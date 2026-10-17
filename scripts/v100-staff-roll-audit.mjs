@@ -3,6 +3,13 @@ import { V100_CREDITS_SONG, v100StaffRollResumeSeconds } from "../app/v100StaffR
 import { V100_CREDITS_FILM } from "../app/v100CreditsFilm.js";
 import { v100StoryEventView } from "../app/v100StoryEvents.js";
 
+export function staffRollFilmBuffersReady() {
+  const movie = document.querySelector(".v100-staff-roll .v100-credit-landscape");
+  const images = [...(movie?.querySelectorAll(".v100-credit-shot") ?? [])];
+  return images.length === 2 && images.every(image => image.getAttribute("src")
+    && image.complete && image.naturalWidth > 0 && image.dataset.creditDecoded === "true");
+}
+
 export async function inspectStaffRoll(page, { index = 0, playerName = "場面確認", seek = false } = {}) {
   const surface = page.locator(".v100-staff-roll");
   await surface.waitFor({ state: "visible", timeout: 15000 });
@@ -14,6 +21,11 @@ export async function inspectStaffRoll(page, { index = 0, playerName = "場面�
     return audio && audio.readyState >= 2 && !audio.paused && audio.currentTime > .03;
   }, undefined, { timeout: 15000 });
   if (seek) {
+    // The fixture jumps ahead much faster than the film. A decoded displayed
+    // shot can still have a pending hidden preload; replacing it at this point
+    // cancels that request. Wait for both actual decodes before seeking, while
+    // retaining the existing strict request-failure gate and decode deadline.
+    await page.waitForFunction(staffRollFilmBuffersReady, undefined, { timeout: 15000 });
     const point = (v100StaffRollResumeSeconds(index, 11) + .1) / V100_CREDITS_SONG.duration;
     await page.waitForFunction(target => { const a = document.querySelector(".v100-staff-roll audio"); return a.buffered.length > 0 && a.buffered.end(a.buffered.length - 1) > a.duration * target; }, point, { timeout: 20000 });
     const probe = await surface.locator("audio").evaluate((audio, target) => { const before = { time: audio.currentTime, duration: audio.duration, seekable: [...Array(audio.seekable.length)].map((_, i) => [audio.seekable.start(i), audio.seekable.end(i)]) }; audio.currentTime = audio.duration * target; return { before, target: audio.duration * target, after: audio.currentTime }; }, point);
@@ -85,5 +97,5 @@ export async function completeStaffRollByFilmEnd(page) {
   for (let attempt = 0; attempt < 3 && await root.getAttribute("data-v100-credit-speed") !== "4"; attempt++)
     await root.getByRole("button", { name: /映像と文字の速さ/u }).click();
   assert.equal(await root.locator("audio").evaluate(audio => audio.playbackRate), 1);
-  await page.locator('[data-v100-surface="epilogue"]').waitFor({ state: "visible", timeout: 40000 });
+  await page.locator('[data-v100-surface="map"]').waitFor({ state: "visible", timeout: 40000 });
 }

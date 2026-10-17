@@ -1,10 +1,11 @@
 import { createHash } from "node:crypto";
-import { mkdir, readFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import sharp from "sharp";
 
 import { buildFormationCard, buildIdentityPortrait } from "./v090-identity-derivatives.mjs";
+import { applyV177ReactionRepairs } from './v177-reaction-source-repairs.mjs';
 
 const root = process.cwd();
 const sourceDir = path.join(root, "assets/source/v090/characters");
@@ -114,6 +115,7 @@ async function keepLargestAlphaComponent(input) {
   return sharp(decoded.data, { raw: { width, height, channels: 4 } }).png().toBuffer();
 }
 
+if(process.argv.includes('--with-identity')){
 await buildIdentityPortrait({
   inputPath: identityMaster,
   outputPath: output.portrait,
@@ -134,6 +136,7 @@ await buildFormationCard({
   `,
 });
 
+}
 const poses = await blueScreenCutout(poseSource);
 if (poses.info.width !== 1536 || poses.info.height !== 1024) {
   throw new Error(`Unexpected Zakimiya pose sheet geometry ${poses.info.width}x${poses.info.height}`);
@@ -208,7 +211,7 @@ await sharp({
   .png({ compressionLevel: 9, adaptiveFiltering: true })
   .toFile(output.battle);
 
-const decodedAtlas = await sharp(output.battle).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+let decodedAtlas = await sharp(output.battle).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
 for (let row = 0; row < 2; row += 1) {
   for (let column = 0; column < battleStates.length; column += 1) {
     for (let y = 0; y < cell.height; y += 1) {
@@ -234,6 +237,8 @@ await sharp(decodedAtlas.data, {
   .png({ compressionLevel: 9, adaptiveFiltering: true })
   .toFile(output.battle);
 
+await writeFile(output.battle,await applyV177ReactionRepairs('zakimiya',await readFile(output.battle),root));
+decodedAtlas=await sharp(output.battle).ensureAlpha().raw().toBuffer({resolveWithObject:true});
 const visible = {};
 for (let row = 0; row < 2; row += 1) {
   const direction = row === 0 ? "right" : "left";

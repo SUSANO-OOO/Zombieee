@@ -1,0 +1,183 @@
+{
+  "at": "2026-10-15T10:10:03.505Z",
+  "sceneId": "defense-paisen-kuma-kiss",
+  "original": "public/art/v100/credits/defense-paisen-kuma-kiss-r1.webp",
+  "originalSha256": "5812ef67e127d5e3c4891f5f03bcea5112020fcfd5ceaa1903a4dfa7db2a6408",
+  "generated": "assets/source/v177/paisen/credits/defense-paisen-kuma-kiss-photo-r2.generated.png",
+  "generatedSha256": "e6f56169a63c1cb505815b09eea4f00d58bcd6485cc6c0f5cec07db37ceec99e",
+  "target": "assets/source/v177/paisen/credits/defense-paisen-kuma-kiss-photo-r2.localized-r1.png",
+  "targetSha256": "2967d5813d5111cc61c562f137f6161d89dd896476978e3b11531818bd16d209",
+  "width": 1600,
+  "height": 900,
+  "polygons": [
+    [
+      [
+        562,
+        69
+      ],
+      [
+        650,
+        46
+      ],
+      [
+        725,
+        55
+      ],
+      [
+        766,
+        93
+      ],
+      [
+        775,
+        140
+      ],
+      [
+        765,
+        170
+      ],
+      [
+        779,
+        201
+      ],
+      [
+        790,
+        217
+      ],
+      [
+        783,
+        244
+      ],
+      [
+        763,
+        274
+      ],
+      [
+        735,
+        292
+      ],
+      [
+        745,
+        333
+      ],
+      [
+        681,
+        352
+      ],
+      [
+        620,
+        328
+      ],
+      [
+        600,
+        268
+      ],
+      [
+        574,
+        243
+      ],
+      [
+        556,
+        199
+      ],
+      [
+        547,
+        131
+      ]
+    ],
+    [
+      [
+        350,
+        818
+      ],
+      [
+        455,
+        791
+      ],
+      [
+        574,
+        814
+      ],
+      [
+        687,
+        834
+      ],
+      [
+        777,
+        842
+      ],
+      [
+        850,
+        862
+      ],
+      [
+        853,
+        900
+      ],
+      [
+        350,
+        900
+      ]
+    ]
+  ],
+  "protectRects": [],
+  "protectPolygons": [
+    [
+      [
+        779,
+        137
+      ],
+      [
+        809,
+        155
+      ],
+      [
+        827,
+        185
+      ],
+      [
+        831,
+        230
+      ],
+      [
+        805,
+        263
+      ],
+      [
+        787,
+        263
+      ],
+      [
+        783,
+        239
+      ],
+      [
+        790,
+        218
+      ],
+      [
+        777,
+        203
+      ],
+      [
+        766,
+        179
+      ]
+    ]
+  ],
+  "faceRect": [
+    546,
+    47,
+    245,
+    312
+  ],
+  "maskPath": "assets/source/v177/paisen/credits/defense-paisen-kuma-kiss-photo-r2.localization-mask-r1.png",
+  "registeredPixels": 93801,
+  "changedPixels": 93792,
+  "changedOutsideRegisteredRegion": 0,
+  "normalization": "Uniform cover fit to native original dimensions, thresholded explicit Paisen mask; all other original decoded RGBA pixels remain byte-identical.",
+  "runtimeConnected": false,
+  "visualReviewed": false,
+  "nativeAccepted": false,
+  "producerAccepted": false,
+  "wholeGameAccepted": false
+}

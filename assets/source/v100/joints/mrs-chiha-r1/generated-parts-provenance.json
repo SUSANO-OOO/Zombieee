@@ -1,0 +1,25 @@
+{
+  "kind": "mrs-chiha",
+  "tool": "built-in image_gen.imagegen",
+  "mode": "transparent edit using the approved identity reference",
+  "generatedPath": "C:/Users/okait/.codex/generated_images/01a12578-4773-7873-a12e-fb0962b19020/exec-2d3d8203-77c0-4db9-9110-af1ca86e9f67.png",
+  "selectedStudyPath": "output/issue177-newcomer-parts-r1/mrs-chiha/parts-study-r1.png",
+  "referencePath": "output/issue177-blender-rig-workshop-r4/mrs-chiha/walk-a.png",
+  "referenceSha256": "19239e02cd4fc3ab615d0e0266df881674eb9ce5fd05c1e97e6ab88b8e424d27",
+  "sha256": "5d75da5d003e877fe24bd97b131a93c3432cfafce17ad7ec7b0f46f9707f4286",
+  "width": 1254,
+  "height": 1254,
+  "transparentPixels": 1222937,
+  "visiblePixels": 315937,
+  "fullPrompt": "Use case: identity-preserve.\nAsset type: one square 1024 x 1024 transparent 4 by 4 detached anatomical paint-parts study for the existing Mrs Chiha game sprite.\nInput image is the sole character and paint reference. Preserve the fitted worn black leather coat, light beige blouse, black trousers, black gloves and original narrow black lace-up high-heeled ankle boots. The final game retains the original face/hair, visible coat and straps, backpack and hands. This sheet is for otherwise hidden body parts needed for true hip/knee/shoulder/elbow rigging; do not create a replacement full character.\nRegular 4 by 4 cells, one detached component in each occupied cell, generous fully transparent gaps. Row order left to right:\nRow1: (1) short fitted black coat torso with light beige blouse, collar to waist ONLY, no head, arms, hanging coat tails, backpack, straps or weapons; (2) small black trouser pelvis with dark belt, no torso or legs; (3) near slim black trouser thigh; (4) near black trouser shin, knee top ankle bottom.\nRow2: (5) near narrow black lace-up high-heeled ankle boot matching the original silhouette, ankle upper left, toe points right, heel and toe both lie on the same horizontal ground line; (6) far slim black trouser thigh; (7) far black trouser shin; (8) far matching high-heeled boot toe right, heel and toe on same horizontal floor.\nRow3: (9) near fitted black leather upper sleeve shoulder top elbow bottom; (10) near black forearm sleeve elbow top wrist bottom, NO hand; (11) near black gloved human hand; (12) far matching upper sleeve shoulder top elbow bottom.\nRow4: (13) far black forearm sleeve, no hand; (14) far black gloved hand; (15) empty transparent; (16) empty transparent.\nAll limb segments straight and vertical with rounded overlap ends at joints. Match the original detailed gritty 2D painted illustration, restrained charcoal/beige/brown palette and side view facing right. Keep the slim human proportions. No head, hair, face, weapon, new jewelry, orange clothing, attached extra limbs, ground, shadow, backdrop, checkerboard, text, numbers, labels, grid or border. Genuinely transparent background.\n",
+  "status": "Prepared hidden-parts study only; not connected to runtime, not included in22-form coverage or PWA assets. Original visible paint/identity/weapon to be preserved during authoring.",
+  "reference": "identity-reference.png",
+  "prompt": "parts-prompt.txt",
+  "adoptedDerivedParts": 10,
+  "originalParts": [
+    "far-boot",
+    "near-boot",
+    "head",
+    "weapon-and-hands"
+  ]
+}

@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { isOwnedTitleCloseCancellation } from "../scripts/owned-title-close-cancellation.mjs";
 
-const url = "http://127.0.0.1:49123/audio/v100/score/horror.mp3";
+const url = "http://127.0.0.1:49123/audio/v100/score/opening.mp3";
 function fixture() {
   return {
     failure: { kind: "request", text: "net::ERR_ABORTED", phase: "context-closing", at: 105, url,

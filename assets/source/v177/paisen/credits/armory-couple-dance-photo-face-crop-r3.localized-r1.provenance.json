@@ -1,0 +1,61 @@
+{
+  "at": "2026-10-15T10:39:27.192Z",
+  "sceneId": "armory-couple-dance",
+  "sourceScene": "assets/source/v177/paisen/credits/armory-couple-dance-photo-r2.localized-r1.png",
+  "sourceSceneSha256": "92b770ce6068f5bf5df4f600fcf4867a646f1264c6de0a659746defb427f2f57",
+  "generated": "assets/source/v177/paisen/credits/armory-couple-dance-photo-face-crop-r3.generated.png",
+  "generatedSha256": "38ff4655d8aa0f76f2c767319005edb508cd40aa70642012ccc9f92ff3a7604e",
+  "sourceCrop": {
+    "left": 1305,
+    "top": 153,
+    "width": 175,
+    "height": 200
+  },
+  "headPolygon": [
+    [
+      1324,
+      171
+    ],
+    [
+      1395,
+      168
+    ],
+    [
+      1448,
+      206
+    ],
+    [
+      1449,
+      252
+    ],
+    [
+      1427,
+      280
+    ],
+    [
+      1396,
+      295
+    ],
+    [
+      1349,
+      285
+    ],
+    [
+      1325,
+      241
+    ],
+    [
+      1319,
+      205
+    ]
+  ],
+  "target": "assets/source/v177/paisen/credits/armory-couple-dance-photo-face-crop-r3.localized-r1.png",
+  "targetSha256": "16f5fdfdd4dd1d6eb44d04c2f8cfe204dfc0d5b431d626a44d47c681e91cac89",
+  "changedHeadPixels": 11287,
+  "changedOutsideHeadFromPrevious": 0,
+  "bodyAndOtherActorsPreserved": true,
+  "runtimeConnected": false,
+  "visualReviewed": false,
+  "producerAccepted": false,
+  "wholeGameAccepted": false
+}

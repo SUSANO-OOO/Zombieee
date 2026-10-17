@@ -42,7 +42,11 @@ function bonePolygon(a,b,radius) {
     [b[0]+dx*radius-dy*radius,b[1]+dy*radius+dx*radius]];
 }
 function addRig(kind,hip,knee,ankle,detail=[],{reach=34,lift=16}={}) {
-  rigs[kind]={path:spriteSheetPath(kind),hip,knee,ankle,target:[hip[0],hip[1]+10],reach,lift,detail,
+  const legLength=Math.hypot(knee[0]-hip[0],knee[1]-hip[1])+Math.hypot(ankle[0]-knee[0],ankle[1]-knee[1]);
+  // Keep the authored hip height where the two fixed bones can reach. Lowering
+  // every hip by ten pixels made the whole cast walk in an unnecessary crouch.
+  const targetY=Math.max(hip[1],ankle[1]-Math.sqrt(Math.max(1,(legLength-2.5)**2-(reach+3)**2)));
+  rigs[kind]={path:spriteSheetPath(kind),hip,knee,ankle,target:[hip[0],targetY],reach,lift,detail,
     thigh:bonePolygon(hip,knee,19),calf:bonePolygon(knee,ankle,16),
     foot:[[ankle[0]-23,ankle[1]-12],[ankle[0]+43,ankle[1]-12],[ankle[0]+49,434],[ankle[0]-24,434]],
     body:[[0,0],[480,0],[480,hip[1]+3],[0,hip[1]+3]]};
@@ -60,8 +64,9 @@ addRig('ranger',[239,230],[260,307],[290,404],[
   [[209,153],[251,157],[332,219],[371,264],[362,276],[316,240],[239,191]],
 ]);
 addRig('medic',[239,253],[261,333],[296,411],[
-  [[131,234],[177,229],[208,278],[198,391],[156,407],[134,353]],
-  [[221,192],[358,247],[353,284],[225,245]],
+  // Only the bag belongs to the torso. The old mask extended below it and
+  // retained the source painting's rear boot as a third, non-articulated leg.
+  [[147,211],[193,218],[213,239],[211,276],[192,310],[166,314],[137,296],[133,267]],
 ]);
 addRig('brute',[240,261],[261,332],[273,409],[
   [[206,177],[347,287],[339,308],[207,204]],
@@ -73,10 +78,9 @@ addRig('guardian',[240,288],[255,345],[284,410],[
   [[251,150],[353,150],[353,405],[251,405]],
   [[146,235],[205,238],[191,302],[160,383],[130,388],[143,332]],
 ],{reach:25,lift:12});
-addRig('engineer',[238,255],[255,324],[276,403],[
-  [[166,205],[195,214],[211,252],[201,282],[179,280],[166,255]],
-  [[195,210],[373,243],[365,306],[200,269]],
-]);
+// His hands and crossbow are above the hip and already inside the torso. The
+// former extra equipment masks copied trouser and knee pixels over moving legs.
+addRig('engineer',[238,255],[255,324],[276,403]);
 addRig('crazy-king',[238,307],[258,362],[280,412],[
   [[156,270],[192,264],[246,286],[338,348],[347,366],[331,389],[300,386],[232,351],[170,319],[147,301],[144,282]],
 ],{reach:28,lift:14});
@@ -95,10 +99,11 @@ function kneeFor(hip,ankle,upper,lower){
   return [hip[0]+dx/d*along+dy/d*bend,hip[1]+dy/d*along-dx/d*bend];
 }
 export function v100MainHumanWalkCycleDistance(kind,scale){const r=rigs[kind];return r?2*r.reach*Math.max(.001,Number(scale)||.001)/stance:null;}
-export function v100MainHumanWalkPose(kind,phase){
+export function v100MainHumanWalkPose(kind,phase,{settle=0}={}){
   const r=rigs[kind];if(!r)return null;
   const p=cycle(phase),rise=-1.1*Math.cos(p*4*Math.PI),upper=length(r.hip,r.knee),lower=length(r.knee,r.ankle);
-  const foot=q=>{q=cycle(q);if(q<=stance+1e-10)return{point:[r.target[0]+r.reach*(1-2*Math.min(q,stance)/stance),r.ankle[1]],planted:true,angle:0};const t=(q-stance)/(1-stance),s=t*t*(3-2*t);return{point:[r.target[0]+r.reach*(2*s-1),r.ankle[1]-r.lift*Math.sin(Math.PI*t)],planted:false,angle:-.15*Math.sin(Math.PI*t)};};
+  const airborne=1-Math.max(0,Math.min(1,Number(settle)||0));
+  const foot=q=>{q=cycle(q);if(q<=stance+1e-10)return{point:[r.target[0]+r.reach*(1-2*Math.min(q,stance)/stance),r.ankle[1]],planted:true,angle:0};const t=(q-stance)/(1-stance),s=t*t*(3-2*t);return{point:[r.target[0]+r.reach*(2*s-1),r.ankle[1]-r.lift*Math.sin(Math.PI*t)*airborne],planted:airborne===0,angle:-.15*Math.sin(Math.PI*t)*airborne};};
   const leg=(offset,q)=>{const f=foot(q),hip=[r.target[0]+offset,r.target[1]+rise];return{...f,hip,knee:kneeFor(hip,f.point,upper,lower)};};
   return{phase:p,rise,upper,lower,near:leg(3,p),far:leg(-3,p+.5)};
 }
@@ -117,16 +122,31 @@ function paint(ctx,image,kind,pose){
 }
 export function createV100MainHumanWalkRenderer({createCanvas=()=>document.createElement('canvas')}={}){
   const cache=new Map();let builds=0;
-  const clear=()=>{for(const {canvas} of cache.values()){canvas.width=0;canvas.height=0;}cache.clear();};
+  const release=entry=>{for(const canvas of [entry.canvas,entry.settled])if(canvas){canvas.width=0;canvas.height=0;}};
+  const clear=()=>{for(const entry of cache.values())release(entry);cache.clear();};
   function prepare(kind,image){
     if(!rigs[kind]||!image?.naturalWidth)return false;
     if(cache.get(kind)?.image===image)return true;
-    const old=cache.get(kind);if(old){old.canvas.width=0;old.canvas.height=0;cache.delete(kind);}
+    const old=cache.get(kind);if(old){release(old);cache.delete(kind);}
     const canvas=createCanvas();canvas.width=cellW*columns;canvas.height=cellH*4;const ctx=canvas.getContext('2d');if(!ctx)return false;
     ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
     for(let i=0;i<frameCount;i++){ctx.save();ctx.translate(i%columns*cellW,Math.floor(i/columns)*cellH);ctx.scale(cellW/480,cellH/448);paint(ctx,image,kind,v100MainHumanWalkPose(kind,i/frameCount));ctx.restore();}
     cache.set(kind,{image,canvas});builds++;return true;
   }
-  function draw(ctx,image,kind,phase,dx,dy,dw,dh){if(!prepare(kind,image))return false;const i=Math.floor(cycle(phase)*frameCount)%frameCount;ctx.drawImage(cache.get(kind).canvas,i%columns*cellW,Math.floor(i/columns)*cellH,cellW,cellH,dx,dy,dw,dh);return true;}
-  return Object.freeze({prepare,draw,clear,snapshot:()=>({entries:cache.size,bytes:cache.size*cellW*cellH*frameCount*4,builds,frames:frameCount})});
+  function draw(ctx,image,kind,phase,dx,dy,dw,dh,{settle=0}={}){
+    if(!prepare(kind,image))return false;
+    const i=Math.floor(cycle(phase)*frameCount)%frameCount,entry=cache.get(kind),s=Math.min(1,Math.max(0,Number(settle)||0));
+    if(s>0){
+      const key=`${i}:${s}`;
+      if(entry.settleKey!==key){
+        entry.settled??=createCanvas();entry.settled.width=cellW;entry.settled.height=cellH;
+        const c=entry.settled.getContext('2d');if(!c)return false;
+        c.imageSmoothingEnabled=true;c.imageSmoothingQuality='high';c.scale(cellW/480,cellH/448);
+        paint(c,image,kind,v100MainHumanWalkPose(kind,i/frameCount,{settle:s}));entry.settleKey=key;
+      }
+      ctx.drawImage(entry.settled,dx,dy,dw,dh);
+    }else ctx.drawImage(entry.canvas,i%columns*cellW,Math.floor(i/columns)*cellH,cellW,cellH,dx,dy,dw,dh);
+    return true;
+  }
+  return Object.freeze({prepare,draw,clear,snapshot:()=>({entries:cache.size,bytes:cache.size*cellW*cellH*frameCount*4+[...cache.values()].filter(e=>e.settled).length*cellW*cellH*4,builds,frames:frameCount})});
 }

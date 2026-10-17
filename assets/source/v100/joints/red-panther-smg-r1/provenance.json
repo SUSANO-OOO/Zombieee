@@ -1,0 +1,127 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "red-panther-smg",
+  "assetPath": "/art/v100/joints/red-panther-smg-r1.webp",
+  "bytes": 31692,
+  "sha256": "a56a14031c445f01561057193aa82b983b083fbc2c641914269a5b45bef63293",
+  "generatedPartsStudySha256": "310c7637541de7cd845a6b37325fa695c6b1b1f1f1cce40fcf458a814d8440a2",
+  "identitySourceSha256": "9bd960e768c844ed57dc1a3a07035153b650fb4026a70635a4bff58c66d25b26",
+  "identityBinding": {
+    "path": "/art/v100/enemies/red-panther-smg-battle-v2.png",
+    "sourceSha256": "e53916e676884631618b8e5cff8f53506451299fcec52638b77724ab724cc5c5",
+    "sourceRect": {
+      "x": 544,
+      "y": 0,
+      "w": 544,
+      "h": 512
+    },
+    "referenceTransform": {
+      "scale": 0.9023861171366594,
+      "tx": -5.449023861171355,
+      "ty": -15.583514099783088,
+      "flipX": false
+    }
+  },
+  "motionSha256": "a4a18bb66b64dcaa46171efa6e9b9506e4755ea127dcbedc8fa63ec9de258fa0",
+  "parts": [
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "3a5d7f8c4bda3d2092c6f7221fee243555c9269e62abc97831ce85f270314da5",
+      "original": false
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "f172dfc4860ce2b1b82dcf93cb0b0257674f7fe9f38ba78c02d7792af2f55fde",
+      "original": false
+    },
+    {
+      "name": "far-thigh",
+      "file": "far-thigh.png",
+      "sha256": "f5b2c49d7eedfb8342db0e13837f5eb2a7093a25c488596792e18c70a8ea6a83",
+      "original": false
+    },
+    {
+      "name": "far-shin",
+      "file": "far-shin.png",
+      "sha256": "f0456a042059384529fb5504b12e6dbee25541ca5522093ecd6d48e32d7e0c16",
+      "original": false
+    },
+    {
+      "name": "far-boot",
+      "file": "far-boot.png",
+      "sha256": "5c728589eb05bb1417e95eb29b8c42074468f71bbde1f6a9feb661e5cdc24166",
+      "original": false
+    },
+    {
+      "name": "near-thigh",
+      "file": "near-thigh.png",
+      "sha256": "6608ac4771d03d8f45f43e11dbf015f65c8b860634ae937902fe3b364d994826",
+      "original": false
+    },
+    {
+      "name": "near-shin",
+      "file": "near-shin.png",
+      "sha256": "f460a8d9714f51db084f19eacd51c0c7974f76c194f034453c2a6d0f691a3128",
+      "original": false
+    },
+    {
+      "name": "near-boot",
+      "file": "near-boot.png",
+      "sha256": "c461e334af53c220b7ea216fb2d1177ba97b78f3a275b77ba342eb06984962d9",
+      "original": false
+    },
+    {
+      "name": "near-upper-arm",
+      "file": "near-upper-arm.png",
+      "sha256": "fbae2df63685ca4566f2a9cba18608704d456aa4a162266ad7b2f7eb4fb1764c",
+      "original": false
+    },
+    {
+      "name": "near-forearm",
+      "file": "near-forearm.png",
+      "sha256": "d6deb7636983ec038e4c866b771f64849e91c9e45abb6d68c032f4aee9ea9292",
+      "original": false
+    },
+    {
+      "name": "far-upper-arm",
+      "file": "far-upper-arm.png",
+      "sha256": "3be7712cde9fb8ddad871482281533a95b61bc463973bd1f224a75cfbcc95234",
+      "original": false
+    },
+    {
+      "name": "far-forearm",
+      "file": "far-forearm.png",
+      "sha256": "1cd9ab175354c6e4ca9f6c4535a79167255774d61252e254716acbca19fd570c",
+      "original": false
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "9adf946252e7d24ba7e6ce7d227c79420a60d1d738a2fa332f7e7eed01ea709c",
+      "original": true
+    },
+    {
+      "name": "weapon-and-hands",
+      "file": "weapon-and-hands.png",
+      "sha256": "a104408c980df199bec05b549554d14b1ea63d93dc195518efb56c540ed553ea",
+      "original": true
+    },
+    {
+      "name": "backpack",
+      "file": "backpack.png",
+      "sha256": "6534c00004157684fd4d42dc0e733a692352420f8f0b6b3a87ba1951c198bc96",
+      "original": true
+    }
+  ],
+  "source": "Blender 5.2 fixed-length military gait, settling, weapon-specific knife thrust/shield bash/gun aim and recovery; original masked head, visible insignia, equipment, hands and coat panels",
+  "groundY": 432,
+  "decodedBytes": 266240,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}

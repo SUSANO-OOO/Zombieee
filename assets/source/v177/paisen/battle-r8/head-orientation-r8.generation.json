@@ -1,0 +1,30 @@
+{
+  "schema": "v177-paisen-enemy-facing-head-r8",
+  "at": "2026-10-15",
+  "tool": "built-in image_gen.imagegen",
+  "sourceOnly": true,
+  "correction": "User: 戦闘時のパイセン全部こっち向いてんの. Keep the three-photo identity while facing the actual travel/attack direction.",
+  "files": [
+    {
+      "file": "head-three-quarter-r8.generated.png",
+      "sha256": "bdbf245849ac6e9af034a2cb3249d0ce81923a03ec364e2fc8c557e8af28593c",
+      "prompt": "Use case: identity-preserve. Asset type: transparent head-and-neck cutout for Paisen, a side-scrolling battle character. Input image 1 is the current game-painted full-body character, provided ONLY as the illustration style, hair, lighting, head proportions, and neck-connection reference. Input images 2, 3, and 4 are the producer's authoritative photographs of this exact man and determine his facial identity. Correct the current camera-facing head. Produce ONE isolated head and neck of the same man, facing screen RIGHT in a strong three-quarter SIDE view, yaw about 75 degrees away from the viewer. His gaze must aim horizontally at the opponent on the RIGHT, never at the viewer. The nose silhouette points RIGHT; the visible eye's iris looks RIGHT; the far eye is mostly occluded. Preserve his specific short black hairline, low straight brows, cheek shape, broad jaw, small moustache and chin stubble, nose and lips from the photographs. Preserve the established finely painted gritty game style, natural skin shading, and realistic young adult proportions. Neutral focused combat expression, without a smile. Include the entire hair, visible left ear, jaw, and neck down to the navy-purple T-shirt collar connection, but do NOT include torso, shoulders, arms, clothing, weapons, captions, grids, other heads, borders or decoration. Leave generous clear transparent margin on every side. Head held upright, not tilted; neck vertically down, flat cut at its base to fit a rig. True transparent alpha background, clean antialiased edges. Do not create a generic replacement person, exaggerated muscular head, front-facing eyes, orange/gold contour strokes, or camera eye contact.",
+      "role": "Intermediate side gaze; still front-leaning. Not the chosen battle head."
+    },
+    {
+      "file": "head-side-profile-r8.generated.png",
+      "sha256": "42a2372f253ec9d6ddd84fcc9aa33f9fa03df6d6e39df85fd5ac1d29bbc9ce4f",
+      "prompt": "Use case: identity-preserve. Edit input image 1, the newly generated transparent Paisen head. Images 2, 3 and 4 are authoritative identity references of this exact man. Make ONE targeted correction: rotate this SAME head further toward screen RIGHT to an EXACT 90-degree SIDE PROFILE seen from his LEFT side. His nose must be the rightmost facial silhouette, only ONE eye is visible, the far eye and far eyebrow are completely hidden, and his gaze points horizontally RIGHT at an offscreen enemy. This is a side-scrolling combat head, so absolutely NO camera eye contact or front-facing facial plane. Preserve his actual facial identity from photos: specific short black hairline, straight brows, cheek, jaw, nose, lips, faint moustache/chin stubble, skin tone. Preserve the finely painted realistic game-art texture and lighting of image 1. Head upright; neck upright and cut flat at base for rig attachment; preserve full hair, ear, jaw and neck. Include only the head and neck, with the same small plain navy-purple collar rim as image 1, no shoulder or torso, no weapons. Center this one profile head on a true transparent alpha canvas with clear margins. Do not create a second head, sheet, text, grid, front view, three-quarter front view, altered person, exaggerated comic features, or ornamental outline. This must be a literal anatomical side profile, not another slightly turned portrait.",
+      "role": "Right-facing side profile selected for rig registration and actual pose review."
+    }
+  ],
+  "inputPhotos": [
+    "C:/Users/okait/AppData/Local/Temp/codex-clipboard-3b180a11-73f9-46ab-9b5e-73e2f1edc53e.png",
+    "C:/Users/okait/AppData/Local/Temp/codex-clipboard-25d36678-020f-4fca-9e8f-0f4989df7f37.png",
+    "C:/Users/okait/AppData/Local/Temp/codex-clipboard-f7346372-9c4e-400f-8cc9-ccef2931291c.png"
+  ],
+  "playerRuntimeAdopted": false,
+  "nativeAccepted": false,
+  "identityProducerAccepted": false,
+  "wholeGameAccepted": false
+}

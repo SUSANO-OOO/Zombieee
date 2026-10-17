@@ -1,0 +1,233 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "ooguchi",
+  "assetPath": "/art/v100/joints/ooguchi-r1.webp",
+  "bytes": 41130,
+  "sha256": "850f41763000ff667ad013b94afd8f39be08aab3e60b23407fc48fe5199a710a",
+  "atlasPacking": "height-descending-shelves",
+  "generatedPartsStudySha256": "76d37a13bbd8f8c44e6a465b4e85f2960229a0740cd04549bdfebe879313a792",
+  "identitySourceSha256": "31d8f4f332c5d647ff6115d0229cfe5fe884db3c5bbdd199c9660b1c2496b92d",
+  "identityBinding": {
+    "path": "/art/v090/bosses/ooguchi-battle-r1.png",
+    "sourceSha256": "02549dd1d2e70eed5cd6efd9478ca8029b4055844781ff379c4e677ba41891e7",
+    "sourceRect": {
+      "x": 0,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "flipX": false
+  },
+  "motionSha256": "d30810cf80a5a0aab4a482be25e228484504e6291cd218e521b6befd71019fa0",
+  "originalPoseBindings": {
+    "idle": {
+      "path": "/art/v090/bosses/ooguchi-battle-r1.png",
+      "sourceSha256": "02549dd1d2e70eed5cd6efd9478ca8029b4055844781ff379c4e677ba41891e7",
+      "sourceRect": {
+        "x": 0,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": false,
+      "file": "identity-reference.png",
+      "sha256": "31d8f4f332c5d647ff6115d0229cfe5fe884db3c5bbdd199c9660b1c2496b92d",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0
+      }
+    },
+    "walk-a": {
+      "path": "/art/v090/bosses/ooguchi-battle-r1.png",
+      "sourceSha256": "02549dd1d2e70eed5cd6efd9478ca8029b4055844781ff379c4e677ba41891e7",
+      "sourceRect": {
+        "x": 480,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": false,
+      "file": "walk-a-reference.png",
+      "sha256": "ce8e0db52f64011da125537f01d2ccb35ffdd28d45d608b0e5a737ac1988bbb2",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0
+      }
+    },
+    "walk-b": {
+      "path": "/art/v090/bosses/ooguchi-battle-r1.png",
+      "sourceSha256": "02549dd1d2e70eed5cd6efd9478ca8029b4055844781ff379c4e677ba41891e7",
+      "sourceRect": {
+        "x": 960,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": false,
+      "file": "walk-b-reference.png",
+      "sha256": "65c21a6602779fbd25f98b1afcbc999b3281aa6e04e1d1ec5f0c2daaa8954bb1",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0
+      }
+    },
+    "attack-a": {
+      "path": "/art/v090/bosses/ooguchi-battle-r1.png",
+      "sourceSha256": "02549dd1d2e70eed5cd6efd9478ca8029b4055844781ff379c4e677ba41891e7",
+      "sourceRect": {
+        "x": 1440,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": false,
+      "file": "attack-a-reference.png",
+      "sha256": "ac5ac186be94c143e4426908b9bfacc4135b57db758fe8a642af5a8c9676250f",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0
+      }
+    },
+    "attack-b": {
+      "path": "/art/v090/bosses/ooguchi-battle-r1.png",
+      "sourceSha256": "02549dd1d2e70eed5cd6efd9478ca8029b4055844781ff379c4e677ba41891e7",
+      "sourceRect": {
+        "x": 1920,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": false,
+      "file": "attack-b-reference.png",
+      "sha256": "dba527e7f234eee71d140d9cb0edfbdf675c606b8768269c5261c2a3a1681682",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0
+      }
+    },
+    "hit": {
+      "path": "/art/v090/bosses/ooguchi-battle-r1.png",
+      "sourceSha256": "02549dd1d2e70eed5cd6efd9478ca8029b4055844781ff379c4e677ba41891e7",
+      "sourceRect": {
+        "x": 2400,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": false,
+      "file": "hit-reference.png",
+      "sha256": "cb2aa39cdcbf24361edb558f72047c94eec896d3858598292191d3b7d109d07e",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0
+      }
+    }
+  },
+  "parts": [
+    {
+      "name": "far-rear-upper",
+      "file": "far-rear-upper.png",
+      "sha256": "9bc714bc9d4e8469ba4a67177ff898c269667ed9b25bde62d65e5c63380a0e7c",
+      "original": false
+    },
+    {
+      "name": "far-rear-lower",
+      "file": "far-rear-lower.png",
+      "sha256": "60452d3dc9ca7cd917b2eff81e4e05f99c287f2465d3e676cd2fcbe00bdf63b2",
+      "original": false
+    },
+    {
+      "name": "far-rear-paw",
+      "file": "far-rear-paw.png",
+      "sha256": "36befc1ae63728196060ed0710c1c5c4d95b1938bf26e5525af3e7c4304d09f4",
+      "original": true
+    },
+    {
+      "name": "near-rear-upper",
+      "file": "near-rear-upper.png",
+      "sha256": "1c118fd7bf4cc4ead0421f6299a0900baf61df55df833d5644c82d16fdf6d51a",
+      "original": false
+    },
+    {
+      "name": "near-rear-lower",
+      "file": "near-rear-lower.png",
+      "sha256": "92a3509a4ab43f04d38a9bf09623df1213adbcc444b0b986d17a135b4cd0c449",
+      "original": false
+    },
+    {
+      "name": "near-rear-paw",
+      "file": "near-rear-paw.png",
+      "sha256": "a123bc8416bd2c37569a6d4705f5c11f3c15e3a532f51954286d5cf0514fe9e4",
+      "original": true
+    },
+    {
+      "name": "far-front-upper",
+      "file": "far-front-upper.png",
+      "sha256": "69402d36daf2561ded43b133a40fcf100f62471de6b311b266876a8e19b55999",
+      "original": false
+    },
+    {
+      "name": "far-front-lower",
+      "file": "far-front-lower.png",
+      "sha256": "f8cc34d2dbf31ada262cd2739020e90115560d72b6de7f09ab4fa928a1476178",
+      "original": false
+    },
+    {
+      "name": "far-front-paw",
+      "file": "far-front-paw.png",
+      "sha256": "fc5b139377eb2c06b5649d5c3dd4887af4ec97507d645a0c492b2b92f04f3a45",
+      "original": true
+    },
+    {
+      "name": "near-front-upper",
+      "file": "near-front-upper.png",
+      "sha256": "9ff08c5e42c31c46d3073695c766cdb6cb114f40a2e860f5b9b2e960a51afd33",
+      "original": false
+    },
+    {
+      "name": "near-front-lower",
+      "file": "near-front-lower.png",
+      "sha256": "bab1bd39df94878d3582d797f3fe7ea0ceb3de7d54edf16ad3900a92aa31914f",
+      "original": false
+    },
+    {
+      "name": "near-front-paw",
+      "file": "near-front-paw.png",
+      "sha256": "709c3db395de849af2f16cd2d0d0d1a4c465597555a2fb4a9385a4d9ecf2c3b3",
+      "original": true
+    },
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "7b3d3a7229f0e9bf816494787d6c452614e38381047e66be558704c6c4f90d3e",
+      "original": false
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "9fc0d23ea247cb68bc177b9ba162af428a1f9af9f76e456bfdede6470df720bb",
+      "original": true
+    },
+    {
+      "name": "jaw",
+      "file": "jaw.png",
+      "sha256": "49484d5cb8984957af830800124069f518f7b4cdf431de881a6296e5ec703452",
+      "original": true
+    }
+  ],
+  "source": "Blender 5.2 four fixed-length crawling legs, three-foot support, planted attack and parented original mandibles. Canonical giant head, torso and four claws retain original paint. Hidden joint completion confined to owned anatomy. Existing charge targeting, movement and timing preserved; all48/all-action native natural-play acceptance pending.",
+  "groundY": 432,
+  "decodedBytes": 196608,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}

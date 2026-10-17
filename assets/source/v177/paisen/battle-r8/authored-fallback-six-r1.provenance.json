@@ -1,0 +1,106 @@
+{
+  "at": "2026-10-15T03:44:23.656Z",
+  "sourceStudyOnly": true,
+  "sourceDirectory": "assets/source/v177/paisen/battle-r8",
+  "textureSha256": "e318ae905df6d0fe24d69ecc71bc5796aebfde3a50defde1c59b3cf0196707cb",
+  "sourceLegacyBuilderSha256": "7ab8a8ac55d37455fd01ae68c33a5548561a25052343e1675151efed989d622a",
+  "legacySixStateSourceUnchanged": true,
+  "states": [
+    "idle",
+    "walk-a",
+    "walk-b",
+    "attack-a",
+    "attack-b",
+    "hit",
+    "death"
+  ],
+  "bounds": [
+    {
+      "state": "idle",
+      "left": 105,
+      "top": 112,
+      "width": 199,
+      "height": 493,
+      "visibleFloorY": 605
+    },
+    {
+      "state": "walk-a",
+      "left": 102,
+      "top": 112,
+      "width": 198,
+      "height": 493,
+      "visibleFloorY": 605
+    },
+    {
+      "state": "walk-b",
+      "left": 114,
+      "top": 112,
+      "width": 170,
+      "height": 493,
+      "visibleFloorY": 605
+    },
+    {
+      "state": "attack-a",
+      "left": 80,
+      "top": 113,
+      "width": 224,
+      "height": 492,
+      "visibleFloorY": 605
+    },
+    {
+      "state": "attack-b",
+      "left": 101,
+      "top": 112,
+      "width": 233,
+      "height": 493,
+      "visibleFloorY": 605
+    },
+    {
+      "state": "hit",
+      "left": 70,
+      "top": 116,
+      "width": 234,
+      "height": 489,
+      "visibleFloorY": 605
+    },
+    {
+      "state": "death",
+      "left": 22,
+      "top": 573,
+      "width": 350,
+      "height": 167,
+      "visibleFloorY": 740
+    }
+  ],
+  "sixStateStudyBytes": 680704,
+  "sixStateSha256": "051b2bf3ee268497eb7cac73b800c132ecbbe58462034f68a2a87c25bb5d31e3",
+  "sevenStateStudyBytes": 1588905,
+  "sevenStateSha256": "239deeda31b28d35083098071c2969657fc5a6851a49446bb456c4d3c0a675de",
+  "deathDerivation": "Original builder function applied to this photo-source hit frame; natural death acceptance remains open",
+  "hitPose": "Source-bound raised guard; upper bones uniformly recoil around actual spine origin, lower feet unchanged",
+  "board": "output/issue177-paisen-enemy-facing-r8-neck-r2-fallback-e208b2a0-a15/seven-states-source-board.png",
+  "runtimeConnected": false,
+  "all21Accepted": false,
+  "visualAccepted": false,
+  "wholeGameAccepted": false,
+  "sourceFrameSha256": "051b2bf3ee268497eb7cac73b800c132ecbbe58462034f68a2a87c25bb5d31e3",
+  "partsSha256": "9deecbf423cad8cb4b12e316c13e6a857e3cbb895de1b857c2f0f06c7be114c3",
+  "motionSha256": "0ada2033c4b91d4e7e716bb4a37917918efda870868604c1862e011781b251df",
+  "sourceHeadSha256": "3decd06af689b23434f8daf6813d30c081b46ac67a3f6b546bcc47d353c3118e",
+  "generatedBy": "output/issue177-paisen-enemy-facing-r8-neck-r2-fallback-r1.mjs",
+  "generatedBySha256": "1a963c21eb3a9de0f91a6a9fc1a137c241f59cd6838deab54cb9b8ec6f06491f",
+  "headFacesOpponent": true,
+  "headPaintOffsetX": -7,
+  "originalShirtCoversNeck": true,
+  "weaponContactMarkerCorrection": {
+    "from": [
+      329,
+      187
+    ],
+    "to": [
+      321,
+      187
+    ],
+    "actorPaintAndAnimationUnchanged": true
+  }
+}

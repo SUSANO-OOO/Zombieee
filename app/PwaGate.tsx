@@ -18,6 +18,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { readPwaBootState } from "./pwaBoot.js";
+import { createPaintedBrowserEntry } from "./pwaBrowserEntry.js";
 import { useGameModalScope } from "./useGameModalScope";
 
 import {
@@ -175,6 +176,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   // Remembered for the visit only, so the invitation is never nagged twice in
   // one session.
   const [offerDismissed, setOfferDismissed] = useState(false);
+  const [browserPlayPending, setBrowserPlayPending] = useState(false);
   // The last failure, kept until the next success or an explicit dismissal, so
   // a player can still read it after they have looked away from the screen.
   const [diagnostics, setDiagnostics] = useState<ReturnType<typeof describeFailureDiagnostics> | null>(null);
@@ -211,6 +213,22 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   const installPlanRef = useRef<{ pendingCount: number; pendingBytes: number; satisfiedBytes?: number } | null>(null);
   const installedManifestRef = useRef<Manifest | null>(null);
   const storedHashesRef = useRef<Set<string>>(new Set());
+  const browserPlayTransitionRef = useRef<ReturnType<typeof createPaintedBrowserEntry> | null>(null);
+
+  useEffect(() => () => {
+    browserPlayTransitionRef.current?.dispose();
+    browserPlayTransitionRef.current = null;
+  }, []);
+
+  const beginBrowserPlay = useCallback(() => {
+    browserPlayTransitionRef.current ??= createPaintedBrowserEntry({
+      requestFrame: (callback: FrameRequestCallback) => window.requestAnimationFrame(callback),
+      cancelFrame: (frame: number) => window.cancelAnimationFrame(frame),
+      onPending: setBrowserPlayPending,
+      onEnter: () => setOfferDismissed(true),
+    });
+    browserPlayTransitionRef.current.request();
+  }, []);
 
   const refreshStored = useCallback(async () => {
     const store = storeRef.current;
@@ -829,6 +847,15 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     return () => window.clearTimeout(timer);
   }, [blocking, deferredPublishedManifest, downloadState, safety]);
 
+  const errorMessage = !error ? null
+    : error.startsWith("アセットの削除を確認できませんでした:")
+      ? "ゲームデータの削除が完了したか確認できませんでした。「保存内容を再確認」を押してください。"
+      : bootFailure
+        ? "保存中のゲームデータを読み取れませんでした。もう一度、保存内容を確認してください。"
+        : downloadState === "commit-failed"
+          ? "取得済みのゲームデータへの切り替えを確認できませんでした。もう一度、反映をお試しください。"
+          : "ゲームデータの取得・保存が完了しませんでした。通信環境と空き容量を確認し、取得をやり直してください。";
+
   const storagePanel = <aside className={storageHost ? "pwa-storage pwa-storage-inline" : "pwa-notice pwa-storage"} role={storageHost ? "region" : "dialog"} aria-label={storageHost ? "アプリのデータ管理" : "データ管理"}>
     <h3>アプリの容量・更新</h3>
     <dl>
@@ -843,10 +870,11 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       <div><dt>release SHA</dt><dd>{installedManifest?.releaseSha ?? "未インストール"}</dd></div>
       <div><dt>origin</dt><dd>{typeof window === "undefined" ? "確認中" : window.location.origin}</dd></div>
       <div><dt>scope</dt><dd>{registrationScope ?? baseUrl}</dd></div>
+      {error && <div><dt>エラーの詳細</dt><dd style={{ overflowWrap: "anywhere" }}>{error}</dd></div>}
     </dl></details>
     {diagnostics && <div className="pwa-failure-summary"><p className="pwa-warning">直近の失敗：{diagnostics.kind}／{diagnostics.failureCount}件{diagnostics.failures[0] ? `／${diagnostics.failures[0].reason}` : ""}</p><div className="pwa-actions"><button type="button" onClick={copyDiagnostics}>{copied ? "コピーしました" : "診断情報をコピー"}</button><button type="button" onClick={() => setDiagnostics(null)}>診断を消去</button></div></div>}
     {saveEnvironment && <aside className="save-environment-badge" data-save-environment={saveEnvironment.kind} data-save-origin={saveEnvironment.origin} aria-label="セーブ保存環境"><span><b>{saveEnvironment.label}</b><code>{saveEnvironment.origin}</code></span><small>{saveEnvironment.storageScope}　{saveEnvironment.isolationNotice}</small></aside>}
-    {error && <p role="alert" className="pwa-warning">{error}</p>}
+    {errorMessage && <p role="alert" className="pwa-warning">{errorMessage}</p>}
     <p className="pwa-hint">アセットを削除すると、ゲームデータの再取得が必要です。セーブデータは保持されます。</p>
     {!activation.safe && <p className="pwa-hint">更新と削除は、会話・戦闘・保存を終えてから操作できます。</p>}
     <div className="pwa-actions">{phase === "repair-required" && installPlan && <button type="button" disabled={!activation.safe} onClick={startInstall}>不足分だけ再取得</button>}<button type="button" disabled={!activation.safe} onClick={() => { void loadPublishedManifest(); }}>更新を確認</button><button type="button" disabled={!activation.safe} onClick={() => { void clearAssets(); }}>アセットを削除</button>{!storageHost && <button type="button" onClick={() => setShowStorage(false)}>閉じる</button>}</div>
@@ -916,8 +944,8 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
                 )}
 
                 <div className="pwa-actions pwa-secondary-actions">
-                  <button type="button" onClick={() => setOfferDismissed(true)}>
-                    {offerCopy?.skipLabel ?? "ブラウザで遊ぶ"}
+                  <button type="button" onClick={beginBrowserPlay} disabled={browserPlayPending} aria-busy={browserPlayPending || undefined}>
+                    {browserPlayPending ? "準備しています…" : offerCopy?.skipLabel ?? "ブラウザで遊ぶ"}
                   </button>
                 </div>
                 <p className="pwa-hint">{offerCopy?.skipHint ?? "インストールせずに遊ぶこともできます。"}</p>
@@ -1043,11 +1071,12 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
                   {/* The old version keeps working while an update is unresolved. */}
                   <button type="button" onClick={() => setDownloadState(null)}>あとにする</button>
                 </div>
-                {error && <p className="pwa-warning" role="alert">{error}</p>}
+                {errorMessage && <p className="pwa-warning" role="alert">{errorMessage}</p>}
               </>
             )}
 
-            {error && <p className="pwa-warning" role="alert">{error}</p>}
+            {errorMessage && <p className="pwa-warning" role="alert">{errorMessage}</p>}
+            {error && <details><summary>エラーの詳細</summary><p style={{ overflowWrap: "anywhere" }}>{error}</p></details>}
           </div>
         </section>
       )}

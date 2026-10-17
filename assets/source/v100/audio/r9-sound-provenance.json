@@ -1,0 +1,2233 @@
+{
+  "version": 1,
+  "sources": [
+    {
+      "creator": "Kenney",
+      "license": "CC0-1.0",
+      "notices": [
+        "kenney-rpg/License.txt",
+        "kenney-impact/License.txt"
+      ],
+      "urls": [
+        "https://kenney.nl/assets/rpg-audio",
+        "https://kenney.nl/assets/impact-sounds"
+      ]
+    }
+  ],
+  "records": [
+    {
+      "id": "v100-r9-chair-scrape",
+      "file": "public/audio/v100/r9/chair-scrape.mp3",
+      "bytes": 11230,
+      "sha256": "a5baf041c16da39af16430e0882a75319726c7b390096184fc26380766984ccd",
+      "duration": 1.1,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactWood_heavy_000.ogg",
+          "sha256": "15ff82332f342c30e469215539e1cc57e11b221aa2cf7e11e811d313a9927f3d",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/cloth2.ogg",
+          "sha256": "8a7451193c38bc05483aec25dd193e163a15d44cf7fff04ac7912573231b0201",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 1.1,
+        "layers": [
+          {
+            "file": "kenney-impact/impactWood_heavy_000.ogg",
+            "gain": 0.55,
+            "delay": 0,
+            "rate": 1
+          },
+          {
+            "file": "kenney-rpg/cloth2.ogg",
+            "gain": 0.35,
+            "delay": 130,
+            "rate": 0.75
+          }
+        ],
+        "noise": {
+          "color": "pink",
+          "gain": 0.12,
+          "cutoff": 2400,
+          "start": 0.03,
+          "end": 0.45
+        }
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-chair-scrape",
+      "file": "public/audio/v100/r9/chair-scrape.ogg",
+      "bytes": 12414,
+      "sha256": "84a651bf6d680ec8137739873eec5cc58907ead027f25b36b8a1a3fbed300a67",
+      "duration": 1.1,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactWood_heavy_000.ogg",
+          "sha256": "15ff82332f342c30e469215539e1cc57e11b221aa2cf7e11e811d313a9927f3d",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/cloth2.ogg",
+          "sha256": "8a7451193c38bc05483aec25dd193e163a15d44cf7fff04ac7912573231b0201",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 1.1,
+        "layers": [
+          {
+            "file": "kenney-impact/impactWood_heavy_000.ogg",
+            "gain": 0.55,
+            "delay": 0,
+            "rate": 1
+          },
+          {
+            "file": "kenney-rpg/cloth2.ogg",
+            "gain": 0.35,
+            "delay": 130,
+            "rate": 0.75
+          }
+        ],
+        "noise": {
+          "color": "pink",
+          "gain": 0.12,
+          "cutoff": 2400,
+          "start": 0.03,
+          "end": 0.45
+        }
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-extinguisher",
+      "file": "public/audio/v100/r9/extinguisher.mp3",
+      "bytes": 28617,
+      "sha256": "6ca4e1b62fed1cb0b62b5fc5e5f5bc570e6525295a9214bc095a6d6cb740aef7",
+      "duration": 2.6,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
+          "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 2.6,
+        "layers": [
+          {
+            "file": "kenney-rpg/metalLatch.ogg",
+            "gain": 0.4,
+            "delay": 0,
+            "rate": 1
+          }
+        ],
+        "noise": {
+          "color": "white",
+          "gain": 0.55,
+          "cutoff": 6800,
+          "start": 0.08,
+          "end": 0.35
+        }
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-extinguisher",
+      "file": "public/audio/v100/r9/extinguisher.ogg",
+      "bytes": 27984,
+      "sha256": "2dfea1e637f40f333e96676122cb7883531a76e976936357a683a8778d44f7bc",
+      "duration": 2.6,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
+          "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 2.6,
+        "layers": [
+          {
+            "file": "kenney-rpg/metalLatch.ogg",
+            "gain": 0.4,
+            "delay": 0,
+            "rate": 1
+          }
+        ],
+        "noise": {
+          "color": "white",
+          "gain": 0.55,
+          "cutoff": 6800,
+          "start": 0.08,
+          "end": 0.35
+        }
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-cargo-door",
+      "file": "public/audio/v100/r9/cargo-door.mp3",
+      "bytes": 10152,
+      "sha256": "ed80f20427d57a75e30871e559cb2c9f8c5866daa3d99afd32afcc6a437828e5",
+      "duration": 1.25,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/doorClose_1.ogg",
+          "sha256": "834d29c60a8a8bfb50b158cdb6b7dfa8f02812a408a1ee9703d038dfab0b1aeb",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_heavy_000.ogg",
+          "sha256": "e07045693e4a2b3d165c424e3dab4c781d9ff8880a386880ac89a51315d7f831",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 1.25,
+        "layers": [
+          {
+            "file": "kenney-rpg/doorClose_1.ogg",
+            "gain": 0.5,
+            "delay": 0,
+            "rate": 1
+          },
+          {
+            "file": "kenney-impact/impactMetal_heavy_000.ogg",
+            "gain": 0.3,
+            "delay": 260,
+            "rate": 0.8
+          }
+        ]
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-cargo-door",
+      "file": "public/audio/v100/r9/cargo-door.ogg",
+      "bytes": 9341,
+      "sha256": "e8e497a1b24946ab31c52e589f37465771e9e2c993c63b26ab1fe849c138c6ea",
+      "duration": 1.25,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/doorClose_1.ogg",
+          "sha256": "834d29c60a8a8bfb50b158cdb6b7dfa8f02812a408a1ee9703d038dfab0b1aeb",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_heavy_000.ogg",
+          "sha256": "e07045693e4a2b3d165c424e3dab4c781d9ff8880a386880ac89a51315d7f831",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 1.25,
+        "layers": [
+          {
+            "file": "kenney-rpg/doorClose_1.ogg",
+            "gain": 0.5,
+            "delay": 0,
+            "rate": 1
+          },
+          {
+            "file": "kenney-impact/impactMetal_heavy_000.ogg",
+            "gain": 0.3,
+            "delay": 260,
+            "rate": 0.8
+          }
+        ]
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-shutter-open",
+      "file": "public/audio/v100/r9/shutter-open.mp3",
+      "bytes": 25507,
+      "sha256": "9a47995423793179d9635c6dd1a1b0b264cf6db0111272653c4d40054a8a9228",
+      "duration": 2.4,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
+          "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_light_000.ogg",
+          "sha256": "33b5e6e37c6e9d54e07bf5a89b12c76e879f40c1ea83cdd82714df1d6f9fec6d",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_medium_000.ogg",
+          "sha256": "a96f879fec0864a8938e0c745b6996a6c5679c16a234ce31a01cc995e8401003",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 2.4,
+        "layers": [
+          {
+            "file": "kenney-rpg/metalLatch.ogg",
+            "gain": 0.35,
+            "delay": 0,
+            "rate": 1
+          },
+          {
+            "file": "kenney-impact/impactMetal_light_000.ogg",
+            "gain": 0.22,
+            "delay": 420,
+            "rate": 0.85
+          },
+          {
+            "file": "kenney-impact/impactMetal_medium_000.ogg",
+            "gain": 0.3,
+            "delay": 1940,
+            "rate": 0.8
+          }
+        ],
+        "noise": {
+          "color": "brown",
+          "gain": 0.8,
+          "cutoff": 1700,
+          "start": 0.18,
+          "end": 0.3
+        }
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-shutter-open",
+      "file": "public/audio/v100/r9/shutter-open.ogg",
+      "bytes": 22346,
+      "sha256": "0ce146f0d7922cc4d14167e5d061f50c2b2ac6d9e571d7cf23da880609471b92",
+      "duration": 2.4,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
+          "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_light_000.ogg",
+          "sha256": "33b5e6e37c6e9d54e07bf5a89b12c76e879f40c1ea83cdd82714df1d6f9fec6d",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_medium_000.ogg",
+          "sha256": "a96f879fec0864a8938e0c745b6996a6c5679c16a234ce31a01cc995e8401003",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 2.4,
+        "layers": [
+          {
+            "file": "kenney-rpg/metalLatch.ogg",
+            "gain": 0.35,
+            "delay": 0,
+            "rate": 1
+          },
+          {
+            "file": "kenney-impact/impactMetal_light_000.ogg",
+            "gain": 0.22,
+            "delay": 420,
+            "rate": 0.85
+          },
+          {
+            "file": "kenney-impact/impactMetal_medium_000.ogg",
+            "gain": 0.3,
+            "delay": 1940,
+            "rate": 0.8
+          }
+        ],
+        "noise": {
+          "color": "brown",
+          "gain": 0.8,
+          "cutoff": 1700,
+          "start": 0.18,
+          "end": 0.3
+        }
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-shutter-jam",
+      "file": "public/audio/v100/r9/shutter-jam.mp3",
+      "bytes": 15457,
+      "sha256": "685649fbe677c0a7d32ecb81364f66bdfa9e061a93e8621a1b2cc2785937548e",
+      "duration": 1.5,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_heavy_000.ogg",
+          "sha256": "e07045693e4a2b3d165c424e3dab4c781d9ff8880a386880ac89a51315d7f831",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
+          "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 1.5,
+        "layers": [
+          {
+            "file": "kenney-impact/impactMetal_heavy_000.ogg",
+            "gain": 0.4,
+            "delay": 700,
+            "rate": 0.75
+          },
+          {
+            "file": "kenney-rpg/metalLatch.ogg",
+            "gain": 0.32,
+            "delay": 810,
+            "rate": 1
+          }
+        ],
+        "noise": {
+          "color": "brown",
+          "gain": 0.6,
+          "cutoff": 2000,
+          "start": 0.08,
+          "end": 0.55
+        }
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-shutter-jam",
+      "file": "public/audio/v100/r9/shutter-jam.ogg",
+      "bytes": 15201,
+      "sha256": "a19f604dc7be36b6a5e082d06e371e0c544695df51e48341b1a1af8c371aed89",
+      "duration": 1.5,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_heavy_000.ogg",
+          "sha256": "e07045693e4a2b3d165c424e3dab4c781d9ff8880a386880ac89a51315d7f831",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
+          "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 1.5,
+        "layers": [
+          {
+            "file": "kenney-impact/impactMetal_heavy_000.ogg",
+            "gain": 0.4,
+            "delay": 700,
+            "rate": 0.75
+          },
+          {
+            "file": "kenney-rpg/metalLatch.ogg",
+            "gain": 0.32,
+            "delay": 810,
+            "rate": 1
+          }
+        ],
+        "noise": {
+          "color": "brown",
+          "gain": 0.6,
+          "cutoff": 2000,
+          "start": 0.08,
+          "end": 0.55
+        }
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-cable-disconnect",
+      "file": "public/audio/v100/r9/cable-disconnect.mp3",
+      "bytes": 6586,
+      "sha256": "b0c33997ed8ee1a7934e1f5c8bf6e401ea96e797e1ed930acd4a1d55ce915aff",
+      "duration": 0.7,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/cloth3.ogg",
+          "sha256": "a48632d17a4f1416541d261a32a31612e01267144c407fa3ecab3ff410f0085b",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
+          "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 0.7,
+        "layers": [
+          {
+            "file": "kenney-rpg/cloth3.ogg",
+            "gain": 0.45,
+            "delay": 0,
+            "rate": 1
+          },
+          {
+            "file": "kenney-rpg/metalLatch.ogg",
+            "gain": 0.27,
+            "delay": 160,
+            "rate": 1.18
+          }
+        ]
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-cable-disconnect",
+      "file": "public/audio/v100/r9/cable-disconnect.ogg",
+      "bytes": 7710,
+      "sha256": "39de83ee7a3073d523435dcbb52c86f7f2e38bed37a3a05b76ddea9c842a8ce4",
+      "duration": 0.7,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/cloth3.ogg",
+          "sha256": "a48632d17a4f1416541d261a32a31612e01267144c407fa3ecab3ff410f0085b",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
+          "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 0.7,
+        "layers": [
+          {
+            "file": "kenney-rpg/cloth3.ogg",
+            "gain": 0.45,
+            "delay": 0,
+            "rate": 1
+          },
+          {
+            "file": "kenney-rpg/metalLatch.ogg",
+            "gain": 0.27,
+            "delay": 160,
+            "rate": 1.18
+          }
+        ]
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-glass-knock",
+      "file": "public/audio/v100/r9/glass-knock.mp3",
+      "bytes": 6212,
+      "sha256": "aa7780051e75bb6ef9c4d94e92e74b1564ef739786f2359582d7dc537c13d0de",
+      "duration": 0.95,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactGlass_heavy_000.ogg",
+          "sha256": "b44b39a940e8948e74b9bd3776bff980df43cf220abdaf0d467dc4c43c0244a5",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactGlass_heavy_000.ogg",
+          "sha256": "b44b39a940e8948e74b9bd3776bff980df43cf220abdaf0d467dc4c43c0244a5",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 0.95,
+        "layers": [
+          {
+            "file": "kenney-impact/impactGlass_heavy_000.ogg",
+            "gain": 0.26,
+            "delay": 0,
+            "rate": 0.85
+          },
+          {
+            "file": "kenney-impact/impactGlass_heavy_000.ogg",
+            "gain": 0.22,
+            "delay": 320,
+            "rate": 0.9
+          }
+        ]
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-glass-knock",
+      "file": "public/audio/v100/r9/glass-knock.ogg",
+      "bytes": 7539,
+      "sha256": "af5d75cdfe4bab790f335d36734db0d35efc17bae28203fe597ae99d13a8ede5",
+      "duration": 0.95,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactGlass_heavy_000.ogg",
+          "sha256": "b44b39a940e8948e74b9bd3776bff980df43cf220abdaf0d467dc4c43c0244a5",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactGlass_heavy_000.ogg",
+          "sha256": "b44b39a940e8948e74b9bd3776bff980df43cf220abdaf0d467dc4c43c0244a5",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 0.95,
+        "layers": [
+          {
+            "file": "kenney-impact/impactGlass_heavy_000.ogg",
+            "gain": 0.26,
+            "delay": 0,
+            "rate": 0.85
+          },
+          {
+            "file": "kenney-impact/impactGlass_heavy_000.ogg",
+            "gain": 0.22,
+            "delay": 320,
+            "rate": 0.9
+          }
+        ]
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-ceiling-fall",
+      "file": "public/audio/v100/r9/ceiling-fall.mp3",
+      "bytes": 20107,
+      "sha256": "8c478dc4998f8b0aa7bc2dbd4fe3bb055e47123e32e8a60fadfdfa1720582b37",
+      "duration": 1.8,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactWood_heavy_000.ogg",
+          "sha256": "15ff82332f342c30e469215539e1cc57e11b221aa2cf7e11e811d313a9927f3d",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_medium_000.ogg",
+          "sha256": "a96f879fec0864a8938e0c745b6996a6c5679c16a234ce31a01cc995e8401003",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactSoft_heavy_000.ogg",
+          "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 1.8,
+        "layers": [
+          {
+            "file": "kenney-impact/impactWood_heavy_000.ogg",
+            "gain": 0.5,
+            "delay": 0,
+            "rate": 0.7
+          },
+          {
+            "file": "kenney-impact/impactMetal_medium_000.ogg",
+            "gain": 0.4,
+            "delay": 180,
+            "rate": 0.7
+          },
+          {
+            "file": "kenney-impact/impactSoft_heavy_000.ogg",
+            "gain": 0.45,
+            "delay": 600,
+            "rate": 0.8
+          }
+        ],
+        "noise": {
+          "color": "pink",
+          "gain": 0.18,
+          "cutoff": 3600,
+          "start": 0.02,
+          "end": 0.7
+        }
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-ceiling-fall",
+      "file": "public/audio/v100/r9/ceiling-fall.ogg",
+      "bytes": 18621,
+      "sha256": "bcb3332e68ecd373e28b26eddc5002ebaac2f939794fc9513be0f49661315a73",
+      "duration": 1.8,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactWood_heavy_000.ogg",
+          "sha256": "15ff82332f342c30e469215539e1cc57e11b221aa2cf7e11e811d313a9927f3d",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_medium_000.ogg",
+          "sha256": "a96f879fec0864a8938e0c745b6996a6c5679c16a234ce31a01cc995e8401003",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactSoft_heavy_000.ogg",
+          "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 1.8,
+        "layers": [
+          {
+            "file": "kenney-impact/impactWood_heavy_000.ogg",
+            "gain": 0.5,
+            "delay": 0,
+            "rate": 0.7
+          },
+          {
+            "file": "kenney-impact/impactMetal_medium_000.ogg",
+            "gain": 0.4,
+            "delay": 180,
+            "rate": 0.7
+          },
+          {
+            "file": "kenney-impact/impactSoft_heavy_000.ogg",
+            "gain": 0.45,
+            "delay": 600,
+            "rate": 0.8
+          }
+        ],
+        "noise": {
+          "color": "pink",
+          "gain": 0.18,
+          "cutoff": 3600,
+          "start": 0.02,
+          "end": 0.7
+        }
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-oxygen-valve",
+      "file": "public/audio/v100/r9/oxygen-valve.mp3",
+      "bytes": 25745,
+      "sha256": "1d38249d16ca6b17f677f87245f011a8784c2c45265c8950a101b1f34a96e474",
+      "duration": 2.3,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
+          "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalPot2.ogg",
+          "sha256": "8e1f820d217d380fde10e969d109db34303e3f4d11c3951926eddef813d04ae2",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 2.3,
+        "layers": [
+          {
+            "file": "kenney-rpg/metalLatch.ogg",
+            "gain": 0.35,
+            "delay": 0,
+            "rate": 1
+          },
+          {
+            "file": "kenney-rpg/metalPot2.ogg",
+            "gain": 0.15,
+            "delay": 280,
+            "rate": 0.7
+          }
+        ],
+        "noise": {
+          "color": "pink",
+          "gain": 0.48,
+          "cutoff": 4600,
+          "start": 0.24,
+          "end": 0.65
+        }
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-oxygen-valve",
+      "file": "public/audio/v100/r9/oxygen-valve.ogg",
+      "bytes": 23741,
+      "sha256": "3cf9806b43710f2715bddb71159bfe19dc2a2f394bbed0048ddb3d97ed7b34f5",
+      "duration": 2.3,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
+          "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalPot2.ogg",
+          "sha256": "8e1f820d217d380fde10e969d109db34303e3f4d11c3951926eddef813d04ae2",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 2.3,
+        "layers": [
+          {
+            "file": "kenney-rpg/metalLatch.ogg",
+            "gain": 0.35,
+            "delay": 0,
+            "rate": 1
+          },
+          {
+            "file": "kenney-rpg/metalPot2.ogg",
+            "gain": 0.15,
+            "delay": 280,
+            "rate": 0.7
+          }
+        ],
+        "noise": {
+          "color": "pink",
+          "gain": 0.48,
+          "cutoff": 4600,
+          "start": 0.24,
+          "end": 0.65
+        }
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-rail-strain",
+      "file": "public/audio/v100/r9/rail-strain.mp3",
+      "bytes": 18327,
+      "sha256": "49d4a44b09c4fbe9c1d49784e6b567299fb533516512df690d1110cd1af58651",
+      "duration": 1.7,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalPot2.ogg",
+          "sha256": "8e1f820d217d380fde10e969d109db34303e3f4d11c3951926eddef813d04ae2",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_heavy_000.ogg",
+          "sha256": "e07045693e4a2b3d165c424e3dab4c781d9ff8880a386880ac89a51315d7f831",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 1.7,
+        "layers": [
+          {
+            "file": "kenney-rpg/metalPot2.ogg",
+            "gain": 0.35,
+            "delay": 0,
+            "rate": 0.65
+          },
+          {
+            "file": "kenney-impact/impactMetal_heavy_000.ogg",
+            "gain": 0.32,
+            "delay": 660,
+            "rate": 0.7
+          }
+        ],
+        "noise": {
+          "color": "brown",
+          "gain": 0.65,
+          "cutoff": 1600,
+          "start": 0.12,
+          "end": 0.4
+        }
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-rail-strain",
+      "file": "public/audio/v100/r9/rail-strain.ogg",
+      "bytes": 16768,
+      "sha256": "b6dd7ac086dd6da997b8788e0c7f3a61e6d5a438ae64da99f7cadaa5857a5a9b",
+      "duration": 1.7,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalPot2.ogg",
+          "sha256": "8e1f820d217d380fde10e969d109db34303e3f4d11c3951926eddef813d04ae2",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_heavy_000.ogg",
+          "sha256": "e07045693e4a2b3d165c424e3dab4c781d9ff8880a386880ac89a51315d7f831",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 1.7,
+        "layers": [
+          {
+            "file": "kenney-rpg/metalPot2.ogg",
+            "gain": 0.35,
+            "delay": 0,
+            "rate": 0.65
+          },
+          {
+            "file": "kenney-impact/impactMetal_heavy_000.ogg",
+            "gain": 0.32,
+            "delay": 660,
+            "rate": 0.7
+          }
+        ],
+        "noise": {
+          "color": "brown",
+          "gain": 0.65,
+          "cutoff": 1600,
+          "start": 0.12,
+          "end": 0.4
+        }
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-coupler-release",
+      "file": "public/audio/v100/r9/coupler-release.mp3",
+      "bytes": 9003,
+      "sha256": "c21b24928ac7be325255cf49929143955cb36bdce79f5f5be405e7c8fb6e8460",
+      "duration": 1.3,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
+          "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_medium_000.ogg",
+          "sha256": "a96f879fec0864a8938e0c745b6996a6c5679c16a234ce31a01cc995e8401003",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_light_000.ogg",
+          "sha256": "33b5e6e37c6e9d54e07bf5a89b12c76e879f40c1ea83cdd82714df1d6f9fec6d",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 1.3,
+        "layers": [
+          {
+            "file": "kenney-rpg/metalLatch.ogg",
+            "gain": 0.5,
+            "delay": 0,
+            "rate": 1
+          },
+          {
+            "file": "kenney-impact/impactMetal_medium_000.ogg",
+            "gain": 0.35,
+            "delay": 230,
+            "rate": 0.8
+          },
+          {
+            "file": "kenney-impact/impactMetal_light_000.ogg",
+            "gain": 0.2,
+            "delay": 600,
+            "rate": 1
+          }
+        ]
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-coupler-release",
+      "file": "public/audio/v100/r9/coupler-release.ogg",
+      "bytes": 8767,
+      "sha256": "2453260f9f98db27171c995c93a7f72ec1c997c0b3d9bd713dbbc91eff7a8da0",
+      "duration": 1.3,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
+          "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_medium_000.ogg",
+          "sha256": "a96f879fec0864a8938e0c745b6996a6c5679c16a234ce31a01cc995e8401003",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_light_000.ogg",
+          "sha256": "33b5e6e37c6e9d54e07bf5a89b12c76e879f40c1ea83cdd82714df1d6f9fec6d",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 1.3,
+        "layers": [
+          {
+            "file": "kenney-rpg/metalLatch.ogg",
+            "gain": 0.5,
+            "delay": 0,
+            "rate": 1
+          },
+          {
+            "file": "kenney-impact/impactMetal_medium_000.ogg",
+            "gain": 0.35,
+            "delay": 230,
+            "rate": 0.8
+          },
+          {
+            "file": "kenney-impact/impactMetal_light_000.ogg",
+            "gain": 0.2,
+            "delay": 600,
+            "rate": 1
+          }
+        ]
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-barrier-raise",
+      "file": "public/audio/v100/r9/barrier-raise.mp3",
+      "bytes": 16338,
+      "sha256": "772ba76c71801dfeae8b455cd4809d1b778696eb6d85680fc4438c868f2d1d82",
+      "duration": 1.6,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
+          "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_light_000.ogg",
+          "sha256": "33b5e6e37c6e9d54e07bf5a89b12c76e879f40c1ea83cdd82714df1d6f9fec6d",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 1.6,
+        "layers": [
+          {
+            "file": "kenney-rpg/metalLatch.ogg",
+            "gain": 0.35,
+            "delay": 0,
+            "rate": 1
+          },
+          {
+            "file": "kenney-impact/impactMetal_light_000.ogg",
+            "gain": 0.25,
+            "delay": 1110,
+            "rate": 0.8
+          }
+        ],
+        "noise": {
+          "color": "brown",
+          "gain": 0.6,
+          "cutoff": 1400,
+          "start": 0.15,
+          "end": 0.3
+        }
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-barrier-raise",
+      "file": "public/audio/v100/r9/barrier-raise.ogg",
+      "bytes": 16017,
+      "sha256": "7a5387bcf12d3c7f12654044f29d66be409ec7b45d08e5ec0940fb8718e907b5",
+      "duration": 1.6,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
+          "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_light_000.ogg",
+          "sha256": "33b5e6e37c6e9d54e07bf5a89b12c76e879f40c1ea83cdd82714df1d6f9fec6d",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 1.6,
+        "layers": [
+          {
+            "file": "kenney-rpg/metalLatch.ogg",
+            "gain": 0.35,
+            "delay": 0,
+            "rate": 1
+          },
+          {
+            "file": "kenney-impact/impactMetal_light_000.ogg",
+            "gain": 0.25,
+            "delay": 1110,
+            "rate": 0.8
+          }
+        ],
+        "noise": {
+          "color": "brown",
+          "gain": 0.6,
+          "cutoff": 1400,
+          "start": 0.15,
+          "end": 0.3
+        }
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-engine-pass",
+      "file": "public/audio/v100/r9/engine-pass.mp3",
+      "bytes": 31551,
+      "sha256": "f7d17df884fcc06b0b637db751441ed925fb3fc32fe25c69e9ebb6eeabb8c2d2",
+      "duration": 3.1,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactGeneric_light_000.ogg",
+          "sha256": "f0e982611e97512fee5f777986b67e8b435434b601f94992ec044f7e89fb5acb",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 3.1,
+        "layers": [
+          {
+            "file": "kenney-impact/impactGeneric_light_000.ogg",
+            "gain": 0.16,
+            "delay": 500,
+            "rate": 0.6
+          }
+        ],
+        "noise": {
+          "color": "brown",
+          "gain": 1.5,
+          "cutoff": 1100,
+          "start": 0.35,
+          "end": 0.8
+        }
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-engine-pass",
+      "file": "public/audio/v100/r9/engine-pass.ogg",
+      "bytes": 25781,
+      "sha256": "a6337e341f5ebf21b74a5fe1ea233c79ef95431a9e58bd2919f35b146d8faa13",
+      "duration": 3.1,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactGeneric_light_000.ogg",
+          "sha256": "f0e982611e97512fee5f777986b67e8b435434b601f94992ec044f7e89fb5acb",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 3.1,
+        "layers": [
+          {
+            "file": "kenney-impact/impactGeneric_light_000.ogg",
+            "gain": 0.16,
+            "delay": 500,
+            "rate": 0.6
+          }
+        ],
+        "noise": {
+          "color": "brown",
+          "gain": 1.5,
+          "cutoff": 1100,
+          "start": 0.35,
+          "end": 0.8
+        }
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-vehicle-collision",
+      "file": "public/audio/v100/r9/vehicle-collision.mp3",
+      "bytes": 15305,
+      "sha256": "30f86f27a0020e137ac6bb77365feff289883f34facdcf7bc0eb66ddd7f1bb7c",
+      "duration": 1.45,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_heavy_000.ogg",
+          "sha256": "e07045693e4a2b3d165c424e3dab4c781d9ff8880a386880ac89a51315d7f831",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_medium_000.ogg",
+          "sha256": "a96f879fec0864a8938e0c745b6996a6c5679c16a234ce31a01cc995e8401003",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 1.45,
+        "layers": [
+          {
+            "file": "kenney-impact/impactMetal_heavy_000.ogg",
+            "gain": 0.58,
+            "delay": 0,
+            "rate": 0.7
+          },
+          {
+            "file": "kenney-impact/impactMetal_medium_000.ogg",
+            "gain": 0.32,
+            "delay": 130,
+            "rate": 0.8
+          }
+        ],
+        "noise": {
+          "color": "pink",
+          "gain": 0.2,
+          "cutoff": 2600,
+          "start": 0.02,
+          "end": 0.65
+        }
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-vehicle-collision",
+      "file": "public/audio/v100/r9/vehicle-collision.ogg",
+      "bytes": 15594,
+      "sha256": "175ee622f789a41695e15f747ff273b48c34b5314cb7da779adc223122781809",
+      "duration": 1.45,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_heavy_000.ogg",
+          "sha256": "e07045693e4a2b3d165c424e3dab4c781d9ff8880a386880ac89a51315d7f831",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_medium_000.ogg",
+          "sha256": "a96f879fec0864a8938e0c745b6996a6c5679c16a234ce31a01cc995e8401003",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 1.45,
+        "layers": [
+          {
+            "file": "kenney-impact/impactMetal_heavy_000.ogg",
+            "gain": 0.58,
+            "delay": 0,
+            "rate": 0.7
+          },
+          {
+            "file": "kenney-impact/impactMetal_medium_000.ogg",
+            "gain": 0.32,
+            "delay": 130,
+            "rate": 0.8
+          }
+        ],
+        "noise": {
+          "color": "pink",
+          "gain": 0.2,
+          "cutoff": 2600,
+          "start": 0.02,
+          "end": 0.65
+        }
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-door-battering",
+      "file": "public/audio/v100/r9/door-battering.mp3",
+      "bytes": 9964,
+      "sha256": "43157f2b46db044417320a08474dc6de29b31a9a8fcd3bec04d26363bbcaed29",
+      "duration": 1.55,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_heavy_000.ogg",
+          "sha256": "e07045693e4a2b3d165c424e3dab4c781d9ff8880a386880ac89a51315d7f831",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_heavy_000.ogg",
+          "sha256": "e07045693e4a2b3d165c424e3dab4c781d9ff8880a386880ac89a51315d7f831",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
+          "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 1.55,
+        "layers": [
+          {
+            "file": "kenney-impact/impactMetal_heavy_000.ogg",
+            "gain": 0.43,
+            "delay": 0,
+            "rate": 0.75
+          },
+          {
+            "file": "kenney-impact/impactMetal_heavy_000.ogg",
+            "gain": 0.37,
+            "delay": 620,
+            "rate": 0.7
+          },
+          {
+            "file": "kenney-rpg/metalLatch.ogg",
+            "gain": 0.25,
+            "delay": 780,
+            "rate": 0.8
+          }
+        ]
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-door-battering",
+      "file": "public/audio/v100/r9/door-battering.ogg",
+      "bytes": 8601,
+      "sha256": "2dbc970b2abf0644eec39711332f885cced2551ed669a00c847aa4bcdaf7b852",
+      "duration": 1.55,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_heavy_000.ogg",
+          "sha256": "e07045693e4a2b3d165c424e3dab4c781d9ff8880a386880ac89a51315d7f831",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_heavy_000.ogg",
+          "sha256": "e07045693e4a2b3d165c424e3dab4c781d9ff8880a386880ac89a51315d7f831",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
+          "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 1.55,
+        "layers": [
+          {
+            "file": "kenney-impact/impactMetal_heavy_000.ogg",
+            "gain": 0.43,
+            "delay": 0,
+            "rate": 0.75
+          },
+          {
+            "file": "kenney-impact/impactMetal_heavy_000.ogg",
+            "gain": 0.37,
+            "delay": 620,
+            "rate": 0.7
+          },
+          {
+            "file": "kenney-rpg/metalLatch.ogg",
+            "gain": 0.25,
+            "delay": 780,
+            "rate": 0.8
+          }
+        ]
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-card-burnout",
+      "file": "public/audio/v100/r9/card-burnout.mp3",
+      "bytes": 14161,
+      "sha256": "aa633a86d93be4b02497a1f7a4644cde2f1733d295bac1a50d7deb16433aa270",
+      "duration": 1.25,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactGeneric_light_000.ogg",
+          "sha256": "f0e982611e97512fee5f777986b67e8b435434b601f94992ec044f7e89fb5acb",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/bookFlip2.ogg",
+          "sha256": "3409042acbfaebc24c1a6327dc073e36f9250841712e96c5040da566a97df73c",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 1.25,
+        "layers": [
+          {
+            "file": "kenney-impact/impactGeneric_light_000.ogg",
+            "gain": 0.22,
+            "delay": 80,
+            "rate": 1.3
+          },
+          {
+            "file": "kenney-rpg/bookFlip2.ogg",
+            "gain": 0.18,
+            "delay": 400,
+            "rate": 1.4
+          }
+        ],
+        "noise": {
+          "color": "white",
+          "gain": 0.22,
+          "cutoff": 5200,
+          "start": 0.02,
+          "end": 0.8
+        }
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-card-burnout",
+      "file": "public/audio/v100/r9/card-burnout.ogg",
+      "bytes": 14828,
+      "sha256": "cd7c4e5af1aba04a6bbddbaa875dbcfac21f9ab5da023b19cdd2c7afa53a7f34",
+      "duration": 1.25,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactGeneric_light_000.ogg",
+          "sha256": "f0e982611e97512fee5f777986b67e8b435434b601f94992ec044f7e89fb5acb",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/bookFlip2.ogg",
+          "sha256": "3409042acbfaebc24c1a6327dc073e36f9250841712e96c5040da566a97df73c",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 1.25,
+        "layers": [
+          {
+            "file": "kenney-impact/impactGeneric_light_000.ogg",
+            "gain": 0.22,
+            "delay": 80,
+            "rate": 1.3
+          },
+          {
+            "file": "kenney-rpg/bookFlip2.ogg",
+            "gain": 0.18,
+            "delay": 400,
+            "rate": 1.4
+          }
+        ],
+        "noise": {
+          "color": "white",
+          "gain": 0.22,
+          "cutoff": 5200,
+          "start": 0.02,
+          "end": 0.8
+        }
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-weapon-handle",
+      "file": "public/audio/v100/r9/weapon-handle.mp3",
+      "bytes": 7707,
+      "sha256": "6ad9c5a813ac92189b2e411536895eac3a66b70ee82aa686a10c90e2e8b91276",
+      "duration": 0.8,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
+          "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/cloth4.ogg",
+          "sha256": "e7ab9a6c4466dea874196c61f59bf1da05cfe58748f42fadd695d441a154a99b",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 0.8,
+        "layers": [
+          {
+            "file": "kenney-rpg/metalLatch.ogg",
+            "gain": 0.36,
+            "delay": 0,
+            "rate": 1
+          },
+          {
+            "file": "kenney-rpg/cloth4.ogg",
+            "gain": 0.3,
+            "delay": 160,
+            "rate": 1
+          }
+        ]
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-weapon-handle",
+      "file": "public/audio/v100/r9/weapon-handle.ogg",
+      "bytes": 8514,
+      "sha256": "d3478d24e9a023ef453d422727b335ee1f99a4b91d1c4748d7fe9a91a4a7ecbc",
+      "duration": 0.8,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
+          "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/cloth4.ogg",
+          "sha256": "e7ab9a6c4466dea874196c61f59bf1da05cfe58748f42fadd695d441a154a99b",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 0.8,
+        "layers": [
+          {
+            "file": "kenney-rpg/metalLatch.ogg",
+            "gain": 0.36,
+            "delay": 0,
+            "rate": 1
+          },
+          {
+            "file": "kenney-rpg/cloth4.ogg",
+            "gain": 0.3,
+            "delay": 160,
+            "rate": 1
+          }
+        ]
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-sample-lids",
+      "file": "public/audio/v100/r9/sample-lids.mp3",
+      "bytes": 10120,
+      "sha256": "8c1861697f6c1e116493b4799a99f749e1964219bd93de316fcbb2722b91c2db",
+      "duration": 1.5,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_light_000.ogg",
+          "sha256": "33b5e6e37c6e9d54e07bf5a89b12c76e879f40c1ea83cdd82714df1d6f9fec6d",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_light_000.ogg",
+          "sha256": "33b5e6e37c6e9d54e07bf5a89b12c76e879f40c1ea83cdd82714df1d6f9fec6d",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_light_000.ogg",
+          "sha256": "33b5e6e37c6e9d54e07bf5a89b12c76e879f40c1ea83cdd82714df1d6f9fec6d",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/cloth3.ogg",
+          "sha256": "a48632d17a4f1416541d261a32a31612e01267144c407fa3ecab3ff410f0085b",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 1.5,
+        "layers": [
+          {
+            "file": "kenney-impact/impactMetal_light_000.ogg",
+            "gain": 0.24,
+            "delay": 0,
+            "rate": 1
+          },
+          {
+            "file": "kenney-impact/impactMetal_light_000.ogg",
+            "gain": 0.22,
+            "delay": 400,
+            "rate": 1.08
+          },
+          {
+            "file": "kenney-impact/impactMetal_light_000.ogg",
+            "gain": 0.24,
+            "delay": 860,
+            "rate": 0.94
+          },
+          {
+            "file": "kenney-rpg/cloth3.ogg",
+            "gain": 0.2,
+            "delay": 100,
+            "rate": 1
+          }
+        ]
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-sample-lids",
+      "file": "public/audio/v100/r9/sample-lids.ogg",
+      "bytes": 9572,
+      "sha256": "92fe8d0899dc240af4053ae4edea641caa9e001542a0f59a6e9d690e1f50a669",
+      "duration": 1.5,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_light_000.ogg",
+          "sha256": "33b5e6e37c6e9d54e07bf5a89b12c76e879f40c1ea83cdd82714df1d6f9fec6d",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_light_000.ogg",
+          "sha256": "33b5e6e37c6e9d54e07bf5a89b12c76e879f40c1ea83cdd82714df1d6f9fec6d",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_light_000.ogg",
+          "sha256": "33b5e6e37c6e9d54e07bf5a89b12c76e879f40c1ea83cdd82714df1d6f9fec6d",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/cloth3.ogg",
+          "sha256": "a48632d17a4f1416541d261a32a31612e01267144c407fa3ecab3ff410f0085b",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 1.5,
+        "layers": [
+          {
+            "file": "kenney-impact/impactMetal_light_000.ogg",
+            "gain": 0.24,
+            "delay": 0,
+            "rate": 1
+          },
+          {
+            "file": "kenney-impact/impactMetal_light_000.ogg",
+            "gain": 0.22,
+            "delay": 400,
+            "rate": 1.08
+          },
+          {
+            "file": "kenney-impact/impactMetal_light_000.ogg",
+            "gain": 0.24,
+            "delay": 860,
+            "rate": 0.94
+          },
+          {
+            "file": "kenney-rpg/cloth3.ogg",
+            "gain": 0.2,
+            "delay": 100,
+            "rate": 1
+          }
+        ]
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-case-close",
+      "file": "public/audio/v100/r9/case-close.mp3",
+      "bytes": 10834,
+      "sha256": "1ceba1edda9595249d37fa1923bb4120d2f1004d0ad673346e280aa467d23bf5",
+      "duration": 1.1,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/bookClose.ogg",
+          "sha256": "81e976532565f4372abd14e83d2684195fa548d0a28d345de221e56052454f32",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
+          "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
+          "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 1.1,
+        "layers": [
+          {
+            "file": "kenney-rpg/bookClose.ogg",
+            "gain": 0.35,
+            "delay": 0,
+            "rate": 0.8
+          },
+          {
+            "file": "kenney-rpg/metalLatch.ogg",
+            "gain": 0.4,
+            "delay": 320,
+            "rate": 1
+          },
+          {
+            "file": "kenney-rpg/metalLatch.ogg",
+            "gain": 0.35,
+            "delay": 600,
+            "rate": 1.06
+          }
+        ]
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-case-close",
+      "file": "public/audio/v100/r9/case-close.ogg",
+      "bytes": 11026,
+      "sha256": "6643d9f500ecd7e3d2013e2d4cfa8ca3cdf4f0264c431c71a42f909bcf34c234",
+      "duration": 1.1,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/bookClose.ogg",
+          "sha256": "81e976532565f4372abd14e83d2684195fa548d0a28d345de221e56052454f32",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
+          "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
+          "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 1.1,
+        "layers": [
+          {
+            "file": "kenney-rpg/bookClose.ogg",
+            "gain": 0.35,
+            "delay": 0,
+            "rate": 0.8
+          },
+          {
+            "file": "kenney-rpg/metalLatch.ogg",
+            "gain": 0.4,
+            "delay": 320,
+            "rate": 1
+          },
+          {
+            "file": "kenney-rpg/metalLatch.ogg",
+            "gain": 0.35,
+            "delay": 600,
+            "rate": 1.06
+          }
+        ]
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-fire-catch",
+      "file": "public/audio/v100/r9/fire-catch.mp3",
+      "bytes": 26476,
+      "sha256": "e09a778cd09b5e1b25f1d13dca1263bd8bb0c62453d83cd73e0fccea8933ff19",
+      "duration": 2.4,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/bookFlip2.ogg",
+          "sha256": "3409042acbfaebc24c1a6327dc073e36f9250841712e96c5040da566a97df73c",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 2.4,
+        "layers": [
+          {
+            "file": "kenney-rpg/bookFlip2.ogg",
+            "gain": 0.25,
+            "delay": 0,
+            "rate": 1.25
+          }
+        ],
+        "noise": {
+          "color": "pink",
+          "gain": 0.45,
+          "cutoff": 4500,
+          "start": 0.12,
+          "end": 0.45
+        }
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-fire-catch",
+      "file": "public/audio/v100/r9/fire-catch.ogg",
+      "bytes": 24411,
+      "sha256": "4618ea5ac344a2edf0b78129565606ed5440b495aaa0f53e096134d4563b4ac5",
+      "duration": 2.4,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/bookFlip2.ogg",
+          "sha256": "3409042acbfaebc24c1a6327dc073e36f9250841712e96c5040da566a97df73c",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 2.4,
+        "layers": [
+          {
+            "file": "kenney-rpg/bookFlip2.ogg",
+            "gain": 0.25,
+            "delay": 0,
+            "rate": 1.25
+          }
+        ],
+        "noise": {
+          "color": "pink",
+          "gain": 0.45,
+          "cutoff": 4500,
+          "start": 0.12,
+          "end": 0.45
+        }
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-gas-ignition",
+      "file": "public/audio/v100/r9/gas-ignition.mp3",
+      "bytes": 19326,
+      "sha256": "a0f01166947ccf9b5493bf92d539a42d922a270bed696fe2b84ce74496204def",
+      "duration": 1.7,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
+          "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactGeneric_light_000.ogg",
+          "sha256": "f0e982611e97512fee5f777986b67e8b435434b601f94992ec044f7e89fb5acb",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 1.7,
+        "layers": [
+          {
+            "file": "kenney-rpg/metalLatch.ogg",
+            "gain": 0.25,
+            "delay": 0,
+            "rate": 1.4
+          },
+          {
+            "file": "kenney-impact/impactGeneric_light_000.ogg",
+            "gain": 0.2,
+            "delay": 180,
+            "rate": 1.3
+          }
+        ],
+        "noise": {
+          "color": "white",
+          "gain": 0.22,
+          "cutoff": 3900,
+          "start": 0.25,
+          "end": 0.75
+        }
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-gas-ignition",
+      "file": "public/audio/v100/r9/gas-ignition.ogg",
+      "bytes": 18790,
+      "sha256": "cbfac07c8ddc9b333a2abdfaafd8b9cd8d77145c68f7302102c133eb7f864cad",
+      "duration": 1.7,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
+          "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactGeneric_light_000.ogg",
+          "sha256": "f0e982611e97512fee5f777986b67e8b435434b601f94992ec044f7e89fb5acb",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 1.7,
+        "layers": [
+          {
+            "file": "kenney-rpg/metalLatch.ogg",
+            "gain": 0.25,
+            "delay": 0,
+            "rate": 1.4
+          },
+          {
+            "file": "kenney-impact/impactGeneric_light_000.ogg",
+            "gain": 0.2,
+            "delay": 180,
+            "rate": 1.3
+          }
+        ],
+        "noise": {
+          "color": "white",
+          "gain": 0.22,
+          "cutoff": 3900,
+          "start": 0.25,
+          "end": 0.75
+        }
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-plate-stack",
+      "file": "public/audio/v100/r9/plate-stack.mp3",
+      "bytes": 15272,
+      "sha256": "dad8d5442002ae89bd6d542f88ed9720210b907eb4c2f84038693be878985431",
+      "duration": 1.2,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalPot1.ogg",
+          "sha256": "159def979e8e386c2c539f5e99cc30a080eb2dcb6c911fa2e4ccc0785b2522fd",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalPot1.ogg",
+          "sha256": "159def979e8e386c2c539f5e99cc30a080eb2dcb6c911fa2e4ccc0785b2522fd",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 1.2,
+        "layers": [
+          {
+            "file": "kenney-rpg/metalPot1.ogg",
+            "gain": 0.22,
+            "delay": 0,
+            "rate": 1.2
+          },
+          {
+            "file": "kenney-rpg/metalPot1.ogg",
+            "gain": 0.18,
+            "delay": 420,
+            "rate": 1.28
+          }
+        ]
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-plate-stack",
+      "file": "public/audio/v100/r9/plate-stack.ogg",
+      "bytes": 14439,
+      "sha256": "a391fc24bf806e95afa5591bdc23ee17449c64201018de9f641ca813f0ac95d9",
+      "duration": 1.2,
+      "loop": false,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalPot1.ogg",
+          "sha256": "159def979e8e386c2c539f5e99cc30a080eb2dcb6c911fa2e4ccc0785b2522fd",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalPot1.ogg",
+          "sha256": "159def979e8e386c2c539f5e99cc30a080eb2dcb6c911fa2e4ccc0785b2522fd",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 1.2,
+        "layers": [
+          {
+            "file": "kenney-rpg/metalPot1.ogg",
+            "gain": 0.22,
+            "delay": 0,
+            "rate": 1.2
+          },
+          {
+            "file": "kenney-rpg/metalPot1.ogg",
+            "gain": 0.18,
+            "delay": 420,
+            "rate": 1.28
+          }
+        ]
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-lab-air",
+      "file": "public/audio/v100/r9/lab-air.mp3",
+      "bytes": 173263,
+      "sha256": "7eeb2bff837e29cda77b3e1719c25a004741505665e7b8b9c3a748f2fdfa333e",
+      "duration": 24,
+      "loop": true,
+      "sources": [],
+      "recipe": {
+        "duration": 24,
+        "loop": true,
+        "layers": [],
+        "noise": {
+          "color": "brown",
+          "gain": 0.25,
+          "cutoff": 720,
+          "start": 0.12,
+          "end": 0.12
+        }
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-lab-air",
+      "file": "public/audio/v100/r9/lab-air.ogg",
+      "bytes": 157845,
+      "sha256": "5d450ba6b4e4df789ac0bee25b71bd31bd085dadc2dde6ce2b08eac0170e2ba6",
+      "duration": 24,
+      "loop": true,
+      "sources": [],
+      "recipe": {
+        "duration": 24,
+        "loop": true,
+        "layers": [],
+        "noise": {
+          "color": "brown",
+          "gain": 0.25,
+          "cutoff": 720,
+          "start": 0.12,
+          "end": 0.12
+        }
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-bridge-wind",
+      "file": "public/audio/v100/r9/bridge-wind.mp3",
+      "bytes": 227306,
+      "sha256": "76ba49a46e04e2966c9cefc96ddc752e4c7b87ab50abffdfda4189a4eeea3b10",
+      "duration": 24,
+      "loop": true,
+      "sources": [],
+      "recipe": {
+        "duration": 24,
+        "loop": true,
+        "layers": [],
+        "noise": {
+          "color": "pink",
+          "gain": 0.13,
+          "cutoff": 1700,
+          "start": 0.12,
+          "end": 0.12
+        }
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-bridge-wind",
+      "file": "public/audio/v100/r9/bridge-wind.ogg",
+      "bytes": 183269,
+      "sha256": "f305e4bab0c82aaf4b921cfb208bed131ebe546af2974a146958bf16b3a571d8",
+      "duration": 24,
+      "loop": true,
+      "sources": [],
+      "recipe": {
+        "duration": 24,
+        "loop": true,
+        "layers": [],
+        "noise": {
+          "color": "pink",
+          "gain": 0.13,
+          "cutoff": 1700,
+          "start": 0.12,
+          "end": 0.12
+        }
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-vehicle-idle",
+      "file": "public/audio/v100/r9/vehicle-idle.mp3",
+      "bytes": 177364,
+      "sha256": "b0d0fbbad851aa11684702b41fc4601a79638a474ea63e8bde511900d308df84",
+      "duration": 24,
+      "loop": true,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/cloth2.ogg",
+          "sha256": "8a7451193c38bc05483aec25dd193e163a15d44cf7fff04ac7912573231b0201",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_light_000.ogg",
+          "sha256": "33b5e6e37c6e9d54e07bf5a89b12c76e879f40c1ea83cdd82714df1d6f9fec6d",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 24,
+        "loop": true,
+        "layers": [
+          {
+            "file": "kenney-rpg/cloth2.ogg",
+            "gain": 0.05,
+            "delay": 8200,
+            "rate": 0.7
+          },
+          {
+            "file": "kenney-impact/impactMetal_light_000.ogg",
+            "gain": 0.035,
+            "delay": 17200,
+            "rate": 0.75
+          }
+        ],
+        "noise": {
+          "color": "brown",
+          "gain": 0.5,
+          "cutoff": 480,
+          "start": 0.12,
+          "end": 0.12
+        }
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-vehicle-idle",
+      "file": "public/audio/v100/r9/vehicle-idle.ogg",
+      "bytes": 140542,
+      "sha256": "b1d4044a3109e9c6e5dbec8fede80e3ab2652a515fd470e3dc853dc44f18c014",
+      "duration": 24,
+      "loop": true,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/cloth2.ogg",
+          "sha256": "8a7451193c38bc05483aec25dd193e163a15d44cf7fff04ac7912573231b0201",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_light_000.ogg",
+          "sha256": "33b5e6e37c6e9d54e07bf5a89b12c76e879f40c1ea83cdd82714df1d6f9fec6d",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 24,
+        "loop": true,
+        "layers": [
+          {
+            "file": "kenney-rpg/cloth2.ogg",
+            "gain": 0.05,
+            "delay": 8200,
+            "rate": 0.7
+          },
+          {
+            "file": "kenney-impact/impactMetal_light_000.ogg",
+            "gain": 0.035,
+            "delay": 17200,
+            "rate": 0.75
+          }
+        ],
+        "noise": {
+          "color": "brown",
+          "gain": 0.5,
+          "cutoff": 480,
+          "start": 0.12,
+          "end": 0.12
+        }
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-kitchen-air",
+      "file": "public/audio/v100/r9/kitchen-air.mp3",
+      "bytes": 212871,
+      "sha256": "8d547ef536e701b79c913b5e41aebebfc761ce76db4de56b7e62e4d5dc920510",
+      "duration": 24,
+      "loop": true,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalPot1.ogg",
+          "sha256": "159def979e8e386c2c539f5e99cc30a080eb2dcb6c911fa2e4ccc0785b2522fd",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/cloth2.ogg",
+          "sha256": "8a7451193c38bc05483aec25dd193e163a15d44cf7fff04ac7912573231b0201",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 24,
+        "loop": true,
+        "layers": [
+          {
+            "file": "kenney-rpg/metalPot1.ogg",
+            "gain": 0.07,
+            "delay": 6100,
+            "rate": 1.2
+          },
+          {
+            "file": "kenney-rpg/cloth2.ogg",
+            "gain": 0.07,
+            "delay": 14700,
+            "rate": 1
+          }
+        ],
+        "noise": {
+          "color": "pink",
+          "gain": 0.1,
+          "cutoff": 1350,
+          "start": 0.12,
+          "end": 0.12
+        }
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    },
+    {
+      "id": "v100-r9-kitchen-air",
+      "file": "public/audio/v100/r9/kitchen-air.ogg",
+      "bytes": 185191,
+      "sha256": "9b1561382ec76ddf7723debe66159aa512ac96ed213d956091c93f87b43fad6e",
+      "duration": 24,
+      "loop": true,
+      "sources": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalPot1.ogg",
+          "sha256": "159def979e8e386c2c539f5e99cc30a080eb2dcb6c911fa2e4ccc0785b2522fd",
+          "license": "CC0-1.0"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/cloth2.ogg",
+          "sha256": "8a7451193c38bc05483aec25dd193e163a15d44cf7fff04ac7912573231b0201",
+          "license": "CC0-1.0"
+        }
+      ],
+      "recipe": {
+        "duration": 24,
+        "loop": true,
+        "layers": [
+          {
+            "file": "kenney-rpg/metalPot1.ogg",
+            "gain": 0.07,
+            "delay": 6100,
+            "rate": 1.2
+          },
+          {
+            "file": "kenney-rpg/cloth2.ogg",
+            "gain": 0.07,
+            "delay": 14700,
+            "rate": 1
+          }
+        ],
+        "noise": {
+          "color": "pink",
+          "gain": 0.1,
+          "cutoff": 1350,
+          "start": 0.12,
+          "end": 0.12
+        }
+      },
+      "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+    }
+  ]
+}

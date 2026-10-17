@@ -1,0 +1,157 @@
+{
+  "tool": "built-in image_gen",
+  "studyFile": "hidden-parts-study.png",
+  "studySha256": "4311d316b9d7b8c7209b260aa2f60cbbe99c04ca1711749357a70fddea22618d",
+  "promptFile": "parts-prompt.txt",
+  "identityBinding": {
+    "path": "/art/v0995/enemies/pall-manta-battle-v2.png",
+    "sourceSha256": "fcacbc668b8b4747b0801d6fd63f606e714e90bbeb9a49fe70a845b218488f54",
+    "sourceRect": {
+      "x": 480,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "flipX": false
+  },
+  "originalPoseBindings": {
+    "idle": {
+      "path": "/art/v0995/enemies/pall-manta-battle-v2.png",
+      "sourceSha256": "fcacbc668b8b4747b0801d6fd63f606e714e90bbeb9a49fe70a845b218488f54",
+      "sourceRect": {
+        "x": 0,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-idle.png",
+      "sha256": "16831583638c7fc1705c3c9103b643af76f2e1e46dba7a16968af47874488dc3",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "walk-a": {
+      "path": "/art/v0995/enemies/pall-manta-battle-v2.png",
+      "sourceSha256": "fcacbc668b8b4747b0801d6fd63f606e714e90bbeb9a49fe70a845b218488f54",
+      "sourceRect": {
+        "x": 480,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "identity-reference.png",
+      "sha256": "52d4c8f1a94ddfc20db4785404c91679c512b54bc00f2fdca8d49514ce38a1d7",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "walk-b": {
+      "path": "/art/v0995/enemies/pall-manta-battle-v2.png",
+      "sourceSha256": "fcacbc668b8b4747b0801d6fd63f606e714e90bbeb9a49fe70a845b218488f54",
+      "sourceRect": {
+        "x": 960,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-walk-b.png",
+      "sha256": "8ad6b9faf35e7505d5aff8faa2aea669e51a474259a65c08ddc87725b69a79c1",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "attack-a": {
+      "path": "/art/v0995/enemies/pall-manta-battle-v2.png",
+      "sourceSha256": "fcacbc668b8b4747b0801d6fd63f606e714e90bbeb9a49fe70a845b218488f54",
+      "sourceRect": {
+        "x": 1440,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-attack-a.png",
+      "sha256": "4bc276a7ed056ebaabe3147cf95e2d9894379636be005e92438dbe5afbe264cc",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "attack-b": {
+      "path": "/art/v0995/enemies/pall-manta-battle-v2.png",
+      "sourceSha256": "fcacbc668b8b4747b0801d6fd63f606e714e90bbeb9a49fe70a845b218488f54",
+      "sourceRect": {
+        "x": 1920,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-attack-b.png",
+      "sha256": "a93bed94bab34478c9c65f71a3493e34dee8be650aabdeb787ef22c019694595",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "hit": {
+      "path": "/art/v0995/enemies/pall-manta-battle-v2.png",
+      "sourceSha256": "fcacbc668b8b4747b0801d6fd63f606e714e90bbeb9a49fe70a845b218488f54",
+      "sourceRect": {
+        "x": 2400,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-hit.png",
+      "sha256": "473a55ae741acf846075ba811795fdadb08793746efd48a9a83e000b1c713fb7",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    }
+  },
+  "usage": "Eight own study cells0..7 complete concealed bone seams only. Original membrane, underside face and all four feet retain canonical walk-a RGBA; no generated feet, face, torso or membrane.",
+  "visibleOriginalParts": [
+    "far-left-foot",
+    "far-right-foot",
+    "near-left-foot",
+    "near-right-foot",
+    "body",
+    "head"
+  ],
+  "adopted": true,
+  "normalPlayAcceptance": false,
+  "all48Acceptance": false
+}

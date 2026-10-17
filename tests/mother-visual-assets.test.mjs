@@ -90,8 +90,17 @@ test("Ooguchi, Gairen, and Futago derivatives are exact and runtime-bound", asyn
     assert.deepEqual(poseAudit.dimensions, record.poseSource.dimensions, record.kind);
     for (const asset of record.generatedAssets) {
       const audit = await fileAudit(asset.path);
-      assert.equal(audit.sha256, asset.sha256, `${record.kind}/${asset.role}`);
-      assert.equal(audit.bytes, asset.bytes, `${record.kind}/${asset.role}`);
+      let current = asset;
+      if (record.kind === 'gairen' && asset.role === 'battle-atlas') {
+        const repair = JSON.parse(await readFile(path.join(ROOT, 'assets/source/v100/gairen-repair-r1/provenance.json')));
+        const original = await fileAudit('assets/source/v100/gairen-repair-r1/canonical-before.png');
+        assert.equal(original.sha256, asset.sha256, 'Historical 0.9.0 QA source remains immutable');
+        assert.equal(original.bytes, asset.bytes);
+        assert.equal(repair.beforeSha256, asset.sha256);
+        current = { ...asset, sha256: repair.png.sha256, bytes: repair.png.bytes };
+      }
+      assert.equal(audit.sha256, current.sha256, `${record.kind}/${asset.role}`);
+      assert.equal(audit.bytes, current.bytes, `${record.kind}/${asset.role}`);
       assert.deepEqual(audit.dimensions, asset.dimensions, `${record.kind}/${asset.role}`);
     }
     assert.equal(
@@ -102,7 +111,7 @@ test("Ooguchi, Gairen, and Futago derivatives are exact and runtime-bound", asyn
       for (const direction of ["left", "right"]) {
         const frame = spriteFrameFor(record.kind, state, direction);
         assert.equal(frame.path, spriteSheetPath(record.kind));
-        assert.equal(frame.gutter.bottom, 16);
+        assert.equal(frame.gutter.bottom, record.kind === 'gairen' && state === 'attack-b' ? 17 : 16);
       }
     }
     const definition = bossDefinitionForEnemyKind(record.kind);

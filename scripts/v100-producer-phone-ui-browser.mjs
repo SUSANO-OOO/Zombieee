@@ -32,7 +32,7 @@ for (const [engine, browserType] of [["chromium", chromium], ["webkit", webkit]]
     await capture("title-844x390");
     await page.setViewportSize({ width: 844, height: 340 });
     await capture("title-844x340");
-    for (const locator of [credits, page.locator("#v100-player-name"), page.getByRole("button", { name: "この名前で作戦を始める" })]) {
+    for (const locator of [credits, page.locator("#v100-player-name"), page.getByRole("button", { name: "この名前でステージを始める" })]) {
       const rect = await locator.boundingBox();
       assert.ok(rect && rect.y >= 0 && rect.y + rect.height <= 340, "title action must be visible in the first short phone viewport");
     }
@@ -49,7 +49,7 @@ for (const [engine, browserType] of [["chromium", chromium], ["webkit", webkit]]
     await dialog.getByRole("button", { name: "閉じる" }).tap();
     await page.setViewportSize({ width: 844, height: 390 });
     await page.locator("#v100-player-name").fill("試遊指揮官");
-    await page.getByRole("button", { name: "この名前で作戦を始める" }).tap();
+    await page.getByRole("button", { name: "この名前でステージを始める" }).tap();
     const prologue = page.locator('[data-v100-event-id="v100:event:prologue"]');
     await prologue.waitFor();
     await capture("prologue-844x390");
@@ -105,7 +105,7 @@ for (const [engine, browserType] of [["chromium", chromium], ["webkit", webkit]]
     row.recruitedNao = true;
     const mapDetails = recruitPage.locator(".v100-map-detail");
     if (await mapDetails.getAttribute("open") === null) await mapDetails.locator(":scope > summary").tap();
-    await recruitPage.getByRole("button", { name: "隊員を編成" }).tap();
+    await recruitPage.getByRole("button", { name: "ユニットを編成" }).tap();
     const stats = recruitPage.getByLabel("戦闘能力と強化後の値");
     await stats.waitFor();
     for (const label of ["HP", "防御力", "近接ダメージ", "射撃ダメージ", "移動速度", "攻撃間隔"]) assert.match(await stats.innerText(), new RegExp(label));

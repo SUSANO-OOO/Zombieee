@@ -10,25 +10,11 @@ import {requiredBattleAssetPlan,BATTLE_CRAWLER_ASSET_PATHS} from '../app/battleA
 import {V100_STAGE_IDS} from '../app/v100Registry.js';
 const digest=bytes=>createHash('sha256').update(bytes).digest('hex');
 
-test('all 767 Producer R5 lines and speakers survive in order with their stable event positions',async()=>{
+test('the archived R5 source stays intact with all 767 historical entries',async()=>{
  const source=await readFile('docs/story/v10/STORY_SCRIPT_V100_PRODUCER_R5.md');
  assert.equal(digest(source),'c324ba3783074ecabe80716d971c35d73028a7f98f2a8069760153b1c8b17cd6');
- const raw=source.toString('utf8');
- const entries=[...raw.matchAll(/^\*\*(.+?)\*\*[ \t　]+\[(S-[^\]\r\n]+)\][ \t]*\r?\n([\s\S]*?)(?=^\*\*.+?\*\*[ \t　]+\[S-|^## |$(?![\s\S]))/gmu)];
- assert.equal(entries.length,767);
- assert.equal(new Set(entries.map(entry=>entry[2])).size,767);
- const nodes=Object.values(V100_STORY_EVENTS).flatMap(event=>event.nodes.map((node,index)=>({eventId:event.id,index,node})));
- assert.equal(nodes.length,767);
- assert.equal(Object.keys(V100_STORY_EVENTS).length,94);
- for(const [index,entry] of entries.entries()) {
-  const current=nodes[index],body=entry[3].trim(),speaker=entry[1];
-  assert.equal(current.node.text,body,entry[2]);
-  assert.equal(current.node.speaker??'', ['ト書き','表示'].includes(speaker)?'':speaker,entry[2]+' speaker');
-  const eventToken=entry[2].replace(/^S-/u,'').replace(/-\d{3}$/u,'');
-  const expected=eventToken.replace(/^(s\d{2})-(pre|post)$/u,'$1:$2');
-  assert.equal(current.eventId,'v100:event:'+expected,entry[2]+' event');
-  assert.equal(current.index,Number(entry[2].match(/(\d{3})$/u)[1])-1,entry[2]+' cursor');
- }
+ const entries=[...source.toString('utf8').matchAll(/\[S-[^\]\r\n]+\]/gu)];
+ assert.equal(entries.length,767);assert.equal(new Set(entries.map(entry=>entry[0])).size,767);
 });
 
 test('R5 leaves the car at hospital for S5/S6 and restores it at S7 without changing legacy plans',()=>{
@@ -42,49 +28,45 @@ test('R5 leaves the car at hospital for S5/S6 and restores it at S7 without chan
  assert.equal(v100BasePresentationFor(7).onFoot,false);
 });
 
-test('epilogue film checkpoint survives reopen without marking dialogue or granting rewards',()=>{
- const id='v100:event:epilogue',count=V100_STORY_EVENTS[id].nodes.length;
- assert.equal(count,27);
- const state=createV100StoryFlowState({playerName:'テスト',flowState:{phase:'epilogue',eventId:id},eventCursor:{eventId:id,nodeIndex:count}});
- const checkpoint=v100StoryFlowCheckpoint(state,count);
- assert.equal(checkpoint.eventCursor.eventId,id);
- assert.equal(checkpoint.eventCursor.nodeIndex,count);
+const at=line=>{
+ for(const event of Object.values(V100_STORY_EVENTS)) {
+  const index=event.nodes.findIndex(node=>node.sourceLine===line);
+  if(index>=0)return {id:event.id,index,node:event.nodes[index]};
+ }
+ throw Error('Missing R9 source line '+line);
+};
+const view=line=>{const {id,index,node}=at(line);return v100StoryDirectionFor(id,index,node);};
+
+test('legacy epilogue resumes R9 ending once, retaining the durable checkpoint',()=>{
+ const state=createV100StoryFlowState({playerName:'テスト',completedStageIds:V100_STAGE_IDS,
+  readStoryEventIds:['v100:event:ending','v100:event:credits'],
+  flowState:{phase:'epilogue',eventId:'v100:event:epilogue',nodeIndex:27},
+  eventCursor:{eventId:'v100:event:epilogue',nodeIndex:27}});
+ assert.equal(state.phase,'ending');assert.equal(state.eventId,'v100:event:ending');assert.equal(state.nodeIndex,0);
+ assert.deepEqual(state.completedStageIds,V100_STAGE_IDS);
+ const checkpoint=v100StoryFlowCheckpoint(state,12);
  const reopened=createV100StoryFlowState({playerName:'テスト',...checkpoint});
- assert.equal(reopened.phase,'epilogue');assert.equal(reopened.nodeIndex,count);
+ assert.equal(reopened.eventId,'v100:event:ending');assert.equal(reopened.nodeIndex,12);
 });
 
-test('R5 cuts preserve causal order and new main-cast staging',()=>{
- const view=(id,index)=>v100StoryDirectionFor(id,index,V100_STORY_EVENTS[id].nodes[index]);
- assert.equal(view('v100:event:prologue',20).cut,'prologue-door-crisis');
- assert.equal(view('v100:event:prologue',27).cut,null,'inside attack cannot retain outside-door drawing');
- assert.equal(view('v100:event:s23:pre',9).cut,null,'card has not yet been picked up');
- assert.equal(view('v100:event:s23:pre',10).cut,'chiha-confession');
- assert.equal(view('v100:event:s22:post',6).cut,null,'hands are washed before the infant grasps his finger');
- assert.equal(view('v100:event:s22:post',7).cut,'zakimiya-c4-reunion');
- assert.equal(view('v100:event:s22:post',10).cut,null,'the radio disclosure follows the family beat');
- for (let index=0;index<=3;index++) assert.equal(view('v100:event:s25:post',index).cut,'president-restrained-alive');
- assert.equal(view('v100:event:s25:post',4).cut,null);
- assert.equal(v100StoryExpressionFor('v100:event:s06:post',2,V100_STORY_EVENTS['v100:event:s06:post'].nodes[2],'unit-raider'),'determined');
- assert.equal(view('v100:event:ending',0).cut,'ending-tky-transport');
- assert.equal(view('v100:event:epilogue',23).cut,'epilogue-tky-receipt');
- assert.equal(view('v100:event:epilogue',0).cut,'epilogue-main-table');
- assert.equal(view('v100:event:epilogue',8).cut,null,'dialogue must not freeze the entire party on one establishing picture');
- assert.equal(view('v100:event:epilogue',25).cut,'epilogue-main-table');
- assert.equal(view('v100:event:epilogue',26).cut,null);
- assert.equal(view('v100:event:prologue',34).cueId,'v100-story-glass');
- assert.equal(view('v100:event:ending',19).cueId,'v100-story-latch');
- assert.equal(v100StoryExpressionFor('v100:event:s23:pre',11,V100_STORY_EVENTS['v100:event:s23:pre'].nodes[11]),'grief');
+test('R9 cuts and close-ups remain bound to their physical cause and source line',()=>{
+ assert.equal(view(87).cut,null,'R5 frying-pan image contradicts the new extinguisher action');
+ assert.equal(view(449).cut,'s03-cold-retrieval');assert.equal(view(453).cut,'s03-cold-retrieval');
+ assert.equal(view(1895).cut,'chiha-confession');assert.equal(view(1909).cut,null,'Chiha has reclaimed her card');
+ assert.equal(view(2022).cut,'president-restrained-alive');assert.equal(view(2030).cut,null);
+ assert.equal(view(2181).cut,'s28-physical-stop');assert.equal(view(2188).insertId,'domestic-stopped');
+ assert.equal(view(602).insertId,'message-backlog');assert.equal(view(1608).insertId,'bridge-crossing');
+ assert.equal(view(2320).cut,'s30-three-samples');assert.equal(view(2320).insertId,null);assert.equal(view(2415).cueId,'v100-r9-plate-stack');
  assert.equal(V100_MAIN_CAST.length,7);assert.ok(!V100_MAIN_CAST.includes('unit-hachi'));
 });
 
-test('family reunion, confession and listeners follow the current R5 beat',()=>{
- const expression=(id,index,owner)=>v100StoryExpressionFor(id,index,V100_STORY_EVENTS[id].nodes[index],owner);
- assert.equal(expression('v100:event:s22:post',2,'unit-zakimiya'),'grief');
- assert.equal(expression('v100:event:s22:post',7,'unit-zakimiya'),'warm');
- assert.equal(expression('v100:event:s23:pre',6,'unit-paisen'),'alarm');
- assert.equal(expression('v100:event:s23:pre',11,'unit-babayaga'),'grief');
- assert.equal(expression('v100:event:s23:pre',20,'unit-mrs-chiha'),'determined');
- assert.equal(expression('v100:event:s23:pre',21,'unit-babayaga'),'determined','listener now supports her decision');
- assert.equal(expression('v100:event:epilogue',8,'unit-zakimiya'),'alarm');
- assert.equal(expression('v100:event:epilogue',10,'unit-zakimiya'),'warm');
+test('R9 grief does not make the recovery force cry and family/homecoming reactions follow the new scene',()=>{
+ const expression=(line,owner)=>{const {id,index,node}=at(line);return v100StoryExpressionFor(id,index,node,owner);};
+ assert.equal(expression(421,'unit-kumaverson'),'grief');
+ assert.equal(expression(451,'red-panther-commander'),'determined');
+ assert.equal(expression(1844,'unit-zakimiya'),'warm');
+ assert.equal(expression(1895,'unit-babayaga'),'grief');
+ assert.equal(expression(1923,'unit-mrs-chiha'),'determined');
+ assert.equal(expression(2385,'unit-babayaga'),'determined','R9 does not promise immediate forgiveness');
+ assert.equal(expression(2415,'unit-paisen'),'warm');
 });

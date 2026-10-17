@@ -29,11 +29,12 @@ export const V100_CREDITS_SCENES = Object.freeze(Object.fromEntries(Object.entri
 function backdropFor(eventId, node) {
   const sceneTag = node?.sceneTag ?? null;
   if (node?.kind === "title") return null;
-  if (eventId === "v100:event:prologue") return ["escape", "radio"].includes(sceneTag) ? PRODUCTION_VISUALS.command : cuts.kumayaBeforeOutbreak;
+  if (eventId === "v100:event:prologue") return ["escape", "warehouse", "radio"].includes(sceneTag) ? PRODUCTION_VISUALS.command : cuts.kumayaBeforeOutbreak;
   if (eventId === "v100:event:credits") return V100_CREDITS_SCENES[node?.sceneLabel]?.backgroundPath ?? null;
   if (eventId === "v100:event:epilogue") return cuts.kumayaReopened;
-  if (eventId === "v100:event:s20:post") return sceneTag === "musashi"
-    ? visuals["stage-mugarian-logistics-hq"] : visuals["stage-nishijin-shopping-street"];
+  if (eventId === "v100:event:s20:post") return node?.sourceDocument === 'STORY_SCRIPT_V100_PRODUCER_R9.md'
+    ? visuals['stage-estuary-floodgate-seal']
+    : sceneTag === "musashi" ? visuals["stage-mugarian-logistics-hq"] : visuals["stage-nishijin-shopping-street"];
   if (eventId === "v100:event:s25:post" && sceneTag === "soup") return cuts.endingHospitalSecured;
   if (eventId === "v100:event:s30:post" && sceneTag === "defeat") return cuts.takuyaOmegaEndingDefeat;
   if (eventId === "v100:event:ending") {
@@ -73,10 +74,11 @@ function categoryFor(eventId, phase, stage) {
 
 function sceneFor(eventId, phase, stage, category, node) {
   if (node?.kind === "title") return PRODUCTION_AUDIO_SCENE_IDS.SILENCE_PROLOGUE_TITLE;
+  if (node?.audioSceneId) return node.audioSceneId;
   if (category === "credits") return V100_CREDITS_SCENES[node?.sceneLabel]?.sceneId ?? PRODUCTION_AUDIO_SCENE_IDS.SILENCE_PROLOGUE_TITLE;
   if (category === "prologue") {
     if (node?.sceneTag === "radio") return PRODUCTION_AUDIO_SCENE_IDS.STORY_CRAWLER_SIGNAL;
-    if (node?.sceneTag === "escape") return PRODUCTION_AUDIO_SCENE_IDS.STORY_CRAWLER_MONTAGE;
+    if (["escape","warehouse"].includes(node?.sceneTag)) return PRODUCTION_AUDIO_SCENE_IDS.STORY_CRAWLER_MONTAGE;
     if (node?.sceneTag === "crisis") return PRODUCTION_AUDIO_SCENE_IDS.STORY_KUMAYA_CRISIS;
     return PRODUCTION_AUDIO_SCENE_IDS.STORY_KUMAYA_DAILY;
   }
@@ -119,8 +121,10 @@ export function v100EventPresentationFor({ eventId, phase, node = null, nodeInde
     stageNumber: stage?.number ?? null,
     category,
     backgroundPath: direction.backgroundPath ?? backdropFor(eventId, node),
+    backgroundAlt: direction.backgroundAlt ?? null,
     cinematic: direction.cinematic,
     cutId: direction.cut,
+    insertId: direction.insertId ?? null,
     expression: direction.expression,
     sceneLabel: node?.sceneLabel ?? null,
     nodeIndex: Math.max(0, Math.floor(Number(nodeIndex) || 0)),

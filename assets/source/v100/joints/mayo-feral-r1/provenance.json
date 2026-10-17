@@ -1,0 +1,230 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "mayo-chan-feral",
+  "assetPath": "/art/v100/joints/mayo-feral-r1.webp",
+  "bytes": 101258,
+  "sha256": "7b44687bdb460747584d538cb94a5ff000993ef49c0619b9a3669098bacc81a8",
+  "softBones": {
+    "idle-mouth": {
+      "minScale": 0.12,
+      "maxScale": 1
+    },
+    "mouth-core": {
+      "minScale": 0.03,
+      "maxScale": 0.68
+    },
+    "mouth-petal-0": {
+      "minScale": 0.03,
+      "maxScale": 0.68
+    },
+    "mouth-petal-1": {
+      "minScale": 0.03,
+      "maxScale": 0.68
+    },
+    "mouth-petal-2": {
+      "minScale": 0.03,
+      "maxScale": 0.68
+    },
+    "mouth-petal-3": {
+      "minScale": 0.03,
+      "maxScale": 0.68
+    }
+  },
+  "atlasPacking": "height-descending-shelves",
+  "generatedPartsStudySha256": "71c2bdc83aa7829eb90033d69e6e621e9f6ea40ce0638e671d1a90423cef951c",
+  "identitySourceSha256": "53d42558abb74695fb5c6d7098eedf7611b853eac991f3eba8509b23779ff61e",
+  "identityBinding": {
+    "file": "identity-reference.png",
+    "path": "/art/v090/characters/mayo-chan-feral-battle-r1.png",
+    "sourceRect": {
+      "x": 480,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "sha256": "53d42558abb74695fb5c6d7098eedf7611b853eac991f3eba8509b23779ff61e",
+    "sourceSha256": "c9b26c01818f21d9af273e817b0a3c48cb57649547558af438a54b5729a536e8"
+  },
+  "motionSha256": "53ef844db453ed8ab71a145dcf63e8cda5e9e55f2fd4adb23becd86af12eff46",
+  "originalPoseBindings": {
+    "walk-a": {
+      "file": "identity-reference.png",
+      "path": "/art/v090/characters/mayo-chan-feral-battle-r1.png",
+      "sourceRect": {
+        "x": 480,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "sha256": "53d42558abb74695fb5c6d7098eedf7611b853eac991f3eba8509b23779ff61e",
+      "sourceSha256": "c9b26c01818f21d9af273e817b0a3c48cb57649547558af438a54b5729a536e8"
+    },
+    "attack-a": {
+      "file": "original-attack-a.png",
+      "path": "/art/v090/characters/mayo-chan-feral-battle-r1.png",
+      "sourceRect": {
+        "x": 1440,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "sha256": "4d3dda77f5be27c9a6cf2a93acb72114ff6eaa66e77ede86ed507decbcb06982",
+      "sourceSha256": "c9b26c01818f21d9af273e817b0a3c48cb57649547558af438a54b5729a536e8"
+    }
+  },
+  "parts": [
+    {
+      "name": "belly-underlap",
+      "file": "belly-underlap.png",
+      "sha256": "55763405a7303bb7582e36ec28e887be56c9264c17312b6750500749b07200d8",
+      "original": false
+    },
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "e5fcac03efcf3b99a114645057a6b660c9c14fe90f7db918768166c78c65cd0a",
+      "original": true
+    },
+    {
+      "name": "far-rear-upper",
+      "file": "far-rear-upper.png",
+      "sha256": "5557490550a0d829f609a9645740f70e888840b11578f0a765fce4336bfb5e6e",
+      "original": false
+    },
+    {
+      "name": "far-rear-lower",
+      "file": "far-rear-lower.png",
+      "sha256": "6824973772919741811dd72d4a020a7ef2eeb1ab4cca2397b13b4bfc3ab9ca75",
+      "original": false
+    },
+    {
+      "name": "near-rear-upper",
+      "file": "near-rear-upper.png",
+      "sha256": "a4f1a48d68dd90c435c7c10e21fd9c5d24d23d7059f764edabe1b45b644086f3",
+      "original": false
+    },
+    {
+      "name": "near-rear-lower",
+      "file": "near-rear-lower.png",
+      "sha256": "86f55b1b0d48abe1b94aab80e2fb8ebf43b9f36919740cdf04cc3763753b5eb2",
+      "original": false
+    },
+    {
+      "name": "far-front-upper",
+      "file": "far-front-upper.png",
+      "sha256": "d86088538f061e6796dfae32cca8e0384ac6bee1bc18ea5831f0266308fe9f23",
+      "original": false
+    },
+    {
+      "name": "far-front-lower",
+      "file": "far-front-lower.png",
+      "sha256": "f29dfa8a3b6f3ec08ff4660bc94ebdfd468510c59e5e1b1d35e4a67070f23a7a",
+      "original": false
+    },
+    {
+      "name": "near-front-upper",
+      "file": "near-front-upper.png",
+      "sha256": "074f612dfff0de0bbf89b8bb0222b3d0303300dc7d5eb6289f634b68172b3b7f",
+      "original": false
+    },
+    {
+      "name": "near-front-lower",
+      "file": "near-front-lower.png",
+      "sha256": "cff1ce81819909f02a054748cf27c610f56b62b452334d1be7eeb10a6d21317f",
+      "original": false
+    },
+    {
+      "name": "far-rear-paw",
+      "file": "far-rear-paw.png",
+      "sha256": "993e950effad989812a23407b7782a7f6421d09e49d6e506b779bece7cd4caee",
+      "original": true
+    },
+    {
+      "name": "near-rear-paw",
+      "file": "near-rear-paw.png",
+      "sha256": "ac863ef1358ea447ec4828d8abfaac7b38314627ef24789e1ab238a0685c7e8a",
+      "original": true
+    },
+    {
+      "name": "far-front-paw",
+      "file": "far-front-paw.png",
+      "sha256": "bfa0b95a49290c04a3217cdf6f01aaa43b6df02855218ccfd4b591279fc48eb0",
+      "original": true
+    },
+    {
+      "name": "near-front-paw",
+      "file": "near-front-paw.png",
+      "sha256": "4e6d0f35e189c1567cb2363fc5ee4727271d15eb29fe32f27ec9c9177fb59572",
+      "original": true
+    },
+    {
+      "name": "tail",
+      "file": "tail.png",
+      "sha256": "bbc8bde0736f6a05a050a2ff89f4ef593eb1cefc930df295e2125a81874297c9",
+      "original": true
+    },
+    {
+      "name": "neck-underlap",
+      "file": "neck-underlap.png",
+      "sha256": "e6d5f1f4d4deccfe447d03e6a6d5e96914f4c461fd8205e3018944e65aafd173",
+      "original": true
+    },
+    {
+      "name": "gear",
+      "file": "gear.png",
+      "sha256": "ceecbd08e4b3e933fc765cd752eaef45672b6a65ae34381616ee5786e69437f5",
+      "original": true
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "580871b7bb45da03e7f0a846a27ea5a3d9acc51c3a757e081ae9857b4af4e827",
+      "original": true
+    },
+    {
+      "name": "idle-mouth",
+      "file": "idle-mouth.png",
+      "sha256": "cb5f3c25a668271d4837bfd290fab0572a202e04e4bb916cebbbcb3e14ca4227",
+      "original": true
+    },
+    {
+      "name": "mouth-core",
+      "file": "mouth-core.png",
+      "sha256": "1602fd73b89c4bb2f5c9ec0d760e9eb51a5f0588c1741d53845f1e028cf4a66e",
+      "original": true
+    },
+    {
+      "name": "mouth-petal-0",
+      "file": "mouth-petal-0.png",
+      "sha256": "d5b5878bc2281c56641272e5d936c02dfbe3227cae4a6d693282b6df10b4eef8",
+      "original": true
+    },
+    {
+      "name": "mouth-petal-1",
+      "file": "mouth-petal-1.png",
+      "sha256": "8b15f26dc08a643fc61afc22e894bbc410ae26c5394809e6db0b2b7d334a2574",
+      "original": true
+    },
+    {
+      "name": "mouth-petal-2",
+      "file": "mouth-petal-2.png",
+      "sha256": "8594a6eb16c750460acdf40f0f425df2c370cfe51c7b301868357e256217401a",
+      "original": true
+    },
+    {
+      "name": "mouth-petal-3",
+      "file": "mouth-petal-3.png",
+      "sha256": "b1b788a61a6912077da2aee7a5a299a5967947f887e70d1b60267d78bf4da332",
+      "original": true
+    }
+  ],
+  "source": "Blender 5.2 dedicated feral four-leg gait with fixed-length hip/knee/ankle chains and planted paws; original face, tail, harness, collar, paws and four fanged mouth petals retained. Hidden fur completion is explicit; head-attached leaf mouth organs fold/open independently. Source texture packing preserves resolution and drawing order. All48/all-action, native continuous-play, performance and physical recording acceptance pending.",
+  "groundY": 432,
+  "decodedBytes": 409600,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}

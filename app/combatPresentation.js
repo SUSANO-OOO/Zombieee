@@ -1370,6 +1370,7 @@ export function createCombatAnimationRuntime({
     locomotionTravelDistance: 0,
     locomotionPhase: 0,
     locomotionStopPhase: 0,
+    locomotionSettle: 1,
   };
 }
 
@@ -1426,18 +1427,26 @@ export function advanceCombatAnimationRuntime(runtime, observation = {}, elapsed
   const stateChanged = state !== previous.state;
   const strideDistance = Math.max(.001, Number(observation.locomotionCycleDistance)
     || LOCOMOTION_STRIDE_DISTANCE[observation.kind] || 14);
-  const previousPhase = Math.max(0, Number(previous.locomotionPhase) || 0);
+  const previousPhase = Number(previous.locomotionPhase) || 0;
   const locomotionStopPhase = state === 'stop-move' && stateChanged
-    ? previousPhase : Math.max(0, Number(previous.locomotionStopPhase) || 0);
+    ? previousPhase : Number(previous.locomotionStopPhase) || 0;
+  const advancingGait = moving && (!requestedState || requestedState === "retreat");
   let locomotionPhase = previousPhase;
-  if (moving && !requestedState) locomotionPhase += movedDistance / strideDistance;
-  else if (state === 'stop-move') {
-    const t = Math.min(1, stateElapsed / animationClipFor('walker','stop-move').durationSeconds);
-    locomotionPhase = locomotionStopPhase
-      + (Math.round(locomotionStopPhase * 2) / 2 - locomotionStopPhase) * t * t * (3 - 2 * t);
-  } else if (previous.state === 'stop-move') {
-    locomotionPhase = Math.round(locomotionStopPhase * 2) / 2;
-  }
+  // Target-facing attacks can travel backward during recoil or repositioning.
+  // Reverse only the local stride so its planted foot cancels actual root
+  // travel; facing, unsigned distance evidence and clip-event time stay owned
+  // by their existing paths. Every gait renderer wraps signed cycle phases.
+  const gaitDirection = (x - previous.lastX) * (direction === "left" ? -1 : 1) < 0 ? -1 : 1;
+  if (advancingGait) locomotionPhase += gaitDirection * movedDistance / strideDistance;
+  // A planted foot must not slide while the fighter is stationary. Settling
+  // lowers the airborne foot in the rig; it never advances the gait phase.
+  // Restart from that actual plant as well. Resetting lift to a full walking
+  // pose in one update made a short stop/approach pop at the knee and foot.
+  // This only eases the lift; distance still advances the stride immediately.
+  const previousSettle = Math.max(0, Math.min(1, Number(previous.locomotionSettle) || 0));
+  const locomotionSettle = moving
+    ? Math.max(0, previousSettle - dt / .12)
+    : Math.min(1, previousSettle + dt / .16);
   const stateTravelDistance = state === "move"
     ? stateChanged
       ? movedDistance
@@ -1478,9 +1487,10 @@ export function advanceCombatAnimationRuntime(runtime, observation = {}, elapsed
     // Keep the feet's phase across start/stop/turn clips. State-local distance
     // still owns the authored clip events and is deliberately not repurposed.
     locomotionTravelDistance: Math.max(0, Number(previous.locomotionTravelDistance) || 0)
-      + (moving && !requestedState ? movedDistance : 0),
+      + (advancingGait ? movedDistance : 0),
     locomotionPhase,
     locomotionStopPhase,
+    locomotionSettle,
   };
 }
 
@@ -1536,13 +1546,22 @@ export function sampleMrsChihaLauncherBash(elapsedSeconds = 0) {
     const currentFrame = MRS_CHIHA_LAUNCHER_BASH.frames[index];
     const end = cursor + currentFrame.durationSeconds;
     if (local < end || index === MRS_CHIHA_LAUNCHER_BASH.frames.length - 1) {
+      const phaseState = ["wind-up", "active", "recovery"][index];
+      const progress = (local - cursor) / currentFrame.durationSeconds;
       return Object.freeze({
         state: "launcher-bash",
+        requestedState: phaseState,
+        resolvedState: phaseState,
+        attackVariant: "launcher-bash",
         frameIndex: index,
         spriteState: currentFrame.spriteState,
         frameElapsedSeconds: local - cursor,
         frameDurationSeconds: currentFrame.durationSeconds,
         clipDurationSeconds: MRS_CHIHA_LAUNCHER_BASH.durationSeconds,
+        clipElapsedSeconds: local,
+        // The normal attack windup already drew the pullback. Continue that
+        // same Blender action into contact instead of snapping back to ready.
+        clipProgress: index === 0 ? (.18 + .10 * progress) / .28 : progress,
         events: currentFrame.events,
         movement: false,
         recovery: index === MRS_CHIHA_LAUNCHER_BASH.frames.length - 1,
@@ -1554,6 +1573,15 @@ export function sampleMrsChihaLauncherBash(elapsedSeconds = 0) {
     cursor = end;
   }
   throw new RangeError("Mrs. Chiha launcher bash clip has no frames");
+}
+
+export function sampleMrsChihaLauncherBashWindup(elapsedSeconds = 0) {
+  const sample = sampleAnimationClip("mrs-chiha", "wind-up", elapsedSeconds);
+  return Object.freeze({
+    ...sample,
+    attackVariant: "launcher-bash",
+    clipProgress: sample.clipProgress * .18 / .28,
+  });
 }
 
 export function mrsChihaLauncherBashDuration() {

@@ -6,6 +6,127 @@ import { load as loadYaml } from "js-yaml";
 import { onlyAbortedStaticStreams } from "../scripts/v099-final-bounded-contract.mjs";
 import { CANONICAL_HUD_STATES } from "../scripts/run-v099-hud-states-bounded.mjs";
 
+test('the focused guardian diagnostic keeps the failing host and cannot replace full acceptance', async () => {
+  const workflow = loadYaml(await readFile('.github/workflows/ci.yml', 'utf8'));
+  const id = 'v177-guardian-control-diagnostic';
+  function assertScope(candidate) {
+    const jobs = candidate.jobs, diagnostic = jobs[id], full = jobs['v100-phase-g-production'];
+    assert.ok(diagnostic);
+    assert.equal(diagnostic.if, "github.head_ref == 'codex/177-combat-clarity'");
+    assert.equal(diagnostic['runs-on'], full['runs-on']);
+    assert.equal(diagnostic['runs-on'], 'macos-15-intel');
+    assert.equal(diagnostic['timeout-minutes'], 20);
+    assert.equal(diagnostic['continue-on-error'], undefined);
+    assert.equal(diagnostic.permissions, undefined);
+    assert.deepEqual(candidate.permissions, {contents:'read'});
+    assert.equal(diagnostic.steps[0].with.ref, '${{ github.event.pull_request.head.sha }}');
+    assert.equal(diagnostic.steps[0].with['persist-credentials'], false);
+    const run = diagnostic.steps.find(step => step.run === 'node scripts/run-browser-qa-with-server.mjs scripts/v100-phase-g-production-matrix.mjs');
+    assert.ok(run);
+    assert.deepEqual(run.env, {
+      DEBUG:'pw:browser', V100_PHASE_G_ONLY:'battle-extra',
+      V100_PHASE_G_ONLY_VARIANT:'stage21-panther-knife', V100_PHASE_G_ONLY_ENGINE:'chromium',
+      V100_PHASE_G_EVIDENCE_DIR:'outputs/v177-guardian-diagnostic',
+    });
+    const scope = diagnostic.steps.find(step => step.name === 'Record limited diagnostic scope');
+    for (const field of ['allProductionCapturesAccepted','all21Accepted','normalCampaignAccepted','wholeGameAccepted']) {
+      assert.ok(scope.run.includes(field + ':false'), field + ' cannot be accepted by one filtered capture');
+    }
+    assert.match(scope.run, /diagnosticOnly:true/u);
+    assert.match(scope.run, /controlDeadlineMs:500/u);
+    const fullRun = full.steps.find(step => step.run?.includes('npm run qa:v100-phase-g'));
+    assert.ok(fullRun.run.includes('npm run qa:v100-phase-g-validate'));
+    for (const env of [candidate.env,full.env,fullRun.env]) {
+      for (const field of ['V100_PHASE_G_ONLY','V100_PHASE_G_ONLY_VARIANT','V100_PHASE_G_ONLY_ENGINE']) {
+        assert.equal(env?.[field], undefined, 'the complete matrix cannot inherit diagnostic filters');
+      }
+    }
+    const normal = jobs['v177-normal-campaign'];
+    assert.ok(normal.needs.includes('v100-phase-g-production'));
+    assert.ok(!normal.needs.includes(id), 'a conditional diagnostic cannot substitute for the mandatory matrix');
+    const upload = diagnostic.steps.at(-1);
+    assert.equal(upload.if, 'always()');
+    assert.equal(upload.with.name, 'v177-guardian-control-diagnostic');
+    assert.notEqual(upload.with.name, full.steps.at(-1).with.name);
+    assert.equal(upload.with.path, 'outputs/v177-guardian-diagnostic');
+    assert.equal(upload.with['if-no-files-found'], 'error');
+  }
+  assertScope(workflow);
+  for (const mutate of [
+    candidate => { candidate.jobs[id]['runs-on'] = 'ubuntu-latest'; },
+    candidate => { candidate.jobs[id]['continue-on-error'] = true; },
+    candidate => { candidate.jobs[id].permissions = {contents:'write'}; },
+    candidate => { candidate.jobs['v100-phase-g-production'].env = {V100_PHASE_G_ONLY:'battle-extra'}; },
+    candidate => { candidate.jobs['v177-normal-campaign'].needs = [id]; },
+    candidate => { candidate.jobs[id].steps.at(-1).with.name = candidate.jobs['v100-phase-g-production'].steps.at(-1).with.name; },
+  ]) {
+    const candidate = structuredClone(workflow); mutate(candidate);
+    assert.throws(() => assertScope(candidate));
+  }
+});
+
+test('split native combat, audio and ordinary contacts remain mandatory in both engines without weakening their deadlines or assertions', async () => {
+  const workflow = loadYaml(await readFile('.github/workflows/ci.yml', 'utf8'));
+  const lanes = [
+    ['v102-combat', 'v102-combat-browser.mjs', {V102_COMBAT_ENGINE:'${{ matrix.engine }}',V102_COMBAT_VIEWPORT_GROUP:'${{ matrix.viewportGroup }}',V102_COMBAT_OUT:'outputs/v102-combat'}, 'v102-combat'],
+    ['v103-audio-output', 'v103-audio-output-browser.mjs', {V103_AUDIO_ENGINE:'${{ matrix.engine }}',V103_AUDIO_OUT:'outputs/v103-audio'}, 'v103-audio'],
+    ['v102-enemy-contacts', 'v100-enemy-contact-motion-browser.mjs', {V100_ENEMY_MOTION_ENGINE:'${{ matrix.engine }}',V100_ENEMY_MOTION_OUT:'outputs/v102-normal-contacts',V100_ENEMY_MOTION_ASSERT:'1'}, 'v102-normal-contacts'],
+  ];
+  function assertLanes(jobs) {
+    const summary = jobs['v102-combat-webkit-summary'];
+    assert.deepEqual(summary.needs, ['v102-combat']);
+    assert.equal(summary.if, 'always()');assert.equal(summary['continue-on-error'], undefined);
+    assert.equal(summary.steps[0].run, 'test "$V177_COMBAT_MATRIX_RESULT" = success');
+    assert.equal(summary.steps[0].env.V177_COMBAT_MATRIX_RESULT, '${{ needs.v102-combat.result }}');
+    for (const [id, script, env, artifact] of lanes) {
+      const job = jobs[id];assert.ok(job, id + ' remains required');
+      assert.equal(job['timeout-minutes'], 30);assert.equal(job['continue-on-error'], undefined);
+      assert.equal(job.if, undefined);assert.equal(job.strategy['fail-fast'], false);
+      assert.deepEqual(job.strategy.matrix.include, id === 'v102-combat' ? [
+        {engine:'chromium',os:'ubuntu-latest',viewportGroup:'all',checkLabel:'chromium'},
+        {engine:'webkit',os:'macos-15-intel',viewportGroup:'desktop-phone',checkLabel:'webkit desktop-phone'},
+        {engine:'webkit',os:'macos-15-intel',viewportGroup:'phone-short',checkLabel:'webkit phone-short'},
+      ] : [{engine:'chromium',os:'ubuntu-latest'},{engine:'webkit',os:'macos-15-intel'}]);
+      assert.ok(jobs['v177-normal-campaign'].needs.includes(id), id + ' cannot be bypassed before representative normal observation');
+      const commands = job.steps.filter(step => step.run?.startsWith('node scripts/run-browser-qa-with-server.mjs'));
+      const expected = 'node scripts/run-browser-qa-with-server.mjs scripts/' + script;
+      const required = commands.filter(step => step.run === expected);
+      assert.equal(required.length, 1);assert.deepEqual(required[0].env, env);
+      assert.equal(required[0]['continue-on-error'], undefined);assert.equal(required[0].if, undefined);
+      if (id === 'v103-audio-output') {
+        assert.equal(commands.length, 2);
+        const diagnostic = commands.find(step => step.run === 'node scripts/run-browser-qa-with-server.mjs scripts/v177-native-aac-browser.mjs');
+        assert.ok(diagnostic);assert.equal(diagnostic['continue-on-error'], undefined);
+        assert.equal(diagnostic.if, "${{ always() && !cancelled() && steps.native_engine.outcome == 'success' && steps.production_build.outcome == 'success' }}");
+        assert.deepEqual(diagnostic.env, {V103_AUDIO_ENGINE:env.V103_AUDIO_ENGINE,V177_NATIVE_AAC_OUT:'outputs/v177-native-aac'});
+        assert.ok(job.steps.indexOf(diagnostic) > job.steps.indexOf(required[0]));
+      } else assert.equal(commands.length, 1);
+      assert.ok(job.steps.some(step => step.run === 'npm run build'));
+      assert.ok(job.steps.some(step => step.run?.includes('npm ci --prefix scripts/pwa-native-runtime') && step.run.includes('install webkit')));
+      const upload = job.steps.at(-1);assert.equal(upload.if, 'always()');
+      assert.equal(upload.with.name, artifact + '-${{ matrix.engine }}' + (id === 'v102-combat' ? '-${{ matrix.viewportGroup }}' : ''));assert.equal(upload.with.path, 'outputs');
+      assert.equal(upload.with['if-no-files-found'], 'error');assert.equal(upload.with['retention-days'], 14);
+    }
+  }
+  assertLanes(workflow.jobs);
+  for (const mutate of [
+    jobs => { delete jobs['v103-audio-output']; },
+    jobs => { jobs['v102-enemy-contacts'].strategy.matrix.include.pop(); },
+    jobs => { jobs['v102-combat']['continue-on-error'] = true; },
+    jobs => { jobs['v102-combat'].strategy.matrix.include.pop(); },
+    jobs => { jobs['v102-combat-webkit-summary'].steps[0].run = 'true'; },
+    jobs => { jobs['v177-normal-campaign'].needs = jobs['v177-normal-campaign'].needs.filter(id => id !== 'v103-audio-output'); },
+    jobs => { jobs['v102-enemy-contacts'].steps.find(step => step.env?.V100_ENEMY_MOTION_ASSERT).env.V100_ENEMY_MOTION_ASSERT = '0'; },
+    jobs => { jobs['v102-combat']['timeout-minutes'] = 60; },
+    jobs => { jobs['v103-audio-output'].steps = jobs['v103-audio-output'].steps.filter(step => !step.run?.endsWith('scripts/v103-audio-output-browser.mjs')); },
+    jobs => { jobs['v103-audio-output'].steps.find(step => step.run?.endsWith('scripts/v103-audio-output-browser.mjs'))['continue-on-error'] = true; },
+    jobs => { jobs['v103-audio-output'].steps.find(step => step.run?.endsWith('scripts/v177-native-aac-browser.mjs')).if = 'success()'; },
+    jobs => { jobs['v103-audio-output'].steps.find(step => step.run?.endsWith('scripts/v177-native-aac-browser.mjs'))['continue-on-error'] = true; },
+  ]) {
+    const jobs = structuredClone(workflow.jobs);mutate(jobs);assert.throws(() => assertLanes(jobs));
+  }
+});
+
 test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   const workflow = (await readFile(".github/workflows/ci.yml", "utf8")).replaceAll("\r\n", "\n");
   const attributes = (await readFile(".gitattributes", "utf8")).replaceAll("\r\n", "\n");
@@ -127,9 +248,9 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   };
   assertMacRuntime(phaseGJob, "chromium webkit", { requirePreflightGate: false });
   for (const job of [deploymentJob, stage3Job, enemyJob, hostedJob, hudJob]) assertMacRuntime(job, "webkit");
-  assert.equal((workflow.match(/runs-on: macos-15-intel/gu) ?? []).length, 7);
-  assert.equal((workflow.match(/runs-on: macos-15(?:\n|\r\n)/gu) ?? []).length, 1);
-  assert.equal((workflow.match(/runs-on: ubuntu-latest/gu) ?? []).length, 1);
+  assert.equal((workflow.match(/runs-on: macos-15-intel/gu) ?? []).length, 8);
+  assert.equal((workflow.match(/runs-on: macos-15(?:\n|\r\n)/gu) ?? []).length, 2);
+  assert.equal((workflow.match(/runs-on: ubuntu-latest/gu) ?? []).length, 2);
   const nativePwaJob=workflow.split("  v100-native-webkit-pwa:\n")[1].split("\n  webkit-hosted:")[0];
   assert.match(nativePwaJob,/runs-on: macos-15-intel/u);
   assert.match(nativePwaJob,/npm ci --prefix scripts\/pwa-native-runtime/u);
@@ -208,7 +329,7 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
 
 test("parsed required CI graph retains every WebKit lane, dependency and viewport", async () => {
   const { jobs } = loadYaml(await readFile(".github/workflows/ci.yml", "utf8"));
-  assert.deepEqual(Object.keys(jobs), ["v102-combat", "verify", "v100-webkit-frame-control", "v100-phase-g-production", "v100-native-webkit-pwa", "webkit-hosted",
+  assert.deepEqual(Object.keys(jobs), ["v177-guardian-control-diagnostic", "r9-story", "v102-combat", "v102-combat-webkit-summary", "v103-audio-output", "v102-enemy-contacts", "v177-normal-campaign", "v177-normal-campaign-diagnostic", "verify", "v100-webkit-frame-control", "v177-webkit-shadow-diagnostic", "v100-phase-g-production", "v100-native-webkit-pwa", "webkit-hosted",
     "webkit-enemy-runtime-shard", "webkit-viewport", "webkit-deployment-viewport", "webkit-stage3-audio"]);
   const dependencies = {
     "v100-webkit-frame-control": undefined, "v100-phase-g-production": undefined, "v100-native-webkit-pwa": undefined, "webkit-hosted": "webkit-enemy-runtime-shard",
@@ -216,9 +337,51 @@ test("parsed required CI graph retains every WebKit lane, dependency and viewpor
     "webkit-deployment-viewport": "webkit-stage3-audio", "webkit-stage3-audio": "webkit-hosted",
   };
   assert.equal(jobs.verify["runs-on"], "ubuntu-latest");
-  assert.deepEqual(jobs['v102-combat'].strategy.matrix.include,[{engine:'chromium',os:'ubuntu-latest'},{engine:'webkit',os:'macos-15-intel'}]);
+  const story = jobs['r9-story'];
+  assert.deepEqual(story.strategy.matrix.include, [
+    {engine:'chromium',os:'ubuntu-latest',phase:'composition'},
+    {engine:'chromium',os:'ubuntu-latest',phase:'bookends'},
+    {engine:'webkit',os:'macos-15-intel',phase:'composition'},
+    {engine:'webkit',os:'macos-15-intel',phase:'bookends'},
+  ]);
+  assert.equal(story.strategy['fail-fast'],false);
+  assert.equal(story['timeout-minutes'],45);
+  assert.equal(story['continue-on-error'],undefined);
+  const storyRuns = [
+    ['composition','node scripts/run-browser-qa-with-server.mjs scripts/v100-dialogue-composition-browser.mjs',
+      {V100_DIALOGUE_QA_ENGINES:'${{ matrix.engine }}',V100_DIALOGUE_QA_OUT:'outputs/r9-story/composition'}],
+    ['bookends','node scripts/run-browser-qa-with-server.mjs scripts/v100-story-bookends-browser-smoke.mjs',
+      {V100_BOOKENDS_ENGINES:'${{ matrix.engine }}',V100_BOOKENDS_EVIDENCE_DIR:'outputs/r9-story/bookends'}],
+  ];
+  for (const [phase, run, env] of storyRuns) {
+    const steps = story.steps.filter(step => step.run === run);
+    assert.equal(steps.length,1);
+    assert.equal(steps[0].if,"matrix.phase == '" + phase + "'");
+    assert.deepEqual(steps[0].env,env);
+  }
+  const storyUpload = story.steps.at(-1);
+  assert.equal(storyUpload.if,'always()');
+  assert.equal(storyUpload.with.name,'r9-story-${{ matrix.engine }}-${{ matrix.phase }}');
+  assert.equal(storyUpload.with.path,'outputs/r9-story');
+  assert.equal(storyUpload.with['if-no-files-found'],'error');
+  assert.deepEqual(jobs['v102-combat'].strategy.matrix.include,[
+    {engine:'chromium',os:'ubuntu-latest',viewportGroup:'all',checkLabel:'chromium'},
+    {engine:'webkit',os:'macos-15-intel',viewportGroup:'desktop-phone',checkLabel:'webkit desktop-phone'},
+    {engine:'webkit',os:'macos-15-intel',viewportGroup:'phone-short',checkLabel:'webkit phone-short'},
+  ]);
   assert.equal(jobs['v102-combat']['continue-on-error'],undefined);
   assert.ok(jobs['v102-combat'].steps.some(step=>step.run==='node scripts/run-browser-qa-with-server.mjs scripts/v102-combat-browser.mjs'));
+  const normal=jobs['v177-normal-campaign'];
+  assert.deepEqual(normal.needs,['verify','v102-combat','v103-audio-output','v102-enemy-contacts','r9-story','v100-native-webkit-pwa','v100-phase-g-production']);
+  assert.deepEqual(normal.strategy.matrix.include,[{engine:'chromium',os:'ubuntu-latest'},{engine:'webkit',os:'macos-15-intel'}]);
+  assert.equal(normal.strategy['fail-fast'],false);assert.equal(normal['continue-on-error'],undefined);
+  assert.equal(normal.steps[0].with.ref,'${{ github.event.pull_request.head.sha }}');
+  const normalRun=normal.steps.find(step=>step.run==='node scripts/run-browser-qa-with-server.mjs scripts/v177-representative-normal-play.mjs');
+  assert.ok(normalRun);assert.equal(normalRun.env.V100_NORMAL_PLAY_ENGINE,'${{ matrix.engine }}');
+  assert.equal(normalRun.env.V100_NORMAL_PLAY_STAGE_LIMIT,'3');
+  assert.equal(normalRun.env.V100_NORMAL_PLAY_RESUME_DIR,undefined);
+  const normalUpload=normal.steps.at(-1);assert.equal(normalUpload.if,'always()');
+  assert.equal(normalUpload.with['if-no-files-found'],'error');assert.equal(normalUpload.with.path,normalRun.env.V100_NORMAL_PLAY_EVIDENCE_DIR);
   for (const [id, needs] of Object.entries(dependencies)) {
     const job = jobs[id];
     assert.deepEqual(job.needs, needs);
@@ -268,6 +431,26 @@ test("parsed required CI graph retains every WebKit lane, dependency and viewpor
   assert.equal(hudCapture.env.ISSUE156_WEBKIT_HUD_STATE, undefined);
   assert.equal(hudCapture.env.V099_FINAL_REMEDIATION_QA_TIMEOUT_MS, "60000");
   assert.equal(jobs["webkit-viewport"]["timeout-minutes"], 20);
+});
+
+test("compact shadow diagnostics cannot consume or replace the primary performance job",async()=>{
+  const {jobs}=loadYaml(await readFile('.github/workflows/ci.yml','utf8'));
+  const primary=jobs['v100-webkit-frame-control'],diagnostic=jobs['v177-webkit-shadow-diagnostic'];
+  assert.equal(primary['timeout-minutes'],30);
+  assert.equal(primary.steps.some(s=>s.env?.V100_PRESIDENT_SHADOW_BLUR_ABLATION),false);
+  assert.ok(primary.steps.some(s=>s.id==='preserved_primary_perf'&&s.if==='always()'));
+  assert.equal(diagnostic.needs,'v100-webkit-frame-control');
+  assert.equal(diagnostic.if,"${{ always() && (needs.v100-webkit-frame-control.result == 'failure' || needs.v100-webkit-frame-control.result == 'cancelled') }}");
+  assert.equal(diagnostic['runs-on'],'macos-15');assert.equal(diagnostic['timeout-minutes'],20);
+  assert.equal(diagnostic['continue-on-error'],undefined);
+  assert.ok(diagnostic.steps.some(s=>s.run==='node scripts/verify-playwright-container-runtime.mjs --macos-arm64'));
+  const probe=diagnostic.steps.find(s=>s.env?.V100_PRESIDENT_SHADOW_BLUR_ABLATION==='1');
+  assert.equal(probe.env.V100_PRESIDENT_DIAGNOSTIC_VIEWPORT,'844x390');
+  assert.equal(probe.env.V100_PRESIDENT_BASELINE_ONLY,'1');assert.equal(probe.env.V100_PRESIDENT_RECORD_VIDEO,'0');
+  const upload=diagnostic.steps.at(-1);assert.equal(upload.if,'always()');
+  assert.equal(upload.with['if-no-files-found'],'error');
+  assert.equal(upload.with.path,probe.env.V100_PRESIDENT_PRESENTATION_OUT);
+  assert.ok(!Object.values(jobs).filter(j=>j!==diagnostic).some(j=>[j.needs].flat().includes('v177-webkit-shadow-diagnostic')),'No acceptance lane depends on diagnostic success');
 });
 
 test("Stage 3 final uses one bounded fixture for candidate and exact PR base", async () => {

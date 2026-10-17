@@ -1,0 +1,1688 @@
+{
+  "schema": "zombieee-joint-source/1",
+  "kind": "brawler",
+  "status": "UNACCEPTED source study; no runtime adoption. Producer-photo Paisen, complete joint overlap; real Blender/render review pending.",
+  "width": 480,
+  "height": 448,
+  "paintStyle": "painted",
+  "sourceSha256": "d69ec982ce5ed960c697ab035e0001f772f4cf5eccf07e671d244bd847eaef87",
+  "sheetSha256": "85154ec93c819204d8254b6234db422c683945b180c5f94fcab0f02d8dd39f33",
+  "parts": [
+    {
+      "name": "torso",
+      "bone": "spine",
+      "file": "torso.png",
+      "original": false,
+      "sha256": "45672cb6e14f32ab5a88b4a85c60b917a3ff8ba50a244c96bb879a71e92a0661",
+      "sourceAxis": [
+        [
+          192,
+          69
+        ],
+        [
+          199,
+          310
+        ]
+      ],
+      "restAxis": [
+        [
+          234,
+          90
+        ],
+        [
+          237,
+          220
+        ]
+      ],
+      "generatedLateralScale": 0.48,
+      "visibleReferencePolygon": [
+        [
+          209,
+          79
+        ],
+        [
+          232,
+          85
+        ],
+        [
+          248,
+          97
+        ],
+        [
+          263,
+          124
+        ],
+        [
+          264,
+          177
+        ],
+        [
+          270,
+          219
+        ],
+        [
+          246,
+          219
+        ],
+        [
+          219,
+          212
+        ],
+        [
+          195,
+          210
+        ],
+        [
+          195,
+          180
+        ],
+        [
+          201,
+          150
+        ],
+        [
+          190,
+          125
+        ]
+      ],
+      "visibleReferenceAxis": null,
+      "continuousReferenceJointOverlap": null,
+      "registeredJointPaintEdit": null,
+      "excludedReferenceOccluders": [
+        [
+          [
+            169,
+            114
+          ],
+          [
+            207,
+            128
+          ],
+          [
+            212,
+            151
+          ],
+          [
+            205,
+            167
+          ],
+          [
+            214,
+            190
+          ],
+          [
+            232,
+            204
+          ],
+          [
+            247,
+            214
+          ],
+          [
+            249,
+            229
+          ],
+          [
+            238,
+            240
+          ],
+          [
+            215,
+            237
+          ],
+          [
+            201,
+            222
+          ],
+          [
+            186,
+            205
+          ],
+          [
+            172,
+            182
+          ],
+          [
+            166,
+            158
+          ]
+        ],
+        [
+          [
+            262,
+            158
+          ],
+          [
+            280,
+            170
+          ],
+          [
+            298,
+            174
+          ],
+          [
+            309,
+            176
+          ],
+          [
+            312,
+            187
+          ],
+          [
+            306,
+            200
+          ],
+          [
+            289,
+            203
+          ],
+          [
+            272,
+            197
+          ],
+          [
+            260,
+            187
+          ]
+        ]
+      ],
+      "source": "Complete hidden joint paint under the explicitly selected identity-reference pixels"
+    },
+    {
+      "name": "pelvis",
+      "bone": "pelvis",
+      "file": "pelvis.png",
+      "original": false,
+      "sha256": "e8a67d0bf9e0f91766aeaaa6afe078bb828b67e02871723ca1ca0ce558fa0abd",
+      "sourceAxis": [
+        [
+          156,
+          91
+        ],
+        [
+          155,
+          189
+        ]
+      ],
+      "restAxis": [
+        [
+          237,
+          218
+        ],
+        [
+          237,
+          259
+        ]
+      ],
+      "generatedLateralScale": 0.31,
+      "visibleReferencePolygon": [
+        [
+          194,
+          211
+        ],
+        [
+          220,
+          212
+        ],
+        [
+          248,
+          217
+        ],
+        [
+          267,
+          217
+        ],
+        [
+          276,
+          253
+        ],
+        [
+          258,
+          273
+        ],
+        [
+          240,
+          286
+        ],
+        [
+          219,
+          269
+        ],
+        [
+          191,
+          255
+        ]
+      ],
+      "visibleReferenceAxis": null,
+      "continuousReferenceJointOverlap": null,
+      "registeredJointPaintEdit": null,
+      "excludedReferenceOccluders": [
+        [
+          [
+            169,
+            114
+          ],
+          [
+            207,
+            128
+          ],
+          [
+            212,
+            151
+          ],
+          [
+            205,
+            167
+          ],
+          [
+            214,
+            190
+          ],
+          [
+            232,
+            204
+          ],
+          [
+            247,
+            214
+          ],
+          [
+            249,
+            229
+          ],
+          [
+            238,
+            240
+          ],
+          [
+            215,
+            237
+          ],
+          [
+            201,
+            222
+          ],
+          [
+            186,
+            205
+          ],
+          [
+            172,
+            182
+          ],
+          [
+            166,
+            158
+          ]
+        ]
+      ],
+      "source": "Complete hidden joint paint under the explicitly selected identity-reference pixels"
+    },
+    {
+      "name": "far-thigh",
+      "bone": "leg-0-upper",
+      "file": "far-thigh.png",
+      "original": false,
+      "sha256": "ac76559d6cc08e2af5ebbe5afb8370a800d51cd2de7a8a43cc2c1caca3fb5d73",
+      "sourceAxis": [
+        [
+          171,
+          42
+        ],
+        [
+          160,
+          280
+        ]
+      ],
+      "restAxis": [
+        [
+          254,
+          244
+        ],
+        [
+          284,
+          318
+        ]
+      ],
+      "generatedLateralScale": 0.32,
+      "visibleReferencePolygon": [
+        [
+          248,
+          226
+        ],
+        [
+          265,
+          220
+        ],
+        [
+          279,
+          248
+        ],
+        [
+          289,
+          285
+        ],
+        [
+          284,
+          303
+        ],
+        [
+          271,
+          317
+        ],
+        [
+          253,
+          311
+        ],
+        [
+          244,
+          289
+        ],
+        [
+          245,
+          258
+        ]
+      ],
+      "visibleReferenceAxis": [
+        [
+          254,
+          244
+        ],
+        [
+          269,
+          307
+        ]
+      ],
+      "continuousReferenceJointOverlap": {
+        "center": [
+          269,
+          307
+        ],
+        "radius": [
+          18,
+          22
+        ]
+      },
+      "registeredJointPaintEdit": null,
+      "excludedReferenceOccluders": [],
+      "source": "Complete hidden joint paint under the explicitly selected identity-reference pixels"
+    },
+    {
+      "name": "far-shin",
+      "bone": "leg-0-lower",
+      "file": "far-shin.png",
+      "original": false,
+      "sha256": "2f82247fbbd77ea60c846f283ad67344da8e6e40edd1f9a402edcf0a163a4130",
+      "sourceAxis": [
+        [
+          149,
+          24
+        ],
+        [
+          144,
+          256
+        ]
+      ],
+      "restAxis": [
+        [
+          284,
+          318
+        ],
+        [
+          269,
+          398
+        ]
+      ],
+      "generatedLateralScale": 0.3,
+      "visibleReferencePolygon": [
+        [
+          254,
+          296
+        ],
+        [
+          279,
+          294
+        ],
+        [
+          285,
+          313
+        ],
+        [
+          282,
+          337
+        ],
+        [
+          275,
+          359
+        ],
+        [
+          277,
+          387
+        ],
+        [
+          267,
+          397
+        ],
+        [
+          251,
+          389
+        ],
+        [
+          252,
+          362
+        ],
+        [
+          245,
+          338
+        ],
+        [
+          247,
+          317
+        ]
+      ],
+      "visibleReferenceAxis": [
+        [
+          269,
+          307
+        ],
+        [
+          266,
+          386
+        ]
+      ],
+      "continuousReferenceJointOverlap": null,
+      "registeredJointPaintEdit": null,
+      "excludedReferenceOccluders": [],
+      "source": "Complete hidden joint paint under the explicitly selected identity-reference pixels"
+    },
+    {
+      "name": "far-boot",
+      "bone": "leg-0-foot",
+      "file": "far-boot.png",
+      "original": false,
+      "sha256": "c899621be9c3cc10a567e715bb00800baa7dfb0db108a9793258f9d05bdeeb35",
+      "sourceAxis": [
+        [
+          106,
+          188.75
+        ],
+        [
+          256,
+          265
+        ]
+      ],
+      "restAxis": [
+        [
+          269,
+          398
+        ],
+        [
+          317,
+          422.4
+        ]
+      ],
+      "generatedLateralScale": 0.32,
+      "visibleReferencePolygon": null,
+      "visibleReferenceAxis": null,
+      "continuousReferenceJointOverlap": {
+        "center": [
+          266,
+          386
+        ],
+        "radius": [
+          17,
+          20
+        ],
+        "sourceAxis": [
+          [
+            266,
+            386
+          ],
+          [
+            314,
+            408
+          ]
+        ]
+      },
+      "registeredJointPaintEdit": null,
+      "excludedReferenceOccluders": [],
+      "source": "Complete hidden joint paint under the explicitly selected identity-reference pixels"
+    },
+    {
+      "name": "near-thigh",
+      "bone": "leg-1-upper",
+      "file": "near-thigh.png",
+      "original": false,
+      "sha256": "d372628cdb2ce95360d3abca9cd0cdd16975c8a3da282e1627c84d37a7c5da15",
+      "sourceAxis": [
+        [
+          160,
+          42
+        ],
+        [
+          171,
+          289
+        ]
+      ],
+      "restAxis": [
+        [
+          218,
+          244
+        ],
+        [
+          224,
+          318
+        ]
+      ],
+      "generatedLateralScale": 0.31,
+      "visibleReferencePolygon": [
+        [
+          191,
+          239
+        ],
+        [
+          217,
+          240
+        ],
+        [
+          238,
+          248
+        ],
+        [
+          240,
+          289
+        ],
+        [
+          230,
+          304
+        ],
+        [
+          212,
+          317
+        ],
+        [
+          187,
+          322
+        ],
+        [
+          170,
+          310
+        ],
+        [
+          178,
+          285
+        ],
+        [
+          183,
+          252
+        ]
+      ],
+      "visibleReferenceAxis": [
+        [
+          218,
+          244
+        ],
+        [
+          201,
+          308
+        ]
+      ],
+      "continuousReferenceJointOverlap": {
+        "center": [
+          201,
+          308
+        ],
+        "radius": [
+          20,
+          24
+        ]
+      },
+      "registeredJointPaintEdit": {
+        "ellipse": [
+          189,
+          298,
+          243,
+          342
+        ],
+        "changedPixels": 1561,
+        "changedOutsideMask": 0,
+        "originalAlphaExact": true,
+        "source": "registered-joint-paint-r7.normalized.png"
+      },
+      "excludedReferenceOccluders": [],
+      "source": "Complete hidden joint paint under the explicitly selected identity-reference pixels"
+    },
+    {
+      "name": "near-shin",
+      "bone": "leg-1-lower",
+      "file": "near-shin.png",
+      "original": false,
+      "sha256": "d23677dd6f73437498b3eee98b6f333925f9a0bb9a997812f7114f98a5400af0",
+      "sourceAxis": [
+        [
+          150,
+          50
+        ],
+        [
+          151,
+          293
+        ]
+      ],
+      "restAxis": [
+        [
+          224,
+          318
+        ],
+        [
+          177,
+          398
+        ]
+      ],
+      "generatedLateralScale": 0.3,
+      "visibleReferencePolygon": [
+        [
+          183,
+          295
+        ],
+        [
+          213,
+          299
+        ],
+        [
+          217,
+          315
+        ],
+        [
+          211,
+          337
+        ],
+        [
+          202,
+          359
+        ],
+        [
+          194,
+          379
+        ],
+        [
+          189,
+          399
+        ],
+        [
+          176,
+          407
+        ],
+        [
+          161,
+          397
+        ],
+        [
+          162,
+          371
+        ],
+        [
+          163,
+          346
+        ],
+        [
+          169,
+          320
+        ]
+      ],
+      "visibleReferenceAxis": [
+        [
+          201,
+          308
+        ],
+        [
+          177,
+          398
+        ]
+      ],
+      "continuousReferenceJointOverlap": null,
+      "registeredJointPaintEdit": null,
+      "excludedReferenceOccluders": [],
+      "source": "Complete hidden joint paint under the explicitly selected identity-reference pixels"
+    },
+    {
+      "name": "near-boot",
+      "bone": "leg-1-foot",
+      "file": "near-boot.png",
+      "original": false,
+      "sha256": "9bc05758469a88fbe63a1fa0dcb94fad0f364654cf9f98c13d4d8a5c2cf63243",
+      "sourceAxis": [
+        [
+          121,
+          177.75
+        ],
+        [
+          271,
+          256.75
+        ]
+      ],
+      "restAxis": [
+        [
+          177,
+          398
+        ],
+        [
+          225,
+          423.28
+        ]
+      ],
+      "generatedLateralScale": 0.32,
+      "visibleReferencePolygon": null,
+      "visibleReferenceAxis": null,
+      "continuousReferenceJointOverlap": {
+        "center": [
+          177,
+          398
+        ],
+        "radius": [
+          18,
+          21
+        ]
+      },
+      "registeredJointPaintEdit": null,
+      "excludedReferenceOccluders": [],
+      "source": "Complete hidden joint paint under the explicitly selected identity-reference pixels"
+    },
+    {
+      "name": "near-upper-arm",
+      "bone": "arm-0-upper",
+      "file": "near-upper-arm.png",
+      "original": false,
+      "sha256": "39d86b452f65a2a26bcfd40b102efea5d13f59f93c9592a804065722d3bb369b",
+      "sourceAxis": [
+        [
+          172,
+          55
+        ],
+        [
+          121,
+          255
+        ]
+      ],
+      "restAxis": [
+        [
+          191,
+          112
+        ],
+        [
+          182,
+          163
+        ]
+      ],
+      "generatedLateralScale": 0.26,
+      "visibleReferencePolygon": [
+        [
+          191,
+          94
+        ],
+        [
+          209,
+          101
+        ],
+        [
+          218,
+          117
+        ],
+        [
+          214,
+          134
+        ],
+        [
+          204,
+          151
+        ],
+        [
+          198,
+          162
+        ],
+        [
+          184,
+          173
+        ],
+        [
+          172,
+          166
+        ],
+        [
+          173,
+          141
+        ],
+        [
+          175,
+          115
+        ],
+        [
+          181,
+          103
+        ]
+      ],
+      "visibleReferenceAxis": null,
+      "continuousReferenceJointOverlap": {
+        "center": [
+          191,
+          112
+        ],
+        "radius": [
+          19,
+          26
+        ]
+      },
+      "registeredJointPaintEdit": {
+        "ellipse": [
+          167,
+          104,
+          203,
+          146
+        ],
+        "changedPixels": 1165,
+        "changedOutsideMask": 0,
+        "originalAlphaExact": true,
+        "source": "registered-joint-paint-r7.normalized.png"
+      },
+      "excludedReferenceOccluders": [],
+      "source": "Complete hidden joint paint under the explicitly selected identity-reference pixels"
+    },
+    {
+      "name": "near-forearm",
+      "bone": "arm-0-lower",
+      "file": "near-forearm.png",
+      "original": false,
+      "sha256": "8033f235194490160539d84f19a036eb34ddd51362d9a546ebd4779aa589be5a",
+      "sourceAxis": [
+        [
+          95,
+          64
+        ],
+        [
+          236,
+          240
+        ]
+      ],
+      "restAxis": [
+        [
+          182,
+          163
+        ],
+        [
+          219,
+          211
+        ]
+      ],
+      "generatedLateralScale": 0.22,
+      "visibleReferencePolygon": [
+        [
+          173,
+          153
+        ],
+        [
+          186,
+          152
+        ],
+        [
+          199,
+          173
+        ],
+        [
+          210,
+          193
+        ],
+        [
+          226,
+          207
+        ],
+        [
+          226,
+          218
+        ],
+        [
+          214,
+          225
+        ],
+        [
+          201,
+          211
+        ],
+        [
+          188,
+          196
+        ],
+        [
+          178,
+          179
+        ],
+        [
+          171,
+          165
+        ]
+      ],
+      "visibleReferenceAxis": null,
+      "continuousReferenceJointOverlap": {
+        "center": [
+          182,
+          163
+        ],
+        "radius": [
+          18,
+          22
+        ]
+      },
+      "registeredJointPaintEdit": {
+        "ellipse": [
+          164,
+          146,
+          202,
+          187
+        ],
+        "changedPixels": 992,
+        "changedOutsideMask": 0,
+        "originalAlphaExact": true,
+        "source": "registered-joint-paint-r7.normalized.png"
+      },
+      "excludedReferenceOccluders": [],
+      "source": "Complete hidden joint paint under the explicitly selected identity-reference pixels"
+    },
+    {
+      "name": "free-hand",
+      "bone": "arm-0-hand",
+      "file": "free-hand.png",
+      "original": false,
+      "sha256": "de3dd24b263e784c42263a1f83e10451a577cf654b138dc18a4e9a5ef2877474",
+      "sourceAxis": [
+        [
+          101,
+          142
+        ],
+        [
+          207,
+          166
+        ]
+      ],
+      "restAxis": [
+        [
+          219,
+          211
+        ],
+        [
+          229,
+          223
+        ]
+      ],
+      "generatedLateralScale": 0.15,
+      "visibleReferencePolygon": [
+        [
+          216,
+          203
+        ],
+        [
+          231,
+          207
+        ],
+        [
+          242,
+          214
+        ],
+        [
+          245,
+          225
+        ],
+        [
+          236,
+          236
+        ],
+        [
+          223,
+          232
+        ],
+        [
+          212,
+          222
+        ]
+      ],
+      "visibleReferenceAxis": null,
+      "continuousReferenceJointOverlap": null,
+      "registeredJointPaintEdit": null,
+      "excludedReferenceOccluders": [],
+      "source": "Complete hidden joint paint under the explicitly selected identity-reference pixels"
+    },
+    {
+      "name": "far-upper-arm",
+      "bone": "arm-1-upper",
+      "file": "far-upper-arm.png",
+      "original": false,
+      "sha256": "2dd1832690b4d3922730142e5486be12ddfa26e6cb9cbe20e6c992f498a3ba01",
+      "sourceAxis": [
+        [
+          155,
+          51
+        ],
+        [
+          200,
+          254
+        ]
+      ],
+      "restAxis": [
+        [
+          251,
+          126
+        ],
+        [
+          269,
+          160
+        ]
+      ],
+      "generatedLateralScale": 0.18,
+      "visibleReferencePolygon": [
+        [
+          250,
+          138
+        ],
+        [
+          260,
+          142
+        ],
+        [
+          267,
+          151
+        ],
+        [
+          275,
+          165
+        ],
+        [
+          272,
+          177
+        ],
+        [
+          261,
+          177
+        ],
+        [
+          254,
+          165
+        ]
+      ],
+      "visibleReferenceAxis": [
+        [
+          251,
+          126
+        ],
+        [
+          269,
+          160
+        ]
+      ],
+      "continuousReferenceJointOverlap": null,
+      "registeredJointPaintEdit": null,
+      "excludedReferenceOccluders": [],
+      "source": "Complete hidden joint paint under the explicitly selected identity-reference pixels"
+    },
+    {
+      "name": "far-forearm",
+      "bone": "arm-1-lower",
+      "file": "far-forearm.png",
+      "original": false,
+      "sha256": "1280517280398d1b6d520f2f7c5c62835d2f1cf9cae59b661b3b8e4e3e0736a0",
+      "sourceAxis": [
+        [
+          224,
+          43
+        ],
+        [
+          110,
+          268
+        ]
+      ],
+      "restAxis": [
+        [
+          269,
+          160
+        ],
+        [
+          305,
+          184
+        ]
+      ],
+      "generatedLateralScale": 0.16,
+      "visibleReferencePolygon": [
+        [
+          263,
+          163
+        ],
+        [
+          277,
+          173
+        ],
+        [
+          293,
+          179
+        ],
+        [
+          305,
+          177
+        ],
+        [
+          308,
+          184
+        ],
+        [
+          304,
+          196
+        ],
+        [
+          292,
+          199
+        ],
+        [
+          277,
+          193
+        ],
+        [
+          263,
+          187
+        ]
+      ],
+      "visibleReferenceAxis": [
+        [
+          269,
+          160
+        ],
+        [
+          305,
+          184
+        ]
+      ],
+      "continuousReferenceJointOverlap": {
+        "center": [
+          269,
+          169
+        ],
+        "radius": [
+          17,
+          23
+        ],
+        "polygon": [
+          [
+            261,
+            158
+          ],
+          [
+            274,
+            158
+          ],
+          [
+            285,
+            175
+          ],
+          [
+            282,
+            192
+          ],
+          [
+            260,
+            184
+          ]
+        ]
+      },
+      "registeredJointPaintEdit": null,
+      "excludedReferenceOccluders": [],
+      "source": "Complete hidden joint paint under the explicitly selected identity-reference pixels"
+    },
+    {
+      "name": "weapon-and-hands",
+      "bone": "weapon-0",
+      "file": "weapon-and-hands.png",
+      "original": false,
+      "sha256": "7bab176538337da73e7a8fd153ea216f375d094b6d9653bbf50bad1250416e88",
+      "sourceAxis": [
+        [
+          103,
+          112
+        ],
+        [
+          209,
+          139
+        ]
+      ],
+      "restAxis": [
+        [
+          305,
+          184
+        ],
+        [
+          316,
+          187
+        ]
+      ],
+      "generatedLateralScale": 0.18,
+      "visibleReferencePolygon": [
+        [
+          300,
+          176
+        ],
+        [
+          310,
+          174
+        ],
+        [
+          321,
+          178
+        ],
+        [
+          325,
+          187
+        ],
+        [
+          324,
+          198
+        ],
+        [
+          317,
+          204
+        ],
+        [
+          305,
+          202
+        ],
+        [
+          297,
+          194
+        ]
+      ],
+      "visibleReferenceAxis": null,
+      "continuousReferenceJointOverlap": null,
+      "registeredJointPaintEdit": null,
+      "excludedReferenceOccluders": [],
+      "source": "Complete hidden joint paint under the explicitly selected identity-reference pixels"
+    },
+    {
+      "name": "head",
+      "bone": "head",
+      "file": "head.png",
+      "original": true,
+      "sha256": "74b62d1bc6720452d29bc284d2cbebf0f423aa9766d4e6d48b4294a10bacb25d",
+      "originalRegions": [
+        [
+          [
+            196,
+            10
+          ],
+          [
+            270,
+            10
+          ],
+          [
+            272,
+            81
+          ],
+          [
+            246,
+            99
+          ],
+          [
+            207,
+            80
+          ],
+          [
+            198,
+            60
+          ]
+        ]
+      ]
+    }
+  ],
+  "order": [
+    "far-upper-arm",
+    "far-forearm",
+    "far-shin",
+    "far-thigh",
+    "far-boot",
+    "near-shin",
+    "near-thigh",
+    "near-boot",
+    "pelvis",
+    "torso",
+    "head",
+    "near-upper-arm",
+    "near-forearm",
+    "free-hand",
+    "weapon-and-hands"
+  ],
+  "lowerLayers": [
+    "far-shin",
+    "far-thigh",
+    "far-boot",
+    "near-shin",
+    "near-thigh",
+    "near-boot",
+    "pelvis"
+  ],
+  "pelvisY": 220,
+  "identityBinding": {
+    "path": "/art/v100/portraits/paisen-identity-r2.webp",
+    "sourceSha256": "2abe752277e3c7947755b9af17c77d9e563233073ad428dcda8397106b3b2342",
+    "role": "Producer-photo identity master; battle derivative separately source-bound",
+    "battleReference": "assets/source/v177/paisen/battle-reference-r2.png"
+  },
+  "referenceFrame": {
+    "width": 394,
+    "height": 757,
+    "scale": 0.8489795918367347,
+    "tx": 72.75102040816327,
+    "ty": -79.93469387755101
+  },
+  "motion": {
+    "walk": {
+      "spanPx": 70,
+      "liftPx": 10,
+      "stanceFraction": 0.6666666666666666,
+      "groundY": 432
+    },
+    "paintBounds": {
+      "x": 0,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    }
+  },
+  "muzzle": [
+    329,
+    187
+  ],
+  "weaponBone": "weapon-0",
+  "rig": {
+    "root": [
+      240,
+      432
+    ],
+    "pelvis": [
+      [
+        237,
+        220
+      ],
+      [
+        237,
+        197
+      ]
+    ],
+    "spine": [
+      [
+        237,
+        220
+      ],
+      [
+        234,
+        90
+      ]
+    ],
+    "head": [
+      [
+        234,
+        90
+      ],
+      [
+        236,
+        40
+      ]
+    ],
+    "legs": [
+      {
+        "hip": [
+          254,
+          244
+        ],
+        "knee": [
+          284,
+          318
+        ],
+        "ankle": [
+          269,
+          398
+        ],
+        "toe": [
+          317,
+          422.4
+        ],
+        "offset": 0,
+        "center": 254,
+        "paintedPaw": "far-boot",
+        "groundAnkleY": 398.5
+      },
+      {
+        "hip": [
+          218,
+          244
+        ],
+        "knee": [
+          224,
+          318
+        ],
+        "ankle": [
+          177,
+          398
+        ],
+        "toe": [
+          225,
+          423.28
+        ],
+        "offset": 0.5,
+        "center": 218,
+        "paintedPaw": "near-boot",
+        "groundAnkleY": 398.5
+      }
+    ],
+    "arms": [
+      {
+        "shoulder": [
+          191,
+          112
+        ],
+        "elbow": [
+          182,
+          163
+        ],
+        "wrist": [
+          219,
+          211
+        ],
+        "grip": [
+          229,
+          223
+        ],
+        "walkSwingPx": 6,
+        "walkLiftPx": 3
+      },
+      {
+        "shoulder": [
+          251,
+          126
+        ],
+        "elbow": [
+          269,
+          160
+        ],
+        "wrist": [
+          305,
+          184
+        ],
+        "grip": [
+          316,
+          187
+        ],
+        "walkSwingPx": 6,
+        "walkLiftPx": 3
+      }
+    ],
+    "extras": [],
+    "firearm": false,
+    "weapons": [
+      {
+        "name": "weapon-0",
+        "a": [
+          316,
+          187
+        ],
+        "b": [
+          329,
+          187
+        ],
+        "armIndex": 1
+      }
+    ],
+    "attack": {
+      "style": "punch",
+      "windupEnd": 0.28,
+      "activeEnd": 0.55,
+      "aimAngle": 0,
+      "aimShift": [
+        31,
+        -58
+      ],
+      "recoilPx": 0,
+      "anticipationShift": [
+        -30,
+        -55
+      ],
+      "attackAngle": -0.12,
+      "anticipationAngle": 0.06,
+      "torsoAngle": 0.06,
+      "torsoAnticipation": -0.025,
+      "walkWeaponSwing": 5,
+      "walkWeaponShift": [
+        -5,
+        -6
+      ],
+      "freeHandAttackShift": [
+        15,
+        -78
+      ],
+      "freeHandAnticipation": [
+        5,
+        -68
+      ]
+    }
+  },
+  "interpolationPivots": {
+    "spine": [
+      237,
+      220
+    ],
+    "head": [
+      237,
+      220
+    ],
+    "weapon-0": [
+      316,
+      187
+    ],
+    "arm-0-hand": [
+      219,
+      211
+    ],
+    "arm-1-hand": [
+      305,
+      184
+    ],
+    "leg-0-foot": [
+      269,
+      398
+    ],
+    "leg-1-foot": [
+      177,
+      398
+    ]
+  },
+  "armConstraints": [
+    {
+      "shoulder": [
+        191,
+        112
+      ],
+      "elbow": [
+        182,
+        163
+      ],
+      "wrist": [
+        219,
+        211
+      ],
+      "grip": [
+        229,
+        223
+      ],
+      "walkSwingPx": 6,
+      "walkLiftPx": 3,
+      "upperBone": "arm-0-upper",
+      "lowerBone": "arm-0-lower",
+      "parentBone": "spine",
+      "effectorBone": "arm-0-hand"
+    },
+    {
+      "shoulder": [
+        251,
+        126
+      ],
+      "elbow": [
+        269,
+        160
+      ],
+      "wrist": [
+        305,
+        184
+      ],
+      "grip": [
+        316,
+        187
+      ],
+      "walkSwingPx": 6,
+      "walkLiftPx": 3,
+      "upperBone": "arm-1-upper",
+      "lowerBone": "arm-1-lower",
+      "parentBone": "spine",
+      "effectorBone": "weapon-0"
+    }
+  ],
+  "legConstraints": [
+    {
+      "parentBone": "pelvis",
+      "parentUpper": false,
+      "upperBone": "leg-0-upper",
+      "lowerBone": "leg-0-lower",
+      "effectorBone": "leg-0-foot",
+      "hip": [
+        254,
+        244
+      ],
+      "knee": [
+        284,
+        318
+      ],
+      "ankle": [
+        269,
+        398
+      ]
+    },
+    {
+      "parentBone": "pelvis",
+      "parentUpper": false,
+      "upperBone": "leg-1-upper",
+      "lowerBone": "leg-1-lower",
+      "effectorBone": "leg-1-foot",
+      "hip": [
+        218,
+        244
+      ],
+      "knee": [
+        224,
+        318
+      ],
+      "ankle": [
+        177,
+        398
+      ]
+    }
+  ]
+}

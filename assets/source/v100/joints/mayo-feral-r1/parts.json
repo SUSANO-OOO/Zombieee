@@ -1,0 +1,2003 @@
+{
+  "schema": "zombieee-layered-unit-authoring/1",
+  "kind": "mayo-chan-feral",
+  "assetKey": "joint-mayo-chan-feral",
+  "status": "Runtime candidate; original-bound dedicated feral anatomy, four planted articulated legs and four head-attached fanged petals. All48/all-action, native continuous-play, performance and physical recording acceptance pending.",
+  "width": 640,
+  "height": 448,
+  "sourceSha256": "53d42558abb74695fb5c6d7098eedf7611b853eac991f3eba8509b23779ff61e",
+  "sheetSha256": "71c2bdc83aa7829eb90033d69e6e621e9f6ea40ce0638e671d1a90423cef951c",
+  "rig": {
+    "root": [
+      240,
+      432
+    ],
+    "pelvis": [
+      [
+        148,
+        315
+      ],
+      [
+        148,
+        293
+      ]
+    ],
+    "spine": [
+      [
+        148,
+        315
+      ],
+      [
+        302,
+        280
+      ]
+    ],
+    "head": [
+      [
+        331,
+        285
+      ],
+      [
+        357,
+        172
+      ]
+    ],
+    "extras": [
+      {
+        "name": "tail",
+        "parent": "spine",
+        "a": [
+          126,
+          259
+        ],
+        "b": [
+          92,
+          178
+        ],
+        "walkAngle": 0.05
+      },
+      {
+        "name": "idle-mouth",
+        "parent": "head",
+        "a": [
+          394,
+          242
+        ],
+        "b": [
+          418,
+          242
+        ],
+        "softScale": {
+          "rest": 1,
+          "active": 0.12
+        },
+        "attackAngle": 0
+      },
+      {
+        "name": "mouth-core",
+        "parent": "head",
+        "a": [
+          394,
+          242
+        ],
+        "b": [
+          418,
+          244
+        ],
+        "softScale": {
+          "rest": 0.03,
+          "active": 0.68
+        },
+        "attackAngle": 0
+      },
+      {
+        "name": "mouth-petal-0",
+        "parent": "head",
+        "a": [
+          394,
+          242
+        ],
+        "b": [
+          418,
+          246
+        ],
+        "softScale": {
+          "rest": 0.03,
+          "active": 0.68
+        },
+        "attackAngle": -0.12
+      },
+      {
+        "name": "mouth-petal-1",
+        "parent": "head",
+        "a": [
+          394,
+          242
+        ],
+        "b": [
+          418,
+          248
+        ],
+        "softScale": {
+          "rest": 0.03,
+          "active": 0.68
+        },
+        "attackAngle": 0.12
+      },
+      {
+        "name": "mouth-petal-2",
+        "parent": "head",
+        "a": [
+          394,
+          242
+        ],
+        "b": [
+          418,
+          250
+        ],
+        "softScale": {
+          "rest": 0.03,
+          "active": 0.68
+        },
+        "attackAngle": 0.08
+      },
+      {
+        "name": "mouth-petal-3",
+        "parent": "head",
+        "a": [
+          394,
+          242
+        ],
+        "b": [
+          418,
+          252
+        ],
+        "softScale": {
+          "rest": 0.03,
+          "active": 0.68
+        },
+        "attackAngle": -0.1
+      }
+    ],
+    "legs": [
+      {
+        "hip": [
+          150,
+          315
+        ],
+        "knee": [
+          118,
+          378
+        ],
+        "ankle": [
+          126,
+          413
+        ],
+        "toe": [
+          114,
+          430
+        ],
+        "offset": 0,
+        "center": 150,
+        "paintedPaw": "far-rear-paw",
+        "groundAnkleY": 415.5
+      },
+      {
+        "hip": [
+          110,
+          315
+        ],
+        "knee": [
+          90,
+          370
+        ],
+        "ankle": [
+          41,
+          411
+        ],
+        "toe": [
+          24,
+          429
+        ],
+        "offset": 0.5,
+        "center": 112,
+        "paintedPaw": "near-rear-paw",
+        "groundAnkleY": 411.5
+      },
+      {
+        "hip": [
+          302,
+          295
+        ],
+        "knee": [
+          334,
+          355
+        ],
+        "ankle": [
+          340,
+          411
+        ],
+        "toe": [
+          355,
+          426
+        ],
+        "offset": 0.5,
+        "center": 302,
+        "paintedPaw": "far-front-paw",
+        "groundAnkleY": 413.5
+      },
+      {
+        "hip": [
+          332,
+          298
+        ],
+        "knee": [
+          358,
+          356
+        ],
+        "ankle": [
+          340,
+          416
+        ],
+        "toe": [
+          352,
+          426
+        ],
+        "offset": 0,
+        "center": 334,
+        "paintedPaw": "near-front-paw",
+        "groundAnkleY": 417.5
+      }
+    ],
+    "arms": [],
+    "attack": {
+      "bodyShift": [
+        4,
+        1.4
+      ],
+      "headShift": [
+        3,
+        -1
+      ],
+      "headAngle": 0.01,
+      "windupEnd": 0.28,
+      "activeEnd": 0.55
+    }
+  },
+  "motion": {
+    "walk": {
+      "spanPx": 32,
+      "liftPx": 20,
+      "stanceFraction": 0.36,
+      "flightLiftPx": 6,
+      "stanceCompressionPx": 1,
+      "groundY": 432
+    }
+  },
+  "order": [
+    "far-rear-upper",
+    "far-rear-lower",
+    "far-rear-paw",
+    "far-front-upper",
+    "far-front-lower",
+    "far-front-paw",
+    "tail",
+    "belly-underlap",
+    "near-rear-upper",
+    "near-rear-lower",
+    "near-rear-paw",
+    "torso",
+    "neck-underlap",
+    "gear",
+    "near-front-upper",
+    "near-front-lower",
+    "near-front-paw",
+    "head",
+    "idle-mouth",
+    "mouth-core",
+    "mouth-petal-0",
+    "mouth-petal-1",
+    "mouth-petal-2",
+    "mouth-petal-3"
+  ],
+  "parts": [
+    {
+      "name": "belly-underlap",
+      "bone": "spine",
+      "hiddenCompletion": {
+        "studySha256": "71c2bdc83aa7829eb90033d69e6e621e9f6ea40ce0638e671d1a90423cef951c",
+        "sourceRect": [
+          88,
+          167,
+          174,
+          100
+        ],
+        "destination": [
+          165,
+          291,
+          132,
+          78
+        ],
+        "mask": {
+          "ellipse": [
+            231,
+            330,
+            66,
+            39
+          ],
+          "intersection": "explicit-original-torso-outline"
+        },
+        "purpose": "only original foreleg occlusion behind retained torso and gear"
+      },
+      "file": "belly-underlap.png",
+      "sha256": "55763405a7303bb7582e36ec28e887be56c9264c17312b6750500749b07200d8"
+    },
+    {
+      "name": "torso",
+      "bone": "spine",
+      "original": true,
+      "polygon": [
+        [
+          70,
+          267
+        ],
+        [
+          127,
+          236
+        ],
+        [
+          197,
+          218
+        ],
+        [
+          241,
+          217
+        ],
+        [
+          288,
+          239
+        ],
+        [
+          304,
+          271
+        ],
+        [
+          292,
+          311
+        ],
+        [
+          274,
+          344
+        ],
+        [
+          231,
+          364
+        ],
+        [
+          187,
+          368
+        ],
+        [
+          149,
+          359
+        ],
+        [
+          113,
+          362
+        ],
+        [
+          84,
+          348
+        ],
+        [
+          58,
+          335
+        ]
+      ],
+      "excludedRegions": [
+        [
+          [
+            187,
+            301
+          ],
+          [
+            212,
+            285
+          ],
+          [
+            250,
+            298
+          ],
+          [
+            278,
+            325
+          ],
+          [
+            303,
+            359
+          ],
+          [
+            266,
+            385
+          ],
+          [
+            207,
+            395
+          ],
+          [
+            184,
+            368
+          ]
+        ],
+        [
+          [
+            75,
+            316
+          ],
+          [
+            108,
+            313
+          ],
+          [
+            144,
+            334
+          ],
+          [
+            137,
+            378
+          ],
+          [
+            76,
+            390
+          ]
+        ]
+      ],
+      "sourceOffset": [
+        0,
+        0
+      ],
+      "originalReference": "identity-reference.png",
+      "file": "torso.png",
+      "sha256": "e5fcac03efcf3b99a114645057a6b660c9c14fe90f7db918768166c78c65cd0a"
+    },
+    {
+      "name": "far-rear-upper",
+      "bone": "leg-0-upper",
+      "hiddenCompletion": {
+        "studySha256": "71c2bdc83aa7829eb90033d69e6e621e9f6ea40ce0638e671d1a90423cef951c",
+        "method": "explicit-curved-fur-centerline-rectification",
+        "curve": [
+          [
+            80,
+            480,
+            27
+          ],
+          [
+            130,
+            521,
+            44
+          ],
+          [
+            180,
+            546,
+            38
+          ],
+          [
+            230,
+            542,
+            25
+          ],
+          [
+            270,
+            516,
+            18
+          ]
+        ],
+        "A": [
+          150,
+          315
+        ],
+        "B": [
+          118,
+          378
+        ],
+        "radii": [
+          21,
+          13
+        ],
+        "originalCurvedStudyNotStraightClipped": true,
+        "opaqueInteriorRows": false
+      },
+      "file": "far-rear-upper.png",
+      "sha256": "5557490550a0d829f609a9645740f70e888840b11578f0a765fce4336bfb5e6e"
+    },
+    {
+      "name": "far-rear-lower",
+      "bone": "leg-0-lower",
+      "hiddenCompletion": {
+        "studySha256": "71c2bdc83aa7829eb90033d69e6e621e9f6ea40ce0638e671d1a90423cef951c",
+        "method": "explicit-curved-fur-centerline-rectification",
+        "curve": [
+          [
+            80,
+            790,
+            23
+          ],
+          [
+            120,
+            820,
+            25
+          ],
+          [
+            160,
+            816,
+            23
+          ],
+          [
+            200,
+            793,
+            19
+          ],
+          [
+            240,
+            813,
+            21
+          ],
+          [
+            275,
+            839,
+            23
+          ]
+        ],
+        "A": [
+          118,
+          378
+        ],
+        "B": [
+          126,
+          413
+        ],
+        "radii": [
+          12,
+          8
+        ],
+        "originalCurvedStudyNotStraightClipped": true,
+        "opaqueInteriorRows": false
+      },
+      "file": "far-rear-lower.png",
+      "sha256": "6824973772919741811dd72d4a020a7ef2eeb1ab4cca2397b13b4bfc3ab9ca75"
+    },
+    {
+      "name": "near-rear-upper",
+      "bone": "leg-1-upper",
+      "hiddenCompletion": {
+        "studySha256": "71c2bdc83aa7829eb90033d69e6e621e9f6ea40ce0638e671d1a90423cef951c",
+        "method": "explicit-curved-fur-centerline-rectification",
+        "curve": [
+          [
+            370,
+            180,
+            25
+          ],
+          [
+            420,
+            155,
+            38
+          ],
+          [
+            470,
+            164,
+            49
+          ],
+          [
+            520,
+            200,
+            38
+          ],
+          [
+            565,
+            216,
+            25
+          ]
+        ],
+        "A": [
+          110,
+          315
+        ],
+        "B": [
+          90,
+          370
+        ],
+        "radii": [
+          21,
+          13
+        ],
+        "originalCurvedStudyNotStraightClipped": true,
+        "opaqueInteriorRows": false
+      },
+      "file": "near-rear-upper.png",
+      "sha256": "a4f1a48d68dd90c435c7c10e21fd9c5d24d23d7059f764edabe1b45b644086f3"
+    },
+    {
+      "name": "near-rear-lower",
+      "bone": "leg-1-lower",
+      "hiddenCompletion": {
+        "studySha256": "71c2bdc83aa7829eb90033d69e6e621e9f6ea40ce0638e671d1a90423cef951c",
+        "method": "explicit-curved-fur-centerline-rectification",
+        "curve": [
+          [
+            370,
+            481,
+            23
+          ],
+          [
+            410,
+            465,
+            25
+          ],
+          [
+            450,
+            449,
+            20
+          ],
+          [
+            490,
+            484,
+            20
+          ],
+          [
+            530,
+            490,
+            21
+          ],
+          [
+            575,
+            450,
+            24
+          ]
+        ],
+        "A": [
+          90,
+          370
+        ],
+        "B": [
+          41,
+          411
+        ],
+        "radii": [
+          12,
+          8
+        ],
+        "originalCurvedStudyNotStraightClipped": true,
+        "opaqueInteriorRows": false
+      },
+      "file": "near-rear-lower.png",
+      "sha256": "86f55b1b0d48abe1b94aab80e2fb8ebf43b9f36919740cdf04cc3763753b5eb2"
+    },
+    {
+      "name": "far-front-upper",
+      "bone": "leg-2-upper",
+      "hiddenCompletion": {
+        "studySha256": "71c2bdc83aa7829eb90033d69e6e621e9f6ea40ce0638e671d1a90423cef951c",
+        "method": "explicit-curved-fur-centerline-rectification",
+        "curve": [
+          [
+            370,
+            1095,
+            28
+          ],
+          [
+            420,
+            1090,
+            44
+          ],
+          [
+            470,
+            1095,
+            41
+          ],
+          [
+            520,
+            1125,
+            28
+          ],
+          [
+            575,
+            1159,
+            24
+          ]
+        ],
+        "A": [
+          302,
+          295
+        ],
+        "B": [
+          334,
+          355
+        ],
+        "radii": [
+          21,
+          13
+        ],
+        "originalCurvedStudyNotStraightClipped": true,
+        "opaqueInteriorRows": true
+      },
+      "file": "far-front-upper.png",
+      "sha256": "d86088538f061e6796dfae32cca8e0384ac6bee1bc18ea5831f0266308fe9f23"
+    },
+    {
+      "name": "far-front-lower",
+      "bone": "leg-2-lower",
+      "hiddenCompletion": {
+        "studySha256": "71c2bdc83aa7829eb90033d69e6e621e9f6ea40ce0638e671d1a90423cef951c",
+        "method": "explicit-curved-fur-centerline-rectification",
+        "curve": [
+          [
+            690,
+            207,
+            24
+          ],
+          [
+            735,
+            185,
+            27
+          ],
+          [
+            780,
+            169,
+            26
+          ],
+          [
+            830,
+            143,
+            25
+          ],
+          [
+            875,
+            121,
+            25
+          ]
+        ],
+        "A": [
+          334,
+          355
+        ],
+        "B": [
+          340,
+          411
+        ],
+        "radii": [
+          12,
+          8
+        ],
+        "originalCurvedStudyNotStraightClipped": true,
+        "opaqueInteriorRows": false
+      },
+      "file": "far-front-lower.png",
+      "sha256": "f29dfa8a3b6f3ec08ff4660bc94ebdfd468510c59e5e1b1d35e4a67070f23a7a"
+    },
+    {
+      "name": "near-front-upper",
+      "bone": "leg-3-upper",
+      "hiddenCompletion": {
+        "studySha256": "71c2bdc83aa7829eb90033d69e6e621e9f6ea40ce0638e671d1a90423cef951c",
+        "method": "explicit-curved-fur-centerline-rectification",
+        "curve": [
+          [
+            685,
+            795,
+            24
+          ],
+          [
+            730,
+            768,
+            40
+          ],
+          [
+            775,
+            777,
+            44
+          ],
+          [
+            825,
+            810,
+            29
+          ],
+          [
+            875,
+            811,
+            22
+          ]
+        ],
+        "A": [
+          332,
+          298
+        ],
+        "B": [
+          358,
+          356
+        ],
+        "radii": [
+          21,
+          13
+        ],
+        "originalCurvedStudyNotStraightClipped": true,
+        "opaqueInteriorRows": false
+      },
+      "file": "near-front-upper.png",
+      "sha256": "074f612dfff0de0bbf89b8bb0222b3d0303300dc7d5eb6289f634b68172b3b7f"
+    },
+    {
+      "name": "near-front-lower",
+      "bone": "leg-3-lower",
+      "hiddenCompletion": {
+        "studySha256": "71c2bdc83aa7829eb90033d69e6e621e9f6ea40ce0638e671d1a90423cef951c",
+        "method": "explicit-curved-fur-centerline-rectification",
+        "curve": [
+          [
+            690,
+            1087,
+            24
+          ],
+          [
+            735,
+            1103,
+            25
+          ],
+          [
+            780,
+            1114,
+            25
+          ],
+          [
+            830,
+            1140,
+            26
+          ],
+          [
+            880,
+            1170,
+            26
+          ]
+        ],
+        "A": [
+          358,
+          356
+        ],
+        "B": [
+          340,
+          416
+        ],
+        "radii": [
+          12,
+          8
+        ],
+        "originalCurvedStudyNotStraightClipped": true,
+        "opaqueInteriorRows": false
+      },
+      "file": "near-front-lower.png",
+      "sha256": "cff1ce81819909f02a054748cf27c610f56b62b452334d1be7eeb10a6d21317f"
+    },
+    {
+      "name": "far-rear-paw",
+      "bone": "leg-0-foot",
+      "original": true,
+      "polygon": [
+        [
+          107,
+          403
+        ],
+        [
+          132,
+          396
+        ],
+        [
+          151,
+          404
+        ],
+        [
+          148,
+          419
+        ],
+        [
+          136,
+          432
+        ],
+        [
+          108,
+          432
+        ]
+      ],
+      "excludedRegions": [],
+      "sourceOffset": [
+        0,
+        0
+      ],
+      "originalReference": "identity-reference.png",
+      "file": "far-rear-paw.png",
+      "sha256": "993e950effad989812a23407b7782a7f6421d09e49d6e506b779bece7cd4caee"
+    },
+    {
+      "name": "near-rear-paw",
+      "bone": "leg-1-foot",
+      "original": true,
+      "polygon": [
+        [
+          20,
+          399
+        ],
+        [
+          51,
+          401
+        ],
+        [
+          64,
+          412
+        ],
+        [
+          51,
+          432
+        ],
+        [
+          16,
+          432
+        ]
+      ],
+      "excludedRegions": [],
+      "sourceOffset": [
+        0,
+        0
+      ],
+      "originalReference": "identity-reference.png",
+      "file": "near-rear-paw.png",
+      "sha256": "ac863ef1358ea447ec4828d8abfaac7b38314627ef24789e1ab238a0685c7e8a"
+    },
+    {
+      "name": "far-front-paw",
+      "bone": "leg-2-foot",
+      "original": true,
+      "polygon": [
+        [
+          318,
+          405
+        ],
+        [
+          350,
+          396
+        ],
+        [
+          367,
+          413
+        ],
+        [
+          367,
+          432
+        ],
+        [
+          333,
+          432
+        ],
+        [
+          319,
+          420
+        ]
+      ],
+      "excludedRegions": [],
+      "sourceOffset": [
+        -73,
+        26
+      ],
+      "originalReference": "identity-reference.png",
+      "file": "far-front-paw.png",
+      "sha256": "bfa0b95a49290c04a3217cdf6f01aaa43b6df02855218ccfd4b591279fc48eb0"
+    },
+    {
+      "name": "near-front-paw",
+      "bone": "leg-3-foot",
+      "original": true,
+      "polygon": [
+        [
+          321,
+          401
+        ],
+        [
+          351,
+          399
+        ],
+        [
+          363,
+          414
+        ],
+        [
+          362,
+          431
+        ],
+        [
+          335,
+          433
+        ],
+        [
+          319,
+          418
+        ]
+      ],
+      "excludedRegions": [],
+      "sourceOffset": [
+        0,
+        16
+      ],
+      "originalReference": "identity-reference.png",
+      "file": "near-front-paw.png",
+      "sha256": "4e6d0f35e189c1567cb2363fc5ee4727271d15eb29fe32f27ec9c9177fb59572"
+    },
+    {
+      "name": "tail",
+      "bone": "tail",
+      "original": true,
+      "polygon": [
+        [
+          0,
+          80
+        ],
+        [
+          165,
+          80
+        ],
+        [
+          170,
+          190
+        ],
+        [
+          153,
+          258
+        ],
+        [
+          128,
+          275
+        ],
+        [
+          95,
+          253
+        ],
+        [
+          15,
+          199
+        ]
+      ],
+      "excludedRegions": [],
+      "sourceOffset": [
+        0,
+        0
+      ],
+      "originalReference": "identity-reference.png",
+      "file": "tail.png",
+      "sha256": "bbc8bde0736f6a05a050a2ff89f4ef593eb1cefc930df295e2125a81874297c9"
+    },
+    {
+      "name": "neck-underlap",
+      "bone": "spine",
+      "original": true,
+      "polygon": [
+        [
+          312,
+          268
+        ],
+        [
+          332,
+          271
+        ],
+        [
+          343,
+          289
+        ],
+        [
+          338,
+          307
+        ],
+        [
+          322,
+          309
+        ],
+        [
+          310,
+          293
+        ]
+      ],
+      "excludedRegions": [],
+      "sourceOffset": [
+        10,
+        30
+      ],
+      "originalReference": "identity-reference.png",
+      "file": "neck-underlap.png",
+      "sha256": "e6d5f1f4d4deccfe447d03e6a6d5e96914f4c461fd8205e3018944e65aafd173"
+    },
+    {
+      "name": "gear",
+      "bone": "spine",
+      "original": true,
+      "polygon": [
+        [
+          122,
+          231
+        ],
+        [
+          173,
+          205
+        ],
+        [
+          235,
+          204
+        ],
+        [
+          273,
+          221
+        ],
+        [
+          294,
+          253
+        ],
+        [
+          320,
+          281
+        ],
+        [
+          322,
+          331
+        ],
+        [
+          286,
+          351
+        ],
+        [
+          213,
+          365
+        ],
+        [
+          155,
+          349
+        ],
+        [
+          124,
+          318
+        ]
+      ],
+      "excludedRegions": [
+        [
+          [
+            187,
+            301
+          ],
+          [
+            212,
+            285
+          ],
+          [
+            250,
+            298
+          ],
+          [
+            278,
+            325
+          ],
+          [
+            303,
+            359
+          ],
+          [
+            266,
+            385
+          ],
+          [
+            207,
+            395
+          ],
+          [
+            184,
+            368
+          ]
+        ]
+      ],
+      "sourceOffset": [
+        0,
+        0
+      ],
+      "originalReference": "identity-reference.png",
+      "file": "gear.png",
+      "sha256": "ceecbd08e4b3e933fc765cd752eaef45672b6a65ae34381616ee5786e69437f5"
+    },
+    {
+      "name": "head",
+      "bone": "head",
+      "original": true,
+      "polygon": [
+        [
+          244,
+          42
+        ],
+        [
+          448,
+          42
+        ],
+        [
+          448,
+          242
+        ],
+        [
+          475,
+          242
+        ],
+        [
+          475,
+          329
+        ],
+        [
+          402,
+          329
+        ],
+        [
+          390,
+          286
+        ],
+        [
+          330,
+          299
+        ],
+        [
+          275,
+          272
+        ],
+        [
+          243,
+          226
+        ]
+      ],
+      "excludedRegions": [
+        [
+          [
+            370,
+            238
+          ],
+          [
+            423,
+            237
+          ],
+          [
+            472,
+            231
+          ],
+          [
+            475,
+            326
+          ],
+          [
+            425,
+            329
+          ],
+          [
+            390,
+            296
+          ]
+        ]
+      ],
+      "sourceOffset": [
+        0,
+        0
+      ],
+      "originalReference": "identity-reference.png",
+      "file": "head.png",
+      "sha256": "580871b7bb45da03e7f0a846a27ea5a3d9acc51c3a757e081ae9857b4af4e827"
+    },
+    {
+      "name": "idle-mouth",
+      "bone": "idle-mouth",
+      "original": true,
+      "polygon": [
+        [
+          370,
+          238
+        ],
+        [
+          423,
+          237
+        ],
+        [
+          472,
+          231
+        ],
+        [
+          475,
+          326
+        ],
+        [
+          425,
+          329
+        ],
+        [
+          390,
+          296
+        ]
+      ],
+      "excludedRegions": [],
+      "sourceOffset": [
+        0,
+        0
+      ],
+      "originalReference": "identity-reference.png",
+      "file": "idle-mouth.png",
+      "sha256": "cb5f3c25a668271d4837bfd290fab0572a202e04e4bb916cebbbcb3e14ca4227"
+    },
+    {
+      "name": "mouth-core",
+      "bone": "mouth-core",
+      "original": true,
+      "polygon": [
+        [
+          382,
+          230
+        ],
+        [
+          408,
+          227
+        ],
+        [
+          428,
+          250
+        ],
+        [
+          396,
+          271
+        ],
+        [
+          378,
+          255
+        ]
+      ],
+      "excludedRegions": [],
+      "sourceOffset": [
+        86,
+        31
+      ],
+      "originalReference": "original-attack-a.png",
+      "file": "mouth-core.png",
+      "sha256": "1602fd73b89c4bb2f5c9ec0d760e9eb51a5f0588c1741d53845f1e028cf4a66e"
+    },
+    {
+      "name": "mouth-petal-0",
+      "bone": "mouth-petal-0",
+      "original": true,
+      "polygon": [
+        [
+          394,
+          238
+        ],
+        [
+          353,
+          213
+        ],
+        [
+          299,
+          194
+        ],
+        [
+          328,
+          230
+        ],
+        [
+          367,
+          250
+        ],
+        [
+          394,
+          253
+        ]
+      ],
+      "excludedRegions": [],
+      "sourceOffset": [
+        86,
+        31
+      ],
+      "originalReference": "original-attack-a.png",
+      "file": "mouth-petal-0.png",
+      "sha256": "d5b5878bc2281c56641272e5d936c02dfbe3227cae4a6d693282b6df10b4eef8"
+    },
+    {
+      "name": "mouth-petal-1",
+      "bone": "mouth-petal-1",
+      "original": true,
+      "polygon": [
+        [
+          393,
+          235
+        ],
+        [
+          413,
+          204
+        ],
+        [
+          453,
+          153
+        ],
+        [
+          447,
+          209
+        ],
+        [
+          432,
+          240
+        ],
+        [
+          399,
+          254
+        ]
+      ],
+      "excludedRegions": [
+        [
+          [
+            394,
+            238
+          ],
+          [
+            353,
+            213
+          ],
+          [
+            299,
+            194
+          ],
+          [
+            328,
+            230
+          ],
+          [
+            367,
+            250
+          ],
+          [
+            394,
+            253
+          ]
+        ]
+      ],
+      "sourceOffset": [
+        86,
+        31
+      ],
+      "originalReference": "original-attack-a.png",
+      "file": "mouth-petal-1.png",
+      "sha256": "8b15f26dc08a643fc61afc22e894bbc410ae26c5394809e6db0b2b7d334a2574"
+    },
+    {
+      "name": "mouth-petal-2",
+      "bone": "mouth-petal-2",
+      "original": true,
+      "polygon": [
+        [
+          398,
+          246
+        ],
+        [
+          432,
+          225
+        ],
+        [
+          462,
+          212
+        ],
+        [
+          504,
+          173
+        ],
+        [
+          508,
+          271
+        ],
+        [
+          472,
+          270
+        ],
+        [
+          491,
+          299
+        ],
+        [
+          506,
+          324
+        ],
+        [
+          507,
+          343
+        ],
+        [
+          483,
+          352
+        ],
+        [
+          468,
+          336
+        ],
+        [
+          458,
+          310
+        ],
+        [
+          436,
+          313
+        ],
+        [
+          405,
+          281
+        ],
+        [
+          389,
+          254
+        ]
+      ],
+      "excludedRegions": [
+        [
+          [
+            394,
+            238
+          ],
+          [
+            353,
+            213
+          ],
+          [
+            299,
+            194
+          ],
+          [
+            328,
+            230
+          ],
+          [
+            367,
+            250
+          ],
+          [
+            394,
+            253
+          ]
+        ],
+        [
+          [
+            393,
+            235
+          ],
+          [
+            413,
+            204
+          ],
+          [
+            453,
+            153
+          ],
+          [
+            447,
+            209
+          ],
+          [
+            432,
+            240
+          ],
+          [
+            399,
+            254
+          ]
+        ]
+      ],
+      "sourceOffset": [
+        86,
+        31
+      ],
+      "originalReference": "original-attack-a.png",
+      "file": "mouth-petal-2.png",
+      "sha256": "8594a6eb16c750460acdf40f0f425df2c370cfe51c7b301868357e256217401a"
+    },
+    {
+      "name": "mouth-petal-3",
+      "bone": "mouth-petal-3",
+      "original": true,
+      "polygon": [
+        [
+          394,
+          249
+        ],
+        [
+          379,
+          265
+        ],
+        [
+          357,
+          282
+        ],
+        [
+          347,
+          313
+        ],
+        [
+          382,
+          295
+        ],
+        [
+          410,
+          275
+        ],
+        [
+          408,
+          251
+        ]
+      ],
+      "excludedRegions": [
+        [
+          [
+            394,
+            238
+          ],
+          [
+            353,
+            213
+          ],
+          [
+            299,
+            194
+          ],
+          [
+            328,
+            230
+          ],
+          [
+            367,
+            250
+          ],
+          [
+            394,
+            253
+          ]
+        ],
+        [
+          [
+            393,
+            235
+          ],
+          [
+            413,
+            204
+          ],
+          [
+            453,
+            153
+          ],
+          [
+            447,
+            209
+          ],
+          [
+            432,
+            240
+          ],
+          [
+            399,
+            254
+          ]
+        ],
+        [
+          [
+            398,
+            246
+          ],
+          [
+            432,
+            225
+          ],
+          [
+            462,
+            212
+          ],
+          [
+            504,
+            173
+          ],
+          [
+            508,
+            271
+          ],
+          [
+            472,
+            270
+          ],
+          [
+            491,
+            299
+          ],
+          [
+            506,
+            324
+          ],
+          [
+            507,
+            343
+          ],
+          [
+            483,
+            352
+          ],
+          [
+            468,
+            336
+          ],
+          [
+            458,
+            310
+          ],
+          [
+            436,
+            313
+          ],
+          [
+            405,
+            281
+          ],
+          [
+            389,
+            254
+          ]
+        ]
+      ],
+      "sourceOffset": [
+        86,
+        31
+      ],
+      "originalReference": "original-attack-a.png",
+      "file": "mouth-petal-3.png",
+      "sha256": "b1b788a61a6912077da2aee7a5a299a5967947f887e70d1b60267d78bf4da332"
+    }
+  ],
+  "lowerLayers": [
+    "far-rear-upper",
+    "far-rear-lower",
+    "far-rear-paw",
+    "near-rear-upper",
+    "near-rear-lower",
+    "near-rear-paw",
+    "far-front-upper",
+    "far-front-lower",
+    "far-front-paw",
+    "near-front-upper",
+    "near-front-lower",
+    "near-front-paw"
+  ],
+  "pelvisY": 315,
+  "muzzle": [
+    443,
+    210
+  ],
+  "muzzleSourcePart": "mouth-petal-1",
+  "weaponBone": "mouth-petal-1",
+  "identityBinding": {
+    "file": "identity-reference.png",
+    "path": "/art/v090/characters/mayo-chan-feral-battle-r1.png",
+    "sourceRect": {
+      "x": 480,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "sha256": "53d42558abb74695fb5c6d7098eedf7611b853eac991f3eba8509b23779ff61e",
+    "sourceSha256": "c9b26c01818f21d9af273e817b0a3c48cb57649547558af438a54b5729a536e8"
+  },
+  "poseBindings": {
+    "walk-a": {
+      "file": "identity-reference.png",
+      "path": "/art/v090/characters/mayo-chan-feral-battle-r1.png",
+      "sourceRect": {
+        "x": 480,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "sha256": "53d42558abb74695fb5c6d7098eedf7611b853eac991f3eba8509b23779ff61e",
+      "sourceSha256": "c9b26c01818f21d9af273e817b0a3c48cb57649547558af438a54b5729a536e8"
+    },
+    "attack-a": {
+      "file": "original-attack-a.png",
+      "path": "/art/v090/characters/mayo-chan-feral-battle-r1.png",
+      "sourceRect": {
+        "x": 1440,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "sha256": "4d3dda77f5be27c9a6cf2a93acb72114ff6eaa66e77ede86ed507decbcb06982",
+      "sourceSha256": "c9b26c01818f21d9af273e817b0a3c48cb57649547558af438a54b5729a536e8"
+    }
+  },
+  "referenceFrame": {
+    "width": 480,
+    "height": 448,
+    "scale": 1,
+    "tx": 0,
+    "ty": 0
+  },
+  "interpolationPivots": {
+    "head": [
+      331,
+      285
+    ],
+    "idle-mouth": [
+      394,
+      242
+    ],
+    "mouth-core": [
+      394,
+      242
+    ],
+    "mouth-petal-0": [
+      394,
+      242
+    ],
+    "mouth-petal-1": [
+      394,
+      242
+    ],
+    "mouth-petal-2": [
+      394,
+      242
+    ],
+    "mouth-petal-3": [
+      394,
+      242
+    ]
+  },
+  "parentAttachments": {
+    "idle-mouth": {
+      "parent": "head",
+      "pivot": [
+        394,
+        242
+      ]
+    },
+    "mouth-core": {
+      "parent": "head",
+      "pivot": [
+        394,
+        242
+      ]
+    },
+    "mouth-petal-0": {
+      "parent": "head",
+      "pivot": [
+        394,
+        242
+      ]
+    },
+    "mouth-petal-1": {
+      "parent": "head",
+      "pivot": [
+        394,
+        242
+      ]
+    },
+    "mouth-petal-2": {
+      "parent": "head",
+      "pivot": [
+        394,
+        242
+      ]
+    },
+    "mouth-petal-3": {
+      "parent": "head",
+      "pivot": [
+        394,
+        242
+      ]
+    }
+  },
+  "softBones": {
+    "idle-mouth": {
+      "minScale": 0.12,
+      "maxScale": 1
+    },
+    "mouth-core": {
+      "minScale": 0.03,
+      "maxScale": 0.68
+    },
+    "mouth-petal-0": {
+      "minScale": 0.03,
+      "maxScale": 0.68
+    },
+    "mouth-petal-1": {
+      "minScale": 0.03,
+      "maxScale": 0.68
+    },
+    "mouth-petal-2": {
+      "minScale": 0.03,
+      "maxScale": 0.68
+    },
+    "mouth-petal-3": {
+      "minScale": 0.03,
+      "maxScale": 0.68
+    }
+  },
+  "atlasPacking": "height-descending-shelves",
+  "legConstraints": [
+    {
+      "parentBone": "spine",
+      "upperBone": "leg-0-upper",
+      "lowerBone": "leg-0-lower",
+      "effectorBone": "leg-0-foot",
+      "hip": [
+        150,
+        315
+      ],
+      "knee": [
+        118,
+        378
+      ],
+      "ankle": [
+        126,
+        413
+      ]
+    },
+    {
+      "parentBone": "spine",
+      "upperBone": "leg-1-upper",
+      "lowerBone": "leg-1-lower",
+      "effectorBone": "leg-1-foot",
+      "hip": [
+        110,
+        315
+      ],
+      "knee": [
+        90,
+        370
+      ],
+      "ankle": [
+        41,
+        411
+      ]
+    },
+    {
+      "parentBone": "spine",
+      "upperBone": "leg-2-upper",
+      "lowerBone": "leg-2-lower",
+      "effectorBone": "leg-2-foot",
+      "hip": [
+        302,
+        295
+      ],
+      "knee": [
+        334,
+        355
+      ],
+      "ankle": [
+        340,
+        411
+      ]
+    },
+    {
+      "parentBone": "spine",
+      "upperBone": "leg-3-upper",
+      "lowerBone": "leg-3-lower",
+      "effectorBone": "leg-3-foot",
+      "hip": [
+        332,
+        298
+      ],
+      "knee": [
+        358,
+        356
+      ],
+      "ankle": [
+        340,
+        416
+      ]
+    }
+  ],
+  "spriteSourceRebinding": {
+    "previousSourceSha256": "87e86f2b6fd4dd113da9ebcb939f370afcc63828f488a80752649a38f386555c",
+    "sourceSha256": "c9b26c01818f21d9af273e817b0a3c48cb57649547558af438a54b5729a536e8",
+    "reason": "Only hit faces recovered from approved original masters; frozen walk/attack reference pixels and rig parts unchanged"
+  }
+}

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
+import {dirname} from 'node:path';
 import {pwaBrowserType} from './pwa-browser-runtime.mjs';
 import {enterV100FromTitle} from './v100-title-qa-entry.mjs';
 import {createDefaultV100Save,normalizeV100Save,serializeV100Save} from '../app/v100Save.js';
@@ -8,7 +9,7 @@ import {nativeBattleTap} from './v100-normal-tactical-input.mjs';
 import {productionBuildIdentity} from './browser-qa-build-identity.mjs';
 if(process.platform==='win32')throw new Error('Enemy motion QA is hosted-only; local game and audio playback are disabled');
 const engine=process.env.V100_ENEMY_MOTION_ENGINE??'chromium',out=process.env.V100_ENEMY_MOTION_OUT;
-assert.ok(out);await mkdir(out,{recursive:false});
+assert.ok(out);await mkdir(dirname(out),{recursive:true});await mkdir(out,{recursive:false});
 const report={engine,build:await productionBuildIdentity(),inputs:[],errors:[],scope:'S1 native deployment only, up to three level-1 owned Guardians cover the three deployment lanes. Observe real ordinary walker and crusher attacks, without actor/time/HP/result setters. Not a campaign or win acceptance.'};
 const browser=await(await pwaBrowserType(engine)).launch();
 try {
@@ -61,4 +62,19 @@ try {
  }catch(e){report.status='failed';report.error=String(e);await page.screenshot({path:out+'/failure.png'}).catch(()=>{});}
  finally{await context.close();report.video=await page.video()?.path();}
 }finally{await browser.close();await writeFile(out+'/report.json',JSON.stringify(report,null,2));}
-console.log(JSON.stringify({status:report.status,error:report.error,inputs:report.inputs.length,rows:report.audit?.rows.length}));if(report.status==='failed')process.exitCode=1;
+console.log(JSON.stringify({status:report.status,error:report.error,inputs:report.inputs.length,rows:report.audit?.rows.length}));
+if(report.status==='failed'){
+ // Keep the bounded observation contract. Persist enough ordinary-play data
+ // in the CI log to distinguish missing attacks from sampling or survival.
+ console.log('[ENEMY CONTACT FAILURE] '+JSON.stringify({
+  completedKinds:report.audit?.completedKinds??[],finalState:report.finalState,
+  timeline:report.audit?.timeline?.slice(-12),
+  attackSamples:['walker','crusher'].map(kind=>({kind,
+   samples:report.audit?.rows?.filter(r=>r.kind===kind).length??0,
+   owners:[...new Set(report.audit?.rows?.filter(r=>r.kind===kind).map(r=>r.id)??[])],
+   windup:report.audit?.rows?.filter(r=>r.kind===kind&&r.windup>.08&&r.flash<=0).length??0,
+   contact:report.audit?.rows?.filter(r=>r.kind===kind&&r.attack>.065&&r.attack<.13&&r.flash<=0).length??0,
+  })),errors:report.errors,
+ }));
+ process.exitCode=1;
+}

@@ -69,7 +69,7 @@ export function v100UnitPresentation(save, unitId) {
 
 export function v100TacticalHintFor(stage) {
   if (!stage) return "前衛で敵を止め、射撃と回復を組み合わせる。";
-  if (v100BossForStage(stage.number)?.id === "boss-kurome") return "クロメの照準が付いた隊員をタップで回避。";
+  if (v100BossForStage(stage.number)?.id === "boss-kurome") return "クロメの照準が付いたユニットをタップで回避。";
   if (stage.missionType === "boss") return "大技の予告を確認。守備の固有技と回復支援で持ちこたえる。";
   if (stage.missionType === "escort") return "前衛と足止め役で、護衛対象へ近づく敵を止める。";
   if (stage.missionType === "timed-defense") return "前衛・射撃・回復を組み合わせ、防衛線を維持する。";

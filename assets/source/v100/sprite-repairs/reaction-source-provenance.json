@@ -1,0 +1,902 @@
+{
+  "format": "nishijin-issue177-reaction-source-preservation",
+  "basedOn": "24a84588461f57a4a84aa76234c4e87c4c386027",
+  "inputs": "assets/source/v100/sprite-repairs/reactions/inputs.json",
+  "sourceMastersUnchanged": true,
+  "generatedWholeFiguresAdopted": false,
+  "localBootAndOverlapPaintOnly": true,
+  "originalFacesHandsWeaponsPreserved": true,
+  "unchangedCells": 40,
+  "changedCells": 16,
+  "rigPartsAndMotionUnchanged": true,
+  "metadata": [
+    {
+      "path": "assets/source/v100/joints/zakimiya-r1/parts.json",
+      "reboundOccurrences": 1
+    },
+    {
+      "path": "assets/source/v100/joints/zakimiya-r1/provenance.json",
+      "reboundOccurrences": 1
+    },
+    {
+      "path": "assets/source/v100/joints/mrs-chiha-r1/parts.json",
+      "reboundOccurrences": 1
+    },
+    {
+      "path": "assets/source/v100/joints/mrs-chiha-r1/provenance.json",
+      "reboundOccurrences": 1
+    },
+    {
+      "path": "assets/source/v100/joints/miyamoto-musashi-r1/parts.json",
+      "reboundOccurrences": 1
+    },
+    {
+      "path": "assets/source/v100/joints/miyamoto-musashi-r1/provenance.json",
+      "reboundOccurrences": 1
+    },
+    {
+      "path": "assets/source/v100/joints/kumaverson-r1/parts.json",
+      "reboundOccurrences": 1
+    },
+    {
+      "path": "assets/source/v100/joints/kumaverson-r1/provenance.json",
+      "reboundOccurrences": 1
+    }
+  ],
+  "rows": [
+    {
+      "kind": "zakimiya",
+      "path": "/art/v090/characters/zakimiya-battle-r1.png",
+      "previousPng": {
+        "bytes": 1228231,
+        "hash": "sha256-9fcf28a4575d2757a94f7f6791e06ea95e13fbd7b3ceba40fd1d9fd515745b7c"
+      },
+      "nextPng": {
+        "bytes": 1562531,
+        "hash": "sha256-9b6ca1bfa7a51cb2a06122fb925a8b67979ae8d9885a606f4984ae2c9758cd39"
+      },
+      "transport": {
+        "path": "/pwa-optimized/art/v090/characters/zakimiya-battle-r1.webp",
+        "bytes": 945778,
+        "hash": "sha256-b829c617e2896a213b6ae96f4fd140dec315551d3e9ca28ac1afe65bb9f21fdd"
+      },
+      "visible": {
+        "right": [
+          [
+            160,
+            16,
+            321,
+            432
+          ],
+          [
+            142,
+            16,
+            329,
+            432
+          ],
+          [
+            136,
+            16,
+            354,
+            432
+          ],
+          [
+            119,
+            16,
+            311,
+            421
+          ],
+          [
+            160,
+            16,
+            397,
+            426
+          ],
+          [
+            140,
+            16,
+            329,
+            432
+          ],
+          [
+            16,
+            293,
+            464,
+            432
+          ]
+        ],
+        "left": [
+          [
+            160,
+            16,
+            321,
+            432
+          ],
+          [
+            142,
+            16,
+            329,
+            432
+          ],
+          [
+            136,
+            16,
+            354,
+            432
+          ],
+          [
+            169,
+            16,
+            368,
+            421
+          ],
+          [
+            100,
+            16,
+            329,
+            426
+          ],
+          [
+            140,
+            16,
+            329,
+            432
+          ],
+          [
+            16,
+            293,
+            464,
+            432
+          ]
+        ]
+      },
+      "cells": [
+        {
+          "row": 0,
+          "column": 0,
+          "oldRgbaSha256": "666c6ed0a21cd0dfa0a42c3b17949e04507c223a084edb4f22b9c8a82cacaa93",
+          "newRgbaSha256": "666c6ed0a21cd0dfa0a42c3b17949e04507c223a084edb4f22b9c8a82cacaa93",
+          "unchanged": true
+        },
+        {
+          "row": 0,
+          "column": 1,
+          "oldRgbaSha256": "da4504082df85c39b0f0cc580d54da950e8d6894f4da7b5476f8025fb5f83a56",
+          "newRgbaSha256": "da4504082df85c39b0f0cc580d54da950e8d6894f4da7b5476f8025fb5f83a56",
+          "unchanged": true
+        },
+        {
+          "row": 0,
+          "column": 2,
+          "oldRgbaSha256": "a7597a61d80817c9a000165e44bc7f2e6300c77e51d6e8bc9666874e48562e53",
+          "newRgbaSha256": "a7597a61d80817c9a000165e44bc7f2e6300c77e51d6e8bc9666874e48562e53",
+          "unchanged": true
+        },
+        {
+          "row": 0,
+          "column": 3,
+          "oldRgbaSha256": "9a3e13390e877ea599fbd18e631f3c9d056b25fcb0e724d9bdf7987683ce3715",
+          "newRgbaSha256": "9a3e13390e877ea599fbd18e631f3c9d056b25fcb0e724d9bdf7987683ce3715",
+          "unchanged": true
+        },
+        {
+          "row": 0,
+          "column": 4,
+          "oldRgbaSha256": "3b05e9f194161499006a213201f5f39547190bde2184a3aee05d7c332c5b1284",
+          "newRgbaSha256": "3b05e9f194161499006a213201f5f39547190bde2184a3aee05d7c332c5b1284",
+          "unchanged": true
+        },
+        {
+          "row": 0,
+          "column": 5,
+          "oldRgbaSha256": "e4f163ae6cca67a2ed4f2991246ee0b538e5c92b69c5e684f6d13647d7a9def1",
+          "newRgbaSha256": "e7b55b9fa46fac5853ca7290c8e4605bdfe85921f5f436c45e5aa56435aab9b1",
+          "unchanged": false
+        },
+        {
+          "row": 0,
+          "column": 6,
+          "oldRgbaSha256": "4039b6894dcf6782a276d26233d98d01b5fae70c2b358f3fd96d1eb8aaf56bc8",
+          "newRgbaSha256": "9447993b194b0ec0940f36bd582ebcf3dcfb3a0dd3c893ac9715abb79a8a093b",
+          "unchanged": false
+        },
+        {
+          "row": 1,
+          "column": 0,
+          "oldRgbaSha256": "a3eeeb5a7fd8f7bcbb2f900a23a2ae588eb11d33003b9385f505fb6436b3deb1",
+          "newRgbaSha256": "a3eeeb5a7fd8f7bcbb2f900a23a2ae588eb11d33003b9385f505fb6436b3deb1",
+          "unchanged": true
+        },
+        {
+          "row": 1,
+          "column": 1,
+          "oldRgbaSha256": "99012803bd11040d68900dd3cb4e5c6d02be835593a394361e89a1ca9c285520",
+          "newRgbaSha256": "99012803bd11040d68900dd3cb4e5c6d02be835593a394361e89a1ca9c285520",
+          "unchanged": true
+        },
+        {
+          "row": 1,
+          "column": 2,
+          "oldRgbaSha256": "0ee4ce9648ce60ed25cd4ffbb081e5f156dde1f3ce8f997eea95ed18468cdbf1",
+          "newRgbaSha256": "0ee4ce9648ce60ed25cd4ffbb081e5f156dde1f3ce8f997eea95ed18468cdbf1",
+          "unchanged": true
+        },
+        {
+          "row": 1,
+          "column": 3,
+          "oldRgbaSha256": "f63a0e8128a07cc84b4c4ff59bbd6aac5d24a6d6c2c476390388cf7087d71336",
+          "newRgbaSha256": "f63a0e8128a07cc84b4c4ff59bbd6aac5d24a6d6c2c476390388cf7087d71336",
+          "unchanged": true
+        },
+        {
+          "row": 1,
+          "column": 4,
+          "oldRgbaSha256": "d4b8dc9464b67fc4c986a2b7659bf5c40219e2599dd1e15f149e95e74e65008d",
+          "newRgbaSha256": "d4b8dc9464b67fc4c986a2b7659bf5c40219e2599dd1e15f149e95e74e65008d",
+          "unchanged": true
+        },
+        {
+          "row": 1,
+          "column": 5,
+          "oldRgbaSha256": "97b15b823b08c5a563331deb4ee3b4894090d4aeaedfa54b8fb200215dd48648",
+          "newRgbaSha256": "f9dc9292dc0c1dbaf8b36867f01b1f050e9e0b55ca82e0d8c5de0fea6744374f",
+          "unchanged": false
+        },
+        {
+          "row": 1,
+          "column": 6,
+          "oldRgbaSha256": "f946c23efac6a054cfae692840239b762fb641c5cc2513e34ce0d353993e53bd",
+          "newRgbaSha256": "3f2536b5adf1d4fe6e3e6ed1f2c6625abb6d9164374e9d1e7472f8cd0fad7591",
+          "unchanged": false
+        }
+      ],
+      "nonreactionCellsPreserved": 10
+    },
+    {
+      "kind": "mrs-chiha",
+      "path": "/art/v090/characters/mrs-chiha-battle-r1.png",
+      "previousPng": {
+        "bytes": 1609973,
+        "hash": "sha256-0cb818f6bd68b276eb74b661b7a312019b22de8a25755ff0a3be25d48abd2135"
+      },
+      "nextPng": {
+        "bytes": 1922329,
+        "hash": "sha256-b654cb2ae26726a9d5fdb918fd806ec0fed533c56598e217ca2f48f2d35fc834"
+      },
+      "transport": {
+        "path": "/pwa-optimized/art/v090/characters/mrs-chiha-battle-r1.webp",
+        "bytes": 1214754,
+        "hash": "sha256-d94cf77a5cac8a38f05858d651ca87910f9a668157a50fce48f11cf0179a2696"
+      },
+      "visible": {
+        "right": [
+          [
+            171,
+            16,
+            309,
+            432
+          ],
+          [
+            132,
+            16,
+            326,
+            432
+          ],
+          [
+            174,
+            16,
+            355,
+            432
+          ],
+          [
+            135,
+            16,
+            345,
+            432
+          ],
+          [
+            42,
+            16,
+            439,
+            432
+          ],
+          [
+            101,
+            16,
+            379,
+            432
+          ],
+          [
+            16,
+            242,
+            464,
+            432
+          ]
+        ],
+        "left": [
+          [
+            171,
+            16,
+            309,
+            432
+          ],
+          [
+            154,
+            16,
+            349,
+            432
+          ],
+          [
+            126,
+            16,
+            307,
+            432
+          ],
+          [
+            135,
+            16,
+            345,
+            432
+          ],
+          [
+            42,
+            16,
+            439,
+            432
+          ],
+          [
+            101,
+            16,
+            379,
+            432
+          ],
+          [
+            16,
+            242,
+            464,
+            432
+          ]
+        ]
+      },
+      "cells": [
+        {
+          "row": 0,
+          "column": 0,
+          "oldRgbaSha256": "102078e3d802123b4967e54db7a34b5c604e1f5084ebdedc31788058fafa5a48",
+          "newRgbaSha256": "102078e3d802123b4967e54db7a34b5c604e1f5084ebdedc31788058fafa5a48",
+          "unchanged": true
+        },
+        {
+          "row": 0,
+          "column": 1,
+          "oldRgbaSha256": "a221c2ac027bdb505805aaa3b3379abd576511fea4f30cf6633e436cd0ceecd9",
+          "newRgbaSha256": "a221c2ac027bdb505805aaa3b3379abd576511fea4f30cf6633e436cd0ceecd9",
+          "unchanged": true
+        },
+        {
+          "row": 0,
+          "column": 2,
+          "oldRgbaSha256": "04e8fc23b739b36a0a602ed7bc668485afc8e29ebea91b9c3f6a5e533c008c76",
+          "newRgbaSha256": "04e8fc23b739b36a0a602ed7bc668485afc8e29ebea91b9c3f6a5e533c008c76",
+          "unchanged": true
+        },
+        {
+          "row": 0,
+          "column": 3,
+          "oldRgbaSha256": "ea6a116b42d8a5d2d6debf349d1f095082347ee0dc7a1ce5c205fed558bec136",
+          "newRgbaSha256": "ea6a116b42d8a5d2d6debf349d1f095082347ee0dc7a1ce5c205fed558bec136",
+          "unchanged": true
+        },
+        {
+          "row": 0,
+          "column": 4,
+          "oldRgbaSha256": "2cf913680feece57f0b440b806d891a397a56cb1eb13e4b6c000d7705d764c19",
+          "newRgbaSha256": "2cf913680feece57f0b440b806d891a397a56cb1eb13e4b6c000d7705d764c19",
+          "unchanged": true
+        },
+        {
+          "row": 0,
+          "column": 5,
+          "oldRgbaSha256": "71f2b389f0c093dda17b44841b0d3a5cb6c74184c6684d1faf1e10db6002759c",
+          "newRgbaSha256": "436841ca37d835ef02e71428ddde0fd1448830cb8dc8f35fa4188dd8751135f4",
+          "unchanged": false
+        },
+        {
+          "row": 0,
+          "column": 6,
+          "oldRgbaSha256": "4dbaeefad47dd1bae0bda708819237e06ee6b94ed58d46de5980ad2118b61e78",
+          "newRgbaSha256": "23dc49be2f1f85741dcec76eb9f4f9bc6f380b899827a157b7b2d2d53fcdb8f4",
+          "unchanged": false
+        },
+        {
+          "row": 1,
+          "column": 0,
+          "oldRgbaSha256": "56876a22d70b18c29c43748fb36d767647077c2b2d688f413dc69747de27332e",
+          "newRgbaSha256": "56876a22d70b18c29c43748fb36d767647077c2b2d688f413dc69747de27332e",
+          "unchanged": true
+        },
+        {
+          "row": 1,
+          "column": 1,
+          "oldRgbaSha256": "21383627f5cd3febc140b22b689134933bdaa62cea71ec58ff6bca903b64e418",
+          "newRgbaSha256": "21383627f5cd3febc140b22b689134933bdaa62cea71ec58ff6bca903b64e418",
+          "unchanged": true
+        },
+        {
+          "row": 1,
+          "column": 2,
+          "oldRgbaSha256": "5ed80fdd130c81b7e5eeb4c26e8763f6516d88ccb2b0c1b8c712fb09d103a06c",
+          "newRgbaSha256": "5ed80fdd130c81b7e5eeb4c26e8763f6516d88ccb2b0c1b8c712fb09d103a06c",
+          "unchanged": true
+        },
+        {
+          "row": 1,
+          "column": 3,
+          "oldRgbaSha256": "45a5d8dde1ec5d390534aab9d2f80d50a6a7074f86dee30063ca6b2239790a4a",
+          "newRgbaSha256": "45a5d8dde1ec5d390534aab9d2f80d50a6a7074f86dee30063ca6b2239790a4a",
+          "unchanged": true
+        },
+        {
+          "row": 1,
+          "column": 4,
+          "oldRgbaSha256": "e7e56740e5fcd4c99328c7f6c4ec33241f2468ab7d8b35318f389d03026df15b",
+          "newRgbaSha256": "e7e56740e5fcd4c99328c7f6c4ec33241f2468ab7d8b35318f389d03026df15b",
+          "unchanged": true
+        },
+        {
+          "row": 1,
+          "column": 5,
+          "oldRgbaSha256": "f38170af88bede32bf6a4947114cc56e127d332f19e7b8537e70831d2ca8c120",
+          "newRgbaSha256": "93d8986d783aa165c7b5557fa5dd09972ed18ed52e03daf11300f1b26e6b2238",
+          "unchanged": false
+        },
+        {
+          "row": 1,
+          "column": 6,
+          "oldRgbaSha256": "dfe15137fde5a89e84b140f8a048b12b7b8dbca5a8dbfcfd0cea0638b3c9a158",
+          "newRgbaSha256": "fb58e99e400729b71fa0e215ea327cc974999b94d7f228c6290fef9643f41663",
+          "unchanged": false
+        }
+      ],
+      "nonreactionCellsPreserved": 10
+    },
+    {
+      "kind": "miyamoto-musashi",
+      "path": "/art/v090/characters/miyamoto-musashi-battle-r1.png",
+      "previousPng": {
+        "bytes": 2026536,
+        "hash": "sha256-118a20a8f5634a5dc7eadd16322c567c418df7cd80beb5a6912c3472181b8c76"
+      },
+      "nextPng": {
+        "bytes": 2141442,
+        "hash": "sha256-34bdfe8792d017d500d8b0622e0387639185dab0e6a193cefdd5b3e47dee8db7"
+      },
+      "transport": {
+        "path": "/pwa-optimized/art/v090/characters/miyamoto-musashi-battle-r1.webp",
+        "bytes": 1325976,
+        "hash": "sha256-01b7cc40d256041d99414552f4c922e5d267b72782c59bdf31f0ff658857caea"
+      },
+      "visible": {
+        "right": [
+          [
+            78,
+            16,
+            440,
+            432
+          ],
+          [
+            155,
+            16,
+            366,
+            432
+          ],
+          [
+            133,
+            16,
+            348,
+            432
+          ],
+          [
+            90,
+            16,
+            390,
+            432
+          ],
+          [
+            106,
+            16,
+            374,
+            432
+          ],
+          [
+            56,
+            16,
+            425,
+            432
+          ],
+          [
+            16,
+            279,
+            464,
+            432
+          ]
+        ],
+        "left": [
+          [
+            40,
+            16,
+            402,
+            432
+          ],
+          [
+            114,
+            16,
+            325,
+            432
+          ],
+          [
+            133,
+            16,
+            348,
+            432
+          ],
+          [
+            90,
+            16,
+            390,
+            432
+          ],
+          [
+            106,
+            16,
+            374,
+            432
+          ],
+          [
+            56,
+            16,
+            425,
+            432
+          ],
+          [
+            16,
+            279,
+            464,
+            432
+          ]
+        ]
+      },
+      "cells": [
+        {
+          "row": 0,
+          "column": 0,
+          "oldRgbaSha256": "f6f06921c72fd4876fa960942acb504571fd033c0010f91bebd560d9814d39c0",
+          "newRgbaSha256": "f6f06921c72fd4876fa960942acb504571fd033c0010f91bebd560d9814d39c0",
+          "unchanged": true
+        },
+        {
+          "row": 0,
+          "column": 1,
+          "oldRgbaSha256": "82194b488dcf09127bec76d04b188ea9928b6f64ced4b1bc33c30e9c914a133a",
+          "newRgbaSha256": "82194b488dcf09127bec76d04b188ea9928b6f64ced4b1bc33c30e9c914a133a",
+          "unchanged": true
+        },
+        {
+          "row": 0,
+          "column": 2,
+          "oldRgbaSha256": "d006fed5c3f719359443ac9a4548bc1913f370a1ab65d8f376f92d1464032ba5",
+          "newRgbaSha256": "d006fed5c3f719359443ac9a4548bc1913f370a1ab65d8f376f92d1464032ba5",
+          "unchanged": true
+        },
+        {
+          "row": 0,
+          "column": 3,
+          "oldRgbaSha256": "ab91121a2f5cb7592bdca02643c218a0a0e795b4743cd4ba912a9f1a99791e3e",
+          "newRgbaSha256": "ab91121a2f5cb7592bdca02643c218a0a0e795b4743cd4ba912a9f1a99791e3e",
+          "unchanged": true
+        },
+        {
+          "row": 0,
+          "column": 4,
+          "oldRgbaSha256": "bf8bb5f9b2641581ce5710d78db7e96797a4787011daa834d61ca16c0d7578c2",
+          "newRgbaSha256": "bf8bb5f9b2641581ce5710d78db7e96797a4787011daa834d61ca16c0d7578c2",
+          "unchanged": true
+        },
+        {
+          "row": 0,
+          "column": 5,
+          "oldRgbaSha256": "8ed3d4f38937d5372eab2832aa2b862564d1327a08b967e3ef554e68d347e43d",
+          "newRgbaSha256": "8f23241274bd1bd6e54e15f8abdc53029ddac86cf14715f45511ac17816abdc3",
+          "unchanged": false
+        },
+        {
+          "row": 0,
+          "column": 6,
+          "oldRgbaSha256": "5da3decc8ab618b50e4d2e7ea38612e497a19c4ad1deb1481cafeaee7e21116e",
+          "newRgbaSha256": "bdfaa858d4658ce8acdeafd13c71287017f9114eddf0a1ef93a254ceb891c01d",
+          "unchanged": false
+        },
+        {
+          "row": 1,
+          "column": 0,
+          "oldRgbaSha256": "f3c742f227cee638ee9f855f8c58dc0b31dfe99a5ba1ca6c62e026e60ac3fb08",
+          "newRgbaSha256": "f3c742f227cee638ee9f855f8c58dc0b31dfe99a5ba1ca6c62e026e60ac3fb08",
+          "unchanged": true
+        },
+        {
+          "row": 1,
+          "column": 1,
+          "oldRgbaSha256": "6fc684ac0e1354992af9fabeb1a25c211cfe51331e3d37c20d5d29f339dd9382",
+          "newRgbaSha256": "6fc684ac0e1354992af9fabeb1a25c211cfe51331e3d37c20d5d29f339dd9382",
+          "unchanged": true
+        },
+        {
+          "row": 1,
+          "column": 2,
+          "oldRgbaSha256": "2cf1eb8602d47852db6e2e73dfcfca7d49f7378683388c38637b31734b912e14",
+          "newRgbaSha256": "2cf1eb8602d47852db6e2e73dfcfca7d49f7378683388c38637b31734b912e14",
+          "unchanged": true
+        },
+        {
+          "row": 1,
+          "column": 3,
+          "oldRgbaSha256": "802f1f514242b96ef13b58d31fbc285683905df8e917ace43080a571c9c77f9e",
+          "newRgbaSha256": "802f1f514242b96ef13b58d31fbc285683905df8e917ace43080a571c9c77f9e",
+          "unchanged": true
+        },
+        {
+          "row": 1,
+          "column": 4,
+          "oldRgbaSha256": "8b3f7fe4ef6cf7d9f983ca1c12eddac3b786c26fe018a069ad0ad6a3efac8c73",
+          "newRgbaSha256": "8b3f7fe4ef6cf7d9f983ca1c12eddac3b786c26fe018a069ad0ad6a3efac8c73",
+          "unchanged": true
+        },
+        {
+          "row": 1,
+          "column": 5,
+          "oldRgbaSha256": "740eeaf92f8d738a3adfc304e91a52d6b8fd14634efcebc60836ba8e6e544317",
+          "newRgbaSha256": "0fbbcec03dd1ccaceaa78590c0501b3760dba27cbf3f3755bc635a64a111b10d",
+          "unchanged": false
+        },
+        {
+          "row": 1,
+          "column": 6,
+          "oldRgbaSha256": "8ef75a7da981635fa1afafa63556e57ac0a52e93aa1d3ef9d98507ad7a8a7af0",
+          "newRgbaSha256": "78b0a71d4344d6c987f2d1cf77161884a337a9abe9fe81810e374e4da3136ff8",
+          "unchanged": false
+        }
+      ],
+      "nonreactionCellsPreserved": 10
+    },
+    {
+      "kind": "kumaverson",
+      "path": "/art/v060/characters/kumaverson-battle-v1.png",
+      "previousPng": {
+        "bytes": 1456630,
+        "hash": "sha256-b1fcca003c5635543b29ca9ca3e0b4f5a0b81a906a03ce22d2d6aa58ee49a346"
+      },
+      "nextPng": {
+        "bytes": 1760286,
+        "hash": "sha256-b1ae3aaa673e08fe842f654cea808e189c1cc0dc5bdaad7641e375abf9f7c4ed"
+      },
+      "transport": {
+        "path": "/pwa-optimized/art/v060/characters/kumaverson-battle-v1.webp",
+        "bytes": 991162,
+        "hash": "sha256-81f61e3348e0c0ac5ac963c88620aa9e26189d74a37a10759f62931254ca2bff"
+      },
+      "visible": {
+        "right": [
+          [
+            130,
+            98,
+            349,
+            432
+          ],
+          [
+            115,
+            102,
+            364,
+            432
+          ],
+          [
+            104,
+            90,
+            376,
+            432
+          ],
+          [
+            120,
+            54,
+            359,
+            432
+          ],
+          [
+            112,
+            108,
+            368,
+            432
+          ],
+          [
+            113,
+            78,
+            367,
+            432
+          ],
+          [
+            25,
+            290,
+            454,
+            432
+          ]
+        ],
+        "left": [
+          [
+            130,
+            98,
+            349,
+            432
+          ],
+          [
+            115,
+            102,
+            364,
+            432
+          ],
+          [
+            104,
+            90,
+            376,
+            432
+          ],
+          [
+            120,
+            54,
+            359,
+            432
+          ],
+          [
+            112,
+            108,
+            368,
+            432
+          ],
+          [
+            113,
+            78,
+            367,
+            432
+          ],
+          [
+            25,
+            290,
+            454,
+            432
+          ]
+        ]
+      },
+      "cells": [
+        {
+          "row": 0,
+          "column": 0,
+          "oldRgbaSha256": "511496d7f8e14f5b47f67d7324afa27d0347c4e2f73f4c3007efef62dd8606a3",
+          "newRgbaSha256": "511496d7f8e14f5b47f67d7324afa27d0347c4e2f73f4c3007efef62dd8606a3",
+          "unchanged": true
+        },
+        {
+          "row": 0,
+          "column": 1,
+          "oldRgbaSha256": "aad3b3b4b8d28eedf3bb00893146642a27f15fc8bf488e62b49baa2489f27428",
+          "newRgbaSha256": "aad3b3b4b8d28eedf3bb00893146642a27f15fc8bf488e62b49baa2489f27428",
+          "unchanged": true
+        },
+        {
+          "row": 0,
+          "column": 2,
+          "oldRgbaSha256": "7d11e6670bd2d6a7134243e21c6360ce5c7908bb62713abd41244b5d6ba402fd",
+          "newRgbaSha256": "7d11e6670bd2d6a7134243e21c6360ce5c7908bb62713abd41244b5d6ba402fd",
+          "unchanged": true
+        },
+        {
+          "row": 0,
+          "column": 3,
+          "oldRgbaSha256": "1f8a7bd38e51d13a715f7268a36479ef5a3ee9926ad30d0d8287885e7ec265f5",
+          "newRgbaSha256": "1f8a7bd38e51d13a715f7268a36479ef5a3ee9926ad30d0d8287885e7ec265f5",
+          "unchanged": true
+        },
+        {
+          "row": 0,
+          "column": 4,
+          "oldRgbaSha256": "befff4968219e802adabcb1d96f2d67659a2bb9ac70c814c9198a53a0f517486",
+          "newRgbaSha256": "befff4968219e802adabcb1d96f2d67659a2bb9ac70c814c9198a53a0f517486",
+          "unchanged": true
+        },
+        {
+          "row": 0,
+          "column": 5,
+          "oldRgbaSha256": "51a8863b701318b8d21eb491d0d90a0fdd1c13d2c72fccfde3b5923592efbe80",
+          "newRgbaSha256": "6be68f17ac1ae793bc88067077f2a14a81014d98d1fb43ec80b0bb38abf48009",
+          "unchanged": false
+        },
+        {
+          "row": 0,
+          "column": 6,
+          "oldRgbaSha256": "321d54dbdf29573284b49d7e4102bcd304f074026785965147d6765ad3e02082",
+          "newRgbaSha256": "c17019bdd46c88bce0b85939156c26f83d8494a074a2d0c7215a36ea8f37d732",
+          "unchanged": false
+        },
+        {
+          "row": 1,
+          "column": 0,
+          "oldRgbaSha256": "ee9ea43c9fe237e4d08ee746727995207b562a301fd6f88b9f4cda097cd0997c",
+          "newRgbaSha256": "ee9ea43c9fe237e4d08ee746727995207b562a301fd6f88b9f4cda097cd0997c",
+          "unchanged": true
+        },
+        {
+          "row": 1,
+          "column": 1,
+          "oldRgbaSha256": "913380d93749579eed770467eaf480192a1781b92f0f62221f48da9bf6d7479d",
+          "newRgbaSha256": "913380d93749579eed770467eaf480192a1781b92f0f62221f48da9bf6d7479d",
+          "unchanged": true
+        },
+        {
+          "row": 1,
+          "column": 2,
+          "oldRgbaSha256": "fa77a3fd4cce29e3291a04d3240ad912067f6e13dbf44c03956b6afccb066ebc",
+          "newRgbaSha256": "fa77a3fd4cce29e3291a04d3240ad912067f6e13dbf44c03956b6afccb066ebc",
+          "unchanged": true
+        },
+        {
+          "row": 1,
+          "column": 3,
+          "oldRgbaSha256": "f874d7aed9e94e6686a8e0a19fba346dc977738380e833b3416a5fe65d9e32f3",
+          "newRgbaSha256": "f874d7aed9e94e6686a8e0a19fba346dc977738380e833b3416a5fe65d9e32f3",
+          "unchanged": true
+        },
+        {
+          "row": 1,
+          "column": 4,
+          "oldRgbaSha256": "8bd5bf4ed3aeb39dce1e7da0f5264a4b914f1b4054142740f4df12fcbae56026",
+          "newRgbaSha256": "8bd5bf4ed3aeb39dce1e7da0f5264a4b914f1b4054142740f4df12fcbae56026",
+          "unchanged": true
+        },
+        {
+          "row": 1,
+          "column": 5,
+          "oldRgbaSha256": "460579d0f4e6dbfb1987940b9e37989b4e9742ef4945875f10080b4cc01d88a7",
+          "newRgbaSha256": "6feceb99819d195d5b26f06310fbe8b13643656f3c182b777798831044dacce5",
+          "unchanged": false
+        },
+        {
+          "row": 1,
+          "column": 6,
+          "oldRgbaSha256": "241d16a78f2a119479b32dd8a7e06b2bbeb7a23870217e2c8e7d0802c6ccd944",
+          "newRgbaSha256": "0250fa7b45f477ae0c81eac72e8f11083751047cb95d4a83407d2cd461204a53",
+          "unchanged": false
+        }
+      ],
+      "nonreactionCellsPreserved": 10
+    }
+  ],
+  "alphaBoundsIncludeEveryNonzeroPixel": true,
+  "visualReview": {
+    "boards": [
+      "output/issue177-reaction-final-boards-r1/zakimiya.png",
+      "output/issue177-reaction-final-boards-r1/mrs-chiha.png",
+      "output/issue177-reaction-final-boards-r1/miyamoto-musashi.png",
+      "output/issue177-reaction-final-boards-r1/kumaverson.png"
+    ],
+    "bothFacings": true,
+    "includes96pxScale": true,
+    "actualChihaDeathCell": "output/issue177-chiha-actual-death-cell-r1.png",
+    "originalFacesHandsWeaponsPreserved": true,
+    "nativeAcceptance": false
+  },
+  "sourceRegeneration": {
+    "proof": "output/issue177-reaction-reproduction-r2/evidence.json",
+    "isolatedFixtures": 3,
+    "comparedFiles": 19,
+    "exact": true,
+    "productionWrites": false
+  },
+  "nativeAcceptance": false
+}

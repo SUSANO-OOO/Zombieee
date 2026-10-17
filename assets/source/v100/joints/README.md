@@ -1,0 +1,456 @@
+# Issue #177: actual joint animation candidate
+
+The current runtime connections cover ranger walking, stopping, aiming, firing,
+recoil and recovery, normal Mayo's diagonal run, ground settling and bite,
+Scout's biped gait, ground settling and crowbar anticipation/contact/return,
+Walker/Turned's gait, settling and claw reach/return, and Runner's separately
+authored running gait with opposed bent arms and a short flight phase, plus
+Gunner, Medic and Engineer walking, settling, aiming, recoil and recovery,
+the four Red Panther forms' weapon-specific military motion, and Brute,
+Brawler, Crazy King and Kumaverson's distinct melee actions.
+They retain the approved head, weapons and equipment. Clothing and
+occluded limbs derive from built-in imagegen parts studies. These are seventeen form candidates
+within the Producer's complete 48-form scope, including allies, enemies, bosses
+and derived forms. Other units, hits, defeat, deployment, turns and abilities
+still require authoring and visual acceptance. No overall acceptance or release
+approval is implied by this source or the tests.
+
+`ranger-r1/parts.json` binds each painted layer to actual Blender bones.
+`author.py` builds fixed-length leg and arm chains, explicit clothing weights,
+four settling levels and the carry/aim/recoil/return action. The compressed
+`motion.json.gz` stores the evaluated bone matrices and clothing vertices, not
+an analytical approximation of Blender. Absolute authoring paths are omitted.
+The approved source atlas hash, reference transform, derived layer hashes and
+output WebP hash are recorded in `parts.json` and `provenance.json`.
+
+The runtime atlas has 30 travel phases, four settling levels, one carry pose and
+31 attack poses. The lower layer holds the real-travel phase during attacks;
+the upper layer follows the attack state and the lower pelvis height. The same
+evaluated weapon transform places the projectile muzzle. Special abilities,
+damage and defeat keep their existing owners. Only the current battle's needed
+atlas is decoded, through the ordinary critical-image loader and cleanup path.
+
+To reproduce the baked texture from the frozen joint export, install
+`@napi-rs/canvas@1.0.10` into a separate tools directory, leaving shared project
+dependencies intact:
+
+```powershell
+npm install --prefix output/joint-authoring-tools --no-save --ignore-scripts --package-lock=false @napi-rs/canvas@1.0.10
+node scripts/build-v177-joint-atlas.mjs --canvas-module output/joint-authoring-tools/node_modules/@napi-rs/canvas/index.js
+node scripts/build-asset-manifest.mjs
+node --test tests/v177-joint-presentation.test.mjs tests/v177-installed-asset-contract.test.mjs
+```
+
+For further authoring, run Blender 5.2 in background mode with `--factory-startup`,
+`--disable-autoexec`, `--python-exit-code 1`, the saved `author.py`, and its source
+directory after `--`. Use a separate output copy; the `.blend` and uncompressed
+motion export are workshop files. Disable file previews before saving, as the
+script does. Recompress a changed motion export and rebake only after checking
+all planted painted soles, grip attachment, fixed bone lengths, mesh winding,
+clipping and identity. A changed output requires a new exact asset contract.
+
+Failed trials remain in the local workshop: r11 used too narrow a knee blend
+and produced 18 inverted triangles. The r12 export uses the established 32 px
+blend and has zero inverted triangles; the smallest signed area ratio is
+0.0046994. This is a geometry result, not a claim that clothing or gait looks
+natural. Normal-speed continuous visual review and native WebKit performance
+remain acceptance requirements. Local game/browser/audio playback is disabled;
+browser verification runs through remote Actions.
+
+`mayo-r1/` uses 17 explicitly bound rigid paint layers and a parented jaw. The
+original head is partitioned into head and jaw without repainting its identity;
+tail and harness remain original paint. The 0.3 stance fraction and 56 px span
+give a 186.667 px source travel cycle, rather than speeding up a short walking
+cycle. Diagonal pairs share support, with a short flight interval and no bone
+stretching. Painted planted soles meet y=432. Four settle banks retain each
+foot's travel phase through attacks. The jaw closes at the beginning of the
+engine's active attack state; the melee effect uses the rendered mouth socket.
+
+The quadruped texture contains cropped parts rather than repeated body frames:
+80,006 bytes downloaded and 421,888 bytes decoded. Its 151 real Blender poses
+are interpolated as rigid transforms, preserving limb proportions between keys.
+The original painter order and a small moving mouth interior preserve occlusion.
+The generated data and texture can be reproduced with project Sharp alone:
+
+```powershell
+node scripts/build-v177-quadruped-joints.mjs
+node scripts/build-asset-manifest.mjs
+node --test tests/v177-quadruped-joints.test.mjs tests/v177-joint-presentation.test.mjs
+```
+
+Mayo r6 clipped two head-edge pixels at maximum attack extension and was
+rejected. R7 reduced head extension; R8 additionally aligned the bite with real
+damage contact. Expanded-pixel review rejected R8's detached old chin edge and
+R9's exposed hinge gap. R10 moves the complete chin with the jaw and retains
+original neck fur behind the hinge, with no new face painting. Its unchanged
+bone export retains fixed lengths and painted ground support within 0.01 source
+pixels. The feral form, retreat, other owned actions, all remaining
+units, normal-speed continuous play and native performance still require work.
+The iPhone saved-recording audio defect remains unresolved.
+
+`scout-r1/` binds 16 explicit paint parts to fixed-length Blender leg and arm
+chains. The original face, backpack, holding hand and crowbar retain their
+source pixels. Both knees bend forward; each boot faces the travel direction.
+The 94 px span and 0.62 stance fraction give 151.613 px per travel cycle,
+approximately 23.79 world pixels before depth/compact scaling. The earlier
+60 px span trial was rejected because it made the legs cycle too quickly at
+the increased ally speed. All 300 exported action frames clear the source-cell
+edges, and planted painted soles stay at y=432 within 0.001 source pixels.
+
+Ordinary attacks hold the current settled leg phase. The weapon and hand use
+the same evaluated transform. Interpolating the arm and weapon independently
+exposed a wrist gap between source keys; the runtime now resolves the authored
+two-bone arms against that same shoulder and hand. This preserves limb lengths,
+shoulder/elbow/wrist continuity and the evaluated Blender bend at source keys.
+The combat melee effect uses the transformed painted crowbar tip. The texture
+downloads 46,982 bytes and decodes 407,552 bytes only when Scout is required.
+
+```powershell
+node scripts/build-v177-biped-joints.mjs
+node scripts/build-asset-manifest.mjs
+node --test tests/v177-biped-joints.test.mjs tests/v177-quadruped-joints.test.mjs tests/v177-joint-presentation.test.mjs
+```
+
+The biped and quadruped builders share the explicit rigid-parts baker. This
+refactor reproduces Mayo's existing texture, pose data and provenance exactly.
+Offline production-render contact sheets were reviewed in both directions,
+through windup, contact, recovery and stopping. They do not replace continuous
+normal battle review, remote native WebKit performance, or the remaining
+actions/forms in the Producer's full 48-form requirement.
+
+`walker-r1/` retains the original head and both hands. Twelve hidden clothing
+and limb pieces were adopted from the built-in imagegen study; 15 visible parts
+bind to the actual Blender biped. The source's charcoal shirt, muddy brown
+pants, worn brown boots and hunched silhouette remain its identity. Walker
+and Turned already share every source frame in both directions, so they use
+one texture and pose object. The battle loader deduplicates this shared key.
+
+The legacy source cell is 394x757 with substantial transparent padding. Its
+authoring reference was normalized to 480x448. The runtime explicitly inverts
+that normalization for paint, gait distance and claw sockets, preserving the
+original source-pixel scale and ground anchor through movement, contact, hit
+and defeat. Ordinary contact uses the new joint owner when its texture is
+ready; existing abilities, hit and death owners remain intact. Both unit and
+enemy QA loading paths ensure the joint texture before reusing an old sprite.
+
+The r2 authoring trial failed because a walking hand target exceeded its arm
+reach. R3 raises that swinging hand enough to keep the original fixed lengths;
+no reach clamp or bone stretch was added. All 300 exported frames clear the
+source-cell edges. Both painted soles, lengths and hand attachment stay within
+0.001 source pixels. Production interpolation also checks 1,803 gait/settle
+samples for elbow/wrist continuity. Cropped clothing avoids the study's lower
+leg paint being duplicated in a thigh or pelvis layer.
+
+The texture downloads 36,616 bytes and decodes 325,632 bytes. Reproduce it with:
+
+```powershell
+node scripts/build-v177-enemy-joints.mjs
+node scripts/build-asset-manifest.mjs
+node --test tests/v177-enemy-joints.test.mjs tests/v177-installed-asset-contract.test.mjs
+```
+
+Normal-speed play, the remaining forms/actions and physical recording audio
+remain unaccepted. These source checks do not close the complete quality goal.
+
+`runner-r1/` shares every exact painted part with `walker-r1/`, as the approved
+source frames also match in every state and direction. Its actual Blender
+motion is different: a 96 px span, 0.48 stance fraction, 20 px lift and 200 px
+travel per cycle give a short flight phase and a longer stride. Bent arms swing
+in opposite phases. Claw anticipation and recovery retain this bent-arm stance,
+avoiding a jump down to the walking form's hanging hands. Bone lengths, real
+painted support, world-space planted feet, elbow/wrist continuity and the
+stationary attack handover are checked through source and production samples.
+
+Only the motion and source authoring data are added. The source parts refer to
+`../walker-r1/`, and both runtime pose objects use `joint-walker` and the exact
+same WebP. Running therefore adds no texture download, decode or PWA asset.
+
+```powershell
+node scripts/build-v177-runner-joints.mjs
+node scripts/build-asset-manifest.mjs --check
+node --test tests/v177-runner-joints.test.mjs tests/v177-enemy-joints.test.mjs
+```
+
+`gunner-r1/`, `medic-r1/` and `engineer-r1/` bind 14, 16 and 14 painted parts
+to actual Blender 5.2 fixed-length legs and arm chains. Each source exports
+five actions with 61 evaluated frames, sampled into 151 runtime poses.
+The original head, both hands and gun or crossbow are retained. Medic's original
+bag and straps remain separate from the two leg chains. The visible original
+chest, shirt and equipment overlay hidden torso fill; the original stationary
+arm and weapon regions are explicitly excluded to avoid duplicate limbs.
+Waists and hips follow each original character's anatomy, rather than the
+old whole-sprite approximate pivots. Generated upper shins, thighs and pelvis
+are cropped to prevent adjacent study parts or duplicate kneepads from entering
+the runtime paint. Prompts and generation hashes are frozen beside each source.
+
+Both arms target the same original weapon transform through travel, aiming,
+recoil and recovery. The production renderer resolves the authored two-bone
+chains between sampled Blender keys. Tests check fixed lengths, real painted
+sole support, world-space planted feet, shoulder/elbow/wrist continuity, grip
+reachability without fallback, preserved original pixels and exact mirrored
+muzzle placement. Each firearm adds one conditional texture: 31,178, 33,662 and
+27,900 download bytes respectively, totaling 92,740 bytes and 759,808 decoded
+bytes. These seven joint textures total 1,142,358 download bytes.
+
+```powershell
+node scripts/build-v177-firearm-joints.mjs
+node scripts/build-asset-manifest.mjs
+node --test tests/v177-firearm-joints.test.mjs tests/v177-installed-asset-contract.test.mjs
+```
+
+Offline source coverage checks all 305 evaluated frames per firearm for paint
+leaving its source cell. Contact sheets use the actual production draw helper
+in both travel directions and through each attack phase. Normal-speed remote
+play and visual acceptance remain pending; hit, defeat, deployment, abilities
+and remaining forms still require the Producer's complete 48-form work.
+
+The four `red-panther-*-r1/` sources add Knife, SMG, Shield and Commander with
+16, 15, 15 and 17 explicit painted parts. The knife thrust, short shield bash,
+two-handed SMG aim/recoil and one-handed pistol aim/recoil are separate actions.
+The source's head, masks, insignia, backpack, hands, weapons, shield and coat
+panels remain. The Commander coat panels have separate parented bones. Both
+arms have fixed-length upper/lower chains; free hands have their own effectors.
+The heavier shield carrier uses a shorter, more grounded gait. In each form,
+the 544x512 source padding and ground anchor are recovered from the normalized
+480x448 authoring paint before world travel, rendering and contact effects.
+
+Knife's approved source has an extra rear arm and hand. The candidate excludes
+that region while retaining the backpack, actual free hand and knife hand.
+This repairs the new joint path; the remaining hit/death/ability owners still
+need their complete animation work. Transparent source pixels are never
+inferred from an opaque-pixel count: SMG and Commander contain mostly translucent
+paint. Original cutouts and visible costume overlays copy their source RGBA
+directly inside each explicit mask, avoiding Canvas premultiplication drift.
+Tests also verify the original red sleeve insignia and translucent source paint.
+
+The new textures download 31,080, 31,692, 41,612 and 34,474 bytes, respectively.
+They total 138,858 download bytes and 1,273,856 decoded bytes; each is
+conditionally loaded.
+
+```powershell
+node scripts/build-v177-panther-joints.mjs
+node scripts/build-asset-manifest.mjs
+node --test tests/v177-panther-joints.test.mjs tests/v177-installed-asset-contract.test.mjs
+```
+
+The 305 Blender frames per form and 1,803 production gait/settle samples per
+form check support, fixed lengths, grip reachability, arm continuity and world
+foot drift. Production checks also cover attack entry/return, opaque weapon
+tips, mirrored effects and preserved original scale. Together with the melee
+sources below, these are seventeen form candidates in the 48-form/all-action scope. Normal-speed play, the
+remaining forms/actions, native performance and physical iPhone recording
+remain unaccepted.
+
+The four melee sources add 14, 15, 15 and 15 explicit painted parts. Brute keeps
+both original holding hands on the hammer and follows its forward swing with
+the torso. Brawler keeps the original bare fists and pixel art, with a separate
+guarding hand. Crazy King levels the actual chainsaw for contact; Kumaverson
+raises the original pan while bracing the already leaning torso. The original
+head, visible clothing and weapon paint remain source-bound. The shorts exclude
+Brawler's old stationary forearm, and an explicit mask removes a detached study
+fragment beside Kumaverson's thigh. The two leg chains stay separate.
+
+A rejected heavy-swing trial reached 82.219 source pixels between runtime keys
+against a 60.008-pixel arm, despite valid evaluated Blender keys. Interpolating
+the translation of the distant image origin displaced the holding point. The
+new sources declare the actual grip and torso pivots; runtime interpolation
+follows those authored points and preserves rigid rotation. The same dense
+production check now measures at most 59.546 pixels for that arm, without using
+the reach fallback or changing the fixed lengths. Existing sources retain their
+unchanged interpolation path. Brawler uses nearest-neighbor atlas paint and
+temporarily disables smoothing inside the saved canvas state.
+
+Brute's large original hammer needs a 576x448 attack envelope; its reference
+scale and ground anchor still derive from the original 480x448 source. The
+other three retain 480x448 envelopes. Tests check every painted outline in all
+305 evaluated frames, real soles, fixed lengths, planted world-space feet,
+arm/grip continuity, attack handover, original RGBA, pixel paint and mirrored
+contact sockets. Each source adds 151 runtime poses and one conditional texture.
+The four textures download 36,642, 21,604, 39,606 and 33,956 bytes, totaling
+131,808 download bytes and 1,183,744 decoded bytes. All fifteen joint textures
+total 1,413,024 download bytes. A built-in imagegen torso edit removes the
+study's erroneous orange arm strip from Brawler's shirt; only study cell zero
+is replaced, with all other study pixels unchanged. Its full edit prompt and
+source hashes remain beside the frozen source.
+
+```powershell
+node scripts/build-v177-melee-joints.mjs
+node scripts/build-asset-manifest.mjs
+node --test tests/v177-melee-joints.test.mjs tests/v177-installed-asset-contract.test.mjs
+```
+
+These are seventeen form candidates within the same 48-form/all-action scope.
+Normal-speed play, remaining forms/actions, native performance and saved
+physical-iPhone recording audio remain unaccepted.
+
+The shield and enemy sources extend the candidate to twenty-two forms with
+nineteen conditional textures. Guardian has two constrained holding arms and
+separate original coat panels; Grappler retains the original long claw and
+cuffed hand with chain. Sprinter retains the forward body, three-stripe
+trousers, face and hands, with bent opposed arms and a support fraction below
+one half so the evaluated gait includes real flight. Crusher and Abomination
+share their already identical approved source and one texture/data object,
+including coarse pixel paint, a raised-fist anticipation and forward slam.
+
+Each new source contains 305 evaluated Blender frames and 151 runtime poses.
+The dense checks cover fixed limb lengths, real painted soles, world foot
+support, no wrist/weapon separation between keys, attack handover, unchanged
+source RGBA, original scale, mirrored sockets and every painted outline in the
+480x448 envelope. Running elbows stay below the shoulders through the cycle.
+The built-in image_gen studies supply hidden joint paint; their full prompts,
+reference binding and generation hashes are frozen in each source directory.
+Original faces, shield, hands and chain are copied from the approved painting.
+The new textures download 43,014, 33,934, 34,264 and 48,332 bytes, totaling
+159,544 bytes downloaded and 1,376,256 bytes decoded. All nineteen textures
+total 1,572,568 download bytes. No authoring source enters the installed pack.
+
+```powershell
+node scripts/build-v177-guard-enemy-joints.mjs
+node scripts/build-asset-manifest.mjs
+node --test tests/v177-guard-enemy-joints.test.mjs tests/v177-installed-asset-contract.test.mjs
+```
+
+These are twenty-two form candidates in the unchanged 48-form/all-action scope.
+Remaining forms, complete hit/death/deploy/ability/frenzy/retreat ownership,
+normal-speed visual play acceptance, native performance and the saved physical
+iPhone recording remain unaccepted.
+
+The four original-bound human sources extend the candidate to twenty-six forms
+and twenty-three conditional textures. Zakimiya retains his original short
+knife; TKY uses the complete approved energy katana and both original holding
+hands; Chiha carries one original gatling with two articulated holding arms;
+Musashi retains his legitimate two attack katanas on independent weapon bones.
+This does not restore his unrelated rear stray blade. Original faces, visible
+costume, weapon paint and boots remain source-bound RGBA. TKY's front boot comes
+from the approved attack pose so the old walk blade glow cannot enter his leg.
+Original references, integer source offsets, source rectangles and hashes are
+frozen in `parts.json`. The builder checks each additional pose binding.
+
+The supporting hand can use a distinct original painted grip point while the
+arm retains its neutral shoulder, elbow, wrist, lengths and sleeve paint.
+Blender and production interpolation resolve the same point; existing sources
+keep their unchanged path. Hidden coat panels come from only cells 14 and 15
+of separate built-in imagegen edits, with prompts and provenance alongside the
+sources. The original other fourteen study cells are retained. No weapon or
+limb is baked into a moving coat panel.
+
+The four sources contain 305 evaluated frames and 151 runtime poses each.
+Tests check all painted outlines, exact original RGBA, fixed lengths, actual
+soles, planted world-space feet and 1,986 dense travel/settle/attack samples per
+source. Their textures download 146,124 bytes and decode to 1,132,544 bytes.
+All twenty-three joint textures total 1,718,692 download bytes. No authoring
+source enters the PWA pack.
+
+```powershell
+node scripts/build-v177-newcomer-joints.mjs
+node scripts/build-asset-manifest.mjs
+node --test tests/v177-newcomer-joints.test.mjs tests/v177-installed-asset-contract.test.mjs
+```
+
+The scope remains all 48 forms and all actions. The remaining 22 forms, complete
+hit/death/deploy/ability/frenzy/retreat ownership, continuous normal-speed play,
+native performance and saved physical-iPhone recording audio remain pending.
+
+The infected martial source adds Shade to the local candidate: twenty-seven
+forms and twenty-four conditional textures. Its original attack arms, fists,
+face, visible mesh shirt, trousers and boots remain bound to approved source
+rectangles and exact RGBA. Four hidden joint-cap regions explicitly record
+their study cell, hash, rest axes and masks. The original bent guard supplies
+the neutral hand position; offsets from an earlier, rejected walk-arm study
+are not applied to it. Both feet exchange positions during the run, and their
+planted world-space soles remain fixed. The source contains 305 evaluated
+Blender frames, 151 runtime poses and 1,986 dense checked interpolation samples.
+
+Shade adds 35,896 download bytes and 251,904 decoded bytes. All twenty-four
+textures total 1,754,588 download bytes. Authoring sources are excluded from
+the PWA pack. Tests also check that the guard remains beside the face, feet
+exchange order, mirrored contacts match visible fists, and the texture loads
+once only for a battle that includes this enemy.
+
+```powershell
+node scripts/build-v177-infected-joints.mjs
+node scripts/build-asset-manifest.mjs
+node --test tests/v177-infected-joints.test.mjs tests/v177-installed-asset-contract.test.mjs
+```
+
+This local extension does not change the remote twenty-six-form candidate
+until a new verified push. The goal remains all 48 forms and all actions;
+remaining 21 forms, complete hit/death/deploy/ability/frenzy/retreat ownership,
+continuous normal-speed play, native performance and physical recording audio
+are not accepted by these offline source checks.
+
+Spitter extends the local candidate to twenty-eight forms and twenty-five
+conditional textures. Its original hood, face, visible olive coat, claws,
+wrapped feet, acid throat and jaw remain source-bound. Original throat paint
+inflates from 0.18 to its authored full size as a separate leaf head organ;
+the head, torso and all limb lengths stay rigid. The jaw hinge and throat
+anchor follow the interpolated head exactly. Acid emission uses the visible
+mouth socket, including mirrored rendering, rather than an unrelated fist.
+
+Twenty source layers contain 305 evaluated Blender frames, 151 runtime poses
+and 1,986 dense checked interpolation samples. Tests reject undeclared body
+scaling, detached organs, shear and inversion, and preserve the immutable
+twenty-seven-form renderer trace from commit 9986fd6. Spitter downloads 37,788
+bytes and decodes to 294,912 bytes; all twenty-five textures total 1,792,376
+download bytes. Authoring sources remain excluded from the PWA pack.
+
+The scope remains all 48 forms and all actions. The remaining twenty forms,
+complete hit/death/deploy/ability/frenzy/retreat ownership, continuous native
+play, performance and physical recording audio require separate evidence.
+
+The dedicated feral Mayo source extends the candidate to twenty-nine forms and
+twenty-six conditional textures. It retains the approved feral face, eyes,
+ears, nose, tail, harness, collar, four paws and four fanged mouth petals. It
+does not alias ordinary Mayo. Explicit hidden belly and limb fur completion
+removes the original raised foreleg from the torso and closes the curved
+study's occluded elbow. The complete lower strand stays attached. Source masks,
+integer offsets, centerlines, prompts and the generated study are retained.
+
+Four fixed-length hip/knee/ankle chains join the interpolated torso to the last
+travel/settled paw positions during movement and attack. Six leaf head organs
+fold/open within their explicit scale bounds; the body and legs stay rigid.
+Tests cover 305 evaluated frames, 1,986 dense source/paint samples and 6,195
+runtime chain poses, exact original RGBA, actual soles, world-space planted
+feet, all source outlines and mirrored visible attack contacts. Existing 28
+forms retain the immutable pre-change trace. Texture packing changes positions
+only and keeps the default layouts and paint resolution of existing sources.
+
+The new texture downloads 101,258 bytes and decodes to 409,600 bytes. All 26
+textures total 1,893,634 download bytes. A roster containing ordinary Mayo
+preloads the feral form before transformation, once; unrelated rosters do not.
+Retreat running uses the same resolved form and actual-distance gait; authored
+fall/rise poses retain their separate owner. Authoring sources stay outside
+the PWA pack.
+
+```powershell
+node scripts/build-v177-feral-joints.mjs
+node scripts/build-asset-manifest.mjs
+node --test tests/v177-feral-joints.test.mjs tests/v177-installed-asset-contract.test.mjs
+```
+
+The full scope remains all 48 forms and all actions. The remaining nineteen
+forms, complete hit/death/deploy/ability/frenzy/retreat ownership, continuous
+native play, performance and physical recording audio are still pending.
+
+### Continuous leg attachment across existing rigid forms
+
+The next candidate adds explicit fixed-length hip/knee/ankle chains to all
+28 registered rigid forms, including aliases. Bipeds retain their separately
+painted lower pelvis as the hip owner while the upper torso attacks. Both
+quadruped forms join their legs to the visible torso, with paws held by the
+travel/settling pose. Original part images and all 26 runtime texture hashes,
+bytes, resolution and drawing order remain unchanged.
+
+Ordinary Mayo's authored anticipation moves back 1.5 source pixels instead
+of 3 to keep every held gait reachable. Its walk/settle matrices, forward
+bite, original paint and stride stay unchanged. Failed reach prototypes are
+retained in output; no bone is stretched and the reach threshold is retained.
+
+Actual renderer checks cover 72,660 travel/settling/attack poses across the
+28 rigid forms and another 14,701 ordinary-Mayo anticipation combinations.
+The original27/original28 golden digests remain immutable legacy controls,
+with new leg correction disabled and the source-bound pre-correction Mayo
+atlas restored only in those controls. The current production leg path must
+independently satisfy exact attachment, planted-foot and fixed-reach checks.
+Ranger's separately baked mesh poses require their own audit; this work does
+not imply all48/all-action or native continuous-play acceptance.

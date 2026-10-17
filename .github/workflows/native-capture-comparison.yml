@@ -1,0 +1,46 @@
+name: Native Capture Comparison Diagnostic
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/native-capture-comparison.yml'
+      - 'scripts/v177-native-canvas-clips.mjs'
+      - 'scripts/v177-native-canvas-comparison*.mjs'
+      - 'tests/v177-native-canvas-comparison.test.mjs'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-capture-comparison-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  native-capture-comparison:
+    name: Native WebKit Capture Comparison Diagnostic
+    runs-on: macos-15-intel
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Install the pinned native WebKit runtime
+        run: |
+          npm ci --prefix scripts/pwa-native-runtime
+          node scripts/pwa-native-runtime/node_modules/playwright/cli.js install webkit
+      - name: Compare original native canvas recording conditions
+        env:
+          V177_NATIVE_CAPTURE_OUT: outputs/v177-native-capture-comparison
+        run: node scripts/v177-native-canvas-comparison-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v177-native-capture-comparison
+          path: outputs/v177-native-capture-comparison
+          retention-days: 7

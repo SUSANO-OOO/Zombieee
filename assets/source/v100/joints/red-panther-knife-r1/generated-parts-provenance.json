@@ -1,0 +1,20 @@
+{
+  "kind": "red-panther-knife",
+  "tool": "built-in image_gen.imagegen",
+  "reference": "identity-reference.png",
+  "prompt": "parts-prompt.txt",
+  "generatedImage": "output/issue177-panther-parts-r1/red-panther-knife/parts-study-r1.png",
+  "bytes": 1058383,
+  "sha256": "a72651aff94c1f8783526d7a39071f63d57c50f31e00d3cf656f4654fa2eaa13",
+  "width": 1254,
+  "height": 1254,
+  "alpha": true,
+  "status": "Hidden costume/anatomy study; original head, visible insignia and gear retained; normal-play acceptance pending",
+  "adoptedDerivedParts": 12,
+  "originalParts": [
+    "head",
+    "weapon-and-hands",
+    "free-hand",
+    "backpack"
+  ]
+}

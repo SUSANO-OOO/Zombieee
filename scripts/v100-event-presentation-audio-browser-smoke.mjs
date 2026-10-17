@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
+import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
 import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
 
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
@@ -8,7 +9,8 @@ import { inspectStaffRoll } from "./v100-staff-roll-audit.mjs";
 import { V100_STAGES, V100_SUPPORTS, V100_UNITS, V100_STAGE_IDS, V100_EVENT_BY_ID } from "../app/v100Registry.js";
 import { createDefaultV100Save, normalizeV100Save, serializeV100Save, deserializeV100Save } from "../app/v100Save.js";
 import { createV100BattleResult, recordV100PendingResult } from "../app/v100Transactions.js";
-import { V100_STORY_EVENTS } from "../app/v100StoryEvents.js";
+import { V100_STORY_EVENTS, V100_STORY_SCRIPT_VERSION } from "../app/v100StoryEvents.js";
+import { v100StoryPageFor } from "../app/v100StoryPages.js";
 import { v100EventPresentationFor } from "../app/v100EventPresentation.js";
 import { v100EventPortraitSnapshot } from "./v100-event-portrait-audit.mjs";
 import { v100EventAudioSnapshot } from "./v100-event-audio-audit.mjs";
@@ -34,12 +36,12 @@ const eventCases = Object.freeze([
   { id: "prologue", eventId: "v100:event:prologue", phase: "event" },
   { id: "boss-reveal", eventId: bossStage.eventIds.pre, phase: "event" },
   { id: "battle-post", eventId: bossStage.eventIds.post, phase: "post" },
-  { id: "two-speaker", eventId: "v100:event:prologue", phase: "event", nodeIndex: 3, advance: false },
-  { id: "speaker-switch", eventId: "v100:event:prologue", phase: "event", nodeIndex: 2, expectedInitialSide: "left", expectedPostActionSide: "right" },
+  { id: "two-speaker", eventId: "v100:event:prologue", phase: "event", nodeIndex: 2, advance: false },
+  { id: "speaker-switch", eventId: "v100:event:prologue", phase: "event", nodeIndex: 1, expectedInitialSide: "left", expectedPostActionSide: "right" },
   { id: "ending", eventId: "v100:event:ending", phase: "ending" },
   { id: "credits", eventId: "v100:event:credits", phase: "credits" },
-  { id: "epilogue", eventId: "v100:event:epilogue", phase: "epilogue" },
-]);
+  { id: "homecoming", eventId: "v100:event:ending", phase: "ending", nodeIndex: V100_STORY_EVENTS['v100:event:ending'].nodes.findIndex(node=>node.cutId==='ending-plates-and-karaage') },
+].map(eventCase=>({...eventCase,nodeIndex:v100StoryPageFor(eventCase.eventId,V100_STORY_EVENTS[eventCase.eventId].nodes,eventCase.nodeIndex??0).nodeIndex})));
 const results = [];
 const cleanupErrors = [];
 const buildIdentity = await productionBuildIdentity();
@@ -108,10 +110,11 @@ function eventSave(eventCase) {
       stageNumber,
       destination: eventCase.phase,
       nodeIndex: eventCase.nodeIndex ?? 0,
+      scriptVersion: V100_STORY_SCRIPT_VERSION,
       firstClear: false,
       finalized: false,
     },
-    eventCursor: { phase: eventCase.phase, eventId: eventCase.eventId, nodeIndex: eventCase.nodeIndex ?? 0 },
+    eventCursor: { phase: eventCase.phase, eventId: eventCase.eventId, nodeIndex: eventCase.nodeIndex ?? 0, scriptVersion: V100_STORY_SCRIPT_VERSION },
   });
   invariant(deserializeV100Save(serializeV100Save(save)).ok, "event fixture must pass the product save reader");
   return save;
@@ -144,11 +147,14 @@ async function seedPage(page, save) {
   });
 }
 
-async function clickUsable(locator, label) {
-  await locator.waitFor({ state: "visible", timeout });
+async function clickUsable(locator, label, { timeout: actionTimeout = timeout } = {}) {
+  const deadline = Date.now() + actionTimeout;
+  const remaining = () => Math.max(1, deadline - Date.now());
+  await locator.waitFor({ state: "visible", timeout: remaining() });
   const box = await locator.boundingBox();
   invariant(box && box.width >= 28 && box.height >= 24, `${label} unusable: ${JSON.stringify(box)}`);
-  await locator.click();
+  invariant(Date.now() < deadline, `${label} input deadline exceeded`);
+  await locator.click({ timeout: remaining() });
 }
 
 function uniqueRequestedKeys(receipts) {
@@ -233,11 +239,7 @@ for (const engine of engines) {
           url.searchParams.set("event-audio-qa", "1");
           const response = await page.goto(String(url), { waitUntil: "domcontentloaded", timeout });
           invariant(response?.ok(), `navigation HTTP ${response?.status()}`);
-          const fiction = page.getByRole("button", { name: "続ける", exact: true });
-          if (await fiction.isVisible().catch(() => false)) await clickUsable(fiction, "fiction notice");
-          const offer = page.getByRole("button", { name: "ブラウザで遊ぶ", exact: true });
-          await offer.waitFor({ state: "visible", timeout: Math.min(timeout, 10_000) }).catch(() => {});
-          if (await offer.isVisible().catch(() => false)) await clickUsable(offer, "PWA browser play");
+          await dismissInstallOffer(page, { timeout, readySelector: ".v100-start-screen", clickControl: clickUsable, waitForFictionDismissal: true });
           const eventSelector = `[data-v100-event-id="${eventCase.eventId}"]`;
           await enterV100FromTitle(page, { timeout });
           await page.locator(eventSelector).waitFor({ state: "visible", timeout });
@@ -285,10 +287,8 @@ for (const engine of engines) {
           invariant(before?.owner === "v100-event-runtime", `${name} QA audio owner missing`);
           invariant((before.receipts ?? []).some(({ action }) => action === "requested"), `${name} has no requested event audio`);
           const primary = page.locator(".v100-event-actions .v100-primary");
-          let advanced = false;
           if (eventCase.advance !== false && await primary.isVisible().catch(() => false)) {
             await clickUsable(primary, `${name} event action`);
-            advanced = true;
             await page.waitForFunction(({ selector, previousIndex }) => {
               const surface = document.querySelector(selector);
               return !surface || surface.getAttribute("data-v100-node-index") !== previousIndex;
@@ -307,7 +307,7 @@ for (const engine of engines) {
           assertPortraitAudit(name, postActionPortraitAudit);
           assertDialogueSurfaceAudit(name, postActionDialogueSurfaceAudit);
           const postActionAudio = await postActionEvent.count() > 0
-            ? await nativeAudioFor(page, eventCase, (eventCase.nodeIndex ?? 0) + Number(advanced)) : null;
+            ? await nativeAudioFor(page, eventCase, Number(await postActionEvent.getAttribute('data-v100-node-index'))) : null;
           await page.evaluate(() => window.__V100_EVENT_AUDIO_QA__?.stop?.("qa-boundary"));
           const after = await page.evaluate(() => window.__V100_EVENT_AUDIO_QA__?.getSnapshot?.() ?? null);
           const requestedKeys = uniqueRequestedKeys(after?.receipts ?? []);

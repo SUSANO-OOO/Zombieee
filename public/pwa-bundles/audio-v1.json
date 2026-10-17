@@ -1,7 +1,7 @@
 {
   "schema": "zombieee-pwa-audio-bundle/1",
   "bundlePath": "/pwa-bundles/audio-v1.bin",
-  "bytes": 32082103,
+  "bytes": 34604123,
   "assets": {
     "/audio/v100/foley/fall.mp3": {
       "id": "v100-body-fall",
@@ -1671,59 +1671,221 @@
       "bytes": 1634,
       "hash": "sha256-9b17e9eb68bc359252c2f5c1eca07334018b4a84c278d50728cf46e701a183f7"
     },
+    "/audio/v100/score/opening.mp3": {
+      "id": "install-v100-score-opening",
+      "offset": 19657042,
+      "bytes": 1377219,
+      "hash": "sha256-f7934da2099df7490395cf9a586c2e1e4d4ac040563004d9029b0c54d99f4f4c"
+    },
     "/audio/v100/score/normal.mp3": {
       "id": "install-v100-score-normal",
-      "offset": 19657042,
+      "offset": 21034261,
       "bytes": 1536879,
       "hash": "sha256-71fe28ebf9c2b02844b38b0526ef45a31143e02c021c40533c623bcd8cd324fe"
     },
     "/audio/v100/score/pressure.mp3": {
       "id": "install-v100-score-pressure",
-      "offset": 21193921,
+      "offset": 22571140,
       "bytes": 1281088,
       "hash": "sha256-0ef3c44cc05aaa207e8b50dafcaf6b1a7aebe558869274b132d0917a7030fd03"
     },
     "/audio/v100/score/daily.mp3": {
       "id": "install-v100-score-daily",
-      "offset": 22475009,
+      "offset": 23852228,
       "bytes": 1536879,
       "hash": "sha256-0ed37db8fb43def68ff5c41e9771c3f6480b75b6f7293534b8adf8cd6f025e98"
     },
     "/audio/v100/score/preparation.mp3": {
       "id": "install-v100-score-preparation",
-      "offset": 24011888,
+      "offset": 25389107,
       "bytes": 1281088,
       "hash": "sha256-5e405da7375cdd46c61f7edc63b40269ceee8cc21fc1bea01c9abb973db47cb7"
     },
     "/audio/v100/score/tension.mp3": {
       "id": "install-v100-score-tension",
-      "offset": 25292976,
+      "offset": 26670195,
       "bytes": 1281088,
       "hash": "sha256-8424612be4b1d7f6828d3abb6e315b74202a57058a14eaae6194996e99a614c3"
     },
     "/audio/v100/score/horror.mp3": {
       "id": "install-v100-score-horror",
-      "offset": 26574064,
+      "offset": 27951283,
       "bytes": 1536879,
       "hash": "sha256-7b115f45b82b1fcf885d1d6f9f7887576ac53b134c2833db8ca13fe07fc497cf"
     },
     "/audio/v100/score/relief.mp3": {
       "id": "install-v100-score-relief",
-      "offset": 28110943,
+      "offset": 29488162,
       "bytes": 1281088,
       "hash": "sha256-d4bd43bbdaf9d883085a4689164e684890122cfb5fde986152545acfa3702cc0"
     },
     "/audio/v100/score/loss.mp3": {
       "id": "install-v100-score-loss",
-      "offset": 29392031,
+      "offset": 30769250,
       "bytes": 1153193,
       "hash": "sha256-12806ff156d4b2891fd799121c4445dc55e8207ad4409cd911b5f713bffe7aea"
     },
     "/audio/v100/score/ending.mp3": {
       "id": "install-v100-score-ending",
-      "offset": 30545224,
+      "offset": 31922443,
       "bytes": 1536879,
       "hash": "sha256-722b8157b4c7a234bebdb9b9a79c3e8805a8b08a0e1411a3b7f97188cc7f14d5"
+    },
+    "/audio/v100/r9/chair-scrape.mp3": {
+      "id": "install-v100-r9-chair-scrape",
+      "offset": 33459322,
+      "bytes": 11230,
+      "hash": "sha256-a5baf041c16da39af16430e0882a75319726c7b390096184fc26380766984ccd"
+    },
+    "/audio/v100/r9/extinguisher.mp3": {
+      "id": "install-v100-r9-extinguisher",
+      "offset": 33470552,
+      "bytes": 28617,
+      "hash": "sha256-6ca4e1b62fed1cb0b62b5fc5e5f5bc570e6525295a9214bc095a6d6cb740aef7"
+    },
+    "/audio/v100/r9/cargo-door.mp3": {
+      "id": "install-v100-r9-cargo-door",
+      "offset": 33499169,
+      "bytes": 10152,
+      "hash": "sha256-ed80f20427d57a75e30871e559cb2c9f8c5866daa3d99afd32afcc6a437828e5"
+    },
+    "/audio/v100/r9/shutter-open.mp3": {
+      "id": "install-v100-r9-shutter-open",
+      "offset": 33509321,
+      "bytes": 25507,
+      "hash": "sha256-9a47995423793179d9635c6dd1a1b0b264cf6db0111272653c4d40054a8a9228"
+    },
+    "/audio/v100/r9/shutter-jam.mp3": {
+      "id": "install-v100-r9-shutter-jam",
+      "offset": 33534828,
+      "bytes": 15457,
+      "hash": "sha256-685649fbe677c0a7d32ecb81364f66bdfa9e061a93e8621a1b2cc2785937548e"
+    },
+    "/audio/v100/r9/cable-disconnect.mp3": {
+      "id": "install-v100-r9-cable-disconnect",
+      "offset": 33550285,
+      "bytes": 6586,
+      "hash": "sha256-b0c33997ed8ee1a7934e1f5c8bf6e401ea96e797e1ed930acd4a1d55ce915aff"
+    },
+    "/audio/v100/r9/glass-knock.mp3": {
+      "id": "install-v100-r9-glass-knock",
+      "offset": 33556871,
+      "bytes": 6212,
+      "hash": "sha256-aa7780051e75bb6ef9c4d94e92e74b1564ef739786f2359582d7dc537c13d0de"
+    },
+    "/audio/v100/r9/ceiling-fall.mp3": {
+      "id": "install-v100-r9-ceiling-fall",
+      "offset": 33563083,
+      "bytes": 20107,
+      "hash": "sha256-8c478dc4998f8b0aa7bc2dbd4fe3bb055e47123e32e8a60fadfdfa1720582b37"
+    },
+    "/audio/v100/r9/oxygen-valve.mp3": {
+      "id": "install-v100-r9-oxygen-valve",
+      "offset": 33583190,
+      "bytes": 25745,
+      "hash": "sha256-1d38249d16ca6b17f677f87245f011a8784c2c45265c8950a101b1f34a96e474"
+    },
+    "/audio/v100/r9/rail-strain.mp3": {
+      "id": "install-v100-r9-rail-strain",
+      "offset": 33608935,
+      "bytes": 18327,
+      "hash": "sha256-49d4a44b09c4fbe9c1d49784e6b567299fb533516512df690d1110cd1af58651"
+    },
+    "/audio/v100/r9/coupler-release.mp3": {
+      "id": "install-v100-r9-coupler-release",
+      "offset": 33627262,
+      "bytes": 9003,
+      "hash": "sha256-c21b24928ac7be325255cf49929143955cb36bdce79f5f5be405e7c8fb6e8460"
+    },
+    "/audio/v100/r9/barrier-raise.mp3": {
+      "id": "install-v100-r9-barrier-raise",
+      "offset": 33636265,
+      "bytes": 16338,
+      "hash": "sha256-772ba76c71801dfeae8b455cd4809d1b778696eb6d85680fc4438c868f2d1d82"
+    },
+    "/audio/v100/r9/engine-pass.mp3": {
+      "id": "install-v100-r9-engine-pass",
+      "offset": 33652603,
+      "bytes": 31551,
+      "hash": "sha256-f7d17df884fcc06b0b637db751441ed925fb3fc32fe25c69e9ebb6eeabb8c2d2"
+    },
+    "/audio/v100/r9/vehicle-collision.mp3": {
+      "id": "install-v100-r9-vehicle-collision",
+      "offset": 33684154,
+      "bytes": 15305,
+      "hash": "sha256-30f86f27a0020e137ac6bb77365feff289883f34facdcf7bc0eb66ddd7f1bb7c"
+    },
+    "/audio/v100/r9/door-battering.mp3": {
+      "id": "install-v100-r9-door-battering",
+      "offset": 33699459,
+      "bytes": 9964,
+      "hash": "sha256-43157f2b46db044417320a08474dc6de29b31a9a8fcd3bec04d26363bbcaed29"
+    },
+    "/audio/v100/r9/card-burnout.mp3": {
+      "id": "install-v100-r9-card-burnout",
+      "offset": 33709423,
+      "bytes": 14161,
+      "hash": "sha256-aa633a86d93be4b02497a1f7a4644cde2f1733d295bac1a50d7deb16433aa270"
+    },
+    "/audio/v100/r9/weapon-handle.mp3": {
+      "id": "install-v100-r9-weapon-handle",
+      "offset": 33723584,
+      "bytes": 7707,
+      "hash": "sha256-6ad9c5a813ac92189b2e411536895eac3a66b70ee82aa686a10c90e2e8b91276"
+    },
+    "/audio/v100/r9/sample-lids.mp3": {
+      "id": "install-v100-r9-sample-lids",
+      "offset": 33731291,
+      "bytes": 10120,
+      "hash": "sha256-8c1861697f6c1e116493b4799a99f749e1964219bd93de316fcbb2722b91c2db"
+    },
+    "/audio/v100/r9/case-close.mp3": {
+      "id": "install-v100-r9-case-close",
+      "offset": 33741411,
+      "bytes": 10834,
+      "hash": "sha256-1ceba1edda9595249d37fa1923bb4120d2f1004d0ad673346e280aa467d23bf5"
+    },
+    "/audio/v100/r9/fire-catch.mp3": {
+      "id": "install-v100-r9-fire-catch",
+      "offset": 33752245,
+      "bytes": 26476,
+      "hash": "sha256-e09a778cd09b5e1b25f1d13dca1263bd8bb0c62453d83cd73e0fccea8933ff19"
+    },
+    "/audio/v100/r9/gas-ignition.mp3": {
+      "id": "install-v100-r9-gas-ignition",
+      "offset": 33778721,
+      "bytes": 19326,
+      "hash": "sha256-a0f01166947ccf9b5493bf92d539a42d922a270bed696fe2b84ce74496204def"
+    },
+    "/audio/v100/r9/plate-stack.mp3": {
+      "id": "install-v100-r9-plate-stack",
+      "offset": 33798047,
+      "bytes": 15272,
+      "hash": "sha256-dad8d5442002ae89bd6d542f88ed9720210b907eb4c2f84038693be878985431"
+    },
+    "/audio/v100/r9/lab-air.mp3": {
+      "id": "install-v100-r9-lab-air",
+      "offset": 33813319,
+      "bytes": 173263,
+      "hash": "sha256-7eeb2bff837e29cda77b3e1719c25a004741505665e7b8b9c3a748f2fdfa333e"
+    },
+    "/audio/v100/r9/bridge-wind.mp3": {
+      "id": "install-v100-r9-bridge-wind",
+      "offset": 33986582,
+      "bytes": 227306,
+      "hash": "sha256-76ba49a46e04e2966c9cefc96ddc752e4c7b87ab50abffdfda4189a4eeea3b10"
+    },
+    "/audio/v100/r9/vehicle-idle.mp3": {
+      "id": "install-v100-r9-vehicle-idle",
+      "offset": 34213888,
+      "bytes": 177364,
+      "hash": "sha256-b0d0fbbad851aa11684702b41fc4601a79638a474ea63e8bde511900d308df84"
+    },
+    "/audio/v100/r9/kitchen-air.mp3": {
+      "id": "install-v100-r9-kitchen-air",
+      "offset": 34391252,
+      "bytes": 212871,
+      "hash": "sha256-8d547ef536e701b79c913b5e41aebebfc761ce76db4de56b7e62e4d5dc920510"
     }
   }
 }

@@ -1,0 +1,51 @@
+{
+  "schema": "v177-paisen-facing-head-registration-r8",
+  "sourceReferenceSha256": "d69ec982ce5ed960c697ab035e0001f772f4cf5eccf07e671d244bd847eaef87",
+  "oldHeadSha256": "74b62d1bc6720452d29bc284d2cbebf0f423aa9766d4e6d48b4294a10bacb25d",
+  "generatedHeadSha256": "42a2372f253ec9d6ddd84fcc9aa33f9fa03df6d6e39df85fd5ac1d29bbc9ce4f",
+  "headSha256": "3decd06af689b23434f8daf6813d30c081b46ac67a3f6b546bcc47d353c3118e",
+  "referenceSha256": "cd36c9f9d958714874c2e7c49008d7afce673811850c4fc1e389cee65a850797",
+  "generatedAlphaCrop": {
+    "left": 293,
+    "top": 58,
+    "width": 771,
+    "height": 1032
+  },
+  "normalizedSize": [
+    62,
+    83
+  ],
+  "top": 16,
+  "left": 200,
+  "neckPivot": [
+    234,
+    90
+  ],
+  "neckline": [
+    9,
+    45
+  ],
+  "paintOffsetX": -7,
+  "headBehindTorso": true,
+  "changedPixels": 4251,
+  "outsideHeadMaskChanges": 0,
+  "visibleHeadExactPixels": 3609,
+  "otherBodyPartsUnchanged": 14,
+  "animationMatricesUnchanged": true,
+  "weaponContactPoint": {
+    "previous": [
+      329,
+      187
+    ],
+    "registered": [
+      321,
+      187
+    ],
+    "minimumPaintAlpha": 128
+  },
+  "motionSha256": "0ada2033c4b91d4e7e716bb4a37917918efda870868604c1862e011781b251df",
+  "semanticReview": "Generated profile manually inspected: one eye visible, nose and iris face right. Assembled poses require separate review.",
+  "nativeAccepted": false,
+  "animationNaturalnessAccepted": false,
+  "wholeGameAccepted": false
+}

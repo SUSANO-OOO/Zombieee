@@ -33,6 +33,6 @@ test('enemy contact sampling and all normal target timers share one unchanged du
  const source=await readFile(new URL('../app/AshfallGame.tsx',import.meta.url),'utf8');
  assert.equal((source.match(/f\.attack = ENEMY_NORMAL_ATTACK_SECONDS;/g)||[]).length,2,'Fighter and objective attacks');
  assert.match(source,/f\.attack = f\.side === "human" \? attackPresentationDuration\(f\.kind\) : ENEMY_NORMAL_ATTACK_SECONDS;/,'Crawler attacks');
- assert.match(source,/options\.v100AuthoredPresentation && f\.side === 'zombie'\s*\? v100EnemyContactPose/,'V1 rendering only');
+ assert.ok(/options\.v100AuthoredPresentation && f\.side === 'zombie' && !jointImage\?\.naturalWidth\s*\? v100EnemyContactPose/.test(source),'V1 rendering only; the previous painted contact remains the fallback until its joint texture is ready');
  assert.match(source,/snapshot\.phase === "warning" && !authoredMeleeWarning/,'Authored body replaces the normal melee warning ribbons');
 });

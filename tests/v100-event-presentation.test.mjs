@@ -57,12 +57,12 @@ test("ending locations follow the source scenes and epilogue returns to the reop
   assert.equal(epilogue.sceneId, PRODUCTION_AUDIO_SCENE_IDS.STORY_KUMAYA_DAILY);
 });
 
-test("ending location ambience follows every authored node without changing the ending score", () => {
+test("R9 ending ambience and score follow treatment, unresolved trust, and the final meal", () => {
   const expected = {
     dawn: ["ambience-v070-stage3-wind-loop"],
-    hospital: ["ambience-v070-medical-bay-loop"],
+    hospital: ["v100-r9-lab-air"],
     signal: ["ambience-v070-crawler-ops-loop", "ambience-v070-radio-signal-loop"],
-    kumaya: ["ambience-v070-kumaya-daily-loop"],
+    kumaya: ["v100-r9-kitchen-air"],
   };
   const visited = new Set();
   for (const [nodeIndex, node] of V100_STORY_EVENTS["v100:event:ending"].nodes.entries()) {
@@ -70,7 +70,7 @@ test("ending location ambience follows every authored node without changing the 
     const scene = V100_AUDIO_MANIFEST.sceneById[presentation.sceneId];
     assert.ok(expected[node.sceneTag], `unmapped ending location: ${node.sceneTag}`);
     assert.deepEqual(scene.ambience, expected[node.sceneTag]);
-    assert.equal(scene.bgm, "music-v100-score-ending");
+    assert.equal(scene.bgm, node.sceneTag==='hospital'?'music-v100-score-relief':node.sceneTag==='kumaya'&&node.sourceLine<2393?'music-v100-score-loss':'music-v100-score-ending');
     assert.equal(presentation.cueId, v100StoryDirectionFor('v100:event:ending',nodeIndex,node).cueId);
     if(presentation.cueId) assert.ok(V100_AUDIO_MANIFEST.assetById[presentation.cueId]);
     assert.ok(!scene.ambience.includes("ambience-v070-crawler-canteen-loop"));
@@ -98,15 +98,15 @@ test("V1 event presentation maps canonical story phases to bounded runtime categ
   }
 });
 
-test("canonical interludes leave the floodgate/lab for their actual locations", () => {
+test("R9 Musashi stays beside the floodgate and the soup scene returns to hospital", () => {
   const view = (eventId, sceneTag) => {
     const nodeIndex = V100_STORY_EVENTS[eventId].nodes.findIndex(node => node.sceneTag === sceneTag);
     assert.ok(nodeIndex >= 0);
     const node = V100_STORY_EVENTS[eventId].nodes[nodeIndex];
     return v100EventPresentationFor({ eventId, phase:"post", node, nodeIndex });
   };
-  assert.match(view("v100:event:s20:post","corridor").backgroundPath,/shopping-street/u);
-  assert.match(view("v100:event:s20:post","musashi").backgroundPath,/mugarian-hq/u);
+  assert.match(view("v100:event:s20:post","street").backgroundPath,/estuary-floodgate/u);
+  assert.match(view("v100:event:s20:post","musashi").backgroundPath,/estuary-floodgate/u);
   const soup=view("v100:event:s25:post","soup");
   assert.match(soup.backgroundPath,/ending-hospital-secured/u);
   const scene=V100_AUDIO_MANIFEST.sceneById[soup.sceneId];

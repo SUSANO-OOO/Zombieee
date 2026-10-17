@@ -1,0 +1,31 @@
+{
+  "tool": "built-in image_gen",
+  "source": "battle-reference-r2.png",
+  "sourceSha256": "b6f6fa4e10ea1656a59c878838f44e3afd4835ce9504a9420031a804b9fead9f",
+  "identityMaster": "assets/source/v177/paisen/paisen-identity-r2.png",
+  "authority": "Producer supplied all three Paisen identity photos on 2026-10-15.",
+  "prompts": {
+    "fullBodyFirst": "Use case: identity-preserve. Asset type: complete full-body battle identity reference for Paisen in the existing gritty Japanese game, to be separated into explicit shoulder/elbow/wrist/hip/knee/ankle rig parts.\nImage1 is the new illustrated identity master selected for this character. Images2,3,4 are the producer's exact same-man photos and absolute face/body/clothing truth. This is a pose derivation of that SAME adult man, not a different generic Asian soldier.\nDraw one finely detailed full-body character in a natural compact ready stance facing toward IMAGE RIGHT, suitable for a side-view advancing and punching unit. Torso and feet point right in a natural three-quarter side angle; face turns slightly toward camera enough to retain recognizability, like photos3/4. Both feet entirely visible and planted on the same baseline, separated by only a relaxed half-step; no long walking stride, crossed legs, tiptoe pose, backward-leaning moonwalk, stiff bent knees or crouching. Knees softly unlocked. Near arm relaxed with a loosely closed fist near his hip, far arm slightly bent with its fist a little in front of the waist. Keep both shoulders, elbows, hands, knees, ankles and their natural connections clearly readable. Exactly two arms/hands and two legs/feet, continuous anatomy, natural adult proportions.\nMatch photo1's and image1's broad rounded-square face/cheeks, thick eyebrows, exact eyes/nose/lips, short straight black hair and natural uneven hairline, tan skin, slight chin/lower-face stubble and thick neck. Moderately stocky/strong physique and broad shoulders as in the photos. Preserve image1's realistic adult head-to-body proportions (approximately six to seven heads tall), not a huge head on a thin childlike body. No idealized angular face or exaggerated bodybuilder muscles.\nExact clothes: plain muted dark navy-purple short-sleeve crewneck T-shirt, loose plain white knee-length shorts, simple worn dark charcoal low-top sneakers as in image1. No added armor, belt, jewelry, logos, weapons, gloves or accessories.\nStyle: the SAME finely worked gritty hand-painted illustrated rendering as image1, with restrained ink texture, natural fabric folds, muted warm rim light and cool shadows. The whole body and face must share the same paint style; no photographic head pasted onto a pixel-art body. No exposed mechanical joints or gaps at shoulders/knees. Clean complete silhouette with generous transparent margins around head, fists and shoes. One character only, vertical full-length composition, actual transparent background, no floor/shadow plate/colored backdrop, no text/watermark/reference panels.",
+    "orientationEdit": "Use case: identity-preserve. Image1 is the EDIT TARGET, a new full-body battle reference for Paisen. Images2 and3 are the exact same-man identity photographs (face truth, with photo3 giving his rightward facial angle).\nMake ONE targeted pose correction: turn the entire body and BOTH feet to face clearly toward IMAGE RIGHT in a three-quarter SIDE VIEW, about65–70degrees away from a frontal view, for a character advancing horizontally to the right. BOTH sneaker toes point right and BOTH heels point left. The near shoe must read as a right-facing side view, not point at the camera. Keep the feet planted on one level baseline, at a natural compact half-step separation rather than a wide walking stride. Maintain continuous natural knees/ankles/hips and true adult body proportions.\nKeep this exact man's recognizable broad face, hair, eyes/nose/lips/stubble and neck, with the head also facing right but turned slightly toward camera so the nearer eye and some far eye remain visible. Do not leave the face looking straight at the camera above a sideways body. Do not replace him with a handsome generic Asian fighter.\nPreserve the same moderately stocky strong physique, navy-purple plain short-sleeve crewneck T-shirt, loose white knee-length shorts, dark worn sneakers, two loosely closed natural fists, and the exact gritty hand-painted style and muted lighting of image1. Near fist relaxed by the hip, far fist a little ahead of the waist; shoulders and elbows attached. No new accessories/weapons, no bodybuilder exaggeration, no huge head or thin childlike limbs. Whole figure head to both shoes stays inside the canvas with transparent margins.\nActual transparent background, no floor, ground shadow, glow, captions, reference panels or extra elements. The correction is solely to the coherent rightward body/head/foot orientation; retain identity, clothes, style and realistic proportions."
+  },
+  "review": {
+    "identityAndClothing": "All3 photos and committed master compared; same face/short hair/physique/navy-purple tee/white knee shorts. No added armor or weapon.",
+    "alpha": "Actual alpha present, exterior sample0; neutral-background preview viewed.",
+    "selectedFor": "Battle reference for new explicit full-body parts and rig authoring.",
+    "runtimeConnected": false,
+    "producerFinalAcceptance": false
+  },
+  "rejectedApproach": {
+    "headOnly": "Six production joint poses were rendered offline with the generated head. Existing body style/physique and shoulder/knee paint gaps remain visible; head-only candidate not adopted.",
+    "proof": "output/issue177-paisen-rig-head-study-r1/original-vs-candidate-render-r1.png",
+    "naturalAnimationAcceptance": false
+  },
+  "preserve": [
+    "all48/all21 whole-game scope",
+    "unit identity stable ID",
+    "existing saves, progression, rewards, settings and voices",
+    "original other-unit source paint",
+    "all unchanged source/floor/grip/performance thresholds"
+  ],
+  "next": "Author a coherent whole-body battle source and complete overlapping anatomical parts, then validate all action states and original-speed motion. This file is a reference, not a finished animation."
+}

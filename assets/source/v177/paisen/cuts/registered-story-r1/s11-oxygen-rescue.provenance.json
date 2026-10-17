@@ -1,0 +1,350 @@
+{
+  "sceneId": "s11-oxygen-rescue",
+  "runtimePath": "/art/v100/story-r9/cuts/s11-oxygen-rescue.webp",
+  "authorSource": "assets/source/v177/paisen/cuts/registered-story-r1/s11-oxygen-rescue.png",
+  "authorSourceSha256": "14bbbb763c70bbe37efcc643394fb3c92f92a4b29d281ad05c6ab52b5adbd3ca",
+  "approvedRegion": "assets/source/v177/paisen/cuts/registered-story-r1/s11-oxygen-rescue.region.png",
+  "approvedRegionSha256": "625c7224c11feb6860e586add957d04ad83307d669599a46f2effa8158c1b3cf",
+  "promptFile": "assets/source/v177/paisen/cuts/registered-story-r1/s11-oxygen-rescue.prompts.json",
+  "provenanceFile": "assets/source/v177/paisen/cuts/registered-story-r1/s11-oxygen-rescue.provenance.json",
+  "originalGitBlob": "ada6d51b03bd5cf79c5a2da99cf764eb73e1cedd",
+  "originalSha256": "bb722fb284a8fecf1a2456ae5789716c8b796fb4feabadef219ad91392416cd1",
+  "originalBytes": 364686,
+  "width": 1280,
+  "height": 720,
+  "changedPixels": 52884,
+  "registeredPixels": 52916,
+  "runtimeBytes": 1139376,
+  "runtimeSha256": "872ab0c62d97039419feed4488da8c9b7019a91f99334bbf7b55372f5fee12db",
+  "byteDelta": 774690,
+  "mode": "built-in imagegen",
+  "identityMaster": "assets/source/v177/paisen/paisen-identity-r2.png",
+  "identityMasterSha256": "a1d5517fc1a500c4e949b0ec6c522efa0404ebd4ddd3b548994713a918983257",
+  "outsideRegisteredRegion": 0,
+  "losslessPixelExact": true,
+  "fullSourceSceneActuallyViewed": true,
+  "sourceVisualAccepted": true,
+  "nativeAccepted": false,
+  "producerAccepted": false,
+  "wholeGameAccepted": false,
+  "sourceRegistration": {
+    "at": "2026-10-15T13:32:39.113Z",
+    "id": "s11-oxygen-rescue",
+    "original": "public/art/v100/story-r9/cuts/s11-oxygen-rescue.webp",
+    "originalSha256": "bb722fb284a8fecf1a2456ae5789716c8b796fb4feabadef219ad91392416cd1",
+    "headSource": "assets/source/v177/paisen/cuts/r9-photo-r1/s11-oxygen-rescue-photo-r1.localized.png",
+    "clothingGeneration": "assets/source/v177/paisen/cuts/r9-photo-r1/s11-oxygen-rescue-clothes-r2.generated.png",
+    "promptSets": [
+      "assets/source/v177/paisen/cuts/r9-photo-r1/s11-oxygen-rescue-photo-r1.generation.json",
+      "assets/source/v177/paisen/cuts/r9-photo-r1/s11-oxygen-rescue-clothes-r2.generation.json"
+    ],
+    "pantsPolygon": [
+      [
+        220,
+        404
+      ],
+      [
+        250,
+        397
+      ],
+      [
+        301,
+        403
+      ],
+      [
+        382,
+        403
+      ],
+      [
+        402,
+        420
+      ],
+      [
+        405,
+        445
+      ],
+      [
+        388,
+        482
+      ],
+      [
+        360,
+        521
+      ],
+      [
+        330,
+        563
+      ],
+      [
+        305,
+        607
+      ],
+      [
+        278,
+        656
+      ],
+      [
+        253,
+        720
+      ],
+      [
+        166,
+        720
+      ],
+      [
+        166,
+        676
+      ],
+      [
+        158,
+        636
+      ],
+      [
+        158,
+        590
+      ],
+      [
+        162,
+        551
+      ],
+      [
+        181,
+        513
+      ],
+      [
+        200,
+        477
+      ],
+      [
+        219,
+        440
+      ]
+    ],
+    "protectedRegions": [
+      [
+        [
+          333,
+          390
+        ],
+        [
+          381,
+          390
+        ],
+        [
+          366,
+          416
+        ],
+        [
+          351,
+          437
+        ],
+        [
+          338,
+          454
+        ],
+        [
+          331,
+          476
+        ],
+        [
+          324,
+          497
+        ],
+        [
+          316,
+          513
+        ],
+        [
+          308,
+          519
+        ],
+        [
+          298,
+          515
+        ],
+        [
+          291,
+          519
+        ],
+        [
+          281,
+          514
+        ],
+        [
+          277,
+          509
+        ],
+        [
+          270,
+          518
+        ],
+        [
+          262,
+          516
+        ],
+        [
+          256,
+          510
+        ],
+        [
+          251,
+          498
+        ],
+        [
+          252,
+          486
+        ],
+        [
+          257,
+          475
+        ],
+        [
+          266,
+          464
+        ],
+        [
+          281,
+          454
+        ],
+        [
+          296,
+          444
+        ],
+        [
+          307,
+          430
+        ],
+        [
+          319,
+          410
+        ]
+      ],
+      [
+        [
+          207,
+          388
+        ],
+        [
+          234,
+          400
+        ],
+        [
+          225,
+          422
+        ],
+        [
+          222,
+          440
+        ],
+        [
+          219,
+          454
+        ],
+        [
+          213,
+          463
+        ],
+        [
+          200,
+          459
+        ],
+        [
+          192,
+          452
+        ],
+        [
+          190,
+          439
+        ],
+        [
+          191,
+          423
+        ],
+        [
+          198,
+          409
+        ]
+      ],
+      [
+        [
+          428,
+          410
+        ],
+        [
+          447,
+          415
+        ],
+        [
+          500,
+          430
+        ],
+        [
+          500,
+          720
+        ],
+        [
+          244,
+          720
+        ],
+        [
+          259,
+          680
+        ],
+        [
+          278,
+          638
+        ],
+        [
+          298,
+          592
+        ],
+        [
+          314,
+          558
+        ],
+        [
+          334,
+          522
+        ],
+        [
+          352,
+          497
+        ],
+        [
+          367,
+          478
+        ],
+        [
+          380,
+          462
+        ],
+        [
+          392,
+          450
+        ],
+        [
+          401,
+          438
+        ],
+        [
+          413,
+          425
+        ]
+      ]
+    ],
+    "mask": "assets/source/v177/paisen/cuts/r9-photo-r1/s11-oxygen-rescue-photo-r3.region.png",
+    "target": "assets/source/v177/paisen/cuts/r9-photo-r1/s11-oxygen-rescue-photo-r3.localized.png",
+    "targetSha256": "14bbbb763c70bbe37efcc643394fb3c92f92a4b29d281ad05c6ab52b5adbd3ca",
+    "maskSha256": "625c7224c11feb6860e586add957d04ad83307d669599a46f2effa8158c1b3cf",
+    "changedPixels": 52884,
+    "changedOutsideRegisteredRegion": 0,
+    "originalProtectedArmsHandsAndForegroundPreserved": true,
+    "visualReviewed": true,
+    "runtimeConnected": false,
+    "nativeAccepted": false,
+    "producerAccepted": false,
+    "wholeGameAccepted": false,
+    "visualReviewedAt": "2026-10-15T13:37:04.972Z",
+    "visualSourceAccepted": true
+  }
+}

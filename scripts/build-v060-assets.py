@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import subprocess
 from pathlib import Path
 from statistics import median
 
@@ -309,6 +310,13 @@ def pack_character(kind: str, right: Image.Image, left: Image.Image | None) -> t
 
     destination = CHARACTER_OUTPUT / f"{kind}-battle-v1.png"
     atlas.save(destination, "PNG", optimize=True)
+    if kind == "kumaverson":
+        # Keep the approved nonreaction paint, and separate the two bottom
+        # poses at x=800 so the full prone head belongs to the death frame.
+        subprocess.run(
+            ["node", str(ROOT / "scripts" / "build-v177-reaction-repairs.mjs"),
+             "--kind=kumaverson", "--png-only"], cwd=ROOT, check=True,
+        )
     return destination, right_frames[0]
 
 

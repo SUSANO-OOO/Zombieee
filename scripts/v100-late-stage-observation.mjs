@@ -110,11 +110,11 @@ try {
   await uiClick(page, page.getByRole("button", { name: "ブラウザで遊ぶ", exact: true }));
   await page.waitForFunction(() => document.querySelector(".v100-shell[aria-busy=\"false\"]"));
   assert.equal(await phase(page), "map");
-  await uiClick(page, page.getByRole("button", { name: "この作戦を編成", exact: true }));
+  await uiClick(page, page.getByRole("button", { name: "編成して出撃", exact: true }));
   for (let step = 0; step < 100 && await phase(page) !== "formation"; step += 1) {
     const currentPhase = await phase(page);
     if (["event", "post", "first-clear-post"].includes(currentPhase)) await uiClick(page, page.locator(".v100-event-actions .v100-primary"));
-    else if (currentPhase === "map") await uiClick(page, page.getByRole("button", { name: "この作戦を編成", exact: true }));
+    else if (currentPhase === "map") await uiClick(page, page.getByRole("button", { name: "編成して出撃", exact: true }));
     else await page.waitForTimeout(100);
   }
   assert.equal(await phase(page), "formation", "S27 map/event flow must reach formation within bounded event steps");

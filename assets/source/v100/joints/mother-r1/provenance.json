@@ -1,0 +1,216 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "mother",
+  "assetPath": "/art/v100/joints/mother-r1.webp",
+  "bytes": 68230,
+  "sha256": "230991a43eff9f9331b68126ec3412f6fb0bc606ec2d46ce47973e16232231f1",
+  "atlasPacking": "height-descending-shelves",
+  "generatedPartsStudySha256": "ff2017cb35ed3312b252f762032d2f19a2caa04b7562744c285b2bb261e6cd78",
+  "identitySourceSha256": "c11c56474860367a0cb12e05b5164d31161fe45157c3ffd95a52a73613211765",
+  "identityBinding": {
+    "path": "/art/v090/bosses/mother-battle-r1.png",
+    "sourceSha256": "f3b1ba21300495058bdb3fbb445da90bd56fde4cb212eae69f12f4fefb826442",
+    "sourceRect": {
+      "x": 480,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "referenceTransform": {
+      "scale": 1,
+      "tx": 0,
+      "ty": 0,
+      "flipX": false
+    }
+  },
+  "motionSha256": "c655e140ee12ab74ece17c65cd75095372918c14bce71143cd04c39cc54b0fd6",
+  "originalPoseBindings": {
+    "walk-a": {
+      "file": "identity-reference.png",
+      "sha256": "c11c56474860367a0cb12e05b5164d31161fe45157c3ffd95a52a73613211765",
+      "path": "/art/v090/bosses/mother-battle-r1.png",
+      "sourceSha256": "f3b1ba21300495058bdb3fbb445da90bd56fde4cb212eae69f12f4fefb826442",
+      "sourceRect": {
+        "x": 480,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": false
+    },
+    "attack-a": {
+      "file": "original-attack-a.png",
+      "sha256": "47fde7e7954f52e6e5e452ad365717397c7a614a218248b989d5ac060baafb0b",
+      "path": "/art/v090/bosses/mother-battle-r1.png",
+      "sourceSha256": "f3b1ba21300495058bdb3fbb445da90bd56fde4cb212eae69f12f4fefb826442",
+      "sourceRect": {
+        "x": 1440,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": false
+    },
+    "attack-b": {
+      "file": "original-attack-b.png",
+      "sha256": "b2502232ad3b8eebe063ee1501c16541ff66a702c6f962dc654d7d2f8a8c4fd2",
+      "path": "/art/v090/bosses/mother-battle-r1.png",
+      "sourceSha256": "f3b1ba21300495058bdb3fbb445da90bd56fde4cb212eae69f12f4fefb826442",
+      "sourceRect": {
+        "x": 1920,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": false
+    }
+  },
+  "parts": [
+    {
+      "name": "far-rear-upper",
+      "file": "far-rear-upper.png",
+      "sha256": "6eabe024d59ec976e1f6e12c38edeb4e17ffe251195f7822a7c3dcb607d1a4d4",
+      "original": false
+    },
+    {
+      "name": "far-rear-lower",
+      "file": "far-rear-lower.png",
+      "sha256": "aab72bd78dde653f94beaeab2dfe04781caa3a3b9cc6b9e68e711e5a76eb2ea4",
+      "original": false
+    },
+    {
+      "name": "far-rear-foot",
+      "file": "far-rear-foot.png",
+      "sha256": "a8e0a23888cbe5263c806b022a324971730d1b453725a8c2b286ece6546ee0e7",
+      "original": true
+    },
+    {
+      "name": "near-rear-upper",
+      "file": "near-rear-upper.png",
+      "sha256": "0e45b788df3daf3cfcdcb4b1151dbbb570fc50fe09fa01d30eafb858bc17961c",
+      "original": false
+    },
+    {
+      "name": "near-rear-lower",
+      "file": "near-rear-lower.png",
+      "sha256": "6216941cefb4b7daa4e0df6641b47fd39ad2fee94e41ddb99e5f70ed63cc2e31",
+      "original": false
+    },
+    {
+      "name": "near-rear-foot",
+      "file": "near-rear-foot.png",
+      "sha256": "a4461f165f19e8ade7bcb74ca2b9b63ab904a1e756faaa07b3c15860a7de1fa6",
+      "original": true
+    },
+    {
+      "name": "near-middle-upper",
+      "file": "near-middle-upper.png",
+      "sha256": "ae9d53fe96fd2bf15ec4d5d5642b65f10df2987b43c8f62751c0f8c188041f2b",
+      "original": false
+    },
+    {
+      "name": "near-middle-lower",
+      "file": "near-middle-lower.png",
+      "sha256": "b1bb0da1db671331bb8537d894169e0139206dc971b51bdca65cce4d5a80d46d",
+      "original": false
+    },
+    {
+      "name": "near-middle-foot",
+      "file": "near-middle-foot.png",
+      "sha256": "cd35e7f49f1bdafcd5856b381a1ca1cc6aed9ea76723ec022ba1975ddfddd6b8",
+      "original": true
+    },
+    {
+      "name": "far-middle-upper",
+      "file": "far-middle-upper.png",
+      "sha256": "647e0e1273981deb66b3080833d26da7697662d868c06447301133f97d811331",
+      "original": false
+    },
+    {
+      "name": "far-middle-lower",
+      "file": "far-middle-lower.png",
+      "sha256": "7889671d27e7e3ac038fa07a335f8344730cf1a02de79a5c51a69948fec2f371",
+      "original": false
+    },
+    {
+      "name": "far-middle-foot",
+      "file": "far-middle-foot.png",
+      "sha256": "3cfc9adeb5bfa5d12aeafdac598180f05cfe07f74f1186baf689c7c785b5d862",
+      "original": true
+    },
+    {
+      "name": "near-front-upper",
+      "file": "near-front-upper.png",
+      "sha256": "93dfc5b300b2b210899cc004272025a9e1c2ffeb34b8a073f02bfd5bd009463a",
+      "original": false
+    },
+    {
+      "name": "near-front-lower",
+      "file": "near-front-lower.png",
+      "sha256": "ff83fbf826a8e76bc286c525f58136b781d0420179c1eb877ff039ec658a50fa",
+      "original": false
+    },
+    {
+      "name": "near-front-foot",
+      "file": "near-front-foot.png",
+      "sha256": "419968b2340e230db60071ce56484fcfd630cf4eb11cf206702a0b4de589d55f",
+      "original": true
+    },
+    {
+      "name": "far-front-upper",
+      "file": "far-front-upper.png",
+      "sha256": "6ff35d1ae368a4a397f4e746e7770f21227c93c44399a2c32270066febf04b30",
+      "original": false
+    },
+    {
+      "name": "far-front-lower",
+      "file": "far-front-lower.png",
+      "sha256": "89f9e8938ee37ff3f95758f2579e6469d18f059f1aa4a2a3c4001907a58e611c",
+      "original": false
+    },
+    {
+      "name": "far-front-foot",
+      "file": "far-front-foot.png",
+      "sha256": "8982b6be30a1f23affd411ee4536ae876893120ba83f1d62f4b6cd7bfc3725d5",
+      "original": true
+    },
+    {
+      "name": "thorax",
+      "file": "thorax.png",
+      "sha256": "b2e9b26db7ffe241e039de5adb53162712eb019f93dd645bd33168f75dad9ee0",
+      "original": false
+    },
+    {
+      "name": "neck",
+      "file": "neck.png",
+      "sha256": "950a979218ec5a2ff2d1f77d60360407573fe11e43e9858ec80b8385b0b005b2",
+      "original": false
+    },
+    {
+      "name": "front-brood-0",
+      "file": "front-brood-0.png",
+      "sha256": "1fb2d70fc295b86e8a169b52169663fdc2385b068120119f28ad3d9d8a6a019a",
+      "original": true
+    },
+    {
+      "name": "front-brood-1",
+      "file": "front-brood-1.png",
+      "sha256": "500fa964204d314375ffe178445c0f3edc9dfd3f80b725e3d85d0f95fc51cfd2",
+      "original": true
+    },
+    {
+      "name": "front-brood-2",
+      "file": "front-brood-2.png",
+      "sha256": "2566e640765fa67eb2b152f45133864a8a4f03991052787bbffc6100569b774a",
+      "original": true
+    }
+  ],
+  "source": "Blender 5.2 fixed-length Mother six-leg alternating tripod gait, planted original feet, original head and thorax-bound brood-retch. Original dorsal shell, eggs, lattice apertures, visible limb tissue, head, teeth, drool and brood sacs retained; hidden joints completed. Far-middle claw comes from the original exposed attack pose. Secondary walking sway settles continuously; dedicated summon, hit, death and transform owners retained. All48/all-action and continuous normal-play acceptance pending.",
+  "decodedBytes": 382976,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { writeFile, mkdir } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { V100_BOSSES, V100_STAGE_IDS } from "../app/v100Registry.js";
-import { v100StoryEventView, V100_STORY_SOURCE_SHA256 } from "../app/v100StoryEvents.js";
+import { v100StoryEventView, V100_STORY_EVENTS, V100_STORY_SOURCE_SHA256, V100_STORY_SCRIPT_VERSION } from "../app/v100StoryEvents.js";
 import {
   beginV100StageAttempt, completeV100Event, createV100StoryFlowState,
   enterV100Battle, enterV100PostResult, finishV100Battle,
@@ -24,6 +24,7 @@ let save = createDefaultV100Save({ playerName, now });
 let flow = createV100StoryFlowState();
 let eventsVisited = 0;
 let nodesVisited = 0;
+const visitedEventIds = [];
 const stages = [];
 
 function accepted(transition, step) {
@@ -61,6 +62,7 @@ function visitEvent(expectedId, beforeComplete) {
     assert.equal(node.text.includes("{{PLAYER_NAME}}"), false, expectedId);
   }
   eventsVisited += 1;
+  visitedEventIds.push(expectedId);
   nodesVisited += view.nodes.length;
   checkpoint();
   flow = markV100FlowEventRead(flow, expectedId);
@@ -114,19 +116,28 @@ for (let index = 0; index < V100_STAGE_IDS.length; index += 1) {
 
 visitEvent("v100:event:ending");
 visitEvent("v100:event:credits");
-visitEvent("v100:event:epilogue");
+// R9 places the homecoming before the credits. Keep the retired stable ID for
+// old saves, but do not count its empty compatibility finalizer as a seen scene.
+const compatibilityFinalizers = Object.values(V100_STORY_EVENTS).filter(event => !visitedEventIds.includes(event.id) && event.finalizeOnly && !event.nodes.length);
+assert.deepEqual(compatibilityFinalizers.map(event => event.id), ["v100:event:epilogue"]);
+assert.equal(compatibilityFinalizers[0].postCreditsFilm, false);
 checkpoint();
 assert.equal(flow.destination, "postgame-map");
 assert.equal(save.postGameAvailable, true);
 assert.equal(save.completedStageIds.length, 30);
-assert.equal(eventsVisited, 94);
+assert.equal(eventsVisited, 93);
+assert.equal(new Set(visitedEventIds).size, eventsVisited);
+assert.deepEqual([...visitedEventIds, ...compatibilityFinalizers.map(event => event.id)].sort(), Object.keys(V100_STORY_EVENTS).sort());
 
 const report = {
   status: "passed",
   scope: "developer-mode synthetic victories; all story events, save/reload checkpoints, stage unlocks and receipts; not normal-play battle acceptance",
   storySourceSha256: V100_STORY_SOURCE_SHA256,
+  storyScriptVersion: V100_STORY_SCRIPT_VERSION,
   playerName,
   eventsVisited,
+  visitedEventIds,
+  compatibilityFinalizerIds: compatibilityFinalizers.map(event => event.id),
   nodesVisited,
   syntheticVictories: stages.length,
   finalDestination: flow.destination,

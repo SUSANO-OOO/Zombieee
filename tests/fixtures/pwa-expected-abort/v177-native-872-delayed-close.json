@@ -1,0 +1,24 @@
+{
+  "source": {
+    "head": "872653acda88bf5a0840e1e488dd3a850467f307",
+    "artifactId": 11992313573,
+    "artifactSha256": "f211052040fe83021b1c4feed66362bb5018f1ae135cdd3365a9ec9c5e119eda",
+    "case": "partial/pwa-partial-failed-update-webkit.json",
+    "intentMarkerWasNotInNativeRecord": true
+  },
+  "failure": {
+    "phase": "candidate-unqualified-incident-entry",
+    "url": "http://127.0.0.1:49745/Zombieee/pwa-bundles/audio-v1.bin",
+    "error": "cancelled",
+    "at": 1792083500410
+  },
+  "request": {
+    "mode": "incident",
+    "index": 4,
+    "startedAt": 1792083499983,
+    "durationMs": 7280,
+    "aborted": true,
+    "completed": false
+  },
+  "modeledIntentForUnitTest": 1792083500399
+}

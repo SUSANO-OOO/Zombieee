@@ -1,5 +1,6 @@
 # Scene music sources
 
+- 'Born Of The Sky' by Scott Buckley - released under CC-BY 4.0. https://www.scottbuckley.com.au/library/born-of-the-sky/
 - 'Simulacra' by Scott Buckley - released under CC-BY 4.0. https://www.scottbuckley.com.au/library/simulacra/
 - 'Amberlight' by Scott Buckley - released under CC-BY 4.0. https://www.scottbuckley.com.au/library/amberlight/
 - 'Artemis' by Scott Buckley - released under CC-BY 4.0. https://www.scottbuckley.com.au/library/artemis/

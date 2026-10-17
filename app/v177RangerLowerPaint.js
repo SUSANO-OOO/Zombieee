@@ -1,0 +1,99 @@
+import {createV177RangerLowerPose,v177RangerLowerPose} from './v177RangerLowerMotion.js';
+
+const painters=new WeakMap(),MAX_PIXELS=65536;
+const samples=[[.25,.25],[.75,.25],[.25,.75],[.75,.75]];
+const topLeft=(ax,ay,bx,by)=>by<ay||(by===ay&&bx>ax);
+const owned=(v,edge)=>v>1e-10||(Math.abs(v)<=1e-10&&edge);
+
+// One source read per original crop, one shared surface per decoded atlas.
+// Image ownership releases all buffers when the installed sprite is released.
+export function createV177RangerLowerPainter(image,rig,createCanvas=()=>image.ownerDocument?.createElement('canvas')??globalThis.document?.createElement('canvas')) {
+  const canvas=createCanvas();if(!canvas?.getContext)return null;
+  const context=canvas.getContext('2d',{willReadFrequently:true});if(!context)return null;
+  const parts=rig.parts.map(part=>{
+    const s=part.source,d=part.destination;canvas.width=s.w;canvas.height=s.h;
+    context.clearRect(0,0,s.w,s.h);context.drawImage(image,s.x,s.y,s.w,s.h,0,0,s.w,s.h);
+    const data=context.getImageData(0,0,s.w,s.h).data,leg=rig.legs.find(l=>l.name===part.name);
+    const uv=new Float64Array(leg?.sourcePositions??[d.x,d.y,d.x+d.w,d.y,d.x+d.w,d.y+d.h,d.x,d.y+d.h]);
+    return {name:part.name,bone:part.bone,rect:d,data,uv,leg,indices:new Uint16Array(leg?.triangles??[0,1,2,0,2,3]),target:new Float64Array(uv.length)};
+  });
+  return {canvas,context,parts,pose:createV177RangerLowerPose(rig),rig,width:0,height:0,sample:null,accum:null,visits:null,imageData:null};
+}
+function ensureCapacity(p,w,h) {
+  let width=Math.max(p.width,w),height=Math.max(p.height,h);
+  if(width*height>MAX_PIXELS){if(w*h>MAX_PIXELS)return false;width=w;height=h;}
+  if(width===p.width&&height===p.height)return true;
+  p.width=width;p.height=height;p.canvas.width=width;p.canvas.height=height;
+  p.sample=new Float32Array(width*height*4);p.accum=new Float32Array(width*height*4);p.visits=new Uint8Array(width*height);
+  p.imageData=p.context.createImageData(width,height);return true;
+}
+function rasterPart(p,g,w,h,ox,oy,stats) {
+  p.visits.fill(0,0,w*h);
+  for(let ti=0;ti<g.indices.length;ti+=3){
+    let ia=g.indices[ti]*2,ib=g.indices[ti+1]*2,ic=g.indices[ti+2]*2;
+    let ax=g.target[ia],ay=g.target[ia+1],bx=g.target[ib],by=g.target[ib+1],cx=g.target[ic],cy=g.target[ic+1];
+    let area=(bx-ax)*(cy-ay)-(by-ay)*(cx-ax);if(Math.abs(area)<1e-12){stats.degenerate++;continue;}
+    if(area<0){const index=ib;ib=ic;ic=index;const x=bx,y=by;bx=cx;by=cy;cx=x;cy=y;area=-area;}
+    const abTop=topLeft(ax,ay,bx,by),bcTop=topLeft(bx,by,cx,cy),caTop=topLeft(cx,cy,ax,ay);
+    const xmin=Math.max(0,Math.ceil(Math.min(ax,bx,cx)-ox)),xmax=Math.min(w-1,Math.floor(Math.max(ax,bx,cx)-ox));
+    const ymin=Math.max(0,Math.ceil(Math.min(ay,by,cy)-oy)),ymax=Math.min(h-1,Math.floor(Math.max(ay,by,cy)-oy));
+    for(let py=ymin;py<=ymax;py++)for(let px=xmin;px<=xmax;px++){
+      const x=px+ox,y=py+oy,ab=(bx-ax)*(y-ay)-(by-ay)*(x-ax),bc=(cx-bx)*(y-by)-(cy-by)*(x-bx),ca=(ax-cx)*(y-cy)-(ay-cy)*(x-cx);
+      if(!owned(ab,abTop)||!owned(bc,bcTop)||!owned(ca,caTop))continue;
+      const pixel=py*w+px;if(p.visits[pixel]++)stats.duplicateWithinPart++;
+      const wa=bc/area,wb=ca/area,wc=ab/area;
+      const sx=g.uv[ia]*wa+g.uv[ib]*wb+g.uv[ic]*wc-g.rect.x-.5,sy=g.uv[ia+1]*wa+g.uv[ib+1]*wb+g.uv[ic+1]*wc-g.rect.y-.5;
+      const ix=Math.floor(sx),iy=Math.floor(sy),fx=sx-ix,fy=sy-iy;let r=0,green=0,b=0,a=0;
+      for(let yy=0;yy<2;yy++)for(let xx=0;xx<2;xx++){
+        const ux=ix+xx,uy=iy+yy;if(ux<0||uy<0||ux>=g.rect.w||uy>=g.rect.h)continue;
+        const at=(uy*g.rect.w+ux)*4,alpha=g.data[at+3]/255,weight=(xx?fx:1-fx)*(yy?fy:1-fy);
+        const amount=alpha*weight;a+=amount;r+=g.data[at]/255*amount;green+=g.data[at+1]/255*amount;b+=g.data[at+2]/255*amount;
+      }
+      if(a===0)continue;const at=pixel*4,keep=1-a;
+      p.sample[at]=r+p.sample[at]*keep;p.sample[at+1]=green+p.sample[at+1]*keep;p.sample[at+2]=b+p.sample[at+2]*keep;p.sample[at+3]=a+p.sample[at+3]*keep;
+    }
+  }
+}
+
+export function paintV177RangerLower(p,ctx,phase,settle,x,y,width,height) {
+  const pose=v177RangerLowerPose(p.rig,phase,settle,p.pose),m=ctx.getTransform();
+  const sx=width/480,sy=height/448,a=m.a*sx,b=m.b*sx,c=m.c*sy,d=m.d*sy,e=m.a*x+m.c*y+m.e,f=m.b*x+m.d*y+m.f;
+  if(![a,b,c,d,e,f].every(Number.isFinite)||Math.abs(a*d-b*c)<1e-12)return {mode:'legacy-cell-fallback',reason:'invalid-transform'};
+  let left=Infinity,top=Infinity,right=-Infinity,bottom=-Infinity;
+  for(const g of p.parts){
+    const matrix=g.leg?null:pose.matrices[g.bone],vertices=g.leg?pose.meshes[g.name]:g.uv;
+    for(let i=0;i<vertices.length;i+=2){
+      let vx=vertices[i],vy=vertices[i+1];if(matrix){const xx=matrix[0]*vx+matrix[2]*vy+matrix[4];vy=matrix[1]*vx+matrix[3]*vy+matrix[5];vx=xx;}
+      const px=a*vx+c*vy+e,py=b*vx+d*vy+f;g.target[i]=px;g.target[i+1]=py;
+      left=Math.min(left,px);right=Math.max(right,px);top=Math.min(top,py);bottom=Math.max(bottom,py);
+    }
+  }
+  left=Math.max(0,Math.floor(left-1));top=Math.max(0,Math.floor(top-1));right=Math.min(ctx.canvas.width,Math.ceil(right+1));bottom=Math.min(ctx.canvas.height,Math.ceil(bottom+1));
+  const w=right-left,h=bottom-top,receipt={mode:'continuous-weighted-mesh',phase:pose.phase,settle:pose.settle,parts:5,meshVertices:130,meshTriangles:192,
+    coverageSamples:4,width:Math.max(0,w),height:Math.max(0,h),duplicateWithinPart:0,degenerate:0};
+  if(w<=0||h<=0)return {...receipt,mode:'offscreen-weighted-mesh'};
+  if(!ensureCapacity(p,w,h))return {mode:'legacy-cell-fallback',reason:'bounded-raster-capacity',width:w,height:h};
+  for(const g of p.parts)for(let i=0;i<g.target.length;i+=2){g.target[i]-=left;g.target[i+1]-=top;}
+  p.accum.fill(0,0,w*h*4);
+  for(const [ox,oy]of samples){
+    p.sample.fill(0,0,w*h*4);for(const g of p.parts)rasterPart(p,g,w,h,ox,oy,receipt);
+    for(let i=0;i<w*h*4;i++)p.accum[i]+=p.sample[i]*.25;
+  }
+  p.imageData.data.fill(0);
+  for(let py=0;py<h;py++)for(let px=0;px<w;px++){
+    const at=(py*w+px)*4,to=(py*p.width+px)*4,alpha=p.accum[at+3];
+    for(let k=0;k<3;k++)p.imageData.data[to+k]=alpha>0?Math.round(p.accum[at+k]/alpha*255):0;p.imageData.data[to+3]=Math.round(alpha*255);
+  }
+  p.context.putImageData(p.imageData,0,0);
+  // The lower is already in backing pixels. The existing clip, alpha, filter,
+  // compositing and body transform apply once, with no second bitmap or leg.
+  ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(p.canvas,0,0,w,h,left,top,w,h);ctx.restore();return receipt;
+}
+
+export function drawV177RangerLower(ctx,image,rig,plan,x,y,width,height) {
+  if(!ctx.getTransform||!ctx.setTransform||!ctx.canvas)return {mode:'legacy-cell-fallback',reason:'canvas-capability-unavailable'};
+  let painter=painters.get(image);
+  if(painter===undefined){try{painter=createV177RangerLowerPainter(image,rig);}catch{painter=null;}painters.set(image,painter);}
+  if(!painter)return {mode:'legacy-cell-fallback',reason:'source-readback-unavailable'};
+  return paintV177RangerLower(painter,ctx,plan.phase,plan.lowerSettle,x,y,width,height);
+}

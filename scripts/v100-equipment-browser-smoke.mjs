@@ -25,7 +25,7 @@ const ready = page => page.waitForFunction(() => document.querySelector('.v100-s
 const saved = page => page.evaluate(key=>JSON.parse(localStorage.getItem(key)),key);
 async function action(page, fn) { await ready(page); const before=(await saved(page)).revision; await fn(); await page.waitForFunction(({key,before})=>JSON.parse(localStorage.getItem(key)).revision>before && document.documentElement.dataset.pwaSaveMutationPending==='false',{key,before}); }
 async function arrive(page) { await page.goto(new URL('/v100',origin).href,{waitUntil:'domcontentloaded'}); await page.waitForFunction(()=>document.querySelector('.v100-shell')||document.querySelector('[role=dialog][aria-label="ゲームデータの準備"] button')); const offer=page.getByRole('button',{name:'ブラウザで遊ぶ',exact:true}); if(await offer.isVisible())await offer.click(); await ready(page); }
-async function openEquipment(page) { await page.getByRole('button',{name:'出撃装備を選ぶ',exact:true}).click(); await page.getByRole('button',{name:'隊員・部隊装備 / 購入・装着・強化',exact:true}).click(); await page.locator('section[data-v100-surface="equipment"]').waitFor(); }
+async function openEquipment(page) { await page.getByRole('navigation',{name:'ステージ準備メニュー',exact:true}).getByRole('button',{name:'装備',exact:true}).click(); await page.locator('section[data-v100-surface="equipment"]').waitFor(); }
 async function snap(page,record,label) { const file=path.join(out,`${record.name}-${label}.png`); const bytes=await page.screenshot({path:file,timeout:45000,animations:'disabled'}); record.images.push({file,sha256:hash(bytes),width:bytes.readUInt32BE(16),height:bytes.readUInt32BE(20)}); }
 try {
 for(const [engine,type] of Object.entries({chromium,webkit}).filter(([engine])=>engines.includes(engine))) {
@@ -65,7 +65,7 @@ for(const [engine,type] of Object.entries({chromium,webkit}).filter(([engine])=>
     await action(page,()=>page.getByLabel('装備枠 1',{exact:true}).selectOption('field-machete'));
     await snap(page,record,'personal');
     const beforeDuplicate=await saved(page);await page.getByLabel('装備枠 2',{exact:true}).selectOption('field-machete');
-    await page.getByText('同じ装備を重ねて装着できません。別の隊員が使用中の場合は追加購入するか外してください。',{exact:true}).waitFor();
+    await page.getByText('同じ装備を重ねて装着できません。別のユニットが使用中の場合は追加購入するか外してください。',{exact:true}).waitFor();
     assert.deepEqual(await saved(page),beforeDuplicate);assert.equal(await page.getByLabel('装備枠 2',{exact:true}).inputValue(),'');
     await page.getByRole('button',{name:'部隊装備',exact:true}).click();
     await action(page,()=>page.getByLabel('装備枠 1',{exact:true}).selectOption('tactical-supply-cache'));
@@ -75,8 +75,8 @@ for(const [engine,type] of Object.entries({chromium,webkit}).filter(([engine])=>
     assert.deepEqual(record.native,record.save);
     await arrive(page);assert.deepEqual(await saved(page),record.save);await openEquipment(page);
     assert.equal(await page.getByLabel('装備枠 1',{exact:true}).inputValue(),'field-machete');
-    await page.getByRole('button',{name:'出撃装備へ',exact:true}).click();await page.getByRole('button',{name:'作戦地図へ',exact:true}).click();
-    await action(page,()=>page.getByRole('button',{name:'この作戦を編成',exact:true}).click());
+    await page.getByRole('button',{name:'出撃装備へ',exact:true}).click();await page.getByRole('button',{name:'ステージ選択へ',exact:true}).click();
+    await action(page,()=>page.getByRole('button',{name:'編成して出撃',exact:true}).click());
     for(let n=0;n<40;n++){await ready(page);if(await page.locator('.v100-formation-panel').isVisible())break;const skip=page.getByRole('button',{name:'スキップ',exact:true});await action(page,()=>skip.isVisible().then(visible=>visible?skip.click():page.locator('.v100-event-actions .v100-primary').click()));}
     await action(page,()=>page.getByRole('button',{name:'戦闘へ',exact:true}).click());
     await page.waitForFunction(()=>window.__ASHFALL_BATTLE_QA__?.getSnapshot().running);

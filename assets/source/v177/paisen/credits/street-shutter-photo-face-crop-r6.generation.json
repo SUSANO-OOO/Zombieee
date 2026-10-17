@@ -1,0 +1,52 @@
+{
+  "at": "2026-10-15T10:18:21.520Z",
+  "mode": "built-in",
+  "intent": "edit",
+  "useCase": "reference-character-consistency",
+  "target": "assets/source/v177/paisen/credits/street-shutter-photo-face-crop-r6.input.png",
+  "targetSha256": "07dc92cf27dd56047a4cc2395a6d84fb018914c26faa87217932557c21405b05",
+  "sourceScene": "assets/source/v177/paisen/credits/street-shutter-r4.localized-r2.png",
+  "sourceSceneSha256": "918df9f15d617e315c759016486556c9f0c2ca1da377c94d3959be73699a075d",
+  "sourceCrop": {
+    "left": 1016,
+    "top": 108,
+    "width": 236,
+    "height": 230
+  },
+  "inputUpscale": 3,
+  "prompt": "Edit image 1, this enlarged close-up of a small character in the game scene. Replace his OLD generic anime facial design with a highly faithful illustrated likeness of the exact adult person in photos 2-4 and the registered illustrated master in image 5. The same person must be recognizable, without beautifying or idealizing him: broad rounded cheeks, short broad chin/jaw, photographed natural eyes/eyelids/brows, nose/tip, lips, ears and short black hairline. The man is lifting a heavy shutter overhead, looking down and toward image right with mild effort. Keep that head tilt and eye direction, not a camera-facing pose. Preserve the existing collar and shoulders exactly; do not add anger or a heroic sharp jaw. Keep the head centered in its current location and the same overall scale, with a natural neck that connects into the existing crew-neck collar. Do not move the neck, create a duplicate neck, or change the original posture. Use the existing detailed painted/inked game style and warm sunset lighting. Keep all scene details, shoulders, shirt collar and background fixed. Only head, ears, hair, face and its continuous neck may change. No text or added objects. The head occupies most of this close-up so facial fidelity is the main priority.",
+  "references": [
+    {
+      "path": "output/issue177-paisen-producer-photos-r1/codex-clipboard-3b180a11-73f9-46ab-9b5e-73e2f1edc53e.png",
+      "sha256": "bfa5a71f1a1cb294ab583e51ac6e343eac6e6fd9d3e996fcd24a50cbf6a74def"
+    },
+    {
+      "path": "output/issue177-paisen-producer-photos-r1/codex-clipboard-25d36678-020f-4fca-9e8f-0f4989df7f37.png",
+      "sha256": "b93dfa892a588013f8bdc9ca1670ccb3874f47ce17eabe585a96f00e60349ee7"
+    },
+    {
+      "path": "output/issue177-paisen-producer-photos-r1/codex-clipboard-f7346372-9c4e-400f-8cc9-ccef2931291c.png",
+      "sha256": "8309ecff99eadc5f9e5ac6cdf23fb536e5930931c9acdba7518e2f3f67d947c4"
+    },
+    {
+      "path": "assets/source/v177/paisen/paisen-identity-r2.png",
+      "sha256": "a1d5517fc1a500c4e949b0ec6c522efa0404ebd4ddd3b548994713a918983257"
+    }
+  ],
+  "runtimeConnected": false,
+  "visualReviewed": false,
+  "producerAccepted": false,
+  "wholeGameAccepted": false,
+  "generatedOriginal": "C:/Users/okait/.codex/generated_images/01a12578-4773-7873-a12e-fb0962b19020/exec-c7d5209b-437e-40e5-b48f-77ae399d54eb.png",
+  "generatedCopy": "assets/source/v177/paisen/credits/street-shutter-photo-face-crop-r6.generated.png",
+  "generatedSha256": "5fec8f18628402ec04058479ea9f3d219dfd4d1de072e892bc65e1421a7e30bf",
+  "generatedSize": {
+    "width": 1271,
+    "height": 1237
+  },
+  "generatedReviewed": true,
+  "generatedReview": "Viewed the built-in output; source candidate only. Preserve original outside a registered Paisen region before runtime adoption.",
+  "localized": "assets/source/v177/paisen/credits/street-shutter-photo-face-crop-r6.localized-r1.png",
+  "localizedSha256": "8bf3e00769c949f4c5c14d8bd74f7b4e6e04281cd538d31c287fc581584b7164",
+  "localizationProvenance": "assets/source/v177/paisen/credits/street-shutter-photo-face-crop-r6.localized-r1.provenance.json"
+}

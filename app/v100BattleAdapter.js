@@ -5,6 +5,7 @@ import { V100_NODE_PROFILES } from "./v100MissionNodes.js";
 import { V100_CORPORATE_CONTROLS } from "./v100CorporateControl.js";
 import { V100_DEFENSE_OBJECTIVES } from "./v100DefenseObjectives.js";
 import { researchCoreObjective } from "./v100ResearchCore.js";
+import { v100IncreaseWaveDensity } from "./v100CombatTuning.js";
 import { v100EquipmentSnapshot, v100OpeningSupportGauge } from "./v100Equipment.js";
 import {
   V100_BOSS_BY_ID,
@@ -69,7 +70,7 @@ const MISSION_LABELS = Object.freeze({
 // Map briefing and battle phases describe the same authored objective.
 export function v100MissionObjectiveFor(stageId) {
   const stage = V100_STAGE_BY_ID[stageId];
-  if (!stage) return "作戦目標を達成";
+  if (!stage) return "ステージの目標を達成";
   if (stage.number === 3) return "大型変異感染者TAKUYAを撃破";
   if (stage.number === 30) return "TAKUYA-Ωを撃破し、西新を守る";
   const control = V100_CORPORATE_CONTROLS[stageId];
@@ -83,7 +84,7 @@ export function v100MissionObjectiveFor(stageId) {
   const vehicle = V100_MISSION_VEHICLES[stageId];
   if (vehicle?.count === 3) return "冷蔵車3台を封鎖地点へ追い込み、停止・確保";
   if (vehicle) return `${vehicle.targetLabel}を目的地へ護送`;
-  return MISSION_LABELS[stage.missionType] ?? "作戦目標を達成";
+  return MISSION_LABELS[stage.missionType] ?? "ステージの目標を達成";
 }
 
 function freeze(value) {
@@ -230,7 +231,7 @@ function phaseScheduleFor(stage, missionType, objective) {
     return {
       phases: freeze([
         freeze({ at: PREP_SECONDS, phase: 1, label: `${node?.label ?? "封鎖設備"}へ前進`, objective }),
-        freeze({ at: PREP_SECONDS + 62, phase: 2, label: "作戦区域を警戒", objective }),
+        freeze({ at: PREP_SECONDS + 62, phase: 2, label: "設備周辺を警戒", objective }),
         freeze({ at: PREP_SECONDS + 120, phase: 3, label: "帰還経路を警戒", objective }),
       ]),
     };
@@ -259,7 +260,7 @@ export function v100BattleDefinitionFor(stageId) {
   const missionNode = V100_NODE_PROFILES[stageId];
   const objective = v100MissionObjectiveFor(stageId);
   const phase = phaseScheduleFor(stage, missionType, objective);
-  const timeline = stageTimeline(stage, missionType, bossKind);
+  const timeline = v100IncreaseWaveDensity(stageTimeline(stage, missionType, bossKind), Object.values(BOSS_KIND_BY_V100_ID), { preserveEscalation: missionType === 'escort' });
   const baseMaxHp = V100_VEHICLE.baseHp;
   const station = missionType === "escort"
     ? { durationSeconds: phase.durationSeconds, maxIntegrity: 500, repairSeconds: 5, minimumEscortReadiness: 1, startX: missionVehicle?.count === 3 ? 450 : 258, endX: missionVehicle?.count === 3 ? 650 : 720 }

@@ -1,0 +1,21 @@
+{
+  "kind": "spitter",
+  "scope": "Hidden anatomical and coat completion only. Original head, hood, visible costume, claws, wrapped feet, original acid sac and jaw paint retained. Throat alone may inflate within authored range; head, torso and all limbs remain rigid.",
+  "tool": "image_gen built-in",
+  "transparentBackground": true,
+  "sourceReferenceSha256": "8c89ad5b46fb04fc207f8e1e9dd32393f9be558401a2a082dad2435e007ee48f",
+  "imageSha256": "8124088c6e9011391445f88bc93d7177b11b6588bed12a7902a284c0c4d69ed1",
+  "prompt": "parts-prompt.txt",
+  "generatedFile": "exec-18ea4c22-dec1-4e15-b767-81c58a4c065b.png",
+  "reference": "identity-reference.png",
+  "originalParts": [
+    "far-boot",
+    "near-boot",
+    "head",
+    "hood",
+    "weapon-and-hands",
+    "mouth-jaw",
+    "throat-sac",
+    "free-hand"
+  ]
+}

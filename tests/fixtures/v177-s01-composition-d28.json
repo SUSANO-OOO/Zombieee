@@ -1,0 +1,209 @@
+{
+  "head": "d28dcdff7ebcafadf90dbb65d58b7c77edca0005",
+  "run": 38649439928,
+  "artifact": 11934917538,
+  "officialZipDigest": "sha256:7ed7f0564e486fa8e71b1b00d56f5ec654bebb29e0e4e9e1501ec1eca3a020ac",
+  "nativeReportSha256": "b017e8dba70ef2c4d013397070873fde1df0a22f9d932bab3182f43ca573762c",
+  "nativeGeometryFields": "scene/copy/heading/detail rectangles copied exactly from the original capture",
+  "projectionInputs": "The old capture did not record the image element box. Test projection uses the existing inset0/1px border/cover/center declarations; this is a layout model, not native face acceptance. New QA reads the actual image rectangle/style. Decoded/full-opacity image flags are model inputs for geometry tests, not recovered DOM paint observations.",
+  "rows": [
+    {
+      "viewport": {
+        "width": 844,
+        "height": 340
+      },
+      "geometry": {
+        "scene": {
+          "x": 12,
+          "y": 12,
+          "width": 820,
+          "height": 324,
+          "right": 832,
+          "bottom": 336
+        },
+        "copy": {
+          "x": 45.71875,
+          "y": 213,
+          "width": 752.5625,
+          "height": 114,
+          "right": 798.28125,
+          "bottom": 327
+        },
+        "headingBox": {
+          "x": 45.71875,
+          "y": 21,
+          "width": 752.5625,
+          "height": 21.5,
+          "right": 798.28125,
+          "bottom": 42.5
+        },
+        "detailShots": [
+          {
+            "id": "s01-nao-rescue",
+            "frame": {
+              "x": 41.625,
+              "y": 76.203125,
+              "width": 270.078125,
+              "height": 108.796875,
+              "right": 311.703125,
+              "bottom": 185
+            }
+          }
+        ],
+        "paintedImage": {
+          "src": "/art/v100/story-r9/cuts/s01-nao-rescue.webp",
+          "complete": true,
+          "naturalWidth": 1280,
+          "naturalHeight": 720,
+          "layoutWidth": 818,
+          "layoutHeight": 322,
+          "rect": {
+            "x": 13,
+            "y": 13,
+            "width": 818,
+            "height": 322
+          },
+          "objectFit": "cover",
+          "objectPosition": "50% 50%",
+          "axisAligned": true,
+          "opacity": 1,
+          "visibility": "visible",
+          "display": "block",
+          "ancestorPaintHidden": false
+        }
+      }
+    },
+    {
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "geometry": {
+        "scene": {
+          "x": 12,
+          "y": 12,
+          "width": 820,
+          "height": 366,
+          "right": 832,
+          "bottom": 378
+        },
+        "copy": {
+          "x": 45.71875,
+          "y": 245,
+          "width": 752.5625,
+          "height": 120,
+          "right": 798.28125,
+          "bottom": 365
+        },
+        "headingBox": {
+          "x": 45.71875,
+          "y": 25,
+          "width": 752.5625,
+          "height": 21.5,
+          "right": 798.28125,
+          "bottom": 46.5
+        },
+        "detailShots": [
+          {
+            "id": "s01-nao-rescue",
+            "frame": {
+              "x": 41.625,
+              "y": 102.203125,
+              "width": 270.078125,
+              "height": 124.796875,
+              "right": 311.703125,
+              "bottom": 227
+            }
+          }
+        ],
+        "paintedImage": {
+          "src": "/art/v100/story-r9/cuts/s01-nao-rescue.webp",
+          "complete": true,
+          "naturalWidth": 1280,
+          "naturalHeight": 720,
+          "layoutWidth": 818,
+          "layoutHeight": 364,
+          "rect": {
+            "x": 13,
+            "y": 13,
+            "width": 818,
+            "height": 364
+          },
+          "objectFit": "cover",
+          "objectPosition": "50% 50%",
+          "axisAligned": true,
+          "opacity": 1,
+          "visibility": "visible",
+          "display": "block",
+          "ancestorPaintHidden": false
+        }
+      }
+    },
+    {
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "geometry": {
+        "scene": {
+          "x": 12,
+          "y": 12,
+          "width": 1256,
+          "height": 696,
+          "right": 1268,
+          "bottom": 708
+        },
+        "copy": {
+          "x": 63.15625,
+          "y": 575,
+          "width": 1153.6875,
+          "height": 120,
+          "right": 1216.84375,
+          "bottom": 695
+        },
+        "headingBox": {
+          "x": 63.15625,
+          "y": 25,
+          "width": 1153.6875,
+          "height": 24.5,
+          "right": 1216.84375,
+          "bottom": 49.5
+        },
+        "detailShots": [
+          {
+            "id": "s01-nao-rescue",
+            "frame": {
+              "x": 56.875,
+              "y": 337,
+              "width": 409.59375,
+              "height": 220,
+              "right": 466.46875,
+              "bottom": 557
+            }
+          }
+        ],
+        "paintedImage": {
+          "src": "/art/v100/story-r9/cuts/s01-nao-rescue.webp",
+          "complete": true,
+          "naturalWidth": 1280,
+          "naturalHeight": 720,
+          "layoutWidth": 1254,
+          "layoutHeight": 694,
+          "rect": {
+            "x": 13,
+            "y": 13,
+            "width": 1254,
+            "height": 694
+          },
+          "objectFit": "cover",
+          "objectPosition": "50% 50%",
+          "axisAligned": true,
+          "opacity": 1,
+          "visibility": "visible",
+          "display": "block",
+          "ancestorPaintHidden": false
+        }
+      }
+    }
+  ]
+}

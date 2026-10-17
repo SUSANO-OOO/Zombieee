@@ -47,3 +47,15 @@ tests/v099-hud-states-bounded.test.mjs text eol=lf
 docs/story/v10/STORY_SCRIPT_V100_PRODUCER_REWRITE.md text eol=lf
 # The supplied R5 manuscript is an immutable byte-for-byte source snapshot.
 docs/story/v10/STORY_SCRIPT_V100_PRODUCER_R5.md -text
+# Preserve the supplied R9 manuscript and deterministic generated registry.
+docs/story/v10/STORY_SCRIPT_V100_PRODUCER_R9.md -text
+app/v100StoryEvents.js text eol=lf
+
+# Paisen source registration and generated outputs replay exact canonical bytes.
+assets/source/v177/paisen/battle-r8/*.json text eol=lf
+assets/source/v177/paisen/battle-reference-r2.provenance.json text eol=lf
+assets/source/v177/paisen/photo-body-runtime-r2.json text eol=lf
+assets/source/v100/runtime/paisen-battle-atlas-provenance.json text eol=lf
+app/v177PaisenPhotoJointData.js text eol=lf
+app/v177PaisenPhotoSpriteData.js text eol=lf
+app/v102CorpsePoseData.js text eol=lf

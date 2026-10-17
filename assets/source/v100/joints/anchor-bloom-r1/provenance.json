@@ -1,0 +1,278 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "anchor-bloom",
+  "assetPath": "/art/v100/joints/anchor-bloom-r1.webp",
+  "bytes": 41226,
+  "sha256": "b9ff3ec5757ad17715130bd308427a40964b8f430108c5bfb274a1de9fe12219",
+  "atlasPacking": "height-descending-shelves",
+  "generatedPartsStudySha256": "8b6a4570651ba4f334dec9307531134b740027397d235be9ff87864dd42b495b",
+  "identitySourceSha256": "dccdb6c8942e224d4a2252a3384f334e9412e4a8ef904d284b5a03edf2841c37",
+  "identityBinding": {
+    "path": "/art/v0995/enemies/anchor-bloom-battle-v2.png",
+    "sourceSha256": "4eab540047e074fb82073c3f5afec07fd82cb6fb3056ae9b05a7ec79a5796047",
+    "sourceRect": {
+      "x": 480,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "flipX": false
+  },
+  "motionSha256": "b2a6e6a079d959ea0d9c15fe0cab2335afffe7b244b550c14ae9feb81eb006d5",
+  "originalPoseBindings": {
+    "idle": {
+      "path": "/art/v0995/enemies/anchor-bloom-battle-v2.png",
+      "sourceSha256": "4eab540047e074fb82073c3f5afec07fd82cb6fb3056ae9b05a7ec79a5796047",
+      "sourceRect": {
+        "x": 0,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-idle.png",
+      "sha256": "650acb7783516c3796e8deba6f6ea013e141132a79fb1ad5f46b2736472d10de",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact native480x448 repaired canonical RGBA, all original pose ownership retained."
+    },
+    "walk-a": {
+      "path": "/art/v0995/enemies/anchor-bloom-battle-v2.png",
+      "sourceSha256": "4eab540047e074fb82073c3f5afec07fd82cb6fb3056ae9b05a7ec79a5796047",
+      "sourceRect": {
+        "x": 480,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "identity-reference.png",
+      "sha256": "dccdb6c8942e224d4a2252a3384f334e9412e4a8ef904d284b5a03edf2841c37",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact native480x448 repaired canonical RGBA, all original pose ownership retained."
+    },
+    "walk-b": {
+      "path": "/art/v0995/enemies/anchor-bloom-battle-v2.png",
+      "sourceSha256": "4eab540047e074fb82073c3f5afec07fd82cb6fb3056ae9b05a7ec79a5796047",
+      "sourceRect": {
+        "x": 960,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-walk-b.png",
+      "sha256": "f0bcaaaf21dbe290678b2930f094efa87368ffe3c526ac358c6657ab157cb127",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact native480x448 repaired canonical RGBA, all original pose ownership retained."
+    },
+    "attack-a": {
+      "path": "/art/v0995/enemies/anchor-bloom-battle-v2.png",
+      "sourceSha256": "4eab540047e074fb82073c3f5afec07fd82cb6fb3056ae9b05a7ec79a5796047",
+      "sourceRect": {
+        "x": 1440,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-attack-a.png",
+      "sha256": "fa0fd43cfa5f0bbe4cc8b6cf5547ec25929a957900398484794656e48c5bd0d3",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact native480x448 repaired canonical RGBA, all original pose ownership retained."
+    },
+    "attack-b": {
+      "path": "/art/v0995/enemies/anchor-bloom-battle-v2.png",
+      "sourceSha256": "4eab540047e074fb82073c3f5afec07fd82cb6fb3056ae9b05a7ec79a5796047",
+      "sourceRect": {
+        "x": 1920,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-attack-b.png",
+      "sha256": "29509ba88903de7a9aabfaefee2d97e98084b2c88b7b377cd6284106d4456012",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact native480x448 repaired canonical RGBA, all original pose ownership retained."
+    },
+    "hit": {
+      "path": "/art/v0995/enemies/anchor-bloom-battle-v2.png",
+      "sourceSha256": "4eab540047e074fb82073c3f5afec07fd82cb6fb3056ae9b05a7ec79a5796047",
+      "sourceRect": {
+        "x": 2400,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-hit.png",
+      "sha256": "e962196a28aa06a07fd2a39c316e15339f4f32da8e03763b7fe760307ab55c6d",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact native480x448 repaired canonical RGBA, all original pose ownership retained."
+    },
+    "death": {
+      "path": "/art/v0995/enemies/anchor-bloom-battle-v2.png",
+      "sourceSha256": "4eab540047e074fb82073c3f5afec07fd82cb6fb3056ae9b05a7ec79a5796047",
+      "sourceRect": {
+        "x": 2880,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-death.png",
+      "sha256": "bb47a84a8fc5bb26582d6014add903142510b0b26e85ef09b5acc4d521c3a3b4",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact native480x448 repaired canonical RGBA, all original pose ownership retained."
+    }
+  },
+  "parts": [
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "5b9f7d92deb39c76c58cda4cdef35a22a1106162e1e27f1b6bd9aa5a2a1b15e4",
+      "original": false
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "820d458b76b07a6ff13edc01cb79063741eeb167e8e0f95ae3a8bdf22677d23e",
+      "original": false
+    },
+    {
+      "name": "rear-left-upper",
+      "file": "rear-left-upper.png",
+      "sha256": "72548a8431e3bbdd1d3261bb8a1b8b5d27929a4a6857e155e77c4f31fa2c7808",
+      "original": false
+    },
+    {
+      "name": "rear-left-lower",
+      "file": "rear-left-lower.png",
+      "sha256": "c9c05efff3ac220405b965b2bdf0a1460166833e652c11275e81b465ec30374a",
+      "original": false
+    },
+    {
+      "name": "rear-left-foot",
+      "file": "rear-left-foot.png",
+      "sha256": "d7bb9a90a2cd7239b532211e3f0da1e1ee93dacc134980409c9c0cc780933f29",
+      "original": true
+    },
+    {
+      "name": "rear-right-upper",
+      "file": "rear-right-upper.png",
+      "sha256": "943071a683da9a3066c7582eab262ac1f87198c3daf41ce4f57f76aef73efdc4",
+      "original": false
+    },
+    {
+      "name": "rear-right-lower",
+      "file": "rear-right-lower.png",
+      "sha256": "0a2f44088be360f5d3db29d67928f2f639da67a099ece1ecf045aec807528fb8",
+      "original": false
+    },
+    {
+      "name": "rear-right-foot",
+      "file": "rear-right-foot.png",
+      "sha256": "1bb2ae0dc426bb3f4bf8d99b990c8b5c4d82f86eb7d9775d454d9945c1d04558",
+      "original": true
+    },
+    {
+      "name": "front-left-upper",
+      "file": "front-left-upper.png",
+      "sha256": "ee6cdd3bdf0d34305bb78a605b111e26b67e508e6d323b676d8019c1fbd38a00",
+      "original": false
+    },
+    {
+      "name": "front-left-lower",
+      "file": "front-left-lower.png",
+      "sha256": "da247a09ebc8b6b2f9f948f0a797494b4b86f8dabba4887a2d5494295241e065",
+      "original": false
+    },
+    {
+      "name": "front-left-foot",
+      "file": "front-left-foot.png",
+      "sha256": "d910dcfe7056aa3351e5b52c0d0aa03de430e1ea13977bd93a015c3b13770e0a",
+      "original": true
+    },
+    {
+      "name": "front-right-upper",
+      "file": "front-right-upper.png",
+      "sha256": "51e34bd9077996a68dbc5d9d410abfd50a940ded299a8231586992a3cead031d",
+      "original": false
+    },
+    {
+      "name": "front-right-lower",
+      "file": "front-right-lower.png",
+      "sha256": "678cb1ca77990b964464023d0c1d1738165d10964fdac9b86e231182d6a5bf39",
+      "original": false
+    },
+    {
+      "name": "front-right-foot",
+      "file": "front-right-foot.png",
+      "sha256": "0c6ba9010729cc3d1d331265203244bbc559f4b92bf4542fb974b5efbf324476",
+      "original": true
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "5dd3f0c61ba4964cbdda05e8a7752334def0390210adffcef6afb7b06e6a28ad",
+      "original": true
+    },
+    {
+      "name": "under-root-veins",
+      "file": "under-root-veins.png",
+      "sha256": "edbbfd401e4c3ce1a1e4f01c1eb32d4b76dd2aa792ef8153d57018b2cc7c27f7",
+      "original": true
+    }
+  ],
+  "source": "Blender5.2 original-RGB repaired native480x448 Anchor Bloom. Original embedded face, four complete root tips, veined tissue and underside tendrils retained. Own concealed tissue joints only; four fixed-length pelvis-owned roots and at least three planted supports. Original seven source poses preserve dedicated blood-tether, hit, death and transform owners. All48/all-action native normal-play acceptance pending.",
+  "groundY": 430.5,
+  "decodedBytes": 239616,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}

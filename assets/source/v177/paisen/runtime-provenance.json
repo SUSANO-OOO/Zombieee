@@ -1,0 +1,65 @@
+{
+  "generator": "scripts/build-v177-paisen-identity.mjs",
+  "source": {
+    "path": "assets/source/v177/paisen/paisen-identity-r2.png",
+    "sha256": "a1d5517fc1a500c4e949b0ec6c522efa0404ebd4ddd3b548994713a918983257"
+  },
+  "outputs": [
+    {
+      "path": "/art/v100/portraits/paisen-identity-r2.webp",
+      "bytes": 738094,
+      "sha256": "2abe752277e3c7947755b9af17c77d9e563233073ad428dcda8397106b3b2342",
+      "width": 1024,
+      "height": 1536,
+      "hasAlpha": true
+    },
+    {
+      "path": "/art/v100/portraits/paisen-event-portrait-r2.webp",
+      "bytes": 250342,
+      "sha256": "64c07142e86944e3764ac4d02de5c1edf3f19f84654672d5356cb7ca7caf7a22",
+      "width": 512,
+      "height": 640,
+      "hasAlpha": true
+    },
+    {
+      "path": "/art/v100/portraits/paisen-formation-card-r3.webp",
+      "bytes": 160328,
+      "sha256": "75a83b82d6c0f6721b3bbcc9a638a276a74a4166179bf15b9839a4ebbb7da573",
+      "width": 512,
+      "height": 512,
+      "hasAlpha": true
+    },
+    {
+      "path": "/art/v100/portraits/paisen-warm-r2.webp",
+      "bytes": 244534,
+      "sha256": "626251dba8c16b6db122684ca449444daba3cf8e230fc3c2af6ad34b43ba74da",
+      "width": 512,
+      "height": 640,
+      "hasAlpha": true
+    },
+    {
+      "path": "/art/v100/portraits/paisen-determined-r2.webp",
+      "bytes": 249968,
+      "sha256": "1835312115771633a9ffd0ff449e8214671dfe49645f88f686a887b1259ec06d",
+      "width": 512,
+      "height": 640,
+      "hasAlpha": true
+    },
+    {
+      "path": "/art/v100/portraits/paisen-alarm-r2.webp",
+      "bytes": 238130,
+      "sha256": "1131c3938ecc9b5315c463b3c8e6f4567a87b8c09ba0fbe97aab23c5c4bf3b20",
+      "width": 512,
+      "height": 640,
+      "hasAlpha": true
+    },
+    {
+      "path": "/art/v100/portraits/paisen-grief-r2.webp",
+      "bytes": 244180,
+      "sha256": "2c9ae38f6e199dca2db145f783255c34d6a3784fc08f5def512d56e4e8e311b4",
+      "width": 512,
+      "height": 640,
+      "hasAlpha": true
+    }
+  ]
+}

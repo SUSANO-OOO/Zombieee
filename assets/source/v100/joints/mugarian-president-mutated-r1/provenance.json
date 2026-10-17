@@ -1,0 +1,281 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "mugarian-president-mutated",
+  "assetPath": "/art/v100/joints/mugarian-president-mutated-r1.webp",
+  "bytes": 58224,
+  "sha256": "2d7843e0e191c0bd602c818d8531c6a37df9f6d9e00dd6e193aa3ea2d3aa50f7",
+  "atlasPacking": "height-descending-shelves",
+  "generatedPartsStudySha256": "77c896c231d372237099ff5203e8c17bc3d713201ee28749c46c2943650fb51a",
+  "identitySourceSha256": "7da97f17c9d7facfa318e2afa8ef17c4a030eb5128d60b1101c00628c3c8d351",
+  "identityBinding": {
+    "path": "/art/v100/bosses/mugarian-president-mutated-battle-v2.png",
+    "sourceSha256": "4c2e37b4238bf46cac9d2dd831419fe550936aa9762fa1c6146eb9f96e3e613c",
+    "sourceRect": {
+      "x": 544,
+      "y": 0,
+      "w": 544,
+      "h": 512
+    },
+    "flipX": false
+  },
+  "motionSha256": "34a18812113df4be23361980a3ed2b40f45ffb99ec06037e4fab11690f8e7528",
+  "originalPoseBindings": {
+    "idle": {
+      "path": "/art/v100/bosses/mugarian-president-mutated-battle-v2.png",
+      "sourceSha256": "4c2e37b4238bf46cac9d2dd831419fe550936aa9762fa1c6146eb9f96e3e613c",
+      "sourceRect": {
+        "x": 544,
+        "y": 0,
+        "w": 544,
+        "h": 512
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "identity-reference.png",
+      "sha256": "7da97f17c9d7facfa318e2afa8ef17c4a030eb5128d60b1101c00628c3c8d351",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact native544x512 canonical RGBA crop; no resize, identity repaint or canvas alpha conversion."
+    },
+    "walk-a": {
+      "path": "/art/v100/bosses/mugarian-president-mutated-battle-v2.png",
+      "sourceSha256": "4c2e37b4238bf46cac9d2dd831419fe550936aa9762fa1c6146eb9f96e3e613c",
+      "sourceRect": {
+        "x": 1088,
+        "y": 0,
+        "w": 544,
+        "h": 512
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-walk-a.png",
+      "sha256": "7652965b249f6e22142b221139e7197ba00b45278804f754d96a50cedec35afb",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact native544x512 canonical RGBA crop; no resize, identity repaint or canvas alpha conversion."
+    },
+    "walk-b": {
+      "path": "/art/v100/bosses/mugarian-president-mutated-battle-v2.png",
+      "sourceSha256": "4c2e37b4238bf46cac9d2dd831419fe550936aa9762fa1c6146eb9f96e3e613c",
+      "sourceRect": {
+        "x": 544,
+        "y": 0,
+        "w": 544,
+        "h": 512
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-walk-b.png",
+      "sha256": "7da97f17c9d7facfa318e2afa8ef17c4a030eb5128d60b1101c00628c3c8d351",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact native544x512 canonical RGBA crop; no resize, identity repaint or canvas alpha conversion."
+    },
+    "attack-a": {
+      "path": "/art/v100/bosses/mugarian-president-mutated-battle-v2.png",
+      "sourceSha256": "4c2e37b4238bf46cac9d2dd831419fe550936aa9762fa1c6146eb9f96e3e613c",
+      "sourceRect": {
+        "x": 1632,
+        "y": 0,
+        "w": 544,
+        "h": 512
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-attack-a.png",
+      "sha256": "abc449ef9159a125a68f69ecfcf74d5a12fa0bab452b9a1b10d2080f242e4c68",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact native544x512 canonical RGBA crop; no resize, identity repaint or canvas alpha conversion."
+    },
+    "attack-b": {
+      "path": "/art/v100/bosses/mugarian-president-mutated-battle-v2.png",
+      "sourceSha256": "4c2e37b4238bf46cac9d2dd831419fe550936aa9762fa1c6146eb9f96e3e613c",
+      "sourceRect": {
+        "x": 2720,
+        "y": 0,
+        "w": 544,
+        "h": 512
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-attack-b.png",
+      "sha256": "21af49296f70631fe0381def35c562a7da6e223dcc95e964de0e59995962f182",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact native544x512 canonical RGBA crop; no resize, identity repaint or canvas alpha conversion."
+    },
+    "hit": {
+      "path": "/art/v100/bosses/mugarian-president-mutated-battle-v2.png",
+      "sourceSha256": "4c2e37b4238bf46cac9d2dd831419fe550936aa9762fa1c6146eb9f96e3e613c",
+      "sourceRect": {
+        "x": 2176,
+        "y": 0,
+        "w": 544,
+        "h": 512
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-hit.png",
+      "sha256": "5ac3d23640811d83ca99588fe39b8fdd7f92fdad7618b4703ddb60ded120c8e1",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact native544x512 canonical RGBA crop; no resize, identity repaint or canvas alpha conversion."
+    }
+  },
+  "parts": [
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "3e71587331236806b630f26a75551a55b287d63ef87dea5d6c58f4a7d6340a92",
+      "original": false
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "59cd191c83bdc5edcb234bbbc04870c6f1085ed286b3eaa237c5d420bc3b6ae6",
+      "original": false
+    },
+    {
+      "name": "far-thigh",
+      "file": "far-thigh.png",
+      "sha256": "6e8da7b3d6a5e28400e83e202651d1cbb6c75eb4b6abc19be53acc59d40ea33e",
+      "original": false
+    },
+    {
+      "name": "far-shin",
+      "file": "far-shin.png",
+      "sha256": "d4514a7a01d4127afad281333444b9246f3dcf98f6bb8be079f41dbdc08641a0",
+      "original": false
+    },
+    {
+      "name": "far-shoe",
+      "file": "far-shoe.png",
+      "sha256": "df457830ad786029990a5e7308dc5d2c059ddb116ecd3959b36cf84b94d6b311",
+      "original": true
+    },
+    {
+      "name": "near-thigh",
+      "file": "near-thigh.png",
+      "sha256": "3caa590ad3a9f2edc530de604c4a8672da748bde617c00a9fd631f487f4038f1",
+      "original": false
+    },
+    {
+      "name": "near-shin",
+      "file": "near-shin.png",
+      "sha256": "5fc1dfbfa8e1d63679411c25091b4f868d936d04ac26e9a08e2cd919ca3167ad",
+      "original": false
+    },
+    {
+      "name": "near-claw-foot",
+      "file": "near-claw-foot.png",
+      "sha256": "dbce42c1f2cd502a84a91480d3680648e4df9a95324dc2d7700432fb8b7f2183",
+      "original": true
+    },
+    {
+      "name": "giant-upper-arm",
+      "file": "giant-upper-arm.png",
+      "sha256": "f8aba8b20800d110434d655f762804d5e018b8d199ed027d7615fe573a4f4f89",
+      "original": false
+    },
+    {
+      "name": "giant-forearm",
+      "file": "giant-forearm.png",
+      "sha256": "dcb72e6a642fdd55107d548852b6bce272e16760c54bc64e52c1e11b37074e63",
+      "original": false
+    },
+    {
+      "name": "abdominal-upper-arm",
+      "file": "abdominal-upper-arm.png",
+      "sha256": "2bc00a11eda06fbc021d0e1cf35c721f7804910f0ce80dd6fc6bb1b24c83c24b",
+      "original": false
+    },
+    {
+      "name": "abdominal-forearm",
+      "file": "abdominal-forearm.png",
+      "sha256": "709f62967ab8296ece4fabd39b3dddc746415616789bd3e9beadf76da8a7a105",
+      "original": false
+    },
+    {
+      "name": "cane-upper-arm",
+      "file": "cane-upper-arm.png",
+      "sha256": "903df4f3b325cd46e571d1ff35769478c4660aca3327284ded6f01d47b31d38c",
+      "original": false
+    },
+    {
+      "name": "cane-forearm",
+      "file": "cane-forearm.png",
+      "sha256": "4ab37ad94d2062f77c2bb808f7bce9ce32a590a5dae1828e28cf44a8103df265",
+      "original": false
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "61015d5cb6d1c0a9b28cd9c7f8d20eae059715c1cb451e4608f80d355cd317e7",
+      "original": true
+    },
+    {
+      "name": "giant-claw-hand",
+      "file": "giant-claw-hand.png",
+      "sha256": "4f381cad6d8aebc2314955760a937cdcea1ea6e79ab71902a431acb11ecdc7c4",
+      "original": true
+    },
+    {
+      "name": "abdominal-claw-hand",
+      "file": "abdominal-claw-hand.png",
+      "sha256": "1f1e5ebacd2abffecd42975172f05883686f1d8c2190f365e0576fafc6e1f51a",
+      "original": true
+    },
+    {
+      "name": "cane-and-hand",
+      "file": "cane-and-hand.png",
+      "sha256": "a7c1389871bee9cc0cedbe0683aebcba5885abef25de59653cd6bc05d04f5bfd",
+      "original": true
+    },
+    {
+      "name": "coat-far",
+      "file": "coat-far.png",
+      "sha256": "44df4cfa129590aa17eaddedd6f458d4e79361eb0fe281fe45ed669fd648d881",
+      "original": false
+    },
+    {
+      "name": "coat-near",
+      "file": "coat-near.png",
+      "sha256": "70d6b0409c3c1d4798ccd2888e26319c962a03348639c9f0452cd39b69989cc5",
+      "original": false
+    }
+  ],
+  "source": "Blender5.2 source-bound native544x512 mutated president. Original giant claw, abdominal claw appendage, cane/gripping hand, face, costume and both feet retained. Two fixed-length pelvis-owned legs and three original arm chains; own hidden tissue/cloth seams only. Explicit planar orientation and unit-scale rigid channels preserve grounding without altering thresholds. Dedicated warning, abilities, hit, death and transform owners retained. All48/all-action native normal-play acceptance pending.",
+  "groundY": 495.5,
+  "decodedBytes": 458752,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}

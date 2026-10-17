@@ -57,7 +57,7 @@ try {
             await action(page, () => page.getByRole("button", { name: "戦闘へ", exact: true }).click());
           } else {
             await page.getByRole("button", { name: "異常発生・記録", exact: true }).click();
-            if (mode === "survival") { await page.getByRole("button", { name: "サバイバル", exact: true }).click(); await action(page, () => page.getByRole("button", { name: "防衛継続作戦へ出撃", exact: true }).click()); }
+            if (mode === "survival") { await page.getByRole("button", { name: "サバイバル", exact: true }).click(); await action(page, () => page.getByRole("button", { name: "サバイバルへ出撃", exact: true }).click()); }
             else await action(page, () => page.getByRole("button", { name: "この異常個体と再戦", exact: true }).click());
           }
           await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__?.getPhaseGCombatSnapshot().running);
@@ -72,7 +72,7 @@ try {
             assert.equal(actual.progressionLevel, level); assert.equal(actual.maxHp, Math.round(card.hp * (1 + .025 * (level - 1)))); assert.equal(actual.damage, Math.round(card.damage * (1 + .02 * (level - 1))));
             for (const field of ["speed", "laneSpeed", "range", "attackEvery"]) assert.equal(actual[field], card[field], field);
             assert.equal(actual.defense, 0); assert.equal(actual.healingMultiplier, 1); assert.equal(actual.trapDurationMultiplier, 1);
-            await shot(page, record, kind); await page.getByRole("button", { name: "作戦を再開", exact: true }).click();
+            await shot(page, record, kind); await page.getByRole("button", { name: "戦闘を再開", exact: true }).click();
           }
           const deadline = Date.now() + 90000;
           while (Date.now() < deadline) {

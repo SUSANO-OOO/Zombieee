@@ -154,7 +154,7 @@ async function openRecords(page) {
     value: serializedSeed,
   });
   await page.goto(legacyQaUrl(baseUrl), { waitUntil: "domcontentloaded", timeout });
-  await dismissInstallOffer(page, { timeout: Math.min(timeout, 5_000) });
+  await dismissInstallOffer(page, { timeout });
   await page.locator("button.title-start").waitFor({ state: "visible", timeout });
   await page.locator("button.title-start").click();
   await page.locator(".map-screen").waitFor({ state: "visible", timeout });

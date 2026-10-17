@@ -1,0 +1,165 @@
+{
+  "provenance": {
+    "head": "b658bfb3583a4d87e6a49ca5df09ac2cc3f6f013",
+    "artifactId": 11805321133,
+    "zipSha256": "13eccfa6a3722077afdc17909595893d897ad27651678844e81e58f261e52ef5",
+    "source": "outputs/v100-phase-g/webkit-667x375-battle-extra-stage06-spitter-seal.capture-transaction.json",
+    "sourceSha256": "03645f2a4980e484fd9f624561665dab52ec3f07e57aadcce953781b25666c97",
+    "originalFailure": "BROWSER_POINTER_DISPATCH_TIMEOUT",
+    "isolation": "fresh-process-per-capture",
+    "projection": "Original precondition sample/terminal fields consumed by the real decision function; no clocks, geometry or eligibility invented."
+  },
+  "precondition": {
+    "expectedIdentity": {
+      "nodeId": "deployment-card-2",
+      "kind": "ranger",
+      "slot": "1"
+    },
+    "samples": [
+      {
+        "sampleOrdinal": 3,
+        "hostTurn": {
+          "sequence": 1,
+          "startedAtWallTimeMs": 1791888079109,
+          "endedAtWallTimeMs": 1791888079149,
+          "elapsedMs": 40
+        },
+        "sampledAtWallTimeMs": 1791888079158,
+        "sampledAtPerformanceMs": 19051.000000000004,
+        "schedulerProbe": {
+          "probeId": "deployment-scheduler-1791888078910-bv57cjkxpow",
+          "status": "pending",
+          "requestedAtWallTimeMs": 1791888079106,
+          "requestedAtPerformanceMs": 18999,
+          "observedAtWallTimeMs": null,
+          "observedAtPerformanceMs": null,
+          "callbackTimestamp": null
+        },
+        "card": {
+          "nodeId": "deployment-card-2",
+          "kind": "ranger",
+          "slot": "1",
+          "actionability": {
+            "eligible": true
+          },
+          "rect": {
+            "visible": true,
+            "x": 185.5,
+            "y": 295,
+            "width": 78.5,
+            "height": 60
+          },
+          "disabled": false,
+          "center": {
+            "x": 224.75,
+            "y": 325
+          },
+          "centerInCard": true,
+          "centerInViewport": true,
+          "centerInRail": true,
+          "viewportIntersection": true,
+          "railIntersection": true,
+          "hitOwnerMatches": true,
+          "pointerEvents": "auto",
+          "rail": {
+            "scrollLeft": 0
+          }
+        }
+      },
+      {
+        "sampleOrdinal": 4,
+        "hostTurn": {
+          "sequence": 2,
+          "startedAtWallTimeMs": 1791888079173,
+          "endedAtWallTimeMs": 1791888079213,
+          "elapsedMs": 40
+        },
+        "sampledAtWallTimeMs": 1791888079221,
+        "sampledAtPerformanceMs": 19114,
+        "schedulerProbe": {
+          "probeId": "deployment-scheduler-1791888078910-bv57cjkxpow",
+          "status": "pending",
+          "requestedAtWallTimeMs": 1791888079106,
+          "requestedAtPerformanceMs": 18999,
+          "observedAtWallTimeMs": null,
+          "observedAtPerformanceMs": null,
+          "callbackTimestamp": null
+        },
+        "card": {
+          "nodeId": "deployment-card-2",
+          "kind": "ranger",
+          "slot": "1",
+          "actionability": {
+            "eligible": true
+          },
+          "rect": {
+            "visible": true,
+            "x": 185.5,
+            "y": 295,
+            "width": 78.5,
+            "height": 60
+          },
+          "disabled": false,
+          "center": {
+            "x": 224.75,
+            "y": 325
+          },
+          "centerInCard": true,
+          "centerInViewport": true,
+          "centerInRail": true,
+          "viewportIntersection": true,
+          "railIntersection": true,
+          "hitOwnerMatches": true,
+          "pointerEvents": "auto",
+          "rail": {
+            "scrollLeft": 0
+          }
+        }
+      }
+    ],
+    "terminal": {
+      "sampleOrdinal": 5,
+      "sampledAtWallTimeMs": 1791888079261,
+      "sampledAtPerformanceMs": 19153,
+      "schedulerProbe": {
+        "probeId": "deployment-scheduler-1791888078910-bv57cjkxpow",
+        "status": "pending",
+        "requestedAtWallTimeMs": 1791888079106,
+        "requestedAtPerformanceMs": 18999,
+        "observedAtWallTimeMs": null,
+        "observedAtPerformanceMs": null,
+        "callbackTimestamp": null
+      },
+      "card": {
+        "nodeId": "deployment-card-2",
+        "kind": "ranger",
+        "slot": "1",
+        "actionability": {
+          "eligible": true
+        },
+        "rect": {
+          "visible": true,
+          "x": 185.5,
+          "y": 295,
+          "width": 78.5,
+          "height": 60
+        },
+        "disabled": false,
+        "center": {
+          "x": 224.75,
+          "y": 325
+        },
+        "centerInCard": true,
+        "centerInViewport": true,
+        "centerInRail": true,
+        "viewportIntersection": true,
+        "railIntersection": true,
+        "hitOwnerMatches": true,
+        "pointerEvents": "auto",
+        "rail": {
+          "scrollLeft": 0
+        }
+      }
+    }
+  }
+}

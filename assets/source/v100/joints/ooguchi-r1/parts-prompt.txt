@@ -1,0 +1,16 @@
+Use case: identity-preserve.
+Asset type: hidden joint paint study for the existing Ooguchi 2D game rig, NOT a replacement character.
+Input image 1 is the approved idle sprite and image 2 is its approved attack-b sprite. They are identity and surface-texture references.
+Create exactly ONE clean transparent 3 by 3 evenly spaced sheet (9 equal cells), no text, no labels, no border or ground/shadow. Each isolated component must stay fully inside its own cell with generous empty margins. Fine painted brown/black organic hide, exposed tendons and bony ridges, same directional light and palette as the references. Do not create a complete creature.
+Cells row-major:
+1 far rear thigh/hip segment, thick tendon-covered brown organic leg, rounded connection ends;
+2 far rear shin segment, narrower bent sinewy leg section, rounded ends;
+3 near rear thigh/hip segment, dark ridged organic muscle, rounded ends;
+4 near rear shin segment, sinewy mottled brown hide, rounded ends;
+5 far front upper leg/shoulder segment, thick ridged organic muscle, rounded ends;
+6 far front lower leg segment, sinewy dark brown hide, rounded ends;
+7 near front upper leg/shoulder segment, thick ridged organic muscle, rounded ends;
+8 near front lower leg segment, sinewy dark brown hide, rounded ends;
+9 only the concealed torso underpaint: an elongated low brown/black ribbed organic belly/back bridging hindquarter to neck, no limbs or head or jaw.
+All eight limb sections are shown as single straight diagonal sections from upper-left to lower-right, simple contiguous silhouettes with rounded joint overlap. These are only completion tissue behind the ORIGINAL visible pixels. No toes, claws, feet, hands, face, eyes, head, teeth, jaws, tail, clothing, weapons, tubes, extra attached limbs or decorative floating pieces. The huge original jaw and all original feet/claws will be preserved from the source outside this sheet.
+Actual transparent background (alpha), NOT a white/black/checkered painted background.

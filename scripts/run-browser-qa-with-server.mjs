@@ -2,6 +2,7 @@ import { once } from "node:events";
 import { spawn } from "node:child_process";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { invokeBrowserQaModule } from "./browser-qa-entry.mjs";
 
 const target = process.argv[2];
 if (!target) throw new Error("Usage: node scripts/run-browser-qa-with-server.mjs <qa-script>");
@@ -164,7 +165,7 @@ process.env.V100_CAMPAIGN_QA_BASE_URL = origin;
 try {
   const origin = await waitForServer();
   applyQaOrigin(origin);
-  await import(pathToFileURL(path.resolve(target)).href);
+  await invokeBrowserQaModule(await import(pathToFileURL(path.resolve(target)).href));
 } finally {
   if (server.exitCode === null) server.kill();
   await Promise.race([

@@ -1,16 +1,26 @@
 import { deepFreeze } from "./content/freeze.js";
 
+// The combat ID stays stable while the visible form changes. Rendering and
+// actual-distance gait calculation must resolve the same form throughout exit.
+export function mayoBattleRenderKind(fighter) {
+  if (fighter?.kind !== "mayo-chan") return null;
+  return fighter.manualAbility?.phase === "feral" || fighter.mayoRetreat?.reason === "ability"
+    || fighter.mayoRetreat?.renderKind === "mayo-chan-feral"
+    ? "mayo-chan-feral" : "mayo-chan";
+}
+
 export const MAYO_RETREAT_TIMING = deepFreeze({
   fallSeconds: .34,
   riseSeconds: .22,
   runSpeed: 190,
 });
 
-export function createMayoRetreatRuntime({ reason = "injury" } = {}) {
+export function createMayoRetreatRuntime({ reason = "injury", renderKind = "mayo-chan" } = {}) {
   return Object.freeze({
     phase: "fall",
     phaseElapsed: 0,
     reason: reason === "ability" ? "ability" : "injury",
+    renderKind: reason === "ability" || renderKind === "mayo-chan-feral" ? "mayo-chan-feral" : "mayo-chan",
     complete: false,
   });
 }

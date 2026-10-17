@@ -1,8 +1,9 @@
 import { createHash } from "node:crypto";
-import { mkdir, readFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import sharp from "sharp";
+import { generateGairenSource } from './build-v177-gairen-source.mjs';
 
 const root = process.cwd();
 const sourceDir = path.join(root, "assets/source/v090/bosses");
@@ -107,8 +108,8 @@ const expectedGenerated = Object.freeze({
     size: Object.freeze([512, 512]),
   }),
   "gairen-battle-r1.png": Object.freeze({
-    sha256: "d2240c879c460dc433e4cf148481ef82972ac502e1d0f0a0565b3b5f0c33369f",
-    bytes: 3876191,
+    sha256: "05df1b3988a7775162ab91a21b71e867409371469af1d34ec1cee404a2fec179",
+    bytes: 3337304,
     size: Object.freeze([3360, 896]),
   }),
   "futago-identity-master-r1.webp": Object.freeze({
@@ -435,6 +436,15 @@ async function buildBattleAtlas(definition, posePath) {
     .png({ compressionLevel: 9, adaptiveFiltering: true })
     .toBuffer();
   await sharp(await stripAtlasFloorLines(atlas)).toFile(atlasPath);
+  if (definition.kind === 'gairen') {
+    const repaired = await generateGairenSource();
+    const legacy = await readFile(atlasPath);
+    if (createHash('sha256').update(legacy).digest('hex') !== repaired.spec.beforeSha256) {
+      throw new Error('Gairen original source drifted before its bounded extra-leg repair');
+    }
+    await writeFile(atlasPath, repaired.atlas);
+    await writeFile(path.join(root, 'public/pwa-optimized/art/v090/bosses/gairen-battle-r1.webp'), repaired.transport);
+  }
   return {
     atlasPath,
     visible: await visibleRects(atlasPath, definition.kind),

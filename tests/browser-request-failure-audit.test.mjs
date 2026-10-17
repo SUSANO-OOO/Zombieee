@@ -102,10 +102,11 @@ test('a late failure during browser shutdown changes both saved status and the p
   await assert.rejects(finalizeRequestFailureEvidence({ report,
     browser: { close: async () => report.cases[0].requestFailures.push({ reason: 'late failure' }) },
     transport: { close: async () => {} }, writeReport: async value => { saved = JSON.parse(JSON.stringify(value)); },
-  }), /Native audio diagnostics failed/);
+  }), error => /Native audio diagnostics failed/.test(error.message) && /late failure/.test(error.message));
   assert.equal(saved.status, 'failed');
   assert.equal(saved.cases[0].status, 'failed');
   assert.equal(saved.cases[0].requestFailures[0].reason, 'late failure');
+  assert.match(saved.error, /late failure/,'CI failure text must retain the cause when the case itself passed before shutdown');
 });
 
 test('both cleanup owners and evidence writing run even when stopping throws', async () => {

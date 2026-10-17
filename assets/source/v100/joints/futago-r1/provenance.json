@@ -1,0 +1,341 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "futago",
+  "assetPath": "/art/v100/joints/futago-r1.webp",
+  "bytes": 80406,
+  "sha256": "ba561d046479964ae7d76b0785e8471d05c7001b563469eb89f8eaed2ff07541",
+  "atlasPacking": "height-descending-shelves",
+  "generatedPartsStudySha256": "58860b3055d9de4b59fff2a7870748d003ed28355b5002c389a47237bfd54ee4",
+  "identitySourceSha256": "2e56f03564f0bf9e4729f2647314127e61b55f5309ad95d541344008537bae38",
+  "identityBinding": {
+    "path": "/art/v090/bosses/futago-battle-r1.png",
+    "sourceSha256": "b7c113fc1c223546ca9b33f1256e50784d6e17332bf527467237e05d0ec267d7",
+    "sourceRect": {
+      "x": 0,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "flipX": false
+  },
+  "motionSha256": "8570ea57815760fdcb2c47a308802168438aa022bd0d83d2b26bd5c1e3a52691",
+  "originalPoseBindings": {
+    "idle": {
+      "path": "/art/v090/bosses/futago-battle-r1.png",
+      "sourceSha256": "b7c113fc1c223546ca9b33f1256e50784d6e17332bf527467237e05d0ec267d7",
+      "sourceRect": {
+        "x": 0,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": false,
+      "file": "identity-reference.png",
+      "sha256": "2e56f03564f0bf9e4729f2647314127e61b55f5309ad95d541344008537bae38",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0
+      },
+      "reason": "Unmodified approved original source pixels; joined multi-limbed identity."
+    },
+    "walk-a": {
+      "path": "/art/v090/bosses/futago-battle-r1.png",
+      "sourceSha256": "b7c113fc1c223546ca9b33f1256e50784d6e17332bf527467237e05d0ec267d7",
+      "sourceRect": {
+        "x": 480,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": false,
+      "file": "original-walk-a.png",
+      "sha256": "a18516524f4c67822dae3e4c90dc4aa270cf9a16f205cc0bbb0178fb3221c5bd",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0
+      },
+      "reason": "Unmodified approved original source pixels; joined multi-limbed identity."
+    },
+    "walk-b": {
+      "path": "/art/v090/bosses/futago-battle-r1.png",
+      "sourceSha256": "b7c113fc1c223546ca9b33f1256e50784d6e17332bf527467237e05d0ec267d7",
+      "sourceRect": {
+        "x": 960,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": false,
+      "file": "original-walk-b.png",
+      "sha256": "6ec19ea86ecd40297a42307a0c10a9af76cbd2c812acb8e78b5e2ef4df254e3b",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0
+      },
+      "reason": "Unmodified approved original source pixels; joined multi-limbed identity."
+    },
+    "attack-a": {
+      "path": "/art/v090/bosses/futago-battle-r1.png",
+      "sourceSha256": "b7c113fc1c223546ca9b33f1256e50784d6e17332bf527467237e05d0ec267d7",
+      "sourceRect": {
+        "x": 1440,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": false,
+      "file": "original-attack-a.png",
+      "sha256": "2559546fb009337d1c0633209fe4414fdcefdeae157f09d186656fd4764ad206",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0
+      },
+      "reason": "Unmodified approved original source pixels; joined multi-limbed identity."
+    },
+    "attack-b": {
+      "path": "/art/v090/bosses/futago-battle-r1.png",
+      "sourceSha256": "b7c113fc1c223546ca9b33f1256e50784d6e17332bf527467237e05d0ec267d7",
+      "sourceRect": {
+        "x": 1920,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": false,
+      "file": "original-attack-b.png",
+      "sha256": "4058f0a5cd0dead23f3db05138ee50d9af57607ee10cb9ec970b205eeb44995d",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0
+      },
+      "reason": "Unmodified approved original source pixels; joined multi-limbed identity."
+    },
+    "hit": {
+      "path": "/art/v090/bosses/futago-battle-r1.png",
+      "sourceSha256": "b7c113fc1c223546ca9b33f1256e50784d6e17332bf527467237e05d0ec267d7",
+      "sourceRect": {
+        "x": 2400,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": false,
+      "file": "original-hit.png",
+      "sha256": "5c56491a3b25fb976d6369bec0546a1379e9d526973d6d539d6971b6ba363d9d",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0
+      },
+      "reason": "Unmodified approved original source pixels; joined multi-limbed identity."
+    }
+  },
+  "parts": [
+    {
+      "name": "far-left-upper",
+      "file": "far-left-upper.png",
+      "sha256": "2505412e7a5e1326486acd4dcf69dbd9132f50d6ab07a97fbcb8639c67600fa7",
+      "original": false
+    },
+    {
+      "name": "far-left-lower",
+      "file": "far-left-lower.png",
+      "sha256": "5030ce0da8ff8d44497cf231566aef70e363c120f583d01e587a6b3e4271d803",
+      "original": false
+    },
+    {
+      "name": "far-left-foot",
+      "file": "far-left-foot.png",
+      "sha256": "35c1c1ddaea9c9e4d0a587d50485a0687c72e481268342b01a03f994c95beb2e",
+      "original": true
+    },
+    {
+      "name": "near-left-upper",
+      "file": "near-left-upper.png",
+      "sha256": "79766061cd3051a9a612903c16e502787689c1a1d47f25b59cd521f030809132",
+      "original": false
+    },
+    {
+      "name": "near-left-lower",
+      "file": "near-left-lower.png",
+      "sha256": "75a64347d1a90f456c2147a4f0c25fab594dadcd90fdb2b932ca20c8aa2cbb2b",
+      "original": false
+    },
+    {
+      "name": "near-left-foot",
+      "file": "near-left-foot.png",
+      "sha256": "852c46d57c9f31f6167e1047477ae0622c80a6a8473dee38212c93e5591d18ea",
+      "original": true
+    },
+    {
+      "name": "center-upper",
+      "file": "center-upper.png",
+      "sha256": "0e3e9ff7208d52040e8bcdf66de9753437d0b9a5cd2a5c69bd581c3ade06798d",
+      "original": false
+    },
+    {
+      "name": "center-lower",
+      "file": "center-lower.png",
+      "sha256": "20360b62e26ca655a847d54293b329635893b5c1c3bc5edbc452dd6e89760f54",
+      "original": false
+    },
+    {
+      "name": "center-foot",
+      "file": "center-foot.png",
+      "sha256": "9c46b92a231b7a7c787de207fb9c810b2aadd5cf24022295de56c506cf323e55",
+      "original": true
+    },
+    {
+      "name": "far-right-upper",
+      "file": "far-right-upper.png",
+      "sha256": "34265adc57cc2170f53bcd0c16d4afaccf21b9d0c7c5afb282fd8bd97bddc634",
+      "original": false
+    },
+    {
+      "name": "far-right-lower",
+      "file": "far-right-lower.png",
+      "sha256": "097b7f4b31887d79d3101cc0f6669429de4bb6f4ad7d88809c09aac494d36765",
+      "original": false
+    },
+    {
+      "name": "far-right-foot",
+      "file": "far-right-foot.png",
+      "sha256": "e7fe12836f033dd5470651da0f80874f182da7616dfcad43a5f64ee90e36af58",
+      "original": true
+    },
+    {
+      "name": "near-right-upper",
+      "file": "near-right-upper.png",
+      "sha256": "a35221779967d3da795e1ac162a1bf0d8cfc7eae31b30285483dfa15eec231e7",
+      "original": false
+    },
+    {
+      "name": "near-right-lower",
+      "file": "near-right-lower.png",
+      "sha256": "4636c3cb78254d4d02aa01ee89b8cfa1b8099c3de62dd2f97e068ee59767d194",
+      "original": false
+    },
+    {
+      "name": "near-right-foot",
+      "file": "near-right-foot.png",
+      "sha256": "de06c49617a86410d0e4f0fb2e99cad6ffc169b9addc61c70b82d634d817f67c",
+      "original": true
+    },
+    {
+      "name": "outer-left-upper",
+      "file": "outer-left-upper.png",
+      "sha256": "24722f5f79e71b7d02016deda938686ceae66af21b50d33d3451e315052cdedf",
+      "original": false
+    },
+    {
+      "name": "outer-left-lower",
+      "file": "outer-left-lower.png",
+      "sha256": "c17a65bf4b2aa36a49b4575640acfc01e2fb08b445e69724c2f948d7641cfb71",
+      "original": false
+    },
+    {
+      "name": "outer-left-claw",
+      "file": "outer-left-claw.png",
+      "sha256": "de4fc29db77d81ba5eb93b44135b69a47d90c3e68e183c48e7d6cbf55e45908b",
+      "original": true
+    },
+    {
+      "name": "inner-left-upper",
+      "file": "inner-left-upper.png",
+      "sha256": "e70833733ceaf646c01965770039888b16a4dce73d72a3e9d021b798d533fa55",
+      "original": false
+    },
+    {
+      "name": "inner-left-lower",
+      "file": "inner-left-lower.png",
+      "sha256": "815a501147056db5d1e382438aab99a00217347017ca448f7b5ffeda408f7415",
+      "original": false
+    },
+    {
+      "name": "inner-left-claw",
+      "file": "inner-left-claw.png",
+      "sha256": "7e380ef44f9a28ad29cf703109c2ef52ca8626acdc6587fec11f27e82258251f",
+      "original": true
+    },
+    {
+      "name": "inner-right-upper",
+      "file": "inner-right-upper.png",
+      "sha256": "ac2d656a2378cdb7d7a3ee2a4a31f264f117fe1d2445d7dc133f8601ebe402da",
+      "original": false
+    },
+    {
+      "name": "inner-right-lower",
+      "file": "inner-right-lower.png",
+      "sha256": "d26da616304b096cb0b71234750c7e5c9bad59a5ae867d5b358b74f412c3dcf9",
+      "original": false
+    },
+    {
+      "name": "inner-right-claw",
+      "file": "inner-right-claw.png",
+      "sha256": "7db2e0c9a9333d27691b98b8f97a92e59163e01c8e32188d6fc477e279c354e4",
+      "original": true
+    },
+    {
+      "name": "outer-right-upper",
+      "file": "outer-right-upper.png",
+      "sha256": "7405335258e833cec6e1f7ea6df544bdc1cbf88479c72decd3f38c0ae91a71a2",
+      "original": false
+    },
+    {
+      "name": "outer-right-lower",
+      "file": "outer-right-lower.png",
+      "sha256": "21a0822e4ee068cd5ffe85f2cba6e831919869350fb417d367eebe6de04034aa",
+      "original": false
+    },
+    {
+      "name": "outer-right-claw",
+      "file": "outer-right-claw.png",
+      "sha256": "c838d6831fb6cd2f2dc2b4dc436fa25227c71813296d784b70cf0fb5131fe74f",
+      "original": true
+    },
+    {
+      "name": "fused-underpaint",
+      "file": "fused-underpaint.png",
+      "sha256": "5ec474424e97b13b3a31556c1992d59a6a0dfdcaf83d2eb56197f7b70cd44485",
+      "original": false
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "87d9c4a9a1af044fa2e4320e90b66f0e51db3dcb0227bc92920cc08b6f5d8148",
+      "original": true
+    },
+    {
+      "name": "fused-ribs",
+      "file": "fused-ribs.png",
+      "sha256": "23514c025ff73deb7a62014ce2725946514d17257fd691a301ca5700c04c6b95",
+      "original": true
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "e2e98f2ced6cb400b89dfbc336eb079fbd2277b3190d6d622876c98dfcc8fe0b",
+      "original": true
+    },
+    {
+      "name": "second-head",
+      "file": "second-head.png",
+      "sha256": "3e402050ebd254e8cbe4e5a0108da9ab15d2cf7f6d9c65fa21b0bd728732c236",
+      "original": true
+    }
+  ],
+  "source": "Blender 5.2 source-bound Futago family: fixed-length planted feet, independent original claw arms, original faces and costume, explicit native frame registration. Fused original anatomy retains both heads, four arms and five canonical feet; separated forms use their own source identities. Split, cross-strike, paired HP, damage and death owners retained. All48/all-action continuous native normal-play acceptance pending.",
+  "groundY": 432,
+  "decodedBytes": 421888,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}

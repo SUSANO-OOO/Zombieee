@@ -5,8 +5,10 @@ import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { enterV100FromTitle, finishV100TitleIntro, seedV100BrowserSaveOnce } from "./v100-title-qa-entry.mjs";
 import { createDefaultV100Save, normalizeV100Save, serializeV100Save } from "../app/v100Save.js";
 import { V100_UNITS, V100_STAGE_IDS } from "../app/v100Registry.js";
-import { v100StoryEventView } from "../app/v100StoryEvents.js";
+import { V100_STORY_SCRIPT_VERSION } from "../app/v100StoryEvents.js";
+import { completeStaffRollByFilmEnd } from './v100-staff-roll-audit.mjs';
 import { installRequestFailureAudit } from "./browser-request-failure-audit.mjs";
+import {decodeNativeEncodedAudio, persistThenDecodeNativeAudio, recordNativeEncodedAudio} from "./v103-encoded-audio-evidence.mjs";
 
 if (process.platform === "win32") throw new Error("Audio QA is hosted-only; local browser and audio playback are disabled");
 const origin = new URL(process.env.V100_CAMPAIGN_QA_BASE_URL);
@@ -17,6 +19,10 @@ await mkdir(out, { recursive: true });
 const report = { engine, build: await productionBuildIdentity(),
   scope: "Production iPhone-UA media output, native stream encoding and decoded signal. macOS/Linux browser evidence; not iOS Control Center screen recording.",
   cases: [], errors: [] };
+const failures = [];
+async function installNativeRecordingClock(page) {
+  await page.addInitScript({content:'globalThis.__V103_RECORD_NATIVE_AUDIO__ = (' + recordNativeEncodedAudio.toString() + ');'});
+}
 const owned = V100_UNITS.map(unit => unit.id);
 const save = normalizeV100Save({ ...createDefaultV100Save(), campaignStarted: true, revision: 3,
   ownedUnitIds: owned, registeredUnitIds: owned, formationSlots: owned.slice(0, 7),
@@ -34,6 +40,7 @@ try {
     page.on("response", response => { if (response.status() >= 400) report.errors.push(`${response.status()} ${response.url()}`); });
     let failure;
     try {
+      await installNativeRecordingClock(page);
       await page.addInitScript(seedV100BrowserSaveOnce, serializeV100Save(save));
       await page.goto(new URL("v100", origin).href);
       const play = page.getByRole("button", { name: "ブラウザで遊ぶ", exact: true });
@@ -90,44 +97,30 @@ try {
               .map(([name, owner]) => [name, { state: owner.contextState, output: owner.output, duplicates: owner.duplicateLoopInstanceKeys }])) )}`);
           if (owners.ui.activeSceneVoices !== 0 || owners.battle.activeBgmVoices !== 1)
             throw new Error("Departing scene or duplicate battle music is still active");
+          for (const [name, owner] of Object.entries(owners)) {
+            const timing = owner.contextTiming;
+            if (!timing || !Number.isFinite(timing.sampleRate) || timing.sampleRate <= 0
+                || [timing.baseLatencySeconds, timing.outputLatencySeconds].some(value => value !== null
+                  && (!Number.isFinite(value) || value < 0)))
+              throw new Error("Missing or invalid live AudioContext timing for " + name);
+          }
           const sink = active.find(audio => audio.srcObject.id === owners.battle.output.streamId), stream = sink.srcObject;
           if (stream.getAudioTracks().length !== 1 || sink.muted || sink.volume !== 1) throw new Error("Invalid native output");
-          const mimeType = ["audio/mp4", "audio/webm;codecs=opus", "audio/webm"].find(type => MediaRecorder.isTypeSupported(type));
-          if (!mimeType) throw new Error("Native audio encoding is unavailable");
-          const chunks = [], recorder = new MediaRecorder(stream, { mimeType });
-          const stopped = new Promise((resolve, reject) => {
-            recorder.ondataavailable = event => { if (event.data.size) chunks.push(event.data); };
-            recorder.onerror = reject; recorder.onstop = resolve;
-          });
-          recorder.start(); await new Promise(resolve => setTimeout(resolve, 2500)); recorder.stop(); await stopped;
-          const bytes = await new Blob(chunks, { type: recorder.mimeType }).arrayBuffer();
-          // Decode saved bytes without opening another hardware audio session
-          // that could interrupt the very outputs being measured on WebKit.
-          const decoder = new OfflineAudioContext(2, 1, 44100);
-          {
-            const buffer = await decoder.decodeAudioData(bytes.slice(0));
-            let sum = 0, peak = 0, count = 0;
-            for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
-              const values = buffer.getChannelData(channel);
-              for (const value of values) { sum += value * value; peak = Math.max(peak, Math.abs(value)); count += 1; }
-            }
-            return { mimeType: recorder.mimeType, bytes: Array.from(new Uint8Array(bytes)),
-              rms: Math.sqrt(sum / count), peak, duration: buffer.duration, sampleRate: buffer.sampleRate,
-              channels: buffer.numberOfChannels, outputs: active.length, paused: sink.paused,
-              owners: Object.fromEntries(Object.entries(owners).map(([name, owner]) => [name, {
-                contextState: owner.contextState, output: owner.output, activeSceneVoices: owner.activeSceneVoices,
-                activeBgmVoices: owner.activeBgmVoices, duplicateLoopInstanceKeys: owner.duplicateLoopInstanceKeys,
-              }])) };
-          }
+          const encoded = await globalThis.__V103_RECORD_NATIVE_AUDIO__(stream);
+          return {...encoded,
+            outputs:active.length, paused:sink.paused,
+            owners:Object.fromEntries(Object.entries(owners).map(([name, owner]) => [name, {
+              contextState:owner.contextState, contextTiming:owner.contextTiming, output:owner.output, activeSceneVoices:owner.activeSceneVoices,
+              activeBgmVoices:owner.activeBgmVoices, duplicateLoopInstanceKeys:owner.duplicateLoopInstanceKeys,
+            }]))};
         });
-        const { bytes, ...signal } = sample;
-        assert.ok(bytes.length > 1000, `${label}: encoded output is empty`);
+        const file = width + 'x' + height + '-' + label + (sample.mimeType.includes('mp4') ? '.m4a' : '.webm');
+        const signal = await persistThenDecodeNativeAudio({sample, out, file, label, recordings:row.recordings,
+          decode:bytes => page.evaluate(decodeNativeEncodedAudio, bytes)});
+        assert.ok(signal.bytes > 1000, `${label}: encoded output is empty`);
         assert.ok(signal.duration >= 1.8 && signal.duration <= 3.5, `${label}: invalid encoded duration`);
         assert.ok(signal.rms > .0001 && signal.peak > .001, `${label}: recorded mix is silent`);
         assert.equal(signal.outputs, 2); assert.equal(signal.paused, false);
-        const file = `${width}x${height}-${label}.${signal.mimeType.includes("mp4") ? "m4a" : "webm"}`;
-        await writeFile(`${out}/${file}`, Buffer.from(bytes));
-        row.recordings.push({ label, file, bytes: bytes.length, ...signal });
       }
       await capture("battle");
       await page.evaluate(() => window.dispatchEvent(new Event("pagehide")));
@@ -154,14 +147,15 @@ try {
       row.requests = requests.report;
       if (requests.report.unexpectedFailures.length) failure ??= new Error("Unexpected browser request failure");
     }
-    if (failure) throw failure;
+    row.status = failure ? "failed" : "passed";
+    if (failure) failures.push(failure);
   }
   // Native file sources use the shared ending context, while battle uses
-  // decoded buffers. Exercise title -> credits and the durable film cursor.
+  // decoded buffers. Exercise title -> credits, then its durable R9 cursor.
   let context = await browser.newContext({ viewport: { width: 844, height: 390 }, isMobile: true, hasTouch: true,
     userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 26_7_1 like Mac OS X) AppleWebKit/605.1.15 Version/26.7 Mobile/15E148 Safari/604.1" });
   let page = await context.newPage(), requests = installRequestFailureAudit(page);
-  const mediaCase = { recordings: [], fixture: "title-to-credits and restored post-epilogue film in separate owned contexts" }; report.nativeMedia = mediaCase;
+  const mediaCase = { recordings: [], fixture: "title-to-credits and restored R9 staff roll in separate owned contexts" }; report.nativeMedia = mediaCase;
   page.on("pageerror", error => report.errors.push(String(error)));
   page.on("console", message => { if (message.type() === "error") report.errors.push(message.text()); });
   page.on("response", response => { if (response.status() >= 400) report.errors.push(`${response.status()} ${response.url()}`); });
@@ -170,7 +164,7 @@ try {
     await page.waitForFunction(selector => {
       const root = document.querySelector(selector);
       const sources = root && [...root.querySelectorAll('audio:not([data-v100-title-voice])')];
-      const required = selector === ".v100-post-credits-film" ? sources?.slice(0, 2) : sources;
+      const required = sources;
       const ui = window.__V100_EVENT_AUDIO_QA__?.getDiagnostics(), uiId = ui?.output?.streamId;
       const outputs = [...document.querySelectorAll("audio[data-game-audio-output]")]
         .filter(audio => audio.srcObject?.active && !audio.paused && audio.srcObject.id !== uiId);
@@ -189,36 +183,23 @@ try {
         throw new Error("Native media output is missing or duplicated");
       const sink = candidates[0], stream = sink.srcObject;
       if (stream.getAudioTracks().length !== 1 || sink.muted || sink.volume !== 1) throw new Error("Invalid native media output");
-      const mimeType = ["audio/mp4", "audio/webm;codecs=opus", "audio/webm"].find(type => MediaRecorder.isTypeSupported(type));
-      if (!mimeType) throw new Error("Native audio encoding is unavailable");
-      const chunks = [], recorder = new MediaRecorder(stream, { mimeType });
-      const stopped = new Promise((resolve, reject) => {
-        recorder.ondataavailable = event => { if (event.data.size) chunks.push(event.data); };
-        recorder.onerror = reject; recorder.onstop = resolve;
-      });
-      recorder.start(); await new Promise(resolve => setTimeout(resolve, 2500)); recorder.stop(); await stopped;
-      const bytes = await new Blob(chunks, { type: recorder.mimeType }).arrayBuffer();
-      const decoder = new OfflineAudioContext(2, 1, 44100), buffer = await decoder.decodeAudioData(bytes.slice(0));
-      let sum = 0, peak = 0, count = 0;
-      for (let channel = 0; channel < buffer.numberOfChannels; channel++) for (const value of buffer.getChannelData(channel)) {
-        sum += value * value; peak = Math.max(peak, Math.abs(value)); count += 1;
-      }
-      return { mimeType: recorder.mimeType, bytes: Array.from(new Uint8Array(bytes)), rms: Math.sqrt(sum / count),
-        peak, duration: buffer.duration, streamId: stream.id, sceneOutputs: candidates.length,
-        sources: [...document.querySelector(selector).querySelectorAll("audio")].map(audio => ({
-          src: audio.currentSrc, time: audio.currentTime, paused: audio.paused, rate: audio.playbackRate,
-        })) };
+      const encoded = await globalThis.__V103_RECORD_NATIVE_AUDIO__(stream);
+      return {...encoded,
+        streamId:stream.id, sceneOutputs:candidates.length,
+        sources:[...document.querySelector(selector).querySelectorAll("audio")].map(audio => ({
+          src:audio.currentSrc, time:audio.currentTime, paused:audio.paused, rate:audio.playbackRate,
+        }))};
     }, selector);
-    const { bytes, ...signal } = sample;
-    assert.ok(bytes.length > 1000 && signal.duration >= 1.8 && signal.duration <= 3.5, `${label}: invalid native encoding`);
+    const file = 'native-' + label + (sample.mimeType.includes('mp4') ? '.m4a' : '.webm');
+    const signal = await persistThenDecodeNativeAudio({sample, out, file, label, recordings:mediaCase.recordings,
+      decode:bytes => page.evaluate(decodeNativeEncodedAudio, bytes)});
+    assert.ok(signal.bytes > 1000 && signal.duration >= 1.8 && signal.duration <= 3.5, `${label}: invalid native encoding`);
     assert.ok(signal.rms > .0001 && signal.peak > .001, `${label}: native file mix is silent`);
-    const file = `native-${label}.${signal.mimeType.includes("mp4") ? "m4a" : "webm"}`;
-    await writeFile(`${out}/${file}`, Buffer.from(bytes), { flag: "wx" });
-    mediaCase.recordings.push({ label, file, bytes: bytes.length, ...signal });
   }
   try {
     const endingSave = normalizeV100Save({ ...save, flowState: { phase: "credits", eventId: "v100:event:credits",
-      stageId: null, stageNumber: null, nodeIndex: 0, firstClear: false, finalized: true, canSkip: true, destination: "credits" } });
+      stageId: null, stageNumber: null, nodeIndex: 0, scriptVersion: V100_STORY_SCRIPT_VERSION, firstClear: false, finalized: true, canSkip: true, destination: "credits" } });
+    await installNativeRecordingClock(page);
     await page.addInitScript(seedV100BrowserSaveOnce, serializeV100Save(endingSave));
     await page.goto(new URL("v100", origin).href);
     const play = page.getByRole("button", { name: "ブラウザで遊ぶ", exact: true });
@@ -229,8 +210,8 @@ try {
     await page.getByRole("button", { name: "続きから", exact: true }).click();
     await captureNativeMedia("credits", ".v100-staff-roll");
     // Closing this owned case gives an in-flight native song request an exact
-    // teardown boundary. Keep real in-case failures unexpected. Film resumes
-    // through the normal saved cursor after the final R5 epilogue line.
+    // teardown boundary. Keep real in-case failures unexpected. The staff
+    // roll resumes through the durable cursor in a fresh owned context.
     await requests.closeContext(context);
     mediaCase.creditsRequests = requests.report;
     assert.deepEqual(requests.report.unexpectedFailures, []);
@@ -240,21 +221,22 @@ try {
     page.on("pageerror", error => report.errors.push(String(error)));
     page.on("console", message => { if (message.type() === "error") report.errors.push(message.text()); });
     page.on("response", response => { if (response.status() >= 400) report.errors.push(`${response.status()} ${response.url()}`); });
-    const filmSave = normalizeV100Save({ ...endingSave, flowState: { ...endingSave.flowState, phase: "epilogue",
-      eventId: "v100:event:epilogue", destination: "epilogue", nodeIndex: v100StoryEventView("v100:event:epilogue", "").nodes.length } });
-    await page.addInitScript(seedV100BrowserSaveOnce, serializeV100Save(filmSave));
+    const resumedSave = normalizeV100Save({ ...endingSave, flowState: { ...endingSave.flowState, nodeIndex: 5 } });
+    await installNativeRecordingClock(page);
+    await page.addInitScript(seedV100BrowserSaveOnce, serializeV100Save(resumedSave));
     await page.goto(new URL("v100", origin).href);
-    const filmEntry = page.getByRole("button", { name: "ブラウザで遊ぶ", exact: true });
-    await filmEntry.or(page.locator(".v100-start-screen")).first().waitFor();
-    if (await filmEntry.isVisible()) await filmEntry.click();
+    const creditsEntry = page.getByRole("button", { name: "ブラウザで遊ぶ", exact: true });
+    await creditsEntry.or(page.locator(".v100-start-screen")).first().waitFor();
+    if (await creditsEntry.isVisible()) await creditsEntry.click();
     await enterV100FromTitle(page);
-    await captureNativeMedia("film", ".v100-post-credits-film");
+    await captureNativeMedia("credits-resumed", ".v100-staff-roll");
     await page.evaluate(() => window.dispatchEvent(new Event("pagehide")));
     assert.equal(await page.locator("audio[data-game-audio-output]").evaluateAll(outputs => outputs.every(audio => audio.paused)), true);
     await page.evaluate(() => window.dispatchEvent(new Event("pageshow")));
-    await captureNativeMedia("film-recovered", ".v100-post-credits-film");
+    await captureNativeMedia("credits-recovered", ".v100-staff-roll");
     const endingStreamId = mediaCase.recordings.at(-1).streamId;
-    await page.locator(".v100-post-credits-film").getByRole("button", { name: "スキップ", exact: true }).click();
+    await completeStaffRollByFilmEnd(page);
+    assert.equal(await page.locator('.v100-post-credits-film').count(), 0, 'R9 returns to the stage map after the staff roll');
     await page.waitForFunction(streamId => [...document.querySelectorAll("audio[data-game-audio-output]")]
       .filter(audio => audio.srcObject?.id === streamId).every(audio => audio.paused), endingStreamId, { timeout: 40000 });
     mediaCase.stoppedEndingStreamId = endingStreamId;
@@ -268,7 +250,8 @@ try {
     mediaCase.requests = requests.report;
     if (requests.report.unexpectedFailures.length) mediaFailure ??= new Error("Unexpected native media request failure");
   }
-  if (mediaFailure) throw mediaFailure;
+  if (mediaFailure) failures.push(mediaFailure);
+  if (failures.length) { report.caseFailures = failures.map(String); throw failures[0]; }
   assert.deepEqual(report.errors, []); report.status = "passed";
 } catch (error) {
   report.status = "failed"; report.failure = String(error);

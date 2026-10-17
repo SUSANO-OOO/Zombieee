@@ -1,0 +1,163 @@
+{
+  "sceneId": "chiha-confession",
+  "runtimePath": "/art/v100/story-r5/cuts/chiha-confession.webp",
+  "authorSource": "assets/source/v177/paisen/cuts/registered-story-r1/chiha-confession.png",
+  "authorSourceSha256": "9152f9c56a2bf0a77a1e177700c7d544e0caf51e5f5b012af0c62c965311910f",
+  "approvedRegion": "assets/source/v177/paisen/cuts/registered-story-r1/chiha-confession.region.png",
+  "approvedRegionSha256": "cb4fe80e683a7e57aa094924c947adce808394be656d34cfea7d04096ff769a5",
+  "promptFile": "assets/source/v177/paisen/cuts/registered-story-r1/chiha-confession.prompts.json",
+  "provenanceFile": "assets/source/v177/paisen/cuts/registered-story-r1/chiha-confession.provenance.json",
+  "originalGitBlob": "ce1860e835a83898eb728742948c2547b4397c57",
+  "originalSha256": "c7ab093edbfc127cd5f1117e55d71fe63426b27dc6504ab875ee067dc229b08e",
+  "originalBytes": 251750,
+  "width": 1280,
+  "height": 720,
+  "changedPixels": 37908,
+  "registeredPixels": 38081,
+  "runtimeBytes": 962892,
+  "runtimeSha256": "8c025bff25e87e0d5f4e71a1d0a84cde754c92891c89c49b24db613e919e44fc",
+  "byteDelta": 711142,
+  "mode": "built-in imagegen",
+  "identityMaster": "assets/source/v177/paisen/paisen-identity-r2.png",
+  "identityMasterSha256": "a1d5517fc1a500c4e949b0ec6c522efa0404ebd4ddd3b548994713a918983257",
+  "outsideRegisteredRegion": 0,
+  "losslessPixelExact": true,
+  "fullSourceSceneActuallyViewed": true,
+  "sourceVisualAccepted": true,
+  "nativeAccepted": false,
+  "producerAccepted": false,
+  "wholeGameAccepted": false,
+  "sourceRegistration": {
+    "id": "chiha-confession",
+    "source": "public/art/v100/story-r5/cuts/chiha-confession.webp",
+    "sourceSha256": "c7ab093edbfc127cd5f1117e55d71fe63426b27dc6504ab875ee067dc229b08e",
+    "localized": "assets/source/v177/paisen/cuts/r9-photo-r1/chiha-confession-photo-unified-r1.localized.png",
+    "localizedSha256": "9152f9c56a2bf0a77a1e177700c7d544e0caf51e5f5b012af0c62c965311910f",
+    "mask": "assets/source/v177/paisen/cuts/r9-photo-r1/chiha-confession-photo-unified-r1.region.png",
+    "maskSha256": "f9cccd7a254949e04baca7efd08c8eaacd22eb951dee7c267b77aa9b0d4616a1",
+    "width": 1280,
+    "height": 720,
+    "changedPixels": 37908,
+    "outsideAuthorizedRegionChanges": 0,
+    "layers": [
+      {
+        "kind": "face",
+        "generated": "assets/source/v177/paisen/cuts/r9-photo-r1/chiha-confession-photo-face-r1.generated.png",
+        "generatedSha256": "15c33d914e8938ceab80bd3154552f457cbc3237ec5d5421320edb75bf8eed2d",
+        "promptSet": "assets/source/v177/paisen/cuts/r9-photo-r1/chiha-confession-photo-face-r1.generation.json",
+        "crop": {
+          "left": 955,
+          "top": 45,
+          "width": 245,
+          "height": 305
+        },
+        "polygons": [
+          [
+            [
+              984,
+              82
+            ],
+            [
+              1014,
+              67
+            ],
+            [
+              1067,
+              62
+            ],
+            [
+              1112,
+              71
+            ],
+            [
+              1140,
+              94
+            ],
+            [
+              1151,
+              127
+            ],
+            [
+              1148,
+              169
+            ],
+            [
+              1142,
+              209
+            ],
+            [
+              1135,
+              233
+            ],
+            [
+              1144,
+              259
+            ],
+            [
+              1137,
+              292
+            ],
+            [
+              1099,
+              324
+            ],
+            [
+              1074,
+              327
+            ],
+            [
+              1042,
+              316
+            ],
+            [
+              1032,
+              295
+            ],
+            [
+              1000,
+              276
+            ],
+            [
+              975,
+              240
+            ],
+            [
+              973,
+              222
+            ],
+            [
+              984,
+              202
+            ],
+            [
+              982,
+              175
+            ],
+            [
+              971,
+              157
+            ],
+            [
+              979,
+              130
+            ]
+          ]
+        ],
+        "protected": [],
+        "mask": "assets/source/v177/paisen/cuts/r9-photo-r1/chiha-confession-photo-unified-r1.layer-1.mask.png",
+        "maskSha256": "f9cccd7a254949e04baca7efd08c8eaacd22eb951dee7c267b77aa9b0d4616a1",
+        "authorizedPixels": 38081,
+        "normalization": "uniform cover fit to source crop, 1.25px inward edge feather; original outside silhouette/occluder polygons"
+      }
+    ],
+    "mode": "built-in imagegen localized through exact source masks",
+    "fullSceneActuallyViewed": false,
+    "sourceAccepted": false,
+    "runtimeConnected": false,
+    "nativeAccepted": false,
+    "producerAccepted": false,
+    "wholeGameAccepted": false,
+    "provenance": "assets/source/v177/paisen/cuts/r9-photo-r1/chiha-confession-photo-unified-r1.provenance.json",
+    "prompts": "assets/source/v177/paisen/cuts/r9-photo-r1/chiha-confession-photo-unified-r1.prompts.json"
+  }
+}

@@ -1,0 +1,219 @@
+{
+  "at": "2026-10-14T20:54:20.476035+00:00",
+  "source": "public/art/v100/story-r9/cuts/s01-nao-rescue.webp",
+  "sourceSha256": "1070f918cb2d6ee0fbefe094eb7fdf50248c18009dda8ba97d2fde2f7307e153",
+  "generatedCopy": "assets/source/v177/paisen/cuts/s01-nao-rescue-r2.generated.png",
+  "generatedSha256": "36a9bf6ba79d4e8d11fe64eba7a8817d15501a3bace49587836ad25497e97c66",
+  "generatedOriginalRetained": true,
+  "generatedSize": [
+    1672,
+    941
+  ],
+  "uniformScale": 0.7655502392344498,
+  "rasterSizeAfterUniformScale": [
+    1280,
+    720
+  ],
+  "finalSize": [
+    1280,
+    720
+  ],
+  "identityFigurePolygon": [
+    [
+      0,
+      280
+    ],
+    [
+      24,
+      224
+    ],
+    [
+      57,
+      199
+    ],
+    [
+      79,
+      180
+    ],
+    [
+      79,
+      130
+    ],
+    [
+      87,
+      77
+    ],
+    [
+      128,
+      43
+    ],
+    [
+      182,
+      34
+    ],
+    [
+      230,
+      50
+    ],
+    [
+      269,
+      83
+    ],
+    [
+      275,
+      130
+    ],
+    [
+      282,
+      155
+    ],
+    [
+      308,
+      172
+    ],
+    [
+      328,
+      196
+    ],
+    [
+      340,
+      207
+    ],
+    [
+      378,
+      260
+    ],
+    [
+      402,
+      308
+    ],
+    [
+      416,
+      389
+    ],
+    [
+      412,
+      431
+    ],
+    [
+      428,
+      472
+    ],
+    [
+      422,
+      508
+    ],
+    [
+      363,
+      505
+    ],
+    [
+      317,
+      489
+    ],
+    [
+      250,
+      476
+    ],
+    [
+      194,
+      486
+    ],
+    [
+      163,
+      505
+    ],
+    [
+      114,
+      521
+    ],
+    [
+      76,
+      541
+    ],
+    [
+      20,
+      549
+    ],
+    [
+      0,
+      552
+    ]
+  ],
+  "protectedMedicalBagPolygon": [
+    [
+      84,
+      502
+    ],
+    [
+      127,
+      487
+    ],
+    [
+      206,
+      487
+    ],
+    [
+      293,
+      489
+    ],
+    [
+      337,
+      482
+    ],
+    [
+      398,
+      498
+    ],
+    [
+      425,
+      519
+    ],
+    [
+      453,
+      542
+    ],
+    [
+      448,
+      643
+    ],
+    [
+      407,
+      663
+    ],
+    [
+      331,
+      665
+    ],
+    [
+      234,
+      662
+    ],
+    [
+      177,
+      655
+    ],
+    [
+      108,
+      646
+    ],
+    [
+      66,
+      605
+    ],
+    [
+      66,
+      549
+    ]
+  ],
+  "changedPixels": 147305,
+  "changedPixelsOutsideExplicitFigure": 0,
+  "allPixelsAtX450OrGreaterUnchanged": true,
+  "localized": "assets/source/v177/paisen/cuts/s01-nao-rescue-r2.localized-r3.png",
+  "localizedSha256": "4075e0425f78fd1f71fc2ff7bc60034baa4d5de28d07c75fc2e39631abe9d26a",
+  "runtimeConnected": false,
+  "producerAcceptance": false,
+  "visualReviewPending": false,
+  "visualReviewedAt": "2026-10-14T21:11:34.778122+00:00",
+  "visualReview": "Compared original and localized candidate; removed old shoulder towel and camouflage trousers, photo-based face/navypurpletee/whitekneeshorts; Nao/elder/medicalbag/background preserved outside explicit figure. Runtime/cutscene timeline integration still pending."
+}

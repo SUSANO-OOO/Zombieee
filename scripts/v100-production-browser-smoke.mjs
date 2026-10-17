@@ -202,7 +202,7 @@ for (const engine of engines) {
         await page.screenshot({ path: mapEvidence });
         result.mapEvidence = path.relative(process.cwd(), mapEvidence).replaceAll("\\", "/");
 
-        const formationCta = page.getByRole("button", { name: "この作戦を編成", exact: true });
+        const formationCta = page.getByRole("button", { name: "編成して出撃", exact: true });
         await clickButton(page, formationCta, "map formation CTA");
         await advanceToFormation(page);
         await page.locator(".v100-formation-panel").waitFor({ state: "visible", timeout });

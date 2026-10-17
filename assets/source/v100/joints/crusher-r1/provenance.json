@@ -1,0 +1,129 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "crusher",
+  "assetPath": "/art/v100/joints/crusher-r1.webp",
+  "bytes": 48332,
+  "sha256": "3d181e781fe03486dfebaaa59e3761d95a09f24ab27a0d9b115c7ea5faa29338",
+  "generatedPartsStudySha256": "4e378e167b97f2f57bd362c3d59829d9cfd573041eaa814cf2a33a229d0b965c",
+  "identitySourceSha256": "7553747c88d94eeb98f5e805b411be82ab69f1267e1a9d2df560e67a394c692f",
+  "identityBinding": {
+    "path": "/art/v060/characters/legacy/crusher-battle-gutter-v1.png",
+    "sourceSha256": "41bf73592852dbb5e0ebe0a636a18220737dcbad170fb9b6b4985f6ab38ae8d9",
+    "sourceRect": {
+      "x": 394,
+      "y": 0,
+      "w": 394,
+      "h": 757
+    },
+    "referenceTransform": {
+      "scale": 0.9563218390804598,
+      "tx": 51.60459770114943,
+      "ty": -142.7494252873563,
+      "flipX": true
+    }
+  },
+  "motionSha256": "769fdb2f617e0f487eb6179098f7bf47bab45054ef299f3f4f8ef5e8fc387239",
+  "parts": [
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "8cfe695a4025916b59268c1ae1a1c5c285f23348fdda4c4c25f5274b76994c73",
+      "original": false
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "2ab94f9548644bb3756993a6638439224bfb124d72cf7135ced7e86bc1fcfa07",
+      "original": false
+    },
+    {
+      "name": "far-thigh",
+      "file": "far-thigh.png",
+      "sha256": "3d93e4aeee96fe726d3ffbba85f483a550361776d88f8bd2b9f5f2d5d3300370",
+      "original": false
+    },
+    {
+      "name": "far-shin",
+      "file": "far-shin.png",
+      "sha256": "14f86ad3382638bc800e943578fa949bf7f302f6a8053ad18693475a82424620",
+      "original": false
+    },
+    {
+      "name": "far-boot",
+      "file": "far-boot.png",
+      "sha256": "1794da56f275817458581a32679a494d810c886b38bfe2a798731e92564ddff0",
+      "original": false
+    },
+    {
+      "name": "near-thigh",
+      "file": "near-thigh.png",
+      "sha256": "6abcdb484bdbc3233b3eff2640dbe095af7ae5171ac0dc14a2ba84fbf1476c97",
+      "original": false
+    },
+    {
+      "name": "near-shin",
+      "file": "near-shin.png",
+      "sha256": "a5b8adc5b9c90994c1bedc43ac71be85746a1ec8bac75afa6eca12a30d9ce7dc",
+      "original": false
+    },
+    {
+      "name": "near-boot",
+      "file": "near-boot.png",
+      "sha256": "8732fb2bb689b0c3fe6e85aa3158865e027aefb1179702afd47f64bc62174d19",
+      "original": false
+    },
+    {
+      "name": "near-upper-arm",
+      "file": "near-upper-arm.png",
+      "sha256": "d0092b020bd5918001bc532a12d516c7f1c2c12fbed82fd65d6c3d1cb37741be",
+      "original": false
+    },
+    {
+      "name": "near-forearm",
+      "file": "near-forearm.png",
+      "sha256": "c7e79c07103c4cd305745c3e5e7a623f675bf66193b16619c15db77046596e6e",
+      "original": false
+    },
+    {
+      "name": "far-upper-arm",
+      "file": "far-upper-arm.png",
+      "sha256": "b3f3ef01b33a4c679e274e3e8bf94648d791d3b2940c19852ffb6e23950382ee",
+      "original": false
+    },
+    {
+      "name": "far-forearm",
+      "file": "far-forearm.png",
+      "sha256": "bcdb24a66e640ba7e8e3947be859ec29a1c220cf548463fc9d15e6009e06953c",
+      "original": false
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "638ce9dc46b2f9ff466c4fc4d6ab577c8bbcdc23f0322928775a7484a874d6b7",
+      "original": true
+    },
+    {
+      "name": "weapon-and-hands",
+      "file": "weapon-and-hands.png",
+      "sha256": "fa9886e72d29c0d4e78e5ad66a7b0b389fb4dbbddfee5aae4e311769ac69a524",
+      "original": true
+    },
+    {
+      "name": "free-hand",
+      "file": "free-hand.png",
+      "sha256": "16189eac1eba62279387e4782ffabe4669b580240816976c5d4aa4c04ad46efb",
+      "original": true
+    }
+  ],
+  "source": "Blender 5.2 fixed-length gait and settled support; guarded two-arm shield bash, long claw reach, forward running with flight and bent arm opposition, raised heavy fist slam; original heads, visible costume, hands, shield and chain; coarse crusher pixel paint",
+  "decodedBytes": 327680,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  },
+  "aliases": [
+    "abomination"
+  ]
+}

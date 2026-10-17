@@ -22,6 +22,42 @@ export function readRuntimeObservation() {
   };
 }
 
+// Project only after measurement has stopped. Full samples stay in report.json;
+// both successful controls and failures need readable costs in bounded CI logs.
+export function runtimePerformanceConsoleSummary(value) {
+  if (!value) return null;
+  const diagnostic = value.callbackDiagnostic;
+  const costs = diagnostic?.timeline?.costs;
+  return {
+    p95RafMs: value.p95RafMs,
+    medianFps: value.medianFps,
+    effectiveRenderHz: value.effectiveRenderHz,
+    rafSampleCount: value.raf?.count,
+    rafElapsedMs: value.raf?.elapsedMs,
+    callbackDiagnosticStoredInReport: Boolean(diagnostic),
+    callbackDiagnostic: diagnostic ? {
+      diagnosticOnly: diagnostic.diagnosticOnly,
+      count: diagnostic.count,
+      p50Ms: diagnostic.p50Ms,
+      p95Ms: diagnostic.p95Ms,
+      maxMs: diagnostic.maxMs,
+      over8Ms: diagnostic.over8Ms,
+      over16Ms: diagnostic.over16Ms,
+      over33Ms: diagnostic.over33Ms,
+      timeline: {
+        clock: diagnostic.timeline?.clock,
+        maxRecords: diagnostic.timeline?.maxRecords,
+        overflow: diagnostic.timeline?.overflow,
+        costs: Object.fromEntries(["raf", "layout", "snapshot", "pointerdown", "pointerup"].flatMap(kind => {
+          const cost = costs?.[kind];
+          return cost ? [[kind, { count: cost.count, p95Ms: cost.p95Ms, maxMs: cost.maxMs }]] : [];
+        })),
+      },
+    } : null,
+    gates: value.gates,
+  };
+}
+
 // Optional read-only timing, on the same clock as the existing rAF samples.
 // No extra polling, input, frame, timer, or state setter is introduced.
 export function installRuntimeObservationDiagnostics() {

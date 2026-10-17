@@ -58,6 +58,9 @@ const eslintConfig = defineConfig([
     "_site/**",
     "out/**",
     "outputs/**",
+    // Local QA captures include generated browser fixtures and rejected
+    // prototypes. They are evidence, outside the production import graph.
+    "output/**",
     "work/**",
     "build/**",
     "next-env.d.ts",

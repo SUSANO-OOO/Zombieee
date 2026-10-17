@@ -6,6 +6,7 @@ import {
   v100UnitFor,
   v100UnitStatAtLevel,
 } from "./v100Registry.js";
+import { V100_COMBAT_TUNING } from "./v100CombatTuning.js";
 
 export const V100_LEVEL_MIN = 1;
 export const V100_LEVEL_MAX = 30;
@@ -58,16 +59,18 @@ export function applyV100LevelUpgrade({ levels = {}, unitId, clearedStageNumber 
 
 export function v100LevelStats(base, level) {
   const safeLevel = Math.max(1, Math.min(30, Math.floor(Number(level) || 1)));
+  const leveledDamage = base?.kind === "scout" && [2, 3].includes(safeLevel)
+    ? Math.max(v100UnitStatAtLevel(base?.damage ?? 0, safeLevel, "damage"), Math.round((base.damage ?? 0) * (1 + (safeLevel - 1) * .02) * 100) / 100)
+    : v100UnitStatAtLevel(base?.damage ?? 0, safeLevel, "damage");
   return Object.freeze({
     hp: v100UnitStatAtLevel(base?.hp ?? 0, safeLevel, "hp"),
     // Early Hachi upgrades retain their 2% attack gain before integer rounding
     // would hide it. Combat already supports fractional equipment damage.
-    damage: base?.kind === "scout" && [2, 3].includes(safeLevel)
-      ? Math.max(v100UnitStatAtLevel(base?.damage ?? 0, safeLevel, "damage"), Math.round((base.damage ?? 0) * (1 + (safeLevel - 1) * .02) * 100) / 100)
-      : v100UnitStatAtLevel(base?.damage ?? 0, safeLevel, "damage"),
+    damage: Math.round(leveledDamage * V100_COMBAT_TUNING.alliedDamageMultiplier * 100) / 100,
     healing: v100UnitStatAtLevel(base?.healing ?? 0, safeLevel, "healing"),
     defense: Math.min(.32, (base?.defense ?? V100_BASE_DEFENSE[base?.kind] ?? 0) + (safeLevel - 1) * .0015),
-    speed: base?.speed ?? 0,
+    speed: (base?.speed ?? 0) * V100_COMBAT_TUNING.alliedTravelMultiplier,
+    laneSpeed: (base?.laneSpeed ?? 0) * V100_COMBAT_TUNING.alliedLaneTravelMultiplier,
     attackEvery: base?.attackEvery ?? 1,
     cooldown: base?.cooldown,
     range: base?.range,
@@ -88,6 +91,8 @@ export function applyV100UnitLevelProgression(card, level) {
     hp: stats.hp,
     damage: stats.damage,
     defense: stats.defense,
+    speed: stats.speed,
+    laneSpeed: stats.laneSpeed,
   });
 }
 

@@ -206,7 +206,7 @@ test("every referenced source is repository-local, nonempty, and has a complete 
       asset.id,
     );
     for (const source of asset.sources) {
-      assert.match(source.src, /^\/audio\/(?:v060\/(?:music|sfx)|v070\/(?:music|ambience|sfx)|v080\/sfx|v090\/sfx|v098\/music|v099\/(?:music|sfx)|v100\/(?:ui|foley|ambience|score))\/[a-z0-9-]+\.(mp3|ogg|wav)$/);
+      assert.match(source.src, /^\/audio\/(?:v060\/(?:music|sfx)|v070\/(?:music|ambience|sfx)|v080\/sfx|v090\/sfx|v098\/music|v099\/(?:music|sfx)|v100\/(?:ui|foley|ambience|score|r9))\/[a-z0-9-]+\.(mp3|ogg|wav)$/);
       assert.doesNotMatch(source.src, /:\/\/|^\/\//);
       const filePath = publicFileFor(source.src);
       assert.equal(existsSync(filePath), true, `${asset.id}: ${source.src}`);

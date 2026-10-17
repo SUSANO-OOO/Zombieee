@@ -5,11 +5,17 @@ import {orderedNativePointer} from './ordered-native-pointer.mjs';
 export function readNativeBattleControl(els){
   const el=els.length===1?els[0]:null;
   if(!el||el.disabled||el.getAttribute('aria-disabled')==='true')return null;
+  const mark=()=>globalThis.performance?.now?.()??null;
+  const started=mark();
   const r=el.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2;
+  const geometryEnded=mark();
   const ownsPoint=r.width>0&&r.height>0&&document.elementFromPoint(x,y)?.closest('button')===el;
+  const hitEnded=mark();
+  const browserReadTimings=started===null||geometryEnded===null||hitEnded===null?null:
+    {geometryMs:geometryEnded-started,hitTestMs:hitEnded-geometryEnded,totalMs:hitEnded-started};
   return{unitCard:el.matches('.unit-card'),point:ownsPoint?{x,y}:null,
     fighterId:el.dataset?.fighterId??null,abilityKind:el.dataset?.abilityKind??null,
-    ariaLabel:el.getAttribute('aria-label')};
+    ariaLabel:el.getAttribute('aria-label'),browserReadTimings};
 }
 
 export async function nativeBattleTap(page,locator,phases=[]){
@@ -33,8 +39,20 @@ export async function nativeBattleTap(page,locator,phases=[]){
   if(!state?.point)return false;await orderedNativePointer(page,state.point,phases);return true;
 }
 
-export async function normalTacticalInput(page,record,{observeSnapshot,barrageWhenOverwhelmed=false,barrageEnabled=true,airstrikeAfterSeconds=0,bossAirstrikePriority=false,reserveSecondAirstrikeForBoss=false,holdRedeploymentUntilBoss=false}={}){
-  const s=await page.evaluate(()=>{const s=window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();if(!s)return null;return{time:s.time,running:s.running,over:s.over,won:s.won,baseHp:s.baseHp,baseMaxHp:s.baseMaxHp,energy:s.energy,supportGauge:s.supportGauge,airstrike:s.airstrike,objective:s.objective,escortMissionObject:s.escortMissionObject,deployQueue:s.deployQueue?.map(f=>({kind:f.kind})),fighters:s.fighters.map(f=>({id:f.id,kind:f.kind,side:f.side,hp:f.hp,maxHp:f.maxHp,x:f.x,y:f.y,lane:f.lane,range:f.range,combatReady:f.combatReady}))};});
+export async function normalTacticalInput(page,record,{observeSnapshot,frameOwner,observeFrameChunk,rangerDrawObservation=false,barrageWhenOverwhelmed=false,barrageEnabled=true,airstrikeAfterSeconds=0,bossAirstrikePriority=false,reserveSecondAirstrikeForBoss=false,holdRedeploymentUntilBoss=false}={}){
+  const observed=await page.evaluate(({owner,rangerDrawObservation})=>{
+    const s=window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();const snapshot=!s?null:{time:s.time,running:s.running,over:s.over,won:s.won,baseHp:s.baseHp,baseMaxHp:s.baseMaxHp,energy:s.energy,supportGauge:s.supportGauge,airstrike:s.airstrike,objective:s.objective,escortMissionObject:s.escortMissionObject,deployQueue:s.deployQueue?.map(f=>({kind:f.kind})),fighters:s.fighters.map(f=>({id:f.id,kind:f.kind,side:f.side,hp:f.hp,maxHp:f.maxHp,x:f.x,y:f.y,lane:f.lane,range:f.range,combatReady:f.combatReady}))};
+    if(snapshot&&rangerDrawObservation)snapshot.rangerDraws={readAt:performance.now(),simulationTime:s.time,
+      actors:s.fighters.filter(f=>f.kind==='ranger'&&f.side==='human'&&f.hp>0).map(f=>({id:f.id,kind:f.kind,side:f.side,hp:f.hp,maxHp:f.maxHp,x:f.x,y:f.y,lane:f.lane,
+        speed:f.speed,laneSpeed:f.laneSpeed,damage:f.damage,range:f.range,attackEvery:f.attackEvery,
+        render:f.renderAudit?{renderSequence:f.renderAudit.renderSequence,renderKind:f.renderAudit.renderKind,assetReady:f.renderAudit.assetReady,
+          renderWidth:f.renderAudit.renderWidth,renderHeight:f.renderAudit.renderHeight,jointPaintedAt:f.renderAudit.jointPaintedAt,
+          jointAtlasPath:f.renderAudit.jointAtlasPath,jointDrawSucceeded:f.renderAudit.jointDrawSucceeded,
+          jointWeightedLowerDrawSucceeded:f.renderAudit.jointWeightedLowerDrawSucceeded,jointWeightedLower:f.renderAudit.jointWeightedLower}:f.renderAudit}))};
+    return owner?{snapshot,frames:globalThis.__V177_READ_NORMAL_FRAMES__?.(owner,'drain')??null}:snapshot;
+  },{owner:frameOwner??null,rangerDrawObservation});
+  const s=frameOwner?observed?.snapshot:observed;
+  if(frameOwner)await observeFrameChunk?.(observed?.frames);
   observeSnapshot?.(s);
   if(!s?.running||s.over)return;
   const humans=s.fighters.filter(f=>f.side==='human'&&f.hp>0),enemies=s.fighters.filter(f=>f.side==='zombie'&&f.hp>0),queue=s.deployQueue??[];

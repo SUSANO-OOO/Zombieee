@@ -1,0 +1,245 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "pall-manta",
+  "assetPath": "/art/v100/joints/pall-manta-r1.webp",
+  "bytes": 32996,
+  "sha256": "bd952c02d4b2c8425067e0723e0581bfc98b8a5bf30c2cc622a7589ffcb14aca",
+  "atlasPacking": "height-descending-shelves",
+  "generatedPartsStudySha256": "4311d316b9d7b8c7209b260aa2f60cbbe99c04ca1711749357a70fddea22618d",
+  "identitySourceSha256": "52d4c8f1a94ddfc20db4785404c91679c512b54bc00f2fdca8d49514ce38a1d7",
+  "identityBinding": {
+    "path": "/art/v0995/enemies/pall-manta-battle-v2.png",
+    "sourceSha256": "fcacbc668b8b4747b0801d6fd63f606e714e90bbeb9a49fe70a845b218488f54",
+    "sourceRect": {
+      "x": 480,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "flipX": false
+  },
+  "motionSha256": "299f5123deb81314a7f1e7cf80565f95cc96ed5ff9b187b975c3e31f9190f03a",
+  "originalPoseBindings": {
+    "idle": {
+      "path": "/art/v0995/enemies/pall-manta-battle-v2.png",
+      "sourceSha256": "fcacbc668b8b4747b0801d6fd63f606e714e90bbeb9a49fe70a845b218488f54",
+      "sourceRect": {
+        "x": 0,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-idle.png",
+      "sha256": "16831583638c7fc1705c3c9103b643af76f2e1e46dba7a16968af47874488dc3",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "walk-a": {
+      "path": "/art/v0995/enemies/pall-manta-battle-v2.png",
+      "sourceSha256": "fcacbc668b8b4747b0801d6fd63f606e714e90bbeb9a49fe70a845b218488f54",
+      "sourceRect": {
+        "x": 480,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "identity-reference.png",
+      "sha256": "52d4c8f1a94ddfc20db4785404c91679c512b54bc00f2fdca8d49514ce38a1d7",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "walk-b": {
+      "path": "/art/v0995/enemies/pall-manta-battle-v2.png",
+      "sourceSha256": "fcacbc668b8b4747b0801d6fd63f606e714e90bbeb9a49fe70a845b218488f54",
+      "sourceRect": {
+        "x": 960,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-walk-b.png",
+      "sha256": "8ad6b9faf35e7505d5aff8faa2aea669e51a474259a65c08ddc87725b69a79c1",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "attack-a": {
+      "path": "/art/v0995/enemies/pall-manta-battle-v2.png",
+      "sourceSha256": "fcacbc668b8b4747b0801d6fd63f606e714e90bbeb9a49fe70a845b218488f54",
+      "sourceRect": {
+        "x": 1440,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-attack-a.png",
+      "sha256": "4bc276a7ed056ebaabe3147cf95e2d9894379636be005e92438dbe5afbe264cc",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "attack-b": {
+      "path": "/art/v0995/enemies/pall-manta-battle-v2.png",
+      "sourceSha256": "fcacbc668b8b4747b0801d6fd63f606e714e90bbeb9a49fe70a845b218488f54",
+      "sourceRect": {
+        "x": 1920,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-attack-b.png",
+      "sha256": "a93bed94bab34478c9c65f71a3493e34dee8be650aabdeb787ef22c019694595",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "hit": {
+      "path": "/art/v0995/enemies/pall-manta-battle-v2.png",
+      "sourceSha256": "fcacbc668b8b4747b0801d6fd63f606e714e90bbeb9a49fe70a845b218488f54",
+      "sourceRect": {
+        "x": 2400,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-hit.png",
+      "sha256": "473a55ae741acf846075ba811795fdadb08793746efd48a9a83e000b1c713fb7",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    }
+  },
+  "parts": [
+    {
+      "name": "far-left-upper",
+      "file": "far-left-upper.png",
+      "sha256": "980644bfab7a6c866851db12ad5e37b27f52f5cbe4db0155bf5c1b87b7024e40",
+      "original": false
+    },
+    {
+      "name": "far-left-lower",
+      "file": "far-left-lower.png",
+      "sha256": "6a470e743461195dd3f3c31a8d5b319034297a43181a2f55347a59596f80ceec",
+      "original": false
+    },
+    {
+      "name": "far-left-foot",
+      "file": "far-left-foot.png",
+      "sha256": "e365cfd223b1a5a8f04d01e14da5ec6743e30292870d485cb6df0ad678f4dc07",
+      "original": true
+    },
+    {
+      "name": "far-right-upper",
+      "file": "far-right-upper.png",
+      "sha256": "e2f60261ec3db992391df23357398a70ac8cdcd2a86234baab73f665fdaeb603",
+      "original": false
+    },
+    {
+      "name": "far-right-lower",
+      "file": "far-right-lower.png",
+      "sha256": "d480ffc1cca62d7b4f3fc7750b98396d3ed4cf3e9ac4dae9f9bc8e1437b54ad0",
+      "original": false
+    },
+    {
+      "name": "far-right-foot",
+      "file": "far-right-foot.png",
+      "sha256": "0ae050eaec94af78c22bcf35d8b8ed3fa50995f0ef95fb3e9996c939a12b2cf5",
+      "original": true
+    },
+    {
+      "name": "near-left-upper",
+      "file": "near-left-upper.png",
+      "sha256": "f16be667cc19aed0f8d4292fb4fcb60a66b032a537be92882a96e5880e574d7f",
+      "original": false
+    },
+    {
+      "name": "near-left-lower",
+      "file": "near-left-lower.png",
+      "sha256": "4a3fe87f470fa5f4b9511bd7c8dab855fd427bb39e0bf5d3553cfe658c7f95d1",
+      "original": false
+    },
+    {
+      "name": "near-left-foot",
+      "file": "near-left-foot.png",
+      "sha256": "7f9c95d90a8f84efacadbaa7458345568b68e09c0f6f00ed27e952f7a56e00d1",
+      "original": true
+    },
+    {
+      "name": "near-right-upper",
+      "file": "near-right-upper.png",
+      "sha256": "28af2218325de2750c84660648a69aac9663cbce6ebf1d10ce38dad7069fa626",
+      "original": false
+    },
+    {
+      "name": "near-right-lower",
+      "file": "near-right-lower.png",
+      "sha256": "e5e4846e7d0a88be0d6742437d53bae94ade9ac15cad84e5d6837389430c26c3",
+      "original": false
+    },
+    {
+      "name": "near-right-foot",
+      "file": "near-right-foot.png",
+      "sha256": "00859af9e8590591213d1e82717cd63b9224d4cca2adfe4708353c3c34be833e",
+      "original": true
+    },
+    {
+      "name": "body",
+      "file": "body.png",
+      "sha256": "65fcb8be1f2ce457c756b831b6e8f7811904b95000abc86b8defa3fb1f507366",
+      "original": true
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "4d8f84bfcde68d5cb3b6c7a0f89c215a1d0db098e310bcde0c632d353459d897",
+      "original": true
+    }
+  ],
+  "source": "Blender5.2 original-bound four-leg Pall Manta supporting crawl and planted underside head bite. Original membrane, folded underside, face and four claw feet retain canonical walk-a RGBA; own concealed bone seams completed. Dedicated projectile-canopy warning, expansion, hit and death owners preserved. All48/all-action continuous native normal-play acceptance pending.",
+  "groundY": 431.5,
+  "decodedBytes": 215040,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}

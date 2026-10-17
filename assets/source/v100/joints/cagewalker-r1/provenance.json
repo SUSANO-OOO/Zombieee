@@ -1,0 +1,245 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "cagewalker",
+  "assetPath": "/art/v100/joints/cagewalker-r1.webp",
+  "bytes": 55424,
+  "sha256": "af5e21aa0856bfc3ead8af88b5b7c3786c04b73d3f3c2b6e9ba2d6154be3f381",
+  "atlasPacking": "height-descending-shelves",
+  "generatedPartsStudySha256": "d14466c105e0eef7fcc0f885692d240eeb4246cd08c6579f8225c22da12f32ff",
+  "identitySourceSha256": "65a10daa116aebb7c03e635fdc4c5595ada2e6228507285b48887e5a3942d915",
+  "identityBinding": {
+    "path": "/art/v0995/enemies/cagewalker-battle-v2.png",
+    "sourceSha256": "3014f1f27e73ae371c1f22410deb190f0c3040ae048fc538eaa715a401db478c",
+    "sourceRect": {
+      "x": 0,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "flipX": false
+  },
+  "motionSha256": "760de998234fd549025a2967927971dbee36777de1aa2bfa7e3a3beb3072753a",
+  "originalPoseBindings": {
+    "idle": {
+      "path": "/art/v0995/enemies/cagewalker-battle-v2.png",
+      "sourceSha256": "3014f1f27e73ae371c1f22410deb190f0c3040ae048fc538eaa715a401db478c",
+      "sourceRect": {
+        "x": 0,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "identity-reference.png",
+      "sha256": "65a10daa116aebb7c03e635fdc4c5595ada2e6228507285b48887e5a3942d915",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "walk-a": {
+      "path": "/art/v0995/enemies/cagewalker-battle-v2.png",
+      "sourceSha256": "3014f1f27e73ae371c1f22410deb190f0c3040ae048fc538eaa715a401db478c",
+      "sourceRect": {
+        "x": 480,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-walk-a.png",
+      "sha256": "92ad4f803886b52d45d705129c70782002ca562bf40216af199c781dab5c7df9",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "walk-b": {
+      "path": "/art/v0995/enemies/cagewalker-battle-v2.png",
+      "sourceSha256": "3014f1f27e73ae371c1f22410deb190f0c3040ae048fc538eaa715a401db478c",
+      "sourceRect": {
+        "x": 960,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-walk-b.png",
+      "sha256": "854e2a70ecdf4b56233e39bacaa17dc61a104ba71b5e9d3d2a805d971b1453e5",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "attack-a": {
+      "path": "/art/v0995/enemies/cagewalker-battle-v2.png",
+      "sourceSha256": "3014f1f27e73ae371c1f22410deb190f0c3040ae048fc538eaa715a401db478c",
+      "sourceRect": {
+        "x": 1440,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-attack-a.png",
+      "sha256": "b38327cdf25ad96d23bf83fc2421b978fe44b8dbea5ff2fc2d0935e9681fe594",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "attack-b": {
+      "path": "/art/v0995/enemies/cagewalker-battle-v2.png",
+      "sourceSha256": "3014f1f27e73ae371c1f22410deb190f0c3040ae048fc538eaa715a401db478c",
+      "sourceRect": {
+        "x": 1920,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-attack-b.png",
+      "sha256": "c815d5b8af56d8e734ec78c956dfc5f10f0b79d4d7c4e7ada662583fa0cec9f5",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "hit": {
+      "path": "/art/v0995/enemies/cagewalker-battle-v2.png",
+      "sourceSha256": "3014f1f27e73ae371c1f22410deb190f0c3040ae048fc538eaa715a401db478c",
+      "sourceRect": {
+        "x": 2400,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-hit.png",
+      "sha256": "c5a692bb6a2e4049fbb81a182cdf14a81f22e86baec6ac4614bc40b360a47f0d",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    }
+  },
+  "parts": [
+    {
+      "name": "far-left-upper",
+      "file": "far-left-upper.png",
+      "sha256": "c40a0ca0fff16c19b98675eca1a94e520e2cc147e7035ae8498de8910609f795",
+      "original": false
+    },
+    {
+      "name": "far-left-lower",
+      "file": "far-left-lower.png",
+      "sha256": "38ec854d24920790df74a963aa425a50fd49204373a5374f375ac408e4627d67",
+      "original": false
+    },
+    {
+      "name": "far-left-foot",
+      "file": "far-left-foot.png",
+      "sha256": "a62c96ee6a4649180cd4823f96b99649cfd1725f0e7816776ae519de9a2ecd8a",
+      "original": true
+    },
+    {
+      "name": "near-left-upper",
+      "file": "near-left-upper.png",
+      "sha256": "459ab175a73a7ea063bf8baefbab64f4ead741974a5f4ea7bbadcf4c4711293a",
+      "original": false
+    },
+    {
+      "name": "near-left-lower",
+      "file": "near-left-lower.png",
+      "sha256": "40cd113cd780a1aca595b0b93f9b62e55eef8307303f481c1e1eaac0ca6f9c00",
+      "original": false
+    },
+    {
+      "name": "near-left-foot",
+      "file": "near-left-foot.png",
+      "sha256": "296ec1f9e483326071018034e71bc11ed77faa6fc6f190cb981a4cec7dd5a496",
+      "original": true
+    },
+    {
+      "name": "far-right-upper",
+      "file": "far-right-upper.png",
+      "sha256": "6c3810b344990c79f955e4d6608f900462a7128e83486e546882874d5006a358",
+      "original": false
+    },
+    {
+      "name": "far-right-lower",
+      "file": "far-right-lower.png",
+      "sha256": "0b2b27e5c33e240131a455d57dbd6b9e022ced00c15c126c45bd7dd27cf3484f",
+      "original": false
+    },
+    {
+      "name": "far-right-foot",
+      "file": "far-right-foot.png",
+      "sha256": "e5d76a841ddc84fbb3383451c2d0a5bccd9d360e16879c370a8d23734f9d51ca",
+      "original": true
+    },
+    {
+      "name": "near-right-upper",
+      "file": "near-right-upper.png",
+      "sha256": "3d6ef6f47638e544a531cba8a94ee7442e800a3cabc3f15ec1b63ec6c3a4196b",
+      "original": false
+    },
+    {
+      "name": "near-right-lower",
+      "file": "near-right-lower.png",
+      "sha256": "0ac7cb5103eee5f66103b72e4ea6bedbacba519641c1a2e049f1d40eacef4107",
+      "original": false
+    },
+    {
+      "name": "near-right-foot",
+      "file": "near-right-foot.png",
+      "sha256": "c4236b3a7ea3c90a8923e5e0a5cad757959869320e4dca23ad5bbfabb362a41e",
+      "original": true
+    },
+    {
+      "name": "thorax",
+      "file": "thorax.png",
+      "sha256": "35497ed40925b220bfa3e547eda5126dd409852820e07e710c3d0d56f1aeeb48",
+      "original": true
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "5d10a4ac437ff55c600cf69cc17367e84a42fd1dabc588cadc458c993e4be91f",
+      "original": true
+    }
+  ],
+  "source": "Blender 5.2 source-bound Cagewalker four-leg gait, three-foot support and original perspective sole planes. Original hollow rib cage, hanging face and skeletal feet retain canonical RGBA; only own concealed bone joints are completed. Ready crouch and forward/downward basic attack keep fixed leg lengths and planted feet. Dedicated bone-cage lunge, warning, hit and death owners preserved. All48/all-action continuous native normal-play acceptance pending.",
+  "groundY": 426.5,
+  "decodedBytes": 262144,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}

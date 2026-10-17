@@ -1,0 +1,12 @@
+{
+  "sceneId": "ending-tky-transport",
+  "mode": "built-in imagegen",
+  "identity": "Producer three photographs plus registered Paisen identity master r2",
+  "prompts": [
+    {
+      "mode": "built-in imagegen",
+      "prompt": "Use case: identity-preserve. Asset type: localized edit input for an existing R9 game cutscene. Input1 is the sole edit target; input2–4 are the producer's authoritative three photographs of the same man; input5 is the approved painted Paisen identity master. Change only the man's hair, face, ear and neck visible in Image1 to the same man in reference photos2–4 and approved painted master5. Preserve the exact right-facing three-quarter profile, quiet serious expression and eyes looking to the right into the transport scene, head scale and the natural neck connection to his raised shoulder. Keep his navy shirt, shoulder, sunset rim light, city, wall and framing unchanged. Use his short natural straight black hair/soft cropped fringe, thick straight eyebrows, broad cheek and rounded broad jaw, compact nose, natural full lips, faint chin stubble and warm skin from the provided photographs. Avoid beautifying into a different sharp-jawed person. Keep the original detailed painted game-world style. Preserve Image1's dimensions, crop and composition, gritty finely painted realistic illustration touch; do not redraw unrelated objects. Do not add text, a watermark or an ornamental frame. This is a reference-driven correction, not a new character design.",
+      "rawGenerationSha256": null
+    }
+  ]
+}

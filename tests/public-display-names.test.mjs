@@ -10,15 +10,15 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 test("public vehicle wording uses the approved mobile-facing alias without changing semantic IDs", () => {
   const cases = new Map([
-    ["CRAWLER", "移動拠点"],
-    ["クローラー", "移動拠点"],
-    ["CRAWLER HP", "移動拠点耐久"],
-    ["CRAWLER大破", "移動拠点大破"],
-    ["大型移動拠点CRAWLER", "大型移動拠点"],
-    ["CRAWLER出入口の安全域です", "移動拠点出入口の安全域です"],
-    ["CRAWLER作戦室", "移動拠点作戦室"],
-    ["遠いCRAWLER", "遠い移動拠点"],
-    ["感染防衛前線でCRAWLERを守り、5waveごとのboss checkpointを突破してください。", "感染防衛前線で移動拠点を守り、5waveごとのboss checkpointを突破してください。"],
+    ["CRAWLER", "装甲車両"],
+    ["クローラー", "装甲車両"],
+    ["CRAWLER HP", "装甲車両耐久"],
+    ["CRAWLER大破", "装甲車両大破"],
+    ["大型移動拠点CRAWLER", "大型装甲車両"],
+    ["CRAWLER出入口の安全域です", "装甲車両出入口の安全域です"],
+    ["CRAWLER作戦室", "装甲車両作戦室"],
+    ["遠いCRAWLER", "遠い装甲車両"],
+    ["感染防衛前線でCRAWLERを守り、5waveごとのboss checkpointを突破してください。", "感染防衛前線で装甲車両を守り、5waveごとのboss checkpointを突破してください。"],
   ]);
   for (const [input, expected] of cases) assert.equal(publicDisplayText(input), expected);
   assert.equal(publicDisplayText("crawler-door"), "crawler-door");

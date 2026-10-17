@@ -1,0 +1,191 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "spitter",
+  "assetPath": "/art/v100/joints/spitter-r1.webp",
+  "bytes": 37788,
+  "sha256": "c1d11b6c38f5cb9753fb46bbb6db73d7db7d9c79886bd9c50418b3647f4a7ffb",
+  "softBones": {
+    "throat-sac": {
+      "minScale": 0.18,
+      "maxScale": 1
+    }
+  },
+  "generatedPartsStudySha256": "8124088c6e9011391445f88bc93d7177b11b6588bed12a7902a284c0c4d69ed1",
+  "identitySourceSha256": "8c89ad5b46fb04fc207f8e1e9dd32393f9be558401a2a082dad2435e007ee48f",
+  "identityBinding": {
+    "path": "/art/v060/characters/legacy/spitter-battle-gutter-v1.png",
+    "sourceSha256": "45176212d2b319c17377f8e29ca2c02acc68410ae5456ff2ca9bcf007a20439a",
+    "sourceRect": {
+      "x": 394,
+      "y": 0,
+      "w": 394,
+      "h": 757
+    },
+    "referenceTransform": {
+      "scale": 0.9541284403669725,
+      "tx": 50.60550458715596,
+      "ty": -132.8440366972477,
+      "flipX": true
+    }
+  },
+  "motionSha256": "12c13eebbcc29f493c372a677894061de256d517aef41d63f80cd144a7a846dd",
+  "originalPoseBindings": {
+    "attack-a": {
+      "file": "original-attack-a.png",
+      "sha256": "a1cef3409b1985efccfc3a92893b09797feee66fa5ee1c73faf78aab8bbd98ca",
+      "path": "/art/v060/characters/legacy/spitter-battle-gutter-v1.png",
+      "sourceSha256": "45176212d2b319c17377f8e29ca2c02acc68410ae5456ff2ca9bcf007a20439a",
+      "sourceRect": {
+        "x": 1182,
+        "y": 0,
+        "w": 394,
+        "h": 757
+      },
+      "flipX": true
+    },
+    "walk-a": {
+      "file": "identity-reference.png",
+      "sha256": "8c89ad5b46fb04fc207f8e1e9dd32393f9be558401a2a082dad2435e007ee48f",
+      "path": "/art/v060/characters/legacy/spitter-battle-gutter-v1.png",
+      "sourceSha256": "45176212d2b319c17377f8e29ca2c02acc68410ae5456ff2ca9bcf007a20439a",
+      "sourceRect": {
+        "x": 394,
+        "y": 0,
+        "w": 394,
+        "h": 757
+      },
+      "flipX": true
+    }
+  },
+  "parts": [
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "28141b16cc18625409b97382b8d87073b783c2f41ce5bc6dcc4fe3bfff3749e9",
+      "original": false
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "c864f6649b2cb37a5da216eaf62522b3b186dd26547f5c7e583d71668c0cadf4",
+      "original": false
+    },
+    {
+      "name": "far-thigh",
+      "file": "far-thigh.png",
+      "sha256": "8fb72f6a203361a35563db8ced9ea7a03f659440ed4a73fd0277739cd2a91175",
+      "original": false
+    },
+    {
+      "name": "far-shin",
+      "file": "far-shin.png",
+      "sha256": "27ed1125c45404f83df9be6934c95c815d035285c8991edcd0edfc613745395a",
+      "original": false
+    },
+    {
+      "name": "far-boot",
+      "file": "far-boot.png",
+      "sha256": "765e80ffe3289397518c16a6ffb27fbf198a93a062dbba6977a86770855ef99c",
+      "original": true
+    },
+    {
+      "name": "near-thigh",
+      "file": "near-thigh.png",
+      "sha256": "7176f6b10417c26e753e62424a034d4de8de76706cfb22fe20371cd474c45252",
+      "original": false
+    },
+    {
+      "name": "near-shin",
+      "file": "near-shin.png",
+      "sha256": "e61ab12e0950a1591d10b50a4326f8a9c9584ebdca25470c267ef79465e9553d",
+      "original": false
+    },
+    {
+      "name": "near-boot",
+      "file": "near-boot.png",
+      "sha256": "5283a611830e8aa62e5aad176d9300f9580f690ff3b88d3f651d72bfad6e408e",
+      "original": true
+    },
+    {
+      "name": "near-upper-arm",
+      "file": "near-upper-arm.png",
+      "sha256": "42c259b3bc4bc6200cc049dd503db9944bd9b88ddd9edad91e4b2391824b49dd",
+      "original": false
+    },
+    {
+      "name": "near-forearm",
+      "file": "near-forearm.png",
+      "sha256": "a58f3d0e2c18070941a49f70de85ae18f6c5d1fbcf1f8ead85c0e3dc2eea2c7f",
+      "original": false
+    },
+    {
+      "name": "far-upper-arm",
+      "file": "far-upper-arm.png",
+      "sha256": "b02fe448586871fd17e19a3e37d99887a5290165eefe31423fa002c1fe43f29f",
+      "original": false
+    },
+    {
+      "name": "far-forearm",
+      "file": "far-forearm.png",
+      "sha256": "cfb1e0659ee385fc6c526fb124d465372cdc263095a452b62ff1e18bb975f219",
+      "original": false
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "f38fee129460ee9fea6529384d370aac6b133f2191cddc49e80e6df24a88e762",
+      "original": true
+    },
+    {
+      "name": "hood",
+      "file": "hood.png",
+      "sha256": "d3d942d9952f5af70f24ec468f0da335fe7d4a83ccffad597213df615f4cc6c3",
+      "original": true
+    },
+    {
+      "name": "weapon-and-hands",
+      "file": "weapon-and-hands.png",
+      "sha256": "de6e2bf4ddad7b45b94816d9672830d3c764e750bca46f40f8f38b1c1a282f88",
+      "original": true
+    },
+    {
+      "name": "mouth-jaw",
+      "file": "mouth-jaw.png",
+      "sha256": "e0d3e95a61d8bae72558976d72af18ade140f8ecf3cb7d2bed882ae6081af859",
+      "original": true
+    },
+    {
+      "name": "throat-sac",
+      "file": "throat-sac.png",
+      "sha256": "28befa4656dbd5d8afffcd8a20b0088098d0e50945ad30bd7f82859dc688afe2",
+      "original": true
+    },
+    {
+      "name": "free-hand",
+      "file": "free-hand.png",
+      "sha256": "629d4781b32bd9fa28b1cddec08d18d6bdc8403cfaad91b0ae7b81aa78cdca09",
+      "original": true
+    },
+    {
+      "name": "coat-far",
+      "file": "coat-far.png",
+      "sha256": "01f43c006a3112a5ce9e5de7c1a0c702a3227e1c954daf995d8a2ab66e68c428",
+      "original": false
+    },
+    {
+      "name": "coat-near",
+      "file": "coat-near.png",
+      "sha256": "8f2777bdea01ddf33c14cc308ff3d843003f4460247aa81de07d5fe719ec3555",
+      "original": false
+    }
+  ],
+  "source": "Blender 5.2 fixed-length Spitter gait and planted support, source-bound acid throat inflation and head-attached hinged jaw. Original hood, visible costume, claws, wrapped feet and mouth/sac paint retained; hidden completion explicitly bound. Emission follows the rendered mouth. All48/all-action and continuous normal-play acceptance pending.",
+  "groundY": 432,
+  "decodedBytes": 294912,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}

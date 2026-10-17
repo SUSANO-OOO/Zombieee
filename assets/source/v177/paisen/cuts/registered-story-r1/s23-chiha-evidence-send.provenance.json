@@ -1,0 +1,333 @@
+{
+  "sceneId": "s23-chiha-evidence-send",
+  "runtimePath": "/art/v100/story-r9/cuts/s23-chiha-evidence-send.webp",
+  "authorSource": "assets/source/v177/paisen/cuts/registered-story-r1/s23-chiha-evidence-send.png",
+  "authorSourceSha256": "0fda37f29c770b86ca5a0a9adc84e7a2f1c70651c1307d065c775f5ab125ca30",
+  "approvedRegion": "assets/source/v177/paisen/cuts/registered-story-r1/s23-chiha-evidence-send.region.png",
+  "approvedRegionSha256": "0ea802e043c22716eef82313e3009a692b37a5bc714a6fb03df8fbd4199b9c4b",
+  "promptFile": "assets/source/v177/paisen/cuts/registered-story-r1/s23-chiha-evidence-send.prompts.json",
+  "provenanceFile": "assets/source/v177/paisen/cuts/registered-story-r1/s23-chiha-evidence-send.provenance.json",
+  "originalGitBlob": "794906a9d91f8d2d2570261fa570e8b510ca046a",
+  "originalSha256": "a0002fe5a95407baa4e548d3c6271b949bccfa172577a60b71631db8e2bb98f1",
+  "originalBytes": 318160,
+  "width": 1280,
+  "height": 720,
+  "changedPixels": 20350,
+  "registeredPixels": 20618,
+  "runtimeBytes": 1055442,
+  "runtimeSha256": "61fd61c6244fada85ad407f706d85d1ed1d56683e7492dea2fcfcdebffaf8687",
+  "byteDelta": 737282,
+  "mode": "built-in imagegen",
+  "identityMaster": "assets/source/v177/paisen/paisen-identity-r2.png",
+  "identityMasterSha256": "a1d5517fc1a500c4e949b0ec6c522efa0404ebd4ddd3b548994713a918983257",
+  "outsideRegisteredRegion": 0,
+  "losslessPixelExact": true,
+  "fullSourceSceneActuallyViewed": true,
+  "sourceVisualAccepted": true,
+  "nativeAccepted": false,
+  "producerAccepted": false,
+  "wholeGameAccepted": false,
+  "sourceRegistration": {
+    "id": "s23-chiha-evidence-send",
+    "source": "public/art/v100/story-r9/cuts/s23-chiha-evidence-send.webp",
+    "sourceSha256": "a0002fe5a95407baa4e548d3c6271b949bccfa172577a60b71631db8e2bb98f1",
+    "localized": "assets/source/v177/paisen/cuts/r9-photo-r1/s23-chiha-evidence-send-photo-unified-r1.localized.png",
+    "localizedSha256": "0fda37f29c770b86ca5a0a9adc84e7a2f1c70651c1307d065c775f5ab125ca30",
+    "mask": "assets/source/v177/paisen/cuts/r9-photo-r1/s23-chiha-evidence-send-photo-unified-r1.region.png",
+    "maskSha256": "24c2dfec6e752e245af16ea9bf248128b80b9c392892d8f79c1f445229110270",
+    "width": 1280,
+    "height": 720,
+    "changedPixels": 20350,
+    "outsideAuthorizedRegionChanges": 0,
+    "layers": [
+      {
+        "kind": "face",
+        "generated": "assets/source/v177/paisen/cuts/r9-photo-r1/s23-chiha-evidence-send-photo-face-r1.generated.png",
+        "generatedSha256": "9e19d8809b43a7352cf4a635fddc943d982e57bf18a569d647034ea48b3e93b1",
+        "promptSet": "assets/source/v177/paisen/cuts/r9-photo-r1/s23-chiha-evidence-send-photo-face-r1.generation.json",
+        "crop": {
+          "left": 905,
+          "top": 103,
+          "width": 150,
+          "height": 170
+        },
+        "polygons": [
+          [
+            [
+              926,
+              140
+            ],
+            [
+              947,
+              125
+            ],
+            [
+              987,
+              119
+            ],
+            [
+              1016,
+              128
+            ],
+            [
+              1036,
+              148
+            ],
+            [
+              1043,
+              177
+            ],
+            [
+              1037,
+              199
+            ],
+            [
+              1033,
+              215
+            ],
+            [
+              1028,
+              234
+            ],
+            [
+              1009,
+              248
+            ],
+            [
+              978,
+              253
+            ],
+            [
+              959,
+              245
+            ],
+            [
+              943,
+              236
+            ],
+            [
+              922,
+              227
+            ],
+            [
+              916,
+              216
+            ],
+            [
+              921,
+              192
+            ],
+            [
+              918,
+              169
+            ]
+          ]
+        ],
+        "protected": [],
+        "mask": "assets/source/v177/paisen/cuts/r9-photo-r1/s23-chiha-evidence-send-photo-unified-r1.layer-1.mask.png",
+        "maskSha256": "f9b1ad18d61beccbc3ae40a70bba546e318fa70f3ed8d097d4edd9b838026482",
+        "authorizedPixels": 13320,
+        "normalization": "uniform cover fit to source crop, 1.25px inward edge feather; original outside silhouette/occluder polygons"
+      },
+      {
+        "kind": "shorts",
+        "generated": "assets/source/v177/paisen/cuts/r9-photo-r1/s23-chiha-evidence-send-photo-shorts-r1.generated.png",
+        "generatedSha256": "ddac823f8b6bd51e49df69126c86211b6024bf8ded93410fada33dab0ace86eb",
+        "promptSet": "assets/source/v177/paisen/cuts/r9-photo-r1/s23-chiha-evidence-send-photo-shorts-r1.generation.json",
+        "crop": {
+          "left": 840,
+          "top": 390,
+          "width": 185,
+          "height": 190
+        },
+        "polygons": [
+          [
+            [
+              915,
+              410
+            ],
+            [
+              942,
+              414
+            ],
+            [
+              955,
+              428
+            ],
+            [
+              973,
+              467
+            ],
+            [
+              987,
+              503
+            ],
+            [
+              996,
+              536
+            ],
+            [
+              992,
+              555
+            ],
+            [
+              981,
+              556
+            ],
+            [
+              970,
+              517
+            ],
+            [
+              951,
+              485
+            ]
+          ],
+          [
+            [
+              862,
+              432
+            ],
+            [
+              881,
+              435
+            ],
+            [
+              891,
+              448
+            ],
+            [
+              904,
+              474
+            ],
+            [
+              919,
+              496
+            ],
+            [
+              934,
+              515
+            ],
+            [
+              943,
+              536
+            ],
+            [
+              950,
+              553
+            ],
+            [
+              953,
+              579
+            ],
+            [
+              863,
+              579
+            ],
+            [
+              853,
+              558
+            ],
+            [
+              854,
+              496
+            ]
+          ]
+        ],
+        "protected": [
+          [
+            [
+              840,
+              390
+            ],
+            [
+              873,
+              395
+            ],
+            [
+              894,
+              407
+            ],
+            [
+              915,
+              426
+            ],
+            [
+              941,
+              442
+            ],
+            [
+              961,
+              463
+            ],
+            [
+              982,
+              490
+            ],
+            [
+              1006,
+              518
+            ],
+            [
+              1025,
+              535
+            ],
+            [
+              1025,
+              580
+            ],
+            [
+              958,
+              580
+            ],
+            [
+              944,
+              564
+            ],
+            [
+              925,
+              545
+            ],
+            [
+              907,
+              522
+            ],
+            [
+              888,
+              501
+            ],
+            [
+              872,
+              478
+            ],
+            [
+              858,
+              453
+            ],
+            [
+              846,
+              437
+            ],
+            [
+              840,
+              427
+            ]
+          ]
+        ],
+        "mask": "assets/source/v177/paisen/cuts/r9-photo-r1/s23-chiha-evidence-send-photo-unified-r1.layer-2.mask.png",
+        "maskSha256": "13898f7a10492bba2efaf0e43005242d259ef74b66ba633c1b26788530c61582",
+        "authorizedPixels": 7298,
+        "normalization": "uniform cover fit to source crop, 1.25px inward edge feather; original outside silhouette/occluder polygons"
+      }
+    ],
+    "mode": "built-in imagegen localized through exact source masks",
+    "fullSceneActuallyViewed": false,
+    "sourceAccepted": false,
+    "runtimeConnected": false,
+    "nativeAccepted": false,
+    "producerAccepted": false,
+    "wholeGameAccepted": false,
+    "provenance": "assets/source/v177/paisen/cuts/r9-photo-r1/s23-chiha-evidence-send-photo-unified-r1.provenance.json",
+    "prompts": "assets/source/v177/paisen/cuts/r9-photo-r1/s23-chiha-evidence-send-photo-unified-r1.prompts.json"
+  }
+}

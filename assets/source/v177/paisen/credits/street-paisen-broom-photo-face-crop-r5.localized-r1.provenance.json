@@ -1,0 +1,61 @@
+{
+  "at": "2026-10-15T10:29:35.212Z",
+  "sceneId": "street-paisen-broom",
+  "sourceScene": "assets/source/v177/paisen/credits/street-paisen-broom-r3-singing.localized-r1.png",
+  "sourceSceneSha256": "93e24b7a50cc984428413b7dc40a7fd9702badedcda5b469ce0e8fdd3d93fc71",
+  "generated": "assets/source/v177/paisen/credits/street-paisen-broom-photo-face-crop-r5.generated.png",
+  "generatedSha256": "158671f5f5288570e32b1c6336f4aa5353e8d3146326a4abc2df790622f026a6",
+  "sourceCrop": {
+    "left": 735,
+    "top": 40,
+    "width": 235,
+    "height": 235
+  },
+  "headPolygon": [
+    [
+      754,
+      48
+    ],
+    [
+      892,
+      48
+    ],
+    [
+      932,
+      113
+    ],
+    [
+      936,
+      183
+    ],
+    [
+      909,
+      218
+    ],
+    [
+      861,
+      231
+    ],
+    [
+      794,
+      224
+    ],
+    [
+      770,
+      188
+    ],
+    [
+      750,
+      148
+    ]
+  ],
+  "target": "assets/source/v177/paisen/credits/street-paisen-broom-photo-face-crop-r5.localized-r1.png",
+  "targetSha256": "cd2fa103a65d516bbc654cdc14ea3fa145910f0a51ebdf10eb2373263748d53c",
+  "changedHeadPixels": 28871,
+  "changedOutsideHeadFromPrevious": 0,
+  "bodyAndOtherActorsPreserved": true,
+  "runtimeConnected": false,
+  "visualReviewed": false,
+  "producerAccepted": false,
+  "wholeGameAccepted": false
+}

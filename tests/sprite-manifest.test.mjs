@@ -1,3 +1,4 @@
+const prePhotoPaisen = JSON.parse(await readFile(new URL('./fixtures/v177-pre-photo-paisen-sprite-r1.json', import.meta.url)));
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
@@ -230,7 +231,7 @@ test("approved explicit atlases have seven states in both directions and a trans
 });
 
 test("legacy source cells are segmented exactly and rendered from isolated gutter atlases", () => {
-  const standard = SPRITE_MANIFEST.brawler;
+  const standard = prePhotoPaisen.entry;
   assert.deepEqual(
     { width: standard.sheet.width, height: standard.sheet.height, gutter: standard.sheet.gutter },
     { width: 2364, height: 757, gutter: 16 },
@@ -246,7 +247,7 @@ test("legacy source cells are segmented exactly and rendered from isolated gutte
 
 test("legacy gutter atlases preserve every source-cell pixel without scaling or cropping", async () => {
   const uniqueEntries = [...new Map(
-    Object.values(SPRITE_MANIFEST)
+    [...Object.values(SPRITE_MANIFEST), prePhotoPaisen.entry]
       .filter(({ sourceSheet }) => sourceSheet)
       .map((entry) => [entry.path, entry]),
   ).values()];
@@ -371,6 +372,8 @@ test("all seventeen people use independent portrait files and radio remains a se
       assert.equal(assetPath, "/art/v0995/characters/portraits/zakimiya-event-portrait-r2.webp");
     } else if (["tky", "mrs-chiha", "miyamoto-musashi", "mayo-chan"].includes(kind)) {
       assert.equal(assetPath, `/art/v0995/characters/portraits/${kind}-event-portrait-r2.webp`);
+    } else if (kind === 'brawler') {
+      assert.equal(assetPath, '/art/v100/portraits/paisen-event-portrait-r2.webp');
     } else if (V070_PORTRAIT_KINDS.has(kind)) {
       assert.equal(assetPath, `/art/v070/characters/portraits/${kind}-portrait-v1.webp`);
     } else {
@@ -436,7 +439,7 @@ test("historical 0.6.0 portrait provenance remains intact after 0.7.0 replacemen
   assert.equal(provenance.entries.length, 10);
   assert.equal(new Set(provenance.entries.map(({ kind }) => kind)).size, 10);
   for (const entry of provenance.entries) {
-    if (V070_PORTRAIT_KINDS.has(entry.kind) || entry.kind === "guide") {
+    if (V070_PORTRAIT_KINDS.has(entry.kind) || entry.kind === "guide" || entry.kind === 'brawler') {
       assert.notEqual(
         entry.finalPath,
         `public${CHARACTER_PORTRAIT_ART[entry.kind]}`,

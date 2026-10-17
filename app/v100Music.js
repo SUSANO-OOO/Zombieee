@@ -1,6 +1,7 @@
 // Reusable scene score. The producer approved the normal/daily direction on
 // 2026-09-09; boss recordings and intentionally silent title cuts stay intact.
 export const V100_MUSIC_TRACKS = Object.freeze([
+  { role: 'opening', title: 'Born Of The Sky', file: 'BornOfTheSky', page: 'born-of-the-sky', start: 82, duration: 88, gain: .66 },
   { role: 'normal', title: 'Simulacra', file: 'Simulacra', page: 'simulacra', start: 30, duration: 98, gain: .72 },
   { role: 'pressure', title: 'Simulacra', file: 'Simulacra', page: 'simulacra', start: 134, duration: 82, gain: .72 },
   { role: 'daily', title: 'Amberlight', file: 'Amberlight', page: 'amberlight', start: 10, duration: 98, gain: .64 },
@@ -57,7 +58,7 @@ function baseStoryScene(number, phase) {
   return 'story-' + family + '-' + phase;
 }
 const sceneRoles = Object.freeze({
-  title: 'preparation', intro: 'tension', map: 'preparation', loadout: 'preparation',
+  title: 'opening', intro: 'tension', map: 'preparation', loadout: 'preparation',
   victory: 'relief', defeat: 'loss',
   'story-kumaya-daily': 'daily', 'story-kumaya-crisis': 'tension',
   'story-collapse-montage': 'horror', 'story-crawler-montage': 'preparation',
@@ -106,7 +107,7 @@ export function withV100Music(base) {
 export function v100SurfaceScore({ ready = false, battleActive = false, modeResult = null, phase = '', won = null } = {}) {
   if (!ready || battleActive || !['name','title','map','formation','result'].includes(phase)) return null;
   const sceneId = modeResult === 'victory' || modeResult === 'defeat' ? modeResult
-    : phase === 'result' ? won === false ? 'defeat' : 'victory' : 'map';
+    : phase === 'result' ? won === false ? 'defeat' : 'victory' : phase === 'title' ? 'title' : 'map';
   return { eventId: 'v100:surface:' + sceneId, nodeIndex: 0, sceneId, category: 'surface',
     cueId: null, dialogueDucking: false, transition: 'scene-crossfade' };
 }

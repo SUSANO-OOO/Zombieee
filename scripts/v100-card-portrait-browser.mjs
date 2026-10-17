@@ -208,7 +208,7 @@ try {
       const errorRecord = value => ({ ...value, at: Date.now(), phase: row.phase });
       page.on("request", request => {
         const record = observed(request); pending.set(record.id, record);
-        if (record.url === new URL("audio/v100/score/horror.mp3", baseUrl).href) row.titleRequests.push(record);
+        if (record.url === new URL("audio/v100/score/opening.mp3", baseUrl).href) row.titleRequests.push(record);
       });
       page.on("requestfinished", request => { pending.delete(observed(request).id); });
       page.on("console", m => { if (m.type() === "error") row.errors.push(errorRecord({ kind: "console", text: m.text() })); });
@@ -254,7 +254,7 @@ try {
       const native = await page.evaluate(() => window.__cardPortraitTitleMedia());
       row.close = { captureComplete: true, runtimeErrorsBeforeClose: row.errors.length,
         pageWasOpen: !page.isClosed(), unexpectedPageLoss: row.unexpectedPageLoss === true,
-        expectedTitleUrl: new URL("audio/v100/score/horror.mp3", baseUrl).href,
+        expectedTitleUrl: new URL("audio/v100/score/opening.mp3", baseUrl).href,
         titleMediaCount: native.length, titleMedia: native.length === 1 ? native[0] : null,
         pendingRequestIds: [...pending.keys()], succeeded: false, error: null };
     } catch (error) {

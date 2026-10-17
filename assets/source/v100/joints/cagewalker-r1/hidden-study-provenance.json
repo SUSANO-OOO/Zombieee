@@ -1,0 +1,159 @@
+{
+  "tool": "built-in image_gen",
+  "studyFile": "hidden-parts-study.png",
+  "studySha256": "d14466c105e0eef7fcc0f885692d240eeb4246cd08c6579f8225c22da12f32ff",
+  "promptFile": "parts-prompt.txt",
+  "identityBinding": {
+    "path": "/art/v0995/enemies/cagewalker-battle-v2.png",
+    "sourceSha256": "3014f1f27e73ae371c1f22410deb190f0c3040ae048fc538eaa715a401db478c",
+    "sourceRect": {
+      "x": 0,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "flipX": false
+  },
+  "originalPoseBindings": {
+    "idle": {
+      "path": "/art/v0995/enemies/cagewalker-battle-v2.png",
+      "sourceSha256": "3014f1f27e73ae371c1f22410deb190f0c3040ae048fc538eaa715a401db478c",
+      "sourceRect": {
+        "x": 0,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "identity-reference.png",
+      "sha256": "65a10daa116aebb7c03e635fdc4c5595ada2e6228507285b48887e5a3942d915",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "walk-a": {
+      "path": "/art/v0995/enemies/cagewalker-battle-v2.png",
+      "sourceSha256": "3014f1f27e73ae371c1f22410deb190f0c3040ae048fc538eaa715a401db478c",
+      "sourceRect": {
+        "x": 480,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-walk-a.png",
+      "sha256": "92ad4f803886b52d45d705129c70782002ca562bf40216af199c781dab5c7df9",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "walk-b": {
+      "path": "/art/v0995/enemies/cagewalker-battle-v2.png",
+      "sourceSha256": "3014f1f27e73ae371c1f22410deb190f0c3040ae048fc538eaa715a401db478c",
+      "sourceRect": {
+        "x": 960,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-walk-b.png",
+      "sha256": "854e2a70ecdf4b56233e39bacaa17dc61a104ba71b5e9d3d2a805d971b1453e5",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "attack-a": {
+      "path": "/art/v0995/enemies/cagewalker-battle-v2.png",
+      "sourceSha256": "3014f1f27e73ae371c1f22410deb190f0c3040ae048fc538eaa715a401db478c",
+      "sourceRect": {
+        "x": 1440,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-attack-a.png",
+      "sha256": "b38327cdf25ad96d23bf83fc2421b978fe44b8dbea5ff2fc2d0935e9681fe594",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "attack-b": {
+      "path": "/art/v0995/enemies/cagewalker-battle-v2.png",
+      "sourceSha256": "3014f1f27e73ae371c1f22410deb190f0c3040ae048fc538eaa715a401db478c",
+      "sourceRect": {
+        "x": 1920,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-attack-b.png",
+      "sha256": "c815d5b8af56d8e734ec78c956dfc5f10f0b79d4d7c4e7ada662583fa0cec9f5",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "hit": {
+      "path": "/art/v0995/enemies/cagewalker-battle-v2.png",
+      "sourceSha256": "3014f1f27e73ae371c1f22410deb190f0c3040ae048fc538eaa715a401db478c",
+      "sourceRect": {
+        "x": 2400,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-hit.png",
+      "sha256": "c5a692bb6a2e4049fbb81a182cdf14a81f22e86baec6ac4614bc40b360a47f0d",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    }
+  },
+  "usage": "Only Cagewalker bone cells8..15 complete owned concealed leg joints. No Resonator cells, clothing or boots. Original hollow rib cage and hanging face retain canonical RGBA; no generated fill over hollow apertures. Four original skeletal feet retain separate perspective planes.",
+  "generatedParts": [
+    "far-left-upper",
+    "far-left-lower",
+    "near-left-upper",
+    "near-left-lower",
+    "far-right-upper",
+    "far-right-lower",
+    "near-right-upper",
+    "near-right-lower"
+  ],
+  "adopted": true,
+  "normalPlayAcceptance": false,
+  "all48Acceptance": false
+}

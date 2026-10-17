@@ -1,0 +1,17 @@
+{
+  "sceneId": "s09-transfer-disconnect",
+  "mode": "built-in imagegen",
+  "identity": "Producer three photographs plus registered Paisen identity master r2",
+  "prompts": [
+    {
+      "mode": "built-in",
+      "prompt": "Use case: identity-preserve. Edit image 1, an enlarged crop of Paisen leaning toward a console beside pink-haired Ikura in a painted game scene. Images 2-4 are the authoritative photos of the SAME real adult; image 5 is his registered illustrated identity. Replace the generic angular comic head with a very faithful likeness of that exact person: rounded broad cheeks, short broad chin/jaw, natural photographed eyes and eyelids, natural eyebrows rather than exaggerated angry wedges, broad nose/tip, lips, ears and short black hairline. Preserve his original head center, scale, forward lean and three-quarter angle toward image RIGHT, urgent focused expression with naturally slightly OPEN mouth and visible teeth, eyes following the cable off to the right, not the viewer. Preserve one natural neck joined to the original navy T-shirt collar without shifting the collar. Keep the same detailed gritty inked/painted game rendering, warm reflected light, sweat and light surface grime, not a pasted photo. Change only Paisen's head/hair/ears/face/neck. Preserve shirt and shoulders, all background structures, and especially Ikura's pink hair and headset at the RIGHT edge exactly. Do not change any other person, pose, crop or object. No extra anatomy, neck, text or watermark.",
+      "rawGenerationSha256": null
+    },
+    {
+      "mode": "built-in imagegen",
+      "prompt": "Use case: precise-object-edit with identity-preserve. Image1 is the only edit target, a crop from a gritty detailed painted game cutscene. Image2 shows the complete original scene only to identify the correct man and preserve all poses. Image3 is the producer's authoritative clothing photograph (plain navy-purple tee, loose white knee-length shorts), Image4 is his approved painted identity master. Output exactly Image1's crop/composition and style. Only the black trousers below Paisen's navy shirt at lower left become loose white knee-length shorts. Keep his same bent hip and thigh pose and framing. The knees and lower legs are outside this crop; do not invent them. Preserve the navy shirt and left arm, pink hair, and the woman's dark trousers to the right. Keep the existing belt if it is visible. The only replacement is the trouser fabric on this man. No captions, decorative frame, new characters or watermark. Do not globally redraw the scene. Keep foreground objects in front, exactly two existing arms and legs. Match the original scene light/shadows and natural cloth folds. White cotton should be dirtied by this scene but recognizably white.",
+      "rawGenerationSha256": null
+    }
+  ]
+}

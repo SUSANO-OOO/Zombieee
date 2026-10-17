@@ -1,0 +1,179 @@
+{
+  "tool": "built-in image_gen",
+  "studyFile": "hidden-parts-study.png",
+  "studySha256": "8b6a4570651ba4f334dec9307531134b740027397d235be9ff87864dd42b495b",
+  "promptFile": "parts-prompt.txt",
+  "identityBinding": {
+    "path": "/art/v0995/enemies/anchor-bloom-battle-v2.png",
+    "sourceSha256": "4eab540047e074fb82073c3f5afec07fd82cb6fb3056ae9b05a7ec79a5796047",
+    "sourceRect": {
+      "x": 480,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "flipX": false
+  },
+  "originalPoseBindings": {
+    "idle": {
+      "path": "/art/v0995/enemies/anchor-bloom-battle-v2.png",
+      "sourceSha256": "4eab540047e074fb82073c3f5afec07fd82cb6fb3056ae9b05a7ec79a5796047",
+      "sourceRect": {
+        "x": 0,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-idle.png",
+      "sha256": "650acb7783516c3796e8deba6f6ea013e141132a79fb1ad5f46b2736472d10de",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact native480x448 repaired canonical RGBA, all original pose ownership retained."
+    },
+    "walk-a": {
+      "path": "/art/v0995/enemies/anchor-bloom-battle-v2.png",
+      "sourceSha256": "4eab540047e074fb82073c3f5afec07fd82cb6fb3056ae9b05a7ec79a5796047",
+      "sourceRect": {
+        "x": 480,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "identity-reference.png",
+      "sha256": "dccdb6c8942e224d4a2252a3384f334e9412e4a8ef904d284b5a03edf2841c37",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact native480x448 repaired canonical RGBA, all original pose ownership retained."
+    },
+    "walk-b": {
+      "path": "/art/v0995/enemies/anchor-bloom-battle-v2.png",
+      "sourceSha256": "4eab540047e074fb82073c3f5afec07fd82cb6fb3056ae9b05a7ec79a5796047",
+      "sourceRect": {
+        "x": 960,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-walk-b.png",
+      "sha256": "f0bcaaaf21dbe290678b2930f094efa87368ffe3c526ac358c6657ab157cb127",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact native480x448 repaired canonical RGBA, all original pose ownership retained."
+    },
+    "attack-a": {
+      "path": "/art/v0995/enemies/anchor-bloom-battle-v2.png",
+      "sourceSha256": "4eab540047e074fb82073c3f5afec07fd82cb6fb3056ae9b05a7ec79a5796047",
+      "sourceRect": {
+        "x": 1440,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-attack-a.png",
+      "sha256": "fa0fd43cfa5f0bbe4cc8b6cf5547ec25929a957900398484794656e48c5bd0d3",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact native480x448 repaired canonical RGBA, all original pose ownership retained."
+    },
+    "attack-b": {
+      "path": "/art/v0995/enemies/anchor-bloom-battle-v2.png",
+      "sourceSha256": "4eab540047e074fb82073c3f5afec07fd82cb6fb3056ae9b05a7ec79a5796047",
+      "sourceRect": {
+        "x": 1920,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-attack-b.png",
+      "sha256": "29509ba88903de7a9aabfaefee2d97e98084b2c88b7b377cd6284106d4456012",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact native480x448 repaired canonical RGBA, all original pose ownership retained."
+    },
+    "hit": {
+      "path": "/art/v0995/enemies/anchor-bloom-battle-v2.png",
+      "sourceSha256": "4eab540047e074fb82073c3f5afec07fd82cb6fb3056ae9b05a7ec79a5796047",
+      "sourceRect": {
+        "x": 2400,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-hit.png",
+      "sha256": "e962196a28aa06a07fd2a39c316e15339f4f32da8e03763b7fe760307ab55c6d",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact native480x448 repaired canonical RGBA, all original pose ownership retained."
+    },
+    "death": {
+      "path": "/art/v0995/enemies/anchor-bloom-battle-v2.png",
+      "sourceSha256": "4eab540047e074fb82073c3f5afec07fd82cb6fb3056ae9b05a7ec79a5796047",
+      "sourceRect": {
+        "x": 2880,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-death.png",
+      "sha256": "bb47a84a8fc5bb26582d6014add903142510b0b26e85ef09b5acc4d521c3a3b4",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact native480x448 repaired canonical RGBA, all original pose ownership retained."
+    }
+  },
+  "sourceRepair": "assets/source/v100/anchor-bloom-repair-r1/provenance.json",
+  "usage": "Cells0..9 complete only own concealed veined tissue; original face, visible tissue, four complete root tips and underside tendrils retain exact repaired canonical RGBA. Cells10/11 unused.",
+  "visibleOriginalParts": [
+    "rear-left-foot",
+    "rear-right-foot",
+    "front-left-foot",
+    "front-right-foot",
+    "head",
+    "under-root-veins"
+  ],
+  "adopted": true,
+  "normalPlayAcceptance": false,
+  "all48Acceptance": false
+}

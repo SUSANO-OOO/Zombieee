@@ -12,9 +12,11 @@ for (const [level, hpMultiplier, damageMultiplier] of [[1, 1, 1], [5, 1.1, 1.08]
     for (const card of UNIT_CONTENT) {
       const next = applyV100UnitLevelProgression(card, level);
       assert.equal(next.hp, Math.round(card.hp * hpMultiplier));
-      assert.equal(next.damage, Math.round(card.damage * damageMultiplier));
+      assert.equal(next.damage, Math.round(Math.round(card.damage * damageMultiplier) * 1.12 * 100) / 100);
+      assert.equal(next.speed, card.speed * 1.45);
+      assert.equal(next.laneSpeed, card.laneSpeed * 1.25);
       assert.equal(next.progressionLevel, level); assert.equal(next.progressionRank, 0);
-      for (const [key, value] of Object.entries(card)) if (!["hp", "damage", "defense"].includes(key)) assert.deepEqual(next[key], value, `${card.kind}:${key}`);
+      for (const [key, value] of Object.entries(card)) if (!["hp", "damage", "defense", "speed", "laneSpeed"].includes(key)) assert.deepEqual(next[key], value, `${card.kind}:${key}`);
       assert.ok(next.defense >= .02 && next.defense <= .32);
       if (level > 1) assert.ok(next.defense > applyV100UnitLevelProgression(card, 1).defense);
       for (const key of ["healingMultiplier", "trapDurationMultiplier", "milestones"]) assert.equal(next[key], card[key]);
@@ -30,7 +32,7 @@ test("V1 clamps malformed and legacy-only levels; the original legacy curve rema
   assert.equal(applyV100UnitLevelProgression(card, 50).progressionLevel, 30);
   const old = applyUnitLevelProgression(card, 30), next = applyV100UnitLevelProgression(card, 30);
   assert.deepEqual([old.hp, old.damage, old.speed, old.attackEvery], [192, 44, 23.84, .526]);
-  assert.deepEqual([next.hp, next.damage, next.speed, next.attackEvery], [233, 49, 21, .72]);
+  assert.deepEqual([next.hp, next.damage, next.speed, next.attackEvery], [233, 54.88, 30.45, .72]);
 });
 
 test("Nao healing rounds before equipment and respects actual missing HP and concurrent-healer caps", () => {

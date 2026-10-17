@@ -3,8 +3,10 @@ import { mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
 import sharp from "sharp";
+import { removeKuromeGroundMatte } from "./v177-kurome-ground-matte.mjs";
 
 const root = process.cwd();
+const battleOnly = process.argv.includes("--battle-only");
 const sourceDir = path.join(root, "assets/source/v090-prototypes/bosses");
 const publicDir = path.join(root, "public/art/v090-prototypes/bosses");
 const source = Object.freeze({
@@ -37,8 +39,8 @@ const expectedGenerated = Object.freeze({
     size: Object.freeze([512, 512]),
   }),
   "kurome-battle-candidate-r1.png": Object.freeze({
-    sha256: "6b29b3244d2d17af31603db37719953b578942682e38d42c83f4a15952fb8a4a",
-    bytes: 2384701,
+    sha256: "db3501624aecc25b186e90e785569a5c3e29fa89ceaf331129f8486e588e4d99",
+    bytes: 2372130,
     size: Object.freeze([3360, 896]),
   }),
 });
@@ -250,7 +252,7 @@ async function buildBattleAtlas(posePath) {
     });
   }
   const atlasPath = path.join(publicDir, "kurome-battle-candidate-r1.png");
-  await sharp({
+  const atlas = await sharp({
     create: {
       width: cell.width * states.length,
       height: cell.height * 2,
@@ -260,25 +262,28 @@ async function buildBattleAtlas(posePath) {
   })
     .composite(composites)
     .png({ compressionLevel: 9, adaptiveFiltering: true })
-    .toFile(atlasPath);
+    .toBuffer();
+  const decoded = await sharp(atlas).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const { rgba } = removeKuromeGroundMatte(decoded.data, decoded.info);
+  await sharp(rgba, { raw: { width: decoded.info.width, height: decoded.info.height, channels: 4 } })
+    .png({ compressionLevel: 9, adaptiveFiltering: true }).toFile(atlasPath);
   return { atlasPath, visible: await visibleRects(atlasPath) };
 }
 
-const identityPath = await verifySource(source.identity);
+const identityPath = battleOnly ? null : await verifySource(source.identity);
 const posePath = await verifySource(source.poses);
-const reference = await buildReferenceAssets(identityPath);
+const reference = identityPath ? await buildReferenceAssets(identityPath) : null;
 const battle = await buildBattleAtlas(posePath);
 const fixedOutputs = await Promise.all([
-  reference.referencePath,
-  reference.compendiumPath,
+  ...(reference ? [reference.referencePath, reference.compendiumPath] : []),
   battle.atlasPath,
 ].map(verifyGenerated));
 
 console.log(JSON.stringify({
-  message: "Built the producer-approved Kurome boss reference assets.",
+  message: battleOnly ? "Built the source-bound Kurome battle atlas only." : "Built the producer-approved Kurome boss reference assets.",
   result: {
-    identity: path.relative(root, reference.referencePath),
-    compendium: path.relative(root, reference.compendiumPath),
+    identity: reference ? path.relative(root, reference.referencePath) : null,
+    compendium: reference ? path.relative(root, reference.compendiumPath) : null,
     battle: path.relative(root, battle.atlasPath),
     visible: battle.visible,
     fixedOutputs,

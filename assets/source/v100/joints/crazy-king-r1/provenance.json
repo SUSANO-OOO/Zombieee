@@ -1,0 +1,127 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "crazy-king",
+  "assetPath": "/art/v100/joints/crazy-king-r1.webp",
+  "bytes": 39606,
+  "sha256": "7310422fc7238d89c8194c40bbafd2f70724a3b979b76be7d4d939f7a773f257",
+  "generatedPartsStudySha256": "fb8b6d114ee18c651800be344b5c232778a6e7a5938f25bc4ca3b38bef5bc973",
+  "identitySourceSha256": "9e8cfb96f3e502567c7679d77fffce8d42dd0a75cb68715197122b637f58dcf0",
+  "identityBinding": {
+    "path": "/art/v060/characters/crazy-king-battle-v1.png",
+    "sourceSha256": "8858e7a32505baaffb21c3dfc58033a1a2a7b1e3293c370121e03e4328c97e5f",
+    "sourceRect": {
+      "x": 480,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "referenceTransform": {
+      "scale": 1.2307692307692308,
+      "tx": -55.384615384615415,
+      "ty": -99.69230769230774,
+      "flipX": false
+    }
+  },
+  "motionSha256": "a461b98365f9b74cc4c87683df9fc5d60d59607755c19bb049db682344f57eea",
+  "parts": [
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "eeda38a76106c0f282cb700ba29026d84b66ec19e3daf2ee76c2098dafd85b3c",
+      "original": false
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "6fd357b7f66896b34aef9dbb15d346096baa4196ca21cfdce60f5832d4a64e44",
+      "original": false
+    },
+    {
+      "name": "far-thigh",
+      "file": "far-thigh.png",
+      "sha256": "82295ccac81afeeb41243733ab5be4c0c69865458ea32e3c7290fc44202b84f0",
+      "original": false
+    },
+    {
+      "name": "far-shin",
+      "file": "far-shin.png",
+      "sha256": "dcf4dcc607a34a703888f2573510b2e7ba0e131a01356d262634b7eefd6d4dd3",
+      "original": false
+    },
+    {
+      "name": "far-boot",
+      "file": "far-boot.png",
+      "sha256": "22252d429f712534a86a62756ad029bb86dd59927334b90011c558ebc4db9077",
+      "original": false
+    },
+    {
+      "name": "near-thigh",
+      "file": "near-thigh.png",
+      "sha256": "849c469b2e62d19f957731c552f1939080e34ef5d0ab3765cd311a80a45a7cfd",
+      "original": false
+    },
+    {
+      "name": "near-shin",
+      "file": "near-shin.png",
+      "sha256": "41dba48a003d537616a7d4e323237ed13a30ca653790da2f1a6499aae747b527",
+      "original": false
+    },
+    {
+      "name": "near-boot",
+      "file": "near-boot.png",
+      "sha256": "d836d1df9bd74a62ab5292faf5a7de896c84413b27f73edce5773139945dad78",
+      "original": false
+    },
+    {
+      "name": "near-upper-arm",
+      "file": "near-upper-arm.png",
+      "sha256": "9f28002ed0ec9736139b5dfedd0dd61b49fdc02bba6d085913da65e935ca194b",
+      "original": false
+    },
+    {
+      "name": "near-forearm",
+      "file": "near-forearm.png",
+      "sha256": "e111c5379af8e6ff47e4f2e21523cbbe6331d499ccc109925fdd47c00e2e5092",
+      "original": false
+    },
+    {
+      "name": "far-upper-arm",
+      "file": "far-upper-arm.png",
+      "sha256": "0cbc03c47519fee4c3748ee083833f9cf3e10f7ea10730ee64bfbbb845b1a2ed",
+      "original": false
+    },
+    {
+      "name": "far-forearm",
+      "file": "far-forearm.png",
+      "sha256": "a3f9c3be2f08c8a9bba547b3620480ecf243619e3ca743a6676af804ad82e332",
+      "original": false
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "93a24f06a831481335affd974554d65a1d758edd447688a60ce938253528ff13",
+      "original": true
+    },
+    {
+      "name": "weapon-and-hands",
+      "file": "weapon-and-hands.png",
+      "sha256": "4847b8469c43a7aa8e49327f7f5d53a0b1754000659fa4d8c3891856ab1d23a8",
+      "original": true
+    },
+    {
+      "name": "free-hand",
+      "file": "free-hand.png",
+      "sha256": "c50585124d43f4a324355168f0f1eca46bd6d7cf804bfe01af06151ce07b326d",
+      "original": true
+    }
+  ],
+  "source": "Blender 5.2 fixed-length gait and settled support; separate two-handed hammer swing with torso follow-through, guarded punch, chainsaw cut and pan strike; original heads, visible clothing, hands and weapons; original brawler pixel style",
+  "groundY": 432,
+  "decodedBytes": 331776,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}

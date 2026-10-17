@@ -1,0 +1,49 @@
+name: Native Audio Capability Diagnostic
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/native-audio-capabilities.yml'
+      - 'scripts/v177-native-audio-capabilities.mjs'
+      - 'tests/v177-native-audio-capabilities.test.mjs'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-audio-capabilities-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  native-audio-capabilities:
+    name: Native WebKit Static Audio Capabilities
+    runs-on: macos-15-intel
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Verify capability-only contracts without launching a browser
+        run: node --test tests/v177-native-audio-capabilities.test.mjs
+      - name: Install the pinned native WebKit runtime
+        run: |
+          npm ci --prefix scripts/pwa-native-runtime
+          node scripts/pwa-native-runtime/node_modules/playwright/cli.js install webkit
+      - name: Query static capabilities without creating or playing media
+        env:
+          V177_EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          V177_NATIVE_AUDIO_CAPABILITIES_OUT: outputs/v177-native-audio-capabilities
+        run: node scripts/v177-native-audio-capabilities.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v177-native-audio-capabilities
+          path: outputs/v177-native-audio-capabilities
+          retention-days: 7
+          if-no-files-found: error

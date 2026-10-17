@@ -1,0 +1,70 @@
+name: Native Game Capture Diagnostic
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/native-game-capture.yml'
+      - 'scripts/v177-native-game-capture-browser.mjs'
+      - 'tests/v177-native-game-capture.test.mjs'
+      - 'scripts/v177-native-incoming-stun.mjs'
+      - 'tests/v177-native-incoming-stun.test.mjs'
+      - 'app/v177IncomingStunProof.js'
+      - 'scripts/v177-native-canvas-clips.mjs'
+      - 'scripts/v177-native-turned-getup.mjs'
+      - 'tests/v177-native-turned-getup.test.mjs'
+      - 'tests/v177-native-canvas-clips.test.mjs'
+      - 'app/v177TurnedGetupProof.js'
+      - 'app/v177TurnedGetupPresentation.js'
+      - 'app/v177TurnedGetupMotion.js'
+      - 'app/v177TurnedGetupHandoff.js'
+      - 'app/v177TurnedGetupDeath.js'
+      - 'app/v177CorpseJointPresentation.js'
+      - 'app/v177JointPresentation.js'
+      - 'app/v177RangerLowerMotion.js'
+      - 'app/v177RangerLowerPaint.js'
+      - 'tests/v177-ranger-continuous-lower.test.mjs'
+      - 'tests/v177-settle-continuity.test.mjs'
+      - 'app/corpseVisuals.js'
+      - 'app/AshfallGame.tsx'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-game-capture-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  native-game-capture:
+    runs-on: macos-15-intel
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Install pinned native WebKit
+        run: |
+          npm ci --prefix scripts/pwa-native-runtime
+          node scripts/pwa-native-runtime/node_modules/playwright/cli.js install webkit
+      - name: Build the exact PR candidate
+        env:
+          GITHUB_PAGES_RELEASE_SHA: ${{ github.event.pull_request.head.sha }}
+        run: npm run build
+      - name: Record priority actions, actual infection rises and natural incoming stun in three viewports with native VP8
+        env:
+          V177_EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          V177_NATIVE_GAME_CAPTURE_OUT: outputs/v177-native-game-capture
+        run: node scripts/v177-native-game-capture-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v177-native-game-capture
+          path: outputs/v177-native-game-capture
+          if-no-files-found: error
+          retention-days: 7
