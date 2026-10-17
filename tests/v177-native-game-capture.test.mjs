@@ -352,7 +352,8 @@ test('the dedicated workflow is path-scoped, read-only, exact-head, built, bound
     'app/v177IncomingStunProof.js','scripts/v177-native-canvas-clips.mjs',
     'scripts/v177-native-turned-getup.mjs','tests/v177-native-turned-getup.test.mjs','tests/v177-native-canvas-clips.test.mjs',
     'app/v177TurnedGetupProof.js','app/v177TurnedGetupPresentation.js','app/v177TurnedGetupMotion.js',
-    'app/v177TurnedGetupHandoff.js','app/v177TurnedGetupDeath.js','app/v177CorpseJointPresentation.js','app/AshfallGame.tsx']);
+    'app/v177TurnedGetupHandoff.js','app/v177TurnedGetupDeath.js','app/v177CorpseJointPresentation.js',
+    'app/v177JointPresentation.js','tests/v177-settle-continuity.test.mjs','app/corpseVisuals.js','app/AshfallGame.tsx']);
   assert.deepEqual(workflow.permissions, { contents: 'read' }); assert.equal(workflow.concurrency['cancel-in-progress'], false);
   const job = workflow.jobs['native-game-capture']; assert.equal(job['runs-on'], 'macos-15-intel'); assert.equal(job['timeout-minutes'], 15);
   assert.equal(job.steps[0].with.ref, '${{ github.event.pull_request.head.sha }}'); assert.equal(job.steps[0].with['persist-credentials'], false);

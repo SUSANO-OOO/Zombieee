@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {readFile} from 'node:fs/promises';
 import path from 'node:path';
-import {ALLY_DEATH_CONFIG} from '../app/combatLifecycle.js';
+import {ALLY_DEATH_CONFIG,advanceAllyLifecycle} from '../app/combatLifecycle.js';
+import {allyCorpseVisualCue} from '../app/corpseVisuals.js';
 import {V177_JOINT_ATLASES} from '../app/v177JointPresentation.js';
 
 export function readNativeTurnedGetupSample({afterSequence=0,performanceBoundary=false}={}) {
@@ -57,7 +58,17 @@ export function assertNativeTurnedGetup(row) {
   assert.equal(birth.variantBasis,'source-bound-fall');assert.equal(birth.source?.sourceBound,true);
   assert.equal(birth.source.recordedAfterPaint,true);assert.ok(Number.isFinite(birth.source.paintedFloorY));
   assert.ok(birth.source.at>=first.simulationTime&&birth.source.at<=birth.bornAt);
-  assert.ok(Math.abs(birth.source.paintedFloorY-birth.floorY)<1e-7);
+  // The original infection cue moves the already-grounded corpse slightly.
+  // Reconstruct its existing owner from the prepared lifecycle and actual
+  // postpaint time. Keep the strict physical and painted floor checks separate
+  // instead of treating that legitimate tremor as ungrounded body paint.
+  const sourceCorpse=advanceAllyLifecycle(proof.preparedCorpse,birth.source.at-proof.preparedAt);
+  assert.equal(sourceCorpse.id,proof.corpseId);assert.equal(sourceCorpse.side,'human');
+  assert.equal(sourceCorpse.state,'infection-warning');
+  const sourceCue=allyCorpseVisualCue(sourceCorpse,birth.source.at);
+  assert.ok(Math.abs(sourceCorpse.y+5-birth.floorY)<1e-7);
+  assert.ok(Math.abs(birth.source.physicalFloorY-birth.floorY)<1e-7);
+  assert.ok(Math.abs(birth.source.paintedFloorY-birth.floorY-sourceCue.tremorY)<1e-7);
   const lock=ALLY_DEATH_CONFIG.riseLockSeconds;
   assert.ok(birth.initialRemaining>0&&birth.initialRemaining<=lock);
   assert.ok(Math.abs(birth.initialRemaining+birth.bornAt-proof.preparedAt-proof.preparedCorpse.infectionRemaining-lock)<1e-8);

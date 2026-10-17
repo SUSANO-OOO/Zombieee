@@ -61,7 +61,8 @@ export function v177JointPose(kind, sample, runtime, { ownedPose=false,actor,wor
   if(sample?.attackVariant && !variant) { rememberRenderedJointPose(actor,kind,null); return null; }
   const phase=cycle(runtime?.locomotionPhase);
   const phaseIndex=Math.floor(phase*atlas.frameCount) % atlas.frameCount;
-  const settleIndex=Math.round(clamp(runtime?.locomotionSettle ?? 1)*(atlas.settleLevels-1));
+  const settleFrame=clamp(runtime?.locomotionSettle ?? 1)*(atlas.settleLevels-1);
+  const settleIndex=atlas.type==='rigid-parts'?Math.floor(settleFrame):Math.round(settleFrame);
   // The feet keep the last actual-travel phase through aiming and firing.
   // Only their lift settles to the floor; attacking never substitutes a
   // different fixed stance or advances a walking clock while stationary.
@@ -79,11 +80,19 @@ export function v177JointPose(kind, sample, runtime, { ownedPose=false,actor,wor
     const attackBase=variant?.startIndex??atlas.lowerCount;
     const attackFrame=(attackPhase??0)*atlas.frameCount,attackIndex=Math.floor(attackFrame);
     const nextPhase=(phaseIndex+1)%atlas.frameCount,blend=phase*atlas.frameCount-phaseIndex;
+    // The runtime already eases stopping continuously. Bracket its original
+    // authored rows as well, rather than jumping between four rounded poses.
+    // Both axes meet at the existing pivots before fixed-length IK resolves
+    // the limbs. No second bitmap, captured-pose allocation or clock is used.
+    const nextSettle=Math.min(atlas.settleLevels-1,settleIndex+1),settleBlend=settleFrame-settleIndex;
+    const offset=atlas.pelvisOffsets[settleIndex][phaseIndex]*(1-blend)+atlas.pelvisOffsets[settleIndex][nextPhase]*blend;
+    const nextOffset=atlas.pelvisOffsets[nextSettle][phaseIndex]*(1-blend)+atlas.pelvisOffsets[nextSettle][nextPhase]*blend;
     return {lowerIndex,lowerNextIndex:settleIndex*atlas.frameCount+nextPhase,lowerBlend:blend,
       upperIndex:attackPhase===null?lowerIndex:attackBase+attackIndex,
       upperNextIndex:attackPhase===null?settleIndex*atlas.frameCount+nextPhase:attackBase+Math.min(atlas.frameCount,attackIndex+1),
       upperBlend:attackPhase===null?blend:attackFrame-attackIndex,phase,settleIndex,attackPhase,
-      upperOffsetY:atlas.pelvisOffsets[settleIndex][phaseIndex]*(1-blend)+atlas.pelvisOffsets[settleIndex][nextPhase]*blend};
+      settleFrameOffset:(nextSettle-settleIndex)*atlas.frameCount,settleBlend,
+      upperOffsetY:offset+(nextOffset-offset)*settleBlend};
   }
   const upperIndex=atlas.lowerCount+(attackPhase===null ? 0 : 1+Math.round(attackPhase*atlas.frameCount));
   const plan={lowerIndex,upperIndex,phase,settleIndex,attackPhase,
@@ -358,13 +367,29 @@ function interpolatedMatrix(out,atlas,plan,bone,upper,applyUpperOffset=true){
   const a=atlas.poses[upper?plan.upperIndex:plan.lowerIndex][bone];
   const b=atlas.poses[upper?plan.upperNextIndex:plan.lowerNextIndex][bone];
   const p=upper?plan.upperBlend:plan.lowerBlend,angleA=Math.atan2(a[1],a[0]),angleB=Math.atan2(b[1],b[0]);
-  const delta=Math.atan2(Math.sin(angleB-angleA),Math.cos(angleB-angleA)),angle=angleA+delta*p,c=Math.cos(angle),s=Math.sin(angle);
+  const delta=Math.atan2(Math.sin(angleB-angleA),Math.cos(angleB-angleA));
+  let angle=angleA+delta*p;
+  const settleBlend=upper&&plan.attackPhase!==null?0:plan.settleBlend??0;
+  const settleOffset=plan.settleFrameOffset??0;
+  const rowA=settleBlend>0?atlas.poses[(upper?plan.upperIndex:plan.lowerIndex)+settleOffset][bone]:a;
+  const rowB=settleBlend>0?atlas.poses[(upper?plan.upperNextIndex:plan.lowerNextIndex)+settleOffset][bone]:b;
+  if(settleBlend>0){
+    const rowAngleA=Math.atan2(rowA[1],rowA[0]),rowAngleB=Math.atan2(rowB[1],rowB[0]);
+    const rowAngle=rowAngleA+Math.atan2(Math.sin(rowAngleB-rowAngleA),Math.cos(rowAngleB-rowAngleA))*p;
+    angle+=Math.atan2(Math.sin(rowAngle-angle),Math.cos(rowAngle-angle))*settleBlend;
+  }
+  const c=Math.cos(angle),s=Math.sin(angle);
   out[0]=c;out[1]=s;out[2]=-s;out[3]=c;
   // A source-bound soft organ can inflate; the head, torso and limb bones
   // retain the existing rigid path. Never interpolate limb scale.
   if(atlas.softBones?.[bone]){
-    const sx=Math.hypot(a[0],a[1])+(Math.hypot(b[0],b[1])-Math.hypot(a[0],a[1]))*p;
-    const sy=Math.hypot(a[2],a[3])+(Math.hypot(b[2],b[3])-Math.hypot(a[2],a[3]))*p;
+    let sx=Math.hypot(a[0],a[1])+(Math.hypot(b[0],b[1])-Math.hypot(a[0],a[1]))*p;
+    let sy=Math.hypot(a[2],a[3])+(Math.hypot(b[2],b[3])-Math.hypot(a[2],a[3]))*p;
+    if(settleBlend>0){
+      const rowSx=Math.hypot(rowA[0],rowA[1])+(Math.hypot(rowB[0],rowB[1])-Math.hypot(rowA[0],rowA[1]))*p;
+      const rowSy=Math.hypot(rowA[2],rowA[3])+(Math.hypot(rowB[2],rowB[3])-Math.hypot(rowA[2],rowA[3]))*p;
+      sx+=(rowSx-sx)*settleBlend;sy+=(rowSy-sy)*settleBlend;
+    }
     out[0]*=sx;out[1]*=sx;out[2]*=sy;out[3]*=sy;
   }
   const pivot=atlas.interpolationPivots?.[bone];
@@ -374,10 +399,17 @@ function interpolatedMatrix(out,atlas,plan,bone,upper,applyUpperOffset=true){
     // outside the arm's fixed reach between two perfectly valid source keys.
     const [px,py]=pivot,ax=a[0]*px+a[2]*py+a[4],ay=a[1]*px+a[3]*py+a[5];
     const bx=b[0]*px+b[2]*py+b[4],by=b[1]*px+b[3]*py+b[5];
-    out[4]=ax+(bx-ax)*p-c*px+s*py;out[5]=ay+(by-ay)*p-s*px-c*py;
+    let targetX=ax+(bx-ax)*p,targetY=ay+(by-ay)*p;
+    if(settleBlend>0){
+      const rowAx=rowA[0]*px+rowA[2]*py+rowA[4],rowAy=rowA[1]*px+rowA[3]*py+rowA[5];
+      const rowBx=rowB[0]*px+rowB[2]*py+rowB[4],rowBy=rowB[1]*px+rowB[3]*py+rowB[5];
+      targetX+=(rowAx+(rowBx-rowAx)*p-targetX)*settleBlend;
+      targetY+=(rowAy+(rowBy-rowAy)*p-targetY)*settleBlend;
+    }
+    out[4]=targetX-c*px+s*py;out[5]=targetY-s*px-c*py;
     if(atlas.softBones?.[bone]){
-      out[4]=ax+(bx-ax)*p-out[0]*px-out[2]*py;
-      out[5]=ay+(by-ay)*p-out[1]*px-out[3]*py;
+      out[4]=targetX-out[0]*px-out[2]*py;
+      out[5]=targetY-out[1]*px-out[3]*py;
     }
     // Child jaw/throat paint follows the interpolated head anchor exactly.
     // Independently interpolating two world-space pivots can detach a hinge.
@@ -386,6 +418,10 @@ function interpolatedMatrix(out,atlas,plan,bone,upper,applyUpperOffset=true){
     }
   }else{
     out[4]=a[4]+(b[4]-a[4])*p;out[5]=a[5]+(b[5]-a[5])*p;
+    if(settleBlend>0){
+      out[4]+=(rowA[4]+(rowB[4]-rowA[4])*p-out[4])*settleBlend;
+      out[5]+=(rowA[5]+(rowB[5]-rowA[5])*p-out[5])*settleBlend;
+    }
   }
   if(applyUpperOffset&&upper&&plan.attackPhase!==null)out[5]+=plan.upperOffsetY;
   return out;

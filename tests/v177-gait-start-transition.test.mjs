@@ -3,6 +3,7 @@ import test from 'node:test';
 import { createCombatAnimationRuntime, advanceCombatAnimationRuntime } from '../app/combatPresentation.js';
 import { spriteKinds } from '../app/spriteManifest.js';
 import { V177_JOINT_ATLASES, v177JointCycleDistance, v177JointPose } from '../app/v177JointPresentation.js';
+import { jointPaintedPartCorners } from './helpers/v177-render-trace.mjs';
 
 test('all48 original rigs begin a moving stride from their planted pose instead of lifting in one update',()=>{
   assert.equal(spriteKinds.length,48);
@@ -18,7 +19,22 @@ test('all48 original rigs begin a moving stride from their planted pose instead 
     assert.equal(runtime.state,'start-move',kind);
     assert.ok(Math.abs(runtime.locomotionPhase-phase-x/stride)<1e-12,kind);
     assert.ok(runtime.locomotionSettle>.9&&runtime.locomotionSettle<1,`${kind}: a new stride instantly changed its lift`);
-    assert.equal(Math.floor(plan.lowerIndex/atlas.frameCount),atlas.settleLevels-1,`${kind}: first draw discarded the planted pose`);
+    if(atlas.type!=='rigid-parts')assert.equal(Math.floor(plan.lowerIndex/atlas.frameCount),atlas.settleLevels-1,`${kind}: first draw discarded the planted pose`);
+    // A bracketing row number alone cannot describe the painted pose. At the
+    // same already-advanced travel phase, actual paint tends to the planted
+    // source as the start interval tends to zero. The real movement above
+    // and its quick response below remain independent requirements.
+    const errors=[];
+    for(const startDt of [dt,dt/10,dt/100,dt/1000]){
+      const start=advanceCombatAnimationRuntime(initial,{kind,x,y:0,moving:true,locomotionCycleDistance:stride},startDt);
+      const sample={requestedState:start.state,clipProgress:0};
+      const painted=jointPaintedPartCorners(kind,v177JointPose(kind,sample,start));
+      const planted=jointPaintedPartCorners(kind,v177JointPose(kind,sample,{...start,locomotionSettle:1}));
+      assert.equal(painted.length,planted.length);
+      errors.push(Math.max(...painted.map((p,i)=>Math.hypot(p[0]-planted[i][0],p[1]-planted[i][1]))));
+    }
+    for(let i=1;i<errors.length;i++)assert.ok(errors[i]<=errors[i-1]+1e-10,`${kind}: first paint does not tend to its plant`);
+    assert.ok(errors.at(-1)<=errors[0]*.01+1e-8,`${kind}: continuous start has a nonzero pose jump`);
     // Keep the existing quick response: the running pose must be available
     // after a short continuous start, without slowing actual travel.
     for(let frame=1;frame<=12;frame++)runtime=advanceCombatAnimationRuntime(runtime,

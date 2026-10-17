@@ -23,6 +23,7 @@ export const NATIVE_GAME_CAPTURE_SOURCES = Object.freeze([
   'scripts/v177-continuous-draw-readiness.mjs', 'scripts/v177-continuous-render-contract.mjs',
   'scripts/v177-enemy-live-render-contract.mjs', 'scripts/v100-title-qa-entry.mjs',
   'app/v177ContinuousProof.js', 'app/v177JointPresentation.js', 'app/v177EnemyJointData.js',
+  'tests/v177-settle-continuity.test.mjs',
   'app/combatPresentation.js', 'app/v102CombatMotion.js', 'app/AshfallGame.tsx',
   'app/v177JointData.js', 'app/v177FirearmJointData.js', 'app/v177RangerUpperMotion.js',
   'app/v177LivingStun.js', 'public/asset-manifest.json',
@@ -36,7 +37,7 @@ export const NATIVE_GAME_CAPTURE_SOURCES = Object.freeze([
   'public/art/v100/joints/walker-r1.webp',
   'app/v177TurnedGetupDeath.js','app/v177CorpseJointPresentation.js',
   'app/v177TurnedGetupProof.js','scripts/v177-native-turned-getup.mjs','tests/v177-native-turned-getup.test.mjs',
-  'app/combatLifecycle.js','tests/v177-native-canvas-clips.test.mjs','app/v102CorpsePose.js','app/v102CorpsePoseData.js',
+  'app/combatLifecycle.js','app/corpseVisuals.js','tests/v177-native-canvas-clips.test.mjs','app/v102CorpsePose.js','app/v102CorpsePoseData.js',
   'public/art/v100/joints/brawler-r1.webp','public/art/v100/characters/paisen-photo-battle-v177.png',
 ]);
 const acceptance = () => ({ originalSpeedAccepted: false, encodedPtsVerified: false,

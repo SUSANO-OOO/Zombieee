@@ -5,6 +5,7 @@ import ts from 'typescript';
 import {createHash} from 'node:crypto';
 import {armV177TurnedGetupProof,releaseV177TurnedGetupProof,readV177TurnedGetupProof} from '../app/v177TurnedGetupProof.js';
 import {createAllyLifecycle,beginAllyDeath,advanceAllyLifecycle} from '../app/combatLifecycle.js';
+import {allyCorpseVisualCue} from '../app/corpseVisuals.js';
 import {createBattleDefinition,battleOutcomeFor} from '../app/battleDefinitions.js';
 import {createEnemySpawnRuntime} from '../app/gameRules.js';
 import {V100_STAGE_IDS} from '../app/v100Registry.js';
@@ -67,8 +68,11 @@ test('world-local observations discover only an actual matching new ID and isola
 });
 
 function contractFixture(variant=0) {
-  const {proof}=prepared(variant),bornAt=76.81,birth={corpseId:42,actorId:99,bornAt,initialRemaining:.74,
-    variant:proof.expectedVariant,variantBasis:'source-bound-fall',floorY:305,source:{at:76.8,sourceBound:true,recordedAfterPaint:true,paintedFloorY:305}};
+  const {proof}=prepared(variant),bornAt=76.81,sourceAt=76.79,floorY=proof.preparedCorpse.y+5;
+  const sourceCue=allyCorpseVisualCue(advanceAllyLifecycle(proof.preparedCorpse,sourceAt-proof.preparedAt),sourceAt);
+  const birth={corpseId:42,actorId:99,bornAt,initialRemaining:.74,
+    variant:proof.expectedVariant,variantBasis:'source-bound-fall',floorY,
+    source:{at:sourceAt,sourceBound:true,recordedAfterPaint:true,physicalFloorY:floorY,paintedFloorY:floorY+sourceCue.tremorY}};
   const pose=v177CaptureJointPose('turned',v177JointPose('turned',{requestedState:'idle'},{locomotionPhase:0,locomotionSettle:1}));
   const draw=(sequence,progress)=>({renderSequence:sequence,renderKind:'turned',jointAtlasPath:V177_JOINT_ATLASES.turned.path,
     jointDrawSucceeded:true,jointPaintedAt:progress===null?77.56+sequence*.001:bornAt+progress*.75-.01,
@@ -102,6 +106,22 @@ test('the receipt contract fails closed on a replaced newborn, source, clock, pr
     const {row}=contractFixture();mutate(row);assert.throws(()=>assertNativeTurnedGetup(row));
   }
   const {row}=contractFixture();row.samples.at(-1).draws=[];assert.equal(nativeTurnedGetupReady(row),false);
+});
+
+test('the original infection tremor has its own strict painted-floor owner and cannot hide physical or source drift',()=>{
+  for(const variant of [0,1]){
+    const {row}=contractFixture(variant),birth=row.samples.at(-1).actualBirth;
+    const cue=allyCorpseVisualCue(advanceAllyLifecycle(row.proof.preparedCorpse,birth.source.at-row.proof.preparedAt),birth.source.at);
+    assert.ok(cue.tremorY>1e-4);assert.ok(Math.abs(birth.source.paintedFloorY-birth.floorY-cue.tremorY)<1e-12);
+    assert.equal(assertNativeTurnedGetup(row).wholeGameAccepted,false);
+  }
+  for(const mutate of [r=>{r.samples.at(-1).actualBirth.source.physicalFloorY+=1e-5;},
+    r=>{r.samples.at(-1).actualBirth.source.paintedFloorY+=1e-5;},
+    r=>{const b=r.samples.at(-1).actualBirth;b.source.paintedFloorY=b.floorY;},
+    r=>{r.proof.preparedCorpse.y+=1e-5;},r=>{r.proof.preparedCorpse.id++;},
+    r=>{r.samples.at(-1).actualBirth.source.at=r.samples.at(-1).actualBirth.bornAt;}]){
+    const {row}=contractFixture();mutate(row);assert.throws(()=>assertNativeTurnedGetup(row));
+  }
 });
 
 test('actual capture ownership releases after native start and preserves the original failure through cleanup',async()=>{
