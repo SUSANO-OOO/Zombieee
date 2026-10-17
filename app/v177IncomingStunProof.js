@@ -57,6 +57,7 @@ export function recordV177IncomingStunDraw(world,fighter,drawSucceeded,plan,audi
   state.draws.push({at:world.time,proofId:state.proof.proofId,battleGeneration:world.battleAudioGeneration,
     renderSequence:audit.renderSequence,requestedState:audit.requestedState,
     renderKind:audit.renderKind,jointAtlasPath:audit.jointAtlasPath,jointDrawSucceeded:Boolean(drawSucceeded),
+    jointWeightedLowerDrawSucceeded:audit.jointWeightedLowerDrawSucceeded===true,jointWeightedLower:audit.jointWeightedLower?{...audit.jointWeightedLower}:null,
     liveStun:Boolean(plan?.liveStun),stunRemaining:plan?.stunRemaining??null,stunElapsed:plan?.stunElapsed??null,
     hp:fighter.hp,flash:fighter.flash,stunned:fighter.stunned,attack:fighter.attack,attackWindup:fighter.attackWindup,
     abilityWindup:fighter.abilityWindup,manualAbilityPhase:fighter.manualAbility?.phase??null,

@@ -101,7 +101,9 @@ function rowFixture(){
     const plan=v177JointPose('ranger',state==='incapacitated'?v177LivingStunSample('ranger'):{requestedState:state},runtime,
       {actor,stunRemaining:actor.stunned});traceRangerPose(plan,{actor});
     recordV177IncomingStunDraw(world,actor,true,plan,{renderSequence:sequence++,renderKind:'ranger',requestedState:state,
-      jointAtlasPath:'/art/v100/joints/ranger-r2.webp'});
+      // Synthetic validator receipt; real lower paint has its own RGBA tests.
+      jointAtlasPath:'/art/v100/joints/ranger-r3.webp',jointWeightedLowerDrawSucceeded:true,
+      jointWeightedLower:{mode:'continuous-weighted-mesh',phase:.371,settle:.5,parts:5,meshVertices:130,meshTriangles:192,coverageSamples:4,duplicateWithinPart:0,degenerate:0}});
   };
   const sample=()=>{
     const observed=readV177IncomingStunProof(world,afterSequence);afterSequence=observed.draws.at(-1)?.renderSequence??afterSequence;
@@ -160,6 +162,8 @@ test('wrong bindings, injected/inert stats, pre-record hits, labels without pain
     row=>row.samples.at(-1).impacts[0].sourceId=row.proof.fighterId,
     row=>row.samples.at(-1).impacts[1].stunned=0,row=>row.samples.at(-1).impacts[1].abilityTargetIds=[],
     row=>{for(const sample of row.samples)for(const draw of sample.draws)draw.jointDrawSucceeded=false;},
+    row=>{for(const sample of row.samples)for(const draw of sample.draws)draw.jointWeightedLowerDrawSucceeded=false;},
+    row=>{for(const sample of row.samples)for(const draw of sample.draws)draw.jointWeightedLower.mode='legacy-cell-fallback';},
     row=>{for(const sample of row.samples)for(const draw of sample.draws)draw.liveStun=false;},
     row=>{for(const sample of row.samples)for(const draw of sample.draws)if(draw.liveStun)draw.upperPose=null;},
     row=>{for(const sample of row.samples)for(const draw of sample.draws)if(draw.liveStun)draw.attack=.1;},

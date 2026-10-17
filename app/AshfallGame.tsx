@@ -4,7 +4,7 @@ import { v177PaisenPhotoComboJointPose } from './v177PaisenPhotoCombo.js';
 import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
 import { v100BasePresentationFor } from "./v100BasePresentation.js";
 import { createV100HumanWalkRenderer, v100HumanWalkPhase, v100UsesHumanWalk, v100HumanWalkCycleDistance, v100HumanWalkFrame } from "./v100HumanWalk.js";
-import { V177_JOINT_ATLASES, v177JointCycleDistance, v177JointPose, drawV177JointPose, v177CaptureJointPose, v177RenderedJointWeaponSocket } from "./v177JointPresentation.js";
+import { V177_JOINT_ATLASES, v177JointCycleDistance, v177JointPose, drawV177JointPose, v177CaptureJointPose, v177RenderedJointWeaponSocket, v177RenderedWeightedLowerReceipt } from "./v177JointPresentation.js";
 import { v177LivingStunState, v177LivingStunSample, v177RangerLivingStunSample } from "./v177LivingStun.js";
 import { rememberV177CorpseJointPose, pruneV177CorpseJointPoses, v177LiveJointGroundLift, v177CorpseJointPresentation, drawV177CorpseJointPresentation } from "./v177CorpseJointPresentation.js";
 import { pruneV177JointActorHistory } from "./v177JointActorHistory.js";
@@ -4128,6 +4128,8 @@ type FighterRenderAudit = {
   articulatedWalkPhase?: number | null;
   jointAtlasPath?: string | null;
   jointDrawSucceeded?: boolean;
+  jointWeightedLowerDrawSucceeded?: boolean;
+  jointWeightedLower?: ReturnType<typeof v177RenderedWeightedLowerReceipt>;
   jointPaintedAt?: number;
   jointGetupProgress?: number | null;
   jointGetupVariant?: string | null;
@@ -4622,6 +4624,10 @@ function drawSpriteFighter(
     if(audit) {
       audit.jointDrawSucceeded=Boolean(jointPose&&drewArticulatedWalk);
       if(audit.jointDrawSucceeded)audit.jointPaintedAt=options.world?.time;
+      if(renderKind==='ranger'){
+        audit.jointWeightedLower=v177RenderedWeightedLowerReceipt(f,options.world);
+        audit.jointWeightedLowerDrawSucceeded=audit.jointDrawSucceeded&&audit.jointWeightedLower?.mode==='continuous-weighted-mesh';
+      }
     }
   }
   if(fighterRenderAuditEnabled&&recordAudit&&jointPose?.turnedGetup) {

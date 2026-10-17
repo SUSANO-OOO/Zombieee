@@ -13,6 +13,8 @@ import { V177_INFECTED_JOINT_ATLASES as infectedAtlases } from './v177InfectedJo
 import { V177_FERAL_JOINT_ATLASES as feralAtlases } from './v177FeralJointData.js';
 import { V177_FUTAGO_JOINT_ATLASES as futagoAtlases } from './v177FutagoJointData.js';
 import { v177RangerCarryPose } from './v177RangerUpperMotion.js';
+import { v177RangerLowerBob } from './v177RangerLowerMotion.js';
+import { drawV177RangerLower } from './v177RangerLowerPaint.js';
 import { v177JointActorKey } from './v177JointActorHistory.js';
 
 const locomotionStates = new Set(['idle','deploy','move','start-move','stop-move','turn','retreat']);
@@ -22,11 +24,15 @@ const hitStates = new Set(['hit','hit-light','hit-heavy']);
 const renderedJointPoses = new WeakMap();
 const livingStunPoses = new WeakMap();
 const actorKey = actor => actor && typeof actor === 'object' ? actor : null;
-function rememberRenderedJointPose(actor,kind,plan) {
+function rememberRenderedJointPose(actor,kind,plan,lowerReceipt=null) {
   const key=actorKey(actor);
   if(!key)return;
-  if(plan)renderedJointPoses.set(key,{kind,plan:{...plan}});
+  if(plan)renderedJointPoses.set(key,{kind,plan:{...plan},lowerReceipt});
   else { renderedJointPoses.delete(key); livingStunPoses.delete(key); }
+}
+export function v177RenderedWeightedLowerReceipt(actor,world) {
+  const entry=renderedJointPoses.get(v177JointActorKey(actor,world));
+  return entry?.kind==='ranger'&&entry.lowerReceipt?{...entry.lowerReceipt}:null;
 }
 const clamp = p => Math.max(0, Math.min(1, Number(p) || 0));
 const cycle = p => ((Number(p) || 0) % 1 + 1) % 1;
@@ -97,6 +103,7 @@ export function v177JointPose(kind, sample, runtime, { ownedPose=false,actor,wor
   const upperIndex=atlas.lowerCount+(attackPhase===null ? 0 : 1+Math.round(attackPhase*atlas.frameCount));
   const plan={lowerIndex,upperIndex,phase,settleIndex,attackPhase,
     upperOffsetY:atlas.pelvisOffsets[settleIndex][phaseIndex]};
+  if(atlas.upperRig&&atlas.lowerRig){plan.lowerSettle=clamp(runtime?.locomotionSettle??1);plan.upperOffsetY=v177RangerLowerBob(phase,plan.lowerSettle);}
   if(atlas.upperRig){
     const rig=atlas.upperRig,frame=(attackPhase??0)*rig.frameCount,index=Math.floor(frame);
     const first=attackPhase===null?0:rig.attackStartIndex+index;
@@ -269,10 +276,10 @@ function rangerLivingStunJointPose(kind,atlas,runtime,actor,remaining) {
     transform=[c,s,-s,c,px-c*px+s*py,py-s*px-c*py];
     for(const bone of Object.keys(upper))upper[bone]=multiplyMatrix(transform,upper[bone]);
   }
-  // The original weighted lower remains a single original cell, with its
-  // matching pelvis offset. Never crossfade a second pair of painted feet.
+  // Keep the last painted lower at entry, then use the same continuous source
+  // pose as neutral. No mutable painter buffer enters this actor history.
   const lower=elapsed===0?entry.plan:neutral;
-  return {...neutral,lowerIndex:lower.lowerIndex,upperOffsetY:lower.upperOffsetY,phase:lower.phase,settleIndex:lower.settleIndex,
+  return {...neutral,lowerIndex:lower.lowerIndex,lowerSettle:lower.lowerSettle,upperOffsetY:lower.upperOffsetY,phase:lower.phase,settleIndex:lower.settleIndex,
     liveStun:true,rangerStunUpperPose:upper,rangerStunUpperTransform:transform,stunElapsed:elapsed,stunRemaining:remaining};
 }
 
@@ -330,9 +337,13 @@ export function drawV177JointPose(ctx, image, kind, plan, x, y, width, height, {
     ctx.restore();rememberRenderedJointPose(actor,kind,plan);return true;
   }
   if(atlas.upperRig&&plan.upperRigPlan&&plan.upperRigPoses){
-    const {source:s,destination:d}=atlas.frames[plan.lowerIndex];
-    ctx.drawImage(image,s.x,s.y,s.w,s.h,x+d.x/atlas.width*width,y+d.y/atlas.height*height,
-      d.w/atlas.width*width,d.h/atlas.height*height);
+    const lowerReceipt=atlas.lowerRig?drawV177RangerLower(ctx,image,atlas.lowerRig,plan,x,y,width,height):null;
+    if(!lowerReceipt||lowerReceipt.mode==='legacy-cell-fallback'){
+      const {source:s,destination:d}=atlas.frames[plan.lowerIndex];
+      const oldBob=atlas.pelvisOffsets[plan.settleIndex][Math.floor(plan.phase*atlas.frameCount)%atlas.frameCount];
+      ctx.drawImage(image,s.x,s.y,s.w,s.h,x+d.x/atlas.width*width,y+(d.y+plan.upperOffsetY-oldBob)/atlas.height*height,
+        d.w/atlas.width*width,d.h/atlas.height*height);
+    }
     const rig={...atlas.upperRig,poses:plan.upperRigPoses};
     const matrix=new Float64Array(6),scratch=[new Float64Array(6),new Float64Array(6)];
     ctx.save();ctx.translate(x,y);ctx.scale(width/atlas.width,height/atlas.height);ctx.translate(0,plan.upperOffsetY);
@@ -344,7 +355,7 @@ export function drawV177JointPose(ctx, image, kind, plan, x, y, width, height, {
       ctx.drawImage(image,source.x,source.y,source.w,source.h,destination.x,destination.y,destination.w,destination.h);
       ctx.restore();
     }
-    ctx.restore();rememberRenderedJointPose(actor,kind,plan);return true;
+    ctx.restore();rememberRenderedJointPose(actor,kind,plan,lowerReceipt);return true;
   }
   for(const [index,dy] of [[plan.lowerIndex,0],[plan.upperIndex,plan.upperOffsetY]]) {
     const {source:s,destination:d}=atlas.frames[index];

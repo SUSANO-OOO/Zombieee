@@ -33,6 +33,13 @@ export function assertV177AuthoredLiveRender({form,phase,proof,samples}){
       assert.ok([r.x,r.y,r.poseScaleX,r.poseScaleY,r.renderSequence].every(Number.isFinite));
       assert.equal(r.jointAtlasPath,path,'actual live art must use this body’s connected texture');
       assert.ok(Number.isInteger(r.jointLowerFrame)&&Number.isInteger(r.jointUpperFrame));
+      if(form==='ranger'){
+        assert.equal(r.jointWeightedLowerDrawSucceeded,true,'Ranger must actually paint its continuous weighted lower');
+        assert.equal(r.jointWeightedLower?.mode,'continuous-weighted-mesh','A legacy fallback is not continuous mesh evidence');
+        assert.equal(r.jointWeightedLower.parts,5);assert.equal(r.jointWeightedLower.meshVertices,130);assert.equal(r.jointWeightedLower.meshTriangles,192);
+        assert.equal(r.jointWeightedLower.coverageSamples,4);assert.equal(r.jointWeightedLower.duplicateWithinPart,0);assert.equal(r.jointWeightedLower.degenerate,0);
+        assert.ok(Number.isFinite(r.jointWeightedLower.phase)&&r.jointWeightedLower.settle>=0&&r.jointWeightedLower.settle<=1);
+      }
       if(['wind-up','active','recovery'].includes(r.requestedState))assert.ok(Number.isFinite(r.renderedWeaponSocket?.x)&&Number.isFinite(r.renderedWeaponSocket?.y),'live attack origin must follow the drawn weapon or mouth');
     }
   }

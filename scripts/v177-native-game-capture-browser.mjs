@@ -26,8 +26,9 @@ export const NATIVE_GAME_CAPTURE_SOURCES = Object.freeze([
   'tests/v177-settle-continuity.test.mjs',
   'app/combatPresentation.js', 'app/v102CombatMotion.js', 'app/AshfallGame.tsx',
   'app/v177JointData.js', 'app/v177FirearmJointData.js', 'app/v177RangerUpperMotion.js',
+  'app/v177RangerLowerMotion.js','app/v177RangerLowerPaint.js','tests/v177-ranger-continuous-lower.test.mjs',
   'app/v177LivingStun.js', 'public/asset-manifest.json',
-  'public/art/v100/joints/ranger-r2.webp', 'public/art/v100/joints/medic-r1.webp',
+  'public/art/v100/joints/ranger-r3.webp', 'public/art/v100/joints/medic-r1.webp',
   'public/art/v100/joints/engineer-r1.webp', 'public/art/v100/joints/crusher-r1.webp',
   'scripts/v177-native-incoming-stun.mjs','tests/v177-native-incoming-stun.test.mjs',
   'app/v177IncomingStunProof.js','app/v090Infected.js','app/v177InfectedJointData.js',
@@ -114,6 +115,7 @@ export function readNativeGameCaptureSample({ fighterId, targetId, performanceBo
       assetReady: r.assetReady, x: r.x, y: r.y, renderWidth: r.renderWidth, renderHeight: r.renderHeight,
       poseScaleX: r.poseScaleX, poseScaleY: r.poseScaleY, requestedState: r.requestedState,
       actualXDelta: r.actualXDelta, jointAtlasPath: r.jointAtlasPath, jointLowerFrame: r.jointLowerFrame,
+      jointWeightedLowerDrawSucceeded:r.jointWeightedLowerDrawSucceeded,jointWeightedLower:r.jointWeightedLower,
       jointUpperFrame: r.jointUpperFrame, renderedWeaponSocket: r.renderedWeaponSocket })) };
 }
 

@@ -19,8 +19,8 @@ const pins={
 const basePath='/art/v100/joints/ranger-r1.webp';
 const baseSha='eb70556d6c4e0d53ec812da6b5a95de91dd0d4d6cb87cd6da1a0c0d61672ed5e';
 const baseFieldsSha='d1320ed433a08eebdf64047e5b1fb80e780be0bdfc3f322b0b71f21b27ae115e';
-const dataPath='app/v177JointData.js',assetPath='/art/v100/joints/ranger-r2.webp';
-const provenancePath='assets/source/v177/ranger/upper-r2/provenance.json';
+const dataPath='app/v177JointData.js',assetPath='/art/v100/joints/ranger-r3.webp';
+const provenancePath='assets/source/v177/ranger/lower-r3/provenance.json';
 const fieldNames=['key','width','height','frameCount','settleLevels','cycleDistance','frames','pelvisOffsets','muzzles','lowerCount'];
 
 export async function buildV177RangerUpper({root=process.cwd(),check=false}={}) {
@@ -61,10 +61,32 @@ export async function buildV177RangerUpper({root=process.cwd(),check=false}={}) 
     x+=w+2;rowHeight=Math.max(rowHeight,h);
   }
   assert.equal(rows.length,7);
-  const width=base.info.width,height=y+rowHeight+2,decodedBytes=width*height*4;
+  const width=base.info.width,upperHeight=y+rowHeight+2;
+  const lowerRows=[];x=2;y=upperHeight+2;rowHeight=0;
+  for(const name of definition.order){
+    if(!lower.has(name))continue;const part=definition.parts.find(p=>p.name===name),bytes=await readFile(path.join(sourceDir,part.file));
+    assert.equal(sha(bytes),part.sha256,'Changed original lower paint: '+name);
+    const raw=await sharp(bytes).ensureAlpha().raw().toBuffer({resolveWithObject:true});
+    let x0=raw.info.width,y0=raw.info.height,x1=-1,y1=-1;
+    for(let yy=0;yy<raw.info.height;yy++)for(let xx=0;xx<raw.info.width;xx++)if(raw.data[(yy*raw.info.width+xx)*4+3]>0){
+      x0=Math.min(x0,xx);y0=Math.min(y0,yy);x1=Math.max(x1,xx);y1=Math.max(y1,yy);
+    }
+    assert.ok(x1>=x0&&y1>=y0);x0=Math.max(0,x0-2);y0=Math.max(0,y0-2);x1=Math.min(raw.info.width-1,x1+2);y1=Math.min(raw.info.height-1,y1+2);
+    const destination={x:x0,y:y0,w:x1-x0+1,h:y1-y0+1},w=destination.w,h=destination.h;
+    if(x+w+2>width){x=2;y+=rowHeight+2;rowHeight=0;}
+    const pixels=await sharp(bytes).extract({left:x0,top:y0,width:w,height:h}).ensureAlpha().raw().toBuffer();
+    lowerRows.push({name,bone:part.bone??null,source:{x,y,w,h},destination,pixels,sourceSha256:part.sha256});
+    x+=w+2;rowHeight=Math.max(rowHeight,h);
+  }
+  assert.equal(lowerRows.length,5);
+  const height=y+rowHeight+2,decodedBytes=width*height*4;
   assert.ok(decodedBytes<=6*1024*1024,'Hybrid ranger exceeds existing decoded memory budget');
   const rgba=Buffer.alloc(decodedBytes);base.data.copy(rgba);
   for(const row of rows)for(let yy=0;yy<row.source.h;yy++)row.pixels.copy(rgba,
+    ((row.source.y+yy)*width+row.source.x)*4,yy*row.source.w*4,(yy+1)*row.source.w*4);
+  const oldUpper=await sharp(await readFile(path.join(root,'public/art/v100/joints/ranger-r2.webp'))).ensureAlpha().raw().toBuffer();
+  assert.ok(rgba.subarray(0,oldUpper.length).equals(oldUpper),'All original r2 cells and upper crops must remain exact');
+  for(const row of lowerRows)for(let yy=0;yy<row.source.h;yy++)row.pixels.copy(rgba,
     ((row.source.y+yy)*width+row.source.x)*4,yy*row.source.w*4,(yy+1)*row.source.w*4);
   // exact also retains RGB under alpha=0; every legacy decoded byte is a control.
   const asset=await sharp(rgba,{raw:{width,height,channels:4}}).webp({lossless:true,exact:true,effort:6}).toBuffer();
@@ -90,7 +112,19 @@ export async function buildV177RangerUpper({root=process.cwd(),check=false}={}) 
       {shoulder:[208,110],elbow:[188,144],wrist:[224,158],upperBone:'arm-0-upper',lowerBone:'arm-0-lower',parentBone:'spine',effectorBone:'weapon-0'},
       {shoulder:[253,114],elbow:[260,173],wrist:[283,191],upperBone:'arm-1-upper',lowerBone:'arm-1-lower',parentBone:'spine',effectorBone:'weapon-0'},
     ]};
-  const data={ranger:{...original,path:assetPath,decodedWidth:width,decodedHeight:height,decodedBytes,upperRig}};
+  const smooth=t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t);};
+  const lowerRig={spanPx:definition.motion.walk.spanPx,liftPx:definition.motion.walk.liftPx,stanceFraction:.62,
+    parts:lowerRows.map(({pixels,...row})=>{void pixels;return row;}),legs:['far-pants','near-pants'].map((name,i)=>{
+      const p=definition.parts.find(v=>v.name===name),upperLength=Math.hypot(p.knee[0]-p.hip[0],p.knee[1]-p.hip[1]),lowerLength=Math.hypot(p.ankle[0]-p.knee[0],p.ankle[1]-p.knee[1]);
+      const rings=[-.3,0,.2,.4,.6,.8,1].map(t=>upperLength*t).concat([.2,.4,.6,.8,1,1.2].map(t=>upperLength+lowerLength*t));
+      const mesh=motion.meshDefinitions[name];assert.equal(mesh.sourcePositions.length,65);assert.equal(mesh.triangles.length,96);
+      return {name,hip:p.hip,knee:p.knee,ankle:p.ankle,upperBone:p.upperBone,lowerBone:p.lowerBone,footBone:'leg-'+i+'-foot',upperLength,lowerLength,
+        bendSign:Math.sign(-(p.ankle[1]-p.hip[1])*(p.knee[0]-p.hip[0])+(p.ankle[0]-p.hip[0])*(p.knee[1]-p.hip[1])),offset:i===0?.5:0,
+        footCenter:definition.motion.walk.footCentersPx[i],groundAnkle:definition.motion.walk.groundAnkleY[i],
+        weights:rings.flatMap(arc=>Array(5).fill(smooth((arc-upperLength+p.blendHalfWidthPx)/(2*p.blendHalfWidthPx)))),
+        sourcePositions:mesh.sourcePositions.flat(),triangles:mesh.triangles.flat()};
+    })};
+  const data={ranger:{...original,path:assetPath,decodedWidth:width,decodedHeight:height,decodedBytes,upperRig,lowerRig}};
   const dataBytes=Buffer.from('// Generated by scripts/build-v177-ranger-upper.mjs; original weighted lower cells and same-source continuous upper rig.\nexport const V177_JOINT_ATLASES = Object.fromEntries(Object.entries('+JSON.stringify(data)+'));\n');
   const generator=await readFile(new URL(import.meta.url)),carry=await readFile(path.join(root,'app/v177RangerUpperMotion.js'));
   const provenance={schema:'zombieee-ranger-hybrid/1',kind:'ranger',assetPath,bytes:asset.length,sha256:sha(asset),decodedBytes,
@@ -99,7 +133,11 @@ export async function buildV177RangerUpper({root=process.cwd(),check=false}={}) 
     parts:partBindings,sourceOrder:upperRig.parts.map(p=>p.name),attackFrames:{source:'original evaluated Blender attack',keys:31,frameStep:2},
     derivedMotion:true,originalWalkUpperFixed:true,carryRecipe:V177_RANGER_CARRY,
     generator:{file:'scripts/build-v177-ranger-upper.mjs',sha256:sha(generator),sharp:sharp.versions.sharp,vips:sharp.versions.vips},
-    carryImplementation:{file:'app/v177RangerUpperMotion.js',sha256:sha(carry)},data:{file:dataPath,sha256:sha(dataBytes)},
+    carryImplementation:{file:'app/v177RangerUpperMotion.js',sha256:sha(carry)},
+    lower:{parts:lowerRig.parts,sourceMeshVertices:130,sourceTriangles:192,preserveVolume:true,continuousActualTravel:true,coverageSamples:4,
+      retainedR2Rgba:true,retainedR2DecodedBytes:oldUpper.length},
+    lowerImplementations:await Promise.all(['app/v177RangerLowerMotion.js','app/v177RangerLowerPaint.js'].map(async file=>({file,sha256:sha(await readFile(path.join(root,file)))}))),
+    data:{file:dataPath,sha256:sha(dataBytes)},
     visualAcceptance:false,originalSpeedAcceptance:false,performanceAcceptance:false,allUnitAcceptance:false};
   const outputs=[['public'+assetPath,asset],[dataPath,dataBytes],[provenancePath,Buffer.from(JSON.stringify(provenance,null,2)+'\n')]];
   for(const [file,bytes]of outputs){const absolute=path.join(root,file);

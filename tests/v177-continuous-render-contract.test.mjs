@@ -14,7 +14,8 @@ const evidence=(form,phase='move')=>{
     fighter:{id:8,...identity,...stats,manualAbilityPhase:form==='mayo-chan-feral'?'feral':'ready',x:500+sign*i*3,attackSequence:phase==='attack'?1:0},
     renders:[{renderSequence:i+1,renderKind:form,assetReady:true,x:500+sign*i*3,y:285,renderWidth:150,renderHeight:140,
       poseScaleX:1,poseScaleY:1,requestedState:phase==='move'?'move':'active',actualXDelta:phase==='move'?sign*3:0,
-      jointAtlasPath:V177_JOINT_ATLASES[form].path,jointLowerFrame:phase==='move'?i:3,jointUpperFrame:120+i,renderedWeaponSocket:{x:510,y:260}}]}));
+      jointAtlasPath:V177_JOINT_ATLASES[form].path,jointLowerFrame:phase==='move'?i:3,jointUpperFrame:120+i,renderedWeaponSocket:{x:510,y:260},
+      ...(form==='ranger'?{jointWeightedLowerDrawSucceeded:true,jointWeightedLower:{mode:'continuous-weighted-mesh',phase:.37,settle:.5,parts:5,meshVertices:130,meshTriangles:192,coverageSamples:4,duplicateWithinPart:0,degenerate:0}}:{})}]}));
   return {form,phase,proof,samples,status:'passed'};
 };
 test('All 48 original bodies can require actual AI travel, attack motion and unchanged actor stats',()=>{

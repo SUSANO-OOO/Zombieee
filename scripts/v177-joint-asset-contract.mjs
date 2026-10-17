@@ -1,9 +1,9 @@
 // Exact source-bound runtime joints; historical Paisen source stays archived.
 export const V177_JOINT_ASSET_ADDITIONS = Object.freeze([
   {
-    "path": "/art/v100/joints/ranger-r2.webp",
-    "bytes": 940102,
-    "hash": "sha256-08440e6c182f562e3fda394a9f12b5e21ca0e9abfa95da104d1dc397f3a412db"
+    "path": "/art/v100/joints/ranger-r3.webp",
+    "bytes": 983840,
+    "hash": "sha256-75232265921b216bf7897c564bed939fadc4b1f04d36095801c6cf28731cfa5e"
   },
   {
     "path": "/art/v100/joints/mayo-r1.webp",

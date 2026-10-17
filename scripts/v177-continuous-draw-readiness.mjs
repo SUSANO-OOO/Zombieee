@@ -12,5 +12,6 @@ export function hasV177ContinuousDraw(proof) {
     && fighter.hp > 0 && Number.isFinite(fighter.x)
     && audit.renderHistory.some(render => render.renderKind === proof.renderKind
       && render.assetReady === true && render.renderWidth > 0 && render.renderHeight > 0
+      && (proof.renderKind!=='ranger'||render.jointWeightedLowerDrawSucceeded===true)
       && Number.isFinite(render.renderSequence) && render.renderSequence > 0);
 }

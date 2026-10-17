@@ -109,6 +109,7 @@ function fixture(phase, { form = 'abomination', failAt, cleanupFails = false, mu
         renderWidth: 150, renderHeight: 140, poseScaleX: 1, poseScaleY: 1,
         requestedState: active ? 'active' : 'move', actualXDelta: active ? 0 : sign * .8,
         jointAtlasPath: V177_JOINT_ATLASES[form].path, jointLowerFrame: i,
+        ...(form==='ranger'?{jointWeightedLowerDrawSucceeded:true,jointWeightedLower:{mode:'continuous-weighted-mesh',phase:.37,settle:.5,parts:5,meshVertices:130,meshTriangles:192,coverageSamples:4,duplicateWithinPart:0,degenerate:0}}:{}),
         jointUpperFrame: 120 + i, renderedWeaponSocket: { x: 600, y: 260 } }] };
     mutate?.(row); return row;
   };
@@ -353,7 +354,8 @@ test('the dedicated workflow is path-scoped, read-only, exact-head, built, bound
     'scripts/v177-native-turned-getup.mjs','tests/v177-native-turned-getup.test.mjs','tests/v177-native-canvas-clips.test.mjs',
     'app/v177TurnedGetupProof.js','app/v177TurnedGetupPresentation.js','app/v177TurnedGetupMotion.js',
     'app/v177TurnedGetupHandoff.js','app/v177TurnedGetupDeath.js','app/v177CorpseJointPresentation.js',
-    'app/v177JointPresentation.js','tests/v177-settle-continuity.test.mjs','app/corpseVisuals.js','app/AshfallGame.tsx']);
+    'app/v177JointPresentation.js','app/v177RangerLowerMotion.js','app/v177RangerLowerPaint.js','tests/v177-ranger-continuous-lower.test.mjs',
+    'tests/v177-settle-continuity.test.mjs','app/corpseVisuals.js','app/AshfallGame.tsx']);
   assert.deepEqual(workflow.permissions, { contents: 'read' }); assert.equal(workflow.concurrency['cancel-in-progress'], false);
   const job = workflow.jobs['native-game-capture']; assert.equal(job['runs-on'], 'macos-15-intel'); assert.equal(job['timeout-minutes'], 15);
   assert.equal(job.steps[0].with.ref, '${{ github.event.pull_request.head.sha }}'); assert.equal(job.steps[0].with['persist-credentials'], false);

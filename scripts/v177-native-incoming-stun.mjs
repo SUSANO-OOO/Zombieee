@@ -71,8 +71,10 @@ export function assertNativeIncomingStun(row) {
     assert.deepEqual(v177IncomingStunStats(sample.target),proof.original.source);
     for(const draw of sample.draws){
       assert.equal(draw.proofId,proof.proofId);assert.equal(draw.battleGeneration,proof.battleGeneration);
-      assert.equal(draw.renderKind,'ranger');assert.equal(draw.jointAtlasPath,'/art/v100/joints/ranger-r2.webp');
+      assert.equal(draw.renderKind,'ranger');assert.equal(draw.jointAtlasPath,'/art/v100/joints/ranger-r3.webp');
       assert.equal(draw.jointDrawSucceeded,true,'A pre-draw state label or sprite fallback is insufficient');
+      assert.equal(draw.jointWeightedLowerDrawSucceeded,true,'Continuous weighted lower must actually be painted');
+      assert.equal(draw.jointWeightedLower?.mode,'continuous-weighted-mesh');
       assert.ok(draw.hp>0&&Number.isFinite(draw.at)&&draw.at>=first.simulationTime&&draw.at<=sample.simulationTime
         &&Number.isSafeInteger(draw.renderSequence));
       if(uniqueDraws.has(draw.renderSequence))assert.deepEqual(uniqueDraws.get(draw.renderSequence),draw);
@@ -121,7 +123,8 @@ export async function captureNativeIncomingStunCase(page,row,deps) {
   try{
     row.proof=await page.evaluate(()=>window.__ASHFALL_BATTLE_QA__.prepareV177IncomingStunProof());
     await page.waitForFunction(({fighterId})=>window.__ASHFALL_BATTLE_QA__.getEnemyFacingRuntimeAudit(fighterId)
-      .renderHistory.some(draw=>draw.renderKind==='ranger'&&draw.jointAtlasPath==='/art/v100/joints/ranger-r2.webp'),row.proof,{timeout:5000});
+      .renderHistory.some(draw=>draw.renderKind==='ranger'&&draw.jointAtlasPath==='/art/v100/joints/ranger-r3.webp'
+        &&draw.jointWeightedLowerDrawSucceeded===true),row.proof,{timeout:5000});
     observation=await page.evaluateHandle(deps.startNativeGameRafObservation,row.proof);
     clip=await deps.beginV177NativeCanvasClip(page,{form:'ranger',requestedKind:'ranger',phase:'incoming-stun',
       fixtureGroup:'natural-incoming-stun',fighterId:row.proof.fighterId,preparedRenderKind:'ranger',
