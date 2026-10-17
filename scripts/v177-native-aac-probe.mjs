@@ -6,14 +6,27 @@ export function assertNativeAacHostedPlatform(platform) {
 export async function runNativeAacProbe({ muxerSource, sourceUrls, route, mix, variant = 'original', live = false, primeFrames = 0 }) {
   const state = { route, mix, variant, live, primeFrames, managedEvents:[], status: "starting", sampleRate: 48000, channels: 2, packets: [],
     configurations: [], events: [], playheads: [], inputs: [], errors: [], realtimeAudioContexts: 0,
+    transportCapacity:1024,transportEvents:[],transportEventOverflow:0,
     physicalRecordingAccepted: false, gameBackendChanged: false };
   const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
   const check = (ok, message) => { if (!ok) throw new Error(message); };
   let audio, encoder, source, objectUrl, moduleUrl, buffer, pending = [], muxer, nextFrame = 0;
   let startAt = null, seStartFrame = null, seRequestedAt = null, fatal = null, ended = false;
   const sampleRate = state.sampleRate, framesPerPacket = 1024, totalFrames = 188 * framesPerPacket;
+  const recordTransport = (event,details={}) => {
+    if(state.transportEvents.length>=state.transportCapacity){state.transportEventOverflow++;return;}
+    const ranges=value=>Array.from({length:value?.length??0},(_,i)=>[value.start(i),value.end(i)]);
+    const number=value=>Number.isFinite(value)?value:String(value);
+    state.transportEvents.push({event,at:performance.now(),ms:startAt===null?null:performance.now()-startAt,
+      sourceReadyState:source?.readyState??null,sourceDuration:number(source?.duration),
+      bufferUpdating:buffer?.updating??null,sourceBuffered:source?.readyState==='closed'?null:ranges(buffer?.buffered),pendingSegments:pending.length,
+      mediaReadyState:audio?.readyState??null,mediaTime:audio?.currentTime??null,mediaDuration:number(audio?.duration),
+      paused:audio?.paused??null,buffered:ranges(audio?.buffered),...details});
+  };
   const reference = new Float32Array(totalFrames * 2), background = new Float32Array(totalFrames * 2);
   state.inputs = sourceUrls;
+  globalThis.__v177RecordTransport=recordTransport;
+  globalThis.__v177NativeAacState=state;
   try {
     check(Number.isSafeInteger(primeFrames) && primeFrames >= 0 && primeFrames <= 3072 && primeFrames % 1024 === 0, "Invalid bounded priming window");
     check(typeof AudioEncoder === "function" && typeof AudioData === "function", "WebCodecs audio is unavailable");
@@ -46,7 +59,10 @@ export async function runNativeAacProbe({ muxerSource, sourceUrls, route, mix, v
     audio.muted = false; audio.volume = 1;
     document.body.append(audio);
     source = new Source();
-    for (const event of ["sourceopen","sourceended","sourceclose","startstreaming","endstreaming"]) source.addEventListener(event, () => state.managedEvents.push({event,ms:startAt === null ? null : performance.now()-startAt,streaming:source.streaming ?? null,duration:Number.isFinite(source.duration)?source.duration:String(source.duration),mediaTime:audio.currentTime}));
+    for (const event of ["sourceopen","sourceended","sourceclose","startstreaming","endstreaming"]) source.addEventListener(event, () => {
+      state.managedEvents.push({event,ms:startAt === null ? null : performance.now()-startAt,streaming:source.streaming ?? null,duration:Number.isFinite(source.duration)?source.duration:String(source.duration),mediaTime:audio.currentTime});
+      recordTransport(event);
+    });
     objectUrl = URL.createObjectURL(source);
     const opened = new Promise((resolve, reject) => {
       source.addEventListener("sourceopen", resolve, { once: true });
@@ -54,19 +70,28 @@ export async function runNativeAacProbe({ muxerSource, sourceUrls, route, mix, v
     });
     audio.src = objectUrl; audio.load();
     await Promise.race([opened, wait(5000).then(() => { throw new Error("Native source open timeout"); })]);
+    state.durationInitialization={before:Number.isFinite(source.duration)?source.duration:String(source.duration),assignedInfinity:live};
     if (live) { source.duration = Infinity; state.explicitLiveDuration = "Infinity"; }
+    state.durationInitialization.after=Number.isFinite(source.duration)?source.duration:String(source.duration);
+    recordTransport('duration-initialized');
     buffer = source.addSourceBuffer(mime);
     const drain = () => {
       if (fatal || buffer.updating || source.readyState !== "open") return;
       try {
-        if (pending.length) buffer.appendBuffer(pending.shift());
+        if (pending.length) {
+          const segment=pending.shift();recordTransport('append-call',{bytes:segment.byteLength});
+          buffer.appendBuffer(segment);
+        }
         else if (ended) source.endOfStream();
       } catch (error) { fatal = String(error); state.errors.push(fatal); }
     };
-    buffer.addEventListener("updateend", drain);
+    for(const event of ['updatestart','update'])buffer.addEventListener(event,()=>recordTransport(event));
+    buffer.addEventListener("updateend",()=>{recordTransport('updateend');drain();});
     buffer.addEventListener("error", () => { fatal = "SourceBuffer error"; state.errors.push(fatal); });
     for (const event of ["playing", "waiting", "stalled", "ended", "error"])
-      audio.addEventListener(event, () => state.events.push({ event, ms: startAt === null ? null : performance.now() - startAt, time: audio.currentTime }));
+      audio.addEventListener(event, () => {state.events.push({ event, ms: startAt === null ? null : performance.now() - startAt, time: audio.currentTime });recordTransport('media-'+event);});
+    for(const event of ['loadedmetadata','loadeddata','canplay','canplaythrough','durationchange','play','pause'])
+      audio.addEventListener(event,()=>recordTransport('media-'+event));
     encoder = new AudioEncoder({
       error: error => { fatal = String(error); state.errors.push(fatal); },
       output: (chunk, metadata) => {
@@ -140,6 +165,7 @@ export async function runNativeAacProbe({ muxerSource, sourceUrls, route, mix, v
         sourceId: sourceUrls[1].id, observedByNativePlayheadAtMs: null };
     };
     if (primeFrames) {
+      recordTransport('priming-start');
       const preparingAt = performance.now();
       while (nextFrame < primeFrames && !fatal) encodeBlock(false);
       while (!fatal && (state.packets.length < primeFrames/framesPerPacket || pending.length || buffer.updating || audio.readyState < 1)) {
@@ -148,13 +174,15 @@ export async function runNativeAacProbe({ muxerSource, sourceUrls, route, mix, v
       }
       check(!fatal, fatal);
       state.priming = {inputFrames:nextFrame,packets:state.packets.length,prepareMs:performance.now()-preparingAt,mediaPaused:audio.paused,mediaTime:audio.currentTime};
+      recordTransport('priming-ready');
     }
     document.documentElement.dataset.probeReady = "1";
     await new Promise(resolve => { start.onclick = resolve; });
     startAt = performance.now();
     state.startedFromNativeClick = true;
+    recordTransport('play-call');
     const play = audio.play();
-    play.catch(error => { fatal = String(error); state.errors.push(fatal); });
+    play.then(()=>recordTransport('play-resolved'),error => { fatal = String(error); state.errors.push(fatal);recordTransport('play-rejected'); });
     while (nextFrame < totalFrames && !fatal) {
       const target = (nextFrame - primeFrames) / sampleRate * 1000;
       if (performance.now() - startAt < target) await wait(target - (performance.now() - startAt));
@@ -181,6 +209,8 @@ export async function runNativeAacProbe({ muxerSource, sourceUrls, route, mix, v
     try { if (audio) { audio.pause(); audio.removeAttribute("src"); audio.load(); audio.remove(); } } catch (error) { state.errors.push(String(error)); state.status = "failed"; }
     if (objectUrl) URL.revokeObjectURL(objectUrl);
     if (moduleUrl) URL.revokeObjectURL(moduleUrl);
+    if(globalThis.__v177RecordTransport===recordTransport)delete globalThis.__v177RecordTransport;
+    if(globalThis.__v177NativeAacState===state)delete globalThis.__v177NativeAacState;
   }
   return state;
 }
@@ -226,6 +256,8 @@ export function nativeAacProbeCases() {
     {route:"ManagedMediaSource",variant:"live",live:true,primeFrames:0},
     {route:"ManagedMediaSource",variant:"live-primed",live:true,primeFrames:3072},
     {route:"MediaSource",variant:"original",live:false,primeFrames:0},
+    {route:"ManagedMediaSource",variant:"observer-control",live:false,primeFrames:0,completion:"promise",freshBrowser:true},
+    {route:"ManagedMediaSource",variant:"primed",live:false,primeFrames:3072,completion:"promise",freshBrowser:true},
   ].flatMap(scenario => ["bgm","bgm-se"].map(mix => ({...scenario,mix})));
 }
 

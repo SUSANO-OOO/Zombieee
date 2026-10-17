@@ -15,6 +15,7 @@ import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { readRuntimeObservation, installRuntimeObservationDiagnostics, runtimePerformanceConsoleSummary } from "./v100-runtime-observation.mjs";
 import { parseIndexingStatus, validateBenchmarkPreparationRecord } from "./v100-macos-indexing-control.mjs";
 import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
+import { rangerPerformanceReceipts } from "./v177-ranger-performance-receipts.mjs";
 
 const configuredBaseUrl = process.env.V100_DEVICE_RUNTIME_BASE_URL ?? process.env.V100_CAMPAIGN_QA_BASE_URL;
 assert.ok(configuredBaseUrl, "V100_DEVICE_RUNTIME_BASE_URL or V100_CAMPAIGN_QA_BASE_URL is required");
@@ -194,6 +195,7 @@ function snapshotProjection(snapshot) {
       .map(({ id, kind, hp, maxHp, x, y, lane, combatReady }) => ({ id, kind, hp, maxHp, x, y, lane, combatReady })),
     humans: living.filter((fighter) => fighter.side === "human")
       .map(({ id, kind, hp, maxHp, x, y, lane }) => ({ id, kind, hp, maxHp, x, y, lane })),
+    ...(snapshot.rangerDraws?{rangerDraws:snapshot.rangerDraws}:{}),
   };
 }
 function fixtureSave() {
@@ -314,6 +316,7 @@ const report = {
       tacticalInput: await fileSha256("scripts/v100-normal-tactical-input.mjs"),
       runner: await fileSha256("scripts/v100-device-runtime-browser.mjs"),
       runtimeObservation: await fileSha256("scripts/v100-runtime-observation.mjs"),
+      rangerPerformanceReceipts: await fileSha256("scripts/v177-ranger-performance-receipts.mjs"),
     },
   },
   fixture: {
@@ -489,7 +492,7 @@ try {
       } else {
         let previousSample = 0;
         while (await stillMeasuring()) {
-          await normalTacticalInput(page, result, { barrageWhenOverwhelmed: !viewport.safeArea, observeSnapshot(snapshot) {
+          await normalTacticalInput(page, result, { rangerDrawObservation:true,barrageWhenOverwhelmed: !viewport.safeArea, observeSnapshot(snapshot) {
             const projected = snapshotProjection(snapshot);
             if (!projected?.running || projected.over || projected.humanCount <= 0 || projected.boss.length === 0) {
               throw new Error("30-second window lost live battle, humans, or boss");
@@ -503,6 +506,9 @@ try {
         }
       }
       const raf = await endMeasurement(page);
+      result.rangerDrawReceipts=observerlessDiagnostic
+        ?{status:'not-observed-diagnostic',weightedPaintObserved:false,scope:'Observerless control retains its original no-sampling protocol; no Ranger workload acceptance.'}
+        :rangerPerformanceReceipts(result.measurementSamples,{startedAt:measurement.startedAt,endedAt:raf?.endedAt});
       if (blankBaselineDiagnostic) result.hostAtMeasurementEnd = hostLoadSnapshot();
       measurementActive = false;
       result.measurementEnded = true;
@@ -547,6 +553,7 @@ try {
       assert.ok(gates.medianFps, `median FPS ${medianFps} below 50`);
       assert.ok(gates.renderCadence, "render cadence differs from graphics profile");
       assert.ok(gates.dpr, "DPR2 quality changed during the measured window");
+      if(!observerlessDiagnostic)assert.equal(result.rangerDrawReceipts.weightedPaintObserved,true,JSON.stringify(result.rangerDrawReceipts.errors));
       result.status = "passed";
     } catch (error) {
       result.error = String(error);

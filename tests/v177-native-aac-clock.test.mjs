@@ -29,13 +29,22 @@ test("Invalid clocks, backwards motion and excessive queued input fail closed",(
     assert.equal(nativeAacClockEvidence(bad).accepted,false);
 });
 test("Both original routes and mixes remain, with separately labeled live and bounded-prime comparisons",()=>{
-  const cases=nativeAacProbeCases();assert.equal(cases.length,8);
+  const cases=nativeAacProbeCases();assert.equal(cases.length,12);
   const original=cases.filter(c=>c.variant==="original");
   assert.deepEqual(original.map(c=>[c.route,c.mix,c.live,c.primeFrames]),[
     ["ManagedMediaSource","bgm",false,0],["ManagedMediaSource","bgm-se",false,0],
     ["MediaSource","bgm",false,0],["MediaSource","bgm-se",false,0]]);
   const primed=cases.filter(c=>c.variant==="live-primed");assert.equal(primed.length,2);
   assert.ok(primed.every(c=>c.route==="ManagedMediaSource"&&c.live&&c.primeFrames===3072));
+  assert.deepEqual(cases.slice(0,8),[
+    {route:'ManagedMediaSource',variant:'original',live:false,primeFrames:0},
+    {route:'ManagedMediaSource',variant:'live',live:true,primeFrames:0},
+    {route:'ManagedMediaSource',variant:'live-primed',live:true,primeFrames:3072},
+    {route:'MediaSource',variant:'original',live:false,primeFrames:0},
+  ].flatMap(c=>['bgm','bgm-se'].map(mix=>({...c,mix}))));
+  const added=cases.slice(8);assert.ok(added.every(c=>c.route==='ManagedMediaSource'&&!c.live&&c.completion==='promise'&&c.freshBrowser));
+  assert.deepEqual(added.map(c=>[c.variant,c.mix,c.primeFrames]),[
+    ['observer-control','bgm',0],['observer-control','bgm-se',0],['primed','bgm',3072],['primed','bgm-se',3072]]);
 });
 test("The private comparisons keep the actual original PCM mix and AudioData body exactly",()=>{
   const source=fs.readFileSync(new URL("../scripts/v177-native-aac-probe.mjs",import.meta.url),"utf8").replaceAll("\r\n","\n");
