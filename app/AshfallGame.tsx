@@ -4128,6 +4128,8 @@ type FighterRenderAudit = {
   articulatedWalkPhase?: number | null;
   jointAtlasPath?: string | null;
   jointDrawSucceeded?: boolean;
+  jointWeaponCycleDrawSucceeded?: boolean;
+  jointWeaponCycle?: {component:"normal-launcher-handling";fighterId:number;attackSequence:number;paintedAt:number;phase:number;elapsed:number;duration:number;reachMargin:number;sourceTexture:string;independentCylinder:false};
   jointWeightedLowerDrawSucceeded?: boolean;
   jointWeightedLower?: ReturnType<typeof v177RenderedWeightedLowerReceipt>;
   jointPaintedAt?: number;
@@ -4624,6 +4626,16 @@ function drawSpriteFighter(
     if(audit) {
       audit.jointDrawSucceeded=Boolean(jointPose&&drewArticulatedWalk);
       if(audit.jointDrawSucceeded)audit.jointPaintedAt=options.world?.time;
+      if(renderKind==='mrs-chiha'){
+        const paintedCycle=Boolean(audit.jointDrawSucceeded&&jointPose?.mrsNormalWeaponCycle&&!jointPose.reactionHeld
+          &&animationSample.requestedState==='recovery'&&f.attackSequence>0&&Number.isFinite(options.world?.time)
+          &&[jointPose.weaponCycleProgress,jointPose.weaponCycleClockElapsed,jointPose.weaponCycleClockDuration,jointPose.weaponCycleReachMargin].every(Number.isFinite));
+        audit.jointWeaponCycleDrawSucceeded=paintedCycle;
+        audit.jointWeaponCycle=paintedCycle?{component:'normal-launcher-handling',fighterId:f.id,attackSequence:f.attackSequence,
+          paintedAt:Number(options.world?.time),phase:Number(jointPose.weaponCycleProgress),elapsed:Number(jointPose.weaponCycleClockElapsed),
+          duration:Number(jointPose.weaponCycleClockDuration),reachMargin:Number(jointPose.weaponCycleReachMargin),
+          sourceTexture:V177_JOINT_ATLASES[renderKind].path,independentCylinder:false}:undefined;
+      }
       if(renderKind==='ranger'){
         audit.jointWeightedLower=v177RenderedWeightedLowerReceipt(f,options.world);
         audit.jointWeightedLowerDrawSucceeded=audit.jointDrawSucceeded&&audit.jointWeightedLower?.mode==='continuous-weighted-mesh';

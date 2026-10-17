@@ -16,6 +16,8 @@ import { v177RangerCarryPose } from './v177RangerUpperMotion.js';
 import { v177RangerLowerBob } from './v177RangerLowerMotion.js';
 import { drawV177RangerLower } from './v177RangerLowerPaint.js';
 import { v177JointActorKey } from './v177JointActorHistory.js';
+import { animationClipFor, attackPresentationDuration } from './combatPresentation.js';
+import { createV177MrsNormalWeaponCycle } from './v177MrsNormalWeaponCycle.js';
 
 const locomotionStates = new Set(['idle','deploy','move','start-move','stop-move','turn','retreat']);
 const attackStates = new Set(['wind-up','active','recovery']);
@@ -39,6 +41,10 @@ const cycle = p => ((Number(p) || 0) % 1 + 1) % 1;
 
 export const V177_JOINT_ATLASES = Object.fromEntries(Object.entries({...bakedAtlases,...quadrupedAtlases,...bipedAtlases,...enemyAtlases,...runnerAtlases,...firearmAtlases,...pantherAtlases,...meleeAtlases,...guardEnemyAtlases,...newcomerAtlases,...infectedAtlases,...feralAtlases,...futagoAtlases,...paisenPhotoAtlases}));
 
+const mrsNormalWeaponCycle=createV177MrsNormalWeaponCycle({
+  animationClipFor,attackPresentationDuration,captureStatusJoints,jointMatrix,
+});
+
 export function v177JointCycleDistance(kind, renderScale) {
   const atlas = V177_JOINT_ATLASES[kind];
   return atlas && Number.isFinite(renderScale) && renderScale > 0
@@ -46,9 +52,12 @@ export function v177JointCycleDistance(kind, renderScale) {
 }
 
 export function v177JointPose(kind, sample, runtime, { ownedPose=false,actor,world,stunRemaining=0 }={}) {
+  const actualActor=actor;
   actor=v177JointActorKey(actor,world);
-  const atlas = V177_JOINT_ATLASES[kind], state=sample?.requestedState;
+  const atlas = V177_JOINT_ATLASES[kind];
   if (!atlas || ownedPose) { rememberRenderedJointPose(actor,kind,null); return null; }
+  if(kind==='mrs-chiha')sample=mrsNormalWeaponCycle.sample(kind,sample,actualActor,{enabled:true,ownedPose});
+  const state=sample?.requestedState;
   if(state==='incapacitated')return kind==='ranger'&&atlas.upperRig
     ? rangerLivingStunJointPose(kind,atlas,runtime,actor,stunRemaining)
     : livingStunJointPose(kind,atlas,runtime,actor,stunRemaining);
@@ -93,12 +102,14 @@ export function v177JointPose(kind, sample, runtime, { ownedPose=false,actor,wor
     const nextSettle=Math.min(atlas.settleLevels-1,settleIndex+1),settleBlend=settleFrame-settleIndex;
     const offset=atlas.pelvisOffsets[settleIndex][phaseIndex]*(1-blend)+atlas.pelvisOffsets[settleIndex][nextPhase]*blend;
     const nextOffset=atlas.pelvisOffsets[nextSettle][phaseIndex]*(1-blend)+atlas.pelvisOffsets[nextSettle][nextPhase]*blend;
-    return {lowerIndex,lowerNextIndex:settleIndex*atlas.frameCount+nextPhase,lowerBlend:blend,
+    const plan={lowerIndex,lowerNextIndex:settleIndex*atlas.frameCount+nextPhase,lowerBlend:blend,
       upperIndex:attackPhase===null?lowerIndex:attackBase+attackIndex,
       upperNextIndex:attackPhase===null?settleIndex*atlas.frameCount+nextPhase:attackBase+Math.min(atlas.frameCount,attackIndex+1),
       upperBlend:attackPhase===null?blend:attackFrame-attackIndex,phase,settleIndex,attackPhase,
       settleFrameOffset:(nextSettle-settleIndex)*atlas.frameCount,settleBlend,
       upperOffsetY:offset+(nextOffset-offset)*settleBlend};
+    return kind==='mrs-chiha'&&sample?.mrsNormalWeaponCycle
+      ? mrsNormalWeaponCycle.plan(kind,sample,plan,atlas) : plan;
   }
   const upperIndex=atlas.lowerCount+(attackPhase===null ? 0 : 1+Math.round(attackPhase*atlas.frameCount));
   const plan={lowerIndex,upperIndex,phase,settleIndex,attackPhase,
@@ -208,12 +219,14 @@ function resolveUpperOwnedLegs(atlas,pose) {
 }
 
 function returnPaintedJoints(atlas,entry,neutral,progress) {
+  const authoredReturn=Number.isFinite(entry.sourcePlan.attackPhase)
+    && entry.sourcePlan.mrsNormalWeaponCycle!==true;
   const target=captureStatusJoints(atlas,neutral);
   if(progress<=0)return {...copyCapturedJoints(entry.pose),upperTransform:entry.upperTransform,
-    returnPlan:Number.isFinite(entry.sourcePlan.attackPhase)?entry.sourcePlan:null};
+    returnPlan:authoredReturn?entry.sourcePlan:null};
   if(progress>=1)return {...target,upperTransform:identityMatrix(),returnPlan:null};
   const pose=blendCapturedJoints(atlas,entry.basePose,target,progress);
-  if(Number.isFinite(entry.sourcePlan.attackPhase)){
+  if(authoredReturn){
     // A long two-handed swing cannot be cross-faded directly to ready: an
     // intermediate weapon angle can lie outside both fixed arm reaches. Follow
     // the original authored return path before joining the current carry pose.
