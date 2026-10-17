@@ -4,12 +4,15 @@ import { v177PaisenPhotoComboJointPose } from './v177PaisenPhotoCombo.js';
 import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
 import { v100BasePresentationFor } from "./v100BasePresentation.js";
 import { createV100HumanWalkRenderer, v100HumanWalkPhase, v100UsesHumanWalk, v100HumanWalkCycleDistance, v100HumanWalkFrame } from "./v100HumanWalk.js";
-import { V177_JOINT_ATLASES, v177JointCycleDistance, v177JointPose, drawV177JointPose, v177RenderedJointWeaponSocket } from "./v177JointPresentation.js";
+import { V177_JOINT_ATLASES, v177JointCycleDistance, v177JointPose, drawV177JointPose, v177CaptureJointPose, v177RenderedJointWeaponSocket } from "./v177JointPresentation.js";
 import { v177LivingStunState, v177LivingStunSample, v177RangerLivingStunSample } from "./v177LivingStun.js";
 import { rememberV177CorpseJointPose, pruneV177CorpseJointPoses, v177LiveJointGroundLift, v177CorpseJointPresentation, drawV177CorpseJointPresentation } from "./v177CorpseJointPresentation.js";
 import { pruneV177JointActorHistory } from "./v177JointActorHistory.js";
+import { rememberV177TurnedCorpsePaint, rememberV177TurnedBirth, v177TurnedGetupDirection,
+  v177TurnedGetupPose, readV177TurnedBirthPresentation, pruneV177TurnedCorpsePaints } from "./v177TurnedGetupPresentation.js";
 import { configureV177ContinuousActorProof, configureV177ReactionProof, v177ProofFormIdentity } from "./v177ContinuousProof.js";
 import { configureV177IncomingStunPair, armV177IncomingStunProof, releaseV177IncomingStunProof, readV177IncomingStunProof, recordV177IncomingStunImpact, recordV177IncomingStunDraw } from "./v177IncomingStunProof.js";
+import { armV177TurnedGetupProof, releaseV177TurnedGetupProof, readV177TurnedGetupProof } from "./v177TurnedGetupProof.js";
 import { v102BattleDisplaySize } from "./v102BattleScale.js";
 import { v102CombatMotionSample, v102GroundLift, v102TravelCycleDistance, v102BattleBodyScale } from "./v102CombatMotion.js";
 import { v102CorpseFallingPose, v102HasFallingDeathFrame } from "./v102CorpsePose.js";
@@ -4124,6 +4127,16 @@ type FighterRenderAudit = {
   corpseJointFragmentGroundError?: number | null;
   articulatedWalkPhase?: number | null;
   jointAtlasPath?: string | null;
+  jointDrawSucceeded?: boolean;
+  jointPaintedAt?: number;
+  jointGetupProgress?: number | null;
+  jointGetupVariant?: string | null;
+  jointGetupCorpseId?: number | null;
+  jointGetupSourcePaintBound?: boolean;
+  jointGetupDrawSucceeded?: boolean;
+  jointGetupPaintedAt?: number;
+  jointGetupReactionAmplitude?: number;
+  jointGetupPaintedPose?: ReturnType<typeof v177CaptureJointPose>;
   renderKind?: string;
   jointLowerFrame?: number | null;
   jointUpperFrame?: number | null;
@@ -4286,13 +4299,13 @@ function drawSpriteFighter(
     manualDirection: lockedDirection,
     manualAbilityActive,
   });
-  const direction = stationAbilityPose && Number.isFinite(stationAbilityPose.direction) && stationAbilityPose.direction !== 0
+  const direction = v177TurnedGetupDirection(options.world,f,stationAbilityPose && Number.isFinite(stationAbilityPose.direction) && stationAbilityPose.direction !== 0
     ? stationAbilityPose.direction < 0 ? 'left' : 'right'
     : soukiPose ? 'left' : (guardianGuardPose || kumaGuardArtPose) && Number.isFinite(lockedDirection) && lockedDirection !== 0
     ? lockedDirection < 0 ? 'left' : 'right'
     : manualAbilityActive && Number.isFinite(lockedDirection) && lockedDirection !== 0
     ? fallbackDirection
-    : f.animationPresentation?.direction ?? fallbackDirection;
+    : f.animationPresentation?.direction ?? fallbackDirection,{enabled:Boolean(options.v100AuthoredPresentation&&jointImage?.naturalWidth)});
   const anomalyTuning = isBossAnomalyKind(f.kind)
     ? BOSS_ANOMALY_TUNING[f.kind as keyof typeof BOSS_ANOMALY_TUNING]
     : null;
@@ -4426,7 +4439,8 @@ function drawSpriteFighter(
   const photoComboJointPose = options.v100AuthoredPresentation && jointImage?.naturalWidth && manualAbilityActive
     ? v177PaisenPhotoComboJointPose(f, MANUAL_ABILITY_REGISTRY.brawler) : null;
   const jointPose = options.v100AuthoredPresentation && jointImage?.naturalWidth
-    ? photoComboJointPose ?? v177JointPose(renderKind,animationSample,f.animationPresentation,{ownedPose:authoredPoseOwned,actor:f,world:options.world,stunRemaining:f.stunned}) : null;
+    ? photoComboJointPose ?? v177TurnedGetupPose(options.world,f,{ownedPose:authoredPoseOwned})
+      ?? v177JointPose(renderKind,animationSample,f.animationPresentation,{ownedPose:authoredPoseOwned,actor:f,world:options.world,stunRemaining:f.stunned}) : null;
   const articulatedWalk = Boolean(!jointPose && options.v100AuthoredPresentation
     && v100UsesHumanWalk(renderKind,animationSample,{manualAbilityActive}));
   const frame = articulatedWalk || jointPose ? v100HumanWalkFrame(spriteFrameFor(renderKind,'walk-a','right'),direction) : tataraGroundCandidate
@@ -4566,6 +4580,12 @@ function drawSpriteFighter(
       groundAnchor: animationSample.groundAnchor,
       articulatedWalkPhase,
       jointAtlasPath: jointPose ? jointAtlas.path : null,
+      jointGetupProgress: jointPose?.turnedGetup?jointPose.getupProgress:null,
+      jointGetupVariant: jointPose?.turnedGetup?jointPose.getupVariant:null,
+      jointGetupCorpseId: jointPose?.turnedGetup?jointPose.getupCorpseId:null,
+      jointGetupSourcePaintBound: jointPose?.turnedGetup?jointPose.getupSourcePaintBound:false,
+      jointGetupDrawSucceeded: false,
+      jointDrawSucceeded: false,
       renderKind,
       jointLowerFrame: jointPose?.lowerIndex ?? null,
       jointUpperFrame: jointPose?.upperIndex ?? null,
@@ -4597,6 +4617,24 @@ function drawSpriteFighter(
     ? drawV177JointPose(ctx,jointImage,renderKind,jointPose,-size.w*frame.anchorX,-size.h*frame.anchorY,size.w,size.h,{actor:f,world:options.world})
     : articulatedWalk && v100HumanWalkRenderer.draw(ctx,sprite,renderKind,articulatedWalkPhase,
       -size.w*frame.anchorX,-size.h*frame.anchorY,size.w,size.h,{settle:f.animationPresentation?.locomotionSettle??1});
+  if(fighterRenderAuditEnabled&&recordAudit) {
+    const audit=fighterRenderAudit.get(f);
+    if(audit) {
+      audit.jointDrawSucceeded=Boolean(jointPose&&drewArticulatedWalk);
+      if(audit.jointDrawSucceeded)audit.jointPaintedAt=options.world?.time;
+    }
+  }
+  if(fighterRenderAuditEnabled&&recordAudit&&jointPose?.turnedGetup) {
+    const audit=fighterRenderAudit.get(f);
+    if(audit) {
+      audit.jointGetupDrawSucceeded=Boolean(drewArticulatedWalk);
+      if(drewArticulatedWalk) {
+        audit.jointGetupPaintedAt=options.world?.time;
+        audit.jointGetupReactionAmplitude=jointPose.getupReactionAmplitude;
+        audit.jointGetupPaintedPose=v177CaptureJointPose(renderKind,jointPose);
+      }
+    }
+  }
   if(fighterRenderAuditEnabled&&recordAudit&&options.world)recordV177IncomingStunDraw(options.world,f,
     Boolean(jointPose&&drewArticulatedWalk),jointPose,fighterRenderAudit.get(f));
   if(options.v100AuthoredPresentation&&options.world)rememberV177CorpseJointPose(options.world,f.id,renderKind,
@@ -8516,7 +8554,7 @@ function drawWorld(
   drawEmergencySupport(ctx, g, stageObjects);
   drawPlacementIndicator(ctx, g.placementIndicator);
 
-  if(g.definition.missionConfig.v100StageNumber){drawV102GoreGround(ctx,g);pruneV177CorpseJointPoses(g);pruneV177JointActorHistory(g);}
+  if(g.definition.missionConfig.v100StageNumber){drawV102GoreGround(ctx,g);pruneV177CorpseJointPoses(g);pruneV177JointActorHistory(g);pruneV177TurnedCorpsePaints(g);}
   for (const corpse of g.corpses) {
     const allyCue = corpse.side === "human" ? allyCorpseVisualCue(corpse, g.time) : null;
     const fallDirection = corpse.variant % 2 === 0 ? -1 : 1;
@@ -8653,6 +8691,12 @@ function drawWorld(
           width * slice.w / frame.w, height * slice.h / frame.h);
       }
       endV102CorpseSever(ctx,goreSeverPlan,sprite,frame,stageObjects);
+      if(g.definition.missionConfig.v100StageNumber&&corpse.side==="human")rememberV177TurnedCorpsePaint(g,corpse,{
+        frame,x:corpse.x+(allyCue?.tremorX??0),y:corpse.y+5+groundOffsetY+(allyCue?.tremorY??0),
+        angle:rotationRadians,scaleY:allyCue?.bodyScaleY??1,flipX:frame.flipX,
+        sourceBound:corpseFallingPose?.sourceBound===true,sourceSha256:corpseFallingPose?.sourceSha256,
+        supportY:corpseFallingPose?.groundSupportY,
+      });
       ctx.filter = "none";
     } else {
       ctx.globalAlpha = corpse.state === "ashing" || corpse.state === "ash" ? Math.min(.55, corpse.life / 2) : .65;
@@ -12855,6 +12899,37 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           initial: { enemyX: enemy.x, targetX: human.x, enemyHp: enemy.hp },
         };
       },
+      prepareV177TurnedGetupProof: ({variant}:{variant:0|1}) => {
+        const g=gameRef.current,lane:Lane=1;
+        if(![0,1].includes(variant)||g.definition.stageId!==V100_STAGE_IDS[0]
+          ||g.definition.missionConfig.v100StageNumber!==1||g.definition.missionType!=="assault"
+          ||g.definition.operationCategory!=="campaign"||g.survivalRun)
+          throw new Error("Turned get-up proof requires the original Stage1 assault");
+        fighterRenderAuditHistory.clear();fighterActualXDeltaAudit.clear();corpseRenderAuditHistory.clear();
+        g.pendingWeaponHits=[];g.fighters=[];g.corpses=[];g.areaEffects=[];
+        g.enemySpawn=createEnemySpawnRuntime() as EnemySpawnRuntime;
+        g.eventIndex=g.definition.timeline.length;g.deployQueue=[];clearTransientRenderObjects(g);
+        g.running=true;g.paused=true;g.over=false;g.won=false;g.baseHp=g.baseMaxHp;g.barricadeHp=g.barricadeMaxHp;
+        g.time=72;g.phase=2;g.wave=4;
+        const id=g.nextId++,x=610,y=activeLaneCenters[lane];
+        const lifecycle=advanceAllyLifecycle(beginAllyDeath(createAllyLifecycle({
+          id,kind:"brawler",inheritedKind:"brawler",lane,x,y,hp:0,variant,
+        })),7.2);
+        g.corpses.push({...lifecycle,id,x,y,lane,side:"human",kind:"brawler",life:14,variant,prevented:false} as Corpse);
+        if(battleOutcomeFor(g.definition,{...g,wavesResolved:true})!==null)
+          throw new Error("Turned get-up prepared Stage1 must remain nonterminal");
+        const proof=armV177TurnedGetupProof(g,{corpseId:id,variant,lane,stageId:g.definition.stageId,initialWave:g.wave});
+        selectedActionRef.current=null;setSelectedAction(null);setStarted(true);setPaused(true);setEnd(null);setScreen("battle");
+        return proof;
+      },
+      releaseV177TurnedGetupProof: (proofId:string) => {
+        const receipt=releaseV177TurnedGetupProof(gameRef.current,proofId);setPaused(false);return receipt;
+      },
+      getV177TurnedGetupProof: (options:{afterSequence?:number;light?:boolean}={}) => readV177TurnedGetupProof(gameRef.current,options,{
+        readBirth:readV177TurnedBirthPresentation,
+        corpseHistory:(id:number)=>corpseRenderAuditHistory.get(id)??[],
+        fighterHistory:(id:number)=>fighterRenderAuditHistory.get(id)??[],
+      }),
       prepareV177IncomingStunProof: () => {
         const g=gameRef.current,lane:Lane=1;
         fighterRenderAuditHistory.clear();fighterActualXDeltaAudit.clear();corpseRenderAuditHistory.clear();
@@ -12985,6 +13060,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             actualXDelta: fighterActualXDeltaAudit.get(fighter.id) ?? 0,
           } : null,
           corpse: corpse ? { ...corpse } : null,
+          turnedBirth: fighter?.kind==='turned'?readV177TurnedBirthPresentation(g,fighter):null,
           renderHistory: (fighterRenderAuditHistory.get(fighterId) ?? []).map((audit) => ({ ...audit })),
           corpseRenderHistory: (corpseRenderAuditHistory.get(fighterId) ?? []).map((audit) => ({ ...audit })),
         };
@@ -23483,7 +23559,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           const facingTarget = fighter.targetId === null
             ? undefined
             : fighterById.get(fighter.targetId);
-          const direction = combatFacingDirection({
+          const direction = v177TurnedGetupDirection(g,fighter,combatFacingDirection({
             side: fighter.side,
             actualXDelta: actualXDeltaByFighterId.get(fighter.id) ?? 0,
             aiMoveDirection: fighter.aiMoveDirection,
@@ -23496,7 +23572,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             manualDirection: Number(fighter.manualAbility?.target?.direction),
             manualAbilityActive,
             attacking: fighter.attackWindup > 0 || fighter.attack > 0 || fighter.flash > 0,
-          });
+          }),{enabled:Boolean(g.definition.missionConfig.v100StageNumber)});
           const presentationState = fighter.mayoRetreat
             ? fighter.mayoRetreat.phase === "run"
               ? "retreat"
@@ -23607,7 +23683,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             const generic = createGenericZombieSpawn(next);
             if (!generic) continue;
             const data = enemyStatsForWave("turned", g.wave); const id = g.nextId++;
-            revived.push({
+            const revivedFighter:Fighter={
                id, side: "zombie", kind: "turned", aiProfile: enemyContentFor("turned")?.aiProfile ?? "nearest", lane: generic.lane as Lane, anchorLane: generic.lane as Lane,
               x: generic.x, y: generic.y, hp: data.hp, maxHp: data.hp, speed: data.speed, damage: data.damage,
               range: data.range, cooldown: Math.max(.4, generic.riseLockRemaining), supportCooldown: 0, attackEvery: data.attackEvery,
@@ -23624,7 +23700,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                abilityCooldown: 0, abilityWindup: 0, attackWindup: 0, attackWindupTargetId: null, attackFacingDirection: null, attackSequence: 0,
                stationAbility: createStationAbilityRuntime("turned"),
                ...createUnitRoleRuntime(),
-            });
+            };
+            rememberV177TurnedBirth(g,corpse,revivedFighter);
+            revived.push(revivedFighter);
             addParticles(g, corpse.x, corpse.y - 20, "#90a965", 14); playCue("turned");
             continue;
           }

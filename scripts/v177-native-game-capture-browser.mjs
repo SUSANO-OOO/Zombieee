@@ -5,6 +5,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {captureNativeIncomingStunCase} from './v177-native-incoming-stun.mjs';
+import {captureNativeTurnedGetupCase} from './v177-native-turned-getup.mjs';
 
 export const NATIVE_GAME_CAPTURE_PHASES = Object.freeze(['move', 'attack', 'engage']);
 export const NATIVE_GAME_CAPTURE_FORMS = Object.freeze(['medic', 'ranger', 'engineer', 'abomination']);
@@ -30,6 +31,13 @@ export const NATIVE_GAME_CAPTURE_SOURCES = Object.freeze([
   'scripts/v177-native-incoming-stun.mjs','tests/v177-native-incoming-stun.test.mjs',
   'app/v177IncomingStunProof.js','app/v090Infected.js','app/v177InfectedJointData.js',
   'app/content/enemyCatalog.js','app/content/unitCatalog.js','public/art/v100/joints/spindle-r1.webp',
+  'app/v177JointActorHistory.js','app/v177WalkerFloorData.js','app/v177TurnedGetupMotion.js',
+  'app/v177TurnedGetupPresentation.js','app/v177TurnedGetupHandoff.js','tests/v177-turned-getup.test.mjs',
+  'public/art/v100/joints/walker-r1.webp',
+  'app/v177TurnedGetupDeath.js','app/v177CorpseJointPresentation.js',
+  'app/v177TurnedGetupProof.js','scripts/v177-native-turned-getup.mjs','tests/v177-native-turned-getup.test.mjs',
+  'app/combatLifecycle.js','tests/v177-native-canvas-clips.test.mjs','app/v102CorpsePose.js','app/v102CorpsePoseData.js',
+  'public/art/v100/joints/brawler-r1.webp','public/art/v100/characters/paisen-photo-battle-v177.png',
 ]);
 const acceptance = () => ({ originalSpeedAccepted: false, encodedPtsVerified: false,
   naturalnessAccepted: false, physicalIphoneRecordingAccepted: false,
@@ -283,7 +291,7 @@ export async function runBrowserQa() {
       legacyV102ParallelPlaywrightRecordVideo: true, sameObservationLoadAsLegacyV102: false,
       codecOnlyCausalComparison: false },
     build: await deps.productionBuildIdentity(), status: 'running-diagnostic', ...acceptance(),
-    scope: '39 native VP8 diagnostic clips in three real viewports: the original36 priority medic/ranger/engineer/abomination move/attack/engage cases retain explicitly inert opponents and unchanged continuous thresholds. Three separate Ranger incoming-stun cases use original Ranger and Spindle stats, real incoming impacts and successful joint draws. Fresh owned context per viewport, one browser, canvas-only without parallel Playwright recordVideo. Observation load differs from legacy MP4; not a codec-only causal comparison. Not all-unit, normal-play, original-speed naturalness, balance or physical audio acceptance.',
+    scope: '45 native VP8 diagnostic clips in three real viewports: the original36 priority cases and3 original Ranger incoming-stun cases retain their controls. Six additional pre-aged human corpse fixtures record actual infection/new ID/rise and ordinary movement with the original clock in both fall variants. No QA birth registration or rise-lock injection. Fresh owned context per viewport, one browser, canvas-only without parallel Playwright recordVideo. Observation load differs from legacy MP4. Not all-unit, normal-play, original-speed naturalness, balance or physical audio acceptance.',
     sources: [], contexts: [], cases: [], errors: [], persistenceErrors: [], contextCleanup: 'not-created', browserCleanup: 'not-created' };
   assert.match(report.build.combinedSha256, /^[a-f0-9]{64}$/u);
   await mkdir(out, { recursive: true });
@@ -349,16 +357,17 @@ export async function runBrowserQa() {
           await page.getByRole('button', { name: '戦闘へ', exact: true }).click();
           await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().running);
           await page.evaluate(async () => {
-            for (const kind of ['abomination', 'walker', 'spindle']) await window.__ASHFALL_BATTLE_QA__.ensureEnemyFacingProofAsset(kind);
-            for (const kind of ['guardian', 'medic', 'ranger', 'engineer']) await window.__ASHFALL_BATTLE_QA__.ensureUnitRenderProofAsset(kind);
+            for (const kind of ['abomination', 'walker', 'spindle', 'turned']) await window.__ASHFALL_BATTLE_QA__.ensureEnemyFacingProofAsset(kind);
+            for (const kind of ['guardian', 'medic', 'ranger', 'engineer', 'brawler']) await window.__ASHFALL_BATTLE_QA__.ensureUnitRenderProofAsset(kind);
           });
         }, closeOwnedContext, { onDeadline: recordFailure });
         const cases=NATIVE_GAME_CAPTURE_FORMS.flatMap(form=>NATIVE_GAME_CAPTURE_PHASES.map(phase=>({form,phase})));
+        cases.push(...[0,1].map(variant=>({form:'turned',phase:'turned-getup',variant})));
         cases.push({form:'ranger',phase:'incoming-stun'});
-        captureCases: for (const {form,phase} of cases) {
-          const row = { form, phase, viewport, status: 'starting', samples: [], ...acceptance() };
+        captureCases: for (const {form,phase,variant} of cases) {
+          const row = { form, phase, ...(variant===undefined?{}:{variant}), viewport, status: 'starting', samples: [], ...acceptance() };
           report.cases.push(row);
-          const capture=phase==='incoming-stun'?captureNativeIncomingStunCase:captureNativeGameCase;
+          const capture=phase==='incoming-stun'?captureNativeIncomingStunCase:phase==='turned-getup'?captureNativeTurnedGetupCase:captureNativeGameCase;
           try { await withNativeGameCaseDeadline(() => capture(page, row, { ...deps, out, onFailure: recordFailure,
             startNativeGameRafObservation,stopNativeGameRafObservation,nativeGamePerformanceReceipt,mimeType:NATIVE_GAME_CAPTURE_MIME }), closeOwnedContext,
             { onDeadline: error => { row.deadlineExpired = true; recordFailure(error); } }); }
@@ -382,7 +391,7 @@ export async function runBrowserQa() {
       try { await browser.close(); report.browserCleanup = 'completed'; }
       catch (error) { report.browserCleanup = 'failed'; recordFailure(error); }
     }
-    report.status = report.errors.length || report.cases.length !== NATIVE_GAME_CAPTURE_VIEWPORTS.length * (NATIVE_GAME_CAPTURE_FORMS.length * NATIVE_GAME_CAPTURE_PHASES.length+1)
+    report.status = report.errors.length || report.cases.length !== NATIVE_GAME_CAPTURE_VIEWPORTS.length * (NATIVE_GAME_CAPTURE_FORMS.length * NATIVE_GAME_CAPTURE_PHASES.length+3)
       || report.cases.some(row => row.status !== 'observed-diagnostic') ? 'failed' : 'completed-diagnostic';
     await persist();
   }

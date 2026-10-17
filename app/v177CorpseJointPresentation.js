@@ -2,6 +2,7 @@ import { V177_JOINT_ATLASES, v177CaptureJointPose, v177InterpolateCapturedJointP
   drawV177ResolvedJointPose, v177JointPaintSupportY } from './v177JointPresentation.js';
 import { V177_CORPSE_JOINT_DATA } from './v177CorpseJointData.js';
 import { V177_WALKER_FLOOR_DATA } from './v177WalkerFloorData.js';
+import { createV177TurnedRiseCorpseRig } from './v177TurnedGetupPresentation.js';
 import { v102CorpseSeverPlan, drawV102JointCorpseWound } from './v102CombatGore.js';
 
 const worlds=new WeakMap();
@@ -35,11 +36,15 @@ function fragmentRestAngle(points,direction) {
 }
 
 export function rememberV177CorpseJointPose(world,id,kind,plan,rendered) {
-  if(!world || !V177_CORPSE_JOINT_DATA[kind])return;
-  let state=worlds.get(world);if(!state){state={live:new Map(),corpses:new Map()};worlds.set(world,state);}
+  if(!world)return;
+  let state=worlds.get(world);
+  const fromTurnedRise=kind==='turned'&&Boolean(plan?.turnedGetup
+    ||state?.live.get(id)?.fromTurnedRise&&(plan?.liveStun||plan?.reactionHeld));
+  if(!V177_CORPSE_JOINT_DATA[kind]&&!fromTurnedRise){state?.live.delete(id);return;}
+  if(!state){state={live:new Map(),corpses:new Map()};worlds.set(world,state);}
   // A source-owned special action cannot be replaced by a stale earlier rig.
   if(!plan){state.live.delete(id);return;}
-  state.live.set(id,{kind,plan,frame:rendered.frame,width:rendered.width,height:rendered.height,
+  state.live.set(id,{kind,plan,fromTurnedRise,frame:rendered.frame,width:rendered.width,height:rendered.height,
     root:{x:rendered.x,y:rendered.y,angle:rendered.angle,scaleX:rendered.scaleX,scaleY:rendered.scaleY,flipX:rendered.flipX}});
 }
 
@@ -96,19 +101,31 @@ function woundsFor(atlas,owned,head) {
   };}
   const bones=new Set(atlas.parts.filter(p=>owned.has(p.name)).map(p=>p.bone));
   const chains=atlas.armConstraints.filter(c=>bones.has(c.effectorBone));
-  return {body:chains.map(c=>({bone:c.lowerBone,pixel:c.wrist})),
-    fragment:chains.map(c=>({bone:c.effectorBone,pixel:c.effectorWrist??c.wrist}))};
+  return {body:chains.map(c=>bones.has(c.lowerBone)
+    ?{bone:c.upperBone,pixel:c.elbow}:{bone:c.lowerBone,pixel:c.wrist}),
+  fragment:chains.map(c=>bones.has(c.lowerBone)
+    ?{bone:c.lowerBone,pixel:c.elbow}:{bone:c.effectorBone,pixel:c.effectorWrist??c.wrist})};
 }
 
 export function createV177CorpseJointState(kind,live,{fallDirection=-1,severPlan=null}={}) {
-  const atlas=V177_JOINT_ATLASES[kind],data=V177_CORPSE_JOINT_DATA[kind];
+  const sourceAtlas=V177_JOINT_ATLASES[kind];
+  if(!live||live.kind!==kind||!sourceAtlas
+    ||!V177_CORPSE_JOINT_DATA[kind]&&!(kind==='turned'&&live.fromTurnedRise))return null;
+  const initial=v177CaptureJointPose(kind,live.plan);
+  const riseRig=kind==='turned'&&live?.fromTurnedRise&&initial?createV177TurnedRiseCorpseRig(initial):null;
+  const atlas=riseRig?{...sourceAtlas,parentAttachments:{...sourceAtlas.parentAttachments,head:riseRig.headAttachment}}:sourceAtlas;
+  const data=riseRig?.data??V177_CORPSE_JOINT_DATA[kind];
   if(!live || live.kind!==kind || !atlas || !data || atlas.path!==data.atlasPath
     || data.outlines.length!==atlas.parts.length || data.outlines.some((o,i)=>o.name!==atlas.parts[i].name))return null;
-  const initial=v177CaptureJointPose(kind,live.plan);if(!initial)return null;
-  const side=fallDirection*(live.root.flipX?-1:1),finalPose={...atlas.poses[0],...data.falls[String(side)]};
+  if(!initial)return null;
+  const side=fallDirection*(live.root.flipX?-1:1),finalPose=riseRig?.finalPose??{...atlas.poses[0],...data.falls[String(side)]};
   const state={kind,atlas,data,initial,finalPose,frame:live.frame,width:live.width,height:live.height,
     initialRoot:{...live.root},fallDirection,severPlan,owned:null,fragment:null};
-  state.initialMatrices=v177InterpolateCapturedJointPose(kind,initial,finalPose,0);
+  state.sampleMatrices=riseRig?.sampleMatrices;
+  state.initialMatrices=state.sampleMatrices?state.sampleMatrices(0):v177InterpolateCapturedJointPose(kind,initial,finalPose,0);
+  // The source rig already lowers the body into a prone pose. A second
+  // quarter-turn would lift its folded knees and torso back off the floor.
+  if(riseRig)state.fallAngle=state.initialRoot.angle;
   if(severPlan) {
     const head=severPlan.style==='cut'||severPlan.style==='saw';
     state.owned=new Set(head?data.severedParts.head:data.severedParts.impact);
@@ -124,8 +141,10 @@ export function createV177CorpseJointState(kind,live,{fallDirection=-1,severPlan
 
 export function sampleV177CorpseJointState(state,{progress,x,y,age=0,ashScaleX=1,ashScaleY=1}={}) {
   if(!state)return null;
-  const p=ease(progress),floor=y+5,matrices=v177InterpolateCapturedJointPose(state.kind,state.initial,state.finalPose,p);
-  const root={...state.initialRoot,x:0,y:0,angle:state.initialRoot.angle+(state.fallDirection*Math.PI/2-state.initialRoot.angle)*p,
+  const p=ease(progress),floor=y+5,matrices=state.sampleMatrices?state.sampleMatrices(p)
+    :v177InterpolateCapturedJointPose(state.kind,state.initial,state.finalPose,p);
+  const targetAngle=state.fallAngle??state.fallDirection*Math.PI/2;
+  const root={...state.initialRoot,x:0,y:0,angle:state.initialRoot.angle+(targetAngle-state.initialRoot.angle)*p,
     scaleX:state.initialRoot.scaleX*ashScaleX,scaleY:state.initialRoot.scaleY*ashScaleY};
   const support=extent(outlinePoints(state,matrices,root,null,state.owned)).bottom;
   const initialY=state.initialRoot.y;

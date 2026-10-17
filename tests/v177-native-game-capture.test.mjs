@@ -321,6 +321,7 @@ test('actual runBrowserQa attempts both closes and preserves the primary failure
       NATIVE_GAME_CAPTURE_SOURCES: [], NATIVE_GAME_CAPTURE_PHASES, NATIVE_GAME_CAPTURE_FORMS, NATIVE_GAME_CAPTURE_VIEWPORTS,
       withNativeGameCaseDeadline, closeNativeGameContext,
       captureNativeIncomingStunCase:async (_page,row)=>{row.status='observed-diagnostic';},
+      captureNativeTurnedGetupCase:async (_page,row)=>{row.status='observed-diagnostic';},
       startNativeGameRafObservation,stopNativeGameRafObservation,nativeGamePerformanceReceipt,NATIVE_GAME_CAPTURE_MIME,
       mkdir: async () => {}, captureNativeGameCase: async (_page, row) => { row.status = 'observed-diagnostic'; },
       writeFile: async (_file, data) => {
@@ -348,7 +349,10 @@ test('the dedicated workflow is path-scoped, read-only, exact-head, built, bound
   assert.deepEqual(workflow.on.pull_request.paths, ['.github/workflows/native-game-capture.yml',
     'scripts/v177-native-game-capture-browser.mjs', 'tests/v177-native-game-capture.test.mjs',
     'scripts/v177-native-incoming-stun.mjs','tests/v177-native-incoming-stun.test.mjs',
-    'app/v177IncomingStunProof.js','scripts/v177-native-canvas-clips.mjs']);
+    'app/v177IncomingStunProof.js','scripts/v177-native-canvas-clips.mjs',
+    'scripts/v177-native-turned-getup.mjs','tests/v177-native-turned-getup.test.mjs','tests/v177-native-canvas-clips.test.mjs',
+    'app/v177TurnedGetupProof.js','app/v177TurnedGetupPresentation.js','app/v177TurnedGetupMotion.js',
+    'app/v177TurnedGetupHandoff.js','app/v177TurnedGetupDeath.js','app/v177CorpseJointPresentation.js','app/AshfallGame.tsx']);
   assert.deepEqual(workflow.permissions, { contents: 'read' }); assert.equal(workflow.concurrency['cancel-in-progress'], false);
   const job = workflow.jobs['native-game-capture']; assert.equal(job['runs-on'], 'macos-15-intel'); assert.equal(job['timeout-minutes'], 15);
   assert.equal(job.steps[0].with.ref, '${{ github.event.pull_request.head.sha }}'); assert.equal(job.steps[0].with['persist-credentials'], false);

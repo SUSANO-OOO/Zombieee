@@ -182,6 +182,33 @@ test('incoming stun acknowledges the real native start event and retains its sep
   await assert.rejects(clip.waitForStart(),/did not become available/u);
 });
 
+test('a pre-birth recording binds its human corpse without inventing a newborn ID or changing legacy clip names',async()=>{
+  for(const variant of [0,1]) {
+    const f=fixture(),directory=await mkdtemp(path.join(os.tmpdir(),'v177-getup-native-'));
+    const request={form:'turned',requestedKind:'turned',preparedRenderKind:'turned',phase:'turned-getup',
+      fixtureGroup:'actual-infection-getup',fighterId:null,corpseId:42,variant,battleGeneration:7,
+      proofId:'7:turned-getup:42',diagnosticOnly:true};
+    const clip=await beginV177NativeCanvasClip(f.page,request,{directory,engine:'webkit',requestedMimeType:'video/webm;codecs=vp8'});
+    const start=await clip.waitForStart(),receipt=await clip.finish({completed:true});
+    assert.equal(start.startedAt,receipt.startedAt);assert.equal(receipt.status,'recorded');assert.equal(receipt.metadata.fighterId,null);
+    assert.ok(receipt.file.endsWith(`actual-infection-getup-turned-turned-getup-corpse-42-variant-${variant}.webm`));
+    assert.equal(receipt.originalSpeedAccepted,false);assert.equal(receipt.encodedPtsVerified,false);
+  }
+});
+
+test('the corpse-only ID exception cannot weaken an existing phase or cross-bind a new infection recording',async()=>{
+  const request={form:'turned',requestedKind:'turned',preparedRenderKind:'turned',phase:'turned-getup',
+    fixtureGroup:'actual-infection-getup',fighterId:null,corpseId:42,variant:0,battleGeneration:7,
+    proofId:'7:turned-getup:42',diagnosticOnly:true};
+  for(const patch of [{fighterId:99},{corpseId:null},{variant:2},{proofId:'wrong'},{preparedRenderKind:'walker'},
+    {fixtureGroup:'authored-form'},{phase:'move'},{diagnosticOnly:false}]) {
+    const f=fixture();await assert.rejects(beginV177NativeCanvasClip(f.page,{...request,...patch},{directory:'/unused',engine:'webkit'}));
+    assert.equal(f.captures,0);
+  }
+  const f=fixture();await assert.rejects(beginV177NativeCanvasClip(f.page,{...metadata,fighterId:null},{directory:'/unused',engine:'webkit'}));
+  assert.equal(f.captures,0);
+});
+
 test('a missing native start event or unavailable recorder cannot release a paused incoming proof',async()=>{
   for(const options of [{startEvent:false},{supported:false}]){
     const f=fixture(options),directory=await mkdtemp(path.join(os.tmpdir(),'v177-incoming-start-failure-'));

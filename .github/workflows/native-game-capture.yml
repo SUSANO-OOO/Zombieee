@@ -10,6 +10,16 @@ on:
       - 'tests/v177-native-incoming-stun.test.mjs'
       - 'app/v177IncomingStunProof.js'
       - 'scripts/v177-native-canvas-clips.mjs'
+      - 'scripts/v177-native-turned-getup.mjs'
+      - 'tests/v177-native-turned-getup.test.mjs'
+      - 'tests/v177-native-canvas-clips.test.mjs'
+      - 'app/v177TurnedGetupProof.js'
+      - 'app/v177TurnedGetupPresentation.js'
+      - 'app/v177TurnedGetupMotion.js'
+      - 'app/v177TurnedGetupHandoff.js'
+      - 'app/v177TurnedGetupDeath.js'
+      - 'app/v177CorpseJointPresentation.js'
+      - 'app/AshfallGame.tsx'
 
 permissions:
   contents: read
@@ -40,7 +50,7 @@ jobs:
         env:
           GITHUB_PAGES_RELEASE_SHA: ${{ github.event.pull_request.head.sha }}
         run: npm run build
-      - name: Record priority actions and natural incoming stun in three viewports with native VP8
+      - name: Record priority actions, actual infection rises and natural incoming stun in three viewports with native VP8
         env:
           V177_EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           V177_NATIVE_GAME_CAPTURE_OUT: outputs/v177-native-game-capture

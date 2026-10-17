@@ -86,13 +86,23 @@ export async function finishNativeCanvasClip(state,{completed}){
 }
 
 export async function beginV177NativeCanvasClip(page,metadata,{directory,engine,requestedMimeType=null}={}){
-  assert.match(metadata.form,/^[a-z0-9-]+$/u);assert.ok(['move','attack','engage','incoming-stun'].includes(metadata.phase));
-  assert.ok(Number.isFinite(metadata.fighterId));assert.ok(['chromium','webkit'].includes(engine));
+  assert.match(metadata.form,/^[a-z0-9-]+$/u);assert.ok(['move','attack','engage','incoming-stun','turned-getup'].includes(metadata.phase));
+  const unborn=metadata.phase==='turned-getup';
+  if(unborn) {
+    for(const key of ['form','requestedKind','preparedRenderKind'])assert.equal(metadata[key],'turned');
+    assert.equal(metadata.fighterId,null,'No newborn exists when its corpse recording starts');
+    assert.ok(Number.isSafeInteger(metadata.corpseId)&&metadata.corpseId>=0);
+    assert.ok([0,1].includes(metadata.variant));assert.equal(metadata.diagnosticOnly,true);
+    assert.ok(Number.isSafeInteger(metadata.battleGeneration));assert.equal(metadata.proofId,`${metadata.battleGeneration}:turned-getup:${metadata.corpseId}`);
+  }else assert.ok(Number.isFinite(metadata.fighterId));
+  assert.ok(['chromium','webkit'].includes(engine));
   assert.ok(requestedMimeType===null||['video/mp4','video/webm;codecs=vp8','video/webm'].includes(requestedMimeType),'Unknown diagnostic native container');
-  assert.ok(['base-enemy','authored-form','approach-to-attack','natural-incoming-stun'].includes(metadata.fixtureGroup));
+  assert.ok(['base-enemy','authored-form','approach-to-attack','natural-incoming-stun','actual-infection-getup'].includes(metadata.fixtureGroup));
   assert.equal(metadata.phase==='engage',metadata.fixtureGroup==='approach-to-attack','approach-to-attack recordings must remain distinct from legacy move/attack clips');
   assert.equal(metadata.phase==='incoming-stun',metadata.fixtureGroup==='natural-incoming-stun','Incoming stun recordings require their own natural opponent contract');
-  const stem=path.join(directory,`${metadata.fixtureGroup}-${metadata.form}-${metadata.phase}-${metadata.fighterId}`);
+  assert.equal(unborn,metadata.fixtureGroup==='actual-infection-getup','Actual infection recordings require their corpse and original birth contract');
+  const identity=unborn?`corpse-${metadata.corpseId}-variant-${metadata.variant}`:metadata.fighterId;
+  const stem=path.join(directory,`${metadata.fixtureGroup}-${metadata.form}-${metadata.phase}-${identity}`);
   let handle,error,finished=false;
   try{handle=await page.locator('.game-shell canvas').evaluateHandle(startNativeCanvasClip,{metadata,engine,requestedMimeType});}
   catch(cause){error=String(cause);}
