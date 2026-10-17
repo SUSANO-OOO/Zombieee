@@ -18,6 +18,7 @@ import {normalCampaignCanSpendVehicleGauge, normalCampaignDeploymentCount, norma
 import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
 import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
 import { deferNormalRecruitOffer } from "./v100-normal-recruit-offer.mjs";
+import { captureNormalAudioUnlockAttempt } from "./v177-normal-audio-unlock-observation.mjs";
 
 if (process.platform === 'win32') throw new Error('Normal-play QA is hosted-only; local game/browser/audio playback is disabled');
 const stageLimit = normalPlayStageLimit(process.env.V100_NORMAL_PLAY_STAGE_LIMIT);
@@ -171,7 +172,7 @@ async function battle(stage) {
     if(report.errors.length||requests.report.unexpectedFailures.length)throw new Error("Browser diagnostics during normal battle");
     if(Date.now()-start>15*60_000)throw new Error(`Stage ${stage.number} exceeded the observation window; no victory or clock change injected`);
     const audio=page.getByRole("button",{name:"音声を有効にする",exact:true});
-    if(await audio.isVisible())await audio.click();
+    if(await audio.isVisible())await captureNormalAudioUnlockAttempt(audio,{page,attempts:record.audioUnlockAttempts??=[],stageNumber:stage.number});
     if(Date.now()-lastShot>30_000) {
       await page.screenshot({path:path.join(out,`s${stage.number}-${Math.floor((Date.now()-start)/1000)}s.png`)});
       lastShot=Date.now();
