@@ -11,6 +11,9 @@ import { pruneV177JointActorHistory } from "./v177JointActorHistory.js";
 import { rememberV177TurnedCorpsePaint, rememberV177TurnedBirth, v177TurnedGetupDirection,
   v177TurnedGetupPose, readV177TurnedBirthPresentation, pruneV177TurnedCorpsePaints } from "./v177TurnedGetupPresentation.js";
 import { configureV177ContinuousActorProof, configureV177ReactionProof, v177ProofFormIdentity } from "./v177ContinuousProof.js";
+import { createMayoFeralProofOwner } from "./v177NativeMayoProof.js";
+import { createV177FutagoDamageCopy, prepareV177NativeFutagoPair, v177FormalFutagoPairSource } from "./v177NativeFutagoProof.js";
+import { configureV177BornTurnedContinuation } from "./v177NativeTurnedProof.js";
 import { configureV177IncomingStunPair, armV177IncomingStunProof, releaseV177IncomingStunProof, readV177IncomingStunProof, recordV177IncomingStunImpact, recordV177IncomingStunDraw } from "./v177IncomingStunProof.js";
 import { armV177TurnedGetupProof, releaseV177TurnedGetupProof, readV177TurnedGetupProof } from "./v177TurnedGetupProof.js";
 import { v102BattleDisplaySize } from "./v102BattleScale.js";
@@ -4170,6 +4173,7 @@ const corpseRenderAuditHistory = new Map<number, FighterRenderAudit[]>();
 const fighterRenderAuditEnabled = typeof window !== "undefined"
   && ["localhost", "127.0.0.1"].includes(window.location.hostname);
 let fighterRenderSequence = 0;
+const nativeFutagoDamageCopy = createV177FutagoDamageCopy();
 
 function recordFighterRenderAudit(fighter: Fighter, audit: FighterRenderAudit) {
   fighterRenderAudit.set(fighter, audit);
@@ -9128,6 +9132,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     rafRequests: 0,
     rafCancellations: 0,
   });
+  const nativeMayoProofRef = useRef<ReturnType<typeof createMayoFeralProofOwner> | null>(null);
   const lastHudRef = useRef(0);
   const selectedActionRef = useRef<SelectedAction>(null);
   const pointerGestureStateRef = useRef(new Map<number, PointerGestureState>());
@@ -10046,6 +10051,33 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
 
   useEffect(() => {
     if (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") return;
+    const resetNativeProofRoom = (g: Game) => {
+      fighterRenderAuditHistory.clear();fighterActualXDeltaAudit.clear();corpseRenderAuditHistory.clear();
+      nativeFutagoDamageCopy.clear(g);
+      g.pendingWeaponHits=[];g.fighters=[];g.corpses=[];g.areaEffects=[];
+      g.enemySpawn=createEnemySpawnRuntime() as EnemySpawnRuntime;
+      g.eventIndex=g.definition.timeline.length;g.deployQueue=[];clearTransientRenderObjects(g);
+      g.running=true;g.paused=true;g.over=false;g.won=false;g.baseHp=g.baseMaxHp;g.barricadeHp=g.barricadeMaxHp;
+      g.manualAbilityReceipts=[];
+    };
+    const nativeMayoProof = nativeMayoProofRef.current ??= createMayoFeralProofOwner({
+      definition:MANUAL_ABILITY_REGISTRY["mayo-chan"],
+      battleGeneration:(g:Game)=>g.battleAudioGeneration,
+      simulationTick:()=>runtimePerformanceRef.current.simulationTicks,
+      nativeNow:()=>performance.now(),setPausedUi:setPaused,attackReachFor:normalAttackReach,
+      prepareNormalPair:(g:Game)=>{
+        const firstId=g.nextId;
+        if(!spawnHuman(g,"mayo-chan",false))throw new Error("Native Mayo constructor unavailable");
+        const actor=g.fighters.find(f=>f.id>=firstId&&f.kind==="mayo-chan"&&f.side==="human");
+        if(!actor)throw new Error("Native Mayo actor unavailable");
+        // Controlled initial layout precedes the genuine native activation.
+        // Original HP, stats, grace, manual state and cooldown stay intact.
+        actor.x=330;actor.y=activeLaneCenters[1];actor.lane=1;actor.anchorLane=1;
+        actor.animationPresentation=createCombatAnimationRuntime({direction:"right",x:actor.x,y:actor.y});
+        const target=spawnEnemy(g,"walker",1);
+        return {actor,target};
+      },
+    });
     const qaWindow = window as typeof window & {
       __ASHFALL_BATTLE_QA__?: unknown;
       __ASHFALL_RUNTIME_PERFORMANCE__?: unknown;
@@ -12967,6 +12999,65 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         const receipt=releaseV177IncomingStunProof(gameRef.current,proofId);setPaused(false);return receipt;
       },
       getV177IncomingStunProof: (afterSequence=0) => readV177IncomingStunProof(gameRef.current,afterSequence),
+      prepareV177NativeMayoProof: ({phase}:{phase:"move"|"attack"|"engage"}) => {
+        const g=gameRef.current;resetNativeProofRoom(g);g.paused=false;
+        const proof=nativeMayoProof.prepare(g,{phase,proofId:g.battleAudioGeneration+":mayo-native:"+g.nextId+":"+phase});
+        selectedActionRef.current=null;setSelectedAction(null);setStarted(true);setPaused(false);setEnd(null);setScreen("battle");
+        return proof;
+      },
+      armV177NativeMayoProof: (proofId:string) => nativeMayoProof.arm(gameRef.current,proofId),
+      releaseV177NativeMayoProof: (proofId:string) => nativeMayoProof.release(gameRef.current,proofId),
+      getV177NativeMayoProof: (proofId:string,light=false) => light
+        ? nativeMayoProof.readLive(gameRef.current,proofId) : nativeMayoProof.read(gameRef.current,proofId),
+      prepareV177NativeFutagoPair: ({form,phase}:{form:string;phase:"move"|"attack"|"engage"}) => {
+        const g=gameRef.current,source=v177FormalFutagoPairSource(g.definition);
+        resetNativeProofRoom(g);g.wave=source.wave;g.v100TwinSpawnCount=0;
+        const proof=prepareV177NativeFutagoPair(g,{
+          renderKind:form,phase,proofId:g.battleAudioGeneration+":futago-native:"+g.nextId+":"+phase,lane:1,laneY:activeLaneCenters[1],
+        },{
+          spawnEnemy,bossRenderKind,normalAttackReach,
+          spawnControlledGuardian:(world:Game)=>{
+            const firstId=world.nextId;
+            if(!spawnHuman(world,"guardian",false))throw new Error("Pair target constructor unavailable");
+            return world.fighters.find(f=>f.id>=firstId&&f.kind==="guardian"&&f.side==="human");
+          },
+          originalFutagoStatsFor:(world:Game)=>{
+            const stats=enemyStatsForWave("futago",world.wave,{v100:true,stageNumber:24});
+            return {...stats,laneSpeed:enemyLaneSpeedFor("futago"),maxHp:stats.hp};
+          },
+        });
+        nativeFutagoDamageCopy.arm(g,proof);
+        selectedActionRef.current=null;setSelectedAction(null);setStarted(true);setPaused(true);setEnd(null);setScreen("battle");
+        return proof;
+      },
+      getV177NativeFutagoPair: (proofId:string) => {
+        const g=gameRef.current,copy=nativeFutagoDamageCopy.read(g);
+        if(!copy||copy.proof.proofId!==proofId)throw new Error("Native pair proof unavailable");
+        return {...copy,ownerEvidence:copy.proof.ownerEvidence,battleGeneration:g.battleAudioGeneration,
+          members:g.fighters.filter(f=>[copy.proof.fighterId,copy.proof.partnerId].includes(f.id))
+            .map(f=>({id:f.id,v100BossId:f.v100BossId,v100TwinPair:f.v100TwinPair,
+              v100TwinPart:f.v100TwinPart,v100TwinEnraged:f.v100TwinEnraged}))};
+      },
+      prepareV177BornTurnedContinuation: ({proofId,phase}:{proofId:string;phase:"move"|"attack"|"engage"}) => {
+        const g=gameRef.current;
+        const proof=configureV177BornTurnedContinuation(g,{proofId,phase,lane:1,laneY:activeLaneCenters[1]},{
+          readGetup:(world:Game)=>readV177TurnedGetupProof(world,{},{
+            readBirth:readV177TurnedBirthPresentation,
+            corpseHistory:(id:number)=>corpseRenderAuditHistory.get(id)??[],
+            fighterHistory:(id:number)=>fighterRenderAuditHistory.get(id)??[],
+          }),
+          readBirth:readV177TurnedBirthPresentation,
+          spawnTarget:(world:Game)=>{
+            const firstId=world.nextId;
+            if(!spawnHuman(world,"guardian",false))throw new Error("Born turned target unavailable");
+            return world.fighters.find(f=>f.id>=firstId&&f.kind==="guardian"&&f.side==="human");
+          },
+          catalog:{knownForms:spriteKinds,playableKinds:PLAYABLE_COMBAT_KINDS,
+            createAnimationRuntime:createCombatAnimationRuntime,attackReachFor:normalAttackReach},
+        });
+        fighterRenderAuditHistory.delete(proof.fighterId);fighterActualXDeltaAudit.delete(proof.fighterId);
+        g.paused=true;setPaused(true);return proof;
+      },
       prepareV177ContinuousActorProof: ({form,phase,sourceKind="guardian"}: {form:string;phase:"move"|"attack"|"engage"|"defeat";sourceKind?:UnitKind}) => {
         const proofCatalog={knownForms:spriteKinds,playableKinds:PLAYABLE_COMBAT_KINDS,
           createAnimationRuntime:createCombatAnimationRuntime,attackReachFor:normalAttackReach,feralSeconds:MANUAL_ABILITY_REGISTRY["mayo-chan"].activeSeconds};
@@ -18695,6 +18786,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             }
           }
           manualAbilityReadyStateRef.current.set(owner.id, readyNow);
+          if(fighterRenderAuditEnabled)nativeMayoProofRef.current?.beforeStep(g,owner,dt,performanceCounters.simulationTicks);
+          try {
           if (owner.kind === "mayo-chan" && owner.manualAbility.phase === "feral" && !owner.mayoRetreat) {
             const hpStep = mayoAbilityHpStep({ hp: owner.hp, maxHp: owner.maxHp, seconds: dt });
             owner.hp = hpStep.hp;
@@ -19352,6 +19445,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             representativeSixPhasePauseRef.current = null;
             g.paused = true;
             setPaused(true);
+          }
+          } finally {
+            if(fighterRenderAuditEnabled)nativeMayoProofRef.current?.afterStep(g,owner,performanceCounters.simulationTicks);
           }
         }
         const pendingWeaponStep = advancePendingWeaponHits(g.pendingWeaponHits, dt);
@@ -21222,12 +21318,17 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                       && String(candidate.id) === victimId
                     ));
                     if (!victim) continue;
+                    const nativePairHpBefore = fighterRenderAuditEnabled ? victim.hp : 0;
                     const resolved = applyIncomingHumanDamage(
                       g,
                       victim,
                       abilityDamage,
                       { attackKind: "melee", attacker: f },
                     );
+                    if(fighterRenderAuditEnabled)nativeFutagoDamageCopy.copyAfterAppliedDamage(g,{
+                      source:f,target:victim,beforeHp:nativePairHpBefore,resolvedDamage:resolved.targetDamage,
+                      mode:"cross-strike",attackSequence:f.attackSequence+1,
+                    });
                     victim.flash = Math.max(victim.flash, .18);
                     victim.knock = Math.max(victim.knock, anomalyKind === "gairen" ? 18 : 14);
                     // Keep each target's impact readable in a clustered phone battle.
@@ -22325,6 +22426,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 target.hp -= immediateAttackDamage;
                 appliedAttack = { targetDamage: immediateAttackDamage };
               }
+              if(fighterRenderAuditEnabled)nativeFutagoDamageCopy.copyAfterAppliedDamage(g,{
+                source:f,target,beforeHp:targetHpBeforeMetric,resolvedDamage:appliedAttack.targetDamage,
+                mode:"normal-direct",attackSequence:committedAttackSequence,
+              });
               if(appliedAttack.targetDamage>0)noteV102GoreImpact(g,target,{weapon:f.kind,originX:f.x,originY:f.y,damage:appliedAttack.targetDamage});
               if (f.side === "human" && appliedAttack.targetDamage > 0) {
                 recordUnitDamage(g, f.kind, Math.max(0, targetHpBeforeMetric) - Math.max(0, target.hp));

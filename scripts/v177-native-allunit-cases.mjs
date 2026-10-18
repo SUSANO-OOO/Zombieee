@@ -1,0 +1,180 @@
+import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
+import {readFile} from 'node:fs/promises';
+import path from 'node:path';
+import {MANUAL_ABILITY_REGISTRY} from '../app/manualAbilities.js';
+import {assertV177AuthoredLiveRender} from './v177-continuous-render-contract.mjs';
+import {nativeBattleTap} from './v100-normal-tactical-input.mjs';
+import {manualMarkerDispatchStarted} from './v100-phase-g-runtime-evidence.mjs';
+import {beginV177NativeCanvasClip} from './v177-native-canvas-clips.mjs';
+import {startNativeGameRafObservation,stopNativeGameRafObservation,
+  nativeGameDamageReceipt,nativeGamePerformanceReceipt} from './v177-native-game-capture-browser.mjs';
+import {LIMITS,assertPlannedCase} from './v177-native-allunit-manifest.mjs';
+import {readNativeAllUnitSample,assertShardProof,postpaintCaptureBoundary,
+  assertShardPostpaintContract} from './v177-native-allunit-contract.mjs';
+import {assertMayoFeralReceipt,assertFutagoPairDamageAndOwner} from './v177-native-allunit-owners.mjs';
+
+export function hasPreparedAllUnitPaint(proof){
+  const qa=window.__ASHFALL_BATTLE_QA__,s=qa?.getSnapshot(),a=qa?.getEnemyFacingRuntimeAudit(proof.fighterId);
+  return document.visibilityState==='visible'&&s?.running===true&&s.paused===true
+    &&a?.fighter?.id===proof.fighterId&&a.fighter.hp>0&&a.fighter.renderKind===proof.renderKind
+    &&a.renderHistory.some(r=>r.renderKind===proof.renderKind&&r.jointDrawSucceeded===true
+      &&r.assetReady===true&&Number.isFinite(r.jointPaintedAt)&&r.renderSequence>0);
+}
+export function observeMayoPointer(proof){
+  const state={proofId:proof.proofId,proofGeneration:proof.proofGeneration,
+    battleGeneration:proof.battleGeneration,events:[],overflow:false};
+  const record=e=>{
+    const button=e.target?.closest?.('button.manual-ability-ready');
+    if(!button||Number(button.dataset.fighterId)!==proof.fighterId)return;
+    if(state.events.length>=16){state.overflow=true;return;}
+    state.events.push({type:e.type,isTrusted:e.isTrusted,fighterId:Number(button.dataset.fighterId),
+      kind:button.dataset.abilityKind,at:performance.now()});
+  };
+  for(const type of ['pointerdown','pointerup','click'])document.addEventListener(type,record,true);
+  state.stop=()=>{for(const type of ['pointerdown','pointerup','click'])document.removeEventListener(type,record,true);};
+  return state;
+}
+export function finishMayoPointer(state){
+  state.stop();return {proofId:state.proofId,proofGeneration:state.proofGeneration,
+    battleGeneration:state.battleGeneration,events:state.events,overflow:state.overflow};
+}
+
+async function prepareCase(page,row,owned,active,resources){
+  let proof;
+  if(row.owner==='turned-birth'){
+    row.birthSetup=await owned(()=>page.evaluate(()=>window.__ASHFALL_BATTLE_QA__.prepareV177TurnedGetupProof({variant:0})));
+    await owned(()=>page.waitForFunction(()=>Number.isFinite(window.__ASHFALL_BATTLE_QA__
+      .getV177TurnedGetupProof({light:true}).corpseRenderSequence),undefined,{timeout:LIMITS.readinessMs}));
+    row.birthRelease=await owned(()=>page.evaluate(id=>window.__ASHFALL_BATTLE_QA__.releaseV177TurnedGetupProof(id),row.birthSetup.proofId));
+    // The original 4.8s infection and .75s rise run freely, without a clock setter.
+    await owned(()=>page.waitForFunction(()=>{
+      const s=window.__ASHFALL_BATTLE_QA__.getV177TurnedGetupProof();
+      return s.actualBirth&&s.fighter?.spawnGrace===0&&s.draws.filter(r=>r.jointDrawSucceeded===true
+        &&r.jointGetupProgress===null&&r.jointPaintedAt>=s.actualBirth.bornAt+s.actualBirth.initialRemaining
+        &&['idle','move','start-move','stop-move','turn'].includes(r.requestedState)).length>=3;
+    },undefined,{timeout:8500}));
+    proof=await owned(()=>page.evaluate(({proofId,phase})=>window.__ASHFALL_BATTLE_QA__
+      .prepareV177BornTurnedContinuation({proofId,phase}),{proofId:row.birthSetup.proofId,phase:row.phase}));
+  }else if(row.owner==='futago-pair'){
+    proof=await owned(()=>page.evaluate(({form,phase})=>window.__ASHFALL_BATTLE_QA__
+      .prepareV177NativeFutagoPair({form,phase}),{form:row.form,phase:row.phase}));
+  }else if(row.owner==='mayo-activation'){
+    proof=await owned(()=>page.evaluate(phase=>window.__ASHFALL_BATTLE_QA__.prepareV177NativeMayoProof({phase}),row.phase));
+    const selector='button.manual-ability-ready.available[data-ability-kind="mayo-chan"][data-fighter-id="'+proof.fighterId+'"][aria-disabled="false"]';
+    const button=page.locator(selector);await owned(()=>button.waitFor({state:'visible',timeout:LIMITS.readinessMs}));
+    resources.pointer=await page.evaluateHandle(observeMayoPointer,proof);active();
+    const before=await owned(()=>page.evaluate(()=>window.__ASHFALL_BATTLE_QA__.getPhaseGCombatSnapshot()));
+    const inputPage={mouse:Object.fromEntries(['move','down','up'].map(key=>[key,async(...args)=>{
+      active();const result=await page.mouse[key](...args);active();return result;
+    }]))};
+    row.inputPhases=[];
+    assert.equal(await owned(()=>nativeBattleTap(inputPage,button,row.inputPhases)),true,'Original Mayo native input required');
+    const after=await owned(()=>page.evaluate(()=>window.__ASHFALL_BATTLE_QA__.getPhaseGCombatSnapshot()));
+    assert.equal(manualMarkerDispatchStarted(before,after,proof.fighterId,'mayo-chan'),true);
+    row.pointer=await owned(()=>resources.pointer.evaluate(finishMayoPointer));
+    assert.equal(row.pointer.overflow,false);await resources.pointer.dispose();resources.pointer=null;
+    await owned(()=>page.waitForFunction(id=>{
+      const s=window.__ASHFALL_BATTLE_QA__.getV177NativeMayoProof(id,true);
+      return s.manualAbility?.phase==='feral'&&s.manualAbility.activeRemaining>0&&!s.mayoRetreat;
+    },proof.proofId,{timeout:LIMITS.readinessMs}));
+    proof=await owned(()=>page.evaluate(id=>window.__ASHFALL_BATTLE_QA__.armV177NativeMayoProof(id),proof.proofId));
+  }else{
+    assert.ok(['ordinary','legacy-art'].includes(row.owner),'Every special form requires its own real owner');
+    proof=await owned(()=>page.evaluate(({form,phase})=>{
+      const qa=window.__ASHFALL_BATTLE_QA__,p=qa.prepareV177ContinuousActorProof({form,phase});
+      qa.setEnemyVfxProofPaused(true);return p;
+    },{form:row.form,phase:row.phase}));
+  }
+  const actual=await owned(()=>page.evaluate(()=>({route:location.pathname,
+    battleGeneration:window.__ASHFALL_BATTLE_QA__.getPhaseGCombatSnapshot().battleGeneration})));
+  return {...proof,...actual,schema:'v177-native-shard-proof/v1',owner:row.owner,
+    proofId:proof.proofId??actual.battleGeneration+':'+row.form+':'+proof.fighterId+':'+row.phase,
+    ownerEvidence:proof.ownerEvidence??proof.origin??{constructorFixture:true,legacyFusedFixture:proof.legacyFusedFixture}};
+}
+
+export function assertAllUnitClip(row,bytes){
+  const c=row.nativeClip;
+  assert.equal(c.status,'recorded');assert.equal(c.engine,'webkit');assert.equal(c.requestedMimeType,'video/webm;codecs=vp8');
+  assert.match(c.mimeType,/^video\/webm/u);assert.equal(c.originalSpeedAccepted,false);assert.equal(c.encodedPtsVerified,false);
+  assert.ok(Number.isSafeInteger(c.bytes)&&c.bytes>0&&c.bytes<=LIMITS.clipBytes);
+  assert.equal(bytes.length,c.bytes);assert.equal(createHash('sha256').update(bytes).digest('hex'),c.sha256);
+  for(const [key,value]of Object.entries(row.recordingMetadata))assert.deepEqual(c.metadata[key],value,'Original clip binding: '+key);
+  assert.equal(c.timeOrigin,row.recordingStart.timeOrigin);assert.equal(c.startedAt,row.recordingStart.startedAt);
+  assert.ok(c.startedAt<=row.boundary.at&&row.boundary.at<=row.release.at);
+  assert.ok(row.samples.at(-1).at<=c.stopRequestedAt);
+  assert.equal(row.sourceRaf.timeOrigin,c.timeOrigin);assert.equal(row.sourceRaf.overflow,false);
+  assert.ok(row.sourceRaf.rows.length>=2);
+  for(let i=0;i<row.sourceRaf.rows.length;i++){
+    const r=row.sourceRaf.rows[i];assert.ok(Number.isFinite(r.at)&&Number.isFinite(r.renderSequence));
+    assert.equal(r.renderKind,row.form);if(i)assert.ok(r.at>row.sourceRaf.rows[i-1].at);
+  }
+}
+export async function captureAllUnitCase(page,row,{out,onFailure=()=>{}}={}){
+  assertPlannedCase(row);let clip,observation,primary;
+  const resources={pointer:null};
+  const active=()=>{assert.notEqual(row.deadlineExpired,true,'Late capture cannot become accepted');assert.equal(page.isClosed(),false);};
+  const owned=async operation=>{active();const value=await operation();active();return value;};
+  try{
+    row.proof=await prepareCase(page,row,owned,active,resources);assertShardProof(row,row.proof);
+    await owned(()=>page.waitForFunction(hasPreparedAllUnitPaint,row.proof,{timeout:LIMITS.readinessMs}));
+    observation=await page.evaluateHandle(startNativeGameRafObservation,row.proof);active();
+    row.recordingMetadata={form:row.form,requestedKind:row.proof.kind,phase:row.phase,
+      fixtureGroup:row.phase==='engage'?'approach-to-attack':row.proof.side==='human'||row.owner==='legacy-art'?'authored-form':'base-enemy',
+      fighterId:row.proof.fighterId,preparedRenderKind:row.form,owner:row.owner,caseId:row.caseId,
+      proofId:row.proof.proofId,battleGeneration:row.proof.battleGeneration,
+      legacyFusedFixture:row.proof.legacyFusedFixture,diagnosticOnly:true,controlledOpponent:true};
+    clip=await beginV177NativeCanvasClip(page,row.recordingMetadata,{directory:path.join(out,
+      row.viewport.width+'x'+row.viewport.height,'native-canvas-clips'),engine:'webkit',requestedMimeType:'video/webm;codecs=vp8'});active();
+    row.recordingStart=await owned(()=>clip.waitForStart());
+    row.pausedCaptureStart=await owned(()=>page.evaluate(readNativeAllUnitSample,{...row.proof,performanceBoundary:true}));
+    row.boundary=postpaintCaptureBoundary(row,row.proof,row.pausedCaptureStart,row.recordingStart);
+    row.sequenceBaseline=row.boundary.renderSequence;
+    row.release=await owned(()=>page.evaluate(proof=>{
+      const qa=window.__ASHFALL_BATTLE_QA__,before=qa.getSnapshot();
+      if(before.paused!==true)throw Error('Prepared capture must remain paused');
+      if(proof.owner==='mayo-activation')qa.releaseV177NativeMayoProof(proof.proofId);
+      else qa.setEnemyVfxProofPaused(false);
+      const after=qa.getSnapshot();return{at:performance.now(),timeOrigin:performance.timeOrigin,
+        beforePaused:before.paused,afterPaused:after.paused,beforeTime:before.time,afterTime:after.time};
+    },row.proof));
+    row.captureStart=await owned(()=>page.evaluate(readNativeAllUnitSample,{...row.proof,performanceBoundary:true}));
+    const count=row.phase==='engage'?LIMITS.engageSamples:LIMITS.moveAttackSamples;
+    for(let i=0;i<count;i++){
+      await owned(()=>page.waitForTimeout(LIMITS.sampleDelayMs));
+      row.samples.push(await owned(()=>page.evaluate(readNativeAllUnitSample,{...row.proof,performanceBoundary:i===count-1})));
+    }
+    const completed=clip;clip=null;row.nativeClip=await completed.finish({completed:true});active();
+    row.sourceRaf=await owned(()=>observation.evaluate(stopNativeGameRafObservation));
+    await observation.dispose();observation=null;
+    row.captureEnd=await owned(()=>page.evaluate(readNativeAllUnitSample,row.proof));
+    if(row.owner==='mayo-activation'){
+      assert.equal(row.captureEnd.fighter?.manualAbilityPhase,'feral');assert.ok(row.captureEnd.fighter.activeRemaining>0);
+      row.proof={...row.proof,...await owned(()=>page.evaluate(id=>window.__ASHFALL_BATTLE_QA__.getV177NativeMayoProof(id),row.proof.proofId))};
+      row.proof.ownerEvidence.pointer=row.pointer;
+    }
+    assertAllUnitClip(row,await readFile(row.nativeClip.file));
+    row.postpaintReceipt=assertShardPostpaintContract(row,row.proof,row.boundary,row.release,row.samples);
+    const windowSamples=row.samples.map(s=>({...s,renders:s.renders.filter(r=>r.renderSequence>row.sequenceBaseline
+      &&r.jointPaintedAt>=row.boundary.simulationTime&&r.jointPaintedAt<=s.simulationTime)}));
+    row.summary=assertV177AuthoredLiveRender({...row,samples:windowSamples});
+    row.expectedJointPath=row.binding.atlas.path;
+    row.damageReceipt=row.owner==='mayo-activation'?assertMayoFeralReceipt(row,MANUAL_ABILITY_REGISTRY['mayo-chan'])
+      :row.owner==='futago-pair'?assertFutagoPairDamageAndOwner(row):nativeGameDamageReceipt(row);
+    row.performanceReceipt=nativeGamePerformanceReceipt(row);active();row.status='observed-diagnostic';
+  }catch(error){primary=error;row.originalFailure=String(error);onFailure(error);throw error;}
+  finally{
+    row.cleanupErrors=[];
+    if(resources.pointer){
+      try{row.interruptedPointer=await resources.pointer.evaluate(finishMayoPointer);}catch(e){row.cleanupErrors.push(String(e));}
+      try{await resources.pointer.dispose();}catch(e){row.cleanupErrors.push(String(e));}
+    }
+    if(clip)try{row.interruptedClip=await clip.finish({completed:false});}catch(e){row.cleanupErrors.push(String(e));}
+    if(observation){
+      try{row.interruptedSourceRaf=await observation.evaluate(stopNativeGameRafObservation);}catch(e){row.cleanupErrors.push(String(e));}
+      try{await observation.dispose();}catch(e){row.cleanupErrors.push(String(e));}
+    }
+    try{await page.evaluate(()=>window.__ASHFALL_BATTLE_QA__.setEnemyVfxProofPaused(true));}catch(e){row.cleanupErrors.push(String(e));}
+    if(!primary&&row.cleanupErrors.length)throw Error(row.cleanupErrors.join('; '));
+  }
+}

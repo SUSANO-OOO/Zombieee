@@ -1,0 +1,62 @@
+name: All Unit Native Motion Capture
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/native-allunit-capture.yml'
+      - 'scripts/v177-native-allunit-*.mjs'
+      - 'tests/v177-native-allunit.test.mjs'
+      - 'scripts/v177-native-canvas-clips.mjs'
+      - 'app/AshfallGame.tsx'
+      - 'app/v177*.js'
+      - 'app/spriteManifest.js'
+      - 'app/combatPresentation.js'
+      - 'app/manualAbilities.js'
+      - 'public/art/v100/joints/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-allunit-capture-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  capture:
+    runs-on: macos-15-intel
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [forms-1, forms-2, forms-3, forms-4, forms-5, forms-6]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Install pinned native WebKit
+        run: |
+          npm ci --prefix scripts/pwa-native-runtime
+          node scripts/pwa-native-runtime/node_modules/playwright/cli.js install webkit
+      - name: Build the exact PR candidate
+        env:
+          GITHUB_PAGES_RELEASE_SHA: ${{ github.event.pull_request.head.sha }}
+        run: npm run build
+      - name: Capture actual movement and attacks for this eight-form shard
+        env:
+          V177_EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          V177_CAPTURE_SHARD: ${{ matrix.shard }}
+          V177_NATIVE_ALLUNIT_OUT: outputs/v177-native-allunit-${{ matrix.shard }}
+        run: node scripts/v177-native-allunit-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v177-native-allunit-${{ matrix.shard }}
+          path: outputs/v177-native-allunit-${{ matrix.shard }}
+          if-no-files-found: error
+          retention-days: 7
