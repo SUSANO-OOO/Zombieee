@@ -4315,7 +4315,7 @@ function drawSpriteFighter(
     manualDirection: lockedDirection,
     manualAbilityActive,
   });
-  const direction = v177TurnedGetupDirection(options.world,f,stationAbilityPose && Number.isFinite(stationAbilityPose.direction) && stationAbilityPose.direction !== 0
+  let direction = v177TurnedGetupDirection(options.world,f,stationAbilityPose && Number.isFinite(stationAbilityPose.direction) && stationAbilityPose.direction !== 0
     ? stationAbilityPose.direction < 0 ? 'left' : 'right'
     : soukiPose ? 'left' : (guardianGuardPose || kumaGuardArtPose) && Number.isFinite(lockedDirection) && lockedDirection !== 0
     ? lockedDirection < 0 ? 'left' : 'right'
@@ -4464,7 +4464,7 @@ function drawSpriteFighter(
         futagoAbilityTuning:f.kind==="futago"?anomalyTuning:undefined}) : null;
   const articulatedWalk = Boolean(!jointPose && options.v100AuthoredPresentation
     && v100UsesHumanWalk(renderKind,animationSample,{manualAbilityActive}));
-  const frame = articulatedWalk || jointPose ? v100HumanWalkFrame(spriteFrameFor(renderKind,'walk-a','right'),direction) : tataraGroundCandidate
+  let frame = articulatedWalk || jointPose ? v100HumanWalkFrame(spriteFrameFor(renderKind,'walk-a','right'),direction) : tataraGroundCandidate
     ? { sourceRect: TATARA_GROUND_ART.sourceRect, anchorX: TATARA_GROUND_ART.anchorX, anchorY: TATARA_GROUND_ART.anchorY, flipX: direction === 'right', path: TATARA_GROUND_ART.path }
     : kumaGuardArtPose
     ? { sourceRect: V100_KUMAVERSON_GUARD_ART.sourceRect, anchorX: V100_KUMAVERSON_GUARD_ART.anchorX, anchorY: V100_KUMAVERSON_GUARD_ART.anchorY, flipX: direction === 'left', path: V100_KUMAVERSON_GUARD_ART.path }
@@ -4488,7 +4488,11 @@ function drawSpriteFighter(
     w: authoredSize.w * compactScale * depthScale * animationSample.bodyScale,
     h: authoredSize.h * compactScale * depthScale * animationSample.bodyScale,
   };
-  jointPose=v177RangerFootPlan(renderKind,jointPose,{actor:f,world:options.world,width:size.w});
+  jointPose=v177RangerFootPlan(renderKind,jointPose,{actor:f,world:options.world,width:size.w,direction});
+  if(jointPose?.rangerFeet){
+    const footDirection=jointPose.rangerFeet.facing<0?'left':'right';
+    if(footDirection!==direction){direction=footDirection;frame={...frame,flipX:direction==='left'};}
+  }
   const articulatedWalkPhase = articulatedWalk || jointPose
     ? v100HumanWalkPhase(f.animationPresentation) : null;
   const locomotionPhase = articulatedWalkPhase ?? (Number(animationSample.clipProgress) || 0);

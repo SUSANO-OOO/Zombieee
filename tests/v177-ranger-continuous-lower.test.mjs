@@ -4,6 +4,8 @@ import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {gunzipSync} from 'node:zlib';
 import sharp from 'sharp';
+import ts from 'typescript';
+import {MANUAL_ABILITY_REGISTRY,createManualAbilityRuntime,beginManualAbility} from '../app/manualAbilities.js';
 import {V177_JOINT_ATLASES,v177JointPose,v177RangerFootPlan,drawV177JointPose,v177RenderedWeightedLowerReceipt,v177RenderedJointWeaponSocket} from '../app/v177JointPresentation.js';
 import {createV177RangerLowerPose,v177RangerLowerPose} from '../app/v177RangerLowerMotion.js';
 import {createV177RangerLowerPainter,paintV177RangerLower} from '../app/v177RangerLowerPaint.js';
@@ -182,4 +184,78 @@ test('actual RGBA draw finishes stop steps across actor replacements and repeate
     assert.deepEqual(last.receipt.footLiftPx,[0,0]);
     assert.ok(Math.abs(last.receipt.footWorldX[1]-last.receipt.footWorldX[0]-65*.2)<1e-9);
   }
+});
+
+test('actual turning paint keeps the body reflection, world feet and sampled muzzle on the same facing',async()=>{
+  const source=await readFile('app/AshfallGame.tsx','utf8');
+  const tree=ts.createSourceFile('game.tsx',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX),branches=[];
+  const visit=node=>{if(ts.isIfStatement(node)&&node.expression.getText(tree)==='jointPose?.rangerFeet')branches.push(node.getText(tree));ts.forEachChild(node,visit);};
+  visit(tree);assert.equal(branches.length,1);
+  const facingForPaint=new Function('jointPose','direction','frame',branches[0]+';return {direction,frame};');
+  for(const[width,height]of[[1280,720],[844,390],[844,340]])for(const start of ['right','left']){
+    const img=image(),world={time:0,fighters:[]},size={w:86.4,h:80.64},pose={offsetX:0,offsetY:0,scaleX:1,scaleY:1,rotationRadians:0};
+    const actor={id:41,x:330,y:285,animationPresentation:{moving:true,direction:start,locomotionPhase:.12,locomotionSettle:0}};
+    world.fighters=[actor];let firstFacing;
+    for(let tick=0;tick<=30;tick++){
+      world.time=tick/60;
+      const requested=tick===0?start:start==='right'?'left':'right';
+      Object.assign(actor.animationPresentation,{direction:requested,moving:tick===0,locomotionSettle:Math.min(1,tick/10)});
+      const sample=tick===0?{requestedState:'move'}:tick<6?{requestedState:'wind-up',clipProgress:tick/6}:{requestedState:'active',clipProgress:.3};
+      const base=v177JointPose('ranger',sample,actor.animationPresentation,{actor,world});
+      const plan=v177RangerFootPlan('ranger',base,{actor,world,width:size.w});
+      const originalFrame={anchorX:.5,anchorY:86/89.6,flipX:requested==='left'};
+      const resolved=facingForPaint(plan,requested,originalFrame),sign=resolved.direction==='left'?-1:1;
+      if(tick===0)firstFacing=sign;
+      if(tick===1)assert.equal(sign,firstFacing,'an endangered ankle must lift before the actual body is reflected');
+      assert.equal(resolved.frame.flipX,sign<0);
+      const snapshot=JSON.stringify(world),target=main({width,height,matrix:[sign,0,0,1,actor.x,actor.y]});
+      const socket=v177RenderedJointWeaponSocket({kind:'ranger',plan,direction:resolved.direction,frame:resolved.frame,size,pose,x:actor.x,y:actor.y});
+      assert.equal(drawV177JointPose(target.ctx,img,'ranger',plan,-size.w*.5,-size.h*86/89.6,size.w,size.h,{actor,world}),true);
+      assert.equal(JSON.stringify(world),snapshot,'display facing cannot change gameplay direction or save state');
+      const receipt=v177RenderedWeightedLowerReceipt(actor,world);
+      assert.equal(receipt.mode,'continuous-weighted-mesh');assert.equal(receipt.duplicateWithinPart,0);assert.equal(receipt.degenerate,0);
+      const lower=v177RangerLowerPose(rig,plan.phase,plan.lowerSettle,undefined,plan.lowerFootTargets);
+      for(let i=0;i<2;i++)assert.ok(Math.abs(actor.x+sign*size.w/480*(lower.joints[i][4]-240)-receipt.footWorldX[i])<1e-9,
+        'the reflected ankle actually painted must reconstruct its fixed world anchor');
+      if(socket){
+        const part=atlas.upperRig.parts.findIndex(part=>part.bone===atlas.upperRig.weaponBone),m=target.calls[part+1].matrix,[sx,sy]=atlas.upperRig.muzzle;
+        assert.ok(Math.hypot(socket.x-m[0]*sx-m[2]*sy-m[4],socket.y-m[1]*sx-m[3]*sy-m[5])<1e-8,
+          'the sampled shot origin must remain on the weapon actually painted during the turn');
+      }
+      assert.equal(v177RangerFootPlan('ranger',plan,{actor,world,width:size.w}),plan,'the second prepaint read reuses this exact resolved turn');
+      if(tick===30)assert.equal(sign,-firstFacing);
+    }
+  }
+  const frame={flipX:true};assert.deepEqual(facingForPaint(null,'left',frame),{direction:'left',frame});
+});
+
+test('an ability activated before a simulation tick keeps its own aim through prepaint and the actual draw',async()=>{
+  const source=await readFile('app/AshfallGame.tsx','utf8'),tree=ts.createSourceFile('game.tsx',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);
+  const calls=[],branches=[];
+  const visit=node=>{
+    if(ts.isExpressionStatement(node)&&node.getText(tree).startsWith('jointPose=v177RangerFootPlan('))calls.push(node.getText(tree));
+    if(ts.isIfStatement(node)&&node.expression.getText(tree)==='jointPose?.rangerFeet')branches.push(node.getText(tree));
+    ts.forEachChild(node,visit);
+  };visit(tree);assert.equal(calls.length,1);assert.equal(branches.length,1);
+  const prepaint=new Function('jointPose','renderKind','f','options','size','direction','v177RangerFootPlan',calls[0]+';return jointPose;');
+  const resolve=new Function('jointPose','direction','frame',branches[0]+';return {direction,frame};');
+  const runtime={state:'idle',moving:false,direction:'right',locomotionPhase:.12,locomotionSettle:1};
+  const actor={id:77,kind:'ranger',side:'human',hp:70,x:330,y:285,stationAbility:{phase:'idle'},animationPresentation:runtime,manualAbility:createManualAbilityRuntime('ranger')};
+  const world={time:20,fighters:[actor]},img=image(),size={w:96,h:89.6};
+  const normal=v177JointPose('ranger',{requestedState:'idle'},runtime,{actor,world});
+  assert.equal(drawV177JointPose(main().ctx,img,'ranger',normal,-48,-86,96,89.6,{actor,world}),true);
+  const originalFeet=v177RenderedWeightedLowerReceipt(actor,world).footWorldX;
+  actor.manualAbility=beginManualAbility(actor.manualAbility,{direction:-1,x:200,y:285,targetId:901}).runtime;
+  const manual=v177JointPose('ranger',{requestedState:'special',clipProgress:0},runtime,{actor,world,ownedPose:true,rangerManualOwner:true,rangerManualDefinition:MANUAL_ABILITY_REGISTRY.ranger});
+  assert.ok(manual.rangerManualUpperPose);assert.equal(runtime.direction,'right');
+  const before=JSON.stringify(world),plan=prepaint(manual,'ranger',actor,{world},size,'left',v177RangerFootPlan);
+  const resolved=resolve(plan,'left',{anchorX:.5,anchorY:86/89.6,flipX:true});
+  assert.equal(resolved.direction,'left','the prepaint feet cannot replace manual aim with the older locomotion direction');
+  assert.equal(resolved.frame.flipX,true);assert.equal(plan.rangerFeet.facing,-1);
+  assert.equal(v177RangerFootPlan('ranger',plan,{actor,world,width:96}),plan,'the draw must keep the ability-owned prepaint direction');
+  const target=main({matrix:[-1,0,0,1,actor.x,actor.y]});
+  assert.equal(drawV177JointPose(target.ctx,img,'ranger',plan,-48,-86,96,89.6,{actor,world}),true);
+  const receipt=v177RenderedWeightedLowerReceipt(actor,world);
+  assert.equal(receipt.mode,'continuous-weighted-mesh');assert.deepEqual(receipt.footWorldX,originalFeet);
+  assert.equal(JSON.stringify(world),before);assert.equal(runtime.direction,'right');
 });

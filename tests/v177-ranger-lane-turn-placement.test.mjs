@@ -140,3 +140,47 @@ test('subthreshold drift after walking uses new lifted stop steps instead of ret
   assert.ok(Math.abs(state.feet[1].x-(root+scale*(rig.legs[1].footCenter+24-240)))<1e-8);
  }
 });
+
+test('a stationary facing turn lifts the endangered boot before reflecting the body',()=>{
+ // Counterexample A: reflecting a fixed far ankle at phase .12 exceeds the
+ // original leg length. Both world anchors must survive that first paint.
+ for(const facing of ['right','left']){
+  const input={time:0,root:330,phase:.12,scale:.18,moving:true,settle:0,facing};
+  const first=v177RangerFootPlacement(rig,null,input);
+  const request={...input,time:1/60,moving:false,facing:facing==='right'?'left':'right'};
+  let result=v177RangerFootPlacement(rig,first.state,request);
+  assertOriginalLegs(result,0);
+  assert.equal(result.state.facing,first.state.facing,'the body must wait for a reachable turning pose');
+  assert.ok(result.state.feet[0].height>0,'the endangered far boot must lift first');
+  assert.equal(result.state.feet[1].x,first.state.feet[1].x,'the other boot remains a world-space support');
+  assert.deepEqual(v177RangerFootPlacement(rig,result.state,request),result,'repeated painting cannot advance the turn');
+  for(let frame=2;frame<=32;frame++){
+   const previous=result.state;
+   result=v177RangerFootPlacement(rig,previous,{...request,time:frame/60});
+   assertOriginalLegs(result,0);
+   for(let i=0;i<2;i++)if(previous.feet[i].mode==='plant'&&result.state.feet[i].mode==='plant')
+    assert.equal(result.state.feet[i].x,previous.feet[i].x,'a turn cannot mirror or slide its supporting boot');
+  }
+  assert.equal(result.state.facing,-first.state.facing);
+  assert.deepEqual(result.state.feet.map(foot=>foot.height),[0,0]);
+ }
+});
+
+test('turning from each gait phase preserves original legs and supports through a stop or immediate pursuit',()=>{
+ for(const facing of [-1,1])for(const scale of [.18,.2])for(const resume of [false,true])for(let key=0;key<60;key++){
+  let root=330,phase=key/60;
+  const input={time:0,root,phase,scale,moving:true,settle:0,facing};
+  let result=v177RangerFootPlacement(rig,null,input);
+  for(let frame=1;frame<=36;frame++){
+   const moving=resume&&frame>=2,settle=moving?0:Math.min(1,frame/10);
+   if(moving){root-=facing*29/60;phase+=29/60/(scale*cycle);}
+   const current={...input,time:frame/60,root,phase,moving,settle,facing:-facing},previous=result.state;
+   result=v177RangerFootPlacement(rig,previous,current);
+   assertOriginalLegs(result,settle);
+   assert.deepEqual(v177RangerFootPlacement(rig,result.state,current),result,'sampling the same turn twice must be idempotent');
+   for(let i=0;i<2;i++)if(previous.feet[i].mode==='plant'&&result.state.feet[i].mode==='plant')
+    assert.equal(result.state.feet[i].x,previous.feet[i].x,'a turning support remains planted in world space');
+  }
+  assert.equal(result.state.facing,-facing);
+ }
+});

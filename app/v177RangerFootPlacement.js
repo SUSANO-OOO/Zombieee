@@ -29,6 +29,15 @@ function targets(rig, feet, root, facing, scale) {
   return feet.map((foot, i) => [localX(foot.x, root, facing, scale), rig.legs[i].groundAnkle - foot.height, foot.angle]);
 }
 
+function reachable(rig, foot, i, input, offset) {
+  const leg=rig.legs[i],x=localX(foot.x,input.root,input.facing,input.scale)-leg.hip[0];
+  const y=leg.groundAnkle-foot.height-leg.hip[1]-v177RangerLowerBob(input.phase+offset,input.settle??0);
+  const distance=Math.hypot(x,y);
+  // Eligibility for reflecting the body uses the original IK's strict bounds.
+  // It never clips an ankle or changes the leg that the painter validates.
+  return distance>Math.abs(leg.upperLength-leg.lowerLength)+1e-7&&distance<leg.upperLength+leg.lowerLength;
+}
+
 function stopping(rig, previous, input) {
   const {time, root, facing, scale, phase} = input;
   let stop = previous.stop;
@@ -36,11 +45,12 @@ function stopping(rig, previous, input) {
   // Start another real pair of steps instead of keeping that old goal forever.
   const goalMoved=stop&&previous.time-stop.at>=stop.durations[0]+stop.durations[1]
     &&stop.goal.some((foot,i)=>Math.abs(foot.x-worldX(rig.legs[i].footCenter+REST_OFFSET[i],root,facing,scale))>1e-10);
-  if (!stop || previous.moving || previous.facing !== facing || goalMoved) {
+  if (!stop || previous.moving || (previous.turnTargetFacing??previous.facing) !== facing || goalMoved) {
     const goal = restFeet(rig, root, facing, scale);
     const height = previous.feet.map(foot => foot.height);
     const distances = previous.feet.map((foot, i) => Math.abs(goal[i].x - foot.x) / scale);
-    const first = height[0] > height[1] + .01 ? 0 : height[1] > height[0] + .01 ? 1 : distances[0] < distances[1] ? 0 : 1;
+    const endangered=previous.feet.findIndex((foot,i)=>!reachable(rig,foot,i,input,previous.offset));
+    const first = endangered>=0 ? endangered : height[0] > height[1] + .01 ? 0 : height[1] > height[0] + .01 ? 1 : distances[0] < distances[1] ? 0 : 1;
     const order = [first, 1 - first];
     stop = {at:previous.time, from:previous.feet.map(foot => ({...foot})), goal,
       order, durations:order.map(i => distances[i] < 1e-10 && height[i] < 1e-10 ? 0 : STEP_SECONDS),
@@ -139,12 +149,20 @@ function advance(rig,previous,input) {
     }) : restFeet(rig, root, facing, scale);
     state = {time, root, facing, scale, phase, offset:0, moving:!!input.moving, feet};
   } else if (time === previous.time && root === previous.root && phase === previous.phase
-    && facing === previous.facing && !!input.moving === previous.moving) {
+    && facing === previous.facing && scale === previous.scale) {
     state = previous;
   } else if (input.frozen || input.moving && Math.abs(phase-previous.phase)<1e-9 && root!==previous.root) {
     // A hit/knock displacement belongs to the existing rigid body reaction.
     // Keep its local leg pose; leaving world anchors behind would overextend it.
     state = held(previous,input);
+  } else if (facing!==previous.facing && (previous.turnTargetFacing
+    ||previous.feet.some((foot,i)=>!reachable(rig,foot,i,input,previous.offset)))) {
+    // A fixed world ankle can become unreachable when only the body is
+    // reflected. Lift that boot first with the existing step and keep the
+    // previous display facing until both original legs allow the turn.
+    state=stopping(rig,previous,input);
+    if(state.feet.some((foot,i)=>!reachable(rig,foot,i,input,state.offset)))
+      state={...state,facing:previous.facing,turnTargetFacing:facing};
   } else {
     state = input.moving ? moving(rig, previous, input) : stopping(rig, previous, input);
   }
@@ -178,5 +196,5 @@ export function v177RangerFootPlacement(rig, previous, input) {
       }
     }
   }else state=advance(rig,previous,input);
-  return {state, phase:wrap(phase + state.offset), targets:targets(rig, state.feet, root, facing, scale)};
+  return {state, phase:wrap(phase + state.offset), targets:targets(rig, state.feet, root, state.facing, scale)};
 }

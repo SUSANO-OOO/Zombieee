@@ -359,13 +359,18 @@ function livingStunJointPose(kind,atlas,runtime,actor,remaining) {
 
 // Resolve before the renderer samples muzzle/ground sockets. Successful draw
 // remains the only publisher of the next actor's foot history.
-export function v177RangerFootPlan(kind,plan,{actor,world,width}={}) {
+export function v177RangerFootPlan(kind,plan,{actor,world,width,direction}={}) {
   const atlas=V177_JOINT_ATLASES[kind],runtime=actor?.animationPresentation;
   if(kind!=='ranger'||!plan?.upperRigPlan||!atlas?.lowerRig)return plan;
   const previous=renderedJointPoses.get(v177JointActorKey(actor,world)),state=plan.rangerFeet;
-  const scale=width/atlas.width,facing=runtime?.direction==='left'?-1:1;
-  if(state&&state.time===world?.time&&state.root===actor?.x&&state.scale===scale
-    &&state.phase===runtime?.locomotionPhase&&state.facing===facing)return plan;
+  const scale=width/atlas.width;
+  const current=state&&state.time===world?.time&&state.root===actor?.x&&state.scale===scale
+    &&state.phase===runtime?.locomotionPhase;
+  // A newly activated ability can own direction before the next simulation
+  // tick updates locomotion. Its prepaint plan must survive the draw's read.
+  const facing=direction===undefined&&current ? state.turnTargetFacing??state.facing
+    : (direction??runtime?.direction)==='left'?-1:1;
+  if(current&&(state.turnTargetFacing??state.facing)===facing)return plan;
   const feet=v177RangerFootPlacement(atlas.lowerRig,previous?.plan?.rangerFeet,{
     time:world?.time,root:actor?.x,scale,phase:runtime?.locomotionPhase,
     moving:runtime?.moving,facing,settle:plan.lowerSettle,frozen:plan.reactionHeld||plan.liveStun,
