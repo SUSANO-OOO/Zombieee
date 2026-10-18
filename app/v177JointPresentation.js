@@ -63,8 +63,9 @@ const futagoAbilityJoint=createV177FutagoAbilityJoint({
 
 export function v177JointCycleDistance(kind, renderScale) {
   const atlas = V177_JOINT_ATLASES[kind];
+  const cycleDistance=atlas?.lowerRig ? atlas.lowerRig.spanPx/atlas.lowerRig.stanceFraction : atlas?.cycleDistance;
   return atlas && Number.isFinite(renderScale) && renderScale > 0
-    ? atlas.cycleDistance / (atlas.referenceFrame?.scale??1) * renderScale : undefined;
+    ? cycleDistance / (atlas.referenceFrame?.scale??1) * renderScale : undefined;
 }
 
 export function v177JointPose(kind, sample, runtime, { ownedPose=false,actor,world,stunRemaining=0,rangerManualOwner=false,rangerManualDefinition,futagoAbilityOwner=false,futagoAbilityTuning }={}) {

@@ -31,11 +31,15 @@ function targets(rig, feet, root, facing, scale) {
 
 function reachable(rig, foot, i, input, offset) {
   const leg=rig.legs[i],x=localX(foot.x,input.root,input.facing,input.scale)-leg.hip[0];
-  const y=leg.groundAnkle-foot.height-leg.hip[1]-v177RangerLowerBob(input.phase+offset,input.settle??0);
-  const distance=Math.hypot(x,y);
+  const y=leg.groundAnkle-foot.height-leg.hip[1];
+  const bob=v177RangerLowerBob(input.phase+offset,input.settle??0);
   // Eligibility for reflecting the body uses the original IK's strict bounds.
-  // It never clips an ankle or changes the leg that the painter validates.
-  return distance>Math.abs(leg.upperLength-leg.lowerLength)+1e-7&&distance<leg.upperLength+leg.lowerLength;
+  // Include the settled body height: an ankle just reachable during the bob
+  // must not overextend as that same planted pose finishes settling.
+  return [y-bob,y].every(vertical=>{
+    const distance=Math.hypot(x,vertical);
+    return distance>Math.abs(leg.upperLength-leg.lowerLength)+1e-7&&distance<leg.upperLength+leg.lowerLength;
+  });
 }
 
 function stopping(rig, previous, input) {

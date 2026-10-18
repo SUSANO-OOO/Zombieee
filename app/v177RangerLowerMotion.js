@@ -12,7 +12,8 @@ export function createV177RangerLowerPose(rig) {
   return {matrices,meshes,joints:rig.legs.map(()=>new Float64Array(6)),bob:0,phase:0,settle:1};
 }
 function rigid(out,ax,ay,bx,by,cx,cy,dx,dy) {
-  const angle=Math.atan2(dy-cy,dx-cx)-Math.atan2(by-ay,bx-ax),c=Math.cos(angle),s=Math.sin(angle);
+  const angle=Math.atan2(dy-cy,dx-cx)-Math.atan2(by-ay,bx-ax);
+  const scale=Math.hypot(dx-cx,dy-cy)/Math.hypot(bx-ax,by-ay),c=Math.cos(angle)*scale,s=Math.sin(angle)*scale;
   out[0]=c;out[1]=s;out[2]=-s;out[3]=c;out[4]=cx-c*ax+s*ay;out[5]=cy-s*ax-c*ay;
 }
 export function v177RangerLowerPose(rig,phase,settle,out=createV177RangerLowerPose(rig),feet=null) {
@@ -32,7 +33,10 @@ export function v177RangerLowerPose(rig,phase,settle,out=createV177RangerLowerPo
     rigid(upper,...leg.hip,...leg.knee,hx,hy,kx,ky);rigid(lower,...leg.knee,...leg.ankle,kx,ky,ax,ay);
     const c=Math.cos(angle),s=Math.sin(angle),foot=out.matrices[leg.footBone];foot[0]=c;foot[1]=s;foot[2]=-s;foot[3]=c;
     foot[4]=ax-c*leg.ankle[0]+s*leg.ankle[1];foot[5]=ay-s*leg.ankle[0]-c*leg.ankle[1];
-    // Original preserve-volume dual-quaternion interpolation, not linear skinning.
+    // Blend rotation/translation as before, with the authored anatomical scale
+    // carried separately. Both source endpoints must reach their actual joint;
+    // rotating a longer painted shin alone would leave it beyond the boot.
+    const upperScale=Math.hypot(upper[0],upper[1]),lowerScale=Math.hypot(lower[0],lower[1]);
     const aa=Math.atan2(upper[1],upper[0])/2,bb=Math.atan2(lower[1],lower[0])/2,aw=Math.cos(aa),az=Math.sin(aa);
     let bw=Math.cos(bb),bz=Math.sin(bb);if(aw*bw+az*bz<0){bw=-bw;bz=-bz;}
     const vertices=out.meshes[leg.name];let previousWeight=NaN,co=0,si=0,offsetX=0,offsetY=0;
@@ -41,7 +45,8 @@ export function v177RangerLowerPose(rig,phase,settle,out=createV177RangerLowerPo
         const q0=aw*(1-w)+bw*w,qz=az*(1-w)+bz*w,n=Math.hypot(q0,qz),qw=q0/n,qzz=qz/n;
         const ddx=((upper[4]*aw+upper[5]*az)*(1-w)+(lower[4]*bw+lower[5]*bz)*w)*.5/n;
         const ddy=((upper[5]*aw-upper[4]*az)*(1-w)+(lower[5]*bw-lower[4]*bz)*w)*.5/n;
-        co=qw*qw-qzz*qzz;si=2*qw*qzz;offsetX=2*(ddx*qw-ddy*qzz);offsetY=2*(ddx*qzz+ddy*qw);previousWeight=w;
+        const scale=upperScale*(1-w)+lowerScale*w;
+        co=(qw*qw-qzz*qzz)*scale;si=2*qw*qzz*scale;offsetX=2*(ddx*qw-ddy*qzz);offsetY=2*(ddx*qzz+ddy*qw);previousWeight=w;
       }
       const x=leg.sourcePositions[j*2],y=leg.sourcePositions[j*2+1];vertices[j*2]=co*x-si*y+offsetX;vertices[j*2+1]=si*x+co*y+offsetY;
     }

@@ -113,12 +113,18 @@ export async function buildV177RangerUpper({root=process.cwd(),check=false}={}) 
       {shoulder:[253,114],elbow:[260,173],wrist:[283,191],upperBone:'arm-1-upper',lowerBone:'arm-1-lower',parentBone:'spine',effectorBone:'weapon-0'},
     ]};
   const smooth=t=>{t=Math.max(0,Math.min(1,t));return t*t*(3-2*t);};
-  const lowerRig={spanPx:definition.motion.walk.spanPx,liftPx:definition.motion.walk.liftPx,stanceFraction:.62,
+  const referenceLeg=definition.parts.find(p=>p.name==='near-pants');
+  const legLengths={upperLength:Math.hypot(referenceLeg.knee[0]-referenceLeg.hip[0],referenceLeg.knee[1]-referenceLeg.hip[1]),
+    lowerLength:Math.hypot(referenceLeg.ankle[0]-referenceLeg.knee[0],referenceLeg.ankle[1]-referenceLeg.knee[1])};
+  // The original far leg was about nine source pixels longer. Its extra knee
+  // bend crossed the near thigh during passing. Retarget both actual legs to
+  // the near leg's proportions, without changing any original clothing pixel.
+  const lowerRig={spanPx:68,liftPx:definition.motion.walk.liftPx,stanceFraction:.62,
     parts:lowerRows.map(({pixels,...row})=>{void pixels;return row;}),legs:['far-pants','near-pants'].map((name,i)=>{
       const p=definition.parts.find(v=>v.name===name),upperLength=Math.hypot(p.knee[0]-p.hip[0],p.knee[1]-p.hip[1]),lowerLength=Math.hypot(p.ankle[0]-p.knee[0],p.ankle[1]-p.knee[1]);
       const rings=[-.3,0,.2,.4,.6,.8,1].map(t=>upperLength*t).concat([.2,.4,.6,.8,1,1.2].map(t=>upperLength+lowerLength*t));
       const mesh=motion.meshDefinitions[name];assert.equal(mesh.sourcePositions.length,65);assert.equal(mesh.triangles.length,96);
-      return {name,hip:p.hip,knee:p.knee,ankle:p.ankle,upperBone:p.upperBone,lowerBone:p.lowerBone,footBone:'leg-'+i+'-foot',upperLength,lowerLength,
+      return {name,hip:p.hip,knee:p.knee,ankle:p.ankle,upperBone:p.upperBone,lowerBone:p.lowerBone,footBone:'leg-'+i+'-foot',...legLengths,
         // Both anatomical knees bend toward the authored +X facing. The near
         // crop's original painted stance must not select a backward IK branch.
         // The complete body transform already mirrors this for left facing.

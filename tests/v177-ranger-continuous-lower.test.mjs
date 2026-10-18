@@ -5,8 +5,8 @@ import {createHash} from 'node:crypto';
 import {gunzipSync} from 'node:zlib';
 import sharp from 'sharp';
 import ts from 'typescript';
-import {MANUAL_ABILITY_REGISTRY,createManualAbilityRuntime,beginManualAbility} from '../app/manualAbilities.js';
-import {V177_JOINT_ATLASES,v177JointPose,v177RangerFootPlan,drawV177JointPose,v177RenderedWeightedLowerReceipt,v177RenderedJointWeaponSocket} from '../app/v177JointPresentation.js';
+import {MANUAL_ABILITY_REGISTRY,createManualAbilityRuntime,beginManualAbility,advanceManualAbility} from '../app/manualAbilities.js';
+import {V177_JOINT_ATLASES,v177JointPose,v177RangerFootPlan,drawV177JointPose,v177RenderedWeightedLowerReceipt,v177RenderedJointWeaponSocket,v177JointCycleDistance} from '../app/v177JointPresentation.js';
 import {createV177RangerLowerPose,v177RangerLowerPose} from '../app/v177RangerLowerMotion.js';
 import {createV177RangerLowerPainter,paintV177RangerLower} from '../app/v177RangerLowerPaint.js';
 const atlas=V177_JOINT_ATLASES.ranger,rig=atlas.lowerRig,sha=b=>createHash('sha256').update(b).digest('hex');
@@ -95,7 +95,10 @@ test('append-only Ranger atlas retains every r2 RGBA byte, upper rig and full or
       assert.ok(raw.subarray(from,from+part.source.w*4).equals(texture.data.subarray(to,to+part.source.w*4)),part.name);}}
   for(const leg of rig.legs){assert.equal(leg.weights.length,65);assert.equal(leg.triangles.length,288);assert.equal(leg.sourcePositions.length,130);}
 });
-test('continuous lower corrects the backward near knee while keeping original foot contacts, far leg and limb lengths',()=>{
+test('the original lower remains reproducible as a legacy control with its original feet and far leg',()=>{
+  const rig={...atlas.lowerRig,spanPx:94,legs:atlas.lowerRig.legs.map(leg=>({...leg,
+    upperLength:Math.hypot(leg.knee[0]-leg.hip[0],leg.knee[1]-leg.hip[1]),
+    lowerLength:Math.hypot(leg.ankle[0]-leg.knee[0],leg.ankle[1]-leg.knee[1])}))};
   const out=createV177RangerLowerPose(rig);let maximum=0,oldBackwardNearKeys=0;
   for(let row=0;row<4;row++)for(let i=0;i<=60;i++){
     const frame=motion.actions[row].frames[i],pose=v177RangerLowerPose(rig,i/60,row/3,out),dx=frame.bones.root.head[0]-240;
@@ -118,6 +121,26 @@ test('continuous lower corrects the backward near knee while keeping original fo
   for(const phase of [0,1/30,.371,.62,.999])for(const settle of [1/6,1/3,.5,2/3,5/6]){
     const a=v177RangerLowerPose(rig,phase,settle-1e-9),b=v177RangerLowerPose(rig,phase,settle+1e-9);
     for(const leg of rig.legs)for(let i=0;i<a.meshes[leg.name].length;i++)assert.ok(Math.abs(a.meshes[leg.name][i]-b.meshes[leg.name][i])<1e-6);
+  }
+});
+
+test('live Ranger legs share anatomical proportions and their original cloth reaches each retargeted joint',()=>{
+  const near=rig.legs[1],point=(m,p)=>[m[0]*p[0]+m[2]*p[1]+m[4],m[1]*p[0]+m[3]*p[1]+m[5]];
+  for(const leg of rig.legs){
+    assert.equal(leg.upperLength,Math.hypot(near.knee[0]-near.hip[0],near.knee[1]-near.hip[1]));
+    assert.equal(leg.lowerLength,Math.hypot(near.ankle[0]-near.knee[0],near.ankle[1]-near.knee[1]));
+  }
+  for(const scale of [.18,.2])assert.equal(v177JointCycleDistance('ranger',scale),rig.spanPx/rig.stanceFraction*scale,
+    'actual travel must use the new painted stride rather than the longer legacy baked stride');
+  for(let frame=0;frame<120;frame++){
+    const pose=v177RangerLowerPose(rig,frame/120,0);
+    for(const [i,leg]of rig.legs.entries()){
+      const joints=pose.joints[i],upper=pose.matrices[leg.upperBone],lower=pose.matrices[leg.lowerBone];
+      for(const [matrix,source,target]of [[upper,leg.hip,[...joints.slice(0,2)]],[upper,leg.knee,[...joints.slice(2,4)]],
+        [lower,leg.knee,[...joints.slice(2,4)]],[lower,leg.ankle,[...joints.slice(4,6)]]])
+        assert.ok(Math.hypot(...point(matrix,source).map((value,i)=>value-target[i]))<1e-9,
+          'retargeting must not leave a rotated cloth endpoint past its actual knee or boot');
+    }
   }
 });
 test('actual joint draw paints one continuous lower and seven upper parts under full backing transforms',()=>{
@@ -250,12 +273,26 @@ test('an ability activated before a simulation tick keeps its own aim through pr
   assert.ok(manual.rangerManualUpperPose);assert.equal(runtime.direction,'right');
   const before=JSON.stringify(world),plan=prepaint(manual,'ranger',actor,{world},size,'left',v177RangerFootPlan);
   const resolved=resolve(plan,'left',{anchorX:.5,anchorY:86/89.6,flipX:true});
-  assert.equal(resolved.direction,'left','the prepaint feet cannot replace manual aim with the older locomotion direction');
-  assert.equal(resolved.frame.flipX,true);assert.equal(plan.rangerFeet.facing,-1);
+  assert.equal(plan.rangerFeet.turnTargetFacing??plan.rangerFeet.facing,-1,
+    'the prepaint feet cannot replace manual aim with the older locomotion direction');
+  assert.equal(resolved.direction,plan.rangerFeet.facing<0?'left':'right');
+  assert.equal(resolved.frame.flipX,plan.rangerFeet.facing<0);
   assert.equal(v177RangerFootPlan('ranger',plan,{actor,world,width:96}),plan,'the draw must keep the ability-owned prepaint direction');
-  const target=main({matrix:[-1,0,0,1,actor.x,actor.y]});
+  const target=main({matrix:[plan.rangerFeet.facing,0,0,1,actor.x,actor.y]});
   assert.equal(drawV177JointPose(target.ctx,img,'ranger',plan,-48,-86,96,89.6,{actor,world}),true);
   const receipt=v177RenderedWeightedLowerReceipt(actor,world);
   assert.equal(receipt.mode,'continuous-weighted-mesh');assert.deepEqual(receipt.footWorldX,originalFeet);
   assert.equal(JSON.stringify(world),before);assert.equal(runtime.direction,'right');
+  const initial=actor.manualAbility;let impactFacing;
+  for(let tick=1;tick<=30;tick++){
+    world.time=20+tick/60;const advanced=advanceManualAbility(initial,tick/60);actor.manualAbility=advanced.runtime;
+    const manual=v177JointPose('ranger',{requestedState:'special'},runtime,{actor,world,ownedPose:true,
+      rangerManualOwner:true,rangerManualDefinition:MANUAL_ABILITY_REGISTRY.ranger});
+    const next=prepaint(manual,'ranger',actor,{world},size,'left',v177RangerFootPlan);
+    assert.equal(next.rangerFeet.turnTargetFacing??next.rangerFeet.facing,-1);
+    const target=main({matrix:[next.rangerFeet.facing,0,0,1,actor.x,actor.y]});
+    assert.equal(drawV177JointPose(target.ctx,img,'ranger',next,-48,-86,96,89.6,{actor,world}),true);
+    if(advanced.events.some(event=>event.type==='impact'))impactFacing=next.rangerFeet.facing;
+  }
+  assert.equal(impactFacing,-1,'the actual ability impact must face the explicit target after its original windup');
 });
