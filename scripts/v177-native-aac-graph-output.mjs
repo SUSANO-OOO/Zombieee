@@ -154,12 +154,24 @@ export async function prepareGraphOutput(context,{state=createGraphState(),workl
     check(typeof env.AudioEncoder==='function'&&typeof env.AudioData==='function'&&typeof env.AudioWorkletNode==='function'&&context.audioWorklet,'Required actual graph/codec API absent');
     const config={codec:'mp4a.40.2',sampleRate:state.sampleRate,numberOfChannels:2,bitrate:192000,aac:{format:'aac'}};
     state.encoderSupport=await within(env.AudioEncoder.isConfigSupported(config),L.readyMs,'Encoder support');check(state.encoderSupport.supported,'Actual-rate AAC encoder unsupported');
-    const mime='audio/mp4; codecs="mp4a.40.2"';check(typeof env.MediaSource==='function'&&env.MediaSource.isTypeSupported(mime),'MediaSource AAC unsupported');
-    audio=env.document.createElement('audio');audio.hidden=true;audio.controls=false;audio.autoplay=false;audio.playsInline=true;audio.disableRemotePlayback=true;audio.preload='auto';audio.volume=1;audio.muted=false;audio.setAttribute('playsinline','');env.document.body.appendChild(audio);
+    const mime='audio/mp4; codecs="mp4a.40.2"';
+    // iPhone's ManagedMediaSource is a separate API; desktop MediaSource
+    // availability must not be used as evidence of the phone's output path.
+    const sourceKind=typeof env.ManagedMediaSource==='function'&&env.ManagedMediaSource.isTypeSupported(mime)
+      ?'ManagedMediaSource':'MediaSource',Source=env[sourceKind];
+    check(typeof Source==='function'&&Source.isTypeSupported(mime),'Native managed/classic MediaSource AAC unsupported');
+    state.route=sourceKind;
+    audio=env.document.createElement('audio');const remotePlaybackDisableSupported='disableRemotePlayback' in audio;audio.hidden=true;audio.controls=false;audio.autoplay=false;audio.playsInline=true;audio.disableRemotePlayback=true;audio.preload='auto';audio.volume=1;audio.muted=false;audio.setAttribute('playsinline','');
+    state.sourceAttachment={api:sourceKind,remotePlaybackDisableSupported,remotePlaybackDisabled:audio.disableRemotePlayback===true,srcWasEmpty:audio.src===''};
+    check(sourceKind!=='ManagedMediaSource'||remotePlaybackDisableSupported&&audio.disableRemotePlayback===true,'ManagedMediaSource requires native remote-playback disabling before attachment');
+    env.document.body.appendChild(audio);
     for(const event of ['playing','waiting','stalled','ended','error'])on(audio,event,()=>{if(state.events.length>=L.transportEvents){fail(new Error('Bounded media event capacity exhausted'));return;}state.events.push({event,ms:ms(),time:audio.currentTime});record('media-'+event);if(event==='error')fail(new Error('Native media element error'));});
     on(audio,'pause',()=>{if(desired&&allowed()){owner.onInterrupted?.();fail(new Error('Unexpected native media pause'));}});
     on(env,'pagehide',()=>{away=true;pause();});on(env,'pageshow',()=>{away=false;});on(env.document,'visibilitychange',()=>{if(!allowed())pause();});if(rotation)on(rotation,'change',()=>{if(!allowed())pause();});
-    source=new env.MediaSource();const opened=new Promise((resolve,reject)=>{on(source,'sourceopen',resolve);on(audio,'error',()=>reject(new Error('MSE source open failed')));});
+    source=new Source();if(sourceKind==='ManagedMediaSource'){
+      check(typeof source.streaming==='boolean','ManagedMediaSource streaming state unavailable');
+      for(const event of ['startstreaming','endstreaming'])on(source,event,()=>record('managed-'+event,{streaming:source.streaming}));
+    }const opened=new Promise((resolve,reject)=>{on(source,'sourceopen',resolve);on(audio,'error',()=>reject(new Error('MSE source open failed')));});
     url=env.URL.createObjectURL(source);audio.src=url;audio.load();await within(opened,L.readyMs,'MSE source open');
     state.durationInitialization={before:Number.isFinite(source.duration)?source.duration:String(source.duration),assignedInfinity:false};
     buffer=source.addSourceBuffer(mime);on(buffer,'updateend',()=>{record('updateend');try{recoverNativeMediaIfStalled();}catch(error){fail(error);}drain();});on(buffer,'error',()=>fail(new Error('Native SourceBuffer error')));

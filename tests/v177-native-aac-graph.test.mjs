@@ -37,7 +37,7 @@ function driverTest(name,fn){
 
 const repo=process.env.V177_GRAPH_REPO??process.cwd();
 const {nativeAacClockEvidence}=await import(pathToFileURL(path.join(repo,'scripts/v177-native-aac-probe.mjs')).href);
-function valid(){return{status:'complete',errors:[],primaryError:null,sampleRate:48000,realtimeAudioContexts:1,mixerContextSame:true,warmDiagnostics:{contextCreateCount:1,contextTiming:{sampleRate:48000}},processorReady:{sampleRate:48000},startedFromTrustedWarmClick:true,
+function valid(){return{route:'MediaSource',sourceAttachment:{api:'MediaSource',remotePlaybackDisableSupported:true,remotePlaybackDisabled:true,srcWasEmpty:true},status:'complete',errors:[],primaryError:null,sampleRate:48000,realtimeAudioContexts:1,mixerContextSame:true,warmDiagnostics:{contextCreateCount:1,contextTiming:{sampleRate:48000}},processorReady:{sampleRate:48000},startedFromTrustedWarmClick:true,
   initialization:{acknowledged:true,confirmedByActualMetadata:true},
   bgm:{trusted:true,assetId:'music-v100-score-normal',voiceId:'voice-1'},effect:{trusted:true,assetId:'weapon-rifle-01',voiceId:'voice-2',firstInputFrame:1,latencyMs:15},
   pcm:[{}],pcmBytes:8192,packets:[{}],encodedBytes:10,finished:{status:'framed',snapshot:{partialFrames:0,acceptedFrames:1024}},inputFrames:1024,transportOverflow:0,nativeRateRecoveries:[],pendingPcmPackets:0,peakPendingPcmPackets:0,peakEncoderQueue:1,peakPendingSegments:1,peakPendingBytes:100,
@@ -47,7 +47,7 @@ function fakeEnvironment({rate=48000,playError=null,encoderQueue=0,omitConfig=fa
   const env=new Target(),clock={now:0},sent=[],encoded=[],nodes=[],durationChanges=[];let currentSource,audio;
   env.performance={now:()=>clock.now};env.matchMedia=()=>Object.assign(new Target(),{matches:false});
   env.URL={createObjectURL:s=>{currentSource=s;return'blob:owned';},revokeObjectURL:()=>{env.revoked=true;}};
-  const doc=new Target();doc.visibilityState='visible';doc.body={appendChild:a=>{audio=a;}};doc.createElement=()=>{const a=new Target();Object.assign(a,{currentTime:0,duration:NaN,ended:false,readyState:4,paused:true,playbackRate:1,buffered:{length:0},volume:1,muted:false,src:'',setAttribute(){},removeAttribute(){this.src='';},remove(){this.removed=true;},load(){if(this.src)queueMicrotask(()=>{currentSource.readyState='open';currentSource.emit('sourceopen');});},play(){if(playError)return Promise.reject(playError);this.paused=false;this.emit('playing');return Promise.resolve();},pause(){this.paused=true;this.emit('pause');}});return a;};env.document=doc;
+  const doc=new Target();doc.visibilityState='visible';doc.body={appendChild:a=>{audio=a;}};doc.createElement=()=>{const a=new Target();Object.assign(a,{currentTime:0,duration:NaN,ended:false,readyState:4,paused:true,playbackRate:1,buffered:{length:0},disableRemotePlayback:false,volume:1,muted:false,src:'',setAttribute(){},removeAttribute(){this.src='';},remove(){this.removed=true;},load(){if(this.src)queueMicrotask(()=>{currentSource.readyState='open';currentSource.emit('sourceopen');});},play(){if(playError)return Promise.reject(playError);this.paused=false;this.emit('playing');return Promise.resolve();},pause(){this.paused=true;this.emit('pause');}});return a;};env.document=doc;
   class Source extends Target{static isTypeSupported(){return true;}constructor(){super();this.readyState='closed';this.durationValue=NaN;}get duration(){return this.durationValue;}set duration(value){durationChanges.push({value,readyState:this.readyState,updating:this.buffer?.updating??null});if(durationError)throw durationError;this.durationValue=value;}addSourceBuffer(){this.buffer=new Target();let appends=0;Object.assign(this.buffer,{updating:false,appendBuffer:()=>{this.buffer.updating=true;if(++appends===1&&deferInitialization)return;queueMicrotask(()=>{this.buffer.updating=false;this.buffer.emit('updateend');});}});return this.buffer;}endOfStream(){this.readyState='ended';audio.ended=true;}}
   env.MediaSource=Source;
   env.AudioData=class{constructor(options){Object.assign(this,options);this.copied=new Float32Array(options.data);}close(){this.closed=true;}};
@@ -66,7 +66,7 @@ test('150ms arithmetic matches the unchanged original helper, including invalid/
   for(const value of cases)assert.deepEqual(graphClockEvidence(value),nativeAacClockEvidence(value));
 });
 test('clock/result contract accepts the finite positive control only within its narrow scope',()=>{const result=assertGraphObservation(valid());assert.equal(result.clock.budgetMs,150);assert.match(result.scope,/not accepted/u);});
-const faults={startup:s=>s.events[0].ms=150.00001,lag:s=>s.playheads[0]={ms:200,time:.049,encodedFrames:9600},queued:s=>s.playheads[0]={ms:1,time:.001,encodedFrames:8192},effect:s=>s.effect.latencyMs=150.00001,
+const faults={sourceApi:s=>s.sourceAttachment.api='unbound',managedAirplay:s=>{s.route='ManagedMediaSource';s.sourceAttachment.api='ManagedMediaSource';s.sourceAttachment.remotePlaybackDisabled=false;},startup:s=>s.events[0].ms=150.00001,lag:s=>s.playheads[0]={ms:200,time:.049,encodedFrames:9600},queued:s=>s.playheads[0]={ms:1,time:.001,encodedFrames:8192},effect:s=>s.effect.latencyMs=150.00001,
   recoveryCap:s=>s.nativeRateRecoveries=Array.from({length:L.nativeResumeAttempts+1},()=>({zeroRate:0,restoredRate:1})),recoveryIncomplete:s=>s.nativeRateRecoveries=[{zeroRate:0,restoredRate:null}],
   fakeInput:s=>s.effect.trusted=false,wrongId:s=>s.effect.assetId='borrowed-rifle',missingVoice:s=>s.effect.voiceId=null,tail:s=>s.finished.status='partial-tail-retained-not-encoded',gap:s=>s.finished.snapshot.acceptedFrames=1025,
   overflow:s=>s.transportOverflow=1,encoderBacklog:s=>s.peakEncoderQueue=L.encoderQueue+1,pcmPoolBacklog:s=>s.peakPendingPcmPackets=L.pcmPoolPackets+1,undrainedPcm:s=>s.pendingPcmPackets=1,mseBacklog:s=>s.peakPendingBytes=L.pendingBytes+1,cleanup:s=>s.cleanup.completed=false,
@@ -516,4 +516,47 @@ test('hidden or disposed owner between native zero and one cannot restore a late
   const probe=nativeRateFixture(f,{onRate:value=>{if(value===0){if(disposed)void output.cleanup();else{f.env.document.visibilityState='hidden';f.env.document.emit('visibilitychange');}}}});
   await probe.ack(0);await probe.ack(50);assert.deepEqual(probe.rates,[0]);assert.equal(state.nativeRateRecoveries[0].cancelled,true);assert.equal(f.audio.playbackRate,0);await probe.ack(150);assert.deepEqual(probe.rates,[0]);await output.cleanup();
  }
+});
+
+
+function installManagedSource(f){
+ const Classic=f.env.MediaSource;
+ f.env.ManagedMediaSource=class extends Classic{constructor(){super();this.streaming=false;}};
+ return f.env.ManagedMediaSource;
+}
+
+test('managed native output is preferred and remote playback is disabled before actual source attachment',async()=>{
+ const f=fakeEnvironment(),Managed=installManagedSource(f),state=createGraphState(),create=f.env.URL.createObjectURL;
+ f.env.URL.createObjectURL=value=>{assert.equal(f.audio.disableRemotePlayback,true);assert.equal(f.audio.src,'');assert.ok(value instanceof Managed);return create(value);};
+ const output=await prepareGraphOutput(f.context,{state,workletUrl:'/worklet.mjs',env:f.env});
+ assert.equal(state.route,'ManagedMediaSource');assert.deepEqual(state.sourceAttachment,{api:'ManagedMediaSource',remotePlaybackDisableSupported:true,remotePlaybackDisabled:true,srcWasEmpty:true});
+ assert.equal(f.nodes.length,1);assert.equal(f.source.duration,Infinity);assert.equal(f.audio.disableRemotePlayback,true);await output.api.prepare();
+ f.source.streaming=true;f.source.emit('startstreaming');f.source.streaming=false;f.source.emit('endstreaming');
+ assert.deepEqual(state.transport.filter(r=>r.event.startsWith('managed-')).map(r=>[r.event,r.streaming]),[['managed-startstreaming',true],['managed-endstreaming',false]]);
+ f.nodes[0].port.onmessage({data:f.packet()});await new Promise(resolve=>setImmediate(resolve));assert.equal(state.pcm.length,1);assert.equal(state.packets.length,1);
+ await output.cleanup();const count=state.transport.length;f.source.emit('startstreaming');assert.equal(state.transport.length,count);assert.equal(state.cleanup.completed,true);
+});
+
+test('classic output remains available only when the managed AAC type is unavailable',async()=>{
+ for(const declared of [false,true]){
+  const f=fakeEnvironment(),Classic=f.env.MediaSource,state=createGraphState();
+  if(declared)f.env.ManagedMediaSource=class extends Classic{static isTypeSupported(){return false;}constructor(){assert.fail('Unsupported managed type must not construct');super();}};
+  const output=await prepareGraphOutput(f.context,{state,workletUrl:'/worklet.mjs',env:f.env});assert.equal(state.route,'MediaSource');assert.ok(f.source instanceof Classic);
+  assert.equal(state.sourceAttachment.api,'MediaSource');assert.equal(state.sourceAttachment.srcWasEmpty,true);await output.cleanup();
+ }
+});
+
+test('a managed constructor rejection stays the original failure and does not silently retry classic playback',async()=>{
+ const f=fakeEnvironment(),Original=f.env.MediaSource,original=new Error('native managed constructor failure');let classicConstructors=0;
+ f.env.MediaSource=class extends Original{constructor(){super();classicConstructors++;}};
+ f.env.ManagedMediaSource=class extends Original{constructor(){super();throw original;}};
+ const state=createGraphState();await assert.rejects(prepareGraphOutput(f.context,{state,workletUrl:'/worklet.mjs',env:f.env}),error=>error===original);
+ assert.equal(classicConstructors,0);assert.match(state.primaryError,/native managed constructor failure/u);assert.equal(state.cleanup.completed,true);assert.equal(f.nodes.length,0);assert.equal(state.pcm.length,0);
+});
+
+test('managed source rejects a missing native remote playback control before attaching any source',async()=>{
+ const f=fakeEnvironment();installManagedSource(f);const create=f.env.document.createElement;let created;
+ f.env.document.createElement=()=>{created=create();delete created.disableRemotePlayback;return created;};
+ const state=createGraphState();await assert.rejects(prepareGraphOutput(f.context,{state,workletUrl:'/worklet.mjs',env:f.env}),/requires native remote-playback disabling before attachment/u);
+ assert.equal(state.sourceAttachment.remotePlaybackDisableSupported,false);assert.equal(state.sourceAttachment.srcWasEmpty,true);assert.equal(f.source,undefined);assert.equal(f.nodes.length,0);assert.equal(created.removed,true);assert.equal(state.cleanup.completed,true);
 });
