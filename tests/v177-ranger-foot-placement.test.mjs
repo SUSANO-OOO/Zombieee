@@ -16,6 +16,100 @@ function checkPose(result,settle) {
   return pose;
 }
 
+test('repeated short pursuits cannot add a new lift above an already airborne boot',()=>{
+  for(const [walkTicks,stopTicks]of [[1,1],[2,1],[4,1],[4,2],[3,1]])for(let sample=0;sample<20;sample++){
+    const currentScale=78.46153846153847/480;
+    let state,root=350,phase=sample/20,settle=1;
+    for(let tick=0;tick<240;tick++){
+      const moving=tick%(walkTicks+stopTicks)<walkTicks,dx=moving?29/60:0;
+      root+=dx;phase+=dx/(currentScale*cycle);
+      settle=moving?Math.max(0,settle-1/60/.12):Math.min(1,settle+1/60/.16);
+      const result=v177RangerFootPlacement(rig,state,{time:tick/60,root,phase,scale:currentScale,settle,moving,facing:'right'});
+      state=result.state;checkPose(result,settle);
+      for(const foot of state.feet){
+        assert.ok(foot.height>=0&&foot.height<=rig.liftPx+1e-10,'An interrupted step must keep its original18px apex, not accumulate another lift');
+        assert.ok(foot.angle>=-.16-1e-10&&foot.angle<=0);
+      }
+    }
+  }
+});
+
+test('short movement and stop changes finish each real step and show both boots on the floor',()=>{
+  for(const dt of [1/60,1/24])for(const currentScale of [78.46153846153847/480,86.30769230769232/480])
+  for(const walkTicks of [1,2,3,4,6])for(const stopTicks of [1,2,3,6,12]){
+    let root=330,phase=0,settle=1,result=v177RangerFootPlacement(rig,null,
+      {time:0,root,phase,scale:currentScale,settle,moving:false,facing:'right'});
+    const lastGround=[0,0];
+    for(let tick=1;tick<=240;tick++){
+      const time=tick*dt,moving=(tick-1)%(walkTicks+stopTicks)<walkTicks,dx=moving?29*dt:0;
+      root+=dx;phase+=dx/(currentScale*cycle);
+      settle=moving?Math.max(0,settle-dt/.12):Math.min(1,settle+dt/.16);
+      const previous=result.state;
+      result=v177RangerFootPlacement(rig,previous,{time,root,phase,scale:currentScale,settle,moving,facing:'right'});
+      checkPose(result,settle);
+      for(let i=0;i<2;i++){
+        const foot=result.state.feet[i],before=previous.feet[i];
+        assert.ok(foot.height>=0&&foot.height<=rig.liftPx+1e-10);
+        if(foot.height<1e-9)lastGround[i]=time;
+        assert.ok(time-lastGround[i]<=.5,'Restarting a pursuit cannot postpone this boot landing indefinitely');
+        if(before.mode==='plant'&&foot.mode==='plant')assert.ok(Math.abs(foot.x-before.x)<1e-8,'Support remains at the actual world contact');
+      }
+    }
+  }
+});
+
+test('small real pursuit drift takes a short step instead of suspending a boot for seconds',()=>{
+  for(const facing of [-1,1]){
+    let root=330,phase=.12,result=v177RangerFootPlacement(rig,null,
+      {time:0,root,phase,scale,settle:1,moving:false,facing});
+    const lastGround=[0,0];
+    for(let tick=1;tick<=600;tick++){
+      const time=tick/60;root+=facing*.04;phase+=.04/(scale*cycle);
+      result=v177RangerFootPlacement(rig,result.state,{time,root,phase,scale,settle:0,moving:false,facing});
+      checkPose(result,0);
+      for(let i=0;i<2;i++){
+        if(result.state.feet[i].height<1e-9)lastGround[i]=time;
+        assert.ok(time-lastGround[i]<=.5,'Slow drift must keep showing actual ground contacts');
+      }
+    }
+  }
+});
+
+test('a pursuit resumed in the air starts at the painted ankle angle and lands continuously',()=>{
+  let state,root=350,phase=0,settle=1,input,airborne;
+  for(let tick=0;tick<40;tick++){
+    const moving=tick%5<4,dx=moving?29/60:0;
+    root+=dx;phase+=dx/(scale*cycle);
+    settle=moving?Math.max(0,settle-1/60/.12):Math.min(1,settle+1/60/.16);
+    input={time:tick/60,root,phase,scale,settle,moving,facing:'right'};
+    state=v177RangerFootPlacement(rig,state,input).state;
+    if(!state.moving&&state.feet.some(foot=>foot.height>.2&&Math.abs(foot.angle)>.005)){airborne=state;break;}
+  }
+  assert.ok(airborne,'The regression must actually restart an airborne stop step');
+  const epsilon=1e-9,dx=29*epsilon,resume={...input,time:input.time+epsilon,root:root+dx,phase:phase+dx/(scale*cycle),moving:true};
+  let result=v177RangerFootPlacement(rig,airborne,resume);checkPose(result,settle);
+  for(let i=0;i<2;i++)for(const key of ['x','height','angle'])
+    assert.ok(Math.abs(result.state.feet[i][key]-airborne.feet[i][key])<1e-6,key+' cannot jump on restart');
+  for(let tick=1;tick<=40;tick++)result=v177RangerFootPlacement(rig,result.state,{...resume,time:resume.time+tick/60,moving:false,settle:1});
+  assert.deepEqual(result.state.feet.map(foot=>[foot.height,foot.angle]),[[0,0],[0,0]]);
+});
+
+test('a resumed support phase cannot drop the other airborne stop step onto the ground',()=>{
+  const input={time:0,root:350,phase:.4,scale,settle:0,moving:true,facing:'right'};
+  let result=v177RangerFootPlacement(rig,null,input);
+  for(let tick=1;tick<=20;tick++)result=v177RangerFootPlacement(rig,result.state,
+    {...input,time:tick/60,moving:false,settle:Math.min(1,tick/60/.16)});
+  const previous=result.state,airborne=previous.feet.findIndex(foot=>foot.height>10);
+  assert.ok(airborne>=0,'The old branch must encounter its actual airborne foot');
+  const epsilon=1e-9,dx=29*epsilon;
+  result=v177RangerFootPlacement(rig,previous,{...input,time:20/60+epsilon,
+    root:350+dx,phase:.4+dx/(scale*cycle),moving:true,settle:1});
+  checkPose(result,1);
+  for(const key of ['x','height','angle'])
+    assert.ok(Math.abs(result.state.feet[airborne][key]-previous.feet[airborne][key])<1e-6,key+' must continue from the real airborne pose');
+  assert.equal(result.state.feet[airborne].mode,'swing');
+});
+
 test('every stopped walk entry finishes with distinct ordered shooting feet, using reachable lifted steps',()=>{
   for(let sample=0;sample<120;sample++){
     const phase=sample/120,input={time:0,root:330,phase,scale,moving:true,settle:0,facing:'right'};
@@ -65,6 +159,51 @@ test('walk, shooting, short pursuit, retreat and a facing change keep support pl
   assert.ok(plants>200&&steps>50);
   assert.ok(largestMotion<4,'neither restarting nor mirroring may teleport a foot');
   assert.deepEqual(state.feet.map(foot=>foot.height),[0,0]);
+});
+
+test('a held airborne step follows the same body reflection before it lands',()=>{
+  for(const facing of [-1,1]){
+    const input={time:0,root:330,phase:.12,scale,settle:0,moving:true,facing};
+    let result=v177RangerFootPlacement(rig,null,input);
+    for(let tick=1;tick<=15;tick++)result=v177RangerFootPlacement(rig,result.state,
+      {...input,time:tick/60,moving:false,settle:1});
+    assert.ok(result.state.feet.some(foot=>foot.flight),'The regression holds an actual airborne correction');
+    const before=result;
+    result=v177RangerFootPlacement(rig,result.state,
+      {...input,time:.35,root:330+facing*5,moving:false,settle:1,frozen:true,facing:-facing});
+    assert.deepEqual(result.targets,before.targets,'The held local leg pose moves with its body');
+    for(let tick=1;tick<=30;tick++){
+      result=v177RangerFootPlacement(rig,result.state,
+        {...input,time:.35+tick/60,root:330+facing*5,moving:false,settle:1,facing:-facing});
+      checkPose(result,1);
+    }
+    assert.deepEqual(result.state.feet.map(foot=>foot.height),[0,0]);
+  }
+});
+
+test('cancelling a pending stationary turn keeps the original landing deadline and reachable feet',()=>{
+  for(const facing of [-1,1]){
+    const input={time:0,root:330,phase:.12,scale,settle:0,moving:true,facing};
+    let result=v177RangerFootPlacement(rig,null,input);
+    result=v177RangerFootPlacement(rig,result.state,
+      {...input,time:1/60,moving:false,settle:1,facing:-facing});
+    assert.equal(result.state.turnTargetFacing,-facing,'This must cancel a turn still waiting for foot support');
+    const airborne=result.state.feet.findIndex(foot=>foot.flight),before=result.state.feet[airborne];
+    const epsilon=1e-9;
+    const cancelled=v177RangerFootPlacement(rig,result.state,
+      {...input,time:1/60+epsilon,moving:false,settle:1});
+    assert.equal(cancelled.state.feet[airborne].flight.endAt,before.flight.endAt);
+    for(const key of ['x','height','angle'])assert.ok(
+      Math.abs(cancelled.state.feet[airborne][key]-before[key])<1e-6,key+' must continue from the actual airborne pose');
+    result=cancelled;
+    for(let tick=2;tick<=60;tick++){
+      result=v177RangerFootPlacement(rig,result.state,
+        {...input,time:tick/60,moving:false,settle:1});
+      checkPose(result,1);
+    }
+    assert.deepEqual(result.state.feet.map(foot=>foot.height),[0,0]);
+    assert.equal(result.state.facing,facing);
+  }
 });
 
 test('hit/stun can freeze an in-flight correction and a fresh actor does not inherit another stop',()=>{

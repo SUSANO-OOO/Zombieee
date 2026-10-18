@@ -332,6 +332,7 @@ import {
   combatFacingDirection,
   combatWeaponAnchor,
   completedAttackAudioReceiptId,
+  ENEMY_FIREARM_WEAPON_PROFILE,
   createCompletedAttackImpactReceipt,
   createCombatAnimationRuntime,
   linkedWeaponTransactionId,
@@ -2154,6 +2155,23 @@ function addWeaponShot(g: Game, hit: Pick<PendingWeaponHit,
   if (hit.casing) {
     addParticles(g, hit.originX - 3 - hit.shotIndex * 2, hit.originY - 4, "#d8a94f", 1);
   }
+}
+
+function addEnemyFirearmShot(
+  g: Game,
+  fighter: Fighter,
+  target: { x: number; y: number; id?: number },
+  targetHeight = 28,
+) {
+  if (!g.definition.missionConfig.v100StageNumber || fighter.side !== "zombie"
+    || !Object.hasOwn(ENEMY_FIREARM_WEAPON_PROFILE, fighter.kind)) return;
+  const origin = weaponAnchorForTarget(fighter, target);
+  // The existing attack has already resolved its hit. Paint that same shot
+  // without scheduling another hit, changing its cadence or borrowing a hand.
+  // sourceId lets drawShots replace this estimate with the actual painted tip.
+  addShot(g, origin.x, origin.y, target.x, target.y - targetHeight, .16,
+    "zombie", .16, "projectile", fighter.kind, undefined, fighter.id, target.id,
+    undefined, undefined, 0, 0, false, 0, 0);
 }
 
 function laneY(lane: Lane, id = 0) {
@@ -5253,7 +5271,8 @@ function drawEnemyCombatReadabilityVfx(
   // footprint. The generic enemy ribbon also classified active abilities as
   // warnings, drawing unrelated curves over the boss's chest after activation.
   const authoredBossWarning = v100Presentation && Boolean(bossDefinitionForEnemyKind(f.kind));
-  if (!snapshot.projectile && snapshot.phase === "warning" && !authoredMeleeWarning && !authoredStationWarning && !authoredBossWarning) {
+  const authoredFirearmWarning = v100Presentation && Object.hasOwn(ENEMY_FIREARM_WEAPON_PROFILE, f.kind);
+  if (!snapshot.projectile && snapshot.phase === "warning" && !authoredMeleeWarning && !authoredStationWarning && !authoredBossWarning && !authoredFirearmWarning) {
     const pulse = .5 + .5 * Math.sin(g.time * 18 + f.id);
     const warningY = f.y - Math.max(24, f.bodyRadius * 1.7);
     const role = snapshot.role;
@@ -22252,6 +22271,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 } else {
                   const result = applyBattlefieldSupplyDamage(objectTarget, f.damage);
                   Object.assign(objectTarget, result.supply);
+                  addEnemyFirearmShot(g, f, objectTarget, 22);
                   objectTarget.hitFlash = .18;
                   addDamageText(g, objectTarget.x, objectTarget.y - 58, `-${Math.round(f.damage)}`, .65, "#ff9a70");
                   addParticles(g, objectTarget.x + 24, objectTarget.y - 18, "#9aa58d", f.kind === "takuya" || f.kind === "gate-eater" || f.kind === "crusher" ? 9 : 4);
@@ -22492,6 +22512,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 source:f,target,beforeHp:targetHpBeforeMetric,resolvedDamage:appliedAttack.targetDamage,
                 mode:"normal-direct",attackSequence:committedAttackSequence,
               });
+              if (!deferredEnemyProjectile && f.side === "zombie") addEnemyFirearmShot(g, f, target);
               if(appliedAttack.targetDamage>0)noteV102GoreImpact(g,target,{weapon:f.kind,originX:f.x,originY:f.y,damage:appliedAttack.targetDamage});
               if (f.side === "human" && appliedAttack.targetDamage > 0) {
                 recordUnitDamage(g, f.kind, Math.max(0, targetHpBeforeMetric) - Math.max(0, target.hp));
@@ -23236,6 +23257,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 const deferredEnemyProjectile = ENEMY_PROJECTILE_KINDS.includes(f.kind);
                 if (!deferredEnemyProjectile) {
                   g.baseHp = Math.max(0, g.baseHp - siegeDamage);
+                  addEnemyFirearmShot(g, f, { x: BASE_X + 8, y: f.y }, 18);
                   g.lastVehicleHit = v100VehicleHitFor({ enemyKind: f.kind, time: g.time, beforeHp: beforeHit, afterHp: g.baseHp }) ?? g.lastVehicleHit;
                 }
                 // A vehicle strike belongs to the metal impact route. Enemy

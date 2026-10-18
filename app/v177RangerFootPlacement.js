@@ -11,6 +11,13 @@ const CENTER = 240;
 const REST_OFFSET = [-24, 24];
 const direction = value => value === 'left' || value === -1 ? -1 : 1;
 
+function stepArc(from, peak, progress, arc = Math.sin(Math.PI * progress)) {
+  const baseline = from * (1 - ease(progress));
+  // Interpolate toward the apex rather than adding it above the retained
+  // airborne pose. Keep the original lift timing and exact start/landing.
+  return baseline + (peak - baseline) * arc;
+}
+
 function naturalFoot(rig, leg, phase, settle) {
   const q = wrap(phase + leg.offset), t = (q - rig.stanceFraction) / (1 - rig.stanceFraction);
   const swing = q > rig.stanceFraction;
@@ -42,41 +49,70 @@ function reachable(rig, foot, i, input, offset) {
   });
 }
 
-function stopping(rig, previous, input) {
-  const {time, root, facing, scale, phase} = input;
-  let stop = previous.stop;
-  // Subthreshold body drift can continue after both stop steps have landed.
-  // Start another real pair of steps instead of keeping that old goal forever.
-  const goalMoved=stop&&previous.time-stop.at>=stop.durations[0]+stop.durations[1]
-    &&stop.goal.some((foot,i)=>Math.abs(foot.x-worldX(rig.legs[i].footCenter+REST_OFFSET[i],root,facing,scale))>1e-10);
-  if (!stop || previous.moving || (previous.turnTargetFacing??previous.facing) !== facing || goalMoved) {
-    const goal = restFeet(rig, root, facing, scale);
-    const height = previous.feet.map(foot => foot.height);
-    const distances = previous.feet.map((foot, i) => Math.abs(goal[i].x - foot.x) / scale);
-    const endangered=previous.feet.findIndex((foot,i)=>!reachable(rig,foot,i,input,previous.offset));
-    const first = endangered>=0 ? endangered : height[0] > height[1] + .01 ? 0 : height[1] > height[0] + .01 ? 1 : distances[0] < distances[1] ? 0 : 1;
-    const order = [first, 1 - first];
-    stop = {at:previous.time, from:previous.feet.map(foot => ({...foot})), goal,
-      order, durations:order.map(i => distances[i] < 1e-10 && height[i] < 1e-10 ? 0 : STEP_SECONDS),
-      lifts:distances.map(distance => Math.min(STOP_LIFT,distance*.4))};
+function helperX(from,to,u,vx,duration) {
+  const diff=to-from,raw=(vx??0)*duration;
+  const tangent=diff>=0?Math.max(0,Math.min(3*diff,raw)):Math.min(0,Math.max(3*diff,raw));
+  return from+diff*u*u*(3-2*u)+tangent*u*(1-u)*(1-u);
+}
+function groundLanding(rig,leg,sign) {
+  const radius=leg.upperLength+leg.lowerLength-1.2,vertical=leg.groundAnkle-leg.hip[1]+1.2;
+  const maxDx=Math.sqrt(radius*radius-vertical*vertical),goal=leg.footCenter+sign*rig.spanPx*.5;
+  return Math.max(leg.hip[0]-maxDx,Math.min(leg.hip[0]+maxDx,goal));
+}
+function makeFlight(foot,previous,input,i,localGoal,kind,nominalEnd=null,duration=STEP_SECONDS) {
+  const at=previous.time,endAt=at+duration;
+  return {id:at+':'+i,at,endAt,fromHeight:foot.height,fromAngle:foot.angle,
+    peak:Math.max(foot.height,kind==='move'?18:Math.min(STOP_LIFT,Math.abs(worldX(localGoal,input.root,input.facing,input.scale)-foot.x)/input.scale*.4)),
+    xAt:at,fromX:foot.x,vx:foot.vx??0,goalLocal:localGoal,goalFacing:input.facing,kind,nominalEnd};
+}
+function sampleFlight(foot,input,flight) {
+  const duration=flight.endAt-flight.at,u=clamp((input.time-flight.at)/duration);
+  const goal=worldX(flight.goalLocal,input.root,flight.goalFacing,input.scale);
+  if(u>=1)return {x:goal,height:0,angle:0,mode:'plant',flight:null,landedPaintTime:input.paintTime,
+    phaseHold:flight.kind==='move'&&!flight.retargeted?{nominalEnd:flight.nominalEnd,direction:flight.travelSign}:null};
+  const xDuration=flight.endAt-flight.xAt,xu=clamp((input.time-flight.xAt)/xDuration);
+  const arc=flight.kind==='move'?Math.sin(Math.PI*u):16*u*u*(1-u)*(1-u);
+  return {x:helperX(flight.fromX,goal,xu,flight.vx,xDuration),
+    height:stepArc(flight.fromHeight,flight.peak,u,arc),
+    angle:flight.kind==='move'?stepArc(flight.fromAngle,-.16,u):flight.fromAngle*(1-ease(u)),
+    mode:'swing',flight,phaseHold:null};
+}
+function finishFlight(foot,previous,input,i,rig,stopping) {
+  let flight=foot.flight;
+  // A requested turn can be cancelled before the body can reflect. Redirect
+  // the airborne correction from its current X without restarting its lift
+  // or postponing the landing already visible to the player.
+  if(flight.kind==='stop'&&flight.goalFacing!==input.facing){
+    flight={...flight,xAt:previous.time,fromX:foot.x,vx:foot.vx??0,
+      goalLocal:rig.legs[i].footCenter+REST_OFFSET[i],goalFacing:input.facing};
   }
-  let elapsed = Math.max(0, time - stop.at);
-  const feet = stop.from.map(foot => ({...foot, mode:foot.height > 0 ? 'swing' : 'plant'}));
-  for (let order = 0; order < 2; order++) {
-    const i = stop.order[order], duration = stop.durations[order];
-    if (elapsed >= duration) {
-      feet[i] = {...stop.goal[i]};
-      elapsed -= duration;
-      continue;
-    }
-    const u = duration > 0 ? clamp(elapsed / duration) : 1, s = ease(u);
-    feet[i] = {x:stop.from[i].x + (stop.goal[i].x - stop.from[i].x) * s,
-      height:stop.from[i].height * (1 - s) + stop.lifts[i] * 16 * u * u * (1 - u) * (1 - u),
-      angle:stop.from[i].angle * (1 - s), mode:'swing'};
-    // Keep the other foot's actual plant or airborne pose until its own step.
-    break;
+  // Retarget the X segment once, retaining the original height curve and
+  // absolute landing deadline. A late stop lands first and corrects afterwards.
+  if(stopping&&flight.kind==='move'&&!flight.retargeted&&flight.endAt-previous.time>=.12){
+    flight={...flight,retargeted:true,at:previous.time,endAt:Math.min(flight.endAt,previous.time+STEP_SECONDS),
+      fromHeight:foot.height,fromAngle:foot.angle,xAt:previous.time,fromX:foot.x,vx:foot.vx??0,
+      goalLocal:rig.legs[i].footCenter+REST_OFFSET[i],goalFacing:input.facing};
   }
-  return {time, root, facing, scale, phase, offset:previous.offset, moving:false, stop, feet};
+  return sampleFlight(foot,input,flight);
+}
+function stopping(rig,previous,input) {
+  const goal=restFeet(rig,input.root,input.facing,input.scale);
+  const active=previous.feet.some(foot=>foot.flight);
+  let first=-1;
+  if(!active){
+    const needed=previous.feet.map((foot,i)=>foot.height>0||Math.abs(foot.x-goal[i].x)>1e-10);
+    const endangered=previous.feet.findIndex((foot,i)=>needed[i]&&!reachable(rig,foot,i,input,previous.offset));
+    const h=previous.feet.map(foot=>foot.height),dist=previous.feet.map((foot,i)=>Math.abs(foot.x-goal[i].x));
+    const alternate=previous.lastLandedLeg===0?1:previous.lastLandedLeg===1?0:-1;
+    first=endangered>=0?endangered:alternate>=0&&needed[alternate]?alternate:needed[0]&&needed[1]?(h[0]>h[1]+.01?0:h[1]>h[0]+.01?1:dist[0]<dist[1]?0:1):needed[0]?0:needed[1]?1:-1;
+  }
+  const feet=previous.feet.map((foot,i)=>{
+    if(foot.flight)return finishFlight(foot,previous,input,i,rig,true);
+    if(i===first){const flight=makeFlight(foot,previous,input,i,rig.legs[i].footCenter+REST_OFFSET[i],'stop');return sampleFlight(foot,input,flight);}
+    return {...foot,mode:foot.height>0?'swing':'plant'};
+  });
+  return {time:input.time,root:input.root,facing:input.facing,scale:input.scale,phase:input.phase,
+    offset:previous.offset,moving:false,feet};
 }
 
 function resumedOffset(rig, previous, input, travelSign) {
@@ -91,52 +127,44 @@ function resumedOffset(rig, previous, input, travelSign) {
   return candidates.sort((a, b) => b.score - a.score)[0].offset;
 }
 
-function moving(rig, previous, input) {
-  const {time, root, facing, scale, phase} = input;
-  const resumed = !previous.moving || previous.facing !== facing;
-  const delta = phase - previous.phase;
-  const travelSign = Math.abs(delta) > 1e-9 ? Math.sign(delta) : previous.travelSign || 1;
-  const offset = resumed ? resumedOffset(rig, previous, input, travelSign) : previous.offset;
-  const cycleDistance = rig.spanPx / rig.stanceFraction;
-  const velocity = Math.abs(delta) > 1e-9 ? (root - previous.root) / delta : facing * scale * cycleDistance;
-  const feet = previous.feet.map((foot, i) => {
-    const leg = rig.legs[i], absolute = phase + offset + leg.offset, q = wrap(absolute);
-    const local=localX(foot.x,root,facing,scale);
+function moving(rig,previous,input) {
+  const {time,root,facing,scale,phase}=input,resumed=!previous.moving||previous.facing!==facing;
+  const delta=phase-previous.phase,travelSign=Math.abs(delta)>1e-9?Math.sign(delta):previous.travelSign||1;
+  const hasFlight=previous.feet.some(foot=>foot.flight);
+  const offset=resumed&&!hasFlight?resumedOffset(rig,previous,input,travelSign):previous.offset;
+  const feet=previous.feet.map((foot,i)=>{
+    if(foot.flight)return finishFlight(foot,previous,input,i,rig,false);
+    const leg=rig.legs[i],absolute=phase+offset+leg.offset,q=wrap(absolute),local=localX(foot.x,root,facing,scale);
     const vertical=leg.groundAnkle-leg.hip[1]-v177RangerLowerBob(phase+offset,input.settle??0);
-    // Lane travel also advances the gait with no horizontal root travel.
-    // Either support can approach full extension before its nominal toe-off.
     const toeOff=Math.hypot(local-leg.hip[0],vertical)>leg.upperLength+leg.lowerLength-1.2;
-    const swing = q > rig.stanceFraction||toeOff;
-    let step = !resumed && foot.step?.direction === travelSign ? foot.step : null;
-    if (!swing && !step) return {...foot, height:0, angle:0, mode:'plant', step:null};
-    if (!step) {
-      const end = travelSign > 0 ? Math.floor(absolute) + 1 : Math.floor(absolute) + (q<=rig.stanceFraction?-1:0) + rig.stanceFraction;
-      const start = previous.phase + offset + leg.offset;
-      const remaining = end - absolute;
-      const landing = leg.footCenter + (travelSign > 0 ? .5 : -.5) * rig.spanPx;
-      step = {direction:travelSign, start, end, from:foot.x, height:foot.height,
-        to:worldX(landing, root + velocity * remaining, facing, scale)};
-    }
-    // An airborne foot can follow the current projected depth. Freezing its
-    // old-scale landing point can place a boot outside the leg's reach.
-    const landing=leg.footCenter+(travelSign>0?.5:-.5)*rig.spanPx;
-    step={...step,to:worldX(landing,root+velocity*(step.end-absolute),facing,scale)};
-    const span = step.end - step.start;
-    const u = Math.abs(span) > 1e-9 ? clamp((absolute - step.start) / span) : 1;
-    if (u >= 1) return {x:step.to, height:0, angle:0, mode:'plant', step:null};
-    const s = ease(u);
-    return {x:step.from + (step.to - step.from) * s,
-      height:step.height * (1 - s) + rig.liftPx * Math.sin(Math.PI * u),
-      angle:-.16 * Math.sin(Math.PI * u), mode:'swing', step};
+    // Private boundary samples must not erase the landing before this paint.
+    if(foot.landedPaintTime===input.paintTime&&reachable(rig,foot,i,input,offset))return {...foot,height:0,angle:0,mode:'plant',flight:null};
+    const hold=foot.phaseHold?.direction===travelSign&&travelSign*(absolute-foot.phaseHold.nominalEnd)<0;
+    if(foot.height===0&&!toeOff&&(hold||q<=rig.stanceFraction))return {...foot,mode:'plant',flight:null};
+    const nominalEnd=travelSign>0?Math.floor(absolute)+1:Math.floor(absolute)+(q<=rig.stanceFraction?-1:0)+rig.stanceFraction;
+    const rate=time>previous.time?Math.abs(delta/(time-previous.time)):0;
+    // Small real drift still calls for a short repositioning step, rather
+    // than holding a boot in the air for the whole slow gait phase.
+    const gaitDuration=rate>0?Math.max(STEP_SECONDS,Math.min(STEP_SECONDS*1.5,(1-rig.stanceFraction)/rate)):STEP_SECONDS;
+    // A new correction discovered while catching up missed paints must still
+    // show a lifted boot at this actual paint. Existing flight deadlines stay
+    // unchanged; only this newly owned step gets a visible landing interval.
+    const visibleTail=Math.min(STEP_SECONDS*.5,Math.max(0,time-previous.time));
+    const duration=Math.max(gaitDuration,(input.paintTime??time)-previous.time+visibleTail);
+    const flight={...makeFlight(foot,previous,input,i,groundLanding(rig,leg,travelSign),'move',nominalEnd,duration),travelSign};
+    return sampleFlight(foot,input,flight);
   });
-  return {time, root, facing, scale, phase, offset, moving:true, travelSign, feet};
+  return {time,root,facing,scale,phase,offset,moving:true,travelSign,feet};
 }
 
 function held(previous,input) {
   const {time,root,facing,scale,phase}=input;
   const unchanged=root===previous.root&&facing===previous.facing&&scale===previous.scale;
   const transform=value=>unchanged?value:worldX(localX(value,previous.root,previous.facing,previous.scale),root,facing,scale);
-  const foot=value=>({...value,x:transform(value.x),step:value.step?{...value.step,from:transform(value.step.from),to:transform(value.step.to)}:value.step});
+  const foot=value=>({...value,x:transform(value.x),flight:value.flight?{...value.flight,
+    at:value.flight.at+time-previous.time,endAt:value.flight.endAt+time-previous.time,
+    xAt:value.flight.xAt+time-previous.time,fromX:transform(value.flight.fromX),
+    goalFacing:value.flight.goalFacing*facing*previous.facing}:value.flight});
   const stop=previous.stop?{...previous.stop,at:previous.stop.at+time-previous.time,
     from:previous.stop.from.map(foot),goal:previous.stop.goal.map(foot)}:undefined;
   return {...previous,time,root,facing,scale,phase,offset:previous.phase+previous.offset-phase,
@@ -146,6 +174,8 @@ function held(previous,input) {
 function advance(rig,previous,input) {
   const {time, root, facing, scale, phase} = input;
   let state;
+  if(previous&&time===previous.time&&root===previous.root&&phase===previous.phase&&scale===previous.scale
+    &&facing===(previous.requestedFacing??previous.facing))return previous;
   if (!previous || time < previous.time) {
     const feet = input.moving ? rig.legs.map(leg => {
       const foot = naturalFoot(rig, leg, phase, input.settle ?? 0);
@@ -155,7 +185,8 @@ function advance(rig,previous,input) {
   } else if (time === previous.time && root === previous.root && phase === previous.phase
     && facing === previous.facing && scale === previous.scale) {
     state = previous;
-  } else if (input.frozen || input.moving && Math.abs(phase-previous.phase)<1e-9 && root!==previous.root) {
+  } else if (input.frozen || time===previous.time&&facing===previous.facing
+    || input.moving && Math.abs(phase-previous.phase)<1e-9 && root!==previous.root) {
     // A hit/knock displacement belongs to the existing rigid body reaction.
     // Keep its local leg pose; leaving world anchors behind would overextend it.
     state = held(previous,input);
@@ -170,12 +201,18 @@ function advance(rig,previous,input) {
   } else {
     state = input.moving ? moving(rig, previous, input) : stopping(rig, previous, input);
   }
-  return state;
+  if(previous&&time>previous.time){const dt=time-previous.time;
+    state={...state,feet:state.feet.map((foot,i)=>({...foot,vx:input.frozen?0:(foot.x-previous.feet[i].x)/dt}))};
+  }else if(previous&&time===previous.time){state={...state,feet:state.feet.map((foot,i)=>({...foot,vx:previous.feet[i].vx??0}))};
+  }else state={...state,feet:state.feet.map(foot=>({...foot,vx:0}))};
+  let lastLandedLeg=previous?.lastLandedLeg??null;
+  if(previous)for(let i=0;i<2;i++)if(previous.feet[i].flight&&!state.feet[i].flight&&state.feet[i].height===0)lastLandedLeg=i;
+  return {...state,requestedFacing:facing,lastLandedLeg};
 }
 
 export function v177RangerFootPlacement(rig, previous, input) {
   if (rig.legs.length !== 2 || ![input.time, input.root, input.phase, input.scale].every(Number.isFinite) || !(input.scale > 0)) return null;
-  input = {...input, facing:direction(input.facing)};
+  input = {...input, facing:direction(input.facing), paintTime:input.time};
   const {time,root,facing,scale,phase}=input;
   // A short pursuit can start and stop between two actual paints. Its source
   // gait phase still records the travel; the last tick's moving flag does not.

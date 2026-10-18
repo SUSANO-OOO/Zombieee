@@ -957,6 +957,13 @@ export const UNIT_WEAPON_PROFILE = deepFreeze({
   "mayo-chan": "bite",
 });
 
+// These enemies resolve their normal hits immediately. This mapping selects
+// only the painted firearm trace; it must not create delayed damage or bursts.
+export const ENEMY_FIREARM_WEAPON_PROFILE = Object.freeze({
+  "red-panther-smg": "machine-gun",
+  "red-panther-commander": "rifle",
+});
+
 export const COMBAT_WEAPON_ANCHORS = deepFreeze({
   brawler: { forward: 13, up: 34 },
   scout: { forward: 25, up: 34 },
@@ -1495,7 +1502,7 @@ export function advanceCombatAnimationRuntime(runtime, observation = {}, elapsed
 }
 
 export function weaponProfileForUnit(kind) {
-  return WEAPON_PROFILES[UNIT_WEAPON_PROFILE[kind] ?? "unarmed"];
+  return WEAPON_PROFILES[UNIT_WEAPON_PROFILE[kind] ?? ENEMY_FIREARM_WEAPON_PROFILE[kind] ?? "unarmed"];
 }
 
 export function weaponProfileForAction(kind, action = "attack") {

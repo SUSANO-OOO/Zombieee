@@ -16,6 +16,59 @@ concurrency:
 
 # Linux WPE backend only; no application or Chromium rendering flag changes.
 jobs:
+  v177-full-normal-route:
+    name: V1 Full Normal Route (${{ matrix.engine }})
+    if: github.head_ref == 'codex/177-combat-clarity'
+    needs: verify
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {engine: chromium, os: ubuntu-latest}
+          - {engine: webkit, os: macos-15-intel}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 150
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22.13.0"
+          cache: npm
+      - run: npm ci
+      - name: Install the actual selected browser
+        run: |
+          if [ "${{ matrix.engine }}" = webkit ]; then
+            npm ci --prefix scripts/pwa-native-runtime
+            node scripts/pwa-native-runtime/node_modules/playwright/cli.js install webkit
+          else
+            npx playwright install --with-deps chromium
+          fi
+      - name: Build the exact normal-route candidate
+        env:
+          GITHUB_PAGES_RELEASE_SHA: ${{ github.event.pull_request.head.sha }}
+        run: npm run build
+      - name: Observe the normal route from a fresh save through Stage 30 or the first real defeat
+        env:
+          V100_NORMAL_PLAY_ENGINE: ${{ matrix.engine }}
+          V100_NORMAL_PLAY_STAGE_LIMIT: "30"
+          V100_NORMAL_PLAY_EVIDENCE_DIR: outputs/v177-full-normal-route-${{ matrix.engine }}
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-normal-campaign-playthrough.mjs
+      - name: Preserve original outcomes, saves, diagnostics and continuous video
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v177-full-normal-route-${{ matrix.engine }}
+          path: outputs/v177-full-normal-route-${{ matrix.engine }}
+          if-no-files-found: error
+          retention-days: 7
+
   v177-guardian-control-diagnostic:
     name: V1 Guardian Control Diagnostic
     if: github.head_ref == 'codex/177-combat-clarity'

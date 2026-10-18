@@ -329,7 +329,7 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
 
 test("parsed required CI graph retains every WebKit lane, dependency and viewport", async () => {
   const { jobs } = loadYaml(await readFile(".github/workflows/ci.yml", "utf8"));
-  assert.deepEqual(Object.keys(jobs), ["v177-guardian-control-diagnostic", "r9-story", "v102-combat", "v102-combat-webkit-summary", "v103-audio-output", "v102-enemy-contacts", "v177-normal-campaign", "v177-normal-campaign-diagnostic", "verify", "v100-webkit-frame-control", "v177-webkit-shadow-diagnostic", "v100-phase-g-production", "v100-native-webkit-pwa", "webkit-hosted",
+  assert.deepEqual(Object.keys(jobs), ["v177-full-normal-route", "v177-guardian-control-diagnostic", "r9-story", "v102-combat", "v102-combat-webkit-summary", "v103-audio-output", "v102-enemy-contacts", "v177-normal-campaign", "v177-normal-campaign-diagnostic", "verify", "v100-webkit-frame-control", "v177-webkit-shadow-diagnostic", "v100-phase-g-production", "v100-native-webkit-pwa", "webkit-hosted",
     "webkit-enemy-runtime-shard", "webkit-viewport", "webkit-deployment-viewport", "webkit-stage3-audio"]);
   const dependencies = {
     "v100-webkit-frame-control": undefined, "v100-phase-g-production": undefined, "v100-native-webkit-pwa": undefined, "webkit-hosted": "webkit-enemy-runtime-shard",
@@ -382,6 +382,18 @@ test("parsed required CI graph retains every WebKit lane, dependency and viewpor
   assert.equal(normalRun.env.V100_NORMAL_PLAY_RESUME_DIR,undefined);
   const normalUpload=normal.steps.at(-1);assert.equal(normalUpload.if,'always()');
   assert.equal(normalUpload.with['if-no-files-found'],'error');assert.equal(normalUpload.with.path,normalRun.env.V100_NORMAL_PLAY_EVIDENCE_DIR);
+  const full=jobs['v177-full-normal-route'];
+  assert.equal(full.if,"github.head_ref == 'codex/177-combat-clarity'");
+  assert.equal(full.needs,'verify');assert.equal(full['timeout-minutes'],150);
+  assert.deepEqual(full.strategy.matrix.include,normal.strategy.matrix.include);
+  assert.equal(full.strategy['fail-fast'],false);assert.equal(full['continue-on-error'],undefined);
+  assert.equal(full.steps[0].with.ref,'${{ github.event.pull_request.head.sha }}');
+  const fullRun=full.steps.find(step=>step.run==='node scripts/run-browser-qa-with-server.mjs scripts/v100-normal-campaign-playthrough.mjs');
+  assert.ok(fullRun);assert.equal(fullRun.env.V100_NORMAL_PLAY_ENGINE,'${{ matrix.engine }}');
+  assert.equal(fullRun.env.V100_NORMAL_PLAY_STAGE_LIMIT,'30');
+  assert.equal(fullRun.env.V100_NORMAL_PLAY_RESUME_DIR,undefined);
+  const fullUpload=full.steps.at(-1);assert.equal(fullUpload.if,'always()');
+  assert.equal(fullUpload.with['if-no-files-found'],'error');assert.equal(fullUpload.with.path,fullRun.env.V100_NORMAL_PLAY_EVIDENCE_DIR);
   for (const [id, needs] of Object.entries(dependencies)) {
     const job = jobs[id];
     assert.deepEqual(job.needs, needs);

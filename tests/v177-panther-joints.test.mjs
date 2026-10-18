@@ -3,7 +3,11 @@ import test from 'node:test';
 import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {gunzipSync} from 'node:zlib';
+import vm from 'node:vm';
+import ts from 'typescript';
 import sharp from 'sharp';
+import {ENEMY_FIREARM_WEAPON_PROFILE,weaponProfileForUnit} from '../app/combatPresentation.js';
+import {enemyCombatVfxSnapshot,ENEMY_PROJECTILE_KINDS} from '../app/enemyVfxPresentation.js';
 import {V177_JOINT_ATLASES,v177JointPose,drawV177JointPose,v177JointCycleDistance,v177RenderedJointWeaponSocket} from '../app/v177JointPresentation.js';
 import {spriteFrameFor} from '../app/spriteManifest.js';
 import {requiredBattleAssetPlan} from '../app/battleAssetPlan.js';
@@ -13,6 +17,53 @@ const kinds=['red-panther-knife','red-panther-smg','red-panther-shield','red-pan
 const transform=(m,[x,y])=>[m[0]*x+m[2]*y+m[4],m[1]*x+m[3]*y+m[5]],distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
 const pixels=async url=>sharp(await readFile(url)).ensureAlpha().raw().toBuffer();
+const gameSource=await readFile(new URL('../app/AshfallGame.tsx',import.meta.url),'utf8');
+const gameAst=ts.createSourceFile('AshfallGame.tsx',gameSource,ts.ScriptTarget.ES2022,true,ts.ScriptKind.TSX);
+function actualFirearmCallbacks(extra={}){
+ const names=['addShot','addEnemyFirearmShot','drawEnemyCombatReadabilityVfx'];
+ const declarations=gameAst.statements.filter(node=>ts.isFunctionDeclaration(node)&&names.includes(node.name?.text));
+ assert.equal(declarations.length,names.length);
+ const source=declarations.map(node=>node.getText(gameAst)).join('\n')+'\n({'+names.join(',')+'});';
+ return vm.runInNewContext(ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText,{
+  ENEMY_FIREARM_WEAPON_PROFILE,enemyCombatVfxSnapshot,acquireRenderObject:()=>({}),SHOT_POOL_KEYS:[],
+  shotRenderOrigins:new WeakMap(),V100_CLAW_CONTACT_WEAPONS:[],V100_CONTACT_WEAPONS:[],
+  capRenderObjectsInPlace(){},RENDER_ARRAY_LIMITS:{shots:48},
+  weaponAnchorForTarget:()=>({x:91,y:42}),V100_CONTACT_ENEMY_KINDS:[],V100_STATION_POSE_KINDS:[],
+  bossDefinitionForEnemyKind:()=>null,...extra,
+ });
+}
+test('actual Panther normal-shot callbacks paint one source-owned firearm trace without another damage transaction',()=>{
+ const {addEnemyFirearmShot}=actualFirearmCallbacks();
+ for(const kind of Object.keys(ENEMY_FIREARM_WEAPON_PROFILE))for(const [targetHeight,target]of [
+  [28,{id:71,x:320,y:200,hp:50}],[22,{id:72,x:310,y:210,hp:30}],[18,{x:90,y:220}],
+ ]){
+  const fighter=Object.freeze({id:17,kind,side:'zombie',damage:22,cooldown:1.18,attackSequence:4});
+  Object.freeze(target);const g={definition:{missionConfig:{v100StageNumber:21}},shots:[],renderObjectPools:{shots:[]},pendingWeaponHits:[],baseHp:90};
+  addEnemyFirearmShot(g,fighter,target,targetHeight);
+  assert.equal(g.shots.length,1);const shot=g.shots[0];
+  assert.equal(shot.style,'projectile');assert.equal(shot.side,'zombie');assert.equal(shot.weapon,kind);assert.equal(shot.sourceId,17);
+  assert.equal(shot.x,91);assert.equal(shot.y,42);assert.equal(shot.tx,target.x);assert.equal(shot.ty,target.y-targetHeight);
+  assert.equal(shot.impactDelaySeconds,0);assert.equal(shot.damageTargetId,undefined);assert.equal(shot.casing,false);
+  assert.equal(g.pendingWeaponHits.length,0);assert.equal(g.baseHp,90);assert.equal(fighter.cooldown,1.18);
+  assert.equal(ENEMY_PROJECTILE_KINDS.includes(kind),false,'Do not move immediate gun hits into the deferred organ-projectile damage path');
+  assert.ok(['ballistic','burst-tracer'].includes(weaponProfileForUnit(kind).trail),'A firearm must not fall back to an unarmed contact arc');
+ }
+ const g={definition:{missionConfig:{v100StageNumber:21}},shots:[]};
+ for(const fighter of [{kind:'red-panther-knife',side:'zombie'},{kind:'spitter',side:'zombie'},{kind:'ranger',side:'human'}])addEnemyFirearmShot(g,fighter,{x:1,y:2});
+ addEnemyFirearmShot({...g,definition:{missionConfig:{}}},{kind:'red-panther-smg',side:'zombie'},{x:1,y:2});
+ assert.equal(g.shots.length,0);
+});
+test('actual enemy warning renderer uses the Panther gun pose while preserving other enemy warnings',()=>{
+ const ribbons=[],{drawEnemyCombatReadabilityVfx}=actualFirearmCallbacks({drawCombatRibbon:(...args)=>ribbons.push(args)});
+ const ctx={save(){},restore(){}},g={definition:{missionConfig:{v100StageNumber:21}},time:2};
+ for(const kind of ['red-panther-smg','red-panther-commander','walker']){
+  ribbons.length=0;
+  drawEnemyCombatReadabilityVfx(ctx,{id:17,kind,side:'zombie',hp:100,maxHp:100,combatReady:true,gateEntering:false,
+   attack:0,attackWindup:.2,abilityWindup:0,flash:0,knock:0,bodyRadius:12,
+   stationAbility:{phase:'idle'},animationPresentation:{direction:'left',moving:false},x:300,y:200},g,1,{});
+  assert.equal(ribbons.length,kind==='walker'?2:0,'The two gun poses replace the unrelated waist/knee warning ribbons');
+ }
+});
 function inside([x,y],polygon){
  let hit=false;for(let i=0,j=polygon.length-1;i<polygon.length;j=i++){
   const [ax,ay]=polygon[i],[bx,by]=polygon[j];if((ay>y)!==(by>y)&&x<(bx-ax)*(y-ay)/(by-ay)+ax)hit=!hit;
