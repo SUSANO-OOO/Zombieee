@@ -21,6 +21,7 @@ import { animationClipFor, attackPresentationDuration } from './combatPresentati
 import { createV177MrsNormalWeaponCycle } from './v177MrsNormalWeaponCycle.js';
 import { createV177RangerManualJoint } from './v177RangerManualJoint.js';
 import { createV177FutagoAbilityJoint } from './v177FutagoAbilityJoint.js';
+import { v177FirearmUpperMotion, applyV177FirearmUpperMotion } from './v177FirearmUpperMotion.js';
 
 const locomotionStates = new Set(['idle','deploy','move','start-move','stop-move','turn','retreat']);
 const attackStates = new Set(['wind-up','active','recovery']);
@@ -134,6 +135,11 @@ export function v177JointPose(kind, sample, runtime, { ownedPose=false,actor,wor
       upperBlend:attackPhase===null?blend:attackFrame-attackIndex,phase,settleIndex,attackPhase,
       settleFrameOffset:(nextSettle-settleIndex)*atlas.frameCount,settleBlend,
       upperOffsetY:offset+(nextOffset-offset)*settleBlend};
+    if((kind==='medic'||kind==='engineer')&&attackStates.has(state)){
+      const spine=jointMatrix(new Float64Array(6),atlas,plan,'spine',true);
+      const follow=v177FirearmUpperMotion(kind,sample,spine);
+      if(follow)plan.firearmUpperTransform=follow;
+    }
     return kind==='mrs-chiha'&&sample?.mrsNormalWeaponCycle
       ? mrsNormalWeaponCycle.plan(kind,sample,plan,atlas) : plan;
   }
@@ -332,8 +338,8 @@ function livingStunJointPose(kind,atlas,runtime,actor,remaining) {
   let entry=livingStunPoses.get(key);
   if(!entry||entry.kind!==kind||entry.epoch!==epoch||clock<entry.clock){
     const pose=captureStatusJoints(atlas,previous.plan),basePose=copyCapturedJoints(pose);
-    const upperTransform=previous.plan.stunUpperTransform??identityMatrix();
-    if(previous.plan.stunUpperTransform)transformUpperJoints(basePose,inverseMatrix(upperTransform));
+    const upperTransform=previous.plan.stunUpperTransform??previous.plan.firearmUpperTransform??identityMatrix();
+    if(previous.plan.stunUpperTransform||previous.plan.firearmUpperTransform)transformUpperJoints(basePose,inverseMatrix(upperTransform));
     entry={kind,epoch,clock,remaining,pose,basePose,upperTransform,
       sourcePlan:previous.plan.stunReturnPlan??previous.plan};
     livingStunPoses.set(key,entry);
@@ -523,7 +529,10 @@ function interpolatedMatrix(out,atlas,plan,bone,upper,applyUpperOffset=true){
 function jointMatrix(out,atlas,plan,bone,upper,scratch){
   const chain=atlas.armConstraints?.find(a=>a.upperBone===bone||a.lowerBone===bone)
     ??atlas.legConstraints?.find(a=>a.upperBone===bone||a.lowerBone===bone);
-  if(!chain)return interpolatedMatrix(out,atlas,plan,bone,upper);
+  if(!chain){
+    interpolatedMatrix(out,atlas,plan,bone,upper);
+    return upper&&plan.firearmUpperTransform?applyV177FirearmUpperMotion(out,plan.firearmUpperTransform):out;
+  }
   const leg=Boolean(chain.hip);
   const parent=scratch?.[0]??new Float64Array(6),effector=scratch?.[1]??new Float64Array(6);
   interpolatedMatrix(parent,atlas,plan,chain.parentBone,leg?chain.parentUpper!==false:upper);
@@ -535,7 +544,10 @@ function jointMatrix(out,atlas,plan,bone,upper,scratch){
   const hx=parent[0]*sx+parent[2]*sy+parent[4],hy=parent[1]*sx+parent[3]*sy+parent[5];
   const tx=effector[0]*twx+effector[2]*twy+effector[4],ty=effector[1]*twx+effector[3]*twy+effector[5];
   const dx=tx-hx,dy=ty-hy,d=Math.hypot(dx,dy),a=Math.hypot(ex-sx,ey-sy),b=Math.hypot(wx-ex,wy-ey);
-  if(d<1e-8||d>a+b+.0001||d<Math.abs(a-b)-.0001)return interpolatedMatrix(out,atlas,plan,bone,upper);
+  if(d<1e-8||d>a+b+.0001||d<Math.abs(a-b)-.0001){
+    interpolatedMatrix(out,atlas,plan,bone,upper);
+    return upper&&plan.firearmUpperTransform?applyV177FirearmUpperMotion(out,plan.firearmUpperTransform):out;
+  }
   const along=(a*a+d*d-b*b)/(2*d),height=Math.sqrt(Math.max(0,a*a-along*along));
   const sign=(ex-sx)*-(wy-sy)+(ey-sy)*(wx-sx)>=0?1:-1;
   const kx=hx+dx/d*along-dy/d*height*sign,ky=hy+dy/d*along+dx/d*height*sign;
@@ -543,7 +555,7 @@ function jointMatrix(out,atlas,plan,bone,upper,scratch){
   const ax=isUpper?hx:kx,ay=isUpper?hy:ky,bx=isUpper?kx:tx,by=isUpper?ky:ty;
   const angle=Math.atan2(by-ay,bx-ax)-Math.atan2((isUpper?ey:wy)-ry,(isUpper?ex:wx)-rx),c=Math.cos(angle),s=Math.sin(angle);
   out[0]=c;out[1]=s;out[2]=-s;out[3]=c;out[4]=ax-c*rx+s*ry;out[5]=ay-s*rx-c*ry;
-  return out;
+  return upper&&plan.firearmUpperTransform?applyV177FirearmUpperMotion(out,plan.firearmUpperTransform):out;
 }
 
 // Keep the actual upper/lower owners when a rendered live pose becomes a
