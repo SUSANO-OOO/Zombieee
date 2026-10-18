@@ -50,7 +50,10 @@ export function prepareV177NativeFutagoPair(world,{renderKind,phase,proofId,lane
   const reach=deps.normalAttackReach(actor,target);
   requireProof(Number.isFinite(reach)&&reach>0,'Production reach must be read');
   const approachDistance=Math.max(8,actor.speed*1.1);
-  target.x=phase==='move'?400:actor.x-(phase==='engage'?reach+approachDistance:Math.max(12,Math.min(40,actor.range*.45)));
+  // Keep the move opponent inside the real area's pursuit radius and nearer
+  // than the companion's opponent after the real boss-body barrier moves it.
+  // At the original9px/s it remains beyond normal reach throughout this clip.
+  target.x=phase==='move'?actor.x-150:actor.x-(phase==='engage'?reach+approachDistance:Math.max(12,Math.min(40,actor.range*.45)));
   buddyTarget.x=850;
   for(const f of [actor,buddy,target,buddyTarget]){f.y=laneY;f.lane=lane;f.anchorLane=lane;}
   // Rebase only the positional origin of these freshly constructed fixtures.

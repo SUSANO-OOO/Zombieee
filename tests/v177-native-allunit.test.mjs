@@ -6,6 +6,7 @@ import {load as loadYaml} from 'js-yaml';
 import {spriteKinds} from '../app/spriteManifest.js';
 import {normalAttackReach,canAcquireCombatTarget,canNormalAttackTarget} from '../app/combatLifecycle.js';
 import {chooseCommittedEnemyLane} from '../app/lanePlanner.js';
+import {chooseEnemyTargetForProfile,enemyAiProfileFor} from '../app/combatAiProfiles.js';
 import {createMayoFeralProofOwner} from '../app/v177NativeMayoProof.js';
 import {createCombatAnimationRuntime,advanceCombatAnimationRuntime} from '../app/combatPresentation.js';
 import {createBattleDefinition} from '../app/battleDefinitions.js';
@@ -160,7 +161,7 @@ function pairFixture(form='futago-separated-a',phase='attack'){
     battleAudioGeneration:7,paused:true,running:true,over:false,fighters:[],v100TwinSpawnCount:0};
   let nextId=10;const original=[];
   const spawn=(kind,side)=>{
-    const f={id:nextId++,kind,side,...stats,bodyRadius:39,x:858,y:297,lane:1,anchorLane:1,
+    const f={id:nextId++,kind,side,...stats,bodyRadius:kind==='guardian'?18:39,x:858,y:297,lane:1,anchorLane:1,
       cooldown:.72+(nextId-11)*.18,abilityCooldown:3.6,attackSequence:4,targetId:null,
       animationPresentation:createCombatAnimationRuntime({direction:side==='zombie'?'left':'right',x:858,y:297})};
     f.animationPresentation.locomotionPhase=.27;f.animationPresentation.locomotionTravelDistance=12.3;
@@ -189,6 +190,30 @@ test('pair initial placement preserves clocks and does not invent first-frame tr
         assert.deepEqual(strip(f),strip(source));
       }
     }
+  }
+});
+test('real area pursuit retains the move opponent after the original compact boss barrier correction',()=>{
+  for(const form of ['futago-separated-a','futago-separated-b']){
+    const {world,proof}=pairFixture(form,'move'),actor=world.fighters.find(f=>f.id===proof.fighterId),
+      target=world.fighters.find(f=>f.id===proof.targetId),other=world.fighters.find(f=>f.id===proof.partnerTargetId);
+    const before=structuredClone(actor),time=world.time,profile=enemyAiProfileFor('area');
+    assert.equal(actor.speed,9);assert.equal(normalAttackReach(actor,target),80);assert.equal(profile.engagementRadius,185);
+    assert.equal(target.x,actor.x-150);assert.equal(other.x,850);
+    // Original compact capture endpoints; target4's real boss barrier moved
+    // it to770.5529899. Keeping x400 left target3 outside the185px pursuit.
+    const atStart={...actor,x:608.5,y:285},old={...target,x:400,y:285};
+    const candidates=(enemy,primary)=>[primary,{...other,x:770.5529898977056,y:285}].map(t=>({...t,
+      distance:Math.hypot(enemy.x-t.x,enemy.y-t.y),inContact:false,blocksRoute:false,attackEligible:true,nearbyAllies:0}));
+    assert.equal(chooseEnemyTargetForProfile({kind:'futago',profile:'area',enemy:atStart,candidates:candidates(atStart,old)})?.id,other.id,
+      'retain the original failed natural target choice');
+    for(const x of [609.721,608.5,600,590,577.6]){
+      const enemy={...actor,x,y:285},primary={...target,y:285},distance=x-primary.x;
+      assert.ok(distance>normalAttackReach(enemy,primary)&&distance<=profile.engagementRadius);
+      assert.ok(distance<770.5529898977056-x,'the original companion target stays farther away');
+      for(const currentTargetId of [null,target.id])assert.equal(chooseEnemyTargetForProfile({
+        kind:'futago',profile:'area',enemy,candidates:candidates(enemy,primary),currentTargetId})?.id,target.id);
+    }
+    assert.deepEqual(actor,before);assert.equal(world.time,time);assert.equal(target.hp,1_000_000);assert.equal(other.hp,1_000_000);
   }
 });
 function pairOwnerRow(){
