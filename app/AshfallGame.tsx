@@ -10107,6 +10107,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       battleGeneration:(g:Game)=>g.battleAudioGeneration,
       simulationTick:()=>runtimePerformanceRef.current.simulationTicks,
       nativeNow:()=>performance.now(),setPausedUi:setPaused,attackReachFor:normalAttackReach,
+      laneYFor:(lane:Lane)=>activeLaneCenters[lane],
       prepareNormalPair:(g:Game)=>{
         const firstId=g.nextId;
         if(!spawnHuman(g,"mayo-chan",false))throw new Error("Native Mayo constructor unavailable");

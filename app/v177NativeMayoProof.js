@@ -53,10 +53,13 @@ export function createMayoFeralProofOwner(deps) {
     need(deps.battleGeneration(world)===s.proof.battleGeneration,'Battle lifecycle changed');
     const reach=deps.attackReachFor(actor,target),approach=Math.max(8,actor.speed*1.1);
     need(Number.isFinite(reach)&&reach>=0&&target,'Real feral reach missing');
+    const targetLane=actor.lane,targetY=deps.laneYFor?.(targetLane);
+    need(Number.isInteger(targetLane)&&targetLane>=0&&targetLane<=2&&Number.isFinite(targetY),'Current Mayo lane center resolver required');
     world.paused=true;deps.setPausedUi(true);
     // Actor, HP, CD and clocks are never reset. Stage only the inert opponent
     // relative to the actually living/activated actor, using its real reach.
     target.x=s.proof.phase==='move'?900:actor.x+(s.proof.phase==='engage'?reach+approach:Math.max(12,Math.min(40,actor.range*.45)));
+    target.y=targetY;target.lane=targetLane;target.anchorLane=targetLane;
     s.proof.engagement=s.proof.phase==='engage'?{productionAttackReach:reach,approachDistance:approach}:null;
     s.armed=true;s.arm={simulationTime:world.time,tick:deps.simulationTick(world),activeRemaining:actor.manualAbility.activeRemaining,hp:actor.hp};
     return copy({...s.proof,ownerEvidence:s.ownerEvidence,arm:s.arm});

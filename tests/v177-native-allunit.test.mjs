@@ -4,7 +4,8 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import {load as loadYaml} from 'js-yaml';
 import {spriteKinds} from '../app/spriteManifest.js';
-import {normalAttackReach} from '../app/combatLifecycle.js';
+import {normalAttackReach,canAcquireCombatTarget,canNormalAttackTarget} from '../app/combatLifecycle.js';
+import {createMayoFeralProofOwner} from '../app/v177NativeMayoProof.js';
 import {createCombatAnimationRuntime,advanceCombatAnimationRuntime} from '../app/combatPresentation.js';
 import {createBattleDefinition} from '../app/battleDefinitions.js';
 import {V100_STAGE_IDS} from '../app/v100Registry.js';
@@ -325,5 +326,63 @@ test('missing/nonfinite current lane resolver fails before spawning and never fa
  for(const lane of [-1,3,.5,null]){
   const f=bornLaneTargetFixture({lane,laneYFor:()=>0}),before=structuredClone(f.actor);
   assert.throws(f.run,/lane center resolver/u);assert.equal(f.spawned,0);assert.deepEqual(f.actor,before);
+ }
+});
+
+
+function currentMayoLaneFixture(options={}) {
+ const {phase='engage',centers=[240,285,325],actorLane=2,actorY=325,actorX=354.124375}=options;
+ const actor={id:10,kind:'mayo-chan',side:'human',speed:47.85,laneSpeed:120,damage:14.56,range:22,attackEvery:.48,
+  hp:64,maxHp:64,cooldown:0,bodyRadius:7,x:330,y:centers[1],lane:1,anchorLane:1,combatReady:true,
+  manualAbility:createManualAbilityRuntime('mayo-chan'),mayoRetreat:null,
+  animationPresentation:{state:'move',locomotionPhase:12.34},navigationRecovery:{elapsed:.19}};
+ const target={id:12,kind:'walker',side:'zombie',hp:100,maxHp:100,x:900,y:centers[1],lane:1,anchorLane:1,
+  bodyRadius:11,combatReady:true,speed:20,laneSpeed:20,damage:10,cooldown:0};
+ const world={time:0,running:true,over:false,paused:false,fighters:[actor,target],manualAbilityReceipts:[]},ui=[];let tick=0;
+ const owner=createMayoFeralProofOwner({definition:MANUAL_ABILITY_REGISTRY['mayo-chan'],battleGeneration:()=>7,
+  simulationTick:()=>tick,nativeNow:()=>1234,setPausedUi:v=>ui.push(v),attackReachFor:normalAttackReach,
+  prepareNormalPair:()=>({actor,target}),laneYFor:Object.hasOwn(options,'resolver')?options.resolver:lane=>centers[lane]});
+ const proof=owner.prepare(world,{proofId:'mayo-current-lane',phase});
+ const begun=beginManualAbility(actor.manualAbility,{id:target.id,x:target.x,y:target.y,lane:target.lane});
+ assert.equal(begun.ok,true);actor.manualAbility=begun.runtime;
+ world.manualAbilityReceipts.push({ownerId:actor.id,kind:'mayo-chan',eventType:'start',activationId:begun.activationId,at:0});
+ while(actor.manualAbility.phase!=='feral'&&tick<100){
+  tick++;world.time+=1/60;owner.beforeStep(world,actor,1/60,tick);
+  const step=advanceManualAbility(actor.manualAbility,1/60);actor.manualAbility=step.runtime;
+  for(const e of step.events)world.manualAbilityReceipts.push({ownerId:actor.id,kind:e.kind,eventType:e.type,activationId:e.activationId,at:world.time});
+  owner.afterStep(world,actor,tick);
+ }
+ assert.equal(actor.manualAbility.phase,'feral');
+ // Geometry observed after genuine activation in the three original failing native cases.
+ Object.assign(actor,{x:actorX,y:actorY,lane:actorLane,anchorLane:actorLane});
+ return {actor,target,world,ui,owner,proof,centers};
+}
+
+test('Mayo feral arm repairs the three recorded stale target lanes without resetting the actual actor',()=>{
+ for(const options of [
+  {phase:'attack',centers:[212,282,352],actorLane:0,actorY:233.5,actorX:355.719375},
+  {phase:'engage',centers:[240,285,325],actorLane:2,actorY:323.5,actorX:353.326875},
+  {phase:'engage',centers:[240,285,325],actorLane:2,actorY:325,actorX:354.124375},
+ ]){
+  const f=currentMayoLaneFixture(options),beforeActor=structuredClone(f.actor),beforeTarget=structuredClone(f.target),time=f.world.time;
+  assert.equal(canAcquireCombatTarget({attacker:f.actor,target:f.target,hasLineOfSight:true}),false);
+  f.owner.arm(f.world,f.proof.proofId);
+  assert.deepEqual(f.actor,beforeActor);assert.equal(f.world.time,time);
+  assert.equal(f.target.lane,f.actor.lane);assert.equal(f.target.anchorLane,f.actor.lane);
+  assert.equal(f.target.y,f.centers[f.actor.lane]);if(f.actor.y!==f.centers[f.actor.lane])assert.notEqual(f.target.y,f.actor.y);
+  for(const key of ['hp','maxHp','speed','laneSpeed','damage','cooldown'])assert.equal(f.target[key],beforeTarget[key]);
+  assert.equal(canAcquireCombatTarget({attacker:f.actor,target:f.target,hasLineOfSight:true}),true);
+  assert.equal(canNormalAttackTarget({attacker:f.actor,target:f.target,hasLineOfSight:true}),options.phase==='attack');
+  if(options.phase==='engage')assert.ok(f.target.x-f.actor.x>normalAttackReach(f.actor,f.target)+4);
+  assert.deepEqual(f.ui,[true]);
+ }
+});
+
+test('Mayo missing or nonfinite current lane center fails before changing either actor, target or pause',()=>{
+ for(const resolver of [undefined,()=>NaN,()=>Infinity]){
+  const f=currentMayoLaneFixture({resolver}),actor=structuredClone(f.actor),target=structuredClone(f.target),time=f.world.time;
+  assert.throws(()=>f.owner.arm(f.world,f.proof.proofId),/Current Mayo lane center resolver/);
+  assert.deepEqual(f.actor,actor);assert.deepEqual(f.target,target);assert.equal(f.world.time,time);
+  assert.equal(f.world.paused,false);assert.deepEqual(f.ui,[]);
  }
 });
