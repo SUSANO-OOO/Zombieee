@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {V177_JOINT_ATLASES as atlases,v177JointPose,v177CaptureJointPose,
   drawV177JointPose,v177RenderedJointWeaponSocket} from '../app/v177JointPresentation.js';
-import {animationClipFor} from '../app/combatPresentation.js';
+import {animationClipFor,sampleAttackPresentation,weaponDamageEventsFor,
+  advancePendingWeaponHits,cancelPendingWeaponTransaction} from '../app/combatPresentation.js';
 import {spriteFrameFor,spriteKinds} from '../app/spriteManifest.js';
 
 const kinds=['medic','engineer'],states=['wind-up','active','recovery'];
@@ -13,7 +14,7 @@ const runtime={locomotionPhase:.37,locomotionSettle:1};
 const original=plan=>{const result={...plan};delete result.firearmUpperTransform;return result;};
 const parts=kind=>JSON.parse(fs.readFileSync('assets/source/v100/joints/'+kind+'-r1/parts.json'));
 
-function record(kind,plan,{actor,scale=1,direction='right',x=0,y=0}={}){
+function record(kind,plan,{actor,world,scale=1,direction='right',x=0,y=0}={}){
   let m=[1,0,0,1,x,y];const stack=[],calls=[];
   const multiply=b=>{const a=m;m=[a[0]*b[0]+a[2]*b[1],a[1]*b[0]+a[3]*b[1],
     a[0]*b[2]+a[2]*b[3],a[1]*b[2]+a[3]*b[3],a[0]*b[4]+a[2]*b[5]+a[4],a[1]*b[4]+a[3]*b[5]+a[5]];};
@@ -23,7 +24,7 @@ function record(kind,plan,{actor,scale=1,direction='right',x=0,y=0}={}){
   const frame={...spriteFrameFor(kind,'walk-a',direction),flipX:direction==='left'},size={w:480*scale,h:448*scale};
   if(direction==='left')ctx.scale(-1,1);
   assert.equal(drawV177JointPose(ctx,{naturalWidth:atlases[kind].decodedWidth},kind,plan,
-    -size.w*frame.anchorX,-size.h*frame.anchorY,size.w,size.h,{actor}),true);
+    -size.w*frame.anchorX,-size.h*frame.anchorY,size.w,size.h,{actor,world}),true);
   return{calls,frame,size};
 }
 
@@ -96,7 +97,7 @@ test('normal shot endpoints and both phase joins have continuous actual matrices
       assert.equal(v177JointPose(kind,{requestedState:state,clipProgress:.3},runtime),null);
     assert.equal(v177JointPose(kind,{requestedState:'active',clipProgress:.3},runtime,{ownedPose:true}),null);
   }
-  for(const kind of spriteKinds.filter(k=>!kinds.includes(k)))for(const state of states)
+  for(const kind of spriteKinds.filter(k=>!kinds.includes(k)&&k!=='gunner'))for(const state of states)
     assert.equal(v177JointPose(kind,{requestedState:state,clipProgress:.3},runtime)?.firearmUpperTransform,undefined);
 });
 
@@ -131,5 +132,89 @@ test('actually painted recoil survives a hit and enters or leaves living stun wi
         pose.lower[part.bone].forEach((v,i)=>assert.ok(Math.abs(v-baseline.lower[part.bone][i])<1e-9,
           'Every actually painted lower part keeps its original transform through stun'));
     }
+  }
+});
+
+const gunnerEvents=weaponDamageEventsFor('gunner',13),gunnerActor=Object.freeze({id:17});
+// Fixtures use the existing released Shot fields. Pending entries alone are not shots.
+function gunnerShots(events,t){
+  return events.filter(e=>e.offsetSeconds<=t).map(e=>{
+    const duration=Math.max(.01,e.travelSeconds)+e.hitStopSeconds+.16;
+    return Object.freeze({sourceId:17,side:'human',weapon:'gunner',style:'projectile',
+      shotIndex:e.shotIndex,duration,life:duration-(t-e.offsetSeconds)});
+  });
+}
+function gunnerPlan(t,shots=gunnerShots(gunnerEvents,t)){
+  return v177JointPose('gunner',sampleAttackPresentation('gunner',t),runtime,
+    {actor:gunnerActor,world:{shots}});
+}
+const upperAngle=plan=>Math.atan2(v177CaptureJointPose('gunner',plan).upper.spine[1],
+  v177CaptureJointPose('gunner',plan).upper.spine[0]);
+
+test('Gunner recoils for each released round, while canceled future rounds and duplicate traces create no extra kick',()=>{
+  assert.deepEqual(gunnerEvents.map(e=>e.offsetSeconds),[0,.055,.11]);
+  assert.ok(Math.abs(gunnerEvents.reduce((n,e)=>n+e.damage,0)-13)<1e-12);
+  let pending=gunnerEvents.map(e=>({...e,remainingSeconds:e.offsetSeconds,transactionId:'burst'}));
+  for(const [index,dt]of [[0,0],[1,.055],[2,.055]]){
+    const advanced=advancePendingWeaponHits(pending,dt);pending=advanced.pending;
+    assert.deepEqual(advanced.due.map(e=>e.shotIndex),[index]);
+    const t=gunnerEvents[index].offsetSeconds+.016,shots=gunnerShots(gunnerEvents,t),
+      actual=gunnerPlan(t,shots),baseline=gunnerPlan(t,[]);
+    assert.ok(upperAngle(actual)<upperAngle(baseline)-.07,'each released round moves the actual torso');
+    assert.deepEqual(gunnerPlan(t,[...shots,...shots]),actual,'multi-target traces cannot multiply body recoil');
+    if(index)assert.ok(upperAngle(gunnerPlan(t,gunnerShots(gunnerEvents.slice(0,1),t)))
+      >upperAngle(actual)+.06,'canceled later rounds have no fabricated impulse');
+  }
+  const canceled=cancelPendingWeaponTransaction(gunnerEvents.slice(1).map(e=>({
+    ...e,remainingSeconds:e.offsetSeconds,transactionId:'burst'})),'burst');
+  assert.deepEqual(advancePendingWeaponHits(canceled,.12).due,[]);
+  assert.deepEqual(advancePendingWeaponHits(gunnerEvents.map(e=>({
+    ...e,remainingSeconds:e.offsetSeconds})),.12).due.map(e=>e.shotIndex),[0,1,2]);
+});
+
+test('Gunner actual paint keeps both arm chains, planted lower parts, waist and muzzle attached through all three kicks',()=>{
+  const data=parts('gunner'),atlas=atlases.gunner,weapon=atlas.parts.findIndex(p=>p.name==='weapon-and-hands');
+  for(const event of gunnerEvents)for(const direction of ['left','right'])for(const scale of [.12,.16,.2]){
+    const plan=gunnerPlan(event.offsetSeconds+.016),pose=v177CaptureJointPose('gunner',plan),
+      plain=original(plan),baseline=v177CaptureJointPose('gunner',plain),
+      shot=record('gunner',plan,{direction,scale,x:300,y:500}),
+      base=record('gunner',plain,{direction,scale,x:300,y:500});
+    joins('gunner',pose);assert.deepEqual(pose.lower,baseline.lower);
+    assert.ok(distance(point(pose.upper.spine,data.rig.spine[0]),point(baseline.upper.spine,data.rig.spine[0]))<1e-9);
+    for(let i=0;i<atlas.parts.length;i++)if(!atlas.parts[i].upper)assert.deepEqual(shot.calls[i],base.calls[i]);
+    const painted=point(shot.calls[weapon],atlas.muzzle),socket=v177RenderedJointWeaponSocket({
+      kind:'gunner',plan,direction,frame:shot.frame,size:shot.size,x:300,y:500,
+      pose:{offsetX:0,offsetY:0,scaleX:1,scaleY:1,rotationRadians:0}});
+    assert.ok(distance(painted,[socket.x,socket.y])<1e-9);
+  }
+});
+
+test('Gunner release edges and active/recovery handover are continuous; unsupported owners cannot drive normal recoil',()=>{
+  for(const t of [0,.012,.055,.067,.08,.11,.122,.135,.165,.19,.275]){
+    const before=v177CaptureJointPose('gunner',gunnerPlan(Math.max(0,t-1e-8))),
+      after=v177CaptureJointPose('gunner',gunnerPlan(t+1e-8));
+    for(const layer of ['lower','upper'])for(const bone of Object.keys(before[layer]))
+      before[layer][bone].forEach((v,i)=>assert.ok(Math.abs(v-after[layer][bone][i])<.0001,'no transform jump at '+t));
+  }
+  // The existing clip sampler stops an epsilon before the endpoint.
+  assert.ok(Math.abs(upperAngle(gunnerPlan(.275)))<1e-12);
+  assert.equal(v177JointPose('gunner',{requestedState:'recovery',clipProgress:1},runtime).firearmUpperTransform,undefined);
+  const t=.016,shot=gunnerShots(gunnerEvents,t)[0],baseline=gunnerPlan(t,[]);
+  for(const invalid of [{sourceId:18},{side:'zombie'},{weapon:'ranger'},{style:'beam'},
+    {shotIndex:3},{shotIndex:undefined},{duration:NaN},{life:NaN},{life:0},{life:shot.duration+.01}])
+    assert.deepEqual(gunnerPlan(t,[{...shot,...invalid}]),baseline);
+  const world=Object.freeze({shots:Object.freeze([shot])}),sample=sampleAttackPresentation('gunner',t);
+  assert.deepEqual(v177JointPose('gunner',sample,runtime,{world}),baseline);
+  assert.equal(v177JointPose('gunner',sample,runtime,{actor:gunnerActor,world,ownedPose:true}),null);
+  for(const state of ['move','idle','deploy','turn','retreat','reload','weapon-cycle'])
+    assert.equal(v177JointPose('gunner',{requestedState:state,clipProgress:.3},runtime,
+      {actor:gunnerActor,world}).firearmUpperTransform,undefined);
+  const actor={id:18},ownWorld={shots:[{...shot,sourceId:18}]},r={...runtime,elapsedSeconds:4,transitionCount:3},
+    plan=v177JointPose('gunner',sample,r,{actor,world:ownWorld});
+  record('gunner',plan,{actor,world:ownWorld});
+  const pose=v177CaptureJointPose('gunner',plan);
+  for(const state of ['hit-light','incapacitated']){
+    const held=v177JointPose('gunner',{requestedState:state},r,{actor,world:ownWorld,stunRemaining:.8});
+    assert.deepEqual(v177CaptureJointPose('gunner',held),pose);joins('gunner',pose);
   }
 });

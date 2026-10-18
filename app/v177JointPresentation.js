@@ -135,9 +135,9 @@ export function v177JointPose(kind, sample, runtime, { ownedPose=false,actor,wor
       upperBlend:attackPhase===null?blend:attackFrame-attackIndex,phase,settleIndex,attackPhase,
       settleFrameOffset:(nextSettle-settleIndex)*atlas.frameCount,settleBlend,
       upperOffsetY:offset+(nextOffset-offset)*settleBlend};
-    if((kind==='medic'||kind==='engineer')&&attackStates.has(state)){
+    if((kind==='medic'||kind==='engineer'||kind==='gunner')&&attackStates.has(state)){
       const spine=jointMatrix(new Float64Array(6),atlas,plan,'spine',true);
-      const follow=v177FirearmUpperMotion(kind,sample,spine);
+      const follow=v177FirearmUpperMotion(kind,sample,spine,{actor:actualActor,world});
       if(follow)plan.firearmUpperTransform=follow;
     }
     return kind==='mrs-chiha'&&sample?.mrsNormalWeaponCycle
