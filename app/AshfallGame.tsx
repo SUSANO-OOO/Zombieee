@@ -4134,6 +4134,10 @@ type FighterRenderAudit = {
   jointWeaponCycleDrawSucceeded?: boolean;
   jointWeaponCycle?: {component:"normal-launcher-handling";fighterId:number;attackSequence:number;paintedAt:number;phase:number;elapsed:number;duration:number;reachMargin:number;sourceTexture:string;independentCylinder:false};
   jointWeightedLowerDrawSucceeded?: boolean;
+  jointRangerManualDrawSucceeded?: boolean;
+  jointRangerManual?: {component:"precision-shot";fighterId:number;activationId:number;runtimeKind:"ranger";runtimePhase:string;
+    abilityElapsed:number;windupRemaining:number;recoveryRemaining:number|null;clockElapsed:number;presentationPhase:string;
+    lockedAim:Record<string,unknown>;paintedAt:number;sourceAtlas:string};
   jointWeightedLower?: ReturnType<typeof v177RenderedWeightedLowerReceipt>;
   jointPaintedAt?: number;
   jointGetupProgress?: number | null;
@@ -4448,7 +4452,9 @@ function drawSpriteFighter(
     ? v177PaisenPhotoComboJointPose(f, MANUAL_ABILITY_REGISTRY.brawler) : null;
   const jointPose = options.v100AuthoredPresentation && jointImage?.naturalWidth
     ? photoComboJointPose ?? v177TurnedGetupPose(options.world,f,{ownedPose:authoredPoseOwned})
-      ?? v177JointPose(renderKind,animationSample,f.animationPresentation,{ownedPose:authoredPoseOwned,actor:f,world:options.world,stunRemaining:f.stunned}) : null;
+      ?? v177JointPose(renderKind,animationSample,f.animationPresentation,{ownedPose:authoredPoseOwned,actor:f,world:options.world,stunRemaining:f.stunned,
+        rangerManualOwner:manualAbilityActive&&renderKind==="ranger"&&!Boolean(supportManualPose||advancedManualPose||kumaGuardArtPose||guardianGuardPose||takuyaSlamPose),
+        rangerManualDefinition:MANUAL_ABILITY_REGISTRY.ranger}) : null;
   const articulatedWalk = Boolean(!jointPose && options.v100AuthoredPresentation
     && v100UsesHumanWalk(renderKind,animationSample,{manualAbilityActive}));
   const frame = articulatedWalk || jointPose ? v100HumanWalkFrame(spriteFrameFor(renderKind,'walk-a','right'),direction) : tataraGroundCandidate
@@ -4643,6 +4649,20 @@ function drawSpriteFighter(
       if(renderKind==='ranger'){
         audit.jointWeightedLower=v177RenderedWeightedLowerReceipt(f,options.world);
         audit.jointWeightedLowerDrawSucceeded=audit.jointDrawSucceeded&&audit.jointWeightedLower?.mode==='continuous-weighted-mesh';
+        const manual=f.manualAbility,source=jointPose?.rangerManualJoint,lower=audit.jointWeightedLower;
+        const manualPaint=Boolean(audit.jointWeightedLowerDrawSucceeded&&manual?.kind==='ranger'
+          &&['windup','recovery'].includes(manual.phase)&&source?.activationId===manual.activationId
+          &&lower?.meshVertices===130&&lower?.meshTriangles===192&&lower?.parts===5
+          &&Number.isFinite(options.world?.time)&&Number.isFinite(source?.clockElapsed)
+          &&Math.abs(source.clockElapsed-(manual.phase==='windup'?MANUAL_ABILITY_REGISTRY.ranger.windupSeconds-manual.windupRemaining:manual.abilityElapsed))<1e-7);
+        audit.jointRangerManualDrawSucceeded=manualPaint;
+        audit.jointRangerManual=manualPaint&&manual&&source?{component:'precision-shot',fighterId:f.id,activationId:manual.activationId,
+          runtimeKind:'ranger',runtimePhase:manual.phase,abilityElapsed:manual.abilityElapsed,windupRemaining:manual.windupRemaining,
+          recoveryRemaining:manual.phase==='recovery'?manual.windupRemaining:null,clockElapsed:source.clockElapsed,
+          presentationPhase:source.presentationPhase,lockedAim:Object.fromEntries(['direction','targetId','targetIds','x','y']
+            .filter(key=>Object.prototype.hasOwnProperty.call(manual.target??{},key))
+            .map(key=>{const value=(manual.target as Record<string,unknown>)[key];return [key,Array.isArray(value)?[...value]:value];})),
+          paintedAt:Number(options.world?.time),sourceAtlas:jointAtlas.path}:undefined;
       }
     }
   }
