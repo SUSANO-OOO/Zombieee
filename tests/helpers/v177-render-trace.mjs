@@ -19,10 +19,10 @@ export function jointLegacyInterpolationControlDigest(kinds){
   for(const [kind,atlas]of original)V177_JOINT_ATLASES[kind]=kind==='mayo-chan'?JSON.parse(gunzipSync(bytes))
     :{...(kind==='brawler'?V177_MELEE_JOINT_ATLASES.brawler:atlas),legConstraints:undefined,
       ...(kind==='ranger'?{upperRig:undefined}:{})};
-  return jointRenderTraceDigest(kinds,{legacySettleRows:true});
+  return jointRenderTraceDigest(kinds,{legacySettleRows:true,legacyFirearmUpper:true});
  }finally{for(const [kind,atlas]of original)V177_JOINT_ATLASES[kind]=atlas;}
 }
-export function jointRenderTraceDigest(kinds,{legacySettleRows=false}={}){
+export function jointRenderTraceDigest(kinds,{legacySettleRows=false,legacyFirearmUpper=false}={}){
  const hash=createHash('sha256');let poses=0,paintCalls=0;
  const quant=n=>typeof n==='number'?Math.round(n*1e6)/1e6:n;
  for(const kind of [...kinds].sort()){
@@ -34,6 +34,9 @@ export function jointRenderTraceDigest(kinds,{legacySettleRows=false}={}){
    // labels. Actual product traces retain the continuous input by default.
    const plan=v177JointPose(kind,{requestedState:state,clipProgress:phase},{locomotionPhase:phase,
      locomotionSettle:legacySettleRows?Math.round(settle*(atlas.settleLevels-1))/(atlas.settleLevels-1):settle});
+   // The archived control predates normal-shot upper follow. Actual traces
+   // retain the new motion by default; only the historical control omits it.
+   if(legacyFirearmUpper)delete plan.firearmUpperTransform;
    assert.ok(drawV177JointPose(ctx,{naturalWidth:atlas.decodedWidth},kind,plan,0,0,atlas.referenceFrame?.width??480,atlas.referenceFrame?.height??448));
    hash.update(JSON.stringify([kind,state,phase,settle,trace]));poses++;
   }
