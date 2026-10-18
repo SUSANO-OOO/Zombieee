@@ -199,7 +199,7 @@ async function main() {
         if (row.status !== 'failed') {
           try {
             if(s25Observe&&number===25)assert.ok(row.s25DeploymentObservations?.length>0,'retain actual card state and cooldown observations');
-            if(s25FireComparison)for(const kind of ['raider','tatara','zakimiya']){
+            if(s25FireComparison)for(const kind of ['gunner','brute','zakimiya']){
               assert.ok(row.inputs.some(input=>input.action==='deploy'&&input.kind===kind),'retain the actual UI request '+kind);
               assert.ok(row.s25ObservedHumans.some(actor=>actor.kind===kind),'comparison not exercised: no actual human ID '+kind);
             }

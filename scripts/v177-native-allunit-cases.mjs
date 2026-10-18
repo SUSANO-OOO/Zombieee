@@ -22,6 +22,32 @@ export function hasPreparedAllUnitPaint(proof){
     &&a.renderHistory.some(r=>r.renderKind===proof.renderKind&&r.jointDrawSucceeded===true
       &&r.assetReady===true&&Number.isFinite(r.jointPaintedAt)&&r.renderSequence>0);
 }
+
+// Read and prepare in ONE browser task. A separate boolean wait/evaluate lets
+// the original route AI change lanes between the observation and placement.
+export function prepareBornTurnedWhenReady({proofId,phase}){
+  const qa=window.__ASHFALL_BATTLE_QA__,source=qa.getV177TurnedGetupProof();
+  if(!source||source.proofId!==proofId||!source.released||!source.running||source.paused||source.over)
+    throw Error('Original released born proof changed while awaiting preparation');
+  const birth=source.actualBirth,actor=source.fighter;
+  if(!birth||!actor||actor.spawnGrace!==0)return false;
+  const normal=source.draws.filter(row=>row.renderKind==='turned'&&row.jointDrawSucceeded===true
+    &&row.jointGetupProgress===null&&Number.isFinite(row.jointPaintedAt)
+    &&row.jointPaintedAt>=birth.bornAt+birth.initialRemaining
+    &&['idle','move','start-move','stop-move','turn'].includes(row.requestedState));
+  if(new Set(normal.map(row=>row.renderSequence)).size<3)return false;
+  if(phase==='engage'){
+    const navigation=actor.navigationRecovery,lane=actor.anchorLane;
+    const centers=qa.getSnapshot().geometry.laneCenters;
+    if(!navigation||navigation.recoveryLane!==null||navigation.recoverySeconds!==0
+      ||navigation.terminalFallbackSeconds!==0||navigation.routeReleaseRequested
+      ||!Number.isInteger(lane)||lane<0||lane>2||actor.lane!==lane
+      ||!Number.isFinite(centers[lane])||!Number.isFinite(actor.y)||Math.abs(actor.y-centers[lane])>2
+      ||!(actor.nextLaneDecisionAt>birth.bornAt+.8)
+      ||actor.targetId!==null||actor.targetObjectId!==null)return false;
+  }
+  return qa.prepareV177BornTurnedContinuation({proofId,phase});
+}
 export function observeMayoPointer(proof){
   const state={proofId:proof.proofId,proofGeneration:proof.proofGeneration,
     battleGeneration:proof.battleGeneration,events:[],overflow:false};
@@ -49,14 +75,9 @@ async function prepareCase(page,row,owned,active,resources){
       .getV177TurnedGetupProof({light:true}).corpseRenderSequence),undefined,{timeout:LIMITS.readinessMs}));
     row.birthRelease=await owned(()=>page.evaluate(id=>window.__ASHFALL_BATTLE_QA__.releaseV177TurnedGetupProof(id),row.birthSetup.proofId));
     // The original 4.8s infection and .75s rise run freely, without a clock setter.
-    await owned(()=>page.waitForFunction(()=>{
-      const s=window.__ASHFALL_BATTLE_QA__.getV177TurnedGetupProof();
-      return s.actualBirth&&s.fighter?.spawnGrace===0&&s.draws.filter(r=>r.jointDrawSucceeded===true
-        &&r.jointGetupProgress===null&&r.jointPaintedAt>=s.actualBirth.bornAt+s.actualBirth.initialRemaining
-        &&['idle','move','start-move','stop-move','turn'].includes(r.requestedState)).length>=3;
-    },undefined,{timeout:8500}));
-    proof=await owned(()=>page.evaluate(({proofId,phase})=>window.__ASHFALL_BATTLE_QA__
-      .prepareV177BornTurnedContinuation({proofId,phase}),{proofId:row.birthSetup.proofId,phase:row.phase}));
+    const ready=await owned(()=>page.waitForFunction(prepareBornTurnedWhenReady,
+      {proofId:row.birthSetup.proofId,phase:row.phase},{timeout:8500,polling:'raf'}));
+    try{proof=await owned(()=>ready.jsonValue());}finally{await ready.dispose();}
   }else if(row.owner==='futago-pair'){
     proof=await owned(()=>page.evaluate(({form,phase})=>window.__ASHFALL_BATTLE_QA__
       .prepareV177NativeFutagoPair({form,phase}),{form:row.form,phase:row.phase}));

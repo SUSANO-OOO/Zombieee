@@ -31,9 +31,9 @@ export function configureV177BornTurnedContinuation(world,{proofId,phase},deps){
   if(!Object.values(original).every(Number.isFinite))throw Error('Original newborn stats must be finite');
   // Spawn ONLY the controlled human opponent. The born actor remains in-world.
   const actorStateBefore=JSON.stringify(actor);
-  // During engage the real newborn can still be crossing toward its already
-  // committed route. Stage the inert target on that route without steering
-  // the actor. The original move/attack placements remain on its physical lane.
+  // Engage is prepared only after the real newborn settles on its route.
+  // A transient recovery lane can be released on the next original AI tick.
+  // The original move/attack placements remain on the physical lane.
   const targetLane=phase==='engage'
     ?(actor.navigationRecovery?.recoveryLane??actor.anchorLane??actor.lane):actor.lane;
   if(!Number.isInteger(actor.lane)||actor.lane<0||actor.lane>2
@@ -41,6 +41,15 @@ export function configureV177BornTurnedContinuation(world,{proofId,phase},deps){
     throw Error('Current born lane center resolver is required');
   const targetY=deps.laneYFor(targetLane);
   if(!Number.isFinite(targetY))throw Error('Current born lane center must be finite');
+  if(phase==='engage'){
+    const navigation=actor.navigationRecovery;
+    if(!navigation||navigation.recoveryLane!==null||navigation.recoverySeconds!==0
+      ||navigation.terminalFallbackSeconds!==0||navigation.routeReleaseRequested
+      ||actor.lane!==actor.anchorLane||!Number.isFinite(actor.y)||Math.abs(actor.y-targetY)>2
+      ||!(actor.nextLaneDecisionAt>birth.bornAt+.8)
+      ||actor.targetId!==null||actor.targetObjectId!==null)
+      throw Error('Original born actor must settle on its naturally committed route before engage preparation');
+  }
   const target=deps.spawnTarget(world);
   if(!target||target.side!=='human'||target.kind!=='guardian'||target.id===id)
     throw Error('Controlled Guardian target unavailable');

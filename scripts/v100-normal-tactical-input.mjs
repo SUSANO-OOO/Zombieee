@@ -49,7 +49,7 @@ export function s25FireDeploymentPriorities(snapshot, observedHumans, baseline) 
   const humans=snapshot.fighters.filter(f=>f.side==='human'&&f.hp>0);
   if(!humans.some(f=>f.kind==='guardian')&&!queued.includes('guardian'))return ['guardian'];
   if(!observedHumans.some(f=>f.kind==='medic'))return queued.includes('medic')?[]:['medic'];
-  const missing=['raider','tatara','zakimiya'].filter(kind=>!observedHumans.some(f=>f.kind===kind));
+  const missing=['gunner','brute','zakimiya'].filter(kind=>!observedHumans.some(f=>f.kind===kind));
   if(!missing.length)return baseline;
   const next=missing.find(kind=>!queued.includes(kind)&&controls.cards.filter(card=>card.kind===kind).length===1
     &&controls.cards.some(card=>card.kind===kind&&!card.disabled&&card.ariaDisabled!=='true'));
