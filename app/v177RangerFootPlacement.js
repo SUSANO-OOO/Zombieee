@@ -43,7 +43,7 @@ function stopping(rig, previous, input) {
       lifts:distances.map(distance => Math.min(STOP_LIFT,distance*.4))};
   }
   let elapsed = Math.max(0, time - stop.at);
-  const feet = stop.from.map(foot => ({...foot, mode:'plant', angle:0, height:0}));
+  const feet = stop.from.map(foot => ({...foot, mode:foot.height > 0 ? 'swing' : 'plant'}));
   for (let order = 0; order < 2; order++) {
     const i = stop.order[order], duration = stop.durations[order];
     if (elapsed >= duration) {
@@ -55,7 +55,7 @@ function stopping(rig, previous, input) {
     feet[i] = {x:stop.from[i].x + (stop.goal[i].x - stop.from[i].x) * s,
       height:stop.from[i].height * (1 - s) + stop.lifts[i] * 16 * u * u * (1 - u) * (1 - u),
       angle:stop.from[i].angle * (1 - s), mode:'swing'};
-    // The other foot stays at its last actual plant until its own step.
+    // Keep the other foot's actual plant or airborne pose until its own step.
     break;
   }
   return {time, root, facing, scale, phase, offset:previous.offset, moving:false, stop, feet};
@@ -83,17 +83,17 @@ function moving(rig, previous, input) {
   const velocity = Math.abs(delta) > 1e-9 ? (root - previous.root) / delta : facing * scale * cycleDistance;
   const feet = previous.feet.map((foot, i) => {
     const leg = rig.legs[i], absolute = phase + offset + leg.offset, q = wrap(absolute);
-    const local=localX(foot.x,root,facing,scale),trailing=(local-leg.footCenter)*travelSign<0;
+    const local=localX(foot.x,root,facing,scale);
     const vertical=leg.groundAnkle-leg.hip[1]-v177RangerLowerBob(phase+offset,input.settle??0);
-    // Lane depth changes the projected scale. Lift a trailing plant slightly
-    // early rather than stretch it beyond reach while waiting for nominal q.
-    const toeOff=trailing&&Math.hypot(local-leg.hip[0],vertical)>leg.upperLength+leg.lowerLength-1.2;
+    // Lane travel also advances the gait with no horizontal root travel.
+    // Either support can approach full extension before its nominal toe-off.
+    const toeOff=Math.hypot(local-leg.hip[0],vertical)>leg.upperLength+leg.lowerLength-1.2;
     const swing = q > rig.stanceFraction||toeOff;
     let step = !resumed && foot.step?.direction === travelSign ? foot.step : null;
     if (!swing && !step) return {...foot, height:0, angle:0, mode:'plant', step:null};
     if (!step) {
       const end = travelSign > 0 ? Math.floor(absolute) + 1 : Math.floor(absolute) + (q<=rig.stanceFraction?-1:0) + rig.stanceFraction;
-      const start = resumed ? absolute : previous.phase + offset + leg.offset;
+      const start = previous.phase + offset + leg.offset;
       const remaining = end - absolute;
       const landing = leg.footCenter + (travelSign > 0 ? .5 : -.5) * rig.spanPx;
       step = {direction:travelSign, start, end, from:foot.x, height:foot.height,
