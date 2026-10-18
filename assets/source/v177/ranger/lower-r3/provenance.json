@@ -141,7 +141,7 @@
   },
   "generator": {
     "file": "scripts/build-v177-ranger-upper.mjs",
-    "sha256": "f4baf524518de79b7c54843189324ae597cf1df7c01920808696a241122548ba",
+    "sha256": "cffd744f6330e157f27cac19a72d5ee6dfbd9942b9490d09c7ea85f16d6ecf5d",
     "sharp": "0.35.3",
     "vips": "8.18.3"
   },
@@ -248,11 +248,15 @@
   "lowerImplementations": [
     {
       "file": "app/v177RangerLowerMotion.js",
-      "sha256": "90c371cfc68a6c68c83cf69383f939d38bce2954a5a2b01ee98b26245b30e8eb"
+      "sha256": "e0c1d43afd0311fb197feb76989108da62e4de2aa30e8e33eb73b88f163ef25b"
     },
     {
       "file": "app/v177RangerLowerPaint.js",
-      "sha256": "80a86980b7b4a22f1a050a3e404d3ff7ac2a25bbce1996c9427c0296d8802dea"
+      "sha256": "0ba5a5603e1ae44edcb64af7697504112d6d6ac0d4827da4d2e1400656f08875"
+    },
+    {
+      "file": "app/v177RangerFootPlacement.js",
+      "sha256": "4c0a8c24b02a6bd9ab5a85dec604fb738f5a5edd8ea22e98b13d641f840482ac"
     }
   ],
   "data": {

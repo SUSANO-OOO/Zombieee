@@ -139,7 +139,7 @@ export async function buildV177RangerUpper({root=process.cwd(),check=false}={}) 
     carryImplementation:{file:'app/v177RangerUpperMotion.js',sha256:sha(carry)},
     lower:{parts:lowerRig.parts,sourceMeshVertices:130,sourceTriangles:192,preserveVolume:true,continuousActualTravel:true,coverageSamples:4,
       retainedR2Rgba:true,retainedR2DecodedBytes:oldUpper.length},
-    lowerImplementations:await Promise.all(['app/v177RangerLowerMotion.js','app/v177RangerLowerPaint.js'].map(async file=>({file,sha256:sha(await readFile(path.join(root,file)))}))),
+    lowerImplementations:await Promise.all(['app/v177RangerLowerMotion.js','app/v177RangerLowerPaint.js','app/v177RangerFootPlacement.js'].map(async file=>({file,sha256:sha(await readFile(path.join(root,file)))}))),
     data:{file:dataPath,sha256:sha(dataBytes)},
     visualAcceptance:false,originalSpeedAcceptance:false,performanceAcceptance:false,allUnitAcceptance:false};
   const outputs=[['public'+assetPath,asset],[dataPath,dataBytes],[provenancePath,Buffer.from(JSON.stringify(provenance,null,2)+'\n')]];

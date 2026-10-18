@@ -4,7 +4,7 @@ import { v177PaisenPhotoComboJointPose } from './v177PaisenPhotoCombo.js';
 import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
 import { v100BasePresentationFor } from "./v100BasePresentation.js";
 import { createV100HumanWalkRenderer, v100HumanWalkPhase, v100UsesHumanWalk, v100HumanWalkCycleDistance, v100HumanWalkFrame } from "./v100HumanWalk.js";
-import { V177_JOINT_ATLASES, v177JointCycleDistance, v177JointPose, drawV177JointPose, v177CaptureJointPose, v177RenderedJointWeaponSocket, v177RenderedWeightedLowerReceipt } from "./v177JointPresentation.js";
+import { V177_JOINT_ATLASES, v177JointCycleDistance, v177JointPose, v177RangerFootPlan, drawV177JointPose, v177CaptureJointPose, v177RenderedJointWeaponSocket, v177RenderedWeightedLowerReceipt } from "./v177JointPresentation.js";
 import { v177LivingStunState, v177LivingStunSample, v177RangerLivingStunSample } from "./v177LivingStun.js";
 import { rememberV177CorpseJointPose, pruneV177CorpseJointPoses, v177LiveJointGroundLift, v177CorpseJointPresentation, drawV177CorpseJointPresentation } from "./v177CorpseJointPresentation.js";
 import { pruneV177JointActorHistory } from "./v177JointActorHistory.js";
@@ -4454,7 +4454,7 @@ function drawSpriteFighter(
   const state = animationSample.spriteState;
   const photoComboJointPose = options.v100AuthoredPresentation && jointImage?.naturalWidth && manualAbilityActive
     ? v177PaisenPhotoComboJointPose(f, MANUAL_ABILITY_REGISTRY.brawler) : null;
-  const jointPose = options.v100AuthoredPresentation && jointImage?.naturalWidth
+  let jointPose = options.v100AuthoredPresentation && jointImage?.naturalWidth
     ? photoComboJointPose ?? v177TurnedGetupPose(options.world,f,{ownedPose:authoredPoseOwned})
       ?? v177JointPose(renderKind,animationSample,f.animationPresentation,{ownedPose:authoredPoseOwned,actor:f,world:options.world,stunRemaining:f.stunned,
         rangerManualOwner:manualAbilityActive&&renderKind==="ranger"&&!Boolean(supportManualPose||advancedManualPose||kumaGuardArtPose||guardianGuardPose||takuyaSlamPose),
@@ -4488,6 +4488,7 @@ function drawSpriteFighter(
     w: authoredSize.w * compactScale * depthScale * animationSample.bodyScale,
     h: authoredSize.h * compactScale * depthScale * animationSample.bodyScale,
   };
+  jointPose=v177RangerFootPlan(renderKind,jointPose,{actor:f,world:options.world,width:size.w});
   const articulatedWalkPhase = articulatedWalk || jointPose
     ? v100HumanWalkPhase(f.animationPresentation) : null;
   const locomotionPhase = articulatedWalkPhase ?? (Number(animationSample.clipProgress) || 0);

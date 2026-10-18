@@ -15,6 +15,7 @@ import { V177_FUTAGO_JOINT_ATLASES as futagoAtlases } from './v177FutagoJointDat
 import { v177RangerCarryPose } from './v177RangerUpperMotion.js';
 import { v177RangerLowerBob } from './v177RangerLowerMotion.js';
 import { drawV177RangerLower } from './v177RangerLowerPaint.js';
+import { v177RangerFootPlacement } from './v177RangerFootPlacement.js';
 import { v177JointActorKey } from './v177JointActorHistory.js';
 import { animationClipFor, attackPresentationDuration } from './combatPresentation.js';
 import { createV177MrsNormalWeaponCycle } from './v177MrsNormalWeaponCycle.js';
@@ -103,9 +104,9 @@ export function v177JointPose(kind, sample, runtime, { ownedPose=false,actor,wor
   const phaseIndex=Math.floor(phase*atlas.frameCount) % atlas.frameCount;
   const settleFrame=clamp(runtime?.locomotionSettle ?? 1)*(atlas.settleLevels-1);
   const settleIndex=atlas.type==='rigid-parts'?Math.floor(settleFrame):Math.round(settleFrame);
-  // The feet keep the last actual-travel phase through aiming and firing.
-  // Only their lift settles to the floor; attacking never substitutes a
-  // different fixed stance or advances a walking clock while stationary.
+  // Baked lowers keep the actual-travel phase through aiming and firing.
+  // Ranger's continuous lower finishes its stop steps through painted history;
+  // neither path advances the gameplay walking phase while stationary.
   const lowerIndex=settleIndex*atlas.frameCount+phaseIndex;
   let attackPhase=null;
   const [windupEnd,activeEnd]=variant?.attackBoundaries??atlas.attackBoundaries??[.28,.7];
@@ -347,7 +348,36 @@ function livingStunJointPose(kind,atlas,runtime,actor,remaining) {
     stunUpperTransform:resolved.upperTransform,stunReturnPlan:resolved.returnPlan??null};
 }
 
+// Resolve before the renderer samples muzzle/ground sockets. Successful draw
+// remains the only publisher of the next actor's foot history.
+export function v177RangerFootPlan(kind,plan,{actor,world,width}={}) {
+  const atlas=V177_JOINT_ATLASES[kind],runtime=actor?.animationPresentation;
+  if(kind!=='ranger'||!plan?.upperRigPlan||!atlas?.lowerRig)return plan;
+  const previous=renderedJointPoses.get(v177JointActorKey(actor,world)),state=plan.rangerFeet;
+  const scale=width/atlas.width,facing=runtime?.direction==='left'?-1:1;
+  if(state&&state.time===world?.time&&state.root===actor?.x&&state.scale===scale
+    &&state.phase===runtime?.locomotionPhase&&state.facing===facing)return plan;
+  const feet=v177RangerFootPlacement(atlas.lowerRig,previous?.plan?.rangerFeet,{
+    time:world?.time,root:actor?.x,scale,phase:runtime?.locomotionPhase,
+    moving:runtime?.moving,facing,settle:plan.lowerSettle,frozen:plan.reactionHeld||plan.liveStun,
+  });
+  if(!feet)return plan;
+  plan={...plan,phase:feet.phase,
+    lowerIndex:plan.settleIndex*atlas.frameCount+Math.floor(feet.phase*atlas.frameCount),
+    lowerFootTargets:feet.targets,rangerFeet:feet.state};
+  if(!plan.rangerManualUpperPose&&!plan.rangerStunUpperPose&&!plan.reactionHeld){
+    const rig=atlas.upperRig,frame=(plan.attackPhase??0)*rig.frameCount,index=Math.floor(frame);
+    const first=plan.attackPhase===null?0:rig.attackStartIndex+index;
+    const next=plan.attackPhase===null?0:rig.attackStartIndex+Math.min(rig.frameCount,index+1);
+    const current=v177RangerCarryPose(rig.poses[first],feet.phase,plan.lowerSettle);
+    plan.upperRigPoses=[current,next===first?current:v177RangerCarryPose(rig.poses[next],feet.phase,plan.lowerSettle)];
+    plan.upperOffsetY=v177RangerLowerBob(feet.phase,plan.lowerSettle);
+  }
+  return plan;
+}
+
 export function drawV177JointPose(ctx, image, kind, plan, x, y, width, height, {actor,world}={}) {
+  const actualActor=actor;
   actor=v177JointActorKey(actor,world);
   const atlas=V177_JOINT_ATLASES[kind];
   if(!atlas || !plan || !image?.naturalWidth) { rememberRenderedJointPose(actor,kind,null); return false; }
@@ -376,7 +406,14 @@ export function drawV177JointPose(ctx, image, kind, plan, x, y, width, height, {
     ctx.restore();rememberRenderedJointPose(actor,kind,plan);return true;
   }
   if(atlas.upperRig&&plan.upperRigPlan&&plan.upperRigPoses){
+    plan=v177RangerFootPlan(kind,plan,{actor:actualActor,world,width});
+    const feet=plan.rangerFeet;
     const lowerReceipt=atlas.lowerRig?drawV177RangerLower(ctx,image,atlas.lowerRig,plan,x,y,width,height):null;
+    if(feet&&lowerReceipt?.mode==='continuous-weighted-mesh')Object.assign(lowerReceipt,{
+      footPlacement:'planted-stop-steps',footWorldX:feet.feet.map(foot=>foot.x),
+      footLiftPx:feet.feet.map(foot=>foot.height),footMoving:feet.moving,
+    });
+    else if(feet)plan={...plan,rangerFeet:undefined};
     if(!lowerReceipt||lowerReceipt.mode==='legacy-cell-fallback'){
       const {source:s,destination:d}=atlas.frames[plan.lowerIndex];
       const oldBob=atlas.pelvisOffsets[plan.settleIndex][Math.floor(plan.phase*atlas.frameCount)%atlas.frameCount];

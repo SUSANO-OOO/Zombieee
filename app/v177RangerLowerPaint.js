@@ -55,8 +55,8 @@ function rasterPart(p,g,w,h,ox,oy,stats) {
   }
 }
 
-export function paintV177RangerLower(p,ctx,phase,settle,x,y,width,height) {
-  const pose=v177RangerLowerPose(p.rig,phase,settle,p.pose),m=ctx.getTransform();
+export function paintV177RangerLower(p,ctx,phase,settle,x,y,width,height,feet=null) {
+  const pose=v177RangerLowerPose(p.rig,phase,settle,p.pose,feet),m=ctx.getTransform();
   const sx=width/480,sy=height/448,a=m.a*sx,b=m.b*sx,c=m.c*sy,d=m.d*sy,e=m.a*x+m.c*y+m.e,f=m.b*x+m.d*y+m.f;
   if(![a,b,c,d,e,f].every(Number.isFinite)||Math.abs(a*d-b*c)<1e-12)return {mode:'legacy-cell-fallback',reason:'invalid-transform'};
   let left=Infinity,top=Infinity,right=-Infinity,bottom=-Infinity;
@@ -95,5 +95,5 @@ export function drawV177RangerLower(ctx,image,rig,plan,x,y,width,height) {
   let painter=painters.get(image);
   if(painter===undefined){try{painter=createV177RangerLowerPainter(image,rig);}catch{painter=null;}painters.set(image,painter);}
   if(!painter)return {mode:'legacy-cell-fallback',reason:'source-readback-unavailable'};
-  return paintV177RangerLower(painter,ctx,plan.phase,plan.lowerSettle,x,y,width,height);
+  return paintV177RangerLower(painter,ctx,plan.phase,plan.lowerSettle,x,y,width,height,plan.lowerFootTargets);
 }

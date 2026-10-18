@@ -1,5 +1,5 @@
 // The approved author's two-bone clothing weights and actual-travel gait.
-// Mutable geometry belongs only to a shared painter; actor history stores phase/settle.
+// Mutable geometry belongs only to a shared painter; actor history owns foot plants.
 const cycle=p=>((Number(p)||0)%1+1)%1;
 const clamp=p=>Math.max(0,Math.min(1,Number(p)||0));
 const smooth=p=>{const t=clamp(p);return t*t*(3-2*t);};
@@ -15,14 +15,14 @@ function rigid(out,ax,ay,bx,by,cx,cy,dx,dy) {
   const angle=Math.atan2(dy-cy,dx-cx)-Math.atan2(by-ay,bx-ax),c=Math.cos(angle),s=Math.sin(angle);
   out[0]=c;out[1]=s;out[2]=-s;out[3]=c;out[4]=cx-c*ax+s*ay;out[5]=cy-s*ax-c*ay;
 }
-export function v177RangerLowerPose(rig,phase,settle,out=createV177RangerLowerPose(rig)) {
+export function v177RangerLowerPose(rig,phase,settle,out=createV177RangerLowerPose(rig),feet=null) {
   phase=cycle(phase);settle=clamp(settle);out.phase=phase;out.settle=settle;out.bob=v177RangerLowerBob(phase,settle);
   const pelvis=out.matrices.pelvis;pelvis[0]=1;pelvis[1]=0;pelvis[2]=0;pelvis[3]=1;pelvis[4]=0;pelvis[5]=out.bob;
   for(let i=0;i<rig.legs.length;i++){
     const leg=rig.legs[i],q=cycle(phase+leg.offset),t=(q-rig.stanceFraction)/(1-rig.stanceFraction),swing=q>rig.stanceFraction;
     const dx=swing?rig.spanPx*(-.5+smooth(t)):rig.spanPx*(.5-q/rig.stanceFraction);
-    const lift=swing?rig.liftPx*Math.sin(Math.PI*t)*(1-settle):0,angle=swing?-.16*Math.sin(Math.PI*t)*(1-settle):0;
-    const hx=leg.hip[0],hy=leg.hip[1]+out.bob,ax=leg.footCenter+dx,ay=leg.groundAnkle-lift;
+    const lift=swing?rig.liftPx*Math.sin(Math.PI*t)*(1-settle):0,angle=feet?.[i]?.[2]??(swing?-.16*Math.sin(Math.PI*t)*(1-settle):0);
+    const hx=leg.hip[0],hy=leg.hip[1]+out.bob,ax=feet?.[i]?.[0]??leg.footCenter+dx,ay=feet?.[i]?.[1]??leg.groundAnkle-lift;
     const tx=ax-hx,ty=ay-hy,d=Math.hypot(tx,ty),a=leg.upperLength,b=leg.lowerLength;
     if(!(d>Math.abs(a-b)+1e-7&&d<a+b))throw new RangeError('Original Ranger ankle target is unreachable');
     const along=(a*a+d*d-b*b)/(2*d),h=Math.sqrt(Math.max(0,a*a-along*along)),ux=tx/d,uy=ty/d;

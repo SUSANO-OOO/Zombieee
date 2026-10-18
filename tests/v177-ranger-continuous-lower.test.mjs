@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {gunzipSync} from 'node:zlib';
 import sharp from 'sharp';
-import {V177_JOINT_ATLASES,v177JointPose,drawV177JointPose,v177RenderedWeightedLowerReceipt} from '../app/v177JointPresentation.js';
+import {V177_JOINT_ATLASES,v177JointPose,v177RangerFootPlan,drawV177JointPose,v177RenderedWeightedLowerReceipt,v177RenderedJointWeaponSocket} from '../app/v177JointPresentation.js';
 import {createV177RangerLowerPose,v177RangerLowerPose} from '../app/v177RangerLowerMotion.js';
 import {createV177RangerLowerPainter,paintV177RangerLower} from '../app/v177RangerLowerPaint.js';
 const atlas=V177_JOINT_ATLASES.ranger,rig=atlas.lowerRig,sha=b=>createHash('sha256').update(b).digest('hex');
@@ -90,4 +90,42 @@ test('shared half-alpha triangle edges are owned once and failed/fallback draws 
   const fallback=main();assert.equal(drawV177JointPose(fallback.ctx,img,'ranger',plan,0,0,96,89.6,{actor}),true);
   assert.equal(v177RenderedWeightedLowerReceipt(actor)?.mode,'legacy-cell-fallback');
   assert.equal(drawV177JointPose(fallback.ctx,{naturalWidth:0},'ranger',plan,0,0,96,89.6,{actor}),false);assert.equal(v177RenderedWeightedLowerReceipt(actor),null);
+});
+
+test('actual RGBA draw finishes stop steps across actor replacements and repeated paints in three viewports',()=>{
+  for(const[width,height]of[[1280,720],[844,390],[844,340]]){
+    const img=image(),world={time:0,fighters:[]};
+    let actor={id:27,x:330,animationPresentation:{moving:true,direction:'right',locomotionPhase:.31,locomotionSettle:0}};
+    const paint=()=>{
+      const base=v177JointPose('ranger',{requestedState:actor.animationPresentation.moving?'move':'active',clipProgress:.3},actor.animationPresentation,{actor,world});
+      const plan=v177RangerFootPlan('ranger',base,{actor,world,width:96});
+      assert.equal(plan.lowerIndex%atlas.frameCount,Math.floor(plan.phase*atlas.frameCount),'the fallback cell must follow the same resolved phase');
+      const socket=v177RenderedJointWeaponSocket({kind:'ranger',plan,direction:'right',
+        frame:{anchorX:.5,anchorY:86/89.6,flipX:false},size:{w:96,h:89.6},
+        pose:{offsetX:0,offsetY:0,scaleX:1,scaleY:1,rotationRadians:0},x:width/2,y:height/2});
+      const target=main({width,height,matrix:[1,0,0,1,width/2,height/2]});
+      assert.equal(drawV177JointPose(target.ctx,img,'ranger',plan,-48,-86,96,89.6,{actor,world}),true);
+      if(socket){
+        const part=atlas.upperRig.parts.findIndex(part=>part.bone===atlas.upperRig.weaponBone);
+        const m=target.calls[part+1].matrix,[sx,sy]=atlas.upperRig.muzzle;
+        assert.ok(Math.hypot(socket.x-(m[0]*sx+m[2]*sy+m[4]),socket.y-(m[1]*sx+m[3]*sy+m[5]))<1e-8,
+          'the muzzle sampled before paint must be the muzzle actually drawn after foot placement');
+      }
+      return{target,receipt:v177RenderedWeightedLowerReceipt(actor,world)};
+    };
+    world.fighters=[actor];let last=paint();assert.equal(last.receipt.footPlacement,'planted-stop-steps');
+    for(let frame=1;frame<=36;frame++){
+      world.time=frame/60;
+      actor={...actor,animationPresentation:{...actor.animationPresentation,moving:false,locomotionSettle:Math.min(1,frame/10)}};
+      world.fighters=[actor];const before=JSON.stringify(world),drawn=paint();
+      assert.equal(JSON.stringify(world),before,'render-only foot anchors cannot enter the fighter or save');
+      assert.equal(drawn.receipt.mode,'continuous-weighted-mesh');
+      assert.equal(drawn.receipt.footPlacement,'planted-stop-steps');
+      assert.ok(drawn.target.calls[0].pixels.some(value=>value));
+      if(frame===8){const again=paint();assert.deepEqual(again.target.calls[0].pixels,drawn.target.calls[0].pixels);}
+      last=drawn;
+    }
+    assert.deepEqual(last.receipt.footLiftPx,[0,0]);
+    assert.ok(Math.abs(last.receipt.footWorldX[1]-last.receipt.footWorldX[0]-65*.2)<1e-9);
+  }
 });
