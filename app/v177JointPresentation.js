@@ -19,6 +19,7 @@ import { v177JointActorKey } from './v177JointActorHistory.js';
 import { animationClipFor, attackPresentationDuration } from './combatPresentation.js';
 import { createV177MrsNormalWeaponCycle } from './v177MrsNormalWeaponCycle.js';
 import { createV177RangerManualJoint } from './v177RangerManualJoint.js';
+import { createV177FutagoAbilityJoint } from './v177FutagoAbilityJoint.js';
 
 const locomotionStates = new Set(['idle','deploy','move','start-move','stop-move','turn','retreat']);
 const attackStates = new Set(['wind-up','active','recovery']);
@@ -52,16 +53,27 @@ const rangerManualJoint=createV177RangerManualJoint({
     {lower:initial,upper:initial},{lower:target,upper:target},p).upper,
 });
 
+const futagoAbilityJoint=createV177FutagoAbilityJoint({
+  normalPlan:(kind,sample,runtime)=>v177JointPose(kind,sample,runtime),
+  capturePose:captureStatusJoints,blendPose:blendCapturedJoints,
+});
+
 export function v177JointCycleDistance(kind, renderScale) {
   const atlas = V177_JOINT_ATLASES[kind];
   return atlas && Number.isFinite(renderScale) && renderScale > 0
     ? atlas.cycleDistance / (atlas.referenceFrame?.scale??1) * renderScale : undefined;
 }
 
-export function v177JointPose(kind, sample, runtime, { ownedPose=false,actor,world,stunRemaining=0,rangerManualOwner=false,rangerManualDefinition }={}) {
+export function v177JointPose(kind, sample, runtime, { ownedPose=false,actor,world,stunRemaining=0,rangerManualOwner=false,rangerManualDefinition,futagoAbilityOwner=false,futagoAbilityTuning }={}) {
   const actualActor=actor;
   actor=v177JointActorKey(actor,world);
   const atlas = V177_JOINT_ATLASES[kind];
+  if(atlas&&ownedPose&&futagoAbilityOwner&&['futago-separated-a','futago-separated-b'].includes(kind)){
+    const abilityPlan=futagoAbilityJoint.plan({kind,actor:actualActor,atlas,runtime,
+      previous:actorKey(actor)?renderedJointPoses.get(actor):null,ownedPose,
+      owner:futagoAbilityOwner,tuning:futagoAbilityTuning});
+    if(abilityPlan){livingStunPoses.delete(actor);return abilityPlan;}
+  }
   if(kind==='ranger'&&atlas&&ownedPose&&rangerManualOwner){
     const manualPlan=rangerManualJoint.plan({kind,actor:actualActor,atlas,runtime,
       previous:actorKey(actor)?renderedJointPoses.get(actor):null,ownedPose,
@@ -233,7 +245,7 @@ function resolveUpperOwnedLegs(atlas,pose) {
 
 function returnPaintedJoints(atlas,entry,neutral,progress) {
   const authoredReturn=Number.isFinite(entry.sourcePlan.attackPhase)
-    && entry.sourcePlan.mrsNormalWeaponCycle!==true;
+    && entry.sourcePlan.mrsNormalWeaponCycle!==true&&!entry.sourcePlan.futagoAbilityJoint;
   const target=captureStatusJoints(atlas,neutral);
   if(progress<=0)return {...copyCapturedJoints(entry.pose),upperTransform:entry.upperTransform,
     returnPlan:authoredReturn?entry.sourcePlan:null};

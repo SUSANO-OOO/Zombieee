@@ -4145,6 +4145,10 @@ type FighterRenderAudit = {
   jointGetupCorpseId?: number | null;
   jointGetupSourcePaintBound?: boolean;
   jointGetupDrawSucceeded?: boolean;
+  jointFutagoAbilityDrawSucceeded?: boolean;
+  jointFutagoAbility?: {component:"separated-cross-strike";fighterId:number;part:string;pairId:number;runtimeKind:"futago";runtimePhase:string;
+    remainingSeconds:number;phaseElapsed:number;phaseDuration:number;attackSequence:number;split:boolean;lockedTarget:Record<string,unknown>;
+    entryPaintBound:boolean;paintedAt:number;sourceAtlas:string};
   jointGetupPaintedAt?: number;
   jointGetupReactionAmplitude?: number;
   jointGetupPaintedPose?: ReturnType<typeof v177CaptureJointPose>;
@@ -4454,7 +4458,10 @@ function drawSpriteFighter(
     ? photoComboJointPose ?? v177TurnedGetupPose(options.world,f,{ownedPose:authoredPoseOwned})
       ?? v177JointPose(renderKind,animationSample,f.animationPresentation,{ownedPose:authoredPoseOwned,actor:f,world:options.world,stunRemaining:f.stunned,
         rangerManualOwner:manualAbilityActive&&renderKind==="ranger"&&!Boolean(supportManualPose||advancedManualPose||kumaGuardArtPose||guardianGuardPose||takuyaSlamPose),
-        rangerManualDefinition:MANUAL_ABILITY_REGISTRY.ranger}) : null;
+        rangerManualDefinition:MANUAL_ABILITY_REGISTRY.ranger,
+        futagoAbilityOwner:f.kind==="futago"&&Boolean(f.v100TwinPart)&&["warning","active","recovery"].includes(f.stationAbility.phase)
+          &&!Boolean(supportManualPose||advancedManualPose||stationAbilityPose||enemyContactPose||takuyaSlamPose),
+        futagoAbilityTuning:f.kind==="futago"?anomalyTuning:undefined}) : null;
   const articulatedWalk = Boolean(!jointPose && options.v100AuthoredPresentation
     && v100UsesHumanWalk(renderKind,animationSample,{manualAbilityActive}));
   const frame = articulatedWalk || jointPose ? v100HumanWalkFrame(spriteFrameFor(renderKind,'walk-a','right'),direction) : tataraGroundCandidate
@@ -4664,6 +4671,21 @@ function drawSpriteFighter(
             .map(key=>{const value=(manual.target as Record<string,unknown>)[key];return [key,Array.isArray(value)?[...value]:value];})),
           paintedAt:Number(options.world?.time),sourceAtlas:jointAtlas.path}:undefined;
       }
+    }
+  }
+  if(fighterRenderAuditEnabled&&recordAudit&&['futago-separated-a','futago-separated-b'].includes(renderKind)){
+    const audit=fighterRenderAudit.get(f),ability=f.stationAbility,source=jointPose?.futagoAbilityJoint;
+    if(audit){
+      const actual=Boolean(audit.jointDrawSucceeded&&source&&f.kind==='futago'&&f.v100BossId==='boss-futago'
+        &&source.part===f.v100TwinPart&&source.pairId===f.v100TwinPair&&ability.kind==='futago'&&ability.phase===source.phase
+        &&source.remaining===ability.remainingSeconds&&Number.isFinite(options.world?.time));
+      audit.jointFutagoAbilityDrawSucceeded=actual;
+      audit.jointFutagoAbility=actual&&source?{component:'separated-cross-strike',fighterId:f.id,part:String(f.v100TwinPart),
+        pairId:Number(f.v100TwinPair),runtimeKind:'futago',runtimePhase:ability.phase,remainingSeconds:ability.remainingSeconds,
+        phaseElapsed:source.elapsed,phaseDuration:source.duration,attackSequence:f.attackSequence,split:ability.split===true,
+        lockedTarget:Object.fromEntries(['targetId','targetX','targetY','lane'].filter(key=>Object.prototype.hasOwnProperty.call(ability,key))
+          .map(key=>[key,(ability as unknown as Record<string,unknown>)[key]])),entryPaintBound:source.entryPaintBound,
+        paintedAt:Number(options.world?.time),sourceAtlas:jointAtlas.path}:undefined;
     }
   }
   if(fighterRenderAuditEnabled&&recordAudit&&jointPose?.turnedGetup) {
