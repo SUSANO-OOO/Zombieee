@@ -15,6 +15,22 @@ const git=args=>execFileSync('git',args,{encoding:'utf8',maxBuffer:8*1024*1024,w
 const sha=b=>createHash('sha256').update(b).digest('hex');
 const acceptance=()=>({originalSpeedAccepted:false,naturalnessAccepted:false,
   physicalSavedAudioAccepted:false,normalCampaignAccepted:false,wholeGameAccepted:false});
+
+// Host-owned progress survives a pending page RPC and the existing setup
+// deadline. These wall-clock receipts do not assert readiness or game timing.
+export async function ensureNativeAllUnitAssets(page,forms,owner,{now=Date.now}={}){
+  owner.assetReadiness=[];
+  for(const form of forms){
+    const receipt={form,status:'starting',hostStartedAtMs:now()};owner.assetReadiness.push(receipt);
+    try{
+      if(owner.cleanup!=='open')throw Error('Asset setup owner is closed');
+      await page.evaluate(async form=>{await window.__ASHFALL_BATTLE_QA__.ensureEnemyFacingProofAsset(form);},form);
+      if(owner.cleanup!=='open')throw Error('Asset setup owner closed before readiness returned');
+      receipt.status='completed';receipt.hostCompletedAtMs=now();
+    }catch(error){receipt.status='failed';receipt.hostFailedAtMs=now();receipt.error=String(error);throw error;}
+  }
+}
+
 export async function nativeAllUnitBinding({env=process.env,...guard}={}){
   const binding=await nativeGameCaptureBinding({...guard,env});
   assert.ok(SHARDS.some(s=>s.id===env.V177_CAPTURE_SHARD),'An exact known shard is required');
@@ -125,10 +141,7 @@ export async function runBrowserQa(){
             owner.setupStage='battle-running';await page.waitForFunction(()=>window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().running);
             const forms=[...new Set(rows.flatMap(r=>[r.form,r.binding.kind,r.binding.side==='human'?'walker':'guardian',
               ...(r.owner==='turned-birth'?['brawler','turned']:[])]))];
-            owner.setupStage='asset-readiness';await page.evaluate(async forms=>{
-              const qa=window.__ASHFALL_BATTLE_QA__;
-              for(const form of forms)await qa.ensureEnemyFacingProofAsset(form);
-            },forms);owner.setupStage='completed';
+            owner.setupStage='asset-readiness';await ensureNativeAllUnitAssets(page,forms,owner);owner.setupStage='completed';
           },closeOwned,{onDeadline:fail});
           for(const planned of rows){
             const row={...planned,status:'starting',samples:[],...acceptance()};report.cases.push(row);

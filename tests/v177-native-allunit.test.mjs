@@ -16,10 +16,43 @@ import {MANUAL_ABILITY_REGISTRY,createManualAbilityRuntime,beginManualAbility,ad
 import {configureV177BornTurnedContinuation} from '../app/v177NativeTurnedProof.js';
 import {createV177FutagoDamageCopy,prepareV177NativeFutagoPair} from '../app/v177NativeFutagoProof.js';
 import {FORM_BINDINGS,SHARDS,VIEWPORTS,LIMITS,planShard,validateManifest,assertPlannedCase} from '../scripts/v177-native-allunit-manifest.mjs';
-import {nativeAllUnitBinding,main} from '../scripts/v177-native-allunit-browser.mjs';
+import {nativeAllUnitBinding,main,ensureNativeAllUnitAssets} from '../scripts/v177-native-allunit-browser.mjs';
 import {readNativeAllUnitSample,postpaintCaptureBoundary,assertShardPostpaintContract} from '../scripts/v177-native-allunit-contract.mjs';
 import {hasPreparedAllUnitPaint,observeMayoPointer,finishMayoPointer} from '../scripts/v177-native-allunit-cases.mjs';
 import {assertFutagoPairDamageAndOwner,assertMayoFeralReceipt} from '../scripts/v177-native-allunit-owners.mjs';
+
+test('asset setup records each original sequential operation before awaiting it without retrying or skipping',async()=>{
+  const owner={cleanup:'open'},calls=[],forms=['ooguchi','guardian','gairen','futago'];let time=100;
+  const page={async evaluate(fn,form){
+    assert.equal(owner.assetReadiness.at(-1).form,form);assert.equal(owner.assetReadiness.at(-1).status,'starting');
+    const actual=vm.runInNewContext('('+fn.toString()+')',{window:{__ASHFALL_BATTLE_QA__:{
+      async ensureEnemyFacingProofAsset(kind){calls.push(kind);}
+    }}});await actual(form);
+  }};
+  await ensureNativeAllUnitAssets(page,forms,owner,{now:()=>++time});
+  assert.deepEqual(calls,forms);assert.deepEqual(owner.assetReadiness.map(r=>r.form),forms);
+  for(const receipt of owner.assetReadiness){assert.equal(receipt.status,'completed');assert.ok(receipt.hostCompletedAtMs>receipt.hostStartedAtMs);}
+});
+
+test('asset setup retains the exact failed kind and original rejection without attempting the remaining kinds',async()=>{
+  const owner={cleanup:'open'},sentinel=Error('Original asset failure'),calls=[];
+  const page={async evaluate(_fn,form){calls.push(form);if(form==='guardian')throw sentinel;}};
+  await assert.rejects(ensureNativeAllUnitAssets(page,['ooguchi','guardian','gairen'],owner),e=>e===sentinel);
+  assert.deepEqual(calls,['ooguchi','guardian']);
+  assert.deepEqual(owner.assetReadiness.map(r=>r.status),['completed','failed']);
+  assert.equal(owner.assetReadiness[1].error,String(sentinel));
+});
+
+test('a pending asset remains visible at owner close and its late return cannot complete setup or start another asset',async()=>{
+  const owner={cleanup:'open'},calls=[];let release;
+  const pending=ensureNativeAllUnitAssets({evaluate(_fn,form){calls.push(form);return new Promise(resolve=>{release=resolve;});}},
+    ['ooguchi','guardian'],owner);
+  assert.equal(owner.assetReadiness[0].form,'ooguchi');assert.equal(owner.assetReadiness[0].status,'starting');
+  owner.cleanup='pending';release();
+  await assert.rejects(pending,/owner closed before readiness returned/u);
+  assert.deepEqual(calls,['ooguchi']);assert.equal(owner.assetReadiness[0].status,'failed');
+  assert.equal(owner.assetReadiness[0].hostCompletedAtMs,undefined);
+});
 
 test('all real renderer forms have one owned route and nine planned captures',()=>{
   assert.equal(validateManifest().forms,48);assert.deepEqual(FORM_BINDINGS.map(f=>f.form),spriteKinds);
