@@ -75,11 +75,18 @@ export async function main({ load = url => import(url), argv = process.argv, ...
 
 // Observe native RAF callbacks and the game's last actual draw receipt. This
 // never paints, copies a canvas, replaces RAF, or supplies encoded timestamps.
-export function startNativeGameRafObservation({ fighterId }) {
+export function startNativeGameRafObservation({ fighterId, realmOwner = null }) {
   const state = { timeOrigin: performance.timeOrigin, startedAt: performance.now(),
     fighterId, rows: [], overflow: false, stopped: false, raf: null };
+  if(realmOwner!==null){
+    state.realmOwner=realmOwner;state.realmCanvas=document.querySelector('.game-shell canvas');
+    state.realmStarted=realmOwner.member({window,document,performance,canvas:state.realmCanvas},'raf-start');
+    state.realmFailure=null;
+  }
   const observe = () => {
     if (state.stopped) return;
+    if(state.realmOwner)try{state.realmOwner.check({window,document,performance,canvas:document.querySelector('.game-shell canvas')});}
+    catch(error){state.realmFailure??=String(error);state.stopped=true;return;}
     const qa = window.__ASHFALL_BATTLE_QA__;
     const draw = qa.getEnemyFacingRuntimeAudit(fighterId).renderHistory.at(-1);
     if (state.rows.length < 4096) state.rows.push({ at: performance.now(),
@@ -92,7 +99,14 @@ export function startNativeGameRafObservation({ fighterId }) {
 }
 export function stopNativeGameRafObservation(state) {
   state.stopped = true; state.stoppedAt = performance.now(); cancelAnimationFrame(state.raf);
-  return { timeOrigin: state.timeOrigin, startedAt: state.startedAt, stoppedAt: state.stoppedAt,
+  let realm;
+  if(state.realmOwner){
+    let stopped=null;
+    try{stopped=state.realmOwner.member({window,document,performance,canvas:document.querySelector('.game-shell canvas')},'raf-stop');}
+    catch(error){state.realmFailure??=String(error);}
+    realm={started:state.realmStarted,stopped,failure:state.realmFailure};
+  }
+  return { timeOrigin: state.timeOrigin, startedAt: state.startedAt, stoppedAt: state.stoppedAt,...(realm?{realm}:{}),
     rows: state.rows, overflow: state.overflow, encodedFrameCount: null, encodedPtsVerified: false,
     scope: 'Native observer RAF callbacks and actual game render receipts; neither is an encoded-frame count' };
 }

@@ -6,11 +6,15 @@ import path from 'node:path';
 // These two functions execute only in the existing hosted game page. They
 // capture its original canvas track; no copied frames, playback, game-clock
 // changes, microphone, audio routing or encoder-frame-rate override is used.
-export function startNativeCanvasClip(canvas,{metadata,engine='chromium',requestedMimeType=null,maxBytes=8*1024*1024,maxMs=15_000,stopMs=3_000}){
+export function startNativeCanvasClip(canvas,{metadata,engine='chromium',requestedMimeType=null,maxBytes=8*1024*1024,maxMs=15_000,stopMs=3_000,realmOwner=null}){
   if(requestedMimeType!==null&&!['video/mp4','video/webm;codecs=vp8','video/webm'].includes(requestedMimeType))throw new RangeError('Unknown diagnostic native container');
   const state={metadata,requestedMimeType,width:canvas?.width,height:canvas?.height,timeOrigin:performance.timeOrigin,
     requestedAt:performance.now(),startedAt:null,stopRequestedAt:null,stoppedAt:null,
     status:'starting',mimeType:null,chunks:[],bytes:0,dataEvents:[],errors:[],maxBytes,stopMs};
+  if(realmOwner!==null){
+    state.realmOwner=realmOwner;
+    state.realmCreated=realmOwner.member({window,document,performance,canvas},'recorder-create');
+  }
   let resolveStopped;
   state.stopped=new Promise(resolve=>{resolveStopped=resolve;});
   state.cleanup=()=>{
@@ -41,7 +45,11 @@ export function startNativeCanvasClip(canvas,{metadata,engine='chromium',request
     state.canvas=canvas;
     state.recorder=new MediaRecorder(state.stream,{mimeType:state.mimeType});
     state.listeners=[
-      ['start',()=>{state.startedAt=performance.now();}],
+      ['start',()=>{
+        state.startedAt=performance.now();
+        if(state.realmOwner)try{state.realmStarted=state.realmOwner.member({window,document,performance,canvas:document.querySelector('.game-shell canvas')},'recorder-start');}
+        catch(error){state.errors.push(String(error));state.stop();}
+      }],
       ['dataavailable',event=>{
         if(!event.data?.size)return;
         state.bytes+=event.data.size;
@@ -68,6 +76,8 @@ export async function finishNativeCanvasClip(state,{completed}){
       if(state.canvas.width!==state.width||state.canvas.height!==state.height||!state.canvas.isConnected)state.errors.push('Original canvas changed during capture');
       if(!completed)state.errors.push('Sampling window interrupted');
       if(state.startedAt===null||state.stoppedAt===null||!state.chunks.length)state.errors.push('Incomplete native recording events');
+      if(state.realmOwner)try{state.realmFinished=state.realmOwner.member({window,document,performance,canvas:document.querySelector('.game-shell canvas')},'recorder-finish');}
+      catch(error){state.errors.push(String(error));}
       state.status=state.errors.length?'invalid':'recorded';
     }
     const blob=new Blob(state.chunks,{type:state.recorder?.mimeType||state.mimeType||''});
@@ -75,7 +85,7 @@ export async function finishNativeCanvasClip(state,{completed}){
     let binary='';
     for(let i=0;i<bytes.length;i+=0x8000)binary+=String.fromCharCode(...bytes.subarray(i,i+0x8000));
     return {schema:'v177-native-canvas-clip/v1',metadata:state.metadata,status:state.status,mimeType:blob.type,mimePreferences:state.mimePreferences??null,requestedMimeType:state.requestedMimeType,
-      width:state.width,height:state.height,timeOrigin:state.timeOrigin,requestedAt:state.requestedAt,
+      width:state.width,height:state.height,timeOrigin:state.timeOrigin,requestedAt:state.requestedAt,...(state.realmOwner?{realm:{created:state.realmCreated,started:state.realmStarted??null,finished:state.realmFinished??null}}:{}),
       startedAt:state.startedAt,stopRequestedAt:state.stopRequestedAt,stoppedAt:state.stoppedAt,
       nativeElapsedMs:state.startedAt!==null&&state.stoppedAt!==null?state.stoppedAt-state.startedAt:null,
       captureWindowMs:state.startedAt!==null&&state.stopRequestedAt!==null?state.stopRequestedAt-state.startedAt:null,
@@ -85,7 +95,7 @@ export async function finishNativeCanvasClip(state,{completed}){
   }finally{clearTimeout(timer);state.cleanup();state.chunks.length=0;}
 }
 
-export async function beginV177NativeCanvasClip(page,metadata,{directory,engine,requestedMimeType=null}={}){
+export async function beginV177NativeCanvasClip(page,metadata,{directory,engine,requestedMimeType=null,realmOwner=null}={}){
   assert.match(metadata.form,/^[a-z0-9-]+$/u);assert.ok(['move','attack','engage','incoming-stun','turned-getup'].includes(metadata.phase));
   const unborn=metadata.phase==='turned-getup';
   if(unborn) {
@@ -104,14 +114,20 @@ export async function beginV177NativeCanvasClip(page,metadata,{directory,engine,
   const identity=unborn?`corpse-${metadata.corpseId}-variant-${metadata.variant}`:metadata.fighterId;
   const stem=path.join(directory,`${metadata.fixtureGroup}-${metadata.form}-${metadata.phase}-${identity}`);
   let handle,error,finished=false;
-  try{handle=await page.locator('.game-shell canvas').evaluateHandle(startNativeCanvasClip,{metadata,engine,requestedMimeType});}
+  try{handle=await page.locator('.game-shell canvas').evaluateHandle(startNativeCanvasClip,{metadata,engine,requestedMimeType,...(realmOwner!==null?{realmOwner}:{})});}
   catch(cause){error=String(cause);}
   return {async waitForStart(){
     if(finished||!handle)throw Error('Native canvas recorder did not become available');
     return handle.evaluate(async state=>{
       const requestedAt=performance.now();
       while(performance.now()-requestedAt<1000){
-        if(Number.isFinite(state.startedAt))return {startedAt:state.startedAt,timeOrigin:state.timeOrigin};
+        if(Number.isFinite(state.startedAt)){
+          if(state.realmOwner){
+            state.realmOwner.check({window,document,performance,canvas:document.querySelector('.game-shell canvas')});
+            if(!state.realmStarted||state.errors.length)throw Error('Native realm recorder start failed');
+          }
+          return {startedAt:state.startedAt,timeOrigin:state.timeOrigin,...(state.realmOwner?{realm:state.realmStarted}:{})};
+        }
         if(state.errors.length||state.status!=='starting')throw Error('Native canvas recorder failed before start');
         await new Promise(resolve=>setTimeout(resolve,5));
       }

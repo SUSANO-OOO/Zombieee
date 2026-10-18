@@ -17,9 +17,58 @@ export function assertShardProof(row,proof){
 }
 // Serializable read-only browser callback. It does not stamp expected proof values onto a paint.
 // Existing fighterId -> Map/history binding is the source ownership boundary.
-// No new state/ring/stamp is required. Identical plausible rows maliciously substituted
+// No new paint state/ring/stamp is required. Separate realm receipts bind clocks.
+// Identical plausible rows maliciously substituted
 // after this exact source callback cannot be distinguished by data validation alone.
-export function readNativeAllUnitSample({fighterId,targetId,owner,proofId,performanceBoundary=false}){
+
+// Created after case preparation, before RAF/Recorder. Retained as a JSHandle,
+// never serialized/reconstructed from parent expectations. No origin tolerance.
+export function createNativeAllUnitRealmOwner(){
+ const ownedWindow=window,ownedDocument=document,ownedPerformance=performance;
+ const ownedCanvas=ownedDocument.querySelector('.game-shell canvas');
+ if(!ownedCanvas||ownedCanvas.ownerDocument!==ownedDocument||!ownedCanvas.isConnected
+  ||ownedDocument.defaultView!==ownedWindow)throw Error('Original realm/canvas unavailable');
+ const ownerId=crypto.randomUUID(),createdAt=ownedPerformance.now(),rawOriginAtCreation=ownedPerformance.timeOrigin;
+ if(typeof ownerId!=='string'||!Number.isFinite(createdAt)||!Number.isFinite(rawOriginAtCreation))throw Error('Invalid native realm owner');
+ let sequence=0;
+ const owner={schema:'v177-native-realm-owner/v1',ownerId,createdAt,rawOriginAtCreation,
+  window:ownedWindow,document:ownedDocument,performance:ownedPerformance,canvas:ownedCanvas,
+  get sequence(){return sequence;},
+  check(refs){
+   if(this!==owner||refs?.window!==ownedWindow||refs.document!==ownedDocument
+    ||refs.performance!==ownedPerformance||refs.canvas!==ownedCanvas
+    ||ownedDocument.defaultView!==ownedWindow||ownedCanvas.ownerDocument!==ownedDocument
+    ||ownedDocument.querySelector('.game-shell canvas')!==ownedCanvas||!ownedCanvas.isConnected)
+    throw Error('Native realm owner reference mismatch');
+  },
+  member(refs,member){
+   owner.check.call(this,refs);
+   if(typeof member!=='string'||member.length===0||!Number.isSafeInteger(sequence+1))throw Error('Invalid native realm sequence/member');
+   sequence++;
+   return{schema:'v177-native-realm-member/v1',ownerId,createdAt,rawOriginAtCreation,sequence,member};
+  }};
+ return Object.freeze(owner);
+}
+export function readNativeAllUnitRealmOwner(owner){
+ return owner.member({window,document,performance,canvas:document.querySelector('.game-shell canvas')},'owner-created');
+}
+export function assertNativeRealmMember(expected,actual,member,after=expected){
+ for(const r of [expected,actual]){
+  assert.equal(r?.schema,'v177-native-realm-member/v1');
+  assert.match(r.ownerId??'',/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iu);
+  assert.ok(finite(r.createdAt)&&finite(r.rawOriginAtCreation));
+  assert.ok(Number.isSafeInteger(r.sequence)&&r.sequence>0);
+ }
+ for(const key of ['ownerId','createdAt','rawOriginAtCreation'])assert.equal(actual[key],expected[key],'Native realm owner changed: '+key);
+ assert.equal(actual.member,member);
+ if(after){assert.ok(Number.isSafeInteger(after.sequence));assert.ok(actual.sequence>after.sequence,'Native realm member sequence did not advance');}
+ return actual;
+}
+
+export function readNativeAllUnitSample(input,ownedProof){
+ const realmOwner=ownedProof===undefined?null:input;
+ const {fighterId,targetId,owner,proofId,performanceBoundary=false}=ownedProof??input;
+ const realm=realmOwner===null?null:realmOwner.member({window,document,performance,canvas:document.querySelector('.game-shell canvas')},'sample');
  const qa=window.__ASHFALL_BATTLE_QA__,snapshot=qa.getSnapshot(),audit=qa.getEnemyFacingRuntimeAudit(fighterId),target=qa.getEnemyFacingRuntimeAudit(targetId);
  const phaseG=qa.getPhaseGCombatSnapshot();
  const mayo=owner==='mayo-activation'?qa.getV177NativeMayoProof(proofId,true):null;
@@ -30,7 +79,7 @@ export function readNativeAllUnitSample({fighterId,targetId,owner,proofId,perfor
   return{runtimePerformance:qa.getPerformanceSnapshot(),geometry:{viewport:{width:innerWidth,height:innerHeight},devicePixelRatio,
    canvas:{width:canvas.width,height:canvas.height,rect:{x:r.x,y:r.y,width:r.width,height:r.height}}}};
  })():{};
- return{schema:'v177-native-shard-postpaint/v1',at:performance.now(),timeOrigin:performance.timeOrigin,
+ return{schema:'v177-native-shard-postpaint/v1',at:performance.now(),timeOrigin:performance.timeOrigin,...(realm?{realm}:{}),
   simulationTime:snapshot.time,route:location.pathname,visible:document.visibilityState==='visible',
   running:snapshot.running,paused:snapshot.paused,viewport:{width:innerWidth,height:innerHeight},...boundary,
   lookup:{requestedFighterId:fighterId,observedFighterId:audit.fighter?.id,requestedTargetId:targetId,observedTargetId:target.fighter?.id},
@@ -74,19 +123,20 @@ function assertPaint(row,proof,raw,paint,minimumSimulationTime){
  }
 }
 export function postpaintCaptureBoundary(row,proof,raw,recorderStart){
- assertRawEnvelope(row,proof,raw,true);assert.ok(finite(recorderStart?.startedAt)&&finite(recorderStart.timeOrigin));assert.equal(raw.timeOrigin,recorderStart.timeOrigin);assert.ok(raw.at>=recorderStart.startedAt,'Boundary must be read after actual native recorder start acknowledgment');
+ assertRawEnvelope(row,proof,raw,true);assert.ok(finite(recorderStart?.startedAt)&&finite(recorderStart.timeOrigin));if(raw.realm||recorderStart.realm)assertNativeRealmMember(recorderStart.realm,raw.realm,'sample');
+ else assert.equal(raw.timeOrigin,recorderStart.timeOrigin);assert.ok(raw.at>=recorderStart.startedAt,'Boundary must be read after actual native recorder start acknowledgment');
  const newest=raw.renders.reduce((a,b)=>a.renderSequence>b.renderSequence?a:b);assertPaint(row,proof,raw,newest,0);
- return{schema:'v177-native-shard-boundary/v1',caseId:row.caseId,proofId:proof.proofId,battleGeneration:proof.battleGeneration,fighterId:proof.fighterId,renderSequence:newest.renderSequence,simulationTime:raw.simulationTime,at:raw.at,timeOrigin:raw.timeOrigin,recorderStartedAt:recorderStart.startedAt};
+ return{schema:'v177-native-shard-boundary/v1',caseId:row.caseId,proofId:proof.proofId,battleGeneration:proof.battleGeneration,fighterId:proof.fighterId,renderSequence:newest.renderSequence,simulationTime:raw.simulationTime,at:raw.at,timeOrigin:raw.timeOrigin,recorderStartedAt:recorderStart.startedAt,...(raw.realm?{realm:raw.realm}:{})};
 }
 export function assertShardPostpaintContract(row,proof,boundary,release,samples){
  assertShardProof(row,proof);assert.equal(boundary?.schema,'v177-native-shard-boundary/v1');assert.equal(boundary.caseId,row.caseId);
  for(const key of ['proofId','battleGeneration','fighterId'])assert.equal(boundary[key],proof[key]);
  assert.ok(id(boundary.renderSequence)&&boundary.renderSequence>0);assert.ok([boundary.simulationTime,boundary.at,boundary.timeOrigin,boundary.recorderStartedAt].every(finite));assert.ok(boundary.at>=boundary.recorderStartedAt);
- assert.ok(release&&finite(release.at)&&finite(release.timeOrigin)&&finite(release.beforeTime)&&finite(release.afterTime));assert.equal(release.timeOrigin,boundary.timeOrigin);assert.ok(release.at>=boundary.at);assert.equal(release.beforePaused,true);assert.equal(release.afterPaused,false);assert.equal(release.beforeTime,release.afterTime,'Release must not advance/reset simulation');assert.equal(release.beforeTime,boundary.simulationTime,'Prepared clock must remain paused through record start/baseline');
+ assert.ok(release&&finite(release.at)&&finite(release.timeOrigin)&&finite(release.beforeTime)&&finite(release.afterTime));if(boundary.realm)assertNativeRealmMember(boundary.realm,release.realm,'release');else{assert.equal(release.realm,undefined);assert.equal(release.timeOrigin,boundary.timeOrigin);}assert.ok(release.at>=boundary.at);assert.equal(release.beforePaused,true);assert.equal(release.afterPaused,false);assert.equal(release.beforeTime,release.afterTime,'Release must not advance/reset simulation');assert.equal(release.beforeTime,boundary.simulationTime,'Prepared clock must remain paused through record start/baseline');
  const count=row.phase==='engage'?LIMITS.engageSamples:LIMITS.moveAttackSamples;assert.ok(Array.isArray(samples));assert.equal(samples.length,count,'Original observation sample count retained');
- const distinct=new Map();let previous={...boundary,at:release.at};
+ const distinct=new Map();let previous={...boundary,at:release.at,...(boundary.realm?{realm:release.realm}:{})};
  for(const raw of samples){
-  assertRawEnvelope(row,proof,raw);assert.equal(raw.timeOrigin,boundary.timeOrigin);assert.ok(raw.at>previous.at&&raw.simulationTime>=previous.simulationTime,'Raw native/simulation clock regressed or froze');
+  assertRawEnvelope(row,proof,raw);if(boundary.realm)assertNativeRealmMember(boundary.realm,raw.realm,'sample',previous.realm);else{assert.equal(raw.realm,undefined);assert.equal(raw.timeOrigin,boundary.timeOrigin);}assert.ok(raw.at>previous.at&&raw.simulationTime>=previous.simulationTime,'Raw native/simulation clock regressed or froze');
   for(const paint of raw.renders){
    assert.ok(id(paint.renderSequence));if(paint.renderSequence<=boundary.renderSequence)continue; // Preserve old raw rows; never count them as capture evidence.
    assertPaint(row,proof,raw,paint,boundary.simulationTime);
@@ -110,8 +160,9 @@ export function prepareOrdinaryShardPaused({form,phase}){
  if(snapshot.paused!==true)throw Error('Prepared actor did not pause');
  return{proof,preparedSimulationTime:snapshot.time,scope:'Paused setup only, no movement or cold/performance acceptance'};
 }
-export function releasePreparedShardClock(){
+export function releasePreparedShardClock(realmOwner=null,proof=null){
+ const realm=realmOwner===null?null:realmOwner.member({window,document,performance,canvas:document.querySelector('.game-shell canvas')},'release');
  const qa=window.__ASHFALL_BATTLE_QA__,before=qa.getSnapshot();if(before.paused!==true)throw Error('Prepared clock was not paused');
- qa.setEnemyVfxProofPaused(false);const after=qa.getSnapshot();if(after.paused!==false||after.time!==before.time)throw Error('Release changed original simulation clock');
- return{at:performance.now(),timeOrigin:performance.timeOrigin,beforePaused:before.paused,afterPaused:after.paused,beforeTime:before.time,afterTime:after.time};
+ if(proof?.owner==='mayo-activation')qa.releaseV177NativeMayoProof(proof.proofId);else qa.setEnemyVfxProofPaused(false);const after=qa.getSnapshot();if(after.paused!==false||after.time!==before.time)throw Error('Release changed original simulation clock');
+ return{at:performance.now(),timeOrigin:performance.timeOrigin,...(realm?{realm}:{}),beforePaused:before.paused,afterPaused:after.paused,beforeTime:before.time,afterTime:after.time};
 }

@@ -11,7 +11,8 @@ import {startNativeGameRafObservation,stopNativeGameRafObservation,
   nativeGameDamageReceipt,nativeGamePerformanceReceipt} from './v177-native-game-capture-browser.mjs';
 import {LIMITS,assertPlannedCase} from './v177-native-allunit-manifest.mjs';
 import {readNativeAllUnitSample,assertShardProof,postpaintCaptureBoundary,
-  assertShardPostpaintContract} from './v177-native-allunit-contract.mjs';
+  assertShardPostpaintContract,createNativeAllUnitRealmOwner,readNativeAllUnitRealmOwner,
+  assertNativeRealmMember,releasePreparedShardClock} from './v177-native-allunit-contract.mjs';
 import {assertMayoFeralReceipt,assertFutagoPairDamageAndOwner} from './v177-native-allunit-owners.mjs';
 
 export function hasPreparedAllUnitPaint(proof){
@@ -103,7 +104,19 @@ export function assertAllUnitClip(row,bytes){
   assert.equal(c.timeOrigin,row.recordingStart.timeOrigin);assert.equal(c.startedAt,row.recordingStart.startedAt);
   assert.ok(c.startedAt<=row.boundary.at&&row.boundary.at<=row.release.at);
   assert.ok(row.samples.at(-1).at<=c.stopRequestedAt);
-  assert.equal(row.sourceRaf.timeOrigin,c.timeOrigin);assert.equal(row.sourceRaf.overflow,false);
+  assert.ok(Number.isFinite(c.timeOrigin)&&Number.isFinite(row.sourceRaf.timeOrigin),'Original raw clock origins must remain recorded');
+  assert.equal(row.realmOwner?.member,'owner-created');
+  assertNativeRealmMember(row.realmOwner,row.realmOwner,'owner-created',null);
+  let previous=row.realmOwner;
+  const check=(r,member)=>{assertNativeRealmMember(row.realmOwner,r,member,previous);previous=r;};
+  check(row.sourceRaf.realm?.started,'raf-start');
+  check(c.realm?.created,'recorder-create');check(row.recordingStart.realm,'recorder-start');
+  assert.deepEqual(c.realm.started,row.recordingStart.realm,'Same recorder-state start receipt differs');
+  check(row.boundary.realm,'sample');check(row.release.realm,'release');check(row.captureStart.realm,'sample');
+  for(const s of row.samples)check(s.realm,'sample');
+  check(c.realm.finished,'recorder-finish');check(row.sourceRaf.realm?.stopped,'raf-stop');check(row.captureEnd.realm,'sample');
+  assert.equal(row.sourceRaf.realm.failure,null);
+  assert.equal(row.sourceRaf.overflow,false);
   assert.ok(row.sourceRaf.rows.length>=2);
   for(let i=0;i<row.sourceRaf.rows.length;i++){
     const r=row.sourceRaf.rows[i];assert.ok(Number.isFinite(r.at)&&Number.isFinite(r.renderSequence));
@@ -112,42 +125,37 @@ export function assertAllUnitClip(row,bytes){
 }
 export async function captureAllUnitCase(page,row,{out,onFailure=()=>{}}={}){
   assertPlannedCase(row);let clip,observation,primary;
-  const resources={pointer:null};
+  const resources={pointer:null,realmOwner:null};
   const active=()=>{assert.notEqual(row.deadlineExpired,true,'Late capture cannot become accepted');assert.equal(page.isClosed(),false);};
   const owned=async operation=>{active();const value=await operation();active();return value;};
   try{
     row.proof=await prepareCase(page,row,owned,active,resources);assertShardProof(row,row.proof);
     await owned(()=>page.waitForFunction(hasPreparedAllUnitPaint,row.proof,{timeout:LIMITS.readinessMs}));
-    observation=await page.evaluateHandle(startNativeGameRafObservation,row.proof);active();
+    resources.realmOwner=await page.evaluateHandle(createNativeAllUnitRealmOwner);active();
+    row.realmOwner=await owned(()=>resources.realmOwner.evaluate(readNativeAllUnitRealmOwner));
+    observation=await page.evaluateHandle(startNativeGameRafObservation,{...row.proof,realmOwner:resources.realmOwner});active();
     row.recordingMetadata={form:row.form,requestedKind:row.proof.kind,phase:row.phase,
       fixtureGroup:row.phase==='engage'?'approach-to-attack':row.proof.side==='human'||row.owner==='legacy-art'?'authored-form':'base-enemy',
       fighterId:row.proof.fighterId,preparedRenderKind:row.form,owner:row.owner,caseId:row.caseId,
       proofId:row.proof.proofId,battleGeneration:row.proof.battleGeneration,
       legacyFusedFixture:row.proof.legacyFusedFixture,diagnosticOnly:true,controlledOpponent:true};
     clip=await beginV177NativeCanvasClip(page,row.recordingMetadata,{directory:path.join(out,
-      row.viewport.width+'x'+row.viewport.height,'native-canvas-clips'),engine:'webkit',requestedMimeType:'video/webm;codecs=vp8'});active();
+      row.viewport.width+'x'+row.viewport.height,'native-canvas-clips'),engine:'webkit',requestedMimeType:'video/webm;codecs=vp8',realmOwner:resources.realmOwner});active();
     row.recordingStart=await owned(()=>clip.waitForStart());
-    row.pausedCaptureStart=await owned(()=>page.evaluate(readNativeAllUnitSample,{...row.proof,performanceBoundary:true}));
+    row.pausedCaptureStart=await owned(()=>resources.realmOwner.evaluate(readNativeAllUnitSample,{...row.proof,performanceBoundary:true}));
     row.boundary=postpaintCaptureBoundary(row,row.proof,row.pausedCaptureStart,row.recordingStart);
     row.sequenceBaseline=row.boundary.renderSequence;
-    row.release=await owned(()=>page.evaluate(proof=>{
-      const qa=window.__ASHFALL_BATTLE_QA__,before=qa.getSnapshot();
-      if(before.paused!==true)throw Error('Prepared capture must remain paused');
-      if(proof.owner==='mayo-activation')qa.releaseV177NativeMayoProof(proof.proofId);
-      else qa.setEnemyVfxProofPaused(false);
-      const after=qa.getSnapshot();return{at:performance.now(),timeOrigin:performance.timeOrigin,
-        beforePaused:before.paused,afterPaused:after.paused,beforeTime:before.time,afterTime:after.time};
-    },row.proof));
-    row.captureStart=await owned(()=>page.evaluate(readNativeAllUnitSample,{...row.proof,performanceBoundary:true}));
+    row.release=await owned(()=>resources.realmOwner.evaluate(releasePreparedShardClock,row.proof));
+    row.captureStart=await owned(()=>resources.realmOwner.evaluate(readNativeAllUnitSample,{...row.proof,performanceBoundary:true}));
     const count=row.phase==='engage'?LIMITS.engageSamples:LIMITS.moveAttackSamples;
     for(let i=0;i<count;i++){
       await owned(()=>page.waitForTimeout(LIMITS.sampleDelayMs));
-      row.samples.push(await owned(()=>page.evaluate(readNativeAllUnitSample,{...row.proof,performanceBoundary:i===count-1})));
+      row.samples.push(await owned(()=>resources.realmOwner.evaluate(readNativeAllUnitSample,{...row.proof,performanceBoundary:i===count-1})));
     }
     const completed=clip;clip=null;row.nativeClip=await completed.finish({completed:true});active();
     row.sourceRaf=await owned(()=>observation.evaluate(stopNativeGameRafObservation));
     await observation.dispose();observation=null;
-    row.captureEnd=await owned(()=>page.evaluate(readNativeAllUnitSample,row.proof));
+    row.captureEnd=await owned(()=>resources.realmOwner.evaluate(readNativeAllUnitSample,row.proof));
     if(row.owner==='mayo-activation'){
       assert.equal(row.captureEnd.fighter?.manualAbilityPhase,'feral');assert.ok(row.captureEnd.fighter.activeRemaining>0);
       row.proof={...row.proof,...await owned(()=>page.evaluate(id=>window.__ASHFALL_BATTLE_QA__.getV177NativeMayoProof(id),row.proof.proofId))};
@@ -175,6 +183,7 @@ export async function captureAllUnitCase(page,row,{out,onFailure=()=>{}}={}){
       try{await observation.dispose();}catch(e){row.cleanupErrors.push(String(e));}
     }
     try{await page.evaluate(()=>window.__ASHFALL_BATTLE_QA__.setEnemyVfxProofPaused(true));}catch(e){row.cleanupErrors.push(String(e));}
+    if(resources.realmOwner)try{await resources.realmOwner.dispose();}catch(e){row.cleanupErrors.push(String(e));}
     if(!primary&&row.cleanupErrors.length)throw Error(row.cleanupErrors.join('; '));
   }
 }
