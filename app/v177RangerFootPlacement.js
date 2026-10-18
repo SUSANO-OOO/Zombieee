@@ -32,7 +32,11 @@ function targets(rig, feet, root, facing, scale) {
 function stopping(rig, previous, input) {
   const {time, root, facing, scale, phase} = input;
   let stop = previous.stop;
-  if (!stop || previous.moving || previous.facing !== facing) {
+  // Subthreshold body drift can continue after both stop steps have landed.
+  // Start another real pair of steps instead of keeping that old goal forever.
+  const goalMoved=stop&&previous.time-stop.at>=stop.durations[0]+stop.durations[1]
+    &&stop.goal.some((foot,i)=>Math.abs(foot.x-worldX(rig.legs[i].footCenter+REST_OFFSET[i],root,facing,scale))>1e-10);
+  if (!stop || previous.moving || previous.facing !== facing || goalMoved) {
     const goal = restFeet(rig, root, facing, scale);
     const height = previous.feet.map(foot => foot.height);
     const distances = previous.feet.map((foot, i) => Math.abs(goal[i].x - foot.x) / scale);
@@ -151,6 +155,13 @@ export function v177RangerFootPlacement(rig, previous, input) {
   if (rig.legs.length !== 2 || ![input.time, input.root, input.phase, input.scale].every(Number.isFinite) || !(input.scale > 0)) return null;
   input = {...input, facing:direction(input.facing)};
   const {time,root,facing,scale,phase}=input;
+  // A short pursuit can start and stop between two actual paints. Its source
+  // gait phase still records the travel; the last tick's moving flag does not.
+  // Keep following that travel until the next unchanged pose starts settling.
+  const samePaint=previous&&time===previous.time&&root===previous.root
+    &&phase===previous.phase&&facing===previous.facing&&scale===previous.scale;
+  if(previous&&!input.frozen&&time>=previous.time
+    &&(Math.abs(phase-previous.phase)>1e-9||samePaint&&previous.moving))input={...input,moving:true};
   let state;
   if(previous&&input.moving&&!input.frozen&&time>=previous.time){
     // Sample crossed plant/swing boundaries even when the actual draw skips
