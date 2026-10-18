@@ -29,14 +29,19 @@ function declaration(source,name){
  assert.ok(node,name);return node.getText(tree).replace(/^export\s+/u,'');
 }
 function callback(realm,fn){return vm.runInContext('('+fn.toString()+')',realm.context);}
-function fixture({origin=1000000,startEvent=true,stopEvent=true,chunks=['pure-node-fixture'],nativeError=false,failAtSample=null,cleanupFailure=false}={}){
+function fixture({origin=1000000,startEvent=true,stopEvent=true,chunks=['pure-node-fixture'],nativeError=false,failAtSample=null,cleanupFailure=false,manualSampleTimer=false,sampleTransportMs=0}={}){
  const plan=SHARDS.flatMap(s=>planShard(s.id)).find(r=>r.form==='medic'&&r.phase==='move'&&r.viewport.height===390);
  const row={...clone(plan),samples:[],status:'starting'};
  const stats={speed:38,laneSpeed:20,damage:10,range:180,attackEvery:1,hp:100,maxHp:100};
  const proof={schema:'v177-native-shard-proof/v1',proofId:'2:medic:4:move',battleGeneration:2,route:'/v100',
   owner:'ordinary',kind:'medic',side:'human',renderKind:'medic',v100TwinPart:null,
   legacyFusedFixture:false,phase:'move',fighterId:4,targetId:5,originalActorStats:stats,ownerEvidence:{constructorFixture:true}};
- const log=[],raf=new Map();let now=1000,rawOrigin=origin,paused=true,simulation=0,seq=1,reads=0,nextRaf=0,streamStops=0;
+ const log=[],raf=new Map(),scheduled=[];let now=1000,rawOrigin=origin,paused=true,simulation=0,seq=1,reads=0,nextRaf=0,streamStops=0;
+ function advanceClock(ms){
+  now+=ms;if(!paused){simulation+=ms/1000;seq++;}
+  for(const [id,fn]of [...raf]){raf.delete(id);fn();}
+  rawOrigin++;
+ }
  const sentinel=Error('Original sample transport failure'),cleanupSentinel=Error('Owner disposal failure');
  const fighter=()=>({...stats,id:4,kind:'medic',side:'human',renderKind:'medic',v100TwinPart:null,x:330+simulation*38,attackSequence:0});
  const paints=()=>[{renderSequence:seq,renderKind:'medic',assetReady:true,renderWidth:60,renderHeight:90,
@@ -74,7 +79,12 @@ function fixture({origin=1000000,startEvent=true,stopEvent=true,chunks=['pure-no
  }
  const globals={window,document,performance,location:{pathname:'/v100'},crypto:{randomUUID},
   innerWidth:844,innerHeight:390,devicePixelRatio:1,MediaRecorder:Recorder,
-  Blob,Uint8Array,btoa,setTimeout,clearTimeout,
+  Blob,Uint8Array,btoa,setTimeout(fn,ms,...args){
+   if(fn.name!=='readNativeSampleOnSchedule')return setTimeout(fn,ms,...args);
+   const timer={fn,ms};scheduled.push(timer);
+   if(!manualSampleTimer)queueMicrotask(()=>{advanceClock(ms);fn();});
+   return timer;
+  },clearTimeout,
   requestAnimationFrame:fn=>{raf.set(++nextRaf,fn);return nextRaf;},
   cancelAnimationFrame:id=>raf.delete(id)};
  Object.defineProperty(globals,'AudioContext',{get(){assert.fail('No AudioContext');}});
@@ -102,7 +112,9 @@ function fixture({origin=1000000,startEvent=true,stopEvent=true,chunks=['pure-no
   };
   const evaluate=h.evaluate.bind(h);h.evaluate=async(fn,arg)=>{
    if(fn.name==='readNativeAllUnitSample'&&++reads===failAtSample)throw sentinel;
-   return evaluate(fn,arg);
+   const result=await evaluate(fn,arg);
+   if(fn.name==='readNativeAllUnitSample'&&arg?.sampleAt!==undefined&&sampleTransportMs)advanceClock(sampleTransportMs);
+   return result;
   };
   return h;
  }
@@ -112,16 +124,13 @@ function fixture({origin=1000000,startEvent=true,stopEvent=true,chunks=['pure-no
   evaluateHandle:async(fn,arg)=>evaluateExpression(transport,fn.toString(),{isFunction:true,returnByValue:false},arg),
   waitForFunction:async(fn,arg,options)=>{assert.equal(options.timeout,LIMITS.readinessMs);assert.equal(await page.evaluate(fn,arg),true);},
   waitForTimeout:async ms=>{
-   assert.equal(ms,120);now+=ms;
-   if(!paused){simulation+=ms/1000;seq++;}
-   for(const [id,fn]of [...raf]){raf.delete(id);fn();}
-   rawOrigin++;
+   assert.equal(ms,120);log.push('host-wait');advanceClock(ms);
   },
   locator:selector=>{assert.equal(selector,'.game-shell canvas');return{
    evaluateHandle:async(fn,arg)=>handle(canvas).evaluateHandle(fn,arg)
   };}
  };
- return{context,globals,window,document,canvas,performance,qa,proof,row,log,page,transport,handle,sentinel,cleanupSentinel,
+ return{context,globals,window,document,canvas,performance,qa,proof,row,log,page,transport,handle,sentinel,cleanupSentinel,scheduled,advanceClock,
   get now(){return now;},set now(v){now=v;},get origin(){return rawOrigin;},set origin(v){rawOrigin=v;},
   get simulation(){return simulation;},get streamStops(){return streamStops;},
   advance:()=>page.waitForTimeout(120),
@@ -150,6 +159,45 @@ test('each fresh raw timeOrigin remains unchanged by stable same-realm owner rec
  assert.deepEqual(samples.map(s=>s.timeOrigin),[1000000,1000001,1000002,999999]);
  for(let i=1;i<samples.length;i++)assertNativeRealmMember(samples[0].realm,samples[i].realm,'sample',samples[i-1].realm);
  assert.ok(samples.every(s=>s.realm.rawOriginAtCreation===1000000));
+});
+
+test('scheduled source reads wait in the original clock without issuing an early sample receipt',async()=>{
+ const f=fixture({manualSampleTimer:true}),owner=f.owner(),first=f.run(readNativeAllUnitRealmOwner,owner);
+ const due=f.now+120,pending=f.run(readNativeAllUnitSample,owner,{...f.proof,sampleAt:due});
+ assert.equal(owner.sequence,first.sequence);assert.equal(f.scheduled.length,1);
+ // A timer firing early must wait again; it cannot stamp the planned time onto a read.
+ f.advanceClock(60);f.scheduled[0].fn();
+ assert.equal(owner.sequence,first.sequence);assert.equal(f.scheduled.length,2);
+ f.advanceClock(f.scheduled[1].ms);f.scheduled[1].fn();
+ const sample=await pending;
+ assert.ok(sample.at>=due&&sample.at<due+.1);assert.equal(owner.sequence,first.sequence+1);
+ assertNativeRealmMember(first,sample.realm,'sample');assert.equal(sample.timeOrigin,f.origin);
+});
+
+test('scheduled source reads reject a lost realm during the wait and retain the previous receipt',async()=>{
+ for(const change of [
+  f=>{f.globals.document={...f.document};},
+  f=>{f.globals.performance={now:f.performance.now,timeOrigin:f.origin};},
+  f=>{f.globals.window={...f.window};},
+  f=>{f.document.querySelector=()=>({...f.canvas});},
+  f=>{f.canvas.isConnected=false;},
+ ]){
+  const f=fixture({manualSampleTimer:true}),owner=f.owner(),first=f.run(readNativeAllUnitRealmOwner,owner);
+  const pending=f.run(readNativeAllUnitSample,owner,{...f.proof,sampleAt:f.now+120});
+  change(f);f.advanceClock(f.scheduled[0].ms);f.scheduled[0].fn();
+  await assert.rejects(pending,/reference mismatch/u);assert.equal(owner.sequence,first.sequence);
+ }
+});
+
+test('scheduled input requires its owner and a finite time; late reads report their actual time immediately',()=>{
+ const f=fixture(),owner=f.owner(),first=f.run(readNativeAllUnitRealmOwner,owner);
+ for(const sampleAt of [NaN,Infinity,-Infinity,null,'120'])
+  assert.throws(()=>f.run(readNativeAllUnitSample,owner,{...f.proof,sampleAt}),/finite time/u);
+ assert.throws(()=>f.run(readNativeAllUnitSample,{...f.proof,sampleAt:f.now+120}),/original realm/u);
+ assert.equal(owner.sequence,first.sequence);assert.equal(f.scheduled.length,0);
+ const actual=f.now,sample=f.run(readNativeAllUnitSample,owner,{...f.proof,sampleAt:actual-500});
+ assert.equal(sample.then,undefined);assert.ok(sample.at>actual);assert.equal(f.scheduled.length,0);
+ assert.equal(owner.sequence,first.sequence+1);
 });
 test('new Document, Performance, Window, canvas, canvas-owner and detachment are rejected by actual callback refs',()=>{
  for(const change of [
@@ -335,6 +383,42 @@ test('actual capture body creates owner after prepare, routes every sample/relea
  assert.ok(f.log.indexOf('recorder-start')<f.log.indexOf('release'));
  assert.equal(f.log.at(-1),'owner-dispose');assert.ok(f.log.indexOf('track-stop')<f.log.indexOf('owner-dispose'));
  assert.equal(f.row.postpaintReceipt.naturalnessAccepted,false);assert.equal(f.row.nativeClip.originalSpeedAccepted,false);
+});
+
+test('actual capture keeps the original source cadence when each sample response adds transport time',async()=>{
+ const f=fixture({sampleTransportMs:85}),{run}=actualCaptureWithExternalControls();
+ await run(f.page,f.row,{out:path.join(fixtureDirectory,randomUUID())});
+ assert.equal(f.row.status,'observed-diagnostic');assert.equal(f.row.samples.length,LIMITS.moveAttackSamples);
+ for(let i=0;i<f.row.samples.length;i++){
+  const sample=f.row.samples[i],planned=f.row.captureStart.at+(i+1)*LIMITS.sampleDelayMs;
+  assert.ok(sample.at>=planned&&sample.at<planned+.1);
+  if(i)assertNativeRealmMember(f.row.samples[0].realm,sample.realm,'sample',f.row.samples[i-1].realm);
+ }
+ assert.ok(f.row.samples.at(-1).at-f.row.captureStart.at<1801);
+ assert.ok(f.row.captureEnd.at-f.row.captureStart.at<1900);
+ assert.equal(f.log.includes('host-wait'),false);assert.equal(f.row.postpaintReceipt.distinctNewPaints,15);
+ assert.equal(f.row.postpaintReceipt.naturalnessAccepted,false);
+});
+
+test('actual capture retains a late response time instead of fabricating the missed source schedule',async()=>{
+ const f=fixture({sampleTransportMs:180}),{run}=actualCaptureWithExternalControls();
+ await run(f.page,f.row,{out:path.join(fixtureDirectory,randomUUID())});
+ const last=f.row.samples.at(-1),planned=f.row.captureStart.at+LIMITS.moveAttackSamples*LIMITS.sampleDelayMs;
+ assert.ok(last.at>planned+700);assert.equal(f.row.samples.length,LIMITS.moveAttackSamples);
+ assert.ok(f.row.samples.every(s=>s.at<=f.row.captureEnd.at));
+ assert.equal(f.row.postpaintReceipt.naturalnessAccepted,false);
+});
+
+test('expiry while a source timer is pending cannot append that late sample or pass capture gates',async()=>{
+ const f=fixture(),{run,externalCalls}=actualCaptureWithExternalControls(),schedule=f.globals.setTimeout;
+ f.globals.setTimeout=(fn,ms,...args)=>{
+  if(fn.name==='readNativeSampleOnSchedule')f.row.deadlineExpired=true;
+  return schedule(fn,ms,...args);
+ };
+ await assert.rejects(run(f.page,f.row,{out:path.join(fixtureDirectory,randomUUID())}),/Late capture/u);
+ assert.ok(f.row.captureStart);assert.equal(f.row.samples.length,0);assert.equal(f.row.status,'starting');
+ assert.equal(f.row.interruptedClip.status,'invalid');assert.equal(externalCalls.length,0);
+ assert.equal(f.streamStops,1);assert.equal(f.log.at(-1),'owner-dispose');
 });
 test('actual capture preserves original sample exception identity before partial clip/RAF/owner cleanup errors',async()=>{
  const f=fixture({failAtSample:2,cleanupFailure:true}),{run,externalCalls}=actualCaptureWithExternalControls(),failures=[];

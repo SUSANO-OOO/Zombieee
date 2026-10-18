@@ -67,7 +67,21 @@ export function assertNativeRealmMember(expected,actual,member,after=expected){
 
 export function readNativeAllUnitSample(input,ownedProof){
  const realmOwner=ownedProof===undefined?null:input;
- const {fighterId,targetId,owner,proofId,performanceBoundary=false}=ownedProof??input;
+ const {fighterId,targetId,owner,proofId,performanceBoundary=false,sampleAt}=ownedProof??input;
+ // Absolute times in the original Performance clock avoid adding a full delay
+ // after every transport round trip. Late reads still retain their actual time.
+ if(sampleAt!==undefined){
+  if(!realmOwner||!Number.isFinite(sampleAt))throw Error('Scheduled sample requires its original realm and a finite time');
+  realmOwner.check({window,document,performance,canvas:document.querySelector('.game-shell canvas')});
+  const now=performance.now();
+  if(!Number.isFinite(now))throw Error('Invalid native sample clock');
+  const delay=sampleAt-now;
+  if(delay>0)return new Promise((resolve,reject)=>{
+   setTimeout(function readNativeSampleOnSchedule(){
+    try{resolve(readNativeAllUnitSample(realmOwner,ownedProof));}catch(error){reject(error);}
+   },delay);
+  });
+ }
  const realm=realmOwner===null?null:realmOwner.member({window,document,performance,canvas:document.querySelector('.game-shell canvas')},'sample');
  const qa=window.__ASHFALL_BATTLE_QA__,snapshot=qa.getSnapshot(),audit=qa.getEnemyFacingRuntimeAudit(fighterId),target=qa.getEnemyFacingRuntimeAudit(targetId);
  const phaseG=qa.getPhaseGCombatSnapshot();

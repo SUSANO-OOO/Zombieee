@@ -170,8 +170,8 @@ export async function captureAllUnitCase(page,row,{out,onFailure=()=>{}}={}){
     row.captureStart=await owned(()=>resources.realmOwner.evaluate(readNativeAllUnitSample,{...row.proof,performanceBoundary:true}));
     const count=row.phase==='engage'?LIMITS.engageSamples:LIMITS.moveAttackSamples;
     for(let i=0;i<count;i++){
-      await owned(()=>page.waitForTimeout(LIMITS.sampleDelayMs));
-      row.samples.push(await owned(()=>resources.realmOwner.evaluate(readNativeAllUnitSample,{...row.proof,performanceBoundary:i===count-1})));
+      row.samples.push(await owned(()=>resources.realmOwner.evaluate(readNativeAllUnitSample,{...row.proof,
+        sampleAt:row.captureStart.at+(i+1)*LIMITS.sampleDelayMs,performanceBoundary:i===count-1})));
     }
     const completed=clip;clip=null;row.nativeClip=await completed.finish({completed:true});active();
     row.sourceRaf=await owned(()=>observation.evaluate(stopNativeGameRafObservation));
