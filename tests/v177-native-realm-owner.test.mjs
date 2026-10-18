@@ -353,7 +353,7 @@ test('candidate browser callbacks contain no eval or Function construction, and 
 
 
 function actualCaptureWithExternalControls(){
- const calls=[];
+ const calls=[],performanceRows=[];
  const external=label=>(()=>{calls.push(label);return{scope:'pure Node external-subcontract fixture; no native/acceptance'};});
  const env={assert,path,LIMITS,assertPlannedCase,assertShardProof,hasPreparedAllUnitPaint:()=>true,
   createNativeAllUnitRealmOwner,readNativeAllUnitRealmOwner,startNativeGameRafObservation,stopNativeGameRafObservation,
@@ -362,14 +362,14 @@ function actualCaptureWithExternalControls(){
   readFile:async file=>fs.readFileSync(file),
   assertV177AuthoredLiveRender:external('motion-damage-existing'),
   nativeGameDamageReceipt:external('normal-damage-existing'),
-  nativeGamePerformanceReceipt:external('performance-existing'),
+  nativeGamePerformanceReceipt:row=>{performanceRows.push(row);return external('performance-existing')();},
  };
  const source=proposed('v177-native-allunit-cases');
  const run=vm.runInNewContext(declaration(source,'prepareCase')+'\n'+declaration(source,'captureAllUnitCase')+'\ncaptureAllUnitCase',env);
- return{run,externalCalls:calls};
+ return{run,externalCalls:calls,performanceRows};
 }
 test('actual capture body creates owner after prepare, routes every sample/release through it and disposes last',async()=>{
- const f=fixture(),{run,externalCalls}=actualCaptureWithExternalControls(),original=f.page.evaluateHandle;
+ const f=fixture(),{run,externalCalls,performanceRows}=actualCaptureWithExternalControls(),original=f.page.evaluateHandle;
  f.page.evaluateHandle=async(fn,arg)=>{
   const h=await original(fn,arg);
   if(fn.name==='createNativeAllUnitRealmOwner')f.log.push('owner-create');
@@ -377,7 +377,13 @@ test('actual capture body creates owner after prepare, routes every sample/relea
  };
  await run(f.page,f.row,{out:path.join(fixtureDirectory,randomUUID())});
  assert.equal(f.row.status,'observed-diagnostic');assert.equal(f.row.samples.length,15);
- assert.deepEqual(externalCalls,['motion-damage-existing','normal-damage-existing','performance-existing']);
+ assert.deepEqual(externalCalls,['motion-damage-existing','normal-damage-existing','performance-existing','performance-existing']);
+ assert.equal(performanceRows.length,2);assert.equal(performanceRows[0],f.row);
+ assert.equal(performanceRows[0].samples,f.row.samples);assert.equal(f.row.samples.length,15);
+ assert.equal(performanceRows[1].captureStart,f.row.captureStart);assert.equal(performanceRows[1].sourceRaf,f.row.sourceRaf);
+ assert.equal(performanceRows[1].samples.length,1);assert.equal(performanceRows[1].samples[0],f.row.captureEnd);
+ assert.ok(f.row.captureEnd.runtimePerformance,'Read actual post-finish counters in addition to the original window');
+ assert.match(f.row.captureTailPerformanceReceipt.scope,/Separate.*original sample window.*unchanged/u);
  assert.ok(f.log.indexOf('prepare')<f.log.indexOf('owner-create'));
  assert.ok(f.log.indexOf('owner-create')<f.log.indexOf('recorder-start'));
  assert.ok(f.log.indexOf('recorder-start')<f.log.indexOf('release'));
@@ -453,5 +459,5 @@ test('owner disposal as the sole fault is a failure after completed fixture byte
  const f=fixture({cleanupFailure:true}),{run,externalCalls}=actualCaptureWithExternalControls();
  await assert.rejects(run(f.page,f.row,{out:path.join(fixtureDirectory,randomUUID())}),/Owner disposal failure/u);
  assert.equal(f.row.nativeClip.status,'recorded');assert.ok(f.row.cleanupErrors.length);
- assert.equal(externalCalls.length,3);assert.equal(f.log.at(-1),'owner-dispose');
+ assert.equal(externalCalls.length,4);assert.equal(f.log.at(-1),'owner-dispose');
 });

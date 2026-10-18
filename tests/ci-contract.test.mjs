@@ -451,6 +451,16 @@ test("compact shadow diagnostics cannot consume or replace the primary performan
   assert.equal(primary['timeout-minutes'],30);
   assert.equal(primary.steps.some(s=>s.env?.V100_PRESIDENT_SHADOW_BLUR_ABLATION),false);
   assert.ok(primary.steps.some(s=>s.id==='preserved_primary_perf'&&s.if==='always()'));
+  const first=primary.steps.findIndex(s=>s.id==='primary_perf'),early=primary.steps.findIndex(s=>s.id==='preserved_first_report'),
+    repeat=primary.steps.findIndex(s=>s.id==='repeat_perf');
+  assert.equal(early,first+1,'The first measured report must survive a later repeat consuming the job deadline');
+  assert.equal(repeat,early+1);
+  const report=primary.steps[early];assert.equal(report.uses,'actions/upload-artifact@v4');
+  assert.equal(report.if,"${{ always() && (steps.primary_perf.outcome == 'success' || steps.primary_perf.outcome == 'failure') }}");
+  assert.equal(report.with.path,primary.steps[first].env.V100_DEVICE_RUNTIME_OUT+'/report.json');
+  assert.equal(report.with.name,'v100-webkit-first-performance-report-attempt-${{ github.run_attempt }}');
+  assert.equal(report.with['if-no-files-found'],'error');assert.equal(report.with['retention-days'],14);
+  assert.equal(report['continue-on-error'],undefined);
   assert.equal(diagnostic.needs,'v100-webkit-frame-control');
   assert.equal(diagnostic.if,"${{ always() && (needs.v100-webkit-frame-control.result == 'failure' || needs.v100-webkit-frame-control.result == 'cancelled') }}");
   assert.equal(diagnostic['runs-on'],'macos-15');assert.equal(diagnostic['timeout-minutes'],20);

@@ -176,7 +176,7 @@ export async function captureAllUnitCase(page,row,{out,onFailure=()=>{}}={}){
     const completed=clip;clip=null;row.nativeClip=await completed.finish({completed:true});active();
     row.sourceRaf=await owned(()=>observation.evaluate(stopNativeGameRafObservation));
     await observation.dispose();observation=null;
-    row.captureEnd=await owned(()=>resources.realmOwner.evaluate(readNativeAllUnitSample,row.proof));
+    row.captureEnd=await owned(()=>resources.realmOwner.evaluate(readNativeAllUnitSample,{...row.proof,performanceBoundary:true}));
     if(row.owner==='mayo-activation'){
       assert.equal(row.captureEnd.fighter?.manualAbilityPhase,'feral');assert.ok(row.captureEnd.fighter.activeRemaining>0);
       row.proof={...row.proof,...await owned(()=>page.evaluate(id=>window.__ASHFALL_BATTLE_QA__.getV177NativeMayoProof(id),row.proof.proofId))};
@@ -190,7 +190,10 @@ export async function captureAllUnitCase(page,row,{out,onFailure=()=>{}}={}){
     row.expectedJointPath=row.binding.atlas.path;
     row.damageReceipt=row.owner==='mayo-activation'?assertMayoFeralReceipt(row,MANUAL_ABILITY_REGISTRY['mayo-chan'])
       :row.owner==='futago-pair'?assertFutagoPairDamageAndOwner(row):nativeGameDamageReceipt(row);
-    row.performanceReceipt=nativeGamePerformanceReceipt(row);active();row.status='observed-diagnostic';
+    row.performanceReceipt=nativeGamePerformanceReceipt(row);
+    row.captureTailPerformanceReceipt={...nativeGamePerformanceReceipt({...row,samples:[row.captureEnd]}),
+      scope:'Separate cumulative counter boundary after recorder finish and RAF stop; the original sample window and thresholds are unchanged. Not original-speed or performance acceptance'};
+    active();row.status='observed-diagnostic';
   }catch(error){primary=error;row.originalFailure=String(error);onFailure(error);throw error;}
   finally{
     row.cleanupErrors=[];

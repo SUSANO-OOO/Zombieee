@@ -47,18 +47,42 @@ test('boss approach still respects the visible button, real support cost, cooldo
   }
 });
 
-test('a genuine stage3 defeat is saved and still stops the normal route before advancing',async()=>{
+for(const slot of ['pendingResult','lastResult'])test('a genuine stage3 defeat in '+slot+' is saved and still stops the normal route before advancing',async()=>{
   const stage=V100_STAGES.find(stage=>stage.number===3),record={number:3,id:stage.id,openingSave:{revision:218}};
   const result={battleRunId:`v100:${stage.id}:218`,won:false,vehicleHp:0};
-  const events=[];
+  const events=[];let saveReads=0;
   const accept=vm.runInNewContext('('+functions.get('acceptResult').getText(tree)+')',{
-    Date,assert,path,out:'/evidence',ready:async()=>{},saveAt:async()=>({pendingResult:result}),
+    Date,assert,path,out:'/evidence',ready:async()=>{},saveAt:async()=>{saveReads++;return{[slot]:result};},
     page:{getByLabel:()=>({innerText:async()=>'ステージ失敗'}),screenshot:async()=>events.push('failure-screenshot')},
     persist:async()=>events.push('persist-defeat'),uiClick:async()=>{throw Error('A defeat must never advance');},button:()=>null,
   });
   await assert.rejects(()=>accept(record),/Normal-play defeat at Stage 3/u);
   assert.equal(record.status,'lost');assert.equal(record.result.won,false);
+  assert.equal(saveReads,1,'Read pending and committed result from the same save snapshot');
   assert.deepEqual(events,['failure-screenshot','persist-defeat']);
+});
+
+test('actual normal battle handoff recognizes its committed loss and preserves unrelated input failures',async()=>{
+  const catches=[];
+  const visit=node=>{if(ts.isCatchClause(node)&&node.block.getText(tree).includes('record.completedResultHandoff'))catches.push(node);ts.forEachChild(node,visit);};
+  visit(functions.get('battle'));assert.equal(catches.length,1);
+  const actual='(async()=>{for(;;)'+catches[0].block.getText(tree)+'})()';
+  const stage=V100_STAGES.find(stage=>stage.number===4),result={battleRunId:`v100:${stage.id}:257`,won:false,vehicleHp:0};
+  for(const scenario of [{slot:'pendingResult'},{slot:'lastResult'},{slot:'lastResult',phase:'battle'},
+    {slot:'lastResult',visible:false},{slot:'lastResult',runId:'old-unrelated-battle'},{slot:'missing'}]){
+    const error=new Error('Original detached unit-card timeout'),record={openingSave:{revision:257}},saved=scenario.slot==='missing'?{}:
+      {[scenario.slot]:{...result,...(scenario.runId?{battleRunId:scenario.runId}:{})}};
+    let reads=0;
+    const execution=vm.runInNewContext(actual,{stage,record,error,saveAt:async()=>{reads++;return saved;},phaseAt:async()=>scenario.phase??'result',
+      page:{getByLabel(name,options){assert.equal(name,'戦闘結果');assert.equal(options.exact,true);return{isVisible:async()=>scenario.visible!==false};}}});
+    if(scenario.phase||scenario.visible===false||scenario.runId||scenario.slot==='missing'){
+      await assert.rejects(execution,actualError=>actualError===error);assert.equal(record.completedResultHandoff,undefined);
+    }else{
+      await execution;assert.equal(record.completedResultHandoff.battleRunId,result.battleRunId);
+      assert.equal(record.completedResultHandoff.error,String(error));
+    }
+    assert.equal(reads,1);assert.equal(saved[scenario.slot]?.won,scenario.slot==='missing'?undefined:false);
+  }
 });
 
 test('the actual caller reserves the first airstrike even when production vehicle fire is enabled',async()=>{

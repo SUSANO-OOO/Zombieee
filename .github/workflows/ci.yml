@@ -733,6 +733,16 @@ jobs:
           V100_DEVICE_RUNTIME_BENCHMARK_PREPARATION: spotlight-paused
         run: node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs
 
+      - name: Preserve the first WebKit performance report before repeats
+        id: preserved_first_report
+        if: ${{ always() && (steps.primary_perf.outcome == 'success' || steps.primary_perf.outcome == 'failure') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: v100-webkit-first-performance-report-attempt-${{ github.run_attempt }}
+          path: outputs/v100-device-runtime/webkit/report.json
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Independently repeat narrow landscape boss performance (WebKit)
         id: repeat_perf
         if: ${{ always() && (steps.primary_perf.outcome == 'success' || steps.primary_perf.outcome == 'failure') }}

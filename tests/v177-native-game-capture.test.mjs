@@ -244,7 +244,11 @@ test('the native RAF observer records actual paint receipts without drawing or i
   let now = 100, next = 0; const callbacks = new Map();
   const globals = { performance: { timeOrigin: 1000, now: () => now },
     requestAnimationFrame(fn) { callbacks.set(++next, fn); return next; }, cancelAnimationFrame(id) { callbacks.delete(id); },
-    window: { __ASHFALL_BATTLE_QA__: { getEnemyFacingRuntimeAudit: () => ({ renderHistory: [{ renderSequence: next, renderKind: 'abomination' }] }) } } };
+    window: { __ASHFALL_BATTLE_QA__: { getEnemyFacingRuntimeAudit: (id, options) => {
+      assert.equal(id, 8); assert.equal(options.latestDrawOnly, true);
+      assert.deepEqual(Object.keys(options), ['latestDrawOnly']);
+      return { renderHistory: [{ renderSequence: next, renderKind: 'abomination' }] };
+    } } } };
   Object.defineProperty(globals, 'AudioContext', { get: () => assert.fail('No audio device') });
   const start = vm.runInNewContext('(' + startNativeGameRafObservation.toString() + ')', globals);
   const stop = vm.runInNewContext('(' + stopNativeGameRafObservation.toString() + ')', globals);
@@ -253,6 +257,59 @@ test('the native RAF observer records actual paint receipts without drawing or i
   const result = stop(state);
   assert.equal(result.rows.length, 2); assert.equal(result.encodedFrameCount, null); assert.equal(result.encodedPtsVerified, false);
   assert.equal(callbacks.size, 0);
+});
+
+function actualEnemyFacingAudit(globals) {
+  const source = fs.readFileSync('app/AshfallGame.tsx', 'utf8');
+  const tree = ts.createSourceFile('AshfallGame.tsx', source, ts.ScriptTarget.ES2022, true, ts.ScriptKind.TSX);
+  const callbacks = [];
+  const visit = node => {
+    if (ts.isPropertyAssignment(node) && node.name.getText(tree) === 'getEnemyFacingRuntimeAudit') callbacks.push(node.initializer);
+    ts.forEachChild(node, visit);
+  };
+  visit(tree); assert.equal(callbacks.length, 1);
+  const code = ts.transpileModule('(' + callbacks[0].getText(tree) + ')', {compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
+  return vm.runInNewContext(code, globals);
+}
+
+test('actual per-RAF audit reads the same last draw without actor, birth or full-history copies', () => {
+  const tail = {renderSequence:41, renderKind:'turned'};
+  for (const key of ['jointDrawSucceeded','jointWeightedLower','x','y']) Object.defineProperty(tail, key,
+    {enumerable:true, get(){assert.fail('Tail summary must not copy this draw field: '+key);}});
+  const history = [null, tail];
+  Object.defineProperty(history, 0, {get(){assert.fail('Tail summary must not enumerate older draws');}});
+  let latest = history, reads = 0;
+  const globals = {fighterRenderAuditHistory:{get(id){assert.equal(id, 8);reads++;return latest;}}};
+  for (const key of ['gameRef','corpseRenderAuditHistory','fighterActualXDeltaAudit','readV177TurnedBirthPresentation'])
+    Object.defineProperty(globals, key, {get(){assert.fail('Tail summary must not access '+key);}});
+  const read = actualEnemyFacingAudit(globals);
+  assert.equal(JSON.stringify(read(8,{latestDrawOnly:true})), JSON.stringify({renderHistory:[{renderSequence:41,renderKind:'turned'}]}));
+  latest = [{renderSequence:42,renderKind:'wrong-kind',jointDrawSucceeded:false}];
+  assert.equal(JSON.stringify(read(8,{latestDrawOnly:true})), JSON.stringify({renderHistory:[{renderSequence:42,renderKind:'wrong-kind'}]}));
+  latest = [{renderSequence:null,renderKind:null,jointDrawSucceeded:false}];
+  assert.equal(JSON.stringify(read(8,{latestDrawOnly:true})), JSON.stringify({renderHistory:[{renderSequence:null,renderKind:null}]}));
+  latest = [];
+  assert.equal(JSON.stringify(read(8,{latestDrawOnly:true})), '{"renderHistory":[]}');
+  latest = undefined;
+  assert.equal(JSON.stringify(read(8,{latestDrawOnly:true})), '{"renderHistory":[]}');
+  assert.equal(reads, 5);
+});
+
+test('actual default audit retains complete independent history rows and agrees with the summary tail', () => {
+  const weighted = {parts:5}, live = [{renderSequence:4,renderKind:'ranger',jointWeightedLower:weighted},
+    {renderSequence:5,renderKind:'wrong-kind',jointDrawSucceeded:false}], corpse = [{renderSequence:9,renderKind:'corpse'}];
+  const read = actualEnemyFacingAudit({gameRef:{current:{fighters:[],corpses:[]}},
+    fighterRenderAuditHistory:new Map([[8,live]]),corpseRenderAuditHistory:new Map([[8,corpse]])});
+  for (const options of [undefined,{},null,{latestDrawOnly:false}]) {
+    const full = read(8,options);
+    assert.equal(full.fighter,null); assert.equal(full.corpse,null); assert.equal(full.turnedBirth,null);
+    assert.equal(JSON.stringify(full.renderHistory),JSON.stringify(live));
+    assert.equal(JSON.stringify(full.corpseRenderHistory),JSON.stringify(corpse));
+    assert.notEqual(full.renderHistory,live); assert.notEqual(full.renderHistory[0],live[0]);
+    assert.equal(full.renderHistory[0].jointWeightedLower,weighted);
+    assert.equal(JSON.stringify(read(8,{latestDrawOnly:true}).renderHistory[0]),
+      JSON.stringify({renderSequence:full.renderHistory.at(-1).renderSequence,renderKind:full.renderHistory.at(-1).renderKind}));
+  }
 });
 
 test('actual sample reads keep the normal and Phase G snapshot APIs distinct', () => {

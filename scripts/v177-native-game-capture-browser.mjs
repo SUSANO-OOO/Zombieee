@@ -93,7 +93,7 @@ export function startNativeGameRafObservation({ fighterId, realmOwner = null }) 
     if(state.realmOwner)try{state.realmOwner.check({window,document,performance,canvas:document.querySelector('.game-shell canvas')});}
     catch(error){state.realmFailure??=String(error);state.stopped=true;return;}
     const qa = window.__ASHFALL_BATTLE_QA__;
-    const draw = qa.getEnemyFacingRuntimeAudit(fighterId).renderHistory.at(-1);
+    const draw = qa.getEnemyFacingRuntimeAudit(fighterId, {latestDrawOnly:true}).renderHistory.at(-1);
     if (state.rows.length < 4096) state.rows.push({ at: performance.now(),
       renderSequence: draw?.renderSequence ?? null, renderKind: draw?.renderKind ?? null });
     else state.overflow = true;

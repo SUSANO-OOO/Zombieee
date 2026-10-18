@@ -13202,7 +13202,13 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         if (!loaded?.naturalWidth) throw new Error(`Unit render proof asset did not decode: ${kind}`);
         return { kind, path, width: loaded.naturalWidth, height: loaded.naturalHeight, reused: false };
       },
-      getEnemyFacingRuntimeAudit: (fighterId: number) => {
+      getEnemyFacingRuntimeAudit: (fighterId: number, options: { latestDrawOnly?: boolean } = {}) => {
+        if (options?.latestDrawOnly === true) {
+          // The per-RAF observer needs the same history tail, without copying
+          // both histories or building actor/target/birth snapshots each frame.
+          const draw = fighterRenderAuditHistory.get(fighterId)?.at(-1);
+          return { renderHistory: draw ? [{ renderSequence: draw.renderSequence, renderKind: draw.renderKind }] : [] };
+        }
         const g = gameRef.current;
         const fighter = g.fighters.find((candidate) => candidate.id === fighterId) ?? null;
         const corpse = g.corpses.find((candidate) => candidate.id === fighterId) ?? null;

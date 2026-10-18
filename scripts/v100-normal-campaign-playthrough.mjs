@@ -279,7 +279,7 @@ async function battle(stage) {
     await page.waitForTimeout(300);
     } catch (error) {
       const saved = await saveAt();
-      const result = saved?.pendingResult;
+      const result = saved?.pendingResult ?? saved?.lastResult;
       if (await phaseAt() !== "result" || !await page.getByLabel("戦闘結果",{exact:true}).isVisible()
         || result?.battleRunId !== `v100:${stage.id}:${record.openingSave.revision}`) throw error;
       record.completedResultHandoff = {error:String(error),battleRunId:result.battleRunId};
@@ -293,7 +293,7 @@ async function battle(stage) {
 }
 async function acceptResult(record) {
   record.endedAt=new Date().toISOString();
-  await ready();record.result=(await saveAt()).pendingResult??(await saveAt()).lastResult;
+  await ready();const saved=await saveAt();record.result=saved?.pendingResult??saved?.lastResult;
   assert.equal(record.result?.battleRunId, `v100:${record.id}:${record.openingSave.revision}`, "Result must belong to this recorded normal battle");
   record.resultText=await page.getByLabel("戦闘結果",{exact:true}).innerText();
   record.status=record.result?.won===true?"won":"lost";
