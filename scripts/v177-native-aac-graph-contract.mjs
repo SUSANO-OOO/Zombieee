@@ -1,5 +1,5 @@
 // Output-only proposal. Pure contracts; importing this file launches nothing.
-export const GRAPH_LIMITS=Object.freeze({caseMs:6000,maxCaptureMs:8000,rowDeadlineMs:30000,readyMs:5000,completionMs:15000,cleanupMs:2000,
+export const GRAPH_LIMITS=Object.freeze({caseMs:6000,maxCaptureMs:8000,rowDeadlineMs:30000,browserLaunchMs:15000,readyMs:5000,completionMs:15000,cleanupMs:2000,
   pcmPackets:512,pcmBytes:4*1024*1024,encoderQueue:4,pendingSegments:8,pendingBytes:256*1024,encodedBytes:1024*1024,muxedBytes:2*1024*1024,transportEvents:2048});
 export function assertGraphHostedPlatform(platform,env) {
   if(platform!=='darwin'||env?.GITHUB_ACTIONS!=='true'||env?.RUNNER_OS!=='macOS')throw new Error('Hosted macOS GitHub Actions only; no local browser, audio or server launch');

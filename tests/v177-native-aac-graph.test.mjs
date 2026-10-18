@@ -234,7 +234,7 @@ test('manual and selective PR bindings require actual exact candidate/event head
 async function actualDriverFault({rawMissing=false,writeFailure=false,allFinalWritesFail=false,lateLaunch=false,lateCloseFailure=false,pageErrorObject=true,goodPage=false}={}){
  const source=await fs.readFile(new URL('../scripts/v177-native-aac-graph-browser.mjs',import.meta.url),'utf8'),begin=source.indexOf('export async function runGraphProbe('),end=source.indexOf('\nif(process.argv[1]',begin);assert.ok(begin>=0&&end>begin);
  const expected='a'.repeat(40),stored=new Map(),writes=[],calls={launch:0,close:0,contextClose:0,serverClose:0,partialRead:0,deadlines:[],console:[]};
- const pageError=new Error('Original page encoder failure'),saveError=new Error('Original final report write failure'),fallbackError=new Error('Secondary fallback report write failure'),rawError=Object.assign(new Error('ENOENT raw.json interrupted upload'),{code:'ENOENT'}),launchError=new Error('Pinned hosted WebKit launch exceeded 5000ms'),lateCloseError=new Error('Secondary late browser close failure');
+ const pageError=new Error('Original page encoder failure'),saveError=new Error('Original final report write failure'),fallbackError=new Error('Secondary fallback report write failure'),rawError=Object.assign(new Error('ENOENT raw.json interrupted upload'),{code:'ENOENT'}),launchError=new Error('Pinned hosted WebKit launch exceeded 15000ms'),lateCloseError=new Error('Secondary late browser close failure');
  const virtualRepo=path.join(repo,'uncreated-pure-driver-fixture'),virtualOut=path.join(virtualRepo,'outputs/v177-native-aac-graph'),pageFailure=pageErrorObject?pageError:pageError.message;
  const fakePage={on(){},async goto(){},async waitForFunction(){},getByRole(){return{async click(){}};},async evaluate(fn){if(String(fn).includes('__graphState')){calls.partialRead++;return goodPage?valid():{status:'failed',primaryError:pageError.message,errors:[pageError.message]};}return goodPage?{status:'complete',primaryError:null}:{status:'failed',primaryError:pageFailure};}};
  const fakeContext={async newPage(){return fakePage;},async close(){calls.contextClose++;}};
@@ -250,7 +250,7 @@ async function actualDriverFault({rawMissing=false,writeFailure=false,allFinalWr
   git:(_repo,args)=>Buffer.from(args[0]==='diff'?'':expected),buildGraphRoutes:async()=>({head:expected,tree:'b'.repeat(40),sourcePins:[],assets:[],manifest:{bytes:2,sha256:'2'},routes:new Map([['/__v177-aac-graph/manifest.json',{bytes:Buffer.from('{}')} ]])}),
   deadline:async(promise,ms,label)=>{calls.deadlines.push({ms,label});if(lateLaunch&&label==='Pinned hosted WebKit launch')return await Promise.race([promise,new Promise((_,reject)=>setTimeout(()=>reject(launchError),5))]);return await promise;},
   createServer:()=>fakeServer,makeGraphHandler:()=>()=>{},pathToFileURL,Date,setTimeout:(fn,ms)=>setTimeout(fn,ms===1000?0:ms),clearTimeout,console:{error:value=>calls.console.push(String(value))}});
- const runtime=new vm.SyntheticModule(['webkit'],function(){this.setExport('webkit',{executablePath:()=>'/pinned/webkit-2359/Playwright',launch:options=>{calls.launch++;assert.equal(options.timeout,5000);return lateLaunch?new Promise(resolve=>setTimeout(()=>resolve(fakeBrowser),20)):Promise.resolve(fakeBrowser);}});},{context:sandbox});
+ const runtime=new vm.SyntheticModule(['webkit'],function(){this.setExport('webkit',{executablePath:()=>'/pinned/webkit-2359/Playwright',launch:options=>{calls.launch++;assert.equal(options.timeout,L.browserLaunchMs);return lateLaunch?new Promise(resolve=>setTimeout(()=>resolve(fakeBrowser),20)):Promise.resolve(fakeBrowser);}});},{context:sandbox});
  const audit=new vm.SyntheticModule(['installRequestFailureAudit'],function(){this.setExport('installRequestFailureAudit',()=>({report:{unexpectedFailures:[]},closeContext:c=>c.close()}));},{context:sandbox});
  const mod=new vm.SourceTextModule(source.slice(begin,end),{context:sandbox,identifier:'file:///actual-r2-runGraphProbe.mjs',importModuleDynamically:async specifier=>{const value=specifier.includes('playwright/index.mjs')?runtime:audit;if(value.status==='unlinked')await value.link(()=>{throw Error('No nested import');});if(value.status==='linked')await value.evaluate();return value;}});
  await mod.link(()=>{throw Error('No static import');});await mod.evaluate();let thrown;
@@ -265,8 +265,8 @@ driverTest('actual driver keeps true raw read Error identity when page reported 
 driverTest('actual driver final write failure is secondary to original page Error and cannot leave canonical running',async()=>{const f=await actualDriverFault({writeFailure:true});assert.equal(f.thrown,f.pageError);assert.equal(f.canonical,null);assert.equal(f.progress.terminal,false);assert.equal(f.progress.reportRole,'progress');assert.equal(f.fallback.status,'failed');assert.equal(f.fallback.terminal,true);assert.equal(f.fallback.persistenceErrors[0].secondary,true);assert.match(f.fallback.primaryError,/Original page encoder failure/u);assert.equal(f.partial.state.primaryError,f.pageError.message);});
 driverTest('actual driver final write Error remains primary by identity if no earlier error occurred',async()=>{const f=await actualDriverFault({writeFailure:true,goodPage:true});assert.equal(f.thrown,f.saveError);assert.equal(f.fallback.status,'failed');assert.equal(f.fallback.persistenceErrors[0].secondary,false);assert.equal(f.canonical,null);});
 driverTest('actual driver retains primary Error even when terminal and fallback persistence both fail',async()=>{const f=await actualDriverFault({writeFailure:true,allFinalWritesFail:true});assert.equal(f.thrown,f.pageError);assert.equal(f.canonical,null);assert.equal(f.fallback,null);assert.equal(f.progress.terminal,false);assert.ok(f.calls.console.some(row=>row.includes('terminal-report-persistence-failed')&&row.includes('Original page encoder failure')&&row.includes('Secondary fallback report write failure')));});
-driverTest('actual driver closes a late browser once without extending the5s readiness or promoting the timed-out result',async()=>{const f=await actualDriverFault({lateLaunch:true});assert.equal(f.thrown,f.launchError);assert.equal(f.calls.launch,1);assert.equal(f.calls.close,1);assert.equal(f.calls.contextClose,0);assert.equal(f.canonical.status,'failed');assert.equal(f.late.ownership.status,'closed');assert.ok(f.calls.deadlines.some(row=>row.label==='Pinned hosted WebKit launch'&&row.ms===5000));assert.ok(f.calls.deadlines.some(row=>row.label==='Late owned browser cleanup'&&row.ms===2000));});
-driverTest('actual driver late close failure is secondary, persisted, and cannot replace original timeout Error',async()=>{const f=await actualDriverFault({lateLaunch:true,lateCloseFailure:true});assert.equal(f.thrown,f.launchError);assert.equal(f.calls.close,1);assert.equal(f.canonical.status,'failed');assert.equal(f.late.ownership.status,'close-failed');assert.match(f.late.ownership.secondaryError,/Secondary late browser close failure/u);assert.match(f.late.primaryError,/launch exceeded 5000ms/u);});
+driverTest('actual driver closes a late browser once within the named process budget without promoting the timed-out result',async()=>{const f=await actualDriverFault({lateLaunch:true});assert.equal(f.thrown,f.launchError);assert.equal(f.calls.launch,1);assert.equal(f.calls.close,1);assert.equal(f.calls.contextClose,0);assert.equal(f.canonical.status,'failed');assert.equal(f.late.ownership.status,'closed');assert.ok(f.calls.deadlines.some(row=>row.label==='Pinned hosted WebKit launch'&&row.ms===L.browserLaunchMs));assert.ok(f.calls.deadlines.some(row=>row.label==='Late owned browser cleanup'&&row.ms===2000));});
+driverTest('actual driver late close failure is secondary, persisted, and cannot replace original timeout Error',async()=>{const f=await actualDriverFault({lateLaunch:true,lateCloseFailure:true});assert.equal(f.thrown,f.launchError);assert.equal(f.calls.close,1);assert.equal(f.canonical.status,'failed');assert.equal(f.late.ownership.status,'close-failed');assert.match(f.late.ownership.secondaryError,/Secondary late browser close failure/u);assert.match(f.late.primaryError,/launch exceeded 15000ms/u);});
 test('selective PR workflow uses exact PR head plus manual fallback and keeps original single job controls',async()=>{
  const text=(await fs.readFile(new URL('../.github/workflows/native-aac-graph-probe.yml',import.meta.url),'utf8')).replaceAll('\r\n','\n');
  const paths=[...text.matchAll(/^      - '([^']+)'$/gmu)].map(match=>match[1]);
@@ -336,4 +336,50 @@ test('actual lazy dispatch crosses the deadline without input or unhandled rejec
   }
   await new Promise(resolve=>setImmediate(resolve));assert.deepEqual(unhandled,[]);
  }finally{process.removeListener('unhandledRejection',observe);}
+});
+
+
+// Execute the actual launch dispatch and original row-owner wrapper. Browser
+// resources stay fake; the8 full-driver cases above own late-resource cleanup.
+async function actualBrowserLaunch({guardAt=0,dispatchAt=guardAt,completeAt=dispatchAt,launchError=null}={}){
+ const NL=String.fromCharCode(10),source=(await fs.readFile(new URL('../scripts/v177-native-aac-graph-browser.mjs',import.meta.url),'utf8')).replaceAll(String.fromCharCode(13),'');
+ const lines=source.split(NL),bound=lines.filter(line=>line.startsWith('async function deadline(promise,ms,label){')),
+  owner=lines.filter(line=>line.trimStart().startsWith('const step=(promise,label,max=L.rowDeadlineMs)=>'));
+ assert.equal(bound.length,1);assert.equal(owner.length,1);
+ const start=source.indexOf("    const launchState={status:'pending',resource:null},launchPromise="),end=source.indexOf(NL+'    let abandonedLaunch=',start);
+ assert.ok(start>=0&&end>start&&end-start<1024);
+ const statement=source.slice(start,end),calls={launches:[],timers:[],cleared:[]},clock={now:guardAt};
+ const context=vm.createContext({assert,L,ownerDeadline:30000,Date:{now:()=>clock.now},
+  setTimeout(_callback,ms){calls.timers.push(ms);clock.now=dispatchAt;return calls.timers.length;},
+  clearTimeout(id){calls.cleared.push(id);},
+  webkit:{launch(options){calls.launches.push({timeout:options.timeout,at:clock.now});clock.now=completeAt;
+   return launchError?Promise.reject(launchError):Promise.resolve('owned fake browser');}}
+ });
+ const run=vm.runInContext([bound[0],owner[0],'(async()=>{',statement,
+  "void launchPromise.catch(()=>{});return step(launchPromise,'Pinned hosted WebKit launch',L.browserLaunchMs);})"].join(NL),context);
+ let value,error;try{value=await run();}catch(original){error=original;}
+ return{calls,value,error};
+}
+test('actual process launch is capped by its named15s budget and the unchanged30s owner residual',async()=>{
+ assert.equal(L.browserLaunchMs,15000);assert.equal(L.rowDeadlineMs,30000);assert.equal(L.readyMs,5000);
+ for(const [guardAt,dispatchAt,expected]of [[0,0,15000],[29000,29000,1000],[29900,29950,50]]){
+  const r=await actualBrowserLaunch({guardAt,dispatchAt});assert.equal(r.error,undefined);
+  assert.equal(r.value,'owned fake browser');assert.equal(r.calls.launches.length,1);assert.equal(r.calls.launches[0].timeout,expected);
+  assert.ok(r.calls.timers[0]<=15000&&r.calls.timers[0]<=30000-guardAt);assert.equal(r.calls.cleared.length,1);
+ }
+ const original=new Error('Original native process launch failure'),r=await actualBrowserLaunch({launchError:original});
+ assert.equal(r.error,original);assert.equal(r.calls.launches.length,1);
+});
+test('actual process launch never dispatches after row expiry or passes an unbounded timeout0',async()=>{
+ for(const guardAt of [30000,30001]){
+  const r=await actualBrowserLaunch({guardAt});assert.match(String(r.error),/Original30s row deadline expired before/u);
+  assert.equal(r.calls.launches.length,0);assert.equal(r.calls.timers.length,0);
+ }
+ for(const dispatchAt of [30000,30001]){
+  const r=await actualBrowserLaunch({guardAt:29999,dispatchAt});assert.match(String(r.error),/Original30s row deadline expired before/u);
+  assert.equal(r.calls.launches.length,0);assert.equal(r.calls.timers[0],1);assert.equal(r.calls.cleared.length,1);
+ }
+ const late=await actualBrowserLaunch({guardAt:29999,completeAt:30001});
+ assert.match(String(late.error),/Late result cannot promote an expired row/u);
+ assert.equal(late.calls.launches.length,1);assert.equal(late.calls.launches[0].timeout,1);
 });

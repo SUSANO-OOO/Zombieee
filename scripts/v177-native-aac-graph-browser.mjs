@@ -94,12 +94,18 @@ export async function runGraphProbe({platform=process.platform,env=process.env,r
     const {webkit}=await import(pathToFileURL(path.join(root,'playwright/index.mjs')).href);assert.ok(webkit.executablePath().includes('webkit-2359'),'Pinned WebKit2359 is required');
     server=createServer(makeGraphHandler(bundle,out,report.http));await step(new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);}), 'Source-only HTTP listen',L.readyMs);
     report.origin='http://127.0.0.1:'+server.address().port;
-    const launchState={status:'pending',resource:null},launchPromise=Promise.resolve().then(()=>webkit.launch({timeout:L.readyMs}));
+    // Process boot has its own budget. It still belongs to the original30s
+    // row, and must never pass timeout0 (unbounded) to Playwright after expiry.
+    const launchState={status:'pending',resource:null},launchPromise=Promise.resolve().then(()=>{
+      const remaining=ownerDeadline-Date.now();
+      if(remaining<=0)throw new Error('Original30s row deadline expired before Pinned hosted WebKit launch');
+      return webkit.launch({timeout:Math.min(remaining,L.browserLaunchMs)});
+    });
     let abandonedLaunch=false,lateCloseStarted=false;
     async function saveLateOwnership(){try{await fs.writeFile(path.join(out,'late-browser-cleanup.json'),JSON.stringify({head:report.head,tree:report.tree,primaryError:report.primaryError??String(primaryError),ownership:report.lateBrowserOwnership},null,2)+'\n');}catch(error){report.lateOwnershipPersistenceError=String(error);console.error(JSON.stringify({scope:'late-browser-cleanup-persistence',primaryError:report.primaryError,secondary:String(error)}));}}
     function closeLateBrowser(resource){if(lateCloseStarted)return;lateCloseStarted=true;report.lateBrowserOwnership={owner:'late-browser',status:'closing',cleanupDeadlineMs:L.cleanupMs};void(async()=>{try{await deadline(Promise.resolve().then(()=>resource.close()),L.cleanupMs,'Late owned browser cleanup');report.lateBrowserOwnership.status='closed';}catch(error){report.lateBrowserOwnership.status='close-failed';report.lateBrowserOwnership.secondaryError=String(error);report.cleanupErrors.push({owner:'late-browser',error:String(error),secondary:true});}finally{await saveLateOwnership();}})();}
     void launchPromise.then(resource=>{launchState.status='resolved';launchState.resource=resource;if(abandonedLaunch)closeLateBrowser(resource);},error=>{launchState.status='rejected';if(abandonedLaunch){report.lateBrowserOwnership={owner:'late-browser',status:'launch-rejected-no-resource',secondaryLaunchError:String(error)};void saveLateOwnership();}});
-    try{browser=await step(launchPromise,'Pinned hosted WebKit launch',L.readyMs);}catch(error){abandonedLaunch=true;if(launchState.resource)closeLateBrowser(launchState.resource);else report.lateBrowserOwnership={owner:'late-browser',status:launchState.status==='pending'?'awaiting-late-settlement':'launch-rejected-no-resource',evidenceFile:'late-browser-cleanup.json'};throw error;}
+    try{browser=await step(launchPromise,'Pinned hosted WebKit launch',L.browserLaunchMs);}catch(error){abandonedLaunch=true;if(launchState.resource)closeLateBrowser(launchState.resource);else report.lateBrowserOwnership={owner:'late-browser',status:launchState.status==='pending'?'awaiting-late-settlement':'launch-rejected-no-resource',evidenceFile:'late-browser-cleanup.json'};throw error;}
     report.browserVersion=browser.version();
     context=await step(browser.newContext({viewport:{width:844,height:390},isMobile:true,hasTouch:true,userAgent:'Mozilla/5.0 (iPhone; CPU iPhone OS 26_7_1 like Mac OS X) AppleWebKit/605.1.15 Version/26.7 Mobile/15E148 Safari/604.1'}),'Owned browser context',L.readyMs);
     page=await step(context.newPage(),'Owned blank page',L.readyMs);const {installRequestFailureAudit}=await import(pathToFileURL(path.join(repo,'scripts/browser-request-failure-audit.mjs')).href);audit=installRequestFailureAudit(page);
