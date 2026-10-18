@@ -13040,7 +13040,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       },
       prepareV177BornTurnedContinuation: ({proofId,phase}:{proofId:string;phase:"move"|"attack"|"engage"}) => {
         const g=gameRef.current;
-        const proof=configureV177BornTurnedContinuation(g,{proofId,phase,lane:1,laneY:activeLaneCenters[1]},{
+        const proof=configureV177BornTurnedContinuation(g,{proofId,phase},{
+          laneYFor:(lane:Lane)=>activeLaneCenters[lane],
           readGetup:(world:Game)=>readV177TurnedGetupProof(world,{},{
             readBirth:readV177TurnedBirthPresentation,
             corpseHistory:(id:number)=>corpseRenderAuditHistory.get(id)??[],

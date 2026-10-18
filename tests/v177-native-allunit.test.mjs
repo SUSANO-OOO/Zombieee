@@ -130,6 +130,7 @@ test('born continuation preserves real actor timers, targets, gait and object',(
       draws:[1,2,3].map(i=>({renderSequence:i,renderKind:'turned',jointDrawSucceeded:true,jointGetupProgress:null,jointPaintedAt:77.55+i*.05,requestedState:'move'}))};
     const result=configureV177BornTurnedContinuation(world,{proofId:source.proofId,phase},{
       readGetup:()=>source,readBirth:()=>birth,catalog:{attackReachFor:normalAttackReach},
+      laneYFor:lane=>[180,220,260][lane],
       configure:()=>{throw Error('Generic reset must never run');},
       spawnTarget:g=>{const t={id:13,kind:'guardian',side:'human',bodyRadius:26};g.fighters.push(t);return t;},
     });
@@ -280,4 +281,49 @@ test('workflow keeps exact head, independent twelve shards and original owned bu
   assert.equal(workflow.jobs.capture.steps[0].with['persist-credentials'],false);
   assert.equal(LIMITS.caseMs,30000);assert.equal(LIMITS.readinessMs,5000);assert.equal(LIMITS.clipBytes,8*1024*1024);
   assert.deepEqual(VIEWPORTS,[{width:1280,height:720},{width:844,height:390},{width:844,height:340}]);
+});
+
+
+function bornLaneTargetFixture({phase='engage',lane=1,laneYFor}={}){
+ const actor={id:12,kind:'turned',side:'zombie',hp:95,maxHp:95,speed:18,laneSpeed:38,damage:18,range:25,
+  attackEvery:.88,spawnGrace:0,flash:0,stunned:0,knock:0,x:608.5,y:288.16666666666663,lane,anchorLane:0,bodyRadius:11,
+  cooldown:.37,abilityCooldown:2.5,attackSequence:4,targetId:null,nextLaneDecisionAt:77.62,
+  navigationRecovery:{recoveryLane:null,elapsed:.37},animationPresentation:{locomotionPhase:12.3,locomotionTravelDistance:3.7}};
+ const birth={actorId:12,corpseId:11,bornAt:76.8,initialRemaining:.75,source:{sourceBound:true,recordedAfterPaint:true}};
+ const world={time:77.8,battleAudioGeneration:7,running:true,paused:false,over:false,fighters:[actor]};
+ const source={released:true,proofId:'7:turned-getup:11',battleGeneration:7,time:77.8,actorId:12,corpseId:11,
+  actualBirth:birth,proof:{initialFighterIds:[],manualBirth:false,injectedSpawnGrace:false,manualClockAdvance:false,preparedAt:72},releasedAt:72,
+  draws:[1,2,3].map(i=>({renderSequence:i,renderKind:'turned',jointDrawSucceeded:true,jointGetupProgress:null,jointPaintedAt:77.55+i*.05,requestedState:'move'}))};
+ let spawned=0;
+ const deps={readGetup:()=>source,readBirth:()=>birth,laneYFor,catalog:{attackReachFor:normalAttackReach},
+  spawnTarget:g=>{spawned++;const t={id:13,kind:'guardian',side:'human',bodyRadius:18};g.fighters.push(t);return t;}};
+ return{world,actor,source,deps,phase,get spawned(){return spawned;},
+  run:()=>configureV177BornTurnedContinuation(world,{proofId:source.proofId,phase},deps)};
+}
+test('born continuation aligns only the inert target to the synchronously current App lane center',()=>{
+ for(const phase of ['move','attack','engage'])for(const lane of [0,1,2]){
+  let centers=[400,480,560];const seen=[];
+  const f=bornLaneTargetFixture({phase,lane,laneYFor:n=>{seen.push(n);return centers[n];}});
+  const before=structuredClone(f.actor),time=f.world.time;
+  centers=[413,497,581]; // Deliberately unlike static gameRules or a cached value.
+  const proof=f.run(),target=f.world.fighters[1];
+  assert.deepEqual(seen,[lane]);assert.equal(target.y,centers[lane]);
+  assert.equal(target.lane,lane);assert.equal(target.anchorLane,lane);
+  assert.equal(proof.initial.targetY,centers[lane]);assert.equal(proof.initial.targetLane,lane);
+  assert.equal(proof.initial.actorY,before.y);assert.equal(target.hp,1_000_000);
+  assert.equal(target.speed,0);assert.equal(target.laneSpeed,0);assert.equal(target.damage,0);
+  assert.equal(proof.fighterId,before.id);assert.equal(f.world.fighters[0],f.actor);
+  assert.deepEqual(f.actor,before);assert.equal(f.world.time,time);assert.equal(f.world.paused,false);
+ }
+});
+test('missing/nonfinite current lane resolver fails before spawning and never falls back to transient actor Y',()=>{
+ for(const laneYFor of [undefined,null,0,()=>undefined,()=>NaN,()=>Infinity]){
+  const f=bornLaneTargetFixture({laneYFor}),before=structuredClone(f.actor);
+  assert.throws(f.run,/lane center/u);assert.equal(f.spawned,0);assert.equal(f.world.fighters.length,1);
+  assert.deepEqual(f.actor,before);assert.equal(f.world.time,77.8);
+ }
+ for(const lane of [-1,3,.5,null]){
+  const f=bornLaneTargetFixture({lane,laneYFor:()=>0}),before=structuredClone(f.actor);
+  assert.throws(f.run,/lane center resolver/u);assert.equal(f.spawned,0);assert.deepEqual(f.actor,before);
+ }
 });
