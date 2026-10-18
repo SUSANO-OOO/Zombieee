@@ -21,7 +21,8 @@ import { animationClipFor, attackPresentationDuration } from './combatPresentati
 import { createV177MrsNormalWeaponCycle } from './v177MrsNormalWeaponCycle.js';
 import { createV177RangerManualJoint } from './v177RangerManualJoint.js';
 import { createV177FutagoAbilityJoint } from './v177FutagoAbilityJoint.js';
-import { v177FirearmUpperMotion, applyV177FirearmUpperMotion } from './v177FirearmUpperMotion.js';
+import { v177FirearmUpperMotion, applyV177FirearmUpperMotion,
+  v177FirearmWeaponPullback, applyV177FirearmWeaponPullback } from './v177FirearmUpperMotion.js';
 
 const locomotionStates = new Set(['idle','deploy','move','start-move','stop-move','turn','retreat']);
 const attackStates = new Set(['wind-up','active','recovery']);
@@ -139,6 +140,8 @@ export function v177JointPose(kind, sample, runtime, { ownedPose=false,actor,wor
       const spine=jointMatrix(new Float64Array(6),atlas,plan,'spine',true);
       const follow=v177FirearmUpperMotion(kind,sample,spine,{actor:actualActor,world});
       if(follow)plan.firearmUpperTransform=follow;
+      const pullback=v177FirearmWeaponPullback(kind,sample);
+      if(pullback)plan.firearmWeaponPullback=pullback;
     }
     return kind==='mrs-chiha'&&sample?.mrsNormalWeaponCycle
       ? mrsNormalWeaponCycle.plan(kind,sample,plan,atlas) : plan;
@@ -531,12 +534,15 @@ function jointMatrix(out,atlas,plan,bone,upper,scratch){
     ??atlas.legConstraints?.find(a=>a.upperBone===bone||a.lowerBone===bone);
   if(!chain){
     interpolatedMatrix(out,atlas,plan,bone,upper);
+    if(upper&&bone===atlas.weaponBone)applyV177FirearmWeaponPullback(out,atlas,plan.firearmWeaponPullback);
     return upper&&plan.firearmUpperTransform?applyV177FirearmUpperMotion(out,plan.firearmUpperTransform):out;
   }
   const leg=Boolean(chain.hip);
   const parent=scratch?.[0]??new Float64Array(6),effector=scratch?.[1]??new Float64Array(6);
   interpolatedMatrix(parent,atlas,plan,chain.parentBone,leg?chain.parentUpper!==false:upper);
   interpolatedMatrix(effector,atlas,plan,chain.effectorBone,leg?false:upper);
+  if(upper&&!leg&&chain.effectorBone===atlas.weaponBone)
+    applyV177FirearmWeaponPullback(effector,atlas,plan.firearmWeaponPullback);
   const [sx,sy]=chain.hip??chain.shoulder,[ex,ey]=chain.knee??chain.elbow,[wx,wy]=chain.ankle??chain.wrist;
   // A supporting hand can come from an approved two-hand attack frame while
   // the arm retains its original neutral anatomy and visible sleeve paint.

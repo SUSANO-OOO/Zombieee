@@ -135,6 +135,37 @@ test('actually painted recoil survives a hit and enters or leaves living stun wi
   }
 });
 
+test('Nao and Monkey yield both elbows as the weapon recoils relative to the torso, with the painted muzzle following',()=>{
+  for(const kind of kinds){
+    const plan=v177JointPose(kind,{requestedState:'active',clipProgress:.3},runtime),plain={...plan};
+    delete plain.firearmWeaponPullback;
+    const pose=v177CaptureJointPose(kind,plan),baseline=v177CaptureJointPose(kind,plain),atlas=atlases[kind];
+    assert.deepEqual(pose.lower,baseline.lower);assert.deepEqual(pose.upper.spine,baseline.upper.spine);joins(kind,pose);
+    const muzzle=point(pose.upper[atlas.weaponBone],atlas.muzzle),oldMuzzle=point(baseline.upper[atlas.weaponBone],atlas.muzzle),
+      wrist=point(baseline.upper[atlas.weaponBone],atlas.armConstraints[0].effectorWrist??atlas.armConstraints[0].wrist),
+      dx=oldMuzzle[0]-wrist[0],dy=oldMuzzle[1]-wrist[1],length=Math.hypot(dx,dy);
+    assert.ok(((muzzle[0]-oldMuzzle[0])*dx+(muzzle[1]-oldMuzzle[1])*dy)/length<-10,
+      'weapon moves backwards along its actual barrel, relative to the unchanged torso');
+    for(const arm of atlas.armConstraints){
+      assert.ok(distance(point(pose.upper[arm.upperBone],arm.elbow),
+        point(baseline.upper[arm.upperBone],arm.elbow))>1,'both original elbows yield instead of translating rigidly');
+      assert.ok(distance(point(pose.upper[arm.upperBone],arm.shoulder),
+        point(baseline.upper[arm.upperBone],arm.shoulder))<1e-9);
+    }
+    for(const direction of ['left','right'])for(const scale of [.12,.16,.2]){
+      const {calls,frame,size}=record(kind,plan,{direction,scale,x:300,y:500}),
+        weapon=atlas.parts.findIndex(p=>p.name==='weapon-and-hands'),painted=point(calls[weapon],atlas.muzzle),
+        socket=v177RenderedJointWeaponSocket({kind,plan,direction,frame,size,x:300,y:500,
+          pose:{offsetX:0,offsetY:0,scaleX:1,scaleY:1,rotationRadians:0}});
+      assert.ok(distance(painted,[socket.x,socket.y])<1e-9);
+    }
+    for(const state of ['idle','move','wind-up','ability','deploy','reload','weapon-cycle'])
+      assert.equal(v177JointPose(kind,{requestedState:state,clipProgress:.3},runtime)?.firearmWeaponPullback,undefined);
+    assert.equal(v177JointPose(kind,{requestedState:'recovery',clipProgress:1},runtime).firearmWeaponPullback,undefined);
+  }
+  assert.equal(v177JointPose('gunner',{requestedState:'active',clipProgress:.3},runtime).firearmWeaponPullback,undefined);
+});
+
 const gunnerEvents=weaponDamageEventsFor('gunner',13),gunnerActor=Object.freeze({id:17});
 // Fixtures use the existing released Shot fields. Pending entries alone are not shots.
 function gunnerShots(events,t){

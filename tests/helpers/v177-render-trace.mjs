@@ -36,7 +36,7 @@ export function jointRenderTraceDigest(kinds,{legacySettleRows=false,legacyFirea
      locomotionSettle:legacySettleRows?Math.round(settle*(atlas.settleLevels-1))/(atlas.settleLevels-1):settle});
    // The archived control predates normal-shot upper follow. Actual traces
    // retain the new motion by default; only the historical control omits it.
-   if(legacyFirearmUpper)delete plan.firearmUpperTransform;
+   if(legacyFirearmUpper){delete plan.firearmUpperTransform;delete plan.firearmWeaponPullback;}
    assert.ok(drawV177JointPose(ctx,{naturalWidth:atlas.decodedWidth},kind,plan,0,0,atlas.referenceFrame?.width??480,atlas.referenceFrame?.height??448));
    hash.update(JSON.stringify([kind,state,phase,settle,trace]));poses++;
   }
