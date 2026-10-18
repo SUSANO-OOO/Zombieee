@@ -5,8 +5,8 @@ import {buildGraphRoutes,makeGraphHandler,DI_WRAPPER,runGraphProbe} from '../scr
 import {prepareGraphOutput,createGraphState,graphOutputForContext} from '../scripts/v177-native-aac-graph-output.mjs';
 
 // Only the8 actual-driver fault cases require VM modules. The standard project
-// runner executes37 ordinary cases here and forwards these8 from one explicitly
-// flagged pure child. Its child mode never registers the37, so none run twice.
+// runner executes ordinary cases here and forwards these8 from one explicitly
+// flagged pure child. Its child mode never registers ordinary cases, so none run twice.
 const driverVmChild=process.env.V177_GRAPH_DRIVER_VM_CHILD==='1';
 const hasDriverVm=typeof vm.SourceTextModule==='function'&&typeof vm.SyntheticModule==='function';
 if(driverVmChild&&!hasDriverVm)throw new Error('Graph driver test child requires --experimental-vm-modules');
@@ -37,22 +37,23 @@ function driverTest(name,fn){
 const repo=process.env.V177_GRAPH_REPO??process.cwd();
 const {nativeAacClockEvidence}=await import(pathToFileURL(path.join(repo,'scripts/v177-native-aac-probe.mjs')).href);
 function valid(){return{status:'complete',errors:[],primaryError:null,sampleRate:48000,realtimeAudioContexts:1,mixerContextSame:true,warmDiagnostics:{contextCreateCount:1,contextTiming:{sampleRate:48000}},processorReady:{sampleRate:48000},startedFromTrustedWarmClick:true,
+  initialization:{acknowledged:true,confirmedByActualMetadata:true},
   bgm:{trusted:true,assetId:'music-v100-score-normal',voiceId:'voice-1'},effect:{trusted:true,assetId:'weapon-rifle-01',voiceId:'voice-2',firstInputFrame:1,latencyMs:15},
   pcm:[{}],pcmBytes:8192,packets:[{}],encodedBytes:10,finished:{status:'framed',snapshot:{partialFrames:0,acceptedFrames:1024}},inputFrames:1024,transportOverflow:0,peakEncoderQueue:1,peakPendingSegments:1,peakPendingBytes:100,
   events:[{event:'playing',ms:10,time:0}],playheads:[{ms:20,time:.02,encodedFrames:1024}],finalMedia:{muted:false,volume:1,time:1024/48000},content:{correlation:.99,rms:.1,peak:.4},cleanup:{completed:true}};}
 class Target{constructor(){this.listeners=new Map();}addEventListener(n,f){const set=this.listeners.get(n)??new Set();set.add(f);this.listeners.set(n,set);}removeEventListener(n,f){this.listeners.get(n)?.delete(f);}emit(n,event={}){for(const f of this.listeners.get(n)??[])f(event);}}
-function fakeEnvironment({rate=48000,playError=null,encoderQueue=0,omitConfig=false}={}){
+function fakeEnvironment({rate=48000,playError=null,encoderQueue=0,omitConfig=false,deferInitialization=false}={}){
   const env=new Target(),clock={now:0},sent=[],encoded=[],nodes=[];let currentSource,audio;
   env.performance={now:()=>clock.now};env.matchMedia=()=>Object.assign(new Target(),{matches:false});
   env.URL={createObjectURL:s=>{currentSource=s;return'blob:owned';},revokeObjectURL:()=>{env.revoked=true;}};
   const doc=new Target();doc.visibilityState='visible';doc.body={appendChild:a=>{audio=a;}};doc.createElement=()=>{const a=new Target();Object.assign(a,{currentTime:0,duration:NaN,ended:false,readyState:4,paused:true,volume:1,muted:false,src:'',setAttribute(){},removeAttribute(){this.src='';},remove(){this.removed=true;},load(){if(this.src)queueMicrotask(()=>{currentSource.readyState='open';currentSource.emit('sourceopen');});},play(){if(playError)return Promise.reject(playError);this.paused=false;this.emit('playing');return Promise.resolve();},pause(){this.paused=true;this.emit('pause');}});return a;};env.document=doc;
-  class Source extends Target{static isTypeSupported(){return true;}constructor(){super();this.readyState='closed';this.duration=NaN;}addSourceBuffer(){this.buffer=new Target();Object.assign(this.buffer,{updating:false,appendBuffer:()=>{this.buffer.updating=true;queueMicrotask(()=>{this.buffer.updating=false;this.buffer.emit('updateend');});}});return this.buffer;}endOfStream(){this.readyState='ended';audio.ended=true;}}
+  class Source extends Target{static isTypeSupported(){return true;}constructor(){super();this.readyState='closed';this.duration=NaN;}addSourceBuffer(){this.buffer=new Target();let appends=0;Object.assign(this.buffer,{updating:false,appendBuffer:()=>{this.buffer.updating=true;if(++appends===1&&deferInitialization)return;queueMicrotask(()=>{this.buffer.updating=false;this.buffer.emit('updateend');});}});return this.buffer;}endOfStream(){this.readyState='ended';audio.ended=true;}}
   env.MediaSource=Source;
   env.AudioData=class{constructor(options){Object.assign(this,options);this.copied=new Float32Array(options.data);}close(){this.closed=true;}};
   env.AudioEncoder=class{static async isConfigSupported(config){return{supported:true,config};}constructor(callbacks){this.callbacks=callbacks;this.state='unconfigured';this.encodeQueueSize=encoderQueue;this.count=0;}configure(config){this.config=config;this.state='configured';}encode(data){assert.equal(data.closed,undefined);encoded.push(data.copied);const index=this.count++,description=new Uint8Array(rate===48000?[0x11,0x90]:[0x12,0x10]);this.callbacks.output({byteLength:4,timestamp:data.timestamp,duration:Math.round(1024/rate*1e6),type:'key',copyTo:d=>d.set([1,2,3,index%256])},index===0&&!omitConfig?{decoderConfig:{codec:'mp4a.40.2',sampleRate:rate,numberOfChannels:2,description}}:{});}async flush(){}close(){this.state='closed';}};
   env.AudioWorkletNode=class{constructor(context,name,options){this.options=options;this.port={onmessage:null,close(){this.closed=true;},postMessage:(message,transfer)=>{const copy=structuredClone(message,{transfer});sent.push(copy);if(copy.type==='finish')queueMicrotask(()=>this.port.onmessage?.({data:{type:'pcm-finished',generation:1,status:'framed',snapshot:{partialFrames:0,acceptedFrames:encoded.length*1024}}}));}};nodes.push(this);}disconnect(){this.disconnected=true;}};
   const context={sampleRate:rate,currentTime:0,state:'suspended',audioWorklet:{async addModule(url){assert.match(url,/worklet/u);}},createGain(){return{connect:node=>{this.connected=node;},disconnect(){this.disconnected=true;}};}};
-  return{env,context,clock,sent,encoded,nodes,get audio(){return audio;},packet(index=0){const buffer=new ArrayBuffer(8192),values=new Float32Array(buffer);for(let i=0;i<values.length;i++)values[i]=Math.sin(i*.1)*.2;return{type:'pcm-packet',generation:1,id:index%4,packetIndex:index,sampleRate:rate,channels:2,numberOfFrames:1024,firstSourceFrame:65536+index*1024,timestampUs:Math.round(index*1024/rate*1e6),durationUs:Math.round((index+1)*1024/rate*1e6)-Math.round(index*1024/rate*1e6),buffer};}};
+  return{env,context,clock,sent,encoded,nodes,get audio(){return audio;},get source(){return currentSource;},completeInitialization(){currentSource.buffer.updating=false;currentSource.buffer.emit('updateend');},packet(index=0){const buffer=new ArrayBuffer(8192),values=new Float32Array(buffer);for(let i=0;i<values.length;i++)values[i]=Math.sin(i*.1)*.2;return{type:'pcm-packet',generation:1,id:index%4,packetIndex:index,sampleRate:rate,channels:2,numberOfFrames:1024,firstSourceFrame:65536+index*1024,timestampUs:Math.round(index*1024/rate*1e6),durationUs:Math.round((index+1)*1024/rate*1e6)-Math.round(index*1024/rate*1e6),buffer};}};
 }
 test('local Windows/Linux guards reject before repository/output/server/browser work',async()=>{
   for(const platform of ['win32','linux'])await assert.rejects(runGraphProbe({platform,env:{GITHUB_ACTIONS:'true',RUNNER_OS:'macOS',V177_GRAPH_EXPECTED_HEAD:'a'.repeat(40)},repo:'this-path-must-not-be-read'}),/Hosted macOS/u);
@@ -67,7 +68,8 @@ test('clock/result contract accepts the finite positive control only within its 
 const faults={startup:s=>s.events[0].ms=150.00001,lag:s=>s.playheads[0]={ms:200,time:.049,encodedFrames:9600},queued:s=>s.playheads[0]={ms:1,time:.001,encodedFrames:8192},effect:s=>s.effect.latencyMs=150.00001,
   fakeInput:s=>s.effect.trusted=false,wrongId:s=>s.effect.assetId='borrowed-rifle',missingVoice:s=>s.effect.voiceId=null,tail:s=>s.finished.status='partial-tail-retained-not-encoded',gap:s=>s.finished.snapshot.acceptedFrames=1025,
   overflow:s=>s.transportOverflow=1,encoderBacklog:s=>s.peakEncoderQueue=L.encoderQueue+1,mseBacklog:s=>s.peakPendingBytes=L.pendingBytes+1,cleanup:s=>s.cleanup.completed=false,
-  synthetic:s=>s.realtimeAudioContexts=0,mixerContext:s=>s.mixerContextSame=false,rate:s=>s.sampleRate=96000,missingRaw:s=>s.pcm=[],error:s=>s.primaryError='original failure',content:s=>s.content.correlation=.7};
+  synthetic:s=>s.realtimeAudioContexts=0,mixerContext:s=>s.mixerContextSame=false,rate:s=>s.sampleRate=96000,missingRaw:s=>s.pcm=[],error:s=>s.primaryError='original failure',content:s=>s.content.correlation=.7,
+  initializationAck:s=>s.initialization.acknowledged=false,unconfirmedMetadata:s=>s.initialization.confirmedByActualMetadata=false};
 for(const [name,mutate]of Object.entries(faults))test('fail-closed result fault '+name,()=>{const state=valid();mutate(state);assert.throws(()=>assertGraphObservation(state));});
 test('raw route construction serves original bytes with only the audioOutput factory replaced; no listening socket',async()=>{
   const bundle=await buildGraphRoutes(repo,{requireExactHead:false});for(const name of ['audioMixer.js','audioManifest.js','audioSession.js','endingAudioMix.js'])assert.ok(bundle.routes.get('/__v177-aac-graph/app/'+name).bytes.equals(await fs.readFile(path.join(repo,'app',name))));
@@ -109,7 +111,37 @@ test('proposal source keeps exact raw imports, trusted input, original cue APIs,
   for(const text of [page,driver])assert.doesNotMatch(text,/\beval\s*\(|new Function\s*\(/u);assert.match(page,/enableAcknowledgementTone:false/u);assert.match(page,/mixer\.play\('music-v100-score-normal'\)/u);assert.match(page,/mixer\.play\('weapon-rifle-01'\)/u);assert.match(page,/voice\.startedAt/u);assert.doesNotMatch(page,/setSettings\(|\.connect\(.*destination/u);
   assert.match(workflow,/workflow_dispatch/u);assert.doesNotMatch(workflow,/schedule:|npm run build|cancel-in-progress: true/u);assert.match(workflow,/timeout-minutes: 15/u);assert.match(workflow,/macos-15-intel/u);assert.match(driver,/record\.revision,'2359'/u);assert.match(driver,/assertGraphHostedPlatform\(platform,env\)/u);
 });
-test('actual output bounds an obstructed MSE append queue and retains the raw failing prefix',async()=>{const f=fakeEnvironment(),state=createGraphState(),output=await prepareGraphOutput(f.context,{state,workletUrl:'/actual-worklet.mjs',env:f.env});await output.api.prepare();for(let index=0;index<9;index++)f.nodes[0].port.onmessage({data:f.packet(index)});assert.match(state.primaryError,/MSE append queue exhausted/u);assert.equal(state.peakPendingSegments,8);assert.equal(state.pcm.length,9);assert.equal(state.packets.length,9);await output.cleanup();});
+test('actual output bounds an obstructed MSE append queue and retains the raw failing prefix',async()=>{const f=fakeEnvironment(),state=createGraphState(),output=await prepareGraphOutput(f.context,{state,workletUrl:'/actual-worklet.mjs',env:f.env});await output.api.prepare();for(let index=0;index<L.pendingSegments+2;index++)f.nodes[0].port.onmessage({data:f.packet(index)});assert.match(state.primaryError,/MSE append queue exhausted/u);assert.equal(state.peakPendingSegments,8);assert.equal(state.pcm.length,L.pendingSegments+2);assert.equal(state.packets.length,L.pendingSegments+2);await output.cleanup();});
+
+test('slow container initialization finishes before actual PCM starts, at both original native rates',async()=>{
+  for(const rate of [44100,48000]){
+    const f=fakeEnvironment({rate,deferInitialization:true}),state=createGraphState();
+    const pending=prepareGraphOutput(f.context,{state,workletUrl:'/actual-worklet.mjs',env:f.env});
+    await new Promise(resolve=>setImmediate(resolve));
+    assert.equal(f.source.buffer.updating,true);assert.equal(f.nodes.length,0);
+    assert.equal(f.encoded.length,0);assert.equal(state.inputFrames,0);assert.equal(state.startedAt,null);
+    assert.equal(state.peakPendingSegments,1);assert.equal(f.audio.paused,true);
+    f.clock.now=384;f.completeInitialization();const output=await pending;
+    assert.equal(state.initialization.acknowledged,true);assert.equal(state.initialization.acknowledgedAt,384);
+    assert.equal(state.initialization.confirmedByActualMetadata,false);assert.equal(f.nodes.length,1);
+    await output.api.prepare();assert.equal(state.startedAt,384);
+    for(let i=0;i<13;i++){
+      f.nodes[0].port.onmessage({data:f.packet(i)});await new Promise(resolve=>setImmediate(resolve));
+    }
+    assert.equal(state.inputFrames,13*1024);assert.equal(state.packets.length,13);
+    assert.equal(state.initialization.confirmedByActualMetadata,true);assert.equal(state.primaryError,null);
+    await output.cleanup();
+  }
+});
+
+test('an initialization error fails before any actual encoder input or Worklet starts',async()=>{
+  const f=fakeEnvironment({deferInitialization:true}),state=createGraphState();
+  const pending=prepareGraphOutput(f.context,{state,workletUrl:'/actual-worklet.mjs',env:f.env});
+  const rejected=assert.rejects(pending,/Native SourceBuffer error/u);
+  await new Promise(resolve=>setImmediate(resolve));f.source.buffer.emit('error');await rejected;
+  assert.equal(f.nodes.length,0);assert.equal(state.inputFrames,0);assert.equal(f.encoded.length,0);
+  assert.equal(state.cleanup.completed,true);assert.equal(f.env.revoked,true);
+});
 
 test('manual and selective PR bindings require actual exact candidate/event head before owned setup',()=>{
  const head='a'.repeat(40),manual={GITHUB_EVENT_NAME:'workflow_dispatch',V177_GRAPH_EXPECTED_HEAD:head};assert.equal(assertGraphEventBinding(manual,head).exact,true);

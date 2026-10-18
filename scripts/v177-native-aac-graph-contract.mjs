@@ -37,6 +37,7 @@ export function assertGraphObservation(state) {
   check(state.sampleRate>0&&state.sampleRate<65536,'Actual context rate is unsupported by the original muxer');check(state.realtimeAudioContexts===1,'Exactly one real AudioContext is required');
   check(state.mixerContextSame===true&&state.warmDiagnostics?.contextCreateCount===1&&state.warmDiagnostics?.contextTiming?.sampleRate===state.sampleRate,'Actual original mixer context identity/count/rate receipt missing');
   check(state.processorReady&&state.processorReady.sampleRate===state.sampleRate,'Actual processor ready/rate receipt missing');
+  check(state.initialization?.acknowledged&&state.initialization.confirmedByActualMetadata,'Prewarmed initialization was not acknowledged and confirmed by actual encoder metadata');
   check(state.startedFromTrustedWarmClick&&state.bgm?.trusted&&state.effect?.trusted,'Real trusted warm/BGM/rifle inputs missing');
   check(state.bgm.assetId==='music-v100-score-normal'&&state.effect.assetId==='weapon-rifle-01','Original source identities differ');
   check(state.bgm.voiceId&&state.effect.voiceId&&state.bgm.voiceId!==state.effect.voiceId,'Actual original mixer voice IDs missing');

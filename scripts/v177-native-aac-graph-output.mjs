@@ -2,6 +2,15 @@
 import {AacFragmentMuxer,normalizeAacDescription} from './v177-aac-fragment-muxer.mjs';
 import {GRAPH_LIMITS as L} from './v177-native-aac-graph-contract.mjs';
 const outputs=new WeakMap();
+function declaredAacDescription(config){
+  // Use the pinned muxer's AAC-LC parser to select the actual rate, without
+  // resampling or starting a second encoder/context to obtain an init header.
+  for(let index=0;index<15;index++){
+    const bits=(2<<11)|(index<<7)|(config.numberOfChannels<<3);
+    try{return normalizeAacDescription(Uint8Array.of(bits>>8,bits&255),config).asc;}catch{/* Try the next defined AAC rate. */}
+  }
+  throw new Error('Actual AAC-LC configuration cannot be initialized');
+}
 export function graphOutputForContext(context,options={}){const value=outputs.get(context);if(!value)throw new Error('Experimental output was not prewarmed for this exact context');value.configureOwner(options);return value.api;}
 export function createGraphState(){return{schema:'v177-real-audio-graph-observation/v1',status:'preparing',route:'MediaSource',variant:'one-prewarmed-original-mixer-bgm-rifle',sampleRate:null,channels:2,realtimeAudioContexts:0,
   startedAt:null,inputFrames:0,pcmBytes:0,encodedBytes:0,muxedBytes:0,pcm:[],packets:[],configurations:[],playheads:[],events:[],transport:[],transportOverflow:0,
@@ -11,12 +20,12 @@ export async function prepareGraphOutput(context,{state=createGraphState(),workl
   const now=()=>env.performance.now(),check=(ok,message)=>{if(!ok)throw new Error(message);};
   state.sampleRate=context.sampleRate;check(Number.isSafeInteger(state.sampleRate)&&state.sampleRate>=8000&&state.sampleRate<65536,'Actual context.sampleRate is unsupported; no resampling is permitted');
   let audio,source,buffer,encoder,node,input,url,owner={},desired=false,disposed=false,away=false,generation=1,pendingPlay=null,muxer,ended=false,originFrame=null,appendBytes=0;
-  const pending=[],pcmParts=[],encodedParts=[],muxedParts=[],removers=[];let finishedResolve,finishedReject;
+  const pending=[],pcmParts=[],encodedParts=[],muxedParts=[],removers=[];let finishedResolve,finishedReject,initializationReject;
   const finished=new Promise((resolve,reject)=>{finishedResolve=resolve;finishedReject=reject;});void finished.catch(()=>{});
   const ms=()=>state.startedAt===null?null:now()-state.startedAt;
-  function fail(error){const text=error instanceof Error?error.stack??String(error):String(error);state.primaryError??=text;if(state.errors.length<16)state.errors.push(text);state.status='failed';finishedReject(error instanceof Error?error:new Error(text));}
+  function fail(error){const text=error instanceof Error?error.stack??String(error):String(error);state.primaryError??=text;if(state.errors.length<16)state.errors.push(text);state.status='failed';initializationReject?.(error instanceof Error?error:new Error(text));finishedReject(error instanceof Error?error:new Error(text));}
   function record(event,extra={}){if(state.transport.length>=L.transportEvents){state.transportOverflow++;fail(new Error('Bounded transport event capacity exhausted'));return;}state.transport.push({event,at:now(),ms:ms(),contextTime:context.currentTime,mediaTime:audio?.currentTime??null,encodeQueue:encoder?.encodeQueueSize??null,pendingSegments:pending.length,pendingBytes:appendBytes,...extra});}
-  const on=(target,name,fn)=>{target.addEventListener(name,fn);removers.push(()=>target.removeEventListener(name,fn));};
+  const on=(target,name,fn)=>{target.addEventListener(name,fn);const remove=()=>target.removeEventListener(name,fn);removers.push(remove);return remove;};
   const rotation=env.matchMedia?.('(orientation: portrait)');
   const allowed=()=>!disposed&&!away&&env.document.visibilityState!=='hidden'&&!rotation?.matches&&(owner.canPlay?.()??true);
   function pause(){desired=false;generation++;audio?.pause();if(state.startedAt!==null&&!disposed)fail(new Error('Observation was interrupted; recovery is outside this single prewarmed case'));}
@@ -69,14 +78,28 @@ export async function prepareGraphOutput(context,{state=createGraphState(),workl
     url=env.URL.createObjectURL(source);audio.src=url;audio.load();await within(opened,L.readyMs,'MSE source open');
     state.durationInitialization={before:Number.isFinite(source.duration)?source.duration:String(source.duration),assignedInfinity:false};
     buffer=source.addSourceBuffer(mime);on(buffer,'updateend',()=>{record('updateend');drain();});on(buffer,'error',()=>fail(new Error('Native SourceBuffer error')));
+    // Complete container initialization before the trusted warm click starts
+    // actual PCM. Previously its first slow updateend filled the eight-segment
+    // queue with real encoder output before playback could become ready.
+    const description=declaredAacDescription(config);muxer=new AacFragmentMuxer(description,config);state.asc=Array.from(description);
+    state.initialization={requestedAt:now(),acknowledged:false,confirmedByActualMetadata:false,audioFrames:0};
+    let removeInitialized;
+    const initialized=new Promise((resolve,reject)=>{
+      initializationReject=reject;
+      removeInitialized=on(buffer,'updateend',()=>{state.initialization.acknowledged=true;state.initialization.acknowledgedAt=now();resolve();});
+    });
+    retainMuxed(muxer.initializationSegment);
+    try{await within(initialized,L.readyMs,'MSE initialization');}
+    finally{initializationReject=null;removeInitialized();}
     encoder=new env.AudioEncoder({error:fail,output:(chunk,metadata)=>{
       // Keep raw encoded bytes/configuration before parsing or mux validation.
       try{
         const bytes=new Uint8Array(chunk.byteLength);chunk.copyTo(bytes);check(state.encodedBytes+bytes.byteLength<=L.encodedBytes&&state.packets.length<L.pcmPackets+4,'Bounded native AAC evidence capacity exhausted');
         encodedParts.push(bytes);state.encodedBytes+=bytes.byteLength;const ordinal=state.packets.length;state.packets.push({timestamp:chunk.timestamp,duration:chunk.duration,type:chunk.type,bytes:bytes.byteLength,offset:state.encodedBytes-bytes.byteLength,atMs:ms()});
         const c=metadata?.decoderConfig;if(c){const description=Array.from(new Uint8Array(c.description??[])),saved={codec:c.codec,sampleRate:c.sampleRate,numberOfChannels:c.numberOfChannels,description,packet:ordinal};state.configurations.push(saved);const normalized=normalizeAacDescription(description,c);
-          if(!muxer){check(c.sampleRate===state.sampleRate&&c.numberOfChannels===2,'Actual AAC configuration differs from Worklet PCM');muxer=new AacFragmentMuxer(description,c);state.asc=Array.from(normalized.asc);retainMuxed(muxer.initializationSegment);}else check(description.length>0&&normalized.asc.every((b,i)=>b===state.asc[i]),'Native AAC configuration changed');}
-        check(muxer,'Native encoder omitted decoder configuration');check(Math.abs(chunk.timestamp-Math.round(ordinal*1024/state.sampleRate*1e6))<=1,'Native AAC packet clock gap or priming representation unsupported');
+          check(c.sampleRate===state.sampleRate&&c.numberOfChannels===2,'Actual AAC configuration differs from Worklet PCM');
+          check(description.length>0&&normalized.asc.every((b,i)=>b===state.asc[i]),'Native AAC configuration changed');state.initialization.confirmedByActualMetadata=true;}
+        check(state.initialization.confirmedByActualMetadata,'Native encoder omitted decoder configuration');check(Math.abs(chunk.timestamp-Math.round(ordinal*1024/state.sampleRate*1e6))<=1,'Native AAC packet clock gap or priming representation unsupported');
         check(chunk.duration!==null&&Math.abs(chunk.duration-1024/state.sampleRate*1e6)<=1,'Native AAC duration is not1024 actual-rate samples');
         retainMuxed(muxer.segment([{data:bytes,timestampSamples:ordinal*1024,durationSamples:1024}]));
       }catch(error){fail(error);}
