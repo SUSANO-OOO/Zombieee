@@ -373,6 +373,7 @@ jobs:
           V100_NORMAL_PLAY_ENGINE: ${{ matrix.engine }}
           V100_NORMAL_PLAY_STAGE_LIMIT: "3"
           V100_NORMAL_PLAY_EVIDENCE_DIR: outputs/v177-normal-campaign-diagnostic-${{ matrix.engine }}
+          V177_S25_FIRE_INPUT_COMPARISON: ${{ matrix.engine == 'chromium' && '1' || '0' }}
         run: node scripts/run-browser-qa-with-server.mjs scripts/v177-representative-normal-play.mjs
       - name: Mark diagnostic scope without promoting the original result
         if: always()

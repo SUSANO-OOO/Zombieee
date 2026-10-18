@@ -39,8 +39,28 @@ export async function nativeBattleTap(page,locator,phases=[]){
   if(!state?.point)return false;await orderedNativePointer(page,state.point,phases);return true;
 }
 
-export async function normalTacticalInput(page,record,{observeSnapshot,frameOwner,observeFrameChunk,rangerDrawObservation=false,barrageWhenOverwhelmed=false,barrageEnabled=true,airstrikeAfterSeconds=0,bossAirstrikePriority=false,reserveSecondAirstrikeForBoss=false,holdRedeploymentUntilBoss=false}={}){
-  const observed=await page.evaluate(({owner,rangerDrawObservation})=>{
+// This opt-in S25 comparison changes only the order of ordinary card taps.
+// Actor observations, not pointer requests, satisfy the one-per-kind trial.
+export function s25FireDeploymentPriorities(snapshot, observedHumans, baseline) {
+  const controls=snapshot?.s25DeploymentObservation;
+  if(!controls||!Array.isArray(observedHumans))throw new Error('S25 comparison requires actual deployment observations');
+  const queued=controls.queuedKinds;
+  if(!Array.isArray(queued)||queued.some(kind=>typeof kind!=='string'))throw new Error('S25 comparison requires the original queue kinds');
+  const humans=snapshot.fighters.filter(f=>f.side==='human'&&f.hp>0);
+  if(!humans.some(f=>f.kind==='guardian')&&!queued.includes('guardian'))return ['guardian'];
+  if(!observedHumans.some(f=>f.kind==='medic'))return queued.includes('medic')?[]:['medic'];
+  const missing=['raider','tatara','zakimiya'].filter(kind=>!observedHumans.some(f=>f.kind===kind));
+  if(!missing.length)return baseline;
+  const next=missing.find(kind=>!queued.includes(kind)&&controls.cards.filter(card=>card.kind===kind).length===1
+    &&controls.cards.some(card=>card.kind===kind&&!card.disabled&&card.ariaDisabled!=='true'));
+  // Reserve command while all missing fire cards are blocked. Their real cost,
+  // cooldown, capacity, hit test and the final native tap remain production-owned.
+  return next?[next]:[];
+}
+
+export async function normalTacticalInput(page,record,{observeSnapshot,frameOwner,observeFrameChunk,rangerDrawObservation=false,s25DeploymentObservation=false,s25FireComparison=false,barrageWhenOverwhelmed=false,barrageEnabled=true,airstrikeAfterSeconds=0,bossAirstrikePriority=false,reserveSecondAirstrikeForBoss=false,holdRedeploymentUntilBoss=false}={}){
+  if(s25FireComparison&&(record.number!==25||!s25DeploymentObservation))throw new Error('S25 fire input is opt-in and Stage 25 only');
+  const observed=await page.evaluate(({owner,rangerDrawObservation,s25DeploymentObservation})=>{
     const s=window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();const snapshot=!s?null:{time:s.time,running:s.running,over:s.over,won:s.won,baseHp:s.baseHp,baseMaxHp:s.baseMaxHp,energy:s.energy,supportGauge:s.supportGauge,airstrike:s.airstrike,objective:s.objective,escortMissionObject:s.escortMissionObject,deployQueue:s.deployQueue?.map(f=>({kind:f.kind})),fighters:s.fighters.map(f=>({id:f.id,kind:f.kind,side:f.side,hp:f.hp,maxHp:f.maxHp,x:f.x,y:f.y,lane:f.lane,range:f.range,combatReady:f.combatReady}))};
     if(snapshot&&rangerDrawObservation)snapshot.rangerDraws={readAt:performance.now(),simulationTime:s.time,
       actors:s.fighters.filter(f=>f.kind==='ranger'&&f.side==='human'&&f.hp>0).map(f=>({id:f.id,kind:f.kind,side:f.side,hp:f.hp,maxHp:f.maxHp,x:f.x,y:f.y,lane:f.lane,
@@ -49,8 +69,16 @@ export async function normalTacticalInput(page,record,{observeSnapshot,frameOwne
           renderWidth:f.renderAudit.renderWidth,renderHeight:f.renderAudit.renderHeight,jointPaintedAt:f.renderAudit.jointPaintedAt,
           jointAtlasPath:f.renderAudit.jointAtlasPath,jointDrawSucceeded:f.renderAudit.jointDrawSucceeded,
           jointWeightedLowerDrawSucceeded:f.renderAudit.jointWeightedLowerDrawSucceeded,jointWeightedLower:f.renderAudit.jointWeightedLower}:f.renderAudit}))};
+    if(snapshot&&s25DeploymentObservation)snapshot.s25DeploymentObservation={readAt:performance.now(),simulationTime:s.time,
+      queuedKinds:[...(s.deployQueue??[])],deployCooldowns:{...s.deployCooldowns},
+      cards:[...document.querySelectorAll('button.unit-card[data-kind]')].map(el=>({kind:el.dataset.kind,slot:el.dataset.slotIndex,
+        disabled:el.disabled,ariaDisabled:el.getAttribute('aria-disabled'),state:el.dataset.state,blockReason:el.dataset.blockReason,
+        costText:el.querySelector('.cost')?.textContent??null,ariaLabel:el.getAttribute('aria-label')})),
+      support:[...document.querySelectorAll('button.support-btn')].map(el=>({supportId:el.dataset.supportId??null,
+        className:el.className,disabled:el.disabled,ariaDisabled:el.getAttribute('aria-disabled'),state:el.dataset.state,
+        cooldown:el.dataset.cooldown??null,ariaLabel:el.getAttribute('aria-label')}))};
     return owner?{snapshot,frames:globalThis.__V177_READ_NORMAL_FRAMES__?.(owner,'drain')??null}:snapshot;
-  },{owner:frameOwner??null,rangerDrawObservation});
+  },{owner:frameOwner??null,rangerDrawObservation,s25DeploymentObservation});
   const s=frameOwner?observed?.snapshot:observed;
   if(frameOwner)await observeFrameChunk?.(observed?.frames);
   observeSnapshot?.(s);
@@ -95,7 +123,7 @@ export async function normalTacticalInput(page,record,{observeSnapshot,frameOwne
   // only precision attacker. Ordinary campaign runs keep their established
   // stage-dependent role order.
   const bossPrecision = record.tacticalProfile==='boss-precision';
-  const priorities = earlyCampaign&&!bossPrecision ? earlyPriorities : latePriorities;
+  const priorities = s25FireComparison ? s25FireDeploymentPriorities(s, record.s25ObservedHumans, earlyCampaign&&!bossPrecision ? earlyPriorities : latePriorities) : earlyCampaign&&!bossPrecision ? earlyPriorities : latePriorities;
   record.tacticalProfile ??= earlyCampaign ? 'early-roles' : 'late-precision';
   const deployedKinds=new Set(record.inputs.filter(input=>input.action==='deploy').map(input=>input.kind));
   const holdRedeployment=holdRedeploymentUntilBoss&&kinds.every(kind=>deployedKinds.has(kind))&&!record.boss;

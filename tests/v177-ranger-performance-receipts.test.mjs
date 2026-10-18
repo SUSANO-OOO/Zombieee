@@ -70,5 +70,7 @@ test('the actual device projection retains raw receipts and all original window,
   const project=new Function('bossKind','return '+declaration(ast,'snapshotProjection').getText(ast))('mugarian-president-mutated'),row={...samples()[0],fighters:[]};
   assert.equal(project(row).rangerDraws,row.rangerDraws);delete row.rangerDraws;assert.equal(Object.hasOwn(project(row),'rangerDraws'),false);
   const tactical=read('scripts/v100-normal-tactical-input.mjs'),oldTactical=execFileSync('git',['show','207e19bd33e6ce62895c615dedaa816ae469d70c:scripts/v100-normal-tactical-input.mjs'],{encoding:'utf8'}).replaceAll('\r\n','\n'),marker='  observeSnapshot?.(s);';
-  assert.equal(tactical.slice(tactical.indexOf(marker)),oldTactical.slice(oldTactical.indexOf(marker)));
+  const s25Only="s25FireComparison ? s25FireDeploymentPriorities(s, record.s25ObservedHumans, earlyCampaign&&!bossPrecision ? earlyPriorities : latePriorities) : earlyCampaign&&!bossPrecision ? earlyPriorities : latePriorities";
+  assert.equal(tactical.split(s25Only).length,2,'only the one explicit S25 branch is exempt');
+  assert.equal(tactical.slice(tactical.indexOf(marker)).replace(s25Only,"earlyCampaign&&!bossPrecision ? earlyPriorities : latePriorities"),oldTactical.slice(oldTactical.indexOf(marker)),'all baseline tactical policy remains exact');
 });

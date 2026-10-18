@@ -139,7 +139,9 @@ test('a stalled stop read is bounded, retains partial evidence and cannot replac
 test('the actual tactical read keeps the original snapshot and all input policy while timing travels in the same RPC',async()=>{
   const old=execFileSync('git',['show','226ccec9e257d8052ce9ed861f16620d3be4765d:scripts/v100-normal-tactical-input.mjs'],{encoding:'utf8'}).replaceAll('\r\n','\n'),
     current=(await readFile('scripts/v100-normal-tactical-input.mjs','utf8')).replaceAll('\r\n','\n'),marker='  observeSnapshot?.(s);';
-  assert.equal(current.slice(current.indexOf(marker)),old.slice(old.indexOf(marker)),'all tactical controls after the read must stay exact');
+  const s25Only="s25FireComparison ? s25FireDeploymentPriorities(s, record.s25ObservedHumans, earlyCampaign&&!bossPrecision ? earlyPriorities : latePriorities) : earlyCampaign&&!bossPrecision ? earlyPriorities : latePriorities";
+  assert.equal(current.split(s25Only).length,2,'only the one explicit S25 branch is exempt');
+  assert.equal(current.slice(current.indexOf(marker)).replace(s25Only,"earlyCampaign&&!bossPrecision ? earlyPriorities : latePriorities"),old.slice(old.indexOf(marker)),'all baseline tactical policy remains exact');
   const ast=ts.createSourceFile('old.mjs',old,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);
   const declaration=ast.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==='normalTacticalInput');
   const first=declaration.body.statements[0].declarationList.declarations[0].initializer.expression.arguments[0].getText(ast);

@@ -93,11 +93,21 @@ export async function runBrowserQa() {
   const scope = representativeNormalPlayScopeWithExit({childCode, candidateSha: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), engine: process.env.V100_NORMAL_PLAY_ENGINE, reportBytes });
   await writeFile(path.join(directory, 'representative-scope.json'), JSON.stringify(scope, null, 2) + '\n');
   console.log(JSON.stringify(scope));
+  const fireComparison=process.env.V177_S25_FIRE_INPUT_COMPARISON==='1';
+  if(fireComparison)assert.equal(process.env.V100_NORMAL_PLAY_ENGINE,'chromium','one S25 comparison on the Chromium diagnostic only');
+  const representativeEnv=fireComparison?{...process.env,V177_S25_DEPLOY_OBSERVATION:'1'}:process.env;
   const representativeCode = await new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, [path.resolve('scripts/v177-representative-battles.mjs')], { stdio: 'inherit', env: process.env });
+    const child = spawn(process.execPath, [path.resolve('scripts/v177-representative-battles.mjs')], { stdio: 'inherit', env: representativeEnv });
     child.on('error', reject); child.on('exit', resolve);
   });
   assert.equal(representativeCode, 0, 'independent middle/late observations retain all technical failure controls');
+  if(fireComparison){
+    const comparisonCode=await new Promise((resolve,reject)=>{
+      const child=spawn(process.execPath,[path.resolve('scripts/v177-representative-battles.mjs')],{stdio:'inherit',env:{...representativeEnv,V177_REPRESENTATIVE_INPUT_CASE:'s25-fire-before-repeat-medic'}});
+      child.on('error',reject);child.on('exit',resolve);
+    });
+    assert.equal(comparisonCode,0,'S25 input comparison retains every technical control and requires actual IDs; no win prerequisite');
+  }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
