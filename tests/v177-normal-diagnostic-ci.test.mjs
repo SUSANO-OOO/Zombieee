@@ -26,11 +26,17 @@ function assertDiagnostic(job) {
   const play = job.steps.find(s => s.run?.includes('v177-representative-normal-play.mjs'));
   assert.equal(play.env.V100_NORMAL_PLAY_EVIDENCE_DIR, directory);
   assert.equal(play.env.V100_NORMAL_PLAY_STAGE_LIMIT, '3');
+  assert.equal(play.env.V177_S25_FIRE_INPUT_COMPARISON, "${{ matrix.engine == 'chromium' && '1' || '0' }}",
+    'only the explicit Chromium diagnostic adds the S25 input comparison');
   assert.equal(job.steps.at(-1).with.name, 'v177-normal-campaign-diagnostic-${{ matrix.engine }}');
   assert.equal(job.steps.at(-1).with.path, directory);
   const actual = structuredClone(job), expected = structuredClone(required);
   delete actual.name;delete actual.if;delete expected.name;
   actual.steps = actual.steps.filter(s => s.run !== 'node scripts/v177-normal-diagnostic-scope.mjs');
+  const comparison = actual.steps.find(s => s.run?.includes('v177-representative-normal-play.mjs'));
+  const baseline = expected.steps.find(s => s.run?.includes('v177-representative-normal-play.mjs'));
+  assert.equal(Object.hasOwn(baseline.env, 'V177_S25_FIRE_INPUT_COMPARISON'), false, 'original normal-play baseline remains unchanged');
+  delete comparison.env.V177_S25_FIRE_INPUT_COMPARISON;
   actual.steps = JSON.parse(JSON.stringify(actual.steps).replaceAll('v177-normal-campaign-diagnostic-', 'v177-normal-campaign-'));
   assert.deepEqual(actual, expected, 'all checkout/build/engines/route/240min/no-retry/artifact controls remain the original normal-play controls');
 }
@@ -39,6 +45,8 @@ test('diagnostic normal play keeps the bounded observation and all technical fai
   assertDiagnostic(jobs['v177-normal-campaign-diagnostic']);
   for (const mutate of [
     j => j.needs.pop(),
+    j => { delete j.steps.find(s => s.run?.includes('v177-representative-normal-play.mjs')).env.V177_S25_FIRE_INPUT_COMPARISON; },
+    j => { j.steps.find(s => s.run?.includes('v177-representative-normal-play.mjs')).env.V177_S25_FIRE_INPUT_COMPARISON = '1'; },
     j => { j['continue-on-error'] = true; },
     j => { j['timeout-minutes'] += 1; },
     j => j.strategy.matrix.include.pop(),
