@@ -31,8 +31,13 @@ export function configureV177BornTurnedContinuation(world,{proofId,phase},deps){
   if(!Object.values(original).every(Number.isFinite))throw Error('Original newborn stats must be finite');
   // Spawn ONLY the controlled human opponent. The born actor remains in-world.
   const actorStateBefore=JSON.stringify(actor);
-  const targetLane=actor.lane;
-  if(!Number.isInteger(targetLane)||targetLane<0||targetLane>2||typeof deps.laneYFor!=='function')
+  // During engage the real newborn can still be crossing toward its already
+  // committed route. Stage the inert target on that route without steering
+  // the actor. The original move/attack placements remain on its physical lane.
+  const targetLane=phase==='engage'
+    ?(actor.navigationRecovery?.recoveryLane??actor.anchorLane??actor.lane):actor.lane;
+  if(!Number.isInteger(actor.lane)||actor.lane<0||actor.lane>2
+    ||!Number.isInteger(targetLane)||targetLane<0||targetLane>2||typeof deps.laneYFor!=='function')
     throw Error('Current born lane center resolver is required');
   const targetY=deps.laneYFor(targetLane);
   if(!Number.isFinite(targetY))throw Error('Current born lane center must be finite');
@@ -45,8 +50,8 @@ export function configureV177BornTurnedContinuation(world,{proofId,phase},deps){
   // Do not reset this real newborn's cooldown, action, target, gait or position.
   target.x=actor.x-(phase==='move'?Math.max(250,actor.speed*5):phase==='engage'
     ?reach+approachDistance:Math.max(12,Math.min(40,actor.range*.45)));
-  // The real newborn may still be between lane centers. Only the inert
-  // target is aligned; read the App's CURRENT geometry, not a static/jittered Y.
+  // Only the inert target is aligned; read the App's CURRENT geometry,
+  // not a static/jittered Y.
   target.y=targetY;target.lane=targetLane;target.anchorLane=targetLane;
   target.combatReady=true;target.gateEntering=false;target.spawnGrace=0;target.entryRampCleared=true;
   target.speed=0;target.laneSpeed=0;target.damage=0;target.cooldown=99;target.abilityCooldown=999;

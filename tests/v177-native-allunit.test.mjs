@@ -5,6 +5,7 @@ import vm from 'node:vm';
 import {load as loadYaml} from 'js-yaml';
 import {spriteKinds} from '../app/spriteManifest.js';
 import {normalAttackReach,canAcquireCombatTarget,canNormalAttackTarget} from '../app/combatLifecycle.js';
+import {chooseCommittedEnemyLane} from '../app/lanePlanner.js';
 import {createMayoFeralProofOwner} from '../app/v177NativeMayoProof.js';
 import {createCombatAnimationRuntime,advanceCombatAnimationRuntime} from '../app/combatPresentation.js';
 import {createBattleDefinition} from '../app/battleDefinitions.js';
@@ -285,11 +286,11 @@ test('workflow keeps exact head, independent twelve shards and original owned bu
 });
 
 
-function bornLaneTargetFixture({phase='engage',lane=1,laneYFor}={}){
+function bornLaneTargetFixture({phase='engage',lane=1,anchorLane=0,recoveryLane=null,actorX=608.5,laneYFor}={}){
  const actor={id:12,kind:'turned',side:'zombie',hp:95,maxHp:95,speed:18,laneSpeed:38,damage:18,range:25,
-  attackEvery:.88,spawnGrace:0,flash:0,stunned:0,knock:0,x:608.5,y:288.16666666666663,lane,anchorLane:0,bodyRadius:11,
+  attackEvery:.88,spawnGrace:0,flash:0,stunned:0,knock:0,x:actorX,y:288.16666666666663,lane,anchorLane,bodyRadius:11,
   cooldown:.37,abilityCooldown:2.5,attackSequence:4,targetId:null,nextLaneDecisionAt:77.62,
-  navigationRecovery:{recoveryLane:null,elapsed:.37},animationPresentation:{locomotionPhase:12.3,locomotionTravelDistance:3.7}};
+  navigationRecovery:{recoveryLane,elapsed:.37},animationPresentation:{locomotionPhase:12.3,locomotionTravelDistance:3.7}};
  const birth={actorId:12,corpseId:11,bornAt:76.8,initialRemaining:.75,source:{sourceBound:true,recordedAfterPaint:true}};
  const world={time:77.8,battleAudioGeneration:7,running:true,paused:false,over:false,fighters:[actor]};
  const source={released:true,proofId:'7:turned-getup:11',battleGeneration:7,time:77.8,actorId:12,corpseId:11,
@@ -301,20 +302,54 @@ function bornLaneTargetFixture({phase='engage',lane=1,laneYFor}={}){
  return{world,actor,source,deps,phase,get spawned(){return spawned;},
   run:()=>configureV177BornTurnedContinuation(world,{proofId:source.proofId,phase},deps)};
 }
-test('born continuation aligns only the inert target to the synchronously current App lane center',()=>{
+test('born continuation aligns only the inert target to its current route or physical App lane center',()=>{
  for(const phase of ['move','attack','engage'])for(const lane of [0,1,2]){
   let centers=[400,480,560];const seen=[];
   const f=bornLaneTargetFixture({phase,lane,laneYFor:n=>{seen.push(n);return centers[n];}});
   const before=structuredClone(f.actor),time=f.world.time;
   centers=[413,497,581]; // Deliberately unlike static gameRules or a cached value.
   const proof=f.run(),target=f.world.fighters[1];
-  assert.deepEqual(seen,[lane]);assert.equal(target.y,centers[lane]);
-  assert.equal(target.lane,lane);assert.equal(target.anchorLane,lane);
-  assert.equal(proof.initial.targetY,centers[lane]);assert.equal(proof.initial.targetLane,lane);
+  const expectedLane=phase==='engage'?0:lane; // This actor already committed to route0.
+  assert.deepEqual(seen,[expectedLane]);assert.equal(target.y,centers[expectedLane]);
+  assert.equal(target.lane,expectedLane);assert.equal(target.anchorLane,expectedLane);
+  assert.equal(proof.initial.targetY,centers[expectedLane]);assert.equal(proof.initial.targetLane,expectedLane);
   assert.equal(proof.initial.actorY,before.y);assert.equal(target.hp,1_000_000);
   assert.equal(target.speed,0);assert.equal(target.laneSpeed,0);assert.equal(target.damage,0);
   assert.equal(proof.fighterId,before.id);assert.equal(f.world.fighters[0],f.actor);
   assert.deepEqual(f.actor,before);assert.equal(f.world.time,time);assert.equal(f.world.paused,false);
+ }
+});
+
+test('real committed-lane and melee rules reproduce the born engage miss without changing the actor route or stats',()=>{
+ // Original native last samples in desktop/phone geometry: the target remained
+ // in lane1 while the born actor reached its source-bound committed route0.
+ for(const {centers,actorX,targetX,x,y} of [{centers:[212,282,352],actorX:607.9,targetX:543.1,x:505.9000000000146,y:213.60000000000082},
+  {centers:[240,285,325],actorX:608.2,targetX:543.4,x:505.6000000000146,y:241.93333333333385}]){
+  const f=bornLaneTargetFixture({actorX,laneYFor:n=>centers[n]}),before=structuredClone(f.actor),time=f.world.time;
+  const decision=chooseCommittedEnemyLane({currentLane:f.actor.anchorLane,physicalLane:f.actor.lane,
+   x:f.actor.x,y:f.actor.y,laneCenters:centers,routeCosts:[4,80009,0],now:time,nextLaneDecisionAt:f.actor.nextLaneDecisionAt,hasTarget:true});
+  assert.equal(decision.committedLane,0);assert.equal(decision.reason,'engaged');
+  const proof=f.run(),target=f.world.fighters[1],liveActor={...f.actor,x,y,lane:0,combatReady:true};
+  assert.ok(Math.abs(target.x-targetX)<1e-8,'retain the original native target X');
+  const oldPhysicalTarget={...target,y:centers[1],lane:1,anchorLane:1};
+  assert.equal(canAcquireCombatTarget({attacker:liveActor,target:oldPhysicalTarget}),false,'retain the original cross-lane miss');
+  assert.equal(canAcquireCombatTarget({attacker:liveActor,target}),true);
+  assert.equal(canNormalAttackTarget({attacker:liveActor,target}),true,'the same original native position can strike on its existing route');
+  assert.equal(proof.initial.targetLane,decision.committedLane);assert.equal(proof.engagement.productionAttackReach,normalAttackReach(f.actor,target));
+  assert.equal(target.hp,1_000_000);assert.equal(target.cooldown,99);assert.deepEqual(f.actor,before);assert.equal(f.world.time,time);
+ }
+});
+
+test('born engage follows existing recovery then committed route, while move and attack keep their physical placements',()=>{
+ for(const setup of [{anchorLane:0,recoveryLane:2,expected:2},{anchorLane:2,recoveryLane:null,expected:2},
+  {anchorLane:null,recoveryLane:null,expected:1}])for(const phase of ['move','attack','engage']){
+  const centers=[212,282,352],f=bornLaneTargetFixture({...setup,phase,laneYFor:n=>centers[n]}),before=structuredClone(f.actor),time=f.world.time;
+  const result=f.run(),target=f.world.fighters[1];assert.equal(target.lane,phase==='engage'?setup.expected:1);
+  assert.equal(result.initial.targetLane,target.lane);assert.equal(target.y,centers[target.lane]);assert.deepEqual(f.actor,before);assert.equal(f.world.time,time);
+ }
+ for(const setup of [{anchorLane:3},{recoveryLane:-1},{recoveryLane:.5},{recoveryLane:NaN}]){
+  const f=bornLaneTargetFixture({...setup,laneYFor:()=>282}),before=structuredClone(f.actor);
+  assert.throws(f.run,/lane center resolver/u);assert.equal(f.spawned,0);assert.deepEqual(f.actor,before);assert.equal(f.world.time,77.8);
  }
 });
 test('missing/nonfinite current lane resolver fails before spawning and never falls back to transient actor Y',()=>{
