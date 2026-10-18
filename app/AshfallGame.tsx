@@ -14006,6 +14006,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           operationId: g.definition.operationId,
           operationCategory: g.definition.operationCategory,
           time: g.time,
+          rangerRenderObservation: {renderSequence:fighterRenderSequence,simulationTime:g.time,battleAudioGeneration:g.battleAudioGeneration},
           phase: g.phase,
           objective: objectiveForBattle(g.definition, g),
           formationKinds: [...g.formationKinds],
@@ -14332,6 +14333,14 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       },
       getPerformanceSnapshot: () => ({
         ...runtimePerformanceRef.current,
+        rangerDrawBoundary: {renderSequence:fighterRenderSequence,simulationTime:gameRef.current.time,
+          battleAudioGeneration:gameRef.current.battleAudioGeneration,
+          actors:gameRef.current.fighters.filter(f=>f.kind==='ranger'&&f.side==='human'&&f.hp>0).map(f=>{
+            const tail=fighterRenderAuditHistory.get(f.id)?.at(-1);
+            return {id:f.id,renderSequence:tail?.renderSequence??null,jointPaintedAt:tail?.jointPaintedAt??null,
+              objectTailSame:Boolean(tail&&fighterRenderAudit.get(f)===tail),
+              worldWeightedLower:v177RenderedWeightedLowerReceipt(f,gameRef.current)};
+          })},
         imageSamplingCache: v100ImageSampler.snapshot(),
         shotLayer: v100ShotLayer.snapshot(),
         graphicsProfile: { ...graphicsProfileRef.current },

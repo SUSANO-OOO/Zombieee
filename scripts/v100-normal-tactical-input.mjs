@@ -63,12 +63,14 @@ export async function normalTacticalInput(page,record,{observeSnapshot,frameOwne
   const observed=await page.evaluate(({owner,rangerDrawObservation,s25DeploymentObservation})=>{
     const s=window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();const snapshot=!s?null:{time:s.time,running:s.running,over:s.over,won:s.won,baseHp:s.baseHp,baseMaxHp:s.baseMaxHp,energy:s.energy,supportGauge:s.supportGauge,airstrike:s.airstrike,objective:s.objective,escortMissionObject:s.escortMissionObject,deployQueue:s.deployQueue?.map(f=>({kind:f.kind})),fighters:s.fighters.map(f=>({id:f.id,kind:f.kind,side:f.side,hp:f.hp,maxHp:f.maxHp,x:f.x,y:f.y,lane:f.lane,range:f.range,combatReady:f.combatReady}))};
     if(snapshot&&rangerDrawObservation)snapshot.rangerDraws={readAt:performance.now(),simulationTime:s.time,
+      renderBoundary:s.rangerRenderObservation??null,
+      measurementStart:{startedAt:window.__V100_DEVICE_RAF__?.startedAt,active:window.__V100_DEVICE_RAF__?.active===true,
+        boundary:window.__V100_DEVICE_RAF__?.performanceBefore?.rangerDrawBoundary??null},
       actors:s.fighters.filter(f=>f.kind==='ranger'&&f.side==='human'&&f.hp>0).map(f=>({id:f.id,kind:f.kind,side:f.side,hp:f.hp,maxHp:f.maxHp,x:f.x,y:f.y,lane:f.lane,
         speed:f.speed,laneSpeed:f.laneSpeed,damage:f.damage,range:f.range,attackEvery:f.attackEvery,
-        render:f.renderAudit?{renderSequence:f.renderAudit.renderSequence,renderKind:f.renderAudit.renderKind,assetReady:f.renderAudit.assetReady,
-          renderWidth:f.renderAudit.renderWidth,renderHeight:f.renderAudit.renderHeight,jointPaintedAt:f.renderAudit.jointPaintedAt,
-          jointAtlasPath:f.renderAudit.jointAtlasPath,jointDrawSucceeded:f.renderAudit.jointDrawSucceeded,
-          jointWeightedLowerDrawSucceeded:f.renderAudit.jointWeightedLowerDrawSucceeded,jointWeightedLower:f.renderAudit.jointWeightedLower}:f.renderAudit}))};
+        objectRender:f.renderAudit,
+        renderSource:{kind:'same-snapshot-unfiltered-tail',fighterId:f.id,historyLength:f.renderAuditHistory?.length??null},
+        render:f.renderAuditHistory?.at(-1)??null}))};
     if(snapshot&&s25DeploymentObservation)snapshot.s25DeploymentObservation={readAt:performance.now(),simulationTime:s.time,
       queuedKinds:[...(s.deployQueue??[])],deployCooldowns:{...s.deployCooldowns},
       cards:[...document.querySelectorAll('button.unit-card[data-kind]')].map(el=>({kind:el.dataset.kind,slot:el.dataset.slotIndex,
