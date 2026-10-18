@@ -119,7 +119,10 @@ export async function buildV177RangerUpper({root=process.cwd(),check=false}={}) 
       const rings=[-.3,0,.2,.4,.6,.8,1].map(t=>upperLength*t).concat([.2,.4,.6,.8,1,1.2].map(t=>upperLength+lowerLength*t));
       const mesh=motion.meshDefinitions[name];assert.equal(mesh.sourcePositions.length,65);assert.equal(mesh.triangles.length,96);
       return {name,hip:p.hip,knee:p.knee,ankle:p.ankle,upperBone:p.upperBone,lowerBone:p.lowerBone,footBone:'leg-'+i+'-foot',upperLength,lowerLength,
-        bendSign:Math.sign(-(p.ankle[1]-p.hip[1])*(p.knee[0]-p.hip[0])+(p.ankle[0]-p.hip[0])*(p.knee[1]-p.hip[1])),offset:i===0?.5:0,
+        // Both anatomical knees bend toward the authored +X facing. The near
+        // crop's original painted stance must not select a backward IK branch.
+        // The complete body transform already mirrors this for left facing.
+        bendSign:-1,offset:i===0?.5:0,
         footCenter:definition.motion.walk.footCentersPx[i],groundAnkle:definition.motion.walk.groundAnkleY[i],
         weights:rings.flatMap(arc=>Array(5).fill(smooth((arc-upperLength+p.blendHalfWidthPx)/(2*p.blendHalfWidthPx)))),
         sourcePositions:mesh.sourcePositions.flat(),triangles:mesh.triangles.flat()};

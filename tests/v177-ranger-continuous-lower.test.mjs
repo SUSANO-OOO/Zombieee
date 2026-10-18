@@ -39,17 +39,26 @@ test('append-only Ranger atlas retains every r2 RGBA byte, upper rig and full or
       assert.ok(raw.subarray(from,from+part.source.w*4).equals(texture.data.subarray(to,to+part.source.w*4)),part.name);}}
   for(const leg of rig.legs){assert.equal(leg.weights.length,65);assert.equal(leg.triangles.length,288);assert.equal(leg.sourcePositions.length,130);}
 });
-test('continuous lower preserves every original exported gait key and fixed hip/knee/ankle attachments',()=>{
-  const out=createV177RangerLowerPose(rig);let maximum=0;
+test('continuous lower corrects the backward near knee while keeping original foot contacts, far leg and limb lengths',()=>{
+  const out=createV177RangerLowerPose(rig);let maximum=0,oldBackwardNearKeys=0;
   for(let row=0;row<4;row++)for(let i=0;i<=60;i++){
     const frame=motion.actions[row].frames[i],pose=v177RangerLowerPose(rig,i/60,row/3,out),dx=frame.bones.root.head[0]-240;
-    for(const leg of rig.legs){const points=pose.meshes[leg.name];for(let j=0;j<65;j++){
+    for(const leg of rig.legs){const points=pose.meshes[leg.name];if(leg.name==='far-pants')for(let j=0;j<65;j++){
       maximum=Math.max(maximum,Math.hypot(points[j*2]-(frame.meshes[leg.name][j][0]-dx),points[j*2+1]-frame.meshes[leg.name][j][1]));}
       const joints=pose.joints[rig.legs.indexOf(leg)];assert.ok(Math.abs(Math.hypot(joints[2]-joints[0],joints[3]-joints[1])-leg.upperLength)<1e-10);
       assert.ok(Math.abs(Math.hypot(joints[4]-joints[2],joints[5]-joints[3])-leg.lowerLength)<1e-10);
+      const ankle=frame.bones[leg.footBone].head;
+      assert.ok(Math.hypot(joints[4]-(ankle[0]-dx),joints[5]-ankle[1])<.01,'keep original stance/swing foot positions');
+      const cross=(joints[4]-joints[0])*(joints[3]-joints[1])-(joints[5]-joints[1])*(joints[2]-joints[0]);
+      assert.ok(cross<0,'both knees must bend toward authored forward, including the settled shooting stance');
+      if(leg.name==='near-pants'){
+        const hip=frame.bones[leg.upperBone].head,knee=frame.bones[leg.lowerBone].head;
+        if((ankle[0]-hip[0])*(knee[1]-hip[1])-(ankle[1]-hip[1])*(knee[0]-hip[0])>0)oldBackwardNearKeys++;
+      }
     }
   }
-  assert.ok(maximum<.01,'same existing source precision; max='+maximum);
+  assert.ok(maximum<.01,'far leg remains at the same existing source precision; max='+maximum);
+  assert.ok(oldBackwardNearKeys>0,'retain a counterexample from the original backward near-knee source');
   for(const phase of [0,1/30,.371,.62,.999])for(const settle of [1/6,1/3,.5,2/3,5/6]){
     const a=v177RangerLowerPose(rig,phase,settle-1e-9),b=v177RangerLowerPose(rig,phase,settle+1e-9);
     for(const leg of rig.legs)for(let i=0;i<a.meshes[leg.name].length;i++)assert.ok(Math.abs(a.meshes[leg.name][i]-b.meshes[leg.name][i])<1e-6);

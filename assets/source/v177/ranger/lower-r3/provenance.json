@@ -141,7 +141,7 @@
   },
   "generator": {
     "file": "scripts/build-v177-ranger-upper.mjs",
-    "sha256": "c60f2e8d1f464c6871901deccbd29c17e2d4d7650569e58dba2f9df19a3ae5ed",
+    "sha256": "f4baf524518de79b7c54843189324ae597cf1df7c01920808696a241122548ba",
     "sharp": "0.35.3",
     "vips": "8.18.3"
   },
@@ -257,7 +257,7 @@
   ],
   "data": {
     "file": "app/v177JointData.js",
-    "sha256": "23be593c427b34627625d74a3c3536ba09027d089bddcdc2bb52b85af378b299"
+    "sha256": "c51e5acb60d8c314d8b457d1ac5179b00c4e312422ba9f059c3f467f7c651068"
   },
   "visualAcceptance": false,
   "originalSpeedAcceptance": false,
