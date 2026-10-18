@@ -56,12 +56,15 @@ export async function prepareGraphOutput(context,{state=createGraphState(),workl
   function enqueue(segment){check(pending.length<L.pendingSegments&&appendBytes+segment.byteLength<=L.pendingBytes,'Bounded MSE append queue exhausted');pending.push(segment);appendBytes+=segment.byteLength;state.peakPendingSegments=Math.max(state.peakPendingSegments,pending.length);state.peakPendingBytes=Math.max(state.peakPendingBytes,appendBytes);drain();}
   function retainMuxed(segment){check(state.muxedBytes+segment.byteLength<=L.muxedBytes,'Bounded muxed evidence capacity exhausted');muxedParts.push(segment);state.muxedBytes+=segment.byteLength;enqueue(segment);}
   function drain(){if(disposed||state.primaryError||!buffer||buffer.updating||source.readyState!=='open')return;try{if(pending.length){const segment=pending.shift();appendBytes-=segment.byteLength;record('append-call',{bytes:segment.byteLength});buffer.appendBuffer(segment);}else if(ended){source.endOfStream();record('end-of-stream');}}catch(error){fail(error);}}
-  function sample(){if(state.startedAt===null)return;state.playheads.push({ms:ms(),time:audio.currentTime,encodedFrames:state.inputFrames,contextTime:context.currentTime,encodeQueueSize:encoder.encodeQueueSize,pendingSegments:pending.length,pendingBytes:appendBytes,readyState:audio.readyState,paused:audio.paused});}
+  const timeRanges=ranges=>ranges?{length:ranges.length,ranges:Array.from({length:Math.min(4,ranges.length)},(_,i)=>[ranges.start(i),ranges.end(i)])}:null;
+  function sample(){if(state.startedAt===null)return;state.playheads.push({ms:ms(),time:audio.currentTime,encodedFrames:state.inputFrames,contextTime:context.currentTime,encodeQueueSize:encoder.encodeQueueSize,pendingSegments:pending.length,pendingBytes:appendBytes,readyState:audio.readyState,paused:audio.paused,
+    audioBuffered:timeRanges(audio.buffered),sourceBuffered:timeRanges(buffer?.buffered),mediaSourceDuration:Number.isFinite(source.duration)?source.duration:String(source.duration),sourceMode:buffer?.mode??null,appendWindowStart:buffer?.appendWindowStart??null,appendWindowEnd:buffer?String(buffer.appendWindowEnd):null});}
   function receivePacket(packet){
     // Preserve actual received bytes before any AudioData construction or encoding.
     const bytes=new Uint8Array(packet.buffer);check(state.pcm.length<L.pcmPackets&&state.pcmBytes+bytes.byteLength<=L.pcmBytes,'Bounded raw PCM evidence capacity exhausted');
     pcmParts.push(bytes.slice());state.pcmBytes+=bytes.byteLength;
-    state.pcm.push({packetIndex:packet.packetIndex,firstSourceFrame:packet.firstSourceFrame,timestampUs:packet.timestampUs,durationUs:packet.durationUs,sampleRate:packet.sampleRate,channels:packet.channels,numberOfFrames:packet.numberOfFrames,bytes:bytes.byteLength,receivedAtMs:ms()});
+    const receipt={generation:packet.generation,id:packet.id,packetIndex:packet.packetIndex,firstSourceFrame:packet.firstSourceFrame,timestampUs:packet.timestampUs,durationUs:packet.durationUs,sampleRate:packet.sampleRate,channels:packet.channels,numberOfFrames:packet.numberOfFrames,bytes:bytes.byteLength,receivedAtMs:ms()};
+    state.pcm.push(receipt);
     check(packet.generation===1&&packet.sampleRate===state.sampleRate&&packet.channels===2&&packet.numberOfFrames===1024&&bytes.byteLength===8192,'Actual PCM packet layout/rate changed');
     check(packet.packetIndex===state.pcm.length-1&&packet.timestampUs===Math.round(packet.packetIndex*1024/state.sampleRate*1e6),'Missing/duplicate/reordered actual PCM packet');
     originFrame??=packet.firstSourceFrame;state.originFrame=originFrame;check(packet.firstSourceFrame===originFrame+state.inputFrames,'Actual Worklet source clock gap');
@@ -69,9 +72,16 @@ export async function prepareGraphOutput(context,{state=createGraphState(),workl
     const floats=new Float32Array(packet.buffer);for(const v of floats)check(Number.isFinite(v),'Nonfinite actual PCM is retained as failure, never clamped');
     check(encoder.encodeQueueSize<L.encoderQueue,'Bounded AudioEncoder queue exhausted');
     const data=new env.AudioData({format:'f32-planar',sampleRate:state.sampleRate,numberOfFrames:1024,numberOfChannels:2,timestamp:packet.timestampUs,data:floats});
-    try{encoder.encode(data);}finally{data.close();}
+    receipt.audioDataReadyAtMs=ms();
+    try{
+      // AudioData owns a copy because its constructor has no transfer list.
+      // Return the scarce Worklet buffer before native encoding/MSE callbacks.
+      // The issue/return times are observations, never an invented Worklet ACK.
+      node.port.postMessage({type:'recycle',generation:1,id:packet.id,packetIndex:packet.packetIndex,buffer:packet.buffer},[packet.buffer]);
+      receipt.recyclePostedAtMs=ms();receipt.encodeCallAtMs=ms();
+      try{encoder.encode(data);}finally{receipt.encodeReturnedAtMs=ms();}
+    }finally{data.close();}
     state.peakEncoderQueue=Math.max(state.peakEncoderQueue,encoder.encodeQueueSize);sample();
-    node.port.postMessage({type:'recycle',generation:1,id:packet.id,packetIndex:packet.packetIndex,buffer:packet.buffer},[packet.buffer]);
   }
   async function cleanup(){
     if(disposed)return;disposed=true;desired=false;generation++;state.cleanup??={completed:false,errors:[]};

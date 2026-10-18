@@ -82,8 +82,43 @@ test('actual experimental output callback retains actual PCM and native AAC befo
   const f=fakeEnvironment(),state=createGraphState(),output=await prepareGraphOutput(f.context,{state,workletUrl:'/actual-worklet.mjs',env:f.env});const api=graphOutputForContext(f.context,{canPlay:()=>true});
   assert.equal(f.context.connected,f.nodes[0]);assert.ok(api.destination);assert.equal(f.nodes[0].options.numberOfOutputs,0);assert.equal(f.nodes[0].options.channelCountMode,'explicit');assert.equal(f.context.destination,undefined);
   await api.prepare();f.nodes[0].port.onmessage({data:{type:'pcm-processor-ready',generation:1,sampleRate:48000}});const packet=f.packet(),original=new Uint8Array(packet.buffer).slice();f.clock.now=22;f.context.currentTime=.022;f.audio.currentTime=.022;f.nodes[0].port.onmessage({data:packet});
-  assert.equal(packet.buffer.byteLength,0,'Raw Worklet transfer must detach only after retaining/encoding');assert.deepEqual(output.evidence().pcmParts[0],original);assert.equal(state.pcmBytes,8192);assert.equal(state.inputFrames,1024);assert.equal(state.packets.length,1);assert.equal(state.primaryError,null);assert.equal(state.configurations[0].sampleRate,48000);await output.finish();await output.cleanup();assert.equal(state.finished.status,'framed');assert.equal(state.cleanup.completed,true);
+  assert.equal(packet.buffer.byteLength,0,'Raw Worklet transfer must detach after retaining and AudioData copy');assert.deepEqual(output.evidence().pcmParts[0],original);assert.equal(state.pcmBytes,8192);assert.equal(state.inputFrames,1024);assert.equal(state.packets.length,1);assert.equal(state.primaryError,null);assert.equal(state.configurations[0].sampleRate,48000);await output.finish();await output.cleanup();assert.equal(state.finished.status,'framed');assert.equal(state.cleanup.completed,true);
 });
+test('PCM is returned before encoding and immediate Worklet reuse cannot change retained or encoded samples',async()=>{
+  const f=fakeEnvironment(),state=createGraphState(),packet=f.packet(),original=new Float32Array(packet.buffer).slice();
+  const Encoder=f.env.AudioEncoder;
+  f.env.AudioEncoder=class extends Encoder{encode(data){
+    assert.equal(packet.buffer.byteLength,0,'The native encoder cannot hold a scarce Worklet buffer');
+    const returned=f.sent.find(row=>row.type==='recycle');assert.ok(returned);assert.equal(returned.id,packet.id);
+    new Float32Array(returned.buffer).fill(.75);
+    assert.deepEqual(data.copied,original,'AudioData must own the samples after the transferred Worklet buffer is reused');
+    super.encode(data);
+  }};
+  const output=await prepareGraphOutput(f.context,{state,workletUrl:'/actual-worklet.mjs',env:f.env});await output.api.prepare();
+  const ranges={length:7,start:i=>i*2,end:i=>i*2+1};f.audio.buffered=ranges;f.source.buffer.buffered=ranges;
+  f.clock.now=22;f.nodes[0].port.onmessage({data:packet});
+  assert.equal(state.primaryError,null);assert.deepEqual(f.encoded[0],original);
+  assert.deepEqual(new Float32Array(output.evidence().pcmParts[0].buffer),original);
+  assert.equal(state.pcm[0].recyclePostedAtMs,22);assert.equal(state.pcm[0].encodeCallAtMs,22);assert.equal(state.pcm[0].encodeReturnedAtMs,22);
+  assert.deepEqual(state.playheads[0].audioBuffered,{length:7,ranges:[[0,1],[2,3],[4,5],[6,7]]});
+  assert.deepEqual(state.playheads[0].sourceBuffered,state.playheads[0].audioBuffered);
+  assert.equal(state.pcm[0].recycleAcknowledgedAtMs,undefined,'A sent transfer is not a Worklet ACK');
+  await output.cleanup();
+});
+
+for(const stage of ['recycle','encode'])test('owned AudioData closes if '+stage+' throws after its copy',async()=>{
+  const f=fakeEnvironment(),state=createGraphState(),original=new Error('original '+stage+' failure'),owned=[];let closes=0;
+  const AudioData=f.env.AudioData,Encoder=f.env.AudioEncoder;
+  f.env.AudioData=class extends AudioData{constructor(options){super(options);owned.push(this);}close(){closes++;super.close();}};
+  if(stage==='encode')f.env.AudioEncoder=class extends Encoder{encode(){throw original;}};
+  const output=await prepareGraphOutput(f.context,{state,workletUrl:'/actual-worklet.mjs',env:f.env});await output.api.prepare();
+  if(stage==='recycle'){const post=f.nodes[0].port.postMessage;f.nodes[0].port.postMessage=(message,transfer)=>{if(message.type==='recycle')throw original;return post(message,transfer);};}
+  const packet=f.packet();f.nodes[0].port.onmessage({data:packet});
+  assert.match(state.primaryError,new RegExp('original '+stage+' failure'));assert.equal(closes,1);assert.equal(owned[0].closed,true);
+  assert.equal(state.pcmBytes,8192);assert.equal(state.packets.length,0);assert.equal(f.encoded.length,0);
+  assert.equal(packet.buffer.byteLength,stage==='encode'?0:8192);await output.cleanup();
+});
+
 test('native original play rejection identity and first error survive later callbacks',async()=>{
   const original=new Error('original native play failure');original.stack='nativePlay@/actual-output.mjs:12:34';
   const f=fakeEnvironment({playError:original}),state=createGraphState(),output=await prepareGraphOutput(f.context,{state,workletUrl:'/actual-worklet.mjs',env:f.env});graphOutputForContext(f.context,{});
