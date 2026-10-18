@@ -118,6 +118,13 @@ export async function prepareGraphOutput(context,{state=createGraphState(),workl
     retainMuxed(muxer.initializationSegment);
     try{await within(initialized,L.readyMs,'MSE initialization');}
     finally{initializationReject=null;removeInitialized();}
+    // This is a live output, not a finite file whose duration grows by one AAC
+    // frame on every append. Declare that once the metadata append is idle.
+    // No clock seek, sample omission or additional prebuffer is introduced.
+    source.duration=Infinity;
+    state.durationInitialization.assignedInfinity=true;
+    state.durationInitialization.afterInitialization=String(source.duration);
+    check(source.duration===Infinity,'Native MSE did not retain its live duration');
     encoder=new env.AudioEncoder({error:fail,output:(chunk,metadata)=>{
       // Keep raw encoded bytes/configuration before parsing or mux validation.
       try{

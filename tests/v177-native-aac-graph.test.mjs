@@ -42,18 +42,18 @@ function valid(){return{status:'complete',errors:[],primaryError:null,sampleRate
   pcm:[{}],pcmBytes:8192,packets:[{}],encodedBytes:10,finished:{status:'framed',snapshot:{partialFrames:0,acceptedFrames:1024}},inputFrames:1024,transportOverflow:0,peakEncoderQueue:1,peakPendingSegments:1,peakPendingBytes:100,
   events:[{event:'playing',ms:10,time:0}],playheads:[{ms:20,time:.02,encodedFrames:1024}],finalMedia:{muted:false,volume:1,time:1024/48000},content:{correlation:.99,rms:.1,peak:.4},cleanup:{completed:true}};}
 class Target{constructor(){this.listeners=new Map();}addEventListener(n,f){const set=this.listeners.get(n)??new Set();set.add(f);this.listeners.set(n,set);}removeEventListener(n,f){this.listeners.get(n)?.delete(f);}emit(n,event={}){for(const f of this.listeners.get(n)??[])f(event);}}
-function fakeEnvironment({rate=48000,playError=null,encoderQueue=0,omitConfig=false,deferInitialization=false}={}){
-  const env=new Target(),clock={now:0},sent=[],encoded=[],nodes=[];let currentSource,audio;
+function fakeEnvironment({rate=48000,playError=null,encoderQueue=0,omitConfig=false,deferInitialization=false,durationError=null}={}){
+  const env=new Target(),clock={now:0},sent=[],encoded=[],nodes=[],durationChanges=[];let currentSource,audio;
   env.performance={now:()=>clock.now};env.matchMedia=()=>Object.assign(new Target(),{matches:false});
   env.URL={createObjectURL:s=>{currentSource=s;return'blob:owned';},revokeObjectURL:()=>{env.revoked=true;}};
   const doc=new Target();doc.visibilityState='visible';doc.body={appendChild:a=>{audio=a;}};doc.createElement=()=>{const a=new Target();Object.assign(a,{currentTime:0,duration:NaN,ended:false,readyState:4,paused:true,volume:1,muted:false,src:'',setAttribute(){},removeAttribute(){this.src='';},remove(){this.removed=true;},load(){if(this.src)queueMicrotask(()=>{currentSource.readyState='open';currentSource.emit('sourceopen');});},play(){if(playError)return Promise.reject(playError);this.paused=false;this.emit('playing');return Promise.resolve();},pause(){this.paused=true;this.emit('pause');}});return a;};env.document=doc;
-  class Source extends Target{static isTypeSupported(){return true;}constructor(){super();this.readyState='closed';this.duration=NaN;}addSourceBuffer(){this.buffer=new Target();let appends=0;Object.assign(this.buffer,{updating:false,appendBuffer:()=>{this.buffer.updating=true;if(++appends===1&&deferInitialization)return;queueMicrotask(()=>{this.buffer.updating=false;this.buffer.emit('updateend');});}});return this.buffer;}endOfStream(){this.readyState='ended';audio.ended=true;}}
+  class Source extends Target{static isTypeSupported(){return true;}constructor(){super();this.readyState='closed';this.durationValue=NaN;}get duration(){return this.durationValue;}set duration(value){durationChanges.push({value,readyState:this.readyState,updating:this.buffer?.updating??null});if(durationError)throw durationError;this.durationValue=value;}addSourceBuffer(){this.buffer=new Target();let appends=0;Object.assign(this.buffer,{updating:false,appendBuffer:()=>{this.buffer.updating=true;if(++appends===1&&deferInitialization)return;queueMicrotask(()=>{this.buffer.updating=false;this.buffer.emit('updateend');});}});return this.buffer;}endOfStream(){this.readyState='ended';audio.ended=true;}}
   env.MediaSource=Source;
   env.AudioData=class{constructor(options){Object.assign(this,options);this.copied=new Float32Array(options.data);}close(){this.closed=true;}};
   env.AudioEncoder=class{static async isConfigSupported(config){return{supported:true,config};}constructor(callbacks){this.callbacks=callbacks;this.state='unconfigured';this.encodeQueueSize=encoderQueue;this.count=0;}configure(config){this.config=config;this.state='configured';}encode(data){assert.equal(data.closed,undefined);encoded.push(data.copied);const index=this.count++,description=new Uint8Array(rate===48000?[0x11,0x90]:[0x12,0x10]);this.callbacks.output({byteLength:4,timestamp:data.timestamp,duration:Math.round(1024/rate*1e6),type:'key',copyTo:d=>d.set([1,2,3,index%256])},index===0&&!omitConfig?{decoderConfig:{codec:'mp4a.40.2',sampleRate:rate,numberOfChannels:2,description}}:{});}async flush(){}close(){this.state='closed';}};
   env.AudioWorkletNode=class{constructor(context,name,options){this.options=options;this.port={onmessage:null,close(){this.closed=true;},postMessage:(message,transfer)=>{const copy=structuredClone(message,{transfer});sent.push(copy);if(copy.type==='finish')queueMicrotask(()=>this.port.onmessage?.({data:{type:'pcm-finished',generation:1,status:'framed',snapshot:{partialFrames:0,acceptedFrames:encoded.length*1024}}}));}};nodes.push(this);}disconnect(){this.disconnected=true;}};
   const context={sampleRate:rate,currentTime:0,state:'suspended',audioWorklet:{async addModule(url){assert.match(url,/worklet/u);}},createGain(){return{connect:node=>{this.connected=node;},disconnect(){this.disconnected=true;}};}};
-  return{env,context,clock,sent,encoded,nodes,get audio(){return audio;},get source(){return currentSource;},completeInitialization(){currentSource.buffer.updating=false;currentSource.buffer.emit('updateend');},packet(index=0){const buffer=new ArrayBuffer(8192),values=new Float32Array(buffer);for(let i=0;i<values.length;i++)values[i]=Math.sin(i*.1)*.2;return{type:'pcm-packet',generation:1,id:index%4,packetIndex:index,sampleRate:rate,channels:2,numberOfFrames:1024,firstSourceFrame:65536+index*1024,timestampUs:Math.round(index*1024/rate*1e6),durationUs:Math.round((index+1)*1024/rate*1e6)-Math.round(index*1024/rate*1e6),buffer};}};
+  return{env,context,clock,sent,encoded,nodes,durationChanges,get audio(){return audio;},get source(){return currentSource;},completeInitialization(){currentSource.buffer.updating=false;currentSource.buffer.emit('updateend');},packet(index=0){const buffer=new ArrayBuffer(8192),values=new Float32Array(buffer);for(let i=0;i<values.length;i++)values[i]=Math.sin(i*.1)*.2;return{type:'pcm-packet',generation:1,id:index%4,packetIndex:index,sampleRate:rate,channels:2,numberOfFrames:1024,firstSourceFrame:65536+index*1024,timestampUs:Math.round(index*1024/rate*1e6),durationUs:Math.round((index+1)*1024/rate*1e6)-Math.round(index*1024/rate*1e6),buffer};}};
 }
 test('local Windows/Linux guards reject before repository/output/server/browser work',async()=>{
   for(const platform of ['win32','linux'])await assert.rejects(runGraphProbe({platform,env:{GITHUB_ACTIONS:'true',RUNNER_OS:'macOS',V177_GRAPH_EXPECTED_HEAD:'a'.repeat(40)},repo:'this-path-must-not-be-read'}),/Hosted macOS/u);
@@ -117,6 +117,24 @@ for(const stage of ['recycle','encode'])test('owned AudioData closes if '+stage+
   assert.match(state.primaryError,new RegExp('original '+stage+' failure'));assert.equal(closes,1);assert.equal(owned[0].closed,true);
   assert.equal(state.pcmBytes,8192);assert.equal(state.packets.length,0);assert.equal(f.encoded.length,0);
   assert.equal(packet.buffer.byteLength,stage==='encode'?0:8192);await output.cleanup();
+});
+
+test('live MSE duration is declared once after the metadata ACK while SourceBuffer is idle',async()=>{
+  const f=fakeEnvironment({deferInitialization:true}),state=createGraphState();
+  const preparing=prepareGraphOutput(f.context,{state,workletUrl:'/actual-worklet.mjs',env:f.env});
+  for(let i=0;i<6;i++)await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(f.source.buffer.updating,true);assert.deepEqual(f.durationChanges,[]);
+  f.completeInitialization();const output=await preparing;
+  assert.deepEqual(f.durationChanges,[{value:Infinity,readyState:'open',updating:false}]);
+  assert.equal(f.source.duration,Infinity);assert.equal(state.durationInitialization.assignedInfinity,true);
+  assert.equal(state.durationInitialization.afterInitialization,'Infinity');assert.equal(state.pcm.length,0);
+  await output.cleanup();
+});
+test('a native live-duration rejection preserves its original Error and releases the prewarmed resources',async()=>{
+  const original=new Error('original duration assignment failure'),f=fakeEnvironment({durationError:original}),state=createGraphState();
+  await assert.rejects(prepareGraphOutput(f.context,{state,workletUrl:'/actual-worklet.mjs',env:f.env}),error=>error===original);
+  assert.match(state.primaryError,/original duration assignment failure/u);assert.equal(state.pcm.length,0);assert.equal(f.nodes.length,0);
+  assert.equal(state.cleanup.completed,true);assert.equal(f.audio.removed,true);assert.equal(f.env.revoked,true);
 });
 
 test('native original play rejection identity and first error survive later callbacks',async()=>{
