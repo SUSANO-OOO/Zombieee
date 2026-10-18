@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
+import fs from 'node:fs';
+import ts from 'typescript';
 import {prepareBornTurnedWhenReady} from '../scripts/v177-native-allunit-cases.mjs';
 
 function fixture(){
@@ -53,5 +55,30 @@ test('birth, original rise and three distinct actual paints remain required for 
     const f=fixture();f.source.fighter.navigationRecovery=null;f.source.fighter.y+=40;
     f.qa.getSnapshot=()=>{throw Error('Move/attack must keep the existing physical placement');};
     assert.equal(f.run(phase),f.proof);
+  }
+});
+
+test('the actual born bridge holds the recorder clock while keeping the pause menu off its recorded pixels',()=>{
+  const source=fs.readFileSync('app/AshfallGame.tsx','utf8');
+  const tree=ts.createSourceFile('game.tsx',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX),matches=[];
+  const visit=node=>{if(ts.isPropertyAssignment(node)&&node.name.getText(tree)==='prepareV177BornTurnedContinuation')matches.push(node);ts.forEachChild(node,visit);};visit(tree);
+  assert.equal(matches.length,1);
+  const compiled=ts.transpileModule('const prepare='+matches[0].initializer.getText(tree)+';return prepare;',
+    {compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
+  for(const phase of ['move','attack','engage']){
+    const actor={id:12,hp:95},world={time:79,nextId:13,paused:false,fighters:[actor],save:{revision:9}},
+      proof={fighterId:12,targetId:13},menu=[],history=new Map([[12,['old']],[99,['other']]]),deltas=new Map([[12,1],[99,2]]);
+    const before=structuredClone(world),bindings={gameRef:{current:world},activeLaneCenters:[212,282,352],
+      configureV177BornTurnedContinuation:(actual,fields)=>{assert.equal(actual,world);assert.deepEqual(fields,{proofId:'original',phase});return proof;},
+      readV177TurnedGetupProof:()=>{},readV177TurnedBirthPresentation:()=>{},spriteKinds:['turned'],PLAYABLE_COMBAT_KINDS:['guardian'],
+      createCombatAnimationRuntime:()=>{},normalAttackReach:()=>45,
+      fighterRenderAuditHistory:history,fighterActualXDeltaAudit:deltas,setPaused:value=>menu.push(value)};
+    const prepare=new Function(...Object.keys(bindings),compiled)(...Object.values(bindings));
+    assert.equal(prepare({proofId:'original',phase}),proof);
+    assert.equal(world.paused,true,'native recorder still owns the clock release');
+    assert.deepEqual(menu,[false],'recording must show the actual actor instead of the pause menu');
+    assert.deepEqual({...world,paused:false},before);assert.equal(world.fighters[0],actor);
+    assert.equal(history.has(12),false);assert.deepEqual(history.get(99),['other']);
+    assert.equal(deltas.has(12),false);assert.equal(deltas.get(99),2);
   }
 });

@@ -13101,7 +13101,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             createAnimationRuntime:createCombatAnimationRuntime,attackReachFor:normalAttackReach},
         });
         fighterRenderAuditHistory.delete(proof.fighterId);fighterActualXDeltaAudit.delete(proof.fighterId);
-        g.paused=true;setPaused(true);return proof;
+        // Hold the QA clock for recorder start without covering its pixels.
+        g.paused=true;setPaused(false);return proof;
       },
       prepareV177ContinuousActorProof: ({form,phase,sourceKind="guardian"}: {form:string;phase:"move"|"attack"|"engage"|"defeat";sourceKind?:UnitKind}) => {
         const proofCatalog={knownForms:spriteKinds,playableKinds:PLAYABLE_COMBAT_KINDS,
