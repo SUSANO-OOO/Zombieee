@@ -27,8 +27,8 @@ export const FORM_BINDINGS=freeze(spriteKinds.map(form=>({
     :form.startsWith('futago-separated-')?'futago-pair':form==='futago'?'legacy-art':'ordinary',
   atlas:{path:V177_JOINT_ATLASES[form]?.path},
 })));
-export const SHARDS=freeze(Array.from({length:6},(_,i)=>({
-  id:'forms-'+(i+1),forms:FORM_BINDINGS.slice(i*8,i*8+8).map(f=>f.form),
+export const SHARDS=freeze(Array.from({length:12},(_,i)=>({
+  id:'forms-'+(i+1),forms:FORM_BINDINGS.slice(i*4,i*4+4).map(f=>f.form),
 })));
 
 export function validateLimits(limits){assert.deepEqual(limits,LIMITS);return true;}
@@ -39,11 +39,11 @@ export function validateManifest(forms=FORM_BINDINGS,shards=SHARDS){
     assert.ok(OWNER_KINDS.includes(forms[i].owner));
     assert.match(forms[i].atlas.path??'',/^\/art\/v100\/joints\/.+\.webp$/u);
   }
-  assert.deepEqual(shards,SHARDS);assert.ok(shards.every(s=>s.forms.length===8));
+  assert.deepEqual(shards,SHARDS);assert.ok(shards.every(s=>s.forms.length===4));
   assert.equal(new Set(shards.flatMap(s=>s.forms)).size,48);
   const counts=Object.fromEntries(OWNER_KINDS.map(owner=>[owner,forms.filter(f=>f.owner===owner).length]));
   assert.deepEqual(counts,{ordinary:43,'turned-birth':1,'mayo-activation':1,'futago-pair':2,'legacy-art':1});
-  return {forms:48,shards:6,counts,nativeAccepted:false};
+  return {forms:48,shards:12,counts,nativeAccepted:false};
 }
 export function planShard(shardId){
   validateManifest();const shard=SHARDS.find(s=>s.id===shardId);assert.ok(shard,'Unknown shard');
@@ -52,7 +52,7 @@ export function planShard(shardId){
     return {caseId:`${shard.id}:${form}:${phase}:${viewport.width}x${viewport.height}`,
       shardId:shard.id,form,phase,viewport,owner:binding.owner,binding};
   })));
-  assert.equal(rows.length,72);assert.equal(new Set(rows.map(r=>r.caseId)).size,72);
+  assert.equal(rows.length,36);assert.equal(new Set(rows.map(r=>r.caseId)).size,36);
   return freeze(rows);
 }
 export function assertPlannedCase(row){

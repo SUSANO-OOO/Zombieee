@@ -5,7 +5,7 @@ on:
     paths:
       - '.github/workflows/native-allunit-capture.yml'
       - 'scripts/v177-native-allunit-*.mjs'
-      - 'tests/v177-native-allunit.test.mjs'
+      - 'tests/v177-native-allunit*.test.mjs'
       - 'scripts/v177-native-canvas-clips.mjs'
       - 'app/AshfallGame.tsx'
       - 'app/v177*.js'
@@ -22,13 +22,52 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      receipt_sha256: ${{ steps.bundle.outputs.receipt_sha256 }}
+      dist_sha256: ${{ steps.bundle.outputs.dist_sha256 }}
+    env:
+      V177_EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Build the exact PR candidate once
+        env:
+          GITHUB_PAGES_RELEASE_SHA: ${{ github.event.pull_request.head.sha }}
+        run: npm run build
+      - name: Retain the exact build and committed public-source manifest
+        id: bundle
+        run: node scripts/v177-native-allunit-build.mjs pack outputs/v177-native-allunit-build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v177-native-allunit-build-${{ github.event.pull_request.head.sha }}-${{ github.run_attempt }}
+          path: outputs/v177-native-allunit-build
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
   capture:
+    needs: build
     runs-on: macos-15-intel
     timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
-        shard: [forms-1, forms-2, forms-3, forms-4, forms-5, forms-6]
+        shard: [forms-1, forms-2, forms-3, forms-4, forms-5, forms-6, forms-7, forms-8, forms-9, forms-10, forms-11, forms-12]
+    env:
+      V177_EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      V177_EXPECTED_BUILD_RECEIPT_SHA256: ${{ needs.build.outputs.receipt_sha256 }}
+      V177_EXPECTED_BUILD_SHA256: ${{ needs.build.outputs.dist_sha256 }}
+      V177_CAPTURE_SHARD: ${{ matrix.shard }}
+      V177_NATIVE_ALLUNIT_OUT: outputs/v177-native-allunit-${{ matrix.shard }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -43,15 +82,13 @@ jobs:
         run: |
           npm ci --prefix scripts/pwa-native-runtime
           node scripts/pwa-native-runtime/node_modules/playwright/cli.js install webkit
-      - name: Build the exact PR candidate
-        env:
-          GITHUB_PAGES_RELEASE_SHA: ${{ github.event.pull_request.head.sha }}
-        run: npm run build
-      - name: Capture actual movement and attacks for this eight-form shard
-        env:
-          V177_EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-          V177_CAPTURE_SHARD: ${{ matrix.shard }}
-          V177_NATIVE_ALLUNIT_OUT: outputs/v177-native-allunit-${{ matrix.shard }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: v177-native-allunit-build-${{ github.event.pull_request.head.sha }}-${{ github.run_attempt }}
+          path: outputs/v177-native-allunit-build
+      - name: Restore and verify the identical recursive build before browser startup
+        run: node scripts/v177-native-allunit-build.mjs restore outputs/v177-native-allunit-build outputs/v177-native-allunit-${{ matrix.shard }}
+      - name: Capture actual movement and attacks for this four-form shard
         run: node scripts/v177-native-allunit-browser.mjs
       - uses: actions/upload-artifact@v4
         if: always()

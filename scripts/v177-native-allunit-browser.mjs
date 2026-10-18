@@ -26,6 +26,7 @@ export async function main({load=url=>import(url),argv=process.argv,...guard}={}
 }
 const additions=[
   '.github/workflows/native-allunit-capture.yml','scripts/v177-native-allunit-browser.mjs',
+  'scripts/v177-native-allunit-build.mjs',
   'scripts/v177-native-allunit-cases.mjs','scripts/v177-native-allunit-manifest.mjs',
   'scripts/v177-native-allunit-contract.mjs','scripts/v177-native-allunit-owners.mjs',
   'tests/v177-native-allunit.test.mjs','scripts/v100-normal-tactical-input.mjs',
@@ -62,7 +63,14 @@ export async function runBrowserQa(){
   const report={at:new Date().toISOString(),...binding,tree:git(['rev-parse','HEAD^{tree}']),
     engine:'webkit',runtime:deps.PWA_WEBKIT_RUNTIME,build:await deps.productionBuildIdentity(),
     status:'running-diagnostic',plan,sources:[],contexts:[],cases:[],errors:[],persistenceErrors:[],...acceptance(),
-    scope:'One of six all48 native VP8 shards. Original free RAF/simulation after actual recorder start. Ordinary actors use original stats; Mayo uses real trusted activation/self-drain; turned continues the actual infection newborn; split twins use their real S24 pair constructors with a deliberately partial encounter. Legacy fused art is an explicit fixture. Controlled target diagnostics are not campaign, balance, original-speed naturalness or physical audio acceptance.'};
+    scope:'One of twelve all48 native VP8 shards. Original free RAF/simulation after actual recorder start. Ordinary actors use original stats; Mayo uses real trusted activation/self-drain; turned continues the actual infection newborn; split twins use their real S24 pair constructors with a deliberately partial encounter. Legacy fused art is an explicit fixture. Controlled target diagnostics are not campaign, balance, original-speed naturalness or physical audio acceptance.'};
+  assert.match(process.env.V177_EXPECTED_BUILD_SHA256??'',/^[a-f0-9]{64}$/u);
+  assert.equal(report.build.combinedSha256,process.env.V177_EXPECTED_BUILD_SHA256,'Capture build differs from the producer job');
+  report.buildBundle=JSON.parse(await readFile(path.join(out,'build-bundle-consumption.json'),'utf8'));
+  for(const [key,value]of Object.entries({head:binding.head,tree:report.tree,runId:process.env.GITHUB_RUN_ID,runAttempt:process.env.GITHUB_RUN_ATTEMPT}))
+    assert.equal(report.buildBundle.binding[key],value,'Shared build owner differs: '+key);
+  assert.equal(report.buildBundle.receiptSha256,process.env.V177_EXPECTED_BUILD_RECEIPT_SHA256);
+  assert.deepEqual(report.buildBundle.build,report.build,'Verified shared build changed before capture');
   await mkdir(out,{recursive:true});report.sources=await retainAllUnitSources(out);
   for(const row of plan)assertRetainedBindings(row,{...report,expectedHead:binding.head,files:report.sources});
   const reportFile=path.join(out,'report.json');await writeFile(reportFile,JSON.stringify(report,null,2)+'\n',{flag:'wx'});
@@ -84,7 +92,7 @@ export async function runBrowserQa(){
           &&(r.owner==='futago-pair'?24:1)===stageNumber);
         if(!rows.length)continue;
         const contextOptions={viewport,isMobile:viewport.width<1000,hasTouch:viewport.width<1000,deviceScaleFactor:1};
-        const owner={viewport,stageNumber,contextOptions,cleanup:'not-created',requests:null};report.contexts.push(owner);
+        const owner={viewport,stageNumber,contextOptions,setupStage:'not-started',cleanup:'not-created',requests:null};report.contexts.push(owner);
         let context,requests,closing;
         const closeOwned=()=>closing??=(async()=>{
           if(!context)return;owner.cleanup='pending';await persist();
@@ -104,18 +112,18 @@ export async function runBrowserQa(){
             registeredUnitIds:owned,availableStageIds:deps.V100_STAGE_IDS,formationSlots:owned.slice(0,7),
             flowState:{phase:'formation',stageId,stageNumber,eventId:null,destination:'formation',nodeIndex:0,firstClear:false,finalized:true}});
           await withNativeGameCaseDeadline(async()=>{
-            await page.addInitScript(deps.seedV100BrowserSaveOnce,deps.serializeV100Save(save));
-            const url=new URL('v100',origin);url.searchParams.set('phase-g','1');await page.goto(url.href);
+            owner.setupStage='seed-save';await page.addInitScript(deps.seedV100BrowserSaveOnce,deps.serializeV100Save(save));
+            const url=new URL('v100',origin);url.searchParams.set('phase-g','1');owner.setupStage='navigate';await page.goto(url.href);
             const play=page.getByRole('button',{name:'ブラウザで遊ぶ',exact:true});
-            await play.or(page.locator('.v100-start-screen')).first().waitFor();if(await play.isVisible())await play.click();
-            await deps.enterV100FromTitle(page);await page.getByRole('button',{name:'戦闘へ',exact:true}).click();
-            await page.waitForFunction(()=>window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().running);
+            owner.setupStage='entry-surface';await play.or(page.locator('.v100-start-screen')).first().waitFor();owner.setupStage='entry-play-button';if(await play.isVisible())await play.click();
+            owner.setupStage='title-entry';await deps.enterV100FromTitle(page);owner.setupStage='battle-button';await page.getByRole('button',{name:'戦闘へ',exact:true}).click();
+            owner.setupStage='battle-running';await page.waitForFunction(()=>window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().running);
             const forms=[...new Set(rows.flatMap(r=>[r.form,r.binding.kind,r.binding.side==='human'?'walker':'guardian',
               ...(r.owner==='turned-birth'?['brawler','turned']:[])]))];
-            await page.evaluate(async forms=>{
+            owner.setupStage='asset-readiness';await page.evaluate(async forms=>{
               const qa=window.__ASHFALL_BATTLE_QA__;
               for(const form of forms)await qa.ensureEnemyFacingProofAsset(form);
-            },forms);
+            },forms);owner.setupStage='completed';
           },closeOwned,{onDeadline:fail});
           for(const planned of rows){
             const row={...planned,status:'starting',samples:[],...acceptance()};report.cases.push(row);

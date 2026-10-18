@@ -21,6 +21,7 @@ import {assertFutagoPairDamageAndOwner,assertMayoFeralReceipt} from '../scripts/
 test('all real renderer forms have one owned route and nine planned captures',()=>{
   assert.equal(validateManifest().forms,48);assert.deepEqual(FORM_BINDINGS.map(f=>f.form),spriteKinds);
   assert.equal(new Set(FORM_BINDINGS.map(f=>f.atlas.path)).size,45);
+  assert.equal(SHARDS.length,12);for(const s of SHARDS)assert.equal(planShard(s.id).length,36);
   const rows=SHARDS.flatMap(s=>planShard(s.id));assert.equal(rows.length,432);
   for(const form of spriteKinds)assert.equal(rows.filter(r=>r.form===form).length,9);
   assert.equal(new Set(rows.map(r=>r.caseId)).size,432);
@@ -35,7 +36,7 @@ test('exact PR native host and shard guard run before owned server import',async
     GITHUB_EVENT_PATH:'event.json',V177_EXPECTED_HEAD_SHA:head,V177_CAPTURE_SHARD:'forms-1'};
   const guard={platform:'darwin',env,read:async()=>JSON.stringify({number:180,pull_request:{head:{sha:head}}}),head:()=>head};
   assert.equal((await nativeAllUnitBinding(guard)).shardId,'forms-1');
-  for(const override of [{platform:'win32'},{platform:'linux'},{env:{...env,V177_CAPTURE_SHARD:'forms-7'}},
+  for(const override of [{platform:'win32'},{platform:'linux'},{env:{...env,V177_CAPTURE_SHARD:'forms-13'}},
     {env:{...env,GITHUB_ACTIONS:'false'}},{head:()=> 'b'.repeat(40)}]){
     let loaded=false;await assert.rejects(main({...guard,...override,argv:['node','driver'],load:async()=>{loaded=true;}}));
     assert.equal(loaded,false);
@@ -264,11 +265,17 @@ test('Mayo owner requires a lifecycle and new original normal impact from actual
     assert.throws(()=>assertMayoFeralReceipt(row,definition));
   }
 });
-test('workflow keeps exact head, independent six shards and original owned budgets',()=>{
+test('workflow keeps exact head, independent twelve shards and original owned budgets',()=>{
   const workflow=loadYaml(fs.readFileSync('.github/workflows/native-allunit-capture.yml','utf8'));
   assert.equal(workflow.concurrency['cancel-in-progress'],false);
   assert.deepEqual(workflow.jobs.capture.strategy.matrix.shard,SHARDS.map(s=>s.id));
   assert.equal(workflow.jobs.capture.strategy['fail-fast'],false);assert.equal(workflow.jobs.capture['timeout-minutes'],15);
+  assert.equal(workflow.jobs.build['timeout-minutes'],15);assert.equal(workflow.jobs.capture.needs,'build');
+  assert.equal(workflow.jobs.build.steps[0].with.ref,'${{ github.event.pull_request.head.sha }}');
+  assert.equal(workflow.jobs.build.steps[0].with['persist-credentials'],false);
+  assert.equal(workflow.jobs.capture.env.V177_EXPECTED_BUILD_SHA256,'${{ needs.build.outputs.dist_sha256 }}');
+  assert.equal(workflow.jobs.capture.env.V177_EXPECTED_BUILD_RECEIPT_SHA256,'${{ needs.build.outputs.receipt_sha256 }}');
+  assert.equal(workflow.jobs.capture.steps.some(s=>s.run==='npm run build'),false);
   assert.equal(workflow.jobs.capture.steps[0].with.ref,'${{ github.event.pull_request.head.sha }}');
   assert.equal(workflow.jobs.capture.steps[0].with['persist-credentials'],false);
   assert.equal(LIMITS.caseMs,30000);assert.equal(LIMITS.readinessMs,5000);assert.equal(LIMITS.clipBytes,8*1024*1024);
