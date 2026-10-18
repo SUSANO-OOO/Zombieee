@@ -96,7 +96,22 @@ export async function finishNativeCanvasClip(state,{completed}){
 }
 
 export async function beginV177NativeCanvasClip(page,metadata,{directory,engine,requestedMimeType=null,realmOwner=null}={}){
-  assert.match(metadata.form,/^[a-z0-9-]+$/u);assert.ok(['move','attack','engage','incoming-stun','turned-getup'].includes(metadata.phase));
+  assert.match(metadata.form,/^[a-z0-9-]+$/u);assert.ok(['move','attack','engage','incoming-stun','turned-getup','ranger-manual-precision'].includes(metadata.phase));
+  const manual=metadata.phase==='ranger-manual-precision';
+  if(manual){
+    for(const key of ['form','requestedKind','preparedRenderKind','manualAbilityKind'])assert.equal(metadata[key],'ranger');
+    assert.equal(metadata.constructorPhase,'engage');assert.equal(metadata.owner,'ranger-manual-precision');
+    assert.ok(Number.isSafeInteger(metadata.fighterId)&&metadata.fighterId>=0);
+    assert.ok(Number.isSafeInteger(metadata.targetId)&&metadata.targetId>=0&&metadata.targetId!==metadata.fighterId);
+    assert.ok(Number.isSafeInteger(metadata.baselineActivationId)&&metadata.baselineActivationId>=0);
+    assert.ok(Number.isSafeInteger(metadata.battleGeneration)&&metadata.battleGeneration>=0);
+    assert.equal(metadata.diagnosticOnly,true);assert.equal(metadata.controlledOpponent,true);assert.equal(metadata.legacyFusedFixture,false);
+    assert.ok(typeof metadata.proofId==='string'&&metadata.proofId.length>0);
+    assert.match(metadata.caseId??'',/^forms-(?:[1-9]|1[0-2]):ranger:ranger-manual-precision:(?:1280x720|844x390|844x340)$/u);
+    assert.match(metadata.referenceCaseId??'',/^forms-(?:[1-9]|1[0-2]):ranger:engage:(?:1280x720|844x390|844x340)$/u);
+    assert.equal(metadata.caseId.replace(':ranger-manual-precision:',':engage:'),metadata.referenceCaseId);
+    assert.equal(Object.hasOwn(metadata,'activationId'),false,'Only a real post-input start receipt may bind the new activation');
+  }
   const unborn=metadata.phase==='turned-getup';
   if(unborn) {
     for(const key of ['form','requestedKind','preparedRenderKind'])assert.equal(metadata[key],'turned');
@@ -107,9 +122,10 @@ export async function beginV177NativeCanvasClip(page,metadata,{directory,engine,
   }else assert.ok(Number.isFinite(metadata.fighterId));
   assert.ok(['chromium','webkit'].includes(engine));
   assert.ok(requestedMimeType===null||['video/mp4','video/webm;codecs=vp8','video/webm'].includes(requestedMimeType),'Unknown diagnostic native container');
-  assert.ok(['base-enemy','authored-form','approach-to-attack','natural-incoming-stun','actual-infection-getup'].includes(metadata.fixtureGroup));
+  assert.ok(['base-enemy','authored-form','approach-to-attack','natural-incoming-stun','actual-infection-getup','actual-ranger-manual-precision'].includes(metadata.fixtureGroup));
   assert.equal(metadata.phase==='engage',metadata.fixtureGroup==='approach-to-attack','approach-to-attack recordings must remain distinct from legacy move/attack clips');
   assert.equal(metadata.phase==='incoming-stun',metadata.fixtureGroup==='natural-incoming-stun','Incoming stun recordings require their own natural opponent contract');
+  assert.equal(manual,metadata.fixtureGroup==='actual-ranger-manual-precision','Manual precision recordings require their own actual input/activation contract');
   assert.equal(unborn,metadata.fixtureGroup==='actual-infection-getup','Actual infection recordings require their corpse and original birth contract');
   const identity=unborn?`corpse-${metadata.corpseId}-variant-${metadata.variant}`:metadata.fighterId;
   const stem=path.join(directory,`${metadata.fixtureGroup}-${metadata.form}-${metadata.phase}-${identity}`);
