@@ -1,0 +1,63 @@
+name: One Prewarmed Native Audio Graph Diagnostic
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/native-aac-graph-probe.yml'
+      - 'scripts/v177-native-aac-graph-*'
+      - 'scripts/v177-graph-pcm-framer.mjs'
+      - 'scripts/v177-aac-fragment-muxer.mjs'
+      - 'scripts/pwa-native-runtime/package.json'
+      - 'scripts/pwa-native-runtime/package-lock.json'
+      - 'tests/v177-native-aac-graph.test.mjs'
+      - 'app/audioMixer.js'
+      - 'app/audioOutput.js'
+      - 'app/audioManifest.js'
+      - 'app/audioSession.js'
+      - 'app/endingAudioMix.js'
+      - 'app/productionAudio.js'
+      - 'app/v100SoundDesign.js'
+      - 'public/audio/v100/score/normal.mp3'
+      - 'public/audio/v100/score/normal.ogg'
+      - 'public/audio/v100/foley/rifle.mp3'
+      - 'public/audio/v100/foley/rifle.ogg'
+  workflow_dispatch:
+    inputs:
+      expected_head:
+        description: Exact reviewed40-character candidate HEAD; root runs only after existing CI is terminal
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: v177-one-prewarmed-native-audio-graph
+  cancel-in-progress: false
+jobs:
+  graph:
+    runs-on: macos-15-intel
+    timeout-minutes: 15
+    env:
+      V177_GRAPH_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || inputs.expected_head }}
+      V177_GRAPH_OUT: outputs/v177-native-aac-graph
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || inputs.expected_head }}
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - name: Pure callback and fault contracts only
+        run: node --experimental-vm-modules --test tests/v177-native-aac-graph.test.mjs
+      - name: Install the original pinned WebKit runtime only
+        run: |
+          npm ci --prefix scripts/pwa-native-runtime
+          node scripts/pwa-native-runtime/node_modules/playwright/cli.js install webkit
+      - name: One real original graph to native AAC/MSE observation
+        run: node scripts/v177-native-aac-graph-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v177-one-native-audio-graph-${{ env.V177_GRAPH_EXPECTED_HEAD }}-${{ github.run_attempt }}
+          path: outputs/v177-native-aac-graph
+          if-no-files-found: error
+          retention-days: 7

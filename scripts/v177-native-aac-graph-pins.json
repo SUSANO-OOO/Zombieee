@@ -1,0 +1,41 @@
+{
+  "schema": "v177-graph-original-source-pins/v1",
+  "originHead": "8b46b1037da3c9c49f2c10b66bca1181324f489e",
+  "audio7": [
+    {
+      "path": "app/audioOutput.js",
+      "gitBlob": "e43304b10c1f39c7df95dabad41bcf89adb9c622",
+      "gitSha256": "f6cf7512b1b6977edc4e32f60097ae877a6af959ac44f85485aee6ec24501c1c"
+    },
+    {
+      "path": "app/audioMixer.js",
+      "gitBlob": "072883a588b5c5d37fd07750249fdbdfa533eb82",
+      "gitSha256": "72538373f294ec0583a065753db9a18bff1b96e1b490fcd3c064a7aad9d27b2f"
+    },
+    {
+      "path": "app/endingAudioMix.js",
+      "gitBlob": "6d8678cf41351891565cfba73731296ea330f1ea",
+      "gitSha256": "27de1df8d29339833a517ded9c7ec044596b051aaf162eb2c09af1f683cd9d79"
+    },
+    {
+      "path": "app/audioSession.js",
+      "gitBlob": "584e1b54a4b5892248e841cbd361c17cb6b5fcd2",
+      "gitSha256": "6f45e81dea79cd4efa9b9fc0b6c296da4c599c6d3e957887c8c1bbe7674132c6"
+    },
+    {
+      "path": "scripts/v177-native-aac-probe.mjs",
+      "gitBlob": "9c9a889e39662e0934df87c8d86ee1ab89725a10",
+      "gitSha256": "98956930e76c883443a39e302e1a68bb4ef49cbef9a3a0863b8275458ce714ea"
+    },
+    {
+      "path": "scripts/v177-native-aac-browser.mjs",
+      "gitBlob": "0a2b6df40c47e15b7de6e7214d125193e0b76e26",
+      "gitSha256": "f882b9c56e3b5d6cd545abe1c545901b0324ad914fa35fabcb4e32c3f27bd318"
+    },
+    {
+      "path": "scripts/v177-aac-fragment-muxer.mjs",
+      "gitBlob": "afecfef49429d8357ae16fadffa6f95722183621",
+      "gitSha256": "2834d114dc7f0e537f50cdf9d2fd536ba311bddd23e0d5fb1691392339a1dd17"
+    }
+  ]
+}
