@@ -1,6 +1,6 @@
 // Output-only proposal. Pure contracts; importing this file launches nothing.
 export const GRAPH_LIMITS=Object.freeze({caseMs:6000,maxCaptureMs:8000,rowDeadlineMs:30000,browserLaunchMs:15000,readyMs:5000,completionMs:15000,cleanupMs:2000,
-  pcmPackets:512,pcmBytes:4*1024*1024,encoderQueue:4,pendingSegments:8,pendingBytes:256*1024,encodedBytes:1024*1024,muxedBytes:2*1024*1024,transportEvents:2048});
+  pcmPoolPackets:16,pcmPackets:512,pcmBytes:4*1024*1024,encoderQueue:4,pendingSegments:8,pendingBytes:256*1024,encodedBytes:1024*1024,muxedBytes:2*1024*1024,transportEvents:2048});
 export function assertGraphHostedPlatform(platform,env) {
   if(platform!=='darwin'||env?.GITHUB_ACTIONS!=='true'||env?.RUNNER_OS!=='macOS')throw new Error('Hosted macOS GitHub Actions only; no local browser, audio or server launch');
   if(!/^[0-9a-f]{40}$/.test(env?.V177_GRAPH_EXPECTED_HEAD??''))throw new Error('Exact40-character candidate HEAD is required');
@@ -46,7 +46,7 @@ export function assertGraphObservation(state) {
   check(state.packets.length>0&&state.encodedBytes<=GRAPH_LIMITS.encodedBytes,'Native AAC bytes absent or unbounded');
   check(state.finished?.status==='framed'&&state.finished.snapshot.partialFrames===0,'Partial PCM cannot be silently omitted or padded');
   check(state.finished.snapshot.acceptedFrames===state.inputFrames&&state.inputFrames===state.pcm.length*1024,'Actual PCM/encoded input receipt disagrees');
-  check(state.transportOverflow===0&&state.peakEncoderQueue<=GRAPH_LIMITS.encoderQueue&&state.peakPendingSegments<=GRAPH_LIMITS.pendingSegments&&state.peakPendingBytes<=GRAPH_LIMITS.pendingBytes,'Bounded transport capacity failed');
+  check(state.transportOverflow===0&&state.pendingPcmPackets===0&&Number.isInteger(state.peakPendingPcmPackets)&&state.peakPendingPcmPackets<=GRAPH_LIMITS.pcmPoolPackets&&state.peakEncoderQueue<=GRAPH_LIMITS.encoderQueue&&state.peakPendingSegments<=GRAPH_LIMITS.pendingSegments&&state.peakPendingBytes<=GRAPH_LIMITS.pendingBytes,'Bounded transport capacity failed');
   const first=state.events.find(row=>row.event==='playing');check(first&&first.ms<=150,'Native startup exceeds the original150ms budget');
   check(!state.events.some(row=>row.event==='waiting'&&row.ms>first.ms&&row.time<state.inputFrames/state.sampleRate-.05),'Native stream underflowed during input');
   const clock=graphClockEvidence(state);check(clock.accepted,'Input-start elapsed clock versus native playhead exceeded the original150ms budget');

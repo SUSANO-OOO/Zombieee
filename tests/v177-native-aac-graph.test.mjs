@@ -3,6 +3,7 @@ import nodeTest from 'node:test';import {spawnSync} from 'node:child_process';im
 import {assertGraphHostedPlatform,assertGraphEventBinding,graphClockEvidence,assertGraphObservation,GRAPH_LIMITS as L} from '../scripts/v177-native-aac-graph-contract.mjs';
 import {buildGraphRoutes,makeGraphHandler,DI_WRAPPER,runGraphProbe} from '../scripts/v177-native-aac-graph-browser.mjs';
 import {prepareGraphOutput,createGraphState,graphOutputForContext} from '../scripts/v177-native-aac-graph-output.mjs';
+import {createPcmPacketFramer} from '../scripts/v177-graph-pcm-framer.mjs';
 
 // Only the8 actual-driver fault cases require VM modules. The standard project
 // runner executes ordinary cases here and forwards these8 from one explicitly
@@ -39,7 +40,7 @@ const {nativeAacClockEvidence}=await import(pathToFileURL(path.join(repo,'script
 function valid(){return{status:'complete',errors:[],primaryError:null,sampleRate:48000,realtimeAudioContexts:1,mixerContextSame:true,warmDiagnostics:{contextCreateCount:1,contextTiming:{sampleRate:48000}},processorReady:{sampleRate:48000},startedFromTrustedWarmClick:true,
   initialization:{acknowledged:true,confirmedByActualMetadata:true},
   bgm:{trusted:true,assetId:'music-v100-score-normal',voiceId:'voice-1'},effect:{trusted:true,assetId:'weapon-rifle-01',voiceId:'voice-2',firstInputFrame:1,latencyMs:15},
-  pcm:[{}],pcmBytes:8192,packets:[{}],encodedBytes:10,finished:{status:'framed',snapshot:{partialFrames:0,acceptedFrames:1024}},inputFrames:1024,transportOverflow:0,peakEncoderQueue:1,peakPendingSegments:1,peakPendingBytes:100,
+  pcm:[{}],pcmBytes:8192,packets:[{}],encodedBytes:10,finished:{status:'framed',snapshot:{partialFrames:0,acceptedFrames:1024}},inputFrames:1024,transportOverflow:0,pendingPcmPackets:0,peakPendingPcmPackets:0,peakEncoderQueue:1,peakPendingSegments:1,peakPendingBytes:100,
   events:[{event:'playing',ms:10,time:0}],playheads:[{ms:20,time:.02,encodedFrames:1024}],finalMedia:{muted:false,volume:1,time:1024/48000},content:{correlation:.99,rms:.1,peak:.4},cleanup:{completed:true}};}
 class Target{constructor(){this.listeners=new Map();}addEventListener(n,f){const set=this.listeners.get(n)??new Set();set.add(f);this.listeners.set(n,set);}removeEventListener(n,f){this.listeners.get(n)?.delete(f);}emit(n,event={}){for(const f of this.listeners.get(n)??[])f(event);}}
 function fakeEnvironment({rate=48000,playError=null,encoderQueue=0,omitConfig=false,deferInitialization=false,durationError=null}={}){
@@ -50,7 +51,7 @@ function fakeEnvironment({rate=48000,playError=null,encoderQueue=0,omitConfig=fa
   class Source extends Target{static isTypeSupported(){return true;}constructor(){super();this.readyState='closed';this.durationValue=NaN;}get duration(){return this.durationValue;}set duration(value){durationChanges.push({value,readyState:this.readyState,updating:this.buffer?.updating??null});if(durationError)throw durationError;this.durationValue=value;}addSourceBuffer(){this.buffer=new Target();let appends=0;Object.assign(this.buffer,{updating:false,appendBuffer:()=>{this.buffer.updating=true;if(++appends===1&&deferInitialization)return;queueMicrotask(()=>{this.buffer.updating=false;this.buffer.emit('updateend');});}});return this.buffer;}endOfStream(){this.readyState='ended';audio.ended=true;}}
   env.MediaSource=Source;
   env.AudioData=class{constructor(options){Object.assign(this,options);this.copied=new Float32Array(options.data);}close(){this.closed=true;}};
-  env.AudioEncoder=class{static async isConfigSupported(config){return{supported:true,config};}constructor(callbacks){this.callbacks=callbacks;this.state='unconfigured';this.encodeQueueSize=encoderQueue;this.count=0;}configure(config){this.config=config;this.state='configured';}encode(data){assert.equal(data.closed,undefined);encoded.push(data.copied);const index=this.count++,description=new Uint8Array(rate===48000?[0x11,0x90]:[0x12,0x10]);this.callbacks.output({byteLength:4,timestamp:data.timestamp,duration:Math.round(1024/rate*1e6),type:'key',copyTo:d=>d.set([1,2,3,index%256])},index===0&&!omitConfig?{decoderConfig:{codec:'mp4a.40.2',sampleRate:rate,numberOfChannels:2,description}}:{});}async flush(){}close(){this.state='closed';}};
+  env.AudioEncoder=class extends Target{static async isConfigSupported(config){return{supported:true,config};}constructor(callbacks){super();this.callbacks=callbacks;this.state='unconfigured';this.encodeQueueSize=encoderQueue;this.count=0;}configure(config){this.config=config;this.state='configured';}encode(data){assert.equal(data.closed,undefined);encoded.push(data.copied);const index=this.count++,description=new Uint8Array(rate===48000?[0x11,0x90]:[0x12,0x10]);this.callbacks.output({byteLength:4,timestamp:data.timestamp,duration:Math.round(1024/rate*1e6),type:'key',copyTo:d=>d.set([1,2,3,index%256])},index===0&&!omitConfig?{decoderConfig:{codec:'mp4a.40.2',sampleRate:rate,numberOfChannels:2,description}}:{});}async flush(){}close(){this.state='closed';}};
   env.AudioWorkletNode=class{constructor(context,name,options){this.options=options;this.port={onmessage:null,close(){this.closed=true;},postMessage:(message,transfer)=>{const copy=structuredClone(message,{transfer});sent.push(copy);if(copy.type==='finish')queueMicrotask(()=>this.port.onmessage?.({data:{type:'pcm-finished',generation:1,status:'framed',snapshot:{partialFrames:0,acceptedFrames:encoded.length*1024}}}));}};nodes.push(this);}disconnect(){this.disconnected=true;}};
   const context={sampleRate:rate,currentTime:0,state:'suspended',audioWorklet:{async addModule(url){assert.match(url,/worklet/u);}},createGain(){return{connect:node=>{this.connected=node;},disconnect(){this.disconnected=true;}};}};
   return{env,context,clock,sent,encoded,nodes,durationChanges,get audio(){return audio;},get source(){return currentSource;},completeInitialization(){currentSource.buffer.updating=false;currentSource.buffer.emit('updateend');},packet(index=0){const buffer=new ArrayBuffer(8192),values=new Float32Array(buffer);for(let i=0;i<values.length;i++)values[i]=Math.sin(i*.1)*.2;return{type:'pcm-packet',generation:1,id:index%4,packetIndex:index,sampleRate:rate,channels:2,numberOfFrames:1024,firstSourceFrame:65536+index*1024,timestampUs:Math.round(index*1024/rate*1e6),durationUs:Math.round((index+1)*1024/rate*1e6)-Math.round(index*1024/rate*1e6),buffer};}};
@@ -67,7 +68,7 @@ test('150ms arithmetic matches the unchanged original helper, including invalid/
 test('clock/result contract accepts the finite positive control only within its narrow scope',()=>{const result=assertGraphObservation(valid());assert.equal(result.clock.budgetMs,150);assert.match(result.scope,/not accepted/u);});
 const faults={startup:s=>s.events[0].ms=150.00001,lag:s=>s.playheads[0]={ms:200,time:.049,encodedFrames:9600},queued:s=>s.playheads[0]={ms:1,time:.001,encodedFrames:8192},effect:s=>s.effect.latencyMs=150.00001,
   fakeInput:s=>s.effect.trusted=false,wrongId:s=>s.effect.assetId='borrowed-rifle',missingVoice:s=>s.effect.voiceId=null,tail:s=>s.finished.status='partial-tail-retained-not-encoded',gap:s=>s.finished.snapshot.acceptedFrames=1025,
-  overflow:s=>s.transportOverflow=1,encoderBacklog:s=>s.peakEncoderQueue=L.encoderQueue+1,mseBacklog:s=>s.peakPendingBytes=L.pendingBytes+1,cleanup:s=>s.cleanup.completed=false,
+  overflow:s=>s.transportOverflow=1,encoderBacklog:s=>s.peakEncoderQueue=L.encoderQueue+1,pcmPoolBacklog:s=>s.peakPendingPcmPackets=L.pcmPoolPackets+1,undrainedPcm:s=>s.pendingPcmPackets=1,mseBacklog:s=>s.peakPendingBytes=L.pendingBytes+1,cleanup:s=>s.cleanup.completed=false,
   synthetic:s=>s.realtimeAudioContexts=0,mixerContext:s=>s.mixerContextSame=false,rate:s=>s.sampleRate=96000,missingRaw:s=>s.pcm=[],error:s=>s.primaryError='original failure',content:s=>s.content.correlation=.7,
   initializationAck:s=>s.initialization.acknowledged=false,unconfirmedMetadata:s=>s.initialization.confirmedByActualMetadata=false};
 for(const [name,mutate]of Object.entries(faults))test('fail-closed result fault '+name,()=>{const state=valid();mutate(state);assert.throws(()=>assertGraphObservation(state));});
@@ -142,9 +143,14 @@ test('native original play rejection identity and first error survive later call
   const f=fakeEnvironment({playError:original}),state=createGraphState(),output=await prepareGraphOutput(f.context,{state,workletUrl:'/actual-worklet.mjs',env:f.env});graphOutputForContext(f.context,{});
   await assert.rejects(output.api.prepare(),error=>error===original);const first=state.primaryError;assert.match(first,/original native play failure/u);assert.match(first,/nativePlay@/u);output.fail(new Error('secondary'));assert.equal(state.primaryError,first);await output.cleanup();
 });
-test('actual output preserves an encoder queue fault and does not fabricate encoded success',async()=>{
-  const f=fakeEnvironment({encoderQueue:4}),state=createGraphState(),output=await prepareGraphOutput(f.context,{state,workletUrl:'/actual-worklet.mjs',env:f.env});await output.api.prepare();f.nodes[0].port.onmessage({data:f.packet()});assert.match(state.primaryError,/queue exhausted/u);assert.equal(state.pcm.length,1);assert.equal(state.packets.length,0);await output.cleanup();
+test('actual output bounds waiting PCM and never fabricates encoding when the native queue stays full',async()=>{
+ const f=fakeEnvironment({encoderQueue:4}),state=createGraphState(),output=await prepareGraphOutput(f.context,{state,workletUrl:'/actual-worklet.mjs',env:f.env});await output.api.prepare();
+ for(let i=0;i<L.pcmPoolPackets;i++)f.nodes[0].port.onmessage({data:f.packet(i)});
+ assert.equal(state.primaryError,null);assert.equal(state.pendingPcmPackets,16);assert.equal(state.packets.length,0);assert.equal(f.sent.filter(r=>r.type==='recycle').length,0);
+ f.nodes[0].port.onmessage({data:f.packet(16)});assert.match(state.primaryError,/pending PCM pool exhausted/u);
+ assert.equal(state.pcm.length,17);assert.equal(state.peakPendingPcmPackets,16);assert.equal(state.packets.length,0);await output.cleanup();
 });
+
 test('actual output retains encoded raw bytes even when decoder configuration is absent',async()=>{
   const f=fakeEnvironment({omitConfig:true}),state=createGraphState(),output=await prepareGraphOutput(f.context,{state,workletUrl:'/actual-worklet.mjs',env:f.env});await output.api.prepare();f.nodes[0].port.onmessage({data:f.packet()});assert.match(state.primaryError,/omitted decoder/u);assert.equal(state.packets.length,1);assert.equal(output.evidence().encodedParts[0].length,4);await output.cleanup();
 });
@@ -157,7 +163,7 @@ test('actual Worklet callback frames128-input quanta and finishes only at an exa
   for(let i=0;i<9;i++){globalThis.currentFrame=i*128;assert.equal(p.process([planes]),true);}assert.equal(p.messages.filter(m=>m.type==='pcm-packet').length,1);const first=p.messages.find(m=>m.type==='pcm-packet');p.port.onmessage({data:{type:'recycle',generation:1,id:first.id,packetIndex:first.packetIndex,buffer:first.buffer}});p.port.onmessage({data:{type:'finish',generation:1}});
   for(let i=9;i<16;i++){globalThis.currentFrame=i*128;assert.equal(p.process([planes]),i===15?false:true);}const finish=p.messages.find(m=>m.type==='pcm-finished');assert.equal(finish.status,'framed');assert.equal(finish.snapshot.acceptedFrames,2048);assert.equal(finish.snapshot.partialFrames,0);
   const broken=new Processor();globalThis.currentFrame=0;assert.equal(broken.process([planes]),true);globalThis.currentFrame=256;assert.equal(broken.process([planes]),false);assert.match(broken.messages.find(m=>m.type==='pcm-framing-error').code,/gap/u);
-  const saturated=new Processor();for(let i=0;i<32;i++){globalThis.currentFrame=i*128;assert.equal(saturated.process([planes]),true);}globalThis.currentFrame=4096;assert.equal(saturated.process([planes]),false);assert.equal(saturated.messages.find(m=>m.type==='pcm-framing-error').code,'pcm-backpressure');
+  const saturated=new Processor();for(let i=0;i<L.pcmPoolPackets*8;i++){globalThis.currentFrame=i*128;assert.equal(saturated.process([planes]),true);}globalThis.currentFrame=L.pcmPoolPackets*1024;assert.equal(saturated.process([planes]),false);assert.equal(saturated.messages.find(m=>m.type==='pcm-framing-error').code,'pcm-backpressure');
  }finally{restoreWorkletGlobals();}});
 test('actual Worklet stops explicitly at the8s cap instead of silently extending collection',()=>{installWorkletGlobals();try{const p=new Processor(),planes=[new Float32Array(128),new Float32Array(128)];let last=0,result=true;while(result&&last<4000){globalThis.currentFrame=last*128;result=p.process([planes]);for(const m of p.messages.filter(m=>m.type==='pcm-packet'&&!m.recycled)){m.recycled=true;p.port.onmessage({data:{type:'recycle',generation:1,id:m.id,packetIndex:m.packetIndex,buffer:m.buffer}});}last++;}assert.equal(result,false);assert.equal(last,3000);assert.equal(p.messages.find(m=>m.type==='pcm-framing-error').code,'eight-second-capture-cap');}finally{restoreWorkletGlobals();}});
 test('actual Worklet failure receipts survive host callback and raw JSON without changing PCM limits',async()=>{
@@ -165,7 +171,7 @@ test('actual Worklet failure receipts survive host callback and raw JSON without
   await import('../scripts/v177-native-aac-graph-worklet.mjs?failure-receipt-test');
   for(const code of ['pcm-backpressure','source-frame-gap-or-duplicate','invalid-recycle']){
    const processor=new Processor(),planes=[new Float32Array(128),new Float32Array(128)];
-   if(code==='pcm-backpressure')for(let i=0;i<=32;i++){globalThis.currentFrame=i*128;processor.process([planes]);}
+   if(code==='pcm-backpressure')for(let i=0;i<=L.pcmPoolPackets*8;i++){globalThis.currentFrame=i*128;processor.process([planes]);}
    else if(code==='source-frame-gap-or-duplicate'){globalThis.currentFrame=0;processor.process([planes]);globalThis.currentFrame=256;processor.process([planes]);}
    else{for(let i=0;i<8;i++){globalThis.currentFrame=i*128;processor.process([planes]);}processor.port.onmessage({data:{type:'recycle',generation:1,id:99,packetIndex:0,buffer:new ArrayBuffer(8192)}});}
    const packet=processor.messages.find(row=>row.type==='pcm-framing-error');assert.equal(packet.code,code);
@@ -174,7 +180,7 @@ test('actual Worklet failure receipts survive host callback and raw JSON without
    const saved=JSON.parse(JSON.stringify(state)).pcmFramingFailure;
    assert.deepEqual(saved,{receivedAtMs:123,generation:1,code,snapshot:packet.snapshot,secondary:false});
    assert.match(state.primaryError,new RegExp(code,'u'));assert.equal(state.status,'failed');assert.equal(state.pcm.length,0);
-   assert.equal(saved.snapshot.poolPackets,4);assert(saved.snapshot.inFlightPackets<=4);assert(JSON.stringify(saved).length<4096);
+   assert.equal(saved.snapshot.poolPackets,L.pcmPoolPackets);assert(saved.snapshot.inFlightPackets<=L.pcmPoolPackets);assert(JSON.stringify(saved).length<4096);
    const first=state.pcmFramingFailure;f.nodes[0].port.onmessage({data:{...packet,code:'secondary'}});assert.equal(state.pcmFramingFailure,first);await output.cleanup();
   }
  }finally{restoreWorkletGlobals();}
@@ -382,4 +388,83 @@ test('actual process launch never dispatches after row expiry or passes an unbou
  const late=await actualBrowserLaunch({guardAt:29999,completeAt:30001});
  assert.match(String(late.error),/Late result cannot promote an expired row/u);
  assert.equal(late.calls.launches.length,1);assert.equal(late.calls.launches[0].timeout,1);
+});
+
+
+test('the named16-slot physical pool preserves raw words and rejects its first excess quantum',()=>{
+ assert.equal(L.pcmPoolPackets,16);assert.equal(L.encoderQueue,4);
+ const emitted=[],framer=createPcmPacketFramer({sampleRate:48000,channels:2,poolPackets:L.pcmPoolPackets,
+  emitPacket:(packet,transfer)=>emitted.push(structuredClone(packet,{transfer}))});
+ for(let i=0;i<16;i++){
+  const planes=[new Float32Array(1024).fill((i+1)/32),new Float32Array(1024).fill(-(i+1)/32)];
+  assert.equal(framer.push(planes,i*1024),true);
+  assert.deepEqual(new Float32Array(emitted[i].buffer),Float32Array.from([...planes[0],...planes[1]]));
+ }
+ assert.equal(framer.snapshot().pcmPoolBytes,128*1024);assert.equal(framer.snapshot().inFlightPackets,16);
+ assert.equal(framer.push([new Float32Array(128),new Float32Array(128)],16384),false);
+ assert.equal(framer.snapshot().failure.code,'pcm-backpressure');assert.equal(framer.snapshot().acceptedFrames,16384);
+ assert.throws(()=>createPcmPacketFramer({sampleRate:48000,poolPackets:17,emitPacket(){}}),/bounded framing/u);
+ assert.equal(createPcmPacketFramer({sampleRate:48000,emitPacket(){}}).snapshot().poolPackets,4,'Generic default remains4');
+});
+
+function queuedEncoderEnvironment(){
+ const f=fakeEnvironment({encoderQueue:4}),Encoder=f.env.AudioEncoder;const nativeRef={current:null};let flushes=0,maximum=0;
+ f.env.AudioEncoder=class extends Encoder{
+  constructor(callbacks){super(callbacks);nativeRef.current=this;}
+  encode(data){assert.ok(this.encodeQueueSize<L.encoderQueue);super.encode(data);this.encodeQueueSize++;maximum=Math.max(maximum,this.encodeQueueSize);}
+  async flush(){flushes++;await super.flush();}
+ };
+ return{f,get native(){return nativeRef.current;},get flushes(){return flushes;},get maximum(){return maximum;}};
+}
+test('native dequeue drains retained PCM in order without crossing encoder4 or copying its pool payload',async()=>{
+ const q=queuedEncoderEnvironment(),{f}=q,state=createGraphState(),output=await prepareGraphOutput(f.context,{state,workletUrl:'/worklet.mjs',env:f.env});await output.api.prepare();
+ const packets=[],original=[];
+ for(let i=0;i<16;i++){const packet=f.packet(i);new Float32Array(packet.buffer).fill(i/32);packets.push(packet);original.push(new Float32Array(packet.buffer).slice());f.clock.now=i*23;f.nodes[0].port.onmessage({data:packet});}
+ assert.equal(state.primaryError,null);assert.equal(state.pendingPcmPackets,16);assert.equal(f.encoded.length,0);
+ assert.ok(packets.every(p=>p.buffer.byteLength===8192),'Waiting retains the original transferred buffers');
+ for(let n=0;n<4;n++){f.clock.now=400+n*10;q.native.encodeQueueSize=0;q.native.emit('dequeue');await new Promise(resolve=>setImmediate(resolve));assert.equal(state.pendingPcmPackets,12-n*4);}
+ assert.equal(q.maximum,4);assert.equal(state.peakPendingPcmPackets,16);assert.equal(state.primaryError,null);
+ assert.equal(f.encoded.length,16);assert.ok(packets.every(p=>p.buffer.byteLength===0));
+ assert.deepEqual(f.sent.filter(p=>p.type==='recycle').map(p=>p.packetIndex),Array.from({length:16},(_,i)=>i));
+ for(let i=0;i<16;i++){assert.deepEqual(f.encoded[i],original[i]);assert.deepEqual(new Float32Array(output.evidence().pcmParts[i].buffer),original[i]);assert.equal(state.pcm[i].timestampUs,Math.round(i*1024/48000*1e6));}
+ f.audio.currentTime=16*1024/48000;await output.finish();assert.equal(q.flushes,1);await output.cleanup();
+});
+test('finish waits for actual pending input before its single original2s encoder flush owner',async()=>{
+ const q=queuedEncoderEnvironment(),{f}=q,state=createGraphState(),output=await prepareGraphOutput(f.context,{state,workletUrl:'/worklet.mjs',env:f.env});await output.api.prepare();
+ for(let i=0;i<3;i++)f.nodes[0].port.onmessage({data:f.packet(i)});
+ const finishing=output.finish();await new Promise(resolve=>setImmediate(resolve));assert.equal(q.flushes,0);
+ q.native.encodeQueueSize=0;q.native.emit('dequeue');f.audio.currentTime=3*1024/48000;
+ await finishing;assert.equal(f.encoded.length,3);assert.equal(q.flushes,1);assert.equal(state.pendingPcmPackets,0);await output.cleanup();
+});
+test('native error while waiting rejects finish with the original identity and forbids late encoding',async()=>{
+ const q=queuedEncoderEnvironment(),{f}=q,state=createGraphState(),output=await prepareGraphOutput(f.context,{state,workletUrl:'/worklet.mjs',env:f.env});await output.api.prepare();
+ f.nodes[0].port.onmessage({data:f.packet()});const finishing=output.finish(),caught=finishing.catch(error=>error);
+ await new Promise(resolve=>setImmediate(resolve));const original=new Error('Original pending native error');q.native.callbacks.error(original);
+ assert.equal(await caught,original);q.native.encodeQueueSize=0;q.native.emit('dequeue');assert.equal(f.encoded.length,0);assert.equal(q.flushes,0);assert.match(state.primaryError,/Original pending native error/u);await output.cleanup();
+});
+test('disposed or expired input-drain owners cannot encode or flush on a late native dequeue',async()=>{
+ for(const expired of [false,true]){
+  const q=queuedEncoderEnvironment(),{f}=q,state=createGraphState(),output=await prepareGraphOutput(f.context,{state,workletUrl:'/worklet.mjs',env:f.env});await output.api.prepare();
+  f.nodes[0].port.onmessage({data:f.packet()});const caught=output.finish().catch(error=>error);await new Promise(resolve=>setImmediate(resolve));
+  if(expired)f.clock.now=2001;else await output.cleanup();q.native.encodeQueueSize=0;q.native.emit('dequeue');
+  const error=await caught;assert.match(String(error),expired?/Original2s AAC input drain deadline expired/u:/disposed before drain/u);
+  assert.equal(f.encoded.length,0);assert.equal(q.flushes,0);await output.cleanup();
+ }
+});
+
+
+test('an encode crossing the drain deadline cannot recycle or encode the next queued packet',async()=>{
+ const q=queuedEncoderEnvironment(),{f}=q,state=createGraphState(),output=await prepareGraphOutput(f.context,{state,workletUrl:'/worklet.mjs',env:f.env});await output.api.prepare();
+ for(let i=0;i<2;i++)f.nodes[0].port.onmessage({data:f.packet(i)});
+ const caught=output.finish().catch(error=>error);await new Promise(resolve=>setImmediate(resolve));
+ const encode=q.native.encode.bind(q.native);q.native.encode=data=>{encode(data);f.clock.now=2001;};
+ f.clock.now=1999;q.native.encodeQueueSize=0;q.native.emit('dequeue');
+ assert.match(String(await caught),/Original2s AAC input drain deadline expired/u);assert.equal(f.encoded.length,1);
+ assert.equal(f.sent.filter(row=>row.type==='recycle').length,1);assert.equal(state.pcm.length,2);assert.equal(q.flushes,0);await output.cleanup();
+});
+test('native flush resolution after the absolute owner deadline cannot publish final media before timer delivery',async()=>{
+ const q=queuedEncoderEnvironment(),{f}=q,state=createGraphState(),output=await prepareGraphOutput(f.context,{state,workletUrl:'/worklet.mjs',env:f.env});await output.api.prepare();
+ q.native.flush=async()=>{f.clock.now=2001;};
+ await assert.rejects(output.finish(),/AAC flush owner expired or was cancelled/u);assert.equal(state.finalMedia,undefined);
+ await output.cleanup();
 });

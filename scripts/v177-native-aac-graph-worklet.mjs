@@ -1,10 +1,11 @@
 // Output-only proposal. Actual processor API; no synthetic signal or second audible output.
 import {createPcmPacketFramer} from './v177-graph-pcm-framer.mjs';
+import {GRAPH_LIMITS as L} from './v177-native-aac-graph-contract.mjs';
 class V177GraphPcmProcessor extends AudioWorkletProcessor {
   constructor(options={}){
     super();const p=options.processorOptions??{};this.generation=p.generation??1;this.stopping=false;this.done=false;this.reported=false;
     this.maxPackets=Math.floor(sampleRate*8/1024);this.packets=0;
-    this.framer=createPcmPacketFramer({sampleRate,channels:2,poolPackets:4,generation:this.generation,
+    this.framer=createPcmPacketFramer({sampleRate,channels:2,poolPackets:L.pcmPoolPackets,generation:this.generation,
       emitPacket:(packet,transfer)=>{this.packets++;this.port.postMessage(packet,transfer);}});
     this.port.onmessage=({data:m})=>{if(m?.generation!==this.generation)return;if(m.type==='recycle')this.framer.recycle(m);else if(m.type==='finish')this.stopping=true;this.checkFailure();};
     this.port.postMessage({type:'pcm-processor-ready',sampleRate,channels:2,generation:this.generation,currentFrame});

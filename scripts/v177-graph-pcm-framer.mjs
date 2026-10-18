@@ -8,7 +8,7 @@ export function pcmTimestampUs(frame, sampleRate) {
 
 export function createPcmPacketFramer({sampleRate,channels=2,poolPackets=4,generation=1,maxInputFrames=2048,emitPacket}) {
   if(!Number.isSafeInteger(sampleRate)||sampleRate<8000||sampleRate>192000)throw new RangeError('Invalid actual sample rate');
-  if(![1,2].includes(channels)||!Number.isInteger(poolPackets)||poolPackets<2||poolPackets>8||!Number.isSafeInteger(generation)||generation<1
+  if(![1,2].includes(channels)||!Number.isInteger(poolPackets)||poolPackets<2||poolPackets>16||!Number.isSafeInteger(generation)||generation<1
     ||!Number.isInteger(maxInputFrames)||maxInputFrames<1||maxInputFrames>2048||typeof emitPacket!=='function')throw new RangeError('Invalid bounded framing configuration');
   const packetFrames=1024,bytesPerPacket=channels*packetFrames*4;
   const slots=Array.from({length:poolPackets},(_,id)=>{const buffer=new ArrayBuffer(bytesPerPacket);return{id,buffer,words:new Uint32Array(buffer),inFlight:false,packetIndex:null};});

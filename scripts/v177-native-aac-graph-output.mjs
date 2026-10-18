@@ -31,16 +31,16 @@ function declaredAacDescription(config){
 export function graphOutputForContext(context,options={}){const value=outputs.get(context);if(!value)throw new Error('Experimental output was not prewarmed for this exact context');value.configureOwner(options);return value.api;}
 export function createGraphState(){return{schema:'v177-real-audio-graph-observation/v1',status:'preparing',route:'MediaSource',variant:'one-prewarmed-original-mixer-bgm-rifle',sampleRate:null,channels:2,realtimeAudioContexts:0,
   startedAt:null,inputFrames:0,pcmBytes:0,encodedBytes:0,muxedBytes:0,pcm:[],packets:[],configurations:[],playheads:[],events:[],transport:[],transportOverflow:0,
-  errors:[],primaryError:null,pcmFramingFailure:null,peakEncoderQueue:0,peakPendingSegments:0,peakPendingBytes:0,physicalRecordingAccepted:false,productionBackendAccepted:false,coldAccepted:false,endingAccepted:false,lifecycleAccepted:false,wholeGameAccepted:false};}
+  errors:[],primaryError:null,pcmFramingFailure:null,pendingPcmPackets:0,peakPendingPcmPackets:0,peakEncoderQueue:0,peakPendingSegments:0,peakPendingBytes:0,physicalRecordingAccepted:false,productionBackendAccepted:false,coldAccepted:false,endingAccepted:false,lifecycleAccepted:false,wholeGameAccepted:false};}
 export async function within(promise,ms,label){let timer;try{return await Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(label+' exceeded '+ms+'ms')),ms);})]);}finally{clearTimeout(timer);}}
 export async function prepareGraphOutput(context,{state=createGraphState(),workletUrl,env=globalThis}={}){
   const now=()=>env.performance.now(),check=(ok,message)=>{if(!ok)throw new Error(message);};
   state.sampleRate=context.sampleRate;check(Number.isSafeInteger(state.sampleRate)&&state.sampleRate>=8000&&state.sampleRate<65536,'Actual context.sampleRate is unsupported; no resampling is permitted');
   let audio,source,buffer,encoder,node,input,url,owner={},desired=false,disposed=false,away=false,generation=1,pendingPlay=null,muxer,ended=false,originFrame=null,appendBytes=0;
-  const pending=[],pcmParts=[],encodedParts=[],muxedParts=[],removers=[];let finishedResolve,finishedReject,initializationReject;
+  const pending=[],queuedPcm=[],pcmParts=[],encodedParts=[],muxedParts=[],removers=[],pcmWaiters=[];let drainingPcm=false,pcmDrainDeadline=null,finishedResolve,finishedReject,initializationReject;
   const finished=new Promise((resolve,reject)=>{finishedResolve=resolve;finishedReject=reject;});void finished.catch(()=>{});
   const ms=()=>state.startedAt===null?null:now()-state.startedAt;
-  function fail(error){const text=graphErrorText(error);state.primaryError??=text;if(state.errors.length<16)state.errors.push(text);state.status='failed';initializationReject?.(error instanceof Error?error:new Error(text));finishedReject(error instanceof Error?error:new Error(text));}
+  function fail(error){const text=graphErrorText(error);state.primaryError??=text;if(state.errors.length<16)state.errors.push(text);state.status='failed';for(const waiter of pcmWaiters.splice(0))waiter.reject(error instanceof Error?error:new Error(text));initializationReject?.(error instanceof Error?error:new Error(text));finishedReject(error instanceof Error?error:new Error(text));}
   function record(event,extra={}){if(state.transport.length>=L.transportEvents){state.transportOverflow++;fail(new Error('Bounded transport event capacity exhausted'));return;}state.transport.push({event,at:now(),ms:ms(),contextTime:context.currentTime,mediaTime:audio?.currentTime??null,encodeQueue:encoder?.encodeQueueSize??null,pendingSegments:pending.length,pendingBytes:appendBytes,...extra});}
   const on=(target,name,fn)=>{target.addEventListener(name,fn);const remove=()=>target.removeEventListener(name,fn);removers.push(remove);return remove;};
   const rotation=env.matchMedia?.('(orientation: portrait)');
@@ -57,7 +57,7 @@ export async function prepareGraphOutput(context,{state=createGraphState(),workl
   function retainMuxed(segment){check(state.muxedBytes+segment.byteLength<=L.muxedBytes,'Bounded muxed evidence capacity exhausted');muxedParts.push(segment);state.muxedBytes+=segment.byteLength;enqueue(segment);}
   function drain(){if(disposed||state.primaryError||!buffer||buffer.updating||source.readyState!=='open')return;try{if(pending.length){const segment=pending.shift();appendBytes-=segment.byteLength;record('append-call',{bytes:segment.byteLength});buffer.appendBuffer(segment);}else if(ended){source.endOfStream();record('end-of-stream');}}catch(error){fail(error);}}
   const timeRanges=ranges=>ranges?{length:ranges.length,ranges:Array.from({length:Math.min(4,ranges.length)},(_,i)=>[ranges.start(i),ranges.end(i)])}:null;
-  function sample(){if(state.startedAt===null)return;state.playheads.push({ms:ms(),time:audio.currentTime,encodedFrames:state.inputFrames,contextTime:context.currentTime,encodeQueueSize:encoder.encodeQueueSize,pendingSegments:pending.length,pendingBytes:appendBytes,readyState:audio.readyState,paused:audio.paused,
+  function sample(){if(state.startedAt===null)return;state.playheads.push({ms:ms(),time:audio.currentTime,encodedFrames:state.inputFrames,contextTime:context.currentTime,encodeQueueSize:encoder.encodeQueueSize,pendingPcmPackets:queuedPcm.length,pendingSegments:pending.length,pendingBytes:appendBytes,readyState:audio.readyState,paused:audio.paused,
     audioBuffered:timeRanges(audio.buffered),sourceBuffered:timeRanges(buffer?.buffered),mediaSourceDuration:Number.isFinite(source.duration)?source.duration:String(source.duration),sourceMode:buffer?.mode??null,appendWindowStart:buffer?.appendWindowStart??null,appendWindowEnd:buffer?String(buffer.appendWindowEnd):null});}
   function receivePacket(packet){
     // Preserve actual received bytes before any AudioData construction or encoding.
@@ -70,21 +70,49 @@ export async function prepareGraphOutput(context,{state=createGraphState(),workl
     originFrame??=packet.firstSourceFrame;state.originFrame=originFrame;check(packet.firstSourceFrame===originFrame+state.inputFrames,'Actual Worklet source clock gap');
     state.inputFrames+=1024;
     const floats=new Float32Array(packet.buffer);for(const v of floats)check(Number.isFinite(v),'Nonfinite actual PCM is retained as failure, never clamped');
-    check(encoder.encodeQueueSize<L.encoderQueue,'Bounded AudioEncoder queue exhausted');
-    const data=new env.AudioData({format:'f32-planar',sampleRate:state.sampleRate,numberOfFrames:1024,numberOfChannels:2,timestamp:packet.timestampUs,data:floats});
-    receipt.audioDataReadyAtMs=ms();
+    // Waiting jobs retain their original transferred Worklet buffer. No new
+    // PCM payload is allocated, and the encoder itself stays capped at4.
+    check(queuedPcm.length<L.pcmPoolPackets,'Bounded pending PCM pool exhausted');
+    queuedPcm.push({packet,receipt});state.pendingPcmPackets=queuedPcm.length;
+    state.peakPendingPcmPackets=Math.max(state.peakPendingPcmPackets,queuedPcm.length);
+    drainPcm();
+  }
+  function drainPcm(){
+    if(disposed||state.primaryError||drainingPcm)return;
+    drainingPcm=true;
     try{
-      // AudioData owns a copy because its constructor has no transfer list.
-      // Return the scarce Worklet buffer before native encoding/MSE callbacks.
-      // The issue/return times are observations, never an invented Worklet ACK.
-      node.port.postMessage({type:'recycle',generation:1,id:packet.id,packetIndex:packet.packetIndex,buffer:packet.buffer},[packet.buffer]);
-      receipt.recyclePostedAtMs=ms();receipt.encodeCallAtMs=ms();
-      try{encoder.encode(data);}finally{receipt.encodeReturnedAtMs=ms();}
-    }finally{data.close();}
-    state.peakEncoderQueue=Math.max(state.peakEncoderQueue,encoder.encodeQueueSize);sample();
+      while(queuedPcm.length&&encoder.encodeQueueSize<L.encoderQueue){
+        assertPcmOwner();
+        const {packet,receipt}=queuedPcm.shift();state.pendingPcmPackets=queuedPcm.length;
+        const data=new env.AudioData({format:'f32-planar',sampleRate:state.sampleRate,numberOfFrames:1024,numberOfChannels:2,timestamp:packet.timestampUs,data:new Float32Array(packet.buffer)});
+        receipt.audioDataReadyAtMs=ms();
+        try{
+          // AudioData owns its copy; return this same scarce pool buffer before
+          // encode(), preserving the existing early-recycle ownership order.
+          assertPcmOwner();
+          node.port.postMessage({type:'recycle',generation:1,id:packet.id,packetIndex:packet.packetIndex,buffer:packet.buffer},[packet.buffer]);
+          receipt.recyclePostedAtMs=ms();
+          assertPcmOwner();receipt.encodeCallAtMs=ms();
+          try{encoder.encode(data);}finally{receipt.encodeReturnedAtMs=ms();}
+        }finally{data.close();}
+        state.peakEncoderQueue=Math.max(state.peakEncoderQueue,encoder.encodeQueueSize);sample();
+        if(state.primaryError)break;
+      }
+      if(!queuedPcm.length&&!state.primaryError)for(const waiter of pcmWaiters.splice(0))waiter.resolve();
+    }catch(error){fail(error);}
+    finally{drainingPcm=false;}
+  }
+  function assertPcmOwner(){
+    check(!disposed&&!state.primaryError,'PCM delivery owner was cancelled');
+    check(pcmDrainDeadline===null||now()<pcmDrainDeadline,'Original2s AAC input drain deadline expired');
+  }
+  function waitForPcmDrain(){
+    if(state.primaryError)return Promise.reject(new Error(state.primaryError));
+    if(!queuedPcm.length)return Promise.resolve();
+    return new Promise((resolve,reject)=>pcmWaiters.push({resolve,reject}));
   }
   async function cleanup(){
-    if(disposed)return;disposed=true;desired=false;generation++;state.cleanup??={completed:false,errors:[]};
+    if(disposed)return;disposed=true;desired=false;generation++;queuedPcm.length=0;state.pendingPcmPackets=0;for(const waiter of pcmWaiters.splice(0))waiter.reject(new Error('Owned PCM intake disposed before drain'));state.cleanup??={completed:false,errors:[]};
     const attempt=(label,fn)=>{try{fn();}catch(error){state.cleanup.errors.push({label,error:String(error)});fail(error);}};
     for(const remove of removers)attempt('listener',remove);
     attempt('port',()=>{if(node){node.port.onmessage=null;node.onprocessorerror=null;node.port.close();}});attempt('input-disconnect',()=>input?.disconnect());attempt('node-disconnect',()=>node?.disconnect());
@@ -137,7 +165,7 @@ export async function prepareGraphOutput(context,{state=createGraphState(),workl
         check(chunk.duration!==null&&Math.abs(chunk.duration-1024/state.sampleRate*1e6)<=1,'Native AAC duration is not1024 actual-rate samples');
         retainMuxed(muxer.segment([{data:bytes,timestampSamples:ordinal*1024,durationSamples:1024}]));
       }catch(error){fail(error);}
-    }});encoder.configure(config);
+    }});on(encoder,'dequeue',()=>{if(disposed||state.primaryError)return;record('encoder-dequeue');drainPcm();});encoder.configure(config);
     await within(context.audioWorklet.addModule(workletUrl),L.readyMs,'Raw Worklet module load');
     node=new env.AudioWorkletNode(context,'v177-graph-pcm-framer',{numberOfInputs:1,numberOfOutputs:0,channelCount:2,channelCountMode:'explicit',channelInterpretation:'speakers',processorOptions:{generation:1}});
     node.port.onmessage=({data:packet})=>{if(disposed)return;try{check(packet.generation===1,'Stale Worklet generation');if(packet.type==='pcm-processor-ready'){check(packet.sampleRate===state.sampleRate,'Processor actual rate mismatch');state.processorReady=packet;record('processor-ready');}else if(packet.type==='pcm-packet')receivePacket(packet);else if(packet.type==='pcm-framing-error'){
@@ -147,7 +175,7 @@ export async function prepareGraphOutput(context,{state=createGraphState(),workl
     node.onprocessorerror=()=>fail(new Error('Actual Worklet processorerror'));input=context.createGain();input.connect(node);api.destination=input;
     const result={api,configureOwner(options){owner=options;},state,origin:()=>originFrame,record,fail,
       evidence:()=>({metadata:state,pcmParts,encodedParts,muxedParts}),
-      async finish(){node.port.postMessage({type:'finish',generation:1});await within(finished,2000,'Worklet boundary finish');check(!state.primaryError,'Original Worklet/transport failure retained');await within(encoder.flush(),2000,'Actual AAC flush');check(!state.primaryError,'Original encoder failure retained');ended=true;drain();const deadline=now()+2000;while((pending.length||buffer.updating||source.readyState==='open')&&now()<deadline&&!state.primaryError)await new Promise(resolve=>setTimeout(resolve,5));check(!pending.length&&!buffer.updating&&source.readyState!=='open','Bounded MSE drain failed');while(audio.currentTime<state.inputFrames/state.sampleRate-.05&&now()<deadline&&!state.primaryError)await new Promise(resolve=>setTimeout(resolve,10));sample();state.finalMedia={time:audio.currentTime,duration:audio.duration,ended:audio.ended,paused:audio.paused,volume:audio.volume,muted:audio.muted,readyState:audio.readyState};check(!state.primaryError,'Original native failure retained');},cleanup};
+      async finish(){node.port.postMessage({type:'finish',generation:1});await within(finished,2000,'Worklet boundary finish');check(!state.primaryError,'Original Worklet/transport failure retained');pcmDrainDeadline=now()+2000;await within((async()=>{await waitForPcmDrain();check(!disposed&&!state.primaryError&&now()<pcmDrainDeadline,'AAC flush owner expired or was cancelled');await encoder.flush();check(!disposed&&!state.primaryError&&now()<pcmDrainDeadline,'AAC flush owner expired or was cancelled');})(),2000,'Actual AAC flush');check(!state.primaryError,'Original encoder failure retained');ended=true;drain();const deadline=now()+2000;while((pending.length||buffer.updating||source.readyState==='open')&&now()<deadline&&!state.primaryError)await new Promise(resolve=>setTimeout(resolve,5));check(!pending.length&&!buffer.updating&&source.readyState!=='open','Bounded MSE drain failed');while(audio.currentTime<state.inputFrames/state.sampleRate-.05&&now()<deadline&&!state.primaryError)await new Promise(resolve=>setTimeout(resolve,10));sample();state.finalMedia={time:audio.currentTime,duration:audio.duration,ended:audio.ended,paused:audio.paused,volume:audio.volume,muted:audio.muted,readyState:audio.readyState};check(!state.primaryError,'Original native failure retained');},cleanup};
     outputs.set(context,result);state.status='prewarmed-modules-not-running';return result;
   }catch(error){fail(error);await cleanup();throw error;}
 }
