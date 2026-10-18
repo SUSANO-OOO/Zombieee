@@ -5,8 +5,8 @@ import {buildGraphRoutes,makeGraphHandler,DI_WRAPPER,runGraphProbe} from '../scr
 import {prepareGraphOutput,createGraphState,graphOutputForContext} from '../scripts/v177-native-aac-graph-output.mjs';
 
 // Only the8 actual-driver fault cases require VM modules. The standard project
-// runner executes34 ordinary cases here and forwards these8 from one explicitly
-// flagged pure child. Its child mode never registers the34, so none run twice.
+// runner executes37 ordinary cases here and forwards these8 from one explicitly
+// flagged pure child. Its child mode never registers the37, so none run twice.
 const driverVmChild=process.env.V177_GRAPH_DRIVER_VM_CHILD==='1';
 const hasDriverVm=typeof vm.SourceTextModule==='function'&&typeof vm.SyntheticModule==='function';
 if(driverVmChild&&!hasDriverVm)throw new Error('Graph driver test child requires --experimental-vm-modules');
@@ -158,4 +158,67 @@ test('selective PR workflow uses exact PR head plus manual fallback and keeps or
  assert.equal(paths.length,18);for(const name of ['.github/workflows/native-aac-graph-probe.yml','scripts/v177-native-aac-graph-*','scripts/v177-graph-pcm-framer.mjs','tests/v177-native-aac-graph.test.mjs','app/audioMixer.js','app/audioOutput.js','public/audio/v100/foley/rifle.mp3'])assert.ok(paths.includes(name));
  assert.ok(paths.every(name=>!['app/**','scripts/**','public/**','**'].includes(name)));assert.equal((text.match(/github\.event\.pull_request\.head\.sha \|\| inputs\.expected_head/gu)??[]).length,2);
  assert.match(text,/group: v177-one-prewarmed-native-audio-graph\n  cancel-in-progress: false/u);assert.match(text,/--experimental-vm-modules --test/u);assert.equal((text.match(/^  graph:/gmu)??[]).length,1);assert.doesNotMatch(text,/matrix:|schedule:|pull_request_target:/u);
+});
+
+// Execute the actual nested actionStep and actual3 trusted input statements.
+// These Node VM mocks neither create a browser nor invoke game/media APIs.
+async function actualTrustedAction({index=0,guardAt=0,dispatchAt=guardAt,completeAt=dispatchAt,actionError=null}={}){
+ const text=(await fs.readFile(new URL('../scripts/v177-native-aac-graph-browser.mjs',import.meta.url),'utf8')).replaceAll('\r\n','\n');
+ const lines=text.split('\n'),deadlineLines=lines.filter(line=>line.startsWith('async function deadline(promise,ms,label){'));
+ assert.equal(deadlineLines.length,1,'one actual deadline definition');const bound=deadlineLines[0];
+ const startMarker='  const actionStep=(action,label,max=L.readyMs)=>{',endMarker='\n  };\n  try{';
+ assert.equal(text.split(startMarker).length,2,'one actual trusted-action wrapper');
+ const start=text.indexOf(startMarker),end=text.indexOf(endMarker,start);
+ assert.ok(end>start&&end-start<2048,'one bounded wrapper immediately before owned try');
+ const wrapper=text.slice(start,end+'\n  };'.length).trimStart();
+ const inputs=lines.filter(line=>line.trimStart().startsWith('await actionStep('));
+ assert.equal(inputs.length,3);assert.equal(text.split("page.getByRole('button'").length,4);
+ const input=/^\s*await actionStep\(timeout=>page\.getByRole\('button',\{name:'([^']+)',exact:true\}\)\.click\(\{timeout\}\),'([^']+)',L\.readyMs\);$/u;
+ const matches=inputs.map(line=>{const match=input.exec(line);assert.ok(match,'one actual trusted click statement');return match;});
+ assert.deepEqual(matches.map(match=>match[1]),['Warm original graph','Start original BGM','Fire original rifle']);
+ assert.deepEqual(matches.map(match=>match[2]),['Trusted warm click','Trusted original BGM click','Trusted original rifle click']);
+ const calls={locators:[],clicks:[],timers:[],cleared:[]},clock={now:guardAt},context=vm.createContext({
+  L,assert,ownerDeadline:30000,Date:{now:()=>clock.now},
+  setTimeout(_callback,ms){calls.timers.push(ms);clock.now=dispatchAt;return calls.timers.length;},
+  clearTimeout(id){calls.cleared.push(id);},
+  page:{getByRole(role,options){calls.locators.push({role,...options});return{click({timeout}){
+   calls.clicks.push({name:options.name,timeout,at:clock.now});clock.now=completeAt;
+   return actionError?Promise.reject(actionError):Promise.resolve('actual click result');
+  }};}}
+ });
+ const run=vm.runInContext(bound+'\n'+wrapper+'\n(async()=>{'+inputs[index]+'})',context);
+ let value,error;try{value=await run();}catch(original){error=original;}
+ return{calls,value,error,sourceStatement:inputs[index]};
+}
+test('actual trusted warm/start/fire are lazy and dispatch0 inputs at or beyond the unchanged30s deadline',async()=>{
+ for(let index=0;index<3;index++)for(const guardAt of [30000,30001]){
+  const r=await actualTrustedAction({index,guardAt});assert.match(String(r.error),/Original30s row deadline expired before/u);
+  assert.equal(r.calls.locators.length,0);assert.equal(r.calls.clicks.length,0);assert.equal(r.calls.timers.length,0);
+ }
+});
+test('actual trusted input timeout uses remaining owner time capped by the original5s and preserves native Error identity',async()=>{
+ const original=new Error('Original trusted input failure');
+ for(let index=0;index<3;index++){
+  for(const [guardAt,dispatchAt,expected]of [[0,0,5000],[29000,29000,1000],[29900,29950,50]]){
+   const r=await actualTrustedAction({index,guardAt,dispatchAt});assert.equal(r.error,undefined);assert.equal(r.calls.clicks.length,1);
+   assert.equal(r.calls.locators.length,1);assert.equal(r.calls.locators[0].role,'button');assert.equal(r.calls.locators[0].exact,true);
+   assert.equal(r.calls.clicks[0].timeout,expected);assert(r.calls.timers[0]<=5000&&r.calls.timers[0]<=30000-guardAt);
+   assert.equal(r.calls.cleared.length,1);
+  }
+  const r=await actualTrustedAction({index,actionError:original});assert.equal(r.error,original);assert.equal(r.calls.clicks.length,1);
+ }
+});
+test('actual lazy dispatch crosses the deadline without input or unhandled rejection and rejects late completion',async()=>{
+ const unhandled=[];const observe=error=>unhandled.push(error);process.on('unhandledRejection',observe);
+ try{
+  for(let index=0;index<3;index++)for(const dispatchAt of [30000,30001]){
+   const r=await actualTrustedAction({index,guardAt:29999,dispatchAt});assert.match(String(r.error),/Original30s row deadline expired before/u);
+   assert.equal(r.calls.locators.length,0);assert.equal(r.calls.clicks.length,0);assert.equal(r.calls.timers[0],1);assert.equal(r.calls.cleared.length,1);
+  }
+  for(let index=0;index<3;index++){
+   const r=await actualTrustedAction({index,guardAt:29999,dispatchAt:29999,completeAt:30001});
+   assert.match(String(r.error),/Late result cannot promote an expired row/u);assert.equal(r.calls.clicks.length,1);assert.equal(r.calls.clicks[0].timeout,1);
+  }
+  await new Promise(resolve=>setImmediate(resolve));assert.deepEqual(unhandled,[]);
+ }finally{process.removeListener('unhandledRejection',observe);}
 });

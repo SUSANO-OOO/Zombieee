@@ -78,6 +78,16 @@ export async function runGraphProbe({platform=process.platform,env=process.env,r
   const addError=error=>{if(report.errors.length<64)report.errors.push(String(error));else report.errorOverflow=(report.errorOverflow??0)+1;};
   let server,browser,context,page,audit,primaryError=null;const ownerDeadline=Date.now()+L.rowDeadlineMs;
   const step=(promise,label,max=L.rowDeadlineMs)=>{const left=ownerDeadline-Date.now();if(left<=0)throw new Error('Original30s row deadline expired before '+label);return deadline(promise,Math.min(left,max),label).then(value=>{assert.ok(Date.now()<=ownerDeadline,'Late result cannot promote an expired row');return value;});};
+  // Trusted input is invoked lazily only after the original owner deadline check.
+  // Recheck at dispatch and pass the current residual to Playwright itself.
+  const actionStep=(action,label,max=L.readyMs)=>{
+    const left=ownerDeadline-Date.now();if(left<=0)throw new Error('Original30s row deadline expired before '+label);
+    const pending=Promise.resolve().then(()=>{
+      const remaining=ownerDeadline-Date.now();if(remaining<=0)throw new Error('Original30s row deadline expired before '+label);
+      return action(Math.min(remaining,max));
+    });
+    return deadline(pending,Math.min(left,max),label).then(value=>{assert.ok(Date.now()<=ownerDeadline,'Late result cannot promote an expired row');return value;});
+  };
   try{
     const root=path.join(repo,'scripts/pwa-native-runtime/node_modules');const pkg=JSON.parse(await fs.readFile(path.join(root,'playwright/package.json'),'utf8')),browsers=JSON.parse(await fs.readFile(path.join(root,'playwright-core/browsers.json'),'utf8'));
     const record=browsers.browsers.find(row=>row.name==='webkit');assert.equal(pkg.version,'1.63.0');assert.equal(record.revision,'2359');assert.equal(record.browserVersion,'26.6');report.runtime={packageVersion:pkg.version,...record};
@@ -96,10 +106,10 @@ export async function runGraphProbe({platform=process.platform,env=process.env,r
     page.on('pageerror',addError);page.on('console',message=>{if(message.type()==='error')addError(message.text());});page.on('response',response=>{if(response.status()>=400)addError(response.status()+' '+response.url());});
     await step(page.goto(report.origin+ROOT),'Raw module diagnostic navigation',L.readyMs);
     await step(page.waitForFunction(()=>document.documentElement.dataset.graphPrepared==='1'||document.documentElement.dataset.graphComplete==='1',null,{timeout:L.readyMs}),'Raw module setup',L.readyMs);
-    await step(page.getByRole('button',{name:'Warm original graph',exact:true}).click({timeout:L.readyMs}),'Trusted warm click',L.readyMs);
-    await step(page.getByRole('button',{name:'Start original BGM',exact:true}).click({timeout:L.readyMs}),'Trusted original BGM click',L.readyMs);
+    await actionStep(timeout=>page.getByRole('button',{name:'Warm original graph',exact:true}).click({timeout}),'Trusted warm click',L.readyMs);
+    await actionStep(timeout=>page.getByRole('button',{name:'Start original BGM',exact:true}).click({timeout}),'Trusted original BGM click',L.readyMs);
     await step(new Promise(resolve=>setTimeout(resolve,1000)),'One-second rifle interval',1500);
-    await step(page.getByRole('button',{name:'Fire original rifle',exact:true}).click({timeout:L.readyMs}),'Trusted original rifle click',L.readyMs);
+    await actionStep(timeout=>page.getByRole('button',{name:'Fire original rifle',exact:true}).click({timeout}),'Trusted original rifle click',L.readyMs);
     const completion=await step(page.evaluate(()=>globalThis.__graphCompletion),'Original graph completion',L.completionMs);
     report.pageCompletion=completion;
     const originalError=value=>value&&typeof value==='object'&&typeof value.message==='string'?value:new Error(String(value));
