@@ -16,6 +16,7 @@ import {traceRangerPose} from './helpers/v177-ranger-render.mjs';
 import {assertNativeIncomingStun,nativeIncomingStunReady,captureNativeIncomingStunCase,
   readNativeIncomingStunSample} from '../scripts/v177-native-incoming-stun.mjs';
 import {nativeGamePerformanceReceipt,withNativeGameCaseDeadline} from '../scripts/v177-native-game-capture-browser.mjs';
+import {nativeCaptureRealmFixture} from './helpers/v177-native-capture-realm-fixture.mjs';
 
 function pair(){
   const card=UNIT_CONTENT_BY_ID.ranger,stats=enemyStatsForWave('spindle',1);
@@ -187,8 +188,13 @@ test('the private observation ring bounds both streams, clones data and cannot b
 
 function pipeline(fault){
   const fixture=rowFixture(),expected=fixture.row,events=[],sentinel=new Error('Original incoming-stun capture error');let index=-1;
+  const realm=nativeCaptureRealmFixture(10000,events);
+  expected.sourceRaf.realm=realm.raf;expected.sourceRaf.timeOrigin=10001;
+  expected.nativeClip.realm=realm.clip;expected.recordingStart.realm=realm.clip.started;
   const observation={async evaluate(){events.push('observer-stop');return expected.sourceRaf;},async dispose(){events.push('observer-dispose');}};
-  const page={async waitForFunction(){},async waitForTimeout(){},async evaluateHandle(){return observation;},
+  const page={async waitForFunction(){},async waitForTimeout(){},async evaluateHandle(fn,arg){
+    if(fn.name==='createNativeAllUnitRealmOwner')return realm.handle;
+    assert.equal(arg.realmOwner,realm.handle);return observation;},
     async evaluate(fn){
       if(fn.name==='readNativeIncomingStunSample'){
         if(fault==='sample'&&index===0)throw sentinel;
@@ -203,7 +209,8 @@ function pipeline(fault){
     }};
   const deps={out:'output',mimeType:'video/webm;codecs=vp8',startNativeGameRafObservation(){},stopNativeGameRafObservation(){},
     nativeGamePerformanceReceipt,read:async()=>fixture.bytes,onFailure:error=>events.push(error===sentinel?'original-failure':'contract-failure'),
-    async beginV177NativeCanvasClip(_page,metadata){
+    async beginV177NativeCanvasClip(_page,metadata,options){
+      assert.equal(options.realmOwner,realm.handle);
       assert.equal(metadata.fixtureGroup,'natural-incoming-stun');assert.equal(metadata.controlledOpponent,false);
       return {async waitForStart(){events.push('recorder-start');if(fault==='start')throw sentinel;return expected.recordingStart;},
         async finish({completed}){events.push('clip-'+completed);if(fault==='cleanup'&&!completed)return new Promise(()=>{});
@@ -218,6 +225,8 @@ test('dedicated native case starts before release, keeps original bytes, and mea
   assert.ok(f.events.indexOf('recorder-start')<f.events.indexOf('release'));
   assert.equal(f.events.filter(e=>e==='clip-true').length,1);assert.equal(f.events.includes('clip-false'),false);
   assert.equal(f.events.at(-1),'pause');assert.ok(f.events.includes('observer-dispose'));
+  assert.equal(f.row.realmReceipt.sameRealmVerified,true);
+  assert.ok(f.events.indexOf('observer-dispose')<f.events.indexOf('owner-disposed'));
 });
 
 test('capture failures retain their first error before cleanup, while a missing-state contract retains a completed original clip',async()=>{

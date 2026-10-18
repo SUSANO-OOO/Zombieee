@@ -6,6 +6,8 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {captureNativeIncomingStunCase} from './v177-native-incoming-stun.mjs';
 import {captureNativeTurnedGetupCase} from './v177-native-turned-getup.mjs';
+import {createNativeAllUnitRealmOwner, readNativeAllUnitRealmOwner,
+  assertNativeCaptureRealm} from './v177-native-capture-realm.mjs';
 
 export const NATIVE_GAME_CAPTURE_PHASES = Object.freeze(['move', 'attack', 'engage']);
 export const NATIVE_GAME_CAPTURE_FORMS = Object.freeze(['medic', 'ranger', 'engineer', 'abomination']);
@@ -40,6 +42,9 @@ export const NATIVE_GAME_CAPTURE_SOURCES = Object.freeze([
   'app/v177TurnedGetupProof.js','scripts/v177-native-turned-getup.mjs','tests/v177-native-turned-getup.test.mjs',
   'app/combatLifecycle.js','app/corpseVisuals.js','tests/v177-native-canvas-clips.test.mjs','app/v102CorpsePose.js','app/v102CorpsePoseData.js',
   'public/art/v100/joints/brawler-r1.webp','public/art/v100/characters/paisen-photo-battle-v177.png',
+  'scripts/v177-native-capture-realm.mjs', 'scripts/v177-native-allunit-contract.mjs',
+  'scripts/v177-native-allunit-manifest.mjs', 'tests/v177-native-capture-realm.test.mjs',
+  'tests/helpers/v177-native-capture-realm-fixture.mjs',
 ]);
 const acceptance = () => ({ originalSpeedAccepted: false, encodedPtsVerified: false,
   naturalnessAccepted: false, physicalIphoneRecordingAccepted: false,
@@ -188,19 +193,21 @@ export function nativeGamePerformanceReceipt(row) {
 
 export async function captureNativeGameCase(page, row, deps) {
   const { beginV177NativeCanvasClip, hasV177ContinuousDraw, assertV177AuthoredLiveRender, out } = deps;
-  let clip, observation, originalFailure;
+  let clip, observation, realmOwner, originalFailure;
   const sampleCount = row.phase === 'engage' ? 30 : 15;
   try {
     assert.ok(NATIVE_GAME_CAPTURE_FORMS.includes(row.form));
     row.proof = await page.evaluate(({ form, phase }) => window.__ASHFALL_BATTLE_QA__.prepareV177ContinuousActorProof({ form, phase }), { form: row.form, phase: row.phase });
     await page.waitForFunction(hasV177ContinuousDraw, row.proof, { timeout: 5_000 });
+    realmOwner = await page.evaluateHandle(createNativeAllUnitRealmOwner);
+    row.realmOwner = await realmOwner.evaluate(readNativeAllUnitRealmOwner);
     row.captureStart = await page.evaluate(readNativeGameCaptureSample, { ...row.proof, performanceBoundary: true });
-    observation = await page.evaluateHandle(startNativeGameRafObservation, row.proof);
+    observation = await page.evaluateHandle(startNativeGameRafObservation, { ...row.proof, realmOwner });
     clip = await beginV177NativeCanvasClip(page, { form: row.form, requestedKind: row.proof.kind,
       phase: row.phase, fixtureGroup: row.phase === 'engage' ? 'approach-to-attack' : row.proof.side === 'human' ? 'authored-form' : 'base-enemy',
       fighterId: row.proof.fighterId, preparedRenderKind: row.proof.renderKind,
       diagnosticOnly: true, controlledOpponent: true },
-    { directory: path.join(out, `${row.viewport.width}x${row.viewport.height}`, 'native-canvas-clips'), engine: 'webkit', requestedMimeType: NATIVE_GAME_CAPTURE_MIME });
+    { directory: path.join(out, `${row.viewport.width}x${row.viewport.height}`, 'native-canvas-clips'), engine: 'webkit', requestedMimeType: NATIVE_GAME_CAPTURE_MIME, realmOwner });
     for (let i = 0; i < sampleCount; i++) {
       await page.waitForTimeout(120);
       row.samples.push(await page.evaluate(readNativeGameCaptureSample, { ...row.proof, performanceBoundary: i === sampleCount - 1 }));
@@ -216,7 +223,7 @@ export async function captureNativeGameCase(page, row, deps) {
     assert.ok(Number.isSafeInteger(row.nativeClip.bytes) && row.nativeClip.bytes > 0 && row.nativeClip.bytes <= 8 * 1024 * 1024);
     assert.match(row.nativeClip.sha256, /^[a-f0-9]{64}$/u);
     assert.equal(row.nativeClip.originalSpeedAccepted, false); assert.equal(row.nativeClip.encodedPtsVerified, false);
-    assert.equal(row.sourceRaf.timeOrigin, row.nativeClip.timeOrigin);
+    row.realmReceipt = assertNativeCaptureRealm(row);
     assert.equal(row.sourceRaf.overflow, false);
     assert.ok(row.sourceRaf.rows.length >= 2, 'Native RAF observations must be retained separately from encoded frames');
     for (const [i, source] of row.sourceRaf.rows.entries()) {
@@ -247,6 +254,9 @@ export async function captureNativeGameCase(page, row, deps) {
       try { row.interruptedSourceRaf = await observation.evaluate(stopNativeGameRafObservation); }
       catch (error) { row.cleanupErrors.push(String(error)); }
       try { await observation.dispose(); } catch (error) { row.cleanupErrors.push(String(error)); }
+    }
+    if (realmOwner) {
+      try { await realmOwner.dispose(); } catch (error) { row.cleanupErrors.push(String(error)); }
     }
     try { await page.evaluate(() => window.__ASHFALL_BATTLE_QA__.setEnemyVfxProofPaused(true)); }
     catch (error) { row.cleanupErrors.push(String(error)); }

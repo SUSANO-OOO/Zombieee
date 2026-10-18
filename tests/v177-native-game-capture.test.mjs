@@ -11,6 +11,7 @@ import { load as loadYaml } from 'js-yaml';
 import { invokeBrowserQaModule } from '../scripts/browser-qa-entry.mjs';
 import { assertV177AuthoredLiveRender } from '../scripts/v177-continuous-render-contract.mjs';
 import { V177_JOINT_ATLASES } from '../app/v177JointPresentation.js';
+import {nativeCaptureRealmFixture} from './helpers/v177-native-capture-realm-fixture.mjs';
 import {
   main, runBrowserQa, nativeGameCaptureBinding, NATIVE_GAME_CAPTURE_PHASES, NATIVE_GAME_CAPTURE_MIME,
   NATIVE_GAME_CAPTURE_SOURCES, captureNativeGameCase, readNativeGameCaptureSample,
@@ -90,6 +91,7 @@ function fixture(phase, { form = 'abomination', failAt, cleanupFails = false, mu
     ...(phase === 'engage' ? { engagement: { productionAttackReach: 120, approachDistance: 55 } } : {}) };
   const bytes = Buffer.from('transport-fixture-only-not-an-encoded-video');
   const events = [], sentinel = new Error('Original sampling failure');
+  const realm = nativeCaptureRealmFixture(1000, events);
   let index = 0;
   const sample = () => {
     const i = index++, active = phase === 'attack' || phase === 'engage' && i > 12;
@@ -119,23 +121,26 @@ function fixture(phase, { form = 'abomination', failAt, cleanupFails = false, mu
       if (arg?.form === form && fn !== readNativeGameCaptureSample) return proof;
       if (fn === readNativeGameCaptureSample) { if (index === failAt) throw sentinel; return sample(); }
       events.push('paused');
-    }, async evaluateHandle(fn) {
+    }, async evaluateHandle(fn, arg) {
+      if (fn.name === 'createNativeAllUnitRealmOwner') return realm.handle;
       assert.equal(fn, startNativeGameRafObservation);
+      assert.equal(arg.realmOwner, realm.handle);
       return { async evaluate(stop) { assert.equal(stop, stopNativeGameRafObservation);
         if (cleanupFails) throw new Error('Observer cleanup failure');
-        return { timeOrigin: 1000, overflow: false, rows: [{ at: 0, renderSequence: 1, renderKind: form },
+        return { timeOrigin: 1000, realm: realm.raf, overflow: false, rows: [{ at: 0, renderSequence: 1, renderKind: form },
           { at: 10, renderSequence: 2, renderKind: form }] }; }, async dispose() { events.push('disposed'); } };
     } };
   const deps = { out: '/diagnostic-only', hasV177ContinuousDraw() {}, assertV177AuthoredLiveRender,
     read: async () => bytes, async beginV177NativeCanvasClip(actualPage, metadata, options) {
       assert.equal(actualPage, page); assert.equal(options.requestedMimeType, 'video/webm;codecs=vp8');
       assert.equal(options.engine, 'webkit'); assert.equal(metadata.form, form);
+      assert.equal(options.realmOwner, realm.handle);
       assert.equal(metadata.fixtureGroup, phase === 'engage' ? 'approach-to-attack' : side === 'human' ? 'authored-form' : 'base-enemy');
       assert.ok(options.directory.includes('844x340'));
       return { async finish({ completed }) { events.push(completed ? 'completed-clip' : 'interrupted-clip');
         return { status: 'recorded', engine: 'webkit', requestedMimeType: NATIVE_GAME_CAPTURE_MIME, mimeType: 'video/webm; codecs=vp8',
           file: 'fixture-original.webm', bytes: bytes.length, sha256: createHash('sha256').update(bytes).digest('hex'),
-          width: 980, height: 520, timeOrigin: 1000, originalSpeedAccepted: false, encodedPtsVerified: false }; } };
+          width: 980, height: 520, timeOrigin: 1001, realm: realm.clip, originalSpeedAccepted: false, encodedPtsVerified: false }; } };
     } };
   return { page, deps, events, sentinel, row: { form, phase, viewport, samples: [] } };
 }
@@ -151,6 +156,9 @@ test('all three real-capture driver paths retain original stats, damage and exis
     assert.equal(f.events.filter(e => e === 'completed-clip').length, 1);
     assert.ok(f.events.includes('paused') && f.events.includes('disposed'));
     assert.equal(f.row.nativeClip.originalSpeedAccepted, false);
+    assert.equal(f.row.realmReceipt.sameRealmVerified, true);
+    assert.equal(f.row.sourceRaf.timeOrigin, 1000); assert.equal(f.row.nativeClip.timeOrigin, 1001);
+    assert.ok(f.events.indexOf('disposed') < f.events.indexOf('owner-disposed'));
     assert.ok(f.row.performanceReceipt.deltas.renderFrames > 0);
     if (phase !== 'move') assert.ok(f.row.damageReceipt.appliedDamage > 0);
     if (phase === 'engage') assert.deepEqual(f.row.summary.states, ['move', 'active']);
@@ -206,7 +214,7 @@ test('an unresponsive owned context close is bounded and cannot be reported as c
 test('an original sampling failure survives capture and RAF cleanup errors without skipping cleanup', async () => {
   const f = fixture('attack', { failAt: 3, cleanupFails: true });
   await assert.rejects(captureNativeGameCase(f.page, f.row, f.deps), error => error === f.sentinel);
-  assert.deepEqual(f.events, ['interrupted-clip', 'disposed', 'paused']);
+  assert.deepEqual(f.events, ['interrupted-clip', 'disposed', 'owner-disposed', 'paused']);
   assert.match(f.row.cleanupErrors[0], /Observer cleanup failure/u);
   assert.equal(f.row.originalFailure, String(f.sentinel));
 });
@@ -351,6 +359,9 @@ test('the dedicated workflow is path-scoped, read-only, exact-head, built, bound
     'scripts/v177-native-game-capture-browser.mjs', 'tests/v177-native-game-capture.test.mjs',
     'scripts/v177-native-incoming-stun.mjs','tests/v177-native-incoming-stun.test.mjs',
     'app/v177IncomingStunProof.js','scripts/v177-native-canvas-clips.mjs',
+    'scripts/v177-native-capture-realm.mjs','scripts/v177-native-allunit-contract.mjs',
+    'scripts/v177-native-allunit-manifest.mjs','tests/v177-native-capture-realm.test.mjs',
+    'tests/helpers/v177-native-capture-realm-fixture.mjs',
     'scripts/v177-native-turned-getup.mjs','tests/v177-native-turned-getup.test.mjs','tests/v177-native-canvas-clips.test.mjs',
     'app/v177TurnedGetupProof.js','app/v177TurnedGetupPresentation.js','app/v177TurnedGetupMotion.js',
     'app/v177TurnedGetupHandoff.js','app/v177TurnedGetupDeath.js','app/v177CorpseJointPresentation.js',

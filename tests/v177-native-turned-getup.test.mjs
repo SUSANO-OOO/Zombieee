@@ -10,6 +10,7 @@ import {createBattleDefinition,battleOutcomeFor} from '../app/battleDefinitions.
 import {createEnemySpawnRuntime} from '../app/gameRules.js';
 import {V100_STAGE_IDS} from '../app/v100Registry.js';
 import {V177_JOINT_ATLASES,v177JointPose,v177CaptureJointPose} from '../app/v177JointPresentation.js';
+import {nativeCaptureRealmFixture} from './helpers/v177-native-capture-realm-fixture.mjs';
 import {assertNativeTurnedGetup,nativeTurnedGetupReady,captureNativeTurnedGetupCase,readNativeTurnedGetupSample,
   startNativeTurnedGetupRafObservation} from '../scripts/v177-native-turned-getup.mjs';
 
@@ -127,9 +128,13 @@ test('the original infection tremor has its own strict painted-floor owner and c
 test('actual capture ownership releases after native start and preserves the original failure through cleanup',async()=>{
   for(const fail of [false,true]) {
     const {row:original,bytes}=contractFixture(),events=[],sentinel=Error('original capture failure');let cursor=-1;
+    const realm=nativeCaptureRealmFixture(100000,events);
+    original.nativeClip.realm=realm.clip;original.recordingStart.realm=realm.clip.started;
     const row={form:'turned',phase:'turned-getup',variant:0,viewport:{width:844,height:340},samples:[]};
-    const handle={evaluate:async()=>({timeOrigin:100000,overflow:false,rows:[{at:1},{at:2},{at:3}]}),dispose:async()=>events.push('dispose')};
-    const page={waitForFunction:async()=>{},evaluateHandle:async fn=>{assert.equal(fn,startNativeTurnedGetupRafObservation);return handle;},
+    const handle={evaluate:async()=>({timeOrigin:100001,realm:realm.raf,overflow:false,rows:[{at:1},{at:2},{at:3}]}),dispose:async()=>events.push('dispose')};
+    const page={waitForFunction:async()=>{},evaluateHandle:async(fn,arg)=>{
+      if(fn.name==='createNativeAllUnitRealmOwner')return realm.handle;
+      assert.equal(fn,startNativeTurnedGetupRafObservation);assert.equal(arg.realmOwner,realm.handle);return handle;},
       waitForTimeout:async()=>{},evaluate:async(fn)=>{
         if(fn===readNativeTurnedGetupSample){
           if(fail&&cursor===0)throw sentinel;
@@ -143,11 +148,14 @@ test('actual capture ownership releases after native start and preserves the ori
       }};
     const deps={out:'/fixture',mimeType:'video/webm;codecs=vp8',read:async()=>bytes,
       nativeGamePerformanceReceipt:()=>({scope:'mock counters only'}),stopNativeGameRafObservation(){},
-      beginV177NativeCanvasClip:async(_page,metadata)=>({waitForStart:async()=>{events.push('native-start');return original.recordingStart;},
-        finish:async({completed})=>{events.push(completed?'complete':'interrupt');return {...original.nativeClip,metadata};}})};
+      beginV177NativeCanvasClip:async(_page,metadata,options)=>{
+        assert.equal(options.realmOwner,realm.handle);
+        return {waitForStart:async()=>{events.push('native-start');return original.recordingStart;},
+          finish:async({completed})=>{events.push(completed?'complete':'interrupt');return {...original.nativeClip,metadata};}};}};
     if(fail)await assert.rejects(captureNativeTurnedGetupCase(page,row,deps),error=>error===sentinel);
     else {await captureNativeTurnedGetupCase(page,row,deps);assert.equal(row.status,'observed-diagnostic');}
     assert.ok(events.indexOf('native-start')<events.indexOf('release'));assert.equal(events.at(-1),'pause');
     assert.equal(events.filter(e=>e==='dispose').length,1);if(fail)assert.ok(events.includes('interrupt'));
+    assert.ok(events.indexOf('dispose')<events.indexOf('owner-disposed'));
   }
 });

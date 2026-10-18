@@ -5,6 +5,7 @@ import path from 'node:path';
 import {ALLY_DEATH_CONFIG,advanceAllyLifecycle} from '../app/combatLifecycle.js';
 import {allyCorpseVisualCue} from '../app/corpseVisuals.js';
 import {V177_JOINT_ATLASES} from '../app/v177JointPresentation.js';
+import {createNativeAllUnitRealmOwner,readNativeAllUnitRealmOwner,assertNativeCaptureRealm} from './v177-native-capture-realm.mjs';
 
 export function readNativeTurnedGetupSample({afterSequence=0,performanceBoundary=false}={}) {
   const qa=window.__ASHFALL_BATTLE_QA__,state=qa.getV177TurnedGetupProof({afterSequence});
@@ -16,10 +17,17 @@ export function readNativeTurnedGetupSample({afterSequence=0,performanceBoundary
   return {...state,at:performance.now(),simulationTime:state.time,visible:document.visibilityState==='visible',route:location.pathname,...boundary};
 }
 
-export function startNativeTurnedGetupRafObservation() {
+export function startNativeTurnedGetupRafObservation({realmOwner=null}={}) {
   const state={timeOrigin:performance.timeOrigin,startedAt:performance.now(),rows:[],overflow:false,stopped:false,raf:null};
+  if(realmOwner!==null){
+    state.realmOwner=realmOwner;
+    state.realmStarted=realmOwner.member({window,document,performance,canvas:document.querySelector('.game-shell canvas')},'raf-start');
+    state.realmFailure=null;
+  }
   const observe=()=>{
     if(state.stopped)return;
+    if(state.realmOwner)try{state.realmOwner.check({window,document,performance,canvas:document.querySelector('.game-shell canvas')});}
+    catch(error){state.realmFailure??=String(error);state.stopped=true;return;}
     const proof=window.__ASHFALL_BATTLE_QA__.getV177TurnedGetupProof({light:true});
     if(state.rows.length<4096)state.rows.push({at:performance.now(),actorId:proof.actorId,
       renderSequence:proof.fighterRenderSequence??proof.corpseRenderSequence,renderKind:proof.actorId===null?'brawler':'turned'});
@@ -113,15 +121,17 @@ export function assertNativeTurnedGetup(row) {
 }
 
 export async function captureNativeTurnedGetupCase(page,row,deps) {
-  let clip,observation,originalFailure;
+  let clip,observation,realmOwner,originalFailure;
   try {
     row.proof=await page.evaluate(variant=>window.__ASHFALL_BATTLE_QA__.prepareV177TurnedGetupProof({variant}),row.variant);
     await page.waitForFunction(()=>Number.isFinite(window.__ASHFALL_BATTLE_QA__.getV177TurnedGetupProof({light:true}).corpseRenderSequence),undefined,{timeout:5000});
-    observation=await page.evaluateHandle(startNativeTurnedGetupRafObservation);
+    realmOwner=await page.evaluateHandle(createNativeAllUnitRealmOwner);
+    row.realmOwner=await realmOwner.evaluate(readNativeAllUnitRealmOwner);
+    observation=await page.evaluateHandle(startNativeTurnedGetupRafObservation,{realmOwner});
     clip=await deps.beginV177NativeCanvasClip(page,{form:'turned',requestedKind:'turned',preparedRenderKind:'turned',phase:'turned-getup',
       fixtureGroup:'actual-infection-getup',fighterId:null,corpseId:row.proof.corpseId,variant:row.variant,
       proofId:row.proof.proofId,battleGeneration:row.proof.battleGeneration,diagnosticOnly:true},
-    {directory:path.join(deps.out,`${row.viewport.width}x${row.viewport.height}`,'native-canvas-clips'),engine:'webkit',requestedMimeType:deps.mimeType});
+    {directory:path.join(deps.out,`${row.viewport.width}x${row.viewport.height}`,'native-canvas-clips'),engine:'webkit',requestedMimeType:deps.mimeType,realmOwner});
     row.recordingStart=await clip.waitForStart();row.captureStart=await page.evaluate(readNativeTurnedGetupSample,{performanceBoundary:true});
     row.release=await page.evaluate(proofId=>({receipt:window.__ASHFALL_BATTLE_QA__.releaseV177TurnedGetupProof(proofId),at:performance.now()}),row.proof.proofId);
     row.releasedAtNative=row.release.at;let afterSequence=Math.max(0,...row.captureStart.corpseDraws.map(d=>d.renderSequence));
@@ -139,7 +149,7 @@ export async function captureNativeTurnedGetupCase(page,row,deps) {
     assert.ok(Number.isSafeInteger(row.nativeClip.bytes)&&row.nativeClip.bytes>0&&row.nativeClip.bytes<=8*1024*1024);
     const bytes=await(deps.read??readFile)(row.nativeClip.file);assert.equal(bytes.length,row.nativeClip.bytes);
     assert.equal(createHash('sha256').update(bytes).digest('hex'),row.nativeClip.sha256);
-    assert.equal(row.sourceRaf.timeOrigin,row.nativeClip.timeOrigin);assert.equal(row.sourceRaf.overflow,false);assert.ok(row.sourceRaf.rows.length>=3);
+    row.realmReceipt=assertNativeCaptureRealm(row);assert.equal(row.sourceRaf.overflow,false);assert.ok(row.sourceRaf.rows.length>=3);
     row.summary=assertNativeTurnedGetup(row);row.performanceReceipt=deps.nativeGamePerformanceReceipt(row);
     assert.notEqual(row.deadlineExpired,true);row.status='observed-diagnostic';
   }catch(error){originalFailure=error;row.originalFailure=String(error);deps.onFailure?.(error);throw error;}
@@ -150,6 +160,7 @@ export async function captureNativeTurnedGetupCase(page,row,deps) {
       try{row.interruptedSourceRaf=await observation.evaluate(deps.stopNativeGameRafObservation);}catch(error){row.cleanupErrors.push(String(error));}
       try{await observation.dispose();}catch(error){row.cleanupErrors.push(String(error));}
     }
+    if(realmOwner)try{await realmOwner.dispose();}catch(error){row.cleanupErrors.push(String(error));}
     try{await page.evaluate(()=>window.__ASHFALL_BATTLE_QA__.setEnemyVfxProofPaused(true));}catch(error){row.cleanupErrors.push(String(error));}
     if(!originalFailure&&row.cleanupErrors.length)throw Error(row.cleanupErrors.join('; '));
   }

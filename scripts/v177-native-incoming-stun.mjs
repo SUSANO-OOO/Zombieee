@@ -3,6 +3,7 @@ import {createHash} from 'node:crypto';
 import {readFile} from 'node:fs/promises';
 import path from 'node:path';
 import {v177IncomingStunStats} from '../app/v177IncomingStunProof.js';
+import {createNativeAllUnitRealmOwner,readNativeAllUnitRealmOwner,assertNativeCaptureRealm} from './v177-native-capture-realm.mjs';
 
 const readyStates=new Set(['idle','move','start-move','stop-move','turn']);
 export function readNativeIncomingStunSample({fighterId,targetId,afterSequence=0,performanceBoundary=false}) {
@@ -119,17 +120,19 @@ export function assertNativeIncomingStun(row) {
 }
 
 export async function captureNativeIncomingStunCase(page,row,deps) {
-  let clip,observation,originalFailure;
+  let clip,observation,realmOwner,originalFailure;
   try{
     row.proof=await page.evaluate(()=>window.__ASHFALL_BATTLE_QA__.prepareV177IncomingStunProof());
     await page.waitForFunction(({fighterId})=>window.__ASHFALL_BATTLE_QA__.getEnemyFacingRuntimeAudit(fighterId)
       .renderHistory.some(draw=>draw.renderKind==='ranger'&&draw.jointAtlasPath==='/art/v100/joints/ranger-r3.webp'
         &&draw.jointWeightedLowerDrawSucceeded===true),row.proof,{timeout:5000});
-    observation=await page.evaluateHandle(deps.startNativeGameRafObservation,row.proof);
+    realmOwner=await page.evaluateHandle(createNativeAllUnitRealmOwner);
+    row.realmOwner=await realmOwner.evaluate(readNativeAllUnitRealmOwner);
+    observation=await page.evaluateHandle(deps.startNativeGameRafObservation,{...row.proof,realmOwner});
     clip=await deps.beginV177NativeCanvasClip(page,{form:'ranger',requestedKind:'ranger',phase:'incoming-stun',
       fixtureGroup:'natural-incoming-stun',fighterId:row.proof.fighterId,preparedRenderKind:'ranger',
       proofId:row.proof.proofId,battleGeneration:row.proof.battleGeneration,diagnosticOnly:true,controlledOpponent:false,originalStats:true},
-    {directory:path.join(deps.out,`${row.viewport.width}x${row.viewport.height}`,'native-canvas-clips'),engine:'webkit',requestedMimeType:deps.mimeType});
+    {directory:path.join(deps.out,`${row.viewport.width}x${row.viewport.height}`,'native-canvas-clips'),engine:'webkit',requestedMimeType:deps.mimeType,realmOwner});
     row.recordingStart=await clip.waitForStart();
     row.captureStart=await page.evaluate(readNativeIncomingStunSample,{...row.proof,performanceBoundary:true});
     row.release=await page.evaluate(proofId=>({receipt:window.__ASHFALL_BATTLE_QA__.releaseV177IncomingStunProof(proofId),at:performance.now()}),row.proof.proofId);
@@ -152,7 +155,7 @@ export async function captureNativeIncomingStunCase(page,row,deps) {
     assert.equal(row.nativeClip.originalSpeedAccepted,false);assert.equal(row.nativeClip.encodedPtsVerified,false);
     const bytes=await(deps.read??readFile)(row.nativeClip.file);
     assert.equal(bytes.length,row.nativeClip.bytes);assert.equal(createHash('sha256').update(bytes).digest('hex'),row.nativeClip.sha256);
-    assert.equal(row.sourceRaf.timeOrigin,row.nativeClip.timeOrigin);assert.equal(row.sourceRaf.overflow,false);
+    row.realmReceipt=assertNativeCaptureRealm(row);assert.equal(row.sourceRaf.overflow,false);
     assert.ok(row.sourceRaf.rows.length>=2);
     for(const[i,source]of row.sourceRaf.rows.entries()){
       assert.ok(Number.isFinite(source.at)&&Number.isFinite(source.renderSequence));assert.equal(source.renderKind,'ranger');
@@ -169,6 +172,7 @@ export async function captureNativeIncomingStunCase(page,row,deps) {
       try{row.interruptedSourceRaf=await observation.evaluate(deps.stopNativeGameRafObservation);}catch(error){row.cleanupErrors.push(String(error));}
       try{await observation.dispose();}catch(error){row.cleanupErrors.push(String(error));}
     }
+    if(realmOwner)try{await realmOwner.dispose();}catch(error){row.cleanupErrors.push(String(error));}
     try{await page.evaluate(()=>window.__ASHFALL_BATTLE_QA__.setEnemyVfxProofPaused(true));}catch(error){row.cleanupErrors.push(String(error));}
     if(!originalFailure&&row.cleanupErrors.length)throw Error(row.cleanupErrors.join('; '));
   }
