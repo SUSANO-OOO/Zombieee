@@ -97,7 +97,9 @@ export function readNativeAllUnitSample(input,ownedProof){
    jointLowerFrame:r.jointLowerFrame,jointUpperFrame:r.jointUpperFrame,jointDrawSucceeded:r.jointDrawSucceeded,
    jointPaintedAt:r.jointPaintedAt,renderedWeaponSocket:r.renderedWeaponSocket,
    jointWeightedLowerDrawSucceeded:r.jointWeightedLowerDrawSucceeded,jointWeightedLower:r.jointWeightedLower,
-   jointWeaponCycleDrawSucceeded:r.jointWeaponCycleDrawSucceeded,jointWeaponCycle:r.jointWeaponCycle}))};
+   jointWeaponCycleDrawSucceeded:r.jointWeaponCycleDrawSucceeded,jointWeaponCycle:r.jointWeaponCycle,
+   jointRangerManualDrawSucceeded:r.jointRangerManualDrawSucceeded,jointRangerManual:r.jointRangerManual,
+   jointFutagoAbilityDrawSucceeded:r.jointFutagoAbilityDrawSucceeded,jointFutagoAbility:r.jointFutagoAbility}))};
 }
 function assertRawEnvelope(row,proof,raw,pausedState=false){
  assertShardProof(row,proof);assert.equal(raw?.schema,'v177-native-shard-postpaint/v1');assert.ok(finite(raw.at)&&finite(raw.timeOrigin)&&finite(raw.simulationTime));
