@@ -1,10 +1,10 @@
 // Raw ESM diagnostic page; imports resolve through the guarded source-only server.
 import {AudioMixer} from '../app/audioMixer.js';
-import {prepareGraphOutput,createGraphState,within} from './v177-native-aac-graph-output.mjs';
+import {prepareGraphOutput,createGraphState,within,graphErrorText} from './v177-native-aac-graph-output.mjs';
 import {GRAPH_LIMITS as L,assertGraphObservation} from './v177-native-aac-graph-contract.mjs';
 const state=createGraphState(),warm=document.querySelector('#warm'),start=document.querySelector('#start'),rifle=document.querySelector('#rifle');
 let context,mixer,output,completing=false,resolveComplete;globalThis.__graphState=state;globalThis.__graphCompletion=new Promise(resolve=>{resolveComplete=resolve;});
-function fail(error){if(output)output.fail(error);else{state.primaryError??=String(error?.stack??error);state.errors.push(String(error));state.status='failed';}}
+function fail(error){if(output)output.fail(error);else{const text=graphErrorText(error);state.primaryError??=text;if(state.errors.length<16)state.errors.push(text);state.status='failed';}}
 const ms=()=>performance.now()-state.startedAt;
 function originalVoice(handle,request){
   if(!handle)throw new Error('Original AudioMixer returned no voice');const voice=mixer.activeVoices.get(handle.id);if(!voice||voice.assetId!==handle.assetId)throw new Error('Actual original mixer voice receipt absent');

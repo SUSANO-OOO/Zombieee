@@ -2,6 +2,23 @@
 import {AacFragmentMuxer,normalizeAacDescription} from './v177-aac-fragment-muxer.mjs';
 import {GRAPH_LIMITS as L} from './v177-native-aac-graph-contract.mjs';
 const outputs=new WeakMap();
+export function graphErrorText(error){
+  const message=String(error),stack=error instanceof Error?error.stack:null;
+  return typeof stack==='string'&&stack&&!stack.includes(message)?message+'\n'+stack:stack||message;
+}
+function framingFailureReceipt(packet,receivedAtMs,secondary){
+  // Keep the first actual failure without PCM, arbitrary nested objects or an
+  // unbounded callback history. These are the framer's existing scalar fields.
+  const scalar=(value,max=128)=>value===null?null:typeof value==='string'?value.slice(0,max)
+    :typeof value==='boolean'||(typeof value==='number'&&Number.isFinite(value))?value:undefined;
+  const copy=(source,keys)=>Object.fromEntries(keys.flatMap(key=>{
+    const value=scalar(source?.[key],key==='message'?512:128);return value===undefined?[]:[[key,value]];
+  }));
+  const snapshot=copy(packet.snapshot,['sampleRate','channels','packetFrames','poolPackets','pcmPoolBytes','generation','originFrame','nextSourceFrame','acceptedFrames','emittedPackets','partialFrames','inFlightPackets','freeBuffers','peakInFlightPackets','staleRecycles','finished']);
+  snapshot.failure=packet.snapshot?.failure===null?null:copy(packet.snapshot?.failure,
+    ['code','acceptedFrames','nextSourceFrame','id','packetIndex','inputFrames','observedSourceFrame','rejectedInputFrames','availableFrames','message']);
+  return{receivedAtMs,generation:packet.generation,code:scalar(packet.code),snapshot,secondary};
+}
 function declaredAacDescription(config){
   // Use the pinned muxer's AAC-LC parser to select the actual rate, without
   // resampling or starting a second encoder/context to obtain an init header.
@@ -14,7 +31,7 @@ function declaredAacDescription(config){
 export function graphOutputForContext(context,options={}){const value=outputs.get(context);if(!value)throw new Error('Experimental output was not prewarmed for this exact context');value.configureOwner(options);return value.api;}
 export function createGraphState(){return{schema:'v177-real-audio-graph-observation/v1',status:'preparing',route:'MediaSource',variant:'one-prewarmed-original-mixer-bgm-rifle',sampleRate:null,channels:2,realtimeAudioContexts:0,
   startedAt:null,inputFrames:0,pcmBytes:0,encodedBytes:0,muxedBytes:0,pcm:[],packets:[],configurations:[],playheads:[],events:[],transport:[],transportOverflow:0,
-  errors:[],primaryError:null,peakEncoderQueue:0,peakPendingSegments:0,peakPendingBytes:0,physicalRecordingAccepted:false,productionBackendAccepted:false,coldAccepted:false,endingAccepted:false,lifecycleAccepted:false,wholeGameAccepted:false};}
+  errors:[],primaryError:null,pcmFramingFailure:null,peakEncoderQueue:0,peakPendingSegments:0,peakPendingBytes:0,physicalRecordingAccepted:false,productionBackendAccepted:false,coldAccepted:false,endingAccepted:false,lifecycleAccepted:false,wholeGameAccepted:false};}
 export async function within(promise,ms,label){let timer;try{return await Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(label+' exceeded '+ms+'ms')),ms);})]);}finally{clearTimeout(timer);}}
 export async function prepareGraphOutput(context,{state=createGraphState(),workletUrl,env=globalThis}={}){
   const now=()=>env.performance.now(),check=(ok,message)=>{if(!ok)throw new Error(message);};
@@ -23,7 +40,7 @@ export async function prepareGraphOutput(context,{state=createGraphState(),workl
   const pending=[],pcmParts=[],encodedParts=[],muxedParts=[],removers=[];let finishedResolve,finishedReject,initializationReject;
   const finished=new Promise((resolve,reject)=>{finishedResolve=resolve;finishedReject=reject;});void finished.catch(()=>{});
   const ms=()=>state.startedAt===null?null:now()-state.startedAt;
-  function fail(error){const text=error instanceof Error?error.stack??String(error):String(error);state.primaryError??=text;if(state.errors.length<16)state.errors.push(text);state.status='failed';initializationReject?.(error instanceof Error?error:new Error(text));finishedReject(error instanceof Error?error:new Error(text));}
+  function fail(error){const text=graphErrorText(error);state.primaryError??=text;if(state.errors.length<16)state.errors.push(text);state.status='failed';initializationReject?.(error instanceof Error?error:new Error(text));finishedReject(error instanceof Error?error:new Error(text));}
   function record(event,extra={}){if(state.transport.length>=L.transportEvents){state.transportOverflow++;fail(new Error('Bounded transport event capacity exhausted'));return;}state.transport.push({event,at:now(),ms:ms(),contextTime:context.currentTime,mediaTime:audio?.currentTime??null,encodeQueue:encoder?.encodeQueueSize??null,pendingSegments:pending.length,pendingBytes:appendBytes,...extra});}
   const on=(target,name,fn)=>{target.addEventListener(name,fn);const remove=()=>target.removeEventListener(name,fn);removers.push(remove);return remove;};
   const rotation=env.matchMedia?.('(orientation: portrait)');
@@ -106,7 +123,10 @@ export async function prepareGraphOutput(context,{state=createGraphState(),workl
     }});encoder.configure(config);
     await within(context.audioWorklet.addModule(workletUrl),L.readyMs,'Raw Worklet module load');
     node=new env.AudioWorkletNode(context,'v177-graph-pcm-framer',{numberOfInputs:1,numberOfOutputs:0,channelCount:2,channelCountMode:'explicit',channelInterpretation:'speakers',processorOptions:{generation:1}});
-    node.port.onmessage=({data:packet})=>{if(disposed)return;try{check(packet.generation===1,'Stale Worklet generation');if(packet.type==='pcm-processor-ready'){check(packet.sampleRate===state.sampleRate,'Processor actual rate mismatch');state.processorReady=packet;record('processor-ready');}else if(packet.type==='pcm-packet')receivePacket(packet);else if(packet.type==='pcm-framing-error')throw new Error('Actual Worklet framing failed: '+JSON.stringify(packet));else if(packet.type==='pcm-finished'){state.finished=packet;finishedResolve(packet);}else throw new Error('Unknown Worklet receipt');}catch(error){fail(error);}};
+    node.port.onmessage=({data:packet})=>{if(disposed)return;try{check(packet.generation===1,'Stale Worklet generation');if(packet.type==='pcm-processor-ready'){check(packet.sampleRate===state.sampleRate,'Processor actual rate mismatch');state.processorReady=packet;record('processor-ready');}else if(packet.type==='pcm-packet')receivePacket(packet);else if(packet.type==='pcm-framing-error'){
+      state.pcmFramingFailure??=framingFailureReceipt(packet,ms(),Boolean(state.primaryError));
+      throw new Error('Actual Worklet framing failed: '+JSON.stringify(state.pcmFramingFailure));
+    }else if(packet.type==='pcm-finished'){state.finished=packet;finishedResolve(packet);}else throw new Error('Unknown Worklet receipt');}catch(error){fail(error);}};
     node.onprocessorerror=()=>fail(new Error('Actual Worklet processorerror'));input=context.createGain();input.connect(node);api.destination=input;
     const result={api,configureOwner(options){owner=options;},state,origin:()=>originFrame,record,fail,
       evidence:()=>({metadata:state,pcmParts,encodedParts,muxedParts}),

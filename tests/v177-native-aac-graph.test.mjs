@@ -85,8 +85,9 @@ test('actual experimental output callback retains actual PCM and native AAC befo
   assert.equal(packet.buffer.byteLength,0,'Raw Worklet transfer must detach only after retaining/encoding');assert.deepEqual(output.evidence().pcmParts[0],original);assert.equal(state.pcmBytes,8192);assert.equal(state.inputFrames,1024);assert.equal(state.packets.length,1);assert.equal(state.primaryError,null);assert.equal(state.configurations[0].sampleRate,48000);await output.finish();await output.cleanup();assert.equal(state.finished.status,'framed');assert.equal(state.cleanup.completed,true);
 });
 test('native original play rejection identity and first error survive later callbacks',async()=>{
-  const original=new Error('original native play failure'),f=fakeEnvironment({playError:original}),state=createGraphState(),output=await prepareGraphOutput(f.context,{state,workletUrl:'/actual-worklet.mjs',env:f.env});graphOutputForContext(f.context,{});
-  await assert.rejects(output.api.prepare(),error=>error===original);const first=state.primaryError;output.fail(new Error('secondary'));assert.equal(state.primaryError,first);await output.cleanup();
+  const original=new Error('original native play failure');original.stack='nativePlay@/actual-output.mjs:12:34';
+  const f=fakeEnvironment({playError:original}),state=createGraphState(),output=await prepareGraphOutput(f.context,{state,workletUrl:'/actual-worklet.mjs',env:f.env});graphOutputForContext(f.context,{});
+  await assert.rejects(output.api.prepare(),error=>error===original);const first=state.primaryError;assert.match(first,/original native play failure/u);assert.match(first,/nativePlay@/u);output.fail(new Error('secondary'));assert.equal(state.primaryError,first);await output.cleanup();
 });
 test('actual output preserves an encoder queue fault and does not fabricate encoded success',async()=>{
   const f=fakeEnvironment({encoderQueue:4}),state=createGraphState(),output=await prepareGraphOutput(f.context,{state,workletUrl:'/actual-worklet.mjs',env:f.env});await output.api.prepare();f.nodes[0].port.onmessage({data:f.packet()});assert.match(state.primaryError,/queue exhausted/u);assert.equal(state.pcm.length,1);assert.equal(state.packets.length,0);await output.cleanup();
@@ -106,6 +107,35 @@ test('actual Worklet callback frames128-input quanta and finishes only at an exa
   const saturated=new Processor();for(let i=0;i<32;i++){globalThis.currentFrame=i*128;assert.equal(saturated.process([planes]),true);}globalThis.currentFrame=4096;assert.equal(saturated.process([planes]),false);assert.equal(saturated.messages.find(m=>m.type==='pcm-framing-error').code,'pcm-backpressure');
  }finally{restoreWorkletGlobals();}});
 test('actual Worklet stops explicitly at the8s cap instead of silently extending collection',()=>{installWorkletGlobals();try{const p=new Processor(),planes=[new Float32Array(128),new Float32Array(128)];let last=0,result=true;while(result&&last<4000){globalThis.currentFrame=last*128;result=p.process([planes]);for(const m of p.messages.filter(m=>m.type==='pcm-packet'&&!m.recycled)){m.recycled=true;p.port.onmessage({data:{type:'recycle',generation:1,id:m.id,packetIndex:m.packetIndex,buffer:m.buffer}});}last++;}assert.equal(result,false);assert.equal(last,3000);assert.equal(p.messages.find(m=>m.type==='pcm-framing-error').code,'eight-second-capture-cap');}finally{restoreWorkletGlobals();}});
+test('actual Worklet failure receipts survive host callback and raw JSON without changing PCM limits',async()=>{
+ installWorkletGlobals();try{
+  await import('../scripts/v177-native-aac-graph-worklet.mjs?failure-receipt-test');
+  for(const code of ['pcm-backpressure','source-frame-gap-or-duplicate','invalid-recycle']){
+   const processor=new Processor(),planes=[new Float32Array(128),new Float32Array(128)];
+   if(code==='pcm-backpressure')for(let i=0;i<=32;i++){globalThis.currentFrame=i*128;processor.process([planes]);}
+   else if(code==='source-frame-gap-or-duplicate'){globalThis.currentFrame=0;processor.process([planes]);globalThis.currentFrame=256;processor.process([planes]);}
+   else{for(let i=0;i<8;i++){globalThis.currentFrame=i*128;processor.process([planes]);}processor.port.onmessage({data:{type:'recycle',generation:1,id:99,packetIndex:0,buffer:new ArrayBuffer(8192)}});}
+   const packet=processor.messages.find(row=>row.type==='pcm-framing-error');assert.equal(packet.code,code);
+   const f=fakeEnvironment(),state=createGraphState(),output=await prepareGraphOutput(f.context,{state,workletUrl:'/worklet.mjs',env:f.env});await output.api.prepare();
+   f.clock.now=123;f.nodes[0].port.onmessage({data:packet});
+   const saved=JSON.parse(JSON.stringify(state)).pcmFramingFailure;
+   assert.deepEqual(saved,{receivedAtMs:123,generation:1,code,snapshot:packet.snapshot,secondary:false});
+   assert.match(state.primaryError,new RegExp(code,'u'));assert.equal(state.status,'failed');assert.equal(state.pcm.length,0);
+   assert.equal(saved.snapshot.poolPackets,4);assert(saved.snapshot.inFlightPackets<=4);assert(JSON.stringify(saved).length<4096);
+   const first=state.pcmFramingFailure;f.nodes[0].port.onmessage({data:{...packet,code:'secondary'}});assert.equal(state.pcmFramingFailure,first);await output.cleanup();
+  }
+ }finally{restoreWorkletGlobals();}
+});
+test('framing evidence keeps the first owner fault bounded and ignores stale or disposed callbacks',async()=>{
+ const f=fakeEnvironment(),state=createGraphState(),output=await prepareGraphOutput(f.context,{state,workletUrl:'/worklet.mjs',env:f.env});await output.api.prepare();
+ const callback=f.nodes[0].port.onmessage,packet={type:'pcm-framing-error',generation:2,code:'x'.repeat(100000),snapshot:{arbitrary:{body:'x'.repeat(100000)},failure:{code:'y'.repeat(100000),message:'z'.repeat(100000),acceptedFrames:12}}};
+ callback({data:packet});assert.equal(state.pcmFramingFailure,null);assert.match(state.primaryError,/Stale Worklet generation/u);const original=state.primaryError;
+ callback({data:{...packet,generation:1}});const receipt=state.pcmFramingFailure;
+ assert.equal(receipt.secondary,true);assert.equal(receipt.code.length,128);assert.equal(receipt.snapshot.failure.code.length,128);assert.equal(receipt.snapshot.failure.message.length,512);
+ assert.equal(receipt.snapshot.arbitrary,undefined);assert(JSON.stringify(receipt).length<4096);assert.equal(state.primaryError,original);
+ await output.cleanup();callback({data:{...packet,generation:1,code:'late'}});assert.equal(state.pcmFramingFailure,receipt);assert.equal(state.primaryError,original);
+});
+
 test('proposal source keeps exact raw imports, trusted input, original cue APIs, clock owners and finite hosted workflow',async()=>{
   const base=new URL('../scripts/',import.meta.url),page=await fs.readFile(new URL('v177-native-aac-graph-page.mjs',base),'utf8'),driver=await fs.readFile(new URL('v177-native-aac-graph-browser.mjs',base),'utf8'),workflow=await fs.readFile(new URL('../.github/workflows/native-aac-graph-probe.yml',import.meta.url),'utf8');
   for(const text of [page,driver])assert.doesNotMatch(text,/\beval\s*\(|new Function\s*\(/u);assert.match(page,/enableAcknowledgementTone:false/u);assert.match(page,/mixer\.play\('music-v100-score-normal'\)/u);assert.match(page,/mixer\.play\('weapon-rifle-01'\)/u);assert.match(page,/voice\.startedAt/u);assert.doesNotMatch(page,/setSettings\(|\.connect\(.*destination/u);
@@ -185,7 +215,7 @@ driverTest('actual driver retains primary Error even when terminal and fallback 
 driverTest('actual driver closes a late browser once without extending the5s readiness or promoting the timed-out result',async()=>{const f=await actualDriverFault({lateLaunch:true});assert.equal(f.thrown,f.launchError);assert.equal(f.calls.launch,1);assert.equal(f.calls.close,1);assert.equal(f.calls.contextClose,0);assert.equal(f.canonical.status,'failed');assert.equal(f.late.ownership.status,'closed');assert.ok(f.calls.deadlines.some(row=>row.label==='Pinned hosted WebKit launch'&&row.ms===5000));assert.ok(f.calls.deadlines.some(row=>row.label==='Late owned browser cleanup'&&row.ms===2000));});
 driverTest('actual driver late close failure is secondary, persisted, and cannot replace original timeout Error',async()=>{const f=await actualDriverFault({lateLaunch:true,lateCloseFailure:true});assert.equal(f.thrown,f.launchError);assert.equal(f.calls.close,1);assert.equal(f.canonical.status,'failed');assert.equal(f.late.ownership.status,'close-failed');assert.match(f.late.ownership.secondaryError,/Secondary late browser close failure/u);assert.match(f.late.primaryError,/launch exceeded 5000ms/u);});
 test('selective PR workflow uses exact PR head plus manual fallback and keeps original single job controls',async()=>{
- const text=await fs.readFile(new URL('../.github/workflows/native-aac-graph-probe.yml',import.meta.url),'utf8');
+ const text=(await fs.readFile(new URL('../.github/workflows/native-aac-graph-probe.yml',import.meta.url),'utf8')).replaceAll('\r\n','\n');
  const paths=[...text.matchAll(/^      - '([^']+)'$/gmu)].map(match=>match[1]);
  assert.equal(paths.length,18);for(const name of ['.github/workflows/native-aac-graph-probe.yml','scripts/v177-native-aac-graph-*','scripts/v177-graph-pcm-framer.mjs','tests/v177-native-aac-graph.test.mjs','app/audioMixer.js','app/audioOutput.js','public/audio/v100/foley/rifle.mp3'])assert.ok(paths.includes(name));
  assert.ok(paths.every(name=>!['app/**','scripts/**','public/**','**'].includes(name)));assert.equal((text.match(/github\.event\.pull_request\.head\.sha \|\| inputs\.expected_head/gu)??[]).length,2);
