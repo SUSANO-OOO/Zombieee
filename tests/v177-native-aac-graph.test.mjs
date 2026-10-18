@@ -40,14 +40,14 @@ const {nativeAacClockEvidence}=await import(pathToFileURL(path.join(repo,'script
 function valid(){return{status:'complete',errors:[],primaryError:null,sampleRate:48000,realtimeAudioContexts:1,mixerContextSame:true,warmDiagnostics:{contextCreateCount:1,contextTiming:{sampleRate:48000}},processorReady:{sampleRate:48000},startedFromTrustedWarmClick:true,
   initialization:{acknowledged:true,confirmedByActualMetadata:true},
   bgm:{trusted:true,assetId:'music-v100-score-normal',voiceId:'voice-1'},effect:{trusted:true,assetId:'weapon-rifle-01',voiceId:'voice-2',firstInputFrame:1,latencyMs:15},
-  pcm:[{}],pcmBytes:8192,packets:[{}],encodedBytes:10,finished:{status:'framed',snapshot:{partialFrames:0,acceptedFrames:1024}},inputFrames:1024,transportOverflow:0,pendingPcmPackets:0,peakPendingPcmPackets:0,peakEncoderQueue:1,peakPendingSegments:1,peakPendingBytes:100,
+  pcm:[{}],pcmBytes:8192,packets:[{}],encodedBytes:10,finished:{status:'framed',snapshot:{partialFrames:0,acceptedFrames:1024}},inputFrames:1024,transportOverflow:0,nativeRateRecoveries:[],pendingPcmPackets:0,peakPendingPcmPackets:0,peakEncoderQueue:1,peakPendingSegments:1,peakPendingBytes:100,
   events:[{event:'playing',ms:10,time:0}],playheads:[{ms:20,time:.02,encodedFrames:1024}],finalMedia:{muted:false,volume:1,time:1024/48000},content:{correlation:.99,rms:.1,peak:.4},cleanup:{completed:true}};}
 class Target{constructor(){this.listeners=new Map();}addEventListener(n,f){const set=this.listeners.get(n)??new Set();set.add(f);this.listeners.set(n,set);}removeEventListener(n,f){this.listeners.get(n)?.delete(f);}emit(n,event={}){for(const f of this.listeners.get(n)??[])f(event);}}
 function fakeEnvironment({rate=48000,playError=null,encoderQueue=0,omitConfig=false,deferInitialization=false,durationError=null}={}){
   const env=new Target(),clock={now:0},sent=[],encoded=[],nodes=[],durationChanges=[];let currentSource,audio;
   env.performance={now:()=>clock.now};env.matchMedia=()=>Object.assign(new Target(),{matches:false});
   env.URL={createObjectURL:s=>{currentSource=s;return'blob:owned';},revokeObjectURL:()=>{env.revoked=true;}};
-  const doc=new Target();doc.visibilityState='visible';doc.body={appendChild:a=>{audio=a;}};doc.createElement=()=>{const a=new Target();Object.assign(a,{currentTime:0,duration:NaN,ended:false,readyState:4,paused:true,volume:1,muted:false,src:'',setAttribute(){},removeAttribute(){this.src='';},remove(){this.removed=true;},load(){if(this.src)queueMicrotask(()=>{currentSource.readyState='open';currentSource.emit('sourceopen');});},play(){if(playError)return Promise.reject(playError);this.paused=false;this.emit('playing');return Promise.resolve();},pause(){this.paused=true;this.emit('pause');}});return a;};env.document=doc;
+  const doc=new Target();doc.visibilityState='visible';doc.body={appendChild:a=>{audio=a;}};doc.createElement=()=>{const a=new Target();Object.assign(a,{currentTime:0,duration:NaN,ended:false,readyState:4,paused:true,playbackRate:1,buffered:{length:0},volume:1,muted:false,src:'',setAttribute(){},removeAttribute(){this.src='';},remove(){this.removed=true;},load(){if(this.src)queueMicrotask(()=>{currentSource.readyState='open';currentSource.emit('sourceopen');});},play(){if(playError)return Promise.reject(playError);this.paused=false;this.emit('playing');return Promise.resolve();},pause(){this.paused=true;this.emit('pause');}});return a;};env.document=doc;
   class Source extends Target{static isTypeSupported(){return true;}constructor(){super();this.readyState='closed';this.durationValue=NaN;}get duration(){return this.durationValue;}set duration(value){durationChanges.push({value,readyState:this.readyState,updating:this.buffer?.updating??null});if(durationError)throw durationError;this.durationValue=value;}addSourceBuffer(){this.buffer=new Target();let appends=0;Object.assign(this.buffer,{updating:false,appendBuffer:()=>{this.buffer.updating=true;if(++appends===1&&deferInitialization)return;queueMicrotask(()=>{this.buffer.updating=false;this.buffer.emit('updateend');});}});return this.buffer;}endOfStream(){this.readyState='ended';audio.ended=true;}}
   env.MediaSource=Source;
   env.AudioData=class{constructor(options){Object.assign(this,options);this.copied=new Float32Array(options.data);}close(){this.closed=true;}};
@@ -67,6 +67,7 @@ test('150ms arithmetic matches the unchanged original helper, including invalid/
 });
 test('clock/result contract accepts the finite positive control only within its narrow scope',()=>{const result=assertGraphObservation(valid());assert.equal(result.clock.budgetMs,150);assert.match(result.scope,/not accepted/u);});
 const faults={startup:s=>s.events[0].ms=150.00001,lag:s=>s.playheads[0]={ms:200,time:.049,encodedFrames:9600},queued:s=>s.playheads[0]={ms:1,time:.001,encodedFrames:8192},effect:s=>s.effect.latencyMs=150.00001,
+  recoveryCap:s=>s.nativeRateRecoveries=Array.from({length:L.nativeResumeAttempts+1},()=>({zeroRate:0,restoredRate:1})),recoveryIncomplete:s=>s.nativeRateRecoveries=[{zeroRate:0,restoredRate:null}],
   fakeInput:s=>s.effect.trusted=false,wrongId:s=>s.effect.assetId='borrowed-rifle',missingVoice:s=>s.effect.voiceId=null,tail:s=>s.finished.status='partial-tail-retained-not-encoded',gap:s=>s.finished.snapshot.acceptedFrames=1025,
   overflow:s=>s.transportOverflow=1,encoderBacklog:s=>s.peakEncoderQueue=L.encoderQueue+1,pcmPoolBacklog:s=>s.peakPendingPcmPackets=L.pcmPoolPackets+1,undrainedPcm:s=>s.pendingPcmPackets=1,mseBacklog:s=>s.peakPendingBytes=L.pendingBytes+1,cleanup:s=>s.cleanup.completed=false,
   synthetic:s=>s.realtimeAudioContexts=0,mixerContext:s=>s.mixerContextSame=false,rate:s=>s.sampleRate=96000,missingRaw:s=>s.pcm=[],error:s=>s.primaryError='original failure',content:s=>s.content.correlation=.7,
@@ -467,4 +468,52 @@ test('native flush resolution after the absolute owner deadline cannot publish f
  q.native.flush=async()=>{f.clock.now=2001;};
  await assert.rejects(output.finish(),/AAC flush owner expired or was cancelled/u);assert.equal(state.finalMedia,undefined);
  await output.cleanup();
+});
+
+
+function nativeRateFixture(f, options={}){
+ const rates=[],originalTime=options.time??0;let rate=1,mediaTime=originalTime;
+ Object.defineProperty(f.audio,'currentTime',{configurable:true,get:()=>mediaTime,set:value=>{assert.fail('Native recovery must not seek: '+value);}});
+ Object.defineProperty(f.audio,'playbackRate',{configurable:true,get:()=>rate,set:value=>{rates.push(value);options.onRate?.(value);rate=value;}});
+ f.audio.buffered={length:1,start:()=>0,end:()=>options.end??1};
+ return{rates,advance:value=>{mediaTime=value;},ack:async at=>{f.clock.now=at;f.source.buffer.emit('updateend');await new Promise(resolve=>setImmediate(resolve));}};
+}
+
+test('actual native rate recovery requires stationary original playhead and actual buffered ACKs without a seek',async()=>{
+ const f=fakeEnvironment(),state=createGraphState(),output=await prepareGraphOutput(f.context,{state,workletUrl:'/worklet.mjs',env:f.env});await output.api.prepare();
+ const probe=nativeRateFixture(f);await probe.ack(0);await probe.ack(49);assert.deepEqual(probe.rates,[]);
+ await probe.ack(50);assert.deepEqual(probe.rates,[0,1]);assert.equal(f.audio.currentTime,0);assert.equal(f.audio.playbackRate,1);
+ assert.equal(state.nativeRateRecoveries.length,1);assert.equal(state.nativeRateRecoveries[0].requestedAtMs,50);assert.equal(state.nativeRateRecoveries[0].stationaryMs,50);
+ await probe.ack(99);await probe.ack(149);assert.equal(probe.rates.length,2);await probe.ack(150);assert.deepEqual(probe.rates,[0,1,0,1]);
+ probe.advance(.01);await probe.ack(200);await probe.ack(249);assert.equal(probe.rates.length,4);await probe.ack(250);assert.equal(probe.rates.length,6);
+ assert.equal(state.primaryError,null);assert.equal(state.inputFrames,0);assert.equal(state.pcm.length,0);assert.equal(state.packets.length,0);await output.cleanup();
+});
+
+for(const condition of ['hidden','paused','not-ready','insufficient-buffer','advancing'])test('native recovery leaves '+condition+' output untouched',async()=>{
+ const f=fakeEnvironment(),state=createGraphState(),output=await prepareGraphOutput(f.context,{state,workletUrl:'/worklet.mjs',env:f.env});await output.api.prepare();
+ const probe=nativeRateFixture(f,{end:condition==='insufficient-buffer'?.079:1});await probe.ack(0);
+ if(condition==='hidden')f.env.document.visibilityState='hidden';if(condition==='paused')f.audio.paused=true;if(condition==='not-ready')f.audio.readyState=2;if(condition==='advancing')probe.advance(.001);
+ await probe.ack(200);assert.deepEqual(probe.rates,[]);assert.equal(state.nativeRateRecoveries.length,0);await output.cleanup();
+});
+
+test('native recovery is capped and original failure survives further append callbacks',async()=>{
+ const f=fakeEnvironment(),state=createGraphState(),output=await prepareGraphOutput(f.context,{state,workletUrl:'/worklet.mjs',env:f.env});await output.api.prepare();
+ const probe=nativeRateFixture(f);await probe.ack(0);for(let i=0;i<L.nativeResumeAttempts;i++)await probe.ack(50+i*100);
+ assert.equal(state.nativeRateRecoveries.length,8);assert.equal(probe.rates.length,16);await probe.ack(850);assert.match(state.primaryError,/Bounded native rate recovery attempts exhausted/u);
+ const original=state.primaryError;await probe.ack(950);assert.equal(state.primaryError,original);assert.equal(probe.rates.length,16);await output.cleanup();
+});
+
+for(const failingRate of [0,1])test('native rearm setter failure at '+failingRate+' preserves Error and actual PCM prefix',async()=>{
+ const original=new Error('actual native rate setter '+failingRate),f=fakeEnvironment(),state=createGraphState(),output=await prepareGraphOutput(f.context,{state,workletUrl:'/worklet.mjs',env:f.env});await output.api.prepare();
+ f.nodes[0].port.onmessage({data:f.packet()});await new Promise(resolve=>setImmediate(resolve));const raw=output.evidence().pcmParts[0].slice();
+ const probe=nativeRateFixture(f,{onRate:value=>{if(value===failingRate)throw original;}});await probe.ack(0);await probe.ack(50);
+ assert.match(state.primaryError,new RegExp('actual native rate setter '+failingRate));assert.equal(state.nativeRateRecoveries.length,1);assert.deepEqual(output.evidence().pcmParts[0],raw);assert.equal(state.packets.length,1);await output.cleanup();
+});
+
+test('hidden or disposed owner between native zero and one cannot restore a late normal rate',async()=>{
+ for(const disposed of [false,true]){
+  const f=fakeEnvironment(),state=createGraphState(),output=await prepareGraphOutput(f.context,{state,workletUrl:'/worklet.mjs',env:f.env});await output.api.prepare();
+  const probe=nativeRateFixture(f,{onRate:value=>{if(value===0){if(disposed)void output.cleanup();else{f.env.document.visibilityState='hidden';f.env.document.emit('visibilitychange');}}}});
+  await probe.ack(0);await probe.ack(50);assert.deepEqual(probe.rates,[0]);assert.equal(state.nativeRateRecoveries[0].cancelled,true);assert.equal(f.audio.playbackRate,0);await probe.ack(150);assert.deepEqual(probe.rates,[0]);await output.cleanup();
+ }
 });

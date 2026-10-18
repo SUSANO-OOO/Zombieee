@@ -31,13 +31,14 @@ function declaredAacDescription(config){
 export function graphOutputForContext(context,options={}){const value=outputs.get(context);if(!value)throw new Error('Experimental output was not prewarmed for this exact context');value.configureOwner(options);return value.api;}
 export function createGraphState(){return{schema:'v177-real-audio-graph-observation/v1',status:'preparing',route:'MediaSource',variant:'one-prewarmed-original-mixer-bgm-rifle',sampleRate:null,channels:2,realtimeAudioContexts:0,
   startedAt:null,inputFrames:0,pcmBytes:0,encodedBytes:0,muxedBytes:0,pcm:[],packets:[],configurations:[],playheads:[],events:[],transport:[],transportOverflow:0,
-  errors:[],primaryError:null,pcmFramingFailure:null,pendingPcmPackets:0,peakPendingPcmPackets:0,peakEncoderQueue:0,peakPendingSegments:0,peakPendingBytes:0,physicalRecordingAccepted:false,productionBackendAccepted:false,coldAccepted:false,endingAccepted:false,lifecycleAccepted:false,wholeGameAccepted:false};}
+  errors:[],primaryError:null,pcmFramingFailure:null,nativeRateRecoveries:[],pendingPcmPackets:0,peakPendingPcmPackets:0,peakEncoderQueue:0,peakPendingSegments:0,peakPendingBytes:0,physicalRecordingAccepted:false,productionBackendAccepted:false,coldAccepted:false,endingAccepted:false,lifecycleAccepted:false,wholeGameAccepted:false};}
 export async function within(promise,ms,label){let timer;try{return await Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(label+' exceeded '+ms+'ms')),ms);})]);}finally{clearTimeout(timer);}}
 export async function prepareGraphOutput(context,{state=createGraphState(),workletUrl,env=globalThis}={}){
   const now=()=>env.performance.now(),check=(ok,message)=>{if(!ok)throw new Error(message);};
   state.sampleRate=context.sampleRate;check(Number.isSafeInteger(state.sampleRate)&&state.sampleRate>=8000&&state.sampleRate<65536,'Actual context.sampleRate is unsupported; no resampling is permitted');
   let audio,source,buffer,encoder,node,input,url,owner={},desired=false,disposed=false,away=false,generation=1,pendingPlay=null,muxer,ended=false,originFrame=null,appendBytes=0;
   const pending=[],queuedPcm=[],pcmParts=[],encodedParts=[],muxedParts=[],removers=[],pcmWaiters=[];let drainingPcm=false,pcmDrainDeadline=null,finishedResolve,finishedReject,initializationReject;
+  let mediaProgress=null,lastRateRecoveryAt=-Infinity;
   const finished=new Promise((resolve,reject)=>{finishedResolve=resolve;finishedReject=reject;});void finished.catch(()=>{});
   const ms=()=>state.startedAt===null?null:now()-state.startedAt;
   function fail(error){const text=graphErrorText(error);state.primaryError??=text;if(state.errors.length<16)state.errors.push(text);state.status='failed';for(const waiter of pcmWaiters.splice(0))waiter.reject(error instanceof Error?error:new Error(text));initializationReject?.(error instanceof Error?error:new Error(text));finishedReject(error instanceof Error?error:new Error(text));}
@@ -57,7 +58,36 @@ export async function prepareGraphOutput(context,{state=createGraphState(),workl
   function retainMuxed(segment){check(state.muxedBytes+segment.byteLength<=L.muxedBytes,'Bounded muxed evidence capacity exhausted');muxedParts.push(segment);state.muxedBytes+=segment.byteLength;enqueue(segment);}
   function drain(){if(disposed||state.primaryError||!buffer||buffer.updating||source.readyState!=='open')return;try{if(pending.length){const segment=pending.shift();appendBytes-=segment.byteLength;record('append-call',{bytes:segment.byteLength});buffer.appendBuffer(segment);}else if(ended){source.endOfStream();record('end-of-stream');}}catch(error){fail(error);}}
   const timeRanges=ranges=>ranges?{length:ranges.length,ranges:Array.from({length:Math.min(4,ranges.length)},(_,i)=>[ranges.start(i),ranges.end(i)])}:null;
-  function sample(){if(state.startedAt===null)return;state.playheads.push({ms:ms(),time:audio.currentTime,encodedFrames:state.inputFrames,contextTime:context.currentTime,encodeQueueSize:encoder.encodeQueueSize,pendingPcmPackets:queuedPcm.length,pendingSegments:pending.length,pendingBytes:appendBytes,readyState:audio.readyState,paused:audio.paused,
+  // A native AVF renderer can stop with HTML paused=false and readyState=3.
+  // Re-arm the owned normal rate only after actual append ACKs show buffered
+  // data beyond a stationary playhead. Preserve every PCM packet and clock.
+  function recoverNativeMediaIfStalled(){
+    if(!allowed()||!desired||state.primaryError||ended||source.readyState!=='open'
+      ||audio.paused||audio.readyState<3||!state.events.some(r=>r.event==='playing'))return;
+    const at=now(),time=audio.currentTime;
+    check(Number.isFinite(time)&&time>=0,'Native playhead is invalid during buffered recovery');
+    if(!mediaProgress||time>mediaProgress.time){mediaProgress={time,at};return;}
+    if(time<mediaProgress.time)return; // Keep a regression as raw clock failure.
+    const stationaryMs=at-mediaProgress.at;
+    if(stationaryMs<50||at-lastRateRecoveryAt<100)return;
+    let ahead=0;
+    for(let i=0;i<audio.buffered.length;i++)if(audio.buffered.start(i)<=time&&audio.buffered.end(i)>time)
+      ahead=Math.max(ahead,audio.buffered.end(i)-time);
+    if(ahead<.08)return;
+    check(audio.playbackRate===1,'Owned native output rate changed unexpectedly');
+    check(state.nativeRateRecoveries.length<L.nativeResumeAttempts,'Bounded native rate recovery attempts exhausted');
+    const current=generation,receipt={requestedAtMs:ms(),time,contextTime:context.currentTime,
+      stationaryMs,bufferAheadSeconds:ahead,rateBefore:audio.playbackRate,zeroRate:null,restoredRate:null,cancelled:false};
+    state.nativeRateRecoveries.push(receipt);lastRateRecoveryAt=at;
+    record('native-rate-recovery-request',receipt);
+    audio.playbackRate=0;receipt.zeroRate=audio.playbackRate;
+    check(receipt.zeroRate===0,'Native zero-rate rearm was not retained');
+    if(!allowed()||!desired||disposed||state.primaryError||current!==generation){receipt.cancelled=true;return;}
+    audio.playbackRate=1;receipt.restoredRate=audio.playbackRate;
+    check(receipt.restoredRate===1,'Native normal-rate restoration was not retained');
+    record('native-rate-recovery-return',{...receipt,timeAfter:audio.currentTime});
+  }
+  function sample(){if(state.startedAt===null)return;state.playheads.push({ms:ms(),time:audio.currentTime,encodedFrames:state.inputFrames,contextTime:context.currentTime,encodeQueueSize:encoder.encodeQueueSize,pendingPcmPackets:queuedPcm.length,pendingSegments:pending.length,pendingBytes:appendBytes,readyState:audio.readyState,paused:audio.paused,playbackRate:audio.playbackRate,
     audioBuffered:timeRanges(audio.buffered),sourceBuffered:timeRanges(buffer?.buffered),mediaSourceDuration:Number.isFinite(source.duration)?source.duration:String(source.duration),sourceMode:buffer?.mode??null,appendWindowStart:buffer?.appendWindowStart??null,appendWindowEnd:buffer?String(buffer.appendWindowEnd):null});}
   function receivePacket(packet){
     // Preserve actual received bytes before any AudioData construction or encoding.
@@ -132,7 +162,7 @@ export async function prepareGraphOutput(context,{state=createGraphState(),workl
     source=new env.MediaSource();const opened=new Promise((resolve,reject)=>{on(source,'sourceopen',resolve);on(audio,'error',()=>reject(new Error('MSE source open failed')));});
     url=env.URL.createObjectURL(source);audio.src=url;audio.load();await within(opened,L.readyMs,'MSE source open');
     state.durationInitialization={before:Number.isFinite(source.duration)?source.duration:String(source.duration),assignedInfinity:false};
-    buffer=source.addSourceBuffer(mime);on(buffer,'updateend',()=>{record('updateend');drain();});on(buffer,'error',()=>fail(new Error('Native SourceBuffer error')));
+    buffer=source.addSourceBuffer(mime);on(buffer,'updateend',()=>{record('updateend');try{recoverNativeMediaIfStalled();}catch(error){fail(error);}drain();});on(buffer,'error',()=>fail(new Error('Native SourceBuffer error')));
     // Complete container initialization before the trusted warm click starts
     // actual PCM. Previously its first slow updateend filled the eight-segment
     // queue with real encoder output before playback could become ready.
