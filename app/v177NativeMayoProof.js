@@ -46,22 +46,23 @@ export function createMayoFeralProofOwner(deps) {
     const feral=world.manualAbilityReceipts.find(r=>r.ownerId===actor.id&&r.activationId===s.ownerEvidence.activationId&&r.kind==='mayo-chan'&&r.eventType==='feral-start');
     if(feral&&!s.ownerEvidence.feralReceipt){s.ownerEvidence.feralReceipt=copy(feral);s.ownerEvidence.feralStartAt=feral.at;}
   }
-  function arm(world,proofId) {
+  function arm(world,proofId,{pauseForRecorder=true}={}) {
     const s=state(world,proofId),actor=world.fighters.find(f=>f.id===s.actorId),target=world.fighters.find(f=>f.id===s.proof.targetId);
     need(!s.failure&&!s.pending&&!s.armed&&!s.released,'Mayo proof invalid/already armed/released');
     need(s.ownerEvidence?.feralReceipt&&!s.overflow&&world.running&&!world.over&&actor?.hp>0&&actor.combatReady&&actor?.manualAbility?.phase==='feral'&&actor.manualAbility.activeRemaining>0&&!actor.mayoRetreat,'Real feral window missing/expired');
     need(deps.battleGeneration(world)===s.proof.battleGeneration,'Battle lifecycle changed');
+    need(typeof pauseForRecorder==='boolean'&&(pauseForRecorder||world.paused===false),'Running Mayo capture requires an unpaused world');
     const reach=deps.attackReachFor(actor,target),approach=Math.max(8,actor.speed*1.1);
     need(Number.isFinite(reach)&&reach>=0&&target,'Real feral reach missing');
     const targetLane=actor.lane,targetY=deps.laneYFor?.(targetLane);
     need(Number.isInteger(targetLane)&&targetLane>=0&&targetLane<=2&&Number.isFinite(targetY),'Current Mayo lane center resolver required');
-    world.paused=true;deps.setPausedUi(true);
+    if(pauseForRecorder){world.paused=true;deps.setPausedUi(true);}
     // Actor, HP, CD and clocks are never reset. Stage only the inert opponent
     // relative to the actually living/activated actor, using its real reach.
     target.x=s.proof.phase==='move'?900:actor.x+(s.proof.phase==='engage'?reach+approach:Math.max(12,Math.min(40,actor.range*.45)));
     target.y=targetY;target.lane=targetLane;target.anchorLane=targetLane;
     s.proof.engagement=s.proof.phase==='engage'?{productionAttackReach:reach,approachDistance:approach}:null;
-    s.armed=true;s.arm={simulationTime:world.time,tick:deps.simulationTick(world),activeRemaining:actor.manualAbility.activeRemaining,hp:actor.hp};
+    s.armed=true;s.arm={simulationTime:world.time,tick:deps.simulationTick(world),activeRemaining:actor.manualAbility.activeRemaining,hp:actor.hp,pauseForRecorder};
     return copy({...s.proof,ownerEvidence:s.ownerEvidence,arm:s.arm});
   }
   function release(world,proofId) {

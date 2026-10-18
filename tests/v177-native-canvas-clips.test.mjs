@@ -247,3 +247,27 @@ for(const failsAt of [null,4]){
     assert.equal(receipts[0].completed,!failsAt);assert.deepEqual(clockEnds,[!failsAt]);
   });
 }
+
+for(const failure of [null,'activation','sample']){
+ test('recorded Mayo engagement keeps all30 samples and cleanup on '+(failure??'completion'),async()=>{
+  const events=[],waits=[],receipts=[],sentinel=new Error('Original Mayo '+failure);let reads=0,finishes=0;
+  const proof={fighterId:751,proofId:'actual-mayo',owner:'mayo-activation',phase:'engage',renderKind:'mayo-chan-feral'};
+  const page={waitForFunction:async()=>events.push('draw'),waitForTimeout:async ms=>waits.push(ms),
+   evaluate:async()=>{reads++;if(failure==='sample'&&reads===29)throw sentinel;return{fighter:{id:751}};}};
+  const owner={receipts},clock={beginSection:()=>{events.push('boundary');return{};},endSection:()=>events.push('clock-end')};
+  const clip={finish:async result=>{finishes++;events.push('finish');return result;}};
+  const run=vm.runInNewContext('('+sampler.getText(tree)+')',{
+   canvasClips:new WeakMap([[page,owner]]),frameClocks:new WeakMap([[page,clock]]),hasV177ContinuousDraw:()=>{},
+   releaseReadyMayoForRecording:async()=>{events.push('unpause-ready');return{};},
+   beginV177NativeCanvasClip:async(p,m)=>{events.push('record');assert.equal(m.preparedRenderKind,'mayo-chan');assert.equal(m.recordedActivationPrefix,true);return clip;},
+   activateRecordedMayo:async()=>{events.push('real-activation');if(failure==='activation')throw sentinel;proof.arm={simulationTime:1};},
+   fenceRecordedMayoSample:sample=>sample,
+  });
+  if(failure)await assert.rejects(()=>run(page,proof,{form:'mayo-chan-feral',phase:'engage'}),e=>e===sentinel);
+  else assert.equal((await run(page,proof,{form:'mayo-chan-feral',phase:'engage'})).length,30);
+  assert.equal(reads,failure==='activation'?0:failure==='sample'?29:30);
+  assert.ok(waits.every(ms=>ms===120));assert.equal(finishes,1);assert.equal(receipts[0].completed,!failure);
+  assert.deepEqual(events.slice(0,3),['unpause-ready','record','real-activation']);
+  if(failure!=='activation')assert.deepEqual(events.slice(3,5),['boundary','draw']);
+ });
+}

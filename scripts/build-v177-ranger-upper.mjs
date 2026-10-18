@@ -119,7 +119,7 @@ export async function buildV177RangerUpper({root=process.cwd(),check=false}={}) 
   // The original far leg was about nine source pixels longer. Its extra knee
   // bend crossed the near thigh during passing. Retarget both actual legs to
   // the near leg's proportions, without changing any original clothing pixel.
-  const lowerRig={spanPx:68,liftPx:definition.motion.walk.liftPx,stanceFraction:.62,
+  const lowerRig={spanPx:78,liftPx:definition.motion.walk.liftPx,stanceFraction:.62,
     parts:lowerRows.map(({pixels,...row})=>{void pixels;return row;}),legs:['far-pants','near-pants'].map((name,i)=>{
       const p=definition.parts.find(v=>v.name===name),upperLength=Math.hypot(p.knee[0]-p.hip[0],p.knee[1]-p.hip[1]),lowerLength=Math.hypot(p.ankle[0]-p.knee[0],p.ankle[1]-p.knee[1]);
       const rings=[-.3,0,.2,.4,.6,.8,1].map(t=>upperLength*t).concat([.2,.4,.6,.8,1,1.2].map(t=>upperLength+lowerLength*t));

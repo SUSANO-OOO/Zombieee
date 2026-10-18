@@ -13053,7 +13053,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         selectedActionRef.current=null;setSelectedAction(null);setStarted(true);setPaused(false);setEnd(null);setScreen("battle");
         return proof;
       },
-      armV177NativeMayoProof: (proofId:string) => nativeMayoProof.arm(gameRef.current,proofId),
+      armV177NativeMayoProof: (proofId:string,options?:{pauseForRecorder?:boolean}) => nativeMayoProof.arm(gameRef.current,proofId,options),
       releaseV177NativeMayoProof: (proofId:string) => nativeMayoProof.release(gameRef.current,proofId),
       getV177NativeMayoProof: (proofId:string,light=false) => light
         ? nativeMayoProof.readLive(gameRef.current,proofId) : nativeMayoProof.read(gameRef.current,proofId),

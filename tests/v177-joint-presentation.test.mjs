@@ -21,7 +21,9 @@ const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 
 test('actual-travel gait phase freezes while stationary and survives attack transitions',()=>{
   const scale=.22,stride=v177JointCycleDistance('ranger',scale);
-  assert.ok(stride>30&&stride<35);
+  // The live stance now travels78 source pixels during .62 of a cycle.
+  // Keep this physical expectation explicit instead of the legacy94px stride.
+  assert.equal(stride,78/.62*scale);
   let runtime=createCombatAnimationRuntime();
   runtime=advanceCombatAnimationRuntime(runtime,{kind:'ranger',x:stride*.37,y:0,locomotionCycleDistance:stride},1/60);
   assert.ok(Math.abs(runtime.locomotionPhase-.37)<1e-12);

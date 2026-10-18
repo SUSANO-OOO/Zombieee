@@ -159,6 +159,24 @@ test('actual joint draw paints one continuous lower and seven upper parts under 
     assert.deepEqual(again.calls[0].pixels,target.calls[0].pixels,'zero time redraw cannot change a pixel or shared painter ownership');
   }
 });
+
+test('a paused isolated left action paints its original weighted body from a left-facing start',()=>{
+ for(const initial of ['left']){
+  const img=image(),world={time:0,fighters:[]},actor={id:47,x:330,
+   animationPresentation:{moving:true,direction:initial,locomotionPhase:.12,locomotionSettle:0}};
+  world.fighters=[actor];
+  const paint=()=>{
+   const base=v177JointPose('ranger',{requestedState:'move'},actor.animationPresentation,{actor,world});
+   const plan=v177RangerFootPlan('ranger',base,{actor,world,width:86.4});
+   const {ctx}=main({matrix:[-1,0,0,1,actor.x,285]});
+   drawV177JointPose(ctx,img,'ranger',plan,-43.2,-80,86.4,80.64,{actor,world});return plan;
+  };
+  paint();actor.x-=4.5;actor.animationPresentation={...actor.animationPresentation,direction:'left',locomotionPhase:.12-4.5/v177JointCycleDistance('ranger',.18)};
+  const plan=paint();
+  assert.equal(plan.rangerFeet.facing,-1,'the isolated left action retains its actually painted initial facing');
+  assert.equal(v177RenderedWeightedLowerReceipt(actor,world).mode,'continuous-weighted-mesh');
+ }
+});
 test('shared half-alpha triangle edges are owned once and failed/fallback draws never claim continuous paint',()=>{
   const small={naturalWidth:4,naturalHeight:4,pixels:Uint8ClampedArray.from(Array(16).fill([200,80,10,128]).flat())};
   const lower={legs:[],parts:[{name:'pelvis',bone:'pelvis',source:{x:0,y:0,w:4,h:4},destination:{x:0,y:0,w:4,h:4}}]};

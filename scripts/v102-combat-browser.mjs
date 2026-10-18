@@ -21,6 +21,7 @@ import {assertV177ReactionRender,assertV177ReactionCoverage,assertJointCorpsePai
 import {createV177VideoFrameClock} from './v177-video-frame-clock.mjs';
 import {beginV177NativeCanvasClip} from './v177-native-canvas-clips.mjs';
 import {v177CombatViewports,closeV177CombatReport} from './v177-combat-workload.mjs';
+import {prepareMayoEngagement,releaseReadyMayoForRecording,activateRecordedMayo,fenceRecordedMayoSample} from './v177-mayo-engagement-capture.mjs';
 
 if(process.platform==='win32')throw new Error('Combat QA is hosted-only; local game, browser and audio playback are disabled');
 const engine=process.env.V102_COMBAT_ENGINE??'chromium';
@@ -41,22 +42,28 @@ const browser=await(await pwaBrowserType(engine)).launch();
 const frameClocks=new WeakMap();
 const canvasClips=new WeakMap();
 async function captureContinuousSamples(page,proof,metadata){
-  await page.waitForFunction(hasV177ContinuousDraw,proof,{timeout:5_000});
-  const owner=canvasClips.get(page),clip=owner?await beginV177NativeCanvasClip(page,{...metadata,fighterId:proof.fighterId,preparedRenderKind:proof.renderKind??metadata.form,v100TwinPart:proof.v100TwinPart??null,legacyFusedFixture:proof.legacyFusedFixture??false},owner):null;
-  const clock=frameClocks.get(page),section=clock?.beginSection({...metadata,fighterId:proof.fighterId});
+  const mayo=proof.owner==='mayo-activation'&&metadata.form==='mayo-chan-feral'&&metadata.phase==='engage';
+  if(mayo)proof.readyRelease=await releaseReadyMayoForRecording(page,proof);
+  else await page.waitForFunction(hasV177ContinuousDraw,proof,{timeout:5_000});
+  const owner=canvasClips.get(page),clip=owner?await beginV177NativeCanvasClip(page,{...metadata,fighterId:proof.fighterId,preparedRenderKind:mayo?'mayo-chan':proof.renderKind??metadata.form,v100TwinPart:proof.v100TwinPart??null,legacyFusedFixture:proof.legacyFusedFixture??false,...(mayo?{recordedActivationPrefix:true}:{})},owner):null;
+  const clock=frameClocks.get(page);let section;
   const samples=[],sampleCount=proof.phase==='engage'?30:15;
   try{
+  if(mayo)await activateRecordedMayo(page,proof,clip);
+  section=clock?.beginSection({...metadata,fighterId:proof.fighterId,...(mayo?{feralBoundary:proof.arm}:{})});
+  if(mayo)await page.waitForFunction(hasV177ContinuousDraw,proof,{timeout:5_000});
   for(let i=0;i<sampleCount;i++){
     await page.waitForTimeout(120);
-    samples.push(await page.evaluate(id=>{
+    const sample=await page.evaluate(id=>{
       const qa=window.__ASHFALL_BATTLE_QA__,snapshot=qa.getSnapshot(),audit=qa.getEnemyFacingRuntimeAudit(id);
       return {at:performance.now(),simulationTime:snapshot.time,running:snapshot.running,paused:snapshot.paused,route:location.pathname,visible:document.visibilityState==='visible',fighter:audit.fighter,
         renders:audit.renderHistory.map(r=>({renderSequence:r.renderSequence,renderKind:r.renderKind,assetReady:r.assetReady,x:r.x,y:r.y,renderWidth:r.renderWidth,renderHeight:r.renderHeight,poseScaleX:r.poseScaleX,poseScaleY:r.poseScaleY,requestedState:r.requestedState,actualXDelta:r.actualXDelta,jointAtlasPath:r.jointAtlasPath,jointLowerFrame:r.jointLowerFrame,jointWeightedLowerDrawSucceeded:r.jointWeightedLowerDrawSucceeded,jointWeightedLower:r.jointWeightedLower,jointUpperFrame:r.jointUpperFrame,renderedWeaponSocket:r.renderedWeaponSocket}))};
-    },proof.fighterId));
+    },proof.fighterId);
+    samples.push(mayo?fenceRecordedMayoSample(sample,proof.captureBoundary):sample);
   }
   return samples;
   }finally{
-    clock?.endSection(section,{completed:samples.length===sampleCount});
+    if(section)clock?.endSection(section,{completed:samples.length===sampleCount});
     if(clip)owner.receipts.push(await clip.finish({completed:samples.length===sampleCount}));
   }
 }
@@ -95,13 +102,17 @@ try{
         for(const {action,expectedState,joint,attackOrigin} of V177_NATIVE_ACTION_PLAN){
           // Fresh fighters keep these states independent. Paint the initial
           // body before applying a hit so its actual last drawn rig is known.
-          const proof=await page.evaluate(({kind,baseKind,side,expectedState})=>{
+          const proof=await page.evaluate(({kind,baseKind,side,expectedState,action})=>{
             const qa=window.__ASHFALL_BATTLE_QA__;
             const prepared=qa.prepareAnimationFoundationProof(baseKind,side,kind);
             if(expectedState!=='deploy')qa.stepAnimationFoundationProof(prepared.fighterId,'stop',.5);
+            // This paused fixture owns one isolated action, not a timed turn.
+            // Establish its left-facing start before its first actual paint;
+            // live turning keeps the original unpaused stepping/foot guards.
+            if(kind==='ranger'&&action==='move-left')qa.stepAnimationFoundationProof(prepared.fighterId,'move-left',.05);
             const previous=qa.getSnapshot().fighters.find(f=>f.id===prepared.fighterId)?.renderAudit?.renderSequence??0;
             return {...prepared,previous};
-          },{kind,baseKind,side,expectedState});
+          },{kind,baseKind,side,expectedState,action});
           await page.waitForFunction(({fighterId,previous})=>{
             const r=window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters.find(f=>f.id===fighterId)?.renderAudit;
             return r?.renderSequence>previous&&r.assetReady;
@@ -180,7 +191,8 @@ try{
         }
         row.continuousCoverage=assertV177ContinuousFormCoverage(row.liveEnemyMotion,row.liveAdditionalMotion);
         for(const form of spriteKinds){
-          const phase='engage',proof=await page.evaluate(form=>window.__ASHFALL_BATTLE_QA__.prepareV177ContinuousActorProof({form,phase:'engage'}),form);
+          const phase='engage',proof=form==='mayo-chan-feral'?await prepareMayoEngagement(page)
+            :await page.evaluate(form=>window.__ASHFALL_BATTLE_QA__.prepareV177ContinuousActorProof({form,phase:'engage'}),form);
           const evidence={form,phase,proof,samples:[],status:'pending'};row.liveEngagementMotion.push(evidence);
           try{
             evidence.samples=await captureContinuousSamples(page,proof,{form,phase,fixtureGroup:'approach-to-attack'});

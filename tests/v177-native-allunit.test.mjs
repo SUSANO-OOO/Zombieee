@@ -469,3 +469,26 @@ test('Mayo missing or nonfinite current lane center fails before changing either
   assert.equal(f.world.paused,false);assert.deepEqual(f.ui,[]);
  }
 });
+
+test('already recording Mayo arms only the target while its original clock and ability keep running',()=>{
+ const f=currentMayoLaneFixture(),actor=structuredClone(f.actor),time=f.world.time;
+ const armed=f.owner.arm(f.world,f.proof.proofId,{pauseForRecorder:false});
+ assert.deepEqual(f.actor,actor);assert.equal(f.world.time,time);
+ assert.equal(f.world.paused,false);assert.deepEqual(f.ui,[]);
+ assert.equal(armed.arm.pauseForRecorder,false);
+ assert.equal(armed.arm.activeRemaining,actor.manualAbility.activeRemaining);
+ assert.equal(armed.ownerEvidence.feralReceipt.activationId,actor.manualAbility.activationId);
+ assert.equal(f.target.lane,actor.lane);assert.equal(f.target.y,f.centers[actor.lane]);
+ assert.ok(f.target.x-actor.x>normalAttackReach(f.actor,f.target));
+ assert.throws(()=>f.owner.release(f.world,f.proof.proofId),/release invalid/);
+ assert.deepEqual(f.actor,actor);assert.equal(f.world.paused,false);
+});
+
+test('running Mayo arm rejects a paused world or invalid option before any fixture mutation',()=>{
+ for(const option of [false,null,0,'false']){
+  const f=currentMayoLaneFixture();if(option===false)f.world.paused=true;
+  const before=structuredClone(f.world);
+  assert.throws(()=>f.owner.arm(f.world,f.proof.proofId,{pauseForRecorder:option}),/unpaused world/);
+  assert.deepEqual(f.world,before);assert.deepEqual(f.ui,[]);
+ }
+});
