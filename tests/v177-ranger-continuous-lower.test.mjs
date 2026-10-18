@@ -10,6 +10,16 @@ import {createV177RangerLowerPainter,paintV177RangerLower} from '../app/v177Rang
 const atlas=V177_JOINT_ATLASES.ranger,rig=atlas.lowerRig,sha=b=>createHash('sha256').update(b).digest('hex');
 const source='assets/source/v100/joints/ranger-r1/',motion=JSON.parse(gunzipSync(await readFile(source+'motion.json.gz')));
 const texture=await sharp(await readFile('public'+atlas.path)).ensureAlpha().raw().toBuffer({resolveWithObject:true});
+// Actual stopped-foot receipts: 6728 seq2219/2221/2443/2445 and f42 seq915.
+// Neutral boot angles and backing transforms reconstruct the pants geometry;
+// they do not claim the missing original full-body transform or native counts.
+const stoppedClothPoses=[
+  [.3218648310388337,.3125,.17980769230769234,285,[[234.50034161521174,375.27737767347855,0],[239.2011385199187,398.5,0]]],
+  [.3218648310388337,.5208333333333333,.17980769230769234,285,[[226.97460136454436,374.12392614906105,0],[239.2011385199187,398.5,0]]],
+  [.3218648310388337,.3125,.17980769230769234,285,[[231.9115994539109,375.1963043451642,0],[239.2011385199187,398.5,0]]],
+  [.3218648310388337,.5208333333333333,.17980769230769234,285,[[224.950555092322,374.0605377705638,0],[239.2011385199187,398.5,0]]],
+  [.28717897371718815,.5208333333333333,.16346153846153846,282,[[215.28056136216583,377.06076053803184,0],[244.45996204933007,398.5,0]]],
+];
 const multiply=(a,b)=>[a[0]*b[0]+a[2]*b[1],a[1]*b[0]+a[3]*b[1],a[0]*b[2]+a[2]*b[3],a[1]*b[2]+a[3]*b[3],a[0]*b[4]+a[2]*b[5]+a[4],a[1]*b[4]+a[3]*b[5]+a[5]];
 // Inert RGBA/Canvas contract. No browser, GPU, game or media device is opened.
 function surface(){
@@ -29,6 +39,50 @@ function main({width=1280,height=720,matrix=[1,0,0,1,0,0]}={}){
     drawImage(img,...rect){calls.push({matrix:[...m],rect,pixels:img.data?new Uint8ClampedArray(img.data.data):null,sourceWidth:img.width});}};
   return {ctx,calls,stack};
 }
+
+test('stopped Ranger cloth keeps one coverage per sample without changing vertices, UV or original legs',()=>{
+  const painter=createV177RangerLowerPainter(image(),rig),source=painter.parts.map(g=>({uv:[...g.uv],indices:[...g.indices]}));
+  const area=(v,a,b,c)=>(v[b*2]-v[a*2])*(v[c*2+1]-v[a*2+1])-(v[b*2+1]-v[a*2+1])*(v[c*2]-v[a*2]);
+  for(const [phase,settle,scale,y,feet]of stoppedClothPoses)for(const sign of [1,-1])for(const angle of [0,.07]){
+    const x=361.900000000001,c=Math.cos(angle),s=Math.sin(angle),width=480*scale,height=448*scale;
+    const {ctx}=main({matrix:[c*sign,s*sign,-s,c,x-c*sign*x+s*y,y-s*sign*x-c*y]});
+    const receipt=paintV177RangerLower(painter,ctx,phase,settle,x-width*.5,y-height*.9642857142857143,width,height,feet);
+    assert.equal(receipt.mode,'continuous-weighted-mesh');assert.equal(receipt.duplicateWithinPart,0);
+    assert.equal(receipt.degenerate,0);assert.equal(receipt.coverageSamples,4);
+    for(const [i,g]of painter.parts.entries()){
+      assert.deepEqual([...g.uv],source[i].uv);assert.deepEqual([...g.indices],source[i].indices);
+      assert.equal(g.rasterIndices.length,g.indices.length);
+      for(let t=0;t<g.rasterIndices.length;t+=3){const [a,b,c]=g.rasterIndices.subarray(t,t+3);
+        assert.ok(area(g.target,a,b,c)*area(g.uv,a,b,c)*sign>0,'each painted triangle retains its source orientation');}
+    }
+    const pose=v177RangerLowerPose(rig,phase,settle,undefined,feet);
+    for(const [i,leg]of rig.legs.entries()){
+      const j=pose.joints[i];assert.ok(Math.abs(Math.hypot(j[2]-j[0],j[3]-j[1])-leg.upperLength)<1e-9);
+      assert.ok(Math.abs(Math.hypot(j[4]-j[2],j[5]-j[3])-leg.lowerLength)<1e-9);
+      assert.deepEqual([...j.subarray(4,6)],feet[i].slice(0,2));
+    }
+  }
+  const {ctx}=main();paintV177RangerLower(painter,ctx,.371,1,300,220,96,89.6);
+  for(const g of painter.parts)assert.deepEqual(g.rasterIndices,g.indices,'a later convex pose restores its original diagonal');
+});
+
+test('Ranger cloth never repairs a collapsed or crossed quad into a false success',()=>{
+  const cases=[
+    {uv:[2,2,6,2,10,2,2,8],degenerate:1},
+    {uv:[2,2,4,4,6,6,8,8],degenerate:2},
+    {uv:[2,2,8,8,2,8,8,2],degenerate:0,overlap:true},
+  ];
+  for(const entry of cases){
+    const painter=createV177RangerLowerPainter(image(),rig),part=painter.parts.find(g=>g.bone==='pelvis');
+    // An isolated invalid quad exercises the real raster failure receipt.
+    // Its private UV copy cannot alter the approved rig or decoded source.
+    part.uv.set(entry.uv);painter.parts=[part];const {ctx}=main();
+    const receipt=paintV177RangerLower(painter,ctx,0,1,0,0,480,448);
+    assert.equal(receipt.mode,'continuous-weighted-mesh');assert.deepEqual(part.rasterIndices,part.indices);
+    assert.equal(receipt.degenerate,entry.degenerate*receipt.coverageSamples);
+    if(entry.overlap)assert.ok(receipt.duplicateWithinPart>0);
+  }
+});
 test('append-only Ranger atlas retains every r2 RGBA byte, upper rig and full original five lower crops',async()=>{
   const oldBytes=await readFile('public/art/v100/joints/ranger-r2.webp');assert.equal(sha(oldBytes),'08440e6c182f562e3fda394a9f12b5e21ca0e9abfa95da104d1dc397f3a412db');
   const old=await sharp(oldBytes).ensureAlpha().raw().toBuffer();assert.ok(texture.data.subarray(0,old.length).equals(old));

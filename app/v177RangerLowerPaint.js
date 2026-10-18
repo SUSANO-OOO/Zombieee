@@ -15,7 +15,8 @@ export function createV177RangerLowerPainter(image,rig,createCanvas=()=>image.ow
     context.clearRect(0,0,s.w,s.h);context.drawImage(image,s.x,s.y,s.w,s.h,0,0,s.w,s.h);
     const data=context.getImageData(0,0,s.w,s.h).data,leg=rig.legs.find(l=>l.name===part.name);
     const uv=new Float64Array(leg?.sourcePositions??[d.x,d.y,d.x+d.w,d.y,d.x+d.w,d.y+d.h,d.x,d.y+d.h]);
-    return {name:part.name,bone:part.bone,rect:d,data,uv,leg,indices:new Uint16Array(leg?.triangles??[0,1,2,0,2,3]),target:new Float64Array(uv.length)};
+    const indices=new Uint16Array(leg?.triangles??[0,1,2,0,2,3]);
+    return {name:part.name,bone:part.bone,rect:d,data,uv,leg,indices,rasterIndices:indices.slice(),target:new Float64Array(uv.length)};
   });
   return {canvas,context,parts,pose:createV177RangerLowerPose(rig),rig,width:0,height:0,sample:null,accum:null,visits:null,imageData:null};
 }
@@ -27,10 +28,29 @@ function ensureCapacity(p,w,h) {
   p.sample=new Float32Array(width*height*4);p.accum=new Float32Array(width*height*4);p.visits=new Uint8Array(width*height);
   p.imageData=p.context.createImageData(width,height);return true;
 }
+function triangleArea(v,a,b,c) {
+  return (v[b*2]-v[a*2])*(v[c*2+1]-v[a*2+1])-(v[b*2+1]-v[a*2+1])*(v[c*2]-v[a*2]);
+}
+function selectPartDiagonals(g) {
+  const source=g.indices,indices=g.rasterIndices,v=g.target;indices.set(source);
+  for(let i=0;i+5<source.length;i+=6){
+    const a=source[i],b=source[i+1],c=source[i+2],d=source[i+5];
+    if(source[i+3]!==a||source[i+4]!==c)continue;
+    const first=triangleArea(v,a,b,c),second=triangleArea(v,a,c,d);
+    if(Math.abs(first)<1e-12||Math.abs(second)<1e-12||first*second>=0)continue;
+    // A bent cloth quad can become concave while keeping its four vertices.
+    // Use its interior diagonal only when both alternate faces agree in winding.
+    // A crossed or collapsed quad keeps the original failure visible.
+    const alternateFirst=triangleArea(v,a,b,d),alternateSecond=triangleArea(v,b,c,d);
+    if(Math.abs(alternateFirst)>=1e-12&&Math.abs(alternateSecond)>=1e-12&&alternateFirst*alternateSecond>0){
+      indices[i+2]=d;indices[i+3]=b;
+    }
+  }
+}
 function rasterPart(p,g,w,h,ox,oy,stats) {
   p.visits.fill(0,0,w*h);
-  for(let ti=0;ti<g.indices.length;ti+=3){
-    let ia=g.indices[ti]*2,ib=g.indices[ti+1]*2,ic=g.indices[ti+2]*2;
+  for(let ti=0;ti<g.rasterIndices.length;ti+=3){
+    let ia=g.rasterIndices[ti]*2,ib=g.rasterIndices[ti+1]*2,ic=g.rasterIndices[ti+2]*2;
     let ax=g.target[ia],ay=g.target[ia+1],bx=g.target[ib],by=g.target[ib+1],cx=g.target[ic],cy=g.target[ic+1];
     let area=(bx-ax)*(cy-ay)-(by-ay)*(cx-ax);if(Math.abs(area)<1e-12){stats.degenerate++;continue;}
     if(area<0){const index=ib;ib=ic;ic=index;const x=bx,y=by;bx=cx;by=cy;cx=x;cy=y;area=-area;}
@@ -73,7 +93,10 @@ export function paintV177RangerLower(p,ctx,phase,settle,x,y,width,height,feet=nu
     coverageSamples:4,width:Math.max(0,w),height:Math.max(0,h),duplicateWithinPart:0,degenerate:0};
   if(w<=0||h<=0)return {...receipt,mode:'offscreen-weighted-mesh'};
   if(!ensureCapacity(p,w,h))return {mode:'legacy-cell-fallback',reason:'bounded-raster-capacity',width:w,height:h};
-  for(const g of p.parts)for(let i=0;i<g.target.length;i+=2){g.target[i]-=left;g.target[i+1]-=top;}
+  for(const g of p.parts){
+    for(let i=0;i<g.target.length;i+=2){g.target[i]-=left;g.target[i+1]-=top;}
+    selectPartDiagonals(g);
+  }
   p.accum.fill(0,0,w*h*4);
   for(const [ox,oy]of samples){
     p.sample.fill(0,0,w*h*4);for(const g of p.parts)rasterPart(p,g,w,h,ox,oy,receipt);
