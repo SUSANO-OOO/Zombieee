@@ -62,6 +62,9 @@ export async function prepareGraphOutput(context,{state=createGraphState(),workl
   // Re-arm the owned normal rate only after actual append ACKs show buffered
   // data beyond a stationary playhead. Preserve every PCM packet and clock.
   function recoverNativeMediaIfStalled(){
+    // Measure the first managed-source baseline without the unproven classic
+    // renderer rearm. Original clocks, raw data and every quality bound remain.
+    if(state.route==='ManagedMediaSource')return;
     if(!allowed()||!desired||state.primaryError||ended||source.readyState!=='open'
       ||audio.paused||audio.readyState<3||!state.events.some(r=>r.event==='playing'))return;
     const at=now(),time=audio.currentTime;

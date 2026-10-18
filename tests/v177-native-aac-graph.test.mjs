@@ -66,7 +66,7 @@ test('150ms arithmetic matches the unchanged original helper, including invalid/
   for(const value of cases)assert.deepEqual(graphClockEvidence(value),nativeAacClockEvidence(value));
 });
 test('clock/result contract accepts the finite positive control only within its narrow scope',()=>{const result=assertGraphObservation(valid());assert.equal(result.clock.budgetMs,150);assert.match(result.scope,/not accepted/u);});
-const faults={sourceApi:s=>s.sourceAttachment.api='unbound',managedAirplay:s=>{s.route='ManagedMediaSource';s.sourceAttachment.api='ManagedMediaSource';s.sourceAttachment.remotePlaybackDisabled=false;},startup:s=>s.events[0].ms=150.00001,lag:s=>s.playheads[0]={ms:200,time:.049,encodedFrames:9600},queued:s=>s.playheads[0]={ms:1,time:.001,encodedFrames:8192},effect:s=>s.effect.latencyMs=150.00001,
+const faults={managedRecovery:s=>{s.route='ManagedMediaSource';s.sourceAttachment.api='ManagedMediaSource';s.nativeRateRecoveries=[{zeroRate:0,restoredRate:1}];},sourceApi:s=>s.sourceAttachment.api='unbound',managedAirplay:s=>{s.route='ManagedMediaSource';s.sourceAttachment.api='ManagedMediaSource';s.sourceAttachment.remotePlaybackDisabled=false;},startup:s=>s.events[0].ms=150.00001,lag:s=>s.playheads[0]={ms:200,time:.049,encodedFrames:9600},queued:s=>s.playheads[0]={ms:1,time:.001,encodedFrames:8192},effect:s=>s.effect.latencyMs=150.00001,
   recoveryCap:s=>s.nativeRateRecoveries=Array.from({length:L.nativeResumeAttempts+1},()=>({zeroRate:0,restoredRate:1})),recoveryIncomplete:s=>s.nativeRateRecoveries=[{zeroRate:0,restoredRate:null}],
   fakeInput:s=>s.effect.trusted=false,wrongId:s=>s.effect.assetId='borrowed-rifle',missingVoice:s=>s.effect.voiceId=null,tail:s=>s.finished.status='partial-tail-retained-not-encoded',gap:s=>s.finished.snapshot.acceptedFrames=1025,
   overflow:s=>s.transportOverflow=1,encoderBacklog:s=>s.peakEncoderQueue=L.encoderQueue+1,pcmPoolBacklog:s=>s.peakPendingPcmPackets=L.pcmPoolPackets+1,undrainedPcm:s=>s.pendingPcmPackets=1,mseBacklog:s=>s.peakPendingBytes=L.pendingBytes+1,cleanup:s=>s.cleanup.completed=false,
@@ -559,4 +559,23 @@ test('managed source rejects a missing native remote playback control before att
  f.env.document.createElement=()=>{created=create();delete created.disableRemotePlayback;return created;};
  const state=createGraphState();await assert.rejects(prepareGraphOutput(f.context,{state,workletUrl:'/worklet.mjs',env:f.env}),/requires native remote-playback disabling before attachment/u);
  assert.equal(state.sourceAttachment.remotePlaybackDisableSupported,false);assert.equal(state.sourceAttachment.srcWasEmpty,true);assert.equal(f.source,undefined);assert.equal(f.nodes.length,0);assert.equal(created.removed,true);assert.equal(state.cleanup.completed,true);
+});
+
+
+test('managed native baseline keeps stationary original media at rate1 beyond the classic recovery cap',async()=>{
+ const f=fakeEnvironment();installManagedSource(f);
+ const state=createGraphState(),output=await prepareGraphOutput(f.context,{state,workletUrl:'/worklet.mjs',env:f.env});await output.api.prepare();
+ const probe=nativeRateFixture(f);f.nodes[0].port.onmessage({data:f.packet()});await new Promise(resolve=>setImmediate(resolve));
+ const raw=output.evidence().pcmParts[0].slice();
+ for(let i=0;i<L.nativeResumeAttempts+3;i++)await probe.ack(i*100);
+ assert.equal(state.route,'ManagedMediaSource');assert.deepEqual(probe.rates,[]);assert.deepEqual(state.nativeRateRecoveries,[]);
+ assert.equal(state.primaryError,null);assert.equal(f.audio.currentTime,0);assert.equal(f.audio.playbackRate,1);
+ assert.equal(state.inputFrames,1024);assert.equal(state.pcm.length,1);assert.equal(state.packets.length,1);assert.deepEqual(output.evidence().pcmParts[0],raw);
+ await output.cleanup();await probe.ack(1500);assert.deepEqual(probe.rates,[]);assert.equal(state.cleanup.completed,true);
+});
+
+test('managed positive control still enforces every original timing and content gate',()=>{
+ const state=valid();state.route='ManagedMediaSource';state.sourceAttachment.api='ManagedMediaSource';
+ assert.equal(assertGraphObservation(state).clock.budgetMs,150);
+ state.events[0].ms=150.00001;assert.throws(()=>assertGraphObservation(state),/startup/u);
 });

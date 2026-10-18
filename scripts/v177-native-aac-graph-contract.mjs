@@ -35,6 +35,7 @@ export function assertGraphObservation(state) {
   const check=(ok,message)=>{if(!ok)throw new Error(message);};
   check(['MediaSource','ManagedMediaSource'].includes(state.route)&&state.sourceAttachment?.api===state.route&&state.sourceAttachment.srcWasEmpty===true,'Actual native source API/attachment receipt missing');
   check(state.route!=='ManagedMediaSource'||state.sourceAttachment.remotePlaybackDisableSupported===true&&state.sourceAttachment.remotePlaybackDisabled===true,'ManagedMediaSource was attached without native remote-playback disabling');
+  check(state.route!=='ManagedMediaSource'||state.nativeRateRecoveries.length===0,'Managed baseline must not mutate native playback rate');
   check(state.status==='complete','Actual graph observation did not complete');check(!state.primaryError&&state.errors.length===0,'Original graph/transport error retained');
   check(state.sampleRate>0&&state.sampleRate<65536,'Actual context rate is unsupported by the original muxer');check(state.realtimeAudioContexts===1,'Exactly one real AudioContext is required');
   check(state.mixerContextSame===true&&state.warmDiagnostics?.contextCreateCount===1&&state.warmDiagnostics?.contextTiming?.sampleRate===state.sampleRate,'Actual original mixer context identity/count/rate receipt missing');
