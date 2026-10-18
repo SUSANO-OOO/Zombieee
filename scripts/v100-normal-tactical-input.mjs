@@ -58,12 +58,42 @@ export function s25FireDeploymentPriorities(snapshot, observedHumans, baseline) 
   return next?[next]:[];
 }
 
-export async function normalTacticalInput(page,record,{observeSnapshot,frameOwner,observeFrameChunk,rangerDrawObservation=false,s25DeploymentObservation=false,s25FireComparison=false,barrageWhenOverwhelmed=false,barrageEnabled=true,airstrikeAfterSeconds=0,bossAirstrikePriority=false,reserveSecondAirstrikeForBoss=false,holdRedeploymentUntilBoss=false}={}){
+export async function normalTacticalInput(page,record,{observeSnapshot,frameOwner,observeFrameChunk,rangerDrawObservation=false,awaitInitialRangerPaint=false,s25DeploymentObservation=false,s25FireComparison=false,barrageWhenOverwhelmed=false,barrageEnabled=true,airstrikeAfterSeconds=0,bossAirstrikePriority=false,reserveSecondAirstrikeForBoss=false,holdRedeploymentUntilBoss=false}={}){
   if(s25FireComparison&&(record.number!==25||!s25DeploymentObservation))throw new Error('S25 fire input is opt-in and Stage 25 only');
-  const observed=await page.evaluate(({owner,rangerDrawObservation,s25DeploymentObservation})=>{
+  if(awaitInitialRangerPaint&&!rangerDrawObservation)throw new Error('Initial Ranger paint wait requires draw observations');
+  const observed=await page.evaluate(async({owner,rangerDrawObservation,awaitInitialRangerPaint,s25DeploymentObservation})=>{
+    if(awaitInitialRangerPaint){
+      const state=window.__V100_DEVICE_RAF__,qa=window.__ASHFALL_BATTLE_QA__;
+      if(!state?.active||!Number.isFinite(state.startedAt)||!qa)throw new Error('Missing active original Ranger measurement');
+      if(!state.rangerFirstPaintFence){
+        const before=qa.getPerformanceSnapshot?.()?.renderFrames,original=state.performanceBefore?.renderFrames;
+        if(!Number.isSafeInteger(before)||!Number.isSafeInteger(original)||original<0||before<original)throw new Error('Missing original actual render counter');
+        const fence={status:'pending',requestedAt:performance.now(),beforeRenderFrames:before,observedAt:null,observedRenderFrames:null,rafCallbacks:0,timeoutMs:2000};
+        state.rangerFirstPaintFence=fence;
+        // Simulation can advance on a skipped paint frame. Wait for the next
+        // actual drawWorld completion, regardless of its Ranger success/failure.
+        // Capture the first raw snapshot in this same browser task; never seek
+        // an older successful tail or change the original measurement window.
+        await new Promise((resolve,reject)=>{
+          let handle=0;
+          const fail=message=>{fence.status='failed';fence.error=message;cancelAnimationFrame(handle);clearTimeout(timer);reject(new Error(message));};
+          const timer=setTimeout(()=>fail('Timed out waiting for initial actual Ranger paint'),fence.timeoutMs);
+          const tick=()=>{
+            fence.rafCallbacks++;
+            if(window.__V100_DEVICE_RAF__!==state||!state.active||window.__ASHFALL_BATTLE_QA__!==qa)return fail('Original Ranger measurement owner stopped or changed');
+            const current=qa.getPerformanceSnapshot?.()?.renderFrames;
+            if(!Number.isSafeInteger(current)||current<before)return fail('Actual render counter is missing or regressed');
+            if(current>before){fence.status='completed';fence.observedAt=performance.now();fence.observedRenderFrames=current;clearTimeout(timer);resolve();}
+            else handle=requestAnimationFrame(tick);
+          };
+          handle=requestAnimationFrame(tick);
+        });
+      }else if(state.rangerFirstPaintFence.status!=='completed')throw new Error('Initial Ranger paint observation did not complete');
+    }
     const s=window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();const snapshot=!s?null:{time:s.time,running:s.running,over:s.over,won:s.won,baseHp:s.baseHp,baseMaxHp:s.baseMaxHp,energy:s.energy,supportGauge:s.supportGauge,airstrike:s.airstrike,objective:s.objective,escortMissionObject:s.escortMissionObject,deployQueue:s.deployQueue?.map(f=>({kind:f.kind})),fighters:s.fighters.map(f=>({id:f.id,kind:f.kind,side:f.side,hp:f.hp,maxHp:f.maxHp,x:f.x,y:f.y,lane:f.lane,range:f.range,combatReady:f.combatReady}))};
     if(snapshot&&rangerDrawObservation)snapshot.rangerDraws={readAt:performance.now(),simulationTime:s.time,
       renderBoundary:s.rangerRenderObservation??null,
+      firstPaintFence:window.__V100_DEVICE_RAF__?.rangerFirstPaintFence??null,
       measurementStart:{startedAt:window.__V100_DEVICE_RAF__?.startedAt,active:window.__V100_DEVICE_RAF__?.active===true,
         boundary:window.__V100_DEVICE_RAF__?.performanceBefore?.rangerDrawBoundary??null},
       actors:s.fighters.filter(f=>f.kind==='ranger'&&f.side==='human'&&f.hp>0).map(f=>({id:f.id,kind:f.kind,side:f.side,hp:f.hp,maxHp:f.maxHp,x:f.x,y:f.y,lane:f.lane,
@@ -80,7 +110,7 @@ export async function normalTacticalInput(page,record,{observeSnapshot,frameOwne
         className:el.className,disabled:el.disabled,ariaDisabled:el.getAttribute('aria-disabled'),state:el.dataset.state,
         cooldown:el.dataset.cooldown??null,ariaLabel:el.getAttribute('aria-label')}))};
     return owner?{snapshot,frames:globalThis.__V177_READ_NORMAL_FRAMES__?.(owner,'drain')??null}:snapshot;
-  },{owner:frameOwner??null,rangerDrawObservation,s25DeploymentObservation});
+  },{owner:frameOwner??null,rangerDrawObservation,awaitInitialRangerPaint,s25DeploymentObservation});
   const s=frameOwner?observed?.snapshot:observed;
   if(frameOwner)await observeFrameChunk?.(observed?.frames);
   observeSnapshot?.(s);

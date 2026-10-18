@@ -141,6 +141,7 @@ function unitDraw(actor,world){
 }
 
 function appVmFixture(){
+ const frames=new Map(),timers=new Map();let nextHandle=0,evaluateCalls=0;
  const read=f=>fs.readFileSync(new URL('../'+f,import.meta.url),'utf8'),app=ts.createSourceFile('actual-App.tsx',read('app/AshfallGame.tsx'),ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX),nodes=[];
  const walk=n=>{nodes.push(n);ts.forEachChild(n,walk);};walk(app);
  const fn=name=>nodes.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text===name),qa=name=>nodes.find(n=>ts.isPropertyAssignment(n)&&n.name.getText(app)===name);
@@ -151,7 +152,9 @@ function appVmFixture(){
   runtimePerformanceRef:{current:{renderFrames:30}},v100ImageSampler:{snapshot:()=>({})},v100ShotLayer:{snapshot:()=>({})},graphicsProfileRef:{current:{}},
   staticBattlefieldCacheRef:{current:{hits:0,rebuilds:0,canvas:null}},renderObjectPoolSnapshot:()=>({}),
   activeBattlefieldDepthScale:()=>1,sampleAnimationClip:()=>({spriteState:'idle',groundAnchor:1,pose:{}}),enemyCombatVfxSnapshot:()=>null,
-  performance:{now:()=>context.nativeClock},nativeClock:0,requestAnimationFrame:()=>1,document:{visibilityState:'visible'},
+  performance:{now:()=>context.nativeClock},nativeClock:0,
+  requestAnimationFrame:fn=>{const id=++nextHandle;frames.set(id,fn);return id;},cancelAnimationFrame:id=>frames.delete(id),
+  setTimeout:fn=>{const id=++nextHandle;timers.set(id,fn);return id;},clearTimeout:id=>timers.delete(id),document:{visibilityState:'visible'},
   gameRef:{current:null},window:{addEventListener(){},removeEventListener(){}}});
  const expression=text=>{const js=ts.transpileModule('('+text+')',{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText;return vm.runInContext(js,context);};
  const body=text=>vm.runInContext(ts.transpileModule(text,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText,context);
@@ -165,8 +168,11 @@ function appVmFixture(){
  const getSnapshot=()=>{snapshotCalls++;const g=context.g;return {time:g.time,running:true,over:true,won:false,deployQueue:[],rangerRenderObservation:makeObservation(),fighters:g.fighters.map(mapFighter)};};
  context.window.__ASHFALL_BATTLE_QA__={getSnapshot,getPerformanceSnapshot:()=>{perfCalls++;return performanceGetter();}};
  const driver=ts.createSourceFile('driver.mjs',read('scripts/v100-device-runtime-browser.mjs'),ts.ScriptTarget.Latest,true,ts.ScriptKind.JS),begin=driver.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text==='beginMeasurement');assert(begin);const beginMeasurement=expression(begin.getText(driver));
- const page={evaluate:async(fn,arg)=>{context.arg=arg;return expression('('+fn.toString()+')')(arg);}};
- return {context,page,record,getSnapshot,beginMeasurement,copy:()=>body('{'+actualAssignment+'}'),counters:()=>({perfCalls,snapshotCalls}),setWorld:g=>{context.g=g;context.gameRef.current=g;},paint:draw=>{const actor=context.g.fighters[0],world=context.g;let lower=draw.jointWeightedLower;if(draw.jointDrawSucceeded===true)lower=unitDraw(actor,world);else v177JointPose('ranger',{requestedState:'special'},actor.animationPresentation,{ownedPose:true,actor,world});const next=body('++fighterRenderSequence');record(actor,{...draw,renderSequence:next,jointWeightedLower:lower});return next;}};
+ const page={evaluate:async(fn,arg)=>{evaluateCalls++;context.arg=arg;return expression('('+fn.toString()+')')(arg);}};
+ return {context,page,record,getSnapshot,beginMeasurement,copy:()=>body('{'+actualAssignment+'}'),counters:()=>({perfCalls,snapshotCalls,evaluateCalls}),
+  frame:at=>{context.nativeClock=at;const pending=[...frames.values()];frames.clear();for(const fn of pending)fn(at);},
+  expire:()=>{const pending=[...timers.values()];timers.clear();for(const fn of pending)fn();},pending:()=>({frames:frames.size,timers:timers.size}),
+  setWorld:g=>{context.g=g;context.gameRef.current=g;},paint:draw=>{const actor=context.g.fighters[0],world=context.g;let lower=draw.jointWeightedLower;if(draw.jointDrawSucceeded===true)lower=unitDraw(actor,world);else v177JointPose('ranger',{requestedState:'special'},actor.animationPresentation,{ownedPose:true,actor,world});const next=body('++fighterRenderSequence');record(actor,{...draw,renderSequence:next,jointWeightedLower:lower});context.runtimePerformanceRef.current.renderFrames++;return next;}};
 }
 
 test('actual record→actual area-copy/assignment→same getSnapshot projection is fresh after the existing beginMeasurement boundary',async()=>{
@@ -205,4 +211,63 @@ test('unprovable copied start and distinct or reused actors in a new unpainted w
   const rows=[];for(let i=0;i<2;i++){f.context.nativeClock=1000+i*1000;if(i){g.time=11;f.paint({...oldActor.render,jointPaintedAt:11});f.copy();}let s;await normalTacticalInput(f.page,{inputs:[]},{rangerDrawObservation:true,observeSnapshot:v=>{s=structuredClone(v);}});s.humans=s.fighters.filter(a=>a.side==='human');rows.push(s);}
   const result=rangerPerformanceReceipts(rows,windowBounds);assert.equal(result.status,'incomplete',mode);assert.equal(result.baselineObservations,0);assert.equal(result.newPaintObservations,1);assert(result.errors.some(e=>e.includes('preceding actual snapshot')));assert.equal(rows[0].rangerDraws.actors[0].render.renderSequence,1,'Original stale raw is retained');
  }
+});
+
+async function firstPaintFixture(){
+ const f=appVmFixture(),a={...actor(9,1,10),animationPresentation:{state:'idle',elapsedSeconds:0,lastEvents:[]},stationAbility:{phase:'idle'},manualAbility:{phase:'ready'}},
+  g={time:10,battleAudioGeneration:7,fighters:[a],areaEffects:[],renderObjectPools:{particles:{},shots:{},damageTexts:{}},particles:[],shots:[],damageTexts:[]};
+ f.setWorld(g);f.paint({...a.render,jointPaintedAt:g.time});await f.beginMeasurement(f.page);
+ g.time+=1/60;f.copy();f.context.nativeClock=1000;
+ let latest;const read=()=>normalTacticalInput(f.page,{inputs:[]},{rangerDrawObservation:true,awaitInitialRangerPaint:true,observeSnapshot:s=>{latest=structuredClone(s);}});
+ return{f,g,a,read,latest:()=>latest};
+}
+
+test('initial native observation waits through skipped paint and then reads the first completed frame in its original RPC',async()=>{
+ const {f,g,a,read,latest}=await firstPaintFixture(),state=f.context.window.__V100_DEVICE_RAF__,start=structuredClone({startedAt:state.startedAt,performanceBefore:state.performanceBefore}),before=f.counters(),task=read();
+ assert.equal(f.counters().snapshotCalls,before.snapshotCalls,'do not sample the known prepaint object copy');
+ const entry=f.context.window.__V100_DEVICE_RAF__.rangerFirstPaintFence.beforeRenderFrames;
+ g.time+=1/60;f.copy();f.frame(1017);await Promise.resolve();
+ assert.equal(f.counters().snapshotCalls,before.snapshotCalls,'a simulation-only callback must not emit or discard a sample');
+ assert.equal(f.context.window.__V100_DEVICE_RAF__.rangerFirstPaintFence.status,'pending');
+ g.time+=1/60;f.paint({...a.render,jointPaintedAt:g.time});f.frame(1034);await task;
+ const first=latest(),fence=first.rangerDraws.firstPaintFence;
+ assert.equal(fence.status,'completed');assert.equal(fence.beforeRenderFrames,entry);assert.equal(fence.observedRenderFrames,entry+1);assert.equal(fence.rafCallbacks,2);
+ assert.equal(first.rangerDraws.actors[0].render.jointPaintedAt,first.time);
+ assert.equal(first.rangerDraws.actors[0].render.jointDrawSucceeded,true);assert.equal(f.counters().snapshotCalls,before.snapshotCalls+1);
+ assert.equal(f.counters().evaluateCalls,before.evaluateCalls+1,'no added browser RPC');assert.equal(f.pending().timers,0);
+ assert.equal(f.context.window.__V100_DEVICE_RAF__.startedAt,start.startedAt);assert.deepEqual(structuredClone(f.context.window.__V100_DEVICE_RAF__.performanceBefore),start.performanceBefore);
+ const perfAfterFirst=f.counters().perfCalls;
+ g.time=11;f.context.nativeClock=2000;f.paint({...a.render,jointPaintedAt:g.time});f.copy();await read();
+ assert.equal(f.counters().perfCalls,perfAfterFirst,'later observations must not poll performance or wait for paint');
+ const rows=[first,latest()].map(s=>({...s,humans:s.fighters.filter(a=>a.side==='human')})),result=rangerPerformanceReceipts(rows,windowBounds);
+ assert.equal(result.status,'recorded',result.errors.join(';'));assert.equal(result.baselineObservations,0);assert.equal(result.newPaintObservations,2);
+ assert.equal(result.naturalnessAccepted,false);assert.equal(result.wholeGameAccepted,false);
+});
+
+test('the first completed frame is retained even when its Ranger draw failed or supplied no fresh receipt',async()=>{
+ for(const mode of ['failed','missing']){
+  const {f,g,a,read,latest}=await firstPaintFixture(),task=read();g.time+=1/60;
+  if(mode==='failed')f.paint({...a.render,jointPaintedAt:g.time,jointDrawSucceeded:false,jointWeightedLowerDrawSucceeded:false,jointWeightedLower:{mode:'legacy-cell-fallback'}});
+  else f.context.runtimePerformanceRef.current.renderFrames++;
+  f.frame(1017);await task;
+  const s=latest(),draw=s.rangerDraws.actors[0].render,result=rangerPerformanceReceipts([{...s,humans:s.fighters}],windowBounds);
+  assert.equal(s.rangerDraws.firstPaintFence.status,'completed');assert.equal(s.rangerDraws.firstPaintFence.rafCallbacks,1);assert.equal(f.counters().snapshotCalls,1);
+  if(mode==='failed'){assert.equal(draw.jointDrawSucceeded,false);assert(result.errors.some(e=>e.includes('not actually painted')));}
+  else{assert(draw.jointPaintedAt<s.time);assert(result.errors.some(e=>e.includes('preceding actual snapshot')));}
+  assert.equal(result.weightedPaintObserved,false,'never wait for a later successful weighted draw');
+ }
+});
+
+test('initial paint waiting fails on a stopped or replaced owner, regressed counter and deadline without observing or applying inputs',async()=>{
+ for(const mode of ['stopped','replaced-measurement','replaced-qa','regressed-counter','timeout']){
+  const {f,read}=await firstPaintFixture(),state=f.context.window.__V100_DEVICE_RAF__,task=read(),failure=assert.rejects(task,/stopped or changed|missing or regressed|Timed out/);
+  if(mode==='stopped')state.active=false;
+  else if(mode==='replaced-measurement')f.context.window.__V100_DEVICE_RAF__={...state};
+  else if(mode==='replaced-qa')f.context.window.__ASHFALL_BATTLE_QA__={...f.context.window.__ASHFALL_BATTLE_QA__};
+  else if(mode==='regressed-counter')f.context.runtimePerformanceRef.current.renderFrames--;
+  if(mode==='timeout')f.expire();else f.frame(1017);
+  await failure;assert.equal(state.rangerFirstPaintFence.status,'failed');assert.equal(f.counters().snapshotCalls,0);assert.equal(f.pending().timers,0);
+ }
+ const {f,read}=await firstPaintFixture();delete f.context.window.__V100_DEVICE_RAF__.performanceBefore.renderFrames;
+ await assert.rejects(read(),/original actual render counter/);assert.equal(f.counters().snapshotCalls,0);
 });

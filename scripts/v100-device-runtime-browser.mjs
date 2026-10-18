@@ -492,7 +492,7 @@ try {
       } else {
         let previousSample = 0;
         while (await stillMeasuring()) {
-          await normalTacticalInput(page, result, { rangerDrawObservation:true,barrageWhenOverwhelmed: !viewport.safeArea, observeSnapshot(snapshot) {
+          await normalTacticalInput(page, result, { rangerDrawObservation:true,awaitInitialRangerPaint:true,barrageWhenOverwhelmed: !viewport.safeArea, observeSnapshot(snapshot) {
             const projected = snapshotProjection(snapshot);
             if (!projected?.running || projected.over || projected.humanCount <= 0 || projected.boss.length === 0) {
               throw new Error("30-second window lost live battle, humans, or boss");
