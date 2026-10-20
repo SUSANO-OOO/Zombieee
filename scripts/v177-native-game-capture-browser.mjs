@@ -25,6 +25,7 @@ export const NATIVE_GAME_CAPTURE_SOURCES = Object.freeze([
   'scripts/v177-continuous-draw-readiness.mjs', 'scripts/v177-continuous-render-contract.mjs',
   'scripts/v177-enemy-live-render-contract.mjs', 'scripts/v100-title-qa-entry.mjs',
   'app/v177ContinuousProof.js', 'app/v177JointPresentation.js', 'app/v177EnemyJointData.js',
+  'app/v177PaintLocomotion.js',
   'tests/v177-settle-continuity.test.mjs',
   'app/combatPresentation.js', 'app/v102CombatMotion.js', 'app/AshfallGame.tsx',
   'app/v177JointData.js', 'app/v177FirearmJointData.js', 'app/v177RangerUpperMotion.js',
@@ -50,6 +51,15 @@ const acceptance = () => ({ originalSpeedAccepted: false, encodedPtsVerified: fa
   naturalnessAccepted: false, physicalIphoneRecordingAccepted: false,
   wholeGameAccepted: false, productionCodecChanged: false });
 const git = args => execFileSync('git', args, { encoding: 'utf8' }).trim();
+
+export function nativeGameCapturePlan(scope='full'){
+  assert.ok(['full','state-supplements'].includes(scope),'Unknown native capture scope');
+  return [
+    ...(scope==='full'?NATIVE_GAME_CAPTURE_FORMS.flatMap(form=>NATIVE_GAME_CAPTURE_PHASES.map(phase=>({form,phase}))):[]),
+    ...[0,1].map(variant=>({form:'turned',phase:'turned-getup',variant})),
+    {form:'ranger',phase:'incoming-stun'},
+  ];
+}
 
 export function assertNativeGameCaptureHost(platform, env) {
   assert.ok(platform === 'darwin' && env.GITHUB_ACTIONS === 'true' && env.RUNNER_OS === 'macOS',
@@ -308,18 +318,20 @@ export async function closeNativeGameContext(context, requests,
 
 export async function runBrowserQa() {
   const binding = await nativeGameCaptureBinding();
+  const event=JSON.parse(await readFile(process.env.GITHUB_EVENT_PATH,'utf8'));
+  const captureScope=event.inputs?.capture_scope??'full',plan=nativeGameCapturePlan(captureScope);
   const deps = await dependencies();
   const out = process.env.V177_NATIVE_GAME_CAPTURE_OUT ?? 'outputs/v177-native-game-capture';
   const origin = new URL(process.env.V100_CAMPAIGN_QA_BASE_URL);
   assert.equal(origin.protocol, 'http:'); assert.equal(origin.hostname, '127.0.0.1');
   const report = { at: new Date().toISOString(), ...binding, tree: git(['rev-parse', 'HEAD^{tree}']),
     engine: 'webkit', headless: true, viewports: NATIVE_GAME_CAPTURE_VIEWPORTS,
-    forms: NATIVE_GAME_CAPTURE_FORMS, runtime: deps.PWA_WEBKIT_RUNTIME,
+    forms: [...new Set(plan.map(r=>r.form))],captureScope,plan,runtime: deps.PWA_WEBKIT_RUNTIME,
     captureConditions: { canvasOnly: true, parallelPlaywrightRecordVideo: false,
       legacyV102ParallelPlaywrightRecordVideo: true, sameObservationLoadAsLegacyV102: false,
       codecOnlyCausalComparison: false },
     build: await deps.productionBuildIdentity(), status: 'running-diagnostic', ...acceptance(),
-    scope: '45 native VP8 diagnostic clips in three real viewports: the original36 priority cases and3 original Ranger incoming-stun cases retain their controls. Six additional pre-aged human corpse fixtures record actual infection/new ID/rise and ordinary movement with the original clock in both fall variants. No QA birth registration or rise-lock injection. Fresh owned context per viewport, one browser, canvas-only without parallel Playwright recordVideo. Observation load differs from legacy MP4. Not all-unit, normal-play, original-speed naturalness, balance or physical audio acceptance.',
+    scope: `${plan.length*3} native VP8 diagnostic clips in three real viewports. State supplements are six pre-aged human corpse fixtures with actual infection/new ID/rise and ordinary movement in both fall variants, plus three original Ranger natural incoming-stun cases. Full scope also retains the original36 priority cases. No QA birth registration, rise-lock injection or manual clock advance. Not all-unit, normal-play, original-speed naturalness, balance or physical audio acceptance.`,
     sources: [], contexts: [], cases: [], errors: [], persistenceErrors: [], contextCleanup: 'not-created', browserCleanup: 'not-created' };
   assert.match(report.build.combinedSha256, /^[a-f0-9]{64}$/u);
   await mkdir(out, { recursive: true });
@@ -378,21 +390,17 @@ export async function runBrowserQa() {
         await withNativeGameCaseDeadline(async () => {
           await page.addInitScript(deps.seedV100BrowserSaveOnce, deps.serializeV100Save(save));
           await page.goto(new URL('v100', origin).href);
-          const play = page.getByRole('button', { name: 'ブラウザで遊ぶ', exact: true });
-          await play.or(page.locator('.v100-start-screen')).first().waitFor();
-          if (await play.isVisible()) await play.click();
+          const {enterNativeAllUnitSurface}=await import('./v177-native-allunit-browser.mjs');
+          await enterNativeAllUnitSurface(page);
           await deps.enterV100FromTitle(page);
           await page.getByRole('button', { name: '戦闘へ', exact: true }).click();
           await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().running);
-          await page.evaluate(async () => {
-            for (const kind of ['abomination', 'walker', 'spindle', 'turned']) await window.__ASHFALL_BATTLE_QA__.ensureEnemyFacingProofAsset(kind);
-            for (const kind of ['guardian', 'medic', 'ranger', 'engineer', 'brawler']) await window.__ASHFALL_BATTLE_QA__.ensureUnitRenderProofAsset(kind);
-          });
+          await page.evaluate(async scope => {
+            for (const kind of scope==='full'?['abomination','walker','spindle','turned']:['walker','spindle','turned']) await window.__ASHFALL_BATTLE_QA__.ensureEnemyFacingProofAsset(kind);
+            for (const kind of scope==='full'?['guardian','medic','ranger','engineer','brawler']:['guardian','ranger','brawler']) await window.__ASHFALL_BATTLE_QA__.ensureUnitRenderProofAsset(kind);
+          },captureScope);
         }, closeOwnedContext, { onDeadline: recordFailure });
-        const cases=NATIVE_GAME_CAPTURE_FORMS.flatMap(form=>NATIVE_GAME_CAPTURE_PHASES.map(phase=>({form,phase})));
-        cases.push(...[0,1].map(variant=>({form:'turned',phase:'turned-getup',variant})));
-        cases.push({form:'ranger',phase:'incoming-stun'});
-        captureCases: for (const {form,phase,variant} of cases) {
+        captureCases: for (const {form,phase,variant} of plan) {
           const row = { form, phase, ...(variant===undefined?{}:{variant}), viewport, status: 'starting', samples: [], ...acceptance() };
           report.cases.push(row);
           const capture=phase==='incoming-stun'?captureNativeIncomingStunCase:phase==='turned-getup'?captureNativeTurnedGetupCase:captureNativeGameCase;
@@ -419,7 +427,7 @@ export async function runBrowserQa() {
       try { await browser.close(); report.browserCleanup = 'completed'; }
       catch (error) { report.browserCleanup = 'failed'; recordFailure(error); }
     }
-    report.status = report.errors.length || report.cases.length !== NATIVE_GAME_CAPTURE_VIEWPORTS.length * (NATIVE_GAME_CAPTURE_FORMS.length * NATIVE_GAME_CAPTURE_PHASES.length+3)
+    report.status = report.errors.length || report.cases.length !== NATIVE_GAME_CAPTURE_VIEWPORTS.length * plan.length
       || report.cases.some(row => row.status !== 'observed-diagnostic') ? 'failed' : 'completed-diagnostic';
     await persist();
   }

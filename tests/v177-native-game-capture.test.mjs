@@ -18,6 +18,7 @@ import {
   NATIVE_GAME_CAPTURE_FORMS, NATIVE_GAME_CAPTURE_VIEWPORTS, nativeGamePerformanceReceipt,
   withNativeGameCaseDeadline, closeNativeGameContext,
   startNativeGameRafObservation, stopNativeGameRafObservation,
+  nativeGameCapturePlan,
 } from '../scripts/v177-native-game-capture-browser.mjs';
 
 const sha = 'a'.repeat(40);
@@ -25,6 +26,15 @@ const env = { GITHUB_ACTIONS: 'true', RUNNER_OS: 'macOS', GITHUB_EVENT_NAME: 'pu
   GITHUB_EVENT_PATH: 'original-event.json', V177_EXPECTED_HEAD_SHA: sha };
 const guard = { platform: 'darwin', env,
   read: async () => JSON.stringify({ number: 203, pull_request: { head: { sha } } }), head: () => sha };
+
+test('state-only capture keeps original natural stun and both infection variants without repeating36 priority clips',()=>{
+  const supplements=nativeGameCapturePlan('state-supplements'),full=nativeGameCapturePlan();
+  assert.deepEqual(supplements,[{form:'turned',phase:'turned-getup',variant:0},{form:'turned',phase:'turned-getup',variant:1},{form:'ranger',phase:'incoming-stun'}]);
+  assert.deepEqual(full.slice(-3),supplements);assert.equal(full.length,15);
+  assert.equal(full.length*NATIVE_GAME_CAPTURE_VIEWPORTS.length,45);assert.equal(supplements.length*NATIVE_GAME_CAPTURE_VIEWPORTS.length,9);
+  assert.throws(()=>nativeGameCapturePlan('accept-all21'),/Unknown native capture scope/u);
+  assert.ok(NATIVE_GAME_CAPTURE_SOURCES.includes('app/v177PaintLocomotion.js'));
+});
 
 test('host, original PR event and checkout binding fail before owned-server import', async () => {
   assert.equal((await nativeGameCaptureBinding(guard)).head, sha);
@@ -380,9 +390,14 @@ test('actual runBrowserQa attempts both closes and preserves the primary failure
       seedV100BrowserSaveOnce() {}, async enterV100FromTitle() {} };
     // Execute the original driver function body with inert IO/browser bindings.
     // Only the resource and persistence paths are mocked; its finally is real.
-    const execute = vm.runInNewContext('(' + entry.getText(tree).replace(/^export /u, '') + ')', {
+    const execute = vm.runInNewContext('(' + entry.getText(tree).replace(/^export /u, '').replace(/\bimport\(/gu, 'loadModule(') + ')', {
       assert, path, URL, createHash, process: { env: { V100_CAMPAIGN_QA_BASE_URL: 'http://127.0.0.1:43123/' } },
       nativeGameCaptureBinding: async () => ({ head: sha }), dependencies: async () => deps,
+      readFile: async () => JSON.stringify({ inputs: { capture_scope: 'full' } }), nativeGameCapturePlan,
+      loadModule: async specifier => {
+        assert.equal(specifier, './v177-native-allunit-browser.mjs');
+        return { enterNativeAllUnitSurface: async () => {} };
+      },
       git: () => 'c'.repeat(40), acceptance: () => ({ originalSpeedAccepted: false }),
       NATIVE_GAME_CAPTURE_SOURCES: [], NATIVE_GAME_CAPTURE_PHASES, NATIVE_GAME_CAPTURE_FORMS, NATIVE_GAME_CAPTURE_VIEWPORTS,
       withNativeGameCaseDeadline, closeNativeGameContext,
