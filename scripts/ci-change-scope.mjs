@@ -12,7 +12,8 @@ const normal=new Set(['scripts/v100-normal-campaign-playthrough.mjs','scripts/v1
   'scripts/v177-representative-normal-play.mjs','scripts/v177-representative-battles.mjs']);
 const allunit=new Set(['.github/workflows/native-allunit-capture.yml','scripts/v177-native-allunit-build.mjs',
   'scripts/v177-native-allunit-browser.mjs','scripts/v177-native-allunit-cases.mjs',
-  'scripts/v177-native-allunit-manifest.mjs','scripts/v177-native-allunit-contract.mjs']);
+  'scripts/v177-native-allunit-manifest.mjs','scripts/v177-native-allunit-contract.mjs',
+  'scripts/v177-native-allunit-selection.mjs','scripts/v177-native-allunit-recovery.json']);
 const r9=new Set(['scripts/v100-dialogue-composition-browser.mjs','scripts/v100-story-bookends-browser-smoke.mjs',
   'scripts/v100-r9-full-story-browser.mjs','scripts/v100-r9-story-plan.mjs']);
 const orchestration=new Set(['.github/workflows/ci.yml','scripts/ci-change-scope.mjs',

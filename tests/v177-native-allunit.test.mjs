@@ -331,7 +331,7 @@ test('Mayo owner requires a lifecycle and new original normal impact from actual
 test('workflow keeps exact head, independent twelve shards and original owned budgets',()=>{
   const workflow=loadYaml(fs.readFileSync('.github/workflows/native-allunit-capture.yml','utf8'));
   assert.equal(workflow.concurrency['cancel-in-progress'],false);
-  assert.deepEqual(workflow.jobs.capture.strategy.matrix.shard,SHARDS.map(s=>s.id));
+  assert.equal(workflow.jobs.capture.strategy.matrix.shard,'${{ fromJSON(needs.build.outputs.shards) }}');
   assert.equal(workflow.jobs.capture.strategy['fail-fast'],false);assert.equal(workflow.jobs.capture['timeout-minutes'],15);
   assert.equal(workflow.jobs.build['timeout-minutes'],15);assert.equal(workflow.jobs.capture.needs,'build');
   assert.equal(workflow.jobs.build.steps[0].with.ref,'${{ github.event.pull_request.head.sha || inputs.expected_head }}');

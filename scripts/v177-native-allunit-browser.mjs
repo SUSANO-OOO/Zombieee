@@ -10,6 +10,7 @@ import {SHARDS,VIEWPORTS,FORM_BINDINGS,planShard,assertRetainedBindings} from '.
 import {captureAllUnitCase} from './v177-native-allunit-cases.mjs';
 import {planRangerManualShard,rangerManualEnvelopeReference} from './v177-native-allunit-ranger-manual-contract.mjs';
 import {captureNativeRangerManualCase} from './v177-native-allunit-ranger-manual.mjs';
+import {nativeCaseSelection} from './v177-native-allunit-selection.mjs';
 
 const git=args=>execFileSync('git',args,{encoding:'utf8',maxBuffer:8*1024*1024,windowsHide:true}).trim();
 const sha=b=>createHash('sha256').update(b).digest('hex');
@@ -51,6 +52,7 @@ const additions=[
   'scripts/ordered-native-pointer.mjs','scripts/v100-phase-g-runtime-evidence.mjs',
   'scripts/v177-native-allunit-ranger-manual.mjs','scripts/v177-native-allunit-ranger-manual-contract.mjs',
   'tests/v177-native-allunit-ranger-manual.test.mjs',
+  'scripts/v177-native-allunit-selection.mjs','scripts/v177-native-allunit-recovery.json',
 ];
 export async function retainAllUnitSources(out){
   // Retain every committed App file, the old capture contract, this driver,
@@ -71,7 +73,11 @@ export async function retainAllUnitSources(out){
   return sources;
 }
 export async function runBrowserQa(){
-  const binding=await nativeAllUnitBinding(),plan=planShard(binding.shardId),manualPlan=planRangerManualShard(binding.shardId);
+  const binding=await nativeAllUnitBinding();
+  const selection=nativeCaseSelection({event:JSON.parse(await readFile(process.env.GITHUB_EVENT_PATH,'utf8'))});
+  const fullPlan=planShard(binding.shardId),plan=fullPlan.filter(r=>selection.caseIds.includes(r.caseId));
+  assert.ok(plan.length,'Selected shard has no requested cases');
+  const manualPlan=selection.mode==='full'?planRangerManualShard(binding.shardId):[];
   const deps=Object.assign({},...await Promise.all([
     import('./pwa-browser-runtime.mjs'),import('./browser-qa-build-identity.mjs'),
     import('./browser-request-failure-audit.mjs'),import('./v100-title-qa-entry.mjs'),
@@ -82,7 +88,8 @@ export async function runBrowserQa(){
   assert.equal(origin.protocol,'http:');assert.equal(origin.hostname,'127.0.0.1');
   const report={at:new Date().toISOString(),...binding,tree:git(['rev-parse','HEAD^{tree}']),
     engine:'webkit',runtime:deps.PWA_WEBKIT_RUNTIME,build:await deps.productionBuildIdentity(),
-    status:'running-diagnostic',plan,manualPlan,manualCases:[],sources:[],contexts:[],cases:[],errors:[],persistenceErrors:[],...acceptance(),
+    status:'running-diagnostic',selection,fullPlan,excludedCaseIds:fullPlan.filter(r=>!selection.caseIds.includes(r.caseId)).map(r=>r.caseId),
+    plan,manualPlan,manualCases:[],sources:[],contexts:[],cases:[],errors:[],persistenceErrors:[],...acceptance(),
     scope:'One of twelve all48 native VP8 shards;432 normal cases remain separate from3 supplemental actual Ranger manual clips. Original free RAF/simulation after actual recorder start. Ordinary actors use original stats; Mayo uses real trusted activation/self-drain; turned continues the actual infection newborn; split twins use their real S24 pair constructors with a deliberately partial encounter. Legacy fused art is an explicit fixture. Controlled target diagnostics are not campaign, balance, original-speed naturalness or physical audio acceptance.'};
   assert.match(process.env.V177_EXPECTED_BUILD_SHA256??'',/^[a-f0-9]{64}$/u);
   assert.equal(report.build.combinedSha256,process.env.V177_EXPECTED_BUILD_SHA256,'Capture build differs from the producer job');
@@ -114,6 +121,8 @@ export async function runBrowserQa(){
         if(!rows.length)continue;
         const contextOptions={viewport,isMobile:viewport.width<1000,hasTouch:viewport.width<1000,deviceScaleFactor:1};
         const owner={viewport,stageNumber,contextOptions,setupStage:'not-started',cleanup:'not-created',requests:null};report.contexts.push(owner);
+        owner.setupPhases=[];owner.pageEvents=[];owner.resourceEvents=[];
+        const setupStage=name=>{owner.setupStage=name;owner.setupPhases.push({name,hostAtMs:Date.now()});};
         let context,requests,closing;
         const closeOwned=()=>closing??=(async()=>{
           if(!context)return;owner.cleanup='pending';await persist();
@@ -126,6 +135,10 @@ export async function runBrowserQa(){
         try{
           context=await browser.newContext(contextOptions);owner.cleanup='open';
           const page=await context.newPage();page.setDefaultTimeout(30000);requests=deps.installRequestFailureAudit(page);
+          for(const type of ['domcontentloaded','load'])page.on(type,()=>owner.pageEvents.push({type,hostAtMs:Date.now()}));
+          for(const type of ['request','requestfinished','requestfailed'])page.on(type,request=>{
+            if(owner.resourceEvents.length<1000)owner.resourceEvents.push({type,url:request.url(),resourceType:request.resourceType(),hostAtMs:Date.now()});
+          });
           page.on('pageerror',fail);page.on('console',m=>{if(m.type()==='error')fail(Error(m.text()));});
           page.on('response',r=>{if(r.status()>=400)fail(Error(r.status()+' '+r.url()));});
           const base=deps.createDefaultV100Save(),owned=deps.V100_UNITS.map(u=>u.id),stageId=deps.V100_STAGE_IDS[stageNumber-1];
@@ -133,15 +146,15 @@ export async function runBrowserQa(){
             registeredUnitIds:owned,availableStageIds:deps.V100_STAGE_IDS,formationSlots:owned.slice(0,7),
             flowState:{phase:'formation',stageId,stageNumber,eventId:null,destination:'formation',nodeIndex:0,firstClear:false,finalized:true}});
           await withNativeGameCaseDeadline(async()=>{
-            owner.setupStage='seed-save';await page.addInitScript(deps.seedV100BrowserSaveOnce,deps.serializeV100Save(save));
-            const url=new URL('v100',origin);url.searchParams.set('phase-g','1');owner.setupStage='navigate';await page.goto(url.href);
+            setupStage('seed-save');await page.addInitScript(deps.seedV100BrowserSaveOnce,deps.serializeV100Save(save));
+            const url=new URL('v100',origin);url.searchParams.set('phase-g','1');setupStage('navigate');await page.goto(url.href);
             const play=page.getByRole('button',{name:'ブラウザで遊ぶ',exact:true});
-            owner.setupStage='entry-surface';await play.or(page.locator('.v100-start-screen')).first().waitFor();owner.setupStage='entry-play-button';if(await play.isVisible())await play.click();
-            owner.setupStage='title-entry';await deps.enterV100FromTitle(page);owner.setupStage='battle-button';await page.getByRole('button',{name:'戦闘へ',exact:true}).click();
-            owner.setupStage='battle-running';await page.waitForFunction(()=>window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().running);
+            setupStage('entry-surface');await play.or(page.locator('.v100-start-screen')).first().waitFor();setupStage('entry-play-button');if(await play.isVisible())await play.click();
+            setupStage('title-entry');await deps.enterV100FromTitle(page);setupStage('battle-button');await page.getByRole('button',{name:'戦闘へ',exact:true}).click();
+            setupStage('battle-running');await page.waitForFunction(()=>window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().running);
             const forms=[...new Set(rows.flatMap(r=>[r.form,r.binding.kind,r.binding.side==='human'?'walker':'guardian',
               ...(r.owner==='turned-birth'?['brawler','turned']:[])]))];
-            owner.setupStage='asset-readiness';await ensureNativeAllUnitAssets(page,forms,owner);owner.setupStage='completed';
+            setupStage('asset-readiness');await ensureNativeAllUnitAssets(page,forms,owner);setupStage('completed');
           },closeOwned,{onDeadline:fail});
           for(const planned of rows){
             const row={...planned,status:'starting',samples:[],...acceptance()};report.cases.push(row);

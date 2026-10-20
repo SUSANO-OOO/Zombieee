@@ -50,21 +50,31 @@ export function prepareBornTurnedWhenReady({proofId,phase}){
 }
 export function observeMayoPointer(proof){
   const state={proofId:proof.proofId,proofGeneration:proof.proofGeneration,
-    battleGeneration:proof.battleGeneration,events:[],overflow:false};
+    battleGeneration:proof.battleGeneration,events:[],allTargets:[],overflow:false};
   const record=e=>{
     const button=e.target?.closest?.('button.manual-ability-ready');
+    const expected=document.querySelector?.('button.manual-ability-ready[data-fighter-id="'+proof.fighterId+'"]');
+    const rect=expected?.getBoundingClientRect();
+    if(state.allTargets.length<32)state.allTargets.push({type:e.type,isTrusted:e.isTrusted,
+      at:performance.now(),x:e.clientX,y:e.clientY,target:e.target?.tagName,
+      fighterId:button?.dataset.fighterId??null,kind:button?.dataset.abilityKind??null,
+      expectedRect:rect?{x:rect.x,y:rect.y,width:rect.width,height:rect.height}:null,
+      expectedAvailable:expected?.getAttribute('aria-disabled')??null,
+      layout:document.documentElement?.dataset.manualAbilityLayoutDebug??null});
+    else state.overflow=true;
+    if(e.type==='pointermove')return;
     if(!button||Number(button.dataset.fighterId)!==proof.fighterId)return;
     if(state.events.length>=16){state.overflow=true;return;}
     state.events.push({type:e.type,isTrusted:e.isTrusted,fighterId:Number(button.dataset.fighterId),
       kind:button.dataset.abilityKind,at:performance.now()});
   };
-  for(const type of ['pointerdown','pointerup','click'])document.addEventListener(type,record,true);
-  state.stop=()=>{for(const type of ['pointerdown','pointerup','click'])document.removeEventListener(type,record,true);};
+  for(const type of ['pointermove','pointerdown','pointerup','click'])document.addEventListener(type,record,true);
+  state.stop=()=>{for(const type of ['pointermove','pointerdown','pointerup','click'])document.removeEventListener(type,record,true);};
   return state;
 }
 export function finishMayoPointer(state){
   state.stop();return {proofId:state.proofId,proofGeneration:state.proofGeneration,
-    battleGeneration:state.battleGeneration,events:state.events,overflow:state.overflow};
+    battleGeneration:state.battleGeneration,events:state.events,allTargets:state.allTargets,overflow:state.overflow};
 }
 
 async function prepareCase(page,row,owned,active,resources){
@@ -83,16 +93,19 @@ async function prepareCase(page,row,owned,active,resources){
       .prepareV177NativeFutagoPair({form,phase}),{form:row.form,phase:row.phase}));
   }else if(row.owner==='mayo-activation'){
     proof=await owned(()=>page.evaluate(phase=>window.__ASHFALL_BATTLE_QA__.prepareV177NativeMayoProof({phase}),row.phase));
+    row.preparedMayoProof=proof;
     const selector='button.manual-ability-ready.available[data-ability-kind="mayo-chan"][data-fighter-id="'+proof.fighterId+'"][aria-disabled="false"]';
     const button=page.locator(selector);await owned(()=>button.waitFor({state:'visible',timeout:LIMITS.readinessMs}));
     resources.pointer=await page.evaluateHandle(observeMayoPointer,proof);active();
     const before=await owned(()=>page.evaluate(()=>window.__ASHFALL_BATTLE_QA__.getPhaseGCombatSnapshot()));
+    row.beforeMayoInput=before;
     const inputPage={mouse:Object.fromEntries(['move','down','up'].map(key=>[key,async(...args)=>{
       active();const result=await page.mouse[key](...args);active();return result;
     }]))};
     row.inputPhases=[];
     assert.equal(await owned(()=>nativeBattleTap(inputPage,button,row.inputPhases)),true,'Original Mayo native input required');
     const after=await owned(()=>page.evaluate(()=>window.__ASHFALL_BATTLE_QA__.getPhaseGCombatSnapshot()));
+    row.afterMayoInput=after;
     assert.equal(manualMarkerDispatchStarted(before,after,proof.fighterId,'mayo-chan'),true);
     row.pointer=await owned(()=>resources.pointer.evaluate(finishMayoPointer));
     assert.equal(row.pointer.overflow,false);await resources.pointer.dispose();resources.pointer=null;
