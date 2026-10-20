@@ -1,11 +1,5 @@
 name: Native AAC Research
 on:
-  pull_request:
-    paths:
-      - '.github/workflows/native-aac-probe.yml'
-      - 'scripts/v177-native-aac-*'
-      - 'scripts/v177-aac-fragment-muxer.mjs'
-      - 'tests/v177-native-aac*'
   workflow_dispatch:
     inputs:
       expected_head:

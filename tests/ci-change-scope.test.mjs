@@ -21,6 +21,7 @@ test('ready events run integration gates and research cannot block representativ
  assert.ok(workflow.jobs.verify.steps.some(step=>step.run==='node --test tests/*.test.mjs'));
  for(const job of Object.values(workflow.jobs))assert.equal(job['continue-on-error'],undefined);
  const research=load(readFileSync('.github/workflows/native-aac-probe.yml','utf8'));
+ assert.equal(research.on.pull_request,undefined,'unchanged unadopted research runs only when requested');
  assert.ok(research.jobs['native-aac'].steps.some(step=>step.run?.endsWith('scripts/v177-native-aac-browser.mjs')));
  assert.ok(!JSON.stringify(workflow.jobs).includes('scripts/v177-native-aac-browser.mjs'));
  for(const path of ['native-allunit-capture','v1-quality-acceptance']){
