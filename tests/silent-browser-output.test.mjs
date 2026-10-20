@@ -31,10 +31,11 @@ test('the explicit-play guard rejects calls even when a caller unmutes media', a
   assert.equal(vm.runInContext('HTMLMediaElement.prototype.play === __CODEX_SILENT_QA__.guard', context), true);
 });
 
-test('Windows game-browser QA is denied; hosted Linux/macOS remain available', () => {
-  assert.throws(() => assertSilentQaHost('win32'), /Local Windows game-browser QA is disabled/);
+test('authorized Windows QA and hosted Linux/macOS keep the same playback guard', () => {
+  assert.doesNotThrow(() => assertSilentQaHost('win32'));
   assert.doesNotThrow(() => assertSilentQaHost('linux'));
   assert.doesNotThrow(() => assertSilentQaHost('darwin'));
+  assert.throws(() => assertSilentQaHost('unknown'),/Unsupported browser QA platform/u);
 });
 
 test('a page whose native play cannot be guarded is closed before game navigation', async () => {

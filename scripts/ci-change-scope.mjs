@@ -9,7 +9,7 @@ const governance=new Set(['AGENTS.md','docs/PROJECT_STATE.md','docs/CODEX_SOL_RO
   'docs/design/v1.0.0/DESIGN_LOCK.md','docs/design/v1.0.0/LUNA_HANDOFF.md']);
 const ranger=new Set(['app/v177RangerFootPlacement.js','app/v177RangerLowerMotion.js','assets/source/v177/ranger/lower-r3/provenance.json']);
 const normal=new Set(['scripts/v100-normal-campaign-playthrough.mjs','scripts/v100-normal-play-contract.mjs',
-  'scripts/v177-representative-normal-play.mjs','scripts/v177-representative-battles.mjs']);
+  'scripts/v177-representative-normal-play.mjs','scripts/v177-representative-battles.mjs','scripts/silent-browser-output.mjs']);
 const orchestration=new Set(['.github/workflows/ci.yml','scripts/ci-change-scope.mjs',
   '.github/workflows/native-aac-probe.yml','.github/workflows/normal-campaign-observation.yml',
   '.github/workflows/native-allunit-capture.yml','.github/workflows/v1-quality-acceptance.yml']);
