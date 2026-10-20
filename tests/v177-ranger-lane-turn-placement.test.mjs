@@ -59,6 +59,31 @@ test('turns during an airborne retreat keep original legs reachable at the actua
  }
 });
 
+test('a direction reversal between paints cannot drag a planted boot when phase increments cancel',()=>{
+ // Seed 178 / stride 2 first exposed the cancellation at paint 414. Real
+ // animation-runtime ticks own the phase; the renderer must retain supports.
+ for(const stride of [1,2,3,4,5,6]){
+  let seed=178,root=330,y=285,time=0,dx=0,dy=0,facing='right',state,supports=0;
+  const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
+  let runtime=createCombatAnimationRuntime({x:root,y,direction:facing});
+  for(let frame=0;frame<1500;frame++){
+   if(frame%23===0){dx=[-29,0,29][Math.floor(random()*3)];dy=[-60,0,60][Math.floor(random()*3)];facing=random()<.5?'right':'left';}
+   root+=dx/60;y=Math.max(220,Math.min(330,y+dy/60));time+=1/60;
+   const scale=.163+(y-220)/110*.037;
+   runtime=advanceCombatAnimationRuntime(runtime,{x:root,y,kind:'ranger',direction:facing,locomotionCycleDistance:scale*cycle},1/60);
+   if(frame%stride)continue;
+   const input={time,root,scale,phase:runtime.locomotionPhase,settle:runtime.locomotionSettle,moving:runtime.moving,facing:runtime.direction};
+   const result=v177RangerFootPlacement(rig,state,input);assertOriginalLegs(result,input.settle);
+   if(state)for(let i=0;i<2;i++)if(state.feet[i].mode==='plant'&&result.state.feet[i].mode==='plant'){
+    assert.ok(Math.abs(result.state.feet[i].x-state.feet[i].x)<1e-8,`support slid at stride ${stride} frame ${frame}`);supports++;
+   }
+   assert.deepEqual(v177RangerFootPlacement(rig,result.state,input),result,'the same paint is immutable');
+   state=result.state;
+  }
+  assert.ok(supports>100);
+ }
+});
+
 test('actual lane travel with no horizontal travel keeps both original legs reachable through stop and pursuit',()=>{
  for(const scale of [.18,.2])for(const laneSpeed of [-60,60]){
   let root=203.28333333333316,y=285,state;

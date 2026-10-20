@@ -185,8 +185,7 @@ function advance(rig,previous,input) {
   } else if (time === previous.time && root === previous.root && phase === previous.phase
     && facing === previous.facing && scale === previous.scale) {
     state = previous;
-  } else if (input.frozen || time===previous.time&&facing===previous.facing
-    || input.moving && Math.abs(phase-previous.phase)<1e-9 && root!==previous.root) {
+  } else if (input.frozen || time===previous.time&&facing===previous.facing) {
     // A hit/knock displacement belongs to the existing rigid body reaction.
     // Keep its local leg pose; leaving world anchors behind would overextend it.
     state = held(previous,input);
@@ -250,7 +249,9 @@ export function v177RangerFootPlacement(rig, previous, input) {
       state=previous;
       for(let step=1;step<=Math.max(1,count);step++){
         const p=step/Math.max(1,count);
-        state=advance(rig,state,{...input,time:previous.time+(time-previous.time)*p,
+        // The final sample is this exact paint. Reconstructing its floating
+        // values can turn a repeated paint into a second tiny body movement.
+        state=advance(rig,state,step===Math.max(1,count)?input:{...input,time:previous.time+(time-previous.time)*p,
           root:previous.root+(root-previous.root)*p,phase:previous.phase+(phase-previous.phase)*p,
           scale:previous.scale+(scale-previous.scale)*p});
       }
