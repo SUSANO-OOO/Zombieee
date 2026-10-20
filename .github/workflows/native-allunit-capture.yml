@@ -95,7 +95,7 @@ jobs:
           retention-days: 7
   capture:
     needs: build
-    if: ${{ !cancelled() && needs.build.result == 'success' }}
+    if: ${{ !cancelled() && needs.build.result == 'success' && needs.build.outputs.shards != '[]' }}
     runs-on: macos-15-intel
     timeout-minutes: 15
     strategy:

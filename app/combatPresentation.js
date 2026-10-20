@@ -1437,7 +1437,8 @@ export function advanceCombatAnimationRuntime(runtime, observation = {}, elapsed
   const previousPhase = Number(previous.locomotionPhase) || 0;
   const locomotionStopPhase = state === 'stop-move' && stateChanged
     ? previousPhase : Number(previous.locomotionStopPhase) || 0;
-  const advancingGait = moving && (!requestedState || requestedState === "retreat");
+  const advancingGait = moving && (!requestedState || requestedState === "retreat"
+    || requestedState === "reload" || requestedState === "weapon-cycle");
   let locomotionPhase = previousPhase;
   // Target-facing attacks can travel backward during recoil or repositioning.
   // Reverse only the local stride so its planted foot cancels actual root

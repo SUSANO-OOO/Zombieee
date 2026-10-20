@@ -29,6 +29,9 @@ const orchestration=new Set(['.github/workflows/ci.yml','scripts/ci-change-scope
 const reviewedValidationBlobs=Object.freeze({
   'scripts/v177-native-allunit-outcomes.mjs':'15b01dfa46d964c86e87268838c9c9b0aba96645',
 });
+const reviewedMotionBlobs=Object.freeze({
+  'app/combatPresentation.js':'327c7a1dd55707c16385d01d28030a37dc4b27c7',
+});
 
 export function ciChangeScope(paths,{draft,sourceBlobs={}}={}){
   assert.equal(typeof draft,'boolean');
@@ -41,6 +44,7 @@ export function ciChangeScope(paths,{draft,sourceBlobs={}}={}){
     else if(r9.has(file))r9Changed=true;
     else if(governance.has(file)||orchestration.has(file)||/^tests\/[^/]+\.test\.mjs$/u.test(file))continue;
     else if(reviewedValidationBlobs[file]&&sourceBlobs[file]===reviewedValidationBlobs[file])continue;
+    else if(reviewedMotionBlobs[file]&&sourceBlobs[file]===reviewedMotionBlobs[file]){normalChanged=true;allunitChanged=true;}
     else full=true; // Unclassified changes retain the complete regression.
   }
   return {full,ranger:full||rangerChanged,normal:full||normalChanged,allunit:full||allunitChanged,r9:full||r9Changed,
@@ -55,7 +59,7 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
   const comparisonBase=execFileSync('git',['merge-base',base,head],{encoding:'utf8',windowsHide:true}).trim();
   assert.match(comparisonBase,/^[0-9a-f]{40}$/u);
   const paths=execFileSync('git',['diff','--no-renames','--name-only',`${comparisonBase}..${head}`],{encoding:'utf8',windowsHide:true}).trim().split(/\r?\n/u).filter(Boolean);
-  const sourceBlobs=Object.fromEntries(paths.filter(file=>reviewedValidationBlobs[file]).map(file=>{
+  const sourceBlobs=Object.fromEntries(paths.filter(file=>reviewedValidationBlobs[file]||reviewedMotionBlobs[file]).map(file=>{
     try{return[file,execFileSync('git',['rev-parse',`${head}:${file}`],{encoding:'utf8',windowsHide:true}).trim()];}
     catch{return[file,null];}
   }));

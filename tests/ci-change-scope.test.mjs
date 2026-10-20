@@ -53,6 +53,15 @@ test('the reviewed outcome validator can recheck retained raw footage without re
  assert.equal(ciChangeScope([file],{...options,draft:false}).full,true);
 });
 
+test('the reviewed reload movement change runs native motion and normal play while retaining unchanged story evidence',()=>{
+ const file='app/combatPresentation.js',blob=execFileSync('git',['hash-object',file],{encoding:'utf8',windowsHide:true}).trim();
+ const options={draft:true,sourceBlobs:{[file]:blob}},scope=ciChangeScope([file],options);
+ assert.equal(scope.full,false);assert.equal(scope.allunit,true);assert.equal(scope.normal,true);assert.equal(scope.r9,false);
+ for(const sourceBlobs of [{},{[file]:'f'.repeat(40)}])assert.equal(ciChangeScope([file],{draft:true,sourceBlobs}).full,true);
+ assert.equal(ciChangeScope([file,'app/v100Save.js'],options).full,true);
+ assert.equal(ciChangeScope([file],{...options,draft:false}).full,true);
+});
+
 test('the CLI handles a PR whose base branch advanced without requiring another merge',()=>{
  const directory=mkdtempSync(join(tmpdir(),'zombieee-ci-scope-'));
  const git=(...args)=>execFileSync('git',args,{cwd:directory,encoding:'utf8',windowsHide:true}).trim();

@@ -33,6 +33,19 @@ export async function ensureNativeAllUnitAssets(page,forms,owner,{now=Date.now}=
   }
 }
 
+export async function prepareNativeAllUnitBattle(page,forms,owner,enterBattle,setupStage=()=>{}){
+  // Asset decode owns no battle/clock state. Start it as soon as the original
+  // bridge exists while the real title and battle controls finish entering.
+  // Both operations must finish inside the unchanged outer30s deadline.
+  await Promise.all([
+    (async()=>{
+      await page.waitForFunction(()=>typeof window.__ASHFALL_BATTLE_QA__?.ensureEnemyFacingProofAsset==='function');
+      setupStage('asset-readiness');await ensureNativeAllUnitAssets(page,forms,owner);
+    })(),
+    Promise.resolve().then(enterBattle),
+  ]);
+}
+
 export async function enterNativeAllUnitSurface(page,setupStage=()=>{}){
   const play=page.getByRole('button',{name:'ブラウザで遊ぶ',exact:true});
   const title=page.locator('.v100-start-screen');
@@ -104,9 +117,9 @@ export async function runBrowserQa(){
   const binding=await nativeAllUnitBinding();
   const selection=nativeCaseSelection({event:JSON.parse(await readFile(process.env.GITHUB_EVENT_PATH,'utf8'))});
   const fullPlan=planShard(binding.shardId),plan=fullPlan.filter(r=>selection.caseIds.includes(r.caseId));
-  assert.ok(plan.length,'Selected shard has no requested cases');
-  const manualPlan=selection.mode==='full'?planRangerManualShard(binding.shardId):[];
-  const outcomePlan=selection.mode==='full'?planOutcomeShard(binding.shardId):[];
+  const manualPlan=planRangerManualShard(binding.shardId).filter(r=>selection.mode==='full'||selection.manualCaseIds?.includes(r.caseId));
+  const outcomePlan=planOutcomeShard(binding.shardId).filter(r=>selection.mode==='full'||selection.outcomeCaseIds?.includes(r.caseId));
+  assert.ok(plan.length||manualPlan.length||outcomePlan.length,'Selected shard has no requested observations');
   const deps=Object.assign({},...await Promise.all([
     import('./pwa-browser-runtime.mjs'),import('./browser-qa-build-identity.mjs'),
     import('./browser-request-failure-audit.mjs'),import('./v100-title-qa-entry.mjs'),
@@ -146,9 +159,11 @@ export async function runBrowserQa(){
       // S24 gets its own owned save/context; no definition or clock is rewritten
       // to turn an unrelated Stage1 actor into a formal separated twin.
       for(const stageNumber of [1,24]){
-        const rows=plan.filter(r=>r.viewport.width===viewport.width&&r.viewport.height===viewport.height
+        const contextPlan=[...plan,...manualPlan.map(r=>rangerManualEnvelopeReference(r)),...outcomePlan.map(r=>r.reference)];
+        const contextRows=contextPlan.filter(r=>r.viewport.width===viewport.width&&r.viewport.height===viewport.height
           &&(r.owner==='futago-pair'?24:1)===stageNumber);
-        if(!rows.length)continue;
+        if(!contextRows.length)continue;
+        const rows=plan.filter(r=>contextRows.some(c=>c.caseId===r.caseId));
         const contextOptions={viewport,isMobile:viewport.width<1000,hasTouch:viewport.width<1000,deviceScaleFactor:1};
         const owner={viewport,stageNumber,contextOptions,setupStage:'not-started',cleanup:'not-created',requests:null};report.contexts.push(owner);
         owner.setupPhases=[];owner.pageEvents=[];owner.resourceEvents=[];
@@ -179,11 +194,12 @@ export async function runBrowserQa(){
             setupStage('seed-save');await page.addInitScript(deps.seedV100BrowserSaveOnce,deps.serializeV100Save(save));
             const url=new URL('v100',origin);url.searchParams.set('phase-g','1');setupStage('navigate');await page.goto(url.href);
             owner.entrySurface=await enterNativeAllUnitSurface(page,setupStage);
-            setupStage('title-entry');await deps.enterV100FromTitle(page);setupStage('battle-button');await page.getByRole('button',{name:'戦闘へ',exact:true}).click();
-            setupStage('battle-running');await page.waitForFunction(()=>window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().running);
-            const forms=[...new Set(rows.flatMap(r=>[r.form,r.binding.kind,r.binding.side==='human'?'walker':'guardian',
+            const forms=[...new Set(contextRows.flatMap(r=>[r.form,r.binding.kind,r.binding.side==='human'?'walker':'guardian',
               ...(r.owner==='turned-birth'?['brawler','turned']:[])]))];
-            setupStage('asset-readiness');await ensureNativeAllUnitAssets(page,forms,owner);setupStage('completed');
+            await prepareNativeAllUnitBattle(page,forms,owner,async()=>{
+              setupStage('title-entry');await deps.enterV100FromTitle(page);setupStage('battle-button');await page.getByRole('button',{name:'戦闘へ',exact:true}).click();
+              setupStage('battle-running');await page.waitForFunction(()=>window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().running);
+            },setupStage);setupStage('completed');
           },closeOwned,{onDeadline:fail});
           for(const planned of rows){
             const row={...planned,status:'starting',samples:[],...acceptance()};report.cases.push(row);
