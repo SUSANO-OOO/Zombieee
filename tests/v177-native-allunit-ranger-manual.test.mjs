@@ -191,8 +191,8 @@ test('missing actual input/start never becomes manual or normal success',async()
 test('actual driver finalizer fails all missing/failed manual rows and never fills missing normal cases',()=>{
  const source=fs.readFileSync(new URL('../scripts/v177-native-allunit-browser.mjs',import.meta.url),'utf8');
  const from=source.indexOf('    report.unexecuted=plan.filter('),to=source.indexOf('    await persist();',from);assert.ok(from>=0&&to>from);const actual=source.slice(from,to);
- const manual=manualPlan(),plan=planShard(manual[0].shardId),base=()=>({errors:[],contexts:[{cleanup:'completed'}],cases:plan.map(p=>({...p,status:'observed-diagnostic'})),manualCases:[]});
- const run=report=>{vm.runInNewContext(actual,{report,plan,manualPlan:manual});return report;};
+ const manual=manualPlan(),plan=planShard(manual[0].shardId),base=()=>({errors:[],contexts:[{cleanup:'completed'}],cases:plan.map(p=>({...p,status:'observed-diagnostic'})),manualCases:[],outcomeCases:[]});
+ const run=report=>{vm.runInNewContext(actual,{report,plan,manualPlan:manual,outcomePlan:[]});return report;};
  const missing=run(base());assert.equal(missing.status,'failed');assert.equal(missing.manualUnexecuted.length,3);assert.equal(missing.unexecuted.length,0);
  const complete=base();complete.manualCases=manual.map(p=>({...p,status:'observed-manual-diagnostic'}));assert.equal(run(complete).status,'completed-diagnostic');
  const failed=base();failed.manualCases=manual.map(p=>({...p,status:'failed'}));assert.equal(run(failed).status,'failed');

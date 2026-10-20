@@ -111,7 +111,7 @@ export async function confirmMayoPointer(page,button,point,proof,phases,active=(
   assert.equal(state.ownsPointer,true,'Mayo moved outside the final pointer before down');
 }
 
-async function prepareCase(page,row,owned,active,resources){
+export async function prepareCase(page,row,owned,active,resources){
   let proof;
   if(row.owner==='turned-birth'){
     row.birthSetup=await owned(()=>page.evaluate(()=>window.__ASHFALL_BATTLE_QA__.prepareV177TurnedGetupProof({variant:0})));

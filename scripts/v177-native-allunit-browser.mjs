@@ -11,6 +11,7 @@ import {captureAllUnitCase} from './v177-native-allunit-cases.mjs';
 import {planRangerManualShard,rangerManualEnvelopeReference} from './v177-native-allunit-ranger-manual-contract.mjs';
 import {captureNativeRangerManualCase} from './v177-native-allunit-ranger-manual.mjs';
 import {nativeCaseSelection} from './v177-native-allunit-selection.mjs';
+import {planOutcomeShard,captureNativeOutcomeCase} from './v177-native-allunit-outcomes.mjs';
 
 const git=args=>execFileSync('git',args,{encoding:'utf8',maxBuffer:8*1024*1024,windowsHide:true}).trim();
 const sha=b=>createHash('sha256').update(b).digest('hex');
@@ -79,6 +80,7 @@ const additions=[
   'scripts/v177-native-allunit-ranger-manual.mjs','scripts/v177-native-allunit-ranger-manual-contract.mjs',
   'tests/v177-native-allunit-ranger-manual.test.mjs',
   'scripts/v177-native-allunit-selection.mjs','scripts/v177-native-allunit-recovery.json',
+  'scripts/v177-native-allunit-outcomes.mjs','tests/v177-native-allunit-outcomes.test.mjs',
 ];
 export async function retainAllUnitSources(out){
   // Retain every committed App file, the old capture contract, this driver,
@@ -104,6 +106,7 @@ export async function runBrowserQa(){
   const fullPlan=planShard(binding.shardId),plan=fullPlan.filter(r=>selection.caseIds.includes(r.caseId));
   assert.ok(plan.length,'Selected shard has no requested cases');
   const manualPlan=selection.mode==='full'?planRangerManualShard(binding.shardId):[];
+  const outcomePlan=selection.mode==='full'?planOutcomeShard(binding.shardId):[];
   const deps=Object.assign({},...await Promise.all([
     import('./pwa-browser-runtime.mjs'),import('./browser-qa-build-identity.mjs'),
     import('./browser-request-failure-audit.mjs'),import('./v100-title-qa-entry.mjs'),
@@ -115,7 +118,7 @@ export async function runBrowserQa(){
   const report={at:new Date().toISOString(),...binding,tree:git(['rev-parse','HEAD^{tree}']),
     engine:'webkit',runtime:deps.PWA_WEBKIT_RUNTIME,build:await deps.productionBuildIdentity(),
     status:'running-diagnostic',selection,fullPlan,excludedCaseIds:fullPlan.filter(r=>!selection.caseIds.includes(r.caseId)).map(r=>r.caseId),
-    plan,manualPlan,manualCases:[],sources:[],contexts:[],cases:[],errors:[],persistenceErrors:[],...acceptance(),
+    plan,manualPlan,manualCases:[],outcomePlan,outcomeCases:[],sources:[],contexts:[],cases:[],errors:[],persistenceErrors:[],...acceptance(),
     scope:'One of twelve all48 native VP8 shards;432 normal cases remain separate from3 supplemental actual Ranger manual clips. Original free RAF/simulation after actual recorder start. Ordinary actors use original stats; Mayo uses real trusted activation/self-drain; turned continues the actual infection newborn; split twins use their real S24 pair constructors with a deliberately partial encounter. Legacy fused art is an explicit fixture. Controlled target diagnostics are not campaign, balance, original-speed naturalness or physical audio acceptance.'};
   assert.match(process.env.V177_EXPECTED_BUILD_SHA256??'',/^[a-f0-9]{64}$/u);
   assert.equal(report.build.combinedSha256,process.env.V177_EXPECTED_BUILD_SHA256,'Capture build differs from the producer job');
@@ -127,6 +130,7 @@ export async function runBrowserQa(){
   await mkdir(out,{recursive:true});report.sources=await retainAllUnitSources(out);
   for(const row of plan)assertRetainedBindings(row,{...report,expectedHead:binding.head,files:report.sources});
   for(const row of manualPlan)assertRetainedBindings(rangerManualEnvelopeReference(row),{...report,expectedHead:binding.head,files:report.sources});
+  for(const row of outcomePlan)assertRetainedBindings(row.reference,{...report,expectedHead:binding.head,files:report.sources});
   const reportFile=path.join(out,'report.json');await writeFile(reportFile,JSON.stringify(report,null,2)+'\n',{flag:'wx'});
   let primary,browser,closingBrowser=false;
   const fail=error=>{primary??=error;report.errors.push(String(error));};
@@ -199,6 +203,16 @@ export async function runBrowserQa(){
               await persist();
             }
           }
+          if(!page.isClosed()&&rows.every(p=>report.cases.some(r=>r.caseId===p.caseId&&r.status==='observed-diagnostic'))){
+            for(const planned of outcomePlan.filter(r=>r.viewport.width===viewport.width&&r.viewport.height===viewport.height
+              &&(r.owner==='futago-pair'?24:1)===stageNumber)){
+              const row={...planned,status:'starting-outcome',samples:[],...acceptance()};report.outcomeCases.push(row);
+              try{await withNativeGameCaseDeadline(()=>captureNativeOutcomeCase(page,row,{out,onFailure:fail}),closeOwned,
+                {onDeadline:error=>{row.deadlineExpired=true;fail(error);}});}
+              catch(error){row.status='failed';row.error=String(error);fail(error);}
+              await persist();if(page.isClosed())break;
+            }
+          }
         }catch(error){fail(error);}
         finally{try{await closeOwned();}catch{/* raw failure is already retained */}}
       }
@@ -210,13 +224,16 @@ export async function runBrowserQa(){
       catch(error){report.browserCleanup='failed';fail(error);}}
     report.unexecuted=plan.filter(p=>!report.cases.some(r=>r.caseId===p.caseId)).map(p=>p.caseId);
     report.manualUnexecuted=manualPlan.filter(p=>!report.manualCases.some(r=>r.caseId===p.caseId)).map(p=>p.caseId);
-    report.status=report.errors.length||report.unexecuted.length||report.manualUnexecuted.length
+    report.outcomeUnexecuted=outcomePlan.filter(p=>!report.outcomeCases.some(r=>r.caseId===p.caseId)).map(p=>p.caseId);
+    report.status=report.errors.length||report.unexecuted.length||report.manualUnexecuted.length||report.outcomeUnexecuted.length
+      ||report.outcomeCases.some(r=>r.status!=='observed-outcome-diagnostic')
       ||report.manualCases.some(r=>r.status!=='observed-manual-diagnostic')||report.cases.some(r=>r.status!=='observed-diagnostic')
       ||report.contexts.some(c=>c.cleanup!=='completed')?'failed':'completed-diagnostic';
     await persist();
   }
   console.log(JSON.stringify({head:report.head,shard:binding.shardId,status:report.status,
-    attempted:report.cases.length,unexecuted:report.unexecuted.length,manualAttempted:report.manualCases.length,manualUnexecuted:report.manualUnexecuted.length,errors:report.errors,...acceptance()}));
+    attempted:report.cases.length,unexecuted:report.unexecuted.length,manualAttempted:report.manualCases.length,manualUnexecuted:report.manualUnexecuted.length,
+    outcomeAttempted:report.outcomeCases.length,outcomeUnexecuted:report.outcomeUnexecuted.length,errors:report.errors,...acceptance()}));
   if(primary)throw primary;assert.equal(report.status,'completed-diagnostic');
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href){

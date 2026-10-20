@@ -10,7 +10,7 @@ import { rememberV177CorpseJointPose, pruneV177CorpseJointPoses, v177LiveJointGr
 import { pruneV177JointActorHistory } from "./v177JointActorHistory.js";
 import { rememberV177TurnedCorpsePaint, rememberV177TurnedBirth, v177TurnedGetupDirection,
   v177TurnedGetupPose, readV177TurnedBirthPresentation, pruneV177TurnedCorpsePaints } from "./v177TurnedGetupPresentation.js";
-import { configureV177ContinuousActorProof, configureV177ReactionProof, v177ProofFormIdentity } from "./v177ContinuousProof.js";
+import { configureV177ContinuousActorProof, configureV177ReactionProof, v177ProofFormIdentity, v177ControlledOutcomeHit } from "./v177ContinuousProof.js";
 import { createMayoFeralProofOwner } from "./v177NativeMayoProof.js";
 import { createV177FutagoDamageCopy, prepareV177NativeFutagoPair, v177FormalFutagoPairSource } from "./v177NativeFutagoProof.js";
 import { configureV177BornTurnedContinuation } from "./v177NativeTurnedProof.js";
@@ -4158,6 +4158,8 @@ type FighterRenderAudit = {
     lockedAim:Record<string,unknown>;paintedAt:number;sourceAtlas:string};
   jointWeightedLower?: ReturnType<typeof v177RenderedWeightedLowerReceipt>;
   jointPaintedAt?: number;
+  jointLocomotion?: {phase:number;runtimeSettle:number;paintSettle:number;lowerIndex:number;lowerNextIndex:number;
+    lowerBlend:number;settleFrameOffset:number;settleBlend:number;direction:string;held:boolean};
   jointGetupProgress?: number | null;
   jointGetupVariant?: string | null;
   jointGetupCorpseId?: number | null;
@@ -4666,6 +4668,12 @@ function drawSpriteFighter(
     if(audit) {
       audit.jointDrawSucceeded=Boolean(jointPose&&drewArticulatedWalk);
       if(audit.jointDrawSucceeded)audit.jointPaintedAt=options.world?.time;
+      if(audit.jointDrawSucceeded&&jointPose?.paintLocomotion){
+        audit.jointLocomotion={phase:f.animationPresentation.locomotionPhase,runtimeSettle:f.animationPresentation.locomotionSettle,
+          paintSettle:jointPose.paintLocomotion.settle,lowerIndex:jointPose.lowerIndex,lowerNextIndex:jointPose.lowerNextIndex,
+          lowerBlend:jointPose.lowerBlend,settleFrameOffset:jointPose.settleFrameOffset,settleBlend:jointPose.settleBlend,
+          direction,held:Boolean(jointPose.reactionHeld||jointPose.liveStun)};
+      }
       if(renderKind==='mrs-chiha'){
         const paintedCycle=Boolean(audit.jointDrawSucceeded&&jointPose?.mrsNormalWeaponCycle&&!jointPose.reactionHeld
           &&animationSample.requestedState==='recovery'&&f.attackSequence>0&&Number.isFinite(options.world?.time)
@@ -13157,6 +13165,17 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         }
         selectedActionRef.current=null;setSelectedAction(null);setStarted(true);setPaused(false);setEnd(null);setScreen("battle");
         return proof;
+      },
+      queueV177ControlledOutcome: ({fighterId,targetId}:{fighterId:number;targetId:number}) => {
+        const g=gameRef.current,actor=g.fighters.find(f=>f.id===fighterId),source=g.fighters.find(f=>f.id===targetId);
+        if(!g.running||!g.paused||g.over||!actor||!source||g.pendingWeaponHits.some(hit=>hit.targetId===fighterId))
+          throw new Error("Controlled outcome requires one prepared, paused living owner");
+        const incomingHit=v177ControlledOutcomeHit(actor,source);
+        g.pendingWeaponHits.push(incomingHit as PendingWeaponHit);
+        return {schema:"v177-controlled-outcome/v1",fighterId,targetId,battleGeneration:g.battleAudioGeneration,
+          form:mayoBattleRenderKind(actor)??bossRenderKind(actor),hpBefore:actor.hp,maxHp:actor.maxHp,
+          queuedAt:g.time,incomingHit,outcome:actor.kind==="mayo-chan"?"retreat":"corpse",
+          controlledIncomingDamage:true,manualClockAdvance:false};
       },
       ensureEnemyFacingProofAsset: async (kind: EnemyKind) => {
         await ensureJointRenderProofAsset(kind);

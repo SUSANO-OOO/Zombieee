@@ -110,6 +110,7 @@ export function readNativeAllUnitSample(input,ownedProof){
    requestedState:r.requestedState,actualXDelta:r.actualXDelta,jointAtlasPath:r.jointAtlasPath,
    jointLowerFrame:r.jointLowerFrame,jointUpperFrame:r.jointUpperFrame,jointDrawSucceeded:r.jointDrawSucceeded,
    jointPaintedAt:r.jointPaintedAt,renderedWeaponSocket:r.renderedWeaponSocket,
+   jointLocomotion:r.jointLocomotion,
    jointWeightedLowerDrawSucceeded:r.jointWeightedLowerDrawSucceeded,jointWeightedLower:r.jointWeightedLower,
    jointWeaponCycleDrawSucceeded:r.jointWeaponCycleDrawSucceeded,jointWeaponCycle:r.jointWeaponCycle,
    jointRangerManualDrawSucceeded:r.jointRangerManualDrawSucceeded,jointRangerManual:r.jointRangerManual,

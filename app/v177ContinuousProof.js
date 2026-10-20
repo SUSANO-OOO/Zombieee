@@ -65,10 +65,18 @@ export function configureV177ContinuousActorProof(actor,target,{form,phase,lane,
 export function configureV177ReactionProof(actor,target,options){
   const proof=configureV177ContinuousActorProof(actor,target,{...options,phase:'attack'});
   actor.cooldown=99;
-  const incomingHit={eventKind:'impact',targetKind:'fighter',targetSide:actor.side,damageMode:'direct',
+  const incomingHit=v177ControlledOutcomeHit(actor,target);
+  return {...proof,phase:'defeat',outcome:actor.kind==='mayo-chan'?'retreat':'corpse',incomingHit,
+    scope:'controlled incoming damage with original actor HP and stats; real damage/defeat or protected retreat; not normal campaign or balance acceptance'};
+}
+
+// Also usable after the existing actual-birth, actual-activation and real pair
+// constructors. It queues damage; it never manufactures HP or an outcome pose.
+export function v177ControlledOutcomeHit(actor,target){
+  if(!actor||!target||actor.id===target.id||actor.side===target.side||!(actor.hp>0)||!(actor.maxHp>0))
+    throw new Error('Controlled outcome requires a living original actor and its opposing source');
+  return {eventKind:'impact',targetKind:'fighter',targetSide:actor.side,damageMode:'direct',
     sourceId:target.id,targetId:actor.id,targetX:actor.x,targetY:actor.y-28,
     originX:target.x,originY:target.y-24,remainingSeconds:.08,damage:actor.maxHp*100+1,
     weapon:target.kind,shotIndex:0,recoil:0,casing:false,hitStopSeconds:0,impactDelaySeconds:.08,applyDamage:true};
-  return {...proof,phase:'defeat',outcome:actor.kind==='mayo-chan'?'retreat':'corpse',incomingHit,
-    scope:'controlled incoming damage with original actor HP and stats; real damage/defeat or protected retreat; not normal campaign or balance acceptance'};
 }

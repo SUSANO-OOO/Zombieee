@@ -96,7 +96,18 @@ export async function finishNativeCanvasClip(state,{completed}){
 }
 
 export async function beginV177NativeCanvasClip(page,metadata,{directory,engine,requestedMimeType=null,realmOwner=null}={}){
-  assert.match(metadata.form,/^[a-z0-9-]+$/u);assert.ok(['move','attack','engage','incoming-stun','turned-getup','ranger-manual-precision'].includes(metadata.phase));
+  assert.match(metadata.form,/^[a-z0-9-]+$/u);assert.ok(['move','attack','engage','incoming-stun','turned-getup','ranger-manual-precision','controlled-outcome'].includes(metadata.phase));
+  const controlledOutcome=metadata.phase==='controlled-outcome';
+  if(controlledOutcome){
+    assert.equal(metadata.diagnosticOnly,true);assert.equal(metadata.controlledIncomingDamage,true);
+    assert.equal(metadata.manualClockAdvance,false);assert.equal(metadata.continuousUntilOutcome,true);
+    assert.ok(Number.isSafeInteger(metadata.battleGeneration));assert.ok(Number.isSafeInteger(metadata.targetId));
+    assert.notEqual(metadata.targetId,metadata.fighterId);assert.equal(metadata.preparedRenderKind,metadata.form);
+    assert.match(metadata.referenceCaseId??'',/^forms-(?:[1-9]|1[0-2]):[a-z0-9-]+:engage:(?:1280x720|844x390|844x340)$/u);
+    assert.equal(metadata.caseId,metadata.referenceCaseId.replace(':engage:',':controlled-outcome:'));
+    assert.equal(metadata.referenceCaseId.split(':')[1],metadata.form);
+    assert.ok(typeof metadata.proofId==='string'&&metadata.proofId.length>0);
+  }
   const manual=metadata.phase==='ranger-manual-precision';
   if(manual){
     for(const key of ['form','requestedKind','preparedRenderKind','manualAbilityKind'])assert.equal(metadata[key],'ranger');
@@ -122,7 +133,8 @@ export async function beginV177NativeCanvasClip(page,metadata,{directory,engine,
   }else assert.ok(Number.isFinite(metadata.fighterId));
   assert.ok(['chromium','webkit'].includes(engine));
   assert.ok(requestedMimeType===null||['video/mp4','video/webm;codecs=vp8','video/webm'].includes(requestedMimeType),'Unknown diagnostic native container');
-  assert.ok(['base-enemy','authored-form','approach-to-attack','natural-incoming-stun','actual-infection-getup','actual-ranger-manual-precision'].includes(metadata.fixtureGroup));
+  assert.ok(['base-enemy','authored-form','approach-to-attack','natural-incoming-stun','actual-infection-getup','actual-ranger-manual-precision','controlled-incoming-outcome'].includes(metadata.fixtureGroup));
+  assert.equal(controlledOutcome,metadata.fixtureGroup==='controlled-incoming-outcome','Controlled damage must never be labelled natural incoming combat');
   assert.equal(metadata.phase==='engage',metadata.fixtureGroup==='approach-to-attack','approach-to-attack recordings must remain distinct from legacy move/attack clips');
   assert.equal(metadata.phase==='incoming-stun',metadata.fixtureGroup==='natural-incoming-stun','Incoming stun recordings require their own natural opponent contract');
   assert.equal(manual,metadata.fixtureGroup==='actual-ranger-manual-precision','Manual precision recordings require their own actual input/activation contract');

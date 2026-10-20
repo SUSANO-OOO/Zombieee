@@ -16,6 +16,7 @@ import { v177RangerCarryPose } from './v177RangerUpperMotion.js';
 import { v177RangerLowerBob } from './v177RangerLowerMotion.js';
 import { drawV177RangerLower } from './v177RangerLowerPaint.js';
 import { v177RangerFootPlacement } from './v177RangerFootPlacement.js';
+import { v177PaintLocomotion } from './v177PaintLocomotion.js';
 import { v177JointActorKey } from './v177JointActorHistory.js';
 import { animationClipFor, attackPresentationDuration } from './combatPresentation.js';
 import { createV177MrsNormalWeaponCycle } from './v177MrsNormalWeaponCycle.js';
@@ -96,16 +97,24 @@ export function v177JointPose(kind, sample, runtime, { ownedPose=false,actor,wor
     if(previous?.kind!==kind) { rememberRenderedJointPose(actor,kind,null); return null; }
     // The existing rigid recoil still moves the body. Keep its last painted
     // feet, head and weapon instead of snapping to a different static hit row.
-    return {...previous.plan,reactionHeld:true};
+    const paintLocomotion=previous.plan.paintLocomotion;
+    return {...previous.plan,reactionHeld:true,...(paintLocomotion?{
+      paintLocomotion:v177PaintLocomotion(runtime,paintLocomotion,{time:world?.time,x:actualActor?.x,held:true}),
+    }:{})};
   }
   if (!locomotionStates.has(state) && !attackStates.has(state) && !recoveryStates.has(state)) {
     rememberRenderedJointPose(actor,kind,null); return null;
   }
   const variant=sample?.attackVariant ? atlas.attackVariants?.[sample.attackVariant] : null;
   if(sample?.attackVariant && !variant) { rememberRenderedJointPose(actor,kind,null); return null; }
+  const previousPaint=actorKey(actor)?renderedJointPoses.get(actor):null;
+  const paintLocomotion=atlas.type==='rigid-parts'&&Number.isFinite(world?.time)&&Number.isFinite(actualActor?.x)
+    ? v177PaintLocomotion(runtime,previousPaint?.kind===kind&&!previousPaint.plan.liveStun
+      ?previousPaint.plan.paintLocomotion:null,
+      {time:world?.time,x:actualActor?.x}) : null;
   const phase=cycle(runtime?.locomotionPhase);
   const phaseIndex=Math.floor(phase*atlas.frameCount) % atlas.frameCount;
-  const settleFrame=clamp(runtime?.locomotionSettle ?? 1)*(atlas.settleLevels-1);
+  const settleFrame=clamp(paintLocomotion?.settle??runtime?.locomotionSettle??1)*(atlas.settleLevels-1);
   const settleIndex=atlas.type==='rigid-parts'?Math.floor(settleFrame):Math.round(settleFrame);
   // Baked lowers keep the actual-travel phase through aiming and firing.
   // Ranger's continuous lower finishes its stop steps through painted history;
@@ -131,7 +140,7 @@ export function v177JointPose(kind, sample, runtime, { ownedPose=false,actor,wor
     const nextSettle=Math.min(atlas.settleLevels-1,settleIndex+1),settleBlend=settleFrame-settleIndex;
     const offset=atlas.pelvisOffsets[settleIndex][phaseIndex]*(1-blend)+atlas.pelvisOffsets[settleIndex][nextPhase]*blend;
     const nextOffset=atlas.pelvisOffsets[nextSettle][phaseIndex]*(1-blend)+atlas.pelvisOffsets[nextSettle][nextPhase]*blend;
-    const plan={lowerIndex,lowerNextIndex:settleIndex*atlas.frameCount+nextPhase,lowerBlend:blend,
+    const plan={paintLocomotion,lowerIndex,lowerNextIndex:settleIndex*atlas.frameCount+nextPhase,lowerBlend:blend,
       upperIndex:attackPhase===null?lowerIndex:attackBase+attackIndex,
       upperNextIndex:attackPhase===null?settleIndex*atlas.frameCount+nextPhase:attackBase+Math.min(atlas.frameCount,attackIndex+1),
       upperBlend:attackPhase===null?blend:attackFrame-attackIndex,phase,settleIndex,attackPhase,
