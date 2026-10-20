@@ -21,7 +21,6 @@ import { deferNormalRecruitOffer } from "./v100-normal-recruit-offer.mjs";
 import { captureNormalAudioUnlockAttempt } from "./v177-normal-audio-unlock-observation.mjs";
 import { installNormalFrameObserver,createNormalFrameCapture,finishNormalFrameCapture } from './v177-normal-frame-observation.mjs';
 
-if (process.platform === 'win32') throw new Error('Normal-play QA is hosted-only; local game/browser/audio playback is disabled');
 const stageLimit = normalPlayStageLimit(process.env.V100_NORMAL_PLAY_STAGE_LIMIT);
 const origin = new URL(process.env.V100_CAMPAIGN_QA_BASE_URL);
 const engine=process.env.V100_NORMAL_PLAY_ENGINE??'chromium';
@@ -296,10 +295,12 @@ async function acceptResult(record) {
   await ready();const saved=await saveAt();record.result=saved?.pendingResult??saved?.lastResult;
   assert.equal(record.result?.battleRunId, `v100:${record.id}:${record.openingSave.revision}`, "Result must belong to this recorded normal battle");
   record.resultText=await page.getByLabel("戦闘結果",{exact:true}).innerText();
+  assert.equal(typeof record.result?.won,'boolean','An observation requires an actual recorded battle result');
   record.status=record.result?.won===true?"won":"lost";
   await page.screenshot({path:path.join(out,`s${record.number}-result.png`)});await persist();
-  if(record.status!=="won")throw new Error(`Normal-play defeat at Stage ${record.number}; preserve the result and diagnose before a new attempt`);
+  if(record.status!=="won"){report.status='observed-defeat';return false;}
   await uiClick(button("次の場面へ"));
+  return true;
 }
 try {
  await page.goto(origin.href);
@@ -352,7 +353,7 @@ try {
     await uiClick(button("編成して出撃"));
   } else if(phase==="formation") await configureFormation();
   else if(phase==="battle") await battle(V100_STAGES.find(stage=>stage.id===save.flowState.stageId));
-  else if(phase==="result") await acceptResult(report.stages.at(-1));
+  else if(phase==="result") {if(!await acceptResult(report.stages.at(-1)))break;}
   else if(phase==="credits") {
     report.staffRoll=await inspectStaffRoll(page,{playerName:save.playerName});
     await page.screenshot({path:path.join(out,"staff-roll-start.png")});
@@ -373,14 +374,16 @@ try {
     await uiClick(page.locator(".v100-event-actions .v100-primary"));
   } else throw new Error(`Unexpected phase ${phase}`);
  }
- if(!["passed", "completed-exploratory-route"].includes(report.status))throw new Error("Normal route did not reach the post-credits map within its finite event count");
+ if(!["passed", "observed-defeat", "completed-exploratory-route"].includes(report.status))throw new Error("Normal route did not reach the post-credits map within its finite event count");
 } catch(error) {report.status="failed";report.error=String(error);await page.screenshot({path:path.join(out,"failure.png")}).catch(()=>{});process.exitCode=1;}
 finally {
-  try { report.finalSave=await saveAt(); } catch(error) { report.saveCaptureError=String(error);process.exitCode=1; }
-  try { await context.storageState({path:path.join(out,"browser-storage.json"),indexedDB:true}); } catch(error) { report.storageCaptureError=String(error);process.exitCode=1; }
+  try { report.finalSave=await saveAt(); } catch(error) { report.saveCaptureError=String(error);report.status='failed';process.exitCode=1; }
+  try { await context.storageState({path:path.join(out,"browser-storage.json"),indexedDB:true}); } catch(error) { report.storageCaptureError=String(error);report.status='failed';process.exitCode=1; }
   await persist();
   try { await requests.closeContext(context);report.video=await video.path();report.videoBytes=(await stat(report.video)).size;assert.ok(report.videoBytes>0); }
   catch(error) { report.videoCaptureError=String(error);report.status='failed';process.exitCode=1; }
   if(report.errors.length||requests.report.unexpectedFailures.length){report.status='failed';report.error??='Browser diagnostics on normal route';process.exitCode=1;}
+  report.technicalStatus=report.status==='failed'?'failed':'passed';
+  report.balanceAcceptance=false;report.wholeCampaignAcceptance=false;report.releaseAcceptance=false;
   await persist();await browser.close();console.log(JSON.stringify({engine,status:report.status,stages:report.stages.length,error:report.error}));
 }

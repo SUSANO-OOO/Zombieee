@@ -12,16 +12,21 @@ export function normalPlayStageLimit(value) {
   return limit;
 }
 
+export function normalPlayPlatform(engine,platform=process.platform){
+  assert.ok(['chromium','webkit'].includes(engine));
+  assert.ok(['win32','linux','darwin'].includes(platform));
+  if(engine==='webkit')assert.equal(platform,'darwin','WebKit acceptance requires the native macOS runtime');
+}
+
 // A bounded AI observation can finish with a real defeat. The original report
-// stays failed; neither an observed defeat nor three wins accepts game balance.
+// preserves its outcome; neither an observed defeat nor three wins accepts game balance.
 export function representativeNormalPlayScope({ candidateSha, engine, reportBytes }) {
   assert.match(candidateSha, /^[0-9a-f]{40}$/u);
   assert.ok(['chromium', 'webkit'].includes(engine));
   const report = JSON.parse(reportBytes.toString('utf8'));
   assert.equal(report.engine, engine);
   assert.equal(report.provenance?.head, candidateSha);
-  assert.ok(['linux', 'darwin'].includes(report.provenance?.platform));
-  if (engine === 'webkit') assert.equal(report.provenance.platform, 'darwin');
+  normalPlayPlatform(engine,report.provenance?.platform);
   assert.match(report.build?.combinedSha256, /^[0-9a-f]{64}$/u);
   assert.deepEqual(report.normalPlayScope, { kind: 'representative-opening', stageLimit: 3, wholeCampaignAcceptance: false });
   assert.deepEqual(report.errors, []);
@@ -39,8 +44,9 @@ export function representativeNormalPlayScope({ candidateSha, engine, reportByte
   const last = report.stages.at(-1);
   const defeated = last.status === 'lost';
   if (defeated) {
-    assert.equal(report.status, 'failed');
-    assert.equal(report.error, `Error: Normal-play defeat at Stage ${last.number}; preserve the result and diagnose before a new attempt`);
+    assert.ok(['observed-defeat','failed'].includes(report.status));
+    if(report.status==='failed')assert.equal(report.error, `Error: Normal-play defeat at Stage ${last.number}; preserve the result and diagnose before a new attempt`);
+    else{assert.equal(report.error,undefined);assert.equal(report.technicalStatus,'passed');}
     assert.equal(last.result.won, false);
   } else {
     assert.equal(report.status, 'passed');
@@ -82,7 +88,7 @@ export function representativeNormalPlayScopeWithExit({childCode,...binding}) {
 }
 
 export async function runBrowserQa() {
-  assert.notEqual(process.platform, 'win32', 'normal-play observation is hosted-only');
+  normalPlayPlatform(process.env.V100_NORMAL_PLAY_ENGINE??'chromium');
   assert.equal(normalPlayStageLimit(process.env.V100_NORMAL_PLAY_STAGE_LIMIT), 3);
   const childCode = await new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [path.resolve('scripts/v100-normal-campaign-playthrough.mjs')], { stdio: 'inherit', env: process.env });

@@ -79,11 +79,11 @@ function sampleFlight(foot,input,flight) {
 }
 function finishFlight(foot,previous,input,i,rig,stopping) {
   let flight=foot.flight;
-  // A requested turn can be cancelled before the body can reflect. Redirect
-  // the airborne correction from its current X without restarting its lift
-  // or postponing the landing already visible to the player.
-  if(flight.kind==='stop'&&flight.goalFacing!==input.facing){
-    flight={...flight,xAt:previous.time,fromX:foot.x,vx:foot.vx??0,
+  // A reflected body must not finish an airborne step at the old-facing
+  // landing. Retarget from the painted X without restarting its lift or
+  // postponing the landing already visible to the player.
+  if(flight.goalFacing!==input.facing){
+    flight={...flight,retargeted:true,xAt:previous.time,fromX:foot.x,vx:foot.vx??0,
       goalLocal:rig.legs[i].footCenter+REST_OFFSET[i],goalFacing:input.facing};
   }
   // Retarget the X segment once, retaining the original height curve and
@@ -195,12 +195,25 @@ function advance(rig,previous,input) {
     // A fixed world ankle can become unreachable when only the body is
     // reflected. Lift that boot first with the existing step and keep the
     // previous display facing until both original legs allow the turn.
-    state=stopping(rig,previous,input);
-    if(state.feet.some((foot,i)=>!reachable(rig,foot,i,input,state.offset)))
-      state={...state,facing:previous.facing,turnTargetFacing:facing};
+    if(previous.turnTargetFacing&&input.moving){
+      // While the body waits to turn, it can still travel. Keep stepping in
+      // the displayed frame instead of leaving a support behind the root.
+      state=moving(rig,previous,{...input,facing:previous.facing});
+      if(state.feet.every((foot,i)=>reachable(rig,foot,i,input,state.offset)))state={...state,facing};
+      else state={...state,turnTargetFacing:facing};
+    }else{
+      state=stopping(rig,previous,input);
+      if(state.feet.some((foot,i)=>!reachable(rig,foot,i,input,state.offset)))
+        state={...state,facing:previous.facing,turnTargetFacing:facing};
+    }
   } else {
     state = input.moving ? moving(rig, previous, input) : stopping(rig, previous, input);
   }
+  // Turning eligibility must use the newly sampled feet, not the preceding
+  // paint: an in-flight landing can cross the reflected body's reach limit.
+  if(previous&&state.facing!==previous.facing&&(time<input.paintTime
+    ||state.feet.some((foot,i)=>!reachable(rig,foot,i,{...input,facing:state.facing},state.offset))))
+    state={...state,facing:previous.facing,turnTargetFacing:facing};
   if(previous&&time>previous.time){const dt=time-previous.time;
     state={...state,feet:state.feet.map((foot,i)=>({...foot,vx:input.frozen?0:(foot.x-previous.feet[i].x)/dt}))};
   }else if(previous&&time===previous.time){state={...state,feet:state.feet.map((foot,i)=>({...foot,vx:previous.feet[i].vx??0}))};

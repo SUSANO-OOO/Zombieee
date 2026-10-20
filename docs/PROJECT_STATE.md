@@ -2,6 +2,8 @@
 
 ## 現在の公開状態
 
+2026-10-20：公開は保留。継続作業は[Issue #177](https://github.com/SUSANO-OOO/Zombieee/issues/177)とDraft PR #180で管理する。監査対象 `168614f3` のCI `39161253712` はcancelled、全ユニット録画 `39161253734` はfailureで終了した。通常攻略はChromium第3／WebKit第5ステージで敗北。別音声研究の最終候補 `c3bc0794`／`39162780934` も150ms基準超過でfailure。これらを実行中や合格として扱わない。運用・CIの整理とレンジャーの方向転換時の描画例外を修正中で、全48形態・R9全編・実機保存録画音声の受入は未完。
+
 - [正式URL](https://susano-ooo.github.io/Zombieee/)のHTML release metadataを、公開中のversion・release SHAの正本とする。
 - [最新GitHub Release](https://github.com/SUSANO-OOO/Zombieee/releases/latest)で固定tagと更新内容を確認する。
 - Version 1.0.0の統合・公開・公開後QAの現在値は[実行台帳 Issue #172](https://github.com/SUSANO-OOO/Zombieee/issues/172)へ記録する。

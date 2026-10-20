@@ -84,12 +84,15 @@ test("Windows browser and audio launch are rejected before hosted work", () => {
   const host=fs.readFileSync(new URL("../scripts/v177-native-aac-browser.mjs",import.meta.url),"utf8");
   assert.ok(host.indexOf("assertNativeAacHostedPlatform(process.platform)")<host.indexOf(".launch()"));
 });
-test("AAC diagnostic preserves the required media step and can run after native decode fails", () => {
+test("AAC research keeps its original controls separate from production media regression", () => {
   const workflow=fs.readFileSync(new URL("../.github/workflows/ci.yml",import.meta.url),"utf8").replaceAll("\r\n","\n");
   const job=workflow.split("  v103-audio-output:\n")[1].split("\n  v102-enemy-contacts:")[0];
   assert.match(job,/run: node scripts\/run-browser-qa-with-server\.mjs scripts\/v103-audio-output-browser\.mjs/u);
   assert.doesNotMatch(job,/continue-on-error/u);
-  assert.match(job,/always\(\).*steps\.native_engine\.outcome == 'success'.*steps\.production_build\.outcome == 'success'/u);
+  assert.doesNotMatch(job,/v177-native-aac-browser/u);
+  const research=fs.readFileSync(new URL('../.github/workflows/native-aac-probe.yml',import.meta.url),'utf8');
+  assert.match(research,/always\(\).*steps\.native_engine\.outcome == 'success'.*steps\.production_build\.outcome == 'success'/u);
+  assert.match(research,/run: node scripts\/run-browser-qa-with-server\.mjs scripts\/v177-native-aac-browser\.mjs/u);
   assert.match(job,/timeout-minutes: 30/u);
 });
 

@@ -2,6 +2,7 @@ name: All Unit Native Motion Capture
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     paths:
       - '.github/workflows/native-allunit-capture.yml'
       - 'scripts/v177-native-allunit-*.mjs'
@@ -23,6 +24,7 @@ concurrency:
 
 jobs:
   build:
+    if: ${{ !github.event.pull_request.draft }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     outputs:

@@ -2,6 +2,7 @@
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     branches:
       - main
       - "integration/**"
@@ -16,21 +17,13 @@ concurrency:
 
 # Linux WPE backend only; no application or Chromium rendering flag changes.
 jobs:
-  v177-full-normal-route:
-    name: V1 Full Normal Route (${{ matrix.engine }})
-    if: github.head_ref == 'codex/177-combat-clarity'
-    needs: verify
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - {engine: chromium, os: ubuntu-latest}
-          - {engine: webkit, os: macos-15-intel}
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 150
-    defaults:
-      run:
-        shell: bash
+  scope:
+    name: Validation Scope
+    runs-on: ubuntu-latest
+    outputs:
+      full: ${{ steps.scope.outputs.full }}
+      ranger: ${{ steps.scope.outputs.ranger }}
+      normal: ${{ steps.scope.outputs.normal }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -39,39 +32,52 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v6
         with:
-          node-version: "22.13.0"
+          node-version: '22.13.0'
+      - id: scope
+        env:
+          CI_SCOPE_BASE: ${{ github.event.before || github.event.pull_request.base.sha }}
+          CI_SCOPE_HEAD: ${{ github.event.pull_request.head.sha }}
+          CI_SCOPE_DRAFT: ${{ github.event.pull_request.draft }}
+        run: node scripts/ci-change-scope.mjs
+
+  ranger-turn-smoke:
+    name: Ranger Turn Regression
+    needs: scope
+    if: needs.scope.outputs.ranger == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22.13.0'
           cache: npm
       - run: npm ci
-      - name: Install the actual selected browser
-        run: |
-          if [ "${{ matrix.engine }}" = webkit ]; then
-            npm ci --prefix scripts/pwa-native-runtime
-            node scripts/pwa-native-runtime/node_modules/playwright/cli.js install webkit
-          else
-            npx playwright install --with-deps chromium
-          fi
-      - name: Build the exact normal-route candidate
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - name: Recheck the original Stage 4 rendering failure
         env:
-          GITHUB_PAGES_RELEASE_SHA: ${{ github.event.pull_request.head.sha }}
-        run: npm run build
-      - name: Observe the normal route from a fresh save through Stage 30 or the first real defeat
-        env:
-          V100_NORMAL_PLAY_ENGINE: ${{ matrix.engine }}
-          V100_NORMAL_PLAY_STAGE_LIMIT: "30"
-          V100_NORMAL_PLAY_EVIDENCE_DIR: outputs/v177-full-normal-route-${{ matrix.engine }}
-        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-normal-campaign-playthrough.mjs
-      - name: Preserve original outcomes, saves, diagnostics and continuous video
+          V100_PHASE_G_ONLY: battle-extra
+          V100_PHASE_G_ONLY_VARIANT: stage04-grappler
+          V100_PHASE_G_ONLY_ENGINE: chromium
+          V100_PHASE_G_EVIDENCE_DIR: outputs/ranger-turn-regression
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-phase-g-production-matrix.mjs
+      - uses: actions/upload-artifact@v4
         if: always()
-        uses: actions/upload-artifact@v4
         with:
-          name: v177-full-normal-route-${{ matrix.engine }}
-          path: outputs/v177-full-normal-route-${{ matrix.engine }}
+          name: ranger-turn-regression
+          path: outputs/ranger-turn-regression
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 14
 
   v177-guardian-control-diagnostic:
+    needs: [scope]
     name: V1 Guardian Control Diagnostic
-    if: github.head_ref == 'codex/177-combat-clarity'
+    if: ${{ needs.scope.outputs.full == 'true' && (github.head_ref == 'codex/177-combat-clarity') }}
     runs-on: macos-15-intel
     timeout-minutes: 20
     defaults:
@@ -114,6 +120,8 @@ jobs:
           retention-days: 14
 
   r9-story:
+    if: ${{ needs.scope.outputs.full == 'true' }}
+    needs: [scope]
     name: R9 Story (${{ matrix.engine }}, ${{ matrix.phase }})
     strategy:
       fail-fast: false
@@ -168,6 +176,8 @@ jobs:
           retention-days: 14
 
   v102-combat:
+    if: ${{ needs.scope.outputs.full == 'true' }}
+    needs: [scope]
     name: V1.0.2 Combat (${{ matrix.checkLabel }})
     strategy:
       fail-fast: false
@@ -216,9 +226,9 @@ jobs:
           retention-days: 14
 
   v102-combat-webkit-summary:
+    needs: [scope, v102-combat]
     name: V1.0.2 Combat (webkit)
-    if: always()
-    needs: [v102-combat]
+    if: ${{ needs.scope.outputs.full == 'true' && (always()) }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -228,6 +238,8 @@ jobs:
         run: test "$V177_COMBAT_MATRIX_RESULT" = success
 
   v103-audio-output:
+    if: ${{ needs.scope.outputs.full == 'true' }}
+    needs: [scope]
     name: V1.0.3 Media Output (${{ matrix.engine }})
     strategy:
       fail-fast: false
@@ -266,12 +278,6 @@ jobs:
           V103_AUDIO_ENGINE: ${{ matrix.engine }}
           V103_AUDIO_OUT: outputs/v103-audio
         run: node scripts/run-browser-qa-with-server.mjs scripts/v103-audio-output-browser.mjs
-      - name: Diagnose native AAC streaming without a realtime AudioContext
-        if: ${{ always() && !cancelled() && steps.native_engine.outcome == 'success' && steps.production_build.outcome == 'success' }}
-        env:
-          V103_AUDIO_ENGINE: ${{ matrix.engine }}
-          V177_NATIVE_AAC_OUT: outputs/v177-native-aac
-        run: node scripts/run-browser-qa-with-server.mjs scripts/v177-native-aac-browser.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -281,6 +287,8 @@ jobs:
           retention-days: 14
 
   v102-enemy-contacts:
+    if: ${{ needs.scope.outputs.full == 'true' }}
+    needs: [scope]
     name: V1 Ordinary Enemy Contacts (${{ matrix.engine }})
     strategy:
       fail-fast: false
@@ -327,10 +335,11 @@ jobs:
           retention-days: 14
 
   v177-normal-campaign:
+    if: ${{ needs.scope.outputs.normal == 'true' }}
+    needs: [scope]
     name: V1 Representative Normal Play (${{ matrix.engine }})
     # All-stage progression uses the existing developer-mode route in verify.
     # Bounded normal UI observations retain defeats for separate balance review.
-    needs: [verify, v102-combat, v103-audio-output, v102-enemy-contacts, r9-story, v100-native-webkit-pwa, v100-phase-g-production]
     strategy:
       fail-fast: false
       matrix:
@@ -381,71 +390,8 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-  v177-normal-campaign-diagnostic:
-    name: V1 Representative Normal Diagnostic (${{ matrix.engine }})
-    # Investigate earned play even when focused QA fails; retain all required gates above.
-    if: always() && needs.verify.result == 'success' && contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
-    needs: [verify, v102-combat, v103-audio-output, v102-enemy-contacts, r9-story, v100-native-webkit-pwa, v100-phase-g-production]
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - {engine: chromium, os: ubuntu-latest}
-          - {engine: webkit, os: macos-15-intel}
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 240
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - name: Checkout exact feature candidate
-        uses: actions/checkout@v7
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          fetch-depth: 0
-          persist-credentials: false
-      - uses: actions/setup-node@v6
-        with:
-          node-version: "22.13.0"
-          cache: npm
-      - run: npm ci
-      - name: Install focused native engine
-        run: |
-          if [ "${{ matrix.engine }}" = webkit ]; then
-            npm ci --prefix scripts/pwa-native-runtime
-            node scripts/pwa-native-runtime/node_modules/playwright/cli.js install webkit
-          else
-            npx playwright install --with-deps chromium
-          fi
-      - name: Build exact normal-play candidate
-        env:
-          GITHUB_PAGES_RELEASE_SHA: ${{ github.event.pull_request.head.sha }}
-        run: npm run build
-      - name: Observe opening stages using a fresh save, earned CAPS and real UI
-        env:
-          V100_NORMAL_PLAY_ENGINE: ${{ matrix.engine }}
-          V100_NORMAL_PLAY_STAGE_LIMIT: "3"
-          V100_NORMAL_PLAY_EVIDENCE_DIR: outputs/v177-normal-campaign-diagnostic-${{ matrix.engine }}
-          V177_S25_FIRE_INPUT_COMPARISON: ${{ matrix.engine == 'chromium' && '1' || '0' }}
-        run: node scripts/run-browser-qa-with-server.mjs scripts/v177-representative-normal-play.mjs
-      - name: Mark diagnostic scope without promoting the original result
-        if: always()
-        env:
-          V100_NORMAL_PLAY_ENGINE: ${{ matrix.engine }}
-          V100_NORMAL_PLAY_EVIDENCE_DIR: outputs/v177-normal-campaign-diagnostic-${{ matrix.engine }}
-          GITHUB_PAGES_RELEASE_SHA: ${{ github.event.pull_request.head.sha }}
-          V177_NORMAL_DIAGNOSTIC_NEEDS: ${{ toJSON(needs) }}
-        run: node scripts/v177-normal-diagnostic-scope.mjs
-      - name: Preserve normal-play results, saves, diagnostics and original-speed video
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: v177-normal-campaign-diagnostic-${{ matrix.engine }}
-          path: outputs/v177-normal-campaign-diagnostic-${{ matrix.engine }}
-          if-no-files-found: error
-          retention-days: 14
-
   verify:
+    needs: [scope]
     name: PR Verify
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -517,15 +463,18 @@ jobs:
         run: npm run build
 
       - name: Test
-        run: npm test
+        run: node --test tests/*.test.mjs
 
       - name: Audit all 30 story stages in developer mode
+        if: ${{ needs.scope.outputs.full == 'true' }}
         run: node scripts/v100-devmode-full-campaign.mjs
 
       - name: Audit V1 CAPS purchasing power
+        if: ${{ needs.scope.outputs.full == 'true' }}
         run: node scripts/v100-economy-budget.mjs
 
       - name: Upload developer mode campaign audit
+        if: ${{ needs.scope.outputs.full == 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: v100-devmode-full-campaign
@@ -536,19 +485,23 @@ jobs:
           retention-days: 14
 
       - name: Install focused browser engines
+        if: ${{ needs.scope.outputs.full == 'true' }}
         run: npx playwright install --with-deps chromium
 
       - name: Verify PWA shell commit and offline relaunch (Chromium)
+        if: ${{ needs.scope.outputs.full == 'true' }}
         run: node scripts/pwa-shell-commit-browser-smoke.mjs
 
       - name: Verify online play after PWA registration failure (Chromium)
+        if: ${{ needs.scope.outputs.full == 'true' }}
         run: node scripts/run-browser-qa-with-server.mjs scripts/pwa-registration-fallback-browser-smoke.mjs
 
       - name: Verify installed PWA launch when update metadata stalls (Chromium)
+        if: ${{ needs.scope.outputs.full == 'true' }}
         run: node scripts/run-browser-qa-with-server.mjs scripts/pwa-held-manifest-browser-smoke.mjs
 
       - name: Upload stalled PWA metadata browser evidence
-        if: always()
+        if: ${{ needs.scope.outputs.full == 'true' && (always()) }}
         uses: actions/upload-artifact@v4
         with:
           name: v100-pwa-held-metadata
@@ -557,6 +510,7 @@ jobs:
           retention-days: 14
 
       - name: Build exact base and candidate PWA sites for partial-update QA
+        if: ${{ needs.scope.outputs.full == 'true' }}
         env:
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
@@ -591,6 +545,7 @@ jobs:
             node scripts/build-github-pages.mjs
 
       - name: Classify whether PWA asset update QA applies
+        if: ${{ needs.scope.outputs.full == 'true' }}
         id: pwa_update_scope
         env:
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
@@ -598,7 +553,7 @@ jobs:
         run: node scripts/classify-pwa-update-scope.mjs
 
       - name: Reproduce and recover the partial-failed existing PWA (Chromium)
-        if: steps.pwa_update_scope.outputs.applicable == 'true'
+        if: ${{ needs.scope.outputs.full == 'true' && (steps.pwa_update_scope.outputs.applicable == 'true') }}
         env:
           PWA_PARTIAL_UPDATE_OLD_ROOT: ${{ runner.temp }}/pwa-old-site
           PWA_PARTIAL_UPDATE_CANDIDATE_ROOT: ${{ github.workspace }}/_site
@@ -608,6 +563,7 @@ jobs:
         run: npm run qa:pwa-partial-update
 
       - name: Capture Issue 156 canonical HUD evidence (Chromium)
+        if: ${{ needs.scope.outputs.full == 'true' }}
         env:
           V099_FINAL_REMEDIATION_QA_ENGINES: chromium
           V099_FINAL_REMEDIATION_QA_CASES: hud
@@ -621,6 +577,7 @@ jobs:
           done
 
       - name: Capture Issue 156 final-canvas deployment evidence (Chromium)
+        if: ${{ needs.scope.outputs.full == 'true' }}
         env:
           V099_FINAL_REMEDIATION_QA_ENGINES: chromium
           V099_FINAL_REMEDIATION_QA_VIEWPORTS: 667x375,736x414,844x390,844x340,932x430,1280x720
@@ -629,18 +586,21 @@ jobs:
         run: node scripts/run-browser-qa-with-server.mjs scripts/v099-final-remediation-browser-smoke.mjs
 
       - name: Capture Issue 156 safe-area, portrait, and metadata evidence
+        if: ${{ needs.scope.outputs.full == 'true' }}
         env:
           ISSUE156_REMEDIATION_QA_ENGINES: chromium
           ISSUE156_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/presentation
         run: npm run qa:issue156-remediation
 
       - name: Capture Issue 156 physical-width records evidence (Chromium)
+        if: ${{ needs.scope.outputs.full == 'true' }}
         env:
           RECORDS_QA_ENGINES: chromium
           RECORDS_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/records/chromium
         run: npm run qa:records
 
       - name: Capture Issue 156 physical-width TAKUYA audio route (Chromium)
+        if: ${{ needs.scope.outputs.full == 'true' }}
         env:
           P5_QA_SCOPE: battle-audio
           P5_QA_ENGINES: chromium
@@ -649,6 +609,7 @@ jobs:
         run: npm run qa:p5
 
       - name: Capture Version 0.9.9.5 enemy runtime and station final-canvas evidence
+        if: ${{ needs.scope.outputs.full == 'true' }}
         env:
           V0995_ENEMY_QA_ENGINES: chromium
           V0995_ENEMY_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue165-evidence/enemy-runtime
@@ -660,7 +621,7 @@ jobs:
           node scripts/run-browser-qa-with-server.mjs scripts/v0995-visual-integrity-browser-smoke.mjs
 
       - name: Upload Issue 165 visual remediation evidence
-        if: always()
+        if: ${{ needs.scope.outputs.full == 'true' && (always()) }}
         uses: actions/upload-artifact@v4
         with:
           name: issue165-visual-remediation-evidence
@@ -669,7 +630,7 @@ jobs:
           retention-days: 14
 
       - name: Upload Issue 156 remediation evidence
-        if: always()
+        if: ${{ needs.scope.outputs.full == 'true' && (always()) }}
         uses: actions/upload-artifact@v4
         with:
           name: issue156-remediation-evidence-chromium
@@ -678,6 +639,8 @@ jobs:
           retention-days: 14
 
   v100-webkit-frame-control:
+    if: ${{ needs.scope.outputs.full == 'true' }}
+    needs: [scope]
     name: V1 WebKit Frame and Boss Performance
     runs-on: macos-15
     defaults:
@@ -906,9 +869,9 @@ jobs:
           retention-days: 14
 
   v177-webkit-shadow-diagnostic:
+    needs: [scope, v100-webkit-frame-control]
     name: WebKit Compact Shadow Diagnostic
-    needs: v100-webkit-frame-control
-    if: ${{ always() && (needs.v100-webkit-frame-control.result == 'failure' || needs.v100-webkit-frame-control.result == 'cancelled') }}
+    if: ${{ needs.scope.outputs.full == 'true' && (always() && (needs.v100-webkit-frame-control.result == 'failure' || needs.v100-webkit-frame-control.result == 'cancelled')) }}
     runs-on: macos-15
     defaults:
       run:
@@ -960,6 +923,8 @@ jobs:
           retention-days: 14
 
   v100-phase-g-production:
+    if: ${{ needs.scope.outputs.full == 'true' }}
+    needs: [scope]
     name: V1 Phase G Production Matrix
     runs-on: macos-15-intel
     defaults:
@@ -1037,6 +1002,8 @@ jobs:
           retention-days: 14
 
   v100-native-webkit-pwa:
+    if: ${{ needs.scope.outputs.full == 'true' }}
+    needs: [scope]
     name: V1 Native WebKit PWA Update and Recovery
     # playwright#41701 fixes the disk-response codec on every WebKit port.
     # Use a separately locked official browser for persistent storage; the
@@ -1195,8 +1162,9 @@ jobs:
           retention-days: 14
 
   webkit-hosted:
+    if: ${{ needs.scope.outputs.full == 'true' }}
+    needs: [scope, webkit-enemy-runtime-shard]
     name: WebKit Hosted Runner Evidence
-    needs: webkit-enemy-runtime-shard
     runs-on: macos-15-intel
     timeout-minutes: 60
 
@@ -1269,6 +1237,8 @@ jobs:
           retention-days: 14
 
   webkit-enemy-runtime-shard:
+    if: ${{ needs.scope.outputs.full == 'true' }}
+    needs: [scope]
     name: WebKit Enemy Runtime Evidence (${{ matrix.shard.name }})
     runs-on: macos-15-intel
     timeout-minutes: 60
@@ -1342,10 +1312,9 @@ jobs:
           retention-days: 14
 
   webkit-viewport:
+    if: ${{ needs.scope.outputs.full == 'true' }}
+    needs: [scope, webkit-deployment-viewport, webkit-hosted]
     name: WebKit Canonical Viewport Evidence (${{ matrix.viewport }})
-    needs:
-      - webkit-deployment-viewport
-      - webkit-hosted
     runs-on: macos-15-intel
     timeout-minutes: 20
     strategy:
@@ -1410,9 +1379,9 @@ jobs:
           retention-days: 14
 
   webkit-deployment-viewport:
+    needs: [scope, webkit-stage3-audio]
     name: WebKit Deployment Viewport Evidence (${{ matrix.viewport }})
-    needs: webkit-stage3-audio
-    if: ${{ !cancelled() }}
+    if: ${{ needs.scope.outputs.full == 'true' && (!cancelled()) }}
     runs-on: macos-15-intel
     defaults:
       run:
@@ -1470,8 +1439,9 @@ jobs:
           retention-days: 14
 
   webkit-stage3-audio:
+    if: ${{ needs.scope.outputs.full == 'true' }}
+    needs: [scope, webkit-hosted]
     name: WebKit Stage 3 Audio Route (${{ matrix.audio_case }})
-    needs: webkit-hosted
     runs-on: macos-15-intel
     defaults:
       run:

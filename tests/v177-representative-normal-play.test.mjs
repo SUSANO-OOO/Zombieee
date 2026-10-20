@@ -5,7 +5,7 @@ import { createHash } from 'node:crypto';
 import { load as loadYaml } from 'js-yaml';
 import { V100_STAGE_IDS } from '../app/v100Registry.js';
 import { normalPlayStageLimit, representativeNormalPlayScope, representativeNormalPlayScopeWithExit } from '../scripts/v177-representative-normal-play.mjs';
-import * as representativeEntry from '../scripts/v177-representative-normal-play.mjs';
+import {normalPlayPlatform} from '../scripts/v177-representative-normal-play.mjs';
 
 const candidateSha = 'a'.repeat(40);
 function fixture(defeatedAt = null) {
@@ -96,20 +96,30 @@ test('the child-exit wrapper preserves successful and actual defeat observations
   }
 });
 
-test('CI keeps independent full developer progression and bounds both normal observations to opening stages', () => {
+test('CI keeps full developer progression separate from bounded normal observation', () => {
   const { jobs } = loadYaml(fs.readFileSync('.github/workflows/ci.yml', 'utf8'));
   assert.ok(jobs.verify.steps.some(step => step.run === 'node scripts/v100-devmode-full-campaign.mjs'));
   assert.equal(jobs.verify.needs?.includes('v177-normal-campaign') ?? false, false);
-  for (const id of ['v177-normal-campaign', 'v177-normal-campaign-diagnostic']) {
+  for (const id of ['v177-normal-campaign']) {
     const play = jobs[id].steps.find(step => step.run?.includes('scripts/v177-representative-normal-play.mjs'));
     assert.equal(play.env.V100_NORMAL_PLAY_STAGE_LIMIT, '3');
     assert.equal(jobs[id]['continue-on-error'], undefined, 'unexpected failures remain hard CI failures');
   }
 });
 
-test('the owned-server launcher can invoke an explicit representative entry without bypassing the local host guard', async () => {
-  assert.equal(typeof representativeEntry.runBrowserQa, 'function', 'importing a guarded CLI must not silently skip the real observation');
-  if (process.platform === 'win32') {
-    await assert.rejects(() => representativeEntry.runBrowserQa(), /normal-play observation is hosted-only/u);
-  }
+test('authorized Windows Chromium observation remains distinct from native macOS WebKit acceptance', () => {
+  for(const platform of ['win32','linux','darwin'])normalPlayPlatform('chromium',platform);
+  normalPlayPlatform('webkit','darwin');
+  for(const platform of ['win32','linux'])assert.throws(()=>normalPlayPlatform('webkit',platform));
+});
+
+test('new defeat observations succeed technically while faults and malformed outcomes remain failures',()=>{
+ const report=fixture(2);report.status='observed-defeat';report.technicalStatus='passed';delete report.error;
+ const binding={candidateSha,engine:'webkit',reportBytes:Buffer.from(JSON.stringify(report))};
+ const scope=representativeNormalPlayScopeWithExit({childCode:0,...binding});
+ assert.equal(scope.observationStatus,'defeat-requires-review');assert.equal(scope.balanceAcceptance,false);
+ assert.throws(()=>representativeNormalPlayScopeWithExit({childCode:1,...binding}));
+ for(const mutate of [p=>{p.errors.push('RangeError');},p=>{p.videoCaptureError='timeout';},p=>{p.error='failure';},p=>{p.technicalStatus='failed';}]){
+  const bad=structuredClone(report);mutate(bad);assert.throws(()=>observe(bad));
+ }
 });

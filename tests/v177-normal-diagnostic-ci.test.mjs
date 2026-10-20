@@ -1,76 +1,23 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import vm from 'node:vm';
 import { createHash } from 'node:crypto';
 import { load as loadYaml } from 'js-yaml';
 import { NORMAL_DIAGNOSTIC_NEEDS, normalDiagnosticScope } from '../scripts/v177-normal-diagnostic-scope.mjs';
 
 const { jobs } = loadYaml(fs.readFileSync('.github/workflows/ci.yml', 'utf8'));
 
-function assertDiagnostic(job) {
-  const required = jobs['v177-normal-campaign'];
-  assert.ok(job, 'failed focused QA must not prevent ordinary campaign investigation');
-  assert.deepEqual(job.needs, required.needs);
-  assert.deepEqual(job.needs, [...NORMAL_DIAGNOSTIC_NEEDS]);
-  assert.equal(job.if, "always() && needs.verify.result == 'success' && contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')");
-  const marker = job.steps.filter(s => s.run === 'node scripts/v177-normal-diagnostic-scope.mjs');
-  assert.equal(marker.length, 1);assert.equal(marker[0].if, 'always()');
-  assert.deepEqual(marker[0].env, {
-    V100_NORMAL_PLAY_ENGINE: '${{ matrix.engine }}',
-    V100_NORMAL_PLAY_EVIDENCE_DIR: 'outputs/v177-normal-campaign-diagnostic-${{ matrix.engine }}',
-    GITHUB_PAGES_RELEASE_SHA: '${{ github.event.pull_request.head.sha }}',
-    V177_NORMAL_DIAGNOSTIC_NEEDS: '${{ toJSON(needs) }}',
-  });
-  const directory = 'outputs/v177-normal-campaign-diagnostic-${{ matrix.engine }}';
-  const play = job.steps.find(s => s.run?.includes('v177-representative-normal-play.mjs'));
-  assert.equal(play.env.V100_NORMAL_PLAY_EVIDENCE_DIR, directory);
-  assert.equal(play.env.V100_NORMAL_PLAY_STAGE_LIMIT, '3');
-  assert.equal(play.env.V177_S25_FIRE_INPUT_COMPARISON, "${{ matrix.engine == 'chromium' && '1' || '0' }}",
-    'only the explicit Chromium diagnostic adds the S25 input comparison');
-  assert.equal(job.steps.at(-1).with.name, 'v177-normal-campaign-diagnostic-${{ matrix.engine }}');
-  assert.equal(job.steps.at(-1).with.path, directory);
-  const actual = structuredClone(job), expected = structuredClone(required);
-  delete actual.name;delete actual.if;delete expected.name;
-  actual.steps = actual.steps.filter(s => s.run !== 'node scripts/v177-normal-diagnostic-scope.mjs');
-  const comparison = actual.steps.find(s => s.run?.includes('v177-representative-normal-play.mjs'));
-  const baseline = expected.steps.find(s => s.run?.includes('v177-representative-normal-play.mjs'));
-  assert.equal(Object.hasOwn(baseline.env, 'V177_S25_FIRE_INPUT_COMPARISON'), false, 'original normal-play baseline remains unchanged');
-  delete comparison.env.V177_S25_FIRE_INPUT_COMPARISON;
-  actual.steps = JSON.parse(JSON.stringify(actual.steps).replaceAll('v177-normal-campaign-diagnostic-', 'v177-normal-campaign-'));
-  assert.deepEqual(actual, expected, 'all checkout/build/engines/route/240min/no-retry/artifact controls remain the original normal-play controls');
-}
-
-test('diagnostic normal play keeps the bounded observation and all technical failure controls', () => {
-  assertDiagnostic(jobs['v177-normal-campaign-diagnostic']);
-  for (const mutate of [
-    j => j.needs.pop(),
-    j => { delete j.steps.find(s => s.run?.includes('v177-representative-normal-play.mjs')).env.V177_S25_FIRE_INPUT_COMPARISON; },
-    j => { j.steps.find(s => s.run?.includes('v177-representative-normal-play.mjs')).env.V177_S25_FIRE_INPUT_COMPARISON = '1'; },
-    j => { j['continue-on-error'] = true; },
-    j => { j['timeout-minutes'] += 1; },
-    j => j.strategy.matrix.include.pop(),
-    j => { j.steps.find(s => s.run?.includes('v177-representative-normal-play.mjs')).run += ' || true'; },
-    j => { j.steps.find(s => s.env?.V100_NORMAL_PLAY_ENGINE && s.run?.includes('v177-representative-normal-play.mjs')).env.V100_NORMAL_PLAY_RESUME_DIR = 'stale-win'; },
-    j => { j.steps.at(-1).with.name = 'v177-normal-campaign-${{ matrix.engine }}'; },
-    j => { j.steps = j.steps.filter(s => s.run !== 'node scripts/v177-normal-diagnostic-scope.mjs'); },
-  ]) {
-    const job = structuredClone(jobs['v177-normal-campaign-diagnostic']);
-    mutate(job);assert.throws(() => assertDiagnostic(job));
-  }
-});
-
-test('the actual job condition runs only for a built candidate with failed, uncancelled focused QA', () => {
-  const expression = jobs['v177-normal-campaign-diagnostic'].if
-    .replaceAll('needs.verify.result', 'verify').replaceAll('needs.*.result', 'results');
-  const condition = vm.runInNewContext('(verify,results)=>' + expression, {
-    always: () => true, contains: (values, value) => values.includes(value),
-  });
-  const statuses = ['success', 'failure', 'skipped', 'cancelled'];
-  for (let n = 0; n < 4 ** NORMAL_DIAGNOSTIC_NEEDS.length; n++) {
-    let value = n;const results = NORMAL_DIAGNOSTIC_NEEDS.map(() => { const status = statuses[value % 4];value = Math.floor(value / 4);return status; });
-    assert.equal(condition(results[0], results), results[0] === 'success' && results.includes('failure') && !results.includes('cancelled'));
-  }
+test('normal observation starts independently and retains technical failure controls',()=>{
+ const job=jobs['v177-normal-campaign'];
+ assert.deepEqual(job.needs,['scope']);
+ assert.equal(jobs['v177-normal-campaign-diagnostic'],undefined,'a second full replay after an unrelated failure is unnecessary');
+ assert.equal(job['continue-on-error'],undefined);assert.equal(job['timeout-minutes'],240);
+ assert.deepEqual(job.strategy.matrix.include.map(row=>row.engine),['chromium','webkit']);
+ assert.equal(job.steps[0].with.ref,'${{ github.event.pull_request.head.sha }}');
+ const play=job.steps.find(step=>step.run?.endsWith('scripts/v177-representative-normal-play.mjs'));
+ assert.equal(play.env.V100_NORMAL_PLAY_STAGE_LIMIT,'3');assert.equal(play.env.V100_NORMAL_PLAY_RESUME_DIR,undefined);
+ assert.equal(play['continue-on-error'],undefined);assert.ok(!play.run.includes('|| true'));
+ assert.equal(job.steps.at(-1).if,'always()');assert.equal(job.steps.at(-1).with['if-no-files-found'],'error');
 });
 
 test('diagnostic receipts retain failed or passed original reports without becoming release acceptance', () => {

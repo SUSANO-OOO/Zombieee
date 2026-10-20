@@ -72,7 +72,6 @@ export function recordS25DeploymentObservation(row,snapshot) {
 }
 
 async function main() {
-  assert.notEqual(process.platform, 'win32', 'representative game/browser/audio observation is hosted-only');
   const engine = process.env.V100_NORMAL_PLAY_ENGINE;
   assert.ok(['chromium', 'webkit'].includes(engine));
   if (engine === 'webkit') assert.equal(process.platform, 'darwin');

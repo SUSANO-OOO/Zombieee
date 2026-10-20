@@ -50,13 +50,14 @@ test('boss approach still respects the visible button, real support cost, cooldo
 for(const slot of ['pendingResult','lastResult'])test('a genuine stage3 defeat in '+slot+' is saved and still stops the normal route before advancing',async()=>{
   const stage=V100_STAGES.find(stage=>stage.number===3),record={number:3,id:stage.id,openingSave:{revision:218}};
   const result={battleRunId:`v100:${stage.id}:218`,won:false,vehicleHp:0};
-  const events=[];let saveReads=0;
+  const events=[],report={status:'running'};let saveReads=0;
   const accept=vm.runInNewContext('('+functions.get('acceptResult').getText(tree)+')',{
-    Date,assert,path,out:'/evidence',ready:async()=>{},saveAt:async()=>{saveReads++;return{[slot]:result};},
+    Date,assert,path,report,out:'/evidence',ready:async()=>{},saveAt:async()=>{saveReads++;return{[slot]:result};},
     page:{getByLabel:()=>({innerText:async()=>'ステージ失敗'}),screenshot:async()=>events.push('failure-screenshot')},
     persist:async()=>events.push('persist-defeat'),uiClick:async()=>{throw Error('A defeat must never advance');},button:()=>null,
   });
-  await assert.rejects(()=>accept(record),/Normal-play defeat at Stage 3/u);
+  assert.equal(await accept(record),false);
+  assert.equal(report.status,'observed-defeat');
   assert.equal(record.status,'lost');assert.equal(record.result.won,false);
   assert.equal(saveReads,1,'Read pending and committed result from the same save snapshot');
   assert.deepEqual(events,['failure-screenshot','persist-defeat']);

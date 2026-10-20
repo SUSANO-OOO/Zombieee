@@ -16,6 +16,49 @@ function assertOriginalLegs(result,settle){
  }
 }
 
+test('retargeting an airborne turn preserves the height curve and ankle angle',()=>{
+ const scale=.18;let root=330,y=285,time=0,state,input;
+ let runtime=createCombatAnimationRuntime({x:root,y,direction:'right'});
+ for(let frame=0;frame<=21;frame++){
+  root-=29/60;y+=60/60;time+=1/60;
+  runtime=advanceCombatAnimationRuntime(runtime,{x:root,y,kind:'ranger',direction:'right',locomotionCycleDistance:scale*cycle},1/60);
+  if(frame%3)continue;
+  input={time,root,scale,phase:runtime.locomotionPhase,settle:runtime.locomotionSettle,moving:true,facing:'right'};
+  state=v177RangerFootPlacement(rig,state,input).state;
+ }
+ assert.ok(state.feet.some(foot=>foot.flight?.kind==='move'&&foot.height>0));
+ const next={...input,time:time+1e-7,root:root-29e-7,phase:input.phase-29e-7/(scale*cycle)};
+ const straight=v177RangerFootPlacement(rig,state,next),turned=v177RangerFootPlacement(rig,state,{...next,facing:'left'});
+ for(let i=0;i<2;i++)for(const key of ['height','angle'])
+  assert.ok(Math.abs(straight.state.feet[i][key]-turned.state.feet[i][key])<1e-5,'a facing request cannot replace an airborne curve');
+ assertOriginalLegs(turned,next.settle);
+});
+
+test('turns during an airborne retreat keep original legs reachable at the actual paint',()=>{
+ // Seed 177 first fails on the old implementation at paint .416666s: an
+ // old-facing flight lands after reflection. Later turns also exercise a
+ // travelling root while reflection is deferred and skipped private samples.
+ let seed=177;
+ const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
+ for(let run=0;run<40;run++){
+  let root=330,y=285,time=0,facing='right',dx=0,dy=0,state;
+  const scale=.18;
+  let runtime=createCombatAnimationRuntime({x:root,y,direction:facing});
+  for(let frame=0;frame<1500;frame++){
+   if(frame%23===0){dx=[-29,0,29][Math.floor(random()*3)];dy=[-60,0,60][Math.floor(random()*3)];facing=random()<.5?'right':'left';}
+   root+=dx/60;y=Math.max(220,Math.min(330,y+dy/60));time+=1/60;
+   runtime=advanceCombatAnimationRuntime(runtime,{x:root,y,kind:'ranger',direction:facing,locomotionCycleDistance:scale*cycle},1/60);
+   if(frame%3)continue;
+   const result=v177RangerFootPlacement(rig,state,{time,root,scale,phase:runtime.locomotionPhase,
+    settle:runtime.locomotionSettle,moving:runtime.moving,facing:runtime.direction});
+   assertOriginalLegs(result,runtime.locomotionSettle);
+   if(state)for(let i=0;i<2;i++)if(state.feet[i].mode==='plant'&&result.state.feet[i].mode==='plant')
+    assert.equal(result.state.feet[i].x,state.feet[i].x,'a support cannot slide to hide a turning error');
+   state=result.state;
+  }
+ }
+});
+
 test('actual lane travel with no horizontal travel keeps both original legs reachable through stop and pursuit',()=>{
  for(const scale of [.18,.2])for(const laneSpeed of [-60,60]){
   let root=203.28333333333316,y=285,state;

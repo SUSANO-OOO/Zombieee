@@ -1,0 +1,44 @@
+import assert from 'node:assert/strict';
+import {execFileSync} from 'node:child_process';
+import {appendFileSync} from 'node:fs';
+import path from 'node:path';
+import {pathToFileURL} from 'node:url';
+
+const governance=new Set(['AGENTS.md','docs/PROJECT_STATE.md','docs/CODEX_SOL_ROLE.md','docs/CODEX_LUNA_ROLE.md',
+  'docs/CODEX_TWO_THREAD_WORKFLOW.md','docs/PRODUCER_DECISIONS_1.0.3.md',
+  'docs/design/v1.0.0/DESIGN_LOCK.md','docs/design/v1.0.0/LUNA_HANDOFF.md']);
+const ranger=new Set(['app/v177RangerFootPlacement.js','app/v177RangerLowerMotion.js','assets/source/v177/ranger/lower-r3/provenance.json']);
+const normal=new Set(['scripts/v100-normal-campaign-playthrough.mjs','scripts/v100-normal-play-contract.mjs',
+  'scripts/v177-representative-normal-play.mjs','scripts/v177-representative-battles.mjs']);
+const orchestration=new Set(['.github/workflows/ci.yml','scripts/ci-change-scope.mjs',
+  '.github/workflows/native-aac-probe.yml','.github/workflows/normal-campaign-observation.yml',
+  '.github/workflows/native-allunit-capture.yml','.github/workflows/v1-quality-acceptance.yml']);
+
+export function ciChangeScope(paths,{draft}={}){
+  assert.equal(typeof draft,'boolean');
+  assert.ok(Array.isArray(paths)&&paths.length>0&&paths.every(p=>typeof p==='string'&&p&&!p.includes('\\')));
+  let full=!draft,rangerChanged=false,normalChanged=false;
+  for(const file of paths){
+    if(ranger.has(file))rangerChanged=true;
+    else if(normal.has(file))normalChanged=true;
+    else if(governance.has(file)||orchestration.has(file)||/^tests\/[^/]+\.test\.mjs$/u.test(file))continue;
+    else full=true; // Unclassified changes retain the complete regression.
+  }
+  return {full,ranger:full||rangerChanged,normal:full||normalChanged,
+    scope:full?'full-regression':'targeted-draft',wholeGameAccepted:false,
+    finalIntegrationRequiresFullRegression:true};
+}
+
+if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href){
+  const {CI_SCOPE_BASE:base,CI_SCOPE_HEAD:head,CI_SCOPE_DRAFT:draft}=process.env;
+  for(const sha of [base,head])assert.match(sha??'',/^[0-9a-f]{40}$/u);
+  assert.ok(['true','false'].includes(draft));
+  const comparisonBase=execFileSync('git',['merge-base',base,head],{encoding:'utf8',windowsHide:true}).trim();
+  assert.match(comparisonBase,/^[0-9a-f]{40}$/u);
+  const paths=execFileSync('git',['diff','--no-renames','--name-only',`${comparisonBase}..${head}`],{encoding:'utf8',windowsHide:true}).trim().split(/\r?\n/u).filter(Boolean);
+  const scope=ciChangeScope(paths,{draft:draft==='true'});
+  if(process.env.GITHUB_OUTPUT)appendFileSync(process.env.GITHUB_OUTPUT,['full','ranger','normal'].map(k=>`${k}=${scope[k]}\n`).join(''));
+  if(process.env.GITHUB_STEP_SUMMARY)appendFileSync(process.env.GITHUB_STEP_SUMMARY,
+    `Validation: ${scope.scope}. Full regression runs when the PR becomes ready. Skipped lanes are not acceptance or replacements for earlier failures.\n`);
+  console.log(JSON.stringify({...scope,base,comparisonBase,head,changedPaths:paths}));
+}
