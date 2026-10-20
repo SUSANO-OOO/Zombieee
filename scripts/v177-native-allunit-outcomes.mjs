@@ -12,6 +12,7 @@ import {assertJointCorpsePaint} from './v177-reaction-render-contract.mjs';
 import {V177_CORPSE_JOINT_DATA} from '../app/v177CorpseJointData.js';
 import {V177_JOINT_ATLASES} from '../app/v177JointPresentation.js';
 import {renderedSourcePixelScale} from './v102-render-source-scale.mjs';
+import {assertNativeCaptureRealm} from './v177-native-capture-realm.mjs';
 
 export function planOutcomeShard(shardId){
   return planShard(shardId).filter(row=>row.phase==='engage').map(reference=>({
@@ -72,6 +73,11 @@ export function assertNativeOutcome(row,bytes){
   assert.equal(initialPaint.jointAtlasPath,V177_JOINT_ATLASES[row.form].path);
   assert.equal(row.release.beforeTime,row.release.afterTime);assert.equal(row.release.beforePaused,true);assert.equal(row.release.afterPaused,false);
   assert.ok(row.captureStart.at<=row.release.at&&row.release.at<=row.samples[0].at);
+  // Independent WebKit timeOrigin reads can quantize differently within the
+  // same Performance object. Retain every raw value; the existing native
+  // reference closure and ordered members own realm identity, without a
+  // numeric tolerance, rewritten origin or substituted clock.
+  const captureRealm=assertNativeCaptureRealm(row);
   let prior=row.realmOwner;
   const realm=(actual,member)=>{assertNativeRealmMember(row.realmOwner,actual,member,prior);prior=actual;};
   realm(row.sourceRaf.realm.started,'raf-start');realm(clip.realm.created,'recorder-create');realm(row.recordingStart.realm,'recorder-start');
@@ -79,10 +85,10 @@ export function assertNativeOutcome(row,bytes){
   let previous=row.captureStart;
   for(const s of [row.captureStart,...row.samples,row.captureEnd]){
     assert.equal(s.battleGeneration,proof.battleGeneration,'Original battle owner changed during outcome capture');
-    assert.equal(s.timeOrigin,row.recordingStart.timeOrigin);assert.equal(s.visible,true);assert.equal(s.running,true);assert.equal(s.route,proof.route);
+    assert.ok(Number.isFinite(s.timeOrigin),'Independent raw native origin must remain recorded');assert.equal(s.visible,true);assert.equal(s.running,true);assert.equal(s.route,proof.route);
   }
   for(const s of row.samples){
-    realm(s.realm,'sample');assert.equal(s.timeOrigin,row.captureStart.timeOrigin);assert.equal(s.visible,true);
+    realm(s.realm,'sample');assert.equal(s.visible,true);
     assert.equal(s.running,true);assert.equal(s.paused,false);assert.equal(s.route,proof.route);
     assert.ok(s.at>previous.at&&s.simulationTime>=previous.simulationTime);previous=s;
     if(s.body.fighter){
@@ -122,7 +128,7 @@ export function assertNativeOutcome(row,bytes){
     const settled=dead.slice(-3);
     for(const r of settled){assert.equal(r.fallProgress,1);if(jointOwner)assertJointCorpsePaint(row.form,r,last.body.corpse,wound,true);}
   }
-  return {caseId:row.caseId,continuousUntilOutcome:true,originalActorStats:true,controlledIncomingDamage:true,
+  return {caseId:row.caseId,continuousUntilOutcome:true,originalActorStats:true,controlledIncomingDamage:true,captureRealm,
     naturalIncomingCombatAccepted:false,originalSpeedAccepted:false,naturalnessAccepted:false,all21Accepted:false,
     actualStates:[...new Set(fresh.map(r=>r.requestedState))],freshDraws:fresh.length,outcome:outcome.outcome};
 }

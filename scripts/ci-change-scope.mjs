@@ -24,8 +24,13 @@ const orchestration=new Set(['.github/workflows/ci.yml','scripts/ci-change-scope
   '.github/workflows/native-capture-comparison.yml','.github/workflows/native-game-capture.yml',
   'scripts/v177-native-opus-probe.mjs','scripts/v177-native-audio-capabilities.mjs',
   'scripts/v177-native-game-capture-browser.mjs']);
+// Reviewed raw-data validation repair only; capture code and product inputs
+// are unchanged. A different blob restores full regression automatically.
+const reviewedValidationBlobs=Object.freeze({
+  'scripts/v177-native-allunit-outcomes.mjs':'15b01dfa46d964c86e87268838c9c9b0aba96645',
+});
 
-export function ciChangeScope(paths,{draft}={}){
+export function ciChangeScope(paths,{draft,sourceBlobs={}}={}){
   assert.equal(typeof draft,'boolean');
   assert.ok(Array.isArray(paths)&&paths.length>0&&paths.every(p=>typeof p==='string'&&p&&!p.includes('\\')));
   let full=!draft,rangerChanged=false,normalChanged=false,allunitChanged=false,r9Changed=false;
@@ -35,6 +40,7 @@ export function ciChangeScope(paths,{draft}={}){
     else if(allunit.has(file))allunitChanged=true;
     else if(r9.has(file))r9Changed=true;
     else if(governance.has(file)||orchestration.has(file)||/^tests\/[^/]+\.test\.mjs$/u.test(file))continue;
+    else if(reviewedValidationBlobs[file]&&sourceBlobs[file]===reviewedValidationBlobs[file])continue;
     else full=true; // Unclassified changes retain the complete regression.
   }
   return {full,ranger:full||rangerChanged,normal:full||normalChanged,allunit:full||allunitChanged,r9:full||r9Changed,
@@ -49,7 +55,11 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
   const comparisonBase=execFileSync('git',['merge-base',base,head],{encoding:'utf8',windowsHide:true}).trim();
   assert.match(comparisonBase,/^[0-9a-f]{40}$/u);
   const paths=execFileSync('git',['diff','--no-renames','--name-only',`${comparisonBase}..${head}`],{encoding:'utf8',windowsHide:true}).trim().split(/\r?\n/u).filter(Boolean);
-  const scope=ciChangeScope(paths,{draft:draft==='true'});
+  const sourceBlobs=Object.fromEntries(paths.filter(file=>reviewedValidationBlobs[file]).map(file=>{
+    try{return[file,execFileSync('git',['rev-parse',`${head}:${file}`],{encoding:'utf8',windowsHide:true}).trim()];}
+    catch{return[file,null];}
+  }));
+  const scope=ciChangeScope(paths,{draft:draft==='true',sourceBlobs});
   if(process.env.GITHUB_OUTPUT)appendFileSync(process.env.GITHUB_OUTPUT,['full','ranger','normal','allunit','r9'].map(k=>`${k}=${scope[k]}\n`).join(''));
   if(process.env.GITHUB_STEP_SUMMARY)appendFileSync(process.env.GITHUB_STEP_SUMMARY,
     `Validation: ${scope.scope}. Full regression runs when the PR becomes ready. Skipped lanes are not acceptance or replacements for earlier failures.\n`);

@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
-import {planOutcomeShard,nativeOutcomeComplete,assertNativeOutcome} from '../scripts/v177-native-allunit-outcomes.mjs';
+import {planOutcomeShard,nativeOutcomeComplete,assertNativeOutcome,readNativeOutcomeSample} from '../scripts/v177-native-allunit-outcomes.mjs';
+import {createNativeAllUnitRealmOwner,readNativeAllUnitRealmOwner} from '../scripts/v177-native-allunit-contract.mjs';
 import {v177ControlledOutcomeHit} from '../app/v177ContinuousProof.js';
 import {SHARDS} from '../scripts/v177-native-allunit-manifest.mjs';
 import {beginV177NativeCanvasClip} from '../scripts/v177-native-canvas-clips.mjs';
@@ -56,7 +57,7 @@ function fixture(){
   row.nativeClip={status:'recorded',engine:'webkit',originalSpeedAccepted:false,encodedPtsVerified:false,requestedMimeType:'video/webm;codecs=vp8',
     bytes:bytes.length,sha256:createHash('sha256').update(bytes).digest('hex'),metadata:row.recordingMetadata,timeOrigin:1000000,startedAt:100,stopRequestedAt:500,
     realm:{created,started,finished:realm('recorder-finish')}};
-  row.sourceRaf={realm:{started:rafStart,stopped:realm('raf-stop'),failure:null},overflow:false};
+  row.sourceRaf={timeOrigin:1000000,realm:{started:rafStart,stopped:realm('raf-stop'),failure:null},overflow:false};
   row.captureEnd={realm:realm('sample'),battleGeneration:7,at:510,timeOrigin:1000000,visible:true,running:true,paused:false,route:'/v100'};return {row,bytes};
 }
 
@@ -64,6 +65,30 @@ test('continuous outcome validates original bytes/realm and actual protected ret
   const {row,bytes}=fixture(),result=assertNativeOutcome(row,bytes);
   assert.equal(nativeOutcomeComplete(row),true);assert.equal(result.continuousUntilOutcome,true);
   for(const key of ['naturalIncomingCombatAccepted','originalSpeedAccepted','naturalnessAccepted','all21Accepted'])assert.equal(result[key],false);
+});
+
+test('outcome keeps independent raw clock reads and rejects replaced real browser references',()=>{
+  const {row,bytes}=fixture();row.sourceRaf.timeOrigin+=1;
+  row.captureStart.timeOrigin+=2;row.samples.forEach((s,i)=>{s.timeOrigin+=3+i;});row.captureEnd.timeOrigin+=8;
+  const original=structuredClone(row),result=assertNativeOutcome(row,bytes);
+  assert.equal(result.captureRealm.sameRealmVerified,true);assert.deepEqual(row,original);
+  for(const change of [r=>{r.samples[1].timeOrigin=NaN;},r=>{r.recordingStart.timeOrigin++;},r=>{r.samples[1].realm.ownerId='eeeeeeee-1234-4000-8000-123456789abc';},
+    r=>{r.samples[1].realm.sequence=r.samples[0].realm.sequence;},r=>{r.samples[1].battleGeneration++;}]){
+    const invalid=structuredClone(row);change(invalid);assert.throws(()=>assertNativeOutcome(invalid,bytes));
+  }
+  let rawOrigin=1000000,at=100;
+  const window={__ASHFALL_BATTLE_QA__:{getSnapshot:()=>({time:0,running:true,paused:true}),
+    getEnemyFacingRuntimeAudit:()=>({fighter:{id:1},renderHistory:[],corpseRenderHistory:[]}),
+    getPhaseGCombatSnapshot:()=>({battleGeneration:7,combatGore:{impacts:[],wounds:[],pools:[]},manualAbilityReceipts:[]})}};
+  const document={defaultView:window,visibilityState:'visible',querySelector:()=>canvas},canvas={ownerDocument:document,isConnected:true};
+  const performance={get timeOrigin(){return rawOrigin++;},now:()=>at++};
+  const context=vm.createContext({window,document,performance,location:{pathname:'/v100'},crypto:{randomUUID:()=> 'aabbccdd-1234-4000-8000-123456789abc'}});
+  const owner=vm.runInContext('('+createNativeAllUnitRealmOwner.toString()+')',context)();
+  const read=vm.runInContext('('+readNativeOutcomeSample.toString()+')',context);
+  vm.runInContext('('+readNativeAllUnitRealmOwner.toString()+')',context)(owner);
+  const first=read(owner,{fighterId:1}),second=read(owner,{fighterId:1});
+  assert.notEqual(first.timeOrigin,second.timeOrigin);assert.equal(first.realm.rawOriginAtCreation,second.realm.rawOriginAtCreation);
+  context.performance={...performance};assert.throws(()=>read(owner,{fighterId:1}),/reference mismatch/u);
 });
 
 test('intermediate pause, forged owner, missing phase, static retreat or altered raw bytes fail closed',()=>{

@@ -42,6 +42,17 @@ test('draft changes select affected observation while unknown/shared/runtime inp
  for(const paths of [[],[''],['app\\a.js']])assert.throws(()=>ciChangeScope(paths,{draft:true}));
 });
 
+test('the reviewed outcome validator can recheck retained raw footage without reshooting successful cases',()=>{
+ const file='scripts/v177-native-allunit-outcomes.mjs';
+ const blob=execFileSync('git',['hash-object',file],{encoding:'utf8',windowsHide:true}).trim();
+ const options={draft:true,sourceBlobs:{[file]:blob}};
+ const scoped=ciChangeScope([file,'tests/v177-native-allunit-outcomes.test.mjs'],options);
+ assert.equal(scoped.full,false);assert.equal(scoped.allunit,false);assert.equal(scoped.r9,false);
+ for(const sourceBlobs of [{},{[file]:'f'.repeat(40)}])assert.equal(ciChangeScope([file],{draft:true,sourceBlobs}).full,true);
+ assert.equal(ciChangeScope([file,'app/v177JointPresentation.js'],options).full,true);
+ assert.equal(ciChangeScope([file],{...options,draft:false}).full,true);
+});
+
 test('the CLI handles a PR whose base branch advanced without requiring another merge',()=>{
  const directory=mkdtempSync(join(tmpdir(),'zombieee-ci-scope-'));
  const git=(...args)=>execFileSync('git',args,{cwd:directory,encoding:'utf8',windowsHide:true}).trim();
