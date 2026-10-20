@@ -227,3 +227,31 @@ test('turning from each gait phase preserves original legs and supports through 
   assert.equal(result.state.facing,-facing);
  }
 });
+
+
+test('the real deployment boundary correction carries the pose without stretching a planted leg',()=>{
+ // Stage 4 Chromium: ramp exit at x=148 was clamped to x=197 in one tick.
+ const {previous,input}={"previous":{"time":13.1666666666669,"root":148,"facing":1,"scale":0.16346153846153846,"phase":2.919267523851999,"offset":0,"moving":true,"travelSign":1,"feet":[{"x":147.87711843932527,"height":12.421422206676564,"angle":-0.11041264183712501,"mode":"swing","flight":{"id":"13.000000000000226:0","at":13.000000000000226,"endAt":13.220000000000226,"fromHeight":0,"fromAngle":0,"peak":18,"xAt":13.000000000000226,"fromX":136.10115583494235,"vx":0,"goalLocal":251.74401770586337,"goalFacing":1,"kind":"move","nominalEnd":3,"travelSign":1},"phaseHold":null,"vx":131.66469291860483},{"x":151.4843752024354,"height":8.248077391093743,"angle":-0.07331624347638882,"mode":"swing","flight":{"id":"13.133333333333566:1","at":13.133333333333566,"endAt":13.353333333333566,"fromHeight":0,"fromAngle":0,"peak":18,"xAt":13.133333333333566,"fromX":151.29238412219635,"vx":0,"goalLocal":279.11207838026235,"goalFacing":1,"kind":"move","nominalEnd":3,"travelSign":1},"phaseHold":null,"vx":12.326843685292834}],"requestedFacing":1,"lastLandedLeg":1},"input":{"time":13.183333333333568,"root":197,"scale":0.16346153846153846,"phase":5.302787805919049,"moving":true,"facing":1,"settle":0}};
+ const saved=JSON.stringify(previous),result=v177RangerFootPlacement(rig,previous,input);
+ assertOriginalLegs(result,input.settle);
+ assert.equal(JSON.stringify(previous),saved);
+ const dx=input.root-previous.root;
+ for(let i=0;i<2;i++){
+  assert.ok(Math.abs(result.state.feet[i].x-previous.feet[i].x-dx)<1e-10);
+  assert.equal(result.state.feet[i].height,previous.feet[i].height);
+  assert.equal(result.state.feet[i].angle,previous.feet[i].angle);
+ }
+ assert.deepEqual(v177RangerFootPlacement(rig,result.state,input),result);
+ const turnInput={...input,facing:-1},turned=v177RangerFootPlacement(rig,previous,turnInput);
+ assertOriginalLegs(turned,input.settle);
+ assert.equal(turned.state.requestedFacing,-1);
+ assert.deepEqual(v177RangerFootPlacement(rig,turned.state,turnInput),turned);
+ let state=result.state;
+ for(let frame=1;frame<=90;frame++){
+  const next={...input,time:input.time+frame/60,root:input.root+29*frame/60,phase:input.phase+29*frame/60/(input.scale*cycle)};
+  const result=v177RangerFootPlacement(rig,state,next);assertOriginalLegs(result,next.settle);
+  for(let i=0;i<2;i++)if(state.feet[i].mode==='plant'&&result.state.feet[i].mode==='plant')
+   assert.equal(result.state.feet[i].x,state.feet[i].x,'normal pursuit retains world supports');
+  state=result.state;
+ }
+});

@@ -235,7 +235,13 @@ export function v177RangerFootPlacement(rig, previous, input) {
   if(previous&&!input.frozen&&time>=previous.time
     &&(Math.abs(phase-previous.phase)>1e-9||samePaint&&previous.moving))input={...input,moving:true};
   let state;
-  if(previous&&input.moving&&!input.frozen&&time>=previous.time){
+  // A spawn/bounds correction can cover more than one authored stride before
+  // a single step could land. Carry the rigid pose with that displacement;
+  // interpolating it as walking leaves the old ankles behind the corrected body.
+  const displaced=previous&&time>=previous.time&&time-previous.time<STEP_SECONDS
+    &&Math.abs(root-previous.root)>scale*rig.spanPx/rig.stanceFraction;
+  if(displaced)state={...held(previous,input),requestedFacing:facing,turnTargetFacing:undefined};
+  else if(previous&&input.moving&&!input.frozen&&time>=previous.time){
     // Sample crossed plant/swing boundaries even when the actual draw skips
     // frames. These are pose evaluations, never fabricated gameplay/paint ticks.
     const count=Math.ceil(Math.max((time-previous.time)/.05,Math.abs(phase-previous.phase)/.04));
