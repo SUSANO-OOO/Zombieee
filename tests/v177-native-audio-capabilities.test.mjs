@@ -172,19 +172,17 @@ test("Unexpected driver, page, request, disconnect and cleanup failures stay fai
 
 test("Dedicated workflow binds the exact PR head, read-only permissions, runtime install and no-cancel contract", () => {
   const workflow = readFileSync(new URL("../.github/workflows/native-audio-capabilities.yml", import.meta.url), "utf8");
-  assert.match(workflow, /pull_request:\s+paths:/u);
-  assert.deepEqual([...workflow.matchAll(/^      - '([^']+)'$/gmu)].map(match => match[1]), [
-    ".github/workflows/native-audio-capabilities.yml", "scripts/v177-native-audio-capabilities.mjs", "tests/v177-native-audio-capabilities.test.mjs",
-  ]);
+  assert.match(workflow, /workflow_dispatch:/u);
+  assert.doesNotMatch(workflow, /pull_request:/u);
   assert.match(workflow, /permissions:\s+contents: read/u); assert.match(workflow, /cancel-in-progress: false/u);
   assert.match(workflow, /runs-on: macos-15-intel/u); assert.match(workflow, /timeout-minutes: 15/u);
-  assert.match(workflow, /ref: \$\{\{ github\.event\.pull_request\.head\.sha \}\}/u);
+  assert.match(workflow, /ref: \$\{\{ inputs\.expected_head \}\}/u);
   assert.match(workflow, /persist-credentials: false/u);
-  assert.match(workflow, /V177_EXPECTED_HEAD_SHA: \$\{\{ github\.event\.pull_request\.head\.sha \}\}/u);
+  assert.match(workflow, /V177_EXPECTED_HEAD_SHA: \$\{\{ inputs\.expected_head \}\}/u);
   assert.match(workflow, /npm ci --prefix scripts\/pwa-native-runtime/u);
   assert.match(workflow, /pwa-native-runtime\/node_modules\/playwright\/cli\.js install webkit/u);
   assert.match(workflow, /if-no-files-found: error/u);
-  assert.doesNotMatch(workflow, /workflow_dispatch|pull_request_target|continue-on-error|contents: write|npm run build|run-browser-qa-with-server/u);
+  assert.doesNotMatch(workflow, /pull_request:|pull_request_target|continue-on-error|contents: write|npm run build|run-browser-qa-with-server/u);
 });
 
 test("Source references distinguish PCM encoder tokens from the unproven audio-only MP4 hypothesis", () => {

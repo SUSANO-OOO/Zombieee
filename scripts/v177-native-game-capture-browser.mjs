@@ -58,14 +58,15 @@ export function assertNativeGameCaptureHost(platform, env) {
 export async function nativeGameCaptureBinding({ platform = process.platform, env = process.env,
   read = readFile, head = () => git(['rev-parse', 'HEAD']) } = {}) {
   assertNativeGameCaptureHost(platform, env);
-  assert.equal(env.GITHUB_EVENT_NAME, 'pull_request', 'Native game capture requires a PR event');
+  assert.ok(['pull_request','workflow_dispatch'].includes(env.GITHUB_EVENT_NAME), 'Native game capture requires a candidate diagnostic event');
   assert.match(env.V177_EXPECTED_HEAD_SHA ?? '', /^[a-f0-9]{40}$/u, 'An exact expected PR head is required');
   assert.ok(env.GITHUB_EVENT_PATH, 'The original PR event is required');
   const event = JSON.parse(await read(env.GITHUB_EVENT_PATH, 'utf8'));
-  assert.equal(event.pull_request?.head?.sha, env.V177_EXPECTED_HEAD_SHA, 'Expected head must match the PR event');
+  const eventHead=env.GITHUB_EVENT_NAME==='pull_request'?event.pull_request?.head?.sha:event.inputs?.expected_head;
+  assert.equal(eventHead, env.V177_EXPECTED_HEAD_SHA, 'Expected head must match the original event');
   const actualHead = await head();
   assert.equal(actualHead, env.V177_EXPECTED_HEAD_SHA, 'Checkout must be the exact PR head');
-  return { head: actualHead, pullRequest: event.number, platform, runnerOS: env.RUNNER_OS };
+  return { head: actualHead, pullRequest: env.GITHUB_EVENT_NAME==='pull_request'?event.number:null, platform, runnerOS: env.RUNNER_OS };
 }
 
 // Deferring the direct CLI entry until module evaluation completes lets the

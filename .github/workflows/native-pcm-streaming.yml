@@ -1,19 +1,18 @@
 name: Native PCM HTTP Streaming Diagnostic
 
 on:
-  pull_request:
-    paths:
-      - '.github/workflows/native-pcm-streaming.yml'
-      - 'scripts/v177-native-pcm-origin.mjs'
-      - 'scripts/v177-native-pcm-probe.mjs'
-      - 'scripts/v177-native-pcm-browser.mjs'
-      - 'tests/v177-native-pcm.test.mjs'
+  workflow_dispatch:
+    inputs:
+      expected_head:
+        description: Exact 40-character candidate SHA for this diagnostic
+        required: true
+        type: string
 
 permissions:
   contents: read
 
 concurrency:
-  group: native-pcm-streaming-${{ github.event.pull_request.number }}
+  group: native-pcm-streaming-${{ inputs.expected_head }}
   cancel-in-progress: false
 
 jobs:
@@ -24,13 +23,17 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ inputs.expected_head }}
           fetch-depth: 2
           persist-credentials: false
       - uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: npm
+      - name: Verify immutable candidate before running the diagnostic
+        env:
+          EXPECTED_HEAD: ${{ inputs.expected_head }}
+        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_HEAD??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_HEAD);'
       - run: npm ci
       - name: Verify PCM and HTTP contracts without playing audio
         run: node --test tests/v177-native-pcm.test.mjs
@@ -40,7 +43,7 @@ jobs:
           node scripts/pwa-native-runtime/node_modules/playwright/cli.js install webkit
       - name: Compare finite and live native WAV playback on the hosted runner
         env:
-          V177_EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          V177_EXPECTED_HEAD_SHA: ${{ inputs.expected_head }}
           V177_NATIVE_PCM_OUT: outputs/v177-native-pcm
         run: node scripts/v177-native-pcm-browser.mjs
       - uses: actions/upload-artifact@v4

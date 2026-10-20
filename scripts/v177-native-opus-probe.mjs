@@ -34,7 +34,7 @@ export const NATIVE_OPUS_SOURCES = Object.freeze([
 
 export function assertNativeOpusHost(platform, env) {
   if (platform !== "darwin" || env?.GITHUB_ACTIONS !== "true" || env?.RUNNER_OS !== "macOS"
-    || env?.GITHUB_EVENT_NAME !== "pull_request" || !/^[a-f0-9]{40}$/u.test(env?.V177_EXPECTED_HEAD_SHA ?? "")) {
+    || !["pull_request","workflow_dispatch"].includes(env?.GITHUB_EVENT_NAME) || !/^[a-f0-9]{40}$/u.test(env?.V177_EXPECTED_HEAD_SHA ?? "")) {
     throw new Error("Native Opus diagnostic requires hosted macOS/GitHub Actions and an exact PR head; local browser, game and audio launch is prohibited");
   }
 }

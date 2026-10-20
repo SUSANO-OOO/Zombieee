@@ -410,27 +410,17 @@ test('actual runBrowserQa attempts both closes and preserves the primary failure
   }
 });
 
-test('the dedicated workflow is path-scoped, read-only, exact-head, built, bounded and never cancels', () => {
+test('the dedicated workflow is manual, read-only, exact-head, built, bounded and never cancels', () => {
   const text = fs.readFileSync('.github/workflows/native-game-capture.yml', 'utf8'), workflow = loadYaml(text);
-  assert.deepEqual(workflow.on.pull_request.paths, ['.github/workflows/native-game-capture.yml',
-    'scripts/v177-native-game-capture-browser.mjs', 'tests/v177-native-game-capture.test.mjs',
-    'scripts/v177-native-incoming-stun.mjs','tests/v177-native-incoming-stun.test.mjs',
-    'app/v177IncomingStunProof.js','scripts/v177-native-canvas-clips.mjs',
-    'scripts/v177-native-capture-realm.mjs','scripts/v177-native-allunit-contract.mjs',
-    'scripts/v177-native-allunit-manifest.mjs','tests/v177-native-capture-realm.test.mjs',
-    'tests/helpers/v177-native-capture-realm-fixture.mjs',
-    'scripts/v177-native-turned-getup.mjs','tests/v177-native-turned-getup.test.mjs','tests/v177-native-canvas-clips.test.mjs',
-    'app/v177TurnedGetupProof.js','app/v177TurnedGetupPresentation.js','app/v177TurnedGetupMotion.js',
-    'app/v177TurnedGetupHandoff.js','app/v177TurnedGetupDeath.js','app/v177CorpseJointPresentation.js',
-    'app/v177JointPresentation.js','app/v177RangerLowerMotion.js','app/v177RangerLowerPaint.js','tests/v177-ranger-continuous-lower.test.mjs',
-    'tests/v177-settle-continuity.test.mjs','app/corpseVisuals.js','app/AshfallGame.tsx']);
+  assert.deepEqual(Object.keys(workflow.on), ['workflow_dispatch']);
+  assert.equal(workflow.on.workflow_dispatch.inputs.expected_head.required, true);
   assert.deepEqual(workflow.permissions, { contents: 'read' }); assert.equal(workflow.concurrency['cancel-in-progress'], false);
   const job = workflow.jobs['native-game-capture']; assert.equal(job['runs-on'], 'macos-15-intel'); assert.equal(job['timeout-minutes'], 15);
-  assert.equal(job.steps[0].with.ref, '${{ github.event.pull_request.head.sha }}'); assert.equal(job.steps[0].with['persist-credentials'], false);
-  assert.ok(job.steps.some(s => s.run === 'npm run build' && s.env.GITHUB_PAGES_RELEASE_SHA === '${{ github.event.pull_request.head.sha }}'));
+  assert.equal(job.steps[0].with.ref, '${{ inputs.expected_head }}'); assert.equal(job.steps[0].with['persist-credentials'], false);
+  assert.ok(job.steps.some(s => s.run === 'npm run build' && s.env.GITHUB_PAGES_RELEASE_SHA === '${{ inputs.expected_head }}'));
   const entry = job.steps.find(s => s.run === 'node scripts/v177-native-game-capture-browser.mjs');
-  assert.equal(entry.env.V177_EXPECTED_HEAD_SHA, '${{ github.event.pull_request.head.sha }}');
-  assert.doesNotMatch(text, /workflow_dispatch|pull_request_target|continue-on-error|deploy-pages/u);
+  assert.equal(entry.env.V177_EXPECTED_HEAD_SHA, '${{ inputs.expected_head }}');
+  assert.doesNotMatch(text, /pull_request:|pull_request_target|continue-on-error|deploy-pages/u);
   for (const source of NATIVE_GAME_CAPTURE_SOURCES) {
     assert.ok(fs.existsSync(source), source); assert.ok(('repo__' + source.replaceAll('/', '__')).startsWith('repo__'));
   }

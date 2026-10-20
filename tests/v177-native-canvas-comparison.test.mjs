@@ -77,10 +77,10 @@ test('unsupported and failed native recordings remain explicit measured outcomes
 
 test('the diagnostic workflow uses read-only permissions, exact PR head, native Mac and preserved artifacts', () => {
   const workflow = fs.readFileSync(new URL('../.github/workflows/native-capture-comparison.yml', import.meta.url), 'utf8');
-  assert.match(workflow, /pull_request:/u); assert.doesNotMatch(workflow, /pull_request_target|workflow_dispatch|continue-on-error/u);
+  assert.match(workflow, /workflow_dispatch:/u); assert.doesNotMatch(workflow, /pull_request:|pull_request_target|continue-on-error/u);
   assert.match(workflow, /contents: read/u); assert.match(workflow, /cancel-in-progress: false/u);
   assert.match(workflow, /runs-on: macos-15-intel/u); assert.match(workflow, /timeout-minutes: 15/u);
-  assert.match(workflow, /ref: \$\{\{ github\.event\.pull_request\.head\.sha \}\}/u);
+  assert.match(workflow, /ref: \$\{\{ inputs\.expected_head \}\}/u);
   assert.match(workflow, /pwa-native-runtime\/node_modules\/playwright\/cli\.js install webkit/u);
   assert.match(workflow, /if: always\(\)/u); assert.match(workflow, /path: outputs\/v177-native-capture-comparison/u);
   assert.doesNotMatch(workflow, /npm run build|pages-release-request|deploy-pages/u);

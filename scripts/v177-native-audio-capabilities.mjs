@@ -214,7 +214,7 @@ export async function runHostedNativeAudioCapabilities() {
   const head = git(["rev-parse", "HEAD"]), expectedHead = process.env.V177_EXPECTED_HEAD_SHA;
   assert.match(expectedHead ?? "", /^[a-f0-9]{40}$/u, "An exact PR head is required");
   assert.equal(head, expectedHead, "Checked-out source is not the exact PR head");
-  assert.equal(process.env.GITHUB_EVENT_NAME, "pull_request", "Only the path-scoped PR workflow may run this diagnostic");
+  assert.ok(["pull_request","workflow_dispatch"].includes(process.env.GITHUB_EVENT_NAME), "Only an exact candidate diagnostic event may run");
   const out = process.env.V177_NATIVE_AUDIO_CAPABILITIES_OUT ?? "outputs/v177-native-audio-capabilities";
   const report = { schemaVersion: 1, ...acceptance(), diagnosticOnly: true, status: "starting", at: new Date().toISOString(),
     scope: "Static API answers in hosted native macOS WebKit with the existing AAC probe's iPhone UA/mobile/touch conditions; the backend remains macOS, not physical iOS. No AudioContext, encoder, recorder, media element, game, audio playback, muxing, latency or iPhone Control Center recording is exercised.",

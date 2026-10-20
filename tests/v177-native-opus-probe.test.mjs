@@ -26,11 +26,11 @@ async function globals(values, fn) {
   }
 }
 
-test("host guard rejects local, non-PR, missing, simulated or nonexact environments", () => {
+test("host guard rejects local, unsupported events, missing, simulated or nonexact environments", () => {
   assert.doesNotThrow(() => assertNativeOpusHost(host.platform, host.env));
   for (const platform of ["win32", "linux", undefined]) assert.throws(() => assertNativeOpusHost(platform, host.env));
   for (const change of [{ GITHUB_ACTIONS: undefined }, { GITHUB_ACTIONS: "false" }, { RUNNER_OS: "Windows" },
-    { GITHUB_EVENT_NAME: "workflow_dispatch" }, { V177_EXPECTED_HEAD_SHA: "HEAD" }, { V177_EXPECTED_HEAD_SHA: "a".repeat(39) }]) {
+    { GITHUB_EVENT_NAME: "push" }, { V177_EXPECTED_HEAD_SHA: "HEAD" }, { V177_EXPECTED_HEAD_SHA: "a".repeat(39) }]) {
     assert.throws(() => assertNativeOpusHost("darwin", { ...host.env, ...change }));
   }
 });
@@ -299,13 +299,13 @@ test("unexpected driver/request/cleanup exceptions fail closed, preserving compl
     muxerSource: "", sourceInputs: [], writeArtifact: writer([]) }), /hosted macOS/); assert.equal(mock.calls.launch, 0);
 });
 
-test("workflow retains read-only exact head, bounded runtime and independent path-scoped scheduling", async () => {
+test("workflow retains read-only exact head, bounded runtime and manual scheduling", async () => {
   const workflow = await readFile(new URL("../.github/workflows/native-opus-streaming.yml", import.meta.url), "utf8");
   assert.match(workflow, /contents: read/u); assert.match(workflow, /cancel-in-progress: false/u);
   assert.match(workflow, /timeout-minutes: 15/u); assert.match(workflow, /runs-on: macos-15-intel/u);
-  assert.match(workflow, /ref: \$\{\{ github\.event\.pull_request\.head\.sha \}\}/u); assert.match(workflow, /fetch-depth: 2/u);
-  assert.match(workflow, /persist-credentials: false/u); assert.doesNotMatch(workflow, /workflow_dispatch|pull_request_target|npm run build|server|qa-with-server/u);
-  assert.equal((workflow.match(/^      - '/gmu) ?? []).length, 6);
+  assert.match(workflow, /ref: \$\{\{ inputs\.expected_head \}\}/u); assert.match(workflow, /fetch-depth: 2/u);
+  assert.match(workflow, /persist-credentials: false/u); assert.doesNotMatch(workflow, /pull_request:|pull_request_target|npm run build|server|qa-with-server/u);
+  assert.match(workflow, /workflow_dispatch:/u);
   const source = await readFile(new URL("../scripts/v177-native-opus-browser.mjs", import.meta.url), "utf8");
   assert.ok(source.indexOf("assert.equal(head, expectedHead") < source.indexOf('await import("./pwa-browser-runtime.mjs")'));
   assert.match(source, /source\/repo__/u); assert.doesNotMatch(source, /from ["']\.\.\/app\//u);

@@ -12,7 +12,12 @@ const normal=new Set(['scripts/v100-normal-campaign-playthrough.mjs','scripts/v1
   'scripts/v177-representative-normal-play.mjs','scripts/v177-representative-battles.mjs']);
 const orchestration=new Set(['.github/workflows/ci.yml','scripts/ci-change-scope.mjs',
   '.github/workflows/native-aac-probe.yml','.github/workflows/normal-campaign-observation.yml',
-  '.github/workflows/native-allunit-capture.yml','.github/workflows/v1-quality-acceptance.yml']);
+  '.github/workflows/native-allunit-capture.yml','.github/workflows/v1-quality-acceptance.yml',
+  '.github/workflows/native-aac-graph-probe.yml','.github/workflows/native-audio-capabilities.yml',
+  '.github/workflows/native-opus-streaming.yml','.github/workflows/native-pcm-streaming.yml',
+  '.github/workflows/native-capture-comparison.yml','.github/workflows/native-game-capture.yml',
+  'scripts/v177-native-opus-probe.mjs','scripts/v177-native-audio-capabilities.mjs',
+  'scripts/v177-native-game-capture-browser.mjs']);
 
 export function ciChangeScope(paths,{draft}={}){
   assert.equal(typeof draft,'boolean');
