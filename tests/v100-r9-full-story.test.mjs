@@ -51,8 +51,8 @@ test('focused Draft verification selects R9 and the capture workflow without ena
  assert.equal(workflow.jobs.capture.strategy.matrix.shard,'${{ fromJSON(needs.build.outputs.shards) }}');
  const allCases=nativeCaseSelection({event:{pull_request:{draft:false}}});
  assert.equal(allCases.shards.length,12);assert.equal(allCases.caseIds.length,432);
- assert.equal(workflow.jobs.capture.if,"${{ !cancelled() && needs.build.result == 'success' }}",
-  'manual capture must survive the skipped PR-only scope ancestor and reject failed build');
+ assert.equal(workflow.jobs.capture.if,"${{ !cancelled() && needs.build.result == 'success' && needs.build.outputs.shards != '[]' }}",
+  'manual capture must survive the skipped PR-only scope ancestor, reject failed build and avoid an empty matrix');
  const ci=load(readFileSync('.github/workflows/ci.yml','utf8'));
  const full=ci.jobs['r9-story'].strategy.matrix.include.filter(r=>r.phase==='full-story');
  assert.equal(new Set(full.map(r=>r.engine+':'+r.viewport)).size,6);

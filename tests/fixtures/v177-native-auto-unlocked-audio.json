@@ -1,0 +1,104 @@
+{
+  "source": {
+    "head": "285eba219d57fdfbf345cc62488b3d53d6cf329e",
+    "runId": "39457925534",
+    "artifactId": 12281827420,
+    "artifactDigest": "e001e1a648a6a3ee97dcbcf2a9a49d477a9521d023bfb5c81ea0c61e66f951ec",
+    "reportSha256": "fe63ea262e57153968ea7c63ab538b96d4e9dac95f3dee098f5cad64deddcbc1",
+    "originalError": "TimeoutError: locator.click: Timeout 15000ms exceeded.\nCall log:\n  - waiting for getByRole('button', { name: '音声を有効にする', exact: true })\n"
+  },
+  "before": {
+    "schema": "v177-normal-audio-unlock-snapshot/v1",
+    "observedAtEpochMs": 1792514436357,
+    "observedAtPerformanceMs": 50690,
+    "visibilityState": "visible",
+    "audioStatus": {
+      "status": "ok",
+      "value": {
+        "state": "running",
+        "contextState": "running",
+        "needsGesture": false,
+        "reason": "context-statechange",
+        "errorPresent": false
+      }
+    },
+    "diagnostics": {
+      "status": "ok",
+      "value": {
+        "unlocked": true,
+        "contextState": "running",
+        "contextGeneration": 1,
+        "contextCreateCount": 1,
+        "lifecycleHidden": false,
+        "disposed": false,
+        "audioState": "running",
+        "needsGesture": false,
+        "activeVoices": 3,
+        "activeBgmVoices": 1,
+        "activeSceneVoices": 1,
+        "cacheFailed": 0,
+        "failedAssetCount": 0,
+        "failedCategories": [],
+        "failedCategoriesTruncated": false,
+        "output": {
+          "mode": "direct",
+          "paused": null,
+          "disposed": false
+        }
+      }
+    },
+    "controls": {
+      "status": "ok",
+      "total": 0,
+      "truncated": false,
+      "values": []
+    }
+  },
+  "after": {
+    "schema": "v177-normal-audio-unlock-snapshot/v1",
+    "observedAtEpochMs": 1792514451382,
+    "observedAtPerformanceMs": 65707,
+    "visibilityState": "visible",
+    "audioStatus": {
+      "status": "ok",
+      "value": {
+        "state": "running",
+        "contextState": "running",
+        "needsGesture": false,
+        "reason": "context-statechange",
+        "errorPresent": false
+      }
+    },
+    "diagnostics": {
+      "status": "ok",
+      "value": {
+        "unlocked": true,
+        "contextState": "running",
+        "contextGeneration": 1,
+        "contextCreateCount": 1,
+        "lifecycleHidden": false,
+        "disposed": false,
+        "audioState": "running",
+        "needsGesture": false,
+        "activeVoices": 1,
+        "activeBgmVoices": 1,
+        "activeSceneVoices": 1,
+        "cacheFailed": 0,
+        "failedAssetCount": 0,
+        "failedCategories": [],
+        "failedCategoriesTruncated": false,
+        "output": {
+          "mode": "direct",
+          "paused": null,
+          "disposed": false
+        }
+      }
+    },
+    "controls": {
+      "status": "ok",
+      "total": 0,
+      "truncated": false,
+      "values": []
+    }
+  }
+}

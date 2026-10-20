@@ -98,8 +98,25 @@ async function observe(page) {
   }
 }
 
-// New diagnostic conditions: a before-read can add up to 1s to an auto-hide UI
-// that disappears after 1.8s. This is not an unchanged causal replay of A3.
+function automaticallyUnlocked(observation) {
+  const value=observation?.status==='ok'?observation.value:null;
+  const status=value?.audioStatus,diagnostics=value?.diagnostics,controls=value?.controls;
+  const audio=status?.value,d=diagnostics?.value;
+  return value?.visibilityState==='visible'&&status?.status==='ok'&&diagnostics?.status==='ok'
+    &&controls?.status==='ok'&&controls.total===0&&controls.truncated===false
+    &&Array.isArray(controls.values)&&controls.values.length===0
+    &&audio?.state==='running'&&audio.contextState==='running'&&audio.needsGesture===false&&audio.errorPresent===false
+    &&d?.unlocked===true&&d.contextState==='running'&&d.audioState==='running'&&d.needsGesture===false
+    &&d.disposed===false&&d.lifecycleHidden===false&&d.cacheFailed===0&&d.failedAssetCount===0
+    &&d.failedCategoriesTruncated===false&&Array.isArray(d.failedCategories)&&d.failedCategories.length===0
+    &&Number.isInteger(d.contextGeneration)&&d.contextGeneration>0
+    &&Number.isInteger(d.contextCreateCount)&&d.contextCreateCount>0
+    &&d.activeBgmVoices>0&&d.activeSceneVoices>0&&d.output?.disposed===false;
+}
+
+// The real title gesture can finish unlocking between isVisible and this
+// read. Confirm the same running generation twice before omitting a redundant
+// click on its already-removed success control. No retry or audio mutation.
 export async function captureNormalAudioUnlockAttempt(audio, { page, attempts, stageNumber }) {
   if (!Array.isArray(attempts)) throw new TypeError('audio-unlock attempts must be an array');
   if (attempts.length >= NORMAL_AUDIO_UNLOCK_ATTEMPT_LIMIT) {
@@ -115,6 +132,15 @@ export async function captureNormalAudioUnlockAttempt(audio, { page, attempts, s
   };
   attempts.push(row);
   row.before = await observe(page);
+  if(automaticallyUnlocked(row.before)) {
+    row.click.status='not-needed-already-unlocked';
+    row.after=await observe(page);
+    const before=row.before.value.diagnostics.value,after=row.after?.value?.diagnostics?.value;
+    if(!automaticallyUnlocked(row.after)||after.contextGeneration!==before.contextGeneration
+      ||after.contextCreateCount!==before.contextCreateCount)
+      throw new Error('Automatic audio unlock changed before the normal input loop resumed');
+    return;
+  }
   let value, originalError, failed = false;
   try {
     value = await audio.click();

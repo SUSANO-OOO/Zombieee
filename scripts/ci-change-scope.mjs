@@ -9,7 +9,8 @@ const governance=new Set(['AGENTS.md','docs/PROJECT_STATE.md','docs/CODEX_SOL_RO
   'docs/design/v1.0.0/DESIGN_LOCK.md','docs/design/v1.0.0/LUNA_HANDOFF.md']);
 const ranger=new Set(['app/v177RangerFootPlacement.js','app/v177RangerLowerMotion.js','assets/source/v177/ranger/lower-r3/provenance.json','scripts/silent-browser-output.mjs']);
 const normal=new Set(['scripts/v100-normal-campaign-playthrough.mjs','scripts/v100-normal-play-contract.mjs',
-  'scripts/v177-representative-normal-play.mjs','scripts/v177-representative-battles.mjs']);
+  'scripts/v177-representative-normal-play.mjs','scripts/v177-representative-battles.mjs',
+  'scripts/v177-normal-audio-unlock-observation.mjs','tests/fixtures/v177-native-auto-unlocked-audio.json']);
 const allunit=new Set(['.github/workflows/native-allunit-capture.yml','scripts/v177-native-allunit-build.mjs',
   'scripts/v177-native-allunit-browser.mjs','scripts/v177-native-allunit-cases.mjs',
   'scripts/v177-native-allunit-manifest.mjs','scripts/v177-native-allunit-contract.mjs',

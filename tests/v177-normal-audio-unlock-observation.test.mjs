@@ -1,9 +1,45 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
+import {readFileSync} from 'node:fs';
 import { captureNormalAudioUnlockAttempt, readNormalAudioUnlockSnapshot, NORMAL_AUDIO_UNLOCK_ATTEMPT_LIMIT, NORMAL_AUDIO_UNLOCK_READ_MS } from '../scripts/v177-normal-audio-unlock-observation.mjs';
 
 const snapshot = () => ({ schema: 'v177-normal-audio-unlock-snapshot/v1', controls: { status: 'ok', total: 0 } });
+const autoUnlocked=JSON.parse(readFileSync('tests/fixtures/v177-native-auto-unlocked-audio.json','utf8'));
+
+test('the original native auto-hide race continues only after two complete running readings without another click',async()=>{
+  const attempts=[],values=[autoUnlocked.before,autoUnlocked.after];let reads=0,clicks=0;
+  await captureNormalAudioUnlockAttempt({click:async()=>{clicks++;throw Error('removed control');}},
+    {page:{evaluate:async()=>structuredClone(values[reads++])},attempts,stageNumber:1});
+  assert.equal(reads,2);assert.equal(clicks,0);assert.equal(attempts[0].click.status,'not-needed-already-unlocked');
+  assert.deepEqual(attempts[0].before.value,autoUnlocked.before);assert.deepEqual(attempts[0].after.value,autoUnlocked.after);
+  assert.deepEqual(attempts[0].acceptance,{audioSignal:false,physicalSavedRecording:false,wholeGame:false});
+});
+
+test('absent control alone, unknown getters, muted or suspended audio and failures still preserve the original required-click failure',async()=>{
+  for(const mutate of [s=>s.audioStatus.status='unknown',s=>s.diagnostics.status='unknown',
+    s=>s.audioStatus.value.needsGesture=true,s=>s.audioStatus.value.errorPresent=true,
+    s=>s.diagnostics.value.contextState='suspended',s=>s.diagnostics.value.unlocked=false,
+    s=>s.diagnostics.value.disposed=true,s=>s.diagnostics.value.lifecycleHidden=true,
+    s=>s.diagnostics.value.activeBgmVoices=0,s=>s.diagnostics.value.failedAssetCount=1,
+    s=>s.diagnostics.value.contextGeneration=null,s=>s.controls.total=1,s=>s.visibilityState='hidden']){
+    const value=structuredClone(autoUnlocked.before);mutate(value);const original=new Error('required click');let clicks=0;
+    await assert.rejects(()=>captureNormalAudioUnlockAttempt({click:async()=>{clicks++;throw original;}},
+      {page:{evaluate:async()=>value},attempts:[],stageNumber:1}),error=>error===original);
+    assert.equal(clicks,1);
+  }
+});
+
+test('automatic unlock cannot pass a changed generation, lost voice, changed need for gesture or failed second reading',async()=>{
+  for(const mutate of [s=>s.diagnostics.value.contextGeneration++,s=>s.diagnostics.value.contextCreateCount++,
+    s=>s.diagnostics.value.activeBgmVoices=0,s=>s.audioStatus.value.needsGesture=true,s=>s.diagnostics.status='data-error']){
+    const after=structuredClone(autoUnlocked.after);mutate(after);let reads=0;
+    await assert.rejects(()=>captureNormalAudioUnlockAttempt({click:async()=>{throw Error('must not retry');}},
+      {page:{evaluate:async()=>reads++===0?structuredClone(autoUnlocked.before):after},attempts:[],stageNumber:1}),
+      /Automatic audio unlock changed/);
+    assert.equal(reads,2);
+  }
+});
 
 test('one native locator click keeps its arguments, return value and before/after ordering', async () => {
   const events = [], attempts = [], result = Symbol('original click result');
