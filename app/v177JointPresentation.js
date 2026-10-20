@@ -304,6 +304,14 @@ function captureRangerUpper(atlas,plan) {
   return pose;
 }
 
+// A dead Ranger retains the actual weighted feet and both painted grips. No
+// living actor or clock is supplied when this immutable paint is drawn again.
+export function v177CaptureRangerPaint(plan) {
+  const atlas=V177_JOINT_ATLASES.ranger;
+  if(!plan?.upperRigPlan||!plan.upperRigPoses)return null;
+  return {...structuredClone(plan),rangerStunUpperPose:captureRangerUpper(atlas,plan)};
+}
+
 function rangerLivingStunJointPose(kind,atlas,runtime,actor,remaining) {
   const key=actorKey(actor),previous=key?renderedJointPoses.get(key):null;
   if(!(remaining>0)||previous?.kind!==kind||!previous.plan.upperRigPlan){
@@ -400,7 +408,7 @@ export function v177RangerFootPlan(kind,plan,{actor,world,width,direction}={}) {
   return plan;
 }
 
-export function drawV177JointPose(ctx, image, kind, plan, x, y, width, height, {actor,world}={}) {
+export function drawV177JointPose(ctx, image, kind, plan, x, y, width, height, {actor,world,paintReceipt}={}) {
   const actualActor=actor;
   actor=v177JointActorKey(actor,world);
   const atlas=V177_JOINT_ATLASES[kind];
@@ -433,6 +441,7 @@ export function drawV177JointPose(ctx, image, kind, plan, x, y, width, height, {
     plan=v177RangerFootPlan(kind,plan,{actor:actualActor,world,width});
     const feet=plan.rangerFeet;
     const lowerReceipt=atlas.lowerRig?drawV177RangerLower(ctx,image,atlas.lowerRig,plan,x,y,width,height):null;
+    if(paintReceipt)paintReceipt.lower=lowerReceipt?{...lowerReceipt}:null;
     if(feet&&lowerReceipt?.mode==='continuous-weighted-mesh')Object.assign(lowerReceipt,{
       footPlacement:'planted-stop-steps',footWorldX:feet.feet.map(foot=>foot.x),
       footLiftPx:feet.feet.map(foot=>foot.height),footMoving:feet.moving,

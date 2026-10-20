@@ -13,6 +13,7 @@ import {V177_CORPSE_JOINT_DATA} from '../app/v177CorpseJointData.js';
 import {V177_JOINT_ATLASES} from '../app/v177JointPresentation.js';
 import {renderedSourcePixelScale} from './v102-render-source-scale.mjs';
 import {assertNativeCaptureRealm} from './v177-native-capture-realm.mjs';
+import {assertContinuousHumanCorpse} from './v177-human-corpse-contract.mjs';
 
 export function planOutcomeShard(shardId){
   return planShard(shardId).filter(row=>row.phase==='engage').map(reference=>({
@@ -118,6 +119,7 @@ export function assertNativeOutcome(row,bytes){
     const wound=row.samples.flatMap(s=>s.effects.wounds).find(r=>r.lethal);
     assert.ok(wound,'Actual damage pipeline must produce the lethal wound');
     const dead=fresh.filter(r=>r.requestedState==='death'),lastLive=fresh.filter(r=>r.requestedState!=='death').at(-1)??initialPaint;
+    assertContinuousHumanCorpse(row.form,dead,lastLive,last.body.corpse);
     const jointOwner=Boolean(V177_CORPSE_JOINT_DATA[row.form]&&lastLive.jointAtlasPath===V177_JOINT_ATLASES[row.form].path);
     const pixelScale=renderedSourcePixelScale(lastLive);
     for(const r of dead){

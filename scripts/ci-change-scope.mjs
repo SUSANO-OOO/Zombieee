@@ -32,6 +32,11 @@ const reviewedValidationBlobs=Object.freeze({
 });
 const reviewedMotionBlobs=Object.freeze({
   'app/combatPresentation.js':'327c7a1dd55707c16385d01d28030a37dc4b27c7',
+  'app/AshfallGame.tsx':'edfef9eae395897aeca8ad7960f2d3ae29ca8079',
+  'app/v177JointPresentation.js':'6b529c553a38a643f5431dae7cd8a2b16dda81b1',
+  'app/v177HumanCorpsePresentation.js':'4026a601765793519412670d2d2c05cb7d61ea4f',
+  'scripts/v177-native-allunit-outcomes.mjs':'3044d3a932b23e74eecc5e6a937aec1b5f36e7d1',
+  'scripts/v177-human-corpse-contract.mjs':'2d0760f0f4f2ff384d4b18b1d171becef32e2e6d',
 });
 
 export function ciChangeScope(paths,{draft,sourceBlobs={}}={}){

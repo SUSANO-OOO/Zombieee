@@ -38,10 +38,13 @@ test('current recovery partitions normal, outcome and manual observations withou
  const selected=nativeCaseSelection({event:{pull_request:{draft:true}},git:()=>''});
  assert.deepEqual(selected.caseIds,current.caseIds);assert.deepEqual(selected.outcomeCaseIds,current.outcomeCaseIds);
  assert.deepEqual(selected.manualCaseIds,current.manualCaseIds);
- assert.equal(selected.caseIds.length,33);assert.equal(selected.retainedEvidence.caseIds.length,399);
- assert.equal(selected.outcomeCaseIds.length,8);assert.equal(selected.retainedEvidence.outcomeCaseIds.length,136);
+ assert.equal(selected.caseIds.length,0);assert.equal(selected.retainedEvidence.caseIds.length,432);
+ assert.equal(selected.outcomeCaseIds.length,9);assert.equal(selected.retainedEvidence.outcomeCaseIds.length,135);
  assert.equal(selected.manualCaseIds.length,0);assert.equal(selected.retainedEvidence.manualCaseIds.length,3);
- assert.deepEqual(selected.shards,['forms-2','forms-5','forms-6']);
+ assert.deepEqual(selected.shards,['forms-1']);
+ assert.ok(selected.outcomeCaseIds.every(id=>/:(scout|medic|ranger):controlled-outcome:/u.test(id)));
+ assert.equal(selected.retainedEvidence.additionalReports.flatMap(r=>r.caseIds).length,33);
+ assert.equal(selected.retainedEvidence.additionalReports.flatMap(r=>r.outcomeCaseIds).length,8);
  for(const mutate of [p=>{p.retainedEvidence.caseIds.pop();},p=>{p.retainedEvidence.caseIds.push(p.caseIds[0]);},
   p=>{p.outcomeCaseIds.pop();},p=>{p.retainedEvidence.manualCaseIds.pop();},p=>{p.retainedEvidence.reports.pop();}]){
   const invalid=structuredClone(current);mutate(invalid);assert.throws(()=>nativeCaseSelection({root:profileRoot(invalid),event:{pull_request:{draft:true}},git:()=>''}));
@@ -54,5 +57,5 @@ test('current recovery partitions normal, outcome and manual observations withou
 test('supplement-only recovery can finish its original context without recapturing a normal case',()=>{
  const profile=structuredClone(current);profile.retainedEvidence.caseIds.push(...profile.caseIds);profile.caseIds=[];
  const result=nativeCaseSelection({root:profileRoot(profile),event:{pull_request:{draft:true}},git:()=>''});
- assert.equal(result.caseIds.length,0);assert.deepEqual(result.shards,['forms-5','forms-6']);assert.equal(result.outcomeCaseIds.length,8);
+ assert.equal(result.caseIds.length,0);assert.deepEqual(result.shards,['forms-1']);assert.equal(result.outcomeCaseIds.length,9);
 });

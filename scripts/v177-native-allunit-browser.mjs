@@ -94,6 +94,7 @@ const additions=[
   'tests/v177-native-allunit-ranger-manual.test.mjs',
   'scripts/v177-native-allunit-selection.mjs','scripts/v177-native-allunit-recovery.json',
   'scripts/v177-native-allunit-outcomes.mjs','tests/v177-native-allunit-outcomes.test.mjs',
+  'scripts/v177-human-corpse-contract.mjs','tests/v177-human-corpse-continuity.test.mjs',
 ];
 export async function retainAllUnitSources(out){
   // Retain every committed App file, the old capture contract, this driver,

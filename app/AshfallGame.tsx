@@ -7,6 +7,7 @@ import { createV100HumanWalkRenderer, v100HumanWalkPhase, v100UsesHumanWalk, v10
 import { V177_JOINT_ATLASES, v177JointCycleDistance, v177JointPose, v177RangerFootPlan, drawV177JointPose, v177CaptureJointPose, v177RenderedJointWeaponSocket, v177RenderedWeightedLowerReceipt } from "./v177JointPresentation.js";
 import { v177LivingStunState, v177LivingStunSample, v177RangerLivingStunSample } from "./v177LivingStun.js";
 import { rememberV177CorpseJointPose, pruneV177CorpseJointPoses, v177LiveJointGroundLift, v177CorpseJointPresentation, drawV177CorpseJointPresentation } from "./v177CorpseJointPresentation.js";
+import { rememberV177HumanCorpsePaint, pruneV177HumanCorpsePaints, v177HumanCorpsePresentation, drawV177HumanCorpsePaint } from "./v177HumanCorpsePresentation.js";
 import { pruneV177JointActorHistory } from "./v177JointActorHistory.js";
 import { rememberV177TurnedCorpsePaint, rememberV177TurnedBirth, v177TurnedGetupDirection,
   v177TurnedGetupPose, readV177TurnedBirthPresentation, pruneV177TurnedCorpsePaints } from "./v177TurnedGetupPresentation.js";
@@ -4137,6 +4138,15 @@ type FighterRenderAudit = {
   corpseGroundOffsetY?: number;
   corpseGroundSupportY?: number;
   corpseJointPose?: boolean;
+  corpsePaintContinuous?: boolean;
+  corpsePaintedAt?: number;
+  corpsePaintMode?: string;
+  bodyPaintedAt?: number;
+  bodyPaintRoot?: { x:number;y:number;angle:number;scaleX:number;scaleY:number;flipX:boolean };
+  corpsePaintSourceRoot?: { x:number;y:number;angle:number;scaleX:number;scaleY:number;flipX:boolean };
+  corpsePaintMatrix?: number[];
+  corpsePaintOutline?: number[][];
+  corpseWeightedLower?: Record<string,unknown>;
   jointSourceReference?: { x: number; y: number; w: number; h: number };
   corpseJointParts?: { name: string; sourceRect: { x: number; y: number; w: number; h: number }; matrix: number[] }[];
   corpseJointFragmentParts?: { name: string; sourceRect: { x: number; y: number; w: number; h: number }; matrix: number[] }[];
@@ -4748,6 +4758,19 @@ function drawSpriteFighter(
       size.w * slice.w / frame.sourceRect.w,
       size.h * slice.h / frame.sourceRect.h,
     );
+  }
+  if(options.v100AuthoredPresentation&&options.world&&recordAudit&&!forceOpaque
+    &&f.side==='human'&&['scout','medic','ranger'].includes(renderKind)){
+    const transform=ctx.getTransform();
+    const bodyPaintRoot={x:f.x+pose.offsetX*depthScale*facingSign,y:f.y-bob+pose.offsetY*depthScale,
+      angle:pose.rotationRadians*facingSign,scaleX:pose.scaleX,scaleY:pose.scaleY,flipX:frame.flipX};
+    rememberV177HumanCorpsePaint(options.world,f,renderKind,{
+      image:jointPose&&drewArticulatedWalk?jointImage:sprite,plan:jointPose&&drewArticulatedWalk?jointPose:null,
+      frame,width:size.w,height:size.h,pixelScale:Math.max(Math.hypot(transform.a,transform.b)/Math.abs(pose.scaleX),
+        Math.hypot(transform.c,transform.d)/Math.abs(pose.scaleY)),
+      root:bodyPaintRoot,
+    });
+    if(fighterRenderAuditEnabled){const audit=fighterRenderAudit.get(f);if(audit){audit.bodyPaintedAt=options.world.time;audit.bodyPaintRoot=bodyPaintRoot;}}
   }
   if(options.v100AuthoredPresentation&&options.world)drawV102GoreWound(ctx,options.world,f,frame,size,options.v100StageObjects);
   ctx.restore();
@@ -8650,7 +8673,7 @@ function drawWorld(
   drawEmergencySupport(ctx, g, stageObjects);
   drawPlacementIndicator(ctx, g.placementIndicator);
 
-  if(g.definition.missionConfig.v100StageNumber){drawV102GoreGround(ctx,g);pruneV177CorpseJointPoses(g);pruneV177JointActorHistory(g);pruneV177TurnedCorpsePaints(g);}
+  if(g.definition.missionConfig.v100StageNumber){drawV102GoreGround(ctx,g);pruneV177CorpseJointPoses(g);pruneV177HumanCorpsePaints(g);pruneV177JointActorHistory(g);pruneV177TurnedCorpsePaints(g);}
   for (const corpse of g.corpses) {
     const allyCue = corpse.side === "human" ? allyCorpseVisualCue(corpse, g.time) : null;
     const fallDirection = corpse.variant % 2 === 0 ? -1 : 1;
@@ -8671,6 +8694,10 @@ function drawWorld(
       if(corpse.state==="ashing")ctx.filter=`grayscale(${Math.round(jointAshProgress*100)}%) sepia(${Math.round(jointAshProgress*70)}%) brightness(${1-jointAshProgress*.35})`;
       drewJointCorpse=drawV177CorpseJointPresentation(ctx,jointCorpseImage,jointCorpse,stageObjects);
     }
+    const humanFallProgress=corpse.side==='human'?Math.min(1,Math.max(0,corpse.deathAge??0)/animationClipFor(corpseRenderKind,'death').durationSeconds):0;
+    const humanCorpse=g.definition.missionConfig.v100StageNumber
+      ?v177HumanCorpsePresentation(g,corpse,corpseRenderKind,{progress:humanFallProgress,fallDirection,
+        tremorX:allyCue?.tremorX??0,tremorY:allyCue?.tremorY??0,scaleY:allyCue?.bodyScaleY??1,jitter:allyCue?.postureJitter??0}):null;
     if(drewJointCorpse&&jointCorpse&&jointCorpseImage){
       if(fighterRenderAuditEnabled){
         const state=jointCorpse.state,reference=state.atlas.referenceFrame;
@@ -8695,6 +8722,32 @@ function drawWorld(
         });
       }
       ctx.filter="none";
+    } else if(humanCorpse){
+      ctx.globalAlpha=corpse.state==='ash'?Math.min(.55,corpse.life/2):corpse.state==='burning'?.72:corpse.state==='dying'?.96:.82;
+      if(allyCue?.skinTint==='light')ctx.filter='grayscale(18%) sepia(32%) hue-rotate(34deg) saturate(.72) brightness(.9)';
+      else if(allyCue?.skinTint==='strong')ctx.filter='grayscale(30%) sepia(52%) hue-rotate(42deg) saturate(.58) brightness(.76) contrast(1.08)';
+      else if(allyCue?.skinTint==='charred')ctx.filter='grayscale(48%) sepia(70%) hue-rotate(335deg) saturate(.65) brightness(.58) contrast(1.18)';
+      else if(allyCue?.skinTint==='ash')ctx.filter='grayscale(100%) brightness(.42) contrast(1.25)';
+      const drawn=drawV177HumanCorpsePaint(ctx,humanCorpse),paint=humanCorpse.paint;
+      if(drawn&&fighterRenderAuditEnabled)recordCorpseRenderAudit(corpse.id,{
+        drawCount:(corpseRenderAuditHistory.get(corpse.id)?.at(-1)?.drawCount??0)+1,renderSequence:++fighterRenderSequence,
+        assetReady:true,x:corpse.x,y:corpse.y,renderKind:corpseRenderKind,
+        spritePath:paint.plan?V177_JOINT_ATLASES[corpseRenderKind].path:paint.frame.path,
+        spriteState:'death',requestedState:'death',resolvedState:'continuous-human-death',
+        poseOpacity:ctx.globalAlpha,effectiveOpacity:ctx.globalAlpha,clipRect:null,
+        direction:paint.root.flipX?'left':'right',sourceRow:paint.frame.sourceRect.y,sourceRect:{...paint.frame.sourceRect},
+        frameFlipX:paint.root.flipX,renderWidth:paint.width,renderHeight:paint.height,
+        fallProgress:humanFallProgress,rotationRadians:humanCorpse.root.angle,corpsePaintContinuous:true,
+        corpsePaintedAt:paint.paintedAt,corpsePaintMode:paint.plan?(corpseRenderKind==='ranger'?'weighted':'rigid'):'sprite',
+        corpsePaintSourceRoot:{...paint.root},corpsePaintMatrix:[...humanCorpse.matrix],corpsePaintOutline:paint.outline.map(p=>[...p]),
+        corpseWeightedLower:humanCorpse.drawReceipt.lower?{...humanCorpse.drawReceipt.lower}:undefined,
+        corpseGroundOffsetY:humanCorpse.root.y-(corpse.y+5),corpseGroundSupportY:humanCorpse.support,
+        groundAnchor:1,actualXDelta:0,
+      });
+      if(drawn)rememberV177TurnedCorpsePaint(g,corpse,{frame:paint.frame,x:humanCorpse.root.x,y:humanCorpse.root.y,
+        angle:humanCorpse.root.angle,scaleY:humanCorpse.root.scaleY,flipX:paint.root.flipX,
+        sourceBound:true,supportY:humanCorpse.support});
+      ctx.filter='none';
     } else if (sprite?.complete && sprite.naturalWidth) {
       const frame = spriteFrameFor(corpseRenderKind, "death", corpse.side === "human" ? "right" : "left");
       const authoredSize = g.definition.missionConfig.v100StageNumber

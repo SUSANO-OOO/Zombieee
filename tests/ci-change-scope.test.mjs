@@ -46,7 +46,7 @@ test('draft changes select affected observation while unknown/shared/runtime inp
 
 test('the reviewed outcome validator can recheck retained raw footage without reshooting successful cases',()=>{
  const file='scripts/v177-native-allunit-outcomes.mjs';
- const blob=execFileSync('git',['hash-object',file],{encoding:'utf8',windowsHide:true}).trim();
+ const blob='15b01dfa46d964c86e87268838c9c9b0aba96645';
  const options={draft:true,sourceBlobs:{[file]:blob}};
  const scoped=ciChangeScope([file,'tests/v177-native-allunit-outcomes.test.mjs'],options);
  assert.equal(scoped.full,false);assert.equal(scoped.allunit,false);assert.equal(scoped.r9,false);
@@ -62,6 +62,17 @@ test('the reviewed reload movement change runs native motion and normal play whi
  for(const sourceBlobs of [{},{[file]:'f'.repeat(40)}])assert.equal(ciChangeScope([file],{draft:true,sourceBlobs}).full,true);
  assert.equal(ciChangeScope([file,'app/v100Save.js'],options).full,true);
  assert.equal(ciChangeScope([file],{...options,draft:false}).full,true);
+});
+
+test('the exact reviewed human death owner runs motion and normal play without repeating unchanged R9',()=>{
+ const paths=['app/AshfallGame.tsx','app/v177JointPresentation.js','app/v177HumanCorpsePresentation.js',
+  'scripts/v177-native-allunit-outcomes.mjs','scripts/v177-human-corpse-contract.mjs'];
+ const sourceBlobs=Object.fromEntries(paths.map(file=>[file,execFileSync('git',['hash-object',file],{encoding:'utf8',windowsHide:true}).trim()]));
+ const scope=ciChangeScope(paths,{draft:true,sourceBlobs});
+ assert.equal(scope.full,false);assert.equal(scope.normal,true);assert.equal(scope.allunit,true);assert.equal(scope.r9,false);
+ for(const file of paths)assert.equal(ciChangeScope(paths,{draft:true,sourceBlobs:{...sourceBlobs,[file]:'f'.repeat(40)}}).full,true);
+ assert.equal(ciChangeScope(paths,{draft:false,sourceBlobs}).full,true);
+ assert.equal(ciChangeScope([...paths,'app/v100Save.js'],{draft:true,sourceBlobs}).full,true);
 });
 
 test('the CLI handles a PR whose base branch advanced without requiring another merge',()=>{
