@@ -10,6 +10,11 @@ const governance=new Set(['AGENTS.md','docs/PROJECT_STATE.md','docs/CODEX_SOL_RO
 const ranger=new Set(['app/v177RangerFootPlacement.js','app/v177RangerLowerMotion.js','assets/source/v177/ranger/lower-r3/provenance.json','scripts/silent-browser-output.mjs']);
 const normal=new Set(['scripts/v100-normal-campaign-playthrough.mjs','scripts/v100-normal-play-contract.mjs',
   'scripts/v177-representative-normal-play.mjs','scripts/v177-representative-battles.mjs']);
+const allunit=new Set(['.github/workflows/native-allunit-capture.yml','scripts/v177-native-allunit-build.mjs',
+  'scripts/v177-native-allunit-browser.mjs','scripts/v177-native-allunit-cases.mjs',
+  'scripts/v177-native-allunit-manifest.mjs','scripts/v177-native-allunit-contract.mjs']);
+const r9=new Set(['scripts/v100-dialogue-composition-browser.mjs','scripts/v100-story-bookends-browser-smoke.mjs',
+  'scripts/v100-r9-full-story-browser.mjs','scripts/v100-r9-story-plan.mjs']);
 const orchestration=new Set(['.github/workflows/ci.yml','scripts/ci-change-scope.mjs',
   '.github/workflows/native-aac-probe.yml','.github/workflows/normal-campaign-observation.yml',
   '.github/workflows/native-allunit-capture.yml','.github/workflows/v1-quality-acceptance.yml',
@@ -22,14 +27,16 @@ const orchestration=new Set(['.github/workflows/ci.yml','scripts/ci-change-scope
 export function ciChangeScope(paths,{draft}={}){
   assert.equal(typeof draft,'boolean');
   assert.ok(Array.isArray(paths)&&paths.length>0&&paths.every(p=>typeof p==='string'&&p&&!p.includes('\\')));
-  let full=!draft,rangerChanged=false,normalChanged=false;
+  let full=!draft,rangerChanged=false,normalChanged=false,allunitChanged=false,r9Changed=false;
   for(const file of paths){
     if(ranger.has(file))rangerChanged=true;
     else if(normal.has(file))normalChanged=true;
+    else if(allunit.has(file))allunitChanged=true;
+    else if(r9.has(file))r9Changed=true;
     else if(governance.has(file)||orchestration.has(file)||/^tests\/[^/]+\.test\.mjs$/u.test(file))continue;
     else full=true; // Unclassified changes retain the complete regression.
   }
-  return {full,ranger:full||rangerChanged,normal:full||normalChanged,
+  return {full,ranger:full||rangerChanged,normal:full||normalChanged,allunit:full||allunitChanged,r9:full||r9Changed,
     scope:full?'full-regression':'targeted-draft',wholeGameAccepted:false,
     finalIntegrationRequiresFullRegression:true};
 }
@@ -42,7 +49,7 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
   assert.match(comparisonBase,/^[0-9a-f]{40}$/u);
   const paths=execFileSync('git',['diff','--no-renames','--name-only',`${comparisonBase}..${head}`],{encoding:'utf8',windowsHide:true}).trim().split(/\r?\n/u).filter(Boolean);
   const scope=ciChangeScope(paths,{draft:draft==='true'});
-  if(process.env.GITHUB_OUTPUT)appendFileSync(process.env.GITHUB_OUTPUT,['full','ranger','normal'].map(k=>`${k}=${scope[k]}\n`).join(''));
+  if(process.env.GITHUB_OUTPUT)appendFileSync(process.env.GITHUB_OUTPUT,['full','ranger','normal','allunit','r9'].map(k=>`${k}=${scope[k]}\n`).join(''));
   if(process.env.GITHUB_STEP_SUMMARY)appendFileSync(process.env.GITHUB_STEP_SUMMARY,
     `Validation: ${scope.scope}. Full regression runs when the PR becomes ready. Skipped lanes are not acceptance or replacements for earlier failures.\n`);
   console.log(JSON.stringify({...scope,base,comparisonBase,head,changedPaths:paths}));

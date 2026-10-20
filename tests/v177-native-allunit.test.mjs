@@ -334,12 +334,12 @@ test('workflow keeps exact head, independent twelve shards and original owned bu
   assert.deepEqual(workflow.jobs.capture.strategy.matrix.shard,SHARDS.map(s=>s.id));
   assert.equal(workflow.jobs.capture.strategy['fail-fast'],false);assert.equal(workflow.jobs.capture['timeout-minutes'],15);
   assert.equal(workflow.jobs.build['timeout-minutes'],15);assert.equal(workflow.jobs.capture.needs,'build');
-  assert.equal(workflow.jobs.build.steps[0].with.ref,'${{ github.event.pull_request.head.sha }}');
+  assert.equal(workflow.jobs.build.steps[0].with.ref,'${{ github.event.pull_request.head.sha || inputs.expected_head }}');
   assert.equal(workflow.jobs.build.steps[0].with['persist-credentials'],false);
   assert.equal(workflow.jobs.capture.env.V177_EXPECTED_BUILD_SHA256,'${{ needs.build.outputs.dist_sha256 }}');
   assert.equal(workflow.jobs.capture.env.V177_EXPECTED_BUILD_RECEIPT_SHA256,'${{ needs.build.outputs.receipt_sha256 }}');
   assert.equal(workflow.jobs.capture.steps.some(s=>s.run==='npm run build'),false);
-  assert.equal(workflow.jobs.capture.steps[0].with.ref,'${{ github.event.pull_request.head.sha }}');
+  assert.equal(workflow.jobs.capture.steps[0].with.ref,'${{ github.event.pull_request.head.sha || inputs.expected_head }}');
   assert.equal(workflow.jobs.capture.steps[0].with['persist-credentials'],false);
   assert.equal(LIMITS.caseMs,30000);assert.equal(LIMITS.readinessMs,5000);assert.equal(LIMITS.clipBytes,8*1024*1024);
   assert.deepEqual(VIEWPORTS,[{width:1280,height:720},{width:844,height:390},{width:844,height:340}]);

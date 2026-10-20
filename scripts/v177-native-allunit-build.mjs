@@ -26,16 +26,22 @@ function sameBinding(receipt,expected){
   assert.match(expected.head,/^[0-9a-f]{40}$/u);assert.match(expected.tree,/^[0-9a-f]{40}$/u);
 }
 export async function buildBinding(root=process.cwd(),env=process.env){
-  assert.equal(env.GITHUB_ACTIONS,'true');assert.equal(env.GITHUB_EVENT_NAME,'pull_request');assert.ok(['linux','darwin'].includes(process.platform),'Remote build/capture only');
+  assert.equal(env.GITHUB_ACTIONS,'true');assert.ok(['pull_request','workflow_dispatch'].includes(env.GITHUB_EVENT_NAME));assert.ok(['linux','darwin'].includes(process.platform),'Remote build/capture only');
   assert.match(env.V177_EXPECTED_HEAD_SHA??'',/^[0-9a-f]{40}$/u);
   for(const k of ['GITHUB_RUN_ID','GITHUB_RUN_ATTEMPT'])assert.match(env[k]??'',/^[1-9][0-9]{0,19}$/u);
   const event=JSON.parse(await readFile(env.GITHUB_EVENT_PATH,'utf8'));
-  assert.equal(event.pull_request?.head?.sha,env.V177_EXPECTED_HEAD_SHA);
+  assertBuildEventHead(env,event);
   assert.equal(env.GITHUB_REPOSITORY?.toLowerCase(),'susano-ooo/zombieee');
   assert.equal(event.repository?.full_name?.toLowerCase(),env.GITHUB_REPOSITORY.toLowerCase());
   const head=git(root,['rev-parse','HEAD']);assert.equal(head,env.V177_EXPECTED_HEAD_SHA);
   git(root,['diff','--quiet','HEAD','--']);
   return{head,tree:git(root,['rev-parse','HEAD^{tree}']),repository:env.GITHUB_REPOSITORY.toLowerCase(),runId:env.GITHUB_RUN_ID,runAttempt:env.GITHUB_RUN_ATTEMPT};
+}
+export function assertBuildEventHead(env,event){
+  assert.ok(['pull_request','workflow_dispatch'].includes(env.GITHUB_EVENT_NAME));
+  assert.match(env.V177_EXPECTED_HEAD_SHA??'',/^[0-9a-f]{40}$/u);
+  const head=env.GITHUB_EVENT_NAME==='pull_request'?event.pull_request?.head?.sha:event.inputs?.expected_head;
+  assert.equal(head,env.V177_EXPECTED_HEAD_SHA,'Build must bind to the original candidate request');
 }
 export function committedFiles(root){
   return new Map(git(root,['ls-tree','-r','--full-tree','HEAD','--','public']).split('\n').filter(Boolean).map(line=>{

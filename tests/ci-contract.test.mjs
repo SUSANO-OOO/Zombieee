@@ -327,7 +327,7 @@ test("parsed required CI graph retains every WebKit lane, dependency and viewpor
   };
   assert.equal(jobs.verify["runs-on"], "ubuntu-latest");
   const story = jobs['r9-story'];
-  assert.deepEqual(story.strategy.matrix.include, [
+  assert.deepEqual(story.strategy.matrix.include.filter(row=>row.phase!=='full-story'), [
     {engine:'chromium',os:'ubuntu-latest',phase:'composition'},
     {engine:'chromium',os:'ubuntu-latest',phase:'bookends'},
     {engine:'webkit',os:'macos-15-intel',phase:'composition'},
@@ -350,7 +350,7 @@ test("parsed required CI graph retains every WebKit lane, dependency and viewpor
   }
   const storyUpload = story.steps.at(-1);
   assert.equal(storyUpload.if,'always()');
-  assert.equal(storyUpload.with.name,'r9-story-${{ matrix.engine }}-${{ matrix.phase }}');
+  assert.equal(storyUpload.with.name,'r9-story-${{ matrix.engine }}-${{ matrix.phase }}-${{ matrix.viewport }}');
   assert.equal(storyUpload.with.path,'outputs/r9-story');
   assert.equal(storyUpload.with['if-no-files-found'],'error');
   assert.deepEqual(jobs['v102-combat'].strategy.matrix.include,[

@@ -14,7 +14,6 @@ import { createV100BattleResult, recordV100PendingResult } from "../app/v100Tran
 import { v100EventPresentationFor } from "../app/v100EventPresentation.js";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { startNativeAudioQaOrigin } from "./native-audio-qa-origin.mjs";
-if(process.platform==='win32')throw new Error('R9 bookend QA is hosted-only; local game/browser/audio playback is disabled');
 
 const transport = await startNativeAudioQaOrigin(new URL(process.env.V100_CAMPAIGN_QA_BASE_URL ?? "http://127.0.0.1:4177/"));
 const origin = transport.origin;

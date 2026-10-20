@@ -14,28 +14,55 @@ on:
       - 'app/combatPresentation.js'
       - 'app/manualAbilities.js'
       - 'public/art/v100/joints/**'
+  workflow_dispatch:
+    inputs:
+      expected_head:
+        description: Exact 40-character candidate SHA to verify without publication
+        required: true
+        type: string
 
 permissions:
   contents: read
 
 concurrency:
-  group: native-allunit-capture-${{ github.event.pull_request.number }}
+  group: native-allunit-capture-${{ github.event.pull_request.number || inputs.expected_head }}
   cancel-in-progress: false
 
 jobs:
+  scope:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    outputs:
+      allunit: ${{ steps.scope.outputs.allunit }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || inputs.expected_head }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22.13.0'
+      - id: scope
+        env:
+          CI_SCOPE_BASE: ${{ github.event.before || github.event.pull_request.base.sha }}
+          CI_SCOPE_HEAD: ${{ github.event.pull_request.head.sha || inputs.expected_head }}
+          CI_SCOPE_DRAFT: ${{ github.event.pull_request.draft }}
+        run: node scripts/ci-change-scope.mjs
   build:
-    if: ${{ !github.event.pull_request.draft }}
+    needs: scope
+    if: ${{ always() && !cancelled() && (github.event_name == 'workflow_dispatch' || (needs.scope.result == 'success' && (!github.event.pull_request.draft || needs.scope.outputs.allunit == 'true'))) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     outputs:
       receipt_sha256: ${{ steps.bundle.outputs.receipt_sha256 }}
       dist_sha256: ${{ steps.bundle.outputs.dist_sha256 }}
     env:
-      V177_EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      V177_EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha || inputs.expected_head }}
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.pull_request.head.sha || inputs.expected_head }}
           persist-credentials: false
       - uses: actions/setup-node@v6
         with:
@@ -44,20 +71,21 @@ jobs:
       - run: npm ci
       - name: Build the exact PR candidate once
         env:
-          GITHUB_PAGES_RELEASE_SHA: ${{ github.event.pull_request.head.sha }}
+          GITHUB_PAGES_RELEASE_SHA: ${{ github.event.pull_request.head.sha || inputs.expected_head }}
         run: npm run build
       - name: Retain the exact build and committed public-source manifest
         id: bundle
         run: node scripts/v177-native-allunit-build.mjs pack outputs/v177-native-allunit-build
       - uses: actions/upload-artifact@v4
         with:
-          name: v177-native-allunit-build-${{ github.event.pull_request.head.sha }}-${{ github.run_attempt }}
+          name: v177-native-allunit-build-${{ github.event.pull_request.head.sha || inputs.expected_head }}-${{ github.run_attempt }}
           path: outputs/v177-native-allunit-build
           include-hidden-files: true
           if-no-files-found: error
           retention-days: 7
   capture:
     needs: build
+    if: ${{ !cancelled() && needs.build.result == 'success' }}
     runs-on: macos-15-intel
     timeout-minutes: 15
     strategy:
@@ -65,7 +93,7 @@ jobs:
       matrix:
         shard: [forms-1, forms-2, forms-3, forms-4, forms-5, forms-6, forms-7, forms-8, forms-9, forms-10, forms-11, forms-12]
     env:
-      V177_EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      V177_EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha || inputs.expected_head }}
       V177_EXPECTED_BUILD_RECEIPT_SHA256: ${{ needs.build.outputs.receipt_sha256 }}
       V177_EXPECTED_BUILD_SHA256: ${{ needs.build.outputs.dist_sha256 }}
       V177_CAPTURE_SHARD: ${{ matrix.shard }}
@@ -73,7 +101,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.pull_request.head.sha || inputs.expected_head }}
           persist-credentials: false
       - uses: actions/setup-node@v6
         with:
@@ -86,7 +114,7 @@ jobs:
           node scripts/pwa-native-runtime/node_modules/playwright/cli.js install webkit
       - uses: actions/download-artifact@v4
         with:
-          name: v177-native-allunit-build-${{ github.event.pull_request.head.sha }}-${{ github.run_attempt }}
+          name: v177-native-allunit-build-${{ github.event.pull_request.head.sha || inputs.expected_head }}-${{ github.run_attempt }}
           path: outputs/v177-native-allunit-build
       - name: Restore and verify the identical recursive build before browser startup
         run: node scripts/v177-native-allunit-build.mjs restore outputs/v177-native-allunit-build outputs/v177-native-allunit-${{ matrix.shard }}

@@ -28,7 +28,6 @@ function readDetailShots(element){
   return{id:figure.dataset.v177StoryDetail,frame:rect(figure),viewBox:svg.getAttribute('viewBox').split(/\s+/u).map(Number),clipRect:crop?['x','y','width','height'].map(key=>Number(crop.getAttribute(key))):null,clipId:clip?.id??null,imageClip:image?.getAttribute('clip-path')??null,href:image?.getAttribute('href')??null,pointerEvents:style.pointerEvents,filter:style.filter,ancestorFilters,insideBackdrop:Boolean(figure.closest('.v100-event-backdrop')),layerIndex:Number(style.zIndex),veilIndex:Number(getComputedStyle(element,'::before').zIndex)};
  });
 }
-if(process.platform==='win32')throw new Error('R9 visual QA is hosted-only; local game/browser/audio playback is disabled');
 const origin=process.env.V100_CAMPAIGN_QA_BASE_URL;
 const out=process.env.V100_DIALOGUE_QA_OUT??'outputs/v100-dialogue-improvement-r1';
 await mkdir(dirname(out),{recursive:true});

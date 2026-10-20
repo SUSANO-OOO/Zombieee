@@ -24,6 +24,7 @@ jobs:
       full: ${{ steps.scope.outputs.full }}
       ranger: ${{ steps.scope.outputs.ranger }}
       normal: ${{ steps.scope.outputs.normal }}
+      r9: ${{ steps.scope.outputs.r9 }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -120,9 +121,9 @@ jobs:
           retention-days: 14
 
   r9-story:
-    if: ${{ needs.scope.outputs.full == 'true' }}
+    if: ${{ needs.scope.outputs.full == 'true' || needs.scope.outputs.r9 == 'true' }}
     needs: [scope]
-    name: R9 Story (${{ matrix.engine }}, ${{ matrix.phase }})
+    name: R9 Story (${{ matrix.engine }}, ${{ matrix.phase }}, ${{ matrix.viewport }})
     strategy:
       fail-fast: false
       matrix:
@@ -131,6 +132,12 @@ jobs:
           - {engine: chromium, os: ubuntu-latest, phase: bookends}
           - {engine: webkit, os: macos-15-intel, phase: composition}
           - {engine: webkit, os: macos-15-intel, phase: bookends}
+          - {engine: chromium, os: ubuntu-latest, phase: full-story, viewport: '1280x720'}
+          - {engine: chromium, os: ubuntu-latest, phase: full-story, viewport: '844x390'}
+          - {engine: chromium, os: ubuntu-latest, phase: full-story, viewport: '844x340'}
+          - {engine: webkit, os: macos-15-intel, phase: full-story, viewport: '1280x720'}
+          - {engine: webkit, os: macos-15-intel, phase: full-story, viewport: '844x390'}
+          - {engine: webkit, os: macos-15-intel, phase: full-story, viewport: '844x340'}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
     defaults:
@@ -139,6 +146,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@v6
@@ -161,16 +169,28 @@ jobs:
           V100_DIALOGUE_QA_ENGINES: ${{ matrix.engine }}
           V100_DIALOGUE_QA_OUT: outputs/r9-story/composition
         run: node scripts/run-browser-qa-with-server.mjs scripts/v100-dialogue-composition-browser.mjs
+      - name: Verify all story finalizers and save receipts with explicit developer victories
+        if: matrix.phase == 'composition' && matrix.engine == 'chromium'
+        env:
+          V100_DEVMODE_REPORT: outputs/r9-story/devmode/report.json
+        run: node scripts/v100-devmode-full-campaign.mjs
       - name: Inspect R9 bookends, restored R5 cursor and credits to map
         if: matrix.phase == 'bookends'
         env:
           V100_BOOKENDS_ENGINES: ${{ matrix.engine }}
           V100_BOOKENDS_EVIDENCE_DIR: outputs/r9-story/bookends
         run: node scripts/run-browser-qa-with-server.mjs scripts/v100-story-bookends-browser-smoke.mjs
+      - name: Read every R9 story page and its actual scene audio receipts
+        if: matrix.phase == 'full-story'
+        env:
+          V100_R9_ENGINES: ${{ matrix.engine }}
+          V100_R9_VIEWPORT: ${{ matrix.viewport }}
+          V100_R9_OUT: outputs/r9-story/full-story
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-r9-full-story-browser.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: r9-story-${{ matrix.engine }}-${{ matrix.phase }}
+          name: r9-story-${{ matrix.engine }}-${{ matrix.phase }}-${{ matrix.viewport }}
           path: outputs/r9-story
           if-no-files-found: error
           retention-days: 14

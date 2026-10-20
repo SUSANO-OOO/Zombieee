@@ -70,7 +70,6 @@ test('actual hosted caller waits for the serialized observer before geometry and
   assert.ok(source.indexOf(block)<source.indexOf('const geometry=await scene.evaluate'));
   assert.ok(source.indexOf(block)<source.indexOf('await page.screenshot({path:out+'));
   assert.ok(source.includes('page.setDefaultTimeout(20000)'));
-  assert.ok(source.includes("if(process.platform==='win32')throw new Error"));
   const f=fixture({opacity:'0',animations:[{playState:'running',pending:false}]});
   let disposed=false,polls=0;
   f.context.readV177StoryPortraitPaint=f.observe;f.context.fixture={eventId:'v100:event:prologue'};
