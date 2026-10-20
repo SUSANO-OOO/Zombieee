@@ -9,6 +9,7 @@ import { v100HumanWalkFrame } from '../../app/v100HumanWalk.js';
 import { V177_JOINT_ATLASES, v177JointPose } from '../../app/v177JointPresentation.js';
 import { V177_CORPSE_JOINT_DATA } from '../../app/v177CorpseJointData.js';
 import { rememberV177CorpseJointPose, v177CorpseJointPresentation, drawV177CorpseJointPresentation } from '../../app/v177CorpseJointPresentation.js';
+import { v177HumanCorpsePresentation } from '../../app/v177HumanCorpsePresentation.js';
 import { beginV102GoreStep, noteV102GoreImpact, finishV102GoreStep, getV102GoreSnapshot } from '../../app/v102CombatGore.js';
 
 const source=fs.readFileSync(new URL('../../app/AshfallGame.tsx',import.meta.url),'utf8');
@@ -39,7 +40,7 @@ export function jointCorpseRenderFixture(form,{kind=form,flipX=true,fallDirectio
   actor.hp=0;assert.equal(finishV102GoreStep(world,step),1);world.fighters=[];world.corpses=[corpse];
   const histories=new Map(),image={complete:true,naturalWidth:data.atlasSize.width,naturalHeight:data.atlasSize.height};
   let receipt;
-  const render=vm.runInNewContext(code,{ENEMY_DEATH_CONFIG,v177CorpseJointPresentation,drawV177CorpseJointPresentation,
+  const render=vm.runInNewContext(code,{ENEMY_DEATH_CONFIG,v177CorpseJointPresentation,drawV177CorpseJointPresentation,v177HumanCorpsePresentation,
     bossRenderKind:c=>c.renderKind,fighterRenderAuditEnabled:true,fighterRenderSequence:1,corpseRenderAuditHistory:histories,stageObjects:{},
     recordCorpseRenderAudit(id,value){receipt=value;const rows=histories.get(id)??[];rows.push(value);histories.set(id,rows);}});
   return {world,corpse,live,image,effects:()=>getV102GoreSnapshot(world),render(progress,sequence=10){

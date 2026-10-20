@@ -7,7 +7,7 @@ import { createV100HumanWalkRenderer, v100HumanWalkPhase, v100UsesHumanWalk, v10
 import { V177_JOINT_ATLASES, v177JointCycleDistance, v177JointPose, v177RangerFootPlan, drawV177JointPose, v177CaptureJointPose, v177RenderedJointWeaponSocket, v177RenderedWeightedLowerReceipt } from "./v177JointPresentation.js";
 import { v177LivingStunState, v177LivingStunSample, v177RangerLivingStunSample } from "./v177LivingStun.js";
 import { rememberV177CorpseJointPose, pruneV177CorpseJointPoses, v177LiveJointGroundLift, v177CorpseJointPresentation, drawV177CorpseJointPresentation } from "./v177CorpseJointPresentation.js";
-import { rememberV177HumanCorpsePaint, pruneV177HumanCorpsePaints, v177HumanCorpsePresentation, drawV177HumanCorpsePaint } from "./v177HumanCorpsePresentation.js";
+import { rememberV177HumanCorpsePaint, pruneV177HumanCorpsePaints, v177HumanCorpsePresentation, drawV177HumanCorpsePaint, V177_CONTINUOUS_HUMAN_CORPSE_KINDS } from "./v177HumanCorpsePresentation.js";
 import { pruneV177JointActorHistory } from "./v177JointActorHistory.js";
 import { rememberV177TurnedCorpsePaint, rememberV177TurnedBirth, v177TurnedGetupDirection,
   v177TurnedGetupPose, readV177TurnedBirthPresentation, pruneV177TurnedCorpsePaints } from "./v177TurnedGetupPresentation.js";
@@ -4760,7 +4760,7 @@ function drawSpriteFighter(
     );
   }
   if(options.v100AuthoredPresentation&&options.world&&recordAudit&&!forceOpaque
-    &&f.side==='human'&&['scout','medic','ranger'].includes(renderKind)){
+    &&f.side==='human'&&V177_CONTINUOUS_HUMAN_CORPSE_KINDS.includes(renderKind)){
     const transform=ctx.getTransform();
     const bodyPaintRoot={x:f.x+pose.offsetX*depthScale*facingSign,y:f.y-bob+pose.offsetY*depthScale,
       angle:pose.rotationRadians*facingSign,scaleX:pose.scaleX,scaleY:pose.scaleY,flipX:frame.flipX};

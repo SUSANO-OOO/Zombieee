@@ -75,6 +75,18 @@ test('the exact reviewed human death owner runs motion and normal play without r
  assert.equal(ciChangeScope([...paths,'app/v100Save.js'],{draft:true,sourceBlobs}).full,true);
 });
 
+test('only the reviewed corpse fixture injection preserves already completed story evidence',()=>{
+ const file='tests/helpers/v177-corpse-joint-render.mjs';
+ const blob=execFileSync('git',['hash-object',file],{encoding:'utf8',windowsHide:true}).trim();
+ const options={draft:true,sourceBlobs:{[file]:blob}};
+ const scoped=ciChangeScope([file,'tests/v177-turned-getup.test.mjs'],options);
+ assert.equal(scoped.full,false);assert.equal(scoped.r9,false);
+ for(const sourceBlobs of [{},{[file]:'f'.repeat(40)}])
+  assert.equal(ciChangeScope([file],{draft:true,sourceBlobs}).full,true);
+ assert.equal(ciChangeScope([file,'tests/helpers/unknown.mjs'],options).full,true);
+ assert.equal(ciChangeScope([file],{...options,draft:false}).full,true);
+});
+
 test('the CLI handles a PR whose base branch advanced without requiring another merge',()=>{
  const directory=mkdtempSync(join(tmpdir(),'zombieee-ci-scope-'));
  const git=(...args)=>execFileSync('git',args,{cwd:directory,encoding:'utf8',windowsHide:true}).trim();

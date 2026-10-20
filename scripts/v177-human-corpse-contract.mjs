@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
+import { V177_CONTINUOUS_HUMAN_CORPSE_KINDS } from '../app/v177HumanCorpsePresentation.js';
 
 const point=(m,[x,y])=>[m[0]*x+m[2]*y+m[4],m[1]*x+m[3]*y+m[5]];
 export function assertContinuousHumanCorpse(form,dead,lastLive,corpse){
-  if(!['scout','medic','ranger'].includes(form))return;
+  if(!V177_CONTINUOUS_HUMAN_CORPSE_KINDS.includes(form))return;
   assert.ok(dead.length>=3);
   const path=lastLive.jointDrawSucceeded?lastLive.jointAtlasPath:lastLive.spritePath;
   const mode=lastLive.jointDrawSucceeded?(form==='ranger'?'weighted':'rigid'):'sprite';

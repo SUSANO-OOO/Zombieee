@@ -229,10 +229,15 @@ test('the rise lands into the current nonzero gait and settled lift in actual wo
 });
 
 test('real App connects postpaint, birth, direction and resolved pose before its successful original15-part draw',()=>{
-  const hook=find(n=>ts.isCallExpression(n)&&n.expression.getText(tree)==='rememberV177TurnedCorpsePaint');
+  const hook=find(n=>ts.isCallExpression(n)&&n.expression.getText(tree)==='rememberV177TurnedCorpsePaint'
+    &&ts.isObjectLiteralExpression(n.arguments[2])&&n.arguments[2].properties.some(p=>ts.isShorthandPropertyAssignment(p)&&p.name.text==='frame'));
   let block=hook;while(block&&!ts.isBlock(block))block=block.parent;
   const statements=block.statements.map(n=>n.getText(tree));
   assert.ok(statements.findIndex(s=>s.startsWith('endV102CorpseSever('))<statements.findIndex(s=>s.includes('rememberV177TurnedCorpsePaint')));
+  const continuous=find(n=>ts.isCallExpression(n)&&n.expression.getText(tree)==='rememberV177TurnedCorpsePaint'
+    &&ts.isObjectLiteralExpression(n.arguments[2])&&n.arguments[2].properties.some(p=>ts.isPropertyAssignment(p)&&p.name.getText(tree)==='frame'&&p.initializer.getText(tree)==='paint.frame'));
+  assert.ok(ts.isIfStatement(continuous.parent.parent)&&continuous.parent.parent.expression.getText(tree)==='drawn',
+    'a failed continuous body draw must not become an infection source');
   const branch=birthNode.thenStatement.getText(tree);assert.ok(branch.indexOf('const revivedFighter')<branch.indexOf('rememberV177TurnedBirth(g,corpse,revivedFighter)'));
   assert.ok(branch.indexOf('rememberV177TurnedBirth(g,corpse,revivedFighter)')<branch.indexOf('revived.push(revivedFighter)'));
   const declaration=find(n=>ts.isVariableDeclaration(n)&&n.name.getText(tree)==='jointPose');

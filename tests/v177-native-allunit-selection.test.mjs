@@ -38,13 +38,18 @@ test('current recovery partitions normal, outcome and manual observations withou
  const selected=nativeCaseSelection({event:{pull_request:{draft:true}},git:()=>''});
  assert.deepEqual(selected.caseIds,current.caseIds);assert.deepEqual(selected.outcomeCaseIds,current.outcomeCaseIds);
  assert.deepEqual(selected.manualCaseIds,current.manualCaseIds);
- assert.equal(selected.caseIds.length,0);assert.equal(selected.retainedEvidence.caseIds.length,432);
- assert.equal(selected.outcomeCaseIds.length,9);assert.equal(selected.retainedEvidence.outcomeCaseIds.length,135);
- assert.equal(selected.manualCaseIds.length,0);assert.equal(selected.retainedEvidence.manualCaseIds.length,3);
- assert.deepEqual(selected.shards,['forms-1']);
- assert.ok(selected.outcomeCaseIds.every(id=>/:(scout|medic|ranger):controlled-outcome:/u.test(id)));
+ assert.equal(selected.caseIds.length,28);assert.equal(selected.retainedEvidence.caseIds.length,404);
+ assert.equal(selected.outcomeCaseIds.length,36);assert.equal(selected.retainedEvidence.outcomeCaseIds.length,108);
+ assert.equal(selected.manualCaseIds.length,1);assert.equal(selected.retainedEvidence.manualCaseIds.length,2);
+ assert.deepEqual(selected.shards,SHARDS.map(s=>s.id));
+ const affected=current.affectedDeathForms;
+ assert.equal(affected.length,11);
+ assert.equal(selected.outcomeCaseIds.filter(id=>affected.some(form=>id.includes(':'+form+':'))).length,33);
+ assert.ok(!selected.outcomeCaseIds.some(id=>/:(scout|medic|ranger):controlled-outcome:/u.test(id)));
+ assert.equal(current.observationGaps.cases.length,32);
+ assert.ok(current.observationGaps.cases.every(g=>[...selected.caseIds,...selected.manualCaseIds,...selected.outcomeCaseIds].includes(g.caseId)));
  assert.equal(selected.retainedEvidence.additionalReports.flatMap(r=>r.caseIds).length,33);
- assert.equal(selected.retainedEvidence.additionalReports.flatMap(r=>r.outcomeCaseIds).length,8);
+ assert.equal(selected.retainedEvidence.additionalReports.flatMap(r=>r.outcomeCaseIds).length,17);
  for(const mutate of [p=>{p.retainedEvidence.caseIds.pop();},p=>{p.retainedEvidence.caseIds.push(p.caseIds[0]);},
   p=>{p.outcomeCaseIds.pop();},p=>{p.retainedEvidence.manualCaseIds.pop();},p=>{p.retainedEvidence.reports.pop();}]){
   const invalid=structuredClone(current);mutate(invalid);assert.throws(()=>nativeCaseSelection({root:profileRoot(invalid),event:{pull_request:{draft:true}},git:()=>''}));
@@ -57,5 +62,5 @@ test('current recovery partitions normal, outcome and manual observations withou
 test('supplement-only recovery can finish its original context without recapturing a normal case',()=>{
  const profile=structuredClone(current);profile.retainedEvidence.caseIds.push(...profile.caseIds);profile.caseIds=[];
  const result=nativeCaseSelection({root:profileRoot(profile),event:{pull_request:{draft:true}},git:()=>''});
- assert.equal(result.caseIds.length,0);assert.deepEqual(result.shards,['forms-1']);assert.equal(result.outcomeCaseIds.length,9);
+ assert.equal(result.caseIds.length,0);assert.deepEqual(result.shards,['forms-1','forms-2','forms-3','forms-7','forms-9','forms-11','forms-12']);assert.equal(result.outcomeCaseIds.length,36);
 });

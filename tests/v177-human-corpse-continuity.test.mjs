@@ -4,7 +4,7 @@ import { animationClipFor } from '../app/combatPresentation.js';
 import { ALLY_DEATH_CONFIG } from '../app/combatLifecycle.js';
 import { v177JointPose, v177CaptureRangerPaint } from '../app/v177JointPresentation.js';
 import { createV177HumanCorpsePaint, sampleV177HumanCorpsePaint, rememberV177HumanCorpsePaint,
-  v177HumanCorpsePresentation, pruneV177HumanCorpsePaints } from '../app/v177HumanCorpsePresentation.js';
+  v177HumanCorpsePresentation, pruneV177HumanCorpsePaints, V177_CONTINUOUS_HUMAN_CORPSE_KINDS } from '../app/v177HumanCorpsePresentation.js';
 import { assertContinuousHumanCorpse } from '../scripts/v177-human-corpse-contract.mjs';
 
 const root={x:305.25,y:222.3,angle:.035,scaleX:1.02,scaleY:.99,flipX:false};
@@ -13,7 +13,8 @@ const paint={root,outline,kind:'scout',fallDirection:-1};
 const transformed=(m,p)=>[m[0]*p[0]+m[2]*p[1]+m[4],m[1]*p[0]+m[3]*p[1]+m[5]];
 
 test('the death starts on the actual last live transform and reaches the floor continuously on the original clock',()=>{
-  for(const kind of ['scout','medic','ranger'])for(const flipX of [false,true])for(const fallDirection of [-1,1]){
+  assert.equal(V177_CONTINUOUS_HUMAN_CORPSE_KINDS.length,14);
+  for(const kind of V177_CONTINUOUS_HUMAN_CORPSE_KINDS)for(const flipX of [false,true])for(const fallDirection of [-1,1]){
     assert.equal(animationClipFor(kind,'death').durationSeconds,.42);
     assert.equal(ALLY_DEATH_CONFIG.dyingSeconds,.55);assert.equal(ALLY_DEATH_CONFIG.infectionSeconds,12);
     const current={...paint,kind,fallDirection,root:{...root,flipX}},before=structuredClone(current);
@@ -90,7 +91,7 @@ test('failed or unbounded source readback cannot claim a continuous corpse',()=>
 });
 
 test('a legacy prone image, frozen fall, stale owner, floating endpoint, or Ranger lower fallback cannot satisfy the new outcome owner',()=>{
-  for(const form of ['scout','medic','ranger']){
+  for(const form of V177_CONTINUOUS_HUMAN_CORPSE_KINDS){
     const source={...root,angle:0},lastLive={bodyPaintedAt:10,bodyPaintRoot:source,jointDrawSucceeded:true,
       jointAtlasPath:'/original-'+form+'.webp',sourceRect:{x:0,y:0,w:480,h:448},frameFlipX:false};
     const dead=[.2,.5,1,1,1].map(progress=>{

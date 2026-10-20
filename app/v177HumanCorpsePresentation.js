@@ -1,8 +1,13 @@
 import { V177_JOINT_ATLASES, drawV177JointPose, v177CaptureJointPose,
   v177InterpolateCapturedJointPose, v177CaptureRangerPaint } from './v177JointPresentation.js';
 import { v177RangerLowerPose } from './v177RangerLowerMotion.js';
+import { PLAYABLE_COMBAT_KINDS } from './combatPresentation.js';
 
-const kinds=new Set(['scout','medic','ranger']),worlds=new WeakMap();
+// Brawler already owns a source-bound articulated fall. Mayo survives through
+// its protected knockdown owner. The other allies shared the instant prone cell.
+export const V177_CONTINUOUS_HUMAN_CORPSE_KINDS=Object.freeze(
+  PLAYABLE_COMBAT_KINDS.filter(kind=>!['brawler','mayo-chan'].includes(kind)));
+const kinds=new Set(V177_CONTINUOUS_HUMAN_CORPSE_KINDS),worlds=new WeakMap();
 const point=(m,[x,y])=>[m[0]*x+m[2]*y+m[4],m[1]*x+m[3]*y+m[5]];
 const box=(x,y,w,h)=>[[x,y],[x+w,y],[x+w,y+h],[x,y+h]];
 const ease=p=>{p=Math.max(0,Math.min(1,p));return p*p*(3-2*p);};
