@@ -22,7 +22,14 @@ export function nativeCaseSelection({event,root=process.cwd(),git=args=>execFile
   const bytes=readFileSync(path.join(root,'scripts/v177-native-allunit-recovery.json'));
   const recovery=JSON.parse(bytes);assert.equal(recovery.schema,'v177-native-allunit-recovery/v1');
   assert.match(recovery.head,/^[0-9a-f]{40}$/u);assert.equal(recovery.runId,'39422404651');
-  const selected=selectNativeCases(recovery.caseIds);assert.equal(selected.caseIds.length,54);
+  const selected=selectNativeCases(recovery.caseIds);assert.ok(selected.caseIds.length<=54);
+  if(recovery.originalCaseIds){
+    const original=selectNativeCases(recovery.originalCaseIds),retained=selectNativeCases(recovery.retainedEvidence.caseIds);
+    assert.equal(original.caseIds.length,54);
+    assert.equal(new Set([...selected.caseIds,...retained.caseIds]).size,54);
+    assert.deepEqual([...selected.caseIds,...retained.caseIds].sort(),[...original.caseIds].sort(),
+      'Selected and retained cases must partition the original54');
+  }else assert.equal(selected.caseIds.length,54);
   const changes=git(['diff','--no-renames','--name-only',recovery.head,'HEAD']).split(/\r?\n/u).filter(Boolean);
   for(const file of changes){
     if(file==='scripts/v177-native-allunit-recovery.json')continue;
@@ -31,7 +38,8 @@ export function nativeCaseSelection({event,root=process.cwd(),git=args=>execFile
   // Exact reviewed harness revisions only. Any later product/contract/driver
   // change falls back to all432; earlier successes retain their original head.
   return {mode:'remaining',baseline:{head:recovery.head,runId:recovery.runId,
-    successfulCases:378,failedCases:1,unexecutedCases:53},profileSha256:createHash('sha256').update(bytes).digest('hex'),...selected};
+    successfulCases:378,failedCases:1,unexecutedCases:53},retainedEvidence:recovery.retainedEvidence??null,
+    profileSha256:createHash('sha256').update(bytes).digest('hex'),...selected};
 }
 
 if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href){

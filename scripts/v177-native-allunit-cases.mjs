@@ -77,6 +77,40 @@ export function finishMayoPointer(state){
     battleGeneration:state.battleGeneration,events:state.events,allTargets:state.allTargets,overflow:state.overflow};
 }
 
+export function readMayoPointerGeometry(elements,point){
+  const button=elements.length===1?elements[0]:null;
+  if(!button||button.disabled||button.getAttribute('aria-disabled')!=='false')return null;
+  const r=button.getBoundingClientRect(),center={x:r.x+r.width/2,y:r.y+r.height/2};
+  const owns=p=>r.width>0&&r.height>0&&document.elementFromPoint(p.x,p.y)?.closest('button')===button;
+  return {fighterId:Number(button.dataset.fighterId),kind:button.dataset.abilityKind,
+    rect:{x:r.x,y:r.y,width:r.width,height:r.height},center,ownsPointer:owns(point),ownsCenter:owns(center),at:performance.now()};
+}
+
+// Moving an OS pointer is asynchronous. The HUD may publish another actual
+// actor position before its ACK. Reposition once before the only down/up;
+// reject a changed owner or another missed target instead of pressing again.
+export async function confirmMayoPointer(page,button,point,proof,phases,active=()=>{}){
+  const observe=async name=>{
+    active();const phase={name,startedAt:Date.now(),status:'pending'};phases.push(phase);
+    try{
+      const state=await button.evaluateAll(readMayoPointerGeometry,point);active();phase.observation=state;
+      assert.ok(state,'Mayo control disappeared before down');assert.equal(state.fighterId,proof.fighterId);
+      assert.equal(state.kind,'mayo-chan');phase.status='completed';return state;
+    }catch(error){phase.status='error';phase.error=String(error);throw error;}
+    finally{phase.endedAt=Date.now();}
+  };
+  let state=await observe('confirm-after-move');
+  if(!state.ownsPointer||Math.hypot(state.center.x-point.x,state.center.y-point.y)>.5){
+    assert.equal(state.ownsCenter,true,'Current Mayo center is covered');point=state.center;
+    const phase={name:'reposition-before-down',point,startedAt:Date.now(),status:'pending'};phases.push(phase);
+    try{active();await page.mouse.move(point.x,point.y);active();phase.status='completed';}
+    catch(error){phase.status='error';phase.error=String(error);throw error;}
+    finally{phase.endedAt=Date.now();}
+    state=await observe('confirm-after-reposition');
+  }
+  assert.equal(state.ownsPointer,true,'Mayo moved outside the final pointer before down');
+}
+
 async function prepareCase(page,row,owned,active,resources){
   let proof;
   if(row.owner==='turned-birth'){
@@ -100,7 +134,9 @@ async function prepareCase(page,row,owned,active,resources){
     const before=await owned(()=>page.evaluate(()=>window.__ASHFALL_BATTLE_QA__.getPhaseGCombatSnapshot()));
     row.beforeMayoInput=before;
     const inputPage={mouse:Object.fromEntries(['move','down','up'].map(key=>[key,async(...args)=>{
-      active();const result=await page.mouse[key](...args);active();return result;
+      active();const result=await page.mouse[key](...args);active();
+      if(key==='move')await confirmMayoPointer(page,button,{x:args[0],y:args[1]},proof,row.inputPhases,active);
+      return result;
     }]))};
     row.inputPhases=[];
     assert.equal(await owned(()=>nativeBattleTap(inputPage,button,row.inputPhases)),true,'Original Mayo native input required');

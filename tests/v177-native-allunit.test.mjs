@@ -16,10 +16,64 @@ import {MANUAL_ABILITY_REGISTRY,createManualAbilityRuntime,beginManualAbility,ad
 import {configureV177BornTurnedContinuation} from '../app/v177NativeTurnedProof.js';
 import {createV177FutagoDamageCopy,prepareV177NativeFutagoPair} from '../app/v177NativeFutagoProof.js';
 import {FORM_BINDINGS,SHARDS,VIEWPORTS,LIMITS,planShard,validateManifest,assertPlannedCase} from '../scripts/v177-native-allunit-manifest.mjs';
-import {nativeAllUnitBinding,main,ensureNativeAllUnitAssets} from '../scripts/v177-native-allunit-browser.mjs';
+import {nativeAllUnitBinding,main,ensureNativeAllUnitAssets,enterNativeAllUnitSurface} from '../scripts/v177-native-allunit-browser.mjs';
 import {readNativeAllUnitSample,postpaintCaptureBoundary,assertShardPostpaintContract} from '../scripts/v177-native-allunit-contract.mjs';
-import {hasPreparedAllUnitPaint,observeMayoPointer,finishMayoPointer} from '../scripts/v177-native-allunit-cases.mjs';
+import {hasPreparedAllUnitPaint,observeMayoPointer,finishMayoPointer,readMayoPointerGeometry,confirmMayoPointer} from '../scripts/v177-native-allunit-cases.mjs';
 import {assertFutagoPairDamageAndOwner,assertMayoFeralReceipt} from '../scripts/v177-native-allunit-owners.mjs';
+
+test('cold entry uses the real notice continue control and awaits its removal before ordinary play',async()=>{
+  const calls=[];let visible=true,hidden=false;
+  const combined={or(){return this;},first(){return this;},async waitFor(){calls.push('entry-visible');}};
+  const play={...combined,async isVisible(){return true;},async click(){assert.equal(hidden,true);calls.push('play');}};
+  const notice={async evaluateAll(){return {present:visible,enabled:visible};},async click(){calls.push('notice-continue');visible=false;}};
+  const page={getByRole:()=>play,locator:selector=>selector==='.fiction-notice'
+    ?{getByRole:()=>notice,async waitFor(options){assert.equal(options.state,'hidden');calls.push('notice-hidden');hidden=true;}}
+    :combined};
+  await enterNativeAllUnitSurface(page);
+  assert.deepEqual(calls,['entry-visible','notice-continue','notice-hidden','entry-visible','play']);
+  const sentinel=Error('Actual notice click failed');notice.click=async()=>{throw sentinel;};visible=true;
+  await assert.rejects(enterNativeAllUnitSurface(page),e=>e===sentinel);
+});
+
+test('notice leaving and disappearing during click advance only after actual removal; a still-present timeout remains a failure',async()=>{
+  for(const scenario of ['disabled','disappeared','still-present']){
+    let presses=0,removed=false;const timeout=Object.assign(Error('Original click timeout'),{name:'TimeoutError'});
+    const combined={or(){return this;},first(){return this;},async waitFor(){}};
+    const play={...combined,async isVisible(){return true;},async click(){assert.equal(removed,true);}};
+    const notice={async evaluateAll(){return {present:true,enabled:scenario!=='disabled'};},async click(options){
+      assert.equal(options.timeout,5000);presses++;if(scenario==='disappeared')removed=true;throw timeout;}};
+    const page={getByRole:()=>play,locator:s=>s==='.fiction-notice'?{getByRole:()=>notice,
+      async count(){return removed?0:1;},async waitFor(){removed=true;}}:combined};
+    if(scenario==='still-present')await assert.rejects(enterNativeAllUnitSurface(page),e=>e===timeout);
+    else{const receipt=await enterNativeAllUnitSurface(page);assert.equal(receipt.noticeContinue,
+      scenario==='disabled'?'already-leaving':'dismissed-during-click');assert.equal(removed,true);}
+    assert.equal(presses,scenario==='disabled'?0:1);
+  }
+});
+
+test('the recorded 220-to244 HUD movement puts the old y242 point outside; one native pre-down correction owns the real button',async()=>{
+  const proof={fighterId:7},old={x:448.5,y:242},rect={x:432.875,y:244,width:44,height:44};
+  const button={disabled:false,dataset:{fighterId:'7',abilityKind:'mayo-chan'},getAttribute:()=> 'false',getBoundingClientRect:()=>rect};
+  const context={elements:[button],point:old,performance:{now:()=>12},document:{elementFromPoint:(x,y)=>({closest:()=>
+    x>=rect.x&&x<rect.x+rect.width&&y>=rect.y&&y<rect.y+rect.height?button:null})}};
+  const read=point=>vm.runInNewContext('('+readMayoPointerGeometry.toString()+')(elements,point)',{...context,point});
+  assert.equal(read(old).ownsPointer,false);
+  const moves=[],phases=[];
+  await confirmMayoPointer({mouse:{async move(x,y){moves.push({x,y});}}},{async evaluateAll(fn,point){assert.equal(fn,readMayoPointerGeometry);return read(point);}},old,proof,phases);
+  assert.deepEqual(moves,[{x:454.875,y:266}]);
+  assert.equal(phases.at(-1).observation.ownsPointer,true);assert.equal(phases.every(p=>p.status==='completed'),true);
+});
+
+test('Mayo pre-down check rejects a replaced owner, coverage and a second miss without another move or press',async()=>{
+  for(const fault of ['owner','covered','still-moving']){
+    let reads=0,moves=0;
+    const control={async evaluateAll(){reads++;return {fighterId:fault==='owner'?99:7,kind:'mayo-chan',center:{x:450,y:266},
+      ownsPointer:false,ownsCenter:fault!=='covered'};}};
+    const page={mouse:{async move(){moves++;},async down(){assert.fail('No press while target check fails');}}};
+    await assert.rejects(confirmMayoPointer(page,control,{x:448,y:242},{fighterId:7},[]));
+    assert.equal(moves,fault==='still-moving'?1:0);assert.equal(reads,fault==='still-moving'?2:1);
+  }
+});
 
 test('asset setup records each original sequential operation before awaiting it without retrying or skipping',async()=>{
   const owner={cleanup:'open'},calls=[],forms=['ooguchi','guardian','gairen','futago'];let time=100;

@@ -7,8 +7,9 @@ import {SHARDS,planShard} from '../scripts/v177-native-allunit-manifest.mjs';
 const recovery=JSON.parse(readFileSync('scripts/v177-native-allunit-recovery.json','utf8'));
 test('unfinished selection never substitutes an unknown or duplicate case and leaves the full inventory intact',()=>{
   const selection=selectNativeCases(recovery.caseIds);
-  assert.equal(selection.caseIds.length,54);
-  assert.deepEqual(selection.shards,['forms-4','forms-5','forms-9','forms-10','forms-11']);
+  assert.equal(selection.caseIds.length,24);
+  assert.deepEqual(selection.shards,['forms-4','forms-9','forms-10']);
+  assert.equal(recovery.originalCaseIds.length,54);assert.equal(recovery.retainedEvidence.caseIds.length,30);
   assert.equal(SHARDS.flatMap(s=>planShard(s.id)).length,432);
   for(const ids of [[],['unknown'],[recovery.caseIds[0],recovery.caseIds[0]]])assert.throws(()=>selectNativeCases(ids));
 });

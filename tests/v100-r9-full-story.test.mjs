@@ -6,6 +6,7 @@ import {r9StoryPlan,assertR9PageGeometry} from '../scripts/v100-r9-story-plan.mj
 import {V100_STORY_EVENTS} from '../app/v100StoryEvents.js';
 import {ciChangeScope} from '../scripts/ci-change-scope.mjs';
 import {assertBuildEventHead} from '../scripts/v177-native-allunit-build.mjs';
+import {nativeCaseSelection} from '../scripts/v177-native-allunit-selection.mjs';
 
 test('R9 page coverage retains every original node and explicitly accounts for credits and finalizers',()=>{
  const plan=r9StoryPlan('確認者');assert.equal(plan.events.length,62);
@@ -47,7 +48,9 @@ test('focused Draft verification selects R9 and the capture workflow without ena
  assert.equal(workflow.on.workflow_dispatch.inputs.expected_head.required,true);
  assert.ok(workflow.jobs.build.if.includes('needs.scope.outputs.allunit'));
  assert.ok(workflow.jobs.build.if.includes('!github.event.pull_request.draft'));
- assert.equal(workflow.jobs.capture.strategy.matrix.shard.length,12);
+ assert.equal(workflow.jobs.capture.strategy.matrix.shard,'${{ fromJSON(needs.build.outputs.shards) }}');
+ const allCases=nativeCaseSelection({event:{pull_request:{draft:false}}});
+ assert.equal(allCases.shards.length,12);assert.equal(allCases.caseIds.length,432);
  assert.equal(workflow.jobs.capture.if,"${{ !cancelled() && needs.build.result == 'success' }}",
   'manual capture must survive the skipped PR-only scope ancestor and reject failed build');
  const ci=load(readFileSync('.github/workflows/ci.yml','utf8'));

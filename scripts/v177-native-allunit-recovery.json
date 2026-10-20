@@ -2,7 +2,7 @@
   "schema": "v177-native-allunit-recovery/v1",
   "head": "07df9fdcf1ceb80362faf6c7015d14e1eb295c7d",
   "runId": "39422404651",
-  "caseIds": [
+  "originalCaseIds": [
     "forms-4:mayo-chan-feral:move:1280x720",
     "forms-4:mayo-chan-feral:attack:1280x720",
     "forms-4:mayo-chan-feral:engage:1280x720",
@@ -58,13 +58,90 @@
     "forms-11:mugarian-president-mutated:attack:1280x720",
     "forms-11:mugarian-president-mutated:engage:1280x720"
   ],
+  "caseIds": [
+    "forms-4:mayo-chan-feral:move:1280x720",
+    "forms-4:mayo-chan-feral:attack:1280x720",
+    "forms-4:mayo-chan-feral:engage:1280x720",
+    "forms-9:resonator:move:1280x720",
+    "forms-9:resonator:attack:1280x720",
+    "forms-9:resonator:engage:1280x720",
+    "forms-9:cagewalker:move:1280x720",
+    "forms-9:cagewalker:attack:1280x720",
+    "forms-9:cagewalker:engage:1280x720",
+    "forms-9:spindle:move:1280x720",
+    "forms-9:spindle:attack:1280x720",
+    "forms-9:spindle:engage:1280x720",
+    "forms-10:choir-knot:move:1280x720",
+    "forms-10:choir-knot:attack:1280x720",
+    "forms-10:choir-knot:engage:1280x720",
+    "forms-10:pall-manta:move:1280x720",
+    "forms-10:pall-manta:attack:1280x720",
+    "forms-10:pall-manta:engage:1280x720",
+    "forms-10:anchor-bloom:move:1280x720",
+    "forms-10:anchor-bloom:attack:1280x720",
+    "forms-10:anchor-bloom:engage:1280x720",
+    "forms-10:red-panther-knife:move:1280x720",
+    "forms-10:red-panther-knife:attack:1280x720",
+    "forms-10:red-panther-knife:engage:1280x720"
+  ],
+  "retainedEvidence": {
+    "head": "e10ba590b74548db1f5208d4b44422239fd16fae",
+    "runId": "39436411863",
+    "caseIds": [
+      "forms-4:walker:move:1280x720",
+      "forms-4:walker:attack:1280x720",
+      "forms-4:walker:engage:1280x720",
+      "forms-4:runner:move:1280x720",
+      "forms-4:runner:attack:1280x720",
+      "forms-4:runner:engage:1280x720",
+      "forms-5:turned:move:1280x720",
+      "forms-5:turned:attack:1280x720",
+      "forms-5:turned:engage:1280x720",
+      "forms-5:spitter:move:1280x720",
+      "forms-5:spitter:attack:1280x720",
+      "forms-5:spitter:engage:1280x720",
+      "forms-5:shade:move:1280x720",
+      "forms-5:shade:attack:1280x720",
+      "forms-5:shade:engage:1280x720",
+      "forms-5:crusher:move:1280x720",
+      "forms-5:crusher:attack:1280x720",
+      "forms-5:crusher:engage:1280x720",
+      "forms-11:red-panther-shield:move:1280x720",
+      "forms-11:red-panther-shield:attack:1280x720",
+      "forms-11:red-panther-shield:engage:1280x720",
+      "forms-11:red-panther-smg:move:1280x720",
+      "forms-11:red-panther-smg:attack:1280x720",
+      "forms-11:red-panther-smg:engage:1280x720",
+      "forms-11:red-panther-commander:move:1280x720",
+      "forms-11:red-panther-commander:attack:1280x720",
+      "forms-11:red-panther-commander:engage:1280x720",
+      "forms-11:mugarian-president-mutated:move:1280x720",
+      "forms-11:mugarian-president-mutated:attack:1280x720",
+      "forms-11:mugarian-president-mutated:engage:1280x720"
+    ],
+    "reports": [
+      {
+        "shard": "forms-4",
+        "sha256": "8304592832a239e0634325962e7af513c5b7e89fbab249d2663e0b5cda67ccaf"
+      },
+      {
+        "shard": "forms-5",
+        "sha256": "bb4ffdeeaf255a7e737e439f9ae53b59a9a12aa2928a4f6243ce8c06dcb547e3"
+      },
+      {
+        "shard": "forms-11",
+        "sha256": "4577b9f7111d74075f4ba12d344889e673bf752d6ce912742d2044c05c41a7f9"
+      }
+    ]
+  },
   "changedBlobs": {
     ".github/workflows/native-allunit-capture.yml": "e285ca2d405b7a54acbf1188f27bbeb4d9dc6824",
     "scripts/ci-change-scope.mjs": "fcb530d78c8654be46b8ce8c87eae890a8f3afd4",
-    "scripts/v177-native-allunit-browser.mjs": "2c0fc5d31d326dd439b549d4d28fda353489ed38",
-    "scripts/v177-native-allunit-cases.mjs": "57457ee538895b1402258972b4bb574ec080d6ef",
-    "scripts/v177-native-allunit-selection.mjs": "b6f2f9b859407a3fd9679a1469538758f80077c6",
-    "tests/v177-native-allunit-selection.test.mjs": "ee090ee8dcae03a5c17bfa8676152fa3ee283883",
-    "tests/v177-native-allunit.test.mjs": "3ca53a93f09475ee5f0041f0e92e3d2d0a590461"
+    "scripts/v177-native-allunit-browser.mjs": "36d8292d0a9204dc758c112459b203bed79f2021",
+    "scripts/v177-native-allunit-cases.mjs": "c0f208edc4ed18b2a0cfae4fa46ed92993648610",
+    "scripts/v177-native-allunit-selection.mjs": "075ee819db0a2ea4b4215d00096976adb3e5013b",
+    "tests/v100-r9-full-story.test.mjs": "bcbc1358a4b920bbeabb76fb94e3d77c17761282",
+    "tests/v177-native-allunit-selection.test.mjs": "5b910f2e798b957933e59f532382541fb0d4ccc7",
+    "tests/v177-native-allunit.test.mjs": "7e64a3c8ceeef8148b37f21428bdc4a781ed9708"
   }
 }

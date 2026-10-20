@@ -6,7 +6,7 @@ import path from 'node:path';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 import {nativeGameCaptureBinding,withNativeGameCaseDeadline,closeNativeGameContext,
   NATIVE_GAME_CAPTURE_SOURCES} from './v177-native-game-capture-browser.mjs';
-import {SHARDS,VIEWPORTS,FORM_BINDINGS,planShard,assertRetainedBindings} from './v177-native-allunit-manifest.mjs';
+import {SHARDS,VIEWPORTS,FORM_BINDINGS,LIMITS,planShard,assertRetainedBindings} from './v177-native-allunit-manifest.mjs';
 import {captureAllUnitCase} from './v177-native-allunit-cases.mjs';
 import {planRangerManualShard,rangerManualEnvelopeReference} from './v177-native-allunit-ranger-manual-contract.mjs';
 import {captureNativeRangerManualCase} from './v177-native-allunit-ranger-manual.mjs';
@@ -30,6 +30,32 @@ export async function ensureNativeAllUnitAssets(page,forms,owner,{now=Date.now}=
       receipt.status='completed';receipt.hostCompletedAtMs=now();
     }catch(error){receipt.status='failed';receipt.hostFailedAtMs=now();receipt.error=String(error);throw error;}
   }
+}
+
+export async function enterNativeAllUnitSurface(page,setupStage=()=>{}){
+  const play=page.getByRole('button',{name:'ブラウザで遊ぶ',exact:true});
+  const title=page.locator('.v100-start-screen');
+  const noticeRoot=page.locator('.fiction-notice');
+  const notice=noticeRoot.getByRole('button',{name:'続ける',exact:true});
+  const receipt={noticeContinue:'not-present',interruptedClick:null};
+  setupStage('entry-surface');await play.or(title).or(notice).first().waitFor();
+  const state=await notice.evaluateAll(elements=>({present:elements.length===1,enabled:elements.length===1&&!elements[0].disabled}));
+  if(state.present){
+    // Use the existing player control instead of spending 6s+500ms waiting
+    // for its automatic dismissal. No DOM, title clock or readiness bypass.
+    setupStage('fiction-continue');receipt.noticeContinue='already-leaving';
+    if(state.enabled){
+      try{await notice.click({timeout:LIMITS.readinessMs});receipt.noticeContinue='clicked';}
+      catch(error){
+        if(error.name!=='TimeoutError'||await noticeRoot.count()!==0)throw error;
+        receipt.noticeContinue='dismissed-during-click';receipt.interruptedClick=String(error);
+      }
+    }
+    await noticeRoot.waitFor({state:'hidden'});
+  }
+  await play.or(title).first().waitFor();setupStage('entry-play-button');
+  if(await play.isVisible())await play.click();
+  return receipt;
 }
 
 export async function nativeAllUnitBinding({env=process.env,...guard}={}){
@@ -148,8 +174,7 @@ export async function runBrowserQa(){
           await withNativeGameCaseDeadline(async()=>{
             setupStage('seed-save');await page.addInitScript(deps.seedV100BrowserSaveOnce,deps.serializeV100Save(save));
             const url=new URL('v100',origin);url.searchParams.set('phase-g','1');setupStage('navigate');await page.goto(url.href);
-            const play=page.getByRole('button',{name:'ブラウザで遊ぶ',exact:true});
-            setupStage('entry-surface');await play.or(page.locator('.v100-start-screen')).first().waitFor();setupStage('entry-play-button');if(await play.isVisible())await play.click();
+            owner.entrySurface=await enterNativeAllUnitSurface(page,setupStage);
             setupStage('title-entry');await deps.enterV100FromTitle(page);setupStage('battle-button');await page.getByRole('button',{name:'戦闘へ',exact:true}).click();
             setupStage('battle-running');await page.waitForFunction(()=>window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().running);
             const forms=[...new Set(rows.flatMap(r=>[r.form,r.binding.kind,r.binding.side==='human'?'walker':'guardian',
