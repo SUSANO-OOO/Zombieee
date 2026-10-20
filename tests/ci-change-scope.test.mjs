@@ -34,6 +34,7 @@ test('draft changes select affected observation while unknown/shared/runtime inp
  assert.equal(ciChangeScope(['docs/PROJECT_STATE.md'],{draft:true}).full,false);
  const motion=ciChangeScope(['app/v177RangerFootPlacement.js','tests/v177-ranger-foot-placement.test.mjs'],{draft:true});
  assert.equal(motion.ranger,true);assert.equal(motion.normal,false);assert.equal(motion.full,false);
+ const guard=ciChangeScope(['scripts/silent-browser-output.mjs'],{draft:true});assert.equal(guard.ranger,true);assert.equal(guard.normal,false);
  const normal=ciChangeScope(['scripts/v100-normal-campaign-playthrough.mjs'],{draft:true});assert.equal(normal.normal,true);assert.equal(normal.ranger,false);
  for(const file of ['app/v177JointPresentation.js','app/audioOutput.js','app/v100Save.js','public/art/unit.webp','package-lock.json','unknown/path','docs/story/v10/全脚本_R9.md'])
   assert.equal(ciChangeScope([file],{draft:true}).full,true,file);
