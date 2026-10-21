@@ -185,6 +185,21 @@ test('the CLI handles a PR whose base branch advanced without requiring another 
 });
 
 
+test('the real CLI collects the native control blob and restores full regression for an unknown revision',()=>{
+ const script=resolve('scripts/ci-change-scope.mjs'),file='scripts/v100-macos-indexing-control.mjs';
+ const directory=mkdtempSync(join(tmpdir(),'zombieee-native-scope-'));
+ const git=(...args)=>execFileSync('git',args,{cwd:directory,encoding:'utf8',windowsHide:true}).trim();
+ const commit=()=>git('-c','user.name=scope-test','-c','user.email=scope-test@example.invalid','-c','commit.gpgsign=false','commit','-qm','fixture');
+ git('init','-q');writeFileSync(join(directory,'AGENTS.md'),'fixture');git('add','.');commit();const base=git('rev-parse','HEAD');
+ mkdirSync(join(directory,'scripts'));const bytes=readFileSync(file);writeFileSync(join(directory,file),bytes);git('add','.');commit();
+ const run=head=>JSON.parse(execFileSync(process.execPath,[script],{cwd:directory,encoding:'utf8',windowsHide:true,
+  env:{...process.env,CI_SCOPE_BASE:base,CI_SCOPE_HEAD:head,CI_SCOPE_DRAFT:'true',GITHUB_OUTPUT:'',GITHUB_STEP_SUMMARY:''}}));
+ const scoped=run(git('rev-parse','HEAD'));
+ assert.equal(scoped.full,false);assert.equal(scoped.allunit,true);assert.equal(scoped.normal,false);assert.equal(scoped.r9,false);
+ writeFileSync(join(directory,file),Buffer.concat([bytes,Buffer.from('\n')]));git('add','.');commit();
+ assert.equal(run(git('rev-parse','HEAD')).full,true);
+});
+
 test('reviewed lifecycle bindings select motion/normal while unchanged story and Ranger-only observations remain reusable',()=>{
  const paths=["app/AshfallGame.tsx","app/v177JointPresentation.js","app/v177LifecyclePresentation.js"];
  const sourceBlobs=Object.fromEntries(paths.map(file=>[file,execFileSync('git',['hash-object',file],{encoding:'utf8',windowsHide:true}).trim()]));

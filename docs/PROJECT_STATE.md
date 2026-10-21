@@ -6,7 +6,7 @@
 
 転倒・起き上がりは元の死亡／マヨ退避／感染出生の処理と時間に接続。段階変化は実際のボスHP変化と双子の相方死亡に接続し、元の攻撃を終えてから頭の短い動作を行う。足・武器・ダメージ・AI・saveは元の担当処理を維持する。製品差分 `080a785f`、localhost計測修正 `5cbdcb0c`。追加21本／4,348 decoded frames（マヨ2、HP境界17、双子2）を原動画1倍速・先送りなしで確認し、新たな足滑り・大きな姿勢の飛びは確認範囲に見つからなかった。
 
-映像と実描画の原記録・失敗履歴・source hashは保持する。旧対応表は `outputs/motion-review/state-motion-inventory-r100.json`、追加動作は `connected-lifecycle-review-r98.json`、Brute修正後は `brute-knee-review-r110.json`／`brute-arm-review-r117.json`、48形態再点検は `all48-motion-recheck-r107.json`。Brute以外の過去記録を新候補の再収録と混同しない。復旧profileは残1本だけを選び、未知の差分やReady化では全回帰へ戻す。製品候補2746のCI `39589154449` は3,022 tests、Lint、content、buildが成功。QA補正e5eaのCI `39590903995` も3,023件成功。QA／文書更新による実行中CIの自動cancelは停止済み。
+映像と実描画の原記録・失敗履歴・source hashは保持する。旧対応表は `outputs/motion-review/state-motion-inventory-r100.json`、追加動作は `connected-lifecycle-review-r98.json`、Brute修正後は `brute-knee-review-r110.json`／`brute-arm-review-r117.json`、48形態再点検は `all48-motion-recheck-r107.json`。Brute以外の過去記録を新候補の再収録と混同しない。復旧profileは残1本だけを選び、未知の差分やReady化では全回帰へ戻す。製品候補2746のCI `39589154449` は3,022 tests、Lint、content、buildが成功。QA補正e5eaのCI `39590903995` も3,023件成功。QA／文書更新による実行中CIの自動cancelは停止済み。723のCI `39597715563` はCLI側の新blob収集漏れで不要な全回帰となったため、このrunだけ停止した。必要なnative1本は別runで継続し、実CLIと一時Git履歴を通す回帰検査で既知差分の限定実行・未知差分の全回帰を確認した。
 
 WebKit通常観察 `39574644933` attempt2は例外0、第1・2作戦勝利、第3作戦敗北。旧録画付き6作戦のRAF p95は123〜200msで未達の記録を維持する。登録3体の生体接地計算から不要な全身capture・再IK・頂点配列を除き、全輪郭と元の床値を保持した（31,752比較の最大差1.71e-13 world px）。正式1.56.1／Apple Siliconの固定30秒性能検証 `39590903947` は全6窓成功。844×340・844×390・1280×720のp95は19／19／29ms、独立再測定19／28ms、DPR2は28ms。元の33ms、50 median FPS、実描画頻度とRanger実負荷の各条件を満たし、console/page/request/HTTPエラー0。1.63／Intel診断 `39589154684` は99〜128msで失敗（blank自体34〜38ms）。両環境や旧通常録画を同じ合格にしない。後続の録画ハーネス・文書更新では成功済みの正式性能測定を繰り返さない。
 
