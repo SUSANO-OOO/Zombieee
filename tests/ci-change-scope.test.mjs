@@ -93,6 +93,15 @@ test('only the exact Souki contact repair selects normal play and motion without
  assert.equal(ciChangeScope(paths,{draft:false,sourceBlobs}).full,true);
 });
 
+test('the exact local QA preparation change reuses unchanged normal-play evidence in Draft',()=>{
+ const file='app/AshfallGame.tsx',blob=execFileSync('git',['hash-object',file],{encoding:'utf8',windowsHide:true}).trim();
+ const options={draft:true,sourceBlobs:{[file]:blob}},scope=ciChangeScope([file],options);
+ assert.equal(scope.full,false);assert.equal(scope.normal,false);assert.equal(scope.allunit,false);assert.equal(scope.r9,false);
+ for(const sourceBlobs of [{},{[file]:'f'.repeat(40)}])assert.equal(ciChangeScope([file],{draft:true,sourceBlobs}).full,true);
+ assert.equal(ciChangeScope([file],{...options,draft:false}).full,true);
+ assert.equal(ciChangeScope([file,'app/manualAbilities.js'],options).full,true);
+});
+
 test('only the reviewed corpse fixture injection preserves already completed story evidence',()=>{
  const file='tests/helpers/v177-corpse-joint-render.mjs';
  const blob=execFileSync('git',['hash-object',file],{encoding:'utf8',windowsHide:true}).trim();

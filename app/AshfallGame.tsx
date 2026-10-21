@@ -11506,7 +11506,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         boss.speed = 0;
         boss.laneSpeed = 0;
         if (["ooguchi", "gairen", "futago"].includes(boss.kind)) {
-          boss.x = boss.combatReadyX ?? boss.x;
+          if (Number.isFinite(boss.combatReadyX) && boss.combatReadyX! > 0) boss.x = boss.combatReadyX!;
         }
         boss.hp = Math.ceil(boss.maxHp * (boss.kind === "futago" ? .55 : .72));
         boss.abilityCooldown = 0;
@@ -12858,10 +12858,15 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       prepareEnemyVfxProof: ({
         kind = "resonator",
         state = "attack",
+        reinforcementAlly = false,
       }: {
         kind?: EnemyKind;
         state?: "entry" | "move" | "warning" | "warning-low-hp" | "attack" | "hit" | "low-hp";
+        reinforcementAlly?: boolean;
       } = {}) => {
+        if (reinforcementAlly && (kind !== "anchor-bloom" || state !== "move")) {
+          throw new Error("Reinforcement fixture requires an idle Anchor Bloom");
+        }
         const g = gameRef.current;
         g.fighters = [];
         g.corpses = [];
@@ -12906,6 +12911,13 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         human.cooldown = 99;
         human.combatReady = true;
         human.gateEntering = false;
+        if (reinforcementAlly) {
+          const ally = spawnEnemy(g, "walker", lane);
+          ally.x = enemy.x + 65; ally.y = enemy.y; ally.lane = lane; ally.anchorLane = lane;
+          ally.combatReady = true; ally.gateEntering = false; ally.spawnGrace = 0;
+          ally.speed = 0; ally.laneSpeed = 0; ally.damage = 0; ally.cooldown = 99; ally.abilityCooldown = 99;
+          ally.hp = Math.ceil(ally.maxHp * .5);
+        }
         if (state === "move") enemy.aiMoveDirection = -1;
         if (state === "warning" || state === "warning-low-hp") {
           enemy.attackWindup = .18;
