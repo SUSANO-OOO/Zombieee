@@ -70,14 +70,19 @@ function readCanvasProjectionAndOwners(element, points) {
   };
 }
 
-export async function observeVisibleBattleHealthBars(canvasLocator) {
+export async function observeVisibleBattleHealthBars(canvasLocator,{page}={}) {
   const {projection} = await canvasLocator.evaluate(readCanvasProjectionAndOwners, []);
   const keys = ['x','y','width','height','worldScale','worldOffsetX','worldOffsetY'];
   if (!projection || !keys.every(key => Number.isFinite(projection[key]))
     || projection.width <= 0 || projection.height <= 0 || projection.worldScale <= 0) {
     return {status:'unavailable', bars:[]};
   }
-  const png = await canvasLocator.screenshot({type:'png', animations:'allow', scale:'css', timeout:2_000});
+  const options={type:'png',animations:'allow',scale:'css',timeout:2_000};
+  // A live camera shake can keep locator.screenshot waiting for a stable
+  // element. Capture the already observed viewport rectangle directly;
+  // the unchanged second projection/ownership read still rejects stale pixels.
+  const png=page?await page.screenshot({...options,clip:Object.fromEntries(['x','y','width','height'].map(k=>[k,projection[k]]))})
+    :await canvasLocator.screenshot(options);
   const {data, info} = await sharp(png).ensureAlpha().raw().toBuffer({resolveWithObject:true});
   const frame = readVisibleBattleHealthBars({data, width:info.width, height:info.height,
     rect:{x:0,y:0,width:projection.width,height:projection.height}});

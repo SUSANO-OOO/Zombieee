@@ -102,9 +102,15 @@ function automaticallyUnlocked(observation) {
   const value=observation?.status==='ok'?observation.value:null;
   const status=value?.audioStatus,diagnostics=value?.diagnostics,controls=value?.controls;
   const audio=status?.value,d=diagnostics?.value;
+  const successControl=controls?.total===1&&controls.values?.length===1
+    &&controls.values[0].status==='ok'&&controls.values[0].ariaLabel==='音声を有効にする'
+    &&controls.values[0].dataState==='success'&&controls.values[0].connected===true
+    &&controls.values[0].disabled===false&&controls.values[0].centerInViewport===true
+    &&controls.values[0].style?.visibility==='visible'&&controls.values[0].style.opacity===1
+    &&controls.values[0].style.pointerEvents==='auto'&&controls.values[0].topHit?.sameMarkedControl===true;
   return value?.visibilityState==='visible'&&status?.status==='ok'&&diagnostics?.status==='ok'
-    &&controls?.status==='ok'&&controls.total===0&&controls.truncated===false
-    &&Array.isArray(controls.values)&&controls.values.length===0
+    &&controls?.status==='ok'&&controls.truncated===false&&Array.isArray(controls.values)
+    &&((controls.total===0&&controls.values.length===0)||successControl)
     &&audio?.state==='running'&&audio.contextState==='running'&&audio.needsGesture===false&&audio.errorPresent===false
     &&d?.unlocked===true&&d.contextState==='running'&&d.audioState==='running'&&d.needsGesture===false
     &&d.disposed===false&&d.lifecycleHidden===false&&d.cacheFailed===0&&d.failedAssetCount===0
@@ -116,7 +122,7 @@ function automaticallyUnlocked(observation) {
 
 // The real title gesture can finish unlocking between isVisible and this
 // read. Confirm the same running generation twice before omitting a redundant
-// click on its already-removed success control. No retry or audio mutation.
+// click on its success control while it disappears. No retry or audio mutation.
 export async function captureNormalAudioUnlockAttempt(audio, { page, attempts, stageNumber }) {
   if (!Array.isArray(attempts)) throw new TypeError('audio-unlock attempts must be an array');
   if (attempts.length >= NORMAL_AUDIO_UNLOCK_ATTEMPT_LIMIT) {

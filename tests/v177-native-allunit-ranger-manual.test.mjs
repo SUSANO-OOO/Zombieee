@@ -129,13 +129,17 @@ test('raw reader and RAF preserve actual false/absent manual flags, origins and 
   getPhaseGCombatSnapshot:()=>({screen:'battle',stageId:'stage',time:current.simulationTime,battleGeneration:2,fighters:[{id:4,manualAbility:current.manualRuntime}],manualAbilityReceipts:current.phaseG.manualAbilityReceipts,completedAttackImpacts:[]}),
   getEnemyFacingRuntimeAudit:id=>id===4?{fighter:current.fighter,renderHistory:history}:{fighter:current.target},getPerformanceSnapshot:()=>({})};
  window.__ASHFALL_BATTLE_QA__=qa;
- const context={window,document:doc,performance:perf,location:{pathname:'/v100'},innerWidth:844,innerHeight:390,devicePixelRatio:1,structuredClone,
+ const clonedHistorySizes=[];
+ const clone=value=>{if(Array.isArray(value)&&value.some(row=>row?.renderSequence!==undefined))clonedHistorySizes.push(value.length);return structuredClone(value);};
+ const context={window,document:doc,performance:perf,location:{pathname:'/v100'},innerWidth:844,innerHeight:390,devicePixelRatio:1,structuredClone:clone,
   proof:fixture().proof,realmOwner:owner,requestAnimationFrame:fn=>{queue.set(++next,fn);return next;},cancelAnimationFrame:id=>queue.delete(id)};
  const reader=vm.runInNewContext('('+createNativeRangerManualReader.toString()+')({proof,realmOwner})',context);context.reader=reader;
  const state=vm.runInNewContext('('+startNativeRangerManualObservation.toString()+')({reader})',context);
  const tick=()=>{const [id,fn]=queue.entries().next().value;queue.delete(id);fn();};tick();assert.equal(state.rows[0].renders[0].jointRangerManualDrawSucceeded,false);
  clock=2;perf.timeOrigin=89;history=[...history,{...history[0],renderSequence:history[0].renderSequence+1,jointRangerManualDrawSucceeded:undefined}];tick();
  assert.equal(state.rows[1].timeOrigin,89);assert.equal(state.rows[1].renders.length,1);assert.equal(state.rows[1].renders[0].jointRangerManualDrawSucceeded,undefined);
+ assert.equal(clonedHistorySizes.at(-1),1,'Already retained heavy paint plans must not be cloned again on every RAF');
+ assert.equal(state.rows[1].historyWindow.previousSequenceFound,true);
  const receipt=stopNativeRangerManualObservation(state);assert.equal(receipt.rows.length,2);assert.equal(receipt.failure,null);assert.equal(listeners.size,0);assert.equal(queue.size,0);
  const bounded=vm.runInNewContext('('+startNativeRangerManualObservation.toString()+')({reader})',context);bounded.rows.length=4096;tick();
  const overflow=stopNativeRangerManualObservation(bounded);assert.equal(overflow.overflow,true);assert.match(overflow.failure,/4096/u);

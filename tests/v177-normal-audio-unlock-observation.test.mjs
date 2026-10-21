@@ -6,6 +6,30 @@ import { captureNormalAudioUnlockAttempt, readNormalAudioUnlockSnapshot, NORMAL_
 
 const snapshot = () => ({ schema: 'v177-normal-audio-unlock-snapshot/v1', controls: { status: 'ok', total: 0 } });
 const autoUnlocked=JSON.parse(readFileSync('tests/fixtures/v177-native-auto-unlocked-audio.json','utf8'));
+const successControl=JSON.parse(readFileSync('tests/fixtures/v177-native-success-control-audio.json','utf8'));
+
+test('the actual native success-control race requires the same two complete running readings before skipping its disappearing button',async()=>{
+ const attempts=[],values=[successControl.before,successControl.after];let reads=0,clicks=0;
+ await captureNormalAudioUnlockAttempt({click:async()=>{clicks++;throw Error('already disappearing');}},
+  {page:{evaluate:async()=>structuredClone(values[reads++])},attempts,stageNumber:1});
+ assert.equal(reads,2);assert.equal(clicks,0);assert.equal(attempts[0].click.status,'not-needed-already-unlocked');
+ assert.equal(attempts[0].before.value.controls.values[0].dataState,'success');
+ assert.equal(attempts[0].after.value.controls.total,0);
+ assert.deepEqual(attempts[0].acceptance,{audioSignal:false,physicalSavedRecording:false,wholeGame:false});
+});
+
+test('pending, partial, hidden, unknown, disconnected or covered controls cannot stand in for the native success control',async()=>{
+ for(const mutate of [s=>s.controls.values[0].dataState='pending',s=>s.controls.values[0].dataState='partial',
+  s=>s.controls.values[0].connected=false,s=>s.controls.values[0].ariaLabel=null,
+  s=>s.controls.values[0].style.visibility='hidden',s=>s.controls.values[0].style.opacity=0,
+  s=>s.controls.values[0].topHit.sameMarkedControl=false,s=>s.diagnostics.value.activeBgmVoices=0]){
+  const before=structuredClone(successControl.before);mutate(before);let reads=0,clicks=0;
+  const original=new Error('required native click');
+  await assert.rejects(()=>captureNormalAudioUnlockAttempt({click:async()=>{clicks++;throw original;}},
+   {page:{evaluate:async()=>reads++===0?before:structuredClone(successControl.after)},attempts:[],stageNumber:1}),e=>e===original);
+  assert.equal(clicks,1);assert.equal(reads,2);
+ }
+});
 
 test('the original native auto-hide race continues only after two complete running readings without another click',async()=>{
   const attempts=[],values=[autoUnlocked.before,autoUnlocked.after];let reads=0,clicks=0;

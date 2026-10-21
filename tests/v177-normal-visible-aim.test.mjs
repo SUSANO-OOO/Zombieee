@@ -27,10 +27,11 @@ async function nativeFrame(file,{dpr=1,occluded=false,geometryChanged=false,scre
     getContext(){contextReads++;throw Error('A live canvas context is forbidden');}};
   const document={elementFromPoint:(x,y)=>y>70&&y<307&&!(occluded&&x>600&&y<180)?canvas:null};
   const locator={evaluate:async(fn,args)=>vm.runInNewContext('('+fn.toString()+')',{document})(canvas,args),
-    screenshot:async options=>{screenshotCalls++;assert.deepEqual(options,{type:'png',animations:'allow',scale:'css',timeout:2_000});
+    screenshot:async()=>assert.fail('A moving canvas must not wait for locator stability')};
+  const page={screenshot:async options=>{screenshotCalls++;assert.deepEqual(options,{type:'png',animations:'allow',scale:'css',timeout:2_000,clip:{x:0,y:0,width:844,height:390}});
       if(screenshotFailure)throw Error('native screenshot failed');return png;}};
   try {
-    const frame=await observeVisibleBattleHealthBars(locator);
+    const frame=await observeVisibleBattleHealthBars(locator,{page});
     assert.equal(contextReads,0);assert.equal(screenshotCalls,1);
     if(frame.status==='read')assert.equal(frame.pngSha256,crypto.createHash('sha256').update(png).digest('hex'));
     return frame;

@@ -223,7 +223,7 @@ async function battle(stage) {
     if(airVisible&&(airReady||barrageReady||!normalCampaignCanSpendVehicleGauge(record.inputs))
       &&(Date.now()-lastAimReadAt>=2_000||(airReady&&!lastAirReady))) {
       lastAimReadAt=Date.now();lastVisibleEnemyTarget=false;visibleEnemyTarget=false;
-      const frame=await observeVisibleBattleHealthBars(page.locator('.game-shell canvas'));
+      const frame=await observeVisibleBattleHealthBars(page.locator('.game-shell canvas'),{page});
       visibleEnemyTarget=frame.status==='read'&&frame.bars.some(bar=>(bar.kind==='enemy'||bar.kind==='clone')&&Number.isFinite(bar.x)&&Number.isFinite(bar.y));
       lastVisibleEnemyTarget=visibleEnemyTarget;
       (record.airAimObservations??=[]).push({seconds:(Date.now()-start)/1000,airReady,status:frame.status,

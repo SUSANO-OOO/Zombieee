@@ -10,11 +10,13 @@ const governance=new Set(['AGENTS.md','docs/PROJECT_STATE.md','docs/CODEX_SOL_RO
 const ranger=new Set(['app/v177RangerFootPlacement.js','app/v177RangerLowerMotion.js','assets/source/v177/ranger/lower-r3/provenance.json','scripts/silent-browser-output.mjs']);
 const normal=new Set(['scripts/v100-normal-campaign-playthrough.mjs','scripts/v100-normal-play-contract.mjs',
   'scripts/v177-representative-normal-play.mjs','scripts/v177-representative-battles.mjs',
-  'scripts/v177-normal-audio-unlock-observation.mjs','tests/fixtures/v177-native-auto-unlocked-audio.json']);
+  'scripts/v177-normal-audio-unlock-observation.mjs','tests/fixtures/v177-native-auto-unlocked-audio.json',
+  'tests/fixtures/v177-native-success-control-audio.json','scripts/v100-normal-visible-aim.mjs']);
 const allunit=new Set(['.github/workflows/native-allunit-capture.yml','scripts/v177-native-allunit-build.mjs',
   'scripts/v177-native-allunit-browser.mjs','scripts/v177-native-allunit-cases.mjs',
   'scripts/v177-native-allunit-manifest.mjs','scripts/v177-native-allunit-contract.mjs',
-  'scripts/v177-native-allunit-selection.mjs','scripts/v177-native-allunit-recovery.json']);
+  'scripts/v177-native-allunit-selection.mjs','scripts/v177-native-allunit-recovery.json',
+  'scripts/v177-native-allunit-ranger-manual.mjs']);
 const r9=new Set(['scripts/v100-dialogue-composition-browser.mjs','scripts/v100-story-bookends-browser-smoke.mjs',
   'scripts/v100-r9-full-story-browser.mjs','scripts/v100-r9-story-plan.mjs']);
 const orchestration=new Set(['.github/workflows/ci.yml','scripts/ci-change-scope.mjs',

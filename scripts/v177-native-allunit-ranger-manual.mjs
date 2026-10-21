@@ -15,7 +15,7 @@ import {RANGER_MANUAL_PHASE,RANGER_MANUAL_GROUP,assertRangerManualPlan,
 // Serializable factory. The method closes over actual realm-owner references;
 // no function-string injection, expected paint stamps or global observer patch.
 export function createNativeRangerManualReader({proof,realmOwner}){
-  const read=({performanceBoundary=false,includeRealm=true}={})=>{
+  const read=({performanceBoundary=false,includeRealm=true,afterRenderSequence=null}={})=>{
     const canvas=document.querySelector('.game-shell canvas'),refs={window,document,performance,canvas};
     realmOwner.check(refs);const realm=includeRealm?realmOwner.member(refs,'sample'):null;
     const qa=window.__ASHFALL_BATTLE_QA__,snapshot=qa.getSnapshot(),phaseG=qa.getPhaseGCombatSnapshot();
@@ -36,7 +36,11 @@ export function createNativeRangerManualReader({proof,realmOwner}){
       skillContacts:structuredClone(snapshot.v100SkillContacts),manualMuzzles:structuredClone(snapshot.v100ManualMuzzles),
       completedAttackImpacts:structuredClone(phaseG.completedAttackImpacts),
       // All actual rows, including missing/false manual flags, remain raw.
-      renders:structuredClone(history),latestPaint:structuredClone(history.at(-1)??null)};
+      historyWindow:{length:history.length,firstSequence:history[0]?.renderSequence??null,
+        lastSequence:history.at(-1)?.renderSequence??null,
+        previousSequenceFound:afterRenderSequence===null||history.some(r=>r.renderSequence===afterRenderSequence)},
+      renders:structuredClone(afterRenderSequence===null?history:history.filter(r=>r.renderSequence>afterRenderSequence)),
+      latestPaint:structuredClone(history.at(-1)??null)};
   };
   return {read,realmOwner};
 }
@@ -55,14 +59,14 @@ export function startNativeRangerManualObservation({reader}){
     if(state.stopped)return;
     try{
       if(state.rows.length>=4096){state.overflow=true;throw Error('Manual source RAF4096 bound exhausted');}
-      const raw=reader.read({includeRealm:false}),history=raw.renders;
+      const raw=reader.read({includeRealm:false,afterRenderSequence:state.lastSequence}),history=raw.renders;
       if(raw.historyOverflow||history.length>128){state.historyOverflow=true;throw Error('Manual raw history128 bound exhausted');}
       if(!Array.isArray(raw.skillContacts)||raw.skillContacts.length>48||!Array.isArray(raw.manualMuzzles)||raw.manualMuzzles.length>16
         ||!Array.isArray(raw.phaseG.manualAbilityReceipts)||raw.phaseG.manualAbilityReceipts.length>48)throw Error('Original manual observation arrays unavailable/unbounded');
-      if(state.lastSequence!==null&&history.length&&history.at(-1).renderSequence>state.lastSequence
-        &&!history.some(r=>r.renderSequence===state.lastSequence))throw Error('Manual source draw history lost its previous actual row');
+      if(state.lastSequence!==null&&raw.historyWindow.lastSequence>state.lastSequence
+        &&!raw.historyWindow.previousSequenceFound)throw Error('Manual source draw history lost its previous actual row');
       const renders=state.lastSequence===null?history:history.filter(r=>r.renderSequence>state.lastSequence);
-      if(history.length)state.lastSequence=history.at(-1).renderSequence;
+      if(raw.historyWindow.lastSequence!==null)state.lastSequence=raw.historyWindow.lastSequence;
       state.rows.push({...raw,renders,renderSequence:raw.latestPaint?.renderSequence??null,renderKind:raw.latestPaint?.renderKind??null});
       state.raf=requestAnimationFrame(observe);
     }catch(error){state.failure??=String(error);state.stopped=true;}
@@ -85,7 +89,12 @@ export async function captureNativeRangerManualCase(page,row,{out,onFailure=()=>
   const resources={realmOwner:null,reader:null,observation:null};let clip,primary;
   const active=()=>{assert.notEqual(row.deadlineExpired,true,'Late manual capture cannot become accepted');assert.equal(page.isClosed(),false);};
   const owned=async operation=>{active();const value=await operation();active();return value;};
-  const read=options=>owned(()=>resources.reader.evaluate((reader,options)=>reader.read(options),options));
+  let sampleSequence=null;
+  const read=async options=>{
+    const raw=await owned(()=>resources.reader.evaluate((reader,options)=>reader.read(options),{...options,afterRenderSequence:sampleSequence}));
+    if(raw.latestPaint?.renderSequence!=null)sampleSequence=raw.latestPaint.renderSequence;
+    return raw;
+  };
   try{
     const prepared=await owned(()=>page.evaluate(()=>{const qa=window.__ASHFALL_BATTLE_QA__,proof=qa.prepareV177ContinuousActorProof({form:'ranger',phase:'engage'});qa.setEnemyVfxProofPaused(true);return{
       ...proof,route:location.pathname,battleGeneration:qa.getPhaseGCombatSnapshot().battleGeneration};}));

@@ -16,7 +16,7 @@ import {MANUAL_ABILITY_REGISTRY,createManualAbilityRuntime,beginManualAbility,ad
 import {configureV177BornTurnedContinuation} from '../app/v177NativeTurnedProof.js';
 import {createV177FutagoDamageCopy,prepareV177NativeFutagoPair} from '../app/v177NativeFutagoProof.js';
 import {FORM_BINDINGS,SHARDS,VIEWPORTS,LIMITS,planShard,validateManifest,assertPlannedCase} from '../scripts/v177-native-allunit-manifest.mjs';
-import {nativeAllUnitBinding,main,ensureNativeAllUnitAssets,enterNativeAllUnitSurface} from '../scripts/v177-native-allunit-browser.mjs';
+import {nativeAllUnitBinding,main,ensureNativeAllUnitAssets,enterNativeAllUnitSurface,nativeContextFormation} from '../scripts/v177-native-allunit-browser.mjs';
 import {readNativeAllUnitSample,postpaintCaptureBoundary,assertShardPostpaintContract} from '../scripts/v177-native-allunit-contract.mjs';
 import {hasPreparedAllUnitPaint,observeMayoPointer,finishMayoPointer,readMayoPointerGeometry,confirmMayoPointer} from '../scripts/v177-native-allunit-cases.mjs';
 import {assertFutagoPairDamageAndOwner,assertMayoFeralReceipt} from '../scripts/v177-native-allunit-owners.mjs';
@@ -119,6 +119,20 @@ test('all real renderer forms have one owned route and nine planned captures',()
   for(const bad of [{...rows[0],owner:'mayo-activation'},{...rows[0],form:'missing'},
     {...rows[0],viewport:{width:844,height:339}},{...rows[0],binding:{...rows[0].binding,kind:'other'}}])
     assert.throws(()=>assertPlannedCase(bad));
+});
+
+test('each constructor context loads only its real actors while retaining original target and formation capacity',()=>{
+ const human=form=>planShard(FORM_BINDINGS.findIndex(b=>b.form===form)<4?'forms-1':'forms-2').find(r=>r.form===form);
+ assert.deepEqual(nativeContextFormation([human('ranger')]),['unit-mizuchi']);
+ const rows=planShard('forms-2').filter(r=>r.viewport.width===1280&&r.phase==='engage');
+ const slots=nativeContextFormation(rows);
+ assert.equal(slots.length,4);assert.equal(new Set(slots).size,4);
+ for(const shard of SHARDS){
+  const formation=nativeContextFormation(planShard(shard.id));
+  assert.ok(formation.length<=5&&formation.length>0);
+  if(planShard(shard.id).some(r=>r.binding.side==='zombie'))assert.ok(formation.includes('unit-gantetsu'));
+ }
+ assert.throws(()=>nativeContextFormation([]));
 });
 
 test('exact PR native host and shard guard run before owned server import',async()=>{

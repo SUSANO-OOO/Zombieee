@@ -12,11 +12,20 @@ import {planRangerManualShard,rangerManualEnvelopeReference} from './v177-native
 import {captureNativeRangerManualCase} from './v177-native-allunit-ranger-manual.mjs';
 import {nativeCaseSelection} from './v177-native-allunit-selection.mjs';
 import {planOutcomeShard,captureNativeOutcomeCase} from './v177-native-allunit-outcomes.mjs';
+import {combatKindToCampaignUnitId} from '../app/campaign.js';
 
 const git=args=>execFileSync('git',args,{encoding:'utf8',maxBuffer:8*1024*1024,windowsHide:true}).trim();
 const sha=b=>createHash('sha256').update(b).digest('hex');
 const acceptance=()=>({originalSpeedAccepted:false,naturalnessAccepted:false,
   physicalSavedAudioAccepted:false,normalCampaignAccepted:false,wholeGameAccepted:false});
+
+export function nativeContextFormation(rows){
+  assert.ok(Array.isArray(rows)&&rows.length);
+  const kinds=[...new Set(rows.map(r=>r.binding.side==='human'?r.binding.kind:'guardian'))];
+  const slots=kinds.map(combatKindToCampaignUnitId);
+  assert.ok(slots.length<=7&&slots.every(id=>typeof id==='string'&&id.startsWith('unit-')));
+  return slots;
+}
 
 // Host-owned progress survives a pending page RPC and the existing setup
 // deadline. These wall-clock receipts do not assert readiness or game timing.
@@ -188,8 +197,12 @@ export async function runBrowserQa(){
           page.on('pageerror',fail);page.on('console',m=>{if(m.type()==='error')fail(Error(m.text()));});
           page.on('response',r=>{if(r.status()>=400)fail(Error(r.status()+' '+r.url()));});
           const base=deps.createDefaultV100Save(),owned=deps.V100_UNITS.map(u=>u.id),stageId=deps.V100_STAGE_IDS[stageNumber-1];
+          // Only this constructor fixture's actual actors need entry assets.
+          // Unrelated formation portraits/bodies otherwise consume the same
+          // cold setup deadline before any controlled case can begin.
+          owner.formationSlots=nativeContextFormation(contextRows);
           const save=deps.normalizeV100Save({...base,campaignStarted:true,revision:3,ownedUnitIds:owned,
-            registeredUnitIds:owned,availableStageIds:deps.V100_STAGE_IDS,formationSlots:owned.slice(0,7),
+            registeredUnitIds:owned,availableStageIds:deps.V100_STAGE_IDS,formationSlots:owner.formationSlots,
             flowState:{phase:'formation',stageId,stageNumber,eventId:null,destination:'formation',nodeIndex:0,firstClear:false,finalized:true}});
           await withNativeGameCaseDeadline(async()=>{
             setupStage('seed-save');await page.addInitScript(deps.seedV100BrowserSaveOnce,deps.serializeV100Save(save));
