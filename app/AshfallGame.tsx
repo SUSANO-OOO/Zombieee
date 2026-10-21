@@ -12,6 +12,7 @@ import { pruneV177JointActorHistory } from "./v177JointActorHistory.js";
 import { rememberV177TurnedCorpsePaint, rememberV177TurnedBirth, v177TurnedGetupDirection,
   v177TurnedGetupPose, readV177TurnedBirthPresentation, pruneV177TurnedCorpsePaints } from "./v177TurnedGetupPresentation.js";
 import { configureV177ContinuousActorProof, configureV177ReactionProof, v177ProofFormIdentity, v177ControlledOutcomeHit } from "./v177ContinuousProof.js";
+import { soukiBurstPhysicalX } from "./v100SoukiCollision.js";
 import { createMayoFeralProofOwner } from "./v177NativeMayoProof.js";
 import { createV177FutagoDamageCopy, prepareV177NativeFutagoPair, v177FormalFutagoPairSource } from "./v177NativeFutagoProof.js";
 import { configureV177BornTurnedContinuation } from "./v177NativeTurnedProof.js";
@@ -21115,7 +21116,6 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               }
             }
             if (f.stationAbility.phase !== "idle") {
-              const beforeX = f.x;
               const burst = advanceSoukiBurst({
                 runtime: f.stationAbility,
                 runner: f,
@@ -21123,12 +21123,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 crawlerRearBoundaryX: BASE_X + 28,
               });
               f.stationAbility = burst.runtime as StationAbilityRuntime;
-              const physicalFloor = g.fighters
-                .filter((candidate) => candidate.side === "human" && candidate.hp > 0
-                  && (candidate.anchorLane ?? candidate.lane) === (f.anchorLane ?? f.lane)
-                  && candidate.x <= beforeX && candidate.x >= burst.runner.x - 4)
-                .reduce((floor, candidate) => Math.max(floor, candidate.x + candidate.bodyRadius + f.bodyRadius), BASE_X + 28);
-              f.x = Math.max(physicalFloor, burst.runner.x);
+              f.x = soukiBurstPhysicalX(f, burst.runner.x, g.fighters, BASE_X + 28);
               f.lane = burst.runner.lane as Lane;
               f.anchorLane = f.lane;
               f.y = activeLaneCenters[f.lane];

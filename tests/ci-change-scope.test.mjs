@@ -84,6 +84,15 @@ test('the exact reviewed human death owner runs motion and normal play without r
  assert.equal(ciChangeScope([...paths,'app/v100Save.js'],{draft:true,sourceBlobs}).full,true);
 });
 
+test('only the exact Souki contact repair selects normal play and motion without unrelated story capture',()=>{
+ const paths=['app/AshfallGame.tsx','app/v100SoukiCollision.js'];
+ const sourceBlobs=Object.fromEntries(paths.map(file=>[file,execFileSync('git',['hash-object',file],{encoding:'utf8',windowsHide:true}).trim()]));
+ const scope=ciChangeScope(paths,{draft:true,sourceBlobs});
+ assert.equal(scope.full,false);assert.equal(scope.normal,true);assert.equal(scope.allunit,true);assert.equal(scope.r9,false);
+ for(const file of paths)assert.equal(ciChangeScope(paths,{draft:true,sourceBlobs:{...sourceBlobs,[file]:'f'.repeat(40)}}).full,true);
+ assert.equal(ciChangeScope(paths,{draft:false,sourceBlobs}).full,true);
+});
+
 test('only the reviewed corpse fixture injection preserves already completed story evidence',()=>{
  const file='tests/helpers/v177-corpse-joint-render.mjs';
  const blob=execFileSync('git',['hash-object',file],{encoding:'utf8',windowsHide:true}).trim();
