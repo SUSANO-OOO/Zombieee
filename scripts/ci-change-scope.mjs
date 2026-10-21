@@ -54,6 +54,19 @@ const reviewedBruteBlobs=Object.freeze({
 const reviewedSupportBlobs=Object.freeze({
   'app/v177CorpseJointPresentation.js':'b339f6379b252c2687e16361004e184d3029a85b',
 });
+
+export function framePerformanceRuntimes(paths,{workflowBlob}={}){
+  const formal={runtime:'formal',host:'macos-15'},native={runtime:'native-recording-control',host:'macos-15-intel'};
+  const workflow='.github/workflows/targeted-frame-performance.yml';
+  const relevant=paths.some(p=>/^(app\/|public\/|package(-lock)?\.json$)/u.test(p)
+    ||[workflow,'scripts/v100-device-runtime-browser.mjs'].includes(p));
+  if(!relevant)return[];
+  // Exact job-name/dispatch correction only. The recorded/native commands and
+  // product are identical to2746; its running comparison must not be duplicated.
+  if(workflowBlob==='774c4b1f8589ea83b407ef385bb09b1904519645'&&paths.includes(workflow)
+    &&paths.every(p=>[workflow,'scripts/ci-change-scope.mjs','tests/ci-change-scope.test.mjs'].includes(p)))return[formal];
+  return[formal,native];
+}
 const reviewedMotionBlobs=Object.freeze({
   'app/combatPresentation.js':'327c7a1dd55707c16385d01d28030a37dc4b27c7',
   'app/AshfallGame.tsx':'95df06a678e2be79ec076059df910dc95c33298c',

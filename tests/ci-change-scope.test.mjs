@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {ciChangeScope} from '../scripts/ci-change-scope.mjs';
+import {ciChangeScope,framePerformanceRuntimes} from '../scripts/ci-change-scope.mjs';
+import {assertEphemeralPerformanceHost} from '../scripts/v100-macos-indexing-control.mjs';
 import {readFileSync} from 'node:fs';
 import {load} from 'js-yaml';
 import {execFileSync} from 'node:child_process';
@@ -12,6 +13,19 @@ test('a ready candidate always gets full regression, including governance-only c
   const scope=ciChangeScope(paths,{draft:false});assert.equal(scope.full,true);assert.equal(scope.ranger,true);assert.equal(scope.normal,true);
   assert.equal(scope.wholeGameAccepted,false);
  }
+});
+
+test('only the exact formal job correction avoids duplicating its unchanged running native control',()=>{
+ const file='.github/workflows/targeted-frame-performance.yml';
+ const workflowBlob=execFileSync('git',['hash-object',file],{encoding:'utf8',windowsHide:true}).trim();
+ assert.deepEqual(framePerformanceRuntimes([file,'scripts/ci-change-scope.mjs','tests/ci-change-scope.test.mjs'],{workflowBlob}).map(r=>r.runtime),['formal']);
+ for(const paths of [[file,'app/AshfallGame.tsx'],[file,'scripts/v100-device-runtime-browser.mjs'],[file,'unknown']])assert.equal(framePerformanceRuntimes(paths,{workflowBlob}).length,2);
+ assert.equal(framePerformanceRuntimes([file],{workflowBlob:'f'.repeat(40)}).length,2);
+ assert.deepEqual(framePerformanceRuntimes(['docs/PROJECT_STATE.md','tests/v177-melee-joints.test.mjs'],{workflowBlob}),[]);
+ const workflow=load(readFileSync(file,'utf8'));
+ const job='v100-webkit-frame-control';assert.ok(workflow.jobs[job]);assert.equal(workflow.on.workflow_dispatch,undefined);
+ assert.doesNotThrow(()=>assertEphemeralPerformanceHost({GITHUB_ACTIONS:'true',RUNNER_ENVIRONMENT:'github-hosted',RUNNER_OS:'macOS',
+  GITHUB_REPOSITORY:'SUSANO-OOO/Zombieee',GITHUB_EVENT_NAME:'pull_request',GITHUB_JOB:job,GITHUB_RUN_ID:'39589154684',GITHUB_SHA:'1'.repeat(40)},'darwin','arm64'));
 });
 
 test('the reviewed hammer knee repair reopens motion without repeating unchanged normal play or R9',()=>{

@@ -9,12 +9,6 @@ on:
       - 'app/**'
       - 'public/**'
       - 'package*.json'
-  workflow_dispatch:
-    inputs:
-      expected_head:
-        description: Exact candidate SHA, without publication
-        required: true
-        type: string
 permissions:
   contents: read
 concurrency:
@@ -25,6 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       run: ${{ steps.changed.outputs.run }}
+      runtimes: ${{ steps.changed.outputs.runtimes }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -44,26 +39,26 @@ jobs:
           import assert from 'node:assert/strict';
           import {execFileSync} from 'node:child_process';
           import {appendFileSync} from 'node:fs';
+          import {framePerformanceRuntimes} from './scripts/ci-change-scope.mjs';
           let run=true;
+          let runtimes=[];
           if(process.env.EVENT_NAME==='pull_request'){
             for(const sha of [process.env.BEFORE,process.env.AFTER])assert.match(sha??'',/^[a-f0-9]{40}$/u);
             const paths=execFileSync('git',['diff','--no-renames','--name-only',process.env.BEFORE,process.env.AFTER],{encoding:'utf8'}).trim().split('\n').filter(Boolean);
-            run=paths.some(p=>/^(app\/|public\/|package(-lock)?\.json$)/u.test(p)||['.github/workflows/targeted-frame-performance.yml','scripts/v100-device-runtime-browser.mjs'].includes(p));
-            console.log(JSON.stringify({before:process.env.BEFORE,after:process.env.AFTER,paths,run}));
+            const workflowBlob=execFileSync('git',['rev-parse',process.env.AFTER+':.github/workflows/targeted-frame-performance.yml'],{encoding:'utf8'}).trim();
+            runtimes=framePerformanceRuntimes(paths,{workflowBlob});run=runtimes.length>0;
+            console.log(JSON.stringify({before:process.env.BEFORE,after:process.env.AFTER,paths,run,runtimes}));
           }
           appendFileSync(process.env.GITHUB_OUTPUT,'run='+run+'\n');
+          appendFileSync(process.env.GITHUB_OUTPUT,'runtimes='+JSON.stringify(runtimes)+'\n');
           JS
-  measure:
+  v100-webkit-frame-control:
     needs: scope
     if: needs.scope.outputs.run == 'true'
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - runtime: formal
-            host: macos-15
-          - runtime: native-recording-control
-            host: macos-15-intel
+        include: ${{ fromJSON(needs.scope.outputs.runtimes) }}
     runs-on: ${{ matrix.host }}
     timeout-minutes: 30
     defaults:
