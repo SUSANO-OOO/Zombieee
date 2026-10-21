@@ -409,6 +409,11 @@ test('workflow keeps exact head, independent twelve shards and original owned bu
   assert.equal(workflow.jobs.capture.steps.some(s=>s.run==='npm run build'),false);
   assert.equal(workflow.jobs.capture.steps[0].with.ref,'${{ github.event.pull_request.head.sha || inputs.expected_head }}');
   assert.equal(workflow.jobs.capture.steps[0].with['persist-credentials'],false);
+  const steps=workflow.jobs.capture.steps,restore=steps.find(s=>s.run?.endsWith(' restore-native-capture'));
+  assert.match(restore.if,/always\(\)/u);
+  for(const outcome of ['success','failure','cancelled'])assert.ok(restore.if.includes("steps.native-preparation.outcome == '"+outcome+"'"));
+  assert.ok(steps.indexOf(restore)<steps.findIndex(s=>s.uses?.startsWith('actions/upload-artifact@')),
+    'Original indexing state must be restored even after cancellation, before the receipt is uploaded');
   assert.equal(LIMITS.caseMs,30000);assert.equal(LIMITS.readinessMs,5000);assert.equal(LIMITS.clipBytes,8*1024*1024);
   assert.deepEqual(VIEWPORTS,[{width:1280,height:720},{width:844,height:390},{width:844,height:340}]);
 });

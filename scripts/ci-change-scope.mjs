@@ -50,6 +50,9 @@ const reviewedLifecycleBlobs=Object.freeze({
 const reviewedBruteBlobs=Object.freeze({
   'app/v177JointPresentation.js':'e2e63704e18e43718fb9a332b689bc0f3c55987e',
 });
+const reviewedNativeControlBlobs=Object.freeze({
+  'scripts/v100-macos-indexing-control.mjs':'31de4d8198b09346c728135887f38f42136968bf',
+});
 // Analytic vertical support preserves every original outline and floor value.
 const reviewedSupportBlobs=Object.freeze({
   'app/v177CorpseJointPresentation.js':'b339f6379b252c2687e16361004e184d3029a85b',
@@ -90,6 +93,7 @@ export function ciChangeScope(paths,{draft,sourceBlobs={}}={}){
     else if(r9.has(file))r9Changed=true;
     else if(governance.has(file)||orchestration.has(file)||/^tests\/[^/]+\.test\.mjs$/u.test(file))continue;
     else if(reviewedBruteBlobs[file]&&sourceBlobs[file]===reviewedBruteBlobs[file])allunitChanged=true;
+    else if(reviewedNativeControlBlobs[file]&&sourceBlobs[file]===reviewedNativeControlBlobs[file])allunitChanged=true;
     else if(reviewedSupportBlobs[file]&&sourceBlobs[file]===reviewedSupportBlobs[file])continue;
     else if(reviewedLifecycleBlobs[file]&&sourceBlobs[file]===reviewedLifecycleBlobs[file]){normalChanged=true;allunitChanged=true;}
     else if(reviewedValidationBlobs[file]&&sourceBlobs[file]===reviewedValidationBlobs[file])continue;

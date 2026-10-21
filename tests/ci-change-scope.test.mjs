@@ -28,6 +28,15 @@ test('only the exact formal job correction avoids duplicating its unchanged runn
   GITHUB_REPOSITORY:'SUSANO-OOO/Zombieee',GITHUB_EVENT_NAME:'pull_request',GITHUB_JOB:job,GITHUB_RUN_ID:'39589154684',GITHUB_SHA:'1'.repeat(40)},'darwin','arm64'));
 });
 
+test('native host control is source-pinned and never repeats unchanged formal performance or story',()=>{
+ const file='scripts/v100-macos-indexing-control.mjs',blob=execFileSync('git',['hash-object',file],{encoding:'utf8',windowsHide:true}).trim();
+ const options={draft:true,sourceBlobs:{[file]:blob}},scope=ciChangeScope([file],options);
+ assert.equal(scope.full,false);assert.equal(scope.allunit,true);assert.equal(scope.normal,false);assert.equal(scope.r9,false);
+ assert.deepEqual(framePerformanceRuntimes([file]),[]);
+ for(const sourceBlobs of [{},{[file]:'f'.repeat(40)}])assert.equal(ciChangeScope([file],{draft:true,sourceBlobs}).full,true);
+ assert.equal(ciChangeScope([file],{...options,draft:false}).full,true);
+});
+
 test('the reviewed hammer knee repair reopens motion without repeating unchanged normal play or R9',()=>{
  const paths=['app/v177JointPresentation.js','app/v177CorpseJointPresentation.js'];
  const sourceBlobs=Object.fromEntries(paths.map(file=>[file,execFileSync('git',['hash-object',file],{encoding:'utf8',windowsHide:true}).trim()]));

@@ -95,6 +95,7 @@ export async function main({load=url=>import(url),argv=process.argv,...guard}={}
 const additions=[
   '.github/workflows/native-allunit-capture.yml','scripts/v177-native-allunit-browser.mjs',
   'scripts/v177-native-allunit-build.mjs',
+  'scripts/v100-macos-indexing-control.mjs',
   'scripts/v177-native-allunit-cases.mjs','scripts/v177-native-allunit-manifest.mjs',
   'scripts/v177-native-allunit-contract.mjs','scripts/v177-native-allunit-owners.mjs',
   'tests/v177-native-allunit.test.mjs','scripts/v100-normal-tactical-input.mjs',
@@ -144,6 +145,16 @@ export async function runBrowserQa(){
     status:'running-diagnostic',selection,fullPlan,excludedCaseIds:fullPlan.filter(r=>!selection.caseIds.includes(r.caseId)).map(r=>r.caseId),
     plan,manualPlan,manualCases:[],outcomePlan,outcomeCases:[],sources:[],contexts:[],cases:[],errors:[],persistenceErrors:[],...acceptance(),
     scope:'One of twelve all48 native VP8 shards;432 normal cases remain separate from3 supplemental actual Ranger manual clips. Original free RAF/simulation after actual recorder start. Ordinary actors use original stats; Mayo uses real trusted activation/self-drain; turned continues the actual infection newborn; split twins use their real S24 pair constructors with a deliberately partial encounter. Legacy fused art is an explicit fixture. Controlled target diagnostics are not campaign, balance, original-speed naturalness or physical audio acceptance.'};
+  if(process.env.V177_NATIVE_HOST_INDEXING_CONTROL==='brute-attack-1280'){
+    const file=path.join(out,'native-host-indexing-prepared.json'),bytes=await readFile(file),prepared=JSON.parse(bytes);
+    assert.equal(prepared.purpose,'native-capture-diagnostic');assert.equal(prepared.diagnosticOnly,true);
+    assert.equal(prepared.acceptanceOverride,false);assert.equal(prepared.state,'paused');
+    assert.equal(prepared.candidateHead,binding.head);assert.equal(prepared.run,process.env.GITHUB_RUN_ID);
+    assert.equal(prepared.attempt,process.env.GITHUB_RUN_ATTEMPT);assert.equal(prepared.shard,binding.shardId);
+    assert.equal(prepared.arch,process.arch);assert.equal(prepared.caseId,'forms-2:brute:attack:1280x720');
+    assert.deepEqual(selection.caseIds,[prepared.caseId]);assert.deepEqual(selection.outcomeCaseIds,[]);assert.deepEqual(selection.manualCaseIds,[]);
+    report.host.indexingControl={purpose:prepared.purpose,diagnosticOnly:true,file,sha256:createHash('sha256').update(bytes).digest('hex')};
+  }
   assert.match(process.env.V177_EXPECTED_BUILD_SHA256??'',/^[a-f0-9]{64}$/u);
   assert.equal(report.build.combinedSha256,process.env.V177_EXPECTED_BUILD_SHA256,'Capture build differs from the producer job');
   report.buildBundle=JSON.parse(await readFile(path.join(out,'build-bundle-consumption.json'),'utf8'));
