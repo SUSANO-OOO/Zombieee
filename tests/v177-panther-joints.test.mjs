@@ -8,6 +8,7 @@ import ts from 'typescript';
 import sharp from 'sharp';
 import {ENEMY_FIREARM_WEAPON_PROFILE,weaponProfileForUnit} from '../app/combatPresentation.js';
 import {enemyCombatVfxSnapshot,ENEMY_PROJECTILE_KINDS} from '../app/enemyVfxPresentation.js';
+import {v177HitReactionStrength} from '../app/v177HitReaction.js';
 import {V177_JOINT_ATLASES,v177JointPose,drawV177JointPose,v177JointCycleDistance,v177RenderedJointWeaponSocket} from '../app/v177JointPresentation.js';
 import {spriteFrameFor} from '../app/spriteManifest.js';
 import {requiredBattleAssetPlan} from '../app/battleAssetPlan.js';
@@ -25,7 +26,7 @@ function actualFirearmCallbacks(extra={}){
  assert.equal(declarations.length,names.length);
  const source=declarations.map(node=>node.getText(gameAst)).join('\n')+'\n({'+names.join(',')+'});';
  return vm.runInNewContext(ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText,{
-  ENEMY_FIREARM_WEAPON_PROFILE,enemyCombatVfxSnapshot,acquireRenderObject:()=>({}),SHOT_POOL_KEYS:[],
+  ENEMY_FIREARM_WEAPON_PROFILE,enemyCombatVfxSnapshot,v177HitReactionStrength,acquireRenderObject:()=>({}),SHOT_POOL_KEYS:[],
   shotRenderOrigins:new WeakMap(),V100_CLAW_CONTACT_WEAPONS:[],V100_CONTACT_WEAPONS:[],
   capRenderObjectsInPlace(){},RENDER_ARRAY_LIMITS:{shots:48},
   weaponAnchorForTarget:()=>({x:91,y:42}),V100_CONTACT_ENEMY_KINDS:[],V100_STATION_POSE_KINDS:[],

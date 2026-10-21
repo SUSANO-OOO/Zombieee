@@ -38,11 +38,10 @@ test('current recovery partitions normal, outcome and manual observations withou
  const selected=nativeCaseSelection({event:{pull_request:{draft:true}},git:()=>''});
  assert.deepEqual(selected.caseIds,current.caseIds);assert.deepEqual(selected.outcomeCaseIds,current.outcomeCaseIds);
  assert.deepEqual(selected.manualCaseIds,current.manualCaseIds);
- assert.equal(selected.caseIds.length,6);assert.equal(selected.retainedEvidence.caseIds.length,426);
- assert.ok(selected.caseIds.every(id=>/:kumaverson:(attack|engage):/u.test(id)));
+ assert.equal(selected.caseIds.length,0);assert.equal(selected.retainedEvidence.caseIds.length,432);
  assert.equal(selected.outcomeCaseIds.length,0);assert.equal(selected.retainedEvidence.outcomeCaseIds.length,144);
  assert.equal(selected.manualCaseIds.length,0);assert.equal(selected.retainedEvidence.manualCaseIds.length,3);
- assert.deepEqual(selected.shards,['forms-12']);
+ assert.deepEqual(selected.shards,[]);
  const affected=current.affectedDeathForms;
  assert.equal(affected.length,11);
  assert.equal(selected.retainedEvidence.outcomeCaseIds.filter(id=>affected.some(form=>id.includes(':'+form+':'))).length,33);
@@ -50,7 +49,10 @@ test('current recovery partitions normal, outcome and manual observations withou
  assert.equal(current.observationGaps.cases.length,32);
  assert.equal(current.unacceptedVisualWindows.cases.length,11);
  assert.ok(current.unacceptedVisualWindows.cases.every(g=>[...selected.retainedEvidence.caseIds,...selected.retainedEvidence.outcomeCaseIds].includes(g.caseId)));
- assert.equal(selected.retainedEvidence.additionalReports.flatMap(r=>r.caseIds).length,61);
+ assert.equal(selected.retainedEvidence.additionalReports.flatMap(r=>r.caseIds).length,67);
+ const hitRepair=selected.retainedEvidence.additionalReports.find(r=>r.runId==='39538653281');
+ assert.equal(hitRepair.head,'a2a00a31b9958d9ab1ed2a30c44a56d08837fe12');
+ assert.equal(hitRepair.caseIds.length,6);assert.ok(hitRepair.caseIds.every(id=>/:kumaverson:(attack|engage):/u.test(id)));
  assert.equal(selected.retainedEvidence.additionalReports.flatMap(r=>r.outcomeCaseIds).length,53);
  assert.equal(selected.retainedEvidence.additionalReports.flatMap(r=>r.manualCaseIds??[]).length,1);
  assert.ok(selected.retainedEvidence.additionalReports.some(r=>r.runId==='39525887343'&&r.caseIds.includes('forms-1:brawler:attack:844x390')),'The fresh clean context supplies Brawler; the original request failure stays in its original report');

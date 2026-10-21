@@ -2,15 +2,8 @@
   "schema": "v177-native-allunit-recovery/v2",
   "head": "29d4057a8a131c93893978bd29f7ddaaf67cebaf",
   "runId": "39449375661",
-  "scope": "426 normal,3 Ranger manual,144 outcome records retain original bytes, source heads and failures. Eleven encoded gaps remain visually unaccepted. The exact hit-strength fix changes6 Kuma attack/engage videos because their targets receive real hits; only those6 require fresh capture. Ranger knock0 and protected Mayo retreat bodies are unaffected. Souki autonomous burst evidence is separate; basic Sprinter fixtures suppress it. No all21, performance, campaign or physical acceptance.",
-  "caseIds": [
-    "forms-12:kumaverson:attack:1280x720",
-    "forms-12:kumaverson:attack:844x390",
-    "forms-12:kumaverson:attack:844x340",
-    "forms-12:kumaverson:engage:1280x720",
-    "forms-12:kumaverson:engage:844x390",
-    "forms-12:kumaverson:engage:844x340"
-  ],
+  "scope": "432 normal,3 Ranger manual,144 outcome records retain original bytes, source heads and failures. Fresh a2a Kuma attack/engage6 replace only the hit-strength-dependent target bodies; the other573 retain their compatible evidence. Eleven encoded gaps remain visually unaccepted. Actual enemy abilities, manual branches, heavy hits and stuns are separate scoped clips. No all21, performance, campaign or physical acceptance.",
+  "caseIds": [],
   "manualCaseIds": [],
   "outcomeCaseIds": [],
   "affectedDeathForms": [
@@ -704,6 +697,12 @@
       "forms-12:kumaverson:move:1280x720",
       "forms-12:kumaverson:move:844x390",
       "forms-12:kumaverson:move:844x340",
+      "forms-12:kumaverson:attack:1280x720",
+      "forms-12:kumaverson:attack:844x390",
+      "forms-12:kumaverson:attack:844x340",
+      "forms-12:kumaverson:engage:1280x720",
+      "forms-12:kumaverson:engage:844x390",
+      "forms-12:kumaverson:engage:844x340",
       "forms-12:babayaga:move:1280x720",
       "forms-12:babayaga:move:844x390",
       "forms-12:babayaga:move:844x340",
@@ -1229,9 +1228,27 @@
           "forms-2:engineer:controlled-outcome:1280x720"
         ],
         "originalStatus": "completed-diagnostic"
+      },
+      {
+        "shard": "forms-12",
+        "head": "a2a00a31b9958d9ab1ed2a30c44a56d08837fe12",
+        "runId": "39538653281",
+        "sha256": "85c53f7a43121315509464a32ff0fb5b712023ce73c23e48ed7ac0965f5b1f1f",
+        "validationSha256": "56c8a0bc579f9ec84eb9558376cb062442d9dc0f7b570bed5544f7c2543cf4c3",
+        "caseIds": [
+          "forms-12:kumaverson:attack:1280x720",
+          "forms-12:kumaverson:engage:1280x720",
+          "forms-12:kumaverson:attack:844x390",
+          "forms-12:kumaverson:engage:844x390",
+          "forms-12:kumaverson:attack:844x340",
+          "forms-12:kumaverson:engage:844x340"
+        ],
+        "manualCaseIds": [],
+        "outcomeCaseIds": [],
+        "originalStatus": "completed-diagnostic"
       }
     ],
-    "retainedClipIndexSha256": "8098d4e5dbd18ded4e504c6ee8f404905736d738b4499d7417ec0533b63d3c88"
+    "retainedClipIndexSha256": "4808bcd7c16d610e5e8ee4982c2ca1f8f46d6b9af911ff081cfa8a1c4408d3e4"
   },
   "changedBlobs": {
     ".github/workflows/native-allunit-capture.yml": "8c099e5f0c66eef85db17f214b9ae8b742cbc758",
@@ -1265,12 +1282,13 @@
     "tests/v177-human-corpse-continuity.test.mjs": "90b95350cf0d87e01b465d6c3b2d21ac39799615",
     "tests/v177-native-allunit-outcomes.test.mjs": "48489c1ba8c33a6ff2e384c4ac6029ba2d447b47",
     "tests/v177-native-allunit-ranger-manual.test.mjs": "f5647dda7b18351f7d3f8d4ef8453b275d6a46d3",
-    "tests/v177-native-allunit-selection.test.mjs": "750dbcabf049b025215b6d3ddf49bb10a2a2e06d",
+    "tests/v177-native-allunit-selection.test.mjs": "d4441f91aee314f174a209b2c7cddd44d06d97ab",
     "tests/v177-native-allunit.test.mjs": "6d6346648962c45a9387fa93678479f1c2b2bada",
     "tests/v177-native-game-capture.test.mjs": "111cb542cecb3382bb6d51f418e2b00ca9b02228",
     "tests/v177-native-setup-overlap.test.mjs": "a5ef98038a7f2e2ffb1591bd0ca21be066f63a79",
     "tests/v177-normal-audio-unlock-observation.test.mjs": "e8aae8c9a79c91071b7d2cd65e5c602eba63087a",
     "tests/v177-normal-visible-aim.test.mjs": "f999607c7498ceb5626e82d30a5766f4e5fff5ee",
+    "tests/v177-panther-joints.test.mjs": "778c40bc47b1a7172e5eddeb9dfcb929b09378fa",
     "tests/v177-reload-foot-contact.test.mjs": "e600a15b0bd9d25a6b736a57bdf8a378a846ca55",
     "tests/v177-turned-getup.test.mjs": "a4ecd9998642153e9d7909b714b6707a628698ec"
   },
