@@ -139,6 +139,7 @@ export async function runBrowserQa(){
   const origin=new URL(process.env.V100_CAMPAIGN_QA_BASE_URL);
   assert.equal(origin.protocol,'http:');assert.equal(origin.hostname,'127.0.0.1');
   const report={at:new Date().toISOString(),...binding,tree:git(['rev-parse','HEAD^{tree}']),
+    host:{arch:process.arch,runnerArch:process.env.RUNNER_ARCH??null,imageOS:process.env.ImageOS??null,imageVersion:process.env.ImageVersion??null},
     engine:'webkit',runtime:deps.PWA_WEBKIT_RUNTIME,build:await deps.productionBuildIdentity(),
     status:'running-diagnostic',selection,fullPlan,excludedCaseIds:fullPlan.filter(r=>!selection.caseIds.includes(r.caseId)).map(r=>r.caseId),
     plan,manualPlan,manualCases:[],outcomePlan,outcomeCases:[],sources:[],contexts:[],cases:[],errors:[],persistenceErrors:[],...acceptance(),

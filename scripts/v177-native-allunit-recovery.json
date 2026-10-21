@@ -2,24 +2,15 @@
   "schema": "v177-native-allunit-recovery/v2",
   "head": "29d4057a8a131c93893978bd29f7ddaaf67cebaf",
   "runId": "39449375661",
-  "scope": "Retain567 unaffected native records (423 normal,141 outcome,3 manual) at their original source heads; reopen Brute9 normal+3 outcome after original1x knee defect confirmed. Other47 forms have identical joint draw matrices. Registered3 live support retains all original outlines and analytic floor values; only redundant capture/interpolation allocation is removed. No clock, motion speed, quality threshold or30s/5s/15s/3s deadline changes. Formal fixed30s p95RAF33ms and native-recording controls remain pending, separate from retained motion evidence. No publication.",
+  "scope": "Retain575 source-bound records (428 normal,144 outcome,3 manual), including8 Brute clips at2746. Recheck only4 Brute temporal gaps:1280 move/attack/engage and844x390 engage. Same pinned native1.63.0 moves to ARM Mac; source reader/RPC timings are additive. Original120ms scheduling,15/30 samples,free RAF,250ms visual density and30s/5s/15s/3s deadlines unchanged. Formal1.56.1 fixed30s performance passed all6 windows at e5ea (19..29ms); Intel native control remains failed and diagnostic. No publication.",
   "caseIds": [
     "forms-2:brute:move:1280x720",
-    "forms-2:brute:move:844x390",
-    "forms-2:brute:move:844x340",
     "forms-2:brute:attack:1280x720",
-    "forms-2:brute:attack:844x390",
-    "forms-2:brute:attack:844x340",
     "forms-2:brute:engage:1280x720",
-    "forms-2:brute:engage:844x390",
-    "forms-2:brute:engage:844x340"
+    "forms-2:brute:engage:844x390"
   ],
   "manualCaseIds": [],
-  "outcomeCaseIds": [
-    "forms-2:brute:controlled-outcome:844x340",
-    "forms-2:brute:controlled-outcome:1280x720",
-    "forms-2:brute:controlled-outcome:844x390"
-  ],
+  "outcomeCaseIds": [],
   "affectedDeathForms": [
     "gunner",
     "crazy-king",
@@ -720,7 +711,12 @@
       "forms-6:takuya:move:1280x720",
       "forms-6:takuya:engage:1280x720",
       "forms-8:futago-separated-a:engage:844x390",
-      "forms-12:takuya-omega:move:1280x720"
+      "forms-12:takuya-omega:move:1280x720",
+      "forms-2:brute:move:844x390",
+      "forms-2:brute:attack:844x390",
+      "forms-2:brute:move:844x340",
+      "forms-2:brute:attack:844x340",
+      "forms-2:brute:engage:844x340"
     ],
     "manualCaseIds": [
       "forms-1:ranger:ranger-manual-precision:844x390",
@@ -868,7 +864,10 @@
       "forms-2:engineer:controlled-outcome:844x390",
       "forms-3:zakimiya:controlled-outcome:1280x720",
       "forms-3:miyamoto-musashi:controlled-outcome:1280x720",
-      "forms-11:mugarian-president-mutated:controlled-outcome:1280x720"
+      "forms-11:mugarian-president-mutated:controlled-outcome:1280x720",
+      "forms-2:brute:controlled-outcome:1280x720",
+      "forms-2:brute:controlled-outcome:844x390",
+      "forms-2:brute:controlled-outcome:844x340"
     ],
     "reports": [
       {
@@ -1347,6 +1346,26 @@
         "outcomeCaseIds": [
           "forms-11:mugarian-president-mutated:controlled-outcome:1280x720"
         ]
+      },
+      {
+        "shard": "forms-2",
+        "head": "2746a778b4a4ff3aaf502b8b71160bcce872c8fd",
+        "runId": "39589154676",
+        "sha256": "4b7ad8e422b088c6bbb9519f7e661a2c100a20d5c1b90e8eb7cc998d29159d27",
+        "validationSha256": "3f54777f583696a8c0b1951689fc250f464792bd844db3592a357f6d81184050",
+        "motionReviewSha256": "063cd6ac32a3002caea7d9a47750994def3d876581e07513b7d7ff30d8d3e85e",
+        "caseIds": [
+          "forms-2:brute:move:844x390",
+          "forms-2:brute:attack:844x390",
+          "forms-2:brute:move:844x340",
+          "forms-2:brute:attack:844x340",
+          "forms-2:brute:engage:844x340"
+        ],
+        "outcomeCaseIds": [
+          "forms-2:brute:controlled-outcome:1280x720",
+          "forms-2:brute:controlled-outcome:844x390",
+          "forms-2:brute:controlled-outcome:844x340"
+        ]
       }
     ],
     "retainedClipIndexSha256": "eebd690f9be3a2b2bfaef06a6f2cd49426120b58020bd3813880af93dad034c6",
@@ -1359,12 +1378,12 @@
       "newLifecycleReviewSha256": "8eb224414c0ba83327472645bf9f3071c2a42f04faf3058fe9581f2e0fb5e1f5",
       "all1008Accepted": false,
       "currentExceptions": [
-        "brute: knee naturalness reopened; original inventory is immutable history, not current acceptance"
+        "Brute:8 fresh clips retained at2746;4 temporal windows remain unaccepted. The immutable older inventory is not current blanket acceptance."
       ]
     }
   },
   "changedBlobs": {
-    ".github/workflows/native-allunit-capture.yml": "8c099e5f0c66eef85db17f214b9ae8b742cbc758",
+    ".github/workflows/native-allunit-capture.yml": "eb1fd7cf38e7963bd7bbf20b496c10725b97dc17",
     ".github/workflows/native-game-capture.yml": "51b34503defe778ea55384712a2b77dc60070df8",
     "app/AshfallGame.tsx": "4445d531b03a44a1147a3ae44d74a8e869d7ba37",
     "app/combatPresentation.js": "327c7a1dd55707c16385d01d28030a37dc4b27c7",
@@ -1373,18 +1392,18 @@
     "app/v177HitReaction.js": "6e7dc3705b3fa8ee8095c675b4046571a085e5af",
     "app/v177HumanCorpsePresentation.js": "0422000720875df12b57c9c721fa4c13a8317869",
     "app/v177JointPresentation.js": "e2e63704e18e43718fb9a332b689bc0f3c55987e",
-    "scripts/ci-change-scope.mjs": "819d942c92261527eeb289b000cfdd936652f2bb",
+    "scripts/ci-change-scope.mjs": "2f72ebedbcbb059f36c1aae41007f75fbf6269ce",
     "scripts/v100-normal-campaign-playthrough.mjs": "310ba070ccce39d9dc671f6a7b482ce40211d3d6",
     "scripts/v100-normal-visible-aim.mjs": "052c0dc3afd9bd0571e1d8ae596026a96669ce14",
     "scripts/v177-human-corpse-contract.mjs": "17568cb76138783d88365660e1ef04e23be26008",
-    "scripts/v177-native-allunit-browser.mjs": "7b25b1f0f843213b830c7a6a98c9d7083b6a38a1",
+    "scripts/v177-native-allunit-browser.mjs": "2076d5f32213dabfb4329339e7dc2e3778eedde1",
     "scripts/v177-native-allunit-outcomes.mjs": "12e9ee396cc426db1a46d942de515c14a54b774b",
     "scripts/v177-native-allunit-ranger-manual-contract.mjs": "69e4ccc8482ad55313d0dcf8c27617b230283416",
     "scripts/v177-native-allunit-ranger-manual.mjs": "6f53d3a7c40c1855a82d91077092c59e18ae9edd",
     "scripts/v177-native-allunit-selection.mjs": "6477d765bf01ef4ef7e56e86a664b3ca27aae083",
     "scripts/v177-native-game-capture-browser.mjs": "6315f3f7167b3b09ff999b3553c80b48ced35d73",
     "scripts/v177-normal-audio-unlock-observation.mjs": "89f90b9fbb1f27bf2dc409955279ed560293b5b3",
-    "tests/ci-change-scope.test.mjs": "178420320f613c0170b2e6422b554ae9468de86a",
+    "tests/ci-change-scope.test.mjs": "87d685b3a06fb1c2bade9a360ce8003ee44a7925",
     "tests/fixtures/v177-native-auto-unlocked-audio.json": "dbc0f000691f2d4a66734e94f1fe05fcbd51b84d",
     "tests/fixtures/v177-native-success-control-audio.json": "2f0f666ea0c2908d9b6cfaa40e56f84818ca73c9",
     "tests/helpers/v177-corpse-joint-render.mjs": "62813dcbd9eb06cd1ccf82ce38cf232da36b4f4c",
@@ -1395,7 +1414,7 @@
     "tests/v177-human-corpse-continuity.test.mjs": "90b95350cf0d87e01b465d6c3b2d21ac39799615",
     "tests/v177-native-allunit-outcomes.test.mjs": "7c88ebc7d060e8358c5ffe84abc4d5f1fa0ff9ce",
     "tests/v177-native-allunit-ranger-manual.test.mjs": "f5647dda7b18351f7d3f8d4ef8453b275d6a46d3",
-    "tests/v177-native-allunit-selection.test.mjs": "6e2c07144aa8bae027c5c21321b65f6881d0a21d",
+    "tests/v177-native-allunit-selection.test.mjs": "7988eff51f1635b6925a6bf162ee07defa6a66b3",
     "tests/v177-native-allunit.test.mjs": "6d6346648962c45a9387fa93678479f1c2b2bada",
     "tests/v177-native-game-capture.test.mjs": "2166b7f9734991a7cd54331a9243cb9844391fea",
     "tests/v177-native-setup-overlap.test.mjs": "a5ef98038a7f2e2ffb1591bd0ca21be066f63a79",
@@ -1410,12 +1429,15 @@
     "scripts/v177-reaction-render-contract.mjs": "fb84ffd008b65864539c914c84a0f9b910c9acd7",
     "tests/v177-native-frame-timing.test.mjs": "0b0bdcb3a53647e9a65fc788456151c6d4492b39",
     ".github/workflows/ci.yml": "1757ef05af6ceff181b3be7002c5a36f3f4fb8eb",
-    "docs/PROJECT_STATE.md": "271e4c214473ce0bd684a724c61a385793ef9583",
+    "docs/PROJECT_STATE.md": "1f10c81bf144719616a243d31340483e2da6f107",
     "app/v177CorpseJointPresentation.js": "b339f6379b252c2687e16361004e184d3029a85b",
     "scripts/v100-device-runtime-browser.mjs": "cf52c7e2ebbde19fafdf50920c0186921f900aa8",
     "tests/v177-corpse-joint-presentation.test.mjs": "e172e7395cadd3e27c8e71dcde6b5e4cbbc2aec0",
     "tests/v177-melee-joints.test.mjs": "b4b86b1e8ee5c2dec304f39e1870eca28127b40b",
-    ".github/workflows/targeted-frame-performance.yml": "784135a26be2bf0f665359322cd11bdfefb6df46"
+    ".github/workflows/targeted-frame-performance.yml": "774c4b1f8589ea83b407ef385bb09b1904519645",
+    "scripts/v177-native-allunit-cases.mjs": "388f6fb5d3dfe088709b920d880d570496561832",
+    "scripts/v177-native-allunit-contract.mjs": "e543fbbc1008f3e6052ff896b5403fcc4f7d3bac",
+    "tests/v177-native-realm-owner.test.mjs": "b2e679b5e6ea2c9e5f09da1efd981480a64a4ad8"
   },
   "unacceptedVisualWindows": {
     "auditSha256": "73cd4c406aba34ba9bc74d22243b711fff9dec8b7961f55e4fbbd08313dc7518",
@@ -1537,51 +1559,35 @@
   "reopenedVisualCases": [
     {
       "caseId": "forms-2:brute:move:1280x720",
-      "reason": "Producer report and original1x review confirm backwards knee bending. New Brute-only IK pole requires fresh source-bound clips."
-    },
-    {
-      "caseId": "forms-2:brute:move:844x390",
-      "reason": "Producer report and original1x review confirm backwards knee bending. New Brute-only IK pole requires fresh source-bound clips."
-    },
-    {
-      "caseId": "forms-2:brute:move:844x340",
-      "reason": "Producer report and original1x review confirm backwards knee bending. New Brute-only IK pole requires fresh source-bound clips."
+      "reason": "Knees repaired and original1x viewed; source/encoded gaps exceed existing250ms. Retain failure and measure reader/RPC on pinned native ARM Mac.",
+      "sourceHead": "2746a778b4a4ff3aaf502b8b71160bcce872c8fd",
+      "sourceSha256": "f95e87a1e56605a919394a0a8f0effb3a3ac6770d2393275721a871d67145e53",
+      "maxEncodedGapMs": 361,
+      "maxSourceGapMs": 407
     },
     {
       "caseId": "forms-2:brute:attack:1280x720",
-      "reason": "Producer report and original1x review confirm backwards knee bending. New Brute-only IK pole requires fresh source-bound clips."
-    },
-    {
-      "caseId": "forms-2:brute:attack:844x390",
-      "reason": "Producer report and original1x review confirm backwards knee bending. New Brute-only IK pole requires fresh source-bound clips."
-    },
-    {
-      "caseId": "forms-2:brute:attack:844x340",
-      "reason": "Producer report and original1x review confirm backwards knee bending. New Brute-only IK pole requires fresh source-bound clips."
+      "reason": "Knees repaired and original1x viewed; source/encoded gaps exceed existing250ms. Retain failure and measure reader/RPC on pinned native ARM Mac.",
+      "sourceHead": "2746a778b4a4ff3aaf502b8b71160bcce872c8fd",
+      "sourceSha256": "b394a34892ecd051d67d2057562fc67001ab712e7d38e77ee38187d21e5901b0",
+      "maxEncodedGapMs": 289,
+      "maxSourceGapMs": 373
     },
     {
       "caseId": "forms-2:brute:engage:1280x720",
-      "reason": "Producer report and original1x review confirm backwards knee bending. New Brute-only IK pole requires fresh source-bound clips."
+      "reason": "Knees repaired and original1x viewed; source/encoded gaps exceed existing250ms. Retain failure and measure reader/RPC on pinned native ARM Mac.",
+      "sourceHead": "2746a778b4a4ff3aaf502b8b71160bcce872c8fd",
+      "sourceSha256": "2b90e2b6270933d1372c88d308a439569e976a684227208103f9e5b59ae74435",
+      "maxEncodedGapMs": 343,
+      "maxSourceGapMs": 323
     },
     {
       "caseId": "forms-2:brute:engage:844x390",
-      "reason": "Producer report and original1x review confirm backwards knee bending. New Brute-only IK pole requires fresh source-bound clips."
-    },
-    {
-      "caseId": "forms-2:brute:engage:844x340",
-      "reason": "Producer report and original1x review confirm backwards knee bending. New Brute-only IK pole requires fresh source-bound clips."
-    },
-    {
-      "caseId": "forms-2:brute:controlled-outcome:844x340",
-      "reason": "Producer report and original1x review confirm backwards knee bending. New Brute-only IK pole requires fresh source-bound clips."
-    },
-    {
-      "caseId": "forms-2:brute:controlled-outcome:1280x720",
-      "reason": "Producer report and original1x review confirm backwards knee bending. New Brute-only IK pole requires fresh source-bound clips."
-    },
-    {
-      "caseId": "forms-2:brute:controlled-outcome:844x390",
-      "reason": "Producer report and original1x review confirm backwards knee bending. New Brute-only IK pole requires fresh source-bound clips."
+      "reason": "Knees repaired and original1x viewed; source/encoded gaps exceed existing250ms. Retain failure and measure reader/RPC on pinned native ARM Mac.",
+      "sourceHead": "2746a778b4a4ff3aaf502b8b71160bcce872c8fd",
+      "sourceSha256": "0820cd6894d95983c3b7bfd8a939b3fee147ccaaa0b65c182cb81f6fa25317c3",
+      "maxEncodedGapMs": 295,
+      "maxSourceGapMs": 295
     }
   ]
 }

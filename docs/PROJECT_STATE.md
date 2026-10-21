@@ -2,13 +2,13 @@
 
 ## 現在の公開状態
 
-2026-10-21：公開は保留。[Issue #177](https://github.com/SUSANO-OOO/Zombieee/issues/177)と[Draft PR #180](https://github.com/SUSANO-OOO/Zombieee/pull/180)で継続する。公開版1.0.3／mainは `99f9c193ab1e35531db39225c839138cdb1c33cd`。Producerの指摘を受け、ハンマー持ちBruteの膝が後方へ折れる不具合を原速動画と実描画行列で確認した。前の「全形態の動作確認完了」という判断を再開し、Bruteの9通常場面と3転帰場面を新候補で再収録する。他47形態の関節行列24,675組、Bruteの靴と上半身10,500組は旧実装と完全一致し、567本の非対象証拠は元SHAで再利用する。
+2026-10-21：公開は保留。[Issue #177](https://github.com/SUSANO-OOO/Zombieee/issues/177)と[Draft PR #180](https://github.com/SUSANO-OOO/Zombieee/pull/180)で継続する。公開版1.0.3／mainは `99f9c193ab1e35531db39225c839138cdb1c33cd`。ハンマー持ちBruteの逆向きの膝を `2746a778` で修正し、新Mac原動画12本を1倍速・先送りなしで確認した。8本は時間密度と確認範囲の自然さを通過。1280の移動・攻撃・接敵と844×390の接敵の4本は元の250ms間隔基準を超え、未合格で保持する。非対象567本と新8本の計575本を元SHAで保持し、残4本だけを同じ1.63.0のApple Silicon Macで確認する。他47形態の関節行列24,675組、Bruteの靴と上半身10,500組は旧実装と完全一致。既存48形態×移動・攻撃・接敵の144本も並列再点検し、Brute以外の同種の大きな膝の反転は確認範囲では見つからなかった。
 
 転倒・起き上がりは元の死亡／マヨ退避／感染出生の処理と時間に接続。段階変化は実際のボスHP変化と双子の相方死亡に接続し、元の攻撃を終えてから頭の短い動作を行う。足・武器・ダメージ・AI・saveは元の担当処理を維持する。製品差分 `080a785f`、localhost計測修正 `5cbdcb0c`。追加21本／4,348 decoded frames（マヨ2、HP境界17、双子2）を原動画1倍速・先送りなしで確認し、新たな足滑り・大きな姿勢の飛びは確認範囲に見つからなかった。
 
-映像と実描画の原記録・失敗履歴・source hashは保持する。旧対応表は `outputs/motion-review/state-motion-inventory-r100.json`、追加動作は `connected-lifecycle-review-r98.json`、Mac補完は `native-musashi-resolved-r94.json`／`native-mutant-resolved-r99.json`。Brute以外の過去記録を新候補の再収録と混同しない。復旧profileはBrute12本だけを再開し、未知の差分やReady化では全回帰へ戻す。最終旧候補340のCI `39580056721` は3,020 tests、Lint、content、buildが成功。QA／文書更新による実行中CIの自動cancelは停止済み。
+映像と実描画の原記録・失敗履歴・source hashは保持する。旧対応表は `outputs/motion-review/state-motion-inventory-r100.json`、追加動作は `connected-lifecycle-review-r98.json`、Brute修正後は `brute-knee-review-r110.json`、48形態再点検は `all48-motion-recheck-r107.json`。Brute以外の過去記録を新候補の再収録と混同しない。復旧profileは残4本だけを選び、未知の差分やReady化では全回帰へ戻す。製品候補2746のCI `39589154449` は3,022 tests、Lint、content、buildが成功。QA補正e5eaのCI `39590903995` も成功。QA／文書更新による実行中CIの自動cancelは停止済み。
 
-WebKit通常観察 `39574644933` attempt2は例外0、第1・2作戦勝利、第3作戦敗北。録画付きのRAF p95は第1〜3作戦123／200／128ms、代表第14／25／30作戦163／166／155msで33ms未達。登録3体の生体接地計算で不要な全身capture・再IK・頂点配列を除去し、全輪郭と元の床値を保持した（31,752比較の最大差1.71e-13 world px）。純JS関数の短縮だけでは性能合格とせず、新候補の固定30秒窓・元の33ms基準で計測する。正式1.56.1／Apple Siliconと1.63／Intel録画対照を分け、後者は常に診断扱い。文書・testだけの後続pushは同じ性能測定を繰り返さない。
+WebKit通常観察 `39574644933` attempt2は例外0、第1・2作戦勝利、第3作戦敗北。旧録画付き6作戦のRAF p95は123〜200msで未達の記録を維持する。登録3体の生体接地計算から不要な全身capture・再IK・頂点配列を除き、全輪郭と元の床値を保持した（31,752比較の最大差1.71e-13 world px）。正式1.56.1／Apple Siliconの固定30秒性能検証 `39590903947` は全6窓成功。844×340・844×390・1280×720のp95は19／19／29ms、独立再測定19／28ms、DPR2は28ms。元の33ms、50 median FPS、実描画頻度とRanger実負荷の各条件を満たし、console/page/request/HTTPエラー0。1.63／Intel診断 `39589154684` は99〜128msで失敗（blank自体34〜38ms）。両環境や旧通常録画を同じ合格にしない。後続の録画ハーネス・文書更新では成功済みの正式性能測定を繰り返さない。
 
 これは適用する状態の動作確認であり、48×21の全1,008組や製品全体の受入ではない。MutantのRAF p95は82msで33ms性能基準の合格ではなく、基準と期限は維持する。R9の技術検証と演出・聴感、全編通常攻略、物理iPhoneの保存録画BGM／SE、Producer実プレイ受入は別の未完ゲート。監査時点のCI cancel、録画failure、通常攻略敗北、音声研究の150ms超過も過去の失敗として保持し、合格へ書き換えない。merge・tag・Release・Pages deployment・Issue closeは行っていない。
 

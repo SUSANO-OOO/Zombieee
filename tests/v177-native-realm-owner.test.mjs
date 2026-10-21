@@ -355,7 +355,7 @@ test('candidate browser callbacks contain no eval or Function construction, and 
 function actualCaptureWithExternalControls(){
  const calls=[],performanceRows=[];
  const external=label=>(()=>{calls.push(label);return{scope:'pure Node external-subcontract fixture; no native/acceptance'};});
- const env={assert,path,LIMITS,assertPlannedCase,assertShardProof,hasPreparedAllUnitPaint:()=>true,
+ const env={assert,path,performance,LIMITS,assertPlannedCase,assertShardProof,hasPreparedAllUnitPaint:()=>true,
   createNativeAllUnitRealmOwner,readNativeAllUnitRealmOwner,startNativeGameRafObservation,stopNativeGameRafObservation,
   beginV177NativeCanvasClip,readNativeAllUnitSample,releasePreparedShardClock,postpaintCaptureBoundary,
   assertShardPostpaintContract,assertAllUnitClip,
@@ -398,6 +398,13 @@ test('actual capture keeps the original source cadence when each sample response
  for(let i=0;i<f.row.samples.length;i++){
   const sample=f.row.samples[i],planned=f.row.captureStart.at+(i+1)*LIMITS.sampleDelayMs;
   assert.ok(sample.at>=planned&&sample.at<planned+.1);
+  const timing=sample.readTiming;
+  assert.equal(timing.sampleAt,planned);assert.ok(timing.startedAt>=planned);
+  assert.ok(timing.scheduleLatenessMs>=0&&timing.scheduleLatenessMs<.1);
+  const stages=['startedAt','snapshotAt','auditAt','targetAuditAt','phaseGAt','boundaryAt','finishedAt'];
+  assert.ok(stages.every((key,j)=>Number.isFinite(timing[key])&&(j===0||timing[key]>=timing[stages[j-1]])));
+  const rpc=f.row.sampleRpcTimings[i];assert.equal(rpc.index,i);assert.equal(rpc.sampleAt,planned);
+  assert.equal(rpc.status,'completed');assert.ok(rpc.durationMs>=0);assert.equal(rpc.durationMs,rpc.finishedAt-rpc.startedAt);
   if(i)assertNativeRealmMember(f.row.samples[0].realm,sample.realm,'sample',f.row.samples[i-1].realm);
  }
  assert.ok(f.row.samples.at(-1).at-f.row.captureStart.at<1801);
@@ -411,6 +418,7 @@ test('actual capture retains a late response time instead of fabricating the mis
  await run(f.page,f.row,{out:path.join(fixtureDirectory,randomUUID())});
  const last=f.row.samples.at(-1),planned=f.row.captureStart.at+LIMITS.moveAttackSamples*LIMITS.sampleDelayMs;
  assert.ok(last.at>planned+700);assert.equal(f.row.samples.length,LIMITS.moveAttackSamples);
+ assert.ok(last.readTiming.scheduleLatenessMs>700,'Missed source schedule is reported without retiming it');
  assert.ok(f.row.samples.every(s=>s.at<=f.row.captureEnd.at));
  assert.equal(f.row.postpaintReceipt.naturalnessAccepted,false);
 });

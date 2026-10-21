@@ -38,8 +38,8 @@ test('current recovery partitions normal, outcome and manual observations withou
  const selected=nativeCaseSelection({event:{pull_request:{draft:true}},git:()=>''});
  assert.deepEqual(selected.caseIds,current.caseIds);assert.deepEqual(selected.outcomeCaseIds,current.outcomeCaseIds);
  assert.deepEqual(selected.manualCaseIds,current.manualCaseIds);
- assert.equal(selected.caseIds.length,9);assert.equal(selected.retainedEvidence.caseIds.length,423);
- assert.equal(selected.outcomeCaseIds.length,3);assert.equal(selected.retainedEvidence.outcomeCaseIds.length,141);
+ assert.equal(selected.caseIds.length,4);assert.equal(selected.retainedEvidence.caseIds.length,428);
+ assert.equal(selected.outcomeCaseIds.length,0);assert.equal(selected.retainedEvidence.outcomeCaseIds.length,144);
  assert.equal(selected.manualCaseIds.length,0);assert.equal(selected.retainedEvidence.manualCaseIds.length,3);
  assert.deepEqual(selected.shards,['forms-2']);
  assert.ok([...selected.caseIds,...selected.outcomeCaseIds].every(id=>id.includes(':brute:')),'Only the changed hammer legs need fresh native footage');
@@ -51,12 +51,17 @@ test('current recovery partitions normal, outcome and manual observations withou
  assert.equal(current.unacceptedVisualWindows.previousCases.length,11);
  assert.equal(current.unacceptedVisualWindows.cases.length,0);
  assert.deepEqual([...selected.caseIds,...selected.outcomeCaseIds].sort(),current.reopenedVisualCases.map(g=>g.caseId).sort(),
-  'newly reported knee defects reopen their affected footage without repeating other forms');
- assert.equal(selected.retainedEvidence.additionalReports.flatMap(r=>r.caseIds).length,73);
+  'only unfinished temporal windows remain open without repeating source-bound successes');
+ assert.equal(selected.retainedEvidence.additionalReports.flatMap(r=>r.caseIds).length,78);
+ const brute=selected.retainedEvidence.additionalReports.find(r=>r.runId==='39589154676');
+ assert.equal(brute.head,'2746a778b4a4ff3aaf502b8b71160bcce872c8fd');
+ assert.equal(brute.caseIds.length,5);assert.equal(brute.outcomeCaseIds.length,3);
+ assert.deepEqual(selected.caseIds,['forms-2:brute:move:1280x720','forms-2:brute:attack:1280x720',
+  'forms-2:brute:engage:1280x720','forms-2:brute:engage:844x390']);
  const hitRepair=selected.retainedEvidence.additionalReports.find(r=>r.runId==='39538653281');
  assert.equal(hitRepair.head,'a2a00a31b9958d9ab1ed2a30c44a56d08837fe12');
  assert.equal(hitRepair.caseIds.length,6);assert.ok(hitRepair.caseIds.every(id=>/:kumaverson:(attack|engage):/u.test(id)));
- assert.equal(selected.retainedEvidence.additionalReports.flatMap(r=>r.outcomeCaseIds).length,58);
+ assert.equal(selected.retainedEvidence.additionalReports.flatMap(r=>r.outcomeCaseIds).length,61);
  assert.equal(selected.retainedEvidence.additionalReports.flatMap(r=>r.manualCaseIds??[]).length,1);
  assert.ok(selected.retainedEvidence.additionalReports.some(r=>r.runId==='39525887343'&&r.caseIds.includes('forms-1:brawler:attack:844x390')),'The fresh clean context supplies Brawler; the original request failure stays in its original report');
  for(const mutate of [p=>{p.retainedEvidence.caseIds.pop();},p=>{p.retainedEvidence.caseIds.push(p.retainedEvidence.caseIds[0]);},

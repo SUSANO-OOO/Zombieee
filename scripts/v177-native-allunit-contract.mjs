@@ -83,8 +83,10 @@ export function readNativeAllUnitSample(input,ownedProof){
   });
  }
  const realm=realmOwner===null?null:realmOwner.member({window,document,performance,canvas:document.querySelector('.game-shell canvas')},'sample');
- const qa=window.__ASHFALL_BATTLE_QA__,snapshot=qa.getSnapshot(),audit=qa.getEnemyFacingRuntimeAudit(fighterId),target=qa.getEnemyFacingRuntimeAudit(targetId);
- const phaseG=qa.getPhaseGCombatSnapshot();
+ const startedAt=performance.now(),qa=window.__ASHFALL_BATTLE_QA__,snapshot=qa.getSnapshot(),snapshotAt=performance.now();
+ const audit=qa.getEnemyFacingRuntimeAudit(fighterId),auditAt=performance.now();
+ const target=qa.getEnemyFacingRuntimeAudit(targetId),targetAuditAt=performance.now();
+ const phaseG=qa.getPhaseGCombatSnapshot(),phaseGAt=performance.now();
  const mayo=owner==='mayo-activation'?qa.getV177NativeMayoProof(proofId,true):null;
  const pair=owner==='futago-pair'?qa.getV177NativeFutagoPair(proofId):null;
  const history=audit.renderHistory??[];
@@ -93,7 +95,8 @@ export function readNativeAllUnitSample(input,ownedProof){
   return{runtimePerformance:qa.getPerformanceSnapshot(),geometry:{viewport:{width:innerWidth,height:innerHeight},devicePixelRatio,
    canvas:{width:canvas.width,height:canvas.height,rect:{x:r.x,y:r.y,width:r.width,height:r.height}}}};
  })():{};
- return{schema:'v177-native-shard-postpaint/v1',at:performance.now(),timeOrigin:performance.timeOrigin,...(realm?{realm}:{}),
+ const boundaryAt=performance.now();
+ const result={schema:'v177-native-shard-postpaint/v1',at:performance.now(),timeOrigin:performance.timeOrigin,...(realm?{realm}:{}),
   simulationTime:snapshot.time,route:location.pathname,visible:document.visibilityState==='visible',
   running:snapshot.running,paused:snapshot.paused,viewport:{width:innerWidth,height:innerHeight},...boundary,
   lookup:{requestedFighterId:fighterId,observedFighterId:audit.fighter?.id,requestedTargetId:targetId,observedTargetId:target.fighter?.id},
@@ -115,6 +118,10 @@ export function readNativeAllUnitSample(input,ownedProof){
    jointWeaponCycleDrawSucceeded:r.jointWeaponCycleDrawSucceeded,jointWeaponCycle:r.jointWeaponCycle,
    jointRangerManualDrawSucceeded:r.jointRangerManualDrawSucceeded,jointRangerManual:r.jointRangerManual,
    jointFutagoAbilityDrawSucceeded:r.jointFutagoAbilityDrawSucceeded,jointFutagoAbility:r.jointFutagoAbility}))};
+ const finishedAt=performance.now();
+ return {...result,readTiming:{sampleAt:sampleAt??null,startedAt,snapshotAt,auditAt,targetAuditAt,phaseGAt,boundaryAt,finishedAt,
+  scheduleLatenessMs:sampleAt===undefined?null:startedAt-sampleAt,durationMs:finishedAt-startedAt,
+  scope:'Original synchronous reader only. RPC/serialization/encoding and native RAF wait are separate; no acceptance or clock change.'}};
 }
 function assertRawEnvelope(row,proof,raw,pausedState=false){
  assertShardProof(row,proof);assert.equal(raw?.schema,'v177-native-shard-postpaint/v1');assert.ok(finite(raw.at)&&finite(raw.timeOrigin)&&finite(raw.simulationTime));

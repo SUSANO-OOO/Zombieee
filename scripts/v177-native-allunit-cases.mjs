@@ -218,9 +218,15 @@ export async function captureAllUnitCase(page,row,{out,onFailure=()=>{}}={}){
     row.release=await owned(()=>resources.realmOwner.evaluate(releasePreparedShardClock,row.proof));
     row.captureStart=await owned(()=>resources.realmOwner.evaluate(readNativeAllUnitSample,{...row.proof,performanceBoundary:true}));
     const count=row.phase==='engage'?LIMITS.engageSamples:LIMITS.moveAttackSamples;
+    row.sampleRpcTimings=[];
     for(let i=0;i<count;i++){
-      row.samples.push(await owned(()=>resources.realmOwner.evaluate(readNativeAllUnitSample,{...row.proof,
-        sampleAt:row.captureStart.at+(i+1)*LIMITS.sampleDelayMs,performanceBoundary:i===count-1})));
+      const sampleAt=row.captureStart.at+(i+1)*LIMITS.sampleDelayMs;
+      const rpc={index:i,sampleAt,startedAt:performance.now(),status:'pending'};row.sampleRpcTimings.push(rpc);
+      try{
+        row.samples.push(await owned(()=>resources.realmOwner.evaluate(readNativeAllUnitSample,{...row.proof,
+          sampleAt,performanceBoundary:i===count-1})));rpc.status='completed';
+      }catch(error){rpc.status='error';rpc.error=String(error);throw error;}
+      finally{rpc.finishedAt=performance.now();rpc.durationMs=rpc.finishedAt-rpc.startedAt;}
     }
     const completed=clip;clip=null;row.nativeClip=await completed.finish({completed:true});active();
     row.sourceRaf=await owned(()=>observation.evaluate(stopNativeGameRafObservation));
