@@ -35,22 +35,22 @@ function actualManualDescriptor(runtime,paint,sourceAtlas){
  const result=JSON.parse(JSON.stringify(inspectPostdraw()));assert.equal(result.jointRangerManualDrawSucceeded,true);
  return result.jointRangerManual;
 }
-function fixture(viewport=VIEWPORTS[1]){
+function fixture(viewport=VIEWPORTS[1],{startAt=10,accumulateClock=false}={}){
  const planned=manualPlan().find(r=>r.viewport.width===viewport.width&&r.viewport.height===viewport.height),row={...planned,samples:[]};
  const stats={speed:38,laneSpeed:62,damage:15,range:138,attackEvery:1.15,hp:82,maxHp:82};
  row.proof={schema:'v177-native-shard-proof/v1',proofId:'2:ranger:4:engage',route:'/v100',battleGeneration:2,owner:'ordinary',phase:'engage',
   fighterId:4,targetId:5,kind:'ranger',side:'human',renderKind:'ranger',v100TwinPart:null,legacyFusedFixture:false,originalActorStats:stats,ownerEvidence:{constructorFixture:true}};
- row.baselineActivationId=0;row.sequenceBaseline=1;row.boundary={simulationTime:10};row.release={at:1000,afterTime:10};row.recordingStart={startedAt:990};
+ row.baselineActivationId=0;row.sequenceBaseline=1;row.boundary={simulationTime:startAt};row.release={at:1000,afterTime:startAt};row.recordingStart={startedAt:990};
  row.recordingMetadata={phase:RANGER_MANUAL_PHASE,fixtureGroup:RANGER_MANUAL_GROUP,baselineActivationId:0};
  const target={targetId:5,targetIds:[5],direction:1,x:500,y:285};
  const initial=createManualAbilityRuntime('ranger'),begun=beginManualAbility(initial,target);assert.equal(begun.ok,true);
- const start={ownerId:4,activationId:begun.activationId,kind:'ranger',eventType:'start',at:10,attackSequence:0};
+ const start={ownerId:4,activationId:begun.activationId,kind:'ranger',eventType:'start',at:startAt,attackSequence:0};
  const fighter={...stats,id:4,kind:'ranger',side:'human',renderKind:'ranger',v100TwinPart:null,x:330,y:285,attackSequence:0};
- row.beforeInput={simulationTime:10,at:1001,fighter,manualRuntime:initial};
- row.afterInput={simulationTime:10,at:1004,phaseG:{manualAbilityReceipts:[start]}};
- let runtime=begun.runtime,impact=null;const receipts=[start],rows=[];
+ row.beforeInput={simulationTime:startAt,at:1001,fighter,manualRuntime:initial};
+ row.afterInput={simulationTime:startAt,at:1004,phaseG:{manualAbilityReceipts:[start]}};
+ let runtime=begun.runtime,impact=null,time=startAt;const receipts=[start],rows=[];
  for(let i=1;i<=240;i++){
-  const stepped=advanceManualAbility(runtime,STEP);runtime=stepped.runtime;const time=10+i*STEP;
+  const stepped=advanceManualAbility(runtime,STEP);runtime=stepped.runtime;time=accumulateClock?time+STEP:startAt+i*STEP;
   for(const event of stepped.events){const r={ownerId:4,activationId:event.activationId,kind:event.kind,eventType:event.type,at:time};receipts.push(r);if(event.type==='impact')impact=r;}
   const paint={renderSequence:i+1,renderKind:'ranger',jointDrawSucceeded:true,jointPaintedAt:time,jointAtlasPath:row.binding.atlas.path,
    assetReady:true,renderWidth:60,renderHeight:90,x:330,y:285,poseScaleX:1,poseScaleY:1,jointLowerFrame:0,jointUpperFrame:0,
@@ -80,6 +80,20 @@ test('supplement plans exactly3 viewport rows in the Ranger shard and never alte
 });
 test('actual original manual state machine supplies.5/.18/92 and all three visual phases in3sizes',()=>{
  for(const viewport of VIEWPORTS){const row=fixture(viewport),r=assertRangerManualCapture(row);assert.equal(r.appliedDamage,MANUAL_ABILITY_REGISTRY.ranger.impactDamage);assert.equal(r.originalSimulationStepSeconds,STEP);assert.equal(r.normalEngageAccepted,false);assert.equal(r.wholeGameAccepted,false);}
+});
+
+test('original31-tick windup accepts accumulated clock roundoff and still rejects real timing changes',()=>{
+ // Exact start/impact numbers from run39525887343, forms-1, Ranger desktop.
+ const row=fixture(VIEWPORTS[0],{startAt:.2833333333333333,accumulateClock:true});
+ const receipt=assertRangerManualCapture(row);
+ assert.equal(receipt.originalStart.at,.2833333333333333);
+ assert.equal(receipt.originalImpact.at,.8000000000000008);
+ assert.ok(receipt.originalImpact.at-receipt.originalStart.at-.5>STEP,'Reproduces the original floating-point rejection');
+ for(const elapsed of [28*STEP,32*STEP,31*STEP+.000001,30.5*STEP]){
+  const changed=structuredClone(row),at=receipt.originalStart.at+elapsed;
+  for(const raw of changed.sourceRaf.rows)for(const r of raw.phaseG.manualAbilityReceipts)if(r.eventType==='impact')r.at=at;
+  assert.throws(()=>assertRangerManualCapture(changed),/Original .5s windup changed/u);
+ }
 });
 const faults={
  windupRecoveryMustRemainNull:r=>r.sourceRaf.rows[3].latestPaint.jointRangerManual.recoveryRemaining=0,

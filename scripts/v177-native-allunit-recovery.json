@@ -2,22 +2,10 @@
   "schema": "v177-native-allunit-recovery/v2",
   "head": "29d4057a8a131c93893978bd29f7ddaaf67cebaf",
   "runId": "39449375661",
-  "scope": "Capture only9 failed/unexecuted cases from20a (4 normal,1 actual Ranger manual,4 human deaths). Preserve570 technical observations at their original heads. Ten20a videos still have observed frame holes and remain visually unaccepted; no blind recapture, all21, performance, naturalness, normal-campaign or physical acceptance is granted.",
-  "caseIds": [
-    "forms-1:brawler:attack:844x390",
-    "forms-2:brute:move:1280x720",
-    "forms-2:gunner:move:1280x720",
-    "forms-2:gunner:attack:1280x720"
-  ],
-  "manualCaseIds": [
-    "forms-1:ranger:ranger-manual-precision:1280x720"
-  ],
-  "outcomeCaseIds": [
-    "forms-2:brute:controlled-outcome:1280x720",
-    "forms-2:gunner:controlled-outcome:1280x720",
-    "forms-2:guardian:controlled-outcome:1280x720",
-    "forms-2:engineer:controlled-outcome:1280x720"
-  ],
+  "scope": "No missing technical captures remain:432 normal,3 actual Ranger manual,144 controlled outcomes retain original bytes and heads. Ranger31-tick roundoff is revalidated from its original failed report. Eleven videos have current unaccepted frame holes; these are not naturalness, performance, all21, campaign or physical acceptance. No blind recapture.",
+  "caseIds": [],
+  "manualCaseIds": [],
+  "outcomeCaseIds": [],
   "affectedDeathForms": [
     "gunner",
     "crazy-king",
@@ -723,11 +711,16 @@
       "forms-12:babayaga:attack:844x340",
       "forms-12:babayaga:engage:1280x720",
       "forms-12:babayaga:engage:844x390",
-      "forms-12:babayaga:engage:844x340"
+      "forms-12:babayaga:engage:844x340",
+      "forms-1:brawler:attack:844x390",
+      "forms-2:brute:move:1280x720",
+      "forms-2:gunner:move:1280x720",
+      "forms-2:gunner:attack:1280x720"
     ],
     "manualCaseIds": [
       "forms-1:ranger:ranger-manual-precision:844x390",
-      "forms-1:ranger:ranger-manual-precision:844x340"
+      "forms-1:ranger:ranger-manual-precision:844x340",
+      "forms-1:ranger:ranger-manual-precision:1280x720"
     ],
     "outcomeCaseIds": [
       "forms-1:brawler:controlled-outcome:1280x720",
@@ -869,7 +862,11 @@
       "forms-12:kumaverson:controlled-outcome:844x340",
       "forms-12:babayaga:controlled-outcome:1280x720",
       "forms-12:babayaga:controlled-outcome:844x390",
-      "forms-12:babayaga:controlled-outcome:844x340"
+      "forms-12:babayaga:controlled-outcome:844x340",
+      "forms-2:brute:controlled-outcome:1280x720",
+      "forms-2:gunner:controlled-outcome:1280x720",
+      "forms-2:guardian:controlled-outcome:1280x720",
+      "forms-2:engineer:controlled-outcome:1280x720"
     ],
     "reports": [
       {
@@ -1196,9 +1193,44 @@
           "forms-12:kumaverson:controlled-outcome:844x340",
           "forms-12:babayaga:controlled-outcome:844x340"
         ]
+      },
+      {
+        "shard": "forms-1",
+        "head": "3dee4438080052f4eac8912ab76aae2112f2872d",
+        "runId": "39525887343",
+        "sha256": "b82bdc9bd4bf5c7c8a842524852b7e329133391073d9de31521f758a2c18234f",
+        "validationSha256": "0295a0e3a8705d4c40059c4e8da4d32a381e951795ccc3e4f19913ee81dc1682",
+        "caseIds": [
+          "forms-1:brawler:attack:844x390"
+        ],
+        "manualCaseIds": [
+          "forms-1:ranger:ranger-manual-precision:1280x720"
+        ],
+        "outcomeCaseIds": [],
+        "originalStatus": "failed"
+      },
+      {
+        "shard": "forms-2",
+        "head": "3dee4438080052f4eac8912ab76aae2112f2872d",
+        "runId": "39525887343",
+        "sha256": "7251f366faf93e11fb728e6a646214f140bb45a1a094dd2bb2142c889fb65c19",
+        "validationSha256": "17601aaee5a50ea3c5b973357c2ccaabac4c55061ee7c7ea739b4d1f93d66142",
+        "caseIds": [
+          "forms-2:brute:move:1280x720",
+          "forms-2:gunner:move:1280x720",
+          "forms-2:gunner:attack:1280x720"
+        ],
+        "manualCaseIds": [],
+        "outcomeCaseIds": [
+          "forms-2:brute:controlled-outcome:1280x720",
+          "forms-2:gunner:controlled-outcome:1280x720",
+          "forms-2:guardian:controlled-outcome:1280x720",
+          "forms-2:engineer:controlled-outcome:1280x720"
+        ],
+        "originalStatus": "completed-diagnostic"
       }
     ],
-    "retainedClipIndexSha256": "1dfee0a96b835e1edd284b3049af1a9bc9cc6a7e2e402903bb71b074848759a6"
+    "retainedClipIndexSha256": "8098d4e5dbd18ded4e504c6ee8f404905736d738b4499d7417ec0533b63d3c88"
   },
   "changedBlobs": {
     ".github/workflows/native-allunit-capture.yml": "8c099e5f0c66eef85db17f214b9ae8b742cbc758",
@@ -1207,25 +1239,26 @@
     "app/combatPresentation.js": "327c7a1dd55707c16385d01d28030a37dc4b27c7",
     "app/v177HumanCorpsePresentation.js": "0422000720875df12b57c9c721fa4c13a8317869",
     "app/v177JointPresentation.js": "6b529c553a38a643f5431dae7cd8a2b16dda81b1",
-    "scripts/ci-change-scope.mjs": "f83e25fddc54a627146159b9e4cf3991dfc9aaf9",
+    "scripts/ci-change-scope.mjs": "a728aa068ecc4d3d52ceb344318a67074183f136",
     "scripts/v100-normal-campaign-playthrough.mjs": "310ba070ccce39d9dc671f6a7b482ce40211d3d6",
     "scripts/v100-normal-visible-aim.mjs": "052c0dc3afd9bd0571e1d8ae596026a96669ce14",
     "scripts/v177-human-corpse-contract.mjs": "17568cb76138783d88365660e1ef04e23be26008",
     "scripts/v177-native-allunit-browser.mjs": "7b25b1f0f843213b830c7a6a98c9d7083b6a38a1",
     "scripts/v177-native-allunit-outcomes.mjs": "3044d3a932b23e74eecc5e6a937aec1b5f36e7d1",
+    "scripts/v177-native-allunit-ranger-manual-contract.mjs": "69e4ccc8482ad55313d0dcf8c27617b230283416",
     "scripts/v177-native-allunit-ranger-manual.mjs": "6f53d3a7c40c1855a82d91077092c59e18ae9edd",
     "scripts/v177-native-allunit-selection.mjs": "6477d765bf01ef4ef7e56e86a664b3ca27aae083",
     "scripts/v177-native-game-capture-browser.mjs": "6315f3f7167b3b09ff999b3553c80b48ced35d73",
     "scripts/v177-normal-audio-unlock-observation.mjs": "89f90b9fbb1f27bf2dc409955279ed560293b5b3",
-    "tests/ci-change-scope.test.mjs": "054ffbfe5ee60eaf7e188a36cce21e4e3950138d",
+    "tests/ci-change-scope.test.mjs": "27d63738e673c2815da336b7f905d2d3f5271308",
     "tests/fixtures/v177-native-auto-unlocked-audio.json": "dbc0f000691f2d4a66734e94f1fe05fcbd51b84d",
     "tests/fixtures/v177-native-success-control-audio.json": "2f0f666ea0c2908d9b6cfaa40e56f84818ca73c9",
     "tests/helpers/v177-corpse-joint-render.mjs": "08f7a664e7df6ef71f208ebdc202ac8fb4ada748",
     "tests/v100-r9-full-story.test.mjs": "a43ebcd3df05e4b851d7fce825398d2b54811388",
     "tests/v177-human-corpse-continuity.test.mjs": "90b95350cf0d87e01b465d6c3b2d21ac39799615",
     "tests/v177-native-allunit-outcomes.test.mjs": "48489c1ba8c33a6ff2e384c4ac6029ba2d447b47",
-    "tests/v177-native-allunit-ranger-manual.test.mjs": "be6162f17cc0b3cf3ae19af4e0de7b5ddb738fff",
-    "tests/v177-native-allunit-selection.test.mjs": "6cbfb1a1228cb872d22821c9a26dcec811ac9542",
+    "tests/v177-native-allunit-ranger-manual.test.mjs": "f5647dda7b18351f7d3f8d4ef8453b275d6a46d3",
+    "tests/v177-native-allunit-selection.test.mjs": "f0d23d5c7513db54746e594126279d1f5ed0d119",
     "tests/v177-native-allunit.test.mjs": "6d6346648962c45a9387fa93678479f1c2b2bada",
     "tests/v177-native-game-capture.test.mjs": "111cb542cecb3382bb6d51f418e2b00ca9b02228",
     "tests/v177-native-setup-overlap.test.mjs": "a5ef98038a7f2e2ffb1591bd0ca21be066f63a79",
@@ -1317,6 +1350,21 @@
         "form": "takuya-omega",
         "maxGap": 0.54,
         "count250": 3
+      },
+      {
+        "caseId": "forms-1:brawler:attack:844x390",
+        "sha256": "71db79b5b47c18683d34e20ed4b703cc58a11270357af3af851a0550958d2722",
+        "phase": "attack",
+        "form": "brawler",
+        "maxGap": 0.27999999999999997,
+        "count250": 1
+      }
+    ],
+    "additionalAudits": [
+      {
+        "sha256": "48f7ec9a73aae498666d17d5ae116f56796a93494710e2dccce5d1e552faddb0",
+        "sourceHead": "3dee4438080052f4eac8912ab76aae2112f2872d",
+        "runId": "39525887343"
       }
     ]
   }

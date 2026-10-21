@@ -38,22 +38,23 @@ test('current recovery partitions normal, outcome and manual observations withou
  const selected=nativeCaseSelection({event:{pull_request:{draft:true}},git:()=>''});
  assert.deepEqual(selected.caseIds,current.caseIds);assert.deepEqual(selected.outcomeCaseIds,current.outcomeCaseIds);
  assert.deepEqual(selected.manualCaseIds,current.manualCaseIds);
- assert.equal(selected.caseIds.length,4);assert.equal(selected.retainedEvidence.caseIds.length,428);
- assert.equal(selected.outcomeCaseIds.length,4);assert.equal(selected.retainedEvidence.outcomeCaseIds.length,140);
- assert.equal(selected.manualCaseIds.length,1);assert.equal(selected.retainedEvidence.manualCaseIds.length,2);
- assert.deepEqual(selected.shards,['forms-1','forms-2']);
+ assert.equal(selected.caseIds.length,0);assert.equal(selected.retainedEvidence.caseIds.length,432);
+ assert.equal(selected.outcomeCaseIds.length,0);assert.equal(selected.retainedEvidence.outcomeCaseIds.length,144);
+ assert.equal(selected.manualCaseIds.length,0);assert.equal(selected.retainedEvidence.manualCaseIds.length,3);
+ assert.deepEqual(selected.shards,[]);
  const affected=current.affectedDeathForms;
  assert.equal(affected.length,11);
- assert.equal(selected.outcomeCaseIds.filter(id=>affected.some(form=>id.includes(':'+form+':'))).length,4);
+ assert.equal(selected.retainedEvidence.outcomeCaseIds.filter(id=>affected.some(form=>id.includes(':'+form+':'))).length,33);
  assert.ok(!selected.outcomeCaseIds.some(id=>/:(scout|medic|ranger):controlled-outcome:/u.test(id)));
  assert.equal(current.observationGaps.cases.length,32);
- assert.equal(current.unacceptedVisualWindows.cases.length,10);
+ assert.equal(current.unacceptedVisualWindows.cases.length,11);
  assert.ok(current.unacceptedVisualWindows.cases.every(g=>[...selected.retainedEvidence.caseIds,...selected.retainedEvidence.outcomeCaseIds].includes(g.caseId)));
- assert.equal(selected.retainedEvidence.additionalReports.flatMap(r=>r.caseIds).length,57);
- assert.equal(selected.retainedEvidence.additionalReports.flatMap(r=>r.outcomeCaseIds).length,49);
- assert.ok(selected.caseIds.includes('forms-1:brawler:attack:844x390'),'The context request failure cannot be promoted through a successful clip');
- for(const mutate of [p=>{p.retainedEvidence.caseIds.pop();},p=>{p.retainedEvidence.caseIds.push(p.caseIds[0]);},
-  p=>{p.outcomeCaseIds.pop();},p=>{p.retainedEvidence.manualCaseIds.pop();},p=>{p.retainedEvidence.reports.pop();}]){
+ assert.equal(selected.retainedEvidence.additionalReports.flatMap(r=>r.caseIds).length,61);
+ assert.equal(selected.retainedEvidence.additionalReports.flatMap(r=>r.outcomeCaseIds).length,53);
+ assert.equal(selected.retainedEvidence.additionalReports.flatMap(r=>r.manualCaseIds??[]).length,1);
+ assert.ok(selected.retainedEvidence.additionalReports.some(r=>r.runId==='39525887343'&&r.caseIds.includes('forms-1:brawler:attack:844x390')),'The fresh clean context supplies Brawler; the original request failure stays in its original report');
+ for(const mutate of [p=>{p.retainedEvidence.caseIds.pop();},p=>{p.retainedEvidence.caseIds.push(p.retainedEvidence.caseIds[0]);},
+  p=>{p.retainedEvidence.outcomeCaseIds.pop();},p=>{p.retainedEvidence.manualCaseIds.pop();},p=>{p.retainedEvidence.reports.pop();}]){
   const invalid=structuredClone(current);mutate(invalid);assert.throws(()=>nativeCaseSelection({root:profileRoot(invalid),event:{pull_request:{draft:true}},git:()=>''}));
  }
  const file='app/combatPresentation.js',blob=current.changedBlobs[file];
@@ -62,7 +63,7 @@ test('current recovery partitions normal, outcome and manual observations withou
 });
 
 test('supplement-only recovery can finish its original context without recapturing a normal case',()=>{
- const profile=structuredClone(current);profile.retainedEvidence.caseIds.push(...profile.caseIds);profile.caseIds=[];
+ const profile=structuredClone(current);profile.manualCaseIds=[profile.retainedEvidence.manualCaseIds.shift()];
  const result=nativeCaseSelection({root:profileRoot(profile),event:{pull_request:{draft:true}},git:()=>''});
- assert.equal(result.caseIds.length,0);assert.deepEqual(result.shards,['forms-1','forms-2']);assert.equal(result.outcomeCaseIds.length,4);
+ assert.equal(result.caseIds.length,0);assert.deepEqual(result.shards,['forms-1']);assert.equal(result.manualCaseIds.length,1);assert.equal(result.outcomeCaseIds.length,0);
 });

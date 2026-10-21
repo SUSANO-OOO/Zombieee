@@ -104,7 +104,12 @@ export function assertRangerManualCapture(row){
   for(const p of draws.values())if(p.renderSequence>=firstManual&&p.renderSequence<=lastManual)assert.equal(p.jointRangerManualDrawSucceeded,true,'Unpainted/fallback hole in manual cycle');
   assert.ok(cooldown,'Actual post-return cooldown missing');
   const impacts=[...new Map(impactRows.map(r=>[JSON.stringify(r),r])).values()];assert.equal(impacts.length,1,'One same-activation real impact required');const impact=impacts[0];
-  assert.ok(Math.abs(impact.at-start.at-definition.windupSeconds)<=STEP,'Original .5s windup changed');
+  // Compare the original fixed ticks. Summing 1/60 can put an allowed31st
+  // tick a few floating-point ulps past the existing one-tick boundary.
+  const elapsedTicks=(impact.at-start.at)/STEP,impactTicks=Math.round(elapsedTicks);
+  const clockRoundoff=4*Number.EPSILON*Math.max(1,Math.abs(start.at),Math.abs(impact.at))/STEP;
+  assert.ok(Math.abs(elapsedTicks-impactTicks)<=clockRoundoff
+    &&Math.abs(impactTicks-definition.windupSeconds/STEP)<=1,'Original .5s windup changed');
   assert.equal(contacts.size,1,'One actual unborrowed Ranger contact required');const contact=[...contacts.values()][0];
   assert.equal(contact.targetId,proof.targetId);assert.equal(contact.shotIndex,0);assert.equal(contact.startedAt,impact.at);
   assert.ok([contact.hpBefore,contact.hpAfter].every(finite)&&contact.hpBefore>contact.hpAfter);assert.equal(contact.hpBefore-contact.hpAfter,definition.impactDamage);
