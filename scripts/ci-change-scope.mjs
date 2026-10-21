@@ -36,8 +36,9 @@ const reviewedValidationBlobs=Object.freeze({
 });
 const reviewedMotionBlobs=Object.freeze({
   'app/combatPresentation.js':'327c7a1dd55707c16385d01d28030a37dc4b27c7',
-  'app/AshfallGame.tsx':'adcab95b79529249417745c4949f658ba5d43996',
+  'app/AshfallGame.tsx':'6c5b04c72afff92d02a14c4bdebe952e8d1f0b16',
   'app/v100SoukiCollision.js':'bbb80fe0b36ff9c6ea2c37aa2d4de617be75b7be',
+  'app/v100SoukiPresentation.js':'9769a43da24230afe829f9a423a2b8cd706f95b1',
   'app/v177JointPresentation.js':'6b529c553a38a643f5431dae7cd8a2b16dda81b1',
   'app/v177HumanCorpsePresentation.js':'0422000720875df12b57c9c721fa4c13a8317869',
   'scripts/v177-native-allunit-outcomes.mjs':'3044d3a932b23e74eecc5e6a937aec1b5f36e7d1',

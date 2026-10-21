@@ -4333,7 +4333,7 @@ function drawSpriteFighter(
     || ["telegraph", "windup", "warning", "charging", "ready", "pulling", "burst", "active", "firing"].includes(f.stationAbility.phase)
     ? 0 : f.flash;
   const soukiPose = options.v100AuthoredPresentation && f.side === 'zombie' && f.kind === 'sprinter'
-    ? v100SoukiPose(f.stationAbility,actionPresentationFlash) : null;
+    ? v100SoukiPose(f.stationAbility,actionPresentationFlash,f.x) : null;
   const enemyContactPose = options.v100AuthoredPresentation && f.side === 'zombie' && !jointImage?.naturalWidth
     ? v100EnemyContactPose(f.kind,{attack:f.attack,attackWindup:f.attackWindup,flash:actionPresentationFlash,abilityPhase:f.stationAbility.phase}) : null;
   const stationAbilityPose = options.v100AuthoredPresentation && f.side === 'zombie'
