@@ -124,6 +124,16 @@ test('only the reviewed corpse fixture injection preserves already completed sto
  assert.equal(ciChangeScope([file],{...options,draft:false}).full,true);
 });
 
+test('the exact Ranger knock repair rechecks Ranger, motion and normal play while retaining unchanged R9',()=>{
+ const file='app/v177JointPresentation.js',blob='46309033f92f10577af7135f34d1215fa8292466';
+ const options={draft:true,sourceBlobs:{[file]:blob}},scope=ciChangeScope([file],options);
+ assert.equal(scope.full,false);assert.equal(scope.ranger,true);assert.equal(scope.normal,true);
+ assert.equal(scope.allunit,true);assert.equal(scope.r9,false);
+ for(const sourceBlobs of [{},{[file]:'f'.repeat(40)}])assert.equal(ciChangeScope([file],{draft:true,sourceBlobs}).full,true);
+ assert.equal(ciChangeScope([file],{...options,draft:false}).full,true);
+ assert.equal(ciChangeScope([file,'app/v100Save.js'],options).full,true);
+});
+
 test('the CLI handles a PR whose base branch advanced without requiring another merge',()=>{
  const directory=mkdtempSync(join(tmpdir(),'zombieee-ci-scope-'));
  const git=(...args)=>execFileSync('git',args,{cwd:directory,encoding:'utf8',windowsHide:true}).trim();

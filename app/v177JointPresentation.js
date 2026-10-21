@@ -391,7 +391,10 @@ export function v177RangerFootPlan(kind,plan,{actor,world,width,direction}={}) {
   if(current&&(state.turnTargetFacing??state.facing)===facing)return plan;
   const feet=v177RangerFootPlacement(atlas.lowerRig,previous?.plan?.rangerFeet,{
     time:world?.time,root:actor?.x,scale,phase:runtime?.locomotionPhase,
-    moving:runtime?.moving,facing,settle:plan.lowerSettle,frozen:plan.reactionHeld||plan.liveStun,
+    // Physical knock can outlast the hit flash. Carry its local leg pose
+    // until the existing impulse ends, then resume the original stop steps.
+    moving:runtime?.moving,facing,settle:plan.lowerSettle,
+    frozen:plan.reactionHeld||plan.liveStun||Math.abs(actor?.knock??0)>.1,
   });
   if(!feet)return plan;
   plan={...plan,phase:feet.phase,

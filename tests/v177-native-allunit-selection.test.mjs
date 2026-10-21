@@ -38,17 +38,18 @@ test('current recovery partitions normal, outcome and manual observations withou
  const selected=nativeCaseSelection({event:{pull_request:{draft:true}},git:()=>''});
  assert.deepEqual(selected.caseIds,current.caseIds);assert.deepEqual(selected.outcomeCaseIds,current.outcomeCaseIds);
  assert.deepEqual(selected.manualCaseIds,current.manualCaseIds);
- assert.equal(selected.caseIds.length,0);assert.equal(selected.retainedEvidence.caseIds.length,432);
- assert.equal(selected.outcomeCaseIds.length,0);assert.equal(selected.retainedEvidence.outcomeCaseIds.length,144);
+ assert.equal(selected.caseIds.length,6);assert.equal(selected.retainedEvidence.caseIds.length,426);
+ assert.equal(selected.outcomeCaseIds.length,5);assert.equal(selected.retainedEvidence.outcomeCaseIds.length,139);
  assert.equal(selected.manualCaseIds.length,0);assert.equal(selected.retainedEvidence.manualCaseIds.length,3);
- assert.deepEqual(selected.shards,[]);
+ assert.deepEqual(selected.shards,['forms-1','forms-2','forms-3','forms-6','forms-8','forms-11','forms-12']);
  const affected=current.affectedDeathForms;
  assert.equal(affected.length,11);
- assert.equal(selected.retainedEvidence.outcomeCaseIds.filter(id=>affected.some(form=>id.includes(':'+form+':'))).length,33);
+ assert.equal([...selected.retainedEvidence.outcomeCaseIds,...selected.outcomeCaseIds].filter(id=>affected.some(form=>id.includes(':'+form+':'))).length,33);
  assert.ok(!selected.outcomeCaseIds.some(id=>/:(scout|medic|ranger):controlled-outcome:/u.test(id)));
  assert.equal(current.observationGaps.cases.length,32);
  assert.equal(current.unacceptedVisualWindows.cases.length,11);
- assert.ok(current.unacceptedVisualWindows.cases.every(g=>[...selected.retainedEvidence.caseIds,...selected.retainedEvidence.outcomeCaseIds].includes(g.caseId)));
+ assert.deepEqual([...selected.caseIds,...selected.outcomeCaseIds].sort(),current.unacceptedVisualWindows.cases.map(g=>g.caseId).sort(),
+  'only the eleven unaccepted original gaps require another native observation');
  assert.equal(selected.retainedEvidence.additionalReports.flatMap(r=>r.caseIds).length,67);
  const hitRepair=selected.retainedEvidence.additionalReports.find(r=>r.runId==='39538653281');
  assert.equal(hitRepair.head,'a2a00a31b9958d9ab1ed2a30c44a56d08837fe12');
@@ -67,6 +68,7 @@ test('current recovery partitions normal, outcome and manual observations withou
 
 test('supplement-only recovery can finish its original context without recapturing a normal case',()=>{
  const profile=structuredClone(current);profile.retainedEvidence.caseIds.push(...profile.caseIds);profile.caseIds=[];
+ profile.retainedEvidence.outcomeCaseIds.push(...profile.outcomeCaseIds);profile.outcomeCaseIds=[];
  profile.manualCaseIds=[profile.retainedEvidence.manualCaseIds.shift()];
  const result=nativeCaseSelection({root:profileRoot(profile),event:{pull_request:{draft:true}},git:()=>''});
  assert.equal(result.caseIds.length,0);assert.deepEqual(result.shards,['forms-1']);assert.equal(result.manualCaseIds.length,1);assert.equal(result.outcomeCaseIds.length,0);

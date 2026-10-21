@@ -42,7 +42,7 @@ const reviewedMotionBlobs=Object.freeze({
   'app/v177HitReaction.js':'6e7dc3705b3fa8ee8095c675b4046571a085e5af',
   'app/v100SoukiCollision.js':'bbb80fe0b36ff9c6ea2c37aa2d4de617be75b7be',
   'app/v100SoukiPresentation.js':'9769a43da24230afe829f9a423a2b8cd706f95b1',
-  'app/v177JointPresentation.js':'6b529c553a38a643f5431dae7cd8a2b16dda81b1',
+  'app/v177JointPresentation.js':'46309033f92f10577af7135f34d1215fa8292466',
   'app/v177HumanCorpsePresentation.js':'0422000720875df12b57c9c721fa4c13a8317869',
   'scripts/v177-native-allunit-outcomes.mjs':'3044d3a932b23e74eecc5e6a937aec1b5f36e7d1',
   'scripts/v177-human-corpse-contract.mjs':'17568cb76138783d88365660e1ef04e23be26008',
@@ -59,7 +59,10 @@ export function ciChangeScope(paths,{draft,sourceBlobs={}}={}){
     else if(r9.has(file))r9Changed=true;
     else if(governance.has(file)||orchestration.has(file)||/^tests\/[^/]+\.test\.mjs$/u.test(file))continue;
     else if(reviewedValidationBlobs[file]&&sourceBlobs[file]===reviewedValidationBlobs[file])continue;
-    else if(reviewedMotionBlobs[file]&&sourceBlobs[file]===reviewedMotionBlobs[file]){normalChanged=true;allunitChanged=true;}
+    else if(reviewedMotionBlobs[file]&&sourceBlobs[file]===reviewedMotionBlobs[file]){
+      normalChanged=true;allunitChanged=true;
+      if(file==='app/v177JointPresentation.js')rangerChanged=true;
+    }
     else full=true; // Unclassified changes retain the complete regression.
   }
   return {full,ranger:full||rangerChanged,normal:full||normalChanged,allunit:full||allunitChanged,r9:full||r9Changed,

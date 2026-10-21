@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {V177_JOINT_ATLASES,v177JointPose,drawV177JointPose,v177RenderedWeightedLowerReceipt} from '../app/v177JointPresentation.js';
+import {V177_JOINT_ATLASES,v177JointPose,v177RangerFootPlan,drawV177JointPose,v177RenderedWeightedLowerReceipt} from '../app/v177JointPresentation.js';
+import {createCombatAnimationRuntime,advanceCombatAnimationRuntime} from '../app/combatPresentation.js';
+import {v177RangerLowerPose} from '../app/v177RangerLowerMotion.js';
 import {MANUAL_ABILITY_REGISTRY,createManualAbilityRuntime,beginManualAbility,advanceManualAbility} from '../app/manualAbilities.js';
 
 // Unit Canvas port exercises actual draw/history code. Its RGBA is a mock;
@@ -38,4 +40,44 @@ test('unpainted plans never publish start time; painted entry survives sampling 
 test('ordinary states stay available and hit/living-stun inherit the actual manual endpoint',()=>{
  const f=fixture();paint(f,plan(f));at(f,.679);const last=plan(f);paint(f,last);at(f,.68);const hit=v177JointPose('ranger',{requestedState:'hit-light'},f.runtime,{actor:f.actor,world:f.world});assert.equal(hit.reactionHeld,true);assert.deepEqual(hit.rangerManualUpperPose,last.rangerManualUpperPose);paint(f,hit);const stun=v177JointPose('ranger',{requestedState:'incapacitated'},f.runtime,{actor:f.actor,world:f.world,stunRemaining:.42});assert(stun.liveStun);assert.deepEqual(stun.rangerStunUpperPose,last.rangerManualUpperPose);
  for(const requestedState of ['idle','move','wind-up','active','recovery','reload'])assert(v177JointPose('ranger',{requestedState,clipProgress:.3},f.runtime));
+});
+
+test('a boss shove outlasting the hit flash carries the weighted legs through the remaining knock and then lands',()=>{
+ const rig=atlas.lowerRig,scale=.2,cycle=rig.spanPx/rig.stanceFraction;
+ const actor={id:19,kind:'ranger',side:'human',hp:70,x:530,y:285,knock:0,stationAbility:{phase:'idle'},
+  animationPresentation:createCombatAnimationRuntime({x:530,y:285,direction:'right'})};
+ const world={time:0,fighters:[actor]},f={actor,world};
+ let previous,heldAfterFlash=0;
+ for(let tick=0;tick<90;tick++){
+  if(tick){
+   // The recorded Ooguchi charge retains knock after its .2s flash and
+   // pushes the recipient farther than an ordinary walking step can cover.
+   actor.knock=tick===1?22:actor.knock*.9;
+   if(tick<=30)actor.x-=31/6;
+   const state=tick<=12?'hit-heavy':undefined;
+   actor.animationPresentation=advanceCombatAnimationRuntime(actor.animationPresentation,
+    {kind:'ranger',x:actor.x,y:actor.y,direction:tick<=12?'right':'left',state,
+     locomotionCycleDistance:scale*cycle},1/60);
+   world.time=tick/60;
+  }
+  const sample={requestedState:tick>0&&tick<=12?'hit-heavy':actor.animationPresentation.state,clipProgress:0};
+  let q=v177JointPose('ranger',sample,actor.animationPresentation,{actor,world});
+  q=v177RangerFootPlan('ranger',q,{actor,world,width:96});
+  const pose=v177RangerLowerPose(rig,q.phase,q.lowerSettle,undefined,q.lowerFootTargets);
+  for(let i=0;i<2;i++){
+   const j=pose.joints[i],leg=rig.legs[i];
+   assert.ok(Math.abs(Math.hypot(j[2]-j[0],j[3]-j[1])-leg.upperLength)<1e-9);
+   assert.ok(Math.abs(Math.hypot(j[4]-j[2],j[5]-j[3])-leg.lowerLength)<1e-9);
+   if(tick>12&&Math.abs(actor.knock)>.1){
+    const before=previous.rangerFeet.feet[i],after=q.rangerFeet.feet[i];
+    assert.ok(Math.abs((after.x-actor.x)/q.rangerFeet.facing
+      -(before.x-previous.rangerFeet.root)/previous.rangerFeet.facing)<1e-9,
+     'remaining physical knock must carry the local foot pose instead of leaving a planted ankle behind');
+    heldAfterFlash++;
+   }
+  }
+  paint(f,q);previous=q;
+ }
+ assert.ok(heldAfterFlash>40,'the regression must actually continue after the flash ends');
+ assert.deepEqual(previous.rangerFeet.feet.map(foot=>foot.height),[0,0]);
 });
