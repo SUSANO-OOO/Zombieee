@@ -10586,8 +10586,12 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       },
       armRepresentativeSixRuntimeAttackProof: (
         ownerId: number,
-        options: { alternateTarget?: boolean } = {},
+        options: { alternateTarget?: boolean; approachDistance?: number } = {},
       ) => {
+        const approachDistance = options.approachDistance ?? 0;
+        if (!Number.isFinite(approachDistance) || approachDistance < 0 || approachDistance > 120) {
+          throw new RangeError("Runtime approach fixture requires 0..120px");
+        }
         const g = gameRef.current;
         const owner = g.fighters.find((fighter) => (
           fighter.id === ownerId
@@ -10617,7 +10621,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           maximumDistance,
           Math.max(minimumDistance, owner.range > 64 ? 145 : Math.min(30, maximumDistance)),
         );
-        target.x = owner.x + proofDistance;
+        target.x = owner.x + proofDistance + approachDistance;
         target.y = owner.y;
         target.lane = owner.lane;
         target.anchorLane = owner.lane;
@@ -12860,11 +12864,16 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         kind = "resonator",
         state = "attack",
         reinforcementAlly = false,
+        recipientKind = "guardian",
       }: {
         kind?: EnemyKind;
         state?: "entry" | "move" | "warning" | "warning-low-hp" | "attack" | "hit" | "low-hp";
         reinforcementAlly?: boolean;
+        recipientKind?: UnitKind;
       } = {}) => {
+        if (!PLAYABLE_COMBAT_KINDS.includes(recipientKind)) {
+          throw new RangeError(`Unknown VFX recipient: ${String(recipientKind)}`);
+        }
         if (reinforcementAlly && (kind !== "anchor-bloom" || state !== "move")) {
           throw new Error("Reinforcement fixture requires an idle Anchor Bloom");
         }
@@ -12880,9 +12889,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         g.won = false;
         const lane: Lane = 1;
         const enemy = spawnEnemy(g, kind, lane);
-        const deployed = spawnHuman(g, "guardian", true);
+        const deployed = spawnHuman(g, recipientKind, true);
         const human = deployed
-          ? g.fighters.find((fighter) => fighter.side === "human" && fighter.kind === "guardian")
+          ? g.fighters.find((fighter) => fighter.side === "human" && fighter.kind === recipientKind)
           : null;
         if (!enemy || !human) throw new Error(`Enemy VFX proof fixture unavailable: ${kind}/${state}`);
         enemy.x = state === "entry" ? 898 : 610;
