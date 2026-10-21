@@ -28,19 +28,27 @@ export function readNativeOutcomeSample(realmOwner,{fighterId,afterSequence=0,sa
     setTimeout(()=>{try{resolve(readNativeOutcomeSample(realmOwner,{fighterId,afterSequence,sampleAt,performanceBoundary}));}catch(error){reject(error);}},sampleAt-performance.now());
   });
   const realm=realmOwner.member({window,document,performance,canvas:document.querySelector('.game-shell canvas')},'sample');
-  const qa=window.__ASHFALL_BATTLE_QA__,snapshot=qa.getSnapshot(),audit=qa.getEnemyFacingRuntimeAudit(fighterId),combat=qa.getPhaseGCombatSnapshot();
+  const startedAt=performance.now(),qa=window.__ASHFALL_BATTLE_QA__,snapshot=qa.getSnapshot(),snapshotAt=performance.now();
+  const audit=qa.getEnemyFacingRuntimeAudit(fighterId),auditAt=performance.now();
+  const combat=qa.getPhaseGCombatSnapshot(),combatAt=performance.now();
   const boundary=performanceBoundary?(()=>{
     const canvas=document.querySelector('.game-shell canvas'),r=canvas.getBoundingClientRect();
     return {runtimePerformance:qa.getPerformanceSnapshot(),geometry:{viewport:{width:innerWidth,height:innerHeight},devicePixelRatio,
       canvas:{width:canvas.width,height:canvas.height,rect:{x:r.x,y:r.y,width:r.width,height:r.height}}}};
   })():{};
-  return {realm,at:performance.now(),timeOrigin:performance.timeOrigin,simulationTime:snapshot.time,
+  const boundaryAt=performance.now();
+  const result={realm,at:performance.now(),timeOrigin:performance.timeOrigin,simulationTime:snapshot.time,
     route:location.pathname,visible:document.visibilityState==='visible',running:snapshot.running,paused:snapshot.paused,battleGeneration:combat.battleGeneration,
     body:{fighter:audit.fighter,corpse:audit.corpse,renderHistory:audit.renderHistory.filter(r=>r.renderSequence>afterSequence),
       corpseRenderHistory:audit.corpseRenderHistory.filter(r=>r.renderSequence>afterSequence)},
     effects:{impacts:combat.combatGore.impacts.filter(r=>r.targetId===fighterId),wounds:combat.combatGore.wounds.filter(r=>r.targetId===fighterId),
       pools:combat.combatGore.pools.filter(r=>r.targetId===fighterId)},
     receipts:combat.manualAbilityReceipts.filter(r=>r.ownerId===fighterId),...boundary};
+  const finishedAt=performance.now();
+  return {...result,readTiming:{startedAt,finishedAt,durationMs:finishedAt-startedAt,
+    snapshotMs:snapshotAt-startedAt,auditMs:auditAt-snapshotAt,combatMs:combatAt-auditAt,
+    boundaryMs:boundaryAt-combatAt,resultMs:finishedAt-boundaryAt,
+    scope:"Synchronous sample construction only; excludes RPC transport, JSON serialization, encoding and export"}};
 }
 
 const draws=row=>row.samples.flatMap(s=>[...s.body.renderHistory,...s.body.corpseRenderHistory]);

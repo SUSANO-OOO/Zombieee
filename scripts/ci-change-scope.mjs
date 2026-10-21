@@ -27,13 +27,13 @@ const orchestration=new Set(['.github/workflows/ci.yml','scripts/ci-change-scope
   '.github/workflows/native-capture-comparison.yml','.github/workflows/native-game-capture.yml',
   'scripts/v177-native-opus-probe.mjs','scripts/v177-native-audio-capabilities.mjs',
   'scripts/v177-native-game-capture-browser.mjs']);
-// Reviewed raw-data validation repair only; capture code and product inputs
-// are unchanged. A different blob restores full regression automatically.
+// Reviewed validation and QA-only observation revisions. Gameplay, rendering
+// and limits are unchanged; a different blob restores full regression.
 const reviewedValidationBlobs=Object.freeze({
-  // Reviewed QA-only preparation: recipients, approach and HP phase boundary.
-  'app/AshfallGame.tsx':'6010b821a215ca825c688aeda853f01c2c81a90e',
+  // Preparation plus living/corpse observation and synchronous sample timing.
+  'app/AshfallGame.tsx':'196ad0a43b13632ed7d228e1a37a5018c4407456',
   'scripts/v177-native-allunit-ranger-manual-contract.mjs':'69e4ccc8482ad55313d0dcf8c27617b230283416',
-  'scripts/v177-native-allunit-outcomes.mjs':'15b01dfa46d964c86e87268838c9c9b0aba96645',
+  'scripts/v177-native-allunit-outcomes.mjs':'883d3129d163bf62f4baba76647d16d8a14650db',
   'tests/helpers/v177-corpse-joint-render.mjs':'08f7a664e7df6ef71f208ebdc202ac8fb4ada748',
 });
 const reviewedMotionBlobs=Object.freeze({

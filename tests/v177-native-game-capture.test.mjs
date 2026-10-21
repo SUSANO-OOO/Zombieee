@@ -289,8 +289,8 @@ test('actual per-RAF audit reads the same last draw without actor, birth or full
   const history = [null, tail];
   Object.defineProperty(history, 0, {get(){assert.fail('Tail summary must not enumerate older draws');}});
   let latest = history, reads = 0;
-  const globals = {fighterRenderAuditHistory:{get(id){assert.equal(id, 8);reads++;return latest;}}};
-  for (const key of ['gameRef','corpseRenderAuditHistory','fighterActualXDeltaAudit','readV177TurnedBirthPresentation'])
+  const globals = {fighterRenderAuditHistory:{get(id){assert.equal(id, 8);reads++;return latest;}},corpseRenderAuditHistory:new Map()};
+  for (const key of ['gameRef','fighterActualXDeltaAudit','readV177TurnedBirthPresentation'])
     Object.defineProperty(globals, key, {get(){assert.fail('Tail summary must not access '+key);}});
   const read = actualEnemyFacingAudit(globals);
   assert.equal(JSON.stringify(read(8,{latestDrawOnly:true})), JSON.stringify({renderHistory:[{renderSequence:41,renderKind:'turned'}]}));
@@ -318,8 +318,27 @@ test('actual default audit retains complete independent history rows and agrees 
     assert.notEqual(full.renderHistory,live); assert.notEqual(full.renderHistory[0],live[0]);
     assert.equal(full.renderHistory[0].jointWeightedLower,weighted);
     assert.equal(JSON.stringify(read(8,{latestDrawOnly:true}).renderHistory[0]),
-      JSON.stringify({renderSequence:full.renderHistory.at(-1).renderSequence,renderKind:full.renderHistory.at(-1).renderKind}));
+      JSON.stringify({renderSequence:full.corpseRenderHistory.at(-1).renderSequence,renderKind:full.corpseRenderHistory.at(-1).renderKind}));
   }
+});
+
+test('actual per-RAF audit follows living to corpse paints and later living reuse without scanning histories',()=>{
+  const histories={live:[{renderSequence:117,renderKind:'miyamoto-musashi'}],dead:[]};
+  const tailHistory=(key)=>({at(index){assert.equal(index,-1);return histories[key].at(-1);}});
+  const read=actualEnemyFacingAudit({fighterRenderAuditHistory:{get(){return tailHistory('live');}},
+    corpseRenderAuditHistory:{get(){return tailHistory('dead');}}});
+  const callbacks=[];let now=100;
+  const globals={performance:{timeOrigin:1000,now:()=>now},window:{__ASHFALL_BATTLE_QA__:{getEnemyFacingRuntimeAudit:read}},
+    requestAnimationFrame(fn){callbacks.push(fn);return callbacks.length;},cancelAnimationFrame(){}};
+  const start=vm.runInNewContext('('+startNativeGameRafObservation.toString()+')',globals),state=start({fighterId:8});
+  const seen=[];
+  for(const [live,dead] of [[117,null],[117,118],[117,119],[120,119]]){
+    histories.live=[{renderSequence:live,renderKind:'miyamoto-musashi'}];
+    histories.dead=dead===null?[]:[{renderSequence:dead,renderKind:'miyamoto-musashi'}];
+    now+=17;callbacks.shift()();seen.push(state.rows.at(-1).renderSequence);
+  }
+  assert.deepEqual(seen,[117,118,119,120]);
+  assert.deepEqual(histories.live,[{renderSequence:120,renderKind:'miyamoto-musashi'}]);
 });
 
 test('actual sample reads keep the normal and Phase G snapshot APIs distinct', () => {

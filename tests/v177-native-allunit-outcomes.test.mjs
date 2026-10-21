@@ -88,6 +88,11 @@ test('outcome keeps independent raw clock reads and rejects replaced real browse
   vm.runInContext('('+readNativeAllUnitRealmOwner.toString()+')',context)(owner);
   const first=read(owner,{fighterId:1}),second=read(owner,{fighterId:1});
   assert.notEqual(first.timeOrigin,second.timeOrigin);assert.equal(first.realm.rawOriginAtCreation,second.realm.rawOriginAtCreation);
+  for(const sample of [first,second]){
+    const t=sample.readTiming;assert.ok(t.finishedAt>=t.startedAt);assert.equal(t.durationMs,t.finishedAt-t.startedAt);
+    assert.equal(t.snapshotMs+t.auditMs+t.combatMs+t.boundaryMs+t.resultMs,t.durationMs);
+    assert.equal(sample.simulationTime,0);assert.equal(sample.running,true);assert.equal(sample.paused,true);
+  }
   context.performance={...performance};assert.throws(()=>read(owner,{fighterId:1}),/reference mismatch/u);
 });
 

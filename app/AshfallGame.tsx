@@ -13316,9 +13316,11 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       },
       getEnemyFacingRuntimeAudit: (fighterId: number, options: { latestDrawOnly?: boolean } = {}) => {
         if (options?.latestDrawOnly === true) {
-          // The per-RAF observer needs the same history tail, without copying
-          // both histories or building actor/target/birth snapshots each frame.
-          const draw = fighterRenderAuditHistory.get(fighterId)?.at(-1);
+          // Keep observing the actual last paint after the living actor moves
+          // into its corpse owner, without copying either complete history.
+          const live = fighterRenderAuditHistory.get(fighterId)?.at(-1);
+          const dead = corpseRenderAuditHistory.get(fighterId)?.at(-1);
+          const draw = !live ? dead : !dead ? live : dead.renderSequence > live.renderSequence ? dead : live;
           return { renderHistory: draw ? [{ renderSequence: draw.renderSequence, renderKind: draw.renderKind }] : [] };
         }
         const g = gameRef.current;

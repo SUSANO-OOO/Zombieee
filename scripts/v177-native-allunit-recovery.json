@@ -2,20 +2,10 @@
   "schema": "v177-native-allunit-recovery/v2",
   "head": "29d4057a8a131c93893978bd29f7ddaaf67cebaf",
   "runId": "39449375661",
-  "scope": "Retain568 source-compatible normal/manual/outcome records with their original bytes, sources and failures. Revisit only the11 still-unaccepted encoded/render gaps (6 normal,5 outcome), without changing limits. The Ranger-only remaining-knock repair is inactive in retained no-knock normal/manual and lethal outcome windows; affected living incoming clips are verified separately. Historical gap records remain unaccepted until actual new raw footage and original1x review. No all21, performance, campaign or physical acceptance.",
-  "caseIds": [
-    "forms-1:brawler:attack:844x390",
-    "forms-6:abomination:move:1280x720",
-    "forms-6:takuya:move:1280x720",
-    "forms-6:takuya:engage:1280x720",
-    "forms-8:futago-separated-a:engage:844x390",
-    "forms-12:takuya-omega:move:1280x720"
-  ],
+  "scope": "Retain577 source-compatible records (432 normal,142 outcome,3 manual); only the two still-unaccepted Mac outcome windows require diagnostic reobservation. Native run39547137610 resolved nine original>=250ms observation gaps with original1x review, without accepting the product p95 RAF33ms budget. Preserve all original11 and32 historical gaps, raw failures, and separate Windows supplementary motion evidence. QA-only observer now follows actual corpse paints and records synchronous sample cost; it changes no gameplay, render quality, clocks or deadlines. No all21, campaign, performance, physical or publication acceptance.",
+  "caseIds": [],
   "manualCaseIds": [],
   "outcomeCaseIds": [
-    "forms-2:brute:controlled-outcome:844x390",
-    "forms-2:engineer:controlled-outcome:844x390",
-    "forms-3:zakimiya:controlled-outcome:1280x720",
     "forms-3:miyamoto-musashi:controlled-outcome:1280x720",
     "forms-11:mugarian-president-mutated:controlled-outcome:1280x720"
   ],
@@ -722,7 +712,13 @@
       "forms-12:babayaga:engage:844x340",
       "forms-2:brute:move:1280x720",
       "forms-2:gunner:move:1280x720",
-      "forms-2:gunner:attack:1280x720"
+      "forms-2:gunner:attack:1280x720",
+      "forms-1:brawler:attack:844x390",
+      "forms-6:abomination:move:1280x720",
+      "forms-6:takuya:move:1280x720",
+      "forms-6:takuya:engage:1280x720",
+      "forms-8:futago-separated-a:engage:844x390",
+      "forms-12:takuya-omega:move:1280x720"
     ],
     "manualCaseIds": [
       "forms-1:ranger:ranger-manual-precision:844x390",
@@ -868,7 +864,10 @@
       "forms-2:brute:controlled-outcome:1280x720",
       "forms-2:gunner:controlled-outcome:1280x720",
       "forms-2:guardian:controlled-outcome:1280x720",
-      "forms-2:engineer:controlled-outcome:1280x720"
+      "forms-2:engineer:controlled-outcome:1280x720",
+      "forms-2:brute:controlled-outcome:844x390",
+      "forms-2:engineer:controlled-outcome:844x390",
+      "forms-3:zakimiya:controlled-outcome:1280x720"
     ],
     "reports": [
       {
@@ -1248,32 +1247,107 @@
         "manualCaseIds": [],
         "outcomeCaseIds": [],
         "originalStatus": "completed-diagnostic"
+      },
+      {
+        "shard": "forms-1",
+        "head": "726d5b682e9d2d4145ea6a2b5b47dee877e13a1b",
+        "runId": "39547137610",
+        "sha256": "f712afd746f8df78faeb8f4959f8edcc328d17fe3258aaf5643fc35ca328bfda",
+        "validationSha256": "b2bbb81376311e6cf97ad696c39d2291b54acb00aa0008449a8a63153398072b",
+        "motionReviewSha256": "8b2906bbe7450e8439f3fcc0c6cdfff8ad88413cd983a8f7835c0418f0f30b5d",
+        "caseIds": [
+          "forms-1:brawler:attack:844x390"
+        ],
+        "outcomeCaseIds": []
+      },
+      {
+        "shard": "forms-2",
+        "head": "726d5b682e9d2d4145ea6a2b5b47dee877e13a1b",
+        "runId": "39547137610",
+        "sha256": "1c2d948a0d51cef2b462340029d57fd12e221dbf599f0f0148dab08c49295b4c",
+        "validationSha256": "57cfcc8910b32259e07c7c9002e02593cdd887e2cee7c543d2a01ee7e1e854dc",
+        "motionReviewSha256": "8b2906bbe7450e8439f3fcc0c6cdfff8ad88413cd983a8f7835c0418f0f30b5d",
+        "caseIds": [],
+        "outcomeCaseIds": [
+          "forms-2:brute:controlled-outcome:844x390",
+          "forms-2:engineer:controlled-outcome:844x390"
+        ]
+      },
+      {
+        "shard": "forms-3",
+        "head": "726d5b682e9d2d4145ea6a2b5b47dee877e13a1b",
+        "runId": "39547137610",
+        "sha256": "9de28137ea33a01771facc4798bd2f3f9553d96026d12b6888d67f8dabf832bb",
+        "validationSha256": "485be28886e54e21773ec62bb46662f3608a68682686a61b6467f093dc25cdd2",
+        "motionReviewSha256": "8b2906bbe7450e8439f3fcc0c6cdfff8ad88413cd983a8f7835c0418f0f30b5d",
+        "caseIds": [],
+        "outcomeCaseIds": [
+          "forms-3:zakimiya:controlled-outcome:1280x720"
+        ]
+      },
+      {
+        "shard": "forms-6",
+        "head": "726d5b682e9d2d4145ea6a2b5b47dee877e13a1b",
+        "runId": "39547137610",
+        "sha256": "c2c9c3346b8c837f48432eef851253683f5321d06650c42f54b7c0e052f482a5",
+        "validationSha256": "461331dfc65d43bf342d5756b9d3b3f74c6755dccfb13564a9bab8719f10e04d",
+        "motionReviewSha256": "8b2906bbe7450e8439f3fcc0c6cdfff8ad88413cd983a8f7835c0418f0f30b5d",
+        "caseIds": [
+          "forms-6:abomination:move:1280x720",
+          "forms-6:takuya:move:1280x720",
+          "forms-6:takuya:engage:1280x720"
+        ],
+        "outcomeCaseIds": []
+      },
+      {
+        "shard": "forms-8",
+        "head": "726d5b682e9d2d4145ea6a2b5b47dee877e13a1b",
+        "runId": "39547137610",
+        "sha256": "2cecdbe1791fc2dca0d2d3fa8031161fbcfeac5ebd99d8e7317fecbd2b4fdfb6",
+        "validationSha256": "8e270a0720560c0e0a6f7b0401b8de06662ba4b8e50a84f96d6088f39acc91ab",
+        "motionReviewSha256": "8b2906bbe7450e8439f3fcc0c6cdfff8ad88413cd983a8f7835c0418f0f30b5d",
+        "caseIds": [
+          "forms-8:futago-separated-a:engage:844x390"
+        ],
+        "outcomeCaseIds": []
+      },
+      {
+        "shard": "forms-12",
+        "head": "726d5b682e9d2d4145ea6a2b5b47dee877e13a1b",
+        "runId": "39547137610",
+        "sha256": "b465a1bdb7ea69101dc4eff4c4154b9281bde3eb8c59a1593d8197a19f3fe1d2",
+        "validationSha256": "e2d3bab9fa2bd6bc5f76868cc1f3df3cb16f1fa8269650d56dc13dbfa183c41a",
+        "motionReviewSha256": "8b2906bbe7450e8439f3fcc0c6cdfff8ad88413cd983a8f7835c0418f0f30b5d",
+        "caseIds": [
+          "forms-12:takuya-omega:move:1280x720"
+        ],
+        "outcomeCaseIds": []
       }
     ],
-    "retainedClipIndexSha256": "4808bcd7c16d610e5e8ee4982c2ca1f8f46d6b9af911ff081cfa8a1c4408d3e4"
+    "retainedClipIndexSha256": "2e5a336b1cedc13442e69522120147b0b2836f1bf2a4e13e6ef561c868315c0d"
   },
   "changedBlobs": {
     ".github/workflows/native-allunit-capture.yml": "8c099e5f0c66eef85db17f214b9ae8b742cbc758",
     ".github/workflows/native-game-capture.yml": "51b34503defe778ea55384712a2b77dc60070df8",
-    "app/AshfallGame.tsx": "6010b821a215ca825c688aeda853f01c2c81a90e",
+    "app/AshfallGame.tsx": "196ad0a43b13632ed7d228e1a37a5018c4407456",
     "app/combatPresentation.js": "327c7a1dd55707c16385d01d28030a37dc4b27c7",
     "app/v100SoukiCollision.js": "bbb80fe0b36ff9c6ea2c37aa2d4de617be75b7be",
     "app/v100SoukiPresentation.js": "9769a43da24230afe829f9a423a2b8cd706f95b1",
     "app/v177HitReaction.js": "6e7dc3705b3fa8ee8095c675b4046571a085e5af",
     "app/v177HumanCorpsePresentation.js": "0422000720875df12b57c9c721fa4c13a8317869",
     "app/v177JointPresentation.js": "46309033f92f10577af7135f34d1215fa8292466",
-    "scripts/ci-change-scope.mjs": "74bded42b4fc435d0de3270eb55666475a00e8bb",
+    "scripts/ci-change-scope.mjs": "ae27cefaf985aa10f718550a91e986517bb48b3d",
     "scripts/v100-normal-campaign-playthrough.mjs": "310ba070ccce39d9dc671f6a7b482ce40211d3d6",
     "scripts/v100-normal-visible-aim.mjs": "052c0dc3afd9bd0571e1d8ae596026a96669ce14",
     "scripts/v177-human-corpse-contract.mjs": "17568cb76138783d88365660e1ef04e23be26008",
     "scripts/v177-native-allunit-browser.mjs": "7b25b1f0f843213b830c7a6a98c9d7083b6a38a1",
-    "scripts/v177-native-allunit-outcomes.mjs": "3044d3a932b23e74eecc5e6a937aec1b5f36e7d1",
+    "scripts/v177-native-allunit-outcomes.mjs": "883d3129d163bf62f4baba76647d16d8a14650db",
     "scripts/v177-native-allunit-ranger-manual-contract.mjs": "69e4ccc8482ad55313d0dcf8c27617b230283416",
     "scripts/v177-native-allunit-ranger-manual.mjs": "6f53d3a7c40c1855a82d91077092c59e18ae9edd",
     "scripts/v177-native-allunit-selection.mjs": "6477d765bf01ef4ef7e56e86a664b3ca27aae083",
     "scripts/v177-native-game-capture-browser.mjs": "6315f3f7167b3b09ff999b3553c80b48ced35d73",
     "scripts/v177-normal-audio-unlock-observation.mjs": "89f90b9fbb1f27bf2dc409955279ed560293b5b3",
-    "tests/ci-change-scope.test.mjs": "9383449fef38b4212cbb5bd96cf0a9cd66039c43",
+    "tests/ci-change-scope.test.mjs": "78df08063a46c46a80dc7947329cfb468a52953e",
     "tests/fixtures/v177-native-auto-unlocked-audio.json": "dbc0f000691f2d4a66734e94f1fe05fcbd51b84d",
     "tests/fixtures/v177-native-success-control-audio.json": "2f0f666ea0c2908d9b6cfaa40e56f84818ca73c9",
     "tests/helpers/v177-corpse-joint-render.mjs": "08f7a664e7df6ef71f208ebdc202ac8fb4ada748",
@@ -1282,11 +1356,11 @@
     "tests/v100-souki-presentation.test.mjs": "95481e5a9ad477cd982d422e44720c4ab4377634",
     "tests/v177-hit-reaction.test.mjs": "5d0316e4cef14bcf81d800766ecb914dfeb867ca",
     "tests/v177-human-corpse-continuity.test.mjs": "90b95350cf0d87e01b465d6c3b2d21ac39799615",
-    "tests/v177-native-allunit-outcomes.test.mjs": "48489c1ba8c33a6ff2e384c4ac6029ba2d447b47",
+    "tests/v177-native-allunit-outcomes.test.mjs": "32efa043cd3cc224e3bc344ce60c197e9a0c199a",
     "tests/v177-native-allunit-ranger-manual.test.mjs": "f5647dda7b18351f7d3f8d4ef8453b275d6a46d3",
-    "tests/v177-native-allunit-selection.test.mjs": "c629f5ff33a48a8f29c5cc096537b1266a58a1a4",
+    "tests/v177-native-allunit-selection.test.mjs": "4eddfd79c2c27eef4633c73dd3d7813dcd2c0c40",
     "tests/v177-native-allunit.test.mjs": "6d6346648962c45a9387fa93678479f1c2b2bada",
-    "tests/v177-native-game-capture.test.mjs": "111cb542cecb3382bb6d51f418e2b00ca9b02228",
+    "tests/v177-native-game-capture.test.mjs": "2166b7f9734991a7cd54331a9243cb9844391fea",
     "tests/v177-native-setup-overlap.test.mjs": "a5ef98038a7f2e2ffb1591bd0ca21be066f63a79",
     "tests/v177-normal-audio-unlock-observation.test.mjs": "e8aae8c9a79c91071b7d2cd65e5c602eba63087a",
     "tests/v177-normal-visible-aim.test.mjs": "f999607c7498ceb5626e82d30a5766f4e5fff5ee",
@@ -1296,9 +1370,43 @@
     "tests/v177-ranger-manual-joint.test.mjs": "09c6748b61ae10c668f58072dd61d29c0de5bad6"
   },
   "unacceptedVisualWindows": {
-    "auditSha256": "610d24673253055043851dc040bca8d027afb5b85d76a2956f3ca16863fa3803",
-    "sourceHead": "20a2d919645fe6d7bba3d8c82f0a391b2fe2d628",
+    "auditSha256": "8b2906bbe7450e8439f3fcc0c6cdfff8ad88413cd983a8f7835c0418f0f30b5d",
+    "sourceHead": "726d5b682e9d2d4145ea6a2b5b47dee877e13a1b",
     "cases": [
+      {
+        "caseId": "forms-3:miyamoto-musashi:controlled-outcome:1280x720",
+        "sha256": "795cb5d8ff543291a524748377cd921bee0ba47c753187b01b0e91f5dc1ccb43",
+        "phase": "controlled-outcome",
+        "form": "miyamoto-musashi",
+        "maxGap": 0.415,
+        "count250": 2,
+        "sourceClipMaxGapMs": 440,
+        "simulationToNativeRatio": 0.552791597567715
+      },
+      {
+        "caseId": "forms-11:mugarian-president-mutated:controlled-outcome:1280x720",
+        "sha256": "491f03d069e60724d01cca46ef6da2b107721c4e916b2a42c6c64633d498cbc9",
+        "phase": "controlled-outcome",
+        "form": "mugarian-president-mutated",
+        "maxGap": 0.25800000000000006,
+        "count250": 1,
+        "sourceClipMaxGapMs": 360,
+        "simulationToNativeRatio": 0.5670046886926176
+      }
+    ],
+    "additionalAudits": [
+      {
+        "sha256": "48f7ec9a73aae498666d17d5ae116f56796a93494710e2dccce5d1e552faddb0",
+        "sourceHead": "3dee4438080052f4eac8912ab76aae2112f2872d",
+        "runId": "39525887343"
+      },
+      {
+        "sha256": "610d24673253055043851dc040bca8d027afb5b85d76a2956f3ca16863fa3803",
+        "sourceHead": "20a2d919645fe6d7bba3d8c82f0a391b2fe2d628",
+        "scope": "Original eleven gaps retained without replacing raw history"
+      }
+    ],
+    "previousCases": [
       {
         "caseId": "forms-2:brute:controlled-outcome:844x390",
         "sha256": "378809d200684d473477d383726a19d2b3cff41f32a5bee0462e5e171c34227f",
@@ -1386,13 +1494,6 @@
         "form": "brawler",
         "maxGap": 0.27999999999999997,
         "count250": 1
-      }
-    ],
-    "additionalAudits": [
-      {
-        "sha256": "48f7ec9a73aae498666d17d5ae116f56796a93494710e2dccce5d1e552faddb0",
-        "sourceHead": "3dee4438080052f4eac8912ab76aae2112f2872d",
-        "runId": "39525887343"
       }
     ]
   }
