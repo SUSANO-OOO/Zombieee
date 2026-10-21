@@ -94,12 +94,22 @@ test('only the exact Souki contact repair selects normal play and motion without
 });
 
 test('the exact local QA preparation change reuses unchanged normal-play evidence in Draft',()=>{
- const file='app/AshfallGame.tsx',blob=execFileSync('git',['hash-object',file],{encoding:'utf8',windowsHide:true}).trim();
+ const file='app/AshfallGame.tsx',blob='5f24411f02bac501920e3483878411fe8f9f9f2a';
  const options={draft:true,sourceBlobs:{[file]:blob}},scope=ciChangeScope([file],options);
  assert.equal(scope.full,false);assert.equal(scope.normal,false);assert.equal(scope.allunit,false);assert.equal(scope.r9,false);
  for(const sourceBlobs of [{},{[file]:'f'.repeat(40)}])assert.equal(ciChangeScope([file],{draft:true,sourceBlobs}).full,true);
  assert.equal(ciChangeScope([file],{...options,draft:false}).full,true);
  assert.equal(ciChangeScope([file,'app/manualAbilities.js'],options).full,true);
+});
+
+test('the exact hit strength repair reruns motion and normal play while reusing unchanged story evidence',()=>{
+ const paths=['app/AshfallGame.tsx','app/v177HitReaction.js'];
+ const sourceBlobs=Object.fromEntries(paths.map(file=>[file,execFileSync('git',['hash-object',file],{encoding:'utf8',windowsHide:true}).trim()]));
+ const scope=ciChangeScope(paths,{draft:true,sourceBlobs});
+ assert.equal(scope.full,false);assert.equal(scope.normal,true);assert.equal(scope.allunit,true);assert.equal(scope.r9,false);
+ for(const file of paths)assert.equal(ciChangeScope(paths,{draft:true,sourceBlobs:{...sourceBlobs,[file]:'f'.repeat(40)}}).full,true);
+ assert.equal(ciChangeScope(paths,{draft:false,sourceBlobs}).full,true);
+ assert.equal(ciChangeScope([...paths,'app/v100Save.js'],{draft:true,sourceBlobs}).full,true);
 });
 
 test('only the reviewed corpse fixture injection preserves already completed story evidence',()=>{

@@ -9,6 +9,7 @@ import { v177LivingStunState, v177LivingStunSample, v177RangerLivingStunSample }
 import { rememberV177CorpseJointPose, pruneV177CorpseJointPoses, v177LiveJointGroundLift, v177CorpseJointPresentation, drawV177CorpseJointPresentation } from "./v177CorpseJointPresentation.js";
 import { rememberV177HumanCorpsePaint, pruneV177HumanCorpsePaints, v177HumanCorpsePresentation, drawV177HumanCorpsePaint, V177_CONTINUOUS_HUMAN_CORPSE_KINDS } from "./v177HumanCorpsePresentation.js";
 import { pruneV177JointActorHistory } from "./v177JointActorHistory.js";
+import { rememberV177HitStrength, v177HitReactionStrength, v177HitReactionState } from "./v177HitReaction.js";
 import { rememberV177TurnedCorpsePaint, rememberV177TurnedBirth, v177TurnedGetupDirection,
   v177TurnedGetupPose, readV177TurnedBirthPresentation, pruneV177TurnedCorpsePaints } from "./v177TurnedGetupPresentation.js";
 import { configureV177ContinuousActorProof, configureV177ReactionProof, v177ProofFormIdentity, v177ControlledOutcomeHit } from "./v177ContinuousProof.js";
@@ -4450,7 +4451,7 @@ function drawSpriteFighter(
     : actionPresentationFlash > 0
     ? sampleAnimationClip(
       f.kind,
-      f.knock >= 12 ? "hit-heavy" : "hit-light",
+      v177HitReactionState(f,options.world),
       Math.max(0, .12 - f.flash),
     )
     : f.attackWindup > 0
@@ -5254,7 +5255,7 @@ function drawEnemyCombatReadabilityVfx(
     attacking: f.attack > 0,
     attackWindup: f.attackWindup > 0 || f.abilityWindup > 0,
     flash: f.flash,
-    knock: f.knock,
+    knock: v177HitReactionStrength(f,g),
     abilityPhase: f.stationAbility.phase,
   });
   if (!snapshot) return;
@@ -20852,6 +20853,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             : f.laneSpeed * mayoBiteSlowMultiplier;
           f.cooldown = advanceAttackCooldown(f.cooldown, dt); f.supportCooldown -= dt; f.retargetIn = Math.max(0, f.retargetIn - dt); f.spawnGrace = Math.max(0, f.spawnGrace - dt);
           f.flash = Math.max(0, f.flash - dt); f.attack = Math.max(0, f.attack - dt); f.marked = Math.max(0, f.marked - dt); f.step += dt;
+          rememberV177HitStrength(f,g);
           f.attackWindup = Math.max(0, f.attackWindup - dt);
           if ((f.takuyaSlamPresentationRemaining ?? 0) > 0) {
             f.takuyaSlamPresentationRemaining = Math.max(0, f.takuyaSlamPresentationRemaining - dt);
@@ -23871,7 +23873,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               : mayoRetreatSpriteState(fighter.mayoRetreat)
             : fighter.flash > 0 && !(fighter.attackWindup > 0 || fighter.attack > 0 || fighter.abilityWindup > 0
               || ["telegraph", "windup", "warning", "charging", "ready", "pulling", "burst", "active", "firing"].includes(fighter.stationAbility.phase))
-              ? fighter.knock >= 12 ? "hit-heavy" : "hit-light"
+              ? v177HitReactionState(fighter,g)
               : fighter.kind === "gunner" && fighter.overheated && fighter.attack <= 0
                 ? "reload"
                 : v177LivingStunState(fighter, {manualAbilityActive,
