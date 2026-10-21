@@ -2,12 +2,10 @@
   "schema": "v177-native-allunit-recovery/v2",
   "head": "29d4057a8a131c93893978bd29f7ddaaf67cebaf",
   "runId": "39449375661",
-  "scope": "Retain578 source-compatible records (432 normal,143 outcome,3 manual). Only Mutant1280 remains pending. Run39574644848 restored Musashi (encoded/source gap71ms, simulation/native ratio1.001, original1x whole clip reviewed); retain all previous failures. Actual localhost frame CPU timeline now enabled and required, without changing gameplay, rendered pixels, free RAF, capture format, quality or deadlines. Earlier lifecycle supplements/normal/R9 evidence remain bound to their source owners; no whole-game/performance/physical/publication acceptance.",
+  "scope": "Retain579 source-compatible native records (432 normal,144 outcome,3 manual); no unfinished motion windows. Original32 observation gaps and11 follow-ups remain in immutable raw history. Musashi080 (encoded/source71ms) and Mutant5cbd (encoded107ms/source99ms) original1x whole videos reviewed;5cbd has26 actual frame timing entries. Connected down/get-up/phase-change reviewed in21 fresh original1x clips4348 decoded frames, with actual lifecycle owners. No clocks, VP8/free-RAF capture, quality thresholds or30s/5s/15s/3s deadlines changed. Whole-game, p95rAF33ms, physical iPhone audio and publication acceptance remain open.",
   "caseIds": [],
   "manualCaseIds": [],
-  "outcomeCaseIds": [
-    "forms-11:mugarian-president-mutated:controlled-outcome:1280x720"
-  ],
+  "outcomeCaseIds": [],
   "affectedDeathForms": [
     "gunner",
     "crazy-king",
@@ -867,7 +865,8 @@
       "forms-2:brute:controlled-outcome:844x390",
       "forms-2:engineer:controlled-outcome:844x390",
       "forms-3:zakimiya:controlled-outcome:1280x720",
-      "forms-3:miyamoto-musashi:controlled-outcome:1280x720"
+      "forms-3:miyamoto-musashi:controlled-outcome:1280x720",
+      "forms-11:mugarian-president-mutated:controlled-outcome:1280x720"
     ],
     "reports": [
       {
@@ -1334,9 +1333,30 @@
         "outcomeCaseIds": [
           "forms-3:miyamoto-musashi:controlled-outcome:1280x720"
         ]
+      },
+      {
+        "shard": "forms-11",
+        "head": "5cbdcb0c57c20b263f75fd758eb4ff488c214753",
+        "runId": "39577258149",
+        "sha256": "ee66a8ae749a124e0aecca363571d1b4edfce3d6de8a71102a3f3b75fe209817",
+        "validationSha256": "55493f6be4ef84284ed48de34c9e63b3fd9396123a2a3182f8b48e2a8818488f",
+        "motionReviewSha256": "73cd4c406aba34ba9bc74d22243b711fff9dec8b7961f55e4fbbd08313dc7518",
+        "caseIds": [],
+        "outcomeCaseIds": [
+          "forms-11:mugarian-president-mutated:controlled-outcome:1280x720"
+        ]
       }
     ],
-    "retainedClipIndexSha256": "82823014662d0a7bfe66e81c15b32c2086becaaf5b87261b7cff2f4d669954ee"
+    "retainedClipIndexSha256": "eebd690f9be3a2b2bfaef06a6f2cd49426120b58020bd3813880af93dad034c6",
+    "applicableMotionReview": {
+      "file": "outputs/motion-review/state-motion-inventory-r100.json",
+      "sha256": "21824d917a63e6c0b8df931ac6a316c80f646563a372dfcecf93ce16ff9f2b4a",
+      "formCount": 48,
+      "stateCount": 21,
+      "unconnectedStates": 0,
+      "newLifecycleReviewSha256": "8eb224414c0ba83327472645bf9f3071c2a42f04faf3058fe9581f2e0fb5e1f5",
+      "all1008Accepted": false
+    }
   },
   "changedBlobs": {
     ".github/workflows/native-allunit-capture.yml": "8c099e5f0c66eef85db17f214b9ae8b742cbc758",
@@ -1359,7 +1379,7 @@
     "scripts/v177-native-allunit-selection.mjs": "6477d765bf01ef4ef7e56e86a664b3ca27aae083",
     "scripts/v177-native-game-capture-browser.mjs": "6315f3f7167b3b09ff999b3553c80b48ced35d73",
     "scripts/v177-normal-audio-unlock-observation.mjs": "89f90b9fbb1f27bf2dc409955279ed560293b5b3",
-    "tests/ci-change-scope.test.mjs": "6d9b828a52cfe3ef749d51dc26100959312acb09",
+    "tests/ci-change-scope.test.mjs": "347d5c43d658790b81260658b48766b264eb8688",
     "tests/fixtures/v177-native-auto-unlocked-audio.json": "dbc0f000691f2d4a66734e94f1fe05fcbd51b84d",
     "tests/fixtures/v177-native-success-control-audio.json": "2f0f666ea0c2908d9b6cfaa40e56f84818ca73c9",
     "tests/helpers/v177-corpse-joint-render.mjs": "62813dcbd9eb06cd1ccf82ce38cf232da36b4f4c",
@@ -1370,7 +1390,7 @@
     "tests/v177-human-corpse-continuity.test.mjs": "90b95350cf0d87e01b465d6c3b2d21ac39799615",
     "tests/v177-native-allunit-outcomes.test.mjs": "7c88ebc7d060e8358c5ffe84abc4d5f1fa0ff9ce",
     "tests/v177-native-allunit-ranger-manual.test.mjs": "f5647dda7b18351f7d3f8d4ef8453b275d6a46d3",
-    "tests/v177-native-allunit-selection.test.mjs": "f2dd7e630b47affc090a731f269f167464d9e404",
+    "tests/v177-native-allunit-selection.test.mjs": "523e05b2588426123d5eaf6b7be897da307daa05",
     "tests/v177-native-allunit.test.mjs": "6d6346648962c45a9387fa93678479f1c2b2bada",
     "tests/v177-native-game-capture.test.mjs": "2166b7f9734991a7cd54331a9243cb9844391fea",
     "tests/v177-native-setup-overlap.test.mjs": "a5ef98038a7f2e2ffb1591bd0ca21be066f63a79",
@@ -1383,22 +1403,14 @@
     "app/v177LifecyclePresentation.js": "dc13038fa0a3a9bb35f6aef0c06eca80eed4d760",
     "tests/v177-lifecycle-presentation.test.mjs": "236bcbe40eebd14a383b5b8a2d97117a1525a26c",
     "scripts/v177-reaction-render-contract.mjs": "fb84ffd008b65864539c914c84a0f9b910c9acd7",
-    "tests/v177-native-frame-timing.test.mjs": "0b0bdcb3a53647e9a65fc788456151c6d4492b39"
+    "tests/v177-native-frame-timing.test.mjs": "0b0bdcb3a53647e9a65fc788456151c6d4492b39",
+    ".github/workflows/ci.yml": "1757ef05af6ceff181b3be7002c5a36f3f4fb8eb",
+    "docs/PROJECT_STATE.md": "6471753d3d93fb32289ed0f08ae42fd57612df86"
   },
   "unacceptedVisualWindows": {
-    "auditSha256": "eef9982453e4f3d6584ee609d00279b1a52921b92ac259174b6d914dca141f2d",
-    "sourceHead": "080a785f04168cb755af41379c2125d9a7e3fa63",
-    "cases": [
-      {
-        "caseId": "forms-11:mugarian-president-mutated:controlled-outcome:1280x720",
-        "sha256": "48af17c739bd14bd782ea52c80361c59117ee7e251d8fc64bdcc0ebceb27c0c3",
-        "phase": "controlled-outcome",
-        "form": "mugarian-president-mutated",
-        "maxGap": 2.349,
-        "count250": 1,
-        "sourceClipMaxGapMs": 2585
-      }
-    ],
+    "auditSha256": "73cd4c406aba34ba9bc74d22243b711fff9dec8b7961f55e4fbbd08313dc7518",
+    "sourceHead": "5cbdcb0c57c20b263f75fd758eb4ff488c214753",
+    "cases": [],
     "additionalAudits": [
       {
         "sha256": "48f7ec9a73aae498666d17d5ae116f56796a93494710e2dccce5d1e552faddb0",
@@ -1414,6 +1426,11 @@
         "sha256": "8b2906bbe7450e8439f3fcc0c6cdfff8ad88413cd983a8f7835c0418f0f30b5d",
         "sourceHead": "726d5b682e9d2d4145ea6a2b5b47dee877e13a1b",
         "scope": "Preserve previous remaining-window audit"
+      },
+      {
+        "sha256": "eef9982453e4f3d6584ee609d00279b1a52921b92ac259174b6d914dca141f2d",
+        "sourceHead": "080a785f04168cb755af41379c2125d9a7e3fa63",
+        "scope": "Preserve previous unresolved window audit"
       }
     ],
     "previousCases": [

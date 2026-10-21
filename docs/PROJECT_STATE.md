@@ -2,7 +2,13 @@
 
 ## 現在の公開状態
 
-2026-10-20：公開は保留。継続作業は[Issue #177](https://github.com/SUSANO-OOO/Zombieee/issues/177)とDraft PR #180で管理する。監査対象 `168614f3` のCI `39161253712` はcancelled、全ユニット録画 `39161253734` はfailureで終了した。通常攻略はChromium第3／WebKit第5ステージで敗北。別音声研究の最終候補 `c3bc0794`／`39162780934` も150ms基準超過でfailure。これらを実行中や合格として扱わない。運用・CIの整理とレンジャーの方向転換時の描画例外を修正中で、全48形態・R9全編・実機保存録画音声の受入は未完。
+2026-10-21：公開は保留。[Issue #177](https://github.com/SUSANO-OOO/Zombieee/issues/177)と[Draft PR #180](https://github.com/SUSANO-OOO/Zombieee/pull/180)で継続する。公開版1.0.3／mainは `99f9c193ab1e35531db39225c839138cdb1c33cd`。全48形態と、適用対象がある全21状態の原速映像確認を完了した。579本のnative証拠を維持し、欠落が残っていたMusashi／MutantのMac録画だけを補完。最大映像間隔は71／107ms、録画中のsource RAFは71／99msで、既存の250ms映像欠落判定を下回る。
+
+転倒・起き上がりは元の死亡／マヨ退避／感染出生の処理と時間に接続。段階変化は実際のボスHP変化と双子の相方死亡に接続し、元の攻撃を終えてから頭の短い動作を行う。足・武器・ダメージ・AI・saveは元の担当処理を維持する。製品差分 `080a785f`、localhost計測修正 `5cbdcb0c`。追加21本／4,348 decoded frames（マヨ2、HP境界17、双子2）を原動画1倍速・先送りなしで確認し、新たな足滑り・大きな姿勢の飛びは確認範囲に見つからなかった。
+
+映像と実描画の原記録・失敗履歴・source hashは保持する。最終対応表は `outputs/motion-review/state-motion-inventory-r100.json`、追加動作は `connected-lifecycle-review-r98.json`、Mac補完は `native-musashi-resolved-r94.json`／`native-mutant-resolved-r99.json`。再開対象は復旧profileに残件0で固定し、未知の差分やReady化では全回帰へ戻す。動作接続と録画窓の独立read-only reviewはHigh／Medium各0。CI `39577258100` は3,020 tests、Lint、content、buildが成功。QA／文書更新による実行中CIの自動cancelも止め、完了済みの再収録を避ける。
+
+これは適用する状態の動作確認であり、48×21の全1,008組や製品全体の受入ではない。MutantのRAF p95は82msで33ms性能基準の合格ではなく、基準と期限は維持する。R9の技術検証と演出・聴感、全編通常攻略、物理iPhoneの保存録画BGM／SE、Producer実プレイ受入は別の未完ゲート。監査時点のCI cancel、録画failure、通常攻略敗北、音声研究の150ms超過も過去の失敗として保持し、合格へ書き換えない。merge・tag・Release・Pages deployment・Issue closeは行っていない。
 
 - [正式URL](https://susano-ooo.github.io/Zombieee/)のHTML release metadataを、公開中のversion・release SHAの正本とする。
 - [最新GitHub Release](https://github.com/SUSANO-OOO/Zombieee/releases/latest)で固定tagと更新内容を確認する。

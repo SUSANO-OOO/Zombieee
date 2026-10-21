@@ -15,6 +15,7 @@ test('a ready candidate always gets full regression, including governance-only c
 });
 test('ready events run integration gates and research cannot block representative observation',()=>{
  const workflow=load(readFileSync('.github/workflows/ci.yml','utf8'));
+ assert.equal(workflow.concurrency['cancel-in-progress'],false,'Preserve running source-bound observation across QA/documentation pushes');
  assert.ok(workflow.on.pull_request.types.includes('ready_for_review'));
  assert.ok(workflow.jobs['v177-normal-campaign'].needs.every(id=>id==='scope'));
  assert.ok(workflow.jobs['ranger-turn-smoke'].if.includes('needs.scope.outputs.ranger'));
