@@ -12,6 +12,7 @@ import { invokeBrowserQaModule } from '../scripts/browser-qa-entry.mjs';
 import { assertV177AuthoredLiveRender } from '../scripts/v177-continuous-render-contract.mjs';
 import { V177_JOINT_ATLASES } from '../app/v177JointPresentation.js';
 import {nativeCaptureRealmFixture} from './helpers/v177-native-capture-realm-fixture.mjs';
+import {assertAllUnitClip} from '../scripts/v177-native-allunit-cases.mjs';
 import {
   main, runBrowserQa, nativeGameCaptureBinding, NATIVE_GAME_CAPTURE_PHASES, NATIVE_GAME_CAPTURE_MIME,
   NATIVE_GAME_CAPTURE_SOURCES, captureNativeGameCase, readNativeGameCaptureSample,
@@ -263,10 +264,46 @@ test('the native RAF observer records actual paint receipts without drawing or i
   const start = vm.runInNewContext('(' + startNativeGameRafObservation.toString() + ')', globals);
   const stop = vm.runInNewContext('(' + stopNativeGameRafObservation.toString() + ')', globals);
   const state = start({ fighterId: 8 });
-  for (const at of [117, 151]) { now = at; const [id, fn] = callbacks.entries().next().value; callbacks.delete(id); fn(); }
+  for (const at of [117, 151]) { now = at; const [id, fn] = callbacks.entries().next().value; callbacks.delete(id); fn(at); }
   const result = stop(state);
   assert.equal(result.rows.length, 2); assert.equal(result.encodedFrameCount, null); assert.equal(result.encodedPtsVerified, false);
   assert.equal(callbacks.size, 0);
+});
+
+test('distinct native frames survive a delayed audit with identical raw observation clocks; invalid native times still fail',()=>{
+  let now=20100,next=0;const callbacks=new Map();
+  const globals={performance:{timeOrigin:1000,now:()=>now},window:{__ASHFALL_BATTLE_QA__:{
+    getEnemyFacingRuntimeAudit:()=>({renderHistory:[{renderSequence:736,renderKind:'choir-knot'}]})}},
+    requestAnimationFrame(fn){callbacks.set(++next,fn);return next;},cancelAnimationFrame(id){callbacks.delete(id);}};
+  const start=vm.runInNewContext('('+startNativeGameRafObservation.toString()+')',globals);
+  const stop=vm.runInNewContext('('+stopNativeGameRafObservation.toString()+')',globals);
+  const state=start({fighterId:8});now=20120;
+  for(const nativeAt of[20118,20120]){
+    assert.equal(callbacks.size,1);const[id,fn]=callbacks.entries().next().value;callbacks.delete(id);fn(nativeAt);
+  }
+  const source=stop(state);
+  assert.deepEqual(Array.from(source.rows,r=>r.at),[20118,20120]);
+  assert.deepEqual(Array.from(source.rows,r=>r.enteredAt),[20120,20120]);
+  assert.deepEqual(Array.from(source.rows,r=>r.observedAt),[20120,20120]);
+  assert.equal(callbacks.size,0);
+  let sequence=0;const realm=member=>({schema:'v177-native-realm-member/v1',ownerId:'aabbccdd-1234-4000-8000-123456789abc',
+    createdAt:10,rawOriginAtCreation:1000,sequence:++sequence,member});
+  const row={form:'choir-knot',recordingMetadata:{},realmOwner:realm('owner-created')};
+  const rafStart=realm('raf-start'),created=realm('recorder-create'),started=realm('recorder-start');
+  row.recordingStart={startedAt:20100,timeOrigin:1000,realm:started};
+  row.boundary={at:20101,realm:realm('sample')};row.release={at:20102,realm:realm('release')};
+  row.captureStart={realm:realm('sample')};row.samples=[{at:20138,realm:realm('sample')}];
+  const bytes=Buffer.from('inert clock contract fixture');
+  row.nativeClip={status:'recorded',engine:'webkit',requestedMimeType:'video/webm;codecs=vp8',mimeType:'video/webm',
+    originalSpeedAccepted:false,encodedPtsVerified:false,bytes:bytes.length,sha256:createHash('sha256').update(bytes).digest('hex'),
+    metadata:{},timeOrigin:1000,startedAt:20100,stopRequestedAt:20140,realm:{created,started,finished:realm('recorder-finish')}};
+  row.sourceRaf={...source,realm:{started:rafStart,stopped:realm('raf-stop'),failure:null}};
+  row.captureEnd={realm:realm('sample')};
+  assert.doesNotThrow(()=>assertAllUnitClip(row,bytes));
+  for(const invalid of[20118,20117,NaN,Infinity]){
+    const bad=structuredClone(row);bad.sourceRaf.rows[1].at=invalid;
+    assert.throws(()=>assertAllUnitClip(bad,bytes),'native duplicate, backward and nonfinite times remain rejected');
+  }
 });
 
 function actualEnemyFacingAudit(globals) {
@@ -335,7 +372,7 @@ test('actual per-RAF audit follows living to corpse paints and later living reus
   for(const [live,dead] of [[117,null],[117,118],[117,119],[120,119]]){
     histories.live=[{renderSequence:live,renderKind:'miyamoto-musashi'}];
     histories.dead=dead===null?[]:[{renderSequence:dead,renderKind:'miyamoto-musashi'}];
-    now+=17;callbacks.shift()();seen.push(state.rows.at(-1).renderSequence);
+    now+=17;callbacks.shift()(now);seen.push(state.rows.at(-1).renderSequence);
   }
   assert.deepEqual(seen,[117,118,119,120]);
   assert.deepEqual(histories.live,[{renderSequence:120,renderKind:'miyamoto-musashi'}]);

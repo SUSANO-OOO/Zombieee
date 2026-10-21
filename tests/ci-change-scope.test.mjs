@@ -91,6 +91,16 @@ test('the reviewed outcome validator can recheck retained raw footage without re
  assert.equal(ciChangeScope([file],{...options,draft:false}).full,true);
 });
 
+test('only the reviewed stricter raw-clock validator reuses untouched product performance and story',()=>{
+ const file='scripts/v177-native-allunit-outcomes.mjs',blob='6d10a2beb094414f8b9b941d964962a3cc3f9f72';
+ const sourceBlobs={[file]:blob},scope=ciChangeScope([file,'scripts/v177-native-game-capture-browser.mjs'],{draft:true,sourceBlobs});
+ for(const gate of ['full','ranger','normal','r9'])assert.equal(scope[gate],false);
+ assert.deepEqual(framePerformanceRuntimes([file,'scripts/v177-native-game-capture-browser.mjs']),[]);
+ for(const sourceBlobs of [{},{[file]:'f'.repeat(40)}])assert.equal(ciChangeScope([file],{draft:true,sourceBlobs}).full,true);
+ assert.equal(ciChangeScope([file],{draft:false,sourceBlobs}).full,true);
+ assert.equal(ciChangeScope([file,'app/v100Save.js'],{draft:true,sourceBlobs}).full,true);
+});
+
 test('only the reviewed fixed-tick validator reuses raw Ranger footage without another capture',()=>{
  const file='scripts/v177-native-allunit-ranger-manual-contract.mjs',blob=execFileSync('git',['hash-object',file],{encoding:'utf8',windowsHide:true}).trim();
  const options={draft:true,sourceBlobs:{[file]:blob}},scope=ciChangeScope([file],options);

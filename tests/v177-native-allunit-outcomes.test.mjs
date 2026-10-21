@@ -57,7 +57,8 @@ function fixture(){
   row.nativeClip={status:'recorded',engine:'webkit',originalSpeedAccepted:false,encodedPtsVerified:false,requestedMimeType:'video/webm;codecs=vp8',
     bytes:bytes.length,sha256:createHash('sha256').update(bytes).digest('hex'),metadata:row.recordingMetadata,timeOrigin:1000000,startedAt:100,stopRequestedAt:500,
     realm:{created,started,finished:realm('recorder-finish')}};
-  row.sourceRaf={timeOrigin:1000000,realm:{started:rafStart,stopped:realm('raf-stop'),failure:null},overflow:false};
+  row.sourceRaf={timeOrigin:1000000,realm:{started:rafStart,stopped:realm('raf-stop'),failure:null},overflow:false,
+    rows:[{at:110,renderSequence:2,renderKind:row.form},{at:230,renderSequence:3,renderKind:row.form}]};
   row.captureEnd={realm:realm('sample'),battleGeneration:7,at:510,timeOrigin:1000000,visible:true,running:true,paused:false,route:'/v100'};return {row,bytes};
 }
 
@@ -65,6 +66,15 @@ test('continuous outcome validates original bytes/realm and actual protected ret
   const {row,bytes}=fixture(),result=assertNativeOutcome(row,bytes);
   assert.equal(nativeOutcomeComplete(row),true);assert.equal(result.continuousUntilOutcome,true);
   for(const key of ['naturalIncomingCombatAccepted','originalSpeedAccepted','naturalnessAccepted','all21Accepted'])assert.equal(result[key],false);
+});
+
+test('outcome observations reject missing, duplicate, reversed or nonfinite native RAF times',()=>{
+  for(const mutate of[r=>{delete r.sourceRaf.rows;},r=>{r.sourceRaf.rows=[];},
+    r=>{r.sourceRaf.rows[1].at=110;},r=>{r.sourceRaf.rows[1].at=109;},
+    r=>{r.sourceRaf.rows[1].at=NaN;},r=>{r.sourceRaf.rows[1].renderSequence=NaN;},
+    r=>{r.sourceRaf.rows[1].renderKind='other';}]){
+    const {row,bytes}=fixture();mutate(row);assert.throws(()=>assertNativeOutcome(row,bytes));
+  }
 });
 
 test('new frame-cost diagnostics cannot succeed with missing, unbounded or reversed actual frame timelines',()=>{
@@ -121,6 +131,7 @@ test('intermediate pause, forged owner, missing phase, static retreat or altered
 
 test('a registered death rig cannot silently become a legacy corpse without its original source and joint contacts',()=>{
   const {row,bytes}=fixture();row.form='takuya';row.outcome.form='takuya';row.outcome.outcome='corpse';
+  for(const r of row.sourceRaf.rows)r.renderKind='takuya';
   Object.assign(row.captureStart.body.renderHistory[0],{renderKind:'takuya',jointAtlasPath:V177_JOINT_ATLASES.takuya.path,
     sourceRect:{x:0,y:0,w:480,h:448},sourceRow:0,renderWidth:100*480/448,renderHeight:100,poseScaleY:1});
   for(const [i,s]of row.samples.entries()){

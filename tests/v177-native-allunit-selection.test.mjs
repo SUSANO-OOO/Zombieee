@@ -33,45 +33,30 @@ test('reuse requires exact reviewed blobs; changes to product, thresholds, drive
   assert.equal(select(file,blob,{inputs:{capture_mode:'full'}}).mode,'full');
 });
 
-test('current recovery partitions normal, outcome and manual observations without repeating retained successes',()=>{
+test('current recovery partitions all original observations and never reuses an invalid clock without a new recording',()=>{
  assert.equal(current.schema,'v177-native-allunit-recovery/v2');
  const selected=nativeCaseSelection({event:{pull_request:{draft:true}},git:()=>''});
  assert.deepEqual(selected.caseIds,current.caseIds);assert.deepEqual(selected.outcomeCaseIds,current.outcomeCaseIds);
  assert.deepEqual(selected.manualCaseIds,current.manualCaseIds);
- assert.equal(selected.caseIds.length,0);assert.equal(selected.retainedEvidence.caseIds.length,432);
- assert.equal(selected.outcomeCaseIds.length,0);assert.equal(selected.retainedEvidence.outcomeCaseIds.length,144);
- assert.equal(selected.manualCaseIds.length,0);assert.equal(selected.retainedEvidence.manualCaseIds.length,3);
- assert.deepEqual(selected.shards,[]);
- assert.ok([...selected.caseIds,...selected.outcomeCaseIds].every(id=>id.includes(':brute:')),'Only the changed hammer legs need fresh native footage');
- const affected=current.affectedDeathForms;
- assert.equal(affected.length,11);
- assert.equal([...selected.retainedEvidence.outcomeCaseIds,...selected.outcomeCaseIds].filter(id=>affected.some(form=>id.includes(':'+form+':'))).length,33);
- assert.ok(!selected.outcomeCaseIds.some(id=>/:(scout|medic|ranger):controlled-outcome:/u.test(id)));
- assert.equal(current.observationGaps.cases.length,32);
- assert.equal(current.unacceptedVisualWindows.previousCases.length,11);
- assert.equal(current.unacceptedVisualWindows.cases.length,0);
- assert.deepEqual([...selected.caseIds,...selected.outcomeCaseIds].sort(),current.reopenedVisualCases.map(g=>g.caseId).sort(),
-  'only unfinished temporal windows remain open without repeating source-bound successes');
- assert.equal(selected.retainedEvidence.additionalReports.flatMap(r=>r.caseIds).length,82);
- const brute=selected.retainedEvidence.additionalReports.find(r=>r.runId==='39589154676');
- assert.equal(brute.head,'2746a778b4a4ff3aaf502b8b71160bcce872c8fd');
- assert.equal(brute.caseIds.length,5);assert.equal(brute.outcomeCaseIds.length,3);
- assert.deepEqual(selected.caseIds,[]);
- const last=selected.retainedEvidence.additionalReports.find(r=>r.runId==='39597715479');
- assert.deepEqual(last.caseIds,['forms-2:brute:attack:1280x720']);assert.equal(last.head,'7236938bbd83177e17f5e56b04b6bb24f7c4ce33');
- const arm=selected.retainedEvidence.additionalReports.find(r=>r.runId==='39594450044');
- assert.equal(arm.caseIds.length,3);assert.equal(arm.head,'fcc18640e3f7844c574b6865dae0e32aa2a05c73');
- const hitRepair=selected.retainedEvidence.additionalReports.find(r=>r.runId==='39538653281');
- assert.equal(hitRepair.head,'a2a00a31b9958d9ab1ed2a30c44a56d08837fe12');
- assert.equal(hitRepair.caseIds.length,6);assert.ok(hitRepair.caseIds.every(id=>/:kumaverson:(attack|engage):/u.test(id)));
- assert.equal(selected.retainedEvidence.additionalReports.flatMap(r=>r.outcomeCaseIds).length,61);
- assert.equal(selected.retainedEvidence.additionalReports.flatMap(r=>r.manualCaseIds??[]).length,1);
- assert.ok(selected.retainedEvidence.additionalReports.some(r=>r.runId==='39525887343'&&r.caseIds.includes('forms-1:brawler:attack:844x390')),'The fresh clean context supplies Brawler; the original request failure stays in its original report');
+ for(const [pending,kept,total]of [[selected.caseIds,selected.retainedEvidence.caseIds,432],
+  [selected.outcomeCaseIds,selected.retainedEvidence.outcomeCaseIds,144],
+  [selected.manualCaseIds,selected.retainedEvidence.manualCaseIds,3]]){
+  assert.equal(pending.length+kept.length,total);assert.equal(new Set([...pending,...kept]).size,total);
+ }
+ const pending=[...selected.caseIds,...selected.manualCaseIds,...selected.outcomeCaseIds];
+ assert.deepEqual(selected.shards,SHARDS.filter(s=>pending.some(id=>id.startsWith(s.id+':'))).map(s=>s.id));
+ assert.equal(current.rawClockAudit.sourceReportCount,12);assert.equal(current.rawClockAudit.rawReportsUnmodified,true);
+ assert.equal(current.rawClockAudit.duplicateRowsRemoved,false);
+ assert.equal(current.rawClockAudit.normalInvalidClock.length,4);assert.equal(current.rawClockAudit.outcomeInvalidClock.length,1);
+ const resolutions=selected.retainedEvidence.additionalReports.flatMap(r=>[...r.caseIds??[],...r.manualCaseIds??[],...r.outcomeCaseIds??[]]);
+ for(const id of [...current.rawClockAudit.normalInvalidClock,...current.rawClockAudit.outcomeInvalidClock])
+  assert.ok(pending.includes(id)||resolutions.includes(id),'An invalid original clock needs a selected case or a separately bound new recording');
+ for(const gate of ['originalSpeedAccepted','naturalnessAccepted','wholeGameAccepted'])assert.equal(current[gate],false);
  for(const mutate of [p=>{p.retainedEvidence.caseIds.pop();},p=>{p.retainedEvidence.caseIds.push(p.retainedEvidence.caseIds[0]);},
   p=>{p.retainedEvidence.outcomeCaseIds.pop();},p=>{p.retainedEvidence.manualCaseIds.pop();},p=>{p.retainedEvidence.reports.pop();}]){
   const invalid=structuredClone(current);mutate(invalid);assert.throws(()=>nativeCaseSelection({root:profileRoot(invalid),event:{pull_request:{draft:true}},git:()=>''}));
  }
- const file='app/combatPresentation.js',blob=current.changedBlobs[file];
+ const file='app/v177RangerFootPlacement.js',blob=current.changedBlobs[file];assert.match(blob,/^[a-f0-9]{40}$/u);
  assert.equal(nativeCaseSelection({event:{pull_request:{draft:true}},git:args=>args[0]==='diff'?file:blob}).mode,'remaining');
  assert.equal(nativeCaseSelection({event:{pull_request:{draft:true}},git:args=>args[0]==='diff'?file:'f'.repeat(40)}).mode,'full');
 });

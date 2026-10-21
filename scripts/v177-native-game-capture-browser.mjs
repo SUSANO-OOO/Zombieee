@@ -99,13 +99,17 @@ export function startNativeGameRafObservation({ fighterId, realmOwner = null }) 
     state.realmStarted=realmOwner.member({window,document,performance,canvas:state.realmCanvas},'raf-start');
     state.realmFailure=null;
   }
-  const observe = () => {
+  const observe = nativeRafAt => {
     if (state.stopped) return;
+    const enteredAt=performance.now();
     if(state.realmOwner)try{state.realmOwner.check({window,document,performance,canvas:document.querySelector('.game-shell canvas')});}
     catch(error){state.realmFailure??=String(error);state.stopped=true;return;}
     const qa = window.__ASHFALL_BATTLE_QA__;
     const draw = qa.getEnemyFacingRuntimeAudit(fighterId, {latestDrawOnly:true}).renderHistory.at(-1);
-    if (state.rows.length < 4096) state.rows.push({ at: performance.now(),
+    // The callback's native frame time precedes this audit. A delayed audit
+    // can finish in the same clock tick as the next frame's audit; retain
+    // both raw readings without substituting them for native frame time.
+    if (state.rows.length < 4096) state.rows.push({ at: nativeRafAt,enteredAt,observedAt:performance.now(),
       renderSequence: draw?.renderSequence ?? null, renderKind: draw?.renderKind ?? null });
     else state.overflow = true;
     state.raf = requestAnimationFrame(observe);
@@ -123,7 +127,8 @@ export function stopNativeGameRafObservation(state) {
     realm={started:state.realmStarted,stopped,failure:state.realmFailure};
   }
   return { timeOrigin: state.timeOrigin, startedAt: state.startedAt, stoppedAt: state.stoppedAt,...(realm?{realm}:{}),
-    rows: state.rows, overflow: state.overflow, encodedFrameCount: null, encodedPtsVerified: false,
+    rows: state.rows, overflow: state.overflow, timestampClock:'native requestAnimationFrame callback',
+    observationClock:'raw performance.now at callback entry and after audit',encodedFrameCount: null, encodedPtsVerified: false,
     scope: 'Native observer RAF callbacks and actual game render receipts; neither is an encoded-frame count' };
 }
 export function readNativeGameCaptureSample({ fighterId, targetId, performanceBoundary = false }) {

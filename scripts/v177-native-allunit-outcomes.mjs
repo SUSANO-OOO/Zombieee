@@ -109,6 +109,11 @@ export function assertNativeOutcome(row,bytes){
   }
   realm(clip.realm.finished,'recorder-finish');realm(row.sourceRaf.realm.stopped,'raf-stop');realm(row.captureEnd.realm,'sample');
   assert.equal(row.sourceRaf.realm.failure,null);assert.equal(row.sourceRaf.overflow,false);
+  assert.ok(Array.isArray(row.sourceRaf.rows)&&row.sourceRaf.rows.length>=2&&row.sourceRaf.rows.length<=LIMITS.sourceRafRows);
+  for(let i=0;i<row.sourceRaf.rows.length;i++){
+    const r=row.sourceRaf.rows[i];assert.ok(Number.isFinite(r.at)&&Number.isFinite(r.renderSequence));
+    assert.equal(r.renderKind,row.form);if(i)assert.ok(r.at>row.sourceRaf.rows[i-1].at);
+  }
   assert.equal(row.captureEnd.paused,false);assert.ok(row.captureEnd.at>=row.samples.at(-1).at);
   assert.ok(row.samples.at(-1).at<=clip.stopRequestedAt);assert.ok(nativeOutcomeComplete(row),'Continuous recording must reach its actual outcome');
   const fresh=draws(row).filter(r=>r.renderSequence>row.sequenceBaseline);
