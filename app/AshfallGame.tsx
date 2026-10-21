@@ -8,7 +8,7 @@ import { V177_JOINT_ATLASES, v177JointCycleDistance, v177JointPose, v177RangerFo
 import { v177LivingStunState, v177LivingStunSample, v177RangerLivingStunSample } from "./v177LivingStun.js";
 import { rememberV177CorpseJointPose, pruneV177CorpseJointPoses, v177LiveJointGroundLift, v177CorpseJointPresentation, drawV177CorpseJointPresentation } from "./v177CorpseJointPresentation.js";
 import { rememberV177HumanCorpsePaint, pruneV177HumanCorpsePaints, v177HumanCorpsePresentation, drawV177HumanCorpsePaint, V177_CONTINUOUS_HUMAN_CORPSE_KINDS } from "./v177HumanCorpsePresentation.js";
-import { pruneV177JointActorHistory } from "./v177JointActorHistory.js";
+import { pruneV177JointActorHistory, v177JointActorKey } from "./v177JointActorHistory.js";
 import { rememberV177HitStrength, v177HitReactionStrength, v177HitReactionState } from "./v177HitReaction.js";
 import { rememberV177TurnedCorpsePaint, rememberV177TurnedBirth, v177TurnedGetupDirection,
   v177TurnedGetupPose, readV177TurnedBirthPresentation, pruneV177TurnedCorpsePaints } from "./v177TurnedGetupPresentation.js";
@@ -645,6 +645,12 @@ import {
   mayoRetreatSpriteState,
   mayoBattleRenderKind,
 } from "./mayoLifecycle.js";
+import { v177FallState, createV177LifecyclePresentation } from './v177LifecyclePresentation.js';
+
+const {v177MayoRetreatSample,v177ObserveBossPhase,v177PhaseChangePose}=createV177LifecyclePresentation({
+  animationClipFor,sampleAnimationClip,mayoRetreatSpriteState,v177JointActorKey,
+  atlasFor:(kind: string)=>V177_JOINT_ATLASES[kind],v177CaptureJointPose,
+});
 
 const W = 960;
 const H = 540;
@@ -4266,6 +4272,8 @@ function drawSpriteFighter(
     allowDiagnosticFallback = false,
   } = options;
   const renderKind = mayoBattleRenderKind(f) ?? bossRenderKind(f);
+  if(options.v100AuthoredPresentation&&f.v100BossId)v177ObserveBossPhase(options.world,f,
+    bossPhaseForHp(f.hp,f.maxHp,f.kind,f).phase);
   const jointAtlas = V177_JOINT_ATLASES[renderKind];
   const jointImage = jointAtlas ? sprites[jointAtlas.key] : null;
   const kumaGuardCandidate = options.v100AuthoredPresentation && f.side === 'human' && f.kind === 'kumaverson'
@@ -4389,11 +4397,7 @@ function drawSpriteFighter(
     : advancedManualPose
     ? {...sampleAnimationClip(f.kind, "special", 0), spriteState: advancedManualPose.spriteState, movement: advancedManualPose.pose.movement, bodyScale: advancedManualPose.pose.bodyScale, pose: V100_ADVANCED_MANUAL_POSE_STABLE}
     : f.mayoRetreat
-    ? sampleAnimationClip(
-      "mayo-chan",
-      f.mayoRetreat.phase === "run" ? "retreat" : mayoRetreatSpriteState(f.mayoRetreat),
-      f.mayoRetreat.phaseElapsed,
-    )
+    ? v177MayoRetreatSample(f)
     : manualAbilityActive
     ? f.manualAbility?.sequentialBrawler
       ? {...sampleAnimationClip(f.kind,"special",manualAbilityElapsed),spriteState:v100BrawlerComboPose(f.manualAbility,MANUAL_ABILITY_REGISTRY.brawler)}
@@ -4479,11 +4483,10 @@ function drawSpriteFighter(
         );
   const articulatedMayoRetreat = f.kind === "mayo-chan" && f.mayoRetreat?.phase === "run" && Boolean(jointImage?.naturalWidth);
   const authoredPoseOwned=Boolean(kumaGuardArtPose||guardianGuardPose||soukiPose||stationAbilityPose||enemyContactPose||supportManualPose||advancedManualPose||takuyaSlamPose||manualAbilityActive||(f.mayoRetreat&&!articulatedMayoRetreat)||f.stationAbility.phase!=='idle');
-  const animationSample = options.v100AuthoredPresentation
+  let animationSample = options.v100AuthoredPresentation
     ? v102CombatMotionSample(renderKind,baseAnimationSample,{side:f.side,attack:f.attack,attackWindup:f.attackWindup,abilityWindup:f.abilityWindup,
       ownedPose:authoredPoseOwned})
     : baseAnimationSample;
-  const state = animationSample.spriteState;
   const photoComboJointPose = options.v100AuthoredPresentation && jointImage?.naturalWidth && manualAbilityActive
     ? v177PaisenPhotoComboJointPose(f, MANUAL_ABILITY_REGISTRY.brawler) : null;
   let jointPose = options.v100AuthoredPresentation && jointImage?.naturalWidth
@@ -4494,6 +4497,16 @@ function drawSpriteFighter(
         futagoAbilityOwner:f.kind==="futago"&&Boolean(f.v100TwinPart)&&["warning","active","recovery"].includes(f.stationAbility.phase)
           &&!Boolean(supportManualPose||advancedManualPose||stationAbilityPose||enemyContactPose||takuyaSlamPose),
         futagoAbilityTuning:f.kind==="futago"?anomalyTuning:undefined}) : null;
+  if(jointPose?.turnedGetup)animationSample={...animationSample,requestedState:'get-up',
+    resolvedState:'infection-rise',clipProgress:jointPose.getupProgress,lifecycleOwner:'infection-birth'};
+  const phaseChangePose=options.v100AuthoredPresentation
+    ?v177PhaseChangePose(options.world,f,renderKind,jointPose,animationSample,{ownedPose:authoredPoseOwned}):null;
+  if(phaseChangePose){
+    jointPose=phaseChangePose;
+    animationSample={...animationSample,requestedState:'phase-change',resolvedState:'boss-phase-head-dip',
+      lifecycleOwner:'registered-boss-phase'};
+  }
+  const state = animationSample.spriteState;
   const articulatedWalk = Boolean(!jointPose && options.v100AuthoredPresentation
     && v100UsesHumanWalk(renderKind,animationSample,{manualAbilityActive}));
   let frame = articulatedWalk || jointPose ? v100HumanWalkFrame(spriteFrameFor(renderKind,'walk-a','right'),direction) : tataraGroundCandidate
@@ -4626,6 +4639,8 @@ function drawSpriteFighter(
       spriteState: animationSample.spriteState,
       requestedState: animationSample.requestedState,
       resolvedState: animationSample.resolvedState,
+      lifecycleOwner: animationSample.lifecycleOwner ?? null,
+      phaseChange: jointPose?.phaseChange ? {...jointPose.phaseChange} : null,
       poseOpacity: pose.opacity,
       effectiveOpacity: ctx.globalAlpha * effectivePoseOpacity,
       clipRect: null,
@@ -8706,7 +8721,7 @@ function drawWorld(
         recordCorpseRenderAudit(corpse.id,{
           drawCount:(corpseRenderAuditHistory.get(corpse.id)?.at(-1)?.drawCount??0)+1,renderSequence:++fighterRenderSequence,
           assetReady:true,x:corpse.x,y:corpse.y,renderKind:corpseRenderKind,spritePath:state.atlas.path,
-          spriteState:"death",requestedState:"death",resolvedState:"joint-death",poseOpacity:ctx.globalAlpha,effectiveOpacity:ctx.globalAlpha,clipRect:null,
+          spriteState:"death",requestedState:v177FallState(jointFallProgress),resolvedState:"joint-death",lifecycleOwner:'enemy-death',poseOpacity:ctx.globalAlpha,effectiveOpacity:ctx.globalAlpha,clipRect:null,
           direction:state.initialRoot.flipX?"left":"right",sourceRow:0,
           sourceRect:{x:0,y:0,w:jointCorpseImage.naturalWidth,h:jointCorpseImage.naturalHeight},
           jointSourceReference:{x:0,y:0,w:reference.width,h:reference.height},
@@ -8735,7 +8750,7 @@ function drawWorld(
         drawCount:(corpseRenderAuditHistory.get(corpse.id)?.at(-1)?.drawCount??0)+1,renderSequence:++fighterRenderSequence,
         assetReady:true,x:corpse.x,y:corpse.y,renderKind:corpseRenderKind,
         spritePath:paint.plan?V177_JOINT_ATLASES[corpseRenderKind].path:paint.frame.path,
-        spriteState:'death',requestedState:'death',resolvedState:'continuous-human-death',
+        spriteState:'death',requestedState:v177FallState(humanFallProgress),resolvedState:'continuous-human-death',lifecycleOwner:'human-death',
         poseOpacity:ctx.globalAlpha,effectiveOpacity:ctx.globalAlpha,clipRect:null,
         direction:paint.root.flipX?'left':'right',sourceRow:paint.frame.sourceRect.y,sourceRect:{...paint.frame.sourceRect},
         frameFlipX:paint.root.flipX,renderWidth:paint.width,renderHeight:paint.height,
@@ -8792,7 +8807,8 @@ function drawWorld(
           renderKind: corpseRenderKind,
           spritePath: frame.path,
           spriteState: "death",
-          requestedState: "death",
+          requestedState: v177FallState(dyingProgress),
+          lifecycleOwner: corpse.side==='human'?'human-death':'enemy-death',
           resolvedState: frame.derivedFrom ?? "death",
           poseOpacity: ctx.globalAlpha,
           effectiveOpacity: ctx.globalAlpha,
@@ -9260,6 +9276,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     scheduledSimulationSteps: 0,
     rafRequests: 0,
     rafCancellations: 0,
+    frameCpuSequence: 0,
+    lastFrameExitAt: null as number | null,
+    frameCpuTimings: [] as Array<Record<string, number | null>>,
   });
   const nativeMayoProofRef = useRef<ReturnType<typeof createMayoFeralProofOwner> | null>(null);
   const lastHudRef = useRef(0);
@@ -18860,12 +18879,22 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       frame = requestAnimationFrame(loop);
     };
     const loop = (now: number) => {
+      const cpuEntryAt = qaMode || qaScenario ? performance.now() : null;
       frame = null;
       const canvas = canvasRef.current;
       const ctx = canvas?.getContext("2d", BATTLE_CANVAS_CONTEXT_OPTIONS);
       const g = gameRef.current;
       if (!ctx) { requestFrame(); return; }
       const performanceCounters = runtimePerformanceRef.current;
+      const recordFrameCpu = (simulationFinishedAt: number | null, drawFinishedAt: number | null) => {
+        if(cpuEntryAt===null)return;
+        const exitAt=performance.now();
+        performanceCounters.frameCpuTimings.push({sequence:++performanceCounters.frameCpuSequence,
+          rafTimestamp:now,entryAt:cpuEntryAt,previousExitAt:performanceCounters.lastFrameExitAt,
+          simulationFinishedAt,drawFinishedAt,exitAt,simulationTime:g.time});
+        if(performanceCounters.frameCpuTimings.length>128)performanceCounters.frameCpuTimings.shift();
+        performanceCounters.lastFrameExitAt=exitAt;
+      };
       if (pageHiddenRef.current || document.visibilityState === "hidden") {
         performanceCounters.hiddenFrameCallbacks += 1;
         g.last = now;
@@ -24216,10 +24245,12 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       }
       }
       const qaPresentationQuiescence = qaPresentationQuiescenceRef.current;
+      const simulationFinishedAt=cpuEntryAt===null?null:performance.now();
       if (!cadence.shouldRender || qaPresentationQuiescence.active) {
         if (cadence.shouldRender && qaPresentationQuiescence.active) {
           qaPresentationQuiescence.suppressedRenderFrames += 1;
         }
+        recordFrameCpu(simulationFinishedAt,simulationFinishedAt);
         requestFrame();
         return;
       }
@@ -24239,6 +24270,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         Boolean(qaMode || qaScenario),
       );
       performanceCounters.renderFrames += 1;
+      const drawFinishedAt=cpuEntryAt===null?null:performance.now();
       if (now - lastHudRef.current > 100) {
         lastHudRef.current = now;
         const bossHud = bossBattleHudSnapshot(g);
@@ -24346,6 +24378,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           }));
         }
       }
+      recordFrameCpu(simulationFinishedAt,drawFinishedAt);
       requestFrame();
     };
     const suspendFrames = () => {

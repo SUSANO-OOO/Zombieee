@@ -30,11 +30,19 @@ const orchestration=new Set(['.github/workflows/ci.yml','scripts/ci-change-scope
 // Reviewed validation and QA-only observation revisions. Gameplay, rendering
 // and limits are unchanged; a different blob restores full regression.
 const reviewedValidationBlobs=Object.freeze({
+  'scripts/v177-reaction-render-contract.mjs':'fb84ffd008b65864539c914c84a0f9b910c9acd7',
   // Preparation plus living/corpse observation and synchronous sample timing.
   'app/AshfallGame.tsx':'196ad0a43b13632ed7d228e1a37a5018c4407456',
   'scripts/v177-native-allunit-ranger-manual-contract.mjs':'69e4ccc8482ad55313d0dcf8c27617b230283416',
-  'scripts/v177-native-allunit-outcomes.mjs':'883d3129d163bf62f4baba76647d16d8a14650db',
-  'tests/helpers/v177-corpse-joint-render.mjs':'08f7a664e7df6ef71f208ebdc202ac8fb4ada748',
+  'scripts/v177-native-allunit-outcomes.mjs':'3057e9d5b107030e94d1bc2d6e4023a7e8e194ff',
+  'tests/helpers/v177-corpse-joint-render.mjs':'62813dcbd9eb06cd1ccf82ce38cf232da36b4f4c',
+});
+// These exact lifecycle revisions preserve existing paints until an actual
+// registered boss phase increase. Down/rise reuse their original lifecycle clocks.
+const reviewedLifecycleBlobs=Object.freeze({
+  "app/AshfallGame.tsx": "36a0e8f329b34a778938d1a4fe0ee6c19c6712a6",
+  "app/v177JointPresentation.js": "05ff9ad9def6c050c29eb7f81650aca6cddc6e37",
+  "app/v177LifecyclePresentation.js": "dc13038fa0a3a9bb35f6aef0c06eca80eed4d760"
 });
 const reviewedMotionBlobs=Object.freeze({
   'app/combatPresentation.js':'327c7a1dd55707c16385d01d28030a37dc4b27c7',
@@ -58,6 +66,7 @@ export function ciChangeScope(paths,{draft,sourceBlobs={}}={}){
     else if(allunit.has(file))allunitChanged=true;
     else if(r9.has(file))r9Changed=true;
     else if(governance.has(file)||orchestration.has(file)||/^tests\/[^/]+\.test\.mjs$/u.test(file))continue;
+    else if(reviewedLifecycleBlobs[file]&&sourceBlobs[file]===reviewedLifecycleBlobs[file]){normalChanged=true;allunitChanged=true;}
     else if(reviewedValidationBlobs[file]&&sourceBlobs[file]===reviewedValidationBlobs[file])continue;
     else if(reviewedMotionBlobs[file]&&sourceBlobs[file]===reviewedMotionBlobs[file]){
       normalChanged=true;allunitChanged=true;
@@ -77,7 +86,7 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
   const comparisonBase=execFileSync('git',['merge-base',base,head],{encoding:'utf8',windowsHide:true}).trim();
   assert.match(comparisonBase,/^[0-9a-f]{40}$/u);
   const paths=execFileSync('git',['diff','--no-renames','--name-only',`${comparisonBase}..${head}`],{encoding:'utf8',windowsHide:true}).trim().split(/\r?\n/u).filter(Boolean);
-  const sourceBlobs=Object.fromEntries(paths.filter(file=>reviewedValidationBlobs[file]||reviewedMotionBlobs[file]).map(file=>{
+  const sourceBlobs=Object.fromEntries(paths.filter(file=>reviewedValidationBlobs[file]||reviewedMotionBlobs[file]||reviewedLifecycleBlobs[file]).map(file=>{
     try{return[file,execFileSync('git',['rev-parse',`${head}:${file}`],{encoding:'utf8',windowsHide:true}).trim()];}
     catch{return[file,null];}
   }));

@@ -35,7 +35,7 @@ const actorKey = actor => actor && typeof actor === 'object' ? actor : null;
 function rememberRenderedJointPose(actor,kind,plan,lowerReceipt=null) {
   const key=actorKey(actor);
   if(!key)return;
-  if(plan)renderedJointPoses.set(key,{kind,plan:{...plan},lowerReceipt});
+  if(plan)renderedJointPoses.set(key,{kind,plan:{...(plan.phaseChangeBasePlan??plan)},lowerReceipt});
   else { renderedJointPoses.delete(key); livingStunPoses.delete(key); }
 }
 export function v177RenderedWeightedLowerReceipt(actor,world) {

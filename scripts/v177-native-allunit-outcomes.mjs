@@ -52,11 +52,12 @@ export function readNativeOutcomeSample(realmOwner,{fighterId,afterSequence=0,sa
 }
 
 const draws=row=>row.samples.flatMap(s=>[...s.body.renderHistory,...s.body.corpseRenderHistory]);
+const corpseDraw=r=>['down','death'].includes(r.requestedState)&&Number.isFinite(r.fallProgress);
 export function nativeOutcomeComplete(row){
   const last=row.samples.at(-1);if(!last)return false;
   if(row.outcome.outcome==='retreat')return !last.body.fighter&&!last.body.corpse
     &&last.receipts.some(r=>r.eventType==='retreat-complete');
-  const dead=draws(row).filter(r=>r.requestedState==='death');
+  const dead=draws(row).filter(corpseDraw);
   return Boolean(last.body.corpse&&dead.slice(-3).length===3&&dead.slice(-3).every(r=>r.fallProgress===1)
     &&dead.some(r=>r.fallProgress>0&&r.fallProgress<1));
 }
@@ -115,7 +116,8 @@ export function assertNativeOutcome(row,bytes){
   for(const r of fresh){assert.equal(r.renderKind,row.form);assert.equal(r.assetReady,true);}
   const last=row.samples.at(-1);
   if(outcome.outcome==='retreat'){
-    for(const state of ['death','hit','retreat'])assert.ok(fresh.some(r=>r.requestedState===state),'Missing actual protected retreat phase '+state);
+    for(const state of row.recordingMetadata.lifecycleStatesV2?['down','get-up','retreat']:['death','hit','retreat'])
+      assert.ok(fresh.some(r=>r.requestedState===state),'Missing actual protected retreat phase '+state);
     assert.equal(last.body.fighter,null);assert.equal(last.body.corpse,null);
     const run=fresh.filter(r=>r.requestedState==='retreat');
     assert.ok(run.length>=2&&new Set(run.map(r=>r.x)).size>1,'Retreat must actually move');
@@ -126,7 +128,11 @@ export function assertNativeOutcome(row,bytes){
     assert.equal(last.body.fighter,null);assert.equal(last.body.corpse.id,proof.fighterId);
     const wound=row.samples.flatMap(s=>s.effects.wounds).find(r=>r.lethal);
     assert.ok(wound,'Actual damage pipeline must produce the lethal wound');
-    const dead=fresh.filter(r=>r.requestedState==='death'),lastLive=fresh.filter(r=>r.requestedState!=='death').at(-1)??initialPaint;
+    const dead=fresh.filter(corpseDraw),lastLive=fresh.filter(r=>!corpseDraw(r)).at(-1)??initialPaint;
+    if(row.recordingMetadata.lifecycleStatesV2) {
+      assert.ok(dead.some(r=>r.requestedState==='down'&&r.fallProgress>0&&r.fallProgress<1),'The actual continuous fall must own down');
+      assert.ok(dead.some(r=>r.requestedState==='death'&&r.fallProgress===1),'Only the settled corpse owns death');
+    }
     assertContinuousHumanCorpse(row.form,dead,lastLive,last.body.corpse);
     const jointOwner=Boolean(V177_CORPSE_JOINT_DATA[row.form]&&lastLive.jointAtlasPath===V177_JOINT_ATLASES[row.form].path);
     const pixelScale=renderedSourcePixelScale(lastLive);
@@ -158,16 +164,19 @@ export async function captureNativeOutcomeCase(page,row,{out,engine='webkit',onF
     row.recordingMetadata={form:row.form,phase:row.phase,fighterId:row.proof.fighterId,targetId:row.proof.targetId,
       preparedRenderKind:row.form,owner:row.owner,caseId:row.caseId,referenceCaseId:row.referenceCaseId,
       battleGeneration:row.proof.battleGeneration,proofId:row.proof.proofId,fixtureGroup:'controlled-incoming-outcome',diagnosticOnly:true,
-      controlledIncomingDamage:true,manualClockAdvance:false,continuousUntilOutcome:true};
+      controlledIncomingDamage:true,manualClockAdvance:false,continuousUntilOutcome:true,lifecycleStatesV2:true};
     clip=await beginV177NativeCanvasClip(page,row.recordingMetadata,{directory:path.join(out,row.viewport.width+'x'+row.viewport.height,'native-canvas-clips'),engine,requestedMimeType:'video/webm;codecs=vp8',realmOwner:resources.realmOwner});active();
     row.recordingStart=await owned(()=>clip.waitForStart());
     row.captureStart=await owned(()=>resources.realmOwner.evaluate(readNativeOutcomeSample,{fighterId:row.proof.fighterId,performanceBoundary:true}));
     row.sequenceBaseline=Math.max(...row.captureStart.body.renderHistory.map(r=>r.renderSequence));assert.ok(Number.isFinite(row.sequenceBaseline));
     row.release=await owned(()=>resources.realmOwner.evaluate(releasePreparedShardClock,row.proof));
     let afterSequence=row.sequenceBaseline;
+    row.rpcTimings=[];
     for(let i=0;i<80;i++){
+      const rpcStartedAt=performance.now();
       const s=await owned(()=>resources.realmOwner.evaluate(readNativeOutcomeSample,{fighterId:row.proof.fighterId,afterSequence,
         sampleAt:row.captureStart.at+(i+1)*LIMITS.sampleDelayMs,performanceBoundary:true}));row.samples.push(s);
+      row.rpcTimings.push({sample:i,startedAt:rpcStartedAt,finishedAt:performance.now(),scope:'Node evaluate round trip, separate from browser clock'});
       afterSequence=Math.max(afterSequence,...s.body.renderHistory.map(r=>r.renderSequence),...s.body.corpseRenderHistory.map(r=>r.renderSequence));
       if(nativeOutcomeComplete(row))break;
     }

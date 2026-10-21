@@ -94,7 +94,9 @@ export function assertV177ReactionRender({form,proof,before,after,late}){
     assert.equal(body.fighter.mayoRetreat?.phase,'run');assert.ok(body.fighter.hp>0&&body.fighter.hp<living.hp);
     assert.ok(body.fighter.x<living.x-20,'the dedicated retreat must actually move toward the vehicle');
     for(const r of body.renderHistory){assert.equal(r.renderKind,form);assert.ok(r.assetReady);}
-    for(const state of ['death','hit','retreat'])assert.ok(body.renderHistory.some(r=>r.requestedState===state),`Mayo actual ${state} must be painted`);
+    const retreatStates=body.renderHistory.some(r=>r.lifecycleOwner==='mayo-retreat')
+      ?['down','get-up','retreat']:['death','hit','retreat'];
+    for(const state of retreatStates)assert.ok(body.renderHistory.some(r=>r.requestedState===state),`Mayo actual ${state} must be painted`);
     const running=body.renderHistory.filter(r=>r.requestedState==='retreat');
     assert.ok(running.length>=2);assert.ok(new Set(running.map(r=>r.jointLowerFrame)).size>1,'retreat feet must advance through the real gait');
     for(const r of running){

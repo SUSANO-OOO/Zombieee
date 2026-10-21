@@ -46,7 +46,7 @@ test('draft changes select affected observation while unknown/shared/runtime inp
 
 test('the reviewed outcome validator can recheck retained raw footage without reshooting successful cases',()=>{
  const file='scripts/v177-native-allunit-outcomes.mjs';
- const blob='883d3129d163bf62f4baba76647d16d8a14650db';
+ const blob='3057e9d5b107030e94d1bc2d6e4023a7e8e194ff';
  const options={draft:true,sourceBlobs:{[file]:blob}};
  const scoped=ciChangeScope([file,'tests/v177-native-allunit-outcomes.test.mjs'],options);
  assert.equal(scoped.full,false);assert.equal(scoped.allunit,false);assert.equal(scoped.r9,false);
@@ -147,4 +147,15 @@ test('the CLI handles a PR whose base branch advanced without requiring another 
   cwd:directory,encoding:'utf8',windowsHide:true,env:{...process.env,CI_SCOPE_BASE:advanced,CI_SCOPE_HEAD:head,CI_SCOPE_DRAFT:'false',GITHUB_OUTPUT:'',GITHUB_STEP_SUMMARY:''}}));
  assert.equal(result.comparisonBase,base);assert.equal(result.full,true);
  assert.deepEqual(result.changedPaths,['app/v177RangerFootPlacement.js']);
+});
+
+
+test('reviewed lifecycle bindings select motion/normal while unchanged story and Ranger-only observations remain reusable',()=>{
+ const paths=["app/AshfallGame.tsx","app/v177JointPresentation.js","app/v177LifecyclePresentation.js"];
+ const sourceBlobs=Object.fromEntries(paths.map(file=>[file,execFileSync('git',['hash-object',file],{encoding:'utf8',windowsHide:true}).trim()]));
+ const result=ciChangeScope(paths,{draft:true,sourceBlobs});
+ assert.equal(result.full,false);assert.equal(result.normal,true);assert.equal(result.allunit,true);assert.equal(result.r9,false);assert.equal(result.ranger,false);
+ for(const file of paths)assert.equal(ciChangeScope(paths,{draft:true,sourceBlobs:{...sourceBlobs,[file]:'f'.repeat(40)}}).full,true);
+ assert.equal(ciChangeScope(paths,{draft:false,sourceBlobs}).full,true);
+ assert.equal(ciChangeScope([...paths,'app/v100Save.js'],{draft:true,sourceBlobs}).full,true);
 });
