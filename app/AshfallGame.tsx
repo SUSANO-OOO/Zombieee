@@ -18879,7 +18879,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       frame = requestAnimationFrame(loop);
     };
     const loop = (now: number) => {
-      const cpuEntryAt = qaMode || qaScenario ? performance.now() : null;
+      const cpuEntryAt = fighterRenderAuditEnabled ? performance.now() : null;
       frame = null;
       const canvas = canvasRef.current;
       const ctx = canvas?.getContext("2d", BATTLE_CANVAS_CONTEXT_OPTIONS);

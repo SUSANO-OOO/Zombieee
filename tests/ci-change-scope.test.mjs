@@ -46,7 +46,7 @@ test('draft changes select affected observation while unknown/shared/runtime inp
 
 test('the reviewed outcome validator can recheck retained raw footage without reshooting successful cases',()=>{
  const file='scripts/v177-native-allunit-outcomes.mjs';
- const blob='3057e9d5b107030e94d1bc2d6e4023a7e8e194ff';
+ const blob='12e9ee396cc426db1a46d942de515c14a54b774b';
  const options={draft:true,sourceBlobs:{[file]:blob}};
  const scoped=ciChangeScope([file,'tests/v177-native-allunit-outcomes.test.mjs'],options);
  assert.equal(scoped.full,false);assert.equal(scoped.allunit,false);assert.equal(scoped.r9,false);
@@ -94,7 +94,7 @@ test('only the exact Souki contact repair selects normal play and motion without
 });
 
 test('the exact local QA preparation change reuses unchanged normal-play evidence in Draft',()=>{
- const file='app/AshfallGame.tsx',blob='196ad0a43b13632ed7d228e1a37a5018c4407456';
+ const file='app/AshfallGame.tsx',blob='4445d531b03a44a1147a3ae44d74a8e869d7ba37';
  const options={draft:true,sourceBlobs:{[file]:blob}},scope=ciChangeScope([file],options);
  assert.equal(scope.full,false);assert.equal(scope.normal,false);assert.equal(scope.allunit,false);assert.equal(scope.r9,false);
  for(const sourceBlobs of [{},{[file]:'f'.repeat(40)}])assert.equal(ciChangeScope([file],{draft:true,sourceBlobs}).full,true);

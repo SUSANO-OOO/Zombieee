@@ -67,6 +67,20 @@ test('continuous outcome validates original bytes/realm and actual protected ret
   for(const key of ['naturalIncomingCombatAccepted','originalSpeedAccepted','naturalnessAccepted','all21Accepted'])assert.equal(result[key],false);
 });
 
+test('new frame-cost diagnostics cannot succeed with missing, unbounded or reversed actual frame timelines',()=>{
+  const {row,bytes}=fixture();row.recordingMetadata.frameCpuTimelineV1=true;
+  assert.throws(()=>assertNativeOutcome(row,bytes),/frame cost timing/u);
+  const trace={sequence:1,rafTimestamp:102,entryAt:103,simulationFinishedAt:104,drawFinishedAt:105,exitAt:106};
+  for(const s of row.samples)s.runtimePerformance={frameCpuTimings:[{...trace},{...trace,sequence:2,entryAt:107,simulationFinishedAt:108,drawFinishedAt:109,exitAt:110}]};
+  assert.equal(assertNativeOutcome(row,bytes).continuousUntilOutcome,true);
+  for(const invalid of [{...trace,entryAt:NaN},{...trace,drawFinishedAt:102}]){
+    const bad=structuredClone(row);bad.samples[0].runtimePerformance.frameCpuTimings=[invalid];
+    assert.throws(()=>assertNativeOutcome(bad,bytes));
+  }
+  const bad=structuredClone(row);bad.samples[0].runtimePerformance.frameCpuTimings=Array.from({length:129},()=>trace);
+  assert.throws(()=>assertNativeOutcome(bad,bytes),/bounded/u);
+});
+
 test('outcome keeps independent raw clock reads and rejects replaced real browser references',()=>{
   const {row,bytes}=fixture();row.sourceRaf.timeOrigin+=1;
   row.captureStart.timeOrigin+=2;row.samples.forEach((s,i)=>{s.timeOrigin+=3+i;});row.captureEnd.timeOrigin+=8;

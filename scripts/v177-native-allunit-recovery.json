@@ -2,11 +2,10 @@
   "schema": "v177-native-allunit-recovery/v2",
   "head": "29d4057a8a131c93893978bd29f7ddaaf67cebaf",
   "runId": "39449375661",
-  "scope": "Retain577 source-compatible records (432 normal,142 outcome,3 manual); only the two still-unaccepted Mac outcome windows require diagnostic reobservation. Native run39547137610 resolved nine original>=250ms observation gaps with original1x review, without accepting the product p95 RAF33ms budget. Preserve all original11 and32 historical gaps, raw failures, and separate Windows supplementary motion evidence. QA-only observer now follows actual corpse paints and records synchronous sample cost; it changes no gameplay, render quality, clocks or deadlines. No all21, campaign, performance, physical or publication acceptance. The reviewed lifecycle revision connects down/get-up to their existing actual paints without changing gait or timers. The new phase-change head dip requires a living registered boss phase increase; normal/controlled-lethal/manual fixtures have no such living increase. Retain their unchanged physical motion evidence; fresh phase-boundary clips are separate supplements. Two Mac failures remain pending with bounded QA frame-CPU/RPC timing.",
+  "scope": "Retain578 source-compatible records (432 normal,143 outcome,3 manual). Only Mutant1280 remains pending. Run39574644848 restored Musashi (encoded/source gap71ms, simulation/native ratio1.001, original1x whole clip reviewed); retain all previous failures. Actual localhost frame CPU timeline now enabled and required, without changing gameplay, rendered pixels, free RAF, capture format, quality or deadlines. Earlier lifecycle supplements/normal/R9 evidence remain bound to their source owners; no whole-game/performance/physical/publication acceptance.",
   "caseIds": [],
   "manualCaseIds": [],
   "outcomeCaseIds": [
-    "forms-3:miyamoto-musashi:controlled-outcome:1280x720",
     "forms-11:mugarian-president-mutated:controlled-outcome:1280x720"
   ],
   "affectedDeathForms": [
@@ -867,7 +866,8 @@
       "forms-2:engineer:controlled-outcome:1280x720",
       "forms-2:brute:controlled-outcome:844x390",
       "forms-2:engineer:controlled-outcome:844x390",
-      "forms-3:zakimiya:controlled-outcome:1280x720"
+      "forms-3:zakimiya:controlled-outcome:1280x720",
+      "forms-3:miyamoto-musashi:controlled-outcome:1280x720"
     ],
     "reports": [
       {
@@ -1322,32 +1322,44 @@
           "forms-12:takuya-omega:move:1280x720"
         ],
         "outcomeCaseIds": []
+      },
+      {
+        "shard": "forms-3",
+        "head": "080a785f04168cb755af41379c2125d9a7e3fa63",
+        "runId": "39574644848",
+        "sha256": "86a29802dd8b73a8dd97f2ba157008e9f2175932e6b7ede94e69f5b50455e58f",
+        "validationSha256": "efecfe1aeb4bb090279d300239558f17a0482bf4c987c8ab7a362eee47880986",
+        "motionReviewSha256": "eef9982453e4f3d6584ee609d00279b1a52921b92ac259174b6d914dca141f2d",
+        "caseIds": [],
+        "outcomeCaseIds": [
+          "forms-3:miyamoto-musashi:controlled-outcome:1280x720"
+        ]
       }
     ],
-    "retainedClipIndexSha256": "2e5a336b1cedc13442e69522120147b0b2836f1bf2a4e13e6ef561c868315c0d"
+    "retainedClipIndexSha256": "82823014662d0a7bfe66e81c15b32c2086becaaf5b87261b7cff2f4d669954ee"
   },
   "changedBlobs": {
     ".github/workflows/native-allunit-capture.yml": "8c099e5f0c66eef85db17f214b9ae8b742cbc758",
     ".github/workflows/native-game-capture.yml": "51b34503defe778ea55384712a2b77dc60070df8",
-    "app/AshfallGame.tsx": "36a0e8f329b34a778938d1a4fe0ee6c19c6712a6",
+    "app/AshfallGame.tsx": "4445d531b03a44a1147a3ae44d74a8e869d7ba37",
     "app/combatPresentation.js": "327c7a1dd55707c16385d01d28030a37dc4b27c7",
     "app/v100SoukiCollision.js": "bbb80fe0b36ff9c6ea2c37aa2d4de617be75b7be",
     "app/v100SoukiPresentation.js": "9769a43da24230afe829f9a423a2b8cd706f95b1",
     "app/v177HitReaction.js": "6e7dc3705b3fa8ee8095c675b4046571a085e5af",
     "app/v177HumanCorpsePresentation.js": "0422000720875df12b57c9c721fa4c13a8317869",
     "app/v177JointPresentation.js": "05ff9ad9def6c050c29eb7f81650aca6cddc6e37",
-    "scripts/ci-change-scope.mjs": "9e729088a46071dbe24e1b9a3b625fe339ff25c7",
+    "scripts/ci-change-scope.mjs": "5d2fe8b19606750980c42dcd6a0efe2e79789b23",
     "scripts/v100-normal-campaign-playthrough.mjs": "310ba070ccce39d9dc671f6a7b482ce40211d3d6",
     "scripts/v100-normal-visible-aim.mjs": "052c0dc3afd9bd0571e1d8ae596026a96669ce14",
     "scripts/v177-human-corpse-contract.mjs": "17568cb76138783d88365660e1ef04e23be26008",
     "scripts/v177-native-allunit-browser.mjs": "7b25b1f0f843213b830c7a6a98c9d7083b6a38a1",
-    "scripts/v177-native-allunit-outcomes.mjs": "3057e9d5b107030e94d1bc2d6e4023a7e8e194ff",
+    "scripts/v177-native-allunit-outcomes.mjs": "12e9ee396cc426db1a46d942de515c14a54b774b",
     "scripts/v177-native-allunit-ranger-manual-contract.mjs": "69e4ccc8482ad55313d0dcf8c27617b230283416",
     "scripts/v177-native-allunit-ranger-manual.mjs": "6f53d3a7c40c1855a82d91077092c59e18ae9edd",
     "scripts/v177-native-allunit-selection.mjs": "6477d765bf01ef4ef7e56e86a664b3ca27aae083",
     "scripts/v177-native-game-capture-browser.mjs": "6315f3f7167b3b09ff999b3553c80b48ced35d73",
     "scripts/v177-normal-audio-unlock-observation.mjs": "89f90b9fbb1f27bf2dc409955279ed560293b5b3",
-    "tests/ci-change-scope.test.mjs": "2ba21170ef7b9086bc8fc0aab80d0b9580efb632",
+    "tests/ci-change-scope.test.mjs": "6d9b828a52cfe3ef749d51dc26100959312acb09",
     "tests/fixtures/v177-native-auto-unlocked-audio.json": "dbc0f000691f2d4a66734e94f1fe05fcbd51b84d",
     "tests/fixtures/v177-native-success-control-audio.json": "2f0f666ea0c2908d9b6cfaa40e56f84818ca73c9",
     "tests/helpers/v177-corpse-joint-render.mjs": "62813dcbd9eb06cd1ccf82ce38cf232da36b4f4c",
@@ -1356,9 +1368,9 @@
     "tests/v100-souki-presentation.test.mjs": "95481e5a9ad477cd982d422e44720c4ab4377634",
     "tests/v177-hit-reaction.test.mjs": "5d0316e4cef14bcf81d800766ecb914dfeb867ca",
     "tests/v177-human-corpse-continuity.test.mjs": "90b95350cf0d87e01b465d6c3b2d21ac39799615",
-    "tests/v177-native-allunit-outcomes.test.mjs": "32efa043cd3cc224e3bc344ce60c197e9a0c199a",
+    "tests/v177-native-allunit-outcomes.test.mjs": "7c88ebc7d060e8358c5ffe84abc4d5f1fa0ff9ce",
     "tests/v177-native-allunit-ranger-manual.test.mjs": "f5647dda7b18351f7d3f8d4ef8453b275d6a46d3",
-    "tests/v177-native-allunit-selection.test.mjs": "4eddfd79c2c27eef4633c73dd3d7813dcd2c0c40",
+    "tests/v177-native-allunit-selection.test.mjs": "f2dd7e630b47affc090a731f269f167464d9e404",
     "tests/v177-native-allunit.test.mjs": "6d6346648962c45a9387fa93678479f1c2b2bada",
     "tests/v177-native-game-capture.test.mjs": "2166b7f9734991a7cd54331a9243cb9844391fea",
     "tests/v177-native-setup-overlap.test.mjs": "a5ef98038a7f2e2ffb1591bd0ca21be066f63a79",
@@ -1370,31 +1382,21 @@
     "tests/v177-ranger-manual-joint.test.mjs": "09c6748b61ae10c668f58072dd61d29c0de5bad6",
     "app/v177LifecyclePresentation.js": "dc13038fa0a3a9bb35f6aef0c06eca80eed4d760",
     "tests/v177-lifecycle-presentation.test.mjs": "236bcbe40eebd14a383b5b8a2d97117a1525a26c",
-    "scripts/v177-reaction-render-contract.mjs": "fb84ffd008b65864539c914c84a0f9b910c9acd7"
+    "scripts/v177-reaction-render-contract.mjs": "fb84ffd008b65864539c914c84a0f9b910c9acd7",
+    "tests/v177-native-frame-timing.test.mjs": "0b0bdcb3a53647e9a65fc788456151c6d4492b39"
   },
   "unacceptedVisualWindows": {
-    "auditSha256": "8b2906bbe7450e8439f3fcc0c6cdfff8ad88413cd983a8f7835c0418f0f30b5d",
-    "sourceHead": "726d5b682e9d2d4145ea6a2b5b47dee877e13a1b",
+    "auditSha256": "eef9982453e4f3d6584ee609d00279b1a52921b92ac259174b6d914dca141f2d",
+    "sourceHead": "080a785f04168cb755af41379c2125d9a7e3fa63",
     "cases": [
       {
-        "caseId": "forms-3:miyamoto-musashi:controlled-outcome:1280x720",
-        "sha256": "795cb5d8ff543291a524748377cd921bee0ba47c753187b01b0e91f5dc1ccb43",
-        "phase": "controlled-outcome",
-        "form": "miyamoto-musashi",
-        "maxGap": 0.415,
-        "count250": 2,
-        "sourceClipMaxGapMs": 440,
-        "simulationToNativeRatio": 0.552791597567715
-      },
-      {
         "caseId": "forms-11:mugarian-president-mutated:controlled-outcome:1280x720",
-        "sha256": "491f03d069e60724d01cca46ef6da2b107721c4e916b2a42c6c64633d498cbc9",
+        "sha256": "48af17c739bd14bd782ea52c80361c59117ee7e251d8fc64bdcc0ebceb27c0c3",
         "phase": "controlled-outcome",
         "form": "mugarian-president-mutated",
-        "maxGap": 0.25800000000000006,
+        "maxGap": 2.349,
         "count250": 1,
-        "sourceClipMaxGapMs": 360,
-        "simulationToNativeRatio": 0.5670046886926176
+        "sourceClipMaxGapMs": 2585
       }
     ],
     "additionalAudits": [
@@ -1407,6 +1409,11 @@
         "sha256": "610d24673253055043851dc040bca8d027afb5b85d76a2956f3ca16863fa3803",
         "sourceHead": "20a2d919645fe6d7bba3d8c82f0a391b2fe2d628",
         "scope": "Original eleven gaps retained without replacing raw history"
+      },
+      {
+        "sha256": "8b2906bbe7450e8439f3fcc0c6cdfff8ad88413cd983a8f7835c0418f0f30b5d",
+        "sourceHead": "726d5b682e9d2d4145ea6a2b5b47dee877e13a1b",
+        "scope": "Preserve previous remaining-window audit"
       }
     ],
     "previousCases": [

@@ -32,9 +32,9 @@ const orchestration=new Set(['.github/workflows/ci.yml','scripts/ci-change-scope
 const reviewedValidationBlobs=Object.freeze({
   'scripts/v177-reaction-render-contract.mjs':'fb84ffd008b65864539c914c84a0f9b910c9acd7',
   // Preparation plus living/corpse observation and synchronous sample timing.
-  'app/AshfallGame.tsx':'196ad0a43b13632ed7d228e1a37a5018c4407456',
+  'app/AshfallGame.tsx':'4445d531b03a44a1147a3ae44d74a8e869d7ba37',
   'scripts/v177-native-allunit-ranger-manual-contract.mjs':'69e4ccc8482ad55313d0dcf8c27617b230283416',
-  'scripts/v177-native-allunit-outcomes.mjs':'3057e9d5b107030e94d1bc2d6e4023a7e8e194ff',
+  'scripts/v177-native-allunit-outcomes.mjs':'12e9ee396cc426db1a46d942de515c14a54b774b',
   'tests/helpers/v177-corpse-joint-render.mjs':'62813dcbd9eb06cd1ccf82ce38cf232da36b4f4c',
 });
 // These exact lifecycle revisions preserve existing paints until an actual

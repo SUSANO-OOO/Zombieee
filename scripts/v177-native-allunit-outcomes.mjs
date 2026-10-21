@@ -115,6 +115,17 @@ export function assertNativeOutcome(row,bytes){
   assert.ok(fresh.length>=3);assert.equal(new Set(fresh.map(r=>r.renderSequence)).size,fresh.length);
   for(const r of fresh){assert.equal(r.renderKind,row.form);assert.equal(r.assetReady,true);}
   const last=row.samples.at(-1);
+  if(row.recordingMetadata.frameCpuTimelineV1) {
+    const traces=row.samples.flatMap(s=>s.runtimePerformance?.frameCpuTimings??[]);
+    const baseline=row.captureStart.runtimePerformance?.frameCpuSequence??0;
+    const actual=[...new Map(traces.filter(f=>Number.isSafeInteger(f.sequence)&&f.sequence>baseline
+      &&f.entryAt>=row.release.at&&f.exitAt<=clip.stopRequestedAt).map(f=>[f.sequence,f])).values()];
+    assert.ok(actual.length>=2,
+      'The actual localhost game loop must provide frame cost timing');
+    for(const s of row.samples)assert.ok(s.runtimePerformance.frameCpuTimings.length<=128,'Frame timing remains bounded');
+    for(const f of traces)assert.ok([f.rafTimestamp,f.entryAt,f.simulationFinishedAt,f.drawFinishedAt,f.exitAt].every(Number.isFinite)
+      &&f.entryAt<=f.simulationFinishedAt&&f.simulationFinishedAt<=f.drawFinishedAt&&f.drawFinishedAt<=f.exitAt);
+  }
   if(outcome.outcome==='retreat'){
     for(const state of row.recordingMetadata.lifecycleStatesV2?['down','get-up','retreat']:['death','hit','retreat'])
       assert.ok(fresh.some(r=>r.requestedState===state),'Missing actual protected retreat phase '+state);
@@ -164,7 +175,7 @@ export async function captureNativeOutcomeCase(page,row,{out,engine='webkit',onF
     row.recordingMetadata={form:row.form,phase:row.phase,fighterId:row.proof.fighterId,targetId:row.proof.targetId,
       preparedRenderKind:row.form,owner:row.owner,caseId:row.caseId,referenceCaseId:row.referenceCaseId,
       battleGeneration:row.proof.battleGeneration,proofId:row.proof.proofId,fixtureGroup:'controlled-incoming-outcome',diagnosticOnly:true,
-      controlledIncomingDamage:true,manualClockAdvance:false,continuousUntilOutcome:true,lifecycleStatesV2:true};
+      controlledIncomingDamage:true,manualClockAdvance:false,continuousUntilOutcome:true,lifecycleStatesV2:true,frameCpuTimelineV1:true};
     clip=await beginV177NativeCanvasClip(page,row.recordingMetadata,{directory:path.join(out,row.viewport.width+'x'+row.viewport.height,'native-canvas-clips'),engine,requestedMimeType:'video/webm;codecs=vp8',realmOwner:resources.realmOwner});active();
     row.recordingStart=await owned(()=>clip.waitForStart());
     row.captureStart=await owned(()=>resources.realmOwner.evaluate(readNativeOutcomeSample,{fighterId:row.proof.fighterId,performanceBoundary:true}));
