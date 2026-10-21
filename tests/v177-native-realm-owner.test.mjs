@@ -39,7 +39,8 @@ function fixture({origin=1000000,startEvent=true,stopEvent=true,chunks=['pure-no
  const log=[],raf=new Map(),scheduled=[];let now=1000,rawOrigin=origin,paused=true,simulation=0,seq=1,reads=0,nextRaf=0,streamStops=0;
  function advanceClock(ms){
   now+=ms;if(!paused){simulation+=ms/1000;seq++;}
-  for(const [id,fn]of [...raf]){raf.delete(id);fn();}
+  const frameAt=now;
+  for(const [id,fn]of [...raf]){raf.delete(id);fn(frameAt);}
   rawOrigin++;
  }
  const sentinel=Error('Original sample transport failure'),cleanupSentinel=Error('Owner disposal failure');
@@ -134,7 +135,7 @@ function fixture({origin=1000000,startEvent=true,stopEvent=true,chunks=['pure-no
   get now(){return now;},set now(v){now=v;},get origin(){return rawOrigin;},set origin(v){rawOrigin=v;},
   get simulation(){return simulation;},get streamStops(){return streamStops;},
   advance:()=>page.waitForTimeout(120),
-  flushRaf:()=>{for(const [id,fn]of [...raf]){raf.delete(id);fn();}},
+  flushRaf:()=>{const frameAt=now;for(const [id,fn]of [...raf]){raf.delete(id);fn(frameAt);}},
   run(fn,...args){return callback(this,fn)(...args);},
   owner(){log.push('owner-create');return callback(this,createNativeAllUnitRealmOwner)();}
  };
@@ -263,14 +264,18 @@ test('RAF realm failure retains partial raw rows, cancels scheduling and cannot 
  assert.equal(result.rows.length,1);assert.match(result.realm.failure,/reference mismatch/u);assert.equal(result.realm.stopped,null);
 });
 
-test('unowned default and explicit-null Recorder/RAF keep the original receipt shape and never access owner globals',async()=>{
+test('unowned default and explicit-null Recorder/RAF keep matching receipts and never access owner globals',async()=>{
  const outputs=[];
  for(const explicitNull of [false,true]){
   const f=fixture();
   Object.defineProperty(f.globals,'document',{get(){assert.fail('Unowned path must not add Document/owner reads');}});
   const raf=f.run(startNativeGameRafObservation,{fighterId:4,...(explicitNull?{realmOwner:null}:{})});
   f.flushRaf();const rafResult=clone(f.run(stopNativeGameRafObservation,raf));
-  assert.deepEqual(Object.keys(rafResult).sort(),['timeOrigin','startedAt','stoppedAt','rows','overflow','encodedFrameCount','encodedPtsVerified','scope'].sort());
+  assert.deepEqual(Object.keys(rafResult).sort(),['timeOrigin','startedAt','stoppedAt','rows','overflow','timestampClock','observationClock','encodedFrameCount','encodedPtsVerified','scope'].sort());
+  assert.equal(rafResult.timestampClock,'native requestAnimationFrame callback');
+  assert.equal(rafResult.observationClock,'raw performance.now at callback entry and after audit');
+  assert.equal(rafResult.rows[0].at,rafResult.startedAt);
+  assert.ok(rafResult.rows[0].observedAt>rafResult.rows[0].enteredAt);
   const state=f.run(startNativeCanvasClip,f.canvas,{metadata:{form:'medic'},...(explicitNull?{realmOwner:null}:{})});
   const clip=clone(await f.run(finishNativeCanvasClip,state,{completed:true}));
   assert.deepEqual(Object.keys(clip).sort(),['schema','metadata','status','mimeType','mimePreferences','requestedMimeType',
