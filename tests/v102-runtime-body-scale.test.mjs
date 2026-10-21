@@ -11,6 +11,7 @@ import {v102BattleDisplaySize} from '../app/v102BattleScale.js';
 import {v102BattleBodyScale,v102TravelCycleDistance} from '../app/v102CombatMotion.js';
 import {v100UsesHumanWalk,v100HumanWalkCycleDistance} from '../app/v100HumanWalk.js';
 import {v177JointCycleDistance} from '../app/v177JointPresentation.js';
+import {v177GroundedStrideFactor} from '../app/v177GroundedMotion.js';
 import {mayoBattleRenderKind} from '../app/mayoLifecycle.js';
 
 const source=readFileSync(new URL('../app/AshfallGame.tsx',import.meta.url),'utf8');
@@ -35,7 +36,7 @@ function fixture(viewport,depth){
  const globals={activeStageViewportId:viewport,STAGE_VIEWPORT_IDS,COMPACT_BATTLE_SPRITE_SCALE,mugarianPresidentCompactScale,
   compactBattleViewport:()=>viewport!==STAGE_VIEWPORT_IDS.STANDARD,activeBattlefieldDepthScale:()=>depth,
   bossRenderKind:f=>f.kind,mayoBattleRenderKind,spriteFrameFor,spriteDisplaySize:spriteBattleDisplaySizeFor,fitSpriteBattleDisplaySize,
-  v102BattleDisplaySize,v102BattleBodyScale,v102TravelCycleDistance,v100UsesHumanWalk,v100HumanWalkCycleDistance,v177JointCycleDistance};
+  v102BattleDisplaySize,v102BattleBodyScale,v102TravelCycleDistance,v100UsesHumanWalk,v100HumanWalkCycleDistance,v177JointCycleDistance,v177GroundedStrideFactor};
  const code=ts.transpileModule(`${functions}\nfunction corpseSize(corpse,g){const corpseRenderKind=corpse.kind;${corpseDeclarations}\nreturn {width,height,bodyScale};}\n({compactSpriteScale,v102GoreBodyHeight,articulatedCycleDistanceFor,corpseSize})`,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
  return vm.runInNewContext(code,globals);
 }
@@ -61,7 +62,8 @@ test('actual V1 gait measures travel against the rendered body scale',()=>{
  for(const kind of spriteKinds){
   const frame=spriteFrameFor(kind,'walk-a','right'),size=v102BattleDisplaySize(kind,frame,spriteBattleDisplaySizeFor(kind));
   const scale=size.w*f.compactSpriteScale(kind)*.9*sampleAnimationClip(kind,'idle',0).bodyScale/frame.sourceRect.w;
-  const expected=v177JointCycleDistance(kind,scale)??(v100UsesHumanWalk(kind,{requestedState:'move'})?v100HumanWalkCycleDistance(kind,scale):v102TravelCycleDistance(kind,(frame.contentRect?.h??frame.sourceRect.h)*scale));
+  const joint=v177JointCycleDistance(kind,scale);
+  const expected=(joint===undefined?undefined:joint*v177GroundedStrideFactor(kind))??(v100UsesHumanWalk(kind,{requestedState:'move'})?v100HumanWalkCycleDistance(kind,scale):v102TravelCycleDistance(kind,(frame.contentRect?.h??frame.sourceRect.h)*scale));
   assert.equal(f.articulatedCycleDistanceFor({kind,y:280},true),expected,kind);
  }
 });
@@ -90,7 +92,7 @@ test('actual transformed Mayo gait and Gore size use the visible form throughout
   ]){
    const fighter={kind:'mayo-chan',manualAbility,mayoRetreat,y:280},frame=spriteFrameFor(kind,'walk-a','right'),size=v102BattleDisplaySize(kind,frame,spriteBattleDisplaySizeFor(kind));
    const scale=size.w*f.compactSpriteScale(kind)*depth*v102BattleBodyScale(kind)/frame.sourceRect.w;
-   assert.equal(f.articulatedCycleDistanceFor(fighter,true),v177JointCycleDistance(kind,scale),kind+' actual body stride');
+   assert.equal(f.articulatedCycleDistanceFor(fighter,true),v177JointCycleDistance(kind,scale)*v177GroundedStrideFactor(kind),kind+' actual body stride');
    const idle=spriteFrameFor(kind,'idle','right'),idleSize=v102BattleDisplaySize(kind,idle,spriteBattleDisplaySizeFor(kind));
    const height=(idle.contentRect?.h??idle.sourceRect.h)*idleSize.h/idle.sourceRect.h*f.compactSpriteScale(kind)*depth*v102BattleBodyScale(kind);
    assert.ok(Math.abs(f.v102GoreBodyHeight(fighter)-height)<1e-10,kind+' visible body height');

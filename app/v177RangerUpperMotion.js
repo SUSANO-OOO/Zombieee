@@ -2,7 +2,7 @@
 // existing stop-settle own its phase; no render clock or previous pose is used.
 export const V177_RANGER_CARRY = Object.freeze({
   waist:Object.freeze([232.5,228.5]),grip:Object.freeze([244,173]),
-  spineRadians:.045,weaponRelativeRadians:-.030,weaponLiftPx:3,
+  spineRadians:.045,weaponRelativeRadians:-.049,weaponLiftPx:3,
 });
 const multiply = (a,b) => [a[0]*b[0]+a[2]*b[1],a[1]*b[0]+a[3]*b[1],
   a[0]*b[2]+a[2]*b[3],a[1]*b[2]+a[3]*b[3],

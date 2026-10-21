@@ -3,6 +3,11 @@ import {orderedNativePointer} from './ordered-native-pointer.mjs';
 // Read-only observations guide ordinary UI inputs. This helper has no combat,
 // save, time, actor or result setters and does not activate a QA scenario.
 export function readNativeBattleControl(els){
+  // A known CSS selection can be read in one browser-protocol call. Keep
+  // the same first/nth selection and fresh geometry/hit test as the locator.
+  if(els&&typeof els.selector==='string'&&Number.isInteger(els.index)&&els.index>=0){
+    const selected=document.querySelectorAll(els.selector)[els.index];els=selected?[selected]:[];
+  }
   const el=els.length===1?els[0]:null;
   if(!el||el.disabled||el.getAttribute('aria-disabled')==='true')return null;
   const mark=()=>globalThis.performance?.now?.()??null;
@@ -18,12 +23,15 @@ export function readNativeBattleControl(els){
     ariaLabel:el.getAttribute('aria-label'),browserReadTimings};
 }
 
-export async function nativeBattleTap(page,locator,phases=[]){
+export async function nativeBattleTap(page,locator,phases=[],selection=null){
+  if(selection!==null&&!(typeof selection?.selector==='string'&&selection.selector.length>0
+    &&Number.isInteger(selection.index)&&selection.index>=0))throw new TypeError('Invalid native control selection');
   // Live ability buttons can disappear or become unavailable between reads.
   // Observe the current match immediately; never wait for that old owner to return.
   const observe=async name=>{
     const phase={name,startedAt:Date.now(),status:'pending'};phases.push(phase);
-    try{const state=await locator.evaluateAll(readNativeBattleControl);phase.observation=state;phase.status='completed';return state;}
+    try{const state=selection===null?await locator.evaluateAll(readNativeBattleControl)
+      :await page.evaluate(readNativeBattleControl,selection);phase.observation=state;phase.status='completed';return state;}
     catch(error){phase.status='error';phase.error=String(error);throw error;}
     finally{phase.endedAt=Date.now();}
   };

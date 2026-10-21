@@ -11,7 +11,7 @@ function fixture({ unitCard = false, covered = false, disabledAfterScroll = fals
     matches: () => unitCard,
     getBoundingClientRect: () => ({ x: 10, y: 20, width: 60, height: 30 }),
   };
-  const document = { elementFromPoint: () => ({ closest: () => covered ? {} : element }) };
+  const document = { elementFromPoint: () => ({ closest: () => covered ? {} : element }),querySelectorAll:()=>[element] };
   const locator = {
     evaluateAll: async callback => {
       calls.push("observe");
@@ -23,6 +23,7 @@ function fixture({ unitCard = false, covered = false, disabledAfterScroll = fals
     },
   };
   const page = { mouse: Object.fromEntries(["move", "down", "up"].map(name => [name, async (...args) => { calls.push([name, ...args]); }])) };
+  page.evaluate=async(callback,selection)=>{calls.push('direct-observe');return vm.runInNewContext(`(${callback.toString()})(selection)`,{document,selection});};
   return { calls, phases, element, locator, page };
 }
 
@@ -59,4 +60,18 @@ test("failed native move is recorded and never sends a later down or up", async 
   assert.equal(f.phases.at(-1).name, "move");
   assert.equal(f.phases.at(-1).status, "error");
   assert.match(f.phases.at(-1).error, /native move rejected/);
+});
+
+test('known CSS controls keep the fresh hit owner and ordered acknowledgements in one browser call',async()=>{
+  const selection={selector:'button.support-btn.medical',index:0};
+  const f=fixture();assert.equal(await nativeBattleTap(f.page,f.locator,f.phases,selection),true);
+  assert.deepEqual(f.calls,['direct-observe',['move',40,35],['down'],['up']]);
+  assert.deepEqual(f.phases.map(p=>p.name),['observe-control','move','down','up']);
+  for(const options of [{covered:true},{unitCard:true,disabledAfterScroll:true}]){
+    const blocked=fixture(options);assert.equal(await nativeBattleTap(blocked.page,blocked.locator,blocked.phases,selection),false);
+    assert.ok(blocked.calls.every(c=>!Array.isArray(c)||!['move','down','up'].includes(c[0])));
+  }
+  const missing=fixture();assert.equal(await nativeBattleTap(missing.page,missing.locator,missing.phases,{...selection,index:1}),false);
+  assert.deepEqual(missing.calls,['direct-observe']);
+  await assert.rejects(nativeBattleTap(f.page,f.locator,[],{...selection,index:-1}),/Invalid native control/);
 });

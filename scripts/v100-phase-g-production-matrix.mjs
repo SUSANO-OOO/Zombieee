@@ -4171,7 +4171,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
           await withPhaseGPageInputLock(page, async () => {
             const lockedAbility = page.locator(sustainAbilitySelector).nth(index);
             if (await lockedAbility.count().catch(() => 0)) await phaseGOrderedControlInput(page,
-              (phases) => nativeBattleTap(page, lockedAbility, phases), 500, "sustain-ability");
+              (phases) => nativeBattleTap(page, lockedAbility, phases,{selector:sustainAbilitySelector,index}), 500, "sustain-ability");
           });
           await page.waitForTimeout(85);
         }
@@ -4179,9 +4179,10 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
 
       if (proofCombatReady && !vehicleActionObserved) {
         await withPhaseGPageInputLock(page, async () => {
-          const lockedCrawler = page.locator('button.support-btn.barrage[data-state="ready"][aria-disabled="false"]').first();
+          const selector='button.support-btn.barrage[data-state="ready"][aria-disabled="false"]';
+          const lockedCrawler = page.locator(selector).first();
           if (await lockedCrawler.count().catch(() => 0)) await phaseGOrderedControlInput(page,
-            (phases) => nativeBattleTap(page, lockedCrawler, phases), 500, "sustain-barrage");
+            (phases) => nativeBattleTap(page, lockedCrawler, phases,{selector,index:0}), 500, "sustain-barrage");
         });
       }
 
@@ -4192,9 +4193,10 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
           await withPhaseGPageInputLock(page, async () => {
             const lockedCanvas = page.locator("canvas.battlefield");
             const lockedBox = await lockedCanvas.boundingBox().catch(() => null);
-            const airstrike = page.locator('button.support-btn.airstrike[data-state="ready"][aria-disabled="false"]').first();
+            const selector='button.support-btn.airstrike[data-state="ready"][aria-disabled="false"]';
+            const airstrike = page.locator(selector).first();
             if (lockedBox && await airstrike.count().catch(() => 0)) {
-              if (await phaseGOrderedControlInput(page, (phases) => nativeBattleTap(page, airstrike, phases), 500, "sustain-airstrike")) {
+              if (await phaseGOrderedControlInput(page, (phases) => nativeBattleTap(page, airstrike, phases,{selector,index:0}), 500, "sustain-airstrike")) {
                 await phaseGOrderedControlInput(page, (phases) => orderedNativePointer(page,
                   { x: lockedBox.x + lockedBox.width * .67, y: lockedBox.y + lockedBox.height * .5 }, phases), 700, "sustain-airstrike-target");
               }
@@ -4215,12 +4217,13 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         await withPhaseGPageInputLock(page, async () => {
           const lockedCanvas = page.locator("canvas.battlefield");
           const lockedBox = await lockedCanvas.boundingBox().catch(() => null);
-          const medical = page.locator('button.support-btn.medical[data-state="ready"][aria-disabled="false"]').first();
+          const selector='button.support-btn.medical[data-state="ready"][aria-disabled="false"]';
+          const medical = page.locator(selector).first();
           if (!lockedBox || !(await medical.count().catch(() => 0))) return;
           const medicalY = proofActorContactPlanPending && Number.isFinite(Number(proofActorContactState?.actorLane))
             ? (Number(proofActorContactState?.actorLane) >= 1 ? lockedBox.height * .3 : lockedBox.height * .7)
             : lockedBox.height * .5;
-          if (await phaseGOrderedControlInput(page, (phases) => nativeBattleTap(page, medical, phases), 500, "sustain-medical")) {
+          if (await phaseGOrderedControlInput(page, (phases) => nativeBattleTap(page, medical, phases,{selector,index:0}), 500, "sustain-medical")) {
             await phaseGOrderedControlInput(page, (phases) => orderedNativePointer(page,
               { x: lockedBox.x + lockedBox.width * .34, y: lockedBox.y + medicalY }, phases), 700, "sustain-medical-target");
           }

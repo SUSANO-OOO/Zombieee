@@ -39,7 +39,8 @@ test('native host control is source-pinned and never repeats unchanged formal pe
 
 test('the reviewed hammer knee repair reopens motion without repeating unchanged normal play or R9',()=>{
  const paths=['app/v177JointPresentation.js','app/v177CorpseJointPresentation.js'];
- const sourceBlobs=Object.fromEntries(paths.map(file=>[file,execFileSync('git',['hash-object',file],{encoding:'utf8',windowsHide:true}).trim()]));
+ const sourceBlobs={'app/v177JointPresentation.js':'e2e63704e18e43718fb9a332b689bc0f3c55987e',
+  'app/v177CorpseJointPresentation.js':'b339f6379b252c2687e16361004e184d3029a85b'};
  const scope=ciChangeScope(paths,{draft:true,sourceBlobs});
  assert.equal(scope.full,false);assert.equal(scope.allunit,true);
  assert.equal(scope.normal,false);assert.equal(scope.ranger,false);assert.equal(scope.r9,false);
@@ -111,7 +112,11 @@ test('the reviewed reload movement change runs native motion and normal play whi
 test('the exact reviewed human death owner runs motion and normal play without repeating unchanged R9',()=>{
  const paths=['app/AshfallGame.tsx','app/v177JointPresentation.js','app/v177HumanCorpsePresentation.js',
   'scripts/v177-native-allunit-outcomes.mjs','scripts/v177-human-corpse-contract.mjs'];
- const sourceBlobs=Object.fromEntries(paths.map(file=>[file,execFileSync('git',['hash-object',file],{encoding:'utf8',windowsHide:true}).trim()]));
+ const sourceBlobs={'app/AshfallGame.tsx':'95df06a678e2be79ec076059df910dc95c33298c',
+  'app/v177JointPresentation.js':'46309033f92f10577af7135f34d1215fa8292466',
+  'app/v177HumanCorpsePresentation.js':'0422000720875df12b57c9c721fa4c13a8317869',
+  'scripts/v177-native-allunit-outcomes.mjs':'3044d3a932b23e74eecc5e6a937aec1b5f36e7d1',
+  'scripts/v177-human-corpse-contract.mjs':'17568cb76138783d88365660e1ef04e23be26008'};
  const scope=ciChangeScope(paths,{draft:true,sourceBlobs});
  assert.equal(scope.full,false);assert.equal(scope.normal,true);assert.equal(scope.allunit,true);assert.equal(scope.r9,false);
  for(const file of paths)assert.equal(ciChangeScope(paths,{draft:true,sourceBlobs:{...sourceBlobs,[file]:'f'.repeat(40)}}).full,true);
@@ -121,7 +126,8 @@ test('the exact reviewed human death owner runs motion and normal play without r
 
 test('only the exact Souki contact repair selects normal play and motion without unrelated story capture',()=>{
  const paths=['app/AshfallGame.tsx','app/v100SoukiCollision.js'];
- const sourceBlobs=Object.fromEntries(paths.map(file=>[file,execFileSync('git',['hash-object',file],{encoding:'utf8',windowsHide:true}).trim()]));
+ const sourceBlobs={'app/AshfallGame.tsx':'95df06a678e2be79ec076059df910dc95c33298c',
+  'app/v100SoukiCollision.js':'bbb80fe0b36ff9c6ea2c37aa2d4de617be75b7be'};
  const scope=ciChangeScope(paths,{draft:true,sourceBlobs});
  assert.equal(scope.full,false);assert.equal(scope.normal,true);assert.equal(scope.allunit,true);assert.equal(scope.r9,false);
  for(const file of paths)assert.equal(ciChangeScope(paths,{draft:true,sourceBlobs:{...sourceBlobs,[file]:'f'.repeat(40)}}).full,true);
@@ -139,7 +145,8 @@ test('the exact local QA preparation change reuses unchanged normal-play evidenc
 
 test('the exact hit strength repair reruns motion and normal play while reusing unchanged story evidence',()=>{
  const paths=['app/AshfallGame.tsx','app/v177HitReaction.js'];
- const sourceBlobs=Object.fromEntries(paths.map(file=>[file,execFileSync('git',['hash-object',file],{encoding:'utf8',windowsHide:true}).trim()]));
+ const sourceBlobs={'app/AshfallGame.tsx':'95df06a678e2be79ec076059df910dc95c33298c',
+  'app/v177HitReaction.js':'6e7dc3705b3fa8ee8095c675b4046571a085e5af'};
  const scope=ciChangeScope(paths,{draft:true,sourceBlobs});
  assert.equal(scope.full,false);assert.equal(scope.normal,true);assert.equal(scope.allunit,true);assert.equal(scope.r9,false);
  for(const file of paths)assert.equal(ciChangeScope(paths,{draft:true,sourceBlobs:{...sourceBlobs,[file]:'f'.repeat(40)}}).full,true);
@@ -202,7 +209,9 @@ test('the real CLI collects the native control blob and restores full regression
 
 test('reviewed lifecycle bindings select motion/normal while unchanged story and Ranger-only observations remain reusable',()=>{
  const paths=["app/AshfallGame.tsx","app/v177JointPresentation.js","app/v177LifecyclePresentation.js"];
- const sourceBlobs=Object.fromEntries(paths.map(file=>[file,execFileSync('git',['hash-object',file],{encoding:'utf8',windowsHide:true}).trim()]));
+ const sourceBlobs={'app/AshfallGame.tsx':'36a0e8f329b34a778938d1a4fe0ee6c19c6712a6',
+  'app/v177JointPresentation.js':'05ff9ad9def6c050c29eb7f81650aca6cddc6e37',
+  'app/v177LifecyclePresentation.js':'dc13038fa0a3a9bb35f6aef0c06eca80eed4d760'};
  const result=ciChangeScope(paths,{draft:true,sourceBlobs});
  assert.equal(result.full,false);assert.equal(result.normal,true);assert.equal(result.allunit,true);assert.equal(result.r9,false);assert.equal(result.ranger,false);
  for(const file of paths)assert.equal(ciChangeScope(paths,{draft:true,sourceBlobs:{...sourceBlobs,[file]:'f'.repeat(40)}}).full,true);

@@ -135,9 +135,9 @@
       244,
       173
     ],
-    "spineRadians": 0.016,
-    "weaponRelativeRadians": -0.02,
-    "weaponLiftPx": 1
+    "spineRadians": 0.045,
+    "weaponRelativeRadians": -0.049,
+    "weaponLiftPx": 3
   },
   "generator": {
     "file": "scripts/build-v177-ranger-upper.mjs",
@@ -147,7 +147,7 @@
   },
   "carryImplementation": {
     "file": "app/v177RangerUpperMotion.js",
-    "sha256": "c0c59c76892580123e5b4d8bc5e00879ec9ccee80125e79c0664391a2a37e603"
+    "sha256": "49d92954237f3575e116c682507a32929230baa27318f0189999202ff004cc6d"
   },
   "lower": {
     "parts": [
