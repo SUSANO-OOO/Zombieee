@@ -18,7 +18,7 @@ import { drawV177RangerLower } from './v177RangerLowerPaint.js';
 import { v177RangerFootPlacement } from './v177RangerFootPlacement.js';
 import { v177PaintLocomotion } from './v177PaintLocomotion.js';
 import { applyV177GroundedMatrix, v177GroundedJointPlan, v177BlendGroundedMotion } from './v177GroundedMotion.js';
-import { v177JointActorKey } from './v177JointActorHistory.js';
+import { v177JointActorKey, v177JointBodyCorrection } from './v177JointActorHistory.js';
 import { animationClipFor, attackPresentationDuration } from './combatPresentation.js';
 import { createV177MrsNormalWeaponCycle } from './v177MrsNormalWeaponCycle.js';
 import { createV177RangerManualJoint } from './v177RangerManualJoint.js';
@@ -408,9 +408,9 @@ export function v177RangerFootPlan(kind,plan,{actor,world,width,direction}={}) {
   const atlas=V177_JOINT_ATLASES[kind],runtime=actor?.animationPresentation;
   if(kind!=='ranger'||!plan?.upperRigPlan||!atlas?.lowerRig)return plan;
   const previous=renderedJointPoses.get(v177JointActorKey(actor,world)),state=plan.rangerFeet;
-  const scale=width/atlas.width;
+  const scale=width/atlas.width,bodyCorrection=v177JointBodyCorrection(actor,world);
   const current=state&&state.time===world?.time&&state.root===actor?.x&&state.scale===scale
-    &&state.phase===runtime?.locomotionPhase;
+    &&state.phase===runtime?.locomotionPhase&&(state.bodyCorrection??0)===bodyCorrection;
   // A newly activated ability can own direction before the next simulation
   // tick updates locomotion. Its prepaint plan must survive the draw's read.
   const facing=direction===undefined&&current ? state.turnTargetFacing??state.facing
@@ -422,6 +422,7 @@ export function v177RangerFootPlan(kind,plan,{actor,world,width,direction}={}) {
     // until the existing impulse ends, then resume the original stop steps.
     moving:runtime?.moving,facing,settle:plan.lowerSettle,
     frozen:plan.reactionHeld||plan.liveStun||Math.abs(actor?.knock??0)>.1,
+    bodyCorrection,
   });
   if(!feet)return plan;
   plan={...plan,phase:feet.phase,

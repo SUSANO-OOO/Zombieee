@@ -1,4 +1,5 @@
 const worlds=new WeakMap();
+const bodyCorrections=new WeakMap();
 const objectKey=value=>value&&typeof value==='object'?value:null;
 
 function worldState(world) {
@@ -19,6 +20,20 @@ export function v177JointActorKey(actor,world) {
   let key=state.actors.get(actor.id);
   if(!key){key={};state.actors.set(actor.id,key);}
   return key;
+}
+
+// Hard collision corrections carry the existing body, rather than asking a
+// planted leg to walk through that instantaneous displacement. The receipt
+// survives Fighter copies and skipped paints, and retires with the world key.
+export function recordV177JointBodyCorrection(actor,world,deltaX) {
+  const key=v177JointActorKey(actor,world);
+  if(key&&Number.isFinite(deltaX)&&deltaX!==0)
+    bodyCorrections.set(key,(bodyCorrections.get(key)??0)+1);
+}
+
+export function v177JointBodyCorrection(actor,world) {
+  const key=v177JointActorKey(actor,world);
+  return key?bodyCorrections.get(key)??0:0;
 }
 
 export function pruneV177JointActorHistory(world) {

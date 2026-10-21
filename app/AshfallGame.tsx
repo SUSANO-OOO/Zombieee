@@ -10,7 +10,7 @@ import { combatApproachSpeed } from "./combatApproach.js";
 import { v177LivingStunState, v177LivingStunSample, v177RangerLivingStunSample } from "./v177LivingStun.js";
 import { rememberV177CorpseJointPose, pruneV177CorpseJointPoses, v177LiveJointGroundLift, v177CorpseJointPresentation, drawV177CorpseJointPresentation } from "./v177CorpseJointPresentation.js";
 import { rememberV177HumanCorpsePaint, pruneV177HumanCorpsePaints, v177HumanCorpsePresentation, drawV177HumanCorpsePaint, V177_CONTINUOUS_HUMAN_CORPSE_KINDS } from "./v177HumanCorpsePresentation.js";
-import { pruneV177JointActorHistory, v177JointActorKey } from "./v177JointActorHistory.js";
+import { pruneV177JointActorHistory, v177JointActorKey, recordV177JointBodyCorrection } from "./v177JointActorHistory.js";
 import { rememberV177HitStrength, v177HitReactionStrength, v177HitReactionState } from "./v177HitReaction.js";
 import { rememberV177TurnedCorpsePaint, rememberV177TurnedBirth, v177TurnedGetupDirection,
   v177TurnedGetupPose, readV177TurnedBirthPresentation, pruneV177TurnedCorpsePaints } from "./v177TurnedGetupPresentation.js";
@@ -23585,7 +23585,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 previousX: movementStartX,
               });
               if (barrier.blocked) {
-                f.x = Math.min(f.x, barrier.x);
+                const correctedX = Math.min(f.x, barrier.x);
+                recordV177JointBodyCorrection(f, g, correctedX - f.x);
+                f.x = correctedX;
                 if (qaBarrier
                   && qaBarrier.humanId === f.id
                   && qaBarrier.bossId === boss.id) {

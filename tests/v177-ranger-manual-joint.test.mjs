@@ -4,6 +4,7 @@ import {V177_JOINT_ATLASES,v177JointPose,v177RangerFootPlan,drawV177JointPose,v1
 import {createCombatAnimationRuntime,advanceCombatAnimationRuntime} from '../app/combatPresentation.js';
 import {v177RangerLowerPose} from '../app/v177RangerLowerMotion.js';
 import {MANUAL_ABILITY_REGISTRY,createManualAbilityRuntime,beginManualAbility,advanceManualAbility} from '../app/manualAbilities.js';
+import {recordV177JointBodyCorrection} from '../app/v177JointActorHistory.js';
 
 // Unit Canvas port exercises actual draw/history code. Its RGBA is a mock;
 // this suite does not claim original pixels, browser timing or native playback.
@@ -80,4 +81,26 @@ test('a boss shove outlasting the hit flash carries the weighted legs through th
  }
  assert.ok(heldAfterFlash>40,'the regression must actually continue after the flash ends');
  assert.deepEqual(previous.rangerFeet.feet.map(foot=>foot.height),[0,0]);
+});
+
+test('actual prepaint and weighted draw consume a boss-body receipt only through successful painted history',()=>{
+ const actor={id:9,kind:'ranger',side:'human',hp:107,x:727.0977930850744,y:285,knock:0,
+  animationPresentation:{state:'idle',locomotionPhase:29.295942071115917,locomotionSettle:1,direction:'right',moving:false}};
+ const world={time:90.69999999999614,fighters:[actor]},f={actor,world},width=86.30769230769232;
+ const resolve=(state='idle')=>v177RangerFootPlan('ranger',v177JointPose('ranger',{requestedState:state,clipProgress:.2},
+  actor.animationPresentation,{actor,world}),{actor,world,width});
+ const initial=resolve();paint(f,initial);
+ const shift=719.589367630198-actor.x;
+ recordV177JointBodyCorrection({...actor},world,shift);actor.x+=shift;world.time+=1/60;
+ actor.animationPresentation={...actor.animationPresentation,state:'start-move',moving:true,
+  locomotionPhase:28.964018806800528,locomotionSettle:1-1/60/.12};
+ const corrected=resolve('active');assert.equal(corrected.rangerFeet.bodyCorrection,1);
+ for(let i=0;i<2;i++)assert.ok(Math.abs(corrected.rangerFeet.feet[i].x-initial.rangerFeet.feet[i].x-shift)<1e-10);
+ assert.deepEqual(resolve('active'),corrected,'reading the plan cannot consume the receipt');
+ const drawn=paint(f,corrected);assert.equal(drawn.receipt.mode,'continuous-weighted-mesh');
+ assert.equal(drawn.receipt.duplicateWithinPart,0);assert.equal(drawn.receipt.degenerate,0);
+ assert.deepEqual(v177RangerFootPlan('ranger',corrected,{actor,world,width}),corrected);
+ recordV177JointBodyCorrection(actor,world,-1);
+ const samePaint=v177RangerFootPlan('ranger',corrected,{actor,world,width});
+ assert.equal(samePaint.rangerFeet.bodyCorrection,2,'a new receipt must survive even a cached prepaint at the same root/time');
 });

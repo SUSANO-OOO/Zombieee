@@ -224,21 +224,23 @@ function advance(rig,previous,input) {
 
 export function v177RangerFootPlacement(rig, previous, input) {
   if (rig.legs.length !== 2 || ![input.time, input.root, input.phase, input.scale].every(Number.isFinite) || !(input.scale > 0)) return null;
-  input = {...input, facing:direction(input.facing), paintTime:input.time};
+  input = {...input, facing:direction(input.facing), paintTime:input.time,
+    bodyCorrection:input.bodyCorrection??0};
   const {time,root,facing,scale,phase}=input;
   // A short pursuit can start and stop between two actual paints. Its source
   // gait phase still records the travel; the last tick's moving flag does not.
   // Keep following that travel until the next unchanged pose starts settling.
   const samePaint=previous&&time===previous.time&&root===previous.root
-    &&phase===previous.phase&&facing===previous.facing&&scale===previous.scale;
+    &&phase===previous.phase&&facing===previous.facing&&scale===previous.scale
+    &&input.bodyCorrection===(previous.bodyCorrection??0);
   if(previous&&!input.frozen&&time>=previous.time
     &&(Math.abs(phase-previous.phase)>1e-9||samePaint&&previous.moving))input={...input,moving:true};
   let state;
-  // A spawn/bounds correction can cover more than one authored stride before
-  // a single step could land. Carry the rigid pose with that displacement;
-  // interpolating it as walking leaves the old ankles behind the corrected body.
-  const displaced=previous&&time>=previous.time&&time-previous.time<STEP_SECONDS
-    &&Math.abs(root-previous.root)>scale*rig.spanPx/rig.stanceFraction;
+  // A hard boss-body correction has its own receipt even below one stride.
+  // Spawn/bounds corrections can also cross a whole stride before one step
+  // lands. Carry that rigid pose; walking would leave its old ankles behind.
+  const displaced=previous&&time>=previous.time&&(input.bodyCorrection!==(previous.bodyCorrection??0)
+    ||time-previous.time<STEP_SECONDS&&Math.abs(root-previous.root)>scale*rig.spanPx/rig.stanceFraction);
   if(displaced)state={...held(previous,input),requestedFacing:facing,turnTargetFacing:undefined};
   else if(previous&&input.moving&&!input.frozen&&time>=previous.time){
     // Sample crossed plant/swing boundaries even when the actual draw skips
@@ -257,5 +259,6 @@ export function v177RangerFootPlacement(rig, previous, input) {
       }
     }
   }else state=advance(rig,previous,input);
+  state={...state,bodyCorrection:input.bodyCorrection};
   return {state, phase:wrap(phase + state.offset), targets:targets(rig, state.feet, root, state.facing, scale)};
 }
