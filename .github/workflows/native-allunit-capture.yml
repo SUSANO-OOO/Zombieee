@@ -40,6 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       allunit: ${{ steps.scope.outputs.allunit }}
+      shards: ${{ steps.selection.outputs.shards }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -55,9 +56,11 @@ jobs:
           CI_SCOPE_HEAD: ${{ github.event.pull_request.head.sha || inputs.expected_head }}
           CI_SCOPE_DRAFT: ${{ github.event.pull_request.draft }}
         run: node scripts/ci-change-scope.mjs
+      - id: selection
+        run: node scripts/v177-native-allunit-selection.mjs
   build:
     needs: scope
-    if: ${{ always() && !cancelled() && (github.event_name == 'workflow_dispatch' || (needs.scope.result == 'success' && (!github.event.pull_request.draft || needs.scope.outputs.allunit == 'true'))) }}
+    if: ${{ always() && !cancelled() && (github.event_name == 'workflow_dispatch' || (needs.scope.result == 'success' && needs.scope.outputs.shards != '[]' && (!github.event.pull_request.draft || needs.scope.outputs.allunit == 'true'))) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     outputs:

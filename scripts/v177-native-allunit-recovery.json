@@ -2,10 +2,8 @@
   "schema": "v177-native-allunit-recovery/v2",
   "head": "29d4057a8a131c93893978bd29f7ddaaf67cebaf",
   "runId": "39449375661",
-  "scope": "Retain578 source-bound records (431 normal,144 outcome,3 manual), including8 Brute clips at2746 and3 atfcc. Recheck only Brute attack1280x720 encoded319ms gap. Exact same native1.63.0/VP8/ARM,120ms scheduling,15samples,freeRAF,250ms density and original deadlines. Explicit one-case ephemeral indexing control is diagnostic only; record and restore original state before upload. Formal e5ea fixed30s six windows19..29ms are retained; Intel failures and older normal-recording failures stay unchanged. No publication.",
-  "caseIds": [
-    "forms-2:brute:attack:1280x720"
-  ],
+  "scope": "All579 source-bound native records retained (432 normal,144 outcome,3 manual). Brute12 new windows:8 at2746,3 atfcc and final desktop attack at723 with original VP8/ARM/120ms15samples/freeRAF/deadlines. Last encoded/source max233/174ms pass existing250ms density, complete1x review done and original host indexing restored before upload. Native host control remains diagnostic; no causal or33ms native claim. Formal e5ea six30s windows19..29ms retained separately. Old failures/recordings remain unchanged. Empty exact Draft selection skips recapture; Ready/unknown source restores full. No publication or whole-product acceptance.",
+  "caseIds": [],
   "manualCaseIds": [],
   "outcomeCaseIds": [],
   "affectedDeathForms": [
@@ -716,7 +714,8 @@
       "forms-2:brute:engage:844x340",
       "forms-2:brute:move:1280x720",
       "forms-2:brute:engage:1280x720",
-      "forms-2:brute:engage:844x390"
+      "forms-2:brute:engage:844x390",
+      "forms-2:brute:attack:1280x720"
     ],
     "manualCaseIds": [
       "forms-1:ranger:ranger-manual-precision:844x390",
@@ -1380,6 +1379,18 @@
           "forms-2:brute:engage:844x390"
         ],
         "outcomeCaseIds": []
+      },
+      {
+        "shard": "forms-2",
+        "head": "7236938bbd83177e17f5e56b04b6bb24f7c4ce33",
+        "runId": "39597715479",
+        "sha256": "ca5c72b3a88738b5270dea05aca053aacb649530eac79d8e7ad2287eaa1a5fa2",
+        "validationSha256": "4f69e954e4360055188b51484570af84492a5eef95a2092a2abe89d5412ffcb4",
+        "motionReviewSha256": "fd0e7a6b2b7c911f01dedb897f114b9918cab53a8630c67b83d90ea29954affd",
+        "caseIds": [
+          "forms-2:brute:attack:1280x720"
+        ],
+        "outcomeCaseIds": []
       }
     ],
     "retainedClipIndexSha256": "eebd690f9be3a2b2bfaef06a6f2cd49426120b58020bd3813880af93dad034c6",
@@ -1391,13 +1402,15 @@
       "unconnectedStates": 0,
       "newLifecycleReviewSha256": "8eb224414c0ba83327472645bf9f3071c2a42f04faf3058fe9581f2e0fb5e1f5",
       "all1008Accepted": false,
-      "currentExceptions": [
-        "Brute:11 fresh clips retained; desktop attack319ms encoded gap remains unaccepted. Original inventories are immutable history."
-      ]
+      "currentExceptions": []
+    },
+    "motionReviewClarification": {
+      "file": "outputs/motion-review/brute-outcome-clarification-r122.json",
+      "sha256": "92f0ac7a6bf17fe9cd12b0bedff37e5ffd5439aa7aa44870e90e5c2044ed1676"
     }
   },
   "changedBlobs": {
-    ".github/workflows/native-allunit-capture.yml": "4123bfc20c10e0d60c158b1e3789e1b56854b132",
+    ".github/workflows/native-allunit-capture.yml": "8aad266832b3c32e216e1e4548f8fb6438281e01",
     ".github/workflows/native-game-capture.yml": "51b34503defe778ea55384712a2b77dc60070df8",
     "app/AshfallGame.tsx": "4445d531b03a44a1147a3ae44d74a8e869d7ba37",
     "app/combatPresentation.js": "327c7a1dd55707c16385d01d28030a37dc4b27c7",
@@ -1414,7 +1427,7 @@
     "scripts/v177-native-allunit-outcomes.mjs": "12e9ee396cc426db1a46d942de515c14a54b774b",
     "scripts/v177-native-allunit-ranger-manual-contract.mjs": "69e4ccc8482ad55313d0dcf8c27617b230283416",
     "scripts/v177-native-allunit-ranger-manual.mjs": "6f53d3a7c40c1855a82d91077092c59e18ae9edd",
-    "scripts/v177-native-allunit-selection.mjs": "2e31e5ab4f9bb1d6e536c3e2ca0c811f01e11b31",
+    "scripts/v177-native-allunit-selection.mjs": "76da51b9096d7b70249a5806fff7d21129da1929",
     "scripts/v177-native-game-capture-browser.mjs": "6315f3f7167b3b09ff999b3553c80b48ced35d73",
     "scripts/v177-normal-audio-unlock-observation.mjs": "89f90b9fbb1f27bf2dc409955279ed560293b5b3",
     "tests/ci-change-scope.test.mjs": "622291aab65cfc48d26709c3d6d4c0a353c6a3fa",
@@ -1428,8 +1441,8 @@
     "tests/v177-human-corpse-continuity.test.mjs": "90b95350cf0d87e01b465d6c3b2d21ac39799615",
     "tests/v177-native-allunit-outcomes.test.mjs": "7c88ebc7d060e8358c5ffe84abc4d5f1fa0ff9ce",
     "tests/v177-native-allunit-ranger-manual.test.mjs": "f5647dda7b18351f7d3f8d4ef8453b275d6a46d3",
-    "tests/v177-native-allunit-selection.test.mjs": "0f1b1f561ef3a0e9983d9de1bf8547aa5c6763b4",
-    "tests/v177-native-allunit.test.mjs": "e817247bdc7530599ad22baa835b08fd95bd2763",
+    "tests/v177-native-allunit-selection.test.mjs": "4fe9b4231ca570d14bc38fd415e874c07c75b267",
+    "tests/v177-native-allunit.test.mjs": "3592211f433d73eff7e07ccb3f5a8960b808e123",
     "tests/v177-native-game-capture.test.mjs": "2166b7f9734991a7cd54331a9243cb9844391fea",
     "tests/v177-native-setup-overlap.test.mjs": "a5ef98038a7f2e2ffb1591bd0ca21be066f63a79",
     "tests/v177-normal-audio-unlock-observation.test.mjs": "e8aae8c9a79c91071b7d2cd65e5c602eba63087a",
@@ -1443,7 +1456,7 @@
     "scripts/v177-reaction-render-contract.mjs": "fb84ffd008b65864539c914c84a0f9b910c9acd7",
     "tests/v177-native-frame-timing.test.mjs": "0b0bdcb3a53647e9a65fc788456151c6d4492b39",
     ".github/workflows/ci.yml": "1757ef05af6ceff181b3be7002c5a36f3f4fb8eb",
-    "docs/PROJECT_STATE.md": "2e86a5bb98a36d581558065244a863b63ab17a8d",
+    "docs/PROJECT_STATE.md": "dcdb8df5baf1dd74dd3622874795cee0993b62eb",
     "app/v177CorpseJointPresentation.js": "b339f6379b252c2687e16361004e184d3029a85b",
     "scripts/v100-device-runtime-browser.mjs": "cf52c7e2ebbde19fafdf50920c0186921f900aa8",
     "tests/v177-corpse-joint-presentation.test.mjs": "e172e7395cadd3e27c8e71dcde6b5e4cbbc2aec0",
@@ -1572,14 +1585,21 @@
       }
     ]
   },
-  "reopenedVisualCases": [
+  "reopenedVisualCases": [],
+  "resolvedVisualCases": [
     {
       "caseId": "forms-2:brute:attack:1280x720",
       "sourceHead": "fcc18640e3f7844c574b6865dae0e32aa2a05c73",
       "sourceSha256": "675bb79b50992b0975c3bf5621476b2bb3733304af8fc56b606a0753c449772c",
       "maxEncodedGapMs": 319,
       "maxSourceGapMs": 217,
-      "reason": "Original encoded319ms gap remains unaccepted. Native-only ephemeral indexing control is one diagnostic variable; no causal or performance acceptance."
+      "reason": "Original encoded319ms gap remains unaccepted. Native-only ephemeral indexing control is one diagnostic variable; no causal or performance acceptance.",
+      "resolvedBy": {
+        "head": "7236938bbd83177e17f5e56b04b6bb24f7c4ce33",
+        "runId": "39597715479",
+        "sha256": "4c824ea7f38b6d5a68f09de8e4e81dc34743cc33e85acb68d365de98e4b7c121",
+        "motionReviewSha256": "fd0e7a6b2b7c911f01dedb897f114b9918cab53a8630c67b83d90ea29954affd"
+      }
     }
   ]
 }

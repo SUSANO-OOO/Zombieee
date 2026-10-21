@@ -68,7 +68,7 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
   const selection=nativeCaseSelection({event});
   assert.ok(process.env.GITHUB_OUTPUT);
   appendFileSync(process.env.GITHUB_OUTPUT,'shards='+JSON.stringify(selection.shards)+'\n');
-  const nativeHostControl=selection.mode==='remaining'&&selection.caseIds.length===1
+  const nativeHostControl=event.pull_request?.draft===true&&selection.mode==='remaining'&&selection.caseIds.length===1
     &&selection.caseIds[0]==='forms-2:brute:attack:1280x720'&&selection.outcomeCaseIds.length===0
     &&selection.manualCaseIds.length===0?'brute-attack-1280':'none';
   appendFileSync(process.env.GITHUB_OUTPUT,'native_host_control='+nativeHostControl+'\n');

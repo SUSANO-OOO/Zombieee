@@ -402,6 +402,9 @@ test('workflow keeps exact head, independent twelve shards and original owned bu
   assert.equal(workflow.jobs.capture.strategy.matrix.shard,'${{ fromJSON(needs.build.outputs.shards) }}');
   assert.equal(workflow.jobs.capture.strategy['fail-fast'],false);assert.equal(workflow.jobs.capture['timeout-minutes'],15);
   assert.equal(workflow.jobs.build['timeout-minutes'],15);assert.equal(workflow.jobs.capture.needs,'build');
+  assert.ok(workflow.jobs.scope.steps.some(s=>s.id==='selection'&&s.run==='node scripts/v177-native-allunit-selection.mjs'));
+  assert.ok(workflow.jobs.build.if.includes("needs.scope.outputs.shards != '[]'"),
+    'An exact empty retained selection must not repeat build and native recording; Ready/unknown selection remains full');
   assert.equal(workflow.jobs.build.steps[0].with.ref,'${{ github.event.pull_request.head.sha || inputs.expected_head }}');
   assert.equal(workflow.jobs.build.steps[0].with['persist-credentials'],false);
   assert.equal(workflow.jobs.capture.env.V177_EXPECTED_BUILD_SHA256,'${{ needs.build.outputs.dist_sha256 }}');
