@@ -17,6 +17,7 @@ import { v177RangerLowerBob } from './v177RangerLowerMotion.js';
 import { drawV177RangerLower } from './v177RangerLowerPaint.js';
 import { v177RangerFootPlacement } from './v177RangerFootPlacement.js';
 import { v177PaintLocomotion } from './v177PaintLocomotion.js';
+import { applyV177GroundedMatrix, v177GroundedJointPlan, v177BlendGroundedMotion } from './v177GroundedMotion.js';
 import { v177JointActorKey } from './v177JointActorHistory.js';
 import { animationClipFor, attackPresentationDuration } from './combatPresentation.js';
 import { createV177MrsNormalWeaponCycle } from './v177MrsNormalWeaponCycle.js';
@@ -58,7 +59,7 @@ const rangerManualJoint=createV177RangerManualJoint({
 });
 
 const futagoAbilityJoint=createV177FutagoAbilityJoint({
-  normalPlan:(kind,sample,runtime)=>v177JointPose(kind,sample,runtime),
+  normalPlan:(kind,sample,runtime)=>v177JointPose(kind,sample,runtime,{grounded:true}),
   capturePose:captureStatusJoints,blendPose:blendCapturedJoints,
 });
 
@@ -69,7 +70,29 @@ export function v177JointCycleDistance(kind, renderScale) {
     ? cycleDistance / (atlas.referenceFrame?.scale??1) * renderScale : undefined;
 }
 
-export function v177JointPose(kind, sample, runtime, { ownedPose=false,actor,world,stunRemaining=0,rangerManualOwner=false,rangerManualDefinition,futagoAbilityOwner=false,futagoAbilityTuning }={}) {
+export function v177GroundedJointPose(kind,source,sample,runtime){
+  const atlas=V177_JOINT_ATLASES[kind],plan=v177GroundedJointPlan(kind,atlas,source,sample,runtime);
+  if(!plan?.groundedMotion)return plan;
+  // Transfer the hips over the planted feet without extending source bones.
+  // Intersect every leg's reachable vertical interval; never move a plant to
+  // hide an unreachable pose or fall back to disconnected limb matrices.
+  const parent=new Float64Array(6),foot=new Float64Array(6);
+  let lo=-Infinity,hi=Infinity;
+  for(const leg of atlas.legConstraints??[]){
+    interpolatedMatrix(parent,atlas,plan,leg.parentBone,leg.parentUpper!==false);
+    interpolatedMatrix(foot,atlas,plan,leg.effectorBone,false);
+    const [hx,hy]=matrixPoint(parent,leg.hip),[fx,fy]=matrixPoint(foot,leg.ankle);
+    const reach=Math.hypot(leg.knee[0]-leg.hip[0],leg.knee[1]-leg.hip[1])
+      +Math.hypot(leg.ankle[0]-leg.knee[0],leg.ankle[1]-leg.knee[1])-.001;
+    const vertical=Math.sqrt(Math.max(0,reach*reach-(fx-hx)*(fx-hx)));
+    lo=Math.max(lo,fy-hy-vertical);hi=Math.min(hi,fy-hy+vertical);
+  }
+  if(lo<=hi){const dy=Math.max(lo,Math.min(hi,0));
+    plan.groundedMotion.lower[5]+=dy;plan.groundedMotion.upper[5]+=dy;}
+  return plan;
+}
+
+export function v177JointPose(kind, sample, runtime, { grounded=false,ownedPose=false,actor,world,stunRemaining=0,rangerManualOwner=false,rangerManualDefinition,futagoAbilityOwner=false,futagoAbilityTuning }={}) {
   const actualActor=actor;
   actor=v177JointActorKey(actor,world);
   const atlas = V177_JOINT_ATLASES[kind];
@@ -90,7 +113,7 @@ export function v177JointPose(kind, sample, runtime, { ownedPose=false,actor,wor
   const state=sample?.requestedState;
   if(state==='incapacitated')return kind==='ranger'&&atlas.upperRig
     ? rangerLivingStunJointPose(kind,atlas,runtime,actor,stunRemaining)
-    : livingStunJointPose(kind,atlas,runtime,actor,stunRemaining);
+    : livingStunJointPose(kind,atlas,runtime,actor,stunRemaining,grounded);
   if(actorKey(actor))livingStunPoses.delete(actor);
   if(hitStates.has(state)) {
     const previous=actorKey(actor) ? renderedJointPoses.get(actor) : null;
@@ -98,9 +121,10 @@ export function v177JointPose(kind, sample, runtime, { ownedPose=false,actor,wor
     // The existing rigid recoil still moves the body. Keep its last painted
     // feet, head and weapon instead of snapping to a different static hit row.
     const paintLocomotion=previous.plan.paintLocomotion;
-    return {...previous.plan,reactionHeld:true,...(paintLocomotion?{
+    const held={...previous.plan,reactionHeld:true,...(paintLocomotion?{
       paintLocomotion:v177PaintLocomotion(runtime,paintLocomotion,{time:world?.time,x:actualActor?.x,held:true}),
     }:{})};
+    return grounded?v177GroundedJointPose(kind,held,sample,runtime):held;
   }
   if (!locomotionStates.has(state) && !attackStates.has(state) && !recoveryStates.has(state)) {
     rememberRenderedJointPose(actor,kind,null); return null;
@@ -153,8 +177,9 @@ export function v177JointPose(kind, sample, runtime, { ownedPose=false,actor,wor
       const pullback=v177FirearmWeaponPullback(kind,sample);
       if(pullback)plan.firearmWeaponPullback=pullback;
     }
+    const painted=grounded?v177GroundedJointPose(kind,plan,sample,runtime):plan;
     return kind==='mrs-chiha'&&sample?.mrsNormalWeaponCycle
-      ? mrsNormalWeaponCycle.plan(kind,sample,plan,atlas) : plan;
+      ? mrsNormalWeaponCycle.plan(kind,sample,painted,atlas) : painted;
   }
   const upperIndex=atlas.lowerCount+(attackPhase===null ? 0 : 1+Math.round(attackPhase*atlas.frameCount));
   const plan={lowerIndex,upperIndex,phase,settleIndex,attackPhase,
@@ -280,7 +305,9 @@ function returnPaintedJoints(atlas,entry,neutral,progress) {
     const frame=attackPhase*atlas.frameCount,index=Math.floor(frame);
     const returning={...neutral,attackPhase,upperIndex:attackBase+index,
       upperNextIndex:attackBase+Math.min(atlas.frameCount,index+1),upperBlend:frame-index,
-      upperOffsetY:entry.sourcePlan.upperOffsetY+(neutral.upperOffsetY-entry.sourcePlan.upperOffsetY)*progress};
+      upperOffsetY:entry.sourcePlan.upperOffsetY+(neutral.upperOffsetY-entry.sourcePlan.upperOffsetY)*progress,
+      firearmWeaponPullback:(entry.sourcePlan.firearmWeaponPullback??0)*(1-smooth(progress)),
+      groundedMotion:v177BlendGroundedMotion(entry.sourcePlan.groundedMotion,neutral.groundedMotion,progress)};
     const source=captureStatusJoints(atlas,returning);
     pose.upper=progress<=.7 ? source.upper
       : blendCapturedJoints(atlas,source,target,smooth((progress-.7)/.3)).upper;
@@ -350,7 +377,7 @@ function rangerLivingStunJointPose(kind,atlas,runtime,actor,remaining) {
     liveStun:true,rangerStunUpperPose:upper,rangerStunUpperTransform:transform,stunElapsed:elapsed,stunRemaining:remaining};
 }
 
-function livingStunJointPose(kind,atlas,runtime,actor,remaining) {
+function livingStunJointPose(kind,atlas,runtime,actor,remaining,grounded=false) {
   const key=actorKey(actor),previous=key?renderedJointPoses.get(key):null;
   if(atlas.type!=='rigid-parts'||!(remaining>0)||previous?.kind!==kind){
     rememberRenderedJointPose(actor,kind,null);return null;
@@ -365,7 +392,7 @@ function livingStunJointPose(kind,atlas,runtime,actor,remaining) {
       sourcePlan:previous.plan.stunReturnPlan??previous.plan};
     livingStunPoses.set(key,entry);
   }
-  const neutral=v177JointPose(kind,{requestedState:'idle'},runtime);
+  const neutral=v177JointPose(kind,{requestedState:'idle'},runtime,{grounded});
   const elapsed=Math.max(0,clock-entry.clock),exitWindow=Math.min(.12,entry.remaining);
   const progress=1-(1-smooth(elapsed/.12))*smooth(remaining/exitWindow);
   const amplitude=smooth(elapsed/.1)*smooth(remaining/.1);
@@ -481,10 +508,10 @@ export function drawV177JointPose(ctx, image, kind, plan, x, y, width, height, {
 
 // Interpolate rigid transforms, rather than matrix coefficients that shorten
 // limbs between samples. The actual Blender root travel was removed by bake.
-function interpolatedMatrix(out,atlas,plan,bone,upper,applyUpperOffset=true){
+function interpolatedMatrix(out,atlas,plan,bone,upper,applyUpperOffset=true,applyGrounded=true){
   const attachment=atlas.parentAttachments?.[bone];let anchorX,anchorY;
   if(attachment){
-    interpolatedMatrix(out,atlas,plan,attachment.parent,upper,false);
+    interpolatedMatrix(out,atlas,plan,attachment.parent,upper,false,false);
     const [px,py]=attachment.pivot;
     anchorX=out[0]*px+out[2]*py+out[4];anchorY=out[1]*px+out[3]*py+out[5];
   }
@@ -548,7 +575,7 @@ function interpolatedMatrix(out,atlas,plan,bone,upper,applyUpperOffset=true){
     }
   }
   if(applyUpperOffset&&upper&&plan.attackPhase!==null)out[5]+=plan.upperOffsetY;
-  return out;
+  return applyGrounded?applyV177GroundedMatrix(out,plan,bone,upper):out;
 }
 
 // Resolve authored two-bone chains against the same interpolated endpoints.

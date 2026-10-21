@@ -5,6 +5,8 @@ import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
 import { v100BasePresentationFor } from "./v100BasePresentation.js";
 import { createV100HumanWalkRenderer, v100HumanWalkPhase, v100UsesHumanWalk, v100HumanWalkCycleDistance, v100HumanWalkFrame } from "./v100HumanWalk.js";
 import { V177_JOINT_ATLASES, v177JointCycleDistance, v177JointPose, v177RangerFootPlan, drawV177JointPose, v177CaptureJointPose, v177RenderedJointWeaponSocket, v177RenderedWeightedLowerReceipt } from "./v177JointPresentation.js";
+import { v177GroundedStrideFactor } from "./v177GroundedMotion.js";
+import { combatApproachSpeed } from "./combatApproach.js";
 import { v177LivingStunState, v177LivingStunSample, v177RangerLivingStunSample } from "./v177LivingStun.js";
 import { rememberV177CorpseJointPose, pruneV177CorpseJointPoses, v177LiveJointGroundLift, v177CorpseJointPresentation, drawV177CorpseJointPresentation } from "./v177CorpseJointPresentation.js";
 import { rememberV177HumanCorpsePaint, pruneV177HumanCorpsePaints, v177HumanCorpsePresentation, drawV177HumanCorpsePaint, V177_CONTINUOUS_HUMAN_CORPSE_KINDS } from "./v177HumanCorpsePresentation.js";
@@ -3967,7 +3969,8 @@ function articulatedCycleDistanceFor(fighter: Fighter,v100=false) {
   const kind=mayoBattleRenderKind(fighter)??bossRenderKind(fighter),frame=spriteFrameFor(kind,'walk-a','right');
   const size=v102BattleDisplaySize(kind,frame,spriteDisplaySize(kind));
   const scale=size.w*compactSpriteScale(kind)*activeBattlefieldDepthScale(fighter.y)*v102BattleBodyScale(kind)/frame.sourceRect.w;
-  return v177JointCycleDistance(kind,scale) ?? (v100UsesHumanWalk(kind, { requestedState: 'move' })
+  const jointDistance=v177JointCycleDistance(kind,scale);
+  return (jointDistance===undefined?undefined:jointDistance*v177GroundedStrideFactor(kind)) ?? (v100UsesHumanWalk(kind, { requestedState: 'move' })
     ? v100HumanWalkCycleDistance(kind,scale)
     : v102TravelCycleDistance(kind,(frame.contentRect?.h??frame.sourceRect.h)*scale));
 }
@@ -4491,7 +4494,7 @@ function drawSpriteFighter(
     ? v177PaisenPhotoComboJointPose(f, MANUAL_ABILITY_REGISTRY.brawler) : null;
   let jointPose = options.v100AuthoredPresentation && jointImage?.naturalWidth
     ? photoComboJointPose ?? v177TurnedGetupPose(options.world,f,{ownedPose:authoredPoseOwned})
-      ?? v177JointPose(renderKind,animationSample,f.animationPresentation,{ownedPose:authoredPoseOwned,actor:f,world:options.world,stunRemaining:f.stunned,
+      ?? v177JointPose(renderKind,animationSample,f.animationPresentation,{grounded:true,ownedPose:authoredPoseOwned,actor:f,world:options.world,stunRemaining:f.stunned,
         rangerManualOwner:manualAbilityActive&&renderKind==="ranger"&&!Boolean(supportManualPose||advancedManualPose||kumaGuardArtPose||guardianGuardPose||takuyaSlamPose),
         rangerManualDefinition:MANUAL_ABILITY_REGISTRY.ranger,
         futagoAbilityOwner:f.kind==="futago"&&Boolean(f.v100TwinPart)&&["warning","active","recovery"].includes(f.stationAbility.phase)
@@ -13333,14 +13336,17 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         if (!loaded?.naturalWidth) throw new Error(`Unit render proof asset did not decode: ${kind}`);
         return { kind, path, width: loaded.naturalWidth, height: loaded.naturalHeight, reused: false };
       },
-      getEnemyFacingRuntimeAudit: (fighterId: number, options: { latestDrawOnly?: boolean } = {}) => {
+      getEnemyFacingRuntimeAudit: (fighterId: number, options: { latestDrawOnly?: boolean; includeGeometry?:boolean } = {}) => {
         if (options?.latestDrawOnly === true) {
           // Keep observing the actual last paint after the living actor moves
           // into its corpse owner, without copying either complete history.
           const live = fighterRenderAuditHistory.get(fighterId)?.at(-1);
           const dead = corpseRenderAuditHistory.get(fighterId)?.at(-1);
           const draw = !live ? dead : !dead ? live : dead.renderSequence > live.renderSequence ? dead : live;
-          return { renderHistory: draw ? [{ renderSequence: draw.renderSequence, renderKind: draw.renderKind }] : [] };
+          return { renderHistory: draw ? [{ renderSequence: draw.renderSequence, renderKind: draw.renderKind,
+            ...(options.includeGeometry?{x:draw.x,y:draw.y,renderWidth:draw.renderWidth,renderHeight:draw.renderHeight,
+              requestedState:draw.requestedState,articulatedWalkPhase:draw.articulatedWalkPhase,jointPaintedAt:draw.jointPaintedAt}:{}),
+          }] : [] };
         }
         const g = gameRef.current;
         const fighter = g.fighters.find((candidate) => candidate.id === fighterId) ?? null;
@@ -22442,7 +22448,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               }
             } else {
               const stopX = objectTarget.x + stoppingDistance;
-              f.x = Math.max(stopX, f.x - f.speed * enemyControlSpeedMultiplier * dt);
+              f.x = Math.max(stopX, f.x - combatApproachSpeed(f.speed * enemyControlSpeedMultiplier,f.x-stopX) * dt);
               const routeY = activeLaneCenters[f.navigationRecovery.recoveryLane ?? f.anchorLane ?? f.lane];
               const dy = routeY - f.y;
               if (Math.abs(dy) > 2) f.y += Math.sign(dy) * Math.min(Math.abs(dy), f.laneSpeed * enemyControlSpeedMultiplier * dt);
@@ -23464,7 +23470,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             const stoppingDistance = Math.max(18, f.range + target.bodyRadius * .55);
             const desiredX = allyIntent?.destinationX ?? (target.x - Math.sign(dx || 1) * stoppingDistance);
             if (Math.abs(desiredX - f.x) > 2) {
-              f.x += Math.sign(desiredX - f.x) * Math.min(Math.abs(desiredX - f.x), humanMovementSpeed * dt);
+              f.x += Math.sign(desiredX - f.x) * Math.min(Math.abs(desiredX - f.x), combatApproachSpeed(humanMovementSpeed,desiredX-f.x) * dt);
               f.x = Math.max(humanMinX, Math.min(humanMaxX, f.x));
             }
             const destinationLane = (f.navigationRecovery.recoveryLane ?? (f.range > 64
@@ -23485,7 +23491,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             f.lane = laneStep.lane as Lane;
           } else if (target && f.side === "zombie") {
             // The CRAWLER remains the objective: enemies advance on their route and only stop for a physical blocker.
-            f.x = advanceZombieX({ enemyX: f.x, speed: f.speed * enemyControlSpeedMultiplier, seconds: dt, burning: false, targetFloor: zombieTargetFloor });
+            f.x = advanceZombieX({ enemyX: f.x, speed: combatApproachSpeed(f.speed * enemyControlSpeedMultiplier,Math.max(0,distance-normalAttackReach(f,target))), seconds: dt, burning: false, targetFloor: zombieTargetFloor });
             f.aiMoveDirection = Math.sign(f.x - movementStartX);
             const routeY = activeLaneCenters[f.navigationRecovery.recoveryLane ?? f.anchorLane ?? f.lane];
             const dy = routeY - f.y;
@@ -23496,7 +23502,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             if (f.side === "human") {
               const desiredX = allyIntent?.destinationX ?? f.x;
               if (Math.abs(desiredX - f.x) > 2) {
-                f.x += Math.sign(desiredX - f.x) * Math.min(Math.abs(desiredX - f.x), humanMovementSpeed * dt);
+                f.x += Math.sign(desiredX - f.x) * Math.min(Math.abs(desiredX - f.x), combatApproachSpeed(humanMovementSpeed,desiredX-f.x) * dt);
                 f.x = Math.max(humanMinX, Math.min(humanMaxX, f.x));
               }
               const laneStep = advanceTowardLane({
@@ -23512,7 +23518,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               f.y = laneStep.y;
               f.lane = laneStep.lane as Lane;
             } else {
-              f.x = advanceZombieX({ enemyX: f.x, speed: f.speed * enemyControlSpeedMultiplier, seconds: dt, burning: false });
+              f.x = advanceZombieX({ enemyX: f.x, speed: combatApproachSpeed(f.speed * enemyControlSpeedMultiplier,BASE_X-f.x), seconds: dt, burning: false });
               f.aiMoveDirection = Math.sign(f.x - movementStartX);
             }
             if (f.side === "zombie" && f.anchorLane !== null) {

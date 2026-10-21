@@ -192,7 +192,7 @@ test('getup terminal paint tends to the same source ready, then original status 
   for(const angle of [-1.57,1.57]) {
     const {world,actor}=fixture({angle}),r=contexts()[0],runtime={locomotionPhase:0,locomotionSettle:1};
     actor.spawnGrace=.75e-9;const last=v177TurnedGetupPose(world,actor);trace('turned',last,r,actor,world);
-    actor.spawnGrace=0;const ready=v177JointPose('turned',{requestedState:'idle'},runtime,{actor,world});
+    actor.spawnGrace=0;const ready=v177JointPose('turned',{requestedState:'idle'},runtime,{grounded:true,actor,world});
     const a=v177CaptureJointPose('turned',last),b=v177CaptureJointPose('turned',ready);
     for(const part of atlases.turned.parts)for(let j=0;j<6;j++)assert.ok(Math.abs(a[part.upper?'upper':'lower'][part.bone][j]-b[part.upper?'upper':'lower'][part.bone][j])<1e-9);
     const move=v177JointPose('turned',{requestedState:'move'},{locomotionPhase:.12,locomotionSettle:.2},{actor,world});
@@ -209,7 +209,7 @@ test('the rise lands into the current nonzero gait and settled lift in actual wo
     for(const phase of [-.044,-.004,0,.004,.044,.25,.5,.75])for(const settle of [0,.3125,1]) {
       actor.animationPresentation={...actor.animationPresentation,locomotionPhase:phase,locomotionSettle:settle};
       const before=JSON.stringify(actor.animationPresentation);actor.spawnGrace=.75e-9;
-      const rising=v177TurnedGetupPose(world,actor),ordinary=v177JointPose('turned',{requestedState:'idle'},actor.animationPresentation);
+      const rising=v177TurnedGetupPose(world,actor),ordinary=v177JointPose('turned',{requestedState:'idle'},actor.animationPresentation,{grounded:true});
       assert.equal(rising.phase,ordinary.phase);assert.equal(rising.settleIndex,ordinary.settleIndex);
       for(const r of rows) {
         const floor=r.y+5;

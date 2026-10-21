@@ -38,7 +38,8 @@ export function configureV177ContinuousActorProof(actor,target,{form,phase,lane,
   actor.x=actor.side==='human'?330:620;
   // Let longer-range weapons be seen instead of hiding the arm and muzzle
   // behind a target placed within 40px of every body. Melee spacing is retained.
-  const attackDistance=actor.range>80?actor.range*.8:Math.max(12,Math.min(40,actor.range*.45));
+  const attackDistance=actor.range>80?actor.range*.8:typeof attackReachFor==='function'
+    ?Math.max(12,attackReachFor(reachActor,target)-2):Math.max(12,Math.min(40,actor.range*.45));
   target.x=phase==='move'?(actor.side==='human'?900:250):actor.x+sign*(phase==='engage'?engagementReach+approachDistance:attackDistance);
   for(const fighter of [actor,target]){
     fighter.y=laneY;fighter.lane=lane;fighter.anchorLane=lane;

@@ -37,5 +37,5 @@ export function v177PaisenPhotoComboJointPose(owner, definition) {
   if (owner?.kind !== 'brawler' || !v100BrawlerCanAct(owner)
     || V177_JOINT_ATLASES.brawler?.path !== PHOTO_PATH) return null;
   const sample = v177PaisenPhotoComboSample(owner.manualAbility, definition);
-  return sample ? v177JointPose('brawler', sample, owner.animationPresentation) : null;
+  return sample ? v177JointPose('brawler', sample, owner.animationPresentation,{grounded:true}) : null;
 }

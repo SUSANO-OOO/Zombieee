@@ -28,7 +28,7 @@ function fixture(part='a',{state='move',progress=.3}={}) {
   const runtime={state,elapsedSeconds:0,transitionCount:0,locomotionPhase:.137,locomotionSettle:.4};
   actor.animationPresentation=runtime;
   const f={actor,runtime,kind:'futago-separated-'+part,world:{time:0,fighters:[actor]}};
-  f.previous=draw(f,v177JointPose(f.kind,{requestedState:state,clipProgress:progress},runtime,{actor,world:f.world}));
+  f.previous=draw(f,v177JointPose(f.kind,{requestedState:state,clipProgress:progress},runtime,{grounded:true,actor,world:f.world}));
   const begun=beginBossAnomalyAbility({boss:actor,candidates:[{id:3,kind:'guardian',side:'human',hp:100,x:400,y:282,lane:1}]});
   assert.equal(begun.ok,true);actor.stationAbility=begun.runtime;return f;
 }
@@ -40,7 +40,7 @@ function advance(f,dt) {
   return result.events;
 }
 function plan(f,extra={}) {
-  return v177JointPose(f.kind,{requestedState:'idle'},f.runtime,{actor:f.actor,world:f.world,
+  return v177JointPose(f.kind,{requestedState:'idle'},f.runtime,{grounded:true,actor:f.actor,world:f.world,
     ownedPose:f.actor.stationAbility.phase!=='idle',futagoAbilityOwner:f.actor.stationAbility.phase!=='idle',
     futagoAbilityTuning:tuning,...extra});
 }

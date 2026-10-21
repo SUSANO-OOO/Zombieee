@@ -122,7 +122,7 @@ export function v177TurnedGetupPose(world,actor,{ownedPose=false}={}) {
   const amplitude=reactionAmplitude(world,actor),rising=samplePose(progress,birth.variant,{reactionAmplitude:amplitude});
   // Knockback can advance the existing gait while AI is still rise-locked.
   // Land into its current phase and settled lift, without resetting either.
-  const landingPlan=v177JointPose('turned',{requestedState:'idle'},actor.animationPresentation);
+  const landingPlan=v177JointPose('turned',{requestedState:'idle'},actor.animationPresentation,{grounded:true});
   let landingPose=null;
   if(progress>.85) {
     const current=v177CaptureJointPose('turned',landingPlan);
