@@ -30,8 +30,8 @@ const orchestration=new Set(['.github/workflows/ci.yml','scripts/ci-change-scope
 // Reviewed raw-data validation repair only; capture code and product inputs
 // are unchanged. A different blob restores full regression automatically.
 const reviewedValidationBlobs=Object.freeze({
-  // Reviewed QA-only preparation: optional recipient and approach gap.
-  'app/AshfallGame.tsx':'f3350d263d4f265bc3cea801afc9d0c6fb0d524f',
+  // Reviewed QA-only preparation: recipients, approach and HP phase boundary.
+  'app/AshfallGame.tsx':'6010b821a215ca825c688aeda853f01c2c81a90e',
   'scripts/v177-native-allunit-ranger-manual-contract.mjs':'69e4ccc8482ad55313d0dcf8c27617b230283416',
   'scripts/v177-native-allunit-outcomes.mjs':'15b01dfa46d964c86e87268838c9c9b0aba96645',
   'tests/helpers/v177-corpse-joint-render.mjs':'08f7a664e7df6ef71f208ebdc202ac8fb4ada748',

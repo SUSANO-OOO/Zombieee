@@ -94,7 +94,7 @@ test('only the exact Souki contact repair selects normal play and motion without
 });
 
 test('the exact local QA preparation change reuses unchanged normal-play evidence in Draft',()=>{
- const file='app/AshfallGame.tsx',blob='f3350d263d4f265bc3cea801afc9d0c6fb0d524f';
+ const file='app/AshfallGame.tsx',blob='6010b821a215ca825c688aeda853f01c2c81a90e';
  const options={draft:true,sourceBlobs:{[file]:blob}},scope=ciChangeScope([file],options);
  assert.equal(scope.full,false);assert.equal(scope.normal,false);assert.equal(scope.allunit,false);assert.equal(scope.r9,false);
  for(const sourceBlobs of [{},{[file]:'f'.repeat(40)}])assert.equal(ciChangeScope([file],{draft:true,sourceBlobs}).full,true);

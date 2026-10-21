@@ -11503,17 +11503,32 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         };
         return { separation, startX: human.x };
       },
-      armBossFoundationTelegraph: (bossId: number, humanId: number) => {
+      armBossFoundationTelegraph: (bossId: number, humanId: number, options: { beforeHpPhase?: number } = {}) => {
         const g = gameRef.current;
         const boss = g.fighters.find((fighter) => fighter.id === bossId && isBossFighter(fighter));
         const human = g.fighters.find((fighter) => fighter.id === humanId && fighter.side === "human");
         if (!boss || !human || !boss.combatReady) return null;
+        let beforePhaseHp: number | null = null;
+        if (options.beforeHpPhase !== undefined) {
+          const phase = options.beforeHpPhase;
+          if (!g.paused || !Number.isInteger(phase) || phase < 1 || boss.kind === "futago"
+            || bossPhaseForHp(1, boss.maxHp, boss.kind, boss).phase <= phase) {
+            throw new Error("HP phase fixture requires a paused boss with a later HP phase");
+          }
+          let low = 1, high = Math.ceil(boss.maxHp);
+          while (high - low > 1) {
+            const hp = Math.floor((low + high) / 2);
+            if (bossPhaseForHp(hp, boss.maxHp, boss.kind, boss).phase > phase) low = hp;
+            else high = hp;
+          }
+          beforePhaseHp = high;
+        }
         boss.speed = 0;
         boss.laneSpeed = 0;
         if (["ooguchi", "gairen", "futago"].includes(boss.kind)) {
           if (Number.isFinite(boss.combatReadyX) && boss.combatReadyX! > 0) boss.x = boss.combatReadyX!;
         }
-        boss.hp = Math.ceil(boss.maxHp * (boss.kind === "futago" ? .55 : .72));
+        boss.hp = beforePhaseHp ?? Math.ceil(boss.maxHp * (boss.kind === "futago" ? .55 : .72));
         boss.abilityCooldown = 0;
         boss.abilityWindup = 0;
         boss.stationAbility = createStationAbilityRuntime(boss.kind);
@@ -11524,8 +11539,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           ));
         }
         if (boss.kind === "kurome" || boss.kind === "mother") boss.x = Math.min(boss.x, 560);
-        human.x = boss.x - (boss.kind === "kurome" ? 210 : boss.kind === "mother" ? 72 : 90);
-        const proofLane = boss.kind === "ooguchi"
+        human.x = boss.x - (beforePhaseHp !== null ? 90 : boss.kind === "kurome" ? 210 : boss.kind === "mother" ? 72 : 90);
+        const proofLane = beforePhaseHp === null && boss.kind === "ooguchi"
           ? (boss.lane === 0 ? 1 : 0)
           : boss.lane;
         human.y = activeLaneCenters[proofLane];
@@ -11535,6 +11550,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         human.cooldown = 99;
         return {
           warningSeconds: bossDefinitionForEnemyKind(boss.kind)?.attackTelegraph.warningSeconds ?? 0,
+          ...(beforePhaseHp === null ? {} : { beforePhaseHp,
+            phase: bossPhaseForHp(boss.hp, boss.maxHp, boss.kind, boss) }),
         };
       },
       armMotherNormalAttack: (bossId: number, humanId: number) => {
