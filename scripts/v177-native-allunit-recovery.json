@@ -2,10 +2,24 @@
   "schema": "v177-native-allunit-recovery/v2",
   "head": "29d4057a8a131c93893978bd29f7ddaaf67cebaf",
   "runId": "39449375661",
-  "scope": "Retain579 source-compatible native records (432 normal,144 outcome,3 manual); no unfinished motion windows. Original32 observation gaps and11 follow-ups remain in immutable raw history. Musashi080 (encoded/source71ms) and Mutant5cbd (encoded107ms/source99ms) original1x whole videos reviewed;5cbd has26 actual frame timing entries. Connected down/get-up/phase-change reviewed in21 fresh original1x clips4348 decoded frames, with actual lifecycle owners. No clocks, VP8/free-RAF capture, quality thresholds or30s/5s/15s/3s deadlines changed. Whole-game, p95rAF33ms, physical iPhone audio and publication acceptance remain open.",
-  "caseIds": [],
+  "scope": "Retain567 unaffected native records (423 normal,141 outcome,3 manual) at their original source heads; reopen Brute9 normal+3 outcome after original1x knee defect confirmed. Other47 forms have identical joint draw matrices. Registered3 live support retains all original outlines and analytic floor values; only redundant capture/interpolation allocation is removed. No clock, motion speed, quality threshold or30s/5s/15s/3s deadline changes. Formal fixed30s p95RAF33ms and native-recording controls remain pending, separate from retained motion evidence. No publication.",
+  "caseIds": [
+    "forms-2:brute:move:1280x720",
+    "forms-2:brute:move:844x390",
+    "forms-2:brute:move:844x340",
+    "forms-2:brute:attack:1280x720",
+    "forms-2:brute:attack:844x390",
+    "forms-2:brute:attack:844x340",
+    "forms-2:brute:engage:1280x720",
+    "forms-2:brute:engage:844x390",
+    "forms-2:brute:engage:844x340"
+  ],
   "manualCaseIds": [],
-  "outcomeCaseIds": [],
+  "outcomeCaseIds": [
+    "forms-2:brute:controlled-outcome:844x340",
+    "forms-2:brute:controlled-outcome:1280x720",
+    "forms-2:brute:controlled-outcome:844x390"
+  ],
   "affectedDeathForms": [
     "gunner",
     "crazy-king",
@@ -319,14 +333,6 @@
       "forms-1:medic:engage:1280x720",
       "forms-1:medic:engage:844x390",
       "forms-1:medic:engage:844x340",
-      "forms-2:brute:move:844x390",
-      "forms-2:brute:move:844x340",
-      "forms-2:brute:attack:1280x720",
-      "forms-2:brute:attack:844x390",
-      "forms-2:brute:attack:844x340",
-      "forms-2:brute:engage:1280x720",
-      "forms-2:brute:engage:844x390",
-      "forms-2:brute:engage:844x340",
       "forms-2:gunner:move:844x390",
       "forms-2:gunner:move:844x340",
       "forms-2:gunner:attack:844x390",
@@ -707,7 +713,6 @@
       "forms-12:babayaga:engage:1280x720",
       "forms-12:babayaga:engage:844x390",
       "forms-12:babayaga:engage:844x340",
-      "forms-2:brute:move:1280x720",
       "forms-2:gunner:move:1280x720",
       "forms-2:gunner:attack:1280x720",
       "forms-1:brawler:attack:844x390",
@@ -735,7 +740,6 @@
       "forms-1:medic:controlled-outcome:1280x720",
       "forms-1:medic:controlled-outcome:844x390",
       "forms-1:medic:controlled-outcome:844x340",
-      "forms-2:brute:controlled-outcome:844x340",
       "forms-2:gunner:controlled-outcome:844x390",
       "forms-2:gunner:controlled-outcome:844x340",
       "forms-2:guardian:controlled-outcome:844x390",
@@ -858,11 +862,9 @@
       "forms-12:babayaga:controlled-outcome:1280x720",
       "forms-12:babayaga:controlled-outcome:844x390",
       "forms-12:babayaga:controlled-outcome:844x340",
-      "forms-2:brute:controlled-outcome:1280x720",
       "forms-2:gunner:controlled-outcome:1280x720",
       "forms-2:guardian:controlled-outcome:1280x720",
       "forms-2:engineer:controlled-outcome:1280x720",
-      "forms-2:brute:controlled-outcome:844x390",
       "forms-2:engineer:controlled-outcome:844x390",
       "forms-3:zakimiya:controlled-outcome:1280x720",
       "forms-3:miyamoto-musashi:controlled-outcome:1280x720",
@@ -1355,7 +1357,10 @@
       "stateCount": 21,
       "unconnectedStates": 0,
       "newLifecycleReviewSha256": "8eb224414c0ba83327472645bf9f3071c2a42f04faf3058fe9581f2e0fb5e1f5",
-      "all1008Accepted": false
+      "all1008Accepted": false,
+      "currentExceptions": [
+        "brute: knee naturalness reopened; original inventory is immutable history, not current acceptance"
+      ]
     }
   },
   "changedBlobs": {
@@ -1367,8 +1372,8 @@
     "app/v100SoukiPresentation.js": "9769a43da24230afe829f9a423a2b8cd706f95b1",
     "app/v177HitReaction.js": "6e7dc3705b3fa8ee8095c675b4046571a085e5af",
     "app/v177HumanCorpsePresentation.js": "0422000720875df12b57c9c721fa4c13a8317869",
-    "app/v177JointPresentation.js": "05ff9ad9def6c050c29eb7f81650aca6cddc6e37",
-    "scripts/ci-change-scope.mjs": "5d2fe8b19606750980c42dcd6a0efe2e79789b23",
+    "app/v177JointPresentation.js": "e2e63704e18e43718fb9a332b689bc0f3c55987e",
+    "scripts/ci-change-scope.mjs": "819d942c92261527eeb289b000cfdd936652f2bb",
     "scripts/v100-normal-campaign-playthrough.mjs": "310ba070ccce39d9dc671f6a7b482ce40211d3d6",
     "scripts/v100-normal-visible-aim.mjs": "052c0dc3afd9bd0571e1d8ae596026a96669ce14",
     "scripts/v177-human-corpse-contract.mjs": "17568cb76138783d88365660e1ef04e23be26008",
@@ -1379,7 +1384,7 @@
     "scripts/v177-native-allunit-selection.mjs": "6477d765bf01ef4ef7e56e86a664b3ca27aae083",
     "scripts/v177-native-game-capture-browser.mjs": "6315f3f7167b3b09ff999b3553c80b48ced35d73",
     "scripts/v177-normal-audio-unlock-observation.mjs": "89f90b9fbb1f27bf2dc409955279ed560293b5b3",
-    "tests/ci-change-scope.test.mjs": "347d5c43d658790b81260658b48766b264eb8688",
+    "tests/ci-change-scope.test.mjs": "178420320f613c0170b2e6422b554ae9468de86a",
     "tests/fixtures/v177-native-auto-unlocked-audio.json": "dbc0f000691f2d4a66734e94f1fe05fcbd51b84d",
     "tests/fixtures/v177-native-success-control-audio.json": "2f0f666ea0c2908d9b6cfaa40e56f84818ca73c9",
     "tests/helpers/v177-corpse-joint-render.mjs": "62813dcbd9eb06cd1ccf82ce38cf232da36b4f4c",
@@ -1390,7 +1395,7 @@
     "tests/v177-human-corpse-continuity.test.mjs": "90b95350cf0d87e01b465d6c3b2d21ac39799615",
     "tests/v177-native-allunit-outcomes.test.mjs": "7c88ebc7d060e8358c5ffe84abc4d5f1fa0ff9ce",
     "tests/v177-native-allunit-ranger-manual.test.mjs": "f5647dda7b18351f7d3f8d4ef8453b275d6a46d3",
-    "tests/v177-native-allunit-selection.test.mjs": "523e05b2588426123d5eaf6b7be897da307daa05",
+    "tests/v177-native-allunit-selection.test.mjs": "6e2c07144aa8bae027c5c21321b65f6881d0a21d",
     "tests/v177-native-allunit.test.mjs": "6d6346648962c45a9387fa93678479f1c2b2bada",
     "tests/v177-native-game-capture.test.mjs": "2166b7f9734991a7cd54331a9243cb9844391fea",
     "tests/v177-native-setup-overlap.test.mjs": "a5ef98038a7f2e2ffb1591bd0ca21be066f63a79",
@@ -1405,7 +1410,12 @@
     "scripts/v177-reaction-render-contract.mjs": "fb84ffd008b65864539c914c84a0f9b910c9acd7",
     "tests/v177-native-frame-timing.test.mjs": "0b0bdcb3a53647e9a65fc788456151c6d4492b39",
     ".github/workflows/ci.yml": "1757ef05af6ceff181b3be7002c5a36f3f4fb8eb",
-    "docs/PROJECT_STATE.md": "6471753d3d93fb32289ed0f08ae42fd57612df86"
+    "docs/PROJECT_STATE.md": "271e4c214473ce0bd684a724c61a385793ef9583",
+    "app/v177CorpseJointPresentation.js": "b339f6379b252c2687e16361004e184d3029a85b",
+    "scripts/v100-device-runtime-browser.mjs": "cf52c7e2ebbde19fafdf50920c0186921f900aa8",
+    "tests/v177-corpse-joint-presentation.test.mjs": "e172e7395cadd3e27c8e71dcde6b5e4cbbc2aec0",
+    "tests/v177-melee-joints.test.mjs": "b4b86b1e8ee5c2dec304f39e1870eca28127b40b",
+    ".github/workflows/targeted-frame-performance.yml": "784135a26be2bf0f665359322cd11bdfefb6df46"
   },
   "unacceptedVisualWindows": {
     "auditSha256": "73cd4c406aba34ba9bc74d22243b711fff9dec8b7961f55e4fbbd08313dc7518",
@@ -1523,5 +1533,55 @@
         "count250": 1
       }
     ]
-  }
+  },
+  "reopenedVisualCases": [
+    {
+      "caseId": "forms-2:brute:move:1280x720",
+      "reason": "Producer report and original1x review confirm backwards knee bending. New Brute-only IK pole requires fresh source-bound clips."
+    },
+    {
+      "caseId": "forms-2:brute:move:844x390",
+      "reason": "Producer report and original1x review confirm backwards knee bending. New Brute-only IK pole requires fresh source-bound clips."
+    },
+    {
+      "caseId": "forms-2:brute:move:844x340",
+      "reason": "Producer report and original1x review confirm backwards knee bending. New Brute-only IK pole requires fresh source-bound clips."
+    },
+    {
+      "caseId": "forms-2:brute:attack:1280x720",
+      "reason": "Producer report and original1x review confirm backwards knee bending. New Brute-only IK pole requires fresh source-bound clips."
+    },
+    {
+      "caseId": "forms-2:brute:attack:844x390",
+      "reason": "Producer report and original1x review confirm backwards knee bending. New Brute-only IK pole requires fresh source-bound clips."
+    },
+    {
+      "caseId": "forms-2:brute:attack:844x340",
+      "reason": "Producer report and original1x review confirm backwards knee bending. New Brute-only IK pole requires fresh source-bound clips."
+    },
+    {
+      "caseId": "forms-2:brute:engage:1280x720",
+      "reason": "Producer report and original1x review confirm backwards knee bending. New Brute-only IK pole requires fresh source-bound clips."
+    },
+    {
+      "caseId": "forms-2:brute:engage:844x390",
+      "reason": "Producer report and original1x review confirm backwards knee bending. New Brute-only IK pole requires fresh source-bound clips."
+    },
+    {
+      "caseId": "forms-2:brute:engage:844x340",
+      "reason": "Producer report and original1x review confirm backwards knee bending. New Brute-only IK pole requires fresh source-bound clips."
+    },
+    {
+      "caseId": "forms-2:brute:controlled-outcome:844x340",
+      "reason": "Producer report and original1x review confirm backwards knee bending. New Brute-only IK pole requires fresh source-bound clips."
+    },
+    {
+      "caseId": "forms-2:brute:controlled-outcome:1280x720",
+      "reason": "Producer report and original1x review confirm backwards knee bending. New Brute-only IK pole requires fresh source-bound clips."
+    },
+    {
+      "caseId": "forms-2:brute:controlled-outcome:844x390",
+      "reason": "Producer report and original1x review confirm backwards knee bending. New Brute-only IK pole requires fresh source-bound clips."
+    }
+  ]
 }

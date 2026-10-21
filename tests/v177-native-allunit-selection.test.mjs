@@ -38,10 +38,11 @@ test('current recovery partitions normal, outcome and manual observations withou
  const selected=nativeCaseSelection({event:{pull_request:{draft:true}},git:()=>''});
  assert.deepEqual(selected.caseIds,current.caseIds);assert.deepEqual(selected.outcomeCaseIds,current.outcomeCaseIds);
  assert.deepEqual(selected.manualCaseIds,current.manualCaseIds);
- assert.equal(selected.caseIds.length,0);assert.equal(selected.retainedEvidence.caseIds.length,432);
- assert.equal(selected.outcomeCaseIds.length,0);assert.equal(selected.retainedEvidence.outcomeCaseIds.length,144);
+ assert.equal(selected.caseIds.length,9);assert.equal(selected.retainedEvidence.caseIds.length,423);
+ assert.equal(selected.outcomeCaseIds.length,3);assert.equal(selected.retainedEvidence.outcomeCaseIds.length,141);
  assert.equal(selected.manualCaseIds.length,0);assert.equal(selected.retainedEvidence.manualCaseIds.length,3);
- assert.deepEqual(selected.shards,[]);
+ assert.deepEqual(selected.shards,['forms-2']);
+ assert.ok([...selected.caseIds,...selected.outcomeCaseIds].every(id=>id.includes(':brute:')),'Only the changed hammer legs need fresh native footage');
  const affected=current.affectedDeathForms;
  assert.equal(affected.length,11);
  assert.equal([...selected.retainedEvidence.outcomeCaseIds,...selected.outcomeCaseIds].filter(id=>affected.some(form=>id.includes(':'+form+':'))).length,33);
@@ -49,8 +50,8 @@ test('current recovery partitions normal, outcome and manual observations withou
  assert.equal(current.observationGaps.cases.length,32);
  assert.equal(current.unacceptedVisualWindows.previousCases.length,11);
  assert.equal(current.unacceptedVisualWindows.cases.length,0);
- assert.deepEqual([...selected.caseIds,...selected.outcomeCaseIds].sort(),current.unacceptedVisualWindows.cases.map(g=>g.caseId).sort(),
-  'resolved recorded windows require no repeated native observation');
+ assert.deepEqual([...selected.caseIds,...selected.outcomeCaseIds].sort(),current.reopenedVisualCases.map(g=>g.caseId).sort(),
+  'newly reported knee defects reopen their affected footage without repeating other forms');
  assert.equal(selected.retainedEvidence.additionalReports.flatMap(r=>r.caseIds).length,73);
  const hitRepair=selected.retainedEvidence.additionalReports.find(r=>r.runId==='39538653281');
  assert.equal(hitRepair.head,'a2a00a31b9958d9ab1ed2a30c44a56d08837fe12');

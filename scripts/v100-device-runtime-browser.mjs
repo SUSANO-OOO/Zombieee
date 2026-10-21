@@ -38,6 +38,11 @@ const diagnosticSeconds = Number(process.env.V100_DEVICE_RUNTIME_DIAGNOSTIC_SECO
 assert.ok(Number.isInteger(diagnosticSeconds) && diagnosticSeconds >= 10 && diagnosticSeconds <= 30, "diagnostic seconds must be 10..30");
 const measurementMs = paintIsolation === "none" && qualityDiagnostic === "auto" ? 30_000 : diagnosticSeconds * 1_000;
 const callbackDiagnostic = process.env.V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC === "1";
+const nativeRecordingDiagnostic = process.env.V100_DEVICE_RUNTIME_NATIVE_RECORDING_DIAGNOSTIC === "1";
+if(nativeRecordingDiagnostic){assert.equal(engine,"webkit");assert.equal(process.platform,"darwin");}
+const runtimeRole=process.env.V100_DEVICE_RUNTIME_ROLE??'formal';
+assert.ok(['formal','native-control'].includes(runtimeRole));
+const nativeControlDiagnostic=runtimeRole==='native-control';
 const blankBaselineDiagnostic = process.env.V100_DEVICE_RUNTIME_BLANK_BASELINE === "1";
 const hostControl = process.env.V100_DEVICE_RUNTIME_HOST_CONTROL ?? "none";
 assert.ok(["none", "spotlight-indexing-paused"].includes(hostControl), `invalid host control: ${hostControl}`);
@@ -338,7 +343,7 @@ const report = {
     expectedBattleIdentity: { stageId: expectedDefinition.stageId, operationId: expectedDefinition.operationId, missionType: expectedDefinition.missionType },
     sourceSha256: sha256(seedRaw),
   },
-  measurement: { seconds: measurementMs / 1000, clock: "browser performance.now", representative: paintIsolation === "none" && qualityDiagnostic === "auto" && !contextSyncDiagnostic && !observerlessDiagnostic && !suppressDebugDatasetDiagnostic && hostControl === "none", uninterrupted: true, paintIsolation, qualityDiagnostic, contextSyncDiagnostic, observerlessDiagnostic, suppressDebugDatasetDiagnostic, hostControl, hostPreparation, diagnosticOnly: paintIsolation !== "none" || qualityDiagnostic !== "auto" || contextSyncDiagnostic || observerlessDiagnostic || suppressDebugDatasetDiagnostic || hostControl !== "none" },
+  measurement: { seconds: measurementMs / 1000, clock: "browser performance.now", representative: paintIsolation === "none" && qualityDiagnostic === "auto" && !contextSyncDiagnostic && !observerlessDiagnostic && !suppressDebugDatasetDiagnostic && !nativeRecordingDiagnostic && !nativeControlDiagnostic && hostControl === "none", uninterrupted: true, paintIsolation, qualityDiagnostic, contextSyncDiagnostic, observerlessDiagnostic, suppressDebugDatasetDiagnostic, nativeRecordingDiagnostic, runtimeRole, hostControl, hostPreparation, diagnosticOnly: paintIsolation !== "none" || qualityDiagnostic !== "auto" || contextSyncDiagnostic || observerlessDiagnostic || suppressDebugDatasetDiagnostic || nativeRecordingDiagnostic || nativeControlDiagnostic || hostControl !== "none" },
   results: [],
 };
 await mkdir(path.dirname(evidenceDir), { recursive: true });
@@ -356,7 +361,8 @@ try {
   for (const viewport of viewports) {
     const name = `${engine}-${viewport.width}x${viewport.height}`;
     const blankBaseline = blankBaselineDiagnostic ? await measureBlankRaf(browser, viewport) : null;
-    const context = await browser.newContext({ viewport, hasTouch: viewport.safeArea, isMobile: viewport.safeArea, deviceScaleFactor: requestedDpr });
+    const context = await browser.newContext({ viewport, hasTouch: viewport.safeArea, isMobile: viewport.safeArea, deviceScaleFactor: requestedDpr,
+      ...(nativeRecordingDiagnostic?{recordVideo:{dir:path.join(evidenceDir,'videos',name),size:{width:viewport.width,height:viewport.height}}}:{}) });
     const page = await context.newPage();
     if (suppressDebugDatasetDiagnostic) {
       await page.addInitScript(() => {

@@ -140,7 +140,10 @@ test('living and fallen original paint stay above the floor across sizes, gaits 
       for(const progress of [0,1/69,.3,1]){
         const sample=sampleV177CorpseJointState(state,{progress,x:500,y:285,age:progress});
         assert.ok(await paintedBottom(state,sample)<=sample.floor+1e-8,kind+' original paint stays above the floor');
-        if(progress===0)assert.deepEqual(sample.root,live.root,'the first fallen paint preserves the grounded living root');
+        if(progress===0){
+          assert.deepEqual({...sample.root,y:live.root.y},live.root,'the first fallen paint preserves the grounded living root');
+          assert.ok(Math.abs(sample.root.y-live.root.y)<1e-9,'analytic support arithmetic preserves the floor below a billionth of a world pixel');
+        }
       }
     }
   assert.equal(v177LiveJointGroundLift('guardian',null,null,290),0,'other unit rigs retain their existing ground rules');

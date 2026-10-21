@@ -20,6 +20,7 @@ const allunit=new Set(['.github/workflows/native-allunit-capture.yml','scripts/v
 const r9=new Set(['scripts/v100-dialogue-composition-browser.mjs','scripts/v100-story-bookends-browser-smoke.mjs',
   'scripts/v100-r9-full-story-browser.mjs','scripts/v100-r9-story-plan.mjs']);
 const orchestration=new Set(['.github/workflows/ci.yml','scripts/ci-change-scope.mjs',
+  '.github/workflows/targeted-frame-performance.yml','scripts/v100-device-runtime-browser.mjs',
   '.github/workflows/native-aac-probe.yml','.github/workflows/normal-campaign-observation.yml',
   '.github/workflows/native-allunit-capture.yml','.github/workflows/v1-quality-acceptance.yml',
   '.github/workflows/native-aac-graph-probe.yml','.github/workflows/native-audio-capabilities.yml',
@@ -44,6 +45,15 @@ const reviewedLifecycleBlobs=Object.freeze({
   "app/v177JointPresentation.js": "05ff9ad9def6c050c29eb7f81650aca6cddc6e37",
   "app/v177LifecyclePresentation.js": "dc13038fa0a3a9bb35f6aef0c06eca80eed4d760"
 });
+// Only Brute's knee solution changes. Native Brute cases are reopened by the
+// source-pinned recovery profile; other forms keep identical draw matrices.
+const reviewedBruteBlobs=Object.freeze({
+  'app/v177JointPresentation.js':'e2e63704e18e43718fb9a332b689bc0f3c55987e',
+});
+// Analytic vertical support preserves every original outline and floor value.
+const reviewedSupportBlobs=Object.freeze({
+  'app/v177CorpseJointPresentation.js':'b339f6379b252c2687e16361004e184d3029a85b',
+});
 const reviewedMotionBlobs=Object.freeze({
   'app/combatPresentation.js':'327c7a1dd55707c16385d01d28030a37dc4b27c7',
   'app/AshfallGame.tsx':'95df06a678e2be79ec076059df910dc95c33298c',
@@ -66,6 +76,8 @@ export function ciChangeScope(paths,{draft,sourceBlobs={}}={}){
     else if(allunit.has(file))allunitChanged=true;
     else if(r9.has(file))r9Changed=true;
     else if(governance.has(file)||orchestration.has(file)||/^tests\/[^/]+\.test\.mjs$/u.test(file))continue;
+    else if(reviewedBruteBlobs[file]&&sourceBlobs[file]===reviewedBruteBlobs[file])allunitChanged=true;
+    else if(reviewedSupportBlobs[file]&&sourceBlobs[file]===reviewedSupportBlobs[file])continue;
     else if(reviewedLifecycleBlobs[file]&&sourceBlobs[file]===reviewedLifecycleBlobs[file]){normalChanged=true;allunitChanged=true;}
     else if(reviewedValidationBlobs[file]&&sourceBlobs[file]===reviewedValidationBlobs[file])continue;
     else if(reviewedMotionBlobs[file]&&sourceBlobs[file]===reviewedMotionBlobs[file]){
@@ -86,7 +98,7 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
   const comparisonBase=execFileSync('git',['merge-base',base,head],{encoding:'utf8',windowsHide:true}).trim();
   assert.match(comparisonBase,/^[0-9a-f]{40}$/u);
   const paths=execFileSync('git',['diff','--no-renames','--name-only',`${comparisonBase}..${head}`],{encoding:'utf8',windowsHide:true}).trim().split(/\r?\n/u).filter(Boolean);
-  const sourceBlobs=Object.fromEntries(paths.filter(file=>reviewedValidationBlobs[file]||reviewedMotionBlobs[file]||reviewedLifecycleBlobs[file]).map(file=>{
+  const sourceBlobs=Object.fromEntries(paths.filter(file=>reviewedValidationBlobs[file]||reviewedMotionBlobs[file]||reviewedLifecycleBlobs[file]||reviewedBruteBlobs[file]||reviewedSupportBlobs[file]).map(file=>{
     try{return[file,execFileSync('git',['rev-parse',`${head}:${file}`],{encoding:'utf8',windowsHide:true}).trim()];}
     catch{return[file,null];}
   }));

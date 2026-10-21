@@ -198,6 +198,33 @@ test('fast hammer interpolation follows the authored grip rather than the distan
  }
 });
 
+test('hammer knees bend forwards without detaching the hip, knee or planted ankle in either facing',()=>{
+ const atlas=V177_JOINT_ATLASES.brute;
+ const matrixFor=(rows,bone)=>rows[atlas.parts.findIndex(part=>part.bone===bone)];
+ for(const direction of ['left','right'])for(let n=0;n<=120;n++)for(const settle of [0,.5,1]){
+  const runtime={locomotionPhase:n/120,locomotionSettle:settle};
+  for(const requestedState of ['move','idle','wind-up','active','recovery']){
+   const {raw,calls}=record('brute',v177JointPose('brute',{requestedState,clipProgress:n/120},runtime),{direction});
+   for(const chain of atlas.legConstraints){
+    const upper=matrixFor(raw,chain.upperBone),lower=matrixFor(raw,chain.lowerBone);
+    const hip=transform(matrixFor(raw,chain.parentBone),chain.hip),knee=transform(upper,chain.knee);
+    const ankle=transform(matrixFor(raw,chain.effectorBone),chain.ankle);
+    assert.ok(distance(transform(upper,chain.hip),hip)<1e-9,'Thigh stays attached to the pelvis');
+    assert.ok(distance(transform(lower,chain.knee),knee)<1e-9,'Thigh and shin meet at the same knee');
+    assert.ok(distance(transform(lower,chain.ankle),ankle)<1e-9,'Shin stays attached to the shoe');
+    assert.ok(Math.abs(distance(hip,knee)-distance(chain.hip,chain.knee))<1e-9);
+    assert.ok(Math.abs(distance(knee,ankle)-distance(chain.knee,chain.ankle))<1e-9);
+    const paintedHip=transform(matrixFor(calls,chain.upperBone),chain.hip);
+    const paintedKnee=transform(matrixFor(calls,chain.upperBone),chain.knee);
+    const paintedAnkle=transform(matrixFor(calls,chain.effectorBone),chain.ankle);
+    const forward=(paintedKnee[0]-paintedHip[0])*(paintedAnkle[1]-paintedHip[1])
+      -(paintedKnee[1]-paintedHip[1])*(paintedAnkle[0]-paintedHip[0]);
+    assert.ok(forward*(direction==='left'?-1:1)>0,'The knee must bend towards the direction faced');
+   }
+  }
+ }
+});
+
 test('archived brawler pixel paint stays unchanged and current painted rigs restore canvas smoothing',async()=>{
  const atlas=V177_MELEE_JOINT_ATLASES.brawler,dir=new URL('../assets/source/v100/joints/brawler-r1/',import.meta.url);
  const retired=V177_RETIRED_JOINT_SOURCE_ASSETS.find(a=>a.path===atlas.path);assert.ok(retired);assert.equal('sha256-'+hash(await readFile(new URL('../public'+atlas.path,import.meta.url))),retired.hash);

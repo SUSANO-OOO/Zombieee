@@ -7,6 +7,10 @@ import { v102CorpseSeverPlan, drawV102JointCorpseWound } from './v102CombatGore.
 
 const worlds=new WeakMap();
 const walkerSoles=V177_WALKER_FLOOR_DATA.outlines.filter(o=>V177_WALKER_FLOOR_DATA.supportParts.includes(o.name));
+const liveOutlines=Object.fromEntries(Object.entries(V177_CORPSE_JOINT_DATA).map(([kind,data])=>[
+  kind,data.outlines.map((outline,i)=>({...outline,bone:V177_JOINT_ATLASES[kind].parts[i].bone,
+    upper:V177_JOINT_ATLASES[kind].parts[i].upper})),
+]));
 const clamp=p=>Math.max(0,Math.min(1,Number(p)||0));
 const ease=p=>{p=clamp(p);return p*p*(3-2*p);};
 const point=(m,[x,y])=>[m[0]*x+m[2]*y+m[4],m[1]*x+m[3]*y+m[5]];
@@ -84,6 +88,10 @@ export function v177LiveJointGroundLift(kind,plan,rendered,floorY) {
   }
   const atlas=V177_JOINT_ATLASES[kind],data=V177_CORPSE_JOINT_DATA[kind];
   if(!atlas || !data || !plan || !Number.isFinite(floorY))return 0;
+  const bottom=v177JointPaintSupportY(kind,plan,liveOutlines[kind],rendered);
+  if(bottom!==null)return Math.max(0,bottom-floorY);
+  // Preserve the previous invalid/unsupported-input path. Valid living paints
+  // need only their vertical support, without capturing and re-solving a corpse.
   const initial=v177CaptureJointPose(kind,plan);if(!initial)return 0;
   const matrices=v177InterpolateCapturedJointPose(kind,initial,atlas.poses[0],0);
   const state={atlas,data,frame:rendered.frame,width:rendered.width,height:rendered.height};

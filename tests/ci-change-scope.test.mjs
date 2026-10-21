@@ -13,6 +13,17 @@ test('a ready candidate always gets full regression, including governance-only c
   assert.equal(scope.wholeGameAccepted,false);
  }
 });
+
+test('the reviewed hammer knee repair reopens motion without repeating unchanged normal play or R9',()=>{
+ const paths=['app/v177JointPresentation.js','app/v177CorpseJointPresentation.js'];
+ const sourceBlobs=Object.fromEntries(paths.map(file=>[file,execFileSync('git',['hash-object',file],{encoding:'utf8',windowsHide:true}).trim()]));
+ const scope=ciChangeScope(paths,{draft:true,sourceBlobs});
+ assert.equal(scope.full,false);assert.equal(scope.allunit,true);
+ assert.equal(scope.normal,false);assert.equal(scope.ranger,false);assert.equal(scope.r9,false);
+ for(const file of paths)assert.equal(ciChangeScope(paths,{draft:true,sourceBlobs:{...sourceBlobs,[file]:'f'.repeat(40)}}).full,true);
+ assert.equal(ciChangeScope(paths,{draft:false,sourceBlobs}).full,true);
+ assert.equal(ciChangeScope([...paths,'app/v100Save.js'],{draft:true,sourceBlobs}).full,true);
+});
 test('ready events run integration gates and research cannot block representative observation',()=>{
  const workflow=load(readFileSync('.github/workflows/ci.yml','utf8'));
  assert.equal(workflow.concurrency['cancel-in-progress'],false,'Preserve running source-bound observation across QA/documentation pushes');
