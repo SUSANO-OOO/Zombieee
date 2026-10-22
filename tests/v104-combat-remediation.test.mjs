@@ -130,12 +130,12 @@ test('actual render and runtime call sites release facing after knock decay ends
 
 test('weapon trails survive the real per-tick fighter copies and cannot cross actor or battle ownership',()=>{
  let actor={id:1,hp:100,kind:'tky'},draws=0;const world={},image={complete:true,naturalWidth:1536},objects={'v100-lightblade':image};
- const ctx={save(){},restore(){},translate(){},rotate(){},drawImage(){draws++;}};
+ const ctx={save(){},restore(){},translate(){},rotate(){},beginPath(){},moveTo(){},lineTo(){},closePath(){},clip(){},transform(){},drawImage(){draws++;}};
  for(let n=0;n<4;n++){
   actor=advanceAreaEffects({fighters:[actor],seconds:1/60}).fighters[0];
   drawV104WeaponWake(ctx,objects,{world,actor,kind:'tky',time:n/60,phase:.3,tip:{x:100+n*5,y:100},grip:{x:80,y:100}});
  }
- assert.equal(draws,3);
+ assert.equal(draws,6,'each real swept surface paints its two clipped texture triangles');
  assert.equal(drawV104WeaponWake(ctx,objects,{world:{},actor,kind:'tky',time:.1,phase:.3,tip:{x:125,y:100},grip:{x:80,y:100}}),false);
  assert.equal(drawV104WeaponWake(ctx,objects,{world,actor:{...actor,id:2},kind:'tky',time:.1,phase:.3,tip:{x:125,y:100},grip:{x:80,y:100}}),false);
  for(const kind of['ranger','babayaga','medic','gunner'])assert.equal(v104WeaponWakeCandidate(kind,.3),false,'guns never resolve a spare melee grip');

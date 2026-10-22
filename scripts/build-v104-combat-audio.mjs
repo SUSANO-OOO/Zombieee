@@ -1,5 +1,8 @@
 import fs from'node:fs/promises';import{createHash}from'node:crypto';import{execFileSync}from'node:child_process';import ffmpeg from'@ffmpeg-installer/ffmpeg';
 const source='assets/source/v100/audio',out='public/audio/v104/combat',records=[];
+const only=process.argv.find(arg=>arg.startsWith('--only='))?.slice(7).split(',');
+if(only&&only.some(name=>!['handgun','suppressed-pistol'].includes(name)))throw Error('Unknown isolated audio target');
+const oldProvenance=only?JSON.parse(await fs.readFile('assets/source/v104/combat-audio/provenance.json','utf8')):null;
 await fs.mkdir(out,{recursive:true});
 const sha=b=>createHash('sha256').update(b).digest('hex');
 // Ogg muxing picks a stream serial at random. Preserve the existing exact asset
@@ -17,10 +20,12 @@ const eyeSources=[
  {name:'eye-fire',duration:.44,expression:'0.24*sin(2*PI*77*t+4*sin(2*PI*37*t))+0.17*sin(2*PI*650*t+12*sin(2*PI*131*t))+0.08*sin(2*PI*1567*t)*sin(2*PI*3719*t)',filter:'highpass=f=60,lowpass=f=6200,afade=t=in:d=0.015,afade=t=out:st=0.24:d=0.2'},
 ];
 for(const effect of eyeSources){
+ if(only)continue;
  const file='assets/source/v104/combat-audio/'+effect.name+'.wav';
  execFileSync(ffmpeg.path,['-y','-v','error','-f','lavfi','-i',`aevalsrc=${effect.expression}:s=44100:d=${effect.duration}`,'-af',effect.filter,'-c:a','pcm_s16le',file],{stdio:'pipe'});
 }
 async function encode(name,inputs,filter,extra={}){
+ if(only&&!only.includes(name))return;
  for(const[ext,codec]of[['ogg','libvorbis'],['mp3','libmp3lame']]){
   const file=`${out}/${name}.${ext}`;
   const previous=ext==='ogg'?await fs.readFile(file).catch(()=>null):null;
@@ -38,9 +43,15 @@ await encode('pan-heavy',[source+'/kenney-rpg/metalPot2.ogg',source+'/kenney-imp
  '[0:a]atrim=0:0.8,highpass=f=200,lowpass=f=7000,volume=0.85[p];[1:a]atrim=0:0.25,lowpass=f=1900,volume=0.6[b];[p][b]amix=inputs=2:normalize=0,volume=0.48,afade=t=out:st=0.6:d=0.2,apad=pad_len=1323[mix]');
 await encode('armor-hit',[source+'/kenney-impact/impactMetal_heavy_000.ogg',source+'/kenney-impact/impactSoft_heavy_000.ogg'],
  '[0:a]asetrate=35280,aresample=44100,atrim=0:0.5,highpass=f=65,lowpass=f=2200,volume=0.75[p];[1:a]atrim=0:0.3,lowpass=f=650,volume=0.85[b];[p][b]amix=inputs=2:normalize=0,volume=0.48,afade=t=out:st=0.16:d=0.1,apad=pad_len=1323[mix]');
+const gunshotCredit={creator:'Vincent Sevedge (Tabasco)',license:'CC-BY-3.0',url:'https://opengameart.org/content/gunshot-sounds',notice:source+'/opengameart/creativecommons.txt',adaptation:'trimmed, filtered, attenuated and faded original CZ pistol recording; no voice'};
+await encode('handgun',[source+'/opengameart/cz.wav'],
+ '[0:a]silenceremove=start_periods=1:start_threshold=-24dB:start_silence=0.005,atrim=0:0.32,asetpts=PTS-STARTPTS,highpass=f=90,lowpass=f=8500,volume=0.48,afade=t=out:st=0.22:d=0.1[mix]',{credit:gunshotCredit,nonVoice:true});
+await encode('suppressed-pistol',[source+'/opengameart/cz.wav'],
+ '[0:a]silenceremove=start_periods=1:start_threshold=-24dB:start_silence=0.005,atrim=0:0.24,asetpts=PTS-STARTPTS,highpass=f=140,lowpass=f=1900,volume=0.28,afade=t=out:st=0.12:d=0.12[mix]',{credit:gunshotCredit,nonVoice:true});
 const voices=JSON.parse(await fs.readFile('assets/source/v104/combat-audio/voices.json','utf8'));
 for(const effect of eyeSources)await encode(effect.name,['assets/source/v104/combat-audio/'+effect.name+'.wav'],'[0:a]volume=1[mix]',{procedural:effect,nonVoice:true});
 for(const v of voices.cast)await encode(`voice-${v.kind}-${v.event}`,[v.source],
  '[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]',{credit:v.credit,text:v.text,synthetic:true,styleId:v.styleId});
-await fs.writeFile('assets/source/v104/combat-audio/provenance.json',JSON.stringify({sources:{foley:{license:'CC0-1.0',creator:'Kenney',urls:['https://kenney.nl/assets/impact-sounds','https://kenney.nl/assets/rpg-audio']},voices},records},null,2)+'\n');
+const completeRecords=only?[...oldProvenance.records.filter(r=>!only.some(name=>r.file===out+'/'+name+'.mp3'||r.file===out+'/'+name+'.ogg')), ...records]:records;
+await fs.writeFile('assets/source/v104/combat-audio/provenance.json',JSON.stringify({sources:{foley:{license:'CC0-1.0',creator:'Kenney',urls:['https://kenney.nl/assets/impact-sounds','https://kenney.nl/assets/rpg-audio']},gunshots:gunshotCredit,voices},records:completeRecords},null,2)+'\n');
 console.log(JSON.stringify({files:records.length,bytes:records.reduce((s,r)=>s+r.bytes,0)}));

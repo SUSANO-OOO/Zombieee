@@ -8,6 +8,13 @@
         "https://kenney.nl/assets/rpg-audio"
       ]
     },
+    "gunshots": {
+      "creator": "Vincent Sevedge (Tabasco)",
+      "license": "CC-BY-3.0",
+      "url": "https://opengameart.org/content/gunshot-sounds",
+      "notice": "assets/source/v100/audio/opengameart/creativecommons.txt",
+      "adaptation": "trimmed, filtered, attenuated and faded original CZ pistol recording; no voice"
+    },
     "voices": {
       "engine": "VOICEVOX Core 0.17.0",
       "cast": [
@@ -695,6 +702,86 @@
       "text": "まだ……。",
       "synthetic": true,
       "styleId": 11
+    },
+    {
+      "file": "public/audio/v104/combat/handgun.ogg",
+      "bytes": 5760,
+      "sha256": "8b56f130581a14fc3fe4f2330c16ea82bd1f5bc5555add8e198c377457ca4af4",
+      "inputs": [
+        {
+          "file": "assets/source/v100/audio/opengameart/cz.wav",
+          "sha256": "4a8594b3cf3f2bfe49497c4a9ae6301b5c7000f21c7cbcb6650df8f594fce713"
+        }
+      ],
+      "filter": "[0:a]silenceremove=start_periods=1:start_threshold=-24dB:start_silence=0.005,atrim=0:0.32,asetpts=PTS-STARTPTS,highpass=f=90,lowpass=f=8500,volume=0.48,afade=t=out:st=0.22:d=0.1[mix];[mix]alimiter=limit=0.85:level=false[out]",
+      "credit": {
+        "creator": "Vincent Sevedge (Tabasco)",
+        "license": "CC-BY-3.0",
+        "url": "https://opengameart.org/content/gunshot-sounds",
+        "notice": "assets/source/v100/audio/opengameart/creativecommons.txt",
+        "adaptation": "trimmed, filtered, attenuated and faded original CZ pistol recording; no voice"
+      },
+      "nonVoice": true
+    },
+    {
+      "file": "public/audio/v104/combat/handgun.mp3",
+      "bytes": 3244,
+      "sha256": "f0d78c759cbd667a8b079f5e4431eb147b3f6e553786b824595a20d5198e7290",
+      "inputs": [
+        {
+          "file": "assets/source/v100/audio/opengameart/cz.wav",
+          "sha256": "4a8594b3cf3f2bfe49497c4a9ae6301b5c7000f21c7cbcb6650df8f594fce713"
+        }
+      ],
+      "filter": "[0:a]silenceremove=start_periods=1:start_threshold=-24dB:start_silence=0.005,atrim=0:0.32,asetpts=PTS-STARTPTS,highpass=f=90,lowpass=f=8500,volume=0.48,afade=t=out:st=0.22:d=0.1[mix];[mix]alimiter=limit=0.85:level=false[out]",
+      "credit": {
+        "creator": "Vincent Sevedge (Tabasco)",
+        "license": "CC-BY-3.0",
+        "url": "https://opengameart.org/content/gunshot-sounds",
+        "notice": "assets/source/v100/audio/opengameart/creativecommons.txt",
+        "adaptation": "trimmed, filtered, attenuated and faded original CZ pistol recording; no voice"
+      },
+      "nonVoice": true
+    },
+    {
+      "file": "public/audio/v104/combat/suppressed-pistol.ogg",
+      "bytes": 5219,
+      "sha256": "b3f95eecb242bb87f2d77eda1343dd6946a13442ff0a3e48499d4fa91bd81fed",
+      "inputs": [
+        {
+          "file": "assets/source/v100/audio/opengameart/cz.wav",
+          "sha256": "4a8594b3cf3f2bfe49497c4a9ae6301b5c7000f21c7cbcb6650df8f594fce713"
+        }
+      ],
+      "filter": "[0:a]silenceremove=start_periods=1:start_threshold=-24dB:start_silence=0.005,atrim=0:0.24,asetpts=PTS-STARTPTS,highpass=f=140,lowpass=f=1900,volume=0.28,afade=t=out:st=0.12:d=0.12[mix];[mix]alimiter=limit=0.85:level=false[out]",
+      "credit": {
+        "creator": "Vincent Sevedge (Tabasco)",
+        "license": "CC-BY-3.0",
+        "url": "https://opengameart.org/content/gunshot-sounds",
+        "notice": "assets/source/v100/audio/opengameart/creativecommons.txt",
+        "adaptation": "trimmed, filtered, attenuated and faded original CZ pistol recording; no voice"
+      },
+      "nonVoice": true
+    },
+    {
+      "file": "public/audio/v104/combat/suppressed-pistol.mp3",
+      "bytes": 2697,
+      "sha256": "3e9ea6df61d0cf17fd75b7104a8db84603b5102179a4a2623054071e108c3358",
+      "inputs": [
+        {
+          "file": "assets/source/v100/audio/opengameart/cz.wav",
+          "sha256": "4a8594b3cf3f2bfe49497c4a9ae6301b5c7000f21c7cbcb6650df8f594fce713"
+        }
+      ],
+      "filter": "[0:a]silenceremove=start_periods=1:start_threshold=-24dB:start_silence=0.005,atrim=0:0.24,asetpts=PTS-STARTPTS,highpass=f=140,lowpass=f=1900,volume=0.28,afade=t=out:st=0.12:d=0.12[mix];[mix]alimiter=limit=0.85:level=false[out]",
+      "credit": {
+        "creator": "Vincent Sevedge (Tabasco)",
+        "license": "CC-BY-3.0",
+        "url": "https://opengameart.org/content/gunshot-sounds",
+        "notice": "assets/source/v100/audio/opengameart/creativecommons.txt",
+        "adaptation": "trimmed, filtered, attenuated and faded original CZ pistol recording; no voice"
+      },
+      "nonVoice": true
     }
   ]
 }

@@ -7,7 +7,7 @@ import {
 } from "./battleAudioContracts.js";
 import { V100_STAGES } from "./v100Registry.js";
 import { v100AudioDesignCandidate, v100SoundSources } from "./v100SoundDesign.js";
-import {V104_ARMOR_AUDIO,V104_BOTTLE_AUDIO,V104_BEAM_AUDIO} from "./v104CombatAudio.js";
+import {V104_ARMOR_AUDIO,V104_BOTTLE_AUDIO,V104_BEAM_AUDIO,V104_HANDGUN_AUDIO} from "./v104CombatAudio.js";
 export {
   V099_MANUAL_ABILITY_AUDIO_CONTRACTS,
   V099_PHYSICAL_AUDIO_ASSET_COUNT,
@@ -102,7 +102,7 @@ const V100_ENEMY_COMBAT_CUE_TARGETS = Object.freeze({
   "red-panther-knife": Object.freeze({ attack: "weapon-crowbar", hurt: "weapon-melee-impact", death: "v100-body-fall" }),
   "red-panther-shield": Object.freeze({ attack: "v104-armor-hit", hurt: "v104-armor-hit", death: "v100-body-fall" }),
   "red-panther-smg": Object.freeze({ attack: "weapon-gunner", hurt: "weapon-melee-impact", death: "v100-body-fall" }),
-  "red-panther-commander": Object.freeze({ attack: "weapon-rifle", hurt: "weapon-melee-impact", death: "v100-body-fall" }),
+  "red-panther-commander": Object.freeze({ attack: "v104-handgun", hurt: "weapon-melee-impact", death: "v100-body-fall" }),
   "mugarian-president-mutated": Object.freeze({
     entrance: "boss-mother-entrance",
     attack: "boss-mother-brood-eruption",
@@ -429,6 +429,7 @@ const enemyVoicePools = ENEMY_KINDS.flatMap((kind) => ENEMY_VOICE_EVENTS.map((ev
 
 const assets = [
   V104_ARMOR_AUDIO,
+  V104_HANDGUN_AUDIO,
   V104_BOTTLE_AUDIO,
   ...V104_BEAM_AUDIO,
   { id: 'v100-body-fall', category: 'melee', sources: v100SoundSources('foley', 'fall'), gain: .6, cooldownMs: 160, maxInstances: 2 },

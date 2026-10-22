@@ -59,6 +59,7 @@ export const WEAPON_PROFILE_IDS = Object.freeze([
   "crowbar",
   "chainsaw",
   "handgun",
+  "suppressed-pistol",
   "rifle",
   "sniper",
   "machine-gun",
@@ -802,6 +803,19 @@ export const WEAPON_PROFILES = deepFreeze({
     damageWeights: [1],
     shotOffsetsSeconds: [0],
   },
+  "suppressed-pistol": {
+    id: "suppressed-pistol",
+    trail: "ballistic",
+    trailColor: "#ddd9ce",
+    impact: "spark",
+    impactRadius: 7,
+    hitStopSeconds: .018,
+    recoil: .18,
+    casing: true,
+    damageWeights: [1],
+    shotOffsetsSeconds: [0],
+    projectileTravelSeconds: .12,
+  },
   rifle: {
     id: "rifle",
     trail: "ballistic",
@@ -951,7 +965,7 @@ export const UNIT_WEAPON_PROFILE = deepFreeze({
   medic: "heal-support",
   "crazy-king": "chainsaw",
   kumaverson: "blunt",
-  babayaga: "sniper",
+  babayaga: "suppressed-pistol",
   guardian: "blunt",
   engineer: "crossbow",
   zakimiya: "blunt",
@@ -965,7 +979,7 @@ export const UNIT_WEAPON_PROFILE = deepFreeze({
 // only the painted firearm trace; it must not create delayed damage or bursts.
 export const ENEMY_FIREARM_WEAPON_PROFILE = Object.freeze({
   "red-panther-smg": "machine-gun",
-  "red-panther-commander": "rifle",
+  "red-panther-commander": "handgun",
 });
 
 export const COMBAT_WEAPON_ANCHORS = deepFreeze({

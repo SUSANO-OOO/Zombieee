@@ -1,32 +1,52 @@
 import {v177JointActorKey} from './v177JointActorHistory.js';
 const weaponHistory=new WeakMap();
-const steelKinds=new Set(['brute','guardian','scout','zakimiya','tky','miyamoto-musashi','crazy-king','kumaverson','takuya','takuya-omega']);
-const clawKinds=new Set(['crusher','abomination','gairen','futago','futago-separated-a','futago-separated-b','mugarian-president-mutated','ooguchi']);
+const steelKinds=new Set(['brute','guardian','gate-eater','red-panther-shield','scout','zakimiya','tky','miyamoto-musashi','crazy-king','kumaverson','takuya','takuya-omega','red-panther-knife']);
+const clawKinds=new Set(['walker','runner','turned','sprinter','grappler','crusher','abomination','gairen','futago','futago-separated-a','futago-separated-b','mugarian-president-mutated']);
+const fistKinds=new Set(['brawler','shade']);
 export function v104WeaponWakeCandidate(kind,phase,held=false){
- return !held&&Number.isFinite(phase)&&phase>=.12&&phase<=.7&&(steelKinds.has(kind)||clawKinds.has(kind));
+ return !held&&Number.isFinite(phase)&&phase>=.12&&phase<=.7&&(steelKinds.has(kind)||clawKinds.has(kind)||fistKinds.has(kind));
 }
 const ready=(objects,id)=>{const image=objects?.[id];if(!image?.complete||!image.naturalWidth)throw Error('Undecoded combat effect: '+id);return image;};
-export function drawV104WeaponWake(ctx,objects,{actor,world,kind,time,tip,grip,phase,held=false}){
- const key=v177JointActorKey(actor,world),previous=weaponHistory.get(key);
- if(!tip||!grip||!Number.isFinite(time)||held||!(actor.hp>0)||(!steelKinds.has(kind)&&!clawKinds.has(kind))){weaponHistory.delete(key);return false;}
+function textureTriangle(ctx,image,source,a,b,c,second=false){
+ const area=(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);
+ if(Math.abs(area)<.01)return false;
+ ctx.save();ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.lineTo(c.x,c.y);ctx.closePath();ctx.clip();
+ // Map the texture's two triangles onto the actual swept blade/hand, rather
+ // than rotating a square effect beside its current endpoint.
+ if(second)ctx.transform(b.x-c.x,b.y-c.y,c.x-a.x,c.y-a.y,a.x,a.y);
+ else ctx.transform(b.x-a.x,b.y-a.y,c.x-b.x,c.y-b.y,a.x,a.y);
+ ctx.drawImage(image,...source,0,0,1,1);ctx.restore();return true;
+}
+export function drawV104WeaponWake(ctx,objects,{actor,world,kind,time,tip,grip,phase,channel='primary',sequence,held=false}){
+ const key=v177JointActorKey(actor,world),history=weaponHistory.get(key)??new Map(),previous=history.get(channel);
+ if(!tip||!grip||!Number.isFinite(time)||held||!(actor.hp>0)||(!steelKinds.has(kind)&&!clawKinds.has(kind)&&!fistKinds.has(kind))){history.delete(channel);return false;}
  if(previous?.time===time)return false;
- weaponHistory.set(key,{time,tip:{...tip},phase});
- if(!(phase>=.18&&phase<=.65)||!previous||!(time>previous.time&&time-previous.time<=.12))return false;
+ history.set(channel,{time,tip:{...tip},grip:{...grip},phase,sequence});weaponHistory.set(key,history);
+ if(!(phase>=.18&&phase<=.65)||!previous||phase<previous.phase||sequence!==previous.sequence||!(time>previous.time&&time-previous.time<=.12))return false;
  const dx=tip.x-previous.tip.x,dy=tip.y-previous.tip.y,travel=Math.hypot(dx,dy),reach=Math.hypot(tip.x-grip.x,tip.y-grip.y);
- if(travel<.6||travel>180||reach<4)return false;
- const alpha=Math.min(.72,travel/10)*Math.min(1,(.7-phase)/.12),size=Math.max(24,Math.min(kind==='takuya-omega'?160:110,reach*1.65));
- ctx.save();ctx.shadowBlur=0;ctx.globalAlpha=alpha;
- if(kind==='tky'){
-  const image=ready(objects,'v100-lightblade'),frame=Math.min(5,Math.floor((phase-.18)/.47*6));
-  ctx.globalCompositeOperation='lighter';ctx.translate(tip.x,tip.y);ctx.rotate(Math.atan2(dy,dx)+Math.PI/4);
-  ctx.drawImage(image,frame%3*512,Math.floor(frame/3)*512,512,512,-size*.85,-size*.15,size,size);
- }else if(clawKinds.has(kind)){
-  const image=ready(objects,'v100-claw-contact'),frame=Math.min(5,Math.floor((phase-.18)/.47*6));
-  ctx.translate(tip.x,tip.y);ctx.rotate(Math.atan2(dy,dx)+Math.PI/4);
-  ctx.drawImage(image,frame%3*512,Math.floor(frame/3)*512,512,512,-size*.6,-size*.4,size,size);
- }else{
-  ctx.translate(tip.x,tip.y);ctx.rotate(Math.atan2(dy,dx)+Math.PI/4);
-  ctx.drawImage(ready(objects,'v104-steel'),-size*.88,-size*.12,size,size);
+ if(travel<.6||travel>180||reach<.5)return false;
+ const organic=clawKinds.has(kind),fist=fistKinds.has(kind),frame=Math.min(5,Math.floor((phase-.18)/.47*6));
+ const id=kind==='tky'?'v100-lightblade':organic?'v100-claw-contact':fist?'v100-dust':'v104-steel';
+ const image=ready(objects,id),source=['v100-lightblade','v100-claw-contact'].includes(id)
+  ?[frame%3*512,Math.floor(frame/3)*512,512,512]:[0,0,image.naturalWidth,image.naturalHeight];
+ const inset=kind==='zakimiya'?.7:organic?.55:.18;
+ const inner=(t,g)=>({x:g.x+(t.x-g.x)*inset,y:g.y+(t.y-g.y)*inset});
+ let a=inner(previous.tip,previous.grip),b=previous.tip,c=tip,d=inner(tip,grip);
+ if(fist||reach<5){
+  const thickness=Math.min(3,Math.max(1,reach*.45)),nx=-dy/travel*thickness,ny=dx/travel*thickness;
+  a={x:previous.tip.x-nx,y:previous.tip.y-ny};b={x:previous.tip.x+nx,y:previous.tip.y+ny};
+  c={x:tip.x+nx,y:tip.y+ny};d={x:tip.x-nx,y:tip.y-ny};
+ }
+ ctx.save();ctx.shadowBlur=0;ctx.globalAlpha=Math.min(kind==='tky'?.82:fist?.3:.6,travel/8)*Math.min(1,(.7-phase)/.12);
+ if(kind==='tky')ctx.globalCompositeOperation='lighter';
+ if(kind==='zakimiya')ctx.globalAlpha*=.55;
+ const first=textureTriangle(ctx,image,source,a,b,c),second=textureTriangle(ctx,image,source,a,c,d,true);
+ if(!first&&!second){
+  // A perfectly straight thrust still has a narrow textured motion strip.
+  const n={x:-dy/travel,y:dx/travel},w=1;
+  const aa={x:previous.tip.x-n.x*w,y:previous.tip.y-n.y*w},bb={x:previous.tip.x+n.x*w,y:previous.tip.y+n.y*w};
+  const cc={x:tip.x+n.x*w,y:tip.y+n.y*w},dd={x:tip.x-n.x*w,y:tip.y-n.y*w};
+  textureTriangle(ctx,image,source,aa,bb,cc);textureTriangle(ctx,image,source,aa,cc,dd,true);
  }
  ctx.restore();return true;
 }

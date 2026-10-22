@@ -74,7 +74,7 @@ export function v177GroundedJointPlan(kind,atlas,plan,sample,runtime){
   const phase=Number(runtime?.locomotionPhase)||0,walk=1-clamp(plan.paintLocomotion?.settle??runtime?.locomotionSettle??1);
   const walking=floating?0:walk;
   const wave=Math.sin(phase*2*Math.PI),bounce=Math.cos(phase*4*Math.PI);
-  const attack=plan.attackPhase===null||plan.attackPhase===undefined?0:attackWeight(plan.attackPhase);
+  const attack=plan.attackPhase===null||plan.attackPhase===undefined?0:plan.choreography?.bodyWeight??attackWeight(plan.attackPhase);
   const gun=group==='firearm'||['medic','engineer'].includes(kind);
   const weight=gun?-attack*.3:attack;
   const dx=wave*(heavy?3:4)*walking+weight*(heavy?10:7);

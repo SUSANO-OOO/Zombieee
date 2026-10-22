@@ -4219,7 +4219,7 @@ type FighterDrawOptions = {
 
 const fighterRenderAudit = new WeakMap<Fighter, FighterRenderAudit>();
 const fighterWeaponSockets = new WeakMap<Fighter, {x:number;y:number}>();
-const fighterJointWeapons = new WeakMap<Fighter, {kind:string;phase:number|null;held:boolean;tip:{x:number;y:number};grip:{x:number;y:number}}>();
+const fighterJointWeapons = new WeakMap<Fighter, {kind:string;channel:string;sequence?:number;phase:number|null;held:boolean;tip:{x:number;y:number};grip:{x:number;y:number}}[]>();
 const fighterTakuyaGroundSockets = new WeakMap<Fighter, {x:number;y:number;sourceId:string;kind:string;pixel:{x:number;y:number}}>();
 const fighterTataraGroundSockets = new WeakMap<Fighter, {x:number;y:number;sourcePath:string;sourcePixel:{x:number;y:number};kind:string;ownerId:number;activationId:number}>();
 const fighterShieldSockets = new WeakMap<Fighter, {x:number;y:number}>();
@@ -4707,8 +4707,23 @@ function drawSpriteFighter(
     ? drawV177JointPose(ctx,jointImage,renderKind,jointPose,-size.w*frame.anchorX,-size.h*frame.anchorY,size.w,size.h,{actor:f,world:options.world})
     : articulatedWalk && v100HumanWalkRenderer.draw(ctx,sprite,renderKind,articulatedWalkPhase,
       -size.w*frame.anchorX,-size.h*frame.anchorY,size.w,size.h,{settle:f.animationPresentation?.locomotionSettle??1});
-  if(drewArticulatedWalk&&jointPose&&weaponSocket&&gripSocket)fighterJointWeapons.set(f,{kind:renderKind,
-    phase:jointPose.attackPhase,held:Boolean(jointPose.reactionHeld||jointPose.liveStun),tip:weaponSocket,grip:gripSocket});
+  if(drewArticulatedWalk&&jointPose&&weaponSocket&&gripSocket){
+    const wakes=[{kind:renderKind,channel:jointAtlas.weaponBone,sequence:jointPose.choreography?.sequence,
+      phase:jointPose.attackPhase,held:Boolean(jointPose.reactionHeld||jointPose.liveStun),tip:weaponSocket,grip:gripSocket}];
+    for(const arm of jointAtlas.armConstraints??[]){
+      if(arm.effectorBone===jointAtlas.weaponBone)continue;
+      // A shared two-handed weapon has one edge. Independent blades, fists
+      // and claws each retain their own painted endpoint and history.
+      if(!['miyamoto-musashi','brawler','shade','walker','runner','turned','sprinter','grappler','crusher','abomination','gairen','futago','futago-separated-a','futago-separated-b','mugarian-president-mutated'].includes(renderKind))continue;
+      if(renderKind==='mugarian-president-mutated'&&arm.effectorBone==='weapon-0')continue;
+      const tipPoint=renderKind==='miyamoto-musashi'?[329,339]:arm.grip;
+      const socketOptions={kind:renderKind,plan:jointPose,direction,frame,size,pose,x:f.x,y:f.y,bob,depthScale,sourceBone:arm.effectorBone};
+      const tip=v177RenderedJointWeaponSocket({...socketOptions,sourcePoint:tipPoint});
+      const grip=v177RenderedJointWeaponSocket({...socketOptions,sourcePoint:arm.effectorWrist??arm.wrist});
+      if(tip&&grip)wakes.push({...wakes[0],channel:arm.effectorBone,tip,grip});
+    }
+    fighterJointWeapons.set(f,wakes);
+  }
   if(fighterRenderAuditEnabled&&recordAudit) {
     const audit=fighterRenderAudit.get(f);
     if(audit) {
@@ -8426,6 +8441,10 @@ function drawAuthoredShotVfx(
   const impact = Math.max(0, impactProgress);
   const trail = weaponProfile.trail;
   const isMelee = shot.style === "melee";
+  if(v100StageObjects&&weapon==='kurome'){
+    drawV104EyeBeam(ctx,v100StageObjects,{origin:{x:shot.x,y:shot.y},target:{x:shot.tx,y:shot.ty},halfWidth:5,progress:p});
+    return true;
+  }
   if(v100StageObjects&&isMelee&&V100_CONTACT_WEAPONS.includes(weapon))return true;
   if(v100StageObjects&&enemyProjectile){
     drawV104InfectedWake(ctx,v100StageObjects,{x,y,ux,uy,trail:enemyProjectile.trail,progress:Math.max(0,impactProgress),impact:impactProgress>=0});
@@ -9014,7 +9033,7 @@ function drawWorld(
     });
     if(f.combatReady&&g.definition.missionConfig.v100StageNumber){
       const weapon=fighterJointWeapons.get(f);
-      if(weapon)drawV104WeaponWake(ctx,stageObjects,{actor:f,world:g,time:g.time,...weapon});
+      if(weapon)for(const stroke of weapon)drawV104WeaponWake(ctx,stageObjects,{actor:f,world:g,time:g.time,...stroke});
       if(f.kind==='kurome'&&['tracking','locked'].includes(f.stationAbility.phase))drawV104EyeBeam(ctx,stageObjects,{
         origin:fighterWeaponSockets.get(f),target:{x:f.stationAbility.targetX??f.x-100,y:(f.stationAbility.targetY??f.y)-38},warning:true,locked:f.stationAbility.phase==='locked'});
     }
@@ -23229,6 +23248,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                   if (["ranger", "gunner", "medic", "babayaga", "engineer"].includes(f.kind)) playCue("ranged-shot", { frequency: 310 + Math.random() * 50 });
                   else playCue("melee-hit");
                 }
+              } else if (f.kind === "kurome" && g.definition.missionConfig.v100StageNumber) {
+                const muzzle=weaponAnchorForTarget(f,target);
+                addShot(g,muzzle.x,muzzle.y,target.x,target.y-28,.18,"zombie",.18,"projectile","kurome",undefined,f.id,target.id);
               } else if (ENEMY_PROJECTILE_KINDS.includes(f.kind)) {
                 if (!productionMixerRef.current) playCue("ranged-shot", { frequency: 205 });
               } else {

@@ -2,6 +2,7 @@ import {v177JointActorKey} from './v177JointActorHistory.js';
 const sources=name=>['mp3','ogg'].map(ext=>({src:`/audio/v104/combat/${name}.${ext}`,type:ext==='mp3'?'audio/mpeg':'audio/ogg'}));
 const replacements={
  'weapon-pan-hit':'pan-hit','weapon-pan-heavy-hit':'pan-heavy','weapon-pan-stun':'pan-heavy',
+ 'weapon-suppressed-pistol':'suppressed-pistol',
  ...Object.fromEntries(['crazy-king','kumaverson','babayaga'].flatMap(kind=>['deploy','attack','hurt','death'].map(event=>{
   const id=`voice-${kind}-${event}`;return[id,id];
  }))),
@@ -10,6 +11,7 @@ export function withV104CombatAudio(base){
  return{...base,assets:base.assets.map(asset=>replacements[asset.id]?{...asset,sources:sources(replacements[asset.id])}:asset)};
 }
 export const V104_ARMOR_AUDIO={id:'v104-armor-hit',category:'melee',sources:sources('armor-hit'),gain:.68,priority:78,cooldownMs:140,maxInstances:2};
+export const V104_HANDGUN_AUDIO={id:'v104-handgun',category:'weapons',sources:sources('handgun'),gain:.72,priority:72,cooldownMs:100,maxInstances:4};
 export const V104_BOTTLE_AUDIO={id:'weapon-bottle-hit',category:'melee',
  sources:['mp3','ogg'].map(ext=>({src:`/audio/v100/foley/story-glass.${ext}`,type:ext==='mp3'?'audio/mpeg':'audio/ogg'})),
  gain:.58,priority:68,cooldownMs:140,maxInstances:2};

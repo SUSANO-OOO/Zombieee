@@ -54,7 +54,7 @@ export function drawV100GroundFire(ctx, objects, effect, time) {
 // infected mouth. Each actual burst shot owns one short, non-looping flash.
 const MUZZLE_PROFILES=Object.freeze({
  ranger:{duration:.1,size:48},
- babayaga:{duration:.1,size:52},
+ babayaga:{duration:.055,size:18},
  gunner:{duration:.085,size:48},
  'red-panther-smg':{duration:.085,size:44},
  'red-panther-commander':{duration:.1,size:42},
@@ -82,7 +82,7 @@ const ready=(objects,id)=>{
  return image;
 };
 export const V100_CONTACT_WEAPONS=Object.freeze(['scout','brawler','kumaverson','brute','guardian','crazy-king','zakimiya','tky','miyamoto-musashi','walker','runner','crusher','abomination','takuya','takuya-omega','gairen','futago','mugarian-president-mutated','ooguchi','grappler','sprinter','gate-eater','cagewalker','red-panther-knife']);
-export const V100_CLAW_CONTACT_WEAPONS=Object.freeze(['walker','runner','grappler','sprinter']);
+export const V100_CLAW_CONTACT_WEAPONS=Object.freeze(['walker','runner','turned','grappler','sprinter','futago']);
 const contactQueues=new WeakMap();
 export function clearV100ContactQueue(world){contactQueues.delete(world);}
 export function queueV100Contact(world,{x,y,ground=false,metal=false,claw=false,size=58,direction=1,delay=0,guardContact=null,clawContact=null,skillContact=null}){

@@ -191,13 +191,13 @@ export function drawV177CorpseJointPresentation(ctx,image,sample,objects={}) {
   if(!sample || !image?.naturalWidth)return false;
   const s=sample.state,dx=-s.width*s.frame.anchorX,dy=-s.height*s.frame.anchorY;
   ctx.save();ctx.transform(...sample.matrix);
-  const drawn=drawV177ResolvedJointPose(ctx,image,s.kind,sample.matrices,dx,dy,s.width,s.height,{omitParts:s.owned});
+  const drawn=drawV177ResolvedJointPose(ctx,image,s.kind,sample.matrices,dx,dy,s.width,s.height,{omitParts:s.owned,frontBones:s.initial.frontBones});
   ctx.restore();if(!drawn)return false;
   const radius=Math.max(2,Math.min(5.5,s.height*.025));
   for(const [x,y]of sample.bodyWounds)drawV102JointCorpseWound(ctx,s.severPlan,x,y,radius,objects);
   if(sample.fragment) {
     const f=sample.fragment;ctx.save();ctx.transform(...f.matrix);
-    drawV177ResolvedJointPose(ctx,image,s.kind,s.initialMatrices,dx,dy,s.width,s.height,{onlyParts:s.owned});ctx.restore();
+    drawV177ResolvedJointPose(ctx,image,s.kind,s.initialMatrices,dx,dy,s.width,s.height,{onlyParts:s.owned,frontBones:s.initial.frontBones});ctx.restore();
     for(const [x,y]of f.wounds)drawV102JointCorpseWound(ctx,s.severPlan,x,y,radius,objects,true);
   }
   return true;
