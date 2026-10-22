@@ -4223,7 +4223,7 @@ type FighterDrawOptions = {
 
 const fighterRenderAudit = new WeakMap<Fighter, FighterRenderAudit>();
 const fighterWeaponSockets = new WeakMap<Fighter, {x:number;y:number}>();
-const fighterJointWeapons = new WeakMap<Fighter, {kind:string;channel:string;sequence?:number;phase:number|null;held:boolean;tip:{x:number;y:number};grip:{x:number;y:number}}[]>();
+const fighterJointWeapons = new WeakMap<Fighter, {kind:string;channel:string;sequence?:number;striking:boolean;phase:number|null;held:boolean;tip:{x:number;y:number};grip:{x:number;y:number}}[]>();
 const fighterTakuyaGroundSockets = new WeakMap<Fighter, {x:number;y:number;sourceId:string;kind:string;pixel:{x:number;y:number}}>();
 const fighterTataraGroundSockets = new WeakMap<Fighter, {x:number;y:number;sourcePath:string;sourcePixel:{x:number;y:number};kind:string;ownerId:number;activationId:number}>();
 const fighterShieldSockets = new WeakMap<Fighter, {x:number;y:number}>();
@@ -4713,6 +4713,7 @@ function drawSpriteFighter(
       -size.w*frame.anchorX,-size.h*frame.anchorY,size.w,size.h,{settle:f.animationPresentation?.locomotionSettle??1});
   if(drewArticulatedWalk&&jointPose&&weaponSocket&&gripSocket){
     const wakes=[{kind:renderKind,channel:jointAtlas.weaponBone,sequence:jointPose.choreography?.sequence,
+      striking:jointPose.choreography?.strikeBones?.includes(jointAtlas.weaponBone)??true,
       phase:jointPose.attackPhase,held:Boolean(jointPose.reactionHeld||jointPose.liveStun),tip:weaponSocket,grip:gripSocket}];
     for(const arm of jointAtlas.armConstraints??[]){
       if(arm.effectorBone===jointAtlas.weaponBone)continue;
@@ -4724,7 +4725,8 @@ function drawSpriteFighter(
       const socketOptions={kind:renderKind,plan:jointPose,direction,frame,size,pose,x:f.x,y:f.y,bob,depthScale,sourceBone:arm.effectorBone};
       const tip=v177RenderedJointWeaponSocket({...socketOptions,sourcePoint:tipPoint});
       const grip=v177RenderedJointWeaponSocket({...socketOptions,sourcePoint:arm.effectorWrist??arm.wrist});
-      if(tip&&grip)wakes.push({...wakes[0],channel:arm.effectorBone,tip,grip});
+      if(tip&&grip)wakes.push({...wakes[0],channel:arm.effectorBone,tip,grip,
+        striking:jointPose.choreography?.strikeBones?.includes(arm.effectorBone)??false});
     }
     fighterJointWeapons.set(f,wakes);
   }
@@ -9133,8 +9135,10 @@ function drawWorld(
     },(contact:{ownerId:number;targetId:number;kind:string;attackSequence:number})=>{
       const owner=g.fighters.find(f=>f.id===contact.ownerId&&f.kind===contact.kind&&f.attackSequence===contact.attackSequence);
       const target=g.fighters.find(f=>f.id===contact.targetId);
-      const stroke=owner?fighterJointWeapons.get(owner)?.[0]:null;
-      return stroke?v104MeleeImpactPoint({...stroke,target}):null;
+      const strokes=owner?fighterJointWeapons.get(owner)?.filter(s=>s.striking):[];
+      const points=(strokes??[]).map(stroke=>v104MeleeImpactPoint({...stroke,target})).filter(Boolean);
+      if(target)points.sort((a,b)=>Math.hypot(a.x-target.x,a.y-(target.y-28))-Math.hypot(b.x-target.x,b.y-(target.y-28)));
+      return points[0]??null;
     });
     drawV100ManualMuzzles(ctx,stageObjects,g,(ownerId:number,kind:string)=>{
       const owner=g.fighters.find(f=>f.id===ownerId&&f.kind===kind&&f.hp>0);

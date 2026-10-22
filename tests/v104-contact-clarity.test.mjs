@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import ts from 'typescript';
 import {drawV104EyeBeam,v104MeleeImpactPoint} from '../app/v104CombatVfx.js';
-import {V177_JOINT_ATLASES as atlases,v177JointPose,v177CaptureJointPose} from '../app/v177JointPresentation.js';
+import {V177_JOINT_ATLASES as atlases,v177JointPose,v177CaptureJointPose,v177RenderedJointWeaponSocket} from '../app/v177JointPresentation.js';
 import {queueV100ClawContact,getV100ClawContactSnapshot,queueV100Contact,drawV100ContactQueue} from '../app/v100CombatVfx.js';
 
 const source=readFileSync('app/AshfallGame.tsx','utf8'),tree=ts.createSourceFile('game.tsx',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);
@@ -14,7 +14,7 @@ const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 test('the real impact resolver binds the current strike and pins the burst to its painted contact point',()=>{
  const arrows=[];const visit=n=>{if(ts.isArrowFunction(n)&&n.parameters[0]?.name.getText(tree)==='contact'&&n.body.getText(tree).includes('v104MeleeImpactPoint'))arrows.push(n);ts.forEachChild(n,visit);};visit(tree);assert.equal(arrows.length,1);
  const owner={id:7,kind:'brute',attackSequence:3},target={id:8,x:430,y:300},g={time:1,definition:{missionConfig:{v100StageNumber:1}},fighters:[owner,target]},fighterJointWeapons=new Map();
- fighterJointWeapons.set(owner,[{kind:'brute',tip:{x:426,y:242},grip:{x:405,y:251}}]);
+ fighterJointWeapons.set(owner,[{kind:'brute',striking:true,tip:{x:426,y:242},grip:{x:405,y:251}}]);
  const resolve=vm.runInNewContext(ts.transpileModule('const resolve='+arrows[0].getText(tree)+';resolve;',{
   compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText,{g,fighterJointWeapons,v104MeleeImpactPoint});
  const contact={ownerId:7,targetId:8,kind:'brute',attackSequence:3,resolvedSocket:false};
@@ -28,6 +28,25 @@ test('the real impact resolver binds the current strike and pins the burst to it
  fighterJointWeapons.get(owner)[0].tip={x:470,y:280};g.time+=.05;
  drawV100ContactQueue(ctx,objects,g,null,null,null,resolve);assert.deepEqual(points.at(-1),[426,242],'an existing burst stays at the impact rather than chasing the weapon');
  g.time+=.2;drawV100ContactQueue(ctx,objects,g,null,null,null,resolve);assert.equal(points.length,2);
+});
+
+test('the actual impact resolver follows the striking fist on both alternating Paisen attacks',()=>{
+ let arrow;const visit=n=>{if(ts.isArrowFunction(n)&&n.parameters[0]?.name.getText(tree)==='contact'&&n.body.getText(tree).includes('v104MeleeImpactPoint'))arrow=n;ts.forEachChild(n,visit);};visit(tree);
+ for(const attackSequence of [1,2]){
+  const kind='brawler',atlas=atlases[kind],owner={id:7,kind,hp:100,attackSequence},target={id:8,x:450,y:300},g={fighters:[owner,target]},fighterJointWeapons=new Map();
+  const plan=v177JointPose(kind,{requestedState:'active',clipProgress:0},{locomotionPhase:.2,locomotionSettle:1},{actor:owner,grounded:true});
+  assert.equal(plan.choreography.strikeBones.length,1);
+  const options={kind,plan,direction:'right',frame:{anchorX:.5,anchorY:1,flipX:false},size:{w:atlas.width,h:atlas.height},pose:{offsetX:0,offsetY:0,scaleX:1,scaleY:1,rotationRadians:0},x:400,y:500};
+  const strokes=atlas.armConstraints.map(arm=>({kind,channel:arm.effectorBone,striking:plan.choreography.strikeBones.includes(arm.effectorBone),
+   tip:v177RenderedJointWeaponSocket({...options,sourceBone:arm.effectorBone,sourcePoint:arm.grip}),
+   grip:v177RenderedJointWeaponSocket({...options,sourceBone:arm.effectorBone,sourcePoint:arm.effectorWrist??arm.wrist})}));
+  fighterJointWeapons.set(owner,strokes);
+  const resolve=vm.runInNewContext(ts.transpileModule('const resolve='+arrow.getText(tree)+';resolve;',{
+   compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText,{g,fighterJointWeapons,v104MeleeImpactPoint});
+  const expected=strokes.find(s=>s.striking).tip,other=strokes.find(s=>!s.striking).tip;
+  assert.ok(distance([expected.x,expected.y],[other.x,other.y])>25);
+  assert.deepEqual(resolve({ownerId:7,targetId:8,kind,attackSequence}),expected);
+ }
 });
 
 test('pan and hammer contacts use their striking surface; long blades intersect the victim along the actual edge',()=>{

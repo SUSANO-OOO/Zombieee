@@ -135,6 +135,7 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
   upper[bone]=multiply(torso,rigid(pivot,point(m,pivot),Math.atan2(m[1],m[0])));
  }
  const arms=atlas.armConstraints.map(c=>({...c})),weaponOwners=[...arms];
+ const strikeBones=contactKinds.has(kind)?[]:kind==='miyamoto-musashi'?['weapon-0','weapon-1']:[atlas.weaponBone];
  const primary=arms.find(c=>c.effectorBone===atlas.weaponBone),pivot=primary.effectorWrist??primary.wrist;
  const rest=point(base[atlas.weaponBone],pivot),restAngle=Math.atan2(base[atlas.weaponBone][1],base[atlas.weaponBone][0]);
  let angle=restAngle,target=[...rest];
@@ -145,6 +146,7 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
    if(kind==='mugarian-president-mutated'&&index===2)continue; // The third arm plants its cane.
    const wrist=c.effectorWrist??c.wrist,home=point(base[c.effectorBone],wrist),reach=armReach(c).max;
    const lead=both||index===(variant===0?leading:(leading+1)%arms.length);
+   if(lead)strikeBones.push(c.effectorBone);
    const rows=lead?[[.18,-reach*.18,-reach*.48],[.23,-reach*.18,-reach*.48],[.28,reach*.95,reach*(index%2?.22:.04)],[.48,reach*.76,reach*.48],[.64,reach*.7,reach*.4]]
     :[[.18,reach*.28,reach*.12],[.23,reach*.28,reach*.12],[.28,reach*.10,reach*.37],[.48,reach*.20,reach*.27],[.64,reach*.2,reach*.27]];
    const t=point(torso,shoulderTarget(c,p,home,rows)),start=Math.atan2(base[c.effectorBone][1],base[c.effectorBone][0]);
@@ -218,7 +220,7 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
   upper['arm-1-hand']=rigid(arms[1].wrist,hand,Math.atan2(m[1],m[0]));
  }
  const frontBones=(!attacking||['crazy-king','babayaga','kumaverson','takuya-omega'].includes(kind)||p>.06&&p<.94)?arms.flatMap(c=>[c.upperBone,c.lowerBone,c.effectorBone]):[];
- const choreography={kind,variant,sequence,upper,arms,frontBones,bodyWeight:weight,stepDistance:attacking?attackSteps[kind]??0:0};if(!attacking)carryPlans.set(atlas,choreography);
+ const choreography={kind,variant,sequence,upper,arms,frontBones,strikeBones,bodyWeight:weight,stepDistance:attacking?attackSteps[kind]??0:0};if(!attacking)carryPlans.set(atlas,choreography);
  return{...plan,choreography,upperOffsetY:0};
 }
 
