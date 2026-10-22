@@ -1,0 +1,36 @@
+{
+  "accent_phrases": [
+    {
+      "moras": [
+        {
+          "text": "ハ",
+          "vowel": "a",
+          "vowel_length": 0.0880352333188057,
+          "pitch": 4.909825801849365,
+          "consonant": "h",
+          "consonant_length": 0.07460600137710571
+        },
+        {
+          "text": "ッ",
+          "vowel": "cl",
+          "vowel_length": 0.07158059626817703,
+          "pitch": 0.0,
+          "consonant": null,
+          "consonant_length": null
+        }
+      ],
+      "accent": 1,
+      "pause_mora": null,
+      "is_interrogative": false
+    }
+  ],
+  "speed_scale": 1.2,
+  "pitch_scale": 0.0,
+  "intonation_scale": 1.0,
+  "volume_scale": 1.0,
+  "pre_phoneme_length": 0.015,
+  "post_phoneme_length": 0.035,
+  "output_sampling_rate": 48000,
+  "output_stereo": false,
+  "kana": "ハ'ッ"
+}

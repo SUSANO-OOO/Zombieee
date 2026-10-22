@@ -1,0 +1,130 @@
+{
+  "engine": "VOICEVOX Core 0.17.0",
+  "cast": [
+    {
+      "kind": "crazy-king",
+      "event": "deploy",
+      "text": "いくぜ！",
+      "styleId": 21,
+      "credit": "VOICEVOX:剣崎雌雄",
+      "source": "assets/source/v104/combat-audio/voice-crazy-king-deploy.wav",
+      "sha256": "8f63f56f9970c343eb981bfc2c08d614ac75d62806cd5db0a04b3a3f1912426f",
+      "synthetic": true
+    },
+    {
+      "kind": "crazy-king",
+      "event": "attack",
+      "text": "おらぁ！",
+      "styleId": 21,
+      "credit": "VOICEVOX:剣崎雌雄",
+      "source": "assets/source/v104/combat-audio/voice-crazy-king-attack.wav",
+      "sha256": "40450cccf1bf6f2810fc03a680198954f27f4de4f050befba8fbd140728d4ba1",
+      "synthetic": true
+    },
+    {
+      "kind": "crazy-king",
+      "event": "hurt",
+      "text": "ぐっ！",
+      "styleId": 21,
+      "credit": "VOICEVOX:剣崎雌雄",
+      "source": "assets/source/v104/combat-audio/voice-crazy-king-hurt.wav",
+      "sha256": "0984a5f78ea5c73ad2b5a513bcc27402feca99ec158dcb47c330e6831fd186d7",
+      "synthetic": true
+    },
+    {
+      "kind": "crazy-king",
+      "event": "death",
+      "text": "くそっ……。",
+      "styleId": 21,
+      "credit": "VOICEVOX:剣崎雌雄",
+      "source": "assets/source/v104/combat-audio/voice-crazy-king-death.wav",
+      "sha256": "8b0d41986c3d0578653d574dc2acdd401ef089edae18367ae6446592bced4a1e",
+      "synthetic": true
+    },
+    {
+      "kind": "kumaverson",
+      "event": "deploy",
+      "text": "任せておけ。",
+      "styleId": 53,
+      "credit": "VOICEVOX:麒ヶ島宗麟",
+      "source": "assets/source/v104/combat-audio/voice-kumaverson-deploy.wav",
+      "sha256": "3b9a43d5e4273b97dadceb031b593e0cb5cc2f390b6d45c09d1d8efb8fdf33f6",
+      "synthetic": true
+    },
+    {
+      "kind": "kumaverson",
+      "event": "attack",
+      "text": "せいっ！",
+      "styleId": 53,
+      "credit": "VOICEVOX:麒ヶ島宗麟",
+      "source": "assets/source/v104/combat-audio/voice-kumaverson-attack.wav",
+      "sha256": "7e1eedfa1f38d86c39ca25791857a6d0fecbaff003037b220f36c3e1b730d81e",
+      "synthetic": true
+    },
+    {
+      "kind": "kumaverson",
+      "event": "hurt",
+      "text": "ぬうっ。",
+      "styleId": 53,
+      "credit": "VOICEVOX:麒ヶ島宗麟",
+      "source": "assets/source/v104/combat-audio/voice-kumaverson-hurt.wav",
+      "sha256": "9b8699453e3a8e3f56fab03aae3e72342601cca59e037133c2d29826bb8448e0",
+      "synthetic": true
+    },
+    {
+      "kind": "kumaverson",
+      "event": "death",
+      "text": "ここまでか……。",
+      "styleId": 53,
+      "credit": "VOICEVOX:麒ヶ島宗麟",
+      "source": "assets/source/v104/combat-audio/voice-kumaverson-death.wav",
+      "sha256": "30e69e99764306bf9feecd5aa3737e39092ed59b45df1a20729dabf5a8e48754",
+      "synthetic": true
+    },
+    {
+      "kind": "babayaga",
+      "event": "deploy",
+      "text": "行くぞ。",
+      "styleId": 11,
+      "credit": "VOICEVOX:玄野武宏",
+      "source": "assets/source/v104/combat-audio/voice-babayaga-deploy.wav",
+      "sha256": "be491f876e38dda809533b09c401618ac914ac62d44a3827d12cc8ab6adeee06",
+      "synthetic": true
+    },
+    {
+      "kind": "babayaga",
+      "event": "attack",
+      "text": "はっ。",
+      "styleId": 11,
+      "credit": "VOICEVOX:玄野武宏",
+      "source": "assets/source/v104/combat-audio/voice-babayaga-attack.wav",
+      "sha256": "9b297890fd538e8c256249d403c4ea76bee47fcd2e8e643ddd69d1799a952b0e",
+      "synthetic": true
+    },
+    {
+      "kind": "babayaga",
+      "event": "hurt",
+      "text": "ぐっ。",
+      "styleId": 11,
+      "credit": "VOICEVOX:玄野武宏",
+      "source": "assets/source/v104/combat-audio/voice-babayaga-hurt.wav",
+      "sha256": "542ab902cd3a4642f3d728f98b804496d68532b3be940317caeee38c979febcd",
+      "synthetic": true
+    },
+    {
+      "kind": "babayaga",
+      "event": "death",
+      "text": "まだ……。",
+      "styleId": 11,
+      "credit": "VOICEVOX:玄野武宏",
+      "source": "assets/source/v104/combat-audio/voice-babayaga-death.wav",
+      "sha256": "e5f7b3a5d3194582051bb0f8cc9315f6188e24e4aed07ec66b3d1cbc934e8c7b",
+      "synthetic": true
+    }
+  ],
+  "licenses": [
+    "https://www.virvoxproject.com/voicevoxの利用規約",
+    "https://frontier.creatia.cc/fanclubs/413/posts/4507"
+  ],
+  "note": "Synthetic voices assigned only to these three named characters; no story full reading."
+}

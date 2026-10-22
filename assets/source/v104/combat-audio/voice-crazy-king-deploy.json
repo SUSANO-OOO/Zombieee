@@ -1,0 +1,44 @@
+{
+  "accent_phrases": [
+    {
+      "moras": [
+        {
+          "text": "イ",
+          "vowel": "i",
+          "vowel_length": 0.09766563028097153,
+          "pitch": 4.720713138580322,
+          "consonant": null,
+          "consonant_length": null
+        },
+        {
+          "text": "ク",
+          "vowel": "u",
+          "vowel_length": 0.06167882680892944,
+          "pitch": 4.959601879119873,
+          "consonant": "k",
+          "consonant_length": 0.07770773023366928
+        },
+        {
+          "text": "ゼ",
+          "vowel": "e",
+          "vowel_length": 0.1721189022064209,
+          "pitch": 4.516232013702393,
+          "consonant": "z",
+          "consonant_length": 0.06169199198484421
+        }
+      ],
+      "accent": 2,
+      "pause_mora": null,
+      "is_interrogative": false
+    }
+  ],
+  "speed_scale": 1.18,
+  "pitch_scale": 0.0,
+  "intonation_scale": 1.0,
+  "volume_scale": 1.0,
+  "pre_phoneme_length": 0.015,
+  "post_phoneme_length": 0.035,
+  "output_sampling_rate": 48000,
+  "output_stereo": false,
+  "kana": "イク'ゼ"
+}

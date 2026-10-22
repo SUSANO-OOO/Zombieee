@@ -1,0 +1,257 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "takuya-omega",
+  "assetPath": "/art/v100/joints/takuya-omega-r3.webp",
+  "bytes": 70246,
+  "sha256": "dda2ec50aae471fc2327a2c2961470f723d3aa6a5d180c206b1d4309e183e351",
+  "atlasPacking": "height-descending-shelves",
+  "generatedPartsStudySha256": "1bf8646fa3bebea37effabedba44f2a417913166de68fe601a2784aca1a93341",
+  "identitySourceSha256": "5505512cd19684b6dadcc3b9c89b01a1a620c096675f3de35a63a237e75c0487",
+  "identityBinding": {
+    "path": "/art/v100/bosses/takuya-omega-battle-v2.png",
+    "sourceSha256": "deaf3edcca3102bd1476460924f92ba4827565dec793c98dacaf03ae57fc424b",
+    "sourceRect": {
+      "x": 544,
+      "y": 0,
+      "w": 544,
+      "h": 512
+    },
+    "flipX": false
+  },
+  "motionSha256": "bf47ac84c3661294eb9c24b716ff0ad253ce890213d95119a016465df4f460ce",
+  "originalPoseBindings": {
+    "idle": {
+      "path": "/art/v100/bosses/takuya-omega-battle-v2.png",
+      "sourceSha256": "deaf3edcca3102bd1476460924f92ba4827565dec793c98dacaf03ae57fc424b",
+      "sourceRect": {
+        "x": 544,
+        "y": 0,
+        "w": 544,
+        "h": 512
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "../takuya-omega-r1/identity-reference.png",
+      "sha256": "5505512cd19684b6dadcc3b9c89b01a1a620c096675f3de35a63a237e75c0487",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact native544x512 canonical RGBA crop without resize or identity repaint."
+    },
+    "walk-a": {
+      "path": "/art/v100/bosses/takuya-omega-battle-v2.png",
+      "sourceSha256": "deaf3edcca3102bd1476460924f92ba4827565dec793c98dacaf03ae57fc424b",
+      "sourceRect": {
+        "x": 1088,
+        "y": 0,
+        "w": 544,
+        "h": 512
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "../takuya-omega-r1/original-walk-a.png",
+      "sha256": "cb6e77ac7ebd6b910e2afd7f556cc9aada2ef79f464da971c179b12ec2adb4ba",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact native544x512 canonical RGBA crop without resize or identity repaint."
+    },
+    "walk-b": {
+      "path": "/art/v100/bosses/takuya-omega-battle-v2.png",
+      "sourceSha256": "deaf3edcca3102bd1476460924f92ba4827565dec793c98dacaf03ae57fc424b",
+      "sourceRect": {
+        "x": 544,
+        "y": 0,
+        "w": 544,
+        "h": 512
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "../takuya-omega-r1/original-walk-b.png",
+      "sha256": "5505512cd19684b6dadcc3b9c89b01a1a620c096675f3de35a63a237e75c0487",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact native544x512 canonical RGBA crop without resize or identity repaint."
+    },
+    "attack-a": {
+      "path": "/art/v100/bosses/takuya-omega-battle-v2.png",
+      "sourceSha256": "deaf3edcca3102bd1476460924f92ba4827565dec793c98dacaf03ae57fc424b",
+      "sourceRect": {
+        "x": 1632,
+        "y": 0,
+        "w": 544,
+        "h": 512
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "../takuya-omega-r1/original-attack-a.png",
+      "sha256": "f5836afe8d26f134d8d0d4d30d2ddcc672247a1053d8161d9d35d78afa0b685b",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact native544x512 canonical RGBA crop without resize or identity repaint."
+    },
+    "attack-b": {
+      "path": "/art/v100/bosses/takuya-omega-battle-v2.png",
+      "sourceSha256": "deaf3edcca3102bd1476460924f92ba4827565dec793c98dacaf03ae57fc424b",
+      "sourceRect": {
+        "x": 2720,
+        "y": 0,
+        "w": 544,
+        "h": 512
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "../takuya-omega-r1/original-attack-b.png",
+      "sha256": "6246287361b49ca93cc4396d356211caa185a0c00a46c9db69112dfe581be8da",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact native544x512 canonical RGBA crop without resize or identity repaint."
+    },
+    "hit": {
+      "path": "/art/v100/bosses/takuya-omega-battle-v2.png",
+      "sourceSha256": "deaf3edcca3102bd1476460924f92ba4827565dec793c98dacaf03ae57fc424b",
+      "sourceRect": {
+        "x": 2176,
+        "y": 0,
+        "w": 544,
+        "h": 512
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "../takuya-omega-r1/original-hit.png",
+      "sha256": "bd023e4f9785acce64cbc163c9fa66799cbc2faa6e712cdda945998ef4a96a3f",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact native544x512 canonical RGBA crop without resize or identity repaint."
+    }
+  },
+  "parts": [
+    {
+      "name": "torso",
+      "file": "../takuya-omega-r1/torso.png",
+      "sha256": "356a72dc37675ed2246ad830d4a22fbb1a269bc740c392eb41611be3b6ba7b42",
+      "original": false
+    },
+    {
+      "name": "pelvis",
+      "file": "../takuya-omega-r1/pelvis.png",
+      "sha256": "76d64401438829b1666539d633c2a86e04e82b26a1ae2509d146904f9c5cbb89",
+      "original": false
+    },
+    {
+      "name": "far-thigh",
+      "file": "../takuya-omega-r1/far-thigh.png",
+      "sha256": "2ed1a7ee982370675f0bd25a52dfe539bc1aa5418b23074b37975d92d3f9e349",
+      "original": false
+    },
+    {
+      "name": "far-shin",
+      "file": "../takuya-omega-r1/far-shin.png",
+      "sha256": "4da343d2d1d9948974d011ad99ef49f0f9a22e5c1ed69c3bce6049675c1839dd",
+      "original": false
+    },
+    {
+      "name": "far-boot",
+      "file": "../takuya-omega-r1/far-boot.png",
+      "sha256": "e38dbb24abc5e4797890a4a6f8645c5a8fbc09a4e4660f34173af8050161eba5",
+      "original": false
+    },
+    {
+      "name": "near-thigh",
+      "file": "../takuya-omega-r1/near-thigh.png",
+      "sha256": "3cf775ed13669ecde267f9a269e139622dd9c40e340562b11d63f6c73e5018d3",
+      "original": false
+    },
+    {
+      "name": "near-shin",
+      "file": "../takuya-omega-r1/near-shin.png",
+      "sha256": "c1e8d5c4998ec985136594e4038bf175a7543b49f2263f27118b7ef6e066fdb7",
+      "original": false
+    },
+    {
+      "name": "near-boot",
+      "file": "../takuya-omega-r1/near-boot.png",
+      "sha256": "da7b5055db95104b43bdcbc06da56e9d81100ab727b1a6851a811b2684581f0b",
+      "original": true
+    },
+    {
+      "name": "giant-upper-arm",
+      "file": "../takuya-omega-r1/giant-upper-arm.png",
+      "sha256": "32411794110eac4796c5e349d88894b382dfc350be8687f41c9c5d3b56411cd9",
+      "original": false
+    },
+    {
+      "name": "giant-forearm",
+      "file": "../takuya-omega-r1/giant-forearm.png",
+      "sha256": "764579f4bf585e07aa6b0b5d56278d23b18a78e67a706e45a5a594d713a49e3d",
+      "original": false
+    },
+    {
+      "name": "cleaver-upper-arm",
+      "file": "../takuya-omega-r1/cleaver-upper-arm.png",
+      "sha256": "f5fdb10885de6a962a11e5325fcc4f029fdc00e0153e7436701256a241537300",
+      "original": false
+    },
+    {
+      "name": "cleaver-forearm",
+      "file": "../takuya-omega-r1/cleaver-forearm.png",
+      "sha256": "cc242e632b19be3acda6fbedd269555ae63c9f2888446085ee1f64a7adae48c9",
+      "original": false
+    },
+    {
+      "name": "head",
+      "file": "../takuya-omega-r1/head.png",
+      "sha256": "396a1c5d0fde3ed9101f937123ab31e43a9475addbcd1028131692f4c052b58c",
+      "original": true
+    },
+    {
+      "name": "back-tubes",
+      "file": "../takuya-omega-r1/back-tubes.png",
+      "sha256": "2b49f82c323574222bedb9027a0290cbef0160743f37f60506b0ca92bafa6d0d",
+      "original": true
+    },
+    {
+      "name": "cleaver-and-hand",
+      "file": "cleaver-and-hand.png",
+      "sha256": "bec16b712e8027a0ebdea1426c0ff0c8f7cc45ec05b4e8ddffedf0b950939e93",
+      "original": false
+    },
+    {
+      "name": "left-free-hand",
+      "file": "left-free-hand.png",
+      "sha256": "a0c4c5bb3f3b7d8b5d78c594e3584fa6e981c621d81961542613952d32264725",
+      "original": false
+    }
+  ],
+  "source": "Blender5.2 fixed-length original Omega body with dedicated closed giant RIGHT hand gripping a broader greatsword. Empty smaller LEFT hand, source-bound boot support, unchanged face/costume/body pixels. No anatomical scaling. Authored native proof and normal-play acceptance tracked separately.",
+  "groundY": 495.5,
+  "decodedBytes": 491520,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}

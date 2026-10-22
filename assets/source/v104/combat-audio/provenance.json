@@ -1,0 +1,700 @@
+{
+  "sources": {
+    "foley": {
+      "license": "CC0-1.0",
+      "creator": "Kenney",
+      "urls": [
+        "https://kenney.nl/assets/impact-sounds",
+        "https://kenney.nl/assets/rpg-audio"
+      ]
+    },
+    "voices": {
+      "engine": "VOICEVOX Core 0.17.0",
+      "cast": [
+        {
+          "kind": "crazy-king",
+          "event": "deploy",
+          "text": "いくぜ！",
+          "styleId": 21,
+          "credit": "VOICEVOX:剣崎雌雄",
+          "source": "assets/source/v104/combat-audio/voice-crazy-king-deploy.wav",
+          "sha256": "8f63f56f9970c343eb981bfc2c08d614ac75d62806cd5db0a04b3a3f1912426f",
+          "synthetic": true
+        },
+        {
+          "kind": "crazy-king",
+          "event": "attack",
+          "text": "おらぁ！",
+          "styleId": 21,
+          "credit": "VOICEVOX:剣崎雌雄",
+          "source": "assets/source/v104/combat-audio/voice-crazy-king-attack.wav",
+          "sha256": "40450cccf1bf6f2810fc03a680198954f27f4de4f050befba8fbd140728d4ba1",
+          "synthetic": true
+        },
+        {
+          "kind": "crazy-king",
+          "event": "hurt",
+          "text": "ぐっ！",
+          "styleId": 21,
+          "credit": "VOICEVOX:剣崎雌雄",
+          "source": "assets/source/v104/combat-audio/voice-crazy-king-hurt.wav",
+          "sha256": "0984a5f78ea5c73ad2b5a513bcc27402feca99ec158dcb47c330e6831fd186d7",
+          "synthetic": true
+        },
+        {
+          "kind": "crazy-king",
+          "event": "death",
+          "text": "くそっ……。",
+          "styleId": 21,
+          "credit": "VOICEVOX:剣崎雌雄",
+          "source": "assets/source/v104/combat-audio/voice-crazy-king-death.wav",
+          "sha256": "8b0d41986c3d0578653d574dc2acdd401ef089edae18367ae6446592bced4a1e",
+          "synthetic": true
+        },
+        {
+          "kind": "kumaverson",
+          "event": "deploy",
+          "text": "任せておけ。",
+          "styleId": 53,
+          "credit": "VOICEVOX:麒ヶ島宗麟",
+          "source": "assets/source/v104/combat-audio/voice-kumaverson-deploy.wav",
+          "sha256": "3b9a43d5e4273b97dadceb031b593e0cb5cc2f390b6d45c09d1d8efb8fdf33f6",
+          "synthetic": true
+        },
+        {
+          "kind": "kumaverson",
+          "event": "attack",
+          "text": "せいっ！",
+          "styleId": 53,
+          "credit": "VOICEVOX:麒ヶ島宗麟",
+          "source": "assets/source/v104/combat-audio/voice-kumaverson-attack.wav",
+          "sha256": "7e1eedfa1f38d86c39ca25791857a6d0fecbaff003037b220f36c3e1b730d81e",
+          "synthetic": true
+        },
+        {
+          "kind": "kumaverson",
+          "event": "hurt",
+          "text": "ぬうっ。",
+          "styleId": 53,
+          "credit": "VOICEVOX:麒ヶ島宗麟",
+          "source": "assets/source/v104/combat-audio/voice-kumaverson-hurt.wav",
+          "sha256": "9b8699453e3a8e3f56fab03aae3e72342601cca59e037133c2d29826bb8448e0",
+          "synthetic": true
+        },
+        {
+          "kind": "kumaverson",
+          "event": "death",
+          "text": "ここまでか……。",
+          "styleId": 53,
+          "credit": "VOICEVOX:麒ヶ島宗麟",
+          "source": "assets/source/v104/combat-audio/voice-kumaverson-death.wav",
+          "sha256": "30e69e99764306bf9feecd5aa3737e39092ed59b45df1a20729dabf5a8e48754",
+          "synthetic": true
+        },
+        {
+          "kind": "babayaga",
+          "event": "deploy",
+          "text": "行くぞ。",
+          "styleId": 11,
+          "credit": "VOICEVOX:玄野武宏",
+          "source": "assets/source/v104/combat-audio/voice-babayaga-deploy.wav",
+          "sha256": "be491f876e38dda809533b09c401618ac914ac62d44a3827d12cc8ab6adeee06",
+          "synthetic": true
+        },
+        {
+          "kind": "babayaga",
+          "event": "attack",
+          "text": "はっ。",
+          "styleId": 11,
+          "credit": "VOICEVOX:玄野武宏",
+          "source": "assets/source/v104/combat-audio/voice-babayaga-attack.wav",
+          "sha256": "9b297890fd538e8c256249d403c4ea76bee47fcd2e8e643ddd69d1799a952b0e",
+          "synthetic": true
+        },
+        {
+          "kind": "babayaga",
+          "event": "hurt",
+          "text": "ぐっ。",
+          "styleId": 11,
+          "credit": "VOICEVOX:玄野武宏",
+          "source": "assets/source/v104/combat-audio/voice-babayaga-hurt.wav",
+          "sha256": "542ab902cd3a4642f3d728f98b804496d68532b3be940317caeee38c979febcd",
+          "synthetic": true
+        },
+        {
+          "kind": "babayaga",
+          "event": "death",
+          "text": "まだ……。",
+          "styleId": 11,
+          "credit": "VOICEVOX:玄野武宏",
+          "source": "assets/source/v104/combat-audio/voice-babayaga-death.wav",
+          "sha256": "e5f7b3a5d3194582051bb0f8cc9315f6188e24e4aed07ec66b3d1cbc934e8c7b",
+          "synthetic": true
+        }
+      ],
+      "licenses": [
+        "https://www.virvoxproject.com/voicevoxの利用規約",
+        "https://frontier.creatia.cc/fanclubs/413/posts/4507"
+      ],
+      "note": "Synthetic voices assigned only to these three named characters; no story full reading."
+    }
+  },
+  "records": [
+    {
+      "file": "public/audio/v104/combat/pan-hit.ogg",
+      "bytes": 9480,
+      "sha256": "f9d953ab850b85e0eb77a3d3456af138c00b44f8ef87d05cafd49d9240aa8680",
+      "inputs": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalPot1.ogg",
+          "sha256": "159def979e8e386c2c539f5e99cc30a080eb2dcb6c911fa2e4ccc0785b2522fd"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactSoft_heavy_000.ogg",
+          "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1"
+        }
+      ],
+      "filter": "[0:a]atrim=0:0.65,highpass=f=240,lowpass=f=7200,volume=0.8[p];[1:a]atrim=0:0.18,lowpass=f=1600,volume=0.5[b];[p][b]amix=inputs=2:duration=longest:dropout_transition=0,volume=2,afade=t=out:st=0.48:d=0.17[mix]"
+    },
+    {
+      "file": "public/audio/v104/combat/pan-hit.mp3",
+      "bytes": 8468,
+      "sha256": "37fb673861ab4c17def4ffd980cc8167fff0c76803986f96e26cb9c259def10d",
+      "inputs": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalPot1.ogg",
+          "sha256": "159def979e8e386c2c539f5e99cc30a080eb2dcb6c911fa2e4ccc0785b2522fd"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactSoft_heavy_000.ogg",
+          "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1"
+        }
+      ],
+      "filter": "[0:a]atrim=0:0.65,highpass=f=240,lowpass=f=7200,volume=0.8[p];[1:a]atrim=0:0.18,lowpass=f=1600,volume=0.5[b];[p][b]amix=inputs=2:duration=longest:dropout_transition=0,volume=2,afade=t=out:st=0.48:d=0.17[mix]"
+    },
+    {
+      "file": "public/audio/v104/combat/pan-heavy.ogg",
+      "bytes": 10203,
+      "sha256": "cf7165b00e39b7a633308a862a67ab1b097c5fd2006d18f9419b5c6bac147f67",
+      "inputs": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalPot2.ogg",
+          "sha256": "8e1f820d217d380fde10e969d109db34303e3f4d11c3951926eddef813d04ae2"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactSoft_heavy_000.ogg",
+          "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1"
+        }
+      ],
+      "filter": "[0:a]atrim=0:0.8,highpass=f=200,lowpass=f=7000,volume=0.85[p];[1:a]atrim=0:0.25,lowpass=f=1900,volume=0.6[b];[p][b]amix=inputs=2:duration=longest:dropout_transition=0,volume=2,afade=t=out:st=0.6:d=0.2[mix]"
+    },
+    {
+      "file": "public/audio/v104/combat/pan-heavy.mp3",
+      "bytes": 9584,
+      "sha256": "18ece66d9d15b83fa3745be1dfec53a9005b90bcd633e84d7d8df2a9133654ed",
+      "inputs": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalPot2.ogg",
+          "sha256": "8e1f820d217d380fde10e969d109db34303e3f4d11c3951926eddef813d04ae2"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactSoft_heavy_000.ogg",
+          "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1"
+        }
+      ],
+      "filter": "[0:a]atrim=0:0.8,highpass=f=200,lowpass=f=7000,volume=0.85[p];[1:a]atrim=0:0.25,lowpass=f=1900,volume=0.6[b];[p][b]amix=inputs=2:duration=longest:dropout_transition=0,volume=2,afade=t=out:st=0.6:d=0.2[mix]"
+    },
+    {
+      "file": "public/audio/v104/combat/armor-hit.ogg",
+      "bytes": 4818,
+      "sha256": "24de49e12e64e6d3e9d3e3b511e4dd786e6e654079fbcbedec064e48ec7282ec",
+      "inputs": [
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_heavy_000.ogg",
+          "sha256": "e07045693e4a2b3d165c424e3dab4c781d9ff8880a386880ac89a51315d7f831"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactSoft_heavy_000.ogg",
+          "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1"
+        }
+      ],
+      "filter": "[0:a]asetrate=35280,aresample=44100,atrim=0:0.5,highpass=f=65,lowpass=f=2200,volume=0.75[p];[1:a]atrim=0:0.3,lowpass=f=650,volume=0.85[b];[p][b]amix=inputs=2:duration=longest:dropout_transition=0,volume=2,afade=t=out:st=0.32:d=0.18[mix]"
+    },
+    {
+      "file": "public/audio/v104/combat/armor-hit.mp3",
+      "bytes": 2544,
+      "sha256": "bac6ad6b40c250342ecde5fa739bb752998533a7c0d6839977d7f06ffc76a4c1",
+      "inputs": [
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_heavy_000.ogg",
+          "sha256": "e07045693e4a2b3d165c424e3dab4c781d9ff8880a386880ac89a51315d7f831"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactSoft_heavy_000.ogg",
+          "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1"
+        }
+      ],
+      "filter": "[0:a]asetrate=35280,aresample=44100,atrim=0:0.5,highpass=f=65,lowpass=f=2200,volume=0.75[p];[1:a]atrim=0:0.3,lowpass=f=650,volume=0.85[b];[p][b]amix=inputs=2:duration=longest:dropout_transition=0,volume=2,afade=t=out:st=0.32:d=0.18[mix]"
+    },
+    {
+      "file": "public/audio/v104/combat/eye-warning.ogg",
+      "bytes": 5870,
+      "sha256": "b7d83ccce1b09f63dd415b26fe45448415501eec85d7e415c71505bc6ebe7f01",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/eye-warning.wav",
+          "sha256": "6909d01d4299ea2dd40a54881cb74e1e510ff3748a4a50804a6f4c60a971cc6f"
+        }
+      ],
+      "filter": "[0:a]volume=1[mix]",
+      "procedural": {
+        "name": "eye-warning",
+        "duration": 1.25,
+        "expression": "0.32*sin(2*PI*(145*t+240*t*t))*(0.75+0.25*sin(2*PI*9*t))",
+        "filter": "highpass=f=100,lowpass=f=2600,afade=t=in:d=0.06,afade=t=out:st=1.1:d=0.15"
+      },
+      "nonVoice": true
+    },
+    {
+      "file": "public/audio/v104/combat/eye-warning.mp3",
+      "bytes": 5819,
+      "sha256": "03658c3118b6f24d859aef97b6fc73108d3e0a1e91e6c2fdaae7bf49c991e6f1",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/eye-warning.wav",
+          "sha256": "6909d01d4299ea2dd40a54881cb74e1e510ff3748a4a50804a6f4c60a971cc6f"
+        }
+      ],
+      "filter": "[0:a]volume=1[mix]",
+      "procedural": {
+        "name": "eye-warning",
+        "duration": 1.25,
+        "expression": "0.32*sin(2*PI*(145*t+240*t*t))*(0.75+0.25*sin(2*PI*9*t))",
+        "filter": "highpass=f=100,lowpass=f=2600,afade=t=in:d=0.06,afade=t=out:st=1.1:d=0.15"
+      },
+      "nonVoice": true
+    },
+    {
+      "file": "public/audio/v104/combat/eye-fire.ogg",
+      "bytes": 6028,
+      "sha256": "a1efa15b398a15112c61f0faaba56a6e4056ac8b1e314b79ec3046f6b54e871d",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/eye-fire.wav",
+          "sha256": "b934f53d02042aaf5ec94485afedc8ffd59f467d0d5d501196562bea7be666c0"
+        }
+      ],
+      "filter": "[0:a]volume=1[mix]",
+      "procedural": {
+        "name": "eye-fire",
+        "duration": 0.44,
+        "expression": "0.24*sin(2*PI*77*t+4*sin(2*PI*37*t))+0.17*sin(2*PI*650*t+12*sin(2*PI*131*t))+0.08*sin(2*PI*1567*t)*sin(2*PI*3719*t)",
+        "filter": "highpass=f=60,lowpass=f=6200,afade=t=in:d=0.015,afade=t=out:st=0.24:d=0.2"
+      },
+      "nonVoice": true
+    },
+    {
+      "file": "public/audio/v104/combat/eye-fire.mp3",
+      "bytes": 4840,
+      "sha256": "a16701cf44c4a299a218aff5fe108be4ad7f887f89a2c9ec09d763bb00bf4c69",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/eye-fire.wav",
+          "sha256": "b934f53d02042aaf5ec94485afedc8ffd59f467d0d5d501196562bea7be666c0"
+        }
+      ],
+      "filter": "[0:a]volume=1[mix]",
+      "procedural": {
+        "name": "eye-fire",
+        "duration": 0.44,
+        "expression": "0.24*sin(2*PI*77*t+4*sin(2*PI*37*t))+0.17*sin(2*PI*650*t+12*sin(2*PI*131*t))+0.08*sin(2*PI*1567*t)*sin(2*PI*3719*t)",
+        "filter": "highpass=f=60,lowpass=f=6200,afade=t=in:d=0.015,afade=t=out:st=0.24:d=0.2"
+      },
+      "nonVoice": true
+    },
+    {
+      "file": "public/audio/v104/combat/voice-crazy-king-deploy.ogg",
+      "bytes": 7949,
+      "sha256": "b968e659e7b7a8ec710b085028d8ee94a7b6966a0e1fa21936fafc803100fe1d",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-crazy-king-deploy.wav",
+          "sha256": "8f63f56f9970c343eb981bfc2c08d614ac75d62806cd5db0a04b3a3f1912426f"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "credit": "VOICEVOX:剣崎雌雄",
+      "text": "いくぜ！",
+      "synthetic": true,
+      "styleId": 21
+    },
+    {
+      "file": "public/audio/v104/combat/voice-crazy-king-deploy.mp3",
+      "bytes": 5467,
+      "sha256": "b4088d74e5dc588aa5f5303c93aa46230b255c2b4ecc921b4644d029cdc6e171",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-crazy-king-deploy.wav",
+          "sha256": "8f63f56f9970c343eb981bfc2c08d614ac75d62806cd5db0a04b3a3f1912426f"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "credit": "VOICEVOX:剣崎雌雄",
+      "text": "いくぜ！",
+      "synthetic": true,
+      "styleId": 21
+    },
+    {
+      "file": "public/audio/v104/combat/voice-crazy-king-attack.ogg",
+      "bytes": 7413,
+      "sha256": "9d6f6b601b2465519873c9589783b46b0c48bd3d6bea6216460c557179b23edd",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-crazy-king-attack.wav",
+          "sha256": "40450cccf1bf6f2810fc03a680198954f27f4de4f050befba8fbd140728d4ba1"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "credit": "VOICEVOX:剣崎雌雄",
+      "text": "おらぁ！",
+      "synthetic": true,
+      "styleId": 21
+    },
+    {
+      "file": "public/audio/v104/combat/voice-crazy-king-attack.mp3",
+      "bytes": 6196,
+      "sha256": "3d25efd65572325c9639a0f07e352da653af3d9c147d4f7a4c9b2b5d182054e6",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-crazy-king-attack.wav",
+          "sha256": "40450cccf1bf6f2810fc03a680198954f27f4de4f050befba8fbd140728d4ba1"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "credit": "VOICEVOX:剣崎雌雄",
+      "text": "おらぁ！",
+      "synthetic": true,
+      "styleId": 21
+    },
+    {
+      "file": "public/audio/v104/combat/voice-crazy-king-hurt.ogg",
+      "bytes": 6326,
+      "sha256": "c139f98b8b76d909a4c7e244152777166a2b301ca783f2f03ec4180311d2674b",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-crazy-king-hurt.wav",
+          "sha256": "0984a5f78ea5c73ad2b5a513bcc27402feca99ec158dcb47c330e6831fd186d7"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "credit": "VOICEVOX:剣崎雌雄",
+      "text": "ぐっ！",
+      "synthetic": true,
+      "styleId": 21
+    },
+    {
+      "file": "public/audio/v104/combat/voice-crazy-king-hurt.mp3",
+      "bytes": 3797,
+      "sha256": "36f55dbd2ea7fab4202d499c6d9af22efdf04c0df67d2f11feabd2b94a4fae8e",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-crazy-king-hurt.wav",
+          "sha256": "0984a5f78ea5c73ad2b5a513bcc27402feca99ec158dcb47c330e6831fd186d7"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "credit": "VOICEVOX:剣崎雌雄",
+      "text": "ぐっ！",
+      "synthetic": true,
+      "styleId": 21
+    },
+    {
+      "file": "public/audio/v104/combat/voice-crazy-king-death.ogg",
+      "bytes": 6805,
+      "sha256": "7a606bfa4e6eab8f559ca569930ef7c8fc700cefc0bfa900aecfa1139e4f03f5",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-crazy-king-death.wav",
+          "sha256": "8b0d41986c3d0578653d574dc2acdd401ef089edae18367ae6446592bced4a1e"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "credit": "VOICEVOX:剣崎雌雄",
+      "text": "くそっ……。",
+      "synthetic": true,
+      "styleId": 21
+    },
+    {
+      "file": "public/audio/v104/combat/voice-crazy-king-death.mp3",
+      "bytes": 4501,
+      "sha256": "c37f6533237abfa817af6cca807d34a781ec1dfc3f9c28dee5a9b346ae49c5fc",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-crazy-king-death.wav",
+          "sha256": "8b0d41986c3d0578653d574dc2acdd401ef089edae18367ae6446592bced4a1e"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "credit": "VOICEVOX:剣崎雌雄",
+      "text": "くそっ……。",
+      "synthetic": true,
+      "styleId": 21
+    },
+    {
+      "file": "public/audio/v104/combat/voice-kumaverson-deploy.ogg",
+      "bytes": 10665,
+      "sha256": "9778adeecdd2f7f4c33d5f193fbcf7ab8b21a97b9921dec05608a66fdba67145",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-kumaverson-deploy.wav",
+          "sha256": "3b9a43d5e4273b97dadceb031b593e0cb5cc2f390b6d45c09d1d8efb8fdf33f6"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "credit": "VOICEVOX:麒ヶ島宗麟",
+      "text": "任せておけ。",
+      "synthetic": true,
+      "styleId": 53
+    },
+    {
+      "file": "public/audio/v104/combat/voice-kumaverson-deploy.mp3",
+      "bytes": 8645,
+      "sha256": "ccbf38db9b33129a87def2315019940ae3803d44bc0303daa28eaea2d9e5c8c2",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-kumaverson-deploy.wav",
+          "sha256": "3b9a43d5e4273b97dadceb031b593e0cb5cc2f390b6d45c09d1d8efb8fdf33f6"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "credit": "VOICEVOX:麒ヶ島宗麟",
+      "text": "任せておけ。",
+      "synthetic": true,
+      "styleId": 53
+    },
+    {
+      "file": "public/audio/v104/combat/voice-kumaverson-attack.ogg",
+      "bytes": 8311,
+      "sha256": "3257bf4f7505ba2d7520b4a6cc0765d4015e2151a6487c38ec5b18195f0455ae",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-kumaverson-attack.wav",
+          "sha256": "7e1eedfa1f38d86c39ca25791857a6d0fecbaff003037b220f36c3e1b730d81e"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "credit": "VOICEVOX:麒ヶ島宗麟",
+      "text": "せいっ！",
+      "synthetic": true,
+      "styleId": 53
+    },
+    {
+      "file": "public/audio/v104/combat/voice-kumaverson-attack.mp3",
+      "bytes": 5414,
+      "sha256": "7a52a049f2dd6acc27a2df86d11037ac9152c4f26364e4f06b568a25db7a0f33",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-kumaverson-attack.wav",
+          "sha256": "7e1eedfa1f38d86c39ca25791857a6d0fecbaff003037b220f36c3e1b730d81e"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "credit": "VOICEVOX:麒ヶ島宗麟",
+      "text": "せいっ！",
+      "synthetic": true,
+      "styleId": 53
+    },
+    {
+      "file": "public/audio/v104/combat/voice-kumaverson-hurt.ogg",
+      "bytes": 7727,
+      "sha256": "3d692a1c1d8db77aae5a4b5d4ae79ef19cdbd72226e25e8335c6c647e47e5aa8",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-kumaverson-hurt.wav",
+          "sha256": "9b8699453e3a8e3f56fab03aae3e72342601cca59e037133c2d29826bb8448e0"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "credit": "VOICEVOX:麒ヶ島宗麟",
+      "text": "ぬうっ。",
+      "synthetic": true,
+      "styleId": 53
+    },
+    {
+      "file": "public/audio/v104/combat/voice-kumaverson-hurt.mp3",
+      "bytes": 4682,
+      "sha256": "97073e9f2782a4439922389807c540e7657881faa3321ede032a9e3246aeeb5e",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-kumaverson-hurt.wav",
+          "sha256": "9b8699453e3a8e3f56fab03aae3e72342601cca59e037133c2d29826bb8448e0"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "credit": "VOICEVOX:麒ヶ島宗麟",
+      "text": "ぬうっ。",
+      "synthetic": true,
+      "styleId": 53
+    },
+    {
+      "file": "public/audio/v104/combat/voice-kumaverson-death.ogg",
+      "bytes": 8730,
+      "sha256": "efb6da4dc14abe6d0c9eb62ae9fc01ba0a2bbcf809d11eee5b2e4bb5430ff4d8",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-kumaverson-death.wav",
+          "sha256": "30e69e99764306bf9feecd5aa3737e39092ed59b45df1a20729dabf5a8e48754"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "credit": "VOICEVOX:麒ヶ島宗麟",
+      "text": "ここまでか……。",
+      "synthetic": true,
+      "styleId": 53
+    },
+    {
+      "file": "public/audio/v104/combat/voice-kumaverson-death.mp3",
+      "bytes": 6557,
+      "sha256": "daddda3acca603129f8924e346e4f6121850ebe7fcdfb0b031c548da90547966",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-kumaverson-death.wav",
+          "sha256": "30e69e99764306bf9feecd5aa3737e39092ed59b45df1a20729dabf5a8e48754"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "credit": "VOICEVOX:麒ヶ島宗麟",
+      "text": "ここまでか……。",
+      "synthetic": true,
+      "styleId": 53
+    },
+    {
+      "file": "public/audio/v104/combat/voice-babayaga-deploy.ogg",
+      "bytes": 7223,
+      "sha256": "f40faee285875a6f0a78d40f3938c9b3a701c6905bfd2eb3d9973c2579d1bf69",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-babayaga-deploy.wav",
+          "sha256": "be491f876e38dda809533b09c401618ac914ac62d44a3827d12cc8ab6adeee06"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "credit": "VOICEVOX:玄野武宏",
+      "text": "行くぞ。",
+      "synthetic": true,
+      "styleId": 11
+    },
+    {
+      "file": "public/audio/v104/combat/voice-babayaga-deploy.mp3",
+      "bytes": 5232,
+      "sha256": "c9771feb52944a1c66d17a454dd1880032abd60ec6539072580bf8f0cb1cd641",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-babayaga-deploy.wav",
+          "sha256": "be491f876e38dda809533b09c401618ac914ac62d44a3827d12cc8ab6adeee06"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "credit": "VOICEVOX:玄野武宏",
+      "text": "行くぞ。",
+      "synthetic": true,
+      "styleId": 11
+    },
+    {
+      "file": "public/audio/v104/combat/voice-babayaga-attack.ogg",
+      "bytes": 5438,
+      "sha256": "cb7d6f180b881be0e8d606a6049ed5d4f7d9900bc55e26e8036b6144e8669fdc",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-babayaga-attack.wav",
+          "sha256": "9b297890fd538e8c256249d403c4ea76bee47fcd2e8e643ddd69d1799a952b0e"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "credit": "VOICEVOX:玄野武宏",
+      "text": "はっ。",
+      "synthetic": true,
+      "styleId": 11
+    },
+    {
+      "file": "public/audio/v104/combat/voice-babayaga-attack.mp3",
+      "bytes": 2885,
+      "sha256": "c94031e47ba6ae1b1fa2820d96e185c55afecd015c8e07f3525d57d940648f82",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-babayaga-attack.wav",
+          "sha256": "9b297890fd538e8c256249d403c4ea76bee47fcd2e8e643ddd69d1799a952b0e"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "credit": "VOICEVOX:玄野武宏",
+      "text": "はっ。",
+      "synthetic": true,
+      "styleId": 11
+    },
+    {
+      "file": "public/audio/v104/combat/voice-babayaga-hurt.ogg",
+      "bytes": 5309,
+      "sha256": "9319a1e0d023633fd4a188323b6014eba79116f05a9a2327262942df100b11cc",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-babayaga-hurt.wav",
+          "sha256": "542ab902cd3a4642f3d728f98b804496d68532b3be940317caeee38c979febcd"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "credit": "VOICEVOX:玄野武宏",
+      "text": "ぐっ。",
+      "synthetic": true,
+      "styleId": 11
+    },
+    {
+      "file": "public/audio/v104/combat/voice-babayaga-hurt.mp3",
+      "bytes": 2364,
+      "sha256": "51283951474d6d6b0e9954fa6b10d5568cae9cb599c850be21ba1d5377f23f52",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-babayaga-hurt.wav",
+          "sha256": "542ab902cd3a4642f3d728f98b804496d68532b3be940317caeee38c979febcd"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "credit": "VOICEVOX:玄野武宏",
+      "text": "ぐっ。",
+      "synthetic": true,
+      "styleId": 11
+    },
+    {
+      "file": "public/audio/v104/combat/voice-babayaga-death.ogg",
+      "bytes": 7327,
+      "sha256": "434da9e6f2a2637d5a00f09959fecea722ed5814b0ff3b9dd297dda32f6b5070",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-babayaga-death.wav",
+          "sha256": "e5f7b3a5d3194582051bb0f8cc9315f6188e24e4aed07ec66b3d1cbc934e8c7b"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "credit": "VOICEVOX:玄野武宏",
+      "text": "まだ……。",
+      "synthetic": true,
+      "styleId": 11
+    },
+    {
+      "file": "public/audio/v104/combat/voice-babayaga-death.mp3",
+      "bytes": 4032,
+      "sha256": "4c3f9d3af3d14c3bd728b0c416d8fcd1cd18a2cf97f4e2966808b900b9c56e6a",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-babayaga-death.wav",
+          "sha256": "e5f7b3a5d3194582051bb0f8cc9315f6188e24e4aed07ec66b3d1cbc934e8c7b"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "credit": "VOICEVOX:玄野武宏",
+      "text": "まだ……。",
+      "synthetic": true,
+      "styleId": 11
+    }
+  ]
+}
