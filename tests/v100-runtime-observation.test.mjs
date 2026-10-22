@@ -34,7 +34,7 @@ function timingContext() {
     addEventListener(type, listener) { events.set(type, listener); },
     removeEventListener(type, listener) { assert.equal(events.get(type), listener); events.delete(type); } };
   vm.runInNewContext(`(${installRuntimeObservationDiagnostics.toString()})()`, { window, Element, performance: { now: () => clock++ } });
-  return { window, Element, pending, rect, events, getterOwner, nativeGetter, nativeSnapshot, nativeRaf, nativeRect, reads: () => reads, advance: amount => { clock += amount; } };
+  return { window, Element, pending, rect, events, getterOwner, nativeGetter, nativeSnapshot, nativeRaf, nativeRect, reads: () => reads, now: () => clock, advance: amount => { clock += amount; } };
 }
 
 test("timing preserves native returns, exceptions and callback IDs and adds no observations", () => {
@@ -71,6 +71,29 @@ test("diagnostic storage remains bounded without hiding native calls or exceptio
   assert.equal(output.timeline.records.length, 12_000);
   assert.equal(output.timeline.overflow, 5);
   assert.equal(c.getterOwner.getSnapshot, c.nativeGetter);
+});
+
+test("existing RAF diagnostics retain only a new same-callback CPU tail without extra sampling", () => {
+  const c = timingContext(), rows = [], diagnostic = c.window.__V100_RAF_CALLBACK_DIAG__;
+  c.window.__ASHFALL_RUNTIME_PERFORMANCE__ = { frameCpuTimings: rows, frameCpuSequence: 0 };
+  diagnostic.start();
+  c.window.requestAnimationFrame((timestamp) => {
+    const entryAt = c.now(); c.advance(5);
+    rows.push(Object.freeze({ sequence: 1, rafTimestamp: timestamp, entryAt,
+      simulationFinishedAt: entryAt + 2, drawFinishedAt: entryAt + 4, exitAt: c.now(), simulationTime: 11 }));
+  });
+  c.pending.shift()(123);
+  c.window.requestAnimationFrame(() => c.advance(1));
+  c.pending.shift()(123); // Same clock, but the earlier CPU row cannot be borrowed.
+  c.window.requestAnimationFrame((timestamp) => {
+    rows.push(Object.freeze({ sequence: 2, rafTimestamp: timestamp, entryAt: c.now() + 100, exitAt: c.now() + 101 }));
+  });
+  c.pending.shift()(124); // A foreign/out-of-bound tail is not this callback.
+  const output = JSON.parse(JSON.stringify(diagnostic.stop()));
+  assert.equal(output.count, 3); assert.equal(c.reads(), 0);
+  assert.deepEqual(output.timeline.records.map(r => r.frameCpu?.sequence ?? null), [1, null, null]);
+  assert.equal(output.timeline.records[0].frameCpu.simulationFinishedAt - output.timeline.records[0].frameCpu.entryAt, 2);
+  assert.equal(rows.length, 2); assert.equal(Object.isFrozen(rows[0]), true);
 });
 
 test("CI costs stay readable with full-size diagnostics while raw evidence and failed gates remain unchanged", () => {

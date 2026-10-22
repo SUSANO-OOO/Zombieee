@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs';
 import ts from 'typescript';
 import { createBattleAudioRuntime, stopBattleAudioRuntime, resetBattleAudioRuntime } from '../app/battleAudioRuntime.js';
 
-const context=()=>new Proxy({},{get:(_target,key)=>key==='imageSmoothingEnabled'?false:()=>{}});
+const context=()=>new Proxy({},{get:(_target,key)=>key==='createLinearGradient'?()=>({addColorStop(){}}):key==='imageSmoothingEnabled'?false:()=>{}});
 const runtime={locomotionPhase:.37,locomotionSettle:1};
 const paint=(kind,plan,actor,world,image={naturalWidth:1})=>drawV177JointPose(context(),image,kind,plan,0,0,100,120,{actor,world});
 const replaceFighters=world=>{world.fighters=advanceAreaEffects({areaEffects:[],fighters:world.fighters,seconds:1/60}).fighters;return world.fighters[0];};

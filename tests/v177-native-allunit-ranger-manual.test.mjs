@@ -104,6 +104,26 @@ test('original31-tick windup accepts accumulated clock roundoff and still reject
   assert.throws(()=>assertRangerManualCapture(changed),/Original .5s windup changed/u);
  }
 });
+
+test('the existing fixed-tick set survives31 repeated additions at the de29 clock scale without a wider time window',()=>{
+ for(const startAt of [10,16,32,100]){
+  const row=fixture(VIEWPORTS[0],{startAt,accumulateClock:true}),receipt=assertRangerManualCapture(row);
+  let expected=startAt;for(let tick=0;tick<31;tick++)expected+=STEP;
+  assert.equal(receipt.originalImpact.at,expected);
+  for(const ticks of [29,30,31])for(const accumulated of [false,true]){
+   const changed=structuredClone(row);let at=startAt;
+   if(accumulated)for(let tick=0;tick<ticks;tick++)at+=STEP;else at=startAt+ticks*STEP;
+   for(const raw of changed.sourceRaf.rows)for(const r of raw.phaseG.manualAbilityReceipts)if(r.eventType==='impact')r.at=at;
+   for(const raw of changed.sourceRaf.rows){for(const c of raw.skillContacts)c.startedAt=at;for(const m of raw.manualMuzzles)m.startedAt=at;}
+   assert.doesNotThrow(()=>assertRangerManualCapture(changed));
+  }
+  for(const at of [expected+1e-12,expected-1e-12,startAt+28*STEP,startAt+32*STEP,startAt+30.5*STEP]){
+   const changed=structuredClone(row);
+   for(const raw of changed.sourceRaf.rows)for(const r of raw.phaseG.manualAbilityReceipts)if(r.eventType==='impact')r.at=at;
+   assert.throws(()=>assertRangerManualCapture(changed),/Original .5s windup changed/u);
+  }
+ }
+});
 const faults={
  windupRecoveryMustRemainNull:r=>r.sourceRaf.rows[3].latestPaint.jointRangerManual.recoveryRemaining=0,
  recoveryClockMustRemainFinite:r=>r.sourceRaf.rows.find(x=>x.manualRuntime.phase==='recovery').latestPaint.jointRangerManual.recoveryRemaining=null,

@@ -2,40 +2,10 @@
   "schema": "v177-native-allunit-recovery/v2",
   "head": "369e9a15710066795abb3e525878f3971182c9c4",
   "runId": "39723729633",
-  "scope": "579 original observations:552 retained (420 from369e9a15/run39723729633;132 from1658e109/run39731104983);27 affected observations need the next candidate (Ranger15 and Ooguchi12:18 normal,3 manual,6 controlled outcomes). Exact previous-raster caching changes Ranger drawing; the recessed mouth changes Ooguchi only. Original reports/clocks and historical failures stay unchanged; the separate1658 raw-clock closure resolves Walker844x340. Original fixture, deadlines, capacity, sampling and33ms criteria remain fixed. Explicit full capture or any unknown source/blob falls back to all432 normal cases. Diagnostic coverage is separate from full1x naturalness, physical saved-audio and whole-product acceptance.",
-  "caseIds": [
-    "forms-1:ranger:move:1280x720",
-    "forms-1:ranger:move:844x390",
-    "forms-1:ranger:move:844x340",
-    "forms-1:ranger:attack:1280x720",
-    "forms-1:ranger:attack:844x390",
-    "forms-1:ranger:attack:844x340",
-    "forms-1:ranger:engage:1280x720",
-    "forms-1:ranger:engage:844x390",
-    "forms-1:ranger:engage:844x340",
-    "forms-8:ooguchi:move:1280x720",
-    "forms-8:ooguchi:move:844x390",
-    "forms-8:ooguchi:move:844x340",
-    "forms-8:ooguchi:attack:1280x720",
-    "forms-8:ooguchi:attack:844x390",
-    "forms-8:ooguchi:attack:844x340",
-    "forms-8:ooguchi:engage:1280x720",
-    "forms-8:ooguchi:engage:844x390",
-    "forms-8:ooguchi:engage:844x340"
-  ],
-  "manualCaseIds": [
-    "forms-1:ranger:ranger-manual-precision:1280x720",
-    "forms-1:ranger:ranger-manual-precision:844x390",
-    "forms-1:ranger:ranger-manual-precision:844x340"
-  ],
-  "outcomeCaseIds": [
-    "forms-1:ranger:controlled-outcome:1280x720",
-    "forms-1:ranger:controlled-outcome:844x390",
-    "forms-1:ranger:controlled-outcome:844x340",
-    "forms-8:ooguchi:controlled-outcome:1280x720",
-    "forms-8:ooguchi:controlled-outcome:844x390",
-    "forms-8:ooguchi:controlled-outcome:844x340"
-  ],
+  "scope": "579 original observations retained under their actual report/head/run owners:420 baseline369e9a15/run39723729633;132 additional1658e109/run39731104983;27 de29cf45/run39752692682. de29 includes24 original successes and3 manual rows separately revalidated after exact29/30/31-tick matching corrected a binary64 roundoff rejection; the originalfailed report and CI conclusion stay unchanged. All original clocks, limits and downstream native performance receipts pass. Normalized Float64 channels match every original atlas division and all downstream arithmetic order, geometry and cache logic remain exact; de29 motion footage is retained while new-head33ms performance/memory and fullCI remain separate gates. No new recording, success-video download or decode. Explicit full mode or an unknown source/blob still restores all432 normal cases. Diagnostic coverage is separate from full1x naturalness, physical saved-audio and whole-product acceptance.",
+  "caseIds": [],
+  "manualCaseIds": [],
+  "outcomeCaseIds": [],
   "changedBlobs": {
     ".github/workflows/ci.yml": "d8ea63fa805be4739573005d5d65b88cde88e0d1",
     ".github/workflows/native-allunit-capture.yml": "fafd6d9890205d176ae80a2329aaa9814b53b0e0",
@@ -44,9 +14,10 @@
     "app/v104CombatVfx.js": "02a8daedfad907f95101ee8b4c26371f22738543",
     "app/v177JointPresentation.js": "fbedd5a7343022973c95f3be38eb80c51ac33f17",
     "app/v177MouthCavity.js": "dd0d9d4b337177d342c5046ad53f5323ff542a95",
-    "app/v177RangerLowerPaint.js": "d03aeed21936d73e127125cc7bc2c720c8f31136",
+    "app/v177RangerLowerPaint.js": "335bb3702e26b6f461444635ea3eb93c56394167",
     "assets/source/v104/combat-audio/provenance.json": "f795bc10a02728968c73f76eba1c7ba6ac674b28",
-    "docs/PROJECT_STATE.md": "dab34f7ebb63052cf98af90c5e7532f38c4e18cd",
+    "assets/source/v177/ranger/lower-r3/provenance.json": "787ec2fcada2679aa754892f1f612170767ddb9b",
+    "docs/PROJECT_STATE.md": "65ac0beb338c3c57a87a27504caff1c947fa12e8",
     "public/asset-manifest.json": "8c0ebcd6c1afc9e665580c028b0795fa0209616f",
     "public/audio/v104/combat/armor-hit.mp3": "1a47fb9f98f893faadc69ab0373e9aded0023ab1",
     "public/audio/v104/combat/armor-hit.ogg": "dfef17821cba45a45524e47818ab48a13118ea77",
@@ -57,22 +28,30 @@
     "public/pwa-bundles/audio-v1.bin": "4d77bd3b3d3d97bb9e6abe694582876e46e511ee",
     "public/pwa-bundles/audio-v1.json": "ac6dd0cab446811dcc7714f479e1f12c3459ad18",
     "scripts/build-v104-combat-audio.mjs": "6da5e5ffb3112f2fd7122c6b636288c87555097b",
+    "scripts/ci-change-scope.mjs": "78751a57e31892dbb9e65fdbb1af20421cbcd0d4",
     "scripts/p5-browser-smoke.mjs": "08108189684252ad081c403021806997e59f4ac6",
     "scripts/v100-device-runtime-browser.mjs": "16defd3c54ce1b41987e606fe182ded2eba18226",
+    "scripts/v100-phase-g-production-matrix.mjs": "c73b125662ba9cbfb3eb8aa2af53e0242230937e",
+    "scripts/v100-runtime-observation.mjs": "64b00b5d93b99649032a8e973bc6c76168e69559",
     "scripts/v104-combat-asset-contract.mjs": "64578dd71f5f569a79db7fa2a8b3140e480a8c72",
+    "scripts/v177-native-allunit-ranger-manual-contract.mjs": "5ef03bf92c4a8bcf455bf263e22aeeee6f1ba2b6",
     "scripts/v177-native-allunit-ranger-manual.mjs": "8dcf2bfdd46052f375dce5585393d333f1a93f17",
-    "scripts/v177-native-allunit-selection.mjs": "0e4da1e27f12129d4f09cfa1a1c7090c6dd27229",
+    "scripts/v177-native-allunit-selection.mjs": "8ffb3e3990da9ef688cce3541c00c3546c2a712a",
     "scripts/v177-ranger-performance-start.mjs": "07ae485151724b962bd6d8253d9e91293bac5b57",
     "tests/manual-abilities.test.mjs": "68dd8e1b5cf4e46aa1a8044e6ce43d86b19af969",
     "tests/p5-story-audio-contract.test.mjs": "a296f7cc4c2f0f68d54156451cbbc8cff33447e0",
     "tests/stage3-final-presentation.test.mjs": "d286450a5d84c1dc1dd8c0d40d2c21470c6b022f",
+    "tests/v100-phase-g-capture.test.mjs": "102b07da2b0b007f51c3d9052832bdaf9e765c88",
     "tests/v100-r9-full-story.test.mjs": "3eceecfccfa098b97e82fb1cb61dca2531eba6ed",
+    "tests/v100-runtime-observation.test.mjs": "8c278902f98b4d74035b9f185b7d5dfdf52c609d",
     "tests/v104-combat-audio-signal.test.mjs": "42f18586df4774ba54a155a8fa3034902ac221c8",
     "tests/v104-combat-remediation.test.mjs": "68afc6b017cf3cca6a02abf1d4c675c639d279f7",
     "tests/v177-installed-asset-contract.test.mjs": "22c0444d987b8edeb03d3af960c74c54e4de847f",
-    "tests/v177-native-allunit-ranger-manual.test.mjs": "7d569a817e2d110f0b565ac3b3a43da6c910204a",
-    "tests/v177-native-allunit-selection.test.mjs": "e2349280121198a8a66055026db4493c2580a27f",
+    "tests/v177-joint-actor-history.test.mjs": "f990b18476a52d4d094fba9f1300c987d8d1ff89",
+    "tests/v177-native-allunit-ranger-manual.test.mjs": "914c5722da5c54bdf9d6d21478f28e69048dddc7",
+    "tests/v177-native-allunit-selection.test.mjs": "0e680eb3cdd5171d9f8bf9e64c1d722dec6ae9b2",
     "tests/v177-ooguchi-joints.test.mjs": "d85d2f5f1ea17f6c014ca4b0470907bdd40ff43d",
+    "tests/v177-paint-locomotion.test.mjs": "2da0da9179235d49aad0752594bdc23d5564c207",
     "tests/v177-ranger-continuous-lower.test.mjs": "091df2cc6fdc4125fe3122a39d019bd5563ba26b",
     "tests/v177-ranger-performance-receipts.test.mjs": "4e794a72e1cbf4fdfc4b280be5c20c377e460043",
     "tests/v177-ranger-performance-start.test.mjs": "e8c9995d46ef2b93dce2a900df212291490d470d"
@@ -603,9 +582,31 @@
       "forms-12:babayaga:attack:844x340",
       "forms-12:babayaga:engage:1280x720",
       "forms-12:babayaga:engage:844x390",
-      "forms-12:babayaga:engage:844x340"
+      "forms-12:babayaga:engage:844x340",
+      "forms-1:ranger:move:1280x720",
+      "forms-1:ranger:attack:1280x720",
+      "forms-1:ranger:engage:1280x720",
+      "forms-1:ranger:move:844x390",
+      "forms-1:ranger:attack:844x390",
+      "forms-1:ranger:engage:844x390",
+      "forms-1:ranger:move:844x340",
+      "forms-1:ranger:attack:844x340",
+      "forms-1:ranger:engage:844x340",
+      "forms-8:ooguchi:move:1280x720",
+      "forms-8:ooguchi:attack:1280x720",
+      "forms-8:ooguchi:engage:1280x720",
+      "forms-8:ooguchi:move:844x390",
+      "forms-8:ooguchi:attack:844x390",
+      "forms-8:ooguchi:engage:844x390",
+      "forms-8:ooguchi:move:844x340",
+      "forms-8:ooguchi:attack:844x340",
+      "forms-8:ooguchi:engage:844x340"
     ],
-    "manualCaseIds": [],
+    "manualCaseIds": [
+      "forms-1:ranger:ranger-manual-precision:1280x720",
+      "forms-1:ranger:ranger-manual-precision:844x390",
+      "forms-1:ranger:ranger-manual-precision:844x340"
+    ],
     "outcomeCaseIds": [
       "forms-1:brawler:controlled-outcome:1280x720",
       "forms-1:brawler:controlled-outcome:844x390",
@@ -744,7 +745,13 @@
       "forms-12:kumaverson:controlled-outcome:844x340",
       "forms-12:babayaga:controlled-outcome:1280x720",
       "forms-12:babayaga:controlled-outcome:844x390",
-      "forms-12:babayaga:controlled-outcome:844x340"
+      "forms-12:babayaga:controlled-outcome:844x340",
+      "forms-1:ranger:controlled-outcome:1280x720",
+      "forms-1:ranger:controlled-outcome:844x390",
+      "forms-1:ranger:controlled-outcome:844x340",
+      "forms-8:ooguchi:controlled-outcome:1280x720",
+      "forms-8:ooguchi:controlled-outcome:844x390",
+      "forms-8:ooguchi:controlled-outcome:844x340"
     ],
     "reports": [
       {
@@ -1533,6 +1540,129 @@
         ],
         "manualCaseIds": [],
         "outcomeCaseIds": []
+      },
+      {
+        "head": "de29cf45c609827e55ac1bb38e5c85a4dedb3834",
+        "runId": "39752692682",
+        "shard": "forms-1",
+        "sha256": "6418153fbdc776863d7160f3cec0332f3d4104b2adb3a584c55b26d8e8bec3b1",
+        "artifactId": 12416980962,
+        "reportStatus": "failed",
+        "originalReportErrors": [
+          "AssertionError [ERR_ASSERTION]: Original .5s windup changed",
+          "AssertionError [ERR_ASSERTION]: Original .5s windup changed",
+          "AssertionError [ERR_ASSERTION]: Original .5s windup changed",
+          "AssertionError [ERR_ASSERTION]: Original .5s windup changed",
+          "AssertionError [ERR_ASSERTION]: Original .5s windup changed",
+          "AssertionError [ERR_ASSERTION]: Original .5s windup changed"
+        ],
+        "caseIds": [
+          "forms-1:ranger:move:1280x720",
+          "forms-1:ranger:attack:1280x720",
+          "forms-1:ranger:engage:1280x720",
+          "forms-1:ranger:move:844x390",
+          "forms-1:ranger:attack:844x390",
+          "forms-1:ranger:engage:844x390",
+          "forms-1:ranger:move:844x340",
+          "forms-1:ranger:attack:844x340",
+          "forms-1:ranger:engage:844x340"
+        ],
+        "manualCaseIds": [
+          "forms-1:ranger:ranger-manual-precision:1280x720",
+          "forms-1:ranger:ranger-manual-precision:844x390",
+          "forms-1:ranger:ranger-manual-precision:844x340"
+        ],
+        "outcomeCaseIds": [
+          "forms-1:ranger:controlled-outcome:1280x720",
+          "forms-1:ranger:controlled-outcome:844x390",
+          "forms-1:ranger:controlled-outcome:844x340"
+        ],
+        "originalReportStatus": "failed",
+        "validationGroups": {
+          "originalSuccess": {
+            "caseIds": [
+              "forms-1:ranger:move:1280x720",
+              "forms-1:ranger:attack:1280x720",
+              "forms-1:ranger:engage:1280x720",
+              "forms-1:ranger:move:844x390",
+              "forms-1:ranger:attack:844x390",
+              "forms-1:ranger:engage:844x390",
+              "forms-1:ranger:move:844x340",
+              "forms-1:ranger:attack:844x340",
+              "forms-1:ranger:engage:844x340"
+            ],
+            "manualCaseIds": [],
+            "outcomeCaseIds": [
+              "forms-1:ranger:controlled-outcome:1280x720",
+              "forms-1:ranger:controlled-outcome:844x390",
+              "forms-1:ranger:controlled-outcome:844x340"
+            ]
+          },
+          "correctedContractRevalidation": {
+            "caseIds": [],
+            "manualCaseIds": [
+              "forms-1:ranger:ranger-manual-precision:1280x720",
+              "forms-1:ranger:ranger-manual-precision:844x390",
+              "forms-1:ranger:ranger-manual-precision:844x340"
+            ],
+            "outcomeCaseIds": [],
+            "correctionSidecarSha256": "1406f161852944b28135eb52a0ac3b0e495d4c26e63155b8ae823202c824e81a",
+            "correctedContractSourceSha256": "14ea17ef36034df60c7b4ff544b2348126053d446e477dc7bdd163db13cc6ec5"
+          }
+        }
+      },
+      {
+        "head": "de29cf45c609827e55ac1bb38e5c85a4dedb3834",
+        "runId": "39752692682",
+        "shard": "forms-8",
+        "sha256": "0b5cd97896faefb207b56b16e3c8023e7d6b1ddcea495729a26d568b27abd4d0",
+        "artifactId": 12414639806,
+        "reportStatus": "completed-diagnostic",
+        "originalReportErrors": [],
+        "caseIds": [
+          "forms-8:ooguchi:move:1280x720",
+          "forms-8:ooguchi:attack:1280x720",
+          "forms-8:ooguchi:engage:1280x720",
+          "forms-8:ooguchi:move:844x390",
+          "forms-8:ooguchi:attack:844x390",
+          "forms-8:ooguchi:engage:844x390",
+          "forms-8:ooguchi:move:844x340",
+          "forms-8:ooguchi:attack:844x340",
+          "forms-8:ooguchi:engage:844x340"
+        ],
+        "manualCaseIds": [],
+        "outcomeCaseIds": [
+          "forms-8:ooguchi:controlled-outcome:1280x720",
+          "forms-8:ooguchi:controlled-outcome:844x390",
+          "forms-8:ooguchi:controlled-outcome:844x340"
+        ],
+        "originalReportStatus": "completed-diagnostic",
+        "validationGroups": {
+          "originalSuccess": {
+            "caseIds": [
+              "forms-8:ooguchi:move:1280x720",
+              "forms-8:ooguchi:attack:1280x720",
+              "forms-8:ooguchi:engage:1280x720",
+              "forms-8:ooguchi:move:844x390",
+              "forms-8:ooguchi:attack:844x390",
+              "forms-8:ooguchi:engage:844x390",
+              "forms-8:ooguchi:move:844x340",
+              "forms-8:ooguchi:attack:844x340",
+              "forms-8:ooguchi:engage:844x340"
+            ],
+            "manualCaseIds": [],
+            "outcomeCaseIds": [
+              "forms-8:ooguchi:controlled-outcome:1280x720",
+              "forms-8:ooguchi:controlled-outcome:844x390",
+              "forms-8:ooguchi:controlled-outcome:844x340"
+            ]
+          },
+          "correctedContractRevalidation": {
+            "caseIds": [],
+            "manualCaseIds": [],
+            "outcomeCaseIds": []
+          }
+        }
       }
     ]
   },
@@ -1638,5 +1768,75 @@
     "originalSpeedAccepted": false,
     "naturalnessAccepted": false,
     "wholeGameAccepted": false
+  },
+  "additionalEvidenceInventories": [
+    {
+      "head": "de29cf45c609827e55ac1bb38e5c85a4dedb3834",
+      "runId": "39752692682",
+      "sha256": "04371c51bdf60347a79174171ff53beeed985cb50fe4541fc62b4ffc835b8a4d",
+      "reports": [
+        {
+          "shard": "forms-1",
+          "sha256": "6418153fbdc776863d7160f3cec0332f3d4104b2adb3a584c55b26d8e8bec3b1",
+          "artifactId": 12416980962
+        },
+        {
+          "shard": "forms-8",
+          "sha256": "0b5cd97896faefb207b56b16e3c8023e7d6b1ddcea495729a26d568b27abd4d0",
+          "artifactId": 12414639806
+        }
+      ],
+      "contractCorrections": [
+        {
+          "sha256": "1406f161852944b28135eb52a0ac3b0e495d4c26e63155b8ae823202c824e81a",
+          "caseIds": [
+            "forms-1:ranger:ranger-manual-precision:1280x720",
+            "forms-1:ranger:ranger-manual-precision:844x390",
+            "forms-1:ranger:ranger-manual-precision:844x340"
+          ],
+          "originalContractSha256": "d8a1c3d28a5a6a3220a7198bff331d76205ce8396a25d211d49340bd50b70a67",
+          "correctedContractSourceSha256": "14ea17ef36034df60c7b4ff544b2348126053d446e477dc7bdd163db13cc6ec5",
+          "conditions": {
+            "windupSeconds": 0.5,
+            "recoverySeconds": 0.18,
+            "impactDamage": 92,
+            "stepSeconds": 0.016666666666666666,
+            "allowedTicks": [
+              29,
+              30,
+              31
+            ],
+            "allowedForms": [
+              "exact start + n * STEP",
+              "exact repeated start += STEP"
+            ],
+            "numericToleranceAdded": false,
+            "deadlineChanged": false,
+            "sourceRafConditionsChanged": false,
+            "clipConditionsChanged": false
+          },
+          "scope": "Only binary64 fixed-tick matching corrected. Original report/clip/status/errors kept; original postpaint, ordered realm/RAF/clip clock, native performance counters and driver cleanup validated separately."
+        }
+      ],
+      "rawClockAuditSha256": "988a57796516e9bb2cf98294c7bf2837e25a6f4f215b4d7c1ed0e47472f9fe97",
+      "originalReportsUnmodified": true,
+      "originalRunConclusion": "failure",
+      "originalSuccess": 24,
+      "correctedContractRevalidated": 3,
+      "successfulVideosDownloaded": 0,
+      "successfulVideosDecoded": 0,
+      "originalSpeedAccepted": false,
+      "naturalnessAccepted": false,
+      "wholeGameAccepted": false
+    }
+  ],
+  "normalizedRgbaEquivalence": {
+    "sha256": "12225034c292ec25038601beba3a19d96ff306e9ac5cd4884dfafcaf336e9994",
+    "baselineSourceSha256": "2c3eb226735ea86e83dceb3356f514251f524b2dab9b21e2c8a2faf8030e53b7",
+    "candidateSourceSha256": "984249a152acf557a4ed31b005dc0de36896f8c583ba304d63115a53304f63ce",
+    "actualTexels": 69087,
+    "mismatches": 0,
+    "allOtherOperationOrderUnchanged": true,
+    "newHeadPerformanceOrMemoryAccepted": false
   }
 }

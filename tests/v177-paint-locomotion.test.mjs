@@ -4,7 +4,7 @@ import {v177PaintLocomotion} from '../app/v177PaintLocomotion.js';
 import {V177_JOINT_ATLASES as atlases,v177JointPose,drawV177JointPose,v177CaptureJointPose} from '../app/v177JointPresentation.js';
 import {createCombatAnimationRuntime,advanceCombatAnimationRuntime} from '../app/combatPresentation.js';
 
-const context=()=>new Proxy({},{get:()=>()=>{}});
+const context=()=>new Proxy({},{get:(_target,key)=>key==='createLinearGradient'?()=>({addColorStop(){}}):()=>{}});
 const point=(m,[x,y])=>[m[0]*x+m[2]*y+m[4],m[1]*x+m[3]*y+m[5]];
 function paint(kind,plan,actor,world){
   assert.equal(drawV177JointPose(context(),{naturalWidth:atlases[kind].decodedWidth},kind,plan,0,0,100,120,{actor,world}),true);

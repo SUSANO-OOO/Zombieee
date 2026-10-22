@@ -70,8 +70,21 @@ export function installRuntimeObservationDiagnostics() {
   let snapshotOwner = null;
   let originalSnapshot = null;
   let snapshotWrapper = null;
+  let lastCpuSequence = 0;
   const record = (kind, startedAt, endedAt, frameTimestamp = null) => {
-    if (records.length < maxRecords) records.push({ kind, startedAt, endedAt, durationMs: endedAt - startedAt, frameTimestamp });
+    if (records.length < maxRecords) {
+      const tails = kind === "raf" ? window.__ASHFALL_RUNTIME_PERFORMANCE__?.frameCpuTimings : null;
+      const cpu = Array.isArray(tails) ? tails[tails.length - 1] : null;
+      const sameCallback = Number.isFinite(cpu?.sequence) && cpu.sequence > lastCpuSequence
+        && cpu.rafTimestamp === frameTimestamp && cpu.entryAt >= startedAt && cpu.exitAt <= endedAt;
+      const frameCpu = sameCallback ? Object.fromEntries([
+        "sequence", "rafTimestamp", "entryAt", "previousExitAt",
+        "simulationFinishedAt", "drawFinishedAt", "exitAt", "simulationTime",
+      ].map((key) => [key, cpu[key] ?? null])) : null;
+      if (sameCallback) lastCpuSequence = cpu.sequence;
+      records.push({ kind, startedAt, endedAt, durationMs: endedAt - startedAt, frameTimestamp,
+        ...(frameCpu ? { frameCpu } : {}) });
+    }
     else overflow += 1;
   };
   window.requestAnimationFrame = function(callback) {
@@ -100,6 +113,7 @@ export function installRuntimeObservationDiagnostics() {
     start() {
       records.length = 0;
       overflow = 0;
+      lastCpuSequence = window.__ASHFALL_RUNTIME_PERFORMANCE__?.frameCpuSequence ?? 0;
       snapshotOwner = window.__ASHFALL_BATTLE_QA__;
       originalSnapshot = snapshotOwner?.getSnapshot;
       if (typeof originalSnapshot !== "function") throw new Error("Runtime observation diagnostic requires the live snapshot getter");

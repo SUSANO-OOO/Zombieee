@@ -104,12 +104,14 @@ export function assertRangerManualCapture(row){
   for(const p of draws.values())if(p.renderSequence>=firstManual&&p.renderSequence<=lastManual)assert.equal(p.jointRangerManualDrawSucceeded,true,'Unpainted/fallback hole in manual cycle');
   assert.ok(cooldown,'Actual post-return cooldown missing');
   const impacts=[...new Map(impactRows.map(r=>[JSON.stringify(r),r])).values()];assert.equal(impacts.length,1,'One same-activation real impact required');const impact=impacts[0];
-  // Compare the original fixed ticks. Summing 1/60 can put an allowed31st
-  // tick a few floating-point ulps past the existing one-tick boundary.
-  const elapsedTicks=(impact.at-start.at)/STEP,impactTicks=Math.round(elapsedTicks);
-  const clockRoundoff=4*Number.EPSILON*Math.max(1,Math.abs(start.at),Math.abs(impact.at))/STEP;
-  assert.ok(Math.abs(elapsedTicks-impactTicks)<=clockRoundoff
-    &&Math.abs(impactTicks-definition.windupSeconds/STEP)<=1,'Original .5s windup changed');
+  // Keep the original29/30/31 fixed-tick set, with no floating-point tolerance.
+  // The runtime accumulates STEP; exact projected fixtures multiply it once.
+  const allowedImpactTimes=new Set(),nominalTicks=definition.windupSeconds/STEP;
+  for(let ticks=Math.ceil(nominalTicks-1);ticks<=Math.floor(nominalTicks+1);ticks++){
+    let accumulated=start.at;for(let tick=0;tick<ticks;tick++)accumulated+=STEP;
+    allowedImpactTimes.add(accumulated);allowedImpactTimes.add(start.at+ticks*STEP);
+  }
+  assert.ok(allowedImpactTimes.has(impact.at),'Original .5s windup changed');
   assert.equal(contacts.size,1,'One actual unborrowed Ranger contact required');const contact=[...contacts.values()][0];
   assert.equal(contact.targetId,proof.targetId);assert.equal(contact.shotIndex,0);assert.equal(contact.startedAt,impact.at);
   assert.ok([contact.hpBefore,contact.hpAfter].every(finite)&&contact.hpBefore>contact.hpAfter);assert.equal(contact.hpBefore-contact.hpAfter,definition.impactDamage);

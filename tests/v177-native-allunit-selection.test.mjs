@@ -75,7 +75,7 @@ test('current recovery partitions all original observations and never reuses an 
  }
  for(const gate of ['originalSpeedAccepted','naturalnessAccepted','wholeGameAccepted'])assert.equal(current[gate],false);
  for(const mutate of [p=>{p.retainedEvidence.caseIds.pop();},p=>{p.retainedEvidence.caseIds.push(p.retainedEvidence.caseIds[0]);},
-  p=>{p.retainedEvidence.outcomeCaseIds.pop();},p=>{p.manualCaseIds.pop();},p=>{p.retainedEvidence.reports.pop();}]){
+  p=>{p.retainedEvidence.outcomeCaseIds.pop();},p=>{(p.manualCaseIds.length?p.manualCaseIds:p.retainedEvidence.manualCaseIds).pop();},p=>{p.retainedEvidence.reports.pop();}]){
   const invalid=structuredClone(current);mutate(invalid);assert.throws(()=>nativeCaseSelection({root:profileRoot(invalid),event:{pull_request:{draft:true}},git:()=>''}));
  }
  const file='app/AshfallGame.tsx',blob=current.changedBlobs[file];assert.match(blob,/^[a-f0-9]{40}$/u);
@@ -89,6 +89,11 @@ test('supplement-only recovery can finish its original context without recapturi
  const profile=structuredClone(current);profile.retainedEvidence.caseIds.push(...profile.caseIds);profile.caseIds=[];
  profile.retainedEvidence.outcomeCaseIds.push(...profile.outcomeCaseIds);profile.outcomeCaseIds=[];
  const manual=[...profile.manualCaseIds,...profile.retainedEvidence.manualCaseIds];profile.manualCaseIds=manual.slice(0,1);profile.retainedEvidence.manualCaseIds=manual.slice(1);
+ for(const report of [...profile.retainedEvidence.reports,...profile.retainedEvidence.additionalReports])for(const key of ['caseIds','manualCaseIds','outcomeCaseIds']){
+  report[key]=report[key].filter(id=>profile.retainedEvidence[key].includes(id));
+  if(report.validationGroups?.correctedContractRevalidation)report.validationGroups.correctedContractRevalidation[key]=report.validationGroups.correctedContractRevalidation[key].filter(id=>report[key].includes(id));
+ }
+ for(const inventory of profile.additionalEvidenceInventories??[])for(const correction of inventory.contractCorrections??[])correction.caseIds=correction.caseIds.filter(id=>profile.retainedEvidence.manualCaseIds.includes(id));
  for(const key of ['caseIds','manualCaseIds','outcomeCaseIds'])for(const id of profile.retainedEvidence[key]){
   const owned=[...profile.retainedEvidence.reports,...profile.retainedEvidence.additionalReports].some(r=>r[key].includes(id));
   if(!owned)profile.retainedEvidence.additionalReports.find(r=>id.startsWith(r.shard+':'))[key].push(id);
@@ -145,4 +150,32 @@ test('every retained observation and historical open clock keeps its exact sourc
  ]){
   const broken=structuredClone(current);mutate(broken);assert.throws(()=>select(broken));
  }
+});
+
+test('a later source keeps its own immutable inventory without relabelling earlier reports',()=>{
+ // Synthetic identities test the metadata boundary; no checked-in evidence changes.
+ const profile=structuredClone(current),report=profile.retainedEvidence.additionalReports[0];
+ const source={head:'e'.repeat(40),runId:'123456789',sha256:'d'.repeat(64),
+  reports:[{shard:report.shard,sha256:report.sha256,artifactId:report.artifactId}]};
+ report.head=source.head;report.runId=source.runId;profile.additionalEvidenceInventories=[...(profile.additionalEvidenceInventories??[]),source];
+ const select=p=>nativeCaseSelection({root:profileRoot(p),event:{pull_request:{draft:false}},git:()=>''});
+ assert.equal(select(profile).retainedEvidence.additionalReports[0].head,source.head);
+ for(const mutate of[
+  p=>{p.additionalEvidenceInventories.pop();},
+  p=>{p.additionalEvidenceInventories.at(-1).reports[0].sha256='f'.repeat(64);},
+  p=>{p.additionalEvidenceInventories.at(-1).reports[0].artifactId+=1;},
+  p=>{p.additionalEvidenceInventories.push(structuredClone(p.additionalEvidenceInventories.at(-1)));},
+ ]){const invalid=structuredClone(profile);mutate(invalid);assert.throws(()=>select(invalid));}
+});
+
+test('corrected manual observations retain the original failure and their separately bound unchanged timing contract',()=>{
+ const select=p=>nativeCaseSelection({root:profileRoot(p),event:{pull_request:{draft:false}},git:()=>''});
+ for(const mutate of[
+  r=>{delete r.retainedEvidence.additionalReports.find(a=>a.originalReportStatus==='failed').validationGroups;},
+  r=>{const report=r.retainedEvidence.additionalReports.find(a=>a.originalReportStatus==='failed');delete report.originalReportStatus;delete report.validationGroups;},
+  r=>{const report=r.retainedEvidence.additionalReports.find(a=>a.originalReportStatus==='failed');delete report.originalReportStatus;delete report.reportStatus;delete report.validationGroups;},
+  r=>{r.additionalEvidenceInventories.at(-1).contractCorrections=[];},
+  r=>{r.additionalEvidenceInventories.at(-1).contractCorrections[0].conditions.allowedTicks.push(32);},
+  r=>{r.additionalEvidenceInventories.at(-1).contractCorrections[0].conditions.numericToleranceAdded=true;},
+ ]){const invalid=structuredClone(current);mutate(invalid);assert.throws(()=>select(invalid));}
 });

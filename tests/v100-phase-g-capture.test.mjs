@@ -267,13 +267,14 @@ test("deployment pointer diagnostics are bounded, capture handler failures, and 
   const targetCard = new FakeElement("button");
   targetCard.attrs.set("data-kind", "scout");
   targetCard.attrs.set("data-slot-index", "1");
+  let hitTestCount = 0;
   const document = {
     documentElement: new FakeElement("html"),
     activeElement: new FakeElement("button"),
     visibilityState: "visible",
     hidden: false,
     hasFocus: () => true,
-    elementFromPoint: () => targetCard,
+    elementFromPoint: () => { hitTestCount += 1; return targetCard; },
     addEventListener: (type, handler) => documentListeners.set(type, [...(documentListeners.get(type) ?? []), handler]),
     removeEventListener: (type, handler) => documentListeners.set(type, (documentListeners.get(type) ?? []).filter((entry) => entry !== handler)),
   };
@@ -305,10 +306,18 @@ test("deployment pointer diagnostics are bounded, capture handler failures, and 
   window.__ASHFALL_BATTLE_QA__ = { getPhaseGCombatSnapshot: () => { throw new Error("fixture snapshot failure"); } };
   for (let index = 0; index < 20; index += 1) assert.throws(() => receiptHandler(rawEvent), /fixture snapshot failure/u);
   assert.equal(registry.get("attempt").handlerExceptions.length, 16);
+  registry.get("attempt").diagnostics.before = registry.get("attempt").diagnosticSnapshot({ x: 10, y: 20 });
+  assert.equal(registry.get("attempt").diagnostics.before.hitTestObserved, true, "preflight diagnostics retain the actual hit test");
+  assert.equal(hitTestCount, 22, "all original event handlers still perform their hit test");
+  const hitsBeforeRead = hitTestCount;
   const originalDocumentIdentity = registry.get("attempt").diagnostics.before.documentElementIdentity;
   document.documentElement = new FakeElement("html");
   const receiptRead = await readFn({ evaluate, isClosed: () => false }, "attempt", 100);
   assert.notEqual(receiptRead.diagnostics.after.documentElementIdentity, originalDocumentIdentity, "receipt read must observe replaced document identity");
+  assert.equal(hitTestCount, hitsBeforeRead, "receipt read adds no layout-dependent hit test");
+  assert.equal(receiptRead.diagnostics.after.hitTestObserved, false);
+  assert.equal(receiptRead.diagnostics.after.currentElementFromPoint, null, "an unobserved hit target must not be presented as evidence");
+  assert.equal(receiptRead.receipts.length, 1, "the original trusted event receipt is still required");
   await removeFn({ evaluate, isClosed: () => false }, "attempt");
   assert.equal((windowListeners.get("click") ?? []).length, 0);
   assert.equal((documentListeners.get("click") ?? []).length, 0);

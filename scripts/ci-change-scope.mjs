@@ -34,7 +34,7 @@ const reviewedValidationBlobs=Object.freeze({
   'scripts/v177-reaction-render-contract.mjs':'fb84ffd008b65864539c914c84a0f9b910c9acd7',
   // Preparation plus living/corpse observation and synchronous sample timing.
   'app/AshfallGame.tsx':'4445d531b03a44a1147a3ae44d74a8e869d7ba37',
-  'scripts/v177-native-allunit-ranger-manual-contract.mjs':'69e4ccc8482ad55313d0dcf8c27617b230283416',
+  'scripts/v177-native-allunit-ranger-manual-contract.mjs':'5ef03bf92c4a8bcf455bf263e22aeeee6f1ba2b6',
   'scripts/v177-native-allunit-outcomes.mjs':'12e9ee396cc426db1a46d942de515c14a54b774b',
   'tests/helpers/v177-corpse-joint-render.mjs':'62813dcbd9eb06cd1ccf82ce38cf232da36b4f4c',
 });

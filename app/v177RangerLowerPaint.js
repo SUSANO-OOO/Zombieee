@@ -16,9 +16,12 @@ export function createV177RangerLowerPainter(image,rig,createCanvas=()=>image.ow
     const s=part.source,d=part.destination;canvas.width=s.w;canvas.height=s.h;
     context.clearRect(0,0,s.w,s.h);context.drawImage(image,s.x,s.y,s.w,s.h,0,0,s.w,s.h);
     const data=context.getImageData(0,0,s.w,s.h).data,leg=rig.legs.find(l=>l.name===part.name);
+    // Cache the exact binary64 divisions once. Keep the original per-sample
+    // alpha*weight, channel*amount and Float32 compositing order unchanged.
+    const normalized=Float64Array.from(data,value=>value/255);
     const uv=new Float64Array(leg?.sourcePositions??[d.x,d.y,d.x+d.w,d.y,d.x+d.w,d.y+d.h,d.x,d.y+d.h]);
     const indices=new Uint16Array(leg?.triangles??[0,1,2,0,2,3]);
-    return {name:part.name,bone:part.bone,rect:d,data,uv,leg,indices,rasterIndices:indices.slice(),target:new Float64Array(uv.length)};
+    return {name:part.name,bone:part.bone,rect:d,data,normalized,uv,leg,indices,rasterIndices:indices.slice(),target:new Float64Array(uv.length)};
   });
   paintCounts.createdPainters++;
   return {canvas,context,parts,pose:createV177RangerLowerPose(rig),rig,width:0,height:0,sample:null,accum:null,visits:null,imageData:null,
@@ -72,8 +75,8 @@ function rasterPart(p,g,w,h,ox,oy,stats) {
       const ix=Math.floor(sx),iy=Math.floor(sy),fx=sx-ix,fy=sy-iy;let r=0,green=0,b=0,a=0;
       for(let yy=0;yy<2;yy++)for(let xx=0;xx<2;xx++){
         const ux=ix+xx,uy=iy+yy;if(ux<0||uy<0||ux>=g.rect.w||uy>=g.rect.h)continue;
-        const at=(uy*g.rect.w+ux)*4,alpha=g.data[at+3]/255,weight=(xx?fx:1-fx)*(yy?fy:1-fy);
-        const amount=alpha*weight;a+=amount;r+=g.data[at]/255*amount;green+=g.data[at+1]/255*amount;b+=g.data[at+2]/255*amount;
+        const at=(uy*g.rect.w+ux)*4,alpha=g.normalized[at+3],weight=(xx?fx:1-fx)*(yy?fy:1-fy);
+        const amount=alpha*weight;a+=amount;r+=g.normalized[at]*amount;green+=g.normalized[at+1]*amount;b+=g.normalized[at+2]*amount;
       }
       if(a===0)continue;const at=pixel*4,keep=1-a;
       p.sample[at]=r+p.sample[at]*keep;p.sample[at+1]=green+p.sample[at+1]*keep;p.sample[at+2]=b+p.sample[at+2]*keep;p.sample[at+3]=a+p.sample[at+3]*keep;

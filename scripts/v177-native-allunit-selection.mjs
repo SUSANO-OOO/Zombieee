@@ -43,22 +43,42 @@ export function nativeCaseSelection({event,root=process.cwd(),git=args=>execFile
     for(const report of retained.reports)assert.match(report.sha256,/^[a-f0-9]{64}$/u);
     // Later successful observations keep their own immutable report and head;
     // the twelve baseline reports above never acquire a newer candidate's label.
-    const inventory=recovery.additionalEvidenceInventory;
+    const inventories=[...(recovery.additionalEvidenceInventory?[recovery.additionalEvidenceInventory]:[]),
+      ...(recovery.additionalEvidenceInventories??[])];
+    const inventory=inventories.length>0;
     if((retained.additionalReports?.length??0)>0||(recovery.additionalRawClockClosures?.length??0)>0
       ||retained.reports.some(r=>Array.isArray(r.caseIds)))assert.ok(inventory,'Later report ownership requires its source inventory');
-    if(inventory){
-      assert.match(inventory.head??'',/^[a-f0-9]{40}$/u);assert.match(inventory.runId??'',/^[1-9][0-9]+$/u);
-      assert.match(inventory.sha256??'',/^[a-f0-9]{64}$/u);
-      assert.ok(Array.isArray(inventory.reports)&&new Set(inventory.reports.map(r=>r.shard)).size===inventory.reports.length);
+    assert.equal(new Set(inventories.map(r=>r.head+':'+r.runId)).size,inventories.length,'Duplicate source inventory');
+    for(const source of inventories){
+      assert.match(source.head??'',/^[a-f0-9]{40}$/u);assert.match(source.runId??'',/^[1-9][0-9]+$/u);
+      assert.match(source.sha256??'',/^[a-f0-9]{64}$/u);
+      assert.ok(Array.isArray(source.reports)&&new Set(source.reports.map(r=>r.shard)).size===source.reports.length);
     }
     const additionalIds=new Set();
     for(const report of retained.additionalReports??[]){
       assert.match(report.head??'',/^[a-f0-9]{40}$/u);assert.match(String(report.runId??''),/^[1-9][0-9]+$/u);
       assert.match(report.sha256??'',/^[a-f0-9]{64}$/u);assert.ok(Number.isSafeInteger(report.artifactId)&&report.artifactId>0);
       if(inventory){
-        assert.equal(report.head,inventory.head);assert.equal(report.runId,inventory.runId);
-        assert.ok(inventory.reports.some(r=>r.shard===report.shard&&r.sha256===report.sha256&&r.artifactId===report.artifactId),
+        const source=inventories.find(r=>r.head===report.head&&r.runId===report.runId);
+        assert.ok(source?.reports.some(r=>r.shard===report.shard&&r.sha256===report.sha256&&r.artifactId===report.artifactId),
           'Additional report identity must match its immutable source inventory');
+        const sourceCorrectedIds=(source.contractCorrections??[]).flatMap(r=>r.caseIds??[]);
+        if(report.manualCaseIds?.length&&(report.originalReportStatus==='failed'||report.reportStatus==='failed'
+          ||report.manualCaseIds.some(id=>sourceCorrectedIds.includes(id)))){
+          const corrected=report.validationGroups?.correctedContractRevalidation;
+          assert.ok(corrected,'Original failed manual rows require separate corrected-contract evidence');
+          assert.deepEqual([...corrected.manualCaseIds].sort(),[...report.manualCaseIds].sort());
+          assert.deepEqual(corrected.caseIds,[]);assert.deepEqual(corrected.outcomeCaseIds,[]);
+          const closure=source.contractCorrections?.find(r=>r.sha256===corrected.correctionSidecarSha256);
+          assert.ok(closure,'Manual correction must bind its immutable source sidecar');
+          for(const key of ['sha256','originalContractSha256','correctedContractSourceSha256'])assert.match(closure[key]??'',/^[a-f0-9]{64}$/u);
+          assert.equal(closure.correctedContractSourceSha256,corrected.correctedContractSourceSha256);
+          assert.deepEqual([...closure.caseIds].sort(),[...report.manualCaseIds].sort());
+          assert.equal(closure.conditions.windupSeconds,.5);assert.equal(closure.conditions.recoverySeconds,.18);
+          assert.equal(closure.conditions.impactDamage,92);assert.equal(closure.conditions.stepSeconds,1/60);
+          assert.deepEqual(closure.conditions.allowedTicks,[29,30,31]);
+          for(const key of ['numericToleranceAdded','deadlineChanged','sourceRafConditionsChanged','clipConditionsChanged'])assert.equal(closure.conditions[key],false);
+        }
       }
       assert.ok(SHARDS.some(s=>s.id===report.shard));let count=0;
       for(const key of ['caseIds','manualCaseIds','outcomeCaseIds']){

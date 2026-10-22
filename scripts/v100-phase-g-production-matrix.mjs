@@ -1387,15 +1387,17 @@ async function installDeploymentPointerReceipt(page, attemptId, expectedIdentity
         slot: node.closest("button.unit-card").getAttribute("data-slot-index"),
       } : null,
     } : null;
-    const diagnosticSnapshot = (point = null) => {
-      const hitTarget = point && Number.isFinite(Number(point.x)) && Number.isFinite(Number(point.y))
-        ? document.elementFromPoint(Number(point.x), Number(point.y)) : null;
+    const diagnosticSnapshot = (point = null, { hitTest = true } = {}) => {
+      const hitTestObserved = hitTest && point !== null
+        && Number.isFinite(Number(point.x)) && Number.isFinite(Number(point.y));
+      const hitTarget = hitTestObserved ? document.elementFromPoint(Number(point.x), Number(point.y)) : null;
       return {
         documentIdentity: documentIdentityFor(),
         documentElementIdentity: nodeDetails(document.documentElement)?.nodeIdentity ?? null,
         hasFocus: document.hasFocus(),
         hidden: document.hidden,
         point: point ? { x: Number(point.x), y: Number(point.y) } : null,
+        hitTestObserved,
         currentElementFromPoint: nodeDetails(hitTarget),
         activeElement: nodeDetails(document.activeElement),
         visibilityState: document.visibilityState,
@@ -1531,7 +1533,8 @@ async function readDeploymentPointerReceipts(page, attemptId, timeoutMs) {
       const entry = window.__V100_PHASE_G_DEPLOYMENT_POINTER_RECEIPTS__?.get(receiptAttemptId);
       if (entry?.diagnostics) {
         const point = entry.diagnostics.before?.point;
-        entry.diagnostics.after = entry.diagnosticSnapshot(point);
+        // The captured event owns its actual hit-test proof. Reading it must not force another layout.
+        entry.diagnostics.after = entry.diagnosticSnapshot(point, { hitTest: false });
       }
       return { receipts: entry?.receipts ?? [], diagnostics: entry?.diagnostics ?? null };
     })()
