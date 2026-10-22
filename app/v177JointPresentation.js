@@ -16,6 +16,7 @@ import { V177_FUTAGO_JOINT_ATLASES as futagoAtlases } from './v177FutagoJointDat
 import { v177RangerCarryPose } from './v177RangerUpperMotion.js';
 import { v177RangerLowerBob } from './v177RangerLowerMotion.js';
 import { drawV177RangerLower } from './v177RangerLowerPaint.js';
+import {v177RecessedMouthContour} from './v177MouthCavity.js';
 import { v177RangerFootPlacement } from './v177RangerFootPlacement.js';
 import { v177PaintLocomotion } from './v177PaintLocomotion.js';
 import { applyV177GroundedMatrix, v177GroundedJointPlan, v177BlendGroundedMotion } from './v177GroundedMotion.js';
@@ -463,11 +464,21 @@ export function drawV177JointPose(ctx, image, kind, plan, x, y, width, height, {
     if(reference){ctx.translate(-reference.tx/reference.scale,-reference.ty/reference.scale);ctx.scale(1/reference.scale,1/reference.scale);}
     for(const part of atlas.parts){
       if(part.bone==='jaw'){
-        ctx.fillStyle=atlas.mouth.color;ctx.beginPath();let started=false;
+        const edges=[];
         for(const [bone,points]of [[atlas.mouth.headBone,atlas.mouth.upper],[atlas.mouth.jawBone,atlas.mouth.lower]]){
           resolve(matrix,atlas,plan,bone,true);
-          for(const [px,py]of points){const xx=matrix[0]*px+matrix[2]*py+matrix[4],yy=matrix[1]*px+matrix[3]*py+matrix[5];
-            if(started)ctx.lineTo(xx,yy);else ctx.moveTo(xx,yy);started=true;}
+          edges.push(points.map(([px,py])=>[matrix[0]*px+matrix[2]*py+matrix[4],matrix[1]*px+matrix[3]*py+matrix[5]]));
+        }
+        const cavity=kind==='ooguchi'?v177RecessedMouthContour(...edges):null;
+        ctx.fillStyle=atlas.mouth.color;
+        if(cavity&&ctx.createLinearGradient){
+          const gradient=ctx.createLinearGradient(...cavity.throat,...cavity.lip);
+          gradient.addColorStop(0,atlas.mouth.color);gradient.addColorStop(.65,atlas.mouth.color);
+          gradient.addColorStop(.9,'rgba(22,13,10,.65)');gradient.addColorStop(1,'rgba(22,13,10,0)');ctx.fillStyle=gradient;
+        }
+        ctx.beginPath();let started=false;
+        for(const [xx,yy]of cavity?.points??edges.flat()){
+          if(started)ctx.lineTo(xx,yy);else ctx.moveTo(xx,yy);started=true;
         }
         ctx.closePath();ctx.fill();
       }

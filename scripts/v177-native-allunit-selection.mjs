@@ -58,6 +58,25 @@ export function nativeCaseSelection({event,root=process.cwd(),git=args=>execFile
       }
       assert.ok(count>0,'An additional report must retain an actual observation');
     }
+    const clockClosures=new Set();
+    for(const closure of recovery.additionalRawClockClosures??[]){
+      assert.ok(!clockClosures.has(closure.caseId),'Duplicate later clock closure');clockClosures.add(closure.caseId);
+      for(const key of ['reportSha256','rawClipSha256','clockAuditSha256'])assert.match(closure[key]??'',/^[a-f0-9]{64}$/u);
+      assert.equal(closure.historyRewritten,false);
+      const report=retained.additionalReports?.find(r=>r.head===closure.head&&r.runId===closure.runId&&r.sha256===closure.reportSha256);
+      assert.ok(report&&[...report.caseIds,...report.manualCaseIds,...report.outcomeCaseIds].includes(closure.caseId),
+        'A later clock closure must bind its own successful retained report');
+      const historical=recovery.historicalRawClockAudits?.find(r=>r.head===closure.resolves?.historicalHead
+        &&r.runId===closure.resolves?.historicalRunId&&r.sha256===closure.resolves?.historicalAuditSha256);
+      assert.ok(historical?.closures.some(r=>r.caseId===closure.caseId&&r.clockClosure==='unresolved-needs-new-recording'),
+        'A later clock closure must resolve an unchanged historical open clock');
+      assert.equal(closure.resolves.previousBaselineHead,recovery.head);assert.equal(closure.resolves.previousBaselineRunId,recovery.runId);
+      const validation=closure.strictClockValidation;
+      for(const key of ['passed','rawReportsUnmodified','nativeClockStrictlyIncreasing','simulationClockNondecreasing',
+        'realmOwnerAndOrderedMembers','sourceRafClockStrictlyIncreasing','overflowFree'])assert.equal(validation?.[key],true);
+      assert.equal(validation.duplicateRowsRemoved,false);assert.equal(validation.sourceHead,closure.head);
+      assert.equal(validation.postpaintContract,'passed');
+    }
     selected.outcomeCaseIds=recovery.outcomeCaseIds;selected.manualCaseIds=recovery.manualCaseIds;
     selected.shards=SHARDS.filter(s=>[...selected.caseIds,...selected.outcomeCaseIds,...selected.manualCaseIds].some(id=>id.startsWith(s.id+':'))).map(s=>s.id);
     baseline={head:recovery.head,runId:recovery.runId,successfulCases:retained.caseIds.length,

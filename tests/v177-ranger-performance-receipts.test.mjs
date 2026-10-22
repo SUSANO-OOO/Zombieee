@@ -7,6 +7,7 @@ import ts from 'typescript';
 import {V177_JOINT_ATLASES,v177JointPose,drawV177JointPose,v177RenderedWeightedLowerReceipt} from '../app/v177JointPresentation.js';
 import {normalTacticalInput} from '../scripts/v100-normal-tactical-input.mjs';
 import {rangerPerformanceReceipts} from '../scripts/v177-ranger-performance-receipts.mjs';
+import {getV177RangerLowerPaintSnapshot} from '../app/v177RangerLowerPaint.js';
 
 const windowBounds={startedAt:0,endedAt:5000};
 function actor(id,sequence,time){return{id,kind:'ranger',side:'human',hp:70,maxHp:70,x:100+sequence,y:280,lane:1,speed:29,laneSpeed:75,damage:22.4,range:145,attackEvery:.82,
@@ -148,7 +149,7 @@ function appVmFixture(){
  const snapshot=qa('getSnapshot'),perf=qa('getPerformanceSnapshot');assert(snapshot&&perf);
  const fighters=nodes.find(n=>ts.isPropertyAssignment(n)&&n.name.getText(app)==='fighters'&&n.pos>snapshot.pos&&n.end<snapshot.end&&n.initializer.getText(app).startsWith('g.fighters.map'));
  const observation=nodes.find(n=>ts.isPropertyAssignment(n)&&n.name.getText(app)==='rangerRenderObservation'&&n.pos>snapshot.pos&&n.end<snapshot.end);assert(fighters&&observation);
- const context=vm.createContext({v177RenderedWeightedLowerReceipt,fighterRenderAudit:new WeakMap(),fighterRenderAuditHistory:new Map(),fighterRenderSequence:0,
+ const context=vm.createContext({v177RenderedWeightedLowerReceipt,getV177RangerLowerPaintSnapshot,fighterRenderAudit:new WeakMap(),fighterRenderAuditHistory:new Map(),fighterRenderSequence:0,
   runtimePerformanceRef:{current:{renderFrames:30}},v100ImageSampler:{snapshot:()=>({})},v100ShotLayer:{snapshot:()=>({})},graphicsProfileRef:{current:{}},
   staticBattlefieldCacheRef:{current:{hits:0,rebuilds:0,canvas:null}},renderObjectPoolSnapshot:()=>({}),
   activeBattlefieldDepthScale:()=>1,sampleAnimationClip:()=>({spriteState:'idle',groundAnchor:1,pose:{}}),enemyCombatVfxSnapshot:()=>null,

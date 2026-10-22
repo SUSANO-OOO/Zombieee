@@ -61,7 +61,16 @@ test('current recovery partitions all original observations and never reuses an 
    if(closure.clockClosure==='new-original-recording-clock-verified'){
     assert.equal(closure.currentHead,current.head);assert.equal(closure.currentRunId,current.runId);assert.match(closure.rawClipSha256,/^[a-f0-9]{64}$/u);
     assert.ok(selected.retainedEvidence.reports.some(r=>r.sha256===closure.reportSha256));
-   }else assert.ok(pending.includes(closure.caseId),'Unresolved historical clock must remain pending');
+   }else{
+    const later=current.additionalRawClockClosures?.find(r=>r.caseId===closure.caseId);
+    assert.ok(pending.includes(closure.caseId)||later,'An unresolved historical clock needs a pending case or a separately bound new original recording');
+    if(later){
+     assert.equal(later.historyRewritten,false);assert.equal(later.strictClockValidation.passed,true);
+     assert.equal(later.resolves.historicalAuditSha256,historical.sha256);
+     assert.ok(selected.retainedEvidence.additionalReports.some(r=>r.head===later.head&&r.runId===later.runId
+      &&r.sha256===later.reportSha256&&r.caseIds.includes(closure.caseId)));
+    }
+   }
   }
  }
  for(const gate of ['originalSpeedAccepted','naturalnessAccepted','wholeGameAccepted'])assert.equal(current[gate],false);
@@ -98,13 +107,27 @@ test('additional successful reports retain their own head and can only bind uniq
  // Synthetic metadata tests ownership only; it is never an evidence claim.
  const report={head:'a'.repeat(40),runId:'123456',sha256:'b'.repeat(64),artifactId:123,
   shard:id.split(':')[0],caseIds:[id],manualCaseIds:[],outcomeCaseIds:[]};
- profile.retainedEvidence.additionalReports=[report];
+ profile.retainedEvidence.additionalReports.push(report);
  const select=p=>nativeCaseSelection({root:profileRoot(p),event:{pull_request:{draft:false}},git:()=>''});
- assert.deepEqual(select(profile).retainedEvidence.additionalReports,[report]);
+ assert.deepEqual(select(profile).retainedEvidence.additionalReports.at(-1),report);
  for(const mutate of[
   r=>{r.head='unbound';},r=>{r.runId='';},r=>{r.sha256='unbound';},r=>{r.artifactId=0;},
   r=>{r.caseIds=[profile.caseIds[0]];},r=>{r.shard='forms-unknown';},
   r=>{r.caseIds.push(id);},r=>{r.manualCaseIds.push(id);},r=>{r.caseIds=[];},
- ]){const broken=structuredClone(profile);mutate(broken.retainedEvidence.additionalReports[0]);assert.throws(()=>select(broken));}
+ ]){const broken=structuredClone(profile);mutate(broken.retainedEvidence.additionalReports.at(-1));assert.throws(()=>select(broken));}
  const repeated=structuredClone(profile);repeated.retainedEvidence.additionalReports.push(structuredClone(report));assert.throws(()=>select(repeated));
+});
+
+test('later raw-clock closures fail closed if their report, original audit or strict clock proof is unbound',()=>{
+ const select=p=>nativeCaseSelection({root:profileRoot(p),event:{pull_request:{draft:false}},git:()=>''});
+ for(const mutate of[
+  r=>{r.reportSha256='f'.repeat(64);},r=>{r.rawClipSha256='';},r=>{r.clockAuditSha256='';},
+  r=>{r.head='f'.repeat(40);},r=>{r.runId='999999';},r=>{r.historyRewritten=true;},
+  r=>{r.resolves.historicalAuditSha256='f'.repeat(64);},r=>{r.resolves.previousBaselineHead='f'.repeat(40);},
+  r=>{r.strictClockValidation.nativeClockStrictlyIncreasing=false;},r=>{r.strictClockValidation.duplicateRowsRemoved=true;},
+ ]){
+  const broken=structuredClone(current);mutate(broken.additionalRawClockClosures[0]);assert.throws(()=>select(broken));
+ }
+ const broken=structuredClone(current);broken.retainedEvidence.additionalReports=broken.retainedEvidence.additionalReports.filter(r=>r.shard!=='forms-4');
+ assert.throws(()=>select(broken));
 });

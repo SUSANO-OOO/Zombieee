@@ -14,6 +14,24 @@ const kind='ooguchi',dir='assets/source/v100/joints/ooguchi-r1/',atlas=V177_JOIN
 const hash=b=>createHash('sha256').update(b).digest('hex'),transform=(m,[x,y])=>[m[0]*x+m[2]*y+m[4],m[1]*x+m[3]*y+m[5]],dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 function inside([x,y],polygon){let hit=false;for(let i=0,j=polygon.length-1;i<polygon.length;j=i++){const[a,b]=polygon[i],[c,d]=polygon[j];if((b>y)!==(d>y)&&x<(c-a)*(y-b)/(d-b)+a)hit=!hit;}return hit;}
 function edgeDistance(p,poly){let best=Infinity;for(let i=0;i<poly.length;i++){const a=poly[i],b=poly[(i+1)%poly.length],dx=b[0]-a[0],dy=b[1]-a[1],t=Math.max(0,Math.min(1,((p[0]-a[0])*dx+(p[1]-a[1])*dy)/(dx*dx+dy*dy)));best=Math.min(best,dist(p,[a[0]+t*dx,a[1]+t*dy]));}return best;}
+
+test('Ooguchi opening leaves the snout gap transparent instead of drawing a flat dark wall',()=>{
+ let open=0;
+ for(const state of ['wind-up','active','recovery'])for(let frame=0;frame<=60;frame++){
+  const plan=v177JointPose(kind,{requestedState:state,clipProgress:frame/60},{locomotionPhase:.1371,locomotionSettle:1});
+  let path=[],filled;const matrices=[];
+  const ctx={save(){},restore(){},translate(){},scale(){},beginPath(){path=[];},moveTo(x,y){path.push([x,y]);},
+   lineTo(x,y){path.push([x,y]);},closePath(){},fill(){filled=[...path];},transform(...m){matrices.push(m);},drawImage(){}};
+  assert.ok(drawV177JointPose(ctx,{naturalWidth:512},kind,plan,0,0,480,448));
+  const head=matrices[atlas.parts.findIndex(p=>p.bone==='head')],jaw=matrices[atlas.parts.findIndex(p=>p.bone==='jaw')];
+  const old=[...atlas.mouth.upper.map(p=>transform(head,p)),...atlas.mouth.lower.map(p=>transform(jaw,p))];
+  const front=[(old[1][0]+old[2][0])/2,(old[1][1]+old[2][1])/2];
+  if(dist(old[1],old[2])<12)continue;open++;
+  assert.ok(filled.length>4);assert.equal(inside(front,filled),false,'open air between the outer tips must not become a dark board');
+  for(const p of filled)assert.ok(inside(p,old)||edgeDistance(p,old)<1e-7,'the throat fill stays inside the original mandibles');
+ }
+ assert.ok(open>40,'exercise actual opening frames across the normal attack');
+});
 test('Ooguchi original four legs retain ground contact, fixed reach and attached mandibles through dense runtime interpolation',async()=>{
 const d=JSON.parse(await readFile(dir+'parts.json')),motion=JSON.parse(gunzipSync(await readFile(dir+'motion.json.gz')));
 assert.equal(d.rig.legs.length,4);assert.equal(d.rig.arms.length,0);assert.equal(d.rig.weapons.length,0);

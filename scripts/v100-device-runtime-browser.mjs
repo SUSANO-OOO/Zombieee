@@ -16,6 +16,8 @@ import { readRuntimeObservation, installRuntimeObservationDiagnostics, runtimePe
 import { parseIndexingStatus, validateBenchmarkPreparationRecord } from "./v100-macos-indexing-control.mjs";
 import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
 import { rangerPerformanceReceipts } from "./v177-ranger-performance-receipts.mjs";
+import {readV177RangerPerformancePreparation} from './v177-ranger-performance-start.mjs';
+import {V177_JOINT_ATLASES} from '../app/v177JointPresentation.js';
 
 const configuredBaseUrl = process.env.V100_DEVICE_RUNTIME_BASE_URL ?? process.env.V100_CAMPAIGN_QA_BASE_URL;
 assert.ok(configuredBaseUrl, "V100_DEVICE_RUNTIME_BASE_URL or V100_CAMPAIGN_QA_BASE_URL is required");
@@ -322,6 +324,7 @@ const report = {
       runner: await fileSha256("scripts/v100-device-runtime-browser.mjs"),
       runtimeObservation: await fileSha256("scripts/v100-runtime-observation.mjs"),
       rangerPerformanceReceipts: await fileSha256("scripts/v177-ranger-performance-receipts.mjs"),
+      rangerPerformanceStart:await fileSha256('scripts/v177-ranger-performance-start.mjs'),
     },
   },
   fixture: {
@@ -478,6 +481,16 @@ try {
       }
       await page.screenshot({ path: path.join(evidenceDir, `${name}-before.png`) });
       if (blankBaselineDiagnostic) result.hostAtMeasurementStart = hostLoadSnapshot();
+      let preparation;
+      result.rangerSetup={attempts:0,lastNotReady:null};
+      while(Date.now()<setupDeadline){
+        preparation=await page.evaluate(readV177RangerPerformancePreparation,{atlasPath:V177_JOINT_ATLASES.ranger.path});result.rangerSetup.attempts++;
+        if(preparation.ready)break;
+        result.rangerSetup.lastNotReady=preparation;
+        await normalTacticalInput(page,result,{barrageWhenOverwhelmed:!viewport.safeArea});
+        await page.waitForTimeout(350);
+      }
+      assert.ok(preparation?.ready,'No live Ranger with an actual weighted paint inside the original setup deadline');
       measurementActive = true;
       const measurement = await beginMeasurement(page);
       result.measurementStarted = true;
