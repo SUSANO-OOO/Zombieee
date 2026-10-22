@@ -14,6 +14,7 @@ import { productionBuildIdentity } from './browser-qa-build-identity.mjs';
 import { installRequestFailureAudit } from './browser-request-failure-audit.mjs';
 import { startNativeCanvasClip, finishNativeCanvasClip } from './v177-native-canvas-clips.mjs';
 import { installNormalFrameObserver,createNormalFrameCapture,finishNormalFrameCapture } from './v177-normal-frame-observation.mjs';
+import {createNormalBrowserDeadline,normalCleanupWithin,normalPlayChildCompletion} from './v177-normal-browser-deadline.mjs';
 
 export const V177_REPRESENTATIVE_WINDOW_MS = 120_000;
 export function assertRepresentativeBattleObservation(row) {
@@ -98,6 +99,7 @@ async function main() {
     report.baseline={file,sha256:createHash('sha256').update(bytes).digest('hex'),number:25,outcome:baseline.outcome};
   }
   const browser = await (await pwaBrowserType(engine)).launch({ headless: true });
+  let outerFailure=null;
   try {
     for (const number of (s25FireComparison?[25]:[14, 25, 30])) {
       const fixture = createV177RepresentativeBudget(number);
@@ -109,10 +111,14 @@ async function main() {
         if(s25FireComparison)assert.equal(row.fixtureSeedSha256,baseline.fixtureSeedSha256,'identical original serialized save');
       }
       report.cases.push(row);
-      const context = await browser.newContext({ viewport: report.viewport, isMobile: true, hasTouch: true,
-        recordVideo: { dir: path.join(out, 'videos'), size: report.viewport } });
-      const page = await context.newPage(), video = page.video();
-      const requests = installRequestFailureAudit(page); row.requestAudit = requests.report;
+      await writeFile(path.join(out,'report.json'),JSON.stringify(report,null,2)+'\n');
+      let context,requests,contextClose;
+      const closeOwnedContext=()=>contextClose??=(requests?requests.closeContext(context):context.close());
+      const rpc=createNormalBrowserDeadline({onTimeout:()=>context?normalCleanupWithin(closeOwnedContext,'timed-out representative context'):undefined});
+      context = await rpc.run(()=>browser.newContext({ viewport: report.viewport, isMobile: true, hasTouch: true,
+        recordVideo: { dir: path.join(out, 'videos'), size: report.viewport } }),'browser.newContext');
+      const rawPage=await rpc.run(()=>context.newPage(),'context.newPage'),page=rpc.wrap(rawPage),video=page.video();
+      requests = installRequestFailureAudit(page); row.requestAudit = requests.report;
       let clip,frameCapture;
       const frameOwner=`${head}:representative:${number}`;
       const saveAt = () => page.evaluate(() => JSON.parse(localStorage.getItem('nishijin-campaign-v100')));
@@ -187,13 +193,14 @@ async function main() {
         else row.outcome = 'observed-window';
         if (clip) await finishClip(false);
         await page.screenshot({ path: path.join(out, `s${number}-observation-end.png`) });
-      } catch (error) { row.status = 'failed'; row.error = String(error); await page.screenshot({ path: path.join(out, `s${number}-failure.png`) }).catch(() => {}); }
+      } catch (error) { row.status = 'failed'; row.error = String(rpc.failure??error); await normalCleanupWithin(()=>rawPage.screenshot({ path: path.join(out, `s${number}-failure.png`) }),'representative failure screenshot',{timeoutMs:30_000}).catch(() => {}); }
       finally {
-        row.framePerformance??=await finishNormalFrameCapture(page,frameCapture,frameOwner).catch(error=>({status:'incomplete',error:String(error),performanceAcceptance:false}));
+        if(rpc.failure)row.operationTimeout={code:rpc.failure.code,operation:rpc.failure.operation,timeoutMs:rpc.failure.timeoutMs};
+        row.framePerformance??=await finishNormalFrameCapture(rawPage,frameCapture,frameOwner).catch(error=>({status:'incomplete',error:String(error),performanceAcceptance:false}));
         if (clip) await finishClip(false).catch(error => { row.captureError = String(error); row.status = 'failed'; });
-        try { row.finalSave ??= await saveAt(); await context.storageState({ path: path.join(out, `s${number}-browser-storage.json`), indexedDB: true }); }
+        try { row.finalSave ??= await normalCleanupWithin(()=>rawPage.evaluate(()=>JSON.parse(localStorage.getItem('nishijin-campaign-v100'))),'representative final save',{timeoutMs:30_000}); await normalCleanupWithin(()=>context.storageState({ path: path.join(out, `s${number}-browser-storage.json`), indexedDB: true }),'representative storage',{timeoutMs:30_000}); }
         catch (error) { row.saveCaptureError = String(error); row.status = 'failed'; }
-        try { await requests.closeContext(context); row.video = await video.path(); row.videoBytes = (await stat(row.video)).size; }
+        try { await normalCleanupWithin(closeOwnedContext,'representative context'); row.video = await normalCleanupWithin(()=>video.path(),'representative video'); row.videoBytes = (await stat(row.video)).size; }
         catch (error) { row.videoCaptureError = String(error); row.status = 'failed'; }
         if (row.status !== 'failed') {
           try {
@@ -209,10 +216,12 @@ async function main() {
         await persist();
       }
     }
-  } finally { await browser.close(); }
-  report.status = report.cases.length === (s25FireComparison?1:3) && report.cases.every(row => row.status === 'observed') ? 'observed' : 'failed';
+  } catch(error){outerFailure=error;report.error=String(error);}
+  finally { try{await normalCleanupWithin(()=>browser.close(),'representative browser');}catch(error){outerFailure??=error;report.browserCloseError=String(error);report.error??=String(error);} }
+  report.status = !outerFailure&&report.cases.length === (s25FireComparison?1:3) && report.cases.every(row => row.status === 'observed') ? 'observed' : 'failed';
   await writeFile(path.join(out, 'report.json'), JSON.stringify(report, null, 2) + '\n');
   console.log(JSON.stringify({ head, engine, status: report.status, outcomes: report.cases.map(row => ({ number: row.number, outcome: row.outcome, status: row.status })) }));
+  normalPlayChildCompletion(report);
   if (report.status === 'failed') process.exitCode = 1;
 }
 

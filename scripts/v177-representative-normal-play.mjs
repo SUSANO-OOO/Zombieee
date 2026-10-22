@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { execFileSync, spawn } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { V100_STAGE_IDS } from '../app/v100Registry.js';
+import {runNormalPlayChild} from './v177-normal-browser-deadline.mjs';
 
 export function normalPlayStageLimit(value) {
   const limit = value === undefined ? 30 : Number(value);
@@ -31,7 +32,7 @@ export function representativeNormalPlayScope({ candidateSha, engine, reportByte
   assert.deepEqual(report.normalPlayScope, { kind: 'representative-opening', stageLimit: 3, wholeCampaignAcceptance: false });
   assert.deepEqual(report.errors, []);
   assert.deepEqual(report.requestAudit?.unexpectedFailures, []);
-  for (const key of ['resumeFrom', 'exploratoryContinuation', 'saveCaptureError', 'storageCaptureError', 'videoCaptureError']) assert.equal(report[key], undefined, key);
+  for (const key of ['resumeFrom', 'exploratoryContinuation', 'saveCaptureError', 'storageCaptureError', 'videoCaptureError','browserCloseError','operationTimeout']) assert.equal(report[key], undefined, key);
   assert.ok(report.videoBytes > 0, 'preserve the actual normal-play video');
   assert.ok(report.stages.length >= 1 && report.stages.length <= 3);
   for (const [index, stage] of report.stages.entries()) {
@@ -90,11 +91,12 @@ export function representativeNormalPlayScopeWithExit({childCode,...binding}) {
 export async function runBrowserQa() {
   normalPlayPlatform(process.env.V100_NORMAL_PLAY_ENGINE??'chromium');
   assert.equal(normalPlayStageLimit(process.env.V100_NORMAL_PLAY_STAGE_LIMIT), 3);
-  const childCode = await new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, [path.resolve('scripts/v100-normal-campaign-playthrough.mjs')], { stdio: 'inherit', env: process.env });
-    child.on('error', reject); child.on('exit', resolve);
-  });
   const directory = path.resolve(process.env.V100_NORMAL_PLAY_EVIDENCE_DIR);
+  const execute=async(script,env=process.env)=>{
+    try{return await runNormalPlayChild(path.resolve(script),{env});}
+    catch(error){if(error.childExitTimeout)try{await writeFile(path.join(directory,'child-exit-timeout.json'),JSON.stringify(error.childExitTimeout,null,2)+'\n',{flag:'wx'});}catch(persistenceError){error.childExitPersistenceError=String(persistenceError);}throw error;}
+  };
+  const childCode = await execute('scripts/v100-normal-campaign-playthrough.mjs');
   const reportBytes = await readFile(path.join(directory, 'report.json'));
   const scope = representativeNormalPlayScopeWithExit({childCode, candidateSha: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), engine: process.env.V100_NORMAL_PLAY_ENGINE, reportBytes });
   await writeFile(path.join(directory, 'representative-scope.json'), JSON.stringify(scope, null, 2) + '\n');
@@ -102,16 +104,10 @@ export async function runBrowserQa() {
   const fireComparison=process.env.V177_S25_FIRE_INPUT_COMPARISON==='1';
   if(fireComparison)assert.equal(process.env.V100_NORMAL_PLAY_ENGINE,'chromium','one S25 comparison on the Chromium diagnostic only');
   const representativeEnv=fireComparison?{...process.env,V177_S25_DEPLOY_OBSERVATION:'1'}:process.env;
-  const representativeCode = await new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, [path.resolve('scripts/v177-representative-battles.mjs')], { stdio: 'inherit', env: representativeEnv });
-    child.on('error', reject); child.on('exit', resolve);
-  });
+  const representativeCode = await execute('scripts/v177-representative-battles.mjs',representativeEnv);
   assert.equal(representativeCode, 0, 'independent middle/late observations retain all technical failure controls');
   if(fireComparison){
-    const comparisonCode=await new Promise((resolve,reject)=>{
-      const child=spawn(process.execPath,[path.resolve('scripts/v177-representative-battles.mjs')],{stdio:'inherit',env:{...representativeEnv,V177_REPRESENTATIVE_INPUT_CASE:'s25-fire-before-repeat-medic'}});
-      child.on('error',reject);child.on('exit',resolve);
-    });
+    const comparisonCode=await execute('scripts/v177-representative-battles.mjs',{...representativeEnv,V177_REPRESENTATIVE_INPUT_CASE:'s25-fire-before-repeat-medic'});
     assert.equal(comparisonCode,0,'S25 input comparison retains every technical control and requires actual IDs; no win prerequisite');
   }
 }

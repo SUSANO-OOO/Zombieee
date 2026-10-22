@@ -161,10 +161,10 @@ test('the actual tactical read keeps the original snapshot and all input policy 
 test('the actual normal battle finally retains its original failure when observation cleanup also fails',async()=>{
   const source=await readFile('scripts/v100-normal-campaign-playthrough.mjs','utf8'),ast=ts.createSourceFile('normal.mjs',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS),
     fn=ast.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==='battle'),primary=new Error('Original ordinary battle failure');
-  let accepted=false,cleanup=0;const report={stages:[],provenance:{head:'a'.repeat(40)}};
-  const bindings={report,saveAt:async()=>({revision:7}),persist:async()=>{},page:{locator:()=>({async waitFor({timeout}){assert.equal(timeout,15000);}})},
+  let accepted=false,cleanup=0;const report={stages:[],provenance:{head:'a'.repeat(40)}},rawPage={};
+  const bindings={report,rawPage,rpc:{run:async operation=>operation(),check(){}},saveAt:async()=>({revision:7}),persist:async()=>{},page:{locator:()=>({async waitFor({timeout}){assert.equal(timeout,15000);}})},
     phaseAt:async()=>'battle',continueRequested:async()=>{throw primary;},out:'inert',createNormalFrameCapture:async()=>({}),
-    finishNormalFrameCapture:async()=>{cleanup++;throw new Error('Secondary timing cleanup failure');},acceptResult:async()=>{accepted=true;}};
+    finishNormalFrameCapture:async page=>{assert.equal(page,rawPage);cleanup++;throw new Error('Secondary timing cleanup failure');},acceptResult:async()=>{accepted=true;}};
   const body=fn.getText(ast),factory=new Function(...Object.keys(bindings),'return '+body),battle=factory(...Object.values(bindings));
   await assert.rejects(battle({number:1,id:'stage-01'}),error=>error===primary);assert.equal(cleanup,1);assert.equal(accepted,false);
   assert.equal(report.stages[0].framePerformance.status,'incomplete');assert.match(report.stages[0].framePerformance.error,/Secondary/);

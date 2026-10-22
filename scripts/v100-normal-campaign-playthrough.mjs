@@ -20,6 +20,7 @@ import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
 import { deferNormalRecruitOffer } from "./v100-normal-recruit-offer.mjs";
 import { captureNormalAudioUnlockAttempt } from "./v177-normal-audio-unlock-observation.mjs";
 import { installNormalFrameObserver,createNormalFrameCapture,finishNormalFrameCapture } from './v177-normal-frame-observation.mjs';
+import {createNormalBrowserDeadline,normalCleanupWithin,normalPlayChildCompletion} from './v177-normal-browser-deadline.mjs';
 
 const stageLimit = normalPlayStageLimit(process.env.V100_NORMAL_PLAY_STAGE_LIMIT);
 const origin = new URL(process.env.V100_CAMPAIGN_QA_BASE_URL);
@@ -60,15 +61,9 @@ if (resumeDir) {
     ? [{ index, number: stage.number, status: "unfinished in an earlier segment; not a victory", sourceReport: report.resumeFrom.reportSha256 }] : []);
   if (report.exploratoryContinuation) report.evidenceKind = "exploratory normal UI route across identified builds; not final-candidate whole-campaign acceptance";
 }
-const browserType=await pwaBrowserType(engine),browser=await browserType.launch({headless:true});
-report.provenance={head:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),tree:execFileSync('git',['rev-parse','HEAD^{tree}'],{encoding:'utf8'}).trim(),platform:process.platform,node:process.version,browserVersion:browser.version(),browserExecutable:browserType.executablePath()};
-const context = await browser.newContext({viewport:{width:844,height:390},hasTouch:true,isMobile:true,recordVideo:{dir:path.join(out,'videos'),size:{width:844,height:390}},...(restoredStorage ? {storageState:restoredStorage} : {})});
-report.videoTimeOrigin={beforePageEpochMs:Date.now()};
-const page = await context.newPage();
-const video=page.video();assert.ok(video,'Normal campaign must preserve its actual native video');
-report.videoTimeOrigin.afterPageEpochMs=Date.now();
-const requests=installRequestFailureAudit(page);report.requestAudit=requests.report;
-page.setDefaultTimeout(15_000);
+let browser,context,requests,rawPage,page,video,contextClose;
+const closeOwnedContext=()=>contextClose??=(requests?requests.closeContext(context):context.close());
+const rpc=createNormalBrowserDeadline({onTimeout:()=>context?normalCleanupWithin(closeOwnedContext,'timed-out opening context'):undefined});
 const saveAt = () => page.evaluate(() => JSON.parse(localStorage.getItem("nishijin-campaign-v100")));
 const phaseAt = () => page.locator(".v100-shell").getAttribute("data-v100-phase");
 const normalizeText = text => String(text ?? "").replaceAll("**", "").replace(/\s+/gu, "").trim();
@@ -77,9 +72,6 @@ async function continueRequested() {
   const stop = await readFile(path.join(out,"stop-request.txt"),"utf8").catch(error => { if (error.code === "ENOENT") return null; throw error; });
   if (stop !== null) throw new Error(`Normal play stopped for diagnosis: ${stop.trim()}`);
 }
-page.on("console",m=>{if(m.type()==="error")report.errors.push({kind:"console",message:m.text()});});
-page.on("pageerror",e=>report.errors.push({kind:"page",message:String(e)}));
-page.on("response",r=>{if(r.status()>=400)report.errors.push({kind:"http",url:r.url(),status:r.status()});});
 async function ready() {
   await page.waitForFunction(() => !document.querySelector('.v100-shell[aria-busy="true"]'));
   await page.waitForFunction(() => [...document.images].every(img => img.complete && img.naturalWidth > 0));
@@ -163,11 +155,13 @@ async function battle(stage) {
   report.stages.push(record); await persist();
   const start=Date.now();let lastShot=0;let cursor=0;let lastAction=0;let lastEmergency=0;let lastEmergencyCursor=-1;let lastAimReadAt=-Infinity;let lastAirReady=false;let lastVisibleEnemyTarget=false;
   // The outer campaign phase changes before the real asset gate releases the HUD.
-  await page.locator('.v100-deployed-count').waitFor({state:'visible',timeout:15_000});
   const frameOwner=`${report.provenance.head}:${stage.id}:${record.openingSave.revision}`;
-  const frameCapture=await createNormalFrameCapture({directory:out,label:`s${stage.number}`,owner:frameOwner});
+  let frameCapture;
   let frameStarted=false;
   try {
+  await rpc.run(async()=>{
+  await page.locator('.v100-deployed-count').waitFor({state:'visible',timeout:15_000});
+  frameCapture=await createNormalFrameCapture({directory:out,label:`s${stage.number}`,owner:frameOwner});
   while(await phaseAt()==="battle") {
     await continueRequested();
     try {
@@ -277,6 +271,7 @@ async function battle(stage) {
     }
     await page.waitForTimeout(300);
     } catch (error) {
+      rpc.check();
       const saved = await saveAt();
       const result = saved?.pendingResult ?? saved?.lastResult;
       if (await phaseAt() !== "result" || !await page.getByLabel("戦闘結果",{exact:true}).isVisible()
@@ -285,8 +280,9 @@ async function battle(stage) {
       break;
     }
   }
+  },`opening Stage ${stage.number} original observation window`,Math.max(0,start+15*60_000-Date.now()));
   } finally {
-    record.framePerformance=await finishNormalFrameCapture(page,frameCapture,frameOwner).catch(error=>({status:'incomplete',error:String(error),performanceAcceptance:false}));
+    record.framePerformance=await finishNormalFrameCapture(rawPage,frameCapture,frameOwner).catch(error=>({status:'incomplete',error:String(error),performanceAcceptance:false}));
   }
   await acceptResult(record);
 }
@@ -303,6 +299,19 @@ async function acceptResult(record) {
   return true;
 }
 try {
+ await persist();
+ const browserType=await pwaBrowserType(engine);browser=await browserType.launch({headless:true});
+ report.provenance={head:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),tree:execFileSync('git',['rev-parse','HEAD^{tree}'],{encoding:'utf8'}).trim(),platform:process.platform,node:process.version,browserVersion:browser.version(),browserExecutable:browserType.executablePath()};
+ context=await rpc.run(()=>browser.newContext({viewport:{width:844,height:390},hasTouch:true,isMobile:true,recordVideo:{dir:path.join(out,'videos'),size:{width:844,height:390}},...(restoredStorage?{storageState:restoredStorage}:{})}),'browser.newContext');
+ report.videoTimeOrigin={beforePageEpochMs:Date.now()};
+ rawPage=await rpc.run(()=>context.newPage(),'context.newPage');page=rpc.wrap(rawPage);
+ video=page.video();assert.ok(video,'Normal campaign must preserve its actual native video');
+ report.videoTimeOrigin.afterPageEpochMs=Date.now();
+ requests=installRequestFailureAudit(page);report.requestAudit=requests.report;
+ page.setDefaultTimeout(15_000);rpc.setDefaultTimeout(15_000);
+ page.on("console",m=>{if(m.type()==="error")report.errors.push({kind:"console",message:m.text()});});
+ page.on("pageerror",e=>report.errors.push({kind:"page",message:String(e)}));
+ page.on("response",r=>{if(r.status()>=400)report.errors.push({kind:"http",url:r.url(),status:r.status()});});
  await page.goto(origin.href);
  await dismissInstallOffer(page,{timeout:15000,readySelector:".v100-start-screen",waitForFictionDismissal:true});
  await enterV100FromTitle(page,{timeout:15000});
@@ -345,7 +354,7 @@ try {
   const phase=await phaseAt();const save=await saveAt();
   if(phase==="map") {
     await writeFile(path.join(out,`save-after-${save.completedStageIds.length}.json`),JSON.stringify(save,null,2));
-    await context.storageState({path:path.join(out,"browser-storage-checkpoint.json"),indexedDB:true});
+    await rpc.run(()=>context.storageState({path:path.join(out,"browser-storage-checkpoint.json"),indexedDB:true}),'opening storage checkpoint');
     if(stageLimit<30&&save.completedStageIds.length>=stageLimit) {report.status="passed";break;}
     if(save.readStoryEventIds.includes("v100:event:credits")) {assert.equal(save.completedStageIds.length,30);assert.equal(save.postGameAvailable,true);report.status=report.exploratoryContinuation?"completed-exploratory-route":"passed";break;}
     const stage=V100_STAGES.find(stage=>save.availableStageIds.includes(stage.id)&&!save.completedStageIds.includes(stage.id));assert.ok(stage,"No next unfinished stage");
@@ -375,15 +384,17 @@ try {
   } else throw new Error(`Unexpected phase ${phase}`);
  }
  if(!["passed", "observed-defeat", "completed-exploratory-route"].includes(report.status))throw new Error("Normal route did not reach the post-credits map within its finite event count");
-} catch(error) {report.status="failed";report.error=String(error);await page.screenshot({path:path.join(out,"failure.png")}).catch(()=>{});process.exitCode=1;}
+} catch(error) {report.status="failed";report.error=String(rpc.failure??error);if(rawPage)await normalCleanupWithin(()=>rawPage.screenshot({path:path.join(out,"failure.png")}), 'opening failure screenshot',{timeoutMs:15_000}).catch(()=>{});process.exitCode=1;}
 finally {
-  try { report.finalSave=await saveAt(); } catch(error) { report.saveCaptureError=String(error);report.status='failed';process.exitCode=1; }
-  try { await context.storageState({path:path.join(out,"browser-storage.json"),indexedDB:true}); } catch(error) { report.storageCaptureError=String(error);report.status='failed';process.exitCode=1; }
+  if(rpc.failure)report.operationTimeout={code:rpc.failure.code,operation:rpc.failure.operation,timeoutMs:rpc.failure.timeoutMs};
+  if(rawPage)try { report.finalSave=await normalCleanupWithin(()=>rawPage.evaluate(()=>JSON.parse(localStorage.getItem('nishijin-campaign-v100'))),'opening final save',{timeoutMs:15_000}); } catch(error) { report.saveCaptureError=String(error);report.status='failed';process.exitCode=1; }
+  if(context)try { await normalCleanupWithin(()=>context.storageState({path:path.join(out,"browser-storage.json"),indexedDB:true}),'opening storage',{timeoutMs:15_000}); } catch(error) { report.storageCaptureError=String(error);report.status='failed';process.exitCode=1; }
   await persist();
-  try { await requests.closeContext(context);report.video=await video.path();report.videoBytes=(await stat(report.video)).size;assert.ok(report.videoBytes>0); }
+  try { if(context)await normalCleanupWithin(closeOwnedContext,'opening context');if(video){report.video=await normalCleanupWithin(()=>video.path(),'opening video');report.videoBytes=(await stat(report.video)).size;assert.ok(report.videoBytes>0);} }
   catch(error) { report.videoCaptureError=String(error);report.status='failed';process.exitCode=1; }
-  if(report.errors.length||requests.report.unexpectedFailures.length){report.status='failed';report.error??='Browser diagnostics on normal route';process.exitCode=1;}
+  if(report.errors.length||requests?.report.unexpectedFailures.length){report.status='failed';report.error??='Browser diagnostics on normal route';process.exitCode=1;}
   report.technicalStatus=report.status==='failed'?'failed':'passed';
   report.balanceAcceptance=false;report.wholeCampaignAcceptance=false;report.releaseAcceptance=false;
-  await persist();await browser.close();console.log(JSON.stringify({engine,status:report.status,stages:report.stages.length,error:report.error}));
+  if(browser)try{await normalCleanupWithin(()=>browser.close(),'opening browser');}catch(error){report.browserCloseError=String(error);report.error??=String(error);report.status='failed';report.technicalStatus='failed';process.exitCode=1;}
+  await persist();normalPlayChildCompletion(report);console.log(JSON.stringify({engine,status:report.status,stages:report.stages.length,error:report.error}));
 }
