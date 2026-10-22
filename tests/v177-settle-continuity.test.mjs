@@ -25,7 +25,7 @@ function paint(kind,plan,rendered={}) {
     beginPath(){},moveTo(){},lineTo(){},closePath(){},fill(){}};
   assert.equal(drawV177JointPose(ctx,{naturalWidth:atlas.decodedWidth},kind,plan,
     -r.width*(r.frame?.anchorX??0),-r.height*(r.frame?.anchorY??0),r.width,r.height),true);
-  assert.equal(calls.length,atlas.parts?.length??8,'each original part is painted once');assert.equal(stack.length,0);
+  assert.equal(calls.length,atlas.parts?.length??8,'each source part is painted once');assert.equal(stack.length,0);
   return calls;
 }
 function paintDelta(a,b) {

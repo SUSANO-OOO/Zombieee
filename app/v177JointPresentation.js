@@ -10,6 +10,7 @@ import { V177_MELEE_JOINT_ATLASES as meleeAtlases } from './v177MeleeJointData.j
 import { V177_GUARD_ENEMY_JOINT_ATLASES as guardEnemyAtlases } from './v177GuardEnemyJointData.js';
 import { V177_NEWCOMER_JOINT_ATLASES as newcomerAtlases } from './v177NewcomerJointData.js';
 import { V177_INFECTED_JOINT_ATLASES as infectedAtlases } from './v177InfectedJointData.js';
+import { V104_OMEGA_JOINT_ATLASES as omegaRightAtlases } from './v104OmegaJointData.js';
 import { V177_FERAL_JOINT_ATLASES as feralAtlases } from './v177FeralJointData.js';
 import { V177_FUTAGO_JOINT_ATLASES as futagoAtlases } from './v177FutagoJointData.js';
 import { v177RangerCarryPose } from './v177RangerUpperMotion.js';
@@ -19,6 +20,7 @@ import { v177RangerFootPlacement } from './v177RangerFootPlacement.js';
 import { v177PaintLocomotion } from './v177PaintLocomotion.js';
 import { applyV177GroundedMatrix, v177GroundedJointPlan, v177BlendGroundedMotion } from './v177GroundedMotion.js';
 import { v177JointActorKey, v177JointBodyCorrection } from './v177JointActorHistory.js';
+import {v177WeaponChoreography,v177GroundedWeaponChoreography} from './v177WeaponChoreography.js';
 import { animationClipFor, attackPresentationDuration } from './combatPresentation.js';
 import { createV177MrsNormalWeaponCycle } from './v177MrsNormalWeaponCycle.js';
 import { createV177RangerManualJoint } from './v177RangerManualJoint.js';
@@ -46,7 +48,7 @@ export function v177RenderedWeightedLowerReceipt(actor,world) {
 const clamp = p => Math.max(0, Math.min(1, Number(p) || 0));
 const cycle = p => ((Number(p) || 0) % 1 + 1) % 1;
 
-export const V177_JOINT_ATLASES = Object.fromEntries(Object.entries({...bakedAtlases,...quadrupedAtlases,...bipedAtlases,...enemyAtlases,...runnerAtlases,...firearmAtlases,...pantherAtlases,...meleeAtlases,...guardEnemyAtlases,...newcomerAtlases,...infectedAtlases,...feralAtlases,...futagoAtlases,...paisenPhotoAtlases}));
+export const V177_JOINT_ATLASES = Object.fromEntries(Object.entries({...bakedAtlases,...quadrupedAtlases,...bipedAtlases,...enemyAtlases,...runnerAtlases,...firearmAtlases,...pantherAtlases,...meleeAtlases,...guardEnemyAtlases,...newcomerAtlases,...infectedAtlases,...feralAtlases,...futagoAtlases,...paisenPhotoAtlases,...omegaRightAtlases}));
 
 const mrsNormalWeaponCycle=createV177MrsNormalWeaponCycle({
   animationClipFor,attackPresentationDuration,captureStatusJoints,jointMatrix,
@@ -89,7 +91,7 @@ export function v177GroundedJointPose(kind,source,sample,runtime){
   }
   if(lo<=hi){const dy=Math.max(lo,Math.min(hi,0));
     plan.groundedMotion.lower[5]+=dy;plan.groundedMotion.upper[5]+=dy;}
-  return plan;
+  return v177GroundedWeaponChoreography(kind,atlas,plan);
 }
 
 export function v177JointPose(kind, sample, runtime, { grounded=false,ownedPose=false,actor,world,stunRemaining=0,rangerManualOwner=false,rangerManualDefinition,futagoAbilityOwner=false,futagoAbilityTuning }={}) {
@@ -177,7 +179,8 @@ export function v177JointPose(kind, sample, runtime, { grounded=false,ownedPose=
       const pullback=v177FirearmWeaponPullback(kind,sample);
       if(pullback)plan.firearmWeaponPullback=pullback;
     }
-    const painted=grounded?v177GroundedJointPose(kind,plan,sample,runtime):plan;
+    const choreographed=v177WeaponChoreography(kind,atlas,plan,actualActor);
+    const painted=grounded?v177GroundedJointPose(kind,choreographed,sample,runtime):choreographed;
     return kind==='mrs-chiha'&&sample?.mrsNormalWeaponCycle
       ? mrsNormalWeaponCycle.plan(kind,sample,painted,atlas) : painted;
   }
@@ -303,11 +306,17 @@ function returnPaintedJoints(atlas,entry,neutral,progress) {
     const attackPhase=entry.sourcePlan.attackPhase+(1-entry.sourcePlan.attackPhase)*clamp(progress/.7);
     const attackBase=entry.sourcePlan.upperIndex-Math.floor(entry.sourcePlan.attackPhase*atlas.frameCount);
     const frame=attackPhase*atlas.frameCount,index=Math.floor(frame);
-    const returning={...neutral,attackPhase,upperIndex:attackBase+index,
+    let returning={...neutral,attackPhase,upperIndex:attackBase+index,
       upperNextIndex:attackBase+Math.min(atlas.frameCount,index+1),upperBlend:frame-index,
       upperOffsetY:entry.sourcePlan.upperOffsetY+(neutral.upperOffsetY-entry.sourcePlan.upperOffsetY)*progress,
       firearmWeaponPullback:(entry.sourcePlan.firearmWeaponPullback??0)*(1-smooth(progress)),
       groundedMotion:v177BlendGroundedMotion(entry.sourcePlan.groundedMotion,neutral.groundedMotion,progress)};
+    if(entry.sourcePlan.choreography){
+      const kind=entry.sourcePlan.choreography.kind;
+      returning=v177WeaponChoreography(kind,atlas,returning,
+        {attackSequence:entry.sourcePlan.choreography.sequence,attackWindup:1});
+      returning=v177GroundedWeaponChoreography(kind,atlas,returning);
+    }
     const source=captureStatusJoints(atlas,returning);
     pose.upper=progress<=.7 ? source.upper
       : blendCapturedJoints(atlas,source,target,smooth((progress-.7)/.3)).upper;
@@ -463,8 +472,7 @@ export function drawV177JointPose(ctx, image, kind, plan, x, y, width, height, {
         ctx.closePath();ctx.fill();
       }
       resolve(matrix,atlas,plan,part.bone,part.upper,scratch);
-      const s=part.source,d=part.destination;
-      ctx.save();ctx.transform(...matrix);ctx.drawImage(image,s.x,s.y,s.w,s.h,d.x,d.y,d.w,d.h);ctx.restore();
+      drawRigidPart(ctx,image,part,matrix);
     }
     ctx.restore();rememberRenderedJointPose(actor,kind,plan);return true;
   }
@@ -510,6 +518,10 @@ export function drawV177JointPose(ctx, image, kind, plan, x, y, width, height, {
 // Interpolate rigid transforms, rather than matrix coefficients that shorten
 // limbs between samples. The actual Blender root travel was removed by bake.
 function interpolatedMatrix(out,atlas,plan,bone,upper,applyUpperOffset=true,applyGrounded=true){
+  if(upper&&plan.choreography?.upper[bone]){
+    out.set(plan.choreography.upper[bone]);
+    return applyGrounded?applyV177GroundedMatrix(out,plan,bone,upper):out;
+  }
   const attachment=atlas.parentAttachments?.[bone];let anchorX,anchorY;
   if(attachment){
     interpolatedMatrix(out,atlas,plan,attachment.parent,upper,false,false);
@@ -552,6 +564,20 @@ function interpolatedMatrix(out,atlas,plan,bone,upper,applyUpperOffset=true,appl
     const [px,py]=pivot,ax=a[0]*px+a[2]*py+a[4],ay=a[1]*px+a[3]*py+a[5];
     const bx=b[0]*px+b[2]*py+b[4],by=b[1]*px+b[3]*py+b[5];
     let targetX=ax+(bx-ax)*p,targetY=ay+(by-ay)*p;
+    // A giant held blade cannot pass through the shoulder during collapse.
+    // Interpolate this wrist in the parent's local polar coordinates: both
+    // endpoint radii remain inside the original two-bone reach annulus.
+    if(plan.omegaWristArc&&bone===atlas.weaponBone){
+      const chain=atlas.armConstraints.find(c=>c.effectorBone===bone),q=chain.shoulder;
+      const pa=atlas.poses[plan.upperIndex][chain.parentBone],pb=atlas.poses[plan.upperNextIndex][chain.parentBone];
+      const sa=matrixPoint(pa,q),sb=matrixPoint(pb,q),aa=Math.atan2(pa[1],pa[0]),ab=Math.atan2(pb[1],pb[0]);
+      const ra=Math.hypot(ax-sa[0],ay-sa[1]),rb=Math.hypot(bx-sb[0],by-sb[1]);
+      const theta=Math.atan2(ay-sa[1],ax-sa[0])-aa,thetaB=Math.atan2(by-sb[1],bx-sb[0])-ab;
+      const parent=new Float64Array(6);interpolatedMatrix(parent,atlas,plan,chain.parentBone,true,false,false);
+      const shoulder=matrixPoint(parent,q),radius=ra+(rb-ra)*p;
+      const turn=theta+Math.atan2(Math.sin(thetaB-theta),Math.cos(thetaB-theta))*p+Math.atan2(parent[1],parent[0]);
+      targetX=shoulder[0]+Math.cos(turn)*radius;targetY=shoulder[1]+Math.sin(turn)*radius;
+    }
     if(settleBlend>0){
       const rowAx=rowA[0]*px+rowA[2]*py+rowA[4],rowAy=rowA[1]*px+rowA[3]*py+rowA[5];
       const rowBx=rowB[0]*px+rowB[2]*py+rowB[4],rowBy=rowB[1]*px+rowB[3]*py+rowB[5];
@@ -585,7 +611,7 @@ function interpolatedMatrix(out,atlas,plan,bone,upper,applyUpperOffset=true,appl
 // Bipeds with a separately painted lower pelvis keep that pelvis as the hip
 // owner while the upper torso leans; the feet never follow the attack pose.
 function jointMatrix(out,atlas,plan,bone,upper,scratch){
-  const chain=atlas.armConstraints?.find(a=>a.upperBone===bone||a.lowerBone===bone)
+  const chain=(plan.choreography?.arms??atlas.armConstraints)?.find(a=>a.upperBone===bone||a.lowerBone===bone)
     ??atlas.legConstraints?.find(a=>a.upperBone===bone||a.lowerBone===bone);
   if(!chain){
     interpolatedMatrix(out,atlas,plan,bone,upper);
@@ -610,9 +636,11 @@ function jointMatrix(out,atlas,plan,bone,upper,scratch){
     return upper&&plan.firearmUpperTransform?applyV177FirearmUpperMotion(out,plan.firearmUpperTransform):out;
   }
   const along=(a*a+d*d-b*b)/(2*d),height=Math.sqrt(Math.max(0,a*a-along*along));
-  // Brute's almost straight source legs lean slightly backwards. Keep its
-  // knees facing forwards through walking, settling and held attack poses.
-  const sign=leg&&atlas.key==='joint-brute'?-1:((ex-sx)*-(wy-sy)+(ey-sy)*(wx-sx)>=0?1:-1);
+  // These right-facing biped sources have wide resting stances; their drawn
+  // static knee angle is not an anatomical walking bend direction.
+  const forwardBiped=leg&&['joint-brute','joint-guardian','joint-tky','joint-miyamoto-musashi',
+    'joint-takuya','joint-takuya-omega','joint-crazy-king','joint-kumaverson','joint-babayaga'].includes(atlas.key);
+  const sign=forwardBiped?-1:((ex-sx)*-(wy-sy)+(ey-sy)*(wx-sx)>=0?1:-1);
   const kx=hx+dx/d*along-dy/d*height*sign,ky=hy+dy/d*along+dx/d*height*sign;
   const isUpper=bone===chain.upperBone,rx=isUpper?sx:ex,ry=isUpper?sy:ey;
   const ax=isUpper?hx:kx,ay=isUpper?hy:ky,bx=isUpper?kx:tx,by=isUpper?ky:ty;
@@ -638,6 +666,12 @@ export function v177CaptureJointPose(kind,plan) {
 
 const supportMatrix=new Float64Array(6);
 const supportScratch=[new Float64Array(6),new Float64Array(6)];
+function drawRigidPart(ctx,image,part,matrix){
+  const s=part.source,d=part.destination;
+  ctx.save();ctx.transform(...matrix);
+  ctx.drawImage(image,s.x,s.y,s.w,s.h,d.x,d.y,d.w,d.h);
+  ctx.restore();
+}
 // Resolve the same source matrices as drawV177JointPose. This synchronous
 // support query reuses three small matrices instead of capturing/re-solving
 // every limb and allocating an array for each painted outline vertex.
@@ -674,7 +708,7 @@ export function v177InterpolateCapturedJointPose(kind,initial,finalPose,progress
     interpolationPivots[chain.effectorBone]??=chain.effectorWrist??chain.ankle??chain.wrist;
   const atlas={...source,interpolationPivots,poses:[initial.lower,initial.upper,finalPose]},p=clamp(progress);
   const plan={lowerIndex:0,lowerNextIndex:2,lowerBlend:p,
-    upperIndex:1,upperNextIndex:2,upperBlend:p,attackPhase:null,upperOffsetY:0};
+    upperIndex:1,upperNextIndex:2,upperBlend:p,attackPhase:null,upperOffsetY:0,omegaWristArc:source.key==='joint-takuya-omega'};
   const scratch=[new Float64Array(6),new Float64Array(6)];
   return atlas.parts.map(part=>[...jointMatrix(new Float64Array(6),atlas,plan,part.bone,part.upper,scratch)]);
 }
@@ -693,19 +727,19 @@ export function drawV177ResolvedJointPose(ctx,image,kind,matrices,x,y,width,heig
   ctx.translate(x,y);ctx.scale(width/(reference?.width??atlas.width),height/(reference?.height??atlas.height));
   if(reference){ctx.translate(-reference.tx/reference.scale,-reference.ty/reference.scale);ctx.scale(1/reference.scale,1/reference.scale);}
   for(const {part,matrix}of selected){
-    const s=part.source,d=part.destination;
-    ctx.save();ctx.transform(...matrix);ctx.drawImage(image,s.x,s.y,s.w,s.h,d.x,d.y,d.w,d.h);ctx.restore();
+    drawRigidPart(ctx,image,part,matrix);
   }
   ctx.restore();return true;
 }
 
-export function v177RenderedJointWeaponSocket({kind,plan,direction,frame,size,pose,x,y,bob=0,depthScale=1}) {
+export function v177RenderedJointWeaponSocket({kind,plan,direction,frame,size,pose,x,y,bob=0,depthScale=1,sourcePoint,allowIdle=false}) {
   const atlas=V177_JOINT_ATLASES[kind];
-  if(!atlas || !plan || plan.attackPhase===null)return null;
+  if(!atlas || !plan || plan.attackPhase===null&&!allowIdle)return null;
   let px,py,dy=plan.upperOffsetY;
   if(atlas.type==='rigid-parts'){
     const resolve=plan.resolvedJointPose ? resolvedJointMatrix : jointMatrix;
-    const m=resolve(new Float64Array(6),atlas,plan,atlas.weaponBone,true),[sx,sy]=atlas.muzzle;
+    const m=resolve(new Float64Array(6),atlas,plan,atlas.weaponBone,true);
+    const [sx,sy]=sourcePoint??atlas.muzzle;
     px=m[0]*sx+m[2]*sy+m[4];py=m[1]*sx+m[3]*sy+m[5];dy=0;
   }else if(atlas.upperRig&&plan.upperRigPlan&&plan.upperRigPoses){
     const rig={...atlas.upperRig,poses:plan.upperRigPoses};

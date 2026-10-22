@@ -145,7 +145,7 @@ for(const kind of kinds){
    assert.ok(Math.abs(actual[1]-(500+((p[1]-ref.ty)/ref.scale-frame.anchorY*d.referenceFrame.height)*scale))<1e-10);
   }
  });
- test(kind+': distinct hammer, guarded punch, level saw cut and pan contact follow the actual hands',()=>{
+ test(kind+': distinct hammer, guarded punch, two-handed saw sweep and downward pan strike follow the actual hands',()=>{
   assert.equal(d.rig.legs.length,2);assert.equal(d.rig.arms.length,2);
   const runtime={locomotionPhase:.1371,locomotionSettle:1},idle=record(kind,v177JointPose(kind,{requestedState:'wind-up',clipProgress:0},runtime)).raw,active=record(kind,v177JointPose(kind,{requestedState:'active',clipProgress:.5},runtime)).raw;
   const start=transform(matrixFor(idle,'weapon-0'),atlas.muzzle),end=transform(matrixFor(active,'weapon-0'),atlas.muzzle);
@@ -161,8 +161,16 @@ for(const kind of kinds){
    assert.ok(guard[1]>head[1]&&guard[1]<d.rig.pelvis[0][1],'The second fist remains between the face and chest');
    assert.ok(end[0]>start[0]);assert.equal(d.sourceSha256,"cd36c9f9d958714874c2e7c49008d7afce673811850c4fc1e389cee65a850797");
   }else if(kind==='crazy-king'){
-   const base=transform(matrixFor(active,'weapon-0'),[217,278]);assert.ok(end[0]-base[0]>140);assert.ok(Math.abs(end[1]-base[1])<3,'Painted chainsaw levels for contact');
-  }else {assert.ok(end[0]-start[0]>80);assert.ok(end[1]-start[1]<-55);}
+   const raised=record(kind,v177JointPose(kind,{requestedState:'wind-up',clipProgress:5/7},runtime)).raw;
+   const a=matrixFor(raised,'weapon-0'),b=matrixFor(active,'weapon-0');
+   assert.ok(Math.atan2(b[1],b[0])-Math.atan2(a[1],a[0])>2.8,'The held chainsaw sweeps through roughly half a turn');
+   const hand=transform(matrixFor(active,'arm-1-hand'),atlas.armConstraints[1].wrist),handle=transform(b,[195,253]);
+   assert.ok(Math.hypot(hand[0]-handle[0],hand[1]-handle[1])<.002,'The second actual painted hand holds the second handle');
+  }else {
+   const raised=record(kind,v177JointPose(kind,{requestedState:'wind-up',clipProgress:5/7},runtime)).raw;
+   const overhead=transform(matrixFor(raised,'weapon-0'),atlas.muzzle);
+   assert.ok(end[1]-overhead[1]>180,'The frying pan comes down from above the head');
+  }
  });
 
  test(kind+': every evaluated pose clears its authored weapon envelope without paint clipping',async()=>{

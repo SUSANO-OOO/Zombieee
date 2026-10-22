@@ -230,6 +230,8 @@ export function combatFacingDirection({
   manualDirection = 0,
   manualAbilityActive = false,
   attacking = false,
+  recoiling = false,
+  previousDirection,
 } = {}) {
   return combatFacingFromMotion({
     side,
@@ -240,6 +242,8 @@ export function combatFacingDirection({
     manualDirection,
     manualAbilityActive,
     attacking,
+    recoiling,
+    previousDirection,
   });
 }
 
@@ -474,7 +478,7 @@ const REMAINING_TEN_CLIP_OVERRIDES = {
     prefix: "hammer", idle: .3, stride: .14, windup: .19, active: .11, recovery: .22, heavy: true, movement: true,
   }),
   kumaverson: authoredPlayableClips({
-    prefix: "iron-pan", idle: .25, stride: .12, windup: .15, active: .09, recovery: .18, heavy: true,
+    prefix: "iron-pan", idle: .25, stride: .12, windup: .19, active: .13, recovery: .18, heavy: true,
   }),
   babayaga: authoredPlayableClips({
     prefix: "suppressed-pistol", idle: .33, stride: .115, windup: .14, active: .09, recovery: .16,
@@ -489,7 +493,7 @@ const REMAINING_TEN_CLIP_OVERRIDES = {
     prefix: "pan", idle: .22, stride: .1, windup: .12, active: .1, recovery: .19, movement: true,
   }),
   "miyamoto-musashi": authoredPlayableClips({
-    prefix: "dual-katana", idle: .29, stride: .095, windup: .13, active: .1, recovery: .18, movement: true,
+    prefix: "dual-katana", idle: .29, stride: .095, windup: .16, active: .14, recovery: .18, movement: true,
   }),
 };
 
@@ -548,10 +552,10 @@ const REPRESENTATIVE_CLIP_OVERRIDES = {
       frame("walk-a", .095),
     ], { loop: true, movement: true }),
     "wind-up": clip([
-      frame("attack-a", .12, [{ type: "chainsaw-lift", at: .015 }]),
+      frame("attack-a", .18, [{ type: "chainsaw-lift", at: .015 }]),
     ]),
     active: clip([
-      frame("attack-b", .09, [
+      frame("attack-b", .18, [
         { type: "chainsaw-contact", at: 0 },
         { type: "weapon-vfx", at: 0 },
       ]),
@@ -573,7 +577,7 @@ const REPRESENTATIVE_CLIP_OVERRIDES = {
       frame("walk-a", .1),
     ], { loop: true, movement: true }),
     "wind-up": clip([
-      frame("attack-a", .12, [{ type: "plasma-guard", at: .02 }]),
+      frame("attack-a", .15, [{ type: "plasma-guard", at: .02 }]),
     ]),
     active: clip([
       frame("attack-b", .08, [{ type: "blade-first-contact", at: 0 }, { type: "weapon-vfx", at: 0 }]),

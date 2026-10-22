@@ -111,7 +111,7 @@ test('only the reviewed fixed-tick validator reuses raw Ranger footage without a
 });
 
 test('the reviewed reload movement change runs native motion and normal play while retaining unchanged story evidence',()=>{
- const file='app/combatPresentation.js',blob=execFileSync('git',['hash-object',file],{encoding:'utf8',windowsHide:true}).trim();
+ const file='app/combatPresentation.js',blob='327c7a1dd55707c16385d01d28030a37dc4b27c7';
  const options={draft:true,sourceBlobs:{[file]:blob}},scope=ciChangeScope([file],options);
  assert.equal(scope.full,false);assert.equal(scope.allunit,true);assert.equal(scope.normal,true);assert.equal(scope.r9,false);
  for(const sourceBlobs of [{},{[file]:'f'.repeat(40)}])assert.equal(ciChangeScope([file],{draft:true,sourceBlobs}).full,true);

@@ -13,5 +13,6 @@ for(let phase=0;phase<12;phase++)for(const settle of [0,1])for(const state of ['
  for(const a of d.armConstraints){const shoulder=point(raw[a.parentBone],a.shoulder),target=point(raw[a.effectorBone],a.effectorWrist??a.wrist),upper=dist(a.shoulder,a.elbow),lower=dist(a.elbow,a.wrist),reach=dist(shoulder,target),margin=Math.min(upper+lower-reach,reach-Math.abs(upper-lower));minArm=Math.min(minArm,margin);const join=Math.max(dist(shoulder,point(raw[a.upperBone],a.shoulder)),dist(point(raw[a.upperBone],a.elbow),point(raw[a.lowerBone],a.elbow)),dist(point(raw[a.lowerBone],a.wrist),target));maxJoin=Math.max(maxJoin,join);if(margin<=.001||join>=.001){failures++;worst={phase,settle,state,n,bone:a.upperBone,margin,join};}}
  const a=point(raw['weapon-0'],d.barrelAxis[0]),b=point(raw['weapon-0'],d.barrelAxis[1]);maxBarrelDy=Math.max(maxBarrelDy,Math.abs(a[1]-b[1]));
 }
-assert.equal(samples,2232);assert.equal(failures,0,JSON.stringify(worst));assert.ok(minLeg>.001&&minArm>.001&&maxJoin<.001);assert.ok(maxBarrelDy<.001);
+assert.equal(samples,2232);assert.equal(failures,0,JSON.stringify(worst));assert.ok(minLeg>.001&&minArm>.001&&maxJoin<.001);
+assert.ok(maxBarrelDy<.001,'The actual silencer axis stays horizontal through the new forward two-hand aim');
 });

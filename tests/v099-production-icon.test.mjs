@@ -150,7 +150,14 @@ test("the approved-icon integration preserves every unrelated pre-icon hash and 
     .filter(({ path }) => !finalRemediationPaths.has(path))
     .filter(({ path }) => !replacedVisualPaths.has(path))
     .map(({ path, hash }) => [path, hash]));
+  const {V104_MEDIA_ADDITIONS}=await import('../scripts/v104-combat-asset-contract.mjs');
+  for(const expected of V104_MEDIA_ADDITIONS){
+    const actual=current.assets.find(a=>a.path===expected.path);
+    assert.deepEqual({path:actual?.path,bytes:actual?.bytes,hash:actual?.hash,criticality:actual?.criticality},expected);
+  }
+  const combatPaths=new Set(V104_MEDIA_ADDITIONS.map(a=>a.path));
   const currentNonIcons = new Map(current.assets
+    .filter(({path})=>!combatPaths.has(path))
     .filter(({ path }) => !path.startsWith("/icons/"))
     .filter(({ path }) => path !== '/art/v102/combat-gore/flesh-wound-r1.webp')
     .filter(({ path }) => !v100ApprovedPaths.has(path))

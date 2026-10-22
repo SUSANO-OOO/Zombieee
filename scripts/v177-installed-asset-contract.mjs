@@ -7,6 +7,7 @@ import { V177_SPRITE_REPLACEMENTS } from "./v177-sprite-repair-asset-contract.mj
 import { V102_ASSET_ADDITIONS } from "./v102-asset-contract.mjs";
 import { V177_JOINT_ASSET_ADDITIONS } from "./v177-joint-asset-contract.mjs";
 import { V100_RELEASE_ASSET_CONTRACT } from "./v100-release-asset-contract.mjs";
+import{applyV104Source,V104_MEDIA_ADDITIONS}from'./v104-combat-asset-contract.mjs';
 
 // These installed releases already include the two bosses and Musashi. Each
 // repaired texture must therefore be downloaded in full, alongside R9 and the
@@ -17,7 +18,8 @@ const additions = Object.freeze([
   ...V100_R9_ASSET_ADDITIONS,
   ...V100_OPENING_ASSET_ADDITIONS,
   ...V177_SPRITE_REPLACEMENTS.map(asset => asset.next),
-  ...V177_JOINT_ASSET_ADDITIONS,
+  ...V177_JOINT_ASSET_ADDITIONS.map(applyV104Source),
+  ...V104_MEDIA_ADDITIONS,
   ...V177_PAISEN_ASSET_ADDITIONS,
   ...V177_PAISEN_CREDITS_ASSETS,
   ...V177_PAISEN_STORY_EXISTING_ASSETS,

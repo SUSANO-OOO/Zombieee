@@ -3,5 +3,5 @@
 export function combatApproachSpeed(speed,distance){
   if(!(speed>0)||!Number.isFinite(distance))return Math.max(0,Number(speed)||0);
   const t=Math.max(0,Math.min(1,(Math.abs(distance)-36)/144));
-  return speed*(1+1.2*t*t*(3-2*t));
+  return speed*(1+1.5*t*t*(3-2*t));
 }

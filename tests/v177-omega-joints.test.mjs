@@ -14,15 +14,15 @@ function inside([x,y],polygon){let hit=false;for(let i=0,j=polygon.length-1;i<po
 function edge(p,poly){let best=Infinity;for(let i=0;i<poly.length;i++){const a=poly[i],b=poly[(i+1)%poly.length],dx=b[0]-a[0],dy=b[1]-a[1],t=Math.max(0,Math.min(1,((p[0]-a[0])*dx+(p[1]-a[1])*dy)/(dx*dx+dy*dy)));best=Math.min(best,distance(p,[a[0]+t*dx,a[1]+t*dy]));}return best;}
 function record(kind,plan){const raw=[];const ctx={save(){},restore(){},translate(){},scale(){},transform(...m){raw.push(m);},drawImage(){}};assert.ok(drawV177JointPose(ctx,{naturalWidth:512},kind,plan,0,0,544,512));return raw;}
 for(const [kind,atlas]of Object.entries(atlases))test('Omega preserves original shirtless identity and visible boots through fixed-length gait, giant-hand bracing and held-cleaver cut',async()=>{
- const dir='assets/source/v100/joints/'+kind+'-r1/',d=JSON.parse(await readFile(dir+'parts.json')),motion=JSON.parse(gunzipSync(await readFile(dir+'motion.json.gz')));
+ const dir='assets/source/v100/joints/'+kind+'-r3/',d=JSON.parse(await readFile(dir+'parts.json')),motion=JSON.parse(gunzipSync(await readFile(dir+'motion.json.gz')));
  assert.deepEqual(motion.rig,d.rig);const outlines=new Map(),soles=[];let originalPixels=0,overlayPixels=0;
  for(const part of d.parts){
-  const bytes=await readFile(dir+part.file),data=await pixels(dir+part.file);assert.equal(hash(bytes),part.sha256);const outline=[];
+  const bytes=await readFile(dir+part.file),data=await pixels(dir+part.file),height=data.length/(544*4);assert.equal(hash(bytes),part.sha256);const outline=[];
   const reference=await pixels(dir+(part.originalReference??'identity-reference.png')),[ox,oy]=part.sourceOffset??[0,0];
-  for(let y=0;y<512;y++)for(let x=0;x<544;x++){
+  for(let y=0;y<height;y++)for(let x=0;x<544;x++){
    const i=(y*544+x)*4,p=[x+.5,y+.5],sx=x-ox,sy=y-oy,j=(sy*544+sx)*4;
    if(data[i+3]>=32&&part.generatedSilhouette)assert.ok(inside(p,part.generatedSilhouette)||edge(p,part.generatedSilhouette)<1.5,part.name+' paint stays inside its owned limb');
-   if(data[i+3]>=32&&(x===0||x===543||y===0||y===511||[-544,544,-1,1].some(n=>data[i+n*4+3]<32)))outline.push(p);
+   if(data[i+3]>=32&&(x===0||x===543||y===0||y===height-1||[-544,544,-1,1].some(n=>data[i+n*4+3]<32)))outline.push(p);
    if(part.original&&sx>=0&&sx<544&&sy>=0&&sy<512&&reference[j+3]>=32){
     const polys=typeof part.polygon[0][0]==='number'?[part.polygon]:part.polygon;
     if(polys.some(poly=>inside(p,poly)&&edge(p,poly)>1.5)&&!(part.excludedRegions??[]).some(poly=>inside(p,poly)||edge(p,poly)<=1.5)){assert.deepEqual(data.subarray(i,i+4),reference.subarray(j,j+4),kind+' '+part.name+' retains source RGBA');originalPixels++;}
@@ -33,7 +33,7 @@ for(const [kind,atlas]of Object.entries(atlases))test('Omega preserves original 
   }
   assert.ok(outline.length>10);outlines.set(part.name,outline);
  }
- for(const leg of d.rig.legs){const data=await pixels(dir+leg.paintedPaw+'.png');let bottom=-1;for(let y=0;y<512;y++)for(let x=0;x<544;x++)if(data[(y*544+x)*4+3]>=32)bottom=Math.max(bottom,y);const points=[];for(let x=0;x<544;x++)if(data[(bottom*544+x)*4+3]>=32)points.push([x+.5,bottom+.5]);assert.ok(points.length);soles.push(points);}
+ for(const leg of d.rig.legs){const data=await pixels(dir+d.parts.find(p=>p.name===leg.paintedPaw).file);let bottom=-1;for(let y=0;y<512;y++)for(let x=0;x<544;x++)if(data[(y*544+x)*4+3]>=32)bottom=Math.max(bottom,y);const points=[];for(let x=0;x<544;x++)if(data[(bottom*544+x)*4+3]>=32)points.push([x+.5,bottom+.5]);assert.ok(points.length);soles.push(points);}
  let boneError=0,groundError=0,gripError=0,drift=0,poses=0;
  for(const action of motion.actions)for(let n=0;n<action.frames.length;n++){
   const f=action.frames[n],first=action.frames[0];poses++;
@@ -77,5 +77,11 @@ for(const [kind,atlas]of Object.entries(atlases))test('Omega preserves original 
  const f=spriteFrameFor(kind,'walk-a','right'),nativeNear=(d.rig.legs[1].paintGroundY-d.referenceFrame.ty)/d.referenceFrame.scale;
  assert.ok(Math.abs(nativeNear-f.anchorY*d.referenceFrame.height)<.001,'Original painted sole registers at the real sprite anchor');
 
- assert.equal(dense,1986);assert.ok(originalPixels>29000&&overlayPixels>42000);assert.equal(atlas.weaponBone,'weapon-0');assert.deepEqual(atlas.muzzle,[315,495]);assert.deepEqual([d.width,d.height],[544,512]);assert.ok(['head','giant-hand','cleaver-and-hand','near-boot','back-tubes'].every(n=>d.parts.find(p=>p.name===n).original));assert.equal(d.parts.find(p=>p.name==='far-boot').studyCell,11);assert.ok(d.parts.find(p=>p.name==='far-boot').excludedRegions.length===1);assert.ok(d.legConstraints.every(l=>l.parentBone==='pelvis'&&!l.parentUpper));for(const state of ['hit','death','collapse','transform'])assert.equal(v177JointPose(kind,{requestedState:state},runtime),null);assert.equal(v177JointPose(kind,{requestedState:'active'},runtime,{ownedPose:true}),null);
+ const old=JSON.parse(await readFile('assets/source/v100/joints/'+kind+'-r1/parts.json'));
+ for(const part of d.parts.filter(p=>!['cleaver-and-hand','left-free-hand'].includes(p.name))){
+  assert.equal(part.sha256,old.parts.find(p=>p.name===part.name).sha256,'Every unchanged body/identity layer retains its exact source bytes');
+ }
+ assert.equal(dense,1986);assert.equal(atlas.weaponBone,'weapon-0');assert.deepEqual(atlas.muzzle,[493,520]);assert.deepEqual([d.width,d.height],[544,512]);
+ assert.equal(d.rig.weapons[0].armIndex,0,'Anatomical giant right arm owns the sword');assert.equal(d.armConstraints[0].effectorBone,'weapon-0');assert.equal(d.armConstraints[1].effectorBone,'arm-1-hand');
+ assert.ok(['head','near-boot','back-tubes'].every(n=>d.parts.find(p=>p.name===n).original));assert.equal(d.parts.find(p=>p.name==='far-boot').studyCell,11);assert.ok(d.parts.find(p=>p.name==='far-boot').excludedRegions.length===1);assert.ok(d.legConstraints.every(l=>l.parentBone==='pelvis'&&!l.parentUpper));for(const state of ['hit','death','collapse','transform'])assert.equal(v177JointPose(kind,{requestedState:state},runtime),null);assert.equal(v177JointPose(kind,{requestedState:'active'},runtime,{ownedPose:true}),null);
 });

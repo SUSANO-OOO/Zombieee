@@ -878,7 +878,7 @@ test("P5 preserves battle voices while authored story dialogue has no voiceover 
   const gameSource = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
   assert.match(gameSource, /unitAudioCueFor\(kind, "voice", "deploy"\) \|\| humanVoiceCueForUnit\(kind, "deploy"\)/u);
   assert.match(gameSource, /humanVoiceCueForUnit\(f\.kind, "attack"\)/u);
-  assert.match(gameSource, /humanVoiceCueForUnit\(target\.kind, "hurt"\)/u);
+  assert.match(gameSource, /queueV104HumanHurt\(g,target,targetHpBefore,humanVoiceCueForUnit\(target\.kind,\s*"hurt"\)\)/u);
   assert.match(gameSource, /humanVoiceCueForUnit\(fighter\.kind, "death"\)/u);
   const inlineControl = gameSource.indexOf('{compactBattleAudioUnlock ? <button');
   const fallbackControl = gameSource.indexOf('{audioUnlockVisible && !compactBattleAudioUnlock && <button');

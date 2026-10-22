@@ -36,7 +36,7 @@ import {
 } from "../app/productionAudio.js";
 
 test("armored-vehicle damage uses a metal cue without a human-like attack voice", () => {
-  assert.equal(LEGACY_SFX_CUE_MAP["crawler-hit"], "weapon-pan-heavy-hit");
+  assert.equal(LEGACY_SFX_CUE_MAP["crawler-hit"], "v104-armor-hit");
   const source = readFileSync(path.join(repositoryRoot, "app", "AshfallGame.tsx"), "utf8");
   const from = source.indexOf('if (beginCombatNormalAttackWindup(f, "crawler", BASE_X)) continue;');
   const to = source.indexOf("const enragedSiege =", from);
@@ -170,9 +170,9 @@ test("production manifest preserves prior audio and adds only audited v080/v090 
   const activeV090Paths = manifestPaths.filter((sourcePath) => sourcePath.startsWith("/audio/v090/"));
   const activeV099Paths = manifestPaths.filter((sourcePath) => sourcePath.startsWith("/audio/v099/"));
   assert.equal(PRODUCTION_AUDIO_MANIFEST.version, 2);
-  assert.equal(PRODUCTION_AUDIO_MANIFEST.assets.length, 256);
+  assert.equal(PRODUCTION_AUDIO_MANIFEST.assets.length, 260);
   // 0.9.8 adds one track: the loadout theme, as the usual MP3 + OGG pair.
-  assert.equal(manifestPaths.length, 450);
+  assert.equal(manifestPaths.length, 458);
   assert.equal(
     manifestPaths.filter((sourcePath) => sourcePath.startsWith("/audio/v098/")).length,
     2,
@@ -206,7 +206,7 @@ test("every referenced source is repository-local, nonempty, and has a complete 
       asset.id,
     );
     for (const source of asset.sources) {
-      assert.match(source.src, /^\/audio\/(?:v060\/(?:music|sfx)|v070\/(?:music|ambience|sfx)|v080\/sfx|v090\/sfx|v098\/music|v099\/(?:music|sfx)|v100\/(?:ui|foley|ambience|score|r9))\/[a-z0-9-]+\.(mp3|ogg|wav)$/);
+      assert.match(source.src, /^\/audio\/(?:v060\/(?:music|sfx)|v070\/(?:music|ambience|sfx)|v080\/sfx|v090\/sfx|v098\/music|v099\/(?:music|sfx)|v100\/(?:ui|foley|ambience|score|r9)|v104\/combat)\/[a-z0-9-]+\.(mp3|ogg|wav)$/);
       assert.doesNotMatch(source.src, /:\/\/|^\/\//);
       const filePath = publicFileFor(source.src);
       assert.equal(existsSync(filePath), true, `${asset.id}: ${source.src}`);
@@ -666,7 +666,7 @@ test("all weapon-mapped units retain production weapons and all sixteen units re
     kumaverson: "weapon-pan-swing",
     babayaga: "weapon-suppressed-pistol",
     engineer: "weapon-suppressed-carbine",
-    zakimiya: "weapon-pan-hit",
+    zakimiya: "weapon-bottle-hit",
     tky: "weapon-tky-plasma-blade",
     "mrs-chiha": "weapon-mrs-chiha-grenade-launcher",
     "miyamoto-musashi": "weapon-musashi-dual-katana",
@@ -901,7 +901,7 @@ test("gameplay routes scenes, combat identity, and procedural fallback through t
   assert.match(source, /weaponCueForUnit\(f\.kind\)/);
   assert.match(source, /const deployVoice = unitAudioCueFor\(kind, "voice", "deploy"\) \|\| humanVoiceCueForUnit\(kind, "deploy"\)/);
   assert.match(source, /humanVoiceCueForUnit\(f\.kind, "attack"\)/);
-  assert.match(source, /humanVoiceCueForUnit\(target\.kind, "hurt"\)/);
+  assert.match(source, /queueV104HumanHurt\(g,target,targetHpBefore,humanVoiceCueForUnit\(target\.kind,\s*"hurt"\)\)/);
   assert.match(source, /humanVoiceCueForUnit\(fighter\.kind, "death"\)/);
   assert.match(source, /enemyVoiceCue\(f\.kind, "attack"\)/);
   assert.match(source, /enemyVoiceCue\(fighter\.kind, "death"\)/);
@@ -935,7 +935,7 @@ test("localhost-only audio QA bridge can inspect and individually play every ass
     ...PRODUCTION_AUDIO_MANIFEST.assets.map((asset) => asset.id),
     ...PRODUCTION_AUDIO_MANIFEST.pools.map((pool) => pool.id),
   ];
-  assert.equal(allCueIds.length, 298);
+  assert.equal(allCueIds.length, 302);
   assert.equal(new Set(allCueIds).size, allCueIds.length);
   for (const category of AUDIO_CATEGORIES) {
     assert.ok(

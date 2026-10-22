@@ -1,7 +1,7 @@
 import fs from 'node:fs';import assert from 'node:assert/strict';import test from 'node:test';
 import {V177_JOINT_ATLASES,v177JointPose,drawV177JointPose} from '../app/v177JointPresentation.js';
-test('Omega retains both pelvis hips and original giant free hand and cleaver arm joins during attacks with retained gait/settling',()=>{
-const kind='takuya-omega',atlas=V177_JOINT_ATLASES[kind],d=JSON.parse(fs.readFileSync('assets/source/v100/joints/'+kind+'-r1/parts.json'));
+test('Omega retains both pelvis hips, closed right-hand greatsword grip and empty left arm through attacks and settling',()=>{
+const kind='takuya-omega',atlas=V177_JOINT_ATLASES[kind],d=JSON.parse(fs.readFileSync('assets/source/v100/joints/'+kind+'-r3/parts.json'));
 const point=(m,[x,y])=>[m[0]*x+m[2]*y+m[4],m[1]*x+m[3]*y+m[5]],dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 let samples=0,failures=0,minLeg=Infinity,minArm=Infinity,maxJoin=0,worst;
 for(let phase=0;phase<12;phase++)for(const settle of [0,1])for(const state of ['wind-up','active','recovery'])for(let n=0;n<=30;n++){

@@ -87,6 +87,20 @@ test('paused status redraws do not recapture the reacted result or accumulate tr
   }
 });
 
+test('Omega interrupted floor-constrained recovery keeps its painted grip on the first stun return frame',()=>{
+ const kind='takuya-omega',atlas=V177_JOINT_ATLASES[kind];
+ for(const phase of[.21,.371])for(const progress of[.51,.73]){
+  const actor={},r={...runtime,locomotionPhase:phase,locomotionSettle:1};
+  const initial=v177JointPose(kind,{requestedState:'recovery',clipProgress:progress},r,{actor,grounded:true});
+  paint(kind,initial,actor);const original=v177CaptureJointPose(kind,initial);
+  const entry=v177JointPose(kind,v177LivingStunSample(kind),r,{actor,grounded:true,stunRemaining:.6});paint(kind,entry,actor);
+  for(const elapsed of[1e-8,1e-7]){
+   const plan=v177JointPose(kind,v177LivingStunSample(kind),{...r,elapsedSeconds:elapsed},{actor,grounded:true,stunRemaining:.6-elapsed});
+   const actual=v177CaptureJointPose(kind,plan);sameJoints(original,actual,`recovery ${progress} first return`);attached(atlas,actual,'constrained return');
+  }
+ }
+});
+
 test('short and interrupted stuns retain fixed arm reach and foot attachment across actual painted handoffs',()=>{
   for(const kind of kinds)for(const state of ['move','active','recovery'])
     for(const phase of [.07,.37,.79])for(const settle of [0,.5,1])for(const duration of [.04,.3,.6]) {

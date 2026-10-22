@@ -7,6 +7,7 @@ import {
 } from "./battleAudioContracts.js";
 import { V100_STAGES } from "./v100Registry.js";
 import { v100AudioDesignCandidate, v100SoundSources } from "./v100SoundDesign.js";
+import {V104_ARMOR_AUDIO,V104_BOTTLE_AUDIO,V104_BEAM_AUDIO} from "./v104CombatAudio.js";
 export {
   V099_MANUAL_ABILITY_AUDIO_CONTRACTS,
   V099_PHYSICAL_AUDIO_ASSET_COUNT,
@@ -99,7 +100,7 @@ const ENEMY_VOICE_EVENTS = Object.freeze(["attack", "hurt", "death"]);
 
 const V100_ENEMY_COMBAT_CUE_TARGETS = Object.freeze({
   "red-panther-knife": Object.freeze({ attack: "weapon-crowbar", hurt: "weapon-melee-impact", death: "v100-body-fall" }),
-  "red-panther-shield": Object.freeze({ attack: "weapon-pan-heavy-hit", hurt: "weapon-pan-hit", death: "v100-body-fall" }),
+  "red-panther-shield": Object.freeze({ attack: "v104-armor-hit", hurt: "v104-armor-hit", death: "v100-body-fall" }),
   "red-panther-smg": Object.freeze({ attack: "weapon-gunner", hurt: "weapon-melee-impact", death: "v100-body-fall" }),
   "red-panther-commander": Object.freeze({ attack: "weapon-rifle", hurt: "weapon-melee-impact", death: "v100-body-fall" }),
   "mugarian-president-mutated": Object.freeze({
@@ -427,6 +428,9 @@ const enemyVoicePools = ENEMY_KINDS.flatMap((kind) => ENEMY_VOICE_EVENTS.map((ev
 )));
 
 const assets = [
+  V104_ARMOR_AUDIO,
+  V104_BOTTLE_AUDIO,
+  ...V104_BEAM_AUDIO,
   { id: 'v100-body-fall', category: 'melee', sources: v100SoundSources('foley', 'fall'), gain: .6, cooldownMs: 160, maxInstances: 2 },
   ...["advance", "navigate", "cancel", "confirm", "reject"].map(role => ({
     id: `v100-ui-${role}`, category: "ui", sources: sourceFor("/audio/v100", "ui", `v100-ui-${role}`),
@@ -884,9 +888,9 @@ const UNIT_WEAPON_CUES = Object.freeze({
   "crazy-king": "weapon-chainsaw-attack",
   kumaverson: "weapon-pan-swing",
   babayaga: "weapon-suppressed-pistol",
-  guardian: "weapon-pan-heavy-hit",
+  guardian: "v104-armor-hit",
   engineer: V080_SUPPRESSED_CARBINE_CUE_ID,
-  zakimiya: "weapon-pan-hit",
+  zakimiya: "weapon-bottle-hit",
   tky: "weapon-tky-plasma-blade",
   "mrs-chiha": "weapon-mrs-chiha-grenade-launcher",
   "miyamoto-musashi": "weapon-musashi-dual-katana",
@@ -1239,7 +1243,7 @@ export const LEGACY_SFX_CUE_MAP = Object.freeze({
   "role-babayaga": "weapon-suppressed-pistol",
   "structure-heavy": "weapon-hammer",
   "structure-light": "weapon-melee-impact",
-  "crawler-hit": "weapon-pan-heavy-hit",
+  "crawler-hit": "v104-armor-hit",
   "crawler-critical": "ui-error",
   "base-damaged": "weapon-melee-impact",
   "base-critical": "support-explosion",

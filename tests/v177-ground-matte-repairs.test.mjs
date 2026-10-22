@@ -14,6 +14,7 @@ import {MOTION_DEFINITIONS,regenerateMotionAtlases} from "../scripts/v100-review
 import {V177_GROUND_MATTE_SPRITE_REPLACEMENTS} from "../scripts/v177-ground-matte-repair-asset-contract.mjs";
 import {V177_JOINT_ASSET_ADDITIONS,V177_RETIRED_JOINT_SOURCE_ASSETS} from "../scripts/v177-joint-asset-contract.mjs";
 import {V177_PAISEN_ASSET_ADDITIONS, V177_PAISEN_RETIRED_ASSETS} from '../scripts/v177-paisen-asset-contract.mjs';
+import{V104_RUNTIME_ADDITIONS,V104_MEDIA_ADDITIONS,V104_OMEGA_REPLACEMENT}from'../scripts/v104-combat-asset-contract.mjs';
 
 const root=fileURLToPath(new URL("../",import.meta.url));
 const base="e4fb2403e87989a4c6323da65eac1e269348d695";
@@ -89,20 +90,20 @@ test("Knife death gap and cord hole use original RGB while eight nondeath cells 
 test("the source-bound matte, R9 action and Paisen identity repairs are the exact manifest replacements",async()=>{
   const current=JSON.parse(await disk("public/asset-manifest.json")),previous=JSON.parse(old("public/asset-manifest.json"));
   const previousByPath=new Map(previous.assets.map(a=>[a.path,a]));
-  assert.equal(current.assets.length,previous.assets.length);
+  assert.equal(current.assets.length,previous.assets.length+V104_MEDIA_ADDITIONS.length);
   const changed=current.assets.filter(a=>a.hash!==previousByPath.get(a.path)?.hash);
   const storyCuts=[
     {path:"/art/v100/story-r9/cuts/s01-nao-rescue.webp",previous:"sha256-1070f918cb2d6ee0fbefe094eb7fdf50248c18009dda8ba97d2fde2f7307e153",hash:"sha256-ae684ae099ea339497a899dedb86ca9cecb7ae6ad694a9a10785d15573a28e48",bytes:1210640},
     {path:"/art/v100/story-r9/cuts/s28-physical-stop.webp",previous:"sha256-26553a67a5f3e02a55b3a2a10801dd39142d18198b4d93e8f04711c99fa4e71e",hash:"sha256-50bb91af6d0ccd5f71c15081df062eca085d405d65faef72a605024845290d19",bytes:233424},
     {path:"/art/v100/story-r9/cuts/s09-transfer-disconnect.webp",previous:"sha256-54392a9122947fff111154cb72dfb61c93deb89c472579bff73cabebe4355b86",hash:"sha256-95a63ac2b76d55e5cc8017ca048f5031c9cce641b855faa0a074e8a732e72a8c",bytes:306628},
   ];
-  assert.deepEqual(changed.map(a=>a.path).sort(),[...new Set([...V177_GROUND_MATTE_SPRITE_REPLACEMENTS.map(a=>a.path),...V177_PAISEN_STORY_ASSETS.map(a=>a.path),...storyCuts.map(a=>a.path),...V177_PAISEN_CREDITS_ASSETS.map(a=>a.path),...V177_PAISEN_ASSET_ADDITIONS.map(a=>a.path),...V177_JOINT_ASSET_ADDITIONS.filter(a=>!previousByPath.has(a.path)).map(a=>a.path)])].sort());
-  for(const retired of [...V177_PAISEN_RETIRED_ASSETS,...V177_RETIRED_JOINT_SOURCE_ASSETS]) {
+  assert.deepEqual(changed.map(a=>a.path).sort(),[...new Set([...V177_GROUND_MATTE_SPRITE_REPLACEMENTS.map(a=>a.path),...V177_PAISEN_STORY_ASSETS.map(a=>a.path),...storyCuts.map(a=>a.path),...V177_PAISEN_CREDITS_ASSETS.map(a=>a.path),...V177_PAISEN_ASSET_ADDITIONS.map(a=>a.path),...V177_JOINT_ASSET_ADDITIONS.filter(a=>!previousByPath.has(a.path)).map(a=>a.path),...V104_RUNTIME_ADDITIONS.map(a=>a.path)])].sort());
+  for(const retired of [...V177_PAISEN_RETIRED_ASSETS,...V177_RETIRED_JOINT_SOURCE_ASSETS,V104_OMEGA_REPLACEMENT.previous]) {
     const before=previousByPath.get(retired.path);
     assert.equal(before.hash,retired.hash);assert.equal(before.bytes,retired.bytes);
     assert.equal(current.assets.some(asset=>asset.path===retired.path),false);
   }
-  for(const approved of [...V177_PAISEN_STORY_ASSETS,...V177_PAISEN_CREDITS_ASSETS,...V177_PAISEN_ASSET_ADDITIONS,...V177_JOINT_ASSET_ADDITIONS.filter(a=>!previousByPath.has(a.path))]) {
+  for(const approved of [...V177_PAISEN_STORY_ASSETS,...V177_PAISEN_CREDITS_ASSETS,...V177_PAISEN_ASSET_ADDITIONS,...V177_JOINT_ASSET_ADDITIONS.filter(a=>!previousByPath.has(a.path)),...V104_RUNTIME_ADDITIONS]) {
     const after=current.assets.find(asset=>asset.path===approved.path);
     assert.equal(after.hash,approved.hash);assert.equal(after.bytes,approved.bytes);
   }

@@ -64,6 +64,14 @@ test("beam hits a held target and misses a target that leaves the locked ray", (
   );
 });
 
+test("the rendered eye origin also owns beam collision, with the original fallback for historical runtimes",()=>{
+ const boss={x:760,y:270},runtime={phase:'firing',targetX:320,targetY:270,originX:794.3,originY:196};
+ const result=resolveKuromeBeam({boss,runtime,candidates:[human()]});
+ assert.deepEqual(result.origin,{x:runtime.originX,y:runtime.originY});
+ assert.deepEqual(result.target,{x:320,y:232});assert.deepEqual(result.hits,['1']);
+ assert.deepEqual(resolveKuromeBeam({boss,runtime:{...runtime,originX:NaN},candidates:[]}).origin,{x:760,y:206});
+});
+
 test("one-tap emergency evade locks the old ray and chooses a different far lane", () => {
   const target = human();
   const tracking = beginKuromeTracking(target).runtime;

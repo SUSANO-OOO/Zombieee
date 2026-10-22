@@ -11,6 +11,7 @@ import { createV177CorpseJointState, sampleV177CorpseJointState, rememberV177Cor
   pruneV177CorpseJointPoses, v177LiveJointGroundLift, v177CorpseJointPresentation } from '../app/v177CorpseJointPresentation.js';
 import { v102CorpseSeverPlan } from '../app/v102CombatGore.js';
 import { V177_JOINT_ASSET_ADDITIONS } from '../scripts/v177-joint-asset-contract.mjs';
+import {V104_RUNTIME_ADDITIONS}from'../scripts/v104-combat-asset-contract.mjs';
 import { buildV177CorpseJointData } from '../scripts/build-v177-corpse-joints.mjs';
 import { jointCorpseRenderFixture } from './helpers/v177-corpse-joint-render.mjs';
 import { assertJointCorpsePaint } from '../scripts/v177-reaction-render-contract.mjs';
@@ -52,7 +53,7 @@ test('backward Omega rest lowers both original boots and blade beside its bulky 
     const state=createV177CorpseJointState(native.form,live,{fallDirection,severPlan:style?{style,direction:1,at:4}:null});
     const sample=sampleV177CorpseJointState(state,{progress:1,x:native.x,y:native.y,age:1.15});
     for(const name of ['far-boot','near-boot','cleaver-and-hand']){
-      const gap=sample.floor-await paintedBottom(state,sample,false,new Set([name]));
+      const gap=sample.floor-await paintedBottom(state,sample,state.owned?.has(name),new Set([name]));
       assert.ok(gap>=-1e-8&&gap<=5,'an original boot/blade cannot remain held in the air after collapse: '+name+' gap='+gap);
     }
     const torsoGap=sample.floor-await paintedBottom(state,sample,false,new Set(['torso']));
@@ -85,7 +86,7 @@ test('the actual 1280px Omega incoming-damage size cannot carry its sole below t
   assert.equal(live.frame.anchorX,native.anchor.x);assert.equal(live.frame.anchorY,native.anchor.y);
   assert.equal(live.plan.lowerIndex,native.lowerFrame);assert.equal(live.plan.upperIndex,native.upperFrame);
   const lift=v177LiveJointGroundLift(native.form,live.plan,{...live,...live.root},native.y+5);
-  assert.ok(lift>0&&lift<1,'reproduce the native subpixel sole mismatch before grounding');
+  assert.ok(lift>=0&&lift<1,'the R2 source retains the exact native size and needs at most the original subpixel correction');
   live.root.y-=lift;
   const state=createV177CorpseJointState(native.form,live,{fallDirection:native.fallDirection,
     severPlan:{style:native.severStyle,direction:native.severDirection,at:4}});
@@ -110,16 +111,19 @@ test('the actual living renderer applies grounding before its sockets, draw and 
   const native=JSON.parse(fs.readFileSync('tests/fixtures/v177-4a3-omega-floor.json','utf8'));
   const plan=v177JointPose(native.form,{requestedState:'idle'},{locomotionPhase:0,locomotionSettle:1});
   const fixture=jointCorpseRenderFixture(native.form);
-  const result=vm.runInNewContext(bob.initializer.getText(parsed),{baseBob:0,jointPose:plan,renderKind:native.form,
+  const sourceBottom=v177LiveJointGroundLift(native.form,plan,{frame:fixture.live.frame,width:native.renderWidth,height:native.renderHeight,x:native.x,y:native.y,angle:0,scaleX:1,scaleY:1,flipX:native.flipX},0);
+  const baseBob=sourceBottom-native.y-5.5;
+  const result=vm.runInNewContext(bob.initializer.getText(parsed),{baseBob,jointPose:plan,renderKind:native.form,
     frame:fixture.live.frame,size:{w:native.renderWidth,h:native.renderHeight},f:{x:native.x,y:native.y},v177LiveJointGroundLift});
-  assert.ok(result>0&&result<1);
+  assert.ok(result-baseBob>0&&result-baseBob<1,'a half-pixel overlap at the original size must be corrected before all consumers');
   const body=draw.getText(parsed),declaration=body.indexOf(bob.getText(parsed));
   for(const consumer of ['v177RenderedJointWeaponSocket(','ctx.translate(','rememberV177CorpseJointPose('])
     assert.ok(body.indexOf(consumer)>declaration,'the same grounded offset must reach '+consumer);
   const applied={},scope={bob:result,jointPose:plan,drewArticulatedWalk:true,renderKind:native.form,
     f:{id:631,x:native.x,y:native.y},frame:fixture.live.frame,size:{w:native.renderWidth,h:native.renderHeight},
     pose:{offsetX:0,offsetY:0,rotationRadians:0,scaleX:1,scaleY:1},depthScale:1,facingSign:-1,direction:'left',
-    options:{world:{}},ctx:{translate:(x,y)=>{applied.translate={x,y};}},
+    options:{world:{}},weaponArm:V177_JOINT_ATLASES[native.form].armConstraints.find(c=>c.effectorBone===V177_JOINT_ATLASES[native.form].weaponBone),
+    ctx:{translate:(x,y)=>{applied.translate={x,y};}},
     v177RenderedJointWeaponSocket:args=>{applied.socket=args;},
     rememberV177CorpseJointPose:(_world,_id,_kind,_plan,root)=>{applied.remember=root;}};
   for(const consumer of consumers.values())vm.runInNewContext(consumer.getText(parsed),scope);
@@ -152,7 +156,7 @@ test('living and fallen original paint stay above the floor across sizes, gaits 
 test('corpse poses and alpha outlines reproduce exactly from the approved original textures and recipes',async()=>{
   assert.equal(await buildV177CorpseJointData(),fs.readFileSync('app/v177CorpseJointData.js','utf8').replace(/\r\n/g,'\n'));
   for(const [kind,data]of Object.entries(V177_CORPSE_JOINT_DATA)){
-    const approved=V177_JOINT_ASSET_ADDITIONS.find(a=>a.path===data.atlasPath);
+    const approved=[...V177_JOINT_ASSET_ADDITIONS,...V104_RUNTIME_ADDITIONS].find(a=>a.path===data.atlasPath);
     assert.equal('sha256-'+data.atlasSha256,approved.hash);
     assert.equal(createHash('sha256').update(fs.readFileSync('public'+data.atlasPath)).digest('hex'),data.atlasSha256);
     assert.equal(data.alphaThreshold,8);assert.equal(data.outlines.length,V177_JOINT_ATLASES[kind].parts.length);

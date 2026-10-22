@@ -36,7 +36,14 @@ export function jointRenderTraceDigest(kinds,{legacySettleRows=false,legacyFirea
      locomotionSettle:legacySettleRows?Math.round(settle*(atlas.settleLevels-1))/(atlas.settleLevels-1):settle});
    // The archived control predates normal-shot upper follow. Actual traces
    // retain the new motion by default; only the historical control omits it.
-   if(legacyFirearmUpper){delete plan.firearmUpperTransform;delete plan.firearmWeaponPullback;}
+   if(legacyFirearmUpper){delete plan.firearmUpperTransform;delete plan.firearmWeaponPullback;
+    // The immutable golden also predates the deliberately revised weapon
+    // choreography. Retain its source-atlas plan and original pelvis offset.
+    if(plan.choreography){delete plan.choreography;
+      const row=atlas.pelvisOffsets[plan.settleIndex],i=Math.floor(plan.phase*atlas.frameCount),t=plan.phase*atlas.frameCount-i;
+      plan.upperOffsetY=row[i]*(1-t)+row[(i+1)%atlas.frameCount]*t;
+    }
+   }
    assert.ok(drawV177JointPose(ctx,{naturalWidth:atlas.decodedWidth},kind,plan,0,0,atlas.referenceFrame?.width??480,atlas.referenceFrame?.height??448));
    hash.update(JSON.stringify([kind,state,phase,settle,trace]));poses++;
   }

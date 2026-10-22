@@ -24,7 +24,11 @@ test('V1 effects have decoded stage and offline sources, preserving fractional a
    assert.ok(maximum<=8,'cell edges must not introduce bright rectangular seams');
    assert.ok(total/count<1,'black gutters should have no visible rectangular veil');
   }else{
-   assert.ok(m.hasAlpha,path);assert.equal(s.channels[3].min,0);assert.equal(s.channels[3].max,255);
+   assert.ok(m.hasAlpha,path);assert.equal(s.channels[3].min,0);
+   // The new additive eye-plasma source peaks at alpha253. Preserve its
+   // original fractional coverage; every pre-existing opaque-core effect
+   // retains its exact255 requirement.
+   assert.equal(s.channels[3].max,id==='v104-eye'?253:255);
    assert.ok(s.channels[3].mean>1&&s.channels[3].mean<230,path);
   }
   assert.ok(manifest.assets.some(a=>a.path===path&&a.criticality==='critical'));

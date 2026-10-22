@@ -1,6 +1,10 @@
 import { TAKUYA_GROUND_BLADE_SOCKET } from './v100TakuyaGroundSocket.js';
+import {queueV104GuardImpact} from './v104CombatAudio.js';
 
 export const V100_COMBAT_VFX_ART=Object.freeze({
+ 'v104-steel':'/art/v104/combat-vfx/steel-r1.webp',
+ 'v104-organic':'/art/v104/combat-vfx/organic-r1.webp',
+ 'v104-eye':'/art/v104/combat-vfx/eye-r1.webp',
  'v102-flesh-wound':'/art/v102/combat-gore/flesh-wound-r1.webp',
  'v100-support-aircraft':'/art/v100/combat-vfx/aircraft-support-r1.webp',
  'v100-explosion':'/art/v100/combat-vfx/explosion-fire-smoke.webp',
@@ -77,7 +81,7 @@ const ready=(objects,id)=>{
  if(!image?.complete||!image.naturalWidth)throw new Error(`Combat VFX must decode before battle: ${id}`);
  return image;
 };
-export const V100_CONTACT_WEAPONS=Object.freeze(['scout','brawler','kumaverson','brute','guardian','crazy-king','zakimiya','walker','runner','crusher','abomination','takuya','grappler','sprinter','gate-eater','cagewalker','red-panther-knife']);
+export const V100_CONTACT_WEAPONS=Object.freeze(['scout','brawler','kumaverson','brute','guardian','crazy-king','zakimiya','tky','miyamoto-musashi','walker','runner','crusher','abomination','takuya','takuya-omega','gairen','futago','mugarian-president-mutated','ooguchi','grappler','sprinter','gate-eater','cagewalker','red-panther-knife']);
 export const V100_CLAW_CONTACT_WEAPONS=Object.freeze(['walker','runner','grappler','sprinter']);
 const contactQueues=new WeakMap();
 export function clearV100ContactQueue(world){contactQueues.delete(world);}
@@ -142,6 +146,7 @@ export function queueV100GuardContact(world,{owner,attacker,incomingDamage,x,y})
  const guardFacing=Number(owner.manualAbility.target?.direction)||1;
  if(owner.kind==='guardian'&&(attacker.x-owner.x)*guardFacing<0)return false;
   queueV100Contact(world,{x,y,metal:true,size:54,direction:attacker.x<owner.x?-1:1,guardContact:{ownerId:owner.id,activationId:owner.manualAbility.activationId,ownerHp:owner.hp,incomingDamage,ownerKind:owner.kind,resolvedSocket:false}});
+ queueV104GuardImpact(world,owner);
  return true;
 }
 // Read-only inspection of the same bounded, expiring render queue. No second

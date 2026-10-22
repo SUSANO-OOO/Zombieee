@@ -13,9 +13,9 @@ const record = ({path, bytes, hash}) => ({path, bytes, hash});
 const ordered = assets => assets.map(record).sort((a, b) => a.path.localeCompare(b.path));
 const baselines = [
   // Same asset count; original full-resolution lower crops add43,738 bytes to Ranger r2.
-  ["1.0.1", "634f8de4b0fb15df902a7dd5983ea94237cfea9d", 119, 51663498, 93],
-  ["1.0.2", "cd246a3d8e93b69d8cb6b370d40f28924a0d86b6", 118, 51642546, 92],
-  ["1.0.3", "99f9c193ab1e35531db39225c839138cdb1c33cd", 118, 51642546, 92],
+  ["1.0.1", "634f8de4b0fb15df902a7dd5983ea94237cfea9d", 139, 52047693, 96],
+  ["1.0.2", "cd246a3d8e93b69d8cb6b370d40f28924a0d86b6", 138, 52026741, 95],
+  ["1.0.3", "99f9c193ab1e35531db39225c839138cdb1c33cd", 138, 52026741, 95],
 ];
 for (const [version, sha, count, bytes, network] of baselines) {
   test(`the frozen installed ${version} pack downloads exactly the R9, score and sprite delta`, () => {
@@ -32,8 +32,8 @@ for (const [version, sha, count, bytes, network] of baselines) {
     assert.equal(expected.additions, count);
     assert.equal(changed.reduce((sum, asset) => sum + asset.bytes, 0), bytes);
     assert.equal(expected.bytes, bytes);
-    assert.equal(changed.filter(asset => asset.bundlePath).length, 27);
-    assert.equal(expected.bundled, 27);
+    assert.equal(changed.filter(asset => asset.bundlePath).length, 44);
+    assert.equal(expected.bundled, 44);
     assert.equal(new Set(changed.map(asset => asset.bundlePath ?? asset.sourcePath ?? asset.path)).size, network);
     assert.equal(expected.network, network);
     const next = new Map(candidate.assets.map(asset => [asset.path, asset]));

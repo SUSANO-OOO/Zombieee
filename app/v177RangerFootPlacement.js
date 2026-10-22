@@ -139,13 +139,27 @@ function moving(rig,previous,input) {
     const toeOff=Math.hypot(local-leg.hip[0],vertical)>leg.upperLength+leg.lowerLength-1.2;
     // Private boundary samples must not erase the landing before this paint.
     if(foot.landedPaintTime===input.paintTime&&reachable(rig,foot,i,input,offset))return {...foot,height:0,angle:0,mode:'plant',flight:null};
-    const hold=foot.phaseHold?.direction===travelSign&&travelSign*(absolute-foot.phaseHold.nominalEnd)<0;
-    if(foot.height===0&&!toeOff&&(hold||q<=rig.stanceFraction))return {...foot,mode:'plant',flight:null};
+    if(foot.height===0&&!toeOff)return {...foot,mode:'plant',flight:null};
     const nominalEnd=travelSign>0?Math.floor(absolute)+1:Math.floor(absolute)+(q<=rig.stanceFraction?-1:0)+rig.stanceFraction;
     const rate=time>previous.time?Math.abs(delta/(time-previous.time)):0;
     // Small real drift still calls for a short repositioning step, rather
     // than holding a boot in the air for the whole slow gait phase.
-    const gaitDuration=rate>0?Math.max(STEP_SECONDS,Math.min(STEP_SECONDS*1.5,(1-rig.stanceFraction)/rate)):STEP_SECONDS;
+    // Walking flight must fit its actual swing fraction. A fixed220ms floor
+    // exceeds half a fast stride and lifts both boots at once. Stop corrections
+    // retain their own220ms owner and already-started flights keep their deadline.
+    let gaitDuration=rate>0?Math.min(STEP_SECONDS*1.5,(1-rig.stanceFraction)/rate):STEP_SECONDS;
+    // Land before the *other actual world plant* runs out of anatomical
+    // reach. Nominal phase alone is insufficient after a short pursuit or
+    // the two asymmetric source legs can both be in flight.
+    const support=previous.feet[1-i],supportLeg=rig.legs[1-i];
+    const speed=time>previous.time?Math.abs((root-previous.root)/(time-previous.time)):0;
+    if(support.height<.01&&!support.flight&&speed>1e-8){
+      const vertical=supportLeg.groundAnkle-supportLeg.hip[1]+1.2;
+      const radius=supportLeg.upperLength+supportLeg.lowerLength-1.2;
+      const reach=Math.sqrt(Math.max(0,radius*radius-vertical*vertical));
+      const ahead=travelSign*(localX(support.x,root,facing,scale)-supportLeg.hip[0]);
+      gaitDuration=Math.min(gaitDuration,Math.max(.12*29/Math.max(29,speed),(ahead+reach)*scale/speed-.025));
+    }
     // A new correction discovered while catching up missed paints must still
     // show a lifted boot at this actual paint. Existing flight deadlines stay
     // unchanged; only this newly owned step gets a visible landing interval.

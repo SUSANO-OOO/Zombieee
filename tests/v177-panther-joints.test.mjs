@@ -62,7 +62,7 @@ test('actual enemy warning renderer uses the Panther gun pose while preserving o
   drawEnemyCombatReadabilityVfx(ctx,{id:17,kind,side:'zombie',hp:100,maxHp:100,combatReady:true,gateEntering:false,
    attack:0,attackWindup:.2,abilityWindup:0,flash:0,knock:0,bodyRadius:12,
    stationAbility:{phase:'idle'},animationPresentation:{direction:'left',moving:false},x:300,y:200},g,1,{});
-  assert.equal(ribbons.length,kind==='walker'?2:0,'The two gun poses replace the unrelated waist/knee warning ribbons');
+  assert.equal(ribbons.length,0,'Authored attacks use their body/weapon; unrelated waist/knee warning ribbons are absent');
  }
 });
 function inside([x,y],polygon){

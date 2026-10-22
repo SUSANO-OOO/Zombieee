@@ -71,8 +71,8 @@ test('attack weight moves the pelvis and torso while holding the same boot targe
 test('clear-ground traversal is faster on both sides, preserves stops and slows, and eases at contact',()=>{
   for(const speed of [4,11,14,23,34]){
     assert.equal(combatApproachSpeed(speed,24),speed);
-    assert.equal(combatApproachSpeed(speed,180),speed*2.2);
-    assert.equal(combatApproachSpeed(speed,-180),speed*2.2);
+    assert.equal(combatApproachSpeed(speed,180),speed*2.5);
+    assert.equal(combatApproachSpeed(speed,-180),speed*2.5);
     assert.ok(Math.abs(combatApproachSpeed(speed*.4,180)-combatApproachSpeed(speed,180)*.4)<1e-12);
     let x=0,t=0;while(x<300-1e-6&&t<100){x+=Math.min(300-x,combatApproachSpeed(speed,300-x)/120);t+=1/120;}
     assert.ok(t<300/speed*.72,JSON.stringify({speed,t,before:300/speed}));

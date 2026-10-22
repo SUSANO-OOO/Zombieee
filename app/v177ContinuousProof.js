@@ -22,7 +22,8 @@ export function v177ProofFormIdentity(form,{knownForms,playableKinds}){
 // supplies a controlled target; normal AI and the real simulation do the work.
 export function configureV177ContinuousActorProof(actor,target,{form,phase,lane,laneY,knownForms,playableKinds,createAnimationRuntime,feralSeconds,attackReachFor}){
   const identity=v177ProofFormIdentity(form,{knownForms,playableKinds});
-  if(!['move','attack','engage'].includes(phase)||!Number.isInteger(lane)||!Number.isFinite(laneY))throw new Error('Invalid continuous proof phase or lane');
+  if(!['move','attack','engage','ability'].includes(phase)||!Number.isInteger(lane)||!Number.isFinite(laneY))throw new Error('Invalid continuous proof phase or lane');
+  if(phase==='ability'&&!['kurome','mother','ooguchi','gairen','futago','mugarian-president-mutated','takuya-omega','takuya'].includes(form))throw Error('Ability proof requires a boss with its own runtime');
   if(actor?.kind!==identity.kind||actor?.side!==identity.side||!target||target.side===actor.side)throw new Error('Continuous proof actor/target identity mismatch');
   if(form==='mayo-chan-feral'&&!actor.manualAbility)throw new Error('Feral form requires its own manual ability runtime');
   if(typeof createAnimationRuntime!=='function'||(form==='mayo-chan-feral'&&!(Number.isFinite(feralSeconds)&&feralSeconds>0)))throw new Error('Continuous proof requires the original animation constructor and feral duration');
@@ -48,7 +49,8 @@ export function configureV177ContinuousActorProof(actor,target,{form,phase,lane,
     fighter.targetObjectId=null;fighter.retargetIn=99;fighter.abilityCooldown=999;
   }
   actor.targetId=target.id;actor.attackWindupTargetId=null;actor.attackSequence=0;actor.aiMoveDirection=0;
-  actor.cooldown=phase==='move'?99:0;
+  actor.cooldown=phase==='move'||phase==='ability'?99:0;
+  if(phase==='ability')actor.abilityCooldown=0;
   actor.animationPresentation=createAnimationRuntime({direction:facing,x:actor.x,y:actor.y});
   if(actor.kind==='futago')actor.v100TwinPart=identity.v100TwinPart??undefined;
   if(form==='mayo-chan-feral')actor.manualAbility={...actor.manualAbility,phase:'feral',activeRemaining:feralSeconds};
