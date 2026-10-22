@@ -84,9 +84,15 @@ test('current recovery partitions all original observations and never reuses an 
 });
 
 test('supplement-only recovery can finish its original context without recapturing a normal case',()=>{
+ // Synthetic report membership exercises an empty-normal partition only;
+ // it never changes the checked-in source inventory or claims new evidence.
  const profile=structuredClone(current);profile.retainedEvidence.caseIds.push(...profile.caseIds);profile.caseIds=[];
  profile.retainedEvidence.outcomeCaseIds.push(...profile.outcomeCaseIds);profile.outcomeCaseIds=[];
  const manual=[...profile.manualCaseIds,...profile.retainedEvidence.manualCaseIds];profile.manualCaseIds=manual.slice(0,1);profile.retainedEvidence.manualCaseIds=manual.slice(1);
+ for(const key of ['caseIds','manualCaseIds','outcomeCaseIds'])for(const id of profile.retainedEvidence[key]){
+  const owned=[...profile.retainedEvidence.reports,...profile.retainedEvidence.additionalReports].some(r=>r[key].includes(id));
+  if(!owned)profile.retainedEvidence.additionalReports.find(r=>id.startsWith(r.shard+':'))[key].push(id);
+ }
  const result=nativeCaseSelection({root:profileRoot(profile),event:{pull_request:{draft:true}},git:()=>''});
  assert.equal(result.caseIds.length,0);assert.deepEqual(result.shards,['forms-1']);assert.equal(result.manualCaseIds.length,1);assert.equal(result.outcomeCaseIds.length,0);
 });
@@ -103,18 +109,15 @@ test('Ready reuse requires complete v2 inventory and exact reviewed source; expl
 });
 
 test('additional successful reports retain their own head and can only bind unique kept observations',()=>{
- const profile=structuredClone(current),id=profile.retainedEvidence.caseIds[0];
- // Synthetic metadata tests ownership only; it is never an evidence claim.
- const report={head:'a'.repeat(40),runId:'123456',sha256:'b'.repeat(64),artifactId:123,
-  shard:id.split(':')[0],caseIds:[id],manualCaseIds:[],outcomeCaseIds:[]};
- profile.retainedEvidence.additionalReports.push(report);
+ const profile=structuredClone(current),report=profile.retainedEvidence.additionalReports[0],id=report.caseIds[0];
  const select=p=>nativeCaseSelection({root:profileRoot(p),event:{pull_request:{draft:false}},git:()=>''});
- assert.deepEqual(select(profile).retainedEvidence.additionalReports.at(-1),report);
+ assert.deepEqual(select(profile).retainedEvidence.additionalReports[0],report);
  for(const mutate of[
   r=>{r.head='unbound';},r=>{r.runId='';},r=>{r.sha256='unbound';},r=>{r.artifactId=0;},
   r=>{r.caseIds=[profile.caseIds[0]];},r=>{r.shard='forms-unknown';},
   r=>{r.caseIds.push(id);},r=>{r.manualCaseIds.push(id);},r=>{r.caseIds=[];},
- ]){const broken=structuredClone(profile);mutate(broken.retainedEvidence.additionalReports.at(-1));assert.throws(()=>select(broken));}
+  r=>{r.head='f'.repeat(40);},r=>{r.sha256='f'.repeat(64);},r=>{r.artifactId+=1;},
+ ]){const broken=structuredClone(profile);mutate(broken.retainedEvidence.additionalReports[0]);assert.throws(()=>select(broken));}
  const repeated=structuredClone(profile);repeated.retainedEvidence.additionalReports.push(structuredClone(report));assert.throws(()=>select(repeated));
 });
 
@@ -130,4 +133,16 @@ test('later raw-clock closures fail closed if their report, original audit or st
  }
  const broken=structuredClone(current);broken.retainedEvidence.additionalReports=broken.retainedEvidence.additionalReports.filter(r=>r.shard!=='forms-4');
  assert.throws(()=>select(broken));
+});
+
+test('every retained observation and historical open clock keeps its exact source owner',()=>{
+ const select=p=>nativeCaseSelection({root:profileRoot(p),event:{pull_request:{draft:false}},git:()=>''});
+ for(const mutate of[
+  p=>{p.retainedEvidence.additionalReports=p.retainedEvidence.additionalReports.filter(r=>r.shard!=='forms-12');},
+  p=>{p.retainedEvidence.reports[0].caseIds.pop();},
+  p=>{p.additionalRawClockClosures=[];},
+  p=>{delete p.additionalEvidenceInventory;},
+ ]){
+  const broken=structuredClone(current);mutate(broken);assert.throws(()=>select(broken));
+ }
 });

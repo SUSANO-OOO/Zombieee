@@ -43,10 +43,23 @@ export function nativeCaseSelection({event,root=process.cwd(),git=args=>execFile
     for(const report of retained.reports)assert.match(report.sha256,/^[a-f0-9]{64}$/u);
     // Later successful observations keep their own immutable report and head;
     // the twelve baseline reports above never acquire a newer candidate's label.
+    const inventory=recovery.additionalEvidenceInventory;
+    if((retained.additionalReports?.length??0)>0||(recovery.additionalRawClockClosures?.length??0)>0
+      ||retained.reports.some(r=>Array.isArray(r.caseIds)))assert.ok(inventory,'Later report ownership requires its source inventory');
+    if(inventory){
+      assert.match(inventory.head??'',/^[a-f0-9]{40}$/u);assert.match(inventory.runId??'',/^[1-9][0-9]+$/u);
+      assert.match(inventory.sha256??'',/^[a-f0-9]{64}$/u);
+      assert.ok(Array.isArray(inventory.reports)&&new Set(inventory.reports.map(r=>r.shard)).size===inventory.reports.length);
+    }
     const additionalIds=new Set();
     for(const report of retained.additionalReports??[]){
       assert.match(report.head??'',/^[a-f0-9]{40}$/u);assert.match(String(report.runId??''),/^[1-9][0-9]+$/u);
       assert.match(report.sha256??'',/^[a-f0-9]{64}$/u);assert.ok(Number.isSafeInteger(report.artifactId)&&report.artifactId>0);
+      if(inventory){
+        assert.equal(report.head,inventory.head);assert.equal(report.runId,inventory.runId);
+        assert.ok(inventory.reports.some(r=>r.shard===report.shard&&r.sha256===report.sha256&&r.artifactId===report.artifactId),
+          'Additional report identity must match its immutable source inventory');
+      }
       assert.ok(SHARDS.some(s=>s.id===report.shard));let count=0;
       for(const key of ['caseIds','manualCaseIds','outcomeCaseIds']){
         assert.ok(Array.isArray(report[key]));
@@ -57,6 +70,19 @@ export function nativeCaseSelection({event,root=process.cwd(),git=args=>execFile
         }
       }
       assert.ok(count>0,'An additional report must retain an actual observation');
+    }
+    if(inventory){
+      const baselineIds=new Set();
+      for(const report of retained.reports)for(const key of ['caseIds','manualCaseIds','outcomeCaseIds']){
+        assert.ok(Array.isArray(report[key]));
+        for(const id of report[key]){
+          assert.ok(retained[key].includes(id)&&id.startsWith(report.shard+':'),'Baseline report must own a retained observation in its shard');
+          assert.ok(!baselineIds.has(id)&&!additionalIds.has(id),'A retained observation needs exactly one original report owner');
+          baselineIds.add(id);
+        }
+      }
+      assert.deepEqual([...baselineIds,...additionalIds].sort(),[...retained.caseIds,...retained.manualCaseIds,...retained.outcomeCaseIds].sort(),
+        'Every retained observation needs a source-bound baseline or additional report');
     }
     const clockClosures=new Set();
     for(const closure of recovery.additionalRawClockClosures??[]){
@@ -76,6 +102,11 @@ export function nativeCaseSelection({event,root=process.cwd(),git=args=>execFile
         'realmOwnerAndOrderedMembers','sourceRafClockStrictlyIncreasing','overflowFree'])assert.equal(validation?.[key],true);
       assert.equal(validation.duplicateRowsRemoved,false);assert.equal(validation.sourceHead,closure.head);
       assert.equal(validation.postpaintContract,'passed');
+    }
+    const pendingIds=new Set([...selected.caseIds,...recovery.manualCaseIds,...recovery.outcomeCaseIds]);
+    for(const historical of recovery.historicalRawClockAudits??[])for(const closure of historical.closures??[]){
+      if(closure.clockClosure==='unresolved-needs-new-recording'&&!pendingIds.has(closure.caseId))
+        assert.ok(clockClosures.has(closure.caseId),'A retained historical open clock requires its separately bound new recording');
     }
     selected.outcomeCaseIds=recovery.outcomeCaseIds;selected.manualCaseIds=recovery.manualCaseIds;
     selected.shards=SHARDS.filter(s=>[...selected.caseIds,...selected.outcomeCaseIds,...selected.manualCaseIds].some(id=>id.startsWith(s.id+':'))).map(s=>s.id);
