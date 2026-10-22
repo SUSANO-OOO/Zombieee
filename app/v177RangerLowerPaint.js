@@ -1,6 +1,8 @@
 import {createV177RangerLowerPose,v177RangerLowerPose} from './v177RangerLowerMotion.js';
 
 const painters=new WeakMap(),MAX_PIXELS=65536;
+const paintCounts={createdPainters:0,rasterizedDraws:0,reusedDraws:0};
+export const getV177RangerLowerPaintSnapshot=()=>({...paintCounts});
 const samples=[[.25,.25],[.75,.25],[.25,.75],[.75,.75]];
 const topLeft=(ax,ay,bx,by)=>by<ay||(by===ay&&bx>ax);
 const owned=(v,edge)=>v>1e-10||(Math.abs(v)<=1e-10&&edge);
@@ -18,12 +20,16 @@ export function createV177RangerLowerPainter(image,rig,createCanvas=()=>image.ow
     const indices=new Uint16Array(leg?.triangles??[0,1,2,0,2,3]);
     return {name:part.name,bone:part.bone,rect:d,data,uv,leg,indices,rasterIndices:indices.slice(),target:new Float64Array(uv.length)};
   });
-  return {canvas,context,parts,pose:createV177RangerLowerPose(rig),rig,width:0,height:0,sample:null,accum:null,visits:null,imageData:null};
+  paintCounts.createdPainters++;
+  return {canvas,context,parts,pose:createV177RangerLowerPose(rig),rig,width:0,height:0,sample:null,accum:null,visits:null,imageData:null,
+    lastRaster:{valid:false,width:0,height:0,duplicateWithinPart:0,degenerate:0,
+      parts:parts.map(part=>({part,target:new Float64Array(part.target.length)}))}};
 }
 function ensureCapacity(p,w,h) {
   let width=Math.max(p.width,w),height=Math.max(p.height,h);
-  if(width*height>MAX_PIXELS){if(w*h>MAX_PIXELS)return false;width=w;height=h;}
+  if(width*height>MAX_PIXELS){if(w*h>MAX_PIXELS){p.lastRaster.valid=false;return false;}width=w;height=h;}
   if(width===p.width&&height===p.height)return true;
+  p.lastRaster.valid=false;
   p.width=width;p.height=height;p.canvas.width=width;p.canvas.height=height;
   p.sample=new Float32Array(width*height*4);p.accum=new Float32Array(width*height*4);p.visits=new Uint8Array(width*height);
   p.imageData=p.context.createImageData(width,height);return true;
@@ -76,9 +82,11 @@ function rasterPart(p,g,w,h,ox,oy,stats) {
 }
 
 export function paintV177RangerLower(p,ctx,phase,settle,x,y,width,height,feet=null) {
-  const pose=v177RangerLowerPose(p.rig,phase,settle,p.pose,feet),m=ctx.getTransform();
+  let pose;
+  try{pose=v177RangerLowerPose(p.rig,phase,settle,p.pose,feet);}catch(error){p.lastRaster.valid=false;throw error;}
+  const m=ctx.getTransform();
   const sx=width/480,sy=height/448,a=m.a*sx,b=m.b*sx,c=m.c*sy,d=m.d*sy,e=m.a*x+m.c*y+m.e,f=m.b*x+m.d*y+m.f;
-  if(![a,b,c,d,e,f].every(Number.isFinite)||Math.abs(a*d-b*c)<1e-12)return {mode:'legacy-cell-fallback',reason:'invalid-transform'};
+  if(![a,b,c,d,e,f].every(Number.isFinite)||Math.abs(a*d-b*c)<1e-12){p.lastRaster.valid=false;return {mode:'legacy-cell-fallback',reason:'invalid-transform'};}
   let left=Infinity,top=Infinity,right=-Infinity,bottom=-Infinity;
   for(const g of p.parts){
     const matrix=g.leg?null:pose.matrices[g.bone],vertices=g.leg?pose.meshes[g.name]:g.uv;
@@ -91,26 +99,47 @@ export function paintV177RangerLower(p,ctx,phase,settle,x,y,width,height,feet=nu
   left=Math.max(0,Math.floor(left-1));top=Math.max(0,Math.floor(top-1));right=Math.min(ctx.canvas.width,Math.ceil(right+1));bottom=Math.min(ctx.canvas.height,Math.ceil(bottom+1));
   const w=right-left,h=bottom-top,receipt={mode:'continuous-weighted-mesh',phase:pose.phase,settle:pose.settle,parts:5,meshVertices:130,meshTriangles:192,
     coverageSamples:4,width:Math.max(0,w),height:Math.max(0,h),duplicateWithinPart:0,degenerate:0};
-  if(w<=0||h<=0)return {...receipt,mode:'offscreen-weighted-mesh'};
+  if(w<=0||h<=0){p.lastRaster.valid=false;return {...receipt,mode:'offscreen-weighted-mesh'};}
   if(!ensureCapacity(p,w,h))return {mode:'legacy-cell-fallback',reason:'bounded-raster-capacity',width:w,height:h};
   for(const g of p.parts){
     for(let i=0;i<g.target.length;i+=2){g.target[i]-=left;g.target[i+1]-=top;}
     selectPartDiagonals(g);
   }
-  p.accum.fill(0,0,w*h*4);
-  for(const [ox,oy]of samples){
-    p.sample.fill(0,0,w*h*4);for(const g of p.parts)rasterPart(p,g,w,h,ox,oy,receipt);
-    for(let i=0;i<w*h*4;i++)p.accum[i]+=p.sample[i]*.25;
+  // Reuse only the immediately preceding successful bitmap at exactly the same
+  // backing-pixel vertices. Pose/IK, clipping and every subpixel are still read
+  // on this paint. The five source crops/UVs belong to this immutable atlas.
+  const last=p.lastRaster;
+  const same=last.valid&&last.width===w&&last.height===h&&last.parts.length===p.parts.length&&p.parts.every((g,i)=>
+    last.parts[i].part===g&&g.target.every((value,j)=>value===last.parts[i].target[j]));
+  if(same){
+    receipt.duplicateWithinPart=last.duplicateWithinPart;receipt.degenerate=last.degenerate;
+  }else{
+    last.valid=false;
+    p.accum.fill(0,0,w*h*4);
+    for(const [ox,oy]of samples){
+      p.sample.fill(0,0,w*h*4);for(const g of p.parts)rasterPart(p,g,w,h,ox,oy,receipt);
+      for(let i=0;i<w*h*4;i++)p.accum[i]+=p.sample[i]*.25;
+    }
+    p.imageData.data.fill(0);
+    for(let py=0;py<h;py++)for(let px=0;px<w;px++){
+      const at=(py*w+px)*4,to=(py*p.width+px)*4,alpha=p.accum[at+3];
+      for(let k=0;k<3;k++)p.imageData.data[to+k]=alpha>0?Math.round(p.accum[at+k]/alpha*255):0;p.imageData.data[to+3]=Math.round(alpha*255);
+    }
+    p.context.putImageData(p.imageData,0,0);
+    if(last.parts.length!==p.parts.length||p.parts.some((g,i)=>last.parts[i].part!==g))
+      last.parts=p.parts.map(part=>({part,target:new Float64Array(part.target.length)}));
+    for(let i=0;i<p.parts.length;i++)last.parts[i].target.set(p.parts[i].target);
+    last.width=w;last.height=h;last.duplicateWithinPart=receipt.duplicateWithinPart;last.degenerate=receipt.degenerate;last.valid=true;
+    paintCounts.rasterizedDraws++;
   }
-  p.imageData.data.fill(0);
-  for(let py=0;py<h;py++)for(let px=0;px<w;px++){
-    const at=(py*w+px)*4,to=(py*p.width+px)*4,alpha=p.accum[at+3];
-    for(let k=0;k<3;k++)p.imageData.data[to+k]=alpha>0?Math.round(p.accum[at+k]/alpha*255):0;p.imageData.data[to+3]=Math.round(alpha*255);
-  }
-  p.context.putImageData(p.imageData,0,0);
   // The lower is already in backing pixels. The existing clip, alpha, filter,
   // compositing and body transform apply once, with no second bitmap or leg.
-  ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(p.canvas,0,0,w,h,left,top,w,h);ctx.restore();return receipt;
+  ctx.save();
+  try{ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(p.canvas,0,0,w,h,left,top,w,h);}
+  catch(error){last.valid=false;throw error;}
+  finally{ctx.restore();}
+  if(same)paintCounts.reusedDraws++;
+  return receipt;
 }
 
 export function drawV177RangerLower(ctx,image,rig,plan,x,y,width,height) {

@@ -38,9 +38,55 @@ function main({width=1280,height=720,matrix=[1,0,0,1,0,0]}={}){
     getTransform:()=>Object.fromEntries(['a','b','c','d','e','f'].map((key,i)=>[key,m[i]])),
     save(){stack.push([...m]);},restore(){m=stack.pop();},setTransform(...value){m=[...value];},transform(...value){m=multiply(m,value);},
     translate(x,y){m=multiply(m,[1,0,0,1,x,y]);},scale(x,y){m=multiply(m,[x,0,0,y,0,0]);},
-    drawImage(img,...rect){calls.push({matrix:[...m],rect,pixels:img.data?new Uint8ClampedArray(img.data.data):null,sourceWidth:img.width});}};
+    drawImage(img,...rect){calls.push({matrix:[...m],rect,pixels:img.data?new Uint8ClampedArray(img.data.data):null,sourceWidth:img.width,
+      alpha:ctx.globalAlpha,composite:ctx.globalCompositeOperation,filter:ctx.filter});}};
   return {ctx,calls,stack};
 }
+
+test('exact raster reuse retains the frozen 1658 pixels at all three viewport transforms',()=>{
+  const result=[],painter=createV177RangerLowerPainter(image(),rig);
+  for(const [width,height,scale]of[[1280,720,1],[844,390,.8],[844,340,2]])for(const flip of[false,true])for(const angle of[0,.07])for(const phase of[0,.371,.83]){
+    const c=Math.cos(angle),s=Math.sin(angle),sign=flip?-1:1;
+    const target=main({width,height,matrix:[c*sign*scale,s*sign*scale,-s*scale,c*scale,width/2,height/2]});
+    const receipt=paintV177RangerLower(painter,target.ctx,phase,phase===0?1:.49999,-48,-80,96,89.6);
+    // Crop to the active draw rectangle: a shared surface can retain a larger
+    // allocation, but those transparent outside pixels are never drawn.
+    const call=target.calls[0],w=receipt.width,h=receipt.height,pixels=new Uint8ClampedArray(w*h*4);
+    for(let y=0;y<h;y++)pixels.set(call.pixels.subarray(y*call.sourceWidth*4,(y*call.sourceWidth+w)*4),y*w*4);
+    result.push({receipt,pixelSha:sha(pixels),draw:call.rect});
+  }
+  // Generated once from immutable commit1658 before adding bitmap reuse.
+  assert.equal(sha(JSON.stringify(result)),'89a8361b28a3d7947c1ce5a1049ed0762d3f13038bb411f996861ee20ffeb599');
+});
+
+test('bitmap reuse observes subpixel, foot, facing and surface changes and applies current draw state',()=>{
+  const painter=createV177RangerLowerPainter(image(),rig),put=painter.context.putImageData;let writes=0;
+  painter.context.putImageData=(...args)=>{writes++;put(...args);};
+  const paint=(entry={})=>{
+    const target=main({width:entry.clipWidth??1280,matrix:entry.matrix??[1,0,0,1,640,360]});
+    if(entry.alpha!=null){target.ctx.globalAlpha=entry.alpha;target.ctx.filter='brightness(1.1)';target.ctx.globalCompositeOperation='screen';}
+    const receipt=paintV177RangerLower(painter,target.ctx,entry.phase??.371,.5,-48,-80,entry.size??96,89.6,entry.feet??null);
+    return {receipt,call:target.calls[0]};
+  };
+  const first=paint();assert.equal(writes,1);
+  const again=paint({alpha:.21});assert.equal(writes,1);assert.deepEqual(again.receipt,first.receipt);
+  assert.deepEqual(again.call.pixels,first.call.pixels);assert.equal(again.call.alpha,.21);
+  assert.equal(again.call.filter,'brightness(1.1)');assert.equal(again.call.composite,'screen');
+  for(const entry of[
+    {matrix:[1,0,0,1,640.000001,360]}, {matrix:[-1,0,0,1,640,360]},
+    {matrix:[2,0,0,2,640,360]}, {phase:.372}, {size:96.000001},
+    {feet:v177RangerLowerPose(rig,.4,.5).joints.map(j=>[j[4],j[5],0])}, {clipWidth:640}, {},
+  ]){const before=writes;paint(entry);assert.equal(writes,before+1,'changed backing geometry must be rasterized');}
+  const before=writes;paint();assert.equal(writes,before);
+  assert.equal(paint({matrix:[1,0,0,1,-2000,0]}).receipt.mode,'offscreen-weighted-mesh');
+  paint();assert.equal(writes,before+1,'offscreen draws invalidate the prior bitmap');
+  assert.equal(paint({matrix:[0,0,0,0,0,0]}).receipt.mode,'legacy-cell-fallback');
+  paint();assert.equal(writes,before+2,'failed transforms invalidate the prior bitmap');
+  painter.context.putImageData=()=>{throw new Error('write failed');};
+  assert.throws(()=>paint({phase:.39}),/write failed/);
+  painter.context.putImageData=(...args)=>{writes++;put(...args);};
+  paint({phase:.39});assert.equal(writes,before+3,'a failed put cannot create a successful reuse receipt');
+});
 
 test('stopped Ranger cloth keeps one coverage per sample without changing vertices, UV or original legs',()=>{
   const painter=createV177RangerLowerPainter(image(),rig),source=painter.parts.map(g=>({uv:[...g.uv],indices:[...g.indices]}));

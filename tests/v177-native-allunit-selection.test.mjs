@@ -92,3 +92,19 @@ test('Ready reuse requires complete v2 inventory and exact reviewed source; expl
  const broken=structuredClone(current);broken.retainedEvidence.caseIds.pop();
  assert.throws(()=>nativeCaseSelection({root:profileRoot(broken),event:ready,git:()=>''}));
 });
+
+test('additional successful reports retain their own head and can only bind unique kept observations',()=>{
+ const profile=structuredClone(current),id=profile.retainedEvidence.caseIds[0];
+ // Synthetic metadata tests ownership only; it is never an evidence claim.
+ const report={head:'a'.repeat(40),runId:'123456',sha256:'b'.repeat(64),artifactId:123,
+  shard:id.split(':')[0],caseIds:[id],manualCaseIds:[],outcomeCaseIds:[]};
+ profile.retainedEvidence.additionalReports=[report];
+ const select=p=>nativeCaseSelection({root:profileRoot(p),event:{pull_request:{draft:false}},git:()=>''});
+ assert.deepEqual(select(profile).retainedEvidence.additionalReports,[report]);
+ for(const mutate of[
+  r=>{r.head='unbound';},r=>{r.runId='';},r=>{r.sha256='unbound';},r=>{r.artifactId=0;},
+  r=>{r.caseIds=[profile.caseIds[0]];},r=>{r.shard='forms-unknown';},
+  r=>{r.caseIds.push(id);},r=>{r.manualCaseIds.push(id);},r=>{r.caseIds=[];},
+ ]){const broken=structuredClone(profile);mutate(broken.retainedEvidence.additionalReports[0]);assert.throws(()=>select(broken));}
+ const repeated=structuredClone(profile);repeated.retainedEvidence.additionalReports.push(structuredClone(report));assert.throws(()=>select(repeated));
+});

@@ -41,6 +41,23 @@ export function nativeCaseSelection({event,root=process.cwd(),git=args=>execFile
     partition(recovery.manualCaseIds,retained.manualCaseIds,manual);
     assert.deepEqual(retained.reports.map(r=>r.shard).sort(),SHARDS.map(s=>s.id).sort());
     for(const report of retained.reports)assert.match(report.sha256,/^[a-f0-9]{64}$/u);
+    // Later successful observations keep their own immutable report and head;
+    // the twelve baseline reports above never acquire a newer candidate's label.
+    const additionalIds=new Set();
+    for(const report of retained.additionalReports??[]){
+      assert.match(report.head??'',/^[a-f0-9]{40}$/u);assert.match(String(report.runId??''),/^[1-9][0-9]+$/u);
+      assert.match(report.sha256??'',/^[a-f0-9]{64}$/u);assert.ok(Number.isSafeInteger(report.artifactId)&&report.artifactId>0);
+      assert.ok(SHARDS.some(s=>s.id===report.shard));let count=0;
+      for(const key of ['caseIds','manualCaseIds','outcomeCaseIds']){
+        assert.ok(Array.isArray(report[key]));
+        for(const id of report[key]){
+          assert.ok(retained[key].includes(id)&&id.startsWith(report.shard+':'),'Additional report must own a retained case in its original shard');
+          assert.ok(!additionalIds.has(id),'A retained case must have only one additional report owner');
+          additionalIds.add(id);count++;
+        }
+      }
+      assert.ok(count>0,'An additional report must retain an actual observation');
+    }
     selected.outcomeCaseIds=recovery.outcomeCaseIds;selected.manualCaseIds=recovery.manualCaseIds;
     selected.shards=SHARDS.filter(s=>[...selected.caseIds,...selected.outcomeCaseIds,...selected.manualCaseIds].some(id=>id.startsWith(s.id+':'))).map(s=>s.id);
     baseline={head:recovery.head,runId:recovery.runId,successfulCases:retained.caseIds.length,

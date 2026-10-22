@@ -10,6 +10,7 @@ import {battleVoiceReady,queueV104HumanHurt} from "./v104CombatAudio.js";
 import {createManualAbilityPointerHold} from "./manualAbilityUi.js";
 import {drawV104WeaponWake,drawV104InfectedWake,drawV104EyeBeam,v104WeaponWakeCandidate} from "./v104CombatVfx.js";
 import { v177GroundedStrideFactor } from "./v177GroundedMotion.js";
+import {getV177RangerLowerPaintSnapshot} from "./v177RangerLowerPaint.js";
 import { combatApproachSpeed } from "./combatApproach.js";
 import { v177LivingStunState, v177LivingStunSample, v177RangerLivingStunSample } from "./v177LivingStun.js";
 import { rememberV177CorpseJointPose, pruneV177CorpseJointPoses, v177LiveJointGroundLift, v177CorpseJointPresentation, drawV177CorpseJointPresentation } from "./v177CorpseJointPresentation.js";
@@ -14576,6 +14577,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       },
       getPerformanceSnapshot: () => ({
         ...runtimePerformanceRef.current,
+        rangerLowerPaint:getV177RangerLowerPaintSnapshot(),
         rangerDrawBoundary: {renderSequence:fighterRenderSequence,simulationTime:gameRef.current.time,
           battleAudioGeneration:gameRef.current.battleAudioGeneration,
           actors:gameRef.current.fighters.filter(f=>f.kind==='ranger'&&f.side==='human'&&f.hp>0).map(f=>{
