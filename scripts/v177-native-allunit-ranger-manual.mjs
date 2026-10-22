@@ -16,15 +16,18 @@ import {RANGER_MANUAL_PHASE,RANGER_MANUAL_GROUP,assertRangerManualPlan,
 // no function-string injection, expected paint stamps or global observer patch.
 export function createNativeRangerManualReader({proof,realmOwner}){
   const read=({performanceBoundary=false,includeRealm=true,afterRenderSequence=null}={})=>{
+    const readerEnteredAt=performance.now();
     const canvas=document.querySelector('.game-shell canvas'),refs={window,document,performance,canvas};
     realmOwner.check(refs);const realm=includeRealm?realmOwner.member(refs,'sample'):null;
-    const qa=window.__ASHFALL_BATTLE_QA__,snapshot=qa.getSnapshot(),phaseG=qa.getPhaseGCombatSnapshot();
-    const audit=qa.getEnemyFacingRuntimeAudit(proof.fighterId),target=qa.getEnemyFacingRuntimeAudit(proof.targetId);
+    const qa=window.__ASHFALL_BATTLE_QA__,snapshot=qa.getNativeRangerManualSnapshot(),snapshotEndedAt=performance.now();
+    const phaseG=qa.getPhaseGCombatSnapshot(),phaseGEndedAt=performance.now();
+    const audit=qa.getEnemyFacingRuntimeAudit(proof.fighterId),actorAuditEndedAt=performance.now(),target=qa.getEnemyFacingRuntimeAudit(proof.targetId,{includeHistory:false}),gettersEndedAt=performance.now();
     const runtimeActor=phaseG.fighters.find(f=>f.id===proof.fighterId),history=audit.renderHistory??[];
     const boundary=performanceBoundary?(()=>{const r=canvas.getBoundingClientRect();return{
       runtimePerformance:qa.getPerformanceSnapshot(),geometry:{viewport:{width:innerWidth,height:innerHeight},devicePixelRatio,
         canvas:{width:canvas.width,height:canvas.height,rect:{x:r.x,y:r.y,width:r.width,height:r.height}}}};})():{};
-    return {schema:'v177-native-shard-postpaint/v1',at:performance.now(),timeOrigin:performance.timeOrigin,...(realm?{realm}:{}),
+    const cloneStartedAt=performance.now();
+    const result={schema:'v177-native-shard-postpaint/v1',at:performance.now(),timeOrigin:performance.timeOrigin,...(realm?{realm}:{}),
       simulationTime:snapshot.time,route:location.pathname,visible:document.visibilityState==='visible',running:snapshot.running,paused:snapshot.paused,
       viewport:{width:innerWidth,height:innerHeight},...boundary,
       lookup:{requestedFighterId:proof.fighterId,observedFighterId:audit.fighter?.id,requestedTargetId:proof.targetId,observedTargetId:target.fighter?.id},
@@ -41,6 +44,8 @@ export function createNativeRangerManualReader({proof,realmOwner}){
         previousSequenceFound:afterRenderSequence===null||history.some(r=>r.renderSequence===afterRenderSequence)},
       renders:structuredClone(afterRenderSequence===null?history:history.filter(r=>r.renderSequence>afterRenderSequence)),
       latestPaint:structuredClone(history.at(-1)??null)};
+    result.observerTiming={readerEnteredAt,snapshotEndedAt,phaseGEndedAt,actorAuditEndedAt,gettersEndedAt,cloneStartedAt,readerEndedAt:performance.now()};
+    return result;
   };
   return {read,realmOwner};
 }
@@ -55,7 +60,8 @@ export function startNativeRangerManualObservation({reader}){
     state.pointer.events.push({type:e.type,isTrusted:e.isTrusted,fighterId:Number(b.dataset.fighterId),kind:b.dataset.abilityKind,at:performance.now()});
   };
   for(const type of ['pointerdown','pointerup','click'])document.addEventListener(type,record,true);
-  const observe=()=>{
+  const observe=nativeRafAt=>{
+    const callbackEnteredAt=performance.now();
     if(state.stopped)return;
     try{
       if(state.rows.length>=4096){state.overflow=true;throw Error('Manual source RAF4096 bound exhausted');}
@@ -68,6 +74,7 @@ export function startNativeRangerManualObservation({reader}){
       const renders=state.lastSequence===null?history:history.filter(r=>r.renderSequence>state.lastSequence);
       if(raw.historyWindow.lastSequence!==null)state.lastSequence=raw.historyWindow.lastSequence;
       state.rows.push({...raw,renders,renderSequence:raw.latestPaint?.renderSequence??null,renderKind:raw.latestPaint?.renderKind??null});
+      state.rows.at(-1).observerTiming={...raw.observerTiming,nativeRafAt,callbackEnteredAt,callbackEndedAt:performance.now()};
       state.raf=requestAnimationFrame(observe);
     }catch(error){state.failure??=String(error);state.stopped=true;}
   };

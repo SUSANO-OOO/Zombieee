@@ -21,8 +21,8 @@ export const V104_MEDIA_ADDITIONS=Object.freeze([
   },
   {
     "path": "/audio/v104/combat/armor-hit.mp3",
-    "bytes": 2544,
-    "hash": "sha256-bac6ad6b40c250342ecde5fa739bb752998533a7c0d6839977d7f06ffc76a4c1",
+    "bytes": 2414,
+    "hash": "sha256-d9602f0fb3570d8955f1742ad1bbc2d57f6c8485adfe57fdb66a4d4a0fd46904",
     "criticality": "optional"
   },
   {
@@ -39,14 +39,14 @@ export const V104_MEDIA_ADDITIONS=Object.freeze([
   },
   {
     "path": "/audio/v104/combat/pan-heavy.mp3",
-    "bytes": 9584,
-    "hash": "sha256-18ece66d9d15b83fa3745be1dfec53a9005b90bcd633e84d7d8df2a9133654ed",
+    "bytes": 8565,
+    "hash": "sha256-a2fd7cff683d15dc7d39b39d95f0ea22b741767d0b8059037c26f20b8eb51e24",
     "criticality": "optional"
   },
   {
     "path": "/audio/v104/combat/pan-hit.mp3",
-    "bytes": 8468,
-    "hash": "sha256-37fb673861ab4c17def4ffd980cc8167fff0c76803986f96e26cb9c259def10d",
+    "bytes": 7630,
+    "hash": "sha256-b67a70e8ad2f985565f1e947b917a5d55bb68298464eebe0c52d66ec2699c1f6",
     "criticality": "optional"
   },
   {

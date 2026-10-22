@@ -13,9 +13,9 @@ const record = ({path, bytes, hash}) => ({path, bytes, hash});
 const ordered = assets => assets.map(record).sort((a, b) => a.path.localeCompare(b.path));
 const baselines = [
   // Same asset count; original full-resolution lower crops add43,738 bytes to Ranger r2.
-  ["1.0.1", "634f8de4b0fb15df902a7dd5983ea94237cfea9d", 139, 52047693, 96],
-  ["1.0.2", "cd246a3d8e93b69d8cb6b370d40f28924a0d86b6", 138, 52026741, 95],
-  ["1.0.3", "99f9c193ab1e35531db39225c839138cdb1c33cd", 138, 52026741, 95],
+  ["1.0.1", "634f8de4b0fb15df902a7dd5983ea94237cfea9d", 139, 52045706, 96],
+  ["1.0.2", "cd246a3d8e93b69d8cb6b370d40f28924a0d86b6", 138, 52024754, 95],
+  ["1.0.3", "99f9c193ab1e35531db39225c839138cdb1c33cd", 138, 52024754, 95],
 ];
 for (const [version, sha, count, bytes, network] of baselines) {
   test(`the frozen installed ${version} pack downloads exactly the R9, score and sprite delta`, () => {

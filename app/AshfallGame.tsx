@@ -7,7 +7,8 @@ import { createV100HumanWalkRenderer, v100HumanWalkPhase, v100UsesHumanWalk, v10
 import { V177_JOINT_ATLASES, v177JointCycleDistance, v177JointPose, v177RangerFootPlan, drawV177JointPose, v177CaptureJointPose, v177RenderedJointWeaponSocket, v177RenderedWeightedLowerReceipt } from "./v177JointPresentation.js";
 import {v177ChoreographedAbilitySample} from "./v177WeaponChoreography.js";
 import {battleVoiceReady,queueV104HumanHurt} from "./v104CombatAudio.js";
-import {drawV104WeaponWake,drawV104InfectedWake,drawV104EyeBeam} from "./v104CombatVfx.js";
+import {createManualAbilityPointerHold} from "./manualAbilityUi.js";
+import {drawV104WeaponWake,drawV104InfectedWake,drawV104EyeBeam,v104WeaponWakeCandidate} from "./v104CombatVfx.js";
 import { v177GroundedStrideFactor } from "./v177GroundedMotion.js";
 import { combatApproachSpeed } from "./combatApproach.js";
 import { v177LivingStunState, v177LivingStunSample, v177RangerLivingStunSample } from "./v177LivingStun.js";
@@ -4610,7 +4611,8 @@ function drawSpriteFighter(
     ? v177RenderedJointWeaponSocket({kind:renderKind,plan:jointPose,direction,frame,size,pose,x:f.x,y:f.y,bob,depthScale,allowIdle:renderKind==='kurome'})
     : v100RenderedWeaponSocket({kind:renderKind,state,direction,frame,size,pose,x:f.x,y:f.y,bob,depthScale});
   if (weaponSocket) fighterWeaponSockets.set(f,weaponSocket);
-  const weaponArm=jointAtlas?.armConstraints?.find(c=>c.effectorBone===jointAtlas.weaponBone);
+  const weaponArm=jointPose&&v104WeaponWakeCandidate(renderKind,jointPose.attackPhase,Boolean(jointPose.reactionHeld||jointPose.liveStun))
+    ?jointAtlas?.armConstraints?.find(c=>c.effectorBone===jointAtlas.weaponBone):null;
   const gripSocket=jointPose&&weaponArm?v177RenderedJointWeaponSocket({kind:renderKind,plan:jointPose,direction,frame,size,pose,x:f.x,y:f.y,bob,depthScale,
     sourcePoint:weaponArm.effectorWrist??weaponArm.wrist}):null;
   if (options.world && options.v100AuthoredPresentation && ["tky", "mrs-chiha", "zakimiya"].includes(f.kind)) {
@@ -9011,7 +9013,7 @@ function drawWorld(
     });
     if(f.combatReady&&g.definition.missionConfig.v100StageNumber){
       const weapon=fighterJointWeapons.get(f);
-      if(weapon)drawV104WeaponWake(ctx,stageObjects,{actor:f,time:g.time,...weapon});
+      if(weapon)drawV104WeaponWake(ctx,stageObjects,{actor:f,world:g,time:g.time,...weapon});
       if(f.kind==='kurome'&&['tracking','locked'].includes(f.stationAbility.phase))drawV104EyeBeam(ctx,stageObjects,{
         origin:fighterWeaponSockets.get(f),target:{x:f.stationAbility.targetX??f.x-100,y:(f.stationAbility.targetY??f.y)-38},warning:true,locked:f.stationAbility.phase==='locked'});
     }
@@ -9329,6 +9331,18 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   });
   const nativeMayoProofRef = useRef<ReturnType<typeof createMayoFeralProofOwner> | null>(null);
   const lastHudRef = useRef(0);
+  const manualPointerHolds = useMemo(createManualAbilityPointerHold, []);
+  useEffect(()=>{
+    const clear=()=>{
+      manualPointerHolds.clear(gameRef.current);
+      canvasRef.current?.parentElement?.querySelectorAll<HTMLButtonElement>('.manual-ability-ready').forEach(button=>{
+        button.style.removeProperty('--manual-pointer-x');button.style.removeProperty('--manual-pointer-y');
+      });
+    };
+    const hidden=()=>{if(document.hidden)clear();};
+    window.addEventListener('blur',clear);window.addEventListener('resize',clear);document.addEventListener('visibilitychange',hidden);
+    return()=>{window.removeEventListener('blur',clear);window.removeEventListener('resize',clear);document.removeEventListener('visibilitychange',hidden);};
+  },[manualPointerHolds]);
   const selectedActionRef = useRef<SelectedAction>(null);
   const pointerGestureStateRef = useRef(new Map<number, PointerGestureState>());
   const eventDestinationRef = useRef<EventDestination>("map");
@@ -13386,7 +13400,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         if (!loaded?.naturalWidth) throw new Error(`Unit render proof asset did not decode: ${kind}`);
         return { kind, path, width: loaded.naturalWidth, height: loaded.naturalHeight, reused: false };
       },
-      getEnemyFacingRuntimeAudit: (fighterId: number, options: { latestDrawOnly?: boolean; includeGeometry?:boolean } = {}) => {
+      getEnemyFacingRuntimeAudit: (fighterId: number, options: { latestDrawOnly?: boolean; includeGeometry?:boolean; includeHistory?:boolean } = {}) => {
         if (options?.latestDrawOnly === true) {
           // Keep observing the actual last paint after the living actor moves
           // into its corpse owner, without copying either complete history.
@@ -13437,8 +13451,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           } : null,
           corpse: corpse ? { ...corpse } : null,
           turnedBirth: fighter?.kind==='turned'?readV177TurnedBirthPresentation(g,fighter):null,
-          renderHistory: (fighterRenderAuditHistory.get(fighterId) ?? []).map((audit) => ({ ...audit })),
-          corpseRenderHistory: (corpseRenderAuditHistory.get(fighterId) ?? []).map((audit) => ({ ...audit })),
+          renderHistory: options?.includeHistory===false?[]:(fighterRenderAuditHistory.get(fighterId) ?? []).map((audit) => ({ ...audit })),
+          corpseRenderHistory: options?.includeHistory===false?[]:(corpseRenderAuditHistory.get(fighterId) ?? []).map((audit) => ({ ...audit })),
         };
       },
       getStationMissionFinalCanvasAudit: () => {
@@ -14151,6 +14165,14 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             } as Parameters<typeof enemyCombatVfxSnapshot>[0] & { kind: string }),
           })),
         };
+      },
+      // The per-RAF manual recorder needs these exact fields, without building
+      // unrelated campaign, animation and complete fighter-history snapshots.
+      // The full snapshot and all recorded manual arrays keep their contract.
+      getNativeRangerManualSnapshot: () => {
+        const g=gameRef.current;
+        return {time:g.time,running:g.running,paused:g.paused,
+          v100SkillContacts:getV100SkillContactSnapshot(g),v100ManualMuzzles:getV100ManualMuzzleSnapshot(g)};
       },
       getSnapshot: () => {
         const g = gameRef.current;
@@ -24628,6 +24650,20 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           const ability = MANUAL_ABILITY_REGISTRY[icon.kind];
           if (!ability) return null;
           const abilityDisabled = !icon.available || paused || Boolean(selectedAction) || combatLocked || battleSaveBoundaryRef.current;
+          const heldPosition=manualPointerHolds.position(gameRef.current,icon,!abilityDisabled);
+          const holdPosition=(button:HTMLButtonElement)=>{
+            if(abilityDisabled)return;
+            const x=button.offsetLeft,y=button.offsetTop;
+            manualPointerHolds.hold(gameRef.current,icon,{x,y});
+            // The CSS lease also covers a React render prepared before this
+            // pointer event. Its later commit cannot move the displayed hit box.
+            button.style.setProperty('--manual-pointer-x',`${x}px`);
+            button.style.setProperty('--manual-pointer-y',`${y}px`);
+          };
+          const releasePosition=(button:HTMLButtonElement)=>{
+            manualPointerHolds.release(gameRef.current,icon.fighterId);
+            button.style.removeProperty('--manual-pointer-x');button.style.removeProperty('--manual-pointer-y');
+          };
           return <button
             key={icon.fighterId}
             type="button"
@@ -24636,16 +24672,22 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             data-ability-kind={icon.kind}
             data-owner-anchor-x={icon.anchorX}
             data-owner-anchor-y={icon.anchorY}
-            style={{ left: icon.x, top: icon.y, width: icon.hitSize, height: icon.hitSize }}
+            style={{ left:`var(--manual-pointer-x, ${heldPosition.x}px)`,top:`var(--manual-pointer-y, ${heldPosition.y}px)`,width:icon.hitSize,height:icon.hitSize,
+              ...(abilityDisabled?{'--manual-pointer-x':'','--manual-pointer-y':''}:{}) } as CSSProperties}
             disabled={!icon.available}
             aria-disabled={abilityDisabled}
             aria-label={`${cards.find((card) => card.kind === icon.kind)?.name ?? icon.kind}：${ability.displayName}${icon.available ? "" : "（対象待ち）"}`}
-            onPointerDown={(event) => event.stopPropagation()}
-            onPointerUp={(event) => event.stopPropagation()}
-            onPointerCancel={(event) => event.stopPropagation()}
+            onPointerEnter={(event)=>holdPosition(event.currentTarget)}
+            onPointerLeave={(event)=>releasePosition(event.currentTarget)}
+            onFocus={(event)=>holdPosition(event.currentTarget)}
+            onBlur={(event)=>releasePosition(event.currentTarget)}
+            onPointerDown={(event) => {holdPosition(event.currentTarget);event.stopPropagation();}}
+            onPointerUp={(event) => {releasePosition(event.currentTarget);event.stopPropagation();}}
+            onPointerCancel={(event) => {releasePosition(event.currentTarget);event.stopPropagation();}}
             onClick={(event) => {
               event.stopPropagation();
               activateManualAbility(icon.fighterId);
+              releasePosition(event.currentTarget);
             }}
           >
             <span aria-hidden="true"><b className={`manual-ability-ready-icon ability-${icon.kind}`} /></span>

@@ -1,12 +1,16 @@
+import {v177JointActorKey} from './v177JointActorHistory.js';
 const weaponHistory=new WeakMap();
 const steelKinds=new Set(['brute','guardian','scout','zakimiya','tky','miyamoto-musashi','crazy-king','kumaverson','takuya','takuya-omega']);
 const clawKinds=new Set(['crusher','abomination','gairen','futago','futago-separated-a','futago-separated-b','mugarian-president-mutated','ooguchi']);
+export function v104WeaponWakeCandidate(kind,phase,held=false){
+ return !held&&Number.isFinite(phase)&&phase>=.12&&phase<=.7&&(steelKinds.has(kind)||clawKinds.has(kind));
+}
 const ready=(objects,id)=>{const image=objects?.[id];if(!image?.complete||!image.naturalWidth)throw Error('Undecoded combat effect: '+id);return image;};
-export function drawV104WeaponWake(ctx,objects,{actor,kind,time,tip,grip,phase,held=false}){
- const previous=weaponHistory.get(actor);
- if(!tip||!grip||!Number.isFinite(time)||held||!(actor.hp>0)||(!steelKinds.has(kind)&&!clawKinds.has(kind))){weaponHistory.delete(actor);return false;}
+export function drawV104WeaponWake(ctx,objects,{actor,world,kind,time,tip,grip,phase,held=false}){
+ const key=v177JointActorKey(actor,world),previous=weaponHistory.get(key);
+ if(!tip||!grip||!Number.isFinite(time)||held||!(actor.hp>0)||(!steelKinds.has(kind)&&!clawKinds.has(kind))){weaponHistory.delete(key);return false;}
  if(previous?.time===time)return false;
- weaponHistory.set(actor,{time,tip:{...tip},phase});
+ weaponHistory.set(key,{time,tip:{...tip},phase});
  if(!(phase>=.18&&phase<=.65)||!previous||!(time>previous.time&&time-previous.time<=.12))return false;
  const dx=tip.x-previous.tip.x,dy=tip.y-previous.tip.y,travel=Math.hypot(dx,dy),reach=Math.hypot(tip.x-grip.x,tip.y-grip.y);
  if(travel<.6||travel>180||reach<4)return false;

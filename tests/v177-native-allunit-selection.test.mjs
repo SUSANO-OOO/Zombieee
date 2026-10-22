@@ -47,16 +47,29 @@ test('current recovery partitions all original observations and never reuses an 
  assert.deepEqual(selected.shards,SHARDS.filter(s=>pending.some(id=>id.startsWith(s.id+':'))).map(s=>s.id));
  assert.equal(current.rawClockAudit.sourceReportCount,12);assert.equal(current.rawClockAudit.rawReportsUnmodified,true);
  assert.equal(current.rawClockAudit.duplicateRowsRemoved,false);
- assert.equal(current.rawClockAudit.normalInvalidClock.length,4);assert.equal(current.rawClockAudit.outcomeInvalidClock.length,1);
- const resolutions=selected.retainedEvidence.additionalReports.flatMap(r=>[...r.caseIds??[],...r.manualCaseIds??[],...r.outcomeCaseIds??[]]);
- for(const id of [...current.rawClockAudit.normalInvalidClock,...current.rawClockAudit.outcomeInvalidClock])
+ assert.equal(current.rawClockAudit.head,current.head);assert.equal(current.rawClockAudit.runId,current.runId);
+ assert.deepEqual(current.rawClockAudit.normalInvalidClock,[]);assert.deepEqual(current.rawClockAudit.outcomeInvalidClock,[]);assert.deepEqual(current.rawClockAudit.manualInvalidClock,[]);
+ const resolutions=(selected.retainedEvidence.additionalReports??[]).flatMap(r=>[...r.caseIds??[],...r.manualCaseIds??[],...r.outcomeCaseIds??[]]);
+ for(const id of [...current.rawClockAudit.normalInvalidClock,...current.rawClockAudit.outcomeInvalidClock,...current.rawClockAudit.manualInvalidClock,
+  ...current.rawClockAudit.normalFailed,...current.rawClockAudit.manualFailed,...current.rawClockAudit.outcomeFailed,...current.rawClockAudit.normalNotClockAuditable])
   assert.ok(pending.includes(id)||resolutions.includes(id),'An invalid original clock needs a selected case or a separately bound new recording');
+ for(const historical of current.historicalRawClockAudits){
+  assert.equal(historical.rawReportsUnmodified,true);assert.equal(historical.duplicateRowsRemoved,false);
+  const invalid=[...historical.normalInvalidClock,...historical.outcomeInvalidClock];
+  assert.deepEqual(historical.closures.map(r=>r.caseId).sort(),invalid.sort());
+  for(const closure of historical.closures){
+   if(closure.clockClosure==='new-original-recording-clock-verified'){
+    assert.equal(closure.currentHead,current.head);assert.equal(closure.currentRunId,current.runId);assert.match(closure.rawClipSha256,/^[a-f0-9]{64}$/u);
+    assert.ok(selected.retainedEvidence.reports.some(r=>r.sha256===closure.reportSha256));
+   }else assert.ok(pending.includes(closure.caseId),'Unresolved historical clock must remain pending');
+  }
+ }
  for(const gate of ['originalSpeedAccepted','naturalnessAccepted','wholeGameAccepted'])assert.equal(current[gate],false);
  for(const mutate of [p=>{p.retainedEvidence.caseIds.pop();},p=>{p.retainedEvidence.caseIds.push(p.retainedEvidence.caseIds[0]);},
-  p=>{p.retainedEvidence.outcomeCaseIds.pop();},p=>{p.retainedEvidence.manualCaseIds.pop();},p=>{p.retainedEvidence.reports.pop();}]){
+  p=>{p.retainedEvidence.outcomeCaseIds.pop();},p=>{p.manualCaseIds.pop();},p=>{p.retainedEvidence.reports.pop();}]){
   const invalid=structuredClone(current);mutate(invalid);assert.throws(()=>nativeCaseSelection({root:profileRoot(invalid),event:{pull_request:{draft:true}},git:()=>''}));
  }
- const file='app/v177RangerFootPlacement.js',blob=current.changedBlobs[file];assert.match(blob,/^[a-f0-9]{40}$/u);
+ const file='app/AshfallGame.tsx',blob=current.changedBlobs[file];assert.match(blob,/^[a-f0-9]{40}$/u);
  assert.equal(nativeCaseSelection({event:{pull_request:{draft:true}},git:args=>args[0]==='diff'?file:blob}).mode,'remaining');
  assert.equal(nativeCaseSelection({event:{pull_request:{draft:true}},git:args=>args[0]==='diff'?file:'f'.repeat(40)}).mode,'full');
 });
@@ -64,7 +77,18 @@ test('current recovery partitions all original observations and never reuses an 
 test('supplement-only recovery can finish its original context without recapturing a normal case',()=>{
  const profile=structuredClone(current);profile.retainedEvidence.caseIds.push(...profile.caseIds);profile.caseIds=[];
  profile.retainedEvidence.outcomeCaseIds.push(...profile.outcomeCaseIds);profile.outcomeCaseIds=[];
- profile.manualCaseIds=[profile.retainedEvidence.manualCaseIds.shift()];
+ const manual=[...profile.manualCaseIds,...profile.retainedEvidence.manualCaseIds];profile.manualCaseIds=manual.slice(0,1);profile.retainedEvidence.manualCaseIds=manual.slice(1);
  const result=nativeCaseSelection({root:profileRoot(profile),event:{pull_request:{draft:true}},git:()=>''});
  assert.equal(result.caseIds.length,0);assert.deepEqual(result.shards,['forms-1']);assert.equal(result.manualCaseIds.length,1);assert.equal(result.outcomeCaseIds.length,0);
+});
+
+test('Ready reuse requires complete v2 inventory and exact reviewed source; explicit full always wins',()=>{
+ const root=profileRoot(current),file=Object.keys(current.changedBlobs)[0],blob=current.changedBlobs[file],ready={pull_request:{draft:false}};
+ const select=(event,changes=file,observed=blob)=>nativeCaseSelection({root,event,git:args=>args[0]==='diff'?changes:observed});
+ assert.equal(select(ready).mode,'remaining');
+ assert.equal(select(ready,file,'f'.repeat(40)).mode,'full');
+ assert.equal(select(ready,'unreviewed-file').mode,'full');
+ assert.equal(select({inputs:{capture_mode:'full'},pull_request:{draft:false}}).mode,'full');
+ const broken=structuredClone(current);broken.retainedEvidence.caseIds.pop();
+ assert.throws(()=>nativeCaseSelection({root:profileRoot(broken),event:ready,git:()=>''}));
 });

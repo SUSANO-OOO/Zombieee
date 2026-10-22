@@ -7,6 +7,9 @@ import{combatFacingFromMotion}from'../app/enemyFacingContract.js';
 import{BOSS_ANOMALY_TUNING}from'../app/bossAnomalies.js';import{KUROME_PROTOTYPE_TUNING}from'../app/kuromeBoss.js';
 import{battleVoiceReady,queueV104HumanHurt}from'../app/v104CombatAudio.js';import{V100_AUDIO_MANIFEST}from'../app/productionAudio.js';
 import{queueV100GuardContact}from'../app/v100CombatVfx.js';
+import{drawV104WeaponWake,v104WeaponWakeCandidate}from'../app/v104CombatVfx.js';
+import{advanceAreaEffects}from'../app/gameRules.js';
+import{createManualAbilityPointerHold}from'../app/manualAbilityUi.js';
 import{readFileSync}from'node:fs';import ts from'typescript';import vm from'node:vm';
 const point=(m,p)=>[m[0]*p[0]+m[2]*p[1]+m[4],m[1]*p[0]+m[3]*p[1]+m[5]],distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 test('forced hit travel retains attention on both sides after flash while real attack/manual locks retain priority',()=>{
@@ -123,4 +126,30 @@ test('actual render and runtime call sites release facing after knock decay ends
   const actor={flash:0,stunned:0,knock},recoiling=vm.runInNewContext(expression,{f:actor,fighter:actor,Math});
   assert.equal(recoiling,false);assert.equal(combatFacingFromMotion({side:'human',recoiling,previousDirection:'right',actualXDelta:-1}),'left');
  }
+});
+
+test('weapon trails survive the real per-tick fighter copies and cannot cross actor or battle ownership',()=>{
+ let actor={id:1,hp:100,kind:'tky'},draws=0;const world={},image={complete:true,naturalWidth:1536},objects={'v100-lightblade':image};
+ const ctx={save(){},restore(){},translate(){},rotate(){},drawImage(){draws++;}};
+ for(let n=0;n<4;n++){
+  actor=advanceAreaEffects({fighters:[actor],seconds:1/60}).fighters[0];
+  drawV104WeaponWake(ctx,objects,{world,actor,kind:'tky',time:n/60,phase:.3,tip:{x:100+n*5,y:100},grip:{x:80,y:100}});
+ }
+ assert.equal(draws,3);
+ assert.equal(drawV104WeaponWake(ctx,objects,{world:{},actor,kind:'tky',time:.1,phase:.3,tip:{x:125,y:100},grip:{x:80,y:100}}),false);
+ assert.equal(drawV104WeaponWake(ctx,objects,{world,actor:{...actor,id:2},kind:'tky',time:.1,phase:.3,tip:{x:125,y:100},grip:{x:80,y:100}}),false);
+ for(const kind of['ranger','babayaga','medic','gunner'])assert.equal(v104WeaponWakeCandidate(kind,.3),false,'guns never resolve a spare melee grip');
+ assert.equal(v104WeaponWakeCandidate('tky',.12),true);assert.equal(v104WeaponWakeCandidate('tky',null),false);assert.equal(v104WeaponWakeCandidate('tky',.3,true),false);
+});
+
+test('a hovered or focused manual button cannot jump away when the delayed HUD catches up',()=>{
+ const holds=createManualAbilityPointerHold(),world={},icon={fighterId:17,kind:'mayo-chan',available:true,x:452.531,y:217.328};
+ holds.hold(world,icon,{x:icon.x,y:icon.y});
+ const caughtUp={...icon,x:488.162,y:180};
+ assert.deepEqual(holds.position(world,caughtUp),{kind:'mayo-chan',x:452.531,y:217.328});
+ assert.deepEqual(holds.position({},caughtUp),caughtUp);
+ assert.deepEqual(holds.position(world,{...caughtUp,fighterId:18}),{...caughtUp,fighterId:18});
+ holds.release(world,17);assert.deepEqual(holds.position(world,caughtUp),caughtUp);
+ holds.hold(world,icon,icon);holds.position(world,{...icon,available:false});assert.deepEqual(holds.position(world,caughtUp),caughtUp);
+ const source=readFileSync('app/AshfallGame.tsx','utf8');for(const event of['onPointerEnter','onFocus','onPointerDown','onPointerUp','onPointerCancel','onPointerLeave','onBlur'])assert.ok(source.includes(event));
 });

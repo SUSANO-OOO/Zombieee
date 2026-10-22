@@ -12,6 +12,15 @@ import {createNativeRangerManualReader,startNativeRangerManualObservation,stopNa
 import {beginV177NativeCanvasClip} from '../scripts/v177-native-canvas-clips.mjs';
 
 const manualPlan=()=>SHARDS.flatMap(s=>planRangerManualShard(s.id));
+
+test('manual RAF projection uses the exact five full-snapshot fields without building unused campaign and fighter histories',()=>{
+ const text=fs.readFileSync('app/AshfallGame.tsx','utf8'),tree=ts.createSourceFile('App.tsx',text,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX),methods=new Map();
+ function visit(n){if(ts.isPropertyAssignment(n)&&['getSnapshot','getNativeRangerManualSnapshot'].includes(n.name.getText(tree)))methods.set(n.name.getText(tree),n.initializer);ts.forEachChild(n,visit);}visit(tree);
+ const returns=method=>{let result;function walk(n){if(ts.isReturnStatement(n)&&ts.isObjectLiteralExpression(n.expression)&&n.expression.properties.some(p=>p.name?.getText(tree)==='v100SkillContacts'))result=n.expression;ts.forEachChild(n,walk);}walk(method);assert.ok(result);return new Map(result.properties.filter(ts.isPropertyAssignment).map(p=>[p.name.getText(tree),p.initializer.getText(tree).replace(/\s+/g,'')]));};
+ const full=returns(methods.get('getSnapshot')),projection=returns(methods.get('getNativeRangerManualSnapshot'));
+ assert.deepEqual([...projection.keys()],['time','running','paused','v100SkillContacts','v100ManualMuzzles']);for(const[k,value]of projection)assert.equal(value,full.get(k),k+' changed source');
+ assert.ok(!methods.get('getNativeRangerManualSnapshot').getText(tree).includes('sampleAnimationClip'));
+});
 // Execute the ACTUAL App postdraw block, rather than duplicating its ABI in a
 // synthetic descriptor. VM mocks provide already-successful draw inputs only.
 const actualAppText=fs.readFileSync('app/AshfallGame.tsx','utf8');
@@ -139,7 +148,7 @@ test('raw reader and RAF preserve actual false/absent manual flags, origins and 
  const perf={now:()=>clock,timeOrigin:88},window={};
  const owner={check:refs=>{assert.equal(refs.window,window);assert.equal(refs.document,doc);assert.equal(refs.performance,perf);assert.equal(refs.canvas,canvas);},
   member(refs,member){this.check(refs);return{schema:'v177-native-realm-member/v1',ownerId:'00000000-0000-4000-8000-000000000001',createdAt:0,rawOriginAtCreation:88,sequence:seq++,member};}};
- const qa={getSnapshot:()=>({time:current.simulationTime,running:true,paused:false,v100SkillContacts:current.skillContacts,v100ManualMuzzles:current.manualMuzzles}),
+ const qa={getNativeRangerManualSnapshot:()=>({time:current.simulationTime,running:true,paused:false,v100SkillContacts:current.skillContacts,v100ManualMuzzles:current.manualMuzzles}),
   getPhaseGCombatSnapshot:()=>({screen:'battle',stageId:'stage',time:current.simulationTime,battleGeneration:2,fighters:[{id:4,manualAbility:current.manualRuntime}],manualAbilityReceipts:current.phaseG.manualAbilityReceipts,completedAttackImpacts:[]}),
   getEnemyFacingRuntimeAudit:id=>id===4?{fighter:current.fighter,renderHistory:history}:{fighter:current.target},getPerformanceSnapshot:()=>({})};
  window.__ASHFALL_BATTLE_QA__=qa;

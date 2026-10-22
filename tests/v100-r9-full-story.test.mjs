@@ -49,7 +49,8 @@ test('focused Draft verification selects R9 and the capture workflow without ena
  assert.ok(workflow.jobs.build.if.includes('needs.scope.outputs.allunit'));
  assert.ok(workflow.jobs.build.if.includes('!github.event.pull_request.draft'));
  assert.equal(workflow.jobs.capture.strategy.matrix.shard,'${{ fromJSON(needs.build.outputs.shards) }}');
- const allCases=nativeCaseSelection({event:{pull_request:{draft:false}}});
+ for(const path of ['app/manualAbilityUi.js','app/v104CombatVfx.js'])assert.ok(workflow.on.pull_request.paths.includes(path),'Changed UI/VFX must reach capture source guards');
+ const allCases=nativeCaseSelection({event:{pull_request:{draft:false},inputs:{capture_mode:'full'}}});
  assert.equal(allCases.shards.length,12);assert.equal(allCases.caseIds.length,432);
  assert.equal(workflow.jobs.capture.if,"${{ !cancelled() && needs.build.result == 'success' && needs.build.outputs.shards != '[]' }}",
   'manual capture must survive the skipped PR-only scope ancestor, reject failed build and avoid an empty matrix');

@@ -142,8 +142,8 @@
   "records": [
     {
       "file": "public/audio/v104/combat/pan-hit.ogg",
-      "bytes": 9480,
-      "sha256": "f9d953ab850b85e0eb77a3d3456af138c00b44f8ef87d05cafd49d9240aa8680",
+      "bytes": 9441,
+      "sha256": "c4dcf13b3ff41f2ad8a787cc0ed58f908aef728fcd7480bca5a7e00f1774abea",
       "inputs": [
         {
           "file": "assets/source/v100/audio/kenney-rpg/metalPot1.ogg",
@@ -154,12 +154,12 @@
           "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1"
         }
       ],
-      "filter": "[0:a]atrim=0:0.65,highpass=f=240,lowpass=f=7200,volume=0.8[p];[1:a]atrim=0:0.18,lowpass=f=1600,volume=0.5[b];[p][b]amix=inputs=2:duration=longest:dropout_transition=0,volume=2,afade=t=out:st=0.48:d=0.17[mix]"
+      "filter": "[0:a]atrim=0:0.65,highpass=f=240,lowpass=f=7200,volume=0.8[p];[1:a]atrim=0:0.18,lowpass=f=1600,volume=0.5[b];[p][b]amix=inputs=2:duration=longest:dropout_transition=0,volume=2,volume=0.48,afade=t=out:st=0.48:d=0.17,apad=pad_len=1323[mix];[mix]alimiter=limit=0.85:level=false,volume=0.5[out]"
     },
     {
       "file": "public/audio/v104/combat/pan-hit.mp3",
-      "bytes": 8468,
-      "sha256": "37fb673861ab4c17def4ffd980cc8167fff0c76803986f96e26cb9c259def10d",
+      "bytes": 7630,
+      "sha256": "b67a70e8ad2f985565f1e947b917a5d55bb68298464eebe0c52d66ec2699c1f6",
       "inputs": [
         {
           "file": "assets/source/v100/audio/kenney-rpg/metalPot1.ogg",
@@ -170,12 +170,12 @@
           "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1"
         }
       ],
-      "filter": "[0:a]atrim=0:0.65,highpass=f=240,lowpass=f=7200,volume=0.8[p];[1:a]atrim=0:0.18,lowpass=f=1600,volume=0.5[b];[p][b]amix=inputs=2:duration=longest:dropout_transition=0,volume=2,afade=t=out:st=0.48:d=0.17[mix]"
+      "filter": "[0:a]atrim=0:0.65,highpass=f=240,lowpass=f=7200,volume=0.8[p];[1:a]atrim=0:0.18,lowpass=f=1600,volume=0.5[b];[p][b]amix=inputs=2:duration=longest:dropout_transition=0,volume=2,volume=0.48,afade=t=out:st=0.48:d=0.17,apad=pad_len=1323[mix];[mix]alimiter=limit=0.85:level=false,volume=0.5[out]"
     },
     {
       "file": "public/audio/v104/combat/pan-heavy.ogg",
-      "bytes": 10203,
-      "sha256": "cf7165b00e39b7a633308a862a67ab1b097c5fd2006d18f9419b5c6bac147f67",
+      "bytes": 9901,
+      "sha256": "ee3d4daf299686365130e30a37ee961a3da50eb21138071a6a27b9054089afc5",
       "inputs": [
         {
           "file": "assets/source/v100/audio/kenney-rpg/metalPot2.ogg",
@@ -186,12 +186,12 @@
           "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1"
         }
       ],
-      "filter": "[0:a]atrim=0:0.8,highpass=f=200,lowpass=f=7000,volume=0.85[p];[1:a]atrim=0:0.25,lowpass=f=1900,volume=0.6[b];[p][b]amix=inputs=2:duration=longest:dropout_transition=0,volume=2,afade=t=out:st=0.6:d=0.2[mix]"
+      "filter": "[0:a]atrim=0:0.8,highpass=f=200,lowpass=f=7000,volume=0.85[p];[1:a]atrim=0:0.25,lowpass=f=1900,volume=0.6[b];[p][b]amix=inputs=2:duration=longest:dropout_transition=0,volume=2,volume=0.48,afade=t=out:st=0.6:d=0.2,apad=pad_len=1323[mix];[mix]alimiter=limit=0.85:level=false,volume=0.5[out]"
     },
     {
       "file": "public/audio/v104/combat/pan-heavy.mp3",
-      "bytes": 9584,
-      "sha256": "18ece66d9d15b83fa3745be1dfec53a9005b90bcd633e84d7d8df2a9133654ed",
+      "bytes": 8565,
+      "sha256": "a2fd7cff683d15dc7d39b39d95f0ea22b741767d0b8059037c26f20b8eb51e24",
       "inputs": [
         {
           "file": "assets/source/v100/audio/kenney-rpg/metalPot2.ogg",
@@ -202,12 +202,12 @@
           "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1"
         }
       ],
-      "filter": "[0:a]atrim=0:0.8,highpass=f=200,lowpass=f=7000,volume=0.85[p];[1:a]atrim=0:0.25,lowpass=f=1900,volume=0.6[b];[p][b]amix=inputs=2:duration=longest:dropout_transition=0,volume=2,afade=t=out:st=0.6:d=0.2[mix]"
+      "filter": "[0:a]atrim=0:0.8,highpass=f=200,lowpass=f=7000,volume=0.85[p];[1:a]atrim=0:0.25,lowpass=f=1900,volume=0.6[b];[p][b]amix=inputs=2:duration=longest:dropout_transition=0,volume=2,volume=0.48,afade=t=out:st=0.6:d=0.2,apad=pad_len=1323[mix];[mix]alimiter=limit=0.85:level=false,volume=0.5[out]"
     },
     {
       "file": "public/audio/v104/combat/armor-hit.ogg",
-      "bytes": 4818,
-      "sha256": "24de49e12e64e6d3e9d3e3b511e4dd786e6e654079fbcbedec064e48ec7282ec",
+      "bytes": 4965,
+      "sha256": "06a6145784d8c2d7c4e24cc94c8a300491047aa175916e72a5d90bd61bc96c1d",
       "inputs": [
         {
           "file": "assets/source/v100/audio/kenney-impact/impactMetal_heavy_000.ogg",
@@ -218,12 +218,12 @@
           "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1"
         }
       ],
-      "filter": "[0:a]asetrate=35280,aresample=44100,atrim=0:0.5,highpass=f=65,lowpass=f=2200,volume=0.75[p];[1:a]atrim=0:0.3,lowpass=f=650,volume=0.85[b];[p][b]amix=inputs=2:duration=longest:dropout_transition=0,volume=2,afade=t=out:st=0.32:d=0.18[mix]"
+      "filter": "[0:a]asetrate=35280,aresample=44100,atrim=0:0.5,highpass=f=65,lowpass=f=2200,volume=0.75[p];[1:a]atrim=0:0.3,lowpass=f=650,volume=0.85[b];[p][b]amix=inputs=2:duration=longest:dropout_transition=0,volume=2,volume=0.48,afade=t=out:st=0.16:d=0.1,apad=pad_len=1323[mix];[mix]alimiter=limit=0.85:level=false,volume=0.5[out]"
     },
     {
       "file": "public/audio/v104/combat/armor-hit.mp3",
-      "bytes": 2544,
-      "sha256": "bac6ad6b40c250342ecde5fa739bb752998533a7c0d6839977d7f06ffc76a4c1",
+      "bytes": 2414,
+      "sha256": "d9602f0fb3570d8955f1742ad1bbc2d57f6c8485adfe57fdb66a4d4a0fd46904",
       "inputs": [
         {
           "file": "assets/source/v100/audio/kenney-impact/impactMetal_heavy_000.ogg",
@@ -234,7 +234,7 @@
           "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1"
         }
       ],
-      "filter": "[0:a]asetrate=35280,aresample=44100,atrim=0:0.5,highpass=f=65,lowpass=f=2200,volume=0.75[p];[1:a]atrim=0:0.3,lowpass=f=650,volume=0.85[b];[p][b]amix=inputs=2:duration=longest:dropout_transition=0,volume=2,afade=t=out:st=0.32:d=0.18[mix]"
+      "filter": "[0:a]asetrate=35280,aresample=44100,atrim=0:0.5,highpass=f=65,lowpass=f=2200,volume=0.75[p];[1:a]atrim=0:0.3,lowpass=f=650,volume=0.85[b];[p][b]amix=inputs=2:duration=longest:dropout_transition=0,volume=2,volume=0.48,afade=t=out:st=0.16:d=0.1,apad=pad_len=1323[mix];[mix]alimiter=limit=0.85:level=false,volume=0.5[out]"
     },
     {
       "file": "public/audio/v104/combat/eye-warning.ogg",
@@ -246,7 +246,7 @@
           "sha256": "6909d01d4299ea2dd40a54881cb74e1e510ff3748a4a50804a6f4c60a971cc6f"
         }
       ],
-      "filter": "[0:a]volume=1[mix]",
+      "filter": "[0:a]volume=1[mix];[mix]alimiter=limit=0.85:level=false[out]",
       "procedural": {
         "name": "eye-warning",
         "duration": 1.25,
@@ -265,7 +265,7 @@
           "sha256": "6909d01d4299ea2dd40a54881cb74e1e510ff3748a4a50804a6f4c60a971cc6f"
         }
       ],
-      "filter": "[0:a]volume=1[mix]",
+      "filter": "[0:a]volume=1[mix];[mix]alimiter=limit=0.85:level=false[out]",
       "procedural": {
         "name": "eye-warning",
         "duration": 1.25,
@@ -284,7 +284,7 @@
           "sha256": "b934f53d02042aaf5ec94485afedc8ffd59f467d0d5d501196562bea7be666c0"
         }
       ],
-      "filter": "[0:a]volume=1[mix]",
+      "filter": "[0:a]volume=1[mix];[mix]alimiter=limit=0.85:level=false[out]",
       "procedural": {
         "name": "eye-fire",
         "duration": 0.44,
@@ -303,7 +303,7 @@
           "sha256": "b934f53d02042aaf5ec94485afedc8ffd59f467d0d5d501196562bea7be666c0"
         }
       ],
-      "filter": "[0:a]volume=1[mix]",
+      "filter": "[0:a]volume=1[mix];[mix]alimiter=limit=0.85:level=false[out]",
       "procedural": {
         "name": "eye-fire",
         "duration": 0.44,
@@ -322,7 +322,7 @@
           "sha256": "8f63f56f9970c343eb981bfc2c08d614ac75d62806cd5db0a04b3a3f1912426f"
         }
       ],
-      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
       "credit": "VOICEVOX:剣崎雌雄",
       "text": "いくぜ！",
       "synthetic": true,
@@ -338,7 +338,7 @@
           "sha256": "8f63f56f9970c343eb981bfc2c08d614ac75d62806cd5db0a04b3a3f1912426f"
         }
       ],
-      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
       "credit": "VOICEVOX:剣崎雌雄",
       "text": "いくぜ！",
       "synthetic": true,
@@ -354,7 +354,7 @@
           "sha256": "40450cccf1bf6f2810fc03a680198954f27f4de4f050befba8fbd140728d4ba1"
         }
       ],
-      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
       "credit": "VOICEVOX:剣崎雌雄",
       "text": "おらぁ！",
       "synthetic": true,
@@ -370,7 +370,7 @@
           "sha256": "40450cccf1bf6f2810fc03a680198954f27f4de4f050befba8fbd140728d4ba1"
         }
       ],
-      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
       "credit": "VOICEVOX:剣崎雌雄",
       "text": "おらぁ！",
       "synthetic": true,
@@ -386,7 +386,7 @@
           "sha256": "0984a5f78ea5c73ad2b5a513bcc27402feca99ec158dcb47c330e6831fd186d7"
         }
       ],
-      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
       "credit": "VOICEVOX:剣崎雌雄",
       "text": "ぐっ！",
       "synthetic": true,
@@ -402,7 +402,7 @@
           "sha256": "0984a5f78ea5c73ad2b5a513bcc27402feca99ec158dcb47c330e6831fd186d7"
         }
       ],
-      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
       "credit": "VOICEVOX:剣崎雌雄",
       "text": "ぐっ！",
       "synthetic": true,
@@ -418,7 +418,7 @@
           "sha256": "8b0d41986c3d0578653d574dc2acdd401ef089edae18367ae6446592bced4a1e"
         }
       ],
-      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
       "credit": "VOICEVOX:剣崎雌雄",
       "text": "くそっ……。",
       "synthetic": true,
@@ -434,7 +434,7 @@
           "sha256": "8b0d41986c3d0578653d574dc2acdd401ef089edae18367ae6446592bced4a1e"
         }
       ],
-      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
       "credit": "VOICEVOX:剣崎雌雄",
       "text": "くそっ……。",
       "synthetic": true,
@@ -450,7 +450,7 @@
           "sha256": "3b9a43d5e4273b97dadceb031b593e0cb5cc2f390b6d45c09d1d8efb8fdf33f6"
         }
       ],
-      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
       "credit": "VOICEVOX:麒ヶ島宗麟",
       "text": "任せておけ。",
       "synthetic": true,
@@ -466,7 +466,7 @@
           "sha256": "3b9a43d5e4273b97dadceb031b593e0cb5cc2f390b6d45c09d1d8efb8fdf33f6"
         }
       ],
-      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
       "credit": "VOICEVOX:麒ヶ島宗麟",
       "text": "任せておけ。",
       "synthetic": true,
@@ -482,7 +482,7 @@
           "sha256": "7e1eedfa1f38d86c39ca25791857a6d0fecbaff003037b220f36c3e1b730d81e"
         }
       ],
-      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
       "credit": "VOICEVOX:麒ヶ島宗麟",
       "text": "せいっ！",
       "synthetic": true,
@@ -498,7 +498,7 @@
           "sha256": "7e1eedfa1f38d86c39ca25791857a6d0fecbaff003037b220f36c3e1b730d81e"
         }
       ],
-      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
       "credit": "VOICEVOX:麒ヶ島宗麟",
       "text": "せいっ！",
       "synthetic": true,
@@ -514,7 +514,7 @@
           "sha256": "9b8699453e3a8e3f56fab03aae3e72342601cca59e037133c2d29826bb8448e0"
         }
       ],
-      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
       "credit": "VOICEVOX:麒ヶ島宗麟",
       "text": "ぬうっ。",
       "synthetic": true,
@@ -530,7 +530,7 @@
           "sha256": "9b8699453e3a8e3f56fab03aae3e72342601cca59e037133c2d29826bb8448e0"
         }
       ],
-      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
       "credit": "VOICEVOX:麒ヶ島宗麟",
       "text": "ぬうっ。",
       "synthetic": true,
@@ -546,7 +546,7 @@
           "sha256": "30e69e99764306bf9feecd5aa3737e39092ed59b45df1a20729dabf5a8e48754"
         }
       ],
-      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
       "credit": "VOICEVOX:麒ヶ島宗麟",
       "text": "ここまでか……。",
       "synthetic": true,
@@ -562,7 +562,7 @@
           "sha256": "30e69e99764306bf9feecd5aa3737e39092ed59b45df1a20729dabf5a8e48754"
         }
       ],
-      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
       "credit": "VOICEVOX:麒ヶ島宗麟",
       "text": "ここまでか……。",
       "synthetic": true,
@@ -578,7 +578,7 @@
           "sha256": "be491f876e38dda809533b09c401618ac914ac62d44a3827d12cc8ab6adeee06"
         }
       ],
-      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
       "credit": "VOICEVOX:玄野武宏",
       "text": "行くぞ。",
       "synthetic": true,
@@ -594,7 +594,7 @@
           "sha256": "be491f876e38dda809533b09c401618ac914ac62d44a3827d12cc8ab6adeee06"
         }
       ],
-      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
       "credit": "VOICEVOX:玄野武宏",
       "text": "行くぞ。",
       "synthetic": true,
@@ -610,7 +610,7 @@
           "sha256": "9b297890fd538e8c256249d403c4ea76bee47fcd2e8e643ddd69d1799a952b0e"
         }
       ],
-      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
       "credit": "VOICEVOX:玄野武宏",
       "text": "はっ。",
       "synthetic": true,
@@ -626,7 +626,7 @@
           "sha256": "9b297890fd538e8c256249d403c4ea76bee47fcd2e8e643ddd69d1799a952b0e"
         }
       ],
-      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
       "credit": "VOICEVOX:玄野武宏",
       "text": "はっ。",
       "synthetic": true,
@@ -642,7 +642,7 @@
           "sha256": "542ab902cd3a4642f3d728f98b804496d68532b3be940317caeee38c979febcd"
         }
       ],
-      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
       "credit": "VOICEVOX:玄野武宏",
       "text": "ぐっ。",
       "synthetic": true,
@@ -658,7 +658,7 @@
           "sha256": "542ab902cd3a4642f3d728f98b804496d68532b3be940317caeee38c979febcd"
         }
       ],
-      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
       "credit": "VOICEVOX:玄野武宏",
       "text": "ぐっ。",
       "synthetic": true,
@@ -674,7 +674,7 @@
           "sha256": "e5f7b3a5d3194582051bb0f8cc9315f6188e24e4aed07ec66b3d1cbc934e8c7b"
         }
       ],
-      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
       "credit": "VOICEVOX:玄野武宏",
       "text": "まだ……。",
       "synthetic": true,
@@ -690,7 +690,7 @@
           "sha256": "e5f7b3a5d3194582051bb0f8cc9315f6188e24e4aed07ec66b3d1cbc934e8c7b"
         }
       ],
-      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]",
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
       "credit": "VOICEVOX:玄野武宏",
       "text": "まだ……。",
       "synthetic": true,

@@ -18,9 +18,13 @@ export function selectNativeCases(ids,{allowEmpty=false}={}){
 export function nativeCaseSelection({event,root=process.cwd(),git=args=>execFileSync('git',args,
   {cwd:root,encoding:'utf8',windowsHide:true,maxBuffer:8*1024*1024}).trim()}={}){
   const all=SHARDS.flatMap(s=>planShard(s.id)),full={mode:'full',...selectNativeCases(all.map(r=>r.caseId))};
-  if(event.pull_request?.draft===false||event.inputs?.capture_mode==='full')return full;
+  if(event.inputs?.capture_mode==='full')return full;
   const bytes=readFileSync(path.join(root,'scripts/v177-native-allunit-recovery.json'));
   const recovery=JSON.parse(bytes);assert.ok(['v177-native-allunit-recovery/v1','v177-native-allunit-recovery/v2'].includes(recovery.schema));
+  // Ready PRs may reuse only the v2 profile which partitions every original
+  // normal, outcome and manual case and pins every reviewed changed blob.
+  // Legacy partial-inventory profiles still require a full Ready capture.
+  if(event.pull_request?.draft===false&&recovery.schema!=='v177-native-allunit-recovery/v2')return full;
   assert.match(recovery.head,/^[0-9a-f]{40}$/u);assert.match(recovery.runId,/^[1-9][0-9]+$/u);
   const selected=selectNativeCases(recovery.caseIds,{allowEmpty:recovery.schema==='v177-native-allunit-recovery/v2'});let baseline;
   if(recovery.schema==='v177-native-allunit-recovery/v2'){
