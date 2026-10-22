@@ -6,9 +6,9 @@ const statKeys = ['kind','side','maxHp','speed','laneSpeed','damage','range','at
 export const v177IncomingStunStats = fighter => Object.fromEntries(statKeys.map(key => [key,
   fighter[key]??(key==='progressionLevel'?1:key==='progressionRank'?0:null)]));
 
-export function configureV177IncomingStunPair(actor,source,{lane,laneY,createAnimationRuntime,createNavigationRuntime}) {
-  if(actor.kind!=='ranger'||actor.side!=='human'||source.kind!=='spindle'||source.side!=='zombie')
-    throw new Error('Incoming stun proof requires the original Ranger and Spindle');
+export function configureV177IncomingStunPair(actor,source,{lane,laneY,createAnimationRuntime,createNavigationRuntime,actorKind='ranger'}) {
+  if(actor.kind!==actorKind||actor.side!=='human'||source.kind!=='spindle'||source.side!=='zombie')
+    throw new Error('Incoming stun proof requires the original requested ally and Spindle');
   const original={actor:v177IncomingStunStats(actor),source:v177IncomingStunStats(source),
     actorHp:actor.hp,sourceHp:source.hp,actorCooldown:actor.cooldown,sourceCooldown:source.cooldown,
     sourceAbilityCooldown:source.abilityCooldown,actorSpawnGrace:actor.spawnGrace};
@@ -17,7 +17,7 @@ export function configureV177IncomingStunPair(actor,source,{lane,laneY,createAni
     fighter.animationPresentation=createAnimationRuntime({x,y:laneY,direction});
     fighter.navigationRecovery=createNavigationRuntime({x,y:laneY,lane});
   }
-  return {form:'ranger',kind:'ranger',renderKind:'ranger',side:'human',phase:'incoming-stun',
+  return {form:actorKind,kind:actorKind,renderKind:actorKind,side:'human',phase:'incoming-stun',
     fighterId:actor.id,targetId:source.id,lane,original,originalStats:true,inertOpponent:false,
     injectedHit:false,injectedStun:false,manualClockAdvance:false};
 }

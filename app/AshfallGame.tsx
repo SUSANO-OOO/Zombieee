@@ -8,7 +8,7 @@ import { V177_JOINT_ATLASES, v177JointCycleDistance, v177JointPose, v177RangerFo
 import {v177ChoreographedAbilitySample} from "./v177WeaponChoreography.js";
 import {battleVoiceReady,queueV104HumanHurt} from "./v104CombatAudio.js";
 import {createManualAbilityPointerHold} from "./manualAbilityUi.js";
-import {drawV104WeaponWake,drawV104InfectedWake,drawV104EyeBeam,v104WeaponWakeCandidate} from "./v104CombatVfx.js";
+import {drawV104WeaponWake,drawV104InfectedWake,drawV104EyeBeam,v104WeaponWakeCandidate,v104MeleeImpactPoint} from "./v104CombatVfx.js";
 import { v177GroundedStrideFactor } from "./v177GroundedMotion.js";
 import {getV177RangerLowerPaintSnapshot} from "./v177RangerLowerPaint.js";
 import { combatApproachSpeed } from "./combatApproach.js";
@@ -2111,7 +2111,11 @@ function addShot(
   shot.impactDelaySeconds = impactDelaySeconds;
   const appliedClawContact = side === "zombie" && V100_CLAW_CONTACT_WEAPONS.includes(weapon ?? "")
     && g.fighters.some(fighter => fighter.id === targetId && fighter.side === "human");
-  if(style==='melee'&&V100_CONTACT_WEAPONS.includes(weapon??'')&&!appliedClawContact)queueV100Contact(g,{x:tx,y:ty,direction:Math.sign(tx-x)||1,size:['brute','crusher','abomination','takuya','gate-eater'].includes(weapon??'')?74:48});
+  if(style==='melee'&&V100_CONTACT_WEAPONS.includes(weapon??'')&&!appliedClawContact){
+    const owner=g.fighters.find(fighter=>fighter.id===sourceId);
+    queueV100Contact(g,{x:tx,y:ty,direction:Math.sign(tx-x)||1,size:['brute','crusher','abomination','takuya','gate-eater'].includes(weapon??'')?74:48,
+      meleeContact:owner?{ownerId:sourceId,targetId,kind:weapon,attackSequence:owner.attackSequence,resolvedSocket:false}:null});
+  }
   g.shots.push(shot);
   capRenderObjectsInPlace(
     g.shots,
@@ -9126,6 +9130,11 @@ function drawWorld(
     },(ownerId:number,activationId:number)=>{
       const owner=g.fighters.find(f=>f.id===ownerId&&f.kind==='brute'&&f.hp>0&&f.manualAbility?.activationId===activationId);
       return owner?fighterTataraGroundSockets.get(owner):null;
+    },(contact:{ownerId:number;targetId:number;kind:string;attackSequence:number})=>{
+      const owner=g.fighters.find(f=>f.id===contact.ownerId&&f.kind===contact.kind&&f.attackSequence===contact.attackSequence);
+      const target=g.fighters.find(f=>f.id===contact.targetId);
+      const stroke=owner?fighterJointWeapons.get(owner)?.[0]:null;
+      return stroke?v104MeleeImpactPoint({...stroke,target}):null;
     });
     drawV100ManualMuzzles(ctx,stageObjects,g,(ownerId:number,kind:string)=>{
       const owner=g.fighters.find(f=>f.id===ownerId&&f.kind===kind&&f.hp>0);
@@ -13254,18 +13263,18 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         corpseHistory:(id:number)=>corpseRenderAuditHistory.get(id)??[],
         fighterHistory:(id:number)=>fighterRenderAuditHistory.get(id)??[],
       }),
-      prepareV177IncomingStunProof: () => {
+      prepareV177IncomingStunProof: ({kind="ranger"}: {kind?:UnitKind}={}) => {
         const g=gameRef.current,lane:Lane=1;
         fighterRenderAuditHistory.clear();fighterActualXDeltaAudit.clear();corpseRenderAuditHistory.clear();
         g.pendingWeaponHits=[];
         g.fighters=[];g.corpses=[];g.enemySpawn=createEnemySpawnRuntime() as EnemySpawnRuntime;
         g.eventIndex=g.definition.timeline.length;g.deployQueue=[];clearTransientRenderObjects(g);
         g.running=true;g.paused=true;g.over=false;g.won=false;g.baseHp=g.baseMaxHp;g.barricadeHp=g.barricadeMaxHp;
-        if(!spawnHuman(g,"ranger",false))throw new Error("Incoming stun Ranger unavailable");
-        const actor=g.fighters.find(f=>f.kind==="ranger"&&f.side==="human"),source=spawnEnemy(g,"spindle",lane,7);
+        if(!spawnHuman(g,kind,false))throw new Error(`Incoming stun ally unavailable: ${kind}`);
+        const actor=g.fighters.find(f=>f.kind===kind&&f.side==="human"),source=spawnEnemy(g,"spindle",lane,7);
         if(!actor||!source)throw new Error("Incoming stun original pair unavailable");
         const proof=armV177IncomingStunProof(g,configureV177IncomingStunPair(actor,source,{lane,laneY:activeLaneCenters[lane],
-          createAnimationRuntime:createCombatAnimationRuntime,createNavigationRuntime:createNavigationRecoveryState}));
+          createAnimationRuntime:createCombatAnimationRuntime,createNavigationRuntime:createNavigationRecoveryState,actorKind:kind}));
         selectedActionRef.current=null;setSelectedAction(null);setStarted(true);setPaused(true);setEnd(null);setScreen("battle");
         return proof;
       },

@@ -8,8 +8,8 @@ const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 const melee=['brawler','shade','walker','runner','turned','sprinter','grappler','crusher','abomination','gairen','mugarian-president-mutated','futago','futago-separated-a','futago-separated-b',
  'scout','brute','guardian','gate-eater','red-panther-shield','red-panther-knife','tky','miyamoto-musashi','crazy-king','kumaverson','takuya','takuya-omega'];
 const runtime={locomotionPhase:.2,locomotionSettle:1};
-function sample(kind,state,progress,sequence=0){
- return v177JointPose(kind,{requestedState:state,clipProgress:progress},runtime,{grounded:true,actor:{attackSequence:sequence+(state==='wind-up'?0:1),attackWindup:state==='wind-up'?1:0}});
+function sample(kind,state,progress,sequence=0,actualRuntime=runtime){
+ return v177JointPose(kind,{requestedState:state,clipProgress:progress},actualRuntime,{grounded:true,actor:{attackSequence:sequence+(state==='wind-up'?0:1),attackWindup:state==='wind-up'?1:0}});
 }
 test('every humanoid melee keeps both actual arm chains attached through broad windup, impact and recovery',()=>{
  for(const kind of [...melee,'babayaga'])for(let sequence=0;sequence<3;sequence++)for(const state of ['wind-up','active','recovery'])for(let n=0;n<=30;n++){
@@ -47,6 +47,31 @@ test('windup and follow-through move the striking wrist and torso, while every s
    const neutral={...p,choreography:undefined},actual=v177CaptureJointPose(kind,p),original=v177CaptureJointPose(kind,neutral);
    for(const leg of atlas.legConstraints??[])assert.deepEqual(point(actual.lower[leg.effectorBone],leg.ankle),point(original.lower[leg.effectorBone],leg.ankle),kind+' stance foot');
   }
+ }
+});
+
+test('short-weapon lunges alternate a planted support foot, never cross legs, and return to the same stance',()=>{
+ for(const kind of ['kumaverson','brute','guardian','gate-eater','red-panther-shield','scout','red-panther-knife',
+  'brawler','shade','walker','runner','turned','sprinter','grappler','crusher','abomination','futago-separated-a','futago-separated-b'])for(const phase of [0,.25,.5,.75]){
+  const atlas=A[kind],legs=atlas.legConstraints,[wind,active]=atlas.attackBoundaries??[.28,.7];
+  const at=p=>{
+   const state=p<=wind?'wind-up':p<=active?'active':'recovery';
+   const progress=state==='wind-up'?p/wind:state==='active'?(p-wind)/(active-wind):(p-active)/(1-active);
+   const pose=v177CaptureJointPose(kind,sample(kind,state,progress,0,{...runtime,locomotionPhase:phase}));
+   return legs.map(l=>point(pose.lower[l.effectorBone],l.ankle));
+  };
+  const start=at(0),end=at(1),order=[0,1].sort((a,b)=>start[a][0]-start[b][0]),[rear,lead]=order;
+  for(let n=0;n<=100;n++){
+   const p=n/100,feet=at(p);
+   assert.ok(feet[lead][0]-feet[rear][0]>=start[lead][0]-start[rear][0]-.002,kind+' legs cannot cross');
+  }
+  for(const [p,support,shifted]of [[.08,rear,false],[.21,lead,true],[.72,lead,true],[.91,rear,false]]){
+   const feet=at(p),plant=at(shifted?.5:0)[support];
+   assert.ok(distance(feet[support],plant)<.002,kind+' planted support at '+p);
+   const swing=support===0?1:0;
+   assert.ok(feet[swing][1]<start[swing][1]-1,kind+' swing foot must lift at '+p);
+  }
+  for(let n=0;n<2;n++)assert.ok(distance(start[n],end[n])<.002,kind+' same stance after recovery');
  }
 });
 test('Babayaga carries a lowered suppressed handgun, raises both original grips to aim, and returns to that same carry',()=>{

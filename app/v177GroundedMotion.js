@@ -55,7 +55,33 @@ function attackWeight(p){
   return 0;
 }
 
-export function v177GroundedJointPlan(kind,atlas,plan,sample,runtime){
+export function sampleV177AttackSteps(atlas,{phase,distance,leadBone}){
+ const legs=atlas.legConstraints??[],lead=legs.find(l=>l.effectorBone===leadBone);
+ if(!(distance>0)||legs.length!==2||!lead||!Number.isFinite(phase))return null;
+ const p=clamp(phase),progress=(a,b)=>smooth((p-a)/(b-a));
+ const order=[lead,...legs.filter(l=>l!==lead)],feet={};let travel=0;
+ for(const [index,leg]of order.entries()){
+  const a=index===0?.02:.14,b=index===0?.14:.28,c=index===0?.82:.64,d=index===0?1:.82;
+  const forward=progress(a,b),back=progress(c,d),q=forward-back;
+  const lift=(p>a&&p<b?Math.sin(Math.PI*(p-a)/(b-a)):p>c&&p<d?Math.sin(Math.PI*(p-c)/(d-c)):0)*Math.min(18,distance*.18);
+  feet[leg.effectorBone]={x:distance*q,lift};travel+=distance*q/2;
+ }
+ return{phase:p,distance,travel,feet,leadBone};
+}
+
+function attackSteps(kind,atlas,plan,rig,sourceFeet){
+ const distance=plan.choreography?.stepDistance??0,legs=atlas.legConstraints??[];
+ if(!(distance>0)||legs.length!==2||!Number.isFinite(plan.attackPhase))return null;
+ // Advance the leading foot first; return the trailing foot first. Moving
+ // the trailing foot ahead of a planted leader would cross the two legs.
+ const footX=leg=>{const foot=rig.feet[leg.effectorBone],x=sourceFeet?.[leg.effectorBone]?.[0]??foot.center;
+  return foot.center+(x-foot.center)*v177GroundedStrideFactor(kind);};
+ const order=[...legs].sort((a,b)=>footX(b)-footX(a));
+ if(plan.stepLeadBone===order[1].effectorBone)order.reverse();
+ return sampleV177AttackSteps(atlas,{phase:plan.attackPhase,distance,leadBone:order[0].effectorBone});
+}
+
+export function v177GroundedJointPlan(kind,atlas,plan,sample,runtime,sourceFeet){
   // Lifecycle/manual owners already contain their own resolved anatomy.
   if(!plan||atlas?.type!=='rigid-parts'||plan.resolvedJointPose||plan.liveStun
     ||plan.turnedGetup||plan.phaseChange||plan.mrsNormalWeaponCycle)return plan;
@@ -77,13 +103,14 @@ export function v177GroundedJointPlan(kind,atlas,plan,sample,runtime){
   const attack=plan.attackPhase===null||plan.attackPhase===undefined?0:plan.choreography?.bodyWeight??attackWeight(plan.attackPhase);
   const gun=group==='firearm'||['medic','engineer'].includes(kind);
   const weight=gun?-attack*.3:attack;
-  const dx=wave*(heavy?3:4)*walking+weight*(heavy?10:7);
+  const steps=attackSteps(kind,atlas,plan,rig,sourceFeet);
+  const dx=wave*(heavy?3:4)*walking+weight*(heavy?10:7)+(steps?.travel??0);
   const dy=(-5+(bounce-1)*(heavy?2:3))*walking+Math.abs(weight)*(heavy?6:4);
   const manyLegs=(atlas.legConstraints?.length??0)>2;
   const lean=wave*(heavy?.022:.035)*walking+weight*(manyLegs?.025:gun?.045:heavy?.085:.065);
-  motion={feet:rig.feet,stride:v177GroundedStrideFactor(kind),lift:floating?1:heavy?2.1:group==='runner'?1.7:1.45,
+  motion={feet:rig.feet,steps,stride:v177GroundedStrideFactor(kind),lift:floating?1:heavy?2.1:group==='runner'?1.7:1.45,
     lower:rotateAt(...rig.waist,0,dx,dy),upper:rotateAt(...rig.waist,lean,dx,dy)};
-  return {...plan,groundedMotion:motion};
+  return {...plan,groundedMotion:motion,...(steps?{stepLeadBone:steps.leadBone}:{})};
 }
 
 // Called by the same resolver as paint, ground support and weapon sockets.
@@ -96,6 +123,8 @@ export function applyV177GroundedMatrix(out,plan,bone,upper){
     const [x,y]=point(out,foot.ankle);
     out[4]+=(x-foot.center)*(motion.stride-1);
     out[5]-=Math.max(0,foot.floor-y)*(motion.lift-1);
+    const step=motion.steps?.feet[bone];
+    if(step){out[4]+=step.x;out[5]-=step.lift;}
     return out;
   }
   if(!upper&&bone!=='pelvis')return out;

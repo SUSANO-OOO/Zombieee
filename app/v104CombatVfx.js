@@ -3,6 +3,15 @@ const weaponHistory=new WeakMap();
 const steelKinds=new Set(['brute','guardian','gate-eater','red-panther-shield','scout','zakimiya','tky','miyamoto-musashi','crazy-king','kumaverson','takuya','takuya-omega','red-panther-knife']);
 const clawKinds=new Set(['walker','runner','turned','sprinter','grappler','crusher','abomination','gairen','futago','futago-separated-a','futago-separated-b','mugarian-president-mutated']);
 const fistKinds=new Set(['brawler','shade']);
+export function v104MeleeImpactPoint({kind,tip,grip,target}){
+ if(!tip||![tip.x,tip.y].every(Number.isFinite))return null;
+ // A hammer head or pan bowl is the striking surface. A long cutting edge
+ // meets the victim where that edge crosses its position, not at its far tip.
+ if(['brute','kumaverson','guardian','gate-eater','red-panther-shield'].includes(kind)
+  ||!steelKinds.has(kind)||!grip||!target||![grip.x,grip.y,target.x].every(Number.isFinite))return {...tip};
+ const dx=tip.x-grip.x,t=Math.abs(dx)<.001?1:Math.max(0,Math.min(1,(target.x-grip.x)/dx));
+ return{x:grip.x+dx*t,y:grip.y+(tip.y-grip.y)*t};
+}
 export function v104WeaponWakeCandidate(kind,phase,held=false){
  return !held&&Number.isFinite(phase)&&phase>=.12&&phase<=.7&&(steelKinds.has(kind)||clawKinds.has(kind)||fistKinds.has(kind));
 }

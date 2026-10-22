@@ -81,6 +81,19 @@ test('Omega large blade clears the painted floor without lifting the body or sho
   }
  }
 });
+
+test('Omega full unchanged blade stays inside the upper scene margin throughout both formerly clipped transition bands',()=>{
+ const kind='takuya-omega',atlas=A[kind];
+ for(const locomotionPhase of [0,.25,.5,.75])for(const locomotionSettle of [0,.5,1])for(const state of ['wind-up','active','recovery'])for(let n=0;n<=100;n++){
+  const plan=v177JointPose(kind,{requestedState:state,clipProgress:n/100},{locomotionPhase,locomotionSettle},{grounded:true});
+  const pose=v177CaptureJointPose(kind,plan),m=pose.upper[atlas.weaponBone],hull=atlas.weaponHull.map(p=>point(m,p));
+  assert.ok(Math.min(...hull.map(p=>p[1]))>=-130-1e-7,JSON.stringify({locomotionPhase,locomotionSettle,state,n}));
+  assert.ok(Math.max(...hull.map(p=>p[1]))<=atlas.weaponFloorY+1e-7);
+  const arm=atlas.armConstraints[0],shoulder=point(pose.upper[arm.parentBone],arm.shoulder),elbow=point(pose.upper[arm.upperBone],arm.elbow),wrist=point(m,arm.effectorWrist);
+  assert.ok(Math.abs(distance(shoulder,elbow)-distance(arm.shoulder,arm.elbow))<.002);
+  assert.ok(Math.abs(distance(elbow,wrist)-distance(arm.elbow,arm.wrist))<.002);
+ }
+});
 test('first battle calls are audible candidates, cooldowns are per actor, and armor never aliases a frying pan',()=>{
  const a={hp:100},b={hp:100};assert.equal(battleVoiceReady(a,'attack',0),true);assert.equal(battleVoiceReady(a,'attack',.5),false);assert.equal(battleVoiceReady(b,'attack',.5),true);assert.equal(battleVoiceReady(a,'attack',2.1),true);assert.equal(battleVoiceReady(a,'hurt',2.1),true);
  const assets=V100_AUDIO_MANIFEST.assets,armor=assets.find(a=>a.id==='v104-armor-hit'),pan=assets.find(a=>a.id==='weapon-pan-hit');

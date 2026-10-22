@@ -11,34 +11,42 @@ const contactKinds=new Set(['brawler','shade','walker','runner','turned','sprint
 const swingKinds=new Set(['scout','brute','guardian','gate-eater','red-panther-shield','red-panther-knife','tky','miyamoto-musashi','crazy-king','kumaverson','takuya','takuya-omega','zakimiya']);
 const kinds=new Set(['babayaga',...swingKinds,...contactKinds]);
 const carryPlans=new WeakMap();
+// Source-pixel travel, performed by alternating planted feet. Short weapons
+// need a real body step to bridge their gameplay engagement distance.
+const attackSteps={kumaverson:100,brute:24,guardian:60,'gate-eater':55,'red-panther-shield':45,scout:30,'red-panther-knife':40,
+ brawler:60,shade:60,walker:60,runner:60,turned:60,sprinter:60,grappler:35,crusher:25,abomination:25,
+ 'futago-separated-a':24,'futago-separated-b':24};
 
 // Project a wrist onto its fixed-length arm annulus and the weapon's floor
 // half-plane together. Alternating the two projections can push a large
 // downward blade back inside the elbow's minimum reach on its final pass.
-function groundedHand(target,shoulder,min,max,ceiling){
- const desired=[target[0]-shoulder[0],target[1]-shoulder[1]],cap=ceiling-shoulder[1];
- if(cap < -max)throw Error('Held weapon has no fixed-length reach above its floor');
- let [x,y]=desired;y=Math.min(y,cap);
+function groundedHand(target,shoulder,min,max,ceiling,base=-Infinity){
+ const lo=Math.max(base-shoulder[1],-max),hi=Math.min(ceiling-shoulder[1],max);
+ if(lo>hi)throw Error('Held weapon has no fixed-length reach inside its vertical strip');
+ const dx=target[0]-shoulder[0];
+ let x=dx,y=Math.max(lo,Math.min(hi,target[1]-shoulder[1]));
  let length=Math.hypot(x,y);
  if(length>max){
   x*=max/length;y*=max/length;
-  if(y>cap){y=cap;x=(desired[0]<0?-1:1)*Math.sqrt(Math.max(0,max*max-y*y));}
+  if(y<lo||y>hi){y=Math.max(lo,Math.min(hi,y));x=(dx<0?-1:1)*Math.sqrt(Math.max(0,max*max-y*y));}
  }
  length=Math.hypot(x,y);
  if(length<min){
   const scale=length?min/length:0,rx=length?x*scale:min,ry=y*scale;
-  if(ry<=cap){x=rx;y=ry;}
-  else{y=cap;x=(desired[0]<0?-1:1)*Math.sqrt(Math.max(0,min*min-y*y));}
+  if(ry>=lo&&ry<=hi){x=rx;y=ry;}
+  else{y=Math.max(lo,Math.min(hi,ry));x=(dx<0?-1:1)*Math.sqrt(Math.max(0,min*min-y*y));}
  }
  return[x+shoulder[0],y+shoulder[1]];
 }
 
-function constrainOmegaWeapon(atlas,upper,ground=[1,0,0,1,0,0]){
+function constrainOmegaWeapon(atlas,upper,ground=[1,0,0,1,0,0],topGuard=-Infinity){
  const m=upper[atlas.weaponBone],c=atlas.armConstraints.find(c=>c.effectorBone===atlas.weaponBone),wrist=c.effectorWrist??c.wrist;
  const final=multiply(ground,m),s=point(ground,point(upper[c.parentBone],c.shoulder)),t=point(final,wrist);
  const a=Math.hypot(c.elbow[0]-c.shoulder[0],c.elbow[1]-c.shoulder[1]),b=Math.hypot(c.wrist[0]-c.elbow[0],c.wrist[1]-c.elbow[1]);
- let bottom=-Infinity;for(const [x,y]of atlas.weaponHull)bottom=Math.max(bottom,final[1]*(x-wrist[0])+final[3]*(y-wrist[1]));
- const hand=groundedHand(t,s,Math.abs(a-b)+2,a+b-2,atlas.weaponFloorY-bottom),dx=hand[0]-t[0],dy=hand[1]-t[1];
+ let top=Infinity,bottom=-Infinity;for(const [x,y]of atlas.weaponHull){
+  const offset=final[1]*(x-wrist[0])+final[3]*(y-wrist[1]);top=Math.min(top,offset);bottom=Math.max(bottom,offset);
+ }
+ const hand=groundedHand(t,s,Math.abs(a-b)+2,a+b-2,atlas.weaponFloorY-bottom,topGuard-top),dx=hand[0]-t[0],dy=hand[1]-t[1];
  // The grounded torso is a rigid transform. Return the wrist translation to
  // its local space so paint, grip IK and weapon sockets keep one owner.
  m[4]+=ground[0]*dx+ground[1]*dy;m[5]+=ground[2]*dx+ground[3]*dy;
@@ -47,7 +55,9 @@ function constrainOmegaWeapon(atlas,upper,ground=[1,0,0,1,0,0]){
 export function v177GroundedWeaponChoreography(kind,atlas,plan){
  if(kind!=='takuya-omega'||!atlas.weaponHull||!plan.choreography||!plan.groundedMotion)return plan;
  const upper={...plan.choreography.upper,[atlas.weaponBone]:[...plan.choreography.upper[atlas.weaponBone]]};
- constrainOmegaWeapon(atlas,upper,plan.groundedMotion.upper);
+ // The full unchanged blade stays above its floor and below the upper scene
+ // margin. Its hand still lies inside the original arm's reach annulus.
+ constrainOmegaWeapon(atlas,upper,plan.groundedMotion.upper,-130);
  return{...plan,choreography:{...plan.choreography,upper}};
 }
 
@@ -61,8 +71,8 @@ function handPose(upper,c,target,angle,margin=2){
  upper[c.effectorBone]=rigid(c.effectorWrist??c.wrist,t,angle);
 }
 const nearAngle=(angle,reference)=>reference+Math.atan2(Math.sin(angle-reference),Math.cos(angle-reference));
-function swingAngle(p,rest,wind,hit,follow){
- wind=nearAngle(wind,rest);hit=nearAngle(hit,wind);follow=nearAngle(follow,hit);
+function swingAngle(p,rest,wind,hit,follow,overhead=false){
+ if(!overhead)wind=nearAngle(wind,rest);hit=nearAngle(hit,wind);follow=nearAngle(follow,hit);
  return keys(p,[[0,rest],[.18,wind],[.23,wind],[.28,hit],[.48,follow],[.64,follow],[1,nearAngle(rest,follow)]])[0];
 }
 function shoulderTarget(c,p,rest,rows){
@@ -118,7 +128,7 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
  const waist=atlas.interpolationPivots?.spine??(legs.length?[legs.reduce((s,c)=>s+c.hip[0],0)/legs.length,legs.reduce((s,c)=>s+c.hip[1],0)/legs.length]:[240,250]);
  const weight=attacking?keys(p,[[0,0],[.18,-1],[.23,-1],[.28,.8],[.48,1],[.64,.8],[1,0]])[0]:0;
  const heavy=['brute','guardian','gate-eater','red-panther-shield','crazy-king','kumaverson','takuya','takuya-omega','crusher','abomination','gairen'].includes(kind);
- const bodyAngle=kind==='babayaga'?0:(heavy?.21:.17)*weight;
+ const bodyAngle=kind==='babayaga'?0:(kind==='brute'?.70:heavy?.21:.17)*weight;
  const torso=rigid(waist,[waist[0]+weight*(heavy?13:9),waist[1]+Math.abs(weight)*(heavy?5:3)],bodyAngle);
  for(const [bone,m]of Object.entries(base)){
   const pivot=atlas.interpolationPivots?.[bone]??[0,0];
@@ -171,10 +181,10 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
    if(kind==='brute'){[wind,hit,follow]=[-2.25,-.65,-.3];rows=[[.18,23,-26],[.23,23,-26],[.28,38,13],[.48,35,28],[.64,35,28]];}
    else if(['guardian','gate-eater','red-panther-shield'].includes(kind)){[wind,hit,follow]=[restDirection-.25,restDirection,restDirection+.10];rows=[[.18,23,38],[.23,23,38],[.28,66,16],[.48,62,24],[.64,62,24]];}
    else if(kind==='kumaverson'){[wind,hit,follow]=[-2.05,-.08,.85];rows=[[.18,9,-45],[.23,9,-45],[.28,reach*.96,0],[.48,reach*.77,reach*.52],[.64,reach*.77,reach*.52]];}
-   else if(kind==='takuya-omega'){[wind,hit,follow]=[-2.05,-.1,.9];rows=[[.18,55,-35],[.23,55,-35],[.28,reach*.9,reach*.12],[.48,reach*.62,reach*.5],[.64,reach*.62,reach*.5]];}
+   else if(kind==='takuya-omega'){[wind,hit,follow]=[-2.75,-.1,.9];rows=[[.08,0,150],[.18,45,140],[.23,45,140],[.25,0,165],[.28,reach*.9,reach*.12],[.48,reach*.62,reach*.5],[.64,reach*.62,reach*.5]];}
    else if(kind==='takuya'){rows=[[.18,70,-10],[.23,70,-10],[.28,90,35],[.48,70,65],[.64,70,65]];}
    target=shoulderTarget(primary,p,rest,rows);
-   angle=swingAngle(p,restDirection,wind,hit,follow)-sourceDirection;
+   angle=swingAngle(p,restDirection,wind,hit,follow,kind==='takuya-omega')-sourceDirection;
   }else{
    target=rest;angle=restAngle;
   }
@@ -208,7 +218,7 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
   upper['arm-1-hand']=rigid(arms[1].wrist,hand,Math.atan2(m[1],m[0]));
  }
  const frontBones=(!attacking||['crazy-king','babayaga','kumaverson','takuya-omega'].includes(kind)||p>.06&&p<.94)?arms.flatMap(c=>[c.upperBone,c.lowerBone,c.effectorBone]):[];
- const choreography={kind,variant,sequence,upper,arms,frontBones,bodyWeight:weight};if(!attacking)carryPlans.set(atlas,choreography);
+ const choreography={kind,variant,sequence,upper,arms,frontBones,bodyWeight:weight,stepDistance:attacking?attackSteps[kind]??0:0};if(!attacking)carryPlans.set(atlas,choreography);
  return{...plan,choreography,upperOffsetY:0};
 }
 

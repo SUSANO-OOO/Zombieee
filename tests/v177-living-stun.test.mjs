@@ -135,3 +135,40 @@ test('missing history, actor mismatch, owned actions and missing images cannot b
   assert.equal(v177JointPose('scout',sample,runtime,{actor,stunRemaining:.5}),null);
   assert.equal(v177JointPose('ranger',v177LivingStunSample('ranger'),runtime,{actor,stunRemaining:.5}),null);
 });
+
+test('an interrupted lunge returns on alternating lifted feet, including short stuns and re-entry in mid-step',()=>{
+ for(const kind of ['kumaverson','brute','walker'])for(const duration of [.04,.3,.6])for(const clipProgress of [.1,.7]){
+  const atlas=V177_JOINT_ATLASES[kind],actor={id:701,hp:100,attackSequence:1},r={...runtime,locomotionPhase:.5,locomotionSettle:1};
+  const attack=v177JointPose(kind,{requestedState:'active',clipProgress},r,{actor,grounded:true});paint(kind,attack,actor);
+  const original=v177CaptureJointPose(kind,attack),neutral=v177CaptureJointPose(kind,v177JointPose(kind,{requestedState:'idle'},r,{grounded:true}));
+  const positions=p=>atlas.legConstraints.map(l=>point(p.lower[l.effectorBone],l.ankle));
+  const floor=positions(neutral),start=positions(original);
+  assert.ok(start.some((p,i)=>Math.abs(p[0]-floor[i][0])>10),'fixture must start in the actual forward lunge');
+  const entry=v177JointPose(kind,v177LivingStunSample(kind),r,{actor,grounded:true,stunRemaining:duration});paint(kind,entry,actor);
+  sameJoints(original,v177CaptureJointPose(kind,entry),kind+' exact interrupted entry');
+  let previous=start;
+  for(let n=1;n<=80;n++){
+   const elapsed=duration*n/80,remaining=Math.max(1e-9,duration-elapsed),clock={...r,elapsedSeconds:elapsed};
+   const plan=v177JointPose(kind,v177LivingStunSample(kind),clock,{actor,grounded:true,stunRemaining:remaining}),pose=v177CaptureJointPose(kind,plan),feet=positions(pose);
+   attached(atlas,pose,kind+' grounded return '+n);
+   assert.ok(feet.some((p,i)=>Math.abs(p[1]-floor[i][1])<.001),kind+' must retain a planted support');
+   for(let i=0;i<2;i++)if(Math.abs(feet[i][0]-previous[i][0])>.01)
+    assert.ok(Math.min(feet[i][1],previous[i][1])<floor[i][1]-.001,kind+' cannot slide a grounded returning foot');
+   paint(kind,plan,actor);previous=feet;
+  }
+  for(let i=0;i<2;i++)assert.ok(distance(previous[i],floor[i])<.001,kind+' must finish at the neutral feet');
+  if(duration===.6){
+   // Reproduce a new interruption while a returning foot is airborne.
+   paint(kind,attack,actor);
+   paint(kind,v177JointPose(kind,v177LivingStunSample(kind),{...r,transitionCount:10},{actor,grounded:true,stunRemaining:.6}),actor);
+   const midway=v177JointPose(kind,v177LivingStunSample(kind),{...r,transitionCount:10,elapsedSeconds:.18},{actor,grounded:true,stunRemaining:.42});paint(kind,midway,actor);
+   const captured=v177CaptureJointPose(kind,midway),next={...r,transitionCount:11,elapsedSeconds:0};
+   const reentry=v177JointPose(kind,v177LivingStunSample(kind),next,{actor,grounded:true,stunRemaining:.4});paint(kind,reentry,actor);
+   sameJoints(captured,v177CaptureJointPose(kind,reentry),kind+' exact mid-step re-entry');
+   const tiny=v177JointPose(kind,v177LivingStunSample(kind),{...next,elapsedSeconds:1e-8},{actor,grounded:true,stunRemaining:.4-1e-8});
+   sameJoints(captured,v177CaptureJointPose(kind,tiny),kind+' continuous mid-step return');
+   const expected=paint(kind,tiny,actor);
+   for(let n=0;n<20;n++)assert.deepEqual(paint(kind,v177JointPose(kind,v177LivingStunSample(kind),{...next,elapsedSeconds:1e-8},{actor,grounded:true,stunRemaining:.4-1e-8}),actor),expected,kind+' paused step redraw');
+  }
+ }
+});

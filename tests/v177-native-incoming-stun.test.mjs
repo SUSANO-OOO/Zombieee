@@ -75,6 +75,19 @@ test('release is once-only, bound to world and generation, and changes only the 
   assert.equal(readV177IncomingStunProof({}),null);
 });
 
+test('the requested melee ally uses its original stats and the same real Spindle damage path',()=>{
+ for(const kind of ['brute','kumaverson']){
+  const d=pair(),card=UNIT_CONTENT_BY_ID[kind];
+  Object.assign(d.actor,structuredClone(card),{kind,hp:card.hp,maxHp:card.hp});
+  const before=v177IncomingStunStats(d.actor),timers={cooldown:d.actor.cooldown,spawnGrace:d.actor.spawnGrace};
+  const proof=configureV177IncomingStunPair(d.actor,d.source,{...d.options,actorKind:kind});
+  assert.equal(proof.form,kind);assert.equal(proof.injectedHit,false);assert.equal(proof.injectedStun,false);
+  assert.deepEqual(proof.original.actor,before);assert.deepEqual(v177IncomingStunStats(d.actor),before);
+  assert.equal(d.actor.cooldown,timers.cooldown);assert.equal(d.actor.spawnGrace,timers.spawnGrace);
+  assert.throws(()=>configureV177IncomingStunPair(d.actor,d.source,d.options),'default remains strictly Ranger');
+ }
+});
+
 test('the actual coil-vault branch records its original damage and stun after the original resolution',()=>{
   const data=pair(),{world,actor,source:enemy}=data;enemy.stationAbility={phase:'active',targetIds:[String(actor.id)]};
   world.time=12;const hp=actor.hp;

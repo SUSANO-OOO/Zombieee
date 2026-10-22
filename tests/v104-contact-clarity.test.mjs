@@ -3,13 +3,42 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import ts from 'typescript';
-import {drawV104EyeBeam} from '../app/v104CombatVfx.js';
+import {drawV104EyeBeam,v104MeleeImpactPoint} from '../app/v104CombatVfx.js';
 import {V177_JOINT_ATLASES as atlases,v177JointPose,v177CaptureJointPose} from '../app/v177JointPresentation.js';
-import {queueV100ClawContact,getV100ClawContactSnapshot} from '../app/v100CombatVfx.js';
+import {queueV100ClawContact,getV100ClawContactSnapshot,queueV100Contact,drawV100ContactQueue} from '../app/v100CombatVfx.js';
 
 const source=readFileSync('app/AshfallGame.tsx','utf8'),tree=ts.createSourceFile('game.tsx',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);
 const point=(matrix,p)=>[matrix[0]*p[0]+matrix[2]*p[1]+matrix[4],matrix[1]*p[0]+matrix[3]*p[1]+matrix[5]];
 const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+
+test('the real impact resolver binds the current strike and pins the burst to its painted contact point',()=>{
+ const arrows=[];const visit=n=>{if(ts.isArrowFunction(n)&&n.parameters[0]?.name.getText(tree)==='contact'&&n.body.getText(tree).includes('v104MeleeImpactPoint'))arrows.push(n);ts.forEachChild(n,visit);};visit(tree);assert.equal(arrows.length,1);
+ const owner={id:7,kind:'brute',attackSequence:3},target={id:8,x:430,y:300},g={time:1,definition:{missionConfig:{v100StageNumber:1}},fighters:[owner,target]},fighterJointWeapons=new Map();
+ fighterJointWeapons.set(owner,[{kind:'brute',tip:{x:426,y:242},grip:{x:405,y:251}}]);
+ const resolve=vm.runInNewContext(ts.transpileModule('const resolve='+arrows[0].getText(tree)+';resolve;',{
+  compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText,{g,fighterJointWeapons,v104MeleeImpactPoint});
+ const contact={ownerId:7,targetId:8,kind:'brute',attackSequence:3,resolvedSocket:false};
+ assert.equal(resolve({...contact,attackSequence:2}),null);assert.equal(resolve({...contact,kind:'kumaverson'}),null);
+ assert.deepEqual(resolve(contact),{x:426,y:242});
+ const points=[],ctx={save(){},restore(){},translate:(x,y)=>points.push([x,y]),scale(){},drawImage(){}},objects={'v100-contact':{complete:true,naturalWidth:1536}};
+ queueV100Contact(g,{x:430,y:272,meleeContact:contact});
+ drawV100ContactQueue(ctx,objects,g,null,null,null,()=>null);assert.equal(points.length,0,'an unresolved owner cannot paint at the old abdomen fallback');
+ drawV100ContactQueue(ctx,objects,g,null,null,null,()=>({x:NaN,y:1}));assert.equal(points.length,0,'invalid painted geometry cannot authorize a burst');
+ drawV100ContactQueue(ctx,objects,g,null,null,null,resolve);assert.deepEqual(points,[[426,242]]);
+ fighterJointWeapons.get(owner)[0].tip={x:470,y:280};g.time+=.05;
+ drawV100ContactQueue(ctx,objects,g,null,null,null,resolve);assert.deepEqual(points.at(-1),[426,242],'an existing burst stays at the impact rather than chasing the weapon');
+ g.time+=.2;drawV100ContactQueue(ctx,objects,g,null,null,null,resolve);assert.equal(points.length,2);
+});
+
+test('pan and hammer contacts use their striking surface; long blades intersect the victim along the actual edge',()=>{
+ const tip={x:500,y:220},grip={x:400,y:260},target={x:440,y:300};
+ for(const kind of ['brute','kumaverson'])assert.deepEqual(v104MeleeImpactPoint({kind,tip,grip,target}),tip);
+ for(const kind of ['tky','miyamoto-musashi','takuya-omega']){
+  assert.deepEqual(v104MeleeImpactPoint({kind,tip,grip,target}),{x:440,y:244});
+  assert.deepEqual(v104MeleeImpactPoint({kind,tip:{x:300,y:220},grip,target:{x:360}}),{x:360,y:244});
+ }
+ assert.equal(v104MeleeImpactPoint({kind:'brute',tip:{x:NaN,y:0}}),null);
+});
 
 test('Kurome normal damage records one visual eye pulse with the actual committed source and target, adding no damage path',()=>{
   const matches=[];const visit=node=>{if(ts.isIfStatement(node)&&node.expression.getText(tree)==='f.kind === "kurome" && g.definition.missionConfig.v100StageNumber')matches.push(node);ts.forEachChild(node,visit);};visit(tree);assert.equal(matches.length,1);
