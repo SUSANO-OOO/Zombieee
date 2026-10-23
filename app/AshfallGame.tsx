@@ -6,7 +6,7 @@ import { v100BasePresentationFor } from "./v100BasePresentation.js";
 import { createV100HumanWalkRenderer, v100HumanWalkPhase, v100UsesHumanWalk, v100HumanWalkCycleDistance, v100HumanWalkFrame } from "./v100HumanWalk.js";
 import { V177_JOINT_ATLASES, v177JointCycleDistance, v177JointPose, v177RangerFootPlan, drawV177JointPose, v177CaptureJointPose, v177RenderedJointWeaponSocket, v177RenderedWeightedLowerReceipt } from "./v177JointPresentation.js";
 import {v177ChoreographedAbilitySample} from "./v177WeaponChoreography.js";
-import {battleVoiceReady,queueV104HumanHurt} from "./v104CombatAudio.js";
+import {battleVoiceReady,queueV104HumanHurt,v104ContactIsHard} from "./v104CombatAudio.js";
 import {createManualAbilityPointerHold} from "./manualAbilityUi.js";
 import {drawV104WeaponWake,drawV104InfectedWake,drawV104EyeBeam,v104WeaponWakeCandidate,v104MeleeImpactPoint} from "./v104CombatVfx.js";
 import { v177GroundedStrideFactor } from "./v177GroundedMotion.js";
@@ -2264,7 +2264,8 @@ function normalAttackProductionCueId(
   fighter: Pick<Fighter, "side" | "kind">,
   mrsLauncherBash = false,
 ) {
-  if (fighter.side === "zombie") return enemyVoiceCue(fighter.kind, "attack");
+  if (fighter.side === "zombie") return fighter.kind === "kurome"
+    ? "v104-eye-fire" : enemyVoiceCue(fighter.kind, "attack");
   if (fighter.kind === "mrs-chiha" && !mrsLauncherBash) {
     return unitAudioCueFor("mrs-chiha", "weapon", "shot");
   }
@@ -21422,7 +21423,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 } else if (f.kind === "anchor-bloom") {
                   addParticles(g, f.x, f.y + 8, "#705552", 16);
                 }
-                playBattleSemanticCue("enemy-takuya-attack", f.x, {
+                playBattleSemanticCue(enemyVoiceCue(f.kind, "attack"), f.x, {
                   semantic: "enemy-ability-impact",
                   receiptId: `${f.id}:${f.kind}:${g.time.toFixed(3)}:impact`,
                   ownerId: f.id,
@@ -21743,7 +21744,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                         ? "boss-gairen-shell-warning"
                         : anomalyKind === "futago"
                           ? "boss-futago-cross-warning"
-                          : "enemy-takuya-attack",
+                          : anomalyKind === "mugarian-president-mutated"
+                            ? enemyCombatCueFor(f.kind, "phase")
+                            : "enemy-takuya-attack",
                   f.x,
                   {
                     semantic: "boss-phase-warning",
@@ -23090,10 +23093,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                     } : {}),
                   });
                 }
-                if (f.kind === "crazy-king") playProductionCue(unitAudioCueFor(f.kind, "weapon", "fleshHit"), contactAudioX, { priority: targetIsHeavy ? 76 : 67, cooldownMs: 110, volume: targetIsHeavy ? .62 : .54, maxInstances: 1 });
+                if (f.kind === "crazy-king") playProductionCue(unitAudioCueFor(f.kind, "weapon", v104ContactIsHard(target.kind) ? "hardHit" : "fleshHit"), contactAudioX, { priority: targetIsHeavy ? 76 : 67, cooldownMs: 110, volume: targetIsHeavy ? .62 : .54, maxInstances: 1 });
                 if (f.kind === "kumaverson") {
                   playProductionCue(unitAudioCueFor(f.kind, "weapon", targetIsHeavy ? "heavyHit" : "hit"), contactAudioX, { priority: targetIsHeavy ? 76 : 68, cooldownMs: 125, volume: targetIsHeavy ? .56 : .48, maxInstances: 1 });
-                  if (target.stunned > 0) playProductionCue(unitAudioCueFor(f.kind, "weapon", "stun"), contactAudioX, { priority: 75, cooldownMs: 220, volume: .45, maxInstances: 1 });
                 }
                 if (f.kind === "mayo-chan" && target.side === "zombie") {
                   target.mayoBiteSlowRemaining = Math.max(
@@ -23205,7 +23207,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                     addDamageText(g, splash.x, splash.y - 46, String(Math.round(resolved.targetDamage)), .65, "#e98a72");
                   }
                 }
-                addParticles(g, target.x, target.y + 2, "#b78656", 13); playCue("takuya-hit");
+                addParticles(g, target.x, target.y + 2, "#b78656", 13);
+                playProductionCue(v104ContactIsHard(target.kind) ? "v104-armor-hit" : "weapon-melee-impact", target.x, {
+                  priority: 72, cooldownMs: 120, maxInstances: 2, fallbackCue: "takuya-hit",
+                });
               }
               if (f.side === "human") {
                 const emphasized = roleEffect === "brawler" || roleEffect === "gunner" || roleEffect === "crazy-king" || roleEffect === "kumaverson" || roleEffect === "babayaga";
@@ -23316,7 +23321,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                       : undefined,
                   });
                 }
-                if (f.kind === "crazy-king") playProductionCue(unitAudioCueFor(f.kind, "weapon", "fleshHit"), structureAudioX, { priority: 74, volume: .56, cooldownMs: 110, maxInstances: 1 });
+                if (f.kind === "crazy-king") playProductionCue(unitAudioCueFor(f.kind, "weapon", "hardHit"), structureAudioX, { priority: 74, volume: .56, cooldownMs: 110, maxInstances: 1 });
                 if (f.kind === "kumaverson") playProductionCue(unitAudioCueFor(f.kind, "weapon", "heavyHit"), structureAudioX, { priority: 74, volume: .54, cooldownMs: 130, maxInstances: 1 });
                 if (f.kind === "gunner") {
                   const firstRound = structureWeaponEvents[0];

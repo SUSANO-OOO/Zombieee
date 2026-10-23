@@ -12,6 +12,11 @@ export function withV104CombatAudio(base){
 }
 export const V104_ARMOR_AUDIO={id:'v104-armor-hit',category:'melee',sources:sources('armor-hit'),gain:.68,priority:78,cooldownMs:140,maxInstances:2};
 export const V104_HANDGUN_AUDIO={id:'v104-handgun',category:'weapons',sources:sources('handgun'),gain:.72,priority:72,cooldownMs:100,maxInstances:4};
+export const V104_CROSSBOW_AUDIO={id:'weapon-crossbow-release',category:'weapons',sources:sources('crossbow-release'),gain:.68,priority:70,cooldownMs:90,maxInstances:4};
+// Contact material is separate from mass: a large fleshy enemy is still flesh.
+export function v104ContactIsHard(kind){
+ return ['crusher','grappler','gate-eater','gairen','guardian','red-panther-shield'].includes(kind);
+}
 export const V104_BOTTLE_AUDIO={id:'weapon-bottle-hit',category:'melee',
  sources:['mp3','ogg'].map(ext=>({src:`/audio/v100/foley/story-glass.${ext}`,type:ext==='mp3'?'audio/mpeg':'audio/ogg'})),
  gain:.58,priority:68,cooldownMs:140,maxInstances:2};

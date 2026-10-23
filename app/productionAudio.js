@@ -7,7 +7,7 @@ import {
 } from "./battleAudioContracts.js";
 import { V100_STAGES } from "./v100Registry.js";
 import { v100AudioDesignCandidate, v100SoundSources } from "./v100SoundDesign.js";
-import {V104_ARMOR_AUDIO,V104_BOTTLE_AUDIO,V104_BEAM_AUDIO,V104_HANDGUN_AUDIO} from "./v104CombatAudio.js";
+import {V104_ARMOR_AUDIO,V104_BOTTLE_AUDIO,V104_BEAM_AUDIO,V104_HANDGUN_AUDIO,V104_CROSSBOW_AUDIO} from "./v104CombatAudio.js";
 export {
   V099_MANUAL_ABILITY_AUDIO_CONTRACTS,
   V099_PHYSICAL_AUDIO_ASSET_COUNT,
@@ -430,6 +430,7 @@ const enemyVoicePools = ENEMY_KINDS.flatMap((kind) => ENEMY_VOICE_EVENTS.map((ev
 const assets = [
   V104_ARMOR_AUDIO,
   V104_HANDGUN_AUDIO,
+  V104_CROSSBOW_AUDIO,
   V104_BOTTLE_AUDIO,
   ...V104_BEAM_AUDIO,
   { id: 'v100-body-fall', category: 'melee', sources: v100SoundSources('foley', 'fall'), gain: .6, cooldownMs: 160, maxInstances: 2 },
@@ -890,7 +891,7 @@ const UNIT_WEAPON_CUES = Object.freeze({
   kumaverson: "weapon-pan-swing",
   babayaga: "weapon-suppressed-pistol",
   guardian: "v104-armor-hit",
-  engineer: V080_SUPPRESSED_CARBINE_CUE_ID,
+  engineer: "weapon-crossbow-release",
   zakimiya: "weapon-bottle-hit",
   tky: "weapon-tky-plasma-blade",
   "mrs-chiha": "weapon-mrs-chiha-grenade-launcher",
@@ -1230,7 +1231,7 @@ export const LEGACY_SFX_CUE_MAP = Object.freeze({
   "takuya-down": "enemy-takuya-death",
   "object-destroy": "support-explosion",
   "object-hit": "weapon-melee-impact",
-  "takuya-hit": "enemy-takuya-hurt",
+  "takuya-hit": "weapon-melee-impact",
   "ranged-shot": "weapon-rifle",
   "melee-hit": "weapon-melee-impact",
   "role-scout": "weapon-crowbar",

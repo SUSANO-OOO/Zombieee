@@ -2,6 +2,12 @@
 export const V104_ASSET_BASE={"sha":"5f48b07242b267baee8a83240f2ec3b07622b45d","manifestSha256":"45b155096d342339e4c6daf743a39ddfa2649fb6b97bf1a745692af70b60de06"};
 export const V104_MEDIA_ADDITIONS=Object.freeze([
   {
+    "path": "/audio/v104/combat/crossbow-release.mp3",
+    "bytes": 3198,
+    "hash": "sha256-b9668da84ccd0395e3f47a34ba771de7313a6d0d2f4d9e50c7b63a7cf4077371",
+    "criticality": "optional"
+  },
+  {
     "path": "/audio/v104/combat/handgun.mp3",
     "bytes": 3244,
     "hash": "sha256-f0d78c759cbd667a8b079f5e4431eb147b3f6e553786b824595a20d5198e7290",

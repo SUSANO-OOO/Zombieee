@@ -782,6 +782,72 @@
         "adaptation": "trimmed, filtered, attenuated and faded original CZ pistol recording; no voice"
       },
       "nonVoice": true
+    },
+    {
+      "file": "public/audio/v104/combat/crossbow-release.ogg",
+      "bytes": 6174,
+      "sha256": "8c07b17d816c0f74bc309615fbf82382eccbea4aa10b1a94d0fac7a5e4f67103",
+      "inputs": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
+          "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/knifeSlice.ogg",
+          "sha256": "4cd96dc630bed9840c15f1dd2306da2cc56a4da26a5d3f1a03c5a7265ac5e54f"
+        },
+        {
+          "file": "assets/source/v104/combat-audio/crossbow-string.wav",
+          "sha256": "0f95b1958d540b250e62735a2aebab331cde701f9dc8c7f219b2dc75c4b4cc40"
+        }
+      ],
+      "filter": "[0:a]atrim=0:0.075,highpass=f=350,lowpass=f=5000,volume=0.2[l];[1:a]atrim=0:0.12,highpass=f=900,lowpass=f=6000,volume=0.12,adelay=8[w];[2:a]volume=0.9[p];[l][w][p]amix=inputs=3:duration=longest:dropout_transition=0,volume=2.4,afade=t=out:st=0.2:d=0.1,apad=pad_len=1323[mix];[mix]alimiter=limit=0.85:level=false[out]",
+      "procedural": {
+        "duration": 0.3,
+        "expression": "0.16*(sin(2*PI*190*t)+0.46*sin(2*PI*380*t)+0.21*sin(2*PI*570*t))*exp(-32*t)",
+        "filter": "highpass=f=120,lowpass=f=5400,afade=t=in:d=0.002,afade=t=out:st=0.2:d=0.1"
+      },
+      "nonVoice": true,
+      "credit": {
+        "creator": "Kenney; deterministic plucked-string synthesis by project",
+        "license": "CC0-1.0",
+        "notice": "assets/source/v100/audio/kenney-rpg/License.txt",
+        "url": "https://kenney.nl/assets/rpg-audio",
+        "adaptation": "short latch and bolt rush over a damped string release; no gunshot or voice"
+      }
+    },
+    {
+      "file": "public/audio/v104/combat/crossbow-release.mp3",
+      "bytes": 3198,
+      "sha256": "b9668da84ccd0395e3f47a34ba771de7313a6d0d2f4d9e50c7b63a7cf4077371",
+      "inputs": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
+          "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/knifeSlice.ogg",
+          "sha256": "4cd96dc630bed9840c15f1dd2306da2cc56a4da26a5d3f1a03c5a7265ac5e54f"
+        },
+        {
+          "file": "assets/source/v104/combat-audio/crossbow-string.wav",
+          "sha256": "0f95b1958d540b250e62735a2aebab331cde701f9dc8c7f219b2dc75c4b4cc40"
+        }
+      ],
+      "filter": "[0:a]atrim=0:0.075,highpass=f=350,lowpass=f=5000,volume=0.2[l];[1:a]atrim=0:0.12,highpass=f=900,lowpass=f=6000,volume=0.12,adelay=8[w];[2:a]volume=0.9[p];[l][w][p]amix=inputs=3:duration=longest:dropout_transition=0,volume=2.4,afade=t=out:st=0.2:d=0.1,apad=pad_len=1323[mix];[mix]alimiter=limit=0.85:level=false[out]",
+      "procedural": {
+        "duration": 0.3,
+        "expression": "0.16*(sin(2*PI*190*t)+0.46*sin(2*PI*380*t)+0.21*sin(2*PI*570*t))*exp(-32*t)",
+        "filter": "highpass=f=120,lowpass=f=5400,afade=t=in:d=0.002,afade=t=out:st=0.2:d=0.1"
+      },
+      "nonVoice": true,
+      "credit": {
+        "creator": "Kenney; deterministic plucked-string synthesis by project",
+        "license": "CC0-1.0",
+        "notice": "assets/source/v100/audio/kenney-rpg/License.txt",
+        "url": "https://kenney.nl/assets/rpg-audio",
+        "adaptation": "short latch and bolt rush over a damped string release; no gunshot or voice"
+      }
     }
   ]
 }
