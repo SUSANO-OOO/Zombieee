@@ -1,0 +1,45 @@
+name: One-window WebKit upload diagnostic
+on:
+  push:
+    branches: [codex/177-wk-upload-diagnostic-r2]
+permissions:
+  contents: read
+jobs:
+  profile:
+    runs-on: macos-15
+    timeout-minutes: 20
+    env:
+      V100_DEVICE_RUNTIME_ENGINE: webkit
+      V100_DEVICE_RUNTIME_VIEWPORT: 1280x720
+      V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC: '1'
+      V100_DEVICE_RUNTIME_OUT: outputs/wk-cpu-profile-r1
+      GITHUB_PAGES_RELEASE_SHA: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 2
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22.13.0'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install webkit
+      - run: node scripts/verify-playwright-container-runtime.mjs --macos-arm64
+      - run: npm run build
+      - name: Observe host indexing without changing it
+        run: |
+          mkdir -p outputs
+          /usr/bin/mdutil -a -s > outputs/wk-cpu-host-indexing-before.txt
+      - name: Profile one original window (diagnostic only)
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-wk-cpu-diagnostic.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: wk-cpu-profile-r1
+          path: |
+            outputs/wk-cpu-profile-r1
+            outputs/wk-cpu-host-indexing-before.txt
+          if-no-files-found: error
+          retention-days: 14
