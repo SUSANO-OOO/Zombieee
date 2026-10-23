@@ -13267,7 +13267,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         corpseHistory:(id:number)=>corpseRenderAuditHistory.get(id)??[],
         fighterHistory:(id:number)=>fighterRenderAuditHistory.get(id)??[],
       }),
-      prepareV177IncomingStunProof: ({kind="ranger"}: {kind?:UnitKind}={}) => {
+      prepareV177IncomingStunProof: ({kind="ranger",sourceDistance=38}: {kind?:UnitKind;sourceDistance?:number}={}) => {
         const g=gameRef.current,lane:Lane=1;
         fighterRenderAuditHistory.clear();fighterActualXDeltaAudit.clear();corpseRenderAuditHistory.clear();
         g.pendingWeaponHits=[];
@@ -13278,7 +13278,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         const actor=g.fighters.find(f=>f.kind===kind&&f.side==="human"),source=spawnEnemy(g,"spindle",lane,7);
         if(!actor||!source)throw new Error("Incoming stun original pair unavailable");
         const proof=armV177IncomingStunProof(g,configureV177IncomingStunPair(actor,source,{lane,laneY:activeLaneCenters[lane],
-          createAnimationRuntime:createCombatAnimationRuntime,createNavigationRuntime:createNavigationRecoveryState,actorKind:kind}));
+          createAnimationRuntime:createCombatAnimationRuntime,createNavigationRuntime:createNavigationRecoveryState,actorKind:kind,sourceDistance}));
         selectedActionRef.current=null;setSelectedAction(null);setStarted(true);setPaused(true);setEnd(null);setScreen("battle");
         return proof;
       },

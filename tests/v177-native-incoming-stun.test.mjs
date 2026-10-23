@@ -88,6 +88,21 @@ test('the requested melee ally uses its original stats and the same real Spindle
  }
 });
 
+test('the alternate initial distance preserves every combat stat and clock and rejects out-of-range placement',()=>{
+ const d=pair(),geometry=new Set(['x','y','lane','anchorLane','animationPresentation','navigationRecovery']);
+ d.actor.kind='kumaverson';const before=structuredClone([d.actor,d.source]);
+ const proof=configureV177IncomingStunPair(d.actor,d.source,{...d.options,actorKind:'kumaverson',sourceDistance:320});
+ assert.equal(d.source.x-d.actor.x,320);assert.equal(proof.initialDistance,320);
+ assert.equal(d.source.y,d.actor.y);assert.equal(proof.injectedHit,false);assert.equal(proof.injectedStun,false);
+ for(const [i,f]of [d.actor,d.source].entries())for(const key of Object.keys(f))
+  if(!geometry.has(key))assert.deepEqual(f[key],before[i][key]);
+ for(const sourceDistance of [-1,0,37,331,NaN,Infinity]){
+  const pairData=pair(),original=structuredClone([pairData.actor,pairData.source]);
+  assert.throws(()=>configureV177IncomingStunPair(pairData.actor,pairData.source,{...pairData.options,sourceDistance}));
+  assert.deepEqual([pairData.actor,pairData.source],original);
+ }
+});
+
 test('the actual coil-vault branch records its original damage and stun after the original resolution',()=>{
   const data=pair(),{world,actor,source:enemy}=data;enemy.stationAbility={phase:'active',targetIds:[String(actor.id)]};
   world.time=12;const hp=actor.hp;
