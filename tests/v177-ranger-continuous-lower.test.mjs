@@ -542,3 +542,49 @@ test('an ability activated before a simulation tick keeps its own aim through pr
   }
   assert.equal(impactFacing,-1,'the actual ability impact must face the explicit target after its original windup');
 });
+
+function activeLowerPixels(result){
+  const {receipt,call}=result,pixels=new Uint8ClampedArray(receipt.width*receipt.height*4);
+  for(let y=0;y<receipt.height;y++)pixels.set(call.pixels.subarray(y*call.sourceWidth*4,(y*call.sourceWidth+receipt.width)*4),y*receipt.width*4);
+  return pixels;
+}
+function assertSameActiveLower(actual,expected){
+  const a=activeLowerPixels(actual),b=activeLowerPixels(expected);assert.equal(a.length,b.length);
+  let mismatches=0;for(let i=0;i<a.length;i++)if(a[i]!==b[i])mismatches++;
+  assert.equal(mismatches,0,'every active RGBA byte must match the independent rendering');
+}
+function paintPoolInput(painter,phase,size=96,offscreen=false){
+  const target=main({matrix:[1,0,0,1,offscreen?-10000:640.25,360]});
+  const receipt=paintV177RangerLower(painter,target.ctx,phase,.6,-size/2,-size*.8,size,size*448/480);
+  return {receipt,call:target.calls[0]};
+}
+test('eight alternating Ranger owners preserve exact pixels and stop uploading unchanged poses',()=>{
+  const {painter,observation}=observedPainter();
+  paintPoolInput(painter,.371,120);paintPoolInput(painter,.371,96,true);
+  const phases=Array.from({length:8},(_,i)=>.03+i*.09),expected=phases.map(phase=>{
+    const control=observedPainter();return paintPoolInput(control.painter,phase);
+  });
+  for(let cycle=0;cycle<4;cycle++)for(const [i,phase]of phases.entries()){
+    const actual=paintPoolInput(painter,phase);
+    assert.deepEqual(actual.receipt,expected[i].receipt);
+    assertSameActiveLower(actual,expected[i]);
+    assert.ok(painter.rasters.reduce((sum,raster)=>sum+raster.canvas.width*raster.canvas.height,0)<=65536);
+    assert.ok(painter.rasters.reduce((sum,raster)=>sum+raster.imageData.data.byteLength,0)<=65536*4);
+  }
+  assert.equal(painter.rasters.length,8);assert.equal(observation.writes,9,'one warmup plus eight distinct exact payloads');
+});
+test('evicting a Ranger upload owner cannot leave an alias pointing through a newly borrowed payload',()=>{
+  const {painter}=observedPainter(),a=.371,b=.372,near=1e-12;
+  paintPoolInput(painter,a,120);paintPoolInput(painter,a,96,true);
+  const phases=[a,a+near,b,b+near,.373,.374,.375,.376,.373,.374,.375,.376,a+near,a+2*near,b+near,a+3*near];
+  for(const phase of phases){
+    const actual=paintPoolInput(painter,phase),control=observedPainter(),expected=paintPoolInput(control.painter,phase);
+    assert.deepEqual(actual.receipt,expected.receipt);
+    assertSameActiveLower(actual,expected);
+    for(const raster of painter.rasters)if(raster.valid&&raster.uploadOwner){
+      assert.equal(raster.uploadOwner.valid,true);assert.equal(raster.uploadOwner.uploadOwner===null,true);
+      assert.equal(raster.imageData.data.length,raster.uploadOwner.canvas.data.data.length);
+      assert.equal(raster.imageData.data.every((value,i)=>value===raster.uploadOwner.canvas.data.data[i]),true,'a valid borrower names an actual independent uploaded copy');
+    }
+  }
+});

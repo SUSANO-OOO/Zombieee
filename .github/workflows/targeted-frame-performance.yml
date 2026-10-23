@@ -5,6 +5,7 @@ on:
     paths:
       - '.github/workflows/targeted-frame-performance.yml'
       - 'scripts/v100-device-runtime-browser.mjs'
+      - 'scripts/v177-ranger-performance-receipts.mjs'
       - 'app/v177CorpseJointPresentation.js'
       - 'app/**'
       - 'public/**'

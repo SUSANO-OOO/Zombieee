@@ -286,3 +286,34 @@ test('initial paint waiting fails on a stopped or replaced owner, regressed coun
  const {f,read}=await firstPaintFixture();delete f.context.window.__V100_DEVICE_RAF__.performanceBefore.renderFrames;
  await assert.rejects(read(),/original actual render counter/);assert.equal(f.counters().snapshotCalls,0);
 });
+
+test('a new physical Ranger paint on the first unchanged fixed tick is distinct from the old cloned start tail',()=>{
+ // Mac run40013984822: start seq23737/sim79.55, initial actor paint79.5333;
+ // the completed fence observed a new seq23738/paint79.55 on the current object.
+ const rows=samples(),start=rows[0].rangerDraws.measurementStart.boundary,a=rows[0].rangerDraws.actors[0];
+ start.actors[0].objectTailSame=false;start.actors[0].jointPaintedAt=start.simulationTime-1/60;
+ start.actors[0].worldWeightedLower=structuredClone(a.render.jointWeightedLower);
+ for(const row of rows)row.rangerDraws.measurementStart.boundary=structuredClone(start);
+ rows[0].time=start.simulationTime;rows[0].rangerDraws.simulationTime=start.simulationTime;rows[0].rangerDraws.renderBoundary.simulationTime=start.simulationTime;
+ a.render.jointPaintedAt=start.simulationTime;a.objectRender=structuredClone(a.render);
+ rows[0].rangerDraws.firstPaintFence={status:'completed',requestedAt:5,observedAt:10,beforeRenderFrames:40,observedRenderFrames:41,timeoutMs:2000};
+ const before=structuredClone(rows),result=rangerPerformanceReceipts(rows,windowBounds);
+ assert.equal(result.status,'recorded',result.errors.join(';'));assert.equal(result.baselineObservations,0);
+ assert.equal(result.firstFixedStepPaintObservations,1);assert.equal(result.newPaintObservations,4);assert.deepEqual(rows,before);
+ const faults=[
+  r=>{const x=r[0].rangerDraws.actors[0];x.render.renderSequence=start.renderSequence;x.objectRender=structuredClone(x.render);},
+  r=>{const x=r[0].rangerDraws.actors[0];x.render.jointPaintedAt=start.actors[0].jointPaintedAt;x.objectRender=structuredClone(x.render);},
+  r=>r[0].rangerDraws.actors[0].objectRender=null,
+  r=>r[0].rangerDraws.actors[0].objectRender.jointPaintedAt-=1/60,
+  r=>r[0].rangerDraws.firstPaintFence.status='pending',
+  r=>r[0].rangerDraws.firstPaintFence.observedRenderFrames=40,
+  r=>r[0].rangerDraws.firstPaintFence.requestedAt=-1,
+  r=>r[0].rangerDraws.firstPaintFence.observedAt=1001,
+  r=>r[0].rangerDraws.firstPaintFence.timeoutMs=2001,
+  r=>{delete r[0].rangerDraws.firstPaintFence;},
+  r=>{for(const row of r)row.rangerDraws.measurementStart.boundary.actors[0].id=999;},
+  r=>r[0].rangerDraws.actors[0].render.jointWeightedLowerDrawSucceeded=false,
+  r=>{const x=r[1].rangerDraws.actors[0];x.render.jointPaintedAt=r[0].time;x.objectRender=structuredClone(x.render);r[1].rangerDraws.firstPaintFence=structuredClone(r[0].rangerDraws.firstPaintFence);},
+ ];
+ for(const mutate of faults){const invalid=structuredClone(rows);mutate(invalid);const bad=rangerPerformanceReceipts(invalid,windowBounds);assert.equal(bad.status,'incomplete');assert.equal(bad.weightedPaintObserved,false);}
+});

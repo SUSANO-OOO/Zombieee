@@ -1,6 +1,6 @@
 import {createV177RangerLowerPose,v177RangerLowerPose} from './v177RangerLowerMotion.js';
 
-const painters=new WeakMap(),MAX_PIXELS=65536;
+const painters=new WeakMap(),MAX_PIXELS=65536,MAX_SURFACES=8;
 const paintCounts={createdPainters:0,rasterizedDraws:0,reusedDraws:0};
 export const getV177RangerLowerPaintSnapshot=()=>({...paintCounts});
 const samples=[[.25,.25],[.75,.25],[.25,.75],[.75,.75]];
@@ -15,7 +15,7 @@ function sourceKernelOccupancy(data,width,height){
   return occupancy;
 }
 const sameRgba=(a,b)=>{if(a.length!==b.length)return false;for(let i=0;i<a.length;i++)if(a[i]!==b[i])return false;return true;};
-const createRaster=(parts,canvas,context,attributes)=>({valid:false,width:0,height:0,duplicateWithinPart:0,degenerate:0,imageData:null,canvas,context,attributes,uploadOwner:null,
+const createRaster=(parts,canvas,context,attributes)=>({valid:false,width:0,height:0,duplicateWithinPart:0,degenerate:0,imageData:null,canvas,context,attributes,uploadOwner:null,lastUsed:0,
   parts:parts.map(part=>({part,target:new Float64Array(part.target.length)}))});
 const invalidateRasters=p=>{for(const raster of p.rasters){raster.valid=false;raster.uploadOwner=null;}};
 function createPaintSurface(createCanvas,width=0,height=0){
@@ -28,8 +28,8 @@ function createPaintSurface(createCanvas,width=0,height=0){
   }catch(error){canvas.width=0;canvas.height=0;throw error;}
 }
 
-// One source read per original crop. At most two bounded surfaces retain the
-// exact raster payloads, so selecting a cached owner needs no pixel upload.
+// One source read per original crop. A small LRU of exact raster payloads
+// avoids overwriting recently drawn surfaces, within the same total pixel cap.
 // Image ownership releases all buffers when the installed sprite is released.
 export function createV177RangerLowerPainter(image,rig,createCanvas=()=>image.ownerDocument?.createElement('canvas')??globalThis.document?.createElement('canvas')) {
   const sourceCanvas=createCanvas();if(!sourceCanvas?.getContext)return null;
@@ -54,7 +54,7 @@ export function createV177RangerLowerPainter(image,rig,createCanvas=()=>image.ow
   paintCounts.createdPainters++;
   const lastRaster=createRaster(parts,canvas,context,attributes);
   return {canvas,context,attributes,parts,pose:createV177RangerLowerPose(rig),rig,width:0,height:0,sample:null,accum:null,visits:null,imageData:null,
-    createCanvas,lastRaster,rasters:[lastRaster]};
+    createCanvas,lastRaster,rasters:[lastRaster],useSequence:0};
 }
 function ensureCapacity(p,w,h) {
   let width=Math.max(p.width,w),height=Math.max(p.height,h);
@@ -167,7 +167,8 @@ export function paintV177RangerLower(p,ctx,phase,settle,x,y,width,height,feet=nu
     if(trace){trace.rasterFinishedAt=trace.lookupFinishedAt;trace.uploadFinishedAt=performance.now();}
   }else{
     if(p.lastRaster.valid&&p.width*p.height*2<=MAX_PIXELS){
-      last=p.rasters.find(raster=>raster.uploadOwner)??p.rasters.find(raster=>raster!==p.lastRaster);
+      const limit=Math.min(MAX_SURFACES,Math.floor(MAX_PIXELS/(p.width*p.height)));
+      last=p.rasters.length<limit?null:p.rasters.filter(raster=>raster!==p.lastRaster).reduce((oldest,raster)=>!oldest||raster.lastUsed<oldest.lastUsed?raster:oldest,null);
       if(!last){
         let canvas;
         try{
@@ -180,6 +181,9 @@ export function paintV177RangerLower(p,ctx,phase,settle,x,y,width,height,feet=nu
       p.lastRaster=last;p.imageData=last.imageData;
     }else last=p.lastRaster;
     const retainOwnPayload=last.valid&&!last.uploadOwner&&last.width===w&&last.height===h;
+    // Reassigning an owner can also turn it into an alias. Retire all old
+    // borrowers before either its payload or its ownership is changed.
+    for(const raster of p.rasters)if(raster.uploadOwner===last){raster.valid=false;raster.uploadOwner=null;}
     last.valid=false;
     p.accum.fill(0,0,w*h*4);
     for(const [ox,oy]of samples){
@@ -204,8 +208,6 @@ export function paintV177RangerLower(p,ctx,phase,settle,x,y,width,height,feet=nu
     if(ownPayloadReused)last.uploadOwner=null;
     else if(previousPayloadReused)last.uploadOwner=previousUploadOwner;
     else{
-      // A different payload cannot leave a geometry key borrowing this surface.
-      for(const raster of p.rasters)if(raster.uploadOwner===last){raster.valid=false;raster.uploadOwner=null;}
       last.uploadOwner=null;
       try{last.context.putImageData(p.imageData,0,0,0,0,w,h);}catch(error){invalidateRasters(p);throw error;}
     }
@@ -221,11 +223,12 @@ export function paintV177RangerLower(p,ctx,phase,settle,x,y,width,height,feet=nu
   // compositing and body transform apply once, with no second bitmap or leg.
   ctx.save();
   const uploadOwner=last.uploadOwner??last;
+  last.lastUsed=++p.useSequence;uploadOwner.lastUsed=p.useSequence;
   try{ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(uploadOwner.canvas,0,0,w,h,left,top,w,h);}
   catch(error){invalidateRasters(p);throw error;}
   finally{ctx.restore();}
   if(same)paintCounts.reusedDraws++;
-  if(trace){trace.surfaceAttributes=uploadOwner.attributes;trace.endedAt=performance.now();diagnostic.rangerPaint(trace);}
+  if(trace){trace.surfaceCount=p.rasters.length;trace.surfacePixels=p.rasters.reduce((sum,raster)=>sum+raster.canvas.width*raster.canvas.height,0);trace.surfaceAttributes=uploadOwner.attributes;trace.endedAt=performance.now();diagnostic.rangerPaint(trace);}
   return receipt;
 }
 

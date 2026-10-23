@@ -74,7 +74,7 @@ test('native Ready reuse requires a successful exact-head CI and its full-only p
 
 test('only the exact formal job correction avoids duplicating its unchanged running native control',()=>{
  const file='.github/workflows/targeted-frame-performance.yml';
- const workflowBlob=execFileSync('git',['hash-object',file],{encoding:'utf8',windowsHide:true}).trim();
+ const workflowBlob='774c4b1f8589ea83b407ef385bb09b1904519645';
  assert.deepEqual(framePerformanceRuntimes([file,'scripts/ci-change-scope.mjs','tests/ci-change-scope.test.mjs'],{workflowBlob}).map(r=>r.runtime),['formal']);
  for(const paths of [[file,'app/AshfallGame.tsx'],[file,'scripts/v100-device-runtime-browser.mjs'],[file,'unknown']])assert.equal(framePerformanceRuntimes(paths,{workflowBlob}).length,2);
  assert.equal(framePerformanceRuntimes([file],{workflowBlob:'f'.repeat(40)}).length,2);
@@ -309,4 +309,24 @@ test('new source heads do not wait behind a previous head and all original full 
  assert.equal(current.concurrency['cancel-in-progress'],false);
  current.concurrency.group=original.concurrency.group;
  assert.deepEqual(current,original,'all jobs, inputs, limits, permissions and acceptance assertions remain identical');
+});
+
+test('exact reviewed Kuma motion, Ranger pool and first-fixed-paint QA target Draft dependencies and preserve every full fallback',()=>{
+ const ranger='app/v177RangerLowerPaint.js',kuma='app/v177WeaponChoreography.js',receipts='scripts/v177-ranger-performance-receipts.mjs';
+ const blob=file=>execFileSync('git',['hash-object',file],{encoding:'utf8',windowsHide:true}).trim();
+ for(const paths of [[kuma],[ranger,kuma],[receipts],[ranger,kuma,receipts]]){
+  const sourceBlobs=Object.fromEntries(paths.map(file=>[file,blob(file)])),options={draft:true,sourceBlobs},scope=ciChangeScope(paths,options);
+  assert.equal(scope.full,false);assert.equal(scope.normal,paths.includes(kuma)||paths.includes(ranger));
+  assert.equal(scope.allunit,paths.includes(kuma)||paths.includes(ranger));assert.equal(scope.ranger,paths.includes(ranger));assert.equal(scope.r9,false);
+  assert.equal(ciChangeScope(paths,{...options,draft:false}).full,true);
+  for(const file of paths){for(const invalid of [null,'f'.repeat(40),'malformed']){
+    const bad={...sourceBlobs};if(invalid===null)delete bad[file];else bad[file]=invalid;
+    assert.equal(ciChangeScope(paths,{draft:true,sourceBlobs:bad}).full,true);
+  }}
+  assert.equal(ciChangeScope([...paths,'app/unknown.js'],options).full,true);
+ }
+ assert.equal(ciChangeScope([ranger],{draft:true,sourceBlobs:{[ranger]:'39dc936236c666ce34009c9e975f4b3a280f4f80'}}).full,true);
+ assert.deepEqual(framePerformanceRuntimes([receipts]).map(r=>r.runtime),['formal','native-recording-control']);
+ const workflow=load(readFileSync('.github/workflows/targeted-frame-performance.yml','utf8'));
+ assert.ok(workflow.on.pull_request.paths.includes(receipts),'changing the transitive workload validator must trigger the real original measurement');
 });

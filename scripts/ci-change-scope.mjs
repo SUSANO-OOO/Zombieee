@@ -39,6 +39,7 @@ const orchestration=new Set(['.github/workflows/ci.yml','scripts/ci-change-scope
 // Reviewed validation and QA-only observation revisions. Gameplay, rendering
 // and limits are unchanged; a different blob restores full regression.
 const reviewedValidationBlobs=Object.freeze({
+  'scripts/v177-ranger-performance-receipts.mjs':'5b7edbda4231ae997eee17876805e449d95242dc',
   'scripts/v177-reaction-render-contract.mjs':'fb84ffd008b65864539c914c84a0f9b910c9acd7',
   // Preparation plus living/corpse observation and synchronous sample timing.
   'app/AshfallGame.tsx':'4445d531b03a44a1147a3ae44d74a8e869d7ba37',
@@ -75,7 +76,7 @@ export function framePerformanceRuntimes(paths,{workflowBlob}={}){
   const formal={runtime:'formal',host:'macos-15'},native={runtime:'native-recording-control',host:'macos-15-intel'};
   const workflow='.github/workflows/targeted-frame-performance.yml';
   const relevant=paths.some(p=>/^(app\/|public\/|package(-lock)?\.json$)/u.test(p)
-    ||[workflow,'scripts/v100-device-runtime-browser.mjs'].includes(p));
+    ||[workflow,'scripts/v100-device-runtime-browser.mjs','scripts/v177-ranger-performance-receipts.mjs'].includes(p));
   if(!relevant)return[];
   // Exact job-name/dispatch correction only. The recorded/native commands and
   // product are identical to2746; its running comparison must not be duplicated.
@@ -84,7 +85,8 @@ export function framePerformanceRuntimes(paths,{workflowBlob}={}){
   return[formal,native];
 }
 const reviewedMotionBlobs=Object.freeze({
-  'app/v177RangerLowerPaint.js':'39dc936236c666ce34009c9e975f4b3a280f4f80',
+  'app/v177RangerLowerPaint.js':'8ee9f9cc4b3d3f9405d760b8c3acbd463e0c3625',
+  'app/v177WeaponChoreography.js':'a01def970c07107bf764a1b0eecf8eeafea4e08e',
   'app/combatPresentation.js':'327c7a1dd55707c16385d01d28030a37dc4b27c7',
   'app/AshfallGame.tsx':'95df06a678e2be79ec076059df910dc95c33298c',
   'app/v177HitReaction.js':'6e7dc3705b3fa8ee8095c675b4046571a085e5af',

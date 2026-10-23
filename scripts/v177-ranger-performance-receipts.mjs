@@ -12,7 +12,7 @@ const validStartActors=b=>Array.isArray(b?.actors)&&new Set(b.actors.map(a=>a?.i
 // They do not replace its native RAF clock,33ms budget or any original gate.
 export function rangerPerformanceReceipts(samples,{startedAt,endedAt}){
   const errors=[],actors=new Map();let observations=0,absenceSamples=0,lastReadAt=null,lastSimulationTime=null;
-  let firstStart=null,lastRenderBoundary=null,baselineObservations=0,newPaintObservations=0;
+  let firstStart=null,lastRenderBoundary=null,baselineObservations=0,newPaintObservations=0,firstFixedStepPaintObservations=0;
   const check=(ok,message)=>{if(!ok)errors.push(message);};
   check(Number.isFinite(startedAt)&&Number.isFinite(endedAt)&&endedAt>startedAt,'Invalid original measurement window');
   check(Array.isArray(samples)&&samples.length>0,'Missing in-window observations');
@@ -69,7 +69,25 @@ export function rangerPerformanceReceipts(samples,{startedAt,endedAt}){
       const newPaint=validRenderBoundary(preceding)&&validRenderBoundary(current)
         &&draw.renderSequence>preceding.renderSequence&&draw.renderSequence<=current.renderSequence
         &&draw.jointPaintedAt>preceding.simulationTime&&draw.jointPaintedAt<=current.simulationTime;
-      check(baseline||newPaint,'Ranger tail is neither exact start-frame baseline nor new paint after the preceding actual snapshot');
+      // A completed draw can precede the next fixed simulation step. Only the
+      // first observation may use this edge, with the actual same-actor start
+      // paint and completed first-draw fence proving a new physical paint.
+      const fence=observed.firstPaintFence;
+      const firstFixedStepPaint=index===0&&validRenderBoundary(origin)&&validRenderBoundary(current)
+        &&actor.objectRender!==null&&typeof actor.objectRender==='object'
+        &&JSON.stringify(actor.objectRender)===JSON.stringify(draw)
+        &&initial?.worldWeightedLower!==null
+        &&typeof initial?.worldWeightedLower==='object'&&!Array.isArray(initial.worldWeightedLower)
+        &&Number.isSafeInteger(initial?.renderSequence)&&initial.renderSequence>0&&initial.renderSequence<=origin.renderSequence
+        &&Number.isFinite(initial?.jointPaintedAt)&&initial.jointPaintedAt<origin.simulationTime
+        &&draw.renderSequence>origin.renderSequence&&draw.renderSequence<=current.renderSequence
+        &&draw.jointPaintedAt===origin.simulationTime&&draw.jointPaintedAt<=current.simulationTime
+        &&fence?.status==='completed'&&Number.isSafeInteger(fence.beforeRenderFrames)&&fence.beforeRenderFrames>=0
+        &&Number.isSafeInteger(fence.observedRenderFrames)&&fence.observedRenderFrames>fence.beforeRenderFrames
+        &&Number.isFinite(fence.requestedAt)&&fence.requestedAt>=startedAt
+        &&Number.isFinite(fence.observedAt)&&fence.observedAt>=fence.requestedAt&&fence.observedAt<=observed.readAt
+        &&fence.timeoutMs===2000&&fence.observedAt-fence.requestedAt<fence.timeoutMs;
+      check(baseline||newPaint||firstFixedStepPaint,'Ranger tail is neither exact start-frame baseline nor new paint after the preceding actual snapshot');
       check(draw.renderKind==='ranger'&&draw.assetReady===true&&draw.renderWidth>0&&draw.renderHeight>0,'Ranger draw identity or asset is unverified');
       check(draw.jointAtlasPath===V177_JOINT_ATLASES.ranger.path,'Ranger draw uses a different connected texture');
       check(Number.isSafeInteger(draw.renderSequence)&&draw.renderSequence>0,'Missing actual Ranger render sequence');
@@ -86,14 +104,14 @@ export function rangerPerformanceReceipts(samples,{startedAt,endedAt}){
       }else actors.set(actor.id,{id:actor.id,kind:actor.kind,firstReadAt:observed.readAt,lastReadAt:observed.readAt,
         firstSequence:draw.renderSequence,lastSequence:draw.renderSequence,firstPaintedAt:draw.jointPaintedAt,lastPaintedAt:draw.jointPaintedAt,
         originalStats:Object.fromEntries(['maxHp','speed','laneSpeed','damage','range','attackEvery'].map(key=>[key,actor[key]])),observations:1});
-      if(sampleBoundaryValid&&errors.length===actorErrorsBefore){if(baseline)baselineObservations++;else if(newPaint)newPaintObservations++;}
+      if(sampleBoundaryValid&&errors.length===actorErrorsBefore){if(baseline)baselineObservations++;else if(newPaint||firstFixedStepPaint){newPaintObservations++;if(firstFixedStepPaint)firstFixedStepPaintObservations++;}}
     }
     lastRenderBoundary=current;
   }
   const advancingActors=[...actors.values()].filter(actor=>actor.observations>=2&&actor.lastSequence>actor.firstSequence&&actor.lastPaintedAt>actor.firstPaintedAt);
   check(advancingActors.length>0,'No Ranger has advancing weighted draws inside the original window');
   return{schema:'v177-ranger-performance-receipts/v1',status:errors.length?'incomplete':'recorded',weightedPaintObserved:errors.length===0,
-    startedAt,endedAt,sampleCount:Array.isArray(samples)?samples.length:0,observations,absenceSamples,baselineObservations,newPaintObservations,actors:[...actors.values()],errors,
+    startedAt,endedAt,sampleCount:Array.isArray(samples)?samples.length:0,observations,absenceSamples,baselineObservations,newPaintObservations,firstFixedStepPaintObservations,actors:[...actors.values()],errors,
     scope:'Actual unfiltered same-ID tails qualified by original start/preceding snapshot counter and clock; exact start-frame baselines are separate from new in-window paints. Genuine absence/new IDs and original raw object audits retained.',
     originalSpeedAccepted:false,naturalnessAccepted:false,physicalIphoneRecordingAccepted:false,wholeGameAccepted:false};
 }
