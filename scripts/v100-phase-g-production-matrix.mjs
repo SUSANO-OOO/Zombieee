@@ -1065,6 +1065,8 @@ function phaseGPointerFailure(code, evidence = {}, pointerCount = 0) {
 
 async function withDeploymentPreinputDeadline(page, operationPromise, deadlineMs, code, evidence = {}) {
   let timeoutId;
+  const clock=globalThis.performance,startedAt=clock?.now?.()??null;
+  const loopStart=clock?.eventLoopUtilization?.()??null;
   try {
     const outcome = await Promise.race([
       operationPromise.then(
@@ -1077,11 +1079,16 @@ async function withDeploymentPreinputDeadline(page, operationPromise, deadlineMs
     ]);
     if (outcome.status === "fulfilled") return outcome.value;
     if (outcome.status === "rejected") throw outcome.error;
+    const timeoutObservedAt=clock?.now?.()??null;
+    const eventLoop=loopStart?clock.eventLoopUtilization(loopStart):null;
     const cancellation = await terminateTimedOutDeploymentPreinput(page, operationPromise);
     throw phaseGPointerFailure(code, {
       ...evidence,
       reason: "preinput-operation-timeout",
       deadlineMs,
+      nodeTiming: { clock: "Node performance.now", startedAt, timeoutObservedAt,
+        elapsedMs:startedAt===null||timeoutObservedAt===null?null:timeoutObservedAt-startedAt,
+        eventLoop:eventLoop?{idleMs:eventLoop.idle,activeMs:eventLoop.active,utilization:eventLoop.utilization}:null },
       cancellation,
     }, 0);
   } finally {

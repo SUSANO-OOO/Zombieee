@@ -81,19 +81,27 @@ function rasterPart(p,g,w,h,ox,oy,stats) {
       const ix=Math.floor(sx),iy=Math.floor(sy),fx=sx-ix,fy=sy-iy;let r=0,green=0,b=0,a=0;
       for(let yy=0;yy<2;yy++)for(let xx=0;xx<2;xx++){
         const ux=ix+xx,uy=iy+yy;if(ux<0||uy<0||ux>=g.rect.w||uy>=g.rect.h)continue;
-        const at=(uy*g.rect.w+ux)*4,alpha=g.normalized[at+3],weight=(xx?fx:1-fx)*(yy?fy:1-fy);
+        const at=(uy*g.rect.w+ux)*4,alpha=g.normalized[at+3];if(alpha===0)continue;
+        const weight=(xx?fx:1-fx)*(yy?fy:1-fy);
         const amount=alpha*weight;a+=amount;r+=g.normalized[at]*amount;green+=g.normalized[at+1]*amount;b+=g.normalized[at+2]*amount;
       }
-      if(a===0)continue;const at=pixel*4,keep=1-a;
+      if(a===0)continue;const at=pixel*4;
+      if(a===1){p.sample[at]=r;p.sample[at+1]=green;p.sample[at+2]=b;p.sample[at+3]=1;continue;}
+      const keep=1-a;
       p.sample[at]=r+p.sample[at]*keep;p.sample[at+1]=green+p.sample[at+1]*keep;p.sample[at+2]=b+p.sample[at+2]*keep;p.sample[at+3]=a+p.sample[at+3]*keep;
     }
   }
 }
 
 export function paintV177RangerLower(p,ctx,phase,settle,x,y,width,height,feet=null) {
+  const diagnostic=globalThis.__V100_RAF_CALLBACK_DIAG__;
+  const trace=diagnostic?.rangerPaintActive===true&&typeof diagnostic.rangerPaint==='function'
+    ?{startedAt:performance.now()}:null;
   let pose;
   try{pose=v177RangerLowerPose(p.rig,phase,settle,p.pose,feet);}catch(error){invalidateRasters(p);throw error;}
+  if(trace)trace.poseFinishedAt=performance.now();
   const m=ctx.getTransform();
+  if(trace){trace.phase=pose.phase;trace.settle=pose.settle;trace.transform=[m.a,m.b,m.c,m.d,m.e,m.f];}
   const sx=width/480,sy=height/448,a=m.a*sx,b=m.b*sx,c=m.c*sy,d=m.d*sy,e=m.a*x+m.c*y+m.e,f=m.b*x+m.d*y+m.f;
   if(![a,b,c,d,e,f].every(Number.isFinite)||Math.abs(a*d-b*c)<1e-12){invalidateRasters(p);return {mode:'legacy-cell-fallback',reason:'invalid-transform'};}
   let left=Infinity,top=Infinity,right=-Infinity,bottom=-Infinity;
@@ -121,12 +129,14 @@ export function paintV177RangerLower(p,ctx,phase,settle,x,y,width,height,feet=nu
   let last=p.rasters.find(raster=>raster.valid&&raster.width===w&&raster.height===h&&raster.parts.length===p.parts.length&&p.parts.every((g,i)=>
     raster.parts[i].part===g&&g.target.every((value,j)=>value===raster.parts[i].target[j])));
   const same=!!last;
+  if(trace){trace.lookupFinishedAt=performance.now();trace.reused=same;trace.cacheSwitch=same&&last!==p.lastRaster;trace.width=w;trace.height=h;}
   if(same){
     if(last!==p.lastRaster){
       try{p.context.putImageData(last.imageData,0,0);}catch(error){invalidateRasters(p);throw error;}
       p.lastRaster=last;p.imageData=last.imageData;
     }
     receipt.duplicateWithinPart=last.duplicateWithinPart;receipt.degenerate=last.degenerate;
+    if(trace){trace.rasterFinishedAt=trace.lookupFinishedAt;trace.uploadFinishedAt=performance.now();}
   }else{
     if(p.lastRaster.valid&&p.width*p.height*2<=MAX_PIXELS){
       last=p.rasters.find(raster=>raster!==p.lastRaster);
@@ -145,10 +155,12 @@ export function paintV177RangerLower(p,ctx,phase,settle,x,y,width,height,feet=nu
     }
     p.imageData.data.fill(0);
     for(let py=0;py<h;py++)for(let px=0;px<w;px++){
-      const at=(py*w+px)*4,to=(py*p.width+px)*4,alpha=p.accum[at+3];
+      const at=(py*w+px)*4,to=(py*p.width+px)*4,alpha=p.accum[at+3];if(alpha===0)continue;
       for(let k=0;k<3;k++)p.imageData.data[to+k]=alpha>0?Math.round(p.accum[at+k]/alpha*255):0;p.imageData.data[to+3]=Math.round(alpha*255);
     }
+    if(trace)trace.rasterFinishedAt=performance.now();
     try{p.context.putImageData(p.imageData,0,0);}catch(error){invalidateRasters(p);throw error;}
+    if(trace)trace.uploadFinishedAt=performance.now();
     if(last.parts.length!==p.parts.length||p.parts.some((g,i)=>last.parts[i].part!==g))
       last.parts=p.parts.map(part=>({part,target:new Float64Array(part.target.length)}));
     for(let i=0;i<p.parts.length;i++)last.parts[i].target.set(p.parts[i].target);
@@ -162,6 +174,7 @@ export function paintV177RangerLower(p,ctx,phase,settle,x,y,width,height,feet=nu
   catch(error){invalidateRasters(p);throw error;}
   finally{ctx.restore();}
   if(same)paintCounts.reusedDraws++;
+  if(trace){trace.endedAt=performance.now();diagnostic.rangerPaint(trace);}
   return receipt;
 }
 

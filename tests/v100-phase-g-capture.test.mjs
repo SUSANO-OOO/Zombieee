@@ -58,6 +58,28 @@ test("a timed-out background input settles cancellation before queued input can 
   assert.deepEqual(calls, [["deadline", 500], ["cancel"], ["settled"]]);
 });
 
+test('input timeout preserves its original deadline and measures Node wait before cancellation',async()=>{
+  const declaration=parsed.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==='withDeploymentPreinputDeadline');
+  let clock=10,trigger,cancellations=0;
+  const loopStart=Object.freeze({active:11,idle:20,utilization:11/31});
+  const run=vm.runInNewContext(declaration.getText(parsed)+'\nwithDeploymentPreinputDeadline',{
+    performance:{now:()=>clock,eventLoopUtilization:previous=>{
+      if(!previous)return loopStart;assert.equal(previous,loopStart);return{active:19,idle:486,utilization:19/505};
+    }},
+    setTimeout:(callback,budget)=>{assert.equal(budget,500);trigger=callback;return 1;},clearTimeout(){},
+    terminateTimedOutDeploymentPreinput:async()=>{cancellations++;clock+=50_000;return{terminalLifecycleVerified:true};},
+    phaseGPointerFailure:(code,evidence)=>Object.assign(new Error(code),{evidence}),
+  });
+  const pending=run({},new Promise(()=>{}),500,'ORIGINAL_TIMEOUT',{control:'sustain-ability'});
+  const rejected=assert.rejects(pending,error=>{
+    assert.equal(error.message,'ORIGINAL_TIMEOUT');assert.equal(error.evidence.deadlineMs,500);
+    assert.deepEqual(JSON.parse(JSON.stringify(error.evidence.nodeTiming)),{clock:'Node performance.now',startedAt:10,timeoutObservedAt:515,elapsedMs:505,
+      eventLoop:{activeMs:19,idleMs:486,utilization:19/505}});
+    return true;
+  });
+  clock=515;trigger();await rejected;assert.equal(cancellations,1);
+});
+
 test("an unavailable redeploy candidate leaves the shared capture page and scheduler untouched", async () => {
   const declaration = parsed.statements.find(node => ts.isFunctionDeclaration(node)
     && node.name?.text === "performVerifiedDeploymentPointer");

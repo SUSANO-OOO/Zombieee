@@ -4,7 +4,11 @@
 
 2026-10-22の追加指示で、修正と必須検証を終えて公開まで進めることが承認された。次候補は1.0.4、実行台帳はIssue #177／Ready PR #180。公開中の1.0.3／mainは `99f9c193ab1e35531db39225c839138cdb1c33cd`（今回再取得）。以下の旧公開保留は当時の記録として保全する。
 
-2026-10-23の追加CI `39941753211` では、PR Verifyの権限contract1件に加え、正式性能の844×390が34ms（元基準33ms）、通常playのS14・S30が元30秒protocol期限で失敗した。権限は `6844c8ec` で必要なscope jobだけへ限定済み。追加修正ではRangerの生存体と死体の共有描画による再rasterを減らすため、全backing頂点が完全一致するpayloadだけ最大2件保持し、RGBA合計65536px・1surface・元IK／4標本を維持した。元36姿勢・3画面の画素と既存13testsは同一、交互120drawの画素／receiptも同一でraster120→3。ただしMac33ms改善は未確認。通常playは固定編成cardの重複countを省き、各nthのfresh判定・scroll後再読取・元入力順と期限を保持する。最初のtimeoutにはmonotonic時刻と上限付きselectorを残す。変更に依存するRanger15観察だけ再開し、他564件は元所有で保持する。下記579件の完了は追加修正前の技術記録であり、追加候補の15件・最終CI・自然さ／聴感・作品全体の確認は未完。元34ms・S14/S30失敗を成功へ書き換えず、公開はまだ行っていない。
+2026-10-23：候補 `0eb19309` のRanger15観察（normal9／manual3／outcome3）は全通過し、元564件と合わせ579件の技術記録を確認した。source394・build・元clock・公式ZIP・CI decode1020frames／errors0、encoded最大180ms・先頭0・末尾最大64msを照合。旧564映像の再取得・再decodeは0。Chromium Qualityも成功。ただし正式ARM性能run `39950050679` は6窓39／32／32・33／31／19msで、最初の844×340だけ元33msを超えた。actual cadence・Ranger実paint・errors0は通過しても、性能全体は未達のまま保持する。
+
+先行ca136 CIのPhase GはStage4・736×414の手動入力が元500msを超えた。observe165ms／move166ms／down150msで481msを消費し、up中のcontext終了が二次エラーとなった。原成功49capture・失敗1・未実行5と7件のCOMPLETE transactionを保持し、最終report／全体validateの成功へ昇格しない。権限contract、旧34ms、通常play S14／S30の元30秒protocol超過も履歴として保全。0ebの描画cache・重複count削減だけでこれらが解消したとは断定しない。
+
+追加候補ではRangerの透明／不透明画素に対する不要な計算だけを省き、元4coverage・192triangles・IK・alpha／Float32合成を保持した。凍結36姿勢×3画面と連続480変形は元画素／receiptと一致。手元の時間差は小さく、Mac33ms改善を主張しない。既存任意診断の測定中だけpose／lookup／raster／upload／blitを同じ原時計・元12000件上限で分け、Phase Gのtimeout検出時には終了処理前のNode時計とevent-loop差分を保存する。追加のpage RPC・poll・timer・retryはない。変更に依存するRanger15件だけを再開し、他564件の元所有は保持する。原120ms標本・250ms／strictPTS-DTS・30秒case・15分job・8MiB、正式30秒／33msと500ms入力期限は変えない。最終CIと性能の未達修正は継続中で、公開はまだ行っていない。追加のProducer承認待ちは解除済みであり、人による自然さ・最終聴感や物理iPhone保存録画BGM／SEを確認済みとは扱わない。
 
 `3487cd39` までの製品変更で、全48形態の武器・両手・接地・重心・攻撃軌道・被弾を改善し、ババヤガは拳銃を下げて携行し接敵時に両手で構える。武蔵は二刀、クレイジーキングは両手のチェーンソー、クマバーソンは鍋の振り下ろし、Ωは握った右手の大剣で攻撃する。追加の実映像監査で判明した変異社長とΩの頭上を通る打撃、杖による足浮き、中断復帰時の跳ねも修正。硬直開始0の元paintを厳密に保持し、無関係な通常unitの不要な武器接地処理も省いた。元の骨長・接地・性能条件は変えない。
 

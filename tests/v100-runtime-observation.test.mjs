@@ -73,6 +73,22 @@ test("diagnostic storage remains bounded without hiding native calls or exceptio
   assert.equal(c.getterOwner.getSnapshot, c.nativeGetter);
 });
 
+test('lower timing joins the bounded original clock only while the existing diagnostic is active',()=>{
+  const c=timingContext(),diagnostic=c.window.__V100_RAF_CALLBACK_DIAG__;
+  const paint={startedAt:1,poseFinishedAt:2,lookupFinishedAt:3,rasterFinishedAt:7,uploadFinishedAt:8,endedAt:9,
+    reused:false,cacheSwitch:false,width:22,height:44,transform:[1,0,0,1,640,360]};
+  assert.equal(diagnostic.rangerPaintActive,false);diagnostic.rangerPaint(paint);
+  diagnostic.start();assert.equal(diagnostic.rangerPaintActive,true);
+  for(let i=0;i<12_002;i++)diagnostic.rangerPaint(paint);
+  const output=JSON.parse(JSON.stringify(diagnostic.stop()));
+  assert.equal(diagnostic.rangerPaintActive,false);assert.equal(c.reads(),0);
+  assert.equal(output.timeline.records.length,12_000);assert.equal(output.timeline.overflow,2);
+  assert.equal(output.count,0);assert.equal(output.timeline.costs['ranger-lower'].count,12_000);
+  assert.deepEqual(output.timeline.records[0],{kind:'ranger-lower',startedAt:1,endedAt:9,durationMs:8,frameTimestamp:null,lowerPaint:paint});
+  assert.equal(runtimePerformanceConsoleSummary({callbackDiagnostic:output}).callbackDiagnostic.timeline.costs['ranger-lower'].p95Ms,8);
+  diagnostic.rangerPaint(paint);assert.equal(output.timeline.overflow,2);
+});
+
 test("existing RAF diagnostics retain only a new same-callback CPU tail without extra sampling", () => {
   const c = timingContext(), rows = [], diagnostic = c.window.__V100_RAF_CALLBACK_DIAG__;
   c.window.__ASHFALL_RUNTIME_PERFORMANCE__ = { frameCpuTimings: rows, frameCpuSequence: 0 };

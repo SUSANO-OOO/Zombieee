@@ -48,7 +48,7 @@ export function runtimePerformanceConsoleSummary(value) {
         clock: diagnostic.timeline?.clock,
         maxRecords: diagnostic.timeline?.maxRecords,
         overflow: diagnostic.timeline?.overflow,
-        costs: Object.fromEntries(["raf", "layout", "snapshot", "pointerdown", "pointerup"].flatMap(kind => {
+        costs: Object.fromEntries(["raf", "layout", "snapshot", "pointerdown", "pointerup", "ranger-lower"].flatMap(kind => {
           const cost = costs?.[kind];
           return cost ? [[kind, { count: cost.count, p95Ms: cost.p95Ms, maxMs: cost.maxMs }]] : [];
         })),
@@ -110,6 +110,13 @@ export function installRuntimeObservationDiagnostics() {
   const pointerTypes = ["pointerdown", "pointerup"];
   for (const type of pointerTypes) window.addEventListener(type, pointer, { capture: true, passive: true });
   window.__V100_RAF_CALLBACK_DIAG__ = {
+    rangerPaintActive: false,
+    rangerPaint(paint) {
+      if(!active)return;
+      if(records.length>=maxRecords){overflow+=1;return;}
+      records.push({kind:'ranger-lower',startedAt:paint.startedAt,endedAt:paint.endedAt,
+        durationMs:paint.endedAt-paint.startedAt,frameTimestamp:null,lowerPaint:{...paint}});
+    },
     start() {
       records.length = 0;
       overflow = 0;
@@ -126,9 +133,11 @@ export function installRuntimeObservationDiagnostics() {
       snapshotOwner.getSnapshot = snapshotWrapper;
       if (snapshotOwner.getSnapshot !== snapshotWrapper) throw new Error("Runtime snapshot timing hook was not installed");
       active = true;
+      window.__V100_RAF_CALLBACK_DIAG__.rangerPaintActive = true;
     },
     stop() {
       active = false;
+      window.__V100_RAF_CALLBACK_DIAG__.rangerPaintActive = false;
       if (snapshotOwner?.getSnapshot === snapshotWrapper) snapshotOwner.getSnapshot = originalSnapshot;
       window.requestAnimationFrame = originalRaf;
       Element.prototype.getBoundingClientRect = originalRect;

@@ -88,6 +88,33 @@ test('bitmap reuse observes subpixel, foot, facing and surface changes and appli
   paint({phase:.39});assert.equal(writes,before+3,'a failed put cannot create a successful reuse receipt');
 });
 
+test('optional lower timing identifies raster, upload and blit without changing pixels or paint receipts',()=>{
+  const previous=globalThis.__V100_RAF_CALLBACK_DIAG__,rows=[];
+  const painter=createV177RangerLowerPainter(image(),rig);
+  const paint=()=>{
+    const target=main({matrix:[1,0,0,1,640,360]});
+    const receipt=paintV177RangerLower(painter,target.ctx,.371,.5,-48,-80,96,89.6);
+    return {receipt,pixels:target.calls[0].pixels};
+  };
+  try{
+    const expected=paint();
+    globalThis.__V100_RAF_CALLBACK_DIAG__={rangerPaintActive:false,rangerPaint:row=>rows.push(row)};
+    assert.deepEqual(paint(),expected);assert.equal(rows.length,0);
+    globalThis.__V100_RAF_CALLBACK_DIAG__.rangerPaintActive=true;
+    assert.deepEqual(paint(),expected);assert.equal(rows.length,1);assert.equal(rows[0].reused,true);
+    assert.equal(rows[0].cacheSwitch,false);assert.deepEqual(rows[0].transform,[1,0,0,1,640,360]);
+    assert.equal(rows[0].rasterFinishedAt,rows[0].lookupFinishedAt);
+    for(const key of ['startedAt','poseFinishedAt','lookupFinishedAt','rasterFinishedAt','uploadFinishedAt','endedAt'])assert.ok(Number.isFinite(rows[0][key]));
+    const times=Object.entries(rows[0]).filter(([key])=>key.endsWith('At')).map(([,value])=>value);
+    assert.ok(times.every((value,index)=>index===0||value>=times[index-1]));
+    const fresh=createV177RangerLowerPainter(image(),rig),target=main({matrix:[1,0,0,1,640,360]});
+    assert.deepEqual(paintV177RangerLower(fresh,target.ctx,.371,.5,-48,-80,96,89.6),expected.receipt);
+    assert.deepEqual(target.calls[0].pixels,expected.pixels);assert.equal(rows[1].reused,false);
+  }finally{
+    if(previous===undefined)delete globalThis.__V100_RAF_CALLBACK_DIAG__;else globalThis.__V100_RAF_CALLBACK_DIAG__=previous;
+  }
+});
+
 test('alternating Ranger owners keep exact pixels and current draw state without repeated rasterization',()=>{
   const activePixels=(receipt,call)=>{
     const result=new Uint8ClampedArray(receipt.width*receipt.height*4);
