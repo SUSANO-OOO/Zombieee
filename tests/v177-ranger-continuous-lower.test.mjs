@@ -588,3 +588,29 @@ test('evicting a Ranger upload owner cannot leave an alias pointing through a ne
     }
   }
 });
+
+test('sixteen rotating poses retain exact pixels inside the original total pixel bound and survive alias eviction',()=>{
+  const {painter,observation}=observedPainter();
+  paintPoolInput(painter,.371,120);paintPoolInput(painter,.371,96,true);
+  const phases=Array.from({length:16},(_,i)=>.03+i*.05),expected=phases.map(phase=>{
+    const control=observedPainter();return paintPoolInput(control.painter,phase);
+  });
+  for(let cycle=0;cycle<4;cycle++)for(const [i,phase]of phases.entries()){
+    const actual=paintPoolInput(painter,phase);assert.deepEqual(actual.receipt,expected[i].receipt);assertSameActiveLower(actual,expected[i]);
+    assert.ok(painter.rasters.length<=16);
+    assert.ok(painter.rasters.reduce((sum,r)=>sum+r.canvas.width*r.canvas.height,0)<=65536);
+    assert.ok(painter.rasters.reduce((sum,r)=>sum+r.imageData.data.byteLength,0)<=65536*4);
+  }
+  assert.equal(painter.rasters.length,16);assert.equal(observation.writes,17,'one warmup and sixteen independent uploads; later rotations reuse them');
+  const churn=[...phases.map(p=>p+1e-12),...Array.from({length:20},(_,i)=>.041+i*.043),...phases.map(p=>p+2e-12),...phases];
+  for(const phase of churn){
+    const actual=paintPoolInput(painter,phase),control=observedPainter(),expected=paintPoolInput(control.painter,phase);
+    assert.deepEqual(actual.receipt,expected.receipt);assertSameActiveLower(actual,expected);
+    for(const r of painter.rasters)if(r.valid&&r.uploadOwner){
+      assert.equal(r.uploadOwner.valid,true);assert.equal(r.uploadOwner.uploadOwner,null);
+      assert.deepEqual(r.imageData.data,r.uploadOwner.canvas.data.data);
+    }
+    assert.ok(painter.rasters.length<=16);
+    assert.ok(painter.rasters.reduce((sum,r)=>sum+r.canvas.width*r.canvas.height,0)<=65536);
+  }
+});

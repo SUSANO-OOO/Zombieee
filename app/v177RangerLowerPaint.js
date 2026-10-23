@@ -1,6 +1,6 @@
 import {createV177RangerLowerPose,v177RangerLowerPose} from './v177RangerLowerMotion.js';
 
-const painters=new WeakMap(),MAX_PIXELS=65536,MAX_SURFACES=8;
+const painters=new WeakMap(),MAX_PIXELS=65536,MAX_SURFACES=16;
 const paintCounts={createdPainters:0,rasterizedDraws:0,reusedDraws:0};
 export const getV177RangerLowerPaintSnapshot=()=>({...paintCounts});
 const samples=[[.25,.25],[.75,.25],[.25,.75],[.75,.75]];
@@ -180,6 +180,8 @@ export function paintV177RangerLower(p,ctx,phase,settle,x,y,width,height,feet=nu
       }
       p.lastRaster=last;p.imageData=last.imageData;
     }else last=p.lastRaster;
+    if(trace){trace.writeSurfaceIndex=p.rasters.indexOf(last);trace.writeSurfaceLastUsed=last.lastUsed;
+      trace.drawsSinceSurfaceUse=last.lastUsed>0?p.useSequence-last.lastUsed:null;trace.replacingValidGeometry=last.valid;}
     const retainOwnPayload=last.valid&&!last.uploadOwner&&last.width===w&&last.height===h;
     // Reassigning an owner can also turn it into an alias. Retire all old
     // borrowers before either its payload or its ownership is changed.
@@ -211,7 +213,7 @@ export function paintV177RangerLower(p,ctx,phase,settle,x,y,width,height,feet=nu
       last.uploadOwner=null;
       try{last.context.putImageData(p.imageData,0,0,0,0,w,h);}catch(error){invalidateRasters(p);throw error;}
     }
-    if(trace){trace.payloadReused=payloadReused;trace.payloadReuseOwner=ownPayloadReused?'own':previousPayloadReused?'previous':null;}
+    if(trace){trace.payloadReused=payloadReused;trace.payloadReuseOwner=ownPayloadReused?'own':previousPayloadReused?'previous':null;trace.actualUpload=!payloadReused;}
     if(trace)trace.uploadFinishedAt=performance.now();
     if(last.parts.length!==p.parts.length||p.parts.some((g,i)=>last.parts[i].part!==g))
       last.parts=p.parts.map(part=>({part,target:new Float64Array(part.target.length)}));
@@ -228,7 +230,7 @@ export function paintV177RangerLower(p,ctx,phase,settle,x,y,width,height,feet=nu
   catch(error){invalidateRasters(p);throw error;}
   finally{ctx.restore();}
   if(same)paintCounts.reusedDraws++;
-  if(trace){trace.surfaceCount=p.rasters.length;trace.surfacePixels=p.rasters.reduce((sum,raster)=>sum+raster.canvas.width*raster.canvas.height,0);trace.surfaceAttributes=uploadOwner.attributes;trace.endedAt=performance.now();diagnostic.rangerPaint(trace);}
+  if(trace){trace.drawSurfaceIndex=p.rasters.indexOf(uploadOwner);trace.surfaceCount=p.rasters.length;trace.surfacePixels=p.rasters.reduce((sum,raster)=>sum+raster.canvas.width*raster.canvas.height,0);trace.surfaceAttributes=uploadOwner.attributes;trace.endedAt=performance.now();diagnostic.rangerPaint(trace);}
   return receipt;
 }
 
