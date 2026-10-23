@@ -12,9 +12,7 @@
     "forms-1:ranger:attack:844x340",
     "forms-1:ranger:engage:1280x720",
     "forms-1:ranger:engage:844x390",
-    "forms-1:ranger:engage:844x340",
-    "forms-2:engineer:attack:1280x720",
-    "forms-4:mayo-chan:attack:1280x720"
+    "forms-1:ranger:engage:844x340"
   ],
   "manualCaseIds": [
     "forms-1:ranger:ranger-manual-precision:1280x720",
@@ -74,7 +72,7 @@
     "assets/source/v104/combat-audio/voice-red-panther-smg-hurt.wav": "268f62d43047d0020a4758aa7cd531619bb38345",
     "assets/source/v104/combat-audio/voices.json": "7c2139ef3f244eb0f9bf4eade9311784462e0ce9",
     "assets/source/v177/ranger/lower-r3/provenance.json": "a55585ebaadc357760ea02067012cd540776ce64",
-    "docs/PROJECT_STATE.md": "9eea707273dc682a4ef7c319758ec7853491269c",
+    "docs/PROJECT_STATE.md": "db4836f46b43208c8264635af6d41ba0e2d16bab",
     "docs/THIRD_PARTY_ASSETS.md": "363a3e0bdce12f376fe5126574a0e803258a41ee",
     "public/asset-manifest.json": "270ccec1db63083a0eb46275bf85885a68bdcd07",
     "public/audio/v104/combat/armor-hit.mp3": "1a47fb9f98f893faadc69ab0373e9aded0023ab1",
@@ -117,7 +115,7 @@
     "public/pwa-bundles/audio-v1.json": "e12f91970bac4c616d7b5d4bec6b27884751e3c1",
     "scripts/build-v104-combat-audio.mjs": "1a5acea833b19a260e07064b5091fa274a83cdeb",
     "scripts/build-v104-combat-voices.py": "e665baeba6da9c4cd883a1d3f298d9d93e3c0f6c",
-    "scripts/ci-change-scope.mjs": "a2d06cc39c3d62542353e2ca5f458edb5f3514dc",
+    "scripts/ci-change-scope.mjs": "2bba575d8760ab726c84999426abb9ba57f298ba",
     "scripts/p5-browser-smoke.mjs": "08108189684252ad081c403021806997e59f4ac6",
     "scripts/v100-device-runtime-browser.mjs": "16defd3c54ce1b41987e606fe182ded2eba18226",
     "scripts/v100-normal-campaign-playthrough.mjs": "916de5ec87aaeb70ed3daa6a35b271432bf80ae9",
@@ -214,7 +212,7 @@
     "tests/v177-runner-joints.test.mjs": "db73c766dead27cb8dc4505a96e9d113f9befde1",
     "tests/v177-takuya-joints.test.mjs": "69ae60bed3e79d3f5a8287a6f1865288c93e539c",
     "tests/v177-walker-floor.test.mjs": "a02726c4ad3cf14099877f59dd1df5279e11e7e4",
-    "tests/ci-change-scope.test.mjs": "4f8e2e14ffe0d224e7ca23d280256e0c690020ef",
+    "tests/ci-change-scope.test.mjs": "65cc7bc2b866fa4bab592665043b74408881624e",
     "scripts/native-recording-runtime/.gitignore": "2ccbe4656c6078ded72491cf2ee9c5ec20219624",
     "scripts/native-recording-runtime/package.json": "71dee9170d1967a29bebd52601c9a181c6cf47e2",
     "scripts/native-recording-runtime/package-lock.json": "d93af5630b37ad9caf2acf77f1c8939651004488",
@@ -229,7 +227,10 @@
     "tests/ci-pr-provenance.test.mjs": "e1fe9eea6d49124eeba722987463ea78afe779b5",
     "tests/helpers/ci-pr-provenance.mjs": "b832ad86f93ab99dbca73d78918d96818b6ec8c0",
     ".github/workflows/targeted-frame-performance.yml": "f10fa6d7d7df483369a428b1cfa53e0a1c7fb87f",
-    "scripts/v177-ranger-performance-receipts.mjs": "5b7edbda4231ae997eee17876805e449d95242dc"
+    "scripts/v177-ranger-performance-receipts.mjs": "5b7edbda4231ae997eee17876805e449d95242dc",
+    ".github/workflows/v1-quality-acceptance.yml": "867ede900ac2ea745236e0cb5a6b2fa81c284b99",
+    "scripts/v177-quality-apt-mirror.mjs": "c0d45637623f4aa2ca220e136c38dd08e0248711",
+    "tests/v177-quality-apt-mirror.test.mjs": "ccbcbd95a60a4f9b3b72227a457a6f0b99ffb991"
   },
   "rawClockAudit": {
     "sha256": "fd25abeadc6e1ced7924deea728f54480b8c0cd572923c372698d98a0b13b1fa",
@@ -764,7 +765,9 @@
       "forms-4:mayo-chan-feral:attack:844x340",
       "forms-4:mayo-chan-feral:engage:1280x720",
       "forms-4:mayo-chan-feral:engage:844x390",
-      "forms-4:mayo-chan-feral:engage:844x340"
+      "forms-4:mayo-chan-feral:engage:844x340",
+      "forms-2:engineer:attack:1280x720",
+      "forms-4:mayo-chan:attack:1280x720"
     ],
     "manualCaseIds": [],
     "outcomeCaseIds": [
@@ -2483,6 +2486,32 @@
         "manualCaseIds": [],
         "outcomeCaseIds": [],
         "encodedAndDecodePartitionSha256": "4228b6cebcc112392560dc290c6f9d077a1d8f17e771b00955ac5f7f0b23f95c"
+      },
+      {
+        "head": "e35e53ce808055112d663c0e72d4a41e84ef8042",
+        "runId": "40035071936",
+        "shard": "forms-2",
+        "sha256": "9e39282824bf75996f9ce14caa2454ba81dad85274d9d961b656463b0b6bf7ca",
+        "artifactId": 12537737869,
+        "caseIds": [
+          "forms-2:engineer:attack:1280x720"
+        ],
+        "manualCaseIds": [],
+        "outcomeCaseIds": [],
+        "encodedAndDecodePartitionSha256": "154917affc8e2b35293a317b1d850b55a8bfbe60fbc16f55abcede35d20eff58"
+      },
+      {
+        "head": "e35e53ce808055112d663c0e72d4a41e84ef8042",
+        "runId": "40035071936",
+        "shard": "forms-4",
+        "sha256": "730510135d8b0253d542471fab37a55f38f80227c434f125c61dad8edbc6c6b7",
+        "artifactId": 12537817170,
+        "caseIds": [
+          "forms-4:mayo-chan:attack:1280x720"
+        ],
+        "manualCaseIds": [],
+        "outcomeCaseIds": [],
+        "encodedAndDecodePartitionSha256": "154917affc8e2b35293a317b1d850b55a8bfbe60fbc16f55abcede35d20eff58"
       }
     ]
   },
@@ -3128,6 +3157,37 @@
         "sha256": "c40fcae9203e6db8e74a99a9e0db3ca890ef475fda265d71ac5c3582b9a3915d"
       },
       "originalCaptureOwnerContractChanged": false,
+      "localMediaDecodeRuns": 0,
+      "originalSpeedAccepted": false,
+      "naturalnessAccepted": false,
+      "wholeGameAccepted": false
+    },
+    {
+      "head": "e35e53ce808055112d663c0e72d4a41e84ef8042",
+      "runId": "40035071936",
+      "sha256": "154917affc8e2b35293a317b1d850b55a8bfbe60fbc16f55abcede35d20eff58",
+      "reports": [
+        {
+          "shard": "forms-2",
+          "sha256": "9e39282824bf75996f9ce14caa2454ba81dad85274d9d961b656463b0b6bf7ca",
+          "artifactId": 12537737869
+        },
+        {
+          "shard": "forms-4",
+          "sha256": "730510135d8b0253d542471fab37a55f38f80227c434f125c61dad8edbc6c6b7",
+          "artifactId": 12537817170
+        }
+      ],
+      "originalReportsUnmodified": true,
+      "officialCiEncodedAndDecodeVerified": true,
+      "diagnosticOnly": true,
+      "processObservationReview": {
+        "file": "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\issue177-foot-r9-20261020\\outputs\\motion-review\\remediation-r4\\native-material-gap-40035071936-audit-r1\\diagnostic-review-r1.json",
+        "bytes": 201353,
+        "sha256": "b30c0ba3ebb947182687ed7c9aee782a4bda58c8f0053215388a61c12b246e27"
+      },
+      "oldCauseResolved": false,
+      "verificationScope": "Only original passed source-owned case IDs. Original failed/unknown rows remain pending; read-only observation does not establish root cause or formal acceptance.",
       "localMediaDecodeRuns": 0,
       "originalSpeedAccepted": false,
       "naturalnessAccepted": false,
@@ -14343,5 +14403,58 @@
     "naturalnessAccepted": false,
     "wholeGameAccepted": false,
     "scope": "Only the exact capacity/diagnostic-source revision is proposed. Larger bounded context count is a performance hypothesis; pixel equality does not establish Mac33ms, naturalness, listening, physical or release acceptance."
+  },
+  "nativeMaterialGapTwoTechnicalClosure": {
+    "head": "e35e53ce808055112d663c0e72d4a41e84ef8042",
+    "runId": "40035071936",
+    "recipe": {
+      "file": "outputs/motion-review/remediation-r4/native-material-gap-40035071936-audit-r1/profile-update-recipe-r1.json",
+      "sha256": "b89a6c9ccca66a8bd5229cc54a40e1d8fc028c256408f2ed6ab1ecb866949233"
+    },
+    "sourcePartition": {
+      "file": "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\issue177-foot-r9-20261020\\outputs\\motion-review\\remediation-r4\\native-material-gap-40035071936-audit-r1\\final-2-source-owned-partition-r1.json",
+      "bytes": 69410,
+      "sha256": "154917affc8e2b35293a317b1d850b55a8bfbe60fbc16f55abcede35d20eff58"
+    },
+    "diagnosticReview": {
+      "file": "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\issue177-foot-r9-20261020\\outputs\\motion-review\\remediation-r4\\native-material-gap-40035071936-audit-r1\\diagnostic-review-r1.json",
+      "bytes": 201353,
+      "sha256": "b30c0ba3ebb947182687ed7c9aee782a4bda58c8f0053215388a61c12b246e27"
+    },
+    "newAdditionalReports": [
+      {
+        "head": "e35e53ce808055112d663c0e72d4a41e84ef8042",
+        "runId": "40035071936",
+        "shard": "forms-2",
+        "sha256": "9e39282824bf75996f9ce14caa2454ba81dad85274d9d961b656463b0b6bf7ca",
+        "artifactId": 12537737869,
+        "caseIds": [
+          "forms-2:engineer:attack:1280x720"
+        ],
+        "manualCaseIds": [],
+        "outcomeCaseIds": [],
+        "encodedAndDecodePartitionSha256": "154917affc8e2b35293a317b1d850b55a8bfbe60fbc16f55abcede35d20eff58"
+      },
+      {
+        "head": "e35e53ce808055112d663c0e72d4a41e84ef8042",
+        "runId": "40035071936",
+        "shard": "forms-4",
+        "sha256": "730510135d8b0253d542471fab37a55f38f80227c434f125c61dad8edbc6c6b7",
+        "artifactId": 12537817170,
+        "caseIds": [
+          "forms-4:mayo-chan:attack:1280x720"
+        ],
+        "manualCaseIds": [],
+        "outcomeCaseIds": [],
+        "encodedAndDecodePartitionSha256": "154917affc8e2b35293a317b1d850b55a8bfbe60fbc16f55abcede35d20eff58"
+      }
+    ],
+    "retainedNow": 564,
+    "pendingNow": 15,
+    "oldCauseResolved": false,
+    "originalSpeedAccepted": false,
+    "naturalnessAccepted": false,
+    "wholeGameAccepted": false,
+    "scope": "Only the two source-owned passed Engineer/Mayo rows append. Ranger15 remains pending for c9. No isolated helper/pins adopted; all original failures and prior562 owners remain unchanged."
   }
 }

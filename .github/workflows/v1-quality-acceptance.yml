@@ -39,6 +39,11 @@ jobs:
           node-version: "22.13.0"
           cache: npm
           cache-dependency-path: package-lock.json
+      - name: Select official Ubuntu mirror for WebKit preparation
+        if: ${{ matrix.engine == 'webkit' }}
+        env:
+          V177_QUALITY_ENGINE: ${{ matrix.engine }}
+        run: node scripts/v177-quality-apt-mirror.mjs
       - name: Install dependencies and browser
         run: |
           npm ci

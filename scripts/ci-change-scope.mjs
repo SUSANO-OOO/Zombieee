@@ -35,7 +35,7 @@ const orchestration=new Set(['.github/workflows/ci.yml','scripts/ci-change-scope
   '.github/workflows/native-opus-streaming.yml','.github/workflows/native-pcm-streaming.yml',
   '.github/workflows/native-capture-comparison.yml','.github/workflows/native-game-capture.yml',
   'scripts/v177-native-opus-probe.mjs','scripts/v177-native-audio-capabilities.mjs',
-  'scripts/v177-native-game-capture-browser.mjs']);
+  'scripts/v177-native-game-capture-browser.mjs','scripts/v177-quality-apt-mirror.mjs']);
 // Reviewed validation and QA-only observation revisions. Gameplay, rendering
 // and limits are unchanged; a different blob restores full regression.
 const reviewedValidationBlobs=Object.freeze({

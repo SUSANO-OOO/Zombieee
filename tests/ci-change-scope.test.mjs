@@ -16,6 +16,15 @@ test('a ready candidate always gets full regression, including governance-only c
  }
 });
 
+test('WebKit mirror preparation is QA-only on Draft and retains full Ready checks',()=>{
+ const paths=['scripts/v177-quality-apt-mirror.mjs','.github/workflows/v1-quality-acceptance.yml',
+  'scripts/ci-change-scope.mjs','tests/v177-quality-apt-mirror.test.mjs'];
+ const draft=ciChangeScope(paths,{draft:true});assert.equal(draft.full,false);
+ assert.equal(draft.wholeGameAccepted,false);assert.equal(draft.finalIntegrationRequiresFullRegression,true);
+ assert.equal(ciChangeScope(paths,{draft:false}).full,true);
+ assert.equal(ciChangeScope([...paths,'scripts/unknown.mjs'],{draft:true}).full,true);
+});
+
 test('the reviewed Ranger readback split targets affected draft lanes while Ready and unknown sources stay full',()=>{
  const file='app/v177RangerLowerPaint.js',blob=execFileSync('git',['hash-object',file],{encoding:'utf8',windowsHide:true}).trim();
  const paths=[file,'assets/source/v177/ranger/lower-r3/provenance.json','scripts/v177-native-allunit-recovery.json',
