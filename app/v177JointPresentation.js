@@ -22,6 +22,7 @@ import { v177PaintLocomotion } from './v177PaintLocomotion.js';
 import { applyV177GroundedMatrix, v177GroundedJointPlan, v177BlendGroundedMotion, sampleV177AttackSteps } from './v177GroundedMotion.js';
 import { v177JointActorKey, v177JointBodyCorrection } from './v177JointActorHistory.js';
 import {v177WeaponChoreography,v177GroundedWeaponChoreography} from './v177WeaponChoreography.js';
+import {V177_CORPSE_JOINT_DATA} from './v177CorpseJointData.js';
 import { animationClipFor, attackPresentationDuration } from './combatPresentation.js';
 import { createV177MrsNormalWeaponCycle } from './v177MrsNormalWeaponCycle.js';
 import { createV177RangerManualJoint } from './v177RangerManualJoint.js';
@@ -101,7 +102,21 @@ export function v177GroundedJointPose(kind,source,sample,runtime){
   }
   if(lo<=hi){const dy=Math.max(lo,Math.min(hi,0));
     plan.groundedMotion.lower[5]+=dy;plan.groundedMotion.upper[5]+=dy;}
-  return v177GroundedWeaponChoreography(kind,atlas,plan);
+  return groundedHeldWeapons(kind,atlas,plan);
+}
+
+const presidentSoles=V177_CORPSE_JOINT_DATA['mugarian-president-mutated'].outlines
+ .filter(o=>V177_JOINT_ATLASES['mugarian-president-mutated'].legConstraints.some(l=>l.paintedPaw===o.name));
+function groundedHeldWeapons(kind,atlas,plan){
+ let soleFloor;
+ if(kind==='mugarian-president-mutated'&&plan.choreography&&plan.groundedMotion){
+  soleFloor=-Infinity;const m=new Float64Array(6);
+  for(const o of presidentSoles){
+   const part=atlas.parts.find(p=>p.name===o.name);jointMatrix(m,atlas,plan,part.bone,false);
+   for(const p of o.hull)soleFloor=Math.max(soleFloor,m[1]*p[0]+m[3]*p[1]+m[5]);
+  }
+ }
+ return v177GroundedWeaponChoreography(kind,atlas,plan,{soleFloor});
 }
 
 export function v177JointPose(kind, sample, runtime, { grounded=false,ownedPose=false,actor,world,stunRemaining=0,rangerManualOwner=false,rangerManualDefinition,futagoAbilityOwner=false,futagoAbilityTuning }={}) {
@@ -359,7 +374,9 @@ function returnPaintedJoints(atlas,entry,neutral,progress,footProgress=progress)
       const kind=entry.sourcePlan.choreography.kind;
       returning=v177WeaponChoreography(kind,atlas,returning,
         {attackSequence:entry.sourcePlan.choreography.sequence,attackWindup:1});
-      returning=v177GroundedWeaponChoreography(kind,atlas,returning);
+      // President's returning feet are resolved below. Constraining its cane
+      // against the neutral lower here would jump the last painted wrist.
+      if(kind!=='mugarian-president-mutated')returning=groundedHeldWeapons(kind,atlas,returning);
     }
     const source=captureStatusJoints(atlas,returning);
     pose.upper=progress<=.7 ? source.upper
@@ -445,6 +462,7 @@ function livingStunJointPose(kind,atlas,runtime,actor,remaining,grounded=false) 
     const step=previous.plan.stunStepReturn??previous.plan.groundedMotion?.steps;
     const stepReturn=step?{...step,feet:Object.fromEntries(Object.entries(step.feet).map(([bone,value])=>[bone,{...value}]))}:null;
     entry={kind,epoch,clock,remaining,pose,basePose,upperTransform,stepReturn,
+      groundedCane:kind==='mugarian-president-mutated'&&Boolean(previous.plan.choreography?.groundedCaneSource||previous.plan.groundedCaneReturn),
       frontBones:[...(previous.plan.frontBones??previous.plan.choreography?.frontBones??[])],
       sourcePlan:previous.plan.stunReturnPlan??previous.plan};
     livingStunPoses.set(key,entry);
@@ -455,8 +473,23 @@ function livingStunJointPose(kind,atlas,runtime,actor,remaining,grounded=false) 
   const footWindow=Math.min(.28,entry.remaining),footProgress=1-(1-smooth(elapsed/.28))*smooth(remaining/footWindow);
   const amplitude=smooth(elapsed/.1)*smooth(remaining/.1);
   const returning=returnPaintedJoints(atlas,entry,neutral,progress,footProgress);
-  const resolved=progress===0&&amplitude===0 ? returning : leanCapturedJoints(atlas,returning,amplitude);
+  let resolved=progress===0&&amplitude===0 ? returning : leanCapturedJoints(atlas,returning,amplitude);
+  if(entry.groundedCane){
+    let soleFloor=-Infinity;
+    for(const o of presidentSoles){
+      const bone=atlas.parts.find(p=>p.name===o.name).bone,m=resolved.lower[bone];
+      for(const p of o.hull)soleFloor=Math.max(soleFloor,m[1]*p[0]+m[3]*p[1]+m[5]);
+    }
+    const fixed=v177GroundedWeaponChoreography(kind,atlas,{choreography:{upper:resolved.upper},
+      groundedMotion:{upper:identityMatrix()}},{soleFloor});
+    resolved.upper=fixed.choreography.upper;
+    const rig={...atlas,poses:[resolved.lower,resolved.upper]},pose={lowerIndex:0,upperIndex:1,
+      lowerNextIndex:0,upperNextIndex:1,lowerBlend:0,upperBlend:0,attackPhase:null,upperOffsetY:0};
+    const cane=atlas.armConstraints.find(c=>c.effectorBone==='weapon-0'),matrix=new Float64Array(6);
+    for(const bone of[cane.upperBone,cane.lowerBone])resolved.upper[bone]=[...jointMatrix(matrix,rig,pose,bone,true)];
+  }
   return {...neutral,liveStun:true,resolvedJointPose:resolved,stunElapsed:elapsed,stunRemaining:remaining,
+    ...(entry.groundedCane?{groundedCaneReturn:true}:{}),
     frontBones:entry.frontBones,
     stunUpperTransform:resolved.upperTransform,stunReturnPlan:resolved.returnPlan??null,stunStepReturn:resolved.stepReturn??null};
 }

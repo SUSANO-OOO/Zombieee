@@ -4723,7 +4723,8 @@ function drawSpriteFighter(
       // and claws each retain their own painted endpoint and history.
       if(!['miyamoto-musashi','brawler','shade','walker','runner','turned','sprinter','grappler','crusher','abomination','gairen','futago','futago-separated-a','futago-separated-b','mugarian-president-mutated'].includes(renderKind))continue;
       if(renderKind==='mugarian-president-mutated'&&arm.effectorBone==='weapon-0')continue;
-      const tipPoint=renderKind==='miyamoto-musashi'?[329,339]:arm.grip;
+      const tipPoint=jointPose.choreography?.strikePoints?.[arm.effectorBone]
+        ??(renderKind==='miyamoto-musashi'?[329,339]:arm.grip);
       const socketOptions={kind:renderKind,plan:jointPose,direction,frame,size,pose,x:f.x,y:f.y,bob,depthScale,sourceBone:arm.effectorBone};
       const tip=v177RenderedJointWeaponSocket({...socketOptions,sourcePoint:tipPoint});
       const grip=v177RenderedJointWeaponSocket({...socketOptions,sourcePoint:arm.effectorWrist??arm.wrist});

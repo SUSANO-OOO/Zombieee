@@ -52,7 +52,7 @@ test('windup and follow-through move the striking wrist and torso, while every s
 
 test('short-weapon lunges alternate a planted support foot, never cross legs, and return to the same stance',()=>{
  for(const kind of ['kumaverson','brute','guardian','gate-eater','red-panther-shield','scout','red-panther-knife',
-  'brawler','shade','walker','runner','turned','sprinter','grappler','crusher','abomination','futago-separated-a','futago-separated-b'])for(const phase of [0,.25,.5,.75]){
+  'brawler','shade','walker','runner','turned','sprinter','grappler','crusher','abomination','futago-separated-a','futago-separated-b','mugarian-president-mutated'])for(const phase of [0,.25,.5,.75]){
   const atlas=A[kind],legs=atlas.legConstraints,[wind,active]=atlas.attackBoundaries??[.28,.7];
   const at=p=>{
    const state=p<=wind?'wind-up':p<=active?'active':'recovery';

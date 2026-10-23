@@ -15,7 +15,7 @@ const carryPlans=new WeakMap();
 // need a real body step to bridge their gameplay engagement distance.
 const attackSteps={kumaverson:100,brute:24,guardian:60,'gate-eater':55,'red-panther-shield':45,scout:30,'red-panther-knife':40,
  brawler:60,shade:60,walker:60,runner:60,turned:60,sprinter:60,grappler:35,crusher:25,abomination:25,
- 'futago-separated-a':24,'futago-separated-b':24};
+ 'futago-separated-a':24,'futago-separated-b':24,'mugarian-president-mutated':140};
 
 // Project a wrist onto its fixed-length arm annulus and the weapon's floor
 // half-plane together. Alternating the two projections can push a large
@@ -52,7 +52,24 @@ function constrainOmegaWeapon(atlas,upper,ground=[1,0,0,1,0,0],topGuard=-Infinit
  m[4]+=ground[0]*dx+ground[1]*dy;m[5]+=ground[2]*dx+ground[3]*dy;
 }
 
-export function v177GroundedWeaponChoreography(kind,atlas,plan){
+export function v177GroundedWeaponChoreography(kind,atlas,plan,{soleFloor}={}){
+ if(kind==='mugarian-president-mutated'&&plan.choreography&&plan.groundedMotion&&Number.isFinite(soleFloor)){
+  const bone='weapon-0',c=atlas.armConstraints.find(c=>c.effectorBone===bone),wrist=c.effectorWrist??c.wrist;
+  const source=plan.choreography.groundedCaneSource??plan.choreography.upper[bone],ground=plan.groundedMotion.upper;
+  const shoulder=point(ground,point(plan.choreography.upper[c.parentBone],c.shoulder)),target=point(multiply(ground,source),wrist);
+  // Keep the complete cane upright while the torso bends. Its own original
+  // hand/arm reaches the same floor as the painted soles; it cannot push the
+  // whole actor upward through the later live-ground correction.
+  const base=atlas.poses[atlas.lowerCount-atlas.frameCount][bone],angle=Math.atan2(base[1],base[0]);
+  const d=atlas.parts.find(p=>p.bone===bone).destination,cs=Math.cos(angle),sn=Math.sin(angle);
+  const bottom=Math.max(...[[d.x,d.y],[d.x+d.w,d.y],[d.x,d.y+d.h],[d.x+d.w,d.y+d.h]]
+   .map(([x,y])=>sn*(x-wrist[0])+cs*(y-wrist[1])));
+  const reach=armReach(c),hand=groundedHand(target,shoulder,reach.min,reach.max,soleFloor-bottom);
+  const inverse=[ground[0],ground[2],ground[1],ground[3],
+   -ground[0]*ground[4]-ground[1]*ground[5],-ground[2]*ground[4]-ground[3]*ground[5]];
+  const upper={...plan.choreography.upper,[bone]:multiply(inverse,rigid(wrist,hand,angle))};
+  return{...plan,choreography:{...plan.choreography,upper,groundedCaneSource:[...source]}};
+ }
  if(kind!=='takuya-omega'||!atlas.weaponHull||!plan.choreography||!plan.groundedMotion)return plan;
  // Recoil can re-resolve a held paint on several successive frames. Project
  // the same authored weapon each time, rather than accumulating the previous
@@ -132,8 +149,8 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
  const waist=atlas.interpolationPivots?.spine??(legs.length?[legs.reduce((s,c)=>s+c.hip[0],0)/legs.length,legs.reduce((s,c)=>s+c.hip[1],0)/legs.length]:[240,250]);
  const weight=attacking?keys(p,[[0,0],[.18,-1],[.23,-1],[.28,.8],[.48,1],[.64,.8],[1,0]])[0]:0;
  const heavy=['brute','guardian','gate-eater','red-panther-shield','crazy-king','kumaverson','takuya','takuya-omega','crusher','abomination','gairen'].includes(kind);
- const bodyAngle=kind==='babayaga'?0:(kind==='brute'?.70:heavy?.21:.17)*weight;
- const torso=rigid(waist,[waist[0]+weight*(heavy?13:9),waist[1]+Math.abs(weight)*(heavy?5:3)],bodyAngle);
+ const bodyAngle=kind==='babayaga'?0:(kind==='brute'?.70:kind==='mugarian-president-mutated'?.50:heavy?.21:.17)*weight;
+ const torso=rigid(waist,[waist[0]+weight*(heavy?13:9),waist[1]+Math.abs(weight)*(kind==='mugarian-president-mutated'?30:heavy?5:3)],bodyAngle);
  for(const [bone,m]of Object.entries(base)){
   const pivot=atlas.interpolationPivots?.[bone]??[0,0];
   upper[bone]=multiply(torso,rigid(pivot,point(m,pivot),Math.atan2(m[1],m[0])));
@@ -147,15 +164,19 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
   const leading=arms.findIndex(c=>c.effectorBone===atlas.weaponBone);
   const both=['grappler','crusher','abomination','futago','futago-separated-a','futago-separated-b'].includes(kind);
   for(const [index,c]of arms.entries()){
-   if(kind==='mugarian-president-mutated'&&index===2)continue; // The third arm plants its cane.
+   if(kind==='mugarian-president-mutated'&&index===2)continue; // The third arm braces the cane while the claws strike.
    const wrist=c.effectorWrist??c.wrist,home=point(base[c.effectorBone],wrist),reach=armReach(c).max;
    const lead=both||index===(variant===0?leading:(leading+1)%arms.length);
    if(lead)strikeBones.push(c.effectorBone);
-   const rows=lead?[[.18,-reach*.18,-reach*.48],[.23,-reach*.18,-reach*.48],[.28,reach*.95,reach*(index%2?.22:.04)],[.48,reach*.76,reach*.48],[.64,reach*.7,reach*.4]]
+   let rows=lead?[[.18,-reach*.18,-reach*.48],[.23,-reach*.18,-reach*.48],[.28,reach*.95,reach*(index%2?.22:.04)],[.48,reach*.76,reach*.48],[.64,reach*.7,reach*.4]]
     :[[.18,reach*.28,reach*.12],[.23,reach*.28,reach*.12],[.28,reach*.10,reach*.37],[.48,reach*.20,reach*.27],[.64,reach*.2,reach*.27]];
+   if(kind==='mugarian-president-mutated'&&lead)rows=[[.18,-reach*.16,-reach*.60],[.23,-reach*.16,-reach*.60],
+    [.28,reach*.50,reach*.86],[.48,reach*.15,reach*.98],[.64,reach*.15,reach*.98]];
    const t=point(torso,shoulderTarget(c,p,home,rows)),start=Math.atan2(base[c.effectorBone][1],base[c.effectorBone][0]);
    const sourceDirection=Math.atan2(c.grip[1]-wrist[1],c.grip[0]-wrist[0]);
-   const aimed=swingAngle(p,start+sourceDirection,-.7,lead?-.1:-.7,lead?.6:-.5)-sourceDirection+bodyAngle;
+   const aimed=kind==='mugarian-president-mutated'&&lead
+    ?keys(p,[[0,start],[.18,-2.1],[.23,-2.1],[.28,-.65],[.48,.05],[.64,.05],[1,start]])[0]+bodyAngle
+    :swingAngle(p,start+sourceDirection,-.7,lead?-.1:-.7,lead?.6:-.5)-sourceDirection+bodyAngle;
    handPose(upper,c,t,aimed,2*envelope);
   }
  }else if(kind==='crazy-king'){
@@ -187,7 +208,7 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
    if(kind==='brute'){[wind,hit,follow]=[-2.25,-.65,-.3];rows=[[.18,23,-26],[.23,23,-26],[.28,38,13],[.48,35,28],[.64,35,28]];}
    else if(['guardian','gate-eater','red-panther-shield'].includes(kind)){[wind,hit,follow]=[restDirection-.25,restDirection,restDirection+.10];rows=[[.18,23,38],[.23,23,38],[.28,66,16],[.48,62,24],[.64,62,24]];}
    else if(kind==='kumaverson'){[wind,hit,follow]=[-2.05,-.08,.85];rows=[[.18,9,-45],[.23,9,-45],[.28,reach*.96,0],[.48,reach*.77,reach*.52],[.64,reach*.77,reach*.52]];}
-   else if(kind==='takuya-omega'){[wind,hit,follow]=[-2.75,-.1,.9];rows=[[.08,0,150],[.18,45,140],[.23,45,140],[.25,0,165],[.28,reach*.9,reach*.12],[.48,reach*.62,reach*.5],[.64,reach*.62,reach*.5]];}
+   else if(kind==='takuya-omega'){[wind,hit,follow]=[-2.75,.25,.9];rows=[[.08,0,150],[.18,45,140],[.23,45,140],[.25,0,165],[.28,reach*.55,reach*.83],[.48,reach*.62,reach*.5],[.64,reach*.62,reach*.5]];}
    else if(kind==='takuya'){rows=[[.18,70,-10],[.23,70,-10],[.28,90,35],[.48,70,65],[.64,70,65]];}
    target=shoulderTarget(primary,p,rest,rows);
    angle=swingAngle(p,restDirection,wind,hit,follow,kind==='takuya-omega')-sourceDirection;
@@ -224,7 +245,8 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
   upper['arm-1-hand']=rigid(arms[1].wrist,hand,Math.atan2(m[1],m[0]));
  }
  const frontBones=(!attacking||['crazy-king','babayaga','kumaverson','takuya-omega'].includes(kind)||p>.06&&p<.94)?arms.flatMap(c=>[c.upperBone,c.lowerBone,c.effectorBone]):[];
- const choreography={kind,variant,sequence,upper,arms,frontBones,strikeBones,bodyWeight:weight,stepDistance:attacking?attackSteps[kind]??0:0};if(!attacking)carryPlans.set(atlas,choreography);
+ const choreography={kind,variant,sequence,upper,arms,frontBones,strikeBones,bodyWeight:weight,stepDistance:attacking?attackSteps[kind]??0:0,
+  ...(kind==='mugarian-president-mutated'?{strikePoints:{'arm-1-hand':[228,326]}}:{})};if(!attacking)carryPlans.set(atlas,choreography);
  return{...plan,choreography,upperOffsetY:0};
 }
 
