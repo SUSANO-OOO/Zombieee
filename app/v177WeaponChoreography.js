@@ -52,7 +52,7 @@ function constrainOmegaWeapon(atlas,upper,ground=[1,0,0,1,0,0],topGuard=-Infinit
  m[4]+=ground[0]*dx+ground[1]*dy;m[5]+=ground[2]*dx+ground[3]*dy;
 }
 
-export function v177GroundedWeaponChoreography(kind,atlas,plan,{soleFloor}={}){
+export function v177GroundedWeaponChoreography(kind,atlas,plan,soleFloor){
  if(kind==='mugarian-president-mutated'&&plan.choreography&&plan.groundedMotion&&Number.isFinite(soleFloor)){
   const bone='weapon-0',c=atlas.armConstraints.find(c=>c.effectorBone===bone),wrist=c.effectorWrist??c.wrist;
   const source=plan.choreography.groundedCaneSource??plan.choreography.upper[bone],ground=plan.groundedMotion.upper;

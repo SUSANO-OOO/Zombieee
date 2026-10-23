@@ -573,6 +573,7 @@ jobs:
         run: node scripts/classify-pwa-update-scope.mjs
 
       - name: Reproduce and recover the partial-failed existing PWA (Chromium)
+        id: issue156_partial_update
         if: ${{ needs.scope.outputs.full == 'true' && (steps.pwa_update_scope.outputs.applicable == 'true') }}
         env:
           PWA_PARTIAL_UPDATE_OLD_ROOT: ${{ runner.temp }}/pwa-old-site
@@ -583,6 +584,7 @@ jobs:
         run: npm run qa:pwa-partial-update
 
       - name: Capture Issue 156 canonical HUD evidence (Chromium)
+        id: issue156_hud
         if: ${{ needs.scope.outputs.full == 'true' }}
         env:
           V099_FINAL_REMEDIATION_QA_ENGINES: chromium
@@ -629,6 +631,7 @@ jobs:
         run: npm run qa:p5
 
       - name: Capture Version 0.9.9.5 enemy runtime and station final-canvas evidence
+        id: issue165_capture
         if: ${{ needs.scope.outputs.full == 'true' }}
         env:
           V0995_ENEMY_QA_ENGINES: chromium
@@ -641,7 +644,7 @@ jobs:
           node scripts/run-browser-qa-with-server.mjs scripts/v0995-visual-integrity-browser-smoke.mjs
 
       - name: Upload Issue 165 visual remediation evidence
-        if: ${{ needs.scope.outputs.full == 'true' && (always()) }}
+        if: ${{ always() && needs.scope.outputs.full == 'true' && (steps.issue165_capture.outcome == 'success' || steps.issue165_capture.outcome == 'failure' || steps.issue165_capture.outcome == 'cancelled') }}
         uses: actions/upload-artifact@v4
         with:
           name: issue165-visual-remediation-evidence
@@ -650,7 +653,7 @@ jobs:
           retention-days: 14
 
       - name: Upload Issue 156 remediation evidence
-        if: ${{ needs.scope.outputs.full == 'true' && (always()) }}
+        if: ${{ always() && needs.scope.outputs.full == 'true' && (steps.issue156_partial_update.outcome == 'success' || steps.issue156_partial_update.outcome == 'failure' || steps.issue156_partial_update.outcome == 'cancelled' || steps.issue156_hud.outcome == 'success' || steps.issue156_hud.outcome == 'failure' || steps.issue156_hud.outcome == 'cancelled') }}
         uses: actions/upload-artifact@v4
         with:
           name: issue156-remediation-evidence-chromium

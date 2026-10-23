@@ -108,6 +108,8 @@ export function v177GroundedJointPose(kind,source,sample,runtime){
 const presidentSoles=V177_CORPSE_JOINT_DATA['mugarian-president-mutated'].outlines
  .filter(o=>V177_JOINT_ATLASES['mugarian-president-mutated'].legConstraints.some(l=>l.paintedPaw===o.name));
 function groundedHeldWeapons(kind,atlas,plan){
+ if(kind!=='mugarian-president-mutated')return kind==='takuya-omega'
+  ?v177GroundedWeaponChoreography(kind,atlas,plan):plan;
  let soleFloor;
  if(kind==='mugarian-president-mutated'&&plan.choreography&&plan.groundedMotion){
   soleFloor=-Infinity;const m=new Float64Array(6);
@@ -116,7 +118,7 @@ function groundedHeldWeapons(kind,atlas,plan){
    for(const p of o.hull)soleFloor=Math.max(soleFloor,m[1]*p[0]+m[3]*p[1]+m[5]);
   }
  }
- return v177GroundedWeaponChoreography(kind,atlas,plan,{soleFloor});
+ return v177GroundedWeaponChoreography(kind,atlas,plan,soleFloor);
 }
 
 export function v177JointPose(kind, sample, runtime, { grounded=false,ownedPose=false,actor,world,stunRemaining=0,rangerManualOwner=false,rangerManualDefinition,futagoAbilityOwner=false,futagoAbilityTuning }={}) {
@@ -474,14 +476,14 @@ function livingStunJointPose(kind,atlas,runtime,actor,remaining,grounded=false) 
   const amplitude=smooth(elapsed/.1)*smooth(remaining/.1);
   const returning=returnPaintedJoints(atlas,entry,neutral,progress,footProgress);
   let resolved=progress===0&&amplitude===0 ? returning : leanCapturedJoints(atlas,returning,amplitude);
-  if(entry.groundedCane){
+  if(entry.groundedCane&&(progress!==0||amplitude!==0)){
     let soleFloor=-Infinity;
     for(const o of presidentSoles){
       const bone=atlas.parts.find(p=>p.name===o.name).bone,m=resolved.lower[bone];
       for(const p of o.hull)soleFloor=Math.max(soleFloor,m[1]*p[0]+m[3]*p[1]+m[5]);
     }
     const fixed=v177GroundedWeaponChoreography(kind,atlas,{choreography:{upper:resolved.upper},
-      groundedMotion:{upper:identityMatrix()}},{soleFloor});
+      groundedMotion:{upper:identityMatrix()}},soleFloor);
     resolved.upper=fixed.choreography.upper;
     const rig={...atlas,poses:[resolved.lower,resolved.upper]},pose={lowerIndex:0,upperIndex:1,
       lowerNextIndex:0,upperNextIndex:1,lowerBlend:0,upperBlend:0,attackPhase:null,upperOffsetY:0};
