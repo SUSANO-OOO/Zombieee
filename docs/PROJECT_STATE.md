@@ -4,11 +4,23 @@
 
 2026-10-22の追加指示で、修正と必須検証を終えて公開まで進めることが承認された。次候補は1.0.4、実行台帳はIssue #177／Ready PR #180。公開中の1.0.3／mainは `99f9c193ab1e35531db39225c839138cdb1c33cd`（今回再取得）。以下の旧公開保留は当時の記録として保全する。
 
-2026-10-23：候補 `0eb19309` のRanger15観察（normal9／manual3／outcome3）は全通過し、元564件と合わせ579件の技術記録を確認した。source394・build・元clock・公式ZIP・CI decode1020frames／errors0、encoded最大180ms・先頭0・末尾最大64msを照合。旧564映像の再取得・再decodeは0。Chromium Qualityも成功。ただし正式ARM性能run `39950050679` は6窓39／32／32・33／31／19msで、最初の844×340だけ元33msを超えた。actual cadence・Ranger実paint・errors0は通過しても、性能全体は未達のまま保持する。
+2026-10-24：候補 `0d4bf897` の最終CI `39957370807` で正式性能が再度未達となった。元30秒×6条件のp95は32／26／43／35／39／34ms、1280×720の実drawは46.55Hzで、33msと頻度の両条件を超過した。先行する同headの成功6条件とは別の結果として保全し、性能の完了判定は取り下げる。画像cache切替時の再uploadを省くため、Rangerの完全同値payloadが各自のcanvasを保持する修正を行う。元RGBA・4coverage・192triangles・IKを維持し、2面合計65,536pixels以内、拡張時は余った面を解放する。凍結36条件（3画面の合計）と連続480姿勢の画素・receiptは旧版と一致したが、Mac33msの再合格は未確認である。
+
+新しい描画候補はローカル全3,167 tests・production build・Lint（errors0／既存warnings25）を通過。実Edgeの同条件66ケース（固定36・owner交替24・サイズ変更6）、55,931,040pixelsで元画像との不一致0、同じfixtureのupload66回→44回を確認した。これは実Canvas画素の一致であり、Macの性能改善量を証明しない。独立reviewでallocation失敗後の復帰1件を直し、製品・CI整理と564保持／15再検証の台帳はH0/M0。commit後の実selectorと新候補の正式CI・録画が残る。
+
+旧0dのRanger15観察（normal9／manual3／outcome3）はrun `39957370811` で全通過。source394・build・元clock・公式ZIP・strictPTS-DTS・CI decode1200frames／errors0、encoded最大200ms・先頭0・末尾最大54msを照合した。この完了記録と前候補0ebの15件は、それぞれ元head／runの履歴として保存する。新しいcanvas変更に依存するRanger15件だけを再検証し、他564件の所有と全失敗履歴は保持する。旧564映像の再取得・再decodeは0。
+
+同候補の正式ARM性能run `39957370870`／job `120426738160` は、元30秒×6条件のp95が19／20／29／30／24／21msで全通過。33ms、median FPS、実draw頻度、生存Rangerの実paint、DPRとerrors0を満たした。診断はoverflow0でCPU系列と実lower paint件数を照合。独立review H0/M0。前候補0ebの39ms失敗と別Intel対照の失敗は保全し、workflow全体を成功とは呼ばない。QualityはChromium／WebKit両方成功。Pages PR workflowのproduction build・static Pages build・browser smokeも成功し、deployは未実行。
 
 先行ca136 CIのPhase GはStage4・736×414の手動入力が元500msを超えた。observe165ms／move166ms／down150msで481msを消費し、up中のcontext終了が二次エラーとなった。原成功49capture・失敗1・未実行5と7件のCOMPLETE transactionを保持し、最終report／全体validateの成功へ昇格しない。権限contract、旧34ms、通常play S14／S30の元30秒protocol超過も履歴として保全。0ebの描画cache・重複count削減だけでこれらが解消したとは断定しない。
 
-追加候補ではRangerの透明／不透明画素に対する不要な計算だけを省き、元4coverage・192triangles・IK・alpha／Float32合成を保持した。凍結36姿勢×3画面と連続480変形は元画素／receiptと一致。手元の時間差は小さく、Mac33ms改善を主張しない。既存任意診断の測定中だけpose／lookup／raster／upload／blitを同じ原時計・元12000件上限で分け、Phase Gのtimeout検出時には終了処理前のNode時計とevent-loop差分を保存する。追加のpage RPC・poll・timer・retryはない。変更に依存するRanger15件だけを再開し、他564件の元所有は保持する。原120ms標本・250ms／strictPTS-DTS・30秒case・15分job・8MiB、正式30秒／33msと500ms入力期限は変えない。最終CIと性能の未達修正は継続中で、公開はまだ行っていない。追加のProducer承認待ちは解除済みであり、人による自然さ・最終聴感や物理iPhone保存録画BGM／SEを確認済みとは扱わない。
+現0dの通常play Chromiumは成功し、旧S14／S30の30秒超過は今回再発していない。一方Phase G job `120439262289` は本体matrix前のカード表示確認で失敗。WebKit3画面の各4状態・7probeと、Chromium1280のready／cooldownの5probeは成功したが、クマバーソンのnative入力がfalseとなった。原ZIP digest、report、失敗画面を照合し、原因を製品・host・750ms scrollへ断定しない。新しいportrait検査だけは既に中心点を実ボタンが所有する場合の不要なscrollを省き、点がなければ元750msと再読取を維持する。他callerの既定、pointer順、画素閾値・期限は不変。入力phases・元stackを保存し、同条件Edgeの修正前後は各4状態・7probe成功。ただしMac CIの解消証拠にはしない。
+
+製品の性能変更を伴うため、未採用のPhase G専用CI再利用経路は除去し、新候補で元の全回帰を実行する。従来のnative-only再利用でwholeCI／fullPhaseG成功を要求する条件は維持し、旧failureを成功へ書き換えない。元500ms入力を含む全Phase Gの新成功と、正式性能・公開後QAはまだ残る。CIのhead別待ち行列により、新候補が旧候補の終了待ちに置かれることを防ぐ。
+
+再利用を妨げていた実測事実として、過去runのheadは固定されても、付随するPR head／baseは現在値へ変化していた。PR番号は関連付けだけに用い、実行時headと、同runが保存したpr-verify-provenanceの所有・公式digest・元head／base／mergeを照合する。元0dの267 bytesは原ZIPと一致し、head0d／base99f9／merge19d7e532を確認した。欠損・期限切れ・破損・別ownerや実際のbase変更は再利用せず、wholeCI／fullPhaseGの合格条件は緩めない。
+
+0d候補ではRangerの透明／不透明画素に対する不要な計算だけを省き、元4coverage・192triangles・IK・alpha／Float32合成を保持した。凍結36姿勢×3画面と連続480変形は元画素／receiptと一致し、手元の小さな時間差をMac改善の因果証明には使わない。任意診断の測定中だけpose／lookup／raster／upload／blitを同じ原時計・元12000件上限で分け、Phase Gのtimeout時には終了処理前のNode時計とevent-loop差分を保存する。追加のpage RPC・poll・timer・retryはない。原120ms標本・250ms／strictPTS-DTS・30秒case・15分job・8MiB、正式30秒／33msと500ms入力期限は不変。最終CI `39957370807` は開始済みで、旧ca候補の完了結果と区別する。通常play・Phase Gを含む最終CIが残り、公開はまだ行っていない。追加のProducer承認待ちは解除済みであり、人による全編の自然さ・最終聴感や物理iPhone保存録画BGM／SEを確認済みとは扱わない。
 
 `3487cd39` までの製品変更で、全48形態の武器・両手・接地・重心・攻撃軌道・被弾を改善し、ババヤガは拳銃を下げて携行し接敵時に両手で構える。武蔵は二刀、クレイジーキングは両手のチェーンソー、クマバーソンは鍋の振り下ろし、Ωは握った右手の大剣で攻撃する。追加の実映像監査で判明した変異社長とΩの頭上を通る打撃、杖による足浮き、中断復帰時の跳ねも修正。硬直開始0の元paintを厳密に保持し、無関係な通常unitの不要な武器接地処理も省いた。元の骨長・接地・性能条件は変えない。
 

@@ -137,14 +137,33 @@ async function probe(page, row, state, targets) {
     assert.ok(restorationDifference.fraction <= .01, "native portrait state changed during visible-hidden-restored comparison");
   }
 }
+async function deployCard(page, row, kind, card) {
+  const attempt = { kind, startedAt: Date.now(), status: "pending", phases: [] };
+  row.inputAttempts.push(attempt);
+  try {
+    attempt.accepted = await nativeBattleTap(page, card, attempt.phases, null, { skipVisibleCardScroll: true });
+    assert.equal(attempt.accepted, true, `native card input rejected: ${kind}; ${JSON.stringify(attempt.phases)}`);
+    row.inputs.push({ action: "deploy", kind });
+    attempt.status = "completed";
+  } catch (error) {
+    attempt.status = "failed"; attempt.error = String(error); attempt.errorStack = error?.stack ?? null;
+    throw error;
+  } finally { attempt.endedAt = Date.now(); }
+}
 const matrix = engine === "chromium"
   ? [340, 390, 430, 720].map(height => ({ engine, width: height === 430 ? 932 : height === 720 ? 1280 : 844, height }))
   : [...[340, 390, 430].map(height => ({ engine: "webkit", width: height === 430 ? 932 : 844, height })), ...(engine === "all" ? [{ engine: "chromium", width: 1280, height: 720 }] : [])];
+const onlyCase = process.env.V100_CARD_QA_ONLY ?? null;
+assert.ok(onlyCase === null || matrix.some(config => `${config.engine}-${config.width}x${config.height}` === onlyCase), "unknown portrait QA case");
+report.caseSelection = { onlyCase, completeMatrix: onlyCase === null,
+  expected: matrix.map(config => `${config.engine}-${config.width}x${config.height}`) };
+if (onlyCase !== null) report.scope = `Single-case diagnostic ${onlyCase}; not full matrix acceptance. ${report.scope}`;
 let currentPage;
 try {
   for (const config of matrix) {
+    if (onlyCase !== null && `${config.engine}-${config.width}x${config.height}` !== onlyCase) continue;
     const row = { ...config, name: `${config.engine}-${config.width}x${config.height}`, status: "running",
-      phase: "boot", states: [], inputs: [], errors: [], titleRequests: [],
+      phase: "boot", states: [], inputs: [], inputAttempts: [], errors: [], titleRequests: [],
       acceptedCloseCancellations: [], unresolvedErrors: [] };
     report.cases.push(row);
     const browser = await ({ chromium, webkit })[config.engine].launch({ headless: true,
@@ -234,15 +253,13 @@ try {
       const guardian = page.locator('button.unit-card[data-kind="guardian"]');
       await page.waitForFunction(() => document.querySelector('button.unit-card[data-kind="guardian"]')?.dataset.state === "ready");
       await probe(page, row, "ready", kinds);
-      assert.equal(await nativeBattleTap(page, guardian), true);
-      row.inputs.push({ action: "deploy", kind: "guardian" });
+      await deployCard(page, row, "guardian", guardian);
       await page.waitForFunction(() => document.querySelector('button.unit-card[data-kind="guardian"]')?.dataset.state === "cooldown");
       await probe(page, row, "cooldown", ["guardian"]);
       for (const kind of ["medic", "kumaverson"]) {
         const card = page.locator(`button.unit-card[data-kind="${kind}"]`);
         await page.waitForFunction(k => document.querySelector(`button.unit-card[data-kind="${k}"]`)?.dataset.state === "ready", kind);
-        assert.equal(await nativeBattleTap(page, card), true);
-        row.inputs.push({ action: "deploy", kind });
+        await deployCard(page, row, kind, card);
       }
       await page.waitForFunction(() => document.querySelector('button.unit-card[data-kind="brawler"]')?.dataset.state === "insufficient");
       await probe(page, row, "insufficient", ["brawler"]);
@@ -258,7 +275,7 @@ try {
         titleMediaCount: native.length, titleMedia: native.length === 1 ? native[0] : null,
         pendingRequestIds: [...pending.keys()], succeeded: false, error: null };
     } catch (error) {
-      row.status = "failed"; row.error = String(error);
+      row.status = "failed"; row.error = String(error); row.errorStack = error?.stack ?? null;
       if (currentPage && !currentPage.isClosed()) await currentPage.screenshot({ path: path.join(out, `${row.name}-failure.png`) }).catch(() => {});
       throw error;
     } finally {

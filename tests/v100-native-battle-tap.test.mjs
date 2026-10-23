@@ -3,15 +3,16 @@ import test from "node:test";
 import vm from "node:vm";
 import { nativeBattleTap, readNativeBattleControl, normalTacticalInput } from "../scripts/v100-normal-tactical-input.mjs";
 
-function fixture({ unitCard = false, covered = false, disabledAfterScroll = false } = {}) {
+function fixture({ unitCard = false, covered = false, disabledAfterScroll = false, uncoverAfterScroll = false } = {}) {
   const calls = [], phases = [];
+  let isCovered = covered;
   const element = {
     disabled: false,
     getAttribute: () => null,
     matches: () => unitCard,
     getBoundingClientRect: () => ({ x: 10, y: 20, width: 60, height: 30 }),
   };
-  const document = { elementFromPoint: () => ({ closest: () => covered ? {} : element }),querySelectorAll:()=>[element] };
+  const document = { elementFromPoint: () => ({ closest: () => isCovered ? {} : element }),querySelectorAll:()=>[element] };
   const locator = {
     evaluateAll: async callback => {
       calls.push("observe");
@@ -20,6 +21,7 @@ function fixture({ unitCard = false, covered = false, disabledAfterScroll = fals
     scrollIntoViewIfNeeded: async ({ timeout }) => {
       calls.push(["scroll", timeout]);
       if (disabledAfterScroll) element.disabled = true;
+      if (uncoverAfterScroll) isCovered = false;
     },
   };
   const page = { mouse: Object.fromEntries(["move", "down", "up"].map(name => [name, async (...args) => { calls.push([name, ...args]); }])) };
@@ -50,6 +52,27 @@ test("unit cards retain the 750 ms scroll and refresh current eligibility afterw
   assert.equal(await nativeBattleTap(f.page, f.locator, f.phases), false);
   assert.deepEqual(f.calls, ["observe", ["scroll", 750], "observe"]);
   assert.deepEqual(f.phases.map(phase => phase.name), ["observe-control", "scroll-control", "refresh-control"]);
+});
+
+test("portrait opt-in uses an already owned fresh centre without a redundant scroll", async () => {
+  const f = fixture({ unitCard: true });
+  assert.equal(await nativeBattleTap(f.page, f.locator, f.phases, null, { skipVisibleCardScroll: true }), true);
+  assert.deepEqual(f.calls, ["observe", ["move", 40, 35], ["down"], ["up"]]);
+  assert.deepEqual(f.phases.map(p => p.name), ["observe-control", "move", "down", "up"]);
+  const disabled = fixture({ unitCard: true }); disabled.element.disabled = true;
+  assert.equal(await nativeBattleTap(disabled.page, disabled.locator, disabled.phases, null, { skipVisibleCardScroll: true }), false);
+  assert.deepEqual(disabled.calls, ["observe"]);
+  await assert.rejects(nativeBattleTap(f.page, f.locator, [], null, { skipVisibleCardScroll: "true" }), /Invalid visible card scroll option/);
+});
+
+test("portrait opt-in keeps the original scroll deadline, refresh and rejection when the centre is hidden", async () => {
+  for (const options of [{}, { disabledAfterScroll: true }, { uncoverAfterScroll: true }]) {
+    const f = fixture({ unitCard: true, covered: true, ...options });
+    const passed = await nativeBattleTap(f.page, f.locator, f.phases, null, { skipVisibleCardScroll: true });
+    assert.equal(passed, options.uncoverAfterScroll === true);
+    assert.deepEqual(f.calls.slice(0, 3), ["observe", ["scroll", 750], "observe"]);
+    assert.deepEqual(f.calls.slice(3), passed ? [["move", 40, 35], ["down"], ["up"]] : []);
+  }
 });
 
 test("failed native move is recorded and never sends a later down or up", async () => {

@@ -31,7 +31,8 @@ export function readNativeBattleControl(els){
     ariaLabel:el.getAttribute('aria-label'),browserReadTimings};
 }
 
-export async function nativeBattleTap(page,locator,phases=[],selection=null){
+export async function nativeBattleTap(page,locator,phases=[],selection=null,{skipVisibleCardScroll=false}={}){
+  if(typeof skipVisibleCardScroll!=='boolean')throw new TypeError('Invalid visible card scroll option');
   if(selection!==null&&!(typeof selection?.selector==='string'&&selection.selector.length>0
     &&Number.isInteger(selection.index)&&selection.index>=0))throw new TypeError('Invalid native control selection');
   // Live ability buttons can disappear or become unavailable between reads.
@@ -45,7 +46,9 @@ export async function nativeBattleTap(page,locator,phases=[],selection=null){
   };
   let state=await observe('observe-control');
   if(!state)return false;
-  if(state.unitCard){
+  // Portrait probes opt in after the fresh centre hit has already established
+  // the actual button owner. Other callers keep their original scroll/read.
+  if(state.unitCard&&(!skipVisibleCardScroll||!state.point)){
     const phase={name:'scroll-control',startedAt:Date.now(),status:'pending'};phases.push(phase);
     try{await locator.scrollIntoViewIfNeeded({timeout:750});phase.status='completed';}
     catch(error){phase.status='error';phase.error=String(error);return false;}

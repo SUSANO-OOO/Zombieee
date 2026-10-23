@@ -8,6 +8,7 @@ import {execFileSync} from 'node:child_process';
 import {mkdtempSync,mkdirSync,writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {resolve,join} from 'node:path';
+import {provenanceFixture} from './helpers/ci-pr-provenance.mjs';
 test('a ready candidate always gets full regression, including governance-only changes',()=>{
  for(const paths of [['AGENTS.md'],['tests/ci-contract.test.mjs'],['app/v177RangerFootPlacement.js']]){
   const scope=ciChangeScope(paths,{draft:false});assert.equal(scope.full,true);assert.equal(scope.ranger,true);assert.equal(scope.normal,true);
@@ -38,13 +39,19 @@ test('native Ready reuse requires a successful exact-head CI and its full-only p
  const head='a'.repeat(40),base='c'.repeat(40),prNumber=180,options={repository:'SUSANO-OOO/Zombieee',head,base,prNumber,token:'test-only'},calls=[];
  const run={id:51,head_sha:head,status:'completed',conclusion:'success',pull_requests:[{number:prNumber,head:{sha:head},base:{sha:base}}]};
  const phaseG={id:73,name:'V1 Phase G Production Matrix',status:'completed',conclusion:'success'};
- const request=(runs,jobs)=>async url=>{calls.push(url);return{ok:true,json:async()=>url.includes('workflows/')?{workflow_runs:runs}:{jobs}};};
- assert.deepEqual(await previousFullCiEvidence({...options,request:request([run],[phaseG])}),{passed:true,head,base,prNumber,runId:51,fullOnlyJobId:73});
+ const fixture=provenanceFixture({runId:51,head,base});
+ const request=(runs,jobs)=>async url=>{calls.push(url);return{ok:true,arrayBuffer:async()=>fixture.zip,
+  json:async()=>url.includes('workflows/')?{workflow_runs:runs}:url.includes('/artifacts?')?fixture.artifacts:{jobs}};};
+ const {provenance,...accepted}=await previousFullCiEvidence({...options,request:request([run],[phaseG])});
+ assert.deepEqual(accepted,{passed:true,head,base,prNumber,runId:51,fullOnlyJobId:73});
+ assert.equal(provenance.head,head);assert.equal(provenance.base,base);assert.equal(provenance.artifactDigest,fixture.artifact.digest);
  for(const bad of [{...run,head_sha:'b'.repeat(40)},{...run,status:'in_progress'},{...run,conclusion:'failure'},{...run,conclusion:'cancelled'},
   {...run,pull_requests:[]},{...run,pull_requests:[{number:181,head:{sha:head},base:{sha:base}}]},
-  {...run,pull_requests:[{number:prNumber,head:{sha:'b'.repeat(40)},base:{sha:base}}]},
-  {...run,pull_requests:[{number:prNumber,head:{sha:head},base:{sha:'d'.repeat(40)}}]}])
+  ])
    assert.equal((await previousFullCiEvidence({...options,request:request([bad],[phaseG])})).passed,false);
+ const live={...run,pull_requests:[{number:prNumber,head:{sha:'b'.repeat(40)},base:{sha:'d'.repeat(40)}}]};
+ assert.equal((await previousFullCiEvidence({...options,request:request([live],[phaseG])})).passed,true,'live PR tips cannot replace immutable checkout provenance');
+ assert.equal((await previousFullCiEvidence({...options,base:'d'.repeat(40),request:request([live],[phaseG])})).passed,false,'a changed actual base is not reusable');
  for(const jobs of [[],[{...phaseG,conclusion:'skipped'}],[{...phaseG,conclusion:'failure'}],[{...phaseG,name:'PR Verify'}]])
    assert.equal((await previousFullCiEvidence({...options,request:request([run],jobs)})).passed,false);
  assert.equal((await previousFullCiEvidence({...options,request:async()=>{throw Error('offline');}})).passed,false);
@@ -281,4 +288,12 @@ test('reviewed lifecycle bindings select motion/normal while unchanged story and
  for(const file of paths)assert.equal(ciChangeScope(paths,{draft:true,sourceBlobs:{...sourceBlobs,[file]:'f'.repeat(40)}}).full,true);
  assert.equal(ciChangeScope(paths,{draft:false,sourceBlobs}).full,true);
  assert.equal(ciChangeScope([...paths,'app/v100Save.js'],{draft:true,sourceBlobs}).full,true);
+});
+test('new source heads do not wait behind a previous head and all original full gates remain intact',()=>{
+ const current=load(readFileSync('.github/workflows/ci.yml','utf8'));
+ const original=load(execFileSync('git',['show','0d4bf897a2839c147be1767b829cfb2a30181348:.github/workflows/ci.yml'],{encoding:'utf8',windowsHide:true}));
+ assert.equal(current.concurrency.group,'${{ github.workflow }}-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}');
+ assert.equal(current.concurrency['cancel-in-progress'],false);
+ current.concurrency.group=original.concurrency.group;
+ assert.deepEqual(current,original,'all jobs, inputs, limits, permissions and acceptance assertions remain identical');
 });

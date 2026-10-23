@@ -3,6 +3,7 @@ import {execFileSync} from 'node:child_process';
 import {appendFileSync} from 'node:fs';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
+import {immutablePrProvenance} from './ci-pr-provenance.mjs';
 
 const governance=new Set(['AGENTS.md','docs/PROJECT_STATE.md','docs/CODEX_SOL_ROLE.md','docs/CODEX_LUNA_ROLE.md',
   'docs/CODEX_TWO_THREAD_WORKFLOW.md','docs/PRODUCER_DECISIONS_1.0.3.md',
@@ -98,24 +99,27 @@ export async function previousFullCiEvidence({repository,head,base,prNumber,toke
   if(!/^[\w.-]+\/[\w.-]+$/u.test(repository??'')||!/^[a-f0-9]{40}$/u.test(head??'')
     ||!/^[a-f0-9]{40}$/u.test(base??'')||!Number.isSafeInteger(prNumber)||prNumber<1||!token)
     return{passed:false,reason:'previous-full-evidence-unavailable'};
-  const get=async suffix=>{
+  const get=async(suffix,binary=false)=>{
     const response=await request(`https://api.github.com/repos/${repository}/${suffix}`,{
       headers:{Accept:'application/vnd.github+json',Authorization:`Bearer ${token}`,'X-GitHub-Api-Version':'2022-11-28'},
       signal:AbortSignal.timeout(10_000),
     });
-    if(!response.ok)throw Error('Actions evidence unavailable');return response.json();
+    if(!response.ok)throw Error('Actions evidence unavailable');return binary?response.arrayBuffer():response.json();
   };
   try{
     const data=await get(`actions/workflows/ci.yml/runs?head_sha=${head}&event=pull_request&per_page=10`);
     for(const run of data.workflow_runs??[]){
       if(run.head_sha!==head||run.status!=='completed'||run.conclusion!=='success'||!Number.isSafeInteger(run.id))continue;
-      // Full jobs checkout the event's synthetic merge. Reuse requires the
-      // same PR/base snapshot as that successful run, not merely the same head.
-      if(!run.pull_requests?.some(pr=>pr.number===prNumber&&pr.head?.sha===head&&pr.base?.sha===base))continue;
+      // PR associations expose the live branch tips. Only the original run
+      // head and its digest-verified checkout provenance bind the old snapshot.
+      if(!run.pull_requests?.some(pr=>pr.number===prNumber))continue;
       const data=await get(`actions/runs/${run.id}/jobs?filter=latest&per_page=100`);
       const phaseG=data.jobs?.find(job=>job.name==='V1 Phase G Production Matrix'&&job.status==='completed'
         &&job.conclusion==='success'&&Number.isSafeInteger(job.id));
-      if(phaseG)return{passed:true,head,base,prNumber,runId:run.id,fullOnlyJobId:phaseG.id};
+      if(phaseG){
+        const provenance=await immutablePrProvenance({get,runId:run.id,head,base});
+        return{passed:true,head,base,prNumber,runId:run.id,fullOnlyJobId:phaseG.id,provenance};
+      }
     }
     return{passed:false,reason:'no-successful-full-ci-for-previous-head'};
   }catch{return{passed:false,reason:'previous-full-evidence-unavailable'};}

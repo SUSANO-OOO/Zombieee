@@ -33,6 +33,13 @@ function surface(){
   canvas.getContext=()=>context;return canvas;
 }
 function image(){return {naturalWidth:atlas.decodedWidth,naturalHeight:atlas.decodedHeight,pixels:texture.data,ownerDocument:{createElement:surface}};}
+function observedPainter(){
+  const observation={writes:0,failWrite:false,surfaces:[],dirtyRects:[]};
+  const create=()=>{const canvas=surface(),context=canvas.getContext(),put=context.putImageData;
+    context.putImageData=(...args)=>{if(observation.failWrite)throw Error('write failed');observation.writes++;observation.dirtyRects.push(args.slice(3));put(...args);};
+    observation.surfaces.push(canvas);return canvas;};
+  return {painter:createV177RangerLowerPainter(image(),rig,create),observation};
+}
 function main({width=1280,height=720,matrix=[1,0,0,1,0,0]}={}){
   const calls=[],stack=[];let m=[...matrix];const ctx={canvas:{width,height},globalAlpha:.73,globalCompositeOperation:'source-over',filter:'none',
     getTransform:()=>Object.fromEntries(['a','b','c','d','e','f'].map((key,i)=>[key,m[i]])),
@@ -60,32 +67,32 @@ test('exact raster reuse retains the frozen 1658 pixels at all three viewport tr
 });
 
 test('bitmap reuse observes subpixel, foot, facing and surface changes and applies current draw state',()=>{
-  const painter=createV177RangerLowerPainter(image(),rig),put=painter.context.putImageData;let writes=0;
-  painter.context.putImageData=(...args)=>{writes++;put(...args);};
+  const {painter,observation}=observedPainter();
   const paint=(entry={})=>{
     const target=main({width:entry.clipWidth??1280,matrix:entry.matrix??[1,0,0,1,640,360]});
     if(entry.alpha!=null){target.ctx.globalAlpha=entry.alpha;target.ctx.filter='brightness(1.1)';target.ctx.globalCompositeOperation='screen';}
     const receipt=paintV177RangerLower(painter,target.ctx,entry.phase??.371,.5,-48,-80,entry.size??96,89.6,entry.feet??null);
     return {receipt,call:target.calls[0]};
   };
-  const first=paint();assert.equal(writes,1);
-  const again=paint({alpha:.21});assert.equal(writes,1);assert.deepEqual(again.receipt,first.receipt);
+  const first=paint();assert.equal(observation.writes,1);
+  assert.deepEqual(observation.dirtyRects[0],[0,0,first.receipt.width,first.receipt.height]);
+  const again=paint({alpha:.21});assert.equal(observation.writes,1);assert.deepEqual(again.receipt,first.receipt);
   assert.deepEqual(again.call.pixels,first.call.pixels);assert.equal(again.call.alpha,.21);
   assert.equal(again.call.filter,'brightness(1.1)');assert.equal(again.call.composite,'screen');
   for(const entry of[
     {matrix:[1,0,0,1,640.000001,360]}, {matrix:[-1,0,0,1,640,360]},
     {matrix:[2,0,0,2,640,360]}, {phase:.372}, {size:96.000001},
     {feet:v177RangerLowerPose(rig,.4,.5).joints.map(j=>[j[4],j[5],0])}, {clipWidth:640}, {},
-  ]){const before=writes;paint(entry);assert.equal(writes,before+1,'changed backing geometry must be rasterized');}
-  const before=writes;paint();assert.equal(writes,before);
+  ]){const before=observation.writes;paint(entry);assert.equal(observation.writes,before+1,'changed backing geometry must be rasterized');}
+  const before=observation.writes;paint();assert.equal(observation.writes,before);
   assert.equal(paint({matrix:[1,0,0,1,-2000,0]}).receipt.mode,'offscreen-weighted-mesh');
-  paint();assert.equal(writes,before+1,'offscreen draws invalidate the prior bitmap');
+  paint();assert.equal(observation.writes,before+1,'offscreen draws invalidate the prior bitmap');
   assert.equal(paint({matrix:[0,0,0,0,0,0]}).receipt.mode,'legacy-cell-fallback');
-  paint();assert.equal(writes,before+2,'failed transforms invalidate the prior bitmap');
-  painter.context.putImageData=()=>{throw new Error('write failed');};
+  paint();assert.equal(observation.writes,before+2,'failed transforms invalidate the prior bitmap');
+  observation.failWrite=true;
   assert.throws(()=>paint({phase:.39}),/write failed/);
-  painter.context.putImageData=(...args)=>{writes++;put(...args);};
-  paint({phase:.39});assert.equal(writes,before+3,'a failed put cannot create a successful reuse receipt');
+  observation.failWrite=false;
+  paint({phase:.39});assert.equal(observation.writes,before+3,'a failed put cannot create a successful reuse receipt');
 });
 
 test('optional lower timing identifies raster, upload and blit without changing pixels or paint receipts',()=>{
@@ -122,7 +129,7 @@ test('alternating Ranger owners keep exact pixels and current draw state without
     return result;
   };
   for(const [width,height,scale]of [[1280,720,1],[844,390,.8],[844,340,2]]){
-    const painter=createV177RangerLowerPainter(image(),rig);
+    const {painter,observation}=observedPainter();
     const paint=(p,second,alpha)=>{
       const target=main({width,height,matrix:[scale,0,0,scale,second?440.75:320.25,160]});
       target.ctx.globalAlpha=alpha;target.ctx.filter=second?'brightness(1.1)':'none';
@@ -132,6 +139,7 @@ test('alternating Ranger owners keep exact pixels and current draw state without
     const expected=[false,true].map(second=>paint(createV177RangerLowerPainter(image(),rig),second,.73));
     for(let i=0;i<6;i++)paint(painter,i%2===1,.73);
     const before=getV177RangerLowerPaintSnapshot();
+    const uploadsBefore=observation.writes;
     for(let i=0;i<20;i++){
       const second=i%2===1,alpha=second?.21:.64,result=paint(painter,second,alpha),control=expected[Number(second)];
       assert.deepEqual(result.receipt,control.receipt);
@@ -142,13 +150,15 @@ test('alternating Ranger owners keep exact pixels and current draw state without
     const after=getV177RangerLowerPaintSnapshot();
     assert.equal(after.rasterizedDraws,before.rasterizedDraws);
     assert.equal(after.reusedDraws-before.reusedDraws,20);
+    assert.equal(observation.writes,uploadsBefore,'alternating cached owners must never upload their pixels again');
     assert.equal(painter.rasters.length,2);
+    assert.equal(new Set(painter.rasters.map(raster=>raster.canvas)).size,2);
     assert.ok(painter.rasters.reduce((sum,raster)=>sum+raster.imageData.data.byteLength,0)<=65536*4);
-    const failed=painter.context.putImageData;
-    painter.context.putImageData=()=>{throw new Error('cached upload failed');};
-    assert.throws(()=>paint(painter,false,.73),/cached upload failed/);
+    assert.ok(painter.rasters.reduce((sum,raster)=>sum+raster.canvas.width*raster.canvas.height,0)<=65536);
+    const failedTarget=main({width,height,matrix:[scale,0,0,scale,320.25,160]});
+    failedTarget.ctx.drawImage=()=>{throw Error('blit failed');};
+    assert.throws(()=>paintV177RangerLower(painter,failedTarget.ctx,.371,.5,-48,-80,96,89.6),/blit failed/);
     assert.ok(painter.rasters.every(raster=>!raster.valid));
-    painter.context.putImageData=failed;
     paint(painter,false,.73);assert.equal(getV177RangerLowerPaintSnapshot().rasterizedDraws,after.rasterizedDraws+1);
   }
 });
@@ -166,9 +176,44 @@ test('Ranger bitmap retention stays within the original RGBA budget and failed a
     const receipt=paint(size);assert.equal(receipt.mode,'continuous-weighted-mesh');
     assert.ok(painter.rasters.length<=2);
     assert.ok(painter.rasters.reduce((sum,raster)=>sum+raster.imageData.data.byteLength,0)<=65536*4);
+    assert.ok(painter.rasters.reduce((sum,raster)=>sum+raster.canvas.width*raster.canvas.height,0)<=65536);
   }
   assert.ok(painter.width*painter.height>32768);
   paint(96,.762);assert.equal(painter.rasters.length,1,'a large backing allocation permits only one retained payload');
+});
+
+test('growing Ranger surfaces releases the alternate backing canvas and a missing context never becomes reusable',()=>{
+  const {painter,observation}=observedPainter();
+  const paint=(size,phase)=>paintV177RangerLower(painter,main({width:1600,height:1600,matrix:[1,0,0,1,600,350]}).ctx,phase,.5,-size/2,-size*.8,size,size*448/480);
+  paint(96,.371);paint(96,.762);paint(96,.371);assert.equal(painter.rasters.length,2);
+  const alternate=painter.rasters[1].canvas;paint(480,.371);
+  assert.equal(alternate.width,0);assert.equal(alternate.height,0);
+  const broken=createV177RangerLowerPainter(image(),rig);let rejected;
+  const target=()=>main({matrix:[1,0,0,1,640,360]}).ctx;
+  paintV177RangerLower(broken,target(),.371,.5,-60,-100,120,112);
+  broken.createCanvas=()=>{rejected={width:0,height:0,getContext:()=>null};return rejected;};
+  assert.throws(()=>paintV177RangerLower(broken,target(),.762,.5,-48,-80,96,89.6),/context unavailable/);
+  assert.equal(rejected.width,0);assert.equal(rejected.height,0);
+  assert.ok(broken.rasters.every(raster=>!raster.valid));
+  assert.ok(observation.surfaces.length<=2);
+});
+
+test('failed growth while the alternate surface is active still permits an old-size repaint',()=>{
+  const {painter}=observedPainter();
+  const paint=(size,phase)=>{const target=main({width:1600,height:1600,matrix:[1,0,0,1,600,350]});
+    const receipt=paintV177RangerLower(painter,target.ctx,phase,.5,-size/2,-size*.8,size,size*448/480);return{receipt,call:target.calls[0]};};
+  paint(96,.371);paint(96,.762);paint(96,.371);
+  const phase=painter.lastRaster.canvas===painter.canvas?.762:.371;
+  const expected=paint(96,phase),alternate=painter.lastRaster.canvas;
+  assert.notEqual(alternate,painter.canvas);
+  const allocate=painter.context.createImageData;
+  painter.context.createImageData=()=>{throw Error('growth allocation failed');};
+  assert.throws(()=>paint(480,.371),/growth allocation failed/);
+  assert.ok(alternate.width>0&&alternate.height>0);
+  assert.ok(painter.rasters.every(raster=>!raster.valid));
+  painter.context.createImageData=allocate;
+  const recovered=paint(96,phase);
+  assert.deepEqual(recovered.receipt,expected.receipt);assert.deepEqual(recovered.call.pixels,expected.call.pixels);
 });
 
 test('stopped Ranger cloth keeps one coverage per sample without changing vertices, UV or original legs',()=>{
