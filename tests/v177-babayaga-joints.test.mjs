@@ -1,3 +1,4 @@
+import {withV177PaintPartIdentity} from './helpers/v177-render-trace.mjs';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
@@ -12,7 +13,7 @@ const hash=b=>createHash('sha256').update(b).digest('hex');
 const pixels=async file=>sharp(await readFile(file)).ensureAlpha().raw().toBuffer();
 function inside([x,y],polygon){let hit=false;for(let i=0,j=polygon.length-1;i<polygon.length;j=i++){const[a,b]=polygon[i],[c,d]=polygon[j];if((b>y)!==(d>y)&&x<(c-a)*(y-b)/(d-b)+a)hit=!hit;}return hit;}
 function edge(p,poly){let best=Infinity;for(let i=0;i<poly.length;i++){const a=poly[i],b=poly[(i+1)%poly.length],dx=b[0]-a[0],dy=b[1]-a[1],t=Math.max(0,Math.min(1,((p[0]-a[0])*dx+(p[1]-a[1])*dy)/(dx*dx+dy*dy)));best=Math.min(best,distance(p,[a[0]+t*dx,a[1]+t*dy]));}return best;}
-function record(kind,plan){const raw=[];const ctx={save(){},restore(){},translate(){},scale(){},transform(...m){raw.push(m);},drawImage(){}};assert.ok(drawV177JointPose(ctx,{naturalWidth:512},kind,plan,0,0,480,448));return raw;}
+function record(kind,plan){const raw=[];const ctx={save(){},restore(){},translate(){},scale(){},transform(...m){raw.push(m);},drawImage(){}};assert.ok(withV177PaintPartIdentity(()=>drawV177JointPose(ctx,{naturalWidth:512},kind,plan,0,0,480,448),ctx,kind,[raw]));return raw;}
 for(const [kind,atlas]of Object.entries(atlases))test('Babayaga retains original face/clothes/shoes/pistol/hands through fixed-length gait and two-hand aim, recoil and recovery',async()=>{
  const dir='assets/source/v100/joints/'+kind+'-r1/',d=JSON.parse(await readFile(dir+'parts.json')),motion=JSON.parse(gunzipSync(await readFile(dir+'motion.json.gz')));
  assert.deepEqual(motion.rig,d.rig);const outlines=new Map(),soles=[];let originalPixels=0,overlayPixels=0;

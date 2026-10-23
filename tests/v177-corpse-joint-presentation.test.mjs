@@ -104,7 +104,7 @@ test('the actual living renderer applies grounding before its sockets, draw and 
   let bob;const consumers=new Map();function visit(n){
     if(ts.isVariableDeclaration(n)&&n.name.getText(parsed)==='bob')bob=n;
     if(ts.isCallExpression(n)&&['v177RenderedJointWeaponSocket','ctx.translate','rememberV177CorpseJointPose'].includes(n.expression.getText(parsed)))
-      consumers.set(n.expression.getText(parsed),n);
+      if(!consumers.has(n.expression.getText(parsed)))consumers.set(n.expression.getText(parsed),n);
     ts.forEachChild(n,visit);
   }visit(draw);
   assert.ok(bob,'exercise the actual live draw offset');

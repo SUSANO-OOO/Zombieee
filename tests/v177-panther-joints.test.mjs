@@ -1,3 +1,4 @@
+import {withV177PaintPartIdentity} from './helpers/v177-render-trace.mjs';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {readFile} from 'node:fs/promises';
@@ -82,7 +83,7 @@ function record(kind,plan,{direction='right',scale=1,x=0,y=0}={}){
  const multiply=b=>{const a=m;m=[a[0]*b[0]+a[2]*b[1],a[1]*b[0]+a[3]*b[1],a[0]*b[2]+a[2]*b[3],a[1]*b[2]+a[3]*b[3],a[0]*b[4]+a[2]*b[5]+a[4],a[1]*b[4]+a[3]*b[5]+a[5]];};
  const ctx={save(){stack.push([...m]);},restore(){m=stack.pop();},translate(x,y){multiply([1,0,0,1,x,y]);},scale(x,y){multiply([x,0,0,y,0,0]);},transform(...a){raw.push(a);multiply(a);},drawImage(){calls.push([...m]);}};
  if(direction==='left')ctx.scale(-1,1);
- assert.equal(drawV177JointPose(ctx,{naturalWidth:atlas.decodedWidth},kind,plan,-size.w*frame.anchorX,-size.h*frame.anchorY,size.w,size.h),true);
+ assert.equal(withV177PaintPartIdentity(()=>drawV177JointPose(ctx,{naturalWidth:atlas.decodedWidth},kind,plan,-size.w*frame.anchorX,-size.h*frame.anchorY,size.w,size.h),ctx,kind,[raw,calls]),true);
  assert.equal(raw.length,{'red-panther-knife':16,'red-panther-smg':15,'red-panther-shield':15,'red-panther-commander':17}[kind]);return {raw,calls,frame,size};
 }
 for(const kind of kinds){
@@ -182,12 +183,25 @@ for(const kind of kinds){
    assert.ok(Math.abs(actual[1]-(500+((p[1]-ref.ty)/ref.scale-frame.anchorY*d.referenceFrame.height)*scale))<1e-10);
   }
  });
- test(kind+': weapon-specific actions keep the knife thrust, shield push and horizontal firearm aim distinct',()=>{
+ test(kind+': weapon-specific actions keep a broad knife cut, braced shield bash and horizontal firearm aim distinct',()=>{
   assert.equal(d.rig.legs.length,2);assert.equal(d.rig.arms.length,2);
   const runtime={locomotionPhase:.1371,locomotionSettle:1},idle=record(kind,v177JointPose(kind,{requestedState:'wind-up',clipProgress:0},runtime)).raw,active=record(kind,v177JointPose(kind,{requestedState:'active',clipProgress:.5},runtime)).raw;
   const start=transform(matrixFor(idle,'weapon-0'),atlas.muzzle),end=transform(matrixFor(active,'weapon-0'),atlas.muzzle);
-  if(kind==='red-panther-knife'){assert.ok(end[0]-start[0]>25);assert.ok(end[1]-start[1]<-20);assert.equal(d.armConstraints.filter(a=>a.effectorBone==='weapon-0').length,1);}
-  else if(kind==='red-panther-shield'){assert.ok(end[0]-start[0]>15&&end[0]-start[0]<35);assert.ok(Math.abs(end[1]-start[1])<15);assert.equal(d.armConstraints.filter(a=>a.effectorBone==='weapon-0').length,2);}
+  if(kind==='red-panther-knife'){
+   const raised=record(kind,v177JointPose(kind,{requestedState:'wind-up',clipProgress:.18/.28},runtime)).raw;
+   const windup=transform(matrixFor(raised,'weapon-0'),atlas.muzzle),a=matrixFor(raised,'weapon-0'),b=matrixFor(active,'weapon-0');
+   const angle=Math.atan2(b[1],b[0])-Math.atan2(a[1],a[0]);
+   assert.ok(end[0]-start[0]>25);assert.ok(windup[1]<start[1]-100&&end[1]>windup[1]+100,'Draw back and cut through a broad arc');
+   assert.ok(Math.abs(Math.atan2(Math.sin(angle),Math.cos(angle)))>2.5,'Rotate the knife through the strike rather than only translating it');
+   assert.equal(d.armConstraints.filter(a=>a.effectorBone==='weapon-0').length,1);
+  }
+  else if(kind==='red-panther-shield'){
+   const raised=record(kind,v177JointPose(kind,{requestedState:'wind-up',clipProgress:.18/.28},runtime)).raw;
+   const windup=transform(matrixFor(raised,'weapon-0'),atlas.muzzle);
+   assert.ok(windup[0]<start[0]-60&&end[0]>windup[0]+60,'Draw the shield back and drive it forward with the body');
+   assert.ok(end[1]>windup[1]+60,'Follow through below the raised guard');
+   assert.equal(d.armConstraints.filter(a=>a.effectorBone==='weapon-0').length,2);
+  }
   else{
    const base=transform(matrixFor(active,'weapon-0'),kind==='red-panther-smg'?[337,180]:[351,239]);
    assert.ok(end[0]-base[0]>10);assert.ok(Math.abs(end[1]-base[1])<.001,'Actual painted barrel becomes horizontal at aim');

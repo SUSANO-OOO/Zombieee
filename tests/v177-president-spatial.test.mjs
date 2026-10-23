@@ -1,3 +1,4 @@
+import {withV177PaintPartIdentity} from './helpers/v177-render-trace.mjs';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
@@ -23,7 +24,7 @@ test('Mutated president original contact planes and original giant claw contact 
    const frame=v100HumanWalkFrame(spriteFrameFor(kind,'walk-a','right'),direction);assert.equal(frame.flipX,direction==='left');if(frame.flipX)ctx.scale(-1,1);
    assert.equal(atlas.referenceFrame.width,frame.sourceRect.w,'Production uses walk-a width, not idle width');assert.equal(atlas.referenceFrame.height,frame.sourceRect.h,'Production uses walk-a height, not idle height');
    const size={w:frame.sourceRect.w*scale,h:frame.sourceRect.h*scale},plan=v177JointPose(kind,{requestedState:'active',clipProgress:.26},{locomotionPhase:.1371,locomotionSettle:1});
-   assert.ok(drawV177JointPose(ctx,{naturalWidth:512},kind,plan,-size.w*frame.anchorX,-size.h*frame.anchorY,size.w,size.h));assert.equal(calls.length,d.parts.length);
+   assert.ok(withV177PaintPartIdentity(()=>drawV177JointPose(ctx,{naturalWidth:512},kind,plan,-size.w*frame.anchorX,-size.h*frame.anchorY,size.w,size.h),ctx,kind,[calls]));assert.equal(calls.length,d.parts.length);
    for(const matrix of calls){assert.ok(Math.abs(Math.hypot(matrix[0],matrix[1])-scale)<1e-10,'Native production drawing never stretches a limb horizontally');assert.ok(Math.abs(Math.hypot(matrix[2],matrix[3])-scale)<1e-10,'Native production drawing preserves the same vertical scale');}
    const contact=transform(calls[atlas.parts.findIndex(p=>p.bone===atlas.weaponBone)],atlas.muzzle),socket=v177RenderedJointWeaponSocket({kind,plan,direction,frame,size,pose:{offsetX:0,offsetY:0,scaleX:1,scaleY:1,rotationRadians:0},x:300,y:500});assert.ok(distance(contact,[socket.x,socket.y])<1e-10);
    for(const leg of d.rig.legs){const p=[leg.ankle[0],leg.ankle[1]+leg.paintGroundY-leg.groundAnkleY],matrix=calls[atlas.parts.findIndex(p=>p.name===leg.paintedPaw)];

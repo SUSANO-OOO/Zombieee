@@ -1,3 +1,4 @@
+import {withV177PaintPartIdentity} from './helpers/v177-render-trace.mjs';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {readFile} from 'node:fs/promises';
@@ -14,7 +15,7 @@ const transform=(m,[x,y])=>[m[0]*x+m[2]*y+m[4],m[1]*x+m[3]*y+m[5]],distance=(a,b
 const pixels=async file=>sharp(await readFile(new URL(file,dir))).ensureAlpha().raw().toBuffer();
 function record(plan){
  const raw=[],ctx={save(){},restore(){},translate(){},scale(){},transform(...m){raw.push(m);},drawImage(){}};
- assert.equal(drawV177JointPose(ctx,{naturalWidth:atlas.decodedWidth},'runner',plan,0,0,394,757),true);
+ assert.equal(withV177PaintPartIdentity(()=>drawV177JointPose(ctx,{naturalWidth:atlas.decodedWidth},'runner',plan,0,0,394,757),ctx,'runner',[raw]),true);
  assert.equal(raw.length,15);return raw;
 }
 test('runner has a separate fixed-length run, actual flight and opposed bent-arm swing on the approved infected paint',async()=>{

@@ -1,3 +1,4 @@
+import {withV177PaintPartIdentity} from './helpers/v177-render-trace.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -23,7 +24,7 @@ function paintMatrices(kind,plan,r) {
     rotate:a=>{m=multiply(m,[Math.cos(a),Math.sin(a),-Math.sin(a),Math.cos(a),0,0]);},
     drawImage:()=>paint.push([...m])};
   ctx.translate(r.x,r.y);ctx.rotate(r.angle);ctx.scale(r.scaleX*(r.flipX?-1:1),r.scaleY);
-  assert.equal(drawV177JointPose(ctx,{naturalWidth:512},kind,plan,-r.width*r.frame.anchorX,-r.height*r.frame.anchorY,r.width,r.height),true);
+  assert.equal(withV177PaintPartIdentity(()=>drawV177JointPose(ctx,{naturalWidth:512},kind,plan,-r.width*r.frame.anchorX,-r.height*r.frame.anchorY,r.width,r.height),ctx,kind,[paint]),true);
   assert.equal(paint.length,15);assert.equal(stack.length,0);
   return paint;
 }

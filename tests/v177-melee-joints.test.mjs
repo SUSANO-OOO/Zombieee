@@ -1,3 +1,4 @@
+import {withV177PaintPartIdentity} from './helpers/v177-render-trace.mjs';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {readFile} from 'node:fs/promises';
@@ -31,7 +32,7 @@ function record(kind,plan,{direction='right',scale=1,x=0,y=0}={}){
  const multiply=b=>{const a=m;m=[a[0]*b[0]+a[2]*b[1],a[1]*b[0]+a[3]*b[1],a[0]*b[2]+a[2]*b[3],a[1]*b[2]+a[3]*b[3],a[0]*b[4]+a[2]*b[5]+a[4],a[1]*b[4]+a[3]*b[5]+a[5]];};
  const ctx={save(){stack.push([...m]);},restore(){m=stack.pop();},translate(x,y){multiply([1,0,0,1,x,y]);},scale(x,y){multiply([x,0,0,y,0,0]);},transform(...a){raw.push(a);multiply(a);},drawImage(){calls.push([...m]);}};
  if(direction==='left')ctx.scale(-1,1);
- assert.equal(drawV177JointPose(ctx,{naturalWidth:atlas.decodedWidth},kind,plan,-size.w*frame.anchorX,-size.h*frame.anchorY,size.w,size.h),true);
+ assert.equal(withV177PaintPartIdentity(()=>drawV177JointPose(ctx,{naturalWidth:atlas.decodedWidth},kind,plan,-size.w*frame.anchorX,-size.h*frame.anchorY,size.w,size.h),ctx,kind,[raw,calls]),true);
  assert.equal(raw.length,{'brute':14,'brawler':15,'crazy-king':15,'kumaverson':15}[kind]);return {raw,calls,frame,size};
 }
 for(const kind of kinds){
@@ -194,15 +195,21 @@ test('Melee textures load only for selected forms and never change legacy asset 
  }
 });
 
-test('fast hammer interpolation follows the authored grip rather than the distant image origin',()=>{
+test('legacy hammer interpolation keeps its grip control and the new broad swing keeps both actual hands joined',()=>{
  const atlas=V177_JOINT_ATLASES.brute,pivot=atlas.interpolationPivots['weapon-0'];
  assert.deepEqual(pivot,[254,168]);
  for(const state of ['wind-up','active','recovery'])for(let n=0;n<=180;n++){
   const plan=v177JointPose('brute',{requestedState:state,clipProgress:n/180},{locomotionPhase:.1371,locomotionSettle:1});
-  const {raw}=record('brute',plan),a=transform(atlas.poses[plan.upperIndex]['weapon-0'],pivot),b=transform(atlas.poses[plan.upperNextIndex]['weapon-0'],pivot);
+  const {raw}=record('brute',{...plan,choreography:undefined}),a=transform(atlas.poses[plan.upperIndex]['weapon-0'],pivot),b=transform(atlas.poses[plan.upperNextIndex]['weapon-0'],pivot);
   const expected=[a[0]+(b[0]-a[0])*plan.upperBlend,a[1]+(b[1]-a[1])*plan.upperBlend+plan.upperOffsetY];
   const actual=transform(raw[atlas.parts.findIndex(p=>p.bone==='weapon-0')],pivot);
   assert.ok(distance(actual,expected)<.001,'The original two-handed grip stays on the evaluated path between keys');
+  const current=record('brute',plan).raw;
+  for(const arm of atlas.armConstraints){
+   const wrist=transform(current[atlas.parts.findIndex(p=>p.bone===arm.lowerBone)],arm.wrist);
+   const held=transform(current[atlas.parts.findIndex(p=>p.bone===arm.effectorBone)],arm.effectorWrist??arm.wrist);
+   assert.ok(distance(wrist,held)<.001,'Both painted hands own the same rigid hammer throughout its broad swing');
+  }
  }
 });
 

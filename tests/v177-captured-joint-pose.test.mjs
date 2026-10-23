@@ -38,7 +38,7 @@ for(const kind of ['takuya','mugarian-president-mutated','takuya-omega']) {
       const original=recording();assert.equal(drawV177JointPose(original.ctx,image,kind,plan,-73,-154,171,253),true);
       const captured=v177CaptureJointPose(kind,plan);assert.ok(captured);
       const matrices=v177InterpolateCapturedJointPose(kind,captured,atlas.poses[0],0),replayed=recording();
-      assert.equal(drawV177ResolvedJointPose(replayed.ctx,image,kind,matrices,-73,-154,171,253),true);
+      assert.equal(drawV177ResolvedJointPose(replayed.ctx,image,kind,matrices,-73,-154,171,253,{frontBones:captured.frontBones}),true);
       samePaint(original.calls,replayed.calls);
       for(const p of [.1,.35,.65,1])for(const m of v177InterpolateCapturedJointPose(kind,captured,atlas.poses[0],p)) {
         assert.ok(Math.abs(Math.hypot(m[0],m[1])-1)<1e-12,'interpolation cannot shorten a source limb');

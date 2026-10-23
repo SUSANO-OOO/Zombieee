@@ -104,6 +104,19 @@ test('Omega repeated held-hit projections keep one authored source and enter stu
   }
 });
 
+test('every choreographed normal attack keeps the actual carry arm draw order at its first and last frames',()=>{
+  for(const [kind,atlas]of Object.entries(atlases)){
+    if(atlas.type!=='rigid-parts')continue;
+    const runtime={locomotionPhase:.137,locomotionSettle:1},idle=v177JointPose(kind,{requestedState:'idle'},runtime,{grounded:true});
+    if(!v177JointPose(kind,{requestedState:'wind-up',clipProgress:0},runtime,{grounded:true}).choreography)continue;
+    const order=plan=>{const paints=[],ctx={save(){},restore(){},translate(){},scale(){},transform(){},beginPath(){},moveTo(){},lineTo(){},closePath(){},fill(){},drawImage(_image,...rect){paints.push(rect);}};
+      assert.ok(drawV177JointPose(ctx,{naturalWidth:1},kind,plan,0,0,100,100));return paints;};
+    const carry=order(idle);
+    for(const [state,p]of [['wind-up',0],['wind-up',1e-9],['recovery',1-1e-9],['recovery',1]])
+      assert.deepEqual(order(v177JointPose(kind,{requestedState:state,clipProgress:p},runtime,{grounded:true})),carry,kind+' cannot hide an unchanged arm at an attack boundary');
+  }
+});
+
 test('clear-ground traversal is faster on both sides, preserves stops and slows, and eases at contact',()=>{
   for(const speed of [4,11,14,23,34]){
     assert.equal(combatApproachSpeed(speed,24),speed);

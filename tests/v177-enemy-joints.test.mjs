@@ -1,3 +1,4 @@
+import {withV177PaintPartIdentity} from './helpers/v177-render-trace.mjs';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {readFile} from 'node:fs/promises';
@@ -19,7 +20,7 @@ function record(plan,{kind='walker',size={w:394,h:757},direction='right',x=0,y=0
  const ctx={save(){stack.push([...m]);},restore(){m=stack.pop();},translate(x,y){multiply([1,0,0,1,x,y]);},scale(x,y){multiply([x,0,0,y,0,0]);},transform(...a){raw.push(a);multiply(a);},drawImage(){calls.push([...m]);}};
  if(direction==='left')ctx.scale(-1,1);
  const frame=spriteFrameFor(kind,'walk-a',direction);
- assert.equal(drawV177JointPose(ctx,{naturalWidth:atlas.decodedWidth},kind,plan,-size.w*frame.anchorX,-size.h*frame.anchorY,size.w,size.h),true);
+ assert.equal(withV177PaintPartIdentity(()=>drawV177JointPose(ctx,{naturalWidth:atlas.decodedWidth},kind,plan,-size.w*frame.anchorX,-size.h*frame.anchorY,size.w,size.h),ctx,kind,[raw,calls]),true);
  assert.equal(calls.length,15);return {calls,raw};
 }
 test('infected legs keep fixed lengths and real painted support; both original hands follow their arm chains',async()=>{

@@ -3,6 +3,36 @@ import {V177_JOINT_ATLASES,v177JointPose,drawV177JointPose} from '../../app/v177
 import {V177_MELEE_JOINT_ATLASES} from '../../app/v177MeleeJointData.js';
 import {readFileSync} from 'node:fs';import {gunzipSync} from 'node:zlib';
 
+// Join measurements to the part actually painted, never to its transient
+// foreground order. Retain that order separately for occlusion regressions.
+export function withV177PaintPartIdentity(draw,ctx,kind,arrays){
+ const atlas=V177_JOINT_ATLASES[kind],key=p=>[
+  p.source.x,p.source.y,p.source.w,p.source.h,
+  p.destination.x,p.destination.y,p.destination.w,p.destination.h].join(',');
+ const indices=new Map(atlas.parts.map((p,i)=>[key(p),i]));
+ assert.equal(indices.size,atlas.parts.length,'source and destination identify one part');
+ const paints=[],original=ctx.drawImage;
+ ctx.drawImage=function(image,...rect){
+  const index=indices.get(rect.join(','));assert.notEqual(index,undefined,'unknown painted source rectangle');
+  paints.push({index,image});return original.call(this,image,...rect);
+ };
+ let result;try{result=draw();}finally{ctx.drawImage=original;}
+ assert.equal(paints.length,atlas.parts.length,'paint every original part exactly once');
+ assert.equal(new Set(paints.map(p=>p.index)).size,atlas.parts.length,'no duplicate or missing part');
+ assert.ok(paints.every(p=>p.image===paints[0].image),'retain the original atlas image');
+ for(const rows of arrays){
+  assert.equal(rows.length,paints.length,'one measured matrix or payload per paint');
+  const ordered=new Array(rows.length);paints.forEach((p,i)=>{ordered[p.index]=rows[i];});
+  rows.splice(0,rows.length,...ordered);
+  Object.defineProperties(rows,{
+   drawOrder:{value:paints.map(p=>atlas.parts[p.index].name),configurable:true},
+   byName:{value:new Map(atlas.parts.map((p,i)=>[p.name,rows[i]])),configurable:true},
+   byBone:{value:new Map(atlas.parts.map((p,i)=>[p.bone,rows[i]])),configurable:true},
+  });
+ }
+ return result;
+}
+
 // The original golden remains an immutable control for the legacy interpolation
 // path. Planned leg correction, continuous settling and Mayo anticipation are tested independently
 // against actual painted joints; they are deliberately visible runtime changes.

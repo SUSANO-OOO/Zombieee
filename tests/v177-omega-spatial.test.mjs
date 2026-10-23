@@ -1,3 +1,4 @@
+import {withV177PaintPartIdentity} from './helpers/v177-render-trace.mjs';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
@@ -24,7 +25,7 @@ test('Omega original contact planes and original cleaver contact survive actual 
    const frame=v100HumanWalkFrame(spriteFrameFor(kind,'walk-a','right'),direction);assert.equal(frame.flipX,direction==='left');if(frame.flipX)ctx.scale(-1,1);
    assert.equal(atlas.referenceFrame.width,frame.sourceRect.w,'Production uses walk-a width, not idle width');assert.equal(atlas.referenceFrame.height,frame.sourceRect.h,'Production uses walk-a height, not idle height');
    const size={w:frame.sourceRect.w*scale,h:frame.sourceRect.h*scale},plan=v177JointPose(kind,{requestedState:'active',clipProgress:.26},{locomotionPhase:.1371,locomotionSettle:1});
-   assert.ok(drawV177JointPose(ctx,{naturalWidth:512},kind,plan,-size.w*frame.anchorX,-size.h*frame.anchorY,size.w,size.h));assert.equal(calls.length,d.parts.length);
+   assert.ok(withV177PaintPartIdentity(()=>drawV177JointPose(ctx,{naturalWidth:512},kind,plan,-size.w*frame.anchorX,-size.h*frame.anchorY,size.w,size.h),ctx,kind,[calls]));assert.equal(calls.length,d.parts.length);
    for(const matrix of calls){
     assert.ok(Math.abs(Math.hypot(matrix[0],matrix[1])-scale)<1e-10,'The complete right grip and broader source blade retain unit scale like every limb');
     assert.ok(Math.abs(Math.hypot(matrix[2],matrix[3])-scale)<1e-10,'The source blade length and every vertical bone scale are retained');

@@ -1,3 +1,4 @@
+import {withV177PaintPartIdentity} from './helpers/v177-render-trace.mjs';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {readFile} from 'node:fs/promises';
@@ -22,7 +23,7 @@ const pixels=async file=>sharp(await readFile(new URL(file,dir))).ensureAlpha().
 function render(plan){
  const matrices=[],calls=[];
  const ctx={save(){},restore(){},translate(){},scale(){},transform(...m){matrices.push(m);},drawImage(...a){calls.push(a);}};
- assert.equal(drawV177JointPose(ctx,{naturalWidth:atlas.decodedWidth},'scout',plan,0,0,480,448),true);
+ assert.equal(withV177PaintPartIdentity(()=>drawV177JointPose(ctx,{naturalWidth:atlas.decodedWidth},'scout',plan,0,0,480,448),ctx,'scout',[matrices,calls]),true);
  assert.equal(calls.length,16);return matrices;
 }
 

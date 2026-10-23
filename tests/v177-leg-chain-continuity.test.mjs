@@ -1,3 +1,4 @@
+import {withV177PaintPartIdentity} from './helpers/v177-render-trace.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile,readdir} from 'node:fs/promises';
@@ -17,7 +18,7 @@ const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 function paintedBones(kind,atlas,sample,runtime){
  const matrices=[],ctx={save(){},restore(){},translate(){},scale(){},beginPath(){},moveTo(){},lineTo(){},closePath(){},fill(){},transform(...m){matrices.push(m);},drawImage(){}};
  const plan=v177JointPose(kind,sample,runtime);assert.ok(plan,kind+' authored plan');
- assert.ok(drawV177JointPose(ctx,{naturalWidth:atlas.decodedWidth},kind,plan,0,0,480,448));
+ assert.ok(withV177PaintPartIdentity(()=>drawV177JointPose(ctx,{naturalWidth:atlas.decodedWidth},kind,plan,0,0,480,448),ctx,kind,[matrices]));
  return Object.fromEntries(atlas.parts.map((p,i)=>[p.bone,matrices[i]]));
 }
 function assertLegs(kind,d,raw){
