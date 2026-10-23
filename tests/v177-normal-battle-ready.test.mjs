@@ -6,6 +6,7 @@ import ts from 'typescript';
 import * as React from 'react';
 import { createDefaultV100Save } from '../app/v100Save.js';
 import { normalCampaignDeploymentCount } from '../scripts/v100-normal-play-contract.mjs';
+import {createNormalBrowserDeadline} from '../scripts/v177-normal-browser-deadline.mjs';
 
 const driverSource = fs.readFileSync('scripts/v100-normal-campaign-playthrough.mjs', 'utf8');
 const driver = ts.createSourceFile('driver.mjs', driverSource, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
@@ -52,7 +53,7 @@ function fixture({ ready = false, stuck = false, duplicate = false } = {}) {
     };
   } };
   const battle = vm.runInNewContext(declaration.getText(driver) + '\nbattle;', {
-    page, report, saveAt: async () => save, persist: async () => {},out:'inert',
+    page,rawPage:page,rpc:createNormalBrowserDeadline({timeoutMs:15000}),report,saveAt:async()=>save,persist:async()=>{},out:'inert',
     createNormalFrameCapture:async()=>({record:async()=>{}}),
     finishNormalFrameCapture:async()=>({status:'incomplete',performanceAcceptance:false}),
     __V177_READ_NORMAL_FRAMES__:()=>({owner:'inert',sequence:0,times:[]}),

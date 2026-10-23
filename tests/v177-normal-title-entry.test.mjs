@@ -9,12 +9,17 @@ import { enterV100FromTitle } from '../scripts/v100-title-qa-entry.mjs';
 function entryBlock(file) {
   const source = fs.readFileSync(file, 'utf8');
   const parsed = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
-  const route = parsed.statements.find(node => ts.isTryStatement(node)
-    && node.tryBlock.statements[0]?.getText(parsed).includes('page.goto(origin.href)'));
+  const isGoto=node=>ts.isExpressionStatement(node)&&ts.isAwaitExpression(node.expression)
+    &&ts.isCallExpression(node.expression.expression)&&node.expression.expression.expression.getText(parsed)==='page.goto';
+  const route=parsed.statements.find(node=>ts.isTryStatement(node)&&node.tryBlock.statements.some(isGoto));
   const branch = route?.tryBlock.statements.find(node => ts.isIfStatement(node)
     && node.expression.getText(parsed) === '!resumeDir');
   assert.ok(route && branch, 'exercise the real normal-play entry before its fresh/resume branch');
-  return source.slice(route.tryBlock.getStart(parsed) + 1, branch.getStart(parsed));
+  const start=route.tryBlock.statements.findIndex(isGoto),branchIndex=route.tryBlock.statements.indexOf(branch);
+  assert.ok(start>=0&&branchIndex>start,'native entry must precede the fresh/resume branch');
+  assert.deepEqual(route.tryBlock.statements.slice(start,branchIndex).map(node=>node.expression?.expression?.expression?.getText(parsed)),
+    ['page.goto','dismissInstallOffer','enterV100FromTitle'],'execute the exact native entry sequence after browser setup');
+  return source.slice(route.tryBlock.statements[start].getStart(parsed),branch.getStart(parsed));
 }
 
 function titleFixture(hasSave) {

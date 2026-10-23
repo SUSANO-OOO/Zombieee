@@ -14,6 +14,16 @@ const recovery={schema:'v177-native-allunit-recovery/v1',head:'1'.repeat(40),run
 function profileRoot(profile){const root=mkdtempSync(path.join(tmpdir(),'v177-selection-'));mkdirSync(path.join(root,'scripts'));
  writeFileSync(path.join(root,'scripts','v177-native-allunit-recovery.json'),JSON.stringify(profile));return root;}
 const originalRoot=profileRoot(recovery);
+
+function resolvedWalkerFixture(){
+ const p=structuredClone(current),closure=p.additionalRawClockClosures?.[0]??p.historicalAdditionalRawClockClosures?.[0];
+ assert.ok(closure,'the original strict-clock closure remains available as historical evidence');
+ p.caseIds=p.caseIds.filter(id=>id!==closure.caseId);
+ if(!p.retainedEvidence.caseIds.includes(closure.caseId))p.retainedEvidence.caseIds.push(closure.caseId);
+ const report=p.retainedEvidence.additionalReports.find(r=>r.head===closure.head&&r.runId===closure.runId&&r.sha256===closure.reportSha256);
+ assert.ok(report);if(!report.caseIds.includes(closure.caseId))report.caseIds.push(closure.caseId);
+ p.additionalRawClockClosures=[structuredClone(closure)];return p;
+}
 test('unfinished selection never substitutes an unknown or duplicate case and leaves the full inventory intact',()=>{
   const selection=selectNativeCases(recovery.caseIds);
   assert.equal(selection.caseIds.length,24);
@@ -96,8 +106,13 @@ test('supplement-only recovery can finish its original context without recapturi
  for(const inventory of profile.additionalEvidenceInventories??[])for(const correction of inventory.contractCorrections??[])correction.caseIds=correction.caseIds.filter(id=>profile.retainedEvidence.manualCaseIds.includes(id));
  for(const key of ['caseIds','manualCaseIds','outcomeCaseIds'])for(const id of profile.retainedEvidence[key]){
   const owned=[...profile.retainedEvidence.reports,...profile.retainedEvidence.additionalReports].some(r=>r[key].includes(id));
-  if(!owned)profile.retainedEvidence.additionalReports.find(r=>id.startsWith(r.shard+':'))[key].push(id);
+  if(!owned)profile.retainedEvidence.reports.find(r=>id.startsWith(r.shard+':'))[key].push(id);
  }
+ profile.additionalRawClockClosures=resolvedWalkerFixture().additionalRawClockClosures;
+ const walker=profile.additionalRawClockClosures[0];
+ const originalOwner=profile.retainedEvidence.additionalReports.find(r=>r.head===walker.head&&r.sha256===walker.reportSha256);
+ for(const r of profile.retainedEvidence.reports)r.caseIds=r.caseIds.filter(id=>id!==walker.caseId);
+ if(!originalOwner.caseIds.includes(walker.caseId))originalOwner.caseIds.push(walker.caseId);
  const result=nativeCaseSelection({root:profileRoot(profile),event:{pull_request:{draft:true}},git:()=>''});
  assert.equal(result.caseIds.length,0);assert.deepEqual(result.shards,['forms-1']);assert.equal(result.manualCaseIds.length,1);assert.equal(result.outcomeCaseIds.length,0);
 });
@@ -127,6 +142,7 @@ test('additional successful reports retain their own head and can only bind uniq
 });
 
 test('later raw-clock closures fail closed if their report, original audit or strict clock proof is unbound',()=>{
+ const resolved=resolvedWalkerFixture();
  const select=p=>nativeCaseSelection({root:profileRoot(p),event:{pull_request:{draft:false}},git:()=>''});
  for(const mutate of[
   r=>{r.reportSha256='f'.repeat(64);},r=>{r.rawClipSha256='';},r=>{r.clockAuditSha256='';},
@@ -134,21 +150,22 @@ test('later raw-clock closures fail closed if their report, original audit or st
   r=>{r.resolves.historicalAuditSha256='f'.repeat(64);},r=>{r.resolves.previousBaselineHead='f'.repeat(40);},
   r=>{r.strictClockValidation.nativeClockStrictlyIncreasing=false;},r=>{r.strictClockValidation.duplicateRowsRemoved=true;},
  ]){
-  const broken=structuredClone(current);mutate(broken.additionalRawClockClosures[0]);assert.throws(()=>select(broken));
+  const broken=structuredClone(resolved);mutate(broken.additionalRawClockClosures[0]);assert.throws(()=>select(broken));
  }
- const broken=structuredClone(current);broken.retainedEvidence.additionalReports=broken.retainedEvidence.additionalReports.filter(r=>r.shard!=='forms-4');
+ const broken=structuredClone(resolved);broken.retainedEvidence.additionalReports=broken.retainedEvidence.additionalReports.filter(r=>r.shard!=='forms-4');
  assert.throws(()=>select(broken));
 });
 
 test('every retained observation and historical open clock keeps its exact source owner',()=>{
+ const resolved=resolvedWalkerFixture();
  const select=p=>nativeCaseSelection({root:profileRoot(p),event:{pull_request:{draft:false}},git:()=>''});
  for(const mutate of[
-  p=>{p.retainedEvidence.additionalReports=p.retainedEvidence.additionalReports.filter(r=>r.shard!=='forms-12');},
+  p=>{p.retainedEvidence.additionalReports.shift();},
   p=>{p.retainedEvidence.reports[0].caseIds.pop();},
   p=>{p.additionalRawClockClosures=[];},
   p=>{delete p.additionalEvidenceInventory;},
  ]){
-  const broken=structuredClone(current);mutate(broken);assert.throws(()=>select(broken));
+  const broken=structuredClone(resolved);mutate(broken);assert.throws(()=>select(broken));
  }
 });
 

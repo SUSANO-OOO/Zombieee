@@ -1,4 +1,5 @@
 import test from 'node:test';
+import {createNormalBrowserDeadline} from '../scripts/v177-normal-browser-deadline.mjs';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
@@ -74,7 +75,7 @@ test('actual normal battle handoff recognizes its committed loss and preserves u
     const error=new Error('Original detached unit-card timeout'),record={openingSave:{revision:257}},saved=scenario.slot==='missing'?{}:
       {[scenario.slot]:{...result,...(scenario.runId?{battleRunId:scenario.runId}:{})}};
     let reads=0;
-    const execution=vm.runInNewContext(actual,{stage,record,error,saveAt:async()=>{reads++;return saved;},phaseAt:async()=>scenario.phase??'result',
+    const execution=vm.runInNewContext(actual,{rpc:createNormalBrowserDeadline({timeoutMs:15000}),stage,record,error,saveAt:async()=>{reads++;return saved;},phaseAt:async()=>scenario.phase??'result',
       page:{getByLabel(name,options){assert.equal(name,'戦闘結果');assert.equal(options.exact,true);return{isVisible:async()=>scenario.visible!==false};}}});
     if(scenario.phase||scenario.visible===false||scenario.runId||scenario.slot==='missing'){
       await assert.rejects(execution,actualError=>actualError===error);assert.equal(record.completedResultHandoff,undefined);
@@ -84,6 +85,20 @@ test('actual normal battle handoff recognizes its committed loss and preserves u
     }
     assert.equal(reads,1);assert.equal(saved[scenario.slot]?.won,scenario.slot==='missing'?undefined:false);
   }
+});
+
+test('a protocol timeout cannot be handed off as an ordinary committed loss even when the result belongs to this battle',async()=>{
+  const catches=[];
+  const visit=node=>{if(ts.isCatchClause(node)&&node.block.getText(tree).includes('record.completedResultHandoff'))catches.push(node);ts.forEachChild(node,visit);};
+  visit(functions.get('battle'));assert.equal(catches.length,1);
+  const rpc=createNormalBrowserDeadline({timeoutMs:1});
+  await assert.rejects(rpc.run(()=>new Promise(()=>{}),'stalled actual battle RPC'),error=>error===rpc.failure);
+  let reads=0;const record={openingSave:{revision:257}},stage=V100_STAGES.find(stage=>stage.number===4);
+  const execution=vm.runInNewContext('(async()=>{for(;;)'+catches[0].block.getText(tree)+'})()',{
+    rpc,stage,record,error:new Error('Secondary detached card'),saveAt:async()=>{reads++;return{lastResult:{battleRunId:`v100:${stage.id}:257`,won:false}};},
+    phaseAt:async()=>'result',page:{getByLabel:()=>({isVisible:async()=>true})},
+  });
+  await assert.rejects(execution,error=>error===rpc.failure);assert.equal(reads,0);assert.equal(record.completedResultHandoff,undefined);
 });
 
 test('the actual caller reserves the first airstrike even when production vehicle fire is enabled',async()=>{

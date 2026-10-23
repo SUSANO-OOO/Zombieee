@@ -1241,43 +1241,6 @@ async function terminateTimedOutDeploymentPointer(page, pointerPromise) {
   return evidence;
 }
 
-async function installDeploymentSchedulerProbe(page, probeId) {
-  if (page.isClosed()) return { probeId, status: "disposed-with-page" };
-  return page.evaluate((schedulerProbeId) => {
-    const registry = window.__V100_PHASE_G_DEPLOYMENT_SCHEDULER_PROBES__ ??= new Map();
-    const existing = registry.get(schedulerProbeId);
-    if (existing?.status === "pending" && Number.isFinite(Number(existing.handle))) {
-      cancelAnimationFrame(existing.handle);
-    }
-    const entry = {
-      probeId: schedulerProbeId,
-      status: "pending",
-      requestedAtWallTimeMs: Date.now(),
-      requestedAtPerformanceMs: performance.now(),
-      handle: null,
-      observedAtWallTimeMs: null,
-      observedAtPerformanceMs: null,
-      callbackTimestamp: null,
-    };
-    entry.handle = requestAnimationFrame((callbackTimestamp) => {
-      entry.status = "observed";
-      entry.observedAtWallTimeMs = Date.now();
-      entry.observedAtPerformanceMs = performance.now();
-      entry.callbackTimestamp = callbackTimestamp;
-    });
-    registry.set(schedulerProbeId, entry);
-    return {
-      probeId: entry.probeId,
-      status: entry.status,
-      requestedAtWallTimeMs: entry.requestedAtWallTimeMs,
-      requestedAtPerformanceMs: entry.requestedAtPerformanceMs,
-      observedAtWallTimeMs: entry.observedAtWallTimeMs,
-      observedAtPerformanceMs: entry.observedAtPerformanceMs,
-      callbackTimestamp: entry.callbackTimestamp,
-    };
-  }, probeId);
-}
-
 async function removeDeploymentSchedulerProbe(page, probeId) {
   if (page.isClosed()) return { probeId, status: "disposed-with-page" };
   return page.evaluate((schedulerProbeId) => {
@@ -1681,8 +1644,12 @@ async function performVerifiedDeploymentPointer(page, {
       requestedSlot,
       phase: `${phase}:final-requery`,
       schedulerProbeId,
+      installSchedulerProbe: true,
     }));
     preflightEvidence.initial = initial;
+    preflightEvidence.schedulerProbe.installation = initial.schedulerProbe?.probeId === schedulerProbeId
+      && ["pending", "observed"].includes(initial.schedulerProbe.status) ? initial.schedulerProbe : null;
+    schedulerProbeInstalled = preflightEvidence.schedulerProbe.installation !== null;
     recorder?.setLatestReadableState(initial);
     if (initial.pageClosed || initial.evaluateError) {
       throw phaseGPointerFailure("lifecycle-loss", { phase, initial }, 0);
@@ -1704,12 +1671,6 @@ async function performVerifiedDeploymentPointer(page, {
     // A recovered card can become unavailable before this locked requery.
     // With no possible input, do not create an observer whose cleanup could
     // close the shared capture page after a diagnostic timeout.
-    preflightEvidence.schedulerProbe.installation = await preflightStep(
-      () => installDeploymentSchedulerProbe(page, schedulerProbeId),
-      "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE",
-      { operation: "scheduler-probe-install", schedulerProbeId },
-    );
-    schedulerProbeInstalled = ["pending", "observed"].includes(preflightEvidence.schedulerProbe.installation?.status);
     if (!schedulerProbeInstalled) {
       throw phaseGPointerFailure("QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE", {
         phase,
@@ -3423,6 +3384,7 @@ async function readBattleDeploymentDiagnostics(page, {
   phase = null,
   schedulerProbeId = null,
   dispatchAttemptId = null,
+  installSchedulerProbe = false,
 } = {}) {
   if (page.isClosed()) {
     return {
@@ -3435,14 +3397,14 @@ async function readBattleDeploymentDiagnostics(page, {
       dispatchAttemptId,
     };
   }
-  const diagnostics = await page.evaluate(({ requestedKind: kind, requestedSlot: slot, phase: diagnosticPhase, activeSchedulerProbeId, receiptAttemptId }) => {
+  const diagnostics = await page.evaluate(({ requestedKind: kind, requestedSlot: slot, phase: diagnosticPhase, activeSchedulerProbeId, receiptAttemptId, installProbe, queueCapacity }) => {
     const diagnosticRegistry = window.__V100_PHASE_G_DEPLOYMENT_DIAGNOSTICS__ ??= { sampleOrdinal: 0 };
     diagnosticRegistry.sampleOrdinal += 1;
     const sampleOrdinal = diagnosticRegistry.sampleOrdinal;
     const schedulerEntry = activeSchedulerProbeId
       ? window.__V100_PHASE_G_DEPLOYMENT_SCHEDULER_PROBES__?.get(activeSchedulerProbeId)
       : null;
-    const schedulerProbe = schedulerEntry ? {
+    let schedulerProbe = schedulerEntry ? {
       probeId: schedulerEntry.probeId,
       status: schedulerEntry.status,
       requestedAtWallTimeMs: schedulerEntry.requestedAtWallTimeMs,
@@ -3565,6 +3527,42 @@ async function readBattleDeploymentDiagnostics(page, {
         } : null,
       };
     });
+    if (installProbe && activeSchedulerProbeId) {
+      // The same initial read owns the candidate and one RAF reservation.
+      // Keep eligibility identical to the host check; visibility in the rail
+      // and hit ownership are verified later, after the original centering.
+      const queue = snapshot?.deployQueue ?? [];
+      const eligible = card => {
+        const cost = card?.cost == null ? NaN : Number(card.cost);
+        const energy = Number(snapshot?.energy ?? NaN);
+        const cooldown = card?.kind ? Number(snapshot?.deployCooldowns?.[card.kind]) : NaN;
+        return Boolean(card?.kind && card.rect?.visible === true && card.state === "ready"
+          && card.ariaDisabled === "false" && card.disabled !== true
+          && snapshot?.screen === "battle" && snapshot.running === true
+          && snapshot.paused !== true && snapshot.over !== true && snapshot.won !== true
+          && Array.isArray(queue) && queue.length < queueCapacity
+          && Number.isFinite(cost) && Number.isFinite(energy) && energy >= cost
+          && Number.isFinite(cooldown) && cooldown === 0);
+      };
+      const candidate = kind ? cards.find(card => card.kind === kind) : cards.find(eligible);
+      if (eligible(candidate)) {
+        const registry = window.__V100_PHASE_G_DEPLOYMENT_SCHEDULER_PROBES__ ??= new Map();
+        const existing = registry.get(activeSchedulerProbeId);
+        if (existing?.status === "pending" && Number.isFinite(Number(existing.handle))) cancelAnimationFrame(existing.handle);
+        const entry = { probeId: activeSchedulerProbeId, status: "pending",
+          requestedAtWallTimeMs: Date.now(), requestedAtPerformanceMs: performance.now(), handle: null,
+          observedAtWallTimeMs: null, observedAtPerformanceMs: null, callbackTimestamp: null };
+        entry.handle = requestAnimationFrame(timestamp => {
+          entry.status = "observed"; entry.observedAtWallTimeMs = Date.now();
+          entry.observedAtPerformanceMs = performance.now(); entry.callbackTimestamp = timestamp;
+        });
+        registry.set(activeSchedulerProbeId, entry);
+        schedulerProbe = {probeId:entry.probeId,status:entry.status,
+          requestedAtWallTimeMs:entry.requestedAtWallTimeMs,requestedAtPerformanceMs:entry.requestedAtPerformanceMs,
+          observedAtWallTimeMs:entry.observedAtWallTimeMs,observedAtPerformanceMs:entry.observedAtPerformanceMs,
+          callbackTimestamp:entry.callbackTimestamp};
+      }
+    }
     const dispatchReceipt = receiptAttemptId
       ? window.__V100_PHASE_G_DEPLOYMENT_POINTER_RECEIPTS__?.get(receiptAttemptId)
       : null;
@@ -3649,7 +3647,8 @@ async function readBattleDeploymentDiagnostics(page, {
       })),
       objectiveText,
     };
-  }, { requestedKind, requestedSlot, phase, activeSchedulerProbeId: schedulerProbeId, receiptAttemptId: dispatchAttemptId }).catch((error) => ({
+  }, { requestedKind, requestedSlot, phase, activeSchedulerProbeId: schedulerProbeId, receiptAttemptId: dispatchAttemptId,
+    installProbe: installSchedulerProbe, queueCapacity: DEPLOYMENT_QUEUE_CAPACITY }).catch((error) => ({
     capturedAt: new Date().toISOString(),
     pageClosed: page.isClosed(),
     requestedKind,

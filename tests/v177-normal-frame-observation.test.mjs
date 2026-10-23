@@ -141,8 +141,15 @@ test('the actual tactical read keeps the original snapshot and all input policy 
     current=(await readFile('scripts/v100-normal-tactical-input.mjs','utf8')).replaceAll('\r\n','\n'),marker='  observeSnapshot?.(s);';
   const s25Only="s25FireComparison ? s25FireDeploymentPriorities(s, record.s25ObservedHumans, earlyCampaign&&!bossPrecision ? earlyPriorities : latePriorities) : earlyCampaign&&!bossPrecision ? earlyPriorities : latePriorities";
   assert.equal(current.split(s25Only).length,2,'only the one explicit S25 branch is exempt');
-  assert.equal(current.slice(current.indexOf(marker)).replace(s25Only,"earlyCampaign&&!bossPrecision ? earlyPriorities : latePriorities"),old.slice(old.indexOf(marker)),'all baseline tactical policy remains exact');
   const ast=ts.createSourceFile('old.mjs',old,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);
+  const projections=[];
+  const visit=node=>{if(ts.isCallExpression(node)&&ts.isPropertyAccessExpression(node.expression)&&node.expression.name.text==='evaluate'
+    &&node.expression.expression.getText(ast)==="page.locator('.game-shell canvas')")projections.push(node.getText(ast));ts.forEachChild(node,visit);};visit(ast);
+  assert.equal(projections.length,1);
+  const immediate="page.locator('.game-shell canvas').evaluateAll(projectRepresentativeAirstrikeCanvases,target)";
+  assert.equal(current.split(immediate).length,2,'only the volatile canvas projection uses the immediate match');
+  assert.equal(current.slice(current.indexOf(marker)).replace(s25Only,"earlyCampaign&&!bossPrecision ? earlyPriorities : latePriorities").replace(immediate,projections[0]),
+    old.slice(old.indexOf(marker)),'all other baseline tactical policy remains exact');
   const declaration=ast.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==='normalTacticalInput');
   const first=declaration.body.statements[0].declarationList.declarations[0].initializer.expression.arguments[0].getText(ast);
   for(let i=0;i<32;i++){

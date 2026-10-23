@@ -79,7 +79,12 @@ test('the actual device projection retains raw receipts and all original window,
   const tactical=read('scripts/v100-normal-tactical-input.mjs'),oldTactical=execFileSync('git',['show','207e19bd33e6ce62895c615dedaa816ae469d70c:scripts/v100-normal-tactical-input.mjs'],{encoding:'utf8'}).replaceAll('\r\n','\n'),marker='  observeSnapshot?.(s);';
   const s25Only="s25FireComparison ? s25FireDeploymentPriorities(s, record.s25ObservedHumans, earlyCampaign&&!bossPrecision ? earlyPriorities : latePriorities) : earlyCampaign&&!bossPrecision ? earlyPriorities : latePriorities";
   assert.equal(tactical.split(s25Only).length,2,'only the one explicit S25 branch is exempt');
-  assert.equal(tactical.slice(tactical.indexOf(marker)).replace(s25Only,"earlyCampaign&&!bossPrecision ? earlyPriorities : latePriorities"),oldTactical.slice(oldTactical.indexOf(marker)),'all baseline tactical policy remains exact');
+  const projectionCalls=[];
+  const tacticalAst=tree(oldTactical),visitProjection=n=>{if(ts.isCallExpression(n)&&ts.isPropertyAccessExpression(n.expression)&&n.expression.name.text==='evaluate'&&n.expression.expression.getText(tacticalAst)==="page.locator('.game-shell canvas')")projectionCalls.push(n.getText(tacticalAst));ts.forEachChild(n,visitProjection);};visitProjection(tacticalAst);
+  assert.equal(projectionCalls.length,1);
+  const immediate="page.locator('.game-shell canvas').evaluateAll(projectRepresentativeAirstrikeCanvases,target)";
+  assert.equal(tactical.split(immediate).length,2);
+  assert.equal(tactical.slice(tactical.indexOf(marker)).replace(immediate,projectionCalls[0]).replace(s25Only,"earlyCampaign&&!bossPrecision ? earlyPriorities : latePriorities"),oldTactical.slice(oldTactical.indexOf(marker)),'all baseline tactical policy remains exact');
 });
 
 

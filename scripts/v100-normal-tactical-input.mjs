@@ -1,5 +1,13 @@
 import {orderedNativePointer} from './ordered-native-pointer.mjs';
 
+export function projectRepresentativeAirstrikeCanvases(canvases,target){
+  const canvas=canvases.length===1?canvases[0]:null;if(!canvas)return null;
+  const rect=canvas.getBoundingClientRect(),scale=Number(canvas.dataset.worldScale),
+    x=rect.x+Number(canvas.dataset.worldOffsetX)+target.x*scale,y=rect.y+Number(canvas.dataset.worldOffsetY)+target.y*scale;
+  if(!(rect.width>0&&rect.height>0&&scale>0)||![x,y,scale].every(Number.isFinite))return null;
+  return document.elementFromPoint(x,y)===canvas?{x,y}:null;
+}
+
 // Read-only observations guide ordinary UI inputs. This helper has no combat,
 // save, time, actor or result setters and does not activate a QA scenario.
 export function readNativeBattleControl(els){
@@ -183,7 +191,7 @@ export async function normalTacticalInput(page,record,{observeSnapshot,frameOwne
       : cluster?.members.length>=3
       ? {x:cluster.members.reduce((v,f)=>v+f.x,0)/cluster.members.length,y:cluster.members.reduce((v,f)=>v+f.y,0)/cluster.members.length}
       : {x:Math.min(805,Math.max(230,boss.x)),y:boss.y};
-    const point=await page.locator('.game-shell canvas').evaluate((c,t)=>{const r=c.getBoundingClientRect(),scale=Number(c.dataset.worldScale),x=r.x+Number(c.dataset.worldOffsetX)+t.x*scale,y=r.y+Number(c.dataset.worldOffsetY)+t.y*scale;return document.elementFromPoint(x,y)===c?{x,y}:null;},target).catch(()=>null);
+    const point=await page.locator('.game-shell canvas').evaluateAll(projectRepresentativeAirstrikeCanvases,target).catch(()=>null);
     if(point&&await nativeBattleTap(page,page.locator('button.support-btn.airstrike'))){await orderedNativePointer(page,point);record.inputs.push({time:s.time,action:'airstrike',target});airstrikeRequested=true;}
   }
   // Keep the airstrike-first representative route. At the large-viewport
