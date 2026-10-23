@@ -6,7 +6,7 @@ import path from 'node:path';
 import {EventEmitter} from 'node:events';
 import {PassThrough} from 'node:stream';
 import {assertNativeProcessTimelineHost,parseProcessCpuTime,parseNativeProcessRows,selectNativeProcessTimeline,
-  withNativeProcessTimeline,readOwnedNativeProcesses,PROCESS_TIMELINE_CASE} from '../scripts/v177-native-process-timeline.mjs';
+  withNativeProcessTimeline,readOwnedNativeProcesses,PROCESS_TIMELINE_CASE,MATERIAL_PROCESS_TIMELINE_CASES} from '../scripts/v177-native-process-timeline.mjs';
 const env={GITHUB_ACTIONS:'true',RUNNER_ENVIRONMENT:'github-hosted',RUNNER_OS:'macOS',GITHUB_REPOSITORY:'SUSANO-OOO/Zombieee',
   GITHUB_EVENT_NAME:'pull_request',GITHUB_JOB:'capture',V177_CAPTURE_SHARD:'forms-2',GITHUB_RUN_ID:'123',GITHUB_RUN_ATTEMPT:'1',GITHUB_SHA:'b'.repeat(40),V177_EXPECTED_HEAD_SHA:'a'.repeat(40)};
 const selection={mode:'remaining',caseIds:[PROCESS_TIMELINE_CASE],manualCaseIds:[],outcomeCaseIds:[]};
@@ -85,7 +85,7 @@ test('owner deadline abort stops observation while the page RPC is still unresol
   release('late completion');assert.equal(await pending,'late completion');
 });
 
-test('only the one remaining Gunner case can observe the ephemeral Mac host',()=>{
+test('the original Gunner observer retains its singleton PR ownership',()=>{
   assert.equal(selectNativeProcessTimeline(selection,{caseId:PROCESS_TIMELINE_CASE}),true);
   for(const altered of [{...selection,mode:'full'},{...selection,caseIds:[PROCESS_TIMELINE_CASE,'other']},
     {...selection,outcomeCaseIds:['other']},{...selection,manualCaseIds:['other']}])
@@ -94,6 +94,43 @@ test('only the one remaining Gunner case can observe the ephemeral Mac host',()=
   for(const [key]of Object.entries(env))assert.throws(()=>assertNativeProcessTimelineHost({...env,[key]:''},'darwin','arm64'));
   assert.throws(()=>assertNativeProcessTimelineHost(env,'win32','arm64'));
   assert.throws(()=>assertNativeProcessTimelineHost(env,'darwin','x64'));
+});
+
+test('material gap observers reject another case, partial inventory, event, shard or workflow head',()=>{
+  const material={mode:'remaining',caseIds:[...MATERIAL_PROCESS_TIMELINE_CASES],manualCaseIds:[],outcomeCaseIds:[]};
+  for(const caseId of MATERIAL_PROCESS_TIMELINE_CASES){
+    assert.equal(selectNativeProcessTimeline(material,{caseId}),true);
+    for(const altered of [{...material,mode:'full'},{...material,caseIds:[caseId]},
+      {...material,caseIds:[...material.caseIds,PROCESS_TIMELINE_CASE]},
+      {...material,caseIds:[caseId,caseId]},{...material,manualCaseIds:['other']},{...material,outcomeCaseIds:['other']}])
+      assert.equal(selectNativeProcessTimeline(altered,{caseId}),false);
+    const owned={...env,GITHUB_EVENT_NAME:'workflow_dispatch',GITHUB_SHA:env.V177_EXPECTED_HEAD_SHA,V177_CAPTURE_SHARD:caseId.split(':')[0]};
+    assertNativeProcessTimelineHost(owned,'darwin','arm64',caseId);
+    for(const changed of [{GITHUB_EVENT_NAME:'pull_request'},{V177_CAPTURE_SHARD:'forms-9'},{GITHUB_SHA:'b'.repeat(40)}])
+      assert.throws(()=>assertNativeProcessTimelineHost({...owned,...changed},'darwin','arm64',caseId));
+  }
+  assert.equal(selectNativeProcessTimeline(material,{caseId:PROCESS_TIMELINE_CASE}),false);
+});
+
+test('material observers retain their own clocks, CPU units and owned cleanup without replacing the operation',async()=>{
+  const out=await mkdtemp(path.join(os.tmpdir(),'v177-material-process-'));
+  const material={mode:'remaining',caseIds:[...MATERIAL_PROCESS_TIMELINE_CASES],manualCaseIds:[],outcomeCaseIds:[]};
+  for(const caseId of MATERIAL_PROCESS_TIMELINE_CASES){
+    const row={caseId},owned={...env,GITHUB_EVENT_NAME:'workflow_dispatch',GITHUB_SHA:env.V177_EXPECTED_HEAD_SHA,V177_CAPTURE_SHARD:caseId.split(':')[0]};
+    let started;const ready=new Promise(resolve=>{started=resolve;});
+    const result=await withNativeProcessTimeline(async()=>{await ready;return 'original-result';},{selection:material,row,out,
+      binding:{head:owned.V177_EXPECTED_HEAD_SHA},env:owned,platform:'darwin',arch:'arm64',
+      run:async()=>{started();return {stdout:' 42 1 S 0:01.04 /Applications/WebKit WebProcess\n',stderr:'',
+        processObservation:{pid:420,closeSeen:true,hardStop:null,code:0,signal:null}};}});
+    assert.equal(result,'original-result');
+    const saved=JSON.parse(await readFile(row.nativeProcessTimeline.file,'utf8'));
+    assert.equal(saved.caseId,caseId);assert.equal(saved.nodeProcess.pid,process.pid);
+    assert.ok(Number.isFinite(saved.nodeProcess.timeOrigin)&&Number.isFinite(saved.nodeFinishedAtMs));
+    assert.ok(Number.isFinite(saved.nodeEventLoopDelta.idle)&&Number.isFinite(saved.nodeCpuDelta.user));
+    assert.equal(saved.productVersusBrowserOsCauseResolved,false);
+    assert.equal(row.nativeProcessTimeline.unconfirmedProcessClose,0);
+    assert.equal(row.nativeProcessTimeline.thresholdsOrDeadlinesChanged,false);
+  }
 });
 
 test('a failed case aborts its pending read-only child and retains the original failure',async()=>{

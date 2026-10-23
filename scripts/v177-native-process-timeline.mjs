@@ -4,8 +4,12 @@ import {setTimeout as delay} from 'node:timers/promises';
 import {writeFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import path from 'node:path';
+import {performance as nodePerformance} from 'node:perf_hooks';
 
 export const PROCESS_TIMELINE_CASE='forms-2:gunner:engage:844x340';
+export const MATERIAL_PROCESS_TIMELINE_CASES=Object.freeze([
+  'forms-2:engineer:attack:1280x720','forms-4:mayo-chan:attack:1280x720',
+]);
 export const PROCESS_TIMELINE_LIMITS=Object.freeze({intervalMs:200,childTimeoutMs:1500,closeWaitMs:250,maxSnapshots:150,maxErrors:16,maxBytes:4*1024*1024});
 
 export function readOwnedNativeProcesses(file,args,{signal,spawnProcess=spawn,schedule=setTimeout,cancel=clearTimeout,
@@ -49,20 +53,28 @@ export function readOwnedNativeProcesses(file,args,{signal,spawnProcess=spawn,sc
 }
 
 export function selectNativeProcessTimeline(selection,row){
-  return selection.mode==='remaining'&&row.caseId===PROCESS_TIMELINE_CASE
+  const original=row.caseId===PROCESS_TIMELINE_CASE
     &&selection.caseIds.length===1&&selection.caseIds[0]===PROCESS_TIMELINE_CASE
     &&selection.manualCaseIds.length===0&&selection.outcomeCaseIds.length===0;
+  const material=MATERIAL_PROCESS_TIMELINE_CASES.includes(row.caseId)
+    &&selection.caseIds.length===2&&MATERIAL_PROCESS_TIMELINE_CASES.every(id=>selection.caseIds.includes(id))
+    &&selection.manualCaseIds.length===0&&selection.outcomeCaseIds.length===0;
+  return selection.mode==='remaining'&&(original||material);
 }
 
-export function assertNativeProcessTimelineHost(env,platform,arch){
+export function assertNativeProcessTimelineHost(env,platform,arch,caseId=PROCESS_TIMELINE_CASE){
   assert.equal(platform,'darwin');assert.equal(arch,'arm64');
+  const material=MATERIAL_PROCESS_TIMELINE_CASES.includes(caseId);
+  assert.ok(material||caseId===PROCESS_TIMELINE_CASE,'Unknown native process observation');
   for(const [key,value]of Object.entries({GITHUB_ACTIONS:'true',RUNNER_ENVIRONMENT:'github-hosted',RUNNER_OS:'macOS',
-    GITHUB_REPOSITORY:'SUSANO-OOO/Zombieee',GITHUB_EVENT_NAME:'pull_request',GITHUB_JOB:'capture',V177_CAPTURE_SHARD:'forms-2'}))
+    GITHUB_REPOSITORY:'SUSANO-OOO/Zombieee',GITHUB_EVENT_NAME:material?'workflow_dispatch':'pull_request',
+    GITHUB_JOB:'capture',V177_CAPTURE_SHARD:caseId.split(':')[0]}))
     assert.equal(env[key],value,'Native process observation is restricted to the owned ephemeral capture job: '+key);
   assert.match(env.GITHUB_RUN_ID??'',/^[1-9][0-9]*$/u);
   assert.match(env.GITHUB_RUN_ATTEMPT??'',/^[1-9][0-9]*$/u);
   assert.match(env.GITHUB_SHA??'',/^[a-f0-9]{40}$/u);
   assert.match(env.V177_EXPECTED_HEAD_SHA??'',/^[a-f0-9]{40}$/u);
+  if(material)assert.equal(env.GITHUB_SHA,env.V177_EXPECTED_HEAD_SHA,'Material observation requires the exact workflow/candidate head');
 }
 
 // Keep the literal counter as well as its decoded value. ps %cpu is a lifetime
@@ -88,10 +100,13 @@ export function parseNativeProcessRows(text){
 export async function withNativeProcessTimeline(operation,{selection,row,out,binding,env=process.env,
   platform=process.platform,arch=process.arch,signal,run=readOwnedNativeProcesses,pause=delay,now=Date.now,monotonic=()=>Number(process.hrtime.bigint())/1e6}={}){
   if(!selectNativeProcessTimeline(selection,row))return operation();
-  assertNativeProcessTimelineHost(env,platform,arch);assert.equal(binding.head,env.V177_EXPECTED_HEAD_SHA);
+  assertNativeProcessTimelineHost(env,platform,arch,row.caseId);assert.equal(binding.head,env.V177_EXPECTED_HEAD_SHA);
   const controller=new AbortController(),snapshots=[],errors=[],ownedProcesses=[];
+  const nodeEluStart=nodePerformance.eventLoopUtilization(),nodeCpuStart=process.cpuUsage();
   const record={schema:'v177-native-process-timeline/v1',caseId:row.caseId,head:binding.head,runId:env.GITHUB_RUN_ID,
     runAttempt:env.GITHUB_RUN_ATTEMPT,host:{platform,arch},limits:PROCESS_TIMELINE_LIMITS,
+    nodeProcess:{pid:process.pid,ppid:process.ppid,timeOrigin:nodePerformance.timeOrigin},
+    diagnosticOnly:true,observerMayAffectTiming:true,
     command:{file:'/bin/ps',args:['-A','-o','pid=,ppid=,state=,time=,comm=']},
     hostStartedAtMs:now(),monotonicStartedAtMs:monotonic(),snapshots,errors,ownedProcesses,attempts:0,limitReached:null,
     scope:'Read-only cumulative process CPU observations around one original case. No process settings, game clock, recording cadence, sample count, deadline or acceptance threshold changes. No profiler, frame filtering or retry.',
@@ -113,6 +128,8 @@ export async function withNativeProcessTimeline(operation,{selection,row,out,bin
           timeout:PROCESS_TIMELINE_LIMITS.childTimeoutMs,maxBuffer:1024*1024,signal:controller.signal});
         if(result.processObservation)pushTracked(ownedProcesses,result.processObservation);
         sample.hostFinishedAtMs=now();sample.monotonicFinishedAtMs=monotonic();
+        sample.nodeAtMs=nodePerformance.now();sample.nodeEventLoopDelta=nodePerformance.eventLoopUtilization(nodeEluStart);
+        sample.nodeCpuDelta=process.cpuUsage(nodeCpuStart);
         sample.rows=parseNativeProcessRows(result.stdout);sample.rawOutputSha256=createHash('sha256').update(result.stdout).digest('hex');
         if(result.stderr.trim())sample.stderr=result.stderr;
         const size=Buffer.byteLength(JSON.stringify(sample));
@@ -130,7 +147,11 @@ export async function withNativeProcessTimeline(operation,{selection,row,out,bin
   // closes the context. The original case deadline remains its sole deadline.
   const finished=worker.then(async()=>{
     record.hostFinishedAtMs=now();record.monotonicFinishedAtMs=monotonic();record.sampleBytes=bytes;
-    const file=path.join(out,'process-timeline-gunner-engage-844x340.json'),text=JSON.stringify(record)+'\n';
+    record.nodeFinishedAtMs=nodePerformance.now();record.nodeEventLoopDelta=nodePerformance.eventLoopUtilization(nodeEluStart);
+    record.nodeCpuDelta=process.cpuUsage(nodeCpuStart);
+    const name=row.caseId===PROCESS_TIMELINE_CASE?'process-timeline-gunner-engage-844x340.json'
+      :'process-timeline-'+row.caseId.split(':').slice(1).join('-')+'.json';
+    const file=path.join(out,name),text=JSON.stringify(record)+'\n';
     assert.ok(Buffer.byteLength(text)<=PROCESS_TIMELINE_LIMITS.maxBytes);
     await writeFile(file,text,{flag:'wx'});
     row.nativeProcessTimeline={file,sha256:createHash('sha256').update(text).digest('hex'),snapshots:snapshots.length,
