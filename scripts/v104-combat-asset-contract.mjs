@@ -2,6 +2,18 @@
 export const V104_ASSET_BASE={"sha":"5f48b07242b267baee8a83240f2ec3b07622b45d","manifestSha256":"45b155096d342339e4c6daf743a39ddfa2649fb6b97bf1a745692af70b60de06"};
 export const V104_MEDIA_ADDITIONS=Object.freeze([
   {
+    "path": "/audio/v104/combat/handgun.mp3",
+    "bytes": 3244,
+    "hash": "sha256-f0d78c759cbd667a8b079f5e4431eb147b3f6e553786b824595a20d5198e7290",
+    "criticality": "optional"
+  },
+  {
+    "path": "/audio/v104/combat/suppressed-pistol.mp3",
+    "bytes": 2697,
+    "hash": "sha256-3e9ea6df61d0cf17fd75b7104a8db84603b5102179a4a2623054071e108c3358",
+    "criticality": "optional"
+  },
+  {
     "path": "/art/v104/combat-vfx/eye-r1.webp",
     "bytes": 138498,
     "hash": "sha256-903d5889db484bf2a6ec320ecd6dfb7218f27270aa4acec276ae6475f5de0dc3",
@@ -137,6 +149,12 @@ export const V104_OMEGA_REPLACEMENT=Object.freeze({
   }
 });
 export const V104_RUNTIME_ADDITIONS=Object.freeze([...V104_MEDIA_ADDITIONS,V104_OMEGA_REPLACEMENT.next]);
+// Commander and Babayaga now use their source-bound handgun recordings. Pin
+// only the old runtime source they replace; unrelated audio remains immutable.
+export const V104_AUDIO_RETIREMENTS=Object.freeze([Object.freeze({
+  path:'/audio/v100/foley/pistol.mp3',bytes:4726,
+  hash:'sha256-65aaca22f301db704cef1dc709e06c6da50d2636ff4d6df07c6839d2d0455216',
+})]);
 export const V104_MEDIA_BYTES=V104_MEDIA_ADDITIONS.reduce((n,a)=>n+a.bytes,0);
-export const V104_ASSET_BYTES_DELTA=V104_MEDIA_BYTES+V104_OMEGA_REPLACEMENT.next.bytes-V104_OMEGA_REPLACEMENT.previous.bytes;
+export const V104_ASSET_BYTES_DELTA=V104_MEDIA_BYTES+V104_OMEGA_REPLACEMENT.next.bytes-V104_OMEGA_REPLACEMENT.previous.bytes-V104_AUDIO_RETIREMENTS.reduce((n,a)=>n+a.bytes,0);
 export const applyV104Source=asset=>asset.path===V104_OMEGA_REPLACEMENT.previous.path?{...asset,...V104_OMEGA_REPLACEMENT.next}:asset;

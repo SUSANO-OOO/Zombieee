@@ -51,7 +51,7 @@ test('contact effects are finite, bounded, tied to battle time, and cleared with
 test('firearms emit once at their muzzle and all other weapons stay free of muzzle flame',()=>{
  for(const weapon of ['ranger','babayaga','gunner','red-panther-smg','red-panther-commander','crawler']){
   assert.equal(v100MuzzleFrame(weapon,0).frame,0);
-  const duration=weapon==='crawler'?.14:['gunner','red-panther-smg'].includes(weapon)?.085:.1;
+  const duration=weapon==='babayaga'?.055:weapon==='crawler'?.14:['gunner','red-panther-smg'].includes(weapon)?.085:.1;
   assert.equal(v100MuzzleFrame(weapon,duration*.999).frame,5);
   for(const elapsed of [-.01,duration,1,Infinity,NaN]){
    assert.equal(v100MuzzleFrame(weapon,elapsed),null);
@@ -70,7 +70,8 @@ test('firearms emit once at their muzzle and all other weapons stay free of muzz
  drawV100Muzzle(ctx,objects,{weapon:'babayaga',elapsed:.04,x:300,y:120,tx:200,ty:120});
  assert.deepEqual(calls.find(c=>c[0]==='translate'),['translate',300,120]);
  assert.deepEqual(calls.find(c=>c[0]==='rotate'),['rotate',Math.PI]);
- assert.deepEqual(calls.find(c=>c[0]==='drawImage').slice(1,5),[1024,0,512,512]);
+ assert.deepEqual(calls.find(c=>c[0]==='drawImage').slice(1,5),[512,512,512,512]);
+ assert.deepEqual(calls.find(c=>c[0]==='drawImage').slice(5),[-112/512*18,-246/512*18,18,18]);
  assert.equal(ctx.globalCompositeOperation,'lighter');assert.equal(ctx.shadowBlur,0);
  assert.equal(calls.at(-1)[0],'restore');
 });

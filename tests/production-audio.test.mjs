@@ -170,9 +170,11 @@ test("production manifest preserves prior audio and adds only audited v080/v090 
   const activeV090Paths = manifestPaths.filter((sourcePath) => sourcePath.startsWith("/audio/v090/"));
   const activeV099Paths = manifestPaths.filter((sourcePath) => sourcePath.startsWith("/audio/v099/"));
   assert.equal(PRODUCTION_AUDIO_MANIFEST.version, 2);
-  assert.equal(PRODUCTION_AUDIO_MANIFEST.assets.length, 260);
-  // 0.9.8 adds one track: the loadout theme, as the usual MP3 + OGG pair.
-  assert.equal(manifestPaths.length, 458);
+  assert.equal(PRODUCTION_AUDIO_MANIFEST.assets.length, 261);
+  // Includes the dedicated commander handgun MP3/OGG pair. Existing cues stay.
+  assert.equal(manifestPaths.length, 460);
+  assert.deepEqual(PRODUCTION_AUDIO_MANIFEST.assets.find(asset=>asset.id==='v104-handgun').sources.map(s=>s.src),
+    ['/audio/v104/combat/handgun.mp3','/audio/v104/combat/handgun.ogg']);
   assert.equal(
     manifestPaths.filter((sourcePath) => sourcePath.startsWith("/audio/v098/")).length,
     2,
@@ -935,7 +937,7 @@ test("localhost-only audio QA bridge can inspect and individually play every ass
     ...PRODUCTION_AUDIO_MANIFEST.assets.map((asset) => asset.id),
     ...PRODUCTION_AUDIO_MANIFEST.pools.map((pool) => pool.id),
   ];
-  assert.equal(allCueIds.length, 302);
+  assert.equal(allCueIds.length, 303);
   assert.equal(new Set(allCueIds).size, allCueIds.length);
   for (const category of AUDIO_CATEGORIES) {
     assert.ok(

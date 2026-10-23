@@ -384,7 +384,7 @@ test("single-shot human projectiles defer their full damage until a positive vis
   const cases = [
     ["ranger", "rifle"],
     ["medic", "heal-support"],
-    ["babayaga", "sniper"],
+    ["babayaga", "suppressed-pistol"],
     ["engineer", "crossbow"],
   ];
 

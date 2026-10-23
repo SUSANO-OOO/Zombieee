@@ -145,7 +145,14 @@ test("the approved-icon integration preserves every unrelated pre-icon hash and 
     ...["anchor-bloom", "cagewalker", "choir-knot", "pall-manta", "resonator", "spindle"]
       .map((kind) => `/art/v090/enemies/${kind}-battle-v1.png`),
   ]);
+  const {V104_AUDIO_RETIREMENTS}=await import('../scripts/v104-combat-asset-contract.mjs');
+  for(const retired of V104_AUDIO_RETIREMENTS){
+    const prior=previous.assets.find(a=>a.path===retired.path);
+    assert.equal(prior,undefined,'this pre-V1 baseline predates the retired pistol source');
+    assert.equal(current.assets.some(a=>a.path===retired.path),false);
+  }
   const previousNonIcons = new Map(previous.assets
+    .filter(({path})=>!V104_AUDIO_RETIREMENTS.some(a=>a.path===path))
     .filter(({ path }) => path !== "/favicon.svg" && !path.startsWith("/icons/"))
     .filter(({ path }) => !finalRemediationPaths.has(path))
     .filter(({ path }) => !replacedVisualPaths.has(path))

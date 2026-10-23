@@ -7,13 +7,13 @@ import { V177_SPRITE_REPLACEMENTS } from "./v177-sprite-repair-asset-contract.mj
 import { V102_ASSET_ADDITIONS } from "./v102-asset-contract.mjs";
 import { V177_JOINT_ASSET_ADDITIONS } from "./v177-joint-asset-contract.mjs";
 import { V100_RELEASE_ASSET_CONTRACT } from "./v100-release-asset-contract.mjs";
-import{applyV104Source,V104_MEDIA_ADDITIONS}from'./v104-combat-asset-contract.mjs';
+import{applyV104Source,V104_MEDIA_ADDITIONS,V104_AUDIO_RETIREMENTS}from'./v104-combat-asset-contract.mjs';
 
 // These installed releases already include the two bosses and Musashi. Each
 // repaired texture must therefore be downloaded in full, alongside R9 and the
 // opening score. The earlier no-media 1.0.3 contract cannot cover this update.
 const sourceReplacements = Object.freeze([...V177_SPRITE_REPLACEMENTS, ...V177_PAISEN_CREDITS_REPLACEMENTS, ...V177_PAISEN_STORY_EXISTING_REPLACEMENTS]);
-const replacements = Object.freeze([...sourceReplacements, ...V177_PAISEN_RETIRED_ASSETS].map(asset => asset.path).sort());
+const replacements = Object.freeze([...sourceReplacements, ...V177_PAISEN_RETIRED_ASSETS, ...V104_AUDIO_RETIREMENTS].map(asset => asset.path).sort());
 const additions = Object.freeze([
   ...V100_R9_ASSET_ADDITIONS,
   ...V100_OPENING_ASSET_ADDITIONS,
@@ -29,7 +29,7 @@ function contract(assets, distinct, changed) {
   return Object.freeze({
     assets, distinct, replaced: replacements,
     sourceReplacements,
-    sourceRetirements: V177_PAISEN_RETIRED_ASSETS,
+    sourceRetirements: Object.freeze([...V177_PAISEN_RETIRED_ASSETS,...V104_AUDIO_RETIREMENTS]),
     changed: Object.freeze(changed), additions: changed.length,
     bytes: changed.reduce((sum, asset) => sum + asset.bytes, 0),
     bundled, network: changed.length - bundled + Number(bundled > 0),
