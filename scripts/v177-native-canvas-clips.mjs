@@ -6,9 +6,12 @@ import path from 'node:path';
 // These two functions execute only in the existing hosted game page. They
 // capture its original canvas track; no copied frames, playback, game-clock
 // changes, microphone, audio routing or encoder-frame-rate override is used.
-export function startNativeCanvasClip(canvas,{metadata,engine='chromium',requestedMimeType=null,maxBytes=8*1024*1024,maxMs=15_000,stopMs=3_000,realmOwner=null}){
+export function startNativeCanvasClip(canvas,{metadata,engine='chromium',requestedMimeType=null,requestedCaptureHz=null,maxBytes=8*1024*1024,maxMs=15_000,stopMs=3_000,realmOwner=null}){
   if(requestedMimeType!==null&&!['video/mp4','video/webm;codecs=vp8','video/webm'].includes(requestedMimeType))throw new RangeError('Unknown diagnostic native container');
-  const state={metadata,requestedMimeType,width:canvas?.width,height:canvas?.height,timeOrigin:performance.timeOrigin,
+  if(requestedCaptureHz!==null&&(requestedCaptureHz!==60||metadata?.acquisitionControl!==true
+    ||metadata?.diagnosticOnly!==true||metadata?.caseId!=='forms-6:abomination:attack:844x340'))
+    throw new RangeError('Capture rate is restricted to the isolated acquisition diagnostic');
+  const state={metadata,requestedMimeType,requestedCaptureHz,width:canvas?.width,height:canvas?.height,timeOrigin:performance.timeOrigin,
     requestedAt:performance.now(),startedAt:null,stopRequestedAt:null,stoppedAt:null,
     status:'starting',mimeType:null,chunks:[],bytes:0,dataEvents:[],errors:[],maxBytes,stopMs};
   if(realmOwner!==null){
@@ -39,7 +42,10 @@ export function startNativeCanvasClip(canvas,{metadata,engine='chromium',request
   state.mimeType=state.mimePreferences.find(type=>MediaRecorder.isTypeSupported(type))??null;
   if(!state.mimeType){state.status='unsupported';state.errors.push('No supported native video container');return state;}
   try{
-    state.stream=canvas.captureStream();
+    // Ordinary evidence keeps every native canvas update. The isolated probe
+    // selects the browser's 60Hz acquisition-request timer, without resampling,
+    // changing game RAF/simulation or altering any encoded coverage threshold.
+    state.stream=requestedCaptureHz===null?canvas.captureStream():canvas.captureStream(requestedCaptureHz);
     if(state.stream.getVideoTracks().length!==1||state.stream.getAudioTracks().length!==0)throw Error('Expected only the original canvas video track');
     state.trackSettings={...state.stream.getVideoTracks()[0].getSettings()};
     state.canvas=canvas;
@@ -84,7 +90,7 @@ export async function finishNativeCanvasClip(state,{completed}){
     const bytes=new Uint8Array(await blob.arrayBuffer());
     let binary='';
     for(let i=0;i<bytes.length;i+=0x8000)binary+=String.fromCharCode(...bytes.subarray(i,i+0x8000));
-    return {schema:'v177-native-canvas-clip/v1',metadata:state.metadata,status:state.status,mimeType:blob.type,mimePreferences:state.mimePreferences??null,requestedMimeType:state.requestedMimeType,
+    return {schema:'v177-native-canvas-clip/v1',metadata:state.metadata,status:state.status,mimeType:blob.type,mimePreferences:state.mimePreferences??null,requestedMimeType:state.requestedMimeType,requestedCaptureHz:state.requestedCaptureHz,
       width:state.width,height:state.height,timeOrigin:state.timeOrigin,requestedAt:state.requestedAt,...(state.realmOwner?{realm:{created:state.realmCreated,started:state.realmStarted??null,finished:state.realmFinished??null}}:{}),
       startedAt:state.startedAt,stopRequestedAt:state.stopRequestedAt,stoppedAt:state.stoppedAt,
       nativeElapsedMs:state.startedAt!==null&&state.stoppedAt!==null?state.stoppedAt-state.startedAt:null,
@@ -95,7 +101,7 @@ export async function finishNativeCanvasClip(state,{completed}){
   }finally{clearTimeout(timer);state.cleanup();state.chunks.length=0;}
 }
 
-export async function beginV177NativeCanvasClip(page,metadata,{directory,engine,requestedMimeType=null,realmOwner=null}={}){
+export async function beginV177NativeCanvasClip(page,metadata,{directory,engine,requestedMimeType=null,requestedCaptureHz=null,realmOwner=null}={}){
   assert.match(metadata.form,/^[a-z0-9-]+$/u);assert.ok(['move','attack','engage','incoming-stun','turned-getup','ranger-manual-precision','controlled-outcome'].includes(metadata.phase));
   const controlledOutcome=metadata.phase==='controlled-outcome';
   if(controlledOutcome){
@@ -142,7 +148,7 @@ export async function beginV177NativeCanvasClip(page,metadata,{directory,engine,
   const identity=unborn?`corpse-${metadata.corpseId}-variant-${metadata.variant}`:metadata.fighterId;
   const stem=path.join(directory,`${metadata.fixtureGroup}-${metadata.form}-${metadata.phase}-${identity}`);
   let handle,error,finished=false;
-  try{handle=await page.locator('.game-shell canvas').evaluateHandle(startNativeCanvasClip,{metadata,engine,requestedMimeType,...(realmOwner!==null?{realmOwner}:{})});}
+  try{handle=await page.locator('.game-shell canvas').evaluateHandle(startNativeCanvasClip,{metadata,engine,requestedMimeType,requestedCaptureHz,...(realmOwner!==null?{realmOwner}:{})});}
   catch(cause){error=String(cause);}
   return {async waitForStart(){
     if(finished||!handle)throw Error('Native canvas recorder did not become available');

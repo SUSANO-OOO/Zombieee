@@ -9,7 +9,7 @@ import ts from 'typescript';
 import {startNativeCanvasClip,finishNativeCanvasClip,beginV177NativeCanvasClip} from '../scripts/v177-native-canvas-clips.mjs';
 
 const metadata={form:'ranger',phase:'move',fighterId:42,fixtureGroup:'authored-form'};
-function fixture({supported=true,supportedTypes=['video/webm;codecs=vp8'],constructorError=false,startEvent=true,stopEvent=true,nativeError=false,chunks=['native-a','native-b']}={}){
+function fixture({supported=true,supportedTypes=['video/webm;codecs=vp8'],captureRate=null,constructorError=false,startEvent=true,stopEvent=true,nativeError=false,chunks=['native-a','native-b']}={}){
   let now=100,captures=0,stops=0,disposed=0;
   const track={getSettings:()=>({width:844,height:304,frameRate:59.94}),stop:()=>{stops++;}};
   const stream={getVideoTracks:()=>[track],getAudioTracks:()=>[],getTracks:()=>[track]};
@@ -25,7 +25,7 @@ function fixture({supported=true,supportedTypes=['video/webm;codecs=vp8'],constr
       if(stopEvent)this.listeners.get('stop')?.();
     });}
   }
-  const canvas={width:844,height:304,isConnected:true,captureStream(...args){assert.equal(args.length,0,'do not override capture FPS');captures++;return stream;}};
+  const canvas={width:844,height:304,isConnected:true,captureStream(...args){if(captureRate===null)assert.equal(args.length,0,'do not override ordinary capture FPS');else assert.deepEqual(Array.from(args),[captureRate]);captures++;return stream;}};
   const globals={MediaRecorder:Recorder,performance:{timeOrigin:1_000_000,now:()=>now+=5},Blob,Uint8Array,btoa,setTimeout,clearTimeout};
   Object.defineProperty(globals,'AudioContext',{get(){assert.fail('Never change or create audio');}});
   Object.defineProperty(globals,'navigator',{get(){assert.fail('Never request camera or microphone');}});
@@ -45,6 +45,17 @@ test('native recording preserves supplied bytes, track rate and event times with
   assert.ok(receipt.stoppedAt>receipt.startedAt);assert.equal(receipt.timeOrigin,1_000_000);
   assert.equal(receipt.originalSpeedAccepted,false);assert.equal(receipt.encodedPtsVerified,false);
   assert.equal(f.captures,1);assert.equal(f.stops,1);assert.equal(state.chunks.length,0);
+});
+
+test('only the isolated acquisition case may request a native 60Hz timer and it grants no encoded acceptance',async()=>{
+  const f=fixture({captureRate:60});
+  const state=f.start({requestedCaptureHz:60,metadata:{...metadata,caseId:'forms-6:abomination:attack:844x340',acquisitionControl:true,diagnosticOnly:true}});
+  const receipt=await f.finish(state);assert.equal(receipt.requestedCaptureHz,60);
+  assert.equal(receipt.trackSettings.frameRate,59.94,'observed native settings are not rewritten to the requested rate');
+  assert.equal(receipt.originalSpeedAccepted,false);assert.equal(receipt.encodedPtsVerified,false);
+  assert.equal(Buffer.from(receipt.videoBase64,'base64').toString(),'native-anative-b');
+  for(const options of [{requestedCaptureHz:60},{requestedCaptureHz:30},{requestedCaptureHz:60,metadata:{...metadata,acquisitionControl:true,diagnosticOnly:true,caseId:'forms-2:brute:attack:1280x720'}}])
+    assert.throws(()=>fixture().start(options),/isolated acquisition diagnostic/u);
 });
 
 test('engine-specific container preference preserves the native track and cannot grant a speed or performance pass',async()=>{

@@ -19,6 +19,11 @@ export function nativeCaseSelection({event,root=process.cwd(),git=args=>execFile
   {cwd:root,encoding:'utf8',windowsHide:true,maxBuffer:8*1024*1024}).trim()}={}){
   const all=SHARDS.flatMap(s=>planShard(s.id)),full={mode:'full',...selectNativeCases(all.map(r=>r.caseId))};
   if(event.inputs?.capture_mode==='full')return full;
+  if(event.inputs?.capture_mode==='abomination-acquisition-control'){
+    assert.equal(event.pull_request,undefined,'An isolated acquisition comparison is dispatch-only');
+    return{mode:'acquisition-control',...selectNativeCases(['forms-6:abomination:attack:844x340']),manualCaseIds:[],outcomeCaseIds:[],
+      scope:'One unchanged original Abomination case with a 60Hz canvas acquisition-request timer; no retained, all-unit or release acceptance'};
+  }
   if(event.inputs?.capture_mode==='brute-codec-control'){
     assert.equal(event.pull_request,undefined,'An isolated recorder comparison is dispatch-only');
     return{mode:'codec-control',...selectNativeCases(['forms-2:brute:attack:1280x720']),manualCaseIds:[],outcomeCaseIds:[],

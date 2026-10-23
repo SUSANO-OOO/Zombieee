@@ -41,6 +41,15 @@ test('an isolated codec dispatch keeps the exact original Brute case and cannot 
  assert.equal(result.retainedEvidence,undefined);
  assert.throws(()=>nativeCaseSelection({event:{...event,pull_request:{draft:false}}}),/dispatch-only/u);
 });
+
+test('the acquisition probe selects only the original duplicate-PTS case without claiming retained evidence',()=>{
+ const event={inputs:{capture_mode:'abomination-acquisition-control'}};
+ const result=nativeCaseSelection({event,root:'not-read',git:()=>{throw Error('No evidence adoption in an acquisition probe');}});
+ assert.equal(result.mode,'acquisition-control');assert.deepEqual(result.caseIds,['forms-6:abomination:attack:844x340']);
+ assert.deepEqual(result.shards,['forms-6']);assert.deepEqual(result.manualCaseIds,[]);assert.deepEqual(result.outcomeCaseIds,[]);
+ assert.equal(result.retainedEvidence,undefined);
+ assert.throws(()=>nativeCaseSelection({event:{...event,pull_request:{draft:false}}}),/dispatch-only/u);
+});
 test('reuse requires exact reviewed blobs; changes to product, thresholds, driver or deleted paths restore full capture',()=>{
   const file='scripts/v177-native-allunit-cases.mjs',blob=recovery.changedBlobs[file];
   const select=(changes,observed=blob,event={pull_request:{draft:true}})=>nativeCaseSelection({event,root:originalRoot,git:args=>args[0]==='diff'?changes:observed});

@@ -28,7 +28,7 @@ on:
       capture_mode:
         description: Remaining original failures, or all432 for integration acceptance
         type: choice
-        options: [remaining, full, brute-codec-control]
+        options: [remaining, full, brute-codec-control, abomination-acquisition-control]
         default: remaining
       video_container:
         description: Native container for the isolated Brute codec control only
