@@ -164,10 +164,16 @@ export async function prepareCase(page,row,owned,active,resources){
     ownerEvidence:proof.ownerEvidence??proof.origin??{constructorFixture:true,legacyFusedFixture:proof.legacyFusedFixture}};
 }
 
-export function assertAllUnitClip(row,bytes){
+export function assertAllUnitClip(row,bytes,{codecControl=false,requestedMimeType='video/webm;codecs=vp8'}={}){
   const c=row.nativeClip;
-  assert.equal(c.status,'recorded');assert.equal(c.engine,'webkit');assert.equal(c.requestedMimeType,'video/webm;codecs=vp8');
-  assert.match(c.mimeType,/^video\/webm/u);assert.equal(c.originalSpeedAccepted,false);assert.equal(c.encodedPtsVerified,false);
+  if(codecControl){
+    assert.equal(row.caseId,'forms-2:brute:attack:1280x720');assert.equal(row.form,'brute');assert.equal(row.phase,'attack');
+    assert.deepEqual(row.viewport,{width:1280,height:720});assert.equal(row.recordingMetadata.codecControl,true);
+    assert.ok(['video/webm;codecs=vp8','video/mp4'].includes(requestedMimeType));
+  }else assert.equal(requestedMimeType,'video/webm;codecs=vp8','Ordinary all-unit clips keep the VP8 contract');
+  assert.equal(c.status,'recorded');assert.equal(c.engine,'webkit');assert.equal(c.requestedMimeType,requestedMimeType);
+  assert.match(c.mimeType,requestedMimeType==='video/mp4'?/^video\/mp4(?:;|$)/u:/^video\/webm(?:;|$)/u);
+  assert.equal(c.originalSpeedAccepted,false);assert.equal(c.encodedPtsVerified,false);
   assert.ok(Number.isSafeInteger(c.bytes)&&c.bytes>0&&c.bytes<=LIMITS.clipBytes);
   assert.equal(bytes.length,c.bytes);assert.equal(createHash('sha256').update(bytes).digest('hex'),c.sha256);
   for(const [key,value]of Object.entries(row.recordingMetadata))assert.deepEqual(c.metadata[key],value,'Original clip binding: '+key);
@@ -193,7 +199,7 @@ export function assertAllUnitClip(row,bytes){
     assert.equal(r.renderKind,row.form);if(i)assert.ok(r.at>row.sourceRaf.rows[i-1].at);
   }
 }
-export async function captureAllUnitCase(page,row,{out,onFailure=()=>{}}={}){
+export async function captureAllUnitCase(page,row,{out,onFailure=()=>{},requestedMimeType='video/webm;codecs=vp8',codecControl=false}={}){
   assertPlannedCase(row);let clip,observation,primary;
   const resources={pointer:null,realmOwner:null};
   const active=()=>{assert.notEqual(row.deadlineExpired,true,'Late capture cannot become accepted');assert.equal(page.isClosed(),false);};
@@ -208,9 +214,10 @@ export async function captureAllUnitCase(page,row,{out,onFailure=()=>{}}={}){
       fixtureGroup:row.phase==='engage'?'approach-to-attack':row.proof.side==='human'||row.owner==='legacy-art'?'authored-form':'base-enemy',
       fighterId:row.proof.fighterId,preparedRenderKind:row.form,owner:row.owner,caseId:row.caseId,
       proofId:row.proof.proofId,battleGeneration:row.proof.battleGeneration,
-      legacyFusedFixture:row.proof.legacyFusedFixture,diagnosticOnly:true,controlledOpponent:true};
+      legacyFusedFixture:row.proof.legacyFusedFixture,diagnosticOnly:true,controlledOpponent:true,
+      ...(codecControl?{codecControl:true}:{})};
     clip=await beginV177NativeCanvasClip(page,row.recordingMetadata,{directory:path.join(out,
-      row.viewport.width+'x'+row.viewport.height,'native-canvas-clips'),engine:'webkit',requestedMimeType:'video/webm;codecs=vp8',realmOwner:resources.realmOwner});active();
+      row.viewport.width+'x'+row.viewport.height,'native-canvas-clips'),engine:'webkit',requestedMimeType,realmOwner:resources.realmOwner});active();
     row.recordingStart=await owned(()=>clip.waitForStart());
     row.pausedCaptureStart=await owned(()=>resources.realmOwner.evaluate(readNativeAllUnitSample,{...row.proof,performanceBoundary:true}));
     row.boundary=postpaintCaptureBoundary(row,row.proof,row.pausedCaptureStart,row.recordingStart);
@@ -237,7 +244,7 @@ export async function captureAllUnitCase(page,row,{out,onFailure=()=>{}}={}){
       row.proof={...row.proof,...await owned(()=>page.evaluate(id=>window.__ASHFALL_BATTLE_QA__.getV177NativeMayoProof(id),row.proof.proofId))};
       row.proof.ownerEvidence.pointer=row.pointer;
     }
-    assertAllUnitClip(row,await readFile(row.nativeClip.file));
+    assertAllUnitClip(row,await readFile(row.nativeClip.file),{codecControl,requestedMimeType});
     row.postpaintReceipt=assertShardPostpaintContract(row,row.proof,row.boundary,row.release,row.samples);
     const windowSamples=row.samples.map(s=>({...s,renders:s.renders.filter(r=>r.renderSequence>row.sequenceBaseline
       &&r.jointPaintedAt>=row.boundary.simulationTime&&r.jointPaintedAt<=s.simulationTime)}));

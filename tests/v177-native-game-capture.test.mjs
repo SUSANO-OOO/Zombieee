@@ -304,6 +304,19 @@ test('distinct native frames survive a delayed audit with identical raw observat
     const bad=structuredClone(row);bad.sourceRaf.rows[1].at=invalid;
     assert.throws(()=>assertAllUnitClip(bad,bytes),'native duplicate, backward and nonfinite times remain rejected');
   }
+  const control=structuredClone(row);Object.assign(control,{caseId:'forms-2:brute:attack:1280x720',form:'brute',phase:'attack',viewport:{width:1280,height:720}});
+  control.recordingMetadata.codecControl=true;control.nativeClip.metadata.codecControl=true;
+  for(const r of control.sourceRaf.rows)r.renderKind='brute';
+  control.nativeClip.requestedMimeType='video/mp4';control.nativeClip.mimeType='video/mp4';
+  const options={codecControl:true,requestedMimeType:'video/mp4'};
+  assert.doesNotThrow(()=>assertAllUnitClip(control,bytes,options));
+  assert.throws(()=>assertAllUnitClip(control,bytes));
+  assert.throws(()=>assertAllUnitClip(control,bytes,{requestedMimeType:'video/mp4'}));
+  for(const change of[r=>{r.caseId='forms-2:brute:attack:844x340';},r=>{r.phase='move';},
+    r=>{r.nativeClip.mimeType='video/webm';},r=>{r.recordingMetadata.codecControl=false;},
+    r=>{r.sourceRaf.rows[1].at=r.sourceRaf.rows[0].at;}]){
+    const bad=structuredClone(control);change(bad);assert.throws(()=>assertAllUnitClip(bad,bytes,options));
+  }
 });
 
 function actualEnemyFacingAudit(globals) {

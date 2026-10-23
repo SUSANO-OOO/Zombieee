@@ -97,6 +97,7 @@ const additions=[
   'scripts/v177-native-allunit-build.mjs',
   'scripts/v100-macos-indexing-control.mjs',
   'scripts/v177-native-allunit-cases.mjs','scripts/v177-native-allunit-manifest.mjs',
+  'scripts/v177-native-encoded-clips.mjs','tests/v177-native-encoded-clips.test.mjs',
   'scripts/v177-native-allunit-contract.mjs','scripts/v177-native-allunit-owners.mjs',
   'tests/v177-native-allunit.test.mjs','scripts/v100-normal-tactical-input.mjs',
   'scripts/ordered-native-pointer.mjs','scripts/v100-phase-g-runtime-evidence.mjs',
@@ -127,6 +128,9 @@ export async function retainAllUnitSources(out){
 export async function runBrowserQa(){
   const binding=await nativeAllUnitBinding();
   const selection=nativeCaseSelection({event:JSON.parse(await readFile(process.env.GITHUB_EVENT_PATH,'utf8'))});
+  const requestedMimeType=process.env.V177_NATIVE_VIDEO_MIME??'video/webm;codecs=vp8';
+  assert.ok(['video/webm;codecs=vp8','video/mp4'].includes(requestedMimeType),'Unknown native recorder comparison');
+  assert.ok(selection.mode==='codec-control'||requestedMimeType==='video/webm;codecs=vp8','Container comparison is isolated from the remaining/full inventory');
   const fullPlan=planShard(binding.shardId),plan=fullPlan.filter(r=>selection.caseIds.includes(r.caseId));
   const manualPlan=planRangerManualShard(binding.shardId).filter(r=>selection.mode==='full'||selection.manualCaseIds?.includes(r.caseId));
   const outcomePlan=planOutcomeShard(binding.shardId).filter(r=>selection.mode==='full'||selection.outcomeCaseIds?.includes(r.caseId));
@@ -142,9 +146,11 @@ export async function runBrowserQa(){
   const report={at:new Date().toISOString(),...binding,tree:git(['rev-parse','HEAD^{tree}']),
     host:{arch:process.arch,runnerArch:process.env.RUNNER_ARCH??null,imageOS:process.env.ImageOS??null,imageVersion:process.env.ImageVersion??null},
     engine:'webkit',runtime:deps.PWA_WEBKIT_RUNTIME,build:await deps.productionBuildIdentity(),
-    status:'running-diagnostic',selection,fullPlan,excludedCaseIds:fullPlan.filter(r=>!selection.caseIds.includes(r.caseId)).map(r=>r.caseId),
+    status:'running-diagnostic',selection,recording:{requestedMimeType,codecControl:selection.mode==='codec-control'},fullPlan,excludedCaseIds:fullPlan.filter(r=>!selection.caseIds.includes(r.caseId)).map(r=>r.caseId),
     plan,manualPlan,manualCases:[],outcomePlan,outcomeCases:[],sources:[],contexts:[],cases:[],errors:[],persistenceErrors:[],...acceptance(),
-    scope:'One of twelve all48 native VP8 shards;432 normal cases remain separate from3 supplemental actual Ranger manual clips. Original free RAF/simulation after actual recorder start. Ordinary actors use original stats; Mayo uses real trusted activation/self-drain; turned continues the actual infection newborn; split twins use their real S24 pair constructors with a deliberately partial encounter. Legacy fused art is an explicit fixture. Controlled target diagnostics are not campaign, balance, original-speed naturalness or physical audio acceptance.'};
+    scope:selection.mode==='codec-control'
+      ?'One original Brute attack case with a native container comparison. Original scene, free RAF/simulation, source clock and deadlines remain unchanged. This dispatch supplies no all-unit, performance, release, naturalness or physical audio acceptance.'
+      :'One of twelve all48 native VP8 shards;432 normal cases remain separate from3 supplemental actual Ranger manual clips. Original free RAF/simulation after actual recorder start. Ordinary actors use original stats; Mayo uses real trusted activation/self-drain; turned continues the actual infection newborn; split twins use their real S24 pair constructors with a deliberately partial encounter. Legacy fused art is an explicit fixture. Controlled target diagnostics are not campaign, balance, original-speed naturalness or physical audio acceptance.'};
   if(process.env.V177_NATIVE_HOST_INDEXING_CONTROL==='brute-attack-1280'){
     const file=path.join(out,'native-host-indexing-prepared.json'),bytes=await readFile(file),prepared=JSON.parse(bytes);
     assert.equal(prepared.purpose,'native-capture-diagnostic');assert.equal(prepared.diagnosticOnly,true);
@@ -229,7 +235,7 @@ export async function runBrowserQa(){
           },closeOwned,{onDeadline:fail});
           for(const planned of rows){
             const row={...planned,status:'starting',samples:[],...acceptance()};report.cases.push(row);
-            try{await withNativeGameCaseDeadline(()=>captureAllUnitCase(page,row,{out,onFailure:fail}),closeOwned,
+            try{await withNativeGameCaseDeadline(()=>captureAllUnitCase(page,row,{out,onFailure:fail,requestedMimeType,codecControl:selection.mode==='codec-control'}),closeOwned,
               {onDeadline:error=>{row.deadlineExpired=true;fail(error);}});}
             catch(error){row.status='failed';row.error=String(error);row.operationSettledAtOwnerReturn=error.operationSettledAtOwnerReturn??null;fail(error);await persist();break;}
             await persist();

@@ -398,6 +398,11 @@ test('Mayo owner requires a lifecycle and new original normal impact from actual
 });
 test('workflow keeps exact head, independent twelve shards and original owned budgets',()=>{
   const workflow=loadYaml(fs.readFileSync('.github/workflows/native-allunit-capture.yml','utf8'));
+  for(const file of['scripts/v177-native-encoded-clips.mjs','tests/v177-native-encoded-clips.test.mjs'])
+    assert.ok(workflow.on.pull_request.paths.includes(file),'Changes to the encoded gate must run its workflow');
+  const encoded=workflow.jobs.capture.steps.find(s=>s.name==='Verify original encoded frames and 250ms coverage');
+  assert.equal(encoded.if,"steps.capture.outcome == 'success'");
+  assert.equal(encoded.run,'node scripts/v177-native-encoded-clips.mjs "$V177_NATIVE_ALLUNIT_OUT/report.json"');
   assert.equal(workflow.concurrency['cancel-in-progress'],false);
   assert.equal(workflow.jobs.capture.strategy.matrix.shard,'${{ fromJSON(needs.build.outputs.shards) }}');
   assert.equal(workflow.jobs.capture.strategy['fail-fast'],false);assert.equal(workflow.jobs.capture['timeout-minutes'],15);

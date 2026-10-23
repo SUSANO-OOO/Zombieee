@@ -19,6 +19,11 @@ export function nativeCaseSelection({event,root=process.cwd(),git=args=>execFile
   {cwd:root,encoding:'utf8',windowsHide:true,maxBuffer:8*1024*1024}).trim()}={}){
   const all=SHARDS.flatMap(s=>planShard(s.id)),full={mode:'full',...selectNativeCases(all.map(r=>r.caseId))};
   if(event.inputs?.capture_mode==='full')return full;
+  if(event.inputs?.capture_mode==='brute-codec-control'){
+    assert.equal(event.pull_request,undefined,'An isolated recorder comparison is dispatch-only');
+    return{mode:'codec-control',...selectNativeCases(['forms-2:brute:attack:1280x720']),manualCaseIds:[],outcomeCaseIds:[],
+      scope:'One unchanged original Brute case for native codec comparison; not all-unit, performance or release acceptance'};
+  }
   const bytes=readFileSync(path.join(root,'scripts/v177-native-allunit-recovery.json'));
   const recovery=JSON.parse(bytes);assert.ok(['v177-native-allunit-recovery/v1','v177-native-allunit-recovery/v2'].includes(recovery.schema));
   // Ready PRs may reuse only the v2 profile which partitions every original

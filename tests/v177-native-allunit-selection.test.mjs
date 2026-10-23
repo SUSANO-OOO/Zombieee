@@ -32,6 +32,15 @@ test('unfinished selection never substitutes an unknown or duplicate case and le
   assert.equal(SHARDS.flatMap(s=>planShard(s.id)).length,432);
   for(const ids of [[],['unknown'],[recovery.caseIds[0],recovery.caseIds[0]]])assert.throws(()=>selectNativeCases(ids));
 });
+
+test('an isolated codec dispatch keeps the exact original Brute case and cannot replace a PR inventory',()=>{
+ const event={inputs:{capture_mode:'brute-codec-control'}};
+ const result=nativeCaseSelection({event,root:'not-read',git:()=>{throw Error('A codec control must not invent retained evidence');}});
+ assert.equal(result.mode,'codec-control');assert.deepEqual(result.caseIds,['forms-2:brute:attack:1280x720']);
+ assert.deepEqual(result.shards,['forms-2']);assert.deepEqual(result.manualCaseIds,[]);assert.deepEqual(result.outcomeCaseIds,[]);
+ assert.equal(result.retainedEvidence,undefined);
+ assert.throws(()=>nativeCaseSelection({event:{...event,pull_request:{draft:false}}}),/dispatch-only/u);
+});
 test('reuse requires exact reviewed blobs; changes to product, thresholds, driver or deleted paths restore full capture',()=>{
   const file='scripts/v177-native-allunit-cases.mjs',blob=recovery.changedBlobs[file];
   const select=(changes,observed=blob,event={pull_request:{draft:true}})=>nativeCaseSelection({event,root:originalRoot,git:args=>args[0]==='diff'?changes:observed});
