@@ -90,6 +90,20 @@ test('carried weapons keep the same paint ownership at both attack endpoints',()
   for(const plan of [sample(kind,'wind-up',0),sample(kind,'recovery',1)])assert.deepEqual(plan.choreography.frontBones,idle.choreography.frontBones,kind);
  }
 });
+
+test('Kumaverson lifts the pan above his head before a full downward strike',()=>{
+ const atlas=A.kumaverson;
+ const poses=[sample('kumaverson','wind-up',.72),sample('kumaverson','active',0),sample('kumaverson','active',.6)]
+  .map(plan=>v177CaptureJointPose('kumaverson',plan));
+ // The bowl center is inside the original pan pixels, not the hand or tip.
+ const centers=poses.map(pose=>point(pose.upper[atlas.weaponBone],[208,250]));
+ const headTop=point(poses[0].upper.head,[328,19]);
+ assert.ok(centers[0][1]<headTop[1]-20,'the raised bowl must clear the head silhouette');
+ assert.ok(centers[1][1]>centers[0][1]+120,'impact must read as a downward pan strike');
+ assert.ok(centers[2][1]>centers[1][1]+45,'the pan must follow through below contact');
+ const angles=poses.map(pose=>Math.atan2(pose.upper[atlas.weaponBone][1],pose.upper[atlas.weaponBone][0]));
+ assert.ok(Math.abs(angles[2]-angles[0])>2.2,'the pan must swing through a broad arc');
+});
 test('painted handguns use pistol presentation while Babayaga retains the same one-round travel timing',()=>{
  assert.equal(UNIT_WEAPON_PROFILE.babayaga,'suppressed-pistol');
  assert.equal(ENEMY_FIREARM_WEAPON_PROFILE['red-panther-commander'],'handgun');
