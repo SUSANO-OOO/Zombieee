@@ -20,7 +20,7 @@ import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
 import { deferNormalRecruitOffer } from "./v100-normal-recruit-offer.mjs";
 import { captureNormalAudioUnlockAttempt } from "./v177-normal-audio-unlock-observation.mjs";
 import { installNormalFrameObserver,createNormalFrameCapture,finishNormalFrameCapture } from './v177-normal-frame-observation.mjs';
-import {createNormalBrowserDeadline,normalCleanupWithin,normalPlayChildCompletion} from './v177-normal-browser-deadline.mjs';
+import {createNormalBrowserDeadline,normalCleanupWithin,normalPlayChildCompletion,normalProtocolTimeoutReceipt} from './v177-normal-browser-deadline.mjs';
 
 const stageLimit = normalPlayStageLimit(process.env.V100_NORMAL_PLAY_STAGE_LIMIT);
 const origin = new URL(process.env.V100_CAMPAIGN_QA_BASE_URL);
@@ -386,7 +386,7 @@ try {
  if(!["passed", "observed-defeat", "completed-exploratory-route"].includes(report.status))throw new Error("Normal route did not reach the post-credits map within its finite event count");
 } catch(error) {report.status="failed";report.error=String(rpc.failure??error);if(rawPage)await normalCleanupWithin(()=>rawPage.screenshot({path:path.join(out,"failure.png")}), 'opening failure screenshot',{timeoutMs:15_000}).catch(()=>{});process.exitCode=1;}
 finally {
-  if(rpc.failure)report.operationTimeout={code:rpc.failure.code,operation:rpc.failure.operation,timeoutMs:rpc.failure.timeoutMs};
+  if(rpc.failure)report.operationTimeout=normalProtocolTimeoutReceipt(rpc.failure);
   if(rawPage)try { report.finalSave=await normalCleanupWithin(()=>rawPage.evaluate(()=>JSON.parse(localStorage.getItem('nishijin-campaign-v100'))),'opening final save',{timeoutMs:15_000}); } catch(error) { report.saveCaptureError=String(error);report.status='failed';process.exitCode=1; }
   if(context)try { await normalCleanupWithin(()=>context.storageState({path:path.join(out,"browser-storage.json"),indexedDB:true}),'opening storage',{timeoutMs:15_000}); } catch(error) { report.storageCaptureError=String(error);report.status='failed';process.exitCode=1; }
   await persist();

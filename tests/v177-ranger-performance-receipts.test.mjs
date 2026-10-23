@@ -84,7 +84,16 @@ test('the actual device projection retains raw receipts and all original window,
   assert.equal(projectionCalls.length,1);
   const immediate="page.locator('.game-shell canvas').evaluateAll(projectRepresentativeAirstrikeCanvases,target)";
   assert.equal(tactical.split(immediate).length,2);
-  assert.equal(tactical.slice(tactical.indexOf(marker)).replace(immediate,projectionCalls[0]).replace(s25Only,"earlyCampaign&&!bossPrecision ? earlyPriorities : latePriorities"),oldTactical.slice(oldTactical.indexOf(marker)),'all baseline tactical policy remains exact');
+  const fixedCardRead=`    // Formation cards are fixed during a battle and were counted in kinds.
+    // Re-read each actual nth owner immediately before and after scrolling;
+    // do not add a separate locator-count round trip for the same card list.
+    const selector='button.unit-card[data-kind="'+kind+'"]',candidates=page.locator(selector);let deployed=false;
+    for(let i=0;i<target[kind];i++)if(await nativeBattleTap(page,candidates.nth(i),[],{selector,index:i})){record.inputs.push({time:s.time,action:'deploy',kind,command:s.energy});deployed=true;break;}`;
+  const previousCardRead=`    const candidates=page.locator('button.unit-card[data-kind="'+kind+'"]');let deployed=false;
+    for(let i=0;i<await candidates.count();i++)if(await nativeBattleTap(page,candidates.nth(i))){record.inputs.push({time:s.time,action:'deploy',kind,command:s.energy});deployed=true;break;}`;
+  assert.equal(tactical.split(fixedCardRead).length,2,'only the exact fixed-count/fresh-nth deployment block is exempt');
+  assert.equal(oldTactical.split(previousCardRead).length,2);
+  assert.equal(tactical.slice(tactical.indexOf(marker)).replace(immediate,projectionCalls[0]).replace(s25Only,"earlyCampaign&&!bossPrecision ? earlyPriorities : latePriorities").replace(fixedCardRead,previousCardRead),oldTactical.slice(oldTactical.indexOf(marker)),'all baseline tactical policy remains exact');
 });
 
 

@@ -177,8 +177,11 @@ export async function normalTacticalInput(page,record,{observeSnapshot,frameOwne
   const holdRedeployment=holdRedeploymentUntilBoss&&kinds.every(kind=>deployedKinds.has(kind))&&!record.boss;
   for(const kind of holdRedeployment?[]:priorities){
     if(!target[kind]||count(kind)>=target[kind])continue;
-    const candidates=page.locator('button.unit-card[data-kind="'+kind+'"]');let deployed=false;
-    for(let i=0;i<await candidates.count();i++)if(await nativeBattleTap(page,candidates.nth(i))){record.inputs.push({time:s.time,action:'deploy',kind,command:s.energy});deployed=true;break;}
+    // Formation cards are fixed during a battle and were counted in kinds.
+    // Re-read each actual nth owner immediately before and after scrolling;
+    // do not add a separate locator-count round trip for the same card list.
+    const selector='button.unit-card[data-kind="'+kind+'"]',candidates=page.locator(selector);let deployed=false;
+    for(let i=0;i<target[kind];i++)if(await nativeBattleTap(page,candidates.nth(i),[],{selector,index:i})){record.inputs.push({time:s.time,action:'deploy',kind,command:s.energy});deployed=true;break;}
     if(deployed)break;
   }
   const cluster=enemies.map(e=>({center:e,members:enemies.filter(f=>Math.hypot(f.x-e.x,(f.y-e.y)*1.3)<115)})).sort((a,b)=>b.members.length-a.members.length)[0];

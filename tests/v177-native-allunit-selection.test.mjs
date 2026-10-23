@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import {readFileSync,mkdtempSync,mkdirSync,writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
+import {execFileSync} from 'node:child_process';
+import {createHash} from 'node:crypto';
 import {selectNativeCases,nativeCaseSelection} from '../scripts/v177-native-allunit-selection.mjs';
 import {SHARDS,planShard} from '../scripts/v177-native-allunit-manifest.mjs';
 
@@ -205,11 +207,21 @@ test('a later source keeps its own immutable inventory without relabelling earli
 
 test('corrected manual observations retain the original failure and their separately bound unchanged timing contract',()=>{
  const select=p=>nativeCaseSelection({root:profileRoot(p),event:{pull_request:{draft:false}},git:()=>''});
+ let fixture=current;
+ if(!current.retainedEvidence.additionalReports.some(r=>r.originalReportStatus==='failed'&&r.manualCaseIds.length)){
+  // Reopening Ranger removes its active manual owners; their original failure
+  // and corrected contract still belong to the immutable preceding profile.
+  const previous=current.historicalRetainedOwnershipBeforeRangerPairCache?.profile;
+  assert.match(previous?.gitHead??'',/^[a-f0-9]{40}$/u);assert.equal(previous.file,'scripts/v177-native-allunit-recovery.json');
+  const raw=execFileSync('git',['show',previous.gitHead+':'+previous.file],{maxBuffer:8*1024*1024});
+  assert.equal(createHash('sha256').update(raw).digest('hex'),previous.sha256);fixture=JSON.parse(raw);
+ }
  const manualSource=p=>{
   const report=p.retainedEvidence.additionalReports.find(r=>r.originalReportStatus==='failed'&&r.manualCaseIds.length);
   const source=p.additionalEvidenceInventories.find(s=>s.head===report.head&&s.runId===report.runId);
   assert.ok(source?.contractCorrections?.length,'the manual correction belongs to its exact original source');return source;
  };
+ assert.equal(select(fixture).mode,'remaining');manualSource(fixture);
  for(const mutate of[
   r=>{delete r.retainedEvidence.additionalReports.find(a=>a.originalReportStatus==='failed').validationGroups;},
   r=>{const report=r.retainedEvidence.additionalReports.find(a=>a.originalReportStatus==='failed');delete report.originalReportStatus;delete report.validationGroups;},
@@ -217,5 +229,5 @@ test('corrected manual observations retain the original failure and their separa
   r=>{manualSource(r).contractCorrections=[];},
   r=>{manualSource(r).contractCorrections[0].conditions.allowedTicks.push(32);},
   r=>{manualSource(r).contractCorrections[0].conditions.numericToleranceAdded=true;},
- ]){const invalid=structuredClone(current);mutate(invalid);assert.throws(()=>select(invalid));}
+ ]){const invalid=structuredClone(fixture);mutate(invalid);assert.throws(()=>select(invalid));}
 });

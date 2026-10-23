@@ -6,6 +6,9 @@ export const getV177RangerLowerPaintSnapshot=()=>({...paintCounts});
 const samples=[[.25,.25],[.75,.25],[.25,.75],[.75,.75]];
 const topLeft=(ax,ay,bx,by)=>by<ay||(by===ay&&bx>ax);
 const owned=(v,edge)=>v>1e-10||(Math.abs(v)<=1e-10&&edge);
+const createRaster=parts=>({valid:false,width:0,height:0,duplicateWithinPart:0,degenerate:0,imageData:null,
+  parts:parts.map(part=>({part,target:new Float64Array(part.target.length)}))});
+const invalidateRasters=p=>{for(const raster of p.rasters)raster.valid=false;};
 
 // One source read per original crop, one shared surface per decoded atlas.
 // Image ownership releases all buffers when the installed sprite is released.
@@ -24,18 +27,21 @@ export function createV177RangerLowerPainter(image,rig,createCanvas=()=>image.ow
     return {name:part.name,bone:part.bone,rect:d,data,normalized,uv,leg,indices,rasterIndices:indices.slice(),target:new Float64Array(uv.length)};
   });
   paintCounts.createdPainters++;
+  const lastRaster=createRaster(parts);
   return {canvas,context,parts,pose:createV177RangerLowerPose(rig),rig,width:0,height:0,sample:null,accum:null,visits:null,imageData:null,
-    lastRaster:{valid:false,width:0,height:0,duplicateWithinPart:0,degenerate:0,
-      parts:parts.map(part=>({part,target:new Float64Array(part.target.length)}))}};
+    lastRaster,rasters:[lastRaster]};
 }
 function ensureCapacity(p,w,h) {
   let width=Math.max(p.width,w),height=Math.max(p.height,h);
-  if(width*height>MAX_PIXELS){if(w*h>MAX_PIXELS){p.lastRaster.valid=false;return false;}width=w;height=h;}
+  if(width*height>MAX_PIXELS){if(w*h>MAX_PIXELS){invalidateRasters(p);return false;}width=w;height=h;}
   if(width===p.width&&height===p.height)return true;
-  p.lastRaster.valid=false;
+  invalidateRasters(p);
+  const sample=new Float32Array(width*height*4),accum=new Float32Array(width*height*4),visits=new Uint8Array(width*height);
+  const imageData=p.context.createImageData(width,height);
   p.width=width;p.height=height;p.canvas.width=width;p.canvas.height=height;
-  p.sample=new Float32Array(width*height*4);p.accum=new Float32Array(width*height*4);p.visits=new Uint8Array(width*height);
-  p.imageData=p.context.createImageData(width,height);return true;
+  p.sample=sample;p.accum=accum;p.visits=visits;
+  p.lastRaster=createRaster(p.parts);p.rasters=[p.lastRaster];
+  p.imageData=imageData;p.lastRaster.imageData=imageData;return true;
 }
 function triangleArea(v,a,b,c) {
   return (v[b*2]-v[a*2])*(v[c*2+1]-v[a*2+1])-(v[b*2+1]-v[a*2+1])*(v[c*2]-v[a*2]);
@@ -86,10 +92,10 @@ function rasterPart(p,g,w,h,ox,oy,stats) {
 
 export function paintV177RangerLower(p,ctx,phase,settle,x,y,width,height,feet=null) {
   let pose;
-  try{pose=v177RangerLowerPose(p.rig,phase,settle,p.pose,feet);}catch(error){p.lastRaster.valid=false;throw error;}
+  try{pose=v177RangerLowerPose(p.rig,phase,settle,p.pose,feet);}catch(error){invalidateRasters(p);throw error;}
   const m=ctx.getTransform();
   const sx=width/480,sy=height/448,a=m.a*sx,b=m.b*sx,c=m.c*sy,d=m.d*sy,e=m.a*x+m.c*y+m.e,f=m.b*x+m.d*y+m.f;
-  if(![a,b,c,d,e,f].every(Number.isFinite)||Math.abs(a*d-b*c)<1e-12){p.lastRaster.valid=false;return {mode:'legacy-cell-fallback',reason:'invalid-transform'};}
+  if(![a,b,c,d,e,f].every(Number.isFinite)||Math.abs(a*d-b*c)<1e-12){invalidateRasters(p);return {mode:'legacy-cell-fallback',reason:'invalid-transform'};}
   let left=Infinity,top=Infinity,right=-Infinity,bottom=-Infinity;
   for(const g of p.parts){
     const matrix=g.leg?null:pose.matrices[g.bone],vertices=g.leg?pose.meshes[g.name]:g.uv;
@@ -102,21 +108,35 @@ export function paintV177RangerLower(p,ctx,phase,settle,x,y,width,height,feet=nu
   left=Math.max(0,Math.floor(left-1));top=Math.max(0,Math.floor(top-1));right=Math.min(ctx.canvas.width,Math.ceil(right+1));bottom=Math.min(ctx.canvas.height,Math.ceil(bottom+1));
   const w=right-left,h=bottom-top,receipt={mode:'continuous-weighted-mesh',phase:pose.phase,settle:pose.settle,parts:5,meshVertices:130,meshTriangles:192,
     coverageSamples:4,width:Math.max(0,w),height:Math.max(0,h),duplicateWithinPart:0,degenerate:0};
-  if(w<=0||h<=0){p.lastRaster.valid=false;return {...receipt,mode:'offscreen-weighted-mesh'};}
+  if(w<=0||h<=0){invalidateRasters(p);return {...receipt,mode:'offscreen-weighted-mesh'};}
   if(!ensureCapacity(p,w,h))return {mode:'legacy-cell-fallback',reason:'bounded-raster-capacity',width:w,height:h};
   for(const g of p.parts){
     for(let i=0;i<g.target.length;i+=2){g.target[i]-=left;g.target[i+1]-=top;}
     selectPartDiagonals(g);
   }
-  // Reuse only the immediately preceding successful bitmap at exactly the same
-  // backing-pixel vertices. Pose/IK, clipping and every subpixel are still read
-  // on this paint. The five source crops/UVs belong to this immutable atlas.
-  const last=p.lastRaster;
-  const same=last.valid&&last.width===w&&last.height===h&&last.parts.length===p.parts.length&&p.parts.every((g,i)=>
-    last.parts[i].part===g&&g.target.every((value,j)=>value===last.parts[i].target[j]));
+  // Two alternating owners (including a corpse and its replacement) must not
+  // evict each other's identical lower on every paint. Compare every current
+  // backing-pixel vertex after pose/IK/clipping; retain at most two payloads
+  // whose combined RGBA storage still fits the original MAX_PIXELS budget.
+  let last=p.rasters.find(raster=>raster.valid&&raster.width===w&&raster.height===h&&raster.parts.length===p.parts.length&&p.parts.every((g,i)=>
+    raster.parts[i].part===g&&g.target.every((value,j)=>value===raster.parts[i].target[j])));
+  const same=!!last;
   if(same){
+    if(last!==p.lastRaster){
+      try{p.context.putImageData(last.imageData,0,0);}catch(error){invalidateRasters(p);throw error;}
+      p.lastRaster=last;p.imageData=last.imageData;
+    }
     receipt.duplicateWithinPart=last.duplicateWithinPart;receipt.degenerate=last.degenerate;
   }else{
+    if(p.lastRaster.valid&&p.width*p.height*2<=MAX_PIXELS){
+      last=p.rasters.find(raster=>raster!==p.lastRaster);
+      if(!last){
+        last=createRaster(p.parts);
+        try{last.imageData=p.context.createImageData(p.width,p.height);}catch(error){invalidateRasters(p);throw error;}
+        p.rasters.push(last);
+      }
+      p.lastRaster=last;p.imageData=last.imageData;
+    }else last=p.lastRaster;
     last.valid=false;
     p.accum.fill(0,0,w*h*4);
     for(const [ox,oy]of samples){
@@ -128,7 +148,7 @@ export function paintV177RangerLower(p,ctx,phase,settle,x,y,width,height,feet=nu
       const at=(py*w+px)*4,to=(py*p.width+px)*4,alpha=p.accum[at+3];
       for(let k=0;k<3;k++)p.imageData.data[to+k]=alpha>0?Math.round(p.accum[at+k]/alpha*255):0;p.imageData.data[to+3]=Math.round(alpha*255);
     }
-    p.context.putImageData(p.imageData,0,0);
+    try{p.context.putImageData(p.imageData,0,0);}catch(error){invalidateRasters(p);throw error;}
     if(last.parts.length!==p.parts.length||p.parts.some((g,i)=>last.parts[i].part!==g))
       last.parts=p.parts.map(part=>({part,target:new Float64Array(part.target.length)}));
     for(let i=0;i<p.parts.length;i++)last.parts[i].target.set(p.parts[i].target);
@@ -139,7 +159,7 @@ export function paintV177RangerLower(p,ctx,phase,settle,x,y,width,height,feet=nu
   // compositing and body transform apply once, with no second bitmap or leg.
   ctx.save();
   try{ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(p.canvas,0,0,w,h,left,top,w,h);}
-  catch(error){last.valid=false;throw error;}
+  catch(error){invalidateRasters(p);throw error;}
   finally{ctx.restore();}
   if(same)paintCounts.reusedDraws++;
   return receipt;

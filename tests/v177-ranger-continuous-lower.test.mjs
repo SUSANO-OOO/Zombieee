@@ -8,7 +8,7 @@ import ts from 'typescript';
 import {MANUAL_ABILITY_REGISTRY,createManualAbilityRuntime,beginManualAbility,advanceManualAbility} from '../app/manualAbilities.js';
 import {V177_JOINT_ATLASES,v177JointPose,v177RangerFootPlan,drawV177JointPose,v177RenderedWeightedLowerReceipt,v177RenderedJointWeaponSocket,v177JointCycleDistance} from '../app/v177JointPresentation.js';
 import {createV177RangerLowerPose,v177RangerLowerPose} from '../app/v177RangerLowerMotion.js';
-import {createV177RangerLowerPainter,paintV177RangerLower} from '../app/v177RangerLowerPaint.js';
+import {createV177RangerLowerPainter,paintV177RangerLower,getV177RangerLowerPaintSnapshot} from '../app/v177RangerLowerPaint.js';
 const atlas=V177_JOINT_ATLASES.ranger,rig=atlas.lowerRig,sha=b=>createHash('sha256').update(b).digest('hex');
 const source='assets/source/v100/joints/ranger-r1/',motion=JSON.parse(gunzipSync(await readFile(source+'motion.json.gz')));
 const texture=await sharp(await readFile('public'+atlas.path)).ensureAlpha().raw().toBuffer({resolveWithObject:true});
@@ -86,6 +86,62 @@ test('bitmap reuse observes subpixel, foot, facing and surface changes and appli
   assert.throws(()=>paint({phase:.39}),/write failed/);
   painter.context.putImageData=(...args)=>{writes++;put(...args);};
   paint({phase:.39});assert.equal(writes,before+3,'a failed put cannot create a successful reuse receipt');
+});
+
+test('alternating Ranger owners keep exact pixels and current draw state without repeated rasterization',()=>{
+  const activePixels=(receipt,call)=>{
+    const result=new Uint8ClampedArray(receipt.width*receipt.height*4);
+    for(let y=0;y<receipt.height;y++)result.set(call.pixels.subarray(y*call.sourceWidth*4,(y*call.sourceWidth+receipt.width)*4),y*receipt.width*4);
+    return result;
+  };
+  for(const [width,height,scale]of [[1280,720,1],[844,390,.8],[844,340,2]]){
+    const painter=createV177RangerLowerPainter(image(),rig);
+    const paint=(p,second,alpha)=>{
+      const target=main({width,height,matrix:[scale,0,0,scale,second?440.75:320.25,160]});
+      target.ctx.globalAlpha=alpha;target.ctx.filter=second?'brightness(1.1)':'none';
+      const receipt=paintV177RangerLower(p,target.ctx,second?.762:.371,second?.25:.5,-48,-80,96,89.6);
+      return {receipt,call:target.calls[0]};
+    };
+    const expected=[false,true].map(second=>paint(createV177RangerLowerPainter(image(),rig),second,.73));
+    for(let i=0;i<6;i++)paint(painter,i%2===1,.73);
+    const before=getV177RangerLowerPaintSnapshot();
+    for(let i=0;i<20;i++){
+      const second=i%2===1,alpha=second?.21:.64,result=paint(painter,second,alpha),control=expected[Number(second)];
+      assert.deepEqual(result.receipt,control.receipt);
+      assert.deepEqual(activePixels(result.receipt,result.call),activePixels(control.receipt,control.call));
+      assert.deepEqual(result.call.rect,control.call.rect);assert.equal(result.call.alpha,alpha);
+      assert.equal(result.call.filter,second?'brightness(1.1)':'none');
+    }
+    const after=getV177RangerLowerPaintSnapshot();
+    assert.equal(after.rasterizedDraws,before.rasterizedDraws);
+    assert.equal(after.reusedDraws-before.reusedDraws,20);
+    assert.equal(painter.rasters.length,2);
+    assert.ok(painter.rasters.reduce((sum,raster)=>sum+raster.imageData.data.byteLength,0)<=65536*4);
+    const failed=painter.context.putImageData;
+    painter.context.putImageData=()=>{throw new Error('cached upload failed');};
+    assert.throws(()=>paint(painter,false,.73),/cached upload failed/);
+    assert.ok(painter.rasters.every(raster=>!raster.valid));
+    painter.context.putImageData=failed;
+    paint(painter,false,.73);assert.equal(getV177RangerLowerPaintSnapshot().rasterizedDraws,after.rasterizedDraws+1);
+  }
+});
+
+test('Ranger bitmap retention stays within the original RGBA budget and failed allocation cannot retain a hit',()=>{
+  const painter=createV177RangerLowerPainter(image(),rig);
+  const paint=(size,phase=.371)=>paintV177RangerLower(painter,main({width:1600,height:1600,matrix:[1,0,0,1,600,350]}).ctx,phase,.5,-size/2,-size*.8,size,size*448/480);
+  paint(120);
+  const allocate=painter.context.createImageData;
+  painter.context.createImageData=()=>{throw new Error('allocation failed');};
+  assert.throws(()=>paint(96,.762),/allocation failed/);
+  assert.ok(painter.rasters.every(raster=>!raster.valid));
+  painter.context.createImageData=allocate;paint(96,.762);
+  for(const size of [300,480,650]){
+    const receipt=paint(size);assert.equal(receipt.mode,'continuous-weighted-mesh');
+    assert.ok(painter.rasters.length<=2);
+    assert.ok(painter.rasters.reduce((sum,raster)=>sum+raster.imageData.data.byteLength,0)<=65536*4);
+  }
+  assert.ok(painter.width*painter.height>32768);
+  paint(96,.762);assert.equal(painter.rasters.length,1,'a large backing allocation permits only one retained payload');
 });
 
 test('stopped Ranger cloth keeps one coverage per sample without changing vertices, UV or original legs',()=>{

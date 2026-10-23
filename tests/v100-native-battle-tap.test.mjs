@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import vm from "node:vm";
-import { nativeBattleTap, readNativeBattleControl } from "../scripts/v100-normal-tactical-input.mjs";
+import { nativeBattleTap, readNativeBattleControl, normalTacticalInput } from "../scripts/v100-normal-tactical-input.mjs";
 
 function fixture({ unitCard = false, covered = false, disabledAfterScroll = false } = {}) {
   const calls = [], phases = [];
@@ -74,4 +74,28 @@ test('known CSS controls keep the fresh hit owner and ordered acknowledgements i
   const missing=fixture();assert.equal(await nativeBattleTap(missing.page,missing.locator,missing.phases,{...selection,index:1}),false);
   assert.deepEqual(missing.calls,['direct-observe']);
   await assert.rejects(nativeBattleTap(f.page,f.locator,[],{...selection,index:-1}),/Invalid native control/);
+});
+
+test('ordinary deployment uses fixed formation counts and fresh nth owners without a locator count call',async()=>{
+  for(const disabledAfterScroll of [false,true]){
+    const calls=[],record={number:14,inputs:[]};
+    const cards=[0,1].map(index=>({disabled:index===0,dataset:{kind:'guardian'},getAttribute:()=>null,matches:()=>true,
+      getBoundingClientRect:()=>({x:10+index*80,y:20,width:60,height:30})}));
+    const document={querySelectorAll:()=>cards,elementFromPoint:x=>({closest:()=>cards[x<80?0:1]})};
+    const snapshot={time:1,running:true,over:false,won:false,baseHp:1000,baseMaxHp:1000,energy:100,fighters:[],deployQueue:[]};
+    const window={__ASHFALL_BATTLE_QA__:{getSnapshot:()=>snapshot}};
+    const page={evaluate:async(callback,arg)=>vm.runInNewContext(`(${callback.toString()})(arg)`,{window,document,arg}),
+      mouse:Object.fromEntries(['move','down','up'].map(name=>[name,async()=>calls.push(name)])),
+      locator(selector){
+        if(selector==='button.unit-card[data-kind]')return{evaluateAll:async reader=>reader(cards)};
+        if(selector==='button.manual-ability-ready.available[aria-disabled="false"]')return{evaluateAll:async reader=>reader([])};
+        assert.equal(selector,'button.unit-card[data-kind="guardian"]');
+        return{get count(){throw new Error('redundant locator count');},nth(index){return{scrollIntoViewIfNeeded:async options=>{
+          assert.equal(index,1);assert.equal(options.timeout,750);calls.push('scroll');if(disabledAfterScroll)cards[index].disabled=true;
+        }};}};
+      }};
+    await normalTacticalInput(page,record);
+    assert.deepEqual(calls,disabledAfterScroll?['scroll']:['scroll','move','down','up']);
+    assert.deepEqual(record.inputs,disabledAfterScroll?[]:[{time:1,action:'deploy',kind:'guardian',command:100}]);
+  }
 });

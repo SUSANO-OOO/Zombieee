@@ -14,7 +14,7 @@ import { productionBuildIdentity } from './browser-qa-build-identity.mjs';
 import { installRequestFailureAudit } from './browser-request-failure-audit.mjs';
 import { startNativeCanvasClip, finishNativeCanvasClip } from './v177-native-canvas-clips.mjs';
 import { installNormalFrameObserver,createNormalFrameCapture,finishNormalFrameCapture } from './v177-normal-frame-observation.mjs';
-import {createNormalBrowserDeadline,normalCleanupWithin,normalPlayChildCompletion} from './v177-normal-browser-deadline.mjs';
+import {createNormalBrowserDeadline,normalCleanupWithin,normalPlayChildCompletion,normalProtocolTimeoutReceipt} from './v177-normal-browser-deadline.mjs';
 
 export const V177_REPRESENTATIVE_WINDOW_MS = 120_000;
 export function assertRepresentativeBattleObservation(row) {
@@ -195,7 +195,7 @@ async function main() {
         await page.screenshot({ path: path.join(out, `s${number}-observation-end.png`) });
       } catch (error) { row.status = 'failed'; row.error = String(rpc.failure??error); await normalCleanupWithin(()=>rawPage.screenshot({ path: path.join(out, `s${number}-failure.png`) }),'representative failure screenshot',{timeoutMs:30_000}).catch(() => {}); }
       finally {
-        if(rpc.failure)row.operationTimeout={code:rpc.failure.code,operation:rpc.failure.operation,timeoutMs:rpc.failure.timeoutMs};
+        if(rpc.failure)row.operationTimeout=normalProtocolTimeoutReceipt(rpc.failure);
         row.framePerformance??=await finishNormalFrameCapture(rawPage,frameCapture,frameOwner).catch(error=>({status:'incomplete',error:String(error),performanceAcceptance:false}));
         if (clip) await finishClip(false).catch(error => { row.captureError = String(error); row.status = 'failed'; });
         try { row.finalSave ??= await normalCleanupWithin(()=>rawPage.evaluate(()=>JSON.parse(localStorage.getItem('nishijin-campaign-v100'))),'representative final save',{timeoutMs:30_000}); await normalCleanupWithin(()=>context.storageState({ path: path.join(out, `s${number}-browser-storage.json`), indexedDB: true }),'representative storage',{timeoutMs:30_000}); }

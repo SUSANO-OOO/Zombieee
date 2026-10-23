@@ -3,13 +3,13 @@ import assert from 'node:assert/strict';
 import {EventEmitter} from 'node:events';
 import {readFile} from 'node:fs/promises';
 import ts from 'typescript';
-import {createNormalBrowserDeadline,normalCleanupWithin,runNormalPlayChild} from '../scripts/v177-normal-browser-deadline.mjs';
+import {createNormalBrowserDeadline,normalCleanupWithin,runNormalPlayChild,normalProtocolTimeoutReceipt} from '../scripts/v177-normal-browser-deadline.mjs';
 
 const flush=async()=>{for(let i=0;i<24;i++)await Promise.resolve();};
 function clock(){
   let now=0,id=0;const pending=new Map();
   return{timers:{setTimeout(fn,ms){const key=++id;pending.set(key,{at:now+ms,fn});return key;},clearTimeout(key){pending.delete(key);}},
-    get pending(){return pending.size;},async advance(ms){await flush();const target=now+ms;
+    get pending(){return pending.size;},get now(){return now;},async advance(ms){await flush();const target=now+ms;
       for(;;){const next=[...pending.entries()].filter(([,item])=>item.at<=target).sort((a,b)=>a[1].at-b[1].at)[0];if(!next)break;
         now=next[1].at;pending.delete(next[0]);next[1].fn();await flush();}now=target;await flush();}};
 }
@@ -43,6 +43,26 @@ for(const stalled of ['evaluate','count','mouse'])test(`stalled ${stalled} latch
   assert.throws(()=>page.locator('button').click({timeout:500}),error=>error===first);
   await assert.rejects(rpc.run(()=>{inputs++;},'later raw request'),error=>error===first);
   assert.equal(inputs,0);assert.equal(time.pending,0);
+});
+
+test('first protocol timeout retains bounded selector and monotonic timing through late completion',async()=>{
+  const time=clock();let complete;
+  const locator=()=>({nth:()=>locator(),filter:()=>locator(),evaluateAll:()=>new Promise(resolve=>{complete=resolve;})});
+  const rpc=createNormalBrowserDeadline({timers:time.timers,clock:()=>time.now});
+  const page=rpc.wrap({locator:()=>locator()});
+  const opaque={toJSON(){throw new Error('opaque locator options must not be serialized');}};
+  const operation=page.locator('button.unit-card[data-kind="guardian"]').nth(1).filter({has:opaque}).evaluateAll(()=>0);
+  const rejection=assert.rejects(operation,error=>error===rpc.failure&&error.timeoutMs===30000);
+  await time.advance(29999);assert.equal(rpc.failure,null);await time.advance(1);await rejection;
+  const receipt=normalProtocolTimeoutReceipt(rpc.failure),saved=structuredClone(receipt);
+  assert.deepEqual(receipt.timing,{clock:'node-performance-now-ms',startedAt:0,timeoutAt:30000,elapsedMs:30000});
+  assert.deepEqual(receipt.locator,{chain:[{factory:'locator',value:'button.unit-card[data-kind="guardian"]'},{factory:'nth',index:1},{factory:'filter',detailsOmitted:true}],truncated:false});
+  complete('late success');await time.advance(1000);assert.deepEqual(normalProtocolTimeoutReceipt(rpc.failure),saved);
+  const otherTime=clock(),other=createNormalBrowserDeadline({timers:otherTime.timers,clock:()=>otherTime.now});
+  let long=other.wrap({locator:()=>locator()}).locator('x'.repeat(400));
+  for(let i=0;i<12;i++)long=long.nth(i);
+  const bounded=assert.rejects(long.evaluateAll(()=>0));await otherTime.advance(30000);await bounded;
+  assert.equal(other.failure.locator.chain.length,8);assert.equal(other.failure.locator.truncated,true);
 });
 
 test('native failures remain primary and healthy long observation is not given a new total deadline',async()=>{
@@ -91,7 +111,7 @@ test('opening setup timeout executes the real report, browser cleanup and comple
     const browser={version:()=> 'test-browser',newContext:()=>point==='newContext'?new Promise(()=>{}):Promise.resolve(context),close:async()=>{closed++;}};
     const bindings={report,persist:async()=>{saved.push(structuredClone(report));},pwaBrowserType:async()=>({launch:async()=>browser,executablePath:()=> 'test'}),
       execFileSync:()=> 'a'.repeat(40),process:{platform:'linux',version:'test'},engine:'chromium',restoredStorage:null,out:'inert',path:{join:(...values)=>values.join('/')},
-      createNormalBrowserDeadline:options=>createNormalBrowserDeadline({...options,timers:time.timers}),normalCleanupWithin:(fn,label,options)=>normalCleanupWithin(fn,label,{...options,timers:time.timers}),
+      createNormalBrowserDeadline:options=>createNormalBrowserDeadline({...options,timers:time.timers}),normalCleanupWithin:(fn,label,options)=>normalCleanupWithin(fn,label,{...options,timers:time.timers}),normalProtocolTimeoutReceipt,
       normalPlayChildCompletion:summary=>completions.push(structuredClone(summary)),console:{log(){}},assert};
     const factory=new Function(...Object.keys(bindings),'return (async()=>{let browser,context,requests,rawPage,page,video,contextClose;const closeOwnedContext=()=>contextClose??=(requests?requests.closeContext(context):context.close());const rpc=createNormalBrowserDeadline({onTimeout:()=>context?normalCleanupWithin(closeOwnedContext,"timed-out opening context"):undefined});'+statement.getText(ast)+';return report;})()');
     const operation=factory(...Object.values(bindings));await time.advance(30000);const result=await operation;

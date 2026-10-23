@@ -6,17 +6,34 @@ const rawMethods=new Set(['evaluate','evaluateAll','evaluateHandle','count','isV
 const locatorFactories=new Set(['locator','getByRole','getByText','getByLabel','getByPlaceholder','getByTestId','getByTitle','getByAltText','nth','first','last','filter','and','or','frameLocator']);
 const actionMethods=new Set(['click','dblclick','tap','fill','type','press','check','uncheck','setChecked','selectOption','getAttribute','innerText','textContent','isEnabled','isDisabled','waitFor','scrollIntoViewIfNeeded','boundingBox','screenshot','goto','reload','waitForFunction','waitForLoadState','waitForURL','waitForTimeout']);
 
-export function createNormalBrowserDeadline({timeoutMs=30_000,onTimeout=()=>{},timers={setTimeout,clearTimeout}}={}){
+const locatorDescription=(previous,key,args)=>{
+  const row={factory:key};
+  if(typeof args[0]==='string'){row.value=args[0].slice(0,256);if(args[0].length>256)row.truncated=true;}
+  else if(key==='nth'&&Number.isSafeInteger(args[0]))row.index=args[0];
+  else if(!['first','last'].includes(key))row.detailsOmitted=true;
+  const chain=[...(previous?.chain??[]),row];
+  return{chain:chain.slice(-8),truncated:!!previous?.truncated||chain.length>8};
+};
+
+export function normalProtocolTimeoutReceipt(error){
+  return{code:error.code,operation:error.operation,timeoutMs:error.timeoutMs,
+    timing:error.timing,locator:error.locator};
+}
+
+export function createNormalBrowserDeadline({timeoutMs=30_000,onTimeout=()=>{},timers={setTimeout,clearTimeout},clock=()=>performance.now()}={}){
   let failure=null;
   const wrapped=new WeakMap();
   const check=()=>{if(failure)throw failure;};
-  async function run(operation,label,budgetMs=timeoutMs){
+  async function run(operation,label,budgetMs=timeoutMs,locator=null){
     check();
+    const startedAt=clock();
     let timer;
     try{
       return await new Promise((resolve,reject)=>{
         timer=timers.setTimeout(()=>{
           if(!failure){failure=new Error(`Normal play protocol deadline exceeded: ${label} (${budgetMs}ms)`);failure.code='NORMAL_PLAY_OPERATION_TIMEOUT';failure.operation=label;failure.timeoutMs=budgetMs;
+            const timeoutAt=clock();failure.timing={clock:'node-performance-now-ms',startedAt,timeoutAt,elapsedMs:timeoutAt-startedAt};
+            failure.locator=locator;
             try{Promise.resolve(onTimeout(failure)).catch(()=>{});}catch{/* Keep the original timeout. */}}
           reject(failure);
         },Math.max(0,budgetMs));
@@ -24,14 +41,14 @@ export function createNormalBrowserDeadline({timeoutMs=30_000,onTimeout=()=>{},t
       });
     }finally{timers.clearTimeout(timer);}
   }
-  function wrap(target,kind='page'){
+  function wrap(target,kind='page',locator=null){
     if(wrapped.has(target))return wrapped.get(target);
     const proxy=new Proxy(target,{get(owner,key){
       const value=Reflect.get(owner,key,owner);
       if(key==='mouse'||key==='touchscreen')return wrap(value,'input');
       if(typeof value!=='function')return value;
-      if(locatorFactories.has(key))return(...args)=>wrap(Reflect.apply(value,owner,args),'locator');
-      if(rawMethods.has(key)||(kind==='input'&&['move','down','up','click','dblclick','wheel','tap'].includes(key)))return(...args)=>run(()=>Reflect.apply(value,owner,args),`${kind}.${key}`).then(result=>key==='evaluateHandle'?wrap(result,'handle'):result);
+      if(locatorFactories.has(key))return(...args)=>wrap(Reflect.apply(value,owner,args),'locator',locatorDescription(locator,key,args));
+      if(rawMethods.has(key)||(kind==='input'&&['move','down','up','click','dblclick','wheel','tap'].includes(key)))return(...args)=>run(()=>Reflect.apply(value,owner,args),`${kind}.${key}`,timeoutMs,locator).then(result=>key==='evaluateHandle'?wrap(result,'handle'):result);
       if(actionMethods.has(key))return(...args)=>{check();return Promise.resolve(Reflect.apply(value,owner,args)).then(result=>{check();return result;});};
       return value.bind(owner);
     }});
