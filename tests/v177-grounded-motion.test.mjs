@@ -55,16 +55,52 @@ test('larger planted steps cancel real root travel rather than sliding at the ne
   }
 });
 
-test('attack weight moves the pelvis and torso while holding the same boot targets',()=>{
+test('attack weight transfers over alternating support and returns to the same boot targets',()=>{
   for(const kind of ['brute','brawler','takuya','kumaverson']){
     const atlas=atlases[kind],initial=v177CaptureJointPose(kind,pose(kind,'wind-up',0,.21));
     const contact=v177CaptureJointPose(kind,pose(kind,'active',.45,.21));
     const end=v177CaptureJointPose(kind,pose(kind,'recovery',1,.21));
     assert.ok(distance(point(initial.lower.pelvis,[0,0]),point(contact.lower.pelvis,[0,0]))>3,kind);
     for(const leg of atlas.legConstraints){
-      assert.deepEqual(initial.lower[leg.effectorBone],contact.lower[leg.effectorBone],kind+' planted attack');
       assert.deepEqual(initial.lower[leg.effectorBone],end.lower[leg.effectorBone],kind+' no boot reset');
     }
+    let previous;
+    for(let n=0;n<=300;n++){
+      const state=n<=84?'wind-up':n<=210?'active':'recovery';
+      const progress=state==='wind-up'?n/84:state==='active'?(n-84)/126:(n-210)/90;
+      const plan=pose(kind,state,progress,.21),paint=v177CaptureJointPose(kind,plan);
+      const feet=atlas.legConstraints.map(leg=>({bone:leg.effectorBone,
+        at:point(paint.lower[leg.effectorBone],leg.ankle),
+        lift:plan.groundedMotion.steps?.feet[leg.effectorBone]?.lift??0}));
+      assert.ok(feet.some(f=>f.lift<1e-10),kind+' keeps a support foot');
+      if(previous)for(const foot of feet){const old=previous.find(f=>f.bone===foot.bone);
+        if(foot.lift<1e-10&&old.lift<1e-10)
+          assert.ok(distance(foot.at,old.at)<.001,kind+' a planted boot cannot slide');
+      }
+      previous=feet;
+    }
+  }
+});
+
+test('Omega repeated held-hit projections keep one authored source and enter stun without a grip snap',()=>{
+  const kind='takuya-omega',ctx={save(){},restore(){},translate(){},scale(){},transform(){},drawImage(){}};
+  for(const phase of [.1,.45,.8])for(const gait of [.137,.371])for(const settle of [0,.5,1]){
+    const actor={id:1,kind,hp:100,x:500},world={time:0,fighters:[actor]},runtime={locomotionPhase:gait,locomotionSettle:settle,elapsedSeconds:0,transitionCount:2};
+    const paint=p=>drawV177JointPose(ctx,{naturalWidth:1},kind,p,0,0,100,100,{actor,world});
+    paint(v177JointPose(kind,{requestedState:'active',clipProgress:phase},runtime,{grounded:true,actor,world}));
+    let held;
+    for(let i=0;i<20;i++){
+      const p=v177JointPose(kind,{requestedState:'hit-heavy',clipProgress:.2},runtime,{grounded:true,actor,world}),now=v177CaptureJointPose(kind,p);
+      if(held)assert.deepEqual(now,held,'repainting the same hit cannot accumulate its weapon correction');
+      held=now;paint(p);
+    }
+    const sample={requestedState:'incapacitated'},options={grounded:true,actor,world,stunRemaining:.8};
+    const first=v177JointPose(kind,sample,runtime,options);paint(first);
+    assert.deepEqual(v177CaptureJointPose(kind,first),held);
+    runtime.elapsedSeconds=1e-9;
+    const next=v177CaptureJointPose(kind,v177JointPose(kind,sample,runtime,{...options,stunRemaining:.8-1e-9}));
+    for(const owner of ['lower','upper'])for(const bone of Object.keys(held[owner]))for(let j=0;j<6;j++)
+      assert.ok(Math.abs(next[owner][bone][j]-held[owner][bone][j])<.001,`${gait}/${settle}/${phase}/${bone}`);
   }
 });
 

@@ -54,11 +54,15 @@ function constrainOmegaWeapon(atlas,upper,ground=[1,0,0,1,0,0],topGuard=-Infinit
 
 export function v177GroundedWeaponChoreography(kind,atlas,plan){
  if(kind!=='takuya-omega'||!atlas.weaponHull||!plan.choreography||!plan.groundedMotion)return plan;
- const upper={...plan.choreography.upper,[atlas.weaponBone]:[...plan.choreography.upper[atlas.weaponBone]]};
+ // Recoil can re-resolve a held paint on several successive frames. Project
+ // the same authored weapon each time, rather than accumulating the previous
+ // floor/reach correction and then snapping back when the return regenerates it.
+ const source=plan.choreography.groundedWeaponSource??plan.choreography.upper[atlas.weaponBone];
+ const upper={...plan.choreography.upper,[atlas.weaponBone]:[...source]};
  // The full unchanged blade stays above its floor and below the upper scene
  // margin. Its hand still lies inside the original arm's reach annulus.
  constrainOmegaWeapon(atlas,upper,plan.groundedMotion.upper,-130);
- return{...plan,choreography:{...plan.choreography,upper}};
+ return{...plan,choreography:{...plan.choreography,upper,groundedWeaponSource:[...source]}};
 }
 
 function armReach(c,margin=2){

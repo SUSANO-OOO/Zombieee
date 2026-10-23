@@ -30,7 +30,8 @@ export function createV177FutagoAbilityJoint({normalPlan,capturePose,blendPose})
     let captured=null;
     if(ability.phase==='warning') {
       if(entry&&elapsed+1e-9<entry.elapsed)entry=null;
-      if(!entry&&old&&elapsed<duration)entry={elapsed,pose:capturePose(atlas,old)};
+      if(!entry&&old&&elapsed<duration)entry={elapsed,pose:capturePose(atlas,old),
+        frontBones:[...(old.frontBones??old.choreography?.frontBones??[])]};
       if(entry) {
         const p=smooth((elapsed-entry.elapsed)/(duration-entry.elapsed));
         captured=blendPose(atlas,entry.pose,capturePose(atlas,target),p);
@@ -45,6 +46,8 @@ export function createV177FutagoAbilityJoint({normalPlan,capturePose,blendPose})
       captured=blendPose(atlas,capturePose(atlas,target),capturePose(atlas,neutral),smooth(progress));
     }
     return {...target,...(captured?{resolvedJointPose:captured}:{}),
+      ...(ability.phase==='warning'&&entry?.frontBones.length
+        &&!target.choreography?.frontBones.length?{frontBones:entry.frontBones}:{}),
       futagoAbilityJoint:{part,pairId:actor.v100TwinPair,sequence:ability.phase==='warning'?actor.attackSequence:actor.attackSequence-1,
         phase:ability.phase,elapsed,duration,remaining,entry,entryPaintBound:Boolean(entry)}};
   }
