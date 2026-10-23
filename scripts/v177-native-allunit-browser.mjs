@@ -13,7 +13,7 @@ import {captureNativeRangerManualCase} from './v177-native-allunit-ranger-manual
 import {nativeCaseSelection} from './v177-native-allunit-selection.mjs';
 import {planOutcomeShard,captureNativeOutcomeCase} from './v177-native-allunit-outcomes.mjs';
 import {combatKindToCampaignUnitId} from '../app/campaign.js';
-import {withNativeProcessTimeline} from './v177-native-process-timeline.mjs';
+import {withNativeProcessTimeline,createNativeManualHostWaitObservation} from './v177-native-process-timeline.mjs';
 
 const git=args=>execFileSync('git',args,{encoding:'utf8',maxBuffer:8*1024*1024,windowsHide:true}).trim();
 const sha=b=>createHash('sha256').update(b).digest('hex');
@@ -158,6 +158,8 @@ export async function runBrowserQa(){
       :selection.mode==='codec-control'
       ?'One original Brute attack case with a native container comparison. Original scene, free RAF/simulation, source clock and deadlines remain unchanged. This dispatch supplies no all-unit, performance, release, naturalness or physical audio acceptance.'
       :'One of twelve all48 native VP8 shards;432 normal cases remain separate from3 supplemental actual Ranger manual clips. A native60Hz source-acquisition request timer does not guarantee encoded60fps or grant acceptance. Original free RAF/simulation after actual recorder start. Ordinary actors use original stats; Mayo uses real trusted activation/self-drain; turned continues the actual infection newborn; split twins use their real S24 pair constructors with a deliberately partial encounter. Legacy fused art is an explicit fixture. Controlled target diagnostics are not campaign, balance, original-speed naturalness or physical audio acceptance.'};
+  const manualHostWait=createNativeManualHostWaitObservation({selection,binding});
+  if(manualHostWait)report.nativeManualHostWait=manualHostWait.record;
   if(process.env.V177_NATIVE_HOST_INDEXING_CONTROL==='brute-attack-1280'){
     const file=path.join(out,'native-host-indexing-prepared.json'),bytes=await readFile(file),prepared=JSON.parse(bytes);
     assert.equal(prepared.purpose,'native-capture-diagnostic');assert.equal(prepared.diagnosticOnly,true);
@@ -187,8 +189,9 @@ export async function runBrowserQa(){
     catch(error){report.persistenceErrors.push(String(error));fail(error);}
   };
   try{
-    browser=await (await deps.nativeRecordingBrowserType()).launch({headless:true});
-    browser.on('disconnected',()=>{if(!closingBrowser)fail(Error('Unexpected native browser disconnect'));});
+    manualHostWait?.mark('browser.launch.start');
+    browser=await (await deps.nativeRecordingBrowserType()).launch({headless:true});manualHostWait?.mark('browser.launch.completed');
+    browser.on('disconnected',()=>{manualHostWait?.mark('browser.disconnected');if(!closingBrowser)fail(Error('Unexpected native browser disconnect'));});
     report.browserVersion=browser.version();assert.equal(report.browserVersion,deps.NATIVE_RECORDING_WEBKIT_RUNTIME.browserVersion);
     for(const viewport of VIEWPORTS){
       // S24 gets its own owned save/context; no definition or clock is rewritten
@@ -205,16 +208,18 @@ export async function runBrowserQa(){
         const setupStage=name=>{owner.setupStage=name;owner.setupPhases.push({name,hostAtMs:Date.now()});};
         let context,requests,closing;
         const closeOwned=()=>closing??=(async()=>{
-          if(!context)return;owner.cleanup='pending';await persist();
-          try{await closeNativeGameContext(context,requests);owner.cleanup='completed';}
+          if(!context)return;manualHostWait?.mark('context.cleanup.start');owner.cleanup='pending';await persist();
+          try{await closeNativeGameContext(context,requests);owner.cleanup='completed';manualHostWait?.mark('context.cleanup.completed');}
           catch(error){owner.cleanup='failed';fail(error);throw error;}
           finally{owner.requests=requests?.report??null;
             if(requests?.report.unexpectedFailures.length)fail(Error('Unexpected native capture request failure'));
             await persist();}
         })();
         try{
-          context=await browser.newContext(contextOptions);owner.cleanup='open';
-          const page=await context.newPage();page.setDefaultTimeout(30000);requests=deps.installRequestFailureAudit(page);
+          manualHostWait?.mark('context.create.start');context=await browser.newContext(contextOptions);owner.cleanup='open';manualHostWait?.mark('context.create.completed');
+          manualHostWait?.mark('page.create.start');const page=await context.newPage();manualHostWait?.mark('page.create.completed');
+          if(manualHostWait){page.on('close',()=>manualHostWait.mark('page.close'));page.on('crash',()=>manualHostWait.mark('page.crash'));}
+          page.setDefaultTimeout(30000);requests=deps.installRequestFailureAudit(page);
           for(const type of ['domcontentloaded','load'])page.on(type,()=>owner.pageEvents.push({type,hostAtMs:Date.now()}));
           for(const type of ['request','requestfinished','requestfailed'])page.on(type,request=>{
             if(owner.resourceEvents.length<1000)owner.resourceEvents.push({type,url:request.url(),resourceType:request.resourceType(),hostAtMs:Date.now()});
@@ -254,9 +259,12 @@ export async function runBrowserQa(){
           if(stageNumber===1&&!page.isClosed()&&rows.every(p=>report.cases.some(r=>r.caseId===p.caseId&&r.status==='observed-diagnostic'))){
             for(const planned of manualPlan.filter(r=>r.viewport.width===viewport.width&&r.viewport.height===viewport.height)){
               const row={...planned,status:'starting-manual',samples:[],normalEngageAccepted:false,...acceptance()};report.manualCases.push(row);
-              try{await withNativeGameCaseDeadline(()=>captureNativeRangerManualCase(page,row,{out,onFailure:fail}),closeOwned,
-                {onDeadline:error=>{row.deadlineExpired=true;fail(error);}});}
+              const processObservationOwner=new AbortController();manualHostWait?.bindSignal(processObservationOwner.signal);manualHostWait?.mark('manual.case.start');
+              try{await withNativeGameCaseDeadline(()=>withNativeProcessTimeline(()=>captureNativeRangerManualCase(page,row,{out,onFailure:fail,hostWait:manualHostWait}),
+                {selection,row,out,binding,signal:processObservationOwner.signal}),closeOwned,
+                {onDeadline:error=>{manualHostWait?.stopRpc('original-case-deadline');processObservationOwner.abort();row.deadlineExpired=true;fail(error);}});}
               catch(error){row.status='failed';row.error=String(error);row.operationSettledAtOwnerReturn=error.operationSettledAtOwnerReturn??null;fail(error);}
+              finally{manualHostWait?.stopRpc('case-return');processObservationOwner.abort();manualHostWait?.mark('manual.case.owner.return');}
               await persist();
             }
           }
@@ -276,9 +284,10 @@ export async function runBrowserQa(){
     }
   }catch(error){fail(error);}
   finally{
-    if(browser){closingBrowser=true;report.browserCleanup='pending';await persist();
-      try{await closeNativeGameContext(browser);report.browserCleanup='completed';}
+    if(browser){manualHostWait?.mark('browser.cleanup.start');closingBrowser=true;report.browserCleanup='pending';await persist();
+      try{await closeNativeGameContext(browser);report.browserCleanup='completed';manualHostWait?.mark('browser.cleanup.completed');}
       catch(error){report.browserCleanup='failed';fail(error);}}
+    if(manualHostWait){manualHostWait.close('browser-finally');if(!manualHostWait.record.complete&&!primary)fail(Error('Manual host wait diagnostic is incomplete'));}
     report.unexecuted=plan.filter(p=>!report.cases.some(r=>r.caseId===p.caseId)).map(p=>p.caseId);
     report.manualUnexecuted=manualPlan.filter(p=>!report.manualCases.some(r=>r.caseId===p.caseId)).map(p=>p.caseId);
     report.outcomeUnexecuted=outcomePlan.filter(p=>!report.outcomeCases.some(r=>r.caseId===p.caseId)).map(p=>p.caseId);

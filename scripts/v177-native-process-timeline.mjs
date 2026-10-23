@@ -4,8 +4,10 @@ import {setTimeout as delay} from 'node:timers/promises';
 import {writeFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import path from 'node:path';
+import {performance as nodePerformance} from 'node:perf_hooks';
 
 export const PROCESS_TIMELINE_CASE='forms-2:gunner:engage:844x340';
+export const MANUAL_PROCESS_TIMELINE_CASE='forms-1:ranger:ranger-manual-precision:844x390';
 export const PROCESS_TIMELINE_LIMITS=Object.freeze({intervalMs:200,childTimeoutMs:1500,closeWaitMs:250,maxSnapshots:150,maxErrors:16,maxBytes:4*1024*1024});
 
 export function readOwnedNativeProcesses(file,args,{signal,spawnProcess=spawn,schedule=setTimeout,cancel=clearTimeout,
@@ -49,20 +51,24 @@ export function readOwnedNativeProcesses(file,args,{signal,spawnProcess=spawn,sc
 }
 
 export function selectNativeProcessTimeline(selection,row){
-  return selection.mode==='remaining'&&row.caseId===PROCESS_TIMELINE_CASE
-    &&selection.caseIds.length===1&&selection.caseIds[0]===PROCESS_TIMELINE_CASE
-    &&selection.manualCaseIds.length===0&&selection.outcomeCaseIds.length===0;
+  return selection.mode==='remaining'&&(
+    row.caseId===PROCESS_TIMELINE_CASE&&selection.caseIds.length===1&&selection.caseIds[0]===PROCESS_TIMELINE_CASE
+      &&selection.manualCaseIds.length===0&&selection.outcomeCaseIds.length===0
+    ||row.caseId===MANUAL_PROCESS_TIMELINE_CASE&&selection.caseIds.length===0
+      &&selection.manualCaseIds.length===1&&selection.manualCaseIds[0]===MANUAL_PROCESS_TIMELINE_CASE&&selection.outcomeCaseIds.length===0);
 }
 
-export function assertNativeProcessTimelineHost(env,platform,arch){
+export function assertNativeProcessTimelineHost(env,platform,arch,caseId=PROCESS_TIMELINE_CASE){
+  assert.ok([PROCESS_TIMELINE_CASE,MANUAL_PROCESS_TIMELINE_CASE].includes(caseId));
   assert.equal(platform,'darwin');assert.equal(arch,'arm64');
   for(const [key,value]of Object.entries({GITHUB_ACTIONS:'true',RUNNER_ENVIRONMENT:'github-hosted',RUNNER_OS:'macOS',
-    GITHUB_REPOSITORY:'SUSANO-OOO/Zombieee',GITHUB_EVENT_NAME:'pull_request',GITHUB_JOB:'capture',V177_CAPTURE_SHARD:'forms-2'}))
+    GITHUB_REPOSITORY:'SUSANO-OOO/Zombieee',GITHUB_EVENT_NAME:caseId===MANUAL_PROCESS_TIMELINE_CASE&&env.GITHUB_EVENT_NAME==='workflow_dispatch'?'workflow_dispatch':'pull_request',GITHUB_JOB:'capture',V177_CAPTURE_SHARD:caseId===MANUAL_PROCESS_TIMELINE_CASE?'forms-1':'forms-2'}))
     assert.equal(env[key],value,'Native process observation is restricted to the owned ephemeral capture job: '+key);
   assert.match(env.GITHUB_RUN_ID??'',/^[1-9][0-9]*$/u);
   assert.match(env.GITHUB_RUN_ATTEMPT??'',/^[1-9][0-9]*$/u);
   assert.match(env.GITHUB_SHA??'',/^[a-f0-9]{40}$/u);
   assert.match(env.V177_EXPECTED_HEAD_SHA??'',/^[a-f0-9]{40}$/u);
+  if(caseId===MANUAL_PROCESS_TIMELINE_CASE)assert.equal(env.GITHUB_SHA,env.V177_EXPECTED_HEAD_SHA,'Manual process observation requires the exact workflow/candidate head');
 }
 
 // Keep the literal counter as well as its decoded value. ps %cpu is a lifetime
@@ -85,13 +91,52 @@ export function parseNativeProcessRows(text){
   });
 }
 
+// Node-only metadata around existing awaits. No page RPC, timer or clock setter.
+export function createNativeManualHostWaitObservation({selection,binding,now=Date.now,
+  monotonic=()=>nodePerformance.now(),utilization=previous=>nodePerformance.eventLoopUtilization(previous)}={}){
+  if(!selectNativeProcessTimeline(selection,{caseId:MANUAL_PROCESS_TIMELINE_CASE}))return null;
+  assert.match(binding.head,/^[a-f0-9]{40}$/u);
+  const record={schema:'v177-native-manual-host-wait/v1',caseId:MANUAL_PROCESS_TIMELINE_CASE,head:binding.head,
+    nodeProcess:{pid:process.pid,ppid:process.ppid,timeOrigin:nodePerformance.timeOrigin},
+    limits:{rpcEvents:128,lifecycleEvents:32,labelChars:64},events:[],lifecycle:[],rpcOverflow:false,lifecycleOverflow:false,
+    observerErrors:[],rpcClosed:false,closed:false,diagnosticOnly:true,productVersusBrowserOsCauseResolved:false,
+    scope:'Host monotonic/ELU and existing browser-reader clocks only. ELU is event-loop wall activity, not CPU. ps adds load; no formal performance, original-speed or whole-game acceptance.'};
+  let rpcClosed=false,closed=false,boundSignal,abort;
+  const mark=name=>{if(closed)return;if(record.lifecycle.length===32){record.lifecycleOverflow=true;return;}
+    record.lifecycle.push({name:String(name).slice(0,64),hostAtMs:now(),nodeMonotonicAtMs:monotonic()});};
+  const stopRpc=reason=>{if(rpcClosed)return;rpcClosed=true;record.rpcClosed=true;record.rpcCloseReason=reason;
+    record.rpcClosedHostAtMs=now();record.rpcClosedMonotonicAtMs=monotonic();
+    for(const e of record.events)if(e.status==='pending'){e.status='pending-at-owner-close';e.elapsedAtOwnerCloseMs=record.rpcClosedMonotonicAtMs-e.nodeStartedAtMs;
+      e.eventLoopAtOwnerClose=utilization(e.eventLoopStart);}
+    boundSignal?.removeEventListener('abort',abort);mark('rpc.owner.closed');};
+  const run=async(name,operation)=>{
+    if(rpcClosed)return operation();
+    let e;if(record.events.length===128)record.rpcOverflow=true;
+    else{e={index:record.events.length,label:String(name).slice(0,64),hostStartedAtMs:now(),nodeStartedAtMs:monotonic(),eventLoopStart:utilization(),status:'pending'};record.events.push(e);}
+    let value,primary,failed=false;try{value=await operation();}catch(error){primary=error;failed=true;}
+    if(e&&!rpcClosed)try{e.hostFinishedAtMs=now();e.nodeFinishedAtMs=monotonic();e.elapsedMs=e.nodeFinishedAtMs-e.nodeStartedAtMs;e.eventLoopDelta=utilization(e.eventLoopStart);e.status=failed?'rejected':'fulfilled';
+      if(failed)e.error=String(primary).slice(0,500);
+      if(e.label==='reader.read'&&value&&typeof value==='object')e.browser={at:value.at,timeOrigin:value.timeOrigin,
+        readerEnteredAt:value.observerTiming?.readerEnteredAt,readerEndedAt:value.observerTiming?.readerEndedAt,renderSequence:value.latestPaint?.renderSequence??null};
+    }catch(error){if(record.observerErrors.length<4)record.observerErrors.push(String(error).slice(0,500));if(!failed)throw error;}
+    if(failed)throw primary;return value;
+  };
+  const bindSignal=signal=>{assert.equal(boundSignal,undefined,'Only one case owns these host observations');boundSignal=signal;abort=()=>stopRpc('case-owner-aborted');
+    signal.addEventListener('abort',abort,{once:true});if(signal.aborted)abort();};
+  const close=reason=>{if(closed)return;stopRpc('browser-finally');mark('observation.closed');record.closeReason=reason;
+    record.closedHostAtMs=now();record.closedMonotonicAtMs=monotonic();closed=true;record.closed=true;
+    record.complete=!record.rpcOverflow&&!record.lifecycleOverflow&&!record.observerErrors.length&&!record.events.some(e=>e.status==='pending'||e.status==='pending-at-owner-close');};
+  mark('observation.created');return{record,run,mark,stopRpc,bindSignal,close};
+}
+
 export async function withNativeProcessTimeline(operation,{selection,row,out,binding,env=process.env,
   platform=process.platform,arch=process.arch,signal,run=readOwnedNativeProcesses,pause=delay,now=Date.now,monotonic=()=>Number(process.hrtime.bigint())/1e6}={}){
   if(!selectNativeProcessTimeline(selection,row))return operation();
-  assertNativeProcessTimelineHost(env,platform,arch);assert.equal(binding.head,env.V177_EXPECTED_HEAD_SHA);
+  assertNativeProcessTimelineHost(env,platform,arch,row.caseId);assert.equal(binding.head,env.V177_EXPECTED_HEAD_SHA);
   const controller=new AbortController(),snapshots=[],errors=[],ownedProcesses=[];
   const record={schema:'v177-native-process-timeline/v1',caseId:row.caseId,head:binding.head,runId:env.GITHUB_RUN_ID,
     runAttempt:env.GITHUB_RUN_ATTEMPT,host:{platform,arch},limits:PROCESS_TIMELINE_LIMITS,
+    nodeProcess:{pid:process.pid,ppid:process.ppid,timeOrigin:nodePerformance.timeOrigin},diagnosticOnly:true,observerMayAffectTiming:true,
     command:{file:'/bin/ps',args:['-A','-o','pid=,ppid=,state=,time=,comm=']},
     hostStartedAtMs:now(),monotonicStartedAtMs:monotonic(),snapshots,errors,ownedProcesses,attempts:0,limitReached:null,
     scope:'Read-only cumulative process CPU observations around one original case. No process settings, game clock, recording cadence, sample count, deadline or acceptance threshold changes. No profiler, frame filtering or retry.',
@@ -130,7 +175,7 @@ export async function withNativeProcessTimeline(operation,{selection,row,out,bin
   // closes the context. The original case deadline remains its sole deadline.
   const finished=worker.then(async()=>{
     record.hostFinishedAtMs=now();record.monotonicFinishedAtMs=monotonic();record.sampleBytes=bytes;
-    const file=path.join(out,'process-timeline-gunner-engage-844x340.json'),text=JSON.stringify(record)+'\n';
+    const file=path.join(out,row.caseId===MANUAL_PROCESS_TIMELINE_CASE?'process-timeline-ranger-manual-844x390.json':'process-timeline-gunner-engage-844x340.json'),text=JSON.stringify(record)+'\n';
     assert.ok(Buffer.byteLength(text)<=PROCESS_TIMELINE_LIMITS.maxBytes);
     await writeFile(file,text,{flag:'wx'});
     row.nativeProcessTimeline={file,sha256:createHash('sha256').update(text).digest('hex'),snapshots:snapshots.length,

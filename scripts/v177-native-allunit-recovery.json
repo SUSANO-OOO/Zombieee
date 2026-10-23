@@ -2,28 +2,12 @@
   "schema": "v177-native-allunit-recovery/v2",
   "head": "369e9a15710066795abb3e525878f3971182c9c4",
   "runId": "39723729633",
-  "scope": "Keep all579 historical source-owned technical closures and failures. Reopen only Ranger15 after exact-payload8-surface LRU, keeping564 unrelated owners including new9a Kuma6. Preserve original4coverage/192triangles/IK,65536 combined pixels,120ms/250ms/strictPTS-DTS/30s/15min/8MiB, unknown-source/full fallback, Ready fullCI,33ms and fullPhaseG. No full1x naturalness/listening/physical/whole-game or publication acceptance inferred.",
-  "caseIds": [
-    "forms-1:ranger:move:1280x720",
-    "forms-1:ranger:move:844x390",
-    "forms-1:ranger:move:844x340",
-    "forms-1:ranger:attack:1280x720",
-    "forms-1:ranger:attack:844x390",
-    "forms-1:ranger:attack:844x340",
-    "forms-1:ranger:engage:1280x720",
-    "forms-1:ranger:engage:844x390",
-    "forms-1:ranger:engage:844x340"
-  ],
+  "scope": "Retain578 original source-owned strict native technical observations:564 existing immutable owners including9a Kuma6 plus14 Ranger observations from738528/run40019627650. Keep only Ranger manual844x390 pending after the original encoded314ms gap exceeds250ms. Retain original report/job/encoded failure and all former source owners, inventories, clock/manual correction and RP/Kuma/Ranger histories. Original120ms/250ms/strictPTS-DTS/30s/15min/8MiB, unknown-source/full432 fallback and overallReady full regression remain. Technical partial closure grants no formal33ms, final CI, whole1x naturalness/listening, physical, whole-game or publication acceptance.",
+  "caseIds": [],
   "manualCaseIds": [
-    "forms-1:ranger:ranger-manual-precision:1280x720",
-    "forms-1:ranger:ranger-manual-precision:844x390",
-    "forms-1:ranger:ranger-manual-precision:844x340"
+    "forms-1:ranger:ranger-manual-precision:844x390"
   ],
-  "outcomeCaseIds": [
-    "forms-1:ranger:controlled-outcome:1280x720",
-    "forms-1:ranger:controlled-outcome:844x390",
-    "forms-1:ranger:controlled-outcome:844x340"
-  ],
+  "outcomeCaseIds": [],
   "changedBlobs": {
     ".github/workflows/ci.yml": "c7374a5f3edc2b1a2368c10b58672f1b22d5bde9",
     ".github/workflows/native-allunit-capture.yml": "2da20bdf990d99bde362e0a75de9af21492f7900",
@@ -125,12 +109,12 @@
     "scripts/v100-runtime-observation.mjs": "77ee993536e1da1bf11a2fc08e5c36fa93a5b3a0",
     "scripts/v104-combat-asset-contract.mjs": "926a17f595ea1ae3bfc7013fe5e6ba145ab2ed3b",
     "scripts/v177-installed-asset-contract.mjs": "0f1db0e55a930ccc2ddc636dfa98793a857e7104",
-    "scripts/v177-native-allunit-browser.mjs": "15602cbb696d7877ddbedcf6b42dc1d31bc40ed3",
+    "scripts/v177-native-allunit-browser.mjs": "e35791d57641b2221394a8676df7c95f3bbff1b7",
     "scripts/v177-native-allunit-cases.mjs": "8cac5dd7dd164f9dd0c89135addfd1bc6269a8ee",
     "scripts/v177-native-allunit-contract.mjs": "1fa4fb9cf9bfb44cf96080f8476b3ef80dc13252",
     "scripts/v177-native-allunit-outcomes.mjs": "bae2b2f8dd0cce98ef9d34078259141e974700cc",
     "scripts/v177-native-allunit-ranger-manual-contract.mjs": "5ef03bf92c4a8bcf455bf263e22aeeee6f1ba2b6",
-    "scripts/v177-native-allunit-ranger-manual.mjs": "8dcf2bfdd46052f375dce5585393d333f1a93f17",
+    "scripts/v177-native-allunit-ranger-manual.mjs": "dd623778ab8de6590dc1cbb5120243035d984484",
     "scripts/v177-native-allunit-selection.mjs": "e285719bbeb777bbb6108590692621a76c23b1fd",
     "scripts/v177-native-canvas-clips.mjs": "d2b00323392043caa891031a43075b71a0c2c85c",
     "scripts/v177-native-encoded-clips.mjs": "10d9411c8a816110457614efef95e1a9832c426c",
@@ -218,7 +202,7 @@
     "scripts/native-recording-runtime/package-lock.json": "d93af5630b37ad9caf2acf77f1c8939651004488",
     "scripts/v177-native-allunit-recording-runtime.mjs": "f2be9806db33e36e4d35bd67b1258eef51883b8c",
     "tests/v177-native-allunit-recording-runtime.test.mjs": "4da9b33e66891e2cd565ce72472bb499fd1f38c7",
-    "scripts/v177-native-process-timeline.mjs": "6713dfd7f9bc6eceed69f12bef8f4dd36678e595",
+    "scripts/v177-native-process-timeline.mjs": "9a10fd60f7a3865fd870b0a3ec5a7904f00fd784",
     "tests/v177-native-process-timeline.test.mjs": "c22c112a57d436b38485a70943ad79138ba7296a",
     "tests/ci-contract.test.mjs": "8f40017cfd0409214762afa67a6793e01e2f68a2",
     "tests/v100-native-battle-tap.test.mjs": "387b2f4537538ca62c18eb4ca1e96e49ad372c54",
@@ -764,9 +748,21 @@
       "forms-12:kumaverson:attack:844x340",
       "forms-12:kumaverson:engage:1280x720",
       "forms-12:kumaverson:engage:844x390",
-      "forms-12:kumaverson:engage:844x340"
+      "forms-12:kumaverson:engage:844x340",
+      "forms-1:ranger:move:1280x720",
+      "forms-1:ranger:move:844x390",
+      "forms-1:ranger:move:844x340",
+      "forms-1:ranger:attack:1280x720",
+      "forms-1:ranger:attack:844x390",
+      "forms-1:ranger:attack:844x340",
+      "forms-1:ranger:engage:1280x720",
+      "forms-1:ranger:engage:844x390",
+      "forms-1:ranger:engage:844x340"
     ],
-    "manualCaseIds": [],
+    "manualCaseIds": [
+      "forms-1:ranger:ranger-manual-precision:1280x720",
+      "forms-1:ranger:ranger-manual-precision:844x340"
+    ],
     "outcomeCaseIds": [
       "forms-1:brawler:controlled-outcome:1280x720",
       "forms-1:brawler:controlled-outcome:844x390",
@@ -908,7 +904,10 @@
       "forms-11:red-panther-commander:controlled-outcome:844x340",
       "forms-4:mayo-chan-feral:controlled-outcome:844x340",
       "forms-7:kurome:controlled-outcome:844x340",
-      "forms-9:futago-separated-b:controlled-outcome:1280x720"
+      "forms-9:futago-separated-b:controlled-outcome:1280x720",
+      "forms-1:ranger:controlled-outcome:1280x720",
+      "forms-1:ranger:controlled-outcome:844x390",
+      "forms-1:ranger:controlled-outcome:844x340"
     ],
     "reports": [
       {
@@ -2473,6 +2472,34 @@
         "manualCaseIds": [],
         "outcomeCaseIds": [],
         "encodedAndDecodePartitionSha256": "65ab342175eaf927d4e254731b6a476bf06bba7ae62329c6f19e6cb168ed9bfb"
+      },
+      {
+        "head": "73852876ac5215bdbd9d3e3607de0301b265dcd1",
+        "runId": "40019627650",
+        "shard": "forms-1",
+        "sha256": "bf2b5f9723e3d77e1b21800e4b5b3d0172bb282876694f32c949c5c3ad6026d1",
+        "artifactId": 12529793476,
+        "caseIds": [
+          "forms-1:ranger:move:1280x720",
+          "forms-1:ranger:move:844x390",
+          "forms-1:ranger:move:844x340",
+          "forms-1:ranger:attack:1280x720",
+          "forms-1:ranger:attack:844x390",
+          "forms-1:ranger:attack:844x340",
+          "forms-1:ranger:engage:1280x720",
+          "forms-1:ranger:engage:844x390",
+          "forms-1:ranger:engage:844x340"
+        ],
+        "manualCaseIds": [
+          "forms-1:ranger:ranger-manual-precision:1280x720",
+          "forms-1:ranger:ranger-manual-precision:844x340"
+        ],
+        "outcomeCaseIds": [
+          "forms-1:ranger:controlled-outcome:1280x720",
+          "forms-1:ranger:controlled-outcome:844x390",
+          "forms-1:ranger:controlled-outcome:844x340"
+        ],
+        "encodedAndDecodePartitionSha256": "8fc3ddf01be9cf879c193eef04cfc21d4377a0dd91152ea60e0ae3ca98e4b129"
       }
     ]
   },
@@ -3045,6 +3072,25 @@
           "shard": "forms-12",
           "sha256": "fd3521c4da5005c7774f13e644a81be78f7c2cfcdad44fd1b8cba411edba67f8",
           "artifactId": 12526375898
+        }
+      ],
+      "originalReportsUnmodified": true,
+      "officialCiEncodedAndDecodeVerified": true,
+      "verificationScope": "Only passed case IDs owned by newAdditionalReports; original failed and unknown rows remain pending",
+      "localMediaDecodeRuns": 0,
+      "originalSpeedAccepted": false,
+      "naturalnessAccepted": false,
+      "wholeGameAccepted": false
+    },
+    {
+      "head": "73852876ac5215bdbd9d3e3607de0301b265dcd1",
+      "runId": "40019627650",
+      "sha256": "8fc3ddf01be9cf879c193eef04cfc21d4377a0dd91152ea60e0ae3ca98e4b129",
+      "reports": [
+        {
+          "shard": "forms-1",
+          "sha256": "bf2b5f9723e3d77e1b21800e4b5b3d0172bb282876694f32c949c5c3ad6026d1",
+          "artifactId": 12529793476
         }
       ],
       "originalReportsUnmodified": true,
@@ -3784,35 +3830,21 @@
     "audioAccepted": false
   },
   "sourceScopedRevalidation": {
-    "candidateBaseHead": "9a692f771001afa5e8169b963ee51c1fe589e30a",
+    "candidateBaseHead": "73852876ac5215bdbd9d3e3607de0301b265dcd1",
     "candidateProductSourceBlobs": {
       "app/v177RangerLowerPaint.js": "8ee9f9cc4b3d3f9405d760b8c3acbd463e0c3625"
     },
-    "sourceEncodedVerified": 564,
-    "sourceEncodedPending": 15,
-    "retained": 564,
-    "pending": 15,
-    "normalPending": 9,
-    "manualPending": 3,
-    "outcomePending": 3,
+    "sourceEncodedVerified": 578,
+    "sourceEncodedPending": 1,
+    "retained": 578,
+    "pending": 1,
+    "normalPending": 0,
+    "manualPending": 1,
+    "outcomePending": 0,
     "reopenedCaseIds": [
-      "forms-1:ranger:move:1280x720",
-      "forms-1:ranger:move:844x390",
-      "forms-1:ranger:move:844x340",
-      "forms-1:ranger:attack:1280x720",
-      "forms-1:ranger:attack:844x390",
-      "forms-1:ranger:attack:844x340",
-      "forms-1:ranger:engage:1280x720",
-      "forms-1:ranger:engage:844x390",
-      "forms-1:ranger:engage:844x340",
-      "forms-1:ranger:ranger-manual-precision:1280x720",
-      "forms-1:ranger:ranger-manual-precision:844x390",
-      "forms-1:ranger:ranger-manual-precision:844x340",
-      "forms-1:ranger:controlled-outcome:1280x720",
-      "forms-1:ranger:controlled-outcome:844x390",
-      "forms-1:ranger:controlled-outcome:844x340"
+      "forms-1:ranger:ranger-manual-precision:844x390"
     ],
-    "reopenReason": "Exact-payload8-surface LRU under original65536 combined pixel cap. Only Ranger has this lower painter. New Kuma6 stays under immutable9a owner; all prior raw clock/failure histories and full unknown/Ready paths remain.",
+    "reopenReason": "Fourteen original738528/run40019627650 normal/manual/outcome observations pass all original source/build/clock/encoded/CI-decode checks. Only Ranger manual844x390 remains pending for original encoded314ms gap over250ms. Keep564 previous original source owners including9a Kuma6 and every raw failure/clock/manual correction/RP/Kuma/Ranger owner history. No blind rerun, timestamp repair or threshold/deadline change.",
     "previousRPReopenedHistory": {
       "caseIds": [
         "forms-10:red-panther-knife:attack:1280x720",
@@ -3909,15 +3941,18 @@
     },
     "sourceEncodedCountsAreHistorical": true,
     "sourcePartition": {
-      "file": "outputs/motion-review/remediation-r4/native-9a692f-kuma6-audit-r1/final-6-source-owned-partition-r1.json",
-      "bytes": 82225,
-      "sha256": "65ab342175eaf927d4e254731b6a476bf06bba7ae62329c6f19e6cb168ed9bfb"
+      "file": "outputs/motion-review/remediation-r4/native-738528-ranger15-audit-r1/final-15-source-owned-partition-r1.json",
+      "bytes": 119683,
+      "sha256": "8fc3ddf01be9cf879c193eef04cfc21d4377a0dd91152ea60e0ae3ca98e4b129"
     },
     "latestFreshNativeRun": {
-      "head": "9a692f771001afa5e8169b963ee51c1fe589e30a",
-      "runId": "40009214118",
-      "verified": 6,
-      "scope": "Only the six formerly pending Kuma normal observations"
+      "head": "73852876ac5215bdbd9d3e3607de0301b265dcd1",
+      "runId": "40019627650",
+      "verified": 14,
+      "failed": 1,
+      "unknown": 0,
+      "partial": true,
+      "scope": "Only fifteen attempted original Ranger observations; fourteen retained and one originalFAIL still pending"
     }
   },
   "historicalRetainedOwnershipBeforeRPAudio": {
@@ -5446,6 +5481,143 @@
         "verified": 6,
         "scope": "Only the six formerly pending Kuma normal observations"
       }
+    },
+    {
+      "candidateBaseHead": "9a692f771001afa5e8169b963ee51c1fe589e30a",
+      "candidateProductSourceBlobs": {
+        "app/v177RangerLowerPaint.js": "8ee9f9cc4b3d3f9405d760b8c3acbd463e0c3625"
+      },
+      "sourceEncodedVerified": 564,
+      "sourceEncodedPending": 15,
+      "retained": 564,
+      "pending": 15,
+      "normalPending": 9,
+      "manualPending": 3,
+      "outcomePending": 3,
+      "reopenedCaseIds": [
+        "forms-1:ranger:move:1280x720",
+        "forms-1:ranger:move:844x390",
+        "forms-1:ranger:move:844x340",
+        "forms-1:ranger:attack:1280x720",
+        "forms-1:ranger:attack:844x390",
+        "forms-1:ranger:attack:844x340",
+        "forms-1:ranger:engage:1280x720",
+        "forms-1:ranger:engage:844x390",
+        "forms-1:ranger:engage:844x340",
+        "forms-1:ranger:ranger-manual-precision:1280x720",
+        "forms-1:ranger:ranger-manual-precision:844x390",
+        "forms-1:ranger:ranger-manual-precision:844x340",
+        "forms-1:ranger:controlled-outcome:1280x720",
+        "forms-1:ranger:controlled-outcome:844x390",
+        "forms-1:ranger:controlled-outcome:844x340"
+      ],
+      "reopenReason": "Exact-payload8-surface LRU under original65536 combined pixel cap. Only Ranger has this lower painter. New Kuma6 stays under immutable9a owner; all prior raw clock/failure histories and full unknown/Ready paths remain.",
+      "previousRPReopenedHistory": {
+        "caseIds": [
+          "forms-10:red-panther-knife:attack:1280x720",
+          "forms-10:red-panther-knife:engage:844x340",
+          "forms-11:red-panther-shield:attack:1280x720",
+          "forms-11:red-panther-shield:engage:1280x720",
+          "forms-11:red-panther-smg:attack:844x340",
+          "forms-11:red-panther-smg:engage:1280x720",
+          "forms-11:red-panther-smg:engage:844x340",
+          "forms-10:red-panther-knife:controlled-outcome:1280x720",
+          "forms-10:red-panther-knife:controlled-outcome:844x390",
+          "forms-10:red-panther-knife:controlled-outcome:844x340",
+          "forms-11:red-panther-shield:controlled-outcome:1280x720",
+          "forms-11:red-panther-shield:controlled-outcome:844x390",
+          "forms-11:red-panther-shield:controlled-outcome:844x340",
+          "forms-11:red-panther-smg:controlled-outcome:1280x720",
+          "forms-11:red-panther-smg:controlled-outcome:844x390",
+          "forms-11:red-panther-smg:controlled-outcome:844x340",
+          "forms-11:red-panther-commander:controlled-outcome:844x390",
+          "forms-11:red-panther-commander:controlled-outcome:844x340",
+          "forms-10:red-panther-knife:attack:844x390",
+          "forms-10:red-panther-knife:engage:844x390",
+          "forms-11:red-panther-commander:attack:1280x720",
+          "forms-11:red-panther-commander:engage:1280x720",
+          "forms-11:red-panther-shield:attack:844x390",
+          "forms-11:red-panther-smg:engage:844x390",
+          "forms-11:red-panther-commander:engage:844x390",
+          "forms-11:red-panther-commander:attack:844x340",
+          "forms-11:red-panther-commander:controlled-outcome:1280x720"
+        ],
+        "nowPassed": [
+          "forms-10:red-panther-knife:attack:1280x720",
+          "forms-10:red-panther-knife:attack:844x390",
+          "forms-10:red-panther-knife:engage:844x390",
+          "forms-10:red-panther-knife:engage:844x340",
+          "forms-11:red-panther-shield:attack:1280x720",
+          "forms-11:red-panther-shield:engage:1280x720",
+          "forms-11:red-panther-smg:engage:1280x720",
+          "forms-11:red-panther-commander:attack:1280x720",
+          "forms-11:red-panther-commander:engage:1280x720",
+          "forms-10:red-panther-knife:controlled-outcome:1280x720",
+          "forms-10:red-panther-knife:controlled-outcome:844x390",
+          "forms-10:red-panther-knife:controlled-outcome:844x340",
+          "forms-11:red-panther-shield:controlled-outcome:1280x720",
+          "forms-11:red-panther-shield:controlled-outcome:844x390",
+          "forms-11:red-panther-smg:controlled-outcome:1280x720",
+          "forms-11:red-panther-smg:controlled-outcome:844x390",
+          "forms-11:red-panther-commander:controlled-outcome:1280x720",
+          "forms-11:red-panther-shield:attack:844x390",
+          "forms-11:red-panther-smg:attack:844x340",
+          "forms-11:red-panther-smg:engage:844x390",
+          "forms-11:red-panther-smg:engage:844x340",
+          "forms-11:red-panther-commander:attack:844x340",
+          "forms-11:red-panther-commander:engage:844x390",
+          "forms-11:red-panther-shield:controlled-outcome:844x340",
+          "forms-11:red-panther-smg:controlled-outcome:844x340",
+          "forms-11:red-panther-commander:controlled-outcome:844x390",
+          "forms-11:red-panther-commander:controlled-outcome:844x340"
+        ],
+        "stillPending": []
+      },
+      "retainedMediaRerecorded": false,
+      "retainedMediaRedecoded": false,
+      "candidateFreshNativeRunAccepted": false,
+      "fullNaturalnessAccepted": false,
+      "wholeGameAccepted": false,
+      "futureRecordingRuntime": {
+        "packageVersion": "1.65.0-alpha-2026-10-23",
+        "revision": "2380",
+        "browserVersion": "27.2"
+      },
+      "qaOnlyPortraitRepair": {
+        "review": {
+          "file": "outputs/motion-review/remediation-r4/ci-0d4bf-card-portrait-failure-r1/patch-review-r1/review.json",
+          "sha256": "d7c2aff38397c3ff9720ac1f6d9010e782dc9408a7e31eb8d165bd6cc385f256"
+        },
+        "portraitInputOptIn": true,
+        "allOtherCallersSkipVisibleCardScroll": false,
+        "nativeConsumers": "Mayo and Ranger manual-ability buttons only; unitCard=false, original branch unchanged",
+        "sourceCompatibility": "skipVisibleCardScroll defaultsfalse. Only portrait deployCard suppliestrue. Native579 and formal0d performance remain original source-owned evidence, not fresh runs.",
+        "productSourcesChanged": false,
+        "thresholdsOrDeadlinesChanged": false
+      },
+      "immutableCiProofRepair": {
+        "review": {
+          "file": "outputs/motion-review/remediation-r4/ci-phaseg-repair-reuse-review-r1/immutable-provenance-r3/review.json",
+          "sha256": "98f699058876462a8ad469a52effb9e96c07168a180ca130cb10fa5494cd2a46"
+        },
+        "executionHeadAndBaseRequireOriginalDigestVerifiedArtifact": true,
+        "priorWholeCiAndFullPhaseGSuccessStillRequiredForNativeQa": true,
+        "newCiModuleHasNoNativeConsumer": true,
+        "productSourcesChanged": false,
+        "thresholdsOrDeadlinesChanged": false
+      },
+      "sourceEncodedCountsAreHistorical": true,
+      "sourcePartition": {
+        "file": "outputs/motion-review/remediation-r4/native-9a692f-kuma6-audit-r1/final-6-source-owned-partition-r1.json",
+        "bytes": 82225,
+        "sha256": "65ab342175eaf927d4e254731b6a476bf06bba7ae62329c6f19e6cb168ed9bfb"
+      },
+      "latestFreshNativeRun": {
+        "head": "9a692f771001afa5e8169b963ee51c1fe589e30a",
+        "runId": "40009214118",
+        "verified": 6,
+        "scope": "Only the six formerly pending Kuma normal observations"
+      }
     }
   ],
   "additionalEncodedRecoveryEvidence": {
@@ -5453,61 +5625,136 @@
       "previousState": {
         "previousState": {
           "previousState": {
-            "sourcePartition": {
-              "file": "outputs/motion-review/remediation-r4/native-ca136-1-audit-r1/final-1-source-owned-partition-r1.json",
-              "bytes": 111237,
-              "sha256": "0062778d2183dcb72c8bd8430480a6beb3543da6c69cb51f338f0d7d4257d5db"
-            },
-            "head": "ca13638bba96d606d6e672cfe948fc8dd2abe15d",
-            "runId": "39941753236",
             "previousState": {
               "sourcePartition": {
-                "file": "outputs/motion-review/remediation-r4/native-8e90-17-audit-r1/final-17-source-owned-partition-r2.json",
-                "bytes": 1584060,
-                "sha256": "86a5ca7f28238fa2e79e2e8a942f584bb5f70ea831115d7c34c434288e54349c"
+                "file": "outputs/motion-review/remediation-r4/native-ca136-1-audit-r1/final-1-source-owned-partition-r1.json",
+                "bytes": 111237,
+                "sha256": "0062778d2183dcb72c8bd8430480a6beb3543da6c69cb51f338f0d7d4257d5db"
               },
-              "head": "8e90523f5a53782d41ab227786fc8b3466a9e511",
-              "runId": "39935763673",
+              "head": "ca13638bba96d606d6e672cfe948fc8dd2abe15d",
+              "runId": "39941753236",
               "previousState": {
                 "sourcePartition": {
-                  "file": "outputs/motion-review/remediation-r4/native-3102-42-audit-r1/final-42-source-owned-partition-r1.json",
-                  "bytes": 4450462,
-                  "sha256": "68c21993ae4309ca2a71b2757d649f56b56500a850b1b1c192649b6e99f75cd2"
+                  "file": "outputs/motion-review/remediation-r4/native-8e90-17-audit-r1/final-17-source-owned-partition-r2.json",
+                  "bytes": 1584060,
+                  "sha256": "86a5ca7f28238fa2e79e2e8a942f584bb5f70ea831115d7c34c434288e54349c"
                 },
-                "head": "3102b0df09130934a060ff6371ab6b81f881d1c6",
-                "runId": "39928977912",
+                "head": "8e90523f5a53782d41ab227786fc8b3466a9e511",
+                "runId": "39935763673",
                 "previousState": {
                   "sourcePartition": {
-                    "file": "outputs/motion-review/remediation-r4/native-ba305-122-audit-r1/final-122-source-owned-partition-handoff-r1.json",
-                    "bytes": 537818,
-                    "sha256": "d6ab87658d2399b66c795fa976101ca09fb116185631ee4c899041759f500c08"
+                    "file": "outputs/motion-review/remediation-r4/native-3102-42-audit-r1/final-42-source-owned-partition-r1.json",
+                    "bytes": 4450462,
+                    "sha256": "68c21993ae4309ca2a71b2757d649f56b56500a850b1b1c192649b6e99f75cd2"
                   },
-                  "head": "ba3051363386bc92865009df1c91c6a0ee3f4e08",
-                  "runId": "39919617100",
+                  "head": "3102b0df09130934a060ff6371ab6b81f881d1c6",
+                  "runId": "39928977912",
                   "previousState": {
                     "sourcePartition": {
-                      "file": "outputs/motion-review/remediation-r4/native-a73-first2-audit-r1/final-221-source-owned-partition-r1.json",
-                      "sha256": "9d81057cefc20f587489e2e14a0903842ad5b5f9228eb83fc68db9978fe751ed"
+                      "file": "outputs/motion-review/remediation-r4/native-ba305-122-audit-r1/final-122-source-owned-partition-handoff-r1.json",
+                      "bytes": 537818,
+                      "sha256": "d6ab87658d2399b66c795fa976101ca09fb116185631ee4c899041759f500c08"
                     },
-                    "head": "a73aa5905ebb3a819bb0e62dca56a3c9bed7b881",
-                    "runId": "39905844837",
-                    "oldRetainedBeforeRPAudio": 358,
-                    "additionalClosuresBeforeRPAudio": 126,
-                    "encodedVerifiedSourceTotal": 484,
-                    "encodedFailedSourceTotal": 95,
-                    "sourceScopedReopens": 27,
-                    "retained": 457,
-                    "pending": 122,
+                    "head": "ba3051363386bc92865009df1c91c6a0ee3f4e08",
+                    "runId": "39919617100",
+                    "previousState": {
+                      "sourcePartition": {
+                        "file": "outputs/motion-review/remediation-r4/native-a73-first2-audit-r1/final-221-source-owned-partition-r1.json",
+                        "sha256": "9d81057cefc20f587489e2e14a0903842ad5b5f9228eb83fc68db9978fe751ed"
+                      },
+                      "head": "a73aa5905ebb3a819bb0e62dca56a3c9bed7b881",
+                      "runId": "39905844837",
+                      "oldRetainedBeforeRPAudio": 358,
+                      "additionalClosuresBeforeRPAudio": 126,
+                      "encodedVerifiedSourceTotal": 484,
+                      "encodedFailedSourceTotal": 95,
+                      "sourceScopedReopens": 27,
+                      "retained": 457,
+                      "pending": 122,
+                      "unknown": 0,
+                      "originalRawEncodedPtsVerifiedFlagsUnchanged": true,
+                      "originalManualFailureAndCorrectionRetained": true,
+                      "audioAccepted": false,
+                      "wholeGameAccepted": false
+                    },
+                    "baselineHeldUnmodified": 457,
+                    "additionalClosures": 80,
+                    "encodedVerifiedSourceTotal": 537,
+                    "encodedFailedSourceTotal": 42,
+                    "sourceScopedReopens": {
+                      "caseIds": [
+                        "forms-10:red-panther-knife:attack:1280x720",
+                        "forms-10:red-panther-knife:engage:844x340",
+                        "forms-11:red-panther-shield:attack:1280x720",
+                        "forms-11:red-panther-shield:engage:1280x720",
+                        "forms-11:red-panther-smg:attack:844x340",
+                        "forms-11:red-panther-smg:engage:1280x720",
+                        "forms-11:red-panther-smg:engage:844x340",
+                        "forms-10:red-panther-knife:controlled-outcome:1280x720",
+                        "forms-10:red-panther-knife:controlled-outcome:844x390",
+                        "forms-10:red-panther-knife:controlled-outcome:844x340",
+                        "forms-11:red-panther-shield:controlled-outcome:1280x720",
+                        "forms-11:red-panther-shield:controlled-outcome:844x390",
+                        "forms-11:red-panther-shield:controlled-outcome:844x340",
+                        "forms-11:red-panther-smg:controlled-outcome:1280x720",
+                        "forms-11:red-panther-smg:controlled-outcome:844x390",
+                        "forms-11:red-panther-smg:controlled-outcome:844x340",
+                        "forms-11:red-panther-commander:controlled-outcome:844x390",
+                        "forms-11:red-panther-commander:controlled-outcome:844x340",
+                        "forms-10:red-panther-knife:attack:844x390",
+                        "forms-10:red-panther-knife:engage:844x390",
+                        "forms-11:red-panther-commander:attack:1280x720",
+                        "forms-11:red-panther-commander:engage:1280x720",
+                        "forms-11:red-panther-shield:attack:844x390",
+                        "forms-11:red-panther-smg:engage:844x390",
+                        "forms-11:red-panther-commander:engage:844x390",
+                        "forms-11:red-panther-commander:attack:844x340",
+                        "forms-11:red-panther-commander:controlled-outcome:1280x720"
+                      ],
+                      "nowPassed": [
+                        "forms-10:red-panther-knife:attack:1280x720",
+                        "forms-10:red-panther-knife:attack:844x390",
+                        "forms-10:red-panther-knife:engage:844x390",
+                        "forms-10:red-panther-knife:engage:844x340",
+                        "forms-11:red-panther-shield:attack:1280x720",
+                        "forms-11:red-panther-shield:engage:1280x720",
+                        "forms-11:red-panther-smg:engage:1280x720",
+                        "forms-11:red-panther-commander:attack:1280x720",
+                        "forms-11:red-panther-commander:engage:1280x720",
+                        "forms-10:red-panther-knife:controlled-outcome:1280x720",
+                        "forms-10:red-panther-knife:controlled-outcome:844x390",
+                        "forms-10:red-panther-knife:controlled-outcome:844x340",
+                        "forms-11:red-panther-shield:controlled-outcome:1280x720",
+                        "forms-11:red-panther-shield:controlled-outcome:844x390",
+                        "forms-11:red-panther-smg:controlled-outcome:1280x720",
+                        "forms-11:red-panther-smg:controlled-outcome:844x390",
+                        "forms-11:red-panther-commander:controlled-outcome:1280x720"
+                      ],
+                      "stillPending": [
+                        "forms-11:red-panther-shield:attack:844x390",
+                        "forms-11:red-panther-smg:attack:844x340",
+                        "forms-11:red-panther-smg:engage:844x390",
+                        "forms-11:red-panther-smg:engage:844x340",
+                        "forms-11:red-panther-commander:attack:844x340",
+                        "forms-11:red-panther-commander:engage:844x390",
+                        "forms-11:red-panther-shield:controlled-outcome:844x340",
+                        "forms-11:red-panther-smg:controlled-outcome:844x340",
+                        "forms-11:red-panther-commander:controlled-outcome:844x390",
+                        "forms-11:red-panther-commander:controlled-outcome:844x340"
+                      ]
+                    },
+                    "retained": 537,
+                    "pending": 42,
                     "unknown": 0,
                     "originalRawEncodedPtsVerifiedFlagsUnchanged": true,
                     "originalManualFailureAndCorrectionRetained": true,
                     "audioAccepted": false,
                     "wholeGameAccepted": false
                   },
-                  "baselineHeldUnmodified": 457,
-                  "additionalClosures": 80,
-                  "encodedVerifiedSourceTotal": 537,
-                  "encodedFailedSourceTotal": 42,
+                  "baselineHeldUnmodified": 537,
+                  "additionalClosures": 25,
+                  "encodedVerifiedSourceTotal": 562,
+                  "encodedFailedSourceTotal": 17,
                   "sourceScopedReopens": {
                     "caseIds": [
                       "forms-10:red-panther-knife:attack:1280x720",
@@ -5555,9 +5802,7 @@
                       "forms-11:red-panther-shield:controlled-outcome:844x390",
                       "forms-11:red-panther-smg:controlled-outcome:1280x720",
                       "forms-11:red-panther-smg:controlled-outcome:844x390",
-                      "forms-11:red-panther-commander:controlled-outcome:1280x720"
-                    ],
-                    "stillPending": [
+                      "forms-11:red-panther-commander:controlled-outcome:1280x720",
                       "forms-11:red-panther-shield:attack:844x390",
                       "forms-11:red-panther-smg:attack:844x340",
                       "forms-11:red-panther-smg:engage:844x390",
@@ -5568,20 +5813,22 @@
                       "forms-11:red-panther-smg:controlled-outcome:844x340",
                       "forms-11:red-panther-commander:controlled-outcome:844x390",
                       "forms-11:red-panther-commander:controlled-outcome:844x340"
-                    ]
+                    ],
+                    "stillPending": []
                   },
-                  "retained": 537,
-                  "pending": 42,
+                  "retained": 562,
+                  "pending": 17,
                   "unknown": 0,
                   "originalRawEncodedPtsVerifiedFlagsUnchanged": true,
                   "originalManualFailureAndCorrectionRetained": true,
                   "audioAccepted": false,
-                  "wholeGameAccepted": false
+                  "wholeGameAccepted": false,
+                  "oldRetainedBeforeNewRun": 537
                 },
-                "baselineHeldUnmodified": 537,
-                "additionalClosures": 25,
-                "encodedVerifiedSourceTotal": 562,
-                "encodedFailedSourceTotal": 17,
+                "baselineHeldUnmodified": 562,
+                "additionalClosures": 16,
+                "encodedVerifiedSourceTotal": 578,
+                "encodedFailedSourceTotal": 1,
                 "sourceScopedReopens": {
                   "caseIds": [
                     "forms-10:red-panther-knife:attack:1280x720",
@@ -5643,140 +5890,95 @@
                   ],
                   "stillPending": []
                 },
-                "retained": 562,
-                "pending": 17,
+                "retained": 578,
+                "pending": 1,
                 "unknown": 0,
                 "originalRawEncodedPtsVerifiedFlagsUnchanged": true,
                 "originalManualFailureAndCorrectionRetained": true,
                 "audioAccepted": false,
                 "wholeGameAccepted": false,
-                "oldRetainedBeforeNewRun": 537
+                "oldRetainedBeforeNewRun": 562
               },
-              "baselineHeldUnmodified": 562,
-              "additionalClosures": 16,
-              "encodedVerifiedSourceTotal": 578,
-              "encodedFailedSourceTotal": 1,
-              "sourceScopedReopens": {
-                "caseIds": [
-                  "forms-10:red-panther-knife:attack:1280x720",
-                  "forms-10:red-panther-knife:engage:844x340",
-                  "forms-11:red-panther-shield:attack:1280x720",
-                  "forms-11:red-panther-shield:engage:1280x720",
-                  "forms-11:red-panther-smg:attack:844x340",
-                  "forms-11:red-panther-smg:engage:1280x720",
-                  "forms-11:red-panther-smg:engage:844x340",
-                  "forms-10:red-panther-knife:controlled-outcome:1280x720",
-                  "forms-10:red-panther-knife:controlled-outcome:844x390",
-                  "forms-10:red-panther-knife:controlled-outcome:844x340",
-                  "forms-11:red-panther-shield:controlled-outcome:1280x720",
-                  "forms-11:red-panther-shield:controlled-outcome:844x390",
-                  "forms-11:red-panther-shield:controlled-outcome:844x340",
-                  "forms-11:red-panther-smg:controlled-outcome:1280x720",
-                  "forms-11:red-panther-smg:controlled-outcome:844x390",
-                  "forms-11:red-panther-smg:controlled-outcome:844x340",
-                  "forms-11:red-panther-commander:controlled-outcome:844x390",
-                  "forms-11:red-panther-commander:controlled-outcome:844x340",
-                  "forms-10:red-panther-knife:attack:844x390",
-                  "forms-10:red-panther-knife:engage:844x390",
-                  "forms-11:red-panther-commander:attack:1280x720",
-                  "forms-11:red-panther-commander:engage:1280x720",
-                  "forms-11:red-panther-shield:attack:844x390",
-                  "forms-11:red-panther-smg:engage:844x390",
-                  "forms-11:red-panther-commander:engage:844x390",
-                  "forms-11:red-panther-commander:attack:844x340",
-                  "forms-11:red-panther-commander:controlled-outcome:1280x720"
-                ],
-                "nowPassed": [
-                  "forms-10:red-panther-knife:attack:1280x720",
-                  "forms-10:red-panther-knife:attack:844x390",
-                  "forms-10:red-panther-knife:engage:844x390",
-                  "forms-10:red-panther-knife:engage:844x340",
-                  "forms-11:red-panther-shield:attack:1280x720",
-                  "forms-11:red-panther-shield:engage:1280x720",
-                  "forms-11:red-panther-smg:engage:1280x720",
-                  "forms-11:red-panther-commander:attack:1280x720",
-                  "forms-11:red-panther-commander:engage:1280x720",
-                  "forms-10:red-panther-knife:controlled-outcome:1280x720",
-                  "forms-10:red-panther-knife:controlled-outcome:844x390",
-                  "forms-10:red-panther-knife:controlled-outcome:844x340",
-                  "forms-11:red-panther-shield:controlled-outcome:1280x720",
-                  "forms-11:red-panther-shield:controlled-outcome:844x390",
-                  "forms-11:red-panther-smg:controlled-outcome:1280x720",
-                  "forms-11:red-panther-smg:controlled-outcome:844x390",
-                  "forms-11:red-panther-commander:controlled-outcome:1280x720",
-                  "forms-11:red-panther-shield:attack:844x390",
-                  "forms-11:red-panther-smg:attack:844x340",
-                  "forms-11:red-panther-smg:engage:844x390",
-                  "forms-11:red-panther-smg:engage:844x340",
-                  "forms-11:red-panther-commander:attack:844x340",
-                  "forms-11:red-panther-commander:engage:844x390",
-                  "forms-11:red-panther-shield:controlled-outcome:844x340",
-                  "forms-11:red-panther-smg:controlled-outcome:844x340",
-                  "forms-11:red-panther-commander:controlled-outcome:844x390",
-                  "forms-11:red-panther-commander:controlled-outcome:844x340"
-                ],
-                "stillPending": []
-              },
-              "retained": 578,
-              "pending": 1,
+              "baselineHeldUnmodified": 578,
+              "additionalClosures": 1,
+              "encodedVerifiedSourceTotal": 579,
+              "encodedFailedSourceTotal": 0,
+              "sourceScopedReopens": [
+                "forms-1:ranger:move:1280x720",
+                "forms-1:ranger:move:844x390",
+                "forms-1:ranger:move:844x340",
+                "forms-1:ranger:attack:1280x720",
+                "forms-1:ranger:attack:844x390",
+                "forms-1:ranger:attack:844x340",
+                "forms-1:ranger:engage:1280x720",
+                "forms-1:ranger:engage:844x390",
+                "forms-1:ranger:engage:844x340",
+                "forms-1:ranger:ranger-manual-precision:1280x720",
+                "forms-1:ranger:ranger-manual-precision:844x390",
+                "forms-1:ranger:ranger-manual-precision:844x340",
+                "forms-1:ranger:controlled-outcome:1280x720",
+                "forms-1:ranger:controlled-outcome:844x390",
+                "forms-1:ranger:controlled-outcome:844x340"
+              ],
+              "retained": 564,
+              "pending": 15,
               "unknown": 0,
               "originalRawEncodedPtsVerifiedFlagsUnchanged": true,
               "originalManualFailureAndCorrectionRetained": true,
               "audioAccepted": false,
               "wholeGameAccepted": false,
-              "oldRetainedBeforeNewRun": 562
+              "oldRetainedBeforeNewRun": 578,
+              "historicalSourceProfile": {
+                "gitHead": "6844c8ec436c253957f421c946da359f12ce0330",
+                "file": "scripts/v177-native-allunit-recovery.json",
+                "sha256": "c7a11ec05a7b6eec4a43decd37d1526faabefaddff615e9340b3804b73304d4a"
+              },
+              "historicalVerifiedBeforeRangerCache": 579
             },
-            "baselineHeldUnmodified": 578,
-            "additionalClosures": 1,
+            "sourcePartition": {
+              "file": "outputs/motion-review/remediation-r4/native-0d4bf-ranger15-audit-r1/final-15-source-owned-partition-r1.json",
+              "bytes": 119424,
+              "sha256": "f7b9debeaf3bbb12950b18219767285695ca644871536adbe112c62ecd04dfe1"
+            },
+            "head": "0d4bf897a2839c147be1767b829cfb2a30181348",
+            "runId": "39957370811",
+            "baselineHeldUnmodified": 564,
+            "additionalClosures": 15,
+            "retained": 579,
+            "pending": 0,
+            "unknown": 0,
             "encodedVerifiedSourceTotal": 579,
             "encodedFailedSourceTotal": 0,
-            "sourceScopedReopens": [
-              "forms-1:ranger:move:1280x720",
-              "forms-1:ranger:move:844x390",
-              "forms-1:ranger:move:844x340",
-              "forms-1:ranger:attack:1280x720",
-              "forms-1:ranger:attack:844x390",
-              "forms-1:ranger:attack:844x340",
-              "forms-1:ranger:engage:1280x720",
-              "forms-1:ranger:engage:844x390",
-              "forms-1:ranger:engage:844x340",
-              "forms-1:ranger:ranger-manual-precision:1280x720",
-              "forms-1:ranger:ranger-manual-precision:844x390",
-              "forms-1:ranger:ranger-manual-precision:844x340",
-              "forms-1:ranger:controlled-outcome:1280x720",
-              "forms-1:ranger:controlled-outcome:844x390",
-              "forms-1:ranger:controlled-outcome:844x340"
-            ],
-            "retained": 564,
-            "pending": 15,
-            "unknown": 0,
+            "sourceScopedReopens": [],
             "originalRawEncodedPtsVerifiedFlagsUnchanged": true,
             "originalManualFailureAndCorrectionRetained": true,
+            "retainedMediaRerecorded": false,
+            "retainedMediaRedecoded": false,
             "audioAccepted": false,
-            "wholeGameAccepted": false,
-            "oldRetainedBeforeNewRun": 578,
-            "historicalSourceProfile": {
-              "gitHead": "6844c8ec436c253957f421c946da359f12ce0330",
-              "file": "scripts/v177-native-allunit-recovery.json",
-              "sha256": "c7a11ec05a7b6eec4a43decd37d1526faabefaddff615e9340b3804b73304d4a"
-            },
-            "historicalVerifiedBeforeRangerCache": 579
+            "wholeGameAccepted": false
           },
-          "sourcePartition": {
-            "file": "outputs/motion-review/remediation-r4/native-0d4bf-ranger15-audit-r1/final-15-source-owned-partition-r1.json",
-            "bytes": 119424,
-            "sha256": "f7b9debeaf3bbb12950b18219767285695ca644871536adbe112c62ecd04dfe1"
-          },
-          "head": "0d4bf897a2839c147be1767b829cfb2a30181348",
-          "runId": "39957370811",
-          "baselineHeldUnmodified": 564,
-          "additionalClosures": 15,
-          "retained": 579,
-          "pending": 0,
-          "unknown": 0,
           "encodedVerifiedSourceTotal": 579,
           "encodedFailedSourceTotal": 0,
-          "sourceScopedReopens": [],
+          "retained": 564,
+          "pending": 15,
+          "unknown": 0,
+          "sourceScopedReopens": [
+            "forms-1:ranger:move:1280x720",
+            "forms-1:ranger:move:844x390",
+            "forms-1:ranger:move:844x340",
+            "forms-1:ranger:attack:1280x720",
+            "forms-1:ranger:attack:844x390",
+            "forms-1:ranger:attack:844x340",
+            "forms-1:ranger:engage:1280x720",
+            "forms-1:ranger:engage:844x390",
+            "forms-1:ranger:engage:844x340",
+            "forms-1:ranger:ranger-manual-precision:1280x720",
+            "forms-1:ranger:ranger-manual-precision:844x390",
+            "forms-1:ranger:ranger-manual-precision:844x340",
+            "forms-1:ranger:controlled-outcome:1280x720",
+            "forms-1:ranger:controlled-outcome:844x390",
+            "forms-1:ranger:controlled-outcome:844x340"
+          ],
           "originalRawEncodedPtsVerifiedFlagsUnchanged": true,
           "originalManualFailureAndCorrectionRetained": true,
           "retainedMediaRerecorded": false,
@@ -5786,45 +5988,64 @@
         },
         "encodedVerifiedSourceTotal": 579,
         "encodedFailedSourceTotal": 0,
-        "retained": 564,
-        "pending": 15,
+        "retained": 573,
+        "pending": 6,
         "unknown": 0,
         "sourceScopedReopens": [
-          "forms-1:ranger:move:1280x720",
-          "forms-1:ranger:move:844x390",
-          "forms-1:ranger:move:844x340",
-          "forms-1:ranger:attack:1280x720",
-          "forms-1:ranger:attack:844x390",
-          "forms-1:ranger:attack:844x340",
-          "forms-1:ranger:engage:1280x720",
-          "forms-1:ranger:engage:844x390",
-          "forms-1:ranger:engage:844x340",
-          "forms-1:ranger:ranger-manual-precision:1280x720",
-          "forms-1:ranger:ranger-manual-precision:844x390",
-          "forms-1:ranger:ranger-manual-precision:844x340",
-          "forms-1:ranger:controlled-outcome:1280x720",
-          "forms-1:ranger:controlled-outcome:844x390",
-          "forms-1:ranger:controlled-outcome:844x340"
+          "forms-12:kumaverson:attack:1280x720",
+          "forms-12:kumaverson:attack:844x390",
+          "forms-12:kumaverson:attack:844x340",
+          "forms-12:kumaverson:engage:1280x720",
+          "forms-12:kumaverson:engage:844x390",
+          "forms-12:kumaverson:engage:844x340"
         ],
         "originalRawEncodedPtsVerifiedFlagsUnchanged": true,
         "originalManualFailureAndCorrectionRetained": true,
         "retainedMediaRerecorded": false,
         "retainedMediaRedecoded": false,
         "audioAccepted": false,
-        "wholeGameAccepted": false
+        "wholeGameAccepted": false,
+        "sourcePartition": {
+          "file": "outputs/motion-review/remediation-r4/native-1c2e0b-ranger15-audit-r1/final-15-source-owned-partition-r1.json",
+          "bytes": 119456,
+          "sha256": "635a62fdee5b71c5bb4fbcedf7f6fc4fad8c49e9e5e509eac2f03c508c700cbf"
+        },
+        "head": "1c2e0bb1c391747d1d8e776193f37c409e4e56ef",
+        "runId": "39997563926",
+        "baselineHeldUnmodified": 558,
+        "additionalClosures": 15,
+        "encodedTotalsAreHistorical": true
       },
+      "sourcePartition": {
+        "file": "outputs/motion-review/remediation-r4/native-9a692f-kuma6-audit-r1/final-6-source-owned-partition-r1.json",
+        "bytes": 82225,
+        "sha256": "65ab342175eaf927d4e254731b6a476bf06bba7ae62329c6f19e6cb168ed9bfb"
+      },
+      "head": "9a692f771001afa5e8169b963ee51c1fe589e30a",
+      "runId": "40009214118",
+      "baselineHeldUnmodified": 573,
+      "additionalClosures": 6,
       "encodedVerifiedSourceTotal": 579,
       "encodedFailedSourceTotal": 0,
-      "retained": 573,
-      "pending": 6,
+      "retained": 564,
+      "pending": 15,
       "unknown": 0,
       "sourceScopedReopens": [
-        "forms-12:kumaverson:attack:1280x720",
-        "forms-12:kumaverson:attack:844x390",
-        "forms-12:kumaverson:attack:844x340",
-        "forms-12:kumaverson:engage:1280x720",
-        "forms-12:kumaverson:engage:844x390",
-        "forms-12:kumaverson:engage:844x340"
+        "forms-1:ranger:move:1280x720",
+        "forms-1:ranger:move:844x390",
+        "forms-1:ranger:move:844x340",
+        "forms-1:ranger:attack:1280x720",
+        "forms-1:ranger:attack:844x390",
+        "forms-1:ranger:attack:844x340",
+        "forms-1:ranger:engage:1280x720",
+        "forms-1:ranger:engage:844x390",
+        "forms-1:ranger:engage:844x340",
+        "forms-1:ranger:ranger-manual-precision:1280x720",
+        "forms-1:ranger:ranger-manual-precision:844x390",
+        "forms-1:ranger:ranger-manual-precision:844x340",
+        "forms-1:ranger:controlled-outcome:1280x720",
+        "forms-1:ranger:controlled-outcome:844x390",
+        "forms-1:ranger:controlled-outcome:844x340"
       ],
       "originalRawEncodedPtsVerifiedFlagsUnchanged": true,
       "originalManualFailureAndCorrectionRetained": true,
@@ -5832,55 +6053,32 @@
       "retainedMediaRedecoded": false,
       "audioAccepted": false,
       "wholeGameAccepted": false,
-      "sourcePartition": {
-        "file": "outputs/motion-review/remediation-r4/native-1c2e0b-ranger15-audit-r1/final-15-source-owned-partition-r1.json",
-        "bytes": 119456,
-        "sha256": "635a62fdee5b71c5bb4fbcedf7f6fc4fad8c49e9e5e509eac2f03c508c700cbf"
-      },
-      "head": "1c2e0bb1c391747d1d8e776193f37c409e4e56ef",
-      "runId": "39997563926",
-      "baselineHeldUnmodified": 558,
-      "additionalClosures": 15,
       "encodedTotalsAreHistorical": true
     },
     "sourcePartition": {
-      "file": "outputs/motion-review/remediation-r4/native-9a692f-kuma6-audit-r1/final-6-source-owned-partition-r1.json",
-      "bytes": 82225,
-      "sha256": "65ab342175eaf927d4e254731b6a476bf06bba7ae62329c6f19e6cb168ed9bfb"
+      "file": "outputs/motion-review/remediation-r4/native-738528-ranger15-audit-r1/final-15-source-owned-partition-r1.json",
+      "bytes": 119683,
+      "sha256": "8fc3ddf01be9cf879c193eef04cfc21d4377a0dd91152ea60e0ae3ca98e4b129"
     },
-    "head": "9a692f771001afa5e8169b963ee51c1fe589e30a",
-    "runId": "40009214118",
-    "baselineHeldUnmodified": 573,
-    "additionalClosures": 6,
-    "encodedVerifiedSourceTotal": 579,
-    "encodedFailedSourceTotal": 0,
-    "retained": 564,
-    "pending": 15,
+    "head": "73852876ac5215bdbd9d3e3607de0301b265dcd1",
+    "runId": "40019627650",
+    "baselineHeldUnmodified": 564,
+    "additionalClosures": 14,
+    "encodedVerifiedSourceTotal": 578,
+    "encodedFailedSourceTotal": 1,
+    "retained": 578,
+    "pending": 1,
     "unknown": 0,
     "sourceScopedReopens": [
-      "forms-1:ranger:move:1280x720",
-      "forms-1:ranger:move:844x390",
-      "forms-1:ranger:move:844x340",
-      "forms-1:ranger:attack:1280x720",
-      "forms-1:ranger:attack:844x390",
-      "forms-1:ranger:attack:844x340",
-      "forms-1:ranger:engage:1280x720",
-      "forms-1:ranger:engage:844x390",
-      "forms-1:ranger:engage:844x340",
-      "forms-1:ranger:ranger-manual-precision:1280x720",
-      "forms-1:ranger:ranger-manual-precision:844x390",
-      "forms-1:ranger:ranger-manual-precision:844x340",
-      "forms-1:ranger:controlled-outcome:1280x720",
-      "forms-1:ranger:controlled-outcome:844x390",
-      "forms-1:ranger:controlled-outcome:844x340"
+      "forms-1:ranger:ranger-manual-precision:844x390"
     ],
+    "encodedTotalsAreHistorical": true,
     "originalRawEncodedPtsVerifiedFlagsUnchanged": true,
     "originalManualFailureAndCorrectionRetained": true,
     "retainedMediaRerecorded": false,
     "retainedMediaRedecoded": false,
     "audioAccepted": false,
-    "wholeGameAccepted": false,
-    "encodedTotalsAreHistorical": true
+    "wholeGameAccepted": false
   },
   "historicalRetainedOwnershipBeforeRangerPairCache": {
     "profile": {
@@ -7057,5 +7255,117 @@
     "continuous480Digest": "21e45542b4dd72b1e18ea4192a7afdcdc9206823509c592215a5270f985f41f0",
     "formal33msAccepted": false,
     "scope": "Exact pixels and bounded resource reuse only; isolated24ms run remained failed on the old first-paint validator and is not formal acceptance."
+  },
+  "nativeRangerPool15PartialClosure": {
+    "head": "73852876ac5215bdbd9d3e3607de0301b265dcd1",
+    "runId": "40019627650",
+    "baselineProfile": {
+      "head": "73852876ac5215bdbd9d3e3607de0301b265dcd1",
+      "file": "outputs/motion-review/remediation-r4/native-738528-ranger15-audit-r1/baseline-profile-738528.json",
+      "bytes": 339258,
+      "sha256": "b8f7a768a4fb31674f75c2626a66705e8dc18b35fcbcc47ab6fa3e5ff635e61e"
+    },
+    "recipe": {
+      "file": "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\issue177-foot-r9-20261020\\outputs\\motion-review\\remediation-r4\\native-738528-ranger15-audit-r1\\profile-update-recipe-r1.json",
+      "bytes": 5413,
+      "sha256": "2385d6314e23c223a5c578ea4b3eb5f72be04d13a6d6c96904c1a987308e50c6"
+    },
+    "sourcePartition": {
+      "file": "outputs/motion-review/remediation-r4/native-738528-ranger15-audit-r1/final-15-source-owned-partition-r1.json",
+      "bytes": 119683,
+      "sha256": "8fc3ddf01be9cf879c193eef04cfc21d4377a0dd91152ea60e0ae3ca98e4b129"
+    },
+    "technicalReview": {
+      "file": "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\issue177-foot-r9-20261020\\outputs\\motion-review\\remediation-r4\\native-738528-ranger15-audit-r1\\technical-closure-review-r1.json",
+      "bytes": 6845,
+      "sha256": "ee1dbedee89b8f03063c84018713393979b2d2accbd9e12cd5e4d8bff5b00cc6"
+    },
+    "summary": {
+      "expectedFresh": 15,
+      "officialArtifactsAcquired": 1,
+      "sourceArtifacts": 1,
+      "passedFresh": 14,
+      "failedFresh": 1,
+      "unknownFresh": 0,
+      "baselineHeldUnmodified": 564,
+      "candidateHeldIfAdopted": 578,
+      "candidatePendingIfAdopted": 1,
+      "total579": 579,
+      "unique579": 579,
+      "duplicateOwners": 0,
+      "sourceReportProblems": 0,
+      "existingCiFullDecodeFrames": 1179,
+      "localMediaDecodeRuns": 0,
+      "old564MediaOpened": 0
+    },
+    "newAdditionalReports": [
+      {
+        "head": "73852876ac5215bdbd9d3e3607de0301b265dcd1",
+        "runId": "40019627650",
+        "shard": "forms-1",
+        "sha256": "bf2b5f9723e3d77e1b21800e4b5b3d0172bb282876694f32c949c5c3ad6026d1",
+        "artifactId": 12529793476,
+        "caseIds": [
+          "forms-1:ranger:move:1280x720",
+          "forms-1:ranger:move:844x390",
+          "forms-1:ranger:move:844x340",
+          "forms-1:ranger:attack:1280x720",
+          "forms-1:ranger:attack:844x390",
+          "forms-1:ranger:attack:844x340",
+          "forms-1:ranger:engage:1280x720",
+          "forms-1:ranger:engage:844x390",
+          "forms-1:ranger:engage:844x340"
+        ],
+        "manualCaseIds": [
+          "forms-1:ranger:ranger-manual-precision:1280x720",
+          "forms-1:ranger:ranger-manual-precision:844x340"
+        ],
+        "outcomeCaseIds": [
+          "forms-1:ranger:controlled-outcome:1280x720",
+          "forms-1:ranger:controlled-outcome:844x390",
+          "forms-1:ranger:controlled-outcome:844x340"
+        ],
+        "encodedAndDecodePartitionSha256": "8fc3ddf01be9cf879c193eef04cfc21d4377a0dd91152ea60e0ae3ca98e4b129"
+      }
+    ],
+    "newAdditionalEvidenceInventory": {
+      "head": "73852876ac5215bdbd9d3e3607de0301b265dcd1",
+      "runId": "40019627650",
+      "sha256": "8fc3ddf01be9cf879c193eef04cfc21d4377a0dd91152ea60e0ae3ca98e4b129",
+      "reports": [
+        {
+          "shard": "forms-1",
+          "sha256": "bf2b5f9723e3d77e1b21800e4b5b3d0172bb282876694f32c949c5c3ad6026d1",
+          "artifactId": 12529793476
+        }
+      ],
+      "originalReportsUnmodified": true,
+      "officialCiEncodedAndDecodeVerified": true,
+      "verificationScope": "Only passed case IDs owned by newAdditionalReports; original failed and unknown rows remain pending",
+      "localMediaDecodeRuns": 0,
+      "originalSpeedAccepted": false,
+      "naturalnessAccepted": false,
+      "wholeGameAccepted": false
+    },
+    "officialArtifact": {
+      "id": 12529793476,
+      "bytes": 22761435,
+      "sha256": "f7762d632642a9cc3df3ebd36199667345a7b3c5966a6f49932c8d4d56dc6de6",
+      "officialDigestMatched": true,
+      "acquisitions": 1
+    },
+    "originalCiJobConclusion": "failure",
+    "originalRawReportStatus": "completed-diagnostic",
+    "originalRawReportErrors": [],
+    "originalEncodedFailureCaseIds": [
+      "forms-1:ranger:ranger-manual-precision:844x390"
+    ],
+    "all15Accepted": false,
+    "failureTiming": {
+      "file": "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\issue177-foot-r9-20261020\\outputs\\motion-review\\remediation-r4\\native-738528-ranger15-audit-r1\\failure-timing-r1.json",
+      "bytes": 15295,
+      "sha256": "c8621386201f97877455c7b8baa2ef46e77200c4cf23405a8d27d5f1e1797194"
+    },
+    "scope": "Append only14 original738528/run40019627650 successful observations. Preserve the original failed184-frame manual844x390 recording/314ms interval and the other564 owners. No579/0, formal33ms, wholeCI, naturalness/listening, physical or release acceptance."
   }
 }

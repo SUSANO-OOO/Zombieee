@@ -91,14 +91,17 @@ export function startNativeRangerManualObservation({reader}){
 export function stopNativeRangerManualObservation(state){return state.stop();}
 
 export async function captureNativeRangerManualCase(page,row,{out,onFailure=()=>{},
-  begin=beginV177NativeCanvasClip,tap=nativeBattleTap,readBytes=readFile}={}){
+  begin=beginV177NativeCanvasClip,tap=nativeBattleTap,readBytes=readFile,hostWait=null}={}){
   assertRangerManualPlan(row);const reference=rangerManualEnvelopeReference(row);
   const resources={realmOwner:null,reader:null,observation:null};let clip,primary;
   const active=()=>{assert.notEqual(row.deadlineExpired,true,'Late manual capture cannot become accepted');assert.equal(page.isClosed(),false);};
-  const owned=async operation=>{active();const value=await operation();active();return value;};
+  const owned=async(operation,label='owned')=>{
+    if(hostWait)return hostWait.run(label,async()=>{active();const value=await operation();active();return value;});
+    active();const value=await operation();active();return value;
+  };
   let sampleSequence=null;
   const read=async options=>{
-    const raw=await owned(()=>resources.reader.evaluate((reader,options)=>reader.read(options),{...options,afterRenderSequence:sampleSequence}));
+    const raw=await owned(()=>resources.reader.evaluate((reader,options)=>reader.read(options),{...options,afterRenderSequence:sampleSequence}),'reader.read');
     if(raw.latestPaint?.renderSequence!=null)sampleSequence=raw.latestPaint.renderSequence;
     return raw;
   };
@@ -133,10 +136,10 @@ export async function captureNativeRangerManualCase(page,row,{out,onFailure=()=>
     const button=page.locator(selector);await owned(()=>button.waitFor({state:'visible',timeout:LIMITS.readinessMs}));
     row.beforeInput=await read();assert.equal(row.beforeInput.manualRuntime.activationId,row.baselineActivationId);assert.equal(row.beforeInput.manualRuntime.phase,'ready');
     const inputPage={mouse:Object.fromEntries(['move','down','up'].map(key=>[key,async(...args)=>{active();const value=await page.mouse[key](...args);active();return value;}]))};
-    row.inputPhases=[];assert.equal(await owned(()=>tap(inputPage,button,row.inputPhases)),true,'Real Ranger native pointer input required');
+    row.inputPhases=[];assert.equal(await owned(()=>tap(inputPage,button,row.inputPhases),'trusted.tap'),true,'Real Ranger native pointer input required');
     row.afterInput=await read();assert.equal(manualMarkerDispatchStarted(row.beforeInput.phaseG,row.afterInput.phaseG,row.proof.fighterId,'ranger'),true,'Actual same-activation original start receipt required');
     for(let i=0;i<LIMITS.engageSamples;i++){
-      await owned(()=>page.waitForTimeout(LIMITS.sampleDelayMs));row.samples.push(await read({performanceBoundary:i===LIMITS.engageSamples-1}));
+      await owned(()=>page.waitForTimeout(LIMITS.sampleDelayMs),'sample.wait120');row.samples.push(await read({performanceBoundary:i===LIMITS.engageSamples-1}));
     }
     const finished=clip;clip=null;row.nativeClip=await finished.finish({completed:true});active();
     row.sourceRaf=await owned(()=>resources.observation.evaluate(stopNativeRangerManualObservation));
