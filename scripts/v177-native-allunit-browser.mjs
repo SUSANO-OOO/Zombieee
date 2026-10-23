@@ -103,6 +103,8 @@ const additions=[
   'scripts/ordered-native-pointer.mjs','scripts/v100-phase-g-runtime-evidence.mjs',
   'scripts/v177-native-allunit-ranger-manual.mjs','scripts/v177-native-allunit-ranger-manual-contract.mjs',
   'tests/v177-native-allunit-ranger-manual.test.mjs',
+  'scripts/v177-native-allunit-recording-runtime.mjs','scripts/native-recording-runtime/package.json',
+  'scripts/native-recording-runtime/package-lock.json','tests/v177-native-allunit-recording-runtime.test.mjs',
   'scripts/v177-native-allunit-selection.mjs','scripts/v177-native-allunit-recovery.json',
   'scripts/v177-native-allunit-outcomes.mjs','tests/v177-native-allunit-outcomes.test.mjs',
   'scripts/v177-human-corpse-contract.mjs','tests/v177-human-corpse-continuity.test.mjs',
@@ -137,7 +139,7 @@ export async function runBrowserQa(){
   const outcomePlan=planOutcomeShard(binding.shardId).filter(r=>selection.mode==='full'||selection.outcomeCaseIds?.includes(r.caseId));
   assert.ok(plan.length||manualPlan.length||outcomePlan.length,'Selected shard has no requested observations');
   const deps=Object.assign({},...await Promise.all([
-    import('./pwa-browser-runtime.mjs'),import('./browser-qa-build-identity.mjs'),
+    import('./v177-native-allunit-recording-runtime.mjs'),import('./browser-qa-build-identity.mjs'),
     import('./browser-request-failure-audit.mjs'),import('./v100-title-qa-entry.mjs'),
     import('../app/v100Registry.js'),import('../app/v100Save.js'),
   ]));
@@ -146,7 +148,7 @@ export async function runBrowserQa(){
   assert.equal(origin.protocol,'http:');assert.equal(origin.hostname,'127.0.0.1');
   const report={at:new Date().toISOString(),...binding,tree:git(['rev-parse','HEAD^{tree}']),
     host:{arch:process.arch,runnerArch:process.env.RUNNER_ARCH??null,imageOS:process.env.ImageOS??null,imageVersion:process.env.ImageVersion??null},
-    engine:'webkit',runtime:deps.PWA_WEBKIT_RUNTIME,build:await deps.productionBuildIdentity(),
+    engine:'webkit',runtime:deps.NATIVE_RECORDING_WEBKIT_RUNTIME,build:await deps.productionBuildIdentity(),
     status:'running-diagnostic',selection,recording:{requestedMimeType,requestedCaptureHz,codecControl:selection.mode==='codec-control'},fullPlan,excludedCaseIds:fullPlan.filter(r=>!selection.caseIds.includes(r.caseId)).map(r=>r.caseId),
     plan,manualPlan,manualCases:[],outcomePlan,outcomeCases:[],sources:[],contexts:[],cases:[],errors:[],persistenceErrors:[],...acceptance(),
     scope:selection.mode==='acquisition-control'
@@ -183,9 +185,9 @@ export async function runBrowserQa(){
     catch(error){report.persistenceErrors.push(String(error));fail(error);}
   };
   try{
-    browser=await (await deps.pwaBrowserType('webkit')).launch({headless:true});
+    browser=await (await deps.nativeRecordingBrowserType()).launch({headless:true});
     browser.on('disconnected',()=>{if(!closingBrowser)fail(Error('Unexpected native browser disconnect'));});
-    report.browserVersion=browser.version();assert.equal(report.browserVersion,deps.PWA_WEBKIT_RUNTIME.browserVersion);
+    report.browserVersion=browser.version();assert.equal(report.browserVersion,deps.NATIVE_RECORDING_WEBKIT_RUNTIME.browserVersion);
     for(const viewport of VIEWPORTS){
       // S24 gets its own owned save/context; no definition or clock is rewritten
       // to turn an unrelated Stage1 actor into a formal separated twin.
