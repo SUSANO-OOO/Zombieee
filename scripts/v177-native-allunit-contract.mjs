@@ -67,7 +67,7 @@ export function assertNativeRealmMember(expected,actual,member,after=expected){
 
 export function readNativeAllUnitSample(input,ownedProof){
  const realmOwner=ownedProof===undefined?null:input;
- const {fighterId,targetId,owner,proofId,performanceBoundary=false,sampleAt}=ownedProof??input;
+ const {fighterId,targetId,owner,proofId,performanceBoundary=false,sampleAt,immutableSnapshot=false}=ownedProof??input;
  // Absolute times in the original Performance clock avoid adding a full delay
  // after every transport round trip. Late reads still retain their actual time.
  if(sampleAt!==undefined){
@@ -118,8 +118,11 @@ export function readNativeAllUnitSample(input,ownedProof){
    jointWeaponCycleDrawSucceeded:r.jointWeaponCycleDrawSucceeded,jointWeaponCycle:r.jointWeaponCycle,
    jointRangerManualDrawSucceeded:r.jointRangerManualDrawSucceeded,jointRangerManual:r.jointRangerManual,
    jointFutagoAbilityDrawSucceeded:r.jointFutagoAbilityDrawSucceeded,jointFutagoAbility:r.jointFutagoAbility}))};
+ // A deferred remote handle must retain the values seen at this actual read,
+ // including nested joint geometry that later game frames may replace/mutate.
+ const stored=immutableSnapshot?structuredClone(result):result;
  const finishedAt=performance.now();
- return {...result,readTiming:{sampleAt:sampleAt??null,startedAt,snapshotAt,auditAt,targetAuditAt,phaseGAt,boundaryAt,finishedAt,
+ return {...stored,readTiming:{sampleAt:sampleAt??null,startedAt,snapshotAt,auditAt,targetAuditAt,phaseGAt,boundaryAt,finishedAt,
   scheduleLatenessMs:sampleAt===undefined?null:startedAt-sampleAt,durationMs:finishedAt-startedAt,
   scope:'Original synchronous reader only. RPC/serialization/encoding and native RAF wait are separate; no acceptance or clock change.'}};
 }

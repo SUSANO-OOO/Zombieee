@@ -201,7 +201,7 @@ export function assertAllUnitClip(row,bytes,{codecControl=false,requestedMimeTyp
 }
 export async function captureAllUnitCase(page,row,{out,onFailure=()=>{},requestedMimeType='video/webm;codecs=vp8',codecControl=false}={}){
   assertPlannedCase(row);let clip,observation,primary;
-  const resources={pointer:null,realmOwner:null};
+  const resources={pointer:null,realmOwner:null,sampleHandles:[]};
   const active=()=>{assert.notEqual(row.deadlineExpired,true,'Late capture cannot become accepted');assert.equal(page.isClosed(),false);};
   const owned=async operation=>{active();const value=await operation();active();return value;};
   try{
@@ -230,8 +230,13 @@ export async function captureAllUnitCase(page,row,{out,onFailure=()=>{},requeste
       const sampleAt=row.captureStart.at+(i+1)*LIMITS.sampleDelayMs;
       const rpc={index:i,sampleAt,startedAt:performance.now(),status:'pending'};row.sampleRpcTimings.push(rpc);
       try{
-        row.samples.push(await owned(()=>resources.realmOwner.evaluate(readNativeAllUnitSample,{...row.proof,
-          sampleAt,performanceBoundary:i===count-1})));rpc.status='completed';
+        // Keep the original read/cadence in the page. Transferring every full
+        // history while encoding can stall WebKit even when the reader is fast.
+        await owned(async()=>{
+          const handle=await resources.realmOwner.evaluateHandle(readNativeAllUnitSample,{...row.proof,
+            sampleAt,performanceBoundary:i===count-1,immutableSnapshot:true});
+          resources.sampleHandles.push({handle,exported:false});
+        });rpc.status='completed';
       }catch(error){rpc.status='error';rpc.error=String(error);throw error;}
       finally{rpc.finishedAt=performance.now();rpc.durationMs=rpc.finishedAt-rpc.startedAt;}
     }
@@ -243,6 +248,9 @@ export async function captureAllUnitCase(page,row,{out,onFailure=()=>{},requeste
       assert.equal(row.captureEnd.fighter?.manualAbilityPhase,'feral');assert.ok(row.captureEnd.fighter.activeRemaining>0);
       row.proof={...row.proof,...await owned(()=>page.evaluate(id=>window.__ASHFALL_BATTLE_QA__.getV177NativeMayoProof(id),row.proof.proofId))};
       row.proof.ownerEvidence.pointer=row.pointer;
+    }
+    for(const entry of resources.sampleHandles){
+      row.samples.push(await owned(()=>entry.handle.evaluate(value=>value)));entry.exported=true;
     }
     assertAllUnitClip(row,await readFile(row.nativeClip.file),{codecControl,requestedMimeType});
     row.postpaintReceipt=assertShardPostpaintContract(row,row.proof,row.boundary,row.release,row.samples);
@@ -267,6 +275,10 @@ export async function captureAllUnitCase(page,row,{out,onFailure=()=>{},requeste
     if(observation){
       try{row.interruptedSourceRaf=await observation.evaluate(stopNativeGameRafObservation);}catch(e){row.cleanupErrors.push(String(e));}
       try{await observation.dispose();}catch(e){row.cleanupErrors.push(String(e));}
+    }
+    for(const entry of resources.sampleHandles){
+      if(!entry.exported)try{(row.interruptedSamples??=[]).push(await entry.handle.evaluate(value=>value));}catch(e){row.cleanupErrors.push(String(e));}
+      try{await entry.handle.dispose();}catch(e){row.cleanupErrors.push(String(e));}
     }
     try{await page.evaluate(()=>window.__ASHFALL_BATTLE_QA__.setEnemyVfxProofPaused(true));}catch(e){row.cleanupErrors.push(String(e));}
     if(resources.realmOwner)try{await resources.realmOwner.dispose();}catch(e){row.cleanupErrors.push(String(e));}

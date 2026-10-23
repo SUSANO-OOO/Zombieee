@@ -15,6 +15,7 @@ import {startNativeCanvasClip,finishNativeCanvasClip,beginV177NativeCanvasClip} 
 import {startNativeGameRafObservation,stopNativeGameRafObservation} from '../scripts/v177-native-game-capture-browser.mjs';
 import {assertAllUnitClip} from '../scripts/v177-native-allunit-cases.mjs';
 import {SHARDS,planShard,LIMITS,assertPlannedCase} from '../scripts/v177-native-allunit-manifest.mjs';
+import {MANUAL_ABILITY_REGISTRY} from '../app/manualAbilities.js';
 
 const root=process.cwd(),fixtureDirectory=process.env.V177_REALM_OWNER_TEST_OUTPUT??path.join(os.tmpdir(),'v177-realm-owner-node');
 const require=createRequire(path.join(root,'package.json'));
@@ -29,12 +30,12 @@ function declaration(source,name){
  assert.ok(node,name);return node.getText(tree).replace(/^export\s+/u,'');
 }
 function callback(realm,fn){return vm.runInContext('('+fn.toString()+')',realm.context);}
-function fixture({origin=1000000,startEvent=true,stopEvent=true,chunks=['pure-node-fixture'],nativeError=false,failAtSample=null,cleanupFailure=false,manualSampleTimer=false,sampleTransportMs=0}={}){
- const plan=SHARDS.flatMap(s=>planShard(s.id)).find(r=>r.form==='medic'&&r.phase==='move'&&r.viewport.height===390);
+function fixture({form='medic',origin=1000000,startEvent=true,stopEvent=true,chunks=['pure-node-fixture'],nativeError=false,failAtSample=null,cleanupFailure=false,manualSampleTimer=false,sampleTransportMs=0,sampleHandleTransportMs=0}={}){
+ const plan=SHARDS.flatMap(s=>planShard(s.id)).find(r=>r.form===form&&r.phase==='move'&&r.viewport.height===390);
  const row={...clone(plan),samples:[],status:'starting'};
  const stats={speed:38,laneSpeed:20,damage:10,range:180,attackEvery:1,hp:100,maxHp:100};
  const proof={schema:'v177-native-shard-proof/v1',proofId:'2:medic:4:move',battleGeneration:2,route:'/v100',
-  owner:'ordinary',kind:'medic',side:'human',renderKind:'medic',v100TwinPart:null,
+  owner:plan.owner,kind:plan.binding.kind,side:'human',renderKind:form,v100TwinPart:null,
   legacyFusedFixture:false,phase:'move',fighterId:4,targetId:5,originalActorStats:stats,ownerEvidence:{constructorFixture:true}};
  const log=[],raf=new Map(),scheduled=[];let now=1000,rawOrigin=origin,paused=true,simulation=0,seq=1,reads=0,nextRaf=0,streamStops=0;
  function advanceClock(ms){
@@ -44,8 +45,9 @@ function fixture({origin=1000000,startEvent=true,stopEvent=true,chunks=['pure-no
   rawOrigin++;
  }
  const sentinel=Error('Original sample transport failure'),cleanupSentinel=Error('Owner disposal failure');
- const fighter=()=>({...stats,id:4,kind:'medic',side:'human',renderKind:'medic',v100TwinPart:null,x:330+simulation*38,attackSequence:0});
- const paints=()=>[{renderSequence:seq,renderKind:'medic',assetReady:true,renderWidth:60,renderHeight:90,
+ const fighter=()=>({...stats,id:4,kind:proof.kind,side:'human',renderKind:form,v100TwinPart:null,x:330+simulation*38,attackSequence:0,
+  ...(plan.owner==='mayo-activation'?{manualAbilityPhase:'feral'}:{})});
+ const paints=()=>[{renderSequence:seq,renderKind:form,assetReady:true,renderWidth:60,renderHeight:90,
   x:330+simulation*38,y:220,poseScaleX:1,poseScaleY:1,requestedState:'move',actualXDelta:simulation?4.56:0,
   jointAtlasPath:row.binding.atlas.path,jointLowerFrame:seq%30,jointUpperFrame:0,
   jointDrawSucceeded:true,jointPaintedAt:simulation,renderedWeaponSocket:{x:350,y:200}}];
@@ -79,7 +81,7 @@ function fixture({origin=1000000,startEvent=true,stopEvent=true,chunks=['pure-no
   });}
  }
  const globals={window,document,performance,location:{pathname:'/v100'},crypto:{randomUUID},
-  innerWidth:844,innerHeight:390,devicePixelRatio:1,MediaRecorder:Recorder,
+  innerWidth:844,innerHeight:390,devicePixelRatio:1,MediaRecorder:Recorder,structuredClone,
   Blob,Uint8Array,btoa,setTimeout(fn,ms,...args){
    if(fn.name!=='readNativeSampleOnSchedule')return setTimeout(fn,ms,...args);
    const timer={fn,ms};scheduled.push(timer);
@@ -114,7 +116,15 @@ function fixture({origin=1000000,startEvent=true,stopEvent=true,chunks=['pure-no
   const evaluate=h.evaluate.bind(h);h.evaluate=async(fn,arg)=>{
    if(fn.name==='readNativeAllUnitSample'&&++reads===failAtSample)throw sentinel;
    const result=await evaluate(fn,arg);
-   if(fn.name==='readNativeAllUnitSample'&&arg?.sampleAt!==undefined&&sampleTransportMs)advanceClock(sampleTransportMs);
+   if(result?.schema==='v177-native-shard-postpaint/v1'&&result.readTiming?.sampleAt!==null&&sampleTransportMs){
+    log.push('sample-export');advanceClock(sampleTransportMs);
+   }
+   return result;
+  };
+  const evaluateHandle=h.evaluateHandle.bind(h);h.evaluateHandle=async(fn,arg)=>{
+   if(fn.name==='readNativeAllUnitSample'&&++reads===failAtSample)throw sentinel;
+   const result=await evaluateHandle(fn,arg);
+   if(fn.name==='readNativeAllUnitSample'&&arg?.sampleAt!==undefined&&sampleHandleTransportMs)advanceClock(sampleHandleTransportMs);
    return result;
   };
   return h;
@@ -357,20 +367,22 @@ test('candidate browser callbacks contain no eval or Function construction, and 
 });
 
 
-function actualCaptureWithExternalControls(){
+function actualCaptureWithExternalControls({preparedFixture,assertMayo}={}){
  const calls=[],performanceRows=[];
  const external=label=>(()=>{calls.push(label);return{scope:'pure Node external-subcontract fixture; no native/acceptance'};});
  const env={assert,path,performance,LIMITS,assertPlannedCase,assertShardProof,hasPreparedAllUnitPaint:()=>true,
   createNativeAllUnitRealmOwner,readNativeAllUnitRealmOwner,startNativeGameRafObservation,stopNativeGameRafObservation,
   beginV177NativeCanvasClip,readNativeAllUnitSample,releasePreparedShardClock,postpaintCaptureBoundary,
-  assertShardPostpaintContract,assertAllUnitClip,
+  assertShardPostpaintContract,assertAllUnitClip,MANUAL_ABILITY_REGISTRY,
+  ...(preparedFixture?{prepareCase:async()=>clone(preparedFixture)}:{}),
+  assertMayoFeralReceipt:assertMayo,
   readFile:async file=>fs.readFileSync(file),
   assertV177AuthoredLiveRender:external('motion-damage-existing'),
   nativeGameDamageReceipt:external('normal-damage-existing'),
   nativeGamePerformanceReceipt:row=>{performanceRows.push(row);return external('performance-existing')();},
  };
  const source=proposed('v177-native-allunit-cases');
- const run=vm.runInNewContext(declaration(source,'prepareCase')+'\n'+declaration(source,'captureAllUnitCase')+'\ncaptureAllUnitCase',env);
+ const run=vm.runInNewContext((preparedFixture?'':declaration(source,'prepareCase'))+'\n'+declaration(source,'captureAllUnitCase')+'\ncaptureAllUnitCase',env);
  return{run,externalCalls:calls,performanceRows};
 }
 test('actual capture body creates owner after prepare, routes every sample/release through it and disposes last',async()=>{
@@ -396,8 +408,8 @@ test('actual capture body creates owner after prepare, routes every sample/relea
  assert.equal(f.row.postpaintReceipt.naturalnessAccepted,false);assert.equal(f.row.nativeClip.originalSpeedAccepted,false);
 });
 
-test('actual capture keeps the original source cadence when each sample response adds transport time',async()=>{
- const f=fixture({sampleTransportMs:85}),{run}=actualCaptureWithExternalControls();
+test('actual capture transfers large immutable samples only after recording, retaining the original source cadence',async()=>{
+ const f=fixture({sampleTransportMs:800}),{run}=actualCaptureWithExternalControls();
  await run(f.page,f.row,{out:path.join(fixtureDirectory,randomUUID())});
  assert.equal(f.row.status,'observed-diagnostic');assert.equal(f.row.samples.length,LIMITS.moveAttackSamples);
  for(let i=0;i<f.row.samples.length;i++){
@@ -414,18 +426,51 @@ test('actual capture keeps the original source cadence when each sample response
  }
  assert.ok(f.row.samples.at(-1).at-f.row.captureStart.at<1801);
  assert.ok(f.row.captureEnd.at-f.row.captureStart.at<1900);
+ assert.equal(f.log.filter(s=>s==='sample-export').length,15);
+ assert.ok(f.log.indexOf('track-stop')<f.log.indexOf('sample-export'));
+ assert.ok(f.now>f.row.captureEnd.at+11999,'Large transport still happens after the unchanged capture boundary');
  assert.equal(f.log.includes('host-wait'),false);assert.equal(f.row.postpaintReceipt.distinctNewPaints,15);
  assert.equal(f.row.postpaintReceipt.naturalnessAccepted,false);
 });
 
-test('actual capture retains a late response time instead of fabricating the missed source schedule',async()=>{
- const f=fixture({sampleTransportMs:180}),{run}=actualCaptureWithExternalControls();
+test('actual capture retains a late handle response time instead of fabricating the missed source schedule',async()=>{
+ const f=fixture({sampleHandleTransportMs:180}),{run}=actualCaptureWithExternalControls();
  await run(f.page,f.row,{out:path.join(fixtureDirectory,randomUUID())});
  const last=f.row.samples.at(-1),planned=f.row.captureStart.at+LIMITS.moveAttackSamples*LIMITS.sampleDelayMs;
  assert.ok(last.at>planned+700);assert.equal(f.row.samples.length,LIMITS.moveAttackSamples);
  assert.ok(last.readTiming.scheduleLatenessMs>700,'Missed source schedule is reported without retiming it');
  assert.ok(f.row.samples.every(s=>s.at<=f.row.captureEnd.at));
  assert.equal(f.row.postpaintReceipt.naturalnessAccepted,false);
+});
+
+test('deferred sample data remains an immutable snapshot of nested geometry at its actual original read',async()=>{
+ const f=fixture(),owner=await f.page.evaluateHandle(createNativeAllUnitRealmOwner),audit=f.qa.getEnemyFacingRuntimeAudit;
+ const nested={weapon:{x:17,y:23},points:[{x:3,y:5}]};
+ f.qa.getEnemyFacingRuntimeAudit=id=>{const result=audit(id);for(const paint of result.renderHistory??[])paint.jointWeaponCycle=nested;return result;};
+ const stored=await owner.evaluateHandle(readNativeAllUnitSample,{...f.proof,immutableSnapshot:true});
+ nested.weapon.x=999;nested.points[0].y=-999;
+ const read=await stored.evaluate(value=>value);assert.deepEqual(read.renders[0].jointWeaponCycle,{weapon:{x:17,y:23},points:[{x:3,y:5}]});
+ await stored.dispose();await owner.dispose();
+});
+
+test('Mayo orchestration fixes its full owner proof before slow post-recording transfer can expire the active window',async()=>{
+ // Preparation, manual lifecycle and damage are separate subcontracts. This
+ // pure fixture isolates the actual capture body's full-proof read ordering.
+ const f=fixture({form:'mayo-chan-feral',sampleTransportMs:800});f.proof.proofGeneration=1;
+ f.qa.releaseV177NativeMayoProof=()=>f.qa.setEnemyVfxProofPaused(false);
+ f.qa.getV177NativeMayoProof=(_id,light)=>{
+  if(light)return{proofId:f.proof.proofId,proofGeneration:1,simulationTick:1,manualAbility:{phase:'feral',activeRemaining:6.2-f.simulation}};
+  f.log.push('mayo-full-proof');return{...clone(f.proof),ledger:[{phase:f.simulation<6.2?'feral':'expired',at:f.simulation}]};
+ };
+ let fixed;
+ const {run}=actualCaptureWithExternalControls({preparedFixture:f.proof,assertMayo:(row,definition)=>{
+  assert.equal(definition.activeSeconds,6.2);assert.equal(row.proof.ledger[0].phase,'feral');fixed=row.proof.ledger[0].at;
+  assert.ok(f.simulation>6.2,'The later transport really crosses the active deadline');return{scope:'Orchestration only; no manual-owner acceptance'};
+ }});
+ await run(f.page,f.row,{out:path.join(fixtureDirectory,randomUUID())});
+ assert.equal(f.row.status,'observed-diagnostic');assert.ok(fixed<6.2);
+ assert.ok(f.log.indexOf('mayo-full-proof')<f.log.indexOf('sample-export'));
+ assert.equal(f.row.samples.length,15);assert.equal(f.row.nativeClip.originalSpeedAccepted,false);
 });
 
 test('expiry while a source timer is pending cannot append that late sample or pass capture gates',async()=>{
