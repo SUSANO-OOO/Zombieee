@@ -422,6 +422,7 @@ import {
   TAKUYA_ENTRANCE_AUDIO,
   battleSceneTransitionCrossfadeMs,
   enemyVoiceCue,
+  enemyCombatCueFor,
   humanVoiceCueForUnit,
   sceneIdForScreen,
   stopBattleAudioLoops,

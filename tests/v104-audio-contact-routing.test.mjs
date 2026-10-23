@@ -14,6 +14,8 @@ const one=predicate=>{const found=nodes.filter(predicate);assert.equal(found.len
 const run=(node,bindings)=>vm.runInNewContext(ts.transpile(node.getText(tree),{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}),bindings);
 const isCue=(node,name)=>ts.isCallExpression(node)&&node.expression.getText(tree)===name;
 const globals={enemyVoiceCue,enemyCombatCueFor,unitAudioCueFor,weaponCueForUnit,v104ContactIsHard};
+const imported=new Set(nodes.filter(ts.isImportSpecifier).map(n=>n.name.text));
+for(const name of Object.keys(globals))assert.ok(imported.has(name),`The actual game must import ${name}; a VM binding cannot repair a missing production binding`);
 
 test('the actual committed normal-attack selector matches the crossbow and eye pulse without changing projectile cadence',()=>{
  const fn=one(n=>ts.isFunctionDeclaration(n)&&n.name?.text==='normalAttackProductionCueId');
