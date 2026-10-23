@@ -195,7 +195,36 @@ test('growing Ranger surfaces releases the alternate backing canvas and a missin
   assert.throws(()=>paintV177RangerLower(broken,target(),.762,.5,-48,-80,96,89.6),/context unavailable/);
   assert.equal(rejected.width,0);assert.equal(rejected.height,0);
   assert.ok(broken.rasters.every(raster=>!raster.valid));
-  assert.ok(observation.surfaces.length<=2);
+  assert.ok(observation.surfaces.filter(canvas=>canvas.width*canvas.height>0).length<=2);
+});
+
+test('Ranger keeps source readback separate from retained paint surfaces',()=>{
+  const observations=[];
+  const create=()=>{const canvas=surface(),context=canvas.getContext(),row={canvas,attributes:null,reads:0};
+    const read=context.getImageData;context.getImageData=(...args)=>{row.reads++;return read(...args);};
+    context.getContextAttributes=()=>({...row.attributes});
+    canvas.getContext=(_kind,attributes)=>{row.attributes={...attributes};return context;};observations.push(row);return canvas;};
+  const painter=createV177RangerLowerPainter(image(),rig,create);
+  assert.equal(observations[0].attributes.willReadFrequently,true);assert.equal(observations[0].reads,rig.parts.length);
+  assert.equal(observations[0].canvas.width,0);assert.equal(observations[0].canvas.height,0);
+  const paint=phase=>paintV177RangerLower(painter,main({matrix:[1,0,0,1,640,360]}).ctx,phase,.5,-48,-80,96,89.6);
+  paint(.371);paint(.762);paint(.371);assert.equal(painter.rasters.length,2);
+  for(const row of observations.slice(1)){assert.equal(row.attributes.willReadFrequently,false);assert.equal(row.reads,0);}
+  for(const raster of painter.rasters)assert.equal(raster.attributes.willReadFrequently,false);
+  assert.ok(painter.rasters.reduce((sum,raster)=>sum+raster.canvas.width*raster.canvas.height,0)<=65536);
+});
+
+test('failed source or paint context acquisition releases every transient canvas',()=>{
+  for(const failure of ['source-context','source-read','paint-context','paint-throw']){
+    const canvases=[];
+    const create=()=>{const canvas=surface(),context=canvas.getContext(),i=canvases.length;canvas.width=300;canvas.height=150;canvases.push(canvas);
+      if(i===0&&failure==='source-read')context.getImageData=()=>{throw Error('source read failed');};
+      canvas.getContext=()=>{if((i===0&&failure==='source-context')||(i===1&&failure==='paint-context'))return null;
+        if(i===1&&failure==='paint-throw')throw Error('paint context failed');return context;};return canvas;};
+    const construct=()=>createV177RangerLowerPainter(image(),rig,create);
+    if(failure.endsWith('context'))assert.equal(construct(),null);else assert.throws(construct,/failed/);
+    assert.ok(canvases.every(canvas=>canvas.width===0&&canvas.height===0),failure);
+  }
 });
 
 test('failed growth while the alternate surface is active still permits an old-size repaint',()=>{

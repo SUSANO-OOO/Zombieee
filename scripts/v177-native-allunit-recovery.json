@@ -2,7 +2,7 @@
   "schema": "v177-native-allunit-recovery/v2",
   "head": "369e9a15710066795abb3e525878f3971182c9c4",
   "runId": "39723729633",
-  "scope": "Preserve579 original strict encoded/CI-decode closures and all failure history. New Ranger two-surface upload ownership reopens only15 normal/manual/outcome observations; keep564 unrelated owners. Original4coverage/192triangles/IK and combined65536pixel surface/RGBA bounds,120ms samples,250ms/strictPTS-DTS/30s/15min/8MiB and unknown-source/full fallback remain. New fullCI/formal33ms/PhaseG original500ms/public QA remain mandatory. No fresh whole-product/human/physical acceptance inferred.",
+  "scope": "Preserve579 original strict encoded/CI-decode closures and all failures;564 unrelated observations retained,15 Ranger observations pending after readback/paint canvas separation. Original4coverage/192triangles/IK,65536pixels,120ms samples,250ms/strictPTS-DTS/30s/15min/8MiB and unknown-source/full fallback remain. Draft targeted checks precede stable Ready final fullCI/formal33ms/fullPhaseG500ms/public QA. No whole-product/human/physical acceptance inferred.",
   "caseIds": [
     "forms-1:ranger:move:1280x720",
     "forms-1:ranger:move:844x390",
@@ -42,7 +42,7 @@
     "app/v177IncomingStunProof.js": "aed0d2d7196cc3e41087fd4bc75cba60cf75b471",
     "app/v177JointPresentation.js": "710b1ce6e3fe40ecf1e324321e5b9b9dd012934c",
     "app/v177MouthCavity.js": "dd0d9d4b337177d342c5046ad53f5323ff542a95",
-    "app/v177RangerLowerPaint.js": "adbde3e7f9c1300b84d471be12e4c379e1b4271e",
+    "app/v177RangerLowerPaint.js": "a68e22c9ccb6df12dc915d7059fb336ae8950f0c",
     "app/v177WeaponChoreography.js": "1cd6c0b1e0a8ae9e686a71e2e351487490b48f47",
     "assets/source/v104/combat-audio/crossbow-string.wav": "4a3539c3cc6acb4002d0967baf358d600c4ac819",
     "assets/source/v104/combat-audio/provenance.json": "951a37511b71e70b2d24e15ae1045132a83de2f9",
@@ -71,8 +71,8 @@
     "assets/source/v104/combat-audio/voice-red-panther-smg-hurt.json": "beb2e7cb51ba9beabd0e313174c186770691113d",
     "assets/source/v104/combat-audio/voice-red-panther-smg-hurt.wav": "268f62d43047d0020a4758aa7cd531619bb38345",
     "assets/source/v104/combat-audio/voices.json": "7c2139ef3f244eb0f9bf4eade9311784462e0ce9",
-    "assets/source/v177/ranger/lower-r3/provenance.json": "78341b8f114e8f5d61458e6860cf826582dc79dc",
-    "docs/PROJECT_STATE.md": "52587a576f122cbe016a9049f5e1245e83d6896d",
+    "assets/source/v177/ranger/lower-r3/provenance.json": "2b2c5e9d4847c0b8094f1c11656cdc55ca095457",
+    "docs/PROJECT_STATE.md": "61ee044b60a45e3c0b04418f08efdf91ebbd13fa",
     "docs/THIRD_PARTY_ASSETS.md": "363a3e0bdce12f376fe5126574a0e803258a41ee",
     "public/asset-manifest.json": "270ccec1db63083a0eb46275bf85885a68bdcd07",
     "public/audio/v104/combat/armor-hit.mp3": "1a47fb9f98f893faadc69ab0373e9aded0023ab1",
@@ -115,7 +115,7 @@
     "public/pwa-bundles/audio-v1.json": "e12f91970bac4c616d7b5d4bec6b27884751e3c1",
     "scripts/build-v104-combat-audio.mjs": "1a5acea833b19a260e07064b5091fa274a83cdeb",
     "scripts/build-v104-combat-voices.py": "e665baeba6da9c4cd883a1d3f298d9d93e3c0f6c",
-    "scripts/ci-change-scope.mjs": "9d3a00edbe19be61da2818d8db7b220e00625a32",
+    "scripts/ci-change-scope.mjs": "051ab06368bd892f3df63d1e7851289794d69a85",
     "scripts/p5-browser-smoke.mjs": "08108189684252ad081c403021806997e59f4ac6",
     "scripts/v100-device-runtime-browser.mjs": "16defd3c54ce1b41987e606fe182ded2eba18226",
     "scripts/v100-normal-campaign-playthrough.mjs": "916de5ec87aaeb70ed3daa6a35b271432bf80ae9",
@@ -205,14 +205,14 @@
     "tests/v177-president-attack-continuity.test.mjs": "c4931dc81a3e3696b07531fa3a1a68931efbbd47",
     "tests/v177-president-joints.test.mjs": "2dd6d8cf01e3878c5d0eed1742f6d6b1afb223ce",
     "tests/v177-president-spatial.test.mjs": "9c65863082873053e39f473fa9582c90479cd4cf",
-    "tests/v177-ranger-continuous-lower.test.mjs": "2acf59b176c6cefbdd37c94748e0d8827e9b7391",
+    "tests/v177-ranger-continuous-lower.test.mjs": "0783f9615838d2cec1aab0f13af868de1a3007cc",
     "tests/v177-ranger-performance-receipts.test.mjs": "baec51618311172ad142830a79c5409229c6f698",
     "tests/v177-ranger-performance-start.test.mjs": "e8c9995d46ef2b93dce2a900df212291490d470d",
     "tests/v177-representative-airstrike-projection.test.mjs": "a56b57544f0a9c045db709a8d6627f2568e27f48",
     "tests/v177-runner-joints.test.mjs": "db73c766dead27cb8dc4505a96e9d113f9befde1",
     "tests/v177-takuya-joints.test.mjs": "69ae60bed3e79d3f5a8287a6f1865288c93e539c",
     "tests/v177-walker-floor.test.mjs": "a02726c4ad3cf14099877f59dd1df5279e11e7e4",
-    "tests/ci-change-scope.test.mjs": "a061c7085a2db60937dc723ad18bc2ec7947738b",
+    "tests/ci-change-scope.test.mjs": "bdc0317ac9b7b6058b75f6bd06f62038c67e02a0",
     "scripts/native-recording-runtime/.gitignore": "2ccbe4656c6078ded72491cf2ee9c5ec20219624",
     "scripts/native-recording-runtime/package.json": "71dee9170d1967a29bebd52601c9a181c6cf47e2",
     "scripts/native-recording-runtime/package-lock.json": "d93af5630b37ad9caf2acf77f1c8939651004488",
@@ -3732,9 +3732,9 @@
     "audioAccepted": false
   },
   "sourceScopedRevalidation": {
-    "candidateBaseHead": "0d4bf897a2839c147be1767b829cfb2a30181348",
+    "candidateBaseHead": "3c8e2f65a31b59f849ea9fb9c6b84f43e9c3828d",
     "candidateProductSourceBlobs": {
-      "app/v177RangerLowerPaint.js": "adbde3e7f9c1300b84d471be12e4c379e1b4271e"
+      "app/v177RangerLowerPaint.js": "a68e22c9ccb6df12dc915d7059fb336ae8950f0c"
     },
     "sourceEncodedVerified": 579,
     "sourceEncodedPending": 0,
@@ -3760,7 +3760,7 @@
       "forms-1:ranger:controlled-outcome:844x390",
       "forms-1:ranger:controlled-outcome:844x340"
     ],
-    "reopenReason": "Exact geometry cache owns two bounded uploaded canvases instead of repeatedly uploading to one. Only Ranger consumes lowerRig. Recheck the same15 Ranger observations; preserve564 unrelated source owners. Original33ms/30s and native clocks/input deadlines unchanged.",
+    "reopenReason": "Separate the one-time source crop readback canvas from two retained paint canvases. Original source/RGBA/coverage/IK/geometry and bounds remain. Keep the same15 Ranger observations pending, retain564 unrelated owners; original clocks, deadlines,33ms and final full integration remain mandatory.",
     "previousRPReopenedHistory": {
       "caseIds": [
         "forms-10:red-panther-knife:attack:1280x720",
@@ -4769,6 +4769,131 @@
         "productSourcesChanged": false,
         "thresholdsOrDeadlinesChanged": false
       }
+    },
+    {
+      "candidateBaseHead": "0d4bf897a2839c147be1767b829cfb2a30181348",
+      "candidateProductSourceBlobs": {
+        "app/v177RangerLowerPaint.js": "adbde3e7f9c1300b84d471be12e4c379e1b4271e"
+      },
+      "sourceEncodedVerified": 579,
+      "sourceEncodedPending": 0,
+      "retained": 564,
+      "pending": 15,
+      "normalPending": 9,
+      "manualPending": 3,
+      "outcomePending": 3,
+      "reopenedCaseIds": [
+        "forms-1:ranger:move:1280x720",
+        "forms-1:ranger:move:844x390",
+        "forms-1:ranger:move:844x340",
+        "forms-1:ranger:attack:1280x720",
+        "forms-1:ranger:attack:844x390",
+        "forms-1:ranger:attack:844x340",
+        "forms-1:ranger:engage:1280x720",
+        "forms-1:ranger:engage:844x390",
+        "forms-1:ranger:engage:844x340",
+        "forms-1:ranger:ranger-manual-precision:1280x720",
+        "forms-1:ranger:ranger-manual-precision:844x390",
+        "forms-1:ranger:ranger-manual-precision:844x340",
+        "forms-1:ranger:controlled-outcome:1280x720",
+        "forms-1:ranger:controlled-outcome:844x390",
+        "forms-1:ranger:controlled-outcome:844x340"
+      ],
+      "reopenReason": "Exact geometry cache owns two bounded uploaded canvases instead of repeatedly uploading to one. Only Ranger consumes lowerRig. Recheck the same15 Ranger observations; preserve564 unrelated source owners. Original33ms/30s and native clocks/input deadlines unchanged.",
+      "previousRPReopenedHistory": {
+        "caseIds": [
+          "forms-10:red-panther-knife:attack:1280x720",
+          "forms-10:red-panther-knife:engage:844x340",
+          "forms-11:red-panther-shield:attack:1280x720",
+          "forms-11:red-panther-shield:engage:1280x720",
+          "forms-11:red-panther-smg:attack:844x340",
+          "forms-11:red-panther-smg:engage:1280x720",
+          "forms-11:red-panther-smg:engage:844x340",
+          "forms-10:red-panther-knife:controlled-outcome:1280x720",
+          "forms-10:red-panther-knife:controlled-outcome:844x390",
+          "forms-10:red-panther-knife:controlled-outcome:844x340",
+          "forms-11:red-panther-shield:controlled-outcome:1280x720",
+          "forms-11:red-panther-shield:controlled-outcome:844x390",
+          "forms-11:red-panther-shield:controlled-outcome:844x340",
+          "forms-11:red-panther-smg:controlled-outcome:1280x720",
+          "forms-11:red-panther-smg:controlled-outcome:844x390",
+          "forms-11:red-panther-smg:controlled-outcome:844x340",
+          "forms-11:red-panther-commander:controlled-outcome:844x390",
+          "forms-11:red-panther-commander:controlled-outcome:844x340",
+          "forms-10:red-panther-knife:attack:844x390",
+          "forms-10:red-panther-knife:engage:844x390",
+          "forms-11:red-panther-commander:attack:1280x720",
+          "forms-11:red-panther-commander:engage:1280x720",
+          "forms-11:red-panther-shield:attack:844x390",
+          "forms-11:red-panther-smg:engage:844x390",
+          "forms-11:red-panther-commander:engage:844x390",
+          "forms-11:red-panther-commander:attack:844x340",
+          "forms-11:red-panther-commander:controlled-outcome:1280x720"
+        ],
+        "nowPassed": [
+          "forms-10:red-panther-knife:attack:1280x720",
+          "forms-10:red-panther-knife:attack:844x390",
+          "forms-10:red-panther-knife:engage:844x390",
+          "forms-10:red-panther-knife:engage:844x340",
+          "forms-11:red-panther-shield:attack:1280x720",
+          "forms-11:red-panther-shield:engage:1280x720",
+          "forms-11:red-panther-smg:engage:1280x720",
+          "forms-11:red-panther-commander:attack:1280x720",
+          "forms-11:red-panther-commander:engage:1280x720",
+          "forms-10:red-panther-knife:controlled-outcome:1280x720",
+          "forms-10:red-panther-knife:controlled-outcome:844x390",
+          "forms-10:red-panther-knife:controlled-outcome:844x340",
+          "forms-11:red-panther-shield:controlled-outcome:1280x720",
+          "forms-11:red-panther-shield:controlled-outcome:844x390",
+          "forms-11:red-panther-smg:controlled-outcome:1280x720",
+          "forms-11:red-panther-smg:controlled-outcome:844x390",
+          "forms-11:red-panther-commander:controlled-outcome:1280x720",
+          "forms-11:red-panther-shield:attack:844x390",
+          "forms-11:red-panther-smg:attack:844x340",
+          "forms-11:red-panther-smg:engage:844x390",
+          "forms-11:red-panther-smg:engage:844x340",
+          "forms-11:red-panther-commander:attack:844x340",
+          "forms-11:red-panther-commander:engage:844x390",
+          "forms-11:red-panther-shield:controlled-outcome:844x340",
+          "forms-11:red-panther-smg:controlled-outcome:844x340",
+          "forms-11:red-panther-commander:controlled-outcome:844x390",
+          "forms-11:red-panther-commander:controlled-outcome:844x340"
+        ],
+        "stillPending": []
+      },
+      "retainedMediaRerecorded": false,
+      "retainedMediaRedecoded": false,
+      "candidateFreshNativeRunAccepted": false,
+      "fullNaturalnessAccepted": false,
+      "wholeGameAccepted": false,
+      "futureRecordingRuntime": {
+        "packageVersion": "1.65.0-alpha-2026-10-23",
+        "revision": "2380",
+        "browserVersion": "27.2"
+      },
+      "qaOnlyPortraitRepair": {
+        "review": {
+          "file": "outputs/motion-review/remediation-r4/ci-0d4bf-card-portrait-failure-r1/patch-review-r1/review.json",
+          "sha256": "d7c2aff38397c3ff9720ac1f6d9010e782dc9408a7e31eb8d165bd6cc385f256"
+        },
+        "portraitInputOptIn": true,
+        "allOtherCallersSkipVisibleCardScroll": false,
+        "nativeConsumers": "Mayo and Ranger manual-ability buttons only; unitCard=false, original branch unchanged",
+        "sourceCompatibility": "skipVisibleCardScroll defaultsfalse. Only portrait deployCard suppliestrue. Native579 and formal0d performance remain original source-owned evidence, not fresh runs.",
+        "productSourcesChanged": false,
+        "thresholdsOrDeadlinesChanged": false
+      },
+      "immutableCiProofRepair": {
+        "review": {
+          "file": "outputs/motion-review/remediation-r4/ci-phaseg-repair-reuse-review-r1/immutable-provenance-r3/review.json",
+          "sha256": "98f699058876462a8ad469a52effb9e96c07168a180ca130cb10fa5494cd2a46"
+        },
+        "executionHeadAndBaseRequireOriginalDigestVerifiedArtifact": true,
+        "priorWholeCiAndFullPhaseGSuccessStillRequiredForNativeQa": true,
+        "newCiModuleHasNoNativeConsumer": true,
+        "productSourcesChanged": false,
+        "thresholdsOrDeadlinesChanged": false
+      }
     }
   ],
   "additionalEncodedRecoveryEvidence": {
@@ -5374,5 +5499,34 @@
     "coverageSamples": 4,
     "meshTriangles": 192,
     "scope": "Exact inert pixels/receipts; no formalMac33ms, full naturalness, listening, whole-game or physical acceptance inferred. Prior one-surface source closures remain historical."
+  },
+  "rangerReadbackSurfaceSeparation": {
+    "oldHead": "3c8e2f65a31b59f849ea9fb9c6b84f43e9c3828d",
+    "oldBlob": "adbde3e7f9c1300b84d471be12e4c379e1b4271e",
+    "newBlob": "a68e22c9ccb6df12dc915d7059fb336ae8950f0c",
+    "sourceCropReads": 5,
+    "temporarySourceReadbackHint": true,
+    "sourceCanvasReleased": true,
+    "retainedPaintReadbackHint": false,
+    "retainedPaintReadbacks": 0,
+    "maxRetainedSurfaces": 2,
+    "combinedBackingPixels": 65536,
+    "transparentControls": {
+      "file": "outputs/motion-review/remediation-r4/ranger-readback-transparent-r1/receipt.json",
+      "sha256": "039698d1b6b81d75e1976f3718d07cc580e3cd00c77313533d108c9db06c13a9",
+      "cases": 6,
+      "generatedRgbaMismatch": 0,
+      "alphaMismatch": 0,
+      "supportMismatch": 0
+    },
+    "strictFinalRgbDiagnostic": {
+      "file": "outputs/motion-review/remediation-r4/ranger-readback-split-r1/edge-pixel-raw-r1.json",
+      "sha256": "ca424ee966a92eb19966c0157b86976224214f8bef1473ea7953728f61037b93",
+      "cases": 66,
+      "passed": false,
+      "maxChannelDelta": 2,
+      "reason": "Different Canvas backend rounding; original zero-difference diagnostic remains failed, without a replacement tolerance."
+    },
+    "scope": "Source and generated RGBA strict equivalence is preserved; six transparent controls retain identical alpha/support. No formal Mac speed, human naturalness/listening, whole-game or physical acceptance inferred."
   }
 }

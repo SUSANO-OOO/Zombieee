@@ -16,6 +16,19 @@ test('a ready candidate always gets full regression, including governance-only c
  }
 });
 
+test('the reviewed Ranger readback split targets affected draft lanes while Ready and unknown sources stay full',()=>{
+ const file='app/v177RangerLowerPaint.js',blob=execFileSync('git',['hash-object',file],{encoding:'utf8',windowsHide:true}).trim();
+ const paths=[file,'assets/source/v177/ranger/lower-r3/provenance.json','scripts/v177-native-allunit-recovery.json',
+  'scripts/ci-change-scope.mjs','tests/ci-change-scope.test.mjs','tests/v177-ranger-continuous-lower.test.mjs','docs/PROJECT_STATE.md'];
+ const options={draft:true,sourceBlobs:{[file]:blob}},scope=ciChangeScope(paths,options);
+ assert.equal(scope.full,false);assert.equal(scope.ranger,true);assert.equal(scope.normal,true);assert.equal(scope.allunit,true);assert.equal(scope.r9,false);
+ assert.equal(scope.finalIntegrationRequiresFullRegression,true);assert.equal(scope.wholeGameAccepted,false);
+ assert.equal(ciChangeScope(paths,{...options,draft:false}).full,true);
+ for(const sourceBlobs of [{},{[file]:'f'.repeat(40)}])assert.equal(ciChangeScope(paths,{draft:true,sourceBlobs}).full,true);
+ for(const unknown of ['app/v100Save.js','public/future-asset.webp','unknown'])assert.equal(ciChangeScope([...paths,unknown],options).full,true);
+ assert.equal(framePerformanceRuntimes(paths).find(r=>r.runtime==='formal').runtime,'formal');
+});
+
 test('native-only synchronize updates retain product lanes without waiving their unfinished gates',()=>{
  const paths=['scripts/v177-native-canvas-clips.mjs','scripts/v177-native-allunit-recovery.json',
   'tests/v177-native-realm-owner.test.mjs','docs/PROJECT_STATE.md'];

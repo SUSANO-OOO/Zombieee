@@ -84,6 +84,7 @@ export function framePerformanceRuntimes(paths,{workflowBlob}={}){
   return[formal,native];
 }
 const reviewedMotionBlobs=Object.freeze({
+  'app/v177RangerLowerPaint.js':'a68e22c9ccb6df12dc915d7059fb336ae8950f0c',
   'app/combatPresentation.js':'327c7a1dd55707c16385d01d28030a37dc4b27c7',
   'app/AshfallGame.tsx':'95df06a678e2be79ec076059df910dc95c33298c',
   'app/v177HitReaction.js':'6e7dc3705b3fa8ee8095c675b4046571a085e5af',
@@ -149,7 +150,7 @@ export function ciChangeScope(paths,{draft,sourceBlobs={},reuseNativeQa=false}={
     else if(reviewedValidationBlobs[file]&&sourceBlobs[file]===reviewedValidationBlobs[file])continue;
     else if(reviewedMotionBlobs[file]&&sourceBlobs[file]===reviewedMotionBlobs[file]){
       normalChanged=true;allunitChanged=true;
-      if(file==='app/v177JointPresentation.js')rangerChanged=true;
+      if(file==='app/v177JointPresentation.js'||file==='app/v177RangerLowerPaint.js')rangerChanged=true;
     }
     else full=true; // Unclassified changes retain the complete regression.
   }

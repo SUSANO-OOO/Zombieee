@@ -6,30 +6,45 @@ export const getV177RangerLowerPaintSnapshot=()=>({...paintCounts});
 const samples=[[.25,.25],[.75,.25],[.25,.75],[.75,.75]];
 const topLeft=(ax,ay,bx,by)=>by<ay||(by===ay&&bx>ax);
 const owned=(v,edge)=>v>1e-10||(Math.abs(v)<=1e-10&&edge);
-const createRaster=(parts,canvas,context)=>({valid:false,width:0,height:0,duplicateWithinPart:0,degenerate:0,imageData:null,canvas,context,
+const createRaster=(parts,canvas,context,attributes)=>({valid:false,width:0,height:0,duplicateWithinPart:0,degenerate:0,imageData:null,canvas,context,attributes,
   parts:parts.map(part=>({part,target:new Float64Array(part.target.length)}))});
 const invalidateRasters=p=>{for(const raster of p.rasters)raster.valid=false;};
+function createPaintSurface(createCanvas,width=0,height=0){
+  const canvas=createCanvas();if(!canvas?.getContext)return null;
+  canvas.width=width;canvas.height=height;
+  try{
+    const context=canvas.getContext('2d',{willReadFrequently:false});
+    if(!context){canvas.width=0;canvas.height=0;return null;}
+    return {canvas,context,attributes:context.getContextAttributes?.()??null};
+  }catch(error){canvas.width=0;canvas.height=0;throw error;}
+}
 
 // One source read per original crop. At most two bounded surfaces retain the
 // exact raster payloads, so selecting a cached owner needs no pixel upload.
 // Image ownership releases all buffers when the installed sprite is released.
 export function createV177RangerLowerPainter(image,rig,createCanvas=()=>image.ownerDocument?.createElement('canvas')??globalThis.document?.createElement('canvas')) {
-  const canvas=createCanvas();if(!canvas?.getContext)return null;
-  const context=canvas.getContext('2d',{willReadFrequently:true});if(!context)return null;
-  const parts=rig.parts.map(part=>{
-    const s=part.source,d=part.destination;canvas.width=s.w;canvas.height=s.h;
-    context.clearRect(0,0,s.w,s.h);context.drawImage(image,s.x,s.y,s.w,s.h,0,0,s.w,s.h);
-    const data=context.getImageData(0,0,s.w,s.h).data,leg=rig.legs.find(l=>l.name===part.name);
+  const sourceCanvas=createCanvas();if(!sourceCanvas?.getContext)return null;
+  const source=sourceCanvas.getContext('2d',{willReadFrequently:true});
+  if(!source){sourceCanvas.width=0;sourceCanvas.height=0;return null;}
+  // The original crops need readback once. Retained paint surfaces never read
+  // pixels back and must not inherit the readback hint from that source work.
+  let parts;
+  try{parts=rig.parts.map(part=>{
+    const s=part.source,d=part.destination;sourceCanvas.width=s.w;sourceCanvas.height=s.h;
+    source.clearRect(0,0,s.w,s.h);source.drawImage(image,s.x,s.y,s.w,s.h,0,0,s.w,s.h);
+    const data=source.getImageData(0,0,s.w,s.h).data,leg=rig.legs.find(l=>l.name===part.name);
     // Cache the exact binary64 divisions once. Keep the original per-sample
     // alpha*weight, channel*amount and Float32 compositing order unchanged.
     const normalized=Float64Array.from(data,value=>value/255);
     const uv=new Float64Array(leg?.sourcePositions??[d.x,d.y,d.x+d.w,d.y,d.x+d.w,d.y+d.h,d.x,d.y+d.h]);
     const indices=new Uint16Array(leg?.triangles??[0,1,2,0,2,3]);
     return {name:part.name,bone:part.bone,rect:d,data,normalized,uv,leg,indices,rasterIndices:indices.slice(),target:new Float64Array(uv.length)};
-  });
+  });}finally{sourceCanvas.width=0;sourceCanvas.height=0;}
+  const surface=createPaintSurface(createCanvas);if(!surface)return null;
+  const {canvas,context,attributes}=surface;
   paintCounts.createdPainters++;
-  const lastRaster=createRaster(parts,canvas,context);
-  return {canvas,context,parts,pose:createV177RangerLowerPose(rig),rig,width:0,height:0,sample:null,accum:null,visits:null,imageData:null,
+  const lastRaster=createRaster(parts,canvas,context,attributes);
+  return {canvas,context,attributes,parts,pose:createV177RangerLowerPose(rig),rig,width:0,height:0,sample:null,accum:null,visits:null,imageData:null,
     createCanvas,lastRaster,rasters:[lastRaster]};
 }
 function ensureCapacity(p,w,h) {
@@ -39,7 +54,7 @@ function ensureCapacity(p,w,h) {
   invalidateRasters(p);
   const sample=new Float32Array(width*height*4),accum=new Float32Array(width*height*4),visits=new Uint8Array(width*height);
   const imageData=p.context.createImageData(width,height);
-  const lastRaster=createRaster(p.parts,p.canvas,p.context);lastRaster.imageData=imageData;
+  const lastRaster=createRaster(p.parts,p.canvas,p.context,p.attributes);lastRaster.imageData=imageData;
   // Allocate before releasing old owners. A failed growth must leave the
   // invalidated old-size surfaces intact so the next small draw can recover.
   for(const raster of p.rasters)if(raster.canvas!==p.canvas){raster.canvas.width=0;raster.canvas.height=0;}
@@ -143,10 +158,9 @@ export function paintV177RangerLower(p,ctx,phase,settle,x,y,width,height,feet=nu
       if(!last){
         let canvas;
         try{
-          canvas=p.createCanvas();if(!canvas?.getContext)throw Error('Ranger raster surface unavailable');
-          canvas.width=p.width;canvas.height=p.height;
-          const context=canvas.getContext('2d',{willReadFrequently:true});if(!context)throw Error('Ranger raster context unavailable');
-          last=createRaster(p.parts,canvas,context);last.imageData=p.context.createImageData(p.width,p.height);
+          const surface=createPaintSurface(p.createCanvas,p.width,p.height);
+          if(!surface)throw Error('Ranger raster context unavailable');canvas=surface.canvas;
+          last=createRaster(p.parts,canvas,surface.context,surface.attributes);last.imageData=p.context.createImageData(p.width,p.height);
         }catch(error){if(canvas){canvas.width=0;canvas.height=0;}invalidateRasters(p);throw error;}
         p.rasters.push(last);
       }
@@ -179,7 +193,7 @@ export function paintV177RangerLower(p,ctx,phase,settle,x,y,width,height,feet=nu
   catch(error){invalidateRasters(p);throw error;}
   finally{ctx.restore();}
   if(same)paintCounts.reusedDraws++;
-  if(trace){trace.endedAt=performance.now();diagnostic.rangerPaint(trace);}
+  if(trace){trace.surfaceAttributes=last.attributes;trace.endedAt=performance.now();diagnostic.rangerPaint(trace);}
   return receipt;
 }
 
