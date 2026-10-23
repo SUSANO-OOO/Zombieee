@@ -36,7 +36,8 @@ function image(){return {naturalWidth:atlas.decodedWidth,naturalHeight:atlas.dec
 function observedPainter(){
   const observation={writes:0,failWrite:false,surfaces:[],dirtyRects:[]};
   const create=()=>{const canvas=surface(),context=canvas.getContext(),put=context.putImageData;
-    context.putImageData=(...args)=>{if(observation.failWrite)throw Error('write failed');observation.writes++;observation.dirtyRects.push(args.slice(3));put(...args);};
+    context.putImageData=(...args)=>{if(observation.failWrite)throw Error('write failed');observation.writes++;observation.dirtyRects.push(args.slice(3));put(...args);
+      canvas.data={width:args[0].width,height:args[0].height,data:new Uint8ClampedArray(args[0].data)};};
     observation.surfaces.push(canvas);return canvas;};
   return {painter:createV177RangerLowerPainter(image(),rig,create),observation};
 }
@@ -49,6 +50,26 @@ function main({width=1280,height=720,matrix=[1,0,0,1,0,0]}={}){
       alpha:ctx.globalAlpha,composite:ctx.globalCompositeOperation,filter:ctx.filter});}};
   return {ctx,calls,stack};
 }
+
+test('a newly rasterized exact RGBA match reuses its uploaded owner while a changed payload is uploaded',()=>{
+  const {painter,observation}=observedPainter(),phase=.371;
+  const paint=value=>{const target=main({matrix:[2,0,0,2,640.25,360]});const receipt=paintV177RangerLower(painter,target.ctx,value,.6,-48,-80,96,89.6);return {receipt,call:target.calls[0]};};
+  const first=paint(phase),owner=painter.lastRaster,vertices=painter.parts.map(g=>[...g.target]);
+  const before=getV177RangerLowerPaintSnapshot();assert.equal(observation.writes,1);
+  const near=paint(phase+1e-12),after=getV177RangerLowerPaintSnapshot();
+  assert.notDeepEqual(painter.parts.map(g=>[...g.target]),vertices,'the geometry cache must miss');
+  assert.equal(after.rasterizedDraws-before.rasterizedDraws,1,'compute the current pose and all original samples');
+  assert.notEqual(near.receipt.phase,first.receipt.phase);assert.deepEqual(near.call.pixels,first.call.pixels);
+  assert.equal(observation.writes,1);assert.equal(painter.lastRaster.uploadOwner,owner);
+  assert.deepEqual(painter.imageData.data,owner.canvas.data.data,'the uploaded pixels are an independent copy');
+  const cachedBefore=getV177RangerLowerPaintSnapshot();paint(phase);paint(phase+1e-12);
+  assert.equal(getV177RangerLowerPaintSnapshot().rasterizedDraws,cachedBefore.rasterizedDraws,'both geometry keys remain cached');
+  const changed=paint(.62);assert.notDeepEqual(changed.call.pixels,first.call.pixels);assert.equal(observation.writes,2);
+  const recovered=paint(phase+1e-12);assert.deepEqual(recovered.call.pixels,first.call.pixels);assert.equal(observation.writes,2,
+    'a retained physical payload can be reused after full byte comparison');
+  assert.ok(painter.rasters.every(r=>!r.valid||r.imageData.data.every((value,i)=>value===(r.uploadOwner??r).canvas.data.data[i])),
+    'a valid geometry key must always name the actual uploaded payload');
+});
 
 test('exact raster reuse retains the frozen 1658 pixels at all three viewport transforms',()=>{
   const result=[],painter=createV177RangerLowerPainter(image(),rig);
@@ -83,7 +104,11 @@ test('bitmap reuse observes subpixel, foot, facing and surface changes and appli
     {matrix:[1,0,0,1,640.000001,360]}, {matrix:[-1,0,0,1,640,360]},
     {matrix:[2,0,0,2,640,360]}, {phase:.372}, {size:96.000001},
     {feet:v177RangerLowerPose(rig,.4,.5).joints.map(j=>[j[4],j[5],0])}, {clipWidth:640}, {},
-  ]){const before=observation.writes;paint(entry);assert.equal(observation.writes,before+1,'changed backing geometry must be rasterized');}
+  ]){
+    const before=getV177RangerLowerPaintSnapshot(),result=paint(entry),after=getV177RangerLowerPaintSnapshot();
+    assert.equal(after.rasterizedDraws,before.rasterizedDraws+1,'changed backing geometry must be rasterized');
+    assert.deepEqual(result.call.pixels,painter.imageData.data,'the current exact payload must be uploaded or already present');
+  }
   const before=observation.writes;paint();assert.equal(observation.writes,before);
   assert.equal(paint({matrix:[1,0,0,1,-2000,0]}).receipt.mode,'offscreen-weighted-mesh');
   paint();assert.equal(observation.writes,before+1,'offscreen draws invalidate the prior bitmap');
@@ -198,7 +223,7 @@ test('growing Ranger surfaces releases the alternate backing canvas and a missin
   assert.ok(observation.surfaces.filter(canvas=>canvas.width*canvas.height>0).length<=2);
 });
 
-test('Ranger keeps source readback separate from retained paint surfaces',()=>{
+test('Ranger releases source readback and retains the original generated-RGBA surface hint',()=>{
   const observations=[];
   const create=()=>{const canvas=surface(),context=canvas.getContext(),row={canvas,attributes:null,reads:0};
     const read=context.getImageData;context.getImageData=(...args)=>{row.reads++;return read(...args);};
@@ -209,8 +234,8 @@ test('Ranger keeps source readback separate from retained paint surfaces',()=>{
   assert.equal(observations[0].canvas.width,0);assert.equal(observations[0].canvas.height,0);
   const paint=phase=>paintV177RangerLower(painter,main({matrix:[1,0,0,1,640,360]}).ctx,phase,.5,-48,-80,96,89.6);
   paint(.371);paint(.762);paint(.371);assert.equal(painter.rasters.length,2);
-  for(const row of observations.slice(1)){assert.equal(row.attributes.willReadFrequently,false);assert.equal(row.reads,0);}
-  for(const raster of painter.rasters)assert.equal(raster.attributes.willReadFrequently,false);
+  for(const row of observations.slice(1)){assert.equal(row.attributes.willReadFrequently,true);assert.equal(row.reads,0);}
+  for(const raster of painter.rasters)assert.equal(raster.attributes.willReadFrequently,true);
   assert.ok(painter.rasters.reduce((sum,raster)=>sum+raster.canvas.width*raster.canvas.height,0)<=65536);
 });
 

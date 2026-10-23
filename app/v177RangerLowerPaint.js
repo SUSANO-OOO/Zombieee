@@ -6,14 +6,23 @@ export const getV177RangerLowerPaintSnapshot=()=>({...paintCounts});
 const samples=[[.25,.25],[.75,.25],[.25,.75],[.75,.75]];
 const topLeft=(ax,ay,bx,by)=>by<ay||(by===ay&&bx>ax);
 const owned=(v,edge)=>v>1e-10||(Math.abs(v)<=1e-10&&edge);
-const createRaster=(parts,canvas,context,attributes)=>({valid:false,width:0,height:0,duplicateWithinPart:0,degenerate:0,imageData:null,canvas,context,attributes,
+function sourceKernelOccupancy(data,width,height){
+  if(!Number.isSafeInteger(width)||!Number.isSafeInteger(height)||width<=0||height<=0||data.length!==width*height*4)return null;
+  const stride=width+1,occupancy=new Uint8Array(stride*(height+1));
+  for(let y=0;y<height;y++)for(let x=0;x<width;x++)if(data[(y*width+x)*4+3]!==0){
+    const at=y*stride+x;occupancy[at]=1;occupancy[at+1]=1;occupancy[at+stride]=1;occupancy[at+stride+1]=1;
+  }
+  return occupancy;
+}
+const sameRgba=(a,b)=>{if(a.length!==b.length)return false;for(let i=0;i<a.length;i++)if(a[i]!==b[i])return false;return true;};
+const createRaster=(parts,canvas,context,attributes)=>({valid:false,width:0,height:0,duplicateWithinPart:0,degenerate:0,imageData:null,canvas,context,attributes,uploadOwner:null,
   parts:parts.map(part=>({part,target:new Float64Array(part.target.length)}))});
-const invalidateRasters=p=>{for(const raster of p.rasters)raster.valid=false;};
+const invalidateRasters=p=>{for(const raster of p.rasters){raster.valid=false;raster.uploadOwner=null;}};
 function createPaintSurface(createCanvas,width=0,height=0){
   const canvas=createCanvas();if(!canvas?.getContext)return null;
   canvas.width=width;canvas.height=height;
   try{
-    const context=canvas.getContext('2d',{willReadFrequently:false});
+    const context=canvas.getContext('2d',{willReadFrequently:true});
     if(!context){canvas.width=0;canvas.height=0;return null;}
     return {canvas,context,attributes:context.getContextAttributes?.()??null};
   }catch(error){canvas.width=0;canvas.height=0;throw error;}
@@ -26,8 +35,8 @@ export function createV177RangerLowerPainter(image,rig,createCanvas=()=>image.ow
   const sourceCanvas=createCanvas();if(!sourceCanvas?.getContext)return null;
   const source=sourceCanvas.getContext('2d',{willReadFrequently:true});
   if(!source){sourceCanvas.width=0;sourceCanvas.height=0;return null;}
-  // The original crops need readback once. Retained paint surfaces never read
-  // pixels back and must not inherit the readback hint from that source work.
+  // Read original crops once and release that canvas. Retained surfaces keep
+  // the original hint for the generated RGBA path, without reading pixels back.
   let parts;
   try{parts=rig.parts.map(part=>{
     const s=part.source,d=part.destination;sourceCanvas.width=s.w;sourceCanvas.height=s.h;
@@ -38,7 +47,7 @@ export function createV177RangerLowerPainter(image,rig,createCanvas=()=>image.ow
     const normalized=Float64Array.from(data,value=>value/255);
     const uv=new Float64Array(leg?.sourcePositions??[d.x,d.y,d.x+d.w,d.y,d.x+d.w,d.y+d.h,d.x,d.y+d.h]);
     const indices=new Uint16Array(leg?.triangles??[0,1,2,0,2,3]);
-    return {name:part.name,bone:part.bone,rect:d,data,normalized,uv,leg,indices,rasterIndices:indices.slice(),target:new Float64Array(uv.length)};
+    return {name:part.name,bone:part.bone,rect:d,data,normalized,kernelOccupancy:sourceKernelOccupancy(data,d.w,d.h),uv,leg,indices,rasterIndices:indices.slice(),target:new Float64Array(uv.length)};
   });}finally{sourceCanvas.width=0;sourceCanvas.height=0;}
   const surface=createPaintSurface(createCanvas);if(!surface)return null;
   const {canvas,context,attributes}=surface;
@@ -98,7 +107,10 @@ function rasterPart(p,g,w,h,ox,oy,stats) {
       const pixel=py*w+px;if(p.visits[pixel]++)stats.duplicateWithinPart++;
       const wa=bc/area,wb=ca/area,wc=ab/area;
       const sx=g.uv[ia]*wa+g.uv[ib]*wb+g.uv[ic]*wc-g.rect.x-.5,sy=g.uv[ia+1]*wa+g.uv[ib+1]*wb+g.uv[ic+1]*wc-g.rect.y-.5;
-      const ix=Math.floor(sx),iy=Math.floor(sy),fx=sx-ix,fy=sy-iy;let r=0,green=0,b=0,a=0;
+      const ix=Math.floor(sx),iy=Math.floor(sy),fx=sx-ix,fy=sy-iy;
+      // Skip only kernels whose original four alpha bytes are all zero.
+      if(g.kernelOccupancy&&(ix< -1||iy< -1||ix>=g.rect.w||iy>=g.rect.h||!g.kernelOccupancy[(iy+1)*(g.rect.w+1)+ix+1]))continue;
+      let r=0,green=0,b=0,a=0;
       for(let yy=0;yy<2;yy++)for(let xx=0;xx<2;xx++){
         const ux=ix+xx,uy=iy+yy;if(ux<0||uy<0||ux>=g.rect.w||uy>=g.rect.h)continue;
         const at=(uy*g.rect.w+ux)*4,alpha=g.normalized[at+3];if(alpha===0)continue;
@@ -144,17 +156,18 @@ export function paintV177RangerLower(p,ctx,phase,settle,x,y,width,height,feet=nu
   }
   // Compare every current backing-pixel vertex after pose/IK/clipping. Each
   // payload owns its uploaded surface, within the same combined pixel bound.
+  const previousRaster=p.lastRaster,previousUploadOwner=previousRaster.uploadOwner??previousRaster;
   let last=p.rasters.find(raster=>raster.valid&&raster.width===w&&raster.height===h&&raster.parts.length===p.parts.length&&p.parts.every((g,i)=>
     raster.parts[i].part===g&&g.target.every((value,j)=>value===raster.parts[i].target[j])));
   const same=!!last;
-  if(trace){trace.lookupFinishedAt=performance.now();trace.reused=same;trace.cacheSwitch=same&&last!==p.lastRaster;trace.width=w;trace.height=h;}
+  if(trace){trace.lookupFinishedAt=performance.now();trace.reused=same;trace.cacheSwitch=same&&(last.uploadOwner??last)!==(previousRaster.uploadOwner??previousRaster);trace.geometryCacheSwitch=same&&last!==previousRaster;trace.width=w;trace.height=h;}
   if(same){
     p.lastRaster=last;p.imageData=last.imageData;
     receipt.duplicateWithinPart=last.duplicateWithinPart;receipt.degenerate=last.degenerate;
     if(trace){trace.rasterFinishedAt=trace.lookupFinishedAt;trace.uploadFinishedAt=performance.now();}
   }else{
     if(p.lastRaster.valid&&p.width*p.height*2<=MAX_PIXELS){
-      last=p.rasters.find(raster=>raster!==p.lastRaster);
+      last=p.rasters.find(raster=>raster.uploadOwner)??p.rasters.find(raster=>raster!==p.lastRaster);
       if(!last){
         let canvas;
         try{
@@ -166,19 +179,37 @@ export function paintV177RangerLower(p,ctx,phase,settle,x,y,width,height,feet=nu
       }
       p.lastRaster=last;p.imageData=last.imageData;
     }else last=p.lastRaster;
+    const retainOwnPayload=last.valid&&!last.uploadOwner&&last.width===w&&last.height===h;
     last.valid=false;
     p.accum.fill(0,0,w*h*4);
     for(const [ox,oy]of samples){
       p.sample.fill(0,0,w*h*4);for(const g of p.parts)rasterPart(p,g,w,h,ox,oy,receipt);
       for(let i=0;i<w*h*4;i++)p.accum[i]+=p.sample[i]*.25;
     }
+    // Sampling is finished. Its existing Float32 workspace can retain every
+    // old byte exactly while generating the new payload, with no extra buffer.
+    if(retainOwnPayload)p.sample.set(p.imageData.data);
     p.imageData.data.fill(0);
     for(let py=0;py<h;py++)for(let px=0;px<w;px++){
       const at=(py*w+px)*4,to=(py*p.width+px)*4,alpha=p.accum[at+3];if(alpha===0)continue;
       for(let k=0;k<3;k++)p.imageData.data[to+k]=alpha>0?Math.round(p.accum[at+k]/alpha*255):0;p.imageData.data[to+3]=Math.round(alpha*255);
     }
     if(trace)trace.rasterFinishedAt=performance.now();
-    try{last.context.putImageData(p.imageData,0,0,0,0,w,h);}catch(error){invalidateRasters(p);throw error;}
+    // Geometry can differ below byte precision. Reuse an already uploaded
+    // surface only after comparing every generated RGBA byte, without a tolerance.
+    const ownPayloadReused=retainOwnPayload&&sameRgba(p.imageData.data,p.sample);
+    const previousPayloadReused=!ownPayloadReused&&previousUploadOwner!==last&&previousUploadOwner.valid&&previousUploadOwner.width===w&&previousUploadOwner.height===h
+      &&sameRgba(p.imageData.data,previousUploadOwner.imageData.data);
+    const payloadReused=ownPayloadReused||previousPayloadReused;
+    if(ownPayloadReused)last.uploadOwner=null;
+    else if(previousPayloadReused)last.uploadOwner=previousUploadOwner;
+    else{
+      // A different payload cannot leave a geometry key borrowing this surface.
+      for(const raster of p.rasters)if(raster.uploadOwner===last){raster.valid=false;raster.uploadOwner=null;}
+      last.uploadOwner=null;
+      try{last.context.putImageData(p.imageData,0,0,0,0,w,h);}catch(error){invalidateRasters(p);throw error;}
+    }
+    if(trace){trace.payloadReused=payloadReused;trace.payloadReuseOwner=ownPayloadReused?'own':previousPayloadReused?'previous':null;}
     if(trace)trace.uploadFinishedAt=performance.now();
     if(last.parts.length!==p.parts.length||p.parts.some((g,i)=>last.parts[i].part!==g))
       last.parts=p.parts.map(part=>({part,target:new Float64Array(part.target.length)}));
@@ -189,11 +220,12 @@ export function paintV177RangerLower(p,ctx,phase,settle,x,y,width,height,feet=nu
   // The lower is already in backing pixels. The existing clip, alpha, filter,
   // compositing and body transform apply once, with no second bitmap or leg.
   ctx.save();
-  try{ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(last.canvas,0,0,w,h,left,top,w,h);}
+  const uploadOwner=last.uploadOwner??last;
+  try{ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(uploadOwner.canvas,0,0,w,h,left,top,w,h);}
   catch(error){invalidateRasters(p);throw error;}
   finally{ctx.restore();}
   if(same)paintCounts.reusedDraws++;
-  if(trace){trace.surfaceAttributes=last.attributes;trace.endedAt=performance.now();diagnostic.rangerPaint(trace);}
+  if(trace){trace.surfaceAttributes=uploadOwner.attributes;trace.endedAt=performance.now();diagnostic.rangerPaint(trace);}
   return receipt;
 }
 
