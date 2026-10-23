@@ -120,11 +120,131 @@
       "source": "assets/source/v104/combat-audio/voice-babayaga-death.wav",
       "sha256": "e5f7b3a5d3194582051bb0f8cc9315f6188e24e4aed07ec66b3d1cbc934e8c7b",
       "synthetic": true
+    },
+    {
+      "kind": "red-panther-knife",
+      "event": "attack",
+      "text": "仕留める！",
+      "styleId": 52,
+      "credit": "VOICEVOX:雀松朱司",
+      "source": "assets/source/v104/combat-audio/voice-red-panther-knife-attack.wav",
+      "sha256": "4ce64f453a65cf16e98a5cb7f1098b9298a18f7169120f2467cbe1e89e121e9f",
+      "synthetic": true
+    },
+    {
+      "kind": "red-panther-knife",
+      "event": "hurt",
+      "text": "ぐっ！",
+      "styleId": 52,
+      "credit": "VOICEVOX:雀松朱司",
+      "source": "assets/source/v104/combat-audio/voice-red-panther-knife-hurt.wav",
+      "sha256": "555b9ac8c71a44479019b9592dedfe2214370f3aaccc9ffafac74bd233dfa775",
+      "synthetic": true
+    },
+    {
+      "kind": "red-panther-knife",
+      "event": "death",
+      "text": "ぐああっ……。",
+      "styleId": 52,
+      "credit": "VOICEVOX:雀松朱司",
+      "source": "assets/source/v104/combat-audio/voice-red-panther-knife-death.wav",
+      "sha256": "6a0f80a19562deaf97445f1e25d1878f3412c9a4a10ae886005ee5cbd5236468",
+      "synthetic": true
+    },
+    {
+      "kind": "red-panther-shield",
+      "event": "attack",
+      "text": "押し切る！",
+      "styleId": 52,
+      "credit": "VOICEVOX:雀松朱司",
+      "source": "assets/source/v104/combat-audio/voice-red-panther-shield-attack.wav",
+      "sha256": "fef337693615bdc1f0d469d654ac1dd21bfa3d2d299a4fb73d802f24f5672c10",
+      "synthetic": true
+    },
+    {
+      "kind": "red-panther-shield",
+      "event": "hurt",
+      "text": "くそっ！",
+      "styleId": 52,
+      "credit": "VOICEVOX:雀松朱司",
+      "source": "assets/source/v104/combat-audio/voice-red-panther-shield-hurt.wav",
+      "sha256": "3d61f47bd6ad70bbbbf309e2e2200a4b963839ae6117bfcf281c3b6690829e46",
+      "synthetic": true
+    },
+    {
+      "kind": "red-panther-shield",
+      "event": "death",
+      "text": "うあっ……。",
+      "styleId": 52,
+      "credit": "VOICEVOX:雀松朱司",
+      "source": "assets/source/v104/combat-audio/voice-red-panther-shield-death.wav",
+      "sha256": "880ffdeb14ce9888f381e0e44c0bcdd5d29670d327a7361902540f70099ff33b",
+      "synthetic": true
+    },
+    {
+      "kind": "red-panther-smg",
+      "event": "attack",
+      "text": "そこだ！",
+      "styleId": 52,
+      "credit": "VOICEVOX:雀松朱司",
+      "source": "assets/source/v104/combat-audio/voice-red-panther-smg-attack.wav",
+      "sha256": "61b0ff6024b4bcfc3d3e278a60505b125daf8c2d3c5f6cea9ae694fdacd09112",
+      "synthetic": true
+    },
+    {
+      "kind": "red-panther-smg",
+      "event": "hurt",
+      "text": "くっ！",
+      "styleId": 52,
+      "credit": "VOICEVOX:雀松朱司",
+      "source": "assets/source/v104/combat-audio/voice-red-panther-smg-hurt.wav",
+      "sha256": "83e67fefc4ae33781e6d735056033646544630a8f5d58d874250393f0c1988ea",
+      "synthetic": true
+    },
+    {
+      "kind": "red-panther-smg",
+      "event": "death",
+      "text": "ぐあっ……。",
+      "styleId": 52,
+      "credit": "VOICEVOX:雀松朱司",
+      "source": "assets/source/v104/combat-audio/voice-red-panther-smg-death.wav",
+      "sha256": "65b06a9397ac75b6892a27a624a6b49af9542338728ca85e3a47d79ab47969e5",
+      "synthetic": true
+    },
+    {
+      "kind": "red-panther-commander",
+      "event": "attack",
+      "text": "排除しろ！",
+      "styleId": 52,
+      "credit": "VOICEVOX:雀松朱司",
+      "source": "assets/source/v104/combat-audio/voice-red-panther-commander-attack.wav",
+      "sha256": "8fc74e7c6312c2987003f811854fb99822f54fd5471744f7e51952f87e783a3a",
+      "synthetic": true
+    },
+    {
+      "kind": "red-panther-commander",
+      "event": "hurt",
+      "text": "ちっ！",
+      "styleId": 52,
+      "credit": "VOICEVOX:雀松朱司",
+      "source": "assets/source/v104/combat-audio/voice-red-panther-commander-hurt.wav",
+      "sha256": "debce2d964b30589cb4baef693b7527bf763c34bc576cfad11c728636380c640",
+      "synthetic": true
+    },
+    {
+      "kind": "red-panther-commander",
+      "event": "death",
+      "text": "ここまでか……。",
+      "styleId": 52,
+      "credit": "VOICEVOX:雀松朱司",
+      "source": "assets/source/v104/combat-audio/voice-red-panther-commander-death.wav",
+      "sha256": "ee7424a8c0c12caf995da845d008c6f411e7a4aeadd04db55b94d211ea1da16c",
+      "synthetic": true
     }
   ],
   "licenses": [
     "https://www.virvoxproject.com/voicevoxの利用規約",
     "https://frontier.creatia.cc/fanclubs/413/posts/4507"
   ],
-  "note": "Synthetic voices assigned only to these three named characters; no story full reading."
+  "note": "Dedicated new utterances for each named character and each RED PANTHER role; no reused character recording or story full reading."
 }

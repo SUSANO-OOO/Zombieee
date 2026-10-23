@@ -1,0 +1,36 @@
+{
+  "accent_phrases": [
+    {
+      "moras": [
+        {
+          "text": "チ",
+          "vowel": "i",
+          "vowel_length": 0.13626176118850708,
+          "pitch": 4.981472969055176,
+          "consonant": "ch",
+          "consonant_length": 0.1110491156578064
+        },
+        {
+          "text": "ッ",
+          "vowel": "cl",
+          "vowel_length": 0.22534418106079102,
+          "pitch": 0.0,
+          "consonant": null,
+          "consonant_length": null
+        }
+      ],
+      "accent": 2,
+      "pause_mora": null,
+      "is_interrogative": false
+    }
+  ],
+  "speed_scale": 1.13,
+  "pitch_scale": -0.015,
+  "intonation_scale": 1.0,
+  "volume_scale": 1.0,
+  "pre_phoneme_length": 0.015,
+  "post_phoneme_length": 0.035,
+  "output_sampling_rate": 48000,
+  "output_stereo": false,
+  "kana": "チッ'"
+}

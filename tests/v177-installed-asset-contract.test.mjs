@@ -11,14 +11,15 @@ import { V100_RELEASE_ASSET_CONTRACT } from "../scripts/v100-release-asset-contr
 const candidate = JSON.parse(readFileSync(new URL("../public/asset-manifest.json", import.meta.url)));
 const record = ({path, bytes, hash}) => ({path, bytes, hash});
 const ordered = assets => assets.map(record).sort((a, b) => a.path.localeCompare(b.path));
-const baselines = [
-  // Crossbow release adds one exact 3,198-byte logical MP3 inside the existing
-  // audio bundle; it adds no network source. Installed baselines stay frozen.
-  ["1.0.1", "634f8de4b0fb15df902a7dd5983ea94237cfea9d", 142, 52054845, 96],
-  ["1.0.2", "cd246a3d8e93b69d8cb6b370d40f28924a0d86b6", 141, 52033893, 95],
-  ["1.0.3", "99f9c193ab1e35531db39225c839138cdb1c33cd", 141, 52033893, 95],
+const expectedUpgradeDeltas = [
+  // Count/bytes describe downloads TO THIS CANDIDATE, not old release totals.
+  // The twelve new RP voices add exactly66,509 bytes inside the audio bundle.
+  // Immutable old SHA/680-or681 asset totals below remain unchanged.
+  ["1.0.1", "634f8de4b0fb15df902a7dd5983ea94237cfea9d", 154, 52121354, 96],
+  ["1.0.2", "cd246a3d8e93b69d8cb6b370d40f28924a0d86b6", 153, 52100402, 95],
+  ["1.0.3", "99f9c193ab1e35531db39225c839138cdb1c33cd", 153, 52100402, 95],
 ];
-for (const [version, sha, count, bytes, network] of baselines) {
+for (const [version, sha, count, bytes, network] of expectedUpgradeDeltas) {
   test(`the frozen installed ${version} pack downloads exactly the R9, score and sprite delta`, () => {
     const old = JSON.parse(execFileSync("git", ["show", `${sha}:public/asset-manifest.json`], {encoding:"utf8",maxBuffer:4*1024*1024}));
     const expected = V177_INSTALLED_ASSET_CONTRACT[version];
@@ -33,8 +34,8 @@ for (const [version, sha, count, bytes, network] of baselines) {
     assert.equal(expected.additions, count);
     assert.equal(changed.reduce((sum, asset) => sum + asset.bytes, 0), bytes);
     assert.equal(expected.bytes, bytes);
-    assert.equal(changed.filter(asset => asset.bundlePath).length, 47);
-    assert.equal(expected.bundled, 47);
+    assert.equal(changed.filter(asset => asset.bundlePath).length, 59);
+    assert.equal(expected.bundled, 59);
     assert.deepEqual(changed.filter(asset=>asset.audioId==='weapon-crossbow-release').map(record),[{
       path:'/audio/v104/combat/crossbow-release.mp3',bytes:3198,
       hash:'sha256-b9668da84ccd0395e3f47a34ba771de7313a6d0d2f4d9e50c7b63a7cf4077371',

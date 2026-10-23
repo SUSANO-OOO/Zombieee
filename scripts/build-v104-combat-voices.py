@@ -1,6 +1,9 @@
 """Dedicated synthetic battle calls. Never imports/overwrites promotion audio."""
 from pathlib import Path
-import sys,json,dataclasses,hashlib,urllib.request
+import sys,json,dataclasses,hashlib,urllib.request,argparse
+parser=argparse.ArgumentParser()
+parser.add_argument('--only-red-panther',action='store_true')
+args=parser.parse_args()
 ROOT=Path(__file__).resolve().parents[1]
 RUNTIME=Path('C:/Users/okait/Documents/Codex/2026-07-11/new-chat/output/promo-20261010/r3/voicevox')
 OUT=ROOT/'assets/source/v104/combat-audio';OUT.mkdir(parents=True,exist_ok=True)
@@ -18,13 +21,28 @@ for model in [rt/'models/vvms/4.vvm',MODEL]:
 cast=[('crazy-king',21,'剣崎雌雄',['いくぜ！','おらぁ！','ぐっ！','くそっ……。'],1.18),
       ('kumaverson',53,'麒ヶ島宗麟',['任せておけ。','せいっ！','ぬうっ。','ここまでか……。'],1.12),
       ('babayaga',11,'玄野武宏',['行くぞ。','はっ。','ぐっ。','まだ……。'],1.2)]
+red_panther=[
+    ('red-panther-knife',['仕留める！','ぐっ！','ぐああっ……。'],1.19,.015),
+    ('red-panther-shield',['押し切る！','くそっ！','うあっ……。'],1.07,-.035),
+    ('red-panther-smg',['そこだ！','くっ！','ぐあっ……。'],1.2,0),
+    ('red-panther-commander',['排除しろ！','ちっ！','ここまでか……。'],1.13,-.015),
+]
 rows=[]
-for kind,style,name,lines,speed in cast:
-    for event,text in zip(['deploy','attack','hurt','death'],lines):
+def render(kind,style,name,lines,speed,events,pitch=0):
+    for event,text in zip(events,lines):
         q=synth.create_audio_query(text,style);q.speed_scale=speed;q.intonation_scale=1.0
+        q.pitch_scale=pitch
         q.pre_phoneme_length=.015;q.post_phoneme_length=.035;q.output_sampling_rate=48000;q.output_stereo=False
         data=synth.synthesis(q,style);file=OUT/f'voice-{kind}-{event}.wav';file.write_bytes(data)
         query=dataclasses.asdict(q);(OUT/f'voice-{kind}-{event}.json').write_text(json.dumps(query,ensure_ascii=False,indent=2),encoding='utf-8',newline='\n')
         rows.append(dict(kind=kind,event=event,text=text,styleId=style,credit='VOICEVOX:'+name,source=str(file.relative_to(ROOT)).replace('\\','/'),sha256=hashlib.sha256(data).hexdigest(),synthetic=True))
         print(kind,event,flush=True)
-(OUT/'voices.json').write_text(json.dumps(dict(engine='VOICEVOX Core 0.17.0',cast=rows,licenses=['https://www.virvoxproject.com/voicevoxの利用規約','https://frontier.creatia.cc/fanclubs/413/posts/4507'],note='Synthetic voices assigned only to these three named characters; no story full reading.'),ensure_ascii=False,indent=2),encoding='utf-8',newline='\n')
+if not args.only_red_panther:
+    for kind,style,name,lines,speed in cast:
+        render(kind,style,name,lines,speed,['deploy','attack','hurt','death'])
+for kind,lines,speed,pitch in red_panther:
+    render(kind,52,'雀松朱司',lines,speed,['attack','hurt','death'],pitch)
+if args.only_red_panther:
+    previous=json.loads((OUT/'voices.json').read_text(encoding='utf-8'))
+    rows=[r for r in previous['cast'] if r['kind'] not in {r[0] for r in red_panther}]+rows
+(OUT/'voices.json').write_text(json.dumps(dict(engine='VOICEVOX Core 0.17.0',cast=rows,licenses=['https://www.virvoxproject.com/voicevoxの利用規約','https://frontier.creatia.cc/fanclubs/413/posts/4507'],note='Dedicated new utterances for each named character and each RED PANTHER role; no reused character recording or story full reading.'),ensure_ascii=False,indent=2),encoding='utf-8',newline='\n')

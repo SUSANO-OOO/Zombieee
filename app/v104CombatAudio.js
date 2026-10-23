@@ -13,6 +13,15 @@ export function withV104CombatAudio(base){
 export const V104_ARMOR_AUDIO={id:'v104-armor-hit',category:'melee',sources:sources('armor-hit'),gain:.68,priority:78,cooldownMs:140,maxInstances:2};
 export const V104_HANDGUN_AUDIO={id:'v104-handgun',category:'weapons',sources:sources('handgun'),gain:.72,priority:72,cooldownMs:100,maxInstances:4};
 export const V104_CROSSBOW_AUDIO={id:'weapon-crossbow-release',category:'weapons',sources:sources('crossbow-release'),gain:.68,priority:70,cooldownMs:90,maxInstances:4};
+const rpVoiceEvents={attack:{priority:67,cooldownMs:1400,gain:.72},hurt:{priority:76,cooldownMs:700,gain:.78},death:{priority:86,cooldownMs:300,gain:.8}};
+const rpVoices=['red-panther-knife','red-panther-shield','red-panther-smg','red-panther-commander']
+ .flatMap(kind=>Object.entries(rpVoiceEvents).map(([event,settings])=>Object.freeze({kind,event,
+  asset:Object.freeze({id:`voice-${kind}-${event}`,category:'humanVoices',sources:sources(`voice-${kind}-${event}`),
+   preload:'lazy',loop:false,maxInstances:1,...settings})})));
+export const V104_RED_PANTHER_VOICES=Object.freeze(rpVoices.map(row=>row.asset));
+const rpMaterialVoices=new Map(rpVoices.map(row=>[`enemy-${row.kind}-${row.event}`,row]));
+// Keep the original weapon/material cue; the dedicated human bark accompanies it.
+export function v104SupplementalEnemyVoice(cueId){return rpMaterialVoices.get(cueId)??null;}
 // Contact material is separate from mass: a large fleshy enemy is still flesh.
 export function v104ContactIsHard(kind){
  return ['crusher','grappler','gate-eater','gairen','guardian','red-panther-shield'].includes(kind);

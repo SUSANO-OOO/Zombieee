@@ -7,7 +7,7 @@ import {
 } from "./battleAudioContracts.js";
 import { V100_STAGES } from "./v100Registry.js";
 import { v100AudioDesignCandidate, v100SoundSources } from "./v100SoundDesign.js";
-import {V104_ARMOR_AUDIO,V104_BOTTLE_AUDIO,V104_BEAM_AUDIO,V104_HANDGUN_AUDIO,V104_CROSSBOW_AUDIO} from "./v104CombatAudio.js";
+import {V104_ARMOR_AUDIO,V104_BOTTLE_AUDIO,V104_BEAM_AUDIO,V104_HANDGUN_AUDIO,V104_CROSSBOW_AUDIO,V104_RED_PANTHER_VOICES} from "./v104CombatAudio.js";
 export {
   V099_MANUAL_ABILITY_AUDIO_CONTRACTS,
   V099_PHYSICAL_AUDIO_ASSET_COUNT,
@@ -431,6 +431,7 @@ const assets = [
   V104_ARMOR_AUDIO,
   V104_HANDGUN_AUDIO,
   V104_CROSSBOW_AUDIO,
+  ...V104_RED_PANTHER_VOICES,
   V104_BOTTLE_AUDIO,
   ...V104_BEAM_AUDIO,
   { id: 'v100-body-fall', category: 'melee', sources: v100SoundSources('foley', 'fall'), gain: .6, cooldownMs: 160, maxInstances: 2 },

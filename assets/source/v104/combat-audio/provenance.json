@@ -137,13 +137,133 @@
           "source": "assets/source/v104/combat-audio/voice-babayaga-death.wav",
           "sha256": "e5f7b3a5d3194582051bb0f8cc9315f6188e24e4aed07ec66b3d1cbc934e8c7b",
           "synthetic": true
+        },
+        {
+          "kind": "red-panther-knife",
+          "event": "attack",
+          "text": "仕留める！",
+          "styleId": 52,
+          "credit": "VOICEVOX:雀松朱司",
+          "source": "assets/source/v104/combat-audio/voice-red-panther-knife-attack.wav",
+          "sha256": "4ce64f453a65cf16e98a5cb7f1098b9298a18f7169120f2467cbe1e89e121e9f",
+          "synthetic": true
+        },
+        {
+          "kind": "red-panther-knife",
+          "event": "hurt",
+          "text": "ぐっ！",
+          "styleId": 52,
+          "credit": "VOICEVOX:雀松朱司",
+          "source": "assets/source/v104/combat-audio/voice-red-panther-knife-hurt.wav",
+          "sha256": "555b9ac8c71a44479019b9592dedfe2214370f3aaccc9ffafac74bd233dfa775",
+          "synthetic": true
+        },
+        {
+          "kind": "red-panther-knife",
+          "event": "death",
+          "text": "ぐああっ……。",
+          "styleId": 52,
+          "credit": "VOICEVOX:雀松朱司",
+          "source": "assets/source/v104/combat-audio/voice-red-panther-knife-death.wav",
+          "sha256": "6a0f80a19562deaf97445f1e25d1878f3412c9a4a10ae886005ee5cbd5236468",
+          "synthetic": true
+        },
+        {
+          "kind": "red-panther-shield",
+          "event": "attack",
+          "text": "押し切る！",
+          "styleId": 52,
+          "credit": "VOICEVOX:雀松朱司",
+          "source": "assets/source/v104/combat-audio/voice-red-panther-shield-attack.wav",
+          "sha256": "fef337693615bdc1f0d469d654ac1dd21bfa3d2d299a4fb73d802f24f5672c10",
+          "synthetic": true
+        },
+        {
+          "kind": "red-panther-shield",
+          "event": "hurt",
+          "text": "くそっ！",
+          "styleId": 52,
+          "credit": "VOICEVOX:雀松朱司",
+          "source": "assets/source/v104/combat-audio/voice-red-panther-shield-hurt.wav",
+          "sha256": "3d61f47bd6ad70bbbbf309e2e2200a4b963839ae6117bfcf281c3b6690829e46",
+          "synthetic": true
+        },
+        {
+          "kind": "red-panther-shield",
+          "event": "death",
+          "text": "うあっ……。",
+          "styleId": 52,
+          "credit": "VOICEVOX:雀松朱司",
+          "source": "assets/source/v104/combat-audio/voice-red-panther-shield-death.wav",
+          "sha256": "880ffdeb14ce9888f381e0e44c0bcdd5d29670d327a7361902540f70099ff33b",
+          "synthetic": true
+        },
+        {
+          "kind": "red-panther-smg",
+          "event": "attack",
+          "text": "そこだ！",
+          "styleId": 52,
+          "credit": "VOICEVOX:雀松朱司",
+          "source": "assets/source/v104/combat-audio/voice-red-panther-smg-attack.wav",
+          "sha256": "61b0ff6024b4bcfc3d3e278a60505b125daf8c2d3c5f6cea9ae694fdacd09112",
+          "synthetic": true
+        },
+        {
+          "kind": "red-panther-smg",
+          "event": "hurt",
+          "text": "くっ！",
+          "styleId": 52,
+          "credit": "VOICEVOX:雀松朱司",
+          "source": "assets/source/v104/combat-audio/voice-red-panther-smg-hurt.wav",
+          "sha256": "83e67fefc4ae33781e6d735056033646544630a8f5d58d874250393f0c1988ea",
+          "synthetic": true
+        },
+        {
+          "kind": "red-panther-smg",
+          "event": "death",
+          "text": "ぐあっ……。",
+          "styleId": 52,
+          "credit": "VOICEVOX:雀松朱司",
+          "source": "assets/source/v104/combat-audio/voice-red-panther-smg-death.wav",
+          "sha256": "65b06a9397ac75b6892a27a624a6b49af9542338728ca85e3a47d79ab47969e5",
+          "synthetic": true
+        },
+        {
+          "kind": "red-panther-commander",
+          "event": "attack",
+          "text": "排除しろ！",
+          "styleId": 52,
+          "credit": "VOICEVOX:雀松朱司",
+          "source": "assets/source/v104/combat-audio/voice-red-panther-commander-attack.wav",
+          "sha256": "8fc74e7c6312c2987003f811854fb99822f54fd5471744f7e51952f87e783a3a",
+          "synthetic": true
+        },
+        {
+          "kind": "red-panther-commander",
+          "event": "hurt",
+          "text": "ちっ！",
+          "styleId": 52,
+          "credit": "VOICEVOX:雀松朱司",
+          "source": "assets/source/v104/combat-audio/voice-red-panther-commander-hurt.wav",
+          "sha256": "debce2d964b30589cb4baef693b7527bf763c34bc576cfad11c728636380c640",
+          "synthetic": true
+        },
+        {
+          "kind": "red-panther-commander",
+          "event": "death",
+          "text": "ここまでか……。",
+          "styleId": 52,
+          "credit": "VOICEVOX:雀松朱司",
+          "source": "assets/source/v104/combat-audio/voice-red-panther-commander-death.wav",
+          "sha256": "ee7424a8c0c12caf995da845d008c6f411e7a4aeadd04db55b94d211ea1da16c",
+          "synthetic": true
         }
       ],
       "licenses": [
         "https://www.virvoxproject.com/voicevoxの利用規約",
         "https://frontier.creatia.cc/fanclubs/413/posts/4507"
       ],
-      "note": "Synthetic voices assigned only to these three named characters; no story full reading."
+      "note": "Dedicated new utterances for each named character and each RED PANTHER role; no reused character recording or story full reading."
     }
   },
   "records": [
@@ -848,6 +968,390 @@
         "url": "https://kenney.nl/assets/rpg-audio",
         "adaptation": "short latch and bolt rush over a damped string release; no gunshot or voice"
       }
+    },
+    {
+      "file": "public/audio/v104/combat/voice-red-panther-knife-attack.ogg",
+      "bytes": 8367,
+      "sha256": "ce5bc95ee9b6eeaea71b8e8037320df3f382bf18dd2f6e01555c8e04ea3d4166",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-red-panther-knife-attack.wav",
+          "sha256": "4ce64f453a65cf16e98a5cb7f1098b9298a18f7169120f2467cbe1e89e121e9f"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
+      "credit": "VOICEVOX:雀松朱司",
+      "text": "仕留める！",
+      "synthetic": true,
+      "styleId": 52
+    },
+    {
+      "file": "public/audio/v104/combat/voice-red-panther-knife-attack.mp3",
+      "bytes": 6484,
+      "sha256": "e0563ca586a60edcc19f4889fca563770a5bf4ef35c4ed1fac3e6922a31f3981",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-red-panther-knife-attack.wav",
+          "sha256": "4ce64f453a65cf16e98a5cb7f1098b9298a18f7169120f2467cbe1e89e121e9f"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
+      "credit": "VOICEVOX:雀松朱司",
+      "text": "仕留める！",
+      "synthetic": true,
+      "styleId": 52
+    },
+    {
+      "file": "public/audio/v104/combat/voice-red-panther-knife-hurt.ogg",
+      "bytes": 6548,
+      "sha256": "5e66ddd664c114228b28b0bad70f72c7f6bf3c543358e96f9c7fb2c38cb7e8db",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-red-panther-knife-hurt.wav",
+          "sha256": "555b9ac8c71a44479019b9592dedfe2214370f3aaccc9ffafac74bd233dfa775"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
+      "credit": "VOICEVOX:雀松朱司",
+      "text": "ぐっ！",
+      "synthetic": true,
+      "styleId": 52
+    },
+    {
+      "file": "public/audio/v104/combat/voice-red-panther-knife-hurt.mp3",
+      "bytes": 3717,
+      "sha256": "bfff909d9f81a20cfb4fae78383416b578ad707ace0c981a5ab7c8e4afabaf18",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-red-panther-knife-hurt.wav",
+          "sha256": "555b9ac8c71a44479019b9592dedfe2214370f3aaccc9ffafac74bd233dfa775"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
+      "credit": "VOICEVOX:雀松朱司",
+      "text": "ぐっ！",
+      "synthetic": true,
+      "styleId": 52
+    },
+    {
+      "file": "public/audio/v104/combat/voice-red-panther-knife-death.ogg",
+      "bytes": 8470,
+      "sha256": "8afd8652d6f4bf7e7a35121500500261c35cbe392b75f900b36d609d9e64cd49",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-red-panther-knife-death.wav",
+          "sha256": "6a0f80a19562deaf97445f1e25d1878f3412c9a4a10ae886005ee5cbd5236468"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
+      "credit": "VOICEVOX:雀松朱司",
+      "text": "ぐああっ……。",
+      "synthetic": true,
+      "styleId": 52
+    },
+    {
+      "file": "public/audio/v104/combat/voice-red-panther-knife-death.mp3",
+      "bytes": 5931,
+      "sha256": "51c28c3c845ede85dec97c02721361290f3a91799b4a75326ec6c3840b84ea47",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-red-panther-knife-death.wav",
+          "sha256": "6a0f80a19562deaf97445f1e25d1878f3412c9a4a10ae886005ee5cbd5236468"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
+      "credit": "VOICEVOX:雀松朱司",
+      "text": "ぐああっ……。",
+      "synthetic": true,
+      "styleId": 52
+    },
+    {
+      "file": "public/audio/v104/combat/voice-red-panther-shield-attack.ogg",
+      "bytes": 8793,
+      "sha256": "3a9f9f788f055564dd5b6d2e28288b82c8efcbd31db7976e0abdcc740620b2ca",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-red-panther-shield-attack.wav",
+          "sha256": "fef337693615bdc1f0d469d654ac1dd21bfa3d2d299a4fb73d802f24f5672c10"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
+      "credit": "VOICEVOX:雀松朱司",
+      "text": "押し切る！",
+      "synthetic": true,
+      "styleId": 52
+    },
+    {
+      "file": "public/audio/v104/combat/voice-red-panther-shield-attack.mp3",
+      "bytes": 6667,
+      "sha256": "0ed0a67e922445f72ac12ae2744cb340e3eecb926d76354393214da8a54a6030",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-red-panther-shield-attack.wav",
+          "sha256": "fef337693615bdc1f0d469d654ac1dd21bfa3d2d299a4fb73d802f24f5672c10"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
+      "credit": "VOICEVOX:雀松朱司",
+      "text": "押し切る！",
+      "synthetic": true,
+      "styleId": 52
+    },
+    {
+      "file": "public/audio/v104/combat/voice-red-panther-shield-hurt.ogg",
+      "bytes": 7753,
+      "sha256": "173624a5f625f498c5235777e8bf119f80bf4c41005fbe7988507af1808ba0b0",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-red-panther-shield-hurt.wav",
+          "sha256": "3d61f47bd6ad70bbbbf309e2e2200a4b963839ae6117bfcf281c3b6690829e46"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
+      "credit": "VOICEVOX:雀松朱司",
+      "text": "くそっ！",
+      "synthetic": true,
+      "styleId": 52
+    },
+    {
+      "file": "public/audio/v104/combat/voice-red-panther-shield-hurt.mp3",
+      "bytes": 4631,
+      "sha256": "a7959722ab94e70de6447fd185d79e18409a413fcb325a681ab4625cd27fd768",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-red-panther-shield-hurt.wav",
+          "sha256": "3d61f47bd6ad70bbbbf309e2e2200a4b963839ae6117bfcf281c3b6690829e46"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
+      "credit": "VOICEVOX:雀松朱司",
+      "text": "くそっ！",
+      "synthetic": true,
+      "styleId": 52
+    },
+    {
+      "file": "public/audio/v104/combat/voice-red-panther-shield-death.ogg",
+      "bytes": 8159,
+      "sha256": "ad2fb74f79ceebcdbe7ecaf75897f55c87eda4ddbee9f43b78482818b5d84bdd",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-red-panther-shield-death.wav",
+          "sha256": "880ffdeb14ce9888f381e0e44c0bcdd5d29670d327a7361902540f70099ff33b"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
+      "credit": "VOICEVOX:雀松朱司",
+      "text": "うあっ……。",
+      "synthetic": true,
+      "styleId": 52
+    },
+    {
+      "file": "public/audio/v104/combat/voice-red-panther-shield-death.mp3",
+      "bytes": 5021,
+      "sha256": "19591b4b6458c5bc7264c2f3679ed1aa0d5f770f7672bc5b88d2825f8e2f3376",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-red-panther-shield-death.wav",
+          "sha256": "880ffdeb14ce9888f381e0e44c0bcdd5d29670d327a7361902540f70099ff33b"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
+      "credit": "VOICEVOX:雀松朱司",
+      "text": "うあっ……。",
+      "synthetic": true,
+      "styleId": 52
+    },
+    {
+      "file": "public/audio/v104/combat/voice-red-panther-smg-attack.ogg",
+      "bytes": 7156,
+      "sha256": "76cee3ccc545715a2d89f4b4447a3b47296584299ca2641247a9863d8798bb26",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-red-panther-smg-attack.wav",
+          "sha256": "61b0ff6024b4bcfc3d3e278a60505b125daf8c2d3c5f6cea9ae694fdacd09112"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
+      "credit": "VOICEVOX:雀松朱司",
+      "text": "そこだ！",
+      "synthetic": true,
+      "styleId": 52
+    },
+    {
+      "file": "public/audio/v104/combat/voice-red-panther-smg-attack.mp3",
+      "bytes": 4994,
+      "sha256": "51fd8abd14f9bd8dfd47deada1ea40129afc7da08245f3fd16bc6b1f9262cdac",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-red-panther-smg-attack.wav",
+          "sha256": "61b0ff6024b4bcfc3d3e278a60505b125daf8c2d3c5f6cea9ae694fdacd09112"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
+      "credit": "VOICEVOX:雀松朱司",
+      "text": "そこだ！",
+      "synthetic": true,
+      "styleId": 52
+    },
+    {
+      "file": "public/audio/v104/combat/voice-red-panther-smg-hurt.ogg",
+      "bytes": 6421,
+      "sha256": "768b131814228f0c56c8126b62ec5aa2e31959ecfc8e17116c71fb3ca722b0db",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-red-panther-smg-hurt.wav",
+          "sha256": "83e67fefc4ae33781e6d735056033646544630a8f5d58d874250393f0c1988ea"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
+      "credit": "VOICEVOX:雀松朱司",
+      "text": "くっ！",
+      "synthetic": true,
+      "styleId": 52
+    },
+    {
+      "file": "public/audio/v104/combat/voice-red-panther-smg-hurt.mp3",
+      "bytes": 3326,
+      "sha256": "1a37ad1aeb6bf8ae09fa95c0d48c15f5314b7653ce4602d1a4298dbea951c9df",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-red-panther-smg-hurt.wav",
+          "sha256": "83e67fefc4ae33781e6d735056033646544630a8f5d58d874250393f0c1988ea"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
+      "credit": "VOICEVOX:雀松朱司",
+      "text": "くっ！",
+      "synthetic": true,
+      "styleId": 52
+    },
+    {
+      "file": "public/audio/v104/combat/voice-red-panther-smg-death.ogg",
+      "bytes": 7669,
+      "sha256": "47e538f7b9454b195ddd8ae11bb22bd8917a0764851829f7e3ce583fa2a54a88",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-red-panther-smg-death.wav",
+          "sha256": "65b06a9397ac75b6892a27a624a6b49af9542338728ca85e3a47d79ab47969e5"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
+      "credit": "VOICEVOX:雀松朱司",
+      "text": "ぐあっ……。",
+      "synthetic": true,
+      "styleId": 52
+    },
+    {
+      "file": "public/audio/v104/combat/voice-red-panther-smg-death.mp3",
+      "bytes": 5541,
+      "sha256": "d63a3ac1c74eef4268bf73b29a302e699f91ea2f027b48925a1cb9e4977e817a",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-red-panther-smg-death.wav",
+          "sha256": "65b06a9397ac75b6892a27a624a6b49af9542338728ca85e3a47d79ab47969e5"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
+      "credit": "VOICEVOX:雀松朱司",
+      "text": "ぐあっ……。",
+      "synthetic": true,
+      "styleId": 52
+    },
+    {
+      "file": "public/audio/v104/combat/voice-red-panther-commander-attack.ogg",
+      "bytes": 9028,
+      "sha256": "c5b001a6c30d833f1464353d4dd28e3b9908516359e654661785fd1c67c3a929",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-red-panther-commander-attack.wav",
+          "sha256": "8fc74e7c6312c2987003f811854fb99822f54fd5471744f7e51952f87e783a3a"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
+      "credit": "VOICEVOX:雀松朱司",
+      "text": "排除しろ！",
+      "synthetic": true,
+      "styleId": 52
+    },
+    {
+      "file": "public/audio/v104/combat/voice-red-panther-commander-attack.mp3",
+      "bytes": 8385,
+      "sha256": "27b019bb554e6e084b58ca045fcf0b93ed2ac2e8d2fcc9f0eddce79ac41fdc4b",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-red-panther-commander-attack.wav",
+          "sha256": "8fc74e7c6312c2987003f811854fb99822f54fd5471744f7e51952f87e783a3a"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
+      "credit": "VOICEVOX:雀松朱司",
+      "text": "排除しろ！",
+      "synthetic": true,
+      "styleId": 52
+    },
+    {
+      "file": "public/audio/v104/combat/voice-red-panther-commander-hurt.ogg",
+      "bytes": 7127,
+      "sha256": "cd7ba7f1a7b6b756e019aeaf7d71a4fc654ff1a9851db308ab058543cab7b31c",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-red-panther-commander-hurt.wav",
+          "sha256": "debce2d964b30589cb4baef693b7527bf763c34bc576cfad11c728636380c640"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
+      "credit": "VOICEVOX:雀松朱司",
+      "text": "ちっ！",
+      "synthetic": true,
+      "styleId": 52
+    },
+    {
+      "file": "public/audio/v104/combat/voice-red-panther-commander-hurt.mp3",
+      "bytes": 4109,
+      "sha256": "0a5ce8a210fb4007ee6560bfdf79767b7a600a6ee474e45b77fe29fd11b3388f",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-red-panther-commander-hurt.wav",
+          "sha256": "debce2d964b30589cb4baef693b7527bf763c34bc576cfad11c728636380c640"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
+      "credit": "VOICEVOX:雀松朱司",
+      "text": "ちっ！",
+      "synthetic": true,
+      "styleId": 52
+    },
+    {
+      "file": "public/audio/v104/combat/voice-red-panther-commander-death.ogg",
+      "bytes": 9533,
+      "sha256": "1572e8c64e32460261c78f3fb2083d7d50438a945babd1cdfbe088024a135aed",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-red-panther-commander-death.wav",
+          "sha256": "ee7424a8c0c12caf995da845d008c6f411e7a4aeadd04db55b94d211ea1da16c"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
+      "credit": "VOICEVOX:雀松朱司",
+      "text": "ここまでか……。",
+      "synthetic": true,
+      "styleId": 52
+    },
+    {
+      "file": "public/audio/v104/combat/voice-red-panther-commander-death.mp3",
+      "bytes": 7703,
+      "sha256": "01af3a92dad904b2a2e441dbb87da9a58e5fded2587f6bc000a07ff21219d015",
+      "inputs": [
+        {
+          "file": "assets/source/v104/combat-audio/voice-red-panther-commander-death.wav",
+          "sha256": "ee7424a8c0c12caf995da845d008c6f411e7a4aeadd04db55b94d211ea1da16c"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
+      "credit": "VOICEVOX:雀松朱司",
+      "text": "ここまでか……。",
+      "synthetic": true,
+      "styleId": 52
     }
   ]
 }

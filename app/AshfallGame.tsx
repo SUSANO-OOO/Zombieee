@@ -6,7 +6,7 @@ import { v100BasePresentationFor } from "./v100BasePresentation.js";
 import { createV100HumanWalkRenderer, v100HumanWalkPhase, v100UsesHumanWalk, v100HumanWalkCycleDistance, v100HumanWalkFrame } from "./v100HumanWalk.js";
 import { V177_JOINT_ATLASES, v177JointCycleDistance, v177JointPose, v177RangerFootPlan, drawV177JointPose, v177CaptureJointPose, v177RenderedJointWeaponSocket, v177RenderedWeightedLowerReceipt } from "./v177JointPresentation.js";
 import {v177ChoreographedAbilitySample} from "./v177WeaponChoreography.js";
-import {battleVoiceReady,queueV104HumanHurt,v104ContactIsHard} from "./v104CombatAudio.js";
+import {battleVoiceReady,queueV104HumanHurt,v104ContactIsHard,v104SupplementalEnemyVoice} from "./v104CombatAudio.js";
 import {createManualAbilityPointerHold} from "./manualAbilityUi.js";
 import {drawV104WeaponWake,drawV104InfectedWake,drawV104EyeBeam,v104WeaponWakeCandidate,v104MeleeImpactPoint} from "./v104CombatVfx.js";
 import { v177GroundedStrideFactor } from "./v177GroundedMotion.js";
@@ -15501,6 +15501,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       semantic?: string;
       receiptId?: string;
       semanticReceiptConsumed?: boolean;
+      voiceAllowed?: boolean;
     } = {},
   ) => {
     if (!cueId) return false;
@@ -15545,7 +15546,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       unlock: () => productionMixer.unlocked ? true : productionMixer.unlock(),
       isMuted: () => sfxMutedRef.current,
       fallback,
-      play: (guardedFallback) => productionMixer.play(cueId, {
+      play: (guardedFallback) => {
+        const primary = productionMixer.play(cueId, {
         pan,
         priority: options.priority,
         cooldownMs: options.cooldownMs,
@@ -15557,7 +15559,27 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         duck: options.duck,
         dedupeKey: options.dedupeKey,
         onLoadFailure: fallback ? guardedFallback : undefined,
-      }),
+        });
+        const voice = v104SupplementalEnemyVoice(cueId);
+        if (voice && options.ownerId !== undefined && options.voiceAllowed !== false) {
+          const instanceKey = `rp-voice:${options.ownerId}`;
+          void runGuardedAudioRequest({
+            gate: sfxRequestGateRef.current,
+            unlock: () => true,
+            isMuted: () => sfxMutedRef.current,
+            play: () => {
+              if (voice.event !== "attack") productionMixer.stopInstance(instanceKey, { fadeMs: 20 });
+              return productionMixer.play(voice.asset.id, {
+                pan,
+                instanceKey,
+                maxInstances: 1,
+                dedupeKey: options.dedupeKey ? `${options.dedupeKey}:voice` : undefined,
+              });
+            },
+          });
+        }
+        return primary;
+      },
     });
     return true;
   }, []);
@@ -20185,6 +20207,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           );
           if (hit.shotIndex === 0 && battleVoiceReady(target,"hurt",g.time,g)) {
             playProductionCue(enemyVoiceCue(target.kind, "hurt"), target.x, {
+              ownerId: target.id,
+              voiceAllowed: appliedDamage > 0,
               priority: target.kind === "takuya" || target.kind === "gate-eater" ? 88 : 62,
               cooldownMs: 210,
               maxInstances: 3,
@@ -22492,6 +22516,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                   f.kind === "takuya" && bossFinalPhase(f, .5) ? 1 : f.attackEvery,
                 );
                 playProductionCue(enemyVoiceCue(f.kind, "attack"), f.x, {
+                  ownerId: f.id,
                   priority: f.kind === "takuya" || f.kind === "gate-eater" ? 94 : 64,
                   cooldownMs: 150,
                   maxInstances: 3,
@@ -23142,12 +23167,15 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                   && !deferredHumanProjectile
                   && target.side === "zombie"
                   && battleVoiceReady(target,"hurt",g.time,g)) playProductionCue(enemyVoiceCue(target.kind, "hurt"), target.x, {
+                  ownerId: target.id,
+                  voiceAllowed: targetHpBeforeMetric > target.hp,
                   priority: target.kind === "takuya" || target.kind === "gate-eater" ? 88 : 62,
                   cooldownMs: 210,
                   maxInstances: 3,
                 });
               } else {
                 playProductionCue(attackAudioCueId, f.x, {
+                  ownerId: f.id,
                   priority: f.kind === "takuya" || f.kind === "gate-eater" ? 94 : 65,
                   cooldownMs: 160,
                   maxInstances: 3,

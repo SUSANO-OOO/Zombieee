@@ -1,7 +1,8 @@
 import fs from'node:fs/promises';import{createHash}from'node:crypto';import{execFileSync}from'node:child_process';import ffmpeg from'@ffmpeg-installer/ffmpeg';
 const source='assets/source/v100/audio',out='public/audio/v104/combat',records=[];
+const voices=JSON.parse(await fs.readFile('assets/source/v104/combat-audio/voices.json','utf8'));
 const only=process.argv.find(arg=>arg.startsWith('--only='))?.slice(7).split(',');
-if(only&&only.some(name=>!['handgun','suppressed-pistol','crossbow-release'].includes(name)))throw Error('Unknown isolated audio target');
+if(only&&only.some(name=>!['handgun','suppressed-pistol','crossbow-release',...voices.cast.map(v=>`voice-${v.kind}-${v.event}`)].includes(name)))throw Error('Unknown isolated audio target');
 const oldProvenance=only?JSON.parse(await fs.readFile('assets/source/v104/combat-audio/provenance.json','utf8')):null;
 await fs.mkdir(out,{recursive:true});
 const sha=b=>createHash('sha256').update(b).digest('hex');
@@ -54,7 +55,6 @@ await encode('suppressed-pistol',[source+'/opengameart/cz.wav'],
 await encode('crossbow-release',[source+'/kenney-rpg/metalLatch.ogg',source+'/kenney-rpg/knifeSlice.ogg',crossbowStringFile],
  '[0:a]atrim=0:0.075,highpass=f=350,lowpass=f=5000,volume=0.2[l];[1:a]atrim=0:0.12,highpass=f=900,lowpass=f=6000,volume=0.12,adelay=8[w];[2:a]volume=0.9[p];[l][w][p]amix=inputs=3:duration=longest:dropout_transition=0,volume=2.4,afade=t=out:st=0.2:d=0.1,apad=pad_len=1323[mix]',
  {procedural:crossbowString,nonVoice:true,credit:{creator:'Kenney; deterministic plucked-string synthesis by project',license:'CC0-1.0',notice:source+'/kenney-rpg/License.txt',url:'https://kenney.nl/assets/rpg-audio',adaptation:'short latch and bolt rush over a damped string release; no gunshot or voice'}});
-const voices=JSON.parse(await fs.readFile('assets/source/v104/combat-audio/voices.json','utf8'));
 for(const effect of eyeSources)await encode(effect.name,['assets/source/v104/combat-audio/'+effect.name+'.wav'],'[0:a]volume=1[mix]',{procedural:effect,nonVoice:true});
 for(const v of voices.cast)await encode(`voice-${v.kind}-${v.event}`,[v.source],
  '[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix]',{credit:v.credit,text:v.text,synthetic:true,styleId:v.styleId});

@@ -1,5 +1,7 @@
 # Third-party and generated asset ledger
 
+2026-10-23 / 1.0.4: RED PANTHERのナイフ・シールド・SMG・指揮官へ、`VOICEVOX:雀松朱司`（style52）の専用短声を各3件（攻撃・被弾・戦闘不能）追加。各兵種を別の文言・query・原WAVとして生成し、別キャラクターの録音は流用しない。既存の武器音・装甲音・倒れる音を保持する。音声の商用利用・別キャラクターへの声当て・クレジット条件は[VirVox公式音声規約](https://www.virvoxproject.com/voicevoxの利用規約)と[公式FAQ](https://www.virvoxproject.com/qa)で確認し、ゲーム内の音声規約リンクも同規約へ接続する。既存3castの原WAV・query・40codecを再生成せず、追加分のみ処理する。モデルは上記と同じ固定SHAの12.vvmを開発環境で使用し、配布しない。
+
 2026-10-22 / 1.0.4: クレイジーキング＝`VOICEVOX:剣崎雌雄`、クマバーソン＝`VOICEVOX:麒ヶ島宗麟`、ババヤガ＝`VOICEVOX:玄野武宏`の専用合成戦闘音声を採用。別人物の既存voiceは流用せず、出撃・攻撃・被弾・戦闘不能の短声のみ。商用利用とクレジット条件を[VirVox公式音声規約](https://www.virvoxproject.com/voicevoxの利用規約)・[剣崎雌雄公式規約](https://frontier.creatia.cc/fanclubs/413/posts/4507)で確認。Core0.17.0 / 固定モデルSHA / 文言・query・原WAV・加工後SHAは `assets/source/v104/combat-audio/`。モデル自体は配布しない。Kenney CC0の既存録音からフライパンの響きと装甲の打撃を別々に混合し、同台帳へ記録。ゲーム内クレジットにも3castを表示。
 
 同日、斬撃の金属片、感染体の飛沫、クロメの眼からの放射の透過VFXを内蔵画像生成で制作。元PNG・使用prompt・変換後SHAは `assets/source/v104/combat-vfx/`。`scripts/build-v104-combat-vfx.mjs`はalphaを保つ縮小・WebP符号化のみ行う。既存キャラクターidentity画像は変更しない。

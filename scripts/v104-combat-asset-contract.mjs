@@ -1,6 +1,18 @@
 // Frozen V1.0.4 media delta. Older manifests and joint45 remain immutable controls.
 export const V104_ASSET_BASE={"sha":"5f48b07242b267baee8a83240f2ec3b07622b45d","manifestSha256":"45b155096d342339e4c6daf743a39ddfa2649fb6b97bf1a745692af70b60de06"};
 export const V104_MEDIA_ADDITIONS=Object.freeze([
+  {path:'/audio/v104/combat/voice-red-panther-commander-attack.mp3',bytes:8385,hash:'sha256-27b019bb554e6e084b58ca045fcf0b93ed2ac2e8d2fcc9f0eddce79ac41fdc4b',criticality:'optional'},
+  {path:'/audio/v104/combat/voice-red-panther-commander-death.mp3',bytes:7703,hash:'sha256-01af3a92dad904b2a2e441dbb87da9a58e5fded2587f6bc000a07ff21219d015',criticality:'optional'},
+  {path:'/audio/v104/combat/voice-red-panther-commander-hurt.mp3',bytes:4109,hash:'sha256-0a5ce8a210fb4007ee6560bfdf79767b7a600a6ee474e45b77fe29fd11b3388f',criticality:'optional'},
+  {path:'/audio/v104/combat/voice-red-panther-knife-attack.mp3',bytes:6484,hash:'sha256-e0563ca586a60edcc19f4889fca563770a5bf4ef35c4ed1fac3e6922a31f3981',criticality:'optional'},
+  {path:'/audio/v104/combat/voice-red-panther-knife-death.mp3',bytes:5931,hash:'sha256-51c28c3c845ede85dec97c02721361290f3a91799b4a75326ec6c3840b84ea47',criticality:'optional'},
+  {path:'/audio/v104/combat/voice-red-panther-knife-hurt.mp3',bytes:3717,hash:'sha256-bfff909d9f81a20cfb4fae78383416b578ad707ace0c981a5ab7c8e4afabaf18',criticality:'optional'},
+  {path:'/audio/v104/combat/voice-red-panther-shield-attack.mp3',bytes:6667,hash:'sha256-0ed0a67e922445f72ac12ae2744cb340e3eecb926d76354393214da8a54a6030',criticality:'optional'},
+  {path:'/audio/v104/combat/voice-red-panther-shield-death.mp3',bytes:5021,hash:'sha256-19591b4b6458c5bc7264c2f3679ed1aa0d5f770f7672bc5b88d2825f8e2f3376',criticality:'optional'},
+  {path:'/audio/v104/combat/voice-red-panther-shield-hurt.mp3',bytes:4631,hash:'sha256-a7959722ab94e70de6447fd185d79e18409a413fcb325a681ab4625cd27fd768',criticality:'optional'},
+  {path:'/audio/v104/combat/voice-red-panther-smg-attack.mp3',bytes:4994,hash:'sha256-51fd8abd14f9bd8dfd47deada1ea40129afc7da08245f3fd16bc6b1f9262cdac',criticality:'optional'},
+  {path:'/audio/v104/combat/voice-red-panther-smg-death.mp3',bytes:5541,hash:'sha256-d63a3ac1c74eef4268bf73b29a302e699f91ea2f027b48925a1cb9e4977e817a',criticality:'optional'},
+  {path:'/audio/v104/combat/voice-red-panther-smg-hurt.mp3',bytes:3326,hash:'sha256-1a37ad1aeb6bf8ae09fa95c0d48c15f5314b7653ce4602d1a4298dbea951c9df',criticality:'optional'},
   {
     "path": "/audio/v104/combat/crossbow-release.mp3",
     "bytes": 3198,

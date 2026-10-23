@@ -1,6 +1,6 @@
 import test from'node:test';import assert from'node:assert/strict';import fs from'node:fs';import{execFileSync}from'node:child_process';import ffmpeg from'@ffmpeg-installer/ffmpeg';import{createHash}from'node:crypto';
 test('new combat codecs preserve the existing true-peak, silence, DC and tail-click limits',()=>{
- const dir='public/audio/v104/combat',names=fs.readdirSync(dir).filter(n=>/\.(mp3|ogg)$/.test(n));assert.equal(names.length,40);
+ const dir='public/audio/v104/combat',names=fs.readdirSync(dir).filter(n=>/\.(mp3|ogg)$/.test(n));assert.equal(names.length,64);
  for(const name of ['handgun','suppressed-pistol','crossbow-release'])for(const ext of ['mp3','ogg'])assert.ok(names.includes(name+'.'+ext));
  const fingerprints=new Map();
  for(const name of names){

@@ -18,7 +18,7 @@ export function V100AssetCredits({ expanded = false }: { expanded?: boolean }) {
     <ul>{V100_SOUND_CREDITS.filter(credit => credit.role !== "ボス戦音楽").map(credit => <li key={credit.author}>
       <a href={credit.page} target="_blank" rel="noreferrer">{credit.author}</a>
       <br />{credit.works.join(" / ")} ／
-      <a href={credit.license === "CC0" ? "https://creativecommons.org/publicdomain/zero/1.0/" : "https://creativecommons.org/licenses/by/3.0/"} target="_blank" rel="noreferrer">{credit.license}</a>
+      <a href={credit.license === "音声ライブラリ利用規約" ? credit.page : credit.license === "CC0" ? "https://creativecommons.org/publicdomain/zero/1.0/" : "https://creativecommons.org/licenses/by/3.0/"} target="_blank" rel="noreferrer">{credit.license}</a>
     </li>)}</ul>
     <p>戦闘ボイス・効果音は切り出し、フィルター、音量、フェードを調整。エフェクト画像はゲーム用の配置・再生時間・煙の重なりを調整。</p>
     <p>画面本文：BIZ UDPGothic。見出し・ボタン：Zen Kaku Gothic New。英数字：Rajdhani。タイトル：New Tegomin。Google Fontsで配布される書体を使用。著作権表示とSIL Open Font License 1.1全文を同梱。</p>
