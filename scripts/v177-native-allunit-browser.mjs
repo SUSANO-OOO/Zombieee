@@ -131,7 +131,7 @@ export async function runBrowserQa(){
   const requestedMimeType=process.env.V177_NATIVE_VIDEO_MIME??'video/webm;codecs=vp8';
   assert.ok(['video/webm;codecs=vp8','video/mp4'].includes(requestedMimeType),'Unknown native recorder comparison');
   assert.ok(selection.mode==='codec-control'||requestedMimeType==='video/webm;codecs=vp8','Container comparison is isolated from the remaining/full inventory');
-  const requestedCaptureHz=selection.mode==='acquisition-control'?60:null;
+  const requestedCaptureHz=60;
   const fullPlan=planShard(binding.shardId),plan=fullPlan.filter(r=>selection.caseIds.includes(r.caseId));
   const manualPlan=planRangerManualShard(binding.shardId).filter(r=>selection.mode==='full'||selection.manualCaseIds?.includes(r.caseId));
   const outcomePlan=planOutcomeShard(binding.shardId).filter(r=>selection.mode==='full'||selection.outcomeCaseIds?.includes(r.caseId));
@@ -153,7 +153,7 @@ export async function runBrowserQa(){
       ?'One original Abomination attack case with a 60Hz canvas acquisition-request timer. Native VP8 bytes, free RAF/simulation, source clocks, 15x120ms sampling and encoded thresholds stay unchanged. Diagnostic only; no retained, all-unit, performance, release or physical acceptance.'
       :selection.mode==='codec-control'
       ?'One original Brute attack case with a native container comparison. Original scene, free RAF/simulation, source clock and deadlines remain unchanged. This dispatch supplies no all-unit, performance, release, naturalness or physical audio acceptance.'
-      :'One of twelve all48 native VP8 shards;432 normal cases remain separate from3 supplemental actual Ranger manual clips. Original free RAF/simulation after actual recorder start. Ordinary actors use original stats; Mayo uses real trusted activation/self-drain; turned continues the actual infection newborn; split twins use their real S24 pair constructors with a deliberately partial encounter. Legacy fused art is an explicit fixture. Controlled target diagnostics are not campaign, balance, original-speed naturalness or physical audio acceptance.'};
+      :'One of twelve all48 native VP8 shards;432 normal cases remain separate from3 supplemental actual Ranger manual clips. A native60Hz source-acquisition request timer does not guarantee encoded60fps or grant acceptance. Original free RAF/simulation after actual recorder start. Ordinary actors use original stats; Mayo uses real trusted activation/self-drain; turned continues the actual infection newborn; split twins use their real S24 pair constructors with a deliberately partial encounter. Legacy fused art is an explicit fixture. Controlled target diagnostics are not campaign, balance, original-speed naturalness or physical audio acceptance.'};
   if(process.env.V177_NATIVE_HOST_INDEXING_CONTROL==='brute-attack-1280'){
     const file=path.join(out,'native-host-indexing-prepared.json'),bytes=await readFile(file),prepared=JSON.parse(bytes);
     assert.equal(prepared.purpose,'native-capture-diagnostic');assert.equal(prepared.diagnosticOnly,true);
@@ -238,7 +238,7 @@ export async function runBrowserQa(){
           },closeOwned,{onDeadline:fail});
           for(const planned of rows){
             const row={...planned,status:'starting',samples:[],...acceptance()};report.cases.push(row);
-            try{await withNativeGameCaseDeadline(()=>captureAllUnitCase(page,row,{out,onFailure:fail,requestedMimeType,requestedCaptureHz,codecControl:selection.mode==='codec-control'}),closeOwned,
+            try{await withNativeGameCaseDeadline(()=>captureAllUnitCase(page,row,{out,onFailure:fail,requestedMimeType,requestedCaptureHz,codecControl:selection.mode==='codec-control',acquisitionControl:selection.mode==='acquisition-control'}),closeOwned,
               {onDeadline:error=>{row.deadlineExpired=true;fail(error);}});}
             catch(error){row.status='failed';row.error=String(error);row.operationSettledAtOwnerReturn=error.operationSettledAtOwnerReturn??null;fail(error);await persist();break;}
             await persist();

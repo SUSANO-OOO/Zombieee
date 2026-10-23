@@ -149,7 +149,7 @@ function fixture(phase, { form = 'abomination', failAt, cleanupFails = false, mu
       assert.equal(metadata.fixtureGroup, phase === 'engage' ? 'approach-to-attack' : side === 'human' ? 'authored-form' : 'base-enemy');
       assert.ok(options.directory.includes('844x340'));
       return { async finish({ completed }) { events.push(completed ? 'completed-clip' : 'interrupted-clip');
-        return { status: 'recorded', engine: 'webkit', requestedMimeType: NATIVE_GAME_CAPTURE_MIME, mimeType: 'video/webm; codecs=vp8',
+        return { status: 'recorded', engine: 'webkit', requestedMimeType: NATIVE_GAME_CAPTURE_MIME, requestedCaptureHz:60, mimeType: 'video/webm; codecs=vp8',
           file: 'fixture-original.webm', bytes: bytes.length, sha256: createHash('sha256').update(bytes).digest('hex'),
           width: 980, height: 520, timeOrigin: 1001, realm: realm.clip, originalSpeedAccepted: false, encodedPtsVerified: false }; } };
     } };
@@ -294,7 +294,7 @@ test('distinct native frames survive a delayed audit with identical raw observat
   row.boundary={at:20101,realm:realm('sample')};row.release={at:20102,realm:realm('release')};
   row.captureStart={realm:realm('sample')};row.samples=[{at:20138,realm:realm('sample')}];
   const bytes=Buffer.from('inert clock contract fixture');
-  row.nativeClip={status:'recorded',engine:'webkit',requestedMimeType:'video/webm;codecs=vp8',mimeType:'video/webm',
+  row.nativeClip={status:'recorded',engine:'webkit',requestedMimeType:'video/webm;codecs=vp8',requestedCaptureHz:60,mimeType:'video/webm',
     originalSpeedAccepted:false,encodedPtsVerified:false,bytes:bytes.length,sha256:createHash('sha256').update(bytes).digest('hex'),
     metadata:{},timeOrigin:1000,startedAt:20100,stopRequestedAt:20140,realm:{created,started,finished:realm('recorder-finish')}};
   row.sourceRaf={...source,realm:{started:rafStart,stopped:realm('raf-stop'),failure:null}};

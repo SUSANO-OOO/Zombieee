@@ -67,7 +67,7 @@ function fixture({form='medic',origin=1000000,startEvent=true,stopEvent=true,chu
  const document={defaultView:window,visibilityState:'visible',querySelector:selector=>{assert.equal(selector,'.game-shell canvas');return canvas;}};
  const canvas={width:844,height:304,isConnected:true,ownerDocument:document,
   getBoundingClientRect:()=>({x:0,y:0,width:844,height:304}),
-  captureStream(...args){assert.equal(args.length,0);log.push('capture-stream');return stream;}};
+  captureStream(...args){assert.deepEqual(Array.from(args),[60]);log.push('capture-stream');return stream;}};
  const performance={get timeOrigin(){return rawOrigin;},now:()=>now+=.001};
  class Recorder{
   static isTypeSupported(type){return type==='video/webm;codecs=vp8';}
@@ -291,10 +291,10 @@ test('unowned default and explicit-null Recorder/RAF keep matching receipts and 
   assert.ok(rafResult.rows[0].observedAt>rafResult.rows[0].enteredAt);
   const state=f.run(startNativeCanvasClip,f.canvas,{metadata:{form:'medic'},...(explicitNull?{realmOwner:null}:{})});
   const clip=clone(await f.run(finishNativeCanvasClip,state,{completed:true}));
-  assert.deepEqual(Object.keys(clip).sort(),['schema','metadata','status','mimeType','mimePreferences','requestedMimeType',
+  assert.deepEqual(Object.keys(clip).sort(),['schema','metadata','status','mimeType','mimePreferences','requestedMimeType','requestedCaptureHz',
    'width','height','timeOrigin','requestedAt','startedAt','stopRequestedAt','stoppedAt','nativeElapsedMs','captureWindowMs',
    'trackSettings','dataEvents','errors','completed','scope','originalSpeedAccepted','encodedPtsVerified','videoBase64'].sort());
-  assert.equal(clip.status,'recorded');assert.equal(Buffer.from(clip.videoBase64,'base64').toString(),'pure-node-fixture');
+  assert.equal(clip.status,'recorded');assert.equal(clip.requestedCaptureHz,60);assert.equal(Buffer.from(clip.videoBase64,'base64').toString(),'pure-node-fixture');
   assert.equal(clip.originalSpeedAccepted,false);assert.equal(clip.encodedPtsVerified,false);outputs.push({rafResult,clip});
  }
  assert.deepEqual(outputs[0],outputs[1]);

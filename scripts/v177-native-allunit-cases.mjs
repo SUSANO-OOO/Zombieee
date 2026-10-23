@@ -164,12 +164,13 @@ export async function prepareCase(page,row,owned,active,resources){
     ownerEvidence:proof.ownerEvidence??proof.origin??{constructorFixture:true,legacyFusedFixture:proof.legacyFusedFixture}};
 }
 
-export function assertAllUnitClip(row,bytes,{codecControl=false,requestedMimeType='video/webm;codecs=vp8',requestedCaptureHz=null}={}){
+export function assertAllUnitClip(row,bytes,{codecControl=false,requestedMimeType='video/webm;codecs=vp8',requestedCaptureHz=60,acquisitionControl=false}={}){
   const c=row.nativeClip;
-  if(requestedCaptureHz!==null){
-    assert.equal(requestedCaptureHz,60);assert.equal(row.caseId,'forms-6:abomination:attack:844x340');
-    assert.equal(row.recordingMetadata.acquisitionControl,true);assert.equal(c.requestedCaptureHz,60);
-  }else assert.ok(c.requestedCaptureHz===null||c.requestedCaptureHz===undefined,'Ordinary evidence keeps the original noargs acquisition');
+  if(acquisitionControl){
+    assert.equal(row.caseId,'forms-6:abomination:attack:844x340');assert.equal(row.recordingMetadata.acquisitionControl,true);
+  }else assert.equal(row.recordingMetadata.acquisitionControl,undefined,'A normal observation cannot acquire a diagnostic label');
+  if(requestedCaptureHz===null)assert.ok(c.requestedCaptureHz===null||c.requestedCaptureHz===undefined,'Historical noargs evidence keeps its original method');
+  else{assert.equal(requestedCaptureHz,60);assert.equal(c.requestedCaptureHz,60);}
   if(codecControl){
     assert.equal(row.caseId,'forms-2:brute:attack:1280x720');assert.equal(row.form,'brute');assert.equal(row.phase,'attack');
     assert.deepEqual(row.viewport,{width:1280,height:720});assert.equal(row.recordingMetadata.codecControl,true);
@@ -203,7 +204,7 @@ export function assertAllUnitClip(row,bytes,{codecControl=false,requestedMimeTyp
     assert.equal(r.renderKind,row.form);if(i)assert.ok(r.at>row.sourceRaf.rows[i-1].at);
   }
 }
-export async function captureAllUnitCase(page,row,{out,onFailure=()=>{},requestedMimeType='video/webm;codecs=vp8',requestedCaptureHz=null,codecControl=false}={}){
+export async function captureAllUnitCase(page,row,{out,onFailure=()=>{},requestedMimeType='video/webm;codecs=vp8',requestedCaptureHz=60,codecControl=false,acquisitionControl=false}={}){
   assertPlannedCase(row);let clip,observation,primary;
   const resources={pointer:null,realmOwner:null,sampleHandles:[]};
   const active=()=>{assert.notEqual(row.deadlineExpired,true,'Late capture cannot become accepted');assert.equal(page.isClosed(),false);};
@@ -219,7 +220,7 @@ export async function captureAllUnitCase(page,row,{out,onFailure=()=>{},requeste
       fighterId:row.proof.fighterId,preparedRenderKind:row.form,owner:row.owner,caseId:row.caseId,
       proofId:row.proof.proofId,battleGeneration:row.proof.battleGeneration,
       legacyFusedFixture:row.proof.legacyFusedFixture,diagnosticOnly:true,controlledOpponent:true,
-      ...(codecControl?{codecControl:true}:{}),...(requestedCaptureHz!==null?{acquisitionControl:true}:{})};
+      ...(codecControl?{codecControl:true}:{}),...(acquisitionControl?{acquisitionControl:true}:{})};
     clip=await beginV177NativeCanvasClip(page,row.recordingMetadata,{directory:path.join(out,
       row.viewport.width+'x'+row.viewport.height,'native-canvas-clips'),engine:'webkit',requestedMimeType,requestedCaptureHz,realmOwner:resources.realmOwner});active();
     row.recordingStart=await owned(()=>clip.waitForStart());
@@ -256,7 +257,7 @@ export async function captureAllUnitCase(page,row,{out,onFailure=()=>{},requeste
     for(const entry of resources.sampleHandles){
       row.samples.push(await owned(()=>entry.handle.evaluate(value=>value)));entry.exported=true;
     }
-    assertAllUnitClip(row,await readFile(row.nativeClip.file),{codecControl,requestedMimeType,requestedCaptureHz});
+    assertAllUnitClip(row,await readFile(row.nativeClip.file),{codecControl,requestedMimeType,requestedCaptureHz,acquisitionControl});
     row.postpaintReceipt=assertShardPostpaintContract(row,row.proof,row.boundary,row.release,row.samples);
     const windowSamples=row.samples.map(s=>({...s,renders:s.renders.filter(r=>r.renderSequence>row.sequenceBaseline
       &&r.jointPaintedAt>=row.boundary.simulationTime&&r.jointPaintedAt<=s.simulationTime)}));

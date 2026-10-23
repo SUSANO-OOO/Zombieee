@@ -170,9 +170,10 @@ test("production manifest preserves prior audio and adds only audited v080/v090 
   const activeV090Paths = manifestPaths.filter((sourcePath) => sourcePath.startsWith("/audio/v090/"));
   const activeV099Paths = manifestPaths.filter((sourcePath) => sourcePath.startsWith("/audio/v099/"));
   assert.equal(PRODUCTION_AUDIO_MANIFEST.version, 2);
-  assert.equal(PRODUCTION_AUDIO_MANIFEST.assets.length, 262);
-  // Dedicated commander handgun and crossbow MP3/OGG pairs; old cues stay.
-  assert.equal(manifestPaths.length, 462);
+  // Current candidate inventory: the prior262 assets /462 sources are retained;
+  // twelve audited RED PANTHER utterances add twelve MP3/OGG pairs.
+  assert.equal(PRODUCTION_AUDIO_MANIFEST.assets.length, 274);
+  assert.equal(manifestPaths.length, 486);
   assert.deepEqual(PRODUCTION_AUDIO_MANIFEST.assets.find(asset=>asset.id==='v104-handgun').sources.map(s=>s.src),
     ['/audio/v104/combat/handgun.mp3','/audio/v104/combat/handgun.ogg']);
   assert.equal(
@@ -495,14 +496,14 @@ test("authored story scenes never bind existing human battle-voice cues", () => 
   ));
   assert.equal(v070Assets.some(({ category }) => category === "humanVoices"), false);
   const battleVoiceAssets = PRODUCTION_AUDIO_MANIFEST.assets.filter(({ category }) => category === "humanVoices");
-  assert.equal(battleVoiceAssets.length, 34);
+  assert.equal(battleVoiceAssets.length, 46); // prior34 plus twelve distinct new RP utterances
   for (const asset of battleVoiceAssets) {
     assert.match(
       asset.id,
-      /^(?:human-(?:female|male-heavy|male-light)-(?:attack|hurt|death)-0[12]|voice-(?:crazy-king|kumaverson|babayaga)-(?:deploy|attack|hurt|death)|voice-mayo-(?:deploy|attack|hurt|retreat))$/,
+      /^(?:human-(?:female|male-heavy|male-light)-(?:attack|hurt|death)-0[12]|voice-(?:crazy-king|kumaverson|babayaga)-(?:deploy|attack|hurt|death)|voice-mayo-(?:deploy|attack|hurt|retreat)|voice-red-panther-(?:knife|shield|smg|commander)-(?:attack|hurt|death))$/,
     );
     assert.equal(
-      asset.sources.every(({ src }) => src.startsWith(asset.id.startsWith("voice-mayo-") ? "/audio/v090/sfx/" : "/audio/v060/sfx/")),
+      asset.sources.every(({ src }) => src.startsWith(asset.id.startsWith("voice-red-panther-") ? "/audio/v104/combat/" : asset.id.startsWith("voice-mayo-") ? "/audio/v090/sfx/" : "/audio/v060/sfx/")),
       true,
       asset.id,
     );
@@ -937,7 +938,7 @@ test("localhost-only audio QA bridge can inspect and individually play every ass
     ...PRODUCTION_AUDIO_MANIFEST.assets.map((asset) => asset.id),
     ...PRODUCTION_AUDIO_MANIFEST.pools.map((pool) => pool.id),
   ];
-  assert.equal(allCueIds.length, 304);
+  assert.equal(allCueIds.length, 316); // current candidate: unchanged304 plus new12 RP assets
   assert.equal(new Set(allCueIds).size, allCueIds.length);
   for (const category of AUDIO_CATEGORIES) {
     assert.ok(
