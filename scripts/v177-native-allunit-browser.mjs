@@ -13,6 +13,7 @@ import {captureNativeRangerManualCase} from './v177-native-allunit-ranger-manual
 import {nativeCaseSelection} from './v177-native-allunit-selection.mjs';
 import {planOutcomeShard,captureNativeOutcomeCase} from './v177-native-allunit-outcomes.mjs';
 import {combatKindToCampaignUnitId} from '../app/campaign.js';
+import {withNativeProcessTimeline} from './v177-native-process-timeline.mjs';
 
 const git=args=>execFileSync('git',args,{encoding:'utf8',maxBuffer:8*1024*1024,windowsHide:true}).trim();
 const sha=b=>createHash('sha256').update(b).digest('hex');
@@ -105,6 +106,7 @@ const additions=[
   'tests/v177-native-allunit-ranger-manual.test.mjs',
   'scripts/v177-native-allunit-recording-runtime.mjs','scripts/native-recording-runtime/package.json',
   'scripts/native-recording-runtime/package-lock.json','tests/v177-native-allunit-recording-runtime.test.mjs',
+  'scripts/v177-native-process-timeline.mjs','tests/v177-native-process-timeline.test.mjs',
   'scripts/v177-native-allunit-selection.mjs','scripts/v177-native-allunit-recovery.json',
   'scripts/v177-native-allunit-outcomes.mjs','tests/v177-native-allunit-outcomes.test.mjs',
   'scripts/v177-human-corpse-contract.mjs','tests/v177-human-corpse-continuity.test.mjs',
@@ -240,9 +242,11 @@ export async function runBrowserQa(){
           },closeOwned,{onDeadline:fail});
           for(const planned of rows){
             const row={...planned,status:'starting',samples:[],...acceptance()};report.cases.push(row);
-            try{await withNativeGameCaseDeadline(()=>captureAllUnitCase(page,row,{out,onFailure:fail,requestedMimeType,requestedCaptureHz,codecControl:selection.mode==='codec-control',acquisitionControl:selection.mode==='acquisition-control'}),closeOwned,
-              {onDeadline:error=>{row.deadlineExpired=true;fail(error);}});}
+            const processObservationOwner=new AbortController();
+            try{await withNativeGameCaseDeadline(()=>withNativeProcessTimeline(()=>captureAllUnitCase(page,row,{out,onFailure:fail,requestedMimeType,requestedCaptureHz,codecControl:selection.mode==='codec-control',acquisitionControl:selection.mode==='acquisition-control'}),{selection,row,out,binding,signal:processObservationOwner.signal}),closeOwned,
+              {onDeadline:error=>{processObservationOwner.abort();row.deadlineExpired=true;fail(error);}});}
             catch(error){row.status='failed';row.error=String(error);row.operationSettledAtOwnerReturn=error.operationSettledAtOwnerReturn??null;fail(error);await persist();break;}
+            finally{processObservationOwner.abort();}
             await persist();
           }
           // Supplemental manual input never supplies a missing normal case.

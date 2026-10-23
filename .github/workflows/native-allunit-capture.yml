@@ -6,6 +6,11 @@ on:
     paths:
       - '.github/workflows/native-allunit-capture.yml'
       - 'scripts/v177-native-allunit-*.mjs'
+      - 'scripts/v177-native-allunit-recovery.json'
+      - 'scripts/native-recording-runtime/package.json'
+      - 'scripts/native-recording-runtime/package-lock.json'
+      - 'scripts/v177-native-process-timeline.mjs'
+      - 'tests/v177-native-process-timeline.test.mjs'
       - 'scripts/v100-macos-indexing-control.mjs'
       - 'tests/v177-native-allunit*.test.mjs'
       - 'scripts/v177-native-encoded-clips.mjs'
