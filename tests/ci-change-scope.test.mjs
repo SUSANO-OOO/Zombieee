@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {ciChangeScope,framePerformanceRuntimes} from '../scripts/ci-change-scope.mjs';
+import {ciChangeScope,framePerformanceRuntimes,previousFullCiEvidence} from '../scripts/ci-change-scope.mjs';
 import {assertEphemeralPerformanceHost} from '../scripts/v100-macos-indexing-control.mjs';
 import {readFileSync} from 'node:fs';
 import {load} from 'js-yaml';
@@ -13,6 +13,43 @@ test('a ready candidate always gets full regression, including governance-only c
   const scope=ciChangeScope(paths,{draft:false});assert.equal(scope.full,true);assert.equal(scope.ranger,true);assert.equal(scope.normal,true);
   assert.equal(scope.wholeGameAccepted,false);
  }
+});
+
+test('native-only synchronize updates retain product lanes without waiving their unfinished gates',()=>{
+ const paths=['scripts/v177-native-canvas-clips.mjs','scripts/v177-native-allunit-recovery.json',
+  'tests/v177-native-realm-owner.test.mjs','docs/PROJECT_STATE.md'];
+ const scoped=ciChangeScope(paths,{draft:false,reuseNativeQa:true});
+ assert.equal(scoped.full,false);assert.equal(scoped.allunit,true);
+ for(const lane of ['ranger','normal','r9','wholeGameAccepted'])assert.equal(scoped[lane],false);
+ assert.equal(scoped.finalIntegrationRequiresFullRegression,true);
+ assert.equal(ciChangeScope(paths,{draft:false}).full,true,'Ready transitions keep full regression');
+ for(const file of ['app/AshfallGame.tsx','public/asset-manifest.json','package-lock.json','unknown',
+  '.github/workflows/ci.yml','scripts/ci-change-scope.mjs','docs/PRODUCER_DECISIONS_1.0.3.md',
+  'tests/v100-r9-full-story.test.mjs','tests/ci-change-scope.test.mjs','tests/future-unknown.test.mjs'])
+   assert.equal(ciChangeScope([...paths,file],{draft:false,reuseNativeQa:true}).full,true,file);
+ const workflow=load(readFileSync('.github/workflows/ci.yml','utf8'));
+ assert.equal(workflow.jobs.scope.steps.find(step=>step.id==='scope').env.CI_SCOPE_ACTION,'${{ github.event.action }}');
+ assert.equal(workflow.jobs.scope.steps.find(step=>step.id==='scope').env.CI_SCOPE_PREVIOUS_HEAD,'${{ github.event.before }}');
+ assert.equal(workflow.jobs.scope.steps.find(step=>step.id==='scope').env.CI_SCOPE_PR_BASE,'${{ github.event.pull_request.base.sha }}');
+ assert.equal(workflow.jobs.scope.steps.find(step=>step.id==='scope').env.CI_SCOPE_PR_NUMBER,'${{ github.event.pull_request.number }}');
+});
+
+test('native Ready reuse requires a successful exact-head CI and its full-only production job',async()=>{
+ const head='a'.repeat(40),base='c'.repeat(40),prNumber=180,options={repository:'SUSANO-OOO/Zombieee',head,base,prNumber,token:'test-only'},calls=[];
+ const run={id:51,head_sha:head,status:'completed',conclusion:'success',pull_requests:[{number:prNumber,head:{sha:head},base:{sha:base}}]};
+ const phaseG={id:73,name:'V1 Phase G Production Matrix',status:'completed',conclusion:'success'};
+ const request=(runs,jobs)=>async url=>{calls.push(url);return{ok:true,json:async()=>url.includes('workflows/')?{workflow_runs:runs}:{jobs}};};
+ assert.deepEqual(await previousFullCiEvidence({...options,request:request([run],[phaseG])}),{passed:true,head,base,prNumber,runId:51,fullOnlyJobId:73});
+ for(const bad of [{...run,head_sha:'b'.repeat(40)},{...run,status:'in_progress'},{...run,conclusion:'failure'},{...run,conclusion:'cancelled'},
+  {...run,pull_requests:[]},{...run,pull_requests:[{number:181,head:{sha:head},base:{sha:base}}]},
+  {...run,pull_requests:[{number:prNumber,head:{sha:'b'.repeat(40)},base:{sha:base}}]},
+  {...run,pull_requests:[{number:prNumber,head:{sha:head},base:{sha:'d'.repeat(40)}}]}])
+   assert.equal((await previousFullCiEvidence({...options,request:request([bad],[phaseG])})).passed,false);
+ for(const jobs of [[],[{...phaseG,conclusion:'skipped'}],[{...phaseG,conclusion:'failure'}],[{...phaseG,name:'PR Verify'}]])
+   assert.equal((await previousFullCiEvidence({...options,request:request([run],jobs)})).passed,false);
+ assert.equal((await previousFullCiEvidence({...options,request:async()=>{throw Error('offline');}})).passed,false);
+ assert.equal((await previousFullCiEvidence({...options,token:'',request:()=>assert.fail('No token must not issue a request')})).passed,false);
+ assert.ok(calls.every(url=>url.startsWith('https://api.github.com/repos/SUSANO-OOO/Zombieee/')));
 });
 
 test('only the exact formal job correction avoids duplicating its unchanged running native control',()=>{
@@ -215,6 +252,23 @@ test('the real CLI collects the native control blob and restores full regression
  assert.equal(scoped.full,false);assert.equal(scoped.allunit,true);assert.equal(scoped.normal,false);assert.equal(scoped.r9,false);
  writeFileSync(join(directory,file),Buffer.concat([bytes,Buffer.from('\n')]));git('add','.');commit();
  assert.equal(run(git('rev-parse','HEAD')).full,true);
+});
+
+test('CLI native synchronize reuse requires the exact ancestor and preserves Ready and unknown-path full regression',()=>{
+ const script=resolve('scripts/ci-change-scope.mjs'),directory=mkdtempSync(join(tmpdir(),'zombieee-native-ready-scope-'));
+ const git=(...args)=>execFileSync('git',args,{cwd:directory,encoding:'utf8',windowsHide:true}).trim();
+ const commit=()=>{git('add','.');git('-c','user.name=scope-test','-c','user.email=scope-test@example.invalid','-c','commit.gpgsign=false','commit','-qm','fixture');return git('rev-parse','HEAD');};
+ git('init','-q');writeFileSync(join(directory,'AGENTS.md'),'fixture');const base=commit();
+ mkdirSync(join(directory,'scripts'));writeFileSync(join(directory,'scripts/v177-native-allunit-recovery.json'),'fixture');const head=commit();
+ const run=(extra={})=>JSON.parse(execFileSync(process.execPath,[script],{cwd:directory,encoding:'utf8',windowsHide:true,
+  env:{...process.env,CI_SCOPE_BASE:base,CI_SCOPE_HEAD:head,CI_SCOPE_DRAFT:'false',CI_SCOPE_ACTION:'synchronize',CI_SCOPE_PREVIOUS_HEAD:base,CI_SCOPE_ACTIONS_TOKEN:'',GITHUB_OUTPUT:'',GITHUB_STEP_SUMMARY:'',...extra}}));
+ const reused=run();assert.equal(reused.eligibleNativeReuse,true);assert.equal(reused.full,true,'missing prior-full evidence must fail closed');assert.equal(reused.previousFullEvidence.passed,false);
+ assert.equal(reused.wholeGameAccepted,false);assert.equal(reused.finalIntegrationRequiresFullRegression,true);
+ assert.equal(run({CI_SCOPE_ACTION:'ready_for_review'}).full,true);
+ assert.equal(run({CI_SCOPE_PREVIOUS_HEAD:head}).full,true);
+ writeFileSync(join(directory,'unknown'),'fixture');const unknown=commit();assert.equal(run({CI_SCOPE_HEAD:unknown}).full,true);
+ git('checkout','--detach',base);writeFileSync(join(directory,'AGENTS.md'),'advanced');const advanced=commit();
+ assert.equal(run({CI_SCOPE_BASE:advanced,CI_SCOPE_PREVIOUS_HEAD:advanced}).full,true,'an unmerged advanced base cannot authorize reuse');
 });
 
 test('reviewed lifecycle bindings select motion/normal while unchanged story and Ranger-only observations remain reusable',()=>{

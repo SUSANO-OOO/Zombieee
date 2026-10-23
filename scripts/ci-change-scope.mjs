@@ -16,7 +16,14 @@ const allunit=new Set(['.github/workflows/native-allunit-capture.yml','scripts/v
   'scripts/v177-native-allunit-browser.mjs','scripts/v177-native-allunit-cases.mjs',
   'scripts/v177-native-allunit-manifest.mjs','scripts/v177-native-allunit-contract.mjs',
   'scripts/v177-native-allunit-selection.mjs','scripts/v177-native-allunit-recovery.json',
-  'scripts/v177-native-allunit-ranger-manual.mjs']);
+  'scripts/v177-native-allunit-ranger-manual.mjs','scripts/v177-native-canvas-clips.mjs']);
+const nativeQaTests=new Set(['tests/v177-native-allunit.test.mjs','tests/v177-native-allunit-build.test.mjs',
+  'tests/v177-native-allunit-selection.test.mjs','tests/v177-native-allunit-outcomes.test.mjs',
+  'tests/v177-native-allunit-ranger-manual.test.mjs','tests/v177-native-canvas-clips.test.mjs',
+  'tests/v177-native-realm-owner.test.mjs','tests/v177-native-capture-realm.test.mjs',
+  'tests/v177-native-encoded-clips.test.mjs','tests/v177-native-frame-timing.test.mjs',
+  'tests/v177-native-setup-overlap.test.mjs','tests/v177-native-incoming-stun.test.mjs',
+  'tests/v177-native-turned-getup.test.mjs','tests/v177-native-born-readiness.test.mjs']);
 const r9=new Set(['scripts/v100-dialogue-composition-browser.mjs','scripts/v100-story-bookends-browser-smoke.mjs',
   'scripts/v100-r9-full-story-browser.mjs','scripts/v100-r9-story-plan.mjs']);
 const orchestration=new Set(['.github/workflows/ci.yml','scripts/ci-change-scope.mjs',
@@ -87,10 +94,43 @@ const reviewedMotionBlobs=Object.freeze({
   'scripts/v177-human-corpse-contract.mjs':'17568cb76138783d88365660e1ef04e23be26008',
 });
 
-export function ciChangeScope(paths,{draft,sourceBlobs={}}={}){
+export async function previousFullCiEvidence({repository,head,base,prNumber,token,request=fetch}={}){
+  if(!/^[\w.-]+\/[\w.-]+$/u.test(repository??'')||!/^[a-f0-9]{40}$/u.test(head??'')
+    ||!/^[a-f0-9]{40}$/u.test(base??'')||!Number.isSafeInteger(prNumber)||prNumber<1||!token)
+    return{passed:false,reason:'previous-full-evidence-unavailable'};
+  const get=async suffix=>{
+    const response=await request(`https://api.github.com/repos/${repository}/${suffix}`,{
+      headers:{Accept:'application/vnd.github+json',Authorization:`Bearer ${token}`,'X-GitHub-Api-Version':'2022-11-28'},
+      signal:AbortSignal.timeout(10_000),
+    });
+    if(!response.ok)throw Error('Actions evidence unavailable');return response.json();
+  };
+  try{
+    const data=await get(`actions/workflows/ci.yml/runs?head_sha=${head}&event=pull_request&per_page=10`);
+    for(const run of data.workflow_runs??[]){
+      if(run.head_sha!==head||run.status!=='completed'||run.conclusion!=='success'||!Number.isSafeInteger(run.id))continue;
+      // Full jobs checkout the event's synthetic merge. Reuse requires the
+      // same PR/base snapshot as that successful run, not merely the same head.
+      if(!run.pull_requests?.some(pr=>pr.number===prNumber&&pr.head?.sha===head&&pr.base?.sha===base))continue;
+      const data=await get(`actions/runs/${run.id}/jobs?filter=latest&per_page=100`);
+      const phaseG=data.jobs?.find(job=>job.name==='V1 Phase G Production Matrix'&&job.status==='completed'
+        &&job.conclusion==='success'&&Number.isSafeInteger(job.id));
+      if(phaseG)return{passed:true,head,base,prNumber,runId:run.id,fullOnlyJobId:phaseG.id};
+    }
+    return{passed:false,reason:'no-successful-full-ci-for-previous-head'};
+  }catch{return{passed:false,reason:'previous-full-evidence-unavailable'};}
+}
+
+export function ciChangeScope(paths,{draft,sourceBlobs={},reuseNativeQa=false}={}){
   assert.equal(typeof draft,'boolean');
+  assert.equal(typeof reuseNativeQa,'boolean');
   assert.ok(Array.isArray(paths)&&paths.length>0&&paths.every(p=>typeof p==='string'&&p&&!p.includes('\\')));
-  let full=!draft,rangerChanged=false,normalChanged=false,allunitChanged=false,r9Changed=false;
+  // A synchronize update containing only native QA, its tests and the status
+  // ledger cannot change the shipped app. Keep the prior full product run and
+  // run the changed QA; Ready transitions and any product/unknown path stay full.
+  const nativeQaOnly=reuseNativeQa&&paths.some(file=>allunit.has(file))
+    &&paths.every(file=>allunit.has(file)||file==='docs/PROJECT_STATE.md'||nativeQaTests.has(file));
+  let full=!draft&&!nativeQaOnly,rangerChanged=false,normalChanged=false,allunitChanged=false,r9Changed=false;
   for(const file of paths){
     if(ranger.has(file))rangerChanged=true;
     else if(normal.has(file))normalChanged=true;
@@ -110,12 +150,12 @@ export function ciChangeScope(paths,{draft,sourceBlobs={}}={}){
     else full=true; // Unclassified changes retain the complete regression.
   }
   return {full,ranger:full||rangerChanged,normal:full||normalChanged,allunit:full||allunitChanged,r9:full||r9Changed,
-    scope:full?'full-regression':'targeted-draft',wholeGameAccepted:false,
+    scope:full?'full-regression':draft?'targeted-draft':'native-qa-update-product-unchanged',wholeGameAccepted:false,
     finalIntegrationRequiresFullRegression:true};
 }
 
 if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href){
-  const {CI_SCOPE_BASE:base,CI_SCOPE_HEAD:head,CI_SCOPE_DRAFT:draft}=process.env;
+  const {CI_SCOPE_BASE:base,CI_SCOPE_HEAD:head,CI_SCOPE_DRAFT:draft,CI_SCOPE_ACTION:action,CI_SCOPE_PREVIOUS_HEAD:previousHead}=process.env;
   for(const sha of [base,head])assert.match(sha??'',/^[0-9a-f]{40}$/u);
   assert.ok(['true','false'].includes(draft));
   const comparisonBase=execFileSync('git',['merge-base',base,head],{encoding:'utf8',windowsHide:true}).trim();
@@ -125,9 +165,16 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
     try{return[file,execFileSync('git',['rev-parse',`${head}:${file}`],{encoding:'utf8',windowsHide:true}).trim()];}
     catch{return[file,null];}
   }));
-  const scope=ciChangeScope(paths,{draft:draft==='true',sourceBlobs});
+  const eligibleNativeReuse=action==='synchronize'&&previousHead===base&&comparisonBase===base
+    &&/^[0-9a-f]{40}$/u.test(previousHead??'');
+  const proposed=ciChangeScope(paths,{draft:draft==='true',sourceBlobs,reuseNativeQa:eligibleNativeReuse});
+  const previousFullEvidence=draft==='false'&&proposed.scope==='native-qa-update-product-unchanged'
+    ?await previousFullCiEvidence({repository:process.env.GITHUB_REPOSITORY,head:previousHead,
+      base:process.env.CI_SCOPE_PR_BASE,prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),token:process.env.CI_SCOPE_ACTIONS_TOKEN}):null;
+  const reuseNativeQa=previousFullEvidence?.passed===true;
+  const scope=ciChangeScope(paths,{draft:draft==='true',sourceBlobs,reuseNativeQa});
   if(process.env.GITHUB_OUTPUT)appendFileSync(process.env.GITHUB_OUTPUT,['full','ranger','normal','allunit','r9'].map(k=>`${k}=${scope[k]}\n`).join(''));
   if(process.env.GITHUB_STEP_SUMMARY)appendFileSync(process.env.GITHUB_STEP_SUMMARY,
-    `Validation: ${scope.scope}. Full regression runs when the PR becomes ready. Skipped lanes are not acceptance or replacements for earlier failures.\n`);
-  console.log(JSON.stringify({...scope,base,comparisonBase,head,changedPaths:paths}));
+    `Validation: ${scope.scope}. Ready transitions, product and unknown changes run full regression. Native-only synchronize updates retain the preceding product run; skipped lanes never replace failed or unfinished gates.\n`);
+  console.log(JSON.stringify({...scope,base,comparisonBase,head,eligibleNativeReuse,previousFullEvidence,changedPaths:paths}));
 }
