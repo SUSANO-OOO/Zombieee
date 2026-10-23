@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
-import {planOutcomeShard,nativeOutcomeComplete,assertNativeOutcome,readNativeOutcomeSample} from '../scripts/v177-native-allunit-outcomes.mjs';
+import {planOutcomeShard,nativeOutcomeComplete,nativeOutcomeProgress,assertNativeOutcome,readNativeOutcomeSample} from '../scripts/v177-native-allunit-outcomes.mjs';
 import {createNativeAllUnitRealmOwner,readNativeAllUnitRealmOwner} from '../scripts/v177-native-allunit-contract.mjs';
 import {v177ControlledOutcomeHit} from '../app/v177ContinuousProof.js';
 import {SHARDS} from '../scripts/v177-native-allunit-manifest.mjs';
@@ -66,6 +66,20 @@ test('continuous outcome validates original bytes/realm and actual protected ret
   const {row,bytes}=fixture(),result=assertNativeOutcome(row,bytes);
   assert.equal(nativeOutcomeComplete(row),true);assert.equal(result.continuousUntilOutcome,true);
   for(const key of ['naturalIncomingCombatAccepted','originalSpeedAccepted','naturalnessAccepted','all21Accepted'])assert.equal(result[key],false);
+});
+
+test('small outcome projections preserve the exact original stop predicate for every prefix of fall, settle and protected retreat',()=>{
+ const {row}=fixture();const retreat=row.samples;
+ const corpse=Array.from({length:8},(_,i)=>({body:{fighter:i<1?{id:1}:null,corpse:i<1?null:{id:1},
+  renderHistory:i<1?[{renderSequence:1,requestedState:'idle'}]:[],
+  corpseRenderHistory:i<1?[]:[{renderSequence:i+1,requestedState:i<5?'down':'death',fallProgress:i<5?i/5:1}]},receipts:[]}));
+ for(const[outcome,samples]of[['retreat',retreat],['corpse',corpse]])for(let i=0;i<=samples.length;i++){
+  const prefix=samples.slice(0,i),original=structuredClone(prefix),projected=prefix.map(nativeOutcomeProgress);
+  assert.equal(nativeOutcomeComplete({outcome:{outcome},samples:prefix}),nativeOutcomeComplete({outcome:{outcome},samples:projected}));
+  assert.deepEqual(prefix,original);
+ }
+ const noFall=corpse.map(r=>({...r,body:{...r.body,corpseRenderHistory:r.body.corpseRenderHistory.map(p=>({...p,fallProgress:1}))}}));
+ assert.equal(nativeOutcomeComplete({outcome:{outcome:'corpse'},samples:noFall.map(nativeOutcomeProgress)}),false);
 });
 
 test('outcome observations reject missing, duplicate, reversed or nonfinite native RAF times',()=>{

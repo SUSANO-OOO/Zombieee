@@ -22,10 +22,10 @@ export function planOutcomeShard(shardId){
   }));
 }
 
-export function readNativeOutcomeSample(realmOwner,{fighterId,afterSequence=0,sampleAt,performanceBoundary=false}){
+export function readNativeOutcomeSample(realmOwner,{fighterId,afterSequence=0,sampleAt,performanceBoundary=false,immutableSnapshot=false}){
   realmOwner.check({window,document,performance,canvas:document.querySelector('.game-shell canvas')});
   if(sampleAt!==undefined&&performance.now()<sampleAt)return new Promise((resolve,reject)=>{
-    setTimeout(()=>{try{resolve(readNativeOutcomeSample(realmOwner,{fighterId,afterSequence,sampleAt,performanceBoundary}));}catch(error){reject(error);}},sampleAt-performance.now());
+    setTimeout(function readNativeOutcomeOnSchedule(){try{resolve(readNativeOutcomeSample(realmOwner,{fighterId,afterSequence,sampleAt,performanceBoundary,immutableSnapshot}));}catch(error){reject(error);}},sampleAt-performance.now());
   });
   const realm=realmOwner.member({window,document,performance,canvas:document.querySelector('.game-shell canvas')},'sample');
   const startedAt=performance.now(),qa=window.__ASHFALL_BATTLE_QA__,snapshot=qa.getSnapshot(),snapshotAt=performance.now();
@@ -44,11 +44,21 @@ export function readNativeOutcomeSample(realmOwner,{fighterId,afterSequence=0,sa
     effects:{impacts:combat.combatGore.impacts.filter(r=>r.targetId===fighterId),wounds:combat.combatGore.wounds.filter(r=>r.targetId===fighterId),
       pools:combat.combatGore.pools.filter(r=>r.targetId===fighterId)},
     receipts:combat.manualAbilityReceipts.filter(r=>r.ownerId===fighterId),...boundary};
+  const stored=immutableSnapshot?structuredClone(result):result;
   const finishedAt=performance.now();
-  return {...result,readTiming:{startedAt,finishedAt,durationMs:finishedAt-startedAt,
+  return {...stored,readTiming:{startedAt,finishedAt,durationMs:finishedAt-startedAt,
     snapshotMs:snapshotAt-startedAt,auditMs:auditAt-snapshotAt,combatMs:combatAt-auditAt,
     boundaryMs:boundaryAt-combatAt,resultMs:finishedAt-boundaryAt,
     scope:"Synchronous sample construction only; excludes RPC transport, JSON serialization, encoding and export"}};
+}
+
+// Only these fields drive the existing stop predicate and next sequence. Full
+// immutable receipts stay in their original page handles until recording ends.
+export function nativeOutcomeProgress(sample){
+  const paint=r=>({renderSequence:r.renderSequence,requestedState:r.requestedState,fallProgress:r.fallProgress});
+  return {body:{fighter:Boolean(sample.body.fighter),corpse:Boolean(sample.body.corpse),
+    renderHistory:sample.body.renderHistory.map(paint),corpseRenderHistory:sample.body.corpseRenderHistory.map(paint)},
+    receipts:sample.receipts.map(r=>({eventType:r.eventType}))};
 }
 
 const draws=row=>row.samples.flatMap(s=>[...s.body.renderHistory,...s.body.corpseRenderHistory]);
@@ -166,7 +176,7 @@ export function assertNativeOutcome(row,bytes){
 }
 
 export async function captureNativeOutcomeCase(page,row,{out,engine='webkit',onFailure=()=>{}}={}){
-  const resources={pointer:null,realmOwner:null};let clip,observation,primary;
+  const resources={pointer:null,realmOwner:null,sampleHandles:[]};let clip,observation,primary;
   const active=()=>{assert.notEqual(row.deadlineExpired,true);assert.equal(page.isClosed(),false);};
   const owned=async fn=>{active();const value=await fn();active();return value;};
   try{
@@ -187,18 +197,23 @@ export async function captureNativeOutcomeCase(page,row,{out,engine='webkit',onF
     row.sequenceBaseline=Math.max(...row.captureStart.body.renderHistory.map(r=>r.renderSequence));assert.ok(Number.isFinite(row.sequenceBaseline));
     row.release=await owned(()=>resources.realmOwner.evaluate(releasePreparedShardClock,row.proof));
     let afterSequence=row.sequenceBaseline;
-    row.rpcTimings=[];
+    row.rpcTimings=[];const progressSamples=[];
     for(let i=0;i<80;i++){
       const rpcStartedAt=performance.now();
-      const s=await owned(()=>resources.realmOwner.evaluate(readNativeOutcomeSample,{fighterId:row.proof.fighterId,afterSequence,
-        sampleAt:row.captureStart.at+(i+1)*LIMITS.sampleDelayMs,performanceBoundary:true}));row.samples.push(s);
+      const handle=await owned(async()=>{
+        const value=await resources.realmOwner.evaluateHandle(readNativeOutcomeSample,{fighterId:row.proof.fighterId,afterSequence,
+          sampleAt:row.captureStart.at+(i+1)*LIMITS.sampleDelayMs,performanceBoundary:true,immutableSnapshot:true});
+        resources.sampleHandles.push({handle:value,exported:false});return value;
+      });
+      const s=await owned(()=>handle.evaluate(nativeOutcomeProgress));progressSamples.push(s);
       row.rpcTimings.push({sample:i,startedAt:rpcStartedAt,finishedAt:performance.now(),scope:'Node evaluate round trip, separate from browser clock'});
       afterSequence=Math.max(afterSequence,...s.body.renderHistory.map(r=>r.renderSequence),...s.body.corpseRenderHistory.map(r=>r.renderSequence));
-      if(nativeOutcomeComplete(row))break;
+      if(nativeOutcomeComplete({outcome:row.outcome,samples:progressSamples}))break;
     }
     const completed=clip;clip=null;row.nativeClip=await completed.finish({completed:true});active();
     row.sourceRaf=await owned(()=>observation.evaluate(stopNativeGameRafObservation));await observation.dispose();observation=null;
     row.captureEnd=await owned(()=>resources.realmOwner.evaluate(readNativeOutcomeSample,{fighterId:row.proof.fighterId,afterSequence,performanceBoundary:true}));
+    for(const entry of resources.sampleHandles){row.samples.push(await owned(()=>entry.handle.evaluate(value=>value)));entry.exported=true;}
     row.summary=assertNativeOutcome(row,await readFile(row.nativeClip.file));
     row.performanceReceipt=nativeGamePerformanceReceipt(row);row.status='observed-outcome-diagnostic';
   }catch(error){primary=error;row.originalFailure=String(error);onFailure(error);throw error;}
@@ -207,6 +222,10 @@ export async function captureNativeOutcomeCase(page,row,{out,engine='webkit',onF
     if(resources.pointer){try{await resources.pointer.evaluate(finishMayoPointer);await resources.pointer.dispose();}catch(e){row.cleanupErrors.push(String(e));}}
     if(clip)try{row.interruptedClip=await clip.finish({completed:false});}catch(e){row.cleanupErrors.push(String(e));}
     if(observation)try{row.interruptedSourceRaf=await observation.evaluate(stopNativeGameRafObservation);await observation.dispose();}catch(e){row.cleanupErrors.push(String(e));}
+    for(const entry of resources.sampleHandles){
+      if(!entry.exported)try{(row.interruptedSamples??=[]).push(await entry.handle.evaluate(value=>value));}catch(e){row.cleanupErrors.push(String(e));}
+      try{await entry.handle.dispose();}catch(e){row.cleanupErrors.push(String(e));}
+    }
     try{await page.evaluate(()=>window.__ASHFALL_BATTLE_QA__.setEnemyVfxProofPaused(true));}catch(e){row.cleanupErrors.push(String(e));}
     if(resources.realmOwner)try{await resources.realmOwner.dispose();}catch(e){row.cleanupErrors.push(String(e));}
     if(!primary&&row.cleanupErrors.length)throw Error(row.cleanupErrors.join('; '));

@@ -16,6 +16,7 @@ import {startNativeGameRafObservation,stopNativeGameRafObservation} from '../scr
 import {assertAllUnitClip} from '../scripts/v177-native-allunit-cases.mjs';
 import {SHARDS,planShard,LIMITS,assertPlannedCase} from '../scripts/v177-native-allunit-manifest.mjs';
 import {MANUAL_ABILITY_REGISTRY} from '../app/manualAbilities.js';
+import {planOutcomeShard,readNativeOutcomeSample,nativeOutcomeProgress,nativeOutcomeComplete} from '../scripts/v177-native-allunit-outcomes.mjs';
 
 const root=process.cwd(),fixtureDirectory=process.env.V177_REALM_OWNER_TEST_OUTPUT??path.join(os.tmpdir(),'v177-realm-owner-node');
 const require=createRequire(path.join(root,'package.json'));
@@ -83,7 +84,7 @@ function fixture({form='medic',origin=1000000,startEvent=true,stopEvent=true,chu
  const globals={window,document,performance,location:{pathname:'/v100'},crypto:{randomUUID},
   innerWidth:844,innerHeight:390,devicePixelRatio:1,MediaRecorder:Recorder,structuredClone,
   Blob,Uint8Array,btoa,setTimeout(fn,ms,...args){
-   if(fn.name!=='readNativeSampleOnSchedule')return setTimeout(fn,ms,...args);
+   if(!['readNativeSampleOnSchedule','readNativeOutcomeOnSchedule'].includes(fn.name))return setTimeout(fn,ms,...args);
    const timer={fn,ms};scheduled.push(timer);
    if(!manualSampleTimer)queueMicrotask(()=>{advanceClock(ms);fn();});
    return timer;
@@ -116,7 +117,9 @@ function fixture({form='medic',origin=1000000,startEvent=true,stopEvent=true,chu
   const evaluate=h.evaluate.bind(h);h.evaluate=async(fn,arg)=>{
    if(fn.name==='readNativeAllUnitSample'&&++reads===failAtSample)throw sentinel;
    const result=await evaluate(fn,arg);
-   if(result?.schema==='v177-native-shard-postpaint/v1'&&result.readTiming?.sampleAt!==null&&sampleTransportMs){
+   const deferredNormal=result?.schema==='v177-native-shard-postpaint/v1'&&result.readTiming?.sampleAt!==null;
+   const deferredOutcome=fn.name!=='readNativeOutcomeSample'&&result?.body?.renderHistory&&result.readTiming;
+   if((deferredNormal||deferredOutcome)&&sampleTransportMs){
     log.push('sample-export');advanceClock(sampleTransportMs);
    }
    return result;
@@ -383,7 +386,7 @@ function actualCaptureWithExternalControls({preparedFixture,assertMayo}={}){
  };
  const source=proposed('v177-native-allunit-cases');
  const run=vm.runInNewContext((preparedFixture?'':declaration(source,'prepareCase'))+'\n'+declaration(source,'captureAllUnitCase')+'\ncaptureAllUnitCase',env);
- return{run,externalCalls:calls,performanceRows};
+ return{run,externalCalls:calls,performanceRows,environment:env};
 }
 test('actual capture body creates owner after prepare, routes every sample/release through it and disposes last',async()=>{
  const f=fixture(),{run,externalCalls,performanceRows}=actualCaptureWithExternalControls(),original=f.page.evaluateHandle;
@@ -471,6 +474,37 @@ test('Mayo orchestration fixes its full owner proof before slow post-recording t
  assert.equal(f.row.status,'observed-diagnostic');assert.ok(fixed<6.2);
  assert.ok(f.log.indexOf('mayo-full-proof')<f.log.indexOf('sample-export'));
  assert.equal(f.row.samples.length,15);assert.equal(f.row.nativeClip.originalSpeedAccepted,false);
+});
+
+test('actual outcome capture uses the same completion predicate before transferring full immutable sample histories',async()=>{
+ // Original damage and corpse paint validators have independent tests. This
+ // fixture exercises acquisition/stop/export ordering through actual handles.
+ const f=fixture({sampleTransportMs:800}),row={...planOutcomeShard('forms-1').find(r=>r.form==='medic'&&r.viewport.height===390),samples:[]};
+ f.proof.phase='engage';
+ const audit=f.qa.getEnemyFacingRuntimeAudit,combat=f.qa.getPhaseGCombatSnapshot;
+ f.qa.getEnemyFacingRuntimeAudit=(id,options)=>{
+  const original=audit(id);if(id!==4)return original;
+  const paint={...original.renderHistory[0],requestedState:f.simulation<.5?'down':'death',fallProgress:Math.min(1,f.simulation/.5)};
+  if(options?.latestDrawOnly)return{renderHistory:[paint]};
+  return f.simulation===0?{...original,corpse:null,corpseRenderHistory:[]}:
+   {...original,fighter:null,corpse:{id:4},renderHistory:[],corpseRenderHistory:[paint]};
+ };
+ f.qa.getPhaseGCombatSnapshot=()=>({...combat(),combatGore:{impacts:[],wounds:[],pools:[]},manualAbilityReceipts:[]});
+ f.qa.queueV177ControlledOutcome=()=>({outcome:'corpse'});
+ const {environment}=actualCaptureWithExternalControls();Object.assign(environment,{readNativeOutcomeSample,nativeOutcomeProgress,nativeOutcomeComplete,
+  assertNativeOutcome:captured=>{assert.equal(nativeOutcomeComplete(captured),true);return{scope:'Orchestration only; no damage/visual acceptance'};}});
+ const run=vm.runInNewContext(declaration(proposed('v177-native-allunit-cases'),'prepareCase')+'\n'+
+  declaration(proposed('v177-native-allunit-outcomes'),'captureNativeOutcomeCase')+'\ncaptureNativeOutcomeCase',environment);
+ await run(f.page,row,{out:path.join(fixtureDirectory,randomUUID())});
+ assert.equal(row.status,'observed-outcome-diagnostic');assert.ok(row.samples.length>=6&&row.samples.length<10);
+ assert.equal(f.log.filter(s=>s==='sample-export').length,row.samples.length);
+ assert.ok(f.log.indexOf('track-stop')<f.log.indexOf('sample-export'));assert.equal(f.log.at(-1),'owner-dispose');
+ assert.ok(row.captureEnd.at-row.captureStart.at<1200);assert.ok(f.now>row.captureEnd.at+4000);
+ for(let i=0;i<row.samples.length;i++){
+  assert.ok(Math.abs(row.samples[i].at-(row.captureStart.at+(i+1)*120))<.1);
+  assert.equal(row.samples[i].body.corpseRenderHistory.length,1);
+ }
+ assert.equal(row.nativeClip.originalSpeedAccepted,false);
 });
 
 test('expiry while a source timer is pending cannot append that late sample or pass capture gates',async()=>{
