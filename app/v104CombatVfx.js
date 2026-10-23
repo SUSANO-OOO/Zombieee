@@ -16,6 +16,33 @@ export function v104WeaponWakeCandidate(kind,phase,held=false){
  return !held&&Number.isFinite(phase)&&phase>=.12&&phase<=.7&&(steelKinds.has(kind)||clawKinds.has(kind)||fistKinds.has(kind));
 }
 const ready=(objects,id)=>{const image=objects?.[id];if(!image?.complete||!image.naturalWidth)throw Error('Undecoded combat effect: '+id);return image;};
+export function drawV104CrossbowBolt(ctx,{x,y,ux,uy}){
+ if(![x,y,ux,uy].every(Number.isFinite)||Math.hypot(ux,uy)<.001)return false;
+ ctx.save();ctx.translate(x,y);ctx.rotate(Math.atan2(uy,ux));
+ ctx.globalCompositeOperation='source-over';ctx.shadowBlur=0;ctx.globalAlpha=.96;ctx.lineCap='round';
+ // A worn shaft, small steel point and dark flights remain on the actual
+ // trajectory. The former luminous lozenge and floating chevron are removed.
+ ctx.strokeStyle='#41382b';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-17,0);ctx.lineTo(3,0);ctx.stroke();
+ ctx.strokeStyle='#b59b72';ctx.lineWidth=.7;ctx.beginPath();ctx.moveTo(-16,-.35);ctx.lineTo(3,-.35);ctx.stroke();
+ ctx.fillStyle='#a9aaa0';ctx.beginPath();ctx.moveTo(8,0);ctx.quadraticCurveTo(4,-.7,2,-1.35);ctx.lineTo(2,1.2);ctx.quadraticCurveTo(4,.6,8,0);ctx.fill();
+ ctx.fillStyle='#5c594c';
+ for(const side of [-1,1]){
+  ctx.beginPath();ctx.moveTo(-17,0);ctx.quadraticCurveTo(-18,side*1.8,-16.5,side*2.8);
+  ctx.quadraticCurveTo(-13.5,side*2.2,-11,side*.35);ctx.closePath();ctx.fill();
+ }
+ ctx.globalAlpha=.2;ctx.strokeStyle='#ae9f84';ctx.lineWidth=.7;ctx.beginPath();ctx.moveTo(-24,.2);ctx.lineTo(-19,.2);ctx.stroke();
+ ctx.restore();return true;
+}
+export function drawV104BiteContact(ctx,objects,{x,y,direction,progress,emphasized=false}){
+ if(![x,y,direction,progress].every(Number.isFinite)||progress<0||progress>1)return false;
+ // The moving jaw is supplied by the dog's real pose. Only the existing
+ // contact dust is painted at contact; no energy jaws or teeth span the gap.
+ const size=(emphasized?24:18)*(1+progress*.3);
+ ctx.save();ctx.translate(x,y);ctx.rotate(direction<0?Math.PI:0);
+ ctx.globalCompositeOperation='source-over';ctx.shadowBlur=0;ctx.globalAlpha=(1-progress)*.72;
+ ctx.drawImage(ready(objects,'v100-dust'),-size*.5,-size*.5,size,size);
+ ctx.restore();return true;
+}
 function textureTriangle(ctx,image,source,a,b,c,second=false){
  const area=(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);
  if(Math.abs(area)<.01)return false;

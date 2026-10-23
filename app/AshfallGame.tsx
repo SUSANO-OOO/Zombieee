@@ -8,7 +8,7 @@ import { V177_JOINT_ATLASES, v177JointCycleDistance, v177JointPose, v177RangerFo
 import {v177ChoreographedAbilitySample} from "./v177WeaponChoreography.js";
 import {battleVoiceReady,queueV104HumanHurt,v104ContactIsHard,v104SupplementalEnemyVoice} from "./v104CombatAudio.js";
 import {createManualAbilityPointerHold} from "./manualAbilityUi.js";
-import {drawV104WeaponWake,drawV104InfectedWake,drawV104EyeBeam,v104WeaponWakeCandidate,v104MeleeImpactPoint} from "./v104CombatVfx.js";
+import {drawV104WeaponWake,drawV104InfectedWake,drawV104EyeBeam,drawV104CrossbowBolt,drawV104BiteContact,v104WeaponWakeCandidate,v104MeleeImpactPoint} from "./v104CombatVfx.js";
 import { v177GroundedStrideFactor } from "./v177GroundedMotion.js";
 import {getV177RangerLowerPaintSnapshot} from "./v177RangerLowerPaint.js";
 import { combatApproachSpeed } from "./combatApproach.js";
@@ -8455,6 +8455,14 @@ function drawAuthoredShotVfx(
     return true;
   }
   if(v100StageObjects&&isMelee&&V100_CONTACT_WEAPONS.includes(weapon))return true;
+  if(v100StageObjects&&isMelee&&trail==='bite-lunge'){
+    drawV104BiteContact(ctx,v100StageObjects,{x:shot.tx,y:shot.ty,direction:dx,progress:elapsed/Math.max(.001,duration),emphasized:shot.emphasized});
+    return true;
+  }
+  if(v100StageObjects&&trail==='bolt'){
+    drawV104CrossbowBolt(ctx,{x,y,ux,uy});
+    return true;
+  }
   if(v100StageObjects&&enemyProjectile){
     drawV104InfectedWake(ctx,v100StageObjects,{x,y,ux,uy,trail:enemyProjectile.trail,progress:Math.max(0,impactProgress),impact:impactProgress>=0});
     return true;

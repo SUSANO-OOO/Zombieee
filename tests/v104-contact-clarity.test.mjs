@@ -3,13 +3,31 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import ts from 'typescript';
-import {drawV104EyeBeam,v104MeleeImpactPoint} from '../app/v104CombatVfx.js';
+import {drawV104EyeBeam,drawV104BiteContact,v104MeleeImpactPoint} from '../app/v104CombatVfx.js';
 import {V177_JOINT_ATLASES as atlases,v177JointPose,v177CaptureJointPose,v177RenderedJointWeaponSocket} from '../app/v177JointPresentation.js';
 import {queueV100ClawContact,getV100ClawContactSnapshot,queueV100Contact,drawV100ContactQueue} from '../app/v100CombatVfx.js';
 
 const source=readFileSync('app/AshfallGame.tsx','utf8'),tree=ts.createSourceFile('game.tsx',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);
 const point=(matrix,p)=>[matrix[0]*p[0]+matrix[2]*p[1]+matrix[4],matrix[1]*p[0]+matrix[3]*p[1]+matrix[5]];
 const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+
+test('Mayo contact dust starts with its damage shot and fades without waiting for projectile travel',()=>{
+ const fn=tree.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text==='drawAuthoredShotVfx');assert.ok(fn);
+ const draw=vm.runInNewContext(ts.transpileModule(fn.getText(tree)+'\ndrawAuthoredShotVfx;',{
+  compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText,{drawV104BiteContact,V100_CONTACT_WEAPONS:[]});
+ const image={complete:true,naturalWidth:512,naturalHeight:512};
+ for(const direction of [-1,1]){
+  const strengths=[];
+  for(const elapsed of [0,1/60,.16,.26]){
+   const points=[],ctx={save(){},restore(){},translate:(x,y)=>points.push([x,y]),rotate(){},drawImage(asset){assert.equal(asset,image);strengths.push(this.globalAlpha);}};
+   const shot={x:400,y:280,tx:400+direction*35,ty:270,sourceId:3,targetId:7,life:.26-elapsed,style:'melee'};
+   const before=structuredClone(shot);
+   assert.equal(draw(ctx,shot,{elapsed,duration:.26,impactProgress:-1,weapon:'mayo-chan',weaponProfile:{trail:'bite-lunge'},v100StageObjects:{'v100-dust':image}}),true);
+   assert.deepEqual(points,[[shot.tx,shot.ty]]);assert.deepEqual(shot,before);
+  }
+  assert.ok(strengths[0]>.7&&strengths[0]>strengths[1]&&strengths[1]>strengths[2]);assert.equal(strengths[3],0);
+ }
+});
 
 test('the real impact resolver binds the current strike and pins the burst to its painted contact point',()=>{
  const arrows=[];const visit=n=>{if(ts.isArrowFunction(n)&&n.parameters[0]?.name.getText(tree)==='contact'&&n.body.getText(tree).includes('v104MeleeImpactPoint'))arrows.push(n);ts.forEachChild(n,visit);};visit(tree);assert.equal(arrows.length,1);
