@@ -196,12 +196,17 @@ test('a later source keeps its own immutable inventory without relabelling earli
 
 test('corrected manual observations retain the original failure and their separately bound unchanged timing contract',()=>{
  const select=p=>nativeCaseSelection({root:profileRoot(p),event:{pull_request:{draft:false}},git:()=>''});
+ const manualSource=p=>{
+  const report=p.retainedEvidence.additionalReports.find(r=>r.originalReportStatus==='failed'&&r.manualCaseIds.length);
+  const source=p.additionalEvidenceInventories.find(s=>s.head===report.head&&s.runId===report.runId);
+  assert.ok(source?.contractCorrections?.length,'the manual correction belongs to its exact original source');return source;
+ };
  for(const mutate of[
   r=>{delete r.retainedEvidence.additionalReports.find(a=>a.originalReportStatus==='failed').validationGroups;},
   r=>{const report=r.retainedEvidence.additionalReports.find(a=>a.originalReportStatus==='failed');delete report.originalReportStatus;delete report.validationGroups;},
   r=>{const report=r.retainedEvidence.additionalReports.find(a=>a.originalReportStatus==='failed');delete report.originalReportStatus;delete report.reportStatus;delete report.validationGroups;},
-  r=>{r.additionalEvidenceInventories.at(-1).contractCorrections=[];},
-  r=>{r.additionalEvidenceInventories.at(-1).contractCorrections[0].conditions.allowedTicks.push(32);},
-  r=>{r.additionalEvidenceInventories.at(-1).contractCorrections[0].conditions.numericToleranceAdded=true;},
+  r=>{manualSource(r).contractCorrections=[];},
+  r=>{manualSource(r).contractCorrections[0].conditions.allowedTicks.push(32);},
+  r=>{manualSource(r).contractCorrections[0].conditions.numericToleranceAdded=true;},
  ]){const invalid=structuredClone(current);mutate(invalid);assert.throws(()=>select(invalid));}
 });
