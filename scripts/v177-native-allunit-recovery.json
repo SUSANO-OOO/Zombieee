@@ -4058,10 +4058,10 @@
       "audioAccepted": false,
       "wholeGameAccepted": false
     },
-    "baselineHeldUnmodified": 457,
+    "baselineHeldUnmodified": 537,
     "additionalClosures": 25,
-    "encodedVerifiedSourceTotal": 537,
-    "encodedFailedSourceTotal": 42,
+    "encodedVerifiedSourceTotal": 562,
+    "encodedFailedSourceTotal": 17,
     "sourceScopedReopens": {
       "caseIds": [
         "forms-10:red-panther-knife:attack:1280x720",
@@ -4109,9 +4109,7 @@
         "forms-11:red-panther-shield:controlled-outcome:844x390",
         "forms-11:red-panther-smg:controlled-outcome:1280x720",
         "forms-11:red-panther-smg:controlled-outcome:844x390",
-        "forms-11:red-panther-commander:controlled-outcome:1280x720"
-      ],
-      "stillPending": [
+        "forms-11:red-panther-commander:controlled-outcome:1280x720",
         "forms-11:red-panther-shield:attack:844x390",
         "forms-11:red-panther-smg:attack:844x340",
         "forms-11:red-panther-smg:engage:844x390",
@@ -4122,7 +4120,8 @@
         "forms-11:red-panther-smg:controlled-outcome:844x340",
         "forms-11:red-panther-commander:controlled-outcome:844x390",
         "forms-11:red-panther-commander:controlled-outcome:844x340"
-      ]
+      ],
+      "stillPending": []
     },
     "retained": 562,
     "pending": 17,
