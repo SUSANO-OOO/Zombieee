@@ -19,6 +19,7 @@ test('the focused guardian diagnostic keeps the failing host and cannot replace 
     assert.equal(diagnostic['continue-on-error'], undefined);
     assert.equal(diagnostic.permissions, undefined);
     assert.deepEqual(candidate.permissions, {contents:'read'});
+    assert.deepEqual(jobs.scope.permissions, {contents:'read',actions:'read'});
     assert.equal(diagnostic.steps[0].with.ref, '${{ github.event.pull_request.head.sha }}');
     assert.equal(diagnostic.steps[0].with['persist-credentials'], false);
     const run = diagnostic.steps.find(step => step.run === 'node scripts/run-browser-qa-with-server.mjs scripts/v100-phase-g-production-matrix.mjs');

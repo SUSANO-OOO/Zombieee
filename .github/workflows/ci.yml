@@ -10,7 +10,6 @@ on:
 
 permissions:
   contents: read
-  actions: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
@@ -21,6 +20,9 @@ jobs:
   scope:
     name: Validation Scope
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
     outputs:
       full: ${{ steps.scope.outputs.full }}
       ranger: ${{ steps.scope.outputs.ranger }}
