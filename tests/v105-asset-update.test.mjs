@@ -6,7 +6,7 @@ import {createHash} from 'node:crypto';
 import sharp from 'sharp';
 import {V105_MEDIA_ADDITIONS,V105_MEDIA_RETIREMENTS,V105_ASSET_BYTES_DELTA} from '../scripts/v105-five-corrections-asset-contract.mjs';
 import {evaluateUpdate} from '../app/pwaUpdatePlanner.js';
-import {correctionCases,canContinueCompletedCorrection} from '../scripts/v105-five-corrections-capture.mjs';
+import {correctionCases,canContinueCompletedCorrection,assertCurrentCorrectionPaints} from '../scripts/v105-five-corrections-capture.mjs';
 
 test('v105 changes exactly six named runtime payloads and retires only the previous skirt/icon selection',async()=>{
   const baseline=JSON.parse(execFileSync('git',['show','e22b134a38409b9d2f86660ee351e616c28fbf44:public/asset-manifest.json'],{encoding:'utf8',maxBuffer:4*1024*1024}));
@@ -47,4 +47,15 @@ test('a retained assertion failure remains failed while only intact independent 
   assert.equal(canContinueCompletedCorrection(row,{...boundary,pageClosed:true}),false);
   assert.equal(canContinueCompletedCorrection(row,{...boundary,fatalErrors:1}),false);
   assert.equal(canContinueCompletedCorrection(row,{...boundary,errorsAfter:2}),false,'A product/page error must not be hidden by continuing');
+});
+
+test('ability captures reject vanished/legacy bodies and retain the real Mayo form change',()=>{
+  const atlasPaths={'mayo-chan':'normal.webp','mayo-chan-feral':'feral.webp'},owner={id:1,kind:'mayo-chan',hp:100};
+  const frame=(n,kind,path)=>({time:n/60,fighters:[{...owner,draw:{renderSequence:n,jointDrawSucceeded:true,renderKind:kind,jointAtlasPath:path}}]});
+  const capture={rows:[frame(1,'mayo-chan','normal.webp'),frame(2,'mayo-chan-feral','feral.webp'),frame(3,'mayo-chan','normal.webp')]};
+  assert.equal(assertCurrentCorrectionPaints(capture,[1],atlasPaths).actualDistinctOwnerPaints,3);
+  for(const draw of [{renderSequence:2},{renderSequence:2,jointDrawSucceeded:false},
+    {renderSequence:2,jointDrawSucceeded:true,renderKind:'mayo-chan-feral',jointAtlasPath:'old-body.png'},
+    {renderSequence:2,jointDrawSucceeded:true,renderKind:'different-person',jointAtlasPath:'normal.webp'}])
+    assert.throws(()=>assertCurrentCorrectionPaints({rows:[capture.rows[0],{time:.2,fighters:[{...owner,draw}]}]},[1],atlasPaths));
 });

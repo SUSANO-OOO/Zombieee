@@ -13419,12 +13419,22 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           ? configureV177ReactionProof(actor,target,{...proofCatalog,form,lane,laneY:activeLaneCenters[lane]})
           : null;
         const proof=reactionProof??configureV177ContinuousActorProof(actor,target,{...proofCatalog,form,phase,lane,laneY:activeLaneCenters[lane]});
+        let reinforcementId:number|null=null;
+        if(form==="anchor-bloom"&&phase==="ability"){
+          // Reinforcement needs a living ally. Keep both original actors'
+          // stats and let the production AI accept the ability normally.
+          const ally=spawnEnemy(g,"walker",lane);
+          ally.x=actor.x+65;ally.y=actor.y;ally.lane=lane;ally.anchorLane=lane;
+          ally.combatReady=true;ally.gateEntering=false;ally.spawnGrace=0;ally.entryRampCleared=true;
+          ally.animationPresentation=createCombatAnimationRuntime({x:ally.x,y:ally.y,direction:"left"});
+          reinforcementId=ally.id;
+        }
         if(reactionProof){
           g.pendingWeaponHits.push(reactionProof.incomingHit as PendingWeaponHit);
           g.paused=true;
         }
         selectedActionRef.current=null;setSelectedAction(null);setStarted(true);setPaused(false);setEnd(null);setScreen("battle");
-        return proof;
+        return reinforcementId===null?proof:{...proof,reinforcementId};
       },
       queueV177ControlledOutcome: ({fighterId,targetId}:{fighterId:number;targetId:number}) => {
         const g=gameRef.current,actor=g.fighters.find(f=>f.id===fighterId),source=g.fighters.find(f=>f.id===targetId);

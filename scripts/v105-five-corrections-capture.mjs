@@ -25,6 +25,19 @@ export function canContinueCompletedCorrection(row,{pageClosed,fatalErrors=0,err
     &&row.capture?.failed===null&&Number.isFinite(row.capture.startAt)&&Number.isFinite(row.capture.stopAt)
     &&row.capture.stopAt>row.capture.startAt&&errorsAfter===errorsBefore+1;
 }
+export function assertCurrentCorrectionPaints(capture,ownerIds,atlasPaths){
+  const seen=new Set(),owners=new Set();
+  for(const row of capture.rows)for(const owner of row.fighters){
+    if(!ownerIds.includes(owner.id)||!(owner.hp>0))continue;
+    const d=owner.draw,key=owner.id+':'+d?.renderSequence;if(seen.has(key))continue;seen.add(key);
+    assert.ok(d?.jointDrawSucceeded,`${owner.kind} missing current-model paint at ${row.time}`);
+    assert.ok(d.renderKind===owner.kind||owner.kind==='mayo-chan'&&d.renderKind==='mayo-chan-feral',`${owner.kind} unexpected body ${d.renderKind}`);
+    assert.ok(atlasPaths[d.renderKind]&&d.jointAtlasPath===atlasPaths[d.renderKind],`${owner.kind} used an unexpected atlas at ${row.time}`);
+    owners.add(owner.id);
+  }
+  assert.ok(ownerIds.every(id=>owners.has(id)),'Every original owner must actually paint its current body');
+  return {actualDistinctOwnerPaints:seen.size,ownerCount:owners.size};
+}
 
 // Original native AV stream, actual game mixer after limiter, original PTS.
 // No microphone, clock override, animation sampling, re-encoding or FPS repair.
@@ -77,6 +90,8 @@ export async function stopCorrectionRecording(){
 
 export async function runBrowserQa(){
   const binding=await nativeGameCaptureBinding(),scope=process.env.V105_CAPTURE_SCOPE;
+  const {V177_JOINT_ATLASES:currentAtlases}=await import('../app/v177JointPresentation.js');
+  const atlasPaths=Object.fromEntries(Object.entries(currentAtlases).map(([kind,atlas])=>[kind,atlas.path]));
   const plan=correctionCases(scope),viewport=scope==='desktop'?{width:1280,height:720}:{width:844,height:scope==='mobile390'?390:340};
   const out=path.resolve(process.env.V105_CAPTURE_OUT??'outputs/v105-five-corrections/'+scope);await mkdir(out,{recursive:true});
   const report={...binding,architecture:process.arch,scope,viewport,runtime:PWA_WEBKIT_RUNTIME,cases:[],errors:[],status:'starting',
@@ -107,7 +122,12 @@ export async function runBrowserQa(){
       try{await withNativeGameCaseDeadline(async()=>{
         const proof=await page.evaluate(async({kind,mode})=>{
           const q=window.__ASHFALL_BATTLE_QA__;
-          await q.ensureEnemyFacingProofAsset(kind);
+          if(['manual','duet'].includes(mode)){
+            await q.ensureUnitRenderProofAsset(kind);
+            // Match the production asset plan: Mayo can change body during
+            // this same real activation, so both actual forms must be ready.
+            if(kind==='mayo-chan')await q.ensureUnitRenderProofAsset('mayo-chan-feral');
+          }else await q.ensureEnemyFacingProofAsset(kind);
           const p=mode==='manual'||mode==='duet'?q.prepareManualAbilityProof(mode==='duet'?[kind,kind]:kind):q.prepareV177ContinuousActorProof({form:kind,phase:mode==='enemy'?'ability':'engage'});
           q.setEnemyVfxProofPaused(true);window.__ASHFALL_AUDIO_QA__.resetCueRequests();
           return {...p,trackedIds:q.getSnapshot().fighters.map(f=>f.id)};
@@ -128,6 +148,7 @@ export async function runBrowserQa(){
         const file=`${String(report.cases.length).padStart(2,'0')}-${item.kind}-${item.mode}.${capture.mime.startsWith('video/mp4')?'mp4':'webm'}`;
         await writeFile(path.join(out,file),bytes,{flag:'wx'});Object.assign(row,{file,sha256:sha(bytes),bytes:bytes.length,capture,status:'retained-pending-checks'});await persist();
         assert.equal(capture.failed,null);assert.ok(capture.rows.length>=30,'actual continuous paint receipts missing');
+        row.currentModelPaints=assertCurrentCorrectionPaints(capture,ids,atlasPaths);
         const actual=(capture.final.time-row.release.time)*1000,wall=capture.stopAt-row.release.at;
         assert.ok(Math.abs(actual-wall)<=120,`Original120ms game/native clock bound: drift=${actual-wall}ms, dropped=${capture.final.timing?.droppedSimulationSeconds-capture.initial.timing?.droppedSimulationSeconds}s`);
         if(item.mode!=='engage'){
