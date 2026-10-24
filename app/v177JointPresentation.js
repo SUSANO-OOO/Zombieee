@@ -22,7 +22,7 @@ import { v177RangerFootPlacement } from './v177RangerFootPlacement.js';
 import { MAYO_RETREAT_TIMING } from './mayoLifecycle.js';
 import { v177PaintLocomotion } from './v177PaintLocomotion.js';
 import { applyV177GroundedMatrix, v177GroundedJointPlan, v177BlendGroundedMotion, sampleV177AttackSteps } from './v177GroundedMotion.js';
-import { v177JointActorKey, v177JointBodyCorrection } from './v177JointActorHistory.js';
+import { v177JointActorKey, v177JointBodyCorrection, v177JointBodyShiftX } from './v177JointActorHistory.js';
 import {v177WeaponChoreography,v177GroundedWeaponChoreography} from './v177WeaponChoreography.js';
 import {v105GroundStrikePlan} from './v105GroundStrike.js';
 import {V177_CORPSE_JOINT_DATA} from './v177CorpseJointData.js';
@@ -558,9 +558,9 @@ export function v177RangerFootPlan(kind,plan,{actor,world,width,direction}={}) {
   const atlas=V177_JOINT_ATLASES[kind],runtime=actor?.animationPresentation;
   if(kind!=='ranger'||!plan?.upperRigPlan||!atlas?.lowerRig)return plan;
   const previous=renderedJointPoses.get(v177JointActorKey(actor,world)),state=plan.rangerFeet;
-  const scale=width/atlas.width,bodyCorrection=v177JointBodyCorrection(actor,world);
+  const scale=width/atlas.width,bodyCorrection=v177JointBodyCorrection(actor,world),bodyShiftX=v177JointBodyShiftX(actor,world);
   const current=state&&state.time===world?.time&&state.root===actor?.x&&state.scale===scale
-    &&state.phase===runtime?.locomotionPhase&&(state.bodyCorrection??0)===bodyCorrection;
+    &&state.phase===runtime?.locomotionPhase&&(state.bodyCorrection??0)===bodyCorrection&&(state.bodyShiftX??0)===bodyShiftX;
   // A newly activated ability can own direction before the next simulation
   // tick updates locomotion. Its prepaint plan must survive the draw's read.
   const facing=direction===undefined&&current ? state.turnTargetFacing??state.facing
@@ -572,7 +572,7 @@ export function v177RangerFootPlan(kind,plan,{actor,world,width,direction}={}) {
     // until the existing impulse ends, then resume the original stop steps.
     moving:runtime?.moving,facing,settle:plan.lowerSettle,
     frozen:plan.reactionHeld||plan.liveStun||Math.abs(actor?.knock??0)>.1,
-    bodyCorrection,
+    bodyCorrection,bodyShiftX,
   });
   if(!feet)return plan;
   plan={...plan,phase:feet.phase,
@@ -632,6 +632,7 @@ export function v105BipedFootPlan(kind,plan,{actor,world,width,frame,direction}=
     facing:requestedFacing,settle:plan.paintLocomotion?.settle??runtime?.locomotionSettle??1,
     frozen:plan.reactionHeld||plan.liveStun||Math.abs(actor.knock??0)>.1,
     bodyCorrection:v177JointBodyCorrection(actor,world),
+    bodyShiftX:v177JointBodyShiftX(actor,world),
   });
   if(!feet)return plan;
   const targets=Object.fromEntries(rig.legs.map((leg,index)=>{

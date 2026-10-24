@@ -22,7 +22,7 @@ test('settled bipeds advance time with exact original feet/targets while sharing
 });
 test('movement, turning, unsettled feet, impulses and corrections keep the original transition path',()=>{
   const seed=original(rig,null,base).state;
-  for(const delta of [{moving:true,root:300.4,phase:.02},{facing:-1},{settle:.9},{frozen:true},{bodyCorrection:1},{root:300.1}]){
+  for(const delta of [{moving:true,root:300.4,phase:.02},{facing:-1},{settle:.9},{frozen:true},{bodyCorrection:1,root:299.9},{root:300.1}]){
     const previous=structuredClone(seed),input={...base,time:.02,...delta};
     assert.deepEqual(current(rig,previous,input),original(rig,previous,input));
   }

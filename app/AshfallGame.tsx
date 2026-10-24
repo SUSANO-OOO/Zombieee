@@ -17,7 +17,7 @@ import { combatApproachSpeed } from "./combatApproach.js";
 import { v177LivingStunState, v177LivingStunSample, v177RangerLivingStunSample } from "./v177LivingStun.js";
 import { rememberV177CorpseJointPose, pruneV177CorpseJointPoses, v177LiveJointGroundLift, v177CorpseJointPresentation, drawV177CorpseJointPresentation } from "./v177CorpseJointPresentation.js";
 import { rememberV177HumanCorpsePaint, pruneV177HumanCorpsePaints, v177HumanCorpsePresentation, drawV177HumanCorpsePaint, V177_CONTINUOUS_HUMAN_CORPSE_KINDS } from "./v177HumanCorpsePresentation.js";
-import { pruneV177JointActorHistory, v177JointActorKey, recordV177JointBodyCorrection } from "./v177JointActorHistory.js";
+import { pruneV177JointActorHistory, v177JointActorKey, recordV177JointBodyCorrection, recordV177JointBodyShift } from "./v177JointActorHistory.js";
 import { rememberV177HitStrength, v177HitReactionStrength, v177HitReactionState } from "./v177HitReaction.js";
 import { rememberV177TurnedCorpsePaint, rememberV177TurnedBirth, v177TurnedGetupDirection,
   v177TurnedGetupPose, readV177TurnedBirthPresentation, pruneV177TurnedCorpsePaints } from "./v177TurnedGetupPresentation.js";
@@ -23707,6 +23707,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           }
 
           if (f.side === "human" || f.side === "zombie") {
+            const pairStartX=f.x;
             let appliedSeparation = false;
             if (f.navigationRecovery.terminalFallbackSeconds <= 0) {
               for (const other of g.fighters) {
@@ -23745,6 +23746,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               f.y = separatedPosition.y;
             }
             f.lane = activeLaneForY(f.y, f.lane);
+            recordV177JointBodyShift(f,g,f.x-pairStartX);
           }
           if (f.side === "human" && f.combatReady && f.hp > 0) {
             const qaBarrier = bossFoundationQaRef.current.barrierChallenge;
@@ -23788,6 +23790,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           const separated = clampToWalkable(movementStageGeometry, { ...position,
             bodyRadius: Math.max(fighter.bodyRadius, enemyRenderedVisualHalfWidth(fighter.kind)) });
           const delta = separated.x - fighter.x;
+          recordV177JointBodyShift(fighter,g,delta);
           fighter.x = separated.x; fighter.y = separated.y;
           actualXDeltaByFighterId.set(fighter.id, (actualXDeltaByFighterId.get(fighter.id) ?? 0) + delta);
           if (fighterRenderAuditEnabled) fighterActualXDeltaAudit.set(fighter.id, actualXDeltaByFighterId.get(fighter.id) ?? 0);
@@ -23806,6 +23809,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             bodyRadius: Math.max(fighter.bodyRadius, renderedHalfWidth),
           });
           if (grounded.clamped) g.stationMetrics.offFloorSteps += 1;
+          recordV177JointBodyShift(fighter,g,grounded.x-fighter.x);
           fighter.x = grounded.x;
           fighter.y = grounded.y;
           fighter.lane = activeLaneForY(fighter.y, fighter.lane);

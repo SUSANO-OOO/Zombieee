@@ -261,6 +261,15 @@ export function v177RangerFootPlacement(rig, previous, input) {
   input = {...input, facing:direction(input.facing), paintTime:input.time,
     bodyCorrection:input.bodyCorrection??0};
   const {time,root,facing,scale,phase}=input;
+  const shifted=Number.isFinite(input.bodyShiftX),shiftX=shifted?input.bodyShiftX-(previous?.bodyShiftX??0):0;
+  if(previous&&time>=previous.time&&shiftX!==0&&root!==previous.root&&phase===previous.phase){
+    // An advancing gait already owns its actual net travel. Transfer only
+    // an otherwise unowned solver displacement; a rejected attempted move
+    // with an unchanged painted root is not an actual body shift. Existing
+    // flights keep every original time and deadline.
+    previous={...previous,root:previous.root+shiftX,feet:previous.feet.map(foot=>({...foot,x:foot.x+shiftX,
+      flight:foot.flight?{...foot.flight,fromX:foot.flight.fromX+shiftX}:foot.flight}))};
+  }
   // Once both feet have finished settling, retain their immutable records.
   // The clock still advances; a turn, impulse or unfinished step uses the
   // original path below, including its original landing deadline.
@@ -278,7 +287,7 @@ export function v177RangerFootPlacement(rig, previous, input) {
       &&foot.x===worldX(rig.legs[i].footCenter+restOffset(rig.legs[i],i),root,facing,scale))){
     const state={time,root,facing,scale,phase,offset:previous.offset,moving:false,
       feet:previous.feet,requestedFacing:facing,lastLandedLeg:previous.lastLandedLeg??null,
-      bodyCorrection:input.bodyCorrection};
+      bodyCorrection:input.bodyCorrection,...(shifted?{bodyShiftX:input.bodyShiftX}:{})};
     return{state,phase:wrap(phase+state.offset),targets:targets(rig,state.feet,root,facing,scale)};
   }
   // A short pursuit can start and stop between two actual paints. Its source
@@ -293,7 +302,10 @@ export function v177RangerFootPlacement(rig, previous, input) {
   // A hard boss-body correction has its own receipt even below one stride.
   // Spawn/bounds corrections can also cross a whole stride before one step
   // lands. Carry that rigid pose; walking would leave its old ankles behind.
-  const displaced=previous&&time>=previous.time&&(input.bodyCorrection!==(previous.bodyCorrection??0)
+  // A solver can reject an attempted step while the actually painted root
+  // stays put. Consume that receipt without freezing an unfinished landing.
+  const displaced=previous&&time>=previous.time&&((input.bodyCorrection!==(previous.bodyCorrection??0)
+      &&(root!==previous.root||scale!==previous.scale))
     ||time-previous.time<STEP_SECONDS&&Math.abs(root-previous.root)>scale*rig.spanPx/rig.stanceFraction);
   if(displaced)state={...held(previous,input),requestedFacing:facing,turnTargetFacing:undefined};
   else if(previous&&input.moving&&!input.frozen&&time>=previous.time){
@@ -313,6 +325,6 @@ export function v177RangerFootPlacement(rig, previous, input) {
       }
     }
   }else state=advance(rig,previous,input);
-  state={...state,bodyCorrection:input.bodyCorrection};
+  state={...state,bodyCorrection:input.bodyCorrection,...(shifted?{bodyShiftX:input.bodyShiftX}:{})};
   return {state, phase:wrap(phase + state.offset), targets:targets(rig, state.feet, root, state.facing, scale)};
 }
