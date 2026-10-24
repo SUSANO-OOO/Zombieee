@@ -14,6 +14,7 @@ import {V100_UNITS,V100_STAGE_IDS} from '../app/v100Registry.js';
 import {MANUAL_ABILITY_REGISTRY as manual} from '../app/manualAbilities.js';
 import {V177_JOINT_ATLASES as atlases} from '../app/v177JointPresentation.js';
 import {installRequestFailureAudit} from './browser-request-failure-audit.mjs';
+import {normalCleanupWithin} from './v177-normal-browser-deadline.mjs';
 const productHead='f7f6f7ce46844eaefc4bb519fa80d591e2607407';
 const sha=b=>createHash('sha256').update(b).digest('hex');
 export async function runBrowserQa(){
@@ -28,8 +29,13 @@ export async function runBrowserQa(){
    {id:'anchor-desktop',kind:'anchor-bloom',mode:'enemy',headless:true,width:1280,height:720}];
  for(const item of cases){
   const row={...item,status:'starting'};report.cases.push(row);await persist();
-  let browser,context,requests,fatal=[];
-  const close=async()=>{if(context){await closeNativeGameContext(context,requests);context=null;}if(browser){await browser.close();browser=null;}};
+  let browser,context,requests,closing,fatal=[];
+  const close=()=>closing??=(async()=>{
+   const ownedContext=context,ownedBrowser=browser,errors=[];context=null;browser=null;
+   if(ownedContext)try{await normalCleanupWithin(()=>closeNativeGameContext(ownedContext,requests),'owned AV context');}catch(e){errors.push(e);}
+   if(ownedBrowser)try{await normalCleanupWithin(()=>ownedBrowser.close(),'owned AV browser');}catch(e){errors.push(e);}
+   if(errors.length)throw new AggregateError(errors,'The original browser must close before another probe or decoder');
+  })();
   try{
    browser=await(await nativeRecordingBrowserType()).launch({headless:item.headless});assert.equal(browser.version(),NATIVE_RECORDING_WEBKIT_RUNTIME.browserVersion);
    context=await browser.newContext({viewport:{width:item.width,height:item.height},deviceScaleFactor:1,isMobile:item.width<1000,hasTouch:item.width<1000});
@@ -59,12 +65,12 @@ export async function runBrowserQa(){
     if(item.mode==='manual')await page.locator(`.manual-ability-ready[data-fighter-id="${ids[0]}"]`).tap({timeout:5000});
     await page.waitForTimeout(durationMs);const capture=await page.evaluate(stopCorrectionRecording),bytes=Buffer.from(capture.data,'base64');delete capture.data;
     const file=item.id+(capture.mime.startsWith('video/mp4')?'.mp4':'.webm');await writeFile(path.join(out,file),bytes,{flag:'wx'});
-    Object.assign(row,{file,sha256:sha(bytes),bytes:bytes.length,capture});
+    Object.assign(row,{file,sha256:sha(bytes),bytes:bytes.length,capture});await persist();
     // The actual original recorder and every observation have stopped before
     // releasing this browser. A running synthetic battle must not compete
     // with the original5s decoder. No retained frame or clock is modified.
     await close();row.browserClosedBeforeDecode=true;row.requests=requests.report;await persist();
-    assert.equal(capture.failed,null);assert.equal(capture.bytes,bytes.length);
+    assert.equal(capture.failed,null);assert.equal(capture.bytes,bytes.length);assert.ok(capture.rows.length>=30,'Original continuous paint receipt count');
     row.originalAv=await auditCorrectionEncodedClip(path.join(out,file),capture);assertCorrectionCaseDeadline(row,started);
     assert.equal(row.originalAv.encodedPtsVerified,true,JSON.stringify(row.originalAv.failures));
     row.currentModelPaints=assertCurrentCorrectionPaints(capture,ids,Object.fromEntries(Object.entries(atlases).map(([k,a])=>[k,a.path])));
@@ -78,6 +84,7 @@ export async function runBrowserQa(){
   }catch(error){row.status='failed';row.error=String(error);}
   finally{try{await close();}catch(e){row.cleanupError=String(e);row.status='failed';}row.productErrors=fatal;await persist();}
   console.log(JSON.stringify({id:item.id,headless:item.headless,status:row.status,driftMs:row.driftMs,error:row.error,caseElapsedMs:row.caseElapsedMs}));
+  if(row.cleanupError||row.deadlineExpired||fatal.length)throw Error('Do not continue after an unclosed, expired or product-error owner');
  }
  report.complete=report.cases.length===cases.length;await persist();assert.ok(report.complete);assert.ok(report.cases.every(r=>r.status==='recorded'),'Retain every original strict control failure');
 }
