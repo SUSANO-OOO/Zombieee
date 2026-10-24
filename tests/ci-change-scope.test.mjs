@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {ciChangeScope,framePerformanceRuntimes,previousFullCiEvidence,previousQualityEvidence} from '../scripts/ci-change-scope.mjs';
+import {ciChangeScope,framePerformanceRuntimes,previousFullCiEvidence,previousQualityEvidence,
+ previousAbilityNameEvidence,reviewedAbilityNamePaths,ABILITY_NAME_BASELINE,ABILITY_NAME_BLOBS,ABILITY_NAME_REUSED_JOBS} from '../scripts/ci-change-scope.mjs';
 import {assertEphemeralPerformanceHost} from '../scripts/v100-macos-indexing-control.mjs';
 import {readFileSync} from 'node:fs';
 import {load} from 'js-yaml';
@@ -9,11 +10,82 @@ import {mkdtempSync,mkdirSync,writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {resolve,join} from 'node:path';
 import {provenanceFixture} from './helpers/ci-pr-provenance.mjs';
+
+test('the exact boss-label deletion retains successful browser owners but repeats Verify, performance and unfinished normal play',async()=>{
+ const old=ABILITY_NAME_BASELINE,paths=[...Object.keys(ABILITY_NAME_BLOBS),'scripts/ci-change-scope.mjs','tests/ci-combat-qa-reuse.test.mjs'];
+ const sourceBlobs={...ABILITY_NAME_BLOBS},options={repository:'SUSANO-OOO/Zombieee',previousHead:old.head,base:old.base,prNumber:181,
+  action:'synchronize',draft:false,paths,sourceBlobs,token:'fixture-only'};
+ const fixture=provenanceFixture({runId:old.runId,head:old.head,base:old.base});
+ const run={id:old.runId,head_sha:old.head,status:'completed',conclusion:'failure',run_attempt:1,event:'pull_request',pull_requests:[{number:181}]};
+ const owner={run_id:old.runId,head_sha:old.head,run_attempt:1};
+ const jobs=ABILITY_NAME_REUSED_JOBS.map((name,i)=>({id:700+i,name,...owner,status:'completed',conclusion:'success'}));
+ jobs.push({id:900,name:'PR Verify',status:'completed',conclusion:'failure'},
+  {id:901,name:'V1 Representative Normal Play (chromium)',status:'completed',conclusion:'failure'},
+  {id:902,name:'V1 Representative Normal Play (webkit)',status:'completed',conclusion:'success'});
+ for(const job of jobs)Object.assign(job,owner);
+ const api=(r=run,rows=jobs)=>async url=>({ok:true,arrayBuffer:async()=>fixture.zip,
+  json:async()=>url.includes('/artifacts?')?fixture.artifacts:url.includes('/jobs?')?{total_count:rows.length,jobs:rows}:r});
+ assert.equal(ABILITY_NAME_REUSED_JOBS.includes('V1 Phase G Production Matrix'),false,'Failed input QA needs a new real run');
+ assert.ok(ABILITY_NAME_REUSED_JOBS.includes('R9 Story (webkit, full-story, 844x340)'));
+ assert.ok(ABILITY_NAME_REUSED_JOBS.includes('V1 Native WebKit PWA Update and Recovery'));
+ const evidence=await previousAbilityNameEvidence({...options,request:api()});assert.equal(evidence.passed,true);
+ assert.equal(evidence.head,old.head);assert.equal(evidence.provenance.base,old.base);
+ assert.equal(evidence.freshVerifyRequired,true);assert.equal(evidence.freshPerformanceRequired,true);assert.equal(evidence.freshNormalRequired,true);
+ assert.equal(evidence.freshPhaseGRequired,true);
+ assert.equal(evidence.reusedJobs.some(j=>j.name==='PR Verify'),false,'A failed Verify is never an accepted old owner');
+ const scope=ciChangeScope(paths,{draft:false,sourceBlobs,reuseAbilityNames:true,freshNormal:evidence.freshNormalRequired});
+ assert.equal(scope.full,false);assert.equal(scope.verify_full,true);assert.equal(scope.performance,true);assert.equal(scope.normal,true);
+ assert.equal(scope.phaseg,true);
+ assert.equal(scope.r9,false);assert.equal(scope.wholeGameAccepted,false);
+ const completedNormal=jobs.map(j=>j.name==='V1 Representative Normal Play (chromium)'?{...j,conclusion:'success'}:j);
+ assert.equal((await previousAbilityNameEvidence({...options,request:api(run,completedNormal)})).freshNormalRequired,true,'Changed phase reader requires fresh observation even after an old success');
+ const normalEvidence=await previousAbilityNameEvidence({...options,paths:paths.filter(p=>p!=='scripts/v177-representative-battles.mjs'),request:api(run,completedNormal)});
+ assert.equal(normalEvidence.freshNormalRequired,false);
+ assert.deepEqual(normalEvidence.reusedJobs.filter(j=>j.name.startsWith('V1 Representative Normal Play'))
+  .map(j=>({id:j.id,run_id:j.run_id,head_sha:j.head_sha,run_attempt:j.run_attempt})),[{id:901,...owner},{id:902,...owner}]);
+ for(const conclusion of ['failure','cancelled','skipped']){
+  const rows=jobs.map((j,i)=>i===0?{...j,conclusion}:j);
+  assert.equal((await previousAbilityNameEvidence({...options,request:api(run,rows)})).passed,false);
+ }
+ for(const rows of [jobs.slice(1),[...jobs,jobs[0]]])assert.equal((await previousAbilityNameEvidence({...options,request:api(run,rows)})).passed,false);
+ for(const bad of [{run_id:1},{head_sha:'b'.repeat(40)},{run_attempt:2},{id:0},{id:-1},{id:jobs[1].id}]){
+  const rows=jobs.map((j,i)=>i===0?{...j,...bad}:j);assert.equal((await previousAbilityNameEvidence({...options,request:api(run,rows)})).passed,false);
+ }
+ for(const key of ['run_id','head_sha','run_attempt']){const rows=structuredClone(jobs);delete rows[0][key];
+  assert.equal((await previousAbilityNameEvidence({...options,request:api(run,rows)})).passed,false);}
+ const wrongNormal=completedNormal.map(j=>j.id===901?{...j,run_attempt:2}:j);
+ assert.equal((await previousAbilityNameEvidence({...options,request:api(run,wrongNormal)})).passed,false);
+ for(const r of [{...run,id:1},{...run,status:'in_progress'},{...run,run_attempt:2},{...run,head_sha:'b'.repeat(40)},{...run,pull_requests:[]}])
+  assert.equal((await previousAbilityNameEvidence({...options,request:api(r)})).passed,false);
+ for(const bad of [{base:'b'.repeat(40)},{action:'ready_for_review'},{previousHead:'b'.repeat(40)},
+  {paths:[...paths,'app/v100Save.js']},{sourceBlobs:{...sourceBlobs,'app/AshfallGame.tsx':'f'.repeat(40)}}]){
+  assert.equal((await previousAbilityNameEvidence({...options,...bad,request:()=>assert.fail('Unknown delta must reject before network')})).passed,false);
+ }
+ assert.equal(reviewedAbilityNamePaths(paths,sourceBlobs),true);
+ assert.equal(ciChangeScope([...paths,'app/unknown.js'],{draft:false,sourceBlobs,reuseAbilityNames:true}).full,true);
+ assert.equal(ciChangeScope(paths,{draft:false,sourceBlobs}).full,true,'No verified preceding browser owners means full regression');
+});
 test('a ready candidate always gets full regression, including governance-only changes',()=>{
  for(const paths of [['AGENTS.md'],['tests/ci-contract.test.mjs'],['app/v177RangerFootPlacement.js']]){
   const scope=ciChangeScope(paths,{draft:false});assert.equal(scope.full,true);assert.equal(scope.ranger,true);assert.equal(scope.normal,true);
   assert.equal(scope.wholeGameAccepted,false);
  }
+});
+
+test('display-only continuation retains Quality only with its own two exact-head engine owners',async()=>{
+ const b=ABILITY_NAME_BASELINE,displayEvidence={passed:true,head:b.head,base:b.base,prNumber:181,
+  freshVerifyRequired:true,freshPerformanceRequired:true,freshPhaseGRequired:true};
+ const run={id:40120044478,head_sha:b.head,status:'completed',conclusion:'success',event:'pull_request',run_attempt:1,pull_requests:[{number:181}]};
+ const jobs=['chromium','webkit'].map((engine,i)=>({id:100+i,name:`V1 Quality UI and Play (${engine})`,
+  status:'completed',conclusion:'success',run_id:run.id,head_sha:b.head,run_attempt:1}));
+ const api=(r=run,rows=jobs)=>async url=>({ok:true,json:async()=>url.includes('/jobs?')?{total_count:rows.length,jobs:rows}:{workflow_runs:[r]}});
+ const options={repository:'SUSANO-OOO/Zombieee',head:b.head,prNumber:181,token:'fixture-only',displayEvidence};
+ assert.equal((await previousQualityEvidence({...options,request:api()})).passed,true);
+ for(const bad of [{run_id:1},{head_sha:'f'.repeat(40)},{run_attempt:2},{conclusion:'failure'},{id:0}])
+  assert.equal((await previousQualityEvidence({...options,request:api(run,jobs.map((j,i)=>i?j:{...j,...bad}))})).passed,false);
+ for(const rows of [jobs.slice(1),[jobs[0],jobs[0]],[]])assert.equal((await previousQualityEvidence({...options,request:api(run,rows)})).passed,false);
+ assert.equal((await previousQualityEvidence({...options,displayEvidence:{...displayEvidence,freshPhaseGRequired:false},
+  request:()=>assert.fail('Unverified source owner cannot request Quality reuse')})).passed,false);
 });
 
 test('WebKit mirror preparation is QA-only on Draft and retains full Ready checks',()=>{
@@ -304,6 +376,7 @@ test('the CLI handles a PR whose base branch advanced without requiring another 
  const result=JSON.parse(execFileSync(process.execPath,[resolve('scripts/ci-change-scope.mjs')],{
   cwd:directory,encoding:'utf8',windowsHide:true,env:{...process.env,CI_SCOPE_BASE:advanced,CI_SCOPE_HEAD:head,CI_SCOPE_DRAFT:'false',GITHUB_OUTPUT:'',GITHUB_STEP_SUMMARY:''}}));
  assert.equal(result.comparisonBase,base);assert.equal(result.full,true);
+ assert.equal(result.abilityNameEvidence.reason,'previous-head-not-exact-ancestor');
  assert.deepEqual(result.changedPaths,['app/v177RangerFootPlacement.js']);
 });
 
@@ -335,6 +408,9 @@ test('CLI native synchronize reuse requires the exact ancestor and preserves Rea
  assert.equal(reused.wholeGameAccepted,false);assert.equal(reused.finalIntegrationRequiresFullRegression,true);
  assert.equal(run({CI_SCOPE_ACTION:'ready_for_review'}).full,true);
  assert.equal(run({CI_SCOPE_PREVIOUS_HEAD:head}).full,true);
+ const output=join(directory,'.git','scope-output');run({GITHUB_OUTPUT:output});
+ assert.equal(Object.fromEntries(readFileSync(output,'utf8').trim().split('\n').map(line=>line.split('='))).phaseg,'true',
+  'The real CLI must publish the fresh Phase G flag to the workflow');
  writeFileSync(join(directory,'unknown'),'fixture');const unknown=commit();assert.equal(run({CI_SCOPE_HEAD:unknown}).full,true);
  git('checkout','--detach',base);writeFileSync(join(directory,'AGENTS.md'),'advanced');const advanced=commit();
  assert.equal(run({CI_SCOPE_BASE:advanced,CI_SCOPE_PREVIOUS_HEAD:advanced}).full,true,'an unmerged advanced base cannot authorize reuse');
@@ -362,6 +438,16 @@ test('new source heads do not wait behind a previous head and all original full 
  delete current.jobs.scope.outputs.combat;
  current.jobs['v102-combat'].if=original.jobs['v102-combat'].if;
  current.jobs['v102-combat-webkit-summary'].if=original.jobs['v102-combat-webkit-summary'].if;
+ assert.equal(current.jobs.scope.outputs.performance,'${{ steps.scope.outputs.performance }}');delete current.jobs.scope.outputs.performance;
+ assert.equal(current.jobs.scope.outputs.verify_full,'${{ steps.scope.outputs.verify_full }}');delete current.jobs.scope.outputs.verify_full;
+ assert.equal(current.jobs.scope.outputs.phaseg,'${{ steps.scope.outputs.phaseg }}');delete current.jobs.scope.outputs.phaseg;
+ assert.equal(current.jobs['v100-phase-g-production'].if,"${{ needs.scope.outputs.full == 'true' || needs.scope.outputs.phaseg == 'true' }}");
+ current.jobs['v100-phase-g-production'].if=original.jobs['v100-phase-g-production'].if;
+ const verifyOnly=original.jobs.verify.steps.filter(step=>step.if?.includes("needs.scope.outputs.full == 'true'"));assert.equal(verifyOnly.length,19);
+ for(const old of verifyOnly){const step=current.jobs.verify.steps.find(s=>s.name===old.name);
+  assert.equal(step.if,old.if.replaceAll("needs.scope.outputs.full == 'true'","(needs.scope.outputs.full == 'true' || needs.scope.outputs.verify_full == 'true')"));step.if=old.if;}
+ assert.equal(current.jobs['v100-webkit-frame-control'].if,"${{ needs.scope.outputs.full == 'true' || needs.scope.outputs.performance == 'true' }}");
+ current.jobs['v100-webkit-frame-control'].if=original.jobs['v100-webkit-frame-control'].if;
  const formalCommand='node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs';
  const formal=workflow=>workflow.jobs['v100-webkit-frame-control'].steps.filter(step=>step.run===formalCommand);
  assert.equal(formal(current).length,4);assert.equal(formal(original).length,4);

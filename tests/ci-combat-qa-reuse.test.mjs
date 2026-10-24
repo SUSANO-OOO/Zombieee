@@ -84,8 +84,23 @@ test('workflow preserves every command/deadline and current script drift rejects
   before.jobs.scope.outputs.combat='${{ steps.scope.outputs.combat }}';
   before.jobs['v102-combat'].if="${{ needs.scope.outputs.full == 'true' || needs.scope.outputs.combat == 'true' }}";
   before.jobs['v102-combat-webkit-summary'].if="${{ (needs.scope.outputs.full == 'true' || needs.scope.outputs.combat == 'true') && (always()) }}";
+  before.jobs.scope.outputs.performance='${{ steps.scope.outputs.performance }}';
+  before.jobs.scope.outputs.verify_full='${{ steps.scope.outputs.verify_full }}';
+  before.jobs.scope.outputs.phaseg='${{ steps.scope.outputs.phaseg }}';
+  before.jobs['v100-phase-g-production'].if="${{ needs.scope.outputs.full == 'true' || needs.scope.outputs.phaseg == 'true' }}";
+  const verify=before.jobs.verify.steps.filter(step=>step.if?.includes("needs.scope.outputs.full == 'true'"));assert.equal(verify.length,19);
+  for(const step of verify)step.if=step.if.replaceAll("needs.scope.outputs.full == 'true'","(needs.scope.outputs.full == 'true' || needs.scope.outputs.verify_full == 'true')");
+  before.jobs['v100-webkit-frame-control'].if="${{ needs.scope.outputs.full == 'true' || needs.scope.outputs.performance == 'true' }}";
+  const command='node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs';
+  const formal=before.jobs['v100-webkit-frame-control'].steps.filter(step=>step.run===command);
+  assert.equal(formal.length,4);
+  for(const step of formal){assert.equal(step.env.V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC,'1');step.env.V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC='0';}
+  const currentFormal=load(current).jobs['v100-webkit-frame-control'].steps.filter(step=>step.run===command);
+  assert.equal(currentFormal.length,4);for(const step of currentFormal)assert.equal(step.env.V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC,'0');
   assert.deepEqual(load(current),before);
-  assert.equal(execFileSync('git',['hash-object','.github/workflows/ci.yml'],{encoding:'utf8',windowsHide:true}).trim(),COMBAT_QA_WORKFLOW_BLOB);
+  const workflowBlob=execFileSync('git',['hash-object','.github/workflows/ci.yml'],{encoding:'utf8',windowsHide:true}).trim();
+  if(workflowBlob!==COMBAT_QA_WORKFLOW_BLOB)assert.equal(reviewedCombatQaPaths(paths,{...sourceBlobs,'.github/workflows/ci.yml':workflowBlob}),false,
+    'Changed workflow must not inherit the old exact-workflow QA owner');
   for(const [file,blob]of Object.entries(COMBAT_QA_BLOBS)){
     const actual=execFileSync('git',['hash-object',file],{encoding:'utf8',windowsHide:true}).trim();
     if(actual===blob)assert.equal(actual,blob);

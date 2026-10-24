@@ -21732,13 +21732,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                     // Keep each target's impact readable in a clustered phone battle.
                     addDamageText(g, victim.x, victim.y - 58, `-${Math.round(resolved.targetDamage)}`, .92, anomalyKind === "gairen" ? "#d3b77c" : anomalyKind === "futago" ? "#d59a9d" : "#e1ad58");
                   }
-                  // V1 boss HP replaces the top banner. Name the move once at
-                  // activation, including a successful dodge, then show only
-                  // short damage values over the targets actually struck.
-                  const moveName = anomalyKind === "gairen" ? "外殻掃討"
-                    : anomalyKind === "futago" ? f.v100TwinPart ? f.stationAbility.split ? "激昂斬撃" : "交差斬撃" : "融合交差撃"
-                      : anomalyKind === "mugarian-president-mutated" ? "四腕制圧" : "Ω大剣薙ぎ払い";
-                  addDamageText(g, areaBoss.x, Math.max(110, areaBoss.y - 96), moveName, .92, anomalyKind === "gairen" ? "#d3b77c" : anomalyKind === "futago" ? "#d59a9d" : "#e1ad58");
+                  // The actual windup owns the single overhead move name.
+                  // Impact keeps only each target's short damage value above.
                   addParticles(
                     g,
                     areaBoss.x,

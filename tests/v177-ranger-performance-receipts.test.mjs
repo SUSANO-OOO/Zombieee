@@ -96,6 +96,31 @@ test('the actual device projection retains raw receipts and all original window,
   assert.equal(tactical.slice(tactical.indexOf(marker)).replace(immediate,projectionCalls[0]).replace(s25Only,"earlyCampaign&&!bossPrecision ? earlyPriorities : latePriorities").replace(fixedCardRead,previousCardRead),oldTactical.slice(oldTactical.indexOf(marker)),'all baseline tactical policy remains exact');
 });
 
+test('formal CPU chunks use the original elapsed RPC and immutable raw numbers without altering clocks or controls',async()=>{
+ const source=fs.readFileSync('scripts/v100-device-runtime-browser.mjs','utf8'),tree=ts.createSourceFile('device.mjs',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);
+ let read;const visit=n=>{if(ts.isVariableDeclaration(n)&&n.name.getText(tree)==='stillMeasuring')read=n.initializer.getText(tree);ts.forEachChild(n,visit);};visit(tree);assert.ok(read);
+ let enabled;const readEnabled=n=>{if(ts.isVariableDeclaration(n)&&n.name.getText(tree)==='retainFrameCpuChunks')enabled=n.initializer.getText(tree);ts.forEachChild(n,readEnabled);};readEnabled(tree);assert.ok(enabled);
+ const formal={runtimeRole:'formal',engine:'webkit',callbackDiagnostic:false,observerlessDiagnostic:false,blankBaselineDiagnostic:true};
+ assert.equal(vm.runInNewContext(enabled,formal),true,'The actual formal environment keeps its separate blank controls and real boss CPU chunks');
+ for(const option of [{runtimeRole:'native-control'},{engine:'chromium'},{callbackDiagnostic:true},{observerlessDiagnostic:true}])
+  assert.equal(vm.runInNewContext(enabled,{...formal,...option}),false);
+ let now=100,calls=0;
+ const raw={frameCpuSequence:7,frameCpuTimings:[{sequence:7,rafTimestamp:95,entryAt:96,previousExitAt:90,
+  simulationFinishedAt:97,drawFinishedAt:99,exitAt:100,simulationTime:3}]};
+ const observation={maxChunks:128,chunks:[],overflow:0},result={frameCpuObservation:observation};
+ const context=vm.createContext({performance:{now:()=>now},__ASHFALL_RUNTIME_PERFORMANCE__:raw,
+  result,measurement:{startedAt:100},measurementMs:30000,retainFrameCpuChunks:true,
+  page:{evaluate:async(fn,args)=>{calls++;assert.deepEqual(JSON.parse(JSON.stringify(args)),{startedAt:100,durationMs:30000});return fn(args);}}});
+ const still=vm.runInContext(read,context);assert.equal(await still(),true);assert.equal(calls,1);
+ assert.deepEqual(JSON.parse(JSON.stringify(observation.chunks[0].rows)),[[7,95,96,90,97,99,100,3]]);
+ raw.frameCpuTimings[0].entryAt=777;assert.equal(observation.chunks[0].rows[0][2],96,'Later ring mutation cannot rewrite an earlier reply');
+ for(let i=1;i<130;i++)await still();assert.equal(observation.chunks.length,128);assert.equal(observation.overflow,2);assert.equal(calls,130);
+ now=30100;assert.equal(await still(),false,'Exact original30s boundary');
+ context.retainFrameCpuChunks=false;const count=observation.chunks.length,overflow=observation.overflow;
+ now=30099;assert.equal(await still(),true);now=30100;assert.equal(await still(),false);
+ assert.equal(observation.chunks.length,count);assert.equal(observation.overflow,overflow,'Excluded controls keep their original scalar path');
+});
+
 
 test('the exact unchanged start frame is a separately counted baseline, never a new in-window paint',()=>{
  const rows=samples(),start={startedAt:0,active:true,boundary:{renderSequence:100,simulationTime:10,battleAudioGeneration:7,actors:[{id:1001,renderSequence:100,jointPaintedAt:10,objectTailSame:true,worldWeightedLower:structuredClone(rows[0].rangerDraws.actors[0].render.jointWeightedLower)}]}};

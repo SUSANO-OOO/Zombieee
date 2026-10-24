@@ -1,10 +1,76 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp,readdir,rm,rmdir} from 'node:fs/promises';
+import {mkdtemp,readdir,rm,rmdir,readFile,writeFile,mkdir} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
 import os from 'node:os';
 import path from 'node:path';
 import vm from 'node:vm';
-import {auditCorrectionEncodedClip,startCorrectionRecording,assertCorrectionCaseDeadline,canContinueCompletedCorrection,assertMayoCorrectionRetreat} from '../scripts/v105-five-corrections-capture.mjs';
+import {auditCorrectionEncodedClip,startCorrectionRecording,assertCorrectionCaseDeadline,canContinueCompletedCorrection,assertMayoCorrectionRetreat,
+  correctionCaseSelection,withCorrectionCaseContext,completeCorrectionCase} from '../scripts/v105-five-corrections-capture.mjs';
+
+test('a last-fixture error delivered during cleanup cannot become a reusable recorded success',()=>{
+  const row={status:'verified-awaiting-owned-cleanup',context:{completed:true,pageClosedBeforeCleanup:false}};
+  completeCorrectionCase(row,1,{fatalErrors:0,now:100});assert.equal(row.status,'recorded');
+  for(const [change,fatalErrors]of [[{},1],[{context:{completed:false,pageClosedBeforeCleanup:false}},0],
+    [{context:{completed:true,pageClosedBeforeCleanup:true}},0],[{deadlineExpired:true},0]]){
+    const bad={...row,status:'verified-awaiting-owned-cleanup',...change};
+    assert.throws(()=>completeCorrectionCase(bad,1,{fatalErrors,now:100}));assert.notEqual(bad.status,'recorded');
+  }
+});
+
+test('correction reuse keeps original owners and reruns all failed and affected names; unknown source stays full',async()=>{
+  const root=await mkdtemp(path.join(os.tmpdir(),'v105-retained-'));
+  const file='docs/qa/v105/five-corrections-6a-evidence.json',original=JSON.parse(await readFile(file,'utf8'));
+  await mkdir(path.join(root,'scripts'));await mkdir(path.join(root,'docs/qa/v105'),{recursive:true});
+  const store=async inventory=>{const bytes=JSON.stringify(inventory);await writeFile(path.join(root,file),bytes);
+    await writeFile(path.join(root,'scripts/v177-native-allunit-recovery.json'),JSON.stringify({fiveCorrections:{file,
+      sha256:createHash('sha256').update(bytes).digest('hex'),head:original.head,runId:original.runId}}));};
+  const options={root,event:{},select:()=>({mode:'remaining'})};
+  try{
+    await store(original);const d=await correctionCaseSelection('desktop',options);
+    assert.equal(d.plan.length,13);assert.equal(d.retained.length,29);assert.equal(d.source.head,original.head);
+    assert.ok(d.plan.some(r=>r.kind==='takuya-omega'&&r.mode==='enemy'));
+    for(const scope of ['mobile390','mobile340']){const s=await correctionCaseSelection(scope,options);assert.equal(s.plan.length,0);assert.equal(s.retained.length,7);}
+    assert.equal((await correctionCaseSelection('desktop',{...options,select:()=>({mode:'full'})})).plan.length,42);
+    for(const mutate of [i=>i.pending.pop(),i=>i.retained.push(i.retained[0]),i=>{i.retained[0].driftMs=120.001;},
+      i=>{i.retained[0].maxGapMs=250.001;},i=>{i.retained[0].head='f'.repeat(40);},
+      i=>{i.retained[0].fullAvDecode.requiredMixerAudioStream=false;},i=>{i.retained[0].caseElapsedMs=30000;},
+      i=>{i.retained[0].encodedPtsVerified=false;},i=>{i.retained[0].originalStatus='failed';},
+      i=>{i.retained[0].reportSha256='f'.repeat(64);},i=>{i.retained[0].artifactId=i.reports[1].artifactId;},
+      i=>{i.reports[0].scope='mobile340';}]){
+      const bad=structuredClone(original);mutate(bad);await store(bad);await assert.rejects(correctionCaseSelection('desktop',options));
+    }
+    await store(original);await writeFile(path.join(root,file),'{}');await assert.rejects(correctionCaseSelection('desktop',options));
+  }finally{assert.equal(path.dirname(root),path.resolve(os.tmpdir()));await rm(root,{recursive:true,force:true});}
+});
+
+test('independent correction fixtures close every page and retain earlier product errors and cleanup failures',async()=>{
+  const events=[],fatals=[],receipts=[];let count=0,failCleanup=false;
+  const browser={newContext:async()=>{
+    const id=++count,handlers={},page={on:(name,fn)=>{handlers[name]=fn;},setDefaultTimeout:ms=>assert.equal(ms,30000),isClosed:()=>false};
+    return{id,newPage:async()=>page,handlers};}};
+  const deps={onFatal:e=>fatals.push(e),onRequests:r=>receipts.push(r),audit:()=>({report:{unexpectedFailures:[]}}),
+    closeContext:async context=>{events.push('close-'+context.id);if(failCleanup)throw Error('close failed');},
+    deadline:async(action,_close,options)=>{assert.equal(typeof options.onDeadline,'function');return action();}};
+  for(let n=1;n<=2;n++)await withCorrectionCaseContext(browser,{},async()=>{events.push('work-'+n);},deps);
+  assert.deepEqual(events,['work-1','close-1','work-2','close-2']);assert.equal(receipts.length,2);
+  assert.ok(receipts.every(r=>r.completed&&r.pageClosedBeforeCleanup===false));
+  await assert.rejects(withCorrectionCaseContext(browser,{},async()=>{throw Error('original capture failed');},deps),/original capture failed/);
+  failCleanup=true;const primary=Error('primary page failure');
+  await assert.rejects(withCorrectionCaseContext(browser,{},async()=>{throw primary;},deps),e=>e===primary&&e.cleanupError.includes('close failed'));
+  assert.equal(fatals.length,1);assert.equal(events.filter(e=>e==='close-4').length,1,'Close never runs twice on the same native owner');
+});
+
+test('a context created after its original deadline is closed without starting a page or capture',async()=>{
+  let resolve,closed=0,pages=0,captures=0;const pending=new Promise(r=>{resolve=r;});
+  const browser={newContext:()=>pending};
+  const result=withCorrectionCaseContext(browser,{},async()=>{captures++;},{
+    deadline:async(action,_close,{onDeadline})=>{void action().catch(()=>{});const error=Error('deadline');onDeadline(error);throw error;},
+    closeContext:async()=>{closed++;}});
+  await assert.rejects(result,/deadline/);
+  resolve({newPage:async()=>{pages++;}});await new Promise(r=>setImmediate(r));
+  assert.equal(closed,1);assert.equal(pages,0);assert.equal(captures,0);
+});
 
 test('Mayo AV cannot pass a clipped run or omit its actual current-model fall, rise and completed exit',()=>{
   const atlas='/current-feral.webp',capture={rows:['fall','rise','run'].map((phase,renderSequence)=>({fighters:[{id:7,mayoRetreat:{phase},

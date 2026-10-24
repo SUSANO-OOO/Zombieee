@@ -56,6 +56,30 @@ export async function prepareNativeAllUnitBattle(page,forms,owner,enterBattle,se
   ]);
 }
 
+export function readNativeCaptureAudioReadiness({readyOnly=false}={}){
+  const d=window.__ASHFALL_AUDIO_QA__?.getDiagnostics();
+  if(!d)throw Error('Original game audio diagnostics unavailable');
+  const row={at:performance.now(),unlocked:d.unlocked,contextState:d.contextState,
+    activePreloads:d.activePreloads,queuedPreloads:d.queuedPreloads,loading:d.cache.loading,fetched:d.cache.fetched,
+    failed:d.cache.failed,activeBgmVoices:d.activeBgmVoices,duplicateLoops:d.duplicateLoopInstanceKeys.length};
+  const ready=row.unlocked===true&&row.contextState==='running'&&row.activeBgmVoices>0&&row.duplicateLoops===0
+    &&['activePreloads','queuedPreloads','loading','fetched','failed'].every(k=>row[k]===0);
+  return readyOnly?(ready?row:false):row;
+}
+// Steady motion capture must not race cold audio preparation. This observes
+// the unchanged product loader inside the original5s readiness/30s setup
+// limits. Cold first-sound and normal-play gates remain separate requirements.
+export async function waitForNativeCaptureAudio(page,owner){
+  const receipt={status:'pending',before:await page.evaluate(readNativeCaptureAudioReadiness),readinessMs:LIMITS.readinessMs};
+  owner.audioReadiness=receipt;let handle,primary;
+  try{
+    handle=await page.waitForFunction(readNativeCaptureAudioReadiness,{readyOnly:true},{timeout:LIMITS.readinessMs,polling:100});
+    receipt.after=await handle.jsonValue();receipt.status='ready';
+  }catch(error){primary=error;receipt.status='failed';receipt.error=String(error);throw error;}
+  finally{if(handle)try{await handle.dispose();}catch(error){receipt.status='failed';receipt.disposeError=String(error);if(!primary)throw error;}}
+  return receipt;
+}
+
 export async function enterNativeAllUnitSurface(page,setupStage=()=>{}){
   const play=page.getByRole('button',{name:'ブラウザで遊ぶ',exact:true});
   const title=page.locator('.v100-start-screen');
@@ -238,7 +262,7 @@ export async function runBrowserQa(){
             await prepareNativeAllUnitBattle(page,forms,owner,async()=>{
               setupStage('title-entry');await deps.enterV100FromTitle(page);setupStage('battle-button');await page.getByRole('button',{name:'戦闘へ',exact:true}).click();
               setupStage('battle-running');await page.waitForFunction(()=>window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().running);
-            },setupStage);setupStage('completed');
+            },setupStage);setupStage('audio-preparation');await waitForNativeCaptureAudio(page,owner);setupStage('completed');
           },closeOwned,{onDeadline:fail});
           for(const planned of rows){
             const row={...planned,status:'starting',samples:[],...acceptance()};report.cases.push(row);

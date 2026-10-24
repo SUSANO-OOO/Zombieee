@@ -5,7 +5,7 @@ import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {immutablePrProvenance} from './ci-pr-provenance.mjs';
 import {COMBAT_QA_BASELINE,COMBAT_QA_BLOBS,reviewedCombatQaPaths,previousCombatQaEvidence,
-  COMBAT_FIXTURE_BASELINE,reviewedCombatFixturePaths,previousCombatFixtureEvidence} from './ci-combat-qa-reuse.mjs';
+  COMBAT_FIXTURE_BASELINE,reviewedCombatFixturePaths,previousCombatFixtureEvidence,BASELINE_JOB_NAMES} from './ci-combat-qa-reuse.mjs';
 
 const governance=new Set(['AGENTS.md','docs/PROJECT_STATE.md','docs/CODEX_SOL_ROLE.md','docs/CODEX_LUNA_ROLE.md',
   'docs/CODEX_TWO_THREAD_WORKFLOW.md','docs/PRODUCER_DECISIONS_1.0.3.md',
@@ -36,6 +36,69 @@ const reviewedCorrectionQaBlobs=Object.freeze({
 const nativeQaOnlyPaths=(paths,sourceBlobs)=>paths.length>0&&paths.every(file=>
   allunit.has(file)||file==='docs/PROJECT_STATE.md'||nativeQaTests.has(file)
   ||(reviewedCorrectionQaBlobs[file]&&sourceBlobs[file]===reviewedCorrectionQaBlobs[file]));
+
+// One reviewed display-only delta. All reused browser jobs must have actually
+// completed on the immutable preceding candidate. Verify and performance run
+// afresh; a failed normal-play lane also runs again. Unknown changes stay full.
+export const ABILITY_NAME_BASELINE=Object.freeze({head:'6a5226647ebf9ba7692c69b9c64af4ce32059d1b',
+ base:'e22b134a38409b9d2f86660ee351e616c28fbf44',runId:40120044446,prNumber:181});
+export const ABILITY_NAME_BLOBS=Object.freeze({
+ "app/AshfallGame.tsx": "004c5f5e25a6ff63c029d6f06d4c29f92efbd859",
+ ".github/workflows/ci.yml": "bbfb51296e72de4c83ea993ce6341f39fbd098a4",
+ "scripts/v177-representative-battles.mjs": "c5359ed5edf24403c427c64832e5d140806eb9c8",
+ "scripts/v100-device-runtime-browser.mjs": "445b9aaa783128b764623a2d40cc3e194587c94e",
+ "scripts/v100-phase-g-production-matrix.mjs": "e879eca860f4bf9e5531e75c29bea79c209cb57f",
+ "scripts/v105-five-corrections-capture.mjs": "f187ea4d816abc25272673d880cc15fe7d5b686b",
+ "scripts/v177-native-allunit-browser.mjs": "536ff62a6e277ab2dd602d95ed9737b1da66b416",
+ "docs/qa/v105/five-corrections-6a-evidence.json": "30027698e152d5e49c5d03f2f4c2212571a3e2c9"
+});
+const abilityNameFiles=new Set([...Object.keys(ABILITY_NAME_BLOBS),'scripts/ci-change-scope.mjs',
+ 'tests/ci-change-scope.test.mjs','tests/ci-contract.test.mjs','tests/ci-combat-qa-reuse.test.mjs',
+ 'scripts/v177-native-allunit-recovery.json','tests/v177-representative-battles.test.mjs',
+ 'scripts/v105-five-corrections-capture.mjs','tests/v105-original-av.test.mjs',
+ 'scripts/v177-native-allunit-browser.mjs','tests/v177-native-setup-overlap.test.mjs',
+ 'tests/v177-ranger-performance-receipts.test.mjs',
+ 'scripts/v100-phase-g-production-matrix.mjs','tests/v100-phase-g-sustain-pointer.test.mjs',
+ 'docs/qa/v105/five-corrections-6a-evidence.json','docs/PROJECT_STATE.md','docs/qa/v105/native-6a-evidence.json']);
+export const ABILITY_NAME_REUSED_JOBS=Object.freeze(BASELINE_JOB_NAMES.filter(name=>
+ !['PR Verify','V1 Guardian Control Diagnostic','WebKit Compact Shadow Diagnostic','V1 WebKit Frame and Boss Performance',
+ 'V1 Phase G Production Matrix','V1 Representative Normal Play (chromium)','V1 Representative Normal Play (webkit)'].includes(name)));
+export function reviewedAbilityNamePaths(paths,sourceBlobs={}){
+ return Array.isArray(paths)&&paths.length>0&&paths.every(file=>abilityNameFiles.has(file))
+  &&['app/AshfallGame.tsx','.github/workflows/ci.yml'].every(file=>paths.includes(file))
+  &&Object.entries(ABILITY_NAME_BLOBS).every(([file,blob])=>!paths.includes(file)||sourceBlobs[file]===blob);
+}
+export async function previousAbilityNameEvidence({repository,previousHead,base,prNumber,action,draft,paths,sourceBlobs,token,request=fetch}={}){
+ const old=ABILITY_NAME_BASELINE;
+ if(repository!=='SUSANO-OOO/Zombieee'||previousHead!==old.head||base!==old.base||prNumber!==old.prNumber
+  ||action!=='synchronize'||draft!==false||!token||!reviewedAbilityNamePaths(paths,sourceBlobs))
+  return{passed:false,reason:'not-the-reviewed-ability-name-display-delta'};
+ const get=async(suffix,binary=false)=>{const response=await request(`https://api.github.com/repos/${repository}/${suffix}`,{
+  headers:{Accept:'application/vnd.github+json',Authorization:`Bearer ${token}`,'X-GitHub-Api-Version':'2022-11-28'},signal:AbortSignal.timeout(10000)});
+  if(!response.ok)throw Error('Original browser evidence unavailable');return binary?response.arrayBuffer():response.json();};
+ try{
+  const run=await get(`actions/runs/${old.runId}`);
+  if(run.id!==old.runId||run.head_sha!==old.head||run.status!=='completed'||run.run_attempt!==1||run.event!=='pull_request'
+   ||!run.pull_requests?.some(pr=>pr.number===old.prNumber))return{passed:false,reason:'original-candidate-not-complete'};
+  const data=await get(`actions/runs/${old.runId}/jobs?filter=latest&per_page=100`);
+  if(!Array.isArray(data.jobs)||!Number.isSafeInteger(data.total_count)||data.total_count>100||data.total_count!==data.jobs.length)
+   return{passed:false,reason:'original-jobs-pagination-or-count-mismatch'};
+  if(new Set(data.jobs.map(j=>j.id)).size!==data.jobs.length||!data.jobs.every(j=>Number.isSafeInteger(j.id)&&j.id>0
+   &&j.run_id===old.runId&&j.head_sha===old.head&&j.run_attempt===1&&j.status==='completed'))
+   return{passed:false,reason:'original-job-owner-mismatch'};
+  const successful=name=>{const rows=data.jobs?.filter(j=>j.name===name);return rows?.length===1&&rows[0].status==='completed'
+   &&rows[0].conclusion==='success'&&Number.isSafeInteger(rows[0].id);};
+  if(!ABILITY_NAME_REUSED_JOBS.every(successful))return{passed:false,reason:'an-unchanged-browser-gate-is-not-successful'};
+  const provenance=await immutablePrProvenance({get,runId:old.runId,head:old.head,base:old.base});
+  const normalNames=['chromium','webkit'].map(engine=>`V1 Representative Normal Play (${engine})`),
+    normalComplete=!paths.includes('scripts/v177-representative-battles.mjs')&&normalNames.every(successful);
+  return{passed:true,head:old.head,base:old.base,prNumber:old.prNumber,runId:old.runId,provenance,
+   reusedJobs:[...ABILITY_NAME_REUSED_JOBS,...(normalComplete?normalNames:[])].map(name=>{const j=data.jobs.find(j=>j.name===name);
+    return{name,id:j.id,head_sha:j.head_sha,run_id:j.run_id,run_attempt:j.run_attempt};}),
+   freshVerifyRequired:true,freshPerformanceRequired:true,freshPhaseGRequired:true,
+   freshNormalRequired:!normalComplete};
+ }catch{return{passed:false,reason:'original-browser-evidence-unavailable'};}
+}
 const r9=new Set(['scripts/v100-dialogue-composition-browser.mjs','scripts/v100-story-bookends-browser-smoke.mjs',
   'scripts/v100-r9-full-story-browser.mjs','scripts/v100-r9-story-plan.mjs']);
 const orchestration=new Set(['.github/workflows/ci.yml','scripts/ci-change-scope.mjs',
@@ -142,8 +205,12 @@ export async function previousFullCiEvidence({repository,head,base,prNumber,toke
 
 // A completed CI does not establish the separate Quality result. Retain its
 // own exact-head owner only when both original engine jobs actually passed.
-export async function previousQualityEvidence({repository,head,prNumber,token,fullEvidence,request=fetch}={}){
-  if(fullEvidence?.passed!==true||fullEvidence.head!==head||fullEvidence.prNumber!==prNumber
+export async function previousQualityEvidence({repository,head,prNumber,token,fullEvidence,displayEvidence,request=fetch}={}){
+  const displayOnly=displayEvidence?.passed===true&&displayEvidence.head===ABILITY_NAME_BASELINE.head
+    &&displayEvidence.base===ABILITY_NAME_BASELINE.base&&displayEvidence.freshVerifyRequired===true
+    &&displayEvidence.freshPerformanceRequired===true&&displayEvidence.freshPhaseGRequired===true;
+  const sourceOwner=displayOnly?displayEvidence:fullEvidence;
+  if(sourceOwner?.passed!==true||sourceOwner.head!==head||sourceOwner.prNumber!==prNumber
     ||!/^[\w.-]+\/[\w.-]+$/u.test(repository??'')||!/^[a-f0-9]{40}$/u.test(head??'')||!Number.isSafeInteger(prNumber)||prNumber<1||!token)
     return{passed:false,reason:'verified-full-owner-required'};
   const get=async suffix=>{
@@ -157,21 +224,26 @@ export async function previousQualityEvidence({repository,head,prNumber,token,fu
     for(const run of data.workflow_runs??[]){
       if(run.head_sha!==head||run.status!=='completed'||run.conclusion!=='success'||!Number.isSafeInteger(run.id)
         ||!run.pull_requests?.some(pr=>pr.number===prNumber))continue;
+      if(displayOnly&&(run.run_attempt!==1||run.event!=='pull_request'))continue;
       const data=await get(`actions/runs/${run.id}/jobs?filter=latest&per_page=100`);
       const names=['V1 Quality UI and Play (chromium)','V1 Quality UI and Play (webkit)'];
       const jobs=names.map(name=>data.jobs?.filter(job=>job.name===name));
       if(!jobs.every(rows=>rows?.length===1&&rows[0].status==='completed'&&rows[0].conclusion==='success'&&Number.isSafeInteger(rows[0].id)))continue;
+      if(displayOnly&&(!Number.isSafeInteger(data.total_count)||data.total_count!==data.jobs.length||data.total_count>100
+        ||!jobs.every(rows=>rows[0].id>0&&rows[0].run_id===run.id&&rows[0].head_sha===head&&rows[0].run_attempt===1)
+        ||new Set(jobs.map(rows=>rows[0].id)).size!==jobs.length))continue;
       return{passed:true,head,prNumber,runId:run.id,jobIds:jobs.map(rows=>rows[0].id)};
     }
     return{passed:false,reason:'no-completed-original-quality-engines'};
   }catch{return{passed:false,reason:'quality-evidence-unavailable'};}
 }
 
-export function ciChangeScope(paths,{draft,sourceBlobs={},reuseNativeQa=false,reuseCombatQa=false,reuseCombatFixture=false}={}){
+export function ciChangeScope(paths,{draft,sourceBlobs={},reuseNativeQa=false,reuseCombatQa=false,reuseCombatFixture=false,reuseAbilityNames=false,freshNormal=false}={}){
   assert.equal(typeof draft,'boolean');
   assert.equal(typeof reuseNativeQa,'boolean');
   assert.equal(typeof reuseCombatQa,'boolean');
   assert.equal(typeof reuseCombatFixture,'boolean');
+  assert.equal(typeof reuseAbilityNames,'boolean');assert.equal(typeof freshNormal,'boolean');
   assert.ok(Array.isArray(paths)&&paths.length>0&&paths.every(p=>typeof p==='string'&&p&&!p.includes('\\')));
   // A synchronize update containing only native QA, its tests and the status
   // ledger cannot change the shipped app. Keep the prior full product run and
@@ -179,8 +251,11 @@ export function ciChangeScope(paths,{draft,sourceBlobs={},reuseNativeQa=false,re
   const nativeQaOnly=reuseNativeQa&&nativeQaOnlyPaths(paths,sourceBlobs);
   const combatQaOnly=reuseCombatQa&&reviewedCombatQaPaths(paths,sourceBlobs);
   const combatFixtureOnly=reuseCombatFixture&&reviewedCombatFixturePaths(paths,sourceBlobs);
-  let full=!draft&&!nativeQaOnly&&!combatQaOnly&&!combatFixtureOnly,rangerChanged=false,normalChanged=false,allunitChanged=false,r9Changed=false,combatChanged=false;
+  const abilityNameOnly=reuseAbilityNames&&reviewedAbilityNamePaths(paths,sourceBlobs);
+  let full=!draft&&!nativeQaOnly&&!combatQaOnly&&!combatFixtureOnly&&!abilityNameOnly,rangerChanged=false,
+    normalChanged=abilityNameOnly&&freshNormal,allunitChanged=false,r9Changed=false,combatChanged=false;
   for(const file of paths){
+    if(abilityNameOnly&&abilityNameFiles.has(file)){if(allunit.has(file))allunitChanged=true;continue;}
     if(ranger.has(file))rangerChanged=true;
     else if(normal.has(file))normalChanged=true;
     else if(allunit.has(file))allunitChanged=true;
@@ -202,8 +277,8 @@ export function ciChangeScope(paths,{draft,sourceBlobs={},reuseNativeQa=false,re
     }
     else full=true; // Unclassified changes retain the complete regression.
   }
-  return {full,ranger:full||rangerChanged,normal:full||normalChanged,allunit:full||allunitChanged,r9:full||r9Changed,combat:full||combatChanged,
-    scope:full?'full-regression':draft?'targeted-draft':combatQaOnly?'combat-qa-update-product-unchanged':combatFixtureOnly?'combat-fixture-update-product-unchanged':'native-qa-update-product-unchanged',wholeGameAccepted:false,
+  return {full,verify_full:full||abilityNameOnly,performance:full||abilityNameOnly,phaseg:full||abilityNameOnly,ranger:full||rangerChanged,normal:full||normalChanged,allunit:full||allunitChanged,r9:full||r9Changed,combat:full||combatChanged,
+    scope:full?'full-regression':abilityNameOnly?'ability-name-display-delta':draft?'targeted-draft':combatQaOnly?'combat-qa-update-product-unchanged':combatFixtureOnly?'combat-fixture-update-product-unchanged':'native-qa-update-product-unchanged',wholeGameAccepted:false,
     finalIntegrationRequiresFullRegression:true};
 }
 
@@ -214,7 +289,7 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
   const comparisonBase=execFileSync('git',['merge-base',base,head],{encoding:'utf8',windowsHide:true}).trim();
   assert.match(comparisonBase,/^[0-9a-f]{40}$/u);
   const paths=execFileSync('git',['diff','--no-renames','--name-only',`${comparisonBase}..${head}`],{encoding:'utf8',windowsHide:true}).trim().split(/\r?\n/u).filter(Boolean);
-  const sourceFiles=new Set([...paths.filter(file=>reviewedCorrectionQaBlobs[file]||reviewedValidationBlobs[file]||reviewedMotionBlobs[file]||reviewedLifecycleBlobs[file]||reviewedBruteBlobs[file]||reviewedNativeControlBlobs[file]||reviewedSupportBlobs[file]||reviewedRawClockBlobs[file]||COMBAT_QA_BLOBS[file]),
+  const sourceFiles=new Set([...paths.filter(file=>ABILITY_NAME_BLOBS[file]||reviewedCorrectionQaBlobs[file]||reviewedValidationBlobs[file]||reviewedMotionBlobs[file]||reviewedLifecycleBlobs[file]||reviewedBruteBlobs[file]||reviewedNativeControlBlobs[file]||reviewedSupportBlobs[file]||reviewedRawClockBlobs[file]||COMBAT_QA_BLOBS[file]),
     ...(Object.keys(COMBAT_QA_BLOBS).every(file=>paths.includes(file))?['.github/workflows/ci.yml','.github/workflows/v1-quality-acceptance.yml']:[]),
     ...(paths.includes('tests/v177-native-canvas-clips.test.mjs')?[...Object.keys(COMBAT_QA_BLOBS),
       '.github/workflows/ci.yml','.github/workflows/v1-quality-acceptance.yml','tests/v177-native-canvas-clips.test.mjs']:[])]);
@@ -231,7 +306,7 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
   const reuseNativeQa=previousFullEvidence?.passed===true;
   const qualityPathsUnchanged=paths.every(file=>file==='docs/PROJECT_STATE.md'
     ||(reviewedCorrectionQaBlobs[file]&&sourceBlobs[file]===reviewedCorrectionQaBlobs[file]));
-  const qualityEvidence=qualityPathsUnchanged?await previousQualityEvidence({repository:process.env.GITHUB_REPOSITORY,
+  let qualityEvidence=qualityPathsUnchanged?await previousQualityEvidence({repository:process.env.GITHUB_REPOSITORY,
     head:previousHead,prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),token:process.env.CI_SCOPE_ACTIONS_TOKEN,fullEvidence:previousFullEvidence})
     :{passed:false,reason:'quality-dependencies-not-proven-unchanged'};
   const productPaths=['app','public','assets','package.json','package-lock.json','scripts/pwa-native-runtime/package.json','scripts/pwa-native-runtime/package-lock.json'];
@@ -248,10 +323,16 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
   const combatFixtureEvidence=await previousCombatFixtureEvidence({repository:process.env.GITHUB_REPOSITORY,previousHead,
     base:process.env.CI_SCOPE_PR_BASE,prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),action,draft:draft==='true',productUnchanged,
     paths,sourceBlobs,token:process.env.CI_SCOPE_ACTIONS_TOKEN});
-  const scope=ciChangeScope(paths,{draft:draft==='true',sourceBlobs,reuseNativeQa,reuseCombatQa:combatQaEvidence.passed,reuseCombatFixture:combatFixtureEvidence.passed});
-  if(process.env.GITHUB_OUTPUT)appendFileSync(process.env.GITHUB_OUTPUT,['full','ranger','normal','allunit','r9','combat'].map(k=>`${k}=${scope[k]}\n`).join(''));
+  const abilityNameEvidence=eligibleNativeReuse?await previousAbilityNameEvidence({repository:process.env.GITHUB_REPOSITORY,previousHead,
+    base:process.env.CI_SCOPE_PR_BASE,prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),action,draft:draft==='true',paths,sourceBlobs,token:process.env.CI_SCOPE_ACTIONS_TOKEN})
+    :{passed:false,reason:'previous-head-not-exact-ancestor'};
+  if(abilityNameEvidence.passed)qualityEvidence=await previousQualityEvidence({repository:process.env.GITHUB_REPOSITORY,
+    head:previousHead,prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),token:process.env.CI_SCOPE_ACTIONS_TOKEN,displayEvidence:abilityNameEvidence});
+  const scope=ciChangeScope(paths,{draft:draft==='true',sourceBlobs,reuseNativeQa,reuseCombatQa:combatQaEvidence.passed,reuseCombatFixture:combatFixtureEvidence.passed,
+    reuseAbilityNames:abilityNameEvidence.passed,freshNormal:abilityNameEvidence.freshNormalRequired??false});
+  if(process.env.GITHUB_OUTPUT)appendFileSync(process.env.GITHUB_OUTPUT,['full','verify_full','performance','phaseg','ranger','normal','allunit','r9','combat'].map(k=>`${k}=${scope[k]}\n`).join(''));
   if(process.env.GITHUB_OUTPUT)appendFileSync(process.env.GITHUB_OUTPUT,`reuse_quality=${combatQaEvidence.passed||combatFixtureEvidence.passed||qualityEvidence.passed}\n`);
   if(process.env.GITHUB_STEP_SUMMARY)appendFileSync(process.env.GITHUB_STEP_SUMMARY,
-    `Validation: ${scope.scope}. Ready transitions, product and unknown changes run full regression. Source-unchanged QA recovery retains only completed original gates; affected combat groups run again. The reviewed fixture continuation retains those groups only after completion. PR Verify tests, lint, content and build run afresh; unchanged conditional browser steps keep their original owners. Original failures remain failures.\n`);
-  console.log(JSON.stringify({...scope,base,comparisonBase,head,eligibleNativeReuse,previousFullEvidence,qualityEvidence,combatQaEvidence,combatFixtureEvidence,changedPaths:paths}));
+    `Validation: ${scope.scope}. Ready transitions and unknown product changes run full regression. Exact reviewed deltas retain only completed original gates with their source owners. The ability-name display delta reruns all19 conditional Verify browser/audit steps, tests, lint, content, build and formal performance; failed or missing normal-play evidence also runs again. Original failures remain failures.\n`);
+  console.log(JSON.stringify({...scope,base,comparisonBase,head,eligibleNativeReuse,previousFullEvidence,qualityEvidence,combatQaEvidence,combatFixtureEvidence,abilityNameEvidence,changedPaths:paths}));
 }

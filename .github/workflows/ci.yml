@@ -25,6 +25,9 @@ jobs:
       actions: read
     outputs:
       full: ${{ steps.scope.outputs.full }}
+      verify_full: ${{ steps.scope.outputs.verify_full }}
+      performance: ${{ steps.scope.outputs.performance }}
+      phaseg: ${{ steps.scope.outputs.phaseg }}
       ranger: ${{ steps.scope.outputs.ranger }}
       normal: ${{ steps.scope.outputs.normal }}
       r9: ${{ steps.scope.outputs.r9 }}
@@ -495,15 +498,15 @@ jobs:
         run: node --test tests/*.test.mjs
 
       - name: Audit all 30 story stages in developer mode
-        if: ${{ needs.scope.outputs.full == 'true' }}
+        if: ${{ (needs.scope.outputs.full == 'true' || needs.scope.outputs.verify_full == 'true') }}
         run: node scripts/v100-devmode-full-campaign.mjs
 
       - name: Audit V1 CAPS purchasing power
-        if: ${{ needs.scope.outputs.full == 'true' }}
+        if: ${{ (needs.scope.outputs.full == 'true' || needs.scope.outputs.verify_full == 'true') }}
         run: node scripts/v100-economy-budget.mjs
 
       - name: Upload developer mode campaign audit
-        if: ${{ needs.scope.outputs.full == 'true' }}
+        if: ${{ (needs.scope.outputs.full == 'true' || needs.scope.outputs.verify_full == 'true') }}
         uses: actions/upload-artifact@v4
         with:
           name: v100-devmode-full-campaign
@@ -514,23 +517,23 @@ jobs:
           retention-days: 14
 
       - name: Install focused browser engines
-        if: ${{ needs.scope.outputs.full == 'true' }}
+        if: ${{ (needs.scope.outputs.full == 'true' || needs.scope.outputs.verify_full == 'true') }}
         run: npx playwright install --with-deps chromium
 
       - name: Verify PWA shell commit and offline relaunch (Chromium)
-        if: ${{ needs.scope.outputs.full == 'true' }}
+        if: ${{ (needs.scope.outputs.full == 'true' || needs.scope.outputs.verify_full == 'true') }}
         run: node scripts/pwa-shell-commit-browser-smoke.mjs
 
       - name: Verify online play after PWA registration failure (Chromium)
-        if: ${{ needs.scope.outputs.full == 'true' }}
+        if: ${{ (needs.scope.outputs.full == 'true' || needs.scope.outputs.verify_full == 'true') }}
         run: node scripts/run-browser-qa-with-server.mjs scripts/pwa-registration-fallback-browser-smoke.mjs
 
       - name: Verify installed PWA launch when update metadata stalls (Chromium)
-        if: ${{ needs.scope.outputs.full == 'true' }}
+        if: ${{ (needs.scope.outputs.full == 'true' || needs.scope.outputs.verify_full == 'true') }}
         run: node scripts/run-browser-qa-with-server.mjs scripts/pwa-held-manifest-browser-smoke.mjs
 
       - name: Upload stalled PWA metadata browser evidence
-        if: ${{ needs.scope.outputs.full == 'true' && (always()) }}
+        if: ${{ (needs.scope.outputs.full == 'true' || needs.scope.outputs.verify_full == 'true') && (always()) }}
         uses: actions/upload-artifact@v4
         with:
           name: v100-pwa-held-metadata
@@ -539,7 +542,7 @@ jobs:
           retention-days: 14
 
       - name: Build exact base and candidate PWA sites for partial-update QA
-        if: ${{ needs.scope.outputs.full == 'true' }}
+        if: ${{ (needs.scope.outputs.full == 'true' || needs.scope.outputs.verify_full == 'true') }}
         env:
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
@@ -574,7 +577,7 @@ jobs:
             node scripts/build-github-pages.mjs
 
       - name: Classify whether PWA asset update QA applies
-        if: ${{ needs.scope.outputs.full == 'true' }}
+        if: ${{ (needs.scope.outputs.full == 'true' || needs.scope.outputs.verify_full == 'true') }}
         id: pwa_update_scope
         env:
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
@@ -583,7 +586,7 @@ jobs:
 
       - name: Reproduce and recover the partial-failed existing PWA (Chromium)
         id: issue156_partial_update
-        if: ${{ needs.scope.outputs.full == 'true' && (steps.pwa_update_scope.outputs.applicable == 'true') }}
+        if: ${{ (needs.scope.outputs.full == 'true' || needs.scope.outputs.verify_full == 'true') && (steps.pwa_update_scope.outputs.applicable == 'true') }}
         env:
           PWA_PARTIAL_UPDATE_OLD_ROOT: ${{ runner.temp }}/pwa-old-site
           PWA_PARTIAL_UPDATE_CANDIDATE_ROOT: ${{ github.workspace }}/_site
@@ -594,7 +597,7 @@ jobs:
 
       - name: Capture Issue 156 canonical HUD evidence (Chromium)
         id: issue156_hud
-        if: ${{ needs.scope.outputs.full == 'true' }}
+        if: ${{ (needs.scope.outputs.full == 'true' || needs.scope.outputs.verify_full == 'true') }}
         env:
           V099_FINAL_REMEDIATION_QA_ENGINES: chromium
           V099_FINAL_REMEDIATION_QA_CASES: hud
@@ -608,7 +611,7 @@ jobs:
           done
 
       - name: Capture Issue 156 final-canvas deployment evidence (Chromium)
-        if: ${{ needs.scope.outputs.full == 'true' }}
+        if: ${{ (needs.scope.outputs.full == 'true' || needs.scope.outputs.verify_full == 'true') }}
         env:
           V099_FINAL_REMEDIATION_QA_ENGINES: chromium
           V099_FINAL_REMEDIATION_QA_VIEWPORTS: 667x375,736x414,844x390,844x340,932x430,1280x720
@@ -617,21 +620,21 @@ jobs:
         run: node scripts/run-browser-qa-with-server.mjs scripts/v099-final-remediation-browser-smoke.mjs
 
       - name: Capture Issue 156 safe-area, portrait, and metadata evidence
-        if: ${{ needs.scope.outputs.full == 'true' }}
+        if: ${{ (needs.scope.outputs.full == 'true' || needs.scope.outputs.verify_full == 'true') }}
         env:
           ISSUE156_REMEDIATION_QA_ENGINES: chromium
           ISSUE156_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/presentation
         run: npm run qa:issue156-remediation
 
       - name: Capture Issue 156 physical-width records evidence (Chromium)
-        if: ${{ needs.scope.outputs.full == 'true' }}
+        if: ${{ (needs.scope.outputs.full == 'true' || needs.scope.outputs.verify_full == 'true') }}
         env:
           RECORDS_QA_ENGINES: chromium
           RECORDS_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/records/chromium
         run: npm run qa:records
 
       - name: Capture Issue 156 physical-width TAKUYA audio route (Chromium)
-        if: ${{ needs.scope.outputs.full == 'true' }}
+        if: ${{ (needs.scope.outputs.full == 'true' || needs.scope.outputs.verify_full == 'true') }}
         env:
           P5_QA_SCOPE: battle-audio
           P5_QA_ENGINES: chromium
@@ -641,7 +644,7 @@ jobs:
 
       - name: Capture Version 0.9.9.5 enemy runtime and station final-canvas evidence
         id: issue165_capture
-        if: ${{ needs.scope.outputs.full == 'true' }}
+        if: ${{ (needs.scope.outputs.full == 'true' || needs.scope.outputs.verify_full == 'true') }}
         env:
           V0995_ENEMY_QA_ENGINES: chromium
           V0995_ENEMY_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue165-evidence/enemy-runtime
@@ -653,7 +656,7 @@ jobs:
           node scripts/run-browser-qa-with-server.mjs scripts/v0995-visual-integrity-browser-smoke.mjs
 
       - name: Upload Issue 165 visual remediation evidence
-        if: ${{ always() && needs.scope.outputs.full == 'true' && (steps.issue165_capture.outcome == 'success' || steps.issue165_capture.outcome == 'failure' || steps.issue165_capture.outcome == 'cancelled') }}
+        if: ${{ always() && (needs.scope.outputs.full == 'true' || needs.scope.outputs.verify_full == 'true') && (steps.issue165_capture.outcome == 'success' || steps.issue165_capture.outcome == 'failure' || steps.issue165_capture.outcome == 'cancelled') }}
         uses: actions/upload-artifact@v4
         with:
           name: issue165-visual-remediation-evidence
@@ -662,7 +665,7 @@ jobs:
           retention-days: 14
 
       - name: Upload Issue 156 remediation evidence
-        if: ${{ always() && needs.scope.outputs.full == 'true' && (steps.issue156_partial_update.outcome == 'success' || steps.issue156_partial_update.outcome == 'failure' || steps.issue156_partial_update.outcome == 'cancelled' || steps.issue156_hud.outcome == 'success' || steps.issue156_hud.outcome == 'failure' || steps.issue156_hud.outcome == 'cancelled') }}
+        if: ${{ always() && (needs.scope.outputs.full == 'true' || needs.scope.outputs.verify_full == 'true') && (steps.issue156_partial_update.outcome == 'success' || steps.issue156_partial_update.outcome == 'failure' || steps.issue156_partial_update.outcome == 'cancelled' || steps.issue156_hud.outcome == 'success' || steps.issue156_hud.outcome == 'failure' || steps.issue156_hud.outcome == 'cancelled') }}
         uses: actions/upload-artifact@v4
         with:
           name: issue156-remediation-evidence-chromium
@@ -671,7 +674,7 @@ jobs:
           retention-days: 14
 
   v100-webkit-frame-control:
-    if: ${{ needs.scope.outputs.full == 'true' }}
+    if: ${{ needs.scope.outputs.full == 'true' || needs.scope.outputs.performance == 'true' }}
     needs: [scope]
     name: V1 WebKit Frame and Boss Performance
     runs-on: macos-15
@@ -876,7 +879,7 @@ jobs:
           retention-days: 14
 
   v100-phase-g-production:
-    if: ${{ needs.scope.outputs.full == 'true' }}
+    if: ${{ needs.scope.outputs.full == 'true' || needs.scope.outputs.phaseg == 'true' }}
     needs: [scope]
     name: V1 Phase G Production Matrix
     runs-on: macos-15-intel

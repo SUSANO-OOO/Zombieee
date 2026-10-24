@@ -17,6 +17,15 @@ import { installNormalFrameObserver,createNormalFrameCapture,finishNormalFrameCa
 import {createNormalBrowserDeadline,normalCleanupWithin,normalPlayChildCompletion,normalProtocolTimeoutReceipt} from './v177-normal-browser-deadline.mjs';
 
 export const V177_REPRESENTATIVE_WINDOW_MS = 120_000;
+// The production shell persists across battle/result. Read it atomically in
+// the page's existing world; no locator polling or implicit reattachment wait.
+export function readRepresentativeBattlePhase(){
+  const shells=document.querySelectorAll('.v100-shell');
+  if(shells.length!==1)throw new Error('Expected one production campaign shell');
+  const phase=shells[0].getAttribute('data-v100-phase');
+  if(phase!=='battle'&&phase!=='result')throw new Error('Unexpected representative battle phase: '+phase);
+  return phase;
+}
 export function assertRepresentativeBattleObservation(row) {
   assert.ok([14, 25, 30].includes(row.number));
   const expected = createV177RepresentativeBudget(row.number);
@@ -42,6 +51,10 @@ export function assertRepresentativeBattleObservation(row) {
   if (row.outcome === 'observed-window') {
     assert.ok(row.wallElapsedMs >= V177_REPRESENTATIVE_WINDOW_MS);
     assert.equal(row.finalSave.pendingResult, null, 'do not force a result at the observation boundary');
+    assert.equal(row.finalBattle?.stageId,row.budget.stageId,'The final live battle must retain the original stage');
+    assert.equal(row.finalBattle.running,true,'A stopped battle cannot satisfy the bounded live window');
+    assert.equal(row.finalBattle.over,false,'An ended battle must reach its real result instead of timing out green');
+    assert.ok(Number.isFinite(row.finalBattle.baseHp)&&row.finalBattle.baseHp>0,'A destroyed vehicle requires the actual defeat result');
   } else {
     const result = row.finalSave.pendingResult ?? row.finalSave.lastResult;
     assert.equal(result.battleRunId, `v100:${row.budget.stageId}:${row.openingSave.revision}`);
@@ -122,7 +135,7 @@ async function main() {
       let clip,frameCapture;
       const frameOwner=`${head}:representative:${number}`;
       const saveAt = () => page.evaluate(() => JSON.parse(localStorage.getItem('nishijin-campaign-v100')));
-      const phaseAt = () => page.locator('.v100-shell').getAttribute('data-v100-phase');
+      const phaseAt = () => page.evaluate(readRepresentativeBattlePhase);
       const persist = () => writeFile(path.join(out, 'report.json'), JSON.stringify(report, null, 2) + '\n');
       page.on('pageerror', error => row.errors.push(String(error)));
       page.on('console', message => { if (message.type() === 'error') row.errors.push(message.text()); });
@@ -185,10 +198,17 @@ async function main() {
         }
         row.wallElapsedMs = Date.now() - started;
         if (await phaseAt() === 'result') await page.waitForFunction(() => !document.querySelector('.v100-shell[aria-busy="true"]') && document.documentElement.dataset.pwaSaveMutationPending === 'false');
-        const end = await page.evaluate(owner => ({ phase: document.querySelector('.v100-shell')?.dataset.v100Phase, save: JSON.parse(localStorage.getItem('nishijin-campaign-v100')),
-          frames:globalThis.__V177_READ_NORMAL_FRAMES__?.(owner,'stop')??null }),frameOwner);
+        const end = await page.evaluate(owner => {
+          const phase=document.querySelector('.v100-shell')?.dataset.v100Phase;
+          if(phase!=='battle'&&phase!=='result')throw new Error('Missing actual final representative phase');
+          const live=phase==='battle'?window.__ASHFALL_BATTLE_QA__?.getSnapshot?.():null;
+          return{phase,save:JSON.parse(localStorage.getItem('nishijin-campaign-v100')),
+            finalBattle:live?{stageId:live.stageId,running:live.running,over:live.over,baseHp:live.baseHp}:null,
+            frames:globalThis.__V177_READ_NORMAL_FRAMES__?.(owner,'stop')??null};
+        },frameOwner);
         await frameCapture.record(end.frames);row.framePerformance=await frameCapture.finish();
         row.finalSave = end.save;
+        row.finalBattle=end.finalBattle;
         if (end.phase === 'result') row.outcome = (row.finalSave.pendingResult ?? row.finalSave.lastResult)?.won ? 'won' : 'lost';
         else row.outcome = 'observed-window';
         if (clip) await finishClip(false);

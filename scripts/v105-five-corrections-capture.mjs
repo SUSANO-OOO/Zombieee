@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {mkdir,writeFile} from 'node:fs/promises';
+import {mkdir,writeFile,readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import path from 'node:path';
 import {fileURLToPath,pathToFileURL} from 'node:url';
@@ -8,12 +8,13 @@ import ffmpeg from '@ffmpeg-installer/ffmpeg';
 import {nativeEncodedTimeline,NATIVE_ENCODED_LIMITS} from './v177-native-encoded-clips.mjs';
 import {nativeGameCaptureBinding,withNativeGameCaseDeadline,closeNativeGameContext} from './v177-native-game-capture-browser.mjs';
 import {nativeRecordingBrowserType,NATIVE_RECORDING_WEBKIT_RUNTIME} from './v177-native-allunit-recording-runtime.mjs';
-import {enterNativeAllUnitSurface} from './v177-native-allunit-browser.mjs';
+import {enterNativeAllUnitSurface,waitForNativeCaptureAudio} from './v177-native-allunit-browser.mjs';
 import {seedV100BrowserSaveOnce,enterV100FromTitle} from './v100-title-qa-entry.mjs';
 import {createDefaultV100Save,normalizeV100Save,serializeV100Save} from '../app/v100Save.js';
 import {V100_UNITS,V100_STAGE_IDS} from '../app/v100Registry.js';
 import {MANUAL_ABILITY_REGISTRY as manual} from '../app/manualAbilities.js';
 import {installRequestFailureAudit} from './browser-request-failure-audit.mjs';
+import {nativeCaseSelection} from './v177-native-allunit-selection.mjs';
 const sha=b=>createHash('sha256').update(b).digest('hex');
 export function correctionCases(scope){
   assert.ok(['desktop','mobile390','mobile340'].includes(scope));
@@ -22,6 +23,68 @@ export function correctionCases(scope){
     ...['grappler','ooze','sprinter','gate-eater','spindle','resonator','cagewalker','choir-knot','pall-manta','anchor-bloom',
       'kurome','mother','ooguchi','gairen','mugarian-president-mutated','takuya-omega','takuya'].map(kind=>({kind,mode:'enemy'})),
     ...['brute','guardian','tky','takuya','takuya-omega','crazy-king','kumaverson','babayaga','brawler'].map(kind=>({kind,mode:'engage'}))];
+}
+
+// Reuse is limited by the same exact-source guard as the original motion
+// inventory. Unknown revisions run the whole original plan. Earlier failures
+// and the boss whose name changed remain fresh observations, never old passes.
+export async function correctionCaseSelection(scope,{event,root=process.cwd(),select=nativeCaseSelection}={}){
+  const plan=correctionCases(scope),full={mode:'full',plan,retained:[]};
+  const selection=select({event,root});if(selection.mode!=='remaining')return full;
+  const profile=JSON.parse(await readFile(path.join(root,'scripts/v177-native-allunit-recovery.json'),'utf8'));
+  const source=profile.fiveCorrections;if(!source)return full;
+  const bytes=await readFile(path.join(root,source.file));assert.equal(sha(bytes),source.sha256);
+  const inventory=JSON.parse(bytes),all=['desktop','mobile390','mobile340'].flatMap(s=>correctionCases(s).map(r=>s+':'+r.kind+':'+r.mode));
+  assert.equal(inventory.head,source.head);assert.equal(inventory.runId,source.runId);
+  assert.equal(inventory.schema,'v105-five-corrections-retained/v1');
+  assert.deepEqual(inventory.reports.map(r=>r.scope).sort(),['desktop','mobile340','mobile390']);
+  const kept=inventory.retained.map(r=>r.caseId),pending=inventory.pending;
+  assert.deepEqual([...kept,...pending].sort(),[...all].sort(),'All original correction cases need one owner or a fresh recording');
+  assert.equal(new Set([...kept,...pending]).size,all.length);
+  for(const row of inventory.retained){
+    assert.equal(row.head,inventory.head);assert.equal(row.runId,inventory.runId);
+    const report=inventory.reports.find(r=>r.scope===row.caseId.split(':')[0]);
+    assert.ok(report&&report.head===row.head&&report.runId===row.runId&&report.reportSha256===row.reportSha256
+      &&report.artifactId===row.artifactId,'Retained AV must belong to its original scope report');
+    assert.match(row.reportSha256,/^[a-f0-9]{64}$/u);assert.match(row.clipSha256,/^[a-f0-9]{64}$/u);
+    assert.ok(Number.isSafeInteger(row.artifactId)&&row.artifactId>0&&row.bytes>0&&row.bytes<=8388608);
+    assert.equal(row.originalStatus,'recorded');assert.equal(row.encodedPtsVerified,true);
+    assert.equal(row.fullAvDecode.completed,true);assert.equal(row.fullAvDecode.requiredMixerAudioStream,true);assert.equal(row.fullAvDecode.errors,0);
+    assert.ok(Number.isFinite(row.driftMs)&&Math.abs(row.driftMs)<=120);
+    assert.ok(Number.isFinite(row.maxGapMs)&&row.maxGapMs<=250&&row.maxGapMs>0);
+    assert.ok(Number.isFinite(row.caseElapsedMs)&&row.caseElapsedMs<30000);
+  }
+  return{mode:'remaining',source:{file:source.file,sha256:source.sha256,head:inventory.head,runId:inventory.runId},
+    plan:plan.filter(r=>pending.includes(scope+':'+r.kind+':'+r.mode)),retained:inventory.retained.filter(r=>r.caseId.startsWith(scope+':'))};
+}
+
+// Every independent fixture owns its page and native recorder resources.
+// Cold entry, capture, decode and cleanup share the existing30s case budget.
+export async function withCorrectionCaseContext(browser,options,operation,{onFatal=()=>{},onRequests=()=>{},onDeadline=()=>{},
+  audit=installRequestFailureAudit,deadline=withNativeGameCaseDeadline,closeContext=closeNativeGameContext}={}){
+  let context,page,requests,closing,expired=false,primary,cleanupReported=false;
+  const close=()=>{
+    if(!context)return;
+    return closing??=(async()=>{
+      const pageClosedBeforeCleanup=page?.isClosed()??true;let completed=false;
+      try{await closeContext(context,requests);completed=true;}
+      finally{if(requests){onRequests({audit:requests.report,pageClosedBeforeCleanup,completed});
+        assert.equal(requests.report.unexpectedFailures.length,0,'Unexpected case request failure');}}
+    })();
+  };
+  const active=()=>{if(expired)throw Error('Late correction case cannot resume after its original deadline');};
+  const cleanup=async()=>{try{await close();}catch(error){if(!primary)throw error;
+    primary.cleanupError=String(error);if(!cleanupReported){cleanupReported=true;onFatal('Case cleanup: '+String(error));}}};
+  try{return await deadline(async()=>{try{
+    context=await browser.newContext(options);active();page=await context.newPage();active();page.setDefaultTimeout(30000);
+    requests=audit(page);
+    page.on('pageerror',e=>onFatal(e.stack??String(e)));page.on('console',m=>{if(m.type()==='error')onFatal(m.text());});
+    page.on('response',r=>{if(r.status()>=400)onFatal(`${r.status()} ${r.url()}`);});
+    return await operation(page);
+  }catch(error){primary??=error;throw error;}finally{await cleanup();}
+  },close,{onDeadline:error=>{expired=true;primary??=error;onDeadline(error);}});}
+  catch(error){primary=error;throw error;}
+  finally{await cleanup();}
 }
 export function canContinueCompletedCorrection(row,{pageClosed,fatalErrors=0,errorsBefore,errorsAfter}){
   return fatalErrors===0&&!row.deadlineExpired&&!pageClosed&&row.bytes>0&&typeof row.file==='string'
@@ -36,6 +99,13 @@ export function assertCorrectionCaseDeadline(row,startedAt,now=performance.now()
   if(row.deadlineExpired||row.caseElapsedMs>=30000){
     row.deadlineExpired=true;throw Error('Native game case exceeded its30s owned operation deadline');
   }
+}
+export function completeCorrectionCase(row,startedAt,{fatalErrors,now=performance.now()}){
+  assertCorrectionCaseDeadline(row,startedAt,now);
+  assert.equal(row.status,'verified-awaiting-owned-cleanup');
+  assert.equal(row.context?.completed,true);assert.equal(row.context?.pageClosedBeforeCleanup,false);
+  assert.equal(fatalErrors,0,'A product/page error during cleanup invalidated the fixture');
+  row.status='recorded';
 }
 export function assertCurrentCorrectionPaints(capture,ownerIds,atlasPaths){
   const seen=new Set(),owners=new Set();
@@ -155,35 +225,34 @@ export async function runBrowserQa(){
   const binding=await nativeGameCaptureBinding(),scope=process.env.V105_CAPTURE_SCOPE;
   const {V177_JOINT_ATLASES:currentAtlases}=await import('../app/v177JointPresentation.js');
   const atlasPaths=Object.fromEntries(Object.entries(currentAtlases).map(([kind,atlas])=>[kind,atlas.path]));
-  const plan=correctionCases(scope),viewport=scope==='desktop'?{width:1280,height:720}:{width:844,height:scope==='mobile390'?390:340};
+  const selection=await correctionCaseSelection(scope,{event:JSON.parse(await readFile(process.env.GITHUB_EVENT_PATH,'utf8'))});
+  const {plan}=selection,viewport=scope==='desktop'?{width:1280,height:720}:{width:844,height:scope==='mobile390'?390:340};
   const out=path.resolve(process.env.V105_CAPTURE_OUT??'outputs/v105-five-corrections/'+scope);await mkdir(out,{recursive:true});
-  const report={...binding,architecture:process.arch,scope,viewport,runtime:NATIVE_RECORDING_WEBKIT_RUNTIME,cases:[],errors:[],status:'starting',
+  const report={...binding,architecture:process.arch,scope,viewport,runtime:NATIVE_RECORDING_WEBKIT_RUNTIME,selection,cases:[],contexts:[],errors:[],status:'starting',
+    recordingConditions:{independentContextPerCase:true,actualAudioReadinessBeforeRecording:true,caseDeadlineMs:30000,
+      retainedObservationsKeepTheirOriginalConditions:true,coldStartupAccepted:false,formalPerformanceAccepted:false},
     acceptance:{physicalIphone:false,humanVisualAndListening:false,normalCampaign:false,wholeGame:false}};
   const persist=()=>writeFile(path.join(out,'report.json'),JSON.stringify(report,null,2)+'\n');
-  let browser,context,requests,primary,fatalErrors=0;
+  let browser,primary,fatalErrors=0;
   const fatal=error=>{fatalErrors++;report.errors.push(String(error));};
   try{
+    if(!plan.length){report.status='retained-original-evidence-awaiting-review';await persist();return;}
     browser=await(await nativeRecordingBrowserType()).launch({headless:true});assert.equal(browser.version(),NATIVE_RECORDING_WEBKIT_RUNTIME.browserVersion);
-    context=await browser.newContext({viewport,deviceScaleFactor:1,isMobile:viewport.width<1000,hasTouch:viewport.width<1000});
-    const page=await context.newPage();page.setDefaultTimeout(30000);requests=installRequestFailureAudit(page);
-    page.on('pageerror',e=>fatal(e.stack??String(e)));page.on('console',m=>{if(m.type()==='error')fatal(m.text());});
-    page.on('response',r=>{if(r.status()>=400)fatal(`${r.status()} ${r.url()}`);});
-    const close=()=>closeNativeGameContext(context,requests);
     const owned=V100_UNITS.map(u=>u.id),base=createDefaultV100Save();
     const save=normalizeV100Save({...base,campaignStarted:true,revision:3,ownedUnitIds:owned,registeredUnitIds:owned,formationSlots:owned.slice(0,7),
       flowState:{phase:'formation',stageId:V100_STAGE_IDS[0],stageNumber:1,eventId:null,destination:'formation',nodeIndex:0,firstClear:false,finalized:true}});
-    await withNativeGameCaseDeadline(async()=>{
-      await page.addInitScript(seedV100BrowserSaveOnce,serializeV100Save(save));
-      await page.goto(new URL('v100',process.env.V100_CAMPAIGN_QA_BASE_URL).href);await enterNativeAllUnitSurface(page);await enterV100FromTitle(page);
-      await page.getByRole('button',{name:'戦闘へ',exact:true}).click();await page.waitForFunction(()=>window.__ASHFALL_BATTLE_QA__?.getSnapshot().running);
-      await page.evaluate(async()=>{await window.__ASHFALL_BATTLE_QA__.ensureUnitRenderProofAsset('guardian');await window.__ASHFALL_BATTLE_QA__.ensureEnemyFacingProofAsset('walker');});
-    },close);
     for(const item of plan){
       const row={...item,status:'starting'};report.cases.push(row);await persist();
       assert.equal(fatalErrors,0,'A prior product/page error invalidated the recording context');
       const errorsBefore=report.errors.length;
       const caseStartedAt=performance.now();
-      try{await withNativeGameCaseDeadline(async()=>{
+      try{await withCorrectionCaseContext(browser,{viewport,deviceScaleFactor:1,isMobile:viewport.width<1000,hasTouch:viewport.width<1000},async page=>{
+      await page.addInitScript(seedV100BrowserSaveOnce,serializeV100Save(save));
+      await page.goto(new URL('v100',process.env.V100_CAMPAIGN_QA_BASE_URL).href);await enterNativeAllUnitSurface(page);await enterV100FromTitle(page);
+      await page.getByRole('button',{name:'戦闘へ',exact:true}).click();await page.waitForFunction(()=>window.__ASHFALL_BATTLE_QA__?.getSnapshot().running);
+      await page.evaluate(async()=>{await window.__ASHFALL_BATTLE_QA__.ensureUnitRenderProofAsset('guardian');await window.__ASHFALL_BATTLE_QA__.ensureEnemyFacingProofAsset('walker');});
+      await waitForNativeCaptureAudio(page,row);
+
         const proof=await page.evaluate(async({kind,mode})=>{
           const q=window.__ASHFALL_BATTLE_QA__;
           if(['manual','duet'].includes(mode)){
@@ -251,14 +320,16 @@ export async function runBrowserQa(){
         }
         assert.equal(fatalErrors,0,'A product/page error invalidated this recording');
         assertCorrectionCaseDeadline(row,caseStartedAt);
-        row.status='recorded';
-      },close,{onDeadline:e=>{row.deadlineExpired=true;row.error=String(e);}});
+        row.status='verified-awaiting-owned-cleanup';
+      },{onFatal:fatal,onRequests:receipt=>{row.context=receipt;report.contexts.push({kind:item.kind,mode:item.mode,...receipt});},
+        onDeadline:e=>{row.deadlineExpired=true;row.error=String(e);}});
+      completeCorrectionCase(row,caseStartedAt,{fatalErrors});
       }catch(error){
         row.status='failed';row.error=String(error);report.errors.push(`${item.kind}/${item.mode}: ${row.error}`);await persist();
         // A retained, completed stream can fail its assertions without
         // invalidating independent next fixtures. Preserve that failure;
         // an exception, missing stream or expired context still stops here.
-        if(!canContinueCompletedCorrection(row,{pageClosed:page.isClosed(),fatalErrors,errorsBefore,errorsAfter:report.errors.length}))throw error;
+        if(!canContinueCompletedCorrection(row,{pageClosed:row.context?.pageClosedBeforeCleanup!==false||row.context?.completed!==true,fatalErrors,errorsBefore,errorsAfter:report.errors.length}))throw error;
       }
       console.log(scope,item.kind,item.mode,row.status);
     }
@@ -266,10 +337,10 @@ export async function runBrowserQa(){
   }catch(error){primary=error;report.errors.push(String(error));report.status='failed';
     const row=report.cases.at(-1);if(row&&row.status!=='recorded'){row.status='failed';row.error=String(error);}}
   finally{
-    if(context)try{await closeNativeGameContext(context,requests);}catch(error){report.errors.push(String(error));}
     if(browser)try{await browser.close();}catch(error){report.errors.push('Browser cleanup: '+String(error));}
-    report.requests=requests?.report??null;
-    if(report.requests?.unexpectedFailures?.length)report.errors.push('Unexpected retained request failures');
+    report.requests={unexpectedFailures:report.contexts.flatMap(r=>r.audit.unexpectedFailures),
+      teardownAborts:report.contexts.flatMap(r=>r.audit.teardownAborts),rawFailures:report.contexts.flatMap(r=>r.audit.rawFailures)};
+    if(report.requests.unexpectedFailures.length)report.errors.push('Unexpected retained request failures');
     if(report.errors.length)report.status='failed';await persist();
   }
   if(primary)throw primary;assert.equal(report.errors.length,0,JSON.stringify(report.errors));

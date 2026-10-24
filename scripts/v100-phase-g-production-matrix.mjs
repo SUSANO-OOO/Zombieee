@@ -1096,6 +1096,124 @@ async function withDeploymentPreinputDeadline(page, operationPromise, deadlineMs
   }
 }
 
+// Opt in only for sustain ability. Default deployment and ordinary tactical
+// input keep their original ordered acknowledgement path.
+function phaseGSustainAbilityObserver({ mode, attemptId, selection }) {
+  const registry = window.__V100_PHASE_G_SUSTAIN_POINTERS__ ??= new Map();
+  const project = (ownerId, kind) => {
+    const s = window.__ASHFALL_BATTLE_QA__?.getPhaseGCombatSnapshot?.();
+    if (!s) throw new Error('Missing existing Phase G runtime observation');
+    const owner = s.fighters?.find(f => String(f.id) === ownerId && f.kind === kind);
+    return { screen:s.screen, stageId:s.stageId, battleGeneration:s.battleGeneration, time:s.time,
+      running:s.running, paused:s.paused, over:s.over,
+      fighters:owner?[{id:owner.id,kind:owner.kind,side:owner.side,hp:owner.hp,
+        manualAbility:{activationId:owner.manualAbility?.activationId}}]:[],
+      manualAbilityReceipts:(s.manualAbilityReceipts??[]).filter(r => String(r.ownerId) === ownerId
+        && r.kind === kind && r.eventType === 'start').map(r => ({...r})) };
+  };
+  if (mode === 'finish') {
+    const entry = registry.get(attemptId);
+    if (!entry) return {status:'missing',attemptId};
+    try { return {status:'finished',attemptId,identity:entry.identity,point:entry.point,before:entry.before,
+      after:project(entry.identity.ownerId,entry.identity.kind),events:entry.events,errors:entry.errors,
+      overflow:entry.overflow,armedAt:entry.armedAt,finishedAt:performance.now(),
+      sameDocument:document === entry.document && document.documentElement === entry.documentElement}; }
+    finally { entry.dispose(); }
+  }
+  if (mode !== 'arm' || registry.size) throw new Error('Invalid or overlapping sustain observer');
+  const el = document.querySelectorAll(selection.selector)[selection.index];
+  if (!el || !el.matches('button.manual-ability-ready.available') || el.disabled
+    || el.getAttribute('aria-disabled') === 'true') return {status:'unavailable'};
+  const r = el.getBoundingClientRect(),point={x:r.x+r.width/2,y:r.y+r.height/2};
+  if (!(r.width>0 && r.height>0)
+    || document.elementFromPoint(point.x,point.y)?.closest('button') !== el) return {status:'unavailable'};
+  const identity={ownerId:String(el.dataset.fighterId),kind:el.dataset.abilityKind},before=project(identity.ownerId,identity.kind);
+  const owner=before.fighters[0];
+  if (!owner || owner.side !== 'human' || !(owner.hp>0) || !Number.isSafeInteger(owner.manualAbility.activationId)
+    || before.screen !== 'battle' || !before.running || before.paused || before.over) return {status:'unavailable'};
+  const types=['pointermove','pointerdown','pointerup','click'];
+  const entry={identity,point,before,events:[],errors:[],overflow:false,document,
+    documentElement:document.documentElement,armedAt:performance.now()};
+  const handler=event=>{
+    try {
+      if (entry.events.length >= 64) {entry.overflow=true;return;}
+      const target=event.target instanceof Element?event.target.closest('button'):null;
+      entry.events.push({sequence:entry.events.length+1,type:event.type,isTrusted:event.isTrusted,
+        pointerType:event.pointerType??'mouse',button:event.button,clientX:event.clientX,clientY:event.clientY,
+        at:performance.now(),sameDocument:document===entry.document && document.documentElement===entry.documentElement,
+        sameNode:target===el,hitOwner:document.elementFromPoint(event.clientX,event.clientY)?.closest('button')===el,
+        sameOwner:String(el.dataset.fighterId)===identity.ownerId && el.dataset.abilityKind===identity.kind,
+        connected:el.isConnected,ready:!el.disabled && el.getAttribute('aria-disabled')!=='true'});
+    } catch(error) {if(entry.errors.length<16)entry.errors.push(String(error));throw error;}
+  };
+  entry.dispose=()=>{for(const type of types)document.removeEventListener(type,handler,true);registry.delete(attemptId);};
+  registry.set(attemptId,entry);
+  try {for(const type of types)document.addEventListener(type,handler,{capture:true,passive:true});}
+  catch(error){entry.dispose();throw error;}
+  return {status:'armed',attemptId,identity,point,before,armedAt:entry.armedAt};
+}
+
+function validatePhaseGSustainAbilityReceipt(armed, actual) {
+  const errors=[],check=(ok,code)=>{if(!ok)errors.push(code);};
+  check(armed?.status==='armed' && actual?.status==='finished' && actual.attemptId===armed.attemptId,'SUSTAIN_RECEIPT_MISSING');
+  check(actual?.identity?.ownerId===armed?.identity?.ownerId && actual?.identity?.kind===armed?.identity?.kind,'SUSTAIN_OWNER_CHANGED');
+  check(JSON.stringify(actual?.before)===JSON.stringify(armed?.before)
+    && JSON.stringify(actual?.point)===JSON.stringify(armed?.point),'SUSTAIN_BASELINE_CHANGED');
+  check(actual?.sameDocument===true && actual?.overflow===false && actual?.errors?.length===0,'SUSTAIN_OBSERVER_INVALID');
+  const events=actual?.events??[],down=events.findIndex(e=>e.type==='pointerdown');
+  check(down>=1 && events.slice(0,down).every(e=>e.type==='pointermove')
+    && events.slice(down).map(e=>e.type).join(',')==='pointerdown,pointerup,click','SUSTAIN_EVENT_ORDER');
+  check(events.every((e,i)=>e.sequence===i+1 && e.isTrusted===true && e.pointerType==='mouse'
+    && e.sameNode===true && e.hitOwner===true && e.sameOwner===true && e.connected===true && e.ready===true && e.sameDocument===true
+    && Number.isFinite(e.clientX) && Number.isFinite(e.clientY)
+    && Math.abs(e.clientX-armed.point.x)<=1 && Math.abs(e.clientY-armed.point.y)<=1
+    && Number.isFinite(e.at) && e.at>=actual.armedAt && e.at<=actual.finishedAt && (!i||e.at>=events[i-1].at)
+    && (e.type==='pointermove'||e.button===0)),'SUSTAIN_REAL_DELIVERY_INVALID');
+  const before=armed?.before,after=actual?.after,ownerId=armed?.identity?.ownerId,kind=armed?.identity?.kind;
+  const prior=before?.fighters?.find(f=>String(f.id)===ownerId)?.manualAbility?.activationId;
+  const current=after?.fighters?.find(f=>String(f.id)===ownerId)?.manualAbility?.activationId;
+  const starts=(after?.manualAbilityReceipts??[]).filter(r=>String(r.ownerId)===ownerId && r.kind===kind
+    && r.eventType==='start' && r.activationId>prior);
+  check(Number.isSafeInteger(before?.battleGeneration) && typeof before?.stageId==='string' && before.stageId.length>0
+    && Number.isFinite(before.time) && Number.isFinite(after?.time) && after.time>=before.time
+    && Number.isSafeInteger(prior) && manualMarkerDispatchStarted(before,after,ownerId,kind)
+    && starts.length===1 && starts[0].activationId===prior+1 && (current===undefined||current===prior+1)
+    && Number.isFinite(starts[0].at) && starts[0].at>=before.time && starts[0].at<=after.time,'SUSTAIN_ACTUAL_ACTIVATION_NOT_ONCE');
+  return {ok:errors.length===0,errors};
+}
+
+async function phaseGSustainAbilityTap(page, selection, phases) {
+  const startedAt=performance.now(),attemptId='sustain-ability-'+Date.now()+'-'+Math.random().toString(36).slice(2);
+  const guard=()=>{
+    if(performance.now()-startedAt>=500)throw phaseGPointerFailure('QA_HARNESS_CONTROL_INPUT_TIMEOUT',
+      {control:'sustain-ability',deadlineMs:500,reason:'original-budget-exhausted-before-next-rpc',phases},0);
+    if(page.isClosed())throw new Error('Sustain page closed before next native transaction phase');
+  };
+  const step=async(name,action)=>{
+    guard();const phase={name,startedAt:Date.now(),status:'pending'};phases.push(phase);
+    try{const value=await action();phase.status='completed';phase.observation=value;return value;}
+    catch(error){phase.status='error';phase.error=String(error);throw error;}
+    finally{phase.endedAt=Date.now();}
+  };
+  try {
+  const armed=await step('observe-and-arm',()=>page.evaluate(phaseGSustainAbilityObserver,{mode:'arm',attemptId,selection}));
+  if(armed.status==='unavailable'){guard();return false;}
+  if(armed.status!=='armed')throw new Error('Sustain observer failed to arm');
+  // One existing native API; no DOM dispatch, forced click, delay, or retry.
+  await step('native-click',()=>page.mouse.click(armed.point.x,armed.point.y));
+  const actual=await step('read-and-dispose',()=>page.evaluate(phaseGSustainAbilityObserver,{mode:'finish',attemptId}));
+  guard();const decision=validatePhaseGSustainAbilityReceipt(armed,actual);
+  if(!decision.ok)throw new Error('Sustain native input evidence invalid: '+decision.errors.join(','));
+  return true;
+  } catch(error) {
+    const failure=error?.phaseGTerminalInputFailure===true?error:phaseGPointerFailure('QA_HARNESS_CONTROL_INPUT_FAILURE',
+      {control:'sustain-ability',phases,error:String(error)},0);
+    failure.phaseGCausalNoFurtherPageRpc=true;
+    throw failure;
+  }
+}
+
+
 async function phaseGOrderedControlInput(page, operation, deadlineMs, control) {
   const phases = [];
   try {
@@ -4178,9 +4296,13 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       if (!bossEngaged && proofCombatReady) {
         for (let index = 0; index < Math.min(abilityCount, 4); index += 1) {
           await withPhaseGPageInputLock(page, async () => {
-            const lockedAbility = page.locator(sustainAbilitySelector).nth(index);
-            if (await lockedAbility.count().catch(() => 0)) await phaseGOrderedControlInput(page,
-              (phases) => nativeBattleTap(page, lockedAbility, phases,{selector:sustainAbilitySelector,index}), 500, "sustain-ability");
+            try {
+              await phaseGOrderedControlInput(page,
+                (phases) => phaseGSustainAbilityTap(page,{selector:sustainAbilitySelector,index},phases), 500, "sustain-ability");
+            } catch(error) {
+              error.phaseGCausalNoFurtherPageRpc=true;
+              throw error;
+            }
           });
           await page.waitForTimeout(85);
         }

@@ -403,6 +403,12 @@ try {
       await page.addInitScript(installRuntimeObservationDiagnostics);
     }
     const result = { name, viewport, status: "failed", blankBaseline, tacticalPolicy: viewport.safeArea ? "airstrike-first" : "crowd-barrage-at-eight", diagnostics: { consoleErrors: [], pageErrors: [], requestFailures: [], httpFailures: [] }, samples: [], measurementSamples: [], inputs: [] };
+    const retainFrameCpuChunks=runtimeRole==='formal'&&engine==='webkit'&&!callbackDiagnostic&&!observerlessDiagnostic;
+    if(retainFrameCpuChunks)result.frameCpuObservation = {
+      source:'existing product frameCpuTimings128 copied in each original stillMeasuring RPC',
+      columns:['sequence','rafTimestamp','entryAt','previousExitAt','simulationFinishedAt','drawFinishedAt','exitAt','simulationTime'],
+      sourceRingCapacity:128,maxChunks:128,overflow:0,chunks:[],diagnosticOnly:true,
+    };
     report.results.push(result);
     let measurementActive = false;
     page.on("console", (message) => { if (message.type() === "error") result.diagnostics.consoleErrors.push(message.text()); });
@@ -497,9 +503,26 @@ try {
       assert.equal(measurement.visibilityState, "visible", "measurement did not start while visible");
       // The elapsed gate uses this browser clock. Node's wall clock can finish
       // first, so use the same monotonic clock to decide when the window ends.
-      const stillMeasuring = () => page.evaluate(({ startedAt, durationMs }) => (
-        performance.now() - startedAt < durationMs
-      ), { startedAt: measurement.startedAt, durationMs: measurementMs });
+      const stillMeasuring = async () => {
+        if(!retainFrameCpuChunks)return page.evaluate(({ startedAt, durationMs }) => (
+          performance.now() - startedAt < durationMs
+        ), { startedAt: measurement.startedAt, durationMs: measurementMs });
+        const reply = await page.evaluate(({ startedAt, durationMs }) => {
+          const measuring = performance.now() - startedAt < durationMs;
+          const runtime = globalThis.__ASHFALL_RUNTIME_PERFORMANCE__;
+          return {
+            measuring,readAt:performance.now(),frameCpuSequence:runtime?.frameCpuSequence??null,
+            rows:Array.isArray(runtime?.frameCpuTimings)?runtime.frameCpuTimings.map(row=>[
+              row.sequence,row.rafTimestamp,row.entryAt,row.previousExitAt,
+              row.simulationFinishedAt,row.drawFinishedAt,row.exitAt,row.simulationTime,
+            ]):null,
+          };
+        }, { startedAt: measurement.startedAt, durationMs: measurementMs });
+        const observation=result.frameCpuObservation;
+        if(observation.chunks.length<observation.maxChunks)observation.chunks.push(reply);
+        else observation.overflow+=1;
+        return reply.measuring;
+      };
       if (observerlessDiagnostic) {
         await page.waitForTimeout(measurementMs);
         while (await stillMeasuring()) await page.waitForTimeout(50);

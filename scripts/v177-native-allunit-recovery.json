@@ -9,25 +9,40 @@
   "manualCaseIds": [],
   "outcomeCaseIds": [],
   "changedBlobs": {
-    ".github/workflows/ci.yml": "cf2cc77ad2772089a4ffab209594879a56a9e590",
+    ".github/workflows/ci.yml": "bbfb51296e72de4c83ea993ce6341f39fbd098a4",
     ".github/workflows/targeted-frame-performance.yml": "670edafd521eba956ee3309afac22ae636f1115a",
     "app/audioMixer.js": "800bb3737914437bbadc2d1edfaf6c557539caf0",
     "app/productionAudio.js": "23ec034cd3b9c48e000d409b8525dd714ed9bead",
     "app/v105AbilityNames.js": "28cf501a28e033f75e643259aec2e14eab144d97",
     "app/v177RangerFootPlacement.js": "b1e7857b6b810773714b1eaf2dedb3846b8c1376",
     "assets/source/v177/ranger/lower-r3/provenance.json": "aba5c66d3183fbe0d5ae849b7a3a48b026b0f1f6",
-    "docs/PROJECT_STATE.md": "97788165de7de46f069f32d61e8345f327581b0c",
+    "docs/PROJECT_STATE.md": "93f05ad0618b603f2895d3a99ec6fdf1cfbaba3b",
     "docs/qa/v105/native-f7-evidence.json": "348eb032e3c7268539f413e62396bae078d35bce",
     "docs/qa/v105/shared-foot-impact-f7.json": "ca7e48eeb2228b3e4d5a513f026aa88719630d5e",
     "tests/audio-mixer.test.mjs": "b7c6537909ee85baa9eb833f187abd5998716f8f",
-    "tests/ci-change-scope.test.mjs": "e65baa3e4597b1cfcf8e5a1752bf10021289c905",
+    "tests/ci-change-scope.test.mjs": "3133216db3ecda0603b0ca99a6504ac269ad385f",
     "tests/ci-contract.test.mjs": "cca6dde0cbe07e3adb29286422b7a2bd907e2cfc",
     "tests/production-audio.test.mjs": "b19bf16647580aaaaa09db262de804485d4a60bf",
     "tests/v105-five-corrections.test.mjs": "27c3a5f353d3579d24862a18ddd09809c20abba0",
     "tests/v177-native-aac-graph.test.mjs": "730c57c8c1a52d2388c0200859ab9063495209f2",
     "tests/v177-native-allunit-selection.test.mjs": "a99195bd5ee33ea7283683fad39817b248348d12",
     "tests/v177-ranger-body-correction.test.mjs": "23eccd8aba1aafd7336cfacdf0785d89748148fe",
-    "docs/qa/v105/native-f880-evidence.json": "597b84943cd699146f872156427192f190068f50"
+    "docs/qa/v105/native-f880-evidence.json": "597b84943cd699146f872156427192f190068f50",
+    "app/AshfallGame.tsx": "004c5f5e25a6ff63c029d6f06d4c29f92efbd859",
+    "scripts/ci-change-scope.mjs": "fdb06f063b6f463e4cc6fe264c73b43b3d1bf2f4",
+    "scripts/v100-device-runtime-browser.mjs": "445b9aaa783128b764623a2d40cc3e194587c94e",
+    "scripts/v100-phase-g-production-matrix.mjs": "e879eca860f4bf9e5531e75c29bea79c209cb57f",
+    "scripts/v105-five-corrections-capture.mjs": "f187ea4d816abc25272673d880cc15fe7d5b686b",
+    "scripts/v177-native-allunit-browser.mjs": "536ff62a6e277ab2dd602d95ed9737b1da66b416",
+    "scripts/v177-representative-battles.mjs": "c5359ed5edf24403c427c64832e5d140806eb9c8",
+    "tests/ci-combat-qa-reuse.test.mjs": "54ab3ab379fb044dc623ddd0fcc7145340eee9c3",
+    "tests/v105-original-av.test.mjs": "bce597610df617963d4ed6a83007746e47466c17",
+    "tests/v177-native-setup-overlap.test.mjs": "d93dbc17ba719cec7941c1483e72fc8cda5ab7d0",
+    "tests/v177-ranger-performance-receipts.test.mjs": "41b03de5109c9c5c6eaa6e3405543876407d43b9",
+    "tests/v177-representative-battles.test.mjs": "90a3e066019e60ecf95ed12e50415fb6bbb5d975",
+    "tests/v100-phase-g-sustain-pointer.test.mjs": "ebc44603f8bdb95db108611eafdd147afd90c9b2",
+    "docs/qa/v105/five-corrections-6a-evidence.json": "30027698e152d5e49c5d03f2f4c2212571a3e2c9",
+    "docs/qa/v105/native-6a-evidence.json": "1b7f233f17d4a61f9a24728359a94ee04495a257"
   },
   "retainedEvidence": {
     "head": "f7f6f7ce46844eaefc4bb519fa80d591e2607407",
@@ -1597,10 +1612,10 @@
   "naturalnessAccepted": false,
   "wholeGameAccepted": false,
   "previousProfile": {
-    "gitHead": "f88084dcf3e457fb4bd63cf4313e14327eb204b3",
+    "gitHead": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
     "file": "scripts/v177-native-allunit-recovery.json",
-    "gitBlob": "2aaf5bbd67782fd9d61620b08d30635919a05717",
-    "sha256": "e085b5f8bfec757ab6a52fe50dc45d8ca45d7f7de87f54473b053fd1a58fc01b"
+    "gitBlob": "4cd7559f4ef4dd89ec7dcbb361d5ae88019328bc",
+    "sha256": "ea16e28901f374d043f8b904735715bcc169ba06107e0fca59a94070cfb26813"
   },
   "additionalEvidenceInventories": [
     {
@@ -1713,5 +1728,11 @@
         }
       ]
     }
-  ]
+  ],
+  "fiveCorrections": {
+    "file": "docs/qa/v105/five-corrections-6a-evidence.json",
+    "sha256": "9ff075abdfd5f0792d54ed671322f147409718fa88a8cff6793cece66ceb2468",
+    "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+    "runId": "40120044506"
+  }
 }

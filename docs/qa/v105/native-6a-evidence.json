@@ -1,0 +1,297 @@
+{
+  "schema": "v105-original-native-failure/v1",
+  "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+  "runId": "40120044439",
+  "jobId": 120949991875,
+  "artifactId": 12572129578,
+  "artifactName": "v177-native-allunit-forms-4",
+  "artifactDigest": "sha256:527e416d07f761cc9984b6f125307a17bcc8d8dba6712bddf0ee5d7633178cf6",
+  "originalMembers": [
+    {
+      "name": "encoded-audit.json",
+      "bytes": 2458,
+      "sha256": "fb802d0ac1dbf037f268eac3e3feb31661a9674da14a3c159282b19ed29f0f46",
+      "originalZipCrc32": 2434951548
+    },
+    {
+      "name": "report.json",
+      "bytes": 870925,
+      "sha256": "8959278e4b73381bc7176f4f66a69930fa2198f74ef1e29b09f414e27ee7d361",
+      "originalZipCrc32": 1923553733
+    }
+  ],
+  "caseId": "forms-4:mayo-chan:attack:1280x720",
+  "originalCaptureStatus": "observed-diagnostic",
+  "originalClip": {
+    "file": "outputs/v177-native-allunit-forms-4/1280x720/native-canvas-clips/authored-form-mayo-chan-attack-1.webm",
+    "sha256": "5b6cc96cb1945dfb5f1cead37cb1763bbf871fe29ea66f6912eeffe3f308f82d",
+    "bytes": 979532,
+    "requestedCaptureHz": 60,
+    "mimeType": "video/webm; codecs=vp8"
+  },
+  "encodedAudit": {
+    "schema": "v177-native-encoded-clips/v1",
+    "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+    "runId": "40120044439",
+    "originalReport": {
+      "file": "/Users/runner/work/Zombieee/Zombieee/outputs/v177-native-allunit-forms-4/report.json",
+      "sha256": "8959278e4b73381bc7176f4f66a69930fa2198f74ef1e29b09f414e27ee7d361"
+    },
+    "limits": {
+      "maxBytes": 8388608,
+      "maxGapMs": 250,
+      "maxHeadMs": 250,
+      "maxTailMs": 250
+    },
+    "sourceSha256": "03a5ccef5caac516d5d9a69418b02967fb6ea1085ae2e6320a1e067e1adf4f01",
+    "results": [
+      {
+        "caseId": "forms-4:mayo-chan:attack:1280x720",
+        "source": "outputs/v177-native-allunit-forms-4/1280x720/native-canvas-clips/authored-form-mayo-chan-attack-1.webm",
+        "sourceSha256": "5b6cc96cb1945dfb5f1cead37cb1763bbf871fe29ea66f6912eeffe3f308f82d",
+        "failures": [
+          "encoded-video-gap-over-250ms"
+        ],
+        "framecrc": {
+          "file": "/Users/runner/work/Zombieee/Zombieee/outputs/v177-native-allunit-forms-4/encoded-clips/forms-4__mayo-chan__attack__1280x720.framecrc",
+          "sha256": "88c1c67712e162f2cc32e5a86a33fdf1de9264842e1d7cb82bfe0d33d33b3077"
+        },
+        "timeline": {
+          "codec": "vp8",
+          "timebase": [
+            1,
+            1000
+          ],
+          "frames": 31,
+          "maxGapMs": 730,
+          "gapsOver250ms": [
+            {
+              "fromPts": 193,
+              "toPts": 923,
+              "ms": 730
+            }
+          ],
+          "coverage": {
+            "captureWindowMs": 2345,
+            "firstVideoPtsMs": 0,
+            "lastVideoPtsMs": 2206,
+            "encodedSpanMs": 2206,
+            "headUncoveredMs": 0,
+            "tailUncoveredMs": 139,
+            "formula": "max(0, original captureWindowMs - (lastPts-firstPts)*timebase); asynchronous stop-event delivery is excluded"
+          },
+          "failures": [
+            "encoded-video-gap-over-250ms"
+          ]
+        },
+        "decode": {
+          "frames": 31,
+          "completed": true,
+          "errors": 0,
+          "progressSha256": "df3d298e30db4490cd0f81d5e5add17ffa3c40ccbf99e6c318e68a06a88616d4"
+        },
+        "recorderStopEventLatencyMs": 66,
+        "encodedPtsVerified": false
+      }
+    ],
+    "summary": {
+      "cases": 1,
+      "passed": 0,
+      "failed": 1
+    },
+    "thresholdRelaxed": false,
+    "deadlineRelaxed": false,
+    "originalReportRewritten": false,
+    "originalSpeedAccepted": false,
+    "naturalnessAccepted": false,
+    "physicalSavedAudioAccepted": false,
+    "wholeGameAccepted": false
+  },
+  "rawTimingDiagnostic": {
+    "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+    "case": "forms-4:mayo-chan:attack:1280x720",
+    "owner": "ordinary",
+    "start": 8840,
+    "stop": 11185,
+    "largestOutside": [
+      {
+        "sequence": 7,
+        "raf": 9905,
+        "cpu": 11,
+        "outside": 723,
+        "draw": 2,
+        "sim": 8,
+        "entry": 9905,
+        "exit": 9916
+      },
+      {
+        "sequence": 22,
+        "raf": 10464,
+        "cpu": 5,
+        "outside": 118,
+        "draw": 2,
+        "sim": 2,
+        "entry": 10464,
+        "exit": 10469
+      },
+      {
+        "sequence": 5,
+        "raf": 9137,
+        "cpu": 16,
+        "outside": 100,
+        "draw": 4,
+        "sim": 12,
+        "entry": 9137,
+        "exit": 9153
+      },
+      {
+        "sequence": 23,
+        "raf": 10558,
+        "cpu": 10,
+        "outside": 90,
+        "draw": 5,
+        "sim": 5,
+        "entry": 10559,
+        "exit": 10569
+      },
+      {
+        "sequence": 31,
+        "raf": 11089,
+        "cpu": 10,
+        "outside": 73,
+        "draw": 5,
+        "sim": 4,
+        "entry": 11089,
+        "exit": 11099
+      }
+    ],
+    "raf": [
+      {
+        "at": 9905,
+        "gap": 732
+      },
+      {
+        "at": 11331,
+        "gap": 138
+      },
+      {
+        "at": 11697,
+        "gap": 133
+      },
+      {
+        "at": 11460,
+        "gap": 129
+      },
+      {
+        "at": 10464,
+        "gap": 122
+      }
+    ],
+    "sampleRpc": [
+      {
+        "index": 0,
+        "sampleAt": 9290,
+        "startedAt": 20693.111833,
+        "status": "completed",
+        "finishedAt": 21344.94975,
+        "durationMs": 651.8379170000007
+      },
+      {
+        "index": 1,
+        "sampleAt": 9410,
+        "startedAt": 21344.963583,
+        "status": "completed",
+        "finishedAt": 21418.694042,
+        "durationMs": 73.73045899999852
+      },
+      {
+        "index": 2,
+        "sampleAt": 9530,
+        "startedAt": 21418.706542,
+        "status": "completed",
+        "finishedAt": 21448.127208,
+        "durationMs": 29.420666000001802
+      }
+    ],
+    "sampleGetter": [
+      {
+        "at": 9904,
+        "keys": [
+          "timeOrigin",
+          "simulationTime",
+          "readTiming"
+        ],
+        "readTiming": {
+          "sampleAt": 9290,
+          "startedAt": 9902,
+          "snapshotAt": 9903,
+          "auditAt": 9903,
+          "targetAuditAt": 9903,
+          "phaseGAt": 9904,
+          "boundaryAt": 9904,
+          "finishedAt": 9905,
+          "scheduleLatenessMs": 612,
+          "durationMs": 3,
+          "scope": "Original synchronous reader only. RPC/serialization/encoding and native RAF wait are separate; no acceptance or clock change."
+        }
+      },
+      {
+        "at": 9950,
+        "keys": [
+          "timeOrigin",
+          "simulationTime",
+          "readTiming"
+        ],
+        "readTiming": {
+          "sampleAt": 9410,
+          "startedAt": 9950,
+          "snapshotAt": 9950,
+          "auditAt": 9950,
+          "targetAuditAt": 9950,
+          "phaseGAt": 9950,
+          "boundaryAt": 9950,
+          "finishedAt": 9951,
+          "scheduleLatenessMs": 540,
+          "durationMs": 1,
+          "scope": "Original synchronous reader only. RPC/serialization/encoding and native RAF wait are separate; no acceptance or clock change."
+        }
+      },
+      {
+        "at": 10011,
+        "keys": [
+          "timeOrigin",
+          "simulationTime",
+          "readTiming"
+        ],
+        "readTiming": {
+          "sampleAt": 9530,
+          "startedAt": 10010,
+          "snapshotAt": 10011,
+          "auditAt": 10011,
+          "targetAuditAt": 10011,
+          "phaseGAt": 10011,
+          "boundaryAt": 10011,
+          "finishedAt": 10011,
+          "scheduleLatenessMs": 480,
+          "durationMs": 1,
+          "scope": "Original synchronous reader only. RPC/serialization/encoding and native RAF wait are separate; no acceptance or clock change."
+        }
+      }
+    ],
+    "sourceOrigin": 1792869661140,
+    "resources": {
+      "fetch": 31
+    }
+  },
+  "acceptance": {
+    "passed": false,
+    "causeResolved": false,
+    "productCpuVersusBrowserOrOsResolved": false,
+    "originalMediaChanged": false,
+    "thresholdsRelaxed": false,
+    "retimed": false,
+    "reencoded": false,
+    "newRecordingRequired": true
+  },
+  "nextSetup": "Wait only for actual product BGM/loader readiness inside the original5s readiness and30s setup bounds. This remains a pending hypothesis about cold preparation, not a fix claim or cold-start/normal-play/formal33ms acceptance."
+}
