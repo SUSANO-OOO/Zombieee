@@ -14,6 +14,10 @@ d5527a3はPR Verify、両browserのQuality UI and Play、Pages静的buildが成�
 
 原速映像の自然さ、実音の最終聴感、携帯同時技名、最終性能、公開後QAの未確認を完了へ昇格しない。物理iPhoneの保存Control Center録画も未確認としてIssue #177をopenに保つ。
 
+追加の負荷切り分けでは、desktopのRanger脚描画がp95 9msを占めた。元の4coverage・192三角形・Float32合成を維持し、crop内部の4tapだけを元00→10→01→11のbinary64順で展開する。既存26回帰と元1658凍結画素が一致し、新19姿勢＋3再利用の821,076値／365,792bytes／全描画receiptも差0、境界比較を75%削減した。Macでの速度達成はまだ未確認。素材の出力は不変でprovenanceの実装hashだけを更新した。
+
+5点AV収録も、既存のwriter修正版を持つ録画専用WebKit r2380へ接続した。PWA r2359と正式性能環境は変更しない。運用上の再利用は、元のfull CIの成功・digest・provenanceが確認できた既知QA／状態文書更新に限定する。Qualityは別の旧headの両engine実成功も要求し、native workflowは同じscope判定を使う。未完、失敗、Ready化、製品変更、未知差分はfullへ戻り、元の失敗を成功へ書き換えない。
+
 ### 以下は1.0.4以前のsourceに限定した保持記録
 
 2026-10-24：公開/mainの最終確認値は1.0.3／99f9c193。1.0.4のPR #180は公開まで承認済みで、追加Producer確認待ちは設けない。製品・assets・依存lockは0de4730a／d62d6761／773678ddと同一である。現在の更新候補は下記のQA専用修正を含み、正式統合・公開・公開後QAはまだ実施していない。最新の実行状態と公開結果はIssue #177／PR #180を参照する。

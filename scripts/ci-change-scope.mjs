@@ -27,6 +27,15 @@ const nativeQaTests=new Set(['tests/v177-native-allunit.test.mjs','tests/v177-na
   'tests/v177-native-encoded-clips.test.mjs','tests/v177-native-frame-timing.test.mjs',
   'tests/v177-native-setup-overlap.test.mjs','tests/v177-native-incoming-stun.test.mjs',
   'tests/v177-native-turned-getup.test.mjs','tests/v177-native-born-readiness.test.mjs']);
+// Only these independently reviewed five-correction recording revisions are QA-only.
+const reviewedCorrectionQaBlobs=Object.freeze({
+  ".github/workflows/five-corrections-capture.yml": "de854ae8d30599ef1dc13806c9ac3089ad587145",
+  "scripts/v105-five-corrections-capture.mjs": "bcef5dd74c3ef17fde504d1ffc07522c747224dd",
+  "tests/v177-native-allunit-recording-runtime.test.mjs": "30ac4642f2b1c2f4728c0fcc08f9b7321cb2ec3b"
+});
+const nativeQaOnlyPaths=(paths,sourceBlobs)=>paths.length>0&&paths.every(file=>
+  allunit.has(file)||file==='docs/PROJECT_STATE.md'||nativeQaTests.has(file)
+  ||(reviewedCorrectionQaBlobs[file]&&sourceBlobs[file]===reviewedCorrectionQaBlobs[file]));
 const r9=new Set(['scripts/v100-dialogue-composition-browser.mjs','scripts/v100-story-bookends-browser-smoke.mjs',
   'scripts/v100-r9-full-story-browser.mjs','scripts/v100-r9-story-plan.mjs']);
 const orchestration=new Set(['.github/workflows/ci.yml','scripts/ci-change-scope.mjs',
@@ -131,6 +140,33 @@ export async function previousFullCiEvidence({repository,head,base,prNumber,toke
   }catch{return{passed:false,reason:'previous-full-evidence-unavailable'};}
 }
 
+// A completed CI does not establish the separate Quality result. Retain its
+// own exact-head owner only when both original engine jobs actually passed.
+export async function previousQualityEvidence({repository,head,prNumber,token,fullEvidence,request=fetch}={}){
+  if(fullEvidence?.passed!==true||fullEvidence.head!==head||fullEvidence.prNumber!==prNumber
+    ||!/^[\w.-]+\/[\w.-]+$/u.test(repository??'')||!/^[a-f0-9]{40}$/u.test(head??'')||!Number.isSafeInteger(prNumber)||prNumber<1||!token)
+    return{passed:false,reason:'verified-full-owner-required'};
+  const get=async suffix=>{
+    const response=await request(`https://api.github.com/repos/${repository}/${suffix}`,{
+      headers:{Accept:'application/vnd.github+json',Authorization:`Bearer ${token}`,'X-GitHub-Api-Version':'2022-11-28'},
+      signal:AbortSignal.timeout(10_000)});
+    if(!response.ok)throw Error('Quality evidence unavailable');return response.json();
+  };
+  try{
+    const data=await get(`actions/workflows/v1-quality-acceptance.yml/runs?head_sha=${head}&event=pull_request&per_page=10`);
+    for(const run of data.workflow_runs??[]){
+      if(run.head_sha!==head||run.status!=='completed'||run.conclusion!=='success'||!Number.isSafeInteger(run.id)
+        ||!run.pull_requests?.some(pr=>pr.number===prNumber))continue;
+      const data=await get(`actions/runs/${run.id}/jobs?filter=latest&per_page=100`);
+      const names=['V1 Quality UI and Play (chromium)','V1 Quality UI and Play (webkit)'];
+      const jobs=names.map(name=>data.jobs?.filter(job=>job.name===name));
+      if(!jobs.every(rows=>rows?.length===1&&rows[0].status==='completed'&&rows[0].conclusion==='success'&&Number.isSafeInteger(rows[0].id)))continue;
+      return{passed:true,head,prNumber,runId:run.id,jobIds:jobs.map(rows=>rows[0].id)};
+    }
+    return{passed:false,reason:'no-completed-original-quality-engines'};
+  }catch{return{passed:false,reason:'quality-evidence-unavailable'};}
+}
+
 export function ciChangeScope(paths,{draft,sourceBlobs={},reuseNativeQa=false,reuseCombatQa=false,reuseCombatFixture=false}={}){
   assert.equal(typeof draft,'boolean');
   assert.equal(typeof reuseNativeQa,'boolean');
@@ -140,8 +176,7 @@ export function ciChangeScope(paths,{draft,sourceBlobs={},reuseNativeQa=false,re
   // A synchronize update containing only native QA, its tests and the status
   // ledger cannot change the shipped app. Keep the prior full product run and
   // run the changed QA; Ready transitions and any product/unknown path stay full.
-  const nativeQaOnly=reuseNativeQa&&paths.some(file=>allunit.has(file))
-    &&paths.every(file=>allunit.has(file)||file==='docs/PROJECT_STATE.md'||nativeQaTests.has(file));
+  const nativeQaOnly=reuseNativeQa&&nativeQaOnlyPaths(paths,sourceBlobs);
   const combatQaOnly=reuseCombatQa&&reviewedCombatQaPaths(paths,sourceBlobs);
   const combatFixtureOnly=reuseCombatFixture&&reviewedCombatFixturePaths(paths,sourceBlobs);
   let full=!draft&&!nativeQaOnly&&!combatQaOnly&&!combatFixtureOnly,rangerChanged=false,normalChanged=false,allunitChanged=false,r9Changed=false,combatChanged=false;
@@ -150,6 +185,9 @@ export function ciChangeScope(paths,{draft,sourceBlobs={},reuseNativeQa=false,re
     else if(normal.has(file))normalChanged=true;
     else if(allunit.has(file))allunitChanged=true;
     else if(r9.has(file))r9Changed=true;
+    else if(reviewedCorrectionQaBlobs[file]){
+      if(sourceBlobs[file]!==reviewedCorrectionQaBlobs[file])full=true;
+    }
     else if(COMBAT_QA_BLOBS[file]&&sourceBlobs[file]===COMBAT_QA_BLOBS[file])combatChanged=true;
     else if(governance.has(file)||orchestration.has(file)||/^tests\/[^/]+\.test\.mjs$/u.test(file))continue;
     else if(reviewedBruteBlobs[file]&&sourceBlobs[file]===reviewedBruteBlobs[file])allunitChanged=true;
@@ -176,7 +214,7 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
   const comparisonBase=execFileSync('git',['merge-base',base,head],{encoding:'utf8',windowsHide:true}).trim();
   assert.match(comparisonBase,/^[0-9a-f]{40}$/u);
   const paths=execFileSync('git',['diff','--no-renames','--name-only',`${comparisonBase}..${head}`],{encoding:'utf8',windowsHide:true}).trim().split(/\r?\n/u).filter(Boolean);
-  const sourceFiles=new Set([...paths.filter(file=>reviewedValidationBlobs[file]||reviewedMotionBlobs[file]||reviewedLifecycleBlobs[file]||reviewedBruteBlobs[file]||reviewedNativeControlBlobs[file]||reviewedSupportBlobs[file]||reviewedRawClockBlobs[file]||COMBAT_QA_BLOBS[file]),
+  const sourceFiles=new Set([...paths.filter(file=>reviewedCorrectionQaBlobs[file]||reviewedValidationBlobs[file]||reviewedMotionBlobs[file]||reviewedLifecycleBlobs[file]||reviewedBruteBlobs[file]||reviewedNativeControlBlobs[file]||reviewedSupportBlobs[file]||reviewedRawClockBlobs[file]||COMBAT_QA_BLOBS[file]),
     ...(Object.keys(COMBAT_QA_BLOBS).every(file=>paths.includes(file))?['.github/workflows/ci.yml','.github/workflows/v1-quality-acceptance.yml']:[]),
     ...(paths.includes('tests/v177-native-canvas-clips.test.mjs')?[...Object.keys(COMBAT_QA_BLOBS),
       '.github/workflows/ci.yml','.github/workflows/v1-quality-acceptance.yml','tests/v177-native-canvas-clips.test.mjs']:[])]);
@@ -186,11 +224,16 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
   }));
   const eligibleNativeReuse=action==='synchronize'&&previousHead===base&&comparisonBase===base
     &&/^[0-9a-f]{40}$/u.test(previousHead??'');
-  const proposed=ciChangeScope(paths,{draft:draft==='true',sourceBlobs,reuseNativeQa:eligibleNativeReuse});
-  const previousFullEvidence=draft==='false'&&proposed.scope==='native-qa-update-product-unchanged'
+  const nativeQaOnlyCandidate=eligibleNativeReuse&&nativeQaOnlyPaths(paths,sourceBlobs);
+  const previousFullEvidence=draft==='false'&&nativeQaOnlyCandidate
     ?await previousFullCiEvidence({repository:process.env.GITHUB_REPOSITORY,head:previousHead,
       base:process.env.CI_SCOPE_PR_BASE,prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),token:process.env.CI_SCOPE_ACTIONS_TOKEN}):null;
   const reuseNativeQa=previousFullEvidence?.passed===true;
+  const qualityPathsUnchanged=paths.every(file=>file==='docs/PROJECT_STATE.md'
+    ||(reviewedCorrectionQaBlobs[file]&&sourceBlobs[file]===reviewedCorrectionQaBlobs[file]));
+  const qualityEvidence=qualityPathsUnchanged?await previousQualityEvidence({repository:process.env.GITHUB_REPOSITORY,
+    head:previousHead,prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),token:process.env.CI_SCOPE_ACTIONS_TOKEN,fullEvidence:previousFullEvidence})
+    :{passed:false,reason:'quality-dependencies-not-proven-unchanged'};
   const productPaths=['app','public','assets','package.json','package-lock.json','scripts/pwa-native-runtime/package.json','scripts/pwa-native-runtime/package-lock.json'];
   const eligibleCombatReuse=eligibleNativeReuse&&previousHead===COMBAT_QA_BASELINE.head&&reviewedCombatQaPaths(paths,sourceBlobs);
   const eligibleFixtureReuse=eligibleNativeReuse&&previousHead===COMBAT_FIXTURE_BASELINE.head&&reviewedCombatFixturePaths(paths,sourceBlobs);
@@ -207,8 +250,8 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
     paths,sourceBlobs,token:process.env.CI_SCOPE_ACTIONS_TOKEN});
   const scope=ciChangeScope(paths,{draft:draft==='true',sourceBlobs,reuseNativeQa,reuseCombatQa:combatQaEvidence.passed,reuseCombatFixture:combatFixtureEvidence.passed});
   if(process.env.GITHUB_OUTPUT)appendFileSync(process.env.GITHUB_OUTPUT,['full','ranger','normal','allunit','r9','combat'].map(k=>`${k}=${scope[k]}\n`).join(''));
-  if(process.env.GITHUB_OUTPUT)appendFileSync(process.env.GITHUB_OUTPUT,`reuse_quality=${combatQaEvidence.passed||combatFixtureEvidence.passed}\n`);
+  if(process.env.GITHUB_OUTPUT)appendFileSync(process.env.GITHUB_OUTPUT,`reuse_quality=${combatQaEvidence.passed||combatFixtureEvidence.passed||qualityEvidence.passed}\n`);
   if(process.env.GITHUB_STEP_SUMMARY)appendFileSync(process.env.GITHUB_STEP_SUMMARY,
     `Validation: ${scope.scope}. Ready transitions, product and unknown changes run full regression. Source-unchanged QA recovery retains only completed original gates; affected combat groups run again. The reviewed fixture continuation retains those groups only after completion. PR Verify tests, lint, content and build run afresh; unchanged conditional browser steps keep their original owners. Original failures remain failures.\n`);
-  console.log(JSON.stringify({...scope,base,comparisonBase,head,eligibleNativeReuse,previousFullEvidence,combatQaEvidence,combatFixtureEvidence,changedPaths:paths}));
+  console.log(JSON.stringify({...scope,base,comparisonBase,head,eligibleNativeReuse,previousFullEvidence,qualityEvidence,combatQaEvidence,combatFixtureEvidence,changedPaths:paths}));
 }

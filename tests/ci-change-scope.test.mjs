@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {ciChangeScope,framePerformanceRuntimes,previousFullCiEvidence} from '../scripts/ci-change-scope.mjs';
+import {ciChangeScope,framePerformanceRuntimes,previousFullCiEvidence,previousQualityEvidence} from '../scripts/ci-change-scope.mjs';
 import {assertEphemeralPerformanceHost} from '../scripts/v100-macos-indexing-control.mjs';
 import {readFileSync} from 'node:fs';
 import {load} from 'js-yaml';
@@ -26,7 +26,7 @@ test('WebKit mirror preparation is QA-only on Draft and retains full Ready check
 });
 
 test('the reviewed Ranger readback split targets affected draft lanes while Ready and unknown sources stay full',()=>{
- const file='app/v177RangerLowerPaint.js',blob=execFileSync('git',['hash-object',file],{encoding:'utf8',windowsHide:true}).trim();
+ const file='app/v177RangerLowerPaint.js',blob=execFileSync('git',['rev-parse','e22b134a38409b9d2f86660ee351e616c28fbf44:'+file],{encoding:'utf8',windowsHide:true}).trim();
  const paths=[file,'assets/source/v177/ranger/lower-r3/provenance.json','scripts/v177-native-allunit-recovery.json',
   'scripts/ci-change-scope.mjs','tests/ci-change-scope.test.mjs','tests/v177-ranger-continuous-lower.test.mjs','docs/PROJECT_STATE.md'];
  const options={draft:true,sourceBlobs:{[file]:blob}},scope=ciChangeScope(paths,options);
@@ -34,8 +34,45 @@ test('the reviewed Ranger readback split targets affected draft lanes while Read
  assert.equal(scope.finalIntegrationRequiresFullRegression,true);assert.equal(scope.wholeGameAccepted,false);
  assert.equal(ciChangeScope(paths,{...options,draft:false}).full,true);
  for(const sourceBlobs of [{},{[file]:'f'.repeat(40)}])assert.equal(ciChangeScope(paths,{draft:true,sourceBlobs}).full,true);
+ const current=execFileSync('git',['hash-object',file],{encoding:'utf8',windowsHide:true}).trim();
+ assert.notEqual(current,blob);assert.equal(ciChangeScope(paths,{draft:true,sourceBlobs:{[file]:current}}).full,true,'A new raster algorithm must reopen full regression');
  for(const unknown of ['app/v100Save.js','public/future-asset.webp','unknown'])assert.equal(ciChangeScope([...paths,unknown],options).full,true);
  assert.equal(framePerformanceRuntimes(paths).find(r=>r.runtime==='formal').runtime,'formal');
+});
+
+test('completed full evidence may retain only the exact reviewed correction QA or status paths',()=>{
+ const files=['.github/workflows/five-corrections-capture.yml','scripts/v105-five-corrections-capture.mjs','tests/v177-native-allunit-recording-runtime.test.mjs'];
+ const sourceBlobs=Object.fromEntries(files.map(file=>[file,execFileSync('git',['rev-parse','c4e146f664a9c6801c2e404c59f0d3b8a1f5a1ce:'+file],{encoding:'utf8',windowsHide:true}).trim()]));
+ for(const paths of [files,['docs/PROJECT_STATE.md']]){
+  const scope=ciChangeScope(paths,{draft:false,reuseNativeQa:true,sourceBlobs});
+  for(const lane of ['full','ranger','normal','allunit','r9','combat','wholeGameAccepted'])assert.equal(scope[lane],false);
+  assert.equal(ciChangeScope(paths,{draft:false,sourceBlobs}).full,true,'No previous successful full owner means no reuse');
+  for(const extra of ['app/v177RangerLowerPaint.js','public/asset-manifest.json','package-lock.json','unknown','scripts/ci-change-scope.mjs'])
+    assert.equal(ciChangeScope([...paths,extra],{draft:false,reuseNativeQa:true,sourceBlobs}).full,true);
+ }
+ for(const file of files)assert.equal(ciChangeScope(files,{draft:false,reuseNativeQa:true,sourceBlobs:{...sourceBlobs,[file]:'f'.repeat(40)}}).full,true);
+ const native=load(readFileSync('.github/workflows/native-allunit-capture.yml','utf8'));
+ assert.equal(native.jobs.scope.outputs.full,'${{ steps.scope.outputs.full }}');assert.equal(native.jobs.scope.permissions.actions,'read');
+ const condition=native.jobs.build.if;assert.ok(condition.includes("github.event_name == 'workflow_dispatch'"));
+ assert.ok(condition.includes("needs.scope.outputs.full == 'true' || needs.scope.outputs.allunit == 'true'"));
+ assert.ok(!condition.includes('!github.event.pull_request.draft'));
+ const quality=load(readFileSync('.github/workflows/v1-quality-acceptance.yml','utf8'));
+ assert.ok(quality.concurrency.group.includes('github.event.pull_request.head.sha'));assert.equal(quality.concurrency['cancel-in-progress'],false);
+});
+
+test('Quality reuse keeps its own successful two-engine owner and never inherits a missing, partial or failed result',async()=>{
+ const head='a'.repeat(40),prNumber=181,options={repository:'SUSANO-OOO/Zombieee',head,prNumber,token:'test-only',fullEvidence:{passed:true,head,prNumber}};
+ const run={id:81,head_sha:head,status:'completed',conclusion:'success',pull_requests:[{number:prNumber}]};
+ const jobs=['chromium','webkit'].map((name,i)=>({id:101+i,name:`V1 Quality UI and Play (${name})`,status:'completed',conclusion:'success'}));
+ const request=(runs,rows)=>async url=>({ok:true,json:async()=>url.includes('workflows/')?{workflow_runs:runs}:{jobs:rows}});
+ assert.deepEqual(await previousQualityEvidence({...options,request:request([run],jobs)}),{passed:true,head,prNumber,runId:81,jobIds:[101,102]});
+ for(const bad of [{...run,head_sha:'b'.repeat(40)},{...run,status:'in_progress'},{...run,conclusion:'failure'},{...run,conclusion:'cancelled'},{...run,pull_requests:[]}])
+  assert.equal((await previousQualityEvidence({...options,request:request([bad],jobs)})).passed,false);
+ for(const rows of [[],jobs.slice(0,1),[...jobs,jobs[0]],[jobs[0],{...jobs[1],conclusion:'skipped'}],[jobs[0],{...jobs[1],conclusion:'failure'}]])
+  assert.equal((await previousQualityEvidence({...options,request:request([run],rows)})).passed,false);
+ for(const fullEvidence of [null,{passed:false},{passed:true,head:'b'.repeat(40),prNumber}])
+  assert.equal((await previousQualityEvidence({...options,fullEvidence,request:()=>assert.fail('Unverified full must not query or inherit Quality')})).passed,false);
+ assert.equal((await previousQualityEvidence({...options,request:async()=>{throw Error('offline');}})).passed,false);
 });
 
 test('native-only synchronize updates retain product lanes without waiving their unfinished gates',()=>{
@@ -129,7 +166,10 @@ test('ready events run integration gates and research cannot block representativ
  for(const path of ['native-allunit-capture','v1-quality-acceptance']){
   const gate=load(readFileSync(`.github/workflows/${path}.yml`,'utf8'));
   assert.ok(gate.on.pull_request.types.includes('ready_for_review'));
-  assert.ok(Object.values(gate.jobs).some(job=>job.if?.includes('!github.event.pull_request.draft')));
+  if(path==='native-allunit-capture'){
+    assert.ok(gate.jobs.build.if.includes("needs.scope.outputs.full == 'true' || needs.scope.outputs.allunit == 'true'"));
+    const ready=ciChangeScope(['docs/PROJECT_STATE.md'],{draft:false});assert.equal(ready.full,true);assert.equal(ready.allunit,true);
+  }else assert.ok(Object.values(gate.jobs).some(job=>job.if?.includes('!github.event.pull_request.draft')));
  }
 });
 test('draft changes select affected observation while unknown/shared/runtime inputs keep full regression',()=>{
