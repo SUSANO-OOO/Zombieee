@@ -24,6 +24,8 @@ d5527a3はPR Verify、両browserのQuality UI and Play、Pages静的buildが成�
 
 Rangerの追加切り分けでは、停止中の足へ未通知の2px物理補正が入ると、必要距離175.5425pxが元脚長175.1271pxを超える同じ例外を純計算で再現した。pair／床／twin射影の実X補正を描画専用WeakMapで通知する。通常歩行が既に所有する実移動には二重適用せず、歩行phase不変の物理移動だけ足とrootへ運ぶ。着地時計は進め、未描画の読取では通知を消費しない。元骨長guard、既存boss barrier、actualDelta監査、移動・攻撃・saveの処理は維持する。関連31件と実prepaint二重読取の回帰は成功した。これは元S30の全内部状態の再現ではなく、修正後の実S30観察と原映像は引き続き必要である。
 
+69bd候補の起動失敗は、Mayo描画からflat時計定数へ追加したimportが、campaign側freeze関数を通ってchunk初期化循環を作ったためと切り分けた。a39e0bdでは時計を同じ値・同じ凍結のObject.freezeへ置換し、不要なcampaign依存だけを除去した。構造上の限定独立reviewはH0/M0、新buildの起動成功は別途確認する。Ranger生成記録の旧helper SHAも再生成し、画像983,840bytesとjoint data56,056bytesは元SHAと一致、provenanceの実装hash1行だけを更新した。元69bdの起動・再現性テスト失敗は保持する。
+
 ### 以下は1.0.4以前のsourceに限定した保持記録
 
 2026-10-24：公開/mainの最終確認値は1.0.3／99f9c193。1.0.4のPR #180は公開まで承認済みで、追加Producer確認待ちは設けない。製品・assets・依存lockは0de4730a／d62d6761／773678ddと同一である。現在の更新候補は下記のQA専用修正を含み、正式統合・公開・公開後QAはまだ実施していない。最新の実行状態と公開結果はIssue #177／PR #180を参照する。
