@@ -90,6 +90,8 @@ async function main() {
     scope: 'Independent S14/S25/S30 battles with minimum one-star production purchasing budgets. Prefix wins are synthetic. Real UI, native time and actual battle outcomes; no AI-win prerequisite, earned-chain or difficulty acceptance. Full-page video is not an accepted speed clock; the first native canvas clip retains the existing 15s/8MiB recorder contract.',
     cases: [], status: 'running' };
   if(s25FireComparison)report.scope='One opt-in S25 input-order comparison against the preserved same-save baseline. Original stats, budget, native clock, ordinary trusted UI and technical gates; no win prerequisite, causal difficulty, original-speed or whole-game acceptance.';
+  report.scope='One original S25 only, with bounded console stages and RAF heartbeat. Product app/public, save, tactical input and all original deadlines unchanged. Diagnostic only; no normal-play, speed, performance or release acceptance.';
+  report.diagnosticOnly=true;report.releaseAccepted=false;
   let baseline;
   if(s25FireComparison){
     const file=path.resolve(process.env.V100_NORMAL_PLAY_EVIDENCE_DIR,'representative-battles/report.json'),bytes=await readFile(file),original=JSON.parse(bytes);
@@ -101,7 +103,7 @@ async function main() {
   const browser = await (await pwaBrowserType(engine)).launch({ headless: true });
   let outerFailure=null;
   try {
-    for (const number of (s25FireComparison?[25]:[14, 25, 30])) {
+    for (const number of [25]) {
       const fixture = createV177RepresentativeBudget(number);
       const row = { number, budget: fixture.budget, inputs: [], samples: [], snapshots: [], errors: [], status: 'running' };
       if(s25Observe&&number===25){
@@ -125,7 +127,13 @@ async function main() {
       const phaseAt = () => page.locator('.v100-shell').getAttribute('data-v100-phase');
       const persist = () => writeFile(path.join(out, 'report.json'), JSON.stringify(report, null, 2) + '\n');
       page.on('pageerror', error => row.errors.push(String(error)));
-      page.on('console', message => { if (message.type() === 'error') row.errors.push(message.text()); });
+      row.protocolStages=[];
+      page.on('console', message => {
+        const text=message.text();if(message.type()==='error')row.errors.push(text);
+        if(text.startsWith('V105_S25_')){if(row.protocolStages.length<1024){
+          const entry={nodeAt:performance.now(),text};row.protocolStages.push(entry);console.log(JSON.stringify(entry));
+        }else row.protocolOverflow=(row.protocolOverflow??0)+1;}
+      });
       page.on('response', response => { if (response.status() >= 400) row.errors.push(`${response.status()}: ${response.url()}`); });
       async function finishClip(completed) {
         const handle = clip; clip = null;
@@ -143,6 +151,12 @@ async function main() {
       }
       try {
         await page.addInitScript(installNormalFrameObserver);
+        await page.addInitScript(()=>{
+          let last=-Infinity,sequence=0;const observe=at=>{
+            if(at-last>=1000){last=at;console.info('V105_S25_RAF '+JSON.stringify({at,enteredAt:performance.now(),sequence:++sequence,visible:document.visibilityState}));}
+            requestAnimationFrame(observe);
+          };requestAnimationFrame(observe);
+        });
         await page.addInitScript(seedV100BrowserSaveOnce, serializeV100Save(fixture.save));
         await page.goto(origin.href);
         await dismissInstallOffer(page, { timeout: 15000, readySelector: '.v100-start-screen', waitForFictionDismissal: true });
@@ -218,7 +232,8 @@ async function main() {
     }
   } catch(error){outerFailure=error;report.error=String(error);}
   finally { try{await normalCleanupWithin(()=>browser.close(),'representative browser');}catch(error){outerFailure??=error;report.browserCloseError=String(error);report.error??=String(error);} }
-  report.status = !outerFailure&&report.cases.length === (s25FireComparison?1:3) && report.cases.every(row => row.status === 'observed') ? 'observed' : 'failed';
+  report.status = !outerFailure&&report.cases.length === 1 && report.cases.every(row => row.status === 'observed') ? 'observed' : 'failed';
+  if(report.cases.some(row=>row.protocolOverflow)){report.protocolObservationIncomplete=true;report.status='failed';}
   await writeFile(path.join(out, 'report.json'), JSON.stringify(report, null, 2) + '\n');
   console.log(JSON.stringify({ head, engine, status: report.status, outcomes: report.cases.map(row => ({ number: row.number, outcome: row.outcome, status: row.status })) }));
   normalPlayChildCompletion(report);

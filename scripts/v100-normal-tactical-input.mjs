@@ -1,11 +1,15 @@
 import {orderedNativePointer} from './ordered-native-pointer.mjs';
 
 export function projectRepresentativeAirstrikeCanvases(canvases,target){
-  const canvas=canvases.length===1?canvases[0]:null;if(!canvas)return null;
-  const rect=canvas.getBoundingClientRect(),scale=Number(canvas.dataset.worldScale),
+  const trace=(stage,detail={})=>console.info('V105_S25_RPC '+JSON.stringify({stage,at:performance.now(),...detail}));
+  trace('entry',{canvasCount:canvases.length});
+  const canvas=canvases.length===1?canvases[0]:null;if(!canvas){trace('return-no-canvas');return null;}
+  const rect=canvas.getBoundingClientRect();trace('rect',{width:rect.width,height:rect.height});
+  const scale=Number(canvas.dataset.worldScale),
     x=rect.x+Number(canvas.dataset.worldOffsetX)+target.x*scale,y=rect.y+Number(canvas.dataset.worldOffsetY)+target.y*scale;
-  if(!(rect.width>0&&rect.height>0&&scale>0)||![x,y,scale].every(Number.isFinite))return null;
-  return document.elementFromPoint(x,y)===canvas?{x,y}:null;
+  if(!(rect.width>0&&rect.height>0&&scale>0)||![x,y,scale].every(Number.isFinite)){trace('return-invalid');return null;}
+  trace('before-hit',{x,y});const hit=document.elementFromPoint(x,y);trace('after-hit',{matches:hit===canvas});
+  trace('return');return hit===canvas?{x,y}:null;
 }
 
 // Read-only observations guide ordinary UI inputs. This helper has no combat,
