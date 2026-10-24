@@ -1,61 +1,58 @@
 name: Native Game Capture Diagnostic
-
 on:
   workflow_dispatch:
     inputs:
       expected_head:
-        description: Exact 40-character candidate SHA for this diagnostic
+        description: Exact isolated diagnostic commit; no normal-play or release acceptance
         required: true
         type: string
-      capture_scope:
-        description: Only missing natural stun and actual infection-rise clips, or the original full diagnostic
-        required: true
-        type: choice
-        options: [full, state-supplements]
-        default: full
-
 permissions:
   contents: read
-
 concurrency:
-  group: native-game-capture-${{ inputs.expected_head }}
+  group: normal-s14-cpu-diagnostic-${{ inputs.expected_head }}
   cancel-in-progress: false
-
 jobs:
-  native-game-capture:
+  context-recording-control:
+    name: Native S14 callback and draw cost diagnostic
     runs-on: macos-15-intel
     timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+    env:
+      EXPECTED_HEAD: ${{ inputs.expected_head }}
+      GITHUB_PAGES_RELEASE_SHA: ${{ inputs.expected_head }}
+      V177_CONTEXT_RECORDING_OUT: outputs/native-context-recording-control
     steps:
       - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.expected_head }}
+          fetch-depth: 0
           persist-credentials: false
+      - name: Verify immutable diagnostic commit
+        run: |
+          [[ "$EXPECTED_HEAD" =~ ^[a-f0-9]{40}$ ]]
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
       - uses: actions/setup-node@v6
         with:
-          node-version: 24
+          node-version: '22.13.0'
           cache: npm
-      - name: Verify immutable candidate before running the diagnostic
-        env:
-          EXPECTED_HEAD: ${{ inputs.expected_head }}
-        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_HEAD??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_HEAD);'
       - run: npm ci
-      - name: Install pinned native WebKit
+      - name: Install unchanged normal WebKit runtime
         run: |
           npm ci --prefix scripts/pwa-native-runtime
           node scripts/pwa-native-runtime/node_modules/playwright/cli.js install webkit
-      - name: Build the exact requested candidate
-        env:
-          GITHUB_PAGES_RELEASE_SHA: ${{ inputs.expected_head }}
+      - name: Build unchanged product once for both variants
+        id: product_build
         run: npm run build
-      - name: Record priority actions, actual infection rises and natural incoming stun in three viewports with native VP8
-        env:
-          V177_EXPECTED_HEAD_SHA: ${{ inputs.expected_head }}
-          V177_NATIVE_GAME_CAPTURE_OUT: outputs/v177-native-game-capture
-        run: node scripts/v177-native-game-capture-browser.mjs
-      - uses: actions/upload-artifact@v4
+      - name: Unrecorded S14 callback timings preserving original video error and exit
+        if: ${{ !cancelled() && steps.product_build.outcome == 'success' }}
+        run: node scripts/v177-normal-context-recording-diagnostic.mjs unrecorded
+      - name: Preserve original reports clocks failures and diagnostic sources
         if: always()
+        uses: actions/upload-artifact@v4
         with:
-          name: v177-native-game-capture
-          path: outputs/v177-native-game-capture
+          name: native-s14-cpu-diagnostic
+          path: outputs/native-context-recording-control
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 14
