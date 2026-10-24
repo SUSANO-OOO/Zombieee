@@ -1,4 +1,5 @@
 import {spawn} from 'node:child_process';
+import {createHash} from 'node:crypto';
 
 // Bound protocol methods which Playwright's action timeout does not cover.
 // Existing action-specific timeouts and the observation clocks remain owned by their callers.
@@ -17,14 +18,14 @@ const locatorDescription=(previous,key,args)=>{
 
 export function normalProtocolTimeoutReceipt(error){
   return{code:error.code,operation:error.operation,timeoutMs:error.timeoutMs,
-    timing:error.timing,locator:error.locator};
+    timing:error.timing,locator:error.locator,...(error.evaluation?{evaluation:error.evaluation}:{})};
 }
 
 export function createNormalBrowserDeadline({timeoutMs=30_000,onTimeout=()=>{},timers={setTimeout,clearTimeout},clock=()=>performance.now()}={}){
   let failure=null;
   const wrapped=new WeakMap();
   const check=()=>{if(failure)throw failure;};
-  async function run(operation,label,budgetMs=timeoutMs,locator=null){
+  async function run(operation,label,budgetMs=timeoutMs,locator=null,timeoutDetails=null){
     check();
     const startedAt=clock();
     let timer;
@@ -34,6 +35,7 @@ export function createNormalBrowserDeadline({timeoutMs=30_000,onTimeout=()=>{},t
           if(!failure){failure=new Error(`Normal play protocol deadline exceeded: ${label} (${budgetMs}ms)`);failure.code='NORMAL_PLAY_OPERATION_TIMEOUT';failure.operation=label;failure.timeoutMs=budgetMs;
             const timeoutAt=clock();failure.timing={clock:'node-performance-now-ms',startedAt,timeoutAt,elapsedMs:timeoutAt-startedAt};
             failure.locator=locator;
+            if(timeoutDetails)try{failure.evaluation=timeoutDetails();}catch{failure.evaluation={unavailable:true};}
             try{Promise.resolve(onTimeout(failure)).catch(()=>{});}catch{/* Keep the original timeout. */}}
           reject(failure);
         },Math.max(0,budgetMs));
@@ -48,7 +50,12 @@ export function createNormalBrowserDeadline({timeoutMs=30_000,onTimeout=()=>{},t
       if(key==='mouse'||key==='touchscreen')return wrap(value,'input');
       if(typeof value!=='function')return value;
       if(locatorFactories.has(key))return(...args)=>wrap(Reflect.apply(value,owner,args),'locator',locatorDescription(locator,key,args));
-      if(rawMethods.has(key)||(kind==='input'&&['move','down','up','click','dblclick','wheel','tap'].includes(key)))return(...args)=>run(()=>Reflect.apply(value,owner,args),`${kind}.${key}`,timeoutMs,locator).then(result=>key==='evaluateHandle'?wrap(result,'handle'):result);
+      if(rawMethods.has(key)||(kind==='input'&&['move','down','up','click','dblclick','wheel','tap'].includes(key)))return(...args)=>run(()=>Reflect.apply(value,owner,args),`${kind}.${key}`,timeoutMs,locator,
+        ['evaluate','evaluateAll','evaluateHandle'].includes(key)?()=>{
+          const fn=typeof args[0]==='function',source=fn?Function.prototype.toString.call(args[0]):typeof args[0]==='string'?args[0]:null;
+          return source===null?{unavailable:true}:{callbackType:fn?'function':'string',name:fn?args[0].name:null,sourceChars:source.length,
+            sourceSha256:createHash('sha256').update(source).digest('hex'),...(fn?{sourceStart:source.slice(0,256)}:{})};
+        }:null).then(result=>key==='evaluateHandle'?wrap(result,'handle'):result);
       if(actionMethods.has(key))return(...args)=>{check();return Promise.resolve(Reflect.apply(value,owner,args)).then(result=>{check();return result;});};
       return value.bind(owner);
     }});
