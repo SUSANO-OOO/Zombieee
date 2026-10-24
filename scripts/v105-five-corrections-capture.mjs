@@ -126,7 +126,10 @@ export async function startCorrectionRecording({ids,durationMs,preferMp4=false})
     new Promise((_,reject)=>{startTimer=setTimeout(()=>reject(Error('Native start exceeded3s')),3000);})]).finally(()=>clearTimeout(startTimer));
   const observe=at=>{if(state.stopAt!==null)return;
     if(state.rows.length>=4096){state.failed='Original4096-frame receipt limit';return;}
-    state.rows.push({at,enteredAt:performance.now(),...q.getV105CorrectionAudit(ids)});state.raf=requestAnimationFrame(observe);};
+    const enteredAt=performance.now(),audit=q.getV105CorrectionAudit(ids),getterFinishedAt=performance.now();
+    const tail=window.__ASHFALL_RUNTIME_PERFORMANCE__?.frameCpuTimings?.at(-1);
+    const frameCpu=tail?Object.fromEntries(['sequence','rafTimestamp','entryAt','previousExitAt','simulationFinishedAt','drawFinishedAt','exitAt','simulationTime'].map(k=>[k,tail[k]??null])):null;
+    state.rows.push({at,enteredAt,...audit,getterFinishedAt,observerExitAt:performance.now(),frameCpu});state.raf=requestAnimationFrame(observe);};
   state.raf=requestAnimationFrame(observe);
   const watchdog=setTimeout(()=>{state.failed??='Original15s real recorder deadline exceeded';
     state.stopAt??=performance.now();cancelAnimationFrame(state.raf);if(recorder.state!=='inactive')recorder.stop();},15000);
@@ -141,6 +144,7 @@ export async function stopCorrectionRecording(){
     if(state.stopAt-state.startAt>15000)state.failed??='Original15s actual capture bound exceeded';
     state.final=window.__ASHFALL_BATTLE_QA__.getV105CorrectionAudit(state.initial.fighters.map(f=>f.id));
     state.cues=window.__ASHFALL_AUDIO_QA__.getCueRequests();
+    state.finalFrameCosts=window.__ASHFALL_BATTLE_QA__.getPerformanceSnapshot?.()?.frameCpuTimings??null;
     if(recorder.state!=='inactive')recorder.stop();await Promise.race([stopped,new Promise((_,reject)=>{stopTimer=setTimeout(()=>reject(Error('Native stop exceeded3s')),3000);})]);
     const blob=new Blob(state.chunks,{type:recorder.mimeType});
     const validBytes=blob.size>0&&blob.size<=8388608;
@@ -155,9 +159,14 @@ export async function runBrowserQa(){
   const binding=await nativeGameCaptureBinding(),scope=process.env.V105_CAPTURE_SCOPE;
   const {V177_JOINT_ATLASES:currentAtlases}=await import('../app/v177JointPresentation.js');
   const atlasPaths=Object.fromEntries(Object.entries(currentAtlases).map(([kind,atlas])=>[kind,atlas.path]));
-  const plan=correctionCases(scope),viewport=scope==='desktop'?{width:1280,height:720}:{width:844,height:scope==='mobile390'?390:340};
+  const fullPlan=correctionCases(scope),selected=scope==='desktop'?['brute/engage','guardian/engage']:['crazy-king/manual','brawler/duet'];
+  assert.ok(['desktop','mobile390'].includes(scope));
+  const plan=fullPlan.filter(row=>selected.includes(row.kind+'/'+row.mode));assert.equal(plan.length,2);
+  const viewport=scope==='desktop'?{width:1280,height:720}:{width:844,height:390};
   const out=path.resolve(process.env.V105_CAPTURE_OUT??'outputs/v105-five-corrections/'+scope);await mkdir(out,{recursive:true});
   const report={...binding,architecture:process.arch,scope,viewport,runtime:NATIVE_RECORDING_WEBKIT_RUNTIME,cases:[],errors:[],status:'starting',
+    selection:{mode:'only-four-original-f880-clock-failures',selected,fullPlanCount:fullPlan.length,fullScopeAccepted:false},
+    costObservation:{sameExistingObserver:true,newPolling:false,newTimer:false,rawClocksUnchanged:true,thresholdsChanged:false,deadlinesChanged:false},
     acceptance:{physicalIphone:false,humanVisualAndListening:false,normalCampaign:false,wholeGame:false}};
   const persist=()=>writeFile(path.join(out,'report.json'),JSON.stringify(report,null,2)+'\n');
   let browser,context,requests,primary,fatalErrors=0;
