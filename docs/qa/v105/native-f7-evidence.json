@@ -1,0 +1,247 @@
+{
+  "schema": "v105-original-native-evidence/v1",
+  "head": "f7f6f7ce46844eaefc4bb519fa80d591e2607407",
+  "runId": "40095599877",
+  "reports": [
+    {
+      "shard": "forms-1",
+      "head": "f7f6f7ce46844eaefc4bb519fa80d591e2607407",
+      "runId": "40095599877",
+      "sha256": "380b989bbc67481c2809bd7f1f111ca9c672af34d84f8ec1c8b9a0a7dc84cd2c",
+      "artifactId": 12562898876,
+      "artifactDigestReportedByGithub": "sha256:9d76fdb03ea861f98076f82b759d44bbfb1edf08f9a411571ada61133a5c2d6b",
+      "encodedAuditSha256": "b25e30fc2be46aeaa4ec9b53327441dd5b5bfa277963c5d8d9e2762454a3b56c",
+      "originalSourceManifestSha256": "2feb068141dd97ad5197decbf245ed6b1404b019fd359ceb11add4f61dab007b",
+      "retainedCount": 36,
+      "originalEncodedSummary": {
+        "cases": 51,
+        "passed": 51,
+        "failed": 0
+      }
+    },
+    {
+      "shard": "forms-2",
+      "head": "f7f6f7ce46844eaefc4bb519fa80d591e2607407",
+      "runId": "40095599877",
+      "sha256": "d5feae131394678d01b40841624378928d14610378068767ae0a2fc192c58da6",
+      "artifactId": 12562604593,
+      "artifactDigestReportedByGithub": "sha256:dff2c0ca1d8bd8c08e7ede7cb065205e5b647d1fc2cc4b28a0f6d66012bd3518",
+      "encodedAuditSha256": "0371afdfd12a8694fb8d85aa0f281a64b2f3afd681ef879aa6569c642289c71e",
+      "originalSourceManifestSha256": "2feb068141dd97ad5197decbf245ed6b1404b019fd359ceb11add4f61dab007b",
+      "retainedCount": 47,
+      "originalEncodedSummary": {
+        "cases": 48,
+        "passed": 47,
+        "failed": 1
+      }
+    },
+    {
+      "shard": "forms-3",
+      "head": "f7f6f7ce46844eaefc4bb519fa80d591e2607407",
+      "runId": "40095599877",
+      "sha256": "647b2076acad81d1d5cec45812fa4375eaf458d4c081aefd94a35f573146cc88",
+      "artifactId": 12563301250,
+      "artifactDigestReportedByGithub": "sha256:34f06e10d99ad61b819069ba2157cac9f90a69794074ad09f9891f0879f0a9c0",
+      "encodedAuditSha256": "b9082e6583024d15d270533fbf4152bfe57bf1411feca2539339947eb899cbd6",
+      "originalSourceManifestSha256": "2feb068141dd97ad5197decbf245ed6b1404b019fd359ceb11add4f61dab007b",
+      "retainedCount": 48,
+      "originalEncodedSummary": {
+        "cases": 48,
+        "passed": 48,
+        "failed": 0
+      }
+    },
+    {
+      "shard": "forms-4",
+      "head": "f7f6f7ce46844eaefc4bb519fa80d591e2607407",
+      "runId": "40095599877",
+      "sha256": "99022e97e1a29e730de19957ee9cdfc225437ed0437198e8de28b4a293bc45d3",
+      "artifactId": 12562068541,
+      "artifactDigestReportedByGithub": "sha256:e8355e245249e2275f904007ad85a3f00e2eb676ce7a51a33c094cdc9a1c9ff5",
+      "encodedAuditSha256": "ffb7c07ef1d81b7a34ac09f45e11e9347c88d23e201cb839345c6c42f13a94e3",
+      "originalSourceManifestSha256": "2feb068141dd97ad5197decbf245ed6b1404b019fd359ceb11add4f61dab007b",
+      "retainedCount": 47,
+      "originalEncodedSummary": {
+        "cases": 48,
+        "passed": 47,
+        "failed": 1
+      }
+    },
+    {
+      "shard": "forms-5",
+      "head": "f7f6f7ce46844eaefc4bb519fa80d591e2607407",
+      "runId": "40095599877",
+      "sha256": "1d4bcef5502ab59df09f966a87e660d39f1fc9ddbf9dcf1f6306b98394679ec8",
+      "artifactId": 12563017975,
+      "artifactDigestReportedByGithub": "sha256:9b9c6bbdea866dcba0112075b2c1c2ce5db62c1aa50b813dab825ecac5992e45",
+      "encodedAuditSha256": "c7510ff7c6c887ada54566a68046e8a6fcfabd93de02beb54c3adb28762c31ae",
+      "originalSourceManifestSha256": "2feb068141dd97ad5197decbf245ed6b1404b019fd359ceb11add4f61dab007b",
+      "retainedCount": 48,
+      "originalEncodedSummary": {
+        "cases": 48,
+        "passed": 48,
+        "failed": 0
+      }
+    },
+    {
+      "shard": "forms-6",
+      "head": "f7f6f7ce46844eaefc4bb519fa80d591e2607407",
+      "runId": "40095599877",
+      "sha256": "6f430f7947ba245a78af4c937ebab6badf29a90bc7d8693f4edbac8be50eb1ac",
+      "artifactId": 12562152974,
+      "artifactDigestReportedByGithub": "sha256:2986c9cdca2ac67c173733f14fa858f09bd96faeee59955bbb71774f2d9f3f21",
+      "encodedAuditSha256": "63e93bf5cbbb5edbeb0ef09b17b825a223b7de67d93dce6eb43e63e0a7f0c9af",
+      "originalSourceManifestSha256": "2feb068141dd97ad5197decbf245ed6b1404b019fd359ceb11add4f61dab007b",
+      "retainedCount": 48,
+      "originalEncodedSummary": {
+        "cases": 48,
+        "passed": 48,
+        "failed": 0
+      }
+    },
+    {
+      "shard": "forms-7",
+      "head": "f7f6f7ce46844eaefc4bb519fa80d591e2607407",
+      "runId": "40095599877",
+      "sha256": "acd36ba42b17433227353251d8c3a262fc9cc1186032144bda3a7329ab007e98",
+      "artifactId": 12563036904,
+      "artifactDigestReportedByGithub": "sha256:80e9bc061b0f4243f42ce403c6cd320dddb0a8f3d361b700f2b775a87d241224",
+      "encodedAuditSha256": "e5c08c5d80d40f8dda313e434714f9c4a25602da034fefecceb4b499d7f1e424",
+      "originalSourceManifestSha256": "2feb068141dd97ad5197decbf245ed6b1404b019fd359ceb11add4f61dab007b",
+      "retainedCount": 48,
+      "originalEncodedSummary": {
+        "cases": 48,
+        "passed": 48,
+        "failed": 0
+      }
+    },
+    {
+      "shard": "forms-8",
+      "head": "f7f6f7ce46844eaefc4bb519fa80d591e2607407",
+      "runId": "40095599877",
+      "sha256": "82453e0ecb8db13c6d9b4c46dceeca056e9246d639ae3e2f8a1807b5d5e08398",
+      "artifactId": 12561576961,
+      "artifactDigestReportedByGithub": "sha256:e95814779684fb1d67a076bf573fa4d57a75917bdc2c5605166b594f04d43d5b",
+      "encodedAuditSha256": "c2d066c904e4aa365e9f4583d2b90bb35ada06db4e95d2d15d2d81545a063e69",
+      "originalSourceManifestSha256": "2feb068141dd97ad5197decbf245ed6b1404b019fd359ceb11add4f61dab007b",
+      "retainedCount": 44,
+      "originalEncodedSummary": {
+        "cases": 48,
+        "passed": 48,
+        "failed": 0
+      }
+    },
+    {
+      "shard": "forms-9",
+      "head": "f7f6f7ce46844eaefc4bb519fa80d591e2607407",
+      "runId": "40095599877",
+      "sha256": "0348ada5614ab5f9f0eec76360f9e233d013047445d86f781241078fae8603b2",
+      "artifactId": 12560912820,
+      "artifactDigestReportedByGithub": "sha256:ec358a6e0395f93e8238110317d539c4cef611e05a509b38a1f040026fa981ed",
+      "encodedAuditSha256": "4dc9cf890d02f2b13dfe69933d383e274a7ef2bc3bce2c9dc6df38832eb283ef",
+      "originalSourceManifestSha256": "2feb068141dd97ad5197decbf245ed6b1404b019fd359ceb11add4f61dab007b",
+      "retainedCount": 47,
+      "originalEncodedSummary": {
+        "cases": 48,
+        "passed": 48,
+        "failed": 0
+      }
+    },
+    {
+      "shard": "forms-10",
+      "head": "f7f6f7ce46844eaefc4bb519fa80d591e2607407",
+      "runId": "40095599877",
+      "sha256": "bbbb02af8ca76b3ca138915766d46f6c5bad4b7b76a1c8809a4f3701034e628a",
+      "artifactId": 12560623050,
+      "artifactDigestReportedByGithub": "sha256:3cf09ed4d2e074a6c078c74db410b15b83f7326ae10b168c08b22f3c2b8c5616",
+      "encodedAuditSha256": "c2e844e1f8885f2c5e30f66aa734c0122dccdeb15ae1b99ea6a23f0b72a60634",
+      "originalSourceManifestSha256": "2feb068141dd97ad5197decbf245ed6b1404b019fd359ceb11add4f61dab007b",
+      "retainedCount": 48,
+      "originalEncodedSummary": {
+        "cases": 48,
+        "passed": 48,
+        "failed": 0
+      }
+    },
+    {
+      "shard": "forms-11",
+      "head": "f7f6f7ce46844eaefc4bb519fa80d591e2607407",
+      "runId": "40095599877",
+      "sha256": "eb4728302a9637a9844defb659a797a3244782ccce50dd2e36a46ac2574693da",
+      "artifactId": 12563427488,
+      "artifactDigestReportedByGithub": "sha256:5b243847cb9f6e4458471c940d5b133005c27f075c1d900ef9101406b9a5be83",
+      "encodedAuditSha256": "ecc352f82d3b611231908caadf237eff769ebe599c641f5dd90d3bbd2f8e89f3",
+      "originalSourceManifestSha256": "2feb068141dd97ad5197decbf245ed6b1404b019fd359ceb11add4f61dab007b",
+      "retainedCount": 48,
+      "originalEncodedSummary": {
+        "cases": 48,
+        "passed": 48,
+        "failed": 0
+      }
+    },
+    {
+      "shard": "forms-12",
+      "head": "f7f6f7ce46844eaefc4bb519fa80d591e2607407",
+      "runId": "40095599877",
+      "sha256": "9bd120adb43a12c1f7e5ee7f2c5b9b18d240c3100e76545a8388a679fda56a57",
+      "artifactId": 12561994267,
+      "artifactDigestReportedByGithub": "sha256:75e35b76b492c6a08906b4956e375430d583653847e817831ddb8cdd8414593e",
+      "encodedAuditSha256": "e94d4dcb84c5f6c895baa97626005a8b1b47b16137e2d8ec1c7ec0c40c312b49",
+      "originalSourceManifestSha256": "2feb068141dd97ad5197decbf245ed6b1404b019fd359ceb11add4f61dab007b",
+      "retainedCount": 47,
+      "originalEncodedSummary": {
+        "cases": 48,
+        "passed": 47,
+        "failed": 1
+      }
+    }
+  ],
+  "originalFailures": [
+    {
+      "caseId": "forms-2:gunner:engage:844x340",
+      "maxGapMs": 260,
+      "reportSha256": "d5feae131394678d01b40841624378928d14610378068767ae0a2fc192c58da6",
+      "encodedAuditSha256": "0371afdfd12a8694fb8d85aa0f281a64b2f3afd681ef879aa6569c642289c71e"
+    },
+    {
+      "caseId": "forms-4:mayo-chan:attack:1280x720",
+      "maxGapMs": 645,
+      "reportSha256": "99022e97e1a29e730de19957ee9cdfc225437ed0437198e8de28b4a293bc45d3",
+      "encodedAuditSha256": "ffb7c07ef1d81b7a34ac09f45e11e9347c88d23e201cb839345c6c42f13a94e3"
+    },
+    {
+      "caseId": "forms-12:takuya-omega:move:844x340",
+      "maxGapMs": 337,
+      "reportSha256": "9bd120adb43a12c1f7e5ee7f2c5b9b18d240c3100e76545a8388a679fda56a57",
+      "encodedAuditSha256": "e94d4dcb84c5f6c895baa97626005a8b1b47b16137e2d8ec1c7ec0c40c312b49"
+    }
+  ],
+  "source": "Original Actions ZIP report members, CRC/bytes/SHA and source binding; full archive digest and media not redownloaded",
+  "previousProfile": {
+    "gitHead": "1f92a3c5339a2e608e98e793bdf4cdecc21d6c6e",
+    "file": "scripts/v177-native-allunit-recovery.json",
+    "gitBlob": "bd2ed07a3d62b758293af55934518c448b90fb83",
+    "sha256": "1e2d0609d8335dd8eddfe41057ea74b7523d754b72a5b40e7d978d1333b6257f"
+  },
+  "sharedFootImpact": {
+    "file": "docs/qa/v105/shared-foot-impact-f7.json",
+    "sha256": "b2fbf1eba2992c5a95593041e8bfd2d7a406249205ce65c61241e75f33c3bbd0",
+    "staticNonCallers": 107,
+    "recordedPredicateFalse": 449,
+    "unknownReopened": [
+      "forms-8:futago-separated-a:move:844x390",
+      "forms-8:futago-separated-a:engage:844x390",
+      "forms-8:futago-separated-a:move:844x340",
+      "forms-8:futago-separated-a:engage:844x340",
+      "forms-9:futago-separated-b:engage:844x390"
+    ],
+    "distinctPaintIndexEntries": 39592,
+    "rawClockOrMediaRowsDeduplicatedForAcceptance": false
+  },
+  "pendingReason": "Three original encoded failures,15 Ranger-dependent observations, and5 shared-helper observations with missing phase boundaries. The shared fix remains enabled for all callers.",
+  "originalSpeedAccepted": false,
+  "naturalnessAccepted": false,
+  "humanListeningAccepted": false,
+  "physicalSavedAudioAccepted": false,
+  "wholeGameAccepted": false
+}

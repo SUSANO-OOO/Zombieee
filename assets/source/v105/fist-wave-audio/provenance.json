@@ -1,0 +1,50 @@
+{
+  "generator": "scripts/build-v105-fist-wave-audio.mjs",
+  "source": "Original deterministic project synthesis; no voice or third-party samples",
+  "contract": "charge at accepted start; launch at current-model fist paint; one impact at swept projectile collision",
+  "oldComboImpactReused": false,
+  "records": [
+    {
+      "role": "charge",
+      "duration": 0.26,
+      "expression": "0.13*sin(2*PI*(100*t+520*t*t))+0.07*sin(2*PI*220*t)*sin(2*PI*733*t)",
+      "filter": "highpass=f=90,lowpass=f=2600,afade=t=in:d=0.035,afade=t=out:st=0.21:d=0.05",
+      "master": "assets/source/v105/fist-wave-audio/charge.wav",
+      "masterSha256": "93da3a01d472936df5e0b41c99aeab925b68e8ed47652ea27b9ad8cacda23803",
+      "file": "public/audio/v105/fist-wave-charge.mp3",
+      "bytes": 5059,
+      "sha256": "366f1fd9b6d96129b39423f5f0a95fe500d006cf296ede64758b4a593453d2e0",
+      "alternate": "public/audio/v105/fist-wave-charge.ogg",
+      "alternateBytes": 4412,
+      "alternateSha256": "20af5d2b981a9d0dbce8f7af3c64218450aae9314e079b877523a8b4609c7dc9"
+    },
+    {
+      "role": "launch",
+      "duration": 0.29,
+      "expression": "0.22*sin(2*PI*(380*t-450*t*t))*exp(-10*t)+0.13*sin(2*PI*3917*t)*sin(2*PI*2173*t)*exp(-15*t)",
+      "filter": "highpass=f=100,lowpass=f=6800,afade=t=in:d=0.004,afade=t=out:st=0.18:d=0.11",
+      "master": "assets/source/v105/fist-wave-audio/launch.wav",
+      "masterSha256": "7d9c04bf474d8a4b71c3b1ae7f7e5582304519b5f8a32836d2c590da65554aed",
+      "file": "public/audio/v105/fist-wave-launch.mp3",
+      "bytes": 5895,
+      "sha256": "6cdca9ee478ef025006f0b9e4d4404e46d6cf7e6b101f57f6551db8641716bb3",
+      "alternate": "public/audio/v105/fist-wave-launch.ogg",
+      "alternateBytes": 4869,
+      "alternateSha256": "0b842868b660e3d821707316cdde01d5d9d0b2d68730f97372bf05b0572c0ab2"
+    },
+    {
+      "role": "impact",
+      "duration": 0.34,
+      "expression": "0.32*sin(2*PI*(92*t-80*t*t))*exp(-18*t)+0.13*sin(2*PI*3181*t)*sin(2*PI*1733*t)*exp(-25*t)",
+      "filter": "highpass=f=55,lowpass=f=4200,afade=t=in:d=0.002,afade=t=out:st=0.20:d=0.14",
+      "master": "assets/source/v105/fist-wave-audio/impact.wav",
+      "masterSha256": "4053aad0e61d6a718bed6397ff9253c85dcf7283debefff97737c93ee03ec64f",
+      "file": "public/audio/v105/fist-wave-impact.mp3",
+      "bytes": 6731,
+      "sha256": "b0cbec28f6966b11997fc2864dc525491bc0cd7d12b0f49ac709c79ca6279334",
+      "alternate": "public/audio/v105/fist-wave-impact.ogg",
+      "alternateBytes": 5370,
+      "alternateSha256": "98a1ef3ec44fc84777e3cef8e7d4a3c97245d616c9b41db8f168ed0503544937"
+    }
+  ]
+}

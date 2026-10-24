@@ -793,7 +793,7 @@ test("runtime renders only ready buttons and never a cooldown ring or number abo
 
 test("all sixteen ready icons map to distinct authored silhouettes", async () => {
   const iconFiles = {
-    brawler: "paisen-kiai-combo-ready-r1.svg",
+    brawler: "paisen-fist-wave-ready.svg",
     scout: "hachi-intercept-dash-ready-r1.svg",
     ranger: "mizuchi-precision-ready-r1.svg",
     medic: "nao-emergency-treatment-ready-r1.svg",
@@ -813,9 +813,10 @@ test("all sixteen ready icons map to distinct authored silhouettes", async () =>
   const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
   const iconSources = await Promise.all(Object.entries(iconFiles).map(async ([kind, file]) => {
     assert.match(css, new RegExp(`ability-${kind.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}[^}]*${file}`));
-    const source = await readFile(new URL(`../public/art/v090/characters/abilities/${file}`, import.meta.url), "utf8");
+    const source = await readFile(new URL(kind==='brawler'?`../public/art/v105/abilities/${file}`:`../public/art/v090/characters/abilities/${file}`, import.meta.url), "utf8");
     assert.match(source, /viewBox="0 0 96 96"/);
-    assert.match(source, /<title id="title">[^<]+ ready<\/title>/);
+    if(kind==='brawler')assert.ok(source.includes(`<title id="title">${MANUAL_ABILITY_REGISTRY.brawler.displayName}</title>`));
+    else assert.match(source, /<title id="title">[^<]+ ready<\/title>/);
     return source.replace(/\s+/g, " ");
   }));
   assert.equal(new Set(iconSources).size, 16, "no unit reuses another unit's icon artwork");
@@ -838,8 +839,10 @@ test("existing eleven abilities connect unique combat mechanics, canvas VFX, and
   ]) {
     assert.match(source, new RegExp(`effect\\.kind === "${kind.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`), `${kind} has dedicated VFX`);
   }
-  assert.match(source, /event\.kind === "brawler"[\s\S]{0,1600}definition\.hitCount/);
-  assert.match(source, /event\.kind === "brawler"[\s\S]{0,2200}finalKnockbackRadius/);
+  assert.ok(source.includes("event.kind==='brawler'&&event.type==='fist-wave-release'"));
+  assert.ok(source.includes('queueV105FistWave(g,owner,event,MANUAL_ABILITY_REGISTRY.brawler)'));
+  assert.ok(source.includes('for(const waveEvent of advanceV105FistWaves(g,g.fighters))'));
+  assert.ok(source.includes('effectDistance(nearby,target)>waveEvent.knockbackRadius'));
   assert.match(source, /event\.kind === "scout"[\s\S]{0,1800}definition\.stunSeconds/);
   assert.match(source, /event\.kind === "ranger"[\s\S]{0,1900}penetrationMultiplier/);
   assert.match(source, /event\.kind === "medic"[\s\S]{0,1900}protectionSeconds/);

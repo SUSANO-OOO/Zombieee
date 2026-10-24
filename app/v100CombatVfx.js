@@ -2,6 +2,7 @@ import { TAKUYA_GROUND_BLADE_SOCKET } from './v100TakuyaGroundSocket.js';
 import {queueV104GuardImpact} from './v104CombatAudio.js';
 
 export const V100_COMBAT_VFX_ART=Object.freeze({
+ 'v105-fist-wave':'/art/v105/combat-vfx/fist-wave-r1.webp',
  'v104-steel':'/art/v104/combat-vfx/steel-r1.webp',
  'v104-organic':'/art/v104/combat-vfx/organic-r1.webp',
  'v104-eye':'/art/v104/combat-vfx/eye-r1.webp',
@@ -200,7 +201,7 @@ export function drawV100ContactQueue(ctx,objects,world,shieldSocketForOwner,taku
    e.tataraGroundContact.bodySourcePath=point.sourcePath??null;
    e.tataraGroundContact.sourcePixel=point.sourcePixel??null;
   }
-  if(e.tataraGroundContact&&!e.tataraGroundContact.resolvedSocket)continue;
+  if(e.tataraGroundContact&&!e.tataraGroundContact.resolvedSocket||e.takuyaGroundContact&&!e.takuyaGroundContact.resolvedSocket)continue;
   drawV100Contact(ctx,objects,{...e,elapsed:world.time-e.startedAt});
  }
 }

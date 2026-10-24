@@ -1,19 +1,20 @@
 import { deepFreeze } from "./content/freeze.js";
-import {advanceV100BrawlerCombo,v100BrawlerComboTiming} from './v100BrawlerCombo.js';
 
 export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   brawler: {
     unitId: "unit-paisen",
-    displayName: "気合連打",
-    summary: "最寄りの敵へ踏み込み連続拳打。最終打で周囲を押し戻す。",
-    iconMotif: "fist-combo",
+    displayName: "気合拳波",
+    summary: "拳から拳波を放つ。直進して最初に当たった敵へ打撃を与え、周囲を押し戻す。",
+    iconMotif: "fist-wave",
     runtimeStatus: "integrated",
     cooldownSeconds: 12,
     windupSeconds: .26,
-    recoverySeconds: .14,
+    recoverySeconds: .52,
     range: 150,
-    impactDamage: 56,
-    hitCount: 5,
+    impactDamage: 280,
+    hitCount: 1,
+    projectileSpeed: 540,
+    projectileRadius: 8,
     finalKnockback: 19,
     finalKnockbackRadius: 82,
   },
@@ -360,9 +361,6 @@ export function manualAbilityCheckpointCooldown(runtime) {
     return Math.max(0, Number(runtime.cooldownRemaining) || 0);
   }
   let remaining = Math.max(0, Number(definition.cooldownSeconds) || 0);
-  if(runtime.kind==='brawler'&&runtime.sequentialBrawler){
-    return Math.round((remaining+Math.max(0,v100BrawlerComboTiming(definition).recoveryEnd-(runtime.abilityElapsed??0)))*1000)/1000;
-  }
   if (runtime.phase === "windup") {
     remaining += Math.max(0, Number(runtime.windupRemaining) || 0);
     remaining += Math.max(0, Number(definition.recoverySeconds) || 0);
@@ -872,7 +870,7 @@ export function manualAbilityLocksNormalAction(runtime) {
   return ["windup", "salvo", "guard", "recovery"].includes(runtime?.phase);
 }
 
-export function beginManualAbility(runtime, target, {sequentialBrawler=false}={}) {
+export function beginManualAbility(runtime, target) {
   const definition = manualAbilityDefinitionFor(runtime?.kind);
   if (!definition || definition.runtimeStatus !== "integrated" || runtime.phase !== "ready" || !target) {
     return Object.freeze({ ok: false, runtime, activationId: runtime?.activationId ?? 0 });
@@ -889,7 +887,7 @@ export function beginManualAbility(runtime, target, {sequentialBrawler=false}={}
       activeRemaining: 0,
       salvoIndex: 0,
       abilityElapsed: 0,
-      sequentialBrawler: runtime.kind==='brawler'&&sequentialBrawler,
+      sequentialBrawler: false,
       activationId,
       target: Object.freeze({ ...target }),
     }),
@@ -904,9 +902,6 @@ export function advanceManualAbility(runtime, seconds) {
   const elapsed = Math.max(0, Number(seconds) || 0);
   if (elapsed === 0 || runtime.phase === "ready") {
     return Object.freeze({ runtime, events: Object.freeze([]) });
-  }
-  if(runtime.kind==='brawler'&&runtime.sequentialBrawler){
-    return deepFreeze(advanceV100BrawlerCombo(runtime,elapsed,definition));
   }
   if (runtime.kind === "mrs-chiha") {
     return advanceMrsChihaAbility(runtime, elapsed);
@@ -1000,7 +995,7 @@ export function advanceManualAbility(runtime, seconds) {
         target: recoverySeconds > 0 && overflow < recoverySeconds ? runtime.target : null,
       }),
       events: Object.freeze([Object.freeze({
-        type: "impact",
+        type: runtime.kind === "brawler" ? "fist-wave-release" : "impact",
         kind: runtime.kind,
         activationId: runtime.activationId,
         target: runtime.target,

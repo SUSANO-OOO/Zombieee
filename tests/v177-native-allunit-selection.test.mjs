@@ -9,6 +9,17 @@ import {selectNativeCases,nativeCaseSelection} from '../scripts/v177-native-allu
 import {SHARDS,planShard} from '../scripts/v177-native-allunit-manifest.mjs';
 
 const current=JSON.parse(readFileSync('scripts/v177-native-allunit-recovery.json','utf8'));
+// The new baseline owns its own raw reports. Old clock closures and failed
+// manual contracts keep their original immutable profile in Git, without
+// acquiring the new baseline's head or being dropped from negative tests.
+const historical=(()=>{
+ const reference=current.previousProfile;if(!reference)return current;
+ assert.equal(reference.file,'scripts/v177-native-allunit-recovery.json');
+ const raw=execFileSync('git',['show',reference.gitHead+':'+reference.file],{maxBuffer:8*1024*1024});
+ assert.equal(createHash('sha256').update(raw).digest('hex'),reference.sha256);
+ assert.equal(execFileSync('git',['rev-parse',reference.gitHead+':'+reference.file],{encoding:'utf8'}).trim(),reference.gitBlob);
+ return JSON.parse(raw);
+})();
 const originalCaseIds=SHARDS.flatMap(s=>planShard(s.id)).filter(r=>r.viewport.width===1280).slice(0,54).map(r=>r.caseId);
 const recovery={schema:'v177-native-allunit-recovery/v1',head:'1'.repeat(40),runId:'39422404651',originalCaseIds,
  caseIds:originalCaseIds.slice(30),retainedEvidence:{caseIds:originalCaseIds.slice(0,30)},
@@ -18,7 +29,7 @@ function profileRoot(profile){const root=mkdtempSync(path.join(tmpdir(),'v177-se
 const originalRoot=profileRoot(recovery);
 
 function resolvedWalkerFixture(){
- const p=structuredClone(current),closure=p.additionalRawClockClosures?.[0]??p.historicalAdditionalRawClockClosures?.[0];
+ const p=structuredClone(historical),closure=p.additionalRawClockClosures?.[0]??p.historicalAdditionalRawClockClosures?.[0];
  assert.ok(closure,'the original strict-clock closure remains available as historical evidence');
  p.caseIds=p.caseIds.filter(id=>id!==closure.caseId);
  if(!p.retainedEvidence.caseIds.includes(closure.caseId))p.retainedEvidence.caseIds.push(closure.caseId);
@@ -83,21 +94,23 @@ test('current recovery partitions all original observations and never reuses an 
  for(const id of [...current.rawClockAudit.normalInvalidClock,...current.rawClockAudit.outcomeInvalidClock,...current.rawClockAudit.manualInvalidClock,
   ...current.rawClockAudit.normalFailed,...current.rawClockAudit.manualFailed,...current.rawClockAudit.outcomeFailed,...current.rawClockAudit.normalNotClockAuditable])
   assert.ok(pending.includes(id)||resolutions.includes(id),'An invalid original clock needs a selected case or a separately bound new recording');
- for(const historical of current.historicalRawClockAudits){
-  assert.equal(historical.rawReportsUnmodified,true);assert.equal(historical.duplicateRowsRemoved,false);
-  const invalid=[...historical.normalInvalidClock,...historical.outcomeInvalidClock];
-  assert.deepEqual(historical.closures.map(r=>r.caseId).sort(),invalid.sort());
-  for(const closure of historical.closures){
+ const archived=nativeCaseSelection({root:profileRoot(historical),event:{pull_request:{draft:true}},git:()=>''});
+ const archivePending=[...archived.caseIds,...archived.manualCaseIds,...archived.outcomeCaseIds];
+ for(const audit of historical.historicalRawClockAudits){
+  assert.equal(audit.rawReportsUnmodified,true);assert.equal(audit.duplicateRowsRemoved,false);
+  const invalid=[...audit.normalInvalidClock,...audit.outcomeInvalidClock];
+  assert.deepEqual(audit.closures.map(r=>r.caseId).sort(),invalid.sort());
+  for(const closure of audit.closures){
    if(closure.clockClosure==='new-original-recording-clock-verified'){
-    assert.equal(closure.currentHead,current.head);assert.equal(closure.currentRunId,current.runId);assert.match(closure.rawClipSha256,/^[a-f0-9]{64}$/u);
-    assert.ok(selected.retainedEvidence.reports.some(r=>r.sha256===closure.reportSha256));
+    assert.equal(closure.currentHead,historical.head);assert.equal(closure.currentRunId,historical.runId);assert.match(closure.rawClipSha256,/^[a-f0-9]{64}$/u);
+    assert.ok(archived.retainedEvidence.reports.some(r=>r.sha256===closure.reportSha256));
    }else{
-    const later=current.additionalRawClockClosures?.find(r=>r.caseId===closure.caseId);
-    assert.ok(pending.includes(closure.caseId)||later,'An unresolved historical clock needs a pending case or a separately bound new original recording');
+    const later=historical.additionalRawClockClosures?.find(r=>r.caseId===closure.caseId);
+    assert.ok(archivePending.includes(closure.caseId)||later,'An unresolved historical clock needs a pending case or a separately bound new original recording');
     if(later){
      assert.equal(later.historyRewritten,false);assert.equal(later.strictClockValidation.passed,true);
-     assert.equal(later.resolves.historicalAuditSha256,historical.sha256);
-     assert.ok(selected.retainedEvidence.additionalReports.some(r=>r.head===later.head&&r.runId===later.runId
+     assert.equal(later.resolves.historicalAuditSha256,audit.sha256);
+     assert.ok(archived.retainedEvidence.additionalReports.some(r=>r.head===later.head&&r.runId===later.runId
       &&r.sha256===later.reportSha256&&r.caseIds.includes(closure.caseId)));
     }
    }
@@ -108,7 +121,7 @@ test('current recovery partitions all original observations and never reuses an 
   p=>{p.retainedEvidence.outcomeCaseIds.pop();},p=>{(p.manualCaseIds.length?p.manualCaseIds:p.retainedEvidence.manualCaseIds).pop();},p=>{p.retainedEvidence.reports.pop();}]){
   const invalid=structuredClone(current);mutate(invalid);assert.throws(()=>nativeCaseSelection({root:profileRoot(invalid),event:{pull_request:{draft:true}},git:()=>''}));
  }
- const file='app/AshfallGame.tsx',blob=current.changedBlobs[file];assert.match(blob,/^[a-f0-9]{40}$/u);
+ const file=Object.keys(current.changedBlobs).find(file=>file.startsWith('app/')),blob=current.changedBlobs[file];assert.match(blob,/^[a-f0-9]{40}$/u);
  assert.equal(nativeCaseSelection({event:{pull_request:{draft:true}},git:args=>args[0]==='diff'?file:blob}).mode,'remaining');
  assert.equal(nativeCaseSelection({event:{pull_request:{draft:true}},git:args=>args[0]==='diff'?file:'f'.repeat(40)}).mode,'full');
 });
@@ -116,7 +129,7 @@ test('current recovery partitions all original observations and never reuses an 
 test('supplement-only recovery can finish its original context without recapturing a normal case',()=>{
  // Synthetic report membership exercises an empty-normal partition only;
  // it never changes the checked-in source inventory or claims new evidence.
- const profile=structuredClone(current);profile.retainedEvidence.caseIds.push(...profile.caseIds);profile.caseIds=[];
+ const profile=structuredClone(historical);profile.retainedEvidence.caseIds.push(...profile.caseIds);profile.caseIds=[];
  profile.retainedEvidence.outcomeCaseIds.push(...profile.outcomeCaseIds);profile.outcomeCaseIds=[];
  const manual=[...profile.manualCaseIds,...profile.retainedEvidence.manualCaseIds];profile.manualCaseIds=manual.slice(0,1);profile.retainedEvidence.manualCaseIds=manual.slice(1);
  for(const report of [...profile.retainedEvidence.reports,...profile.retainedEvidence.additionalReports])for(const key of ['caseIds','manualCaseIds','outcomeCaseIds']){
@@ -149,7 +162,7 @@ test('Ready reuse requires complete v2 inventory and exact reviewed source; expl
 });
 
 test('additional successful reports retain their own head and can only bind unique kept observations',()=>{
- const profile=structuredClone(current),report=profile.retainedEvidence.additionalReports[0],id=report.caseIds[0];
+ const profile=structuredClone(historical),report=profile.retainedEvidence.additionalReports[0],id=report.caseIds[0];
  const select=p=>nativeCaseSelection({root:profileRoot(p),event:{pull_request:{draft:false}},git:()=>''});
  assert.deepEqual(select(profile).retainedEvidence.additionalReports[0],report);
  for(const mutate of[
@@ -191,7 +204,7 @@ test('every retained observation and historical open clock keeps its exact sourc
 
 test('a later source keeps its own immutable inventory without relabelling earlier reports',()=>{
  // Synthetic identities test the metadata boundary; no checked-in evidence changes.
- const profile=structuredClone(current),report=profile.retainedEvidence.additionalReports[0];
+ const profile=structuredClone(historical),report=profile.retainedEvidence.additionalReports[0];
  const source={head:'e'.repeat(40),runId:'123456789',sha256:'d'.repeat(64),
   reports:[{shard:report.shard,sha256:report.sha256,artifactId:report.artifactId}]};
  report.head=source.head;report.runId=source.runId;profile.additionalEvidenceInventories=[...(profile.additionalEvidenceInventories??[]),source];
@@ -207,11 +220,11 @@ test('a later source keeps its own immutable inventory without relabelling earli
 
 test('corrected manual observations retain the original failure and their separately bound unchanged timing contract',()=>{
  const select=p=>nativeCaseSelection({root:profileRoot(p),event:{pull_request:{draft:false}},git:()=>''});
- let fixture=current;
- if(!current.retainedEvidence.additionalReports.some(r=>r.originalReportStatus==='failed'&&r.manualCaseIds.length)){
+ let fixture=historical;
+ if(!fixture.retainedEvidence.additionalReports.some(r=>r.originalReportStatus==='failed'&&r.manualCaseIds.length)){
   // Reopening Ranger removes its active manual owners; their original failure
   // and corrected contract still belong to the immutable preceding profile.
-  const previous=current.historicalRetainedOwnershipBeforeRangerPairCache?.profile;
+  const previous=fixture.historicalRetainedOwnershipBeforeRangerPairCache?.profile;
   assert.match(previous?.gitHead??'',/^[a-f0-9]{40}$/u);assert.equal(previous.file,'scripts/v177-native-allunit-recovery.json');
   const raw=execFileSync('git',['show',previous.gitHead+':'+previous.file],{maxBuffer:8*1024*1024});
   assert.equal(createHash('sha256').update(raw).digest('hex'),previous.sha256);fixture=JSON.parse(raw);

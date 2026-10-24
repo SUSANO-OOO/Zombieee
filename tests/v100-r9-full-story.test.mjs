@@ -47,7 +47,8 @@ test('focused Draft verification selects R9 and the capture workflow without ena
  const workflow=load(readFileSync('.github/workflows/native-allunit-capture.yml','utf8'));
  assert.equal(workflow.on.workflow_dispatch.inputs.expected_head.required,true);
  assert.ok(workflow.jobs.build.if.includes('needs.scope.outputs.allunit'));
- assert.ok(workflow.jobs.build.if.includes('!github.event.pull_request.draft'));
+ assert.ok(workflow.jobs.build.if.includes("needs.scope.outputs.full == 'true'"));
+ assert.ok(!workflow.jobs.build.if.includes('!github.event.pull_request.draft'),'Ready status alone cannot repeat completed source-bound captures');
  assert.equal(workflow.jobs.capture.strategy.matrix.shard,'${{ fromJSON(needs.build.outputs.shards) }}');
  for(const path of ['app/manualAbilityUi.js','app/v104CombatVfx.js'])assert.ok(workflow.on.pull_request.paths.includes(path),'Changed UI/VFX must reach capture source guards');
  const allCases=nativeCaseSelection({event:{pull_request:{draft:false},inputs:{capture_mode:'full'}}});

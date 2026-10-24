@@ -349,13 +349,13 @@ try{for(const number of numbers){
     const expectedOwnerKind=kumaGuardCheck?'kumaverson':'guardian';
     assert.ok(audit.draws.some(d=>d.contact?.ownerKind===expectedOwnerKind&&d.contact?.resolvedSocket&&d.owner?.render?.spriteState==='hit'),'Real guard contact must coincide with a resolved socket and authored impact reaction');
     if(kumaGuardCheck){
-     assert.ok(samples.some(f=>(f.pose==='guard'||f.pose==='hit')&&f.render?.spritePath==='/art/v100/characters/kumaverson-guard-v1.png'&&f.render?.renderedPanSocket),'Kuma guard must expose the actual guard sprite path and pan socket');
+     assert.ok(samples.some(f=>(f.pose==='guard'||f.pose==='hit')&&f.render?.jointAtlasPath==='/art/v100/joints/kumaverson-r1.webp'&&f.render?.jointDrawSucceeded&&f.render?.renderedWeaponSocket),'Kuma guard must use the same current articulated person and pan socket');
       const isAction=f=>f.phase==='active'&&f.flash<=.04&&!f.gateEntering&&(f.animationState==='move'||f.attack>0||f.attackWindup>0||f.abilityWindup>0);
       const actionSamples=samples.filter(isAction);
       result.kumaUndrawnActionSamples=actionSamples.filter(f=>!f.render?.spritePath).length;
       const realActions=actionSamples.filter(f=>Boolean(f.render?.spritePath));
       assert.ok(realActions.length>0,'Kuma must show a real active movement or normal attack sample with an actual rendered frame');
-      assert.ok(realActions.every(f=>f.render?.spritePath?.includes('/art/v060/')),'Kuma active movement/normal attacks must preserve the original atlas');
+      assert.ok(realActions.every(f=>f.render?.jointAtlasPath==='/art/v100/joints/kumaverson-r1.webp'&&f.render?.jointDrawSucceeded),'Kuma active movement/normal attacks must preserve the current articulated person');
     }
    }
   }
@@ -380,9 +380,9 @@ try{for(const number of numbers){
    assert.ok(audit.frames.contact.filter(n=>n>0).length>=4,'Actual contacts must show the authored sequence');
    assert.ok(audit.frames.ground.filter(n=>n>0).length>=4,'An ordinary Tatara skill tap must show the authored ground impact');
    for(const d of audit.draws){assert.equal(d.composite,'source-over');assert.equal(d.alpha,1);assert.equal(d.shadowBlur,0);}
-   const combos=new Map();for(const hit of Object.values(audit.comboContacts??{})){const key=hit.ownerId+':'+hit.activationId;const sequence=combos.get(key)??[];sequence.push(hit);combos.set(key,sequence);}
-   result.completeVisibleCombos=[...combos.values()].filter(sequence=>new Set(sequence.map(h=>h.index)).size===5);
-   assert.ok(result.completeVisibleCombos.length,'At least one native combo must produce all five actual target-local contact bursts, not only timeline receipts');
+   result.visibleFistWaves=Object.keys(audit.fistFlights??{}).filter(key=>audit.fistContacts?.[key]
+     &&audit.fistContacts[key].at>audit.fistFlights[key].startedAt);
+   assert.ok(result.visibleFistWaves.length,'An actual fist wave flight and its later source-bound collision must both paint in the native battle');
   }
   if(process.env.V100_MUZZLE_CHECK==='1'){
    const {image,...audit}=await page.evaluate(()=>window.__V100_MUZZLE_QA__);

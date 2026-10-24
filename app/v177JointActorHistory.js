@@ -1,5 +1,6 @@
 const worlds=new WeakMap();
 const bodyCorrections=new WeakMap();
+const bodyShifts=new WeakMap();
 const objectKey=value=>value&&typeof value==='object'?value:null;
 
 function worldState(world) {
@@ -34,6 +35,16 @@ export function recordV177JointBodyCorrection(actor,world,deltaX) {
 export function v177JointBodyCorrection(actor,world) {
   const key=v177JointActorKey(actor,world);
   return key?bodyCorrections.get(key)??0:0;
+}
+
+// Soft pair/floor projection carries only its actual horizontal displacement.
+// It must not pause the ordinary gait or an already-owned landing clock.
+export function recordV177JointBodyShift(actor,world,deltaX){
+  const key=v177JointActorKey(actor,world);
+  if(key&&Number.isFinite(deltaX)&&deltaX!==0)bodyShifts.set(key,(bodyShifts.get(key)??0)+deltaX);
+}
+export function v177JointBodyShiftX(actor,world){
+  const key=v177JointActorKey(actor,world);return key?bodyShifts.get(key)??0:0;
 }
 
 export function pruneV177JointActorHistory(world) {

@@ -40,6 +40,30 @@ export function resolveV100AdvancedAbilityOrigin(world, ownerId, socket, metadat
   return resolved;
 }
 
+// The current articulated actor has different phase names from the archived
+// whole-body cells. Accept its actual successful paint without impersonating
+// an old attack-a/b frame, and never resolve a windup or stale owner's socket.
+export function resolveV105CurrentAbilityOrigin(world, owner, socket, metadata = {}) {
+  const kinds = { 'tky-lightblade':'tky', 'mrs-grenade-flight':'mrs-chiha', 'zakimiya-bottle':'zakimiya' };
+  if (!owner || !world?.fighters?.some(f => f.id === owner.id && f.kind === owner.kind && f.hp > 0)
+    || metadata.activationId !== owner.manualAbility?.activationId
+    || metadata.paintedAt !== world.time || !['active','recovery'].includes(metadata.phase)
+    || !metadata.path?.startsWith('/art/') || !metadata.sourceBone
+    || ![socket?.x,socket?.y,metadata.sourcePixel?.x,metadata.sourcePixel?.y].every(Number.isFinite)) return 0;
+  let resolved = 0;
+  for (const effect of active(world)) {
+    if (!effect.pendingOrigin || effect.ownerId !== owner.id || effect.activationId !== metadata.activationId
+      || kinds[effect.type] !== owner.kind || world.time < effect.startedAt) continue;
+    Object.assign(effect,{originX:socket.x,originY:socket.y,x:socket.x,y:socket.y,
+      direction:metadata.direction === 'left' ? -1 : metadata.direction === 'right' ? 1 : effect.direction,
+      resolvedSocketPoint:{x:socket.x,y:socket.y},sourcePath:metadata.path,
+      sourceState:metadata.phase,sourcePixel:metadata.sourcePixel,sourceBone:metadata.sourceBone,
+      sourceModel:'current-joint',paintedAt:metadata.paintedAt,pendingOrigin:false});
+    resolved += 1;
+  }
+  return resolved;
+}
+
 export function getV100AdvancedAbilityEffectsSnapshot(world) { return active(world).map(effect => ({ ...effect, elapsed: Math.max(0, world.time - effect.startedAt) })); }
 
 function image(objects, id) { const value = objects[id]; return value?.complete && value.naturalWidth ? value : null; }

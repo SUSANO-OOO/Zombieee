@@ -39,7 +39,7 @@ function actualManualDescriptor(runtime,paint,sourceAtlas){
  postdrawContext.f={id:4,kind:'ranger',side:'human',hp:82,manualAbility:runtime};
  const clockElapsed=runtime.phase==='windup'?.5-runtime.windupRemaining:runtime.abilityElapsed;
  postdrawContext.jointPose={rangerManualJoint:{activationId:runtime.activationId,clockElapsed,
-  presentationPhase:runtime.phase==='windup'?'aim':clockElapsed-.5<=.18/3?'recoil':'return'}};
+  presentationPhase:runtime.phase==='windup'?'aim':clockElapsed-.5<=.18/2?'recoil':'return'}};
  postdrawContext.jointAtlas={path:sourceAtlas};postdrawContext.options={world:{time:paint.jointPaintedAt}};
  const result=JSON.parse(JSON.stringify(inspectPostdraw()));assert.equal(result.jointRangerManualDrawSucceeded,true);
  return result.jointRangerManual;

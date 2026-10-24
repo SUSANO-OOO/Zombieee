@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { Script } from 'node:vm';
 import { combatFacingDirection, PLAYABLE_COMBAT_KINDS } from '../app/combatPresentation.js';
 import { v177TurnedGetupDirection } from '../app/v177TurnedGetupPresentation.js';
+import {v105AbilityFacing} from '../app/v105CurrentAbilityPose.js';
 import {
   beginManualAbility, createManualAbilityRuntime,
   manualAbilityLocksNormalAction, selectManualAbilityTarget,
@@ -19,7 +20,7 @@ const directionSelection = new Script(source.slice(start, end) + '\ndirection;',
   filename: 'AshfallGame.tsx:drawSpriteFighter:direction',
 });
 const renderFacing = (f, overrides = {}) => directionSelection.runInNewContext({
-  f, combatFacingDirection, v177TurnedGetupDirection,
+  f, combatFacingDirection, v177TurnedGetupDirection, v105AbilityFacing,
   options:{world:{},v100AuthoredPresentation:true},jointImage:{naturalWidth:512},
   manualAbilityActive: manualAbilityLocksNormalAction(f.manualAbility),
   stationAbilityPose: null, soukiPose: null,

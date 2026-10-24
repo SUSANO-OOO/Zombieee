@@ -1,5 +1,3 @@
-import { deepFreeze } from "./content/freeze.js";
-
 // The combat ID stays stable while the visible form changes. Rendering and
 // actual-distance gait calculation must resolve the same form throughout exit.
 export function mayoBattleRenderKind(fighter) {
@@ -9,7 +7,7 @@ export function mayoBattleRenderKind(fighter) {
     ? "mayo-chan-feral" : "mayo-chan";
 }
 
-export const MAYO_RETREAT_TIMING = deepFreeze({
+export const MAYO_RETREAT_TIMING = Object.freeze({
   fallSeconds: .34,
   riseSeconds: .22,
   runSpeed: 190,

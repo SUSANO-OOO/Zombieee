@@ -1,0 +1,53 @@
+{
+  "schema": "v105-approved-clothing-restoration/1",
+  "kind": "crazy-king",
+  "approvedDesign": {
+    "document": "docs/story/v10/PRODUCER_DECISIONS_FINAL_RELEASE.md",
+    "reference": "public/art/v060/characters/crazy-king-battle-v1.png",
+    "referenceSha256": "8858e7a32505baaffb21c3dfc58033a1a2a7b1e3293c370121e03e4328c97e5f",
+    "identityReference": "assets/source/v100/joints/crazy-king-r1/identity-reference.png",
+    "identitySha256": "9e8cfb96f3e502567c7679d77fffce8d42dd0a75cb68715197122b637f58dcf0",
+    "clothing": "Original green jacket, black pleated skirt and tall red boots"
+  },
+  "cause": "The generated pelvis part contained red shorts before atlas packing. Restore the skirt; do not revert current motion.",
+  "originalPart": {
+    "file": "assets/source/v100/joints/crazy-king-r1/pelvis.png",
+    "sha256": "6fd357b7f66896b34aef9dbb15d346096baa4196ca21cfdce60f5832d4a64e44"
+  },
+  "generation": {
+    "tool": "built-in image_gen",
+    "selectedOutputSha256": "5c2bd6f1bfd19978fed8cd92dcdba3d8d5ab22a8cdb581b910409b905337801b",
+    "workspaceSource": "assets/source/v105/crazy-king/pelvis-generated-r1.png",
+    "transparentBackground": true,
+    "prompt": "Replace only the incorrect red shorts pelvis part with the approved black/dark charcoal pleated skirt from the supplied Crazy King identity reference. Preserve the painted game style, perspective and lighting. Reconstruct hidden pleats to match the original garment. Isolate the complete skirt on genuine transparency, with no jacket, head, arms, chainsaw, legs, boots, text or background. No redesign, trousers or red fabric."
+  },
+  "registration": {
+    "canvas": [
+      480,
+      448
+    ],
+    "rectangle": {
+      "x": 173,
+      "y": 220,
+      "width": 96,
+      "height": 70
+    },
+    "method": "Trim transparent margin and register the selected garment; no motion or other part changes"
+  },
+  "output": {
+    "file": "assets\\source\\v105\\crazy-king\\pelvis-restored-r1.png",
+    "sha256": "abf8fcd72eb0123fcdb9b5cf7534673d8134cf7f0cc0ad70aa54b939e8cb9dd7"
+  },
+  "runtime": {
+    "assetPath": "/art/v105/joints/crazy-king-skirt-r1.webp",
+    "bytes": 40584,
+    "hash": "962b29c823dfa65eaf60a56ba26d22c015a943eb142f91e2743a2c76581da031",
+    "atlas": [
+      512,
+      162
+    ],
+    "decodedBytes": 331776,
+    "poses": 151
+  },
+  "motionAndOtherAnatomyUnchanged": true
+}
