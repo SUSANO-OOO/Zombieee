@@ -1,50 +1,51 @@
 name: Native Capture Comparison Diagnostic
-
 on:
   workflow_dispatch:
     inputs:
       expected_head:
-        description: Exact 40-character candidate SHA for this diagnostic
+        description: Exact immutable text-only display capture
         required: true
         type: string
-
 permissions:
   contents: read
-
-concurrency:
-  group: native-capture-comparison-${{ inputs.expected_head }}
-  cancel-in-progress: false
-
 jobs:
-  native-capture-comparison:
-    name: Native WebKit Capture Comparison Diagnostic
-    runs-on: macos-15-intel
+  text-only-display:
+    runs-on: macos-15
     timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+    env:
+      V177_EXPECTED_HEAD_SHA: ${{ inputs.expected_head }}
     steps:
       - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.expected_head }}
+          fetch-depth: 2
           persist-credentials: false
       - uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: npm
-      - name: Verify immutable candidate before running the diagnostic
-        env:
-          EXPECTED_HEAD: ${{ inputs.expected_head }}
-        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_HEAD??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_HEAD);'
-      - run: npm ci
-      - name: Install the pinned native WebKit runtime
+      - name: Bind the unchanged product tree and the four-case selection
         run: |
-          npm ci --prefix scripts/pwa-native-runtime
-          node scripts/pwa-native-runtime/node_modules/playwright/cli.js install webkit
-      - name: Compare original native canvas recording conditions
+          node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";const git=a=>execFileSync("git",a,{encoding:"utf8"}).trim();assert.equal(git(["rev-parse","HEAD"]),process.env.V177_EXPECTED_HEAD_SHA);for(const p of ["app","public","package.json","package-lock.json"])assert.equal(git(["rev-parse","HEAD:"+p]),git(["rev-parse","807f994e946060379549fc5f1403b21daa3a91ef:"+p]));'
+      - run: npm ci
+      - run: npm ci --prefix scripts/native-recording-runtime
+      - run: node scripts/native-recording-runtime/node_modules/playwright/cli.js install webkit
+      - run: npm run build
         env:
-          V177_NATIVE_CAPTURE_OUT: outputs/v177-native-capture-comparison
-        run: node scripts/v177-native-canvas-comparison-browser.mjs
+          GITHUB_PAGES_RELEASE_SHA: ${{ inputs.expected_head }}
+      - name: Original AV recording, actual inputs and original strict checks in the affected display cases
+        run: |
+          result=0
+          for scope in desktop mobile390 mobile340; do
+            V105_CAPTURE_SCOPE="$scope" node scripts/v105-five-corrections-capture.mjs || result=1
+          done
+          exit "$result"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: v177-native-capture-comparison
-          path: outputs/v177-native-capture-comparison
-          retention-days: 7
+          name: v105-text-only-display
+          path: outputs/v105-five-corrections
+          if-no-files-found: error

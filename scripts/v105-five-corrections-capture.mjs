@@ -155,9 +155,14 @@ export async function runBrowserQa(){
   const binding=await nativeGameCaptureBinding(),scope=process.env.V105_CAPTURE_SCOPE;
   const {V177_JOINT_ATLASES:currentAtlases}=await import('../app/v177JointPresentation.js');
   const atlasPaths=Object.fromEntries(Object.entries(currentAtlases).map(([kind,atlas])=>[kind,atlas.path]));
-  const plan=correctionCases(scope),viewport=scope==='desktop'?{width:1280,height:720}:{width:844,height:scope==='mobile390'?390:340};
+  const fullPlan=correctionCases(scope),selected=scope==='desktop'?['crazy-king/manual','takuya-omega/enemy']:
+    scope==='mobile390'?['brawler/manual']:['brawler/duet'];
+  const plan=fullPlan.filter(row=>selected.includes(row.kind+'/'+row.mode));assert.equal(plan.length,selected.length);
+  const viewport=scope==='desktop'?{width:1280,height:720}:{width:844,height:scope==='mobile390'?390:340};
   const out=path.resolve(process.env.V105_CAPTURE_OUT??'outputs/v105-five-corrections/'+scope);await mkdir(out,{recursive:true});
   const report={...binding,architecture:process.arch,scope,viewport,runtime:NATIVE_RECORDING_WEBKIT_RUNTIME,cases:[],errors:[],status:'starting',
+    selection:{mode:'requested-text-only-display-check',selected,fullPlanCount:fullPlan.length,
+      excluded:fullPlan.filter(row=>!plan.includes(row)),fullScopeAccepted:false},
     acceptance:{physicalIphone:false,humanVisualAndListening:false,normalCampaign:false,wholeGame:false}};
   const persist=()=>writeFile(path.join(out,'report.json'),JSON.stringify(report,null,2)+'\n');
   let browser,context,requests,primary,fatalErrors=0;
