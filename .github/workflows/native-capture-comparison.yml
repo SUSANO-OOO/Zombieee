@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       expected_head:
-        description: Exact diagnostic revision with unchanged f7 gameplay
+        description: Exact diagnostic revision; product source is separately pinned
         required: true
         type: string
 permissions:

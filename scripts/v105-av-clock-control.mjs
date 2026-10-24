@@ -15,14 +15,21 @@ import {MANUAL_ABILITY_REGISTRY as manual} from '../app/manualAbilities.js';
 import {V177_JOINT_ATLASES as atlases} from '../app/v177JointPresentation.js';
 import {installRequestFailureAudit} from './browser-request-failure-audit.mjs';
 import {normalCleanupWithin} from './v177-normal-browser-deadline.mjs';
-const productHead='f7f6f7ce46844eaefc4bb519fa80d591e2607407';
+const productHead='1f92a3c5339a2e608e98e793bdf4cdecc21d6c6e';
 const sha=b=>createHash('sha256').update(b).digest('hex');
+// Original MP3 decoded-buffer fingerprints from the unmodified f7 control,
+// independently matched against all three repository PCM masters.
+const fistBuffers=[
+ {role:'charge',length:13792,rate:48000,channels:1,fingerprint:[[17,0],[257,0],[509,0],[4137,0.10468262434005737],[8275,0.10463055968284607]]},
+ {role:'launch',length:16300,rate:48000,channels:1,fingerprint:[[17,-5.174175612410181e-7],[257,-0.0000020135439626756124],[509,0.000011966030797339045],[4890,0.10169616341590881],[9780,0.02104424685239792]]},
+ {role:'impact',length:18808,rate:48000,channels:1,fingerprint:[[17,-0.00007852203270886093],[257,0.00015737564535811543],[509,-0.000020885760022792965],[5642,-0.021784035488963127],[11284,-0.003831054549664259]]},
+];
 // Observe original source starts without replacing assets, timers, graphs or
 // recorder clocks. A WeakMap identifies the exact decoded AudioBuffer used.
 function observeOriginalAudioSources(){
- const rows=[],buffers=new WeakMap();let sequence=0,overflow=0;
- const stamp=context=>({wall:performance.now(),currentTime:context.currentTime,state:context.state,sampleRate:context.sampleRate,
-  baseLatency:context.baseLatency??null,outputLatency:context.outputLatency??null});
+ const rows=[],buffers=new WeakMap(),contexts=new WeakMap();let sequence=0,contextSequence=0,overflow=0;
+ const stamp=context=>{if(!contexts.has(context))contexts.set(context,++contextSequence);return {contextId:contexts.get(context),wall:performance.now(),currentTime:context.currentTime,state:context.state,sampleRate:context.sampleRate,
+  baseLatency:context.baseLatency??null,outputLatency:context.outputLatency??null};};
  const append=row=>{if(rows.length<512)rows.push(row);else overflow++;};
  const identify=buffer=>{let id=buffers.get(buffer);if(!id){id=++sequence;buffers.set(buffer,id);
   const pcm=buffer.getChannelData(0),indices=[17,257,509,Math.floor(pcm.length*.3),Math.floor(pcm.length*.6)].filter(i=>i<pcm.length);
@@ -104,6 +111,20 @@ export async function runBrowserQa(){
     const starts=capture.rows.flatMap(r=>r.abilityNames.starts).filter(r=>ids.includes(r.ownerId));
     assert.ok(ids.every(id=>starts.some(r=>r.ownerId===id)),'A real accepted ability start is mandatory');
     assert.ok(capture.rows.some(r=>r.abilityNames.active.some(a=>ids.includes(a.ownerId)&&a.lastPaint)),'The name must actually paint');
+    const firstCue=capture.cues.find(c=>c.cueId==='v105-fist-wave-charge');assert.ok(firstCue);
+    row.fistAudioPreparation=fistBuffers.map(expected=>{
+     const matching=sourceTrace.rows.filter(r=>r.type==='buffer'&&r.length===expected.length&&r.rate===expected.rate&&r.channels===expected.channels
+      &&JSON.stringify(r.fingerprint)===JSON.stringify(expected.fingerprint));
+     const cue=capture.cues.find(c=>c.cueId===`v105-fist-wave-${expected.role}`);assert.ok(cue);
+     const starts=sourceTrace.rows.filter(r=>r.type==='start'&&matching.some(b=>b.id===r.id)&&r.before.wall>=cue.at);
+     assert.equal(starts.length,1,'Exactly one original source starts for each real fist event');
+     const start=starts[0],decoded=sourceTrace.rows.find(r=>r.type==='decode'&&r.id===start.id);assert.ok(decoded);
+     const latencyMs=start.before.wall-cue.at;
+     assert.ok(decoded.finished.wall<=firstCue.at,'The actually used PCM must be ready before the first accepted activation');
+     assert.ok(latencyMs<=1000/30,'Prepared original SE must start within one original30Hz render interval');
+     return {role:expected.role,cueAt:cue.at,bufferId:start.id,contextId:start.before.contextId,decodedAt:decoded.finished.wall,
+      startAt:start.before.wall,latencyMs,actualContextTime:start.before.currentTime};
+    });
     row.driftMs=(capture.final.time-row.release.time)*1000-(capture.stopAt-row.release.at);
     assert.ok(Math.abs(row.driftMs)<=120,`Original120ms clock: ${row.driftMs}`);
     assert.deepEqual(fatal,[]);assert.deepEqual(requests.report.unexpectedFailures,[]);assertCorrectionCaseDeadline(row,started);row.status='recorded';

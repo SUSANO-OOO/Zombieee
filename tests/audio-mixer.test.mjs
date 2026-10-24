@@ -541,6 +541,49 @@ test("a fading scene voice never satisfies dedupe when the same scene restarts",
   await mixer.dispose();
 });
 
+test("explicit scene cues prepare before optional effects without playing themselves", async () => {
+  const context = new FakeAudioContext(), paths = [];
+  const ids = ['charge','launch','impact'];
+  const manifest = createAudioManifest({
+    assets: [...ids.map(id=>({id,category:'weapons',preload:'scene',sources:[{src:`/${id}.mp3`}]})),
+      {id:'optional',category:'ui',preload:'lazy',sources:[{src:'/optional.mp3'}]}],
+    scenes: [{id:'battle',preload:[...ids,'optional']}],
+  });
+  let release;
+  const mixer = createAudioMixer({manifest,contextFactory:()=>context,enableAcknowledgementTone:false,
+    maxPreloadConcurrency:2,fetcher:async url=>{paths.push(url);
+      if(url==='/optional.mp3')await new Promise(resolve=>{release=resolve;});
+      return {ok:true,arrayBuffer:async()=>new Uint8Array([1]).buffer};}});
+  try {
+    await mixer.unlock();await mixer.setScene('battle');
+    assert.deepEqual(paths.slice(0,3),ids.map(id=>`/${id}.mp3`));
+    for(const id of ids)assert.equal(mixer.assetCache.get(id).status,'ready');
+    assert.equal(context.decodeCount,3);assert.equal(context.sources.length,0,'preparation never emits a cue');
+  } finally {release?.();await flushAsyncWork();await mixer.dispose();}
+});
+
+test("inactive explicit scene cues survive cache pressure and are released on scene exit", async () => {
+  const context=new FakeAudioContext();context.decodeAudioData=async()=>{context.decodeCount++;return {duration:.1,length:128,numberOfChannels:1};};
+  const ids=['charge','launch','impact'],network=makeFetcher();
+  const manifest=createAudioManifest({assets:[...ids.map(id=>({id,category:'weapons',preload:'scene',sources:[{src:`/${id}.mp3`}]})),
+    {id:'lazy',category:'ui',preload:'lazy',sources:[{src:'/lazy.mp3'}]}],
+    scenes:[{id:'battle',preload:ids},{id:'menu'}]});
+  const mixer=createAudioMixer({manifest,contextFactory:()=>context,fetcher:network.fetcher,maxCacheBytes:1024,enableAcknowledgementTone:false});
+  try {
+    await mixer.unlock();await mixer.setScene('battle');await mixer.preloadAssets(['lazy']);
+    for(const id of ids)assert.equal(mixer.assetCache.get(id).status,'ready');
+    assert.equal(mixer.getDiagnostics().maxCacheBytes,1024);
+    assert.equal(mixer.getDiagnostics().protectedBytes,3*128*4);
+    assert.equal(mixer.assetCache.has('lazy'),false,'idle unrelated payload is evicted under the original cap');
+    const decoded=context.decodeCount;assert.equal(decoded,4,'three scene buffers and the unrelated lazy buffer were actually decoded');
+    const voice=await mixer.play('charge');assert.ok(voice);
+    assert.equal(context.decodeCount,decoded,'the first real cue uses its prepared PCM');voice.stop();
+    await mixer.setScene('menu');
+    assert.equal(mixer.getDiagnostics().protectedBytes,0);
+    assert.ok(mixer.getDiagnostics().retainedBytes<=1024,'exited scenes release their protection');
+  } finally {await mixer.dispose();}
+});
+
 test("optional scene preload cannot delay unlock or the first critical BGM source", async () => {
   const context = new FakeAudioContext();
   const manifest = createAudioManifest({

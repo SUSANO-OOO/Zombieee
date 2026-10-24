@@ -40,7 +40,7 @@ test('the real fist-wave cues are queued for preload from formation and every ba
     ...PRODUCTION_AUDIO_MANIFEST.scenes.filter(scene=>scene.id.endsWith('-battle')).map(scene=>scene.id)];
   for(const role of ['charge','launch','impact']){
     const id=`v105-fist-wave-${role}`,asset=PRODUCTION_AUDIO_MANIFEST.assetById[id];
-    assert.equal(asset.preload,'lazy','Keep the existing offline payload contract');
+    assert.equal(asset.preload,'scene','Prepare and retain the three short cues before the actual fist sequence');
     for(const scene of scenes)assert.ok(PRODUCTION_AUDIO_MANIFEST.sceneById[scene].preload.includes(id),`${scene}/${id}`);
     assert.equal(asset.loop,false);assert.equal(asset.maxInstances,2);
   }
