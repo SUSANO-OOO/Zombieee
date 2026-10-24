@@ -2,11 +2,15 @@
 
 ## 現在の公開状態
 
-2026-10-24（最終統合候補）：製品 `0de4730a` の正式Mac ARM性能6条件は29／19／33／21／26／22msで元33msを通過。元30秒、実draw頻度、生存Rangerの新paint、全206source pins、errors0、元30分期限とSpotlight復元を独立照合H0/M0。別Intel録画対照は2step失敗のまま保持し、workflow全体の成功とは呼ばない。旧1fの34ms×2失敗を新結果で書き換えない。実Canvas305条件・276,193,440pixelsの差0を確認した描画修正であり、全通常戦闘の33ms達成や高速化の因果は断定しない。
+2026-10-24：公開/mainの最終確認値は1.0.3／99f9c193。1.0.4のPR #180はd62d6761で最終CIを実行中。製品は0de4730aと同一。正式Mac ARM6条件は19／20／26／19／19／24msで元33ms・実draw頻度・元30秒と全期限を満たし、206source pins・errors0を独立照合H0/M0。Quality144、R9全10、Native PWA保存／更新／復旧、Phase G 55画面と敵runtime6分割、Stage3音声経路3件の原記録も照合済み。Phase Gの開発者fixtureや音声用の描画抑制／HP設定を、通常全編の自然さ・聴感へ昇格しない。後続のviewport統合観察は進行中。
 
-同候補の新Ranger15観察は元source・clock・strictPTS/DTS・CI既存decode1254framesに成功。最大gap135ms・head0／tail47msで原250msを維持し、旧564所有・過去Ranger所有・全失敗履歴を変えず579件の技術観察を保持する。補完run `40047265894` の実感染後getup6件と自然なRanger被弾3件も、元66source・専用状態契約と各一度のfull decode1250frames／errors0を照合。最大gap148ms・head0／tail31msで、旧映像を再取得せず追加9件だけを確認した。補完9件を元579 inventoryへ混入しない。
+Mac579件と実感染getup6＋Ranger自然被弾3件は、元source・clock・strictPTS/DTS・既存decodeと原250ms条件で保持する。下記のQA専用修正はゲーム・描画を変えないため、成功済みの元report所有は更新しない。WK phone-shortの原失敗は30個目だけretreatで、armから6389ms／6.3333sim秒が元残6.16秒を超えた通常の時間満了。ローカルee43f50bは同じ30×120msをbrowser内で取得し、全raw／失敗保存と所有解除を独立H0/M0確認した。HP消耗・変化時間・原clip／時計／期限と他形態は不変。対象単体検証は成功、修正後Mac戦闘回帰は未検証であり、原失敗と派生summary失敗は保全する。
 
-通常操作はChromium／WebKitで元のphase・保存・終了処理を確認。ChromiumはS1勝利→S2敗北、独立S14／25／30は敗北。WebKitはS1／2勝利→S3敗北、独立S14／25は敗北、S30は元120秒の観察窓終了時も戦闘継続であり実結果は未確定。S30の保存に残る旧S29結果を今回の勝敗へ流用しない。受動RAFp95や敗北を正式33ms合格・自然な勝利へ読み替えない。残る最終Ready全回帰と全編自然さ／最終聴感・公開と公開後QAは未完。物理iPhone保存録画のBGM／SEは引き続き未確認としてIssue #177をopenに保つ。公開中は1.0.3／`99f9c193`のままで、追加のProducer承認待ちは設けない。
+今回d62の通常操作はCHがS1／2勝利→S3敗北、WKがS1／2／3勝利、独立S14／25／30は双方とも実敗北。元保存・入力・cleanup／errors0を照合し、合成進行と最小購入fixtureを全30面の自然勝利とは呼ばない。通常native RAF12窓のうち10窓は33ms参考値を超え、正式6窓の成功で代替しない。同一Macの継続録画有無95／91msでも遅さが残り、次のCPU観察では描画とcallback外の両方が重い。画像更新APIだけの同一host比較は157→172msで改善根拠がなく、画素差ゼロの試作も不採用とした。ゲームを含まない同一Intel上の既存2runtime・最小Canvas6条件は各60native標本で完了し、put p95は全て1ms、空RAFも約30fps。S14の遅さは再現せず、製品／環境いずれの原因とも断定しない。元通常observerのperformanceAcceptance:falseを維持し、正式33ms合格や全通常戦闘の速度保証に昇格しない。原失敗・各source・元33msと全期限は維持する。
+
+QA-only CI復旧では同じ製品・元PR baseとexact sourceを確認し、旧50job全完了・既知の戦闘失敗2件以外の全成功、元Quality両engineの成功、全attempt1とdigest一致のPR provenanceを必須とする。条件成立時だけ元の成功所有を保持し、影響する3戦闘matrix／summaryとPR Verifyを再実行する。不一致・未完・別失敗・未知変更は全検証へ戻る。元のcommands・runtime・33ms・全期限は不変。独立H0/M0、対象31検証と追加Quality条件を確認した。
+
+更新は未完。残件は携帯戦闘収録修正のMac検証、通常負荷の切り分け、後続の必須統合観察、全編自然さ／最終聴感、正式統合・公開と公開後QA。公開まで承認済みのため、追加Producer承認待ちは設けない。物理iPhone保存Control Center録画のBGM／SEは未確認としてIssue #177をopenに保つ。
 
 以下の1f以前の成功・失敗は、それぞれの製品・条件に限った経緯として保持する。
 

@@ -317,6 +317,11 @@ test('new source heads do not wait behind a previous head and all original full 
  assert.equal(current.concurrency.group,'${{ github.workflow }}-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}');
  assert.equal(current.concurrency['cancel-in-progress'],false);
  current.concurrency.group=original.concurrency.group;
+ // The separate combat-QA recovery contract verifies these three reviewed
+ // scheduling-only fields. Every original command and deadline stays frozen.
+ delete current.jobs.scope.outputs.combat;
+ current.jobs['v102-combat'].if=original.jobs['v102-combat'].if;
+ current.jobs['v102-combat-webkit-summary'].if=original.jobs['v102-combat-webkit-summary'].if;
  assert.deepEqual(current,original,'all jobs, inputs, limits, permissions and acceptance assertions remain identical');
 });
 

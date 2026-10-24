@@ -17,8 +17,38 @@ concurrency:
 
 # Linux WPE backend only; no application or Chromium rendering flag changes.
 jobs:
-  quality-ui-play:
+  scope:
     if: ${{ !github.event.pull_request.draft }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      reuse_quality: ${{ steps.scope.outputs.reuse_quality }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22.13.0'
+      - id: scope
+        env:
+          CI_SCOPE_BASE: ${{ github.event.before || github.event.pull_request.base.sha }}
+          CI_SCOPE_HEAD: ${{ github.event.pull_request.head.sha }}
+          CI_SCOPE_DRAFT: ${{ github.event.pull_request.draft }}
+          CI_SCOPE_ACTION: ${{ github.event.action }}
+          CI_SCOPE_PREVIOUS_HEAD: ${{ github.event.before }}
+          CI_SCOPE_PR_BASE: ${{ github.event.pull_request.base.sha }}
+          CI_SCOPE_PR_NUMBER: ${{ github.event.pull_request.number }}
+          CI_SCOPE_ACTIONS_TOKEN: ${{ github.token }}
+        run: node scripts/ci-change-scope.mjs
+  quality-ui-play:
+    needs: scope
+    if: ${{ !github.event.pull_request.draft && needs.scope.outputs.reuse_quality != 'true' }}
     name: V1 Quality UI and Play (${{ matrix.engine }})
     runs-on: ubuntu-latest
     timeout-minutes: 45

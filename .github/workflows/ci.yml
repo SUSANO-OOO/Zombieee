@@ -28,6 +28,7 @@ jobs:
       ranger: ${{ steps.scope.outputs.ranger }}
       normal: ${{ steps.scope.outputs.normal }}
       r9: ${{ steps.scope.outputs.r9 }}
+      combat: ${{ steps.scope.outputs.combat }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -204,7 +205,7 @@ jobs:
           retention-days: 14
 
   v102-combat:
-    if: ${{ needs.scope.outputs.full == 'true' }}
+    if: ${{ needs.scope.outputs.full == 'true' || needs.scope.outputs.combat == 'true' }}
     needs: [scope]
     name: V1.0.2 Combat (${{ matrix.checkLabel }})
     strategy:
@@ -256,7 +257,7 @@ jobs:
   v102-combat-webkit-summary:
     needs: [scope, v102-combat]
     name: V1.0.2 Combat (webkit)
-    if: ${{ needs.scope.outputs.full == 'true' && (always()) }}
+    if: ${{ (needs.scope.outputs.full == 'true' || needs.scope.outputs.combat == 'true') && (always()) }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

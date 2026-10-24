@@ -4,6 +4,7 @@ import {appendFileSync} from 'node:fs';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {immutablePrProvenance} from './ci-pr-provenance.mjs';
+import {COMBAT_QA_BASELINE,COMBAT_QA_BLOBS,reviewedCombatQaPaths,previousCombatQaEvidence} from './ci-combat-qa-reuse.mjs';
 
 const governance=new Set(['AGENTS.md','docs/PROJECT_STATE.md','docs/CODEX_SOL_ROLE.md','docs/CODEX_LUNA_ROLE.md',
   'docs/CODEX_TWO_THREAD_WORKFLOW.md','docs/PRODUCER_DECISIONS_1.0.3.md',
@@ -28,6 +29,7 @@ const nativeQaTests=new Set(['tests/v177-native-allunit.test.mjs','tests/v177-na
 const r9=new Set(['scripts/v100-dialogue-composition-browser.mjs','scripts/v100-story-bookends-browser-smoke.mjs',
   'scripts/v100-r9-full-story-browser.mjs','scripts/v100-r9-story-plan.mjs']);
 const orchestration=new Set(['.github/workflows/ci.yml','scripts/ci-change-scope.mjs',
+  'scripts/ci-combat-qa-reuse.mjs',
   '.github/workflows/targeted-frame-performance.yml','scripts/v100-device-runtime-browser.mjs',
   '.github/workflows/native-aac-probe.yml','.github/workflows/normal-campaign-observation.yml',
   '.github/workflows/native-allunit-capture.yml','.github/workflows/v1-quality-acceptance.yml',
@@ -128,21 +130,24 @@ export async function previousFullCiEvidence({repository,head,base,prNumber,toke
   }catch{return{passed:false,reason:'previous-full-evidence-unavailable'};}
 }
 
-export function ciChangeScope(paths,{draft,sourceBlobs={},reuseNativeQa=false}={}){
+export function ciChangeScope(paths,{draft,sourceBlobs={},reuseNativeQa=false,reuseCombatQa=false}={}){
   assert.equal(typeof draft,'boolean');
   assert.equal(typeof reuseNativeQa,'boolean');
+  assert.equal(typeof reuseCombatQa,'boolean');
   assert.ok(Array.isArray(paths)&&paths.length>0&&paths.every(p=>typeof p==='string'&&p&&!p.includes('\\')));
   // A synchronize update containing only native QA, its tests and the status
   // ledger cannot change the shipped app. Keep the prior full product run and
   // run the changed QA; Ready transitions and any product/unknown path stay full.
   const nativeQaOnly=reuseNativeQa&&paths.some(file=>allunit.has(file))
     &&paths.every(file=>allunit.has(file)||file==='docs/PROJECT_STATE.md'||nativeQaTests.has(file));
-  let full=!draft&&!nativeQaOnly,rangerChanged=false,normalChanged=false,allunitChanged=false,r9Changed=false;
+  const combatQaOnly=reuseCombatQa&&reviewedCombatQaPaths(paths,sourceBlobs);
+  let full=!draft&&!nativeQaOnly&&!combatQaOnly,rangerChanged=false,normalChanged=false,allunitChanged=false,r9Changed=false,combatChanged=false;
   for(const file of paths){
     if(ranger.has(file))rangerChanged=true;
     else if(normal.has(file))normalChanged=true;
     else if(allunit.has(file))allunitChanged=true;
     else if(r9.has(file))r9Changed=true;
+    else if(COMBAT_QA_BLOBS[file]&&sourceBlobs[file]===COMBAT_QA_BLOBS[file])combatChanged=true;
     else if(governance.has(file)||orchestration.has(file)||/^tests\/[^/]+\.test\.mjs$/u.test(file))continue;
     else if(reviewedBruteBlobs[file]&&sourceBlobs[file]===reviewedBruteBlobs[file])allunitChanged=true;
     else if(reviewedNativeControlBlobs[file]&&sourceBlobs[file]===reviewedNativeControlBlobs[file])allunitChanged=true;
@@ -156,8 +161,8 @@ export function ciChangeScope(paths,{draft,sourceBlobs={},reuseNativeQa=false}={
     }
     else full=true; // Unclassified changes retain the complete regression.
   }
-  return {full,ranger:full||rangerChanged,normal:full||normalChanged,allunit:full||allunitChanged,r9:full||r9Changed,
-    scope:full?'full-regression':draft?'targeted-draft':'native-qa-update-product-unchanged',wholeGameAccepted:false,
+  return {full,ranger:full||rangerChanged,normal:full||normalChanged,allunit:full||allunitChanged,r9:full||r9Changed,combat:full||combatChanged,
+    scope:full?'full-regression':draft?'targeted-draft':combatQaOnly?'combat-qa-update-product-unchanged':'native-qa-update-product-unchanged',wholeGameAccepted:false,
     finalIntegrationRequiresFullRegression:true};
 }
 
@@ -168,7 +173,9 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
   const comparisonBase=execFileSync('git',['merge-base',base,head],{encoding:'utf8',windowsHide:true}).trim();
   assert.match(comparisonBase,/^[0-9a-f]{40}$/u);
   const paths=execFileSync('git',['diff','--no-renames','--name-only',`${comparisonBase}..${head}`],{encoding:'utf8',windowsHide:true}).trim().split(/\r?\n/u).filter(Boolean);
-  const sourceBlobs=Object.fromEntries(paths.filter(file=>reviewedValidationBlobs[file]||reviewedMotionBlobs[file]||reviewedLifecycleBlobs[file]||reviewedBruteBlobs[file]||reviewedNativeControlBlobs[file]||reviewedSupportBlobs[file]||reviewedRawClockBlobs[file]).map(file=>{
+  const sourceFiles=new Set([...paths.filter(file=>reviewedValidationBlobs[file]||reviewedMotionBlobs[file]||reviewedLifecycleBlobs[file]||reviewedBruteBlobs[file]||reviewedNativeControlBlobs[file]||reviewedSupportBlobs[file]||reviewedRawClockBlobs[file]||COMBAT_QA_BLOBS[file]),
+    ...(Object.keys(COMBAT_QA_BLOBS).every(file=>paths.includes(file))?['.github/workflows/ci.yml','.github/workflows/v1-quality-acceptance.yml']:[])]);
+  const sourceBlobs=Object.fromEntries([...sourceFiles].map(file=>{
     try{return[file,execFileSync('git',['rev-parse',`${head}:${file}`],{encoding:'utf8',windowsHide:true}).trim()];}
     catch{return[file,null];}
   }));
@@ -179,9 +186,17 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
     ?await previousFullCiEvidence({repository:process.env.GITHUB_REPOSITORY,head:previousHead,
       base:process.env.CI_SCOPE_PR_BASE,prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),token:process.env.CI_SCOPE_ACTIONS_TOKEN}):null;
   const reuseNativeQa=previousFullEvidence?.passed===true;
-  const scope=ciChangeScope(paths,{draft:draft==='true',sourceBlobs,reuseNativeQa});
-  if(process.env.GITHUB_OUTPUT)appendFileSync(process.env.GITHUB_OUTPUT,['full','ranger','normal','allunit','r9'].map(k=>`${k}=${scope[k]}\n`).join(''));
+  const productPaths=['app','public','assets','package.json','package-lock.json','scripts/pwa-native-runtime/package.json','scripts/pwa-native-runtime/package-lock.json'];
+  const eligibleCombatReuse=eligibleNativeReuse&&previousHead===COMBAT_QA_BASELINE.head&&reviewedCombatQaPaths(paths,sourceBlobs);
+  const productUnchanged=eligibleCombatReuse&&productPaths.every(file=>execFileSync('git',['rev-parse',`${previousHead}:${file}`],{encoding:'utf8',windowsHide:true}).trim()
+    ===execFileSync('git',['rev-parse',`${head}:${file}`],{encoding:'utf8',windowsHide:true}).trim());
+  const combatQaEvidence=await previousCombatQaEvidence({repository:process.env.GITHUB_REPOSITORY,previousHead,
+    base:process.env.CI_SCOPE_PR_BASE,prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),action,draft:draft==='true',productUnchanged,
+    paths,sourceBlobs,token:process.env.CI_SCOPE_ACTIONS_TOKEN});
+  const scope=ciChangeScope(paths,{draft:draft==='true',sourceBlobs,reuseNativeQa,reuseCombatQa:combatQaEvidence.passed});
+  if(process.env.GITHUB_OUTPUT)appendFileSync(process.env.GITHUB_OUTPUT,['full','ranger','normal','allunit','r9','combat'].map(k=>`${k}=${scope[k]}\n`).join(''));
+  if(process.env.GITHUB_OUTPUT)appendFileSync(process.env.GITHUB_OUTPUT,`reuse_quality=${combatQaEvidence.passed}\n`);
   if(process.env.GITHUB_STEP_SUMMARY)appendFileSync(process.env.GITHUB_STEP_SUMMARY,
-    `Validation: ${scope.scope}. Ready transitions, product and unknown changes run full regression. Native-only synchronize updates retain the preceding product run; skipped lanes never replace failed or unfinished gates.\n`);
-  console.log(JSON.stringify({...scope,base,comparisonBase,head,eligibleNativeReuse,previousFullEvidence,changedPaths:paths}));
+    `Validation: ${scope.scope}. Ready transitions, product and unknown changes run full regression. Source-unchanged QA recovery retains only completed original gates; affected combat groups run again, and original failures remain failures.\n`);
+  console.log(JSON.stringify({...scope,base,comparisonBase,head,eligibleNativeReuse,previousFullEvidence,combatQaEvidence,changedPaths:paths}));
 }
