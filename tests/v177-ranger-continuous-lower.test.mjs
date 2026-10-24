@@ -199,20 +199,28 @@ test('Ranger bitmap retention stays within the original RGBA budget and failed a
   painter.context.createImageData=allocate;paint(96,.762);
   for(const size of [300,480,650]){
     const receipt=paint(size);assert.equal(receipt.mode,'continuous-weighted-mesh');
-    assert.ok(painter.rasters.length<=2);
+    assert.ok(painter.rasters.length<=32);
     assert.ok(painter.rasters.reduce((sum,raster)=>sum+raster.imageData.data.byteLength,0)<=65536*4);
     assert.ok(painter.rasters.reduce((sum,raster)=>sum+raster.canvas.width*raster.canvas.height,0)<=65536);
   }
   assert.ok(painter.width*painter.height>32768);
-  paint(96,.762);assert.equal(painter.rasters.length,1,'a large backing allocation permits only one retained payload');
+  const small=paint(96,.762);
+  assert.ok(painter.lastRaster.canvas.width<=small.width+1);assert.ok(painter.lastRaster.canvas.height<=small.height+1);
+  assert.ok(painter.lastRaster.canvas.width===small.width||painter.lastRaster.canvas.height===small.height,
+    'a cropped blit needs at most one transparent row or column, never a larger old rectangle');
+  assert.ok(painter.rasters.reduce((sum,raster)=>sum+raster.canvas.width*raster.canvas.height,0)<=65536,
+    'a small payload must not inherit the large sampler allocation');
 });
 
-test('growing Ranger surfaces releases the alternate backing canvas and a missing context never becomes reusable',()=>{
+test('sampler growth preserves exact small surfaces and a missing context never becomes reusable',()=>{
   const {painter,observation}=observedPainter();
   const paint=(size,phase)=>paintV177RangerLower(painter,main({width:1600,height:1600,matrix:[1,0,0,1,600,350]}).ctx,phase,.5,-size/2,-size*.8,size,size*448/480);
+  paint(120,.371);paintV177RangerLower(painter,main({matrix:[1,0,0,1,-10000,350]}).ctx,.371,.5,-48,-80,96,89.6);
   paint(96,.371);paint(96,.762);paint(96,.371);assert.equal(painter.rasters.length,2);
-  const alternate=painter.rasters[1].canvas;paint(480,.371);
-  assert.equal(alternate.width,0);assert.equal(alternate.height,0);
+  const alternate=painter.rasters[1].canvas,dimensions=[alternate.width,alternate.height];paint(480,.371);
+  assert.deepEqual([alternate.width,alternate.height],dimensions);
+  const writes=observation.writes;paint(96,.762);assert.equal(observation.writes,writes,
+    'a larger sampler workspace must not force a still-retained small payload to upload again');
   const broken=createV177RangerLowerPainter(image(),rig);let rejected;
   const target=()=>main({matrix:[1,0,0,1,640,360]}).ctx;
   paintV177RangerLower(broken,target(),.371,.5,-60,-100,120,112);
@@ -220,7 +228,7 @@ test('growing Ranger surfaces releases the alternate backing canvas and a missin
   assert.throws(()=>paintV177RangerLower(broken,target(),.762,.5,-48,-80,96,89.6),/context unavailable/);
   assert.equal(rejected.width,0);assert.equal(rejected.height,0);
   assert.ok(broken.rasters.every(raster=>!raster.valid));
-  assert.ok(observation.surfaces.filter(canvas=>canvas.width*canvas.height>0).length<=2);
+  assert.ok(observation.surfaces.reduce((sum,canvas)=>sum+canvas.width*canvas.height,0)<=65536);
 });
 
 test('Ranger releases source readback and retains the original generated-RGBA surface hint',()=>{
@@ -597,7 +605,7 @@ test('sixteen rotating poses retain exact pixels inside the original total pixel
   });
   for(let cycle=0;cycle<4;cycle++)for(const [i,phase]of phases.entries()){
     const actual=paintPoolInput(painter,phase);assert.deepEqual(actual.receipt,expected[i].receipt);assertSameActiveLower(actual,expected[i]);
-    assert.ok(painter.rasters.length<=16);
+    assert.ok(painter.rasters.length<=32);
     assert.ok(painter.rasters.reduce((sum,r)=>sum+r.canvas.width*r.canvas.height,0)<=65536);
     assert.ok(painter.rasters.reduce((sum,r)=>sum+r.imageData.data.byteLength,0)<=65536*4);
   }
@@ -610,7 +618,48 @@ test('sixteen rotating poses retain exact pixels inside the original total pixel
       assert.equal(r.uploadOwner.valid,true);assert.equal(r.uploadOwner.uploadOwner,null);
       assert.deepEqual(r.imageData.data,r.uploadOwner.canvas.data.data);
     }
-    assert.ok(painter.rasters.length<=16);
+    assert.ok(painter.rasters.length<=32);
     assert.ok(painter.rasters.reduce((sum,r)=>sum+r.canvas.width*r.canvas.height,0)<=65536);
   }
+});
+
+test('thirty-two small rotating poses reuse exact uploads without increasing the original pixel budget',()=>{
+  const {painter,observation}=observedPainter();
+  paintPoolInput(painter,.371,120);paintPoolInput(painter,.371,96,true);
+  const phases=Array.from({length:32},(_,i)=>.01+i*.025),expected=phases.map(phase=>paintPoolInput(observedPainter().painter,phase));
+  for(let cycle=0;cycle<3;cycle++)for(const [i,phase]of phases.entries()){
+    const actual=paintPoolInput(painter,phase);assert.deepEqual(actual.receipt,expected[i].receipt);assertSameActiveLower(actual,expected[i]);
+    assert.ok(painter.rasters.length<=32);
+    assert.ok(painter.rasters.reduce((sum,raster)=>sum+raster.canvas.width*raster.canvas.height,0)<=65536);
+    assert.ok(painter.rasters.reduce((sum,raster)=>sum+raster.imageData.data.byteLength,0)<=65536*4);
+  }
+  assert.equal(painter.rasters.length,32);assert.equal(observation.writes,33,
+    'the next two full rotations must draw their original uploaded payloads');
+});
+
+test('variable-size raster eviction releases backing pixels and never leaves a stale borrowed upload',()=>{
+  const {painter,observation}=observedPainter();
+  const entries=[{phase:.371,size:96},{phase:.371+1e-12,size:96},
+    ...Array.from({length:42},(_,i)=>({phase:.01+i*.023,size:132+(i%5)*8})),
+    {phase:.371+1e-12,size:96},{phase:.42,size:650},{phase:.371,size:96}];
+  for(const {phase,size}of entries){
+    const actual=paintPoolInput(painter,phase,size),expected=paintPoolInput(observedPainter().painter,phase,size);
+    assert.deepEqual(actual.receipt,expected.receipt);assertSameActiveLower(actual,expected);
+    assert.ok(painter.rasters.length<=32);
+    assert.ok(painter.rasters.reduce((sum,raster)=>sum+raster.canvas.width*raster.canvas.height,0)<=65536);
+    assert.ok(painter.rasters.reduce((sum,raster)=>sum+raster.imageData.data.byteLength,0)<=65536*4);
+    for(const raster of painter.rasters){
+      assert.equal(raster.canvas.width,raster.imageData.width);assert.equal(raster.canvas.height,raster.imageData.height);
+      if(raster.valid){
+        const extraWidth=raster.canvas.width-raster.width,extraHeight=raster.canvas.height-raster.height;
+        assert.ok([0,1].includes(extraWidth)&&[0,1].includes(extraHeight)&&extraWidth+extraHeight<=1);
+        const owner=raster.uploadOwner??raster;assert.equal(owner.valid,true);assert.equal(owner.uploadOwner,null);
+        assert.deepEqual(raster.imageData.data,owner.canvas.data.data);
+      }
+    }
+    for(const canvas of observation.surfaces.slice(1))if(!painter.rasters.some(raster=>raster.canvas===canvas)){
+      assert.equal(canvas.width,0);assert.equal(canvas.height,0,'an evicted canvas must release its actual backing');
+    }
+  }
+  assert.ok(observation.surfaces.length>painter.rasters.length+1,'the case must actually evict physical surfaces');
 });

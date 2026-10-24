@@ -2,10 +2,28 @@
   "schema": "v177-native-allunit-recovery/v2",
   "head": "369e9a15710066795abb3e525878f3971182c9c4",
   "runId": "39723729633",
-  "scope": "All579 original technical observations are source-owned and retained; no capture pending. Unreviewed product, QA, threshold or deleted-source changes still restore full capture. Naturalness, listening, formal performance, physical and whole-game acceptance remain separate.",
-  "caseIds": [],
-  "manualCaseIds": [],
-  "outcomeCaseIds": [],
+  "scope": "Retain564 original source-owned technical observations. Reopen only Ranger9 normal+3 manual+3 outcome for variable-size backing/32-surface exact-pixel rendering, within the original65536-pixel bound. Previous579 owners and all raw/encoded failures remain historical. Unknown product or contract changes restore full capture. Naturalness, listening, performance, physical and whole-game acceptance remain separate.",
+  "caseIds": [
+    "forms-1:ranger:move:1280x720",
+    "forms-1:ranger:move:844x390",
+    "forms-1:ranger:move:844x340",
+    "forms-1:ranger:attack:1280x720",
+    "forms-1:ranger:attack:844x390",
+    "forms-1:ranger:attack:844x340",
+    "forms-1:ranger:engage:1280x720",
+    "forms-1:ranger:engage:844x390",
+    "forms-1:ranger:engage:844x340"
+  ],
+  "manualCaseIds": [
+    "forms-1:ranger:ranger-manual-precision:1280x720",
+    "forms-1:ranger:ranger-manual-precision:844x390",
+    "forms-1:ranger:ranger-manual-precision:844x340"
+  ],
+  "outcomeCaseIds": [
+    "forms-1:ranger:controlled-outcome:1280x720",
+    "forms-1:ranger:controlled-outcome:844x390",
+    "forms-1:ranger:controlled-outcome:844x340"
+  ],
   "changedBlobs": {
     ".github/workflows/ci.yml": "c7374a5f3edc2b1a2368c10b58672f1b22d5bde9",
     ".github/workflows/native-allunit-capture.yml": "2da20bdf990d99bde362e0a75de9af21492f7900",
@@ -24,7 +42,7 @@
     "app/v177IncomingStunProof.js": "aed0d2d7196cc3e41087fd4bc75cba60cf75b471",
     "app/v177JointPresentation.js": "710b1ce6e3fe40ecf1e324321e5b9b9dd012934c",
     "app/v177MouthCavity.js": "dd0d9d4b337177d342c5046ad53f5323ff542a95",
-    "app/v177RangerLowerPaint.js": "2671bcf554d4f59b703054dc5962436e080ebe98",
+    "app/v177RangerLowerPaint.js": "463a8d228e93e722713af8d3e09a2809ea4e0255",
     "app/v177WeaponChoreography.js": "a01def970c07107bf764a1b0eecf8eeafea4e08e",
     "assets/source/v104/combat-audio/crossbow-string.wav": "4a3539c3cc6acb4002d0967baf358d600c4ac819",
     "assets/source/v104/combat-audio/provenance.json": "951a37511b71e70b2d24e15ae1045132a83de2f9",
@@ -53,8 +71,8 @@
     "assets/source/v104/combat-audio/voice-red-panther-smg-hurt.json": "beb2e7cb51ba9beabd0e313174c186770691113d",
     "assets/source/v104/combat-audio/voice-red-panther-smg-hurt.wav": "268f62d43047d0020a4758aa7cd531619bb38345",
     "assets/source/v104/combat-audio/voices.json": "7c2139ef3f244eb0f9bf4eade9311784462e0ce9",
-    "assets/source/v177/ranger/lower-r3/provenance.json": "a55585ebaadc357760ea02067012cd540776ce64",
-    "docs/PROJECT_STATE.md": "388f7bdfabcf2d73fdbe1e5c493c3326cd458569",
+    "assets/source/v177/ranger/lower-r3/provenance.json": "66df1f71527ecc718e836bbe8147130a68acaa4e",
+    "docs/PROJECT_STATE.md": "fd655131a4da22a80c05857e864e8fd742be50e9",
     "docs/THIRD_PARTY_ASSETS.md": "363a3e0bdce12f376fe5126574a0e803258a41ee",
     "public/asset-manifest.json": "270ccec1db63083a0eb46275bf85885a68bdcd07",
     "public/audio/v104/combat/armor-hit.mp3": "1a47fb9f98f893faadc69ab0373e9aded0023ab1",
@@ -97,7 +115,7 @@
     "public/pwa-bundles/audio-v1.json": "e12f91970bac4c616d7b5d4bec6b27884751e3c1",
     "scripts/build-v104-combat-audio.mjs": "1a5acea833b19a260e07064b5091fa274a83cdeb",
     "scripts/build-v104-combat-voices.py": "e665baeba6da9c4cd883a1d3f298d9d93e3c0f6c",
-    "scripts/ci-change-scope.mjs": "2bba575d8760ab726c84999426abb9ba57f298ba",
+    "scripts/ci-change-scope.mjs": "8008d5894a2494ec6c1dff3bb7a7e441421a593e",
     "scripts/p5-browser-smoke.mjs": "08108189684252ad081c403021806997e59f4ac6",
     "scripts/v100-device-runtime-browser.mjs": "16defd3c54ce1b41987e606fe182ded2eba18226",
     "scripts/v100-normal-campaign-playthrough.mjs": "916de5ec87aaeb70ed3daa6a35b271432bf80ae9",
@@ -187,7 +205,7 @@
     "tests/v177-president-attack-continuity.test.mjs": "c4931dc81a3e3696b07531fa3a1a68931efbbd47",
     "tests/v177-president-joints.test.mjs": "2dd6d8cf01e3878c5d0eed1742f6d6b1afb223ce",
     "tests/v177-president-spatial.test.mjs": "9c65863082873053e39f473fa9582c90479cd4cf",
-    "tests/v177-ranger-continuous-lower.test.mjs": "6df4bb5d9c8c8126644e2fa95a3e009f291f6af9",
+    "tests/v177-ranger-continuous-lower.test.mjs": "8e3d7943cc455d14ed3ed2345d3fc1c51c7b305f",
     "tests/v177-ranger-performance-receipts.test.mjs": "22cd9a4135b4e3176a3a97827a3fd4a2874de641",
     "tests/v177-ranger-performance-start.test.mjs": "e8c9995d46ef2b93dce2a900df212291490d470d",
     "tests/v177-representative-airstrike-projection.test.mjs": "a56b57544f0a9c045db709a8d6627f2568e27f48",
@@ -749,22 +767,9 @@
       "forms-4:mayo-chan-feral:engage:844x390",
       "forms-4:mayo-chan-feral:engage:844x340",
       "forms-2:engineer:attack:1280x720",
-      "forms-4:mayo-chan:attack:1280x720",
-      "forms-1:ranger:move:1280x720",
-      "forms-1:ranger:move:844x390",
-      "forms-1:ranger:move:844x340",
-      "forms-1:ranger:attack:1280x720",
-      "forms-1:ranger:attack:844x390",
-      "forms-1:ranger:attack:844x340",
-      "forms-1:ranger:engage:1280x720",
-      "forms-1:ranger:engage:844x390",
-      "forms-1:ranger:engage:844x340"
+      "forms-4:mayo-chan:attack:1280x720"
     ],
-    "manualCaseIds": [
-      "forms-1:ranger:ranger-manual-precision:1280x720",
-      "forms-1:ranger:ranger-manual-precision:844x390",
-      "forms-1:ranger:ranger-manual-precision:844x340"
-    ],
+    "manualCaseIds": [],
     "outcomeCaseIds": [
       "forms-1:brawler:controlled-outcome:1280x720",
       "forms-1:brawler:controlled-outcome:844x390",
@@ -906,10 +911,7 @@
       "forms-11:red-panther-commander:controlled-outcome:844x340",
       "forms-4:mayo-chan-feral:controlled-outcome:844x340",
       "forms-7:kurome:controlled-outcome:844x340",
-      "forms-9:futago-separated-b:controlled-outcome:1280x720",
-      "forms-1:ranger:controlled-outcome:1280x720",
-      "forms-1:ranger:controlled-outcome:844x390",
-      "forms-1:ranger:controlled-outcome:844x340"
+      "forms-9:futago-separated-b:controlled-outcome:1280x720"
     ],
     "reports": [
       {
@@ -2510,35 +2512,6 @@
         "manualCaseIds": [],
         "outcomeCaseIds": [],
         "encodedAndDecodePartitionSha256": "154917affc8e2b35293a317b1d850b55a8bfbe60fbc16f55abcede35d20eff58"
-      },
-      {
-        "head": "56d5338cc8ef322efa56de988c428314fb7a5918",
-        "runId": "40039687966",
-        "shard": "forms-1",
-        "sha256": "56ffe577b2d48aa9176ed9cedf81e6deccc2f3d67d95381d58e590d41de4c803",
-        "artifactId": 12539385586,
-        "caseIds": [
-          "forms-1:ranger:move:1280x720",
-          "forms-1:ranger:move:844x390",
-          "forms-1:ranger:move:844x340",
-          "forms-1:ranger:attack:1280x720",
-          "forms-1:ranger:attack:844x390",
-          "forms-1:ranger:attack:844x340",
-          "forms-1:ranger:engage:1280x720",
-          "forms-1:ranger:engage:844x390",
-          "forms-1:ranger:engage:844x340"
-        ],
-        "manualCaseIds": [
-          "forms-1:ranger:ranger-manual-precision:1280x720",
-          "forms-1:ranger:ranger-manual-precision:844x390",
-          "forms-1:ranger:ranger-manual-precision:844x340"
-        ],
-        "outcomeCaseIds": [
-          "forms-1:ranger:controlled-outcome:1280x720",
-          "forms-1:ranger:controlled-outcome:844x390",
-          "forms-1:ranger:controlled-outcome:844x340"
-        ],
-        "encodedAndDecodePartitionSha256": "75fb71a9e379669ab725ce3dfd1a03bcf47ab5f761d8068bf53e3de546af45d3"
       }
     ]
   },
@@ -14570,5 +14543,103 @@
     "originalSpeedAccepted": false,
     "naturalnessAccepted": false,
     "wholeGameAccepted": false
+  },
+  "historicalRangerOwnersBeforeTightBacking": {
+    "head": "1fecd0f845daab0b5be74c776ff561c671c8f82c",
+    "profileSha256": "1138324a9ad5cb4c2a45898c81af4ef0512c0aecadb172fe18739cf3dabfe072",
+    "originalSourceOwners": [
+      {
+        "head": "56d5338cc8ef322efa56de988c428314fb7a5918",
+        "runId": "40039687966",
+        "shard": "forms-1",
+        "sha256": "56ffe577b2d48aa9176ed9cedf81e6deccc2f3d67d95381d58e590d41de4c803",
+        "artifactId": 12539385586,
+        "caseIds": [
+          "forms-1:ranger:move:1280x720",
+          "forms-1:ranger:move:844x390",
+          "forms-1:ranger:move:844x340",
+          "forms-1:ranger:attack:1280x720",
+          "forms-1:ranger:attack:844x390",
+          "forms-1:ranger:attack:844x340",
+          "forms-1:ranger:engage:1280x720",
+          "forms-1:ranger:engage:844x390",
+          "forms-1:ranger:engage:844x340"
+        ],
+        "manualCaseIds": [
+          "forms-1:ranger:ranger-manual-precision:1280x720",
+          "forms-1:ranger:ranger-manual-precision:844x390",
+          "forms-1:ranger:ranger-manual-precision:844x340"
+        ],
+        "outcomeCaseIds": [
+          "forms-1:ranger:controlled-outcome:1280x720",
+          "forms-1:ranger:controlled-outcome:844x390",
+          "forms-1:ranger:controlled-outcome:844x340"
+        ],
+        "encodedAndDecodePartitionSha256": "75fb71a9e379669ab725ce3dfd1a03bcf47ab5f761d8068bf53e3de546af45d3"
+      }
+    ],
+    "reopenedCaseIds": [
+      "forms-1:ranger:move:1280x720",
+      "forms-1:ranger:move:844x390",
+      "forms-1:ranger:move:844x340",
+      "forms-1:ranger:attack:1280x720",
+      "forms-1:ranger:attack:844x390",
+      "forms-1:ranger:attack:844x340",
+      "forms-1:ranger:engage:1280x720",
+      "forms-1:ranger:engage:844x390",
+      "forms-1:ranger:engage:844x340",
+      "forms-1:ranger:ranger-manual-precision:1280x720",
+      "forms-1:ranger:ranger-manual-precision:844x390",
+      "forms-1:ranger:ranger-manual-precision:844x340",
+      "forms-1:ranger:controlled-outcome:1280x720",
+      "forms-1:ranger:controlled-outcome:844x390",
+      "forms-1:ranger:controlled-outcome:844x340"
+    ],
+    "originalRawAndEncodedFailuresPreserved": true
+  },
+  "rangerTightBackingRasterEquivalence": {
+    "candidateBaseHead": "1fecd0f845daab0b5be74c776ff561c671c8f82c",
+    "sourceFile": "app/v177RangerLowerPaint.js",
+    "sourceBlob": "463a8d228e93e722713af8d3e09a2809ea4e0255",
+    "sourceSha256": "cbab1cd7ebbea112beb9e7de8352c3f35f44c4153689e7078449e3ab9c963414",
+    "maxCombinedSurfacePixels": 65536,
+    "maxSurfaceCount": 32,
+    "coverageSamples": 4,
+    "meshTriangles": 192,
+    "smallestOriginalCroppedBlitPadding": true,
+    "workspaceAndRetainedBackingsSeparated": true,
+    "localActualBrowserControls": [
+      {
+        "file": "output/playwright/ranger-tight32-r1/tight32-final-focus-receipt-r3.json",
+        "sha256": "1f1658365ae02ec2cc114aa6371befec4e385d75ada9bd6bbf076b578860333c"
+      },
+      {
+        "file": "output/playwright/ranger-tight32-r1/tight32-mixed-receipt-r3.json",
+        "sha256": "582d89d6e016138055e41e0b22ea06443aa3c923b336ecab9307ebae5349686e"
+      }
+    ],
+    "reopenedCaseIds": [
+      "forms-1:ranger:move:1280x720",
+      "forms-1:ranger:move:844x390",
+      "forms-1:ranger:move:844x340",
+      "forms-1:ranger:attack:1280x720",
+      "forms-1:ranger:attack:844x390",
+      "forms-1:ranger:attack:844x340",
+      "forms-1:ranger:engage:1280x720",
+      "forms-1:ranger:engage:844x390",
+      "forms-1:ranger:engage:844x340",
+      "forms-1:ranger:ranger-manual-precision:1280x720",
+      "forms-1:ranger:ranger-manual-precision:844x390",
+      "forms-1:ranger:ranger-manual-precision:844x340",
+      "forms-1:ranger:controlled-outcome:1280x720",
+      "forms-1:ranger:controlled-outcome:844x390",
+      "forms-1:ranger:controlled-outcome:844x340"
+    ],
+    "heldOtherCases": 564,
+    "localPixelEqualityIsFreshMacPerformance": false,
+    "originalSpeedAccepted": false,
+    "naturalnessAccepted": false,
+    "wholeGameAccepted": false,
+    "postCommitActualCliRequired": true
   }
 }

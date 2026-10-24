@@ -1,6 +1,6 @@
 import {createV177RangerLowerPose,v177RangerLowerPose} from './v177RangerLowerMotion.js';
 
-const painters=new WeakMap(),MAX_PIXELS=65536,MAX_SURFACES=16;
+const painters=new WeakMap(),MAX_PIXELS=65536,MAX_SURFACES=32;
 const paintCounts={createdPainters:0,rasterizedDraws:0,reusedDraws:0};
 export const getV177RangerLowerPaintSnapshot=()=>({...paintCounts});
 const samples=[[.25,.25],[.75,.25],[.25,.75],[.75,.75]];
@@ -60,17 +60,48 @@ function ensureCapacity(p,w,h) {
   let width=Math.max(p.width,w),height=Math.max(p.height,h);
   if(width*height>MAX_PIXELS){if(w*h>MAX_PIXELS){invalidateRasters(p);return false;}width=w;height=h;}
   if(width===p.width&&height===p.height)return true;
-  invalidateRasters(p);
-  const sample=new Float32Array(width*height*4),accum=new Float32Array(width*height*4),visits=new Uint8Array(width*height);
-  const imageData=p.context.createImageData(width,height);
-  const lastRaster=createRaster(p.parts,p.canvas,p.context,p.attributes);lastRaster.imageData=imageData;
-  // Allocate before releasing old owners. A failed growth must leave the
-  // invalidated old-size surfaces intact so the next small draw can recover.
-  for(const raster of p.rasters)if(raster.canvas!==p.canvas){raster.canvas.width=0;raster.canvas.height=0;}
-  p.width=width;p.height=height;p.canvas.width=width;p.canvas.height=height;
-  p.sample=sample;p.accum=accum;p.visits=visits;
-  p.lastRaster=lastRaster;p.rasters=[lastRaster];
-  p.imageData=imageData;p.lastRaster.imageData=imageData;return true;
+  try{
+    const sample=new Float32Array(width*height*4),accum=new Float32Array(width*height*4),visits=new Uint8Array(width*height);
+    p.width=width;p.height=height;p.sample=sample;p.accum=accum;p.visits=visits;
+    for(const raster of p.rasters)if(raster.valid){
+      const backingWidth=raster.width+(width>raster.width?1:0),backingHeight=raster.height+(width===raster.width&&height>raster.height?1:0);
+      if(raster.canvas.width!==backingWidth||raster.canvas.height!==backingHeight)retireRaster(p,raster);
+    }
+  }catch(error){invalidateRasters(p);throw error;}
+  return true;
+}
+function retireRaster(p,raster) {
+  for(const borrower of p.rasters)if(borrower.uploadOwner===raster){borrower.valid=false;borrower.uploadOwner=null;}
+  raster.valid=false;raster.uploadOwner=null;
+}
+function selectRaster(p,w,h) {
+  const pixels=w*h,total=p.rasters.reduce((sum,raster)=>sum+raster.canvas.width*raster.canvas.height,0);
+  let raster=p.rasters.find(raster=>!raster.valid);
+  if(!raster&&(p.rasters.length>=MAX_SURFACES||total+pixels>MAX_PIXELS))
+    raster=p.rasters.reduce((oldest,current)=>!oldest||current.lastUsed<oldest.lastUsed?current:oldest,null);
+  let transient;
+  try{
+    if(!raster){
+      const surface=createPaintSurface(p.createCanvas);
+      if(!surface)throw Error('Ranger raster context unavailable');
+      transient=surface.canvas;raster=createRaster(p.parts,surface.canvas,surface.context,surface.attributes);
+    }
+    const resize=raster.canvas.width!==w||raster.canvas.height!==h;
+    // Obtain the replacement before retiring a usable owner. Allocation failure
+    // invalidates reuse, but leaves the old canvases available for recovery.
+    const imageData=resize||!raster.imageData?p.context.createImageData(w,h):raster.imageData;
+    let retained=total-raster.canvas.width*raster.canvas.height;
+    while(retained+pixels>MAX_PIXELS){
+      const victim=p.rasters.filter(current=>current!==raster).reduce((oldest,current)=>!oldest||current.lastUsed<oldest.lastUsed?current:oldest,null);
+      retireRaster(p,victim);retained-=victim.canvas.width*victim.canvas.height;
+      victim.canvas.width=0;victim.canvas.height=0;victim.imageData=null;
+      p.rasters.splice(p.rasters.indexOf(victim),1);
+    }
+    if(resize){retireRaster(p,raster);raster.canvas.width=w;raster.canvas.height=h;}
+    raster.imageData=imageData;
+    if(!p.rasters.includes(raster))p.rasters.push(raster);
+    return raster;
+  }catch(error){if(transient){transient.width=0;transient.height=0;}invalidateRasters(p);throw error;}
 }
 function triangleArea(v,a,b,c) {
   return (v[b*2]-v[a*2])*(v[c*2+1]-v[a*2+1])-(v[b*2+1]-v[a*2+1])*(v[c*2]-v[a*2]);
@@ -150,6 +181,10 @@ export function paintV177RangerLower(p,ctx,phase,settle,x,y,width,height,feet=nu
     coverageSamples:4,width:Math.max(0,w),height:Math.max(0,h),duplicateWithinPart:0,degenerate:0};
   if(w<=0||h<=0){invalidateRasters(p);return {...receipt,mode:'offscreen-weighted-mesh'};}
   if(!ensureCapacity(p,w,h))return {mode:'legacy-cell-fallback',reason:'bounded-raster-capacity',width:w,height:h};
+  // Whole-image and cropped-image blits can round alpha differently. Preserve
+  // the original path with one transparent column or row, rather than keeping
+  // the full old workspace rectangle on every retained surface.
+  const backingWidth=w+(p.width>w?1:0),backingHeight=h+(p.width===w&&p.height>h?1:0);
   for(const g of p.parts){
     for(let i=0;i<g.target.length;i+=2){g.target[i]-=left;g.target[i+1]-=top;}
     selectPartDiagonals(g);
@@ -157,7 +192,7 @@ export function paintV177RangerLower(p,ctx,phase,settle,x,y,width,height,feet=nu
   // Compare every current backing-pixel vertex after pose/IK/clipping. Each
   // payload owns its uploaded surface, within the same combined pixel bound.
   const previousRaster=p.lastRaster,previousUploadOwner=previousRaster.uploadOwner??previousRaster;
-  let last=p.rasters.find(raster=>raster.valid&&raster.width===w&&raster.height===h&&raster.parts.length===p.parts.length&&p.parts.every((g,i)=>
+  let last=p.rasters.find(raster=>raster.valid&&raster.width===w&&raster.height===h&&raster.canvas.width===backingWidth&&raster.canvas.height===backingHeight&&raster.parts.length===p.parts.length&&p.parts.every((g,i)=>
     raster.parts[i].part===g&&g.target.every((value,j)=>value===raster.parts[i].target[j])));
   const same=!!last;
   if(trace){trace.lookupFinishedAt=performance.now();trace.reused=same;trace.cacheSwitch=same&&(last.uploadOwner??last)!==(previousRaster.uploadOwner??previousRaster);trace.geometryCacheSwitch=same&&last!==previousRaster;trace.width=w;trace.height=h;}
@@ -166,27 +201,13 @@ export function paintV177RangerLower(p,ctx,phase,settle,x,y,width,height,feet=nu
     receipt.duplicateWithinPart=last.duplicateWithinPart;receipt.degenerate=last.degenerate;
     if(trace){trace.rasterFinishedAt=trace.lookupFinishedAt;trace.uploadFinishedAt=performance.now();}
   }else{
-    if(p.lastRaster.valid&&p.width*p.height*2<=MAX_PIXELS){
-      const limit=Math.min(MAX_SURFACES,Math.floor(MAX_PIXELS/(p.width*p.height)));
-      last=p.rasters.length<limit?null:p.rasters.filter(raster=>raster!==p.lastRaster).reduce((oldest,raster)=>!oldest||raster.lastUsed<oldest.lastUsed?raster:oldest,null);
-      if(!last){
-        let canvas;
-        try{
-          const surface=createPaintSurface(p.createCanvas,p.width,p.height);
-          if(!surface)throw Error('Ranger raster context unavailable');canvas=surface.canvas;
-          last=createRaster(p.parts,canvas,surface.context,surface.attributes);last.imageData=p.context.createImageData(p.width,p.height);
-        }catch(error){if(canvas){canvas.width=0;canvas.height=0;}invalidateRasters(p);throw error;}
-        p.rasters.push(last);
-      }
-      p.lastRaster=last;p.imageData=last.imageData;
-    }else last=p.lastRaster;
+    last=selectRaster(p,backingWidth,backingHeight);p.lastRaster=last;p.imageData=last.imageData;
     if(trace){trace.writeSurfaceIndex=p.rasters.indexOf(last);trace.writeSurfaceLastUsed=last.lastUsed;
       trace.drawsSinceSurfaceUse=last.lastUsed>0?p.useSequence-last.lastUsed:null;trace.replacingValidGeometry=last.valid;}
     const retainOwnPayload=last.valid&&!last.uploadOwner&&last.width===w&&last.height===h;
     // Reassigning an owner can also turn it into an alias. Retire all old
     // borrowers before either its payload or its ownership is changed.
-    for(const raster of p.rasters)if(raster.uploadOwner===last){raster.valid=false;raster.uploadOwner=null;}
-    last.valid=false;
+    retireRaster(p,last);
     p.accum.fill(0,0,w*h*4);
     for(const [ox,oy]of samples){
       p.sample.fill(0,0,w*h*4);for(const g of p.parts)rasterPart(p,g,w,h,ox,oy,receipt);
@@ -197,14 +218,15 @@ export function paintV177RangerLower(p,ctx,phase,settle,x,y,width,height,feet=nu
     if(retainOwnPayload)p.sample.set(p.imageData.data);
     p.imageData.data.fill(0);
     for(let py=0;py<h;py++)for(let px=0;px<w;px++){
-      const at=(py*w+px)*4,to=(py*p.width+px)*4,alpha=p.accum[at+3];if(alpha===0)continue;
+      const at=(py*w+px)*4,to=(py*p.imageData.width+px)*4,alpha=p.accum[at+3];if(alpha===0)continue;
       for(let k=0;k<3;k++)p.imageData.data[to+k]=alpha>0?Math.round(p.accum[at+k]/alpha*255):0;p.imageData.data[to+3]=Math.round(alpha*255);
     }
     if(trace)trace.rasterFinishedAt=performance.now();
     // Geometry can differ below byte precision. Reuse an already uploaded
     // surface only after comparing every generated RGBA byte, without a tolerance.
-    const ownPayloadReused=retainOwnPayload&&sameRgba(p.imageData.data,p.sample);
+    const ownPayloadReused=retainOwnPayload&&sameRgba(p.imageData.data,p.sample.subarray(0,p.imageData.data.length));
     const previousPayloadReused=!ownPayloadReused&&previousUploadOwner!==last&&previousUploadOwner.valid&&previousUploadOwner.width===w&&previousUploadOwner.height===h
+      &&previousUploadOwner.imageData.width===p.imageData.width&&previousUploadOwner.imageData.height===p.imageData.height
       &&sameRgba(p.imageData.data,previousUploadOwner.imageData.data);
     const payloadReused=ownPayloadReused||previousPayloadReused;
     if(ownPayloadReused)last.uploadOwner=null;

@@ -85,7 +85,7 @@ export function framePerformanceRuntimes(paths,{workflowBlob}={}){
   return[formal,native];
 }
 const reviewedMotionBlobs=Object.freeze({
-  'app/v177RangerLowerPaint.js':'2671bcf554d4f59b703054dc5962436e080ebe98',
+  'app/v177RangerLowerPaint.js':'463a8d228e93e722713af8d3e09a2809ea4e0255',
   'app/v177WeaponChoreography.js':'a01def970c07107bf764a1b0eecf8eeafea4e08e',
   'app/combatPresentation.js':'327c7a1dd55707c16385d01d28030a37dc4b27c7',
   'app/AshfallGame.tsx':'95df06a678e2be79ec076059df910dc95c33298c',
