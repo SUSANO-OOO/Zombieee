@@ -50,6 +50,7 @@ jobs:
         with:
           name: publisher-control-build
           path: outputs/publisher-control-build
+          include-hidden-files: true
           if-no-files-found: error
           retention-days: 7
   observe:
