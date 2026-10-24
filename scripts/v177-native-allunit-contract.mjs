@@ -97,6 +97,7 @@ export function readNativeAllUnitSample(input,ownedProof){
  })():{};
  const boundaryAt=performance.now();
  const result={schema:'v177-native-shard-postpaint/v1',at:performance.now(),timeOrigin:performance.timeOrigin,...(realm?{realm}:{}),
+  publisherAudit:window.__ASHFALL_AUDIO_QA__?.getPublisherAudit?.()??null,
   simulationTime:snapshot.time,route:location.pathname,visible:document.visibilityState==='visible',
   running:snapshot.running,paused:snapshot.paused,viewport:{width:innerWidth,height:innerHeight},...boundary,
   lookup:{requestedFighterId:fighterId,observedFighterId:audit.fighter?.id,requestedTargetId:targetId,observedTargetId:target.fighter?.id},

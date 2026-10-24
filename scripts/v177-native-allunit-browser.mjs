@@ -118,6 +118,7 @@ export async function main({load=url=>import(url),argv=process.argv,...guard}={}
   finally{if(length<3)argv.length=length;else argv[2]=original;}
 }
 const additions=[
+  '.github/workflows/native-capture-comparison.yml',
   '.github/workflows/native-allunit-capture.yml','scripts/v177-native-allunit-browser.mjs',
   'scripts/v177-native-allunit-build.mjs',
   'scripts/v100-macos-indexing-control.mjs',
@@ -155,7 +156,9 @@ export async function retainAllUnitSources(out){
 }
 export async function runBrowserQa(){
   const binding=await nativeAllUnitBinding();
-  const selection=nativeCaseSelection({event:JSON.parse(await readFile(process.env.GITHUB_EVENT_PATH,'utf8'))});
+  const publisherPolicy=process.env.V105_QA_AUDIO_PUBLISH_POLICY;
+  assert.ok(['periodic-trace','on-demand-trace'].includes(publisherPolicy),'One fixed adhoc publisher policy required');
+  const selection={mode:'qa-publisher-causal-control',caseIds:['forms-4:mayo-chan:attack:1280x720'],manualCaseIds:[],outcomeCaseIds:[],shards:['forms-4']};
   const requestedMimeType=process.env.V177_NATIVE_VIDEO_MIME??'video/webm;codecs=vp8';
   assert.ok(['video/webm;codecs=vp8','video/mp4'].includes(requestedMimeType),'Unknown native recorder comparison');
   assert.ok(selection.mode==='codec-control'||requestedMimeType==='video/webm;codecs=vp8','Container comparison is isolated from the remaining/full inventory');
@@ -177,7 +180,11 @@ export async function runBrowserQa(){
     engine:'webkit',runtime:deps.NATIVE_RECORDING_WEBKIT_RUNTIME,build:await deps.productionBuildIdentity(),
     status:'running-diagnostic',selection,recording:{requestedMimeType,requestedCaptureHz,codecControl:selection.mode==='codec-control'},fullPlan,excludedCaseIds:fullPlan.filter(r=>!selection.caseIds.includes(r.caseId)).map(r=>r.caseId),
     plan,manualPlan,manualCases:[],outcomePlan,outcomeCases:[],sources:[],contexts:[],cases:[],errors:[],persistenceErrors:[],...acceptance(),
-    scope:selection.mode==='acquisition-control'
+    sourceProductBase:'45e46b90be77cd349670157974646dcc7f16b1cd',diagnosticPublisherPolicy:publisherPolicy,
+    diagnosticOnly:true,releaseAccepted:false,
+    scope:selection.mode==='qa-publisher-causal-control'
+      ?'Fixed ABBA diagnostic of the local-only250ms audio DOM publisher. One ordinary Mayo attack1280, original stats/assets/input/15x120ms/VP8 and all original limits. Direct mixer reads remain real. No all-unit, formal, release, naturalness, physical or whole-game acceptance.'
+      :selection.mode==='acquisition-control'
       ?'One original Abomination attack case with a 60Hz canvas acquisition-request timer. Native VP8 bytes, free RAF/simulation, source clocks, 15x120ms sampling and encoded thresholds stay unchanged. Diagnostic only; no retained, all-unit, performance, release or physical acceptance.'
       :selection.mode==='codec-control'
       ?'One original Brute attack case with a native container comparison. Original scene, free RAF/simulation, source clock and deadlines remain unchanged. This dispatch supplies no all-unit, performance, release, naturalness or physical audio acceptance.'
@@ -255,7 +262,7 @@ export async function runBrowserQa(){
             flowState:{phase:'formation',stageId,stageNumber,eventId:null,destination:'formation',nodeIndex:0,firstClear:false,finalized:true}});
           await withNativeGameCaseDeadline(async()=>{
             setupStage('seed-save');await page.addInitScript(deps.seedV100BrowserSaveOnce,deps.serializeV100Save(save));
-            const url=new URL('v100',origin);url.searchParams.set('phase-g','1');setupStage('navigate');await page.goto(url.href);
+            const url=new URL('v100',origin);url.searchParams.set('phase-g','1');url.searchParams.set('qa-audio-publish',publisherPolicy);setupStage('navigate');await page.goto(url.href);
             owner.entrySurface=await enterNativeAllUnitSurface(page,setupStage);
             const forms=[...new Set(contextRows.flatMap(r=>[r.form,r.binding.kind,r.binding.side==='human'?'walker':'guardian',
               ...(r.owner==='turned-birth'?['brawler','turned']:[])]))];

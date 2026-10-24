@@ -10094,6 +10094,12 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
 
     const qaWindow = window as typeof window & { __ASHFALL_AUDIO_QA__?: unknown };
     const isLocalQa = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+    // Adhoc local QA diagnostic only: compare the existing publisher with
+    // on-demand reads. The game mixer, cues and all public behavior are unchanged.
+    const publisherPolicy = isLocalQa ? new URLSearchParams(window.location.search).get("qa-audio-publish") : null;
+    const tracePublisher = publisherPolicy === "periodic-trace" || publisherPolicy === "on-demand-trace";
+    const publisherRows: Array<[number, number, number, number]> = [];
+    let publisherSequence = 0, publisherOverflow = 0;
     const qaAssets = playbackManifest.assets.map((asset) => ({
       id: asset.id,
       category: asset.category,
@@ -10118,6 +10124,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         return true;
       },
       getDiagnostics: () => mixer.getDiagnostics(),
+      getPublisherAudit: () => ({ policy: publisherPolicy, enabled: tracePublisher,
+        sequence: publisherSequence, overflow: publisherOverflow,
+        columns: ["sequence", "startedAt", "mixerFinishedAt", "finishedAt"],
+        rows: publisherRows.slice(-128).map(row => [...row]) }),
       getAudioStatus: () => ({ ...mixer.getAudioStatus() }),
       getFailureEvents: () => ({ events: audioFailureEvents.map((event) => ({ ...event })), overflow: audioFailureOverflow }),
       getAvailability: () => ({ ...audioAvailabilityRef.current }),
@@ -10158,7 +10168,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       document.documentElement.dataset.audioQaCues = String(qaBridge.cueIds.length);
       document.documentElement.dataset.audioQaScenes = String(qaBridge.sceneIds.length);
       const publishDiagnostics = () => {
+        const publisherStartedAt = tracePublisher ? performance.now() : 0;
         const diagnostics = mixer.getDiagnostics();
+        const publisherMixerFinishedAt = tracePublisher ? performance.now() : 0;
         const root = document.documentElement;
         root.dataset.audioUnlocked = String(diagnostics.unlocked);
         root.dataset.audioContextState = diagnostics.contextState ?? "none";
@@ -10173,9 +10185,13 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         const settings = mixer.getSettings();
         root.dataset.audioBgmVolume = String(settings.bgmVolume);
         root.dataset.audioSfxVolume = String(settings.sfxVolume);
+        if (tracePublisher) {
+          const row: [number, number, number, number] = [++publisherSequence, publisherStartedAt, publisherMixerFinishedAt, performance.now()];
+          if (publisherRows.length < 4096) publisherRows.push(row); else publisherOverflow++;
+        }
       };
       publishDiagnostics();
-      diagnosticsTimer = window.setInterval(publishDiagnostics, 250);
+      if (publisherPolicy !== "on-demand-trace") diagnosticsTimer = window.setInterval(publishDiagnostics, 250);
 
       if (new URLSearchParams(window.location.search).get("decode") === "assets") {
         const root = document.documentElement;
