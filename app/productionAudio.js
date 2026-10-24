@@ -430,7 +430,7 @@ const enemyVoicePools = ENEMY_KINDS.flatMap((kind) => ENEMY_VOICE_EVENTS.map((ev
 const assets = [
   ...['charge','launch','impact'].map(role=>({id:`v105-fist-wave-${role}`,category:role==='impact'?'melee':'weapons',
     sources:['mp3','ogg'].map(ext=>({src:`/audio/v105/fist-wave-${role}.${ext}`,type:ext==='mp3'?'audio/mpeg':'audio/ogg'})),gain:role==='charge'?.5:.72,
-    priority:82,cooldownMs:80,maxInstances:2,loop:false,preload:'lazy'})),
+    priority:82,cooldownMs:80,maxInstances:2,loop:false,preload:'scene'})),
   V104_ARMOR_AUDIO,
   V104_HANDGUN_AUDIO,
   V104_CROSSBOW_AUDIO,
