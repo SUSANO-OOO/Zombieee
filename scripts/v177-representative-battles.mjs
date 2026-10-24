@@ -155,7 +155,12 @@ async function main() {
         await page.addInitScript(installNormalFrameObserver);
         await page.addInitScript(()=>{
           let last=-Infinity,sequence=0;const observe=at=>{
-            if(at-last>=1000){last=at;console.info('V105_S25_RAF '+JSON.stringify({at,enteredAt:performance.now(),sequence:++sequence,visible:document.visibilityState}));}
+            if(at-last>=1000){last=at;const shells=document.querySelectorAll('.v100-shell'),shell=shells[0];
+              console.info('V105_S25_RAF '+JSON.stringify({at,enteredAt:performance.now(),sequence:++sequence,
+                visible:document.visibilityState,url:location.href,readyState:document.readyState,
+                shellCount:shells.length,phase:shell?.getAttribute('data-v100-phase')??null,
+                busy:shell?.getAttribute('aria-busy')??null,saveMutationPending:document.documentElement.dataset.pwaSaveMutationPending??null,
+                battleCanvases:document.querySelectorAll('.game-shell canvas').length}));}
             requestAnimationFrame(observe);
           };requestAnimationFrame(observe);
         });
