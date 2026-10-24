@@ -49,7 +49,7 @@ export async function runBrowserQa(){
     await enterNativeAllUnitSurface(page);await enterV100FromTitle(page);await page.getByRole('button',{name:'戦闘へ',exact:true}).click();
     await page.waitForFunction(()=>window.__ASHFALL_BATTLE_QA__?.getSnapshot().running);
     await page.evaluate(async()=>{await window.__ASHFALL_BATTLE_QA__.ensureUnitRenderProofAsset('guardian');await window.__ASHFALL_BATTLE_QA__.ensureEnemyFacingProofAsset('walker');});
-   },close);
+   },close,{onDeadline:()=>{row.deadlineExpired=true;}});
    const started=performance.now();
    await withNativeGameCaseDeadline(async()=>{
     row.proof=await page.evaluate(async({kind,mode})=>{const q=window.__ASHFALL_BATTLE_QA__;
