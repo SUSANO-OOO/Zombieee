@@ -3,6 +3,9 @@ import {mkdir,writeFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import path from 'node:path';
 import {fileURLToPath,pathToFileURL} from 'node:url';
+import {spawnSync} from 'node:child_process';
+import ffmpeg from '@ffmpeg-installer/ffmpeg';
+import {nativeEncodedTimeline,NATIVE_ENCODED_LIMITS} from './v177-native-encoded-clips.mjs';
 import {nativeGameCaptureBinding,withNativeGameCaseDeadline,closeNativeGameContext} from './v177-native-game-capture-browser.mjs';
 import {pwaBrowserType,PWA_WEBKIT_RUNTIME} from './pwa-browser-runtime.mjs';
 import {enterNativeAllUnitSurface} from './v177-native-allunit-browser.mjs';
@@ -25,6 +28,15 @@ export function canContinueCompletedCorrection(row,{pageClosed,fatalErrors=0,err
     &&row.capture?.failed===null&&Number.isFinite(row.capture.startAt)&&Number.isFinite(row.capture.stopAt)
     &&row.capture.stopAt>row.capture.startAt&&errorsAfter===errorsBefore+1;
 }
+export function assertCorrectionCaseDeadline(row,startedAt,now=performance.now()){
+  row.caseElapsedMs=now-startedAt;
+  assert.ok(Number.isFinite(row.caseElapsedMs)&&row.caseElapsedMs>=0,'Actual case clock required');
+  // Synchronous native demux/decode must never outrun the original timer and
+  // then cancel it as success. A late case stops the loop and owns cleanup.
+  if(row.deadlineExpired||row.caseElapsedMs>=30000){
+    row.deadlineExpired=true;throw Error('Native game case exceeded its30s owned operation deadline');
+  }
+}
 export function assertCurrentCorrectionPaints(capture,ownerIds,atlasPaths){
   const seen=new Set(),owners=new Set();
   for(const row of capture.rows)for(const owner of row.fighters){
@@ -39,19 +51,46 @@ export function assertCurrentCorrectionPaints(capture,ownerIds,atlasPaths){
   return {actualDistinctOwnerPaints:seen.size,ownerCount:owners.size};
 }
 
+// Verify the retained native bytes, never repair or replace their timeline.
+// The limits and decoder contract are the existing all-unit native contract.
+export async function auditCorrectionEncodedClip(file,capture,{execute=spawnSync,ffmpegPath=ffmpeg.path}={}){
+  const result={failures:[],thresholdRelaxed:false,retimed:false,reencoded:false};
+  const run=args=>{
+    const r=execute(ffmpegPath,args,{encoding:'utf8',windowsHide:true,maxBuffer:8*1024*1024,timeout:5000});
+    assert.equal(r.error,undefined,String(r.error));assert.equal(r.status,0,r.stderr);
+    assert.equal(r.stderr.trim(),'','Original demux/decode errors must remain zero');return r.stdout;
+  };
+  try{
+    assert.ok(capture.bytes>0&&capture.bytes<=NATIVE_ENCODED_LIMITS.maxBytes,'Original8MiB limit');
+    const crc=run(['-hide_banner','-v','error','-copyts','-i',file,'-map','0:v:0','-c','copy','-f','framecrc','pipe:1']);
+    await writeFile(file+'.framecrc',crc,{flag:'wx'});
+    result.timeline=nativeEncodedTimeline(crc,capture.stopAt-capture.startAt);
+    result.failures.push(...result.timeline.failures);
+    const progress=run(['-hide_banner','-v','error','-copyts','-threads','1','-i',file,'-map','0:v:0','-map','0:a:0','-vsync','0','-enc_time_base:v','1:1000','-threads','1','-progress','pipe:1','-nostats','-f','null','-']);
+    const frames=Number([...progress.matchAll(/^frame=(\d+)$/gmu)].at(-1)?.[1]);
+    assert.ok(progress.includes('progress=end'));assert.equal(frames,result.timeline.frames,'Decoded frames must match original packets');
+    result.decode={videoFrames:frames,requiredMixerAudioStream:true,completed:true,errors:0};
+  }catch(error){result.failures.push(String(error));}
+  result.encodedPtsVerified=result.failures.length===0;return result;
+}
+
 // Original native AV stream, actual game mixer after limiter, original PTS.
 // No microphone, clock override, animation sampling, re-encoding or FPS repair.
-export async function startCorrectionRecording({ids,durationMs}){
+export async function startCorrectionRecording({ids,durationMs,preferMp4=false}){
   if(durationMs>15000)throw Error('Original15s capture limit');
   const q=window.__ASHFALL_BATTLE_QA__,audio=window.__ASHFALL_AUDIO_QA__;
   await audio.unlock();const tap=audio.createLocalRecordingTap();
   const canvas=document.querySelector('.game-shell canvas'),stream=canvas.captureStream(60);
   for(const track of tap.stream.getAudioTracks())stream.addTrack(track);
-  const mime=['video/webm;codecs=vp8,opus','video/mp4'].find(type=>MediaRecorder.isTypeSupported(type));
+  // Keep successful desktop VP8 acquisition. On mobile WebKit the VP8/Opus
+  // stream dropped whole intervals; use its native MP4 AV encoder first.
+  // Both encoders must pass the same original-byte/PTS/audio checks below.
+  const mimePreferences=preferMp4?['video/mp4','video/webm;codecs=vp8,opus']:['video/webm;codecs=vp8,opus','video/mp4'];
+  const mime=mimePreferences.find(type=>MediaRecorder.isTypeSupported(type));
   if(!mime){tap.release();stream.getTracks().forEach(t=>t.stop());throw Error('Native original AV encoding unavailable');}
   const state={rows:[],chunks:[],startAt:null,stopAt:null,failed:null,raf:null,bytes:0,
     videoTrackSettings:{...stream.getVideoTracks()[0].getSettings()},audioTracks:stream.getAudioTracks().length,
-    mime,durationMs,initial:q.getV105CorrectionAudit(ids),clockOrigin:performance.timeOrigin};
+    mime,mimePreferences,durationMs,initial:q.getV105CorrectionAudit(ids),clockOrigin:performance.timeOrigin};
   const recorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:5000000,audioBitsPerSecond:128000});
   const stopped=new Promise((resolve,reject)=>{recorder.onstop=resolve;recorder.onerror=e=>{state.failed=String(e.error??e);reject(Error(state.failed));};});
   void stopped.catch(()=>{});
@@ -119,6 +158,7 @@ export async function runBrowserQa(){
       const row={...item,status:'starting'};report.cases.push(row);await persist();
       assert.equal(fatalErrors,0,'A prior product/page error invalidated the recording context');
       const errorsBefore=report.errors.length;
+      const caseStartedAt=performance.now();
       try{await withNativeGameCaseDeadline(async()=>{
         const proof=await page.evaluate(async({kind,mode})=>{
           const q=window.__ASHFALL_BATTLE_QA__;
@@ -135,7 +175,7 @@ export async function runBrowserQa(){
         const manualCase=['manual','duet'].includes(item.mode),ids=manualCase?proof.ownerIds:[proof.fighterId];
         await page.waitForFunction(ids=>ids.every(id=>window.__ASHFALL_BATTLE_QA__.getEnemyFacingRuntimeAudit(id).renderHistory.at(-1)?.jointDrawSucceeded),ids,{timeout:5000});
         const d=manual[item.kind],durationMs=manualCase?Math.ceil(Math.max(3,(d.windupSeconds??0)+(d.activeSeconds??d.guardSeconds??0)+(d.recoverySeconds??0)+1.2)*1000):item.mode==='enemy'?8000:6500;
-        row.start=await page.evaluate(startCorrectionRecording,{ids:proof.trackedIds,durationMs});
+        row.start=await page.evaluate(startCorrectionRecording,{ids:proof.trackedIds,durationMs,preferMp4:viewport.width<1000});
         row.release=await page.evaluate(()=>{const q=window.__ASHFALL_BATTLE_QA__;q.setEnemyVfxProofPaused(false);
           return {at:performance.now(),time:q.getV105CorrectionAudit([]).time};});
         if(manualCase){
@@ -148,6 +188,10 @@ export async function runBrowserQa(){
         const file=`${String(report.cases.length).padStart(2,'0')}-${item.kind}-${item.mode}.${capture.mime.startsWith('video/mp4')?'mp4':'webm'}`;
         await writeFile(path.join(out,file),bytes,{flag:'wx'});Object.assign(row,{file,sha256:sha(bytes),bytes:bytes.length,capture,status:'retained-pending-checks'});await persist();
         assert.equal(capture.failed,null);assert.ok(capture.rows.length>=30,'actual continuous paint receipts missing');
+        assert.equal(capture.bytes,bytes.length,'Original encoded bytes must remain intact');
+        row.originalAv=await auditCorrectionEncodedClip(path.join(out,file),capture);
+        assertCorrectionCaseDeadline(row,caseStartedAt);
+        assert.ok(row.originalAv.encodedPtsVerified,JSON.stringify(row.originalAv.failures));
         row.currentModelPaints=assertCurrentCorrectionPaints(capture,ids,atlasPaths);
         const actual=(capture.final.time-row.release.time)*1000,wall=capture.stopAt-row.release.at;
         assert.ok(Math.abs(actual-wall)<=120,`Original120ms game/native clock bound: drift=${actual-wall}ms, dropped=${capture.final.timing?.droppedSimulationSeconds-capture.initial.timing?.droppedSimulationSeconds}s`);
@@ -169,6 +213,7 @@ export async function runBrowserQa(){
           assert.ok(capture.rows.some(r=>r.contacts.some(c=>ids.includes(c.ownerId)&&c.resolvedSocket)),'Ground impact must bind an actual painted weapon point');
         }
         assert.equal(fatalErrors,0,'A product/page error invalidated this recording');
+        assertCorrectionCaseDeadline(row,caseStartedAt);
         row.status='recorded';
       },close,{onDeadline:e=>{row.deadlineExpired=true;row.error=String(e);}});
       }catch(error){
@@ -180,7 +225,7 @@ export async function runBrowserQa(){
       }
       console.log(scope,item.kind,item.mode,row.status);
     }
-    report.status=report.errors.length?'failed':'recorded-awaiting-visual-and-pts-review';
+    report.status=report.errors.length?'failed':'recorded-awaiting-visual-and-listening-review';
   }catch(error){primary=error;report.errors.push(String(error));report.status='failed';
     const row=report.cases.at(-1);if(row&&row.status!=='recorded'){row.status='failed';row.error=String(error);}}
   finally{
