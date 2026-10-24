@@ -79,14 +79,28 @@ test('Quality reuse requires both original engine jobs to pass on the same exact
     assert.equal((await previousCombatQaEvidence({...options,request:api({qualityJobs})})).passed,false);
 });
 
-test('workflow changes only expose the reviewed combat lane and preserve every original command and deadline',()=>{
+test('workflow preserves every command/deadline and current script drift rejects reuse and requires full validation',async()=>{
   const current=readFileSync('.github/workflows/ci.yml','utf8'),before=load(execFileSync('git',['show',old.head+':.github/workflows/ci.yml'],{encoding:'utf8',windowsHide:true}));
   before.jobs.scope.outputs.combat='${{ steps.scope.outputs.combat }}';
   before.jobs['v102-combat'].if="${{ needs.scope.outputs.full == 'true' || needs.scope.outputs.combat == 'true' }}";
   before.jobs['v102-combat-webkit-summary'].if="${{ (needs.scope.outputs.full == 'true' || needs.scope.outputs.combat == 'true') && (always()) }}";
   assert.deepEqual(load(current),before);
   assert.equal(execFileSync('git',['hash-object','.github/workflows/ci.yml'],{encoding:'utf8',windowsHide:true}).trim(),COMBAT_QA_WORKFLOW_BLOB);
-  for(const [file,blob]of Object.entries(COMBAT_QA_BLOBS))assert.equal(execFileSync('git',['hash-object',file],{encoding:'utf8',windowsHide:true}).trim(),blob);
+  for(const [file,blob]of Object.entries(COMBAT_QA_BLOBS)){
+    const actual=execFileSync('git',['hash-object',file],{encoding:'utf8',windowsHide:true}).trim();
+    if(actual===blob)assert.equal(actual,blob);
+    else{
+      // Keep the immutable reuse hash and inspect the CURRENT file. Its drift
+      // must reject the old receipts and select full regression, even if a
+      // caller incorrectly asks to reuse them. Never repin an old QA owner.
+      const currentBlobs={...sourceBlobs,[file]:actual};
+      assert.equal(reviewedCombatQaPaths(paths,currentBlobs),false,file);
+      const currentScope=ciChangeScope(paths,{draft:false,sourceBlobs:currentBlobs,reuseCombatQa:true});
+      assert.equal(currentScope.full,true,file);assert.equal(currentScope.scope,'full-regression');
+      assert.equal((await previousCombatQaEvidence({...options,sourceBlobs:currentBlobs,
+        request:()=>assert.fail('Changed current scripts cannot query or inherit old QA')})).passed,false);
+    }
+  }
   const qualityFile='.github/workflows/v1-quality-acceptance.yml',quality=load(readFileSync(qualityFile,'utf8'));
   const oldQuality=load(execFileSync('git',['show',old.head+':'+qualityFile],{encoding:'utf8',windowsHide:true}));
   oldQuality.jobs['quality-ui-play'].needs='scope';oldQuality.jobs['quality-ui-play'].if="${{ !github.event.pull_request.draft && needs.scope.outputs.reuse_quality != 'true' }}";

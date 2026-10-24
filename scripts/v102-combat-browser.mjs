@@ -127,9 +127,9 @@ try{
             const prepared=qa.prepareAnimationFoundationProof(baseKind,side,kind);
             if(expectedState!=='deploy')qa.stepAnimationFoundationProof(prepared.fighterId,'stop',.5);
             // This paused fixture owns one isolated action, not a timed turn.
-            // Establish its left-facing start before its first actual paint;
+            // Establish its requested direction before its first actual paint;
             // live turning keeps the original unpaused stepping/foot guards.
-            if(action==='move-left')qa.stepAnimationFoundationProof(prepared.fighterId,'move-left',.05);
+            if(['move-left','move-right'].includes(action))qa.stepAnimationFoundationProof(prepared.fighterId,action,.05);
             const previous=qa.getSnapshot().fighters.find(f=>f.id===prepared.fighterId)?.renderAudit?.renderSequence??0;
             return {...prepared,previous};
           },{kind,baseKind,side,expectedState,action});
