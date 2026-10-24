@@ -4192,6 +4192,8 @@ type FighterRenderAudit = {
   jointAtlasPath?: string | null;
   jointDrawSucceeded?: boolean;
   jointGroundStrike?: {gap:number;contactReady:boolean;sourcePoint:number[]} | null;
+  jointMayoRetreat?: {phase:string;elapsed:number;progress:number;drop:number;sourceAtlas:string} | null;
+  mayoRetreatAtPaint?: {phase:string;phaseElapsed:number;renderKind:string} | null;
   jointWeaponCycleDrawSucceeded?: boolean;
   jointWeaponCycle?: {component:"normal-launcher-handling";fighterId:number;attackSequence:number;paintedAt:number;phase:number;elapsed:number;duration:number;reachMargin:number;sourceTexture:string;independentCylinder:false};
   jointWeightedLowerDrawSucceeded?: boolean;
@@ -4690,6 +4692,8 @@ function drawSpriteFighter(
       articulatedWalkPhase,
       jointAtlasPath: jointPose ? jointAtlas.path : null,
       jointGroundStrike:jointPose?.groundStrike?{gap:jointPose.groundStrike.gap,contactReady:jointPose.groundStrike.contactReady,sourcePoint:jointPose.groundStrike.sourcePoint}:null,
+      jointMayoRetreat:jointPose?.mayoRetreatJoint?{...jointPose.mayoRetreatJoint}:null,
+      mayoRetreatAtPaint:f.mayoRetreat?{phase:f.mayoRetreat.phase,phaseElapsed:f.mayoRetreat.phaseElapsed,renderKind}:null,
       jointGetupProgress: jointPose?.turnedGetup?jointPose.getupProgress:null,
       jointGetupVariant: jointPose?.turnedGetup?jointPose.getupVariant:null,
       jointGetupCorpseId: jointPose?.turnedGetup?jointPose.getupCorpseId:null,
@@ -13498,12 +13502,16 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           fighters:g.fighters.filter(f=>fighterIds.length===0||fighterIds.includes(f.id)).map(f=>{
             const draw=fighterRenderAuditHistory.get(f.id)?.at(-1);
             return {id:f.id,kind:f.kind,hp:f.hp,x:f.x,y:f.y,manualAbility:f.manualAbility?{...f.manualAbility}:null,
+              mayoRetreat:f.mayoRetreat?{...f.mayoRetreat}:null,
               stationAbility:{...f.stationAbility},abilityWindup:f.abilityWindup,
               draw:draw?{renderSequence:draw.renderSequence,renderKind:draw.renderKind,
                 jointAtlasPath:draw.jointAtlasPath,jointDrawSucceeded:draw.jointDrawSucceeded,jointGroundStrike:draw.jointGroundStrike,
+                jointMayoRetreat:draw.jointMayoRetreat,
+                mayoRetreatAtPaint:draw.mayoRetreatAtPaint,
                 jointPaintedAt:draw.jointPaintedAt,requestedState:draw.requestedState,direction:draw.direction,
                 x:draw.x,y:draw.y,renderedWeaponSocket:draw.renderedWeaponSocket}:null};}),
           fistWave:v105FistWaveSnapshot(g),abilityNames:v105AbilityNameSnapshot(g),
+          retreatCompletions:g.manualAbilityReceipts.filter(r=>r.kind==='mayo-chan'&&r.eventType==='retreat-complete').map(r=>({...r})),
           advanced:getV100AdvancedAbilityEffectsSnapshot(g),contacts:getV100SkillContactSnapshot(g)};
       },
       getEnemyFacingRuntimeAudit: (fighterId: number, options: { latestDrawOnly?: boolean; includeGeometry?:boolean; includeHistory?:boolean } = {}) => {

@@ -35,6 +35,17 @@ import {
   weaponCueForUnit,
 } from "../app/productionAudio.js";
 
+test('the real fist-wave cues are queued for preload from formation and every battle scene',()=>{
+  const scenes=['loadout','stage1','stage2','stage3','station-gate','station-platform','station-tunnel','pressure-surface','pressure-station','boss','story-boss',
+    ...PRODUCTION_AUDIO_MANIFEST.scenes.filter(scene=>scene.id.endsWith('-battle')).map(scene=>scene.id)];
+  for(const role of ['charge','launch','impact']){
+    const id=`v105-fist-wave-${role}`,asset=PRODUCTION_AUDIO_MANIFEST.assetById[id];
+    assert.equal(asset.preload,'lazy','Keep the existing offline payload contract');
+    for(const scene of scenes)assert.ok(PRODUCTION_AUDIO_MANIFEST.sceneById[scene].preload.includes(id),`${scene}/${id}`);
+    assert.equal(asset.loop,false);assert.equal(asset.maxInstances,2);
+  }
+});
+
 test("armored-vehicle damage uses a metal cue without a human-like attack voice", () => {
   assert.equal(LEGACY_SFX_CUE_MAP["crawler-hit"], "v104-armor-hit");
   const source = readFileSync(path.join(repositoryRoot, "app", "AshfallGame.tsx"), "utf8");

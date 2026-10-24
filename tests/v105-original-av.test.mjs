@@ -4,7 +4,23 @@ import {mkdtemp,readdir,rm,rmdir} from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import vm from 'node:vm';
-import {auditCorrectionEncodedClip,startCorrectionRecording,assertCorrectionCaseDeadline,canContinueCompletedCorrection} from '../scripts/v105-five-corrections-capture.mjs';
+import {auditCorrectionEncodedClip,startCorrectionRecording,assertCorrectionCaseDeadline,canContinueCompletedCorrection,assertMayoCorrectionRetreat} from '../scripts/v105-five-corrections-capture.mjs';
+
+test('Mayo AV cannot pass a clipped run or omit its actual current-model fall, rise and completed exit',()=>{
+  const atlas='/current-feral.webp',capture={rows:['fall','rise','run'].map((phase,renderSequence)=>({fighters:[{id:7,mayoRetreat:{phase},
+    draw:{renderSequence,jointDrawSucceeded:true,renderKind:'mayo-chan-feral',jointAtlasPath:atlas,
+      mayoRetreatAtPaint:{phase,phaseElapsed:.02,renderKind:'mayo-chan-feral'},jointMayoRetreat:{phase,elapsed:.02,sourceAtlas:atlas}}}]})),
+    final:{fighters:[],retreatCompletions:[{ownerId:7,mode:'ability',x:146,baseX:146}]}};
+  assert.deepEqual(assertMayoCorrectionRetreat(capture,[7]),{phases:['fall','rise','run'],completedOwnerIds:[7]});
+  const betweenPaints=structuredClone(capture.rows[0]);betweenPaints.fighters[0].mayoRetreat.phase='rise';
+  const separateClocks=structuredClone(capture);separateClocks.rows.splice(1,0,betweenPaints);
+  assert.deepEqual(assertMayoCorrectionRetreat(separateClocks,[7]),{phases:['fall','rise','run'],completedOwnerIds:[7]},'A simulation-only callback cannot invent a new paint or reject the last real one');
+  for(const mutate of [c=>c.rows.splice(1,1),c=>{c.rows[0].fighters[0].draw.jointDrawSucceeded=false;},
+    c=>{c.rows[1].fighters[0].draw.jointMayoRetreat.sourceAtlas='/old.webp';},
+    c=>c.final.fighters.push({id:7}),c=>{c.final.retreatCompletions=[];}]){
+    const bad=structuredClone(capture);mutate(bad);assert.throws(()=>assertMayoCorrectionRetreat(bad,[7]));
+  }
+});
 
 const crc=pts=>'#tb 0: 1/1000\n#media_type 0: video\n#codec_id 0: vp8\n'+pts.map(p=>`0, ${p}, ${p}, 1, 100, 0x12345678`).join('\n')+'\n';
 test('native decode cannot turn a CPU-blocked or already expired30s case into success',()=>{

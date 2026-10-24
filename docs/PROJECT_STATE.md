@@ -18,6 +18,10 @@ d5527a3はPR Verify、両browserのQuality UI and Play、Pages静的buildが成�
 
 5点AV収録も、既存のwriter修正版を持つ録画専用WebKit r2380へ接続した。PWA r2359と正式性能環境は変更しない。運用上の再利用は、元のfull CIの成功・digest・provenanceが確認できた既知QA／状態文書更新に限定する。Qualityは別の旧headの両engine実成功も要求し、native workflowは同じscope判定を使う。未完、失敗、Ready化、製品変更、未知差分はfullへ戻り、元の失敗を成功へ書き換えない。
 
+最新b38f2adでは、正式ARM性能6条件が31／28／21／21／32／21msで成功した。一方、別のCI所有Macでは23／25／34／24／35／35msで3条件失敗し、desktopの実draw52.194Hzも元基準に届いていない。成功側だけを採用せず両原reportを保持する。Quality両engineと静的Pages buildは成功。PR Verifyは運用修正と古い期待値が食い違う2testの失敗で、旧hashへの付け替えをせずテストを整合し、対象13件は成功した。
+
+同headの5点原AVはdesktop32／42、携帯390は7／7、携帯340は4／7が技術成功。Mayoだけは能力終了のprotected fall/riseが旧sheetへ戻る製品経路を確認した。現行の通常／feral四足rigと実退避時計で接続し、元の骨長・接合とHP／退避期限を保持する。捕捉も実退避完了まで元15秒／30秒内で行い、simulationだけ進んだcallbackを新paintと混同しない。拳波の固有3SEは編成と戦闘sceneから先読みする。これらの新製品差分の原速映像・聴感は未確認。さらに通常WebKit Stage30ではRangerの到達不能な足目標による描画例外が出たため修正対象として保持し、公開完了を主張しない。
+
 ### 以下は1.0.4以前のsourceに限定した保持記録
 
 2026-10-24：公開/mainの最終確認値は1.0.3／99f9c193。1.0.4のPR #180は公開まで承認済みで、追加Producer確認待ちは設けない。製品・assets・依存lockは0de4730a／d62d6761／773678ddと同一である。現在の更新候補は下記のQA専用修正を含み、正式統合・公開・公開後QAはまだ実施していない。最新の実行状態と公開結果はIssue #177／PR #180を参照する。

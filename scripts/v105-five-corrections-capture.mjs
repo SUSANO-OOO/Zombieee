@@ -51,6 +51,30 @@ export function assertCurrentCorrectionPaints(capture,ownerIds,atlasPaths){
   return {actualDistinctOwnerPaints:seen.size,ownerCount:owners.size};
 }
 
+export function assertMayoCorrectionRetreat(capture,ownerIds){
+  const phases=new Set(),seen=new Set();
+  for(const row of capture.rows)for(const owner of row.fighters){
+    const draw=owner.draw,painted=draw?.mayoRetreatAtPaint,key=owner.id+':'+draw?.renderSequence;
+    if(!ownerIds.includes(owner.id)||!painted||seen.has(key))continue;
+    seen.add(key);const phase=painted.phase;phases.add(phase);
+    assert.equal(owner.draw?.jointDrawSucceeded,true,'Retreat keeps the current articulated body');
+    assert.equal(owner.draw.renderKind,'mayo-chan-feral','The completed ability keeps its feral form throughout retreat');
+    if(phase==='fall'||phase==='rise'){
+      const pose=owner.draw.jointMayoRetreat;
+      assert.equal(pose?.phase,phase);assert.equal(pose?.sourceAtlas,owner.draw.jointAtlasPath);
+      assert.equal(pose?.elapsed,painted.phaseElapsed);
+    }
+  }
+  assert.deepEqual([...phases],['fall','rise','run'],'Observe the real protected fall, rise and return run');
+  for(const id of ownerIds){
+    assert.ok(!capture.final.fighters.some(f=>f.id===id),'Continue through actual withdrawal, not a truncated run');
+    const receipt=capture.final.retreatCompletions.find(r=>r.ownerId===id&&r.mode==='ability');
+    assert.ok(receipt,'The real gameplay must complete the protected withdrawal');
+    assert.equal(receipt.x,receipt.baseX);
+  }
+  return {phases:[...phases],completedOwnerIds:[...ownerIds]};
+}
+
 // Verify the retained native bytes, never repair or replace their timeline.
 // The limits and decoder contract are the existing all-unit native contract.
 export async function auditCorrectionEncodedClip(file,capture,{execute=spawnSync,ffmpegPath=ffmpeg.path}={}){
@@ -174,7 +198,8 @@ export async function runBrowserQa(){
         },item);row.proof=proof;
         const manualCase=['manual','duet'].includes(item.mode),ids=manualCase?proof.ownerIds:[proof.fighterId];
         await page.waitForFunction(ids=>ids.every(id=>window.__ASHFALL_BATTLE_QA__.getEnemyFacingRuntimeAudit(id).renderHistory.at(-1)?.jointDrawSucceeded),ids,{timeout:5000});
-        const d=manual[item.kind],durationMs=manualCase?Math.ceil(Math.max(3,(d.windupSeconds??0)+(d.activeSeconds??d.guardSeconds??0)+(d.recoverySeconds??0)+1.2)*1000):item.mode==='enemy'?8000:6500;
+        const d=manual[item.kind],durationMs=item.kind==='mayo-chan'&&manualCase?15000:
+          manualCase?Math.ceil(Math.max(3,(d.windupSeconds??0)+(d.activeSeconds??d.guardSeconds??0)+(d.recoverySeconds??0)+1.2)*1000):item.mode==='enemy'?8000:6500;
         row.start=await page.evaluate(startCorrectionRecording,{ids:proof.trackedIds,durationMs,preferMp4:viewport.width<1000});
         row.release=await page.evaluate(()=>{const q=window.__ASHFALL_BATTLE_QA__;q.setEnemyVfxProofPaused(false);
           return {at:performance.now(),time:q.getV105CorrectionAudit([]).time};});
@@ -183,7 +208,18 @@ export async function runBrowserQa(){
             if(viewport.width<1000)await button.tap({timeout:5000});else await button.click({timeout:5000});}
           row.input='actual enabled player buttons; once per owner';
         }
-        await page.waitForTimeout(durationMs);
+        if(item.kind==='mayo-chan'&&manualCase){
+          // The old fixed window cut off the same real retreat before exit.
+          // Observe its actual completion inside the unchanged15s recorder
+          // and30s operation limits; never extend either deadline.
+          const elapsed=await page.evaluate(start=>performance.now()-start,row.start.startAt);
+          await page.waitForFunction(ids=>{
+            const state=window.__V105_RECORDING__?.state,last=state?.rows.at(-1);
+            return last&&ids.every(id=>!last.fighters.some(f=>f.id===id)
+              &&last.retreatCompletions.some(r=>r.ownerId===id&&r.mode==='ability'));
+          },ids,{timeout:Math.max(1,14500-elapsed),polling:100});
+          await page.waitForTimeout(100);
+        }else await page.waitForTimeout(durationMs);
         const capture=await page.evaluate(stopCorrectionRecording),bytes=Buffer.from(capture.data,'base64');delete capture.data;
         const file=`${String(report.cases.length).padStart(2,'0')}-${item.kind}-${item.mode}.${capture.mime.startsWith('video/mp4')?'mp4':'webm'}`;
         await writeFile(path.join(out,file),bytes,{flag:'wx'});Object.assign(row,{file,sha256:sha(bytes),bytes:bytes.length,capture,status:'retained-pending-checks'});await persist();
@@ -193,6 +229,7 @@ export async function runBrowserQa(){
         assertCorrectionCaseDeadline(row,caseStartedAt);
         assert.ok(row.originalAv.encodedPtsVerified,JSON.stringify(row.originalAv.failures));
         row.currentModelPaints=assertCurrentCorrectionPaints(capture,ids,atlasPaths);
+        if(item.kind==='mayo-chan'&&manualCase)row.retreat=assertMayoCorrectionRetreat(capture,ids);
         const actual=(capture.final.time-row.release.time)*1000,wall=capture.stopAt-row.release.at;
         assert.ok(Math.abs(actual-wall)<=120,`Original120ms game/native clock bound: drift=${actual-wall}ms, dropped=${capture.final.timing?.droppedSimulationSeconds-capture.initial.timing?.droppedSimulationSeconds}s`);
         if(item.mode!=='engage'){

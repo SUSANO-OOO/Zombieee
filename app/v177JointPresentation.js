@@ -19,6 +19,7 @@ import { v177RangerLowerBob } from './v177RangerLowerMotion.js';
 import { drawV177RangerLower } from './v177RangerLowerPaint.js';
 import {v177RecessedMouthContour} from './v177MouthCavity.js';
 import { v177RangerFootPlacement } from './v177RangerFootPlacement.js';
+import { MAYO_RETREAT_TIMING } from './mayoLifecycle.js';
 import { v177PaintLocomotion } from './v177PaintLocomotion.js';
 import { applyV177GroundedMatrix, v177GroundedJointPlan, v177BlendGroundedMotion, sampleV177AttackSteps } from './v177GroundedMotion.js';
 import { v177JointActorKey, v177JointBodyCorrection } from './v177JointActorHistory.js';
@@ -39,6 +40,7 @@ const hitStates = new Set(['hit','hit-light','hit-heavy']);
 const renderedJointPoses = new WeakMap();
 const bipedFootRigs = new WeakMap();
 const livingStunPoses = new WeakMap();
+const mayoRetreatPoses = new WeakMap();
 const actorKey = actor => actor && typeof actor === 'object' ? actor : null;
 function rememberRenderedJointPose(actor,kind,plan,lowerReceipt=null) {
   const key=actorKey(actor);
@@ -130,6 +132,10 @@ export function v177JointPose(kind, sample, runtime, { grounded=false,ownedPose=
   const actualActor=actor;
   actor=v177JointActorKey(actor,world);
   const atlas = V177_JOINT_ATLASES[kind];
+  if(actualActor?.kind==='mayo-chan'){
+    const retreat=mayoRetreatJointPose(kind,atlas,runtime,actor,actualActor);
+    if(retreat){livingStunPoses.delete(actor);return retreat;}
+  }
   if(atlas&&ownedPose&&futagoAbilityOwner&&['futago-separated-a','futago-separated-b'].includes(kind)){
     const abilityPlan=futagoAbilityJoint.plan({kind,actor:actualActor,atlas,runtime,
       previous:actorKey(actor)?renderedJointPoses.get(actor):null,ownedPose,
@@ -289,6 +295,49 @@ function blendCapturedJoints(atlas,initial,neutral,p) {
   for(const bone of Object.keys(atlas.poses[0]))for(const upper of [false,true])
     result[upper?'upper':'lower'][bone]=[...jointMatrix(matrix,rig,plan,bone,upper,scratch)];
   return result;
+}
+
+// Protected withdrawal is a living fall/rise, not a corpse or a legacy sheet.
+// Keep the visible normal/feral rig and use only the existing retreat clock.
+function mayoRetreatJointPose(kind,atlas,runtime,key,actor){
+  if(!actorKey(key))return null;
+  const retreat=actor.mayoRetreat;
+  if(!retreat||!['fall','rise'].includes(retreat.phase)){
+    mayoRetreatPoses.delete(key);return null;
+  }
+  if(!['mayo-chan','mayo-chan-feral'].includes(kind)||atlas?.type!=='rigid-parts'
+    ||!Number.isFinite(retreat.phaseElapsed)||retreat.phaseElapsed<0)return null;
+  let entry=mayoRetreatPoses.get(key);
+  if(!entry||entry.kind!==kind){
+    const standing=v177JointPose(kind,{requestedState:'idle'},
+      {...runtime,moving:false,locomotionSettle:1},{grounded:true});
+    if(!standing)return null;
+    const neutral=captureStatusJoints(atlas,standing),previous=renderedJointPoses.get(key);
+    const initial=previous?.kind===kind?captureStatusJoints(atlas,previous.plan):copyCapturedJoints(neutral);
+    const folded=copyCapturedJoints(neutral);
+    const clearance=atlas.legConstraints.map(leg=>{
+      const hip=matrixPoint(neutral[leg.parentUpper===false?'lower':'upper'][leg.parentBone],leg.hip);
+      const paw=matrixPoint(neutral.lower[leg.effectorBone],leg.ankle);
+      return Math.max(0,paw[1]-hip[1]);
+    });
+    const drop=Math.min(42,...clearance.map(value=>value*.5));
+    transformUpperJoints(folded,[1,0,0,1,0,drop]);
+    // A small neck dip follows the same head/child attachments as the live rig.
+    const pivot=atlas.parentAttachments?.head?.pivot??atlas.interpolationPivots?.head;
+    if(pivot){
+      const [px,py]=matrixPoint(folded.upper[atlas.parentAttachments?.head?.parent??'spine'],pivot);
+      const c=Math.cos(.12),s=Math.sin(.12),t=[c,s,-s,c,px-c*px+s*py,py-s*px-c*py];
+      const followsHead=bone=>bone==='head'||atlas.parentAttachments?.[bone]?.parent==='head';
+      for(const bone of Object.keys(folded.upper))if(followsHead(bone))folded.upper[bone]=multiplyMatrix(t,folded.upper[bone]);
+    }
+    resolveUpperOwnedLegs(atlas,folded,true);
+    entry={kind,standing,initial,neutral,folded,drop};mayoRetreatPoses.set(key,entry);
+  }
+  const progress=smooth(retreat.phaseElapsed/(retreat.phase==='fall'?MAYO_RETREAT_TIMING.fallSeconds:MAYO_RETREAT_TIMING.riseSeconds));
+  const pose=retreat.phase==='fall'?blendCapturedJoints(atlas,entry.initial,entry.folded,progress)
+    :blendCapturedJoints(atlas,entry.folded,entry.neutral,progress);
+  return {...entry.standing,resolvedJointPose:pose,attackPhase:null,
+    mayoRetreatJoint:{phase:retreat.phase,elapsed:retreat.phaseElapsed,progress,drop:entry.drop,sourceAtlas:atlas.path}};
 }
 
 function leanCapturedJoints(atlas,pose,amplitude) {

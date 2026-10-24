@@ -105,12 +105,22 @@ test('workflow preserves every command/deadline and current script drift rejects
   }
   const qualityFile='.github/workflows/v1-quality-acceptance.yml',quality=load(readFileSync(qualityFile,'utf8'));
   const oldQuality=load(execFileSync('git',['show',old.head+':'+qualityFile],{encoding:'utf8',windowsHide:true}));
+  oldQuality.concurrency={group:'${{ github.workflow }}-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}','cancel-in-progress':false};
   oldQuality.jobs['quality-ui-play'].needs='scope';oldQuality.jobs['quality-ui-play'].if="${{ !github.event.pull_request.draft && needs.scope.outputs.reuse_quality != 'true' }}";
   const scope=quality.jobs.scope;delete quality.jobs.scope;assert.deepEqual(quality,oldQuality);
   assert.equal(scope['timeout-minutes'],5);assert.deepEqual(scope.permissions,{contents:'read',actions:'read'});
   assert.deepEqual(scope.steps.find(s=>s.id==='scope').env,before.jobs.scope.steps.find(s=>s.id==='scope').env);
   assert.equal(scope.steps.find(s=>s.id==='scope').run,'node scripts/ci-change-scope.mjs');
-  assert.equal(execFileSync('git',['hash-object',qualityFile],{encoding:'utf8',windowsHide:true}).trim(),COMBAT_QA_QUALITY_WORKFLOW_BLOB);
+  const qualityBlob=execFileSync('git',['hash-object',qualityFile],{encoding:'utf8',windowsHide:true}).trim();
+  if(qualityBlob!==COMBAT_QA_QUALITY_WORKFLOW_BLOB){
+    const currentBlobs={...sourceBlobs,[qualityFile]:qualityBlob};
+    assert.equal(reviewedCombatQaPaths(paths,currentBlobs),false);
+    assert.equal(ciChangeScope(paths,{draft:false,sourceBlobs:currentBlobs,reuseCombatQa:true}).full,true);
+    let requests=0;
+    assert.equal((await previousCombatQaEvidence({...options,sourceBlobs:currentBlobs,
+      request:()=>{requests++;assert.fail('The changed workflow cannot inherit the old combat QA owner');}})).passed,false);
+    assert.equal(requests,0);
+  }
 });
 
 const fixtureFile='tests/v177-native-canvas-clips.test.mjs';
