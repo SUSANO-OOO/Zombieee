@@ -22,6 +22,7 @@ import {createV177VideoFrameClock} from './v177-video-frame-clock.mjs';
 import {beginV177NativeCanvasClip} from './v177-native-canvas-clips.mjs';
 import {v177CombatViewports,closeV177CombatReport} from './v177-combat-workload.mjs';
 import {prepareMayoEngagement,releaseReadyMayoForRecording,activateRecordedMayo,fenceRecordedMayoSample} from './v177-mayo-engagement-capture.mjs';
+import {collectV177MayoNativeSamples,takeV177MayoNativeSamples} from './v177-mayo-native-samples.mjs';
 
 if(process.platform==='win32')throw new Error('Combat QA is hosted-only; local game, browser and audio playback are disabled');
 const engine=process.env.V102_COMBAT_ENGINE??'chromium';
@@ -52,7 +53,26 @@ async function captureContinuousSamples(page,proof,metadata){
   if(mayo)await activateRecordedMayo(page,proof,clip);
   section=clock?.beginSection({...metadata,fighterId:proof.fighterId,...(mayo?{feralBoundary:proof.arm}:{})});
   if(mayo)await page.waitForFunction(hasV177ContinuousDraw,proof,{timeout:5_000});
-  for(let i=0;i<sampleCount;i++){
+  if(mayo){
+    const owner=`${proof.proofId}:${proof.proofGeneration}:${proof.fighterId}:${proof.captureBoundary.renderSequence}`;
+    let collection,collectionError;
+    try{collection=await page.evaluate(collectV177MayoNativeSamples,{owner,fighterId:proof.fighterId});}
+    catch(error){collectionError=error;}
+    finally{
+      try{
+        const retained=await page.evaluate(takeV177MayoNativeSamples,{owner});
+        assert.equal(retained?.owner,owner,'retain the actual Mayo sample owner');
+        const {samples:rawSamples,...receipt}=retained;
+        proof.nativeSampling={...receipt,partialSamples:rawSamples};
+        for(const sample of rawSamples)samples.push(fenceRecordedMayoSample(sample,proof.captureBoundary));
+        if(!collectionError&&retained.status==='completed')delete proof.nativeSampling.partialSamples;
+      }catch(error){collectionError??=error;}
+    }
+    if(collectionError)throw collectionError;
+    assert.equal(collection?.status,'completed',collection?.error??'Mayo native observations incomplete');
+    assert.equal(collection.sampleCount,sampleCount);assert.equal(collection.spacingMs,120);
+    assert.equal(samples.length,sampleCount,'retain every original Mayo observation');
+  }else for(let i=0;i<sampleCount;i++){
     await page.waitForTimeout(120);
     const sample=await page.evaluate(id=>{
       const qa=window.__ASHFALL_BATTLE_QA__,snapshot=qa.getSnapshot(),audit=qa.getEnemyFacingRuntimeAudit(id);
