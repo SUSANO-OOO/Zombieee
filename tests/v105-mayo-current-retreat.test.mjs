@@ -60,3 +60,10 @@ test('real Mayo ability/injury retreat paints the same current form through movi
   assert.deepEqual(MAYO_RETREAT_TIMING,{fallSeconds:.34,riseSeconds:.22,runSpeed:190});assert.equal(actor.hp,retreatHp);assert.equal(world.corpses.length,0);
  }
 });
+
+test('Mayo retains the same frozen numeric clock without importing the campaign initialization graph',()=>{
+ const lifecycle=readFileSync('app/mayoLifecycle.js','utf8');
+ assert.doesNotMatch(lifecycle,/from\s+['"]\.\/content\//u);
+ assert.equal(Object.isFrozen(MAYO_RETREAT_TIMING),true);
+ assert.deepEqual(MAYO_RETREAT_TIMING,{fallSeconds:.34,riseSeconds:.22,runSpeed:190});
+});
