@@ -59,7 +59,8 @@ const abilityNameFiles=new Set([...Object.keys(ABILITY_NAME_BLOBS),'scripts/ci-c
  'scripts/v177-native-allunit-browser.mjs','tests/v177-native-setup-overlap.test.mjs',
  'tests/v177-ranger-performance-receipts.test.mjs',
  'scripts/v100-phase-g-production-matrix.mjs','tests/v100-phase-g-sustain-pointer.test.mjs',
- 'docs/qa/v105/five-corrections-6a-evidence.json','docs/PROJECT_STATE.md','docs/qa/v105/native-6a-evidence.json']);
+ 'docs/qa/v105/five-corrections-6a-evidence.json','docs/qa/v105/ci-6a-infrastructure-failure.json',
+ 'docs/PROJECT_STATE.md','docs/qa/v105/native-6a-evidence.json']);
 export const ABILITY_NAME_REUSED_JOBS=Object.freeze(BASELINE_JOB_NAMES.filter(name=>
  !['PR Verify','V1 Guardian Control Diagnostic','WebKit Compact Shadow Diagnostic','V1 WebKit Frame and Boss Performance',
  'V1 Phase G Production Matrix','V1 Representative Normal Play (chromium)','V1 Representative Normal Play (webkit)'].includes(name)));
@@ -78,22 +79,83 @@ export async function previousAbilityNameEvidence({repository,previousHead,base,
   if(!response.ok)throw Error('Original browser evidence unavailable');return binary?response.arrayBuffer():response.json();};
  try{
   const run=await get(`actions/runs/${old.runId}`);
-  if(run.id!==old.runId||run.head_sha!==old.head||run.status!=='completed'||run.run_attempt!==1||run.event!=='pull_request'
+  if(run.id!==old.runId||run.head_sha!==old.head||run.status!=='completed'||![1,2].includes(run.run_attempt)||run.event!=='pull_request'
    ||!run.pull_requests?.some(pr=>pr.number===old.prNumber))return{passed:false,reason:'original-candidate-not-complete'};
-  const data=await get(`actions/runs/${old.runId}/jobs?filter=latest&per_page=100`);
+  const data=await get(run.run_attempt===1?`actions/runs/${old.runId}/jobs?filter=latest&per_page=100`
+    :`actions/runs/${old.runId}/attempts/1/jobs?per_page=100`);
   if(!Array.isArray(data.jobs)||!Number.isSafeInteger(data.total_count)||data.total_count>100||data.total_count!==data.jobs.length)
    return{passed:false,reason:'original-jobs-pagination-or-count-mismatch'};
   if(new Set(data.jobs.map(j=>j.id)).size!==data.jobs.length||!data.jobs.every(j=>Number.isSafeInteger(j.id)&&j.id>0
    &&j.run_id===old.runId&&j.head_sha===old.head&&j.run_attempt===1&&j.status==='completed'))
    return{passed:false,reason:'original-job-owner-mismatch'};
-  const successful=name=>{const rows=data.jobs?.filter(j=>j.name===name);return rows?.length===1&&rows[0].status==='completed'
+  const adoptedJobs=[...data.jobs];let infrastructureRecovery=null;
+  if(run.run_attempt===2){
+   // Only this original host's DNS failure is eligible. No game or HUD test
+   // ran there. Preserve all attempt1 owners and require the one replacement
+   // job to run its actual capture and upload under the unchanged workflow.
+   const name='WebKit Canonical Viewport Evidence (844x340)',original=data.jobs.filter(j=>j.name===name),step=(j,n,c)=>
+    j.steps?.some(s=>s.name===n&&s.status==='completed'&&s.conclusion===c);
+   if(original.length!==1||original[0].id!==120981969541||original[0].conclusion!=='failure'
+     ||!step(original[0],'Setup Node.js','failure')||!step(original[0],'Capture canonical HUD evidence','skipped'))
+    return{passed:false,reason:'not-the-original-unexecuted-dns-failure'};
+   const retry=await get(`actions/runs/${old.runId}/attempts/2/jobs?per_page=100`);
+   // GitHub also emits new-ID copies of unchanged results in attempt2. They
+   // are not new measurements and never replace their original owners.
+   const names=rows=>rows.map(j=>j.name).sort();
+   if(!Array.isArray(retry.jobs)||retry.total_count!==data.jobs.length||retry.jobs.length!==data.jobs.length
+     ||new Set(data.jobs.map(j=>j.name)).size!==data.jobs.length||new Set(retry.jobs.map(j=>j.id)).size!==retry.jobs.length
+     ||JSON.stringify(names(retry.jobs))!==JSON.stringify(names(data.jobs)))return{passed:false,reason:'specific-retry-inventory-mismatch'};
+   const execution=j=>[j.status,j.conclusion,j.started_at,j.completed_at,j.runner_id,j.runner_name,
+    j.steps?.map(s=>[s.name,s.number,s.status,s.conclusion,s.started_at,s.completed_at])];
+   const clock=(start,end)=>typeof start==='string'&&typeof end==='string'
+    &&Number.isFinite(Date.parse(start))&&Date.parse(end)>=Date.parse(start);
+   const executed=j=>clock(j.started_at,j.completed_at)&&Number.isSafeInteger(j.runner_id)&&j.runner_id>0
+    &&typeof j.runner_name==='string'&&j.runner_name.length>0&&Array.isArray(j.steps)&&j.steps.length>0
+    &&new Set(j.steps.map(s=>s.number)).size===j.steps.length&&j.steps.every(s=>
+      typeof s.name==='string'&&s.name.length>0&&Number.isSafeInteger(s.number)&&s.number>0&&s.status==='completed'
+      &&['success','failure','cancelled','skipped','neutral','timed_out','action_required'].includes(s.conclusion)
+      &&clock(s.started_at,s.completed_at));
+   for(const alias of retry.jobs){
+    if(!Number.isSafeInteger(alias.id)||alias.id<=0||data.jobs.some(j=>j.id===alias.id)||alias.head_sha!==old.head
+      ||alias.run_id!==old.runId||alias.run_attempt!==2||alias.status!=='completed')
+     return{passed:false,reason:'specific-retry-owner-mismatch'};
+    if(alias.name===name)continue;
+    const source=data.jobs.find(j=>j.name===alias.name);
+    // This optional diagnostic never executed. GitHub changes its synthetic
+    // start timestamp on retry, although it still has no runner or steps.
+    // It is not in the adopted gate inventory and supplies no measurement.
+    if(source.id===120949556263&&source.name==='V1 Guardian Control Diagnostic'
+      &&!ABILITY_NAME_REUSED_JOBS.includes(source.name)){
+     const unexecuted=j=>j.conclusion==='skipped'&&j.runner_id===null&&j.runner_name===null
+      &&Array.isArray(j.steps)&&j.steps.length===0&&typeof j.started_at==='string'&&Number.isFinite(Date.parse(j.started_at))
+      &&typeof j.completed_at==='string'&&Number.isFinite(Date.parse(j.completed_at));
+     if(!unexecuted(source)||!unexecuted(alias)||source.completed_at!==alias.completed_at)
+      return{passed:false,reason:'unexecuted-diagnostic-copy-mismatch'};
+     continue;
+    }
+    if(!executed(source)||!executed(alias)||JSON.stringify(execution(source))!==JSON.stringify(execution(alias)))
+     return{passed:false,reason:'another-job-executed-in-the-recovery'};
+   }
+   const j=retry.jobs.find(j=>j.name===name);
+   if(!Number.isSafeInteger(j?.id)||j.id<=0||data.jobs.some(old=>old.id===j.id)
+     ||j.name!==name||j.run_id!==old.runId||j.head_sha!==old.head||j.run_attempt!==2||j.status!=='completed'||j.conclusion!=='success'
+     ||!executed(original[0])||!executed(j)
+     ||!(Date.parse(j.started_at)>Date.parse(original[0].completed_at))||!(Date.parse(j.completed_at)>=Date.parse(j.started_at))
+     ||!step(j,'Setup Node.js','success')||!step(j,'Capture canonical HUD evidence','success')
+     ||!step(j,'Upload canonical WebKit viewport evidence','success'))return{passed:false,reason:'specific-hud-recovery-not-successful'};
+   adoptedJobs.splice(adoptedJobs.findIndex(j=>j.name===name),1,j);
+   infrastructureRecovery={original:{id:original[0].id,run_attempt:1,conclusion:'failure',capture:'skipped'},unchangedCopiesNotAdopted:retry.jobs.length-1,
+    replacement:{id:j.id,run_attempt:2,conclusion:'success',capture:'success'},head:old.head,runId:old.runId,name};
+  }
+  const successful=name=>{const rows=adoptedJobs.filter(j=>j.name===name);return rows?.length===1&&rows[0].status==='completed'
    &&rows[0].conclusion==='success'&&Number.isSafeInteger(rows[0].id);};
   if(!ABILITY_NAME_REUSED_JOBS.every(successful))return{passed:false,reason:'an-unchanged-browser-gate-is-not-successful'};
   const provenance=await immutablePrProvenance({get,runId:old.runId,head:old.head,base:old.base});
   const normalNames=['chromium','webkit'].map(engine=>`V1 Representative Normal Play (${engine})`),
     normalComplete=!paths.includes('scripts/v177-representative-battles.mjs')&&normalNames.every(successful);
-  return{passed:true,head:old.head,base:old.base,prNumber:old.prNumber,runId:old.runId,provenance,
-   reusedJobs:[...ABILITY_NAME_REUSED_JOBS,...(normalComplete?normalNames:[])].map(name=>{const j=data.jobs.find(j=>j.name===name);
+  return{passed:true,head:old.head,base:old.base,prNumber:old.prNumber,runId:old.runId,provenance,infrastructureRecovery,
+   originalRunConclusion:run.conclusion,
+   reusedJobs:[...ABILITY_NAME_REUSED_JOBS,...(normalComplete?normalNames:[])].map(name=>{const j=adoptedJobs.find(j=>j.name===name);
     return{name,id:j.id,head_sha:j.head_sha,run_id:j.run_id,run_attempt:j.run_attempt};}),
    freshVerifyRequired:true,freshPerformanceRequired:true,freshPhaseGRequired:true,
    freshNormalRequired:!normalComplete};

@@ -1,0 +1,61 @@
+{
+  "schema": "v105-ci-original-infrastructure-failure/v1",
+  "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+  "runId": 40120044446,
+  "runAttempt": 1,
+  "job": {
+    "id": 120981969541,
+    "name": "WebKit Canonical Viewport Evidence (844x340)",
+    "conclusion": "failure",
+    "setupNode": "failure",
+    "actualHudCapture": "skipped",
+    "artifactUpload": "failure-no-files"
+  },
+  "originalLog": {
+    "sha256": "fc7cce644b8907d779a30d3ef3c82523d8a1c83ac0fc9fcb5b7e3b68ae768110",
+    "bytes": 34291,
+    "retainedLocally": "outputs/motion-review/remediation-r4/v105-6a-hud844340-original.log"
+  },
+  "errors": [
+    "getaddrinfo ENOTFOUND api.github.com",
+    "getaddrinfo ENOTFOUND nodejs.org"
+  ],
+  "productStarted": false,
+  "gameOrHudResult": "unexecuted",
+  "recoveryRequest": {
+    "method": "rerun-one-specific-job",
+    "runAttempt": 2,
+    "onlyJobId": 120981969541,
+    "requested": true,
+    "resultNotInferred": true,
+    "originalConditionsAndDeadlineUnchanged": true
+  },
+  "recoveryObservation": {
+    "runAttempt": 2,
+    "jobId": 120987178379,
+    "startedAt": "2026-10-24T21:03:53Z",
+    "completedAt": "2026-10-24T21:12:41Z",
+    "conclusion": "success",
+    "actualHudCapture": "success",
+    "artifactUpload": "success",
+    "artifactId": 12575663878,
+    "artifactName": "issue156-webkit-hud-844x340",
+    "originalZipBytes": 4213735,
+    "verifiedOriginalZipSha256": "20a36d82b0b26ce03ce63c4cd8da315d919b30a30e3a704d940ceb88cf6beac8",
+    "boundedSummaryStatus": "passed",
+    "boundedSummarySha256": "37264fad08ef69f80613a44a47270c95de6305e2f2e47c3b13b1b28b343c0acd",
+    "wholeOldCiAccepted": false,
+    "otherActualExecutions": 0,
+    "carriedResultsNotAdopted": 49,
+    "unexecutedOptionalDiagnostic": {
+      "originalId": 120949556263,
+      "copyId": 120987205828,
+      "name": "V1 Guardian Control Diagnostic",
+      "conclusion": "skipped",
+      "runner": null,
+      "steps": 0,
+      "suppliesAcceptanceEvidence": false
+    }
+  },
+  "scope": "Original attempt1 DNS failure is retained. Only the real same-source attempt2 HUD capture and upload replace that unexecuted gate. Other successful gates retain their actual attempt1 owners; new-ID carried copies supply no new measurements. Verify, normal-play, Phase G and formal performance failures remain open for the corrected candidate."
+}

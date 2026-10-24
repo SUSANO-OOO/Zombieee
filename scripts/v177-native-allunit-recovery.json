@@ -16,11 +16,11 @@
     "app/v105AbilityNames.js": "28cf501a28e033f75e643259aec2e14eab144d97",
     "app/v177RangerFootPlacement.js": "b1e7857b6b810773714b1eaf2dedb3846b8c1376",
     "assets/source/v177/ranger/lower-r3/provenance.json": "aba5c66d3183fbe0d5ae849b7a3a48b026b0f1f6",
-    "docs/PROJECT_STATE.md": "93f05ad0618b603f2895d3a99ec6fdf1cfbaba3b",
+    "docs/PROJECT_STATE.md": "9d2ca1300aa0b6dfdf4b795cc20af7b21f1468ae",
     "docs/qa/v105/native-f7-evidence.json": "348eb032e3c7268539f413e62396bae078d35bce",
     "docs/qa/v105/shared-foot-impact-f7.json": "ca7e48eeb2228b3e4d5a513f026aa88719630d5e",
     "tests/audio-mixer.test.mjs": "b7c6537909ee85baa9eb833f187abd5998716f8f",
-    "tests/ci-change-scope.test.mjs": "3133216db3ecda0603b0ca99a6504ac269ad385f",
+    "tests/ci-change-scope.test.mjs": "30b6afed29f5c521035fc93cdab6a4e82ad512b8",
     "tests/ci-contract.test.mjs": "cca6dde0cbe07e3adb29286422b7a2bd907e2cfc",
     "tests/production-audio.test.mjs": "b19bf16647580aaaaa09db262de804485d4a60bf",
     "tests/v105-five-corrections.test.mjs": "27c3a5f353d3579d24862a18ddd09809c20abba0",
@@ -29,7 +29,7 @@
     "tests/v177-ranger-body-correction.test.mjs": "23eccd8aba1aafd7336cfacdf0785d89748148fe",
     "docs/qa/v105/native-f880-evidence.json": "597b84943cd699146f872156427192f190068f50",
     "app/AshfallGame.tsx": "004c5f5e25a6ff63c029d6f06d4c29f92efbd859",
-    "scripts/ci-change-scope.mjs": "fdb06f063b6f463e4cc6fe264c73b43b3d1bf2f4",
+    "scripts/ci-change-scope.mjs": "79e51aa0e9675e86dd33dc43f800f0f306402b7c",
     "scripts/v100-device-runtime-browser.mjs": "445b9aaa783128b764623a2d40cc3e194587c94e",
     "scripts/v100-phase-g-production-matrix.mjs": "e879eca860f4bf9e5531e75c29bea79c209cb57f",
     "scripts/v105-five-corrections-capture.mjs": "f187ea4d816abc25272673d880cc15fe7d5b686b",
@@ -42,7 +42,8 @@
     "tests/v177-representative-battles.test.mjs": "90a3e066019e60ecf95ed12e50415fb6bbb5d975",
     "tests/v100-phase-g-sustain-pointer.test.mjs": "ebc44603f8bdb95db108611eafdd147afd90c9b2",
     "docs/qa/v105/five-corrections-6a-evidence.json": "30027698e152d5e49c5d03f2f4c2212571a3e2c9",
-    "docs/qa/v105/native-6a-evidence.json": "1b7f233f17d4a61f9a24728359a94ee04495a257"
+    "docs/qa/v105/native-6a-evidence.json": "1b7f233f17d4a61f9a24728359a94ee04495a257",
+    "docs/qa/v105/ci-6a-infrastructure-failure.json": "1408c24a862a46f46071f29dabdd017998bc307e"
   },
   "retainedEvidence": {
     "head": "f7f6f7ce46844eaefc4bb519fa80d591e2607407",
@@ -1612,10 +1613,10 @@
   "naturalnessAccepted": false,
   "wholeGameAccepted": false,
   "previousProfile": {
-    "gitHead": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+    "gitHead": "ed0fed486ef7ce2ff3f621c201a0fb24e5812d86",
     "file": "scripts/v177-native-allunit-recovery.json",
-    "gitBlob": "4cd7559f4ef4dd89ec7dcbb361d5ae88019328bc",
-    "sha256": "ea16e28901f374d043f8b904735715bcc169ba06107e0fca59a94070cfb26813"
+    "gitBlob": "c2a3809cf0fd495effecf8fb9cfa9d26b5287f83",
+    "sha256": "c2a0fa3f9d869f6a0549d6efb574d6d3377ca0a8d6cad8d3ec400cb7cafa4b9a"
   },
   "additionalEvidenceInventories": [
     {

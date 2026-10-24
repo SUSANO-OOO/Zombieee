@@ -62,6 +62,52 @@ test('the exact boss-label deletion retains successful browser owners but repeat
   assert.equal((await previousAbilityNameEvidence({...options,...bad,request:()=>assert.fail('Unknown delta must reject before network')})).passed,false);
  }
  assert.equal(reviewedAbilityNamePaths(paths,sourceBlobs),true);
+ for(const j of jobs)Object.assign(j,{started_at:'2026-10-24T18:00:00Z',completed_at:'2026-10-24T18:01:00Z',runner_id:1,runner_name:'fixture-host',
+   steps:[{name:'original',number:1,status:'completed',conclusion:'success',started_at:'2026-10-24T18:00:00Z',completed_at:'2026-10-24T18:01:00Z'}]});
+ const hudName='WebKit Canonical Viewport Evidence (844x340)',hud=jobs.find(j=>j.name===hudName),
+   step=(name,conclusion)=>({name,status:'completed',conclusion,number:name.startsWith('Setup')?1:name.startsWith('Capture')?2:3,
+    started_at:'2026-10-24T18:00:00Z',completed_at:'2026-10-24T18:00:00Z'}),
+   failedHud={...hud,id:120981969541,conclusion:'failure',steps:[step('Setup Node.js','failure'),step('Capture canonical HUD evidence','skipped')]},
+   originalJobs=[...jobs.map(j=>j===hud?failedHud:j),{id:120949556263,name:'V1 Guardian Control Diagnostic',...owner,status:'completed',conclusion:'skipped',
+     runner_id:null,runner_name:null,steps:[],started_at:'2026-10-24T18:01:01Z',completed_at:'2026-10-24T18:01:00Z'}],
+   retryHud={...hud,id:120999999999,run_attempt:2,started_at:'2026-10-24T19:00:00Z',completed_at:'2026-10-24T19:01:00Z',steps:[step('Setup Node.js','success'),step('Capture canonical HUD evidence','success'),step('Upload canonical WebKit viewport evidence','success')]},
+   aliases=originalJobs.filter(j=>j.name!==hudName).map((j,i)=>({...structuredClone(j),id:130000000000+i,run_attempt:2,
+     ...(j.conclusion==='skipped'?{started_at:'2026-10-24T19:00:01Z'}:{})})),
+   recoveredJobs=[...aliases,retryHud];
+ const retryApi=(retry=recoveredJobs,original=originalJobs)=>async url=>({ok:true,arrayBuffer:async()=>fixture.zip,
+   json:async()=>url.includes('/artifacts?')?fixture.artifacts:url.includes('/attempts/2/jobs?')?{total_count:retry.length,jobs:retry}
+    :url.includes('/attempts/1/jobs?')?{total_count:original.length,jobs:original}:{...run,run_attempt:2}});
+ const recovered=await previousAbilityNameEvidence({...options,request:retryApi()});assert.equal(recovered.passed,true);
+ assert.equal(recovered.originalRunConclusion,'failure');assert.equal(recovered.infrastructureRecovery.original.id,failedHud.id);
+ assert.deepEqual(recovered.reusedJobs.filter(j=>j.name===hudName).map(j=>({id:j.id,attempt:j.run_attempt})),[{id:retryHud.id,attempt:2}]);
+ assert.ok(recovered.reusedJobs.filter(j=>j.name!==hudName).every(j=>j.run_attempt===1),'Earlier successes keep their actual attempt1 owners');
+ for(const bad of [{run_id:1},{head_sha:'f'.repeat(40)},{run_attempt:1},{id:failedHud.id},{name:'other'},
+   {conclusion:'skipped'},{status:'in_progress'},{steps:[]},{started_at:failedHud.started_at}])
+   assert.equal((await previousAbilityNameEvidence({...options,request:retryApi([...aliases,{...retryHud,...bad}])})).passed,false);
+ for(const retry of [[],[...aliases,retryHud,retryHud],recoveredJobs.slice(1)])assert.equal((await previousAbilityNameEvidence({...options,request:retryApi(retry)})).passed,false);
+ for(const bad of [{started_at:'2026-10-24T19:00:00Z'},{runner_id:999},{steps:[step('other','success')]},{conclusion:'failure'},{head_sha:'f'.repeat(40)}]){
+   const changed=recoveredJobs.map((j,i)=>i===0?{...j,...bad}:j);assert.equal((await previousAbilityNameEvidence({...options,request:retryApi(changed)})).passed,false,'Another execution cannot be hidden as a carried result');
+ }
+ assert.equal((await previousAbilityNameEvidence({...options,request:retryApi(recoveredJobs,jobs)})).passed,false,'An unrelated failure cannot use the known DNS recovery');
+ for(const key of ['started_at','completed_at','runner_id','runner_name','steps']){
+   const first=originalJobs[0].name,missingOriginal=structuredClone(originalJobs),missingRetry=structuredClone(recoveredJobs);
+   delete missingOriginal[0][key];delete missingRetry.find(j=>j.name===first)[key];
+   assert.equal((await previousAbilityNameEvidence({...options,request:retryApi(missingRetry,missingOriginal)})).passed,false,
+     'Missing execution metadata cannot prove that a new-ID record is only a carried copy');
+ }
+ for(const key of ['name','number','status','conclusion','started_at','completed_at']){
+   const missingOriginal=structuredClone(originalJobs),missingRetry=structuredClone(recoveredJobs);
+   delete missingOriginal[0].steps[0][key];delete missingRetry.find(j=>j.name===originalJobs[0].name).steps[0][key];
+   assert.equal((await previousAbilityNameEvidence({...options,request:retryApi(missingRetry,missingOriginal)})).passed,false);
+ }
+ for(const key of ['runner_id','runner_name']){
+   const missingRetry=structuredClone(recoveredJobs);delete missingRetry.find(j=>j.name===hudName)[key];
+   assert.equal((await previousAbilityNameEvidence({...options,request:retryApi(missingRetry)})).passed,false);
+ }
+ for(const patch of [{runner_id:1},{steps:[step('unexpected','success')]},{conclusion:'success'},{completed_at:'2026-10-24T19:00:00Z'}]){
+   const changed=recoveredJobs.map(j=>j.name==='V1 Guardian Control Diagnostic'?{...j,...patch}:j);
+   assert.equal((await previousAbilityNameEvidence({...options,request:retryApi(changed)})).passed,false);
+ }
  assert.equal(ciChangeScope([...paths,'app/unknown.js'],{draft:false,sourceBlobs,reuseAbilityNames:true}).full,true);
  assert.equal(ciChangeScope(paths,{draft:false,sourceBlobs}).full,true,'No verified preceding browser owners means full regression');
 });

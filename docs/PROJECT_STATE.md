@@ -12,6 +12,8 @@
 
 旧AAC8b46b103の固定source実験は48eb6b30で現Mixer検証から分離し、原本・失敗・陽性／陰性を保持。hash更新・skip・旧実験再実行はしない。拳波の実初回3SEは元2–11ms成功を保持する。6a PR Verifyの旧workflow比較1件は、古いhashへの付替えなしで実変更に整合した。Phase Gはsustain-abilityの元500ms内で4通信のup待ち中に期限到達したため、実trusted event順・同owner・実発動一回を検査する3通信へ限定修正し、新実行で確認する。失敗したVerify・通常play・Phase G・正式性能を成功へ付け替えず、有効な他の実成功ownerだけを再利用する。
 
+元CIのcanonical844×340は実行機のDNS障害でNode準備に失敗し、ゲーム検証は未実行だった。原1回目を保全し、その1jobだけを同じsource・元条件・期限で再実行した。第2回の実job120987178379はcapture／upload成功、原ZIPの公式SHAと全CRC、8状態のbounded-summary passedを確認した。他の42成功は元の第1回の所有を保持し、GitHubが第2回に作る49件の結果コピーを新しい計測へ付け替えない。元CI全体のfailureと、Verify・通常play・Phase G・正式性能の失敗は保持し、修正後候補で確認する。
+
 人間による最終聴感、物理iPhoneの保存Control Center録画内BGM／SE、実端末の操作と発熱は未確認としてIssue #177をopenに保つ。技術通過やWebKit相当をこれらの代替にしない。正式公開と公開後QAも未完了。
 
 ### 以下は前候補ごとの保持履歴（当時の未完了表記を含む）
