@@ -79,10 +79,6 @@ export function drawV105AbilityNames(ctx,world,{width,height,headY,cssScale=1}={
     const age=world.time-row.startedAt;
     ctx.globalAlpha=Math.min(1,age/.06,(row.duration-age)/.23);
     const color=row.owner.side==='human'?'#f4d887':'#f1a7a0';
-    ctx.fillStyle='rgba(9,13,18,.9)';ctx.fillRect(row.x-row.width/2,row.y-row.height/2,row.width,row.height);
-    ctx.strokeStyle=color;ctx.lineWidth=1.5;
-    ctx.beginPath();ctx.moveTo(row.x, row.y+row.height/2);
-    ctx.lineTo(Math.max(5,Math.min(width-5,row.headX)),row.headY-3);ctx.stroke();
     ctx.fillStyle=color;
     ctx[V105_ABILITY_NAME_PAINT]={ownerId:row.ownerId,activationId:row.activationId,name:row.name,key:row.key,startedAt:row.startedAt};
     try{ctx.fillText(row.name,row.x,row.y);}finally{delete ctx[V105_ABILITY_NAME_PAINT];}
