@@ -7,18 +7,26 @@ on:
         description: Exact immutable QA source SHA
         required: true
         type: string
+      release_sha:
+        description: Actual published v1.0.5 merge result SHA
+        required: true
+        type: string
+      request_id:
+        description: Actual official Pages release request ID
+        required: true
+        type: string
 
 permissions:
   contents: read
   actions: read
 
 concurrency:
-  group: public-profile-prepare-${{ inputs.expected_head }}
+  group: public-profile-verify-${{ inputs.expected_head }}
   cancel-in-progress: false
 
 jobs:
   native-capture-comparison:
-    name: Preserve actual public1.0.3 browser profile before publication
+    name: Update the exact closed public1.0.3 profile through actual Pages controls
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -40,27 +48,71 @@ jobs:
         run: |
           node --input-type=module -e 'import assert from "node:assert/strict";import{createRequire}from"node:module";const r=createRequire(import.meta.url);assert.equal(r("playwright/package.json").version,"1.56.1");assert.equal(process.platform,"linux");assert.equal(process.arch,"x64");'
           npx playwright install --with-deps chromium
-      - name: Install the actual published bundle and create a save with player controls
+      - name: Check the original prepare artifact owner
         env:
-          PWA_OFFICIAL_PROFILE_MODE: prepare
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p outputs/v105-public-profile-verify
+          gh api repos/SUSANO-OOO/Zombieee/actions/artifacts/12576180089 > outputs/v105-public-profile-verify/original-artifact.json
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';import fs from 'node:fs';
+          const a=JSON.parse(fs.readFileSync('outputs/v105-public-profile-verify/original-artifact.json'));
+          assert.equal(a.id,12576180089);assert.equal(a.expired,false);assert.equal(a.name,'v105-public-profile-prepared');
+          assert.equal(a.size_in_bytes,190394274);assert.equal(a.digest,'sha256:c33d3726e6a1f325e867340c31532d7681582009a23ceba87b102492169114b3');
+          assert.equal(a.workflow_run.id,40131684178);assert.equal(a.workflow_run.head_sha,'42254897c07b807c077b3715283f4582a17689a1');
+          JS
+      - uses: actions/download-artifact@v4
+        with:
+          name: v105-public-profile-prepared
+          run-id: 40131684178
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/v105-public-profile-restored-archive
+      - name: Verify and restore the unchanged closed profile
+        run: |
+          python3 <<'PY'
+          import hashlib, json, os, pathlib, tarfile
+          root=pathlib.Path(os.environ['RUNNER_TEMP'])
+          archive=root/'v105-public-profile-restored-archive'
+          profile=archive/'closed-profile.tgz'
+          sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+          expected='b567e80baedcab3d1034e65636c398adf120ae390c6a418227a1d1a2a87ef59b'
+          assert sha(profile)==expected
+          assert (archive/'closed-profile.tgz.sha256').read_text().split()[0]==expected
+          prepare=archive/'pwa-official-existing-profile-prepare-chromium.json'
+          assert sha(prepare)=='ea7bf4258fbb125b806c06cfadb6d25ab24c8975c8730f977d13385704fa0329'
+          report=json.loads(prepare.read_text())
+          assert report['status']=='passed' and report['archiveReady'] is True and report['closeConfirmed'] is True
+          assert report['owner']['head']=='42254897c07b807c077b3715283f4582a17689a1' and str(report['owner']['runId'])=='40131684178' and str(report['owner']['runAttempt'])=='1'
+          assert not (root/'v105-public-profile').exists() and not (root/'v105-public-profile.contract.json').exists()
+          with tarfile.open(profile,'r:gz') as tar:
+              for member in tar.getmembers():
+                  p=pathlib.PurePosixPath(member.name)
+                  assert not p.is_absolute() and '..' not in p.parts and ':' not in member.name
+                  assert p.parts[0] in ['v105-public-profile','v105-public-profile.contract.json']
+                  assert member.isfile() or member.isdir()
+                  if p.parts[0]=='v105-public-profile.contract.json': assert len(p.parts)==1 and member.isfile()
+              tar.extractall(root,filter='data')
+          assert sha(root/'v105-public-profile.contract.json')=='5f147c464cca756955d73ee95090c7f0c769469ef88dc61a0b495f56aa222128'
+          pathlib.Path('outputs/v105-public-profile-verify/restoration.json').write_text(json.dumps({'runId':40131684178,'artifactId':12576180089,'closedArchiveSha256':expected,'prepareReportPreserved':True,'seedSaveUsed':False,'profileFilesCheckedByUnchangedScriptBeforeBrowser':True},indent=2)+'\n')
+          PY
+      - name: Confirm actual public update, relaunch and existing save preservation
+        env:
+          PWA_OFFICIAL_PROFILE_MODE: verify
           EXPECTED_HEAD: ${{ inputs.expected_head }}
-          PWA_OFFICIAL_PROFILE_EXPECTED_VERSION: "1.0.3"
-          PWA_OFFICIAL_PROFILE_EXPECTED_SHA: 99f9c193ab1e35531db39225c839138cdb1c33cd
+          PWA_OFFICIAL_PROFILE_EXPECTED_VERSION: "1.0.5"
+          PWA_OFFICIAL_PROFILE_EXPECTED_SHA: ${{ inputs.release_sha }}
+          PWA_OFFICIAL_PROFILE_EXPECTED_REQUEST_ID: ${{ inputs.request_id }}
+          PWA_OFFICIAL_PROFILE_EXPECTED_ISSUE: "177"
           PWA_OFFICIAL_PROFILE_BROWSER: chromium
           PWA_OFFICIAL_PROFILE_URL: https://susano-ooo.github.io/Zombieee/
           PWA_OFFICIAL_PROFILE_DIR: ${{ runner.temp }}/v105-public-profile
           PWA_OFFICIAL_PROFILE_CONTRACT: ${{ runner.temp }}/v105-public-profile.contract.json
-          PWA_OFFICIAL_PROFILE_EVIDENCE_DIR: outputs/v105-public-profile-prepare
+          PWA_OFFICIAL_PROFILE_EVIDENCE_DIR: outputs/v105-public-profile-verify/game
         run: node scripts/pwa-official-existing-profile.mjs
-      - name: Archive only the closed synthetic test profile with its sealed receipt
-        run: |
-          test -f "$RUNNER_TEMP/v105-public-profile.contract.json"
-          tar -C "$RUNNER_TEMP" -czf outputs/v105-public-profile-prepare/closed-profile.tgz v105-public-profile v105-public-profile.contract.json
-          sha256sum outputs/v105-public-profile-prepare/closed-profile.tgz > outputs/v105-public-profile-prepare/closed-profile.tgz.sha256
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: v105-public-profile-prepared
-          path: outputs/v105-public-profile-prepare
+          name: v105-public-profile-verified
+          path: outputs/v105-public-profile-verify
           if-no-files-found: error
           retention-days: 14
