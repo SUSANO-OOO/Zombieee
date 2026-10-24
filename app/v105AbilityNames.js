@@ -1,15 +1,12 @@
 // Ephemeral battle presentation, created only at a successful gameplay start.
 // Nothing here is serialized into saves/checkpoints or resurrected on reload.
-import {bossDefinitionForEnemyKind} from './bossFoundation.js';
-import {v090InfectedDefinition} from './v090Infected.js';
-import {STATION_ENEMY_TUNING} from './stationEnemyMechanics.js';
 const battles=new WeakMap();
 export function clearV105AbilityNames(world){battles.delete(world);}
 const liveOwner=(world,row)=>world.fighters?.find(f=>f.id===row.ownerId&&f.kind===row.ownerKind);
-export function v105EnemyAbilityName(kind){
-  return bossDefinitionForEnemyKind(kind)?.attackTelegraph?.displayName
-    ??v090InfectedDefinition(kind)?.abilityDisplayName
-    ??({grappler:STATION_ENEMY_TUNING.karamite,ooze:STATION_ENEMY_TUNING.leakMud,sprinter:STATION_ENEMY_TUNING.souki}[kind]?.displayName);
+export function v105EnemyAbilityName(kind,{boss,infected,station}={}){
+  return boss?.attackTelegraph?.displayName
+    ??infected?.abilityDisplayName
+    ??({grappler:station?.karamite,ooze:station?.leakMud,sprinter:station?.souki}[kind]?.displayName);
 }
 export const V105_ABILITY_NAME_PAINT=Symbol.for('Zombieee.actualAbilityNamePaint');
 const entries=world=>{

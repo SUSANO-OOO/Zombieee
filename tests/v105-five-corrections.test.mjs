@@ -1,3 +1,4 @@
+import {bossDefinitionForEnemyKind} from '../app/bossFoundation.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {MANUAL_ABILITY_REGISTRY as definitions,createManualAbilityRuntime,beginManualAbility,advanceManualAbility,manualAbilityCheckpointCooldown} from '../app/manualAbilities.js';
@@ -67,9 +68,9 @@ test('area-effect fighter copies retain the pending fist, following label, and a
   assert.equal(resolveV105FistWavePaint(world,current,{x:146,y:268},{activationId:1,paintedAt:.26,sourceAtlas:atlases.brawler.path}),true);
   world.time=.5;assert.equal(advanceV105FistWaves(world,world.fighters).find(e=>e.type==='contact').target,world.fighters[1]);
   const enemy={...victim(),kind:'grappler',stationAbility:{phase:'windup'}};world.fighters=[enemy];
-  assert.equal(startV105AbilityName(world,enemy,{name:v105EnemyAbilityName(enemy.kind),source:'enemy'}),true);
+  assert.equal(startV105AbilityName(world,enemy,{name:v105EnemyAbilityName(enemy.kind,{station:STATION_ENEMY_TUNING}),source:'enemy'}),true);
   world.fighters=[{...enemy}];world.time+=.5;updateV105AbilityNames(world);
-  assert.equal(startV105AbilityName(world,world.fighters[0],{name:v105EnemyAbilityName(enemy.kind),source:'enemy'}),true);
+  assert.equal(startV105AbilityName(world,world.fighters[0],{name:v105EnemyAbilityName(enemy.kind,{station:STATION_ENEMY_TUNING}),source:'enemy'}),true);
   const starts=v105AbilityNameSnapshot(world).starts.filter(r=>r.source==='enemy');
   assert.deepEqual(starts.map(r=>r.activationId),[1,2]);
 });
@@ -86,7 +87,7 @@ test('actual starts own one Japanese label; phases/hits do not re-register, and 
   owner.hp=100;owner.manualAbility={...owner.manualAbility,phase:'windup',activationId:2};
   startV105AbilityName(world,owner,{name:definition.displayName,activationId:2});world.over=true;
   updateV105AbilityNames(world);assert.equal(v105AbilityNameSnapshot(world).active.length,0);
-  for(const kind of ['grappler','ooze','sprinter',...Object.keys(V090_INFECTED_DEFINITIONS),'takuya','gate-eater','kurome','mother','ooguchi','gairen','futago','mugarian-president-mutated','takuya-omega'])assert.ok(v105EnemyAbilityName(kind),kind);
+  for(const kind of ['grappler','ooze','sprinter',...Object.keys(V090_INFECTED_DEFINITIONS),'takuya','gate-eater','kurome','mother','ooguchi','gairen','futago','mugarian-president-mutated','takuya-omega'])assert.ok(v105EnemyAbilityName(kind,{boss:bossDefinitionForEnemyKind(kind),infected:V090_INFECTED_DEFINITIONS[kind],station:STATION_ENEMY_TUNING}),kind);
 });
 test('simultaneous ability names stay inside the mobile battle and remain distinct',()=>{
   const rows=Array.from({length:8},(_,i)=>({ownerId:i,name:i%2?'Ω大剣薙ぎ払い':'気合拳波',headX:i<4?8:835,headY:130+i%4*4}));
@@ -195,7 +196,7 @@ test('current rig samples advance the affected manual and station windup/release
     }
   }
   const enemy={kind:'grappler',side:'zombie',hp:100,combatReady:true,stationAbility:{phase:'windup',remainingSeconds:STATION_ENEMY_TUNING.karamite.windupSeconds*.5}};
-  assert.equal(v105CurrentAbilitySample(enemy,base).clipProgress,.5);
+  assert.equal(v105CurrentAbilitySample(enemy,base,{station:STATION_ENEMY_TUNING}).clipProgress,.5);
   const gunner={kind:'gunner',side:'human',hp:100,combatReady:true};
   const d=definitions.gunner;
   for(let i=0;i<d.burstCount;i++){

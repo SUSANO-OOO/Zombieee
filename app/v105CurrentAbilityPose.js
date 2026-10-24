@@ -1,4 +1,3 @@
-import {STATION_ENEMY_TUNING as station} from './stationEnemyMechanics.js';
 const clamp=p=>Math.max(0,Math.min(1,Number(p)||0));
 const sample=(base,state,p,style)=>({...base,requestedState:state,clipProgress:clamp(p),
   movement:false,abilityPresentation:style});
@@ -14,7 +13,7 @@ export function v105AbilityFacing(owner){
 
 // Ability clocks select motion on the same current atlas as normal combat.
 // A legacy whole-body ability cell never owns the actor's person/clothes.
-export function v105CurrentAbilitySample(owner,base,{manualDefinition,anomaly,kurome,infected,takuyaWarning,takuyaReturn}={}){
+export function v105CurrentAbilitySample(owner,base,{manualDefinition,anomaly,kurome,infected,takuyaWarning,takuyaReturn,station}={}){
   if(!owner||!(owner.hp>0)||!owner.combatReady)return null;
   const m=owner.manualAbility;
   if(owner.stunned>0&&(['windup','recovery','salvo','guard','active','feral'].includes(m?.phase)

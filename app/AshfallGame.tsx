@@ -2127,6 +2127,9 @@ function addShot(
   );
 }
 
+function currentEnemyAbilityName(kind: EnemyKind) {
+  return v105EnemyAbilityName(kind,{boss:bossDefinitionForEnemyKind(kind),infected:v090InfectedDefinition(kind),station:STATION_ENEMY_TUNING});
+}
 function clearTransientRenderObjects(g: Game) {
   v100ImageSampler.clear();
   v100ShotLayer.clear();
@@ -4505,7 +4508,7 @@ function drawSpriteFighter(
   const articulatedMayoRetreat = f.kind === "mayo-chan" && f.mayoRetreat?.phase === "run" && Boolean(jointImage?.naturalWidth);
   const jointAbilitySample=jointImage?.naturalWidth
     ?v105CurrentAbilitySample(f,{...baseAnimationSample,bodyScale:v102BattleBodyScale(renderKind)},{manualDefinition:MANUAL_ABILITY_REGISTRY[f.kind],
-      anomaly:anomalyTuning,kurome:KUROME_PROTOTYPE_TUNING,infected:v090InfectedDefinition(f.kind),
+      anomaly:anomalyTuning,kurome:KUROME_PROTOTYPE_TUNING,infected:v090InfectedDefinition(f.kind),station:STATION_ENEMY_TUNING,
       takuyaWarning:bossDefinitionForEnemyKind('takuya')?.attackTelegraph.warningSeconds,
       takuyaReturn:TAKUYA_SLAM_PRESENTATION.impactSeconds}):null;
   const authoredPoseOwned=Boolean((!jointAbilitySample&&(kumaGuardArtPose||guardianGuardPose||soukiPose||stationAbilityPose||enemyContactPose||supportManualPose||advancedManualPose||takuyaSlamPose||manualAbilityActive||(f.mayoRetreat&&!articulatedMayoRetreat)||(f.stationAbility.phase!=='idle')))
@@ -21273,7 +21276,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               const windup = beginKaramiteWindup({ attacker: f, target: victim });
               if (windup.ok) {
                 f.stationAbility = windup.runtime as StationAbilityRuntime;
-                startV105AbilityName(g,f,{name:v105EnemyAbilityName(f.kind),source:'enemy'});
+                startV105AbilityName(g,f,{name:currentEnemyAbilityName(f.kind),source:'enemy'});
                 abilityFrame = true;
                 g.banner = "絡手 // 拘束予告";
                 g.bannerTime = Math.max(g.bannerTime, .75);
@@ -21313,7 +21316,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 });
                 if (windup.ok) {
                   f.stationAbility = windup.runtime as StationAbilityRuntime;
-                  startV105AbilityName(g,f,{name:v105EnemyAbilityName(f.kind),source:'enemy'});
+                  startV105AbilityName(g,f,{name:currentEnemyAbilityName(f.kind),source:'enemy'});
                   abilityFrame = true;
                   g.banner = "漏泥 // 床汚染予告";
                   g.bannerTime = Math.max(g.bannerTime, .8);
@@ -21328,7 +21331,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               const started = beginSoukiBurst({ runner: f });
               if (started.ok) {
                 f.stationAbility = started.runtime as StationAbilityRuntime;
-                startV105AbilityName(g,f,{name:v105EnemyAbilityName(f.kind),source:'enemy'});
+                startV105AbilityName(g,f,{name:currentEnemyAbilityName(f.kind),source:'enemy'});
                 g.banner = "走鬼 // 後方侵入予告";
                 g.bannerTime = Math.max(g.bannerTime, .62);
               }
@@ -21362,7 +21365,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               });
               if (started.ok) {
                 f.stationAbility = started.runtime as StationAbilityRuntime;
-                startV105AbilityName(g,f,{name:v105EnemyAbilityName(f.kind),source:'enemy'});
+                startV105AbilityName(g,f,{name:currentEnemyAbilityName(f.kind),source:'enemy'});
                 abilityFrame = true;
                 g.banner = `${definition?.displayName ?? enemyContentFor(f.kind)?.displayName ?? "異形"} // ${
                   f.kind === "resonator"
@@ -21580,7 +21583,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               });
               if (started.ok) {
                 f.stationAbility = started.runtime as StationAbilityRuntime;
-                startV105AbilityName(g,f,{name:v105EnemyAbilityName(f.kind),source:'enemy'});
+                startV105AbilityName(g,f,{name:currentEnemyAbilityName(f.kind),source:'enemy'});
                 abilityFrame = true;
                 g.banner = "マザー // 増殖兆候";
                 g.bannerTime = .72;
@@ -21768,7 +21771,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               });
               if (started.ok) {
                 f.stationAbility = started.runtime as StationAbilityRuntime;
-                startV105AbilityName(g,f,{name:v105EnemyAbilityName(f.kind),source:'enemy'});
+                startV105AbilityName(g,f,{name:currentEnemyAbilityName(f.kind),source:'enemy'});
                 abilityFrame = true;
                 g.banner = anomalyKind === "ooguchi"
                   ? "オオグチ // 捕食突進予告"
@@ -21887,7 +21890,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               const started = beginKuromeTracking(victim);
               if (started.ok) {
                 f.stationAbility = started.runtime as StationAbilityRuntime;
-                startV105AbilityName(g,f,{name:v105EnemyAbilityName(f.kind),source:'enemy'});
+                startV105AbilityName(g,f,{name:currentEnemyAbilityName(f.kind),source:'enemy'});
                 abilityFrame = true;
                 g.banner = isKuromeClone(f) ? "クロメ分身 // 追跡照準" : "クロメ // 追跡照準";
                 // The ray itself owns the full warning window. Keep the global
@@ -21917,7 +21920,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               const started = beginTicketGateEaterCharge({ boss: f, targetX });
               if (started.ok) {
                 f.stationAbility = {...started.runtime,originX:f.x,originY:f.y} as StationAbilityRuntime;
-                startV105AbilityName(g,f,{name:v105EnemyAbilityName(f.kind),source:'enemy'});
+                startV105AbilityName(g,f,{name:currentEnemyAbilityName(f.kind),source:'enemy'});
                 g.banner = "改札喰い // 突進予告";
                 g.bannerTime = Math.max(
                   g.bannerTime,
@@ -21989,7 +21992,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               abilityFrame = true;
               f.abilityWindup = bossDefinitionForEnemyKind("takuya")?.attackTelegraph.warningSeconds ?? 0;
               f.abilityCooldown = bossFinalPhase(f, .5) ? 4.8 : 6.5;
-              if(f.abilityWindup>0)startV105AbilityName(g,f,{name:v105EnemyAbilityName(f.kind),source:'enemy'});
+              if(f.abilityWindup>0)startV105AbilityName(g,f,{name:currentEnemyAbilityName(f.kind),source:'enemy'});
               g.banner = "TAKUYA // 鉄槌強襲予告";
               g.bannerTime = f.abilityWindup + .05;
             }
