@@ -17,7 +17,10 @@ concurrency:
 jobs:
   capture:
     if: github.head_ref == 'codex/177-five-corrections-v105'
-    runs-on: macos-15-intel
+    # Keep the original viewport, 60fps stream request and clock/deadline bounds.
+    # The Intel recording control remains in Targeted Frame Performance; use
+    # the formal benchmark's ARM host for the product's original AV evidence.
+    runs-on: macos-15
     timeout-minutes: 15
     strategy:
       fail-fast: false

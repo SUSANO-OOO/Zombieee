@@ -4732,10 +4732,12 @@ function drawSpriteFighter(
       sourceAtlas:jointAtlas.path,paintedAt:options.world.time});
   }
   if(drewArticulatedWalk&&jointPose&&weaponSocket&&options.world){
-    const sourcePixel={x:jointAtlas.muzzle[0],y:jointAtlas.muzzle[1]};
-    if(['tky','mrs-chiha','zakimiya'].includes(f.kind))resolveV105CurrentAbilityOrigin(options.world,f,weaponSocket,{
-      activationId:f.manualAbility?.activationId,path:jointAtlas.path,phase:animationSample.requestedState,
-      paintedAt:options.world.time,sourceBone:jointAtlas.weaponBone,direction,sourcePixel});
+    if(['tky','mrs-chiha','zakimiya'].includes(f.kind)){
+      const sourcePixel={x:jointAtlas.muzzle[0],y:jointAtlas.muzzle[1]};
+      resolveV105CurrentAbilityOrigin(options.world,f,weaponSocket,{
+        activationId:f.manualAbility?.activationId,path:jointAtlas.path,phase:animationSample.requestedState,
+        paintedAt:options.world.time,sourceBone:jointAtlas.weaponBone,direction,sourcePixel});
+    }
     const groundPixel=jointPose.groundStrike?.contactReady?jointPose.groundStrike.sourcePoint:null;
     const groundSocket=groundPixel?v177RenderedJointWeaponSocket({kind:renderKind,plan:jointPose,direction,frame,size,pose,
       x:f.x,y:f.y,bob,depthScale,sourcePoint:groundPixel}):null;
@@ -13482,6 +13484,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       getV105CorrectionAudit: (fighterIds: number[] = []) => {
         const g=gameRef.current;
         return {time:g.time,running:g.running,paused:g.paused,over:g.over,
+          timing:{droppedSimulationSeconds:runtimePerformanceRef.current.droppedSimulationSeconds},
           fighters:g.fighters.filter(f=>fighterIds.length===0||fighterIds.includes(f.id)).map(f=>{
             const draw=fighterRenderAuditHistory.get(f.id)?.at(-1);
             return {id:f.id,kind:f.kind,hp:f.hp,x:f.x,y:f.y,manualAbility:f.manualAbility?{...f.manualAbility}:null,

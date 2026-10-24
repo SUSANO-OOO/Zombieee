@@ -24,7 +24,7 @@ export function configureV177ContinuousActorProof(actor,target,{form,phase,lane,
   const identity=v177ProofFormIdentity(form,{knownForms,playableKinds});
   if(!['move','attack','engage','ability'].includes(phase)||!Number.isInteger(lane)||!Number.isFinite(laneY))throw new Error('Invalid continuous proof phase or lane');
   if(phase==='ability'&&!['kurome','mother','ooguchi','gairen','futago','mugarian-president-mutated','takuya-omega','takuya',
-    'grappler','ooze','sprinter','spindle','resonator','cagewalker','choir-knot','pall-manta','anchor-bloom'].includes(form))throw Error('Ability proof requires an enemy with its own runtime');
+    'grappler','ooze','sprinter','gate-eater','spindle','resonator','cagewalker','choir-knot','pall-manta','anchor-bloom'].includes(form))throw Error('Ability proof requires an enemy with its own runtime');
   if(actor?.kind!==identity.kind||actor?.side!==identity.side||!target||target.side===actor.side)throw new Error('Continuous proof actor/target identity mismatch');
   if(form==='mayo-chan-feral'&&!actor.manualAbility)throw new Error('Feral form requires its own manual ability runtime');
   if(typeof createAnimationRuntime!=='function'||(form==='mayo-chan-feral'&&!(Number.isFinite(feralSeconds)&&feralSeconds>0)))throw new Error('Continuous proof requires the original animation constructor and feral duration');

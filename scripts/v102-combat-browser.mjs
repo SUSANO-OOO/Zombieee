@@ -129,7 +129,7 @@ try{
             // This paused fixture owns one isolated action, not a timed turn.
             // Establish its left-facing start before its first actual paint;
             // live turning keeps the original unpaused stepping/foot guards.
-            if(kind==='ranger'&&action==='move-left')qa.stepAnimationFoundationProof(prepared.fighterId,'move-left',.05);
+            if(action==='move-left')qa.stepAnimationFoundationProof(prepared.fighterId,'move-left',.05);
             const previous=qa.getSnapshot().fighters.find(f=>f.id===prepared.fighterId)?.renderAudit?.renderSequence??0;
             return {...prepared,previous};
           },{kind,baseKind,side,expectedState,action});

@@ -33,7 +33,7 @@ test('v105 changes exactly six named runtime payloads and retires only the previ
 });
 test('correction capture covers changed action owners and both short mobile layouts, without a 48 by 21 cross-product',()=>{
   const desktop=correctionCases('desktop');assert.equal(desktop.filter(c=>c.mode==='manual').length,16);
-  assert.equal(desktop.filter(c=>c.mode==='engage').length,9);assert.equal(desktop.filter(c=>c.mode==='enemy').length,16);
+  assert.equal(desktop.filter(c=>c.mode==='engage').length,9);assert.equal(desktop.filter(c=>c.mode==='enemy').length,17);
   assert.deepEqual(correctionCases('mobile390'),correctionCases('mobile340'));
   assert.throws(()=>correctionCases('all-states'));
 });

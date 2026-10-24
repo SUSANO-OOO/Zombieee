@@ -16,7 +16,7 @@ export function correctionCases(scope){
   assert.ok(['desktop','mobile390','mobile340'].includes(scope));
   if(scope!=='desktop')return [...['brawler','crazy-king','guardian','gunner','zakimiya','mrs-chiha'].map(kind=>({kind,mode:'manual'})),{kind:'brawler',mode:'duet'}];
   return [...Object.keys(manual).map(kind=>({kind,mode:'manual'})),
-    ...['grappler','ooze','sprinter','spindle','resonator','cagewalker','choir-knot','pall-manta','anchor-bloom',
+    ...['grappler','ooze','sprinter','gate-eater','spindle','resonator','cagewalker','choir-knot','pall-manta','anchor-bloom',
       'kurome','mother','ooguchi','gairen','mugarian-president-mutated','takuya-omega','takuya'].map(kind=>({kind,mode:'enemy'})),
     ...['brute','guardian','tky','takuya','takuya-omega','crazy-king','kumaverson','babayaga','brawler'].map(kind=>({kind,mode:'engage'}))];
 }
@@ -59,8 +59,9 @@ export async function stopCorrectionRecording(){
     state.cues=window.__ASHFALL_AUDIO_QA__.getCueRequests();
     if(recorder.state!=='inactive')recorder.stop();await Promise.race([stopped,new Promise((_,reject)=>{stopTimer=setTimeout(()=>reject(Error('Native stop exceeded3s')),3000);})]);
     const blob=new Blob(state.chunks,{type:recorder.mimeType});
-    if(!blob.size||blob.size>8388608)throw Error('Original encoded byte limit');
-    const data=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result.split('base64,')[1]);reader.onerror=reject;reader.readAsDataURL(blob);});
+    const validBytes=blob.size>0&&blob.size<=8388608;
+    if(!validBytes)state.failed??='Original encoded byte limit';
+    const data=validBytes?await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result.split('base64,')[1]);reader.onerror=reject;reader.readAsDataURL(blob);}):'';
     const receipt={...state};delete receipt.chunks;
     return {data,...receipt,canvas:{width:document.querySelector('.game-shell canvas').width,height:document.querySelector('.game-shell canvas').height}};
   }finally{clearTimeout(stopTimer);tap.release();stream.getTracks().forEach(t=>t.stop());delete window.__V105_RECORDING__;}
@@ -70,7 +71,7 @@ export async function runBrowserQa(){
   const binding=await nativeGameCaptureBinding(),scope=process.env.V105_CAPTURE_SCOPE;
   const plan=correctionCases(scope),viewport=scope==='desktop'?{width:1280,height:720}:{width:844,height:scope==='mobile390'?390:340};
   const out=path.resolve(process.env.V105_CAPTURE_OUT??'outputs/v105-five-corrections/'+scope);await mkdir(out,{recursive:true});
-  const report={...binding,scope,viewport,runtime:PWA_WEBKIT_RUNTIME,cases:[],errors:[],status:'starting',
+  const report={...binding,architecture:process.arch,scope,viewport,runtime:PWA_WEBKIT_RUNTIME,cases:[],errors:[],status:'starting',
     acceptance:{physicalIphone:false,humanVisualAndListening:false,normalCampaign:false,wholeGame:false}};
   const persist=()=>writeFile(path.join(out,'report.json'),JSON.stringify(report,null,2)+'\n');
   let browser,context,requests,primary;
@@ -78,7 +79,7 @@ export async function runBrowserQa(){
     browser=await(await pwaBrowserType('webkit')).launch({headless:true});assert.equal(browser.version(),PWA_WEBKIT_RUNTIME.browserVersion);
     context=await browser.newContext({viewport,deviceScaleFactor:1,isMobile:viewport.width<1000,hasTouch:viewport.width<1000});
     const page=await context.newPage();page.setDefaultTimeout(30000);requests=installRequestFailureAudit(page);
-    page.on('pageerror',e=>report.errors.push(String(e)));page.on('console',m=>{if(m.type()==='error')report.errors.push(m.text());});
+    page.on('pageerror',e=>report.errors.push(e.stack??String(e)));page.on('console',m=>{if(m.type()==='error')report.errors.push(m.text());});
     page.on('response',r=>{if(r.status()>=400)report.errors.push(`${r.status()} ${r.url()}`);});
     const close=()=>closeNativeGameContext(context,requests);
     const owned=V100_UNITS.map(u=>u.id),base=createDefaultV100Save();
