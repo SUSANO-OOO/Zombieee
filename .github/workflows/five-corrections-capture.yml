@@ -37,8 +37,8 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npm ci --prefix scripts/pwa-native-runtime
-      - run: node scripts/pwa-native-runtime/node_modules/playwright/cli.js install webkit
+      - run: npm ci --prefix scripts/native-recording-runtime
+      - run: node scripts/native-recording-runtime/node_modules/playwright/cli.js install webkit
       - run: npm run build
         env:
           GITHUB_PAGES_RELEASE_SHA: ${{ github.event.pull_request.head.sha }}

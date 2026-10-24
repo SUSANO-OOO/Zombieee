@@ -7,7 +7,7 @@ import {spawnSync} from 'node:child_process';
 import ffmpeg from '@ffmpeg-installer/ffmpeg';
 import {nativeEncodedTimeline,NATIVE_ENCODED_LIMITS} from './v177-native-encoded-clips.mjs';
 import {nativeGameCaptureBinding,withNativeGameCaseDeadline,closeNativeGameContext} from './v177-native-game-capture-browser.mjs';
-import {pwaBrowserType,PWA_WEBKIT_RUNTIME} from './pwa-browser-runtime.mjs';
+import {nativeRecordingBrowserType,NATIVE_RECORDING_WEBKIT_RUNTIME} from './v177-native-allunit-recording-runtime.mjs';
 import {enterNativeAllUnitSurface} from './v177-native-allunit-browser.mjs';
 import {seedV100BrowserSaveOnce,enterV100FromTitle} from './v100-title-qa-entry.mjs';
 import {createDefaultV100Save,normalizeV100Save,serializeV100Save} from '../app/v100Save.js';
@@ -133,13 +133,13 @@ export async function runBrowserQa(){
   const atlasPaths=Object.fromEntries(Object.entries(currentAtlases).map(([kind,atlas])=>[kind,atlas.path]));
   const plan=correctionCases(scope),viewport=scope==='desktop'?{width:1280,height:720}:{width:844,height:scope==='mobile390'?390:340};
   const out=path.resolve(process.env.V105_CAPTURE_OUT??'outputs/v105-five-corrections/'+scope);await mkdir(out,{recursive:true});
-  const report={...binding,architecture:process.arch,scope,viewport,runtime:PWA_WEBKIT_RUNTIME,cases:[],errors:[],status:'starting',
+  const report={...binding,architecture:process.arch,scope,viewport,runtime:NATIVE_RECORDING_WEBKIT_RUNTIME,cases:[],errors:[],status:'starting',
     acceptance:{physicalIphone:false,humanVisualAndListening:false,normalCampaign:false,wholeGame:false}};
   const persist=()=>writeFile(path.join(out,'report.json'),JSON.stringify(report,null,2)+'\n');
   let browser,context,requests,primary,fatalErrors=0;
   const fatal=error=>{fatalErrors++;report.errors.push(String(error));};
   try{
-    browser=await(await pwaBrowserType('webkit')).launch({headless:true});assert.equal(browser.version(),PWA_WEBKIT_RUNTIME.browserVersion);
+    browser=await(await nativeRecordingBrowserType()).launch({headless:true});assert.equal(browser.version(),NATIVE_RECORDING_WEBKIT_RUNTIME.browserVersion);
     context=await browser.newContext({viewport,deviceScaleFactor:1,isMobile:viewport.width<1000,hasTouch:viewport.width<1000});
     const page=await context.newPage();page.setDefaultTimeout(30000);requests=installRequestFailureAudit(page);
     page.on('pageerror',e=>fatal(e.stack??String(e)));page.on('console',m=>{if(m.type()==='error')fatal(m.text());});
