@@ -17,6 +17,31 @@ import {installRequestFailureAudit} from './browser-request-failure-audit.mjs';
 import {normalCleanupWithin} from './v177-normal-browser-deadline.mjs';
 const productHead='f7f6f7ce46844eaefc4bb519fa80d591e2607407';
 const sha=b=>createHash('sha256').update(b).digest('hex');
+// Observe original source starts without replacing assets, timers, graphs or
+// recorder clocks. A WeakMap identifies the exact decoded AudioBuffer used.
+function observeOriginalAudioSources(){
+ const rows=[],buffers=new WeakMap();let sequence=0,overflow=0;
+ const stamp=context=>({wall:performance.now(),currentTime:context.currentTime,state:context.state,sampleRate:context.sampleRate,
+  baseLatency:context.baseLatency??null,outputLatency:context.outputLatency??null});
+ const append=row=>{if(rows.length<512)rows.push(row);else overflow++;};
+ const identify=buffer=>{let id=buffers.get(buffer);if(!id){id=++sequence;buffers.set(buffer,id);
+  const pcm=buffer.getChannelData(0),indices=[17,257,509,Math.floor(pcm.length*.3),Math.floor(pcm.length*.6)].filter(i=>i<pcm.length);
+  append({type:'buffer',id,length:buffer.length,rate:buffer.sampleRate,channels:buffer.numberOfChannels,
+   fingerprint:indices.map(i=>[i,pcm[i]])});}return id;};
+ const proto=globalThis.BaseAudioContext?.prototype;
+ if(!proto)throw Error('Original WebAudio source observation unavailable');
+ const decode=proto.decodeAudioData,create=proto.createBufferSource;
+ proto.decodeAudioData=function(raw,success,failure){const context=this,requested=stamp(context);let logged=false;
+  const note=buffer=>{if(!logged){logged=true;append({type:'decode',id:identify(buffer),requested,finished:stamp(context)});}return buffer;};
+  const result=decode.call(context,raw,buffer=>{note(buffer);success?.(buffer);},failure);
+  if(result?.then)void result.then(note,()=>{});return result;
+ };
+ proto.createBufferSource=function(){const source=create.call(this),context=this,start=source.start;
+  source.start=function(...args){const before=stamp(context),id=source.buffer?identify(source.buffer):null;
+   const result=start.apply(source,args);append({type:'start',id,before,after:stamp(context),args});return result;};return source;
+ };
+ window.__V105_AUDIO_SOURCE_TRACE__={snapshot:()=>({rows:rows.map(row=>({...row})),overflow,clock:performance.timeOrigin})};
+}
 export async function runBrowserQa(){
  const binding=await nativeGameCaptureBinding();
  const changed=execFileSync('git',['diff','--name-only',productHead,'HEAD'],{encoding:'utf8'}).trim().split('\n').filter(Boolean);
@@ -25,8 +50,7 @@ export async function runBrowserQa(){
    diagnosticOnly:true,acceptance:{physicalIphone:false,humanListening:false,wholeGame:false,release:false},cases:[]};
  const out=path.resolve('outputs/v105-av-clock-control');await mkdir(out,{recursive:true});
  const persist=()=>writeFile(path.join(out,'report.json'),JSON.stringify(report,null,2)+'\n');
- const cases=[...[true,false,false,true].map((headless,i)=>({id:`mrs340-${i+1}`,kind:'mrs-chiha',mode:'manual',headless,width:844,height:340})),
-   {id:'anchor-desktop',kind:'anchor-bloom',mode:'enemy',headless:true,width:1280,height:720}];
+ const cases=[340,390].map(height=>({id:`fist-${height}`,kind:'brawler',mode:'manual',headless:true,width:844,height}));
  for(const item of cases){
   const row={...item,status:'starting'};report.cases.push(row);await persist();
   let browser,context,requests,closing,fatal=[];
@@ -45,6 +69,7 @@ export async function runBrowserQa(){
    const save=normalizeV100Save({...base,campaignStarted:true,revision:3,ownedUnitIds:owned,registeredUnitIds:owned,formationSlots:owned.slice(0,7),
     flowState:{phase:'formation',stageId:V100_STAGE_IDS[0],stageNumber:1,eventId:null,destination:'formation',nodeIndex:0,firstClear:false,finalized:true}});
    await withNativeGameCaseDeadline(async()=>{
+    await page.addInitScript(observeOriginalAudioSources);
     await page.addInitScript(seedV100BrowserSaveOnce,serializeV100Save(save));await page.goto(new URL('v100',process.env.V100_CAMPAIGN_QA_BASE_URL).href);
     await enterNativeAllUnitSurface(page);await enterV100FromTitle(page);await page.getByRole('button',{name:'戦闘へ',exact:true}).click();
     await page.waitForFunction(()=>window.__ASHFALL_BATTLE_QA__?.getSnapshot().running);
@@ -65,7 +90,9 @@ export async function runBrowserQa(){
     if(item.mode==='manual')await page.locator(`.manual-ability-ready[data-fighter-id="${ids[0]}"]`).tap({timeout:5000});
     await page.waitForTimeout(durationMs);const capture=await page.evaluate(stopCorrectionRecording),bytes=Buffer.from(capture.data,'base64');delete capture.data;
     const file=item.id+(capture.mime.startsWith('video/mp4')?'.mp4':'.webm');await writeFile(path.join(out,file),bytes,{flag:'wx'});
-    Object.assign(row,{file,sha256:sha(bytes),bytes:bytes.length,capture});await persist();
+    const sourceTrace=await page.evaluate(()=>window.__V105_AUDIO_SOURCE_TRACE__.snapshot());
+    assert.equal(sourceTrace.overflow,0,'Original source trace overflow');
+    Object.assign(row,{file,sha256:sha(bytes),bytes:bytes.length,capture,sourceTrace});await persist();
     // The actual original recorder and every observation have stopped before
     // releasing this browser. A running synthetic battle must not compete
     // with the original5s decoder. No retained frame or clock is modified.
