@@ -1,50 +1,66 @@
-name: Native Capture Comparison Diagnostic
+name: Public Pages Persistent Profile QA
 
 on:
   workflow_dispatch:
     inputs:
       expected_head:
-        description: Exact 40-character candidate SHA for this diagnostic
+        description: Exact immutable QA source SHA
         required: true
         type: string
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
-  group: native-capture-comparison-${{ inputs.expected_head }}
+  group: public-profile-prepare-${{ inputs.expected_head }}
   cancel-in-progress: false
 
 jobs:
   native-capture-comparison:
-    name: Native WebKit Capture Comparison Diagnostic
-    runs-on: macos-15-intel
+    name: Preserve actual public1.0.3 browser profile before publication
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.expected_head }}
+          fetch-depth: 1
           persist-credentials: false
       - uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: npm
-      - name: Verify immutable candidate before running the diagnostic
+      - name: Check immutable QA source
         env:
           EXPECTED_HEAD: ${{ inputs.expected_head }}
-        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_HEAD??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_HEAD);'
+        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_HEAD??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_HEAD);assert.equal(process.env.GITHUB_SHA,process.env.EXPECTED_HEAD);'
       - run: npm ci
-      - name: Install the pinned native WebKit runtime
+      - name: Install the same pinned Chromium used for both profile phases
         run: |
-          npm ci --prefix scripts/pwa-native-runtime
-          node scripts/pwa-native-runtime/node_modules/playwright/cli.js install webkit
-      - name: Compare original native canvas recording conditions
+          node --input-type=module -e 'import assert from "node:assert/strict";import{createRequire}from"node:module";const r=createRequire(import.meta.url);assert.equal(r("playwright/package.json").version,"1.56.1");assert.equal(process.platform,"linux");assert.equal(process.arch,"x64");'
+          npx playwright install --with-deps chromium
+      - name: Install the actual published bundle and create a save with player controls
         env:
-          V177_NATIVE_CAPTURE_OUT: outputs/v177-native-capture-comparison
-        run: node scripts/v177-native-canvas-comparison-browser.mjs
+          PWA_OFFICIAL_PROFILE_MODE: prepare
+          EXPECTED_HEAD: ${{ inputs.expected_head }}
+          PWA_OFFICIAL_PROFILE_EXPECTED_VERSION: "1.0.3"
+          PWA_OFFICIAL_PROFILE_EXPECTED_SHA: 99f9c193ab1e35531db39225c839138cdb1c33cd
+          PWA_OFFICIAL_PROFILE_BROWSER: chromium
+          PWA_OFFICIAL_PROFILE_URL: https://susano-ooo.github.io/Zombieee/
+          PWA_OFFICIAL_PROFILE_DIR: ${{ runner.temp }}/v105-public-profile
+          PWA_OFFICIAL_PROFILE_CONTRACT: ${{ runner.temp }}/v105-public-profile.contract.json
+          PWA_OFFICIAL_PROFILE_EVIDENCE_DIR: outputs/v105-public-profile-prepare
+        run: node scripts/pwa-official-existing-profile.mjs
+      - name: Archive only the closed synthetic test profile with its sealed receipt
+        run: |
+          test -f "$RUNNER_TEMP/v105-public-profile.contract.json"
+          tar -C "$RUNNER_TEMP" -czf outputs/v105-public-profile-prepare/closed-profile.tgz v105-public-profile v105-public-profile.contract.json
+          sha256sum outputs/v105-public-profile-prepare/closed-profile.tgz > outputs/v105-public-profile-prepare/closed-profile.tgz.sha256
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: v177-native-capture-comparison
-          path: outputs/v177-native-capture-comparison
-          retention-days: 7
+          name: v105-public-profile-prepared
+          path: outputs/v105-public-profile-prepare
+          if-no-files-found: error
+          retention-days: 14

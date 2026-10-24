@@ -1,202 +1,89 @@
-import { V100_RELEASE_ASSET_CONTRACT as assetContract } from "./v100-release-asset-contract.mjs";
-// Preserve a real already-installed public profile across the V1 publication.
-//
-// prepare: while official Pages still serves 0.9.9.5, create one fresh named
-// persistent profile, seed a valid played legacy save before the first origin
-// load, install every published asset, and seal an immutable companion record.
-// verify: after the approved V1 publication, reopen that exact profile and
-// prove the real published gift/update/offline/rollback-recovery path.
+// One-off adhoc QA-branch reference; replace scripts/pwa-official-existing-profile.mjs only on that branch.
+// No save seed, worker-byte modification, OS installation, game setter, or release operation.
+// Hosted Chromium's retained origin/profile proof only. Root workflow owns the verified prepare artifact transfer.
+import assert from 'node:assert/strict';
+import {createHash,randomUUID} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
+import {mkdir,readFile,readdir,lstat,writeFile} from 'node:fs/promises';
+import path from 'node:path';
+import os from 'node:os';
+import {V100_PRIMARY_STORAGE_KEY} from '../app/v100Save.js';
+import {pwaBrowserType} from './pwa-browser-runtime.mjs';
+import {installRequestFailureAudit} from './browser-request-failure-audit.mjs';
+import {enterV100FromTitle} from './v100-title-qa-entry.mjs';
+import {inspectV177InstalledSaveTransition} from './v177-installed-save-contract.mjs';
 
-import { createHash, randomUUID } from "node:crypto";
-import { mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises";
-import path from "node:path";
-
-import { CAMPAIGN_STAGES, createDefaultCampaignSave, serializeCampaignSave } from "../app/campaign.js";
-import { V100_INITIAL_UNIT_IDS, V100_LEGACY_GIFT } from "../app/v100Registry.js";
-import { V100_PRIMARY_STORAGE_KEY } from "../app/v100Save.js";
-import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
-
-const mode = process.env.PWA_OFFICIAL_PROFILE_MODE ?? "prepare";
-const browserName = process.env.PWA_OFFICIAL_PROFILE_BROWSER ?? "chromium";
-const browserType = await pwaBrowserType(browserName);
-const officialUrl = new URL(process.env.PWA_OFFICIAL_PROFILE_URL ?? "https://susano-ooo.github.io/Zombieee/");
-const profileInput = process.env.PWA_OFFICIAL_PROFILE_DIR;
-const evidenceInput = process.env.PWA_OFFICIAL_PROFILE_EVIDENCE_DIR;
-const profileDir = path.resolve(profileInput ?? "");
-const evidenceDir = path.resolve(evidenceInput ?? "");
-const contractPath = path.resolve(process.env.PWA_OFFICIAL_PROFILE_CONTRACT ?? `${profileDir}.contract.json`);
-const oldVersion = "0.9.9.5";
-const oldReleaseSha = "55d796cc577d1d9f903a4d2c6b4382196511db27";
-const oldRequestId = "v0.9.9.5-55d796c-20260814T0011Z";
-const oldIssue = "165";
-const candidateVersion = process.env.PWA_OFFICIAL_PROFILE_EXPECTED_VERSION ?? "1.0.0";
-const candidateReleaseSha = process.env.PWA_OFFICIAL_PROFILE_EXPECTED_SHA?.trim() ?? "";
-const candidateRequestId = process.env.PWA_OFFICIAL_PROFILE_EXPECTED_REQUEST_ID?.trim() ?? "";
-const candidateIssue = process.env.PWA_OFFICIAL_PROFILE_EXPECTED_ISSUE?.trim() ?? "";
-const legacySaveKey = "nishijin-campaign-v1";
-const v100SaveKey = V100_PRIMARY_STORAGE_KEY;
-
-if (!['prepare', 'verify'].includes(mode)) throw new Error("PWA_OFFICIAL_PROFILE_MODE must be prepare or verify");
-if (!browserType) throw new Error(`Unknown browser: ${browserName}`);
-if (!profileInput || !evidenceInput) throw new Error("PWA_OFFICIAL_PROFILE_DIR and PWA_OFFICIAL_PROFILE_EVIDENCE_DIR are required");
-if (officialUrl.protocol !== "https:" || officialUrl.pathname !== "/Zombieee/") {
-  throw new Error("PWA_OFFICIAL_PROFILE_URL must be the exact official HTTPS root ending /Zombieee/");
+const mode=process.env.PWA_OFFICIAL_PROFILE_MODE;
+const browserName=process.env.PWA_OFFICIAL_PROFILE_BROWSER??'chromium';
+const officialUrl=new URL(process.env.PWA_OFFICIAL_PROFILE_URL??'https://susano-ooo.github.io/Zombieee/');
+const expected={version:process.env.PWA_OFFICIAL_PROFILE_EXPECTED_VERSION?.trim(),releaseSha:process.env.PWA_OFFICIAL_PROFILE_EXPECTED_SHA?.trim(),requestId:process.env.PWA_OFFICIAL_PROFILE_EXPECTED_REQUEST_ID?.trim(),issue:process.env.PWA_OFFICIAL_PROFILE_EXPECTED_ISSUE?.trim()};
+assert.ok(['prepare','verify'].includes(mode));
+assert.equal(browserName,'chromium');
+assert.equal(officialUrl.href,'https://susano-ooo.github.io/Zombieee/');
+assert.equal(process.platform,'linux'); assert.equal(process.arch,'x64');
+assert.equal(process.env.GITHUB_ACTIONS,'true'); assert.equal(process.env.RUNNER_ENVIRONMENT,'github-hosted');
+assert.ok(process.env.PWA_OFFICIAL_PROFILE_DIR&&process.env.PWA_OFFICIAL_PROFILE_EVIDENCE_DIR);
+assert.equal(expected.version,mode==='prepare'?'1.0.3':'1.0.5');
+assert.match(expected.releaseSha??'',/^[0-9a-f]{40}$/u);
+if(mode==='prepare')assert.equal(expected.releaseSha,'99f9c193ab1e35531db39225c839138cdb1c33cd');
+if(mode==='verify'){assert.ok(expected.requestId);assert.match(expected.issue??'',/^[1-9]\d*$/u);}
+const profileDir=path.resolve(process.env.PWA_OFFICIAL_PROFILE_DIR);
+const evidenceDir=path.resolve(process.env.PWA_OFFICIAL_PROFILE_EVIDENCE_DIR);
+const contractPath=path.resolve(process.env.PWA_OFFICIAL_PROFILE_CONTRACT??profileDir+'.contract.json');
+const inside=(parent,child)=>{const r=path.relative(parent,child);return r===''||(!r.startsWith('..'+path.sep)&&r!=='..'&&!path.isAbsolute(r));};
+assert.ok(!inside(profileDir,evidenceDir)&&!inside(profileDir,contractPath),'Evidence and contract must be outside the closed profile');
+const entries=p=>readdir(p).catch(e=>e.code==='ENOENT'?[]:Promise.reject(e));
+assert.equal((await entries(evidenceDir)).length,0,'Evidence must be new or empty');
+await mkdir(evidenceDir,{recursive:true});
+await mkdir(path.dirname(profileDir),{recursive:true});
+const sha256=value=>createHash('sha256').update(value).digest('hex');
+const legacySaveKey='nishijin-campaign-v1',v100SaveKey=V100_PRIMARY_STORAGE_KEY;
+const browserType=await pwaBrowserType(browserName);
+const report={mode,status:'running',officialUrl:officialUrl.href,profileDir,contractPath,emulatedStandaloneOnly:true,physicalInstallAccepted:false,physicalAudioAccepted:false,humanListeningAccepted:false,wholeGameAccepted:false,seedSaveUsed:false,legacyWriteObservationEnabled:false,archiveReady:false,steps:[],errors:[],cleanup:[],diagnostics:{consoleErrors:[],pageErrors:[],httpErrors:[],requestFailures:[],teardown:[]},owner:{head:process.env.GITHUB_SHA,runId:process.env.GITHUB_RUN_ID,runAttempt:process.env.GITHUB_RUN_ATTEMPT,ref:process.env.GITHUB_REF}};
+const reportPath=path.join(evidenceDir,'pwa-official-existing-profile-'+mode+'-chromium.json');
+let context=null,page=null,requestAudit=null,phase='preflight',closeUnconfirmed=false,contract=null;
+report.requestAudits=[];
+const persist=()=>writeFile(reportPath,JSON.stringify(report,null,2)+'\n');
+const git=args=>execFileSync('git',args,{encoding:'utf8',timeout:5000,maxBuffer:1024*1024}).trim();
+async function qaSourceIdentity(){
+  const head=git(['rev-parse','HEAD']);assert.equal(head,process.env.GITHUB_SHA);assert.equal(head,process.env.EXPECTED_HEAD);
+  const files=['scripts/pwa-browser-runtime.mjs','scripts/v100-title-qa-entry.mjs','scripts/v177-installed-save-contract.mjs',
+    'scripts/browser-request-failure-audit.mjs','app/v100Save.js'];
+  git(['diff','--exit-code','HEAD','--','app',...files]);
+  const dependencies={appTree:git(['rev-parse','HEAD:app']),files:{}};
+  for(const file of files)dependencies.files[file]=sha256(await readFile(new URL('../'+file,import.meta.url)));
+  return {head,dependencies};
 }
-// WebKit/Chromium CacheStorage backends add several hashed directories below
-// userDataDir. On Windows an already-long worktree path can make Cache.open()
-// fail with an internal error even though page navigation succeeds. Keep the
-// retained profile at a short named workspace path and fail before first load;
-// otherwise the irreplaceable public-old baseline would be contaminated.
-if (process.platform === "win32" && profileDir.length > 60) {
-  throw new Error(`Windows persistent profile path must be 60 characters or shorter (actual ${profileDir.length})`);
+// Original official-profile bounds: action/API30s, navigation/save/UI90s,
+// initial pack420s, worker-state message5s, active/update180s, poll250ms.
+// Outer owner also bounds original navigator.serviceWorker.ready / IDB / close promises.
+async function bounded(label,ms,operation){let timer;const started=performance.now();try{const result=await Promise.race([Promise.resolve().then(operation),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error(label+' exceeded '+ms+'ms')),ms);})]);if(performance.now()-started>=ms)throw Error(label+' completed after '+ms+'ms');return result;}finally{clearTimeout(timer);report.steps.push({phase,label,budgetMs:ms,elapsedMs:performance.now()-started});}}
+async function runtimeIdentity(){
+  const pkg=JSON.parse(await readFile(new URL('../node_modules/playwright/package.json',import.meta.url)));
+  const bytes=await readFile(new URL('../node_modules/playwright-core/browsers.json',import.meta.url));
+  const browsers=JSON.parse(bytes).browsers;
+  const chromium=browsers.find(b=>b.name==='chromium'),shell=browsers.find(b=>b.name==='chromium-headless-shell');
+  assert.equal(pkg.version,'1.56.1');assert.equal(chromium.revision,'1194');assert.equal(shell.revision,'1194');
+  return {platform:process.platform,arch:process.arch,osRelease:os.release(),osReleaseFileSha256:sha256(await readFile('/etc/os-release')),node:process.version,playwright:pkg.version,browsersSha256:sha256(bytes),chromium,shell,packageLockSha256:sha256(await readFile(new URL('../package-lock.json',import.meta.url)))};
 }
-if (mode === "verify" && (
-  !/^[0-9a-f]{40}$/u.test(candidateReleaseSha)
-  || !candidateRequestId
-  || !/^\d+$/u.test(candidateIssue)
-)) {
-  throw new Error("verify requires exact candidate SHA, request ID, and numeric Issue");
+async function openProfile(){
+  try{context=await bounded('persistent Chromium launch',30000,()=>browserType.launchPersistentContext(profileDir,{headless:true,viewport:{width:844,height:390},deviceScaleFactor:3,hasTouch:true,serviceWorkers:'allow'}));}
+  catch(error){closeUnconfirmed=true;throw error;}
+  context.setDefaultTimeout(30000);context.setDefaultNavigationTimeout(90000);
+  assert.equal(context.browser().version(),report.runtime.chromium.browserVersion);
+  // Existing official-profile standalone fixture, explicitly emulated; no Storage/IDB seeding or product setter.
+  await bounded('standalone fixture',30000,()=>context.addInitScript(()=>{Object.defineProperty(navigator,'standalone',{value:true,configurable:true});}));
+  page=context.pages()[0]??await bounded('new page',30000,()=>context.newPage());
+  requestAudit=installRequestFailureAudit(page);report.requestAudits.push(requestAudit.report);
+  page.on('console',m=>{if(m.type()==='error')report.diagnostics.consoleErrors.push({phase,message:m.text()});});
+  page.on('pageerror',e=>report.diagnostics.pageErrors.push({phase,error:String(e)}));
+  page.on('response',r=>{if(r.status()>=400)report.diagnostics.httpErrors.push({phase,url:r.url(),status:r.status()});});
 }
+async function closeProfile(){
+  if(!context)return;const owned=context,audit=requestAudit;
+  try{await bounded('persistent context close',30000,()=>audit?audit.closeContext(owned):owned.close());context=null;requestAudit=null;report.cleanup.push({phase,closed:true});}
+  catch(e){closeUnconfirmed=true;report.cleanup.push({phase,closed:false,error:String(e)});throw e;}
 
-function sha256(value) {
-  return createHash("sha256").update(value).digest("hex");
-}
-
-async function directoryEntries(target) {
-  return readdir(target).catch((error) => error?.code === "ENOENT" ? [] : Promise.reject(error));
-}
-
-if ((await directoryEntries(evidenceDir)).length > 0) throw new Error(`Evidence directory must be new or empty: ${evidenceDir}`);
-if (mode === "prepare") {
-  if ((await directoryEntries(profileDir)).length > 0) throw new Error(`Prepare refuses a nonempty profile: ${profileDir}`);
-  if (await stat(contractPath).catch(() => null)) throw new Error(`Prepare refuses an existing contract: ${contractPath}`);
-} else {
-  if ((await directoryEntries(profileDir)).length === 0) throw new Error(`Verify requires the retained nonempty profile: ${profileDir}`);
-  await stat(contractPath);
-}
-await mkdir(path.dirname(profileDir), { recursive: true });
-await mkdir(evidenceDir, { recursive: true });
-
-const legacySave = createDefaultCampaignSave();
-legacySave.campaignStarted = true;
-legacySave.caps = 777;
-legacySave.supplies = 654;
-legacySave.completedStageIds = CAMPAIGN_STAGES.slice(0, 2).map((stage) => stage.id);
-legacySave.bestStarsByStage = {
-  [CAMPAIGN_STAGES[0].id]: 3,
-  [CAMPAIGN_STAGES[1].id]: 2,
-};
-legacySave.unlockedStageIds = CAMPAIGN_STAGES.slice(0, 3).map((stage) => stage.id);
-legacySave.formationPresets = legacySave.formationPresets.map((preset, index) => (
-  index === 0 ? { ...preset, unitIds: ["unit-paisen", "unit-hachi", "unit-nao"] } : preset
-));
-legacySave.readStoryEventIds = ["story-prologue-v070", "story-stage1-intro-v070"];
-legacySave.updatedAt = "2026-08-10T00:00:00.000Z";
-legacySave.settings = {
-  ...legacySave.settings,
-  bgmEnabled: false,
-  sfxEnabled: false,
-  bgmVolume: 0.42,
-  sfxVolume: 0.37,
-  graphicsQuality: "power-save",
-};
-const legacySaveRaw = serializeCampaignSave(legacySave);
-const legacySaveSha256 = sha256(legacySaveRaw);
-
-const results = [];
-const failures = [];
-const images = [];
-const diagnostics = { consoleErrors: [], pageErrors: [], httpErrors: [], requestFailures: [], teardown: [] };
-let phase = "setup";
-let teardown = false;
-let context = null;
-
-function record(name, passed, detail = {}) {
-  const entry = { name, passed, ...detail };
-  results.push(entry);
-  if (!passed) failures.push({ name, ...detail });
-  console.log(`[${passed ? "PASS" : "FAIL"}] ${name}${passed ? "" : ` :: ${JSON.stringify(detail)}`}`);
-}
-
-function attachDiagnostics(page) {
-  page.on("console", (message) => {
-    if (message.type() !== "error") return;
-    (teardown ? diagnostics.teardown : diagnostics.consoleErrors).push({ phase, message: message.text() });
-  });
-  page.on("pageerror", (error) => {
-    (teardown ? diagnostics.teardown : diagnostics.pageErrors).push({ phase, error: String(error) });
-  });
-  page.on("response", (response) => {
-    if (response.status() < 400) return;
-    (teardown ? diagnostics.teardown : diagnostics.httpErrors).push({ phase, url: response.url(), status: response.status() });
-  });
-  page.on("requestfailed", (request) => {
-    (teardown ? diagnostics.teardown : diagnostics.requestFailures).push({
-      phase,
-      url: request.url(),
-      error: request.failure()?.errorText ?? "unknown",
-    });
-  });
-}
-
-async function openProfile({ seed }) {
-  const opened = await browserType.launchPersistentContext(profileDir, {
-    headless: true,
-    viewport: { width: 844, height: 390 },
-    deviceScaleFactor: 3,
-    hasTouch: true,
-  });
-  await opened.addInitScript(({ seed, key, raw, legacyKeys }) => {
-    Object.defineProperty(window.navigator, "standalone", { value: true, configurable: true });
-    if (seed && !window.localStorage.getItem(key)) window.localStorage.setItem(key, raw);
-    window.__PWA_OFFICIAL_LEGACY_WRITES__ = [];
-    for (const method of ["setItem", "removeItem", "clear"]) {
-      const native = Storage.prototype[method];
-      Storage.prototype[method] = function (...args) {
-        if (this === localStorage && (method === "clear" || legacyKeys.includes(String(args[0])))) {
-          window.__PWA_OFFICIAL_LEGACY_WRITES__.push({ store: "local", method, key: args[0] ?? null });
-        }
-        return native.apply(this, args);
-      };
-    }
-    for (const method of ["put", "add", "delete", "clear"]) {
-      const native = IDBObjectStore.prototype[method];
-      IDBObjectStore.prototype[method] = function (...args) {
-        if (this.transaction.db.name === "nishijin-campaign-backup") {
-          window.__PWA_OFFICIAL_LEGACY_WRITES__.push({ store: "indexed", method });
-        }
-        return native.apply(this, args);
-      };
-    }
-  }, {
-    seed,
-    key: legacySaveKey,
-    raw: legacySaveRaw,
-    legacyKeys: [legacySaveKey, `${legacySaveKey}::last-known-good`, `${legacySaveKey}::pre-migration`],
-  });
-  const page = opened.pages()[0] ?? await opened.newPage();
-  attachDiagnostics(page);
-  return { context: opened, page };
-}
-
-async function closeProfile(label) {
-  if (!context) return;
-  phase = label;
-  teardown = true;
-  await context.close();
-  context = null;
-  teardown = false;
-}
-
-async function screenshot(page, label) {
-  const file = path.join(evidenceDir, `${mode}-${browserName}-${label}.png`);
-  const bytes = await page.screenshot({ path: file, animations: "disabled" });
-  images.push({
-    file: path.basename(file),
-    sha256: sha256(bytes),
-    width: bytes.readUInt32BE(16),
-    height: bytes.readUInt32BE(20),
-  });
 }
 
 function metaValue(html, name) {
@@ -253,35 +140,6 @@ async function getWorkerState(page) {
   });
 }
 
-function workerSummary(state) {
-  const summarize = (manifest) => manifest ? {
-    version: manifest.version,
-    releaseSha: manifest.releaseSha,
-    assets: manifest.assets?.length ?? null,
-  } : null;
-  return {
-    scope: state?.scope ?? null,
-    activeScriptURL: state?.activeScriptURL ?? null,
-    activeWorkerState: state?.activeWorkerState ?? null,
-    waitingScriptURL: state?.waitingScriptURL ?? null,
-    waitingWorkerState: state?.waitingWorkerState ?? null,
-    active: summarize(state?.activeState?.active),
-    previous: summarize(state?.activeState?.previous),
-    storedHashes: state?.activeState?.storedHashes?.length ?? null,
-  };
-}
-
-async function waitForActiveVersion(page, version, timeoutMs = 180_000) {
-  const started = Date.now();
-  let state = null;
-  while (Date.now() - started < timeoutMs) {
-    state = await getWorkerState(page);
-    if (state?.activeState?.active?.version === version && state.activeWorkerState === "activated") return state;
-    await page.waitForTimeout(250);
-  }
-  return state;
-}
-
 async function cacheState(page, manifest) {
   return page.evaluate(async (assets) => {
     const cache = await caches.open("zombieee-assets-v1");
@@ -295,13 +153,6 @@ async function cacheState(page, manifest) {
       allEntries: keys.length,
     };
   }, manifest.assets);
-}
-
-async function legacyState(page) {
-  return page.evaluate((key) => ({
-    raw: localStorage.getItem(key),
-    legacyWrites: [...(window.__PWA_OFFICIAL_LEGACY_WRITES__ ?? [])],
-  }), legacySaveKey);
 }
 
 async function v100State(page) {
@@ -338,403 +189,151 @@ async function waitForV100Ready(page) {
   ), null, { timeout: 90_000 });
 }
 
-async function waitForGame(page) {
-  await page.locator(".game-shell, .game-frame").first().waitFor({ state: "visible", timeout: 90_000 });
+async function publishedIdentity(){
+  const identity=await bounded('official HTML and manifest identity',30000,()=>readPublishedIdentity(context));
+  assert.equal(identity.htmlStatus,200);assert.equal(identity.manifestStatus,200);
+  for(const key of ['version','releaseSha']){assert.equal(identity[key],expected[key]);assert.equal(identity.manifest[key],expected[key]);}
+  assert.ok(identity.requestId);assert.match(identity.issue??'',/^[1-9]\d*$/u);
+  for(const key of ['requestId','issue'])if(expected[key])assert.equal(identity[key],expected[key]);
+  assert.equal(identity.base,'/Zombieee/');assert.ok(identity.manifest.assets.length>0);
+  const sw=await bounded('unmodified public SW bytes',30000,()=>context.request.get(new URL('sw.js',officialUrl).href,{headers:{'cache-control':'no-cache',pragma:'no-cache'}}));
+  assert.equal(sw.status(),200);identity.workerBytesSha256=sha256(await bounded('SW response body',30000,()=>sw.body()));
+  return identity;
 }
-
-async function prepare() {
-  let page;
-  ({ context, page } = await openProfile({ seed: true }));
-  phase = "prepare-live-entry";
-  await page.goto(officialUrl.toString(), { waitUntil: "domcontentloaded", timeout: 90_000 });
-  const published = await readPublishedIdentity(context);
-  record("official Pages is the exact released 0.9.9.5 identity", (
-    published.htmlStatus === 200
-    && published.manifestStatus === 200
-    && published.version === oldVersion
-    && published.releaseSha === oldReleaseSha
-    && published.requestId === oldRequestId
-    && published.issue === oldIssue
-    && published.base === "/Zombieee/"
-    && published.manifest.version === oldVersion
-    && published.manifest.releaseSha === oldReleaseSha
-    && published.manifest.assets?.length === 415
-    && new Set(published.manifest.assets.map((asset) => asset.hash)).size === 413
-  ), { ...published, manifest: { version: published.manifest.version, releaseSha: published.manifest.releaseSha, assets: published.manifest.assets?.length } });
-
-  const startDownload = page.getByRole("button", { name: "ダウンロードを開始", exact: true });
-  await startDownload.waitFor({ state: "visible", timeout: 90_000 });
-  await screenshot(page, "published-old-download-ready");
-  await startDownload.click();
-  const startGame = page.getByRole("button", { name: "ゲームを始める", exact: true });
-  await startGame.waitFor({ state: "visible", timeout: 420_000 });
-  const cache = await cacheState(page, published.manifest);
-  const worker = await getWorkerState(page);
-  const beforeGameSave = await legacyState(page);
-  record("official old pack is completely installed into the named profile", (
-    cache.assetEntries === 413
-    && cache.logicalSatisfied === 415
-    && worker.scope === officialUrl.toString()
-    && worker.activeWorkerState === "activated"
-    && worker.activeState?.active?.version === oldVersion
-    && worker.activeState?.active?.releaseSha === oldReleaseSha
-    && beforeGameSave.raw === legacySaveRaw
-  ), {
-    cache,
-    worker: workerSummary(worker),
-    legacySaveSha256: sha256(beforeGameSave.raw ?? ""),
-    legacyWrites: beforeGameSave.legacyWrites,
+async function activeVersion(identity){
+  return bounded('active manifest exact identity',180000,async()=>{
+    for(;;){const state=await getWorkerState(page);if(state?.activeWorkerState==='activated'&&state.activeState?.active?.version===identity.version&&state.activeState.active.releaseSha===identity.releaseSha)return state;await page.waitForTimeout(250);}
   });
-  await screenshot(page, "published-old-download-complete");
-  await startGame.click();
-  await waitForGame(page);
-  await screenshot(page, "published-old-installed");
-  await closeProfile("prepare-first-close");
-
-  ({ context, page } = await openProfile({ seed: false }));
-  phase = "prepare-persistent-reopen";
-  await page.goto(officialUrl.toString(), { waitUntil: "domcontentloaded", timeout: 90_000 });
-  await waitForGame(page);
-  const reopenedCache = await cacheState(page, published.manifest);
-  const reopenedWorker = await getWorkerState(page);
-  const reopenedSave = await legacyState(page);
-  record("official old profile survives a real browser-context reopen", (
-    reopenedCache.assetEntries === 413
-    && reopenedCache.logicalSatisfied === 415
-    && reopenedWorker.activeState?.active?.version === oldVersion
-    && reopenedWorker.activeState?.active?.releaseSha === oldReleaseSha
-    && reopenedSave.raw === legacySaveRaw
-  ), {
-    cache: reopenedCache,
-    worker: workerSummary(reopenedWorker),
-    legacySaveSha256: sha256(reopenedSave.raw ?? ""),
-    legacyWrites: reopenedSave.legacyWrites,
-  });
-  await screenshot(page, "published-old-reopened");
-
-  return {
-    profileId: randomUUID(),
-    preparedAt: new Date().toISOString(),
-    officialUrl: officialUrl.toString(),
-    browser: browserName,
-    oldIdentity: {
-      version: published.version,
-      releaseSha: published.releaseSha,
-      requestId: published.requestId,
-      issue: published.issue,
-      htmlBytes: published.htmlBytes,
-      htmlSha256: published.htmlSha256,
-      manifestBytes: published.manifestBytes,
-      manifestSha256: published.manifestSha256,
-      assetCount: published.manifest.assets.length,
-      distinctHashCount: new Set(published.manifest.assets.map((asset) => asset.hash)).size,
-      totalBytes: published.manifest.assets.reduce((sum, asset) => sum + Number(asset.bytes ?? 0), 0),
-    },
-    oldManifest: published.manifest,
-    legacySaveSha256,
-  };
 }
-
-async function verify(contract) {
-  let page;
-  ({ context, page } = await openProfile({ seed: false }));
-  const candidateRequests = [];
-  page.on("request", (request) => {
-    const url = new URL(request.url());
-    if (url.origin === officialUrl.origin && /\/(?:art|audio|pwa-bundles)\//u.test(url.pathname)) {
-      candidateRequests.push(url.pathname);
-    }
+async function ready(){await bounded('V100 save/UI ready',90000,()=>waitForV100Ready(page));}
+async function snapshot(label,identity,{requirePageIdentity=true}={}){
+  const result=await bounded(label+' storage/worker/UI snapshot',30000,async()=>{
+    const worker=await getWorkerState(page),cache=await cacheState(page,identity.manifest),save=await v100State(page);
+    const ui=await page.evaluate(()=>({url:location.href,title:document.title,version:document.querySelector('meta[name="github-pages-version"]')?.content??null,releaseSha:document.querySelector('meta[name="github-pages-release"]')?.content??null,standaloneFixture:navigator.standalone===true,displayModeStandalone:matchMedia('(display-mode: standalone)').matches,controllerURL:navigator.serviceWorker.controller?.scriptURL??null,controllerState:navigator.serviceWorker.controller?.state??null,savePending:document.documentElement.dataset.pwaSaveMutationPending??null,shell:!!document.querySelector('.v100-shell'),map:!!document.querySelector('.v100-map-layout'),titleScreen:!!document.querySelector('.v100-start-screen')}));
+    return {label,worker,cache,save,ui};
   });
-  phase = "verify-published-candidate-entry";
-  await page.goto(officialUrl.toString(), { waitUntil: "domcontentloaded", timeout: 90_000 });
-  const published = await readPublishedIdentity(context);
-  record("official Pages is the exact approved V1 release identity", (
-    published.htmlStatus === 200
-    && published.manifestStatus === 200
-    && published.version === candidateVersion
-    && published.releaseSha === candidateReleaseSha
-    && published.requestId === candidateRequestId
-    && published.issue === candidateIssue
-    && published.base === "/Zombieee/"
-    && published.manifest.version === candidateVersion
-    && published.manifest.releaseSha === candidateReleaseSha
-  ), { ...published, manifest: { version: published.manifest.version, releaseSha: published.manifest.releaseSha, assets: published.manifest.assets?.length } });
-
-  const oldManifest = contract.oldManifest;
-  const oldHashes = new Set(oldManifest.assets.map((asset) => asset.hash));
-  const candidateHashes = new Set(published.manifest.assets.map((asset) => asset.hash));
-  const candidateByPath = new Map(published.manifest.assets.map((asset) => [asset.path, asset]));
-  const unchanged = oldManifest.assets.filter((asset) => {
-    const next = candidateByPath.get(asset.path);
-    return next && next.hash === asset.hash && next.bytes === asset.bytes
-      && (next.sourcePath ?? null) === (asset.sourcePath ?? null)
-      && (next.bundlePath ?? null) === (asset.bundlePath ?? null);
-  });
-  const newAssets = published.manifest.assets.filter((asset) => !oldHashes.has(asset.hash));
-  const expectedPaths = new Set(newAssets.map((asset) => `/Zombieee${asset.bundlePath ?? asset.sourcePath ?? asset.path}`));
-  record("published V1 declares the source-bound update delta from all 415 legacy assets", (
-    oldManifest.assets.length === 415
-    && oldHashes.size === 413
-    && published.manifest.assets.length === assetContract.count
-    && candidateHashes.size === assetContract.distinctHashes
-    && unchanged.length === 415
-    && newAssets.length === assetContract.additionsFromV0995
-    && newAssets.reduce((sum, asset) => sum + asset.bytes, 0) === assetContract.bytesFromV0995
-    && expectedPaths.size === assetContract.additionsFromV0995
-  ), {
-    oldAssets: oldManifest.assets.length,
-    oldHashes: oldHashes.size,
-    candidateAssets: published.manifest.assets.length,
-    candidateHashes: candidateHashes.size,
-    unchanged: unchanged.length,
-    newAssets: newAssets.length,
-    newBytes: newAssets.reduce((sum, asset) => sum + asset.bytes, 0),
-  });
-
-  await waitForV100Ready(page);
-  const gift = page.getByRole("dialog", { name: "新しい戦闘記録を開始しました", exact: true });
-  await gift.waitFor({ state: "visible", timeout: 90_000 });
-  const updateButton = page.getByRole("button", { name: "更新をダウンロード", exact: true });
-  const updateDeferredDuringGift = await updateButton.count() === 0;
-  const confirmGift = gift.getByRole("button", { name: "確認する", exact: true });
-  await page.waitForFunction(() => {
-    const button = [...document.querySelectorAll("button")].find((entry) => entry.textContent?.trim() === "確認する");
-    return button instanceof HTMLButtonElement && !button.disabled;
-  }, null, { timeout: 90_000 });
-  const beforeUpdate = await v100State(page);
-  const nativeBefore = beforeUpdate.native?.record?.serialized ? JSON.parse(beforeUpdate.native.record.serialized) : null;
-  record("published V1 claims one visible gift without importing or writing legacy progress", (
-    updateDeferredDuringGift
-    && beforeUpdate.oldRaw === legacySaveRaw
-    && beforeUpdate.mirror?.caps === V100_LEGACY_GIFT.amountCaps
-    && beforeUpdate.mirror?.campaignStarted === false
-    && beforeUpdate.mirror?.completedStageIds?.length === 0
-    && beforeUpdate.mirror?.ownedUnitIds?.slice().sort().join("|") === [...V100_INITIAL_UNIT_IDS].sort().join("|")
-    && beforeUpdate.mirror?.settings?.bgmEnabled === false
-    && beforeUpdate.mirror?.settings?.sfxEnabled === false
-    && beforeUpdate.mirror?.settings?.bgmVolume === 0.42
-    && beforeUpdate.mirror?.settings?.sfxVolume === 0.37
-    && beforeUpdate.mirror?.settings?.graphicsQuality === "power-save"
-    && beforeUpdate.mirror?.receipts?.filter((id) => id === V100_LEGACY_GIFT.entitlementReceipt).length === 1
-    && beforeUpdate.mirror?.receipts?.filter((id) => id === V100_LEGACY_GIFT.popupReceipt).length === 1
-    && beforeUpdate.mirror?.legacy?.popupAcknowledged === true
-    && JSON.stringify(nativeBefore) === JSON.stringify(beforeUpdate.mirror)
-    && beforeUpdate.legacyWrites.length === 0
-  ), { updateDeferredDuringGift, mirror: beforeUpdate.mirror, legacyWrites: beforeUpdate.legacyWrites });
-  await screenshot(page, "published-v1-gift");
-  await confirmGift.click();
-  await gift.waitFor({ state: "detached", timeout: 30_000 });
-  await waitForV100Ready(page);
-  await updateButton.waitFor({ state: "visible", timeout: 90_000 });
-  const waiting = await page.evaluate(async () => {
-    const registration = await navigator.serviceWorker.ready;
-    try { await registration.update(); } catch { /* state readback below owns the result */ }
-    const started = Date.now();
-    while (!registration.waiting && Date.now() - started < 15_000) await new Promise((resolve) => setTimeout(resolve, 250));
-    return { scope: registration.scope, waiting: Boolean(registration.waiting), state: registration.waiting?.state ?? null };
-  });
-  record("published candidate has a real waiting worker and safe enabled update control", (
-    waiting.waiting && waiting.scope === officialUrl.toString() && await updateButton.isEnabled()
-  ), waiting);
-  await screenshot(page, "published-v1-update-ready");
-
-  const requestStart = candidateRequests.length;
-  await updateButton.click();
-  phase = "verify-published-update-download";
-  const active = await waitForActiveVersion(page, candidateVersion);
-  const startGame = page.getByRole("button", { name: "ゲームを始める", exact: true });
-  await startGame.waitFor({ state: "visible", timeout: 180_000 });
-  await screenshot(page, "published-v1-update-complete");
-  await startGame.click();
-  await waitForV100Ready(page);
-  const updatedCache = await cacheState(page, published.manifest);
-  const afterUpdate = await v100State(page);
-  const actualPaths = candidateRequests.slice(requestStart);
-  const actualPathSet = new Set(actualPaths);
-  const unexpected = [...actualPathSet].filter((item) => !expectedPaths.has(item));
-  const missing = [...expectedPaths].filter((item) => !actualPathSet.has(item));
-  record("published V1 commits the activated generation and preserves both save owners", (
-    active?.activeWorkerState === "activated"
-    && active?.activeState?.active?.version === candidateVersion
-    && active?.activeState?.active?.releaseSha === candidateReleaseSha
-    && active?.activeState?.previous?.version === oldVersion
-    && updatedCache.assetEntries === new Set([...oldHashes, ...candidateHashes]).size
-    && updatedCache.logicalSatisfied === assetContract.count
-    && afterUpdate.oldRaw === legacySaveRaw
-    && afterUpdate.raw === beforeUpdate.raw
-    && afterUpdate.legacyWrites.length === 0
-  ), {
-    worker: workerSummary(active),
-    cache: updatedCache,
-    oldSavePreserved: afterUpdate.oldRaw === legacySaveRaw,
-    v100SavePreserved: afterUpdate.raw === beforeUpdate.raw,
-    legacyWrites: afterUpdate.legacyWrites,
-  });
-  record("published update fetches exactly the 44 preferred new transport paths", (
-    actualPaths.length === 44 && actualPathSet.size === 44 && unexpected.length === 0 && missing.length === 0
-  ), { expected: [...expectedPaths].sort(), actual: actualPaths, unexpected, missing });
-  await screenshot(page, "published-v1-committed");
-  await closeProfile("verify-committed-close");
-
-  ({ context, page } = await openProfile({ seed: false }));
-  phase = "verify-published-reopen";
-  await page.goto(officialUrl.toString(), { waitUntil: "domcontentloaded", timeout: 90_000 });
-  await waitForV100Ready(page);
-  const reopenedWorker = await getWorkerState(page);
-  const reopened = await v100State(page);
-  record("published V1 survives browser-context reopen with no duplicate gift", (
-    reopenedWorker.activeState?.active?.releaseSha === candidateReleaseSha
-    && reopened.oldRaw === legacySaveRaw
-    && reopened.raw === beforeUpdate.raw
-    && reopened.legacyWrites.length === 0
-    && await page.getByRole("dialog", { name: "新しい戦闘記録を開始しました", exact: true }).count() === 0
-  ), { worker: workerSummary(reopenedWorker), legacyWrites: reopened.legacyWrites });
-
-  await context.setOffline(true);
-  phase = "verify-published-offline-reopen";
-  await page.reload({ waitUntil: "domcontentloaded", timeout: 90_000 });
-  await waitForV100Ready(page);
-  const offlineWorker = await getWorkerState(page);
-  const offline = await v100State(page);
-  record("published V1 performs an actual offline root relaunch", (
-    offlineWorker.activeState?.active?.releaseSha === candidateReleaseSha
-    && offline.oldRaw === legacySaveRaw
-    && offline.raw === beforeUpdate.raw
-    && offline.legacyWrites.length === 0
-  ), { worker: workerSummary(offlineWorker), legacyWrites: offline.legacyWrites });
-  await screenshot(page, "published-v1-offline");
-  await context.setOffline(false);
-
-  const rollback = await page.evaluate(async () => {
-    const registration = await navigator.serviceWorker.ready;
-    return new Promise((resolve) => {
-      const channel = new MessageChannel();
-      const timer = setTimeout(() => resolve(null), 10_000);
-      channel.port1.onmessage = (event) => { clearTimeout(timer); resolve(event.data ?? null); };
-      registration.active.postMessage({ type: "pwa:rollback" }, [channel.port2]);
-    });
-  });
-  phase = "verify-published-rollback";
-  await page.reload({ waitUntil: "domcontentloaded", timeout: 90_000 });
-  const recommit = page.getByRole("button", { name: "保存済みデータを反映", exact: true });
-  await recommit.waitFor({ state: "visible", timeout: 90_000 });
-  const rolledBackWorker = await getWorkerState(page);
-  const rolledBackLegacy = await legacyState(page);
-  const rolledBackV100Raw = await page.evaluate((key) => localStorage.getItem(key), v100SaveKey);
-  record("published rollback restores the old generation without changing either save", (
-    rollback?.type === "pwa:rolled-back"
-    && rolledBackWorker.activeState?.active?.version === oldVersion
-    && rolledBackLegacy.raw === legacySaveRaw
-    && rolledBackV100Raw === beforeUpdate.raw
-  ), { rollback, worker: workerSummary(rolledBackWorker), legacyWrites: rolledBackLegacy.legacyWrites });
-  await screenshot(page, "published-rollback-commit-required");
-
-  await recommit.click();
-  const recoveredWorker = await waitForActiveVersion(page, candidateVersion);
-  const recoveredStart = page.getByRole("button", { name: "ゲームを始める", exact: true });
-  await recoveredStart.waitFor({ state: "visible", timeout: 90_000 });
-  await recoveredStart.click();
-  await waitForV100Ready(page);
-  const recovered = await v100State(page);
-  record("published rollback recovery returns the retained profile to V1", (
-    recoveredWorker?.activeState?.active?.releaseSha === candidateReleaseSha
-    && recovered.oldRaw === legacySaveRaw
-    && recovered.raw === beforeUpdate.raw
-    && recovered.legacyWrites.length === 0
-  ), { worker: workerSummary(recoveredWorker), legacyWrites: recovered.legacyWrites });
-  await screenshot(page, "published-v1-recovered");
-  return { publishedIdentity: published };
-}
-
-let contract = null;
-let modeResult = null;
-try {
-  if (mode === "prepare") {
-    contract = await prepare();
-  } else {
-    contract = JSON.parse(await readFile(contractPath, "utf8"));
-    record("retained profile contract matches the official old baseline", (
-      contract.officialUrl === officialUrl.toString()
-      && contract.browser === browserName
-      && contract.oldIdentity?.version === oldVersion
-      && contract.oldIdentity?.releaseSha === oldReleaseSha
-      && contract.oldIdentity?.requestId === oldRequestId
-      && contract.oldIdentity?.issue === oldIssue
-      && contract.oldIdentity?.assetCount === 415
-      && contract.oldIdentity?.distinctHashCount === 413
-      && contract.legacySaveSha256 === legacySaveSha256
-    ), { profileId: contract.profileId, oldIdentity: contract.oldIdentity });
-    modeResult = await verify(contract);
+  report.steps.push(result);await persist();
+  assert.equal(result.worker.scope,officialUrl.href);assert.equal(result.worker.activeWorkerState,'activated');
+  assert.equal(result.worker.activeState?.active?.version,identity.version);assert.equal(result.worker.activeState.active.releaseSha,identity.releaseSha);
+  assert.equal(result.cache.logicalSatisfied,identity.manifest.assets.length);
+  assert.ok(result.ui.controllerURL);assert.equal(result.ui.controllerState,'activated');assert.equal(result.ui.standaloneFixture,true);
+  assert.equal(result.ui.savePending,'false');assert.equal(result.ui.shell,true);
+  if(requirePageIdentity){assert.equal(result.ui.version,identity.version);assert.equal(result.ui.releaseSha,identity.releaseSha);}
+  if(requirePageIdentity&&result.ui.map){
+    result.ui.displayedReleaseLabel=await page.locator('.v100-save-meta > span').first().textContent();
+    assert.equal(result.ui.displayedReleaseLabel?.trim(),'Version '+identity.version,'Visible product version must match the published release');
   }
-} catch (error) {
-  record(`${mode} official existing-profile flow completes without an unhandled error`, false, {
-    error: String(error?.stack ?? error),
-  });
-} finally {
-  if (context) await closeProfile("final-close").catch(() => {});
-  record("official profile runtime diagnostics are clean", (
-    diagnostics.consoleErrors.length === 0
-    && diagnostics.pageErrors.length === 0
-    && diagnostics.httpErrors.length === 0
-    && diagnostics.requestFailures.length === 0
-  ), {
-    consoleErrors: diagnostics.consoleErrors,
-    pageErrors: diagnostics.pageErrors,
-    httpErrors: diagnostics.httpErrors,
-    requestFailures: diagnostics.requestFailures,
-  });
-  record("official profile teardown diagnostics are clean", diagnostics.teardown.length === 0, {
-    teardown: diagnostics.teardown,
+  assert.ok(result.save.raw&&result.save.mirror&&result.save.native?.record,'Real durable player save is required');
+  assert.equal(result.save.native.database,v100SaveKey);
+  assert.deepEqual(JSON.parse(result.save.native.record.serialized),result.save.mirror);
+  result.screenshot=label+'.png';
+  await bounded(label+' actual player screen',30000,()=>page.screenshot({path:path.join(evidenceDir,result.screenshot)}));
+  return result;
+}
+function preserveSave(before,after,label){
+  const exact=before.raw===after.raw&&JSON.stringify(before.native.record)===JSON.stringify(after.native.record);
+  const transition=exact?{preserved:true,rawPreserved:true,durablePreserved:true,addedFields:[],changedPaths:[]}:inspectV177InstalledSaveTransition(before,after);
+  report.steps.push({label,transition});assert.equal(transition.preserved,true,label);
+  assert.equal(before.oldRaw,after.oldRaw,'Legacy key must not be synthesized or modified');
+}
+async function mapThroughPlayerUi({create=false}={}){
+  await bounded(create?'player creates name/story/map save':'player resumes retained map',90000,async()=>{
+    await waitForV100Ready(page);
+    if(await page.locator('.v100-start-screen').isVisible())await enterV100FromTitle(page);
+    await waitForV100Ready(page);
+    if(create){await page.locator('#v100-player-name').fill('公開更新確認');await page.getByRole('button',{name:'この名前でステージを始める',exact:true}).click();}
+    for(let i=0;i<220;i++){
+      await waitForV100Ready(page);
+      if(await page.locator('.v100-map-layout').isVisible())return;
+      const skip=page.getByRole('button',{name:'スキップ',exact:true});
+      await(await skip.isVisible()?skip:page.locator('.v100-event-actions .v100-primary')).click();
+    }
+    throw Error('Did not reach map within 220 ordinary player story transitions');
   });
 }
-
-const sourceFiles = [
-  "scripts/pwa-official-existing-profile.mjs",
-  "app/PwaGate.tsx",
-  "app/GameEntry.tsx",
-  "app/v100Save.js",
-  "app/v100CampaignStorage.js",
-];
-const sources = [];
-for (const file of sourceFiles) {
-  sources.push({ file, sha256: sha256(await readFile(new URL(`../${file}`, import.meta.url))) });
+async function profileFiles(){
+  assert.equal(context,null,'Never seal/read profile while Chromium is open');assert.equal(closeUnconfirmed,false);
+  const files=[];
+  async function walk(dir){for(const name of(await readdir(dir)).sort()){const file=path.join(dir,name),s=await lstat(file);assert.equal(s.isSymbolicLink(),false,'Closed profile must have no unresolved link '+file);if(s.isDirectory())await walk(file);else{assert.equal(s.isFile(),true);const bytes=await readFile(file);files.push({file:path.relative(profileDir,file).split(path.sep).join('/'),bytes:bytes.length,sha256:sha256(bytes)});}}}
+  await walk(profileDir);assert.ok(files.length>0);return files;
 }
-const report = {
-  mode,
-  browser: browserName,
-  officialUrl: officialUrl.toString(),
-  profileDir,
-  contractPath,
-  contract: contract ? {
-    profileId: contract.profileId,
-    preparedAt: contract.preparedAt,
-    oldIdentity: contract.oldIdentity,
-    legacySaveSha256: contract.legacySaveSha256,
-  } : null,
-  modeResult: modeResult?.publishedIdentity ? {
-    publishedIdentity: {
-      version: modeResult.publishedIdentity.version,
-      releaseSha: modeResult.publishedIdentity.releaseSha,
-      requestId: modeResult.publishedIdentity.requestId,
-      issue: modeResult.publishedIdentity.issue,
-      htmlBytes: modeResult.publishedIdentity.htmlBytes,
-      htmlSha256: modeResult.publishedIdentity.htmlSha256,
-      manifestBytes: modeResult.publishedIdentity.manifestBytes,
-      manifestSha256: modeResult.publishedIdentity.manifestSha256,
-    },
-  } : null,
-  sources,
-  images,
-  diagnostics,
-  results,
-  failures,
-};
-const reportPath = path.join(evidenceDir, `pwa-official-existing-profile-${mode}-${browserName}.json`);
-await writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
-if (mode === "prepare" && failures.length === 0 && contract) {
-  const contractPayload = { ...contract, sourceSha256: sources[0].sha256, prepareReport: path.basename(reportPath) };
-  await writeFile(contractPath, `${JSON.stringify(contractPayload, null, 2)}\n`, { encoding: "utf8", flag: "wx" });
+try{
+  const source=await qaSourceIdentity();report.owner.head=source.head;report.owner.checkedOutHead=source.head;
+  report.qaDependencies=source.dependencies;
+  report.referenceSourceSha256=sha256(await readFile(new URL('./pwa-official-existing-profile.mjs',import.meta.url)));
+  report.runtime=await runtimeIdentity();
+  if(mode==='prepare'){
+    assert.equal((await entries(profileDir)).length,0,'Prepare requires a new dedicated test profile');
+    assert.equal(await lstat(contractPath).catch(e=>e.code==='ENOENT'?null:Promise.reject(e)),null,'Prepare refuses to replace a contract');
+  }else{
+    contract=JSON.parse(await readFile(contractPath,'utf8'));
+    assert.equal(contract.officialUrl,officialUrl.href);assert.equal(contract.emulatedStandaloneOnly,true);assert.equal(contract.seedSaveUsed,false);
+    assert.equal(report.referenceSourceSha256,contract.referenceSourceSha256,'Prepare and verify must use the same reference script');
+    assert.deepEqual(report.qaDependencies,contract.qaDependencies,'Prepare and verify must use identical imported QA helpers and app source');
+    assert.equal(contract.prepareOwner.checkedOutHead,contract.prepareOwner.head);
+    assert.match(contract.prepareOwner.head,/^[a-f0-9]{40}$/u);
+    assert.equal(contract.oldIdentity.version,'1.0.3');assert.equal(contract.oldIdentity.releaseSha,'99f9c193ab1e35531db39225c839138cdb1c33cd');
+    assert.deepEqual(report.runtime,contract.runtime,'The same browser revision, lock, OS, architecture and Node runtime are required');
+    assert.deepEqual(await profileFiles(),contract.closedProfileFiles,'Restore the exact closed prepare profile, not storageState or a recreated save');
+    report.prepareOwner=contract.prepareOwner;report.profileId=contract.profileId;
+    report.restoredProfileFilesSha256=sha256(JSON.stringify(contract.closedProfileFiles));
+  }
+  await openProfile();phase=mode+'-live-entry';
+  await page.goto(officialUrl.href,{waitUntil:'domcontentloaded',timeout:90000});
+  const published=await publishedIdentity();report.publishedIdentity=published;await persist();
+  if(mode==='prepare'){
+    const download=page.getByRole('button',{name:'ダウンロードを開始',exact:true});
+    await download.waitFor({state:'visible',timeout:90000});await download.click();
+    const start=page.getByRole('button',{name:'ゲームを始める',exact:true});
+    await start.waitFor({state:'visible',timeout:420000});await activeVersion(published);await start.click();
+    await mapThroughPlayerUi({create:true});const created=await snapshot('player-created-installed-map',published);
+    assert.equal(created.save.mirror.playerName,'公開更新確認');assert.ok(created.save.mirror.readStoryEventIds.length>0);
+    phase='prepare-first-close';await closeProfile();await openProfile();phase='prepare-reopen';
+    await page.goto(officialUrl.href,{waitUntil:'domcontentloaded',timeout:90000});await ready();
+    const reopened=await snapshot('old-profile-reopened-before-resume',published);preserveSave(created.save,reopened.save,'old reopen preserves player save');
+    await mapThroughPlayerUi();const baseline=await snapshot('old-profile-resumed-map',published);preserveSave(created.save,baseline.save,'old resume preserves player save');
+    phase='prepare-final-close';await closeProfile();
+    contract={schema:1,profileId:randomUUID(),preparedAt:new Date().toISOString(),officialUrl:officialUrl.href,emulatedStandaloneOnly:true,physicalInstallAccepted:false,seedSaveUsed:false,runtime:report.runtime,prepareOwner:report.owner,oldIdentity:published,baseline,closedProfileFiles:await profileFiles()};
+  }else{
+    report.serviceWorkerBytesSame=published.workerBytesSha256===contract.oldIdentity.workerBytesSha256;
+    await ready();
+    const before=await snapshot('old-active-profile-before-update',contract.oldIdentity,{requirePageIdentity:false});preserveSave(contract.baseline.save,before.save,'restored pre-update save');
+    const update=page.getByRole('button',{name:'更新をダウンロード',exact:true});
+    const commit=page.getByRole('button',{name:'保存済みデータを反映',exact:true});
+    await update.or(commit).first().waitFor({state:'visible',timeout:90000});
+    if(await update.isVisible()){await update.click();report.updateControl='更新をダウンロード';}else{await commit.click();report.updateControl='保存済みデータを反映';}
+    // No registration.update(), waiting-worker assertion, QA SW comment, skipWaiting, or rollback mutation.
+    await activeVersion(published);
+    const start=page.getByRole('button',{name:'ゲームを始める',exact:true});await start.waitFor({state:'visible',timeout:180000});await start.click();
+    // PwaGate's completion button changes React state; it does not reload the old document.
+    // Active pack is candidate here; require candidate HTML/UI only after the real browser reopen below.
+    await ready();const updated=await snapshot('updated-active-pack-before-reopen',published,{requirePageIdentity:false});preserveSave(before.save,updated.save,'real public update preserves save');
+    phase='verify-first-close';await closeProfile();await openProfile();phase='verify-reopen';
+    await page.goto(officialUrl.href,{waitUntil:'domcontentloaded',timeout:90000});await ready();
+    const reopened=await snapshot('updated-profile-reopened',published);preserveSave(updated.save,reopened.save,'updated reopen preserves save');
+    await mapThroughPlayerUi();const final=await snapshot('updated-profile-reopened-map',published);preserveSave(reopened.save,final.save,'reopened resume preserves save');
+    phase='verify-final-close';await closeProfile();
+  }
+  for(const [kind,values]of Object.entries(report.diagnostics))assert.deepEqual(values,[],kind+' diagnostics');
+  assert.ok(report.requestAudits.every(r=>r.unexpectedFailures.length===0),'Unexpected request failures remain failures');
+  report.status='passed';
+  if(mode==='prepare'){
+    contract.referenceSourceSha256=report.referenceSourceSha256;
+    contract.qaDependencies=report.qaDependencies;
+    contract.closedProfileFilesSha256=sha256(JSON.stringify(contract.closedProfileFiles));
+    await writeFile(contractPath,JSON.stringify(contract,null,2)+'\n',{flag:'wx'});
+    report.contractSha256=sha256(await readFile(contractPath));report.profileId=contract.profileId;report.closedProfileFilesSha256=contract.closedProfileFilesSha256;
+    report.archiveReady=true; // Workflow may tar the ENTIRE closed profile + this contract + this receipt only after exit0.
+  }
+}catch(error){report.status='failed';report.errors.push({phase,error:String(error),stack:error?.stack??null});}
+finally{
+  if(context)try{await closeProfile();}catch(error){report.status='failed';report.errors.push({phase:'cleanup',error:String(error)});}
+  if(Object.values(report.diagnostics).some(a=>a.length)||report.requestAudits.some(r=>r.unexpectedFailures.length)){report.status='failed';report.archiveReady=false;}
+  report.closeConfirmed=context===null&&!closeUnconfirmed;
+  report.publicOriginInstalledUpdateAccepted=mode==='verify'&&report.status==='passed'&&report.closeConfirmed;
+  if(report.status!=='passed'||!report.closeConfirmed)report.archiveReady=false;
+  await persist();
 }
-
-console.log(`${results.length - failures.length} / ${results.length} official existing-profile cases passed`);
-if (failures.length > 0) process.exitCode = 1;
+console.log(JSON.stringify({mode,status:report.status,reportPath,contractPath,archiveReady:report.archiveReady,emulatedStandaloneOnly:true,physicalInstallAccepted:false}));
+// Fail-stop after bounded close failure. A failed or unconfirmed profile must never be archived/adopted.
+if(report.status!=='passed'||!report.closeConfirmed)process.exit(1);
