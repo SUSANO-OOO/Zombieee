@@ -23,7 +23,20 @@ test('real manual activation starts from last actually drawn walking/ordinary at
 });
 test('original .5 impact/.18 recovery own recoil clock and return to ordinary pose',()=>{
  const f=fixture();paint(f,plan(f));for(const seconds of[0,.2,.499999]){assert.equal(at(f,seconds).events.length,0);assert.equal(plan(f).rangerManualJoint.presentationPhase,'aim');}
- const impact=at(f,.5);assert(impact.events.some(e=>e.type==='impact'));assert.equal(plan(f).rangerManualJoint.presentationPhase,'recoil');at(f,.57);assert.equal(plan(f).rangerManualJoint.presentationPhase,'return');at(f,.6799999999);const end=paint(f,plan(f));at(f,.68);assert.equal(f.actor.manualAbility.phase,'cooldown');const normal=paint(f,v177JointPose('ranger',{requestedState:'idle'},f.runtime,{actor:f.actor,world:f.world}));for(let i=1;i<8;i++)for(let j=0;j<6;j++)assert(Math.abs(end.calls[i].matrix[j]-normal.calls[i].matrix[j])<1e-7);
+ const impact=at(f,.5);assert(impact.events.some(e=>e.type==='impact'));assert.equal(plan(f).rangerManualJoint.presentationPhase,'recoil');at(f,.60);assert.equal(plan(f).rangerManualJoint.presentationPhase,'return');at(f,.6799999999);const end=paint(f,plan(f));at(f,.68);assert.equal(f.actor.manualAbility.phase,'cooldown');const normal=paint(f,v177JointPose('ranger',{requestedState:'idle'},f.runtime,{actor:f.actor,world:f.world}));for(let i=1;i<8;i++)for(let j=0;j<6;j++)assert(Math.abs(end.calls[i].matrix[j]-normal.calls[i].matrix[j])<1e-7);
+});
+
+test('the actual sparse native shot paints a real recoil before return without extending the gameplay recovery',()=>{
+ const f=fixture({state:'idle'});let elapsed=0,impacts=0;const phases=[];
+ // Original d552 desktop paints around the missing recoil, not invented FPS.
+ for(const next of [0,.4499999999999744,.4999999999999716,.5666666666666345,.649999999999963,.7333333333332916]){
+  const advanced=advanceManualAbility(f.actor.manualAbility,next-elapsed);f.actor.manualAbility=advanced.runtime;
+  impacts+=advanced.events.filter(e=>e.type==='impact').length;elapsed=next;f.world.time=20+next;
+  const q=plan(f);if(q){const drawn=paint(f,q);assert.equal(drawn.receipt.mode,'continuous-weighted-mesh');phases.push(q.rangerManualJoint.presentationPhase);}
+ }
+ assert.deepEqual(phases,['aim','aim','aim','recoil','return']);assert.equal(impacts,1);
+ assert.equal(f.actor.manualAbility.phase,'cooldown');assert.equal(f.actor.manualAbility.abilityElapsed,definition.windupSeconds+definition.recoverySeconds);
+ assert.equal(definition.windupSeconds,.5);assert.equal(definition.recoverySeconds,.18);assert.equal(definition.impactDamage,92);
 });
 test('missing actual history, foreign world and other owners cannot enter manual joints',()=>{
  assert.equal(plan(fixture({draw:false})),null);

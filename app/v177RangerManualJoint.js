@@ -54,7 +54,9 @@ export function createV177RangerManualJoint({normalPlan,captureUpper,blendUpper}
       upper=aimP===0?copyUpper(entry.upper):blendUpper(atlas,entry.upper,captureUpper(atlas,aiming),aimP);
       attackPhase=aiming.attackPhase*aimP;presentationPhase='aim';
     }else {
-      const afterShot=elapsed-windup,recoilSeconds=recovery/3;
+      // Keep the original .18s recovery. Give the actual recoil half of it:
+      // a real 66.7ms paint interval otherwise skipped the whole impulse.
+      const afterShot=elapsed-windup,recoilSeconds=recovery/2;
       if(afterShot<=recoilSeconds) {
         const recoil=normalPlan({requestedState:'active',clipProgress:clamp(afterShot/recoilSeconds)},gait);
         upper=captureUpper(atlas,recoil);attackPhase=recoil.attackPhase;presentationPhase='recoil';
