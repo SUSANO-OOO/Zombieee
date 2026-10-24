@@ -96,7 +96,7 @@ test('bitmap reuse observes subpixel, foot, facing and surface changes and appli
     return {receipt,call:target.calls[0]};
   };
   const first=paint();assert.equal(observation.writes,1);
-  assert.deepEqual(observation.dirtyRects[0],[0,0,first.receipt.width,first.receipt.height]);
+  assert.deepEqual(observation.dirtyRects[0],[]);
   const again=paint({alpha:.21});assert.equal(observation.writes,1);assert.deepEqual(again.receipt,first.receipt);
   assert.deepEqual(again.call.pixels,first.call.pixels);assert.equal(again.call.alpha,.21);
   assert.equal(again.call.filter,'brightness(1.1)');assert.equal(again.call.composite,'screen');
@@ -108,7 +108,13 @@ test('bitmap reuse observes subpixel, foot, facing and surface changes and appli
     const before=getV177RangerLowerPaintSnapshot(),result=paint(entry),after=getV177RangerLowerPaintSnapshot();
     assert.equal(after.rasterizedDraws,before.rasterizedDraws+1,'changed backing geometry must be rasterized');
     assert.deepEqual(result.call.pixels,painter.imageData.data,'the current exact payload must be uploaded or already present');
+    const payload=painter.imageData,surface=painter.lastRaster.canvas;
+    assert.equal(payload.width,surface.width);assert.equal(payload.height,surface.height);
+    for(let y=0;y<payload.height;y++)for(let x=0;x<payload.width;x++)if(x>=result.receipt.width||y>=result.receipt.height)
+      assert.deepEqual([...payload.data.subarray((y*payload.width+x)*4,(y*payload.width+x)*4+4)],[0,0,0,0],
+        'a complete upload only adds the original transparent backing guard');
   }
+  assert.ok(observation.dirtyRects.every(rect=>rect.length===0));
   const before=observation.writes;paint();assert.equal(observation.writes,before);
   assert.equal(paint({matrix:[1,0,0,1,-2000,0]}).receipt.mode,'offscreen-weighted-mesh');
   paint();assert.equal(observation.writes,before+1,'offscreen draws invalidate the prior bitmap');
