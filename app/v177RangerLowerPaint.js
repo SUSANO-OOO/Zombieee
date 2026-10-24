@@ -249,10 +249,7 @@ export function paintV177RangerLower(p,ctx,phase,settle,x,y,width,height,feet=nu
     else if(previousPayloadReused)last.uploadOwner=previousUploadOwner;
     else{
       last.uploadOwner=null;
-      // The payload owns this exact backing size. Its optional guard row/column
-      // is already transparent; write the complete original RGBA once rather
-      // than asking the native canvas to clip a dirty rectangle.
-      try{last.context.putImageData(p.imageData,0,0);}catch(error){invalidateRasters(p);throw error;}
+      try{last.context.putImageData(p.imageData,0,0,0,0,w,h);}catch(error){invalidateRasters(p);throw error;}
     }
     if(trace){trace.payloadReused=payloadReused;trace.payloadReuseOwner=ownPayloadReused?'own':previousPayloadReused?'previous':null;trace.actualUpload=!payloadReused;}
     if(trace)trace.uploadFinishedAt=performance.now();
