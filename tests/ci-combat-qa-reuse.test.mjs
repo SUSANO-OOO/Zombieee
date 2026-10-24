@@ -97,8 +97,10 @@ test('workflow preserves every command/deadline and current script drift rejects
       assert.equal(reviewedCombatQaPaths(paths,currentBlobs),false,file);
       const currentScope=ciChangeScope(paths,{draft:false,sourceBlobs:currentBlobs,reuseCombatQa:true});
       assert.equal(currentScope.full,true,file);assert.equal(currentScope.scope,'full-regression');
+      let requests=0;
       assert.equal((await previousCombatQaEvidence({...options,sourceBlobs:currentBlobs,
-        request:()=>assert.fail('Changed current scripts cannot query or inherit old QA')})).passed,false);
+        request:()=>{requests++;assert.fail('Changed current scripts cannot query or inherit old QA');}})).passed,false);
+      assert.equal(requests,0,'Changed current scripts must fail before requesting old QA');
     }
   }
   const qualityFile='.github/workflows/v1-quality-acceptance.yml',quality=load(readFileSync(qualityFile,'utf8'));

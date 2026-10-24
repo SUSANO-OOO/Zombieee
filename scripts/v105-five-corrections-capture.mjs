@@ -20,6 +20,11 @@ export function correctionCases(scope){
       'kurome','mother','ooguchi','gairen','mugarian-president-mutated','takuya-omega','takuya'].map(kind=>({kind,mode:'enemy'})),
     ...['brute','guardian','tky','takuya','takuya-omega','crazy-king','kumaverson','babayaga','brawler'].map(kind=>({kind,mode:'engage'}))];
 }
+export function canContinueCompletedCorrection(row,{pageClosed,fatalErrors=0,errorsBefore,errorsAfter}){
+  return fatalErrors===0&&!row.deadlineExpired&&!pageClosed&&row.bytes>0&&typeof row.file==='string'
+    &&row.capture?.failed===null&&Number.isFinite(row.capture.startAt)&&Number.isFinite(row.capture.stopAt)
+    &&row.capture.stopAt>row.capture.startAt&&errorsAfter===errorsBefore+1;
+}
 
 // Original native AV stream, actual game mixer after limiter, original PTS.
 // No microphone, clock override, animation sampling, re-encoding or FPS repair.
@@ -77,13 +82,14 @@ export async function runBrowserQa(){
   const report={...binding,architecture:process.arch,scope,viewport,runtime:PWA_WEBKIT_RUNTIME,cases:[],errors:[],status:'starting',
     acceptance:{physicalIphone:false,humanVisualAndListening:false,normalCampaign:false,wholeGame:false}};
   const persist=()=>writeFile(path.join(out,'report.json'),JSON.stringify(report,null,2)+'\n');
-  let browser,context,requests,primary;
+  let browser,context,requests,primary,fatalErrors=0;
+  const fatal=error=>{fatalErrors++;report.errors.push(String(error));};
   try{
     browser=await(await pwaBrowserType('webkit')).launch({headless:true});assert.equal(browser.version(),PWA_WEBKIT_RUNTIME.browserVersion);
     context=await browser.newContext({viewport,deviceScaleFactor:1,isMobile:viewport.width<1000,hasTouch:viewport.width<1000});
     const page=await context.newPage();page.setDefaultTimeout(30000);requests=installRequestFailureAudit(page);
-    page.on('pageerror',e=>report.errors.push(e.stack??String(e)));page.on('console',m=>{if(m.type()==='error')report.errors.push(m.text());});
-    page.on('response',r=>{if(r.status()>=400)report.errors.push(`${r.status()} ${r.url()}`);});
+    page.on('pageerror',e=>fatal(e.stack??String(e)));page.on('console',m=>{if(m.type()==='error')fatal(m.text());});
+    page.on('response',r=>{if(r.status()>=400)fatal(`${r.status()} ${r.url()}`);});
     const close=()=>closeNativeGameContext(context,requests);
     const owned=V100_UNITS.map(u=>u.id),base=createDefaultV100Save();
     const save=normalizeV100Save({...base,campaignStarted:true,revision:3,ownedUnitIds:owned,registeredUnitIds:owned,formationSlots:owned.slice(0,7),
@@ -96,7 +102,9 @@ export async function runBrowserQa(){
     },close);
     for(const item of plan){
       const row={...item,status:'starting'};report.cases.push(row);await persist();
-      await withNativeGameCaseDeadline(async()=>{
+      assert.equal(fatalErrors,0,'A prior product/page error invalidated the recording context');
+      const errorsBefore=report.errors.length;
+      try{await withNativeGameCaseDeadline(async()=>{
         const proof=await page.evaluate(async({kind,mode})=>{
           const q=window.__ASHFALL_BATTLE_QA__;
           await q.ensureEnemyFacingProofAsset(kind);
@@ -121,7 +129,7 @@ export async function runBrowserQa(){
         await writeFile(path.join(out,file),bytes,{flag:'wx'});Object.assign(row,{file,sha256:sha(bytes),bytes:bytes.length,capture,status:'retained-pending-checks'});await persist();
         assert.equal(capture.failed,null);assert.ok(capture.rows.length>=30,'actual continuous paint receipts missing');
         const actual=(capture.final.time-row.release.time)*1000,wall=capture.stopAt-row.release.at;
-        assert.ok(Math.abs(actual-wall)<=120,'Original120ms game/native clock bound');
+        assert.ok(Math.abs(actual-wall)<=120,`Original120ms game/native clock bound: drift=${actual-wall}ms, dropped=${capture.final.timing?.droppedSimulationSeconds-capture.initial.timing?.droppedSimulationSeconds}s`);
         if(item.mode!=='engage'){
           const starts=capture.rows.flatMap(r=>r.abilityNames.starts).filter(r=>ids.includes(r.ownerId));
           assert.ok(ids.every(id=>starts.some(r=>r.ownerId===id)),'No accepted real ability start/name for an owner');
@@ -139,8 +147,16 @@ export async function runBrowserQa(){
           assert.ok(capture.rows.some(r=>r.fighters.some(f=>ids.includes(f.id)&&f.draw?.jointGroundStrike?.contactReady)),'No actual floor strike paint');
           assert.ok(capture.rows.some(r=>r.contacts.some(c=>ids.includes(c.ownerId)&&c.resolvedSocket)),'Ground impact must bind an actual painted weapon point');
         }
+        assert.equal(fatalErrors,0,'A product/page error invalidated this recording');
         row.status='recorded';
       },close,{onDeadline:e=>{row.deadlineExpired=true;row.error=String(e);}});
+      }catch(error){
+        row.status='failed';row.error=String(error);report.errors.push(`${item.kind}/${item.mode}: ${row.error}`);await persist();
+        // A retained, completed stream can fail its assertions without
+        // invalidating independent next fixtures. Preserve that failure;
+        // an exception, missing stream or expired context still stops here.
+        if(!canContinueCompletedCorrection(row,{pageClosed:page.isClosed(),fatalErrors,errorsBefore,errorsAfter:report.errors.length}))throw error;
+      }
       console.log(scope,item.kind,item.mode,row.status);
     }
     report.status=report.errors.length?'failed':'recorded-awaiting-visual-and-pts-review';

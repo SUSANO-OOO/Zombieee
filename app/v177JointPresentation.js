@@ -614,7 +614,8 @@ export function drawV177JointPose(ctx, image, kind, plan, x, y, width, height, {
   if(atlas.type==='rigid-parts'){
     const resolve=plan.resolvedJointPose ? resolvedJointMatrix : jointMatrix;
     const matrix=new Float64Array(6);
-    const scratch=atlas.armConstraints || atlas.legConstraints ? [new Float64Array(6),new Float64Array(6)] : null;
+    const scratch=atlas.armConstraints || atlas.legConstraints
+      ? [new Float64Array(6),new Float64Array(6),{atlas,plan,chains:new Map()}] : null;
     const reference=atlas.referenceFrame;
     ctx.save();
     // Nearest sampling of a half-size atlas at a fractional, rotating battle
@@ -800,6 +801,26 @@ function jointMatrix(out,atlas,plan,bone,upper,scratch){
     if(upper&&bone===atlas.weaponBone)applyV177FirearmWeaponPullback(out,atlas,plan.firearmWeaponPullback);
     return upper&&plan.firearmUpperTransform?applyV177FirearmUpperMotion(out,plan.firearmUpperTransform):out;
   }
+  const geometry=jointChainGeometry(atlas,plan,chain,upper,scratch);
+  if(!geometry){
+    interpolatedMatrix(out,atlas,plan,bone,upper);
+    return upper&&plan.firearmUpperTransform?applyV177FirearmUpperMotion(out,plan.firearmUpperTransform):out;
+  }
+  const {sx,sy,ex,ey,wx,wy,hx,hy,tx,ty,kx,ky}=geometry;
+  const isUpper=bone===chain.upperBone,rx=isUpper?sx:ex,ry=isUpper?sy:ey;
+  const ax=isUpper?hx:kx,ay=isUpper?hy:ky,bx=isUpper?kx:tx,by=isUpper?ky:ty;
+  const angle=Math.atan2(by-ay,bx-ax)-Math.atan2((isUpper?ey:wy)-ry,(isUpper?ex:wx)-rx),c=Math.cos(angle),s=Math.sin(angle);
+  out[0]=c;out[1]=s;out[2]=-s;out[3]=c;out[4]=ax-c*rx+s*ry;out[5]=ay-s*rx-c*ry;
+  return upper&&plan.firearmUpperTransform?applyV177FirearmUpperMotion(out,plan.firearmUpperTransform):out;
+}
+
+// Only one synchronous final draw owns this cache. Pose construction, ground
+// correction, sockets and captured stun/corpse owners keep their original path.
+function jointChainGeometry(atlas,plan,chain,upper,scratch){
+  const context=scratch?.[2],cache=context?.atlas===atlas&&context.plan===plan?context.chains:null;
+  let slots=cache?.get(chain);const slot=upper?1:0;
+  if(slots&&slot in slots)return slots[slot];
+  if(cache&&!slots){slots=[];cache.set(chain,slots);}
   const leg=Boolean(chain.hip);
   const parent=scratch?.[0]??new Float64Array(6),effector=scratch?.[1]??new Float64Array(6);
   interpolatedMatrix(parent,atlas,plan,chain.parentBone,leg?chain.parentUpper!==false:upper);
@@ -813,10 +834,7 @@ function jointMatrix(out,atlas,plan,bone,upper,scratch){
   const hx=parent[0]*sx+parent[2]*sy+parent[4],hy=parent[1]*sx+parent[3]*sy+parent[5];
   const tx=effector[0]*twx+effector[2]*twy+effector[4],ty=effector[1]*twx+effector[3]*twy+effector[5];
   const dx=tx-hx,dy=ty-hy,d=Math.hypot(dx,dy),a=Math.hypot(ex-sx,ey-sy),b=Math.hypot(wx-ex,wy-ey);
-  if(d<1e-8||d>a+b+.0001||d<Math.abs(a-b)-.0001){
-    interpolatedMatrix(out,atlas,plan,bone,upper);
-    return upper&&plan.firearmUpperTransform?applyV177FirearmUpperMotion(out,plan.firearmUpperTransform):out;
-  }
+  if(d<1e-8||d>a+b+.0001||d<Math.abs(a-b)-.0001){if(slots)slots[slot]=null;return null;}
   const along=(a*a+d*d-b*b)/(2*d),height=Math.sqrt(Math.max(0,a*a-along*along));
   // These right-facing biped sources have wide resting stances; their drawn
   // static knee angle is not an anatomical walking bend direction.
@@ -824,11 +842,8 @@ function jointMatrix(out,atlas,plan,bone,upper,scratch){
     'joint-takuya','joint-takuya-omega','joint-crazy-king','joint-kumaverson','joint-babayaga'].includes(atlas.key);
   const sign=forwardBiped?-1:((ex-sx)*-(wy-sy)+(ey-sy)*(wx-sx)>=0?1:-1);
   const kx=hx+dx/d*along-dy/d*height*sign,ky=hy+dy/d*along+dx/d*height*sign;
-  const isUpper=bone===chain.upperBone,rx=isUpper?sx:ex,ry=isUpper?sy:ey;
-  const ax=isUpper?hx:kx,ay=isUpper?hy:ky,bx=isUpper?kx:tx,by=isUpper?ky:ty;
-  const angle=Math.atan2(by-ay,bx-ax)-Math.atan2((isUpper?ey:wy)-ry,(isUpper?ex:wx)-rx),c=Math.cos(angle),s=Math.sin(angle);
-  out[0]=c;out[1]=s;out[2]=-s;out[3]=c;out[4]=ax-c*rx+s*ry;out[5]=ay-s*rx-c*ry;
-  return upper&&plan.firearmUpperTransform?applyV177FirearmUpperMotion(out,plan.firearmUpperTransform):out;
+  const geometry={sx,sy,ex,ey,wx,wy,hx,hy,tx,ty,kx,ky};
+  if(slots)slots[slot]=geometry;return geometry;
 }
 
 // Keep the actual upper/lower owners when a rendered live pose becomes a

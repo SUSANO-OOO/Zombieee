@@ -6,7 +6,7 @@ import {createHash} from 'node:crypto';
 import sharp from 'sharp';
 import {V105_MEDIA_ADDITIONS,V105_MEDIA_RETIREMENTS,V105_ASSET_BYTES_DELTA} from '../scripts/v105-five-corrections-asset-contract.mjs';
 import {evaluateUpdate} from '../app/pwaUpdatePlanner.js';
-import {correctionCases} from '../scripts/v105-five-corrections-capture.mjs';
+import {correctionCases,canContinueCompletedCorrection} from '../scripts/v105-five-corrections-capture.mjs';
 
 test('v105 changes exactly six named runtime payloads and retires only the previous skirt/icon selection',async()=>{
   const baseline=JSON.parse(execFileSync('git',['show','e22b134a38409b9d2f86660ee351e616c28fbf44:public/asset-manifest.json'],{encoding:'utf8',maxBuffer:4*1024*1024}));
@@ -36,4 +36,15 @@ test('correction capture covers changed action owners and both short mobile layo
   assert.equal(desktop.filter(c=>c.mode==='engage').length,9);assert.equal(desktop.filter(c=>c.mode==='enemy').length,17);
   assert.deepEqual(correctionCases('mobile390'),correctionCases('mobile340'));
   assert.throws(()=>correctionCases('all-states'));
+});
+
+test('a retained assertion failure remains failed while only intact independent capture contexts may continue',()=>{
+  const row={status:'failed',file:'original.webm',bytes:100,capture:{failed:null,startAt:1,stopAt:3001}},boundary={pageClosed:false,errorsBefore:0,errorsAfter:1};
+  assert.equal(canContinueCompletedCorrection(row,boundary),true);assert.equal(row.status,'failed');
+  for(const invalid of [{...row,deadlineExpired:true},{...row,bytes:0},{...row,capture:undefined},
+    {...row,capture:{...row.capture,failed:'recorder error'}},{...row,capture:{...row.capture,stopAt:0}}])
+    assert.equal(canContinueCompletedCorrection(invalid,boundary),false);
+  assert.equal(canContinueCompletedCorrection(row,{...boundary,pageClosed:true}),false);
+  assert.equal(canContinueCompletedCorrection(row,{...boundary,fatalErrors:1}),false);
+  assert.equal(canContinueCompletedCorrection(row,{...boundary,errorsAfter:2}),false,'A product/page error must not be hidden by continuing');
 });
