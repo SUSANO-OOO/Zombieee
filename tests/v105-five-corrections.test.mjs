@@ -1,4 +1,5 @@
 import {bossDefinitionForEnemyKind} from '../app/bossFoundation.js';
+import {recordV177JointBodyShift} from '../app/v177JointActorHistory.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {MANUAL_ABILITY_REGISTRY as definitions,createManualAbilityRuntime,beginManualAbility,advanceManualAbility,manualAbilityCheckpointCooldown} from '../app/manualAbilities.js';
@@ -179,6 +180,40 @@ test('shared biped walk-stop-turn-attack return keeps original leg identities an
     }
   }
 });
+test('every shared two-leg caller transfers a cancelled pursuit as actual net motion',()=>{
+  const kinds=Object.entries(atlases).filter(([,atlas])=>atlas.type==='rigid-parts'&&atlas.legConstraints?.length===2);
+  let exercised=0;
+  for(const [kind]of kinds)for(const direction of ['right','left']){
+    const owner={id:1,kind,hp:100,side:'human',combatReady:true,x:300,y:300,knock:0};
+    const reference={...owner},world={time:0,fighters:[owner]},control={time:0,fighters:[reference]};
+    for(let n=0;n<90;n++){
+      const runtime={moving:false,locomotionPhase:.37,locomotionSettle:1,direction};
+      owner.animationPresentation={...runtime};reference.animationPresentation={...runtime};
+      world.time=control.time=n/60;
+      if(n>=10){owner.x+=.00258211726816171;recordV177JointBodyShift(owner,world,.00258211726816171-29/60);}
+      const sample={requestedState:'move',clipProgress:.37};
+      const source=v177JointPose(kind,sample,owner.animationPresentation,{grounded:true,actor:owner,world});
+      const normal=v177JointPose(kind,sample,reference.animationPresentation,{grounded:true,actor:reference,world:control});
+      const plan=v105BipedFootPlan(kind,source,{actor:owner,world,width:100,frame:{anchorX:.5},direction});
+      const expected=v105BipedFootPlan(kind,normal,{actor:reference,world:control,width:100,frame:{anchorX:.5},direction});
+      if(!source.groundedMotion){assert.equal(plan,source);break;}
+      assert.ok(plan.bipedFeet,kind);
+      if(n===0)exercised++;
+      for(let i=0;i<2;i++){
+        assert.ok(Math.abs(plan.bipedFeet.feet[i].x-expected.bipedFeet.feet[i].x-(owner.x-reference.x))<1e-9,kind);
+        assert.equal(plan.bipedFeet.feet[i].height,expected.bipedFeet.feet[i].height,kind);
+        assert.equal(plan.bipedFeet.feet[i].flight?.endAt,expected.bipedFeet.feet[i].flight?.endAt,kind);
+      }
+      const actualPose=v177CaptureJointPose(kind,plan),expectedPose=v177CaptureJointPose(kind,expected);
+      for(const [bone,matrix]of Object.entries(actualPose.lower))for(let i=0;i<6;i++)
+        assert.ok(Math.abs(matrix[i]-expectedPose.lower[bone][i])<1e-9,`${kind}/${direction}/${bone} original local anatomy`);
+      drawV177JointPose(ctx,{naturalWidth:100},kind,plan,0,0,100,100,{actor:owner,world});
+      drawV177JointPose(ctx,{naturalWidth:100},kind,expected,0,0,100,100,{actor:reference,world:control});
+    }
+  }
+  assert.ok(exercised>0);
+});
+
 test('current rig samples advance the affected manual and station windup/release/recovery clocks',()=>{
   const base={requestedState:'special',clipProgress:0,bodyScale:1.12};
   for(const kind of ['brute','guardian','kumaverson','medic','tky','mrs-chiha','zakimiya','miyamoto-musashi','babayaga','engineer']){
