@@ -887,9 +887,10 @@ export function v177JointPaintSupportY(kind,plan,outlines,rendered) {
   const origin=y-sin*sx*width*(r.tx/(r.scale*r.width)+frame.anchorX)
     -cos*scaleY*height*(r.ty/(r.scale*r.height)+frame.anchorY);
   const resolve=plan.resolvedJointPose?resolvedJointMatrix:jointMatrix;
+  const scratch=[supportScratch[0],supportScratch[1],{atlas,plan,chains:new Map()}];
   let bottom=-Infinity;
   for(const outline of outlines) {
-    const m=resolve(supportMatrix,atlas,plan,outline.bone,outline.upper,supportScratch);
+    const m=resolve(supportMatrix,atlas,plan,outline.bone,outline.upper,scratch);
     const a=xx*m[0]+yy*m[1],b=xx*m[2]+yy*m[3],c=origin+xx*m[4]+yy*m[5];
     for(const p of outline.hull)bottom=Math.max(bottom,a*p[0]+b*p[1]+c);
   }

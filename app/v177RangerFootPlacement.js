@@ -261,6 +261,26 @@ export function v177RangerFootPlacement(rig, previous, input) {
   input = {...input, facing:direction(input.facing), paintTime:input.time,
     bodyCorrection:input.bodyCorrection??0};
   const {time,root,facing,scale,phase}=input;
+  // Once both feet have finished settling, retain their immutable records.
+  // The clock still advances; a turn, impulse or unfinished step uses the
+  // original path below, including its original landing deadline.
+  if(rig.phaseOwned===true&&previous&&time>previous.time
+    &&input.moving===false&&previous.moving===false&&!input.frozen
+    &&input.settle===1&&root===previous.root&&phase===previous.phase
+    &&scale===previous.scale&&facing===previous.facing
+    &&previous.requestedFacing===facing
+    &&input.bodyCorrection===(previous.bodyCorrection??0)
+    &&previous.turnTargetFacing==null&&previous.stop==null
+    &&Number.isFinite(previous.offset)&&previous.feet?.length===2
+    &&previous.feet.every((foot,i)=>foot.mode==='plant'
+      &&Object.is(foot.height,0)&&Object.is(foot.angle,0)&&Object.is(foot.vx,0)
+      &&foot.flight==null&&foot.phaseHold==null
+      &&foot.x===worldX(rig.legs[i].footCenter+restOffset(rig.legs[i],i),root,facing,scale))){
+    const state={time,root,facing,scale,phase,offset:previous.offset,moving:false,
+      feet:previous.feet,requestedFacing:facing,lastLandedLeg:previous.lastLandedLeg??null,
+      bodyCorrection:input.bodyCorrection};
+    return{state,phase:wrap(phase+state.offset),targets:targets(rig,state.feet,root,facing,scale)};
+  }
   // A short pursuit can start and stop between two actual paints. Its source
   // gait phase still records the travel; the last tick's moving flag does not.
   // Keep following that travel until the next unchanged pose starts settling.

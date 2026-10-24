@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
 import * as current from '../app/v177JointPresentation.js';
+import {V177_CORPSE_JOINT_DATA} from '../app/v177CorpseJointData.js';
 
 // The unchanged pre-optimization algorithm is an immutable image/matrix
 // oracle. This does not inherit any old runtime or performance acceptance.
@@ -35,6 +36,12 @@ test('one-draw chain reuse preserves exact original paint commands and every sou
       plan=current.v105BipedFootPlan(kind,plan,{actor,world,width:96,frame:{anchorX:.5},direction:'right'});
       assert.deepEqual(draw(current,kind,plan),draw(original,kind,plan),kind+'/'+state+'/'+p);
       assert.deepEqual(current.v177CaptureJointPose(kind,plan),original.v177CaptureJointPose(kind,plan));
+      const data=V177_CORPSE_JOINT_DATA[kind];
+      if(data){
+        const outlines=data.outlines.map((o,i)=>({...o,bone:atlas.parts[i].bone,upper:atlas.parts[i].upper}));
+        const rendered={frame:{anchorX:.5,anchorY:1},width:96,height:96,x:300,y:300,angle:.02,scaleX:1,scaleY:1,flipX:p>.5};
+        assert.equal(current.v177JointPaintSupportY(kind,plan,outlines,rendered),original.v177JointPaintSupportY(kind,plan,outlines,rendered),kind+' original support floor');
+      }
       // A following paint must not retain geometry from this draw, even when
       // an owner reuses the plan while changing its final rigid correction.
       if(plan.groundedMotion){
