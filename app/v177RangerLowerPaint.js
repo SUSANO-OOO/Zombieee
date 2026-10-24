@@ -244,24 +244,14 @@ export function paintV177RangerLower(p,ctx,phase,settle,x,y,width,height,feet=nu
     const previousPayloadReused=!ownPayloadReused&&previousUploadOwner!==last&&previousUploadOwner.valid&&previousUploadOwner.width===w&&previousUploadOwner.height===h
       &&previousUploadOwner.imageData.width===p.imageData.width&&previousUploadOwner.imageData.height===p.imageData.height
       &&sameRgba(p.imageData.data,previousUploadOwner.imageData.data);
-    // Different IK inputs can quantize to the exact same finished bytes.
-    // Another actor may have drawn between those poses, so the preceding
-    // upload is not the only safe reusable owner. Compare every RGBA byte;
-    // never reuse approximately equal geometry or follow an alias chain.
-    const retainedPayloadOwner=ownPayloadReused||previousPayloadReused?null:p.rasters.find(candidate=>
-      candidate!==last&&candidate!==previousUploadOwner&&candidate.valid&&!candidate.uploadOwner
-      &&candidate.width===w&&candidate.height===h
-      &&candidate.imageData.width===p.imageData.width&&candidate.imageData.height===p.imageData.height
-      &&sameRgba(p.imageData.data,candidate.imageData.data));
-    const payloadReused=ownPayloadReused||previousPayloadReused||!!retainedPayloadOwner;
+    const payloadReused=ownPayloadReused||previousPayloadReused;
     if(ownPayloadReused)last.uploadOwner=null;
     else if(previousPayloadReused)last.uploadOwner=previousUploadOwner;
-    else if(retainedPayloadOwner)last.uploadOwner=retainedPayloadOwner;
     else{
       last.uploadOwner=null;
       try{last.context.putImageData(p.imageData,0,0,0,0,w,h);}catch(error){invalidateRasters(p);throw error;}
     }
-    if(trace){trace.payloadReused=payloadReused;trace.payloadReuseOwner=ownPayloadReused?'own':previousPayloadReused?'previous':retainedPayloadOwner?'retained':null;trace.actualUpload=!payloadReused;}
+    if(trace){trace.payloadReused=payloadReused;trace.payloadReuseOwner=ownPayloadReused?'own':previousPayloadReused?'previous':null;trace.actualUpload=!payloadReused;}
     if(trace)trace.uploadFinishedAt=performance.now();
     if(last.parts.length!==p.parts.length||p.parts.some((g,i)=>last.parts[i].part!==g))
       last.parts=p.parts.map(part=>({part,target:new Float64Array(part.target.length)}));

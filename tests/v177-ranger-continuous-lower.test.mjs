@@ -581,20 +581,6 @@ test('eight alternating Ranger owners preserve exact pixels and stop uploading u
   }
   assert.equal(painter.rasters.length,8);assert.equal(observation.writes,9,'one warmup plus eight distinct exact payloads');
 });
-test('an intervening actor does not force another upload of byte-identical retained cloth',()=>{
-  const {painter,observation}=observedPainter();
-  paintPoolInput(painter,.371,120);paintPoolInput(painter,.371,96,true);
-  const first=paintPoolInput(painter,.371),owner=painter.lastRaster;
-  paintPoolInput(painter,.61);
-  const before=observation.writes,actual=paintPoolInput(painter,.371+1e-12);
-  assert.notEqual(painter.lastRaster,owner,'this is a new IK geometry, not a geometry-cache hit');
-  assert.equal(painter.lastRaster.uploadOwner,owner,'reuse the direct retained upload after the intervening actor');
-  assert.equal(observation.writes,before,'the already uploaded exact payload needs no transfer');
-  assertSameActiveLower(actual,first);
-  assertSameActiveLower(actual,paintPoolInput(observedPainter().painter,.371+1e-12));
-  assert.ok(painter.rasters.reduce((sum,r)=>sum+r.canvas.width*r.canvas.height,0)<=65536);
-});
-
 test('evicting a Ranger upload owner cannot leave an alias pointing through a newly borrowed payload',()=>{
   const {painter}=observedPainter(),a=.371,b=.372,near=1e-12;
   paintPoolInput(painter,a,120);paintPoolInput(painter,a,96,true);
