@@ -72,6 +72,8 @@ export function recordS25DeploymentObservation(row,snapshot) {
   }
 }
 
+export async function runBrowserQa(){await main();}
+
 async function main() {
   const engine = process.env.V100_NORMAL_PLAY_ENGINE;
   assert.ok(['chromium', 'webkit'].includes(engine));
