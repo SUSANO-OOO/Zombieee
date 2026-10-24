@@ -1,50 +1,91 @@
 name: Native Capture Comparison Diagnostic
-
 on:
   workflow_dispatch:
     inputs:
       expected_head:
-        description: Exact 40-character candidate SHA for this diagnostic
+        description: Exact immutable retained-upload diagnostic revision
         required: true
         type: string
-
 permissions:
   contents: read
-
 concurrency:
   group: native-capture-comparison-${{ inputs.expected_head }}
   cancel-in-progress: false
-
 jobs:
-  native-capture-comparison:
-    name: Native WebKit Capture Comparison Diagnostic
-    runs-on: macos-15-intel
-    timeout-minutes: 15
+  retained-upload-control:
+    name: Same Mac Original and Retained Upload Control
+    runs-on: macos-15
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.expected_head }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/checkout@v7
+        with:
+          ref: f7f6f7ce46844eaefc4bb519fa80d591e2607407
+          path: control-baseline
           persist-credentials: false
       - uses: actions/setup-node@v6
         with:
-          node-version: 24
+          node-version: '22.13.0'
           cache: npm
-      - name: Verify immutable candidate before running the diagnostic
+      - name: Bind both immutable source trees
         env:
           EXPECTED_HEAD: ${{ inputs.expected_head }}
-        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_HEAD??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_HEAD);'
-      - run: npm ci
-      - name: Install the pinned native WebKit runtime
         run: |
-          npm ci --prefix scripts/pwa-native-runtime
-          node scripts/pwa-native-runtime/node_modules/playwright/cli.js install webkit
-      - name: Compare original native canvas recording conditions
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';import{execFileSync}from'node:child_process';import{mkdirSync,writeFileSync}from'node:fs';
+          const git=(args,cwd)=>execFileSync('git',args,{cwd,encoding:'utf8'}).trim();
+          const base='f7f6f7ce46844eaefc4bb519fa80d591e2607407',product='b5489b287cac228b10732e4914557b986f439fb3',head=git(['rev-parse','HEAD']);
+          assert.equal(head,process.env.EXPECTED_HEAD);assert.equal(git(['rev-parse','HEAD'],'control-baseline'),base);
+          assert.deepEqual(git(['diff','--name-only',base,head]).split('\n').sort(),['.github/workflows/native-capture-comparison.yml','app/v177RangerLowerPaint.js','tests/v177-ranger-continuous-lower.test.mjs']);
+          assert.deepEqual(git(['diff','--name-only',product,head]).split('\n'),['.github/workflows/native-capture-comparison.yml']);
+          const paths=['app/v177RangerLowerPaint.js','scripts/v100-device-runtime-browser.mjs','scripts/run-browser-qa-with-server.mjs'];
+          mkdirSync('outputs/v105-retained-upload-control',{recursive:true});
+          writeFileSync('outputs/v105-retained-upload-control/binding.json',JSON.stringify({base,product,head,paths:paths.map(p=>({path:p,base:git(['rev-parse',base+':'+p]),after:git(['rev-parse',head+':'+p])})),hostIndexingControl:'unchanged; no formal preparation claimed',diagnosticOnly:true,releaseAccepted:false},null,2));
+          JS
+      - run: npm ci
+      - run: npx playwright install webkit
+      - run: node scripts/verify-playwright-container-runtime.mjs --macos-arm64
+      - run: npm run build
         env:
-          V177_NATIVE_CAPTURE_OUT: outputs/v177-native-capture-comparison
-        run: node scripts/v177-native-canvas-comparison-browser.mjs
+          GITHUB_PAGES_RELEASE_SHA: ${{ inputs.expected_head }}
+      - run: npm ci
+        working-directory: control-baseline
+      - run: npm run build
+        working-directory: control-baseline
+        env:
+          GITHUB_PAGES_RELEASE_SHA: f7f6f7ce46844eaefc4bb519fa80d591e2607407
+      - name: Same original 30-second windows in ABBA order
+        env:
+          V100_DEVICE_RUNTIME_ENGINE: webkit
+          V100_DEVICE_RUNTIME_ROLE: native-control
+          V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC: '1'
+          V100_DEVICE_RUNTIME_BLANK_BASELINE: '1'
+        run: |
+          result=0
+          for viewport in 844x390 1280x720; do
+            sequence=0
+            for mode in baseline candidate candidate baseline; do
+              sequence=$((sequence+1))
+              work="$GITHUB_WORKSPACE"
+              if [[ "$mode" == baseline ]]; then work="$GITHUB_WORKSPACE/control-baseline"; fi
+              (
+                cd "$work"
+                V100_DEVICE_RUNTIME_VIEWPORT="$viewport" V100_DEVICE_RUNTIME_OUT="$GITHUB_WORKSPACE/outputs/v105-retained-upload-control/$viewport/$sequence-$mode" node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs
+              ) || result=1
+            done
+          done
+          exit "$result"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: v177-native-capture-comparison
-          path: outputs/v177-native-capture-comparison
-          retention-days: 7
+          name: v105-retained-upload-control
+          path: outputs/v105-retained-upload-control
+          if-no-files-found: error
+          retention-days: 14
