@@ -1,5 +1,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {execFileSync} from 'node:child_process';import {readFileSync} from 'node:fs';import {load} from 'js-yaml';
 import {COMBAT_QA_BASELINE as old,COMBAT_QA_BLOBS,COMBAT_QA_WORKFLOW_BLOB,COMBAT_QA_QUALITY_WORKFLOW_BLOB,BASELINE_JOB_NAMES,reviewedCombatQaPaths,previousCombatQaEvidence} from '../scripts/ci-combat-qa-reuse.mjs';
+import {COMBAT_FIXTURE_BASELINE as repair,COMBAT_FIXTURE_BLOB,COMBAT_FIXTURE_SKIPPED_JOBS,
+  reviewedCombatFixturePaths,previousCombatFixtureEvidence} from '../scripts/ci-combat-qa-reuse.mjs';
 import {ciChangeScope} from '../scripts/ci-change-scope.mjs';import {provenanceFixture} from './helpers/ci-pr-provenance.mjs';
 const paths=[...Object.keys(COMBAT_QA_BLOBS),'.github/workflows/ci.yml','scripts/ci-change-scope.mjs','scripts/ci-combat-qa-reuse.mjs',
   'tests/ci-combat-qa-reuse.test.mjs','scripts/v177-native-allunit-recovery.json','docs/PROJECT_STATE.md','.github/workflows/v1-quality-acceptance.yml'];
@@ -93,4 +95,68 @@ test('workflow changes only expose the reviewed combat lane and preserve every o
   assert.deepEqual(scope.steps.find(s=>s.id==='scope').env,before.jobs.scope.steps.find(s=>s.id==='scope').env);
   assert.equal(scope.steps.find(s=>s.id==='scope').run,'node scripts/ci-change-scope.mjs');
   assert.equal(execFileSync('git',['hash-object',qualityFile],{encoding:'utf8',windowsHide:true}).trim(),COMBAT_QA_QUALITY_WORKFLOW_BLOB);
+});
+
+const fixtureFile='tests/v177-native-canvas-clips.test.mjs';
+const fixturePaths=[fixtureFile,'scripts/ci-change-scope.mjs','scripts/ci-combat-qa-reuse.mjs',
+  'tests/ci-combat-qa-reuse.test.mjs','scripts/v177-native-allunit-recovery.json'];
+const fixtureBlobs={...sourceBlobs,[fixtureFile]:COMBAT_FIXTURE_BLOB};
+const fixtureOptions={...options,previousHead:repair.head,paths:fixturePaths,sourceBlobs:fixtureBlobs};
+const repairProvenance=provenanceFixture({runId:repair.runId,head:repair.head,base:old.base,artifactId:92});
+const repairRun={...originalRun,id:repair.runId,head_sha:repair.head};
+const repairJobs=['Validation Scope','PR Verify',...['chromium','webkit desktop-phone','webkit phone-short','webkit'].map(label=>`V1.0.2 Combat (${label})`),
+  ...COMBAT_FIXTURE_SKIPPED_JOBS].map((name,i)=>({id:name==='PR Verify'?120776216487:5000+i,run_id:repair.runId,run_attempt:1,
+    head_sha:repair.head,name,status:'completed',conclusion:name==='PR Verify'?'failure':COMBAT_FIXTURE_SKIPPED_JOBS.includes(name)?'skipped':'success',
+    ...(name==='PR Verify'?{steps:[...['Verify PR provenance','Upload PR provenance','Check patch whitespace','Install dependencies','Lint',
+      'Validate production content','Build production application'].map(name=>({name,status:'completed',conclusion:'success'})),
+      {name:'Test',status:'completed',conclusion:'failure'}]}:{})}));
+const fixtureApi=({run=repairRun,jobs=repairJobs,artifacts=repairProvenance.artifacts,zip=repairProvenance.zip,calls=[],original={}}={})=>{
+  const prior=api({...original,calls});
+  return async url=>{
+    if(!url.includes('/runs/'+repair.runId)&&!url.includes('/artifacts/'+repairProvenance.artifacts.artifacts[0].id+'/zip'))return prior(url);
+    calls.push(url);return{ok:true,arrayBuffer:async()=>zip,json:async()=>url.includes('/jobs?')?{total_count:jobs.length,jobs}:
+      url.includes('/artifacts?')?artifacts:run};
+  };
+};
+
+test('reviewed Mayo VM fixture repair retains completed combat groups and runs the complete PR Verify afresh',async()=>{
+  const calls=[],result=await previousCombatFixtureEvidence({...fixtureOptions,request:fixtureApi({calls})});assert.equal(result.passed,true);
+  assert.equal(result.originalEvidence.originalRunConclusion,'failure');assert.equal(result.originalEvidence.originalFailures.length,2);
+  assert.equal(result.originalVerifyFailure.conclusion,'failure');assert.equal(result.retainedCombatJobs.length,4);
+  assert.ok(result.retainedCombatJobs.every(j=>j.conclusion==='success'));assert.equal(result.wholeGameAccepted,false);
+  assert.equal(calls.length,10);assert.equal(result.provenance.head,repair.head);
+  const scope=ciChangeScope(fixturePaths,{draft:false,sourceBlobs:fixtureBlobs,reuseCombatFixture:result.passed});
+  assert.equal(scope.full,false);assert.equal(scope.combat,false);assert.equal(scope.scope,'combat-fixture-update-product-unchanged');
+  for(const key of ['ranger','normal','r9','wholeGameAccepted'])assert.equal(scope[key],false);
+  assert.equal(scope.finalIntegrationRequiresFullRegression,true);
+  assert.equal(execFileSync('git',['hash-object',fixtureFile],{encoding:'utf8',windowsHide:true}).trim(),COMBAT_FIXTURE_BLOB);
+});
+
+test('fixture continuation rejects different sources, product, context or unknown paths before reading old gates',async()=>{
+  for(const changed of [{repository:'another/repo'},{previousHead:old.head},{base:'f'.repeat(40)},{prNumber:181},{action:'ready_for_review'},
+    {draft:true},{productUnchanged:false},{token:''},{paths:fixturePaths.filter(p=>p!==fixtureFile)},
+    {paths:[...fixturePaths,'app/AshfallGame.tsx']},{paths:[...fixturePaths,'scripts/unknown.mjs']},
+    ...Object.keys(fixtureBlobs).map(file=>({sourceBlobs:{...fixtureBlobs,[file]:'f'.repeat(40)}}))])
+    assert.equal((await previousCombatFixtureEvidence({...fixtureOptions,...changed,request:()=>assert.fail('ineligible fixture repair must fail closed')})).passed,false);
+  assert.equal(reviewedCombatFixturePaths(fixturePaths,fixtureBlobs),true);
+  assert.equal(ciChangeScope(fixturePaths,{draft:false,sourceBlobs:fixtureBlobs}).full,true);
+  assert.equal(ciChangeScope([...fixturePaths,'app/AshfallGame.tsx'],{draft:false,sourceBlobs:fixtureBlobs,reuseCombatFixture:true}).full,true);
+});
+
+test('fixture continuation cannot adopt an unfinished, failed or missing combat group or an altered failed Verify',async()=>{
+  const index=repairJobs.findIndex(j=>j.name==='V1.0.2 Combat (webkit phone-short)'),verify=repairJobs.findIndex(j=>j.name==='PR Verify');
+  for(const field of [{conclusion:'failure'},{conclusion:'skipped'},{conclusion:'cancelled'},{status:'in_progress'},
+    {run_attempt:2},{run_attempt:undefined},{head_sha:old.head},{run_id:old.runId},{id:repairJobs[0].id}]){
+    const jobs=repairJobs.map((j,i)=>i===index?{...j,...field}:j);
+    assert.equal((await previousCombatFixtureEvidence({...fixtureOptions,request:fixtureApi({jobs})})).passed,false);
+  }
+  for(const jobs of [repairJobs.slice(1),[...repairJobs,repairJobs[0]],repairJobs.map((j,i)=>i===verify?{...j,conclusion:'success'}:j),
+    repairJobs.map((j,i)=>i===verify?{...j,steps:j.steps.map(s=>s.name==='Lint'?{...s,conclusion:'failure'}:s)}:j)])
+    assert.equal((await previousCombatFixtureEvidence({...fixtureOptions,request:fixtureApi({jobs})})).passed,false);
+  for(const run of [{...repairRun,status:'in_progress'},{...repairRun,run_attempt:2},{...repairRun,head_sha:old.head},
+    {...repairRun,conclusion:'cancelled'},{...repairRun,pull_requests:[]}])
+    assert.equal((await previousCombatFixtureEvidence({...fixtureOptions,request:fixtureApi({run})})).passed,false);
+  const zip=Buffer.from(repairProvenance.zip);zip[zip.length-1]^=1;
+  assert.equal((await previousCombatFixtureEvidence({...fixtureOptions,request:fixtureApi({zip})})).passed,false);
+  assert.equal((await previousCombatFixtureEvidence({...fixtureOptions,request:fixtureApi({original:{run:{...originalRun,conclusion:'cancelled'}}})})).passed,false);
 });

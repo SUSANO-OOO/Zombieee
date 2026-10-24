@@ -84,3 +84,72 @@ export async function previousCombatQaEvidence({repository,previousHead,base,prN
       rerun:'All three original combat viewport groups and their original summary',wholeGameAccepted:false};
   }catch{return{passed:false,reason:'original-gates-or-immutable-provenance-not-complete'};}
 }
+
+// Only the reviewed VM fixture changes after the three repaired combat groups.
+// The failed PR Verify is never inherited: all tests, lint and build run afresh.
+// Its unchanged conditional browser steps retain their original d62 owners.
+export const COMBAT_FIXTURE_BASELINE=Object.freeze({head:'773678dd6fd663bb3a9066ed9ec08f54acbf8832',runId:40061577855});
+export const COMBAT_FIXTURE_BLOB='26055a5a0b08f55eef5683f8cdb05e8ffeb64783';
+const fixturePath='tests/v177-native-canvas-clips.test.mjs';
+const fixtureAllowed=new Set([fixturePath,'scripts/ci-change-scope.mjs','scripts/ci-combat-qa-reuse.mjs',
+  'tests/ci-combat-qa-reuse.test.mjs','scripts/v177-native-allunit-recovery.json','docs/PROJECT_STATE.md']);
+export const COMBAT_FIXTURE_SKIPPED_JOBS=Object.freeze([
+  'Ranger Turn Regression','WebKit Enemy Runtime Evidence (${{ matrix.shard.name }})','V1 Guardian Control Diagnostic',
+  'R9 Story (${{ matrix.engine }}, ${{ matrix.phase }}, ${{ matrix.viewport }})',
+  'V1 Representative Normal Play (${{ matrix.engine }})','WebKit Compact Shadow Diagnostic',
+  'V1 WebKit Frame and Boss Performance','WebKit Hosted Runner Evidence','V1.0.3 Media Output (${{ matrix.engine }})',
+  'V1 Ordinary Enemy Contacts (${{ matrix.engine }})','V1 Native WebKit PWA Update and Recovery',
+  'WebKit Stage 3 Audio Route (${{ matrix.audio_case }})','V1 Phase G Production Matrix',
+  'WebKit Deployment Viewport Evidence (${{ matrix.viewport }})','WebKit Canonical Viewport Evidence (${{ matrix.viewport }})',
+]);
+const fixtureCombatJobs=['chromium','webkit desktop-phone','webkit phone-short','webkit'].map(label=>`V1.0.2 Combat (${label})`);
+export function reviewedCombatFixturePaths(paths,sourceBlobs={}){
+  return Array.isArray(paths)&&paths.includes(fixturePath)&&paths.every(file=>fixtureAllowed.has(file))
+    &&sourceBlobs[fixturePath]===COMBAT_FIXTURE_BLOB
+    &&Object.entries(COMBAT_QA_BLOBS).every(([file,blob])=>sourceBlobs[file]===blob)
+    &&sourceBlobs['.github/workflows/ci.yml']===COMBAT_QA_WORKFLOW_BLOB
+    &&sourceBlobs['.github/workflows/v1-quality-acceptance.yml']===COMBAT_QA_QUALITY_WORKFLOW_BLOB;
+}
+export async function previousCombatFixtureEvidence(options={}){
+  const {repository,previousHead,base,prNumber,action,draft,productUnchanged,paths,sourceBlobs,token,request=fetch}=options;
+  const old=COMBAT_QA_BASELINE,repair=COMBAT_FIXTURE_BASELINE;
+  if(repository!=='SUSANO-OOO/Zombieee'||previousHead!==repair.head||base!==old.base||prNumber!==old.prNumber
+    ||action!=='synchronize'||draft!==false||productUnchanged!==true||!token||!reviewedCombatFixturePaths(paths,sourceBlobs))
+    return{passed:false,reason:'not-the-reviewed-combat-vm-fixture-repair'};
+  // Revalidate the original owners instead of treating skipped follow-up jobs
+  // as successful measurements. The CLI also compares all three product trees.
+  const original=await previousCombatQaEvidence({...options,previousHead:old.head,
+    paths:[...Object.keys(COMBAT_QA_BLOBS),'.github/workflows/ci.yml','.github/workflows/v1-quality-acceptance.yml']});
+  if(!original.passed)return{passed:false,reason:'original-product-gates-unavailable'};
+  const get=async(suffix,binary=false)=>{
+    const response=await request(`https://api.github.com/repos/${repository}/${suffix}`,{
+      headers:{Accept:'application/vnd.github+json',Authorization:`Bearer ${token}`,'X-GitHub-Api-Version':'2022-11-28'},signal:AbortSignal.timeout(10000)});
+    assert.equal(response.ok,true);return binary?response.arrayBuffer():response.json();
+  };
+  try{
+    const run=await get(`actions/runs/${repair.runId}`);
+    assert.equal(run.id,repair.runId);assert.equal(run.head_sha,repair.head);assert.equal(run.run_attempt,1);
+    assert.equal(run.event,'pull_request');assert.equal(run.status,'completed');assert.equal(run.conclusion,'failure');
+    assert.ok(run.pull_requests?.some(pr=>pr.number===old.prNumber));
+    const data=await get(`actions/runs/${repair.runId}/jobs?filter=latest&per_page=100`),jobs=data.jobs;
+    assert.ok(Array.isArray(jobs));assert.equal(jobs.length,data.total_count);
+    assert.deepEqual(jobs.map(j=>j.name).sort(),['Validation Scope','PR Verify',...fixtureCombatJobs,...COMBAT_FIXTURE_SKIPPED_JOBS].sort());
+    assert.equal(new Set(jobs.map(j=>j.id)).size,jobs.length);
+    for(const job of jobs){
+      assert.ok(Number.isSafeInteger(job.id)&&job.id>0);assert.equal(job.run_id,repair.runId);assert.equal(job.run_attempt,1);
+      assert.equal(job.head_sha,repair.head);assert.equal(job.status,'completed');
+      assert.equal(job.conclusion,job.name==='PR Verify'?'failure':COMBAT_FIXTURE_SKIPPED_JOBS.includes(job.name)?'skipped':'success');
+    }
+    const failedVerify=jobs.find(j=>j.name==='PR Verify');assert.equal(failedVerify.id,120776216487);
+    assert.ok(Array.isArray(failedVerify.steps)&&failedVerify.steps.every(s=>s.status==='completed'));
+    assert.deepEqual(failedVerify.steps.filter(s=>s.conclusion==='failure').map(s=>s.name),['Test']);
+    for(const name of ['Verify PR provenance','Upload PR provenance','Check patch whitespace','Install dependencies','Lint',
+      'Validate production content','Build production application'])
+      assert.equal(failedVerify.steps.find(s=>s.name===name)?.conclusion,'success');
+    const provenance=await immutablePrProvenance({get,runId:repair.runId,head:repair.head,base:old.base});
+    return{passed:true,head:repair.head,runId:repair.runId,base:old.base,provenance,originalEvidence:original,
+      retainedCombatJobs:jobs.filter(j=>fixtureCombatJobs.includes(j.name)).map(({id,name,conclusion})=>({id,name,conclusion})),
+      originalVerifyFailure:{id:failedVerify.id,conclusion:failedVerify.conclusion,failedStep:'Test'},
+      rerun:'PR Verify: all unit tests, lint, content validation and production build; unchanged conditional browser steps retain their original owners',wholeGameAccepted:false};
+  }catch{return{passed:false,reason:'repaired-combat-gates-or-immutable-provenance-not-complete'};}
+}

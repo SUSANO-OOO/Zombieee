@@ -7,6 +7,7 @@ import os from 'node:os';
 import path from 'node:path';
 import ts from 'typescript';
 import {startNativeCanvasClip,finishNativeCanvasClip,beginV177NativeCanvasClip} from '../scripts/v177-native-canvas-clips.mjs';
+import {collectV177MayoNativeSamples,takeV177MayoNativeSamples} from '../scripts/v177-mayo-native-samples.mjs';
 
 const metadata={form:'ranger',phase:'move',fighterId:42,fixtureGroup:'authored-form'};
 function fixture({supported=true,supportedTypes=['video/webm;codecs=vp8'],captureRate=60,constructorError=false,startEvent=true,stopEvent=true,nativeError=false,chunks=['native-a','native-b']}={}){
@@ -260,23 +261,42 @@ for(const failsAt of [null,4]){
 
 for(const failure of [null,'activation','sample']){
  test('recorded Mayo engagement keeps all30 samples and cleanup on '+(failure??'completion'),async()=>{
-  const events=[],waits=[],receipts=[],sentinel=new Error('Original Mayo '+failure);let reads=0,finishes=0;
-  const proof={fighterId:751,proofId:'actual-mayo',owner:'mayo-activation',phase:'engage',renderKind:'mayo-chan-feral'};
-  const page={waitForFunction:async()=>events.push('draw'),waitForTimeout:async ms=>waits.push(ms),
-   evaluate:async()=>{reads++;if(failure==='sample'&&reads===29)throw sentinel;return{fighter:{id:751}};}};
-  const owner={receipts},clock={beginSection:()=>{events.push('boundary');return{};},endSection:()=>events.push('clock-end')};
+  const events=[],waits=[],receipts=[],calls=[],clockEnds=[],sentinel=new Error('Original Mayo '+failure);let reads=0,finishes=0,now=0;
+  const proof={fighterId:751,proofId:'actual-mayo',proofGeneration:3,owner:'mayo-activation',phase:'engage',renderKind:'mayo-chan-feral'};
+  const browser=vm.createContext({window:{__ASHFALL_BATTLE_QA__:{getSnapshot:()=>({time:now/1000,running:true,paused:false}),
+   getEnemyFacingRuntimeAudit:id=>{assert.equal(id,751);reads++;if(failure==='sample'&&reads===29)throw sentinel;
+    return{fighter:{id,manualAbilityPhase:'feral'},renderHistory:[{renderSequence:17+reads,renderKind:'mayo-chan-feral'}]};}}},
+   location:{pathname:'/v100'},document:{visibilityState:'visible'},performance:{now:()=>now},structuredClone,
+   setTimeout:(callback,delay)=>{assert.equal(delay,120);waits.push(delay);queueMicrotask(()=>{now+=delay;callback();});},clearTimeout:()=>assert.fail('completed sampling leaves no pending timer')});
+  const page={waitForFunction:async()=>events.push('draw'),waitForTimeout:async()=>assert.fail('Mayo waits belong inside the browser'),
+   evaluate:async(fn,args)=>{calls.push(fn);assert.equal(args.owner,'actual-mayo:3:751:17');
+    return vm.runInContext('('+fn.toString()+')',browser)(args);}};
+  const owner={receipts},clock={beginSection:()=>{events.push('boundary');return{};},endSection:(section,result)=>{clockEnds.push(result.completed);events.push('clock-end');}};
   const clip={finish:async result=>{finishes++;events.push('finish');return result;}};
   const run=vm.runInNewContext('('+sampler.getText(tree)+')',{
    canvasClips:new WeakMap([[page,owner]]),frameClocks:new WeakMap([[page,clock]]),hasV177ContinuousDraw:()=>{},
    releaseReadyMayoForRecording:async()=>{events.push('unpause-ready');return{};},
    beginV177NativeCanvasClip:async(p,m)=>{events.push('record');assert.equal(m.preparedRenderKind,'mayo-chan');assert.equal(m.recordedActivationPrefix,true);return clip;},
-   activateRecordedMayo:async()=>{events.push('real-activation');if(failure==='activation')throw sentinel;proof.arm={simulationTime:1};},
+   activateRecordedMayo:async()=>{events.push('real-activation');if(failure==='activation')throw sentinel;proof.arm={simulationTime:1};proof.captureBoundary={renderSequence:17};},
+   assert,collectV177MayoNativeSamples,takeV177MayoNativeSamples,
    fenceRecordedMayoSample:sample=>sample,
   });
-  if(failure)await assert.rejects(()=>run(page,proof,{form:'mayo-chan-feral',phase:'engage'}),e=>e===sentinel);
-  else assert.equal((await run(page,proof,{form:'mayo-chan-feral',phase:'engage'})).length,30);
+  if(failure==='activation')await assert.rejects(()=>run(page,proof,{form:'mayo-chan-feral',phase:'engage'}),e=>e===sentinel);
+  else if(failure==='sample')await assert.rejects(()=>run(page,proof,{form:'mayo-chan-feral',phase:'engage'}),/Original Mayo sample/u);
+  else {
+   const samples=await run(page,proof,{form:'mayo-chan-feral',phase:'engage'});assert.equal(samples.length,30);
+   for(let i=0;i<samples.length;i++){assert.equal(samples[i].at,(i+1)*120);assert.equal(samples[i].renders[0].renderSequence,18+i);}
+  }
   assert.equal(reads,failure==='activation'?0:failure==='sample'?29:30);
-  assert.ok(waits.every(ms=>ms===120));assert.equal(finishes,1);assert.equal(receipts[0].completed,!failure);
+  assert.equal(waits.length,reads);assert.equal(finishes,1);assert.equal(receipts[0].completed,!failure);
+  assert.deepEqual(calls,failure==='activation'?[]:[collectV177MayoNativeSamples,takeV177MayoNativeSamples]);
+  assert.equal(browser.__V177_MAYO_NATIVE_SAMPLES__,undefined,'the completed or failed owner is drained');
+  assert.deepEqual(clockEnds,failure==='activation'?[]:[!failure]);
+  if(failure==='sample'){
+   assert.equal(proof.nativeSampling.status,'failed');assert.equal(proof.nativeSampling.partialSamples.length,28);
+   assert.equal(proof.nativeSampling.partialSamples.at(-1).renders[0].renderSequence,45);
+   assert.match(proof.nativeSampling.error,/Original Mayo sample/u);
+  }else if(!failure){assert.equal(proof.nativeSampling.status,'completed');assert.equal(proof.nativeSampling.partialSamples,undefined);}
   assert.deepEqual(events.slice(0,3),['unpause-ready','record','real-activation']);
   if(failure!=='activation')assert.deepEqual(events.slice(3,5),['boundary','draw']);
  });

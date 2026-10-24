@@ -54,7 +54,7 @@
     "assets/source/v104/combat-audio/voice-red-panther-smg-hurt.wav": "268f62d43047d0020a4758aa7cd531619bb38345",
     "assets/source/v104/combat-audio/voices.json": "7c2139ef3f244eb0f9bf4eade9311784462e0ce9",
     "assets/source/v177/ranger/lower-r3/provenance.json": "66df1f71527ecc718e836bbe8147130a68acaa4e",
-    "docs/PROJECT_STATE.md": "698fb1d3d49861652659e80fc441c20461132988",
+    "docs/PROJECT_STATE.md": "50f19eb14222b35ec31d7e0469cee9ef659f0f4f",
     "docs/THIRD_PARTY_ASSETS.md": "363a3e0bdce12f376fe5126574a0e803258a41ee",
     "public/asset-manifest.json": "270ccec1db63083a0eb46275bf85885a68bdcd07",
     "public/audio/v104/combat/armor-hit.mp3": "1a47fb9f98f893faadc69ab0373e9aded0023ab1",
@@ -97,7 +97,7 @@
     "public/pwa-bundles/audio-v1.json": "e12f91970bac4c616d7b5d4bec6b27884751e3c1",
     "scripts/build-v104-combat-audio.mjs": "1a5acea833b19a260e07064b5091fa274a83cdeb",
     "scripts/build-v104-combat-voices.py": "e665baeba6da9c4cd883a1d3f298d9d93e3c0f6c",
-    "scripts/ci-change-scope.mjs": "213916ed91ece3812029d7d407ce31377393186e",
+    "scripts/ci-change-scope.mjs": "52ad301f30cbb7934c5caa4420e2232d3702d1fa",
     "scripts/p5-browser-smoke.mjs": "08108189684252ad081c403021806997e59f4ac6",
     "scripts/v100-device-runtime-browser.mjs": "16defd3c54ce1b41987e606fe182ded2eba18226",
     "scripts/v100-normal-campaign-playthrough.mjs": "916de5ec87aaeb70ed3daa6a35b271432bf80ae9",
@@ -166,7 +166,7 @@
     "tests/v177-native-allunit-ranger-manual.test.mjs": "914c5722da5c54bdf9d6d21478f28e69048dddc7",
     "tests/v177-native-allunit-selection.test.mjs": "b16c40120c71c939a8c0eec10e83fbd65f83f67d",
     "tests/v177-native-allunit.test.mjs": "9b8f183568a842352d9e0090d05182a89c5cbca8",
-    "tests/v177-native-canvas-clips.test.mjs": "165ef583c623e43641edb2c494a4242741dfa2ab",
+    "tests/v177-native-canvas-clips.test.mjs": "26055a5a0b08f55eef5683f8cdb05e8ffeb64783",
     "tests/v177-native-encoded-clips.test.mjs": "f5bc41017d34f25d9852b226892db2151378f502",
     "tests/v177-native-game-capture.test.mjs": "0b6edce46d8eda434f92c34979de7dc57d8ed087",
     "tests/v177-native-incoming-stun.test.mjs": "efef1223025a29a6221aaec285f326cecc67815c",
@@ -216,8 +216,8 @@
     "scripts/v102-combat-browser.mjs": "526d852a97fe760fb85ebafeb9e5b95da5ade110",
     "scripts/v177-mayo-native-samples.mjs": "6a079c6d10c3ed4c8c305a737a9a88f507b5f25e",
     "tests/v177-mayo-native-samples.test.mjs": "45778d068db0bfeed3719ae24601f71d7e585b1f",
-    "scripts/ci-combat-qa-reuse.mjs": "00f4593911266a43044042b5671cbdc4dcfcb69f",
-    "tests/ci-combat-qa-reuse.test.mjs": "c5a18765c4c735c4aa7a461d71d524f8bd3d4201"
+    "scripts/ci-combat-qa-reuse.mjs": "bfd4be6d5149a47f68764a859083922d8d3cc565",
+    "tests/ci-combat-qa-reuse.test.mjs": "df3129a8e7dbf8ae1b0ad386a86612858e484a89"
   },
   "rawClockAudit": {
     "sha256": "fd25abeadc6e1ced7924deea728f54480b8c0cd572923c372698d98a0b13b1fa",
