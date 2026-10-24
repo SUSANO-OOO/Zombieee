@@ -2,49 +2,32 @@
   "schema": "v177-native-allunit-recovery/v2",
   "head": "f7f6f7ce46844eaefc4bb519fa80d591e2607407",
   "runId": "40095599877",
-  "scope": "Retain556 source-owned f7 technical observations with a source-bound shared-helper impact audit; reopen original3 encoded gaps,15 Ranger observations and5 unknown shared-helper boundaries. Every old failure and owner remains in the previous Git profile. Unknown changes restore full capture.",
+  "scope": "Retain578 source-owned original technical observations from f7 and f880; only the original Mayo desktop attack encoded gap remains pending. All old failures and owners remain in Git and the source inventories. Unknown source changes restore full capture.",
   "caseIds": [
-    "forms-1:ranger:move:1280x720",
-    "forms-1:ranger:move:844x390",
-    "forms-1:ranger:move:844x340",
-    "forms-1:ranger:attack:1280x720",
-    "forms-1:ranger:attack:844x390",
-    "forms-1:ranger:attack:844x340",
-    "forms-1:ranger:engage:1280x720",
-    "forms-1:ranger:engage:844x390",
-    "forms-1:ranger:engage:844x340",
-    "forms-2:gunner:engage:844x340",
-    "forms-4:mayo-chan:attack:1280x720",
-    "forms-8:futago-separated-a:move:844x390",
-    "forms-8:futago-separated-a:move:844x340",
-    "forms-8:futago-separated-a:engage:844x390",
-    "forms-8:futago-separated-a:engage:844x340",
-    "forms-9:futago-separated-b:engage:844x390",
-    "forms-12:takuya-omega:move:844x340"
+    "forms-4:mayo-chan:attack:1280x720"
   ],
-  "manualCaseIds": [
-    "forms-1:ranger:ranger-manual-precision:1280x720",
-    "forms-1:ranger:ranger-manual-precision:844x390",
-    "forms-1:ranger:ranger-manual-precision:844x340"
-  ],
-  "outcomeCaseIds": [
-    "forms-1:ranger:controlled-outcome:1280x720",
-    "forms-1:ranger:controlled-outcome:844x390",
-    "forms-1:ranger:controlled-outcome:844x340"
-  ],
+  "manualCaseIds": [],
+  "outcomeCaseIds": [],
   "changedBlobs": {
+    ".github/workflows/ci.yml": "cf2cc77ad2772089a4ffab209594879a56a9e590",
+    ".github/workflows/targeted-frame-performance.yml": "670edafd521eba956ee3309afac22ae636f1115a",
     "app/audioMixer.js": "800bb3737914437bbadc2d1edfaf6c557539caf0",
     "app/productionAudio.js": "23ec034cd3b9c48e000d409b8525dd714ed9bead",
+    "app/v105AbilityNames.js": "28cf501a28e033f75e643259aec2e14eab144d97",
     "app/v177RangerFootPlacement.js": "b1e7857b6b810773714b1eaf2dedb3846b8c1376",
     "assets/source/v177/ranger/lower-r3/provenance.json": "aba5c66d3183fbe0d5ae849b7a3a48b026b0f1f6",
-    "docs/PROJECT_STATE.md": "2d292be560fe3059316e53d12c0b126d8d4d5014",
+    "docs/PROJECT_STATE.md": "97788165de7de46f069f32d61e8345f327581b0c",
+    "docs/qa/v105/native-f7-evidence.json": "348eb032e3c7268539f413e62396bae078d35bce",
+    "docs/qa/v105/shared-foot-impact-f7.json": "ca7e48eeb2228b3e4d5a513f026aa88719630d5e",
     "tests/audio-mixer.test.mjs": "b7c6537909ee85baa9eb833f187abd5998716f8f",
+    "tests/ci-change-scope.test.mjs": "e65baa3e4597b1cfcf8e5a1752bf10021289c905",
+    "tests/ci-contract.test.mjs": "cca6dde0cbe07e3adb29286422b7a2bd907e2cfc",
     "tests/production-audio.test.mjs": "b19bf16647580aaaaa09db262de804485d4a60bf",
     "tests/v105-five-corrections.test.mjs": "27c3a5f353d3579d24862a18ddd09809c20abba0",
-    "tests/v177-native-allunit-selection.test.mjs": "96bca27fa2ff12f39a212bb0c59c947d1317a1c2",
+    "tests/v177-native-aac-graph.test.mjs": "730c57c8c1a52d2388c0200859ab9063495209f2",
+    "tests/v177-native-allunit-selection.test.mjs": "a99195bd5ee33ea7283683fad39817b248348d12",
     "tests/v177-ranger-body-correction.test.mjs": "23eccd8aba1aafd7336cfacdf0785d89748148fe",
-    "docs/qa/v105/native-f7-evidence.json": "348eb032e3c7268539f413e62396bae078d35bce",
-    "docs/qa/v105/shared-foot-impact-f7.json": "ca7e48eeb2228b3e4d5a513f026aa88719630d5e"
+    "docs/qa/v105/native-f880-evidence.json": "597b84943cd699146f872156427192f190068f50"
   },
   "retainedEvidence": {
     "head": "f7f6f7ce46844eaefc4bb519fa80d591e2607407",
@@ -464,9 +447,29 @@
       "forms-12:kumaverson:engage:844x340",
       "forms-12:babayaga:move:844x340",
       "forms-12:babayaga:attack:844x340",
-      "forms-12:babayaga:engage:844x340"
+      "forms-12:babayaga:engage:844x340",
+      "forms-1:ranger:move:1280x720",
+      "forms-1:ranger:attack:1280x720",
+      "forms-1:ranger:engage:1280x720",
+      "forms-1:ranger:move:844x390",
+      "forms-1:ranger:attack:844x390",
+      "forms-1:ranger:engage:844x390",
+      "forms-1:ranger:move:844x340",
+      "forms-1:ranger:attack:844x340",
+      "forms-1:ranger:engage:844x340",
+      "forms-2:gunner:engage:844x340",
+      "forms-8:futago-separated-a:move:844x390",
+      "forms-8:futago-separated-a:engage:844x390",
+      "forms-8:futago-separated-a:move:844x340",
+      "forms-8:futago-separated-a:engage:844x340",
+      "forms-9:futago-separated-b:engage:844x390",
+      "forms-12:takuya-omega:move:844x340"
     ],
-    "manualCaseIds": [],
+    "manualCaseIds": [
+      "forms-1:ranger:ranger-manual-precision:1280x720",
+      "forms-1:ranger:ranger-manual-precision:844x390",
+      "forms-1:ranger:ranger-manual-precision:844x340"
+    ],
     "outcomeCaseIds": [
       "forms-1:brawler:controlled-outcome:1280x720",
       "forms-1:scout:controlled-outcome:1280x720",
@@ -608,7 +611,10 @@
       "forms-12:takuya-omega:controlled-outcome:844x340",
       "forms-12:crazy-king:controlled-outcome:844x340",
       "forms-12:kumaverson:controlled-outcome:844x340",
-      "forms-12:babayaga:controlled-outcome:844x340"
+      "forms-12:babayaga:controlled-outcome:844x340",
+      "forms-1:ranger:controlled-outcome:1280x720",
+      "forms-1:ranger:controlled-outcome:844x390",
+      "forms-1:ranger:controlled-outcome:844x340"
     ],
     "reports": [
       {
@@ -1288,7 +1294,87 @@
         ]
       }
     ],
-    "additionalReports": [],
+    "additionalReports": [
+      {
+        "shard": "forms-1",
+        "head": "f88084dcf3e457fb4bd63cf4313e14327eb204b3",
+        "runId": "40109045890",
+        "sha256": "8203d3f6a323a41365afb1ea69f26d853a1053a5fcff01afef3e836255a33b43",
+        "artifactId": 12566081895,
+        "caseIds": [
+          "forms-1:ranger:move:1280x720",
+          "forms-1:ranger:attack:1280x720",
+          "forms-1:ranger:engage:1280x720",
+          "forms-1:ranger:move:844x390",
+          "forms-1:ranger:attack:844x390",
+          "forms-1:ranger:engage:844x390",
+          "forms-1:ranger:move:844x340",
+          "forms-1:ranger:attack:844x340",
+          "forms-1:ranger:engage:844x340"
+        ],
+        "manualCaseIds": [
+          "forms-1:ranger:ranger-manual-precision:1280x720",
+          "forms-1:ranger:ranger-manual-precision:844x390",
+          "forms-1:ranger:ranger-manual-precision:844x340"
+        ],
+        "outcomeCaseIds": [
+          "forms-1:ranger:controlled-outcome:1280x720",
+          "forms-1:ranger:controlled-outcome:844x390",
+          "forms-1:ranger:controlled-outcome:844x340"
+        ]
+      },
+      {
+        "shard": "forms-2",
+        "head": "f88084dcf3e457fb4bd63cf4313e14327eb204b3",
+        "runId": "40109045890",
+        "sha256": "ae66db75433462cbb7f3d4a3f189e6fdec4abcc3fb4197e72ddd8d6eb66ed927",
+        "artifactId": 12565554957,
+        "caseIds": [
+          "forms-2:gunner:engage:844x340"
+        ],
+        "manualCaseIds": [],
+        "outcomeCaseIds": []
+      },
+      {
+        "shard": "forms-8",
+        "head": "f88084dcf3e457fb4bd63cf4313e14327eb204b3",
+        "runId": "40109045890",
+        "sha256": "ebf6d5e8d6cc01f850c985ca5796a272c7ce10d07b08d5774f151a9254587b0f",
+        "artifactId": 12566500868,
+        "caseIds": [
+          "forms-8:futago-separated-a:move:844x390",
+          "forms-8:futago-separated-a:engage:844x390",
+          "forms-8:futago-separated-a:move:844x340",
+          "forms-8:futago-separated-a:engage:844x340"
+        ],
+        "manualCaseIds": [],
+        "outcomeCaseIds": []
+      },
+      {
+        "shard": "forms-9",
+        "head": "f88084dcf3e457fb4bd63cf4313e14327eb204b3",
+        "runId": "40109045890",
+        "sha256": "5cc2749ee963c85e78298d0d058e14926cc98f06222bef64417b83516e64349d",
+        "artifactId": 12565579849,
+        "caseIds": [
+          "forms-9:futago-separated-b:engage:844x390"
+        ],
+        "manualCaseIds": [],
+        "outcomeCaseIds": []
+      },
+      {
+        "shard": "forms-12",
+        "head": "f88084dcf3e457fb4bd63cf4313e14327eb204b3",
+        "runId": "40109045890",
+        "sha256": "2bc578049e2594a735a88b37b9371d0f5f542e60372d82295c6656fd9b8567df",
+        "artifactId": 12565912604,
+        "caseIds": [
+          "forms-12:takuya-omega:move:844x340"
+        ],
+        "manualCaseIds": [],
+        "outcomeCaseIds": []
+      }
+    ],
     "originalSpeedAccepted": false,
     "naturalnessAccepted": false
   },
@@ -1511,9 +1597,121 @@
   "naturalnessAccepted": false,
   "wholeGameAccepted": false,
   "previousProfile": {
-    "gitHead": "1f92a3c5339a2e608e98e793bdf4cdecc21d6c6e",
+    "gitHead": "f88084dcf3e457fb4bd63cf4313e14327eb204b3",
     "file": "scripts/v177-native-allunit-recovery.json",
-    "gitBlob": "bd2ed07a3d62b758293af55934518c448b90fb83",
-    "sha256": "1e2d0609d8335dd8eddfe41057ea74b7523d754b72a5b40e7d978d1333b6257f"
-  }
+    "gitBlob": "2aaf5bbd67782fd9d61620b08d30635919a05717",
+    "sha256": "e085b5f8bfec757ab6a52fe50dc45d8ca45d7f7de87f54473b053fd1a58fc01b"
+  },
+  "additionalEvidenceInventories": [
+    {
+      "head": "f88084dcf3e457fb4bd63cf4313e14327eb204b3",
+      "runId": "40109045890",
+      "sha256": "5e1855b03e90579b98d12d3517677b141c5fe2af05af97b44ac082a5115298b6",
+      "file": "docs/qa/v105/native-f880-evidence.json",
+      "reports": [
+        {
+          "shard": "forms-1",
+          "head": "f88084dcf3e457fb4bd63cf4313e14327eb204b3",
+          "runId": "40109045890",
+          "sha256": "8203d3f6a323a41365afb1ea69f26d853a1053a5fcff01afef3e836255a33b43",
+          "artifactId": 12566081895,
+          "artifactDigestReportedByGithub": "sha256:a62288d731bf830ad82a8dda7b4ab036f984eb259056728fc770df94f3cbe2c9",
+          "encodedAuditSha256": "bb61037dc0ab13b25ffe4fd723de3e93000dcab23700157e55ae9fa7fde73dab",
+          "sourceManifestSha256": "0c9ffdf4eab2f61a51c1a8383f395852daac9d29a2ba8d4b689e75f23b3678f1",
+          "sourceFilesVerified": 400,
+          "retainedCount": 15,
+          "originalEncodedSummary": {
+            "cases": 15,
+            "passed": 15,
+            "failed": 0
+          }
+        },
+        {
+          "shard": "forms-2",
+          "head": "f88084dcf3e457fb4bd63cf4313e14327eb204b3",
+          "runId": "40109045890",
+          "sha256": "ae66db75433462cbb7f3d4a3f189e6fdec4abcc3fb4197e72ddd8d6eb66ed927",
+          "artifactId": 12565554957,
+          "artifactDigestReportedByGithub": "sha256:913ed902443b949865e4f1bfe8d8866f438360ee485215d1c147d79a58643600",
+          "encodedAuditSha256": "cdf7b28167f7a56e795100d15fd45246881700576880eb035b9e648fc6a9cdad",
+          "sourceManifestSha256": "0c9ffdf4eab2f61a51c1a8383f395852daac9d29a2ba8d4b689e75f23b3678f1",
+          "sourceFilesVerified": 400,
+          "retainedCount": 1,
+          "originalEncodedSummary": {
+            "cases": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        {
+          "shard": "forms-4",
+          "head": "f88084dcf3e457fb4bd63cf4313e14327eb204b3",
+          "runId": "40109045890",
+          "sha256": "7f05222caa56ae5a5fd988c959f30cb495fcd7212e71355927a3ac96f8ba38c6",
+          "artifactId": 12565129224,
+          "artifactDigestReportedByGithub": "sha256:e11e43b089f45fc8a98c1f038dd16007526c6c2b853e3c6408bf8c8a4876b21d",
+          "encodedAuditSha256": "5516545694fef14bf7abee4a981a27876759f3644f43d6d77b3edf9735a4bb2f",
+          "sourceManifestSha256": "0c9ffdf4eab2f61a51c1a8383f395852daac9d29a2ba8d4b689e75f23b3678f1",
+          "sourceFilesVerified": 400,
+          "retainedCount": 0,
+          "originalEncodedSummary": {
+            "cases": 1,
+            "passed": 0,
+            "failed": 1
+          }
+        },
+        {
+          "shard": "forms-8",
+          "head": "f88084dcf3e457fb4bd63cf4313e14327eb204b3",
+          "runId": "40109045890",
+          "sha256": "ebf6d5e8d6cc01f850c985ca5796a272c7ce10d07b08d5774f151a9254587b0f",
+          "artifactId": 12566500868,
+          "artifactDigestReportedByGithub": "sha256:e1f912ad7fd7a2ee75be0d219d668084b518d32f4ecf7e731e0bfcf511b5b818",
+          "encodedAuditSha256": "6d125b8d300f0c398b9d74d1b63e8cb4457342b5ab00c3b71c98431ff0d8f5fc",
+          "sourceManifestSha256": "0c9ffdf4eab2f61a51c1a8383f395852daac9d29a2ba8d4b689e75f23b3678f1",
+          "sourceFilesVerified": 400,
+          "retainedCount": 4,
+          "originalEncodedSummary": {
+            "cases": 4,
+            "passed": 4,
+            "failed": 0
+          }
+        },
+        {
+          "shard": "forms-9",
+          "head": "f88084dcf3e457fb4bd63cf4313e14327eb204b3",
+          "runId": "40109045890",
+          "sha256": "5cc2749ee963c85e78298d0d058e14926cc98f06222bef64417b83516e64349d",
+          "artifactId": 12565579849,
+          "artifactDigestReportedByGithub": "sha256:e705ad4d6ff08b165d545395d919dcba459c65052112755e9d5fe74040b6a976",
+          "encodedAuditSha256": "de9d44b36c4bf82797e67079f3c0a5e7d9bbef5531e5918e099013d85449fcb8",
+          "sourceManifestSha256": "0c9ffdf4eab2f61a51c1a8383f395852daac9d29a2ba8d4b689e75f23b3678f1",
+          "sourceFilesVerified": 400,
+          "retainedCount": 1,
+          "originalEncodedSummary": {
+            "cases": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        },
+        {
+          "shard": "forms-12",
+          "head": "f88084dcf3e457fb4bd63cf4313e14327eb204b3",
+          "runId": "40109045890",
+          "sha256": "2bc578049e2594a735a88b37b9371d0f5f542e60372d82295c6656fd9b8567df",
+          "artifactId": 12565912604,
+          "artifactDigestReportedByGithub": "sha256:002b15f6597cf8f97b0efa4d38ed5780bf2981a01831f59cc194e0de117834ba",
+          "encodedAuditSha256": "189d1eddfe1a815008ca20b78961ca23e89fcceeee5184bd32312d73af24f9ca",
+          "sourceManifestSha256": "0c9ffdf4eab2f61a51c1a8383f395852daac9d29a2ba8d4b689e75f23b3678f1",
+          "sourceFilesVerified": 400,
+          "retainedCount": 1,
+          "originalEncodedSummary": {
+            "cases": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        }
+      ]
+    }
+  ]
 }

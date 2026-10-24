@@ -1,0 +1,316 @@
+{
+  "schema": "v105-original-native-evidence/v1",
+  "head": "f88084dcf3e457fb4bd63cf4313e14327eb204b3",
+  "runId": "40109045890",
+  "reports": [
+    {
+      "shard": "forms-1",
+      "head": "f88084dcf3e457fb4bd63cf4313e14327eb204b3",
+      "runId": "40109045890",
+      "sha256": "8203d3f6a323a41365afb1ea69f26d853a1053a5fcff01afef3e836255a33b43",
+      "artifactId": 12566081895,
+      "artifactDigestReportedByGithub": "sha256:a62288d731bf830ad82a8dda7b4ab036f984eb259056728fc770df94f3cbe2c9",
+      "encodedAuditSha256": "bb61037dc0ab13b25ffe4fd723de3e93000dcab23700157e55ae9fa7fde73dab",
+      "sourceManifestSha256": "0c9ffdf4eab2f61a51c1a8383f395852daac9d29a2ba8d4b689e75f23b3678f1",
+      "sourceFilesVerified": 400,
+      "retainedCount": 15,
+      "originalEncodedSummary": {
+        "cases": 15,
+        "passed": 15,
+        "failed": 0
+      }
+    },
+    {
+      "shard": "forms-2",
+      "head": "f88084dcf3e457fb4bd63cf4313e14327eb204b3",
+      "runId": "40109045890",
+      "sha256": "ae66db75433462cbb7f3d4a3f189e6fdec4abcc3fb4197e72ddd8d6eb66ed927",
+      "artifactId": 12565554957,
+      "artifactDigestReportedByGithub": "sha256:913ed902443b949865e4f1bfe8d8866f438360ee485215d1c147d79a58643600",
+      "encodedAuditSha256": "cdf7b28167f7a56e795100d15fd45246881700576880eb035b9e648fc6a9cdad",
+      "sourceManifestSha256": "0c9ffdf4eab2f61a51c1a8383f395852daac9d29a2ba8d4b689e75f23b3678f1",
+      "sourceFilesVerified": 400,
+      "retainedCount": 1,
+      "originalEncodedSummary": {
+        "cases": 1,
+        "passed": 1,
+        "failed": 0
+      }
+    },
+    {
+      "shard": "forms-4",
+      "head": "f88084dcf3e457fb4bd63cf4313e14327eb204b3",
+      "runId": "40109045890",
+      "sha256": "7f05222caa56ae5a5fd988c959f30cb495fcd7212e71355927a3ac96f8ba38c6",
+      "artifactId": 12565129224,
+      "artifactDigestReportedByGithub": "sha256:e11e43b089f45fc8a98c1f038dd16007526c6c2b853e3c6408bf8c8a4876b21d",
+      "encodedAuditSha256": "5516545694fef14bf7abee4a981a27876759f3644f43d6d77b3edf9735a4bb2f",
+      "sourceManifestSha256": "0c9ffdf4eab2f61a51c1a8383f395852daac9d29a2ba8d4b689e75f23b3678f1",
+      "sourceFilesVerified": 400,
+      "retainedCount": 0,
+      "originalEncodedSummary": {
+        "cases": 1,
+        "passed": 0,
+        "failed": 1
+      }
+    },
+    {
+      "shard": "forms-8",
+      "head": "f88084dcf3e457fb4bd63cf4313e14327eb204b3",
+      "runId": "40109045890",
+      "sha256": "ebf6d5e8d6cc01f850c985ca5796a272c7ce10d07b08d5774f151a9254587b0f",
+      "artifactId": 12566500868,
+      "artifactDigestReportedByGithub": "sha256:e1f912ad7fd7a2ee75be0d219d668084b518d32f4ecf7e731e0bfcf511b5b818",
+      "encodedAuditSha256": "6d125b8d300f0c398b9d74d1b63e8cb4457342b5ab00c3b71c98431ff0d8f5fc",
+      "sourceManifestSha256": "0c9ffdf4eab2f61a51c1a8383f395852daac9d29a2ba8d4b689e75f23b3678f1",
+      "sourceFilesVerified": 400,
+      "retainedCount": 4,
+      "originalEncodedSummary": {
+        "cases": 4,
+        "passed": 4,
+        "failed": 0
+      }
+    },
+    {
+      "shard": "forms-9",
+      "head": "f88084dcf3e457fb4bd63cf4313e14327eb204b3",
+      "runId": "40109045890",
+      "sha256": "5cc2749ee963c85e78298d0d058e14926cc98f06222bef64417b83516e64349d",
+      "artifactId": 12565579849,
+      "artifactDigestReportedByGithub": "sha256:e705ad4d6ff08b165d545395d919dcba459c65052112755e9d5fe74040b6a976",
+      "encodedAuditSha256": "de9d44b36c4bf82797e67079f3c0a5e7d9bbef5531e5918e099013d85449fcb8",
+      "sourceManifestSha256": "0c9ffdf4eab2f61a51c1a8383f395852daac9d29a2ba8d4b689e75f23b3678f1",
+      "sourceFilesVerified": 400,
+      "retainedCount": 1,
+      "originalEncodedSummary": {
+        "cases": 1,
+        "passed": 1,
+        "failed": 0
+      }
+    },
+    {
+      "shard": "forms-12",
+      "head": "f88084dcf3e457fb4bd63cf4313e14327eb204b3",
+      "runId": "40109045890",
+      "sha256": "2bc578049e2594a735a88b37b9371d0f5f542e60372d82295c6656fd9b8567df",
+      "artifactId": 12565912604,
+      "artifactDigestReportedByGithub": "sha256:002b15f6597cf8f97b0efa4d38ed5780bf2981a01831f59cc194e0de117834ba",
+      "encodedAuditSha256": "189d1eddfe1a815008ca20b78961ca23e89fcceeee5184bd32312d73af24f9ca",
+      "sourceManifestSha256": "0c9ffdf4eab2f61a51c1a8383f395852daac9d29a2ba8d4b689e75f23b3678f1",
+      "sourceFilesVerified": 400,
+      "retainedCount": 1,
+      "originalEncodedSummary": {
+        "cases": 1,
+        "passed": 1,
+        "failed": 0
+      }
+    }
+  ],
+  "originalFailures": [
+    {
+      "caseId": "forms-4:mayo-chan:attack:1280x720",
+      "maxGapMs": 516,
+      "sourceClipSha256": "524a6279bc4e343869e8415c665f8a5b07b55e10273c7a0c60d4fcfcce804dcf",
+      "reportSha256": "7f05222caa56ae5a5fd988c959f30cb495fcd7212e71355927a3ac96f8ba38c6",
+      "encodedAuditSha256": "5516545694fef14bf7abee4a981a27876759f3644f43d6d77b3edf9735a4bb2f"
+    }
+  ],
+  "strictRawClocks": [
+    {
+      "caseId": "forms-1:ranger:move:1280x720",
+      "rawNativeStrictlyIncreasing": true,
+      "simulationNondecreasing": true,
+      "sourceRafStrictlyIncreasing": true,
+      "rawRowsRemoved": false,
+      "sourceReportSha256": "8203d3f6a323a41365afb1ea69f26d853a1053a5fcff01afef3e836255a33b43"
+    },
+    {
+      "caseId": "forms-1:ranger:attack:1280x720",
+      "rawNativeStrictlyIncreasing": true,
+      "simulationNondecreasing": true,
+      "sourceRafStrictlyIncreasing": true,
+      "rawRowsRemoved": false,
+      "sourceReportSha256": "8203d3f6a323a41365afb1ea69f26d853a1053a5fcff01afef3e836255a33b43"
+    },
+    {
+      "caseId": "forms-1:ranger:engage:1280x720",
+      "rawNativeStrictlyIncreasing": true,
+      "simulationNondecreasing": true,
+      "sourceRafStrictlyIncreasing": true,
+      "rawRowsRemoved": false,
+      "sourceReportSha256": "8203d3f6a323a41365afb1ea69f26d853a1053a5fcff01afef3e836255a33b43"
+    },
+    {
+      "caseId": "forms-1:ranger:move:844x390",
+      "rawNativeStrictlyIncreasing": true,
+      "simulationNondecreasing": true,
+      "sourceRafStrictlyIncreasing": true,
+      "rawRowsRemoved": false,
+      "sourceReportSha256": "8203d3f6a323a41365afb1ea69f26d853a1053a5fcff01afef3e836255a33b43"
+    },
+    {
+      "caseId": "forms-1:ranger:attack:844x390",
+      "rawNativeStrictlyIncreasing": true,
+      "simulationNondecreasing": true,
+      "sourceRafStrictlyIncreasing": true,
+      "rawRowsRemoved": false,
+      "sourceReportSha256": "8203d3f6a323a41365afb1ea69f26d853a1053a5fcff01afef3e836255a33b43"
+    },
+    {
+      "caseId": "forms-1:ranger:engage:844x390",
+      "rawNativeStrictlyIncreasing": true,
+      "simulationNondecreasing": true,
+      "sourceRafStrictlyIncreasing": true,
+      "rawRowsRemoved": false,
+      "sourceReportSha256": "8203d3f6a323a41365afb1ea69f26d853a1053a5fcff01afef3e836255a33b43"
+    },
+    {
+      "caseId": "forms-1:ranger:move:844x340",
+      "rawNativeStrictlyIncreasing": true,
+      "simulationNondecreasing": true,
+      "sourceRafStrictlyIncreasing": true,
+      "rawRowsRemoved": false,
+      "sourceReportSha256": "8203d3f6a323a41365afb1ea69f26d853a1053a5fcff01afef3e836255a33b43"
+    },
+    {
+      "caseId": "forms-1:ranger:attack:844x340",
+      "rawNativeStrictlyIncreasing": true,
+      "simulationNondecreasing": true,
+      "sourceRafStrictlyIncreasing": true,
+      "rawRowsRemoved": false,
+      "sourceReportSha256": "8203d3f6a323a41365afb1ea69f26d853a1053a5fcff01afef3e836255a33b43"
+    },
+    {
+      "caseId": "forms-1:ranger:engage:844x340",
+      "rawNativeStrictlyIncreasing": true,
+      "simulationNondecreasing": true,
+      "sourceRafStrictlyIncreasing": true,
+      "rawRowsRemoved": false,
+      "sourceReportSha256": "8203d3f6a323a41365afb1ea69f26d853a1053a5fcff01afef3e836255a33b43"
+    },
+    {
+      "caseId": "forms-1:ranger:ranger-manual-precision:1280x720",
+      "rawNativeStrictlyIncreasing": true,
+      "simulationNondecreasing": true,
+      "sourceRafStrictlyIncreasing": true,
+      "rawRowsRemoved": false,
+      "sourceReportSha256": "8203d3f6a323a41365afb1ea69f26d853a1053a5fcff01afef3e836255a33b43"
+    },
+    {
+      "caseId": "forms-1:ranger:ranger-manual-precision:844x390",
+      "rawNativeStrictlyIncreasing": true,
+      "simulationNondecreasing": true,
+      "sourceRafStrictlyIncreasing": true,
+      "rawRowsRemoved": false,
+      "sourceReportSha256": "8203d3f6a323a41365afb1ea69f26d853a1053a5fcff01afef3e836255a33b43"
+    },
+    {
+      "caseId": "forms-1:ranger:ranger-manual-precision:844x340",
+      "rawNativeStrictlyIncreasing": true,
+      "simulationNondecreasing": true,
+      "sourceRafStrictlyIncreasing": true,
+      "rawRowsRemoved": false,
+      "sourceReportSha256": "8203d3f6a323a41365afb1ea69f26d853a1053a5fcff01afef3e836255a33b43"
+    },
+    {
+      "caseId": "forms-1:ranger:controlled-outcome:1280x720",
+      "rawNativeStrictlyIncreasing": true,
+      "simulationNondecreasing": true,
+      "sourceRafStrictlyIncreasing": true,
+      "rawRowsRemoved": false,
+      "sourceReportSha256": "8203d3f6a323a41365afb1ea69f26d853a1053a5fcff01afef3e836255a33b43"
+    },
+    {
+      "caseId": "forms-1:ranger:controlled-outcome:844x390",
+      "rawNativeStrictlyIncreasing": true,
+      "simulationNondecreasing": true,
+      "sourceRafStrictlyIncreasing": true,
+      "rawRowsRemoved": false,
+      "sourceReportSha256": "8203d3f6a323a41365afb1ea69f26d853a1053a5fcff01afef3e836255a33b43"
+    },
+    {
+      "caseId": "forms-1:ranger:controlled-outcome:844x340",
+      "rawNativeStrictlyIncreasing": true,
+      "simulationNondecreasing": true,
+      "sourceRafStrictlyIncreasing": true,
+      "rawRowsRemoved": false,
+      "sourceReportSha256": "8203d3f6a323a41365afb1ea69f26d853a1053a5fcff01afef3e836255a33b43"
+    },
+    {
+      "caseId": "forms-2:gunner:engage:844x340",
+      "rawNativeStrictlyIncreasing": true,
+      "simulationNondecreasing": true,
+      "sourceRafStrictlyIncreasing": true,
+      "rawRowsRemoved": false,
+      "sourceReportSha256": "ae66db75433462cbb7f3d4a3f189e6fdec4abcc3fb4197e72ddd8d6eb66ed927"
+    },
+    {
+      "caseId": "forms-8:futago-separated-a:move:844x390",
+      "rawNativeStrictlyIncreasing": true,
+      "simulationNondecreasing": true,
+      "sourceRafStrictlyIncreasing": true,
+      "rawRowsRemoved": false,
+      "sourceReportSha256": "ebf6d5e8d6cc01f850c985ca5796a272c7ce10d07b08d5774f151a9254587b0f"
+    },
+    {
+      "caseId": "forms-8:futago-separated-a:engage:844x390",
+      "rawNativeStrictlyIncreasing": true,
+      "simulationNondecreasing": true,
+      "sourceRafStrictlyIncreasing": true,
+      "rawRowsRemoved": false,
+      "sourceReportSha256": "ebf6d5e8d6cc01f850c985ca5796a272c7ce10d07b08d5774f151a9254587b0f"
+    },
+    {
+      "caseId": "forms-8:futago-separated-a:move:844x340",
+      "rawNativeStrictlyIncreasing": true,
+      "simulationNondecreasing": true,
+      "sourceRafStrictlyIncreasing": true,
+      "rawRowsRemoved": false,
+      "sourceReportSha256": "ebf6d5e8d6cc01f850c985ca5796a272c7ce10d07b08d5774f151a9254587b0f"
+    },
+    {
+      "caseId": "forms-8:futago-separated-a:engage:844x340",
+      "rawNativeStrictlyIncreasing": true,
+      "simulationNondecreasing": true,
+      "sourceRafStrictlyIncreasing": true,
+      "rawRowsRemoved": false,
+      "sourceReportSha256": "ebf6d5e8d6cc01f850c985ca5796a272c7ce10d07b08d5774f151a9254587b0f"
+    },
+    {
+      "caseId": "forms-9:futago-separated-b:engage:844x390",
+      "rawNativeStrictlyIncreasing": true,
+      "simulationNondecreasing": true,
+      "sourceRafStrictlyIncreasing": true,
+      "rawRowsRemoved": false,
+      "sourceReportSha256": "5cc2749ee963c85e78298d0d058e14926cc98f06222bef64417b83516e64349d"
+    },
+    {
+      "caseId": "forms-12:takuya-omega:move:844x340",
+      "rawNativeStrictlyIncreasing": true,
+      "simulationNondecreasing": true,
+      "sourceRafStrictlyIncreasing": true,
+      "rawRowsRemoved": false,
+      "sourceReportSha256": "2bc578049e2594a735a88b37b9371d0f5f542e60372d82295c6656fd9b8567df"
+    }
+  ],
+  "source": "Original hosted artifacts and untouched clip/report/source members; complete original native decode receipts are retained",
+  "previousProfile": {
+    "gitHead": "f88084dcf3e457fb4bd63cf4313e14327eb204b3",
+    "file": "scripts/v177-native-allunit-recovery.json",
+    "gitBlob": "2aaf5bbd67782fd9d61620b08d30635919a05717",
+    "sha256": "e085b5f8bfec757ab6a52fe50dc45d8ca45d7f7de87f54473b053fd1a58fc01b"
+  },
+  "laterProductDifference": {
+    "files": [
+      "app/v105AbilityNames.js",
+      "tests/v177-native-aac-graph.test.mjs"
+    ],
+    "bodyMotionPhysicsAudioUnchanged": true,
+    "overheadPresentation": "Black backing and connector removed; latest actual AV run40116306312 owns four text-only display observations; old recordings do not prove the new label style"
+  },
+  "originalSpeedAccepted": false,
+  "naturalnessAccepted": false,
+  "humanListeningAccepted": false,
+  "physicalSavedAudioAccepted": false,
+  "wholeGameAccepted": false
+}

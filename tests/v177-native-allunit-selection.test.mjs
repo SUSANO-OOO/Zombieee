@@ -13,12 +13,18 @@ const current=JSON.parse(readFileSync('scripts/v177-native-allunit-recovery.json
 // manual contracts keep their original immutable profile in Git, without
 // acquiring the new baseline's head or being dropped from negative tests.
 const historical=(()=>{
- const reference=current.previousProfile;if(!reference)return current;
- assert.equal(reference.file,'scripts/v177-native-allunit-recovery.json');
- const raw=execFileSync('git',['show',reference.gitHead+':'+reference.file],{maxBuffer:8*1024*1024});
- assert.equal(createHash('sha256').update(raw).digest('hex'),reference.sha256);
- assert.equal(execFileSync('git',['rev-parse',reference.gitHead+':'+reference.file],{encoding:'utf8'}).trim(),reference.gitBlob);
- return JSON.parse(raw);
+ let profile=current;const seen=new Set();
+ for(let depth=0;!Array.isArray(profile.historicalRawClockAudits);depth++){
+  assert.ok(depth<8,'Historical negative tests require a bounded original profile chain');
+  const reference=profile.previousProfile;assert.ok(reference,'Original strict-clock failures must remain reachable');
+  assert.equal(reference.file,'scripts/v177-native-allunit-recovery.json');
+  assert.equal(seen.has(reference.gitHead),false,'Historical profile cycle');seen.add(reference.gitHead);
+  const raw=execFileSync('git',['show',reference.gitHead+':'+reference.file],{maxBuffer:8*1024*1024});
+  assert.equal(createHash('sha256').update(raw).digest('hex'),reference.sha256);
+  assert.equal(execFileSync('git',['rev-parse',reference.gitHead+':'+reference.file],{encoding:'utf8'}).trim(),reference.gitBlob);
+  profile=JSON.parse(raw);
+ }
+ return profile;
 })();
 const originalCaseIds=SHARDS.flatMap(s=>planShard(s.id)).filter(r=>r.viewport.width===1280).slice(0,54).map(r=>r.caseId);
 const recovery={schema:'v177-native-allunit-recovery/v1',head:'1'.repeat(40),runId:'39422404651',originalCaseIds,
