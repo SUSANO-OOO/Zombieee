@@ -4246,6 +4246,8 @@ const fighterActualXDeltaAudit = new Map<number, number>();
 const corpseRenderAuditHistory = new Map<number, FighterRenderAudit[]>();
 const fighterRenderAuditEnabled = typeof window !== "undefined"
   && ["localhost", "127.0.0.1"].includes(window.location.hostname);
+const diagnosticHistoryLimit = fighterRenderAuditEnabled
+  && new URLSearchParams(window.location.search).get('qaAuditHistory') === 'latest' ? 1 : 128;
 let fighterRenderSequence = 0;
 const nativeFutagoDamageCopy = createV177FutagoDamageCopy();
 
@@ -4253,14 +4255,16 @@ function recordFighterRenderAudit(fighter: Fighter, audit: FighterRenderAudit) {
   fighterRenderAudit.set(fighter, audit);
   const history = fighterRenderAuditHistory.get(fighter.id) ?? [];
   history.push(audit);
-  if (history.length > 128) history.splice(0, history.length - 128);
+  const limit=fighter.kind==='ranger'||audit.renderKind==='ranger'?128:diagnosticHistoryLimit;
+  if(history.length>limit)history.splice(0,history.length-limit);
   fighterRenderAuditHistory.set(fighter.id, history);
 }
 
 function recordCorpseRenderAudit(corpseId: number, audit: FighterRenderAudit) {
   const history = corpseRenderAuditHistory.get(corpseId) ?? [];
   history.push(audit);
-  if (history.length > 128) history.splice(0, history.length - 128);
+  const limit=audit.renderKind==='ranger'?128:diagnosticHistoryLimit;
+  if(history.length>limit)history.splice(0,history.length-limit);
   corpseRenderAuditHistory.set(corpseId, history);
 }
 
@@ -14692,6 +14696,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       },
       getPerformanceSnapshot: () => ({
         ...runtimePerformanceRef.current,
+        diagnosticHistoryLimit,
         rangerLowerPaint:getV177RangerLowerPaintSnapshot(),
         rangerDrawBoundary: {renderSequence:fighterRenderSequence,simulationTime:gameRef.current.time,
           battleAudioGeneration:gameRef.current.battleAudioGeneration,

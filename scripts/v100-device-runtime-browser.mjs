@@ -39,6 +39,8 @@ assert.ok(["auto", "power-save"].includes(qualityDiagnostic), `invalid quality d
 const diagnosticSeconds = Number(process.env.V100_DEVICE_RUNTIME_DIAGNOSTIC_SECONDS ?? 15);
 assert.ok(Number.isInteger(diagnosticSeconds) && diagnosticSeconds >= 10 && diagnosticSeconds <= 30, "diagnostic seconds must be 10..30");
 const measurementMs = paintIsolation === "none" && qualityDiagnostic === "auto" ? 30_000 : diagnosticSeconds * 1_000;
+const auditHistory=process.env.V100_DEVICE_RUNTIME_AUDIT_HISTORY??'full';
+assert.ok(['full','latest'].includes(auditHistory));
 const callbackDiagnostic = process.env.V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC === "1";
 const nativeRecordingDiagnostic = process.env.V100_DEVICE_RUNTIME_NATIVE_RECORDING_DIAGNOSTIC === "1";
 if(nativeRecordingDiagnostic){assert.equal(engine,"webkit");assert.equal(process.platform,"darwin");}
@@ -416,6 +418,9 @@ try {
         localStorage.setItem("nishijin-campaign-v100:last-known-good", raw);
       }, seedRaw);
       const url = new URL("v100", baseUrl);
+      if(auditHistory==='latest')url.searchParams.set('qaAuditHistory','latest');
+      result.auditHistory={requested:auditHistory,expectedNonRangerHistoryLimit:auditHistory==='latest'?1:128,rangerHistoryLimit:128,
+        normalProductBehaviorChanged:false,diagnosticOnly:true};
       if (viewport.safeArea) url.searchParams.set("safe", "iphone-landscape");
       const response = await page.goto(String(url), { waitUntil: "domcontentloaded", timeout: setupTimeoutMs });
       assert.ok(response?.ok(), `navigation HTTP ${response?.status()}`);
@@ -493,6 +498,7 @@ try {
       assert.ok(preparation?.ready,'No live Ranger with an actual weighted paint inside the original setup deadline');
       measurementActive = true;
       const measurement = await beginMeasurement(page);
+      assert.equal(measurement.performance?.diagnosticHistoryLimit,auditHistory==='latest'?1:128,'Actual telemetry mode must match');
       result.measurementStarted = true;
       assert.equal(measurement.visibilityState, "visible", "measurement did not start while visible");
       // The elapsed gate uses this browser clock. Node's wall clock can finish
@@ -525,6 +531,7 @@ try {
         }
       }
       const raf = await endMeasurement(page);
+      assert.equal(raf?.performanceAfter?.diagnosticHistoryLimit,auditHistory==='latest'?1:128,'Telemetry mode must remain unchanged');
       result.rangerDrawReceipts=observerlessDiagnostic
         ?{status:'not-observed-diagnostic',weightedPaintObserved:false,scope:'Observerless control retains its original no-sampling protocol; no Ranger workload acceptance.'}
         :rangerPerformanceReceipts(result.measurementSamples,{startedAt:measurement.startedAt,endedAt:raf?.endedAt});
