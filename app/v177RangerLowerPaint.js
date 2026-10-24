@@ -233,7 +233,10 @@ export function paintV177RangerLower(p,ctx,phase,settle,x,y,width,height,feet=nu
     else if(previousPayloadReused)last.uploadOwner=previousUploadOwner;
     else{
       last.uploadOwner=null;
-      try{last.context.putImageData(p.imageData,0,0,0,0,w,h);}catch(error){invalidateRasters(p);throw error;}
+      try{
+        if(globalThis.__V177_RANGER_FULL_UPLOAD_DIAG__===true)last.context.putImageData(p.imageData,0,0);
+        else last.context.putImageData(p.imageData,0,0,0,0,w,h);
+      }catch(error){invalidateRasters(p);throw error;}
     }
     if(trace){trace.payloadReused=payloadReused;trace.payloadReuseOwner=ownPayloadReused?'own':previousPayloadReused?'previous':null;trace.actualUpload=!payloadReused;}
     if(trace)trace.uploadFinishedAt=performance.now();
