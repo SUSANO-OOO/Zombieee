@@ -362,6 +362,16 @@ test('new source heads do not wait behind a previous head and all original full 
  delete current.jobs.scope.outputs.combat;
  current.jobs['v102-combat'].if=original.jobs['v102-combat'].if;
  current.jobs['v102-combat-webkit-summary'].if=original.jobs['v102-combat-webkit-summary'].if;
+ const formalCommand='node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs';
+ const formal=workflow=>workflow.jobs['v100-webkit-frame-control'].steps.filter(step=>step.run===formalCommand);
+ assert.equal(formal(current).length,4);assert.equal(formal(original).length,4);
+ for(const step of formal(current))assert.equal(step.env.V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC,'0');
+ for(const step of formal(original)){
+  assert.equal(step.env.V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC,'1');
+  step.env.V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC='0';
+ }
+ const targeted=load(readFileSync('.github/workflows/targeted-frame-performance.yml','utf8'));
+ assert.equal(targeted.jobs['v100-webkit-frame-control'].env.V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC,"${{ matrix.runtime == 'formal' && '0' || '1' }}");
  assert.deepEqual(current,original,'all jobs, inputs, limits, permissions and acceptance assertions remain identical');
 });
 

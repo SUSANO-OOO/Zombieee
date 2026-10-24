@@ -420,7 +420,10 @@ test("parsed required CI graph retains every WebKit lane, dependency and viewpor
   const performance = frameSteps.findIndex((step) => step.run === "node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs");
   assert.ok(arch >= 0 && arch < browserInstall && runtimePin > browserInstall && capture > runtimePin && build > capture && performance > build);
   assert.match(frameSteps[arch].run, /test "\$\(uname -m\)" = arm64/u);
-  assert.equal(frameSteps[performance]?.env?.V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC, "1");
+  const formalMeasurements=frameSteps.filter(step=>step.run==="node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs");
+  assert.equal(formalMeasurements.length,4);
+  for(const step of formalMeasurements)assert.equal(step.env?.V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC,"0",
+    "Formal raw-RAF and Ranger proof retain their original gates without the optional callback profiler");
   assert.equal(frameSteps.find((step) => step.name === "Upload WebKit frame controls and boss performance")?.with?.["if-no-files-found"], "error");
   assert.equal(jobs["v100-phase-g-production"].steps.some((step) => step.name === "Measure V1 native boss battle performance (WebKit)"), false);
   const viewports = ["667x375", "736x414", "844x390", "844x340", "932x430", "1280x720"];

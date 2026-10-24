@@ -69,7 +69,7 @@ jobs:
       EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || inputs.expected_head }}
       GITHUB_PAGES_RELEASE_SHA: ${{ github.event.pull_request.head.sha || inputs.expected_head }}
       V100_DEVICE_RUNTIME_ENGINE: webkit
-      V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC: '1'
+      V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC: ${{ matrix.runtime == 'formal' && '0' || '1' }}
       V100_DEVICE_RUNTIME_BLANK_BASELINE: '1'
     steps:
       - uses: actions/checkout@v7

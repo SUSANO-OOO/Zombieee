@@ -724,7 +724,7 @@ jobs:
           V100_DEVICE_RUNTIME_ENGINE: webkit
           V100_DEVICE_RUNTIME_OUT: outputs/v100-device-runtime/webkit
           V100_DEVICE_RUNTIME_BLANK_BASELINE: "1"
-          V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC: "1"
+          V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC: "0"
           V100_DEVICE_RUNTIME_BENCHMARK_PREPARATION: spotlight-paused
         run: node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs
 
@@ -746,7 +746,7 @@ jobs:
           V100_DEVICE_RUNTIME_VIEWPORT: 844x340
           V100_DEVICE_RUNTIME_OUT: outputs/v100-device-runtime/webkit-844x340-repeat
           V100_DEVICE_RUNTIME_BLANK_BASELINE: "1"
-          V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC: "1"
+          V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC: "0"
           V100_DEVICE_RUNTIME_BENCHMARK_PREPARATION: spotlight-paused
         run: node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs
 
@@ -758,7 +758,7 @@ jobs:
           V100_DEVICE_RUNTIME_VIEWPORT: 844x390
           V100_DEVICE_RUNTIME_OUT: outputs/v100-device-runtime/webkit-844x390-repeat
           V100_DEVICE_RUNTIME_BLANK_BASELINE: "1"
-          V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC: "1"
+          V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC: "0"
           V100_DEVICE_RUNTIME_BENCHMARK_PREPARATION: spotlight-paused
         run: node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs
 
@@ -771,7 +771,7 @@ jobs:
           V100_DEVICE_RUNTIME_DPR: "2"
           V100_DEVICE_RUNTIME_OUT: outputs/v100-device-runtime/webkit-844x390-dpr2
           V100_DEVICE_RUNTIME_BLANK_BASELINE: "1"
-          V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC: "1"
+          V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC: "0"
           V100_DEVICE_RUNTIME_BENCHMARK_PREPARATION: spotlight-paused
         run: node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs
 
