@@ -169,3 +169,72 @@ test('continuous soft projection cannot freeze an ordinary advancing gait or pos
     assert.ok(landings>6);
   }
 });
+
+test('a cancelled pursuit carries only painted net displacement without inventing stop steps',()=>{
+  // f7 S25 time66.133333: +.002582 actual travel cancels a29/60 attempt.
+  // The independently retained16-input reproduction fails the original strict
+  // bone reach on tick15; it is a boundary model, not a full S25 replay.
+  const scale=78.46153846153847/480,initialRoot=659.9011553858735,phase=30.460399674544067;
+  const at=65.88333333333087,net=.00258211726816171,attempt=29/60;
+  let state,reference,root=initialRoot,shift=0,landings=0;
+  for(let tick=0;tick<90;tick++){
+    if(tick>=10){root+=net;shift+=net-attempt;}
+    const input={time:at+tick/60,root,phase,scale,settle:1,moving:false,facing:1,bodyCorrection:0,bodyShiftX:shift,frozen:false};
+    const before=structuredClone(state),actual=v177RangerFootPlacement(rig,state,input);
+    const expected=v177RangerFootPlacement(rig,reference,{...input,root:initialRoot,bodyShiftX:0});
+    check(actual,1);assert.deepEqual(state,before,'a planning query cannot mutate the preceding paint');
+    for(let i=0;i<2;i++){
+      assert.ok(Math.abs(actual.state.feet[i].x-expected.state.feet[i].x-(root-initialRoot))<1e-10,
+        'the raw cancellation is not another movement of the supporting boot');
+      assert.equal(actual.state.feet[i].height,expected.state.feet[i].height);
+      assert.equal(actual.state.feet[i].flight?.endAt,expected.state.feet[i].flight?.endAt,'retain each original landing deadline');
+      if(state?.feet[i].flight&&!actual.state.feet[i].flight)landings++;
+    }
+    state=actual.state;reference=expected.state;
+  }
+  assert.equal(landings,0,'the original settled stance needs no new correction step');
+  assert.ok(state.feet.every(foot=>foot.height===0&&!foot.flight));
+  assert.equal(state.bodyShiftX,shift,'consume the real cumulative solver receipt once');
+});
+
+test('net projection during an unfinished stop retains the original flight and landing clock',()=>{
+  let state,root=330,phase=13/30,settle=1,time=0;const scale=.18;
+  for(let tick=0;tick<15;tick++){
+    time+=1/30;const walking=tick<10;if(walking){root+=29/30;phase+=29/30/(scale*cycle);}
+    settle=walking?Math.max(0,settle-1/30/.12):Math.min(1,settle+1/30/.16);
+    state=v177RangerFootPlacement(rig,state,{time,root,phase,scale,settle,moving:walking,facing:1}).state;
+  }
+  assert.ok(state.feet.some(foot=>foot.flight));
+  const initialRoot=root,net=.00258211726816171;let reference=state,shift=0,landings=0;
+  for(let tick=1;tick<=60;tick++){
+    root+=net;shift+=net-29/60;
+    const input={time:time+tick/60,root,phase,scale,settle:1,moving:false,facing:1,bodyShiftX:shift};
+    const actual=v177RangerFootPlacement(rig,state,input),expected=v177RangerFootPlacement(rig,reference,{...input,root:initialRoot,bodyShiftX:0});
+    check(actual,1);for(let i=0;i<2;i++){
+      assert.ok(Math.abs(actual.state.feet[i].x-expected.state.feet[i].x-(root-initialRoot))<1e-10);
+      assert.equal(actual.state.feet[i].height,expected.state.feet[i].height);
+      assert.equal(actual.state.feet[i].flight?.endAt,expected.state.feet[i].flight?.endAt);
+      if(state.feet[i].flight&&!actual.state.feet[i].flight)landings++;
+    }
+    state=actual.state;reference=expected.state;
+  }
+  assert.ok(landings>=2);assert.ok(state.feet.every(foot=>!foot.flight&&foot.height===0));
+});
+
+test('a simultaneous hard correction retains its original rigid priority over the soft receipt',()=>{
+  let state,root=330,phase=13/30,settle=1,time=0;const scale=.18;
+  for(let tick=0;tick<15;tick++){
+    time+=1/30;const walking=tick<10;if(walking){root+=29/30;phase+=29/30/(scale*cycle);}
+    settle=walking?Math.max(0,settle-1/30/.12):Math.min(1,settle+1/30/.16);
+    state=v177RangerFootPlacement(rig,state,{time,root,phase,scale,settle,moving:walking,facing:1}).state;
+  }
+  assert.ok(state.feet.some(foot=>foot.flight));
+  const input={time:time+1/60,root:root+.25,phase,scale,settle:1,moving:false,facing:1,bodyCorrection:1};
+  const reference=v177RangerFootPlacement(rig,state,input),actual=v177RangerFootPlacement(rig,state,{...input,bodyShiftX:-.1});
+  check(actual,1);assert.deepEqual(actual.targets,reference.targets);
+  for(let i=0;i<2;i++){
+    assert.equal(actual.state.feet[i].height,state.feet[i].height,'preserve the original hard rigid carry');
+    assert.equal(actual.state.feet[i].flight?.endAt,reference.state.feet[i].flight?.endAt);
+  }
+  assert.equal(actual.state.bodyCorrection,1);assert.equal(actual.state.bodyShiftX,-.1);
+});

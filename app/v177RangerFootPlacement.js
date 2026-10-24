@@ -262,13 +262,16 @@ export function v177RangerFootPlacement(rig, previous, input) {
     bodyCorrection:input.bodyCorrection??0};
   const {time,root,facing,scale,phase}=input;
   const shifted=Number.isFinite(input.bodyShiftX),shiftX=shifted?input.bodyShiftX-(previous?.bodyShiftX??0):0;
-  if(previous&&time>=previous.time&&shiftX!==0&&root!==previous.root&&phase===previous.phase){
+  if(previous&&time>=previous.time&&shiftX!==0&&root!==previous.root&&phase===previous.phase
+    &&input.bodyCorrection===(previous.bodyCorrection??0)){
     // An advancing gait already owns its actual net travel. Transfer only
-    // an otherwise unowned solver displacement; a rejected attempted move
-    // with an unchanged painted root is not an actual body shift. Existing
-    // flights keep every original time and deadline.
-    previous={...previous,root:previous.root+shiftX,feet:previous.feet.map(foot=>({...foot,x:foot.x+shiftX,
-      flight:foot.flight?{...foot.flight,fromX:foot.flight.fromX+shiftX}:foot.flight}))};
+    // an otherwise unowned actual displacement. The raw correction can nearly
+    // cancel an attempted pursuit: transferring it in full would subtract that
+    // rejected travel again from a planted boot. Consume the receipt while
+    // carrying only the painted net change, retaining all flight deadlines.
+    const actualShiftX=root-previous.root;
+    previous={...previous,root,feet:previous.feet.map(foot=>({...foot,x:foot.x+actualShiftX,
+      flight:foot.flight?{...foot.flight,fromX:foot.flight.fromX+actualShiftX}:foot.flight}))};
   }
   // Once both feet have finished settling, retain their immutable records.
   // The clock still advances; a turn, impulse or unfinished step uses the
