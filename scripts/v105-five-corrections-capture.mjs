@@ -29,16 +29,19 @@ export async function startCorrectionRecording({ids,durationMs}){
   await audio.unlock();const tap=audio.createLocalRecordingTap();
   const canvas=document.querySelector('.game-shell canvas'),stream=canvas.captureStream(60);
   for(const track of tap.stream.getAudioTracks())stream.addTrack(track);
-  const mime=['video/mp4','video/webm;codecs=vp8,opus'].find(type=>MediaRecorder.isTypeSupported(type));
+  const mime=['video/webm;codecs=vp8,opus','video/mp4'].find(type=>MediaRecorder.isTypeSupported(type));
   if(!mime){tap.release();stream.getTracks().forEach(t=>t.stop());throw Error('Native original AV encoding unavailable');}
   const state={rows:[],chunks:[],startAt:null,stopAt:null,failed:null,raf:null,bytes:0,
+    videoTrackSettings:{...stream.getVideoTracks()[0].getSettings()},audioTracks:stream.getAudioTracks().length,
     mime,durationMs,initial:q.getV105CorrectionAudit(ids),clockOrigin:performance.timeOrigin};
   const recorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:5000000,audioBitsPerSecond:128000});
   const stopped=new Promise((resolve,reject)=>{recorder.onstop=resolve;recorder.onerror=e=>{state.failed=String(e.error??e);reject(Error(state.failed));};});
   void stopped.catch(()=>{});
   recorder.ondataavailable=e=>{if(e.data.size){state.bytes+=e.data.size;state.chunks.push(e.data);if(state.bytes>8388608)state.failed='Original8MiB limit exceeded';}};
   let startTimer;
-  await Promise.race([new Promise(resolve=>{recorder.onstart=()=>{state.startAt=performance.now();resolve();};recorder.start(250);}),
+  // Match the existing native recorder's single original stream. WebKit's
+  // MP4 timeslices produced repeated packet timestamps and missing frames.
+  await Promise.race([new Promise(resolve=>{recorder.onstart=()=>{state.startAt=performance.now();resolve();};recorder.start();}),
     new Promise((_,reject)=>{startTimer=setTimeout(()=>reject(Error('Native start exceeded3s')),3000);})]).finally(()=>clearTimeout(startTimer));
   const observe=at=>{if(state.stopAt!==null)return;
     if(state.rows.length>=4096){state.failed='Original4096-frame receipt limit';return;}
