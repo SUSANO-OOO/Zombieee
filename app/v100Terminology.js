@@ -11,5 +11,5 @@ const V100_ROLE_LABELS = Object.freeze({
 export { V100_ROLE_LABELS };
 
 export function v100RoleLabelFor(roleId) {
-  return V100_ROLE_LABELS[roleId] ?? "隊員";
+  return V100_ROLE_LABELS[roleId] ?? "ユニット";
 }

@@ -1,0 +1,31 @@
+{
+  "head": "451718675684aac63228e87a0133a436098d6339",
+  "artifactId": 11961401178,
+  "zipSha256": "3ccc09db17bd76a00d160cb4b1757ddb41356321ba615e93f975b1781e0bbb5a",
+  "allOriginalEntriesVerified": true,
+  "records": [
+    {
+      "file": "s3-1s.png",
+      "sha256": "3314c5bfe074c7192a3c363660f0aff224c193edec1030b78d6ae545d4dc30c7",
+      "bytes": 487472
+    },
+    {
+      "file": "s3-31s.png",
+      "sha256": "7a3fa53440ac0539708562fc5db99a273a9988d55ca29edec0a0d5aafbf54264",
+      "bytes": 501283
+    },
+    {
+      "file": "s3-61s.png",
+      "sha256": "80c9c6d7e099138ca0f52fa154e21d968f72e2e401c227aeb0df3cfc127579bf",
+      "bytes": 492872
+    }
+  ],
+  "openingOwnedIds": [
+    "unit-hachi",
+    "unit-paisen",
+    "unit-kumaverson",
+    "unit-babayaga",
+    "unit-nao"
+  ],
+  "normalPlayAccepted": false
+}

@@ -1,0 +1,9 @@
+Create a production anatomy completion study for the provided canonical fused twin boss, NOT a replacement character and NOT a new full body. Preserve the exact sickly brown/grey desaturated flesh, black worn clothing scraps, exposed rib lattice, inked realistic game sprite painting. Existing two faces, hair, all visible claws, feet, and the fused chest will remain untouched original pixels in the final game.
+Transparent PNG. A clean 4 columns by 4 rows grid of SIXTEEN completely separate isolated concealed joint repair parts; generous transparent gutters, no labels, no lettering, no color swatches, no background, no border.
+Read cells left to right row by row:
+1-5: five different thin twisted upper-leg / hip connection pieces, approximately vertical; torn dark cloth near top, sinewy grey brown flesh at joint ends.
+6-10: five matching thin calf/shin connection pieces, approximately vertical, exposed tendons and irregular bone texture, NO foot or toes.
+11-14: four long tapered upper-arm/forearm repair strips with original desaturated tendon and ragged sleeve textures. All approximately vertical, NO hand/fingers.
+15: a small irregular concealed lower fused-abdomen patch, exposed grey brown rib tendons, NO head, NO whole torso.
+16: a second small inner pelvis seam patch with tattered charcoal cloth and thin rib tendons.
+Every cell must contain one separated part with real alpha around it; endpoints hidden under original owned masks. No independent complete character, no new faces, no additional heads, no additional hands, no feet, no bright red/orange glow, no equipment. Keep paint detailed and quiet like original canonical game art.

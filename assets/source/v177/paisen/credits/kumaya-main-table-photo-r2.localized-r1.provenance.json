@@ -1,0 +1,198 @@
+{
+  "at": "2026-10-15T10:10:03.817Z",
+  "sceneId": "kumaya-main-table",
+  "original": "public/art/v100/story-r5/cuts/epilogue-main-table.webp",
+  "originalSha256": "d3ec6d129f97a07700f4a96e1f315f213ea8ec59eecfbdda1bde98bd5cfdd2b5",
+  "generated": "assets/source/v177/paisen/credits/kumaya-main-table-photo-r2.generated.png",
+  "generatedSha256": "a7f95772928363077ddac4e7cd5b923be22744e6e3a74ad022ce961891db2dd4",
+  "target": "assets/source/v177/paisen/credits/kumaya-main-table-photo-r2.localized-r1.png",
+  "targetSha256": "1d941cfba528fcecf617e26e1d98d669ac23ae523e96d8043111732943b66bdb",
+  "width": 1280,
+  "height": 720,
+  "polygons": [
+    [
+      [
+        69,
+        112
+      ],
+      [
+        120,
+        79
+      ],
+      [
+        198,
+        88
+      ],
+      [
+        235,
+        139
+      ],
+      [
+        242,
+        214
+      ],
+      [
+        218,
+        265
+      ],
+      [
+        200,
+        294
+      ],
+      [
+        153,
+        318
+      ],
+      [
+        97,
+        300
+      ],
+      [
+        78,
+        257
+      ],
+      [
+        58,
+        205
+      ],
+      [
+        60,
+        146
+      ]
+    ],
+    [
+      [
+        84,
+        272
+      ],
+      [
+        160,
+        304
+      ],
+      [
+        217,
+        282
+      ],
+      [
+        260,
+        286
+      ],
+      [
+        325,
+        306
+      ],
+      [
+        362,
+        345
+      ],
+      [
+        397,
+        425
+      ],
+      [
+        394,
+        505
+      ],
+      [
+        305,
+        506
+      ],
+      [
+        278,
+        474
+      ],
+      [
+        215,
+        440
+      ],
+      [
+        0,
+        395
+      ],
+      [
+        0,
+        298
+      ],
+      [
+        45,
+        284
+      ]
+    ]
+  ],
+  "protectRects": [
+    [
+      0,
+      346,
+      224,
+      374
+    ]
+  ],
+  "protectPolygons": [
+    [
+      [
+        359,
+        415
+      ],
+      [
+        393,
+        441
+      ],
+      [
+        403,
+        500
+      ],
+      [
+        394,
+        545
+      ],
+      [
+        300,
+        550
+      ],
+      [
+        217,
+        520
+      ],
+      [
+        178,
+        497
+      ],
+      [
+        169,
+        473
+      ],
+      [
+        223,
+        480
+      ],
+      [
+        283,
+        482
+      ],
+      [
+        297,
+        448
+      ],
+      [
+        306,
+        428
+      ]
+    ]
+  ],
+  "faceRect": [
+    57,
+    79,
+    188,
+    240
+  ],
+  "maskPath": "assets/source/v177/paisen/credits/kumaya-main-table-photo-r2.localization-mask-r1.png",
+  "registeredPixels": 66718,
+  "changedPixels": 66693,
+  "changedOutsideRegisteredRegion": 0,
+  "normalization": "Uniform cover fit to native original dimensions, thresholded explicit Paisen mask; all other original decoded RGBA pixels remain byte-identical.",
+  "runtimeConnected": false,
+  "visualReviewed": false,
+  "nativeAccepted": false,
+  "producerAccepted": false,
+  "wholeGameAccepted": false
+}

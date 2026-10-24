@@ -1,3 +1,4 @@
+import { V177_PAISEN_PHOTO_SPRITES } from './v177PaisenPhotoSpriteData.js';
 import { V075_VISUAL_PROFILES, V080_UNIT_VISUAL_PROFILES, V090_UNIT_VISUAL_PROFILES } from "./visualProfiles.js";
 import { PRODUCTION_ENEMY_SOURCE_FACING } from "./enemyFacingContract.js";
 import { V100_RUNTIME_ASSET_MANIFEST } from "./v100RuntimeAssetManifest.js";
@@ -105,7 +106,7 @@ const LEGACY_SHEET_AUDIT = Object.freeze({
   brawler: {
     path: "/brawler-sprites-v1.png", width: 2172, height: 724,
     edges: STANDARD_LEGACY_CELL_EDGES,
-    visible: [[49, 93, 316, 586], [48, 97, 331, 587], [28, 97, 340, 587], [19, 110, 362, 589], [0, 117, 362, 589], [0, 118, 304, 589]],
+    visible: [[49, 93, 316, 586], [48, 97, 331, 587], [28, 97, 340, 587], [19, 110, 280, 589], [0, 117, 362, 589], [70, 118, 304, 589]],
   },
   scout: {
     path: "/scout-sprites-v2.png", width: 2172, height: 724,
@@ -135,7 +136,7 @@ const LEGACY_SHEET_AUDIT = Object.freeze({
   infected: {
     path: "/infected-sprites-v1.png", width: 2172, height: 724,
     edges: STANDARD_LEGACY_CELL_EDGES,
-    visible: [[68, 127, 318, 590], [56, 131, 324, 590], [45, 130, 362, 590], [0, 151, 362, 590], [0, 194, 362, 589], [0, 135, 323, 590]],
+    visible: [[68, 127, 318, 590], [56, 131, 324, 590], [45, 130, 304, 590], [0, 151, 358, 590], [0, 194, 362, 589], [29, 135, 323, 590]],
   },
   spitter: {
     path: "/spitter-sprites-v1.png", width: 2172, height: 724,
@@ -145,12 +146,12 @@ const LEGACY_SHEET_AUDIT = Object.freeze({
   shade: {
     path: "/shade-raider-sprites-v1.png", width: 2172, height: 724,
     edges: STANDARD_LEGACY_CELL_EDGES,
-    visible: [[49, 119, 309, 573], [2, 152, 362, 571], [0, 158, 362, 560], [0, 148, 359, 571], [3, 275, 332, 569], [37, 174, 314, 573]],
+    visible: [[49, 119, 309, 573], [2, 152, 362, 571], [65, 158, 362, 560], [0, 148, 359, 571], [3, 275, 332, 569], [37, 174, 314, 573]],
   },
   crusher: {
     path: "/crusher-sprites-v1.png", width: 2172, height: 724,
     edges: STANDARD_LEGACY_CELL_EDGES,
-    visible: [[74, 139, 362, 585], [0, 150, 362, 585], [0, 157, 359, 587], [12, 100, 362, 590], [0, 216, 362, 595], [0, 179, 329, 589]],
+    visible: [[74, 139, 362, 585], [80, 150, 362, 585], [74, 157, 359, 587], [12, 100, 336, 589], [0, 216, 362, 595], [0, 179, 329, 589]],
   },
   takuya: {
     path: "/takuya-boss-sprites-v2.png", width: 2172, height: 724,
@@ -167,30 +168,48 @@ const LEGACY_PADDED_CELL = Object.freeze({
   gutter: 16,
 });
 
+// Source-bound exclusions checked against the complete connected body in
+// each cell. Detached impact debris, projectiles and muzzle flashes remain.
+const LEGACY_NEIGHBOUR_RECTANGLES = Object.freeze({
+  brawler: { "attack-a": [350, 0, 44, 757], hit: [0, 200, 44, 64], death: [0, 200, 44, 64] },
+  infected: { "walk-b": [320, 0, 74, 757], "attack-a": [360, 300, 34, 75], "attack-b": [368, 576, 26, 40], hit: [0, 500, 60, 120], death: [0, 500, 60, 120] },
+  shade: { "walk-b": [0, 0, 40, 757], "attack-a": [0, 490, 28, 55] },
+  crusher: { "walk-a": [0, 0, 64, 757], "walk-b": [0, 0, 64, 757], "attack-a": [320, 450, 74, 175] },
+});
+
+function slicesAroundRectangle(width, height, [x, y, w, h]) {
+  return [
+    { x: 0, y: 0, w: width, h: y },
+    { x: 0, y, w: x, h },
+    { x: x + w, y, w: width - x - w, h },
+    { x: 0, y: y + h, w: width, h: height - y - h },
+  ].filter(slice => slice.w > 0 && slice.h > 0);
+}
+
 const NEWCOMER_VISIBLE = Object.freeze({
   zakimiya: {
-    right: [[160, 16, 321, 432], [142, 16, 329, 432], [136, 16, 354, 432], [119, 16, 311, 421], [160, 16, 397, 426], [140, 16, 329, 432], [220, 327, 426, 432]],
-    left: [[160, 16, 321, 432], [142, 16, 329, 432], [136, 16, 354, 432], [169, 16, 368, 421], [100, 16, 329, 426], [140, 16, 329, 432], [55, 327, 260, 432]],
+    right: [[160,16,321,432],[142,16,329,432],[136,16,354,432],[119,16,311,421],[160,16,397,426],[140,16,329,432],[16,293,464,432]],
+    left: [[160,16,321,432],[142,16,329,432],[136,16,354,432],[169,16,368,421],[100,16,329,426],[140,16,329,432],[16,293,464,432]],
   },
   tky: {
     right: [[157, 16, 323, 432], [120, 16, 360, 432], [117, 16, 364, 432], [110, 40, 401, 432], [159, 16, 362, 432], [108, 16, 373, 432], [16, 244, 464, 432]],
     left: [[157, 16, 323, 432], [120, 16, 360, 432], [117, 16, 364, 432], [79, 40, 370, 432], [118, 16, 321, 432], [108, 16, 373, 432], [16, 244, 464, 432]],
   },
   "mrs-chiha": {
-    right: [[171, 16, 309, 432], [132, 16, 326, 432], [174, 16, 355, 432], [135, 16, 345, 432], [42, 16, 439, 432], [67, 16, 414, 432], [70, 176, 410, 432]],
-    left: [[171, 16, 309, 432], [154, 16, 349, 432], [126, 16, 307, 432], [135, 16, 345, 432], [42, 16, 439, 432], [67, 16, 414, 432], [70, 176, 410, 432]],
+    right: [[171,16,309,432],[132,16,326,432],[174,16,355,432],[135,16,345,432],[42,16,439,432],[101,16,379,432],[16,242,464,432]],
+    left: [[171,16,309,432],[154,16,349,432],[126,16,307,432],[135,16,345,432],[42,16,439,432],[101,16,379,432],[16,242,464,432]],
   },
   "miyamoto-musashi": {
-    right: [[78, 16, 402, 432], [114, 16, 366, 432], [133, 16, 348, 432], [90, 16, 390, 432], [106, 16, 374, 432], [89, 16, 392, 432], [120, 300, 455, 432]],
-    left: [[78, 16, 402, 432], [114, 16, 366, 432], [133, 16, 348, 432], [90, 16, 390, 432], [106, 16, 374, 432], [89, 16, 392, 432], [26, 300, 360, 432]],
+    right: [[78,16,440,432],[155,16,366,432],[133,16,348,432],[90,16,390,432],[106,16,374,432],[56,16,425,432],[16,279,464,432]],
+    left: [[40,16,402,432],[114,16,325,432],[133,16,348,432],[90,16,390,432],[106,16,374,432],[56,16,425,432],[16,279,464,432]],
   },
   "mayo-chan": {
-    right: [[50, 16, 430, 432], [16, 95, 464, 432], [16, 75, 464, 432], [16, 185, 464, 432], [48, 16, 433, 432], [54, 16, 427, 432], [16, 171, 464, 432]],
-    left: [[50, 16, 430, 432], [16, 95, 464, 432], [16, 75, 464, 432], [16, 185, 464, 432], [48, 16, 433, 432], [54, 16, 427, 432], [16, 171, 464, 432]],
+    right: [[50, 16, 430, 432], [16, 95, 464, 432], [16, 75, 464, 432], [16, 185, 464, 432], [48, 16, 433, 432], [25, 16, 456, 432], [16, 171, 464, 432]],
+    left: [[50, 16, 430, 432], [16, 95, 464, 432], [16, 75, 464, 432], [16, 185, 464, 432], [48, 16, 433, 432], [25, 16, 456, 432], [16, 171, 464, 432]],
   },
   "mayo-chan-feral": {
-    right: [[40, 16, 441, 432], [16, 47, 464, 432], [16, 87, 464, 432], [66, 16, 414, 432], [39, 16, 442, 432], [16, 43, 464, 432], [16, 53, 464, 432]],
-    left: [[40, 16, 441, 432], [16, 47, 464, 432], [16, 87, 464, 432], [66, 16, 414, 432], [39, 16, 442, 432], [16, 43, 464, 432], [16, 53, 464, 432]],
+    right: [[40, 16, 441, 432], [16, 47, 464, 432], [16, 87, 464, 432], [66, 16, 414, 432], [39, 16, 442, 432], [16, 107, 464, 432], [16, 53, 464, 432]],
+    left: [[40, 16, 441, 432], [16, 47, 464, 432], [16, 87, 464, 432], [66, 16, 414, 432], [39, 16, 442, 432], [16, 107, 464, 432], [16, 53, 464, 432]],
   },
   scout: {
     right: [[107, 16, 373, 432], [98, 16, 382, 432], [116, 16, 364, 432], [132, 16, 348, 432], [24, 16, 455, 432], [96, 16, 383, 432], [80, 285, 399, 432]],
@@ -225,8 +244,8 @@ const NEWCOMER_VISIBLE = Object.freeze({
     left: [[140, 84, 340, 432], [138, 94, 342, 432], [119, 115, 361, 432], [121, 59, 358, 432], [56, 129, 424, 432], [87, 109, 393, 432], [58, 290, 422, 432]],
   },
   kumaverson: {
-    right: [[130, 98, 349, 432], [115, 102, 364, 432], [104, 90, 376, 432], [120, 54, 359, 432], [112, 108, 368, 432], [70, 78, 410, 432], [35, 290, 445, 432]],
-    left: [[130, 98, 349, 432], [115, 102, 364, 432], [104, 90, 376, 432], [120, 54, 359, 432], [112, 108, 368, 432], [70, 78, 410, 432], [35, 290, 445, 432]],
+    right: [[130,98,349,432],[115,102,364,432],[104,90,376,432],[120,54,359,432],[112,108,368,432],[113,78,367,432],[25,290,454,432]],
+    left: [[130,98,349,432],[115,102,364,432],[104,90,376,432],[120,54,359,432],[112,108,368,432],[113,78,367,432],[25,290,454,432]],
   },
   babayaga: {
     right: [[179, 43, 301, 432], [133, 48, 347, 432], [125, 53, 355, 432], [114, 61, 365, 432], [94, 58, 386, 432], [75, 77, 405, 432], [57, 328, 423, 432]],
@@ -261,8 +280,8 @@ const NEWCOMER_VISIBLE = Object.freeze({
     left: [[16, 245, 464, 432], [16, 252, 464, 432], [16, 253, 464, 432], [16, 234, 464, 432], [16, 272, 464, 432], [16, 197, 464, 432], [16, 293, 464, 432]],
   },
   gairen: {
-    right: [[16, 31, 464, 432], [40, 16, 440, 432], [16, 45, 464, 432], [16, 19, 464, 432], [16, 24, 464, 432], [21, 16, 459, 432], [16, 233, 464, 432]],
-    left: [[16, 31, 464, 432], [40, 16, 440, 432], [16, 45, 464, 432], [16, 19, 464, 432], [16, 24, 464, 432], [21, 16, 459, 432], [16, 233, 464, 432]],
+    right: [[16, 31, 464, 432], [40, 16, 440, 432], [16, 45, 464, 432], [16, 19, 464, 432], [16, 24, 464, 431], [21, 16, 459, 432], [16, 233, 464, 432]],
+    left: [[16, 31, 464, 432], [40, 16, 440, 432], [16, 45, 464, 432], [16, 19, 464, 432], [16, 24, 464, 431], [21, 16, 459, 432], [16, 233, 464, 432]],
   },
   futago: {
     right: [[17, 16, 463, 432], [63, 16, 418, 432], [35, 16, 445, 432], [16, 28, 464, 432], [25, 16, 456, 432], [27, 16, 454, 432], [16, 204, 464, 432]],
@@ -289,8 +308,8 @@ const NEWCOMER_VISIBLE = Object.freeze({
     left: [[30, 283, 451, 432], [25, 216, 446, 432], [37, 216, 458, 432], [30, 83, 451, 432], [30, 66, 451, 432], [32, 141, 449, 432], [30, 275, 451, 432]],
   },
   "anchor-bloom": {
-    right: [[32, 74, 449, 432], [27, 105, 444, 432], [39, 105, 456, 432], [32, 165, 449, 432], [32, 145, 449, 422], [36, 45, 445, 429], [32, 225, 449, 427]],
-    left: [[32, 74, 449, 432], [27, 105, 444, 432], [39, 105, 456, 432], [32, 165, 449, 432], [32, 145, 449, 422], [36, 45, 445, 429], [32, 225, 449, 427]],
+    right: [[32,72,449,432],[27,138,444,432],[39,138,456,432],[32,204,449,432],[32,173,449,432],[32,54,449,432],[32,268,449,432]],
+    left: [[32,72,449,432],[27,138,444,432],[39,138,456,432],[32,204,449,432],[32,173,449,432],[32,54,449,432],[32,268,449,432]],
   },
 });
 
@@ -349,6 +368,35 @@ function frameRecord({
   });
 }
 
+
+function paisenPhotoManifestEntry() {
+  const data = V177_PAISEN_PHOTO_SPRITES;
+  const frames = {};
+  for (const state of SPRITE_STATES) {
+    const index = STATE_FRAME_INDEX[state];
+    frames[state] = {};
+    for (const direction of SPRITE_DIRECTIONS) {
+      frames[state][direction] = frameRecord({
+        path: data.sixPath, sheetWidth: data.cellWidth * 6, sheetHeight: data.cellHeight,
+        source: { x: index * data.cellWidth, y: 0, w: data.cellWidth, h: data.cellHeight },
+        visible: data.sixVisible[index], nativeDirection: 'right', direction,
+        authoredCell: data.authoredCell, anchorX: .5,
+        groundAnchorPixels: data.sixGroundAnchorPixels[index],
+        derivedFrom: state === 'death' ? 'hit' : undefined,
+      });
+    }
+    Object.freeze(frames[state]);
+  }
+  return Object.freeze({
+    path: data.sixPath,
+    sheet: Object.freeze({ width: data.cellWidth * 6, height: data.cellHeight,
+      layout: 'six-source-bound-photo-gutter-cells', cellWidth: data.cellWidth,
+      cellHeight: data.cellHeight, gutter: 16 }),
+    battleContentHeight: null, battleScale: 1, nativeDirection: 'right',
+    states: SPRITE_STATES, directions: SPRITE_DIRECTIONS, frames: Object.freeze(frames),
+  });
+}
+
 function legacyManifestEntry(auditKey, nativeDirection, { battleScale = 1 } = {}) {
   const audit = LEGACY_SHEET_AUDIT[auditKey];
   const path = `/art/v060/characters/legacy/${auditKey}-battle-gutter-v1.png`;
@@ -383,6 +431,8 @@ function legacyManifestEntry(auditKey, nativeDirection, { battleScale = 1 } = {}
         visible,
         nativeDirection,
         direction,
+        drawSlices: LEGACY_NEIGHBOUR_RECTANGLES[auditKey]?.[state]
+          ? slicesAroundRectangle(source.w, source.h, LEGACY_NEIGHBOUR_RECTANGLES[auditKey][state]) : undefined,
         authoredCell: { x: sourceXOffset, y: sourceYOffset, w: authoredWidth, h: audit.height },
         anchorX: (sourceXOffset + authoredWidth / 2) / LEGACY_PADDED_CELL.width,
         derivedFrom: state === "death" ? "hit" : undefined,
@@ -453,6 +503,9 @@ function explicitAtlasManifestEntry(kind, path, { semanticSourceFacing = null } 
         visible: NEWCOMER_VISIBLE[kind][direction][index],
         nativeDirection: direction,
         direction,
+        // A separate fragment of the next coat intrudes into TKY's thrust.
+        drawSlices: kind === "tky" && state === "attack-a"
+          ? slicesAroundRectangle(480, 448, [direction === "right" ? 360 : 50, 240, 70, 90]) : undefined,
       });
     }
     Object.freeze(frames[state]);
@@ -659,7 +712,7 @@ function v100CustomAtlasManifestEntry({ kind, path, sourceStates, visible }) {
 }
 
 export const SPRITE_MANIFEST = Object.freeze({
-  brawler: legacyManifestEntry("brawler", "right"),
+  brawler: paisenPhotoManifestEntry(),
   scout: explicitAtlasManifestEntry("scout", "/art/v070/characters/scout-battle-v1.png"),
   ranger: explicitAtlasManifestEntry("ranger", "/art/v070/characters/ranger-battle-v1.png"),
   medic: explicitAtlasManifestEntry("medic", "/art/v070/characters/medic-battle-v1.png"),
@@ -742,26 +795,7 @@ export const SPRITE_MANIFEST = Object.freeze({
 const V100_PAISEN_ATLAS_PATH = "/art/v100/characters/paisen-battle-v1.png";
 const V100_PAISEN_CELL_WIDTH = 394;
 const V100_PAISEN_CELL_HEIGHT = 757;
-const V100_PAISEN_VISIBLE = Object.freeze({
-  right: Object.freeze([
-    [65, 109, 332, 602],
-    [64, 113, 347, 603],
-    [44, 113, 356, 603],
-    [35, 126, 378, 605],
-    [16, 133, 378, 605],
-    [16, 134, 320, 605],
-    [22, 516, 372, 741],
-  ]),
-  left: Object.freeze([
-    [62, 109, 329, 602],
-    [47, 113, 330, 603],
-    [38, 113, 350, 603],
-    [16, 126, 359, 605],
-    [16, 133, 378, 605],
-    [74, 134, 378, 605],
-    [22, 516, 372, 741],
-  ]),
-});
+const V100_PAISEN_VISIBLE = V177_PAISEN_PHOTO_SPRITES.sevenVisible;
 
 function v100PaisenManifestEntry() {
   const frames = {};
@@ -817,13 +851,13 @@ function v100PaisenManifestEntry() {
 
 export const V100_SPRITE_MANIFEST = Object.freeze({ paisen: v100PaisenManifestEntry() });
 export const V100_SPRITE_PROVENANCE = Object.freeze({
-  generator: "v100-paisen-atlas-r1",
-  identitySourcePath: "/art/v060/characters/portraits/brawler-portrait-v2.webp",
-  identitySourceSha256: "9C4EA4D8BC5D2FD2BAE10EA5BB455F45127D1D861EDF2D3061866EB9C36DF010",
-  sourceBattleDerivativePath: "/art/v060/characters/legacy/brawler-battle-gutter-v1.png",
-  sourceBattleDerivativeSha256: "F1B5149AD4D4A1CC94220B40CD336D18D38372CBE26AEFBF27620BA808DEE836",
+  generator: 'v177-paisen-photo-fallback-r1',
+  identitySourcePath: V177_PAISEN_PHOTO_SPRITES.identityPath,
+  identitySourceSha256: V177_PAISEN_PHOTO_SPRITES.identitySha256.toUpperCase(),
+  sourceBattleDerivativePath: V177_PAISEN_PHOTO_SPRITES.sixPath,
+  sourceBattleDerivativeSha256: V177_PAISEN_PHOTO_SPRITES.sixSha256.toUpperCase(),
   atlasPath: V100_PAISEN_ATLAS_PATH,
-  atlasSha256: "B4943A31126B60C06466FE6BCAA466D027851A852FD08AE92DCFE7F5C566CAF6",
+  atlasSha256: V177_PAISEN_PHOTO_SPRITES.sevenSha256.toUpperCase(),
 });
 
 export const v100SpriteKinds = Object.freeze(Object.keys(V100_SPRITE_MANIFEST));

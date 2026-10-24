@@ -1,0 +1,325 @@
+{
+  "head": "5f9f8e9015f8f1aa9f73336050db5dd6c0d13008",
+  "operation": "Recover complete source hit faces by widening only the crop before existing alpha-component isolation and resize",
+  "sourceMastersUnchanged": true,
+  "other12CellsPerSheetUnchanged": true,
+  "rigPartsAndMotionUnchanged": true,
+  "frozenReferencesUnchanged": true,
+  "rows": [
+    {
+      "path": "/art/v090/characters/mayo-chan-battle-r1.png",
+      "previous": {
+        "path": "/art/v090/characters/mayo-chan-battle-r1.png",
+        "bytes": 1938152,
+        "hash": "sha256-49ec6dbbac3bc22ed266edb2fc422c2c5dffe74942e83624061a132f087b9fd2",
+        "criticality": "critical"
+      },
+      "next": {
+        "path": "/art/v090/characters/mayo-chan-battle-r1.png",
+        "sourcePath": "/pwa-optimized/art/v090/characters/mayo-chan-battle-r1.webp",
+        "bytes": 1984598,
+        "hash": "sha256-91d5b6756ac5f3957978c708c2d690cf5750905a9db947b4a2c26331a2e0e1e5",
+        "criticality": "critical"
+      },
+      "changedPixels": 236256,
+      "unchangedCells": 12,
+      "cells": [
+        {
+          "row": 0,
+          "column": 0,
+          "oldRgbaSha256": "6ff9d6204074e3c44b0b2a90fcc2c125f3e5866948cb949b3ea95499abcf2abc",
+          "newRgbaSha256": "6ff9d6204074e3c44b0b2a90fcc2c125f3e5866948cb949b3ea95499abcf2abc",
+          "unchanged": true
+        },
+        {
+          "row": 0,
+          "column": 1,
+          "oldRgbaSha256": "fa03be090688693365031476d2304eef69b9b30e6b48fa036c161df6e828f860",
+          "newRgbaSha256": "fa03be090688693365031476d2304eef69b9b30e6b48fa036c161df6e828f860",
+          "unchanged": true
+        },
+        {
+          "row": 0,
+          "column": 2,
+          "oldRgbaSha256": "3d1c056d7db7e1627f2012b55330120b53868f86191983b4c80006721e4e5d7b",
+          "newRgbaSha256": "3d1c056d7db7e1627f2012b55330120b53868f86191983b4c80006721e4e5d7b",
+          "unchanged": true
+        },
+        {
+          "row": 0,
+          "column": 3,
+          "oldRgbaSha256": "e6693b023ef3f9baefe3555c57d5459c2eb1107215d0351a71f18aaaec4001d2",
+          "newRgbaSha256": "e6693b023ef3f9baefe3555c57d5459c2eb1107215d0351a71f18aaaec4001d2",
+          "unchanged": true
+        },
+        {
+          "row": 0,
+          "column": 4,
+          "oldRgbaSha256": "50ab94fd0866722308fa1d114b30525bc65081168d28e0e0b346856f59a1c278",
+          "newRgbaSha256": "50ab94fd0866722308fa1d114b30525bc65081168d28e0e0b346856f59a1c278",
+          "unchanged": true
+        },
+        {
+          "row": 0,
+          "column": 5,
+          "oldRgbaSha256": "15a50030ae1daff4cb8b9c18030279dc9efdd920051a907c861588a387f84a45",
+          "newRgbaSha256": "0acea47a943e6ad25e980f88280da3385efe6b0117138f71d8a6cade9227522a",
+          "unchanged": false
+        },
+        {
+          "row": 0,
+          "column": 6,
+          "oldRgbaSha256": "9cf7cf4506b07dfb56f14d6118e4776fac83c9a412bb649e5760e29c73b330b2",
+          "newRgbaSha256": "9cf7cf4506b07dfb56f14d6118e4776fac83c9a412bb649e5760e29c73b330b2",
+          "unchanged": true
+        },
+        {
+          "row": 1,
+          "column": 0,
+          "oldRgbaSha256": "95fb6cda2ffecddaeb3e8083249b294ba385257694652b74cf1e372f37278a71",
+          "newRgbaSha256": "95fb6cda2ffecddaeb3e8083249b294ba385257694652b74cf1e372f37278a71",
+          "unchanged": true
+        },
+        {
+          "row": 1,
+          "column": 1,
+          "oldRgbaSha256": "29bf5c167e099bc5ba456b1ed6abc5d91b7b90dfb47a6a1348a898cfed248fcd",
+          "newRgbaSha256": "29bf5c167e099bc5ba456b1ed6abc5d91b7b90dfb47a6a1348a898cfed248fcd",
+          "unchanged": true
+        },
+        {
+          "row": 1,
+          "column": 2,
+          "oldRgbaSha256": "938637c4872859bb07e002d7853a9480e8abcfafa00ac6eec44bcfe3f0c4102a",
+          "newRgbaSha256": "938637c4872859bb07e002d7853a9480e8abcfafa00ac6eec44bcfe3f0c4102a",
+          "unchanged": true
+        },
+        {
+          "row": 1,
+          "column": 3,
+          "oldRgbaSha256": "b45b2186051c921d30defff52023c0e8040be2b960ba546dafb6c576b3b3e8a9",
+          "newRgbaSha256": "b45b2186051c921d30defff52023c0e8040be2b960ba546dafb6c576b3b3e8a9",
+          "unchanged": true
+        },
+        {
+          "row": 1,
+          "column": 4,
+          "oldRgbaSha256": "70ec04da81fa3585a47af6640b47384293e0dc74016dbc96b0e943adcda71e26",
+          "newRgbaSha256": "70ec04da81fa3585a47af6640b47384293e0dc74016dbc96b0e943adcda71e26",
+          "unchanged": true
+        },
+        {
+          "row": 1,
+          "column": 5,
+          "oldRgbaSha256": "89495cbb2f7d7bbdfde5a884c9723af1b5b3dfc8df92597242f107951f72c000",
+          "newRgbaSha256": "8b6e52353a2bc005061f6a359df9fff38e979dd75bdd74057fdf4ac87c10501c",
+          "unchanged": false
+        },
+        {
+          "row": 1,
+          "column": 6,
+          "oldRgbaSha256": "7b1b94de70285c2257e2b8b212044bb1fe2ed1222ff6c53729da7aec37ff5de5",
+          "newRgbaSha256": "7b1b94de70285c2257e2b8b212044bb1fe2ed1222ff6c53729da7aec37ff5de5",
+          "unchanged": true
+        }
+      ],
+      "previousPng": {
+        "path": "/art/v090/characters/mayo-chan-battle-r1.png",
+        "bytes": 2789017,
+        "hash": "sha256-9b22480d26b1ad892a086817eea15c993c4af24d8df5c4fb33a4a8d71a33c86c",
+        "criticality": "critical"
+      },
+      "nextPng": {
+        "path": "/art/v090/characters/mayo-chan-battle-r1.png",
+        "sourcePath": "/pwa-optimized/art/v090/characters/mayo-chan-battle-r1.webp",
+        "bytes": 2847055,
+        "hash": "sha256-c37bdd7bcb53fef4cd2e5260634c19211f7257021faebbc4a2f501b4e8294379",
+        "criticality": "critical"
+      },
+      "transportDelta": 46446
+    },
+    {
+      "path": "/art/v090/characters/mayo-chan-feral-battle-r1.png",
+      "previous": {
+        "path": "/art/v090/characters/mayo-chan-feral-battle-r1.png",
+        "bytes": 2517188,
+        "hash": "sha256-e650c8b22c94c2ebeddbf1a78c97aecc714621a20bc0f94218047b520efa35d2",
+        "criticality": "critical"
+      },
+      "next": {
+        "path": "/art/v090/characters/mayo-chan-feral-battle-r1.png",
+        "sourcePath": "/pwa-optimized/art/v090/characters/mayo-chan-feral-battle-r1.webp",
+        "bytes": 2478752,
+        "hash": "sha256-9b584d3f21673d93dde19a4b1816d62c0d99a12ab6ed1c338aa54736d515f1e7",
+        "criticality": "critical"
+      },
+      "changedPixels": 253758,
+      "unchangedCells": 12,
+      "cells": [
+        {
+          "row": 0,
+          "column": 0,
+          "oldRgbaSha256": "0b3d8017ee6f569972f0efd72041b56e8bd8c4ea66efe7813aec113262a97c4b",
+          "newRgbaSha256": "0b3d8017ee6f569972f0efd72041b56e8bd8c4ea66efe7813aec113262a97c4b",
+          "unchanged": true
+        },
+        {
+          "row": 0,
+          "column": 1,
+          "oldRgbaSha256": "f5629a9deb83c9c0c8737525e1c8d84118194fe963be9472472dce16cbaf2c82",
+          "newRgbaSha256": "f5629a9deb83c9c0c8737525e1c8d84118194fe963be9472472dce16cbaf2c82",
+          "unchanged": true
+        },
+        {
+          "row": 0,
+          "column": 2,
+          "oldRgbaSha256": "8d06db5f8e6686d44080538e97f04af6987cd1b9e3f96fe81eaa9274e26d3507",
+          "newRgbaSha256": "8d06db5f8e6686d44080538e97f04af6987cd1b9e3f96fe81eaa9274e26d3507",
+          "unchanged": true
+        },
+        {
+          "row": 0,
+          "column": 3,
+          "oldRgbaSha256": "4e9f378d681a5c9daa78fc2c72d23927a293ea77c80d172e7f24e1e5825a146a",
+          "newRgbaSha256": "4e9f378d681a5c9daa78fc2c72d23927a293ea77c80d172e7f24e1e5825a146a",
+          "unchanged": true
+        },
+        {
+          "row": 0,
+          "column": 4,
+          "oldRgbaSha256": "9bb0d84a8ca2ae534f32c3be65ce2fd67b4db28a02d64991cb74b1e792f344c8",
+          "newRgbaSha256": "9bb0d84a8ca2ae534f32c3be65ce2fd67b4db28a02d64991cb74b1e792f344c8",
+          "unchanged": true
+        },
+        {
+          "row": 0,
+          "column": 5,
+          "oldRgbaSha256": "6789224ff4486a8df93bba3715d0554b3729bc2b738b4f65728076988e9c7694",
+          "newRgbaSha256": "b37425a732912b7308a595b93f91f0be4be42d4873934a803fb050d2f29ed24d",
+          "unchanged": false
+        },
+        {
+          "row": 0,
+          "column": 6,
+          "oldRgbaSha256": "b07486eeb5267d8f8a536b4752d9d610636a97bbc5ccdb9770ab1427fcdbc7c4",
+          "newRgbaSha256": "b07486eeb5267d8f8a536b4752d9d610636a97bbc5ccdb9770ab1427fcdbc7c4",
+          "unchanged": true
+        },
+        {
+          "row": 1,
+          "column": 0,
+          "oldRgbaSha256": "c556a354c4bad413cbf0ca795d3116230cd47bb244aa1bcf7b03f71b1396fcbd",
+          "newRgbaSha256": "c556a354c4bad413cbf0ca795d3116230cd47bb244aa1bcf7b03f71b1396fcbd",
+          "unchanged": true
+        },
+        {
+          "row": 1,
+          "column": 1,
+          "oldRgbaSha256": "4e832801fb44b59bf85ecd300a6d78b039565b3b17f35c3f5c6db3fef55b52b0",
+          "newRgbaSha256": "4e832801fb44b59bf85ecd300a6d78b039565b3b17f35c3f5c6db3fef55b52b0",
+          "unchanged": true
+        },
+        {
+          "row": 1,
+          "column": 2,
+          "oldRgbaSha256": "672286aabb7bef5808895745eb3f0a85784f8de4d3dcb165a9837d17d65216be",
+          "newRgbaSha256": "672286aabb7bef5808895745eb3f0a85784f8de4d3dcb165a9837d17d65216be",
+          "unchanged": true
+        },
+        {
+          "row": 1,
+          "column": 3,
+          "oldRgbaSha256": "0fdbca4d85eee535f9b8d1c3c7b7c59997f477ed3cfe59f2bcec28e8f840586f",
+          "newRgbaSha256": "0fdbca4d85eee535f9b8d1c3c7b7c59997f477ed3cfe59f2bcec28e8f840586f",
+          "unchanged": true
+        },
+        {
+          "row": 1,
+          "column": 4,
+          "oldRgbaSha256": "0374bcb081c8dd6c608a520f6a982b84f32ef632a242e9190523a75b46662eb9",
+          "newRgbaSha256": "0374bcb081c8dd6c608a520f6a982b84f32ef632a242e9190523a75b46662eb9",
+          "unchanged": true
+        },
+        {
+          "row": 1,
+          "column": 5,
+          "oldRgbaSha256": "88328feb63f1fe93915e4d05365c12f090d1c3548da650d060038efd002192f8",
+          "newRgbaSha256": "8aceb40ae9435a3966125793838aee8688b9469934fbb3cdc5de98089589bdef",
+          "unchanged": false
+        },
+        {
+          "row": 1,
+          "column": 6,
+          "oldRgbaSha256": "57a861744f165ec84ee8a5f9d6fad44000fa8a53301079280672f1eac5937bef",
+          "newRgbaSha256": "57a861744f165ec84ee8a5f9d6fad44000fa8a53301079280672f1eac5937bef",
+          "unchanged": true
+        }
+      ],
+      "previousPng": {
+        "path": "/art/v090/characters/mayo-chan-feral-battle-r1.png",
+        "bytes": 3550255,
+        "hash": "sha256-87e86f2b6fd4dd113da9ebcb939f370afcc63828f488a80752649a38f386555c",
+        "criticality": "critical"
+      },
+      "nextPng": {
+        "path": "/art/v090/characters/mayo-chan-feral-battle-r1.png",
+        "sourcePath": "/pwa-optimized/art/v090/characters/mayo-chan-feral-battle-r1.webp",
+        "bytes": 3462944,
+        "hash": "sha256-c9b26c01818f21d9af273e817b0a3c48cb57649547558af438a54b5729a536e8",
+        "criticality": "critical"
+      },
+      "transportDelta": -38436
+    }
+  ],
+  "transportNote": "PNG source/preservation and downloaded WebP transport hashes are separate. Published1.0.3 transport read back before deriving both lossless WebPs. All alpha and visible RGB bytes match PNG.",
+  "visualReview": {
+    "board": "output/issue177-mayo-complete-source-prototype-r1/comparison.png",
+    "reviewedHitCells": [
+      {
+        "row": 1,
+        "column": 5,
+        "kind": "mayo-chan"
+      },
+      {
+        "row": 3,
+        "column": 5,
+        "kind": "mayo-chan-feral"
+      }
+    ],
+    "bothReviewed": true,
+    "otherPrototypeFramesNotApplied": true
+  },
+  "rigReproduction": {
+    "builders": 2,
+    "comparedFiles": [
+      {
+        "path": "public/art/v100/joints/mayo-r1.webp",
+        "hash": "b2f4fa920406bec60009f16795f7eebf0f6ea868f5d07aed5cd6e1b2288ffff7",
+        "gitBlob": "171b057815d345d5431371d49e0336e0d2ec2675"
+      },
+      {
+        "path": "public/art/v100/joints/mayo-feral-r1.webp",
+        "hash": "7b44687bdb460747584d538cb94a5ff000993ef49c0619b9a3669098bacc81a8",
+        "gitBlob": "3b8d681be2ed560b88749001c9364a3cd90249e8"
+      },
+      {
+        "path": "public/art/v100/joints/ooguchi-r1.webp",
+        "hash": "850f41763000ff667ad013b94afd8f39be08aab3e60b23407fc48fe5199a710a",
+        "gitBlob": "a680093de32adaefa19e8f64b67c437297f5f049"
+      },
+      {
+        "path": "app/v177QuadrupedJointData.js",
+        "hash": "2f231ab9edd3f1606b90a82952b7f33745e6078f06f99f7300dd29b96de39041",
+        "gitBlob": "b373559a7615389569ceea017967d40fdc5b7eda"
+      },
+      {
+        "path": "app/v177FeralJointData.js",
+        "hash": "fb4ba0277f2f90d367804b8245147561ec6eacafa2677462c767ab0566ae5706",
+        "gitBlob": "2e4ffec61e7ac9a3956772e801c7aa2b2d5ed364"
+      }
+    ],
+    "exact": true,
+    "all48NativeFrameAudit": "output/issue177-all48-native-frame-audit-r2.json",
+    "nativeAcceptance": false
+  }
+}

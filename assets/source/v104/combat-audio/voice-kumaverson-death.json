@@ -1,0 +1,60 @@
+{
+  "accent_phrases": [
+    {
+      "moras": [
+        {
+          "text": "コ",
+          "vowel": "o",
+          "vowel_length": 0.04914923384785652,
+          "pitch": 4.592341899871826,
+          "consonant": "k",
+          "consonant_length": 0.05804269015789032
+        },
+        {
+          "text": "コ",
+          "vowel": "o",
+          "vowel_length": 0.059008222073316574,
+          "pitch": 5.285175800323486,
+          "consonant": "k",
+          "consonant_length": 0.06843642890453339
+        },
+        {
+          "text": "マ",
+          "vowel": "a",
+          "vowel_length": 0.0650298222899437,
+          "pitch": 5.346155643463135,
+          "consonant": "m",
+          "consonant_length": 0.0439576581120491
+        },
+        {
+          "text": "デ",
+          "vowel": "e",
+          "vowel_length": 0.0553484745323658,
+          "pitch": 5.022819519042969,
+          "consonant": "d",
+          "consonant_length": 0.0424419566988945
+        },
+        {
+          "text": "カ",
+          "vowel": "a",
+          "vowel_length": 0.20053339004516602,
+          "pitch": 4.669827461242676,
+          "consonant": "k",
+          "consonant_length": 0.08548391610383987
+        }
+      ],
+      "accent": 3,
+      "pause_mora": null,
+      "is_interrogative": false
+    }
+  ],
+  "speed_scale": 1.12,
+  "pitch_scale": 0.0,
+  "intonation_scale": 1.0,
+  "volume_scale": 1.0,
+  "pre_phoneme_length": 0.015,
+  "post_phoneme_length": 0.035,
+  "output_sampling_rate": 48000,
+  "output_stereo": false,
+  "kana": "ココマ'デカ"
+}

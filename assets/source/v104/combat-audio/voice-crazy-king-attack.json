@@ -1,0 +1,44 @@
+{
+  "accent_phrases": [
+    {
+      "moras": [
+        {
+          "text": "オ",
+          "vowel": "o",
+          "vowel_length": 0.11936325579881668,
+          "pitch": 4.9243550300598145,
+          "consonant": null,
+          "consonant_length": null
+        },
+        {
+          "text": "ラ",
+          "vowel": "a",
+          "vowel_length": 0.14613205194473267,
+          "pitch": 4.800279140472412,
+          "consonant": "r",
+          "consonant_length": 0.03508911281824112
+        },
+        {
+          "text": "ア",
+          "vowel": "a",
+          "vowel_length": 0.15398967266082764,
+          "pitch": 4.4836602210998535,
+          "consonant": null,
+          "consonant_length": null
+        }
+      ],
+      "accent": 1,
+      "pause_mora": null,
+      "is_interrogative": false
+    }
+  ],
+  "speed_scale": 1.18,
+  "pitch_scale": 0.0,
+  "intonation_scale": 1.0,
+  "volume_scale": 1.0,
+  "pre_phoneme_length": 0.015,
+  "post_phoneme_length": 0.035,
+  "output_sampling_rate": 48000,
+  "output_stereo": false,
+  "kana": "オ'ラア"
+}

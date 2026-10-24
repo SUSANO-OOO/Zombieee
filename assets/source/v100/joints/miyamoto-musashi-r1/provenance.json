@@ -1,0 +1,172 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "miyamoto-musashi",
+  "assetPath": "/art/v100/joints/miyamoto-musashi-r1.webp",
+  "bytes": 41920,
+  "sha256": "d8fd78012fa9dc63631b7e724d94953ff04c010c2f017176d7d04b684e2430a8",
+  "generatedPartsStudySha256": "7e73661675fea4af6f93cedc29915696ccb4c8178412b7de962364c127afa037",
+  "identitySourceSha256": "cd9da7d16bf3d703d189dbf7ad1d90d7b5ec074a727d3a22600b78b147e480e0",
+  "identityBinding": {
+    "path": "/art/v090/characters/miyamoto-musashi-battle-r1.png",
+    "sourceSha256": "34bdfe8792d017d500d8b0622e0387639185dab0e6a193cefdd5b3e47dee8db7",
+    "sourceRect": {
+      "x": 480,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "referenceTransform": {
+      "scale": 1,
+      "tx": 0,
+      "ty": 0,
+      "flipX": false
+    }
+  },
+  "motionSha256": "4ca73d98733555a8ba9d316aef998bedf00de8ba1934ed929fc9b483a0418589",
+  "originalPoseBindings": {
+    "walk-a": {
+      "file": "identity-reference.png",
+      "sha256": "cd9da7d16bf3d703d189dbf7ad1d90d7b5ec074a727d3a22600b78b147e480e0",
+      "path": "/art/v090/characters/miyamoto-musashi-battle-r1.png",
+      "sourceSha256": "34bdfe8792d017d500d8b0622e0387639185dab0e6a193cefdd5b3e47dee8db7",
+      "sourceRect": {
+        "x": 480,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": false
+    },
+    "attack-a": {
+      "file": "original-attack-a.png",
+      "sha256": "1ed0d5a84f5b9def792831c008c12917390a28eeb74be09511100141fe572704",
+      "path": "/art/v090/characters/miyamoto-musashi-battle-r1.png",
+      "sourceSha256": "34bdfe8792d017d500d8b0622e0387639185dab0e6a193cefdd5b3e47dee8db7",
+      "sourceRect": {
+        "x": 1440,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": false
+    }
+  },
+  "parts": [
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "c7cf99ba81478ab840edf32134237d250c93ae506b4a9fe0c5cbb0936cf028c0",
+      "original": false
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "838fb993d5f7dea35fc7fb123cfba060cfc98f1a7e15a227b6c5f37fe8c79244",
+      "original": false
+    },
+    {
+      "name": "far-thigh",
+      "file": "far-thigh.png",
+      "sha256": "95ca898d9e20babfa9c46ecc7154ca71630cd913e0bb0c626e677e42850344c7",
+      "original": false
+    },
+    {
+      "name": "far-shin",
+      "file": "far-shin.png",
+      "sha256": "8c119a3714e1f11dd7352ea39f041cea03a21ccd637fcea0c2a00a7f825e0e26",
+      "original": false
+    },
+    {
+      "name": "far-boot",
+      "file": "far-boot.png",
+      "sha256": "fa59a2dd69a619656138c060390743b54185f5dfb55065e7d78f501070709cc2",
+      "original": true
+    },
+    {
+      "name": "near-thigh",
+      "file": "near-thigh.png",
+      "sha256": "4eaf6bbbda6679083079cc2ccdc11cf808a1fe98c05c5318bfd64f04fdcfc1f6",
+      "original": false
+    },
+    {
+      "name": "near-shin",
+      "file": "near-shin.png",
+      "sha256": "fff80a502211d2c8fe40c17a32937b938482bd9750019ba27fa30c94bb862364",
+      "original": false
+    },
+    {
+      "name": "near-boot",
+      "file": "near-boot.png",
+      "sha256": "4da27c3fb17c12056b7a262d5893cad31c72a0576f7a77e7c70b66f7a32eb2a5",
+      "original": true
+    },
+    {
+      "name": "near-upper-arm",
+      "file": "near-upper-arm.png",
+      "sha256": "a9ebf882fa7dc01a7bfadf1c16c76d1c9601a72641015cb23f7332d43e7e2937",
+      "original": false
+    },
+    {
+      "name": "near-forearm",
+      "file": "near-forearm.png",
+      "sha256": "65cac219786c0ee56a4c2e172f14242e06779cc46eed00bf2eb11717c8d66c6e",
+      "original": false
+    },
+    {
+      "name": "far-upper-arm",
+      "file": "far-upper-arm.png",
+      "sha256": "9cb4ad8900c2f138bb92204469d9890213a5b58167ab835c4bb9f180f5f13ebf",
+      "original": false
+    },
+    {
+      "name": "far-forearm",
+      "file": "far-forearm.png",
+      "sha256": "486fae1cd0349fed75063e377cab9852ff5a1588512a921d4bd0021a70053ee8",
+      "original": false
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "184f75897ef67d0be5e8c72848f74f36e41d2c85dd2862ab09cf28ee35acfcbd",
+      "original": true
+    },
+    {
+      "name": "weapon-and-hands",
+      "file": "weapon-and-hands.png",
+      "sha256": "e6803aadefca3b7d618a452cf57d5662f50edded91629ef7bdae3915146ff2c0",
+      "original": true
+    },
+    {
+      "name": "secondary-weapon-and-hand",
+      "file": "secondary-weapon-and-hand.png",
+      "sha256": "43fe571607be2362832c397ff2a6776b63a68f4b3d5f2a467d4e823aa416dfb5",
+      "original": true
+    },
+    {
+      "name": "coat-far",
+      "file": "coat-far.png",
+      "sha256": "ad392f4767fc26b66442c0541186d1b2f6d84c49842af8691c768b7839ac7f70",
+      "original": false
+    },
+    {
+      "name": "coat-near",
+      "file": "coat-near.png",
+      "sha256": "d897dd3c147c49ea0b03bedbc7e074a2bf08b998274be5a63e831483542d6fd5",
+      "original": false
+    }
+  ],
+  "source": "Blender 5.2 fixed-length gait and settled support; original short-knife thrust, two-hand energy katana, two-hand gatling, independent original two-katana attack. Source-bound faces, hands, blades and boots; visible costume preserved; hidden coat panels with separate bones. No rejected Takuya identity or rear stray blade.",
+  "groundY": 432,
+  "decodedBytes": 315392,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  },
+  "spriteSourceRebinding": {
+    "previousSourceSha256": "118a20a8f5634a5dc7eadd16322c567c418df7cd80beb5a6912c3472181b8c76",
+    "sourceSha256": "34bdfe8792d017d500d8b0622e0387639185dab0e6a193cefdd5b3e47dee8db7",
+    "reason": "Only hit/death source cells repaired; every frozen idle/walk/attack pixel, part and motion stays exact"
+  }
+}

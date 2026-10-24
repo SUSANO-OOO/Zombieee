@@ -9,7 +9,7 @@ const styles = await readFile(new URL("../app/globals.css", import.meta.url), "u
 test("campaign navigation exposes Survival lobby and result screens", () => {
   assert.match(campaignScreensSource, /"survival" \| "survival-result"/);
   assert.match(campaignScreensSource, /onOpenSurvival/);
-  assert.match(campaignScreensSource, /className="special-operation survival-entry"[\s\S]*>防衛継続作戦</);
+  assert.match(campaignScreensSource, /className="special-operation survival-entry"[\s\S]*>防衛継続ステージ</);
   assert.match(ashfallSource, /screen === "survival"/);
   assert.match(ashfallSource, /screen === "survival-result"/);
   assert.match(ashfallSource, /checkpointから再開/);
@@ -17,8 +17,8 @@ test("campaign navigation exposes Survival lobby and result screens", () => {
 
 test("Survival battle HUD exposes required wave, boss, speed, and CRAWLER controls", () => {
   assert.match(ashfallSource, /className="survival-hud"/);
-  assert.match(ashfallSource, />WAVE</);
-  assert.match(ashfallSource, />NEXT BOSS</);
+  assert.match(ashfallSource, />現在の波</);
+  assert.match(ashfallSource, />次のボス</);
   assert.match(ashfallSource, /formatBattleText\("CRAWLER HP"\)/);
   assert.match(ashfallSource, /changeSurvivalSpeed\(1\).*?>1倍</s);
   assert.match(ashfallSource, /changeSurvivalSpeed\(2\).*?>2倍</s);

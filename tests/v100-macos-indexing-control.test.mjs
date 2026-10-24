@@ -1,8 +1,21 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { assertEphemeralPerformanceHost, parseIndexingStatus, restoreEnabledVolumes, validateBenchmarkPreparationRecord } from "../scripts/v100-macos-indexing-control.mjs";
+import { assertEphemeralPerformanceHost, assertEphemeralNativeCaptureHost, parseIndexingStatus, restoreEnabledVolumes, validateBenchmarkPreparationRecord } from "../scripts/v100-macos-indexing-control.mjs";
 
 const env = { GITHUB_ACTIONS: "true", RUNNER_ENVIRONMENT: "github-hosted", RUNNER_OS: "macOS", GITHUB_REPOSITORY: "SUSANO-OOO/Zombieee", GITHUB_EVENT_NAME: "pull_request", GITHUB_JOB: "v100-webkit-frame-control", GITHUB_RUN_ID: "36935406773", GITHUB_SHA: "0284f0f616c695e45a7e73c5b9979c1d1c15b1d1" };
+
+test("native single-case diagnostic cannot authorize the formal host or any broader capture selection", () => {
+  const native={...env,GITHUB_JOB:"capture",GITHUB_RUN_ATTEMPT:"1",V177_CAPTURE_SHARD:"forms-2",V177_NATIVE_HOST_INDEXING_CONTROL:"brute-attack-1280",V177_EXPECTED_HEAD_SHA:"a".repeat(40)};
+  const selection={mode:"remaining",caseIds:["forms-2:brute:attack:1280x720"],outcomeCaseIds:[],manualCaseIds:[],shards:["forms-2"]};
+  assert.doesNotThrow(()=>assertEphemeralNativeCaptureHost(native,"darwin","arm64",selection));
+  assert.throws(()=>assertEphemeralPerformanceHost(native,"darwin","arm64"));
+  for(const key of Object.keys(native))assert.throws(()=>assertEphemeralNativeCaptureHost({...native,[key]:""},"darwin","arm64",selection));
+  for(const patch of [{mode:"full"},{caseIds:[]},{caseIds:[...selection.caseIds,"forms-2:brute:move:1280x720"]},
+    {outcomeCaseIds:["forms-2:brute:controlled-outcome:1280x720"]},{manualCaseIds:["unexpected"]},{shards:["forms-1"]}])
+    assert.throws(()=>assertEphemeralNativeCaptureHost(native,"darwin","arm64",{...selection,...patch}));
+  assert.throws(()=>assertEphemeralNativeCaptureHost(native,"win32","arm64",selection));
+  assert.throws(()=>assertEphemeralNativeCaptureHost(native,"darwin","x64",selection));
+});
 test("Spotlight control rejects user computers, self-hosted runners and other jobs before mutation", () => {
   assert.doesNotThrow(() => assertEphemeralPerformanceHost(env, "darwin", "arm64"));
   for (const key of Object.keys(env)) assert.throws(() => assertEphemeralPerformanceHost({ ...env, [key]: "" }, "darwin", "arm64"));

@@ -5,6 +5,7 @@ import vm from "node:vm";
 import ts from "typescript";
 import {beginV102GoreStep,finishV102GoreStep,noteV102GoreImpact,noteV102GorePeriodicDamage,getV102GoreSnapshot} from '../app/v102CombatGore.js';
 import {advanceAreaEffects} from '../app/gameRules.js';
+import {battleVoiceReady} from '../app/v104CombatAudio.js';
 import {
   advancePendingWeaponHits,
   cancelPendingWeaponTransaction,
@@ -96,6 +97,7 @@ function runContact(mode, options = {}) {
   const goreStep=options.gore?beginV102GoreStep(Object.assign(g,{definition:{missionConfig:{v100StageNumber:1}},corpses:[]})):null;
   const record = (kind) => (...args) => { effects.push([kind, ...args]); };
   const context = {
+    battleVoiceReady,
     noteV102GoreImpact,
     g, pendingWeaponStep: { due: hits }, canceledWeaponTransactions: new Set(),
     createCompletedAttackImpactReceipt, cancelPendingWeaponTransaction,

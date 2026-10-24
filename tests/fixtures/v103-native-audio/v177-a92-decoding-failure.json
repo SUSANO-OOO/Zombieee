@@ -1,0 +1,14 @@
+{
+  "head": "a92a48c81b76307d2095a9771f7a7bed16ac8177",
+  "artifactId": 12000178122,
+  "zipSha256": "3f8136999eb39f8a14b224e65062f4a6bac321e719e9844085b5d274d95f7462",
+  "summarySha256": "d1d7b221785e64dcbcf54bddf44f38d938f84c3c74d0c2bce8a979577e7ea957",
+  "failure": "Error: page.evaluate: EncodingError: Decoding failed",
+  "viewport": [
+    1280,
+    720
+  ],
+  "encodedBytesPresent": false,
+  "unitPayloadIsModeled": true,
+  "physicalIphoneAcceptance": false
+}

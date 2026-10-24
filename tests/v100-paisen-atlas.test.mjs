@@ -53,10 +53,12 @@ test("Paisen V1 runtime atlas has seven audited states in both directions", asyn
   assert.equal(v100SpriteFrameFor("paisen", "death", "left").derivedFrom, "hit");
 });
 
-test("Paisen provenance names only the approved identity and legacy derivative sources", async () => {
+test("Paisen provenance pins the three-photo identity and its authored battle derivative", async () => {
   const identity = await readFile(publicFile(V100_SPRITE_PROVENANCE.identitySourcePath));
   const sourceBattle = await readFile(publicFile(V100_SPRITE_PROVENANCE.sourceBattleDerivativePath));
   assert.equal(sha256(identity), V100_SPRITE_PROVENANCE.identitySourceSha256);
   assert.equal(sha256(sourceBattle), V100_SPRITE_PROVENANCE.sourceBattleDerivativeSha256);
-  assert.equal(V100_SPRITE_PROVENANCE.generator, "v100-paisen-atlas-r1");
+  assert.equal(V100_SPRITE_PROVENANCE.generator, "v177-paisen-photo-fallback-r1");
+  assert.equal(V100_SPRITE_PROVENANCE.identitySourcePath, "/art/v100/portraits/paisen-identity-r2.webp");
+  assert.equal(V100_SPRITE_PROVENANCE.sourceBattleDerivativePath, "/art/v100/characters/paisen-photo-battle-v177.png");
 });

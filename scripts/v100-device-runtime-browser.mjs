@@ -12,9 +12,12 @@ import { V100_STAGE_IDS } from "../app/v100Registry.js";
 import { v100BattleDefinitionFor } from "../app/v100BattleAdapter.js";
 import { normalTacticalInput } from "./v100-normal-tactical-input.mjs";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
-import { readRuntimeObservation, installRuntimeObservationDiagnostics } from "./v100-runtime-observation.mjs";
+import { readRuntimeObservation, installRuntimeObservationDiagnostics, runtimePerformanceConsoleSummary } from "./v100-runtime-observation.mjs";
 import { parseIndexingStatus, validateBenchmarkPreparationRecord } from "./v100-macos-indexing-control.mjs";
 import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
+import { rangerPerformanceReceipts } from "./v177-ranger-performance-receipts.mjs";
+import {readV177RangerPerformancePreparation} from './v177-ranger-performance-start.mjs';
+import {V177_JOINT_ATLASES} from '../app/v177JointPresentation.js';
 
 const configuredBaseUrl = process.env.V100_DEVICE_RUNTIME_BASE_URL ?? process.env.V100_CAMPAIGN_QA_BASE_URL;
 assert.ok(configuredBaseUrl, "V100_DEVICE_RUNTIME_BASE_URL or V100_CAMPAIGN_QA_BASE_URL is required");
@@ -37,6 +40,11 @@ const diagnosticSeconds = Number(process.env.V100_DEVICE_RUNTIME_DIAGNOSTIC_SECO
 assert.ok(Number.isInteger(diagnosticSeconds) && diagnosticSeconds >= 10 && diagnosticSeconds <= 30, "diagnostic seconds must be 10..30");
 const measurementMs = paintIsolation === "none" && qualityDiagnostic === "auto" ? 30_000 : diagnosticSeconds * 1_000;
 const callbackDiagnostic = process.env.V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC === "1";
+const nativeRecordingDiagnostic = process.env.V100_DEVICE_RUNTIME_NATIVE_RECORDING_DIAGNOSTIC === "1";
+if(nativeRecordingDiagnostic){assert.equal(engine,"webkit");assert.equal(process.platform,"darwin");}
+const runtimeRole=process.env.V100_DEVICE_RUNTIME_ROLE??'formal';
+assert.ok(['formal','native-control'].includes(runtimeRole));
+const nativeControlDiagnostic=runtimeRole==='native-control';
 const blankBaselineDiagnostic = process.env.V100_DEVICE_RUNTIME_BLANK_BASELINE === "1";
 const hostControl = process.env.V100_DEVICE_RUNTIME_HOST_CONTROL ?? "none";
 assert.ok(["none", "spotlight-indexing-paused"].includes(hostControl), `invalid host control: ${hostControl}`);
@@ -194,6 +202,7 @@ function snapshotProjection(snapshot) {
       .map(({ id, kind, hp, maxHp, x, y, lane, combatReady }) => ({ id, kind, hp, maxHp, x, y, lane, combatReady })),
     humans: living.filter((fighter) => fighter.side === "human")
       .map(({ id, kind, hp, maxHp, x, y, lane }) => ({ id, kind, hp, maxHp, x, y, lane })),
+    ...(snapshot.rangerDraws?{rangerDraws:snapshot.rangerDraws}:{}),
   };
 }
 function fixtureSave() {
@@ -229,7 +238,7 @@ async function waitForBattle(page, deadline) {
   while (Date.now() < deadline) {
     const phase = await page.locator(".v100-shell").getAttribute("data-v100-phase").catch(() => null);
     if (phase === "map") {
-      await page.getByRole("button", { name: "この作戦を編成", exact: true }).click();
+      await page.getByRole("button", { name: "編成して出撃", exact: true }).click();
     } else if (phase === "formation") {
       try {
         await page.getByRole("button", { name: "戦闘へ", exact: true }).click({ timeout: 5_000 });
@@ -314,6 +323,8 @@ const report = {
       tacticalInput: await fileSha256("scripts/v100-normal-tactical-input.mjs"),
       runner: await fileSha256("scripts/v100-device-runtime-browser.mjs"),
       runtimeObservation: await fileSha256("scripts/v100-runtime-observation.mjs"),
+      rangerPerformanceReceipts: await fileSha256("scripts/v177-ranger-performance-receipts.mjs"),
+      rangerPerformanceStart:await fileSha256('scripts/v177-ranger-performance-start.mjs'),
     },
   },
   fixture: {
@@ -335,7 +346,7 @@ const report = {
     expectedBattleIdentity: { stageId: expectedDefinition.stageId, operationId: expectedDefinition.operationId, missionType: expectedDefinition.missionType },
     sourceSha256: sha256(seedRaw),
   },
-  measurement: { seconds: measurementMs / 1000, clock: "browser performance.now", representative: paintIsolation === "none" && qualityDiagnostic === "auto" && !contextSyncDiagnostic && !observerlessDiagnostic && !suppressDebugDatasetDiagnostic && hostControl === "none", uninterrupted: true, paintIsolation, qualityDiagnostic, contextSyncDiagnostic, observerlessDiagnostic, suppressDebugDatasetDiagnostic, hostControl, hostPreparation, diagnosticOnly: paintIsolation !== "none" || qualityDiagnostic !== "auto" || contextSyncDiagnostic || observerlessDiagnostic || suppressDebugDatasetDiagnostic || hostControl !== "none" },
+  measurement: { seconds: measurementMs / 1000, clock: "browser performance.now", representative: paintIsolation === "none" && qualityDiagnostic === "auto" && !contextSyncDiagnostic && !observerlessDiagnostic && !suppressDebugDatasetDiagnostic && !nativeRecordingDiagnostic && !nativeControlDiagnostic && hostControl === "none", uninterrupted: true, paintIsolation, qualityDiagnostic, contextSyncDiagnostic, observerlessDiagnostic, suppressDebugDatasetDiagnostic, nativeRecordingDiagnostic, runtimeRole, hostControl, hostPreparation, diagnosticOnly: paintIsolation !== "none" || qualityDiagnostic !== "auto" || contextSyncDiagnostic || observerlessDiagnostic || suppressDebugDatasetDiagnostic || nativeRecordingDiagnostic || nativeControlDiagnostic || hostControl !== "none" },
   results: [],
 };
 await mkdir(path.dirname(evidenceDir), { recursive: true });
@@ -353,7 +364,8 @@ try {
   for (const viewport of viewports) {
     const name = `${engine}-${viewport.width}x${viewport.height}`;
     const blankBaseline = blankBaselineDiagnostic ? await measureBlankRaf(browser, viewport) : null;
-    const context = await browser.newContext({ viewport, hasTouch: viewport.safeArea, isMobile: viewport.safeArea, deviceScaleFactor: requestedDpr });
+    const context = await browser.newContext({ viewport, hasTouch: viewport.safeArea, isMobile: viewport.safeArea, deviceScaleFactor: requestedDpr,
+      ...(nativeRecordingDiagnostic?{recordVideo:{dir:path.join(evidenceDir,'videos',name),size:{width:viewport.width,height:viewport.height}}}:{}) });
     const page = await context.newPage();
     if (suppressDebugDatasetDiagnostic) {
       await page.addInitScript(() => {
@@ -469,6 +481,16 @@ try {
       }
       await page.screenshot({ path: path.join(evidenceDir, `${name}-before.png`) });
       if (blankBaselineDiagnostic) result.hostAtMeasurementStart = hostLoadSnapshot();
+      let preparation;
+      result.rangerSetup={attempts:0,lastNotReady:null};
+      while(Date.now()<setupDeadline){
+        preparation=await page.evaluate(readV177RangerPerformancePreparation,{atlasPath:V177_JOINT_ATLASES.ranger.path});result.rangerSetup.attempts++;
+        if(preparation.ready)break;
+        result.rangerSetup.lastNotReady=preparation;
+        await normalTacticalInput(page,result,{barrageWhenOverwhelmed:!viewport.safeArea});
+        await page.waitForTimeout(350);
+      }
+      assert.ok(preparation?.ready,'No live Ranger with an actual weighted paint inside the original setup deadline');
       measurementActive = true;
       const measurement = await beginMeasurement(page);
       result.measurementStarted = true;
@@ -489,7 +511,7 @@ try {
       } else {
         let previousSample = 0;
         while (await stillMeasuring()) {
-          await normalTacticalInput(page, result, { barrageWhenOverwhelmed: !viewport.safeArea, observeSnapshot(snapshot) {
+          await normalTacticalInput(page, result, { rangerDrawObservation:true,awaitInitialRangerPaint:true,barrageWhenOverwhelmed: !viewport.safeArea, observeSnapshot(snapshot) {
             const projected = snapshotProjection(snapshot);
             if (!projected?.running || projected.over || projected.humanCount <= 0 || projected.boss.length === 0) {
               throw new Error("30-second window lost live battle, humans, or boss");
@@ -503,6 +525,9 @@ try {
         }
       }
       const raf = await endMeasurement(page);
+      result.rangerDrawReceipts=observerlessDiagnostic
+        ?{status:'not-observed-diagnostic',weightedPaintObserved:false,scope:'Observerless control retains its original no-sampling protocol; no Ranger workload acceptance.'}
+        :rangerPerformanceReceipts(result.measurementSamples,{startedAt:measurement.startedAt,endedAt:raf?.endedAt});
       if (blankBaselineDiagnostic) result.hostAtMeasurementEnd = hostLoadSnapshot();
       measurementActive = false;
       result.measurementEnded = true;
@@ -547,6 +572,7 @@ try {
       assert.ok(gates.medianFps, `median FPS ${medianFps} below 50`);
       assert.ok(gates.renderCadence, "render cadence differs from graphics profile");
       assert.ok(gates.dpr, "DPR2 quality changed during the measured window");
+      if(!observerlessDiagnostic)assert.equal(result.rangerDrawReceipts.weightedPaintObserved,true,JSON.stringify(result.rangerDrawReceipts.errors));
       result.status = "passed";
     } catch (error) {
       result.error = String(error);
@@ -573,12 +599,13 @@ const failures = report.results.filter((result) => result.status !== "passed" ||
 if (failures.length > 0) {
   console.error(JSON.stringify({ status: "failed", report: reportPath, failures: failures.map(result => ({
     name: result.name, error: result.error, blankBaseline: result.blankBaseline,
-    performance: result.performance && { p95RafMs: result.performance.p95RafMs,
-      medianFps: result.performance.medianFps, effectiveRenderHz: result.performance.effectiveRenderHz,
-      callbackDiagnostic: result.performance.callbackDiagnostic, gates: result.performance.gates },
+    performance: runtimePerformanceConsoleSummary(result.performance),
     diagnosticCounts: Object.fromEntries(Object.entries(result.diagnostics).map(([kind, items]) => [kind, items.length])),
   })) }, null, 2));
   process.exitCode = 1;
 } else {
-  console.log(JSON.stringify({ status: "passed", report: reportPath, cases: report.results.length }, null, 2));
+  console.log(JSON.stringify({ status: "passed", report: reportPath, cases: report.results.length,
+    measurements: callbackDiagnostic ? report.results.map(result => ({ name: result.name,
+      performance: runtimePerformanceConsoleSummary(result.performance) })) : undefined,
+  }, null, 2));
 }

@@ -1,0 +1,67 @@
+{
+  "accent_phrases": [
+    {
+      "moras": [
+        {
+          "text": "ハ",
+          "vowel": "a",
+          "vowel_length": 0.0748155266046524,
+          "pitch": 4.7660932540893555,
+          "consonant": "h",
+          "consonant_length": 0.1003367230296135
+        },
+        {
+          "text": "イ",
+          "vowel": "i",
+          "vowel_length": 0.0663776770234108,
+          "pitch": 4.958606243133545,
+          "consonant": null,
+          "consonant_length": null
+        },
+        {
+          "text": "ジョ",
+          "vowel": "o",
+          "vowel_length": 0.06353465467691422,
+          "pitch": 4.697818756103516,
+          "consonant": "j",
+          "consonant_length": 0.07242318242788315
+        }
+      ],
+      "accent": 1,
+      "pause_mora": null,
+      "is_interrogative": false
+    },
+    {
+      "moras": [
+        {
+          "text": "シ",
+          "vowel": "i",
+          "vowel_length": 0.039117712527513504,
+          "pitch": 4.650446891784668,
+          "consonant": "sh",
+          "consonant_length": 0.09156341850757599
+        },
+        {
+          "text": "ロ",
+          "vowel": "o",
+          "vowel_length": 0.2010098397731781,
+          "pitch": 4.577418327331543,
+          "consonant": "r",
+          "consonant_length": 0.03238927572965622
+        }
+      ],
+      "accent": 2,
+      "pause_mora": null,
+      "is_interrogative": false
+    }
+  ],
+  "speed_scale": 1.13,
+  "pitch_scale": -0.015,
+  "intonation_scale": 1.0,
+  "volume_scale": 1.0,
+  "pre_phoneme_length": 0.015,
+  "post_phoneme_length": 0.035,
+  "output_sampling_rate": 48000,
+  "output_stereo": false,
+  "kana": "ハ'イジョ/シロ'"
+}

@@ -782,7 +782,7 @@ test("runtime renders only ready buttons and never a cooldown ring or number abo
   const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
   assert.match(source, /hud\.manualAbilityIcons\.map/);
   assert.match(source, /canActivateManualAbility/);
-  assert.match(source, /onPointerDown=\{\(event\) => event\.stopPropagation\(\)\}/);
+  assert.match(source, /onPointerDown=\{\(event\) => [^}]*event\.stopPropagation\(\)/);
   assert.doesNotMatch(css, /\.manual-ability-(?:cooldown|ring|countdown)/);
   assert.doesNotMatch(css, /\.manual-ability-ready > i/);
   assert.doesNotMatch(source, /pointer(?:Length|Angle)/);

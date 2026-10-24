@@ -1,0 +1,36 @@
+{
+  "accent_phrases": [
+    {
+      "moras": [
+        {
+          "text": "グ",
+          "vowel": "u",
+          "vowel_length": 0.08365391194820404,
+          "pitch": 5.03485107421875,
+          "consonant": "g",
+          "consonant_length": 0.0465564951300621
+        },
+        {
+          "text": "ッ",
+          "vowel": "cl",
+          "vowel_length": 0.09598039835691452,
+          "pitch": 0.0,
+          "consonant": null,
+          "consonant_length": null
+        }
+      ],
+      "accent": 1,
+      "pause_mora": null,
+      "is_interrogative": false
+    }
+  ],
+  "speed_scale": 1.2,
+  "pitch_scale": 0.0,
+  "intonation_scale": 1.0,
+  "volume_scale": 1.0,
+  "pre_phoneme_length": 0.015,
+  "post_phoneme_length": 0.035,
+  "output_sampling_rate": 48000,
+  "output_stereo": false,
+  "kana": "グ'ッ"
+}

@@ -1,0 +1,225 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "takuya",
+  "assetPath": "/art/v100/joints/takuya-r1.webp",
+  "bytes": 41884,
+  "sha256": "e4ffc7c020cf80a06d1cf0ebc5cdc7f7bb82a684c1792c0b3ca1533b4e9352fc",
+  "atlasPacking": "height-descending-shelves",
+  "generatedPartsStudySha256": "be1889114440192e95f79d6a341a5939b8472293cad9eec155c88ea70b915dbb",
+  "identitySourceSha256": "12b600124ad71c155fdb50f56df66a9a1e85085976194719f4d44bb7f42e221b",
+  "identityBinding": {
+    "path": "/art/v100/bosses/takuya-battle-repaired-v1.png",
+    "sourceSha256": "7baf14827f63faadbf7c05cd17d78edd735012a9def65904b50dae363d633419",
+    "sourceRect": {
+      "x": 0,
+      "y": 0,
+      "w": 512,
+      "h": 757
+    },
+    "referenceTransform": {
+      "scale": 0.85,
+      "tx": 22,
+      "ty": -83,
+      "flipX": true
+    }
+  },
+  "motionSha256": "1482c319e45ca4c2b7675f0ff2716f13ebcf7ef4f940e4f94b30bac29aab3291",
+  "originalPoseBindings": {
+    "walk-a": {
+      "file": "original-walk-a.png",
+      "sha256": "db2717be3fc868cbe33b1985ae819cef10ff9dd930f62ecf5e15586769281f2f",
+      "path": "/art/v100/bosses/takuya-battle-repaired-v1.png",
+      "sourceSha256": "7baf14827f63faadbf7c05cd17d78edd735012a9def65904b50dae363d633419",
+      "sourceRect": {
+        "x": 512,
+        "y": 0,
+        "w": 512,
+        "h": 757
+      },
+      "flipX": true,
+      "referenceTransform": {
+        "scale": 0.85,
+        "tx": 22,
+        "ty": -83,
+        "flipX": true
+      }
+    },
+    "attack-a": {
+      "file": "original-attack-a.png",
+      "sha256": "7837f5b231e6d5d41bf466ddd4d2bb42e410f03f17bfe751675107b97bd31f11",
+      "path": "/art/v100/bosses/takuya-battle-repaired-v1.png",
+      "sourceSha256": "7baf14827f63faadbf7c05cd17d78edd735012a9def65904b50dae363d633419",
+      "sourceRect": {
+        "x": 1536,
+        "y": 0,
+        "w": 512,
+        "h": 757
+      },
+      "flipX": true,
+      "referenceTransform": {
+        "scale": 0.85,
+        "tx": 22,
+        "ty": 0,
+        "flipX": true
+      }
+    },
+    "attack-b": {
+      "file": "original-attack-b.png",
+      "sha256": "17738ce8a75dc4e466f5cfd2ac470fff2905d4911b1d3c21dfdf9f9a863f4691",
+      "path": "/art/v100/bosses/takuya-battle-repaired-v1.png",
+      "sourceSha256": "7baf14827f63faadbf7c05cd17d78edd735012a9def65904b50dae363d633419",
+      "sourceRect": {
+        "x": 2048,
+        "y": 0,
+        "w": 512,
+        "h": 757
+      },
+      "flipX": true,
+      "referenceTransform": {
+        "scale": 0.85,
+        "tx": 22,
+        "ty": -83,
+        "flipX": true
+      }
+    },
+    "idle": {
+      "file": "identity-reference.png",
+      "sha256": "12b600124ad71c155fdb50f56df66a9a1e85085976194719f4d44bb7f42e221b",
+      "path": "/art/v100/bosses/takuya-battle-repaired-v1.png",
+      "sourceSha256": "7baf14827f63faadbf7c05cd17d78edd735012a9def65904b50dae363d633419",
+      "sourceRect": {
+        "x": 0,
+        "y": 0,
+        "w": 512,
+        "h": 757
+      },
+      "flipX": true,
+      "referenceTransform": {
+        "scale": 0.85,
+        "tx": 22,
+        "ty": -83,
+        "flipX": true
+      }
+    },
+    "attack-a-pelvis": {
+      "file": "original-attack-a-pelvis.png",
+      "sha256": "ebd92d9642ad8c175447bd3a1c5a0291a617187fd02f7419e46999bff4735abe",
+      "path": "/art/v100/bosses/takuya-battle-repaired-v1.png",
+      "sourceSha256": "7baf14827f63faadbf7c05cd17d78edd735012a9def65904b50dae363d633419",
+      "sourceRect": {
+        "x": 1536,
+        "y": 0,
+        "w": 512,
+        "h": 757
+      },
+      "flipX": true,
+      "referenceTransform": {
+        "scale": 0.85,
+        "tx": 22,
+        "ty": -110,
+        "flipX": true
+      }
+    }
+  },
+  "parts": [
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "d8af90b7a5eed4124de2571e70ef6206737e83f91bcbf6c278deab2da662349f",
+      "original": true
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "1cecb3c7f17129325fb4366c1fe66ddf687560ecde1b27f3b60e1bcecac8778b",
+      "original": true
+    },
+    {
+      "name": "far-thigh",
+      "file": "far-thigh.png",
+      "sha256": "f6acacae6f3aacdc10adc65404e97688f14d2cc56e6274b340d41b7e1fdac269",
+      "original": false
+    },
+    {
+      "name": "far-shin",
+      "file": "far-shin.png",
+      "sha256": "2e65659593bd0cfef5920253ad303f2c3e81ad1ded6f74d729ea139dedef788d",
+      "original": false
+    },
+    {
+      "name": "near-thigh",
+      "file": "near-thigh.png",
+      "sha256": "1b6130cc37d91b911e25320f4b8661f063a89bd92d449ae61001bf549c882852",
+      "original": false
+    },
+    {
+      "name": "near-shin",
+      "file": "near-shin.png",
+      "sha256": "7f8237070d2556a3bee73c1ccd0dc42318c19ddfa138dacd06284b328da3c737",
+      "original": false
+    },
+    {
+      "name": "far-boot",
+      "file": "far-boot.png",
+      "sha256": "b396bcd2b47b1be1de405edfe31cc3747d36e1d7f936311116cfea7725c36fd5",
+      "original": true
+    },
+    {
+      "name": "near-boot",
+      "file": "near-boot.png",
+      "sha256": "23f8cb0fc8c3ec97fa1ab36993d348f6a76e876f1c7d42a5d67d8a9ee12dfa7a",
+      "original": true
+    },
+    {
+      "name": "near-upper-arm",
+      "file": "near-upper-arm.png",
+      "sha256": "e18df6753b124e0378b22a7c81496e25d7074353ed8522c596b2bc5770f84f17",
+      "original": false
+    },
+    {
+      "name": "near-forearm",
+      "file": "near-forearm.png",
+      "sha256": "68ad2ae318ab3170e4d36eb68e056731c792476d7ffa334a568238f2440357f4",
+      "original": false
+    },
+    {
+      "name": "far-upper-arm",
+      "file": "far-upper-arm.png",
+      "sha256": "ceac493c4544ca56e52d21698142d2bf54bab0d9ffb113c0203bc70155e070cd",
+      "original": false
+    },
+    {
+      "name": "far-forearm",
+      "file": "far-forearm.png",
+      "sha256": "edfb04cc35a12e5702d213b7057b3c04f61a4d74345b1405a063f5711c19b472",
+      "original": false
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "31be32fb766ad09e5de1aa9700363860206f6ae2a4399bfaa5086c9fd8123504",
+      "original": true
+    },
+    {
+      "name": "weapon-and-hands",
+      "file": "weapon-and-hands.png",
+      "sha256": "67a1c225f5f8da4b32919c0ff000a54157effd1ecd83c654d6b3d6ea24757d29",
+      "original": true
+    },
+    {
+      "name": "weapon-cable",
+      "file": "weapon-cable.png",
+      "sha256": "df84792bcba162d5b95bed7b05922671d46fff29a0eb7f55eeebb69d5298ee09",
+      "original": true
+    }
+  ],
+  "source": "Blender 5.2 fixed-length heavy gait and two-hand downward slam. Original canonical bare torso, harness, chain, hair, glasses, black shorts, cuffs, hands, boots and rectangular weapon retained. Hidden limb completion explicitly bound and confined to owned anatomy; rejected orange-vest artwork excluded. Planted soles and fixed arm reach hold through dense runtime interpolation. Separate ground-slam ability, hit, death and transform owners retained. All48/all-action and continuous native normal-play acceptance pending.",
+  "groundY": 432,
+  "decodedBytes": 245760,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}

@@ -2,6 +2,110 @@
 
 ## 現在の公開状態
 
+2026-10-24：公開/mainの最終確認値は1.0.3／99f9c193。1.0.4のPR #180は公開まで承認済みで、追加Producer確認待ちは設けない。製品・assets・依存lockは0de4730a／d62d6761／773678ddと同一である。現在の更新候補は下記のQA専用修正を含み、正式統合・公開・公開後QAはまだ実施していない。最新の実行状態と公開結果はIssue #177／PR #180を参照する。
+
+正式Mac ARM性能6条件は19／20／26／19／19／24msで、元33ms・実draw頻度・元30秒と全期限に成功した原ownerを保持する。Quality144、R9全10、Native PWA保存／更新／復旧、Phase G 55画面、敵runtime6分割、Stage3音声経路3件、deployment／canonical全12viewport jobも原sourceの独立照合済み。合成進行、描画抑制、静止画、JSONや録画終了だけを、全編の自然さ・聴感・実端末の受入へ昇格しない。
+
+Mac579件と実感染getup6＋Ranger自然被弾3件は、元source・clock・strictPTS/DTS・原250msと既存decodeで保持する。元d62のWK phone-short失敗は、30個目だけretreatで、armから6389ms／6.3333sim秒が元残6.16秒を超えた時間満了だった。ゲームのHP・変化時間・描画・原clip・時計・期限は変えず、同じ30×120msの取得をbrowser内へ移した。773の3戦闘matrixとsummaryは全成功した。3群の元JSONも独立H0/M0で照合し、両engineのMayoは30点すべてferalのまま、元6.2秒・HP消耗・期限を維持した。Chromiumの補助clock invalidとWebKitのunsupportedは正常へ変更せず、原速媒体受入へ使わない。修正したMayo VM fixtureを含む新共通テストの合格確認が残る。773のPR Verifyは3193成功／2失敗であり、旧fixtureが新方式のcaptureBoundary／collect／takeを用意していない原因を修正し、対象3条件はローカル成功した。元失敗と未実行の条件付き後段は成功へ書き換えない。
+
+CI継承は元d62の全50job／Quality両engineとimmutable PR来歴を再照合し、773の全21job完了、戦闘4jobの成功、PR VerifyのTestのみ失敗、元baseとexact sourceを必須にする。fixtureだけの続行では全単体テスト・Lint・content・buildを新規実行し、変更のない条件付きbrowser検証と戦闘録画は元ownerを保持する。不一致・未完・別失敗・未知sourceなら全検証へ戻る。workflowのcommands・runtime・基準・全期限は不変である。
+
+通常操作ではCHがS1／2勝利→S3敗北、WKがS1／2／3勝利、独立S14／25／30は双方とも実敗北。最小購入fixtureや合成進行を全30面の自然勝利とは呼ばない。通常native RAF12窓のうち10窓は33ms参考値を超え、正式6窓で代替しない。同一Intelの録画有無95／91ms、画像更新方式157→172msでは改善根拠がなく試作は不採用。ゲームを含まない2runtime・最小Canvas6条件は各60native標本で完了し、put p95は全て1ms、空RAFも約30fps。通常戦闘の遅さを製品／環境どちらの原因とも断定せず、元performanceAcceptance:falseを維持する。全編自然さ・最終聴感、物理iPhone保存Control Center録画のBGM／SEは未確認であり、Issue #177をopenに保つ。
+
+以下の1f以前の成功・失敗は、それぞれの製品・条件に限った経緯として保持する。
+
+2026-10-24（統合候補の未達修正）：`1fecd0f8` のQualityはChromium／WebKit各72件、合計144件が元の条件に成功。WebKit準備は71秒、確認本体18分14秒で元45分／35分を維持した。一方、最終CIの正式性能は20／25／34／32／32／34msでdesktopとDPR2が原33msを超過し、desktop実draw51.818Hzも未達。別run `40039687924` の56正式ARM6条件成功を、この1f失敗の代替にしない。1f通常WebKitは保存・終了処理まで成功し、通常の敗北を勝利へ変更しない。Chromiumは序盤3場面の技術観察に成功したが、独立S14のphase読取30秒で失敗。旧56のcanvas読取30秒とは別操作として原記録を保持し、原因は未確定。
+
+この性能修正ではRanger描画の作業領域と保持画像を分離し、各画像は実寸と元の合成経路を保つ最小1列または1行だけを確保する。32面までを合計65,536pixels内で保持し、RGBA・頂点・IK・4点coverage・192triangles・時計は維持する。実Edgeの混合175条件と32姿勢130条件は修正前と全画素・receiptが一致し、画像再送は122→70／129→34。純実寸案で発見した1byte差と途中の検査失敗は保全し、画質基準を緩めず元の合成経路を復元した。下半身26tests・製品build・Lint errors0／既存warnings25が成功。影響するRanger15件だけを再開し、他564件の元report所有を保持する。新候補の正式性能・通常観察・必須CIと全編自然さ／最終聴感・公開後QAは未完。公開はまだ行っていない。追加のProducer承認待ちは設けない。
+
+2026-10-24（残存性能の修正中）：候補 `45510ed2` のMac録画18件は元条件で16成功、2失敗。Engineer1280攻撃の最大281ms、マヨ通常1280攻撃の最大738ms／末尾312ms不足は原失敗のまま保持する。製品と録画API・60Hz・VP8・原250ms・全期限を変えない隔離候補 `e35e53ce`／run `40035071936` の対象2件は、source・clock・encoded・CI既存decode125framesの独立照合に成功。Engineer最大92ms／末尾11ms、マヨ最大167ms／末尾3ms。その2件の元report所有を採用した後、`56d5338c`／run `40039687966` の新Ranger15件も原条件に成功。394source・build・206pins・CI既存decode1002framesを独立照合H0/M0、encoded最大224ms・head最大0／tail最大90ms。旧564所有を保持して579技術観察を完了、残る映像の再録は0件。過去314msを含む全失敗と診断欠測は保全し、原因解消とは断定しない。
+
+同455候補の正式ARM性能6条件は35／41／25／28／35／23msで3条件が原33msを超え、初回390の実draw40.219Hzも元基準に届かない。修正 `c9efa3b2` はRanger下半身の保持面数を8から16へ変更し、合計65,536pixels・全RGBA・頂点・IK・4点coverage・画質と時計を維持する。実Edge175条件と焦点66条件の画素差0、焦点の画像再送65→17、下半身24tests・CI選択tests・Lint・製品build成功、限定source review H0/M0。元の比較補助検査の失敗も履歴へ残した。56のMac正式性能はrun `40039687924` で実行中。Chromium／WebKitの通常観察は455で成功し、通常の敗北と保存完了を勝利へ置き換えない。旧候補の未完全CIは次候補確定後に停止し、完了jobの証拠を保持した。QualityのWebKitは準備40分24秒（うちUbuntu package取得39分29.571秒）で元45分に達し未完。WebKit準備だけ既知のAzure mirror URIを公式HTTPSへ変更し、優先順・署名設定・runtime1.63.0/r2359・全3画面・45分／35分を維持する。最終全回帰・全編自然さ／最終聴感・公開と公開後QAは未完。追加のProducer承認待ちは設けない。
+
+以下の738候補と旧候補の成功は、それぞれの元の製品・検証条件に限った記録として保持する。
+
+2026-10-22の追加指示で、修正と必須検証を終えて公開まで進めることが承認された。次候補は1.0.4、実行台帳はIssue #177／PR #180。性能修正中はDraftで対象検証を行い、安定候補のReady移行時に元の全回帰を実行する。公開中の1.0.3／mainは `99f9c193ab1e35531db39225c839138cdb1c33cd`。以下の旧公開保留は当時の記録として保全する。
+
+2026-10-24（最終候補の準備）：`73852876` の正式ARM性能6条件は19／33／32／19／33／24ms、元33ms・実draw頻度・生存Rangerの実paint・全期限を満たした。新しい初回paint例外は6条件とも使用0。Chromium／WebKitの通常観察とPages PR build・browser smokeも成功した。別Intel対照の失敗は保持し、workflow全体の成功とは呼ばない。Mac録画15件のうち14件を保持し、残るmanual844×390は製品が738と同じ隔離commit `42e5548e`／run `40028824562` で1件だけ計測した。新172framesは最大152ms・原clock・元31tick命中・damage92・既存CI decodeに成功。元314msの失敗は保全し、再発しなかったことを原因解消とは呼ばない。診断のprocess標本1回のtimeoutは欠測として残す。旧所有と元250ms・全入力／収録期限は維持する。
+
+全48の実フレーム1056枚を再確認し、モンキーの発光する菱形の矢、マヨ2形態の発光顎を残存問題として修正した。矢は軸・矢尻・羽根を持つ実体へ、噛みつきは実際の身体と命中時から減衰する接触粉塵へ変更。粉塵の約0.16秒遅延を部分reviewで発見して直し、回帰検査9件と新マヨ2本の20frame確認H0/M0に通過した。約8分53秒の原速動画R15はマヨ2本だけを再更新し、他94場面を保持。変化後マヨは実発動後のxに差があるため同一配置とは表記しない。新VFXに依存する攻撃・接敵18件だけを再開し、移動／退場と他45形態を保持する。ローカル全3177件は3168件成功・権限制限9件のみ同条件hostで成功し、原失敗logを保持。build・Lint errors0／既存warnings25・diffも成功。フレーム標本・技術検査を全編自然さ／最終聴感へ昇格しない。最終Ready全回帰・公開と公開後QAは未完、物理iPhone保存音声も引き続き未確認。追加のProducer承認待ちは設けない。
+
+以下は以前の候補の記録であり、上記の未完項目を完了とする根拠にはしない。
+
+2026-10-24（9a後の描画候補）：Kumaの新Mac6件はrun `40009214118` で全通過し、元579件の技術観察が揃った。各元head／run／reportの所有と全失敗履歴を保持する。続くRanger描画変更では、同じRGBAと頂点の画像を最大8面・合計65,536pixels内で保持し、古い借用参照を再割当前に無効化する。実Edge110条件／96,481,440pixels差0、連続480姿勢の元pixel／receipt digest一致、割当・描画失敗からの復帰を確認。Rangerの9通常＋3手動＋3outcomeだけを再開し、他564件（新Kuma6を含む）は保持する。
+
+専用診断run `40013984822` は24ms・実draw56.60Hzだったが、初回の実paintを全体simulation時刻の前進で誤拒否して原FAILとなった。原reportは失敗のまま保持し、初回だけ、窓内の完了fence・新renderSequence・現在の同actor object監査と実weighted drawを結ぶ修正を行う。開始時の旧cloneをbaselineに変更せず、後続sampleの元global clock条件、古いtail・別actor・失敗drawの拒否、原33ms／30秒6窓／入力と全期限を維持する。未準備host・単窓の診断を正式性能合格や高速化の因果証明には使わない。QA helper単独変更でも元の性能CIが起動するよう、依存pathを追加した。
+
+全48動画R13とKuma比較R13は書出し検査を通過し、他95場面の画素・相対PTSは不変。元録画はdirty1c作業中だが292sourceが9a内容と一致することを訂正metadataで明示した。正式33ms、新Ranger15、全編の自然さ／聴感、最終Ready全CI、公開後QAは未完。追加承認待ちは設けず、物理iPhone保存録画BGM／SEは未確認としてIssue #177をopenに保つ。以下の1c以前の記録と失敗は経緯として保持する。
+
+2026-10-24：候補 `1c2e0bb1` のDraft対象CIは5工程成功・15工程skip、MacのRanger15観察も元source・clock・公式ZIP・既存decodeに一致して成功した。通常playはChromiumのStage25が76.353秒、WebKitが78.086秒で実敗北となり、車両HP0・save101→102・終了処理の成功を確認。旧66の読取30秒超過は保持し、原因解消の断定はしない。一方、正式Mac性能6条件は45／21／45／20／20／23msで4成功・2失敗。初回844×340と1280×720は実描画39.597／48.272Hzも元基準に届かず、公開は停止中。新しいRGBA転送再利用は30／1870回（1.60%）で、失敗2窓では0だった。別の専用診断 `40005028800` は同じ1c製品からCPU情報を採取したが、sampling・未準備hostを含むため正式性能や同条件の時間比較へは使わない。最終Readyの全回帰は未実行。
+
+原速動画を再確認した結果、クマバーソンを「頭上へ大きく振り上げている」とした先の評価は強すぎた。鍋を頭より上へ持ち上げ、胴を前へ折って振り下ろす修正を行った。元の腕長・握り・足・踏込み・攻撃時計・能力値は維持し、他47形態1175姿勢・Kumaの脚／携行505姿勢の差0、対象11testsと製品build成功。新しい原速8秒の交戦・振上げ途中の実被弾2録画は原250ms・PTS/DTS・全AV decodeを通過した。既存1c15観察を元所有で追加し、Kumaの攻撃／交戦×3画面の6件だけを再開する（573保持／6未検証）。新Mac6件・33ms達成・全編の自然さと聴感・最終CI・公開後QAは未完であり、追加のProducer承認待ちは設けない。
+
+旧66の正式Mac性能は31／20／30／19／19／34msでDPR2失敗、Chromium Stage25の結果・最終saveの元30秒超過も失敗のまま保全する。元3cと最終描画source39dcの実Edge78条件・66,990,240pixelsは差0で、凍結36・連続480姿勢の元画素とreceiptも一致した。要求hintだけで実CPU／GPUの挙動や高速化は断定しない。旧564所有、各候補のRanger15履歴、全ての原失敗を保持する。
+
+直前のreadback分離では、原画5cropを読む一時canvasと、読み戻さない保持描画面を分離した。実Edge66件のreceiptは一致したが最終合成RGBの最大2/255差により厳密0diff診断はFAILのまま保持。追加の透明背景6件は生成RGBA・輪郭・最終alpha差0だった。旧 `3c8e2f65` の性能56／33／34／29／31／19msと失敗履歴も保持する。一方、同headのPhase Gはcore48＋extra7の55確認、全13 transaction、実入力と元期限・不正0を照合して成功した。これは新候補の全回帰を代替しない。
+
+2026-10-24：候補 `0d4bf897` の最終CI `39957370807` で正式性能が再度未達となった。元30秒×6条件のp95は32／26／43／35／39／34ms、1280×720の実drawは46.55Hzで、33msと頻度の両条件を超過した。先行する同headの成功6条件とは別の結果として保全し、性能の完了判定は取り下げる。画像cache切替時の再uploadを省くため、Rangerの完全同値payloadが各自のcanvasを保持する修正を行う。元RGBA・4coverage・192triangles・IKを維持し、2面合計65,536pixels以内、拡張時は余った面を解放する。凍結36条件（3画面の合計）と連続480姿勢の画素・receiptは旧版と一致したが、Mac33msの再合格は未確認である。
+
+新しい描画候補はローカル全3,167 tests・production build・Lint（errors0／既存warnings25）を通過。実Edgeの同条件66ケース（固定36・owner交替24・サイズ変更6）、55,931,040pixelsで元画像との不一致0、同じfixtureのupload66回→44回を確認した。これは実Canvas画素の一致であり、Macの性能改善量を証明しない。独立reviewでallocation失敗後の復帰1件を直し、製品・CI整理と564保持／15再検証の台帳はH0/M0。commit後の実selectorと新候補の正式CI・録画が残る。
+
+旧0dのRanger15観察（normal9／manual3／outcome3）はrun `39957370811` で全通過。source394・build・元clock・公式ZIP・strictPTS-DTS・CI decode1200frames／errors0、encoded最大200ms・先頭0・末尾最大54msを照合した。この完了記録と前候補0ebの15件は、それぞれ元head／runの履歴として保存する。新しいcanvas変更に依存するRanger15件だけを再検証し、他564件の所有と全失敗履歴は保持する。旧564映像の再取得・再decodeは0。
+
+同候補の正式ARM性能run `39957370870`／job `120426738160` は、元30秒×6条件のp95が19／20／29／30／24／21msで全通過。33ms、median FPS、実draw頻度、生存Rangerの実paint、DPRとerrors0を満たした。診断はoverflow0でCPU系列と実lower paint件数を照合。独立review H0/M0。前候補0ebの39ms失敗と別Intel対照の失敗は保全し、workflow全体を成功とは呼ばない。QualityはChromium／WebKit両方成功。Pages PR workflowのproduction build・static Pages build・browser smokeも成功し、deployは未実行。
+
+先行ca136 CIのPhase GはStage4・736×414の手動入力が元500msを超えた。observe165ms／move166ms／down150msで481msを消費し、up中のcontext終了が二次エラーとなった。原成功49capture・失敗1・未実行5と7件のCOMPLETE transactionを保持し、最終report／全体validateの成功へ昇格しない。権限contract、旧34ms、通常play S14／S30の元30秒protocol超過も履歴として保全。0ebの描画cache・重複count削減だけでこれらが解消したとは断定しない。
+
+現0dの通常play Chromiumは成功し、旧S14／S30の30秒超過は今回再発していない。一方Phase G job `120439262289` は本体matrix前のカード表示確認で失敗。WebKit3画面の各4状態・7probeと、Chromium1280のready／cooldownの5probeは成功したが、クマバーソンのnative入力がfalseとなった。原ZIP digest、report、失敗画面を照合し、原因を製品・host・750ms scrollへ断定しない。新しいportrait検査だけは既に中心点を実ボタンが所有する場合の不要なscrollを省き、点がなければ元750msと再読取を維持する。他callerの既定、pointer順、画素閾値・期限は不変。入力phases・元stackを保存し、同条件Edgeの修正前後は各4状態・7probe成功。ただしMac CIの解消証拠にはしない。
+
+製品の性能変更を伴うため、未採用のPhase G専用CI再利用経路は除去し、新候補で元の全回帰を実行する。従来のnative-only再利用でwholeCI／fullPhaseG成功を要求する条件は維持し、旧failureを成功へ書き換えない。元500ms入力を含む全Phase Gの新成功と、正式性能・公開後QAはまだ残る。CIのhead別待ち行列により、新候補が旧候補の終了待ちに置かれることを防ぐ。
+
+再利用を妨げていた実測事実として、過去runのheadは固定されても、付随するPR head／baseは現在値へ変化していた。PR番号は関連付けだけに用い、実行時headと、同runが保存したpr-verify-provenanceの所有・公式digest・元head／base／mergeを照合する。元0dの267 bytesは原ZIPと一致し、head0d／base99f9／merge19d7e532を確認した。欠損・期限切れ・破損・別ownerや実際のbase変更は再利用せず、wholeCI／fullPhaseGの合格条件は緩めない。
+
+0d候補ではRangerの透明／不透明画素に対する不要な計算だけを省き、元4coverage・192triangles・IK・alpha／Float32合成を保持した。凍結36姿勢×3画面と連続480変形は元画素／receiptと一致し、手元の小さな時間差をMac改善の因果証明には使わない。任意診断の測定中だけpose／lookup／raster／upload／blitを同じ原時計・元12000件上限で分け、Phase Gのtimeout時には終了処理前のNode時計とevent-loop差分を保存する。追加のpage RPC・poll・timer・retryはない。原120ms標本・250ms／strictPTS-DTS・30秒case・15分job・8MiB、正式30秒／33msと500ms入力期限は不変。最終CI `39957370807` は開始済みで、旧ca候補の完了結果と区別する。通常play・Phase Gを含む最終CIが残り、公開はまだ行っていない。追加のProducer承認待ちは解除済みであり、人による全編の自然さ・最終聴感や物理iPhone保存録画BGM／SEを確認済みとは扱わない。
+
+`3487cd39` までの製品変更で、全48形態の武器・両手・接地・重心・攻撃軌道・被弾を改善し、ババヤガは拳銃を下げて携行し接敵時に両手で構える。武蔵は二刀、クレイジーキングは両手のチェーンソー、クマバーソンは鍋の振り下ろし、Ωは握った右手の大剣で攻撃する。追加の実映像監査で判明した変異社長とΩの頭上を通る打撃、杖による足浮き、中断復帰時の跳ねも修正。硬直開始0の元paintを厳密に保持し、無関係な通常unitの不要な武器接地処理も省いた。元の骨長・接地・性能条件は変えない。
+
+クロスボウ、装甲、鍋、金属接触、ボス各種とクロメの発音経路を修正済み。RED PANTHER4役へ、それぞれ新たに合成した攻撃・被弾・死亡の計12声を追加した。元の武器音・被弾音、既存792論理assetと旧音声67ファイルは同一hashを保持。追加は66,509 bytesで、PWA bundleは345区間。実戦処理からの12声・元material音の共存、実HP変化、mute／画面遷移／0damage抑制、音源信号・build・独立review H0/M0を確認した。旧人物の録音を別人物へ流用していない。
+
+全48形態R11・同条件比較7本・ボス能力R12の計9本は映像音声の技術検査が完了。新RP音声の4攻撃場面だけ差し替え、他92場面と変更前96場面を再利用した。変異社長能力も通常条件で再取得し、元10秒・30秒期限・8MiBのまま563 frames／最大100ms／全AV decode不正0を確認。ボス動画は他5能力を再利用し、旧停止と診断録画は元資料として保持する。技術検査を全編の自然さ・最終聴感へ読み替えない。
+
+Mac再取得run `39905844837` の221件は126追加通過・95失敗・不明0。RP依存27件だけ再開した457保持／122未完から、run `39919617100` の80件、run `39928977912` の25件、run `39935763673` の16件、run `39941753236` のGunner1件が厳密encoded／既存CI decodeを追加通過し、元579観察の技術記録は579保持／未完0となった。公式ZIP・source・clip・receiptは元head/run/report所有で照合し、不明・重複0。旧Walker失敗と別の新clock closureを保持する。録画専用の公式日付固定1.65.0-alpha-2026-10-23／rev2380／27.2を実Macで確認。最後の新1本は73frames／最大137ms／先頭0・末尾3ms／元CI decode不正0、394source・build・元clockと独立review H0/M0を照合した。process記録は16観測・全owned childのclose確認・欠測／errors／上限到達0。各処理終了後200ms待ち、実開始間隔307〜859msの原値とCPU差分の不明43行を保持する。旧encoded337ms／source361ms失敗の原因や修正因果は未確定で、成功へ書き換えない。元1.63と安定1.64.1のwriter修正不足、sidecar集計誤りの訂正も保存。PWA1.63・正式性能1.56・製品sourceは不変。元ゲームclock、120ms標本、250ms・strict PTS/DTS・30秒・15分・8MiBと未知差分の全件復帰を維持し、旧成功映像は再録・再decodeしない。全579を現在候補で一括再取得した証拠ではなく、原所有ごとの記録である。
+
+正式Mac性能run `39919617090` のARM job `120301667457` は元30秒×6窓を全通過。p95は29／20／33・22／23／21ms、1280画面の実描画54.367Hzで元最低54Hzを満たし、不正0。旧53.206Hz失敗と別Intel診断失敗は保存し、workflow全体を成功と呼ばない。以後app・public・package同一性を保持する。ba305 CIのR9全編・Phase G・敵6組・通常play・PWA復旧・Stage3音声3routeは成功。音声routeは元60秒・1attempt・cue／HP／FIFO・実drawとHUD復元を独立review H0/M0で確認し、root1.56.1／WebKit2215の証拠として保持する。PR Verifyの新音声在庫3件・新receipt項目1件の元失敗は `b78379b8` で修正し対象再検証を通過した。ca136 CIの全3152検査は3151成功・CI権限contract1失敗。Actions証拠取得のread権限を全体からscope jobだけへ限定し、元のroot read-onlyを維持して失敗対象1testを通過した。現CIの実行済み工程は保持し、更新候補の最終CIへ進む。3102b0dfのQuality、8e90523fのPages PR buildも成功、公開処理はskipped。最終CI・全編の自然さ／聴感と作品全体の確認が残る。必須gate通過後に公開し、物理iPhone保存録画BGM／SEは未確認としてIssueをopenに保つ。
+
+以下は過去候補の実装・検証記録であり、上記の未完項目の完了を意味しない。
+
+大剣を握るΩの巨大な右手と前向きの大きな刃、脚の接地、武器別の斬撃・叩きつけ・両手持ち、被弾時の向き、双方の通常接近2.5倍と接敵速度の切替を修正した。全48形態の歩行／攻撃の原速動画と7本の同条件比較を作成。元映像の不足・つなぎ目の停止は必要部分だけ差し替え、成功済み166場面の再収録を避けた。映像の時間間隔・frame数・ファイル照合と、全体の自然さ・聴感・物理端末受入は区別する。
+
+候補 `1658e109`／Mac run39731104983の追加141件は全成功し、原reportの厳密clock検査も不正0。元369候補の438件と合わせ579件の取得を完了した。成功動画の不要な取得・再decodeはしていない。次候補ではRangerの同一頂点raster再利用とオオグチの口腔輪郭の変更に依存する27件だけを再取得し、552件（369の420／1658の132）を元head・run・report SHAで保持する。旧clock失敗の履歴は書き換えず、Walker844×340の新しい原録画clock検証を別に結び付ける。原速・容量・入力期限・描画基準は不変。
+
+1658の全回帰・R9全編・通常戦闘・UI・PWA復旧・敵6shard・Phase Gは成功。正式性能run39731104921は1280で35ms／51.27Hzとなり失敗のまま保持する。新キャッシュは毎回のIK・全頂点・paint receiptを維持し、完全同値の直前bitmapだけを再利用する。旧版36姿勢×3画面のpixel一致と無効化を確認した。元30秒計測を始める前に、生存Rangerと同じ実paintの確認を追加し、期限・測定本体・33ms条件は変更しない。正式性能job末尾の任意診断による30分超過は、その診断を既存の別jobに任せて解消する。Stage3音声のfinal候補失敗ではbaseと異なる描画抑制が判明したため、両方とも実draw／HUDを続ける同じDOM抑制へそろえた。元60秒・cue判定・1attemptを維持し、失敗時の描画／simulation／保存境界・解除の記録を保持する。元停止の内部原因は未確定で、新CIの結果で判定する。
+
+オオグチの開口時に露出する黒い矩形は、顎の輪郭内へ後退した口腔で修正した。新1本は全decodeと厳密PTSを通過し最大間隔80ms、問題の60frameでも矩形が消えた。他95場面は再録しない。装甲・フライパン音は34codecの元信号基準を通過済み。ここまでの取得・画素一致・部分観察を、全編の自然さ・聴感・物理端末受入と混同しない。新候補のCI・Mac27件・33ms・残る作品確認が通るまでmerge／tag／Release／Pagesを実行しない。iPhoneの保存録画BGM／SEは引き続き未確認としてIssueをopenに保つ。
+
+### 2026-10-22 追加指示前の記録
+
+2026-10-22：公開保留を継続。接地した足に連動する歩幅、腰・胴の重心移動、攻撃・被弾・装填・よろけの接続を修正した。遠距離の通常移動は最大2.2倍、接敵前は従来速度へ戻す。ローカルEdgeの全48形態×歩行4秒／接敵・攻撃5秒を収録し、同じ配置・能力値の比較動画とハンマー専用比較を作成。変化後マヨと感染後形態の比較用配置は、実際の発動・出生を経た原記録と区別する。銃の安定性を補正したミズチ2場面だけを差し替え、他47形態は再録しない。
+
+製品候補 `57530e9f` のCI失敗（銃の保持角、旧SHAを現在のファイルとして読む検査、旧死亡画像の期待、500ms入力超過）は保全。保持角の既存基準を維持し、生成元記録・検査側の依存注入と所有者判定を修正した。支援入力は最新DOM／被覆確認を1回のbrowser呼出しにまとめ、500／700ms・入力順・cancelを維持する。修正後の全3,035 tests、Lint 0 errors／25 warnings、content検証は成功。後続 `59b10f0d` のCI 3,043件中6失敗は、模擬RAFがcallback時刻を渡さない旧fixtureと追加clockラベルの期待値であり、修正後の関連313 testsは全成功。独立read-only review H/M 0。最終CIはIssue／PRの最新結果で確認し、merge・tag・Release・Pages deploy・Issue closeは行わない。
+
+候補 `329b601c` の正式ARM性能測定は6窓すべてp95 19〜29msだったが、うち3窓で大ボスの物理押戻し後にミズチの元脚長で足へ届かず、描画停止・page errorが起きたため全体は不合格。候補 `b1fd6dc4` は衝突境界の実補正だけをworld内の描画履歴へ記録し、そのpaintの脚を体と共に運ぶ。元脚長・通常歩行の接地・ボスの境界・性能基準は変更しない。元3条件、以後90paint、最速通常移動と独立reviewで確認し、補正なし11,584paintは旧版と同一。実S25原速30秒の1,353 framesは最大encoded74ms・診断0。正式Mac run39654237270のARM job119410478988は固定30秒×6窓を全成功、p95は23／25／32ms、独立再測定27／27ms、DPR2は28ms。元33ms・50 median FPS・実描画頻度・実Ranger負荷を満たし診断0、索引復元stepも成功。別Intel診断は75〜183ms／録画86msで失敗し、workflow全体はfailureのまま。元候補のPhase G入力超過は保全し、同じ期限のWindows3画面成功をMacの元失敗へ置き換えない。
+
+`329b601c` の全形態Mac録画は、RAF後の観測時刻が別フレームで同値になるnormal4件の失敗とoutcome1件の検査漏れがあった。全12原reportのhashと時刻を監査して535観察を元SHAで保持。native RAF timestampとraw観測時刻を別に保存し、有限・厳密増加、元sample数・期限・容量を維持した `59b10f0d`／run39658399560で残る44本（normal27、outcome17）の収録と既存contract検査が全成功し、579観察の取得を完了した。新44本のbytes／hash・全decodeを照合したが、encoded250ms／厳密PTSは26本成功・18本未達のため、原速自然さの受入へ繰り上げない。全48形態の連続比較動画は別のWindows原速収録で最大180msを検証済み。停止した広範CI、Mac Phase G、Intel性能、物理端末、全編・作品受入は未完のまま保持し、公開操作は行わない。
+
+### 2026-10-21以前の検証記録
+
+2026-10-21：公開は保留。[Issue #177](https://github.com/SUSANO-OOO/Zombieee/issues/177)と[Draft PR #180](https://github.com/SUSANO-OOO/Zombieee/pull/180)で継続する。公開版1.0.3／mainは `99f9c193ab1e35531db39225c839138cdb1c33cd`。ハンマー持ちBruteの逆向きの膝を `2746a778` で修正し、新Mac原動画12本を1倍速・先送りなしで確認した。元12本の8本とARM補完3本、最後の1280攻撃1本が時間密度と確認範囲の自然さを通過した。最後の原動画は最大encoded233ms／source174msで元250ms基準を維持。同じ1.63.0／VP8／ARM・元標本数／期限のまま収録し、CI Macの検索索引を元状態へ復元した記録も検証した（run39597715479）。非対象567本と新12本の計579本を元SHAで保持し、pending0。索引停止との因果関係は未確定で、録画自体のRAF p95 46msを正式33msの合格へ流用しない。他47形態の関節行列24,675組、Bruteの靴と上半身10,500組は旧実装と完全一致。既存48形態×移動・攻撃・接敵の144本も並列再点検し、Brute以外の同種の大きな膝の反転は確認範囲では見つからなかった。
+
+転倒・起き上がりは元の死亡／マヨ退避／感染出生の処理と時間に接続。段階変化は実際のボスHP変化と双子の相方死亡に接続し、元の攻撃を終えてから頭の短い動作を行う。足・武器・ダメージ・AI・saveは元の担当処理を維持する。製品差分 `080a785f`、localhost計測修正 `5cbdcb0c`。追加21本／4,348 decoded frames（マヨ2、HP境界17、双子2）を原動画1倍速・先送りなしで確認し、新たな足滑り・大きな姿勢の飛びは確認範囲に見つからなかった。
+
+映像と実描画の原記録・失敗履歴・source hashは保持する。旧対応表は `outputs/motion-review/state-motion-inventory-r100.json`、追加動作は `connected-lifecycle-review-r98.json`、Brute修正後は `brute-knee-review-r110.json`／`brute-arm-review-r117.json`／`brute-last-review-r122.json`、48形態再点検は `all48-motion-recheck-r107.json`。Brute以外の過去記録を新候補の再収録と混同しない。復旧profileの未完は0。正確な空のDraft選択ではbuild・収録を省き、未知の差分やReady化では全回帰へ戻す。転帰映像の説明でBrute自身の転倒を相手の転倒と呼んだ誤記は `brute-outcome-clarification-r122.json` で訂正し、原記録は保持する。製品候補2746のCI `39589154449` は3,022 tests、Lint、content、buildが成功。QA補正e5eaのCI `39590903995` も3,023件成功。QA／文書更新による実行中CIの自動cancelは停止済み。723のCI `39597715563` はCLI側の新blob収集漏れで不要な全回帰となったため、このrunだけ停止した。必要なnative1本は別runで完了し、実CLIと一時Git履歴を通す回帰検査で既知差分の限定実行・未知差分の全回帰を確認した。
+
+WebKit通常観察 `39574644933` attempt2は例外0、第1・2作戦勝利、第3作戦敗北。旧録画付き6作戦のRAF p95は123〜200msで未達の記録を維持する。登録3体の生体接地計算から不要な全身capture・再IK・頂点配列を除き、全輪郭と元の床値を保持した（31,752比較の最大差1.71e-13 world px）。正式1.56.1／Apple Siliconの固定30秒性能検証 `39590903947` は全6窓成功。844×340・844×390・1280×720のp95は19／19／29ms、独立再測定19／28ms、DPR2は28ms。元の33ms、50 median FPS、実描画頻度とRanger実負荷の各条件を満たし、console/page/request/HTTPエラー0。1.63／Intel診断 `39589154684` は99〜128msで失敗（blank自体34〜38ms）。両環境や旧通常録画を同じ合格にしない。後続の録画ハーネス・文書更新では成功済みの正式性能測定を繰り返さない。
+
+これは適用する状態の動作確認であり、48×21の全1,008組や製品全体の受入ではない。旧native診断のMutantのRAF p95は82msで正式33ms性能基準の合格ではなく、基準と期限は維持する。R9の技術検証と演出・聴感、全編通常攻略、物理iPhoneの保存録画BGM／SE、Producer実プレイ受入は別の未完ゲート。監査時点のCI cancel、録画failure、通常攻略敗北、音声研究の150ms超過も過去の失敗として保持し、合格へ書き換えない。merge・tag・Release・Pages deployment・Issue closeは行っていない。
+
 - [正式URL](https://susano-ooo.github.io/Zombieee/)のHTML release metadataを、公開中のversion・release SHAの正本とする。
 - [最新GitHub Release](https://github.com/SUSANO-OOO/Zombieee/releases/latest)で固定tagと更新内容を確認する。
 - Version 1.0.0の統合・公開・公開後QAの現在値は[実行台帳 Issue #172](https://github.com/SUSANO-OOO/Zombieee/issues/172)へ記録する。

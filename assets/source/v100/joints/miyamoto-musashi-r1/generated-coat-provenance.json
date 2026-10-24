@@ -1,0 +1,19 @@
+{
+  "tool": "image_gen.imagegen",
+  "mode": "built-in edit",
+  "transparentBackground": true,
+  "prompt": "coat-parts-prompt.txt",
+  "reference": "identity-reference.png",
+  "referenceSha256": "cd9da7d16bf3d703d189dbf7ad1d90d7b5ec074a727d3a22600b78b147e480e0",
+  "originalStudySha256": "7e73661675fea4af6f93cedc29915696ccb4c8178412b7de962364c127afa037",
+  "generatedStudySha256": "a73e942d31740a19a8f2f43006a75905a506ef8b3d9826bd2bdd55c59e5da7df",
+  "selectedCells": [
+    14,
+    15
+  ],
+  "adoptedParts": [
+    "coat-far",
+    "coat-near"
+  ],
+  "remainingCellsUsed": false
+}

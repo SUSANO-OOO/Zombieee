@@ -58,6 +58,28 @@ test("a timed-out background input settles cancellation before queued input can 
   assert.deepEqual(calls, [["deadline", 500], ["cancel"], ["settled"]]);
 });
 
+test('input timeout preserves its original deadline and measures Node wait before cancellation',async()=>{
+  const declaration=parsed.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==='withDeploymentPreinputDeadline');
+  let clock=10,trigger,cancellations=0;
+  const loopStart=Object.freeze({active:11,idle:20,utilization:11/31});
+  const run=vm.runInNewContext(declaration.getText(parsed)+'\nwithDeploymentPreinputDeadline',{
+    performance:{now:()=>clock,eventLoopUtilization:previous=>{
+      if(!previous)return loopStart;assert.equal(previous,loopStart);return{active:19,idle:486,utilization:19/505};
+    }},
+    setTimeout:(callback,budget)=>{assert.equal(budget,500);trigger=callback;return 1;},clearTimeout(){},
+    terminateTimedOutDeploymentPreinput:async()=>{cancellations++;clock+=50_000;return{terminalLifecycleVerified:true};},
+    phaseGPointerFailure:(code,evidence)=>Object.assign(new Error(code),{evidence}),
+  });
+  const pending=run({},new Promise(()=>{}),500,'ORIGINAL_TIMEOUT',{control:'sustain-ability'});
+  const rejected=assert.rejects(pending,error=>{
+    assert.equal(error.message,'ORIGINAL_TIMEOUT');assert.equal(error.evidence.deadlineMs,500);
+    assert.deepEqual(JSON.parse(JSON.stringify(error.evidence.nodeTiming)),{clock:'Node performance.now',startedAt:10,timeoutObservedAt:515,elapsedMs:505,
+      eventLoop:{activeMs:19,idleMs:486,utilization:19/505}});
+    return true;
+  });
+  clock=515;trigger();await rejected;assert.equal(cancellations,1);
+});
+
 test("an unavailable redeploy candidate leaves the shared capture page and scheduler untouched", async () => {
   const declaration = parsed.statements.find(node => ts.isFunctionDeclaration(node)
     && node.name?.text === "performVerifiedDeploymentPointer");
@@ -127,6 +149,7 @@ test("background observations wait for fresh pointer preflight and retain the pa
   const result = await background; await next;
   assert.equal(result.liveHumanTargetCount, 2);
   assert.equal(result.bossEngaged, true);
+  assert.equal(result.setupRuntime.fixture, true);
   assert.deepEqual(events, ["visibility", "boss", "live-count", "runtime", "actor", "unit", "vehicle", "next-pointer"]);
 });
 
@@ -266,13 +289,14 @@ test("deployment pointer diagnostics are bounded, capture handler failures, and 
   const targetCard = new FakeElement("button");
   targetCard.attrs.set("data-kind", "scout");
   targetCard.attrs.set("data-slot-index", "1");
+  let hitTestCount = 0;
   const document = {
     documentElement: new FakeElement("html"),
     activeElement: new FakeElement("button"),
     visibilityState: "visible",
     hidden: false,
     hasFocus: () => true,
-    elementFromPoint: () => targetCard,
+    elementFromPoint: () => { hitTestCount += 1; return targetCard; },
     addEventListener: (type, handler) => documentListeners.set(type, [...(documentListeners.get(type) ?? []), handler]),
     removeEventListener: (type, handler) => documentListeners.set(type, (documentListeners.get(type) ?? []).filter((entry) => entry !== handler)),
   };
@@ -304,10 +328,18 @@ test("deployment pointer diagnostics are bounded, capture handler failures, and 
   window.__ASHFALL_BATTLE_QA__ = { getPhaseGCombatSnapshot: () => { throw new Error("fixture snapshot failure"); } };
   for (let index = 0; index < 20; index += 1) assert.throws(() => receiptHandler(rawEvent), /fixture snapshot failure/u);
   assert.equal(registry.get("attempt").handlerExceptions.length, 16);
+  registry.get("attempt").diagnostics.before = registry.get("attempt").diagnosticSnapshot({ x: 10, y: 20 });
+  assert.equal(registry.get("attempt").diagnostics.before.hitTestObserved, true, "preflight diagnostics retain the actual hit test");
+  assert.equal(hitTestCount, 22, "all original event handlers still perform their hit test");
+  const hitsBeforeRead = hitTestCount;
   const originalDocumentIdentity = registry.get("attempt").diagnostics.before.documentElementIdentity;
   document.documentElement = new FakeElement("html");
   const receiptRead = await readFn({ evaluate, isClosed: () => false }, "attempt", 100);
   assert.notEqual(receiptRead.diagnostics.after.documentElementIdentity, originalDocumentIdentity, "receipt read must observe replaced document identity");
+  assert.equal(hitTestCount, hitsBeforeRead, "receipt read adds no layout-dependent hit test");
+  assert.equal(receiptRead.diagnostics.after.hitTestObserved, false);
+  assert.equal(receiptRead.diagnostics.after.currentElementFromPoint, null, "an unobserved hit target must not be presented as evidence");
+  assert.equal(receiptRead.receipts.length, 1, "the original trusted event receipt is still required");
   await removeFn({ evaluate, isClosed: () => false }, "attempt");
   assert.equal((windowListeners.get("click") ?? []).length, 0);
   assert.equal((documentListeners.get("click") ?? []).length, 0);
@@ -381,7 +413,7 @@ test("actual Stage25 opening seals its first attack before slots6/7, then preser
   };
   visit(battle);
   assert.ok(opening && capture);
-  const helpers = ["createCombatImpactReader", "observeOpeningCombatAction", "collectCombatCausalProof", "completedImpactTargetDeploymentKind"]
+  const helpers = ["phaseGPageInputState", "withPhaseGPageInputLock", "createCombatImpactReader", "observeOpeningCombatAction", "collectCombatCausalProof", "completedImpactTargetDeploymentKind"]
     .map(name => parsed.statements.find(n => ts.isFunctionDeclaration(n) && n.name?.text === name).getText(parsed)).join("\n");
   const machine = createV100PhaseGProofMachine();
   const impacts = [{
@@ -404,6 +436,7 @@ test("actual Stage25 opening seals its first attack before slots6/7, then preser
     waitForTimeout: async ms => { now += ms; },
   };
   const scope = {
+    phaseGPageInputTails: new WeakMap(),
     page, phaseGProofMachine: machine, battleTimeout: 150000, COMBAT_CAUSAL_PAGE_TRANSACTION_TIMEOUT_MS: 2000,
     Date: { now: () => now }, setTimeout: (callback, ms) => { now += ms; callback(); },
     observePromiseWithin: async promise => ({ status: "fulfilled", value: await promise }),
@@ -806,6 +839,7 @@ test("boss presentation barrier preserves actual entry and the existing per-lane
     const calls = [];
     const wait = vm.runInNewContext(`${declaration.getText(parsed)}\nwaitForRequiredBossPresentation`, {
       checkpointRecorderFor: () => null, battleTimeout: 45000,
+      waitForPhaseGPagePredicate: (page, ...args) => page.waitForFunction(...args),
       waitForCombatActivity: async (_page, options) => calls.push(options.bossKind),
     });
     await wait({ waitForFunction: async (callback, expectedKind, options) => {
@@ -838,10 +872,12 @@ function bossWaitFixture(samples, { budget = 150000, readStatus = null } = {}) {
   const budgets = [];
   const wait = vm.runInNewContext(`${declaration.getText(parsed)}\nwaitForCombatActivity`, {
     checkpointRecorderFor: () => null, battleTimeout: budget,
+    waitForPhaseGPagePredicate: (page, ...args) => page.waitForFunction(...args),
     invariant: (condition, message) => assert.ok(condition, message),
     V100_REPRESENTATIVE_COMBAT_CONTRACT, validateV100RepresentativeCombatEvidence, deriveV100RuntimeObservation,
     Date: { now: () => now }, setTimeout: (callback, ms) => { now += ms; callback(); },
     readPhaseGSetupRuntime: async () => samples[Math.min(reads++, samples.length - 1)],
+    withPhaseGPageInputLock: async (_page, operation) => operation(),
     observePromiseWithin: async (promise, remaining) => {
       budgets.push(remaining);
       const value = await promise;
@@ -857,6 +893,42 @@ const bossSample = (kind, values = {}) => ({
   fighters: [{ id: 25, side: "zombie", kind, hp: 6200, combatReady: true, gateEntering: false,
     x: 758, attackSequence: 0, attack: 0, attackWindup: 0, abilityWindup: 0,
     stationAbility: { phase: "warning", remainingSeconds: .45 }, ...values }],
+});
+
+test("representative boss reads finish before background native input starts on the same page", async () => {
+  const names = ["phaseGPageInputState", "withPhaseGPageInputLock", "observePromiseWithin", "waitForCombatActivity"];
+  const declarations = names.map(name => parsed.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === name));
+  assert.ok(declarations.every(Boolean));
+  let releaseRead, enteredRead;
+  const readPending = new Promise(resolve => { releaseRead = resolve; });
+  const readStarted = new Promise(resolve => { enteredRead = resolve; });
+  const events = [], sample = bossSample("takuya-omega", { attackSequence: 1 });
+  const harness = vm.runInNewContext(declarations.map(node => node.getText(parsed)).join("\n")
+    + "\n({ withPhaseGPageInputLock, waitForCombatActivity })", {
+    phaseGPageInputTails: new WeakMap(), checkpointRecorderFor: () => null, battleTimeout: 150000,
+    waitForPhaseGPagePredicate: (page, ...args) => page.waitForFunction(...args),
+    invariant: (condition, message) => assert.ok(condition, message),
+    V100_REPRESENTATIVE_COMBAT_CONTRACT, validateV100RepresentativeCombatEvidence, deriveV100RuntimeObservation,
+    Date, setTimeout, clearTimeout,
+    readPhaseGSetupRuntime: async () => {
+      events.push("representative-read"); enteredRead(); await readPending;
+      events.push("representative-read-finished"); return sample;
+    },
+  });
+  const page = { waitForFunction: async (_callback, arg, options) => {
+    assert.equal(arg, null); assert.equal(options.timeout, 45000); assert.equal(options.polling, 100);
+  } };
+  const bossWait = harness.waitForCombatActivity(page, { bossKind: "takuya-omega" });
+  await readStarted;
+  const background = harness.withPhaseGPageInputLock(page, async () => { events.push("background-native-input"); });
+  try {
+    await new Promise(resolve => setImmediate(resolve));
+    assert.deepEqual(events, ["representative-read"], "observation RPC must not occupy the browser during the bounded input operation");
+  } finally {
+    releaseRead(); await Promise.allSettled([bossWait, background]);
+  }
+  assert.equal(await bossWait, sample, "the actual canonical representative validator still owns acceptance");
+  assert.deepEqual(events, ["representative-read", "representative-read-finished", "background-native-input"]);
 });
 test("boss wait uses the actual canonical validator for legacy and V1 signals, preserving the winning read", async () => {
   for (const kind of ["takuya", "mugarian-president-mutated", "takuya-omega"]) {
@@ -898,6 +970,27 @@ test("boss wait rejects battle loss and deadline without restarting the budget o
     assert.equal(error.phaseGBattleSetup.representativeLastRead, lost); return true;
   });
   assert.equal(ended.reads(), 2);
+});
+
+test("waiting for the input lane consumes the original boss deadline and cannot start a late page read", async () => {
+  const declaration = parsed.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === "waitForCombatActivity");
+  let now = 0, reads = 0;
+  const wait = vm.runInNewContext(`${declaration.getText(parsed)}\nwaitForCombatActivity`, {
+    checkpointRecorderFor: () => null, battleTimeout: 150000,
+    waitForPhaseGPagePredicate: (page, ...args) => page.waitForFunction(...args),
+    invariant: (condition, message) => assert.ok(condition, message),
+    V100_REPRESENTATIVE_COMBAT_CONTRACT, validateV100RepresentativeCombatEvidence, deriveV100RuntimeObservation,
+    Date: { now: () => now },
+    readPhaseGSetupRuntime: async () => { reads += 1; return bossSample("takuya-omega", { attackSequence: 1 }); },
+    withPhaseGPageInputLock: async (_page, operation) => { await Promise.resolve(); now = 150001; return operation(); },
+    observePromiseWithin: async (promise, remaining) => {
+      assert.equal(remaining, 150000, "queue wait must not restart the boss budget");
+      try { return { status: "fulfilled", value: await promise }; }
+      catch (error) { return { status: "rejected", error: String(error) }; }
+    },
+  });
+  await assert.rejects(wait({ waitForFunction: async () => {} }, { bossKind: "takuya-omega" }), /BOSS_REPRESENTATIVE_DEADLINE_EXCEEDED/u);
+  assert.equal(reads, 0, "an expired queued observation must never issue another page RPC");
 });
 test("boss native read rejection or unresolved deadline is terminal and seals only the unresolved RPC", async () => {
   for (const status of ["rejected", "timeout"]) {
@@ -1021,11 +1114,13 @@ function manualMarkerEvidence() {
 }
 test("manual marker wait rejects impact-only, unrelated activation and dead marked targets and retains the positive frame", async () => {
   const declaration = parsed.statements.find((entry) => ts.isFunctionDeclaration(entry) && entry.name?.text === "waitForManualMarkerObservation");
-  const wait = vm.runInNewContext(`${declaration.getText(parsed)}\nwaitForManualMarkerObservation`, { battleTimeout: 150000, manualMarkerActivation, invariant: (ok, detail) => assert.ok(ok, detail) });
+  const wait = vm.runInNewContext(`${declaration.getText(parsed)}\nwaitForManualMarkerObservation`, {
+    battleTimeout: 150000, manualMarkerActivation, invariant: (ok, detail) => assert.ok(ok, detail),
+    waitForPhaseGPagePredicate: (page, ...args) => page.waitForFunction(...args),
+  });
   const target = { id: 3, side: "zombie", kind: "red-panther-smg", hp: 80, marked: 6 };
   const receipt = { ownerId: 9, activationId: 1, kind: "babayaga", eventType: "impact", at: 34.72 };
   const snapshot = { screen: "battle", stageId: "stage21", battleGeneration: 2, fighters: [target], manualAbilityReceipts: [receipt] };
-  let disposed = 0;
   const value = await wait({ waitForFunction: async (callback, kind, options) => {
     assert.equal(options.timeout, 10000);
     const check = (sample) => vm.runInNewContext(`(${callback.toString()})(kind)`, {
@@ -1042,11 +1137,10 @@ test("manual marker wait rejects impact-only, unrelated activation and dead mark
       { ...snapshot, battleGeneration: 3 },
       { ...snapshot, stageId: "stage24" }]) assert.equal(Boolean(check(invalid)), false);
     const positive = check(snapshot);
-    return { jsonValue: async () => positive, dispose: async () => { disposed += 1; } };
+    return positive;
   } }, "babayaga", manualMarkerEvidence());
   assert.equal(value.fighters[0].marked, 6);
   assert.equal(value.observedAtPageTime, 34000);
-  assert.equal(disposed, 1);
 });
 
 test("manual marker failure preserves one actual diagnostic snapshot and never retries or masks the primary failure", async () => {
@@ -1058,6 +1152,8 @@ test("manual marker failure preserves one actual diagnostic snapshot and never r
     const actual = { battleGeneration: 2, fighters: [], manualAbilityReceipts: [{ kind: "babayaga", eventType: "impact" }] };
     const evidence = manualMarkerEvidence();
     const wait = vm.runInNewContext(`${declaration.getText(parsed)}\nwaitForManualMarkerObservation`, {
+      waitForPhaseGPagePredicate: (page, ...args) => page.waitForFunction(...args),
+      withPhaseGPageInputLock: async (_page, operation) => operation(),
       battleTimeout: 150000, manualMarkerActivation, invariant: (ok, detail) => assert.ok(ok, detail), readPhaseGSetupRuntime: async () => {
         reads += 1;
         if (readFails) throw new Error("context closed after primary failure");

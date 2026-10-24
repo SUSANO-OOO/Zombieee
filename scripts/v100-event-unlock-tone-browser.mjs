@@ -30,7 +30,7 @@ try{
  await page.goto(new URL('/v100',origin).href);
  const play=page.getByRole('button',{name:'ブラウザで遊ぶ',exact:true});await play.or(page.locator('#v100-player-name')).first().waitFor();if(await play.isVisible())await play.click();
  await page.locator('#v100-player-name').fill('音確認');
- await page.getByRole('button',{name:'この名前で作戦を始める',exact:true}).click();
+ await page.getByRole('button',{name:'この名前でステージを始める',exact:true}).click();
  await page.locator('.v100-event-actions .v100-primary').waitFor();
  await page.waitForFunction(()=>window.__V100_EVENT_AUDIO_QA__?.getSnapshot()?.audioStatus.state==='running');
  report.initialToneCount=await page.evaluate(()=>window.__V100_OSCILLATOR_TRACE__.length);

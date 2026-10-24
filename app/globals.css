@@ -129,7 +129,7 @@ button[aria-disabled="true"]:focus-visible {
 .barrier-health.vulnerable b { color:#efb06a; text-shadow:0 0 8px rgba(224,91,56,.45); }
 .barrier-health.hit { animation:crawler-hit .16s ease-out; }
 .barrier-health.v100-control-health { width:min(28%,236px); }
-.barrier-health.v100-control-health div span,.barrier-health.v100-control-health div b { white-space:nowrap; }
+.barrier-health:not(.mission-health) div span,.barrier-health:not(.mission-health) div b { white-space:nowrap; }
 .barrier-health.omega-objective-left { left:calc(2% + var(--app-viewport-safe-left)); right:auto; }
 .barrier-health > small { display:block; margin-top:3px; color:#d17b52; font:800 clamp(5px,.52vw,7px) monospace; letter-spacing:.1em; }
 .mission-health { opacity:1; padding:5px 8px; border:1px solid rgba(216,188,118,.45); background:rgba(7,12,13,.78); }
@@ -227,7 +227,7 @@ button[aria-disabled="true"]:focus-visible {
 .loadout-units > div { height:calc(100% - 22px); display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); grid-template-rows:repeat(2,minmax(0,1fr)); gap:6px; }
 .loadout-units article { position:relative; min-width:0; overflow:hidden; padding:9px 46px 7px 10px; border:1px solid rgba(197,160,105,.26); border-left:3px solid #8e6843; background:radial-gradient(circle at 90% 45%,rgba(197,99,56,.18),transparent 43%),rgba(8,11,12,.45); }
 .loadout-units article::after { content:""; position:absolute; z-index:0; top:4%; right:-2%; bottom:3%; width:52%; pointer-events:none; background:var(--loadout-unit-art) center/cover no-repeat; filter:saturate(.78) contrast(1.06) drop-shadow(0 5px 7px #000); opacity:.68; }
-.loadout-units article[data-kind="scout"] { --loadout-unit-art:url('/art/v070/characters/portraits/scout-portrait-v1.webp'); }.loadout-units article[data-kind="ranger"] { --loadout-unit-art:url('/art/v070/characters/portraits/ranger-portrait-v1.webp'); }.loadout-units article[data-kind="brute"] { --loadout-unit-art:url('/art/v070/characters/portraits/brute-portrait-v1.webp'); }.loadout-units article[data-kind="brawler"] { --loadout-unit-art:url('/art/v060/characters/portraits/brawler-portrait-v2.webp'); }.loadout-units article[data-kind="gunner"] { --loadout-unit-art:url('/art/v070/characters/portraits/gunner-portrait-v1.webp'); }.loadout-units article[data-kind="medic"] { --loadout-unit-art:url('/art/v070/characters/portraits/medic-portrait-v1.webp'); }.loadout-units article[data-kind="crazy-king"] { --loadout-unit-art:url('/art/v060/characters/portraits/crazy-king-portrait-v2.webp'); }.loadout-units article[data-kind="kumaverson"] { --loadout-unit-art:url('/art/v060/characters/portraits/kumaverson-portrait-v2.webp'); }.loadout-units article[data-kind="babayaga"] { --loadout-unit-art:url('/art/v060/characters/portraits/babayaga-portrait-v2.webp'); }.loadout-units article[data-kind="guardian"] { --loadout-unit-art:url('/art/v070/characters/portraits/guardian-portrait-v1.webp'); }.loadout-units article[data-kind="engineer"] { --loadout-unit-art:url('/art/v070/characters/portraits/engineer-portrait-v1.webp'); }
+.loadout-units article[data-kind="scout"] { --loadout-unit-art:url('/art/v070/characters/portraits/scout-portrait-v1.webp'); }.loadout-units article[data-kind="ranger"] { --loadout-unit-art:url('/art/v070/characters/portraits/ranger-portrait-v1.webp'); }.loadout-units article[data-kind="brute"] { --loadout-unit-art:url('/art/v070/characters/portraits/brute-portrait-v1.webp'); }.loadout-units article[data-kind="brawler"] { --loadout-unit-art:url('/art/v100/portraits/paisen-event-portrait-r2.webp'); }.loadout-units article[data-kind="gunner"] { --loadout-unit-art:url('/art/v070/characters/portraits/gunner-portrait-v1.webp'); }.loadout-units article[data-kind="medic"] { --loadout-unit-art:url('/art/v070/characters/portraits/medic-portrait-v1.webp'); }.loadout-units article[data-kind="crazy-king"] { --loadout-unit-art:url('/art/v060/characters/portraits/crazy-king-portrait-v2.webp'); }.loadout-units article[data-kind="kumaverson"] { --loadout-unit-art:url('/art/v060/characters/portraits/kumaverson-portrait-v2.webp'); }.loadout-units article[data-kind="babayaga"] { --loadout-unit-art:url('/art/v060/characters/portraits/babayaga-portrait-v2.webp'); }.loadout-units article[data-kind="guardian"] { --loadout-unit-art:url('/art/v070/characters/portraits/guardian-portrait-v1.webp'); }.loadout-units article[data-kind="engineer"] { --loadout-unit-art:url('/art/v070/characters/portraits/engineer-portrait-v1.webp'); }
 .loadout-units article b,.loadout-units article small { position:relative; z-index:1; display:block; max-width:76%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }.loadout-units article b { color:#e3c898; font:900 clamp(8px,1vw,14px) monospace; }.loadout-units article small { margin-top:4px; color:#9f927e; font:700 clamp(6px,.63vw,9px)/1.1 sans-serif; }.loadout-units article em { position:absolute; z-index:2; right:8px; top:50%; transform:translateY(-50%); color:#efc364; font:900 clamp(7px,.8vw,11px) monospace; font-style:normal; text-shadow:0 2px 3px #000; }
 .loadout-support { display:grid; grid-template-rows:auto minmax(0,1fr) auto auto; gap:5px; }
 .supply-choices { min-height:0; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:5px; }
@@ -414,7 +414,7 @@ button[aria-disabled="true"]:focus-visible {
   .battle-controls-zone .phase-block strong { grid-column:1/-1; grid-row:2; min-width:0; overflow:hidden; padding:0 3px; border-top:1px solid rgba(235,205,161,.2); border-right:0; border-left:0; font-size:14px; line-height:1; letter-spacing:0; }
   .battle-controls-zone .icon-btn { flex:0 0 42px; width:42px; height:44px; }
   .battle-controls-zone .audio-btn small { font-size:12px; line-height:1; }
-  .barrier-health { top:64px; max-width:28%; padding:4px 6px; background:rgba(5,8,9,.78); }
+  .barrier-health { top:64px; width:min(28%,236px); max-width:28%; padding:4px 6px; background:rgba(5,8,9,.78); }
   .boss-hud { top:104px; min-width:260px; }
   .boss-hud div { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:6px; }
   .boss-hud span,.boss-hud b { min-width:0; white-space:nowrap; }
@@ -1079,6 +1079,12 @@ html[data-pwa-maintenance-pending="true"] .pwa-repair { display:none; }
     background:rgba(16,19,18,.78);
     line-height:1;
   }
+  /* The cost owns the upper edge here; reserve the lower edge for the
+     complete shortage count rather than the former two-character label. */
+  .game-frame[data-battle-hud-layout="mobile"]:not(.v100-shell .game-frame) .unit-card .card-state {
+    right:4px !important;
+    max-width:calc(100% - 8px) !important;
+  }
 }
 
 /* Battle cards are portrait-led now that the unit name is no longer printed
@@ -1121,3 +1127,22 @@ html[data-pwa-maintenance-pending="true"] .pwa-repair { display:none; }
 }
 .unit-card .cost { display:inline-flex; align-items:baseline; gap:3px; white-space:nowrap; }
 .unit-card .cost-mark { margin-right:0; color:#d7ba79; font:800 clamp(7px,.38em,12px)/1 "Arial Narrow",sans-serif; font-style:normal; letter-spacing:.04em; vertical-align:baseline; }
+
+/* The canonical deck also shows the full shortage sentence on desktop.
+   Give cost and status separate vertical anchors at every legacy width.
+   V1 owns its card composition independently. */
+.game-frame:not(.v100-shell .game-frame) .unit-card .cost {
+  top:3px;
+  right:3px !important;
+  bottom:auto !important;
+  padding:1px 2px;
+  border:1px solid rgba(215,186,121,.42);
+  background:rgba(16,19,18,.78);
+  line-height:1;
+}
+.game-frame:not(.v100-shell .game-frame) .unit-card .card-state {
+  left:4px !important;
+  right:4px !important;
+  width:auto;
+  max-width:calc(100% - 8px) !important;
+}

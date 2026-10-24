@@ -135,7 +135,7 @@ function actionablePointerCard(overrides = {}) {
 
 function pointerSample(sampleOrdinal, overrides = {}) {
   const {
-    schedulerStatus = "pending",
+    schedulerStatus = "observed",
     hostTurn: hostTurnOverrides = {},
     sampledAtWallTimeMs = 1_000 + sampleOrdinal * 40,
     sampledAtPerformanceMs = 2_000 + sampleOrdinal * 40,
@@ -312,8 +312,29 @@ test("WebKit battle-extra keeps one fresh browser process per capture", () => {
   });
 });
 
-test("r14 pointer precondition accepts scheduler-independent samples with pending or observed rAF and an immediate terminal recheck", () => {
-  for (const schedulerStatus of ["pending", "observed"]) {
+test("the captured b658 ready card cannot authorize input before its native rAF probe is observed", async () => {
+  const fixture = JSON.parse(await readFile(new URL('./fixtures/v177-b658-phaseg-pending-raf.json', import.meta.url), 'utf8'));
+  assert.equal(fixture.provenance.originalFailure, 'BROWSER_POINTER_DISPATCH_TIMEOUT');
+  const result = runPointerProbe({ precondition: fixture.precondition }).precondition;
+  assert.equal(result.status, 'QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE');
+  assert.equal(result.pointerCount, 0);
+  assert.equal(result.reason, 'browser-scheduler-not-observed');
+});
+
+test("a pending first sample can become ready after a real observed rAF and a fresh terminal check", () => {
+  const samples = [pointerSample(1, { schedulerStatus: 'pending' }), pointerSample(2, { schedulerStatus: 'observed' })];
+  const terminal = pointerSample(3, { schedulerStatus: 'observed' });
+  const result = runPointerProbe({ precondition: { expectedIdentity: pointerIdentity, samples, terminal } }).precondition;
+  assert.equal(result.status, 'ready-for-pointer');
+  assert.equal(result.pointerCount, 0);
+  const pendingTerminal = { ...terminal, schedulerProbe: { ...terminal.schedulerProbe, status: 'pending' } };
+  const refused = runPointerProbe({ precondition: { expectedIdentity: pointerIdentity, samples, terminal: pendingTerminal } }).precondition;
+  assert.equal(refused.status, 'QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE');
+  assert.equal(refused.pointerCount, 0);
+});
+
+test("pointer precondition keeps independent samples and an immediate terminal recheck after observed rAF", () => {
+  for (const schedulerStatus of ["observed"]) {
     const samples = [
       pointerSample(1, { schedulerStatus }),
       pointerSample(2, { schedulerStatus, rect: { x: 10.75 }, rail: { scrollLeft: 12.75 } }),

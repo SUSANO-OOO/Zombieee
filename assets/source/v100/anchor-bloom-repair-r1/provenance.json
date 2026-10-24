@@ -1,0 +1,298 @@
+{
+  "scope": "Frozen original-RGB alpha and complete owned-pose repair, used for all original Anchor Bloom states. Original1536x1024 source is immutable. Built-in image_gen alpha guide only; none of its repainted RGB is adopted. Neutral connected fringe refinement preserves every original RGB byte before standard uniform atlas fitting. No global floor-band erasure, no fixed384px source crop.",
+  "original": "assets/source/v090/enemies/anchor-bloom-infected-pose-sheet-r1.png",
+  "originalSha256": "a149c3952d78e3b9dd855c35c44eae3af1da1d243e6b7bd1f219d346292ac6a3",
+  "alphaSourceSha256": "0fd0e3640a0cf3eaf1f89cfb0e927fa111052671deafdd2b52a4c4fe3f159719",
+  "sourceBindings": [
+    {
+      "poseIndex": 0,
+      "ownedPolygon": null,
+      "ownedSourceRect": {
+        "x": 30,
+        "y": 225,
+        "w": 300,
+        "h": 270
+      },
+      "tightRect": {
+        "x": 48,
+        "y": 244,
+        "w": 255,
+        "h": 220
+      },
+      "sha256": "e742e0dc5c37ab31df5c65fb749463b745eff4f7856a8ffdb8effe0b3b7c90c8"
+    },
+    {
+      "poseIndex": 1,
+      "ownedPolygon": null,
+      "ownedSourceRect": {
+        "x": 338,
+        "y": 220,
+        "w": 370,
+        "h": 280
+      },
+      "tightRect": {
+        "x": 346,
+        "y": 236,
+        "w": 353,
+        "h": 249
+      },
+      "sha256": "da5531ce82491f998522e51e690691638bb81718e54dea8306306f7151ec511d"
+    },
+    {
+      "poseIndex": 2,
+      "ownedPolygon": null,
+      "ownedSourceRect": {
+        "x": 708,
+        "y": 270,
+        "w": 370,
+        "h": 230
+      },
+      "tightRect": {
+        "x": 711,
+        "y": 285,
+        "w": 357,
+        "h": 195
+      },
+      "sha256": "a3852fb00e66d464c6bbc5c7db863c534edb7227d9a76dadb76859db503efca6"
+    },
+    {
+      "poseIndex": 3,
+      "ownedPolygon": null,
+      "ownedSourceRect": {
+        "x": 1078,
+        "y": 220,
+        "w": 458,
+        "h": 300
+      },
+      "tightRect": {
+        "x": 1086,
+        "y": 234,
+        "w": 443,
+        "h": 275
+      },
+      "sha256": "eced0a2daadb9ca6b56570f6d87b3fc732f1a513c09a0bc6b16cc21c5b63ed29"
+    },
+    {
+      "poseIndex": 4,
+      "ownedPolygon": null,
+      "ownedSourceRect": {
+        "x": 0,
+        "y": 550,
+        "w": 395,
+        "h": 290
+      },
+      "tightRect": {
+        "x": 19,
+        "y": 550,
+        "w": 376,
+        "h": 278
+      },
+      "sha256": "d3f50c17343d81b3be41179e8c78509324188036435a37099bd2373352c8ea6d"
+    },
+    {
+      "poseIndex": 5,
+      "ownedPolygon": [
+        [
+          360,
+          515
+        ],
+        [
+          708,
+          515
+        ],
+        [
+          708,
+          835
+        ],
+        [
+          395,
+          835
+        ],
+        [
+          395,
+          675
+        ],
+        [
+          360,
+          620
+        ]
+      ],
+      "ownedSourceRect": {
+        "x": 360,
+        "y": 515,
+        "w": 348,
+        "h": 320
+      },
+      "tightRect": {
+        "x": 371,
+        "y": 531,
+        "w": 323,
+        "h": 293
+      },
+      "sha256": "8934c01982c7c8ea4ec0edc8c2e090509496fad8bd81edd5fdb1a177dd9856d5"
+    },
+    {
+      "poseIndex": 6,
+      "ownedPolygon": null,
+      "ownedSourceRect": {
+        "x": 708,
+        "y": 600,
+        "w": 365,
+        "h": 255
+      },
+      "tightRect": {
+        "x": 713,
+        "y": 613,
+        "w": 360,
+        "h": 222
+      },
+      "sha256": "b933130faf8d86e96bab2b154aa4568dae9f58b6db9b6a7558be46cebc1a629b"
+    },
+    {
+      "poseIndex": 7,
+      "ownedPolygon": null,
+      "ownedSourceRect": {
+        "x": 1062,
+        "y": 630,
+        "w": 474,
+        "h": 225
+      },
+      "tightRect": {
+        "x": 1066,
+        "y": 655,
+        "w": 447,
+        "h": 176
+      },
+      "sha256": "6d59345c4d6e646ed91385018300ed6082b4af838ecb56b450235c66e67be67a"
+    }
+  ],
+  "poseIndexes": [
+    0,
+    1,
+    1,
+    2,
+    3,
+    5,
+    7
+  ],
+  "semanticRows": {
+    "right": "source",
+    "left": "mirror"
+  },
+  "visible": {
+    "right": [
+      [
+        32,
+        72,
+        449,
+        432
+      ],
+      [
+        27,
+        138,
+        444,
+        432
+      ],
+      [
+        39,
+        138,
+        456,
+        432
+      ],
+      [
+        32,
+        204,
+        449,
+        432
+      ],
+      [
+        32,
+        173,
+        449,
+        432
+      ],
+      [
+        32,
+        54,
+        449,
+        432
+      ],
+      [
+        32,
+        268,
+        449,
+        432
+      ]
+    ],
+    "left": [
+      [
+        32,
+        72,
+        449,
+        432
+      ],
+      [
+        27,
+        138,
+        444,
+        432
+      ],
+      [
+        39,
+        138,
+        456,
+        432
+      ],
+      [
+        32,
+        204,
+        449,
+        432
+      ],
+      [
+        32,
+        173,
+        449,
+        432
+      ],
+      [
+        32,
+        54,
+        449,
+        432
+      ],
+      [
+        32,
+        268,
+        449,
+        432
+      ]
+    ]
+  },
+  "png": {
+    "bytes": 2251981,
+    "sha256": "4eab540047e074fb82073c3f5afec07fd82cb6fb3056ae9b05a7ec79a5796047"
+  },
+  "webp": {
+    "bytes": 1641792,
+    "sha256": "cb2e25e889723aa08d23025763048a5540992d703aaeb735c4cdabb0be8a5a43"
+  },
+  "losslessVisibleRgbAndAlpha": true,
+  "productionChanged": true,
+  "normalPlayAcceptance": false,
+  "alphaGuideSha256": "afb2a726df0335d107d505d225fb8f2958ef1600b4273d4cebab3246cd2a54c7",
+  "tool": "built-in image_gen alpha guide",
+  "promptFile": "prompt.txt",
+  "previousManifestAsset": {
+    "path": "/art/v0995/enemies/anchor-bloom-battle-v2.png",
+    "bytes": 1727262,
+    "hash": "sha256-0f39067f32bd473222d353e21057670afdd799cca204d102a1af3dc035522174",
+    "pack": "units",
+    "category": "enemy",
+    "criticality": "critical",
+    "sourcePath": "/pwa-optimized/art/v0995/enemies/anchor-bloom-battle-v2.webp"
+  },
+  "adopted": true,
+  "offlineAllSevenStatesViewed": true,
+  "allActionNativeAcceptance": false
+}

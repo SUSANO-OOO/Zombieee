@@ -1,0 +1,52 @@
+{
+  "accent_phrases": [
+    {
+      "moras": [
+        {
+          "text": "シ",
+          "vowel": "I",
+          "vowel_length": 0.04363627731800079,
+          "pitch": 0.0,
+          "consonant": "sh",
+          "consonant_length": 0.09136778116226196
+        },
+        {
+          "text": "ト",
+          "vowel": "o",
+          "vowel_length": 0.06415142863988876,
+          "pitch": 5.085721015930176,
+          "consonant": "t",
+          "consonant_length": 0.030744638293981552
+        },
+        {
+          "text": "メ",
+          "vowel": "e",
+          "vowel_length": 0.07656913250684738,
+          "pitch": 5.060178756713867,
+          "consonant": "m",
+          "consonant_length": 0.05136934667825699
+        },
+        {
+          "text": "ル",
+          "vowel": "u",
+          "vowel_length": 0.1578494906425476,
+          "pitch": 4.743490219116211,
+          "consonant": "r",
+          "consonant_length": 0.0277448371052742
+        }
+      ],
+      "accent": 3,
+      "pause_mora": null,
+      "is_interrogative": false
+    }
+  ],
+  "speed_scale": 1.19,
+  "pitch_scale": 0.015,
+  "intonation_scale": 1.0,
+  "volume_scale": 1.0,
+  "pre_phoneme_length": 0.015,
+  "post_phoneme_length": 0.035,
+  "output_sampling_rate": 48000,
+  "output_stereo": false,
+  "kana": "_シトメ'ル"
+}

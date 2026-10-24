@@ -1,0 +1,255 @@
+{
+  "sceneId": "prologue-extinguisher-escape",
+  "runtimePath": "/art/v100/story-r9/cuts/prologue-extinguisher-escape.webp",
+  "authorSource": "assets/source/v177/paisen/cuts/registered-story-r1/prologue-extinguisher-escape.png",
+  "authorSourceSha256": "beade6411ee7897e0cc864a5397a2a5ccf9bb3838e422a5b157de5327451c325",
+  "approvedRegion": "assets/source/v177/paisen/cuts/registered-story-r1/prologue-extinguisher-escape.region.png",
+  "approvedRegionSha256": "aadb604eeab352477ee88559c93113f53ad1c73db1a233a631c55a4f225ffa6e",
+  "promptFile": "assets/source/v177/paisen/cuts/registered-story-r1/prologue-extinguisher-escape.prompts.json",
+  "provenanceFile": "assets/source/v177/paisen/cuts/registered-story-r1/prologue-extinguisher-escape.provenance.json",
+  "originalGitBlob": "debebad361c49690485b338d864caa1b7db9bb8f",
+  "originalSha256": "4c34b90d454425bdd5552695fe8e0cea24cabfc661231bcdbebb53e7b1f5c6a4",
+  "originalBytes": 285466,
+  "width": 1280,
+  "height": 720,
+  "changedPixels": 23778,
+  "registeredPixels": 23866,
+  "runtimeBytes": 969994,
+  "runtimeSha256": "9ad6e25610a1a0be51fa4ca9507c94f818ad7eee5f0976f1b4c1983c809d4081",
+  "byteDelta": 684528,
+  "mode": "built-in imagegen",
+  "identityMaster": "assets/source/v177/paisen/paisen-identity-r2.png",
+  "identityMasterSha256": "a1d5517fc1a500c4e949b0ec6c522efa0404ebd4ddd3b548994713a918983257",
+  "outsideRegisteredRegion": 0,
+  "losslessPixelExact": true,
+  "fullSourceSceneActuallyViewed": true,
+  "sourceVisualAccepted": true,
+  "nativeAccepted": false,
+  "producerAccepted": false,
+  "wholeGameAccepted": false,
+  "sourceRegistration": {
+    "id": "prologue-extinguisher-escape",
+    "source": "public/art/v100/story-r9/cuts/prologue-extinguisher-escape.webp",
+    "sourceSha256": "4c34b90d454425bdd5552695fe8e0cea24cabfc661231bcdbebb53e7b1f5c6a4",
+    "localized": "assets/source/v177/paisen/cuts/r9-photo-r1/prologue-extinguisher-escape-photo-unified-r1.localized.png",
+    "localizedSha256": "beade6411ee7897e0cc864a5397a2a5ccf9bb3838e422a5b157de5327451c325",
+    "mask": "assets/source/v177/paisen/cuts/r9-photo-r1/prologue-extinguisher-escape-photo-unified-r1.region.png",
+    "maskSha256": "d102d7917147cfab46b9ef938cf48d5da90e7f9566ec381d082434e063aa0dc7",
+    "width": 1280,
+    "height": 720,
+    "changedPixels": 23778,
+    "outsideAuthorizedRegionChanges": 0,
+    "layers": [
+      {
+        "kind": "face",
+        "generated": "assets/source/v177/paisen/cuts/r9-photo-r1/prologue-extinguisher-escape-photo-face-r1.generated.png",
+        "generatedSha256": "cff7fe4355183c0d09a9d4fc25e043f63d2112e5150348e2ee86441ccd1e2acc",
+        "promptSet": "assets/source/v177/paisen/cuts/r9-photo-r1/prologue-extinguisher-escape-photo-face-r1.generation.json",
+        "crop": {
+          "left": 115,
+          "top": 55,
+          "width": 135,
+          "height": 165
+        },
+        "polygons": [
+          [
+            [
+              140,
+              86
+            ],
+            [
+              151,
+              76
+            ],
+            [
+              174,
+              72
+            ],
+            [
+              196,
+              78
+            ],
+            [
+              211,
+              93
+            ],
+            [
+              217,
+              115
+            ],
+            [
+              218,
+              139
+            ],
+            [
+              212,
+              159
+            ],
+            [
+              213,
+              176
+            ],
+            [
+              202,
+              188
+            ],
+            [
+              185,
+              201
+            ],
+            [
+              173,
+              202
+            ],
+            [
+              161,
+              187
+            ],
+            [
+              153,
+              171
+            ],
+            [
+              141,
+              155
+            ],
+            [
+              135,
+              137
+            ],
+            [
+              135,
+              111
+            ]
+          ]
+        ],
+        "protected": [],
+        "mask": "assets/source/v177/paisen/cuts/r9-photo-r1/prologue-extinguisher-escape-photo-unified-r1.layer-1.mask.png",
+        "maskSha256": "8a7f83012d472c0149c0fc26e39f46bd3204627e7cd41c34f1f6d79087f43170",
+        "authorizedPixels": 8266,
+        "normalization": "uniform cover fit to source crop, 1.25px inward edge feather; original outside silhouette/occluder polygons"
+      },
+      {
+        "kind": "shorts",
+        "generated": "assets/source/v177/paisen/cuts/r9-photo-r1/prologue-extinguisher-escape-photo-shorts-r1.generated.png",
+        "generatedSha256": "4000ccc6e5a8ab47e1e44824410958ddb5c8585dcdac47612967005ae5927012",
+        "promptSet": "assets/source/v177/paisen/cuts/r9-photo-r1/prologue-extinguisher-escape-photo-shorts-r1.generation.json",
+        "crop": {
+          "left": 125,
+          "top": 290,
+          "width": 200,
+          "height": 175
+        },
+        "polygons": [
+          [
+            [
+              181,
+              322
+            ],
+            [
+              290,
+              325
+            ],
+            [
+              297,
+              350
+            ],
+            [
+              294,
+              387
+            ],
+            [
+              285,
+              412
+            ],
+            [
+              276,
+              451
+            ],
+            [
+              234,
+              446
+            ],
+            [
+              216,
+              428
+            ],
+            [
+              198,
+              441
+            ],
+            [
+              157,
+              433
+            ],
+            [
+              143,
+              418
+            ],
+            [
+              136,
+              408
+            ],
+            [
+              145,
+              385
+            ],
+            [
+              157,
+              367
+            ],
+            [
+              171,
+              346
+            ]
+          ]
+        ],
+        "protected": [
+          [
+            [
+              125,
+              416
+            ],
+            [
+              171,
+              430
+            ],
+            [
+              213,
+              444
+            ],
+            [
+              286,
+              455
+            ],
+            [
+              325,
+              462
+            ],
+            [
+              325,
+              465
+            ],
+            [
+              125,
+              465
+            ]
+          ]
+        ],
+        "mask": "assets/source/v177/paisen/cuts/r9-photo-r1/prologue-extinguisher-escape-photo-unified-r1.layer-2.mask.png",
+        "maskSha256": "dc987722a00abd5c4982946d80e89c5b93f0380c0929dca77aee2dc0498a2247",
+        "authorizedPixels": 15600,
+        "normalization": "uniform cover fit to source crop, 1.25px inward edge feather; original outside silhouette/occluder polygons"
+      }
+    ],
+    "mode": "built-in imagegen localized through exact source masks",
+    "fullSceneActuallyViewed": false,
+    "sourceAccepted": false,
+    "runtimeConnected": false,
+    "nativeAccepted": false,
+    "producerAccepted": false,
+    "wholeGameAccepted": false,
+    "provenance": "assets/source/v177/paisen/cuts/r9-photo-r1/prologue-extinguisher-escape-photo-unified-r1.provenance.json",
+    "prompts": "assets/source/v177/paisen/cuts/r9-photo-r1/prologue-extinguisher-escape-photo-unified-r1.prompts.json"
+  }
+}

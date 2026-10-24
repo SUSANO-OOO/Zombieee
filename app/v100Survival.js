@@ -56,7 +56,7 @@ export function normalizeV100SurvivalProgress(raw, receipts, ownedUnitIds) {
 
 export function v100SurvivalSession(active, settings) {
   const run = active.run;
-  return { stageId: V100_STAGE_IDS[0], resultId: run.runId, displayName: '防衛継続作戦',
+  return { stageId: V100_STAGE_IDS[0], resultId: run.runId, displayName: 'サバイバル',
     formationKinds: v100FormationCombatKinds(run.formation.unitIds), enemyKinds: [...SURVIVAL_NORMAL_ENEMY_KINDS, ...run.bossPool],
     selectedSupply: v100SupportSupplyFor(active.equippedSupportId), equippedSupportId: active.equippedSupportId,
     unitLevels: { ...run.formation.unitLevelsByUnit }, vehicleMaxHp: run.crawler.maxHp,

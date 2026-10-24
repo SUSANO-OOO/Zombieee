@@ -1,0 +1,244 @@
+// Exact source-bound runtime joints; historical Paisen source stays archived.
+export const V177_JOINT_ASSET_ADDITIONS = Object.freeze([
+  {
+    "path": "/art/v100/joints/ranger-r3.webp",
+    "bytes": 983840,
+    "hash": "sha256-75232265921b216bf7897c564bed939fadc4b1f04d36095801c6cf28731cfa5e"
+  },
+  {
+    "path": "/art/v100/joints/mayo-r1.webp",
+    "bytes": 80006,
+    "hash": "sha256-b2f4fa920406bec60009f16795f7eebf0f6ea868f5d07aed5cd6e1b2288ffff7"
+  },
+  {
+    "path": "/art/v100/joints/scout-r1.webp",
+    "bytes": 46982,
+    "hash": "sha256-57b5823be6f2e4fd36cf971d6406a33df639657fb0db0e50d43b75a823f1dbaa"
+  },
+  {
+    "path": "/art/v100/joints/walker-r1.webp",
+    "bytes": 36616,
+    "hash": "sha256-322d6c0118e8c732fefdc26fad7b21edac214d66942b499a6baae19d85778530"
+  },
+  {
+    "path": "/art/v100/joints/gunner-r1.webp",
+    "bytes": 31178,
+    "hash": "sha256-3407a631718bc0129f2e6d2839a02bc819f93536764b71fcf5231b1875b92879"
+  },
+  {
+    "path": "/art/v100/joints/medic-r1.webp",
+    "bytes": 33662,
+    "hash": "sha256-a0242fdaaee0cbf14bf61e517bbcd3e9e77f471221db6b5a2d0686b91a64b5e7"
+  },
+  {
+    "path": "/art/v100/joints/engineer-r1.webp",
+    "bytes": 27900,
+    "hash": "sha256-564e3640d01f581f3317f9401ee10e919ed58d7bff9580e1d15bb72010e1c197"
+  },
+  {
+    "path": "/art/v100/joints/red-panther-knife-r1.webp",
+    "bytes": 31080,
+    "hash": "sha256-6fd6955d5213d04e0f4fa29c3c7a33614695106320a86f06866f1239061c26d4"
+  },
+  {
+    "path": "/art/v100/joints/red-panther-smg-r1.webp",
+    "bytes": 31692,
+    "hash": "sha256-a56a14031c445f01561057193aa82b983b083fbc2c641914269a5b45bef63293"
+  },
+  {
+    "path": "/art/v100/joints/red-panther-shield-r1.webp",
+    "bytes": 41612,
+    "hash": "sha256-18a9b9b441c751bf7899743d6f9250d0e776181b9144fbdafa51a6cb5d33007b"
+  },
+  {
+    "path": "/art/v100/joints/red-panther-commander-r1.webp",
+    "bytes": 34474,
+    "hash": "sha256-bc917cd193ceeeb359b0cc99632b9253906a032f8037bf0bd44f686e405cfebd"
+  },
+  {
+    "path": "/art/v100/joints/brute-r1.webp",
+    "bytes": 36642,
+    "hash": "sha256-8fe2d63e4cf27485fbf2de83512a002e85e76d2973dc8e42ba4dca2582b8c8b5"
+  },
+  {
+    "path": "/art/v100/joints/brawler-photo-r2.webp",
+    "bytes": 36100,
+    "hash": "sha256-e318ae905df6d0fe24d69ecc71bc5796aebfde3a50defde1c59b3cf0196707cb",
+    "criticality": "critical"
+  },
+  {
+    "path": "/art/v100/joints/crazy-king-r1.webp",
+    "bytes": 39606,
+    "hash": "sha256-7310422fc7238d89c8194c40bbafd2f70724a3b979b76be7d4d939f7a773f257"
+  },
+  {
+    "path": "/art/v100/joints/kumaverson-r1.webp",
+    "bytes": 33956,
+    "hash": "sha256-b21eb685a87bc72b7ce7687f78eb6b3b486f37a6a0b59bf11a2fc87ad5266364"
+  },
+  {
+    "path": "/art/v100/joints/guardian-r1.webp",
+    "bytes": 43014,
+    "hash": "sha256-d187f913f9ea170856f59b7df142f6408759ca405caf355c8797e1baa179102d"
+  },
+  {
+    "path": "/art/v100/joints/grappler-r1.webp",
+    "bytes": 33934,
+    "hash": "sha256-df73594ee69487b746b6af179e5d2418b01500e42b64d3c7492c27fa420df86d"
+  },
+  {
+    "path": "/art/v100/joints/sprinter-r1.webp",
+    "bytes": 34264,
+    "hash": "sha256-756209bb37ca3a9656c6d3d4a50f84d532bc8ceaf5a19f196800b911137dbdc8"
+  },
+  {
+    "path": "/art/v100/joints/crusher-r1.webp",
+    "bytes": 48332,
+    "hash": "sha256-3d181e781fe03486dfebaaa59e3761d95a09f24ab27a0d9b115c7ea5faa29338"
+  },
+  {
+    "path": "/art/v100/joints/zakimiya-r1.webp",
+    "bytes": 30216,
+    "hash": "sha256-5859fd70326d70e0e29a35019216276951e0388656779611405bb78ec686a86f"
+  },
+  {
+    "path": "/art/v100/joints/tky-r1.webp",
+    "bytes": 36212,
+    "hash": "sha256-59495022d95a45677605e04887d72e5359a63e3c5a94203315d4bfe4053aad22"
+  },
+  {
+    "path": "/art/v100/joints/mrs-chiha-r1.webp",
+    "bytes": 37776,
+    "hash": "sha256-5ff2ba98e8a67e1cc24fa2404ffd94b68cdbc7b6696c8eb08e536f3114ff4fec"
+  },
+  {
+    "path": "/art/v100/joints/miyamoto-musashi-r1.webp",
+    "bytes": 41920,
+    "hash": "sha256-d8fd78012fa9dc63631b7e724d94953ff04c010c2f017176d7d04b684e2430a8"
+  },
+  {
+    "path": "/art/v100/joints/shade-r1.webp",
+    "bytes": 35896,
+    "hash": "sha256-647f7db80624cdfc24f629ee30d3dedca14303cc91c9fb42f10c640da32ff413"
+  },
+  {
+    "path": "/art/v100/joints/spitter-r1.webp",
+    "bytes": 37788,
+    "hash": "sha256-c1d11b6c38f5cb9753fb46bbb6db73d7db7d9c79886bd9c50418b3647f4a7ffb"
+  },
+  {
+    "path": "/art/v100/joints/mayo-feral-r1.webp",
+    "bytes": 101258,
+    "hash": "sha256-7b44687bdb460747584d538cb94a5ff000993ef49c0619b9a3669098bacc81a8"
+  },
+  {
+    "path": "/art/v100/joints/ooze-r1.webp",
+    "bytes": 58562,
+    "hash": "sha256-6513946285a392a7929f3c2a20acbf78bedcfed78827e94039bb79bec36d4a09"
+  },
+  {
+    "path": "/art/v100/joints/gate-eater-r1.webp",
+    "bytes": 61574,
+    "hash": "sha256-aa7b1598546bb8e89f3794fc214e84b23d6e5738e6d7c93361ca1ad78bb42bdc"
+  },
+  {
+    "path": "/art/v100/joints/kurome-r1.webp",
+    "bytes": 39354,
+    "hash": "sha256-5c542caaee18731de8d2306be8a0e35af7a96ceafbfba189363e2d1ac4ae4977"
+  },
+  {
+    "path": "/art/v100/joints/mother-r1.webp",
+    "bytes": 68230,
+    "hash": "sha256-230991a43eff9f9331b68126ec3412f6fb0bc606ec2d46ce47973e16232231f1"
+  },
+  {
+    "path": "/art/v100/joints/takuya-r1.webp",
+    "bytes": 41884,
+    "hash": "sha256-e4ffc7c020cf80a06d1cf0ebc5cdc7f7bb82a684c1792c0b3ca1533b4e9352fc"
+  },
+  {
+    "path": "/art/v100/joints/ooguchi-r1.webp",
+    "bytes": 41130,
+    "hash": "sha256-850f41763000ff667ad013b94afd8f39be08aab3e60b23407fc48fe5199a710a"
+  },
+  {
+    "path": "/art/v100/joints/gairen-r1.webp",
+    "bytes": 65988,
+    "hash": "sha256-cf95a6a076d58a2c0f67ef1a72197abbba8546c00502660e9fbccb6125deb5bf"
+  },
+  {
+    "path": "/art/v100/joints/futago-r1.webp",
+    "bytes": 80406,
+    "hash": "sha256-ba561d046479964ae7d76b0785e8471d05c7001b563469eb89f8eaed2ff07541"
+  },
+  {
+    "path": "/art/v100/joints/futago-separated-a-r1.webp",
+    "bytes": 24404,
+    "hash": "sha256-08955e85523c9c046a0d84e7d37269335b111d58c8afb92193c66780800bf63a"
+  },
+  {
+    "path": "/art/v100/joints/futago-separated-b-r1.webp",
+    "bytes": 30054,
+    "hash": "sha256-4ffe7e41e67947722730a56d61883ed440482a391b0ef0596eca7d0e02280d68"
+  },
+  {
+    "path": "/art/v100/joints/resonator-r1.webp",
+    "bytes": 39254,
+    "hash": "sha256-3d932476e029ab1c492d5e1cd68bc05c8d14c24034117bd1874ff934285de521"
+  },
+  {
+    "path": "/art/v100/joints/cagewalker-r1.webp",
+    "bytes": 55424,
+    "hash": "sha256-af5e21aa0856bfc3ead8af88b5b7c3786c04b73d3f3c2b6e9ba2d6154be3f381"
+  },
+  {
+    "path": "/art/v100/joints/choir-knot-r1.webp",
+    "bytes": 37066,
+    "hash": "sha256-e73db8a21c59a7999e22b619114dc7bcd7c175e5066700da7ff3584855de4cb5"
+  },
+  {
+    "path": "/art/v100/joints/spindle-r1.webp",
+    "bytes": 33514,
+    "hash": "sha256-159c81bd5a20271648f0fd12e8ff8d3bd26f83d110e32177eb2518373d602b97"
+  },
+  {
+    "path": "/art/v100/joints/pall-manta-r1.webp",
+    "bytes": 32996,
+    "hash": "sha256-bd952c02d4b2c8425067e0723e0581bfc98b8a5bf30c2cc622a7589ffcb14aca"
+  },
+  {
+    "path": "/art/v100/joints/babayaga-r1.webp",
+    "bytes": 22584,
+    "hash": "sha256-68963ba9025a3b597f2f83600761b360ecb4e080848712bdaffae67d2b6ccecd"
+  },
+  {
+    "path": "/art/v100/joints/mugarian-president-mutated-r1.webp",
+    "bytes": 58224,
+    "hash": "sha256-2d7843e0e191c0bd602c818d8531c6a37df9f6d9e00dd6e193aa3ea2d3aa50f7"
+  },
+  {
+    "path": "/art/v100/joints/takuya-omega-r1.webp",
+    "bytes": 60800,
+    "hash": "sha256-a4e8eca5c5494e093ecc803c4a1a9b2ddc227fb3249f4bc7726f945b59301a3f"
+  },
+  {
+    "path": "/art/v100/joints/anchor-bloom-r1.webp",
+    "bytes": 41226,
+    "hash": "sha256-b9ff3ec5757ad17715130bd308427a40964b8f430108c5bfb274a1de9fe12219"
+  }
+].map(Object.freeze));
+export const V177_RETIRED_JOINT_SOURCE_ASSETS = Object.freeze([
+  {
+    "path": "/art/v100/joints/ranger-r1.webp",
+    "bytes": 886014,
+    "hash": "sha256-eb70556d6c4e0d53ec812da6b5a95de91dd0d4d6cb87cd6da1a0c0d61672ed5e",
+    "criticality": "critical"
+  },
+  {
+    "path": "/art/v100/joints/brawler-r1.webp",
+    "bytes": 21604,
+    "hash": "sha256-c33d2ac536e714e2b5d8cc3ad8dd7e2ee1793fc4d3002d77b4517ceb96ebc2a6",
+    "criticality": "critical"
+  }
+].map(Object.freeze));
+export const V177_JOINT_ASSET_BYTES = V177_JOINT_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0);

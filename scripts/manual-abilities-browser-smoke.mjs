@@ -1283,7 +1283,7 @@ async function speedPauseVisibilityProof(page, engine) {
   ), ownerId);
   invariant(Math.abs(pausedAfter - pausedBefore) <= .03,
     `${engine}/pause: cooldown advanced while paused (${pausedBefore} -> ${pausedAfter})`);
-  await page.getByRole("button", { name: "作戦を再開", exact: true }).click();
+  await page.getByRole("button", { name: "戦闘を再開", exact: true }).click();
   await page.getByRole("button", { name: "2倍", exact: true }).click();
   await page.waitForFunction(() => (
     window.__ASHFALL_BATTLE_QA__.getSnapshot().survivalRun?.speed === 2

@@ -1,0 +1,41 @@
+{
+  "head": "451718675684aac63228e87a0133a436098d6339",
+  "stage1OwnedIds": [
+    "unit-hachi",
+    "unit-paisen",
+    "unit-kumaverson",
+    "unit-babayaga"
+  ],
+  "measuredWinningStage1Ids": [
+    "unit-babayaga",
+    "unit-hachi",
+    "unit-kumaverson",
+    "unit-paisen"
+  ],
+  "nativeControls": [
+    {
+      "engine": "chromium",
+      "won": true,
+      "order": [
+        "babayaga",
+        "scout",
+        "kumaverson",
+        "brawler"
+      ],
+      "zipSha256": "3ccc09db17bd76a00d160cb4b1757ddb41356321ba615e93f975b1781e0bbb5a"
+    },
+    {
+      "engine": "webkit",
+      "won": true,
+      "order": [
+        "babayaga",
+        "scout",
+        "kumaverson",
+        "brawler"
+      ],
+      "zipSha256": "1c501ffb0f5b2d06993f1be763ca6e2a1e76b84f1a3b2f7e916f683eb379583b"
+    }
+  ],
+  "current9cedMeleeOpeningNotAccepted": true,
+  "newAll30Acceptance": false
+}

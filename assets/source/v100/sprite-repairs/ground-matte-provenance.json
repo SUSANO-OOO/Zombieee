@@ -1,0 +1,92 @@
+{
+  "format": "nishijin-issue177-ground-matte-repairs",
+  "base": "e4fb2403e87989a4c6323da65eac1e269348d695",
+  "sourceGenerators": [
+    "scripts/build-v090-kurome-prototype-assets.mjs",
+    "scripts/v100-reviewed-motion-generator.mjs"
+  ],
+  "kuromeBuilderMode": "--battle-only",
+  "records": [
+    {
+      "kind": "red-panther-knife",
+      "path": "/art/v100/enemies/red-panther-knife-battle-v2.png",
+      "previousPNG": "7cdc0436c6edd763cc4594268db44c5853b5f35cccd2e3901146ab230b6ca881",
+      "pngSha256": "6551d92e7b876009dece2472081c9a3c064c5e23578acba51dab024f468781e7",
+      "pngBytes": 1291311,
+      "guide": {
+        "path": "assets/source/v100/sprite-repairs/ground-mattes/knife-death-matte-guide-r1.png",
+        "sha256": "3aa433f8a29710f8dbd6e95e3c023c2561cd60ced719f42e71a082b161645c16",
+        "usage": "Visual removal guide only; no generated body RGB adopted"
+      },
+      "next": {
+        "path": "/art/v100/enemies/red-panther-knife-battle-v2.png",
+        "sourcePath": "/pwa-optimized/art/v100/enemies/red-panther-knife-battle-v2.webp",
+        "bytes": 837728,
+        "hash": "sha256-8595bca3abbe53131e57d1a5669fdccd3f1e11312bc52b864013b646f0769c19",
+        "criticality": "critical"
+      },
+      "sourceRepair": {
+        "rawSourceRGBRetained": true,
+        "deathOnly": true,
+        "otherEightCellsRgbaRetained": true,
+        "repair": {
+          "alphaAuthored": false,
+          "seedPalette": "luma>=205/chroma<=12",
+          "edgePixels": 1197110,
+          "seedPixels": 7379,
+          "seedCount": 2,
+          "seedResults": [
+            {
+              "seed": [
+                704,
+                706
+              ],
+              "removed": 7278
+            },
+            {
+              "seed": [
+                187,
+                830
+              ],
+              "removed": 101
+            }
+          ],
+          "zeroRemovalSeeds": [],
+          "changedPixels": 1204489,
+          "allowedMaskPixels": 1204489,
+          "alphaChangesOutsideAllowedMask": 0,
+          "rgbChangesOutsideAllowedMask": 0
+        }
+      }
+    },
+    {
+      "kind": "kurome",
+      "path": "/art/v090-prototypes/bosses/kurome-battle-candidate-r1.png",
+      "previousPNG": "6b29b3244d2d17af31603db37719953b578942682e38d42c83f4a15952fb8a4a",
+      "pngSha256": "db3501624aecc25b186e90e785569a5c3e29fa89ceaf331129f8486e588e4d99",
+      "pngBytes": 2372130,
+      "guide": {
+        "path": "assets/source/v100/sprite-repairs/ground-mattes/kurome-matte-guide-r1.png",
+        "sha256": "522929bc443e4a84f5c0cc2ec561bcf2f707abb2a0d48a285f0c1f5928d7e4d5",
+        "usage": "Visual removal guide only; no generated body RGB adopted"
+      },
+      "next": {
+        "path": "/art/v090-prototypes/bosses/kurome-battle-candidate-r1.png",
+        "sourcePath": "/pwa-optimized/art/v090-prototypes/bosses/kurome-battle-candidate-r1.webp",
+        "bytes": 1579870,
+        "hash": "sha256-797c1a39f8f866e10d452dd3e9f716e1bc1dc8a784d7a46722e36736e88aed83",
+        "criticality": "critical"
+      },
+      "sourceRepair": {
+        "allSourceRGBRetained": true,
+        "alphaChanges": 28230,
+        "states": 7,
+        "directions": 2,
+        "protected": "Original colored/dark body and its one-pixel edge; each authored row inspected independently"
+      }
+    }
+  ],
+  "nativeAllActionsAcceptance": false,
+  "normalCampaignAcceptance": false,
+  "physicalRecordingAcceptance": false
+}

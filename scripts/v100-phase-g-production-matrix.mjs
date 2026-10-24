@@ -14,10 +14,11 @@ import { createV100BattleResult, recordV100PendingResult } from "../app/v100Tran
 import { V100_STAGE_IDS, V100_STAGES, V100_SUPPORTS, V100_UNITS, V100_VEHICLE } from "../app/v100Registry.js";
 import { v100BattleDefinitionFor } from "../app/v100BattleAdapter.js";
 import { v100DialogueSlots } from "../app/v100DialogueComposition.js";
-import { V100_STORY_EVENTS } from "../app/v100StoryEvents.js";
+import { V100_STORY_EVENTS, V100_STORY_SCRIPT_VERSION } from "../app/v100StoryEvents.js";
 import { enemyAiProfileFor } from "../app/combatAiProfiles.js";
 import { enemyContentFor } from "../app/content/enemyCatalog.js";
 import { unitContentFor } from "../app/content/unitCatalog.js";
+import { COMBAT_ROLE_RULES } from "../app/combatLifecycle.js";
 import { deriveV100ProductionEnemyCoverage, V100_REPRESENTATIVE_COMBAT_CONTRACT, validateV100RepresentativeCombatEvidence } from "../app/v100PhaseGContract.js";
 import { enemyCombatCueFor, weaponCueForUnit } from "../app/productionAudio.js";
 import { validateProductionEnemyRuntimeShards } from "./v0995-enemy-runtime-shards.mjs";
@@ -89,7 +90,7 @@ const extraBattleContracts = Object.freeze([
 })));
 const coreStates = [
   "title-name", "dialogue-left", "dialogue-right", "map-normal", "map-locked-boss", "formation", "personnel", "support-vehicle-management",
-  "battle-normal", "battle-boss", "result-win", "result-lose", "ending", "credits", "epilogue-postgame", "data-management-modal",
+  "battle-normal", "battle-boss", "result-win", "result-lose", "ending", "credits", "postgame-map", "data-management-modal",
 ];
 const onlyState = process.env.V100_PHASE_G_ONLY ?? "";
 const onlyVariant = process.env.V100_PHASE_G_ONLY_VARIANT ?? "";
@@ -241,6 +242,42 @@ function sameDeploymentCardIdentity(left, right) {
     && left.slot === right.slot;
 }
 
+function ordinaryMeleeProofFrontline(runtime, enemy, diagnostics, attackObserved = false) {
+  const none = { pending: false, kind: null };
+  if (attackObserved || runtime?.screen !== "battle"
+    || COMBAT_ROLE_RULES[enemy?.id]?.attackType !== "melee") return none;
+  const fighters = runtime.fighters ?? [];
+  const proofActors = fighters.filter((fighter) => fighter.side === "zombie" && fighter.kind === enemy.id
+    && Number(fighter.hp) > 0 && fighter.combatReady === true && fighter.gateEntering !== true);
+  if (!proofActors.length) return none;
+  // Two living marksmen can kite and kill a melee actor before contact. A
+  // real arriving frontline unit also counts, so this plan never duplicates
+  // it while it traverses the production deployment gate.
+  if (fighters.some((fighter) => {
+    if (fighter.side !== "human" || !(Number(fighter.hp) > 0)
+      || COMBAT_ROLE_RULES[unitContentFor(fighter.kind)?.id]?.attackType !== "melee") return false;
+    if (fighter.gateEntering === true || fighter.combatReady !== true) return true;
+    const targets = (source, target) => source.targetId != null && target.id != null
+      && String(source.targetId) === String(target.id);
+    if (proofActors.some(actor => targets(fighter, actor) || targets(actor, fighter))) return true;
+    const currentEnemy = fighters.find(target => targets(fighter, target)
+      && target.side === "zombie" && Number(target.hp) > 0);
+    // A scout fighting a different living enemy is not the proof actor's
+    // frontline. Unknown/stale targets and an arriving melee unit still hold
+    // this plan, so it cannot manufacture repeated or unowned deployments.
+    return !currentEnemy || typeof currentEnemy.kind !== "string" || currentEnemy.kind === enemy.id;
+  })) return none;
+  const candidates = deploymentCandidatesFromDiagnostics(diagnostics, new Set())
+    .map((card, index) => ({ card, index, content: unitContentFor(card.kind) }))
+    .filter(({ content }) => content && Number(content.hp) > 0
+      && COMBAT_ROLE_RULES[content.id]?.attackType === "melee");
+  candidates.sort((left, right) => Number(right.content.hp) - Number(left.content.hp)
+    || Number(left.content.damage) / Math.max(.01, Number(left.content.attackEvery))
+      - Number(right.content.damage) / Math.max(.01, Number(right.content.attackEvery))
+    || left.index - right.index);
+  return { pending: true, kind: candidates[0]?.card.kind ?? null };
+}
+
 function sameNormalizedDeploymentOwner(left, right) {
   if (left === null && right === null) return true;
   return sameDeploymentCardIdentity(left, right);
@@ -343,6 +380,16 @@ function deploymentPointerPreconditionDecision({ expectedIdentity, samples = [],
       status: terminal ? "coordinate-invalidated-before-pointer" : "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE",
       pointerCount: 0,
       reason: taskTurnEvidenceValid ? "candidate-not-stable" : "scheduler-independent-sample-separation-missing",
+    };
+  }
+  // Stable DOM samples can arrive while WebKit has not serviced even the
+  // installed frame callback. Keep sampling within the existing preflight
+  // budget until that callback is observed, including the final recheck.
+  if (current.schedulerProbe?.status !== "observed") {
+    return {
+      status: "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE",
+      pointerCount: 0,
+      reason: "browser-scheduler-not-observed",
     };
   }
   return {
@@ -741,7 +788,10 @@ function invariant(condition, message) {
 }
 
 function phaseGBrowserLifecyclePolicy(engineName, state) {
-  const isolated = engineName === "webkit" && state === "battle-extra";
+  // Each extra battle is an independent authored fixture. Keep its native
+  // input deadline free of queues/caches from unrelated earlier captures.
+  // Full normal-campaign play remains a separate continuous single-page run.
+  const isolated = (engineName === "chromium" || engineName === "webkit") && state === "battle-extra";
   return Object.freeze({
     engineName,
     state,
@@ -865,7 +915,7 @@ function relativeEvidence(filePath) {
   return path.relative(process.cwd(), filePath).replaceAll("\\", "/");
 }
 
-function fullSave({ availableStageIds = [V100_STAGE_IDS[0]], completedStageIds = [], flowState = null, pendingResult = null, formationUnitIds = null, unitLevels = null, vehicleUpgradeLevel = 3 } = {}) {
+function fullSave({ availableStageIds = [V100_STAGE_IDS[0]], completedStageIds = [], readStoryEventIds = [], readStoryVersions = {}, flowState = null, pendingResult = null, formationUnitIds = null, unitLevels = null, vehicleUpgradeLevel = 3 } = {}) {
   const base = createDefaultV100Save({ playerName: "QAプレイヤー" });
   return normalizeV100Save({
     ...base,
@@ -875,6 +925,8 @@ function fullSave({ availableStageIds = [V100_STAGE_IDS[0]], completedStageIds =
     caps: 9999,
     availableStageIds,
     completedStageIds,
+    readStoryEventIds,
+    readStoryVersions,
     registeredUnitIds: V100_UNITS.map((unit) => unit.id),
     ownedUnitIds: V100_UNITS.map((unit) => unit.id),
     unitLevels: unitLevels ?? base.unitLevels,
@@ -916,7 +968,7 @@ function eventSave(phase, eventId, { nodeIndex = 0, stageNumber = 30 } = {}) {
   return fullSave({
     availableStageIds: V100_STAGE_IDS,
     completedStageIds: V100_STAGE_IDS.slice(0, 29),
-    flowState: { phase, eventId, stageId, stageNumber: boundedStageNumber, destination: phase, nodeIndex, firstClear: false, finalized: true },
+    flowState: { phase, eventId, stageId, stageNumber: boundedStageNumber, destination: phase, nodeIndex, scriptVersion:V100_STORY_SCRIPT_VERSION, firstClear: false, finalized: true },
   });
 }
 
@@ -990,10 +1042,11 @@ async function readPhaseGSustainState(page, { bossIsLive, readSetupRuntime,
         return (snapshot?.fighters ?? []).filter((fighter) => fighter.side === "human" && Number(fighter.hp) > 0).length;
       }).catch(() => 0);
       const setupRuntime = await readSetupRuntime();
+      if (!setupRuntime) return null;
       await observeProofActorAttack(setupRuntime);
       await observeProofUnitAttack(setupRuntime);
       await observeVehicleAction(setupRuntime);
-      return { bossEngaged, liveHumanTargetCount };
+      return { bossEngaged, liveHumanTargetCount, setupRuntime };
     })();
     return withDeploymentPreinputDeadline(page, observation, DEPLOYMENT_POINTER_PREFLIGHT_DEADLINE_MS,
       "QA_HARNESS_BACKGROUND_OBSERVATION_TIMEOUT", { phase: "sustain-observation" });
@@ -1012,6 +1065,8 @@ function phaseGPointerFailure(code, evidence = {}, pointerCount = 0) {
 
 async function withDeploymentPreinputDeadline(page, operationPromise, deadlineMs, code, evidence = {}) {
   let timeoutId;
+  const clock=globalThis.performance,startedAt=clock?.now?.()??null;
+  const loopStart=clock?.eventLoopUtilization?.()??null;
   try {
     const outcome = await Promise.race([
       operationPromise.then(
@@ -1024,11 +1079,16 @@ async function withDeploymentPreinputDeadline(page, operationPromise, deadlineMs
     ]);
     if (outcome.status === "fulfilled") return outcome.value;
     if (outcome.status === "rejected") throw outcome.error;
+    const timeoutObservedAt=clock?.now?.()??null;
+    const eventLoop=loopStart?clock.eventLoopUtilization(loopStart):null;
     const cancellation = await terminateTimedOutDeploymentPreinput(page, operationPromise);
     throw phaseGPointerFailure(code, {
       ...evidence,
       reason: "preinput-operation-timeout",
       deadlineMs,
+      nodeTiming: { clock: "Node performance.now", startedAt, timeoutObservedAt,
+        elapsedMs:startedAt===null||timeoutObservedAt===null?null:timeoutObservedAt-startedAt,
+        eventLoop:eventLoop?{idleMs:eventLoop.idle,activeMs:eventLoop.active,utilization:eventLoop.utilization}:null },
       cancellation,
     }, 0);
   } finally {
@@ -1045,6 +1105,34 @@ async function phaseGOrderedControlInput(page, operation, deadlineMs, control) {
     if (error?.phaseGTerminalInputFailure === true) throw error;
     throw phaseGPointerFailure("QA_HARNESS_CONTROL_INPUT_FAILURE", { control, phases, error: String(error) }, 0);
   }
+}
+
+async function waitForPhaseGPagePredicate(page, predicate, argument, { timeout: timeoutMs, polling = 100 }) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const remaining = deadline - Date.now();
+    const observation = withPhaseGPageInputLock(page, () => {
+      invariant(Date.now() < deadline, "FOREGROUND_OBSERVATION_DEADLINE_EXCEEDED");
+      return page.evaluate(predicate, argument);
+    });
+    let value;
+    try {
+      // Queue time consumes the original observation budget. Unlike an
+      // autonomous browser poll, every read shares the native input lane.
+      value = await withDeploymentPreinputDeadline(page, observation, remaining,
+        "QA_HARNESS_FOREGROUND_OBSERVATION_TIMEOUT", { phase: "foreground-predicate" });
+    } catch (error) {
+      if (error?.phaseGTerminalInputFailure === true) {
+        phaseGPageInputState(page).terminalError ??= error;
+        error.phaseGCausalNoFurtherPageRpc = true;
+      }
+      throw error;
+    }
+    invariant(Date.now() <= deadline, "FOREGROUND_OBSERVATION_DEADLINE_EXCEEDED");
+    if (value) return value;
+    await new Promise((resolve) => setTimeout(resolve, Math.min(polling, Math.max(0, deadline - Date.now()))));
+  }
+  throw new Error("FOREGROUND_OBSERVATION_DEADLINE_EXCEEDED");
 }
 
 async function observePromiseWithin(promise, timeoutMs) {
@@ -1160,43 +1248,6 @@ async function terminateTimedOutDeploymentPointer(page, pointerPromise) {
   return evidence;
 }
 
-async function installDeploymentSchedulerProbe(page, probeId) {
-  if (page.isClosed()) return { probeId, status: "disposed-with-page" };
-  return page.evaluate((schedulerProbeId) => {
-    const registry = window.__V100_PHASE_G_DEPLOYMENT_SCHEDULER_PROBES__ ??= new Map();
-    const existing = registry.get(schedulerProbeId);
-    if (existing?.status === "pending" && Number.isFinite(Number(existing.handle))) {
-      cancelAnimationFrame(existing.handle);
-    }
-    const entry = {
-      probeId: schedulerProbeId,
-      status: "pending",
-      requestedAtWallTimeMs: Date.now(),
-      requestedAtPerformanceMs: performance.now(),
-      handle: null,
-      observedAtWallTimeMs: null,
-      observedAtPerformanceMs: null,
-      callbackTimestamp: null,
-    };
-    entry.handle = requestAnimationFrame((callbackTimestamp) => {
-      entry.status = "observed";
-      entry.observedAtWallTimeMs = Date.now();
-      entry.observedAtPerformanceMs = performance.now();
-      entry.callbackTimestamp = callbackTimestamp;
-    });
-    registry.set(schedulerProbeId, entry);
-    return {
-      probeId: entry.probeId,
-      status: entry.status,
-      requestedAtWallTimeMs: entry.requestedAtWallTimeMs,
-      requestedAtPerformanceMs: entry.requestedAtPerformanceMs,
-      observedAtWallTimeMs: entry.observedAtWallTimeMs,
-      observedAtPerformanceMs: entry.observedAtPerformanceMs,
-      callbackTimestamp: entry.callbackTimestamp,
-    };
-  }, probeId);
-}
-
 async function removeDeploymentSchedulerProbe(page, probeId) {
   if (page.isClosed()) return { probeId, status: "disposed-with-page" };
   return page.evaluate((schedulerProbeId) => {
@@ -1306,15 +1357,17 @@ async function installDeploymentPointerReceipt(page, attemptId, expectedIdentity
         slot: node.closest("button.unit-card").getAttribute("data-slot-index"),
       } : null,
     } : null;
-    const diagnosticSnapshot = (point = null) => {
-      const hitTarget = point && Number.isFinite(Number(point.x)) && Number.isFinite(Number(point.y))
-        ? document.elementFromPoint(Number(point.x), Number(point.y)) : null;
+    const diagnosticSnapshot = (point = null, { hitTest = true } = {}) => {
+      const hitTestObserved = hitTest && point !== null
+        && Number.isFinite(Number(point.x)) && Number.isFinite(Number(point.y));
+      const hitTarget = hitTestObserved ? document.elementFromPoint(Number(point.x), Number(point.y)) : null;
       return {
         documentIdentity: documentIdentityFor(),
         documentElementIdentity: nodeDetails(document.documentElement)?.nodeIdentity ?? null,
         hasFocus: document.hasFocus(),
         hidden: document.hidden,
         point: point ? { x: Number(point.x), y: Number(point.y) } : null,
+        hitTestObserved,
         currentElementFromPoint: nodeDetails(hitTarget),
         activeElement: nodeDetails(document.activeElement),
         visibilityState: document.visibilityState,
@@ -1450,7 +1503,8 @@ async function readDeploymentPointerReceipts(page, attemptId, timeoutMs) {
       const entry = window.__V100_PHASE_G_DEPLOYMENT_POINTER_RECEIPTS__?.get(receiptAttemptId);
       if (entry?.diagnostics) {
         const point = entry.diagnostics.before?.point;
-        entry.diagnostics.after = entry.diagnosticSnapshot(point);
+        // The captured event owns its actual hit-test proof. Reading it must not force another layout.
+        entry.diagnostics.after = entry.diagnosticSnapshot(point, { hitTest: false });
       }
       return { receipts: entry?.receipts ?? [], diagnostics: entry?.diagnostics ?? null };
     })()
@@ -1597,8 +1651,12 @@ async function performVerifiedDeploymentPointer(page, {
       requestedSlot,
       phase: `${phase}:final-requery`,
       schedulerProbeId,
+      installSchedulerProbe: true,
     }));
     preflightEvidence.initial = initial;
+    preflightEvidence.schedulerProbe.installation = initial.schedulerProbe?.probeId === schedulerProbeId
+      && ["pending", "observed"].includes(initial.schedulerProbe.status) ? initial.schedulerProbe : null;
+    schedulerProbeInstalled = preflightEvidence.schedulerProbe.installation !== null;
     recorder?.setLatestReadableState(initial);
     if (initial.pageClosed || initial.evaluateError) {
       throw phaseGPointerFailure("lifecycle-loss", { phase, initial }, 0);
@@ -1620,12 +1678,6 @@ async function performVerifiedDeploymentPointer(page, {
     // A recovered card can become unavailable before this locked requery.
     // With no possible input, do not create an observer whose cleanup could
     // close the shared capture page after a diagnostic timeout.
-    preflightEvidence.schedulerProbe.installation = await preflightStep(
-      () => installDeploymentSchedulerProbe(page, schedulerProbeId),
-      "QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE",
-      { operation: "scheduler-probe-install", schedulerProbeId },
-    );
-    schedulerProbeInstalled = ["pending", "observed"].includes(preflightEvidence.schedulerProbe.installation?.status);
     if (!schedulerProbeInstalled) {
       throw phaseGPointerFailure("QA_HARNESS_POINTER_PREFLIGHT_DIVERGENCE", {
         phase,
@@ -2207,11 +2259,10 @@ async function readPhaseGSetupRuntime(page) {
 }
 
 async function waitForManualMarkerObservation(page, kind, evidence = {}) {
-  let handle;
   try {
     const activation = manualMarkerActivation(evidence, kind);
     invariant(activation.ok, "manual dispatch identity invalid: " + activation.errors.join(", "));
-    handle = await page.waitForFunction((expected) => {
+    const { snapshot, observedAtPageTime } = await waitForPhaseGPagePredicate(page, (expected) => {
     const snapshot = window.__ASHFALL_BATTLE_QA__?.getPhaseGCombatSnapshot?.();
     const markedEnemy = snapshot?.fighters?.some((fighter) => String(fighter.id) === String(expected.targetId)
       && fighter.side === "zombie" && fighter.hp > 0 && Number(fighter.marked) > 0);
@@ -2222,16 +2273,15 @@ async function waitForManualMarkerObservation(page, kind, evidence = {}) {
       && snapshot.stageId === expected.stageId && markedEnemy && impact
       ? { snapshot, observedAtPageTime: performance.now() } : false;
   }, activation.identity, { timeout: Math.min(battleTimeout, 10_000), polling: 100 });
-    const { snapshot, observedAtPageTime } = await handle.jsonValue();
     evidence.afterAction = { ...snapshot, observedAtPageTime, missionObjects: snapshot.battlefieldObjects ?? [] };
     return evidence.afterAction;
   } catch (error) {
     // Preserve the actual outcome without turning a diagnostic read into a retry.
-    try { evidence.afterAction = await readPhaseGSetupRuntime(page); }
-    catch (readError) { evidence.readError = String(readError); }
+    if (!error.phaseGCausalNoFurtherPageRpc) {
+      try { evidence.afterAction = await withPhaseGPageInputLock(page, () => readPhaseGSetupRuntime(page)); }
+      catch (readError) { evidence.readError = String(readError); }
+    }
     throw error;
-  } finally {
-    if (handle) await handle.dispose();
   }
 }
 
@@ -2244,7 +2294,7 @@ async function waitForRequiredBossPresentation(page, { bossKind, waitForBossAtta
   if (!bossKind) return;
   const recorder = checkpointRecorderFor(page);
   recorder?.setAwaiting("boss-presentation", { bossKind, predicate: "real boss alive, entry complete and in frame" });
-  await page.waitForFunction((expectedKind) => {
+  await waitForPhaseGPagePredicate(page, (expectedKind) => {
     const snapshot = window.__ASHFALL_BATTLE_QA__?.getPhaseGCombatSnapshot?.();
     return snapshot?.screen === "battle" && snapshot.fighters?.some((fighter) => (
       fighter.side === "zombie" && fighter.kind === expectedKind && fighter.hp > 0
@@ -2266,7 +2316,7 @@ function assertRequiredBossRuntime(runtime, bossKind, label) {
 async function waitForCombatActivity(page, { bossKind = null } = {}) {
   const recorder = checkpointRecorderFor(page);
   recorder?.setAwaiting("combat-activity", { bossKind, predicate: "current production attack or completed impact" });
-  await page.waitForFunction(() => {
+  await waitForPhaseGPagePredicate(page, () => {
     const snapshot = window.__ASHFALL_BATTLE_QA__?.getPhaseGCombatSnapshot?.();
     if (!snapshot || snapshot.screen !== "battle") return false;
     const hasFighters = snapshot.fighters?.some((fighter) => Number(fighter.hp) > 0) === true;
@@ -2285,7 +2335,12 @@ async function waitForCombatActivity(page, { bossKind = null } = {}) {
   let latest = null;
   try {
     while (Date.now() < deadline) {
-      const read = await observePromiseWithin(readPhaseGSetupRuntime(page), deadline - Date.now());
+      // Keep this observation out of the bounded native-input operation.
+      // Queue time still consumes the original boss deadline.
+      const read = await observePromiseWithin(withPhaseGPageInputLock(page, () => {
+        invariant(Date.now() <= deadline, "BOSS_REPRESENTATIVE_DEADLINE_EXCEEDED");
+        return readPhaseGSetupRuntime(page);
+      }), deadline - Date.now());
       if (read.status !== "fulfilled") throw Object.assign(new Error(`BOSS_REPRESENTATIVE_READ_${read.status.toUpperCase()}: ${read.error ?? "original deadline"}`), {
         phaseGCausalNoFurtherPageRpc: read.status === "timeout",
       });
@@ -2333,7 +2388,7 @@ const stateContracts = Object.freeze({
   "result-lose": { phases: ["result"], selectors: ['[data-v100-surface="result-lose"]', ".v100-result-records", ".v100-result-actions"] },
   ending: { phases: ["ending"], selectors: ['[data-v100-surface="ending"]', ".v100-event-panel", ".v100-story-node", ".v100-event-actions"] },
   credits: { phases: ["credits"], selectors: ['[data-v100-surface="credits"]', ".v100-credit-landscape", ".v100-credit-shot", ".v100-credit-roll-window", ".v100-credit-roll-track", ".v100-credit-controls"], forbiddenSelectors: [".v100-credit-memory", ".v100-credit-brand"], elementCounts: { ".v100-staff-roll audio": 1 } },
-  "epilogue-postgame": { phases: ["epilogue"], selectors: ['[data-v100-surface="epilogue"]', ".v100-post-credits-film", ".v100-post-credit-picture", ".v100-post-credit-landscape", ".v100-post-credit-controls"], elementCounts: { ".v100-post-credits-film audio": 3, ".v100-post-credits-film .v100-credit-shot": 2 } },
+  "postgame-map": { phases: ["map"], surfaces:["campaign"], selectors: ['[data-v100-surface="map"]', '.v100-command-tabs', '.v100-stage-list'], forbiddenSelectors:['.v100-post-credits-film'] },
   "data-management-modal": { phases: ["map"], surfaces: ["data"], selectors: ['[data-v100-surface="data"]', '[role="dialog"][aria-labelledby="v100-data-title"]', ".v100-data-actions"] },
   "battle-extra": { phases: ["battle"], selectors: ['.game-shell[data-screen="battle"]', ".game-shell[data-screen=\"battle\"] canvas", "button.unit-card[data-kind]"] },
 });
@@ -3336,6 +3391,7 @@ async function readBattleDeploymentDiagnostics(page, {
   phase = null,
   schedulerProbeId = null,
   dispatchAttemptId = null,
+  installSchedulerProbe = false,
 } = {}) {
   if (page.isClosed()) {
     return {
@@ -3348,14 +3404,14 @@ async function readBattleDeploymentDiagnostics(page, {
       dispatchAttemptId,
     };
   }
-  const diagnostics = await page.evaluate(({ requestedKind: kind, requestedSlot: slot, phase: diagnosticPhase, activeSchedulerProbeId, receiptAttemptId }) => {
+  const diagnostics = await page.evaluate(({ requestedKind: kind, requestedSlot: slot, phase: diagnosticPhase, activeSchedulerProbeId, receiptAttemptId, installProbe, queueCapacity }) => {
     const diagnosticRegistry = window.__V100_PHASE_G_DEPLOYMENT_DIAGNOSTICS__ ??= { sampleOrdinal: 0 };
     diagnosticRegistry.sampleOrdinal += 1;
     const sampleOrdinal = diagnosticRegistry.sampleOrdinal;
     const schedulerEntry = activeSchedulerProbeId
       ? window.__V100_PHASE_G_DEPLOYMENT_SCHEDULER_PROBES__?.get(activeSchedulerProbeId)
       : null;
-    const schedulerProbe = schedulerEntry ? {
+    let schedulerProbe = schedulerEntry ? {
       probeId: schedulerEntry.probeId,
       status: schedulerEntry.status,
       requestedAtWallTimeMs: schedulerEntry.requestedAtWallTimeMs,
@@ -3478,6 +3534,42 @@ async function readBattleDeploymentDiagnostics(page, {
         } : null,
       };
     });
+    if (installProbe && activeSchedulerProbeId) {
+      // The same initial read owns the candidate and one RAF reservation.
+      // Keep eligibility identical to the host check; visibility in the rail
+      // and hit ownership are verified later, after the original centering.
+      const queue = snapshot?.deployQueue ?? [];
+      const eligible = card => {
+        const cost = card?.cost == null ? NaN : Number(card.cost);
+        const energy = Number(snapshot?.energy ?? NaN);
+        const cooldown = card?.kind ? Number(snapshot?.deployCooldowns?.[card.kind]) : NaN;
+        return Boolean(card?.kind && card.rect?.visible === true && card.state === "ready"
+          && card.ariaDisabled === "false" && card.disabled !== true
+          && snapshot?.screen === "battle" && snapshot.running === true
+          && snapshot.paused !== true && snapshot.over !== true && snapshot.won !== true
+          && Array.isArray(queue) && queue.length < queueCapacity
+          && Number.isFinite(cost) && Number.isFinite(energy) && energy >= cost
+          && Number.isFinite(cooldown) && cooldown === 0);
+      };
+      const candidate = kind ? cards.find(card => card.kind === kind) : cards.find(eligible);
+      if (eligible(candidate)) {
+        const registry = window.__V100_PHASE_G_DEPLOYMENT_SCHEDULER_PROBES__ ??= new Map();
+        const existing = registry.get(activeSchedulerProbeId);
+        if (existing?.status === "pending" && Number.isFinite(Number(existing.handle))) cancelAnimationFrame(existing.handle);
+        const entry = { probeId: activeSchedulerProbeId, status: "pending",
+          requestedAtWallTimeMs: Date.now(), requestedAtPerformanceMs: performance.now(), handle: null,
+          observedAtWallTimeMs: null, observedAtPerformanceMs: null, callbackTimestamp: null };
+        entry.handle = requestAnimationFrame(timestamp => {
+          entry.status = "observed"; entry.observedAtWallTimeMs = Date.now();
+          entry.observedAtPerformanceMs = performance.now(); entry.callbackTimestamp = timestamp;
+        });
+        registry.set(activeSchedulerProbeId, entry);
+        schedulerProbe = {probeId:entry.probeId,status:entry.status,
+          requestedAtWallTimeMs:entry.requestedAtWallTimeMs,requestedAtPerformanceMs:entry.requestedAtPerformanceMs,
+          observedAtWallTimeMs:entry.observedAtWallTimeMs,observedAtPerformanceMs:entry.observedAtPerformanceMs,
+          callbackTimestamp:entry.callbackTimestamp};
+      }
+    }
     const dispatchReceipt = receiptAttemptId
       ? window.__V100_PHASE_G_DEPLOYMENT_POINTER_RECEIPTS__?.get(receiptAttemptId)
       : null;
@@ -3562,7 +3654,8 @@ async function readBattleDeploymentDiagnostics(page, {
       })),
       objectiveText,
     };
-  }, { requestedKind, requestedSlot, phase, activeSchedulerProbeId: schedulerProbeId, receiptAttemptId: dispatchAttemptId }).catch((error) => ({
+  }, { requestedKind, requestedSlot, phase, activeSchedulerProbeId: schedulerProbeId, receiptAttemptId: dispatchAttemptId,
+    installProbe: installSchedulerProbe, queueCapacity: DEPLOYMENT_QUEUE_CAPACITY }).catch((error) => ({
     capturedAt: new Date().toISOString(),
     pageClosed: page.isClosed(),
     requestedKind,
@@ -3824,7 +3917,7 @@ async function formationPage(page, save, stageName = null) {
     await click(page, page.locator(".v100-stage-list button").filter({ hasText: stageName }).first(), "stage selection");
     await page.waitForTimeout(50);
   }
-  const cta = page.getByRole("button", { name: /この作戦を編成|再出撃/u }).first();
+  const cta = page.getByRole("button", { name: /編成して出撃|再出撃/u }).first();
   await click(page, cta, "map formation CTA");
   await advanceStory(page, ".v100-formation-panel");
   checkpointRecorderFor(page)?.markOnce("formation-visible", "completed", { selector: ".v100-formation-panel" });
@@ -3904,7 +3997,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       requiredCompletedImpactActorKeys,
     });
   };
-  const readSetupRuntime = async () => {
+  const readSetupRuntimeUnlocked = async () => {
     const runtime = await readPhaseGSetupRuntime(page);
     if (runtime?.screen === "battle") {
       const observed = deriveV100RuntimeObservation(runtime);
@@ -3913,6 +4006,9 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     }
     return runtime;
   };
+  // Foreground setup polling must not overlap a sustain pointer transaction.
+  // Callers already holding the input lane use the same reader directly.
+  const readSetupRuntime = () => withPhaseGPageInputLock(page, readSetupRuntimeUnlocked);
   let proofActorAttackObserved = proofActor === null;
   let vehicleActionObserved = !requireVehicleAction;
   let proofUnitDeployed = proofUnitKind === null;
@@ -3953,7 +4049,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     if (proofActorAttackObserved) setupObservations[`zombie:${proofActor}`] ??= runtime;
     return proofActorAttackObserved;
   };
-  const readProofActorContactState = async () => {
+  const readProofActorContactState = () => withPhaseGPageInputLock(page, async () => {
     if (!proofActor) return null;
     const state = await page.evaluate((expectedKind) => {
       const snapshot = window.__ASHFALL_BATTLE_QA__?.getPhaseGCombatSnapshot?.();
@@ -3981,7 +4077,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
     }, proofActor).catch(() => null);
     if (state?.mounted === true) recorder?.markOnce("proof-actor-mounted-or-absent", "observed", { actor: proofActor });
     return state;
-  };
+  });
   const observeProofUnitAttack = async (runtime = null) => {
     if (proofUnitAttackObserved || !proofUnitKind) return proofUnitAttackObserved;
     runtime ??= await readSetupRuntime();
@@ -4008,7 +4104,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
   const ordinaryTacticsAfterProof = completedImpactProofEnabled || requireVehicleAction;
   let bossDeploymentFinished = false;
   let sustainFailure = null;
-  const bossIsLive = async () => bossKind && await page.evaluate((expectedKind) => {
+  const bossIsLiveUnlocked = async () => bossKind && await page.evaluate((expectedKind) => {
     const snapshot = window.__ASHFALL_BATTLE_QA__?.getPhaseGCombatSnapshot?.();
     return snapshot?.screen === "battle" && snapshot.fighters?.some((fighter) => (
       fighter.side === "zombie"
@@ -4023,6 +4119,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       && Number(fighter.x) < 960
     )) === true;
   }, bossKind).catch(() => false);
+  const bossIsLive = () => withPhaseGPageInputLock(page, bossIsLiveUnlocked);
   const accelerateBossEntry = async () => {
     if (!bossKind) return;
     // Only the authored entry animation is accelerated. Spawn, sprite mount,
@@ -4046,7 +4143,8 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       // Background observation shares the same page lane as pointer preflight.
       // Otherwise its RPCs can run during the bounded fresh-state read.
       const backgroundState = await readPhaseGSustainState(page, {
-        bossIsLive, readSetupRuntime, observeProofActorAttack, observeProofUnitAttack, observeVehicleAction,
+        bossIsLive: bossIsLiveUnlocked, readSetupRuntime: readSetupRuntimeUnlocked,
+        observeProofActorAttack, observeProofUnitAttack, observeVehicleAction,
       });
       if (!backgroundState) break;
       const { bossEngaged, liveHumanTargetCount } = backgroundState;
@@ -4059,7 +4157,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         // formation roles and can defeat the QA fixture before boss entry.
         // The boss-attack fixture also needs living humans when its boss arrives.
         await withPhaseGPageInputLock(page, () => normalTacticalInput(page, tacticalRecord, { barrageWhenOverwhelmed: tacticalStageNumber >= 25, barrageEnabled: tacticalStageNumber !== 24, airstrikeAfterSeconds: tacticalStageNumber >= 24 ? 40 : 0 }));
-        await accelerateBossEntry();
+        await withPhaseGPageInputLock(page, accelerateBossEntry);
         await page.waitForTimeout(520);
         continue;
       }
@@ -4069,7 +4167,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       const sustainAbilitySelector = 'button.manual-ability-ready.available:not([disabled])'
         + (manualAbilityKind ? `:not([data-ability-kind="${manualAbilityKind}"])` : "");
       const abilityButtons = page.locator(sustainAbilitySelector);
-      const abilityCount = await abilityButtons.count().catch(() => 0);
+      const abilityCount = await withPhaseGPageInputLock(page, () => abilityButtons.count().catch(() => 0));
       const proofCombatReady = proofActorAttackObserved && proofUnitAttackObserved;
       const pendingCompletedImpactTargetKind = completedImpactTargetDeploymentKind({
         completedImpactProofEnabled,
@@ -4082,31 +4180,32 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
           await withPhaseGPageInputLock(page, async () => {
             const lockedAbility = page.locator(sustainAbilitySelector).nth(index);
             if (await lockedAbility.count().catch(() => 0)) await phaseGOrderedControlInput(page,
-              (phases) => nativeBattleTap(page, lockedAbility, phases), 500, "sustain-ability");
+              (phases) => nativeBattleTap(page, lockedAbility, phases,{selector:sustainAbilitySelector,index}), 500, "sustain-ability");
           });
           await page.waitForTimeout(85);
         }
       }
 
-      const crawler = page.locator('button.support-btn.barrage[data-state="ready"][aria-disabled="false"]').first();
-      if (proofCombatReady && !vehicleActionObserved && await crawler.count().catch(() => 0)) {
+      if (proofCombatReady && !vehicleActionObserved) {
         await withPhaseGPageInputLock(page, async () => {
-          const lockedCrawler = page.locator('button.support-btn.barrage[data-state="ready"][aria-disabled="false"]').first();
+          const selector='button.support-btn.barrage[data-state="ready"][aria-disabled="false"]';
+          const lockedCrawler = page.locator(selector).first();
           if (await lockedCrawler.count().catch(() => 0)) await phaseGOrderedControlInput(page,
-            (phases) => nativeBattleTap(page, lockedCrawler, phases), 500, "sustain-barrage");
+            (phases) => nativeBattleTap(page, lockedCrawler, phases,{selector,index:0}), 500, "sustain-barrage");
         });
       }
 
       const canvas = page.locator("canvas.battlefield");
-      const box = await canvas.boundingBox().catch(() => null);
+      const box = await withPhaseGPageInputLock(page, () => canvas.boundingBox().catch(() => null));
       if (box) {
         if (!bossEngaged && proofCombatReady && !completedImpactProofEnabled) {
           await withPhaseGPageInputLock(page, async () => {
             const lockedCanvas = page.locator("canvas.battlefield");
             const lockedBox = await lockedCanvas.boundingBox().catch(() => null);
-            const airstrike = page.locator('button.support-btn.airstrike[data-state="ready"][aria-disabled="false"]').first();
+            const selector='button.support-btn.airstrike[data-state="ready"][aria-disabled="false"]';
+            const airstrike = page.locator(selector).first();
             if (lockedBox && await airstrike.count().catch(() => 0)) {
-              if (await phaseGOrderedControlInput(page, (phases) => nativeBattleTap(page, airstrike, phases), 500, "sustain-airstrike")) {
+              if (await phaseGOrderedControlInput(page, (phases) => nativeBattleTap(page, airstrike, phases,{selector,index:0}), 500, "sustain-airstrike")) {
                 await phaseGOrderedControlInput(page, (phases) => orderedNativePointer(page,
                   { x: lockedBox.x + lockedBox.width * .67, y: lockedBox.y + lockedBox.height * .5 }, phases), 700, "sustain-airstrike-target");
               }
@@ -4127,12 +4226,13 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         await withPhaseGPageInputLock(page, async () => {
           const lockedCanvas = page.locator("canvas.battlefield");
           const lockedBox = await lockedCanvas.boundingBox().catch(() => null);
-          const medical = page.locator('button.support-btn.medical[data-state="ready"][aria-disabled="false"]').first();
+          const selector='button.support-btn.medical[data-state="ready"][aria-disabled="false"]';
+          const medical = page.locator(selector).first();
           if (!lockedBox || !(await medical.count().catch(() => 0))) return;
           const medicalY = proofActorContactPlanPending && Number.isFinite(Number(proofActorContactState?.actorLane))
             ? (Number(proofActorContactState?.actorLane) >= 1 ? lockedBox.height * .3 : lockedBox.height * .7)
             : lockedBox.height * .5;
-          if (await phaseGOrderedControlInput(page, (phases) => nativeBattleTap(page, medical, phases), 500, "sustain-medical")) {
+          if (await phaseGOrderedControlInput(page, (phases) => nativeBattleTap(page, medical, phases,{selector,index:0}), 500, "sustain-medical")) {
             await phaseGOrderedControlInput(page, (phases) => orderedNativePointer(page,
               { x: lockedBox.x + lockedBox.width * .34, y: lockedBox.y + medicalY }, phases), 700, "sustain-medical-target");
           }
@@ -4142,9 +4242,26 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
       // the initial three deployments first, then use only affordable native
       // cards; the deferred proof unit need not wait for an enemy to attack a
       // formation that has already died.
+      let meleeFrontline = { pending: false, kind: null };
       if (!bossKind && proofActor && bossDeploymentFinished
-        && (!proofUnitDeployed || liveHumanTargetCount < 2)) {
-        const requestedKind = !proofUnitDeployed ? proofUnitKind : null;
+        && !completedImpactProofEnabled && !proofActorAttackObserved) {
+        meleeFrontline = ordinaryMeleeProofFrontline(backgroundState.setupRuntime, proofActorContent, null);
+        if (meleeFrontline.pending) {
+          const diagnostics = await withPhaseGPageInputLock(page, () => withDeploymentPreinputDeadline(page,
+            readBattleDeploymentDiagnostics(page, { phase: "proof-melee-frontline" }),
+            DEPLOYMENT_POINTER_PREFLIGHT_DEADLINE_MS, "QA_HARNESS_BACKGROUND_OBSERVATION_TIMEOUT",
+            { phase: "proof-melee-frontline" }));
+          meleeFrontline = ordinaryMeleeProofFrontline(backgroundState.setupRuntime, proofActorContent, diagnostics,
+            proofActorAttackObserved);
+        }
+      }
+      if (!bossKind && proofActor && bossDeploymentFinished
+        && (!proofUnitDeployed || liveHumanTargetCount < 2 || meleeFrontline.pending)
+        && (!proofUnitDeployed || !meleeFrontline.pending || meleeFrontline.kind)) {
+        // Keep the original attack deadline/predicate. Select an affordable
+        // production melee card instead of spending the remaining command on
+        // another marksman while the exact ordinary melee proof is pending.
+        const requestedKind = !proofUnitDeployed ? proofUnitKind : meleeFrontline.kind;
         const pointer = await performVerifiedDeploymentPointer(page, {
           requestedKind, phase: "proof-target-continuity",
         });
@@ -4179,7 +4296,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
           });
         }
       }
-      await accelerateBossEntry();
+      await withPhaseGPageInputLock(page, accelerateBossEntry);
       await page.waitForTimeout(520);
     }
   })() : null;
@@ -4224,10 +4341,10 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         while (!deployed && Date.now() < deadline) {
           await captureOpeningAction();
           if (page.isClosed()) throw new Error("Target page, context or browser has been closed during non-boss unit deployment");
-          const candidateSample = await readBattleDeploymentDiagnostics(page, {
+          const candidateSample = await withPhaseGPageInputLock(page, () => readBattleDeploymentDiagnostics(page, {
             requestedSlot: slot + 1,
             phase: "candidate-sample",
-          });
+          }));
           recorder?.setLatestReadableState(candidateSample);
           const candidateCards = deploymentCandidatesFromDiagnostics(candidateSample, deployedKinds);
           const requestedOpeningKind = openingKinds[slot] ?? null;
@@ -4305,10 +4422,10 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
           const battleVisible = await page.locator('.game-shell[data-screen="battle"]').isVisible().catch(() => false);
           if (!battleVisible) break;
           if (await bossIsLive()) break;
-          const candidateSample = await readBattleDeploymentDiagnostics(page, {
+          const candidateSample = await withPhaseGPageInputLock(page, () => readBattleDeploymentDiagnostics(page, {
             requestedSlot: deployment + 1,
             phase: "candidate-sample",
-          });
+          }));
           recorder?.setLatestReadableState(candidateSample);
           const pendingCompletedImpactTargetKind = completedImpactTargetDeploymentKind({
             completedImpactProofEnabled,
@@ -4446,7 +4563,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
           const ability = page.locator(`button.manual-ability-ready.available[data-ability-kind="${manualAbilityKind}"][aria-disabled="false"]`).first();
           if (!(await ability.count())) return false;
           const ownerId = await ability.getAttribute("data-fighter-id");
-          const runtime = await readSetupRuntime();
+          const runtime = await readSetupRuntimeUnlocked();
           if (manualAbilityKind === "babayaga" && !babayagaMarkerInputReady(runtime, ownerId)) return false;
           manualActionEvidence.ownerId = ownerId;
           manualActionEvidence.beforeInput = runtime;
@@ -4455,7 +4572,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
           // ordinary tactical input; the receipt gate below still proves the
           // exact activation, living target, and completed impact.
           if (!(await nativeBattleTap(page, ability))) return false;
-          manualActionEvidence.afterInput = await readSetupRuntime();
+          manualActionEvidence.afterInput = await readSetupRuntimeUnlocked();
           // A pointer can land just as the owner is stunned or its target
           // changes. Count an activation only when the game records its start;
           // an ignored input may be retried inside the original 45-second
@@ -4578,7 +4695,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
         invariant(developerBossWaveEvidence?.fallbackHumanSpawned === false,
           "boss-wave handoff cannot add a synthetic fallback human");
       }
-      await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__?.getPhaseGCombatSnapshot?.()?.fighters?.some((fighter) => fighter.side === "human" && fighter.hp > 0) === true, null, { timeout: battleTimeout, polling: 100 });
+      await waitForPhaseGPagePredicate(page, () => window.__ASHFALL_BATTLE_QA__?.getPhaseGCombatSnapshot?.()?.fighters?.some((fighter) => fighter.side === "human" && fighter.hp > 0) === true, null, { timeout: battleTimeout, polling: 100 });
       if (!bossKind || !waitForBossAttack) {
         await waitForCombatActivity(page);
       } else {
@@ -4661,7 +4778,7 @@ for (const viewport of requiredViewports) {
     const savedBeforeDisclosure = await page.evaluate(() => JSON.stringify(Object.fromEntries(
       Object.keys(localStorage).sort().map(key => [key, localStorage.getItem(key)]),
     )));
-    await click(page, page.getByText("作戦詳細・記録", { exact: true }), "map details disclosure");
+    await click(page, page.getByText("ステージ詳細・記録", { exact: true }), "map details disclosure");
     await page.locator(".v100-map-detail[open]").waitFor({ state: "visible", timeout });
     const contentVisible = await page.locator(".v100-map-detail[open]").evaluate(details => {
       const detailRect = details.getBoundingClientRect();
@@ -4686,7 +4803,7 @@ for (const viewport of requiredViewports) {
     const disclosureScreenshot = await saveScreenshot(page, imagePath(disclosureLabel), disclosureLabel);
     // Compact details deliberately fold the briefing. Keep its visible state
     // contract intact and record the native disclosure as separate evidence.
-    await click(page, page.getByText("作戦詳細・記録", { exact: true }), "map details return to briefing");
+    await click(page, page.getByText("ステージ詳細・記録", { exact: true }), "map details return to briefing");
     invariant(await page.locator(".v100-map-detail[open]").count() === 0, "locked map details did not close");
     const savedAfterDisclosure = await page.evaluate(() => JSON.stringify(Object.fromEntries(
       Object.keys(localStorage).sort().map(key => [key, localStorage.getItem(key)]),
@@ -4714,12 +4831,12 @@ for (const viewport of requiredViewports) {
   });
   await captureState("chromium", viewport, "personnel", async (page) => {
     await mapPage(page, fullSave());
-    await click(page, page.getByRole("navigation", { name: "作戦準備メニュー" }).getByRole("button", { name: "隊員", exact: true }), "personnel formation");
+    await click(page, page.getByRole("navigation", { name: "ステージ準備メニュー" }).getByRole("button", { name: "ユニット", exact: true }), "personnel formation");
     await page.locator('main.v100-shell[data-v100-surface="personnel"]').waitFor({ state: "visible", timeout });
   });
   await captureState("chromium", viewport, "support-vehicle-management", async (page) => {
     await mapPage(page, fullSave());
-    await click(page, page.getByRole("navigation", { name: "作戦準備メニュー" }).getByRole("button", { name: "支援", exact: true }), "support management");
+    await click(page, page.getByRole("navigation", { name: "ステージ準備メニュー" }).getByRole("button", { name: "支援", exact: true }), "support management");
     await page.locator('main.v100-shell[data-v100-surface="support-vehicle"]').waitFor({ state: "visible", timeout });
     const saveBeforeManagementNavigation = await page.evaluate(() => localStorage.getItem("nishijin-campaign-v100"));
     const supportContract = await productionStateContract(page, "support-vehicle-management");
@@ -4829,19 +4946,17 @@ for (const viewport of requiredViewports) {
   await captureState("chromium", viewport, "result-lose", async (page) => { await openRoute(page, resultSave(false)); await page.locator('[data-v100-surface="result-lose"]').waitFor({ state: "visible", timeout }); });
   await captureState("chromium", viewport, "ending", async (page) => { await openRoute(page, eventSave("ending", "v100:event:ending")); await page.locator('[data-v100-surface="ending"]').waitFor({ state: "visible", timeout }); });
   await captureState("chromium", viewport, "credits", async (page) => { await openRoute(page, eventSave("credits", "v100:event:credits")); await page.locator('[data-v100-surface="credits"]').waitFor({ state: "visible", timeout }); });
-  await captureState("chromium", viewport, "epilogue-postgame", async (page) => {
-    const save = eventSave("epilogue", "v100:event:epilogue");
-    // This visual capture runs muted; native-media QA covers the audible film.
-    // Avoid waiting forever for a browser autoplay gesture before the fade-in.
-    await openRoute(page, { ...save, settings: { ...save.settings, bgmEnabled: false, sfxEnabled: false } });
-    await page.locator('[data-v100-surface="epilogue"]').waitFor({ state: "visible", timeout });
-    // R5 epilogue dialogue precedes the film. Use the product's story control
-    // to enter the cinematic surface; the full dialogue is checked separately.
-    await advanceStory(page, ".v100-post-credits-film");
-    await page.waitForFunction(() => {
-      const film = document.querySelector(".v100-post-credits-film"), image = film?.querySelector(".v100-credit-shot:not(.v100-credit-shot-next)");
-      return Number(film?.getAttribute("data-v100-film-elapsed")) >= 4.3 && image instanceof HTMLImageElement && image.dataset.creditDecoded === "true" && image.naturalWidth > 0;
-    }, null, { timeout });
+  await captureState("chromium", viewport, "postgame-map", async (page) => {
+    // Enter the actual R9 destination through the staff-roll skip control.
+    // Normal-duration music/fade and storage failure remain separate lanes.
+    const save = fullSave({completedStageIds:V100_STAGE_IDS,availableStageIds:V100_STAGE_IDS,
+      readStoryEventIds:['v100:event:ending'],readStoryVersions:{'v100:event:ending':V100_STORY_SCRIPT_VERSION},
+      flowState:{phase:'credits',eventId:'v100:event:credits',nodeIndex:0,scriptVersion:V100_STORY_SCRIPT_VERSION,finalized:true,firstClear:false,destination:'credits'}});
+    await openRoute(page,{...save,settings:{...save.settings,bgmEnabled:false,sfxEnabled:false}});
+    await page.locator('.v100-staff-roll').getByRole('button',{name:'スキップ',exact:true}).click();
+    await page.locator('[data-v100-surface="map"]').waitFor({state:'visible',timeout});
+    const stored=await page.evaluate(()=>JSON.parse(localStorage.getItem('nishijin-campaign-v100')));
+    invariant(stored.flowState.phase==='map'&&stored.completedStageIds.length===30,'R9 credits preserve completed progress and return to the stage map');
   });
   await captureState("chromium", viewport, "data-management-modal", async (page) => {
     await mapPage(page, fullSave());

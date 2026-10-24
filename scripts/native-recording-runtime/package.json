@@ -1,0 +1,9 @@
+{
+  "name": "zombieee-native-recording-verification-runtime",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Recording-only WebKit with upstream pending-writer frame retention; separate from PWA and formal performance baselines.",
+  "dependencies": {
+    "playwright": "1.65.0-alpha-2026-10-23"
+  }
+}

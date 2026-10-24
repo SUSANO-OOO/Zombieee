@@ -1,0 +1,244 @@
+{
+  "at": "2026-10-15T10:10:03.657Z",
+  "sceneId": "kumaya-tky-receipt",
+  "original": "public/art/v100/story-r5/cuts/epilogue-tky-receipt.webp",
+  "originalSha256": "87fd704b22647591633ada45a8b52e18d8e2792cf7007a57cc7093db13cb90b2",
+  "generated": "assets/source/v177/paisen/credits/kumaya-tky-receipt-photo-r2.generated.png",
+  "generatedSha256": "925250e507fccf05a6453380876b5c1fd57c16c1208fe59a0514c9f5be39ba12",
+  "target": "assets/source/v177/paisen/credits/kumaya-tky-receipt-photo-r2.localized-r1.png",
+  "targetSha256": "bf750945bf50fe549501c0ae88eedfd5eb6e27118ecc05f5e514b4cfcfd66311",
+  "width": 1280,
+  "height": 720,
+  "polygons": [
+    [
+      [
+        155,
+        52
+      ],
+      [
+        245,
+        57
+      ],
+      [
+        300,
+        103
+      ],
+      [
+        319,
+        154
+      ],
+      [
+        311,
+        220
+      ],
+      [
+        291,
+        252
+      ],
+      [
+        250,
+        279
+      ],
+      [
+        184,
+        275
+      ],
+      [
+        153,
+        242
+      ],
+      [
+        130,
+        194
+      ],
+      [
+        128,
+        116
+      ]
+    ],
+    [
+      [
+        149,
+        236
+      ],
+      [
+        220,
+        268
+      ],
+      [
+        288,
+        252
+      ],
+      [
+        350,
+        251
+      ],
+      [
+        409,
+        278
+      ],
+      [
+        436,
+        347
+      ],
+      [
+        432,
+        419
+      ],
+      [
+        421,
+        458
+      ],
+      [
+        357,
+        458
+      ],
+      [
+        326,
+        407
+      ],
+      [
+        183,
+        418
+      ],
+      [
+        114,
+        429
+      ],
+      [
+        0,
+        399
+      ],
+      [
+        0,
+        310
+      ],
+      [
+        45,
+        277
+      ],
+      [
+        101,
+        248
+      ]
+    ]
+  ],
+  "protectRects": [
+    [
+      0,
+      448,
+      1280,
+      272
+    ]
+  ],
+  "protectPolygons": [
+    [
+      [
+        187,
+        232
+      ],
+      [
+        225,
+        240
+      ],
+      [
+        256,
+        259
+      ],
+      [
+        247,
+        283
+      ],
+      [
+        235,
+        294
+      ],
+      [
+        208,
+        298
+      ],
+      [
+        192,
+        342
+      ],
+      [
+        134,
+        383
+      ],
+      [
+        51,
+        431
+      ],
+      [
+        0,
+        436
+      ],
+      [
+        0,
+        399
+      ],
+      [
+        54,
+        355
+      ],
+      [
+        112,
+        310
+      ],
+      [
+        129,
+        276
+      ],
+      [
+        165,
+        261
+      ]
+    ],
+    [
+      [
+        334,
+        409
+      ],
+      [
+        427,
+        407
+      ],
+      [
+        436,
+        505
+      ],
+      [
+        410,
+        528
+      ],
+      [
+        339,
+        534
+      ],
+      [
+        321,
+        508
+      ],
+      [
+        338,
+        457
+      ]
+    ]
+  ],
+  "faceRect": [
+    128,
+    51,
+    194,
+    228
+  ],
+  "maskPath": "assets/source/v177/paisen/credits/kumaya-tky-receipt-photo-r2.localization-mask-r1.png",
+  "registeredPixels": 80594,
+  "changedPixels": 80507,
+  "changedOutsideRegisteredRegion": 0,
+  "normalization": "Uniform cover fit to native original dimensions, thresholded explicit Paisen mask; all other original decoded RGBA pixels remain byte-identical.",
+  "runtimeConnected": false,
+  "visualReviewed": false,
+  "nativeAccepted": false,
+  "producerAccepted": false,
+  "wholeGameAccepted": false
+}

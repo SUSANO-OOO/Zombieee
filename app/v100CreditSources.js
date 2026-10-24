@@ -1,5 +1,9 @@
 // Public credits match the adopted material ledger; no private identity sources are distributed.
 export const V100_SOUND_CREDITS = Object.freeze([
+  {role:"RED PANTHER四兵種の合成戦闘音声",author:"VOICEVOX:雀松朱司",works:["VOICEVOX"],page:"https://www.virvoxproject.com/voicevoxの利用規約",license:"音声ライブラリ利用規約"},
+  {role:"クレイジーキングの合成戦闘音声",author:"VOICEVOX:剣崎雌雄",works:["VOICEVOX"],page:"https://frontier.creatia.cc/fanclubs/413/posts/4507",license:"音声ライブラリ利用規約"},
+  {role:"クマバーソンの合成戦闘音声",author:"VOICEVOX:麒ヶ島宗麟",works:["VOICEVOX"],page:"https://www.virvoxproject.com/voicevoxの利用規約",license:"音声ライブラリ利用規約"},
+  {role:"ババヤガの合成戦闘音声",author:"VOICEVOX:玄野武宏",works:["VOICEVOX"],page:"https://www.virvoxproject.com/voicevoxの利用規約",license:"音声ライブラリ利用規約"},
   { role: "男性の笑い声", author: "adiantheman", works: ["Evil Laugh"], page: "https://freesound.org/people/adiantheman/sounds/829881/", license: "CC0" },
   { role: "波音", author: "transitking", works: ["Water Waves"], page: "https://opengameart.org/content/water-waves", license: "CC0" },
   {

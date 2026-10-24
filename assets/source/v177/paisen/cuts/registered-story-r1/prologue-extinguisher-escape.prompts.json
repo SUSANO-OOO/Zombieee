@@ -1,0 +1,17 @@
+{
+  "sceneId": "prologue-extinguisher-escape",
+  "mode": "built-in imagegen",
+  "identity": "Producer three photographs plus registered Paisen identity master r2",
+  "prompts": [
+    {
+      "mode": "built-in",
+      "prompt": "Use case: identity-preserve. Edit image 1, an enlarged head crop of Paisen looking back during a kitchen escape in a detailed painted game. Images 2-4 are authoritative photos of the SAME real adult person; image 5 is his registered world-style illustration. Replace the generic angular comic face with a very faithful likeness of that exact photographed person: rounded broad cheeks and short broad jaw/chin, natural photographed eyes/eyelids and eyebrows, broad nose and tip, lips, ears and short black hairline. Avoid beautifying him, sharp hero jaw, exaggerated angry brows or different identity. Preserve the original head center and scale, tilted three-quarter face looking back to image RIGHT, urgent alarmed expression with naturally OPEN mouth, and eyes looking to the danger at right, not to the viewer. Keep one natural neck connected to the existing navy T-shirt collar at the same position. Change only his head, face, hair, ears and neck. Preserve shoulders, shirt, arm, the other people's heads at lower left, door, curtain, lighting and all background pixels/objects. Match the same detailed gritty inked/painted game style, natural skin texture and scene lighting; do not paste a photograph. No extra anatomy, neck, text, watermarks or objects.",
+      "rawGenerationSha256": null
+    },
+    {
+      "mode": "built-in imagegen",
+      "prompt": "Use case: precise-object-edit with identity-preserve. Image1 is the only edit target, a crop from a gritty detailed painted game cutscene. Image2 shows the complete original scene only to identify the correct man and preserve all poses. Image3 is the producer's authoritative clothing photograph (plain navy-purple tee, loose white knee-length shorts), Image4 is his approved painted identity master. Output exactly Image1's crop/composition and style. Only the black trousers on Paisen at the left become loose white knee-length shorts. Keep the navy shirt, original pelvis and leg pose, chair in front, hanging arm and hand to the right, and other people exactly unchanged. Bare calves may appear only on an already visible lower leg. Do not create a leg outside the original silhouette. The existing thigh and leg are partly hidden by the foreground chair. No captions, decorative frame, new characters or watermark. Do not globally redraw the scene. Keep foreground objects in front, exactly two existing arms and legs. Match the original scene light/shadows and natural cloth folds. White cotton should be dirtied by this scene but recognizably white.",
+      "rawGenerationSha256": null
+    }
+  ]
+}

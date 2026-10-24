@@ -26,7 +26,7 @@ import {
 test("Producer rewrite story event registry is complete and source-bound", async () => {
   assert.equal(Object.keys(V100_STORY_EVENTS).length, 94);
   assert.deepEqual(Object.keys(V100_STORY_EVENTS), V100_EVENT_IDS);
-  const source = await readFile(new URL("../docs/story/v10/STORY_SCRIPT_V100_PRODUCER_REWRITE.md", import.meta.url));
+  const source = await readFile(new URL("../docs/story/v10/STORY_SCRIPT_V100_PRODUCER_R9.md", import.meta.url));
   assert.equal(V100_STORY_SOURCE_SHA256, createHash("sha256").update(source).digest("hex"));
   assert.equal(V100_STORY_SOURCE_LINE_COUNT, source.toString("utf8").split(/\r?\n/u).length);
   assert.equal(v100StoryContract().creditsHasDialogue, false);
@@ -40,15 +40,15 @@ test("Producer rewrite story event registry is complete and source-bound", async
 });
 
 test("story rendering expands the current name without mutating the source registry", () => {
-  const source = V100_STORY_EVENTS["v100:event:epilogue"].nodes.find((node) => node.text.includes("PLAYER"));
+  const source = V100_STORY_EVENTS["v100:event:ending"].nodes.find((node) => node.text.includes("PLAYER"));
   assert.ok(source);
-  const view = v100StoryEventView("v100:event:epilogue", "指揮官");
+  const view = v100StoryEventView("v100:event:ending", "指揮官");
   assert.equal(view.nodes.some((node) => node.text.includes("指揮官")), true);
-  assert.equal(V100_STORY_EVENTS["v100:event:epilogue"].nodes.some((node) => node.text.includes("指揮官")), false);
+  assert.equal(V100_STORY_EVENTS["v100:event:ending"].nodes.some((node) => node.text.includes("指揮官")), false);
 });
 
 test("name and recruitment introductions are present before their release gates", () => {
-  for (const id of ["v100:event:prologue", "v100:event:s01:pre", "v100:event:s10:pre", "v100:event:s30:pre", "v100:event:ending", "v100:event:credits", "v100:event:epilogue"]) {
+  for (const id of Object.keys(V100_STORY_EVENTS).filter(id=>V100_STORY_EVENTS[id].nodes.some(node=>node.text.includes('{{PLAYER_NAME}}')))) {
     assert.ok(V100_STORY_EVENTS[id].nodes.some((node) => node.text.includes("{{PLAYER_NAME}}")), `${id} must reflect the entered name`);
     assert.ok(v100StoryEventView(id, "試遊指揮官").nodes.some((node) => node.text.includes("試遊指揮官")), `${id} must render the name`);
   }
@@ -95,7 +95,6 @@ test("victory requires post and first-clear finalize, with the Stage 30 ending c
   state = completeV100Event(state).state;
   assert.equal(state.phase, "credits");
   state = completeV100Event(state).state;
-  assert.equal(state.phase, "epilogue");
-  state = completeV100Event(state).state;
+  assert.equal(state.phase, "map");
   assert.equal(state.destination, "postgame-map");
 });

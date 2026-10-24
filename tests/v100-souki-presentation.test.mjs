@@ -3,6 +3,38 @@ import test from 'node:test';
 import {beginSoukiBurst,advanceSoukiBurst,STATION_ENEMY_TUNING} from '../app/stationEnemyMechanics.js';
 import {spriteFrameFor,fitSpriteBattleDisplaySize,SPRITE_STATES} from '../app/spriteManifest.js';
 import {v100SoukiPose,v100SoukiAuthoredSize,V100_SOUKI_STABLE_POSE} from '../app/v100SoukiPresentation.js';
+import {readFileSync} from 'node:fs';
+import {createCombatAnimationRuntime,advanceCombatAnimationRuntime,combatFacingDirection} from '../app/combatPresentation.js';
+
+test('Souki burst stride follows signed actual travel while its ability clock continues',()=>{
+ const duration=STATION_ENEMY_TUNING.souki.burstSeconds,speed=STATION_ENEMY_TUNING.souki.burstSpeed;
+ for(const elapsed of [.1,.3,.54,.8,1]){
+  const runtime={phase:'burst',remainingSeconds:duration-elapsed};
+  assert.deepEqual(v100SoukiPose(runtime,0,-speed*elapsed),v100SoukiPose(runtime),'Full-speed cadence stays unchanged at a matching world phase');
+ }
+ for(const distance of [0,46,-46]){
+  const poses=[.3,.5,.8,1].map(elapsed=>v100SoukiPose({phase:'burst',remainingSeconds:duration-elapsed},0,distance));
+  assert.equal(new Set(poses.map(p=>p.spriteState)).size,1,'No foot cycle while the root stays at contact');
+  assert.deepEqual(poses.map(p=>p.elapsed),[.3,.5,.8,1].map(e=>duration-(duration-e)),'Keep original ability time');
+ }
+ const at=distance=>v100SoukiPose({phase:'burst',remainingSeconds:.3},0,distance).spriteState;
+ assert.notEqual(at(-speed*.3),at(-speed*.5),'Different world positions select different stride poses');
+ const source=readFileSync('app/AshfallGame.tsx','utf8');
+ assert.match(source,/v100SoukiPose\(f\.stationAbility,actionPresentationFlash,f\.x\)/u);
+});
+
+test('rightward contact pushback reverses the fixed-left burst even when normal runtime facing becomes right',()=>{
+ const f={x:381.8,y:285},ability={phase:'burst',remainingSeconds:.3};
+ let animation=createCombatAnimationRuntime({x:f.x,y:f.y,direction:'left'});
+ const before=v100SoukiPose(ability,0,f.x);assert.equal(before.spriteState,'attack-b');
+ const actualXDelta=2;f.x+=actualXDelta;
+ const direction=combatFacingDirection({side:'zombie',actualXDelta,aiMoveDirection:0,entryDirection:-1,targetDirection:-1});
+ animation=advanceCombatAnimationRuntime(animation,{kind:'sprinter',direction,x:f.x,y:f.y,locomotionCycleDistance:48.5930950493},1/60);
+ assert.equal(animation.direction,'right');assert.ok(animation.locomotionPhase>0,'Normal runtime faces the actual push');
+ const after=v100SoukiPose(ability,0,f.x);assert.equal(after.spriteState,'walk-a','Fixed-left body retraces the preceding stride cell');
+ assert.equal(after.elapsed,before.elapsed,'The shove does not advance ability time');
+ assert.equal(v100SoukiPose(ability,0,381.8).spriteState,before.spriteState,'Returning to the same world point restores its pose');
+});
 
 test('Souki uses its authored crouch, launch, strides and recovery through an actual unchanged burst',()=>{
  let runner={id:8,kind:'sprinter',side:'zombie',hp:90,combatReady:true,lane:1,x:780,y:285};

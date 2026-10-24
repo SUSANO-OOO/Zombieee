@@ -1,0 +1,173 @@
+name: All Unit Native Motion Capture
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - '.github/workflows/native-allunit-capture.yml'
+      - 'scripts/v177-native-allunit-*.mjs'
+      - 'scripts/v177-native-allunit-recovery.json'
+      - 'scripts/native-recording-runtime/package.json'
+      - 'scripts/native-recording-runtime/package-lock.json'
+      - 'scripts/v177-native-process-timeline.mjs'
+      - 'tests/v177-native-process-timeline.test.mjs'
+      - 'scripts/v100-macos-indexing-control.mjs'
+      - 'tests/v177-native-allunit*.test.mjs'
+      - 'scripts/v177-native-encoded-clips.mjs'
+      - 'tests/v177-native-encoded-clips.test.mjs'
+      - 'scripts/v177-native-canvas-clips.mjs'
+      - 'app/AshfallGame.tsx'
+      - 'app/v177*.js'
+      - 'app/spriteManifest.js'
+      - 'app/combatPresentation.js'
+      - 'app/manualAbilities.js'
+      - 'app/manualAbilityUi.js'
+      - 'app/v104CombatVfx.js'
+      - 'public/art/v100/joints/**'
+  workflow_dispatch:
+    inputs:
+      expected_head:
+        description: Exact 40-character candidate SHA to verify without publication
+        required: true
+        type: string
+      capture_mode:
+        description: Remaining original failures, or all432 for integration acceptance
+        type: choice
+        options: [remaining, full, brute-codec-control, abomination-acquisition-control]
+        default: remaining
+      video_container:
+        description: Native container for the isolated Brute codec control only
+        type: choice
+        options: [vp8, mp4]
+        default: vp8
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-allunit-capture-${{ github.event.pull_request.number || inputs.expected_head }}
+  cancel-in-progress: false
+
+jobs:
+  scope:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    outputs:
+      allunit: ${{ steps.scope.outputs.allunit }}
+      shards: ${{ steps.selection.outputs.shards }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || inputs.expected_head }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22.13.0'
+      - id: scope
+        env:
+          CI_SCOPE_BASE: ${{ github.event.before || github.event.pull_request.base.sha }}
+          CI_SCOPE_HEAD: ${{ github.event.pull_request.head.sha || inputs.expected_head }}
+          CI_SCOPE_DRAFT: ${{ github.event.pull_request.draft }}
+        run: node scripts/ci-change-scope.mjs
+      - id: selection
+        run: node scripts/v177-native-allunit-selection.mjs
+  build:
+    needs: scope
+    if: ${{ always() && !cancelled() && (github.event_name == 'workflow_dispatch' || (needs.scope.result == 'success' && needs.scope.outputs.shards != '[]' && (!github.event.pull_request.draft || needs.scope.outputs.allunit == 'true'))) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      receipt_sha256: ${{ steps.bundle.outputs.receipt_sha256 }}
+      dist_sha256: ${{ steps.bundle.outputs.dist_sha256 }}
+      shards: ${{ steps.selection.outputs.shards }}
+      native_host_control: ${{ steps.selection.outputs.native_host_control }}
+    env:
+      V177_EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha || inputs.expected_head }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || inputs.expected_head }}
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Select only source-compatible unfinished cases in Draft
+        id: selection
+        run: node scripts/v177-native-allunit-selection.mjs
+      - name: Build the exact PR candidate once
+        env:
+          GITHUB_PAGES_RELEASE_SHA: ${{ github.event.pull_request.head.sha || inputs.expected_head }}
+        run: npm run build
+      - name: Retain the exact build and committed public-source manifest
+        id: bundle
+        run: node scripts/v177-native-allunit-build.mjs pack outputs/v177-native-allunit-build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v177-native-allunit-build-${{ github.event.pull_request.head.sha || inputs.expected_head }}-${{ github.run_attempt }}
+          path: outputs/v177-native-allunit-build
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+  capture:
+    needs: build
+    if: ${{ !cancelled() && needs.build.result == 'success' && needs.build.outputs.shards != '[]' }}
+    runs-on: macos-15
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ${{ fromJSON(needs.build.outputs.shards) }}
+    env:
+      V177_EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha || inputs.expected_head }}
+      V177_EXPECTED_BUILD_RECEIPT_SHA256: ${{ needs.build.outputs.receipt_sha256 }}
+      V177_EXPECTED_BUILD_SHA256: ${{ needs.build.outputs.dist_sha256 }}
+      V177_CAPTURE_SHARD: ${{ matrix.shard }}
+      V177_NATIVE_ALLUNIT_OUT: outputs/v177-native-allunit-${{ matrix.shard }}
+      V177_NATIVE_HOST_INDEXING_CONTROL: ${{ needs.build.outputs.native_host_control }}
+      V177_NATIVE_VIDEO_MIME: ${{ inputs.video_container == 'mp4' && 'video/mp4' || 'video/webm;codecs=vp8' }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || inputs.expected_head }}
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Install pinned native WebKit
+        run: |
+          node --input-type=module -e 'import assert from "node:assert/strict";assert.equal(process.platform,"darwin");assert.equal(process.arch,"arm64");'
+          npm ci --prefix scripts/native-recording-runtime
+          node scripts/native-recording-runtime/node_modules/playwright/cli.js install webkit
+      - uses: actions/download-artifact@v4
+        with:
+          name: v177-native-allunit-build-${{ github.event.pull_request.head.sha || inputs.expected_head }}-${{ github.run_attempt }}
+          path: outputs/v177-native-allunit-build
+      - name: Restore and verify the identical recursive build before browser startup
+        run: node scripts/v177-native-allunit-build.mjs restore outputs/v177-native-allunit-build outputs/v177-native-allunit-${{ matrix.shard }}
+      - name: Prepare single-case native timing control
+        id: native-preparation
+        if: env.V177_NATIVE_HOST_INDEXING_CONTROL == 'brute-attack-1280'
+        run: node scripts/v100-macos-indexing-control.mjs prepare-native-capture
+      - name: Capture actual movement and attacks for this four-form shard
+        id: capture
+        run: node scripts/v177-native-allunit-browser.mjs
+      - name: Verify original encoded frames and 250ms coverage
+        if: steps.capture.outcome == 'success'
+        run: node scripts/v177-native-encoded-clips.mjs "$V177_NATIVE_ALLUNIT_OUT/report.json"
+      - name: Restore original native host indexing
+        if: ${{ always() && (steps.native-preparation.outcome == 'success' || steps.native-preparation.outcome == 'failure' || steps.native-preparation.outcome == 'cancelled') }}
+        run: node scripts/v100-macos-indexing-control.mjs restore-native-capture
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v177-native-allunit-${{ matrix.shard }}
+          path: outputs/v177-native-allunit-${{ matrix.shard }}
+          if-no-files-found: error
+          retention-days: 7

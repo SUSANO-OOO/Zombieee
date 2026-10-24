@@ -1,0 +1,19 @@
+{
+  "kind": "red-panther-shield",
+  "tool": "built-in image_gen.imagegen",
+  "reference": "identity-reference.png",
+  "prompt": "parts-prompt.txt",
+  "generatedImage": "output/issue177-panther-parts-r1/red-panther-shield/parts-study-r1.png",
+  "bytes": 1407403,
+  "sha256": "0fe7113953116f627c1dfb3686fa367f2336abb3d0621071fca510dce1857f85",
+  "width": 1254,
+  "height": 1254,
+  "alpha": true,
+  "status": "Hidden costume/anatomy study; original head, visible insignia and gear retained; normal-play acceptance pending",
+  "adoptedDerivedParts": 12,
+  "originalParts": [
+    "head",
+    "weapon-and-hands",
+    "backpack"
+  ]
+}

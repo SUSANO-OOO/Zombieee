@@ -1,3 +1,5 @@
+> 履歴資料：Version 1.0.0当時の設計・実行記録。現行作業は `docs/PRODUCER_DECISIONS_1.0.3.md`、Issue #177、AGENTS.mdを参照する。以下の旧役割・承認待ち・未完cursorを現在の停止条件にしない。
+
 # Version 1.0.0 Historical Luna Handoff / Current SOL Execution Handoff
 
 **2026-09-07 execution override:** the current Codex task owns the whole completion mission under the Producer's new instruction. The current finite sequence and evidence are at the top of `docs/PROJECT_STATE.md` and Issue #172. Historical role handoffs, narrow path locks and routine technical approval waits below do not override that instruction. Locked product decisions and legacy-data preservation remain; only the final Producer approval unlocks integration/merge/tag/Release/official Pages, followed by public verification. The persistent goal cannot be completed at a test, documentation or release-candidate checkpoint.

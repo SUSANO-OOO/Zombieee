@@ -193,7 +193,9 @@ export function resolveKuromeBeam({
     || !Number.isFinite(Number(runtime.targetY))) {
     return deepFreeze({ hits: [], origin: null, target: null });
   }
-  const origin = { x: Number(boss.x) || 0, y: (Number(boss.y) || 0) - 64 };
+  const origin = Number.isFinite(runtime.originX)&&Number.isFinite(runtime.originY)
+    ?{x:runtime.originX,y:runtime.originY}
+    :{ x: Number(boss.x) || 0, y: (Number(boss.y) || 0) - 64 };
   const target = { x: Number(runtime.targetX), y: Number(runtime.targetY) - 38 };
   const width = Math.max(1, Number(beamHalfWidth) || 1);
   const hits = candidates

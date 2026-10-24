@@ -1,0 +1,93 @@
+// Experimental output-only proposal. This module is served raw; no eval/source rewriting.
+import {AacFragmentMuxer,normalizeAacDescription} from './v177-aac-fragment-muxer.mjs';
+import {GRAPH_LIMITS as L} from './v177-native-aac-graph-contract.mjs';
+const outputs=new WeakMap();
+export function graphOutputForContext(context,options={}){const value=outputs.get(context);if(!value)throw new Error('Experimental output was not prewarmed for this exact context');value.configureOwner(options);return value.api;}
+export function createGraphState(){return{schema:'v177-real-audio-graph-observation/v1',status:'preparing',route:'MediaSource',variant:'one-prewarmed-original-mixer-bgm-rifle',sampleRate:null,channels:2,realtimeAudioContexts:0,
+  startedAt:null,inputFrames:0,pcmBytes:0,encodedBytes:0,muxedBytes:0,pcm:[],packets:[],configurations:[],playheads:[],events:[],transport:[],transportOverflow:0,
+  errors:[],primaryError:null,peakEncoderQueue:0,peakPendingSegments:0,peakPendingBytes:0,physicalRecordingAccepted:false,productionBackendAccepted:false,coldAccepted:false,endingAccepted:false,lifecycleAccepted:false,wholeGameAccepted:false};}
+export async function within(promise,ms,label){let timer;try{return await Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(label+' exceeded '+ms+'ms')),ms);})]);}finally{clearTimeout(timer);}}
+export async function prepareGraphOutput(context,{state=createGraphState(),workletUrl,env=globalThis}={}){
+  const now=()=>env.performance.now(),check=(ok,message)=>{if(!ok)throw new Error(message);};
+  state.sampleRate=context.sampleRate;check(Number.isSafeInteger(state.sampleRate)&&state.sampleRate>=8000&&state.sampleRate<65536,'Actual context.sampleRate is unsupported; no resampling is permitted');
+  let audio,source,buffer,encoder,node,input,url,owner={},desired=false,disposed=false,away=false,generation=1,pendingPlay=null,muxer,ended=false,originFrame=null,appendBytes=0;
+  const pending=[],pcmParts=[],encodedParts=[],muxedParts=[],removers=[];let finishedResolve,finishedReject;
+  const finished=new Promise((resolve,reject)=>{finishedResolve=resolve;finishedReject=reject;});void finished.catch(()=>{});
+  const ms=()=>state.startedAt===null?null:now()-state.startedAt;
+  function fail(error){const text=error instanceof Error?error.stack??String(error):String(error);state.primaryError??=text;if(state.errors.length<16)state.errors.push(text);state.status='failed';finishedReject(error instanceof Error?error:new Error(text));}
+  function record(event,extra={}){if(state.transport.length>=L.transportEvents){state.transportOverflow++;fail(new Error('Bounded transport event capacity exhausted'));return;}state.transport.push({event,at:now(),ms:ms(),contextTime:context.currentTime,mediaTime:audio?.currentTime??null,encodeQueue:encoder?.encodeQueueSize??null,pendingSegments:pending.length,pendingBytes:appendBytes,...extra});}
+  const on=(target,name,fn)=>{target.addEventListener(name,fn);removers.push(()=>target.removeEventListener(name,fn));};
+  const rotation=env.matchMedia?.('(orientation: portrait)');
+  const allowed=()=>!disposed&&!away&&env.document.visibilityState!=='hidden'&&!rotation?.matches&&(owner.canPlay?.()??true);
+  function pause(){desired=false;generation++;audio?.pause();if(state.startedAt!==null&&!disposed)fail(new Error('Observation was interrupted; recovery is outside this single prewarmed case'));}
+  const api={destination:null,prepare(){
+    if(state.primaryError)return Promise.reject(new Error(state.primaryError));if(!allowed())return Promise.reject(new Error('Experimental output cannot play in the current lifecycle'));
+    if(pendingPlay)return pendingPlay;desired=true;const current=generation;if(state.startedAt===null)state.startedAt=now();record('native-play-call');
+    let play;try{play=audio.play();}catch(error){play=Promise.reject(error);}
+    void Promise.resolve(play).then(()=>{if(disposed||!desired||current!==generation||!allowed())audio.pause();},()=>{});
+    pendingPlay=within(Promise.resolve(play),owner.timeoutMs??2000,'Native output gesture play').then(()=>{check(allowed()&&current===generation&&desired&&!audio.paused,'Native play resolved after cancellation');return true;}).catch(error=>{fail(error);desired=false;audio.pause();throw error;}).finally(()=>{pendingPlay=null;});return pendingPlay;
+  },pause,foreground(){away=false;},needsRecovery:()=>!desired||audio?.paused||Boolean(state.primaryError),snapshot:()=>({mode:'experimental-worklet-aac-mse',paused:audio?.paused??null,disposed,generation,experimental:true}),dispose(){void cleanup();}};
+  function enqueue(segment){check(pending.length<L.pendingSegments&&appendBytes+segment.byteLength<=L.pendingBytes,'Bounded MSE append queue exhausted');pending.push(segment);appendBytes+=segment.byteLength;state.peakPendingSegments=Math.max(state.peakPendingSegments,pending.length);state.peakPendingBytes=Math.max(state.peakPendingBytes,appendBytes);drain();}
+  function retainMuxed(segment){check(state.muxedBytes+segment.byteLength<=L.muxedBytes,'Bounded muxed evidence capacity exhausted');muxedParts.push(segment);state.muxedBytes+=segment.byteLength;enqueue(segment);}
+  function drain(){if(disposed||state.primaryError||!buffer||buffer.updating||source.readyState!=='open')return;try{if(pending.length){const segment=pending.shift();appendBytes-=segment.byteLength;record('append-call',{bytes:segment.byteLength});buffer.appendBuffer(segment);}else if(ended){source.endOfStream();record('end-of-stream');}}catch(error){fail(error);}}
+  function sample(){if(state.startedAt===null)return;state.playheads.push({ms:ms(),time:audio.currentTime,encodedFrames:state.inputFrames,contextTime:context.currentTime,encodeQueueSize:encoder.encodeQueueSize,pendingSegments:pending.length,pendingBytes:appendBytes,readyState:audio.readyState,paused:audio.paused});}
+  function receivePacket(packet){
+    // Preserve actual received bytes before any AudioData construction or encoding.
+    const bytes=new Uint8Array(packet.buffer);check(state.pcm.length<L.pcmPackets&&state.pcmBytes+bytes.byteLength<=L.pcmBytes,'Bounded raw PCM evidence capacity exhausted');
+    pcmParts.push(bytes.slice());state.pcmBytes+=bytes.byteLength;
+    state.pcm.push({packetIndex:packet.packetIndex,firstSourceFrame:packet.firstSourceFrame,timestampUs:packet.timestampUs,durationUs:packet.durationUs,sampleRate:packet.sampleRate,channels:packet.channels,numberOfFrames:packet.numberOfFrames,bytes:bytes.byteLength,receivedAtMs:ms()});
+    check(packet.generation===1&&packet.sampleRate===state.sampleRate&&packet.channels===2&&packet.numberOfFrames===1024&&bytes.byteLength===8192,'Actual PCM packet layout/rate changed');
+    check(packet.packetIndex===state.pcm.length-1&&packet.timestampUs===Math.round(packet.packetIndex*1024/state.sampleRate*1e6),'Missing/duplicate/reordered actual PCM packet');
+    originFrame??=packet.firstSourceFrame;state.originFrame=originFrame;check(packet.firstSourceFrame===originFrame+state.inputFrames,'Actual Worklet source clock gap');
+    state.inputFrames+=1024;
+    const floats=new Float32Array(packet.buffer);for(const v of floats)check(Number.isFinite(v),'Nonfinite actual PCM is retained as failure, never clamped');
+    check(encoder.encodeQueueSize<L.encoderQueue,'Bounded AudioEncoder queue exhausted');
+    const data=new env.AudioData({format:'f32-planar',sampleRate:state.sampleRate,numberOfFrames:1024,numberOfChannels:2,timestamp:packet.timestampUs,data:floats});
+    try{encoder.encode(data);}finally{data.close();}
+    state.peakEncoderQueue=Math.max(state.peakEncoderQueue,encoder.encodeQueueSize);sample();
+    node.port.postMessage({type:'recycle',generation:1,id:packet.id,packetIndex:packet.packetIndex,buffer:packet.buffer},[packet.buffer]);
+  }
+  async function cleanup(){
+    if(disposed)return;disposed=true;desired=false;generation++;state.cleanup??={completed:false,errors:[]};
+    const attempt=(label,fn)=>{try{fn();}catch(error){state.cleanup.errors.push({label,error:String(error)});fail(error);}};
+    for(const remove of removers)attempt('listener',remove);
+    attempt('port',()=>{if(node){node.port.onmessage=null;node.onprocessorerror=null;node.port.close();}});attempt('input-disconnect',()=>input?.disconnect());attempt('node-disconnect',()=>node?.disconnect());
+    attempt('encoder-close',()=>{if(encoder&&encoder.state!=='closed')encoder.close();});
+    attempt('media-release',()=>{if(audio){audio.pause();audio.removeAttribute('src');audio.load();audio.remove();}});
+    attempt('object-url',()=>{if(url)env.URL.revokeObjectURL(url);});outputs.delete(context);state.cleanup.completed=state.cleanup.errors.length===0;
+  }
+  try{
+    check(typeof env.AudioEncoder==='function'&&typeof env.AudioData==='function'&&typeof env.AudioWorkletNode==='function'&&context.audioWorklet,'Required actual graph/codec API absent');
+    const config={codec:'mp4a.40.2',sampleRate:state.sampleRate,numberOfChannels:2,bitrate:192000,aac:{format:'aac'}};
+    state.encoderSupport=await within(env.AudioEncoder.isConfigSupported(config),L.readyMs,'Encoder support');check(state.encoderSupport.supported,'Actual-rate AAC encoder unsupported');
+    const mime='audio/mp4; codecs="mp4a.40.2"';check(typeof env.MediaSource==='function'&&env.MediaSource.isTypeSupported(mime),'MediaSource AAC unsupported');
+    audio=env.document.createElement('audio');audio.hidden=true;audio.controls=false;audio.autoplay=false;audio.playsInline=true;audio.disableRemotePlayback=true;audio.preload='auto';audio.volume=1;audio.muted=false;audio.setAttribute('playsinline','');env.document.body.appendChild(audio);
+    for(const event of ['playing','waiting','stalled','ended','error'])on(audio,event,()=>{if(state.events.length>=L.transportEvents){fail(new Error('Bounded media event capacity exhausted'));return;}state.events.push({event,ms:ms(),time:audio.currentTime});record('media-'+event);if(event==='error')fail(new Error('Native media element error'));});
+    on(audio,'pause',()=>{if(desired&&allowed()){owner.onInterrupted?.();fail(new Error('Unexpected native media pause'));}});
+    on(env,'pagehide',()=>{away=true;pause();});on(env,'pageshow',()=>{away=false;});on(env.document,'visibilitychange',()=>{if(!allowed())pause();});if(rotation)on(rotation,'change',()=>{if(!allowed())pause();});
+    source=new env.MediaSource();const opened=new Promise((resolve,reject)=>{on(source,'sourceopen',resolve);on(audio,'error',()=>reject(new Error('MSE source open failed')));});
+    url=env.URL.createObjectURL(source);audio.src=url;audio.load();await within(opened,L.readyMs,'MSE source open');
+    state.durationInitialization={before:Number.isFinite(source.duration)?source.duration:String(source.duration),assignedInfinity:false};
+    buffer=source.addSourceBuffer(mime);on(buffer,'updateend',()=>{record('updateend');drain();});on(buffer,'error',()=>fail(new Error('Native SourceBuffer error')));
+    encoder=new env.AudioEncoder({error:fail,output:(chunk,metadata)=>{
+      // Keep raw encoded bytes/configuration before parsing or mux validation.
+      try{
+        const bytes=new Uint8Array(chunk.byteLength);chunk.copyTo(bytes);check(state.encodedBytes+bytes.byteLength<=L.encodedBytes&&state.packets.length<L.pcmPackets+4,'Bounded native AAC evidence capacity exhausted');
+        encodedParts.push(bytes);state.encodedBytes+=bytes.byteLength;const ordinal=state.packets.length;state.packets.push({timestamp:chunk.timestamp,duration:chunk.duration,type:chunk.type,bytes:bytes.byteLength,offset:state.encodedBytes-bytes.byteLength,atMs:ms()});
+        const c=metadata?.decoderConfig;if(c){const description=Array.from(new Uint8Array(c.description??[])),saved={codec:c.codec,sampleRate:c.sampleRate,numberOfChannels:c.numberOfChannels,description,packet:ordinal};state.configurations.push(saved);const normalized=normalizeAacDescription(description,c);
+          if(!muxer){check(c.sampleRate===state.sampleRate&&c.numberOfChannels===2,'Actual AAC configuration differs from Worklet PCM');muxer=new AacFragmentMuxer(description,c);state.asc=Array.from(normalized.asc);retainMuxed(muxer.initializationSegment);}else check(description.length>0&&normalized.asc.every((b,i)=>b===state.asc[i]),'Native AAC configuration changed');}
+        check(muxer,'Native encoder omitted decoder configuration');check(Math.abs(chunk.timestamp-Math.round(ordinal*1024/state.sampleRate*1e6))<=1,'Native AAC packet clock gap or priming representation unsupported');
+        check(chunk.duration!==null&&Math.abs(chunk.duration-1024/state.sampleRate*1e6)<=1,'Native AAC duration is not1024 actual-rate samples');
+        retainMuxed(muxer.segment([{data:bytes,timestampSamples:ordinal*1024,durationSamples:1024}]));
+      }catch(error){fail(error);}
+    }});encoder.configure(config);
+    await within(context.audioWorklet.addModule(workletUrl),L.readyMs,'Raw Worklet module load');
+    node=new env.AudioWorkletNode(context,'v177-graph-pcm-framer',{numberOfInputs:1,numberOfOutputs:0,channelCount:2,channelCountMode:'explicit',channelInterpretation:'speakers',processorOptions:{generation:1}});
+    node.port.onmessage=({data:packet})=>{if(disposed)return;try{check(packet.generation===1,'Stale Worklet generation');if(packet.type==='pcm-processor-ready'){check(packet.sampleRate===state.sampleRate,'Processor actual rate mismatch');state.processorReady=packet;record('processor-ready');}else if(packet.type==='pcm-packet')receivePacket(packet);else if(packet.type==='pcm-framing-error')throw new Error('Actual Worklet framing failed: '+JSON.stringify(packet));else if(packet.type==='pcm-finished'){state.finished=packet;finishedResolve(packet);}else throw new Error('Unknown Worklet receipt');}catch(error){fail(error);}};
+    node.onprocessorerror=()=>fail(new Error('Actual Worklet processorerror'));input=context.createGain();input.connect(node);api.destination=input;
+    const result={api,configureOwner(options){owner=options;},state,origin:()=>originFrame,record,fail,
+      evidence:()=>({metadata:state,pcmParts,encodedParts,muxedParts}),
+      async finish(){node.port.postMessage({type:'finish',generation:1});await within(finished,2000,'Worklet boundary finish');check(!state.primaryError,'Original Worklet/transport failure retained');await within(encoder.flush(),2000,'Actual AAC flush');check(!state.primaryError,'Original encoder failure retained');ended=true;drain();const deadline=now()+2000;while((pending.length||buffer.updating||source.readyState==='open')&&now()<deadline&&!state.primaryError)await new Promise(resolve=>setTimeout(resolve,5));check(!pending.length&&!buffer.updating&&source.readyState!=='open','Bounded MSE drain failed');while(audio.currentTime<state.inputFrames/state.sampleRate-.05&&now()<deadline&&!state.primaryError)await new Promise(resolve=>setTimeout(resolve,10));sample();state.finalMedia={time:audio.currentTime,duration:audio.duration,ended:audio.ended,paused:audio.paused,volume:audio.volume,muted:audio.muted,readyState:audio.readyState};check(!state.primaryError,'Original native failure retained');},cleanup};
+    outputs.set(context,result);state.status='prewarmed-modules-not-running';return result;
+  }catch(error){fail(error);await cleanup();throw error;}
+}

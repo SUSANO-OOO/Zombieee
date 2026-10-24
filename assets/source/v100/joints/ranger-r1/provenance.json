@@ -1,0 +1,110 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "ranger",
+  "assetPath": "/art/v100/joints/ranger-r1.webp",
+  "sha256": "eb70556d6c4e0d53ec812da6b5a95de91dd0d4d6cb87cd6da1a0c0d61672ed5e",
+  "bytes": 886014,
+  "generatedPartsStudySha256": "70198b242775f2ac389c70c33aabdadd6daf6cd6418e896d0b482a9059d10ec6",
+  "identitySourceSha256": "c7e24b73935f68d770ac211f407e11978dc01604d5b3280a8bccd1a50ea92317",
+  "identityBinding": {
+    "path": "/art/v070/characters/ranger-battle-v1.png",
+    "width": 480,
+    "height": 448,
+    "scale": 1,
+    "tx": 0.5,
+    "ty": 0,
+    "sourceSha256": "185a9f6850c51da5bb4cf55374531ec210ac3a5a2182b21be91a336c098f0d6b",
+    "sourceRect": {
+      "x": 480,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "flipX": false
+  },
+  "motionSha256": "863cbb7a10f613f9c6fa77025bec706328a857efb40a793e1056d51498ddc386",
+  "parts": [
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "9a0a706a33533889fb59e04a20f5ccbebec8d80cdc3c3245aef421933cf73912",
+      "original": true
+    },
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "b8e3ec90c348375f8700cb54ab76a20298cb7de0d79df13a51dea48ea523a8c9",
+      "original": false
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "a079f1095fa5b31cb131bee71651d7ae2527cb4dcc485088a95337b64e1ca2da",
+      "original": false
+    },
+    {
+      "name": "weapon",
+      "file": "weapon.png",
+      "sha256": "8b116997ea3f429b3d2de0a6537ca52c186d6cc0fc46db6efc80ac678adfa407",
+      "original": true
+    },
+    {
+      "name": "near-upper-arm",
+      "file": "near-upper-arm.png",
+      "sha256": "cb983efc4984612ee4d74199dd2404cf0a742bd5e90921a2b4aaa1823a5f419a",
+      "original": false
+    },
+    {
+      "name": "near-forearm",
+      "file": "near-forearm.png",
+      "sha256": "d1b8ac0966833169c398acaada2a933935d5a4b11b0f814d0e9333d2f7d5863b",
+      "original": false
+    },
+    {
+      "name": "far-upper-arm",
+      "file": "far-upper-arm.png",
+      "sha256": "28ef9aa04168d1d695a41cfede2205e642bf2dd1f09dff202b69c14197f4a301",
+      "original": false
+    },
+    {
+      "name": "far-forearm",
+      "file": "far-forearm.png",
+      "sha256": "fe448000f8fb118bfb9905f7f346f71062c66e94cf9bc0498da2d6e491d875a1",
+      "original": false
+    },
+    {
+      "name": "near-boot",
+      "file": "near-boot.png",
+      "sha256": "ad7c06a1c8acfc4fe66e10e50e1ec62147c60197336ac02515b6ee776ce33cf2",
+      "original": false
+    },
+    {
+      "name": "far-boot",
+      "file": "far-boot.png",
+      "sha256": "191b065d7e9611bc10964cfd4aaaa8bc240d9a7ebd67efe062a727e0c6cd2d6e",
+      "original": false
+    },
+    {
+      "name": "far-pants",
+      "file": "far-pants.png",
+      "sha256": "7ba734d65efc0a1b7584ae5a74fd29c07155de4ce279ab73baeb83c21dd8fc81",
+      "original": false
+    },
+    {
+      "name": "near-pants",
+      "file": "near-pants.png",
+      "sha256": "bc7c7eff878861881f78c7d1c95b81796ab412e62abc5c4b5411e5f32593f94f",
+      "original": false
+    }
+  ],
+  "source": "Blender 5.2 real bone poses and explicit clothing meshes; original head, rifle and hands",
+  "groundY": 432,
+  "decodedBytes": 4149248,
+  "scope": {
+    "totalUnits": 48,
+    "integratedCandidateUnits": 1,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  },
+  "frames": 152
+}

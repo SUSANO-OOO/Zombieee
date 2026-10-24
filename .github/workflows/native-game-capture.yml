@@ -1,0 +1,61 @@
+name: Native Game Capture Diagnostic
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_head:
+        description: Exact 40-character candidate SHA for this diagnostic
+        required: true
+        type: string
+      capture_scope:
+        description: Only missing natural stun and actual infection-rise clips, or the original full diagnostic
+        required: true
+        type: choice
+        options: [full, state-supplements]
+        default: full
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-game-capture-${{ inputs.expected_head }}
+  cancel-in-progress: false
+
+jobs:
+  native-game-capture:
+    runs-on: macos-15-intel
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.expected_head }}
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - name: Verify immutable candidate before running the diagnostic
+        env:
+          EXPECTED_HEAD: ${{ inputs.expected_head }}
+        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_HEAD??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_HEAD);'
+      - run: npm ci
+      - name: Install pinned native WebKit
+        run: |
+          npm ci --prefix scripts/pwa-native-runtime
+          node scripts/pwa-native-runtime/node_modules/playwright/cli.js install webkit
+      - name: Build the exact requested candidate
+        env:
+          GITHUB_PAGES_RELEASE_SHA: ${{ inputs.expected_head }}
+        run: npm run build
+      - name: Record priority actions, actual infection rises and natural incoming stun in three viewports with native VP8
+        env:
+          V177_EXPECTED_HEAD_SHA: ${{ inputs.expected_head }}
+          V177_NATIVE_GAME_CAPTURE_OUT: outputs/v177-native-game-capture
+        run: node scripts/v177-native-game-capture-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v177-native-game-capture
+          path: outputs/v177-native-game-capture
+          if-no-files-found: error
+          retention-days: 7

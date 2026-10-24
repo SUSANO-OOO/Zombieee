@@ -26,7 +26,7 @@ const SHARE_DESCRIPTION =
 export const metadata: Metadata = {
   title: RELEASE_TITLE,
   description:
-    "装甲車両と16人の生存者を率い、西新の全30作戦を戦い抜くリアルタイム戦略・防衛ゲーム。",
+    "装甲車両と16人の生存者を率い、西新の全30ステージを戦い抜くリアルタイム戦略・防衛ゲーム。",
   icons: {
     icon: [{ url: V099_APP_ICON_IDENTITY.paths.favicon48, type: "image/png", sizes: "48x48" }],
     shortcut: V099_APP_ICON_IDENTITY.paths.favicon48,

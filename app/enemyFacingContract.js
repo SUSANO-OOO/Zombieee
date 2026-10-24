@@ -98,18 +98,24 @@ export function combatFacingFromMotion({
   manualDirection = 0,
   manualAbilityActive = false,
   attacking = false,
+  recoiling = false,
+  previousDirection,
 } = {}) {
-  if (side === "human" && manualAbilityActive && Number(manualDirection) !== 0) {
-    return Number(manualDirection) < 0 ? "left" : "right";
+  const manual = Number(manualDirection), target = Number(targetDirection);
+  if (side === "human" && manualAbilityActive && Number.isFinite(manual) && manual !== 0) {
+    return manual < 0 ? "left" : "right";
   }
-  if (attacking && Number(targetDirection) !== 0) {
-    return Number(targetDirection) < 0 ? "left" : "right";
+  if (attacking && Number.isFinite(target) && target !== 0) {
+    return target < 0 ? "left" : "right";
   }
+  // A hit translates the body; it does not turn its attention away from the
+  // attacker. Explicit attacks and manual aim above still own their direction.
+  if (recoiling && (previousDirection === "left" || previousDirection === "right")) return previousDirection;
   if (Number(actualXDelta) > .05) return "right";
   if (Number(actualXDelta) < -.05) return "left";
   if (Number(aiMoveDirection) > .05) return "right";
   if (Number(aiMoveDirection) < -.05) return "left";
-  if (Number(targetDirection) !== 0) return Number(targetDirection) < 0 ? "left" : "right";
+  if (Number.isFinite(target) && target !== 0) return target < 0 ? "left" : "right";
   if (side === "human") return "right";
   return Number(entryDirection) > 0 ? "right" : "left";
 }

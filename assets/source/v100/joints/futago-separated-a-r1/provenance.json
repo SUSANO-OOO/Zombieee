@@ -1,0 +1,415 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "futago-separated-a",
+  "assetPath": "/art/v100/joints/futago-separated-a-r1.webp",
+  "bytes": 24404,
+  "sha256": "08955e85523c9c046a0d84e7d37269335b111d58c8afb92193c66780800bf63a",
+  "atlasPacking": "height-descending-shelves",
+  "generatedPartsStudySha256": "f314b6a5f32266a4881bc0e1c40bbfe2397e006091810b0c603dd596c44e654c",
+  "identitySourceSha256": "08bc90fcf191b912d37e0efa431971241337ee9a865b24fdb3e2fb85b0469aef",
+  "identityBinding": {
+    "path": "/art/v100/bosses/futago-separated-a-battle-v1.webp",
+    "sourceSha256": "9150a4c69f4c62cf5f9ae929db6b733abaf66e10f67a2169e2b7657daf060368",
+    "sourceRect": {
+      "x": 32,
+      "y": 441,
+      "w": 183,
+      "h": 320
+    },
+    "drawSlices": [
+      {
+        "x": 0,
+        "y": 0,
+        "w": 183,
+        "h": 320
+      }
+    ],
+    "flipX": false
+  },
+  "motionSha256": "700919769c8093fdb422ac82c6b6dda2106bc80fb6b10607e1ed6c797c6a2200",
+  "originalPoseBindings": {
+    "idle": {
+      "path": "/art/v100/bosses/futago-separated-a-battle-v1.webp",
+      "sourceSha256": "9150a4c69f4c62cf5f9ae929db6b733abaf66e10f67a2169e2b7657daf060368",
+      "sourceRect": {
+        "x": 32,
+        "y": 441,
+        "w": 183,
+        "h": 320
+      },
+      "drawSlices": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 183,
+          "h": 320
+        }
+      ],
+      "flipX": false,
+      "file": "identity-reference.png",
+      "sha256": "08bc90fcf191b912d37e0efa431971241337ee9a865b24fdb3e2fb85b0469aef",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 148,
+        "ty": 128,
+        "paddingOnly": true
+      },
+      "reason": "Original native crop padded by integer pixels, without resampling or identity repaint"
+    },
+    "walk-a": {
+      "path": "/art/v100/bosses/futago-separated-a-battle-v1.webp",
+      "sourceSha256": "9150a4c69f4c62cf5f9ae929db6b733abaf66e10f67a2169e2b7657daf060368",
+      "sourceRect": {
+        "x": 258,
+        "y": 437,
+        "w": 249,
+        "h": 359
+      },
+      "drawSlices": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 249,
+          "h": 359
+        }
+      ],
+      "flipX": false,
+      "file": "original-walk-a.png",
+      "sha256": "d94f57cc11dc00ce34905dc2072b35da48ed4ed95388426d5d2e8de497d8f257",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "originalReferenceOnly": true
+      },
+      "reason": "Unmodified canonical pose crop retained for identity/owner evidence; not blindly copied into the gait"
+    },
+    "walk-b": {
+      "path": "/art/v100/bosses/futago-separated-a-battle-v1.webp",
+      "sourceSha256": "9150a4c69f4c62cf5f9ae929db6b733abaf66e10f67a2169e2b7657daf060368",
+      "sourceRect": {
+        "x": 512,
+        "y": 437,
+        "w": 276,
+        "h": 375
+      },
+      "drawSlices": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 138,
+          "h": 187
+        },
+        {
+          "x": 138,
+          "y": 0,
+          "w": 138,
+          "h": 93
+        },
+        {
+          "x": 138,
+          "y": 93,
+          "w": 69,
+          "h": 94
+        },
+        {
+          "x": 207,
+          "y": 140,
+          "w": 69,
+          "h": 47
+        },
+        {
+          "x": 0,
+          "y": 187,
+          "w": 276,
+          "h": 188
+        }
+      ],
+      "flipX": false,
+      "file": "original-walk-b.png",
+      "sha256": "621fe3da9beb3e4b07bac3896504243aaafd8ba38bc1366c1c6d701485268449",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "originalReferenceOnly": true
+      },
+      "reason": "Unmodified canonical pose crop retained for identity/owner evidence; not blindly copied into the gait"
+    },
+    "attack-a": {
+      "path": "/art/v100/bosses/futago-separated-a-battle-v1.webp",
+      "sourceSha256": "9150a4c69f4c62cf5f9ae929db6b733abaf66e10f67a2169e2b7657daf060368",
+      "sourceRect": {
+        "x": 771,
+        "y": 410,
+        "w": 280,
+        "h": 338
+      },
+      "drawSlices": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 140,
+          "h": 84
+        },
+        {
+          "x": 17,
+          "y": 105,
+          "w": 18,
+          "h": 21
+        },
+        {
+          "x": 0,
+          "y": 126,
+          "w": 70,
+          "h": 43
+        },
+        {
+          "x": 70,
+          "y": 84,
+          "w": 70,
+          "h": 85
+        },
+        {
+          "x": 192,
+          "y": 15,
+          "w": 2,
+          "h": 3
+        },
+        {
+          "x": 196,
+          "y": 15,
+          "w": 5,
+          "h": 6
+        },
+        {
+          "x": 140,
+          "y": 42,
+          "w": 70,
+          "h": 42
+        },
+        {
+          "x": 210,
+          "y": 0,
+          "w": 70,
+          "h": 84
+        },
+        {
+          "x": 140,
+          "y": 84,
+          "w": 140,
+          "h": 85
+        },
+        {
+          "x": 0,
+          "y": 169,
+          "w": 280,
+          "h": 169
+        }
+      ],
+      "flipX": false,
+      "file": "original-attack-a.png",
+      "sha256": "42733537e49d28841d22f40f7c30ea6c472bf571d54ff7387c5cc40ea6135bd8",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "originalReferenceOnly": true
+      },
+      "reason": "Unmodified canonical pose crop retained for identity/owner evidence; not blindly copied into the gait"
+    },
+    "attack-b": {
+      "path": "/art/v100/bosses/futago-separated-a-battle-v1.webp",
+      "sourceSha256": "9150a4c69f4c62cf5f9ae929db6b733abaf66e10f67a2169e2b7657daf060368",
+      "sourceRect": {
+        "x": 1072,
+        "y": 421,
+        "w": 342,
+        "h": 384
+      },
+      "drawSlices": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 171,
+          "h": 192
+        },
+        {
+          "x": 171,
+          "y": 12,
+          "w": 21,
+          "h": 12
+        },
+        {
+          "x": 171,
+          "y": 48,
+          "w": 85,
+          "h": 48
+        },
+        {
+          "x": 256,
+          "y": 0,
+          "w": 86,
+          "h": 96
+        },
+        {
+          "x": 171,
+          "y": 96,
+          "w": 171,
+          "h": 96
+        },
+        {
+          "x": 0,
+          "y": 192,
+          "w": 342,
+          "h": 192
+        }
+      ],
+      "flipX": false,
+      "file": "original-attack-b.png",
+      "sha256": "f4c4408647c29221c931812c4ec9ad1fd3b576656d34810d40522521daa5864a",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "originalReferenceOnly": true
+      },
+      "reason": "Unmodified canonical pose crop retained for identity/owner evidence; not blindly copied into the gait"
+    },
+    "hit": {
+      "path": "/art/v100/bosses/futago-separated-a-battle-v1.webp",
+      "sourceSha256": "9150a4c69f4c62cf5f9ae929db6b733abaf66e10f67a2169e2b7657daf060368",
+      "sourceRect": {
+        "x": 1401,
+        "y": 434,
+        "w": 214,
+        "h": 337
+      },
+      "drawSlices": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 214,
+          "h": 337
+        }
+      ],
+      "flipX": false,
+      "file": "original-hit.png",
+      "sha256": "8e7066d54b90c11d816209480b0b25bf86673ad9ec883c0bffbd56dbe8a8ccdd",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "originalReferenceOnly": true
+      },
+      "reason": "Unmodified canonical pose crop retained for identity/owner evidence; not blindly copied into the gait"
+    }
+  },
+  "parts": [
+    {
+      "name": "far-upper",
+      "file": "far-upper.png",
+      "sha256": "fad547e16e167eab56b98e5ca398c83f100b8425e535ca76cbfb8a18380d412b",
+      "original": false
+    },
+    {
+      "name": "far-lower",
+      "file": "far-lower.png",
+      "sha256": "f419661e8886729f6ae3d62bcd0486bf5cf8efe0be8dae42790f608e95a51473",
+      "original": false
+    },
+    {
+      "name": "far-foot",
+      "file": "far-foot.png",
+      "sha256": "332586478b7cabf62b9bbd246c04663efcb3f76189d4812cb44518c94c2c0f73",
+      "original": true
+    },
+    {
+      "name": "near-upper",
+      "file": "near-upper.png",
+      "sha256": "78a55437aac3e1a3b5afa2b6eb3b289656cea674da4b9b3443a8a8f01204ce02",
+      "original": false
+    },
+    {
+      "name": "near-lower",
+      "file": "near-lower.png",
+      "sha256": "a9a0267b72c03873f7ea4795d8986220bb5c028a768a79bbf6f2066c7f532e4d",
+      "original": false
+    },
+    {
+      "name": "near-foot",
+      "file": "near-foot.png",
+      "sha256": "91b46757baf8da588e83d87ea1cdada77ae7e3a9404641c8986b27d8b4fc1045",
+      "original": true
+    },
+    {
+      "name": "large-upper",
+      "file": "large-upper.png",
+      "sha256": "8040ae0251b3a39ced144aa8cde6e82d2b1ca20b130afa09646dbd4f8b350615",
+      "original": false
+    },
+    {
+      "name": "large-lower",
+      "file": "large-lower.png",
+      "sha256": "81e47dc3533de91dd254021322faed45d7da393adca87abf1e91f23406fe5ba6",
+      "original": false
+    },
+    {
+      "name": "large-claw",
+      "file": "large-claw.png",
+      "sha256": "c41c5d3666ece0fbb2ade270c31d8e7d22e85a951abddb589ea160e3a316d55b",
+      "original": true
+    },
+    {
+      "name": "small-upper",
+      "file": "small-upper.png",
+      "sha256": "7322c7d5c68ce11d20a6f416f71bd41799d2d543b89ddbe95bd62e8c83ea97f9",
+      "original": false
+    },
+    {
+      "name": "small-lower",
+      "file": "small-lower.png",
+      "sha256": "b6b5a1d142da1b5c50eff68892fbd64e8edfc87911b3f0f5db4d499b857be4ce",
+      "original": false
+    },
+    {
+      "name": "small-claw",
+      "file": "small-claw.png",
+      "sha256": "46433d9a4d4d293cb3a137e7abab2da5023b00b09a4da9d98c0486f755dd1e83",
+      "original": true
+    },
+    {
+      "name": "torso-underpaint",
+      "file": "torso-underpaint.png",
+      "sha256": "252e6b93f5ef4e48e92e1432bc41ce3c75afc5bc885270c2cdb2c6ed01e17966",
+      "original": false
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "720342e6cad5d3d575a747c87985c71e09f7cd299c33aac2fef8712c7d473004",
+      "original": true
+    },
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "748162bc8c05de570bc067856ea3b62bcdbd3ee59a5b5a4ccf3a8b9b864b3828",
+      "original": true
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "01c376fc708ef724f37c1cff258c493b4516788025dacb75e50118ff8e8d9514",
+      "original": true
+    }
+  ],
+  "source": "Blender 5.2 source-bound Futago family: fixed-length planted feet, independent original claw arms, original faces and costume, explicit native frame registration. Fused original anatomy retains both heads, four arms and five canonical feet; separated forms use their own source identities. Split, cross-strike, paired HP, damage and death owners retained. All48/all-action continuous native normal-play acceptance pending.",
+  "groundY": 421.5,
+  "decodedBytes": 133120,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}

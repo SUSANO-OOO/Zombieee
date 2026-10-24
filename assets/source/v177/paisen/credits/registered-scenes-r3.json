@@ -1,0 +1,1404 @@
+{
+  "at": "2026-10-15T10:39:27.198Z",
+  "mode": "built-in",
+  "identityAuthority": "Producer supplied three photos, registered illustrated master r2",
+  "sceneCount": 8,
+  "items": [
+    {
+      "at": "2026-10-15T10:10:02.994Z",
+      "sceneId": "street-community",
+      "original": "public/art/v100/credits/street-community-r1.webp",
+      "originalSha256": "7a3614c3515b7e0403d2e4bc81ab83413c12134f969aa6b74b8c7ca6531b1a62",
+      "generated": "assets/source/v177/paisen/credits/street-community-photo-r2.generated.png",
+      "generatedSha256": "7f751c38f6851ae7d4f35c1d495d2a561c6e69d79223d015d65d53874f11a145",
+      "target": "assets/source/v177/paisen/credits/street-community-photo-r2.localized-r1.png",
+      "targetSha256": "dd5cb810126a3de40e0e4353833a434063267f826aa970faf955cc9e77f36abf",
+      "width": 1600,
+      "height": 900,
+      "polygons": [
+        [
+          [
+            757,
+            184
+          ],
+          [
+            813,
+            179
+          ],
+          [
+            827,
+            260
+          ],
+          [
+            858,
+            294
+          ],
+          [
+            896,
+            219
+          ],
+          [
+            971,
+            219
+          ],
+          [
+            1008,
+            270
+          ],
+          [
+            1022,
+            225
+          ],
+          [
+            1019,
+            169
+          ],
+          [
+            1077,
+            156
+          ],
+          [
+            1102,
+            233
+          ],
+          [
+            1087,
+            337
+          ],
+          [
+            1069,
+            417
+          ],
+          [
+            1085,
+            520
+          ],
+          [
+            1104,
+            644
+          ],
+          [
+            1065,
+            715
+          ],
+          [
+            961,
+            734
+          ],
+          [
+            944,
+            665
+          ],
+          [
+            902,
+            733
+          ],
+          [
+            898,
+            803
+          ],
+          [
+            800,
+            801
+          ],
+          [
+            812,
+            720
+          ],
+          [
+            823,
+            657
+          ],
+          [
+            798,
+            559
+          ],
+          [
+            835,
+            514
+          ],
+          [
+            839,
+            415
+          ],
+          [
+            779,
+            315
+          ]
+        ]
+      ],
+      "protectRects": [
+        [
+          1108,
+          290,
+          492,
+          610
+        ],
+        [
+          900,
+          720,
+          700,
+          180
+        ],
+        [
+          0,
+          0,
+          1600,
+          165
+        ]
+      ],
+      "protectPolygons": [],
+      "faceRect": [
+        890,
+        219,
+        132,
+        155
+      ],
+      "maskPath": "assets/source/v177/paisen/credits/street-community-photo-r2.localization-mask-r1.png",
+      "registeredPixels": 146395,
+      "changedPixels": 146318,
+      "changedOutsideRegisteredRegion": 0,
+      "normalization": "Uniform cover fit to native original dimensions, thresholded explicit Paisen mask; all other original decoded RGBA pixels remain byte-identical.",
+      "runtimeConnected": false,
+      "visualReviewed": true,
+      "nativeAccepted": false,
+      "producerAccepted": false,
+      "wholeGameAccepted": false,
+      "promptSet": "assets/source/v177/paisen/credits/street-community-photo-r2.generation.json",
+      "provenance": "assets/source/v177/paisen/credits/street-community-photo-r2.localized-r1.provenance.json"
+    },
+    {
+      "sceneId": "street-shutter",
+      "target": "assets/source/v177/paisen/credits/street-shutter-photo-face-crop-r6.localized-r1.png",
+      "promptSet": "assets/source/v177/paisen/credits/street-shutter-photo-face-crop-r6.generation.json",
+      "provenance": "assets/source/v177/paisen/credits/street-shutter-photo-face-crop-r6.localized-r1.provenance.json",
+      "faceRect": [
+        1038,
+        125,
+        173,
+        174
+      ],
+      "targetSha256": "8bf3e00769c949f4c5c14d8bd74f7b4e6e04281cd538d31c287fc581584b7164",
+      "runtimeConnected": false,
+      "wholeGameAccepted": false,
+      "previousTarget": "assets/source/v177/paisen/credits/street-shutter-r4.localized-r2.png",
+      "headRefinement": {
+        "at": "2026-10-15T10:29:35.026Z",
+        "sceneId": "street-shutter",
+        "sourceScene": "assets/source/v177/paisen/credits/street-shutter-r4.localized-r2.png",
+        "sourceSceneSha256": "918df9f15d617e315c759016486556c9f0c2ca1da377c94d3959be73699a075d",
+        "generated": "assets/source/v177/paisen/credits/street-shutter-photo-face-crop-r6.generated.png",
+        "generatedSha256": "5fec8f18628402ec04058479ea9f3d219dfd4d1de072e892bc65e1421a7e30bf",
+        "sourceCrop": {
+          "left": 1016,
+          "top": 108,
+          "width": 236,
+          "height": 230
+        },
+        "headPolygon": [
+          [
+            1038,
+            125
+          ],
+          [
+            1162,
+            120
+          ],
+          [
+            1211,
+            186
+          ],
+          [
+            1202,
+            267
+          ],
+          [
+            1156,
+            299
+          ],
+          [
+            1084,
+            288
+          ],
+          [
+            1041,
+            218
+          ]
+        ],
+        "target": "assets/source/v177/paisen/credits/street-shutter-photo-face-crop-r6.localized-r1.png",
+        "targetSha256": "8bf3e00769c949f4c5c14d8bd74f7b4e6e04281cd538d31c287fc581584b7164",
+        "changedHeadPixels": 24846,
+        "changedOutsideHeadFromPrevious": 0,
+        "bodyAndOtherActorsPreserved": true,
+        "runtimeConnected": false,
+        "visualReviewed": false,
+        "producerAccepted": false,
+        "wholeGameAccepted": false
+      },
+      "visualReviewed": true
+    },
+    {
+      "sceneId": "street-paisen-broom",
+      "target": "assets/source/v177/paisen/credits/street-paisen-broom-photo-face-crop-r5.localized-r1.png",
+      "promptSet": "assets/source/v177/paisen/credits/street-paisen-broom-photo-face-crop-r5.generation.json",
+      "provenance": "assets/source/v177/paisen/credits/street-paisen-broom-photo-face-crop-r5.localized-r1.provenance.json",
+      "faceRect": [
+        750,
+        48,
+        186,
+        183
+      ],
+      "targetSha256": "cd2fa103a65d516bbc654cdc14ea3fa145910f0a51ebdf10eb2373263748d53c",
+      "runtimeConnected": false,
+      "wholeGameAccepted": false,
+      "previousTarget": "assets/source/v177/paisen/credits/street-paisen-broom-r3-singing.localized-r1.png",
+      "headRefinement": {
+        "at": "2026-10-15T10:29:35.212Z",
+        "sceneId": "street-paisen-broom",
+        "sourceScene": "assets/source/v177/paisen/credits/street-paisen-broom-r3-singing.localized-r1.png",
+        "sourceSceneSha256": "93e24b7a50cc984428413b7dc40a7fd9702badedcda5b469ce0e8fdd3d93fc71",
+        "generated": "assets/source/v177/paisen/credits/street-paisen-broom-photo-face-crop-r5.generated.png",
+        "generatedSha256": "158671f5f5288570e32b1c6336f4aa5353e8d3146326a4abc2df790622f026a6",
+        "sourceCrop": {
+          "left": 735,
+          "top": 40,
+          "width": 235,
+          "height": 235
+        },
+        "headPolygon": [
+          [
+            754,
+            48
+          ],
+          [
+            892,
+            48
+          ],
+          [
+            932,
+            113
+          ],
+          [
+            936,
+            183
+          ],
+          [
+            909,
+            218
+          ],
+          [
+            861,
+            231
+          ],
+          [
+            794,
+            224
+          ],
+          [
+            770,
+            188
+          ],
+          [
+            750,
+            148
+          ]
+        ],
+        "target": "assets/source/v177/paisen/credits/street-paisen-broom-photo-face-crop-r5.localized-r1.png",
+        "targetSha256": "cd2fa103a65d516bbc654cdc14ea3fa145910f0a51ebdf10eb2373263748d53c",
+        "changedHeadPixels": 28871,
+        "changedOutsideHeadFromPrevious": 0,
+        "bodyAndOtherActorsPreserved": true,
+        "runtimeConnected": false,
+        "visualReviewed": false,
+        "producerAccepted": false,
+        "wholeGameAccepted": false
+      },
+      "visualReviewed": true
+    },
+    {
+      "at": "2026-10-15T10:10:03.138Z",
+      "sceneId": "hospital-courtyard",
+      "original": "public/art/v100/story-r5/cuts/ending-medical-progress.webp",
+      "originalSha256": "28737f0a1326a81c46054807972ed27022dcc3a4311a2ee6f06f0c64cd275689",
+      "generated": "assets/source/v177/paisen/credits/hospital-courtyard-photo-r2.generated.png",
+      "generatedSha256": "dcec3e565e976a28ce82063901ec78040b1fff965ebfbb5a78d94969d5260887",
+      "target": "assets/source/v177/paisen/credits/hospital-courtyard-photo-r2.localized-r1.png",
+      "targetSha256": "4b46f36dd32f3166d355f2c1cd3dc22365841034cece301ec5ee023d43ad78d0",
+      "width": 1280,
+      "height": 720,
+      "polygons": [
+        [
+          [
+            86,
+            69
+          ],
+          [
+            188,
+            62
+          ],
+          [
+            214,
+            96
+          ],
+          [
+            225,
+            151
+          ],
+          [
+            217,
+            198
+          ],
+          [
+            243,
+            206
+          ],
+          [
+            280,
+            222
+          ],
+          [
+            314,
+            249
+          ],
+          [
+            333,
+            303
+          ],
+          [
+            337,
+            343
+          ],
+          [
+            286,
+            358
+          ],
+          [
+            233,
+            355
+          ],
+          [
+            136,
+            335
+          ],
+          [
+            89,
+            307
+          ],
+          [
+            72,
+            329
+          ],
+          [
+            72,
+            233
+          ],
+          [
+            90,
+            219
+          ],
+          [
+            88,
+            190
+          ],
+          [
+            76,
+            151
+          ],
+          [
+            76,
+            106
+          ]
+        ]
+      ],
+      "protectRects": [
+        [
+          0,
+          0,
+          70,
+          720
+        ],
+        [
+          220,
+          0,
+          1060,
+          196
+        ],
+        [
+          0,
+          355,
+          1280,
+          365
+        ]
+      ],
+      "protectPolygons": [
+        [
+          [
+            0,
+            293
+          ],
+          [
+            65,
+            304
+          ],
+          [
+            74,
+            330
+          ],
+          [
+            158,
+            363
+          ],
+          [
+            203,
+            411
+          ],
+          [
+            0,
+            412
+          ]
+        ]
+      ],
+      "faceRect": [
+        75,
+        71,
+        154,
+        207
+      ],
+      "maskPath": "assets/source/v177/paisen/credits/hospital-courtyard-photo-r2.localization-mask-r1.png",
+      "registeredPixels": 51605,
+      "changedPixels": 51581,
+      "changedOutsideRegisteredRegion": 0,
+      "normalization": "Uniform cover fit to native original dimensions, thresholded explicit Paisen mask; all other original decoded RGBA pixels remain byte-identical.",
+      "runtimeConnected": false,
+      "visualReviewed": true,
+      "nativeAccepted": false,
+      "producerAccepted": false,
+      "wholeGameAccepted": false,
+      "promptSet": "assets/source/v177/paisen/credits/hospital-courtyard-photo-r2.generation.json",
+      "provenance": "assets/source/v177/paisen/credits/hospital-courtyard-photo-r2.localized-r1.provenance.json"
+    },
+    {
+      "at": "2026-10-15T10:10:03.327Z",
+      "sceneId": "armory-couple-dance",
+      "original": "public/art/v100/credits/armory-couple-dance-r1.webp",
+      "originalSha256": "b62271385452e9aa13ffac6f11ec75f548001435a5ab218607f83c11a8efa95e",
+      "generated": "assets/source/v177/paisen/credits/armory-couple-dance-photo-r2.generated.png",
+      "generatedSha256": "b577e623a5b5520657f65b610e477c278d8a0c9c4fb0883ccf7436857741547c",
+      "target": "assets/source/v177/paisen/credits/armory-couple-dance-photo-face-crop-r3.localized-r1.png",
+      "targetSha256": "16f5fdfdd4dd1d6eb44d04c2f8cfe204dfc0d5b431d626a44d47c681e91cac89",
+      "width": 1600,
+      "height": 900,
+      "polygons": [
+        [
+          [
+            1330,
+            183
+          ],
+          [
+            1383,
+            169
+          ],
+          [
+            1425,
+            187
+          ],
+          [
+            1450,
+            222
+          ],
+          [
+            1453,
+            257
+          ],
+          [
+            1503,
+            272
+          ],
+          [
+            1526,
+            321
+          ],
+          [
+            1530,
+            368
+          ],
+          [
+            1494,
+            390
+          ],
+          [
+            1507,
+            437
+          ],
+          [
+            1572,
+            529
+          ],
+          [
+            1599,
+            576
+          ],
+          [
+            1599,
+            649
+          ],
+          [
+            1541,
+            653
+          ],
+          [
+            1506,
+            560
+          ],
+          [
+            1454,
+            497
+          ],
+          [
+            1424,
+            534
+          ],
+          [
+            1380,
+            629
+          ],
+          [
+            1331,
+            676
+          ],
+          [
+            1270,
+            666
+          ],
+          [
+            1286,
+            603
+          ],
+          [
+            1350,
+            485
+          ],
+          [
+            1365,
+            424
+          ],
+          [
+            1353,
+            398
+          ],
+          [
+            1324,
+            366
+          ],
+          [
+            1302,
+            330
+          ],
+          [
+            1309,
+            278
+          ],
+          [
+            1334,
+            253
+          ],
+          [
+            1324,
+            222
+          ]
+        ]
+      ],
+      "protectRects": [],
+      "protectPolygons": [
+        [
+          [
+            1275,
+            648
+          ],
+          [
+            1418,
+            609
+          ],
+          [
+            1530,
+            622
+          ],
+          [
+            1600,
+            608
+          ],
+          [
+            1600,
+            900
+          ],
+          [
+            1155,
+            900
+          ],
+          [
+            1172,
+            675
+          ]
+        ],
+        [
+          [
+            1418,
+            228
+          ],
+          [
+            1433,
+            226
+          ],
+          [
+            1565,
+            544
+          ],
+          [
+            1576,
+            567
+          ],
+          [
+            1565,
+            609
+          ],
+          [
+            1520,
+            607
+          ],
+          [
+            1519,
+            562
+          ],
+          [
+            1535,
+            548
+          ]
+        ]
+      ],
+      "faceRect": [
+        1324,
+        170,
+        133,
+        148
+      ],
+      "maskPath": "assets/source/v177/paisen/credits/armory-couple-dance-photo-r2.localization-mask-r1.png",
+      "registeredPixels": 67396,
+      "changedPixels": 67374,
+      "changedOutsideRegisteredRegion": 0,
+      "normalization": "Uniform cover fit to native original dimensions, thresholded explicit Paisen mask; all other original decoded RGBA pixels remain byte-identical.",
+      "runtimeConnected": false,
+      "visualReviewed": true,
+      "nativeAccepted": false,
+      "producerAccepted": false,
+      "wholeGameAccepted": false,
+      "promptSet": "assets/source/v177/paisen/credits/armory-couple-dance-photo-face-crop-r3.generation.json",
+      "provenance": "assets/source/v177/paisen/credits/armory-couple-dance-photo-face-crop-r3.localized-r1.provenance.json",
+      "previousTarget": "assets/source/v177/paisen/credits/armory-couple-dance-photo-r2.localized-r1.png",
+      "headRefinement": {
+        "at": "2026-10-15T10:39:27.192Z",
+        "sceneId": "armory-couple-dance",
+        "sourceScene": "assets/source/v177/paisen/credits/armory-couple-dance-photo-r2.localized-r1.png",
+        "sourceSceneSha256": "92b770ce6068f5bf5df4f600fcf4867a646f1264c6de0a659746defb427f2f57",
+        "generated": "assets/source/v177/paisen/credits/armory-couple-dance-photo-face-crop-r3.generated.png",
+        "generatedSha256": "38ff4655d8aa0f76f2c767319005edb508cd40aa70642012ccc9f92ff3a7604e",
+        "sourceCrop": {
+          "left": 1305,
+          "top": 153,
+          "width": 175,
+          "height": 200
+        },
+        "headPolygon": [
+          [
+            1324,
+            171
+          ],
+          [
+            1395,
+            168
+          ],
+          [
+            1448,
+            206
+          ],
+          [
+            1449,
+            252
+          ],
+          [
+            1427,
+            280
+          ],
+          [
+            1396,
+            295
+          ],
+          [
+            1349,
+            285
+          ],
+          [
+            1325,
+            241
+          ],
+          [
+            1319,
+            205
+          ]
+        ],
+        "target": "assets/source/v177/paisen/credits/armory-couple-dance-photo-face-crop-r3.localized-r1.png",
+        "targetSha256": "16f5fdfdd4dd1d6eb44d04c2f8cfe204dfc0d5b431d626a44d47c681e91cac89",
+        "changedHeadPixels": 11287,
+        "changedOutsideHeadFromPrevious": 0,
+        "bodyAndOtherActorsPreserved": true,
+        "runtimeConnected": false,
+        "visualReviewed": false,
+        "producerAccepted": false,
+        "wholeGameAccepted": false
+      }
+    },
+    {
+      "at": "2026-10-15T10:10:03.505Z",
+      "sceneId": "defense-paisen-kuma-kiss",
+      "original": "public/art/v100/credits/defense-paisen-kuma-kiss-r1.webp",
+      "originalSha256": "5812ef67e127d5e3c4891f5f03bcea5112020fcfd5ceaa1903a4dfa7db2a6408",
+      "generated": "assets/source/v177/paisen/credits/defense-paisen-kuma-kiss-photo-r2.generated.png",
+      "generatedSha256": "e6f56169a63c1cb505815b09eea4f00d58bcd6485cc6c0f5cec07db37ceec99e",
+      "target": "assets/source/v177/paisen/credits/defense-paisen-kuma-kiss-photo-r2.localized-r1.png",
+      "targetSha256": "2967d5813d5111cc61c562f137f6161d89dd896476978e3b11531818bd16d209",
+      "width": 1600,
+      "height": 900,
+      "polygons": [
+        [
+          [
+            562,
+            69
+          ],
+          [
+            650,
+            46
+          ],
+          [
+            725,
+            55
+          ],
+          [
+            766,
+            93
+          ],
+          [
+            775,
+            140
+          ],
+          [
+            765,
+            170
+          ],
+          [
+            779,
+            201
+          ],
+          [
+            790,
+            217
+          ],
+          [
+            783,
+            244
+          ],
+          [
+            763,
+            274
+          ],
+          [
+            735,
+            292
+          ],
+          [
+            745,
+            333
+          ],
+          [
+            681,
+            352
+          ],
+          [
+            620,
+            328
+          ],
+          [
+            600,
+            268
+          ],
+          [
+            574,
+            243
+          ],
+          [
+            556,
+            199
+          ],
+          [
+            547,
+            131
+          ]
+        ],
+        [
+          [
+            350,
+            818
+          ],
+          [
+            455,
+            791
+          ],
+          [
+            574,
+            814
+          ],
+          [
+            687,
+            834
+          ],
+          [
+            777,
+            842
+          ],
+          [
+            850,
+            862
+          ],
+          [
+            853,
+            900
+          ],
+          [
+            350,
+            900
+          ]
+        ]
+      ],
+      "protectRects": [],
+      "protectPolygons": [
+        [
+          [
+            779,
+            137
+          ],
+          [
+            809,
+            155
+          ],
+          [
+            827,
+            185
+          ],
+          [
+            831,
+            230
+          ],
+          [
+            805,
+            263
+          ],
+          [
+            787,
+            263
+          ],
+          [
+            783,
+            239
+          ],
+          [
+            790,
+            218
+          ],
+          [
+            777,
+            203
+          ],
+          [
+            766,
+            179
+          ]
+        ]
+      ],
+      "faceRect": [
+        546,
+        47,
+        245,
+        312
+      ],
+      "maskPath": "assets/source/v177/paisen/credits/defense-paisen-kuma-kiss-photo-r2.localization-mask-r1.png",
+      "registeredPixels": 93801,
+      "changedPixels": 93792,
+      "changedOutsideRegisteredRegion": 0,
+      "normalization": "Uniform cover fit to native original dimensions, thresholded explicit Paisen mask; all other original decoded RGBA pixels remain byte-identical.",
+      "runtimeConnected": false,
+      "visualReviewed": true,
+      "nativeAccepted": false,
+      "producerAccepted": false,
+      "wholeGameAccepted": false,
+      "promptSet": "assets/source/v177/paisen/credits/defense-paisen-kuma-kiss-photo-r2.generation.json",
+      "provenance": "assets/source/v177/paisen/credits/defense-paisen-kuma-kiss-photo-r2.localized-r1.provenance.json"
+    },
+    {
+      "at": "2026-10-15T10:10:03.657Z",
+      "sceneId": "kumaya-tky-receipt",
+      "original": "public/art/v100/story-r5/cuts/epilogue-tky-receipt.webp",
+      "originalSha256": "87fd704b22647591633ada45a8b52e18d8e2792cf7007a57cc7093db13cb90b2",
+      "generated": "assets/source/v177/paisen/credits/kumaya-tky-receipt-photo-r2.generated.png",
+      "generatedSha256": "925250e507fccf05a6453380876b5c1fd57c16c1208fe59a0514c9f5be39ba12",
+      "target": "assets/source/v177/paisen/credits/kumaya-tky-receipt-photo-r2.localized-r1.png",
+      "targetSha256": "bf750945bf50fe549501c0ae88eedfd5eb6e27118ecc05f5e514b4cfcfd66311",
+      "width": 1280,
+      "height": 720,
+      "polygons": [
+        [
+          [
+            155,
+            52
+          ],
+          [
+            245,
+            57
+          ],
+          [
+            300,
+            103
+          ],
+          [
+            319,
+            154
+          ],
+          [
+            311,
+            220
+          ],
+          [
+            291,
+            252
+          ],
+          [
+            250,
+            279
+          ],
+          [
+            184,
+            275
+          ],
+          [
+            153,
+            242
+          ],
+          [
+            130,
+            194
+          ],
+          [
+            128,
+            116
+          ]
+        ],
+        [
+          [
+            149,
+            236
+          ],
+          [
+            220,
+            268
+          ],
+          [
+            288,
+            252
+          ],
+          [
+            350,
+            251
+          ],
+          [
+            409,
+            278
+          ],
+          [
+            436,
+            347
+          ],
+          [
+            432,
+            419
+          ],
+          [
+            421,
+            458
+          ],
+          [
+            357,
+            458
+          ],
+          [
+            326,
+            407
+          ],
+          [
+            183,
+            418
+          ],
+          [
+            114,
+            429
+          ],
+          [
+            0,
+            399
+          ],
+          [
+            0,
+            310
+          ],
+          [
+            45,
+            277
+          ],
+          [
+            101,
+            248
+          ]
+        ]
+      ],
+      "protectRects": [
+        [
+          0,
+          448,
+          1280,
+          272
+        ]
+      ],
+      "protectPolygons": [
+        [
+          [
+            187,
+            232
+          ],
+          [
+            225,
+            240
+          ],
+          [
+            256,
+            259
+          ],
+          [
+            247,
+            283
+          ],
+          [
+            235,
+            294
+          ],
+          [
+            208,
+            298
+          ],
+          [
+            192,
+            342
+          ],
+          [
+            134,
+            383
+          ],
+          [
+            51,
+            431
+          ],
+          [
+            0,
+            436
+          ],
+          [
+            0,
+            399
+          ],
+          [
+            54,
+            355
+          ],
+          [
+            112,
+            310
+          ],
+          [
+            129,
+            276
+          ],
+          [
+            165,
+            261
+          ]
+        ],
+        [
+          [
+            334,
+            409
+          ],
+          [
+            427,
+            407
+          ],
+          [
+            436,
+            505
+          ],
+          [
+            410,
+            528
+          ],
+          [
+            339,
+            534
+          ],
+          [
+            321,
+            508
+          ],
+          [
+            338,
+            457
+          ]
+        ]
+      ],
+      "faceRect": [
+        128,
+        51,
+        194,
+        228
+      ],
+      "maskPath": "assets/source/v177/paisen/credits/kumaya-tky-receipt-photo-r2.localization-mask-r1.png",
+      "registeredPixels": 80594,
+      "changedPixels": 80507,
+      "changedOutsideRegisteredRegion": 0,
+      "normalization": "Uniform cover fit to native original dimensions, thresholded explicit Paisen mask; all other original decoded RGBA pixels remain byte-identical.",
+      "runtimeConnected": false,
+      "visualReviewed": true,
+      "nativeAccepted": false,
+      "producerAccepted": false,
+      "wholeGameAccepted": false,
+      "promptSet": "assets/source/v177/paisen/credits/kumaya-tky-receipt-photo-r2.generation.json",
+      "provenance": "assets/source/v177/paisen/credits/kumaya-tky-receipt-photo-r2.localized-r1.provenance.json"
+    },
+    {
+      "at": "2026-10-15T10:10:03.817Z",
+      "sceneId": "kumaya-main-table",
+      "original": "public/art/v100/story-r5/cuts/epilogue-main-table.webp",
+      "originalSha256": "d3ec6d129f97a07700f4a96e1f315f213ea8ec59eecfbdda1bde98bd5cfdd2b5",
+      "generated": "assets/source/v177/paisen/credits/kumaya-main-table-photo-r2.generated.png",
+      "generatedSha256": "a7f95772928363077ddac4e7cd5b923be22744e6e3a74ad022ce961891db2dd4",
+      "target": "assets/source/v177/paisen/credits/kumaya-main-table-photo-r2.localized-r1.png",
+      "targetSha256": "1d941cfba528fcecf617e26e1d98d669ac23ae523e96d8043111732943b66bdb",
+      "width": 1280,
+      "height": 720,
+      "polygons": [
+        [
+          [
+            69,
+            112
+          ],
+          [
+            120,
+            79
+          ],
+          [
+            198,
+            88
+          ],
+          [
+            235,
+            139
+          ],
+          [
+            242,
+            214
+          ],
+          [
+            218,
+            265
+          ],
+          [
+            200,
+            294
+          ],
+          [
+            153,
+            318
+          ],
+          [
+            97,
+            300
+          ],
+          [
+            78,
+            257
+          ],
+          [
+            58,
+            205
+          ],
+          [
+            60,
+            146
+          ]
+        ],
+        [
+          [
+            84,
+            272
+          ],
+          [
+            160,
+            304
+          ],
+          [
+            217,
+            282
+          ],
+          [
+            260,
+            286
+          ],
+          [
+            325,
+            306
+          ],
+          [
+            362,
+            345
+          ],
+          [
+            397,
+            425
+          ],
+          [
+            394,
+            505
+          ],
+          [
+            305,
+            506
+          ],
+          [
+            278,
+            474
+          ],
+          [
+            215,
+            440
+          ],
+          [
+            0,
+            395
+          ],
+          [
+            0,
+            298
+          ],
+          [
+            45,
+            284
+          ]
+        ]
+      ],
+      "protectRects": [
+        [
+          0,
+          346,
+          224,
+          374
+        ]
+      ],
+      "protectPolygons": [
+        [
+          [
+            359,
+            415
+          ],
+          [
+            393,
+            441
+          ],
+          [
+            403,
+            500
+          ],
+          [
+            394,
+            545
+          ],
+          [
+            300,
+            550
+          ],
+          [
+            217,
+            520
+          ],
+          [
+            178,
+            497
+          ],
+          [
+            169,
+            473
+          ],
+          [
+            223,
+            480
+          ],
+          [
+            283,
+            482
+          ],
+          [
+            297,
+            448
+          ],
+          [
+            306,
+            428
+          ]
+        ]
+      ],
+      "faceRect": [
+        57,
+        79,
+        188,
+        240
+      ],
+      "maskPath": "assets/source/v177/paisen/credits/kumaya-main-table-photo-r2.localization-mask-r1.png",
+      "registeredPixels": 66718,
+      "changedPixels": 66693,
+      "changedOutsideRegisteredRegion": 0,
+      "normalization": "Uniform cover fit to native original dimensions, thresholded explicit Paisen mask; all other original decoded RGBA pixels remain byte-identical.",
+      "runtimeConnected": false,
+      "visualReviewed": true,
+      "nativeAccepted": false,
+      "producerAccepted": false,
+      "wholeGameAccepted": false,
+      "promptSet": "assets/source/v177/paisen/credits/kumaya-main-table-photo-r2.generation.json",
+      "provenance": "assets/source/v177/paisen/credits/kumaya-main-table-photo-r2.localized-r1.provenance.json"
+    }
+  ],
+  "sceneBoard": "output/issue177-paisen-credits-native-inventory-r1/all-eight-localized-scenes-r3.png",
+  "faceBoard": "output/issue177-paisen-credits-native-inventory-r1/all-eight-localized-faces-r3.png",
+  "runtimeConnected": false,
+  "visualReviewed": true,
+  "producerAccepted": false,
+  "wholeGameAccepted": false,
+  "previousFamily": "assets/source/v177/paisen/credits/registered-scenes-r2.json",
+  "visualReview": {
+    "at": "2026-10-15T12:38:53.387Z",
+    "scope": "All eight selected full-scene and face contact sheets inspected; not native runtime or Producer acceptance",
+    "sceneBoard": "output/issue177-paisen-credits-native-inventory-r1/all-eight-localized-scenes-r3.png",
+    "faceBoard": "output/issue177-paisen-credits-native-inventory-r1/all-eight-localized-faces-r3.png"
+  }
+}

@@ -160,8 +160,8 @@ test("visual identity locks agree with the canonical campaign weapon and product
   assert.match(monkeyCampaign.weaponName, /二カム式コンパクトクロスボウ/);
   assert.match(monkeyCampaign.appearanceAudit.weaponMatch, /二cam/);
   assert.ok(monkey.identityLock.includes("two-cam-compact-compound-crossbow-with-visible-bolt"));
-  // The cue keeps its stable internal ID; visual/gameplay semantics no longer show a firearm.
-  assert.equal(weaponCueForUnit("engineer"), "weapon-suppressed-carbine");
+  // The approved crossbow now has its own string/latch release, without a gunshot.
+  assert.equal(weaponCueForUnit("engineer"), "weapon-crossbow-release");
 });
 
 test("Monkey approved crossbow atlas uses authored movement, aimed shots, hit, and grounded defeat poses", async () => {

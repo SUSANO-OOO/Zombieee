@@ -1,0 +1,137 @@
+name: Targeted Frame Performance
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - '.github/workflows/targeted-frame-performance.yml'
+      - 'scripts/v100-device-runtime-browser.mjs'
+      - 'scripts/v177-ranger-performance-receipts.mjs'
+      - 'app/v177CorpseJointPresentation.js'
+      - 'app/**'
+      - 'public/**'
+      - 'package*.json'
+permissions:
+  contents: read
+concurrency:
+  group: targeted-performance-${{ github.event.pull_request.head.sha || inputs.expected_head }}
+  cancel-in-progress: false
+jobs:
+  scope:
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.changed.outputs.run }}
+      runtimes: ${{ steps.changed.outputs.runtimes }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || inputs.expected_head }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22.13.0'
+      - id: changed
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before || github.event.pull_request.base.sha }}
+          AFTER: ${{ github.event.pull_request.head.sha || inputs.expected_head }}
+        run: |
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import {execFileSync} from 'node:child_process';
+          import {appendFileSync} from 'node:fs';
+          import {framePerformanceRuntimes} from './scripts/ci-change-scope.mjs';
+          let run=true;
+          let runtimes=[];
+          if(process.env.EVENT_NAME==='pull_request'){
+            for(const sha of [process.env.BEFORE,process.env.AFTER])assert.match(sha??'',/^[a-f0-9]{40}$/u);
+            const paths=execFileSync('git',['diff','--no-renames','--name-only',process.env.BEFORE,process.env.AFTER],{encoding:'utf8'}).trim().split('\n').filter(Boolean);
+            const workflowBlob=execFileSync('git',['rev-parse',process.env.AFTER+':.github/workflows/targeted-frame-performance.yml'],{encoding:'utf8'}).trim();
+            runtimes=framePerformanceRuntimes(paths,{workflowBlob});run=runtimes.length>0;
+            console.log(JSON.stringify({before:process.env.BEFORE,after:process.env.AFTER,paths,run,runtimes}));
+          }
+          appendFileSync(process.env.GITHUB_OUTPUT,'run='+run+'\n');
+          appendFileSync(process.env.GITHUB_OUTPUT,'runtimes='+JSON.stringify(runtimes)+'\n');
+          JS
+  v100-webkit-frame-control:
+    needs: scope
+    if: needs.scope.outputs.run == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.scope.outputs.runtimes) }}
+    runs-on: ${{ matrix.host }}
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    env:
+      EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || inputs.expected_head }}
+      GITHUB_PAGES_RELEASE_SHA: ${{ github.event.pull_request.head.sha || inputs.expected_head }}
+      V100_DEVICE_RUNTIME_ENGINE: webkit
+      V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC: '1'
+      V100_DEVICE_RUNTIME_BLANK_BASELINE: '1'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || inputs.expected_head }}
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22.13.0'
+          cache: npm
+      - name: Verify requested immutable candidate
+        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_HEAD??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_HEAD);'
+      - run: npm ci
+      - name: Install original formal runtime
+        if: matrix.runtime == 'formal'
+        run: |
+          npx playwright install webkit
+          node scripts/verify-playwright-container-runtime.mjs --macos-arm64
+      - name: Install native observation runtime
+        if: matrix.runtime == 'native-recording-control'
+        run: |
+          npm ci --prefix scripts/pwa-native-runtime
+          node scripts/pwa-native-runtime/node_modules/playwright/cli.js install webkit
+          echo "PLAYWRIGHT_MODULE_PATH=$GITHUB_WORKSPACE/scripts/pwa-native-runtime/node_modules/playwright/index.mjs" >> "$GITHUB_ENV"
+          echo 'V100_DEVICE_RUNTIME_ROLE=native-control' >> "$GITHUB_ENV"
+      - run: npm run build
+      - name: Prepare original formal benchmark host
+        id: preparation
+        if: matrix.runtime == 'formal'
+        run: |
+          node scripts/v100-macos-indexing-control.mjs prepare-benchmark
+          echo 'V100_DEVICE_RUNTIME_BENCHMARK_PREPARATION=spotlight-paused' >> "$GITHUB_ENV"
+      - name: Original fixed 30-second window in all three viewports
+        id: primary
+        env:
+          V100_DEVICE_RUNTIME_OUT: outputs/targeted-performance/primary
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs
+      - name: Original formal repeats and DPR2
+        if: ${{ always() && matrix.runtime == 'formal' && (steps.primary.outcome == 'success' || steps.primary.outcome == 'failure') }}
+        run: |
+          result=0
+          for viewport in 844x340 844x390; do
+            V100_DEVICE_RUNTIME_VIEWPORT="$viewport" V100_DEVICE_RUNTIME_OUT="outputs/targeted-performance/repeat-$viewport" node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs || result=1
+          done
+          V100_DEVICE_RUNTIME_VIEWPORT=844x390 V100_DEVICE_RUNTIME_DPR=2 V100_DEVICE_RUNTIME_OUT=outputs/targeted-performance/dpr2 node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs || result=1
+          exit "$result"
+      - name: Same-host recorded window with unchanged 33ms reference
+        if: ${{ always() && matrix.runtime == 'native-recording-control' && (steps.primary.outcome == 'success' || steps.primary.outcome == 'failure') }}
+        env:
+          V100_DEVICE_RUNTIME_VIEWPORT: 844x390
+          V100_DEVICE_RUNTIME_NATIVE_RECORDING_DIAGNOSTIC: '1'
+          V100_DEVICE_RUNTIME_OUT: outputs/targeted-performance/recorded-control
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: targeted-performance-${{ matrix.runtime }}
+          path: |
+            outputs/targeted-performance
+            outputs/v100-device-runtime/spotlight-benchmark-preparation.json
+          if-no-files-found: error
+          retention-days: 14
+      - name: Restore original indexing
+        if: ${{ always() && (steps.preparation.outcome == 'success' || steps.preparation.outcome == 'failure') }}
+        run: node scripts/v100-macos-indexing-control.mjs restore-benchmark

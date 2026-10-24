@@ -1,22 +1,39 @@
+import {observeVisibleBattleHealthBars,visibleAirstrikeTarget} from './v100-normal-visible-aim.mjs';
 // A normal campaign route: fresh save, earned CAPS, real time and UI inputs.
 // Read-only save inspection records progress; no seed, QA bridge or forced result.
 import assert from "node:assert/strict";
-import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
+import { normalPlayStageLimit } from './v177-representative-normal-play.mjs';
+import { appendFile, mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import path from "node:path";
-import { chromium } from "playwright";
+import { execFileSync } from "node:child_process";
 import { V100_STAGES, V100_UNITS, V100_VEHICLE, v100LevelCost } from "../app/v100Registry.js";
 import { v100StoryEventView } from "../app/v100StoryEvents.js";
 import { v100StoryPageFor } from "../app/v100StoryPages.js";
 import { inspectStaffRoll } from "./v100-staff-roll-audit.mjs";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
+import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
+import { installRequestFailureAudit } from "./browser-request-failure-audit.mjs";
+import {normalCampaignCanSpendVehicleGauge, normalCampaignDeploymentCount, normalCampaignDeployOrder } from "./v100-normal-play-contract.mjs";
+import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
+import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
+import { deferNormalRecruitOffer } from "./v100-normal-recruit-offer.mjs";
+import { captureNormalAudioUnlockAttempt } from "./v177-normal-audio-unlock-observation.mjs";
+import { installNormalFrameObserver,createNormalFrameCapture,finishNormalFrameCapture } from './v177-normal-frame-observation.mjs';
+import {createNormalBrowserDeadline,normalCleanupWithin,normalPlayChildCompletion,normalProtocolTimeoutReceipt} from './v177-normal-browser-deadline.mjs';
 
+const stageLimit = normalPlayStageLimit(process.env.V100_NORMAL_PLAY_STAGE_LIMIT);
 const origin = new URL(process.env.V100_CAMPAIGN_QA_BASE_URL);
+const engine=process.env.V100_NORMAL_PLAY_ENGINE??'chromium';
+assert.ok(['chromium','webkit'].includes(engine));
+if(engine==='webkit')assert.equal(process.platform,'darwin','Normal campaign WebKit acceptance requires the native macOS runtime');
 assert.ok(["localhost", "127.0.0.1"].includes(origin.hostname));
 assert.equal(origin.search, "");
 const out = path.resolve(process.env.V100_NORMAL_PLAY_EVIDENCE_DIR ?? "outputs/v100-normal-campaign");
+await mkdir(path.dirname(out), { recursive: true });
 await mkdir(out, { recursive: false });
-const report = { evidenceKind:"automated normal UI playthrough; manual feel and physical-device acceptance remain separate", origin:origin.href, build:await productionBuildIdentity(), stages:[], events:{}, transactions:[], errors:[], status:"running" };
+const report = { evidenceKind:"automated normal UI playthrough; manual feel and physical-device acceptance remain separate", engine, origin:origin.href, build:await productionBuildIdentity(), stages:[], events:{}, transactions:[], errors:[], status:"running" };
+report.normalPlayScope = { kind: stageLimit === 3 ? 'representative-opening' : 'normal-route', stageLimit, wholeCampaignAcceptance: false };
 const resumeDir = process.env.V100_NORMAL_PLAY_RESUME_DIR && path.resolve(process.env.V100_NORMAL_PLAY_RESUME_DIR);
 let restoredStorage;
 if (resumeDir) {
@@ -44,10 +61,9 @@ if (resumeDir) {
     ? [{ index, number: stage.number, status: "unfinished in an earlier segment; not a victory", sourceReport: report.resumeFrom.reportSha256 }] : []);
   if (report.exploratoryContinuation) report.evidenceKind = "exploratory normal UI route across identified builds; not final-candidate whole-campaign acceptance";
 }
-const browser = await chromium.launch({headless:true});
-const context = await browser.newContext({viewport:{width:844,height:390},hasTouch:true,isMobile:true,...(restoredStorage ? {storageState:restoredStorage} : {})});
-const page = await context.newPage();
-page.setDefaultTimeout(15_000);
+let browser,context,requests,rawPage,page,video,contextClose;
+const closeOwnedContext=()=>contextClose??=(requests?requests.closeContext(context):context.close());
+const rpc=createNormalBrowserDeadline({onTimeout:()=>context?normalCleanupWithin(closeOwnedContext,'timed-out opening context'):undefined});
 const saveAt = () => page.evaluate(() => JSON.parse(localStorage.getItem("nishijin-campaign-v100")));
 const phaseAt = () => page.locator(".v100-shell").getAttribute("data-v100-phase");
 const normalizeText = text => String(text ?? "").replaceAll("**", "").replace(/\s+/gu, "").trim();
@@ -56,35 +72,41 @@ async function continueRequested() {
   const stop = await readFile(path.join(out,"stop-request.txt"),"utf8").catch(error => { if (error.code === "ENOENT") return null; throw error; });
   if (stop !== null) throw new Error(`Normal play stopped for diagnosis: ${stop.trim()}`);
 }
-page.on("console",m=>{if(m.type()==="error")report.errors.push({kind:"console",message:m.text()});});
-page.on("pageerror",e=>report.errors.push({kind:"page",message:String(e)}));
-page.on("requestfailed",r=>report.errors.push({kind:"request",url:r.url(),message:r.failure()?.errorText}));
-page.on("response",r=>{if(r.status()>=400)report.errors.push({kind:"http",url:r.url(),status:r.status()});});
 async function ready() {
   await page.waitForFunction(() => !document.querySelector('.v100-shell[aria-busy="true"]'));
   await page.waitForFunction(() => [...document.images].every(img => img.complete && img.naturalWidth > 0));
 }
 async function uiClick(locator) { await ready(); await locator.click(); await ready(); }
 const button = name => page.getByRole("button",{name,exact:true});
-const selectPersonnel = unit => page.locator("button.v100-personnel-card").filter({has:page.getByRole("heading",{name:unit.displayName,exact:true})});
+const preparationTab = name => page.getByRole("navigation",{name:"ステージ準備メニュー",exact:true}).getByRole("button",{name,exact:true});
+async function selectPersonnel(unit) {
+  const back=button("ユニット一覧へ");
+  if(await back.isVisible())await uiClick(back);
+  await uiClick(page.locator("button.v100-personnel-card").filter({has:page.getByRole("heading",{name:unit.displayName,exact:true})}));
+}
 function plannedFormation(save) {
-  const preference=["unit-gantetsu","unit-nao","unit-babayaga","unit-mizuchi","unit-hachi","unit-kumaverson","unit-tatara","unit-monkey","unit-paisen"];
+  // Both451 Stage1 wins retain ranged/scout/Kuma/Paisen: no medic is owned yet.
+  // In a92, delaying the earned medic to fifth made Stage3 arrivals55-60s
+  // and left one native run with zero medic healing. The872 third-slot medic
+  // arrived17-22s and its Chromium run cleared the boss. These are controls,
+  // not fresh all30 acceptance. Keep early healing behind ranged/scout.
+  const preference=["unit-babayaga","unit-hachi","unit-nao","unit-kumaverson","unit-paisen","unit-mizuchi","unit-gantetsu","unit-tatara","unit-monkey"];
   return preference.filter(id=>save.ownedUnitIds.includes(id)).slice(0,7);
 }
 async function prepareEconomy(stageNumber) {
+  await deferNormalRecruitOffer(page,{saveAt,uiClick,stageNumber,transactions:report.transactions});
   let save=await saveAt();
-  await uiClick(button("隊員を編成"));
+  await uiClick(preparationTab("ユニット"));
   for(const id of ["unit-nao","unit-mizuchi","unit-monkey","unit-tatara","unit-gantetsu"]) {
     const unit=V100_UNITS.find(unit=>unit.id===id);
     if(!save.ownedUnitIds.includes(id)&&save.registeredUnitIds.includes(id)&&save.caps>=unit.registrationCostCaps) {
-      await uiClick(selectPersonnel(unit));
-      await uiClick(button(`配備登録 ${unit.registrationCostCaps} CAPS`));
+      await selectPersonnel(unit);
+      await uiClick(button(`配備登録 / ${unit.registrationCostCaps} CAPS`));
       save=await saveAt(); report.transactions.push({stageNumber,action:"register",id,caps:save.caps});
     }
   }
-  await uiClick(button("作戦地図へ"));
   // Reserve a modest vehicle progression and the first unlocked healing supply.
-  await uiClick(button("出撃装備を選ぶ"));
+  await uiClick(preparationTab("支援"));
   if(save.supportPurchaseUnlockedIds.includes("support-healing")) {
     const healing=page.locator(".v100-support-management-card").filter({has:page.getByRole("heading",{name:"回復支援",exact:true})});
     if(!save.ownedSupportIds.includes("support-healing")&&save.caps>=50) {
@@ -98,13 +120,11 @@ async function prepareEconomy(stageNumber) {
   const desiredVehicleLevel=Math.min(5,Math.floor(stageNumber/5));
   const cost=V100_VEHICLE.upgradeCosts[save.vehicle.upgradeLevel]??Infinity;
   if(save.vehicle.upgradeLevel<desiredVehicleLevel&&save.caps>=cost) {
-    await uiClick(button("装甲車両を強化"));
-    await uiClick(button(`HPを強化 / ${cost} CAPS`)); save=await saveAt();
+    await uiClick(preparationTab("車両"));
+    await uiClick(button(`耐久を強化 / ${cost} CAPS`)); save=await saveAt();
     report.transactions.push({stageNumber,action:"vehicle",level:save.vehicle.upgradeLevel,caps:save.caps});
-    await uiClick(button("出撃装備へ"));
   }
-  await uiClick(button("作戦地図へ"));
-  await uiClick(button("隊員を編成"));
+  await uiClick(preparationTab("ユニット"));
   const targetLevel=Math.min(save.levelCap,Math.max(1,Math.ceil(stageNumber*.8)));
   for(let n=0;n<210;n++) {
     const ids=plannedFormation(save).filter(id=>save.unitLevels[id]<targetLevel).sort((a,b)=>save.unitLevels[a]-save.unitLevels[b]);
@@ -112,10 +132,10 @@ async function prepareEconomy(stageNumber) {
     if(!id)break;
     const unit=V100_UNITS.find(unit=>unit.id===id);
     const cost=v100LevelCost(save.unitLevels[id]+1);
-    await uiClick(selectPersonnel(unit));await uiClick(button(`強化 ${cost} CAPS`));
+    await selectPersonnel(unit);await uiClick(button(`Lv.${save.unitLevels[id]+1}へ強化 / ${cost} CAPS`));
     save=await saveAt();report.transactions.push({stageNumber,action:"level",id,level:save.unitLevels[id],caps:save.caps});
   }
-  await uiClick(button("作戦地図へ"));
+  await uiClick(preparationTab("ステージ"));
 }
 async function configureFormation() {
   const save=await saveAt();const wanted=plannedFormation(save);
@@ -133,20 +153,29 @@ async function configureFormation() {
 async function battle(stage) {
   const record={number:stage.number,id:stage.id,startedAt:new Date().toISOString(),openingSave:await saveAt(),inputs:[],status:"running"};
   report.stages.push(record); await persist();
-  const start=Date.now();let lastShot=0;let cursor=0;let lastAction=0;let lastEmergency=0;
+  const start=Date.now();let lastShot=0;let cursor=0;let lastAction=0;let lastEmergency=0;let lastEmergencyCursor=-1;let lastAimReadAt=-Infinity;let lastAirReady=false;let lastVisibleEnemyTarget=false;
+  // The outer campaign phase changes before the real asset gate releases the HUD.
+  const frameOwner=`${report.provenance.head}:${stage.id}:${record.openingSave.revision}`;
+  let frameCapture;
+  let frameStarted=false;
+  try {
+  await rpc.run(async()=>{
+  await page.locator('.v100-deployed-count').waitFor({state:'visible',timeout:15_000});
+  frameCapture=await createNormalFrameCapture({directory:out,label:`s${stage.number}`,owner:frameOwner});
   while(await phaseAt()==="battle") {
     await continueRequested();
-    const countText = await page.locator(".bay-status").allTextContents();
-    const count = countText.join(" ").match(/同時出撃\s+(\d+)\/(\d+)/u);
-    if (count) {
-      record.maximumObservedActive = Math.max(record.maximumObservedActive ?? 0,Number(count[1]));
-      assert.equal(Number(count[2]),7);assert.ok(Number(count[1])<=7,`Live deployment cap exceeded: ${count[0]}`);
-    }
     try {
-    if(report.errors.length)throw new Error("Browser diagnostics during normal battle");
+    const observed=await page.locator('.v100-deployed-count').evaluateAll((nodes,{owner,action})=>({
+      value:nodes.length===1?nodes[0].getAttribute('aria-label'):null,
+      frames:globalThis.__V177_READ_NORMAL_FRAMES__?.(owner,action)??null,
+    }),{owner:frameOwner,action:frameStarted?'drain':'start'});
+    frameStarted=true;await frameCapture.record(observed.frames);
+    const deploymentCount=normalCampaignDeploymentCount(observed.value);
+    record.maximumObservedActive=Math.max(record.maximumObservedActive??0,deploymentCount.active);
+    if(report.errors.length||requests.report.unexpectedFailures.length)throw new Error("Browser diagnostics during normal battle");
     if(Date.now()-start>15*60_000)throw new Error(`Stage ${stage.number} exceeded the observation window; no victory or clock change injected`);
     const audio=page.getByRole("button",{name:"音声を有効にする",exact:true});
-    if(await audio.isVisible())await audio.click();
+    if(await audio.isVisible())await captureNormalAudioUnlockAttempt(audio,{page,attempts:record.audioUnlockAttempts??=[],stageNumber:stage.number});
     if(Date.now()-lastShot>30_000) {
       await page.screenshot({path:path.join(out,`s${stage.number}-${Math.floor((Date.now()-start)/1000)}s.png`)});
       lastShot=Date.now();
@@ -155,23 +184,64 @@ async function battle(stage) {
     const cards=page.locator("button.unit-card[data-kind]");
     const count=await cards.count();
     if(count&&Date.now()-lastAction>500) {
-      const card=cards.nth(cursor%count);
+      const equippedKinds=await cards.evaluateAll(elements=>elements.map(el=>el.getAttribute('data-kind')));
+      const deploymentOrder=normalCampaignDeployOrder(equippedKinds);
+      record.deploymentOrder??=deploymentOrder;
+      const card=cards.nth(equippedKinds.indexOf(deploymentOrder[cursor%count]));
       if(await card.isEnabled()) {
         const kind=await card.getAttribute("data-kind"); await card.click();
         record.inputs.push({seconds:(Date.now()-start)/1000,action:"deploy",kind});cursor++;lastAction=Date.now();
-      } else if (/同時出撃\s+0\/7/u.test(countText.join(" ")) && Date.now()-start>15_000 && Date.now()-lastEmergency>12_000) {
-        // An empty defense line needs an affordable escort while the next
-        // expensive role is funded. Keep the ordered role cursor unchanged.
-        const scout=page.locator('button.unit-card[data-kind="scout"]');
-        if(await scout.count() && await scout.isEnabled()) {
-          await scout.click();lastEmergency=Date.now();lastAction=Date.now();
-          record.inputs.push({seconds:(Date.now()-start)/1000,action:"emergency-deploy",kind:"scout"});
+      } else if (deploymentCount.active===0 && Date.now()-start>15_000) {
+        // Preserve funds for the pending role while the vehicle is healthy.
+        // The2fce Stage3 originals instead left a critical vehicle undefended
+        // after its one escort died, despite a ready25-cost card. The actual
+        // visible critical HUD permits another escort; card cooldown/cost and
+        // the outer500ms input interval still apply, and the role stays pending.
+        const criticalEmptyLine=await page.locator('.crawler-health.critical').isVisible();
+        if(criticalEmptyLine || (cursor!==lastEmergencyCursor && Date.now()-lastEmergency>12_000)) {
+          const scout=page.locator('button.unit-card[data-kind="scout"]');
+          if(await scout.count() && await scout.isEnabled()) {
+            await scout.click();lastEmergency=Date.now();lastAction=Date.now();lastEmergencyCursor=cursor;
+            record.inputs.push({seconds:(Date.now()-start)/1000,action:"emergency-deploy",kind:"scout",pendingKind:deploymentOrder[cursor%count],deploymentCursor:cursor,criticalEmptyLine});
+          }
         }
       }
     }
-    const barrage=page.getByRole("button",{name:/^装甲車両一斉砲撃/});
+    let airstrikeRequested=false;
+    const airstrike=page.locator('button.support-btn.airstrike');
+    const airVisible=Date.now()-start>12_000&&await airstrike.isVisible();
+    const airReady=airVisible&&await airstrike.isEnabled();
+    const barrage=page.locator('button.support-btn[data-category="vehicle"]');
+    const barrageReady=await barrage.isVisible()&&await barrage.isEnabled();
+    let visibleEnemyTarget=Date.now()-lastAimReadAt<=2_000&&lastVisibleEnemyTarget;
+    if(airVisible&&(airReady||barrageReady||!normalCampaignCanSpendVehicleGauge(record.inputs))
+      &&(Date.now()-lastAimReadAt>=2_000||(airReady&&!lastAirReady))) {
+      lastAimReadAt=Date.now();lastVisibleEnemyTarget=false;visibleEnemyTarget=false;
+      const frame=await observeVisibleBattleHealthBars(page.locator('.game-shell canvas'),{page});
+      visibleEnemyTarget=frame.status==='read'&&frame.bars.some(bar=>(bar.kind==='enemy'||bar.kind==='clone')&&Number.isFinite(bar.x)&&Number.isFinite(bar.y));
+      lastVisibleEnemyTarget=visibleEnemyTarget;
+      (record.airAimObservations??=[]).push({seconds:(Date.now()-start)/1000,airReady,status:frame.status,
+        bars:frame.bars,pngSha256:frame.pngSha256,source:frame.source,visibleEnemyTarget,barrageReady});
+      const aim=frame?.canvas&&visibleAirstrikeTarget(frame.canvas,frame);
+      const bossSeen=await page.locator('.boss-hud').isVisible();
+      if(aim&&(aim.expectedVisibleBarsInRadius>=2||bossSeen)&&await page.evaluate(point=>document.elementFromPoint(point.x,point.y)?.tagName==='CANVAS',aim.point)) {
+        if(airReady) {
+          const aimScreenshot=`s${stage.number}-air-${record.inputs.filter(input=>input.action==='airstrike').length+1}-aim.png`;
+          await writeFile(path.join(out,aimScreenshot),frame.png);
+          await airstrike.click();await page.mouse.click(aim.point.x,aim.point.y);
+          airstrikeRequested=true;
+          const input={seconds:(Date.now()-start)/1000,action:'airstrike',...aim,aimScreenshot,aimScreenshotSha256:frame.pngSha256};record.inputs.push(input);
+          await page.waitForFunction(()=>{const button=document.querySelector('button.support-btn.airstrike');return !button||button.getAttribute('aria-disabled')==='true';},undefined,{timeout:2_000});
+          input.acknowledgment=await airstrike.evaluateAll(elements=>elements.length===1?{state:elements[0].getAttribute('data-state'),disabled:elements[0].getAttribute('aria-disabled')}:null);
+        }
+      }
+    }
+    lastAirReady=airReady;
     const bossVisible=await page.locator(".boss-hud").isVisible();
-    if((stage.missionType!=="boss" ? Date.now()-start>12_000 : bossVisible)&&await barrage.isVisible()&&await barrage.isEnabled()) {
+    // A single visible enemy still needs aircraft funding even before a useful
+    // two-target aim exists. After its acknowledgment, refresh the same bounded
+    // observation for ready vehicle fire; never spend70 on an unobserved field.
+    if(!airstrikeRequested&&visibleEnemyTarget&&normalCampaignCanSpendVehicleGauge(record.inputs,visibleEnemyTarget)&&(Date.now()-start>12_000||(stage.missionType==="boss"&&bossVisible))&&barrageReady) {
       await barrage.click();record.inputs.push({seconds:(Date.now()-start)/1000,action:"barrage"});
     }
     // Take one DOM snapshot of these transient targets. Retaining nth()
@@ -201,30 +271,53 @@ async function battle(stage) {
     }
     await page.waitForTimeout(300);
     } catch (error) {
+      rpc.check();
       const saved = await saveAt();
-      const result = saved?.pendingResult;
-      if (await phaseAt() !== "result" || !await page.getByLabel("作戦結果",{exact:true}).isVisible()
+      const result = saved?.pendingResult ?? saved?.lastResult;
+      if (await phaseAt() !== "result" || !await page.getByLabel("戦闘結果",{exact:true}).isVisible()
         || result?.battleRunId !== `v100:${stage.id}:${record.openingSave.revision}`) throw error;
       record.completedResultHandoff = {error:String(error),battleRunId:result.battleRunId};
       break;
     }
   }
+  },`opening Stage ${stage.number} original observation window`,Math.max(0,start+15*60_000-Date.now()));
+  } finally {
+    record.framePerformance=await finishNormalFrameCapture(rawPage,frameCapture,frameOwner).catch(error=>({status:'incomplete',error:String(error),performanceAcceptance:false}));
+  }
   await acceptResult(record);
 }
 async function acceptResult(record) {
-  await ready();record.result=(await saveAt()).pendingResult??(await saveAt()).lastResult;
+  record.endedAt=new Date().toISOString();
+  await ready();const saved=await saveAt();record.result=saved?.pendingResult??saved?.lastResult;
   assert.equal(record.result?.battleRunId, `v100:${record.id}:${record.openingSave.revision}`, "Result must belong to this recorded normal battle");
-  record.resultText=await page.getByLabel("作戦結果",{exact:true}).innerText();
+  record.resultText=await page.getByLabel("戦闘結果",{exact:true}).innerText();
+  assert.equal(typeof record.result?.won,'boolean','An observation requires an actual recorded battle result');
   record.status=record.result?.won===true?"won":"lost";
   await page.screenshot({path:path.join(out,`s${record.number}-result.png`)});await persist();
-  if(record.status!=="won")throw new Error(`Normal-play defeat at Stage ${record.number}; preserve the result and diagnose before a new attempt`);
+  if(record.status!=="won"){report.status='observed-defeat';return false;}
   await uiClick(button("次の場面へ"));
+  return true;
 }
 try {
- await page.goto(origin.href);await button("ブラウザで遊ぶ").click();
+ await persist();
+ const browserType=await pwaBrowserType(engine);browser=await browserType.launch({headless:true});
+ report.provenance={head:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),tree:execFileSync('git',['rev-parse','HEAD^{tree}'],{encoding:'utf8'}).trim(),platform:process.platform,node:process.version,browserVersion:browser.version(),browserExecutable:browserType.executablePath()};
+ context=await rpc.run(()=>browser.newContext({viewport:{width:844,height:390},hasTouch:true,isMobile:true,recordVideo:{dir:path.join(out,'videos'),size:{width:844,height:390}},...(restoredStorage?{storageState:restoredStorage}:{})}),'browser.newContext');
+ report.videoTimeOrigin={beforePageEpochMs:Date.now()};
+ rawPage=await rpc.run(()=>context.newPage(),'context.newPage');page=rpc.wrap(rawPage);
+ video=page.video();assert.ok(video,'Normal campaign must preserve its actual native video');
+ report.videoTimeOrigin.afterPageEpochMs=Date.now();
+ requests=installRequestFailureAudit(page);report.requestAudit=requests.report;
+ page.setDefaultTimeout(15_000);rpc.setDefaultTimeout(15_000);
+ page.on("console",m=>{if(m.type()==="error")report.errors.push({kind:"console",message:m.text()});});
+ page.on("pageerror",e=>report.errors.push({kind:"page",message:String(e)}));
+ page.on("response",r=>{if(r.status()>=400)report.errors.push({kind:"http",url:r.url(),status:r.status()});});
+ await page.goto(origin.href);
+ await dismissInstallOffer(page,{timeout:15000,readySelector:".v100-start-screen",waitForFictionDismissal:true});
+ await enterV100FromTitle(page,{timeout:15000});
  if (!resumeDir) {
    await page.getByLabel("呼ばれたい名前",{exact:true}).fill("西新通し確認");
-   await uiClick(button("この名前で作戦を始める"));
+   await uiClick(button("この名前でステージを始める"));
  } else {
    await ready();
    const previous = JSON.parse(await readFile(path.join(resumeDir,"report.json")));
@@ -243,7 +336,7 @@ try {
      assert.equal(reason.battleRunId,restored.lastResult?.battleRunId);
      assert.ok(reason.finding?.length && reason.operatorChanges?.length);
      assert.equal(await phaseAt(),"result");
-     await uiClick(button("作戦地図へ"));
+     await uiClick(button("ステージ選択へ"));
      const after=await saveAt();
      for(const key of ["caps","receipts","completedStageIds","unitLevels","ownedUnitIds"])assert.deepEqual(after[key],restored[key],`Defeat return preserves ${key}`);
      report.retry={...reason,path:reasonPath,sha256:createHash("sha256").update(bytes).digest("hex"),defeatReturnPreserved:true};
@@ -254,24 +347,26 @@ try {
    }
  }
  let preparedStage=0;
+ await page.evaluate(installNormalFrameObserver);
  for(let steps=0;steps<6000;steps++) {
   await continueRequested();
-  if(report.errors.length)throw new Error("Browser diagnostics on normal route");
+  if(report.errors.length||requests.report.unexpectedFailures.length)throw new Error("Browser diagnostics on normal route");
   const phase=await phaseAt();const save=await saveAt();
   if(phase==="map") {
     await writeFile(path.join(out,`save-after-${save.completedStageIds.length}.json`),JSON.stringify(save,null,2));
-    await context.storageState({path:path.join(out,"browser-storage-checkpoint.json"),indexedDB:true});
-    if(save.readStoryEventIds.includes("v100:event:epilogue")) {assert.equal(save.completedStageIds.length,30);assert.equal(save.postGameAvailable,true);report.status=report.exploratoryContinuation?"completed-exploratory-route":"passed";break;}
+    await rpc.run(()=>context.storageState({path:path.join(out,"browser-storage-checkpoint.json"),indexedDB:true}),'opening storage checkpoint');
+    if(stageLimit<30&&save.completedStageIds.length>=stageLimit) {report.status="passed";break;}
+    if(save.readStoryEventIds.includes("v100:event:credits")) {assert.equal(save.completedStageIds.length,30);assert.equal(save.postGameAvailable,true);report.status=report.exploratoryContinuation?"completed-exploratory-route":"passed";break;}
     const stage=V100_STAGES.find(stage=>save.availableStageIds.includes(stage.id)&&!save.completedStageIds.includes(stage.id));assert.ok(stage,"No next unfinished stage");
     if(preparedStage!==stage.number){await prepareEconomy(stage.number);preparedStage=stage.number;}
-    await uiClick(button("この作戦を編成"));
+    await uiClick(button("編成して出撃"));
   } else if(phase==="formation") await configureFormation();
   else if(phase==="battle") await battle(V100_STAGES.find(stage=>stage.id===save.flowState.stageId));
-  else if(phase==="result") await acceptResult(report.stages.at(-1));
+  else if(phase==="result") {if(!await acceptResult(report.stages.at(-1)))break;}
   else if(phase==="credits") {
     report.staffRoll=await inspectStaffRoll(page,{playerName:save.playerName});
     await page.screenshot({path:path.join(out,"staff-roll-start.png")});
-    await page.locator('[data-v100-surface="epilogue"]').waitFor({state:"visible",timeout:360000});
+    await page.locator('[data-v100-surface="map"]').waitFor({state:"visible",timeout:360000});
     assert.ok((await saveAt()).readStoryEventIds.includes("v100:event:credits"));
     report.events["v100:event:credits"]=11;
   }
@@ -288,10 +383,18 @@ try {
     await uiClick(page.locator(".v100-event-actions .v100-primary"));
   } else throw new Error(`Unexpected phase ${phase}`);
  }
- if(!["passed", "completed-exploratory-route"].includes(report.status))throw new Error("Normal route did not reach completed epilogue within its finite event count");
-} catch(error) {report.status="failed";report.error=String(error);await page.screenshot({path:path.join(out,"failure.png")}).catch(()=>{});process.exitCode=1;}
+ if(!["passed", "observed-defeat", "completed-exploratory-route"].includes(report.status))throw new Error("Normal route did not reach the post-credits map within its finite event count");
+} catch(error) {report.status="failed";report.error=String(rpc.failure??error);if(rawPage)await normalCleanupWithin(()=>rawPage.screenshot({path:path.join(out,"failure.png")}), 'opening failure screenshot',{timeoutMs:15_000}).catch(()=>{});process.exitCode=1;}
 finally {
-  try { report.finalSave=await saveAt(); } catch(error) { report.saveCaptureError=String(error);process.exitCode=1; }
-  try { await context.storageState({path:path.join(out,"browser-storage.json"),indexedDB:true}); } catch(error) { report.storageCaptureError=String(error);process.exitCode=1; }
-  await persist();await browser.close();console.log(JSON.stringify({status:report.status,stages:report.stages.length,error:report.error}));
+  if(rpc.failure)report.operationTimeout=normalProtocolTimeoutReceipt(rpc.failure);
+  if(rawPage)try { report.finalSave=await normalCleanupWithin(()=>rawPage.evaluate(()=>JSON.parse(localStorage.getItem('nishijin-campaign-v100'))),'opening final save',{timeoutMs:15_000}); } catch(error) { report.saveCaptureError=String(error);report.status='failed';process.exitCode=1; }
+  if(context)try { await normalCleanupWithin(()=>context.storageState({path:path.join(out,"browser-storage.json"),indexedDB:true}),'opening storage',{timeoutMs:15_000}); } catch(error) { report.storageCaptureError=String(error);report.status='failed';process.exitCode=1; }
+  await persist();
+  try { if(context)await normalCleanupWithin(closeOwnedContext,'opening context');if(video){report.video=await normalCleanupWithin(()=>video.path(),'opening video');report.videoBytes=(await stat(report.video)).size;assert.ok(report.videoBytes>0);} }
+  catch(error) { report.videoCaptureError=String(error);report.status='failed';process.exitCode=1; }
+  if(report.errors.length||requests?.report.unexpectedFailures.length){report.status='failed';report.error??='Browser diagnostics on normal route';process.exitCode=1;}
+  report.technicalStatus=report.status==='failed'?'failed':'passed';
+  report.balanceAcceptance=false;report.wholeCampaignAcceptance=false;report.releaseAcceptance=false;
+  if(browser)try{await normalCleanupWithin(()=>browser.close(),'opening browser');}catch(error){report.browserCloseError=String(error);report.error??=String(error);report.status='failed';report.technicalStatus='failed';process.exitCode=1;}
+  await persist();normalPlayChildCompletion(report);console.log(JSON.stringify({engine,status:report.status,stages:report.stages.length,error:report.error}));
 }

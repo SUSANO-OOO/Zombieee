@@ -51,14 +51,14 @@ try {
       assert.equal(await page.locator('[data-v100-surface="formation"]').count(),0);
       await click(page,"出撃編成へ");
       await page.locator('[data-v100-surface="formation"]').waitFor({state:"visible"});
-      await click(page,"隊員を育成");
+      await click(page,"ユニットの育成");
       await page.locator('section[data-v100-surface="personnel"]').waitFor({state:"visible"});
       await click(page,"出撃編成へ");
       await click(page,"枠を空ける");
       await click(page,"パイセンを枠1へ配置");
       await renderedImagesReady(page); await page.reload(); await click(page,"ブラウザで遊ぶ"); await phase(page,"formation");
       assert.equal((await readSave(page)).formationSlots[0],"unit-paisen");
-      await click(page,"作戦地図へ"); await phase(page,"map");
+      await click(page,"ステージ選択へ"); await phase(page,"map");
       const saved=await readSave(page);
       assert.equal(saved.caps,0); assert.deepEqual(saved.completedStageIds,[]); assert.equal(saved.pendingResult,null);
       assert.ok(saved.readStoryEventIds.includes("v100:event:s01:pre"));
@@ -68,7 +68,7 @@ try {
       const pending=recordV100PendingResult(initial,result); assert.equal(pending.applied,true);
       await openFixture(page,normalizeV100Save({...pending.save,flowState:{phase:"result",stageId:V100_STAGE_IDS[0],stageNumber:1,firstClear:true}}));
       await phase(page,"result");
-      const resultCopy=await page.locator('[aria-label="作戦結果"]').innerText();
+      const resultCopy=await page.locator('[aria-label="戦闘結果"]').innerText();
       assert.doesNotMatch(resultCopy,/獲得CAPS|初回解放|ナオ/);
       assert.equal((await readSave(page)).caps,0);
       await click(page,"次の場面へ"); await phase(page,"post");
@@ -81,7 +81,7 @@ try {
        if(++nodes>80)throw new Error("post-event did not finish");
       }
       await phase(page,"first-clear-post");
-      const reward=page.getByLabel("確定した作戦報酬");
+      const reward=page.getByLabel("確定したクリア報酬");
       assert.match(await reward.innerText(),/\+90/); assert.match(await reward.innerText(),/ナオの配備登録/);
       assert.equal((await readSave(page)).caps,90);
       await page.screenshot({path:path.join(out,`${name}-reward.png`)});

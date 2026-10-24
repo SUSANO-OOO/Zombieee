@@ -1,0 +1,60 @@
+{
+  "nativeHead": "f98945e5201ec8d5c82b20e2f8a7c050bc409ea1",
+  "artifactId": 11708609490,
+  "zipSha256": "e77b5e66ada2eb4289336cb723a3be96d5a2c0849c356752efb3b9da948ab841",
+  "scope": "Recorded recovery-window paths and relevant ownership bindings, not a replacement for native exact-delta validation.",
+  "sourceAsset": {
+    "path": "/audio/v100/score/preparation.mp3",
+    "bytes": 1281088,
+    "hash": "sha256-5e405da7375cdd46c61f7edc63b40269ceee8cc21fc1bea01c9abb973db47cb7",
+    "pack": "audio",
+    "category": "audio",
+    "criticality": "optional",
+    "audioChannel": "bgm",
+    "audioId": "install-v100-score-preparation",
+    "audioType": "audio/mpeg",
+    "bundlePath": "/pwa-bundles/audio-v1.bin",
+    "bundleOffset": 25389107,
+    "bundleBytes": 1281088,
+    "bundleLength": 34604123
+  },
+  "recoveryAssetRequests": [
+    "/Zombieee/audio/v100/score/preparation.mp3",
+    "/Zombieee/pwa-bundles/audio-v1.bin",
+    "/Zombieee/pwa-bundles/audio-v1.bin",
+    "/Zombieee/audio/v100/credits/maou_31_tsuioku_no_gensosekai.mp3",
+    "/Zombieee/audio/v100/epilogue/king-laugh-r1.mp3",
+    "/Zombieee/audio/v100/epilogue/meinohama-waves-r1.mp3",
+    "/Zombieee/audio/v100/title/k4ito-title-call-r1.wav",
+    "/Zombieee/pwa-optimized/explosive-drum-v1.webp",
+    "/Zombieee/fonts/v100/BIZUDPGothic-Regular.woff2",
+    "/Zombieee/fonts/v100/NewTegomin-Title.woff2",
+    "/Zombieee/fonts/v100/Rajdhani-Bold.woff2",
+    "/Zombieee/fonts/v100/ZenKakuGothicNew-Bold.woff2",
+    "/Zombieee/icons/v099/infected-face-a2-1024.png",
+    "/Zombieee/icons/v099/infected-face-a2-512.png",
+    "/Zombieee/pwa-optimized/medical-supply-station-v1.webp",
+    "/Zombieee/pwa-optimized/plain-drum-v1.webp",
+    "/Zombieee/pwa-optimized/tactical-drop-pod-v1.webp"
+  ],
+  "repairTransportPaths": [
+    "/Zombieee/pwa-bundles/audio-v1.bin",
+    "/Zombieee/audio/v100/credits/maou_31_tsuioku_no_gensosekai.mp3",
+    "/Zombieee/audio/v100/epilogue/king-laugh-r1.mp3",
+    "/Zombieee/audio/v100/epilogue/meinohama-waves-r1.mp3",
+    "/Zombieee/audio/v100/title/k4ito-title-call-r1.wav",
+    "/Zombieee/pwa-optimized/explosive-drum-v1.webp",
+    "/Zombieee/fonts/v100/BIZUDPGothic-Regular.woff2",
+    "/Zombieee/fonts/v100/NewTegomin-Title.woff2",
+    "/Zombieee/fonts/v100/Rajdhani-Bold.woff2",
+    "/Zombieee/fonts/v100/ZenKakuGothicNew-Bold.woff2",
+    "/Zombieee/icons/v099/infected-face-a2-1024.png",
+    "/Zombieee/icons/v099/infected-face-a2-512.png",
+    "/Zombieee/pwa-optimized/medical-supply-station-v1.webp",
+    "/Zombieee/pwa-optimized/plain-drum-v1.webp",
+    "/Zombieee/pwa-optimized/tactical-drop-pod-v1.webp"
+  ],
+  "bundledRuntimeAudioSourcePaths": [
+    "/Zombieee/audio/v100/score/preparation.mp3"
+  ]
+}

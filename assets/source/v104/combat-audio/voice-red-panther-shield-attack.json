@@ -1,0 +1,52 @@
+{
+  "accent_phrases": [
+    {
+      "moras": [
+        {
+          "text": "オ",
+          "vowel": "o",
+          "vowel_length": 0.11033618450164795,
+          "pitch": 4.573832035064697,
+          "consonant": null,
+          "consonant_length": null
+        },
+        {
+          "text": "シ",
+          "vowel": "I",
+          "vowel_length": 0.06867454946041107,
+          "pitch": 0.0,
+          "consonant": "sh",
+          "consonant_length": 0.09688001871109009
+        },
+        {
+          "text": "キ",
+          "vowel": "i",
+          "vowel_length": 0.06688876450061798,
+          "pitch": 4.96173620223999,
+          "consonant": "k",
+          "consonant_length": 0.05561228469014168
+        },
+        {
+          "text": "ル",
+          "vowel": "u",
+          "vowel_length": 0.1706002652645111,
+          "pitch": 4.693332672119141,
+          "consonant": "r",
+          "consonant_length": 0.033380139619112015
+        }
+      ],
+      "accent": 3,
+      "pause_mora": null,
+      "is_interrogative": false
+    }
+  ],
+  "speed_scale": 1.07,
+  "pitch_scale": -0.035,
+  "intonation_scale": 1.0,
+  "volume_scale": 1.0,
+  "pre_phoneme_length": 0.015,
+  "post_phoneme_length": 0.035,
+  "output_sampling_rate": 48000,
+  "output_stereo": false,
+  "kana": "オ_シキ'ル"
+}

@@ -1,0 +1,26 @@
+{
+  "kind": "zakimiya",
+  "tool": "built-in image_gen.imagegen",
+  "mode": "transparent edit using the approved identity reference",
+  "generatedPath": "C:/Users/okait/.codex/generated_images/01a12578-4773-7873-a12e-fb0962b19020/exec-3bea56f3-fbc6-4779-8664-0b197cd4f718.png",
+  "selectedStudyPath": "output/issue177-newcomer-parts-r1/zakimiya/parts-study-r1.png",
+  "referencePath": "output/issue177-blender-rig-workshop-r4/zakimiya/walk-a.png",
+  "referenceSha256": "f6b17f845892462bd5f7ac0b2ef1e935bce37cf8b556fba520bf24e2340e388b",
+  "sha256": "18147af328b9755b22a12a030f38cb7bc49298dfbca7199a3134337f8ccd3ff6",
+  "width": 1254,
+  "height": 1254,
+  "transparentPixels": 1142219,
+  "visiblePixels": 394394,
+  "fullPrompt": "Use case: identity-preserve.\nAsset type: one square 1024 x 1024 transparent 4 by 4 anatomical paint-parts study for the existing Zakimiya game sprite.\nInput image is the sole character and paint reference. Preserve the worn black leather jacket with sleeves rolled above the forearms, dirty light beige undershirt, charcoal cargo trousers, worn brown lace-up combat boots and pale cloth bandages on the wrists. The final game retains the original painted head, visible costume, hands and equipment. Supply matching hidden anatomical paint for real hip/knee/shoulder/elbow articulation, not a new full character.\nRegular 4 by 4 layout, one detached part in each occupied cell, generous fully transparent padding between components; no parts cross cell edges. Left-to-right, top-to-bottom:\nRow1: (1) short open black leather jacket torso with light beige undershirt, collar to waist ONLY, no head, no arms, no jacket tails or equipment; (2) charcoal cargo-trouser pelvis with brown belt, no torso or legs; (3) near thigh in worn charcoal cargo trousers, upper end at top; (4) near shin in matching trousers, knee top, ankle bottom.\nRow2: (5) near brown lace-up boot, ankle upper left, flat sole, toe points right; (6) far charcoal trouser thigh; (7) far charcoal trouser shin; (8) far brown combat boot, flat sole, toe right.\nRow3: (9) near upper arm in rolled black leather sleeve, shoulder top, elbow bottom; (10) near bare forearm with dirty beige bandage wrap near wrist, elbow top, wrist bottom, NO hand; (11) near small bandaged human hand; (12) far upper arm in rolled black leather sleeve.\nRow4: (13) far bare forearm with bandaged wrist, no hand; (14) far small bandaged hand; (15) empty transparent cell; (16) empty transparent cell.\nAll limb segments straight along the vertical axis, rounded overlap ends at joints. Match the original restrained detailed gritty 2D painted sprite and the exact dark charcoal/brown/beige palette, side view facing right. No head, face, weapon, new accessory, backdrop, shadow, ground, checkerboard, text, labels, border or grid. No extra limbs attached to torso or pelvis. Genuinely transparent background.\n",
+  "status": "Prepared hidden-parts study only; not connected to runtime, not included in22-form coverage or PWA assets. Original visible paint/identity/weapon to be preserved during authoring.",
+  "reference": "identity-reference.png",
+  "prompt": "parts-prompt.txt",
+  "adoptedDerivedParts": 10,
+  "originalParts": [
+    "far-boot",
+    "near-boot",
+    "head",
+    "weapon-and-hands",
+    "free-hand"
+  ]
+}

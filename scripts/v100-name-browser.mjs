@@ -36,7 +36,7 @@ try{for(const [engine,type] of Object.entries({chromium,webkit})){
    const before=await saveAt(page);
    if(kind==='rename'){await click(page,'表示名を変更');assert.equal(await page.locator('html').getAttribute('data-pwa-screen'),'event');}
    assert.equal(await field.getAttribute('maxlength'),null,'UTF-16 maxlength must not truncate valid 12-grapheme names');
-   const submit=kind==='fresh'?'この名前で作戦を始める':'この名前に変更';
+   const submit=kind==='fresh'?'この名前でステージを始める':'この名前に変更';
    await field.fill('👩‍🚒'.repeat(13));await click(page,submit);assert.match(await page.getByRole('alert').innerText(),/名前は12文字以内/u);assert.deepEqual(await saveAt(page),before);
    await field.fill('西新\u200D指揮官');await click(page,submit);assert.match(await page.getByRole('alert').innerText(),/使用できない文字/u);assert.deepEqual(await saveAt(page),before);
    if(kind==='fresh'){

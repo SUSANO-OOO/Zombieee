@@ -263,7 +263,7 @@ export function survivalUpgradePreview(run, upgradeId) {
   if (!key) return null;
   const percent = effects => Math.round((reduction ? 1 - effects[key] : effects[key] - 1) * 100);
   const previous = percent(before), next = percent(after);
-  return { label, before: previous, after: next, suffix: "%", note: previous === next ? "効果は上限に達しています" : "この作戦中の合計効果" };
+  return { label, before: previous, after: next, suffix: "%", note: previous === next ? "効果は上限に達しています" : "このステージ中の合計効果" };
 }
 
 export function survivalNextWavePreview(run) {

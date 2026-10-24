@@ -50,7 +50,8 @@ test("all 20 campaign stages have a closed required visual plan", () => {
     }
     assert.deepEqual(
       new Set(plan.persistent.map(({ key }) => key)),
-      new Set([...Object.keys(BATTLE_CRAWLER_ASSET_PATHS), ...Object.keys(BATTLE_SUPPORT_ASSET_PATHS)]),
+      new Set([...Object.keys(BATTLE_CRAWLER_ASSET_PATHS), ...Object.keys(BATTLE_SUPPORT_ASSET_PATHS), "joint-brawler", "joint-engineer", "joint-walker",
+        ...stage.enemyKinds.filter(kind=>["grappler","sprinter","crusher","abomination","shade","spitter","ooze","gate-eater","kurome","mother","takuya","resonator","cagewalker","choir-knot","spindle","pall-manta","babayaga","mugarian-president-mutated","takuya-omega","anchor-bloom"].includes(kind)).map(kind=>"joint-"+(kind==="abomination"?"crusher":kind))]),
     );
     assert.equal(plan.paths.length, new Set(plan.paths).size, `${stage.id}/dedupe`);
     assert.ok(Object.isFrozen(plan) && Object.isFrozen(plan.paths));
@@ -96,7 +97,7 @@ test("a finite HUD runtime plan loads the selected formation and authored stage 
     includeAllSprites: false,
   });
   assert.deepEqual(plan.sprites.map(({ kind }) => kind), [
-    "brawler", "scout", "medic", "engineer", "mayo-chan", "ranger", "crazy-king", "walker", "runner", "turned",
+    "brawler", "scout", "medic", "engineer", "mayo-chan", "ranger", "crazy-king", "walker", "runner", "turned", "mayo-chan-feral",
   ]);
   assert.ok(!plan.sprites.some(({ kind }) => kind === "spindle"));
 });
@@ -115,6 +116,9 @@ test("legacy exhaustive QA can exclude V1 atlases without changing V1 production
     ["red-panther-knife", "red-panther-shield", "red-panther-smg", "red-panther-commander", "mugarian-president-mutated", "takuya-omega", "futago-separated-a", "futago-separated-b", "kumaverson-guard"].sort());
   assert.deepEqual(full.stageObjects.filter(entry=>!legacy.stageObjects.some(old=>old.id===entry.id)).map(entry=>entry.path),[
     "/art/v100/mission-objects/boundary-gate-states-r1.webp",
+    "/art/v104/combat-vfx/steel-r1.webp",
+    "/art/v104/combat-vfx/organic-r1.webp",
+    "/art/v104/combat-vfx/eye-r1.webp",
     "/art/v102/combat-gore/flesh-wound-r1.webp",
     "/art/v100/combat-vfx/aircraft-support-r1.webp",
     "/art/v100/combat-vfx/explosion-fire-smoke.webp",
@@ -136,5 +140,6 @@ test("legacy exhaustive QA can exclude V1 atlases without changing V1 production
     "/art/v100/characters/tatara-ground-strike-r1.webp",
   ]);
   assert.ok(legacy.stageObjects.every(old=>full.stageObjects.some(entry=>entry.id===old.id&&entry.path===old.path)));
-  assert.equal(full.persistent.length, legacy.persistent.length);
+  assert.equal(full.persistent.length, legacy.persistent.length+45);
+  assert.deepEqual(full.persistent.filter(p=>!legacy.persistent.some(old=>old.key===p.key)).map(p=>p.key).sort(),['joint-brawler','joint-scout','joint-ranger','joint-medic','joint-guardian','joint-brute','joint-gunner','joint-engineer','joint-mayo-chan','joint-walker','joint-grappler','joint-sprinter','joint-crusher','joint-red-panther-knife','joint-red-panther-shield','joint-red-panther-smg','joint-red-panther-commander','joint-crazy-king','joint-kumaverson','joint-zakimiya','joint-tky','joint-mrs-chiha','joint-miyamoto-musashi','joint-shade','joint-spitter','joint-mayo-chan-feral','joint-ooze','joint-gate-eater','joint-kurome','joint-mother','joint-takuya','joint-ooguchi','joint-gairen','joint-futago','joint-futago-separated-a','joint-futago-separated-b','joint-resonator','joint-cagewalker','joint-choir-knot','joint-spindle','joint-pall-manta','joint-babayaga','joint-mugarian-president-mutated','joint-takuya-omega','joint-anchor-bloom'].sort());
 });

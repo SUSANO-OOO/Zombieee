@@ -1,0 +1,75 @@
+{
+  "accent_phrases": [
+    {
+      "moras": [
+        {
+          "text": "マ",
+          "vowel": "a",
+          "vowel_length": 0.06458904594182968,
+          "pitch": 4.3143630027771,
+          "consonant": "m",
+          "consonant_length": 0.06429104506969452
+        },
+        {
+          "text": "カ",
+          "vowel": "a",
+          "vowel_length": 0.05682937800884247,
+          "pitch": 5.324179172515869,
+          "consonant": "k",
+          "consonant_length": 0.07362052798271179
+        },
+        {
+          "text": "セ",
+          "vowel": "e",
+          "vowel_length": 0.05154033005237579,
+          "pitch": 5.347508907318115,
+          "consonant": "s",
+          "consonant_length": 0.06997063755989075
+        },
+        {
+          "text": "テ",
+          "vowel": "e",
+          "vowel_length": 0.06940151751041412,
+          "pitch": 4.874425888061523,
+          "consonant": "t",
+          "consonant_length": 0.05879250541329384
+        }
+      ],
+      "accent": 3,
+      "pause_mora": null,
+      "is_interrogative": false
+    },
+    {
+      "moras": [
+        {
+          "text": "オ",
+          "vowel": "o",
+          "vowel_length": 0.07174338400363922,
+          "pitch": 4.597348213195801,
+          "consonant": null,
+          "consonant_length": null
+        },
+        {
+          "text": "ケ",
+          "vowel": "e",
+          "vowel_length": 0.20362606644630432,
+          "pitch": 4.635260105133057,
+          "consonant": "k",
+          "consonant_length": 0.08725827932357788
+        }
+      ],
+      "accent": 2,
+      "pause_mora": null,
+      "is_interrogative": false
+    }
+  ],
+  "speed_scale": 1.12,
+  "pitch_scale": 0.0,
+  "intonation_scale": 1.0,
+  "volume_scale": 1.0,
+  "pre_phoneme_length": 0.015,
+  "post_phoneme_length": 0.035,
+  "output_sampling_rate": 48000,
+  "output_stereo": false,
+  "kana": "マカセ'テ/オケ'"
+}

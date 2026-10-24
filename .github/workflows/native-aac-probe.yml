@@ -1,0 +1,68 @@
+name: Native AAC Research
+on:
+  workflow_dispatch:
+    inputs:
+      expected_head:
+        description: Exact candidate commit for research; not production or physical recording acceptance
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: native-aac-research-${{ github.event.pull_request.number || inputs.expected_head }}
+  cancel-in-progress: false
+jobs:
+  native-aac:
+    name: Native AAC Research (${{ matrix.engine }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {engine: chromium, os: ubuntu-latest}
+          - {engine: webkit, os: macos-15-intel}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || inputs.expected_head }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify immutable research candidate
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || inputs.expected_head }}
+        run: |
+          [[ "$EXPECTED_HEAD" =~ ^[0-9a-f]{40}$ ]]
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22.13.0"
+          cache: npm
+      - run: npm ci
+      - name: Install focused native engine
+        id: native_engine
+        run: |
+          if [ "${{ matrix.engine }}" = webkit ]; then
+            npm ci --prefix scripts/pwa-native-runtime
+            node scripts/pwa-native-runtime/node_modules/playwright/cli.js install webkit
+          else
+            npx playwright install --with-deps chromium
+          fi
+      - run: npm run build
+        id: production_build
+      - name: Diagnose native AAC streaming without a realtime AudioContext
+        if: ${{ always() && !cancelled() && steps.native_engine.outcome == 'success' && steps.production_build.outcome == 'success' }}
+        env:
+          V103_AUDIO_ENGINE: ${{ matrix.engine }}
+          V177_NATIVE_AAC_OUT: outputs/v177-native-aac
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v177-native-aac-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-aac-research-${{ matrix.engine }}
+          path: outputs/v177-native-aac
+          if-no-files-found: error
+          retention-days: 14

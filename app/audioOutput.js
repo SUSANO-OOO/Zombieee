@@ -5,6 +5,17 @@ export function usesNativeMediaOutput(navigatorTarget = globalThis.navigator) {
     || (/Macintosh/u.test(navigatorTarget?.userAgent ?? "") && navigatorTarget?.maxTouchPoints > 1);
 }
 
+// These values describe the context, not a speaker or saved screen recording.
+export function audioContextTimingSnapshot(context) {
+  const finiteNonnegative = value => Number.isFinite(value) && value >= 0 ? value : null;
+  return {
+    sampleRate: Number.isFinite(context?.sampleRate) && context.sampleRate > 0 ? context.sampleRate : null,
+    baseLatencySeconds: finiteNonnegative(context?.baseLatency),
+    outputLatencySeconds: finiteNonnegative(context?.outputLatency),
+    scope: "AudioContext reported timing; not speaker or saved Control Center timing",
+  };
+}
+
 const disconnect = node => { try { node?.disconnect(); } catch { /* Already released. */ } };
 const abortError = () => new DOMException("Audio output is no longer active", "AbortError");
 

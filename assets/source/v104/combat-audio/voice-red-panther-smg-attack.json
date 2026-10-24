@@ -1,0 +1,44 @@
+{
+  "accent_phrases": [
+    {
+      "moras": [
+        {
+          "text": "ソ",
+          "vowel": "o",
+          "vowel_length": 0.05446738004684448,
+          "pitch": 4.43275785446167,
+          "consonant": "s",
+          "consonant_length": 0.10286302119493484
+        },
+        {
+          "text": "コ",
+          "vowel": "o",
+          "vowel_length": 0.057401254773139954,
+          "pitch": 5.022629737854004,
+          "consonant": "k",
+          "consonant_length": 0.0673837959766388
+        },
+        {
+          "text": "ダ",
+          "vowel": "a",
+          "vowel_length": 0.21864750981330872,
+          "pitch": 4.847989559173584,
+          "consonant": "d",
+          "consonant_length": 0.037132129073143005
+        }
+      ],
+      "accent": 3,
+      "pause_mora": null,
+      "is_interrogative": false
+    }
+  ],
+  "speed_scale": 1.2,
+  "pitch_scale": 0,
+  "intonation_scale": 1.0,
+  "volume_scale": 1.0,
+  "pre_phoneme_length": 0.015,
+  "post_phoneme_length": 0.035,
+  "output_sampling_rate": 48000,
+  "output_stereo": false,
+  "kana": "ソコダ'"
+}

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
+import { execFileSync } from "node:child_process";
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
@@ -39,6 +40,9 @@ function resolvesExclusivelyToMaster(records, assetId, masterId, visited = new S
 
 test("Version 0.9.0 visual approval ledger covers every active file and exact byte revision", async () => {
   const ledger = JSON.parse(await readFile(LEDGER_PATH, "utf8"));
+  const repairs=JSON.parse(await readFile(path.join(ROOT,'assets/source/v100/sprite-repairs/provenance.json'),'utf8'));
+  const mayoRepairs=JSON.parse(await readFile(path.join(ROOT,'assets/source/v100/sprite-repairs/mayo-hit-source-provenance.json'),'utf8'));
+  const reactionRepairs=JSON.parse(await readFile(path.join(ROOT,'assets/source/v100/sprite-repairs/reaction-source-provenance.json'),'utf8'));
   assert.equal(ledger.schemaVersion, 1);
   assert.equal(ledger.version, "0.9.0");
   assert.equal(ledger.status, "active-partial");
@@ -76,8 +80,39 @@ test("Version 0.9.0 visual approval ledger covers every active file and exact by
     const canonicalData = record.path.endsWith(".svg")
       ? Buffer.from(data.toString("utf8").replaceAll("\r\n", "\n"), "utf8")
       : data;
-    assert.equal(createHash("sha256").update(canonicalData).digest("hex"), record.sha256, record.path);
-    assert.equal(canonicalData.length, record.bytes, record.path);
+    const repair=repairs.records.find(item=>`public${item.path}`===record.path);
+    const mayoRepair=mayoRepairs.rows.find(item=>`public${item.path}`===record.path);
+    const reactionRepair=reactionRepairs.rows.find(item=>`public${item.path}`===record.path);
+    if(repair){
+      assert.equal(record.path,'public/art/v090/characters/miyamoto-musashi-battle-r1.png','only the explicitly requested legacy sprite repair supersedes this ledger');
+      assert.match(repairs.producerRequest,/2026-10-10.*Musashi rear stray blade/);
+      const original=await readFile(path.join(ROOT,'assets/source/v100/sprite-repairs/musashi-published-1.0.3.png'));
+      assert.equal(createHash('sha256').update(original).digest('hex'),record.sha256,'the historical approved original is retained byte-identically');
+      assert.equal(original.length,record.bytes);
+      assert.equal(repair.originalSha256,record.sha256);
+      assert.equal(createHash('sha256').update(canonicalData).digest('hex'),repair.pngSha256);
+      assert.equal(canonicalData.length,repair.pngBytes);
+    }else if(mayoRepair){
+      assert.ok(['public/art/v090/characters/mayo-chan-battle-r1.png','public/art/v090/characters/mayo-chan-feral-battle-r1.png'].includes(record.path));
+      const original=execFileSync('git',['show',`99f9c193ab1e35531db39225c839138cdb1c33cd:${record.path}`],{maxBuffer:8*1024*1024});
+      assert.equal(createHash('sha256').update(original).digest('hex'),record.sha256,'Historical approved source remains pinned');
+      assert.equal(original.length,record.bytes);
+      assert.equal(mayoRepair.previousPng.hash,`sha256-${record.sha256}`);assert.equal(mayoRepair.previousPng.bytes,record.bytes);
+      assert.equal(`sha256-${createHash('sha256').update(canonicalData).digest('hex')}`,mayoRepair.nextPng.hash);assert.equal(canonicalData.length,mayoRepair.nextPng.bytes);
+      assert.equal(mayoRepair.unchangedCells,12);assert.ok(mayoRepair.cells.filter(c=>c.column!==5).every(c=>c.oldRgbaSha256===c.newRgbaSha256));
+    }else if(reactionRepair){
+      assert.ok(['public/art/v090/characters/zakimiya-battle-r1.png','public/art/v090/characters/mrs-chiha-battle-r1.png'].includes(record.path));
+      const original=execFileSync('git',['show',`99f9c193ab1e35531db39225c839138cdb1c33cd:${record.path}`],{maxBuffer:8*1024*1024});
+      assert.equal(createHash('sha256').update(original).digest('hex'),record.sha256,'Historical approved source remains pinned');
+      assert.equal(original.length,record.bytes);
+      assert.equal(reactionRepair.previousPng.hash,`sha256-${record.sha256}`);assert.equal(reactionRepair.previousPng.bytes,record.bytes);
+      assert.equal(`sha256-${createHash('sha256').update(canonicalData).digest('hex')}`,reactionRepair.nextPng.hash);assert.equal(canonicalData.length,reactionRepair.nextPng.bytes);
+      const retained=reactionRepair.cells.filter(c=>c.column<5);
+      assert.equal(retained.length,10);assert.ok(retained.every(c=>c.oldRgbaSha256===c.newRgbaSha256));
+    }else{
+      assert.equal(createHash("sha256").update(canonicalData).digest("hex"), record.sha256, record.path);
+      assert.equal(canonicalData.length, record.bytes, record.path);
+    }
     const metadata = await sharp(data).metadata();
     assert.equal(metadata.width, record.width, record.path);
     assert.equal(metadata.height, record.height, record.path);

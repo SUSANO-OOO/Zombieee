@@ -22,6 +22,42 @@ export function readRuntimeObservation() {
   };
 }
 
+// Project only after measurement has stopped. Full samples stay in report.json;
+// both successful controls and failures need readable costs in bounded CI logs.
+export function runtimePerformanceConsoleSummary(value) {
+  if (!value) return null;
+  const diagnostic = value.callbackDiagnostic;
+  const costs = diagnostic?.timeline?.costs;
+  return {
+    p95RafMs: value.p95RafMs,
+    medianFps: value.medianFps,
+    effectiveRenderHz: value.effectiveRenderHz,
+    rafSampleCount: value.raf?.count,
+    rafElapsedMs: value.raf?.elapsedMs,
+    callbackDiagnosticStoredInReport: Boolean(diagnostic),
+    callbackDiagnostic: diagnostic ? {
+      diagnosticOnly: diagnostic.diagnosticOnly,
+      count: diagnostic.count,
+      p50Ms: diagnostic.p50Ms,
+      p95Ms: diagnostic.p95Ms,
+      maxMs: diagnostic.maxMs,
+      over8Ms: diagnostic.over8Ms,
+      over16Ms: diagnostic.over16Ms,
+      over33Ms: diagnostic.over33Ms,
+      timeline: {
+        clock: diagnostic.timeline?.clock,
+        maxRecords: diagnostic.timeline?.maxRecords,
+        overflow: diagnostic.timeline?.overflow,
+        costs: Object.fromEntries(["raf", "layout", "snapshot", "pointerdown", "pointerup", "ranger-lower"].flatMap(kind => {
+          const cost = costs?.[kind];
+          return cost ? [[kind, { count: cost.count, p95Ms: cost.p95Ms, maxMs: cost.maxMs }]] : [];
+        })),
+      },
+    } : null,
+    gates: value.gates,
+  };
+}
+
 // Optional read-only timing, on the same clock as the existing rAF samples.
 // No extra polling, input, frame, timer, or state setter is introduced.
 export function installRuntimeObservationDiagnostics() {
@@ -34,8 +70,21 @@ export function installRuntimeObservationDiagnostics() {
   let snapshotOwner = null;
   let originalSnapshot = null;
   let snapshotWrapper = null;
+  let lastCpuSequence = 0;
   const record = (kind, startedAt, endedAt, frameTimestamp = null) => {
-    if (records.length < maxRecords) records.push({ kind, startedAt, endedAt, durationMs: endedAt - startedAt, frameTimestamp });
+    if (records.length < maxRecords) {
+      const tails = kind === "raf" ? window.__ASHFALL_RUNTIME_PERFORMANCE__?.frameCpuTimings : null;
+      const cpu = Array.isArray(tails) ? tails[tails.length - 1] : null;
+      const sameCallback = Number.isFinite(cpu?.sequence) && cpu.sequence > lastCpuSequence
+        && cpu.rafTimestamp === frameTimestamp && cpu.entryAt >= startedAt && cpu.exitAt <= endedAt;
+      const frameCpu = sameCallback ? Object.fromEntries([
+        "sequence", "rafTimestamp", "entryAt", "previousExitAt",
+        "simulationFinishedAt", "drawFinishedAt", "exitAt", "simulationTime",
+      ].map((key) => [key, cpu[key] ?? null])) : null;
+      if (sameCallback) lastCpuSequence = cpu.sequence;
+      records.push({ kind, startedAt, endedAt, durationMs: endedAt - startedAt, frameTimestamp,
+        ...(frameCpu ? { frameCpu } : {}) });
+    }
     else overflow += 1;
   };
   window.requestAnimationFrame = function(callback) {
@@ -61,9 +110,17 @@ export function installRuntimeObservationDiagnostics() {
   const pointerTypes = ["pointerdown", "pointerup"];
   for (const type of pointerTypes) window.addEventListener(type, pointer, { capture: true, passive: true });
   window.__V100_RAF_CALLBACK_DIAG__ = {
+    rangerPaintActive: false,
+    rangerPaint(paint) {
+      if(!active)return;
+      if(records.length>=maxRecords){overflow+=1;return;}
+      records.push({kind:'ranger-lower',startedAt:paint.startedAt,endedAt:paint.endedAt,
+        durationMs:paint.endedAt-paint.startedAt,frameTimestamp:null,lowerPaint:{...paint}});
+    },
     start() {
       records.length = 0;
       overflow = 0;
+      lastCpuSequence = window.__ASHFALL_RUNTIME_PERFORMANCE__?.frameCpuSequence ?? 0;
       snapshotOwner = window.__ASHFALL_BATTLE_QA__;
       originalSnapshot = snapshotOwner?.getSnapshot;
       if (typeof originalSnapshot !== "function") throw new Error("Runtime observation diagnostic requires the live snapshot getter");
@@ -76,9 +133,11 @@ export function installRuntimeObservationDiagnostics() {
       snapshotOwner.getSnapshot = snapshotWrapper;
       if (snapshotOwner.getSnapshot !== snapshotWrapper) throw new Error("Runtime snapshot timing hook was not installed");
       active = true;
+      window.__V100_RAF_CALLBACK_DIAG__.rangerPaintActive = true;
     },
     stop() {
       active = false;
+      window.__V100_RAF_CALLBACK_DIAG__.rangerPaintActive = false;
       if (snapshotOwner?.getSnapshot === snapshotWrapper) snapshotOwner.getSnapshot = originalSnapshot;
       window.requestAnimationFrame = originalRaf;
       Element.prototype.getBoundingClientRect = originalRect;

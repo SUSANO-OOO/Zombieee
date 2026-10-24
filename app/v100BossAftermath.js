@@ -1,6 +1,7 @@
 // Approved body atlases show the limbs and weapons. Their weight disturbs
 // ground dust; an ability activation must not invent a limb or a contact hit.
 const PROFILES = Object.freeze({
+  mother: { spread: 44, size: 52 },
   ooguchi: { spread: 54, size: 52 },
   gairen: { spread: 42, size: 48 },
   futago: { spread: 46, size: 40 },

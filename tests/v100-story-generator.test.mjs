@@ -27,10 +27,9 @@ test("canonical end roll contains all eleven ordered shots, never the production
   const credits = V100_STORY_EVENTS["v100:event:credits"];
   assert.deepEqual(credits.nodes.map(node => node.sceneLabel), shotLabels);
   assert.ok(credits.nodes.every(node => node.kind === "montage" && node.speaker === null && node.text.length > 0));
-  assert.equal(credits.nodes.at(-1).sourceLine - credits.nodes[0].sourceLine, 10);
-  assert.ok(V100_STORY_EVENTS["v100:event:ending"].nodes.every(node => node.sourceLine < credits.nodes[0].sourceLine));
+  assert.ok(credits.nodes.every(node=>node.sourceDocument==='existing-production-credits'&&node.sourceKey===`credits:${node.sceneLabel}`));
   assert.ok(![...credits.nodes, ...V100_STORY_EVENTS["v100:event:ending"].nodes].some(node => node.text.includes("台詞は使わず")));
-  assert.equal(V100_STORY_EVENTS["v100:event:epilogue"].nodes.at(-1).text, "西新世紀末物語");
+  assert.equal(V100_STORY_EVENTS["v100:event:epilogue"].nodes.length,0,'R9 homecoming is in ending before the credits');
 });
 
 test("generator preserves Markdown credits and titles and fails on a missing shot", async () => {
@@ -78,7 +77,7 @@ test("generator preserves Markdown credits and titles and fails on a missing sho
 
 test("Producer rewrite preserves key joins, reveals and ending without markup leaks", () => {
   const allNodes = Object.values(V100_STORY_EVENTS).flatMap(event => event.nodes);
-  assert.equal(new Set(allNodes.map(node => node.sourceLine)).size, allNodes.length);
+  assert.equal(new Set(allNodes.map(node => node.sourceKey)).size, allNodes.length);
   assert.ok(allNodes.every(node => node.text.length > 0 && !node.text.includes("**")));
   for (const [stage, name] of [[12, "ザキミヤ"], [14, "TKY"], [17, "Mrs.チハ"], [20, "宮本武蔵"]]) {
     assert.equal(V100_STORY_EVENTS[`v100:event:s${stage}:post`].nodes.at(-1).text, `${name}が合流。戦闘配備登録を解禁。`);

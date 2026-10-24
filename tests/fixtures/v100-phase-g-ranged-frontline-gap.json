@@ -1,0 +1,16 @@
+{
+  "sourceHead": "c921c1bb4aec961a7fe2663ab7b6db752750fadc",
+  "sourceJob": 114562467711,
+  "artifactSha256": "699c5bfe2a854c4689864d1c202f4e5497c45efd019d451fd05ce55b14f1d4d9",
+  "sourceRecord": "outputs/v100-phase-g/chromium-736x414-battle-extra-stage04-grappler.capture-transaction.json#failureState.snapshot",
+  "scope": "Exact subset of native failure snapshot fighters, no invented deployment or attack proof. UI actionability is supplied separately by each test.",
+  "screen": "battle",
+  "stageId": "stage-nishijin-station-gate",
+  "time": 74.26666666666374,
+  "wave": 4,
+  "fighters": [
+    { "id": 8, "side": "human", "kind": "ranger", "hp": 30.604000000000006, "maxHp": 70, "x": 451.6947950561157, "combatReady": true, "gateEntering": false, "targetId": 19, "attackSequence": 50 },
+    { "id": 17, "side": "human", "kind": "ranger", "hp": 70, "maxHp": 70, "x": 504.39270946315435, "combatReady": true, "gateEntering": false, "targetId": 25, "attackSequence": 31 },
+    { "id": 28, "side": "zombie", "kind": "grappler", "hp": 190, "maxHp": 190, "x": 732.9239700374484, "combatReady": true, "gateEntering": false, "targetId": null, "attackSequence": 0 }
+  ]
+}

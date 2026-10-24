@@ -77,8 +77,8 @@ try {
           if (!short) {
             await page.getByRole("button", { name: "異常発生・記録", exact: true }).click(); await page.getByRole("button", { name: "サバイバル", exact: true }).click();
             await shot(page, record, "hub");
-            if (locked) { assert.equal(await page.getByRole("button", { name: "防衛継続作戦へ出撃", exact: true }).count(), 0); assert.equal(await page.locator("[data-outbreak-boss-id]").count(), 0); }
-            else await action(page, () => page.getByRole("button", { name: "防衛継続作戦へ出撃", exact: true }).click());
+            if (locked) { assert.equal(await page.getByRole("button", { name: "サバイバルへ出撃", exact: true }).count(), 0); assert.equal(await page.locator("[data-outbreak-boss-id]").count(), 0); }
+            else await action(page, () => page.getByRole("button", { name: "サバイバルへ出撃", exact: true }).click());
           }
           if (!locked) {
             await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__?.getSnapshot().survivalRun?.modePolicy === "v100" && window.__ASHFALL_BATTLE_QA__.getSnapshot().running);
@@ -123,19 +123,19 @@ try {
             await page.waitForFunction(() => window.__ASHFALL_BATTLE_QA__?.getPhaseGCombatSnapshot().paused === false);
             await page.getByRole("button", { name: "一時停止", exact: true }).click(); await shot(page, record, "paused");
             if (short) await fault(page, true);
-            await page.getByRole("button", { name: "作戦地図へ撤退", exact: true }).click();
+            await page.getByRole("button", { name: "ステージ選択へ撤退", exact: true }).click();
             if (short) {
               const before = await saved(page); await page.getByRole("button", { name: "実行する", exact: true }).click();
               const retry = page.getByRole("button", { name: "一括保存を再試行", exact: true }); await retry.waitFor();
               assert.deepEqual(await saved(page), before); await shot(page, record, "settlement-aborted"); await fault(page, false);
               await action(page, () => retry.click());
             } else await action(page, () => page.getByRole("button", { name: "実行する", exact: true }).click());
-            await page.getByRole("region", { name: "防衛継続作戦の戦果", exact: true }).waitFor(); record.result = await saved(page);
+            await page.getByRole("region", { name: "サバイバルの戦果", exact: true }).waitFor(); record.result = await saved(page);
             assert.equal(record.result.survival.active, null); assert.equal(record.result.survival.totalRuns, 1); assert.equal(record.result.bosses.defeatCounts[boss.id], 2);
             assert.equal(record.result.caps, 2000 + record.result.survival.lastResult.totalCaps);
             assert.deepEqual(record.result.completedStageIds, seed.completedStageIds); assert.deepEqual(record.result.ownedUnitIds, seed.ownedUnitIds);
             assert.equal(await page.evaluate(() => document.documentElement.dataset.pwaResultSaving), "true");
-            await shot(page, record, "result"); await arrive(page); await page.getByRole("region", { name: "防衛継続作戦の戦果", exact: true }).waitFor(); assert.deepEqual(await saved(page), record.result);
+            await shot(page, record, "result"); await arrive(page); await page.getByRole("region", { name: "サバイバルの戦果", exact: true }).waitFor(); assert.deepEqual(await saved(page), record.result);
           }
           record.legacyWrites = await page.evaluate(() => window.__SURVIVAL_LEGACY_WRITES__); assert.deepEqual(record.legacyWrites, []); assert.deepEqual(record.errors, []);
           record.status = "passed-storage-runtime-audio-disabled"; console.log(JSON.stringify({ name: record.name, status: record.status, images: record.images.length }));

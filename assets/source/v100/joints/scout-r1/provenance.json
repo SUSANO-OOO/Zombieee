@@ -1,0 +1,132 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "scout",
+  "assetPath": "/art/v100/joints/scout-r1.webp",
+  "bytes": 46982,
+  "sha256": "57b5823be6f2e4fd36cf971d6406a33df639657fb0db0e50d43b75a823f1dbaa",
+  "generatedPartsStudySha256": "a37e015dceb254b758d66f755563c7eee6d4c4e56b8ffcb7ae7476692d892216",
+  "identitySourceSha256": "967eb9244be3ad0eeb197b468f7eb214e74d39059aa2665b8efa390860ad2c05",
+  "identityBinding": {
+    "path": "/art/v070/characters/scout-battle-v1.png",
+    "sourceSha256": "902eadc217a2fca212f57abd079c021d4ea2a441d9bbb648699b19ab749a5762",
+    "sourceRect": {
+      "x": 480,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "referenceTransform": {
+      "scale": 1,
+      "tx": 0,
+      "ty": 0
+    }
+  },
+  "motionSha256": "9b28efcaebda12500d259d6a1b756fbf367948040ed0ace4c1a9e2cd942eba5a",
+  "parts": [
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "5335fc66865ad422d01cce107acc75089f18420bc52f0f8ddb878e60966e0468",
+      "original": true
+    },
+    {
+      "name": "backpack",
+      "file": "backpack.png",
+      "sha256": "3aa9eb2d1cfcaeda74cdd19663c7721e4bfa906b224482c6723f8ef8acad4771",
+      "original": true
+    },
+    {
+      "name": "crowbar-and-hand",
+      "file": "crowbar-and-hand.png",
+      "sha256": "26bc64df189ed4a58b83cd16a7cce94c8175f3699bfc0d14a39aac3de8f1bf36",
+      "original": true
+    },
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "446beef28af16d89953d1ffdfb6f2574c5ec756cd37c8431bbf4d1f7331b6f0e",
+      "original": false
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "420a3ad1e2dbd3a1c3fc5cb42a3ecea0f172f2c9cc5c9c8e89b1a87cb0f5b3c2",
+      "original": false
+    },
+    {
+      "name": "near-upper-arm",
+      "file": "near-upper-arm.png",
+      "sha256": "9f04d3bccbf1cbd803daa179b5adab6b6081a49bc0aed4f4e90d3841f13d77b7",
+      "original": false
+    },
+    {
+      "name": "near-forearm",
+      "file": "near-forearm.png",
+      "sha256": "6a2ea3b97b22f2ce173aa28fec26ae00b54ae9e7ae78718efdc805321fbfd12f",
+      "original": false
+    },
+    {
+      "name": "far-upper-arm",
+      "file": "far-upper-arm.png",
+      "sha256": "fe88b84d44787a1ca95957134c8ddb7e8a4c29a9ca0d7053cf5d8f68b13b8762",
+      "original": false
+    },
+    {
+      "name": "far-forearm",
+      "file": "far-forearm.png",
+      "sha256": "8dcb17cc339c058f5537ff2aa701c6b9fbde10ca1033c1c72ecfe156374c03cb",
+      "original": false
+    },
+    {
+      "name": "far-hand",
+      "file": "far-hand.png",
+      "sha256": "96dd65a02c95eee2d917b271175a5de9a36c4c505a4f40fc8835525a93431c93",
+      "original": false
+    },
+    {
+      "name": "near-thigh",
+      "file": "near-thigh.png",
+      "sha256": "c40030640cfe9ec468bf0da7e8dcba4baf4227f6a75ef7a57fc3396f9a7e38ed",
+      "original": false
+    },
+    {
+      "name": "near-shin",
+      "file": "near-shin.png",
+      "sha256": "b35b110f5032d6e9f5240c36eb94372735ac5a46607f4e933e148ecda0062e25",
+      "original": false
+    },
+    {
+      "name": "near-boot",
+      "file": "near-boot.png",
+      "sha256": "65ff0d90a5b2605c51b0d9edad97f0d564c456a8ab0fbeb9e6cab09b50c6a034",
+      "original": false
+    },
+    {
+      "name": "far-thigh",
+      "file": "far-thigh.png",
+      "sha256": "6bd74f7d49aedd94104e251dd950a4909342700a640a0e6aea6bfbacd44616f7",
+      "original": false
+    },
+    {
+      "name": "far-shin",
+      "file": "far-shin.png",
+      "sha256": "8a96b4f1add98dba81c3d9002b4b9b26567e791168888976ad24ebc7cb60b21b",
+      "original": false
+    },
+    {
+      "name": "far-boot",
+      "file": "far-boot.png",
+      "sha256": "c61918bb31ad41f0f5ef1da08ac5a2407e6e24955432b93ee1cff7da3f49569a",
+      "original": false
+    }
+  ],
+  "source": "Blender 5.2 fixed-length biped gait, ground settling and parented crowbar contact; original face, backpack, hand and crowbar",
+  "groundY": 432,
+  "decodedBytes": 407552,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}

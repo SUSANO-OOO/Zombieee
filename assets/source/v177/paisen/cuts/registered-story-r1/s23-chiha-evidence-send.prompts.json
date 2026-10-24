@@ -1,0 +1,17 @@
+{
+  "sceneId": "s23-chiha-evidence-send",
+  "mode": "built-in imagegen",
+  "identity": "Producer three photographs plus registered Paisen identity master r2",
+  "prompts": [
+    {
+      "mode": "built-in imagegen",
+      "prompt": "Use case: identity-preserve. Asset type: localized edit input for an existing R9 game cutscene. Input1 is the sole edit target; input2–4 are the producer's authoritative three photographs of the same man; input5 is the approved painted Paisen identity master. Change only the man's hair, face, ear and neck visible in Image1 to the same man in reference photos2–4 and approved painted master5. Preserve this exact right-facing over-the-shoulder three-quarter pose, lowered chin, eyes looking right toward the urgent evidence-send action, serious restrained expression, head scale and anatomical neck attachment to this shoulder. Keep the adjacent raised hand and all fingers, his dark navy shirt, shoulder, all background and scene edges unchanged. He has short natural straight black hair with soft cropped fringe, thick straight eyebrows, broad cheeks and rounded broad jaw, compact nose, natural full lips, faint chin stubble, medium warm skin as the photographs; avoid the old pointed angular action-hero face or spiky anime hair. Maintain dim green-grey concrete lighting. Preserve Image1's dimensions, crop and composition, gritty finely painted realistic illustration touch; do not redraw unrelated objects. Do not add text, a watermark or an ornamental frame. This is a reference-driven correction, not a new character design.",
+      "rawGenerationSha256": null
+    },
+    {
+      "mode": "built-in imagegen",
+      "prompt": "Use case: precise-object-edit with identity-preserve. Image1 is the only edit target, a crop from a gritty detailed painted game cutscene. Image2 shows the complete original scene only to identify the correct man and preserve all poses. Image3 is the producer's authoritative clothing photograph (plain navy-purple tee, loose white knee-length shorts), Image4 is his approved painted identity master. Output exactly Image1's crop/composition and style. The foreground brown leather sleeve and white cuff belong to the woman Chiha and MUST remain entirely unchanged. Paisen's black trousers are the narrow partly hidden area BEHIND her sleeve, under the navy shirt visible near the TOP of Image1, and toward the LOWER LEFT. Change only that man's black trouser fabric to loose white knee-length shorts as in references3–4. Keep original hip/thigh/leg size, pose and occlusion. No pale fabric on the woman's sleeve, no extra limbs, no change to shirt, wall, person or lighting. No captions, decorative frame, new characters or watermark. Do not globally redraw the scene. Keep foreground objects in front, exactly two existing arms and legs. Match the original scene light/shadows and natural cloth folds. White cotton should be dirtied by this scene but recognizably white.",
+      "rawGenerationSha256": null
+    }
+  ]
+}

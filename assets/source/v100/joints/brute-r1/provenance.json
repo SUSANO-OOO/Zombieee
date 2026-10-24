@@ -1,0 +1,121 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "brute",
+  "assetPath": "/art/v100/joints/brute-r1.webp",
+  "bytes": 36642,
+  "sha256": "8fe2d63e4cf27485fbf2de83512a002e85e76d2973dc8e42ba4dca2582b8c8b5",
+  "generatedPartsStudySha256": "b9c452a55a18ba17a622e2e88ea35239742f880ff54c53f6dda74ae5307ae38b",
+  "identitySourceSha256": "0f0505c450f9753a12f96f573fa31799e3ef457182ce322c8964d6597ae04b7c",
+  "identityBinding": {
+    "path": "/art/v070/characters/brute-battle-v1.png",
+    "sourceSha256": "8b51f82432280661d6bb35786ee74c8e583f4da22ac4805e80072750657a2b95",
+    "sourceRect": {
+      "x": 480,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "referenceTransform": {
+      "scale": 1,
+      "tx": 0.5,
+      "ty": 0,
+      "flipX": false
+    }
+  },
+  "motionSha256": "06b8032e2372aa3da72d0ff5288976740990d7264182bd2288495a7f55cb5b33",
+  "parts": [
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "da4745833d7a2f4483d246014a9fddcac9f7b2fdda4e57803e4cc06e4b14eb90",
+      "original": false
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "47ce327bbc761ba4e0e1b14051b8ca26f22aea0f5055c5501d8d4cba8965b1db",
+      "original": false
+    },
+    {
+      "name": "far-thigh",
+      "file": "far-thigh.png",
+      "sha256": "a27c64f42f090a68467f18d2d341b695be2c03a44a89ca3e9f990b112c2166ba",
+      "original": false
+    },
+    {
+      "name": "far-shin",
+      "file": "far-shin.png",
+      "sha256": "0991c427d64f4ba6d427a23263d8946043d9b93ce83ef6f3dfa13f07f87f8249",
+      "original": false
+    },
+    {
+      "name": "far-boot",
+      "file": "far-boot.png",
+      "sha256": "794ff67a1be106fbfff02b242dcb5a01506028d5e755dff6059fa67c3e71fce6",
+      "original": false
+    },
+    {
+      "name": "near-thigh",
+      "file": "near-thigh.png",
+      "sha256": "5709f4d53e0cdb8f392dcf794c44772c015aec7851d5163498fcaec37c252a93",
+      "original": false
+    },
+    {
+      "name": "near-shin",
+      "file": "near-shin.png",
+      "sha256": "4671f0ea660abc3f325aa3c411813726c2534d493b85b6d89ffa3b7ebaed7c68",
+      "original": false
+    },
+    {
+      "name": "near-boot",
+      "file": "near-boot.png",
+      "sha256": "7ebc0dfbb95480ac2ec0f7b6d5356f60fc530c17c51610b347fa69b13767efdb",
+      "original": false
+    },
+    {
+      "name": "near-upper-arm",
+      "file": "near-upper-arm.png",
+      "sha256": "ce962e027de4bbd34d70355b950fc4fbe98a607fdffeae5801fe5bc0b287330c",
+      "original": false
+    },
+    {
+      "name": "near-forearm",
+      "file": "near-forearm.png",
+      "sha256": "b174453f090da6afcaf9fa0e669ee36ec4b98d884b55815849c138c07b5757bd",
+      "original": false
+    },
+    {
+      "name": "far-upper-arm",
+      "file": "far-upper-arm.png",
+      "sha256": "27eedfece48115f5129f1897100cbbb218789001602eb491c915f001e9caa5be",
+      "original": false
+    },
+    {
+      "name": "far-forearm",
+      "file": "far-forearm.png",
+      "sha256": "e221129de4e06aa74539421cc48d81aaebda0d32116d9df1a1e6b593c450d0e5",
+      "original": false
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "180e54791514b99924597dc4a5ac4428cd74762ac36019a738a421ac9f1a7f61",
+      "original": true
+    },
+    {
+      "name": "weapon-and-hands",
+      "file": "weapon-and-hands.png",
+      "sha256": "ae15414b523cc37e646acfd2931a355b48415e10f4ce0915a01df1c7099c5b9a",
+      "original": true
+    }
+  ],
+  "source": "Blender 5.2 fixed-length gait and settled support; separate two-handed hammer swing with torso follow-through, guarded punch, chainsaw cut and pan strike; original heads, visible clothing, hands and weapons; original brawler pixel style",
+  "groundY": 432,
+  "decodedBytes": 415744,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}

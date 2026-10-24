@@ -1,6 +1,10 @@
 import { TAKUYA_GROUND_BLADE_SOCKET } from './v100TakuyaGroundSocket.js';
+import {queueV104GuardImpact} from './v104CombatAudio.js';
 
 export const V100_COMBAT_VFX_ART=Object.freeze({
+ 'v104-steel':'/art/v104/combat-vfx/steel-r1.webp',
+ 'v104-organic':'/art/v104/combat-vfx/organic-r1.webp',
+ 'v104-eye':'/art/v104/combat-vfx/eye-r1.webp',
  'v102-flesh-wound':'/art/v102/combat-gore/flesh-wound-r1.webp',
  'v100-support-aircraft':'/art/v100/combat-vfx/aircraft-support-r1.webp',
  'v100-explosion':'/art/v100/combat-vfx/explosion-fire-smoke.webp',
@@ -50,7 +54,7 @@ export function drawV100GroundFire(ctx, objects, effect, time) {
 // infected mouth. Each actual burst shot owns one short, non-looping flash.
 const MUZZLE_PROFILES=Object.freeze({
  ranger:{duration:.1,size:48},
- babayaga:{duration:.1,size:52},
+ babayaga:{duration:.055,size:18},
  gunner:{duration:.085,size:48},
  'red-panther-smg':{duration:.085,size:44},
  'red-panther-commander':{duration:.1,size:42},
@@ -77,14 +81,14 @@ const ready=(objects,id)=>{
  if(!image?.complete||!image.naturalWidth)throw new Error(`Combat VFX must decode before battle: ${id}`);
  return image;
 };
-export const V100_CONTACT_WEAPONS=Object.freeze(['scout','brawler','kumaverson','brute','guardian','crazy-king','zakimiya','walker','runner','crusher','abomination','takuya','grappler','sprinter','gate-eater','cagewalker','red-panther-knife']);
-export const V100_CLAW_CONTACT_WEAPONS=Object.freeze(['walker','runner','grappler','sprinter']);
+export const V100_CONTACT_WEAPONS=Object.freeze(['scout','brawler','kumaverson','brute','guardian','crazy-king','zakimiya','tky','miyamoto-musashi','walker','runner','crusher','abomination','takuya','takuya-omega','gairen','futago','mugarian-president-mutated','ooguchi','grappler','sprinter','gate-eater','cagewalker','red-panther-knife']);
+export const V100_CLAW_CONTACT_WEAPONS=Object.freeze(['walker','runner','turned','grappler','sprinter','futago']);
 const contactQueues=new WeakMap();
 export function clearV100ContactQueue(world){contactQueues.delete(world);}
-export function queueV100Contact(world,{x,y,ground=false,metal=false,claw=false,size=58,direction=1,delay=0,guardContact=null,clawContact=null,skillContact=null}){
+export function queueV100Contact(world,{x,y,ground=false,metal=false,claw=false,size=58,direction=1,delay=0,guardContact=null,clawContact=null,skillContact=null,meleeContact=null}){
  if(!world.definition?.missionConfig?.v100StageNumber)return;
  const entries=(contactQueues.get(world)??[]).filter(e=>world.time-e.startedAt<e.duration);
- entries.push({x,y,ground,metal,claw,size,direction,guardContact,clawContact,skillContact,startedAt:world.time+delay,duration:metal?.16:ground?.6:.2});
+ entries.push({x,y,ground,metal,claw,size,direction,guardContact,clawContact,skillContact,meleeContact,startedAt:world.time+delay,duration:metal?.16:ground?.6:.2});
  contactQueues.set(world,entries.slice(-48));
 }
 export function queueV100TakuyaGroundContact(world,{owner}={}){
@@ -142,6 +146,7 @@ export function queueV100GuardContact(world,{owner,attacker,incomingDamage,x,y})
  const guardFacing=Number(owner.manualAbility.target?.direction)||1;
  if(owner.kind==='guardian'&&(attacker.x-owner.x)*guardFacing<0)return false;
   queueV100Contact(world,{x,y,metal:true,size:54,direction:attacker.x<owner.x?-1:1,guardContact:{ownerId:owner.id,activationId:owner.manualAbility.activationId,ownerHp:owner.hp,incomingDamage,ownerKind:owner.kind,resolvedSocket:false}});
+ queueV104GuardImpact(world,owner);
  return true;
 }
 // Read-only inspection of the same bounded, expiring render queue. No second
@@ -159,7 +164,7 @@ export function drawV100Contact(ctx,objects,{x,y,elapsed,ground=false,metal=fals
  ctx.drawImage(ready(objects,metal?'v100-metal-contact':ground?'v100-ground-impact':claw?'v100-claw-contact':'v100-contact'),frame%3*512,Math.floor(frame/3)*512,512,512,-anchor.x/512*size,-anchor.y/512*size,size,size);
  ctx.restore();return true;
 }
-export function drawV100ContactQueue(ctx,objects,world,shieldSocketForOwner,takuyaGroundSocketForOwner,tataraGroundSocketForOwner){
+export function drawV100ContactQueue(ctx,objects,world,shieldSocketForOwner,takuyaGroundSocketForOwner,tataraGroundSocketForOwner,meleeSocketForOwner){
  const active=(contactQueues.get(world)??[]).filter(e=>{
   if(world.time<e.startedAt-1||world.time-e.startedAt>=e.duration)return false;
   const t=e.tataraGroundContact;
@@ -171,6 +176,11 @@ export function drawV100ContactQueue(ctx,objects,world,shieldSocketForOwner,taku
  });
  contactQueues.set(world,active);
   for(const e of active){
+  if(e.meleeContact&&!e.meleeContact.resolvedSocket&&world.time>=e.startedAt){
+   const point=meleeSocketForOwner?.(e.meleeContact);
+   if(!point||![point.x,point.y].every(Number.isFinite))continue;
+   e.x=point.x;e.y=point.y;e.meleeContact.resolvedSocket=true;
+  }
   if(e.guardContact?.ownerKind&&['guardian','kumaverson'].includes(e.guardContact.ownerKind)&&!e.guardContact.resolvedSocket){
    const point=shieldSocketForOwner?.(e.guardContact.ownerId);
    if(!point||![point.x,point.y].every(Number.isFinite))continue;

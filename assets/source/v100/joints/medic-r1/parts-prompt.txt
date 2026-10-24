@@ -1,0 +1,18 @@
+Use the attached image as the sole identity and costume reference for hidden clothing/limb paint, not as permission to design a new person. This is an identity-preserving technical sprite parts study for the same approved 2D game character. The female medic with dark teal rolled-sleeve field jacket, white inner shirt, orange-red straps, dark charcoal cargo trousers and dark worn lace-up combat boots. Preserve her lean adult female build and the reference's exact subdued colors and painterly style. Her original brown ponytail/head, both hands, compact gun, orange straps and monkey-face medical bag will be cut from the reference: do not paint bags, hair, guns or an extra leg in any body part. The trouser pelvis must be one anatomically normal two-leg root, not another limb hidden below a bag.
+Output one square 4-by-4 grid on a genuinely transparent background. Keep the 16 equal cells clearly separated by empty transparent gutters. Paint fourteen isolated animation pieces, each fully contained in its own cell with no overlap and no labels. Ordered left-to-right, top-to-bottom:
+1 front torso from collar to waist only, no head, arms, hands, weapon or legs;
+2 compact pelvis/waist clothing piece ending above the thighs, no torso, full legs or hanging limb;
+3 near upper leg from hip to knee, straight and relaxed;
+4 near lower leg from knee to ankle, straight;
+5 near boot in side/three-quarter view with the toe pointing RIGHT, no lower leg;
+6 far upper leg from hip to knee, straight and relaxed;
+7 far lower leg from knee to ankle, straight;
+8 far boot with the toe pointing RIGHT, no lower leg;
+9 near upper arm from shoulder to elbow, straight and relaxed, costume-specific sleeve or bare skin;
+10 near forearm from elbow to wrist, straight, no upper arm, hand or weapon;
+11 near isolated hand;
+12 far upper arm from shoulder to elbow, straight;
+13 far forearm from elbow to wrist, straight;
+14 far isolated hand;
+15 and 16 completely empty.
+Expose enough plausible matching cloth/skin at each joint to overlap naturally when rigged. Each limb segment must be a single anatomical part: no attached duplicate shin or foot, no extra legs, no rings or mechanical joints. Keep the original realistic hand-painted 2D game shading and texture, not 3D plastic, not cartoon simplification. No bone rigs, skeletons, diagrams, guide lines, text, white matte, checkerboard, cast ground shadows or extra objects. All pieces are facing generally right and lit consistently with the reference.

@@ -93,7 +93,7 @@ async function reachLoadout(page) {
   invariant(await start.isEnabled(), "title start button stayed disabled");
   await start.click();
   await advanceToMap(page);
-  const prepare = page.getByRole("button", { name: "この作戦を編成", exact: true });
+  const prepare = page.getByRole("button", { name: "編成して出撃", exact: true });
   invariant(await prepare.isEnabled(), "stage prepare button is disabled");
   await prepare.click();
   await page.locator(".formation-screen").waitFor({ state: "visible", timeout });

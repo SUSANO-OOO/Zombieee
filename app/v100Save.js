@@ -20,6 +20,7 @@ import { normalizeV100BossProgress } from "./v100BossProgress.js";
 import { normalizeV100OutbreakProgress } from "./v100Outbreak.js";
 import { normalizeV100SurvivalProgress } from "./v100Survival.js";
 import { createV100StoryFlowState } from "./v100StoryFlow.js";
+import { V100_STORY_SCRIPT_VERSION } from './v100StoryEvents.js';
 import { storyResultIdentity, isSettledStoryResult, isValidStoryVictory } from "./v100ResultIntegrity.js";
 import { CAMPAIGN_EXPORT_FORMAT, CAMPAIGN_IMPORT_MAX_BYTES, parseCampaignManualImport } from "./campaignStorage.js";
 
@@ -118,6 +119,7 @@ export function createDefaultV100Save({ settings = {}, playerName = V100_DEFAULT
     formationSlots: [...V100_INITIAL_UNIT_IDS, ...Array(V100_FORMATION_MAX_SLOTS - V100_INITIAL_UNIT_IDS.length).fill(null)],
     receipts: [],
     readStoryEventIds: [],
+    readStoryVersions: {},
     eventCursor: null,
     flowState: {
       phase: "name",
@@ -128,6 +130,7 @@ export function createDefaultV100Save({ settings = {}, playerName = V100_DEFAULT
       nodeIndex: 0,
       firstClear: false,
       finalized: false,
+      scriptVersion: null,
     },
     pendingResult: null,
     lastResult: null,
@@ -164,6 +167,7 @@ function normalizeFlowState(value, fallback) {
     nodeIndex: integer(source?.nodeIndex, 0, 10_000),
     firstClear: source?.firstClear === true,
     finalized: source?.finalized === true,
+    scriptVersion: typeof source?.scriptVersion === 'string' ? source.scriptVersion : null,
   };
 }
 
@@ -222,11 +226,14 @@ export function normalizeV100Save(raw, { fallback = null } = {}) {
     formationSlots: normalizeFormationSlots(raw.formationSlots, ownedUnitIds),
     receipts,
     readStoryEventIds: uniqueStrings(raw.readStoryEventIds).filter((eventId) => eventId.startsWith("v100:event:")),
+    readStoryVersions: Object.fromEntries(Object.entries(isRecord(raw.readStoryVersions) ? raw.readStoryVersions : {}).filter(([id, version]) => v100EventPhaseForId(id) && typeof version === 'string')),
     eventCursor: raw.eventCursor && typeof raw.eventCursor === "object" ? {
       eventId: typeof raw.eventCursor.eventId === "string" ? raw.eventCursor.eventId : null,
       phase: typeof raw.eventCursor.phase === "string" ? raw.eventCursor.phase : null,
       nodeIndex: integer(raw.eventCursor.nodeIndex),
       nodeKey: typeof raw.eventCursor.nodeKey === "string" ? raw.eventCursor.nodeKey : null,
+      scriptVersion: typeof raw.eventCursor.scriptVersion === 'string' ? raw.eventCursor.scriptVersion : null,
+      sourceKey: typeof raw.eventCursor.sourceKey === 'string' ? raw.eventCursor.sourceKey : null,
     } : null,
     flowState: normalizeFlowState(raw.flowState, base.flowState),
     pendingResult: raw.pendingResult && typeof raw.pendingResult === "object" ? clone(raw.pendingResult) : null,
@@ -451,10 +458,11 @@ export function setV100EventCursor(save, cursor, { now } = {}) {
 export function markV100EventRead(save, eventId, { now } = {}) {
   if (typeof eventId !== "string" || !eventId.startsWith("v100:event:")) return { applied: false, reason: "unknown-event", save: normalizeV100Save(save) };
   const current = normalizeV100Save(save);
-  if (current.readStoryEventIds.includes(eventId)) return { applied: false, duplicate: true, reason: "already-read", save: current };
+  if (current.readStoryEventIds.includes(eventId) && current.readStoryVersions[eventId] === V100_STORY_SCRIPT_VERSION) return { applied: false, duplicate: true, reason: "already-read", save: current };
   return applyV100SaveMutation(current, (next) => ({
     ...next,
-    readStoryEventIds: [...next.readStoryEventIds, eventId],
+    readStoryEventIds: [...new Set([...next.readStoryEventIds, eventId])],
+    readStoryVersions: {...next.readStoryVersions,[eventId]:V100_STORY_SCRIPT_VERSION},
     eventCursor: null,
   }), { now });
 }

@@ -6,7 +6,7 @@ const STRIDE=Object.freeze(['walk-b','walk-a','attack-b','walk-a']);
 
 // The atlas already has a crouch, a launch and two complete running poses.
 // Bind them to the real ability phases instead of stretching an idle body.
-export function v100SoukiPose(runtime,flash=0){
+export function v100SoukiPose(runtime,flash=0,worldX){
  const durations={telegraph:STATION_ENEMY_TUNING.souki.telegraphSeconds,burst:STATION_ENEMY_TUNING.souki.burstSeconds,recovery:STATION_ENEMY_TUNING.souki.recoverySeconds};
  const duration=durations[runtime?.phase];
  if(!duration||!Number.isFinite(runtime.remainingSeconds))return null;
@@ -14,7 +14,15 @@ export function v100SoukiPose(runtime,flash=0){
  const clip=runtime.phase==='telegraph'?'wind-up':runtime.phase==='burst'?'special':'recovery';
  if(flash>.04)return{spriteState:'hit',clip:'hit-light',elapsed};
  if(runtime.phase==='telegraph')return{spriteState:elapsed<.1?'idle':elapsed<.2?'walk-a':'attack-a',clip,elapsed};
- if(runtime.phase==='burst')return{spriteState:elapsed<.08?'attack-b':STRIDE[Math.floor((elapsed-.08)/.095)%STRIDE.length],clip,elapsed};
+ if(runtime.phase==='burst'){
+  // This authored burst faces left even when another body pushes it right.
+  // Anchor its stride to world X, independently of normal runtime facing.
+  // Full-speed cadence stays the same; its initial cell is world-positioned.
+  // Stops hold and pushback reverses the stride. Ability time is unchanged.
+  const strideElapsed=Number.isFinite(worldX)?-worldX/STATION_ENEMY_TUNING.souki.burstSpeed:elapsed;
+  const index=Math.floor((strideElapsed-.08)/.095),wrapped=(index%STRIDE.length+STRIDE.length)%STRIDE.length;
+  return{spriteState:elapsed<.08?'attack-b':STRIDE[wrapped],clip,elapsed};
+ }
  return{spriteState:elapsed<.12?'walk-a':elapsed<.28?'attack-a':'idle',clip,elapsed};
 }
 

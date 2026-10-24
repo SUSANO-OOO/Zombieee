@@ -1,0 +1,163 @@
+{
+  "tool": "built-in image_gen",
+  "studyFile": "hidden-parts-study.png",
+  "studySha256": "58860b3055d9de4b59fff2a7870748d003ed28355b5002c389a47237bfd54ee4",
+  "promptFile": "parts-prompt.txt",
+  "identityMaster": {
+    "path": "/art/v090/bosses/futago-identity-master-r1.webp",
+    "sha256": "667cf49c513831481c5ba8e7d85b322a68232867900efa49e9f840806901270b"
+  },
+  "identityBinding": {
+    "path": "/art/v090/bosses/futago-battle-r1.png",
+    "sourceSha256": "b7c113fc1c223546ca9b33f1256e50784d6e17332bf527467237e05d0ec267d7",
+    "sourceRect": {
+      "x": 0,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "flipX": false
+  },
+  "originalPoseBindings": {
+    "idle": {
+      "path": "/art/v090/bosses/futago-battle-r1.png",
+      "sourceSha256": "b7c113fc1c223546ca9b33f1256e50784d6e17332bf527467237e05d0ec267d7",
+      "sourceRect": {
+        "x": 0,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": false,
+      "file": "identity-reference.png",
+      "sha256": "2e56f03564f0bf9e4729f2647314127e61b55f5309ad95d541344008537bae38",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0
+      },
+      "reason": "Unmodified approved original source pixels; joined multi-limbed identity."
+    },
+    "walk-a": {
+      "path": "/art/v090/bosses/futago-battle-r1.png",
+      "sourceSha256": "b7c113fc1c223546ca9b33f1256e50784d6e17332bf527467237e05d0ec267d7",
+      "sourceRect": {
+        "x": 480,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": false,
+      "file": "original-walk-a.png",
+      "sha256": "a18516524f4c67822dae3e4c90dc4aa270cf9a16f205cc0bbb0178fb3221c5bd",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0
+      },
+      "reason": "Unmodified approved original source pixels; joined multi-limbed identity."
+    },
+    "walk-b": {
+      "path": "/art/v090/bosses/futago-battle-r1.png",
+      "sourceSha256": "b7c113fc1c223546ca9b33f1256e50784d6e17332bf527467237e05d0ec267d7",
+      "sourceRect": {
+        "x": 960,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": false,
+      "file": "original-walk-b.png",
+      "sha256": "6ec19ea86ecd40297a42307a0c10a9af76cbd2c812acb8e78b5e2ef4df254e3b",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0
+      },
+      "reason": "Unmodified approved original source pixels; joined multi-limbed identity."
+    },
+    "attack-a": {
+      "path": "/art/v090/bosses/futago-battle-r1.png",
+      "sourceSha256": "b7c113fc1c223546ca9b33f1256e50784d6e17332bf527467237e05d0ec267d7",
+      "sourceRect": {
+        "x": 1440,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": false,
+      "file": "original-attack-a.png",
+      "sha256": "2559546fb009337d1c0633209fe4414fdcefdeae157f09d186656fd4764ad206",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0
+      },
+      "reason": "Unmodified approved original source pixels; joined multi-limbed identity."
+    },
+    "attack-b": {
+      "path": "/art/v090/bosses/futago-battle-r1.png",
+      "sourceSha256": "b7c113fc1c223546ca9b33f1256e50784d6e17332bf527467237e05d0ec267d7",
+      "sourceRect": {
+        "x": 1920,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": false,
+      "file": "original-attack-b.png",
+      "sha256": "4058f0a5cd0dead23f3db05138ee50d9af57607ee10cb9ec970b205eeb44995d",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0
+      },
+      "reason": "Unmodified approved original source pixels; joined multi-limbed identity."
+    },
+    "hit": {
+      "path": "/art/v090/bosses/futago-battle-r1.png",
+      "sourceSha256": "b7c113fc1c223546ca9b33f1256e50784d6e17332bf527467237e05d0ec267d7",
+      "sourceRect": {
+        "x": 2400,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "flipX": false,
+      "file": "original-hit.png",
+      "sha256": "5c56491a3b25fb976d6369bec0546a1379e9d526973d6d539d6971b6ba363d9d",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0
+      },
+      "reason": "Unmodified approved original source pixels; joined multi-limbed identity."
+    }
+  },
+  "usage": "Only concealed joint/torso completion. Both original heads, four original claws, ribs, costume and five painted feet remain source-bound. Five contact feet are intentional canonical fused anatomy, not an added duplicate leg.",
+  "generatedParts": [
+    "far-left-upper",
+    "far-left-lower",
+    "near-left-upper",
+    "near-left-lower",
+    "center-upper",
+    "center-lower",
+    "far-right-upper",
+    "far-right-lower",
+    "near-right-upper",
+    "near-right-lower",
+    "outer-left-upper",
+    "outer-left-lower",
+    "inner-left-upper",
+    "inner-left-lower",
+    "inner-right-upper",
+    "inner-right-lower",
+    "outer-right-upper",
+    "outer-right-lower",
+    "fused-underpaint"
+  ],
+  "adopted": true,
+  "productionConnected": false,
+  "normalPlayAcceptance": false,
+  "all48Acceptance": false
+}

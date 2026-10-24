@@ -638,7 +638,7 @@ test("r6 deployment diagnostics are bounded and preserve the existing acceptance
   assert.match(firstFrame, /hostTurn\(DEPLOYMENT_FIRST_FRAME_SAMPLE_INTERVAL_MS\)/u);
   assert.match(firstFrame, /getCrawlerDeploymentProofSnapshot/u);
   assert.match(firstFrame, /snapshot\?\.schema === "v099-crawler-deployment-snapshot\/v1"/u);
-  assert.match(firstFrame, /snapshot\.banner\?\.includes\("移動拠点から出撃"\) === true/u);
+  assert.match(firstFrame, /snapshot\.banner\?\.includes\("装甲車両から出撃"\) === true/u);
   assert.match(firstFrame, /progress === 0/u);
   assert.match(firstFrame, /captureTrace = null/u);
   assert.match(firstFrame, /expectedPresentationArm = null/u);

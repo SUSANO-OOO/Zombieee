@@ -1,0 +1,360 @@
+{
+  "format": "nishijin-issue177-reaction-source-inputs",
+  "originalMastersImmutable": true,
+  "generatedWholeFiguresAdopted": false,
+  "inputs": [
+    {
+      "path": "assets/source/v100/sprite-repairs/reactions/zakimiya-boot-guide-r1.png",
+      "bytes": 108518,
+      "sha256": "a46accffe00a64cabf8ef49c55629c8f741744c18f4a9a50a6cc4c35d4859c7a"
+    },
+    {
+      "path": "assets/source/v090/characters/zakimiya-combat-poses-source-r1.png",
+      "bytes": 1550436,
+      "sha256": "3413bb6050ecc712254e5250eab452f7f13e506c35fc3f9150fe24d8710170c9"
+    },
+    {
+      "path": "assets/source/v100/sprite-repairs/reactions/mrs-chiha-boot-guide-r1.png",
+      "bytes": 92240,
+      "sha256": "9602db76e13de4184252cdfdf8cfc0aebffdeeadb8845c626c6f98da4a0b3c7d"
+    },
+    {
+      "path": "assets/source/v090/characters/mrs-chiha-combat-poses-source-r1.png",
+      "bytes": 1573769,
+      "sha256": "7c65486d12449639d919dea2a2306eb01602ffbb0d0f5a826189affa59396304"
+    },
+    {
+      "path": "assets/source/v100/sprite-repairs/reactions/miyamoto-musashi-boot-guide-r1.png",
+      "bytes": 57878,
+      "sha256": "c5a4d775a57f6ff6d70d011a44b34b235c06330a312e0b3f18659badd70478bc"
+    },
+    {
+      "path": "assets/source/v090/characters/miyamoto-musashi-combat-poses-source-r1.png",
+      "bytes": 1600645,
+      "sha256": "8e3b9f08faf1ff7d5cf2eaabc85ca6c4cdd2b80eaa7fb8718f338afeedb17af5"
+    },
+    {
+      "path": "assets/source/v100/sprite-repairs/reactions/mrs-chiha-death-overlap-guide-r1.png",
+      "bytes": 7761,
+      "sha256": "321e321c5455e86f29f91b3a6817db9887c7f7f7f0e0ee360d7db4997313819e"
+    },
+    {
+      "path": "assets/source/v100/sprite-repairs/reactions/miyamoto-musashi-death-overlap-guide-r1.png",
+      "bytes": 8637,
+      "sha256": "c08aa36ecd7fe50cc5d3f9ecb02c7fb3f5bd89fb87e46b3b99b2efbdd59dbd92"
+    },
+    {
+      "path": "reference/characters/generated-working-v1/kumaverson-atlas-right-chroma-v1.png",
+      "bytes": 1523536,
+      "sha256": "93c5abfb8fd85f3d85e248cea84003691141fcc1e9814254550d8fac3fabda60"
+    },
+    {
+      "path": "assets/source/v100/sprite-repairs/reactions/kumaverson-approved-nonreaction-baseline-r1.png",
+      "bytes": 1456630,
+      "sha256": "b1fcca003c5635543b29ca9ca3e0b4f5a0b81a906a03ce22d2d6aa58ee49a346"
+    }
+  ],
+  "generated": [
+    {
+      "kind": "zakimiya",
+      "state": "hit",
+      "sourceSha256": "19cb110bc802690d8561b233e34b1649ef6df3fa3be2aa6656b101465819c72f",
+      "sourceCrop": [
+        320,
+        1200,
+        300,
+        310
+      ],
+      "connectedPixels": 41515,
+      "adoptedPart": "only this isolated boot; generated head/body/hands/weapons excluded"
+    },
+    {
+      "kind": "mrs-chiha",
+      "state": "hit",
+      "sourceSha256": "5fd54ca39d67a2074007a6781679721576d1b10bbc25181297fe228441759c00",
+      "sourceCrop": [
+        570,
+        1030,
+        330,
+        390
+      ],
+      "connectedPixels": 32452,
+      "adoptedPart": "only this isolated boot; generated head/body/hands/weapons excluded"
+    },
+    {
+      "kind": "miyamoto-musashi",
+      "state": "hit",
+      "sourceSha256": "933fa24e970d137c8f18aab73e3cce3b88110a5f43cd6a6b082551d05e440aaa",
+      "sourceCrop": [
+        660,
+        1080,
+        300,
+        200
+      ],
+      "connectedPixels": 18647,
+      "adoptedPart": "only this isolated boot; generated head/body/hands/weapons excluded"
+    },
+    {
+      "kind": "mrs-chiha",
+      "state": "death",
+      "sourceSha256": "ce98e75d05b2015c8dda3da64caafad67666166f321b4333c9107b4e674c39a7",
+      "placement": [
+        4,
+        20,
+        376,
+        162
+      ],
+      "adoptedPart": "only missing boot/cloth within explicit overlap polygon; face/body/hands/weapon excluded"
+    },
+    {
+      "kind": "miyamoto-musashi",
+      "state": "death",
+      "sourceSha256": "e4a331666a04a491a23cd30dc7e7e5a3ff6ebb37ecbc3c003f1c97162f7cfebf",
+      "placement": [
+        7,
+        8,
+        310,
+        104
+      ],
+      "adoptedPart": "only missing boot/cloth within explicit overlap polygon; face/body/hands/weapon excluded"
+    }
+  ],
+  "kumaBaselinePurpose": "Preserve all 10 previously approved nonreaction cells exactly; original grid builder differs in prior matte/retouch pixels",
+  "nativeAcceptance": false,
+  "transportBaselines": [
+    {
+      "path": "/art/v090/characters/zakimiya-battle-r1.png",
+      "bytes": 870632,
+      "hash": "sha256-cd6413bbd543cb5b93abe10997a55f5a99a2b22b1500b0014882d8588b990d06",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v090/characters/mrs-chiha-battle-r1.png",
+      "bytes": 1158832,
+      "hash": "sha256-87dcbd829ab7735ffc41adbd0fae6b46bef9ffdc791b9824e50f12a5419a3b5b",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v090/characters/miyamoto-musashi-battle-r1.png",
+      "bytes": 1277560,
+      "hash": "sha256-b364a9c87a6641aa30e7cdaf611111ddd058e90a8768a2e92cd306945506a321",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v060/characters/kumaverson-battle-v1.png",
+      "bytes": 992400,
+      "hash": "sha256-cd072f9bc36253ed1aa4957b90159a2ff323b661251cc40918609ddfd256bd4e",
+      "criticality": "critical"
+    }
+  ],
+  "nonreactionCells": {
+    "zakimiya": [
+      {
+        "row": 0,
+        "column": 0,
+        "sha256": "666c6ed0a21cd0dfa0a42c3b17949e04507c223a084edb4f22b9c8a82cacaa93"
+      },
+      {
+        "row": 0,
+        "column": 1,
+        "sha256": "da4504082df85c39b0f0cc580d54da950e8d6894f4da7b5476f8025fb5f83a56"
+      },
+      {
+        "row": 0,
+        "column": 2,
+        "sha256": "a7597a61d80817c9a000165e44bc7f2e6300c77e51d6e8bc9666874e48562e53"
+      },
+      {
+        "row": 0,
+        "column": 3,
+        "sha256": "9a3e13390e877ea599fbd18e631f3c9d056b25fcb0e724d9bdf7987683ce3715"
+      },
+      {
+        "row": 0,
+        "column": 4,
+        "sha256": "3b05e9f194161499006a213201f5f39547190bde2184a3aee05d7c332c5b1284"
+      },
+      {
+        "row": 1,
+        "column": 0,
+        "sha256": "a3eeeb5a7fd8f7bcbb2f900a23a2ae588eb11d33003b9385f505fb6436b3deb1"
+      },
+      {
+        "row": 1,
+        "column": 1,
+        "sha256": "99012803bd11040d68900dd3cb4e5c6d02be835593a394361e89a1ca9c285520"
+      },
+      {
+        "row": 1,
+        "column": 2,
+        "sha256": "0ee4ce9648ce60ed25cd4ffbb081e5f156dde1f3ce8f997eea95ed18468cdbf1"
+      },
+      {
+        "row": 1,
+        "column": 3,
+        "sha256": "f63a0e8128a07cc84b4c4ff59bbd6aac5d24a6d6c2c476390388cf7087d71336"
+      },
+      {
+        "row": 1,
+        "column": 4,
+        "sha256": "d4b8dc9464b67fc4c986a2b7659bf5c40219e2599dd1e15f149e95e74e65008d"
+      }
+    ],
+    "mrs-chiha": [
+      {
+        "row": 0,
+        "column": 0,
+        "sha256": "102078e3d802123b4967e54db7a34b5c604e1f5084ebdedc31788058fafa5a48"
+      },
+      {
+        "row": 0,
+        "column": 1,
+        "sha256": "a221c2ac027bdb505805aaa3b3379abd576511fea4f30cf6633e436cd0ceecd9"
+      },
+      {
+        "row": 0,
+        "column": 2,
+        "sha256": "04e8fc23b739b36a0a602ed7bc668485afc8e29ebea91b9c3f6a5e533c008c76"
+      },
+      {
+        "row": 0,
+        "column": 3,
+        "sha256": "ea6a116b42d8a5d2d6debf349d1f095082347ee0dc7a1ce5c205fed558bec136"
+      },
+      {
+        "row": 0,
+        "column": 4,
+        "sha256": "2cf913680feece57f0b440b806d891a397a56cb1eb13e4b6c000d7705d764c19"
+      },
+      {
+        "row": 1,
+        "column": 0,
+        "sha256": "56876a22d70b18c29c43748fb36d767647077c2b2d688f413dc69747de27332e"
+      },
+      {
+        "row": 1,
+        "column": 1,
+        "sha256": "21383627f5cd3febc140b22b689134933bdaa62cea71ec58ff6bca903b64e418"
+      },
+      {
+        "row": 1,
+        "column": 2,
+        "sha256": "5ed80fdd130c81b7e5eeb4c26e8763f6516d88ccb2b0c1b8c712fb09d103a06c"
+      },
+      {
+        "row": 1,
+        "column": 3,
+        "sha256": "45a5d8dde1ec5d390534aab9d2f80d50a6a7074f86dee30063ca6b2239790a4a"
+      },
+      {
+        "row": 1,
+        "column": 4,
+        "sha256": "e7e56740e5fcd4c99328c7f6c4ec33241f2468ab7d8b35318f389d03026df15b"
+      }
+    ],
+    "miyamoto-musashi": [
+      {
+        "row": 0,
+        "column": 0,
+        "sha256": "f6f06921c72fd4876fa960942acb504571fd033c0010f91bebd560d9814d39c0"
+      },
+      {
+        "row": 0,
+        "column": 1,
+        "sha256": "82194b488dcf09127bec76d04b188ea9928b6f64ced4b1bc33c30e9c914a133a"
+      },
+      {
+        "row": 0,
+        "column": 2,
+        "sha256": "d006fed5c3f719359443ac9a4548bc1913f370a1ab65d8f376f92d1464032ba5"
+      },
+      {
+        "row": 0,
+        "column": 3,
+        "sha256": "ab91121a2f5cb7592bdca02643c218a0a0e795b4743cd4ba912a9f1a99791e3e"
+      },
+      {
+        "row": 0,
+        "column": 4,
+        "sha256": "bf8bb5f9b2641581ce5710d78db7e96797a4787011daa834d61ca16c0d7578c2"
+      },
+      {
+        "row": 1,
+        "column": 0,
+        "sha256": "f3c742f227cee638ee9f855f8c58dc0b31dfe99a5ba1ca6c62e026e60ac3fb08"
+      },
+      {
+        "row": 1,
+        "column": 1,
+        "sha256": "6fc684ac0e1354992af9fabeb1a25c211cfe51331e3d37c20d5d29f339dd9382"
+      },
+      {
+        "row": 1,
+        "column": 2,
+        "sha256": "2cf1eb8602d47852db6e2e73dfcfca7d49f7378683388c38637b31734b912e14"
+      },
+      {
+        "row": 1,
+        "column": 3,
+        "sha256": "802f1f514242b96ef13b58d31fbc285683905df8e917ace43080a571c9c77f9e"
+      },
+      {
+        "row": 1,
+        "column": 4,
+        "sha256": "8b3f7fe4ef6cf7d9f983ca1c12eddac3b786c26fe018a069ad0ad6a3efac8c73"
+      }
+    ],
+    "kumaverson": [
+      {
+        "row": 0,
+        "column": 0,
+        "sha256": "511496d7f8e14f5b47f67d7324afa27d0347c4e2f73f4c3007efef62dd8606a3"
+      },
+      {
+        "row": 0,
+        "column": 1,
+        "sha256": "aad3b3b4b8d28eedf3bb00893146642a27f15fc8bf488e62b49baa2489f27428"
+      },
+      {
+        "row": 0,
+        "column": 2,
+        "sha256": "7d11e6670bd2d6a7134243e21c6360ce5c7908bb62713abd41244b5d6ba402fd"
+      },
+      {
+        "row": 0,
+        "column": 3,
+        "sha256": "1f8a7bd38e51d13a715f7268a36479ef5a3ee9926ad30d0d8287885e7ec265f5"
+      },
+      {
+        "row": 0,
+        "column": 4,
+        "sha256": "befff4968219e802adabcb1d96f2d67659a2bb9ac70c814c9198a53a0f517486"
+      },
+      {
+        "row": 1,
+        "column": 0,
+        "sha256": "ee9ea43c9fe237e4d08ee746727995207b562a301fd6f88b9f4cda097cd0997c"
+      },
+      {
+        "row": 1,
+        "column": 1,
+        "sha256": "913380d93749579eed770467eaf480192a1781b92f0f62221f48da9bf6d7479d"
+      },
+      {
+        "row": 1,
+        "column": 2,
+        "sha256": "fa77a3fd4cce29e3291a04d3240ad912067f6e13dbf44c03956b6afccb066ebc"
+      },
+      {
+        "row": 1,
+        "column": 3,
+        "sha256": "f874d7aed9e94e6686a8e0a19fba346dc977738380e833b3416a5fe65d9e32f3"
+      },
+      {
+        "row": 1,
+        "column": 4,
+        "sha256": "8bd5bf4ed3aeb39dce1e7da0f5264a4b914f1b4054142740f4df12fcbae56026"
+      }
+    ]
+  }
+}

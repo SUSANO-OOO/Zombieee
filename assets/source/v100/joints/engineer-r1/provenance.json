@@ -1,0 +1,121 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "engineer",
+  "assetPath": "/art/v100/joints/engineer-r1.webp",
+  "bytes": 27900,
+  "sha256": "564e3640d01f581f3317f9401ee10e919ed58d7bff9580e1d15bb72010e1c197",
+  "generatedPartsStudySha256": "a9df8c53a7afe5aac344010e3d0fe79f5e71a10e41a5103147bdd44b25c88817",
+  "identitySourceSha256": "83a82ea1d500a5a32d9c3806bb41f8b51b1024b64a7e44d4d04a616e014af10d",
+  "identityBinding": {
+    "path": "/art/v070/characters/engineer-battle-v1.png",
+    "sourceSha256": "8b8587b1fba86e2a44cbe15576e6d64407ecfca4d1c1747eb460583c17669d8e",
+    "sourceRect": {
+      "x": 480,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "referenceTransform": {
+      "scale": 1,
+      "tx": 0.5,
+      "ty": 0,
+      "flipX": false
+    }
+  },
+  "motionSha256": "2a484f7619c456bb9380656b4c5330437e020a18f14d1adc3e5dca8f6917dbb3",
+  "parts": [
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "95b6bd9d9aba3dc8559aefa537435ccc6adc3e1757cf9af07ac699939b6a3a50",
+      "original": false
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "5f5bd656216d0ef9ea2291f14bcd9cb6da29aa1046f19971f2e99863eae99b92",
+      "original": false
+    },
+    {
+      "name": "far-thigh",
+      "file": "far-thigh.png",
+      "sha256": "36e61fa0394be17d58595d4e6c32466923c063d67263d33bd27e36f56319db45",
+      "original": false
+    },
+    {
+      "name": "far-shin",
+      "file": "far-shin.png",
+      "sha256": "074bb434ed1c129e70f9db61eed9fc30b313fb36d7cc5ae36b1bf4225297c24d",
+      "original": false
+    },
+    {
+      "name": "far-boot",
+      "file": "far-boot.png",
+      "sha256": "8279282cd1143fe47841575aa615a7f786e166d67e5a6808ada20681f41e84de",
+      "original": false
+    },
+    {
+      "name": "near-thigh",
+      "file": "near-thigh.png",
+      "sha256": "9ee8f2aa4c7eb3af61e68d03aa440f278cdc39f772504b5c2aa1cf27c922c1f3",
+      "original": false
+    },
+    {
+      "name": "near-shin",
+      "file": "near-shin.png",
+      "sha256": "7a47efaed8026b07c7dbbe981fe30de22385e7f0d0af2a44cf8d92c22cc3a2cd",
+      "original": false
+    },
+    {
+      "name": "near-boot",
+      "file": "near-boot.png",
+      "sha256": "162d70fd96b12e8893e8a07336937c81afc40ea8102a0149bc93b9c357d6db5b",
+      "original": false
+    },
+    {
+      "name": "near-upper-arm",
+      "file": "near-upper-arm.png",
+      "sha256": "6265cce9c6876341081de6c2e4de8ff4fd0c31cfad6eebab94a983bf9715d848",
+      "original": false
+    },
+    {
+      "name": "near-forearm",
+      "file": "near-forearm.png",
+      "sha256": "b79e30458abb6f6e195a7ecf376ed1c18d86d258610cc811aaf13bb72f6339f3",
+      "original": false
+    },
+    {
+      "name": "far-upper-arm",
+      "file": "far-upper-arm.png",
+      "sha256": "cc462720149a79c043695b1f15cdc1a573dca630eb0a43245e593e00d8df0a7f",
+      "original": false
+    },
+    {
+      "name": "far-forearm",
+      "file": "far-forearm.png",
+      "sha256": "fb60e45fa392f40133547828e4d608d3d2137f0201dbe4a47ab0146d1498cf52",
+      "original": false
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "0958b378773f1e37ca146364c4344f8bb8d4aeb4114efbda1d34fb0f61d86739",
+      "original": true
+    },
+    {
+      "name": "weapon-and-hands",
+      "file": "weapon-and-hands.png",
+      "sha256": "669d89fa38340f5925de958b9d0496098df3a4824f6f415520fbd1b3214ccd98",
+      "original": true
+    }
+  ],
+  "source": "Blender 5.2 fixed-length legs and both arms holding the original gun/crossbow and hands; source-bound chest, gear, feet, aiming and recoil",
+  "groundY": 432,
+  "decodedBytes": 225280,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}

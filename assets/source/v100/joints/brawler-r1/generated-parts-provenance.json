@@ -1,0 +1,38 @@
+{
+  "kind": "brawler",
+  "tool": "built-in image_gen.imagegen",
+  "originalGeneratedImage": "C:/Users/okait/.codex/generated_images/01a12578-4773-7873-a12e-fb0962b19020/exec-c8dc99c5-e479-4a8d-85e6-9de1554b2a40.png",
+  "reference": "identity-reference.png",
+  "prompt": "parts-prompt.txt",
+  "generatedImage": "output/issue177-melee-parts-r1/brawler/parts-study-r1.png",
+  "bytes": 741383,
+  "sha256": "5d753047cd1cce14bdfe1fac1f29753bf67bf4cd9e618d2ee7b326d2972f6eba",
+  "width": 1254,
+  "height": 1254,
+  "alpha": true,
+  "status": "Hidden anatomy/costume parts study; source face, visible costume, weapon and hands retained; visual and normal-play acceptance pending",
+  "originalStudySha256": "5d753047cd1cce14bdfe1fac1f29753bf67bf4cd9e618d2ee7b326d2972f6eba",
+  "finalDerivedStudySha256": "1956690c70c9e91063824fb26051e049cea5809b42b4a2c44110d79d79736306",
+  "edits": [
+    {
+      "tool": "builtin-imagegen",
+      "generatedImagePath": "C:/Users/okait/.codex/generated_images/01a12578-4773-7873-a12e-fb0962b19020/exec-4058b687-5f2c-4fbb-afd0-234906020014.png",
+      "generatedImageSha256": "46583e830d2e1075b4cba437ef5c73e0df15730d500e482b12f16e3d9bc16f95",
+      "prompt": "torso-repair-prompt.txt",
+      "adoptedRegion": {
+        "cell": 0,
+        "x": 0,
+        "y": 0,
+        "w": 314,
+        "h": 314
+      },
+      "untouchedOutsideEditedCell": true
+    }
+  ],
+  "adoptedDerivedParts": 12,
+  "originalParts": [
+    "head",
+    "weapon-and-hands",
+    "free-hand"
+  ]
+}

@@ -1,7 +1,7 @@
-// Run game browser QA on hosted Linux/macOS. Local Windows QA is disabled:
-// blocking explicit play calls did not prevent the reported audible output.
+// Local PC QA is authorized. The playback guard below is still useful for
+// visual checks; it does not establish physical silence or audio acceptance.
 export function assertSilentQaHost(platform) {
-  if (platform === 'win32') throw new Error('Local Windows game-browser QA is disabled after audible output. Use hosted CI.');
+  if (!['win32','linux','darwin'].includes(platform)) throw new Error('Unsupported browser QA platform: '+platform);
 }
 
 export function installSilentBrowserOutput({ blockNativePlayback }) {

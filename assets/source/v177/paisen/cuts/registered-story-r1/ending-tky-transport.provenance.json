@@ -1,0 +1,151 @@
+{
+  "sceneId": "ending-tky-transport",
+  "runtimePath": "/art/v100/story-r5/cuts/ending-tky-transport.webp",
+  "authorSource": "assets/source/v177/paisen/cuts/registered-story-r1/ending-tky-transport.png",
+  "authorSourceSha256": "2a313adb3fdd487e8d0f1549d51f56c0a8efdd7bbf577625e1a7c8c62c345ab8",
+  "approvedRegion": "assets/source/v177/paisen/cuts/registered-story-r1/ending-tky-transport.region.png",
+  "approvedRegionSha256": "52c3dcfb1c13ddfbd643ad4445407cd93d1e3ab35c3bbb59ae0cfa5b94d1b059",
+  "promptFile": "assets/source/v177/paisen/cuts/registered-story-r1/ending-tky-transport.prompts.json",
+  "provenanceFile": "assets/source/v177/paisen/cuts/registered-story-r1/ending-tky-transport.provenance.json",
+  "originalGitBlob": "de9c727545b96ee25cbc521bd591aa7780fdc6d3",
+  "originalSha256": "9f280cb137924aed3fc09cf249ace782fcf95eaa1f2a41ad22be734a0d4642bc",
+  "originalBytes": 299446,
+  "width": 1280,
+  "height": 720,
+  "changedPixels": 15082,
+  "registeredPixels": 15131,
+  "runtimeBytes": 1021992,
+  "runtimeSha256": "4fc1cd8e5dd892e0d11e8c16584c5c96da6884f2bc80e728d60e48d3f3a4a613",
+  "byteDelta": 722546,
+  "mode": "built-in imagegen",
+  "identityMaster": "assets/source/v177/paisen/paisen-identity-r2.png",
+  "identityMasterSha256": "a1d5517fc1a500c4e949b0ec6c522efa0404ebd4ddd3b548994713a918983257",
+  "outsideRegisteredRegion": 0,
+  "losslessPixelExact": true,
+  "fullSourceSceneActuallyViewed": true,
+  "sourceVisualAccepted": true,
+  "nativeAccepted": false,
+  "producerAccepted": false,
+  "wholeGameAccepted": false,
+  "sourceRegistration": {
+    "id": "ending-tky-transport",
+    "source": "public/art/v100/story-r5/cuts/ending-tky-transport.webp",
+    "sourceSha256": "9f280cb137924aed3fc09cf249ace782fcf95eaa1f2a41ad22be734a0d4642bc",
+    "localized": "assets/source/v177/paisen/cuts/r9-photo-r1/ending-tky-transport-photo-unified-r1.localized.png",
+    "localizedSha256": "2a313adb3fdd487e8d0f1549d51f56c0a8efdd7bbf577625e1a7c8c62c345ab8",
+    "mask": "assets/source/v177/paisen/cuts/r9-photo-r1/ending-tky-transport-photo-unified-r1.region.png",
+    "maskSha256": "458048eb553948965a68a2744df2b0322b6459933c0709a7850a81b7ccbc421a",
+    "width": 1280,
+    "height": 720,
+    "changedPixels": 15082,
+    "outsideAuthorizedRegionChanges": 0,
+    "layers": [
+      {
+        "kind": "face",
+        "generated": "assets/source/v177/paisen/cuts/r9-photo-r1/ending-tky-transport-photo-face-r1.generated.png",
+        "generatedSha256": "513f3985a6f1c700026372db01e40c448f1004e26f3381a23582209415c97b6c",
+        "promptSet": "assets/source/v177/paisen/cuts/r9-photo-r1/ending-tky-transport-photo-face-r1.generation.json",
+        "crop": {
+          "left": 1030,
+          "top": 175,
+          "width": 165,
+          "height": 205
+        },
+        "polygons": [
+          [
+            [
+              1054,
+              212
+            ],
+            [
+              1084,
+              202
+            ],
+            [
+              1127,
+              199
+            ],
+            [
+              1155,
+              210
+            ],
+            [
+              1166,
+              228
+            ],
+            [
+              1170,
+              251
+            ],
+            [
+              1174,
+              266
+            ],
+            [
+              1167,
+              288
+            ],
+            [
+              1165,
+              308
+            ],
+            [
+              1154,
+              321
+            ],
+            [
+              1143,
+              327
+            ],
+            [
+              1144,
+              338
+            ],
+            [
+              1121,
+              350
+            ],
+            [
+              1082,
+              345
+            ],
+            [
+              1058,
+              335
+            ],
+            [
+              1053,
+              316
+            ],
+            [
+              1058,
+              293
+            ],
+            [
+              1055,
+              265
+            ],
+            [
+              1052,
+              239
+            ]
+          ]
+        ],
+        "protected": [],
+        "mask": "assets/source/v177/paisen/cuts/r9-photo-r1/ending-tky-transport-photo-unified-r1.layer-1.mask.png",
+        "maskSha256": "458048eb553948965a68a2744df2b0322b6459933c0709a7850a81b7ccbc421a",
+        "authorizedPixels": 15131,
+        "normalization": "uniform cover fit to source crop, 1.25px inward edge feather; original outside silhouette/occluder polygons"
+      }
+    ],
+    "mode": "built-in imagegen localized through exact source masks",
+    "fullSceneActuallyViewed": false,
+    "sourceAccepted": false,
+    "runtimeConnected": false,
+    "nativeAccepted": false,
+    "producerAccepted": false,
+    "wholeGameAccepted": false,
+    "provenance": "assets/source/v177/paisen/cuts/r9-photo-r1/ending-tky-transport-photo-unified-r1.provenance.json",
+    "prompts": "assets/source/v177/paisen/cuts/r9-photo-r1/ending-tky-transport-photo-unified-r1.prompts.json"
+  }
+}

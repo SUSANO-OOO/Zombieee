@@ -1,0 +1,36 @@
+{
+  "accent_phrases": [
+    {
+      "moras": [
+        {
+          "text": "ク",
+          "vowel": "u",
+          "vowel_length": 0.11712931096553802,
+          "pitch": 4.900970458984375,
+          "consonant": "k",
+          "consonant_length": 0.06504353880882263
+        },
+        {
+          "text": "ッ",
+          "vowel": "cl",
+          "vowel_length": 0.230249285697937,
+          "pitch": 0.0,
+          "consonant": null,
+          "consonant_length": null
+        }
+      ],
+      "accent": 1,
+      "pause_mora": null,
+      "is_interrogative": false
+    }
+  ],
+  "speed_scale": 1.2,
+  "pitch_scale": 0,
+  "intonation_scale": 1.0,
+  "volume_scale": 1.0,
+  "pre_phoneme_length": 0.015,
+  "post_phoneme_length": 0.035,
+  "output_sampling_rate": 48000,
+  "output_stereo": false,
+  "kana": "ク'ッ"
+}

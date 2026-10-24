@@ -6,6 +6,7 @@ import { exportV100BrowserSave, importV100BrowserSave, restoreV100BrowserSave } 
 import { createV100StoryFlowState, shouldAutoSkipV100StoryEvent, v100StoryFlowCheckpoint } from "../app/v100StoryFlow.js";
 import { createV100BattleResult, recordV100PendingResult, finalizeV100PendingResult } from "../app/v100Transactions.js";
 import { completeV100Event } from "../app/v100StoryFlow.js";
+import {V100_STORY_SCRIPT_VERSION} from '../app/v100StoryEvents.js';
 
 const save = createDefaultV100Save({ playerName: "監査" });
 const checkpoint = eventId => ({
@@ -37,8 +38,8 @@ test("all registered event checkpoints and both S30 ending checkpoint forms rema
       const raw = { ...resultSave, campaignStarted: true, flowState, eventCursor: { eventId, phase: flowState.phase, nodeIndex: 0 } };
       const parsed = deserializeV100Save(JSON.stringify(raw));
       assert.equal(parsed.ok, true, eventId);
-      assert.equal(createV100StoryFlowState(parsed.save).phase, flowState.phase);
-      assert.equal(createV100StoryFlowState(parsed.save).eventId, eventId);
+      assert.equal(createV100StoryFlowState(parsed.save).phase, flowState.phase==='epilogue'?'ending':flowState.phase);
+      assert.equal(createV100StoryFlowState(parsed.save).eventId, eventId==='v100:event:epilogue'?'v100:event:ending':eventId);
       assert.equal(completeV100Event(createV100StoryFlowState(parsed.save)).accepted, true, eventId);
     }
   }
@@ -53,7 +54,7 @@ test("older cursor-only and default-name checkpoints infer the registered event 
       assert.equal(parsed.ok, true);
       const flow = createV100StoryFlowState(parsed.save);
       assert.equal(flow.phase, v100EventPhaseForId(eventId));
-      assert.equal(flow.nodeIndex, 1);
+      assert.equal(flow.nodeIndex, eventId==='v100:event:credits'?1:0,'R9 restarts revised dialogue while preserving unchanged credits');
       if (flow.phase === "post") assert.equal(finalizeV100PendingResult(parsed.save).applied, true);
       assert.equal(deserializeV100Save(serializeV100Save({ ...parsed.save, ...v100StoryFlowCheckpoint(flow) })).ok, true);
     }
@@ -98,7 +99,7 @@ test("unknown, mismatched and incomplete active event checkpoints cannot reach I
 
 test("read preference skips ordinary read dialogue while replay, new scenes and reward/credits confirmation remain visible", () => {
   for (const eventId of V100_EVENT_IDS) {
-    const state = { ...checkpoint(eventId), readStoryEventIds: [eventId] };
+    const state = { ...checkpoint(eventId), readStoryEventIds: [eventId],readStoryVersions:{[eventId]:V100_STORY_SCRIPT_VERSION} };
     assert.equal(shouldAutoSkipV100StoryEvent(state, { enabled: true }), !["first-clear-post", "credits"].includes(state.phase), eventId);
     assert.equal(shouldAutoSkipV100StoryEvent(state, { enabled: true, replay: true }), false);
     assert.equal(shouldAutoSkipV100StoryEvent(state, { enabled: false }), false);

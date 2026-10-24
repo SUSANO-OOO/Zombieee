@@ -59,6 +59,7 @@ export const WEAPON_PROFILE_IDS = Object.freeze([
   "crowbar",
   "chainsaw",
   "handgun",
+  "suppressed-pistol",
   "rifle",
   "sniper",
   "machine-gun",
@@ -230,6 +231,8 @@ export function combatFacingDirection({
   manualDirection = 0,
   manualAbilityActive = false,
   attacking = false,
+  recoiling = false,
+  previousDirection,
 } = {}) {
   return combatFacingFromMotion({
     side,
@@ -240,6 +243,8 @@ export function combatFacingDirection({
     manualDirection,
     manualAbilityActive,
     attacking,
+    recoiling,
+    previousDirection,
   });
 }
 
@@ -474,7 +479,7 @@ const REMAINING_TEN_CLIP_OVERRIDES = {
     prefix: "hammer", idle: .3, stride: .14, windup: .19, active: .11, recovery: .22, heavy: true, movement: true,
   }),
   kumaverson: authoredPlayableClips({
-    prefix: "iron-pan", idle: .25, stride: .12, windup: .15, active: .09, recovery: .18, heavy: true,
+    prefix: "iron-pan", idle: .25, stride: .12, windup: .19, active: .13, recovery: .18, heavy: true,
   }),
   babayaga: authoredPlayableClips({
     prefix: "suppressed-pistol", idle: .33, stride: .115, windup: .14, active: .09, recovery: .16,
@@ -489,7 +494,7 @@ const REMAINING_TEN_CLIP_OVERRIDES = {
     prefix: "pan", idle: .22, stride: .1, windup: .12, active: .1, recovery: .19, movement: true,
   }),
   "miyamoto-musashi": authoredPlayableClips({
-    prefix: "dual-katana", idle: .29, stride: .095, windup: .13, active: .1, recovery: .18, movement: true,
+    prefix: "dual-katana", idle: .29, stride: .095, windup: .16, active: .14, recovery: .18, movement: true,
   }),
 };
 
@@ -548,10 +553,10 @@ const REPRESENTATIVE_CLIP_OVERRIDES = {
       frame("walk-a", .095),
     ], { loop: true, movement: true }),
     "wind-up": clip([
-      frame("attack-a", .12, [{ type: "chainsaw-lift", at: .015 }]),
+      frame("attack-a", .18, [{ type: "chainsaw-lift", at: .015 }]),
     ]),
     active: clip([
-      frame("attack-b", .09, [
+      frame("attack-b", .18, [
         { type: "chainsaw-contact", at: 0 },
         { type: "weapon-vfx", at: 0 },
       ]),
@@ -573,7 +578,7 @@ const REPRESENTATIVE_CLIP_OVERRIDES = {
       frame("walk-a", .1),
     ], { loop: true, movement: true }),
     "wind-up": clip([
-      frame("attack-a", .12, [{ type: "plasma-guard", at: .02 }]),
+      frame("attack-a", .15, [{ type: "plasma-guard", at: .02 }]),
     ]),
     active: clip([
       frame("attack-b", .08, [{ type: "blade-first-contact", at: 0 }, { type: "weapon-vfx", at: 0 }]),
@@ -798,6 +803,19 @@ export const WEAPON_PROFILES = deepFreeze({
     damageWeights: [1],
     shotOffsetsSeconds: [0],
   },
+  "suppressed-pistol": {
+    id: "suppressed-pistol",
+    trail: "ballistic",
+    trailColor: "#ddd9ce",
+    impact: "spark",
+    impactRadius: 7,
+    hitStopSeconds: .018,
+    recoil: .18,
+    casing: true,
+    damageWeights: [1],
+    shotOffsetsSeconds: [0],
+    projectileTravelSeconds: .12,
+  },
   rifle: {
     id: "rifle",
     trail: "ballistic",
@@ -947,7 +965,7 @@ export const UNIT_WEAPON_PROFILE = deepFreeze({
   medic: "heal-support",
   "crazy-king": "chainsaw",
   kumaverson: "blunt",
-  babayaga: "sniper",
+  babayaga: "suppressed-pistol",
   guardian: "blunt",
   engineer: "crossbow",
   zakimiya: "blunt",
@@ -955,6 +973,13 @@ export const UNIT_WEAPON_PROFILE = deepFreeze({
   "mrs-chiha": "grenade",
   "miyamoto-musashi": "dual-katana",
   "mayo-chan": "bite",
+});
+
+// These enemies resolve their normal hits immediately. This mapping selects
+// only the painted firearm trace; it must not create delayed damage or bursts.
+export const ENEMY_FIREARM_WEAPON_PROFILE = Object.freeze({
+  "red-panther-smg": "machine-gun",
+  "red-panther-commander": "handgun",
 });
 
 export const COMBAT_WEAPON_ANCHORS = deepFreeze({
@@ -1370,6 +1395,7 @@ export function createCombatAnimationRuntime({
     locomotionTravelDistance: 0,
     locomotionPhase: 0,
     locomotionStopPhase: 0,
+    locomotionSettle: 1,
   };
 }
 
@@ -1426,18 +1452,27 @@ export function advanceCombatAnimationRuntime(runtime, observation = {}, elapsed
   const stateChanged = state !== previous.state;
   const strideDistance = Math.max(.001, Number(observation.locomotionCycleDistance)
     || LOCOMOTION_STRIDE_DISTANCE[observation.kind] || 14);
-  const previousPhase = Math.max(0, Number(previous.locomotionPhase) || 0);
+  const previousPhase = Number(previous.locomotionPhase) || 0;
   const locomotionStopPhase = state === 'stop-move' && stateChanged
-    ? previousPhase : Math.max(0, Number(previous.locomotionStopPhase) || 0);
+    ? previousPhase : Number(previous.locomotionStopPhase) || 0;
+  const advancingGait = moving && (!requestedState || requestedState === "retreat"
+    || requestedState === "reload" || requestedState === "weapon-cycle");
   let locomotionPhase = previousPhase;
-  if (moving && !requestedState) locomotionPhase += movedDistance / strideDistance;
-  else if (state === 'stop-move') {
-    const t = Math.min(1, stateElapsed / animationClipFor('walker','stop-move').durationSeconds);
-    locomotionPhase = locomotionStopPhase
-      + (Math.round(locomotionStopPhase * 2) / 2 - locomotionStopPhase) * t * t * (3 - 2 * t);
-  } else if (previous.state === 'stop-move') {
-    locomotionPhase = Math.round(locomotionStopPhase * 2) / 2;
-  }
+  // Target-facing attacks can travel backward during recoil or repositioning.
+  // Reverse only the local stride so its planted foot cancels actual root
+  // travel; facing, unsigned distance evidence and clip-event time stay owned
+  // by their existing paths. Every gait renderer wraps signed cycle phases.
+  const gaitDirection = (x - previous.lastX) * (direction === "left" ? -1 : 1) < 0 ? -1 : 1;
+  if (advancingGait) locomotionPhase += gaitDirection * movedDistance / strideDistance;
+  // A planted foot must not slide while the fighter is stationary. Settling
+  // lowers the airborne foot in the rig; it never advances the gait phase.
+  // Restart from that actual plant as well. Resetting lift to a full walking
+  // pose in one update made a short stop/approach pop at the knee and foot.
+  // This only eases the lift; distance still advances the stride immediately.
+  const previousSettle = Math.max(0, Math.min(1, Number(previous.locomotionSettle) || 0));
+  const locomotionSettle = moving
+    ? Math.max(0, previousSettle - dt / .12)
+    : Math.min(1, previousSettle + dt / .16);
   const stateTravelDistance = state === "move"
     ? stateChanged
       ? movedDistance
@@ -1478,14 +1513,15 @@ export function advanceCombatAnimationRuntime(runtime, observation = {}, elapsed
     // Keep the feet's phase across start/stop/turn clips. State-local distance
     // still owns the authored clip events and is deliberately not repurposed.
     locomotionTravelDistance: Math.max(0, Number(previous.locomotionTravelDistance) || 0)
-      + (moving && !requestedState ? movedDistance : 0),
+      + (advancingGait ? movedDistance : 0),
     locomotionPhase,
     locomotionStopPhase,
+    locomotionSettle,
   };
 }
 
 export function weaponProfileForUnit(kind) {
-  return WEAPON_PROFILES[UNIT_WEAPON_PROFILE[kind] ?? "unarmed"];
+  return WEAPON_PROFILES[UNIT_WEAPON_PROFILE[kind] ?? ENEMY_FIREARM_WEAPON_PROFILE[kind] ?? "unarmed"];
 }
 
 export function weaponProfileForAction(kind, action = "attack") {
@@ -1536,13 +1572,22 @@ export function sampleMrsChihaLauncherBash(elapsedSeconds = 0) {
     const currentFrame = MRS_CHIHA_LAUNCHER_BASH.frames[index];
     const end = cursor + currentFrame.durationSeconds;
     if (local < end || index === MRS_CHIHA_LAUNCHER_BASH.frames.length - 1) {
+      const phaseState = ["wind-up", "active", "recovery"][index];
+      const progress = (local - cursor) / currentFrame.durationSeconds;
       return Object.freeze({
         state: "launcher-bash",
+        requestedState: phaseState,
+        resolvedState: phaseState,
+        attackVariant: "launcher-bash",
         frameIndex: index,
         spriteState: currentFrame.spriteState,
         frameElapsedSeconds: local - cursor,
         frameDurationSeconds: currentFrame.durationSeconds,
         clipDurationSeconds: MRS_CHIHA_LAUNCHER_BASH.durationSeconds,
+        clipElapsedSeconds: local,
+        // The normal attack windup already drew the pullback. Continue that
+        // same Blender action into contact instead of snapping back to ready.
+        clipProgress: index === 0 ? (.18 + .10 * progress) / .28 : progress,
         events: currentFrame.events,
         movement: false,
         recovery: index === MRS_CHIHA_LAUNCHER_BASH.frames.length - 1,
@@ -1554,6 +1599,15 @@ export function sampleMrsChihaLauncherBash(elapsedSeconds = 0) {
     cursor = end;
   }
   throw new RangeError("Mrs. Chiha launcher bash clip has no frames");
+}
+
+export function sampleMrsChihaLauncherBashWindup(elapsedSeconds = 0) {
+  const sample = sampleAnimationClip("mrs-chiha", "wind-up", elapsedSeconds);
+  return Object.freeze({
+    ...sample,
+    attackVariant: "launcher-bash",
+    clipProgress: sample.clipProgress * .18 / .28,
+  });
 }
 
 export function mrsChihaLauncherBashDuration() {

@@ -3,7 +3,7 @@
   "license": "CC-BY-4.0",
   "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
   "usageUrl": "https://www.scottbuckley.com.au/library/using-this-music/",
-  "acceptance": "Normal battle and daily conversation direction approved 2026-09-09. Remaining scene assignments are local candidate work; boss music unchanged.",
+  "acceptance": "Normal battle and daily conversation direction approved 2026-09-09. Producer requested an exciting opening track 2026-10-10; Born Of The Sky is the implementation candidate. Remaining scene assignments require play review; boss music unchanged.",
   "adaptation": "Official compositions excerpted, stereo loop seams crossfaded, two-pass loudness normalization. Not newly composed by this project.",
   "ffmpegVersion": "ffmpeg version N-92722-gf22fcd4483 Copyright (c) 2000-2018 the FFmpeg developers\r",
   "records": [
@@ -473,6 +473,58 @@
         "output_thresh": "-28.09",
         "normalization_type": "dynamic",
         "target_offset": "-1.96"
+      }
+    },
+    {
+      "role": "opening",
+      "file": "public/audio/v100/score/opening.mp3",
+      "bytes": 1377219,
+      "sha256": "f7934da2099df7490395cf9a586c2e1e4d4ac040563004d9029b0c54d99f4f4c",
+      "durationSeconds": 86,
+      "sourceFile": "assets/source/v100/audio/scott-buckley/BornOfTheSky.mp3",
+      "sourceSha256": "0d2f6a8b048a0f1ae366933de17da1b8c2e1d219eb5fbb8d4b00b9d930e89b26",
+      "title": "Born Of The Sky",
+      "sourcePage": "https://www.scottbuckley.com.au/library/born-of-the-sky/",
+      "sourceStartSeconds": 82,
+      "crossfadeSeconds": 2,
+      "normalization": "loudnorm=I=-20:LRA=11:TP=-2:measured_I=-12.50:measured_LRA=3.00:measured_TP=-0.97:measured_thresh=-22.50:offset=-0.52:linear=true",
+      "analysis": {
+        "input_i": "-12.50",
+        "input_tp": "-0.97",
+        "input_lra": "3.00",
+        "input_thresh": "-22.50",
+        "output_i": "-19.48",
+        "output_tp": "-7.73",
+        "output_lra": "2.20",
+        "output_thresh": "-29.48",
+        "normalization_type": "dynamic",
+        "target_offset": "-0.52"
+      }
+    },
+    {
+      "role": "opening",
+      "file": "public/audio/v100/score/opening.ogg",
+      "bytes": 1304117,
+      "sha256": "9c2b448c486e7deccb1b4ccdc9916aca981990778ab17402d0694c7268cbb3a7",
+      "durationSeconds": 86,
+      "sourceFile": "assets/source/v100/audio/scott-buckley/BornOfTheSky.mp3",
+      "sourceSha256": "0d2f6a8b048a0f1ae366933de17da1b8c2e1d219eb5fbb8d4b00b9d930e89b26",
+      "title": "Born Of The Sky",
+      "sourcePage": "https://www.scottbuckley.com.au/library/born-of-the-sky/",
+      "sourceStartSeconds": 82,
+      "crossfadeSeconds": 2,
+      "normalization": "loudnorm=I=-20:LRA=11:TP=-2:measured_I=-12.50:measured_LRA=3.00:measured_TP=-0.97:measured_thresh=-22.50:offset=-0.52:linear=true",
+      "analysis": {
+        "input_i": "-12.50",
+        "input_tp": "-0.97",
+        "input_lra": "3.00",
+        "input_thresh": "-22.50",
+        "output_i": "-19.48",
+        "output_tp": "-7.73",
+        "output_lra": "2.20",
+        "output_thresh": "-29.48",
+        "normalization_type": "dynamic",
+        "target_offset": "-0.52"
       }
     }
   ]

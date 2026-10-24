@@ -1,4 +1,13 @@
 {
+  "status": "rejected-by-producer",
+  "reuseAllowed": false,
+  "rejectionReason": "Producer rejected the orange-vest TAKUYA design. Source images, derived images and the obsolete generator must remain absent.",
+  "sources": {
+    "stage3": "assets/source/v100/takuya/takuya-stage3-vest-source-v2.png",
+    "omega": "assets/source/v100/enemies/takuya-omega-vest-atlas-source-v3.png",
+    "identity": "assets/source/v100/enemies/takuya-omega-identity-master-vest-r3.png",
+    "ending": "assets/source/v100/cuts/takuya-omega-defeat-vest-source-v3.png"
+  },
   "generator": "scripts/build-v100-takuya-vest-assets.mjs",
   "editMethod": "built-in image generation, precise costume edit of reviewed original TAKUYA assets",
   "preservedIdentity": [

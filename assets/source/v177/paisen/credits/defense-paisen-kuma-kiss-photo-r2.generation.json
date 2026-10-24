@@ -1,0 +1,54 @@
+{
+  "at": "2026-10-15T09:08:55.467Z",
+  "mode": "built-in",
+  "intent": "edit",
+  "useCase": "reference-character-consistency",
+  "sceneId": "defense-paisen-kuma-kiss",
+  "actionAuthority": {
+    "source": "app/v100CreditsFilm.js",
+    "actors": [
+      "unit-paisen",
+      "unit-kumaverson"
+    ],
+    "description": "クマバーソンがパイセンの頬にキスをする。パイセンは肩を抱き、大げさな身ぶりで喜ぶ。"
+  },
+  "target": "public/art/v100/credits/defense-paisen-kuma-kiss-r1.webp",
+  "targetSha256": "5812ef67e127d5e3c4891f5f03bcea5112020fcfd5ceaa1903a4dfa7db2a6408",
+  "prompt": "Edit image 1, the existing 1600x900 detailed painted game illustration. Paisen is the short-haired adult man on the LEFT in the navy T-shirt and improvised white cloth cape. The long-haired man on the RIGHT in the dirty pale T-shirt is Kumaverson. Change ONLY Paisen's facial identity, hair, ears, build and normal clothing; preserve the white cloth cape as a scene prop, the cheek kiss contact, Paisen's delighted closed-eye smile, the raised open left hand and his other arm around Kumaverson's shoulder. Do not change Kumaverson's face, lips, hand, body, shirt or frying pan. Any visible Paisen trousers should be white knee shorts; do not invent hidden legs. Images 2-4 are the Producer's authoritative photos of the exact adult person Paisen must resemble. Image 5 is his already registered illustrated identity: reproduce that SAME person, face and outfit faithfully in this scene. Match short black hair, broad rounded cheeks/jaw, natural dark eyes and brows, photographed nose/lips/ears and moderately stocky build. Use the plain navy-purple crew-neck T-shirt and loose white knee-length shorts from the photos, with practical dark low-top shoes only where feet are visible. Do not retain the old sharp-jawed generic anime-hero face or turn him into a different actor. Adapt the accurate photo likeness into the image's richly detailed inked/painted post-apocalyptic game style, perspective, lighting and shadows. Keep the head size/location and its natural neck-to-collar connection; no shifted neck, added limbs or camera-facing stare. Preserve every other person and prop, original action, composition, camera viewpoint, framing and background. No text, logos, symbols or added people/objects. All pixels outside Paisen's figure should be unchanged.",
+  "references": [
+    {
+      "path": "output/issue177-paisen-producer-photos-r1/codex-clipboard-3b180a11-73f9-46ab-9b5e-73e2f1edc53e.png",
+      "sha256": "bfa5a71f1a1cb294ab583e51ac6e343eac6e6fd9d3e996fcd24a50cbf6a74def"
+    },
+    {
+      "path": "output/issue177-paisen-producer-photos-r1/codex-clipboard-25d36678-020f-4fca-9e8f-0f4989df7f37.png",
+      "sha256": "b93dfa892a588013f8bdc9ca1670ccb3874f47ce17eabe585a96f00e60349ee7"
+    },
+    {
+      "path": "output/issue177-paisen-producer-photos-r1/codex-clipboard-f7346372-9c4e-400f-8cc9-ccef2931291c.png",
+      "sha256": "8309ecff99eadc5f9e5ac6cdf23fb536e5930931c9acdba7518e2f3f67d947c4"
+    },
+    {
+      "path": "assets/source/v177/paisen/paisen-identity-r2.png",
+      "sha256": "a1d5517fc1a500c4e949b0ec6c522efa0404ebd4ddd3b548994713a918983257"
+    }
+  ],
+  "runtimeConnected": false,
+  "visualReviewed": false,
+  "wholeGameAccepted": false,
+  "targetWidth": 1600,
+  "targetHeight": 900,
+  "generatedOriginal": "C:/Users/okait/.codex/generated_images/01a12578-4773-7873-a12e-fb0962b19020/exec-44c92d8a-f401-4ba9-9650-51f081bdca92.png",
+  "generatedCopy": "assets/source/v177/paisen/credits/defense-paisen-kuma-kiss-photo-r2.generated.png",
+  "generatedSha256": "e6f56169a63c1cb505815b09eea4f00d58bcd6485cc6c0f5cec07db37ceec99e",
+  "generatedSize": {
+    "width": 1672,
+    "height": 941
+  },
+  "generatedReviewed": true,
+  "generatedReview": "Viewed the built-in output; source candidate only. Preserve original outside a registered Paisen region before runtime adoption.",
+  "producerAccepted": false,
+  "localized": "assets/source/v177/paisen/credits/defense-paisen-kuma-kiss-photo-r2.localized-r1.png",
+  "localizedSha256": "2967d5813d5111cc61c562f137f6161d89dd896476978e3b11531818bd16d209",
+  "localizationProvenance": "assets/source/v177/paisen/credits/defense-paisen-kuma-kiss-photo-r2.localized-r1.provenance.json"
+}

@@ -1,0 +1,160 @@
+{
+  "at": "2026-10-15T10:10:03.138Z",
+  "sceneId": "hospital-courtyard",
+  "original": "public/art/v100/story-r5/cuts/ending-medical-progress.webp",
+  "originalSha256": "28737f0a1326a81c46054807972ed27022dcc3a4311a2ee6f06f0c64cd275689",
+  "generated": "assets/source/v177/paisen/credits/hospital-courtyard-photo-r2.generated.png",
+  "generatedSha256": "dcec3e565e976a28ce82063901ec78040b1fff965ebfbb5a78d94969d5260887",
+  "target": "assets/source/v177/paisen/credits/hospital-courtyard-photo-r2.localized-r1.png",
+  "targetSha256": "4b46f36dd32f3166d355f2c1cd3dc22365841034cece301ec5ee023d43ad78d0",
+  "width": 1280,
+  "height": 720,
+  "polygons": [
+    [
+      [
+        86,
+        69
+      ],
+      [
+        188,
+        62
+      ],
+      [
+        214,
+        96
+      ],
+      [
+        225,
+        151
+      ],
+      [
+        217,
+        198
+      ],
+      [
+        243,
+        206
+      ],
+      [
+        280,
+        222
+      ],
+      [
+        314,
+        249
+      ],
+      [
+        333,
+        303
+      ],
+      [
+        337,
+        343
+      ],
+      [
+        286,
+        358
+      ],
+      [
+        233,
+        355
+      ],
+      [
+        136,
+        335
+      ],
+      [
+        89,
+        307
+      ],
+      [
+        72,
+        329
+      ],
+      [
+        72,
+        233
+      ],
+      [
+        90,
+        219
+      ],
+      [
+        88,
+        190
+      ],
+      [
+        76,
+        151
+      ],
+      [
+        76,
+        106
+      ]
+    ]
+  ],
+  "protectRects": [
+    [
+      0,
+      0,
+      70,
+      720
+    ],
+    [
+      220,
+      0,
+      1060,
+      196
+    ],
+    [
+      0,
+      355,
+      1280,
+      365
+    ]
+  ],
+  "protectPolygons": [
+    [
+      [
+        0,
+        293
+      ],
+      [
+        65,
+        304
+      ],
+      [
+        74,
+        330
+      ],
+      [
+        158,
+        363
+      ],
+      [
+        203,
+        411
+      ],
+      [
+        0,
+        412
+      ]
+    ]
+  ],
+  "faceRect": [
+    75,
+    71,
+    154,
+    207
+  ],
+  "maskPath": "assets/source/v177/paisen/credits/hospital-courtyard-photo-r2.localization-mask-r1.png",
+  "registeredPixels": 51605,
+  "changedPixels": 51581,
+  "changedOutsideRegisteredRegion": 0,
+  "normalization": "Uniform cover fit to native original dimensions, thresholded explicit Paisen mask; all other original decoded RGBA pixels remain byte-identical.",
+  "runtimeConnected": false,
+  "visualReviewed": false,
+  "nativeAccepted": false,
+  "producerAccepted": false,
+  "wholeGameAccepted": false
+}

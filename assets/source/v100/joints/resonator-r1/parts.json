@@ -1,0 +1,3517 @@
+{
+  "schema": "zombieee-joint-source/1",
+  "kind": "resonator",
+  "status": "Frozen original-bound Resonator candidate: giant open throat, costume, hands and boots retained. Two fixed-length planted legs, forward original arm opening and rear brace; sonic origin follows original throat/head. Dedicated howl, hit and death owners preserved. All48/all-action continuous native normal-play acceptance pending.",
+  "width": 480,
+  "height": 448,
+  "paintStyle": "painted",
+  "sourceSha256": "ae1a87594d84d5ef55f5f7fc860d920774780ab536768074c44c5b0300d51e17",
+  "sheetSha256": "d14466c105e0eef7fcc0f885692d240eeb4246cd08c6579f8225c22da12f32ff",
+  "poseBindings": {
+    "idle": {
+      "path": "/art/v0995/enemies/resonator-battle-v2.png",
+      "sourceSha256": "cc3e787d5abde40fd8b3aedb91558840c1e3d89726e577daca49f505bc0967ae",
+      "sourceRect": {
+        "x": 0,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "identity-reference.png",
+      "sha256": "ae1a87594d84d5ef55f5f7fc860d920774780ab536768074c44c5b0300d51e17",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "walk-a": {
+      "path": "/art/v0995/enemies/resonator-battle-v2.png",
+      "sourceSha256": "cc3e787d5abde40fd8b3aedb91558840c1e3d89726e577daca49f505bc0967ae",
+      "sourceRect": {
+        "x": 480,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-walk-a.png",
+      "sha256": "c02f951665ee7efa8b3142f25e17b0a7121fff22c3ba96b96fe41d96474fe5b6",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "walk-b": {
+      "path": "/art/v0995/enemies/resonator-battle-v2.png",
+      "sourceSha256": "cc3e787d5abde40fd8b3aedb91558840c1e3d89726e577daca49f505bc0967ae",
+      "sourceRect": {
+        "x": 960,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-walk-b.png",
+      "sha256": "da5bdd2609b24e8369f9654c8bc3cb9c723385156afafa6a7b3c7e447934c400",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "attack-a": {
+      "path": "/art/v0995/enemies/resonator-battle-v2.png",
+      "sourceSha256": "cc3e787d5abde40fd8b3aedb91558840c1e3d89726e577daca49f505bc0967ae",
+      "sourceRect": {
+        "x": 1440,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-attack-a.png",
+      "sha256": "69a8ebea10f473d3a2826927110cb6de9064c264aa6220d2e98c912c03d4835d",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "attack-b": {
+      "path": "/art/v0995/enemies/resonator-battle-v2.png",
+      "sourceSha256": "cc3e787d5abde40fd8b3aedb91558840c1e3d89726e577daca49f505bc0967ae",
+      "sourceRect": {
+        "x": 1920,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-attack-b.png",
+      "sha256": "526f4ef20e7802dc76bfcbff46ae4f363d357c08d710e0f93d950d854d01251b",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "hit": {
+      "path": "/art/v0995/enemies/resonator-battle-v2.png",
+      "sourceSha256": "cc3e787d5abde40fd8b3aedb91558840c1e3d89726e577daca49f505bc0967ae",
+      "sourceRect": {
+        "x": 2400,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-hit.png",
+      "sha256": "5cceed3885237decd6081391ea0d3e7a119ee65588dcd3a73f705cddd15af901",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    }
+  },
+  "parts": [
+    {
+      "name": "far-upper",
+      "bone": "leg-0-upper",
+      "file": "far-upper.png",
+      "sha256": "69646b1d4c9a931b4f42ec4be30304bb2fac2c2f4e42fba17ff882a64ec8646f",
+      "original": false,
+      "studyCell": 0,
+      "studyRect": [
+        0,
+        0,
+        309,
+        314
+      ],
+      "studySha256": "d14466c105e0eef7fcc0f885692d240eeb4246cd08c6579f8225c22da12f32ff",
+      "studyFile": "hidden-parts-study.png",
+      "sourceAxis": [
+        [
+          165.02719361856418,
+          47.46
+        ],
+        [
+          121.1025,
+          286.54
+        ]
+      ],
+      "restAxis": [
+        [
+          223,
+          267
+        ],
+        [
+          179,
+          338
+        ]
+      ],
+      "targetWidth": 30,
+      "originalRegions": [
+        [
+          [
+            208,
+            260
+          ],
+          [
+            228,
+            265
+          ],
+          [
+            230,
+            284
+          ],
+          [
+            216,
+            308
+          ],
+          [
+            197,
+            334
+          ],
+          [
+            191,
+            351
+          ],
+          [
+            167,
+            349
+          ],
+          [
+            163,
+            334
+          ],
+          [
+            180,
+            303
+          ],
+          [
+            197,
+            277
+          ]
+        ]
+      ],
+      "excludedRegions": [
+        [
+          [
+            147,
+            391
+          ],
+          [
+            165,
+            391
+          ],
+          [
+            167,
+            409
+          ],
+          [
+            178,
+            420
+          ],
+          [
+            185,
+            426
+          ],
+          [
+            184,
+            433
+          ],
+          [
+            149,
+            433
+          ],
+          [
+            139,
+            428
+          ],
+          [
+            139,
+            415
+          ]
+        ],
+        [
+          [
+            278,
+            390
+          ],
+          [
+            300,
+            388
+          ],
+          [
+            305,
+            405
+          ],
+          [
+            316,
+            418
+          ],
+          [
+            336,
+            424
+          ],
+          [
+            340,
+            432
+          ],
+          [
+            306,
+            433
+          ],
+          [
+            283,
+            429
+          ],
+          [
+            274,
+            417
+          ]
+        ],
+        [
+          [
+            325,
+            268
+          ],
+          [
+            338,
+            267
+          ],
+          [
+            342,
+            282
+          ],
+          [
+            346,
+            293
+          ],
+          [
+            345,
+            303
+          ],
+          [
+            339,
+            311
+          ],
+          [
+            333,
+            310
+          ],
+          [
+            329,
+            301
+          ],
+          [
+            323,
+            304
+          ],
+          [
+            319,
+            294
+          ],
+          [
+            321,
+            280
+          ]
+        ],
+        [
+          [
+            178,
+            269
+          ],
+          [
+            192,
+            268
+          ],
+          [
+            200,
+            282
+          ],
+          [
+            205,
+            299
+          ],
+          [
+            209,
+            310
+          ],
+          [
+            204,
+            320
+          ],
+          [
+            198,
+            321
+          ],
+          [
+            193,
+            314
+          ],
+          [
+            188,
+            322
+          ],
+          [
+            180,
+            319
+          ],
+          [
+            177,
+            308
+          ],
+          [
+            172,
+            301
+          ],
+          [
+            174,
+            286
+          ]
+        ],
+        [
+          [
+            226,
+            79
+          ],
+          [
+            244,
+            60
+          ],
+          [
+            276,
+            57
+          ],
+          [
+            299,
+            72
+          ],
+          [
+            312,
+            90
+          ],
+          [
+            327,
+            120
+          ],
+          [
+            327,
+            149
+          ],
+          [
+            321,
+            176
+          ],
+          [
+            312,
+            196
+          ],
+          [
+            299,
+            218
+          ],
+          [
+            283,
+            222
+          ],
+          [
+            275,
+            202
+          ],
+          [
+            268,
+            184
+          ],
+          [
+            267,
+            163
+          ],
+          [
+            252,
+            147
+          ],
+          [
+            233,
+            121
+          ]
+        ]
+      ],
+      "generatedSilhouette": [
+        [
+          208,
+          260
+        ],
+        [
+          228,
+          265
+        ],
+        [
+          230,
+          284
+        ],
+        [
+          216,
+          308
+        ],
+        [
+          197,
+          334
+        ],
+        [
+          191,
+          351
+        ],
+        [
+          167,
+          349
+        ],
+        [
+          163,
+          334
+        ],
+        [
+          180,
+          303
+        ],
+        [
+          197,
+          277
+        ]
+      ]
+    },
+    {
+      "name": "far-lower",
+      "bone": "leg-0-lower",
+      "file": "far-lower.png",
+      "sha256": "c384e05e150b1c760873e6dfd93ab352664757a1226629f8db2a80e0f190b55e",
+      "original": false,
+      "studyCell": 1,
+      "studyRect": [
+        309,
+        0,
+        309,
+        314
+      ],
+      "studySha256": "d14466c105e0eef7fcc0f885692d240eeb4246cd08c6579f8225c22da12f32ff",
+      "studyFile": "hidden-parts-study.png",
+      "sourceAxis": [
+        [
+          479.79863945578234,
+          40.230000000000004
+        ],
+        [
+          501.0047393364929,
+          288.77000000000004
+        ]
+      ],
+      "restAxis": [
+        [
+          179,
+          338
+        ],
+        [
+          156,
+          401
+        ]
+      ],
+      "targetWidth": 26,
+      "originalRegions": [
+        [
+          [
+            169,
+            327
+          ],
+          [
+            191,
+            335
+          ],
+          [
+            187,
+            358
+          ],
+          [
+            175,
+            383
+          ],
+          [
+            168,
+            406
+          ],
+          [
+            147,
+            409
+          ],
+          [
+            140,
+            394
+          ],
+          [
+            153,
+            367
+          ]
+        ]
+      ],
+      "excludedRegions": [
+        [
+          [
+            147,
+            391
+          ],
+          [
+            165,
+            391
+          ],
+          [
+            167,
+            409
+          ],
+          [
+            178,
+            420
+          ],
+          [
+            185,
+            426
+          ],
+          [
+            184,
+            433
+          ],
+          [
+            149,
+            433
+          ],
+          [
+            139,
+            428
+          ],
+          [
+            139,
+            415
+          ]
+        ],
+        [
+          [
+            278,
+            390
+          ],
+          [
+            300,
+            388
+          ],
+          [
+            305,
+            405
+          ],
+          [
+            316,
+            418
+          ],
+          [
+            336,
+            424
+          ],
+          [
+            340,
+            432
+          ],
+          [
+            306,
+            433
+          ],
+          [
+            283,
+            429
+          ],
+          [
+            274,
+            417
+          ]
+        ]
+      ],
+      "generatedSilhouette": [
+        [
+          169,
+          327
+        ],
+        [
+          191,
+          335
+        ],
+        [
+          187,
+          358
+        ],
+        [
+          175,
+          383
+        ],
+        [
+          168,
+          406
+        ],
+        [
+          147,
+          409
+        ],
+        [
+          140,
+          394
+        ],
+        [
+          153,
+          367
+        ]
+      ]
+    },
+    {
+      "name": "far-foot",
+      "bone": "leg-0-foot",
+      "file": "far-foot.png",
+      "sha256": "9716806f94be785356d8a37fe75997afba133a59502efbd01700b7efaf801bd4",
+      "original": true,
+      "polygon": [
+        [
+          147,
+          391
+        ],
+        [
+          165,
+          391
+        ],
+        [
+          167,
+          409
+        ],
+        [
+          178,
+          420
+        ],
+        [
+          185,
+          426
+        ],
+        [
+          184,
+          433
+        ],
+        [
+          149,
+          433
+        ],
+        [
+          139,
+          428
+        ],
+        [
+          139,
+          415
+        ]
+      ],
+      "excludedRegions": [],
+      "originalReference": "identity-reference.png",
+      "sourceOffset": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "near-upper",
+      "bone": "leg-1-upper",
+      "file": "near-upper.png",
+      "sha256": "3df236b491995951d8ff65c3117d017aecf1bb84e26dac5310997c9e50ee5ffc",
+      "original": false,
+      "studyCell": 2,
+      "studyRect": [
+        618,
+        0,
+        309,
+        314
+      ],
+      "studySha256": "d14466c105e0eef7fcc0f885692d240eeb4246cd08c6579f8225c22da12f32ff",
+      "studyFile": "hidden-parts-study.png",
+      "sourceAxis": [
+        [
+          767.5441267868241,
+          49.6
+        ],
+        [
+          798.1332236842105,
+          290.40000000000003
+        ]
+      ],
+      "restAxis": [
+        [
+          251,
+          269
+        ],
+        [
+          285,
+          337
+        ]
+      ],
+      "targetWidth": 30,
+      "originalRegions": [
+        [
+          [
+            240,
+            257
+          ],
+          [
+            263,
+            257
+          ],
+          [
+            280,
+            283
+          ],
+          [
+            293,
+            316
+          ],
+          [
+            295,
+            343
+          ],
+          [
+            274,
+            350
+          ],
+          [
+            260,
+            324
+          ],
+          [
+            249,
+            297
+          ]
+        ]
+      ],
+      "excludedRegions": [
+        [
+          [
+            147,
+            391
+          ],
+          [
+            165,
+            391
+          ],
+          [
+            167,
+            409
+          ],
+          [
+            178,
+            420
+          ],
+          [
+            185,
+            426
+          ],
+          [
+            184,
+            433
+          ],
+          [
+            149,
+            433
+          ],
+          [
+            139,
+            428
+          ],
+          [
+            139,
+            415
+          ]
+        ],
+        [
+          [
+            278,
+            390
+          ],
+          [
+            300,
+            388
+          ],
+          [
+            305,
+            405
+          ],
+          [
+            316,
+            418
+          ],
+          [
+            336,
+            424
+          ],
+          [
+            340,
+            432
+          ],
+          [
+            306,
+            433
+          ],
+          [
+            283,
+            429
+          ],
+          [
+            274,
+            417
+          ]
+        ],
+        [
+          [
+            325,
+            268
+          ],
+          [
+            338,
+            267
+          ],
+          [
+            342,
+            282
+          ],
+          [
+            346,
+            293
+          ],
+          [
+            345,
+            303
+          ],
+          [
+            339,
+            311
+          ],
+          [
+            333,
+            310
+          ],
+          [
+            329,
+            301
+          ],
+          [
+            323,
+            304
+          ],
+          [
+            319,
+            294
+          ],
+          [
+            321,
+            280
+          ]
+        ],
+        [
+          [
+            178,
+            269
+          ],
+          [
+            192,
+            268
+          ],
+          [
+            200,
+            282
+          ],
+          [
+            205,
+            299
+          ],
+          [
+            209,
+            310
+          ],
+          [
+            204,
+            320
+          ],
+          [
+            198,
+            321
+          ],
+          [
+            193,
+            314
+          ],
+          [
+            188,
+            322
+          ],
+          [
+            180,
+            319
+          ],
+          [
+            177,
+            308
+          ],
+          [
+            172,
+            301
+          ],
+          [
+            174,
+            286
+          ]
+        ],
+        [
+          [
+            226,
+            79
+          ],
+          [
+            244,
+            60
+          ],
+          [
+            276,
+            57
+          ],
+          [
+            299,
+            72
+          ],
+          [
+            312,
+            90
+          ],
+          [
+            327,
+            120
+          ],
+          [
+            327,
+            149
+          ],
+          [
+            321,
+            176
+          ],
+          [
+            312,
+            196
+          ],
+          [
+            299,
+            218
+          ],
+          [
+            283,
+            222
+          ],
+          [
+            275,
+            202
+          ],
+          [
+            268,
+            184
+          ],
+          [
+            267,
+            163
+          ],
+          [
+            252,
+            147
+          ],
+          [
+            233,
+            121
+          ]
+        ]
+      ],
+      "generatedSilhouette": [
+        [
+          240,
+          257
+        ],
+        [
+          263,
+          257
+        ],
+        [
+          280,
+          283
+        ],
+        [
+          293,
+          316
+        ],
+        [
+          295,
+          343
+        ],
+        [
+          274,
+          350
+        ],
+        [
+          260,
+          324
+        ],
+        [
+          249,
+          297
+        ]
+      ]
+    },
+    {
+      "name": "near-lower",
+      "bone": "leg-1-lower",
+      "file": "near-lower.png",
+      "sha256": "f2fa7f23c8fa227d1e83d935673ca7bede9a2e1c2cb70260ab6b2c3468a30105",
+      "original": false,
+      "studyCell": 3,
+      "studyRect": [
+        927,
+        0,
+        310,
+        314
+      ],
+      "studySha256": "d14466c105e0eef7fcc0f885692d240eeb4246cd08c6579f8225c22da12f32ff",
+      "studyFile": "hidden-parts-study.png",
+      "sourceAxis": [
+        [
+          1061.132625994695,
+          44.230000000000004
+        ],
+        [
+          1097.0910079767948,
+          292.77000000000004
+        ]
+      ],
+      "restAxis": [
+        [
+          285,
+          337
+        ],
+        [
+          291,
+          396
+        ]
+      ],
+      "targetWidth": 26,
+      "originalRegions": [
+        [
+          [
+            272,
+            330
+          ],
+          [
+            293,
+            329
+          ],
+          [
+            299,
+            352
+          ],
+          [
+            305,
+            384
+          ],
+          [
+            302,
+            404
+          ],
+          [
+            281,
+            409
+          ],
+          [
+            275,
+            389
+          ],
+          [
+            276,
+            365
+          ]
+        ]
+      ],
+      "excludedRegions": [
+        [
+          [
+            147,
+            391
+          ],
+          [
+            165,
+            391
+          ],
+          [
+            167,
+            409
+          ],
+          [
+            178,
+            420
+          ],
+          [
+            185,
+            426
+          ],
+          [
+            184,
+            433
+          ],
+          [
+            149,
+            433
+          ],
+          [
+            139,
+            428
+          ],
+          [
+            139,
+            415
+          ]
+        ],
+        [
+          [
+            278,
+            390
+          ],
+          [
+            300,
+            388
+          ],
+          [
+            305,
+            405
+          ],
+          [
+            316,
+            418
+          ],
+          [
+            336,
+            424
+          ],
+          [
+            340,
+            432
+          ],
+          [
+            306,
+            433
+          ],
+          [
+            283,
+            429
+          ],
+          [
+            274,
+            417
+          ]
+        ]
+      ],
+      "generatedSilhouette": [
+        [
+          272,
+          330
+        ],
+        [
+          293,
+          329
+        ],
+        [
+          299,
+          352
+        ],
+        [
+          305,
+          384
+        ],
+        [
+          302,
+          404
+        ],
+        [
+          281,
+          409
+        ],
+        [
+          275,
+          389
+        ],
+        [
+          276,
+          365
+        ]
+      ]
+    },
+    {
+      "name": "near-foot",
+      "bone": "leg-1-foot",
+      "file": "near-foot.png",
+      "sha256": "79fc14eb7d7bc1e7a27e18691acfe6e97ef415556b953b23b5ffb5795979a2c8",
+      "original": true,
+      "polygon": [
+        [
+          278,
+          390
+        ],
+        [
+          300,
+          388
+        ],
+        [
+          305,
+          405
+        ],
+        [
+          316,
+          418
+        ],
+        [
+          336,
+          424
+        ],
+        [
+          340,
+          432
+        ],
+        [
+          306,
+          433
+        ],
+        [
+          283,
+          429
+        ],
+        [
+          274,
+          417
+        ]
+      ],
+      "excludedRegions": [],
+      "originalReference": "identity-reference.png",
+      "sourceOffset": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "large-upper",
+      "bone": "arm-0-upper",
+      "file": "large-upper.png",
+      "sha256": "510aaa3241afc2e071a4c7bef48659f1240b96ec9997a5c5b388a3ece8303f7c",
+      "original": false,
+      "studyCell": 4,
+      "studyRect": [
+        0,
+        316,
+        309,
+        313
+      ],
+      "studySha256": "d14466c105e0eef7fcc0f885692d240eeb4246cd08c6579f8225c22da12f32ff",
+      "studyFile": "hidden-parts-study.png",
+      "sourceAxis": [
+        [
+          144.798224852071,
+          345.72
+        ],
+        [
+          201.47625329815304,
+          600.28
+        ]
+      ],
+      "restAxis": [
+        [
+          295,
+          155
+        ],
+        [
+          316,
+          218
+        ]
+      ],
+      "targetWidth": 23,
+      "originalRegions": [
+        [
+          [
+            289,
+            146
+          ],
+          [
+            305,
+            149
+          ],
+          [
+            315,
+            168
+          ],
+          [
+            321,
+            197
+          ],
+          [
+            326,
+            222
+          ],
+          [
+            308,
+            229
+          ],
+          [
+            299,
+            208
+          ],
+          [
+            294,
+            182
+          ]
+        ]
+      ],
+      "excludedRegions": [
+        [
+          [
+            226,
+            79
+          ],
+          [
+            244,
+            60
+          ],
+          [
+            276,
+            57
+          ],
+          [
+            299,
+            72
+          ],
+          [
+            312,
+            90
+          ],
+          [
+            327,
+            120
+          ],
+          [
+            327,
+            149
+          ],
+          [
+            321,
+            176
+          ],
+          [
+            312,
+            196
+          ],
+          [
+            299,
+            218
+          ],
+          [
+            283,
+            222
+          ],
+          [
+            275,
+            202
+          ],
+          [
+            268,
+            184
+          ],
+          [
+            267,
+            163
+          ],
+          [
+            252,
+            147
+          ],
+          [
+            233,
+            121
+          ]
+        ]
+      ],
+      "generatedSilhouette": [
+        [
+          289,
+          146
+        ],
+        [
+          305,
+          149
+        ],
+        [
+          315,
+          168
+        ],
+        [
+          321,
+          197
+        ],
+        [
+          326,
+          222
+        ],
+        [
+          308,
+          229
+        ],
+        [
+          299,
+          208
+        ],
+        [
+          294,
+          182
+        ]
+      ]
+    },
+    {
+      "name": "large-lower",
+      "bone": "arm-0-lower",
+      "file": "large-lower.png",
+      "sha256": "38c18cbc2c561dc92559c81ecdc017fc3156f7b7943d4cc3c427dab839b6ddd6",
+      "original": false,
+      "studyCell": 4,
+      "studyRect": [
+        0,
+        316,
+        309,
+        313
+      ],
+      "studySha256": "d14466c105e0eef7fcc0f885692d240eeb4246cd08c6579f8225c22da12f32ff",
+      "studyFile": "hidden-parts-study.png",
+      "sourceAxis": [
+        [
+          144.798224852071,
+          345.72
+        ],
+        [
+          201.47625329815304,
+          600.28
+        ]
+      ],
+      "restAxis": [
+        [
+          316,
+          218
+        ],
+        [
+          330,
+          276
+        ]
+      ],
+      "targetWidth": 19,
+      "originalRegions": [
+        [
+          [
+            309,
+            211
+          ],
+          [
+            327,
+            214
+          ],
+          [
+            332,
+            233
+          ],
+          [
+            338,
+            256
+          ],
+          [
+            339,
+            278
+          ],
+          [
+            326,
+            285
+          ],
+          [
+            319,
+            270
+          ],
+          [
+            316,
+            246
+          ]
+        ]
+      ],
+      "excludedRegions": [
+        [
+          [
+            325,
+            268
+          ],
+          [
+            338,
+            267
+          ],
+          [
+            342,
+            282
+          ],
+          [
+            346,
+            293
+          ],
+          [
+            345,
+            303
+          ],
+          [
+            339,
+            311
+          ],
+          [
+            333,
+            310
+          ],
+          [
+            329,
+            301
+          ],
+          [
+            323,
+            304
+          ],
+          [
+            319,
+            294
+          ],
+          [
+            321,
+            280
+          ]
+        ],
+        [
+          [
+            178,
+            269
+          ],
+          [
+            192,
+            268
+          ],
+          [
+            200,
+            282
+          ],
+          [
+            205,
+            299
+          ],
+          [
+            209,
+            310
+          ],
+          [
+            204,
+            320
+          ],
+          [
+            198,
+            321
+          ],
+          [
+            193,
+            314
+          ],
+          [
+            188,
+            322
+          ],
+          [
+            180,
+            319
+          ],
+          [
+            177,
+            308
+          ],
+          [
+            172,
+            301
+          ],
+          [
+            174,
+            286
+          ]
+        ]
+      ],
+      "generatedSilhouette": [
+        [
+          309,
+          211
+        ],
+        [
+          327,
+          214
+        ],
+        [
+          332,
+          233
+        ],
+        [
+          338,
+          256
+        ],
+        [
+          339,
+          278
+        ],
+        [
+          326,
+          285
+        ],
+        [
+          319,
+          270
+        ],
+        [
+          316,
+          246
+        ]
+      ]
+    },
+    {
+      "name": "large-claw",
+      "bone": "arm-0-hand",
+      "file": "large-claw.png",
+      "sha256": "546adf2947ecc3919b01d1a3faed6a64e5e0a04c9649b66d8b4835ce24bd7770",
+      "original": true,
+      "polygon": [
+        [
+          325,
+          268
+        ],
+        [
+          338,
+          267
+        ],
+        [
+          342,
+          282
+        ],
+        [
+          346,
+          293
+        ],
+        [
+          345,
+          303
+        ],
+        [
+          339,
+          311
+        ],
+        [
+          333,
+          310
+        ],
+        [
+          329,
+          301
+        ],
+        [
+          323,
+          304
+        ],
+        [
+          319,
+          294
+        ],
+        [
+          321,
+          280
+        ]
+      ],
+      "excludedRegions": [],
+      "originalReference": "identity-reference.png",
+      "sourceOffset": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "small-upper",
+      "bone": "arm-1-upper",
+      "file": "small-upper.png",
+      "sha256": "1cd036c25d34e5a0e5cc9f4b406f87440e1cc1e71082abffb9b2bc2745820934",
+      "original": false,
+      "studyCell": 5,
+      "studyRect": [
+        309,
+        316,
+        309,
+        313
+      ],
+      "studySha256": "d14466c105e0eef7fcc0f885692d240eeb4246cd08c6579f8225c22da12f32ff",
+      "studyFile": "hidden-parts-study.png",
+      "sourceAxis": [
+        [
+          446.338,
+          347.58
+        ],
+        [
+          518.4368723098995,
+          600.4200000000001
+        ]
+      ],
+      "restAxis": [
+        [
+          193,
+          149
+        ],
+        [
+          182,
+          220
+        ]
+      ],
+      "targetWidth": 23,
+      "originalRegions": [
+        [
+          [
+            184,
+            137
+          ],
+          [
+            205,
+            141
+          ],
+          [
+            204,
+            161
+          ],
+          [
+            196,
+            188
+          ],
+          [
+            192,
+            219
+          ],
+          [
+            175,
+            226
+          ],
+          [
+            171,
+            213
+          ],
+          [
+            179,
+            178
+          ]
+        ]
+      ],
+      "excludedRegions": [
+        [
+          [
+            226,
+            79
+          ],
+          [
+            244,
+            60
+          ],
+          [
+            276,
+            57
+          ],
+          [
+            299,
+            72
+          ],
+          [
+            312,
+            90
+          ],
+          [
+            327,
+            120
+          ],
+          [
+            327,
+            149
+          ],
+          [
+            321,
+            176
+          ],
+          [
+            312,
+            196
+          ],
+          [
+            299,
+            218
+          ],
+          [
+            283,
+            222
+          ],
+          [
+            275,
+            202
+          ],
+          [
+            268,
+            184
+          ],
+          [
+            267,
+            163
+          ],
+          [
+            252,
+            147
+          ],
+          [
+            233,
+            121
+          ]
+        ]
+      ],
+      "generatedSilhouette": [
+        [
+          184,
+          137
+        ],
+        [
+          205,
+          141
+        ],
+        [
+          204,
+          161
+        ],
+        [
+          196,
+          188
+        ],
+        [
+          192,
+          219
+        ],
+        [
+          175,
+          226
+        ],
+        [
+          171,
+          213
+        ],
+        [
+          179,
+          178
+        ]
+      ]
+    },
+    {
+      "name": "small-lower",
+      "bone": "arm-1-lower",
+      "file": "small-lower.png",
+      "sha256": "5a1486d5aceaaf708ff45d75a4a0ac5aac11eb076f2df842f2fff93526cf4d40",
+      "original": false,
+      "studyCell": 5,
+      "studyRect": [
+        309,
+        316,
+        309,
+        313
+      ],
+      "studySha256": "d14466c105e0eef7fcc0f885692d240eeb4246cd08c6579f8225c22da12f32ff",
+      "studyFile": "hidden-parts-study.png",
+      "sourceAxis": [
+        [
+          446.338,
+          347.58
+        ],
+        [
+          518.4368723098995,
+          600.4200000000001
+        ]
+      ],
+      "restAxis": [
+        [
+          182,
+          220
+        ],
+        [
+          184,
+          279
+        ]
+      ],
+      "targetWidth": 19,
+      "originalRegions": [
+        [
+          [
+            176,
+            211
+          ],
+          [
+            193,
+            214
+          ],
+          [
+            191,
+            237
+          ],
+          [
+            193,
+            261
+          ],
+          [
+            192,
+            281
+          ],
+          [
+            177,
+            287
+          ],
+          [
+            171,
+            271
+          ],
+          [
+            171,
+            245
+          ]
+        ]
+      ],
+      "excludedRegions": [
+        [
+          [
+            325,
+            268
+          ],
+          [
+            338,
+            267
+          ],
+          [
+            342,
+            282
+          ],
+          [
+            346,
+            293
+          ],
+          [
+            345,
+            303
+          ],
+          [
+            339,
+            311
+          ],
+          [
+            333,
+            310
+          ],
+          [
+            329,
+            301
+          ],
+          [
+            323,
+            304
+          ],
+          [
+            319,
+            294
+          ],
+          [
+            321,
+            280
+          ]
+        ],
+        [
+          [
+            178,
+            269
+          ],
+          [
+            192,
+            268
+          ],
+          [
+            200,
+            282
+          ],
+          [
+            205,
+            299
+          ],
+          [
+            209,
+            310
+          ],
+          [
+            204,
+            320
+          ],
+          [
+            198,
+            321
+          ],
+          [
+            193,
+            314
+          ],
+          [
+            188,
+            322
+          ],
+          [
+            180,
+            319
+          ],
+          [
+            177,
+            308
+          ],
+          [
+            172,
+            301
+          ],
+          [
+            174,
+            286
+          ]
+        ]
+      ],
+      "generatedSilhouette": [
+        [
+          176,
+          211
+        ],
+        [
+          193,
+          214
+        ],
+        [
+          191,
+          237
+        ],
+        [
+          193,
+          261
+        ],
+        [
+          192,
+          281
+        ],
+        [
+          177,
+          287
+        ],
+        [
+          171,
+          271
+        ],
+        [
+          171,
+          245
+        ]
+      ]
+    },
+    {
+      "name": "small-claw",
+      "bone": "arm-1-hand",
+      "file": "small-claw.png",
+      "sha256": "531e810bf18b61b39a3150adb9136f50522f2519c88c60d48b265250fd1ab948",
+      "original": true,
+      "polygon": [
+        [
+          178,
+          269
+        ],
+        [
+          192,
+          268
+        ],
+        [
+          200,
+          282
+        ],
+        [
+          205,
+          299
+        ],
+        [
+          209,
+          310
+        ],
+        [
+          204,
+          320
+        ],
+        [
+          198,
+          321
+        ],
+        [
+          193,
+          314
+        ],
+        [
+          188,
+          322
+        ],
+        [
+          180,
+          319
+        ],
+        [
+          177,
+          308
+        ],
+        [
+          172,
+          301
+        ],
+        [
+          174,
+          286
+        ]
+      ],
+      "excludedRegions": [],
+      "originalReference": "identity-reference.png",
+      "sourceOffset": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "torso-underpaint",
+      "bone": "spine",
+      "file": "torso-underpaint.png",
+      "sha256": "4431ab1fcf759fd100f37aa794b2fd6f8401a3435f93f5b4ed9fbc1eed29402e",
+      "original": false,
+      "studyCell": 6,
+      "studyRect": [
+        618,
+        316,
+        309,
+        313
+      ],
+      "studySha256": "d14466c105e0eef7fcc0f885692d240eeb4246cd08c6579f8225c22da12f32ff",
+      "studyFile": "hidden-parts-study.png",
+      "sourceAxis": [
+        [
+          759.5882255389718,
+          371.41
+        ],
+        [
+          792.236052789442,
+          597.59
+        ]
+      ],
+      "restAxis": [
+        [
+          232,
+          127
+        ],
+        [
+          239,
+          263
+        ]
+      ],
+      "targetWidth": 80,
+      "originalRegions": [],
+      "excludedRegions": [],
+      "generatedSilhouette": [
+        [
+          192,
+          94
+        ],
+        [
+          229,
+          87
+        ],
+        [
+          252,
+          108
+        ],
+        [
+          266,
+          135
+        ],
+        [
+          284,
+          153
+        ],
+        [
+          297,
+          189
+        ],
+        [
+          284,
+          230
+        ],
+        [
+          283,
+          259
+        ],
+        [
+          263,
+          280
+        ],
+        [
+          228,
+          286
+        ],
+        [
+          200,
+          272
+        ],
+        [
+          189,
+          253
+        ],
+        [
+          192,
+          217
+        ],
+        [
+          193,
+          181
+        ],
+        [
+          178,
+          144
+        ]
+      ]
+    },
+    {
+      "name": "pelvis",
+      "bone": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "407785aece6bff79cf60e51a00d2d1983b5fcb88e8c74186b699e28c744c4230",
+      "original": true,
+      "polygon": [
+        [
+          200,
+          242
+        ],
+        [
+          238,
+          241
+        ],
+        [
+          264,
+          253
+        ],
+        [
+          282,
+          275
+        ],
+        [
+          276,
+          296
+        ],
+        [
+          259,
+          301
+        ],
+        [
+          239,
+          288
+        ],
+        [
+          219,
+          292
+        ],
+        [
+          199,
+          279
+        ]
+      ],
+      "excludedRegions": [
+        [
+          [
+            208,
+            260
+          ],
+          [
+            228,
+            265
+          ],
+          [
+            230,
+            284
+          ],
+          [
+            216,
+            308
+          ],
+          [
+            197,
+            334
+          ],
+          [
+            191,
+            351
+          ],
+          [
+            167,
+            349
+          ],
+          [
+            163,
+            334
+          ],
+          [
+            180,
+            303
+          ],
+          [
+            197,
+            277
+          ]
+        ],
+        [
+          [
+            240,
+            257
+          ],
+          [
+            263,
+            257
+          ],
+          [
+            280,
+            283
+          ],
+          [
+            293,
+            316
+          ],
+          [
+            295,
+            343
+          ],
+          [
+            274,
+            350
+          ],
+          [
+            260,
+            324
+          ],
+          [
+            249,
+            297
+          ]
+        ],
+        [
+          [
+            147,
+            391
+          ],
+          [
+            165,
+            391
+          ],
+          [
+            167,
+            409
+          ],
+          [
+            178,
+            420
+          ],
+          [
+            185,
+            426
+          ],
+          [
+            184,
+            433
+          ],
+          [
+            149,
+            433
+          ],
+          [
+            139,
+            428
+          ],
+          [
+            139,
+            415
+          ]
+        ],
+        [
+          [
+            278,
+            390
+          ],
+          [
+            300,
+            388
+          ],
+          [
+            305,
+            405
+          ],
+          [
+            316,
+            418
+          ],
+          [
+            336,
+            424
+          ],
+          [
+            340,
+            432
+          ],
+          [
+            306,
+            433
+          ],
+          [
+            283,
+            429
+          ],
+          [
+            274,
+            417
+          ]
+        ],
+        [
+          [
+            325,
+            268
+          ],
+          [
+            338,
+            267
+          ],
+          [
+            342,
+            282
+          ],
+          [
+            346,
+            293
+          ],
+          [
+            345,
+            303
+          ],
+          [
+            339,
+            311
+          ],
+          [
+            333,
+            310
+          ],
+          [
+            329,
+            301
+          ],
+          [
+            323,
+            304
+          ],
+          [
+            319,
+            294
+          ],
+          [
+            321,
+            280
+          ]
+        ],
+        [
+          [
+            178,
+            269
+          ],
+          [
+            192,
+            268
+          ],
+          [
+            200,
+            282
+          ],
+          [
+            205,
+            299
+          ],
+          [
+            209,
+            310
+          ],
+          [
+            204,
+            320
+          ],
+          [
+            198,
+            321
+          ],
+          [
+            193,
+            314
+          ],
+          [
+            188,
+            322
+          ],
+          [
+            180,
+            319
+          ],
+          [
+            177,
+            308
+          ],
+          [
+            172,
+            301
+          ],
+          [
+            174,
+            286
+          ]
+        ]
+      ],
+      "originalReference": "identity-reference.png",
+      "sourceOffset": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "torso",
+      "bone": "spine",
+      "file": "torso.png",
+      "sha256": "682940d9c446b830c653e0d7bdfd008a1b5bac2996e83332544360b93966bef5",
+      "original": true,
+      "polygon": [
+        [
+          192,
+          94
+        ],
+        [
+          229,
+          87
+        ],
+        [
+          252,
+          108
+        ],
+        [
+          266,
+          135
+        ],
+        [
+          284,
+          153
+        ],
+        [
+          297,
+          189
+        ],
+        [
+          284,
+          230
+        ],
+        [
+          283,
+          259
+        ],
+        [
+          263,
+          280
+        ],
+        [
+          228,
+          286
+        ],
+        [
+          200,
+          272
+        ],
+        [
+          189,
+          253
+        ],
+        [
+          192,
+          217
+        ],
+        [
+          193,
+          181
+        ],
+        [
+          178,
+          144
+        ]
+      ],
+      "excludedRegions": [
+        [
+          [
+            226,
+            79
+          ],
+          [
+            244,
+            60
+          ],
+          [
+            276,
+            57
+          ],
+          [
+            299,
+            72
+          ],
+          [
+            312,
+            90
+          ],
+          [
+            327,
+            120
+          ],
+          [
+            327,
+            149
+          ],
+          [
+            321,
+            176
+          ],
+          [
+            312,
+            196
+          ],
+          [
+            299,
+            218
+          ],
+          [
+            283,
+            222
+          ],
+          [
+            275,
+            202
+          ],
+          [
+            268,
+            184
+          ],
+          [
+            267,
+            163
+          ],
+          [
+            252,
+            147
+          ],
+          [
+            233,
+            121
+          ]
+        ],
+        [
+          [
+            200,
+            242
+          ],
+          [
+            238,
+            241
+          ],
+          [
+            264,
+            253
+          ],
+          [
+            282,
+            275
+          ],
+          [
+            276,
+            296
+          ],
+          [
+            259,
+            301
+          ],
+          [
+            239,
+            288
+          ],
+          [
+            219,
+            292
+          ],
+          [
+            199,
+            279
+          ]
+        ],
+        [
+          [
+            289,
+            146
+          ],
+          [
+            305,
+            149
+          ],
+          [
+            315,
+            168
+          ],
+          [
+            321,
+            197
+          ],
+          [
+            326,
+            222
+          ],
+          [
+            308,
+            229
+          ],
+          [
+            299,
+            208
+          ],
+          [
+            294,
+            182
+          ]
+        ],
+        [
+          [
+            184,
+            137
+          ],
+          [
+            205,
+            141
+          ],
+          [
+            204,
+            161
+          ],
+          [
+            196,
+            188
+          ],
+          [
+            192,
+            219
+          ],
+          [
+            175,
+            226
+          ],
+          [
+            171,
+            213
+          ],
+          [
+            179,
+            178
+          ]
+        ],
+        [
+          [
+            309,
+            211
+          ],
+          [
+            327,
+            214
+          ],
+          [
+            332,
+            233
+          ],
+          [
+            338,
+            256
+          ],
+          [
+            339,
+            278
+          ],
+          [
+            326,
+            285
+          ],
+          [
+            319,
+            270
+          ],
+          [
+            316,
+            246
+          ]
+        ],
+        [
+          [
+            176,
+            211
+          ],
+          [
+            193,
+            214
+          ],
+          [
+            191,
+            237
+          ],
+          [
+            193,
+            261
+          ],
+          [
+            192,
+            281
+          ],
+          [
+            177,
+            287
+          ],
+          [
+            171,
+            271
+          ],
+          [
+            171,
+            245
+          ]
+        ],
+        [
+          [
+            325,
+            268
+          ],
+          [
+            338,
+            267
+          ],
+          [
+            342,
+            282
+          ],
+          [
+            346,
+            293
+          ],
+          [
+            345,
+            303
+          ],
+          [
+            339,
+            311
+          ],
+          [
+            333,
+            310
+          ],
+          [
+            329,
+            301
+          ],
+          [
+            323,
+            304
+          ],
+          [
+            319,
+            294
+          ],
+          [
+            321,
+            280
+          ]
+        ],
+        [
+          [
+            178,
+            269
+          ],
+          [
+            192,
+            268
+          ],
+          [
+            200,
+            282
+          ],
+          [
+            205,
+            299
+          ],
+          [
+            209,
+            310
+          ],
+          [
+            204,
+            320
+          ],
+          [
+            198,
+            321
+          ],
+          [
+            193,
+            314
+          ],
+          [
+            188,
+            322
+          ],
+          [
+            180,
+            319
+          ],
+          [
+            177,
+            308
+          ],
+          [
+            172,
+            301
+          ],
+          [
+            174,
+            286
+          ]
+        ]
+      ],
+      "originalReference": "identity-reference.png",
+      "sourceOffset": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "head",
+      "bone": "head",
+      "file": "head.png",
+      "sha256": "966643fb4b74e90f5aee546e17cb6935ab32bb9ee54b422a74f2319935263ae1",
+      "original": true,
+      "polygon": [
+        [
+          226,
+          79
+        ],
+        [
+          244,
+          60
+        ],
+        [
+          276,
+          57
+        ],
+        [
+          299,
+          72
+        ],
+        [
+          312,
+          90
+        ],
+        [
+          327,
+          120
+        ],
+        [
+          327,
+          149
+        ],
+        [
+          321,
+          176
+        ],
+        [
+          312,
+          196
+        ],
+        [
+          299,
+          218
+        ],
+        [
+          283,
+          222
+        ],
+        [
+          275,
+          202
+        ],
+        [
+          268,
+          184
+        ],
+        [
+          267,
+          163
+        ],
+        [
+          252,
+          147
+        ],
+        [
+          233,
+          121
+        ]
+      ],
+      "excludedRegions": [],
+      "originalReference": "identity-reference.png",
+      "sourceOffset": [
+        0,
+        0
+      ]
+    }
+  ],
+  "order": [
+    "small-upper",
+    "small-lower",
+    "small-claw",
+    "far-upper",
+    "far-lower",
+    "far-foot",
+    "near-upper",
+    "near-lower",
+    "near-foot",
+    "pelvis",
+    "torso-underpaint",
+    "torso",
+    "head",
+    "large-upper",
+    "large-lower",
+    "large-claw"
+  ],
+  "atlasPacking": "height-descending-shelves",
+  "lowerLayers": [
+    "far-upper",
+    "far-lower",
+    "far-foot",
+    "near-upper",
+    "near-lower",
+    "near-foot",
+    "pelvis"
+  ],
+  "pelvisY": 263,
+  "identityBinding": {
+    "path": "/art/v0995/enemies/resonator-battle-v2.png",
+    "sourceSha256": "cc3e787d5abde40fd8b3aedb91558840c1e3d89726e577daca49f505bc0967ae",
+    "sourceRect": {
+      "x": 0,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "flipX": false
+  },
+  "referenceFrame": {
+    "width": 480,
+    "height": 448,
+    "scale": 1,
+    "tx": 0,
+    "ty": -0.5
+  },
+  "sourcePadding": {
+    "tx": 0,
+    "ty": 0,
+    "scale": 1
+  },
+  "interpolationPivots": {
+    "spine": [
+      239,
+      263
+    ],
+    "head": [
+      265,
+      149
+    ]
+  },
+  "parentAttachments": {
+    "head": {
+      "parent": "spine",
+      "pivot": [
+        265,
+        149
+      ]
+    }
+  },
+  "muzzle": [
+    315,
+    167
+  ],
+  "weaponBone": "head",
+  "motion": {
+    "walk": {
+      "spanPx": 36,
+      "liftPx": 10,
+      "stanceFraction": 0.72,
+      "bodyBobPx": 0.5,
+      "groundY": 431.5
+    },
+    "paintBounds": {
+      "x": 0,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    }
+  },
+  "armConstraints": [
+    {
+      "name": "large",
+      "shoulder": [
+        295,
+        155
+      ],
+      "elbow": [
+        316,
+        218
+      ],
+      "wrist": [
+        330,
+        276
+      ],
+      "grip": [
+        335,
+        298
+      ],
+      "walkWrist": [
+        327,
+        273
+      ],
+      "walkSwingPx": 3,
+      "walkLiftPx": 1.5,
+      "walkPhaseOffset": 0,
+      "upperBone": "arm-0-upper",
+      "lowerBone": "arm-0-lower",
+      "parentBone": "spine",
+      "effectorBone": "arm-0-hand"
+    },
+    {
+      "name": "small",
+      "shoulder": [
+        193,
+        149
+      ],
+      "elbow": [
+        182,
+        220
+      ],
+      "wrist": [
+        184,
+        279
+      ],
+      "grip": [
+        191,
+        308
+      ],
+      "walkWrist": [
+        187,
+        275
+      ],
+      "walkSwingPx": 3,
+      "walkLiftPx": 1.5,
+      "walkPhaseOffset": 0.5,
+      "upperBone": "arm-1-upper",
+      "lowerBone": "arm-1-lower",
+      "parentBone": "spine",
+      "effectorBone": "arm-1-hand"
+    }
+  ],
+  "legConstraints": [
+    {
+      "name": "far",
+      "hip": [
+        223,
+        267
+      ],
+      "knee": [
+        179,
+        338
+      ],
+      "ankle": [
+        156,
+        401
+      ],
+      "toe": [
+        175,
+        425
+      ],
+      "center": 186,
+      "offset": 0.5,
+      "paintedPaw": "far-foot",
+      "groundAnkleY": 401,
+      "paintGroundY": 428.5,
+      "upperBone": "leg-0-upper",
+      "lowerBone": "leg-0-lower",
+      "parentBone": "pelvis",
+      "parentUpper": false,
+      "effectorBone": "leg-0-foot"
+    },
+    {
+      "name": "near",
+      "hip": [
+        251,
+        269
+      ],
+      "knee": [
+        285,
+        337
+      ],
+      "ankle": [
+        291,
+        396
+      ],
+      "toe": [
+        324,
+        426
+      ],
+      "center": 271,
+      "offset": 0,
+      "paintedPaw": "near-foot",
+      "groundAnkleY": 396,
+      "paintGroundY": 431.5,
+      "upperBone": "leg-1-upper",
+      "lowerBone": "leg-1-lower",
+      "parentBone": "pelvis",
+      "parentUpper": false,
+      "effectorBone": "leg-1-foot"
+    }
+  ],
+  "rig": {
+    "root": [
+      240,
+      432
+    ],
+    "pelvis": [
+      [
+        239,
+        263
+      ],
+      [
+        239,
+        239
+      ]
+    ],
+    "spine": [
+      [
+        239,
+        263
+      ],
+      [
+        239,
+        135
+      ]
+    ],
+    "head": [
+      [
+        265,
+        149
+      ],
+      [
+        270,
+        93
+      ]
+    ],
+    "legs": [
+      {
+        "name": "far",
+        "hip": [
+          223,
+          267
+        ],
+        "knee": [
+          179,
+          338
+        ],
+        "ankle": [
+          156,
+          401
+        ],
+        "toe": [
+          175,
+          425
+        ],
+        "center": 186,
+        "offset": 0.5,
+        "paintedPaw": "far-foot",
+        "groundAnkleY": 401,
+        "paintGroundY": 428.5
+      },
+      {
+        "name": "near",
+        "hip": [
+          251,
+          269
+        ],
+        "knee": [
+          285,
+          337
+        ],
+        "ankle": [
+          291,
+          396
+        ],
+        "toe": [
+          324,
+          426
+        ],
+        "center": 271,
+        "offset": 0,
+        "paintedPaw": "near-foot",
+        "groundAnkleY": 396,
+        "paintGroundY": 431.5
+      }
+    ],
+    "arms": [
+      {
+        "name": "large",
+        "shoulder": [
+          295,
+          155
+        ],
+        "elbow": [
+          316,
+          218
+        ],
+        "wrist": [
+          330,
+          276
+        ],
+        "grip": [
+          335,
+          298
+        ],
+        "walkWrist": [
+          327,
+          273
+        ],
+        "walkSwingPx": 3,
+        "walkLiftPx": 1.5,
+        "walkPhaseOffset": 0
+      },
+      {
+        "name": "small",
+        "shoulder": [
+          193,
+          149
+        ],
+        "elbow": [
+          182,
+          220
+        ],
+        "wrist": [
+          184,
+          279
+        ],
+        "grip": [
+          191,
+          308
+        ],
+        "walkWrist": [
+          187,
+          275
+        ],
+        "walkSwingPx": 3,
+        "walkLiftPx": 1.5,
+        "walkPhaseOffset": 0.5
+      }
+    ],
+    "weapons": [],
+    "extras": [],
+    "attack": {
+      "style": "claw",
+      "armTargets": [
+        [
+          370,
+          224
+        ],
+        [
+          149,
+          251
+        ]
+      ],
+      "armAnticipations": [
+        [
+          -5,
+          -12
+        ],
+        [
+          3,
+          -8
+        ]
+      ],
+      "handAngles": [
+        -0.45,
+        0.18
+      ],
+      "handAnticipations": [
+        0.08,
+        0.08
+      ],
+      "torsoAngle": 0.04,
+      "torsoAnticipation": -0.008,
+      "headAttackAngle": 0.025,
+      "headAnticipationAngle": -0.012,
+      "windupEnd": 0.28,
+      "activeEnd": 0.55
+    }
+  },
+  "visibleIdentityPolicy": "Exact canonical giant open throat/head, torn charcoal/ochre costume, original hands and boots retained. Own concealed joint study only, no other species material. Two connected fixed-length legs and original feet; held attack feet. Existing sonic/special, hit, death and stage owners preserved. Native/all-action natural-play acceptance pending."
+}

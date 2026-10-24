@@ -1,0 +1,157 @@
+{
+  "tool": "built-in image_gen",
+  "studyFile": "hidden-parts-study.png",
+  "studySha256": "709dd0a3950de859a7947bc2d92b73e7d26e1e0d9803b6da3c6d2b2113aa37d4",
+  "promptFile": "parts-prompt.txt",
+  "identityBinding": {
+    "path": "/art/v0995/enemies/spindle-battle-v2.png",
+    "sourceSha256": "7efd2d013f2fa79046e7df3c7ce927d67ee30c28b9a480e1f2e861c99421366a",
+    "sourceRect": {
+      "x": 0,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "flipX": false
+  },
+  "originalPoseBindings": {
+    "idle": {
+      "path": "/art/v0995/enemies/spindle-battle-v2.png",
+      "sourceSha256": "7efd2d013f2fa79046e7df3c7ce927d67ee30c28b9a480e1f2e861c99421366a",
+      "sourceRect": {
+        "x": 0,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "identity-reference.png",
+      "sha256": "893543e111afa7f449c1c35be1e1690ffa23c2ebaa50f92f671e4919bcbfb22b",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "walk-a": {
+      "path": "/art/v0995/enemies/spindle-battle-v2.png",
+      "sourceSha256": "7efd2d013f2fa79046e7df3c7ce927d67ee30c28b9a480e1f2e861c99421366a",
+      "sourceRect": {
+        "x": 480,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-walk-a.png",
+      "sha256": "39f404e85d02361df2b890bcc03a1f45b26ea47a9ec13657e0651682bc790f85",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "walk-b": {
+      "path": "/art/v0995/enemies/spindle-battle-v2.png",
+      "sourceSha256": "7efd2d013f2fa79046e7df3c7ce927d67ee30c28b9a480e1f2e861c99421366a",
+      "sourceRect": {
+        "x": 960,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-walk-b.png",
+      "sha256": "05e1d9415f6f3168f06566350de110e86e0ec8a64be14dff6a8eb5e6dc4b2a75",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "attack-a": {
+      "path": "/art/v0995/enemies/spindle-battle-v2.png",
+      "sourceSha256": "7efd2d013f2fa79046e7df3c7ce927d67ee30c28b9a480e1f2e861c99421366a",
+      "sourceRect": {
+        "x": 1440,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-attack-a.png",
+      "sha256": "ba56db2bd71fdc104e4f28d935d336faf887fcb77cf9e74a71023aa69123af6f",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "attack-b": {
+      "path": "/art/v0995/enemies/spindle-battle-v2.png",
+      "sourceSha256": "7efd2d013f2fa79046e7df3c7ce927d67ee30c28b9a480e1f2e861c99421366a",
+      "sourceRect": {
+        "x": 1920,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-attack-b.png",
+      "sha256": "bde9538b34d6f286a7af05a7aed9d9bbeea77648207d3413c79ecd14544eeb7f",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "hit": {
+      "path": "/art/v0995/enemies/spindle-battle-v2.png",
+      "sourceSha256": "7efd2d013f2fa79046e7df3c7ce927d67ee30c28b9a480e1f2e861c99421366a",
+      "sourceRect": {
+        "x": 2400,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-hit.png",
+      "sha256": "74b63e2dedaf18ccb78110e0e46235dda046dfa4b1e682a569812c56bb6be6f1",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    }
+  },
+  "usage": "Cells0..11 complete concealed leg seams,12/13 complete canonically occluded far-side claw feet;14/15 unused. Original head/eyes, segmented carapace, spikes/tails and four visible feet remain canonical RGBA.",
+  "visibleOriginalParts": [
+    "far-front-foot",
+    "near-rear-foot",
+    "near-middle-foot",
+    "near-front-foot",
+    "body",
+    "head"
+  ],
+  "adopted": true,
+  "normalPlayAcceptance": false,
+  "all48Acceptance": false
+}

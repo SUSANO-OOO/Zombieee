@@ -10,7 +10,7 @@ export const BOSS_FOUNDATION_SCHEMA_VERSION = 1;
 const V100_BOSS_ACTION_GUIDANCE = deepFreeze({
   "boss-takuya": "防御技で備え、被弾後は回復",
   "boss-gate-eater": "防御技で備え、停止中に攻撃技",
-  "boss-kurome-prototype": "狙われた隊員をタップで回避",
+  "boss-kurome-prototype": "狙われたユニットをタップで回避",
   "boss-mother": "召喚体へ範囲技や火炎支援",
   "boss-ooguchi": "防御技で備え、停止中に攻撃技",
   "boss-gairen": "外殻展開中に攻撃技や砲撃",

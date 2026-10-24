@@ -2,6 +2,7 @@
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     branches:
       - main
       - "integration/**"
@@ -11,13 +12,313 @@ permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
+  cancel-in-progress: false
 
 # Linux WPE backend only; no application or Chromium rendering flag changes.
 jobs:
+  scope:
+    name: Validation Scope
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      full: ${{ steps.scope.outputs.full }}
+      ranger: ${{ steps.scope.outputs.ranger }}
+      normal: ${{ steps.scope.outputs.normal }}
+      r9: ${{ steps.scope.outputs.r9 }}
+      combat: ${{ steps.scope.outputs.combat }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22.13.0'
+      - id: scope
+        env:
+          CI_SCOPE_BASE: ${{ github.event.before || github.event.pull_request.base.sha }}
+          CI_SCOPE_HEAD: ${{ github.event.pull_request.head.sha }}
+          CI_SCOPE_DRAFT: ${{ github.event.pull_request.draft }}
+          CI_SCOPE_ACTION: ${{ github.event.action }}
+          CI_SCOPE_PREVIOUS_HEAD: ${{ github.event.before }}
+          CI_SCOPE_PR_BASE: ${{ github.event.pull_request.base.sha }}
+          CI_SCOPE_PR_NUMBER: ${{ github.event.pull_request.number }}
+          CI_SCOPE_ACTIONS_TOKEN: ${{ github.token }}
+        run: node scripts/ci-change-scope.mjs
+
+  ranger-turn-smoke:
+    name: Ranger Turn Regression
+    needs: scope
+    if: needs.scope.outputs.ranger == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22.13.0'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - name: Recheck the original Stage 4 rendering failure
+        env:
+          V100_PHASE_G_ONLY: battle-extra
+          V100_PHASE_G_ONLY_VARIANT: stage04-grappler
+          V100_PHASE_G_ONLY_ENGINE: chromium
+          V100_PHASE_G_EVIDENCE_DIR: outputs/ranger-turn-regression
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-phase-g-production-matrix.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ranger-turn-regression
+          path: outputs/ranger-turn-regression
+          if-no-files-found: error
+          retention-days: 14
+
+  v177-guardian-control-diagnostic:
+    needs: [scope]
+    name: V1 Guardian Control Diagnostic
+    if: ${{ needs.scope.outputs.full == 'true' && (github.head_ref == 'codex/177-combat-clarity') }}
+    runs-on: macos-15-intel
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22.13.0"
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - run: npx playwright install chromium
+      - run: npm run build
+      - name: Record limited diagnostic scope
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          mkdir -p outputs/v177-guardian-diagnostic
+          node --input-type=module -e 'import fs from "node:fs";import{execFileSync}from"node:child_process";fs.writeFileSync("outputs/v177-guardian-diagnostic/scope.json",JSON.stringify({diagnosticOnly:true,requestedHead:process.env.EXPECTED_HEAD,checkoutHead:execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),variant:"stage21-panther-knife",engine:"chromium",controlDeadlineMs:500,allProductionCapturesAccepted:false,all21Accepted:false,normalCampaignAccepted:false,wholeGameAccepted:false},null,2)+"\n");'
+      - name: Inspect the original guardian input deadline
+        env:
+          DEBUG: pw:browser
+          V100_PHASE_G_ONLY: battle-extra
+          V100_PHASE_G_ONLY_VARIANT: stage21-panther-knife
+          V100_PHASE_G_ONLY_ENGINE: chromium
+          V100_PHASE_G_EVIDENCE_DIR: outputs/v177-guardian-diagnostic
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-phase-g-production-matrix.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v177-guardian-control-diagnostic
+          path: outputs/v177-guardian-diagnostic
+          if-no-files-found: error
+          retention-days: 14
+
+  r9-story:
+    if: ${{ needs.scope.outputs.full == 'true' || needs.scope.outputs.r9 == 'true' }}
+    needs: [scope]
+    name: R9 Story (${{ matrix.engine }}, ${{ matrix.phase }}, ${{ matrix.viewport }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {engine: chromium, os: ubuntu-latest, phase: composition}
+          - {engine: chromium, os: ubuntu-latest, phase: bookends}
+          - {engine: webkit, os: macos-15-intel, phase: composition}
+          - {engine: webkit, os: macos-15-intel, phase: bookends}
+          - {engine: chromium, os: ubuntu-latest, phase: full-story, viewport: '1280x720'}
+          - {engine: chromium, os: ubuntu-latest, phase: full-story, viewport: '844x390'}
+          - {engine: chromium, os: ubuntu-latest, phase: full-story, viewport: '844x340'}
+          - {engine: webkit, os: macos-15-intel, phase: full-story, viewport: '1280x720'}
+          - {engine: webkit, os: macos-15-intel, phase: full-story, viewport: '844x390'}
+          - {engine: webkit, os: macos-15-intel, phase: full-story, viewport: '844x340'}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22.13.0"
+          cache: npm
+      - run: npm ci
+      - name: Install focused native engine
+        run: |
+          if [ "${{ matrix.engine }}" = webkit ]; then
+            npm ci --prefix scripts/pwa-native-runtime
+            node scripts/pwa-native-runtime/node_modules/playwright/cli.js install webkit
+          else
+            npx playwright install --with-deps chromium
+          fi
+      - run: npm run build
+      - name: Inspect all 17 R9 illustrations and 18 diagrams at three viewports
+        if: matrix.phase == 'composition'
+        env:
+          V100_DIALOGUE_QA_ENGINES: ${{ matrix.engine }}
+          V100_DIALOGUE_QA_OUT: outputs/r9-story/composition
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-dialogue-composition-browser.mjs
+      - name: Verify all story finalizers and save receipts with explicit developer victories
+        if: matrix.phase == 'composition' && matrix.engine == 'chromium'
+        env:
+          V100_DEVMODE_REPORT: outputs/r9-story/devmode/report.json
+        run: node scripts/v100-devmode-full-campaign.mjs
+      - name: Inspect R9 bookends, restored R5 cursor and credits to map
+        if: matrix.phase == 'bookends'
+        env:
+          V100_BOOKENDS_ENGINES: ${{ matrix.engine }}
+          V100_BOOKENDS_EVIDENCE_DIR: outputs/r9-story/bookends
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-story-bookends-browser-smoke.mjs
+      - name: Read every R9 story page and its actual scene audio receipts
+        if: matrix.phase == 'full-story'
+        env:
+          V100_R9_ENGINES: ${{ matrix.engine }}
+          V100_R9_VIEWPORT: ${{ matrix.viewport }}
+          V100_R9_OUT: outputs/r9-story/full-story
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-r9-full-story-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r9-story-${{ matrix.engine }}-${{ matrix.phase }}-${{ matrix.viewport }}
+          path: outputs/r9-story
+          if-no-files-found: error
+          retention-days: 14
+
   v102-combat:
-    name: V1.0.2 Combat (${{ matrix.engine }})
+    if: ${{ needs.scope.outputs.full == 'true' || needs.scope.outputs.combat == 'true' }}
+    needs: [scope]
+    name: V1.0.2 Combat (${{ matrix.checkLabel }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {engine: chromium, os: ubuntu-latest, viewportGroup: all, checkLabel: chromium}
+          - {engine: webkit, os: macos-15-intel, viewportGroup: desktop-phone, checkLabel: webkit desktop-phone}
+          - {engine: webkit, os: macos-15-intel, viewportGroup: phone-short, checkLabel: webkit phone-short}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22.13.0"
+          cache: npm
+      - run: npm ci
+      - name: Install focused native engine
+        run: |
+          if [ "${{ matrix.engine }}" = webkit ]; then
+            npm ci --prefix scripts/pwa-native-runtime
+            node scripts/pwa-native-runtime/node_modules/playwright/cli.js install webkit
+          else
+            npx playwright install --with-deps chromium
+          fi
+      - run: npm run build
+      - name: Verify all render forms and actual gore damage
+        env:
+          V102_COMBAT_ENGINE: ${{ matrix.engine }}
+          V102_COMBAT_VIEWPORT_GROUP: ${{ matrix.viewportGroup }}
+          V102_COMBAT_OUT: outputs/v102-combat
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v102-combat-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v102-combat-${{ matrix.engine }}-${{ matrix.viewportGroup }}
+          path: outputs
+          if-no-files-found: error
+          retention-days: 14
+
+  v102-combat-webkit-summary:
+    needs: [scope, v102-combat]
+    name: V1.0.2 Combat (webkit)
+    if: ${{ (needs.scope.outputs.full == 'true' || needs.scope.outputs.combat == 'true') && (always()) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require every combat viewport group to succeed
+        env:
+          V177_COMBAT_MATRIX_RESULT: ${{ needs.v102-combat.result }}
+        run: test "$V177_COMBAT_MATRIX_RESULT" = success
+
+  v103-audio-output:
+    if: ${{ needs.scope.outputs.full == 'true' }}
+    needs: [scope]
+    name: V1.0.3 Media Output (${{ matrix.engine }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {engine: chromium, os: ubuntu-latest}
+          - {engine: webkit, os: macos-15-intel}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22.13.0"
+          cache: npm
+      - run: npm ci
+      - name: Install focused native engine
+        id: native_engine
+        run: |
+          if [ "${{ matrix.engine }}" = webkit ]; then
+            npm ci --prefix scripts/pwa-native-runtime
+            node scripts/pwa-native-runtime/node_modules/playwright/cli.js install webkit
+          else
+            npx playwright install --with-deps chromium
+          fi
+      - run: npm run build
+        id: production_build
+      - name: Verify iPhone media output and encoded mix without microphone access
+        env:
+          V103_AUDIO_ENGINE: ${{ matrix.engine }}
+          V103_AUDIO_OUT: outputs/v103-audio
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v103-audio-output-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v103-audio-${{ matrix.engine }}
+          path: outputs
+          if-no-files-found: error
+          retention-days: 14
+
+  v102-enemy-contacts:
+    if: ${{ needs.scope.outputs.full == 'true' }}
+    needs: [scope]
+    name: V1 Ordinary Enemy Contacts (${{ matrix.engine }})
     strategy:
       fail-fast: false
       matrix:
@@ -48,16 +349,6 @@ jobs:
             npx playwright install --with-deps chromium
           fi
       - run: npm run build
-      - name: Verify iPhone media output and encoded mix without microphone access
-        env:
-          V103_AUDIO_ENGINE: ${{ matrix.engine }}
-          V103_AUDIO_OUT: outputs/v103-audio
-        run: node scripts/run-browser-qa-with-server.mjs scripts/v103-audio-output-browser.mjs
-      - name: Verify all render forms and actual gore damage
-        env:
-          V102_COMBAT_ENGINE: ${{ matrix.engine }}
-          V102_COMBAT_OUT: outputs/v102-combat
-        run: node scripts/run-browser-qa-with-server.mjs scripts/v102-combat-browser.mjs
       - name: Observe ordinary enemy contacts through native touch deployment
         env:
           V100_ENEMY_MOTION_ENGINE: ${{ matrix.engine }}
@@ -67,15 +358,69 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: v102-combat-${{ matrix.engine }}
-          path: |
-            outputs/v102-combat
-            outputs/v102-normal-contacts
-            outputs/v103-audio
+          name: v102-normal-contacts-${{ matrix.engine }}
+          path: outputs
+          if-no-files-found: error
+          retention-days: 14
+
+  v177-normal-campaign:
+    if: ${{ needs.scope.outputs.normal == 'true' }}
+    needs: [scope]
+    name: V1 Representative Normal Play (${{ matrix.engine }})
+    # All-stage progression uses the existing developer-mode route in verify.
+    # Bounded normal UI observations retain defeats for separate balance review.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {engine: chromium, os: ubuntu-latest}
+          - {engine: webkit, os: macos-15-intel}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 240
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout exact feature candidate
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22.13.0"
+          cache: npm
+      - run: npm ci
+      - name: Install focused native engine
+        run: |
+          if [ "${{ matrix.engine }}" = webkit ]; then
+            npm ci --prefix scripts/pwa-native-runtime
+            node scripts/pwa-native-runtime/node_modules/playwright/cli.js install webkit
+          else
+            npx playwright install --with-deps chromium
+          fi
+      - name: Build exact normal-play candidate
+        env:
+          GITHUB_PAGES_RELEASE_SHA: ${{ github.event.pull_request.head.sha }}
+        run: npm run build
+      - name: Observe opening stages using a fresh save, earned CAPS and real UI
+        env:
+          V100_NORMAL_PLAY_ENGINE: ${{ matrix.engine }}
+          V100_NORMAL_PLAY_STAGE_LIMIT: "3"
+          V100_NORMAL_PLAY_EVIDENCE_DIR: outputs/v177-normal-campaign-${{ matrix.engine }}
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v177-representative-normal-play.mjs
+      - name: Preserve normal-play results, saves, diagnostics and original-speed video
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v177-normal-campaign-${{ matrix.engine }}
+          path: outputs/v177-normal-campaign-${{ matrix.engine }}
           if-no-files-found: error
           retention-days: 14
 
   verify:
+    needs: [scope]
     name: PR Verify
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -147,15 +492,18 @@ jobs:
         run: npm run build
 
       - name: Test
-        run: npm test
+        run: node --test tests/*.test.mjs
 
       - name: Audit all 30 story stages in developer mode
+        if: ${{ needs.scope.outputs.full == 'true' }}
         run: node scripts/v100-devmode-full-campaign.mjs
 
       - name: Audit V1 CAPS purchasing power
+        if: ${{ needs.scope.outputs.full == 'true' }}
         run: node scripts/v100-economy-budget.mjs
 
       - name: Upload developer mode campaign audit
+        if: ${{ needs.scope.outputs.full == 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: v100-devmode-full-campaign
@@ -166,19 +514,23 @@ jobs:
           retention-days: 14
 
       - name: Install focused browser engines
+        if: ${{ needs.scope.outputs.full == 'true' }}
         run: npx playwright install --with-deps chromium
 
       - name: Verify PWA shell commit and offline relaunch (Chromium)
+        if: ${{ needs.scope.outputs.full == 'true' }}
         run: node scripts/pwa-shell-commit-browser-smoke.mjs
 
       - name: Verify online play after PWA registration failure (Chromium)
+        if: ${{ needs.scope.outputs.full == 'true' }}
         run: node scripts/run-browser-qa-with-server.mjs scripts/pwa-registration-fallback-browser-smoke.mjs
 
       - name: Verify installed PWA launch when update metadata stalls (Chromium)
+        if: ${{ needs.scope.outputs.full == 'true' }}
         run: node scripts/run-browser-qa-with-server.mjs scripts/pwa-held-manifest-browser-smoke.mjs
 
       - name: Upload stalled PWA metadata browser evidence
-        if: always()
+        if: ${{ needs.scope.outputs.full == 'true' && (always()) }}
         uses: actions/upload-artifact@v4
         with:
           name: v100-pwa-held-metadata
@@ -187,6 +539,7 @@ jobs:
           retention-days: 14
 
       - name: Build exact base and candidate PWA sites for partial-update QA
+        if: ${{ needs.scope.outputs.full == 'true' }}
         env:
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
@@ -221,6 +574,7 @@ jobs:
             node scripts/build-github-pages.mjs
 
       - name: Classify whether PWA asset update QA applies
+        if: ${{ needs.scope.outputs.full == 'true' }}
         id: pwa_update_scope
         env:
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
@@ -228,7 +582,8 @@ jobs:
         run: node scripts/classify-pwa-update-scope.mjs
 
       - name: Reproduce and recover the partial-failed existing PWA (Chromium)
-        if: steps.pwa_update_scope.outputs.applicable == 'true'
+        id: issue156_partial_update
+        if: ${{ needs.scope.outputs.full == 'true' && (steps.pwa_update_scope.outputs.applicable == 'true') }}
         env:
           PWA_PARTIAL_UPDATE_OLD_ROOT: ${{ runner.temp }}/pwa-old-site
           PWA_PARTIAL_UPDATE_CANDIDATE_ROOT: ${{ github.workspace }}/_site
@@ -238,6 +593,8 @@ jobs:
         run: npm run qa:pwa-partial-update
 
       - name: Capture Issue 156 canonical HUD evidence (Chromium)
+        id: issue156_hud
+        if: ${{ needs.scope.outputs.full == 'true' }}
         env:
           V099_FINAL_REMEDIATION_QA_ENGINES: chromium
           V099_FINAL_REMEDIATION_QA_CASES: hud
@@ -251,6 +608,7 @@ jobs:
           done
 
       - name: Capture Issue 156 final-canvas deployment evidence (Chromium)
+        if: ${{ needs.scope.outputs.full == 'true' }}
         env:
           V099_FINAL_REMEDIATION_QA_ENGINES: chromium
           V099_FINAL_REMEDIATION_QA_VIEWPORTS: 667x375,736x414,844x390,844x340,932x430,1280x720
@@ -259,18 +617,21 @@ jobs:
         run: node scripts/run-browser-qa-with-server.mjs scripts/v099-final-remediation-browser-smoke.mjs
 
       - name: Capture Issue 156 safe-area, portrait, and metadata evidence
+        if: ${{ needs.scope.outputs.full == 'true' }}
         env:
           ISSUE156_REMEDIATION_QA_ENGINES: chromium
           ISSUE156_REMEDIATION_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/presentation
         run: npm run qa:issue156-remediation
 
       - name: Capture Issue 156 physical-width records evidence (Chromium)
+        if: ${{ needs.scope.outputs.full == 'true' }}
         env:
           RECORDS_QA_ENGINES: chromium
           RECORDS_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue156-evidence/records/chromium
         run: npm run qa:records
 
       - name: Capture Issue 156 physical-width TAKUYA audio route (Chromium)
+        if: ${{ needs.scope.outputs.full == 'true' }}
         env:
           P5_QA_SCOPE: battle-audio
           P5_QA_ENGINES: chromium
@@ -279,6 +640,8 @@ jobs:
         run: npm run qa:p5
 
       - name: Capture Version 0.9.9.5 enemy runtime and station final-canvas evidence
+        id: issue165_capture
+        if: ${{ needs.scope.outputs.full == 'true' }}
         env:
           V0995_ENEMY_QA_ENGINES: chromium
           V0995_ENEMY_QA_EVIDENCE_DIR: ${{ github.workspace }}/issue165-evidence/enemy-runtime
@@ -290,7 +653,7 @@ jobs:
           node scripts/run-browser-qa-with-server.mjs scripts/v0995-visual-integrity-browser-smoke.mjs
 
       - name: Upload Issue 165 visual remediation evidence
-        if: always()
+        if: ${{ always() && needs.scope.outputs.full == 'true' && (steps.issue165_capture.outcome == 'success' || steps.issue165_capture.outcome == 'failure' || steps.issue165_capture.outcome == 'cancelled') }}
         uses: actions/upload-artifact@v4
         with:
           name: issue165-visual-remediation-evidence
@@ -299,7 +662,7 @@ jobs:
           retention-days: 14
 
       - name: Upload Issue 156 remediation evidence
-        if: always()
+        if: ${{ always() && needs.scope.outputs.full == 'true' && (steps.issue156_partial_update.outcome == 'success' || steps.issue156_partial_update.outcome == 'failure' || steps.issue156_partial_update.outcome == 'cancelled' || steps.issue156_hud.outcome == 'success' || steps.issue156_hud.outcome == 'failure' || steps.issue156_hud.outcome == 'cancelled') }}
         uses: actions/upload-artifact@v4
         with:
           name: issue156-remediation-evidence-chromium
@@ -308,6 +671,8 @@ jobs:
           retention-days: 14
 
   v100-webkit-frame-control:
+    if: ${{ needs.scope.outputs.full == 'true' }}
+    needs: [scope]
     name: V1 WebKit Frame and Boss Performance
     runs-on: macos-15
     defaults:
@@ -362,6 +727,16 @@ jobs:
           V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC: "1"
           V100_DEVICE_RUNTIME_BENCHMARK_PREPARATION: spotlight-paused
         run: node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs
+
+      - name: Preserve the first WebKit performance report before repeats
+        id: preserved_first_report
+        if: ${{ always() && (steps.primary_perf.outcome == 'success' || steps.primary_perf.outcome == 'failure') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: v100-webkit-first-performance-report-attempt-${{ github.run_attempt }}
+          path: outputs/v100-device-runtime/webkit/report.json
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Independently repeat narrow landscape boss performance (WebKit)
         id: repeat_perf
@@ -420,88 +795,9 @@ jobs:
         if: ${{ always() && (steps.benchmark_preparation.outcome == 'success' || steps.benchmark_preparation.outcome == 'failure') }}
         run: node scripts/v100-macos-indexing-control.mjs restore-benchmark
 
-      - name: Pause Spotlight indexing for same-host causal diagnosis
-        id: indexing_control
-        if: ${{ always() && steps.preserved_primary_perf.outcome == 'success' && (steps.primary_perf.outcome == 'failure' || steps.repeat_perf.outcome == 'failure' || steps.repeat_390_perf.outcome == 'failure' || steps.dpr2_perf.outcome == 'failure') }}
-        run: node scripts/v100-macos-indexing-control.mjs pause
 
-      - name: Diagnose 844x340 boss performance with indexing paused
-        if: ${{ always() && steps.indexing_control.outcome == 'success' }}
-        continue-on-error: true
-        env:
-          V100_DEVICE_RUNTIME_ENGINE: webkit
-          V100_DEVICE_RUNTIME_VIEWPORT: 844x340
-          V100_DEVICE_RUNTIME_OUT: outputs/v100-device-runtime/webkit-844x340-indexing-control
-          V100_DEVICE_RUNTIME_HOST_CONTROL: spotlight-indexing-paused
-          V100_DEVICE_RUNTIME_BLANK_BASELINE: "1"
-          V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC: "1"
-        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs
-
-      - name: Diagnose 844x390 boss performance with indexing paused
-        if: ${{ always() && steps.indexing_control.outcome == 'success' }}
-        continue-on-error: true
-        env:
-          V100_DEVICE_RUNTIME_ENGINE: webkit
-          V100_DEVICE_RUNTIME_VIEWPORT: 844x390
-          V100_DEVICE_RUNTIME_OUT: outputs/v100-device-runtime/webkit-844x390-indexing-control
-          V100_DEVICE_RUNTIME_HOST_CONTROL: spotlight-indexing-paused
-          V100_DEVICE_RUNTIME_BLANK_BASELINE: "1"
-          V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC: "1"
-        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs
-
-      - name: Restore Spotlight indexing on ephemeral performance host
-        if: ${{ always() && (steps.indexing_control.outcome == 'success' || steps.indexing_control.outcome == 'failure') }}
-        run: node scripts/v100-macos-indexing-control.mjs restore
-
-      - name: Diagnose narrow landscape canvas cost after performance failure
-        if: ${{ always() && (steps.primary_perf.outcome == 'failure' || steps.repeat_perf.outcome == 'failure') }}
-        continue-on-error: true
-        env:
-          V100_DEVICE_RUNTIME_ENGINE: webkit
-          V100_DEVICE_RUNTIME_VIEWPORT: 844x340
-          V100_DEVICE_RUNTIME_OUT: outputs/v100-device-runtime/webkit-844x340-draw-suppressed
-          V100_DEVICE_RUNTIME_PAINT_ISOLATION: draw-suppressed
-          V100_DEVICE_RUNTIME_DIAGNOSTIC_SECONDS: "15"
-          V100_DEVICE_RUNTIME_BLANK_BASELINE: "1"
-          V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC: "1"
-        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs
-
-      - name: Diagnose 844x390 canvas cost after performance failure
-        if: ${{ always() && (steps.primary_perf.outcome == 'failure' || steps.repeat_390_perf.outcome == 'failure') }}
-        continue-on-error: true
-        env:
-          V100_DEVICE_RUNTIME_ENGINE: webkit
-          V100_DEVICE_RUNTIME_VIEWPORT: 844x390
-          V100_DEVICE_RUNTIME_OUT: outputs/v100-device-runtime/webkit-844x390-draw-suppressed
-          V100_DEVICE_RUNTIME_PAINT_ISOLATION: draw-suppressed
-          V100_DEVICE_RUNTIME_DIAGNOSTIC_SECONDS: "15"
-          V100_DEVICE_RUNTIME_BLANK_BASELINE: "1"
-          V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC: "1"
-        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs
-
-      - name: Diagnose 844x390 raster groups after performance failure
-        if: ${{ always() && (steps.primary_perf.outcome == 'failure' || steps.repeat_390_perf.outcome == 'failure') }}
-        continue-on-error: true
-        env:
-          V100_PRESIDENT_PRESENTATION_ENGINE: webkit
-          V100_PRESIDENT_PRESENTATION_OUT: outputs/v100-device-runtime/webkit-844x390-raster-groups
-          V100_PRESIDENT_RECORD_VIDEO: "0"
-          V100_PRESIDENT_BASELINE_ONLY: "1"
-          V100_PRESIDENT_RASTER_GROUP_ABLATION: "1"
-          V100_PRESIDENT_DIAGNOSTIC_VIEWPORT: 844x390
-        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-president-presentation-browser.mjs
-
-      - name: Diagnose 844x390 HUD compositing after performance failure
-        if: ${{ always() && (steps.primary_perf.outcome == 'failure' || steps.repeat_390_perf.outcome == 'failure') }}
-        continue-on-error: true
-        env:
-          V100_PRESIDENT_PRESENTATION_ENGINE: webkit
-          V100_PRESIDENT_PRESENTATION_OUT: outputs/v100-device-runtime/webkit-844x390-hud-visibility
-          V100_PRESIDENT_RECORD_VIDEO: "0"
-          V100_PRESIDENT_BASELINE_ONLY: "1"
-          V100_PRESIDENT_HUD_VISIBILITY_ABLATION: "1"
-          V100_PRESIDENT_DIAGNOSTIC_VIEWPORT: 844x390
-        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-president-presentation-browser.mjs
+      # Formal windows, original indexing restoration and reports finish within
+      # the fixed 30m job. Independent diagnostics use the existing separate jobs.
 
       - name: Upload WebKit frame controls and boss performance
         if: always()
@@ -525,7 +821,63 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  v177-webkit-shadow-diagnostic:
+    needs: [scope, v100-webkit-frame-control]
+    name: WebKit Compact Shadow Diagnostic
+    if: ${{ needs.scope.outputs.full == 'true' && (always() && (needs.v100-webkit-frame-control.result == 'failure' || needs.v100-webkit-frame-control.result == 'cancelled')) }}
+    runs-on: macos-15
+    defaults:
+      run:
+        shell: bash
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout synthetic PR merge
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify Apple Silicon diagnostic host
+        run: |
+          uname -m
+          test "$(uname -m)" = arm64
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22.13.0"
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Install locked WebKit
+        run: npx playwright install webkit
+      - name: Verify pinned macOS WebKit runtime
+        run: node scripts/verify-playwright-container-runtime.mjs --macos-arm64
+      - name: Build production application
+        run: npm run build
+      # Diagnostic-only original/flat/restored comparison on this new host.
+      # It cannot promote or replace the original performance acceptance run.
+      - name: Diagnose 844x390 shadow raster cost after performance failure
+        env:
+          V100_PRESIDENT_PRESENTATION_ENGINE: webkit
+          V100_PRESIDENT_PRESENTATION_OUT: outputs/v100-device-runtime/webkit-844x390-shadow-blur
+          V100_PRESIDENT_RECORD_VIDEO: "0"
+          V100_PRESIDENT_BASELINE_ONLY: "1"
+          V100_PRESIDENT_SHADOW_BLUR_ABLATION: "1"
+          V100_PRESIDENT_DIAGNOSTIC_VIEWPORT: 844x390
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-president-presentation-browser.mjs
+      - name: Preserve compact shadow diagnostic independently
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v177-webkit-compact-shadow-diagnostic-attempt-${{ github.run_attempt }}
+          path: outputs/v100-device-runtime/webkit-844x390-shadow-blur
+          if-no-files-found: error
+          retention-days: 14
+
   v100-phase-g-production:
+    if: ${{ needs.scope.outputs.full == 'true' }}
+    needs: [scope]
     name: V1 Phase G Production Matrix
     runs-on: macos-15-intel
     defaults:
@@ -603,6 +955,8 @@ jobs:
           retention-days: 14
 
   v100-native-webkit-pwa:
+    if: ${{ needs.scope.outputs.full == 'true' }}
+    needs: [scope]
     name: V1 Native WebKit PWA Update and Recovery
     # playwright#41701 fixes the disk-response codec on every WebKit port.
     # Use a separately locked official browser for persistent storage; the
@@ -761,8 +1115,9 @@ jobs:
           retention-days: 14
 
   webkit-hosted:
+    if: ${{ needs.scope.outputs.full == 'true' }}
+    needs: [scope, webkit-enemy-runtime-shard]
     name: WebKit Hosted Runner Evidence
-    needs: webkit-enemy-runtime-shard
     runs-on: macos-15-intel
     timeout-minutes: 60
 
@@ -835,6 +1190,8 @@ jobs:
           retention-days: 14
 
   webkit-enemy-runtime-shard:
+    if: ${{ needs.scope.outputs.full == 'true' }}
+    needs: [scope]
     name: WebKit Enemy Runtime Evidence (${{ matrix.shard.name }})
     runs-on: macos-15-intel
     timeout-minutes: 60
@@ -908,10 +1265,9 @@ jobs:
           retention-days: 14
 
   webkit-viewport:
+    if: ${{ needs.scope.outputs.full == 'true' }}
+    needs: [scope, webkit-deployment-viewport, webkit-hosted]
     name: WebKit Canonical Viewport Evidence (${{ matrix.viewport }})
-    needs:
-      - webkit-deployment-viewport
-      - webkit-hosted
     runs-on: macos-15-intel
     timeout-minutes: 20
     strategy:
@@ -976,9 +1332,9 @@ jobs:
           retention-days: 14
 
   webkit-deployment-viewport:
+    needs: [scope, webkit-stage3-audio]
     name: WebKit Deployment Viewport Evidence (${{ matrix.viewport }})
-    needs: webkit-stage3-audio
-    if: ${{ !cancelled() }}
+    if: ${{ needs.scope.outputs.full == 'true' && (!cancelled()) }}
     runs-on: macos-15-intel
     defaults:
       run:
@@ -1036,8 +1392,9 @@ jobs:
           retention-days: 14
 
   webkit-stage3-audio:
+    if: ${{ needs.scope.outputs.full == 'true' }}
+    needs: [scope, webkit-hosted]
     name: WebKit Stage 3 Audio Route (${{ matrix.audio_case }})
-    needs: webkit-hosted
     runs-on: macos-15-intel
     defaults:
       run:

@@ -1,0 +1,155 @@
+{
+  "tool": "built-in image_gen",
+  "studyFile": "hidden-parts-study.png",
+  "studySha256": "318ece0791440697f4f077d7e75a7fa6f219383da96b621cb4491a3aefd4658d",
+  "promptFile": "parts-prompt.txt",
+  "identityBinding": {
+    "path": "/art/v0995/enemies/choir-knot-battle-v2.png",
+    "sourceSha256": "20151ebcac726798f8480531fe17088cbd8901edd23b3a1aa640514109a9e07c",
+    "sourceRect": {
+      "x": 0,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "flipX": false
+  },
+  "originalPoseBindings": {
+    "idle": {
+      "path": "/art/v0995/enemies/choir-knot-battle-v2.png",
+      "sourceSha256": "20151ebcac726798f8480531fe17088cbd8901edd23b3a1aa640514109a9e07c",
+      "sourceRect": {
+        "x": 0,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "identity-reference.png",
+      "sha256": "c8733abeb16f4eeaa9b79c681755c00a332ead1d35f7c9607f9ce1025a2f65ae",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "walk-a": {
+      "path": "/art/v0995/enemies/choir-knot-battle-v2.png",
+      "sourceSha256": "20151ebcac726798f8480531fe17088cbd8901edd23b3a1aa640514109a9e07c",
+      "sourceRect": {
+        "x": 480,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-walk-a.png",
+      "sha256": "4573498c0d778d48864fbc84ec84e863ed5b417667b15f2eb444edd3d098fee3",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "walk-b": {
+      "path": "/art/v0995/enemies/choir-knot-battle-v2.png",
+      "sourceSha256": "20151ebcac726798f8480531fe17088cbd8901edd23b3a1aa640514109a9e07c",
+      "sourceRect": {
+        "x": 960,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-walk-b.png",
+      "sha256": "186eaf4782c1591719f1378b89dec01f9746b7a93097e6fcca1319e7b9503b1d",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "attack-a": {
+      "path": "/art/v0995/enemies/choir-knot-battle-v2.png",
+      "sourceSha256": "20151ebcac726798f8480531fe17088cbd8901edd23b3a1aa640514109a9e07c",
+      "sourceRect": {
+        "x": 1440,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-attack-a.png",
+      "sha256": "bcb104f1bd924a0e09a6d6d605dd41caad7df0ab0b1c11aedfdf709693b25a05",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "attack-b": {
+      "path": "/art/v0995/enemies/choir-knot-battle-v2.png",
+      "sourceSha256": "20151ebcac726798f8480531fe17088cbd8901edd23b3a1aa640514109a9e07c",
+      "sourceRect": {
+        "x": 1920,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-attack-b.png",
+      "sha256": "523e3e33fb30699397b95d6858dd57eb1b259130200712f32a400cd4ff3d35d6",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "hit": {
+      "path": "/art/v0995/enemies/choir-knot-battle-v2.png",
+      "sourceSha256": "20151ebcac726798f8480531fe17088cbd8901edd23b3a1aa640514109a9e07c",
+      "sourceRect": {
+        "x": 2400,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-hit.png",
+      "sha256": "0e25eaac95f887b5a3119c297ec6ccbdfccdac24a9036f7de7c0a2a10b1c0216",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    }
+  },
+  "usage": "Only own concealed leg cells0..3 complete narrow skin/bone seams. All fused faces and body remain original canonical RGBA. No generated faces, torso, feet, arms or unrelated material. Original two feet preserve their separate contact planes.",
+  "generatedParts": [
+    "far-upper",
+    "far-lower",
+    "near-upper",
+    "near-lower"
+  ],
+  "adopted": true,
+  "normalPlayAcceptance": false,
+  "all48Acceptance": false
+}

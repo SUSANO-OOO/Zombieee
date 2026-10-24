@@ -1,6 +1,6 @@
 import { AUDIO_CATEGORIES, createAudioManifest } from "./audioManifest.js";
 import { createPlaybackAudioSession } from "./audioSession.js";
-import { createAudioOutput } from "./audioOutput.js";
+import { createAudioOutput, audioContextTimingSnapshot } from "./audioOutput.js";
 
 const DEFAULT_CATEGORY_VOLUMES = Object.freeze({
   bgm: 1,
@@ -1587,6 +1587,7 @@ export class AudioMixer {
     return {
       unlocked: this.unlocked,
       contextState: this.context?.state ?? null,
+      contextTiming: audioContextTimingSnapshot(this.context),
       contextGeneration: this.contextGeneration,
       contextCreateCount: this.contextCreateCount,
       output: this.audioOutput?.snapshot() ?? null,

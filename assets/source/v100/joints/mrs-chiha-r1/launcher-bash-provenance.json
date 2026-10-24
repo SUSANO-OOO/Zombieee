@@ -1,0 +1,80 @@
+{
+  "schema": "zombieee-launcher-bash/1",
+  "kind": "mrs-chiha",
+  "baselineCommit": "c858205c427aad2f583f79abfa0a8903e0171de3",
+  "producerScope": "All48 forms and all actions; dedicated close-range normal attack must keep original anatomy and weapon",
+  "blender": "5.2, background, actual evaluated bones",
+  "sourceFiles": [
+    {
+      "path": "assets/source/v100/joints/mrs-chiha-r1/parts.json",
+      "sha256": "e7cb759aa46be23bbfa7cadfa3c88149685dd6c39fa6613d2f8eb350af66a573"
+    },
+    {
+      "path": "assets/source/v100/joints/mrs-chiha-r1/author.py",
+      "sha256": "588537ebfb8e750175390d954b7d0642b0ad2d8da77199a6441883a5ee6d5f6d"
+    },
+    {
+      "path": "assets/source/v100/joints/mrs-chiha-r1/motion.json.gz",
+      "sha256": "372fe73fe35320c7daa730f94a287a6b287835abe5880124d04b8ab0dd5e5b2d"
+    }
+  ],
+  "action": "launcher-bash",
+  "sourceKeys": 61,
+  "bakedUpperPoses": 31,
+  "firstUpperIndex": 151,
+  "originalActions": 5,
+  "originalSourceKeys": 305,
+  "originalBakedPoses": 151,
+  "originalActionsAndPosesExact": true,
+  "originalPaintAndTextureExact": true,
+  "wholeSourcePngUnchanged": true,
+  "attackTimingAndEventsPreserved": true,
+  "prewindupHandoverContinuous": true,
+  "denseRuntimeSamples": 1322,
+  "maxGripError": 1.7053025658242404e-13,
+  "maxGroundError": 0.00008703378421159869,
+  "minReachMargin": 10.553023328941904,
+  "regeneratedFiles": [
+    {
+      "path": "app/v177NewcomerJointData.js",
+      "hash": "578ff75413ed48120eee17e23f06c27f71b5104d1dd73b463a35661a0c2ac627"
+    },
+    {
+      "path": "public/art/v100/joints/zakimiya-r1.webp",
+      "hash": "5859fd70326d70e0e29a35019216276951e0388656779611405bb78ec686a86f"
+    },
+    {
+      "path": "assets/source/v100/joints/zakimiya-r1/provenance.json",
+      "hash": "6a8aa39b5bedc3a0dfbb1250c4dc880145d3033c1aa55d540d56ab475314a1c7"
+    },
+    {
+      "path": "public/art/v100/joints/tky-r1.webp",
+      "hash": "59495022d95a45677605e04887d72e5359a63e3c5a94203315d4bfe4053aad22"
+    },
+    {
+      "path": "assets/source/v100/joints/tky-r1/provenance.json",
+      "hash": "2fd5a09442d83f288ad6b4c51fb01ece757a0ffd753e00e876c8ed1a474c03b3"
+    },
+    {
+      "path": "public/art/v100/joints/mrs-chiha-r1.webp",
+      "hash": "5ff2ba98e8a67e1cc24fa2404ffd94b68cdbc7b6696c8eb08e536f3114ff4fec"
+    },
+    {
+      "path": "assets/source/v100/joints/mrs-chiha-r1/provenance.json",
+      "hash": "b3d9791d986e8c8b6605bdcad81addb2f66b7e67793b215b54a19f0e4212b50b"
+    },
+    {
+      "path": "public/art/v100/joints/miyamoto-musashi-r1.webp",
+      "hash": "d8fd78012fa9dc63631b7e724d94953ff04c010c2f017176d7d04b684e2430a8"
+    },
+    {
+      "path": "assets/source/v100/joints/miyamoto-musashi-r1/provenance.json",
+      "hash": "013ab3fe8cbd79980855dee99ebd75a8811d83b6c3bfe8bc5cae7cf48b0ef6f5"
+    }
+  ],
+  "sourceReview": "output/issue177-chiha-bash-prototype-r1/both-facings-sequence-r2.png",
+  "bothFacingsAnd96pxReviewed": true,
+  "jointTolerancePx": 0.001,
+  "nativeNormalPlayAcceptance": false,
+  "physicalRecordingAcceptance": false
+}

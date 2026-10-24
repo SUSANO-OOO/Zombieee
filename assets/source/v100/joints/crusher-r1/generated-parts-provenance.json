@@ -1,0 +1,15 @@
+{
+  "tool": "built-in image_gen",
+  "generatedPath": "C:\\Users\\okait\\.codex\\generated_images\\01a12578-4773-7873-a12e-fb0962b19020\\exec-43f5821b-fb6b-4d64-85ec-c4bf4be36ecd.png",
+  "prompt": "parts-prompt.txt",
+  "sha256": "4e378e167b97f2f57bd362c3d59829d9cfd573041eaa814cf2a33a229d0b965c",
+  "referencePath": "output/issue177-blender-rig-workshop-r4/crusher/walk-a.png",
+  "role": "identity-preserving hidden anatomical parts; original visible painting overlaid",
+  "reference": "identity-reference.png",
+  "adoptedDerivedParts": 12,
+  "originalParts": [
+    "head",
+    "weapon-and-hands",
+    "free-hand"
+  ]
+}

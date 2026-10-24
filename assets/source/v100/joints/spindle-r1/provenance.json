@@ -1,0 +1,281 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "spindle",
+  "assetPath": "/art/v100/joints/spindle-r1.webp",
+  "bytes": 33514,
+  "sha256": "159c81bd5a20271648f0fd12e8ff8d3bd26f83d110e32177eb2518373d602b97",
+  "atlasPacking": "height-descending-shelves",
+  "generatedPartsStudySha256": "709dd0a3950de859a7947bc2d92b73e7d26e1e0d9803b6da3c6d2b2113aa37d4",
+  "identitySourceSha256": "893543e111afa7f449c1c35be1e1690ffa23c2ebaa50f92f671e4919bcbfb22b",
+  "identityBinding": {
+    "path": "/art/v0995/enemies/spindle-battle-v2.png",
+    "sourceSha256": "7efd2d013f2fa79046e7df3c7ce927d67ee30c28b9a480e1f2e861c99421366a",
+    "sourceRect": {
+      "x": 0,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "flipX": false
+  },
+  "motionSha256": "b0d7663a9136eda7e2f26dc5bdbe86c13fe3a3a54753b1ac8c00373f51f87c78",
+  "originalPoseBindings": {
+    "idle": {
+      "path": "/art/v0995/enemies/spindle-battle-v2.png",
+      "sourceSha256": "7efd2d013f2fa79046e7df3c7ce927d67ee30c28b9a480e1f2e861c99421366a",
+      "sourceRect": {
+        "x": 0,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "identity-reference.png",
+      "sha256": "893543e111afa7f449c1c35be1e1690ffa23c2ebaa50f92f671e4919bcbfb22b",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "walk-a": {
+      "path": "/art/v0995/enemies/spindle-battle-v2.png",
+      "sourceSha256": "7efd2d013f2fa79046e7df3c7ce927d67ee30c28b9a480e1f2e861c99421366a",
+      "sourceRect": {
+        "x": 480,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-walk-a.png",
+      "sha256": "39f404e85d02361df2b890bcc03a1f45b26ea47a9ec13657e0651682bc790f85",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "walk-b": {
+      "path": "/art/v0995/enemies/spindle-battle-v2.png",
+      "sourceSha256": "7efd2d013f2fa79046e7df3c7ce927d67ee30c28b9a480e1f2e861c99421366a",
+      "sourceRect": {
+        "x": 960,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-walk-b.png",
+      "sha256": "05e1d9415f6f3168f06566350de110e86e0ec8a64be14dff6a8eb5e6dc4b2a75",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "attack-a": {
+      "path": "/art/v0995/enemies/spindle-battle-v2.png",
+      "sourceSha256": "7efd2d013f2fa79046e7df3c7ce927d67ee30c28b9a480e1f2e861c99421366a",
+      "sourceRect": {
+        "x": 1440,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-attack-a.png",
+      "sha256": "ba56db2bd71fdc104e4f28d935d336faf887fcb77cf9e74a71023aa69123af6f",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "attack-b": {
+      "path": "/art/v0995/enemies/spindle-battle-v2.png",
+      "sourceSha256": "7efd2d013f2fa79046e7df3c7ce927d67ee30c28b9a480e1f2e861c99421366a",
+      "sourceRect": {
+        "x": 1920,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-attack-b.png",
+      "sha256": "bde9538b34d6f286a7af05a7aed9d9bbeea77648207d3413c79ecd14544eeb7f",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    },
+    "hit": {
+      "path": "/art/v0995/enemies/spindle-battle-v2.png",
+      "sourceSha256": "7efd2d013f2fa79046e7df3c7ce927d67ee30c28b9a480e1f2e861c99421366a",
+      "sourceRect": {
+        "x": 2400,
+        "y": 0,
+        "w": 480,
+        "h": 448
+      },
+      "drawSlices": null,
+      "flipX": false,
+      "file": "original-hit.png",
+      "sha256": "74b63e2dedaf18ccb78110e0e46235dda046dfa4b1e682a569812c56bb6be6f1",
+      "referenceTransform": {
+        "scale": 1,
+        "tx": 0,
+        "ty": 0,
+        "paddingOnly": true
+      },
+      "reason": "Exact decoded canonical RGBA crop, no identity repaint, resampling or canvas alpha conversion."
+    }
+  },
+  "parts": [
+    {
+      "name": "far-rear-upper",
+      "file": "far-rear-upper.png",
+      "sha256": "074ab11ca60547e8dd6b1c7e55238871eb99e110d3ee69e81cbe915ae5004f1e",
+      "original": false
+    },
+    {
+      "name": "far-rear-lower",
+      "file": "far-rear-lower.png",
+      "sha256": "57dee9d14719760be92bea372bbb14744f7f292aa3a7d24195a8cf211bb06763",
+      "original": false
+    },
+    {
+      "name": "far-rear-foot",
+      "file": "far-rear-foot.png",
+      "sha256": "04576d968bbafd9af3f71ae0d811626e66111b05a4e265d47cb7de0c63a5e384",
+      "original": false
+    },
+    {
+      "name": "far-middle-upper",
+      "file": "far-middle-upper.png",
+      "sha256": "e958c4cd7e954bb314acb42a82b2ffdb54d44b7af4d78f62a51fbd55e9138675",
+      "original": false
+    },
+    {
+      "name": "far-middle-lower",
+      "file": "far-middle-lower.png",
+      "sha256": "2740e45e331fc5ab741a4b9e1d8f4ef4485014752f13e34e8cb7a5ee5851938c",
+      "original": false
+    },
+    {
+      "name": "far-middle-foot",
+      "file": "far-middle-foot.png",
+      "sha256": "29257e3231de71f4a4f96f4bfe56e407684027282155d21a3bb0712ff5bc158b",
+      "original": false
+    },
+    {
+      "name": "far-front-upper",
+      "file": "far-front-upper.png",
+      "sha256": "cd020f3b6a1caa4e986b54d19d36f5fa4687c59cec6bd7183d316b1b4619b622",
+      "original": false
+    },
+    {
+      "name": "far-front-lower",
+      "file": "far-front-lower.png",
+      "sha256": "67362d3f419d2382e8aaadd3812c025b6275c1265ef9ca68891454dcd5fec708",
+      "original": false
+    },
+    {
+      "name": "far-front-foot",
+      "file": "far-front-foot.png",
+      "sha256": "81cf7a59add0157df107e0aaf81fc844f424d56acc68ec4382ac4bcf1b6121e3",
+      "original": true
+    },
+    {
+      "name": "near-rear-upper",
+      "file": "near-rear-upper.png",
+      "sha256": "1dc6b6d164461d2e094e733e9651846cdb76bf9e900630dc8dd7dcfd5c325616",
+      "original": false
+    },
+    {
+      "name": "near-rear-lower",
+      "file": "near-rear-lower.png",
+      "sha256": "e9094fd1b738c2aaa0ec240e0be132dd3e219ad6fd218f3287fea34caf3e74ae",
+      "original": false
+    },
+    {
+      "name": "near-rear-foot",
+      "file": "near-rear-foot.png",
+      "sha256": "da45d64c7b19e961bdbb21e30c1ffacb96dc4f32c0db82caf43738596160f275",
+      "original": true
+    },
+    {
+      "name": "near-middle-upper",
+      "file": "near-middle-upper.png",
+      "sha256": "08839ff94627dc77627628959f2fac7a4e391e70e88cfeca8df8136e06934cc1",
+      "original": false
+    },
+    {
+      "name": "near-middle-lower",
+      "file": "near-middle-lower.png",
+      "sha256": "ea55ca65851b266a9b9196c2ba6b952ce1b8aae10db06ca86fc218c3a9588e80",
+      "original": false
+    },
+    {
+      "name": "near-middle-foot",
+      "file": "near-middle-foot.png",
+      "sha256": "0e588d45f84c67e4c2ec4d2ec29a997059d1e9e1c6c7bb9bb3976b91bd3560f8",
+      "original": true
+    },
+    {
+      "name": "near-front-upper",
+      "file": "near-front-upper.png",
+      "sha256": "9ffe6b6d89f020a53cb01ba48ac4273e60fb7ea99d7d1a61831b01979d884d18",
+      "original": false
+    },
+    {
+      "name": "near-front-lower",
+      "file": "near-front-lower.png",
+      "sha256": "b1d746d7df3645404ea12e5c4566d5d987a26d0e306e7b891b990a4bbe45dad9",
+      "original": false
+    },
+    {
+      "name": "near-front-foot",
+      "file": "near-front-foot.png",
+      "sha256": "997a1f48fa08ea712370627bfb26613d74c73c654c36db9c9c89783cc3738765",
+      "original": true
+    },
+    {
+      "name": "body",
+      "file": "body.png",
+      "sha256": "35c7689da2aa60980feb4f4165c44e51681622d9971db11afa11fbec74506c05",
+      "original": true
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "3c34f5aa67f90f68745a74c78549e1619429e7eed8b8bfdac008c045523f89d2",
+      "original": true
+    }
+  ],
+  "source": "Blender5.2 original-bound six-leg Spindle alternating tripod gait, fixed bone lengths and planted low head lunge. Original carapace, head/eyes, tails/spikes and four visible feet retain canonical RGBA; own hidden seams/two occluded far feet completed. Clean owned body masks prevent residual extra legs. Dedicated coil warning, backline vault, hit and death owners preserved. All48/all-action continuous native normal-play acceptance pending.",
+  "groundY": 431.5,
+  "decodedBytes": 215040,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}

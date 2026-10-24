@@ -574,9 +574,9 @@ export function battlefieldSupplyPlacementCheck({
   const def = battlefieldSupplyDefinition(selectedKind, v100SupportId);
   if (!def) return { ok: false, reason: "未対応の戦場物資です" };
   if (v100SupportId !== undefined && !Number.isFinite(scrap)) return { ok: false, reason: "戦場資源が無効です" };
-  if (!running) return { ok: false, reason: "作戦開始後に配置できます" };
+  if (!running) return { ok: false, reason: "戦闘開始後に配置できます" };
   if (paused) return { ok: false, reason: "一時停止中は配置できません" };
-  if (over) return { ok: false, reason: "作戦終了後は配置できません" };
+  if (over) return { ok: false, reason: "戦闘終了後は配置できません" };
   if (cooldown > 0) return { ok: false, reason: `戦場物資を再準備中です（${Math.ceil(cooldown)}秒）` };
   if (scrap < def.cost) return { ok: false, reason: "スクラップが不足しています" };
   const internalLane = normalizedInternalLane(lane, y, laneCenters);
@@ -890,9 +890,9 @@ export function resolveContainerLanding({ fighters = [], lane, x }) {
 }
 
 export function resolveFieldSupportPlacement({ running, paused, over, rage, cost, kind, lane, x, strikeCooldown = 0, supports = [], containers = [] }) {
-  if (!running) return { ok: false, reason: "作戦開始後に配置できます", rage, x };
+  if (!running) return { ok: false, reason: "戦闘開始後に配置できます", rage, x };
   if (paused) return { ok: false, reason: "一時停止中は配置できません", rage, x };
-  if (over) return { ok: false, reason: "作戦終了後は配置できません", rage, x };
+  if (over) return { ok: false, reason: "戦闘終了後は配置できません", rage, x };
   if (rage < cost) return { ok: false, reason: "レイジが不足しています", rage, x };
   if (kind === "airstrike" && strikeCooldown > 0) return { ok: false, reason: "航空支援は再装填中です", rage, x };
   if (kind === "barrel" && supports.some((support) => support.kind === "barrel" && support.lane === lane)) {
@@ -920,9 +920,9 @@ export function createEmergencySupportRuntime(v100 = false) {
 
 export function airstrikePlacementCheck({ running, paused, over, supportGauge, lane, x, y, laneCenters = LANE_Y, runtime = createEmergencySupportRuntime() }) {
   if (runtime.v100 && !Number.isFinite(supportGauge)) return { ok: false, reason: "支援ゲージが無効です" };
-  if (!running) return { ok: false, reason: "作戦開始後に要請できます" };
+  if (!running) return { ok: false, reason: "戦闘開始後に要請できます" };
   if (paused) return { ok: false, reason: "一時停止中は要請できません" };
-  if (over) return { ok: false, reason: "作戦終了後は要請できません" };
+  if (over) return { ok: false, reason: "戦闘終了後は要請できません" };
   if (runtime.phase !== "idle") return { ok: false, reason: "航空支援を実行中です" };
   if ((runtime.cooldownRemaining ?? 0) > 0) return { ok: false, reason: `航空支援を再準備中です（${Math.ceil(runtime.cooldownRemaining)}秒）` };
   if (supportGauge < vehicleAbilityDefinition("vehicle-airstrike", runtime.v100).battleCost) return { ok: false, reason: "支援ゲージが不足しています" };
@@ -1026,9 +1026,9 @@ export function createCrawlerAbilityRuntime(initialCharge = CRAWLER_BARRAGE_DEF.
 
 export function requestCrawlerBarrage({ running, paused, over, runtime, supportGauge = 0 }) {
   if (runtime.v100 && !Number.isFinite(supportGauge)) return { ok: false, reason: "支援ゲージが無効です", runtime, supportGauge };
-  if (!running) return { ok: false, reason: "作戦開始後に使用できます", runtime, supportGauge };
+  if (!running) return { ok: false, reason: "戦闘開始後に使用できます", runtime, supportGauge };
   if (paused) return { ok: false, reason: "一時停止中は使用できません", runtime, supportGauge };
-  if (over) return { ok: false, reason: "作戦終了後は使用できません", runtime, supportGauge };
+  if (over) return { ok: false, reason: "戦闘終了後は使用できません", runtime, supportGauge };
   if (runtime.phase !== "ready") return { ok: false, reason: "一斉掃射は再装填中です", runtime, supportGauge };
   const cost = vehicleAbilityDefinition("vehicle-barrage", runtime.v100).battleCost;
   if (supportGauge < cost) return { ok: false, reason: "支援ゲージが不足しています", runtime, supportGauge };

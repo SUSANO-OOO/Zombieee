@@ -1,0 +1,58 @@
+{
+  "at": "2026-10-15T09:08:55.461Z",
+  "mode": "built-in",
+  "intent": "edit",
+  "useCase": "reference-character-consistency",
+  "sceneId": "hospital-courtyard",
+  "actionAuthority": {
+    "source": "app/v100CreditsFilm.js",
+    "actors": [
+      "unit-paisen",
+      "unit-kumaverson",
+      "unit-babayaga",
+      "unit-mrs-chiha",
+      "unit-zakimiya",
+      "unit-mayo-chan"
+    ],
+    "description": "病院で進行の止まった腕を確かめる。仲間たちは医師の説明を聞き、次の診察を待つ。"
+  },
+  "target": "public/art/v100/story-r5/cuts/ending-medical-progress.webp",
+  "targetSha256": "28737f0a1326a81c46054807972ed27022dcc3a4311a2ee6f06f0c64cd275689",
+  "prompt": "Edit image 1, the existing 1280x720 detailed painted game illustration. Paisen is the short-haired adult man wearing the navy T-shirt on the LEFT behind the patient's horizontal forearm, listening attentively to the doctor. Only his face, hair, ears, neck and shirt may change; legs/shorts are not visible and must not be invented. Keep his attentive sideward gaze and seated posture. Preserve the patient arm, doctor in foreground, the long-haired man in a dirty pale shirt, the suited man, the woman, elder, dog and every other person exactly. Images 2-4 are the Producer's authoritative photos of the exact adult person Paisen must resemble. Image 5 is his already registered illustrated identity: reproduce that SAME person, face and outfit faithfully in this scene. Match short black hair, broad rounded cheeks/jaw, natural dark eyes and brows, photographed nose/lips/ears and moderately stocky build. Use the plain navy-purple crew-neck T-shirt and loose white knee-length shorts from the photos, with practical dark low-top shoes only where feet are visible. Do not retain the old sharp-jawed generic anime-hero face or turn him into a different actor. Adapt the accurate photo likeness into the image's richly detailed inked/painted post-apocalyptic game style, perspective, lighting and shadows. Keep the head size/location and its natural neck-to-collar connection; no shifted neck, added limbs or camera-facing stare. Preserve every other person and prop, original action, composition, camera viewpoint, framing and background. No text, logos, symbols or added people/objects. All pixels outside Paisen's figure should be unchanged.",
+  "references": [
+    {
+      "path": "output/issue177-paisen-producer-photos-r1/codex-clipboard-3b180a11-73f9-46ab-9b5e-73e2f1edc53e.png",
+      "sha256": "bfa5a71f1a1cb294ab583e51ac6e343eac6e6fd9d3e996fcd24a50cbf6a74def"
+    },
+    {
+      "path": "output/issue177-paisen-producer-photos-r1/codex-clipboard-25d36678-020f-4fca-9e8f-0f4989df7f37.png",
+      "sha256": "b93dfa892a588013f8bdc9ca1670ccb3874f47ce17eabe585a96f00e60349ee7"
+    },
+    {
+      "path": "output/issue177-paisen-producer-photos-r1/codex-clipboard-f7346372-9c4e-400f-8cc9-ccef2931291c.png",
+      "sha256": "8309ecff99eadc5f9e5ac6cdf23fb536e5930931c9acdba7518e2f3f67d947c4"
+    },
+    {
+      "path": "assets/source/v177/paisen/paisen-identity-r2.png",
+      "sha256": "a1d5517fc1a500c4e949b0ec6c522efa0404ebd4ddd3b548994713a918983257"
+    }
+  ],
+  "runtimeConnected": false,
+  "visualReviewed": false,
+  "wholeGameAccepted": false,
+  "targetWidth": 1280,
+  "targetHeight": 720,
+  "generatedOriginal": "C:/Users/okait/.codex/generated_images/01a12578-4773-7873-a12e-fb0962b19020/exec-35c1933e-7a1a-42b0-817c-e6bac4424661.png",
+  "generatedCopy": "assets/source/v177/paisen/credits/hospital-courtyard-photo-r2.generated.png",
+  "generatedSha256": "dcec3e565e976a28ce82063901ec78040b1fff965ebfbb5a78d94969d5260887",
+  "generatedSize": {
+    "width": 1672,
+    "height": 941
+  },
+  "generatedReviewed": true,
+  "generatedReview": "Viewed the built-in output; source candidate only. Preserve original outside a registered Paisen region before runtime adoption.",
+  "producerAccepted": false,
+  "localized": "assets/source/v177/paisen/credits/hospital-courtyard-photo-r2.localized-r1.png",
+  "localizedSha256": "4b46f36dd32f3166d355f2c1cd3dc22365841034cece301ec5ee023d43ad78d0",
+  "localizationProvenance": "assets/source/v177/paisen/credits/hospital-courtyard-photo-r2.localized-r1.provenance.json"
+}
