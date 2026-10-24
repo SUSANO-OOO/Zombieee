@@ -1,3 +1,4 @@
+import {V105_MEDIA_RETIREMENTS} from '../scripts/v105-five-corrections-asset-contract.mjs';
 import {V177_PAISEN_STORY_REPLACEMENTS, V177_PAISEN_STORY_EXISTING_REPLACEMENTS} from '../scripts/v177-paisen-story-asset-contract.mjs';
 import { V177_PAISEN_CREDITS_REPLACEMENTS } from '../scripts/v177-paisen-credits-asset-contract.mjs';
 import { V177_PAISEN_ASSET_ADDITIONS, V177_PAISEN_RETIRED_ASSETS, V177_PAISEN_LEGACY_RETIREMENTS } from '../scripts/v177-paisen-asset-contract.mjs';
@@ -15,9 +16,9 @@ const expectedUpgradeDeltas = [
   // Count/bytes describe downloads TO THIS CANDIDATE, not old release totals.
   // The twelve new RP voices add exactly66,509 bytes inside the audio bundle.
   // Immutable old SHA/680-or681 asset totals below remain unchanged.
-  ["1.0.1", "634f8de4b0fb15df902a7dd5983ea94237cfea9d", 154, 52121354, 96],
-  ["1.0.2", "cd246a3d8e93b69d8cb6b370d40f28924a0d86b6", 153, 52100402, 95],
-  ["1.0.3", "99f9c193ab1e35531db39225c839138cdb1c33cd", 153, 52100402, 95],
+  ["1.0.1", "634f8de4b0fb15df902a7dd5983ea94237cfea9d", 159, 52181969, 98],
+  ["1.0.2", "cd246a3d8e93b69d8cb6b370d40f28924a0d86b6", 158, 52161017, 97],
+  ["1.0.3", "99f9c193ab1e35531db39225c839138cdb1c33cd", 158, 52161017, 97],
 ];
 for (const [version, sha, count, bytes, network] of expectedUpgradeDeltas) {
   test(`the frozen installed ${version} pack downloads exactly the R9, score and sprite delta`, () => {
@@ -34,8 +35,8 @@ for (const [version, sha, count, bytes, network] of expectedUpgradeDeltas) {
     assert.equal(expected.additions, count);
     assert.equal(changed.reduce((sum, asset) => sum + asset.bytes, 0), bytes);
     assert.equal(expected.bytes, bytes);
-    assert.equal(changed.filter(asset => asset.bundlePath).length, 59);
-    assert.equal(expected.bundled, 59);
+    assert.equal(changed.filter(asset => asset.bundlePath).length, 62);
+    assert.equal(expected.bundled, 62);
     assert.deepEqual(changed.filter(asset=>asset.audioId==='weapon-crossbow-release').map(record),[{
       path:'/audio/v104/combat/crossbow-release.mp3',bytes:3198,
       hash:'sha256-b9668da84ccd0395e3f47a34ba771de7313a6d0d2f4d9e50c7b63a7cf4077371',
@@ -88,6 +89,7 @@ test("the frozen 0.9.9.5 delta includes the source-bound sprite repairs and the 
     "/art/v090/characters/zakimiya-battle-r1.png",
     "/art/v0995/enemies/anchor-bloom-battle-v2.png",
     ...V177_PAISEN_LEGACY_RETIREMENTS.map(asset=>asset.path),
+    V105_MEDIA_RETIREMENTS[0].path,
   ].sort());
   assert.deepEqual(expected.replaced,old.assets.filter(asset=>next.get(asset.path)?.hash!==asset.hash).map(asset=>asset.path).sort());
   assert.equal(expected.additions,changed.length);assert.equal(expected.bytes,changed.reduce((sum,asset)=>sum+asset.bytes,0));

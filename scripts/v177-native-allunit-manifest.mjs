@@ -37,7 +37,9 @@ export function validateManifest(forms=FORM_BINDINGS,shards=SHARDS){
   for(let i=0;i<forms.length;i++){
     assert.deepEqual(forms[i],FORM_BINDINGS[i],'Capture must use the actual renderer identity');
     assert.ok(OWNER_KINDS.includes(forms[i].owner));
-    assert.match(forms[i].atlas.path??'',/^\/art\/v100\/joints\/.+\.webp$/u);
+    const atlasPath=forms[i].atlas.path??'';
+    if(forms[i].form==='crazy-king')assert.equal(atlasPath,'/art/v105/joints/crazy-king-skirt-r1.webp');
+    else assert.match(atlasPath,/^\/art\/v100\/joints\/.+\.webp$/u);
   }
   assert.deepEqual(shards,SHARDS);assert.ok(shards.every(s=>s.forms.length===4));
   assert.equal(new Set(shards.flatMap(s=>s.forms)).size,48);

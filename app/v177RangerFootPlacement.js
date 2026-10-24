@@ -9,6 +9,8 @@ const STEP_SECONDS = .22;
 const STOP_LIFT = 12;
 const CENTER = 240;
 const REST_OFFSET = [-24, 24];
+const restOffset = (leg, index) => leg.restOffset ?? REST_OFFSET[index];
+const lowerBob = (rig, phase, settle) => rig.bob ? rig.bob(phase, settle) : v177RangerLowerBob(phase, settle);
 const direction = value => value === 'left' || value === -1 ? -1 : 1;
 
 function stepArc(from, peak, progress, arc = Math.sin(Math.PI * progress)) {
@@ -30,7 +32,7 @@ function naturalFoot(rig, leg, phase, settle) {
 function worldX(local, root, facing, scale) { return root + facing * scale * (local - CENTER); }
 function localX(value, root, facing, scale) { return CENTER + facing * (value - root) / scale; }
 function restFeet(rig, root, facing, scale) {
-  return rig.legs.map((leg, i) => ({x:worldX(leg.footCenter + REST_OFFSET[i], root, facing, scale), height:0, angle:0, mode:'plant'}));
+  return rig.legs.map((leg, i) => ({x:worldX(leg.footCenter + restOffset(leg,i), root, facing, scale), height:0, angle:0, mode:'plant'}));
 }
 function targets(rig, feet, root, facing, scale) {
   return feet.map((foot, i) => [localX(foot.x, root, facing, scale), rig.legs[i].groundAnkle - foot.height, foot.angle]);
@@ -39,7 +41,7 @@ function targets(rig, feet, root, facing, scale) {
 function reachable(rig, foot, i, input, offset) {
   const leg=rig.legs[i],x=localX(foot.x,input.root,input.facing,input.scale)-leg.hip[0];
   const y=leg.groundAnkle-foot.height-leg.hip[1];
-  const bob=v177RangerLowerBob(input.phase+offset,input.settle??0);
+  const bob=lowerBob(rig,input.phase+offset,input.settle??0);
   // Eligibility for reflecting the body uses the original IK's strict bounds.
   // Include the settled body height: an ankle just reachable during the bob
   // must not overextend as that same planted pose finishes settling.
@@ -56,7 +58,7 @@ function helperX(from,to,u,vx,duration) {
 }
 function groundLanding(rig,leg,sign) {
   const radius=leg.upperLength+leg.lowerLength-1.2,vertical=leg.groundAnkle-leg.hip[1]+1.2;
-  const maxDx=Math.sqrt(radius*radius-vertical*vertical),goal=leg.footCenter+sign*rig.spanPx*.5;
+  const maxDx=Math.sqrt(Math.max(0,radius*radius-vertical*vertical)),goal=leg.footCenter+sign*rig.spanPx*.5;
   return Math.max(leg.hip[0]-maxDx,Math.min(leg.hip[0]+maxDx,goal));
 }
 function makeFlight(foot,previous,input,i,localGoal,kind,nominalEnd=null,duration=STEP_SECONDS) {
@@ -84,14 +86,14 @@ function finishFlight(foot,previous,input,i,rig,stopping) {
   // postponing the landing already visible to the player.
   if(flight.goalFacing!==input.facing){
     flight={...flight,retargeted:true,xAt:previous.time,fromX:foot.x,vx:foot.vx??0,
-      goalLocal:rig.legs[i].footCenter+REST_OFFSET[i],goalFacing:input.facing};
+      goalLocal:rig.legs[i].footCenter+restOffset(rig.legs[i],i),goalFacing:input.facing};
   }
   // Retarget the X segment once, retaining the original height curve and
   // absolute landing deadline. A late stop lands first and corrects afterwards.
   if(stopping&&flight.kind==='move'&&!flight.retargeted&&flight.endAt-previous.time>=.12){
     flight={...flight,retargeted:true,at:previous.time,endAt:Math.min(flight.endAt,previous.time+STEP_SECONDS),
       fromHeight:foot.height,fromAngle:foot.angle,xAt:previous.time,fromX:foot.x,vx:foot.vx??0,
-      goalLocal:rig.legs[i].footCenter+REST_OFFSET[i],goalFacing:input.facing};
+      goalLocal:rig.legs[i].footCenter+restOffset(rig.legs[i],i),goalFacing:input.facing};
   }
   return sampleFlight(foot,input,flight);
 }
@@ -108,7 +110,7 @@ function stopping(rig,previous,input) {
   }
   const feet=previous.feet.map((foot,i)=>{
     if(foot.flight)return finishFlight(foot,previous,input,i,rig,true);
-    if(i===first){const flight=makeFlight(foot,previous,input,i,rig.legs[i].footCenter+REST_OFFSET[i],'stop');return sampleFlight(foot,input,flight);}
+    if(i===first){const flight=makeFlight(foot,previous,input,i,rig.legs[i].footCenter+restOffset(rig.legs[i],i),'stop');return sampleFlight(foot,input,flight);}
     return {...foot,mode:foot.height>0?'swing':'plant'};
   });
   return {time:input.time,root:input.root,facing:input.facing,scale:input.scale,phase:input.phase,
@@ -132,14 +134,32 @@ function moving(rig,previous,input) {
   const delta=phase-previous.phase,travelSign=Math.abs(delta)>1e-9?Math.sign(delta):previous.travelSign||1;
   const hasFlight=previous.feet.some(foot=>foot.flight);
   const offset=resumed&&!hasFlight?resumedOffset(rig,previous,input,travelSign):previous.offset;
+  let swingOwner=-1;
+  if(rig.phaseOwned){
+    swingOwner=previous.feet.findIndex(foot=>foot.flight?foot.flight.endAt>time+1e-10:foot.height>1e-7);
+    if(swingOwner<0){
+      const candidates=previous.feet.map((foot,i)=>{
+        const q=wrap(phase+offset+rig.legs[i].offset),unreachable=!reachable(rig,foot,i,input,offset);
+        return{i,score:(q>rig.stanceFraction?2:0)+(unreachable?1:0),q};
+      }).filter(row=>row.score>0).sort((a,b)=>b.score-a.score||b.q-a.q||a.i-b.i);
+      swingOwner=candidates[0]?.i??-1;
+    }
+  }
   const feet=previous.feet.map((foot,i)=>{
     if(foot.flight)return finishFlight(foot,previous,input,i,rig,false);
+    if(rig.phaseOwned&&i!==swingOwner)return{...foot,mode:'plant',flight:null};
     const leg=rig.legs[i],absolute=phase+offset+leg.offset,q=wrap(absolute),local=localX(foot.x,root,facing,scale);
-    const vertical=leg.groundAnkle-leg.hip[1]-v177RangerLowerBob(phase+offset,input.settle??0);
+    const vertical=leg.groundAnkle-leg.hip[1]-lowerBob(rig,phase+offset,input.settle??0);
     const toeOff=Math.hypot(local-leg.hip[0],vertical)>leg.upperLength+leg.lowerLength-1.2;
     // Private boundary samples must not erase the landing before this paint.
     if(foot.landedPaintTime===input.paintTime&&reachable(rig,foot,i,input,offset))return {...foot,height:0,angle:0,mode:'plant',flight:null};
-    if(foot.height===0&&!toeOff)return {...foot,mode:'plant',flight:null};
+    const supportInFlight=previous.feet[1-i].flight&&previous.feet[1-i].flight.endAt>time+1e-10;
+    // Other bipeds share this planner but own a phase-scheduled gait. Start
+    // their swing before the support runs out of reach, and never lift a
+    // second boot while the first has an outstanding landing. Ranger keeps
+    // its separately accepted reach-driven continuous-mesh stride unchanged.
+    if(rig.phaseOwned&&supportInFlight)return {...foot,mode:'plant',flight:null};
+    if(foot.height===0&&!toeOff&&(!rig.phaseOwned||q<=rig.stanceFraction))return {...foot,mode:'plant',flight:null};
     const nominalEnd=travelSign>0?Math.floor(absolute)+1:Math.floor(absolute)+(q<=rig.stanceFraction?-1:0)+rig.stanceFraction;
     const rate=time>previous.time?Math.abs(delta/(time-previous.time)):0;
     // Small real drift still calls for a short repositioning step, rather

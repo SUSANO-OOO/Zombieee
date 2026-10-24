@@ -327,7 +327,7 @@ test('new source heads do not wait behind a previous head and all original full 
 
 test('exact reviewed Kuma motion, Ranger pool and first-fixed-paint QA target Draft dependencies and preserve every full fallback',()=>{
  const ranger='app/v177RangerLowerPaint.js',kuma='app/v177WeaponChoreography.js',receipts='scripts/v177-ranger-performance-receipts.mjs';
- const blob=file=>execFileSync('git',['hash-object',file],{encoding:'utf8',windowsHide:true}).trim();
+ const blob=file=>execFileSync('git',['rev-parse','e22b134a38409b9d2f86660ee351e616c28fbf44:'+file],{encoding:'utf8',windowsHide:true}).trim();
  for(const paths of [[kuma],[ranger,kuma],[receipts],[ranger,kuma,receipts]]){
   const sourceBlobs=Object.fromEntries(paths.map(file=>[file,blob(file)])),options={draft:true,sourceBlobs},scope=ciChangeScope(paths,options);
   assert.equal(scope.full,false);assert.equal(scope.normal,paths.includes(kuma)||paths.includes(ranger));

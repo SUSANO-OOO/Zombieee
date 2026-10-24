@@ -274,9 +274,9 @@
     {
       "name": "pelvis",
       "bone": "pelvis",
-      "file": "pelvis.png",
+      "file": "../../../v105/crazy-king/pelvis-restored-r1.png",
       "original": false,
-      "sha256": "6fd357b7f66896b34aef9dbb15d346096baa4196ca21cfdce60f5832d4a64e44",
+      "sha256": "abf8fcd72eb0123fcdb9b5cf7534673d8134cf7f0cc0ad70aa54b939e8cb9dd7",
       "studyCell": 1,
       "sourceAxis": [
         [
@@ -298,7 +298,8 @@
           267
         ]
       ],
-      "targetWidth": 77
+      "targetWidth": 77,
+      "clothingRestoration": "assets/source/v105/crazy-king/provenance.json"
     },
     {
       "name": "far-thigh",

@@ -1,0 +1,53 @@
+name: Five Product Corrections Capture
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+    paths:
+      - 'app/**'
+      - 'public/art/v105/**'
+      - 'public/audio/v105/**'
+      - 'scripts/v105-five-corrections-capture.mjs'
+      - '.github/workflows/five-corrections-capture.yml'
+permissions:
+  contents: read
+concurrency:
+  group: five-corrections-${{ github.event.pull_request.head.sha }}
+  cancel-in-progress: false
+jobs:
+  capture:
+    if: github.head_ref == 'codex/177-five-corrections-v105'
+    runs-on: macos-15-intel
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        scope: [desktop, mobile390, mobile340]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm ci --prefix scripts/pwa-native-runtime
+      - run: node scripts/pwa-native-runtime/node_modules/playwright/cli.js install webkit
+      - run: npm run build
+        env:
+          GITHUB_PAGES_RELEASE_SHA: ${{ github.event.pull_request.head.sha }}
+      - name: Record changed real motions, abilities, Japanese names and actual game sound
+        run: node scripts/v105-five-corrections-capture.mjs
+        env:
+          V177_EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          V105_CAPTURE_SCOPE: ${{ matrix.scope }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v105-five-corrections-${{ matrix.scope }}
+          path: outputs/v105-five-corrections/${{ matrix.scope }}
+          if-no-files-found: error
+          retention-days: 14

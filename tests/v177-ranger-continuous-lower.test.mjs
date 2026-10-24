@@ -466,7 +466,7 @@ test('actual RGBA draw finishes stop steps across actor replacements and repeate
 test('actual turning paint keeps the body reflection, world feet and sampled muzzle on the same facing',async()=>{
   const source=await readFile('app/AshfallGame.tsx','utf8');
   const tree=ts.createSourceFile('game.tsx',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX),branches=[];
-  const visit=node=>{if(ts.isIfStatement(node)&&node.expression.getText(tree)==='jointPose?.rangerFeet')branches.push(node.getText(tree));ts.forEachChild(node,visit);};
+  const visit=node=>{if(ts.isIfStatement(node)&&node.expression.getText(tree)==='jointPose?.rangerFeet||jointPose?.bipedFeet')branches.push(node.getText(tree));ts.forEachChild(node,visit);};
   visit(tree);assert.equal(branches.length,1);
   const facingForPaint=new Function('jointPose','direction','frame',branches[0]+';return {direction,frame};');
   for(const[width,height]of[[1280,720],[844,390],[844,340]])for(const start of ['right','left']){
@@ -511,7 +511,7 @@ test('an ability activated before a simulation tick keeps its own aim through pr
   const calls=[],branches=[];
   const visit=node=>{
     if(ts.isExpressionStatement(node)&&node.getText(tree).startsWith('jointPose=v177RangerFootPlan('))calls.push(node.getText(tree));
-    if(ts.isIfStatement(node)&&node.expression.getText(tree)==='jointPose?.rangerFeet')branches.push(node.getText(tree));
+    if(ts.isIfStatement(node)&&node.expression.getText(tree)==='jointPose?.rangerFeet||jointPose?.bipedFeet')branches.push(node.getText(tree));
     ts.forEachChild(node,visit);
   };visit(tree);assert.equal(calls.length,1);assert.equal(branches.length,1);
   const prepaint=new Function('jointPose','renderKind','f','options','size','direction','v177RangerFootPlan',calls[0]+';return jointPose;');

@@ -365,15 +365,11 @@ const MANUAL_ABILITY_SPECIAL_CLIPS = {
 
 const REMAINING_MANUAL_ABILITY_SPECIAL_CLIPS = {
   brawler: clip([
-    frame("attack-a", .08, [{ type: "fist-combo-brace", at: .02 }]),
-    frame("attack-b", .035, [{ type: "fist-combo-hit", at: .025, hitIndex: 0 }]),
-    frame("attack-a", .035, [{ type: "fist-combo-hit", at: .025, hitIndex: 1 }]),
-    frame("attack-b", .035, [{ type: "fist-combo-hit", at: .025, hitIndex: 2 }]),
-    frame("attack-a", .035, [{ type: "fist-combo-hit", at: .025, hitIndex: 3 }]),
-    frame("attack-b", .04, [{ type: "fist-combo-finish", at: .035, hitIndex: 4 }]),
-    frame("attack-a", .06, [{ type: "fist-combo-recover", at: .02 }]),
-    frame("idle", .08, [{ type: "fist-combo-ready", at: .08 }]),
-  ], { movement: true }),
+    frame("attack-a", .26, [{ type: "fist-wave-brace", at: .02 }]),
+    frame("attack-b", .065, [{ type: "fist-wave-release", at: 0 }]),
+    frame("attack-a", .355, [{ type: "fist-wave-recover", at: 0 }]),
+    frame("idle", .1, [{ type: "fist-wave-ready", at: .1 }]),
+  ]),
   ranger: clip([
     frame("attack-a", .28, [{ type: "precision-kneel", at: .02 }]),
     frame("attack-b", .22, [{ type: "precision-lock", at: .11 }]),

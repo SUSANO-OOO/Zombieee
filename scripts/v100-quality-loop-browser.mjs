@@ -461,11 +461,11 @@ for (const engine of engines) {
       }
       row.abilityText = await page.evaluate(() => globalThis.__PLAYER_ABILITY_TEXT_PROOF__);
       assert.ok(row.native.inputs.some(input => input.action === 'ability'), 'A native ability input was exercised');
-      assert.ok(row.abilityReceipts.some(receipt => ['active-start', 'impact'].includes(receipt.eventType)), 'A production ability actually took effect');
+      assert.ok(row.abilityReceipts.some(receipt => ['active-start', 'impact', 'fist-wave-release'].includes(receipt.eventType)), 'A production ability actually took effect');
       assert.ok(row.abilityText.observedDraws > 0, 'Native battle canvas was observed');
       assert.ok(row.abilityText.numericDraws > 0, 'Numerical battle feedback remains visible');
       assert.ok(row.abilityText.observedBanners > 0, 'Transient mission banners were observed throughout native battle');
-      assert.deepEqual(row.abilityText.forbidden, [], 'No player ability names appear in the battlefield or message banner');
+      assert.deepEqual(row.abilityText.forbidden, [], 'Only actual-start owner-bound short names are allowed; old banners and labels remain forbidden');
       if (await page.locator(".v100-result-panel").isVisible()) {
         row.nativeResult = true;
         const summary = page.locator(".v100-battle-report summary");

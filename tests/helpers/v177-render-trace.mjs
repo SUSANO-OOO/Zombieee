@@ -47,7 +47,7 @@ export function jointLegacyInterpolationControlDigest(kinds){
   // cells are byte-identical; its later continuous upper rig is tested through
   // actual paint separately. Never regenerate this pre-change digest.
   for(const [kind,atlas]of original)V177_JOINT_ATLASES[kind]=kind==='mayo-chan'?JSON.parse(gunzipSync(bytes))
-    :{...(kind==='brawler'?V177_MELEE_JOINT_ATLASES.brawler:atlas),legConstraints:undefined,
+    :{...(['brawler','crazy-king'].includes(kind)?V177_MELEE_JOINT_ATLASES[kind]:atlas),legConstraints:undefined,
       ...(kind==='ranger'?{upperRig:undefined}:{})};
   return jointRenderTraceDigest(kinds,{legacySettleRows:true,legacyFirearmUpper:true});
  }finally{for(const [kind,atlas]of original)V177_JOINT_ATLASES[kind]=atlas;}

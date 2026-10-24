@@ -1,3 +1,4 @@
+import {applyV105Source,V105_NEW_RUNTIME_ASSETS,V105_MEDIA_ADDITIONS,V105_MEDIA_RETIREMENTS} from './v105-five-corrections-asset-contract.mjs';
 import {V177_PAISEN_STORY_REPLACEMENTS, V177_PAISEN_STORY_ASSETS, V177_PAISEN_STORY_EXISTING_REPLACEMENTS, V177_PAISEN_STORY_EXISTING_ASSETS} from './v177-paisen-story-asset-contract.mjs';
 import { V177_PAISEN_CREDITS_REPLACEMENTS, V177_PAISEN_CREDITS_ASSETS } from './v177-paisen-credits-asset-contract.mjs';
 import { V177_PAISEN_ASSET_ADDITIONS, V177_PAISEN_RETIRED_ASSETS, V177_PAISEN_LEGACY_RETIREMENTS } from './v177-paisen-asset-contract.mjs';
@@ -13,7 +14,7 @@ import{applyV104Source,V104_MEDIA_ADDITIONS,V104_AUDIO_RETIREMENTS}from'./v104-c
 // repaired texture must therefore be downloaded in full, alongside R9 and the
 // opening score. The earlier no-media 1.0.3 contract cannot cover this update.
 const sourceReplacements = Object.freeze([...V177_SPRITE_REPLACEMENTS, ...V177_PAISEN_CREDITS_REPLACEMENTS, ...V177_PAISEN_STORY_EXISTING_REPLACEMENTS]);
-const replacements = Object.freeze([...sourceReplacements, ...V177_PAISEN_RETIRED_ASSETS, ...V104_AUDIO_RETIREMENTS].map(asset => asset.path).sort());
+const replacements = Object.freeze([...sourceReplacements, ...V177_PAISEN_RETIRED_ASSETS, ...V104_AUDIO_RETIREMENTS,V105_MEDIA_RETIREMENTS[0]].map(asset => asset.path).sort());
 const additions = Object.freeze([
   ...V100_R9_ASSET_ADDITIONS,
   ...V100_OPENING_ASSET_ADDITIONS,
@@ -23,13 +24,13 @@ const additions = Object.freeze([
   ...V177_PAISEN_ASSET_ADDITIONS,
   ...V177_PAISEN_CREDITS_ASSETS,
   ...V177_PAISEN_STORY_EXISTING_ASSETS,
-]);
+].map(applyV105Source).concat(V105_NEW_RUNTIME_ASSETS));
 function contract(assets, distinct, changed) {
   const bundled = changed.filter(asset => asset.path.startsWith("/audio/")).length;
   return Object.freeze({
     assets, distinct, replaced: replacements,
     sourceReplacements,
-    sourceRetirements: Object.freeze([...V177_PAISEN_RETIRED_ASSETS,...V104_AUDIO_RETIREMENTS]),
+    sourceRetirements: Object.freeze([...V177_PAISEN_RETIRED_ASSETS,...V104_AUDIO_RETIREMENTS,V105_MEDIA_RETIREMENTS[0]]),
     changed: Object.freeze(changed), additions: changed.length,
     bytes: changed.reduce((sum, asset) => sum + asset.bytes, 0),
     bundled, network: changed.length - bundled + Number(bundled > 0),
@@ -39,10 +40,10 @@ export const V177_INSTALLED_ASSET_CONTRACT = Object.freeze({
   "0.9.9.5": Object.freeze({
     assets: 415, distinct: 413,
     replaced: Object.freeze(['/art/v080/characters/cards/kumaverson-formation-card-r2.webp', ...V177_SPRITE_REPLACEMENTS
-      .filter(asset => ['/v060/','/v090/','/v090-prototypes/','/v0995/'].some(version=>asset.path.includes(version))).map(asset => asset.path), ...V177_PAISEN_LEGACY_RETIREMENTS.map(asset=>asset.path)].sort()),
+      .filter(asset => ['/v060/','/v090/','/v090-prototypes/','/v0995/'].some(version=>asset.path.includes(version))).map(asset => asset.path), ...V177_PAISEN_LEGACY_RETIREMENTS.map(asset=>asset.path),V105_MEDIA_RETIREMENTS[0].path].sort()),
     sourceReplacements: Object.freeze(V177_SPRITE_REPLACEMENTS
       .filter(asset => ['/v060/','/v090/','/v090-prototypes/','/v0995/'].some(version=>asset.path.includes(version)))),
-    sourceRetirements: V177_PAISEN_LEGACY_RETIREMENTS,
+    sourceRetirements: Object.freeze([...V177_PAISEN_LEGACY_RETIREMENTS,V105_MEDIA_RETIREMENTS[0]]),
     additions: V100_RELEASE_ASSET_CONTRACT.additionsFromV0995,
     bytes: V100_RELEASE_ASSET_CONTRACT.bytesFromV0995,
     bundled: V100_RELEASE_ASSET_CONTRACT.bundledAudioAdditionsFromV0995,
@@ -65,6 +66,8 @@ export function v177InstalledSourceReplacementsMatch(oldManifest, candidateManif
   return expected.sourceReplacements.every(asset=>matches(oldByPath.get(asset.path),asset.previous)
     &&matches(nextByPath.get(asset.path),asset.next))
     && expected.sourceRetirements.every(asset=>matches(oldByPath.get(asset.path),asset) && !nextByPath.has(asset.path))
+    && V105_MEDIA_ADDITIONS.every(asset=>matches(nextByPath.get(asset.path),asset))
+    && V105_MEDIA_RETIREMENTS.every(asset=>(!oldByPath.has(asset.path)||matches(oldByPath.get(asset.path),asset))&&!nextByPath.has(asset.path))
     && V177_PAISEN_STORY_REPLACEMENTS.filter(row=>row.path.includes("/story-r9/")).every(row=>!oldByPath.has(row.path))
     && [...V177_PAISEN_ASSET_ADDITIONS, ...V177_PAISEN_CREDITS_ASSETS, ...V177_PAISEN_STORY_ASSETS].every(asset=>matches(nextByPath.get(asset.path),asset));
 }

@@ -2,15 +2,32 @@
 // actors, change time, apply damage or manufacture impact events.
 export function installContactCanvasAudit(){
  const original=CanvasRenderingContext2D.prototype.drawImage;
- const audit={draws:[],frames:{contact:[0,0,0,0,0,0],ground:[0,0,0,0,0,0]},captures:{},comboContacts:{},ambiguousDraws:0};window.__V100_CONTACT_QA__=audit;
+ const audit={draws:[],frames:{contact:[0,0,0,0,0,0],ground:[0,0,0,0,0,0]},captures:{},comboContacts:{},fistFlights:{},fistContacts:{},ambiguousDraws:0};window.__V100_CONTACT_QA__=audit;
  CanvasRenderingContext2D.prototype.drawImage=function(...args){
   const result=original.apply(this,args),[image,sx,sy,sw,sh,dx,dy,dw,dh]=args;
+  const source=image.currentSrc||image.src;
+  if(args.length===5&&typeof source==='string'&&new URL(source,window.location.href).pathname==='/art/v105/combat-vfx/fist-wave-r1.webp'){
+    const s=window.__ASHFALL_BATTLE_QA__?.getV105CorrectionAudit?.([]),m=this.getTransform(),canvas=this.canvas;
+    const scale=Number(canvas.dataset.worldScale)*Number(canvas.dataset.dpr),ox=Number(canvas.dataset.worldOffsetX)*Number(canvas.dataset.dpr),oy=Number(canvas.dataset.worldOffsetY)*Number(canvas.dataset.dpr);
+    const candidates=(s?.fistWave.waves??[]).filter(w=>s.time>=w.startedAt&&[m.e,m.f,scale,ox,oy,w.x,w.y].every(Number.isFinite)&&scale>0
+      &&Math.hypot(m.e-(ox+w.x*scale),m.f-(oy+w.y*scale))<=12*scale);
+    if(candidates.length===1){const w=candidates[0];audit.fistFlights[w.key]??={...w,paintedAt:s.time,point:[m.e,m.f],assetPath:new URL(source,window.location.href).pathname};}
+    else if(candidates.length>1)audit.ambiguousDraws++;
+  }
   if(args.length!==9||image.naturalWidth!==1536||image.naturalHeight!==1024||sw!==512||sh!==512||dw!==dh||this.globalCompositeOperation!=='source-over')return result;
   const kind=Math.abs(dx+228/512*dw)<.001&&Math.abs(dy+270/512*dw)<.001?'contact':Math.abs(dx+256/512*dw)<.001&&Math.abs(dy+360/512*dw)<.001?'ground':null;
   const assetPath=new URL(image.currentSrc||image.src,window.location.href).pathname;
   if(!kind||!assetPath.endsWith('/art/v100/combat-vfx/'+(kind==='contact'?'contact':'ground-impact')+'-six-frames-r1.webp'))return result;
   const frame=sx/512+sy/512*3;if(!kind||!Number.isInteger(frame)||frame<0||frame>=6)return result;
   audit.frames[kind][frame]++;const m=this.getTransform();
+  if(kind==='contact'&&dw===70){
+   const s=window.__ASHFALL_BATTLE_QA__?.getV105CorrectionAudit?.([]),canvas=this.canvas;
+   const scale=Number(canvas.dataset.worldScale)*Number(canvas.dataset.dpr),ox=Number(canvas.dataset.worldOffsetX)*Number(canvas.dataset.dpr),oy=Number(canvas.dataset.worldOffsetY)*Number(canvas.dataset.dpr);
+   const candidates=(s?.fistWave.receipts??[]).filter(r=>r.type==='contact'&&s.time>=r.at&&s.time-r.at<.2&&Math.floor((s.time-r.at)/.2*6)===frame
+     &&[m.e,m.f,scale,ox,oy,r.x,r.y].every(Number.isFinite)&&scale>0&&Math.hypot(m.e-(ox+r.x*scale),m.f-(oy+r.y*scale))<=12*scale);
+   if(candidates.length===1){const r=candidates[0];audit.fistContacts[r.key]??={...r,paintedAt:s.time,frame,point:[m.e,m.f]};}
+   else if(candidates.length>1)audit.ambiguousDraws++;
+  }
   if(kind==='contact'&&[52,70].includes(dw)){
    const s=window.__ASHFALL_BATTLE_QA__?.getSnapshot?.(),candidates=[];
    for(const e of s?.manualAbilityReceipts??[]){

@@ -172,8 +172,8 @@ test("production manifest preserves prior audio and adds only audited v080/v090 
   assert.equal(PRODUCTION_AUDIO_MANIFEST.version, 2);
   // Current candidate inventory: the prior262 assets /462 sources are retained;
   // twelve audited RED PANTHER utterances add twelve MP3/OGG pairs.
-  assert.equal(PRODUCTION_AUDIO_MANIFEST.assets.length, 274);
-  assert.equal(manifestPaths.length, 486);
+  assert.equal(PRODUCTION_AUDIO_MANIFEST.assets.length, 277);
+  assert.equal(manifestPaths.length, 492);
   assert.deepEqual(PRODUCTION_AUDIO_MANIFEST.assets.find(asset=>asset.id==='v104-handgun').sources.map(s=>s.src),
     ['/audio/v104/combat/handgun.mp3','/audio/v104/combat/handgun.ogg']);
   assert.equal(
@@ -209,7 +209,7 @@ test("every referenced source is repository-local, nonempty, and has a complete 
       asset.id,
     );
     for (const source of asset.sources) {
-      assert.match(source.src, /^\/audio\/(?:v060\/(?:music|sfx)|v070\/(?:music|ambience|sfx)|v080\/sfx|v090\/sfx|v098\/music|v099\/(?:music|sfx)|v100\/(?:ui|foley|ambience|score|r9)|v104\/combat)\/[a-z0-9-]+\.(mp3|ogg|wav)$/);
+      assert.match(source.src, /^\/audio\/(?:v060\/(?:music|sfx)|v070\/(?:music|ambience|sfx)|v080\/sfx|v090\/sfx|v098\/music|v099\/(?:music|sfx)|v100\/(?:ui|foley|ambience|score|r9)|v104\/combat|v105)\/[a-z0-9-]+\.(mp3|ogg|wav)$/);
       assert.doesNotMatch(source.src, /:\/\/|^\/\//);
       const filePath = publicFileFor(source.src);
       assert.equal(existsSync(filePath), true, `${asset.id}: ${source.src}`);
@@ -938,7 +938,7 @@ test("localhost-only audio QA bridge can inspect and individually play every ass
     ...PRODUCTION_AUDIO_MANIFEST.assets.map((asset) => asset.id),
     ...PRODUCTION_AUDIO_MANIFEST.pools.map((pool) => pool.id),
   ];
-  assert.equal(allCueIds.length, 316); // current candidate: unchanged304 plus new12 RP assets
+  assert.equal(allCueIds.length, 319); // unchanged316 plus three fist-wave cues
   assert.equal(new Set(allCueIds).size, allCueIds.length);
   for (const category of AUDIO_CATEGORIES) {
     assert.ok(

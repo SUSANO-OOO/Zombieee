@@ -80,7 +80,7 @@ export function v099AudioSource(spec) {
 }
 
 export const V099_MANUAL_ABILITY_AUDIO_CONTRACTS = Object.freeze({
-  brawler: freezeContract({ readyCue: "ability-ready-melee", activationRoot: "ability-brawler-kiai-activate", timeline: { impact: "ability-brawler-kiai-combo-impact" } }),
+  brawler: freezeContract({ readyCue: "ability-ready-melee", activationRoot: "v105-fist-wave-charge", timeline: { launch: "v105-fist-wave-launch", impact: "v105-fist-wave-impact" } }),
   scout: freezeContract({ readyCue: "ability-ready-melee", activationRoot: "ability-scout-intercept-activate", timeline: { impact: "ability-scout-intercept-impact" } }),
   ranger: freezeContract({ readyCue: "ability-ready-ranged", activationRoot: "ability-ranger-precision-activate", timeline: { shot: "ability-ranger-precision-shot", impact: "ability-ranger-precision-impact" } }),
   medic: freezeContract({ readyCue: "ability-ready-support", activationRoot: "ability-medic-emergency-activate", timeline: { success: "ability-medic-treatment" } }),
