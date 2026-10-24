@@ -241,7 +241,8 @@ async function mapThroughPlayerUi({create=false}={}){
     await waitForV100Ready(page);
     if(await page.locator('.v100-start-screen').isVisible())await enterV100FromTitle(page);
     await waitForV100Ready(page);
-    if(create){await page.locator('#v100-player-name').fill('公開更新確認');await page.getByRole('button',{name:'この名前でステージを始める',exact:true}).click();}
+    // prepare is pinned to public1.0.3/99f9, whose real accessible label predates the stage-wording update.
+    if(create){assert.equal(expected.version,'1.0.3');await page.locator('#v100-player-name').fill('公開更新確認');await page.getByRole('button',{name:'この名前で作戦を始める',exact:true}).click();}
     for(let i=0;i<220;i++){
       await waitForV100Ready(page);
       if(await page.locator('.v100-map-layout').isVisible())return;
