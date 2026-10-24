@@ -1,61 +1,54 @@
 name: Native Game Capture Diagnostic
-
 on:
   workflow_dispatch:
     inputs:
       expected_head:
-        description: Exact 40-character candidate SHA for this diagnostic
+        description: Exact diagnostic commit; no product or release acceptance
         required: true
         type: string
-      capture_scope:
-        description: Only missing natural stun and actual infection-rise clips, or the original full diagnostic
-        required: true
-        type: choice
-        options: [full, state-supplements]
-        default: full
-
 permissions:
   contents: read
-
 concurrency:
-  group: native-game-capture-${{ inputs.expected_head }}
+  group: native-canvas-primitive-${{ inputs.expected_head }}
   cancel-in-progress: false
-
 jobs:
-  native-game-capture:
+  canvas-primitives:
+    name: Native canvas primitive runtime comparison
     runs-on: macos-15-intel
     timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+    env:
+      EXPECTED_HEAD: ${{ inputs.expected_head }}
+      V177_PRIMITIVE_OUT: outputs/native-canvas-primitive
     steps:
       - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.expected_head }}
+          fetch-depth: 0
           persist-credentials: false
+      - name: Verify exact diagnostic commit
+        run: |
+          [[ "$EXPECTED_HEAD" =~ ^[a-f0-9]{40}$ ]]
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
       - uses: actions/setup-node@v6
         with:
-          node-version: 24
+          node-version: '22.13.0'
           cache: npm
-      - name: Verify immutable candidate before running the diagnostic
-        env:
-          EXPECTED_HEAD: ${{ inputs.expected_head }}
-        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_HEAD??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_HEAD);'
       - run: npm ci
-      - name: Install pinned native WebKit
+      - name: Install both existing pinned WebKit runtimes
         run: |
           npm ci --prefix scripts/pwa-native-runtime
+          node node_modules/playwright/cli.js install webkit
           node scripts/pwa-native-runtime/node_modules/playwright/cli.js install webkit
-      - name: Build the exact requested candidate
-        env:
-          GITHUB_PAGES_RELEASE_SHA: ${{ inputs.expected_head }}
-        run: npm run build
-      - name: Record priority actions, actual infection rises and natural incoming stun in three viewports with native VP8
-        env:
-          V177_EXPECTED_HEAD_SHA: ${{ inputs.expected_head }}
-          V177_NATIVE_GAME_CAPTURE_OUT: outputs/v177-native-game-capture
-        run: node scripts/v177-native-game-capture-browser.mjs
-      - uses: actions/upload-artifact@v4
+      - name: Observe native blank and identical Canvas2D primitives
+        run: node scripts/v177-native-canvas-primitive-diagnostic.mjs
+      - name: Preserve all native primitive observations and failures
         if: always()
+        uses: actions/upload-artifact@v4
         with:
-          name: v177-native-game-capture
-          path: outputs/v177-native-game-capture
+          name: native-canvas-primitive-diagnostic
+          path: outputs/native-canvas-primitive
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 14
