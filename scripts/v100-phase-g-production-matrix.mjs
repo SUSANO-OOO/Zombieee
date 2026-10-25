@@ -1125,6 +1125,7 @@ function phaseGSustainAbilityObserver({ mode, attemptId, selection }) {
     try { return {status:'finished',attemptId,identity:entry.identity,point:entry.point,before:entry.before,
       after:project(entry.identity.ownerId,entry.identity.kind),events:entry.events,errors:entry.errors,
       overflow:entry.overflow,armedAt:entry.armedAt,finishedAt:performance.now(),
+      sameRealm:window===entry.window && performance===entry.performance,
       sameDocument:document === entry.document && document.documentElement === entry.documentElement}; }
     finally { entry.dispose(); }
   }
@@ -1140,7 +1141,7 @@ function phaseGSustainAbilityObserver({ mode, attemptId, selection }) {
   if (!owner || owner.side !== 'human' || !(owner.hp>0) || !Number.isSafeInteger(owner.manualAbility.activationId)
     || before.screen !== 'battle' || !before.running || before.paused || before.over) return {status:'unavailable'};
   const types=['pointermove','pointerdown','pointerup','click'];
-  const entry={identity,point,before,events:[],errors:[],overflow:false,document,
+  const entry={identity,point,before,events:[],errors:[],overflow:false,document,window,performance,
     documentElement:document.documentElement,armedAt:performance.now()};
   const handler=event=>{
     try {
@@ -1149,6 +1150,7 @@ function phaseGSustainAbilityObserver({ mode, attemptId, selection }) {
       entry.events.push({sequence:entry.events.length+1,type:event.type,isTrusted:event.isTrusted,
         pointerType:event.pointerType??'mouse',button:event.button,clientX:event.clientX,clientY:event.clientY,
         at:performance.now(),sameDocument:document===entry.document && document.documentElement===entry.documentElement,
+        sameRealm:window===entry.window && performance===entry.performance,
         sameNode:target===el,hitOwner:document.elementFromPoint(event.clientX,event.clientY)?.closest('button')===el,
         sameOwner:String(el.dataset.fighterId)===identity.ownerId && el.dataset.abilityKind===identity.kind,
         connected:el.isConnected,ready:!el.disabled && el.getAttribute('aria-disabled')!=='true'});
@@ -1167,12 +1169,12 @@ function validatePhaseGSustainAbilityReceipt(armed, actual) {
   check(actual?.identity?.ownerId===armed?.identity?.ownerId && actual?.identity?.kind===armed?.identity?.kind,'SUSTAIN_OWNER_CHANGED');
   check(JSON.stringify(actual?.before)===JSON.stringify(armed?.before)
     && JSON.stringify(actual?.point)===JSON.stringify(armed?.point),'SUSTAIN_BASELINE_CHANGED');
-  check(actual?.sameDocument===true && actual?.overflow===false && actual?.errors?.length===0,'SUSTAIN_OBSERVER_INVALID');
+  check(actual?.sameDocument===true && actual?.sameRealm===true && actual?.overflow===false && actual?.errors?.length===0,'SUSTAIN_OBSERVER_INVALID');
   const events=actual?.events??[],down=events.findIndex(e=>e.type==='pointerdown');
   check(down>=1 && events.slice(0,down).every(e=>e.type==='pointermove')
     && events.slice(down).map(e=>e.type).join(',')==='pointerdown,pointerup,click','SUSTAIN_EVENT_ORDER');
   check(events.every((e,i)=>e.sequence===i+1 && e.isTrusted===true && e.pointerType==='mouse'
-    && e.sameNode===true && e.hitOwner===true && e.sameOwner===true && e.connected===true && e.ready===true && e.sameDocument===true
+    && e.sameNode===true && e.hitOwner===true && e.sameOwner===true && e.connected===true && e.ready===true && e.sameDocument===true && e.sameRealm===true
     && Number.isFinite(e.clientX) && Number.isFinite(e.clientY)
     && Math.abs(e.clientX-armed.point.x)<=1 && Math.abs(e.clientY-armed.point.y)<=1
     && Number.isFinite(e.at) && e.at>=actual.armedAt && e.at<=actual.finishedAt && (!i||e.at>=events[i-1].at)
@@ -1191,7 +1193,10 @@ function validatePhaseGSustainAbilityReceipt(armed, actual) {
   check(Number.isSafeInteger(before?.battleGeneration) && before.battleGeneration===after?.battleGeneration
     && typeof before?.stageId==='string' && before.stageId.length>0 && before.stageId===after?.stageId
     && before.screen==='battle' && after?.screen==='battle'
-    && Number.isFinite(before.timeOrigin) && before.timeOrigin>0 && before.timeOrigin===after?.timeOrigin
+    // WebKit may expose adjacent quantized timeOrigin values in one realm.
+    // Keep both raw values; use the actual Window/Performance references above
+    // for identity, without tolerances, offsets or changing the input clock.
+    && Number.isFinite(before.timeOrigin) && before.timeOrigin>0 && Number.isFinite(after?.timeOrigin) && after.timeOrigin>0
     && Number.isFinite(before.time) && Number.isFinite(after?.time) && after.time>=before.time
     && Number.isSafeInteger(prior),'SUSTAIN_BATTLE_OR_CLOCK_CHANGED');
   const newRejects=addedRows(before?.abilityRejectRequests??[],after?.abilityRejectRequests??[]);

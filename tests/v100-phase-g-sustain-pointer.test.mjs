@@ -66,7 +66,8 @@ function fixture(change={}){
     listeners.get(type)?.(event);if(type==='click'){activate();if(change.removeButton)el.isConnected=false;}}
    if(change.multipleStarts)activate();if(change.generationChange)snapshot.battleGeneration++;
    if(change.removeActor)snapshot.fighters=[];
-   snapshot.time+=1/60;if(change.originChange)context.performance.timeOrigin++;
+   snapshot.time+=1/60;if(change.originChange)context.performance={...context.performance,timeOrigin:context.performance.timeOrigin+1};
+   if(change.originJitter)context.performance.timeOrigin++;
   }}};
  if(change.oldReject)rejectRequests.push({cueId:'v100-ui-reject',dedupeKey:'ability:9:unavailable',at:99});
  return{context,page,calls,listeners,snapshot,get gets(){return gets;},get handlerCalls(){return handlerCalls;},closeContext(){closed=true;listeners.clear();window.__V100_PHASE_G_SUSTAIN_POINTERS__?.clear();}};
@@ -93,6 +94,7 @@ assert.equal(results.length,19);
 
 test('a real synchronous unavailable handler response is distinct from activation, missing input or unknown rejection',async()=>{
  await run('production unavailable guard rejects a delivered background click',{productionReject:true},'rejected');
+ await run('same original Performance object with adjacent raw timeOrigin values remains actual activation',{originJitter:true},'pass');
  for(const [name,change]of Object.entries({wrongOwner:{wrongRejectOwner:true},unknownReason:{unknownReject:true},beforeClick:{earlyReject:true},afterFinish:{futureReject:true},oldReceipt:{oldReject:true},missingReceipt:{missingReject:true},duplicateReceipt:{doubleReject:true},mixedActivationAndReject:{mixedStartReject:true},differentOrigin:{originChange:true}}))
   await run(name,{productionReject:true,...change},'fail-finalized');
  await run('synchronous validation also consumes the original500ms',{productionReject:true,slowValidation:true},'fail-finalized');

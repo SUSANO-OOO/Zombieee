@@ -245,4 +245,9 @@ async function main() {
   if (report.status === 'failed') process.exitCode = 1;
 }
 
+export async function runBrowserQa(){
+  const {runNormalPlayChild}=await import('./v177-normal-browser-deadline.mjs');
+  const {fileURLToPath}=await import('node:url');
+  assert.equal(await runNormalPlayChild(fileURLToPath(import.meta.url)),0,'The original S14 child must finish and retain every technical control');
+}
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) await main();
