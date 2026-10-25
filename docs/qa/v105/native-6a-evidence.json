@@ -430,6 +430,73 @@
       },
       "physicalSavedAudioAccepted": false,
       "wholeGameAccepted": false
+    },
+    {
+      "head": "4c68dbfd03fe5e639b33c95f612824ab459c74d4",
+      "runId": "40210584678",
+      "jobId": 121221494305,
+      "report": {
+        "shard": "forms-1",
+        "head": "4c68dbfd03fe5e639b33c95f612824ab459c74d4",
+        "runId": "40210584678",
+        "sha256": "f42f500089ed9d6a80edae666d34b283145a259116ecbbe623a2ec08472c9052",
+        "artifactId": 12605885872,
+        "artifactDigestReportedByGithub": "sha256:a2b57e1c76d823e1a20a1acefc456194a0e22541a9929a4117db884a5c2e9221",
+        "encodedAuditSha256": "aa132a26a107f72550c5f1195845f831a2a73275087db0a79565d0691c7c2b37",
+        "sourceFilesVerified": 400,
+        "sourceManifestSha256": "249a471f74334240295cd19a07d9b1507fefd52cd6015045a3bacaffaa7e2ae3",
+        "retainedCount": 5
+      },
+      "originalReportStatus": "completed-diagnostic",
+      "originalJobConclusion": "success",
+      "caseIds": [
+        "forms-1:ranger:move:1280x720",
+        "forms-1:ranger:attack:1280x720",
+        "forms-1:ranger:engage:1280x720"
+      ],
+      "manualCaseIds": [
+        "forms-1:ranger:ranger-manual-precision:1280x720"
+      ],
+      "outcomeCaseIds": [
+        "forms-1:ranger:controlled-outcome:1280x720"
+      ],
+      "originalMembers": [
+        {
+          "file": "encoded-audit.json",
+          "bytes": 7948,
+          "crc32": "8313b2bc",
+          "sha256": "aa132a26a107f72550c5f1195845f831a2a73275087db0a79565d0691c7c2b37"
+        },
+        {
+          "file": "report.json",
+          "bytes": 22278740,
+          "crc32": "6752127c",
+          "sha256": "f42f500089ed9d6a80edae666d34b283145a259116ecbbe623a2ec08472c9052"
+        }
+      ],
+      "rawReportsUnmodified": true,
+      "originalFailuresPreserved": true,
+      "technical": {
+        "frames": 677,
+        "maxGapMs": 88,
+        "maxOrdinaryClockDriftMs": 17.333333333160894,
+        "fullDecodeErrors": 0
+      },
+      "visibleReview": {
+        "reviewer": "parent AI",
+        "method": "Original bytes played continuously at1.0x through ended with time-ordered live screenshots",
+        "checked": [
+          "move-ground-contact-stop",
+          "ordinary22-hit-return",
+          "manual-current-model-92-hit-text-only-name-return",
+          "hurt-facing-defeat"
+        ],
+        "audioPlaybackMuted": true,
+        "humanListeningAccepted": false,
+        "physicalIphoneAccepted": false
+      },
+      "dependency": "Later work changes formal observation export and sustain manual input QA only; app/public/assets and native actor/recording logic are unchanged.",
+      "wholeGameAccepted": false
     }
   ]
 }

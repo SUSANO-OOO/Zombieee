@@ -1264,8 +1264,12 @@ async function phaseGSustainAbilityTap(page, selection, phases, evidenceRecord) 
   const armed=await step('observe-and-arm',()=>page.evaluate(phaseGSustainAbilityObserver,{mode:'arm',attemptId,selection}));
   if(armed.status==='unavailable'){guard();return false;}
   if(armed.status!=='armed')throw new Error('Sustain observer failed to arm');
-  // One existing native API; no DOM dispatch, forced click, delay, or retry.
-  await step('native-click',()=>page.mouse.click(armed.point.x,armed.point.y));
+  // One native manual gesture. A short press makes the pinned server await
+  // down before sending up, instead of queuing both concurrently. Move ACK is
+  // still independent; the real four-event/handler receipt and500ms guard rule.
+  await step('native-click',()=>control==='sustain-ability'
+    ?page.mouse.click(armed.point.x,armed.point.y,{delay:1})
+    :page.mouse.click(armed.point.x,armed.point.y));
   const actual=await step('read-and-dispose',()=>page.evaluate(phaseGSustainAbilityObserver,
     {mode:'finish',attemptId,waitMs:Math.max(0,500-(performance.now()-startedAt))}));
   guard();const decision=validatePhaseGSustainAbilityReceipt(armed,actual);

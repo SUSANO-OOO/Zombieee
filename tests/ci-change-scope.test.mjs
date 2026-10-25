@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {ciChangeScope,framePerformanceRuntimes,previousFullCiEvidence,previousQualityEvidence,
  previousAbilityNameEvidence,reviewedAbilityNamePaths,reviewedAbilityContinuationPaths,ABILITY_NAME_BASELINE,ABILITY_NAME_PREDECESSOR,ABILITY_NAME_AUDIO_OWNER,ABILITY_LAYOUT_PRODUCT_BEFORE,ABILITY_NAME_PREDECESSOR_AUDIO_JOBS,ABILITY_NAME_BLOBS,ABILITY_NAME_REUSED_JOBS,RANGER_BUFFER_FILE,RANGER_BUFFER_BLOB,RETIRED_AUDIO_OWNER_FILE,RANGER_PROVENANCE_FILE} from '../scripts/ci-change-scope.mjs';
 import {assertEphemeralPerformanceHost} from '../scripts/v100-macos-indexing-control.mjs';
+import {FORMAL_TRANSFER_FILES,FORMAL_TRANSFER_CONTROL_JOBS,FORMAL_TRANSFER_PRODUCT_STEPS} from '../scripts/ci-change-scope.mjs';
 import {readFileSync} from 'node:fs';
 import {load} from 'js-yaml';
 import {execFileSync} from 'node:child_process';
@@ -25,10 +26,15 @@ test('the exact reviewed QA continuation keeps original6a owners, requires produ
    audioProof=provenanceFixture({runId:audio.runId,head:audio.head,base:old.base,artifactId:93});
  const audioJobs=Object.entries(ABILITY_NAME_PREDECESSOR_AUDIO_JOBS).map(([name,id])=>({name,id,run_id:audio.runId,head_sha:audio.head,run_attempt:1,status:'completed',conclusion:'success',
   steps:['Verify iPhone media output and encoded mix without microphone access','Run actions/upload-artifact@v4'].map(name=>({name,status:'completed',conclusion:'success'}))}));
- const api=({previousRun=predecessor,rows=jobs,previousRows=audioJobs,previousProof=previous}={})=>async url=>({ok:true,
+ const controlJobs=Object.entries(FORMAL_TRANSFER_CONTROL_JOBS).map(([name,id])=>({name,id,run_id:prev.runId,head_sha:prev.head,run_attempt:1,status:'completed',conclusion:'success',
+  steps:(name==='PR Verify'?FORMAL_TRANSFER_PRODUCT_STEPS:name==='Ranger Turn Regression'
+   ?['Recheck the original Stage 4 rendering failure','Run actions/upload-artifact@v4']
+   :['Observe opening stages using a fresh save, earned CAPS and real UI','Preserve normal-play results, saves, diagnostics and original-speed video'])
+    .map(name=>({name,status:'completed',conclusion:'success'}))}));
+ const api=({previousRun=predecessor,rows=jobs,previousRows=audioJobs,previousProof=previous,controls=controlJobs}={})=>async url=>({ok:true,
    arrayBuffer:async()=>url.includes('/93/')?audioProof.zip:url.includes('/92/')?previousProof.zip:original.zip,
    json:async()=>url.includes('/'+audio.runId+'/artifacts?')?audioProof.artifacts:url.includes('/artifacts?')?(url.includes('/'+prev.runId+'/')?previousProof.artifacts:original.artifacts)
-     :url.includes('/jobs?')?url.includes('/'+audio.runId+'/')?{total_count:previousRows.length,jobs:previousRows}:{total_count:rows.length,jobs:rows}:url.endsWith('/'+audio.runId)?audioRun:url.endsWith('/'+prev.runId)?previousRun:oldRun});
+     :url.includes('/jobs?')?url.includes('/'+audio.runId+'/')?{total_count:previousRows.length,jobs:previousRows}:url.includes('/'+prev.runId+'/')?{total_count:controls.length,jobs:controls}:{total_count:rows.length,jobs:rows}:url.endsWith('/'+audio.runId)?audioRun:url.endsWith('/'+prev.runId)?previousRun:oldRun});
  const options={repository:'SUSANO-OOO/Zombieee',previousHead:prev.head,base:old.base,prNumber:181,action:'synchronize',draft:false,
    paths,sourceBlobs,productUnchanged:true,originalAncestor:true,token:'fixture-only'};
  const evidence=await previousAbilityNameEvidence({...options,request:api()});assert.equal(evidence.passed,true);
@@ -101,6 +107,27 @@ test('the exact reviewed QA continuation keeps original6a owners, requires produ
  for(const bad of [{layoutReadDelta:false},{rangerBufferDelta:true},{productUnchanged:true},
    ...Object.keys(ABILITY_LAYOUT_PRODUCT_BEFORE).map(file=>({sourceBlobs:{...sourceBlobs,[file]:'f'.repeat(40)}}))])
   assert.equal((await previousAbilityNameEvidence({...layoutOptions,...bad,request:()=>assert.fail('Unknown layout change must fail before network')})).passed,false);
+ const formalPaths=[...paths,...FORMAL_TRANSFER_FILES],formalOptions={...options,paths:formalPaths};
+ const formal=await previousAbilityNameEvidence({...formalOptions,request:api()});assert.equal(formal.passed,true);
+ assert.equal(formal.formalTransferDelta,true);assert.equal(formal.productUnchanged,true);assert.equal(formal.reusedJobs.length,45);
+ assert.equal(formal.freshNormalRequired,false);assert.equal(formal.freshProductValidationsRequired,false);
+ assert.equal(formal.freshVerifyRequired,true);assert.equal(formal.freshPerformanceRequired,true);assert.equal(formal.freshPhaseGRequired,true);
+ assert.equal(formal.productValidationOwner.id,121220946144);assert.equal(formal.predecessor.controlJobs.length,3);
+ for(const [name,id]of Object.entries(FORMAL_TRANSFER_CONTROL_JOBS))if(name!=='PR Verify'){
+  const row=formal.reusedJobs.find(j=>j.name===name);assert.equal(row.id,id);assert.equal(row.head_sha,prev.head);assert.equal(row.run_id,prev.runId);
+ }
+ const names=load(readFileSync('.github/workflows/ci.yml','utf8')).jobs.verify.steps.filter(s=>s.if?.includes('verify_full')).map(s=>s.name);
+ assert.equal(names.length,19);assert.deepEqual([...FORMAL_TRANSFER_PRODUCT_STEPS],names);
+ const formalScope=ciChangeScope(formalPaths,{draft:false,sourceBlobs,reuseAbilityNames:true,reuseProductValidation:true});
+ assert.equal(formalScope.scope,'formal-evidence-transfer-delta');assert.equal(formalScope.full,false);assert.equal(formalScope.verify_full,false);
+ assert.equal(formalScope.performance,true);assert.equal(formalScope.phaseg,true);assert.equal(formalScope.normal,false);assert.equal(formalScope.ranger,false);
+ assert.equal(ciChangeScope(paths,{draft:false,sourceBlobs,reuseAbilityNames:true,reuseProductValidation:true}).verify_full,true);
+ for(const controls of [controlJobs.slice(1),[...controlJobs,controlJobs[0]],
+  ...Object.keys(FORMAL_TRANSFER_CONTROL_JOBS).flatMap(name=>[{id:1},{head_sha:old.head},{run_id:old.runId},{run_attempt:2},{status:'in_progress'},{conclusion:'failure'},{conclusion:'skipped'},
+    {steps:[]},{steps:controlJobs.find(j=>j.name===name).steps.map((s,i)=>i?s:{...s,conclusion:'skipped'})}].map(change=>controlJobs.map(j=>j.name===name?{...j,...change}:j)))])
+  assert.equal((await previousAbilityNameEvidence({...formalOptions,request:api({controls})})).passed,false,'Every reused result needs its exact successful job and steps');
+ for(const bad of [{productUnchanged:false},{sourceBlobs:{...sourceBlobs,[FORMAL_TRANSFER_FILES[0]]:'f'.repeat(40)}},{paths:[...formalPaths,'app/unknown.js']}])
+  assert.equal((await previousAbilityNameEvidence({...formalOptions,...bad,request:()=>assert.fail('Unknown formal change rejected before network')})).passed,false);
  const wrongProof=provenanceFixture({runId:prev.runId,head:prev.head,base:'f'.repeat(40),artifactId:92});
  assert.equal((await previousAbilityNameEvidence({...options,request:api({previousProof:wrongProof})})).passed,false);
  const lost=jobs.map((j,i)=>i?j:{...j,conclusion:'failure'});

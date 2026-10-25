@@ -71,7 +71,7 @@ function fixture(change={}){
   if(change.sameIdStart||change.regressedStart){snapshot.fighters[0].manualAbility.activationId--;snapshot.manualAbilityReceipts.at(-1).activationId=change.regressedStart?-1:0;}};
  const page={isClosed:()=>closed,async evaluate(fn,arg){calls.push(arg.mode);clock++;
   const result=await fn(arg);if(arg.mode==='finish')result.cleanupFixtureObserved=listeners.size===0;return clone(result);},
-  mouse:{async click(x,y){calls.push('native-click');if(change.nativeError)throw Error('native input rejected');
+  mouse:{async click(x,y,options){if(change.barrage)assert.equal(options,undefined);else assert.deepEqual(clone(options),{delay:1});calls.push('native-click');if(change.nativeError)throw Error('native input rejected');
    if(change.lateClick){clock=601;return;}
    let types=['pointermove','pointerdown','pointerup','click'];if(change.missingUp)types=types.filter(t=>t!=='pointerup');
    if(change.reordered)types=['pointermove','pointerup','pointerdown','click'];if(change.duplicateClick)types.push('click');

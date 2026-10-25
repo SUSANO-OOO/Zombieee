@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {mkdtemp,readdir,rm,rmdir,readFile,writeFile,mkdir} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
 import os from 'node:os';
 import path from 'node:path';
 import vm from 'node:vm';
@@ -27,15 +28,21 @@ test('correction reuse keeps original owners and reruns all failed and affected 
       sha256:createHash('sha256').update(bytes).digest('hex'),head:original.head,runId:original.runId}}));};
   const options={root,event:{},select:()=>({mode:'remaining'})};
   try{
+    const prior=JSON.parse(execFileSync('git',['show','4c68dbfd03fe5e639b33c95f612824ab459c74d4:'+file],{encoding:'utf8',windowsHide:true}));
+    await store(prior);const unfinished=await correctionCaseSelection('desktop',options);
+    assert.equal(unfinished.plan.length,1);assert.equal(unfinished.retained.length,41);assert.equal(unfinished.plan[0].kind,'ranger');
+    const missingPending=structuredClone(prior);missingPending.pending.pop();await store(missingPending);
+    await assert.rejects(correctionCaseSelection('desktop',options),'An old unfinished case cannot be dropped');
     await store(original);const d=await correctionCaseSelection('desktop',options);
-    assert.equal(d.plan.length,1);assert.equal(d.retained.length,41);assert.equal(d.source.head,original.head);
-    assert.deepEqual(d.plan.map(r=>r.kind).sort(),['ranger']);
+    assert.equal(d.plan.length,0);assert.equal(d.retained.length,42);assert.equal(d.source.head,original.head);
+    const completed=d.retained.find(r=>r.caseId==='desktop:ranger:manual');
+    assert.equal(completed.head,'4c68dbfd03fe5e639b33c95f612824ab459c74d4');assert.equal(completed.runId,'40210584508');
     const omega=d.retained.find(r=>r.caseId==='desktop:takuya-omega:enemy');
     assert.equal(omega.head,'45e46b90be77cd349670157974646dcc7f16b1cd');assert.equal(omega.runId,'40134504325');
     assert.equal(d.retained.filter(r=>r.head===original.head).length,28,'Old shared-context successes keep their original owners');
     for(const scope of ['mobile390','mobile340']){const s=await correctionCaseSelection(scope,options);assert.equal(s.plan.length,0);assert.equal(s.retained.length,7);}
     assert.equal((await correctionCaseSelection('desktop',{...options,select:()=>({mode:'full'})})).plan.length,42);
-    for(const mutate of [i=>i.pending.pop(),i=>i.retained.push(i.retained[0]),i=>{i.retained[0].driftMs=120.001;},
+    for(const mutate of [i=>i.retained.pop(),i=>i.retained.push(i.retained[0]),i=>{i.retained[0].driftMs=120.001;},
       i=>{i.retained[0].maxGapMs=250.001;},i=>{i.retained[0].head='f'.repeat(40);},
       i=>{i.retained[0].fullAvDecode.requiredMixerAudioStream=false;},i=>{i.retained[0].caseElapsedMs=30000;},
       i=>{i.retained[0].encodedPtsVerified=false;},i=>{i.retained[0].originalStatus='failed';},

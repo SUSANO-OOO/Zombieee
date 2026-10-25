@@ -77,10 +77,11 @@ export function s25FireDeploymentPriorities(snapshot, observedHumans, baseline) 
   return next?[next]:[];
 }
 
-export async function normalTacticalInput(page,record,{observeSnapshot,frameOwner,observeFrameChunk,rangerDrawObservation=false,awaitInitialRangerPaint=false,s25DeploymentObservation=false,s25FireComparison=false,barrageWhenOverwhelmed=false,barrageEnabled=true,airstrikeAfterSeconds=0,bossAirstrikePriority=false,reserveSecondAirstrikeForBoss=false,holdRedeploymentUntilBoss=false}={}){
+export async function normalTacticalInput(page,record,{observeSnapshot,frameOwner,observeFrameChunk,rangerDrawObservation=false,awaitInitialRangerPaint=false,deferRangerObservation=false,s25DeploymentObservation=false,s25FireComparison=false,barrageWhenOverwhelmed=false,barrageEnabled=true,airstrikeAfterSeconds=0,bossAirstrikePriority=false,reserveSecondAirstrikeForBoss=false,holdRedeploymentUntilBoss=false}={}){
   if(s25FireComparison&&(record.number!==25||!s25DeploymentObservation))throw new Error('S25 fire input is opt-in and Stage 25 only');
   if(awaitInitialRangerPaint&&!rangerDrawObservation)throw new Error('Initial Ranger paint wait requires draw observations');
-  const observed=await page.evaluate(async({owner,rangerDrawObservation,awaitInitialRangerPaint,s25DeploymentObservation})=>{
+  if(deferRangerObservation&&(!rangerDrawObservation||!awaitInitialRangerPaint||frameOwner))throw new Error('Deferred Ranger proof requires the original formal reader');
+  const observed=await page.evaluate(async({owner,rangerDrawObservation,awaitInitialRangerPaint,deferRangerObservation,s25DeploymentObservation})=>{
     if(awaitInitialRangerPaint){
       const state=window.__V100_DEVICE_RAF__,qa=window.__ASHFALL_BATTLE_QA__;
       if(!state?.active||!Number.isFinite(state.startedAt)||!qa)throw new Error('Missing active original Ranger measurement');
@@ -128,8 +129,18 @@ export async function normalTacticalInput(page,record,{observeSnapshot,frameOwne
       support:[...document.querySelectorAll('button.support-btn')].map(el=>({supportId:el.dataset.supportId??null,
         className:el.className,disabled:el.disabled,ariaDisabled:el.getAttribute('aria-disabled'),state:el.dataset.state,
         cooldown:el.dataset.cooldown??null,ariaLabel:el.getAttribute('aria-label')}))};
+    if(snapshot&&deferRangerObservation){
+      const state=window.__V100_DEVICE_RAF__,binding=state?.rangerObservationOwner;
+      if(!state?.active||binding?.state!==state||binding.window!==window||binding.document!==document
+        ||binding.performance!==performance||binding.startedAt!==state.startedAt||!Array.isArray(state.rangerDrawObservations))
+        throw new Error('Original deferred Ranger observation owner changed');
+      if(state.rangerDrawObservations.length>=128){state.rangerDrawOverflow++;throw new Error('Deferred Ranger observation overflow');}
+      const index=state.rangerDrawObservations.length,draws=structuredClone(snapshot.rangerDraws);
+      state.rangerDrawObservations.push({index,draws});
+      snapshot.rangerDrawObservation={index,startedAt:state.startedAt,readAt:draws.readAt,simulationTime:draws.simulationTime};delete snapshot.rangerDraws;
+    }
     return owner?{snapshot,frames:globalThis.__V177_READ_NORMAL_FRAMES__?.(owner,'drain')??null}:snapshot;
-  },{owner:frameOwner??null,rangerDrawObservation,awaitInitialRangerPaint,s25DeploymentObservation});
+  },{owner:frameOwner??null,rangerDrawObservation,awaitInitialRangerPaint,deferRangerObservation,s25DeploymentObservation});
   const s=frameOwner?observed?.snapshot:observed;
   if(frameOwner)await observeFrameChunk?.(observed?.frames);
   observeSnapshot?.(s);

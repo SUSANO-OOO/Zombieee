@@ -4,6 +4,14 @@
 
 このソースの製品版は1.0.5。実配信のversion・release SHA・公開後確認は、[正式URL](https://susano-ooo.github.io/Zombieee/)のmetadataと[Issue #177の最新記録](https://github.com/SUSANO-OOO/Zombieee/issues/177)を正本とする。Release作成・配信・画面表示を別々に記録する。以下は各候補を確認した時点の履歴。
 
+## 2026-10-26 候補4c68dbfdの実結果と検査側の限定修正
+
+PR Verifyは全3272テストと19条件工程まで成功。通常Chromium／WebKitも序盤の実敗北と独立S14／S25／S30の敗北・結果保存・終了まで成功し、S30の旧30秒失敗を成功へ書き換えず再発なしとして保持する。正式Mac ARM6窓は29／25／33／19／20／33msで33ms基準を満たしたが、desktop53.617890Hzで元54Hz基準未達。PR仮merge9cf7783fはPR head4c68dbfdと完全に同じtreeであり、SHAの役割は区別する。正式の失敗は原ZIP e3b19150…a18e5fとともに保持する。
+
+残desktop5動作は原400ソース・全421CRC・実build・677frames・最大gap88ms・通常時計差最大17.334ms・全decodeを照合し、原速1.0倍の歩行→停止→射撃・実22命中→復帰、能力・92命中・技名・現モデル・退場も確認。F5残1本も113frames／210ms・clock−20.334ms、原速の現モデルと文字のみ精密排除・実92命中・復帰を確認し、元579動作／56映像の確認が揃った。消音を聴感合格と呼ばない。
+
+Phase Gは同じ狭画面Takuyaの技入力で、arm114ms・native API136ms後のfinish未返却、元500.845msで失敗。Node active11.045msで、実delivery／発動結果は不明のまま。単入力と元500msを維持し、手動技だけを正規APIの短いpressへ変更してdown応答後にupを送る。move応答の直列保証や解消はまだ主張せず、成功済み砲撃の入力条件も維持する。正式計測は同じreadのRanger描画証拠を即immutable保存し、元終了時刻とRAF停止後にexport・元readへ厳密再結合する。旧predicate・30秒・1秒選択・戦術入力・33ms／54Hz・DPR・原時刻を維持し、移送方式の効果は新実測待ち。製品app／public／assetsは4cと同一。変更に依存しない通常play、19条件工程、Ranger Turn、原映像は実成功ownerで保持し、基本test／Lint／build、正式6窓とPhase Gを確認する。1.0.5公開と公開後QAは未実施。
+
 ## 2026-10-26 候補6e00e3c5の実結果と限定修正
 
 PR Verifyは本体全テストと19製品検査まで成功、通常WebKitも実成功。正式Mac ARMは32／35／35／35／33／33ms、desktop50.964Hzで未達。通常ChromiumはS14・S25の実敗北と保存まで成功したが、S30の純粋な画面状態読取が元30秒で失敗した。後始末後の取得不能は独立したセーブ破損と断定しない。旧S14の一次原因と今回S30の停止／通信待ちは未確定のまま、追加RPCを増やさない画面遷移・終了イベント記録を加える。

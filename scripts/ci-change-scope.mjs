@@ -44,7 +44,31 @@ export const ABILITY_NAME_BASELINE=Object.freeze({head:'6a5226647ebf9ba7692c69b9
  base:'e22b134a38409b9d2f86660ee351e616c28fbf44',runId:40120044446,prNumber:181});
 // Preserve the original browser/Quality owners. The two audio jobs below are
 // separately owned by the completed repaired-audio candidate, never its failures.
-export const ABILITY_NAME_PREDECESSOR=Object.freeze({head:'6e00e3c5f084a9fe633ea28888460f6d63e880b5',runId:40204024443});
+export const ABILITY_NAME_PREDECESSOR=Object.freeze({head:'4c68dbfd03fe5e639b33c95f612824ab459c74d4',runId:40210584510});
+export const FORMAL_TRANSFER_FILES=Object.freeze(['scripts/v100-device-runtime-browser.mjs','scripts/v100-normal-tactical-input.mjs']);
+export const FORMAL_TRANSFER_PRODUCT_STEPS=Object.freeze([
+ "Audit all 30 story stages in developer mode",
+ "Audit V1 CAPS purchasing power",
+ "Upload developer mode campaign audit",
+ "Install focused browser engines",
+ "Verify PWA shell commit and offline relaunch (Chromium)",
+ "Verify online play after PWA registration failure (Chromium)",
+ "Verify installed PWA launch when update metadata stalls (Chromium)",
+ "Upload stalled PWA metadata browser evidence",
+ "Build exact base and candidate PWA sites for partial-update QA",
+ "Classify whether PWA asset update QA applies",
+ "Reproduce and recover the partial-failed existing PWA (Chromium)",
+ "Capture Issue 156 canonical HUD evidence (Chromium)",
+ "Capture Issue 156 final-canvas deployment evidence (Chromium)",
+ "Capture Issue 156 safe-area, portrait, and metadata evidence",
+ "Capture Issue 156 physical-width records evidence (Chromium)",
+ "Capture Issue 156 physical-width TAKUYA audio route (Chromium)",
+ "Capture Version 0.9.9.5 enemy runtime and station final-canvas evidence",
+ "Upload Issue 165 visual remediation evidence",
+ "Upload Issue 156 remediation evidence"
+]);
+export const FORMAL_TRANSFER_CONTROL_JOBS=Object.freeze({'PR Verify':121220946144,'Ranger Turn Regression':121220946200,
+ 'V1 Representative Normal Play (chromium)':121220946183,'V1 Representative Normal Play (webkit)':121220946224});
 export const ABILITY_NAME_AUDIO_OWNER=Object.freeze({head:'a8f4f5986d8f66423c422a37f32400c1a3009551',runId:40198626338});
 export const ABILITY_NAME_PREDECESSOR_AUDIO_JOBS=Object.freeze({
  'V1.0.3 Media Output (chromium)':121185029269,'V1.0.3 Media Output (webkit)':121185029364});
@@ -64,19 +88,20 @@ export const ABILITY_NAME_BLOBS=Object.freeze({
  "app/v105AbilityNames.js": "ebe6a7ecb6ea702944d45a1502b3134ac9004b38",
  ".github/workflows/ci.yml": "3b402dfbe2a8a0922c694cc00f1762eb6d52ed33",
  "scripts/v177-representative-battles.mjs": "e7b0bb62e83f3527a0282f7fbfaa58ed6174c68f",
- "scripts/v100-device-runtime-browser.mjs": "0c4c5090222f58ab5f36be802c642f526997f574",
- "scripts/v100-phase-g-production-matrix.mjs": "c3b0ea060df71d55106cd54200febf0b44000470",
+ "scripts/v100-device-runtime-browser.mjs": "88e522d267de0e6604b56c9f49e6e217473ff05d",
+ "scripts/v100-normal-tactical-input.mjs": "574d7a5eadc6fd7212d61bc6118518daf0091600",
+ "scripts/v100-phase-g-production-matrix.mjs": "593e2bb3034ced9bc235a4c582c7d7f25381468d",
  "scripts/v177-native-allunit-cases.mjs": "e5d27c160ec2eb04d8a0109c0a39918174c6b5ac",
  "scripts/v177-normal-browser-deadline.mjs": "f60a49ca98db5a8059de56a04073a50b9e6b862f",
  "scripts/v105-five-corrections-capture.mjs": "c266140d17b1176024bb9066424d37cd91675d16",
  "scripts/v177-native-allunit-browser.mjs": "c936e79a3131210f29e3d01a18455419ffe249a5",
- "docs/qa/v105/five-corrections-6a-evidence.json": "28e8824d6062c3fb25d366a4a5d37dd1acd5d717",
+ "docs/qa/v105/five-corrections-6a-evidence.json": "5c93688db5cee8e52703e9d46acdf92e410ad0e2",
  ".github/workflows/native-allunit-capture.yml": "6fbcbea4dd55623fd7f4c8bbceda5c3c79bcc9f5",
  ".github/workflows/five-corrections-capture.yml": "bf347a5923b8b31a0451e4358901feaa5040752a",
  "scripts/v100-macos-indexing-control.mjs": "d00ae47eb420f113af07437a55c47203e7446207",
  "scripts/v177-native-allunit-selection.mjs": "6a11cf23189e7f69f67bb21e1e2938084f81cd83",
  "app/v177RangerLowerPaint.js": "c9d74ef6b47a377778498569221232dae12a6ba3",
- "docs/qa/v105/native-6a-evidence.json": "a2a755ead78ec291ebaa04545cb343ae5d32203d",
+ "docs/qa/v105/native-6a-evidence.json": "86bb4523488a3cd38827731771118697bb754313",
  "app/battleAudioRuntime.js": "65e612cbc460eaf27eb3ba8894feb692563f27d8",
  "assets/source/v177/ranger/lower-r3/provenance.json": "66d32b5c69c8a3c1acf1efe1e53287efaf3e48ad"
 });
@@ -91,7 +116,7 @@ const abilityNameFiles=new Set([...Object.keys(ABILITY_NAME_BLOBS),'scripts/ci-c
  'docs/qa/v105/five-corrections-6a-evidence.json','docs/qa/v105/ci-6a-infrastructure-failure.json',
  'docs/PROJECT_STATE.md','docs/qa/v105/native-6a-evidence.json',
  RETIRED_AUDIO_OWNER_FILE,RANGER_PROVENANCE_FILE,'tests/battle-audio-runtime.test.mjs','tests/v100-phase-g-capture.test.mjs',
- 'tests/v105-five-corrections.test.mjs','tests/v177-native-realm-owner.test.mjs']);
+ 'tests/v105-five-corrections.test.mjs','tests/v177-native-realm-owner.test.mjs','tests/v177-ranger-deferred-observation.test.mjs']);
 export const ABILITY_NAME_REUSED_JOBS=Object.freeze(BASELINE_JOB_NAMES.filter(name=>
  !['PR Verify','V1 Guardian Control Diagnostic','WebKit Compact Shadow Diagnostic','V1 WebKit Frame and Boss Performance',
  'V1 Phase G Production Matrix','V1 Representative Normal Play (chromium)','V1 Representative Normal Play (webkit)'].includes(name)));
@@ -204,8 +229,29 @@ export async function previousAbilityNameEvidence({repository,previousHead,base,
    &&rows[0].conclusion==='success'&&Number.isSafeInteger(rows[0].id);};
   if(!ABILITY_NAME_REUSED_JOBS.every(successful))return{passed:false,reason:'an-unchanged-browser-gate-is-not-successful'};
   const provenance=await immutablePrProvenance({get,runId:old.runId,head:old.head,base:old.base});
-  const normalNames=['chromium','webkit'].map(engine=>`V1 Representative Normal Play (${engine})`),
-    normalComplete=!rangerBufferDelta&&!layoutReadDelta&&!paths.includes('scripts/v177-representative-battles.mjs')&&normalNames.every(successful);
+  const normalNames=['chromium','webkit'].map(engine=>`V1 Representative Normal Play (${engine})`);
+  let normalComplete=!rangerBufferDelta&&!layoutReadDelta&&!paths.includes('scripts/v177-representative-battles.mjs')&&normalNames.every(successful);
+  const formalTransferDelta=continuation&&productUnchanged&&FORMAL_TRANSFER_FILES.every(file=>paths.includes(file));
+  let productValidationOwner=null;
+  if(formalTransferDelta){
+   const data=await get(`actions/runs/${ABILITY_NAME_PREDECESSOR.runId}/jobs?filter=latest&per_page=100`);
+   if(!Array.isArray(data.jobs)||data.total_count!==data.jobs.length||data.total_count>100
+     ||new Set(data.jobs.map(j=>j.id)).size!==data.jobs.length)return{passed:false,reason:'formal-control-inventory-invalid'};
+   const adopted=[];
+   for(const [name,id]of Object.entries(FORMAL_TRANSFER_CONTROL_JOBS)){
+    const rows=data.jobs.filter(j=>j.name===name),j=rows[0];
+    const required=name==='PR Verify'?FORMAL_TRANSFER_PRODUCT_STEPS:name==='Ranger Turn Regression'
+      ?['Recheck the original Stage 4 rendering failure','Run actions/upload-artifact@v4']
+      :['Observe opening stages using a fresh save, earned CAPS and real UI','Preserve normal-play results, saves, diagnostics and original-speed video'];
+    if(rows.length!==1||j.id!==id||j.run_id!==ABILITY_NAME_PREDECESSOR.runId||j.head_sha!==previousHead||j.run_attempt!==1
+      ||j.status!=='completed'||j.conclusion!=='success'||!required.every(label=>j.steps?.filter(s=>s.name===label&&s.status==='completed'&&s.conclusion==='success').length===1))
+      return{passed:false,reason:'formal-control-measurement-not-successful'};
+    const owner={name,id,head_sha:j.head_sha,run_id:j.run_id,run_attempt:j.run_attempt};
+    if(name==='PR Verify')productValidationOwner={...owner,stepNames:required};
+    else{const index=adoptedJobs.findIndex(old=>old.name===name);if(index<0)adoptedJobs.push(j);else adoptedJobs.splice(index,1,j);adopted.push(owner);}
+   }
+   normalComplete=normalNames.every(successful);predecessor.controlJobs=adopted;
+  }
   const freshAudioRequired=rangerBufferDelta&&paths.includes(RETIRED_AUDIO_OWNER_FILE);
   if(continuation&&!freshAudioRequired){
    const audioOwner=ABILITY_NAME_AUDIO_OWNER,audioRun=await get(`actions/runs/${audioOwner.runId}`);
@@ -229,14 +275,15 @@ export async function previousAbilityNameEvidence({repository,previousHead,base,
   }
   return{passed:true,head:old.head,base:old.base,prNumber:old.prNumber,runId:old.runId,provenance,infrastructureRecovery,predecessor,
    originalRunConclusion:run.conclusion,
-   productUnchanged,rangerBufferDelta,layoutReadDelta,freshRangerRequired:rangerBufferDelta||layoutReadDelta,
+   productUnchanged,rangerBufferDelta,layoutReadDelta,formalTransferDelta,productValidationOwner,
+   freshRangerRequired:rangerBufferDelta||layoutReadDelta,
    layoutReadScope:layoutReadDelta?Object.entries(ABILITY_LAYOUT_PRODUCT_BEFORE).map(([file,before])=>({file,before,after:ABILITY_NAME_BLOBS[file]})):null,
    rangerBufferScope:rangerBufferDelta?{file:RANGER_BUFFER_FILE,before:RANGER_BUFFER_BEFORE_BLOB,after:RANGER_BUFFER_BLOB}:null,
    freshAudioRequired,
    reusedJobs:[...ABILITY_NAME_REUSED_JOBS.filter(name=>(!(rangerBufferDelta||layoutReadDelta)||name!=='Ranger Turn Regression')
     &&(!freshAudioRequired||!name.startsWith('V1.0.3 Media Output ('))),...(normalComplete?normalNames:[])].map(name=>{const j=adoptedJobs.find(j=>j.name===name);
     return{name,id:j.id,head_sha:j.head_sha,run_id:j.run_id,run_attempt:j.run_attempt};}),
-   freshVerifyRequired:true,freshPerformanceRequired:true,freshPhaseGRequired:true,
+   freshVerifyRequired:true,freshProductValidationsRequired:!formalTransferDelta,freshPerformanceRequired:true,freshPhaseGRequired:true,
    freshNormalRequired:!normalComplete};
  }catch{return{passed:false,reason:'original-browser-evidence-unavailable'};}
 }
@@ -379,12 +426,13 @@ export async function previousQualityEvidence({repository,head,prNumber,token,fu
   }catch{return{passed:false,reason:'quality-evidence-unavailable'};}
 }
 
-export function ciChangeScope(paths,{draft,sourceBlobs={},reuseNativeQa=false,reuseCombatQa=false,reuseCombatFixture=false,reuseAbilityNames=false,freshNormal=false}={}){
+export function ciChangeScope(paths,{draft,sourceBlobs={},reuseNativeQa=false,reuseCombatQa=false,reuseCombatFixture=false,reuseAbilityNames=false,reuseProductValidation=false,freshNormal=false}={}){
   assert.equal(typeof draft,'boolean');
   assert.equal(typeof reuseNativeQa,'boolean');
   assert.equal(typeof reuseCombatQa,'boolean');
   assert.equal(typeof reuseCombatFixture,'boolean');
   assert.equal(typeof reuseAbilityNames,'boolean');assert.equal(typeof freshNormal,'boolean');
+  assert.equal(typeof reuseProductValidation,'boolean');
   assert.ok(Array.isArray(paths)&&paths.length>0&&paths.every(p=>typeof p==='string'&&p&&!p.includes('\\')));
   // A synchronize update containing only native QA, its tests and the status
   // ledger cannot change the shipped app. Keep the prior full product run and
@@ -418,9 +466,10 @@ export function ciChangeScope(paths,{draft,sourceBlobs={},reuseNativeQa=false,re
     }
     else full=true; // Unclassified changes retain the complete regression.
   }
-  return {full,verify_full:full||abilityNameOnly,performance:full||abilityNameOnly,phaseg:full||abilityNameOnly,ranger:full||rangerChanged,normal:full||normalChanged,allunit:full||allunitChanged,r9:full||r9Changed,combat:full||combatChanged,
+  const retainedProductValidation=abilityNameOnly&&reuseProductValidation&&FORMAL_TRANSFER_FILES.every(file=>paths.includes(file));
+  return {full,verify_full:full||(abilityNameOnly&&!retainedProductValidation),performance:full||abilityNameOnly,phaseg:full||abilityNameOnly,ranger:full||rangerChanged,normal:full||normalChanged,allunit:full||allunitChanged,r9:full||r9Changed,combat:full||combatChanged,
     audio:full||(abilityNameOnly&&paths.includes(RETIRED_AUDIO_OWNER_FILE)),
-    scope:full?'full-regression':abilityNameOnly?(paths.includes('app/v105AbilityNames.js')?'ability-name-lazy-layout-delta':paths.includes(RANGER_BUFFER_FILE)?(paths.includes(RETIRED_AUDIO_OWNER_FILE)?'ranger-buffer-and-audio-lifecycle-delta':'ranger-buffer-selection-delta'):'ability-name-display-delta'):draft?'targeted-draft':combatQaOnly?'combat-qa-update-product-unchanged':combatFixtureOnly?'combat-fixture-update-product-unchanged':'native-qa-update-product-unchanged',wholeGameAccepted:false,
+    scope:full?'full-regression':retainedProductValidation?'formal-evidence-transfer-delta':abilityNameOnly?(paths.includes('app/v105AbilityNames.js')?'ability-name-lazy-layout-delta':paths.includes(RANGER_BUFFER_FILE)?(paths.includes(RETIRED_AUDIO_OWNER_FILE)?'ranger-buffer-and-audio-lifecycle-delta':'ranger-buffer-selection-delta'):'ability-name-display-delta'):draft?'targeted-draft':combatQaOnly?'combat-qa-update-product-unchanged':combatFixtureOnly?'combat-fixture-update-product-unchanged':'native-qa-update-product-unchanged',wholeGameAccepted:false,
     finalIntegrationRequiresFullRegression:true};
 }
 
@@ -485,10 +534,12 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
   if(abilityNameEvidence.passed)qualityEvidence=await previousQualityEvidence({repository:process.env.GITHUB_REPOSITORY,
     head:abilityNameEvidence.head,prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),token:process.env.CI_SCOPE_ACTIONS_TOKEN,displayEvidence:abilityNameEvidence});
   const scope=ciChangeScope(paths,{draft:draft==='true',sourceBlobs,reuseNativeQa,reuseCombatQa:combatQaEvidence.passed,reuseCombatFixture:combatFixtureEvidence.passed,
-    reuseAbilityNames:abilityNameEvidence.passed,freshNormal:abilityNameEvidence.freshNormalRequired??false});
+    reuseAbilityNames:abilityNameEvidence.passed,reuseProductValidation:abilityNameEvidence.freshProductValidationsRequired===false,freshNormal:abilityNameEvidence.freshNormalRequired??false});
   if(process.env.GITHUB_OUTPUT)appendFileSync(process.env.GITHUB_OUTPUT,['full','verify_full','performance','phaseg','ranger','normal','allunit','r9','combat','audio'].map(k=>`${k}=${scope[k]}\n`).join(''));
   if(process.env.GITHUB_OUTPUT)appendFileSync(process.env.GITHUB_OUTPUT,`reuse_quality=${combatQaEvidence.passed||combatFixtureEvidence.passed||qualityEvidence.passed}\n`);
   if(process.env.GITHUB_STEP_SUMMARY)appendFileSync(process.env.GITHUB_STEP_SUMMARY,
-    `Validation: ${scope.scope}. Ready transitions and unknown product changes run full regression. Exact reviewed deltas retain only completed original gates with their source owners. The ability-name display delta reruns all19 conditional Verify browser/audit steps, tests, lint, content, build and formal performance; failed or missing normal-play evidence also runs again. Original failures remain failures.\n`);
+    `Validation: ${scope.scope}. Ready transitions and unknown product changes run full regression. Exact reviewed deltas retain only completed original gates with their source owners. ${abilityNameEvidence.formalTransferDelta
+      ?'This QA-only delta retains the completed19 conditional Verify browser/audit steps, normal-play and Ranger gates with their verified original owners; tests, lint, content, build, all6 formal performance windows and PhaseG run fresh.'
+      :'The ability-name display delta reruns all19 conditional Verify browser/audit steps, tests, lint, content, build and formal performance; failed or missing normal-play evidence also runs again.'} Original failures remain failures.\n`);
   console.log(JSON.stringify({...scope,base,comparisonBase,head,eligibleNativeReuse,previousFullEvidence,qualityEvidence,combatQaEvidence,combatFixtureEvidence,abilityNameEvidence,changedPaths:paths}));
 }

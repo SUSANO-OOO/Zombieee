@@ -70,6 +70,25 @@
         "formalPerformanceAccepted": false
       },
       "originalReportStatus": "recorded-awaiting-visual-and-listening-review"
+    },
+    {
+      "scope": "desktop",
+      "head": "4c68dbfd03fe5e639b33c95f612824ab459c74d4",
+      "runId": "40210584508",
+      "artifactId": 12605386845,
+      "artifactDigest": "sha256:3073c7d7917a0459bc07812218d2813938abb04d5c7a1cd6fd80c0492580fb61",
+      "reportSha256": "07274c93535c1fad946cac645dc330aaab77197bbc6171420203da768ce8acbd",
+      "reportBytes": 482554,
+      "originalZipCrc32": 498265100,
+      "conditions": {
+        "independentContextPerCase": true,
+        "actualAudioReadinessBeforeRecording": true,
+        "caseDeadlineMs": 30000,
+        "retainedObservationsKeepTheirOriginalConditions": true,
+        "coldStartupAccepted": false,
+        "formalPerformanceAccepted": false
+      },
+      "originalReportStatus": "recorded-awaiting-visual-and-listening-review"
     }
   ],
   "retained": [
@@ -1227,11 +1246,30 @@
         "errors": 0
       },
       "caseElapsedMs": 20548.493042000002
+    },
+    {
+      "caseId": "desktop:ranger:manual",
+      "head": "4c68dbfd03fe5e639b33c95f612824ab459c74d4",
+      "runId": "40210584508",
+      "artifactId": 12605386845,
+      "reportSha256": "07274c93535c1fad946cac645dc330aaab77197bbc6171420203da768ce8acbd",
+      "file": "01-ranger-manual.webm",
+      "clipSha256": "47770feb812aca0932fb10d2dd225e52d0065b76fdb25626b95ea70c1ce1e699",
+      "bytes": 1662801,
+      "originalStatus": "recorded",
+      "driftMs": -20.333333333544488,
+      "maxGapMs": 210,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 113,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 18049.504792
     }
   ],
-  "pending": [
-    "desktop:ranger:manual"
-  ],
+  "pending": [],
   "originalFailures": [
     {
       "caseId": "desktop:scout:manual",

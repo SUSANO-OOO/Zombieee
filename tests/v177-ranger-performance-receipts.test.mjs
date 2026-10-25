@@ -71,10 +71,22 @@ test('the actual device projection retains raw receipts and all original window,
     old=execFileSync('git',['show','207e19bd33e6ce62895c615dedaa816ae469d70c:scripts/v100-device-runtime-browser.mjs'],{encoding:'utf8'}).replaceAll('\r\n','\n'),
     tree=text=>ts.createSourceFile('device.mjs',text,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS),ast=tree(source),oldAst=tree(old);
   const declaration=(ast,name)=>ast.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text===name);
-  for(const name of ['beginMeasurement','endMeasurement','fixtureSave']){
-    const current=declaration(ast,name).getText(ast)
+  // The changed stop is exercised against the original default-off callback
+  // and failure boundaries in v177-ranger-deferred-observation.test.mjs.
+  for(const name of ['beginMeasurement','fixtureSave']){
+    let current=declaration(ast,name).getText(ast)
       .replace(', frameCpuChunks: [], frameCpuOverflow: 0','')
       .replace(', deferredCpu: {chunks:state.frameCpuChunks,overflow:state.frameCpuOverflow}','');
+    if(name==='beginMeasurement'){
+      const addition=`    if(deferRangerObservation){
+      state.rangerObservationOwner={state,window,document,performance,startedAt:state.startedAt};
+      state.rangerDrawObservations=[];state.rangerDrawOverflow=0;
+    }
+`;
+      assert.equal(current.split(addition).length,2,'Only the reviewed opt-in storage is exempt');
+      current=current.replace(addition,'').replace('beginMeasurement(page,{deferRangerObservation=false}={})','beginMeasurement(page)')
+        .replace('page.evaluate(deferRangerObservation =>','page.evaluate(() =>').replace('},deferRangerObservation);','});');
+    }
     assert.equal(current,declaration(oldAst,name).getText(oldAst),name);
   }
   const gate=ast=>{const rows=[];const visit=n=>{if(ts.isVariableDeclaration(n)&&n.name.getText(ast)==='gates')rows.push(n.initializer.getText(ast));ts.forEachChild(n,visit);};visit(ast);assert.equal(rows.length,1);return rows[0];};
@@ -360,7 +372,7 @@ test('the same original end callback exports all unmodified CPU chunks after sto
  const chunks=[{measuring:true,readAt:100,frameCpuSequence:1,rows:[[1,90,91,89,92,93,94,1.5]]}];
  const owner={active:true,handle:123,startedAt:0,times:[10,20],capacity:4800,overflow:0,visibilityEvents:[],listeners:{},frameCpuChunks:chunks,frameCpuOverflow:3};
  let stopped=false,calls=0;
- const ctx=vm.createContext({window:{__V100_DEVICE_RAF__:owner},document:{visibilityState:'visible'},performance:{now:()=>{assert.equal(stopped,true);return 30000;}},
+ const ctx=vm.createContext({structuredClone,window:{__V100_DEVICE_RAF__:owner},document:{visibilityState:'visible'},performance:{now:()=>{assert.equal(stopped,true);return 30000;}},
  cancelAnimationFrame:h=>{assert.equal(h,123);stopped=true;},page:{evaluate:async fn=>{calls++;return fn();}}});
  const endMeasurement=vm.runInContext('('+end.getText(tree)+')',ctx),receipt=await endMeasurement(ctx.page);
  assert.equal(calls,1);assert.equal(receipt.endedAt,30000);assert.equal(owner.active,false);
