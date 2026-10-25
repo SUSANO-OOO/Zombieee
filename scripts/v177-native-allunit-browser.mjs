@@ -10,10 +10,10 @@ import {SHARDS,VIEWPORTS,FORM_BINDINGS,LIMITS,planShard,assertRetainedBindings} 
 import {captureAllUnitCase} from './v177-native-allunit-cases.mjs';
 import {planRangerManualShard,rangerManualEnvelopeReference} from './v177-native-allunit-ranger-manual-contract.mjs';
 import {captureNativeRangerManualCase} from './v177-native-allunit-ranger-manual.mjs';
-import {nativeCaseSelection} from './v177-native-allunit-selection.mjs';
 import {planOutcomeShard,captureNativeOutcomeCase} from './v177-native-allunit-outcomes.mjs';
 import {combatKindToCampaignUnitId} from '../app/campaign.js';
 import {withNativeProcessTimeline} from './v177-native-process-timeline.mjs';
+import {prepareMayoOwnedSample} from './v177-native-mayo-owned-sample.mjs';
 
 const git=args=>execFileSync('git',args,{encoding:'utf8',maxBuffer:8*1024*1024,windowsHide:true}).trim();
 const sha=b=>createHash('sha256').update(b).digest('hex');
@@ -131,6 +131,7 @@ const additions=[
   'scripts/v177-native-allunit-recording-runtime.mjs','scripts/native-recording-runtime/package.json',
   'scripts/native-recording-runtime/package-lock.json','tests/v177-native-allunit-recording-runtime.test.mjs',
   'scripts/v177-native-process-timeline.mjs','tests/v177-native-process-timeline.test.mjs',
+  'scripts/v177-native-mayo-owned-sample.mjs',
   'scripts/v177-native-allunit-selection.mjs','scripts/v177-native-allunit-recovery.json',
   'scripts/v177-native-allunit-outcomes.mjs','tests/v177-native-allunit-outcomes.test.mjs',
   'scripts/v177-human-corpse-contract.mjs','tests/v177-human-corpse-continuity.test.mjs',
@@ -155,7 +156,12 @@ export async function retainAllUnitSources(out){
 }
 export async function runBrowserQa(){
   const binding=await nativeAllUnitBinding();
-  const selection=nativeCaseSelection({event:JSON.parse(await readFile(process.env.GITHUB_EVENT_PATH,'utf8'))});
+  // ADHOC BRANCH ONLY. This is not an inventory/recovery-selection change.
+  assert.equal(process.env.GITHUB_EVENT_NAME,'workflow_dispatch');assert.equal(binding.shardId,'forms-4');
+  const allowed=new Set(['scripts/v177-native-allunit-browser.mjs','scripts/v177-native-mayo-owned-sample.mjs','.github/workflows/native-capture-comparison.yml']);
+  const delta=git(['diff','--name-only','45e46b90be77cd349670157974646dcc7f16b1cd','HEAD']).split('\n').filter(Boolean);
+  assert.ok(delta.length>0&&delta.every(file=>allowed.has(file)),'Only3 adhoc QA paths may differ from product45e46b90');
+  const selection={mode:'owned-mayo-sample-diagnostic',caseIds:['forms-4:mayo-chan:attack:1280x720'],manualCaseIds:[],outcomeCaseIds:[],shards:['forms-4']};
   const requestedMimeType=process.env.V177_NATIVE_VIDEO_MIME??'video/webm;codecs=vp8';
   assert.ok(['video/webm;codecs=vp8','video/mp4'].includes(requestedMimeType),'Unknown native recorder comparison');
   assert.ok(selection.mode==='codec-control'||requestedMimeType==='video/webm;codecs=vp8','Container comparison is isolated from the remaining/full inventory');
@@ -177,7 +183,10 @@ export async function runBrowserQa(){
     engine:'webkit',runtime:deps.NATIVE_RECORDING_WEBKIT_RUNTIME,build:await deps.productionBuildIdentity(),
     status:'running-diagnostic',selection,recording:{requestedMimeType,requestedCaptureHz,codecControl:selection.mode==='codec-control'},fullPlan,excludedCaseIds:fullPlan.filter(r=>!selection.caseIds.includes(r.caseId)).map(r=>r.caseId),
     plan,manualPlan,manualCases:[],outcomePlan,outcomeCases:[],sources:[],contexts:[],cases:[],errors:[],persistenceErrors:[],...acceptance(),
-    scope:selection.mode==='acquisition-control'
+    sourceProductBase:'45e46b90be77cd349670157974646dcc7f16b1cd',diagnosticOnly:true,releaseAccepted:false,allUnitAcceptance:false,
+    scope:selection.mode==='owned-mayo-sample-diagnostic'
+      ?'One ordinary original Mayo attack1280; pinned recording2380. A2s native stack observation is diagnostic only. Original15x120ms/30s case/VP8/60Hz/8MiB and clocks remain unchanged. Sampler never extends the recording/case and never kills its subject.'
+      :selection.mode==='acquisition-control'
       ?'One original Abomination attack case with a 60Hz canvas acquisition-request timer. Native VP8 bytes, free RAF/simulation, source clocks, 15x120ms sampling and encoded thresholds stay unchanged. Diagnostic only; no retained, all-unit, performance, release or physical acceptance.'
       :selection.mode==='codec-control'
       ?'One original Brute attack case with a native container comparison. Original scene, free RAF/simulation, source clock and deadlines remain unchanged. This dispatch supplies no all-unit, performance, release, naturalness or physical audio acceptance.'
@@ -204,14 +213,19 @@ export async function runBrowserQa(){
   for(const row of manualPlan)assertRetainedBindings(rangerManualEnvelopeReference(row),{...report,expectedHead:binding.head,files:report.sources});
   for(const row of outcomePlan)assertRetainedBindings(row.reference,{...report,expectedHead:binding.head,files:report.sources});
   const reportFile=path.join(out,'report.json');await writeFile(reportFile,JSON.stringify(report,null,2)+'\n',{flag:'wx'});
-  let primary,browser,closingBrowser=false;
+  let primary,browser,closingBrowser=false,sampleDiagnostic;
+  const sampleLifecycle=new AbortController();
   const fail=error=>{primary??=error;report.errors.push(String(error));};
   const persist=async()=>{
     try{await writeFile(reportFile,JSON.stringify(report,null,2)+'\n');}
     catch(error){report.persistenceErrors.push(String(error));fail(error);}
   };
   try{
-    browser=await (await deps.nativeRecordingBrowserType()).launch({headless:true});
+    const recordingType=await deps.nativeRecordingBrowserType();
+    sampleDiagnostic=await prepareMayoOwnedSample({out:path.join(out,'owned-mayo-sample'),selection,binding,
+      browserType:recordingType,runtime:deps.NATIVE_RECORDING_WEBKIT_RUNTIME,signal:sampleLifecycle.signal});
+    sampleDiagnostic.markBrowserLaunch();
+    browser=await recordingType.launch({headless:true});
     browser.on('disconnected',()=>{if(!closingBrowser)fail(Error('Unexpected native browser disconnect'));});
     report.browserVersion=browser.version();assert.equal(report.browserVersion,deps.NATIVE_RECORDING_WEBKIT_RUNTIME.browserVersion);
     for(const viewport of VIEWPORTS){
@@ -262,15 +276,18 @@ export async function runBrowserQa(){
             await prepareNativeAllUnitBattle(page,forms,owner,async()=>{
               setupStage('title-entry');await deps.enterV100FromTitle(page);setupStage('battle-button');await page.getByRole('button',{name:'戦闘へ',exact:true}).click();
               setupStage('battle-running');await page.waitForFunction(()=>window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().running);
-            },setupStage);setupStage('audio-preparation');await waitForNativeCaptureAudio(page,owner);setupStage('completed');
-          },closeOwned,{onDeadline:fail});
+            },setupStage);setupStage('audio-preparation');await waitForNativeCaptureAudio(page,owner);
+            await sampleDiagnostic.admit();setupStage('completed');
+          },closeOwned,{onDeadline:error=>{sampleLifecycle.abort();fail(error);}});
           for(const planned of rows){
             const row={...planned,status:'starting',samples:[],...acceptance()};report.cases.push(row);
             const processObservationOwner=new AbortController();
-            try{await withNativeGameCaseDeadline(()=>withNativeProcessTimeline(()=>captureAllUnitCase(page,row,{out,onFailure:fail,requestedMimeType,requestedCaptureHz,codecControl:selection.mode==='codec-control',acquisitionControl:selection.mode==='acquisition-control'}),{selection,row,out,binding,signal:processObservationOwner.signal}),closeOwned,
+            try{await withNativeGameCaseDeadline(()=>withNativeProcessTimeline(()=>sampleDiagnostic.run(()=>captureAllUnitCase(page,row,{out,onFailure:fail,requestedMimeType,requestedCaptureHz,codecControl:selection.mode==='codec-control',acquisitionControl:selection.mode==='acquisition-control'}),{row,signal:processObservationOwner.signal}),{selection,row,out,binding,signal:processObservationOwner.signal}),closeOwned,
               {onDeadline:error=>{processObservationOwner.abort();row.deadlineExpired=true;fail(error);}});}
             catch(error){row.status='failed';row.error=String(error);row.operationSettledAtOwnerReturn=error.operationSettledAtOwnerReturn??null;fail(error);await persist();break;}
-            finally{processObservationOwner.abort();}
+            finally{processObservationOwner.abort();
+              try{await sampleDiagnostic.settled();}catch(error){row.nativeOwnedSamplePersistenceError=String(error);fail(error);}
+            }
             await persist();
           }
           // Supplemental manual input never supplies a missing normal case.
@@ -300,9 +317,11 @@ export async function runBrowserQa(){
     }
   }catch(error){fail(error);}
   finally{
+    sampleLifecycle.abort();
     if(browser){closingBrowser=true;report.browserCleanup='pending';await persist();
       try{await closeNativeGameContext(browser);report.browserCleanup='completed';}
       catch(error){report.browserCleanup='failed';fail(error);}}
+    if(sampleDiagnostic)try{await sampleDiagnostic.settled();}catch(error){report.nativeOwnedSamplePersistenceError=String(error);fail(error);}
     report.unexecuted=plan.filter(p=>!report.cases.some(r=>r.caseId===p.caseId)).map(p=>p.caseId);
     report.manualUnexecuted=manualPlan.filter(p=>!report.manualCases.some(r=>r.caseId===p.caseId)).map(p=>p.caseId);
     report.outcomeUnexecuted=outcomePlan.filter(p=>!report.outcomeCases.some(r=>r.caseId===p.caseId)).map(p=>p.caseId);
