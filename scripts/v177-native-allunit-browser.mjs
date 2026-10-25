@@ -118,6 +118,7 @@ export async function main({load=url=>import(url),argv=process.argv,...guard}={}
   finally{if(length<3)argv.length=length;else argv[2]=original;}
 }
 const additions=[
+  '.github/workflows/native-capture-comparison.yml','public/art/v105/abilities/mayo-chan-feral-ready-raster-r1.png',
   '.github/workflows/native-allunit-capture.yml','scripts/v177-native-allunit-browser.mjs',
   'scripts/v177-native-allunit-build.mjs',
   'scripts/v100-macos-indexing-control.mjs',
@@ -155,7 +156,9 @@ export async function retainAllUnitSources(out){
 }
 export async function runBrowserQa(){
   const binding=await nativeAllUnitBinding();
-  const selection=nativeCaseSelection({event:JSON.parse(await readFile(process.env.GITHUB_EVENT_PATH,'utf8'))});
+  assert.equal(process.env.GITHUB_EVENT_NAME,'workflow_dispatch');
+  const iconPolicy=process.env.V105_MAYO_ICON_POLICY;assert.ok(['svg','static-png'].includes(iconPolicy));
+  const selection={mode:'mayo-static-icon-control',caseIds:['forms-4:mayo-chan:attack:1280x720'],manualCaseIds:[],outcomeCaseIds:[],shards:['forms-4']};
   const requestedMimeType=process.env.V177_NATIVE_VIDEO_MIME??'video/webm;codecs=vp8';
   assert.ok(['video/webm;codecs=vp8','video/mp4'].includes(requestedMimeType),'Unknown native recorder comparison');
   assert.ok(selection.mode==='codec-control'||requestedMimeType==='video/webm;codecs=vp8','Container comparison is isolated from the remaining/full inventory');
@@ -177,7 +180,10 @@ export async function runBrowserQa(){
     engine:'webkit',runtime:deps.NATIVE_RECORDING_WEBKIT_RUNTIME,build:await deps.productionBuildIdentity(),
     status:'running-diagnostic',selection,recording:{requestedMimeType,requestedCaptureHz,codecControl:selection.mode==='codec-control'},fullPlan,excludedCaseIds:fullPlan.filter(r=>!selection.caseIds.includes(r.caseId)).map(r=>r.caseId),
     plan,manualPlan,manualCases:[],outcomePlan,outcomeCases:[],sources:[],contexts:[],cases:[],errors:[],persistenceErrors:[],...acceptance(),
-    scope:selection.mode==='acquisition-control'
+    iconPolicy,sourceProductBase:'45e46b90be77cd349670157974646dcc7f16b1cd',diagnosticOnly:true,releaseAccepted:false,
+    scope:selection.mode==='mayo-static-icon-control'
+      ?'Fixed ABBA original Mayo ordinary attack1280 comparing the authored SVG icon with an offline192px RGBA rendering of that same SVG. Original image design, game, mixer, renderer, stats, VP8 recording,15x120ms sampling, source clocks, quality/deadlines and original byte audits stay unchanged. No release/allunit/formal acceptance.'
+      :selection.mode==='acquisition-control'
       ?'One original Abomination attack case with a 60Hz canvas acquisition-request timer. Native VP8 bytes, free RAF/simulation, source clocks, 15x120ms sampling and encoded thresholds stay unchanged. Diagnostic only; no retained, all-unit, performance, release or physical acceptance.'
       :selection.mode==='codec-control'
       ?'One original Brute attack case with a native container comparison. Original scene, free RAF/simulation, source clock and deadlines remain unchanged. This dispatch supplies no all-unit, performance, release, naturalness or physical audio acceptance.'
@@ -262,7 +268,12 @@ export async function runBrowserQa(){
             await prepareNativeAllUnitBattle(page,forms,owner,async()=>{
               setupStage('title-entry');await deps.enterV100FromTitle(page);setupStage('battle-button');await page.getByRole('button',{name:'戦闘へ',exact:true}).click();
               setupStage('battle-running');await page.waitForFunction(()=>window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().running);
-            },setupStage);setupStage('audio-preparation');await waitForNativeCaptureAudio(page,owner);setupStage('completed');
+            },setupStage);setupStage('audio-preparation');await waitForNativeCaptureAudio(page,owner);
+            if(iconPolicy==='static-png'){
+              setupStage('static-icon-control-style');
+              await page.addStyleTag({content:".manual-ability-ready-icon.ability-mayo-chan{background-image:url('/art/v105/abilities/mayo-chan-feral-ready-raster-r1.png')}"});
+            }
+            setupStage('completed');
           },closeOwned,{onDeadline:fail});
           for(const planned of rows){
             const row={...planned,status:'starting',samples:[],...acceptance()};report.cases.push(row);
