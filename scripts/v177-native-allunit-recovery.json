@@ -16,11 +16,11 @@
     "app/v105AbilityNames.js": "28cf501a28e033f75e643259aec2e14eab144d97",
     "app/v177RangerFootPlacement.js": "b1e7857b6b810773714b1eaf2dedb3846b8c1376",
     "assets/source/v177/ranger/lower-r3/provenance.json": "aba5c66d3183fbe0d5ae849b7a3a48b026b0f1f6",
-    "docs/PROJECT_STATE.md": "9d2ca1300aa0b6dfdf4b795cc20af7b21f1468ae",
+    "docs/PROJECT_STATE.md": "94708f27be52d59b7186059ad22c10751236dd21",
     "docs/qa/v105/native-f7-evidence.json": "348eb032e3c7268539f413e62396bae078d35bce",
     "docs/qa/v105/shared-foot-impact-f7.json": "ca7e48eeb2228b3e4d5a513f026aa88719630d5e",
     "tests/audio-mixer.test.mjs": "b7c6537909ee85baa9eb833f187abd5998716f8f",
-    "tests/ci-change-scope.test.mjs": "30b6afed29f5c521035fc93cdab6a4e82ad512b8",
+    "tests/ci-change-scope.test.mjs": "cce9f7c1ee84c0bfec8635a1671747bf7c271b22",
     "tests/ci-contract.test.mjs": "cca6dde0cbe07e3adb29286422b7a2bd907e2cfc",
     "tests/production-audio.test.mjs": "b19bf16647580aaaaa09db262de804485d4a60bf",
     "tests/v105-five-corrections.test.mjs": "27c3a5f353d3579d24862a18ddd09809c20abba0",
@@ -29,21 +29,23 @@
     "tests/v177-ranger-body-correction.test.mjs": "23eccd8aba1aafd7336cfacdf0785d89748148fe",
     "docs/qa/v105/native-f880-evidence.json": "597b84943cd699146f872156427192f190068f50",
     "app/AshfallGame.tsx": "004c5f5e25a6ff63c029d6f06d4c29f92efbd859",
-    "scripts/ci-change-scope.mjs": "79e51aa0e9675e86dd33dc43f800f0f306402b7c",
+    "scripts/ci-change-scope.mjs": "cdf8b13fe375b176fd31a8c5794859f54e3892fe",
     "scripts/v100-device-runtime-browser.mjs": "445b9aaa783128b764623a2d40cc3e194587c94e",
-    "scripts/v100-phase-g-production-matrix.mjs": "e879eca860f4bf9e5531e75c29bea79c209cb57f",
-    "scripts/v105-five-corrections-capture.mjs": "f187ea4d816abc25272673d880cc15fe7d5b686b",
+    "scripts/v100-phase-g-production-matrix.mjs": "1dcde92eacfa4c5027b92ce38a782849ad6f61b7",
+    "scripts/v105-five-corrections-capture.mjs": "39dc904107ff9a752d387fb0cc8833a8bbdc5779",
     "scripts/v177-native-allunit-browser.mjs": "536ff62a6e277ab2dd602d95ed9737b1da66b416",
     "scripts/v177-representative-battles.mjs": "c5359ed5edf24403c427c64832e5d140806eb9c8",
     "tests/ci-combat-qa-reuse.test.mjs": "54ab3ab379fb044dc623ddd0fcc7145340eee9c3",
-    "tests/v105-original-av.test.mjs": "bce597610df617963d4ed6a83007746e47466c17",
+    "tests/v105-original-av.test.mjs": "4cf3fe840e35d3d90d011329577a85644541a0d9",
     "tests/v177-native-setup-overlap.test.mjs": "d93dbc17ba719cec7941c1483e72fc8cda5ab7d0",
     "tests/v177-ranger-performance-receipts.test.mjs": "41b03de5109c9c5c6eaa6e3405543876407d43b9",
     "tests/v177-representative-battles.test.mjs": "90a3e066019e60ecf95ed12e50415fb6bbb5d975",
-    "tests/v100-phase-g-sustain-pointer.test.mjs": "ebc44603f8bdb95db108611eafdd147afd90c9b2",
-    "docs/qa/v105/five-corrections-6a-evidence.json": "30027698e152d5e49c5d03f2f4c2212571a3e2c9",
+    "tests/v100-phase-g-sustain-pointer.test.mjs": "4c47755ef32c61b74dc7f46bbc99962d9e9985a4",
+    "docs/qa/v105/five-corrections-6a-evidence.json": "53ddd11abdef9749b950d95c76fc529cd3a66543",
     "docs/qa/v105/native-6a-evidence.json": "1b7f233f17d4a61f9a24728359a94ee04495a257",
-    "docs/qa/v105/ci-6a-infrastructure-failure.json": "1408c24a862a46f46071f29dabdd017998bc307e"
+    "docs/qa/v105/ci-6a-infrastructure-failure.json": "1408c24a862a46f46071f29dabdd017998bc307e",
+    "scripts/v177-normal-browser-deadline.mjs": "f60a49ca98db5a8059de56a04073a50b9e6b862f",
+    "tests/v177-normal-browser-deadline.test.mjs": "e664a058bf55b093a1544f03e5482ad878eefbf0"
   },
   "retainedEvidence": {
     "head": "f7f6f7ce46844eaefc4bb519fa80d591e2607407",
@@ -1613,10 +1615,10 @@
   "naturalnessAccepted": false,
   "wholeGameAccepted": false,
   "previousProfile": {
-    "gitHead": "ed0fed486ef7ce2ff3f621c201a0fb24e5812d86",
+    "gitHead": "45e46b90be77cd349670157974646dcc7f16b1cd",
     "file": "scripts/v177-native-allunit-recovery.json",
-    "gitBlob": "c2a3809cf0fd495effecf8fb9cfa9d26b5287f83",
-    "sha256": "c2a0fa3f9d869f6a0549d6efb574d6d3377ca0a8d6cad8d3ec400cb7cafa4b9a"
+    "gitBlob": "b31beddf0273807691685a88c1f01d9bcde75b0c",
+    "sha256": "39440eb9848a73405d62a6fe71dc6aa3828e40ca1ff32432bb1c410a0d0a8e7d"
   },
   "additionalEvidenceInventories": [
     {
@@ -1732,7 +1734,7 @@
   ],
   "fiveCorrections": {
     "file": "docs/qa/v105/five-corrections-6a-evidence.json",
-    "sha256": "9ff075abdfd5f0792d54ed671322f147409718fa88a8cff6793cece66ceb2468",
+    "sha256": "0074e65ee029b74b312aa0937fb5c3fccfdeb794e276494d888ddecf5e57129c",
     "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
     "runId": "40120044506"
   }

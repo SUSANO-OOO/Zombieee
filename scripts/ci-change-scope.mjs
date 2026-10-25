@@ -42,15 +42,19 @@ const nativeQaOnlyPaths=(paths,sourceBlobs)=>paths.length>0&&paths.every(file=>
 // afresh; a failed normal-play lane also runs again. Unknown changes stay full.
 export const ABILITY_NAME_BASELINE=Object.freeze({head:'6a5226647ebf9ba7692c69b9c64af4ce32059d1b',
  base:'e22b134a38409b9d2f86660ee351e616c28fbf44',runId:40120044446,prNumber:181});
+// The predecessor is a context/ancestry check, never a replacement owner for
+// the successful browser and Quality measurements on the original baseline.
+export const ABILITY_NAME_PREDECESSOR=Object.freeze({head:'45e46b90be77cd349670157974646dcc7f16b1cd',runId:40134504308});
 export const ABILITY_NAME_BLOBS=Object.freeze({
  "app/AshfallGame.tsx": "004c5f5e25a6ff63c029d6f06d4c29f92efbd859",
  ".github/workflows/ci.yml": "bbfb51296e72de4c83ea993ce6341f39fbd098a4",
  "scripts/v177-representative-battles.mjs": "c5359ed5edf24403c427c64832e5d140806eb9c8",
  "scripts/v100-device-runtime-browser.mjs": "445b9aaa783128b764623a2d40cc3e194587c94e",
- "scripts/v100-phase-g-production-matrix.mjs": "e879eca860f4bf9e5531e75c29bea79c209cb57f",
- "scripts/v105-five-corrections-capture.mjs": "f187ea4d816abc25272673d880cc15fe7d5b686b",
+ "scripts/v100-phase-g-production-matrix.mjs": "1dcde92eacfa4c5027b92ce38a782849ad6f61b7",
+ "scripts/v177-normal-browser-deadline.mjs": "f60a49ca98db5a8059de56a04073a50b9e6b862f",
+ "scripts/v105-five-corrections-capture.mjs": "39dc904107ff9a752d387fb0cc8833a8bbdc5779",
  "scripts/v177-native-allunit-browser.mjs": "536ff62a6e277ab2dd602d95ed9737b1da66b416",
- "docs/qa/v105/five-corrections-6a-evidence.json": "30027698e152d5e49c5d03f2f4c2212571a3e2c9"
+ "docs/qa/v105/five-corrections-6a-evidence.json": "53ddd11abdef9749b950d95c76fc529cd3a66543"
 });
 const abilityNameFiles=new Set([...Object.keys(ABILITY_NAME_BLOBS),'scripts/ci-change-scope.mjs',
  'tests/ci-change-scope.test.mjs','tests/ci-contract.test.mjs','tests/ci-combat-qa-reuse.test.mjs',
@@ -59,6 +63,7 @@ const abilityNameFiles=new Set([...Object.keys(ABILITY_NAME_BLOBS),'scripts/ci-c
  'scripts/v177-native-allunit-browser.mjs','tests/v177-native-setup-overlap.test.mjs',
  'tests/v177-ranger-performance-receipts.test.mjs',
  'scripts/v100-phase-g-production-matrix.mjs','tests/v100-phase-g-sustain-pointer.test.mjs',
+ 'scripts/v177-normal-browser-deadline.mjs','tests/v177-normal-browser-deadline.test.mjs',
  'docs/qa/v105/five-corrections-6a-evidence.json','docs/qa/v105/ci-6a-infrastructure-failure.json',
  'docs/PROJECT_STATE.md','docs/qa/v105/native-6a-evidence.json']);
 export const ABILITY_NAME_REUSED_JOBS=Object.freeze(BASELINE_JOB_NAMES.filter(name=>
@@ -69,15 +74,33 @@ export function reviewedAbilityNamePaths(paths,sourceBlobs={}){
   &&['app/AshfallGame.tsx','.github/workflows/ci.yml'].every(file=>paths.includes(file))
   &&Object.entries(ABILITY_NAME_BLOBS).every(([file,blob])=>!paths.includes(file)||sourceBlobs[file]===blob);
 }
-export async function previousAbilityNameEvidence({repository,previousHead,base,prNumber,action,draft,paths,sourceBlobs,token,request=fetch}={}){
+export function reviewedAbilityContinuationPaths(paths,sourceBlobs={}){
+ return Array.isArray(paths)&&paths.length>0&&paths.every(file=>abilityNameFiles.has(file)
+   &&file!=='app/AshfallGame.tsx'&&file!=='.github/workflows/ci.yml')
+  &&Object.entries(ABILITY_NAME_BLOBS).every(([file,blob])=>sourceBlobs[file]===blob);
+}
+export async function previousAbilityNameEvidence({repository,previousHead,base,prNumber,action,draft,paths,sourceBlobs,
+ productUnchanged=false,originalAncestor=false,token,request=fetch}={}){
  const old=ABILITY_NAME_BASELINE;
- if(repository!=='SUSANO-OOO/Zombieee'||previousHead!==old.head||base!==old.base||prNumber!==old.prNumber
-  ||action!=='synchronize'||draft!==false||!token||!reviewedAbilityNamePaths(paths,sourceBlobs))
+ const continuation=previousHead===ABILITY_NAME_PREDECESSOR.head&&productUnchanged===true&&originalAncestor===true
+  &&reviewedAbilityContinuationPaths(paths,sourceBlobs);
+ if(repository!=='SUSANO-OOO/Zombieee'||base!==old.base||prNumber!==old.prNumber
+  ||action!=='synchronize'||draft!==false||!token
+  ||!(previousHead===old.head&&reviewedAbilityNamePaths(paths,sourceBlobs)||continuation))
   return{passed:false,reason:'not-the-reviewed-ability-name-display-delta'};
  const get=async(suffix,binary=false)=>{const response=await request(`https://api.github.com/repos/${repository}/${suffix}`,{
   headers:{Accept:'application/vnd.github+json',Authorization:`Bearer ${token}`,'X-GitHub-Api-Version':'2022-11-28'},signal:AbortSignal.timeout(10000)});
   if(!response.ok)throw Error('Original browser evidence unavailable');return binary?response.arrayBuffer():response.json();};
  try{
+  let predecessor=null;
+  if(continuation){
+   const record=await get(`actions/runs/${ABILITY_NAME_PREDECESSOR.runId}`);
+   if(record.id!==ABILITY_NAME_PREDECESSOR.runId||record.head_sha!==previousHead||record.status!=='completed'
+     ||record.conclusion!=='failure'||record.run_attempt!==1||record.event!=='pull_request'||!record.pull_requests?.some(pr=>pr.number===old.prNumber))
+    return{passed:false,reason:'reviewed-predecessor-context-unavailable'};
+   const provenance=await immutablePrProvenance({get,runId:record.id,head:previousHead,base:old.base});
+   predecessor={head:previousHead,runId:record.id,conclusion:record.conclusion,provenance,measurementOwnersAdopted:false};
+  }
   const run=await get(`actions/runs/${old.runId}`);
   if(run.id!==old.runId||run.head_sha!==old.head||run.status!=='completed'||![1,2].includes(run.run_attempt)||run.event!=='pull_request'
    ||!run.pull_requests?.some(pr=>pr.number===old.prNumber))return{passed:false,reason:'original-candidate-not-complete'};
@@ -153,7 +176,7 @@ export async function previousAbilityNameEvidence({repository,previousHead,base,
   const provenance=await immutablePrProvenance({get,runId:old.runId,head:old.head,base:old.base});
   const normalNames=['chromium','webkit'].map(engine=>`V1 Representative Normal Play (${engine})`),
     normalComplete=!paths.includes('scripts/v177-representative-battles.mjs')&&normalNames.every(successful);
-  return{passed:true,head:old.head,base:old.base,prNumber:old.prNumber,runId:old.runId,provenance,infrastructureRecovery,
+  return{passed:true,head:old.head,base:old.base,prNumber:old.prNumber,runId:old.runId,provenance,infrastructureRecovery,predecessor,
    originalRunConclusion:run.conclusion,
    reusedJobs:[...ABILITY_NAME_REUSED_JOBS,...(normalComplete?normalNames:[])].map(name=>{const j=adoptedJobs.find(j=>j.name===name);
     return{name,id:j.id,head_sha:j.head_sha,run_id:j.run_id,run_attempt:j.run_attempt};}),
@@ -313,7 +336,7 @@ export function ciChangeScope(paths,{draft,sourceBlobs={},reuseNativeQa=false,re
   const nativeQaOnly=reuseNativeQa&&nativeQaOnlyPaths(paths,sourceBlobs);
   const combatQaOnly=reuseCombatQa&&reviewedCombatQaPaths(paths,sourceBlobs);
   const combatFixtureOnly=reuseCombatFixture&&reviewedCombatFixturePaths(paths,sourceBlobs);
-  const abilityNameOnly=reuseAbilityNames&&reviewedAbilityNamePaths(paths,sourceBlobs);
+  const abilityNameOnly=reuseAbilityNames&&(reviewedAbilityNamePaths(paths,sourceBlobs)||reviewedAbilityContinuationPaths(paths,sourceBlobs));
   let full=!draft&&!nativeQaOnly&&!combatQaOnly&&!combatFixtureOnly&&!abilityNameOnly,rangerChanged=false,
     normalChanged=abilityNameOnly&&freshNormal,allunitChanged=false,r9Changed=false,combatChanged=false;
   for(const file of paths){
@@ -352,6 +375,7 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
   assert.match(comparisonBase,/^[0-9a-f]{40}$/u);
   const paths=execFileSync('git',['diff','--no-renames','--name-only',`${comparisonBase}..${head}`],{encoding:'utf8',windowsHide:true}).trim().split(/\r?\n/u).filter(Boolean);
   const sourceFiles=new Set([...paths.filter(file=>ABILITY_NAME_BLOBS[file]||reviewedCorrectionQaBlobs[file]||reviewedValidationBlobs[file]||reviewedMotionBlobs[file]||reviewedLifecycleBlobs[file]||reviewedBruteBlobs[file]||reviewedNativeControlBlobs[file]||reviewedSupportBlobs[file]||reviewedRawClockBlobs[file]||COMBAT_QA_BLOBS[file]),
+    ...(previousHead===ABILITY_NAME_PREDECESSOR.head?Object.keys(ABILITY_NAME_BLOBS):[]),
     ...(Object.keys(COMBAT_QA_BLOBS).every(file=>paths.includes(file))?['.github/workflows/ci.yml','.github/workflows/v1-quality-acceptance.yml']:[]),
     ...(paths.includes('tests/v177-native-canvas-clips.test.mjs')?[...Object.keys(COMBAT_QA_BLOBS),
       '.github/workflows/ci.yml','.github/workflows/v1-quality-acceptance.yml','tests/v177-native-canvas-clips.test.mjs']:[])]);
@@ -374,7 +398,9 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
   const productPaths=['app','public','assets','package.json','package-lock.json','scripts/pwa-native-runtime/package.json','scripts/pwa-native-runtime/package-lock.json'];
   const eligibleCombatReuse=eligibleNativeReuse&&previousHead===COMBAT_QA_BASELINE.head&&reviewedCombatQaPaths(paths,sourceBlobs);
   const eligibleFixtureReuse=eligibleNativeReuse&&previousHead===COMBAT_FIXTURE_BASELINE.head&&reviewedCombatFixturePaths(paths,sourceBlobs);
-  const productUnchanged=(eligibleCombatReuse||eligibleFixtureReuse)&&productPaths.every(file=>{
+  const eligibleAbilityContinuation=eligibleNativeReuse&&previousHead===ABILITY_NAME_PREDECESSOR.head
+    &&reviewedAbilityContinuationPaths(paths,sourceBlobs);
+  const productUnchanged=(eligibleCombatReuse||eligibleFixtureReuse||eligibleAbilityContinuation)&&productPaths.every(file=>{
     const blob=execFileSync('git',['rev-parse',`${head}:${file}`],{encoding:'utf8',windowsHide:true}).trim();
     return [previousHead,...(eligibleFixtureReuse?[COMBAT_QA_BASELINE.head]:[])].every(ref=>
       execFileSync('git',['rev-parse',`${ref}:${file}`],{encoding:'utf8',windowsHide:true}).trim()===blob);
@@ -386,10 +412,12 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
     base:process.env.CI_SCOPE_PR_BASE,prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),action,draft:draft==='true',productUnchanged,
     paths,sourceBlobs,token:process.env.CI_SCOPE_ACTIONS_TOKEN});
   const abilityNameEvidence=eligibleNativeReuse?await previousAbilityNameEvidence({repository:process.env.GITHUB_REPOSITORY,previousHead,
-    base:process.env.CI_SCOPE_PR_BASE,prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),action,draft:draft==='true',paths,sourceBlobs,token:process.env.CI_SCOPE_ACTIONS_TOKEN})
+    base:process.env.CI_SCOPE_PR_BASE,prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),action,draft:draft==='true',paths,sourceBlobs,productUnchanged,
+    originalAncestor:eligibleAbilityContinuation&&execFileSync('git',['merge-base',ABILITY_NAME_BASELINE.head,previousHead],{encoding:'utf8',windowsHide:true}).trim()===ABILITY_NAME_BASELINE.head,
+    token:process.env.CI_SCOPE_ACTIONS_TOKEN})
     :{passed:false,reason:'previous-head-not-exact-ancestor'};
   if(abilityNameEvidence.passed)qualityEvidence=await previousQualityEvidence({repository:process.env.GITHUB_REPOSITORY,
-    head:previousHead,prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),token:process.env.CI_SCOPE_ACTIONS_TOKEN,displayEvidence:abilityNameEvidence});
+    head:abilityNameEvidence.head,prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),token:process.env.CI_SCOPE_ACTIONS_TOKEN,displayEvidence:abilityNameEvidence});
   const scope=ciChangeScope(paths,{draft:draft==='true',sourceBlobs,reuseNativeQa,reuseCombatQa:combatQaEvidence.passed,reuseCombatFixture:combatFixtureEvidence.passed,
     reuseAbilityNames:abilityNameEvidence.passed,freshNormal:abilityNameEvidence.freshNormalRequired??false});
   if(process.env.GITHUB_OUTPUT)appendFileSync(process.env.GITHUB_OUTPUT,['full','verify_full','performance','phaseg','ranger','normal','allunit','r9','combat'].map(k=>`${k}=${scope[k]}\n`).join(''));

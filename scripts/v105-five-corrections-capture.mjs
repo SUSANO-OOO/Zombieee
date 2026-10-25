@@ -37,13 +37,14 @@ export async function correctionCaseSelection(scope,{event,root=process.cwd(),se
   const inventory=JSON.parse(bytes),all=['desktop','mobile390','mobile340'].flatMap(s=>correctionCases(s).map(r=>s+':'+r.kind+':'+r.mode));
   assert.equal(inventory.head,source.head);assert.equal(inventory.runId,source.runId);
   assert.equal(inventory.schema,'v105-five-corrections-retained/v1');
-  assert.deepEqual(inventory.reports.map(r=>r.scope).sort(),['desktop','mobile340','mobile390']);
+  assert.deepEqual([...new Set(inventory.reports.map(r=>r.scope))].sort(),['desktop','mobile340','mobile390']);
+  assert.equal(new Set(inventory.reports.map(r=>r.head+':'+r.runId+':'+r.scope)).size,inventory.reports.length,
+    'One report identity per original candidate and scope');
   const kept=inventory.retained.map(r=>r.caseId),pending=inventory.pending;
   assert.deepEqual([...kept,...pending].sort(),[...all].sort(),'All original correction cases need one owner or a fresh recording');
   assert.equal(new Set([...kept,...pending]).size,all.length);
   for(const row of inventory.retained){
-    assert.equal(row.head,inventory.head);assert.equal(row.runId,inventory.runId);
-    const report=inventory.reports.find(r=>r.scope===row.caseId.split(':')[0]);
+    const report=inventory.reports.find(r=>r.scope===row.caseId.split(':')[0] && r.head===row.head && r.runId===row.runId);
     assert.ok(report&&report.head===row.head&&report.runId===row.runId&&report.reportSha256===row.reportSha256
       &&report.artifactId===row.artifactId,'Retained AV must belong to its original scope report');
     assert.match(row.reportSha256,/^[a-f0-9]{64}$/u);assert.match(row.clipSha256,/^[a-f0-9]{64}$/u);

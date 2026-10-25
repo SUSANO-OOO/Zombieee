@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {ciChangeScope,framePerformanceRuntimes,previousFullCiEvidence,previousQualityEvidence,
- previousAbilityNameEvidence,reviewedAbilityNamePaths,ABILITY_NAME_BASELINE,ABILITY_NAME_BLOBS,ABILITY_NAME_REUSED_JOBS} from '../scripts/ci-change-scope.mjs';
+ previousAbilityNameEvidence,reviewedAbilityNamePaths,reviewedAbilityContinuationPaths,ABILITY_NAME_BASELINE,ABILITY_NAME_PREDECESSOR,ABILITY_NAME_BLOBS,ABILITY_NAME_REUSED_JOBS} from '../scripts/ci-change-scope.mjs';
 import {assertEphemeralPerformanceHost} from '../scripts/v100-macos-indexing-control.mjs';
 import {readFileSync} from 'node:fs';
 import {load} from 'js-yaml';
@@ -10,6 +10,46 @@ import {mkdtempSync,mkdirSync,writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {resolve,join} from 'node:path';
 import {provenanceFixture} from './helpers/ci-pr-provenance.mjs';
+
+test('the exact45e QA continuation keeps original6a owners, requires product ancestry and never adopts failed predecessor gates',async()=>{
+ const old=ABILITY_NAME_BASELINE,prev=ABILITY_NAME_PREDECESSOR,
+   paths=['scripts/ci-change-scope.mjs','scripts/v177-normal-browser-deadline.mjs','scripts/v100-phase-g-production-matrix.mjs',
+     'scripts/v105-five-corrections-capture.mjs','scripts/v177-native-allunit-recovery.json','docs/qa/v105/five-corrections-6a-evidence.json'],
+   sourceBlobs={...ABILITY_NAME_BLOBS},owner={run_id:old.runId,head_sha:old.head,run_attempt:1},
+   jobs=ABILITY_NAME_REUSED_JOBS.map((name,i)=>({id:700+i,name,...owner,status:'completed',conclusion:'success'})),
+   oldRun={id:old.runId,head_sha:old.head,status:'completed',conclusion:'failure',run_attempt:1,event:'pull_request',pull_requests:[{number:181}]},
+   predecessor={...oldRun,id:prev.runId,head_sha:prev.head},
+   original=provenanceFixture({runId:old.runId,head:old.head,base:old.base,artifactId:91}),
+   previous=provenanceFixture({runId:prev.runId,head:prev.head,base:old.base,artifactId:92});
+ const api=({previousRun=predecessor,rows=jobs,previousProof=previous}={})=>async url=>({ok:true,
+   arrayBuffer:async()=>url.includes('/92/')?previousProof.zip:original.zip,
+   json:async()=>url.includes('/artifacts?')?(url.includes('/'+prev.runId+'/')?previousProof.artifacts:original.artifacts)
+     :url.includes('/jobs?')?{total_count:rows.length,jobs:rows}:url.endsWith('/'+prev.runId)?previousRun:oldRun});
+ const options={repository:'SUSANO-OOO/Zombieee',previousHead:prev.head,base:old.base,prNumber:181,action:'synchronize',draft:false,
+   paths,sourceBlobs,productUnchanged:true,originalAncestor:true,token:'fixture-only'};
+ const evidence=await previousAbilityNameEvidence({...options,request:api()});assert.equal(evidence.passed,true);
+ assert.equal(evidence.head,old.head);assert.equal(evidence.runId,old.runId);assert.equal(evidence.predecessor.head,prev.head);
+ assert.equal(evidence.predecessor.conclusion,'failure');assert.equal(evidence.predecessor.measurementOwnersAdopted,false);
+ assert.equal(evidence.predecessor.provenance.head,prev.head);assert.equal(evidence.provenance.head,old.head);
+ assert.equal(evidence.reusedJobs.length,43);assert.ok(evidence.reusedJobs.every(j=>j.head_sha===old.head&&j.run_id===old.runId));
+ for(const field of ['freshVerifyRequired','freshPerformanceRequired','freshPhaseGRequired','freshNormalRequired'])assert.equal(evidence[field],true);
+ const scope=ciChangeScope(paths,{draft:false,sourceBlobs,reuseAbilityNames:true,freshNormal:true});
+ assert.equal(scope.full,false);for(const field of ['verify_full','performance','phaseg','normal'])assert.equal(scope[field],true);
+ assert.equal(scope.r9,false);assert.equal(scope.wholeGameAccepted,false);
+ assert.equal(reviewedAbilityNamePaths(paths,sourceBlobs),false);assert.equal(reviewedAbilityContinuationPaths(paths,sourceBlobs),true);
+ for(const bad of [{productUnchanged:false},{originalAncestor:false},{previousHead:'f'.repeat(40)},
+   {base:'f'.repeat(40)},{prNumber:180},{action:'ready_for_review'},{draft:true},
+   {paths:[...paths,'app/AshfallGame.tsx']},{paths:[...paths,'package-lock.json']},
+   {sourceBlobs:{...sourceBlobs,'app/AshfallGame.tsx':'f'.repeat(40)}},
+   {sourceBlobs:{...sourceBlobs,'.github/workflows/ci.yml':null}}])
+  assert.equal((await previousAbilityNameEvidence({...options,...bad,request:()=>assert.fail('Reject unknown continuation before network')})).passed,false);
+ for(const patch of [{id:1},{head_sha:old.head},{status:'in_progress'},{conclusion:'cancelled'},{run_attempt:2},{pull_requests:[]}])
+  assert.equal((await previousAbilityNameEvidence({...options,request:api({previousRun:{...predecessor,...patch}})})).passed,false);
+ const wrongProof=provenanceFixture({runId:prev.runId,head:prev.head,base:'f'.repeat(40),artifactId:92});
+ assert.equal((await previousAbilityNameEvidence({...options,request:api({previousProof:wrongProof})})).passed,false);
+ const lost=jobs.map((j,i)=>i?j:{...j,conclusion:'failure'});
+ assert.equal((await previousAbilityNameEvidence({...options,request:api({rows:lost})})).passed,false);
+});
 
 test('the exact boss-label deletion retains successful browser owners but repeats Verify, performance and unfinished normal play',async()=>{
  const old=ABILITY_NAME_BASELINE,paths=[...Object.keys(ABILITY_NAME_BLOBS),'scripts/ci-change-scope.mjs','tests/ci-combat-qa-reuse.test.mjs'];

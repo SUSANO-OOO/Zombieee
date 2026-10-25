@@ -28,8 +28,11 @@ test('correction reuse keeps original owners and reruns all failed and affected 
   const options={root,event:{},select:()=>({mode:'remaining'})};
   try{
     await store(original);const d=await correctionCaseSelection('desktop',options);
-    assert.equal(d.plan.length,13);assert.equal(d.retained.length,29);assert.equal(d.source.head,original.head);
-    assert.ok(d.plan.some(r=>r.kind==='takuya-omega'&&r.mode==='enemy'));
+    assert.equal(d.plan.length,2);assert.equal(d.retained.length,40);assert.equal(d.source.head,original.head);
+    assert.deepEqual(d.plan.map(r=>r.kind).sort(),['mayo-chan','miyamoto-musashi']);
+    const omega=d.retained.find(r=>r.caseId==='desktop:takuya-omega:enemy');
+    assert.equal(omega.head,'45e46b90be77cd349670157974646dcc7f16b1cd');assert.equal(omega.runId,'40134504325');
+    assert.equal(d.retained.filter(r=>r.head===original.head).length,29,'Old shared-context successes keep their original owners');
     for(const scope of ['mobile390','mobile340']){const s=await correctionCaseSelection(scope,options);assert.equal(s.plan.length,0);assert.equal(s.retained.length,7);}
     assert.equal((await correctionCaseSelection('desktop',{...options,select:()=>({mode:'full'})})).plan.length,42);
     for(const mutate of [i=>i.pending.pop(),i=>i.retained.push(i.retained[0]),i=>{i.retained[0].driftMs=120.001;},
@@ -37,7 +40,9 @@ test('correction reuse keeps original owners and reruns all failed and affected 
       i=>{i.retained[0].fullAvDecode.requiredMixerAudioStream=false;},i=>{i.retained[0].caseElapsedMs=30000;},
       i=>{i.retained[0].encodedPtsVerified=false;},i=>{i.retained[0].originalStatus='failed';},
       i=>{i.retained[0].reportSha256='f'.repeat(64);},i=>{i.retained[0].artifactId=i.reports[1].artifactId;},
-      i=>{i.reports[0].scope='mobile340';}]){
+      i=>{i.reports[0].scope='mobile340';},i=>i.reports.push(i.reports.at(-1)),
+      i=>{i.retained.at(-1).runId=original.runId;},i=>{i.retained.at(-1).reportSha256=i.reports[0].reportSha256;},
+      i=>{i.retained.at(-1).originalStatus='failed';},i=>{i.retained.at(-1).maxGapMs=250.001;}]){
       const bad=structuredClone(original);mutate(bad);await store(bad);await assert.rejects(correctionCaseSelection('desktop',options));
     }
     await store(original);await writeFile(path.join(root,file),'{}');await assert.rejects(correctionCaseSelection('desktop',options));
