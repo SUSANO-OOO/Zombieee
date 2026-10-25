@@ -1,50 +1,82 @@
-name: Native Capture Comparison Diagnostic
-
+name: Desktop Original CPU Transfer Diagnostic
 on:
   workflow_dispatch:
     inputs:
       expected_head:
-        description: Exact 40-character candidate SHA for this diagnostic
         required: true
         type: string
-
 permissions:
   contents: read
-
 concurrency:
-  group: native-capture-comparison-${{ inputs.expected_head }}
+  group: formal-transfer-${{ inputs.expected_head }}
   cancel-in-progress: false
-
 jobs:
-  native-capture-comparison:
-    name: Native WebKit Capture Comparison Diagnostic
-    runs-on: macos-15-intel
-    timeout-minutes: 15
+  observe:
+    runs-on: macos-15
+    timeout-minutes: 30
+    env:
+      EXPECTED_HEAD: ${{ inputs.expected_head }}
+      GITHUB_PAGES_RELEASE_SHA: ${{ inputs.expected_head }}
+      V100_DEVICE_RUNTIME_ENGINE: webkit
+      V100_DEVICE_RUNTIME_ROLE: formal
+      V100_DEVICE_RUNTIME_VIEWPORT: 1280x720
+      V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC: '0'
+      V100_DEVICE_RUNTIME_BLANK_BASELINE: '1'
     steps:
       - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.expected_head }}
+          fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@v6
         with:
-          node-version: 24
+          node-version: '22.13.0'
           cache: npm
-      - name: Verify immutable candidate before running the diagnostic
-        env:
-          EXPECTED_HEAD: ${{ inputs.expected_head }}
-        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_HEAD??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_HEAD);'
-      - run: npm ci
-      - name: Install the pinned native WebKit runtime
+      - name: Verify original product and the two diagnostic paths
         run: |
-          npm ci --prefix scripts/pwa-native-runtime
-          node scripts/pwa-native-runtime/node_modules/playwright/cli.js install webkit
-      - name: Compare original native canvas recording conditions
-        env:
-          V177_NATIVE_CAPTURE_OUT: outputs/v177-native-capture-comparison
-        run: node scripts/v177-native-canvas-comparison-browser.mjs
+          node --input-type=module <<'JS'
+          import assert from'node:assert/strict';import{execFileSync}from'node:child_process';
+          const g=a=>execFileSync('git',a,{encoding:'utf8'}).trim(),base='45e46b90be77cd349670157974646dcc7f16b1cd';
+          assert.equal(g(['rev-parse','HEAD']),process.env.EXPECTED_HEAD);assert.equal(process.env.GITHUB_SHA,process.env.EXPECTED_HEAD);
+          assert.equal(g(['merge-base',base,'HEAD']),base);
+          assert.deepEqual(g(['diff','--name-only',base,'HEAD']).split('\n').sort(),['scripts/v100-device-runtime-browser.mjs','.github/workflows/native-capture-comparison.yml'].sort());
+          for(const file of ['app','public','assets','package.json','package-lock.json','scripts/v100-normal-tactical-input.mjs','scripts/v100-runtime-observation.mjs','scripts/v177-ranger-performance-start.mjs','scripts/v177-ranger-performance-receipts.mjs'])assert.equal(g(['rev-parse','HEAD:'+file]),g(['rev-parse',base+':'+file]));
+          JS
+      - run: npm ci
+      - name: Install and verify original formal Mac ARM browser
+        run: |
+          npx playwright install webkit
+          node scripts/verify-playwright-container-runtime.mjs --macos-arm64
+      - run: npm run build
+      - name: Fixed ABBA original live transfer and after-window transfer
+        shell: bash
+        run: |
+          set -euo pipefail
+          for episode in a1 b1 b2 a2; do
+            if [[ "$episode" == a* ]]; then export V105_FORMAL_CPU_TRANSFER=live; else export V105_FORMAL_CPU_TRANSFER=after-window; fi
+            export V100_DEVICE_RUNTIME_OUT="outputs/formal-transfer/$episode"
+            set +e
+            node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs
+            code=$?
+            set -e
+            if [[ "$code" -gt 1 ]]; then exit "$code"; fi
+            node --input-type=module <<'JS'
+          import fs from'node:fs';import assert from'node:assert/strict';
+          const r=JSON.parse(fs.readFileSync(process.env.V100_DEVICE_RUNTIME_OUT+'/report.json'));
+          assert.equal(r.measurement.representative,false);assert.equal(r.results.length,1);
+          const x=r.results[0];assert.ok(['passed','failed'].includes(x.status));
+          for(const rows of Object.values(x.diagnostics))assert.equal(rows.length,0,'Product/transport error is not a performance-only failure');
+          assert.ok(x.performance?.raf.elapsedMs>=30000);assert.equal(x.rangerDrawReceipts?.weightedPaintObserved,true);
+          const allowed=new Set(['p95Raf','medianFps','renderCadence']);
+          for(const [name,pass]of Object.entries(x.performance.gates))if(!allowed.has(name))assert.equal(pass,true,name);
+          assert.equal(x.frameCpuObservation.overflow,0);assert.ok(x.frameCpuObservation.chunks.length>0);
+          console.log(JSON.stringify({mode:r.measurement.transferControl.mode,status:x.status,p95:x.performance.p95RafMs,hz:x.performance.effectiveRenderHz,originalError:x.error??null,formalAccepted:false}));
+          JS
+          done
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: v177-native-capture-comparison
-          path: outputs/v177-native-capture-comparison
-          retention-days: 7
+          name: formal-transfer-original
+          path: outputs/formal-transfer
+          if-no-files-found: error
+          retention-days: 14

@@ -27,6 +27,11 @@ const playwright = process.env.PLAYWRIGHT_MODULE_PATH
   ? await import(pathToFileURL(path.resolve(process.env.PLAYWRIGHT_MODULE_PATH)).href)
   : await import("playwright");
 const engine = process.env.V100_DEVICE_RUNTIME_ENGINE ?? "chromium";
+const transferMode=process.env.V105_FORMAL_CPU_TRANSFER;
+assert.ok(['live','after-window'].includes(transferMode),'One fixed adhoc transfer control required');
+assert.equal(engine,'webkit');assert.equal(process.platform,'darwin');assert.equal(process.arch,'arm64');
+assert.equal(process.env.V100_DEVICE_RUNTIME_VIEWPORT,'1280x720');
+assert.equal(process.env.V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC,'0');
 const requestedDpr = Number(process.env.V100_DEVICE_RUNTIME_DPR ?? 1);
 assert.ok([1, 2].includes(requestedDpr), "V100_DEVICE_RUNTIME_DPR must be 1 or 2");
 assert.ok(["chromium", "webkit"].includes(engine), `unsupported engine: ${engine}`);
@@ -265,7 +270,7 @@ async function beginMeasurement(page) {
     window.__V100_RAF_CALLBACK_DIAG__?.start();
     // A 120Hz phone produces about 3,600 samples in 30 seconds. Retain that
     // complete window with bounded headroom; overflow still fails the gate.
-    const state = { startedAt: performance.now(), times: [], capacity: 4_800, overflow: 0, active: true, handle: 0, visibilityEvents: [] };
+    const state = { startedAt: performance.now(), times: [], capacity: 4_800, overflow: 0, active: true, handle: 0, visibilityEvents: [], frameCpuChunks: [], frameCpuOverflow: 0 };
     const mark = (type) => state.visibilityEvents.push({ type, at: performance.now(), visibilityState: document.visibilityState });
     state.listeners = { visibilitychange: () => mark("visibilitychange"), blur: () => mark("blur"), pagehide: () => mark("pagehide") };
     for (const [type, listener] of Object.entries(state.listeners)) window.addEventListener(type, listener, { passive: true });
@@ -291,7 +296,7 @@ async function endMeasurement(page) {
     const performanceAfter = window.__ASHFALL_BATTLE_QA__?.getPerformanceSnapshot?.() ?? null;
     const callbackDiagnostic = window.__V100_RAF_CALLBACK_DIAG__?.stop() ?? null;
     for (const [type, listener] of Object.entries(state.listeners ?? {})) window.removeEventListener(type, listener);
-    return { startedAt: state.startedAt, endedAt, times: state.times, capacity: state.capacity, overflow: state.overflow, visibilityEvents: state.visibilityEvents, performanceBefore: state.performanceBefore, performanceAfter, visibilityState: document.visibilityState, callbackDiagnostic };
+    return { startedAt: state.startedAt, endedAt, times: state.times, capacity: state.capacity, overflow: state.overflow, visibilityEvents: state.visibilityEvents, performanceBefore: state.performanceBefore, performanceAfter, visibilityState: document.visibilityState, callbackDiagnostic, deferredCpu: {chunks:state.frameCpuChunks,overflow:state.frameCpuOverflow} };
   });
 }
 
@@ -349,6 +354,8 @@ const report = {
   measurement: { seconds: measurementMs / 1000, clock: "browser performance.now", representative: paintIsolation === "none" && qualityDiagnostic === "auto" && !contextSyncDiagnostic && !observerlessDiagnostic && !suppressDebugDatasetDiagnostic && !nativeRecordingDiagnostic && !nativeControlDiagnostic && hostControl === "none", uninterrupted: true, paintIsolation, qualityDiagnostic, contextSyncDiagnostic, observerlessDiagnostic, suppressDebugDatasetDiagnostic, nativeRecordingDiagnostic, runtimeRole, hostControl, hostPreparation, diagnosticOnly: paintIsolation !== "none" || qualityDiagnostic !== "auto" || contextSyncDiagnostic || observerlessDiagnostic || suppressDebugDatasetDiagnostic || nativeRecordingDiagnostic || nativeControlDiagnostic || hostControl !== "none" },
   results: [],
 };
+report.measurement.representative=false;report.measurement.diagnosticOnly=true;
+report.measurement.transferControl={mode:transferMode,fixedOrder:'ABBA',productChanged:false,indexingPreparation:'none in both conditions; not formal qualification',formalAccepted:false,releaseAccepted:false};
 await mkdir(path.dirname(evidenceDir), { recursive: true });
 await mkdir(evidenceDir, { recursive: false });
 const require = createRequire(import.meta.url);
@@ -405,7 +412,7 @@ try {
     const result = { name, viewport, status: "failed", blankBaseline, tacticalPolicy: viewport.safeArea ? "airstrike-first" : "crowd-barrage-at-eight", diagnostics: { consoleErrors: [], pageErrors: [], requestFailures: [], httpFailures: [] }, samples: [], measurementSamples: [], inputs: [] };
     const retainFrameCpuChunks=runtimeRole==='formal'&&engine==='webkit'&&!callbackDiagnostic&&!observerlessDiagnostic;
     if(retainFrameCpuChunks)result.frameCpuObservation = {
-      source:'existing product frameCpuTimings128 copied in each original stillMeasuring RPC',
+      source:transferMode==='live'?'existing product frameCpuTimings128 copied and transferred in each original stillMeasuring RPC':'same original numeric chunks copied in each stillMeasuring RPC, retained in the original measurement owner and exported once after stop',
       columns:['sequence','rafTimestamp','entryAt','previousExitAt','simulationFinishedAt','drawFinishedAt','exitAt','simulationTime'],
       sourceRingCapacity:128,maxChunks:128,overflow:0,chunks:[],diagnosticOnly:true,
     };
@@ -507,17 +514,25 @@ try {
         if(!retainFrameCpuChunks)return page.evaluate(({ startedAt, durationMs }) => (
           performance.now() - startedAt < durationMs
         ), { startedAt: measurement.startedAt, durationMs: measurementMs });
-        const reply = await page.evaluate(({ startedAt, durationMs }) => {
+        const reply = await page.evaluate(({ startedAt, durationMs, transferMode }) => {
           const measuring = performance.now() - startedAt < durationMs;
           const runtime = globalThis.__ASHFALL_RUNTIME_PERFORMANCE__;
-          return {
+          const chunk = {
             measuring,readAt:performance.now(),frameCpuSequence:runtime?.frameCpuSequence??null,
             rows:Array.isArray(runtime?.frameCpuTimings)?runtime.frameCpuTimings.map(row=>[
               row.sequence,row.rafTimestamp,row.entryAt,row.previousExitAt,
               row.simulationFinishedAt,row.drawFinishedAt,row.exitAt,row.simulationTime,
             ]):null,
           };
-        }, { startedAt: measurement.startedAt, durationMs: measurementMs });
+          if(transferMode==='after-window'){
+            const owner=window.__V100_DEVICE_RAF__;
+            if(!owner?.active||owner.startedAt!==startedAt||!Array.isArray(owner.frameCpuChunks))throw Error('Original CPU observation owner changed');
+            if(owner.frameCpuChunks.length<128)owner.frameCpuChunks.push(chunk);else owner.frameCpuOverflow++;
+            return measuring;
+          }
+          return chunk;
+        }, { startedAt: measurement.startedAt, durationMs: measurementMs, transferMode });
+        if(transferMode==='after-window'){assert.equal(typeof reply,'boolean');return reply;}
         const observation=result.frameCpuObservation;
         if(observation.chunks.length<observation.maxChunks)observation.chunks.push(reply);
         else observation.overflow+=1;
@@ -548,6 +563,10 @@ try {
         }
       }
       const raf = await endMeasurement(page);
+      if(transferMode==='after-window'){
+        assert.ok(Array.isArray(raf?.deferredCpu?.chunks));assert.ok(Number.isSafeInteger(raf.deferredCpu.overflow));
+        result.frameCpuObservation.chunks=raf.deferredCpu.chunks;result.frameCpuObservation.overflow=raf.deferredCpu.overflow;
+      }
       result.rangerDrawReceipts=observerlessDiagnostic
         ?{status:'not-observed-diagnostic',weightedPaintObserved:false,scope:'Observerless control retains its original no-sampling protocol; no Ranger workload acceptance.'}
         :rangerPerformanceReceipts(result.measurementSamples,{startedAt:measurement.startedAt,endedAt:raf?.endedAt});
