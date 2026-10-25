@@ -12,8 +12,15 @@ const evidence=fs.readFileSync('scripts/v100-phase-g-runtime-evidence.mjs','utf8
 const parsed=ts.createSourceFile('evidence.mjs',evidence,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);
 const marker=parsed.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text==='manualMarkerDispatchStarted').getText(parsed).replace('export ','');
 const clone=x=>JSON.parse(JSON.stringify(x));
+const appSource=fs.readFileSync('app/AshfallGame.tsx','utf8');
+const appTree=ts.createSourceFile('app.tsx',appSource,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);
+let actualAbilityCallback;
+const findAbility=n=>{if(ts.isVariableDeclaration(n)&&n.name.getText(appTree)==='activateManualAbility')actualAbilityCallback=n.initializer.arguments[0].getText(appTree);ts.forEachChild(n,findAbility);};
+findAbility(appTree);assert.ok(actualAbilityCallback);
+const actualHandlerJs=ts.transpileModule('this.actualHandler='+actualAbilityCallback,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
 function fixture(change={}){
  let clock=100,gets=0,handlerCalls=0,closed=false,hitBlocked=false;
+ const rejectRequests=[];
  const calls=[],listeners=new Map(),snapshot={screen:'battle',stageId:'stage-3',battleGeneration:2,time:3,
   running:true,paused:false,over:false,fighters:[{id:9,kind:'brute',side:'human',hp:100,manualAbility:{activationId:0}}],manualAbilityReceipts:[]};
  class Element{constructor(){this.dataset={fighterId:'9',abilityKind:'brute'};this.disabled=false;this.isConnected=true;}
@@ -23,12 +30,31 @@ function fixture(change={}){
  const document={documentElement:{},querySelectorAll:()=>change.missing?[]:[el],elementFromPoint:()=>change.covered||hitBlocked?other:el,
   addEventListener(type,handler,options){assert.equal(options.capture,true);assert.equal(options.passive,true);listeners.set(type,handler);},
   removeEventListener(type,handler,capture){assert.equal(capture,true);assert.equal(listeners.get(type),handler);listeners.delete(type);}};
- const window={__ASHFALL_BATTLE_QA__:{getPhaseGCombatSnapshot(){gets++;if(change.readFails&&gets===2)throw Error('post observation failed');return clone(snapshot);}}};
- const context=vm.createContext({window,document,Element,performance:{now:()=>clock},Date:{now:()=>clock},Math,
+ const window={__ASHFALL_BATTLE_QA__:{getPhaseGCombatSnapshot(){gets++;if(change.readFails&&gets===2)throw Error('post observation failed');return clone(snapshot);}},
+  __ASHFALL_AUDIO_QA__:{getCueRequests:()=>clone(rejectRequests)}};
+ const context=vm.createContext({window,document,Element,performance:{now:()=>clock,timeOrigin:100000},Date:{now:()=>clock},Math,
+  JSON:{stringify:value=>{if(change.slowValidation&&gets===2)clock=601;return JSON.stringify(value);}},
+  gameRef:{current:snapshot},selectedActionRef:{current:null},rejectBattleSaveBoundary:()=>false,
+  manualAbilityTargetCandidates:()=>[],canActivateManualAbility:()=>false,
+  playUiOperationCue:(action,dedupeKey)=>{assert.equal(action,'reject');rejectRequests.push({cueId:'v100-ui-reject',dedupeKey,at:clock});},
   phaseGPointerFailure:(code,evidence)=>Object.assign(new Error(code),{code,evidence,phaseGTerminalInputFailure:true})});
+ vm.runInContext(actualHandlerJs,context);
  vm.runInContext(marker+'\n'+helpers+'\nthis.api={observer:phaseGSustainAbilityObserver,validate:validatePhaseGSustainAbilityReceipt,tap:phaseGSustainAbilityTap};',context);
- const activate=()=>{handlerCalls++;if(change.noActivation)return;snapshot.fighters[0].manualAbility.activationId++;
-  snapshot.manualAbilityReceipts.push({ownerId:9,kind:'brute',eventType:'start',activationId:snapshot.fighters[0].manualAbility.activationId,at:snapshot.time});};
+ const activate=()=>{handlerCalls++;
+  if(change.productionReject){assert.equal(context.actualHandler(9),false);
+   const r=rejectRequests.at(-1);
+   if(change.wrongRejectOwner)r.dedupeKey='ability:10:unavailable';
+   if(change.unknownReject)r.dedupeKey='ability:9:not-integrated';
+   if(change.earlyReject)r.at=100;
+   if(change.futureReject)r.at=999;
+   if(change.oldReject){r.at=99;rejectRequests.pop();}
+   if(change.missingReject)rejectRequests.pop();
+   if(change.doubleReject)rejectRequests.push({...r,at:clock+.1});
+   if(!change.mixedStartReject)return;
+  }
+  if(change.noActivation)return;snapshot.fighters[0].manualAbility.activationId++;
+  snapshot.manualAbilityReceipts.push({ownerId:9,kind:'brute',eventType:'start',activationId:snapshot.fighters[0].manualAbility.activationId,at:snapshot.time});
+  if(change.sameIdStart||change.regressedStart){snapshot.fighters[0].manualAbility.activationId--;snapshot.manualAbilityReceipts.at(-1).activationId=change.regressedStart?-1:0;}};
  const page={isClosed:()=>closed,async evaluate(fn,arg){calls.push(arg.mode);clock++;
   const result=fn(arg);if(arg.mode==='finish')result.cleanupFixtureObserved=listeners.size===0;return clone(result);},
   mouse:{async click(x,y){calls.push('native-click');if(change.nativeError)throw Error('native input rejected');
@@ -40,15 +66,17 @@ function fixture(change={}){
     listeners.get(type)?.(event);if(type==='click'){activate();if(change.removeButton)el.isConnected=false;}}
    if(change.multipleStarts)activate();if(change.generationChange)snapshot.battleGeneration++;
    if(change.removeActor)snapshot.fighters=[];
-   snapshot.time+=1/60;
+   snapshot.time+=1/60;if(change.originChange)context.performance.timeOrigin++;
   }}};
+ if(change.oldReject)rejectRequests.push({cueId:'v100-ui-reject',dedupeKey:'ability:9:unavailable',at:99});
  return{context,page,calls,listeners,snapshot,get gets(){return gets;},get handlerCalls(){return handlerCalls;},closeContext(){closed=true;listeners.clear();window.__V100_PHASE_G_SUSTAIN_POINTERS__?.clear();}};
 }
 const results=[];
-async function run(name,change,expected){const f=fixture(change),phases=[];let accepted,error;
- try{accepted=await f.context.api.tap(f.page,{selector:'button.manual-ability-ready.available:not([disabled])',index:0},phases);}catch(e){error=String(e);}
+async function run(name,change,expected){const f=fixture(change),phases=[],record={};let accepted,error;
+ try{accepted=await f.context.api.tap(f.page,{selector:'button.manual-ability-ready.available:not([disabled])',index:0},phases,record);}catch(e){error=String(e);}
  if(expected==='pass'){assert.equal(error,undefined,name);assert.equal(accepted,true,name);assert.deepEqual(f.calls,['arm','native-click','finish']);assert.equal(f.gets,2);assert.equal(f.handlerCalls,1);assert.equal(f.listeners.size,0);}
  if(expected==='unavailable'){assert.equal(error,undefined);assert.equal(accepted,false);assert.deepEqual(f.calls,['arm']);assert.equal(f.handlerCalls,0);assert.equal(f.listeners.size,0);}
+ if(expected==='rejected'){assert.equal(error,undefined,name);assert.equal(accepted,false,name);assert.deepEqual(f.calls,['arm','native-click','finish']);assert.equal(f.handlerCalls,1);assert.equal(f.listeners.size,0);assert.equal(record.sustainAbilityInputs[0].outcome,'rejected');assert.equal(phases.at(-1).decision.rejection.dedupeKey,'ability:9:unavailable');}
  if(expected==='fail-finalized'){assert.ok(error,name);assert.notEqual(accepted,true);assert.deepEqual(f.calls,['arm','native-click','finish']);assert.equal(f.listeners.size,0);}
  if(expected==='fail-no-later-rpc'){assert.ok(error,name);assert.deepEqual(f.calls,['arm','native-click']);f.closeContext();assert.equal(f.listeners.size,0);}
  results.push({name,logicFixturePassed:true,accepted:accepted??false,error:error??null,rpcs:f.calls,syntheticFixtureOnly:true});}
@@ -62,11 +90,20 @@ await run('native error sends neither a receipt RPC nor a second input',{nativeE
 await run('late native fulfillment cannot start the final RPC past original500ms',{lateClick:true},'fail-no-later-rpc');
 assert.equal(results.length,19);
 });
+
+test('a real synchronous unavailable handler response is distinct from activation, missing input or unknown rejection',async()=>{
+ await run('production unavailable guard rejects a delivered background click',{productionReject:true},'rejected');
+ for(const [name,change]of Object.entries({wrongOwner:{wrongRejectOwner:true},unknownReason:{unknownReject:true},beforeClick:{earlyReject:true},afterFinish:{futureReject:true},oldReceipt:{oldReject:true},missingReceipt:{missingReject:true},duplicateReceipt:{doubleReject:true},mixedActivationAndReject:{mixedStartReject:true},differentOrigin:{originChange:true}}))
+  await run(name,{productionReject:true,...change},'fail-finalized');
+ await run('synchronous validation also consumes the original500ms',{productionReject:true,slowValidation:true},'fail-finalized');
+ await run('same-id new start cannot be hidden by the unchanged counter',{productionReject:true,mixedStartReject:true,sameIdStart:true},'fail-finalized');
+ await run('regressed-id new start cannot be hidden by the unchanged counter',{productionReject:true,mixedStartReject:true,regressedStart:true},'fail-finalized');
+});
 test('the native sustain change preserves the original500ms lock, terminal cancellation and default deployment input',()=>{
 const original=ts.createSourceFile('original.mjs',execFileSync('git',['show','6a5226647ebf9ba7692c69b9c64af4ce32059d1b:scripts/v100-phase-g-production-matrix.mjs'],{encoding:'utf8',windowsHide:true}),ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);
 const candidate=tree;
 for(const name of ['phaseGPageInputState','withPhaseGPageInputLock','phaseGPointerFailure','withDeploymentPreinputDeadline','phaseGOrderedControlInput','installDeploymentPointerReceipt','readDeploymentPointerReceipts','removeDeploymentPointerReceipt','performVerifiedDeploymentPointer']){const a=original.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text===name),b=candidate.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text===name);assert.ok(a&&b);assert.equal(a.getText(original),b.getText(candidate),name);}
-assert.match(source,/phaseGSustainAbilityTap\(page,\{selector:sustainAbilitySelector,index\},phases\), 500, "sustain-ability"/u);
+assert.match(source,/phaseGSustainAbilityTap\(page,\{selector:sustainAbilitySelector,index\},phases,tacticalRecord\), 500, "sustain-ability"/u);
 });
 
 test('the real outer500ms timeout also forbids later page diagnostics and another input',async()=>{
@@ -75,7 +112,7 @@ test('the real outer500ms timeout also forbids later page diagnostics and anothe
  let arrow;const visit=n=>{if(ts.isArrowFunction(n)&&n.body.getText(tree).includes('try {\n              await phaseGOrderedControlInput'))arrow=n;
   ts.forEachChild(n,visit);};visit(tree);assert.ok(arrow,'Test the actual sustain callsite exception path');
  let cancellations=0,inputs=0;
- const context={performance,page:{},sustainAbilitySelector:'button.manual-ability-ready.available',index:0,
+ const context={performance,page:{},sustainAbilitySelector:'button.manual-ability-ready.available',index:0,tacticalRecord:{},
   phaseGSustainAbilityTap:async()=>{inputs++;return new Promise(()=>{});},
   terminateTimedOutDeploymentPreinput:async()=>{cancellations++;return{terminalLifecycleVerified:true};},
   setTimeout:(fn,ms)=>{assert.equal(ms,500);return setTimeout(fn,0);},clearTimeout};

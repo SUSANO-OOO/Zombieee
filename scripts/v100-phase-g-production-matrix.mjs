@@ -1105,9 +1105,17 @@ function phaseGSustainAbilityObserver({ mode, attemptId, selection }) {
     if (!s) throw new Error('Missing existing Phase G runtime observation');
     const owner = s.fighters?.find(f => String(f.id) === ownerId && f.kind === kind);
     return { screen:s.screen, stageId:s.stageId, battleGeneration:s.battleGeneration, time:s.time,
+      timeOrigin:performance.timeOrigin,
       running:s.running, paused:s.paused, over:s.over,
       fighters:owner?[{id:owner.id,kind:owner.kind,side:owner.side,hp:owner.hp,
-        manualAbility:{activationId:owner.manualAbility?.activationId}}]:[],
+        stunned:owner.stunned,combatReady:owner.combatReady,gateEntering:owner.gateEntering,
+        manualAbility:{activationId:owner.manualAbility?.activationId,phase:owner.manualAbility?.phase}}]:[],
+      // Read the real synchronous handler response. A stale available HUD can
+      // receive a correct click after its actual target or readiness changed.
+      // A rejection is not an activation and must not satisfy manual proof.
+      abilityRejectRequests:(window.__ASHFALL_AUDIO_QA__?.getCueRequests?.()??[])
+        .filter(r=>r.cueId==='v100-ui-reject' && r.dedupeKey?.startsWith('ability:'+ownerId+':'))
+        .map(r=>({...r})),
       manualAbilityReceipts:(s.manualAbilityReceipts??[]).filter(r => String(r.ownerId) === ownerId
         && r.kind === kind && r.eventType === 'start').map(r => ({...r})) };
   };
@@ -1174,15 +1182,33 @@ function validatePhaseGSustainAbilityReceipt(armed, actual) {
   const current=after?.fighters?.find(f=>String(f.id)===ownerId)?.manualAbility?.activationId;
   const starts=(after?.manualAbilityReceipts??[]).filter(r=>String(r.ownerId)===ownerId && r.kind===kind
     && r.eventType==='start' && r.activationId>prior);
-  check(Number.isSafeInteger(before?.battleGeneration) && typeof before?.stageId==='string' && before.stageId.length>0
+  const addedRows=(oldRows,newRows)=>{
+    const counts=new Map();for(const row of oldRows){const key=JSON.stringify(row);counts.set(key,(counts.get(key)??0)+1);}
+    return newRows.filter(row=>{const key=JSON.stringify(row),count=counts.get(key)??0;
+      if(count){counts.set(key,count-1);return false;}return true;});
+  };
+  const newStarts=addedRows(before?.manualAbilityReceipts??[],after?.manualAbilityReceipts??[]);
+  check(Number.isSafeInteger(before?.battleGeneration) && before.battleGeneration===after?.battleGeneration
+    && typeof before?.stageId==='string' && before.stageId.length>0 && before.stageId===after?.stageId
+    && before.screen==='battle' && after?.screen==='battle'
+    && Number.isFinite(before.timeOrigin) && before.timeOrigin>0 && before.timeOrigin===after?.timeOrigin
     && Number.isFinite(before.time) && Number.isFinite(after?.time) && after.time>=before.time
-    && Number.isSafeInteger(prior) && manualMarkerDispatchStarted(before,after,ownerId,kind)
-    && starts.length===1 && starts[0].activationId===prior+1 && (current===undefined||current===prior+1)
-    && Number.isFinite(starts[0].at) && starts[0].at>=before.time && starts[0].at<=after.time,'SUSTAIN_ACTUAL_ACTIVATION_NOT_ONCE');
-  return {ok:errors.length===0,errors};
+    && Number.isSafeInteger(prior),'SUSTAIN_BATTLE_OR_CLOCK_CHANGED');
+  const newRejects=addedRows(before?.abilityRejectRequests??[],after?.abilityRejectRequests??[]);
+  const activated=manualMarkerDispatchStarted(before,after,ownerId,kind)
+    && newStarts.length===1 && starts.length===1 && starts[0].activationId===prior+1 && (current===undefined||current===prior+1)
+    && Number.isFinite(starts[0].at) && starts[0].at>=before.time && starts[0].at<=after.time && newRejects.length===0;
+  const click=events.find(e=>e.type==='click'),rejection=newRejects[0];
+  const rejected=newStarts.length===0 && starts.length===0 && current===prior && newRejects.length===1
+    && rejection.cueId==='v100-ui-reject' && rejection.dedupeKey==='ability:'+ownerId+':unavailable'
+    && Number.isFinite(rejection.at) && Number.isFinite(click?.at)
+    && rejection.at>=click.at && rejection.at<=actual.finishedAt;
+  check(activated||rejected,'SUSTAIN_HANDLER_RESPONSE_UNPROVEN');
+  return {ok:errors.length===0,errors,outcome:errors.length?'invalid':activated?'activated':'rejected',
+    rejection:rejected?{cueId:rejection.cueId,dedupeKey:rejection.dedupeKey,at:rejection.at}:null};
 }
 
-async function phaseGSustainAbilityTap(page, selection, phases) {
+async function phaseGSustainAbilityTap(page, selection, phases, evidenceRecord) {
   const startedAt=performance.now(),attemptId='sustain-ability-'+Date.now()+'-'+Math.random().toString(36).slice(2);
   const guard=()=>{
     if(performance.now()-startedAt>=500)throw phaseGPointerFailure('QA_HARNESS_CONTROL_INPUT_TIMEOUT',
@@ -1203,8 +1229,11 @@ async function phaseGSustainAbilityTap(page, selection, phases) {
   await step('native-click',()=>page.mouse.click(armed.point.x,armed.point.y));
   const actual=await step('read-and-dispose',()=>page.evaluate(phaseGSustainAbilityObserver,{mode:'finish',attemptId}));
   guard();const decision=validatePhaseGSustainAbilityReceipt(armed,actual);
+  phases.at(-1).decision=decision;
   if(!decision.ok)throw new Error('Sustain native input evidence invalid: '+decision.errors.join(','));
-  return true;
+  if(evidenceRecord)(evidenceRecord.sustainAbilityInputs??=[]).push({outcome:decision.outcome,phases});
+  guard();
+  return decision.outcome==='activated';
   } catch(error) {
     const failure=error?.phaseGTerminalInputFailure===true?error:phaseGPointerFailure('QA_HARNESS_CONTROL_INPUT_FAILURE',
       {control:'sustain-ability',phases,error:String(error)},0);
@@ -4298,7 +4327,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
           await withPhaseGPageInputLock(page, async () => {
             try {
               await phaseGOrderedControlInput(page,
-                (phases) => phaseGSustainAbilityTap(page,{selector:sustainAbilitySelector,index},phases), 500, "sustain-ability");
+                (phases) => phaseGSustainAbilityTap(page,{selector:sustainAbilitySelector,index},phases,tacticalRecord), 500, "sustain-ability");
             } catch(error) {
               error.phaseGCausalNoFurtherPageRpc=true;
               throw error;
