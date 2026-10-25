@@ -182,7 +182,7 @@ export async function runBrowserQa(){
     plan,manualPlan,manualCases:[],outcomePlan,outcomeCases:[],sources:[],contexts:[],cases:[],errors:[],persistenceErrors:[],...acceptance(),
     iconPolicy,sourceProductBase:'45e46b90be77cd349670157974646dcc7f16b1cd',diagnosticOnly:true,releaseAccepted:false,
     scope:selection.mode==='mayo-static-icon-control'
-      ?'Fixed ABBA original Mayo ordinary attack1280 comparing the authored SVG icon with an offline192px RGBA rendering of that same SVG. Original image design, game, mixer, renderer, stats, VP8 recording,15x120ms sampling, source clocks, quality/deadlines and original byte audits stay unchanged. No release/allunit/formal acceptance.'
+      ?'Continuation B1/B2/A2 after failed A1 run40180089865 on a different VM; only the new BBA shares one host. Original Mayo ordinary attack1280 comparing the authored SVG icon with an offline192px RGBA rendering of that same SVG. Original image design, game, mixer, renderer, stats, VP8 recording,15x120ms sampling, source clocks, quality/deadlines and original byte audits stay unchanged. No release/allunit/formal acceptance.'
       :selection.mode==='acquisition-control'
       ?'One original Abomination attack case with a 60Hz canvas acquisition-request timer. Native VP8 bytes, free RAF/simulation, source clocks, 15x120ms sampling and encoded thresholds stay unchanged. Diagnostic only; no retained, all-unit, performance, release or physical acceptance.'
       :selection.mode==='codec-control'
