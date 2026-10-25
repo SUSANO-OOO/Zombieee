@@ -52,7 +52,11 @@ jobs:
   scope:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
     outputs:
+      full: ${{ steps.scope.outputs.full }}
       allunit: ${{ steps.scope.outputs.allunit }}
       shards: ${{ steps.selection.outputs.shards }}
     steps:
@@ -69,12 +73,17 @@ jobs:
           CI_SCOPE_BASE: ${{ github.event.before || github.event.pull_request.base.sha }}
           CI_SCOPE_HEAD: ${{ github.event.pull_request.head.sha || inputs.expected_head }}
           CI_SCOPE_DRAFT: ${{ github.event.pull_request.draft }}
+          CI_SCOPE_ACTION: ${{ github.event.action }}
+          CI_SCOPE_PREVIOUS_HEAD: ${{ github.event.before }}
+          CI_SCOPE_PR_BASE: ${{ github.event.pull_request.base.sha }}
+          CI_SCOPE_PR_NUMBER: ${{ github.event.pull_request.number }}
+          CI_SCOPE_ACTIONS_TOKEN: ${{ github.token }}
         run: node scripts/ci-change-scope.mjs
       - id: selection
         run: node scripts/v177-native-allunit-selection.mjs
   build:
     needs: scope
-    if: ${{ always() && !cancelled() && (github.event_name == 'workflow_dispatch' || (needs.scope.result == 'success' && needs.scope.outputs.shards != '[]' && (!github.event.pull_request.draft || needs.scope.outputs.allunit == 'true'))) }}
+    if: ${{ always() && !cancelled() && (github.event_name == 'workflow_dispatch' || (needs.scope.result == 'success' && needs.scope.outputs.shards != '[]' && (needs.scope.outputs.full == 'true' || needs.scope.outputs.allunit == 'true'))) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     outputs:
@@ -153,7 +162,7 @@ jobs:
         run: node scripts/v177-native-allunit-build.mjs restore outputs/v177-native-allunit-build outputs/v177-native-allunit-${{ matrix.shard }}
       - name: Prepare single-case native timing control
         id: native-preparation
-        if: env.V177_NATIVE_HOST_INDEXING_CONTROL == 'brute-attack-1280'
+        if: env.V177_NATIVE_HOST_INDEXING_CONTROL == 'brute-attack-1280' || env.V177_NATIVE_HOST_INDEXING_CONTROL == 'mayo-attack-1280' || env.V177_NATIVE_HOST_INDEXING_CONTROL == 'ranger-motion'
         run: node scripts/v100-macos-indexing-control.mjs prepare-native-capture
       - name: Capture actual movement and attacks for this four-form shard
         id: capture

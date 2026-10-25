@@ -28,7 +28,11 @@ export function observePlayerAbilityText() {
       const value = String(text);
       proof.observedDraws += 1;
       if (/^[+-]?\d+(?:\.\d+)?$/.test(value)) proof.numericDraws += 1;
-      recordForbidden(value);
+      const label=this[Symbol.for('Zombieee.actualAbilityNamePaint')];
+      if(label&&label.name===value&&label.ownerId!==undefined&&label.activationId>0&&Number.isFinite(label.startedAt)){
+        proof.abilityNameDraws??=[];
+        if(proof.abilityNameDraws.length<256)proof.abilityNameDraws.push({...label,x:args[0],y:args[1]});
+      }else recordForbidden(value);
     }
     return draw.call(this, text, ...args);
   };

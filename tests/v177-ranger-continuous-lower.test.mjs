@@ -176,8 +176,9 @@ test('alternating Ranger owners keep exact pixels and current draw state without
     assert.equal(after.rasterizedDraws,before.rasterizedDraws);
     assert.equal(after.reusedDraws-before.reusedDraws,20);
     assert.equal(observation.writes,uploadsBefore,'alternating cached owners must never upload their pixels again');
-    assert.equal(painter.rasters.length,2);
-    assert.equal(new Set(painter.rasters.map(raster=>raster.canvas)).size,2);
+    assert.equal(painter.rasters.filter(raster=>raster.valid).length,2);
+    assert.equal(painter.rasters.length,3,'two current payloads plus the still-retained retired surface');
+    assert.equal(new Set(painter.rasters.map(raster=>raster.canvas)).size,3);
     assert.ok(painter.rasters.reduce((sum,raster)=>sum+raster.imageData.data.byteLength,0)<=65536*4);
     assert.ok(painter.rasters.reduce((sum,raster)=>sum+raster.canvas.width*raster.canvas.height,0)<=65536);
     const failedTarget=main({width,height,matrix:[scale,0,0,scale,320.25,160]});
@@ -216,8 +217,9 @@ test('sampler growth preserves exact small surfaces and a missing context never 
   const {painter,observation}=observedPainter();
   const paint=(size,phase)=>paintV177RangerLower(painter,main({width:1600,height:1600,matrix:[1,0,0,1,600,350]}).ctx,phase,.5,-size/2,-size*.8,size,size*448/480);
   paint(120,.371);paintV177RangerLower(painter,main({matrix:[1,0,0,1,-10000,350]}).ctx,.371,.5,-48,-80,96,89.6);
-  paint(96,.371);paint(96,.762);paint(96,.371);assert.equal(painter.rasters.length,2);
-  const alternate=painter.rasters[1].canvas,dimensions=[alternate.width,alternate.height];paint(480,.371);
+  paint(96,.371);paint(96,.762);paint(96,.371);assert.equal(painter.rasters.filter(raster=>raster.valid).length,2);
+  assert.equal(painter.rasters.length,3);
+  const alternate=painter.rasters.find(raster=>raster.valid&&raster!==painter.lastRaster).canvas,dimensions=[alternate.width,alternate.height];paint(480,.371);
   assert.deepEqual([alternate.width,alternate.height],dimensions);
   const writes=observation.writes;paint(96,.762);assert.equal(observation.writes,writes,
     'a larger sampler workspace must not force a still-retained small payload to upload again');
@@ -241,7 +243,8 @@ test('Ranger releases source readback and retains the original generated-RGBA su
   assert.equal(observations[0].attributes.willReadFrequently,true);assert.equal(observations[0].reads,rig.parts.length);
   assert.equal(observations[0].canvas.width,0);assert.equal(observations[0].canvas.height,0);
   const paint=phase=>paintV177RangerLower(painter,main({matrix:[1,0,0,1,640,360]}).ctx,phase,.5,-48,-80,96,89.6);
-  paint(.371);paint(.762);paint(.371);assert.equal(painter.rasters.length,2);
+  paint(.371);paint(.762);paint(.371);assert.equal(painter.rasters.filter(raster=>raster.valid).length,2);
+  assert.equal(painter.rasters.length,3);
   for(const row of observations.slice(1)){assert.equal(row.attributes.willReadFrequently,true);assert.equal(row.reads,0);}
   for(const raster of painter.rasters)assert.equal(raster.attributes.willReadFrequently,true);
   assert.ok(painter.rasters.reduce((sum,raster)=>sum+raster.canvas.width*raster.canvas.height,0)<=65536);
@@ -466,7 +469,7 @@ test('actual RGBA draw finishes stop steps across actor replacements and repeate
 test('actual turning paint keeps the body reflection, world feet and sampled muzzle on the same facing',async()=>{
   const source=await readFile('app/AshfallGame.tsx','utf8');
   const tree=ts.createSourceFile('game.tsx',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX),branches=[];
-  const visit=node=>{if(ts.isIfStatement(node)&&node.expression.getText(tree)==='jointPose?.rangerFeet')branches.push(node.getText(tree));ts.forEachChild(node,visit);};
+  const visit=node=>{if(ts.isIfStatement(node)&&node.expression.getText(tree)==='jointPose?.rangerFeet||jointPose?.bipedFeet')branches.push(node.getText(tree));ts.forEachChild(node,visit);};
   visit(tree);assert.equal(branches.length,1);
   const facingForPaint=new Function('jointPose','direction','frame',branches[0]+';return {direction,frame};');
   for(const[width,height]of[[1280,720],[844,390],[844,340]])for(const start of ['right','left']){
@@ -511,7 +514,7 @@ test('an ability activated before a simulation tick keeps its own aim through pr
   const calls=[],branches=[];
   const visit=node=>{
     if(ts.isExpressionStatement(node)&&node.getText(tree).startsWith('jointPose=v177RangerFootPlan('))calls.push(node.getText(tree));
-    if(ts.isIfStatement(node)&&node.expression.getText(tree)==='jointPose?.rangerFeet')branches.push(node.getText(tree));
+    if(ts.isIfStatement(node)&&node.expression.getText(tree)==='jointPose?.rangerFeet||jointPose?.bipedFeet')branches.push(node.getText(tree));
     ts.forEachChild(node,visit);
   };visit(tree);assert.equal(calls.length,1);assert.equal(branches.length,1);
   const prepaint=new Function('jointPose','renderKind','f','options','size','direction','v177RangerFootPlan',calls[0]+';return jointPose;');
@@ -579,7 +582,9 @@ test('eight alternating Ranger owners preserve exact pixels and stop uploading u
     assert.ok(painter.rasters.reduce((sum,raster)=>sum+raster.canvas.width*raster.canvas.height,0)<=65536);
     assert.ok(painter.rasters.reduce((sum,raster)=>sum+raster.imageData.data.byteLength,0)<=65536*4);
   }
-  assert.equal(painter.rasters.length,8);assert.equal(observation.writes,9,'one warmup plus eight distinct exact payloads');
+  assert.equal(painter.rasters.filter(raster=>raster.valid).length,8);
+  assert.equal(painter.rasters.length,9,'the original warmup surface is retained while the pool has spare capacity');
+  assert.equal(observation.writes,9,'one warmup plus eight distinct exact payloads');
 });
 test('evicting a Ranger upload owner cannot leave an alias pointing through a newly borrowed payload',()=>{
   const {painter}=observedPainter(),a=.371,b=.372,near=1e-12;
@@ -609,7 +614,9 @@ test('sixteen rotating poses retain exact pixels inside the original total pixel
     assert.ok(painter.rasters.reduce((sum,r)=>sum+r.canvas.width*r.canvas.height,0)<=65536);
     assert.ok(painter.rasters.reduce((sum,r)=>sum+r.imageData.data.byteLength,0)<=65536*4);
   }
-  assert.equal(painter.rasters.length,16);assert.equal(observation.writes,17,'one warmup and sixteen independent uploads; later rotations reuse them');
+  assert.equal(painter.rasters.filter(raster=>raster.valid).length,16);
+  assert.equal(painter.rasters.length,17,'the retired warmup does not displace a current exact payload');
+  assert.equal(observation.writes,17,'one warmup and sixteen independent uploads; later rotations reuse them');
   const churn=[...phases.map(p=>p+1e-12),...Array.from({length:20},(_,i)=>.041+i*.043),...phases.map(p=>p+2e-12),...phases];
   for(const phase of churn){
     const actual=paintPoolInput(painter,phase),control=observedPainter(),expected=paintPoolInput(control.painter,phase);
@@ -662,4 +669,60 @@ test('variable-size raster eviction releases backing pixels and never leaves a s
     }
   }
   assert.ok(observation.surfaces.length>painter.rasters.length+1,'the case must actually evict physical surfaces');
+});
+
+
+test('invalidating geometry does not rewrite a recently drawn surface when a colder invalid surface exists',()=>{
+ const {painter}=observedPainter();
+ paintPoolInput(painter,.371,120);paintPoolInput(painter,.371,96,true);paintPoolInput(painter,.19);paintPoolInput(painter,.49);
+ assert.ok(painter.rasters.length>=2);
+ const hot=painter.rasters[0],cold=painter.rasters.at(-1),hotPixels=hot.canvas.data;
+ for(const [i,raster]of painter.rasters.entries()){raster.valid=false;raster.lastUsed=90+i;}
+ cold.lastUsed=3;painter.useSequence=100;
+ const actual=paintPoolInput(painter,.73),expected=paintPoolInput(observedPainter().painter,.73);
+ assert.equal(painter.lastRaster,cold);assert.equal(cold.lastUsed,101);assert.equal(hot.canvas.data,hotPixels);
+ assertSameActiveLower(actual,expected);assert.deepEqual(actual.receipt,expected.receipt);
+ assert.ok(painter.rasters.length<=32);assert.ok(painter.rasters.reduce((sum,r)=>sum+r.canvas.width*r.canvas.height,0)<=65536);
+});
+
+
+test('a recently drawn invalid surface stays intact while the original pool has spare capacity',()=>{
+ const {painter}=observedPainter();
+ paintPoolInput(painter,.371);
+ const hot=painter.lastRaster,pixels=hot.canvas.data;
+ paintPoolInput(painter,.371,96,true);
+ const actual=paintPoolInput(painter,.73),expected=paintPoolInput(observedPainter().painter,.73);
+ assert.notEqual(painter.lastRaster.canvas,hot.canvas);
+ assert.equal(hot.canvas.data,pixels,'an invalid geometry key does not make a queued surface safe to rewrite');
+ assertSameActiveLower(actual,expected);assert.deepEqual(actual.receipt,expected.receipt);
+ assert.ok(painter.rasters.length<=32);
+ assert.ok(painter.rasters.reduce((sum,r)=>sum+r.canvas.width*r.canvas.height,0)<=65536);
+});
+
+test('the weighted lower painter dependency remains limited to the Ranger atlas',()=>{
+ assert.deepEqual(Object.entries(V177_JOINT_ATLASES).filter(([,a])=>a.lowerRig).map(([kind])=>kind),['ranger']);
+});
+
+test('a full Ranger pool reuses a matching backing size without recreating it or rewriting the last draw',()=>{
+ const {painter}=observedPainter();
+ paintPoolInput(painter,.371,120);paintPoolInput(painter,.371,96,true);
+ const phases=Array.from({length:32},(_,i)=>.01+i*.025);
+ for(const phase of phases)paintPoolInput(painter,phase);
+ assert.equal(painter.rasters.length,32);
+ const oldest=painter.rasters.reduce((a,b)=>b.lastUsed<a.lastUsed?b:a),hot=painter.lastRaster;
+ let choice;
+ for(const phase of phases){
+  const value=phase+1e-5,expected=paintPoolInput(observedPainter().painter,value),{width,height}=expected.receipt;
+  const w=width+(painter.width>width?1:0),h=height+(painter.width===width&&painter.height>height?1:0);
+  const matching=painter.rasters.filter(r=>r.canvas.width===w&&r.canvas.height===h&&r.lastUsed<painter.useSequence);
+  if(matching.length&&(oldest.canvas.width!==w||oldest.canvas.height!==h)){choice={value,expected,matching};break;}
+ }
+ assert.ok(choice,'actual new geometry must have a retained matching size and a different-sized global LRU');
+ const allocate=painter.context.createImageData;let allocations=0;
+ painter.context.createImageData=(...args)=>{allocations++;return allocate(...args);};
+ const hotPixels=hot.canvas.data,actual=paintPoolInput(painter,choice.value);
+ assert.equal(allocations,0,'an existing correctly sized backing must not be destroyed and recreated');
+ assert.ok(choice.matching.includes(painter.lastRaster));assert.notEqual(painter.lastRaster,hot);
+ assert.equal(hot.canvas.data,hotPixels);assertSameActiveLower(actual,choice.expected);assert.deepEqual(actual.receipt,choice.expected.receipt);
+ assert.ok(painter.rasters.length<=32);assert.ok(painter.rasters.reduce((n,r)=>n+r.canvas.width*r.canvas.height,0)<=65536);
 });

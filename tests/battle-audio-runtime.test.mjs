@@ -70,6 +70,26 @@ test("delayed cue requires owner, activation, generation, and simulation time pr
   assert.equal(runtime.playedSemanticReceipts.size, 1);
 });
 
+test("a removed ability owner drops only its due audio and leaves live and future cues intact", () => {
+  for (const missing of [null, undefined]) {
+    const runtime = createBattleAudioRuntime();
+    for (const [ownerId, at] of [["removed", 1], ["live", 1], ["future", 2]]) {
+      assert.equal(scheduleDelayedBattleAudioCue(runtime, {
+        ownerId, activationId: 4, semantic: "ability-impact", receiptId: ownerId,
+        cueId: ownerId, dueSimulationTime: at,
+      }), true);
+    }
+    const live = { alive: true, retreat: false, activationId: 4, phase: "active" };
+    const resolveOwner = ownerId => ownerId === "removed" ? missing : live;
+    assert.deepEqual(takeDueBattleAudioCues(runtime, { simulationTime: 1, resolveOwner }).map(cue => cue.cueId), ["live"]);
+    assert.equal(runtime.playedSemanticReceipts.size, 1);
+    assert.deepEqual(runtime.delayedCues.map(cue => cue.cueId), ["future"]);
+    assert.deepEqual(takeDueBattleAudioCues(runtime, { simulationTime: 2, resolveOwner }).map(cue => cue.cueId), ["future"]);
+    assert.deepEqual(takeDueBattleAudioCues(runtime, { simulationTime: 3, resolveOwner }), []);
+    assert.equal(runtime.playedSemanticReceipts.size, 2);
+  }
+});
+
 test("pause, hidden, result, and disposal stop delayed requests", () => {
   const runtime = createBattleAudioRuntime();
   scheduleDelayedBattleAudioCue(runtime, {

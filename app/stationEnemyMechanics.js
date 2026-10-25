@@ -6,6 +6,7 @@ const EPSILON = 1e-9;
 
 export const STATION_ENEMY_TUNING = Object.freeze({
   karamite: Object.freeze({
+    displayName: "拘束",
     windupSeconds: 0.9,
     bindRange: 128,
     breakRange: 154,
@@ -14,6 +15,7 @@ export const STATION_ENEMY_TUNING = Object.freeze({
     stopDistance: 18,
   }),
   leakMud: Object.freeze({
+    displayName: "床汚染",
     windupSeconds: 1.05,
     radiusX: 58,
     radiusY: 20,
@@ -23,6 +25,7 @@ export const STATION_ENEMY_TUNING = Object.freeze({
     speedMultiplier: 0.62,
   }),
   souki: Object.freeze({
+    displayName: "後方侵入",
     telegraphSeconds: 0.55,
     burstSeconds: 1.1,
     recoverySeconds: 0.7,

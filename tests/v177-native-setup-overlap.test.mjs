@@ -1,6 +1,31 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {prepareNativeAllUnitBattle} from '../scripts/v177-native-allunit-browser.mjs';
+import vm from 'node:vm';
+import {prepareNativeAllUnitBattle,readNativeCaptureAudioReadiness,waitForNativeCaptureAudio} from '../scripts/v177-native-allunit-browser.mjs';
+
+test('native motion readiness requires the actual running BGM and completed original audio preparation',()=>{
+ const diagnostic={unlocked:true,contextState:'running',activeBgmVoices:1,duplicateLoopInstanceKeys:[],activePreloads:0,queuedPreloads:0,
+  cache:{loading:0,fetched:0,failed:0}};
+ const read=d=>vm.runInNewContext(`(${readNativeCaptureAudioReadiness.toString()})({readyOnly:true})`,{
+  window:{__ASHFALL_AUDIO_QA__:{getDiagnostics:()=>d}},performance:{now:()=>123}});
+ assert.equal(read(diagnostic).at,123);
+ for(const mutate of [d=>{d.unlocked=false;},d=>{d.contextState='suspended';},d=>{d.activeBgmVoices=0;},
+  d=>{d.duplicateLoopInstanceKeys=['same-loop'];},d=>{d.activePreloads=1;},d=>{d.queuedPreloads=1;},
+  d=>{d.cache.loading=1;},d=>{d.cache.fetched=1;},d=>{d.cache.failed=1;}]){
+  const d=structuredClone(diagnostic);mutate(d);assert.equal(read(d),false);
+ }
+});
+
+test('audio readiness keeps its5s bound, returns its original receipt and disposes the read handle',async()=>{
+ const owner={},before={at:1,queuedPreloads:31},after={at:1300,queuedPreloads:0},events=[];
+ const page={evaluate:async()=>before,waitForFunction:async(_read,args,options)=>{
+  assert.deepEqual(args,{readyOnly:true});assert.deepEqual(options,{timeout:5000,polling:100});
+  return{jsonValue:async()=>after,dispose:async()=>events.push('dispose')};}};
+ assert.equal((await waitForNativeCaptureAudio(page,owner)).after,after);assert.equal(owner.audioReadiness.before,before);
+ assert.equal(owner.audioReadiness.status,'ready');assert.deepEqual(events,['dispose']);
+ const failed={};await assert.rejects(waitForNativeCaptureAudio({...page,waitForFunction:async()=>{throw Error('original readiness timeout');}},failed),/original readiness timeout/);
+ assert.equal(failed.audioReadiness.status,'failed');
+});
 
 test('title/battle entry and original asset decode both finish before setup returns',async()=>{
  const calls=[],owner={cleanup:'open'};let hook,decoded;

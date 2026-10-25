@@ -206,7 +206,7 @@ export function assertAllUnitClip(row,bytes,{codecControl=false,requestedMimeTyp
 }
 export async function captureAllUnitCase(page,row,{out,onFailure=()=>{},requestedMimeType='video/webm;codecs=vp8',requestedCaptureHz=60,codecControl=false,acquisitionControl=false}={}){
   assertPlannedCase(row);let clip,observation,primary;
-  const resources={pointer:null,realmOwner:null,sampleHandles:[]};
+  const resources={pointer:null,realmOwner:null,captureStartHandle:null,captureStartExported:false,sampleHandles:[]};
   const active=()=>{assert.notEqual(row.deadlineExpired,true,'Late capture cannot become accepted');assert.equal(page.isClosed(),false);};
   const owned=async operation=>{active();const value=await operation();active();return value;};
   try{
@@ -228,11 +228,23 @@ export async function captureAllUnitCase(page,row,{out,onFailure=()=>{},requeste
     row.boundary=postpaintCaptureBoundary(row,row.proof,row.pausedCaptureStart,row.recordingStart);
     row.sequenceBaseline=row.boundary.renderSequence;
     row.release=await owned(()=>resources.realmOwner.evaluate(releasePreparedShardClock,row.proof));
-    row.captureStart=await owned(()=>resources.realmOwner.evaluate(readNativeAllUnitSample,{...row.proof,performanceBoundary:true}));
+    let captureStartAt;
+    if(row.form==='ranger'){
+      // Keep this original, immutable boundary in its actual browser realm.
+      // Only its scalar clock is needed to schedule the original 120ms reads;
+      // avoid the remaining full-history transfer during encoding. Its share
+      // of the observed first-read delay has not been isolated.
+      await owned(async()=>{resources.captureStartHandle=await resources.realmOwner.evaluateHandle(readNativeAllUnitSample,
+        {...row.proof,performanceBoundary:true,immutableSnapshot:true});});
+      captureStartAt=await owned(()=>resources.captureStartHandle.evaluate(value=>value.at));
+    }else{
+      row.captureStart=await owned(()=>resources.realmOwner.evaluate(readNativeAllUnitSample,{...row.proof,performanceBoundary:true}));
+      captureStartAt=row.captureStart.at;
+    }
     const count=row.phase==='engage'?LIMITS.engageSamples:LIMITS.moveAttackSamples;
     row.sampleRpcTimings=[];
     for(let i=0;i<count;i++){
-      const sampleAt=row.captureStart.at+(i+1)*LIMITS.sampleDelayMs;
+      const sampleAt=captureStartAt+(i+1)*LIMITS.sampleDelayMs;
       const rpc={index:i,sampleAt,startedAt:performance.now(),status:'pending'};row.sampleRpcTimings.push(rpc);
       try{
         // Keep the original read/cadence in the page. Transferring every full
@@ -249,6 +261,9 @@ export async function captureAllUnitCase(page,row,{out,onFailure=()=>{},requeste
     row.sourceRaf=await owned(()=>observation.evaluate(stopNativeGameRafObservation));
     await observation.dispose();observation=null;
     row.captureEnd=await owned(()=>resources.realmOwner.evaluate(readNativeAllUnitSample,{...row.proof,performanceBoundary:true}));
+    if(resources.captureStartHandle){
+      row.captureStart=await owned(()=>resources.captureStartHandle.evaluate(value=>value));resources.captureStartExported=true;
+    }
     if(row.owner==='mayo-activation'){
       assert.equal(row.captureEnd.fighter?.manualAbilityPhase,'feral');assert.ok(row.captureEnd.fighter.activeRemaining>0);
       row.proof={...row.proof,...await owned(()=>page.evaluate(id=>window.__ASHFALL_BATTLE_QA__.getV177NativeMayoProof(id),row.proof.proofId))};
@@ -280,6 +295,10 @@ export async function captureAllUnitCase(page,row,{out,onFailure=()=>{},requeste
     if(observation){
       try{row.interruptedSourceRaf=await observation.evaluate(stopNativeGameRafObservation);}catch(e){row.cleanupErrors.push(String(e));}
       try{await observation.dispose();}catch(e){row.cleanupErrors.push(String(e));}
+    }
+    if(resources.captureStartHandle){
+      if(!resources.captureStartExported)try{row.interruptedCaptureStart=await resources.captureStartHandle.evaluate(value=>value);}catch(e){row.cleanupErrors.push(String(e));}
+      try{await resources.captureStartHandle.dispose();}catch(e){row.cleanupErrors.push(String(e));}
     }
     for(const entry of resources.sampleHandles){
       if(!entry.exported)try{(row.interruptedSamples??=[]).push(await entry.handle.evaluate(value=>value));}catch(e){row.cleanupErrors.push(String(e));}

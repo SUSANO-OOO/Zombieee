@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {EventEmitter} from 'node:events';
 import {readFile} from 'node:fs/promises';
 import ts from 'typescript';
+import {createHash} from 'node:crypto';
 import {createNormalBrowserDeadline,normalCleanupWithin,runNormalPlayChild,normalProtocolTimeoutReceipt} from '../scripts/v177-normal-browser-deadline.mjs';
 
 const flush=async()=>{for(let i=0;i<24;i++)await Promise.resolve();};
@@ -71,6 +72,23 @@ test('native failures remain primary and healthy long observation is not given a
   assert.equal(rpc.failure,null);
   for(let i=0;i<5;i++){assert.equal(await rpc.wrap({count:async()=>i}).count(),i);await time.advance(30000);}
   assert.equal(rpc.failure,null);assert.equal(time.pending,0);
+});
+
+test('a failed evaluation identifies its actual callback without reading arguments or instrumenting successful calls',async()=>{
+  const time=clock(),rpc=createNormalBrowserDeadline({timers:time.timers,clock:()=>time.now});
+  const argument={get secret(){assert.fail('Callback arguments must never be inspected');},toJSON(){assert.fail('Arguments must not be serialized');}};
+  function readActualPhase(){return document.querySelector('.v100-shell')?.dataset.v100Phase;}
+  const raw={evaluate:()=>new Promise(()=>{})},page=rpc.wrap(raw),operation=page.evaluate(readActualPhase,argument);
+  const rejection=assert.rejects(operation,error=>error===rpc.failure);
+  await time.advance(29999);assert.equal(rpc.failure,null);await time.advance(1);await rejection;
+  const receipt=normalProtocolTimeoutReceipt(rpc.failure),source=Function.prototype.toString.call(readActualPhase);
+  assert.deepEqual(receipt.evaluation,{callbackType:'function',name:'readActualPhase',sourceChars:source.length,
+    sourceSha256:createHash('sha256').update(source).digest('hex'),sourceStart:source.slice(0,256)});
+  assert.equal(receipt.timeoutMs,30000);assert.equal(receipt.timing.elapsedMs,30000);
+  const healthy=createNormalBrowserDeadline({timers:time.timers,clock:()=>time.now}),fn=()=>42;
+  Object.defineProperty(fn,'name',{get(){assert.fail('No callback metadata on the success path');}});
+  assert.equal(await healthy.wrap({evaluate:async()=>42}).evaluate(fn,argument),42);
+  assert.equal(healthy.failure,null);assert.equal(time.pending,0);
 });
 
 test('cleanup is bounded independently and does not replace the latched protocol failure',async()=>{

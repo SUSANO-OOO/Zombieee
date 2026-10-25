@@ -1,9 +1,9 @@
 {
   "schema": "zombieee-joint-atlas/1",
   "kind": "crazy-king",
-  "assetPath": "/art/v100/joints/crazy-king-r1.webp",
-  "bytes": 39606,
-  "sha256": "7310422fc7238d89c8194c40bbafd2f70724a3b979b76be7d4d939f7a773f257",
+  "assetPath": "/art/v105/joints/crazy-king-skirt-r1.webp",
+  "bytes": 40584,
+  "sha256": "962b29c823dfa65eaf60a56ba26d22c015a943eb142f91e2743a2c76581da031",
   "generatedPartsStudySha256": "fb8b6d114ee18c651800be344b5c232778a6e7a5938f25bc4ca3b38bef5bc973",
   "identitySourceSha256": "9e8cfb96f3e502567c7679d77fffce8d42dd0a75cb68715197122b637f58dcf0",
   "identityBinding": {
@@ -32,8 +32,8 @@
     },
     {
       "name": "pelvis",
-      "file": "pelvis.png",
-      "sha256": "6fd357b7f66896b34aef9dbb15d346096baa4196ca21cfdce60f5832d4a64e44",
+      "file": "../../../v105/crazy-king/pelvis-restored-r1.png",
+      "sha256": "abf8fcd72eb0123fcdb9b5cf7534673d8134cf7f0cc0ad70aa54b939e8cb9dd7",
       "original": false
     },
     {
@@ -115,7 +115,7 @@
       "original": true
     }
   ],
-  "source": "Blender 5.2 fixed-length gait and settled support; separate two-handed hammer swing with torso follow-through, guarded punch, chainsaw cut and pan strike; original heads, visible clothing, hands and weapons; original brawler pixel style",
+  "source": "Approved black pleated skirt restored from original identity. Existing green jacket, red boots, body, weapon, evaluated gait, attack matrices, IK and clocks unchanged.",
   "groundY": 432,
   "decodedBytes": 331776,
   "poses": 151,

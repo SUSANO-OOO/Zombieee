@@ -981,7 +981,7 @@ export class AudioMixer {
     }
     for (const sceneId of [this.sceneState.sceneId, this.pendingScene?.sceneId, this.desiredScene?.sceneId]) {
       const scene = this.manifest.sceneById[sceneId];
-      if (scene) this.#expandCueIds([scene.bgm, ...scene.ambience].filter(Boolean)).forEach(id => ids.add(id));
+      if (scene) this.#sceneCriticalAssetIds(scene).forEach(id => ids.add(id));
     }
     return ids;
   }
@@ -1103,13 +1103,20 @@ export class AudioMixer {
     return criticalSceneReady && result.failed.length === 0;
   }
 
+  #sceneCriticalAssetIds(scene) {
+    return [...new Set([
+      ...this.#expandCueIds([scene.bgm, ...scene.ambience].filter(Boolean)),
+      ...this.#expandCueIds(scene.preload).filter(id => this.manifest.assetById[id].preload === "scene"),
+    ])];
+  }
+
   async preloadScene(sceneId, { includeOptional = true } = {}) {
     const scene = this.manifest.sceneById[sceneId];
     if (!scene) {
       this.#warn(`unknown-scene:${String(sceneId)}`, `Unknown audio scene ${String(sceneId)} was ignored.`);
       return { loaded: [], failed: [] };
     }
-    const criticalAssetIds = this.#expandCueIds([scene.bgm, ...scene.ambience].filter(Boolean));
+    const criticalAssetIds = this.#sceneCriticalAssetIds(scene);
     const criticalAssets = new Set(criticalAssetIds);
     const optionalAssetIds = includeOptional
       ? this.#expandCueIds(scene.preload).filter((assetId) => !criticalAssets.has(assetId))
@@ -1419,7 +1426,7 @@ export class AudioMixer {
       await this.preloadScene(sceneId, { includeOptional: false });
       return null;
     }
-    // BGM and scene ambience are the transition-critical assets. Optional
+    // BGM, ambience and explicitly declared scene cues are critical. Optional
     // combat/UI cues warm in the background and remain lazy-loadable, so a
     // slow SFX cannot hold the first music frame or create an iPhone decode burst.
     await this.preloadScene(sceneId, { includeOptional: false });

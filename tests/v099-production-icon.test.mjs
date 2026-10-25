@@ -1,3 +1,4 @@
+import {V105_MEDIA_ADDITIONS,V105_MEDIA_RETIREMENTS} from '../scripts/v105-five-corrections-asset-contract.mjs';
 import { V177_PAISEN_RETIRED_ASSETS } from '../scripts/v177-paisen-asset-contract.mjs';
 import assert from "node:assert/strict";
 import { access, readFile } from "node:fs/promises";
@@ -164,7 +165,7 @@ test("the approved-icon integration preserves every unrelated pre-icon hash and 
   }
   const combatPaths=new Set(V104_MEDIA_ADDITIONS.map(a=>a.path));
   const currentNonIcons = new Map(current.assets
-    .filter(({path})=>!combatPaths.has(path))
+    .filter(({path})=>!combatPaths.has(path)&&!V105_MEDIA_ADDITIONS.some(a=>a.path===path))
     .filter(({ path }) => !path.startsWith("/icons/"))
     .filter(({ path }) => path !== '/art/v102/combat-gore/flesh-wound-r1.webp')
     .filter(({ path }) => !v100ApprovedPaths.has(path))
@@ -195,7 +196,7 @@ test("the approved-icon integration preserves every unrelated pre-icon hash and 
     '/art/v090/characters/mrs-chiha-battle-r1.png',
     '/art/v090/characters/zakimiya-battle-r1.png',
   ],'Only the eight pinned source repairs replace sprites in this legacy icon baseline');
-  for(const retired of V177_PAISEN_RETIRED_ASSETS) {
+  for(const retired of [...V177_PAISEN_RETIRED_ASSETS,...V105_MEDIA_RETIREMENTS]) {
     if(!previousNonIcons.has(retired.path))continue;
     assert.equal(previousNonIcons.get(retired.path),retired.hash);
     assert.equal(currentNonIcons.has(retired.path),false);

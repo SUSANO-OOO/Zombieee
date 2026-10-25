@@ -7,6 +7,7 @@ import { V177_RUNNER_JOINT_ATLASES as runnerAtlases } from './v177RunnerJointDat
 import { V177_FIREARM_JOINT_ATLASES as firearmAtlases } from './v177FirearmJointData.js';
 import { V177_PANTHER_JOINT_ATLASES as pantherAtlases } from './v177PantherJointData.js';
 import { V177_MELEE_JOINT_ATLASES as meleeAtlases } from './v177MeleeJointData.js';
+import { V105_CRAZY_KING_JOINT_ATLAS as crazyKingRestoredAtlas } from './v105CrazyKingJointData.js';
 import { V177_GUARD_ENEMY_JOINT_ATLASES as guardEnemyAtlases } from './v177GuardEnemyJointData.js';
 import { V177_NEWCOMER_JOINT_ATLASES as newcomerAtlases } from './v177NewcomerJointData.js';
 import { V177_INFECTED_JOINT_ATLASES as infectedAtlases } from './v177InfectedJointData.js';
@@ -18,10 +19,12 @@ import { v177RangerLowerBob } from './v177RangerLowerMotion.js';
 import { drawV177RangerLower } from './v177RangerLowerPaint.js';
 import {v177RecessedMouthContour} from './v177MouthCavity.js';
 import { v177RangerFootPlacement } from './v177RangerFootPlacement.js';
+import { MAYO_RETREAT_TIMING } from './mayoLifecycle.js';
 import { v177PaintLocomotion } from './v177PaintLocomotion.js';
 import { applyV177GroundedMatrix, v177GroundedJointPlan, v177BlendGroundedMotion, sampleV177AttackSteps } from './v177GroundedMotion.js';
-import { v177JointActorKey, v177JointBodyCorrection } from './v177JointActorHistory.js';
+import { v177JointActorKey, v177JointBodyCorrection, v177JointBodyShiftX } from './v177JointActorHistory.js';
 import {v177WeaponChoreography,v177GroundedWeaponChoreography} from './v177WeaponChoreography.js';
+import {v105GroundStrikePlan} from './v105GroundStrike.js';
 import {V177_CORPSE_JOINT_DATA} from './v177CorpseJointData.js';
 import { animationClipFor, attackPresentationDuration } from './combatPresentation.js';
 import { createV177MrsNormalWeaponCycle } from './v177MrsNormalWeaponCycle.js';
@@ -35,7 +38,9 @@ const attackStates = new Set(['wind-up','active','recovery']);
 const recoveryStates = new Set(['reload','weapon-cycle']);
 const hitStates = new Set(['hit','hit-light','hit-heavy']);
 const renderedJointPoses = new WeakMap();
+const bipedFootRigs = new WeakMap();
 const livingStunPoses = new WeakMap();
+const mayoRetreatPoses = new WeakMap();
 const actorKey = actor => actor && typeof actor === 'object' ? actor : null;
 function rememberRenderedJointPose(actor,kind,plan,lowerReceipt=null) {
   const key=actorKey(actor);
@@ -50,7 +55,7 @@ export function v177RenderedWeightedLowerReceipt(actor,world) {
 const clamp = p => Math.max(0, Math.min(1, Number(p) || 0));
 const cycle = p => ((Number(p) || 0) % 1 + 1) % 1;
 
-export const V177_JOINT_ATLASES = Object.fromEntries(Object.entries({...bakedAtlases,...quadrupedAtlases,...bipedAtlases,...enemyAtlases,...runnerAtlases,...firearmAtlases,...pantherAtlases,...meleeAtlases,...guardEnemyAtlases,...newcomerAtlases,...infectedAtlases,...feralAtlases,...futagoAtlases,...paisenPhotoAtlases,...omegaRightAtlases}));
+export const V177_JOINT_ATLASES = Object.fromEntries(Object.entries({...bakedAtlases,...quadrupedAtlases,...bipedAtlases,...enemyAtlases,...runnerAtlases,...firearmAtlases,...pantherAtlases,...meleeAtlases,...guardEnemyAtlases,...newcomerAtlases,...infectedAtlases,...feralAtlases,...futagoAtlases,...paisenPhotoAtlases,...omegaRightAtlases,'crazy-king':crazyKingRestoredAtlas}));
 
 const mrsNormalWeaponCycle=createV177MrsNormalWeaponCycle({
   animationClipFor,attackPresentationDuration,captureStatusJoints,jointMatrix,
@@ -108,6 +113,8 @@ export function v177GroundedJointPose(kind,source,sample,runtime){
 const presidentSoles=V177_CORPSE_JOINT_DATA['mugarian-president-mutated'].outlines
  .filter(o=>V177_JOINT_ATLASES['mugarian-president-mutated'].legConstraints.some(l=>l.paintedPaw===o.name));
 function groundedHeldWeapons(kind,atlas,plan){
+ if(['brute','takuya'].includes(kind)&&plan.bipedFeet&&['ground-slam','slam'].includes(plan.abilityPresentation))
+  return v105GroundStrikePlan(kind,atlas,plan,v177CaptureJointPose(kind,plan));
  if(kind!=='mugarian-president-mutated')return kind==='takuya-omega'
   ?v177GroundedWeaponChoreography(kind,atlas,plan):plan;
  let soleFloor;
@@ -125,6 +132,10 @@ export function v177JointPose(kind, sample, runtime, { grounded=false,ownedPose=
   const actualActor=actor;
   actor=v177JointActorKey(actor,world);
   const atlas = V177_JOINT_ATLASES[kind];
+  if(actualActor?.kind==='mayo-chan'){
+    const retreat=mayoRetreatJointPose(kind,atlas,runtime,actor,actualActor);
+    if(retreat){livingStunPoses.delete(actor);return retreat;}
+  }
   if(atlas&&ownedPose&&futagoAbilityOwner&&['futago-separated-a','futago-separated-b'].includes(kind)){
     const abilityPlan=futagoAbilityJoint.plan({kind,actor:actualActor,atlas,runtime,
       previous:actorKey(actor)?renderedJointPoses.get(actor):null,ownedPose,
@@ -193,7 +204,7 @@ export function v177JointPose(kind, sample, runtime, { grounded=false,ownedPose=
     const nextSettle=Math.min(atlas.settleLevels-1,settleIndex+1),settleBlend=settleFrame-settleIndex;
     const offset=atlas.pelvisOffsets[settleIndex][phaseIndex]*(1-blend)+atlas.pelvisOffsets[settleIndex][nextPhase]*blend;
     const nextOffset=atlas.pelvisOffsets[nextSettle][phaseIndex]*(1-blend)+atlas.pelvisOffsets[nextSettle][nextPhase]*blend;
-    const plan={paintLocomotion,lowerIndex,lowerNextIndex:settleIndex*atlas.frameCount+nextPhase,lowerBlend:blend,
+    const plan={abilityPresentation:sample?.abilityPresentation,paintLocomotion,lowerIndex,lowerNextIndex:settleIndex*atlas.frameCount+nextPhase,lowerBlend:blend,
       upperIndex:attackPhase===null?lowerIndex:attackBase+attackIndex,
       upperNextIndex:attackPhase===null?settleIndex*atlas.frameCount+nextPhase:attackBase+Math.min(atlas.frameCount,attackIndex+1),
       upperBlend:attackPhase===null?blend:attackFrame-attackIndex,phase,settleIndex,attackPhase,
@@ -286,6 +297,49 @@ function blendCapturedJoints(atlas,initial,neutral,p) {
   return result;
 }
 
+// Protected withdrawal is a living fall/rise, not a corpse or a legacy sheet.
+// Keep the visible normal/feral rig and use only the existing retreat clock.
+function mayoRetreatJointPose(kind,atlas,runtime,key,actor){
+  if(!actorKey(key))return null;
+  const retreat=actor.mayoRetreat;
+  if(!retreat||!['fall','rise'].includes(retreat.phase)){
+    mayoRetreatPoses.delete(key);return null;
+  }
+  if(!['mayo-chan','mayo-chan-feral'].includes(kind)||atlas?.type!=='rigid-parts'
+    ||!Number.isFinite(retreat.phaseElapsed)||retreat.phaseElapsed<0)return null;
+  let entry=mayoRetreatPoses.get(key);
+  if(!entry||entry.kind!==kind){
+    const standing=v177JointPose(kind,{requestedState:'idle'},
+      {...runtime,moving:false,locomotionSettle:1},{grounded:true});
+    if(!standing)return null;
+    const neutral=captureStatusJoints(atlas,standing),previous=renderedJointPoses.get(key);
+    const initial=previous?.kind===kind?captureStatusJoints(atlas,previous.plan):copyCapturedJoints(neutral);
+    const folded=copyCapturedJoints(neutral);
+    const clearance=atlas.legConstraints.map(leg=>{
+      const hip=matrixPoint(neutral[leg.parentUpper===false?'lower':'upper'][leg.parentBone],leg.hip);
+      const paw=matrixPoint(neutral.lower[leg.effectorBone],leg.ankle);
+      return Math.max(0,paw[1]-hip[1]);
+    });
+    const drop=Math.min(42,...clearance.map(value=>value*.5));
+    transformUpperJoints(folded,[1,0,0,1,0,drop]);
+    // A small neck dip follows the same head/child attachments as the live rig.
+    const pivot=atlas.parentAttachments?.head?.pivot??atlas.interpolationPivots?.head;
+    if(pivot){
+      const [px,py]=matrixPoint(folded.upper[atlas.parentAttachments?.head?.parent??'spine'],pivot);
+      const c=Math.cos(.12),s=Math.sin(.12),t=[c,s,-s,c,px-c*px+s*py,py-s*px-c*py];
+      const followsHead=bone=>bone==='head'||atlas.parentAttachments?.[bone]?.parent==='head';
+      for(const bone of Object.keys(folded.upper))if(followsHead(bone))folded.upper[bone]=multiplyMatrix(t,folded.upper[bone]);
+    }
+    resolveUpperOwnedLegs(atlas,folded,true);
+    entry={kind,standing,initial,neutral,folded,drop};mayoRetreatPoses.set(key,entry);
+  }
+  const progress=smooth(retreat.phaseElapsed/(retreat.phase==='fall'?MAYO_RETREAT_TIMING.fallSeconds:MAYO_RETREAT_TIMING.riseSeconds));
+  const pose=retreat.phase==='fall'?blendCapturedJoints(atlas,entry.initial,entry.folded,progress)
+    :blendCapturedJoints(atlas,entry.folded,entry.neutral,progress);
+  return {...entry.standing,resolvedJointPose:pose,attackPhase:null,
+    mayoRetreatJoint:{phase:retreat.phase,elapsed:retreat.phaseElapsed,progress,drop:entry.drop,sourceAtlas:atlas.path}};
+}
+
 function leanCapturedJoints(atlas,pose,amplitude) {
   const legs=atlas.legConstraints??[];
   if(!legs.length||amplitude<=0)return resolveUpperOwnedLegs(atlas,pose);
@@ -368,10 +422,12 @@ function returnPaintedJoints(atlas,entry,neutral,progress,footProgress=progress)
     const attackBase=entry.sourcePlan.upperIndex-Math.floor(entry.sourcePlan.attackPhase*atlas.frameCount);
     const frame=attackPhase*atlas.frameCount,index=Math.floor(frame);
     let returning={...neutral,attackPhase,upperIndex:attackBase+index,
+      abilityPresentation:entry.sourcePlan.abilityPresentation,
+      ...(entry.sourcePlan.groundStrike?{bipedFeet:entry.sourcePlan.bipedFeet,bipedFootTargets:entry.sourcePlan.bipedFootTargets}:{}),
       upperNextIndex:attackBase+Math.min(atlas.frameCount,index+1),upperBlend:frame-index,
       upperOffsetY:entry.sourcePlan.upperOffsetY+(neutral.upperOffsetY-entry.sourcePlan.upperOffsetY)*progress,
       firearmWeaponPullback:(entry.sourcePlan.firearmWeaponPullback??0)*(1-smooth(progress)),
-      groundedMotion:v177BlendGroundedMotion(entry.sourcePlan.groundedMotion,neutral.groundedMotion,progress)};
+      groundedMotion:v177BlendGroundedMotion(entry.sourcePlan.groundStrikeSourceMotion??entry.sourcePlan.groundedMotion,neutral.groundedMotion,progress)};
     if(entry.sourcePlan.choreography){
       const kind=entry.sourcePlan.choreography.kind;
       returning=v177WeaponChoreography(kind,atlas,returning,
@@ -502,9 +558,9 @@ export function v177RangerFootPlan(kind,plan,{actor,world,width,direction}={}) {
   const atlas=V177_JOINT_ATLASES[kind],runtime=actor?.animationPresentation;
   if(kind!=='ranger'||!plan?.upperRigPlan||!atlas?.lowerRig)return plan;
   const previous=renderedJointPoses.get(v177JointActorKey(actor,world)),state=plan.rangerFeet;
-  const scale=width/atlas.width,bodyCorrection=v177JointBodyCorrection(actor,world);
+  const scale=width/atlas.width,bodyCorrection=v177JointBodyCorrection(actor,world),bodyShiftX=v177JointBodyShiftX(actor,world);
   const current=state&&state.time===world?.time&&state.root===actor?.x&&state.scale===scale
-    &&state.phase===runtime?.locomotionPhase&&(state.bodyCorrection??0)===bodyCorrection;
+    &&state.phase===runtime?.locomotionPhase&&(state.bodyCorrection??0)===bodyCorrection&&(state.bodyShiftX??0)===bodyShiftX;
   // A newly activated ability can own direction before the next simulation
   // tick updates locomotion. Its prepaint plan must survive the draw's read.
   const facing=direction===undefined&&current ? state.turnTargetFacing??state.facing
@@ -516,7 +572,7 @@ export function v177RangerFootPlan(kind,plan,{actor,world,width,direction}={}) {
     // until the existing impulse ends, then resume the original stop steps.
     moving:runtime?.moving,facing,settle:plan.lowerSettle,
     frozen:plan.reactionHeld||plan.liveStun||Math.abs(actor?.knock??0)>.1,
-    bodyCorrection,
+    bodyCorrection,bodyShiftX,
   });
   if(!feet)return plan;
   plan={...plan,phase:feet.phase,
@@ -533,6 +589,73 @@ export function v177RangerFootPlan(kind,plan,{actor,world,width,direction}={}) {
   return plan;
 }
 
+// Keep anatomical leg identity through stops and reflection, using the same
+// actual-painted foot history as Ranger. Side-view overlap remains legal.
+// Original hips, limb lengths, near/far paint order and attack steps survive.
+export function v105BipedFootPlan(kind,plan,{actor,world,width,frame,direction}={}) {
+  const atlas=V177_JOINT_ATLASES[kind],runtime=actor?.animationPresentation;
+  if(atlas?.type!=='rigid-parts'||atlas.legConstraints?.length!==2||!plan?.groundedMotion
+    ||plan.resolvedJointPose||plan.turnedGetup||plan.phaseChange||!world||!frame)return plan;
+  let rig=bipedFootRigs.get(atlas);
+  if(!rig){
+    const factor=plan.groundedMotion.stride,legs=atlas.legConstraints.map((leg,index)=>{
+      const positions=atlas.poses.slice(0,atlas.frameCount).map(p=>matrixPoint(p[leg.effectorBone],leg.ankle));
+      const center=(Math.min(...positions.map(p=>p[0]))+Math.max(...positions.map(p=>p[0])))/2;
+      return{...leg,footCenter:center,restOffset:leg.ankle[0]-center,
+        upperLength:Math.hypot(leg.knee[0]-leg.hip[0],leg.knee[1]-leg.hip[1]),
+        lowerLength:Math.hypot(leg.ankle[0]-leg.knee[0],leg.ankle[1]-leg.knee[1]),
+        // The authored standing ankle and hip are one anatomical pair.
+        // A walking maximum Y combined with standing X can overextend a
+        // nearly straight leg and make a stationary turn wait forever.
+        groundAnkle:leg.ankle[1],offset:index*.5};
+    });
+    const sourceLift=Math.max(...atlas.legConstraints.flatMap(leg=>{
+      const ys=atlas.poses.slice(0,atlas.frameCount).map(p=>matrixPoint(p[leg.effectorBone],leg.ankle)[1]);
+      return Math.max(...ys)-Math.min(...ys);
+    }));
+    rig={legs,phaseOwned:true,stanceFraction:.62,spanPx:atlas.cycleDistance*.62*factor,
+      liftPx:Math.max(8,sourceLift*plan.groundedMotion.lift),bob:()=>0};
+    bipedFootRigs.set(atlas,rig);
+  }
+  const reference=atlas.referenceFrame,scale=width/((reference?.width??atlas.width)*(reference?.scale??1));
+  const center=(reference?.tx??0)+(reference?.scale??1)*(reference?.width??atlas.width)*frame.anchorX;
+  // FootPlacement uses a source center of 240. Account for the exact painted
+  // reference/anchor rather than assuming a half-width legacy sprite.
+  const requestedFacing=direction==='left'?-1:1,root=actor.x,basisOffset=240-center;
+  const dynamicRig={...rig,legs:rig.legs.map(leg=>({...leg,
+    footCenter:leg.footCenter+basisOffset,
+    hip:matrixPoint(interpolatedMatrix(new Float64Array(6),atlas,plan,leg.parentBone,leg.parentUpper!==false),leg.hip)
+      .map((value,index)=>value+(index===0?basisOffset:0))}))};
+  const previous=renderedJointPoses.get(v177JointActorKey(actor,world));
+  const feet=v177RangerFootPlacement(dynamicRig,previous?.kind===kind?previous.plan.bipedFeet:undefined,{
+    time:world.time,root,scale,phase:runtime?.locomotionPhase??0,moving:runtime?.moving,
+    facing:requestedFacing,settle:plan.paintLocomotion?.settle??runtime?.locomotionSettle??1,
+    frozen:plan.reactionHeld||plan.liveStun||Math.abs(actor.knock??0)>.1,
+    bodyCorrection:v177JointBodyCorrection(actor,world),
+    bodyShiftX:v177JointBodyShiftX(actor,world),
+  });
+  if(!feet)return plan;
+  const targets=Object.fromEntries(rig.legs.map((leg,index)=>{
+    const [x,y,angle]=feet.targets[index],step=plan.groundedMotion.steps?.feet[leg.effectorBone];
+    const m=atlas.poses[atlas.lowerCount-atlas.frameCount][leg.effectorBone];
+    return[leg.effectorBone,{ankle:leg.ankle,x:x-basisOffset+(step?.x??0),y:y-(step?.lift??0),angle:angle+Math.atan2(m[1],m[0])}];
+  }));
+  plan={...plan,bipedFeet:feet.state,bipedFootTargets:targets};
+  // Fit the original hips above both new plants. Never stretch a thigh or
+  // detach a shin to mask an unreachable ankle during weight transfer.
+  let lo=-Infinity,hi=Infinity;
+  for(const leg of dynamicRig.legs){
+    const t=targets[leg.effectorBone],reach=leg.upperLength+leg.lowerLength-.001;
+    const vertical=Math.sqrt(Math.max(0,reach*reach-(t.x-(leg.hip[0]-basisOffset))**2));
+    lo=Math.max(lo,t.y-leg.hip[1]-vertical);hi=Math.min(hi,t.y-leg.hip[1]+vertical);
+  }
+  if(lo<=hi){const dy=Math.max(lo,Math.min(hi,0));
+    plan.groundedMotion={...plan.groundedMotion,lower:[...plan.groundedMotion.lower],upper:[...plan.groundedMotion.upper]};
+    plan.groundedMotion.lower[5]+=dy;plan.groundedMotion.upper[5]+=dy;
+  }
+  return groundedHeldWeapons(kind,atlas,plan);
+}
+
 export function drawV177JointPose(ctx, image, kind, plan, x, y, width, height, {actor,world,paintReceipt}={}) {
   const actualActor=actor;
   actor=v177JointActorKey(actor,world);
@@ -541,7 +664,8 @@ export function drawV177JointPose(ctx, image, kind, plan, x, y, width, height, {
   if(atlas.type==='rigid-parts'){
     const resolve=plan.resolvedJointPose ? resolvedJointMatrix : jointMatrix;
     const matrix=new Float64Array(6);
-    const scratch=atlas.armConstraints || atlas.legConstraints ? [new Float64Array(6),new Float64Array(6)] : null;
+    const scratch=atlas.armConstraints || atlas.legConstraints
+      ? [new Float64Array(6),new Float64Array(6),{atlas,plan,chains:new Map()}] : null;
     const reference=atlas.referenceFrame;
     ctx.save();
     // Nearest sampling of a half-size atlas at a fractional, rotating battle
@@ -622,6 +746,11 @@ export function drawV177JointPose(ctx, image, kind, plan, x, y, width, height, {
 // Interpolate rigid transforms, rather than matrix coefficients that shorten
 // limbs between samples. The actual Blender root travel was removed by bake.
 function interpolatedMatrix(out,atlas,plan,bone,upper,applyUpperOffset=true,applyGrounded=true){
+  const plant=!upper&&applyGrounded&&plan.bipedFootTargets?.[bone];
+  if(plant){
+    const c=Math.cos(plant.angle),s=Math.sin(plant.angle),[x,y]=plant.ankle;
+    out.set([c,s,-s,c,plant.x-c*x+s*y,plant.y-s*x-c*y]);return out;
+  }
   if(upper&&plan.choreography?.upper[bone]){
     out.set(plan.choreography.upper[bone]);
     return applyGrounded?applyV177GroundedMatrix(out,plan,bone,upper):out;
@@ -722,6 +851,26 @@ function jointMatrix(out,atlas,plan,bone,upper,scratch){
     if(upper&&bone===atlas.weaponBone)applyV177FirearmWeaponPullback(out,atlas,plan.firearmWeaponPullback);
     return upper&&plan.firearmUpperTransform?applyV177FirearmUpperMotion(out,plan.firearmUpperTransform):out;
   }
+  const geometry=jointChainGeometry(atlas,plan,chain,upper,scratch);
+  if(!geometry){
+    interpolatedMatrix(out,atlas,plan,bone,upper);
+    return upper&&plan.firearmUpperTransform?applyV177FirearmUpperMotion(out,plan.firearmUpperTransform):out;
+  }
+  const {sx,sy,ex,ey,wx,wy,hx,hy,tx,ty,kx,ky}=geometry;
+  const isUpper=bone===chain.upperBone,rx=isUpper?sx:ex,ry=isUpper?sy:ey;
+  const ax=isUpper?hx:kx,ay=isUpper?hy:ky,bx=isUpper?kx:tx,by=isUpper?ky:ty;
+  const angle=Math.atan2(by-ay,bx-ax)-Math.atan2((isUpper?ey:wy)-ry,(isUpper?ex:wx)-rx),c=Math.cos(angle),s=Math.sin(angle);
+  out[0]=c;out[1]=s;out[2]=-s;out[3]=c;out[4]=ax-c*rx+s*ry;out[5]=ay-s*rx-c*ry;
+  return upper&&plan.firearmUpperTransform?applyV177FirearmUpperMotion(out,plan.firearmUpperTransform):out;
+}
+
+// Only one synchronous final draw owns this cache. Pose construction, ground
+// correction, sockets and captured stun/corpse owners keep their original path.
+function jointChainGeometry(atlas,plan,chain,upper,scratch){
+  const context=scratch?.[2],cache=context?.atlas===atlas&&context.plan===plan?context.chains:null;
+  let slots=cache?.get(chain);const slot=upper?1:0;
+  if(slots&&slot in slots)return slots[slot];
+  if(cache&&!slots){slots=[];cache.set(chain,slots);}
   const leg=Boolean(chain.hip);
   const parent=scratch?.[0]??new Float64Array(6),effector=scratch?.[1]??new Float64Array(6);
   interpolatedMatrix(parent,atlas,plan,chain.parentBone,leg?chain.parentUpper!==false:upper);
@@ -735,10 +884,7 @@ function jointMatrix(out,atlas,plan,bone,upper,scratch){
   const hx=parent[0]*sx+parent[2]*sy+parent[4],hy=parent[1]*sx+parent[3]*sy+parent[5];
   const tx=effector[0]*twx+effector[2]*twy+effector[4],ty=effector[1]*twx+effector[3]*twy+effector[5];
   const dx=tx-hx,dy=ty-hy,d=Math.hypot(dx,dy),a=Math.hypot(ex-sx,ey-sy),b=Math.hypot(wx-ex,wy-ey);
-  if(d<1e-8||d>a+b+.0001||d<Math.abs(a-b)-.0001){
-    interpolatedMatrix(out,atlas,plan,bone,upper);
-    return upper&&plan.firearmUpperTransform?applyV177FirearmUpperMotion(out,plan.firearmUpperTransform):out;
-  }
+  if(d<1e-8||d>a+b+.0001||d<Math.abs(a-b)-.0001){if(slots)slots[slot]=null;return null;}
   const along=(a*a+d*d-b*b)/(2*d),height=Math.sqrt(Math.max(0,a*a-along*along));
   // These right-facing biped sources have wide resting stances; their drawn
   // static knee angle is not an anatomical walking bend direction.
@@ -746,11 +892,8 @@ function jointMatrix(out,atlas,plan,bone,upper,scratch){
     'joint-takuya','joint-takuya-omega','joint-crazy-king','joint-kumaverson','joint-babayaga'].includes(atlas.key);
   const sign=forwardBiped?-1:((ex-sx)*-(wy-sy)+(ey-sy)*(wx-sx)>=0?1:-1);
   const kx=hx+dx/d*along-dy/d*height*sign,ky=hy+dy/d*along+dx/d*height*sign;
-  const isUpper=bone===chain.upperBone,rx=isUpper?sx:ex,ry=isUpper?sy:ey;
-  const ax=isUpper?hx:kx,ay=isUpper?hy:ky,bx=isUpper?kx:tx,by=isUpper?ky:ty;
-  const angle=Math.atan2(by-ay,bx-ax)-Math.atan2((isUpper?ey:wy)-ry,(isUpper?ex:wx)-rx),c=Math.cos(angle),s=Math.sin(angle);
-  out[0]=c;out[1]=s;out[2]=-s;out[3]=c;out[4]=ax-c*rx+s*ry;out[5]=ay-s*rx-c*ry;
-  return upper&&plan.firearmUpperTransform?applyV177FirearmUpperMotion(out,plan.firearmUpperTransform):out;
+  const geometry={sx,sy,ex,ey,wx,wy,hx,hy,tx,ty,kx,ky};
+  if(slots)slots[slot]=geometry;return geometry;
 }
 
 // Keep the actual upper/lower owners when a rendered live pose becomes a
@@ -794,9 +937,10 @@ export function v177JointPaintSupportY(kind,plan,outlines,rendered) {
   const origin=y-sin*sx*width*(r.tx/(r.scale*r.width)+frame.anchorX)
     -cos*scaleY*height*(r.ty/(r.scale*r.height)+frame.anchorY);
   const resolve=plan.resolvedJointPose?resolvedJointMatrix:jointMatrix;
+  const scratch=[supportScratch[0],supportScratch[1],{atlas,plan,chains:new Map()}];
   let bottom=-Infinity;
   for(const outline of outlines) {
-    const m=resolve(supportMatrix,atlas,plan,outline.bone,outline.upper,supportScratch);
+    const m=resolve(supportMatrix,atlas,plan,outline.bone,outline.upper,scratch);
     const a=xx*m[0]+yy*m[1],b=xx*m[2]+yy*m[3],c=origin+xx*m[4]+yy*m[5];
     for(const p of outline.hull)bottom=Math.max(bottom,a*p[0]+b*p[1]+c);
   }

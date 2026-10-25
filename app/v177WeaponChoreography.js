@@ -162,7 +162,28 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
  const primary=arms.find(c=>c.effectorBone===atlas.weaponBone),pivot=primary.effectorWrist??primary.wrist;
  const rest=point(base[atlas.weaponBone],pivot),restAngle=Math.atan2(base[atlas.weaponBone][1],base[atlas.weaponBone][0]);
  let angle=restAngle,target=[...rest];
- if(contactKinds.has(kind)){
+ if(['guardian','kumaverson'].includes(kind)&&plan.abilityPresentation==='guard'){
+  const raised=keys(p,[[0,0],[.28,1],[.7,1],[1,0]])[0];
+  const sourceDirection=Math.atan2(atlas.muzzle[1]-pivot[1],atlas.muzzle[0]-pivot[0]);
+  const reach=armReach(primary).max,home=point(torso,rest);
+  const shoulder=point(torso,primary.shoulder);
+  const goal=[shoulder[0]+reach*.72,shoulder[1]+reach*.28];
+  const hand=[home[0]+(goal[0]-home[0])*raised,home[1]+(goal[1]-home[1])*raised];
+  const aim=nearAngle(-Math.PI*.5-sourceDirection,restAngle);
+  upper[atlas.weaponBone]=rigid(pivot,hand,restAngle+(aim-restAngle)*raised);
+ }else if(kind==='brawler'&&plan.abilityPresentation==='fist-wave'){
+  // Bring both fists from the waist to the same forward pressure plane.
+  // Their original shoulders and elbows keep their own fixed bone lengths.
+  for(const [index,c]of arms.entries()){
+   const wrist=c.effectorWrist??c.wrist,home=point(base[c.effectorBone],wrist),reach=armReach(c).max;
+   const rows=[[.18,-reach*.10,reach*.55],[.23,-reach*.10,reach*.55],
+    [.28,reach*.92,reach*.14+(index?4:-4)],[.48,reach*.92,reach*.14+(index?4:-4)],[.64,reach*.87,reach*.18]];
+   const t=point(torso,shoulderTarget(c,p,home,rows));
+   const sourceDirection=Math.atan2(c.grip[1]-wrist[1],c.grip[0]-wrist[0]);
+   handPose(upper,c,t,swingAngle(p,Math.atan2(base[c.effectorBone][1],base[c.effectorBone][0])+sourceDirection,
+    -.1,0,.08)-sourceDirection+bodyAngle,2*envelope);
+  }
+ }else if(contactKinds.has(kind)){
   const leading=arms.findIndex(c=>c.effectorBone===atlas.weaponBone);
   const both=['grappler','crusher','abomination','futago','futago-separated-a','futago-separated-b'].includes(kind);
   for(const [index,c]of arms.entries()){
@@ -247,7 +268,8 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
   upper['arm-1-hand']=rigid(arms[1].wrist,hand,Math.atan2(m[1],m[0]));
  }
  const frontBones=(!attacking||['crazy-king','babayaga','kumaverson','takuya-omega'].includes(kind)||p>.06&&p<.94)?arms.flatMap(c=>[c.upperBone,c.lowerBone,c.effectorBone]):[];
- const choreography={kind,variant,sequence,upper,arms,frontBones,strikeBones,bodyWeight:weight,stepDistance:attacking?attackSteps[kind]??0:0,
+ const stationaryAbility=['guard','fist-wave','cross-guard','ground-slam','slam'].includes(plan.abilityPresentation);
+ const choreography={kind,variant,sequence,upper,arms,frontBones,strikeBones,bodyWeight:weight,stepDistance:attacking&&!stationaryAbility?attackSteps[kind]??0:0,
   ...(kind==='mugarian-president-mutated'?{strikePoints:{'arm-1-hand':[228,326]}}:{})};if(!attacking)carryPlans.set(atlas,choreography);
  return{...plan,choreography,upperOffsetY:0};
 }

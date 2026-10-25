@@ -1,0 +1,1473 @@
+{
+  "schema": "v105-five-corrections-retained/v1",
+  "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+  "runId": "40120044506",
+  "reports": [
+    {
+      "scope": "desktop",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570772348,
+      "artifactDigest": "sha256:c9b73d7d3494f6e7f4a1913d2ddcd147147a5e7c315f91213e618254af19f7aa",
+      "reportSha256": "e60a5b9d321beaba9f4225c1a0b56fb73a050f0278b1fd1b5c3f7ac1ea427c5c",
+      "reportBytes": 33324275,
+      "originalZipCrc32": 3795532921
+    },
+    {
+      "scope": "mobile390",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570906553,
+      "artifactDigest": "sha256:cb2a76bc84ed6b67fa60954ef76f3fd525da33378debcc13b1c3557ea0e88d3e",
+      "reportSha256": "8b72def40557e12360e585b6fbdb0a24e93daf60a93710da893d159008a9afaa",
+      "reportBytes": 5902193,
+      "originalZipCrc32": 1948553483
+    },
+    {
+      "scope": "mobile340",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570981234,
+      "artifactDigest": "sha256:8fcdcfbf1bc4b8b9018f26e38beb65672ea2d19bf92e6fa7126252ebaf35acbc",
+      "reportSha256": "1fb0f3313410e87a815b0f858c9ce68b03fb24ca034a3a2e3a46921e443131a0",
+      "reportBytes": 4588658,
+      "originalZipCrc32": 1880282133
+    },
+    {
+      "scope": "desktop",
+      "head": "45e46b90be77cd349670157974646dcc7f16b1cd",
+      "runId": "40134504325",
+      "artifactId": 12576417507,
+      "artifactDigest": "sha256:cf76ffb1e8730d4911b45219e9ebb793d790cfd0554c709a471c7027b415636b",
+      "reportSha256": "b8fed704c078c2292b09203255543cada10b5e2420bccde64f8293a5054217ea",
+      "reportBytes": 10835473,
+      "originalZipCrc32": 2671866056,
+      "conditions": {
+        "independentContextPerCase": true,
+        "actualAudioReadinessBeforeRecording": true,
+        "caseDeadlineMs": 30000,
+        "retainedObservationsKeepTheirOriginalConditions": true,
+        "coldStartupAccepted": false,
+        "formalPerformanceAccepted": false
+      },
+      "originalReportStatus": "failed"
+    },
+    {
+      "scope": "desktop",
+      "head": "e87021073d7c8ab93387a4999cfedc46f467943f",
+      "runId": "40185635457",
+      "artifactId": 12595887875,
+      "artifactDigest": "sha256:1bf771e427f553d9033832f1e02349c9e485792db1526980277645c1332aad4d",
+      "reportSha256": "cb86a1bee5b96c0bb8e106998f233fb24d096c9473a56f9478587cdada7ed20b",
+      "reportBytes": 2572424,
+      "originalZipCrc32": 1042498359,
+      "conditions": {
+        "independentContextPerCase": true,
+        "actualAudioReadinessBeforeRecording": true,
+        "caseDeadlineMs": 30000,
+        "retainedObservationsKeepTheirOriginalConditions": true,
+        "coldStartupAccepted": false,
+        "formalPerformanceAccepted": false
+      },
+      "originalReportStatus": "recorded-awaiting-visual-and-listening-review"
+    },
+    {
+      "scope": "desktop",
+      "head": "4c68dbfd03fe5e639b33c95f612824ab459c74d4",
+      "runId": "40210584508",
+      "artifactId": 12605386845,
+      "artifactDigest": "sha256:3073c7d7917a0459bc07812218d2813938abb04d5c7a1cd6fd80c0492580fb61",
+      "reportSha256": "07274c93535c1fad946cac645dc330aaab77197bbc6171420203da768ce8acbd",
+      "reportBytes": 482554,
+      "originalZipCrc32": 498265100,
+      "conditions": {
+        "independentContextPerCase": true,
+        "actualAudioReadinessBeforeRecording": true,
+        "caseDeadlineMs": 30000,
+        "retainedObservationsKeepTheirOriginalConditions": true,
+        "coldStartupAccepted": false,
+        "formalPerformanceAccepted": false
+      },
+      "originalReportStatus": "recorded-awaiting-visual-and-listening-review"
+    }
+  ],
+  "retained": [
+    {
+      "caseId": "desktop:brawler:manual",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570772348,
+      "reportSha256": "e60a5b9d321beaba9f4225c1a0b56fb73a050f0278b1fd1b5c3f7ac1ea427c5c",
+      "file": "01-brawler-manual.webm",
+      "clipSha256": "a230d108237ca9556068a3e35f5618ac0e9ad76dcb9dc0efd1abc173f5399622",
+      "bytes": 1558815,
+      "originalStatus": "recorded",
+      "driftMs": -65.66666666685887,
+      "maxGapMs": 152,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 97,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 5502.974708999998
+    },
+    {
+      "caseId": "desktop:medic:manual",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570772348,
+      "reportSha256": "e60a5b9d321beaba9f4225c1a0b56fb73a050f0278b1fd1b5c3f7ac1ea427c5c",
+      "file": "04-medic-manual.webm",
+      "clipSha256": "71cae23db641d33cd7c056cf7f03c262f25df9a0d28e545d47ea40d7f00d09e2",
+      "bytes": 1747037,
+      "originalStatus": "recorded",
+      "driftMs": -1.6666666668675134,
+      "maxGapMs": 107,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 121,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 4763.514167000001
+    },
+    {
+      "caseId": "desktop:kumaverson:manual",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570772348,
+      "reportSha256": "e60a5b9d321beaba9f4225c1a0b56fb73a050f0278b1fd1b5c3f7ac1ea427c5c",
+      "file": "07-kumaverson-manual.webm",
+      "clipSha256": "58b5df1b0e5c7a207a2f7d935ff6ac9d14d96f841e265d10487361099b099f41",
+      "bytes": 4204190,
+      "originalStatus": "recorded",
+      "driftMs": 23.6666666662004,
+      "maxGapMs": 192,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 293,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 12086.556125000003
+    },
+    {
+      "caseId": "desktop:babayaga:manual",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570772348,
+      "reportSha256": "e60a5b9d321beaba9f4225c1a0b56fb73a050f0278b1fd1b5c3f7ac1ea427c5c",
+      "file": "08-babayaga-manual.webm",
+      "clipSha256": "558c2f573f8682ac438f8d7a9d7bb39ee8d2fd3c890d724a7ed93166c72f5cf0",
+      "bytes": 1737790,
+      "originalStatus": "recorded",
+      "driftMs": 19.66666666646961,
+      "maxGapMs": 130,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 116,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 5566.478832999994
+    },
+    {
+      "caseId": "desktop:gunner:manual",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570772348,
+      "reportSha256": "e60a5b9d321beaba9f4225c1a0b56fb73a050f0278b1fd1b5c3f7ac1ea427c5c",
+      "file": "09-gunner-manual.webm",
+      "clipSha256": "391fa6fd668f89cd29b70fee2f21ca1bb92667f077d574647f6b777f236c95cc",
+      "bytes": 1452186,
+      "originalStatus": "recorded",
+      "driftMs": -89.66666666686751,
+      "maxGapMs": 208,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 93,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 5498.590125000002
+    },
+    {
+      "caseId": "desktop:guardian:manual",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570772348,
+      "reportSha256": "e60a5b9d321beaba9f4225c1a0b56fb73a050f0278b1fd1b5c3f7ac1ea427c5c",
+      "file": "10-guardian-manual.webm",
+      "clipSha256": "2ed767a54fdc09a0438915c868197295b7a83a9890a0090cd79640ad91ec699d",
+      "bytes": 3849286,
+      "originalStatus": "recorded",
+      "driftMs": 18.666666666185847,
+      "maxGapMs": 128,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 248,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 10675.200417
+    },
+    {
+      "caseId": "desktop:engineer:manual",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570772348,
+      "reportSha256": "e60a5b9d321beaba9f4225c1a0b56fb73a050f0278b1fd1b5c3f7ac1ea427c5c",
+      "file": "11-engineer-manual.webm",
+      "clipSha256": "9af403052bd600a3167c079ed42f9e8088fa9e8319e200079e56c2f1c4ec6c9e",
+      "bytes": 1644246,
+      "originalStatus": "recorded",
+      "driftMs": 23.999999999804004,
+      "maxGapMs": 136,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 111,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 5288.182916000005
+    },
+    {
+      "caseId": "desktop:zakimiya:manual",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570772348,
+      "reportSha256": "e60a5b9d321beaba9f4225c1a0b56fb73a050f0278b1fd1b5c3f7ac1ea427c5c",
+      "file": "12-zakimiya-manual.webm",
+      "clipSha256": "273f8554d77733173fc2aef953e2f8364544584b9297cd2c77b64afc2707f9fa",
+      "bytes": 1525283,
+      "originalStatus": "recorded",
+      "driftMs": -35.33333333352493,
+      "maxGapMs": 136,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 86,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 5115.774542000014
+    },
+    {
+      "caseId": "desktop:tky:manual",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570772348,
+      "reportSha256": "e60a5b9d321beaba9f4225c1a0b56fb73a050f0278b1fd1b5c3f7ac1ea427c5c",
+      "file": "13-tky-manual.webm",
+      "clipSha256": "ea491f1140a37cac5763c0a298e7c34f308e2b2adac8261841396d2ec2e48f08",
+      "bytes": 1510761,
+      "originalStatus": "recorded",
+      "driftMs": -20.666666666858873,
+      "maxGapMs": 237,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 97,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 5339.9220410000125
+    },
+    {
+      "caseId": "desktop:grappler:enemy",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570772348,
+      "reportSha256": "e60a5b9d321beaba9f4225c1a0b56fb73a050f0278b1fd1b5c3f7ac1ea427c5c",
+      "file": "17-grappler-enemy.webm",
+      "clipSha256": "b66b3905ad556751f6552f8d38bf583963b35f6d516630623a030ce4c5d761cb",
+      "bytes": 4006540,
+      "originalStatus": "recorded",
+      "driftMs": -117.33333333379232,
+      "maxGapMs": 210,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 258,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 10794.474500000011
+    },
+    {
+      "caseId": "desktop:ooze:enemy",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570772348,
+      "reportSha256": "e60a5b9d321beaba9f4225c1a0b56fb73a050f0278b1fd1b5c3f7ac1ea427c5c",
+      "file": "18-ooze-enemy.webm",
+      "clipSha256": "f1001b347b72b0136a6fa52ead64810f3324860f528e19eb52e624d481f5041f",
+      "bytes": 4010253,
+      "originalStatus": "recorded",
+      "driftMs": -20.333333333792325,
+      "maxGapMs": 178,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 225,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 12453.198458999977
+    },
+    {
+      "caseId": "desktop:gate-eater:enemy",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570772348,
+      "reportSha256": "e60a5b9d321beaba9f4225c1a0b56fb73a050f0278b1fd1b5c3f7ac1ea427c5c",
+      "file": "20-gate-eater-enemy.webm",
+      "clipSha256": "583041eef5dd388c846eaf2e703e8cc4108dd209d9aca489491821d199719893",
+      "bytes": 4026528,
+      "originalStatus": "recorded",
+      "driftMs": -10.666666667131722,
+      "maxGapMs": 181,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 231,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 13092.133040999994
+    },
+    {
+      "caseId": "desktop:spindle:enemy",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570772348,
+      "reportSha256": "e60a5b9d321beaba9f4225c1a0b56fb73a050f0278b1fd1b5c3f7ac1ea427c5c",
+      "file": "21-spindle-enemy.webm",
+      "clipSha256": "67493b0f37bcc0c7859570f93a5ecc501ef84dbdff32047241a04efb323e8faa",
+      "bytes": 3912216,
+      "originalStatus": "recorded",
+      "driftMs": -74.33333333000064,
+      "maxGapMs": 208,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 250,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 12037.421624999988
+    },
+    {
+      "caseId": "desktop:resonator:enemy",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570772348,
+      "reportSha256": "e60a5b9d321beaba9f4225c1a0b56fb73a050f0278b1fd1b5c3f7ac1ea427c5c",
+      "file": "22-resonator-enemy.webm",
+      "clipSha256": "6fd6efb5c0f2936d9d6587842107648262b2fddb1bac62c36ba0891267e2a18c",
+      "bytes": 3527222,
+      "originalStatus": "recorded",
+      "driftMs": -21.333333326953834,
+      "maxGapMs": 173,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 239,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 13093.70966600001
+    },
+    {
+      "caseId": "desktop:cagewalker:enemy",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570772348,
+      "reportSha256": "e60a5b9d321beaba9f4225c1a0b56fb73a050f0278b1fd1b5c3f7ac1ea427c5c",
+      "file": "23-cagewalker-enemy.webm",
+      "clipSha256": "991130888b3e449d972b24ebeec8a94be4b83aa3ddd422bf286b88fda6fd9bd6",
+      "bytes": 4140963,
+      "originalStatus": "recorded",
+      "driftMs": -89.99999999359352,
+      "maxGapMs": 168,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 246,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 11781.352832999983
+    },
+    {
+      "caseId": "desktop:choir-knot:enemy",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570772348,
+      "reportSha256": "e60a5b9d321beaba9f4225c1a0b56fb73a050f0278b1fd1b5c3f7ac1ea427c5c",
+      "file": "24-choir-knot-enemy.webm",
+      "clipSha256": "a3d4c6b731cdf417eb66ae427103133da0bbbd21f7ca9976e135a33b33cf8d48",
+      "bytes": 4169658,
+      "originalStatus": "recorded",
+      "driftMs": -32.33333332683469,
+      "maxGapMs": 162,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 272,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 12001.37270799998
+    },
+    {
+      "caseId": "desktop:pall-manta:enemy",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570772348,
+      "reportSha256": "e60a5b9d321beaba9f4225c1a0b56fb73a050f0278b1fd1b5c3f7ac1ea427c5c",
+      "file": "25-pall-manta-enemy.webm",
+      "clipSha256": "c59c86b254ff7b9ddca1fb0916c500c3d2f1d18fcdd8e9aa66e13e6e0a7ad46c",
+      "bytes": 4091792,
+      "originalStatus": "recorded",
+      "driftMs": -81.6666666601941,
+      "maxGapMs": 224,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 258,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 12065.275583999988
+    },
+    {
+      "caseId": "desktop:kurome:enemy",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570772348,
+      "reportSha256": "e60a5b9d321beaba9f4225c1a0b56fb73a050f0278b1fd1b5c3f7ac1ea427c5c",
+      "file": "27-kurome-enemy.webm",
+      "clipSha256": "458249275d1e69d24a0c906bf5cc9128faf452377ed134745f7a19590fc69be6",
+      "bytes": 3722240,
+      "originalStatus": "recorded",
+      "driftMs": -26.99999999359352,
+      "maxGapMs": 245,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 232,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 13268.099125000008
+    },
+    {
+      "caseId": "desktop:mother:enemy",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570772348,
+      "reportSha256": "e60a5b9d321beaba9f4225c1a0b56fb73a050f0278b1fd1b5c3f7ac1ea427c5c",
+      "file": "28-mother-enemy.webm",
+      "clipSha256": "61ff3ee3253b003fdef77dcf27c76842f3ad3f900a9f87bdf5e013059c8d3801",
+      "bytes": 3639024,
+      "originalStatus": "recorded",
+      "driftMs": -74.99999999359352,
+      "maxGapMs": 200,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 183,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 13614.511457999994
+    },
+    {
+      "caseId": "desktop:ooguchi:enemy",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570772348,
+      "reportSha256": "e60a5b9d321beaba9f4225c1a0b56fb73a050f0278b1fd1b5c3f7ac1ea427c5c",
+      "file": "29-ooguchi-enemy.webm",
+      "clipSha256": "007fdc6a7fe0cf6135265620476a34454aa41950d7b106169704f1153fe8c97c",
+      "bytes": 3638888,
+      "originalStatus": "recorded",
+      "driftMs": -50.666666660194096,
+      "maxGapMs": 176,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 230,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 12506.236125000054
+    },
+    {
+      "caseId": "desktop:takuya:enemy",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570772348,
+      "reportSha256": "e60a5b9d321beaba9f4225c1a0b56fb73a050f0278b1fd1b5c3f7ac1ea427c5c",
+      "file": "33-takuya-enemy.webm",
+      "clipSha256": "d398ed98ace4fb24d538c2a8ff3900a719ee894d3779fa96f84a1a7936bdd58a",
+      "bytes": 3992354,
+      "originalStatus": "recorded",
+      "driftMs": -116.33333334066992,
+      "maxGapMs": 194,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 219,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 13156.622124999994
+    },
+    {
+      "caseId": "desktop:brute:engage",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570772348,
+      "reportSha256": "e60a5b9d321beaba9f4225c1a0b56fb73a050f0278b1fd1b5c3f7ac1ea427c5c",
+      "file": "34-brute-engage.webm",
+      "clipSha256": "5125b8a8b5705cd5eb7a44d476d5200dbf472f43e1263407c0f933466ebf61e7",
+      "bytes": 3409337,
+      "originalStatus": "recorded",
+      "driftMs": 39.99999999395186,
+      "maxGapMs": 210,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 184,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 9815.969458000036
+    },
+    {
+      "caseId": "desktop:tky:engage",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570772348,
+      "reportSha256": "e60a5b9d321beaba9f4225c1a0b56fb73a050f0278b1fd1b5c3f7ac1ea427c5c",
+      "file": "36-tky-engage.webm",
+      "clipSha256": "b2b5c5bc078971c0df96c606b67a055055474d819e0286a839090f94d6b63c82",
+      "bytes": 3121667,
+      "originalStatus": "recorded",
+      "driftMs": -52.33333333921473,
+      "maxGapMs": 168,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 167,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 9757.310750000004
+    },
+    {
+      "caseId": "desktop:takuya:engage",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570772348,
+      "reportSha256": "e60a5b9d321beaba9f4225c1a0b56fb73a050f0278b1fd1b5c3f7ac1ea427c5c",
+      "file": "37-takuya-engage.webm",
+      "clipSha256": "bebf28fc7202ca02829cbb4e119e2e81c1b7ba0da90f6183d60dae7aa0ae4b96",
+      "bytes": 3616893,
+      "originalStatus": "recorded",
+      "driftMs": -20.666666672699648,
+      "maxGapMs": 192,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 186,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 10715.891999999993
+    },
+    {
+      "caseId": "desktop:takuya-omega:engage",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570772348,
+      "reportSha256": "e60a5b9d321beaba9f4225c1a0b56fb73a050f0278b1fd1b5c3f7ac1ea427c5c",
+      "file": "38-takuya-omega-engage.webm",
+      "clipSha256": "b3123d00ec0efebff7a2bf6f2de1e2f057631a51fd55e44a1afc66c2a014b855",
+      "bytes": 3854935,
+      "originalStatus": "recorded",
+      "driftMs": -35.66666667274512,
+      "maxGapMs": 213,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 202,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 12710.668584000028
+    },
+    {
+      "caseId": "desktop:kumaverson:engage",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570772348,
+      "reportSha256": "e60a5b9d321beaba9f4225c1a0b56fb73a050f0278b1fd1b5c3f7ac1ea427c5c",
+      "file": "40-kumaverson-engage.webm",
+      "clipSha256": "0519ecfb0f649ff6ea8fb3cf04bc38df89ea11ccd3db3cab9ebec9e69035143c",
+      "bytes": 3649731,
+      "originalStatus": "recorded",
+      "driftMs": -96.6666666726087,
+      "maxGapMs": 248,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 197,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 9150.832750000001
+    },
+    {
+      "caseId": "desktop:babayaga:engage",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570772348,
+      "reportSha256": "e60a5b9d321beaba9f4225c1a0b56fb73a050f0278b1fd1b5c3f7ac1ea427c5c",
+      "file": "41-babayaga-engage.webm",
+      "clipSha256": "b188f4c5c9aad4cba82b557f2fef2adb8a0861d67caabc0d6d07bfa749503f20",
+      "bytes": 3246335,
+      "originalStatus": "recorded",
+      "driftMs": -103.33333333916926,
+      "maxGapMs": 149,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 179,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 9482.082750000001
+    },
+    {
+      "caseId": "desktop:brawler:engage",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570772348,
+      "reportSha256": "e60a5b9d321beaba9f4225c1a0b56fb73a050f0278b1fd1b5c3f7ac1ea427c5c",
+      "file": "42-brawler-engage.webm",
+      "clipSha256": "193362a5949269c9af3db8c1c8898879f1c0d4b01a0ee99d3822115b9c68c542",
+      "bytes": 3288216,
+      "originalStatus": "recorded",
+      "driftMs": -92.6666666726087,
+      "maxGapMs": 184,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 179,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 10176.129791999992
+    },
+    {
+      "caseId": "mobile390:brawler:manual",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570906553,
+      "reportSha256": "8b72def40557e12360e585b6fbdb0a24e93daf60a93710da893d159008a9afaa",
+      "file": "01-brawler-manual.mp4",
+      "clipSha256": "e1bf97fa19fb65d893d5722e75809995600d80bf311829006ea1a3b2110ae20b",
+      "bytes": 491706,
+      "originalStatus": "recorded",
+      "driftMs": -1.9599610823206604e-10,
+      "maxGapMs": 171.66666666666669,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 105,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 5178.158374999999
+    },
+    {
+      "caseId": "mobile390:crazy-king:manual",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570906553,
+      "reportSha256": "8b72def40557e12360e585b6fbdb0a24e93daf60a93710da893d159008a9afaa",
+      "file": "02-crazy-king-manual.mp4",
+      "clipSha256": "93b2b16edada76b0ef0a3957d001ad2bd925582a16a7879dbf7ead1901e66ca1",
+      "bytes": 1031377,
+      "originalStatus": "recorded",
+      "driftMs": 30.999999999576175,
+      "maxGapMs": 195,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 256,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 8508.993791999997
+    },
+    {
+      "caseId": "mobile390:guardian:manual",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570906553,
+      "reportSha256": "8b72def40557e12360e585b6fbdb0a24e93daf60a93710da893d159008a9afaa",
+      "file": "03-guardian-manual.mp4",
+      "clipSha256": "e4be7705e91b4298fd32395e3c8a647280651f5509c82d25292b1906c5828b2e",
+      "bytes": 1092190,
+      "originalStatus": "recorded",
+      "driftMs": 63.99999999953707,
+      "maxGapMs": 106.66666666666667,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 298,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 9407.388834000001
+    },
+    {
+      "caseId": "mobile390:gunner:manual",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570906553,
+      "reportSha256": "8b72def40557e12360e585b6fbdb0a24e93daf60a93710da893d159008a9afaa",
+      "file": "04-gunner-manual.mp4",
+      "clipSha256": "d7b3830ec1cfcbe4da431afd3212a8abd6be83419f832ef2d9f57814c1ef0209",
+      "bytes": 674884,
+      "originalStatus": "recorded",
+      "driftMs": 53.66666666647825,
+      "maxGapMs": 163.33333333333334,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 122,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 4412.1865839999955
+    },
+    {
+      "caseId": "mobile390:zakimiya:manual",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570906553,
+      "reportSha256": "8b72def40557e12360e585b6fbdb0a24e93daf60a93710da893d159008a9afaa",
+      "file": "05-zakimiya-manual.mp4",
+      "clipSha256": "7a14e4dffc40be6cc7d4df8ba2ea8bf029599d17efa131fd7266a405b519a049",
+      "bytes": 916022,
+      "originalStatus": "recorded",
+      "driftMs": 5.999999999812644,
+      "maxGapMs": 208.33333333333334,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 119,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 4419.399709000005
+    },
+    {
+      "caseId": "mobile390:mrs-chiha:manual",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570906553,
+      "reportSha256": "8b72def40557e12360e585b6fbdb0a24e93daf60a93710da893d159008a9afaa",
+      "file": "06-mrs-chiha-manual.mp4",
+      "clipSha256": "f325504005fd712753ce61a3e604f2207f114d208737cb5a25a77c7ac3429e6b",
+      "bytes": 1096451,
+      "originalStatus": "recorded",
+      "driftMs": 66.99999999980946,
+      "maxGapMs": 213.33333333333334,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 121,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 4342.802625000004
+    },
+    {
+      "caseId": "mobile390:brawler:duet",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570906553,
+      "reportSha256": "8b72def40557e12360e585b6fbdb0a24e93daf60a93710da893d159008a9afaa",
+      "file": "07-brawler-duet.mp4",
+      "clipSha256": "32c5b81ca0f8c8d1f9c8d23b95ca032a1f0fc4133cf391219b82586be26b04e0",
+      "bytes": 575396,
+      "originalStatus": "recorded",
+      "driftMs": 45.999999999795364,
+      "maxGapMs": 111.66666666666667,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 111,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 4526.965000000004
+    },
+    {
+      "caseId": "mobile340:brawler:manual",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570981234,
+      "reportSha256": "1fb0f3313410e87a815b0f858c9ce68b03fb24ca034a3a2e3a46921e443131a0",
+      "file": "01-brawler-manual.mp4",
+      "clipSha256": "40eb61629fab011ea8741390f7eafa0c092ccbdd13ab995ed9ad5b5233d383a4",
+      "bytes": 564056,
+      "originalStatus": "recorded",
+      "driftMs": -58.666666666876154,
+      "maxGapMs": 131.66666666666669,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 93,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 5574.855999999998
+    },
+    {
+      "caseId": "mobile340:crazy-king:manual",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570981234,
+      "reportSha256": "1fb0f3313410e87a815b0f858c9ce68b03fb24ca034a3a2e3a46921e443131a0",
+      "file": "02-crazy-king-manual.mp4",
+      "clipSha256": "d69a871c812f958862561d4139a01b43cedcfe9b5fba72ffd4b082e492d4f1f9",
+      "bytes": 1000266,
+      "originalStatus": "recorded",
+      "driftMs": 47.333333332908296,
+      "maxGapMs": 200,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 220,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 8870.504375
+    },
+    {
+      "caseId": "mobile340:guardian:manual",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570981234,
+      "reportSha256": "1fb0f3313410e87a815b0f858c9ce68b03fb24ca034a3a2e3a46921e443131a0",
+      "file": "03-guardian-manual.mp4",
+      "clipSha256": "9d07f537b797a8c744b88c6389b87a4fa0164454a6d671214727cd27ab89410d",
+      "bytes": 1210679,
+      "originalStatus": "recorded",
+      "driftMs": 28.33333333286282,
+      "maxGapMs": 146.66666666666669,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 251,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 10124.242415999997
+    },
+    {
+      "caseId": "mobile340:gunner:manual",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570981234,
+      "reportSha256": "1fb0f3313410e87a815b0f858c9ce68b03fb24ca034a3a2e3a46921e443131a0",
+      "file": "04-gunner-manual.mp4",
+      "clipSha256": "6770c1300bfd225d58175757bd33885cd6eec23d8086a7ede4ae686bcb565474",
+      "bytes": 560766,
+      "originalStatus": "recorded",
+      "driftMs": 55.999999999804004,
+      "maxGapMs": 141.66666666666669,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 87,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 4412.303709
+    },
+    {
+      "caseId": "mobile340:zakimiya:manual",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570981234,
+      "reportSha256": "1fb0f3313410e87a815b0f858c9ce68b03fb24ca034a3a2e3a46921e443131a0",
+      "file": "05-zakimiya-manual.mp4",
+      "clipSha256": "ce4add3495c4320a4b0615107b99c10f25b9bd0c12d880303b6fa3820fdf7e2c",
+      "bytes": 847302,
+      "originalStatus": "recorded",
+      "driftMs": 21.66666666646961,
+      "maxGapMs": 196.66666666666669,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 88,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 4300.172749999998
+    },
+    {
+      "caseId": "mobile340:mrs-chiha:manual",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570981234,
+      "reportSha256": "1fb0f3313410e87a815b0f858c9ce68b03fb24ca034a3a2e3a46921e443131a0",
+      "file": "06-mrs-chiha-manual.mp4",
+      "clipSha256": "aab543d6b2f496d090a8ca57e4f237bbefca9cfe6b7d4d5e200d22483d3853b0",
+      "bytes": 980148,
+      "originalStatus": "recorded",
+      "driftMs": -15.666666666861602,
+      "maxGapMs": 191.66666666666669,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 75,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 4295.801208000004
+    },
+    {
+      "caseId": "mobile340:brawler:duet",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570981234,
+      "reportSha256": "1fb0f3313410e87a815b0f858c9ce68b03fb24ca034a3a2e3a46921e443131a0",
+      "file": "07-brawler-duet.mp4",
+      "clipSha256": "243b6dc2497d4d6f16c6e344941204a9ad751be2625dde7a8a16b61e58cbdd1a",
+      "bytes": 658513,
+      "originalStatus": "recorded",
+      "driftMs": -52.33333333355313,
+      "maxGapMs": 210,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 89,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 4856.190084000002
+    },
+    {
+      "caseId": "desktop:scout:manual",
+      "head": "45e46b90be77cd349670157974646dcc7f16b1cd",
+      "runId": "40134504325",
+      "artifactId": 12576417507,
+      "reportSha256": "b8fed704c078c2292b09203255543cada10b5e2420bccde64f8293a5054217ea",
+      "file": "01-scout-manual.webm",
+      "clipSha256": "52d22106ea46b7e9659f56ce664cb92e88e42a0403747564babebabb6cb59757",
+      "bytes": 1617089,
+      "originalStatus": "recorded",
+      "driftMs": 25.999999999798092,
+      "maxGapMs": 224,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 112,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 19502.058624999998
+    },
+    {
+      "caseId": "desktop:brute:manual",
+      "head": "45e46b90be77cd349670157974646dcc7f16b1cd",
+      "runId": "40134504325",
+      "artifactId": 12576417507,
+      "reportSha256": "b8fed704c078c2292b09203255543cada10b5e2420bccde64f8293a5054217ea",
+      "file": "02-brute-manual.webm",
+      "clipSha256": "c23c1be75bc1521921b707899bfb3bbe997f713a1d9c2b4a2de33ef131ca26f7",
+      "bytes": 1481238,
+      "originalStatus": "recorded",
+      "driftMs": 23.333333333112478,
+      "maxGapMs": 176,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 96,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 16447.369334
+    },
+    {
+      "caseId": "desktop:crazy-king:manual",
+      "head": "45e46b90be77cd349670157974646dcc7f16b1cd",
+      "runId": "40134504325",
+      "artifactId": 12576417507,
+      "reportSha256": "b8fed704c078c2292b09203255543cada10b5e2420bccde64f8293a5054217ea",
+      "file": "03-crazy-king-manual.webm",
+      "clipSha256": "46901526ae291e82621f9020bfcc12eaecbda851e6af4426dd663df90c23a0f4",
+      "bytes": 3703445,
+      "originalStatus": "recorded",
+      "driftMs": -80.66666666711717,
+      "maxGapMs": 152,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 237,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 22810.431167000002
+    },
+    {
+      "caseId": "desktop:mrs-chiha:manual",
+      "head": "45e46b90be77cd349670157974646dcc7f16b1cd",
+      "runId": "40134504325",
+      "artifactId": 12576417507,
+      "reportSha256": "b8fed704c078c2292b09203255543cada10b5e2420bccde64f8293a5054217ea",
+      "file": "04-mrs-chiha-manual.webm",
+      "clipSha256": "258ded76c1005de219fdbfb9e8a8a80c1471f840bc70e216ccdd2d54d3d21cd0",
+      "bytes": 2200269,
+      "originalStatus": "recorded",
+      "driftMs": 4.999999999789907,
+      "maxGapMs": 136,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 132,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 16475.610209000006
+    },
+    {
+      "caseId": "desktop:sprinter:enemy",
+      "head": "45e46b90be77cd349670157974646dcc7f16b1cd",
+      "runId": "40134504325",
+      "artifactId": 12576417507,
+      "reportSha256": "b8fed704c078c2292b09203255543cada10b5e2420bccde64f8293a5054217ea",
+      "file": "07-sprinter-enemy.webm",
+      "clipSha256": "f00e8f7b80a06624d1e131fcb5022d7264c9b69d1cfc27df8c598facd0848086",
+      "bytes": 3667284,
+      "originalStatus": "recorded",
+      "driftMs": -76.33333333328301,
+      "maxGapMs": 216,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 224,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 21966.998208999998
+    },
+    {
+      "caseId": "desktop:anchor-bloom:enemy",
+      "head": "45e46b90be77cd349670157974646dcc7f16b1cd",
+      "runId": "40134504325",
+      "artifactId": 12576417507,
+      "reportSha256": "b8fed704c078c2292b09203255543cada10b5e2420bccde64f8293a5054217ea",
+      "file": "08-anchor-bloom-enemy.webm",
+      "clipSha256": "6b36be0cc35109a5cec0bddf8f01d4946b19301a52caf6c6c904a4dd75002daf",
+      "bytes": 3786748,
+      "originalStatus": "recorded",
+      "driftMs": -92.66666666661513,
+      "maxGapMs": 181,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 220,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 21387.993625000003
+    },
+    {
+      "caseId": "desktop:gairen:enemy",
+      "head": "45e46b90be77cd349670157974646dcc7f16b1cd",
+      "runId": "40134504325",
+      "artifactId": 12576417507,
+      "reportSha256": "b8fed704c078c2292b09203255543cada10b5e2420bccde64f8293a5054217ea",
+      "file": "09-gairen-enemy.webm",
+      "clipSha256": "f55f235ae3a3058b7da70592c6594ce7652e9589a10a17b89cc1d263b0672223",
+      "bytes": 5104232,
+      "originalStatus": "recorded",
+      "driftMs": 33.33333333337487,
+      "maxGapMs": 104,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 319,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 20214.052750000003
+    },
+    {
+      "caseId": "desktop:mugarian-president-mutated:enemy",
+      "head": "45e46b90be77cd349670157974646dcc7f16b1cd",
+      "runId": "40134504325",
+      "artifactId": 12576417507,
+      "reportSha256": "b8fed704c078c2292b09203255543cada10b5e2420bccde64f8293a5054217ea",
+      "file": "10-mugarian-president-mutated-enemy.webm",
+      "clipSha256": "926fc5ec17c6acc396d209d39fe0dd15cf3bb5c024925c7d8dd67c7ad6658af9",
+      "bytes": 4575564,
+      "originalStatus": "recorded",
+      "driftMs": 44.000000000043656,
+      "maxGapMs": 149,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 281,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 19707.323542
+    },
+    {
+      "caseId": "desktop:takuya-omega:enemy",
+      "head": "45e46b90be77cd349670157974646dcc7f16b1cd",
+      "runId": "40134504325",
+      "artifactId": 12576417507,
+      "reportSha256": "b8fed704c078c2292b09203255543cada10b5e2420bccde64f8293a5054217ea",
+      "file": "11-takuya-omega-enemy.webm",
+      "clipSha256": "43afa50b9fb241b3c5a4600f4deb972c2b8057414f59972824af8648697c8ec7",
+      "bytes": 3915257,
+      "originalStatus": "recorded",
+      "driftMs": 13.333333333384871,
+      "maxGapMs": 106,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 225,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 21833.35712499998
+    },
+    {
+      "caseId": "desktop:guardian:engage",
+      "head": "45e46b90be77cd349670157974646dcc7f16b1cd",
+      "runId": "40134504325",
+      "artifactId": 12576417507,
+      "reportSha256": "b8fed704c078c2292b09203255543cada10b5e2420bccde64f8293a5054217ea",
+      "file": "12-guardian-engage.webm",
+      "clipSha256": "0d32409f22e45f6250f8b05df85c3f2a4db4c1c049009b9aacb11d60125eae73",
+      "bytes": 3798608,
+      "originalStatus": "recorded",
+      "driftMs": 46.99999999997726,
+      "maxGapMs": 88,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 251,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 18750.02000000002
+    },
+    {
+      "caseId": "desktop:crazy-king:engage",
+      "head": "45e46b90be77cd349670157974646dcc7f16b1cd",
+      "runId": "40134504325",
+      "artifactId": 12576417507,
+      "reportSha256": "b8fed704c078c2292b09203255543cada10b5e2420bccde64f8293a5054217ea",
+      "file": "13-crazy-king-engage.webm",
+      "clipSha256": "72d727e2e28cedda93471a3e2c15e76425a2c50c8e5f65c780b2c92e2b832ed8",
+      "bytes": 4211868,
+      "originalStatus": "recorded",
+      "driftMs": 62.33333333331302,
+      "maxGapMs": 120,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 252,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 18693.683374999964
+    },
+    {
+      "caseId": "desktop:miyamoto-musashi:manual",
+      "head": "e87021073d7c8ab93387a4999cfedc46f467943f",
+      "runId": "40185635457",
+      "artifactId": 12595887875,
+      "reportSha256": "cb86a1bee5b96c0bb8e106998f233fb24d096c9473a56f9478587cdada7ed20b",
+      "file": "01-miyamoto-musashi-manual.webm",
+      "clipSha256": "4cacc1f7122a39b2b496367813aec74d0f609cfb5880cceb4422bd6d45ccfc28",
+      "bytes": 2917938,
+      "originalStatus": "recorded",
+      "driftMs": -1.6666666669698316,
+      "maxGapMs": 115,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 223,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 19164.075417
+    },
+    {
+      "caseId": "desktop:mayo-chan:manual",
+      "head": "e87021073d7c8ab93387a4999cfedc46f467943f",
+      "runId": "40185635457",
+      "artifactId": 12595887875,
+      "reportSha256": "cb86a1bee5b96c0bb8e106998f233fb24d096c9473a56f9478587cdada7ed20b",
+      "file": "02-mayo-chan-manual.webm",
+      "clipSha256": "87c5572e782d3f41e69faea8b76a99746331119014d2e8a54329687f55b99836",
+      "bytes": 5024336,
+      "originalStatus": "recorded",
+      "driftMs": -16.666666667180834,
+      "maxGapMs": 112,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 392,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 20548.493042000002
+    },
+    {
+      "caseId": "desktop:ranger:manual",
+      "head": "4c68dbfd03fe5e639b33c95f612824ab459c74d4",
+      "runId": "40210584508",
+      "artifactId": 12605386845,
+      "reportSha256": "07274c93535c1fad946cac645dc330aaab77197bbc6171420203da768ce8acbd",
+      "file": "01-ranger-manual.webm",
+      "clipSha256": "47770feb812aca0932fb10d2dd225e52d0065b76fdb25626b95ea70c1ce1e699",
+      "bytes": 1662801,
+      "originalStatus": "recorded",
+      "driftMs": -20.333333333544488,
+      "maxGapMs": 210,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 113,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 18049.504792
+    }
+  ],
+  "pending": [],
+  "originalFailures": [
+    {
+      "caseId": "desktop:scout:manual",
+      "originalStatus": "failed",
+      "originalError": "AssertionError [ERR_ASSERTION]: [\"encoded-video-gap-over-250ms\"]",
+      "clipSha256": "d5c4b27a266f05de9c970a1d6178b1b9e3e7d9756984b387dd00f48f8b51cc64",
+      "reason": "original-failed-clock-or-encoded-timeline"
+    },
+    {
+      "caseId": "desktop:brute:manual",
+      "originalStatus": "failed",
+      "originalError": "AssertionError [ERR_ASSERTION]: Original120ms game/native clock bound: drift=-165.00000000017917ms, dropped=0.22100000000000186s",
+      "clipSha256": "d97b337f23a56d113619ef4d644edd78146eb4099e2da6ec65d30eb1972ae1ba",
+      "reason": "original-failed-clock-or-encoded-timeline"
+    },
+    {
+      "caseId": "desktop:crazy-king:manual",
+      "originalStatus": "failed",
+      "originalError": "AssertionError [ERR_ASSERTION]: [\"encoded-video-gap-over-250ms\"]",
+      "clipSha256": "4d300894edf9a57a0d6aac66050d3c30a2615175e8a7d236d96448286acbce04",
+      "reason": "original-failed-clock-or-encoded-timeline"
+    },
+    {
+      "caseId": "desktop:mrs-chiha:manual",
+      "originalStatus": "failed",
+      "originalError": "AssertionError [ERR_ASSERTION]: Original120ms game/native clock bound: drift=-265.6666666668648ms, dropped=0.3346666666666689s",
+      "clipSha256": "5b528c2e025ef0406468b8dff31a97de77b15ad9e1cc37c3c963a0cc1e8db86d",
+      "reason": "original-failed-clock-or-encoded-timeline"
+    },
+    {
+      "caseId": "desktop:miyamoto-musashi:manual",
+      "originalStatus": "failed",
+      "originalError": "AssertionError [ERR_ASSERTION]: Original120ms game/native clock bound: drift=-130.0000000003156ms, dropped=0.2889999999999997s",
+      "clipSha256": "f15396b9aa986b1cac08194910f21985623a4864a6a36a12778f6320283d28fc",
+      "reason": "original-failed-clock-or-encoded-timeline"
+    },
+    {
+      "caseId": "desktop:mayo-chan:manual",
+      "originalStatus": "failed",
+      "originalError": "AssertionError [ERR_ASSERTION]: Original120ms game/native clock bound: drift=-258.00000000052387ms, dropped=0.40500000000000114s",
+      "clipSha256": "25c794d0dbc912818f3a8c1092473f3588fd099e0c03d505beec954855400b4f",
+      "reason": "original-failed-clock-or-encoded-timeline"
+    },
+    {
+      "caseId": "desktop:sprinter:enemy",
+      "originalStatus": "failed",
+      "originalError": "AssertionError [ERR_ASSERTION]: [\"encoded-video-gap-over-250ms\"]",
+      "clipSha256": "c2bd1f692e0eba9db3d668c9d318ffc1cfc5a4d7975b3499703ec62aaa8544ac",
+      "reason": "original-failed-clock-or-encoded-timeline"
+    },
+    {
+      "caseId": "desktop:anchor-bloom:enemy",
+      "originalStatus": "failed",
+      "originalError": "AssertionError [ERR_ASSERTION]: Original120ms game/native clock bound: drift=-138.6666666602341ms, dropped=0.21000000000000796s",
+      "clipSha256": "75d0609d1d4e377ed2a532d92f510ea668b34a882c178d194508f3ddee5754af",
+      "reason": "original-failed-clock-or-encoded-timeline"
+    },
+    {
+      "caseId": "desktop:gairen:enemy",
+      "originalStatus": "failed",
+      "originalError": "AssertionError [ERR_ASSERTION]: Original120ms game/native clock bound: drift=-215.66666666015408ms, dropped=0.28066666666667217s",
+      "clipSha256": "071fed9c2dd3d431b3cded067673aa7d1e66e5795686d67f088f2c859346e89f",
+      "reason": "original-failed-clock-or-encoded-timeline"
+    },
+    {
+      "caseId": "desktop:mugarian-president-mutated:enemy",
+      "originalStatus": "failed",
+      "originalError": "AssertionError [ERR_ASSERTION]: Original120ms game/native clock bound: drift=-151.33333333683913ms, dropped=0.13666666666666671s",
+      "clipSha256": "63ff7c67c522eb209fd5fe9a9e6fa6d3606ea62921d18c0c6e22a7774a5e2312",
+      "reason": "original-failed-clock-or-encoded-timeline"
+    },
+    {
+      "caseId": "desktop:takuya-omega:enemy",
+      "originalStatus": "recorded",
+      "originalError": null,
+      "clipSha256": "e29d488845b323bc73e83e2fa8a9e5f6f04d7cf5ab9afb0d6c1a2d8a770ced52",
+      "reason": "impact-name-duplicate-removed-needs-new-visible-proof"
+    },
+    {
+      "caseId": "desktop:guardian:engage",
+      "originalStatus": "failed",
+      "originalError": "AssertionError [ERR_ASSERTION]: [\"encoded-video-gap-over-250ms\"]",
+      "clipSha256": "e51bf3927cd21238547dfee25b508a908f4905302da6f355353f93741aca33a6",
+      "reason": "original-failed-clock-or-encoded-timeline"
+    },
+    {
+      "caseId": "desktop:crazy-king:engage",
+      "originalStatus": "failed",
+      "originalError": "AssertionError [ERR_ASSERTION]: Original120ms game/native clock bound: drift=-135.33333333921473ms, dropped=0.20300000000000296s",
+      "clipSha256": "e16559cb5cbc088e4a0e81b61ad6b05db0671d18c413a378ebaf9cca61168760",
+      "reason": "original-failed-clock-or-encoded-timeline"
+    }
+  ],
+  "impact": {
+    "retainedConditions": "Original6a shared recording context and original audio preparation; these43 observations do not inherit the new fresh-context or audio-readiness conditions.",
+    "newCaptureConditions": "Only the13 pending desktop observations use an independent context and an actual audio-readiness fence inside the original30s operation deadline. Cold first-sound, normal play and formal33ms acceptance remain independent.",
+    "productDelta": "Remove only the common boss impact damage-text name; all motion, body, sound, damage and start-name rendering remain unchanged.",
+    "affectedFresh": [
+      "desktop:gairen:enemy",
+      "desktop:mugarian-president-mutated:enemy",
+      "desktop:takuya-omega:enemy"
+    ],
+    "sourceHeadersRewritten": false,
+    "oldFailuresPreserved": true,
+    "originalSpeedNaturalnessAccepted": false,
+    "humanListeningAccepted": false,
+    "physicalIphoneAccepted": false
+  },
+  "followup": {
+    "head": "45e46b90be77cd349670157974646dcc7f16b1cd",
+    "runId": "40134504325",
+    "originalFailures": [
+      {
+        "caseId": "desktop:miyamoto-musashi:manual",
+        "head": "45e46b90be77cd349670157974646dcc7f16b1cd",
+        "runId": "40134504325",
+        "originalStatus": "failed",
+        "originalError": "AssertionError [ERR_ASSERTION]: Original120ms game/native clock bound: drift=-218.00000000031014ms, dropped=0.30799999999999983s",
+        "clipSha256": "015440ce917b1853aed356b9897fb35eabd1e63203398e8e24511ee1df56fda5",
+        "driftMs": -218.00000000031014,
+        "maxGapMs": 157
+      },
+      {
+        "caseId": "desktop:mayo-chan:manual",
+        "head": "45e46b90be77cd349670157974646dcc7f16b1cd",
+        "runId": "40134504325",
+        "originalStatus": "failed",
+        "originalError": "AssertionError [ERR_ASSERTION]: [\"encoded-video-gap-over-250ms\"]",
+        "clipSha256": "2fc15aac8c06321544a3a1e165ceea2c9a36948a8b3a76900e254057ff37170a",
+        "driftMs": -135.00000000050932,
+        "maxGapMs": 269
+      }
+    ],
+    "retainedCaseIds": [
+      "desktop:scout:manual",
+      "desktop:brute:manual",
+      "desktop:crazy-king:manual",
+      "desktop:mrs-chiha:manual",
+      "desktop:sprinter:enemy",
+      "desktop:anchor-bloom:enemy",
+      "desktop:gairen:enemy",
+      "desktop:mugarian-president-mutated:enemy",
+      "desktop:takuya-omega:enemy",
+      "desktop:guardian:engage",
+      "desktop:crazy-king:engage"
+    ],
+    "visibleReview": {
+      "reviewer": "parent AI",
+      "method": "Original unmodified clips played from start to end at1.0x with timed live screenshots; not human listening or frame-perfect continuous human acceptance.",
+      "clips": [
+        "desktop:scout:manual",
+        "desktop:brute:manual",
+        "desktop:crazy-king:manual",
+        "desktop:mrs-chiha:manual",
+        "desktop:sprinter:enemy",
+        "desktop:anchor-bloom:enemy",
+        "desktop:gairen:enemy",
+        "desktop:mugarian-president-mutated:enemy",
+        "desktop:takuya-omega:enemy",
+        "desktop:guardian:engage",
+        "desktop:crazy-king:engage"
+      ],
+      "findings": [
+        "Text-only Japanese start names above their caster; no black backing or gold impact duplicate in the boss clips.",
+        "Crazy King green hoodie, black pleated skirt and red boots maintained through buff and ordinary approach/attack.",
+        "Current body preserved across observed startup, windup, contact and recovery; guardian and Crazy King maintain leg identity and ground contact."
+      ],
+      "audioPlaybackMuted": true,
+      "humanListeningAccepted": false,
+      "failedTimingClipsAccepted": false
+    },
+    "oldOwnersRewritten": false,
+    "oldFailuresDeleted": false,
+    "oldSharedContextConditionsPromoted": false,
+    "thresholdsChanged": false,
+    "deadlinesChanged": false
+  },
+  "reopenedAfterRangerBufferSelection": [
+    {
+      "caseId": "desktop:ranger:manual",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570772348,
+      "reportSha256": "e60a5b9d321beaba9f4225c1a0b56fb73a050f0278b1fd1b5c3f7ac1ea427c5c",
+      "file": "03-ranger-manual.webm",
+      "clipSha256": "21fc12fb2413ee9b72d88f4add09ca73d1d5f4808365915be45c9c27a5e8d9e0",
+      "bytes": 1620373,
+      "originalStatus": "recorded",
+      "driftMs": 17.66666666646961,
+      "maxGapMs": 146,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 109,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 7065.294667000002
+    }
+  ]
+}

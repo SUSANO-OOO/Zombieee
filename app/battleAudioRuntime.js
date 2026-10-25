@@ -154,9 +154,10 @@ export function takeDueBattleAudioCues(runtime, {
     }
     const owner = resolveOwner(entry.ownerId);
     const ownerActive = owner?.alive === true && owner.retreat !== true;
+    if (!ownerActive) continue;
     const activationActive = entry.activationId === 0
       || (Number(owner.activationId) === entry.activationId && owner.phase !== "retreat" && owner.phase !== "cooldown");
-    if (!ownerActive || !activationActive) continue;
+    if (!activationActive) continue;
     if (!tryConsumeSemanticReceipt(runtime, entry)) continue;
     due.push(entry);
   }

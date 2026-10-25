@@ -1,5 +1,6 @@
 import vm from 'node:vm';
-import nodeTest from 'node:test';import {spawnSync} from 'node:child_process';import assert from 'node:assert/strict';import fs from 'node:fs/promises';import path from 'node:path';import {pathToFileURL,fileURLToPath} from 'node:url';
+import nodeTest from 'node:test';import {spawnSync,execFileSync} from 'node:child_process';import {createHash} from 'node:crypto';import assert from 'node:assert/strict';import fs from 'node:fs/promises';import path from 'node:path';import {pathToFileURL,fileURLToPath} from 'node:url';
+import {tmpdir} from 'node:os';
 import {assertGraphHostedPlatform,assertGraphEventBinding,graphClockEvidence,assertGraphObservation,GRAPH_LIMITS as L} from '../scripts/v177-native-aac-graph-contract.mjs';
 import {buildGraphRoutes,makeGraphHandler,DI_WRAPPER,runGraphProbe} from '../scripts/v177-native-aac-graph-browser.mjs';
 import {prepareGraphOutput,createGraphState,graphOutputForContext} from '../scripts/v177-native-aac-graph-output.mjs';
@@ -69,12 +70,51 @@ const faults={startup:s=>s.events[0].ms=150.00001,lag:s=>s.playheads[0]={ms:200,
   overflow:s=>s.transportOverflow=1,encoderBacklog:s=>s.peakEncoderQueue=L.encoderQueue+1,mseBacklog:s=>s.peakPendingBytes=L.pendingBytes+1,cleanup:s=>s.cleanup.completed=false,
   synthetic:s=>s.realtimeAudioContexts=0,mixerContext:s=>s.mixerContextSame=false,rate:s=>s.sampleRate=96000,missingRaw:s=>s.pcm=[],error:s=>s.primaryError='original failure',content:s=>s.content.correlation=.7};
 for(const [name,mutate]of Object.entries(faults))test('fail-closed result fault '+name,()=>{const state=valid();mutate(state);assert.throws(()=>assertGraphObservation(state));});
-test('raw route construction serves original bytes with only the audioOutput factory replaced; no listening socket',async()=>{
-  const bundle=await buildGraphRoutes(repo,{requireExactHead:false});for(const name of ['audioMixer.js','audioManifest.js','audioSession.js','endingAudioMix.js'])assert.ok(bundle.routes.get('/__v177-aac-graph/app/'+name).bytes.equals(await fs.readFile(path.join(repo,'app',name))));
-  assert.ok(bundle.routes.get('/__v177-aac-graph/app/audioOutput-original.js').bytes.equals(await fs.readFile(path.join(repo,'app/audioOutput.js'))));assert.equal(bundle.routes.get('/__v177-aac-graph/app/audioOutput.js').bytes.toString(),DI_WRAPPER);assert.equal(bundle.routes.get('/__v177-aac-graph/probe/v177-aac-fragment-muxer.mjs').bytes.toString(),await fs.readFile(path.join(repo,'scripts/v177-aac-fragment-muxer.mjs'),'utf8'));
+async function withOriginalGraphSource(originHead,inspect){
+  const parent=path.resolve(tmpdir()),fixture=await fs.mkdtemp(path.join(parent,'v177-original-graph-'));
+  const git=args=>execFileSync('git',args,{cwd:fixture,encoding:'utf8',maxBuffer:4*1024*1024,windowsHide:true}).trim();
+  try{
+    // A local object-sharing fixture, never a checkout or mutation of the
+    // product repository. Only module sources and four diagnostic assets are
+    // materialized; no game, audio device, browser or server is launched.
+    execFileSync('git',['clone','--shared','--no-checkout',path.resolve(repo),fixture],{stdio:'pipe',windowsHide:true});
+    git(['update-ref','--no-deref','HEAD',originHead]);git(['read-tree',originHead]);
+    const modules=git(['ls-tree','-r','--name-only',originHead,'app']).split('\n').filter(file=>file.endsWith('.js'));
+    const inputs=['package.json','scripts/v177-aac-fragment-muxer.mjs','scripts/v177-native-aac-browser.mjs',
+      'scripts/v177-native-aac-probe.mjs','scripts/pwa-native-runtime/package-lock.json','scripts/browser-request-failure-audit.mjs'];
+    git(['checkout-index','--',...modules,...inputs]);
+    const {V100_AUDIO_MANIFEST:manifest}=await import(pathToFileURL(path.join(fixture,'app/productionAudio.js')).href);
+    const assets=['music-v100-score-normal','weapon-rifle-01'].flatMap(id=>manifest.assetById[id].sources.map(source=>'public'+source.src));
+    assert.equal(assets.length,4);git(['checkout-index','--',...assets]);
+    assert.equal(git(['rev-parse','HEAD']),originHead);
+    await inspect(fixture);
+  }finally{
+    assert.equal(path.dirname(path.resolve(fixture)),parent);
+    assert.ok(path.basename(fixture).startsWith('v177-original-graph-'));
+    await fs.rm(fixture,{recursive:true,force:true});
+  }
+}
+
+test('historical raw routes retain their positive byte checks while changed product audio is rejected; no listening socket',async()=>{
+  const pins=JSON.parse(await fs.readFile(path.join(repo,'scripts/v177-native-aac-graph-pins.json'),'utf8'));
+  const changed=pins.audio7.find(row=>createHash('sha256').update(execFileSync('git',['show','HEAD:'+row.path],{cwd:repo,maxBuffer:2*1024*1024})).digest('hex')!==row.gitSha256);
+  if(changed){
+    // The historical output experiment must refuse a later product mixer.
+    // Keep its original pins; this is rejection evidence for the current
+    // product, followed by the same positive check on the immutable original.
+    await assert.rejects(buildGraphRoutes(repo,{requireExactHead:false}),error=>
+      error instanceof assert.AssertionError&&error.code==='ERR_ASSERTION'
+      &&error.message.startsWith('Scoped original audio source changed: '+changed.path+'\n'));
+  }
+  const inspect=async sourceRepo=>{
+  const bundle=await buildGraphRoutes(sourceRepo,{requireExactHead:false});for(const name of ['audioMixer.js','audioManifest.js','audioSession.js','endingAudioMix.js'])assert.ok(bundle.routes.get('/__v177-aac-graph/app/'+name).bytes.equals(await fs.readFile(path.join(sourceRepo,'app',name))));
+  if(changed)assert.equal(bundle.head,pins.originHead);
+  assert.ok(bundle.routes.get('/__v177-aac-graph/app/audioOutput-original.js').bytes.equals(await fs.readFile(path.join(sourceRepo,'app/audioOutput.js'))));assert.equal(bundle.routes.get('/__v177-aac-graph/app/audioOutput.js').bytes.toString(),DI_WRAPPER);assert.equal(bundle.routes.get('/__v177-aac-graph/probe/v177-aac-fragment-muxer.mjs').bytes.toString(),await fs.readFile(path.join(sourceRepo,'scripts/v177-aac-fragment-muxer.mjs'),'utf8'));
   assert.equal(bundle.assets.filter(a=>a.id==='music-v100-score-normal').length,2);assert.equal(bundle.assets.filter(a=>a.id==='weapon-rifle-01').length,2);assert.equal(bundle.routes.has('/'),false);
   const log={requests:[],errors:[],artifacts:[]},handler=makeGraphHandler(bundle,'unused-output',log),parts=[];const response={writeHead(code){this.code=code;return this;},end(value){if(value)parts.push(Buffer.from(value));}};
-  await handler({method:'GET',url:'/__v177-aac-graph/app/audioMixer.js'},response);assert.equal(response.code,200);assert.ok(Buffer.concat(parts).equals(await fs.readFile(path.join(repo,'app/audioMixer.js'))));
+  await handler({method:'GET',url:'/__v177-aac-graph/app/audioMixer.js'},response);assert.equal(response.code,200);assert.ok(Buffer.concat(parts).equals(await fs.readFile(path.join(sourceRepo,'app/audioMixer.js'))));
+  };
+  if(changed)await withOriginalGraphSource(pins.originHead,inspect);else await inspect(repo);
 });
 test('actual experimental output callback retains actual PCM and native AAC before transfer/recycle and uses no destination edge',async()=>{
   const f=fakeEnvironment(),state=createGraphState(),output=await prepareGraphOutput(f.context,{state,workletUrl:'/actual-worklet.mjs',env:f.env});const api=graphOutputForContext(f.context,{canPlay:()=>true});

@@ -15,6 +15,13 @@ test('native recording binds its fixed writer browser while PWA and formal rende
   const install=workflow.jobs.capture.steps.find(s=>s.name==='Install pinned native WebKit').run;
   assert.match(install,/npm ci --prefix scripts\/native-recording-runtime/u);
   assert.match(install,/native-recording-runtime\/node_modules\/playwright\/cli\.js install webkit/u);
+  const corrections=yaml(readFileSync('.github/workflows/five-corrections-capture.yml','utf8'));
+  assert.ok(corrections.jobs.capture.steps.some(s=>s.run==='npm ci --prefix scripts/native-recording-runtime'));
+  assert.ok(corrections.jobs.capture.steps.some(s=>s.run==='node scripts/native-recording-runtime/node_modules/playwright/cli.js install webkit'));
+  const capture=readFileSync('scripts/v105-five-corrections-capture.mjs','utf8');
+  assert.match(capture,/await\(await nativeRecordingBrowserType\(\)\)\.launch/u);
+  assert.match(capture,/runtime:NATIVE_RECORDING_WEBKIT_RUNTIME/u);
+  assert.doesNotMatch(capture,/pwaBrowserType|PWA_WEBKIT_RUNTIME/u);
   const calls=[],webkit={executablePath:()=>'/fixed/webkit-2380/pw_run.sh'};
   const read=async url=>{calls.push(url.href);return JSON.stringify(url.pathname.endsWith('playwright/package.json')
     ?{version:'1.65.0-alpha-2026-10-23'}:{browsers:[{name:'webkit',revision:'2380',browserVersion:'27.2'}]});};

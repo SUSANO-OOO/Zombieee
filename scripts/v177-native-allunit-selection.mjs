@@ -164,14 +164,27 @@ export function nativeCaseSelection({event,root=process.cwd(),git=args=>execFile
     profileSha256:createHash('sha256').update(bytes).digest('hex'),...selected};
 }
 
+export function isRangerCaptureSelection(selection){
+  const normal=planShard('forms-1').filter(r=>r.form==='ranger'),engage=normal.filter(r=>r.phase==='engage');
+  const allowed={caseIds:normal.map(r=>r.caseId),outcomeCaseIds:engage.map(r=>r.caseId.replace(':engage:',':controlled-outcome:')),
+    manualCaseIds:engage.map(r=>r.caseId.replace(':engage:',':ranger-manual-precision:'))};
+  return selection.mode==='remaining'&&JSON.stringify(selection.shards)===JSON.stringify(['forms-1'])
+    &&Object.keys(allowed).every(k=>Array.isArray(selection[k])&&new Set(selection[k]).size===selection[k].length&&selection[k].every(id=>allowed[k].includes(id)))
+    &&Object.keys(allowed).some(k=>selection[k].length>0);
+}
+export function nativeCaptureHostControl(event,selection){
+  if(event.pull_request&&isRangerCaptureSelection(selection))return 'ranger-motion';
+  return event.pull_request?.draft===true&&selection.mode==='remaining'&&selection.caseIds.length===1
+    &&selection.caseIds[0]==='forms-2:brute:attack:1280x720'&&selection.outcomeCaseIds.length===0
+    &&selection.manualCaseIds.length===0?'brute-attack-1280':event.pull_request&&selection.mode==='remaining'
+    &&selection.caseIds.length===1&&selection.caseIds[0]==='forms-4:mayo-chan:attack:1280x720'
+    &&selection.outcomeCaseIds.length===0&&selection.manualCaseIds.length===0?'mayo-attack-1280':'none';
+}
 if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href){
   const event=JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH,'utf8'));
   const selection=nativeCaseSelection({event});
   assert.ok(process.env.GITHUB_OUTPUT);
   appendFileSync(process.env.GITHUB_OUTPUT,'shards='+JSON.stringify(selection.shards)+'\n');
-  const nativeHostControl=event.pull_request?.draft===true&&selection.mode==='remaining'&&selection.caseIds.length===1
-    &&selection.caseIds[0]==='forms-2:brute:attack:1280x720'&&selection.outcomeCaseIds.length===0
-    &&selection.manualCaseIds.length===0?'brute-attack-1280':'none';
-  appendFileSync(process.env.GITHUB_OUTPUT,'native_host_control='+nativeHostControl+'\n');
+  appendFileSync(process.env.GITHUB_OUTPUT,'native_host_control='+nativeCaptureHostControl(event,selection)+'\n');
   console.log(JSON.stringify(selection));
 }

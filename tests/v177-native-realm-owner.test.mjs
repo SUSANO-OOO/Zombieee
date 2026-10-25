@@ -31,7 +31,7 @@ function declaration(source,name){
  assert.ok(node,name);return node.getText(tree).replace(/^export\s+/u,'');
 }
 function callback(realm,fn){return vm.runInContext('('+fn.toString()+')',realm.context);}
-function fixture({form='medic',origin=1000000,startEvent=true,stopEvent=true,chunks=['pure-node-fixture'],nativeError=false,failAtSample=null,cleanupFailure=false,manualSampleTimer=false,sampleTransportMs=0,sampleHandleTransportMs=0}={}){
+function fixture({form='medic',origin=1000000,startEvent=true,stopEvent=true,chunks=['pure-node-fixture'],nativeError=false,failAtSample=null,cleanupFailure=false,manualSampleTimer=false,sampleTransportMs=0,sampleHandleTransportMs=0,startBoundaryTransportMs=0}={}){
  const plan=SHARDS.flatMap(s=>planShard(s.id)).find(r=>r.form===form&&r.phase==='move'&&r.viewport.height===390);
  const row={...clone(plan),samples:[],status:'starting'};
  const stats={speed:38,laneSpeed:20,damage:10,range:180,attackEvery:1,hp:100,maxHp:100};
@@ -51,7 +51,8 @@ function fixture({form='medic',origin=1000000,startEvent=true,stopEvent=true,chu
  const paints=()=>[{renderSequence:seq,renderKind:form,assetReady:true,renderWidth:60,renderHeight:90,
   x:330+simulation*38,y:220,poseScaleX:1,poseScaleY:1,requestedState:'move',actualXDelta:simulation?4.56:0,
   jointAtlasPath:row.binding.atlas.path,jointLowerFrame:seq%30,jointUpperFrame:0,
-  jointDrawSucceeded:true,jointPaintedAt:simulation,renderedWeaponSocket:{x:350,y:200}}];
+  jointDrawSucceeded:true,jointPaintedAt:simulation,renderedWeaponSocket:{x:350,y:200},
+  ...(form==='ranger'?{jointWeightedLowerDrawSucceeded:true,jointWeightedLower:{mode:'continuous-weighted-mesh',parts:5,meshVertices:130,meshTriangles:192,coverageSamples:4,duplicateWithinPart:0,degenerate:0}}:{})}];
  const qa={
   prepareV177ContinuousActorProof:()=>{log.push('prepare');return clone(proof);},
   getSnapshot:()=>({time:simulation,running:true,paused}),
@@ -117,6 +118,9 @@ function fixture({form='medic',origin=1000000,startEvent=true,stopEvent=true,chu
   const evaluate=h.evaluate.bind(h);h.evaluate=async(fn,arg)=>{
    if(fn.name==='readNativeAllUnitSample'&&++reads===failAtSample)throw sentinel;
    const result=await evaluate(fn,arg);
+   if(result?.schema==='v177-native-shard-postpaint/v1'&&result?.readTiming?.sampleAt===null&&result.paused===false&&startBoundaryTransportMs){
+    log.push('start-boundary-export');advanceClock(startBoundaryTransportMs);
+   }
    const deferredNormal=result?.schema==='v177-native-shard-postpaint/v1'&&result.readTiming?.sampleAt!==null;
    const deferredOutcome=fn.name!=='readNativeOutcomeSample'&&result?.body?.renderHistory&&result.readTiming;
    if((deferredNormal||deferredOutcome)&&sampleTransportMs){
@@ -444,6 +448,55 @@ test('actual capture retains a late handle response time instead of fabricating 
  assert.ok(last.readTiming.scheduleLatenessMs>700,'Missed source schedule is reported without retiming it');
  assert.ok(f.row.samples.every(s=>s.at<=f.row.captureEnd.at));
  assert.equal(f.row.postpaintReceipt.naturalnessAccepted,false);
+});
+
+test('Ranger start history is immutable and exported after encoding while its original scalar clock schedules all samples',async()=>{
+ const f=fixture({form:'ranger',sampleTransportMs:800,startBoundaryTransportMs:900}),{run}=actualCaptureWithExternalControls();
+ await run(f.page,f.row,{out:path.join(fixtureDirectory,randomUUID())});
+ assert.equal(f.row.status,'observed-diagnostic');assert.equal(f.row.samples.length,15);
+ assert.equal(f.row.captureStart.simulationTime,0);assert.equal(f.row.captureStart.readTiming.sampleAt,null);
+ for(let i=0;i<15;i++){
+  const sample=f.row.samples[i],due=f.row.captureStart.at+(i+1)*120;
+  assert.equal(sample.readTiming.sampleAt,due);assert.ok(sample.at>=due&&sample.at<due+.1);
+ }
+ assert.ok(f.row.samples.at(-1).at-f.row.samples[0].at>1679);
+ assert.ok(f.log.indexOf('track-stop')<f.log.indexOf('start-boundary-export'));
+ assert.equal(f.log.filter(x=>x==='start-boundary-export').length,2);
+ assert.equal(f.row.postpaintReceipt.naturalnessAccepted,false);
+ assert.equal(f.log.at(-1),'owner-dispose');
+});
+
+test('Ranger failed capture retains the original start boundary and disposes its handle without accepting missing samples',async()=>{
+ const f=fixture({form:'ranger',failAtSample:4}),{run}=actualCaptureWithExternalControls();
+ await assert.rejects(run(f.page,f.row,{out:path.join(fixtureDirectory,randomUUID())}),e=>e===f.sentinel);
+ assert.equal(f.row.status,'starting');assert.equal(f.row.captureStart,undefined);
+ assert.ok(f.row.interruptedCaptureStart?.realm);assert.equal(f.row.interruptedCaptureStart.simulationTime,0);
+ assert.equal(f.row.summary,undefined);assert.equal(f.row.postpaintReceipt,undefined);
+ assert.equal(f.log.at(-1),'owner-dispose');
+});
+
+test('Ranger start handle is owned before a deadline crossing can reject its creation response',async()=>{
+ const f=fixture({form:'ranger'}),{run}=actualCaptureWithExternalControls(),original=f.page.evaluateHandle;
+ let disposed=false;
+ f.page.evaluateHandle=async(fn,arg)=>{
+  const handle=await original(fn,arg);
+  if(fn.name==='createNativeAllUnitRealmOwner'){
+   const evaluateHandle=handle.evaluateHandle.bind(handle);
+   handle.evaluateHandle=async(reader,proof)=>{
+    const boundary=await evaluateHandle(reader,proof);
+    if(reader.name==='readNativeAllUnitSample'&&proof?.performanceBoundary&&proof.immutableSnapshot){
+     const dispose=boundary.dispose.bind(boundary);boundary.dispose=async()=>{disposed=true;await dispose();};
+     f.row.deadlineExpired=true;
+    }
+    return boundary;
+   };
+  }
+  return handle;
+ };
+ await assert.rejects(run(f.page,f.row,{out:path.join(fixtureDirectory,randomUUID())}),/Late capture/);
+ assert.equal(disposed,true);assert.ok(f.row.interruptedCaptureStart?.realm);
+ assert.equal(f.row.captureStart,undefined);assert.equal(f.row.summary,undefined);
+ assert.equal(f.log.at(-1),'owner-dispose');
 });
 
 test('deferred sample data remains an immutable snapshot of nested geometry at its actual original read',async()=>{

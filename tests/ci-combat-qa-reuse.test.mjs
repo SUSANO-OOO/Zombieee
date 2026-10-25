@@ -79,22 +79,67 @@ test('Quality reuse requires both original engine jobs to pass on the same exact
     assert.equal((await previousCombatQaEvidence({...options,request:api({qualityJobs})})).passed,false);
 });
 
-test('workflow changes only expose the reviewed combat lane and preserve every original command and deadline',()=>{
+test('workflow preserves every command/deadline and current script drift rejects reuse and requires full validation',async()=>{
   const current=readFileSync('.github/workflows/ci.yml','utf8'),before=load(execFileSync('git',['show',old.head+':.github/workflows/ci.yml'],{encoding:'utf8',windowsHide:true}));
   before.jobs.scope.outputs.combat='${{ steps.scope.outputs.combat }}';
   before.jobs['v102-combat'].if="${{ needs.scope.outputs.full == 'true' || needs.scope.outputs.combat == 'true' }}";
   before.jobs['v102-combat-webkit-summary'].if="${{ (needs.scope.outputs.full == 'true' || needs.scope.outputs.combat == 'true') && (always()) }}";
+  before.jobs.scope.outputs.performance='${{ steps.scope.outputs.performance }}';
+  before.jobs.scope.outputs.verify_full='${{ steps.scope.outputs.verify_full }}';
+  before.jobs.scope.outputs.phaseg='${{ steps.scope.outputs.phaseg }}';
+  // Audio-owner changes require both native media-output jobs. Only their
+  // selection changes; the full comparison below still freezes every command.
+  before.jobs.scope.outputs.audio='${{ steps.scope.outputs.audio }}';
+  before.jobs['v103-audio-output'].if="${{ needs.scope.outputs.full == 'true' || needs.scope.outputs.audio == 'true' }}";
+  before.jobs['v100-phase-g-production'].if="${{ needs.scope.outputs.full == 'true' || needs.scope.outputs.phaseg == 'true' }}";
+  const verify=before.jobs.verify.steps.filter(step=>step.if?.includes("needs.scope.outputs.full == 'true'"));assert.equal(verify.length,19);
+  for(const step of verify)step.if=step.if.replaceAll("needs.scope.outputs.full == 'true'","(needs.scope.outputs.full == 'true' || needs.scope.outputs.verify_full == 'true')");
+  before.jobs['v100-webkit-frame-control'].if="${{ needs.scope.outputs.full == 'true' || needs.scope.outputs.performance == 'true' }}";
+  const command='node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs';
+  const formal=before.jobs['v100-webkit-frame-control'].steps.filter(step=>step.run===command);
+  assert.equal(formal.length,4);
+  for(const step of formal){assert.equal(step.env.V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC,'1');step.env.V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC='0';}
+  const currentFormal=load(current).jobs['v100-webkit-frame-control'].steps.filter(step=>step.run===command);
+  assert.equal(currentFormal.length,4);for(const step of currentFormal)assert.equal(step.env.V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC,'0');
   assert.deepEqual(load(current),before);
-  assert.equal(execFileSync('git',['hash-object','.github/workflows/ci.yml'],{encoding:'utf8',windowsHide:true}).trim(),COMBAT_QA_WORKFLOW_BLOB);
-  for(const [file,blob]of Object.entries(COMBAT_QA_BLOBS))assert.equal(execFileSync('git',['hash-object',file],{encoding:'utf8',windowsHide:true}).trim(),blob);
+  const workflowBlob=execFileSync('git',['hash-object','.github/workflows/ci.yml'],{encoding:'utf8',windowsHide:true}).trim();
+  if(workflowBlob!==COMBAT_QA_WORKFLOW_BLOB)assert.equal(reviewedCombatQaPaths(paths,{...sourceBlobs,'.github/workflows/ci.yml':workflowBlob}),false,
+    'Changed workflow must not inherit the old exact-workflow QA owner');
+  for(const [file,blob]of Object.entries(COMBAT_QA_BLOBS)){
+    const actual=execFileSync('git',['hash-object',file],{encoding:'utf8',windowsHide:true}).trim();
+    if(actual===blob)assert.equal(actual,blob);
+    else{
+      // Keep the immutable reuse hash and inspect the CURRENT file. Its drift
+      // must reject the old receipts and select full regression, even if a
+      // caller incorrectly asks to reuse them. Never repin an old QA owner.
+      const currentBlobs={...sourceBlobs,[file]:actual};
+      assert.equal(reviewedCombatQaPaths(paths,currentBlobs),false,file);
+      const currentScope=ciChangeScope(paths,{draft:false,sourceBlobs:currentBlobs,reuseCombatQa:true});
+      assert.equal(currentScope.full,true,file);assert.equal(currentScope.scope,'full-regression');
+      let requests=0;
+      assert.equal((await previousCombatQaEvidence({...options,sourceBlobs:currentBlobs,
+        request:()=>{requests++;assert.fail('Changed current scripts cannot query or inherit old QA');}})).passed,false);
+      assert.equal(requests,0,'Changed current scripts must fail before requesting old QA');
+    }
+  }
   const qualityFile='.github/workflows/v1-quality-acceptance.yml',quality=load(readFileSync(qualityFile,'utf8'));
   const oldQuality=load(execFileSync('git',['show',old.head+':'+qualityFile],{encoding:'utf8',windowsHide:true}));
+  oldQuality.concurrency={group:'${{ github.workflow }}-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}','cancel-in-progress':false};
   oldQuality.jobs['quality-ui-play'].needs='scope';oldQuality.jobs['quality-ui-play'].if="${{ !github.event.pull_request.draft && needs.scope.outputs.reuse_quality != 'true' }}";
   const scope=quality.jobs.scope;delete quality.jobs.scope;assert.deepEqual(quality,oldQuality);
   assert.equal(scope['timeout-minutes'],5);assert.deepEqual(scope.permissions,{contents:'read',actions:'read'});
   assert.deepEqual(scope.steps.find(s=>s.id==='scope').env,before.jobs.scope.steps.find(s=>s.id==='scope').env);
   assert.equal(scope.steps.find(s=>s.id==='scope').run,'node scripts/ci-change-scope.mjs');
-  assert.equal(execFileSync('git',['hash-object',qualityFile],{encoding:'utf8',windowsHide:true}).trim(),COMBAT_QA_QUALITY_WORKFLOW_BLOB);
+  const qualityBlob=execFileSync('git',['hash-object',qualityFile],{encoding:'utf8',windowsHide:true}).trim();
+  if(qualityBlob!==COMBAT_QA_QUALITY_WORKFLOW_BLOB){
+    const currentBlobs={...sourceBlobs,[qualityFile]:qualityBlob};
+    assert.equal(reviewedCombatQaPaths(paths,currentBlobs),false);
+    assert.equal(ciChangeScope(paths,{draft:false,sourceBlobs:currentBlobs,reuseCombatQa:true}).full,true);
+    let requests=0;
+    assert.equal((await previousCombatQaEvidence({...options,sourceBlobs:currentBlobs,
+      request:()=>{requests++;assert.fail('The changed workflow cannot inherit the old combat QA owner');}})).passed,false);
+    assert.equal(requests,0);
+  }
 });
 
 const fixtureFile='tests/v177-native-canvas-clips.test.mjs';

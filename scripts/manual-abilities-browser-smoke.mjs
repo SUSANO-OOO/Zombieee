@@ -68,7 +68,7 @@ const kinds = [
   "mayo-chan",
 ];
 const iconFiles = {
-  brawler: "paisen-kiai-combo-ready-r1.svg",
+  brawler: "paisen-fist-wave-ready.svg",
   scout: "hachi-intercept-dash-ready-r1.svg",
   ranger: "mizuchi-precision-ready-r1.svg",
   medic: "nao-emergency-treatment-ready-r1.svg",
@@ -87,7 +87,7 @@ const iconFiles = {
 };
 const sustainedKinds = new Set(["crazy-king", "kumaverson", "guardian"]);
 const expectedTimelineCueGroups = {
-  brawler: [["ability-brawler-kiai-combo-impact"]],
+  brawler: [["v105-fist-wave-charge"], ["v105-fist-wave-launch"], ["v105-fist-wave-impact"]],
   scout: [["ability-scout-intercept-impact"]],
   ranger: [["ability-ranger-precision-shot"], ["ability-ranger-precision-impact"]],
   medic: [["ability-medic-treatment"]],
@@ -1155,7 +1155,7 @@ async function abilityActivationProof(page, engine) {
         && x > enemyXBefore.get(id) + .5
       ));
       invariant(displaced.length >= 2,
-        `${engine}/brawler: final hit did not push the surrounding group`);
+        `${engine}/brawler: fist-wave collision did not push the surrounding group`);
     }
     if (kind === "medic") {
       invariant(allyHpAfter > allyHpBefore, `${engine}/medic: emergency treatment did not heal`);

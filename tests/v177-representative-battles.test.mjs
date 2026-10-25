@@ -2,10 +2,21 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import ts from 'typescript';
+import vm from 'node:vm';
 import { UNIT_CONTENT } from '../app/content/unitCatalog.js';
 import { s25FireDeploymentPriorities } from '../scripts/v100-normal-tactical-input.mjs';
 import { createV177RepresentativeBudget } from '../scripts/v177-representative-budget.mjs';
-import { assertRepresentativeBattleObservation, V177_REPRESENTATIVE_WINDOW_MS } from '../scripts/v177-representative-battles.mjs';
+import { assertRepresentativeBattleObservation, readRepresentativeBattlePhase, V177_REPRESENTATIVE_WINDOW_MS } from '../scripts/v177-representative-battles.mjs';
+
+test('battle/result phase observation never accepts an absent, ambiguous or unrelated campaign surface',()=>{
+  const read=nodes=>vm.runInNewContext('('+readRepresentativeBattlePhase.toString()+')()',{
+    document:{querySelectorAll(selector){assert.equal(selector,'.v100-shell');return nodes;}}});
+  const shell=phase=>({getAttribute(name){assert.equal(name,'data-v100-phase');return phase;}});
+  for(const phase of ['battle','result'])assert.equal(read([shell(phase)]),phase);
+  assert.throws(()=>read([]),/Expected one production campaign shell/);
+  assert.throws(()=>read([shell('battle'),shell('result')]),/Expected one production campaign shell/);
+  for(const phase of [null,'formation','title','event'])assert.throws(()=>read([shell(phase)]),/Unexpected representative battle phase/);
+});
 
 function observed(outcome, number = 14) {
   const fixture = createV177RepresentativeBudget(number);
@@ -14,6 +25,7 @@ function observed(outcome, number = 14) {
   const finalSave = structuredClone(openingSave);
   if (outcome !== 'observed-window') finalSave.pendingResult = { battleRunId: `v100:${fixture.budget.stageId}:${openingSave.revision}`, won: outcome === 'won' };
   return { number, budget: fixture.budget, openingSave, finalSave, outcome, wallElapsedMs: V177_REPRESENTATIVE_WINDOW_MS,
+    finalBattle:outcome==='observed-window'?{stageId:fixture.budget.stageId,running:true,over:false,baseHp:100}:null,
     inputs: [{ action: 'deploy' }], snapshots: [{ humans: 2, enemies: 3 }], errors: [], requestAudit: { unexpectedFailures: [] },
     nativeClip: { status: 'recorded', errors: [], bytes: 2048, originalSpeedAccepted: false }, videoBytes: 4096 };
 }
@@ -46,6 +58,11 @@ test('faults, unearned money, absent combat/video and forced results cannot be a
   for (const mutate of mutations) { const row = observed('lost'); mutate(row); assert.throws(() => assertRepresentativeBattleObservation(row)); }
   const early = observed('observed-window'); early.wallElapsedMs = 100; assert.throws(() => assertRepresentativeBattleObservation(early));
   const forced = observed('observed-window'); forced.finalSave.pendingResult = { won: true }; assert.throws(() => assertRepresentativeBattleObservation(forced));
+  for(const patch of [{baseHp:0},{baseHp:-1},{over:true},{running:false},{stageId:'other-stage'}]){
+    const stopped=observed('observed-window',25);Object.assign(stopped.finalBattle,patch);
+    assert.throws(()=>assertRepresentativeBattleObservation(stopped),'Never turn an ended or missing S25 result into a successful window');
+  }
+  const absent=observed('observed-window',25);delete absent.finalBattle;assert.throws(()=>assertRepresentativeBattleObservation(absent));
 });
 
 // Captured S25 DOM, original report SHA256

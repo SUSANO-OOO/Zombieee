@@ -97,3 +97,16 @@ test('audit retains a transient DOM ability banner after its removal', () => {
     delete globalThis.__PLAYER_ABILITY_TEXT_PROOF__;
   }
 });
+
+test('audit permits the actual owner-bound ability name paint and still rejects a free-floating copy',()=>{
+  const previous=globalThis.CanvasRenderingContext2D;
+  class Canvas{canvas={isConnected:true};fillText(){}}
+  globalThis.CanvasRenderingContext2D=Canvas;
+  try{
+    observePlayerAbilityText();const ctx=new Canvas(),key=Symbol.for('Zombieee.actualAbilityNamePaint');
+    ctx[key]={ownerId:4,activationId:2,name:'気合拳波',startedAt:3.2,key:'manual:4:2'};
+    ctx.fillText('気合拳波',20,30);delete ctx[key];ctx.fillText('疾駆迎撃',20,30);
+    assert.equal(globalThis.__PLAYER_ABILITY_TEXT_PROOF__.abilityNameDraws.length,1);
+    assert.deepEqual(globalThis.__PLAYER_ABILITY_TEXT_PROOF__.forbidden,['疾駆迎撃']);
+  }finally{globalThis.CanvasRenderingContext2D=previous;delete globalThis.__PLAYER_ABILITY_TEXT_PROOF__;}
+});

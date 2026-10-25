@@ -14,6 +14,7 @@ import {nativeCaseSelection} from './v177-native-allunit-selection.mjs';
 import {planOutcomeShard,captureNativeOutcomeCase} from './v177-native-allunit-outcomes.mjs';
 import {combatKindToCampaignUnitId} from '../app/campaign.js';
 import {withNativeProcessTimeline} from './v177-native-process-timeline.mjs';
+import {validateCapturePreparationRecord} from './v100-macos-indexing-control.mjs';
 
 const git=args=>execFileSync('git',args,{encoding:'utf8',maxBuffer:8*1024*1024,windowsHide:true}).trim();
 const sha=b=>createHash('sha256').update(b).digest('hex');
@@ -54,6 +55,30 @@ export async function prepareNativeAllUnitBattle(page,forms,owner,enterBattle,se
     })(),
     Promise.resolve().then(enterBattle),
   ]);
+}
+
+export function readNativeCaptureAudioReadiness({readyOnly=false}={}){
+  const d=window.__ASHFALL_AUDIO_QA__?.getDiagnostics();
+  if(!d)throw Error('Original game audio diagnostics unavailable');
+  const row={at:performance.now(),unlocked:d.unlocked,contextState:d.contextState,
+    activePreloads:d.activePreloads,queuedPreloads:d.queuedPreloads,loading:d.cache.loading,fetched:d.cache.fetched,
+    failed:d.cache.failed,activeBgmVoices:d.activeBgmVoices,duplicateLoops:d.duplicateLoopInstanceKeys.length};
+  const ready=row.unlocked===true&&row.contextState==='running'&&row.activeBgmVoices>0&&row.duplicateLoops===0
+    &&['activePreloads','queuedPreloads','loading','fetched','failed'].every(k=>row[k]===0);
+  return readyOnly?(ready?row:false):row;
+}
+// Steady motion capture must not race cold audio preparation. This observes
+// the unchanged product loader inside the original5s readiness/30s setup
+// limits. Cold first-sound and normal-play gates remain separate requirements.
+export async function waitForNativeCaptureAudio(page,owner){
+  const receipt={status:'pending',before:await page.evaluate(readNativeCaptureAudioReadiness),readinessMs:LIMITS.readinessMs};
+  owner.audioReadiness=receipt;let handle,primary;
+  try{
+    handle=await page.waitForFunction(readNativeCaptureAudioReadiness,{readyOnly:true},{timeout:LIMITS.readinessMs,polling:100});
+    receipt.after=await handle.jsonValue();receipt.status='ready';
+  }catch(error){primary=error;receipt.status='failed';receipt.error=String(error);throw error;}
+  finally{if(handle)try{await handle.dispose();}catch(error){receipt.status='failed';receipt.disposeError=String(error);if(!primary)throw error;}}
+  return receipt;
 }
 
 export async function enterNativeAllUnitSurface(page,setupStage=()=>{}){
@@ -158,15 +183,10 @@ export async function runBrowserQa(){
       :selection.mode==='codec-control'
       ?'One original Brute attack case with a native container comparison. Original scene, free RAF/simulation, source clock and deadlines remain unchanged. This dispatch supplies no all-unit, performance, release, naturalness or physical audio acceptance.'
       :'One of twelve all48 native VP8 shards;432 normal cases remain separate from3 supplemental actual Ranger manual clips. A native60Hz source-acquisition request timer does not guarantee encoded60fps or grant acceptance. Original free RAF/simulation after actual recorder start. Ordinary actors use original stats; Mayo uses real trusted activation/self-drain; turned continues the actual infection newborn; split twins use their real S24 pair constructors with a deliberately partial encounter. Legacy fused art is an explicit fixture. Controlled target diagnostics are not campaign, balance, original-speed naturalness or physical audio acceptance.'};
-  if(process.env.V177_NATIVE_HOST_INDEXING_CONTROL==='brute-attack-1280'){
+  if(process.env.V177_NATIVE_HOST_INDEXING_CONTROL&&process.env.V177_NATIVE_HOST_INDEXING_CONTROL!=='none'){
     const file=path.join(out,'native-host-indexing-prepared.json'),bytes=await readFile(file),prepared=JSON.parse(bytes);
-    assert.equal(prepared.purpose,'native-capture-diagnostic');assert.equal(prepared.diagnosticOnly,true);
-    assert.equal(prepared.acceptanceOverride,false);assert.equal(prepared.state,'paused');
-    assert.equal(prepared.candidateHead,binding.head);assert.equal(prepared.run,process.env.GITHUB_RUN_ID);
-    assert.equal(prepared.attempt,process.env.GITHUB_RUN_ATTEMPT);assert.equal(prepared.shard,binding.shardId);
-    assert.equal(prepared.arch,process.arch);assert.equal(prepared.caseId,'forms-2:brute:attack:1280x720');
-    assert.deepEqual(selection.caseIds,[prepared.caseId]);assert.deepEqual(selection.outcomeCaseIds,[]);assert.deepEqual(selection.manualCaseIds,[]);
-    report.host.indexingControl={purpose:prepared.purpose,diagnosticOnly:true,file,sha256:createHash('sha256').update(bytes).digest('hex')};
+    validateCapturePreparationRecord(prepared,{selection,binding});
+    report.host.indexingControl={purpose:prepared.purpose,diagnosticOnly:prepared.diagnosticOnly,file,sha256:createHash('sha256').update(bytes).digest('hex')};
   }
   assert.match(process.env.V177_EXPECTED_BUILD_SHA256??'',/^[a-f0-9]{64}$/u);
   assert.equal(report.build.combinedSha256,process.env.V177_EXPECTED_BUILD_SHA256,'Capture build differs from the producer job');
@@ -238,7 +258,7 @@ export async function runBrowserQa(){
             await prepareNativeAllUnitBattle(page,forms,owner,async()=>{
               setupStage('title-entry');await deps.enterV100FromTitle(page);setupStage('battle-button');await page.getByRole('button',{name:'戦闘へ',exact:true}).click();
               setupStage('battle-running');await page.waitForFunction(()=>window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().running);
-            },setupStage);setupStage('completed');
+            },setupStage);setupStage('audio-preparation');await waitForNativeCaptureAudio(page,owner);setupStage('completed');
           },closeOwned,{onDeadline:fail});
           for(const planned of rows){
             const row={...planned,status:'starting',samples:[],...acceptance()};report.cases.push(row);

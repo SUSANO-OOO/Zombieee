@@ -1,3 +1,4 @@
+import {applyV105Source,V105_NEW_RUNTIME_ASSETS,V105_ASSET_BYTES_DELTA,V105_LEGACY_DOWNLOAD_BYTES_DELTA} from './v105-five-corrections-asset-contract.mjs';
 import{applyV104Source,V104_MEDIA_ADDITIONS,V104_ASSET_BYTES_DELTA,V104_AUDIO_RETIREMENTS}from'./v104-combat-asset-contract.mjs';
 import {applyPaisenStorySource, V177_PAISEN_STORY_EXISTING_BYTES_DELTA} from './v177-paisen-story-asset-contract.mjs';
 import { V177_PAISEN_CREDITS_BYTES_DELTA, applyPaisenCreditsSource } from './v177-paisen-credits-asset-contract.mjs';
@@ -123,22 +124,22 @@ const spriteReplacementByPath = new Map(V177_SPRITE_REPLACEMENTS.map(asset=>[ass
 const legacySpriteRefreshes = V177_SPRITE_REPLACEMENTS.filter(asset=>['/v060/','/v090/','/v090-prototypes/','/v0995/'].some(version=>asset.path.includes(version)));
 export const V177_ADDITIONAL_LEGACY_SPRITE_REFRESHES = legacySpriteRefreshes.length - 1;
 export const V177_SPRITE_UPDATE_BYTES = V177_SPRITE_REPLACEMENTS.reduce((sum,asset)=>sum+(legacySpriteRefreshes.includes(asset)?asset.next.bytes:asset.delta),0);
-export const V100_COMPLETION_ASSET_ADDITIONS = Object.freeze([...V100_STORY_BACKGROUND_ADDITIONS,...V100_MISSION_VEHICLE_ADDITIONS,...V100_MISSION_BACKGROUND_ADDITIONS,...V100_RESEARCH_CORE_ADDITIONS,...V100_MISSION_NODE_ADDITIONS,...V100_FUTAGO_BODY_ADDITIONS,...V100_CLINICAL_CONTROL_ADDITIONS,...V100_CORPORATE_MISSION_ADDITIONS,...V100_OBJECTIVE_STATE_ADDITIONS,...V100_DEFENSE_PERIMETER_ADDITIONS,...V100_ADVANCED_COMBAT_VFX_ADDITIONS,...V100_PRODUCER_FEEDBACK_ART_ADDITIONS].filter(asset=>!removedCandidatePaths.has(asset.path)).concat(V100_PHONE_REVIEW_ASSET_ADDITIONS.filter(asset=>!replacedMotionPaths.has(asset.path)),V100_TAKUYA_DEFEAT_CUT_ADDITION,V100_WEBKIT_CARD_REPLACEMENT,V100_ENDING_MUSIC_ADDITION,V100_CREDITS_FILM_ASSET_ADDITIONS,V100_POST_CREDITS_ASSET_ADDITIONS,V100_DESIGN_ASSET_ADDITIONS,V100_TITLE_AUDIO_ADDITION).filter(asset=>!r5RemovedPaths.has(asset.path)).map(asset=>r5ReplacementByPath.get(asset.path)??asset).concat(V100_R5_ASSET_ADDITIONS,V102_ASSET_ADDITIONS,V100_R9_ASSET_ADDITIONS,V100_OPENING_ASSET_ADDITIONS,V177_JOINT_ASSET_ADDITIONS.map(applyV104Source),V104_MEDIA_ADDITIONS,V177_PAISEN_ASSET_ADDITIONS).filter(asset=>![...V177_PAISEN_RETIRED_ASSETS,...V104_AUDIO_RETIREMENTS].some(retired=>retired.path===asset.path)).map(asset=>spriteReplacementByPath.get(asset.path)??asset).map(applyPaisenCreditsSource).map(applyPaisenStorySource));
-const addedBytes = V100_COMPLETION_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0);
+const V104_COMPLETION_ASSET_ADDITIONS = Object.freeze([...V100_STORY_BACKGROUND_ADDITIONS,...V100_MISSION_VEHICLE_ADDITIONS,...V100_MISSION_BACKGROUND_ADDITIONS,...V100_RESEARCH_CORE_ADDITIONS,...V100_MISSION_NODE_ADDITIONS,...V100_FUTAGO_BODY_ADDITIONS,...V100_CLINICAL_CONTROL_ADDITIONS,...V100_CORPORATE_MISSION_ADDITIONS,...V100_OBJECTIVE_STATE_ADDITIONS,...V100_DEFENSE_PERIMETER_ADDITIONS,...V100_ADVANCED_COMBAT_VFX_ADDITIONS,...V100_PRODUCER_FEEDBACK_ART_ADDITIONS].filter(asset=>!removedCandidatePaths.has(asset.path)).concat(V100_PHONE_REVIEW_ASSET_ADDITIONS.filter(asset=>!replacedMotionPaths.has(asset.path)),V100_TAKUYA_DEFEAT_CUT_ADDITION,V100_WEBKIT_CARD_REPLACEMENT,V100_ENDING_MUSIC_ADDITION,V100_CREDITS_FILM_ASSET_ADDITIONS,V100_POST_CREDITS_ASSET_ADDITIONS,V100_DESIGN_ASSET_ADDITIONS,V100_TITLE_AUDIO_ADDITION).filter(asset=>!r5RemovedPaths.has(asset.path)).map(asset=>r5ReplacementByPath.get(asset.path)??asset).concat(V100_R5_ASSET_ADDITIONS,V102_ASSET_ADDITIONS,V100_R9_ASSET_ADDITIONS,V100_OPENING_ASSET_ADDITIONS,V177_JOINT_ASSET_ADDITIONS.map(applyV104Source),V104_MEDIA_ADDITIONS,V177_PAISEN_ASSET_ADDITIONS).filter(asset=>![...V177_PAISEN_RETIRED_ASSETS,...V104_AUDIO_RETIREMENTS].some(retired=>retired.path===asset.path)).map(asset=>spriteReplacementByPath.get(asset.path)??asset).map(applyPaisenCreditsSource).map(applyPaisenStorySource));
+const addedBytes = V104_COMPLETION_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0);
 const endingAssetsBytes = [...V100_CREDITS_FILM_ASSET_ADDITIONS, ...V100_POST_CREDITS_ASSET_ADDITIONS].reduce((sum, asset) => sum + asset.bytes, 0);
 // The 28 foley/UI/ambience/score MP3s have distinct content hashes but share
 // one physical transport. Pin this separately from logical asset coverage.
 const bundledAudioAdditionsFromV0995 = 28 + V100_R5_ASSET_DELTA.audioBundleAdditions
   + V100_R9_ASSET_ADDITIONS.filter(asset => asset.path.startsWith('/audio/')).length
   + V100_OPENING_ASSET_ADDITIONS.length + V104_MEDIA_ADDITIONS.filter(asset=>asset.path.startsWith('/audio/')).length-V104_AUDIO_RETIREMENTS.length;
-export const V100_RELEASE_ASSET_CONTRACT = Object.freeze({
-  count: 457 - V177_PAISEN_LEGACY_RETIREMENTS.length + V100_COMPLETION_ASSET_ADDITIONS.length,
-  distinctHashes: 455 - V177_PAISEN_LEGACY_RETIREMENTS.length + V100_COMPLETION_ASSET_ADDITIONS.length,
-  additionsFromV0995: 44 + V100_COMPLETION_ASSET_ADDITIONS.length + V177_ADDITIONAL_LEGACY_SPRITE_REFRESHES,
+const V104_RELEASE_ASSET_CONTRACT = Object.freeze({
+  count: 457 - V177_PAISEN_LEGACY_RETIREMENTS.length + V104_COMPLETION_ASSET_ADDITIONS.length,
+  distinctHashes: 455 - V177_PAISEN_LEGACY_RETIREMENTS.length + V104_COMPLETION_ASSET_ADDITIONS.length,
+  additionsFromV0995: 44 + V104_COMPLETION_ASSET_ADDITIONS.length + V177_ADDITIONAL_LEGACY_SPRITE_REFRESHES,
   bundledAudioAdditionsFromV0995,
   audioBundlePath: "/pwa-bundles/audio-v1.bin",
-  networkSourcesFromV0995: 44 + V100_COMPLETION_ASSET_ADDITIONS.length - bundledAudioAdditionsFromV0995 + 1 + V177_ADDITIONAL_LEGACY_SPRITE_REFRESHES,
-  artAdditionsFromV0995: 43 + V100_COMPLETION_ASSET_ADDITIONS.filter(asset=>asset.path.startsWith("/art/v100/")).length,
+  networkSourcesFromV0995: 44 + V104_COMPLETION_ASSET_ADDITIONS.length - bundledAudioAdditionsFromV0995 + 1 + V177_ADDITIONAL_LEGACY_SPRITE_REFRESHES,
+  artAdditionsFromV0995: 43 + V104_COMPLETION_ASSET_ADDITIONS.filter(asset=>asset.path.startsWith("/art/v100/")).length,
   // Measured against the frozen 0.9.9.5 manifest, including the restored
   // station relay and the ordinary drum's lossless WebP transport.
   bytesFromV0995: 60_311_674 + endingAssetsBytes + V100_DESIGN_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0) + V100_TITLE_AUDIO_ADDITION.bytes + V100_R5_ASSET_DELTA.updateFromV0995Bytes + V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + V177_SPRITE_UPDATE_BYTES + V177_JOINT_ASSET_BYTES + V177_PAISEN_UPDATE_BYTES + V177_PAISEN_CREDITS_BYTES_DELTA + V177_PAISEN_STORY_EXISTING_BYTES_DELTA + V104_ASSET_BYTES_DELTA,
@@ -149,4 +150,25 @@ export const V100_RELEASE_ASSET_CONTRACT = Object.freeze({
   candidateDistinctHashBytes: 149_450_104 + endingAssetsBytes + V100_DESIGN_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0) + V100_TITLE_AUDIO_ADDITION.bytes + V100_R5_ASSET_DELTA.distinctBytes + V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + V177_SPRITE_BYTES_DELTA + V177_JOINT_ASSET_BYTES + V177_PAISEN_BYTES_DELTA + V177_PAISEN_CREDITS_BYTES_DELTA + V177_PAISEN_STORY_EXISTING_BYTES_DELTA + V104_ASSET_BYTES_DELTA,
   updateFromV0982Bytes: 77_002_122 + endingAssetsBytes + V100_DESIGN_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0) + V100_TITLE_AUDIO_ADDITION.bytes + V100_R5_ASSET_DELTA.updateFromV0982Bytes + V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + V177_SPRITE_UPDATE_BYTES + V177_JOINT_ASSET_BYTES + V177_PAISEN_UPDATE_BYTES + V177_PAISEN_CREDITS_BYTES_DELTA + V177_PAISEN_STORY_EXISTING_BYTES_DELTA + V104_ASSET_BYTES_DELTA,
   updateFromV0993Bytes: 66_627_428 + endingAssetsBytes + V100_DESIGN_ASSET_ADDITIONS.reduce((sum, asset) => sum + asset.bytes, 0) + V100_TITLE_AUDIO_ADDITION.bytes + V100_R5_ASSET_DELTA.updateFromV0993Bytes + V102_ASSET_BYTES + V100_R9_ASSET_BYTES + V100_OPENING_ASSET_BYTES + V177_SPRITE_UPDATE_BYTES + V177_JOINT_ASSET_BYTES + V177_PAISEN_UPDATE_BYTES + V177_PAISEN_CREDITS_BYTES_DELTA + V177_PAISEN_STORY_EXISTING_BYTES_DELTA + V104_ASSET_BYTES_DELTA,
+});
+
+// Preserve the v1.0.4 derivation above and apply only the six pinned v1.0.5
+// payloads / two retirements. No unrelated installed asset may change.
+export const V100_COMPLETION_ASSET_ADDITIONS=Object.freeze([
+  ...V104_COMPLETION_ASSET_ADDITIONS.map(applyV105Source),...V105_NEW_RUNTIME_ASSETS,
+]);
+export const V100_RELEASE_ASSET_CONTRACT=Object.freeze({
+  ...V104_RELEASE_ASSET_CONTRACT,
+  count:V104_RELEASE_ASSET_CONTRACT.count+4,
+  distinctHashes:V104_RELEASE_ASSET_CONTRACT.distinctHashes+4,
+  additionsFromV0995:V104_RELEASE_ASSET_CONTRACT.additionsFromV0995+5,
+  bundledAudioAdditionsFromV0995:V104_RELEASE_ASSET_CONTRACT.bundledAudioAdditionsFromV0995+3,
+  networkSourcesFromV0995:V104_RELEASE_ASSET_CONTRACT.networkSourcesFromV0995+2,
+  artAdditionsFromV0995:V104_RELEASE_ASSET_CONTRACT.artAdditionsFromV0995-1,
+  bytesFromV0995:V104_RELEASE_ASSET_CONTRACT.bytesFromV0995+V105_LEGACY_DOWNLOAD_BYTES_DELTA,
+  completionBytes:V104_RELEASE_ASSET_CONTRACT.completionBytes+V105_LEGACY_DOWNLOAD_BYTES_DELTA,
+  candidateTotalBytes:V104_RELEASE_ASSET_CONTRACT.candidateTotalBytes+V105_ASSET_BYTES_DELTA,
+  candidateDistinctHashBytes:V104_RELEASE_ASSET_CONTRACT.candidateDistinctHashBytes+V105_ASSET_BYTES_DELTA,
+  updateFromV0982Bytes:V104_RELEASE_ASSET_CONTRACT.updateFromV0982Bytes+V105_LEGACY_DOWNLOAD_BYTES_DELTA,
+  updateFromV0993Bytes:V104_RELEASE_ASSET_CONTRACT.updateFromV0993Bytes+V105_LEGACY_DOWNLOAD_BYTES_DELTA,
 });

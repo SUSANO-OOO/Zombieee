@@ -1,0 +1,18 @@
+{
+  "generator": "image_gen; scripts/build-v105-fist-wave-art.mjs performs transparent sprite packaging only",
+  "identityChange": false,
+  "source": "Original generated effect, no character or third-party reference",
+  "prompt": "Create ONE isolated game VFX sprite: a compact forward-traveling martial-arts fist-pressure wave, facing RIGHT, for a gritty dark post-apocalyptic Japanese 2D side-view action strategy game. This is the projectile released from a powerful fighter's fists, not a character or a hand. A dense, readable rounded leading pressure front with irregular flame-like turbulent ivory and amber light, a slightly cyan-white hot core, soft torn smoky streamers and tapered motion streaks trailing LEFT. The leading edge should feel forceful, fast and tangible, not a circular icon. Painterly textured high-quality realistic game VFX, muted gold highlights that fit ruined streets, localized bright core, soft variable-opacity alpha edge. Tight horizontal silhouette about 2:1, centered with transparent padding. Absolutely transparent background. No literal hand or person, no black background, no ground shadow, no neon rings, circles, triangles, polygons, UI frame, star shapes, target markers, text or logos. Single sprite only, no contact sheet or multiple frames. It must remain legible when displayed around 48 by 28 screen pixels.",
+  "raw": "assets/source/v105/fist-wave/imagegen-r1.png",
+  "rawSha256": "987fbfcd089f10cfa8e1994e011de2aad0cfe2df6db7a5d666fc0af67b668494",
+  "file": "public/art/v105/combat-vfx/fist-wave-r1.webp",
+  "bytes": 40952,
+  "sha256": "2471d4b8a4e15328cde86fc0e06cc0738be2c5d26ceaf3543cf7c3ba77fd7963",
+  "packaging": "alpha trim, proportional 256x128 containment, lossless WebP",
+  "anchor": {
+    "x": 0.9,
+    "y": 0.5
+  },
+  "collisionRadius": 8,
+  "travelDirection": "right; rotate about actual collision center"
+}

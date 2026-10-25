@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { assertEphemeralPerformanceHost, assertEphemeralNativeCaptureHost, parseIndexingStatus, restoreEnabledVolumes, validateBenchmarkPreparationRecord } from "../scripts/v100-macos-indexing-control.mjs";
+import { assertEphemeralPerformanceHost, assertEphemeralNativeCaptureHost, parseIndexingStatus, restoreEnabledVolumes, validateBenchmarkPreparationRecord, assertEphemeralCorrectionCaptureHost, validateCapturePreparationRecord, correctionPreparationNeeded } from "../scripts/v100-macos-indexing-control.mjs";
 
 const env = { GITHUB_ACTIONS: "true", RUNNER_ENVIRONMENT: "github-hosted", RUNNER_OS: "macOS", GITHUB_REPOSITORY: "SUSANO-OOO/Zombieee", GITHUB_EVENT_NAME: "pull_request", GITHUB_JOB: "v100-webkit-frame-control", GITHUB_RUN_ID: "36935406773", GITHUB_SHA: "0284f0f616c695e45a7e73c5b9979c1d1c15b1d1" };
 
@@ -49,4 +49,38 @@ test("benchmark preparation requires its recorded causal basis and the current e
   for (const patch of [{run:"other"},{head:"other"},{purpose:"causal-diagnostic"},{state:"restored"},{diagnosticOnly:true},{acceptanceOverride:true},{basis:{...record.basis,run:0}},
     {before:[]},{after:[]},{after:[{mount:"/other",enabled:false}]},{after:[{mount:"/",enabled:true}]},{after:[...record.after,...record.after]},{pausedAt:"invalid"}]) assert.throws(() => validate({...record,...patch}));
   assert.throws(() => validateBenchmarkPreparationRecord(record, env, "win32", "arm64"));
+});
+
+
+test('only the exact unfinished native and correction cases can prepare their own ephemeral ARM host',()=>{
+ const base={...env,GITHUB_JOB:'capture',GITHUB_RUN_ATTEMPT:'1',V177_EXPECTED_HEAD_SHA:'a'.repeat(40)};
+ const native={...base,V177_CAPTURE_SHARD:'forms-4',V177_NATIVE_HOST_INDEXING_CONTROL:'mayo-attack-1280'};
+ const selection={mode:'remaining',caseIds:['forms-4:mayo-chan:attack:1280x720'],outcomeCaseIds:[],manualCaseIds:[],shards:['forms-4']};
+ assert.doesNotThrow(()=>assertEphemeralNativeCaptureHost(native,'darwin','arm64',selection));
+ for(const patch of [{V177_CAPTURE_SHARD:'forms-2'},{V177_NATIVE_HOST_INDEXING_CONTROL:'other'},{RUNNER_ENVIRONMENT:'self-hosted'},{GITHUB_EVENT_NAME:'workflow_dispatch'}])assert.throws(()=>assertEphemeralNativeCaptureHost({...native,...patch},'darwin','arm64',selection));
+ const correction={...base,V105_CAPTURE_SCOPE:'desktop'},s={mode:'remaining',plan:[{kind:'miyamoto-musashi',mode:'manual'},{kind:'mayo-chan',mode:'manual'}]};
+ assert.equal(correctionPreparationNeeded(s),true);assert.doesNotThrow(()=>assertEphemeralCorrectionCaptureHost(correction,'darwin','arm64',s));
+ for(const key of Object.keys(correction))assert.throws(()=>assertEphemeralCorrectionCaptureHost({...correction,[key]:''},'darwin','arm64',s));
+ assert.throws(()=>assertEphemeralCorrectionCaptureHost(correction,'win32','arm64',s));assert.throws(()=>assertEphemeralCorrectionCaptureHost(correction,'darwin','x64',s));
+ for(const patch of [{mode:'full'},{plan:[]},{plan:[...s.plan,{kind:'brawler',mode:'manual'}]},{plan:[s.plan[0]]}]){
+  const unknown={...s,...patch};assert.equal(correctionPreparationNeeded(unknown),false);assert.throws(()=>assertEphemeralCorrectionCaptureHost(correction,'darwin','arm64',unknown));
+ }
+ for(const [e,sel,isCorrection,binding]of [[native,selection,false,{head:base.V177_EXPECTED_HEAD_SHA,shardId:'forms-4'}],[correction,s,true,{head:base.V177_EXPECTED_HEAD_SHA}]]){
+  const record={run:e.GITHUB_RUN_ID,head:e.GITHUB_SHA,attempt:'1',candidateHead:binding.head,arch:'arm64',state:'paused',diagnosticOnly:false,acceptanceOverride:false,
+   purpose:isCorrection?'correction-capture-preparation':'native-capture-preparation',...(isCorrection?{scope:'desktop',plan:s.plan}:{shard:'forms-4',caseId:selection.caseIds[0]}),
+   before:[{mount:'/',enabled:true}],after:[{mount:'/',enabled:false}],pausedAt:'2026-10-25T00:00:00Z'};
+  const validate=r=>validateCapturePreparationRecord(r,{env:e,platform:'darwin',arch:'arm64',selection:sel,binding,correction:isCorrection});
+  assert.equal(validate(record),record);
+  for(const patch of [{run:'other'},{head:'other'},{candidateHead:'f'.repeat(40)},{attempt:'2'},{arch:'x64'},{state:'restored'},{purpose:'benchmark-preparation'},{diagnosticOnly:true},{acceptanceOverride:true},{after:[]},{after:[{mount:'/',enabled:true}]},{after:[{mount:'/other',enabled:false}]},{pausedAt:'invalid'},isCorrection?{plan:[]}:{caseId:'forms-2:brute:attack:1280x720'}])assert.throws(()=>validate({...record,...patch}));
+ }
+});
+
+
+test('Ranger continuation uses the same prepared-host ownership without permitting other units or a full capture',()=>{
+ const e={...env,GITHUB_JOB:'capture',GITHUB_RUN_ATTEMPT:'1',V177_EXPECTED_HEAD_SHA:'a'.repeat(40),V177_CAPTURE_SHARD:'forms-1',V177_NATIVE_HOST_INDEXING_CONTROL:'ranger-motion'};
+ const selection={mode:'remaining',shards:['forms-1'],caseIds:['forms-1:ranger:move:1280x720'],manualCaseIds:[],outcomeCaseIds:[]};
+ assert.doesNotThrow(()=>assertEphemeralNativeCaptureHost(e,'darwin','arm64',selection));
+ for(const patch of [{mode:'full'},{caseIds:[]},{caseIds:['forms-1:brawler:move:1280x720']},{manualCaseIds:['unexpected']}])assert.throws(()=>assertEphemeralNativeCaptureHost(e,'darwin','arm64',{...selection,...patch}));
+ const c={...e,V105_CAPTURE_SCOPE:'desktop'},s={mode:'remaining',plan:[{kind:'ranger',mode:'manual'}]};
+ assert.equal(correctionPreparationNeeded(s),true);assert.doesNotThrow(()=>assertEphemeralCorrectionCaptureHost(c,'darwin','arm64',s));
 });

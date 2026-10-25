@@ -203,6 +203,7 @@ function snapshotProjection(snapshot) {
     humans: living.filter((fighter) => fighter.side === "human")
       .map(({ id, kind, hp, maxHp, x, y, lane }) => ({ id, kind, hp, maxHp, x, y, lane })),
     ...(snapshot.rangerDraws?{rangerDraws:snapshot.rangerDraws}:{}),
+    ...(snapshot.rangerDrawObservation?{rangerDrawObservation:snapshot.rangerDrawObservation}:{}),
   };
 }
 function fixtureSave() {
@@ -260,12 +261,16 @@ async function waitForBattle(page, deadline) {
   }
   throw new Error("S25 did not reach a live battle during setup");
 }
-async function beginMeasurement(page) {
-  return page.evaluate(() => {
+async function beginMeasurement(page,{deferRangerObservation=false}={}) {
+  return page.evaluate(deferRangerObservation => {
     window.__V100_RAF_CALLBACK_DIAG__?.start();
     // A 120Hz phone produces about 3,600 samples in 30 seconds. Retain that
     // complete window with bounded headroom; overflow still fails the gate.
-    const state = { startedAt: performance.now(), times: [], capacity: 4_800, overflow: 0, active: true, handle: 0, visibilityEvents: [] };
+    const state = { startedAt: performance.now(), times: [], capacity: 4_800, overflow: 0, active: true, handle: 0, visibilityEvents: [], frameCpuChunks: [], frameCpuOverflow: 0 };
+    if(deferRangerObservation){
+      state.rangerObservationOwner={state,window,document,performance,startedAt:state.startedAt};
+      state.rangerDrawObservations=[];state.rangerDrawOverflow=0;
+    }
     const mark = (type) => state.visibilityEvents.push({ type, at: performance.now(), visibilityState: document.visibilityState });
     state.listeners = { visibilitychange: () => mark("visibilitychange"), blur: () => mark("blur"), pagehide: () => mark("pagehide") };
     for (const [type, listener] of Object.entries(state.listeners)) window.addEventListener(type, listener, { passive: true });
@@ -279,19 +284,53 @@ async function beginMeasurement(page) {
     state.performanceBefore = window.__ASHFALL_BATTLE_QA__?.getPerformanceSnapshot?.() ?? null;
     window.__V100_DEVICE_RAF__ = state;
     return { startedAt: state.startedAt, performance: state.performanceBefore, visibilityState: document.visibilityState };
-  });
+  },deferRangerObservation);
 }
 async function endMeasurement(page) {
   return page.evaluate(() => {
     const state = window.__V100_DEVICE_RAF__;
     if (!state) return null;
+    if(state.measurementEnd)return state.measurementEnd;
     state.active = false;
     cancelAnimationFrame(state.handle);
     const endedAt = performance.now();
-    const performanceAfter = window.__ASHFALL_BATTLE_QA__?.getPerformanceSnapshot?.() ?? null;
-    const callbackDiagnostic = window.__V100_RAF_CALLBACK_DIAG__?.stop() ?? null;
-    for (const [type, listener] of Object.entries(state.listeners ?? {})) window.removeEventListener(type, listener);
-    return { startedAt: state.startedAt, endedAt, times: state.times, capacity: state.capacity, overflow: state.overflow, visibilityEvents: state.visibilityEvents, performanceBefore: state.performanceBefore, performanceAfter, visibilityState: document.visibilityState, callbackDiagnostic };
+    const binding=state.rangerObservationOwner;
+    const deferredRanger=binding?{startedAt:state.startedAt,endedAt,overflow:state.rangerDrawOverflow,
+      sameOwner:binding.state===state&&binding.window===window&&binding.document===document&&binding.performance===performance&&binding.startedAt===state.startedAt,
+      rows:state.rangerDrawObservations}:null;
+    // Latch the first stop before post-stop diagnostics or transport can fail.
+    // Cleanup can recover this same partial receipt, never a later boundary.
+    const receipt=state.measurementEnd={ startedAt: state.startedAt, endedAt, times: state.times, capacity: state.capacity, overflow: state.overflow, visibilityEvents: state.visibilityEvents, performanceBefore: state.performanceBefore, performanceAfter:null, visibilityState: document.visibilityState, callbackDiagnostic:null, deferredCpu: {chunks:state.frameCpuChunks,overflow:state.frameCpuOverflow},...(binding?{deferredRanger}: {}) };
+    try{
+      receipt.performanceAfter=structuredClone(window.__ASHFALL_BATTLE_QA__?.getPerformanceSnapshot?.()??null);
+      receipt.callbackDiagnostic=window.__V100_RAF_CALLBACK_DIAG__?.stop()??null;
+      return receipt;
+    }catch(error){receipt.stopError=String(error);throw error;}
+    finally{for(const [type,listener]of Object.entries(state.listeners??{}))window.removeEventListener(type,listener);}
+  });
+}
+
+function restoreDeferredRangerObservations(samples,observation,{startedAt,endedAt}){
+  assert.equal(observation?.sameOwner,true,'Original Ranger observation owner lost');
+  assert.equal(observation.startedAt,startedAt);assert.equal(observation.endedAt,endedAt);
+  assert.equal(observation.overflow,0,'Deferred Ranger evidence overflow');
+  const rows=observation.rows;assert.ok(Array.isArray(rows)&&rows.length>0&&rows.length<=128);
+  for(let i=0;i<rows.length;i++){
+    const r=rows[i];assert.equal(r.index,i,'Original Ranger read order changed');
+    assert.ok(r.draws&&Number.isFinite(r.draws.readAt)&&r.draws.readAt>=startedAt&&r.draws.readAt<=endedAt);
+    assert.equal(r.draws.measurementStart?.startedAt,startedAt);assert.equal(r.draws.measurementStart.active,true);
+    if(i)assert.ok(r.draws.readAt>=rows[i-1].draws.readAt,'Original Ranger read clock regressed');
+  }
+  let previous=-1;
+  return samples.map(s=>{
+    const reference=s.rangerDrawObservation;
+    assert.equal(s.rangerDraws,undefined,'Deferred evidence cannot replace an existing observation');
+    assert.equal(reference?.startedAt,startedAt);assert.ok(Number.isSafeInteger(reference?.index)&&reference.index>previous&&reference.index<rows.length,'Missing, duplicate or unordered Ranger read');
+    previous=reference.index;const draws=rows[reference.index].draws;
+    assert.equal(reference.readAt,draws.readAt,'Ranger reference belongs to another read');
+    assert.equal(reference.simulationTime,s.time,'Ranger reference changed its original snapshot time');
+    assert.equal(draws.simulationTime,s.time,'Ranger receipt belongs to another original snapshot');
+    return{...s,rangerDraws:draws};
   });
 }
 
@@ -403,6 +442,12 @@ try {
       await page.addInitScript(installRuntimeObservationDiagnostics);
     }
     const result = { name, viewport, status: "failed", blankBaseline, tacticalPolicy: viewport.safeArea ? "airstrike-first" : "crowd-barrage-at-eight", diagnostics: { consoleErrors: [], pageErrors: [], requestFailures: [], httpFailures: [] }, samples: [], measurementSamples: [], inputs: [] };
+    const retainFrameCpuChunks=runtimeRole==='formal'&&engine==='webkit'&&!callbackDiagnostic&&!observerlessDiagnostic;
+    if(retainFrameCpuChunks)result.frameCpuObservation = {
+      source:'existing product frameCpuTimings128 copied in each original stillMeasuring RPC; raw chunks transferred after the original measurement stops',
+      columns:['sequence','rafTimestamp','entryAt','previousExitAt','simulationFinishedAt','drawFinishedAt','exitAt','simulationTime'],
+      sourceRingCapacity:128,maxChunks:128,overflow:0,chunks:[],diagnosticOnly:true,
+    };
     report.results.push(result);
     let measurementActive = false;
     page.on("console", (message) => { if (message.type() === "error") result.diagnostics.consoleErrors.push(message.text()); });
@@ -492,14 +537,33 @@ try {
       }
       assert.ok(preparation?.ready,'No live Ranger with an actual weighted paint inside the original setup deadline');
       measurementActive = true;
-      const measurement = await beginMeasurement(page);
+      const measurement = await beginMeasurement(page,{deferRangerObservation:retainFrameCpuChunks});
       result.measurementStarted = true;
       assert.equal(measurement.visibilityState, "visible", "measurement did not start while visible");
       // The elapsed gate uses this browser clock. Node's wall clock can finish
       // first, so use the same monotonic clock to decide when the window ends.
-      const stillMeasuring = () => page.evaluate(({ startedAt, durationMs }) => (
-        performance.now() - startedAt < durationMs
-      ), { startedAt: measurement.startedAt, durationMs: measurementMs });
+      const stillMeasuring = async () => {
+        if(!retainFrameCpuChunks)return page.evaluate(({ startedAt, durationMs }) => (
+          performance.now() - startedAt < durationMs
+        ), { startedAt: measurement.startedAt, durationMs: measurementMs });
+        const reply = await page.evaluate(({ startedAt, durationMs }) => {
+          const measuring = performance.now() - startedAt < durationMs;
+          const runtime = globalThis.__ASHFALL_RUNTIME_PERFORMANCE__;
+          const chunk = {
+            measuring,readAt:performance.now(),frameCpuSequence:runtime?.frameCpuSequence??null,
+            rows:Array.isArray(runtime?.frameCpuTimings)?runtime.frameCpuTimings.map(row=>[
+              row.sequence,row.rafTimestamp,row.entryAt,row.previousExitAt,
+              row.simulationFinishedAt,row.drawFinishedAt,row.exitAt,row.simulationTime,
+            ]):null,
+          };
+          const owner=window.__V100_DEVICE_RAF__;
+          if(!owner?.active||owner.startedAt!==startedAt||!Array.isArray(owner.frameCpuChunks))throw Error('Original CPU observation owner changed');
+          if(owner.frameCpuChunks.length<128)owner.frameCpuChunks.push(chunk);else owner.frameCpuOverflow++;
+          return measuring;
+        }, { startedAt: measurement.startedAt, durationMs: measurementMs });
+        assert.equal(typeof reply,'boolean');
+        return reply;
+      };
       if (observerlessDiagnostic) {
         await page.waitForTimeout(measurementMs);
         while (await stillMeasuring()) await page.waitForTimeout(50);
@@ -511,7 +575,7 @@ try {
       } else {
         let previousSample = 0;
         while (await stillMeasuring()) {
-          await normalTacticalInput(page, result, { rangerDrawObservation:true,awaitInitialRangerPaint:true,barrageWhenOverwhelmed: !viewport.safeArea, observeSnapshot(snapshot) {
+          await normalTacticalInput(page, result, { rangerDrawObservation:true,awaitInitialRangerPaint:true,deferRangerObservation:retainFrameCpuChunks,barrageWhenOverwhelmed: !viewport.safeArea, observeSnapshot(snapshot) {
             const projected = snapshotProjection(snapshot);
             if (!projected?.running || projected.over || projected.humanCount <= 0 || projected.boss.length === 0) {
               throw new Error("30-second window lost live battle, humans, or boss");
@@ -525,11 +589,17 @@ try {
         }
       }
       const raf = await endMeasurement(page);
+      measurementActive = false;
+      assert.equal(raf.stopError,undefined,'Original measurement stop failed');
+      if(retainFrameCpuChunks)Object.assign(result.frameCpuObservation,raf.deferredCpu);
+      if(retainFrameCpuChunks){
+        result.deferredRangerObservation=raf.deferredRanger;
+        result.measurementSamples=restoreDeferredRangerObservations(result.measurementSamples,raf.deferredRanger,{startedAt:measurement.startedAt,endedAt:raf.endedAt});
+      }
       result.rangerDrawReceipts=observerlessDiagnostic
         ?{status:'not-observed-diagnostic',weightedPaintObserved:false,scope:'Observerless control retains its original no-sampling protocol; no Ranger workload acceptance.'}
         :rangerPerformanceReceipts(result.measurementSamples,{startedAt:measurement.startedAt,endedAt:raf?.endedAt});
       if (blankBaselineDiagnostic) result.hostAtMeasurementEnd = hostLoadSnapshot();
-      measurementActive = false;
       result.measurementEnded = true;
       if (suppressDebugDatasetDiagnostic) {
         result.suppressedDatasetWrites = await page.evaluate(() => window.__V100_DEBUG_DATASET_SUPPRESSED__ ?? 0);
@@ -578,6 +648,7 @@ try {
       result.error = String(error);
       if (measurementActive) {
         result.partialMeasurement = await endMeasurement(page).catch((cleanupError) => ({ cleanupError: String(cleanupError) }));
+        if(retainFrameCpuChunks&&result.partialMeasurement?.deferredCpu)Object.assign(result.frameCpuObservation,result.partialMeasurement.deferredCpu);
         measurementActive = false;
       }
       result.debug = await page.evaluate(() => ({ phase: document.querySelector(".v100-shell")?.dataset.v100Phase ?? null, screen: document.querySelector(".game-shell")?.dataset.screen ?? null, snapshot: window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null })).catch(() => null);

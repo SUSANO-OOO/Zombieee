@@ -4,7 +4,7 @@ import {V177_JOINT_ATLASES,v177JointPose,v177RangerFootPlan,drawV177JointPose,v1
 import {createCombatAnimationRuntime,advanceCombatAnimationRuntime} from '../app/combatPresentation.js';
 import {v177RangerLowerPose} from '../app/v177RangerLowerMotion.js';
 import {MANUAL_ABILITY_REGISTRY,createManualAbilityRuntime,beginManualAbility,advanceManualAbility} from '../app/manualAbilities.js';
-import {recordV177JointBodyCorrection} from '../app/v177JointActorHistory.js';
+import {recordV177JointBodyCorrection,recordV177JointBodyShift} from '../app/v177JointActorHistory.js';
 
 // Unit Canvas port exercises actual draw/history code. Its RGBA is a mock;
 // this suite does not claim original pixels, browser timing or native playback.
@@ -23,7 +23,20 @@ test('real manual activation starts from last actually drawn walking/ordinary at
 });
 test('original .5 impact/.18 recovery own recoil clock and return to ordinary pose',()=>{
  const f=fixture();paint(f,plan(f));for(const seconds of[0,.2,.499999]){assert.equal(at(f,seconds).events.length,0);assert.equal(plan(f).rangerManualJoint.presentationPhase,'aim');}
- const impact=at(f,.5);assert(impact.events.some(e=>e.type==='impact'));assert.equal(plan(f).rangerManualJoint.presentationPhase,'recoil');at(f,.57);assert.equal(plan(f).rangerManualJoint.presentationPhase,'return');at(f,.6799999999);const end=paint(f,plan(f));at(f,.68);assert.equal(f.actor.manualAbility.phase,'cooldown');const normal=paint(f,v177JointPose('ranger',{requestedState:'idle'},f.runtime,{actor:f.actor,world:f.world}));for(let i=1;i<8;i++)for(let j=0;j<6;j++)assert(Math.abs(end.calls[i].matrix[j]-normal.calls[i].matrix[j])<1e-7);
+ const impact=at(f,.5);assert(impact.events.some(e=>e.type==='impact'));assert.equal(plan(f).rangerManualJoint.presentationPhase,'recoil');at(f,.60);assert.equal(plan(f).rangerManualJoint.presentationPhase,'return');at(f,.6799999999);const end=paint(f,plan(f));at(f,.68);assert.equal(f.actor.manualAbility.phase,'cooldown');const normal=paint(f,v177JointPose('ranger',{requestedState:'idle'},f.runtime,{actor:f.actor,world:f.world}));for(let i=1;i<8;i++)for(let j=0;j<6;j++)assert(Math.abs(end.calls[i].matrix[j]-normal.calls[i].matrix[j])<1e-7);
+});
+
+test('the actual sparse native shot paints a real recoil before return without extending the gameplay recovery',()=>{
+ const f=fixture({state:'idle'});let elapsed=0,impacts=0;const phases=[];
+ // Original d552 desktop paints around the missing recoil, not invented FPS.
+ for(const next of [0,.4499999999999744,.4999999999999716,.5666666666666345,.649999999999963,.7333333333332916]){
+  const advanced=advanceManualAbility(f.actor.manualAbility,next-elapsed);f.actor.manualAbility=advanced.runtime;
+  impacts+=advanced.events.filter(e=>e.type==='impact').length;elapsed=next;f.world.time=20+next;
+  const q=plan(f);if(q){const drawn=paint(f,q);assert.equal(drawn.receipt.mode,'continuous-weighted-mesh');phases.push(q.rangerManualJoint.presentationPhase);}
+ }
+ assert.deepEqual(phases,['aim','aim','aim','recoil','return']);assert.equal(impacts,1);
+ assert.equal(f.actor.manualAbility.phase,'cooldown');assert.equal(f.actor.manualAbility.abilityElapsed,definition.windupSeconds+definition.recoverySeconds);
+ assert.equal(definition.windupSeconds,.5);assert.equal(definition.recoverySeconds,.18);assert.equal(definition.impactDamage,92);
 });
 test('missing actual history, foreign world and other owners cannot enter manual joints',()=>{
  assert.equal(plan(fixture({draw:false})),null);
@@ -103,4 +116,20 @@ test('actual prepaint and weighted draw consume a boss-body receipt only through
  recordV177JointBodyCorrection(actor,world,-1);
  const samePaint=v177RangerFootPlan('ranger',corrected,{actor,world,width});
  assert.equal(samePaint.rangerFeet.bodyCorrection,2,'a new receipt must survive even a cached prepaint at the same root/time');
+});
+
+test('soft projection is read from the last successful paint without consuming or doubling it during prepaint',()=>{
+ const actor={id:31,kind:'ranger',side:'human',hp:82,x:330,y:280,knock:0,
+   animationPresentation:{state:'idle',locomotionPhase:.31,locomotionSettle:1,direction:'right',moving:false}};
+ const world={time:12,fighters:[actor]},f={actor,world};
+ const resolve=()=>v177RangerFootPlan('ranger',v177JointPose('ranger',{requestedState:'idle'},actor.animationPresentation,{actor,world}),{actor,world,width:96});
+ const before=resolve();paint(f,before);recordV177JointBodyShift({...actor},world,-2);actor.x-=2;world.time+=1/30;
+ const after=resolve();assert.equal(after.rangerFeet.bodyShiftX,-2);
+ for(let i=0;i<2;i++)assert.equal(after.rangerFeet.feet[i].x,before.rangerFeet.feet[i].x-2);
+ assert.deepEqual(resolve(),after);assert.deepEqual(resolve(),after,'Unpainted reads cannot consume the cumulative correction');
+ const drawn=paint(f,after);assert.equal(drawn.receipt.mode,'continuous-weighted-mesh');
+ assert.deepEqual(v177RangerFootPlan('ranger',after,{actor,world,width:96}),after);
+ recordV177JointBodyShift(actor,world,-1);actor.x-=1;
+ const next=resolve();assert.equal(next.rangerFeet.bodyShiftX,-3);
+ for(let i=0;i<2;i++)assert.equal(next.rangerFeet.feet[i].x,after.rangerFeet.feet[i].x-1);
 });

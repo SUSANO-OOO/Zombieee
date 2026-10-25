@@ -76,9 +76,22 @@ function retireRaster(p,raster) {
 }
 function selectRaster(p,w,h) {
   const pixels=w*h,total=p.rasters.reduce((sum,raster)=>sum+raster.canvas.width*raster.canvas.height,0);
-  let raster=p.rasters.find(raster=>!raster.valid);
-  if(!raster&&(p.rasters.length>=MAX_SURFACES||total+pixels>MAX_PIXELS))
-    raster=p.rasters.reduce((oldest,current)=>!oldest||current.lastUsed<oldest.lastUsed?current:oldest,null);
+  // Invalid geometry can still have a surface in the browser's draw queue.
+  // Reuse the coldest invalid surface, rather than immediately rewriting the
+  // first array slot while another unused/cold surface is available.
+  let raster=null;
+  for(const candidate of p.rasters)if(!candidate.valid&&(!raster||candidate.lastUsed<raster.lastUsed))raster=candidate;
+  // A spare surface avoids synchronizing a just-drawn backing store even when
+  // it is the only invalid geometry. Keep the original pool and pixel bounds.
+  if(raster?.lastUsed>0&&p.useSequence-raster.lastUsed<MAX_SURFACES
+    &&p.rasters.length<MAX_SURFACES&&total+pixels<=MAX_PIXELS)raster=null;
+  if(!raster&&(p.rasters.length>=MAX_SURFACES||total+pixels>MAX_PIXELS)){
+    // Keep a matching backing store instead of resizing a different-sized LRU.
+    // Exclude the last drawn surface; its browser read can still be queued.
+    for(const candidate of p.rasters)if(candidate.canvas.width===w&&candidate.canvas.height===h
+      &&candidate.lastUsed<p.useSequence&&(!raster||candidate.lastUsed<raster.lastUsed))raster=candidate;
+    raster??=p.rasters.reduce((oldest,current)=>!oldest||current.lastUsed<oldest.lastUsed?current:oldest,null);
+  }
   let transient;
   try{
     if(!raster){
@@ -142,11 +155,27 @@ function rasterPart(p,g,w,h,ox,oy,stats) {
       // Skip only kernels whose original four alpha bytes are all zero.
       if(g.kernelOccupancy&&(ix< -1||iy< -1||ix>=g.rect.w||iy>=g.rect.h||!g.kernelOccupancy[(iy+1)*(g.rect.w+1)+ix+1]))continue;
       let r=0,green=0,b=0,a=0;
-      for(let yy=0;yy<2;yy++)for(let xx=0;xx<2;xx++){
-        const ux=ix+xx,uy=iy+yy;if(ux<0||uy<0||ux>=g.rect.w||uy>=g.rect.h)continue;
-        const at=(uy*g.rect.w+ux)*4,alpha=g.normalized[at+3];if(alpha===0)continue;
-        const weight=(xx?fx:1-fx)*(yy?fy:1-fy);
-        const amount=alpha*weight;a+=amount;r+=g.normalized[at]*amount;green+=g.normalized[at+1]*amount;b+=g.normalized[at+2]*amount;
+      if(ix>=0&&iy>=0&&ix+1<g.rect.w&&iy+1<g.rect.h){
+        // Interior kernels have all four original taps. Keep exactly the old
+        // 00,10,01,11 binary64 operations/addition order, without repeating
+        // four loop/bound/index calculations for every coverage sample.
+        const n=g.normalized,wx=1-fx,wy=1-fy,row=g.rect.w*4;
+        let at=(iy*g.rect.w+ix)*4,alpha=n[at+3];
+        if(alpha!==0){const amount=alpha*(wx*wy);a+=amount;r+=n[at]*amount;green+=n[at+1]*amount;b+=n[at+2]*amount;}
+        at+=4;alpha=n[at+3];
+        if(alpha!==0){const amount=alpha*(fx*wy);a+=amount;r+=n[at]*amount;green+=n[at+1]*amount;b+=n[at+2]*amount;}
+        at+=row-4;alpha=n[at+3];
+        if(alpha!==0){const amount=alpha*(wx*fy);a+=amount;r+=n[at]*amount;green+=n[at+1]*amount;b+=n[at+2]*amount;}
+        at+=4;alpha=n[at+3];
+        if(alpha!==0){const amount=alpha*(fx*fy);a+=amount;r+=n[at]*amount;green+=n[at+1]*amount;b+=n[at+2]*amount;}
+      }else{
+        // The original clipped-border path owns every outside tap decision.
+        for(let yy=0;yy<2;yy++)for(let xx=0;xx<2;xx++){
+          const ux=ix+xx,uy=iy+yy;if(ux<0||uy<0||ux>=g.rect.w||uy>=g.rect.h)continue;
+          const at=(uy*g.rect.w+ux)*4,alpha=g.normalized[at+3];if(alpha===0)continue;
+          const weight=(xx?fx:1-fx)*(yy?fy:1-fy);
+          const amount=alpha*weight;a+=amount;r+=g.normalized[at]*amount;green+=g.normalized[at+1]*amount;b+=g.normalized[at+2]*amount;
+        }
       }
       if(a===0)continue;const at=pixel*4;
       if(a===1){p.sample[at]=r;p.sample[at+1]=green;p.sample[at+2]=b;p.sample[at+3]=1;continue;}
