@@ -185,7 +185,7 @@ export async function runBrowserQa(){
     plan,manualPlan,manualCases:[],outcomePlan,outcomeCases:[],sources:[],contexts:[],cases:[],errors:[],persistenceErrors:[],...acceptance(),
     sourceProductBase:'45e46b90be77cd349670157974646dcc7f16b1cd',diagnosticOnly:true,releaseAccepted:false,allUnitAcceptance:false,
     scope:selection.mode==='owned-mayo-sample-diagnostic'
-      ?'One ordinary original Mayo attack1280; pinned recording2380. A2s native stack observation is diagnostic only. Original15x120ms/30s case/VP8/60Hz/8MiB and clocks remain unchanged. Sampler never extends the recording/case and never kills its subject.'
+      ?'One ordinary original Mayo attack1280; pinned recording2380. A2s native stack observation is diagnostic only. Original15x120ms/30s case/VP8/60Hz/8MiB and clocks remain unchanged. Sampler never extends the recording window or original30s case deadline and never kills its subject. Read-only symbol analysis may finish after capture within that original owner.'
       :selection.mode==='acquisition-control'
       ?'One original Abomination attack case with a 60Hz canvas acquisition-request timer. Native VP8 bytes, free RAF/simulation, source clocks, 15x120ms sampling and encoded thresholds stay unchanged. Diagnostic only; no retained, all-unit, performance, release or physical acceptance.'
       :selection.mode==='codec-control'

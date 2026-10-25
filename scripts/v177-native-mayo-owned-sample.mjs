@@ -185,9 +185,15 @@ export async function prepareMayoOwnedSample({out,selection,binding,browserType,
       let primary,result;
       try{result=await operation();}catch(e){primary=e;record.originalOperationError=String(e);}
       finally{
-        record.caseFinishedAtMs=Date.now();stop.abort();
+        record.caseFinishedAtMs=Date.now();
+        record.originalCaptureOperationFinishedAtMs=record.caseFinishedAtMs;
+        record.analysisOwner='Original30s case owner and10s sampler wall bound; capture/media already stopped unchanged';
+        // A completed capture does not expire the outer case owner. Native
+        // symbol analysis is read-only and may finish inside that original
+        // remaining budget. Product failure/deadline still aborts immediately.
+        if(primary||signal?.aborted)stop.abort();
         try{await caseDone;}catch(e){observerError=e;}
-        signal?.removeEventListener('abort',abort);
+        finally{stop.abort();signal?.removeEventListener('abort',abort);}
         try{await persist();}catch(e){observerError??=e;}
       }
       if(primary)throw primary;if(observerError)throw observerError;
