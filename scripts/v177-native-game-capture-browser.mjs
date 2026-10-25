@@ -129,7 +129,8 @@ export function stopNativeGameRafObservation(state) {
   return { timeOrigin: state.timeOrigin, startedAt: state.startedAt, stoppedAt: state.stoppedAt,...(realm?{realm}:{}),
     rows: state.rows, overflow: state.overflow, timestampClock:'native requestAnimationFrame callback',
     observationClock:'raw performance.now at callback entry and after audit',encodedFrameCount: null, encodedPtsVerified: false,
-    scope: 'Native observer RAF callbacks and actual game render receipts; neither is an encoded-frame count' };
+    audioNativeCost:window.__ASHFALL_AUDIO_QA__?.getDiagnostics?.().audioNativeCost??null,
+    scope: 'Native observer RAF callbacks and actual game render receipts; neither is an encoded-frame count. Audio call timings are copied once in this existing stop RPC, after the unmodified recording.' };
 }
 export function readNativeGameCaptureSample({ fighterId, targetId, performanceBoundary = false }) {
   const qa = window.__ASHFALL_BATTLE_QA__, snapshot = qa.getSnapshot();

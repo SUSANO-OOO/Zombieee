@@ -130,6 +130,10 @@ export class AudioMixer {
     onAssetFailure = null,
   } = {}) {
     this.manifest = createAudioManifest(manifest ?? {});
+    // ADHOC DIAGNOSTIC COPY ONLY. Never adopt this observer as a product fix.
+    this.audioNativeCostAssetIds = Object.freeze(this.manifest.assets.map(asset => asset.id));
+    this.audioNativeCostAssetIndex = new Map(this.audioNativeCostAssetIds.map((id,index) => [id,index]));
+    this.audioNativeCost = { capacity:128, sequence:0, operation:0, overflow:0, rows:[] };
     this.contextFactory = contextFactory;
     this.fetcher = fetcher;
     this.logger = logger;
@@ -891,7 +895,7 @@ export class AudioMixer {
     return entry.fetchPromise;
   }
 
-  #decodeRaw(raw) {
+  #decodeRaw(raw, diagnosticAssetId, diagnosticOperationId) {
     return new Promise((resolve, reject) => {
       try {
         let settled = false;
@@ -912,7 +916,14 @@ export class AudioMixer {
           globalThis.clearTimeout(timeoutId);
           reject(error);
         };
-        const result = this.context.decodeAudioData(raw.slice(0), succeed, fail);
+        const diagnosticCopy=this.#beginAudioNativeCost(1,diagnosticAssetId,diagnosticOperationId);
+        let decodeInput,diagnosticCopyOutcome=-1;
+        try {decodeInput=raw.slice(0);diagnosticCopyOutcome=1;}
+        finally {this.#endAudioNativeCost(diagnosticCopy,diagnosticCopyOutcome);}
+        const diagnosticCall=this.#beginAudioNativeCost(2,diagnosticAssetId,diagnosticOperationId);
+        let result,diagnosticCallOutcome=-1;
+        try {result=this.context.decodeAudioData(decodeInput,succeed,fail);diagnosticCallOutcome=1;}
+        finally {this.#endAudioNativeCost(diagnosticCall,diagnosticCallOutcome);}
         if (result?.then) result.then(succeed, fail);
       } catch (error) {
         reject(error);
@@ -931,8 +942,13 @@ export class AudioMixer {
     cacheEntry.decodePromise = (async () => {
       let lastError = null;
       while (entry?.raw) {
+        const diagnosticOperationId=++this.audioNativeCost.operation;
+        const diagnosticAwait=this.#beginAudioNativeCost(3,assetId,diagnosticOperationId);
+        let diagnosticAwaitFinished=false;
         try {
-          const buffer = await this.#decodeRaw(entry.raw);
+          const buffer = await this.#decodeRaw(entry.raw,assetId,diagnosticOperationId);
+          this.#endAudioNativeCost(diagnosticAwait,1);
+          diagnosticAwaitFinished=true;
           entry.buffer = buffer;
           // AudioBuffer is reusable across context recovery. Keep one decoded
           // copy; an evicted, idle cue can fetch its source again on demand.
@@ -941,6 +957,7 @@ export class AudioMixer {
           entry.lastAccess = ++this.cacheAccessSequence;
           return buffer;
         } catch (error) {
+          if(!diagnosticAwaitFinished)this.#endAudioNativeCost(diagnosticAwait,-1);
           lastError = error;
           entry.raw = null;
           entry.source = null;
@@ -1244,6 +1261,12 @@ export class AudioMixer {
   }
 
   #createVoice(resolved, buffer, options) {
+    const diagnosticOperationId=++this.audioNativeCost.operation;
+    const diagnosticAssetId=resolved?.asset?.id??null;
+    const diagnosticTotal=this.#beginAudioNativeCost(4,diagnosticAssetId,diagnosticOperationId);
+    let diagnosticOutcome=0;
+    let diagnosticNodes=null,diagnosticConnections=null,diagnosticStart=null;
+    try {
     if (this.lifecycleHidden) return null;
     const { cueId, asset, pool, alias } = resolved;
     const context = this.context;
@@ -1251,6 +1274,7 @@ export class AudioMixer {
     const instanceKey = options.instanceKey ?? alias?.instanceKey ?? cueId;
     const maxInstances = Math.max(1, Math.floor(options.maxInstances ?? alias?.maxInstances ?? pool?.maxInstances ?? asset.maxInstances));
     if (!this.#reserveVoiceSlot({ priority, instanceKey, maxInstances })) return null;
+    diagnosticNodes=this.#beginAudioNativeCost(5,asset.id,diagnosticOperationId);
     const source = context.createBufferSource();
     const gain = context.createGain();
     const panner = typeof context.createStereoPanner === "function" ? context.createStereoPanner() : null;
@@ -1266,6 +1290,8 @@ export class AudioMixer {
     } else {
       setParamValue(gain.gain, volume, now);
     }
+    this.#endAudioNativeCost(diagnosticNodes,1);
+    diagnosticConnections=this.#beginAudioNativeCost(6,asset.id,diagnosticOperationId);
     source.connect(gain);
     if (panner) {
       setParamValue(panner.pan, clamp(options.pan ?? 0, -1, 1), now);
@@ -1274,6 +1300,7 @@ export class AudioMixer {
     } else {
       gain.connect(this.buses[asset.category]);
     }
+    this.#endAudioNativeCost(diagnosticConnections,1);
     const id = `voice-${++this.voiceSequence}`;
     const voice = {
       id,
@@ -1304,14 +1331,24 @@ export class AudioMixer {
     source.onended = () => this.#cleanupVoice(voice);
     this.activeVoices.set(id, voice);
     try {
+      diagnosticStart=this.#beginAudioNativeCost(7,asset.id,diagnosticOperationId);
       source.start(now, Math.max(0, options.offsetSeconds ?? 0));
       if (Number.isFinite(options.durationSeconds) && options.durationSeconds > 0) source.stop(now + options.durationSeconds);
+      this.#endAudioNativeCost(diagnosticStart,1);
     } catch (error) {
+      if(diagnosticStart&&diagnosticStart[6]===null)this.#endAudioNativeCost(diagnosticStart,-1);
       this.#cleanupVoice(voice);
       this.#warn(`play:${asset.id}`, `Failed to start ${asset.id}; the cue was skipped.`, error);
       return null;
     }
+    diagnosticOutcome=1;
     return handle;
+    } catch(error) {
+      diagnosticOutcome=-1;
+      for(const row of [diagnosticNodes,diagnosticConnections,diagnosticStart])if(row&&row[6]===null)this.#endAudioNativeCost(row,-1);
+      throw error;
+    }
+    finally { this.#endAudioNativeCost(diagnosticTotal,diagnosticOutcome); }
   }
 
   async #playCue(cueId, options) {
@@ -1565,6 +1602,19 @@ export class AudioMixer {
     return keys.reduce((total, instanceKey) => total + this.stopInstance(instanceKey, options), 0);
   }
 
+  #beginAudioNativeCost(kind,assetId,operation) {
+    const trace=this.audioNativeCost;
+    const row=[++trace.sequence,kind,this.audioNativeCostAssetIndex.get(assetId)??-1,operation,this.contextGeneration,null,null,0];
+    if(trace.rows.length===trace.capacity){trace.rows.shift();trace.overflow++;}
+    trace.rows.push(row);
+    row[5]=globalThis.performance.now();
+    return row;
+  }
+
+  #endAudioNativeCost(row,outcome) {
+    row[6]=globalThis.performance.now();row[7]=outcome;
+  }
+
   getDiagnostics() {
     const protectedAssets = this.#protectedAssetIds();
     const retainedBytes = [...this.assetCache.values()].reduce((sum, entry) => sum + this.#assetBytes(entry), 0);
@@ -1597,6 +1647,14 @@ export class AudioMixer {
       contextTiming: audioContextTimingSnapshot(this.context),
       contextGeneration: this.contextGeneration,
       contextCreateCount: this.contextCreateCount,
+      audioNativeCost: {
+        clock:"raw browser performance.now; not AudioContext time or CPU utilization",
+        columns:["sequence","kind","assetIndex","operation","contextGeneration","startedAt","endedAt","outcome"],
+        kinds:{1:"buffer-copy-sync",2:"decodeAudioData-call-sync",3:"decode-await-wall",4:"createVoice-total-sync",5:"nodes-buffer-config-sync",6:"connections-sync",7:"source-start-stop-sync"},
+        capacity:this.audioNativeCost.capacity,sequence:this.audioNativeCost.sequence,overflow:this.audioNativeCost.overflow,
+        assetIds:this.audioNativeCostAssetIds,rows:this.audioNativeCost.rows.map(row=>[...row]),
+        scope:"Adhoc diagnostic only. Pending rows have null endedAt/outcome0. Await and total spans include nested spans; never sum them as CPU.",
+      },
       output: this.audioOutput?.snapshot() ?? null,
       lifecycleHidden: this.lifecycleHidden,
       unlockTimeoutMs: this.unlockTimeoutMs,

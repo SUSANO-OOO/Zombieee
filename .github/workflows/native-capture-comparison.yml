@@ -1,50 +1,101 @@
-name: Native Capture Comparison Diagnostic
-
+name: One Mayo Native Audio Cost Observation
 on:
   workflow_dispatch:
     inputs:
       expected_head:
-        description: Exact 40-character candidate SHA for this diagnostic
         required: true
         type: string
-
 permissions:
   contents: read
-
 concurrency:
-  group: native-capture-comparison-${{ inputs.expected_head }}
+  group: audio-native-cost-${{ inputs.expected_head }}
   cancel-in-progress: false
-
 jobs:
-  native-capture-comparison:
-    name: Native WebKit Capture Comparison Diagnostic
-    runs-on: macos-15-intel
+  build:
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
+    outputs:
+      receipt_sha256: ${{ steps.bundle.outputs.receipt_sha256 }}
+      dist_sha256: ${{ steps.bundle.outputs.dist_sha256 }}
+    env:
+      V177_EXPECTED_HEAD_SHA: ${{ inputs.expected_head }}
+      GITHUB_PAGES_RELEASE_SHA: ${{ inputs.expected_head }}
     steps:
       - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.expected_head }}
+          fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: npm
-      - name: Verify immutable candidate before running the diagnostic
-        env:
-          EXPECTED_HEAD: ${{ inputs.expected_head }}
-        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_HEAD??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_HEAD);'
-      - run: npm ci
-      - name: Install the pinned native WebKit runtime
+      - name: Verify exact diagnostic sources and unchanged game assets
         run: |
-          npm ci --prefix scripts/pwa-native-runtime
-          node scripts/pwa-native-runtime/node_modules/playwright/cli.js install webkit
-      - name: Compare original native canvas recording conditions
-        env:
-          V177_NATIVE_CAPTURE_OUT: outputs/v177-native-capture-comparison
-        run: node scripts/v177-native-canvas-comparison-browser.mjs
+          node --input-type=module <<'JS'
+          import assert from'node:assert/strict';import{execFileSync}from'node:child_process';
+          const g=a=>execFileSync('git',a,{encoding:'utf8'}).trim(),base='45e46b90be77cd349670157974646dcc7f16b1cd';
+          assert.equal(g(['rev-parse','HEAD']),process.env.V177_EXPECTED_HEAD_SHA);assert.equal(process.env.GITHUB_SHA,process.env.V177_EXPECTED_HEAD_SHA);
+          assert.equal(g(['merge-base',base,'HEAD']),base);
+          assert.deepEqual(g(['diff','--name-only',base,'HEAD']).split('\n').sort(),['app/audioMixer.js','scripts/v177-native-game-capture-browser.mjs','scripts/v177-native-allunit-browser.mjs','.github/workflows/native-capture-comparison.yml'].sort());
+          for(const f of ['app/AshfallGame.tsx','public','assets','package.json','package-lock.json','scripts/native-recording-runtime','scripts/v177-native-allunit-cases.mjs','scripts/v177-native-allunit-contract.mjs','scripts/v177-native-allunit-manifest.mjs','scripts/v177-native-canvas-clips.mjs','scripts/v177-native-encoded-clips.mjs'])assert.equal(g(['rev-parse','HEAD:'+f]),g(['rev-parse',base+':'+f]));
+          JS
+      - run: npm ci
+      - name: Verify unchanged mixer behavior under the passive observer
+        run: node --test tests/audio-mixer.test.mjs
+      - run: npm run build
+      - id: bundle
+        run: node scripts/v177-native-allunit-build.mjs pack outputs/audio-native-cost-build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: audio-native-cost-build
+          path: outputs/audio-native-cost-build
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+  observe:
+    needs: build
+    runs-on: macos-15
+    timeout-minutes: 15
+    env:
+      V177_EXPECTED_HEAD_SHA: ${{ inputs.expected_head }}
+      V177_EXPECTED_BUILD_RECEIPT_SHA256: ${{ needs.build.outputs.receipt_sha256 }}
+      V177_EXPECTED_BUILD_SHA256: ${{ needs.build.outputs.dist_sha256 }}
+      V177_CAPTURE_SHARD: forms-4
+      V177_NATIVE_VIDEO_MIME: video/webm;codecs=vp8
+      V177_NATIVE_ALLUNIT_OUT: outputs/audio-native-cost-original
+      V105_AUDIO_NATIVE_COST_DIAGNOSTIC: '1'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.expected_head }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Install original ARM native recording WebKit
+        run: |
+          node --input-type=module -e 'import assert from "node:assert/strict";assert.equal(process.platform,"darwin");assert.equal(process.arch,"arm64");'
+          npm ci --prefix scripts/native-recording-runtime
+          node scripts/native-recording-runtime/node_modules/playwright/cli.js install webkit
+      - uses: actions/download-artifact@v4
+        with:
+          name: audio-native-cost-build
+          path: outputs/audio-native-cost-build
+      - name: Restore the exact recursive build including hidden files
+        run: node scripts/v177-native-allunit-build.mjs restore outputs/audio-native-cost-build outputs/audio-native-cost-original
+      - name: Observe the one original ordinary Mayo attack once
+        run: node scripts/v177-native-allunit-browser.mjs
+      - name: Audit original encoded bytes without repairing failed frames
+        run: node scripts/v177-native-encoded-clips.mjs outputs/audio-native-cost-original/report.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: v177-native-capture-comparison
-          path: outputs/v177-native-capture-comparison
-          retention-days: 7
+          name: audio-native-cost-original
+          path: outputs/audio-native-cost-original
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 14
