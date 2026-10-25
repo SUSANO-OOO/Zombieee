@@ -1,50 +1,84 @@
-name: Native Capture Comparison Diagnostic
-
+name: Remaining S14 and S25 Input Observation
 on:
   workflow_dispatch:
     inputs:
       expected_head:
-        description: Exact 40-character candidate SHA for this diagnostic
         required: true
         type: string
-
 permissions:
   contents: read
-
 concurrency:
-  group: native-capture-comparison-${{ inputs.expected_head }}
+  group: remaining-input-${{ inputs.expected_head }}
   cancel-in-progress: false
-
 jobs:
-  native-capture-comparison:
-    name: Native WebKit Capture Comparison Diagnostic
-    runs-on: macos-15-intel
-    timeout-minutes: 15
+  observe:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {lane: s14-chromium, os: ubuntu-latest}
+          - {lane: s25-webkit, os: macos-15-intel}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.expected_head }}
+          fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@v6
         with:
-          node-version: 24
+          node-version: '22.13.0'
           cache: npm
-      - name: Verify immutable candidate before running the diagnostic
+      - name: Check immutable source and unchanged game
         env:
-          EXPECTED_HEAD: ${{ inputs.expected_head }}
-        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_HEAD??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_HEAD);'
-      - run: npm ci
-      - name: Install the pinned native WebKit runtime
+          EXPECTED: ${{ inputs.expected_head }}
         run: |
-          npm ci --prefix scripts/pwa-native-runtime
-          node scripts/pwa-native-runtime/node_modules/playwright/cli.js install webkit
-      - name: Compare original native canvas recording conditions
+          node --input-type=module <<'JS'
+          import assert from'node:assert/strict';import{execFileSync}from'node:child_process';
+          const g=a=>execFileSync('git',a,{encoding:'utf8'}).trim(),base='45e46b90be77cd349670157974646dcc7f16b1cd';
+          assert.equal(g(['rev-parse','HEAD']),process.env.EXPECTED);assert.equal(process.env.GITHUB_SHA,process.env.EXPECTED);
+          assert.equal(g(['merge-base',base,'HEAD']),base);
+          assert.deepEqual(g(['diff','--name-only',base,'HEAD']).split('\n').sort(),[
+            '.github/workflows/native-capture-comparison.yml','scripts/v177-normal-browser-deadline.mjs',
+            'tests/v177-normal-browser-deadline.test.mjs','scripts/v100-phase-g-production-matrix.mjs',
+            'tests/v100-phase-g-sustain-pointer.test.mjs','scripts/v177-representative-battles.mjs'].sort());
+          for(const f of ['app','public','assets','package.json','package-lock.json','scripts/pwa-native-runtime','scripts/native-recording-runtime'])assert.equal(g(['rev-parse','HEAD:'+f]),g(['rev-parse',base+':'+f]));
+          JS
+      - run: npm ci
+      - name: Install the original selected browser runtime
+        run: |
+          if [[ '${{ matrix.lane }}' == s14-chromium ]]; then npx playwright install --with-deps chromium; else
+            npx playwright install chromium webkit
+            node scripts/verify-playwright-container-runtime.mjs --macos
+          fi
+      - name: Build unchanged game for the immutable observation
         env:
-          V177_NATIVE_CAPTURE_OUT: outputs/v177-native-capture-comparison
-        run: node scripts/v177-native-canvas-comparison-browser.mjs
+          GITHUB_PAGES_RELEASE_SHA: ${{ inputs.expected_head }}
+        run: npm run build
+      - name: Observe only the failed Stage14 with its original deadlines and actual outcome
+        if: matrix.lane == 's14-chromium'
+        env:
+          V100_NORMAL_PLAY_ENGINE: chromium
+          V100_NORMAL_PLAY_EVIDENCE_DIR: outputs/remaining-input/s14
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v177-representative-battles.mjs
+      - name: Observe the actual Stage25 accepted or rejected native ability response
+        if: matrix.lane == 's25-webkit'
+        env:
+          V100_PHASE_G_ONLY: battle-extra
+          V100_PHASE_G_ONLY_VARIANT: stage25-president
+          V100_PHASE_G_ONLY_ENGINE: webkit
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v100-phase-g-production-matrix.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: v177-native-capture-comparison
-          path: outputs/v177-native-capture-comparison
-          retention-days: 7
+          name: remaining-input-${{ matrix.lane }}
+          path: |
+            outputs/remaining-input
+            outputs/v100-phase-g
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 14
