@@ -14,11 +14,11 @@
     "app/v105AbilityNames.js": "ebe6a7ecb6ea702944d45a1502b3134ac9004b38",
     "app/v177RangerFootPlacement.js": "b1e7857b6b810773714b1eaf2dedb3846b8c1376",
     "assets/source/v177/ranger/lower-r3/provenance.json": "66d32b5c69c8a3c1acf1efe1e53287efaf3e48ad",
-    "docs/PROJECT_STATE.md": "66539eea36437f5aa1347b53eb381d43f98c1543",
+    "docs/PROJECT_STATE.md": "6e0bd8becc334004d769d4ff2df9017d2208847f",
     "docs/qa/v105/native-f7-evidence.json": "348eb032e3c7268539f413e62396bae078d35bce",
     "docs/qa/v105/shared-foot-impact-f7.json": "ca7e48eeb2228b3e4d5a513f026aa88719630d5e",
     "tests/audio-mixer.test.mjs": "b7c6537909ee85baa9eb833f187abd5998716f8f",
-    "tests/ci-change-scope.test.mjs": "6ed8ce29cd96b22ea177e7d461a5e30c10f19ddf",
+    "tests/ci-change-scope.test.mjs": "ca3479ed65c269a5d8410008b714108f7f6d719a",
     "tests/ci-contract.test.mjs": "cca6dde0cbe07e3adb29286422b7a2bd907e2cfc",
     "tests/production-audio.test.mjs": "b19bf16647580aaaaa09db262de804485d4a60bf",
     "tests/v105-five-corrections.test.mjs": "00cbe4607cc71e4ea2f05df5cb3ec363a56849af",
@@ -27,7 +27,7 @@
     "tests/v177-ranger-body-correction.test.mjs": "23eccd8aba1aafd7336cfacdf0785d89748148fe",
     "docs/qa/v105/native-f880-evidence.json": "597b84943cd699146f872156427192f190068f50",
     "app/AshfallGame.tsx": "a0a873098b12f6de62548f83e3f6773e2aca0592",
-    "scripts/ci-change-scope.mjs": "1a32f92b463c2a97a8f04388f9f06792aa4685b1",
+    "scripts/ci-change-scope.mjs": "48047b349d7a1d03cc74070581e4a0fedba36e75",
     "scripts/v100-device-runtime-browser.mjs": "88e522d267de0e6604b56c9f49e6e217473ff05d",
     "scripts/v100-phase-g-production-matrix.mjs": "593e2bb3034ced9bc235a4c582c7d7f25381468d",
     "scripts/v105-five-corrections-capture.mjs": "c266140d17b1176024bb9066424d37cd91675d16",
@@ -57,7 +57,7 @@
     "scripts/v177-native-allunit-cases.mjs": "e5d27c160ec2eb04d8a0109c0a39918174c6b5ac",
     "tests/v177-native-realm-owner.test.mjs": "fb08d6fd9590fc49165d0fe608144085abbef77e",
     "scripts/v100-normal-tactical-input.mjs": "574d7a5eadc6fd7212d61bc6118518daf0091600",
-    "tests/v177-ranger-deferred-observation.test.mjs": "c557b63efecdbf07365b026bed3bb2016b7042e8"
+    "tests/v177-ranger-deferred-observation.test.mjs": "a14a00f267bef56b38597f961ee21cd2ef2f58aa"
   },
   "retainedEvidence": {
     "head": "f7f6f7ce46844eaefc4bb519fa80d591e2607407",

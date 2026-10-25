@@ -45,6 +45,20 @@ export const ABILITY_NAME_BASELINE=Object.freeze({head:'6a5226647ebf9ba7692c69b9
 // Preserve the original browser/Quality owners. The two audio jobs below are
 // separately owned by the completed repaired-audio candidate, never its failures.
 export const ABILITY_NAME_PREDECESSOR=Object.freeze({head:'4c68dbfd03fe5e639b33c95f612824ab459c74d4',runId:40210584510});
+export const QA_FORMATTING_PREDECESSOR=Object.freeze({head:'a12b63d29ccf646f9d6bd06c0d26dab4db7b2c0b',runId:40217815362,
+ test:'tests/v177-ranger-deferred-observation.test.mjs',before:'c557b63efecdbf07365b026bed3bb2016b7042e8',after:'a14a00f267bef56b38597f961ee21cd2ef2f58aa',verifyJob:121242881557});
+export const QA_FORMATTING_MEASURED_JOBS=Object.freeze({
+ 'V1 WebKit Frame and Boss Performance':{id:121242881532,steps:[
+  'Verify Apple Silicon performance host','Verify pinned macOS WebKit runtime','Capture blank and active-canvas frame controls',
+  'Prepare isolated Mac benchmark environment','Measure V1 native boss battle performance (WebKit)',
+  'Preserve the first WebKit performance report before repeats','Independently repeat narrow landscape boss performance (WebKit)',
+  'Independently repeat 844x390 boss performance (WebKit)','Measure 844x390 WebKit performance at DPR2',
+  'Preserve measured WebKit performance before diagnostics']},
+ 'V1 Phase G Production Matrix':{id:121242881601,steps:[
+  'Verify pinned macOS WebKit runtime','Capture native WebKit Stage 3 battle music gate',
+  'Diagnose native pointer transport before production capture','Verify decoded and visible battle card portraits across native state transitions',
+  'Verify portrait fidelity after native viewport transitions','Capture and validate the full Phase G production matrix','Upload Phase G production evidence']}
+});
 export const FORMAL_TRANSFER_FILES=Object.freeze(['scripts/v100-device-runtime-browser.mjs','scripts/v100-normal-tactical-input.mjs']);
 export const FORMAL_TRANSFER_PRODUCT_STEPS=Object.freeze([
  "Audit all 30 story stages in developer mode",
@@ -129,15 +143,23 @@ export function reviewedAbilityContinuationPaths(paths,sourceBlobs={}){
  return Array.isArray(paths)&&paths.length>0&&paths.every(file=>abilityNameFiles.has(file))
   &&Object.entries(ABILITY_NAME_BLOBS).every(([file,blob])=>sourceBlobs[file]===blob);
 }
+export function reviewedQaFormattingPaths(paths,sourceBlobs={}){
+ return reviewedAbilityContinuationPaths(paths,sourceBlobs)&&paths.includes(QA_FORMATTING_PREDECESSOR.test)
+  &&sourceBlobs[QA_FORMATTING_PREDECESSOR.test]===QA_FORMATTING_PREDECESSOR.after
+  &&paths.every(file=>[QA_FORMATTING_PREDECESSOR.test,'scripts/ci-change-scope.mjs','tests/ci-change-scope.test.mjs',
+   'scripts/v177-native-allunit-recovery.json','docs/PROJECT_STATE.md'].includes(file));
+}
 export async function previousAbilityNameEvidence({repository,previousHead,base,prNumber,action,draft,paths,sourceBlobs,
- productUnchanged=false,rangerBufferDelta=false,layoutReadDelta=false,originalAncestor=false,token,request=fetch}={}){
+ productUnchanged=false,rangerBufferDelta=false,layoutReadDelta=false,originalAncestor=false,formattingTextUnchanged=false,token,request=fetch}={}){
  const old=ABILITY_NAME_BASELINE;
  const compatible=paths?.some(file=>Object.hasOwn(ABILITY_LAYOUT_PRODUCT_BEFORE,file))
   ?layoutReadDelta===true&&rangerBufferDelta===false&&productUnchanged===false
   :paths?.includes(RANGER_BUFFER_FILE)
   ?rangerBufferDelta===true&&productUnchanged===false&&sourceBlobs[RANGER_BUFFER_FILE]===RANGER_BUFFER_BLOB
   :productUnchanged===true&&rangerBufferDelta===false;
- const continuation=previousHead===ABILITY_NAME_PREDECESSOR.head&&compatible&&originalAncestor===true
+ const formattingContinuation=previousHead===QA_FORMATTING_PREDECESSOR.head&&compatible&&productUnchanged===true
+  &&originalAncestor===true&&formattingTextUnchanged===true&&reviewedQaFormattingPaths(paths,sourceBlobs);
+ const continuation=formattingContinuation||previousHead===ABILITY_NAME_PREDECESSOR.head&&compatible&&originalAncestor===true
   &&reviewedAbilityContinuationPaths(paths,sourceBlobs);
  if(repository!=='SUSANO-OOO/Zombieee'||base!==old.base||prNumber!==old.prNumber
   ||action!=='synchronize'||draft!==false||!token
@@ -149,8 +171,9 @@ export async function previousAbilityNameEvidence({repository,previousHead,base,
  try{
   let predecessor=null;
   if(continuation){
-   const record=await get(`actions/runs/${ABILITY_NAME_PREDECESSOR.runId}`);
-   if(record.id!==ABILITY_NAME_PREDECESSOR.runId||record.head_sha!==previousHead||record.status!=='completed'
+   const context=formattingContinuation?QA_FORMATTING_PREDECESSOR:ABILITY_NAME_PREDECESSOR;
+   const record=await get(`actions/runs/${context.runId}`);
+   if(record.id!==context.runId||record.head_sha!==previousHead||record.status!=='completed'
      ||record.conclusion!=='failure'||record.run_attempt!==1||record.event!=='pull_request'||!record.pull_requests?.some(pr=>pr.number===old.prNumber))
     return{passed:false,reason:'reviewed-predecessor-context-unavailable'};
    const provenance=await immutablePrProvenance({get,runId:record.id,head:previousHead,base:old.base});
@@ -231,8 +254,8 @@ export async function previousAbilityNameEvidence({repository,previousHead,base,
   const provenance=await immutablePrProvenance({get,runId:old.runId,head:old.head,base:old.base});
   const normalNames=['chromium','webkit'].map(engine=>`V1 Representative Normal Play (${engine})`);
   let normalComplete=!rangerBufferDelta&&!layoutReadDelta&&!paths.includes('scripts/v177-representative-battles.mjs')&&normalNames.every(successful);
-  const formalTransferDelta=continuation&&productUnchanged&&FORMAL_TRANSFER_FILES.every(file=>paths.includes(file));
-  let productValidationOwner=null;
+  const formalTransferDelta=continuation&&productUnchanged&&(formattingContinuation||FORMAL_TRANSFER_FILES.every(file=>paths.includes(file)));
+  let productValidationOwner=null,formattingEvidence=null;
   if(formalTransferDelta){
    const data=await get(`actions/runs/${ABILITY_NAME_PREDECESSOR.runId}/jobs?filter=latest&per_page=100`);
    if(!Array.isArray(data.jobs)||data.total_count!==data.jobs.length||data.total_count>100
@@ -243,7 +266,7 @@ export async function previousAbilityNameEvidence({repository,previousHead,base,
     const required=name==='PR Verify'?FORMAL_TRANSFER_PRODUCT_STEPS:name==='Ranger Turn Regression'
       ?['Recheck the original Stage 4 rendering failure','Run actions/upload-artifact@v4']
       :['Observe opening stages using a fresh save, earned CAPS and real UI','Preserve normal-play results, saves, diagnostics and original-speed video'];
-    if(rows.length!==1||j.id!==id||j.run_id!==ABILITY_NAME_PREDECESSOR.runId||j.head_sha!==previousHead||j.run_attempt!==1
+    if(rows.length!==1||j.id!==id||j.run_id!==ABILITY_NAME_PREDECESSOR.runId||j.head_sha!==ABILITY_NAME_PREDECESSOR.head||j.run_attempt!==1
       ||j.status!=='completed'||j.conclusion!=='success'||!required.every(label=>j.steps?.filter(s=>s.name===label&&s.status==='completed'&&s.conclusion==='success').length===1))
       return{passed:false,reason:'formal-control-measurement-not-successful'};
     const owner={name,id,head_sha:j.head_sha,run_id:j.run_id,run_attempt:j.run_attempt};
@@ -251,6 +274,28 @@ export async function previousAbilityNameEvidence({repository,previousHead,base,
     else{const index=adoptedJobs.findIndex(old=>old.name===name);if(index<0)adoptedJobs.push(j);else adoptedJobs.splice(index,1,j);adopted.push(owner);}
    }
    normalComplete=normalNames.every(successful);predecessor.controlJobs=adopted;
+  }
+  if(formattingContinuation){
+   const owner=QA_FORMATTING_PREDECESSOR,data=await get(`actions/runs/${owner.runId}/jobs?filter=latest&per_page=100`);
+   if(!Array.isArray(data.jobs)||data.total_count!==data.jobs.length||data.total_count>100
+     ||new Set(data.jobs.map(j=>j.id)).size!==data.jobs.length||!data.jobs.every(j=>j.status==='completed'
+      &&j.run_id===owner.runId&&j.head_sha===owner.head&&j.run_attempt===1))return{passed:false,reason:'formatting-job-inventory-invalid'};
+   const failures=data.jobs.filter(j=>!['success','skipped'].includes(j.conclusion)),verify=failures[0];
+   const step=(j,name,conclusion)=>j.steps?.filter(s=>s.name===name&&s.status==='completed'&&s.conclusion===conclusion).length===1;
+   if(failures.length!==1||verify.id!==owner.verifyJob||verify.name!=='PR Verify'||verify.conclusion!=='failure'
+     ||verify.steps?.filter(s=>s.conclusion==='failure').length!==1||!step(verify,'Check patch whitespace','failure')
+     ||!['Checkout synthetic PR merge','Verify PR provenance','Upload PR provenance'].every(name=>step(verify,name,'success'))
+     ||!['Setup Node.js','Install dependencies','Lint','Validate production content','Build production application','Test',...FORMAL_TRANSFER_PRODUCT_STEPS]
+      .every(name=>step(verify,name,'skipped')))return{passed:false,reason:'formatting-was-not-the-only-verify-failure'};
+   const jobs=[];
+   for(const [name,contract]of Object.entries(QA_FORMATTING_MEASURED_JOBS)){
+    const rows=data.jobs.filter(j=>j.name===name),j=rows[0];
+    if(rows.length!==1||j.id!==contract.id||j.conclusion!=='success'||!contract.steps.every(label=>step(j,label,'success')))
+     return{passed:false,reason:'formatting-measurement-not-successful'};
+    jobs.push({name,id:j.id,head_sha:j.head_sha,run_id:j.run_id,run_attempt:j.run_attempt,status:j.status,conclusion:j.conclusion,stepNames:contract.steps});
+   }
+   formattingEvidence={passed:true,head:owner.head,runId:owner.runId,verifyFailure:{id:verify.id,step:'Check patch whitespace',preserved:true},
+    measuredJobs:jobs,sourceOnlyCorrection:{file:owner.test,before:owner.before,after:owner.after,change:'one CRLF to LF; all other characters identical'}};
   }
   const freshAudioRequired=rangerBufferDelta&&paths.includes(RETIRED_AUDIO_OWNER_FILE);
   if(continuation&&!freshAudioRequired){
@@ -275,7 +320,7 @@ export async function previousAbilityNameEvidence({repository,previousHead,base,
   }
   return{passed:true,head:old.head,base:old.base,prNumber:old.prNumber,runId:old.runId,provenance,infrastructureRecovery,predecessor,
    originalRunConclusion:run.conclusion,
-   productUnchanged,rangerBufferDelta,layoutReadDelta,formalTransferDelta,productValidationOwner,
+   productUnchanged,rangerBufferDelta,layoutReadDelta,formalTransferDelta,productValidationOwner,formattingEvidence,
    freshRangerRequired:rangerBufferDelta||layoutReadDelta,
    layoutReadScope:layoutReadDelta?Object.entries(ABILITY_LAYOUT_PRODUCT_BEFORE).map(([file,before])=>({file,before,after:ABILITY_NAME_BLOBS[file]})):null,
    rangerBufferScope:rangerBufferDelta?{file:RANGER_BUFFER_FILE,before:RANGER_BUFFER_BEFORE_BLOB,after:RANGER_BUFFER_BLOB}:null,
@@ -283,7 +328,7 @@ export async function previousAbilityNameEvidence({repository,previousHead,base,
    reusedJobs:[...ABILITY_NAME_REUSED_JOBS.filter(name=>(!(rangerBufferDelta||layoutReadDelta)||name!=='Ranger Turn Regression')
     &&(!freshAudioRequired||!name.startsWith('V1.0.3 Media Output ('))),...(normalComplete?normalNames:[])].map(name=>{const j=adoptedJobs.find(j=>j.name===name);
     return{name,id:j.id,head_sha:j.head_sha,run_id:j.run_id,run_attempt:j.run_attempt};}),
-   freshVerifyRequired:true,freshProductValidationsRequired:!formalTransferDelta,freshPerformanceRequired:true,freshPhaseGRequired:true,
+   freshVerifyRequired:true,freshProductValidationsRequired:!formalTransferDelta,freshPerformanceRequired:!formattingContinuation,freshPhaseGRequired:!formattingContinuation,
    freshNormalRequired:!normalComplete};
  }catch{return{passed:false,reason:'original-browser-evidence-unavailable'};}
 }
@@ -394,9 +439,18 @@ export async function previousFullCiEvidence({repository,head,base,prNumber,toke
 // A completed CI does not establish the separate Quality result. Retain its
 // own exact-head owner only when both original engine jobs actually passed.
 export async function previousQualityEvidence({repository,head,prNumber,token,fullEvidence,displayEvidence,request=fetch}={}){
+  const formatting=displayEvidence?.formattingEvidence;
+  const measuredFormatting=formatting?.passed===true&&formatting.head===QA_FORMATTING_PREDECESSOR.head
+    &&formatting.runId===QA_FORMATTING_PREDECESSOR.runId&&formatting.measuredJobs?.length===2
+    &&Object.entries(QA_FORMATTING_MEASURED_JOBS).every(([name,contract])=>{
+      const rows=formatting.measuredJobs.filter(j=>j.name===name),j=rows[0];
+      return rows.length===1&&j.id===contract.id&&j.head_sha===formatting.head&&j.run_id===formatting.runId&&j.run_attempt===1
+        &&j.status==='completed'&&j.conclusion==='success'&&JSON.stringify(j.stepNames)===JSON.stringify(contract.steps);
+    });
   const displayOnly=displayEvidence?.passed===true&&displayEvidence.head===ABILITY_NAME_BASELINE.head
     &&displayEvidence.base===ABILITY_NAME_BASELINE.base&&displayEvidence.freshVerifyRequired===true
-    &&displayEvidence.freshPerformanceRequired===true&&displayEvidence.freshPhaseGRequired===true;
+    &&(displayEvidence.freshPerformanceRequired===true&&displayEvidence.freshPhaseGRequired===true
+      ||measuredFormatting&&displayEvidence.freshPerformanceRequired===false&&displayEvidence.freshPhaseGRequired===false);
   const sourceOwner=displayOnly?displayEvidence:fullEvidence;
   if(sourceOwner?.passed!==true||sourceOwner.head!==head||sourceOwner.prNumber!==prNumber
     ||!/^[\w.-]+\/[\w.-]+$/u.test(repository??'')||!/^[a-f0-9]{40}$/u.test(head??'')||!Number.isSafeInteger(prNumber)||prNumber<1||!token)
@@ -426,7 +480,7 @@ export async function previousQualityEvidence({repository,head,prNumber,token,fu
   }catch{return{passed:false,reason:'quality-evidence-unavailable'};}
 }
 
-export function ciChangeScope(paths,{draft,sourceBlobs={},reuseNativeQa=false,reuseCombatQa=false,reuseCombatFixture=false,reuseAbilityNames=false,reuseProductValidation=false,freshNormal=false}={}){
+export function ciChangeScope(paths,{draft,sourceBlobs={},reuseNativeQa=false,reuseCombatQa=false,reuseCombatFixture=false,reuseAbilityNames=false,reuseProductValidation=false,reuseMeasuredQa=false,freshNormal=false}={}){
   assert.equal(typeof draft,'boolean');
   assert.equal(typeof reuseNativeQa,'boolean');
   assert.equal(typeof reuseCombatQa,'boolean');
@@ -441,6 +495,7 @@ export function ciChangeScope(paths,{draft,sourceBlobs={},reuseNativeQa=false,re
   const combatQaOnly=reuseCombatQa&&reviewedCombatQaPaths(paths,sourceBlobs);
   const combatFixtureOnly=reuseCombatFixture&&reviewedCombatFixturePaths(paths,sourceBlobs);
   const abilityNameOnly=reuseAbilityNames&&(reviewedAbilityNamePaths(paths,sourceBlobs)||reviewedAbilityContinuationPaths(paths,sourceBlobs));
+  const formattingCarry=abilityNameOnly&&reuseMeasuredQa&&reviewedQaFormattingPaths(paths,sourceBlobs);
   let full=!draft&&!nativeQaOnly&&!combatQaOnly&&!combatFixtureOnly&&!abilityNameOnly,rangerChanged=abilityNameOnly&&(paths.includes(RANGER_BUFFER_FILE)||paths.includes('app/v105AbilityNames.js')),
     normalChanged=abilityNameOnly&&freshNormal,allunitChanged=false,r9Changed=false,combatChanged=false;
   for(const file of paths){
@@ -466,10 +521,10 @@ export function ciChangeScope(paths,{draft,sourceBlobs={},reuseNativeQa=false,re
     }
     else full=true; // Unclassified changes retain the complete regression.
   }
-  const retainedProductValidation=abilityNameOnly&&reuseProductValidation&&FORMAL_TRANSFER_FILES.every(file=>paths.includes(file));
-  return {full,verify_full:full||(abilityNameOnly&&!retainedProductValidation),performance:full||abilityNameOnly,phaseg:full||abilityNameOnly,ranger:full||rangerChanged,normal:full||normalChanged,allunit:full||allunitChanged,r9:full||r9Changed,combat:full||combatChanged,
+  const retainedProductValidation=abilityNameOnly&&reuseProductValidation&&(formattingCarry||FORMAL_TRANSFER_FILES.every(file=>paths.includes(file)));
+  return {full,verify_full:full||(abilityNameOnly&&!retainedProductValidation),performance:full||abilityNameOnly&&!formattingCarry,phaseg:full||abilityNameOnly&&!formattingCarry,ranger:full||rangerChanged,normal:full||normalChanged,allunit:full||allunitChanged,r9:full||r9Changed,combat:full||combatChanged,
     audio:full||(abilityNameOnly&&paths.includes(RETIRED_AUDIO_OWNER_FILE)),
-    scope:full?'full-regression':retainedProductValidation?'formal-evidence-transfer-delta':abilityNameOnly?(paths.includes('app/v105AbilityNames.js')?'ability-name-lazy-layout-delta':paths.includes(RANGER_BUFFER_FILE)?(paths.includes(RETIRED_AUDIO_OWNER_FILE)?'ranger-buffer-and-audio-lifecycle-delta':'ranger-buffer-selection-delta'):'ability-name-display-delta'):draft?'targeted-draft':combatQaOnly?'combat-qa-update-product-unchanged':combatFixtureOnly?'combat-fixture-update-product-unchanged':'native-qa-update-product-unchanged',wholeGameAccepted:false,
+    scope:full?'full-regression':formattingCarry?'qa-formatting-correction':retainedProductValidation?'formal-evidence-transfer-delta':abilityNameOnly?(paths.includes('app/v105AbilityNames.js')?'ability-name-lazy-layout-delta':paths.includes(RANGER_BUFFER_FILE)?(paths.includes(RETIRED_AUDIO_OWNER_FILE)?'ranger-buffer-and-audio-lifecycle-delta':'ranger-buffer-selection-delta'):'ability-name-display-delta'):draft?'targeted-draft':combatQaOnly?'combat-qa-update-product-unchanged':combatFixtureOnly?'combat-fixture-update-product-unchanged':'native-qa-update-product-unchanged',wholeGameAccepted:false,
     finalIntegrationRequiresFullRegression:true};
 }
 
@@ -481,7 +536,8 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
   assert.match(comparisonBase,/^[0-9a-f]{40}$/u);
   const paths=execFileSync('git',['diff','--no-renames','--name-only',`${comparisonBase}..${head}`],{encoding:'utf8',windowsHide:true}).trim().split(/\r?\n/u).filter(Boolean);
   const sourceFiles=new Set([...paths.filter(file=>ABILITY_NAME_BLOBS[file]||reviewedCorrectionQaBlobs[file]||reviewedValidationBlobs[file]||reviewedMotionBlobs[file]||reviewedLifecycleBlobs[file]||reviewedBruteBlobs[file]||reviewedNativeControlBlobs[file]||reviewedSupportBlobs[file]||reviewedRawClockBlobs[file]||COMBAT_QA_BLOBS[file]),
-    ...(previousHead===ABILITY_NAME_PREDECESSOR.head?Object.keys(ABILITY_NAME_BLOBS):[]),
+    ...([ABILITY_NAME_PREDECESSOR.head,QA_FORMATTING_PREDECESSOR.head].includes(previousHead)?Object.keys(ABILITY_NAME_BLOBS):[]),
+    ...(previousHead===QA_FORMATTING_PREDECESSOR.head?[QA_FORMATTING_PREDECESSOR.test]:[]),
     ...(Object.keys(COMBAT_QA_BLOBS).every(file=>paths.includes(file))?['.github/workflows/ci.yml','.github/workflows/v1-quality-acceptance.yml']:[]),
     ...(paths.includes('tests/v177-native-canvas-clips.test.mjs')?[...Object.keys(COMBAT_QA_BLOBS),
       '.github/workflows/ci.yml','.github/workflows/v1-quality-acceptance.yml','tests/v177-native-canvas-clips.test.mjs']:[])]);
@@ -504,7 +560,11 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
   const productPaths=['app','public','assets','package.json','package-lock.json','scripts/pwa-native-runtime/package.json','scripts/pwa-native-runtime/package-lock.json'];
   const eligibleCombatReuse=eligibleNativeReuse&&previousHead===COMBAT_QA_BASELINE.head&&reviewedCombatQaPaths(paths,sourceBlobs);
   const eligibleFixtureReuse=eligibleNativeReuse&&previousHead===COMBAT_FIXTURE_BASELINE.head&&reviewedCombatFixturePaths(paths,sourceBlobs);
-  const eligibleAbilityContinuation=eligibleNativeReuse&&previousHead===ABILITY_NAME_PREDECESSOR.head
+  const formattingTextUnchanged=eligibleNativeReuse&&previousHead===QA_FORMATTING_PREDECESSOR.head&&reviewedQaFormattingPaths(paths,sourceBlobs)
+    &&execFileSync('git',['rev-parse',previousHead+':'+QA_FORMATTING_PREDECESSOR.test],{encoding:'utf8',windowsHide:true}).trim()===QA_FORMATTING_PREDECESSOR.before
+    &&execFileSync('git',['show',previousHead+':'+QA_FORMATTING_PREDECESSOR.test],{encoding:'utf8',windowsHide:true}).replace(/\r\n/gu,'\n')
+      ===execFileSync('git',['show',head+':'+QA_FORMATTING_PREDECESSOR.test],{encoding:'utf8',windowsHide:true});
+  const eligibleAbilityContinuation=eligibleNativeReuse&&([ABILITY_NAME_PREDECESSOR.head,QA_FORMATTING_PREDECESSOR.head].includes(previousHead))
     &&reviewedAbilityContinuationPaths(paths,sourceBlobs);
   const productUnchanged=(eligibleCombatReuse||eligibleFixtureReuse||eligibleAbilityContinuation)&&productPaths.every(file=>{
     const blob=execFileSync('git',['rev-parse',`${head}:${file}`],{encoding:'utf8',windowsHide:true}).trim();
@@ -527,18 +587,21 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
     base:process.env.CI_SCOPE_PR_BASE,prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),action,draft:draft==='true',productUnchanged,
     paths,sourceBlobs,token:process.env.CI_SCOPE_ACTIONS_TOKEN});
   const abilityNameEvidence=eligibleNativeReuse?await previousAbilityNameEvidence({repository:process.env.GITHUB_REPOSITORY,previousHead,
-    base:process.env.CI_SCOPE_PR_BASE,prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),action,draft:draft==='true',paths,sourceBlobs,productUnchanged,rangerBufferDelta,layoutReadDelta,
+    base:process.env.CI_SCOPE_PR_BASE,prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),action,draft:draft==='true',paths,sourceBlobs,productUnchanged,rangerBufferDelta,layoutReadDelta,formattingTextUnchanged,
     originalAncestor:eligibleAbilityContinuation&&execFileSync('git',['merge-base',ABILITY_NAME_BASELINE.head,previousHead],{encoding:'utf8',windowsHide:true}).trim()===ABILITY_NAME_BASELINE.head,
     token:process.env.CI_SCOPE_ACTIONS_TOKEN})
     :{passed:false,reason:'previous-head-not-exact-ancestor'};
   if(abilityNameEvidence.passed)qualityEvidence=await previousQualityEvidence({repository:process.env.GITHUB_REPOSITORY,
     head:abilityNameEvidence.head,prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),token:process.env.CI_SCOPE_ACTIONS_TOKEN,displayEvidence:abilityNameEvidence});
   const scope=ciChangeScope(paths,{draft:draft==='true',sourceBlobs,reuseNativeQa,reuseCombatQa:combatQaEvidence.passed,reuseCombatFixture:combatFixtureEvidence.passed,
-    reuseAbilityNames:abilityNameEvidence.passed,reuseProductValidation:abilityNameEvidence.freshProductValidationsRequired===false,freshNormal:abilityNameEvidence.freshNormalRequired??false});
+    reuseAbilityNames:abilityNameEvidence.passed,reuseProductValidation:abilityNameEvidence.freshProductValidationsRequired===false,
+    reuseMeasuredQa:abilityNameEvidence.formattingEvidence?.passed===true,freshNormal:abilityNameEvidence.freshNormalRequired??false});
   if(process.env.GITHUB_OUTPUT)appendFileSync(process.env.GITHUB_OUTPUT,['full','verify_full','performance','phaseg','ranger','normal','allunit','r9','combat','audio'].map(k=>`${k}=${scope[k]}\n`).join(''));
   if(process.env.GITHUB_OUTPUT)appendFileSync(process.env.GITHUB_OUTPUT,`reuse_quality=${combatQaEvidence.passed||combatFixtureEvidence.passed||qualityEvidence.passed}\n`);
   if(process.env.GITHUB_STEP_SUMMARY)appendFileSync(process.env.GITHUB_STEP_SUMMARY,
-    `Validation: ${scope.scope}. Ready transitions and unknown product changes run full regression. Exact reviewed deltas retain only completed original gates with their source owners. ${abilityNameEvidence.formalTransferDelta
+    `Validation: ${scope.scope}. Ready transitions and unknown product changes run full regression. Exact reviewed deltas retain only completed original gates with their source owners. ${abilityNameEvidence.formattingEvidence?.passed
+      ?'Only the fixed test CRLF is corrected. The original failed whitespace check stays failed; the same whitespace check, tests, lint, content and build run fresh. Completed formal6 and PhaseG stay with their actual a12 owners; earlier45 jobs and19 product steps keep their separate original owners.'
+      :abilityNameEvidence.formalTransferDelta
       ?'This QA-only delta retains the completed19 conditional Verify browser/audit steps, normal-play and Ranger gates with their verified original owners; tests, lint, content, build, all6 formal performance windows and PhaseG run fresh.'
       :'The ability-name display delta reruns all19 conditional Verify browser/audit steps, tests, lint, content, build and formal performance; failed or missing normal-play evidence also runs again.'} Original failures remain failures.\n`);
   console.log(JSON.stringify({...scope,base,comparisonBase,head,eligibleNativeReuse,previousFullEvidence,qualityEvidence,combatQaEvidence,combatFixtureEvidence,abilityNameEvidence,changedPaths:paths}));

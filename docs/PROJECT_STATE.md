@@ -4,6 +4,12 @@
 
 このソースの製品版は1.0.5。実配信のversion・release SHA・公開後確認は、[正式URL](https://susano-ooo.github.io/Zombieee/)のmetadataと[Issue #177の最新記録](https://github.com/SUSANO-OOO/Zombieee/issues/177)を正本とする。Release作成・配信・画面表示を別々に記録する。以下は各候補を確認した時点の履歴。
 
+## 2026-10-26 候補a12b63d2の正式性能と空白補正
+
+正式Mac ARM／WebKit job121242881532は6条件すべて実成功。p95は19／23／19／19／19／19ms、desktop58.533844527Hzで、元33ms／54Hz・30秒・画質・DPR・生時計と全gateを維持した。原ZIP1b26fa10…0e021c5・全18CRC、7source SHA256、原reportの合成merge dedb603c（parents e22＋a12、tree25625979がa12同一）を照合した。同じreadのRanger証拠は76〜81点・overflow0・元ownerで保存され、原選択26〜27点へ再結合されている。旧4c等の未達はそのまま保持し、製品を変えずに正式測定の転送を修正した結果として扱う。
+
+CI40217815362のVerify121242881557は新test最終行だけのCRLFを元のwhitespace検査が検出して失敗し、基本checksは未実行。ローカルではCRLF1個→LF以外が全文一致し、元mainとの差分空白検査も成功。補正後は同じ空白検査・全tests・Lint・content・buildをfresh実行する。元の失敗を消さず、a12の全job完了と正式6窓・PhaseGの実success、同じ製品／runtime／検査sourceを要求する限定継続だけを既存CIへ追加し、成功した測定の再起動を避ける。4cの45job／19製品工程、6a Quality2、A8音声、579動作／56映像は各実ownerのまま保持する。PhaseG121242881601も全55画面・16combat evidenceと元manifest検証まで実successとなり、a12の未完jobは0。補正後の基本CIを残し、1.0.5のmerge・Release・Pages・公開後QAは未実施。
+
 ## 2026-10-26 候補4c68dbfdの実結果と検査側の限定修正
 
 PR Verifyは全3272テストと19条件工程まで成功。通常Chromium／WebKitも序盤の実敗北と独立S14／S25／S30の敗北・結果保存・終了まで成功し、S30の旧30秒失敗を成功へ書き換えず再発なしとして保持する。正式Mac ARM6窓は29／25／33／19／20／33msで33ms基準を満たしたが、desktop53.617890Hzで元54Hz基準未達。PR仮merge9cf7783fはPR head4c68dbfdと完全に同じtreeであり、SHAの役割は区別する。正式の失敗は原ZIP e3b19150…a18e5fとともに保持する。

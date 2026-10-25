@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {ciChangeScope,framePerformanceRuntimes,previousFullCiEvidence,previousQualityEvidence,
  previousAbilityNameEvidence,reviewedAbilityNamePaths,reviewedAbilityContinuationPaths,ABILITY_NAME_BASELINE,ABILITY_NAME_PREDECESSOR,ABILITY_NAME_AUDIO_OWNER,ABILITY_LAYOUT_PRODUCT_BEFORE,ABILITY_NAME_PREDECESSOR_AUDIO_JOBS,ABILITY_NAME_BLOBS,ABILITY_NAME_REUSED_JOBS,RANGER_BUFFER_FILE,RANGER_BUFFER_BLOB,RETIRED_AUDIO_OWNER_FILE,RANGER_PROVENANCE_FILE} from '../scripts/ci-change-scope.mjs';
 import {assertEphemeralPerformanceHost} from '../scripts/v100-macos-indexing-control.mjs';
-import {FORMAL_TRANSFER_FILES,FORMAL_TRANSFER_CONTROL_JOBS,FORMAL_TRANSFER_PRODUCT_STEPS} from '../scripts/ci-change-scope.mjs';
+import {FORMAL_TRANSFER_FILES,FORMAL_TRANSFER_CONTROL_JOBS,FORMAL_TRANSFER_PRODUCT_STEPS,QA_FORMATTING_PREDECESSOR,QA_FORMATTING_MEASURED_JOBS,reviewedQaFormattingPaths} from '../scripts/ci-change-scope.mjs';
 import {readFileSync} from 'node:fs';
 import {load} from 'js-yaml';
 import {execFileSync} from 'node:child_process';
@@ -128,6 +128,50 @@ test('the exact reviewed QA continuation keeps original6a owners, requires produ
   assert.equal((await previousAbilityNameEvidence({...formalOptions,request:api({controls})})).passed,false,'Every reused result needs its exact successful job and steps');
  for(const bad of [{productUnchanged:false},{sourceBlobs:{...sourceBlobs,[FORMAL_TRANSFER_FILES[0]]:'f'.repeat(40)}},{paths:[...formalPaths,'app/unknown.js']}])
   assert.equal((await previousAbilityNameEvidence({...formalOptions,...bad,request:()=>assert.fail('Unknown formal change rejected before network')})).passed,false);
+ const format=QA_FORMATTING_PREDECESSOR,formatPaths=['scripts/ci-change-scope.mjs','tests/ci-change-scope.test.mjs',format.test,'scripts/v177-native-allunit-recovery.json'],
+  formatBlobs={...sourceBlobs,[format.test]:format.after},formatRun={...oldRun,id:format.runId,head_sha:format.head},
+  formatProof=provenanceFixture({runId:format.runId,head:format.head,base:old.base,artifactId:94}),
+  formatOwner={run_id:format.runId,head_sha:format.head,run_attempt:1,status:'completed'},
+  formatRows=[{...formatOwner,id:format.verifyJob,name:'PR Verify',conclusion:'failure',steps:[
+   ...['Checkout synthetic PR merge','Verify PR provenance','Upload PR provenance'].map(name=>({name,status:'completed',conclusion:'success'})),
+   {name:'Check patch whitespace',status:'completed',conclusion:'failure'},
+   ...['Setup Node.js','Install dependencies','Lint','Validate production content','Build production application','Test',...FORMAL_TRANSFER_PRODUCT_STEPS]
+    .map(name=>({name,status:'completed',conclusion:'skipped'}))]},
+   ...Object.entries(QA_FORMATTING_MEASURED_JOBS).map(([name,contract])=>({...formatOwner,name,id:contract.id,conclusion:'success',
+    steps:contract.steps.map(name=>({name,status:'completed',conclusion:'success'}))}))];
+ const formatApi=({record=formatRun,rows=formatRows,proof=formatProof}={})=>async url=>{
+  if(url.includes('/94/'))return{ok:true,arrayBuffer:async()=>proof.zip};
+  if(url.includes('/'+format.runId+'/artifacts?'))return{ok:true,json:async()=>proof.artifacts};
+  if(url.includes('/'+format.runId+'/jobs?'))return{ok:true,json:async()=>({total_count:rows.length,jobs:rows})};
+  if(url.endsWith('/'+format.runId))return{ok:true,json:async()=>record};
+  return api()(url);
+ };
+ const formatOptions={...options,previousHead:format.head,paths:formatPaths,sourceBlobs:formatBlobs,formattingTextUnchanged:true};
+ assert.equal(reviewedQaFormattingPaths(formatPaths,formatBlobs),true);
+ const formatted=await previousAbilityNameEvidence({...formatOptions,request:formatApi()});assert.equal(formatted.passed,true);
+ assert.equal(formatted.predecessor.head,format.head);assert.equal(formatted.formattingEvidence.measuredJobs.length,2);
+ assert.equal(formatted.productValidationOwner.head_sha,prev.head);assert.equal(formatted.reusedJobs.length,45);
+ for(const field of ['freshPerformanceRequired','freshPhaseGRequired','freshProductValidationsRequired'])assert.equal(formatted[field],false);
+ assert.equal(formatted.freshVerifyRequired,true);
+ const formatScope=ciChangeScope(formatPaths,{draft:false,sourceBlobs:formatBlobs,reuseAbilityNames:true,reuseProductValidation:true,reuseMeasuredQa:true});
+ assert.equal(formatScope.scope,'qa-formatting-correction');
+ for(const field of ['full','verify_full','performance','phaseg','normal','ranger','audio'])assert.equal(formatScope[field],false);
+ assert.equal(ciChangeScope(formatPaths,{draft:false,sourceBlobs:formatBlobs,reuseAbilityNames:true,reuseProductValidation:true}).performance,true);
+ const before=execFileSync('git',['show',format.head+':'+format.test],{encoding:'utf8'}),after=readFileSync(format.test,'utf8');
+ assert.equal((before.match(/\r\n/gu)??[]).length,1);assert.equal(before.replace(/\r\n/gu,'\n'),after);
+ assert.equal(execFileSync('git',['hash-object','--stdin'],{input:before,encoding:'utf8'}).trim(),format.before);
+ assert.equal(execFileSync('git',['hash-object','--stdin'],{input:after,encoding:'utf8'}).trim(),format.after);
+ for(const bad of [{formattingTextUnchanged:false},{productUnchanged:false},{originalAncestor:false},{action:'ready_for_review'},
+   {sourceBlobs:{...formatBlobs,[format.test]:'f'.repeat(40)}},{sourceBlobs:{...formatBlobs,[FORMAL_TRANSFER_FILES[0]]:'f'.repeat(40)}},
+   {paths:[...formatPaths,'app/unknown.js']}])
+  assert.equal((await previousAbilityNameEvidence({...formatOptions,...bad,request:()=>assert.fail('Unreviewed formatting correction rejected before network')})).passed,false);
+ for(const record of [{...formatRun,status:'in_progress'},{...formatRun,head_sha:prev.head},{...formatRun,run_attempt:2}])
+  assert.equal((await previousAbilityNameEvidence({...formatOptions,request:formatApi({record})})).passed,false);
+ for(const rows of [formatRows.slice(1),[...formatRows,formatRows[1]],
+   ...formatRows.flatMap((row,index)=>[{id:1},{head_sha:prev.head},{run_id:prev.runId},{run_attempt:2},{status:'in_progress'},{steps:[]},
+    {conclusion:index?'failure':'success'},{steps:row.steps.map((s,i)=>i?s:{...s,conclusion:'skipped'})}]
+    .map(change=>formatRows.map((j,i)=>i===index?{...j,...change}:j)))])
+  assert.equal((await previousAbilityNameEvidence({...formatOptions,request:formatApi({rows})})).passed,false,'Only the whitespace failure plus both complete real measurement jobs can carry forward');
  const wrongProof=provenanceFixture({runId:prev.runId,head:prev.head,base:'f'.repeat(40),artifactId:92});
  assert.equal((await previousAbilityNameEvidence({...options,request:api({previousProof:wrongProof})})).passed,false);
  const lost=jobs.map((j,i)=>i?j:{...j,conclusion:'failure'});
@@ -255,6 +299,17 @@ test('display-only continuation retains Quality only with its own two exact-head
  for(const rows of [jobs.slice(1),[jobs[0],jobs[0]],[]])assert.equal((await previousQualityEvidence({...options,request:api(run,rows)})).passed,false);
  assert.equal((await previousQualityEvidence({...options,displayEvidence:{...displayEvidence,freshPhaseGRequired:false},
   request:()=>assert.fail('Unverified source owner cannot request Quality reuse')})).passed,false);
+ const formattingEvidence={passed:true,head:QA_FORMATTING_PREDECESSOR.head,runId:QA_FORMATTING_PREDECESSOR.runId,
+  measuredJobs:Object.entries(QA_FORMATTING_MEASURED_JOBS).map(([name,contract])=>({name,id:contract.id,
+   head_sha:QA_FORMATTING_PREDECESSOR.head,run_id:QA_FORMATTING_PREDECESSOR.runId,run_attempt:1,status:'completed',conclusion:'success',stepNames:contract.steps}))};
+ const held={...displayEvidence,freshPerformanceRequired:false,freshPhaseGRequired:false,formattingEvidence};
+ const retained=await previousQualityEvidence({...options,displayEvidence:held,request:api()});
+ assert.equal(retained.passed,true);assert.equal(retained.head,b.head);assert.deepEqual(retained.jobIds,[100,101]);
+ for(const patch of [{passed:false},{head:b.head},{runId:1},{measuredJobs:formattingEvidence.measuredJobs.slice(1)},
+   ...formattingEvidence.measuredJobs.flatMap((row,index)=>[{id:1},{head_sha:b.head},{run_id:1},{run_attempt:2},{status:'in_progress'},{conclusion:'failure'},{stepNames:[]}]
+    .map(change=>({measuredJobs:formattingEvidence.measuredJobs.map((j,i)=>i===index?{...j,...change}:j)})))])
+  assert.equal((await previousQualityEvidence({...options,displayEvidence:{...held,formattingEvidence:{...formattingEvidence,...patch}},
+   request:()=>assert.fail('Missing original measurement proof cannot retain Quality')})).passed,false);
 });
 
 test('WebKit mirror preparation is QA-only on Draft and retains full Ready checks',()=>{
