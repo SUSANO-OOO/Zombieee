@@ -19,6 +19,33 @@ import { rangerPerformanceReceipts } from "./v177-ranger-performance-receipts.mj
 import {readV177RangerPerformancePreparation} from './v177-ranger-performance-start.mjs';
 import {V177_JOINT_ATLASES} from '../app/v177JointPresentation.js';
 
+
+// Diagnostic only: forward each native operation exactly once and preserve all
+// product clocks, input and source pixels. Stop restores every original method.
+function installV105NativeCanvasCost(){
+ const originals=[],rows=[],totals={},limit=12000;let active=false,overflow=0;
+ const proto=CanvasRenderingContext2D.prototype;
+ for(const name of ['drawImage','restore','fill','stroke','fillText','putImageData','clearRect','getImageData','createImageData']){
+  const descriptor=Object.getOwnPropertyDescriptor(proto,name);if(typeof descriptor?.value!=='function')throw Error('Missing native '+name);
+  const original=descriptor.value;originals.push([name,descriptor]);
+  Object.defineProperty(proto,name,{...descriptor,value:function(...args){
+   if(!active)return Reflect.apply(original,this,args);
+   const at=performance.now();let threw=false;
+   try{return Reflect.apply(original,this,args);}catch(error){threw=true;throw error;}
+   finally{const endedAt=performance.now(),durationMs=endedAt-at;
+    try{const t=totals[name]??={count:0,sumMs:0,maxMs:0,exceptions:0};t.count++;t.sumMs+=durationMs;t.maxMs=Math.max(t.maxMs,durationMs);if(threw)t.exceptions++;
+     if(durationMs>=2){if(rows.length>=limit)overflow++;else rows.push({name,at,endedAt,durationMs,threw,
+      lastCompletedCpuSequenceAtCall:globalThis.__ASHFALL_RUNTIME_PERFORMANCE__?.frameCpuSequence??null,
+      canvas:[this.canvas.width,this.canvas.height],className:this.canvas.className??null,
+      source:name==='drawImage'?{url:args[0]?.currentSrc??args[0]?.src??null,width:args[0]?.naturalWidth??args[0]?.width,height:args[0]?.naturalHeight??args[0]?.height}:null,
+      filter:this.filter,shadowBlur:this.shadowBlur,stack:new Error().stack});}
+    }catch(error){overflow++;}
+   }
+  }});
+ }
+ window.__V105_NATIVE_CANVAS_COST__={start(){active=true;},stop(){active=false;for(const [name,d]of originals)Object.defineProperty(proto,name,d);return{totals,rows,overflow,limit,slowRowThresholdMs:2,allCallsCounted:true,diagnosticOnly:true,releaseAcceptance:false};}};
+}
+
 const configuredBaseUrl = process.env.V100_DEVICE_RUNTIME_BASE_URL ?? process.env.V100_CAMPAIGN_QA_BASE_URL;
 assert.ok(configuredBaseUrl, "V100_DEVICE_RUNTIME_BASE_URL or V100_CAMPAIGN_QA_BASE_URL is required");
 const baseUrl = new URL(configuredBaseUrl);
@@ -44,7 +71,7 @@ const nativeRecordingDiagnostic = process.env.V100_DEVICE_RUNTIME_NATIVE_RECORDI
 if(nativeRecordingDiagnostic){assert.equal(engine,"webkit");assert.equal(process.platform,"darwin");}
 const runtimeRole=process.env.V100_DEVICE_RUNTIME_ROLE??'formal';
 assert.ok(['formal','native-control'].includes(runtimeRole));
-const nativeControlDiagnostic=runtimeRole==='native-control';
+const nativeControlDiagnostic=true; // Instrumented native methods are never formal qualification.
 const blankBaselineDiagnostic = process.env.V100_DEVICE_RUNTIME_BLANK_BASELINE === "1";
 const hostControl = process.env.V100_DEVICE_RUNTIME_HOST_CONTROL ?? "none";
 assert.ok(["none", "spotlight-indexing-paused"].includes(hostControl), `invalid host control: ${hostControl}`);
@@ -263,6 +290,7 @@ async function waitForBattle(page, deadline) {
 async function beginMeasurement(page) {
   return page.evaluate(() => {
     window.__V100_RAF_CALLBACK_DIAG__?.start();
+    window.__V105_NATIVE_CANVAS_COST__?.start();
     // A 120Hz phone produces about 3,600 samples in 30 seconds. Retain that
     // complete window with bounded headroom; overflow still fails the gate.
     const state = { startedAt: performance.now(), times: [], capacity: 4_800, overflow: 0, active: true, handle: 0, visibilityEvents: [], frameCpuChunks: [], frameCpuOverflow: 0 };
@@ -288,10 +316,11 @@ async function endMeasurement(page) {
     state.active = false;
     cancelAnimationFrame(state.handle);
     const endedAt = performance.now();
+    const nativeCanvasCost=window.__V105_NATIVE_CANVAS_COST__?.stop()??null;
     const performanceAfter = window.__ASHFALL_BATTLE_QA__?.getPerformanceSnapshot?.() ?? null;
     const callbackDiagnostic = window.__V100_RAF_CALLBACK_DIAG__?.stop() ?? null;
     for (const [type, listener] of Object.entries(state.listeners ?? {})) window.removeEventListener(type, listener);
-    return { startedAt: state.startedAt, endedAt, times: state.times, capacity: state.capacity, overflow: state.overflow, visibilityEvents: state.visibilityEvents, performanceBefore: state.performanceBefore, performanceAfter, visibilityState: document.visibilityState, callbackDiagnostic, deferredCpu: {chunks:state.frameCpuChunks,overflow:state.frameCpuOverflow} };
+    return { startedAt: state.startedAt, endedAt, times: state.times, capacity: state.capacity, overflow: state.overflow, visibilityEvents: state.visibilityEvents, performanceBefore: state.performanceBefore, performanceAfter, visibilityState: document.visibilityState, callbackDiagnostic, nativeCanvasCost, deferredCpu: {chunks:state.frameCpuChunks,overflow:state.frameCpuOverflow} };
   });
 }
 
@@ -402,6 +431,7 @@ try {
     if (callbackDiagnostic) {
       await page.addInitScript(installRuntimeObservationDiagnostics);
     }
+    await page.addInitScript(installV105NativeCanvasCost);
     const result = { name, viewport, status: "failed", blankBaseline, tacticalPolicy: viewport.safeArea ? "airstrike-first" : "crowd-barrage-at-eight", diagnostics: { consoleErrors: [], pageErrors: [], requestFailures: [], httpFailures: [] }, samples: [], measurementSamples: [], inputs: [] };
     const retainFrameCpuChunks=runtimeRole==='formal'&&engine==='webkit'&&!callbackDiagnostic&&!observerlessDiagnostic;
     if(retainFrameCpuChunks)result.frameCpuObservation = {
@@ -586,8 +616,10 @@ try {
         renderCadence: renderCadenceToleranceHz !== null && effectiveRenderHz !== null && Math.abs(effectiveRenderHz - expectedRenderHz) <= renderCadenceToleranceHz,
         dpr: requestedDpr !== 2 || qualityDiagnostic !== "auto" || (raf.performanceAfter?.graphicsProfile?.resolvedMode === "high" && raf.performanceAfter?.graphicsProfile?.dprCap === 2 && result.canvasContextAfter.dpr === 2 && Math.abs(finalDpr - 2) < .01 && Math.abs(finalDprY - 2) < .01),
       };
-      result.performance = { before: measurement.performance, after: raf.performanceAfter, raf: { count: raf?.times?.length ?? 0, capacity: raf?.capacity, overflow: raf?.overflow ?? 0, elapsedMs: elapsed, times: raf?.times ?? [], intervals, invalidIntervals }, visibility: { state: raf.visibilityState, events: raf.visibilityEvents ?? [] }, callbackDiagnostic: raf.callbackDiagnostic, medianRafMs, p95RafMs, medianFps, renderDelta, effectiveRenderHz, expectedRenderHz, renderCadenceToleranceHz, gates };
+      result.performance = { before: measurement.performance, after: raf.performanceAfter, raf: { count: raf?.times?.length ?? 0, capacity: raf?.capacity, overflow: raf?.overflow ?? 0, elapsedMs: elapsed, times: raf?.times ?? [], intervals, invalidIntervals }, visibility: { state: raf.visibilityState, events: raf.visibilityEvents ?? [] }, callbackDiagnostic: raf.callbackDiagnostic, nativeCanvasCost:raf.nativeCanvasCost, medianRafMs, p95RafMs, medianFps, renderDelta, effectiveRenderHz, expectedRenderHz, renderCadenceToleranceHz, gates };
       await page.screenshot({ path: path.join(evidenceDir, `${name}-after.png`) });
+      assert.ok(raf.nativeCanvasCost?.totals.drawImage?.count>0,'Native cost observation did not run');
+      assert.equal(raf.nativeCanvasCost.overflow,0,'Native cost observation overflow or telemetry failure');
       assert.ok(gates.sampleCount, "insufficient rAF samples for representative window");
       assert.ok(gates.overflow, "rAF observer overflowed");
       assert.ok(gates.strictlyIncreasing, "rAF timestamps are not strictly increasing");
