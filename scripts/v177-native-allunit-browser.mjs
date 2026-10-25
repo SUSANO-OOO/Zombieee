@@ -14,6 +14,7 @@ import {nativeCaseSelection} from './v177-native-allunit-selection.mjs';
 import {planOutcomeShard,captureNativeOutcomeCase} from './v177-native-allunit-outcomes.mjs';
 import {combatKindToCampaignUnitId} from '../app/campaign.js';
 import {withNativeProcessTimeline} from './v177-native-process-timeline.mjs';
+import {validateCapturePreparationRecord} from './v100-macos-indexing-control.mjs';
 
 const git=args=>execFileSync('git',args,{encoding:'utf8',maxBuffer:8*1024*1024,windowsHide:true}).trim();
 const sha=b=>createHash('sha256').update(b).digest('hex');
@@ -182,15 +183,10 @@ export async function runBrowserQa(){
       :selection.mode==='codec-control'
       ?'One original Brute attack case with a native container comparison. Original scene, free RAF/simulation, source clock and deadlines remain unchanged. This dispatch supplies no all-unit, performance, release, naturalness or physical audio acceptance.'
       :'One of twelve all48 native VP8 shards;432 normal cases remain separate from3 supplemental actual Ranger manual clips. A native60Hz source-acquisition request timer does not guarantee encoded60fps or grant acceptance. Original free RAF/simulation after actual recorder start. Ordinary actors use original stats; Mayo uses real trusted activation/self-drain; turned continues the actual infection newborn; split twins use their real S24 pair constructors with a deliberately partial encounter. Legacy fused art is an explicit fixture. Controlled target diagnostics are not campaign, balance, original-speed naturalness or physical audio acceptance.'};
-  if(process.env.V177_NATIVE_HOST_INDEXING_CONTROL==='brute-attack-1280'){
+  if(process.env.V177_NATIVE_HOST_INDEXING_CONTROL&&process.env.V177_NATIVE_HOST_INDEXING_CONTROL!=='none'){
     const file=path.join(out,'native-host-indexing-prepared.json'),bytes=await readFile(file),prepared=JSON.parse(bytes);
-    assert.equal(prepared.purpose,'native-capture-diagnostic');assert.equal(prepared.diagnosticOnly,true);
-    assert.equal(prepared.acceptanceOverride,false);assert.equal(prepared.state,'paused');
-    assert.equal(prepared.candidateHead,binding.head);assert.equal(prepared.run,process.env.GITHUB_RUN_ID);
-    assert.equal(prepared.attempt,process.env.GITHUB_RUN_ATTEMPT);assert.equal(prepared.shard,binding.shardId);
-    assert.equal(prepared.arch,process.arch);assert.equal(prepared.caseId,'forms-2:brute:attack:1280x720');
-    assert.deepEqual(selection.caseIds,[prepared.caseId]);assert.deepEqual(selection.outcomeCaseIds,[]);assert.deepEqual(selection.manualCaseIds,[]);
-    report.host.indexingControl={purpose:prepared.purpose,diagnosticOnly:true,file,sha256:createHash('sha256').update(bytes).digest('hex')};
+    validateCapturePreparationRecord(prepared,{selection,binding});
+    report.host.indexingControl={purpose:prepared.purpose,diagnosticOnly:prepared.diagnosticOnly,file,sha256:createHash('sha256').update(bytes).digest('hex')};
   }
   assert.match(process.env.V177_EXPECTED_BUILD_SHA256??'',/^[a-f0-9]{64}$/u);
   assert.equal(report.build.combinedSha256,process.env.V177_EXPECTED_BUILD_SHA256,'Capture build differs from the producer job');

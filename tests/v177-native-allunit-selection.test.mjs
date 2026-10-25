@@ -5,7 +5,17 @@ import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
-import {selectNativeCases,nativeCaseSelection} from '../scripts/v177-native-allunit-selection.mjs';
+import {selectNativeCases,nativeCaseSelection,nativeCaptureHostControl} from '../scripts/v177-native-allunit-selection.mjs';
+
+test('host preparation is restricted to the unfinished PR case and never injected into manual remaining or full capture',()=>{
+ const s={mode:'remaining',caseIds:['forms-4:mayo-chan:attack:1280x720'],outcomeCaseIds:[],manualCaseIds:[]};
+ for(const draft of [false,true])assert.equal(nativeCaptureHostControl({pull_request:{draft}},s),'mayo-attack-1280');
+ assert.equal(nativeCaptureHostControl({inputs:{capture_mode:'remaining'}},s),'none');
+ for(const patch of [{mode:'full'},{caseIds:[]},{caseIds:[...s.caseIds,'forms-4:mayo-chan:move:1280x720']},{manualCaseIds:['unexpected']},{outcomeCaseIds:['unexpected']}])assert.equal(nativeCaptureHostControl({pull_request:{draft:false}},{...s,...patch}),'none');
+ const brute={...s,caseIds:['forms-2:brute:attack:1280x720']};
+ assert.equal(nativeCaptureHostControl({pull_request:{draft:true}},brute),'brute-attack-1280');
+ assert.equal(nativeCaptureHostControl({pull_request:{draft:false}},brute),'none');
+});
 import {SHARDS,planShard} from '../scripts/v177-native-allunit-manifest.mjs';
 
 const current=JSON.parse(readFileSync('scripts/v177-native-allunit-recovery.json','utf8'));

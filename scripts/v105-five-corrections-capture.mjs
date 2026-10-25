@@ -15,6 +15,7 @@ import {V100_UNITS,V100_STAGE_IDS} from '../app/v100Registry.js';
 import {MANUAL_ABILITY_REGISTRY as manual} from '../app/manualAbilities.js';
 import {installRequestFailureAudit} from './browser-request-failure-audit.mjs';
 import {nativeCaseSelection} from './v177-native-allunit-selection.mjs';
+import {validateCapturePreparationRecord,correctionPreparationNeeded} from './v100-macos-indexing-control.mjs';
 const sha=b=>createHash('sha256').update(b).digest('hex');
 export function correctionCases(scope){
   assert.ok(['desktop','mobile390','mobile340'].includes(scope));
@@ -234,6 +235,11 @@ export async function runBrowserQa(){
       retainedObservationsKeepTheirOriginalConditions:true,coldStartupAccepted:false,formalPerformanceAccepted:false},
     acceptance:{physicalIphone:false,humanVisualAndListening:false,normalCampaign:false,wholeGame:false}};
   const persist=()=>writeFile(path.join(out,'report.json'),JSON.stringify(report,null,2)+'\n');
+  if(scope==='desktop'&&process.env.GITHUB_EVENT_NAME==='pull_request'&&correctionPreparationNeeded(selection)){
+    const file=path.join(out,'native-host-indexing-prepared.json'),bytes=await readFile(file);
+    const prepared=JSON.parse(bytes);validateCapturePreparationRecord(prepared,{selection,binding,correction:true});
+    report.hostPreparation={purpose:prepared.purpose,file,sha256:sha(bytes),diagnosticOnly:false,acceptanceOverride:false};
+  }
   let browser,primary,fatalErrors=0;
   const fatal=error=>{fatalErrors++;report.errors.push(String(error));};
   try{

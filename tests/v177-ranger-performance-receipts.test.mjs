@@ -71,7 +71,12 @@ test('the actual device projection retains raw receipts and all original window,
     old=execFileSync('git',['show','207e19bd33e6ce62895c615dedaa816ae469d70c:scripts/v100-device-runtime-browser.mjs'],{encoding:'utf8'}).replaceAll('\r\n','\n'),
     tree=text=>ts.createSourceFile('device.mjs',text,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS),ast=tree(source),oldAst=tree(old);
   const declaration=(ast,name)=>ast.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text===name);
-  for(const name of ['beginMeasurement','endMeasurement','fixtureSave'])assert.equal(declaration(ast,name).getText(ast),declaration(oldAst,name).getText(oldAst),name);
+  for(const name of ['beginMeasurement','endMeasurement','fixtureSave']){
+    const current=declaration(ast,name).getText(ast)
+      .replace(', frameCpuChunks: [], frameCpuOverflow: 0','')
+      .replace(', deferredCpu: {chunks:state.frameCpuChunks,overflow:state.frameCpuOverflow}','');
+    assert.equal(current,declaration(oldAst,name).getText(oldAst),name);
+  }
   const gate=ast=>{const rows=[];const visit=n=>{if(ts.isVariableDeclaration(n)&&n.name.getText(ast)==='gates')rows.push(n.initializer.getText(ast));ts.forEachChild(n,visit);};visit(ast);assert.equal(rows.length,1);return rows[0];};
   assert.equal(gate(ast),gate(oldAst));
   const project=new Function('bossKind','return '+declaration(ast,'snapshotProjection').getText(ast))('mugarian-president-mutated'),row={...samples()[0],fighters:[]};
@@ -108,17 +113,22 @@ test('formal CPU chunks use the original elapsed RPC and immutable raw numbers w
  const raw={frameCpuSequence:7,frameCpuTimings:[{sequence:7,rafTimestamp:95,entryAt:96,previousExitAt:90,
   simulationFinishedAt:97,drawFinishedAt:99,exitAt:100,simulationTime:3}]};
  const observation={maxChunks:128,chunks:[],overflow:0},result={frameCpuObservation:observation};
- const context=vm.createContext({performance:{now:()=>now},__ASHFALL_RUNTIME_PERFORMANCE__:raw,
+ const owner={active:true,startedAt:100,frameCpuChunks:[],frameCpuOverflow:0};
+ const context=vm.createContext({assert,window:{__V100_DEVICE_RAF__:owner},performance:{now:()=>now},__ASHFALL_RUNTIME_PERFORMANCE__:raw,
   result,measurement:{startedAt:100},measurementMs:30000,retainFrameCpuChunks:true,
   page:{evaluate:async(fn,args)=>{calls++;assert.deepEqual(JSON.parse(JSON.stringify(args)),{startedAt:100,durationMs:30000});return fn(args);}}});
  const still=vm.runInContext(read,context);assert.equal(await still(),true);assert.equal(calls,1);
- assert.deepEqual(JSON.parse(JSON.stringify(observation.chunks[0].rows)),[[7,95,96,90,97,99,100,3]]);
- raw.frameCpuTimings[0].entryAt=777;assert.equal(observation.chunks[0].rows[0][2],96,'Later ring mutation cannot rewrite an earlier reply');
- for(let i=1;i<130;i++)await still();assert.equal(observation.chunks.length,128);assert.equal(observation.overflow,2);assert.equal(calls,130);
+ assert.deepEqual(JSON.parse(JSON.stringify(owner.frameCpuChunks[0].rows)),[[7,95,96,90,97,99,100,3]]);
+ raw.frameCpuTimings[0].entryAt=777;assert.equal(owner.frameCpuChunks[0].rows[0][2],96,'Later ring mutation cannot rewrite an earlier reply');
+ for(let i=1;i<130;i++)await still();assert.equal(owner.frameCpuChunks.length,128);assert.equal(owner.frameCpuOverflow,2);
+ assert.equal(observation.chunks.length,0,'No raw payload is transferred during the window');assert.equal(calls,130);
  now=30100;assert.equal(await still(),false,'Exact original30s boundary');
- context.retainFrameCpuChunks=false;const count=observation.chunks.length,overflow=observation.overflow;
+ context.retainFrameCpuChunks=false;const count=owner.frameCpuChunks.length,overflow=owner.frameCpuOverflow;
  now=30099;assert.equal(await still(),true);now=30100;assert.equal(await still(),false);
- assert.equal(observation.chunks.length,count);assert.equal(observation.overflow,overflow,'Excluded controls keep their original scalar path');
+ assert.equal(owner.frameCpuChunks.length,count);assert.equal(owner.frameCpuOverflow,overflow,'Excluded controls keep their original scalar path');
+ context.retainFrameCpuChunks=true;owner.active=false;await assert.rejects(still(),/owner changed/);
+ owner.active=true;owner.startedAt=99;await assert.rejects(still(),/owner changed/);
+ owner.startedAt=100;owner.frameCpuChunks=null;await assert.rejects(still(),/owner changed/);
 });
 
 
@@ -341,4 +351,20 @@ test('a new physical Ranger paint on the first unchanged fixed tick is distinct 
   r=>{const x=r[1].rangerDraws.actors[0];x.render.jointPaintedAt=r[0].time;x.objectRender=structuredClone(x.render);r[1].rangerDraws.firstPaintFence=structuredClone(r[0].rangerDraws.firstPaintFence);},
  ];
  for(const mutate of faults){const invalid=structuredClone(rows);mutate(invalid);const bad=rangerPerformanceReceipts(invalid,windowBounds);assert.equal(bad.status,'incomplete');assert.equal(bad.weightedPaintObserved,false);}
+});
+
+
+test('the same original end callback exports all unmodified CPU chunks after stopping and also preserves partial failures',async()=>{
+ const source=fs.readFileSync('scripts/v100-device-runtime-browser.mjs','utf8'),tree=ts.createSourceFile('device.mjs',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);
+ const end=tree.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text==='endMeasurement');assert.ok(end);
+ const chunks=[{measuring:true,readAt:100,frameCpuSequence:1,rows:[[1,90,91,89,92,93,94,1.5]]}];
+ const owner={active:true,handle:123,startedAt:0,times:[10,20],capacity:4800,overflow:0,visibilityEvents:[],listeners:{},frameCpuChunks:chunks,frameCpuOverflow:3};
+ let stopped=false,calls=0;
+ const ctx=vm.createContext({window:{__V100_DEVICE_RAF__:owner},document:{visibilityState:'visible'},performance:{now:()=>{assert.equal(stopped,true);return 30000;}},
+ cancelAnimationFrame:h=>{assert.equal(h,123);stopped=true;},page:{evaluate:async fn=>{calls++;return fn();}}});
+ const endMeasurement=vm.runInContext('('+end.getText(tree)+')',ctx),receipt=await endMeasurement(ctx.page);
+ assert.equal(calls,1);assert.equal(receipt.endedAt,30000);assert.equal(owner.active,false);
+ assert.equal(receipt.deferredCpu.chunks,chunks);assert.equal(receipt.deferredCpu.overflow,3);assert.equal(chunks[0].rows[0][2],91);
+ assert.match(source,/result\.partialMeasurement = await endMeasurement\(page\)/u);
+ assert.match(source,/Object\.assign\(result\.frameCpuObservation,result\.partialMeasurement\.deferredCpu\)/u);
 });

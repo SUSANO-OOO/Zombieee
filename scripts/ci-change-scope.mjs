@@ -49,19 +49,23 @@ export const ABILITY_NAME_BLOBS=Object.freeze({
  "app/AshfallGame.tsx": "004c5f5e25a6ff63c029d6f06d4c29f92efbd859",
  ".github/workflows/ci.yml": "bbfb51296e72de4c83ea993ce6341f39fbd098a4",
  "scripts/v177-representative-battles.mjs": "c5359ed5edf24403c427c64832e5d140806eb9c8",
- "scripts/v100-device-runtime-browser.mjs": "445b9aaa783128b764623a2d40cc3e194587c94e",
+ "scripts/v100-device-runtime-browser.mjs": "0c4c5090222f58ab5f36be802c642f526997f574",
  "scripts/v100-phase-g-production-matrix.mjs": "1dcde92eacfa4c5027b92ce38a782849ad6f61b7",
  "scripts/v177-normal-browser-deadline.mjs": "f60a49ca98db5a8059de56a04073a50b9e6b862f",
- "scripts/v105-five-corrections-capture.mjs": "39dc904107ff9a752d387fb0cc8833a8bbdc5779",
- "scripts/v177-native-allunit-browser.mjs": "536ff62a6e277ab2dd602d95ed9737b1da66b416",
- "docs/qa/v105/five-corrections-6a-evidence.json": "53ddd11abdef9749b950d95c76fc529cd3a66543"
+ "scripts/v105-five-corrections-capture.mjs": "c266140d17b1176024bb9066424d37cd91675d16",
+ "scripts/v177-native-allunit-browser.mjs": "c936e79a3131210f29e3d01a18455419ffe249a5",
+ "docs/qa/v105/five-corrections-6a-evidence.json": "53ddd11abdef9749b950d95c76fc529cd3a66543",
+ ".github/workflows/native-allunit-capture.yml": "ad08423c4a87f21bbe8b82bb09a600e3b9609048",
+ ".github/workflows/five-corrections-capture.yml": "bf347a5923b8b31a0451e4358901feaa5040752a",
+ "scripts/v100-macos-indexing-control.mjs": "55fde48bad0dde061cf342a15035cda7c25a0b0e",
+ "scripts/v177-native-allunit-selection.mjs": "1c05d40e3d7c57e0fc7dc2a28731a347ac1cbdb5"
 });
 const abilityNameFiles=new Set([...Object.keys(ABILITY_NAME_BLOBS),'scripts/ci-change-scope.mjs',
  'tests/ci-change-scope.test.mjs','tests/ci-contract.test.mjs','tests/ci-combat-qa-reuse.test.mjs',
  'scripts/v177-native-allunit-recovery.json','tests/v177-representative-battles.test.mjs',
  'scripts/v105-five-corrections-capture.mjs','tests/v105-original-av.test.mjs',
  'scripts/v177-native-allunit-browser.mjs','tests/v177-native-setup-overlap.test.mjs',
- 'tests/v177-ranger-performance-receipts.test.mjs',
+ 'tests/v177-ranger-performance-receipts.test.mjs','tests/v100-macos-indexing-control.test.mjs','tests/v177-native-allunit-selection.test.mjs',
  'scripts/v100-phase-g-production-matrix.mjs','tests/v100-phase-g-sustain-pointer.test.mjs',
  'scripts/v177-normal-browser-deadline.mjs','tests/v177-normal-browser-deadline.test.mjs',
  'docs/qa/v105/five-corrections-6a-evidence.json','docs/qa/v105/ci-6a-infrastructure-failure.json',
@@ -220,7 +224,7 @@ const reviewedBruteBlobs=Object.freeze({
   'app/v177JointPresentation.js':'e2e63704e18e43718fb9a332b689bc0f3c55987e',
 });
 const reviewedNativeControlBlobs=Object.freeze({
-  'scripts/v100-macos-indexing-control.mjs':'31de4d8198b09346c728135887f38f42136968bf',
+  'scripts/v100-macos-indexing-control.mjs':'55fde48bad0dde061cf342a15035cda7c25a0b0e',
 });
 // Analytic vertical support preserves every original outline and floor value.
 const reviewedSupportBlobs=Object.freeze({

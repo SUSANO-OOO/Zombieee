@@ -164,14 +164,18 @@ export function nativeCaseSelection({event,root=process.cwd(),git=args=>execFile
     profileSha256:createHash('sha256').update(bytes).digest('hex'),...selected};
 }
 
+export function nativeCaptureHostControl(event,selection){
+  return event.pull_request?.draft===true&&selection.mode==='remaining'&&selection.caseIds.length===1
+    &&selection.caseIds[0]==='forms-2:brute:attack:1280x720'&&selection.outcomeCaseIds.length===0
+    &&selection.manualCaseIds.length===0?'brute-attack-1280':event.pull_request&&selection.mode==='remaining'
+    &&selection.caseIds.length===1&&selection.caseIds[0]==='forms-4:mayo-chan:attack:1280x720'
+    &&selection.outcomeCaseIds.length===0&&selection.manualCaseIds.length===0?'mayo-attack-1280':'none';
+}
 if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href){
   const event=JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH,'utf8'));
   const selection=nativeCaseSelection({event});
   assert.ok(process.env.GITHUB_OUTPUT);
   appendFileSync(process.env.GITHUB_OUTPUT,'shards='+JSON.stringify(selection.shards)+'\n');
-  const nativeHostControl=event.pull_request?.draft===true&&selection.mode==='remaining'&&selection.caseIds.length===1
-    &&selection.caseIds[0]==='forms-2:brute:attack:1280x720'&&selection.outcomeCaseIds.length===0
-    &&selection.manualCaseIds.length===0?'brute-attack-1280':'none';
-  appendFileSync(process.env.GITHUB_OUTPUT,'native_host_control='+nativeHostControl+'\n');
+  appendFileSync(process.env.GITHUB_OUTPUT,'native_host_control='+nativeCaptureHostControl(event,selection)+'\n');
   console.log(JSON.stringify(selection));
 }

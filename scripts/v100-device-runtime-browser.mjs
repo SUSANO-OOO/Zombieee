@@ -265,7 +265,7 @@ async function beginMeasurement(page) {
     window.__V100_RAF_CALLBACK_DIAG__?.start();
     // A 120Hz phone produces about 3,600 samples in 30 seconds. Retain that
     // complete window with bounded headroom; overflow still fails the gate.
-    const state = { startedAt: performance.now(), times: [], capacity: 4_800, overflow: 0, active: true, handle: 0, visibilityEvents: [] };
+    const state = { startedAt: performance.now(), times: [], capacity: 4_800, overflow: 0, active: true, handle: 0, visibilityEvents: [], frameCpuChunks: [], frameCpuOverflow: 0 };
     const mark = (type) => state.visibilityEvents.push({ type, at: performance.now(), visibilityState: document.visibilityState });
     state.listeners = { visibilitychange: () => mark("visibilitychange"), blur: () => mark("blur"), pagehide: () => mark("pagehide") };
     for (const [type, listener] of Object.entries(state.listeners)) window.addEventListener(type, listener, { passive: true });
@@ -291,7 +291,7 @@ async function endMeasurement(page) {
     const performanceAfter = window.__ASHFALL_BATTLE_QA__?.getPerformanceSnapshot?.() ?? null;
     const callbackDiagnostic = window.__V100_RAF_CALLBACK_DIAG__?.stop() ?? null;
     for (const [type, listener] of Object.entries(state.listeners ?? {})) window.removeEventListener(type, listener);
-    return { startedAt: state.startedAt, endedAt, times: state.times, capacity: state.capacity, overflow: state.overflow, visibilityEvents: state.visibilityEvents, performanceBefore: state.performanceBefore, performanceAfter, visibilityState: document.visibilityState, callbackDiagnostic };
+    return { startedAt: state.startedAt, endedAt, times: state.times, capacity: state.capacity, overflow: state.overflow, visibilityEvents: state.visibilityEvents, performanceBefore: state.performanceBefore, performanceAfter, visibilityState: document.visibilityState, callbackDiagnostic, deferredCpu: {chunks:state.frameCpuChunks,overflow:state.frameCpuOverflow} };
   });
 }
 
@@ -405,7 +405,7 @@ try {
     const result = { name, viewport, status: "failed", blankBaseline, tacticalPolicy: viewport.safeArea ? "airstrike-first" : "crowd-barrage-at-eight", diagnostics: { consoleErrors: [], pageErrors: [], requestFailures: [], httpFailures: [] }, samples: [], measurementSamples: [], inputs: [] };
     const retainFrameCpuChunks=runtimeRole==='formal'&&engine==='webkit'&&!callbackDiagnostic&&!observerlessDiagnostic;
     if(retainFrameCpuChunks)result.frameCpuObservation = {
-      source:'existing product frameCpuTimings128 copied in each original stillMeasuring RPC',
+      source:'existing product frameCpuTimings128 copied in each original stillMeasuring RPC; raw chunks transferred after the original measurement stops',
       columns:['sequence','rafTimestamp','entryAt','previousExitAt','simulationFinishedAt','drawFinishedAt','exitAt','simulationTime'],
       sourceRingCapacity:128,maxChunks:128,overflow:0,chunks:[],diagnosticOnly:true,
     };
@@ -510,18 +510,20 @@ try {
         const reply = await page.evaluate(({ startedAt, durationMs }) => {
           const measuring = performance.now() - startedAt < durationMs;
           const runtime = globalThis.__ASHFALL_RUNTIME_PERFORMANCE__;
-          return {
+          const chunk = {
             measuring,readAt:performance.now(),frameCpuSequence:runtime?.frameCpuSequence??null,
             rows:Array.isArray(runtime?.frameCpuTimings)?runtime.frameCpuTimings.map(row=>[
               row.sequence,row.rafTimestamp,row.entryAt,row.previousExitAt,
               row.simulationFinishedAt,row.drawFinishedAt,row.exitAt,row.simulationTime,
             ]):null,
           };
+          const owner=window.__V100_DEVICE_RAF__;
+          if(!owner?.active||owner.startedAt!==startedAt||!Array.isArray(owner.frameCpuChunks))throw Error('Original CPU observation owner changed');
+          if(owner.frameCpuChunks.length<128)owner.frameCpuChunks.push(chunk);else owner.frameCpuOverflow++;
+          return measuring;
         }, { startedAt: measurement.startedAt, durationMs: measurementMs });
-        const observation=result.frameCpuObservation;
-        if(observation.chunks.length<observation.maxChunks)observation.chunks.push(reply);
-        else observation.overflow+=1;
-        return reply.measuring;
+        assert.equal(typeof reply,'boolean');
+        return reply;
       };
       if (observerlessDiagnostic) {
         await page.waitForTimeout(measurementMs);
@@ -548,6 +550,7 @@ try {
         }
       }
       const raf = await endMeasurement(page);
+      if(retainFrameCpuChunks)Object.assign(result.frameCpuObservation,raf.deferredCpu);
       result.rangerDrawReceipts=observerlessDiagnostic
         ?{status:'not-observed-diagnostic',weightedPaintObserved:false,scope:'Observerless control retains its original no-sampling protocol; no Ranger workload acceptance.'}
         :rangerPerformanceReceipts(result.measurementSamples,{startedAt:measurement.startedAt,endedAt:raf?.endedAt});
@@ -601,6 +604,7 @@ try {
       result.error = String(error);
       if (measurementActive) {
         result.partialMeasurement = await endMeasurement(page).catch((cleanupError) => ({ cleanupError: String(cleanupError) }));
+        if(retainFrameCpuChunks&&result.partialMeasurement?.deferredCpu)Object.assign(result.frameCpuObservation,result.partialMeasurement.deferredCpu);
         measurementActive = false;
       }
       result.debug = await page.evaluate(() => ({ phase: document.querySelector(".v100-shell")?.dataset.v100Phase ?? null, screen: document.querySelector(".game-shell")?.dataset.screen ?? null, snapshot: window.__ASHFALL_BATTLE_QA__?.getSnapshot?.() ?? null })).catch(() => null);

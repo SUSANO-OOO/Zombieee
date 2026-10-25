@@ -26,6 +26,9 @@ jobs:
       fail-fast: false
       matrix:
         scope: [desktop, mobile390, mobile340]
+    env:
+      V177_EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      V105_CAPTURE_SCOPE: ${{ matrix.scope }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -42,11 +45,15 @@ jobs:
       - run: npm run build
         env:
           GITHUB_PAGES_RELEASE_SHA: ${{ github.event.pull_request.head.sha }}
+      - name: Prepare the original host for the two unfinished desktop recordings
+        id: capture-preparation
+        if: matrix.scope == 'desktop'
+        run: node scripts/v100-macos-indexing-control.mjs prepare-correction-capture
       - name: Record changed real motions, abilities, Japanese names and actual game sound
         run: node scripts/v105-five-corrections-capture.mjs
-        env:
-          V177_EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-          V105_CAPTURE_SCOPE: ${{ matrix.scope }}
+      - name: Restore all original host indexing states
+        if: ${{ always() && (steps.capture-preparation.outputs.prepared == 'true' || steps.capture-preparation.outcome == 'failure' || steps.capture-preparation.outcome == 'cancelled') }}
+        run: node scripts/v100-macos-indexing-control.mjs restore-correction-capture
       - uses: actions/upload-artifact@v4
         if: always()
         with:
