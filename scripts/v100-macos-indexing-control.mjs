@@ -3,6 +3,7 @@ import { execFileSync } from "node:child_process";
 import { mkdir, readFile, realpath, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import {isRangerCaptureSelection} from './v177-native-allunit-selection.mjs';
 
 export function assertEphemeralPerformanceHost(env, platform, arch) {
   assert.equal(platform, "darwin", "Spotlight control requires macOS");
@@ -17,17 +18,19 @@ export function assertEphemeralPerformanceHost(env, platform, arch) {
 export function assertEphemeralNativeCaptureHost(env, platform, arch, selection) {
   assert.equal(platform, "darwin"); assert.equal(arch, "arm64");
   const mayo = env.V177_NATIVE_HOST_INDEXING_CONTROL === "mayo-attack-1280";
-  for (const [key, value] of Object.entries({ GITHUB_ACTIONS: "true", RUNNER_ENVIRONMENT: "github-hosted", RUNNER_OS: "macOS", GITHUB_REPOSITORY: "SUSANO-OOO/Zombieee", GITHUB_EVENT_NAME: "pull_request", GITHUB_JOB: "capture", V177_CAPTURE_SHARD: mayo ? "forms-4" : "forms-2", V177_NATIVE_HOST_INDEXING_CONTROL: mayo ? "mayo-attack-1280" : "brute-attack-1280" })) assert.equal(env[key], value, `Native capture control forbidden: ${key}`);
+  const ranger = env.V177_NATIVE_HOST_INDEXING_CONTROL === "ranger-motion";
+  for (const [key, value] of Object.entries({ GITHUB_ACTIONS: "true", RUNNER_ENVIRONMENT: "github-hosted", RUNNER_OS: "macOS", GITHUB_REPOSITORY: "SUSANO-OOO/Zombieee", GITHUB_EVENT_NAME: "pull_request", GITHUB_JOB: "capture", V177_CAPTURE_SHARD: ranger?"forms-1":mayo ? "forms-4" : "forms-2", V177_NATIVE_HOST_INDEXING_CONTROL: ranger?"ranger-motion":mayo ? "mayo-attack-1280" : "brute-attack-1280" })) assert.equal(env[key], value, `Native capture control forbidden: ${key}`);
   assert.match(env.GITHUB_RUN_ID ?? "", /^\d+$/u); assert.match(env.GITHUB_RUN_ATTEMPT ?? "", /^\d+$/u);
   assert.match(env.GITHUB_SHA ?? "", /^[a-f0-9]{40}$/u); assert.match(env.V177_EXPECTED_HEAD_SHA ?? "", /^[a-f0-9]{40}$/u);
   assert.equal(selection.mode, "remaining");
+  if(ranger){assert.equal(isRangerCaptureSelection(selection),true);return;}
   assert.deepEqual(selection.caseIds, [mayo ? "forms-4:mayo-chan:attack:1280x720" : "forms-2:brute:attack:1280x720"]);
   assert.deepEqual(selection.outcomeCaseIds, []); assert.deepEqual(selection.manualCaseIds, []);
   assert.deepEqual(selection.shards, [mayo ? "forms-4" : "forms-2"]);
 }
 
 export const correctionPreparationNeeded = selection => selection.mode==='remaining'
-  &&JSON.stringify(selection.plan)===JSON.stringify([{kind:'miyamoto-musashi',mode:'manual'},{kind:'mayo-chan',mode:'manual'}]);
+  &&[JSON.stringify([{kind:'miyamoto-musashi',mode:'manual'},{kind:'mayo-chan',mode:'manual'}]),JSON.stringify([{kind:'ranger',mode:'manual'}])].includes(JSON.stringify(selection.plan));
 
 export function assertEphemeralCorrectionCaptureHost(env, platform, arch, selection) {
   assert.equal(platform, "darwin"); assert.equal(arch, "arm64");
@@ -35,7 +38,7 @@ export function assertEphemeralCorrectionCaptureHost(env, platform, arch, select
   for (const key of ["GITHUB_RUN_ID", "GITHUB_RUN_ATTEMPT"]) assert.match(env[key] ?? "", /^\d+$/u);
   for (const key of ["GITHUB_SHA", "V177_EXPECTED_HEAD_SHA"]) assert.match(env[key] ?? "", /^[a-f0-9]{40}$/u);
   assert.equal(selection.mode, "remaining");
-  assert.deepEqual(selection.plan, [{kind:"miyamoto-musashi",mode:"manual"},{kind:"mayo-chan",mode:"manual"}]);
+  assert.equal(correctionPreparationNeeded(selection),true);
 }
 
 export function validateCapturePreparationRecord(record, {env=process.env,platform=process.platform,arch=process.arch,selection,binding,correction=false}={}) {
@@ -48,7 +51,9 @@ export function validateCapturePreparationRecord(record, {env=process.env,platfo
   assert.equal(record.diagnosticOnly,diagnostic);
   assert.equal(record.purpose,correction?'correction-capture-preparation':diagnostic?'native-capture-diagnostic':'native-capture-preparation');
   if(correction){assert.equal(record.scope,env.V105_CAPTURE_SCOPE);assert.deepEqual(record.plan,selection.plan);}
-  else {assert.equal(record.shard,binding.shardId);assert.equal(record.caseId,selection.caseIds[0]);}
+  else {assert.equal(record.shard,binding.shardId);if(isRangerCaptureSelection(selection)){
+    for(const k of ['caseIds','manualCaseIds','outcomeCaseIds'])assert.deepEqual(record[k],selection[k]);
+  }else assert.equal(record.caseId,selection.caseIds[0]);}
   assert.ok(Array.isArray(record.before)&&record.before.length>0&&Array.isArray(record.after));
   for(const volumes of [record.before,record.after]){
     assert.equal(new Set(volumes.map(v=>v.mount)).size,volumes.length);
@@ -147,7 +152,8 @@ async function main(mode) {
     const record = { run: process.env.GITHUB_RUN_ID, head: process.env.GITHUB_SHA,
       purpose, diagnosticOnly: native?diagnosticNative:!benchmark&&!correction, acceptanceOverride: false,
       ...(native||correction ? { attempt:process.env.GITHUB_RUN_ATTEMPT,candidateHead:nativeBinding.head,
-        ...(native?{shard:nativeBinding.shardId,caseId:selection.caseIds[0]}:{scope:process.env.V105_CAPTURE_SCOPE,plan:selection.plan}),arch:process.arch,
+        ...(native?{shard:nativeBinding.shardId,...(isRangerCaptureSelection(selection)
+          ?Object.fromEntries(['caseIds','manualCaseIds','outcomeCaseIds'].map(k=>[k,selection[k]])):{caseId:selection.caseIds[0]})}:{scope:process.env.V105_CAPTURE_SCOPE,plan:selection.plan}),arch:process.arch,
         processBefore:execFileSync("/bin/ps",["-axo","pid=,comm=,%cpu="],options) } : {}),
       ...(benchmark ? { basis: { run: 36944517519, primaryDigest: "fa3a2bf9a5c3ece6ddc63bcaf77c0c03308c7b6d7b6e37bb4699539c6c20f83b", controlDigest: "41e03d4975a2504984a5f1b98804a3c4aed248186e3f67a0c5bfeeccfcca5b94" } } : {}),
       before, attemptedAt: new Date().toISOString(), state: "pause-attempted" };
@@ -167,7 +173,9 @@ async function main(mode) {
     assert.equal(record.purpose, purpose);
     if (native||correction) {
       assert.equal(record.attempt,process.env.GITHUB_RUN_ATTEMPT);assert.equal(record.candidateHead,nativeBinding.head);
-      if(native){assert.equal(record.shard,nativeBinding.shardId);assert.equal(record.caseId,selection.caseIds[0]);}
+      if(native){assert.equal(record.shard,nativeBinding.shardId);if(isRangerCaptureSelection(selection)){
+        for(const k of ['caseIds','manualCaseIds','outcomeCaseIds'])assert.deepEqual(record[k],selection[k]);
+      }else assert.equal(record.caseId,selection.caseIds[0]);}
       else {assert.equal(record.scope,process.env.V105_CAPTURE_SCOPE);assert.deepEqual(record.plan,selection.plan);}
       assert.equal(record.diagnosticOnly,native?diagnosticNative:false);assert.equal(record.acceptanceOverride,false);
     }

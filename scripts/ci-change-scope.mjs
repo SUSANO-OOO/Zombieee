@@ -37,14 +37,17 @@ const nativeQaOnlyPaths=(paths,sourceBlobs)=>paths.length>0&&paths.every(file=>
   allunit.has(file)||file==='docs/PROJECT_STATE.md'||nativeQaTests.has(file)
   ||(reviewedCorrectionQaBlobs[file]&&sourceBlobs[file]===reviewedCorrectionQaBlobs[file]));
 
-// One reviewed display-only delta. All reused browser jobs must have actually
+// Reviewed display and Ranger-buffer deltas. Reused browser jobs must have actually
 // completed on the immutable preceding candidate. Verify and performance run
 // afresh; a failed normal-play lane also runs again. Unknown changes stay full.
 export const ABILITY_NAME_BASELINE=Object.freeze({head:'6a5226647ebf9ba7692c69b9c64af4ce32059d1b',
  base:'e22b134a38409b9d2f86660ee351e616c28fbf44',runId:40120044446,prNumber:181});
 // The predecessor is a context/ancestry check, never a replacement owner for
 // the successful browser and Quality measurements on the original baseline.
-export const ABILITY_NAME_PREDECESSOR=Object.freeze({head:'45e46b90be77cd349670157974646dcc7f16b1cd',runId:40134504308});
+export const ABILITY_NAME_PREDECESSOR=Object.freeze({head:'e87021073d7c8ab93387a4999cfedc46f467943f',runId:40185635358});
+export const RANGER_BUFFER_FILE='app/v177RangerLowerPaint.js';
+export const RANGER_BUFFER_BEFORE_BLOB='6fb3f78fd4277701a04d2210a0a93b6dc66f888e';
+export const RANGER_BUFFER_BLOB='3f21644839d81fd90a5ac362a118e501e0b76eef';
 export const ABILITY_NAME_BLOBS=Object.freeze({
  "app/AshfallGame.tsx": "004c5f5e25a6ff63c029d6f06d4c29f92efbd859",
  ".github/workflows/ci.yml": "bbfb51296e72de4c83ea993ce6341f39fbd098a4",
@@ -54,18 +57,20 @@ export const ABILITY_NAME_BLOBS=Object.freeze({
  "scripts/v177-normal-browser-deadline.mjs": "f60a49ca98db5a8059de56a04073a50b9e6b862f",
  "scripts/v105-five-corrections-capture.mjs": "c266140d17b1176024bb9066424d37cd91675d16",
  "scripts/v177-native-allunit-browser.mjs": "c936e79a3131210f29e3d01a18455419ffe249a5",
- "docs/qa/v105/five-corrections-6a-evidence.json": "53ddd11abdef9749b950d95c76fc529cd3a66543",
- ".github/workflows/native-allunit-capture.yml": "ad08423c4a87f21bbe8b82bb09a600e3b9609048",
+ "docs/qa/v105/five-corrections-6a-evidence.json": "28e8824d6062c3fb25d366a4a5d37dd1acd5d717",
+ ".github/workflows/native-allunit-capture.yml": "6fbcbea4dd55623fd7f4c8bbceda5c3c79bcc9f5",
  ".github/workflows/five-corrections-capture.yml": "bf347a5923b8b31a0451e4358901feaa5040752a",
- "scripts/v100-macos-indexing-control.mjs": "55fde48bad0dde061cf342a15035cda7c25a0b0e",
- "scripts/v177-native-allunit-selection.mjs": "1c05d40e3d7c57e0fc7dc2a28731a347ac1cbdb5"
+ "scripts/v100-macos-indexing-control.mjs": "d00ae47eb420f113af07437a55c47203e7446207",
+ "scripts/v177-native-allunit-selection.mjs": "6a11cf23189e7f69f67bb21e1e2938084f81cd83",
+ "app/v177RangerLowerPaint.js": "3f21644839d81fd90a5ac362a118e501e0b76eef",
+ "docs/qa/v105/native-6a-evidence.json": "3d14dd05bf6804ff91ab3762e0f4b04a2a402189"
 });
 const abilityNameFiles=new Set([...Object.keys(ABILITY_NAME_BLOBS),'scripts/ci-change-scope.mjs',
  'tests/ci-change-scope.test.mjs','tests/ci-contract.test.mjs','tests/ci-combat-qa-reuse.test.mjs',
  'scripts/v177-native-allunit-recovery.json','tests/v177-representative-battles.test.mjs',
  'scripts/v105-five-corrections-capture.mjs','tests/v105-original-av.test.mjs',
  'scripts/v177-native-allunit-browser.mjs','tests/v177-native-setup-overlap.test.mjs',
- 'tests/v177-ranger-performance-receipts.test.mjs','tests/v100-macos-indexing-control.test.mjs','tests/v177-native-allunit-selection.test.mjs',
+ 'tests/v177-ranger-performance-receipts.test.mjs','tests/v100-macos-indexing-control.test.mjs','tests/v177-native-allunit-selection.test.mjs','tests/v177-ranger-continuous-lower.test.mjs',
  'scripts/v100-phase-g-production-matrix.mjs','tests/v100-phase-g-sustain-pointer.test.mjs',
  'scripts/v177-normal-browser-deadline.mjs','tests/v177-normal-browser-deadline.test.mjs',
  'docs/qa/v105/five-corrections-6a-evidence.json','docs/qa/v105/ci-6a-infrastructure-failure.json',
@@ -74,7 +79,7 @@ export const ABILITY_NAME_REUSED_JOBS=Object.freeze(BASELINE_JOB_NAMES.filter(na
  !['PR Verify','V1 Guardian Control Diagnostic','WebKit Compact Shadow Diagnostic','V1 WebKit Frame and Boss Performance',
  'V1 Phase G Production Matrix','V1 Representative Normal Play (chromium)','V1 Representative Normal Play (webkit)'].includes(name)));
 export function reviewedAbilityNamePaths(paths,sourceBlobs={}){
- return Array.isArray(paths)&&paths.length>0&&paths.every(file=>abilityNameFiles.has(file))
+ return Array.isArray(paths)&&paths.length>0&&!paths.includes(RANGER_BUFFER_FILE)&&paths.every(file=>abilityNameFiles.has(file))
   &&['app/AshfallGame.tsx','.github/workflows/ci.yml'].every(file=>paths.includes(file))
   &&Object.entries(ABILITY_NAME_BLOBS).every(([file,blob])=>!paths.includes(file)||sourceBlobs[file]===blob);
 }
@@ -84,9 +89,12 @@ export function reviewedAbilityContinuationPaths(paths,sourceBlobs={}){
   &&Object.entries(ABILITY_NAME_BLOBS).every(([file,blob])=>sourceBlobs[file]===blob);
 }
 export async function previousAbilityNameEvidence({repository,previousHead,base,prNumber,action,draft,paths,sourceBlobs,
- productUnchanged=false,originalAncestor=false,token,request=fetch}={}){
+ productUnchanged=false,rangerBufferDelta=false,originalAncestor=false,token,request=fetch}={}){
  const old=ABILITY_NAME_BASELINE;
- const continuation=previousHead===ABILITY_NAME_PREDECESSOR.head&&productUnchanged===true&&originalAncestor===true
+ const compatible=paths?.includes(RANGER_BUFFER_FILE)
+  ?rangerBufferDelta===true&&productUnchanged===false&&sourceBlobs[RANGER_BUFFER_FILE]===RANGER_BUFFER_BLOB
+  :productUnchanged===true&&rangerBufferDelta===false;
+ const continuation=previousHead===ABILITY_NAME_PREDECESSOR.head&&compatible&&originalAncestor===true
   &&reviewedAbilityContinuationPaths(paths,sourceBlobs);
  if(repository!=='SUSANO-OOO/Zombieee'||base!==old.base||prNumber!==old.prNumber
   ||action!=='synchronize'||draft!==false||!token
@@ -179,10 +187,11 @@ export async function previousAbilityNameEvidence({repository,previousHead,base,
   if(!ABILITY_NAME_REUSED_JOBS.every(successful))return{passed:false,reason:'an-unchanged-browser-gate-is-not-successful'};
   const provenance=await immutablePrProvenance({get,runId:old.runId,head:old.head,base:old.base});
   const normalNames=['chromium','webkit'].map(engine=>`V1 Representative Normal Play (${engine})`),
-    normalComplete=!paths.includes('scripts/v177-representative-battles.mjs')&&normalNames.every(successful);
+    normalComplete=!rangerBufferDelta&&!paths.includes('scripts/v177-representative-battles.mjs')&&normalNames.every(successful);
   return{passed:true,head:old.head,base:old.base,prNumber:old.prNumber,runId:old.runId,provenance,infrastructureRecovery,predecessor,
    originalRunConclusion:run.conclusion,
-   reusedJobs:[...ABILITY_NAME_REUSED_JOBS,...(normalComplete?normalNames:[])].map(name=>{const j=adoptedJobs.find(j=>j.name===name);
+   productUnchanged,rangerBufferDelta,freshRangerRequired:rangerBufferDelta,rangerBufferScope:rangerBufferDelta?{file:RANGER_BUFFER_FILE,before:RANGER_BUFFER_BEFORE_BLOB,after:RANGER_BUFFER_BLOB}:null,
+   reusedJobs:[...ABILITY_NAME_REUSED_JOBS.filter(name=>!rangerBufferDelta||name!=='Ranger Turn Regression'),...(normalComplete?normalNames:[])].map(name=>{const j=adoptedJobs.find(j=>j.name===name);
     return{name,id:j.id,head_sha:j.head_sha,run_id:j.run_id,run_attempt:j.run_attempt};}),
    freshVerifyRequired:true,freshPerformanceRequired:true,freshPhaseGRequired:true,
    freshNormalRequired:!normalComplete};
@@ -224,7 +233,7 @@ const reviewedBruteBlobs=Object.freeze({
   'app/v177JointPresentation.js':'e2e63704e18e43718fb9a332b689bc0f3c55987e',
 });
 const reviewedNativeControlBlobs=Object.freeze({
-  'scripts/v100-macos-indexing-control.mjs':'55fde48bad0dde061cf342a15035cda7c25a0b0e',
+  'scripts/v100-macos-indexing-control.mjs':'d00ae47eb420f113af07437a55c47203e7446207',
 });
 // Analytic vertical support preserves every original outline and floor value.
 const reviewedSupportBlobs=Object.freeze({
@@ -341,7 +350,7 @@ export function ciChangeScope(paths,{draft,sourceBlobs={},reuseNativeQa=false,re
   const combatQaOnly=reuseCombatQa&&reviewedCombatQaPaths(paths,sourceBlobs);
   const combatFixtureOnly=reuseCombatFixture&&reviewedCombatFixturePaths(paths,sourceBlobs);
   const abilityNameOnly=reuseAbilityNames&&(reviewedAbilityNamePaths(paths,sourceBlobs)||reviewedAbilityContinuationPaths(paths,sourceBlobs));
-  let full=!draft&&!nativeQaOnly&&!combatQaOnly&&!combatFixtureOnly&&!abilityNameOnly,rangerChanged=false,
+  let full=!draft&&!nativeQaOnly&&!combatQaOnly&&!combatFixtureOnly&&!abilityNameOnly,rangerChanged=abilityNameOnly&&paths.includes(RANGER_BUFFER_FILE),
     normalChanged=abilityNameOnly&&freshNormal,allunitChanged=false,r9Changed=false,combatChanged=false;
   for(const file of paths){
     if(abilityNameOnly&&abilityNameFiles.has(file)){if(allunit.has(file))allunitChanged=true;continue;}
@@ -367,7 +376,7 @@ export function ciChangeScope(paths,{draft,sourceBlobs={},reuseNativeQa=false,re
     else full=true; // Unclassified changes retain the complete regression.
   }
   return {full,verify_full:full||abilityNameOnly,performance:full||abilityNameOnly,phaseg:full||abilityNameOnly,ranger:full||rangerChanged,normal:full||normalChanged,allunit:full||allunitChanged,r9:full||r9Changed,combat:full||combatChanged,
-    scope:full?'full-regression':abilityNameOnly?'ability-name-display-delta':draft?'targeted-draft':combatQaOnly?'combat-qa-update-product-unchanged':combatFixtureOnly?'combat-fixture-update-product-unchanged':'native-qa-update-product-unchanged',wholeGameAccepted:false,
+    scope:full?'full-regression':abilityNameOnly?(paths.includes(RANGER_BUFFER_FILE)?'ranger-buffer-selection-delta':'ability-name-display-delta'):draft?'targeted-draft':combatQaOnly?'combat-qa-update-product-unchanged':combatFixtureOnly?'combat-fixture-update-product-unchanged':'native-qa-update-product-unchanged',wholeGameAccepted:false,
     finalIntegrationRequiresFullRegression:true};
 }
 
@@ -409,6 +418,12 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
     return [previousHead,...(eligibleFixtureReuse?[COMBAT_QA_BASELINE.head]:[])].every(ref=>
       execFileSync('git',['rev-parse',`${ref}:${file}`],{encoding:'utf8',windowsHide:true}).trim()===blob);
   });
+  // This reviewed allocation-only change preserves the pose/pixel algorithm.
+  // Prove that it is the sole product delta; every unknown edit stays full.
+  const changedProductPaths=eligibleAbilityContinuation?execFileSync('git',['diff','--no-renames','--name-only',previousHead,head,'--',...productPaths],{encoding:'utf8',windowsHide:true}).trim().split(/\r?\n/u).filter(Boolean):[];
+  const rangerBufferDelta=eligibleAbilityContinuation&&JSON.stringify(changedProductPaths)===JSON.stringify([RANGER_BUFFER_FILE])
+    &&sourceBlobs[RANGER_BUFFER_FILE]===RANGER_BUFFER_BLOB
+    &&execFileSync('git',['rev-parse',previousHead+':'+RANGER_BUFFER_FILE],{encoding:'utf8',windowsHide:true}).trim()===RANGER_BUFFER_BEFORE_BLOB;
   const combatQaEvidence=await previousCombatQaEvidence({repository:process.env.GITHUB_REPOSITORY,previousHead,
     base:process.env.CI_SCOPE_PR_BASE,prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),action,draft:draft==='true',productUnchanged,
     paths,sourceBlobs,token:process.env.CI_SCOPE_ACTIONS_TOKEN});
@@ -416,7 +431,7 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
     base:process.env.CI_SCOPE_PR_BASE,prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),action,draft:draft==='true',productUnchanged,
     paths,sourceBlobs,token:process.env.CI_SCOPE_ACTIONS_TOKEN});
   const abilityNameEvidence=eligibleNativeReuse?await previousAbilityNameEvidence({repository:process.env.GITHUB_REPOSITORY,previousHead,
-    base:process.env.CI_SCOPE_PR_BASE,prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),action,draft:draft==='true',paths,sourceBlobs,productUnchanged,
+    base:process.env.CI_SCOPE_PR_BASE,prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),action,draft:draft==='true',paths,sourceBlobs,productUnchanged,rangerBufferDelta,
     originalAncestor:eligibleAbilityContinuation&&execFileSync('git',['merge-base',ABILITY_NAME_BASELINE.head,previousHead],{encoding:'utf8',windowsHide:true}).trim()===ABILITY_NAME_BASELINE.head,
     token:process.env.CI_SCOPE_ACTIONS_TOKEN})
     :{passed:false,reason:'previous-head-not-exact-ancestor'};

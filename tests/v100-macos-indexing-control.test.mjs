@@ -74,3 +74,13 @@ test('only the exact unfinished native and correction cases can prepare their ow
   for(const patch of [{run:'other'},{head:'other'},{candidateHead:'f'.repeat(40)},{attempt:'2'},{arch:'x64'},{state:'restored'},{purpose:'benchmark-preparation'},{diagnosticOnly:true},{acceptanceOverride:true},{after:[]},{after:[{mount:'/',enabled:true}]},{after:[{mount:'/other',enabled:false}]},{pausedAt:'invalid'},isCorrection?{plan:[]}:{caseId:'forms-2:brute:attack:1280x720'}])assert.throws(()=>validate({...record,...patch}));
  }
 });
+
+
+test('Ranger continuation uses the same prepared-host ownership without permitting other units or a full capture',()=>{
+ const e={...env,GITHUB_JOB:'capture',GITHUB_RUN_ATTEMPT:'1',V177_EXPECTED_HEAD_SHA:'a'.repeat(40),V177_CAPTURE_SHARD:'forms-1',V177_NATIVE_HOST_INDEXING_CONTROL:'ranger-motion'};
+ const selection={mode:'remaining',shards:['forms-1'],caseIds:['forms-1:ranger:move:1280x720'],manualCaseIds:[],outcomeCaseIds:[]};
+ assert.doesNotThrow(()=>assertEphemeralNativeCaptureHost(e,'darwin','arm64',selection));
+ for(const patch of [{mode:'full'},{caseIds:[]},{caseIds:['forms-1:brawler:move:1280x720']},{manualCaseIds:['unexpected']}])assert.throws(()=>assertEphemeralNativeCaptureHost(e,'darwin','arm64',{...selection,...patch}));
+ const c={...e,V105_CAPTURE_SCOPE:'desktop'},s={mode:'remaining',plan:[{kind:'ranger',mode:'manual'}]};
+ assert.equal(correctionPreparationNeeded(s),true);assert.doesNotThrow(()=>assertEphemeralCorrectionCaptureHost(c,'darwin','arm64',s));
+});

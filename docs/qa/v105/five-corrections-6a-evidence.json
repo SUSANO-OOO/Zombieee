@@ -51,6 +51,25 @@
         "formalPerformanceAccepted": false
       },
       "originalReportStatus": "failed"
+    },
+    {
+      "scope": "desktop",
+      "head": "e87021073d7c8ab93387a4999cfedc46f467943f",
+      "runId": "40185635457",
+      "artifactId": 12595887875,
+      "artifactDigest": "sha256:1bf771e427f553d9033832f1e02349c9e485792db1526980277645c1332aad4d",
+      "reportSha256": "cb86a1bee5b96c0bb8e106998f233fb24d096c9473a56f9478587cdada7ed20b",
+      "reportBytes": 2572424,
+      "originalZipCrc32": 1042498359,
+      "conditions": {
+        "independentContextPerCase": true,
+        "actualAudioReadinessBeforeRecording": true,
+        "caseDeadlineMs": 30000,
+        "retainedObservationsKeepTheirOriginalConditions": true,
+        "coldStartupAccepted": false,
+        "formalPerformanceAccepted": false
+      },
+      "originalReportStatus": "recorded-awaiting-visual-and-listening-review"
     }
   ],
   "retained": [
@@ -74,27 +93,6 @@
         "errors": 0
       },
       "caseElapsedMs": 5502.974708999998
-    },
-    {
-      "caseId": "desktop:ranger:manual",
-      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
-      "runId": "40120044506",
-      "artifactId": 12570772348,
-      "reportSha256": "e60a5b9d321beaba9f4225c1a0b56fb73a050f0278b1fd1b5c3f7ac1ea427c5c",
-      "file": "03-ranger-manual.webm",
-      "clipSha256": "21fc12fb2413ee9b72d88f4add09ca73d1d5f4808365915be45c9c27a5e8d9e0",
-      "bytes": 1620373,
-      "originalStatus": "recorded",
-      "driftMs": 17.66666666646961,
-      "maxGapMs": 146,
-      "encodedPtsVerified": true,
-      "fullAvDecode": {
-        "videoFrames": 109,
-        "requiredMixerAudioStream": true,
-        "completed": true,
-        "errors": 0
-      },
-      "caseElapsedMs": 7065.294667000002
     },
     {
       "caseId": "desktop:medic:manual",
@@ -1187,11 +1185,52 @@
         "errors": 0
       },
       "caseElapsedMs": 18693.683374999964
+    },
+    {
+      "caseId": "desktop:miyamoto-musashi:manual",
+      "head": "e87021073d7c8ab93387a4999cfedc46f467943f",
+      "runId": "40185635457",
+      "artifactId": 12595887875,
+      "reportSha256": "cb86a1bee5b96c0bb8e106998f233fb24d096c9473a56f9478587cdada7ed20b",
+      "file": "01-miyamoto-musashi-manual.webm",
+      "clipSha256": "4cacc1f7122a39b2b496367813aec74d0f609cfb5880cceb4422bd6d45ccfc28",
+      "bytes": 2917938,
+      "originalStatus": "recorded",
+      "driftMs": -1.6666666669698316,
+      "maxGapMs": 115,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 223,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 19164.075417
+    },
+    {
+      "caseId": "desktop:mayo-chan:manual",
+      "head": "e87021073d7c8ab93387a4999cfedc46f467943f",
+      "runId": "40185635457",
+      "artifactId": 12595887875,
+      "reportSha256": "cb86a1bee5b96c0bb8e106998f233fb24d096c9473a56f9478587cdada7ed20b",
+      "file": "02-mayo-chan-manual.webm",
+      "clipSha256": "87c5572e782d3f41e69faea8b76a99746331119014d2e8a54329687f55b99836",
+      "bytes": 5024336,
+      "originalStatus": "recorded",
+      "driftMs": -16.666666667180834,
+      "maxGapMs": 112,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 392,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 20548.493042000002
     }
   ],
   "pending": [
-    "desktop:miyamoto-musashi:manual",
-    "desktop:mayo-chan:manual"
+    "desktop:ranger:manual"
   ],
   "originalFailures": [
     {
@@ -1369,5 +1408,28 @@
     "oldSharedContextConditionsPromoted": false,
     "thresholdsChanged": false,
     "deadlinesChanged": false
-  }
+  },
+  "reopenedAfterRangerBufferSelection": [
+    {
+      "caseId": "desktop:ranger:manual",
+      "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
+      "runId": "40120044506",
+      "artifactId": 12570772348,
+      "reportSha256": "e60a5b9d321beaba9f4225c1a0b56fb73a050f0278b1fd1b5c3f7ac1ea427c5c",
+      "file": "03-ranger-manual.webm",
+      "clipSha256": "21fc12fb2413ee9b72d88f4add09ca73d1d5f4808365915be45c9c27a5e8d9e0",
+      "bytes": 1620373,
+      "originalStatus": "recorded",
+      "driftMs": 17.66666666646961,
+      "maxGapMs": 146,
+      "encodedPtsVerified": true,
+      "fullAvDecode": {
+        "videoFrames": 109,
+        "requiredMixerAudioStream": true,
+        "completed": true,
+        "errors": 0
+      },
+      "caseElapsedMs": 7065.294667000002
+    }
+  ]
 }

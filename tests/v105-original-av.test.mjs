@@ -28,11 +28,11 @@ test('correction reuse keeps original owners and reruns all failed and affected 
   const options={root,event:{},select:()=>({mode:'remaining'})};
   try{
     await store(original);const d=await correctionCaseSelection('desktop',options);
-    assert.equal(d.plan.length,2);assert.equal(d.retained.length,40);assert.equal(d.source.head,original.head);
-    assert.deepEqual(d.plan.map(r=>r.kind).sort(),['mayo-chan','miyamoto-musashi']);
+    assert.equal(d.plan.length,1);assert.equal(d.retained.length,41);assert.equal(d.source.head,original.head);
+    assert.deepEqual(d.plan.map(r=>r.kind).sort(),['ranger']);
     const omega=d.retained.find(r=>r.caseId==='desktop:takuya-omega:enemy');
     assert.equal(omega.head,'45e46b90be77cd349670157974646dcc7f16b1cd');assert.equal(omega.runId,'40134504325');
-    assert.equal(d.retained.filter(r=>r.head===original.head).length,29,'Old shared-context successes keep their original owners');
+    assert.equal(d.retained.filter(r=>r.head===original.head).length,28,'Old shared-context successes keep their original owners');
     for(const scope of ['mobile390','mobile340']){const s=await correctionCaseSelection(scope,options);assert.equal(s.plan.length,0);assert.equal(s.retained.length,7);}
     assert.equal((await correctionCaseSelection('desktop',{...options,select:()=>({mode:'full'})})).plan.length,42);
     for(const mutate of [i=>i.pending.pop(),i=>i.retained.push(i.retained[0]),i=>{i.retained[0].driftMs=120.001;},

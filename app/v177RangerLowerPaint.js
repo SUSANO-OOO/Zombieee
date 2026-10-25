@@ -76,7 +76,11 @@ function retireRaster(p,raster) {
 }
 function selectRaster(p,w,h) {
   const pixels=w*h,total=p.rasters.reduce((sum,raster)=>sum+raster.canvas.width*raster.canvas.height,0);
-  let raster=p.rasters.find(raster=>!raster.valid);
+  // Invalid geometry can still have a surface in the browser's draw queue.
+  // Reuse the coldest invalid surface, rather than immediately rewriting the
+  // first array slot while another unused/cold surface is available.
+  let raster=null;
+  for(const candidate of p.rasters)if(!candidate.valid&&(!raster||candidate.lastUsed<raster.lastUsed))raster=candidate;
   if(!raster&&(p.rasters.length>=MAX_SURFACES||total+pixels>MAX_PIXELS))
     raster=p.rasters.reduce((oldest,current)=>!oldest||current.lastUsed<oldest.lastUsed?current:oldest,null);
   let transient;

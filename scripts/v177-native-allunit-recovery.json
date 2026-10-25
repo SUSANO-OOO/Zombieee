@@ -2,12 +2,28 @@
   "schema": "v177-native-allunit-recovery/v2",
   "head": "f7f6f7ce46844eaefc4bb519fa80d591e2607407",
   "runId": "40095599877",
-  "scope": "Retain578 source-owned original technical observations from f7 and f880; only the original Mayo desktop attack encoded gap remains pending. All old failures and owners remain in Git and the source inventories. Unknown source changes restore full capture.",
+  "scope": "Retain564 original technical observations including the new source-owned e870 Mayo attack; reopen only15 Ranger observations affected by cold-invalid-surface reuse. All prior failures and owners remain immutable.",
   "caseIds": [
-    "forms-4:mayo-chan:attack:1280x720"
+    "forms-1:ranger:move:1280x720",
+    "forms-1:ranger:move:844x390",
+    "forms-1:ranger:move:844x340",
+    "forms-1:ranger:attack:1280x720",
+    "forms-1:ranger:attack:844x390",
+    "forms-1:ranger:attack:844x340",
+    "forms-1:ranger:engage:1280x720",
+    "forms-1:ranger:engage:844x390",
+    "forms-1:ranger:engage:844x340"
   ],
-  "manualCaseIds": [],
-  "outcomeCaseIds": [],
+  "manualCaseIds": [
+    "forms-1:ranger:ranger-manual-precision:1280x720",
+    "forms-1:ranger:ranger-manual-precision:844x390",
+    "forms-1:ranger:ranger-manual-precision:844x340"
+  ],
+  "outcomeCaseIds": [
+    "forms-1:ranger:controlled-outcome:1280x720",
+    "forms-1:ranger:controlled-outcome:844x390",
+    "forms-1:ranger:controlled-outcome:844x340"
+  ],
   "changedBlobs": {
     ".github/workflows/ci.yml": "bbfb51296e72de4c83ea993ce6341f39fbd098a4",
     ".github/workflows/targeted-frame-performance.yml": "670edafd521eba956ee3309afac22ae636f1115a",
@@ -16,41 +32,43 @@
     "app/v105AbilityNames.js": "28cf501a28e033f75e643259aec2e14eab144d97",
     "app/v177RangerFootPlacement.js": "b1e7857b6b810773714b1eaf2dedb3846b8c1376",
     "assets/source/v177/ranger/lower-r3/provenance.json": "aba5c66d3183fbe0d5ae849b7a3a48b026b0f1f6",
-    "docs/PROJECT_STATE.md": "507e7a3a471ad5e1c7c5b5f3f5d3a329a2965023",
+    "docs/PROJECT_STATE.md": "ddebeabcfc29efc96fb8da050df9b53e34fccc42",
     "docs/qa/v105/native-f7-evidence.json": "348eb032e3c7268539f413e62396bae078d35bce",
     "docs/qa/v105/shared-foot-impact-f7.json": "ca7e48eeb2228b3e4d5a513f026aa88719630d5e",
     "tests/audio-mixer.test.mjs": "b7c6537909ee85baa9eb833f187abd5998716f8f",
-    "tests/ci-change-scope.test.mjs": "cce9f7c1ee84c0bfec8635a1671747bf7c271b22",
+    "tests/ci-change-scope.test.mjs": "fcee836bf0dce91148faa491243d898725594565",
     "tests/ci-contract.test.mjs": "cca6dde0cbe07e3adb29286422b7a2bd907e2cfc",
     "tests/production-audio.test.mjs": "b19bf16647580aaaaa09db262de804485d4a60bf",
     "tests/v105-five-corrections.test.mjs": "27c3a5f353d3579d24862a18ddd09809c20abba0",
     "tests/v177-native-aac-graph.test.mjs": "730c57c8c1a52d2388c0200859ab9063495209f2",
-    "tests/v177-native-allunit-selection.test.mjs": "66e9e27b1bba7f489e32efeeebc481937396b8ba",
+    "tests/v177-native-allunit-selection.test.mjs": "87462915c4f15fd22db071b964b34af1a2cf84b6",
     "tests/v177-ranger-body-correction.test.mjs": "23eccd8aba1aafd7336cfacdf0785d89748148fe",
     "docs/qa/v105/native-f880-evidence.json": "597b84943cd699146f872156427192f190068f50",
     "app/AshfallGame.tsx": "004c5f5e25a6ff63c029d6f06d4c29f92efbd859",
-    "scripts/ci-change-scope.mjs": "243c6c7483eb1221ba23de1ee454f6ba9da659aa",
+    "scripts/ci-change-scope.mjs": "1363ff72d997916bc1084a4d1101c1740faea17d",
     "scripts/v100-device-runtime-browser.mjs": "0c4c5090222f58ab5f36be802c642f526997f574",
     "scripts/v100-phase-g-production-matrix.mjs": "1dcde92eacfa4c5027b92ce38a782849ad6f61b7",
     "scripts/v105-five-corrections-capture.mjs": "c266140d17b1176024bb9066424d37cd91675d16",
     "scripts/v177-native-allunit-browser.mjs": "c936e79a3131210f29e3d01a18455419ffe249a5",
     "scripts/v177-representative-battles.mjs": "c5359ed5edf24403c427c64832e5d140806eb9c8",
     "tests/ci-combat-qa-reuse.test.mjs": "54ab3ab379fb044dc623ddd0fcc7145340eee9c3",
-    "tests/v105-original-av.test.mjs": "4cf3fe840e35d3d90d011329577a85644541a0d9",
+    "tests/v105-original-av.test.mjs": "514daa29e1f61966560e1aa8250146cf0b7e2a44",
     "tests/v177-native-setup-overlap.test.mjs": "d93dbc17ba719cec7941c1483e72fc8cda5ab7d0",
     "tests/v177-ranger-performance-receipts.test.mjs": "b7eb9cc1c0d55ebe7f77c92ac4ff37faea29c2c9",
     "tests/v177-representative-battles.test.mjs": "90a3e066019e60ecf95ed12e50415fb6bbb5d975",
     "tests/v100-phase-g-sustain-pointer.test.mjs": "4c47755ef32c61b74dc7f46bbc99962d9e9985a4",
-    "docs/qa/v105/five-corrections-6a-evidence.json": "53ddd11abdef9749b950d95c76fc529cd3a66543",
-    "docs/qa/v105/native-6a-evidence.json": "1b7f233f17d4a61f9a24728359a94ee04495a257",
+    "docs/qa/v105/five-corrections-6a-evidence.json": "28e8824d6062c3fb25d366a4a5d37dd1acd5d717",
+    "docs/qa/v105/native-6a-evidence.json": "3d14dd05bf6804ff91ab3762e0f4b04a2a402189",
     "docs/qa/v105/ci-6a-infrastructure-failure.json": "1408c24a862a46f46071f29dabdd017998bc307e",
     "scripts/v177-normal-browser-deadline.mjs": "f60a49ca98db5a8059de56a04073a50b9e6b862f",
     "tests/v177-normal-browser-deadline.test.mjs": "e664a058bf55b093a1544f03e5482ad878eefbf0",
     ".github/workflows/five-corrections-capture.yml": "bf347a5923b8b31a0451e4358901feaa5040752a",
-    ".github/workflows/native-allunit-capture.yml": "ad08423c4a87f21bbe8b82bb09a600e3b9609048",
-    "scripts/v100-macos-indexing-control.mjs": "55fde48bad0dde061cf342a15035cda7c25a0b0e",
-    "scripts/v177-native-allunit-selection.mjs": "1c05d40e3d7c57e0fc7dc2a28731a347ac1cbdb5",
-    "tests/v100-macos-indexing-control.test.mjs": "2503e344879a172c57a674c2e5b7eef1455fd832"
+    ".github/workflows/native-allunit-capture.yml": "6fbcbea4dd55623fd7f4c8bbceda5c3c79bcc9f5",
+    "scripts/v100-macos-indexing-control.mjs": "d00ae47eb420f113af07437a55c47203e7446207",
+    "scripts/v177-native-allunit-selection.mjs": "6a11cf23189e7f69f67bb21e1e2938084f81cd83",
+    "tests/v100-macos-indexing-control.test.mjs": "57eec2e51112e3cb7ed8a872631ac3e7ead114fc",
+    "app/v177RangerLowerPaint.js": "3f21644839d81fd90a5ac362a118e501e0b76eef",
+    "tests/v177-ranger-continuous-lower.test.mjs": "545eba7e4750358bd83ca93a5d28831112efb6df"
   },
   "retainedEvidence": {
     "head": "f7f6f7ce46844eaefc4bb519fa80d591e2607407",
@@ -471,28 +489,16 @@
       "forms-12:babayaga:move:844x340",
       "forms-12:babayaga:attack:844x340",
       "forms-12:babayaga:engage:844x340",
-      "forms-1:ranger:move:1280x720",
-      "forms-1:ranger:attack:1280x720",
-      "forms-1:ranger:engage:1280x720",
-      "forms-1:ranger:move:844x390",
-      "forms-1:ranger:attack:844x390",
-      "forms-1:ranger:engage:844x390",
-      "forms-1:ranger:move:844x340",
-      "forms-1:ranger:attack:844x340",
-      "forms-1:ranger:engage:844x340",
       "forms-2:gunner:engage:844x340",
       "forms-8:futago-separated-a:move:844x390",
       "forms-8:futago-separated-a:engage:844x390",
       "forms-8:futago-separated-a:move:844x340",
       "forms-8:futago-separated-a:engage:844x340",
       "forms-9:futago-separated-b:engage:844x390",
-      "forms-12:takuya-omega:move:844x340"
+      "forms-12:takuya-omega:move:844x340",
+      "forms-4:mayo-chan:attack:1280x720"
     ],
-    "manualCaseIds": [
-      "forms-1:ranger:ranger-manual-precision:1280x720",
-      "forms-1:ranger:ranger-manual-precision:844x390",
-      "forms-1:ranger:ranger-manual-precision:844x340"
-    ],
+    "manualCaseIds": [],
     "outcomeCaseIds": [
       "forms-1:brawler:controlled-outcome:1280x720",
       "forms-1:scout:controlled-outcome:1280x720",
@@ -634,10 +640,7 @@
       "forms-12:takuya-omega:controlled-outcome:844x340",
       "forms-12:crazy-king:controlled-outcome:844x340",
       "forms-12:kumaverson:controlled-outcome:844x340",
-      "forms-12:babayaga:controlled-outcome:844x340",
-      "forms-1:ranger:controlled-outcome:1280x720",
-      "forms-1:ranger:controlled-outcome:844x390",
-      "forms-1:ranger:controlled-outcome:844x340"
+      "forms-12:babayaga:controlled-outcome:844x340"
     ],
     "reports": [
       {
@@ -1319,34 +1322,6 @@
     ],
     "additionalReports": [
       {
-        "shard": "forms-1",
-        "head": "f88084dcf3e457fb4bd63cf4313e14327eb204b3",
-        "runId": "40109045890",
-        "sha256": "8203d3f6a323a41365afb1ea69f26d853a1053a5fcff01afef3e836255a33b43",
-        "artifactId": 12566081895,
-        "caseIds": [
-          "forms-1:ranger:move:1280x720",
-          "forms-1:ranger:attack:1280x720",
-          "forms-1:ranger:engage:1280x720",
-          "forms-1:ranger:move:844x390",
-          "forms-1:ranger:attack:844x390",
-          "forms-1:ranger:engage:844x390",
-          "forms-1:ranger:move:844x340",
-          "forms-1:ranger:attack:844x340",
-          "forms-1:ranger:engage:844x340"
-        ],
-        "manualCaseIds": [
-          "forms-1:ranger:ranger-manual-precision:1280x720",
-          "forms-1:ranger:ranger-manual-precision:844x390",
-          "forms-1:ranger:ranger-manual-precision:844x340"
-        ],
-        "outcomeCaseIds": [
-          "forms-1:ranger:controlled-outcome:1280x720",
-          "forms-1:ranger:controlled-outcome:844x390",
-          "forms-1:ranger:controlled-outcome:844x340"
-        ]
-      },
-      {
         "shard": "forms-2",
         "head": "f88084dcf3e457fb4bd63cf4313e14327eb204b3",
         "runId": "40109045890",
@@ -1393,6 +1368,18 @@
         "artifactId": 12565912604,
         "caseIds": [
           "forms-12:takuya-omega:move:844x340"
+        ],
+        "manualCaseIds": [],
+        "outcomeCaseIds": []
+      },
+      {
+        "shard": "forms-4",
+        "head": "e87021073d7c8ab93387a4999cfedc46f467943f",
+        "runId": "40185635446",
+        "sha256": "8455a414ae67d630093115f6b2b31a9ae9d43d88d07d389af0076ef9ecc95cb0",
+        "artifactId": 12596172721,
+        "caseIds": [
+          "forms-4:mayo-chan:attack:1280x720"
         ],
         "manualCaseIds": [],
         "outcomeCaseIds": []
@@ -1735,12 +1722,62 @@
           }
         }
       ]
+    },
+    {
+      "head": "e87021073d7c8ab93387a4999cfedc46f467943f",
+      "runId": "40185635446",
+      "file": "docs/qa/v105/native-6a-evidence.json",
+      "inventoryRecordPath": "laterObservations[0]",
+      "sha256": "b80bc113fd957b98ce7c458c2f377fd8493bb3eaf0ac5c6ffdb1baad57f663bb",
+      "reports": [
+        {
+          "shard": "forms-4",
+          "head": "e87021073d7c8ab93387a4999cfedc46f467943f",
+          "runId": "40185635446",
+          "sha256": "8455a414ae67d630093115f6b2b31a9ae9d43d88d07d389af0076ef9ecc95cb0",
+          "artifactId": 12596172721,
+          "artifactDigestReportedByGithub": "sha256:5bee2665a378013b87c6fbee20d056dc169ac1e45cab7015724d66c99611c809",
+          "encodedAuditSha256": "a5a4978cf9a43c88442f18c35c96081358ae5a3c251498dd1dad47df6dc24afd",
+          "sourceManifestSha256": "571b58169dc89c15a3772ee549bea35d48e9390acb888834ef1c9ee87cf5f0d3",
+          "sourceManifestAlgorithm": "sha256 of JSON.stringify(original report.sources)",
+          "sourceFilesVerified": 400,
+          "retainedCount": 1,
+          "originalEncodedSummary": {
+            "cases": 1,
+            "passed": 1,
+            "failed": 0
+          }
+        }
+      ]
     }
   ],
   "fiveCorrections": {
     "file": "docs/qa/v105/five-corrections-6a-evidence.json",
-    "sha256": "0074e65ee029b74b312aa0937fb5c3fccfdeb794e276494d888ddecf5e57129c",
+    "sha256": "262fbe6de453babd8b7e46db9a6f47e4905f99f6d357ad4bacd3cffb462e203e",
     "head": "6a5226647ebf9ba7692c69b9c64af4ce32059d1b",
     "runId": "40120044506"
+  },
+  "reopenedRangerBufferOwnership": {
+    "gitHead": "e87021073d7c8ab93387a4999cfedc46f467943f",
+    "file": "scripts/v177-native-allunit-recovery.json",
+    "sha256": "56e6f515de906a0b1fe1345676a6f773c49437f83971aa47cea0c6b282fed3cb",
+    "caseIds": [
+      "forms-1:ranger:move:1280x720",
+      "forms-1:ranger:attack:1280x720",
+      "forms-1:ranger:engage:1280x720",
+      "forms-1:ranger:move:844x390",
+      "forms-1:ranger:attack:844x390",
+      "forms-1:ranger:engage:844x390",
+      "forms-1:ranger:move:844x340",
+      "forms-1:ranger:attack:844x340",
+      "forms-1:ranger:engage:844x340",
+      "forms-1:ranger:ranger-manual-precision:1280x720",
+      "forms-1:ranger:ranger-manual-precision:844x390",
+      "forms-1:ranger:ranger-manual-precision:844x340",
+      "forms-1:ranger:controlled-outcome:1280x720",
+      "forms-1:ranger:controlled-outcome:844x390",
+      "forms-1:ranger:controlled-outcome:844x340"
+    ],
+    "reason": "Cold invalid surface selection changes the shared Ranger lower painter; original ownership remains in this immutable profile and reports."
   }
 }

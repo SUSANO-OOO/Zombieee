@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {ciChangeScope,framePerformanceRuntimes,previousFullCiEvidence,previousQualityEvidence,
- previousAbilityNameEvidence,reviewedAbilityNamePaths,reviewedAbilityContinuationPaths,ABILITY_NAME_BASELINE,ABILITY_NAME_PREDECESSOR,ABILITY_NAME_BLOBS,ABILITY_NAME_REUSED_JOBS} from '../scripts/ci-change-scope.mjs';
+ previousAbilityNameEvidence,reviewedAbilityNamePaths,reviewedAbilityContinuationPaths,ABILITY_NAME_BASELINE,ABILITY_NAME_PREDECESSOR,ABILITY_NAME_BLOBS,ABILITY_NAME_REUSED_JOBS,RANGER_BUFFER_FILE,RANGER_BUFFER_BLOB} from '../scripts/ci-change-scope.mjs';
 import {assertEphemeralPerformanceHost} from '../scripts/v100-macos-indexing-control.mjs';
 import {readFileSync} from 'node:fs';
 import {load} from 'js-yaml';
@@ -11,7 +11,7 @@ import {tmpdir} from 'node:os';
 import {resolve,join} from 'node:path';
 import {provenanceFixture} from './helpers/ci-pr-provenance.mjs';
 
-test('the exact45e QA continuation keeps original6a owners, requires product ancestry and never adopts failed predecessor gates',async()=>{
+test('the exact reviewed QA continuation keeps original6a owners, requires product ancestry and never adopts failed predecessor gates',async()=>{
  const old=ABILITY_NAME_BASELINE,prev=ABILITY_NAME_PREDECESSOR,
    paths=['scripts/ci-change-scope.mjs','scripts/v177-normal-browser-deadline.mjs','scripts/v100-phase-g-production-matrix.mjs',
      'scripts/v105-five-corrections-capture.mjs','scripts/v177-native-allunit-recovery.json','docs/qa/v105/five-corrections-6a-evidence.json'],
@@ -45,6 +45,18 @@ test('the exact45e QA continuation keeps original6a owners, requires product anc
   assert.equal((await previousAbilityNameEvidence({...options,...bad,request:()=>assert.fail('Reject unknown continuation before network')})).passed,false);
  for(const patch of [{id:1},{head_sha:old.head},{status:'in_progress'},{conclusion:'cancelled'},{run_attempt:2},{pull_requests:[]}])
   assert.equal((await previousAbilityNameEvidence({...options,request:api({previousRun:{...predecessor,...patch}})})).passed,false);
+ const rangerPaths=[...paths,RANGER_BUFFER_FILE],rangerOptions={...options,paths:rangerPaths,productUnchanged:false,rangerBufferDelta:true};
+ const rangerEvidence=await previousAbilityNameEvidence({...rangerOptions,request:api()});assert.equal(rangerEvidence.passed,true);
+ assert.equal(rangerEvidence.productUnchanged,false);assert.equal(rangerEvidence.rangerBufferDelta,true);
+ assert.equal(rangerEvidence.reusedJobs.length,42);assert.equal(rangerEvidence.reusedJobs.some(j=>j.name==='Ranger Turn Regression'),false);
+ assert.equal(sourceBlobs[RANGER_BUFFER_FILE],RANGER_BUFFER_BLOB);
+ const oldNormalJobs=['chromium','webkit'].map((engine,i)=>({id:900+i,name:'V1 Representative Normal Play ('+engine+')',...owner,status:'completed',conclusion:'success'}));
+ const stillFresh=await previousAbilityNameEvidence({...rangerOptions,request:api({rows:[...jobs,...oldNormalJobs]})});assert.equal(stillFresh.passed,true);assert.equal(stillFresh.freshNormalRequired,true);assert.equal(stillFresh.reusedJobs.length,42);
+ const rangerScope=ciChangeScope(rangerPaths,{draft:false,sourceBlobs,reuseAbilityNames:true,freshNormal:true});
+ assert.equal(rangerScope.full,false);for(const f of ['verify_full','performance','phaseg','normal','ranger','allunit'])assert.equal(rangerScope[f],true);
+ for(const bad of [{rangerBufferDelta:false},{productUnchanged:true},{sourceBlobs:{...sourceBlobs,[RANGER_BUFFER_FILE]:'f'.repeat(40)}},{paths:[...rangerPaths,'app/unknown.js']}])
+  assert.equal((await previousAbilityNameEvidence({...rangerOptions,...bad,request:()=>assert.fail('Reject unrelated product changes before network')})).passed,false);
+ assert.equal(reviewedAbilityNamePaths([...Object.keys(ABILITY_NAME_BLOBS)],sourceBlobs),false,'The old display-only entry cannot adopt a new Ranger renderer');
  const wrongProof=provenanceFixture({runId:prev.runId,head:prev.head,base:'f'.repeat(40),artifactId:92});
  assert.equal((await previousAbilityNameEvidence({...options,request:api({previousProof:wrongProof})})).passed,false);
  const lost=jobs.map((j,i)=>i?j:{...j,conclusion:'failure'});
@@ -52,7 +64,7 @@ test('the exact45e QA continuation keeps original6a owners, requires product anc
 });
 
 test('the exact boss-label deletion retains successful browser owners but repeats Verify, performance and unfinished normal play',async()=>{
- const old=ABILITY_NAME_BASELINE,paths=[...Object.keys(ABILITY_NAME_BLOBS),'scripts/ci-change-scope.mjs','tests/ci-combat-qa-reuse.test.mjs'];
+ const old=ABILITY_NAME_BASELINE,paths=[...Object.keys(ABILITY_NAME_BLOBS).filter(f=>f!==RANGER_BUFFER_FILE),'scripts/ci-change-scope.mjs','tests/ci-combat-qa-reuse.test.mjs'];
  const sourceBlobs={...ABILITY_NAME_BLOBS},options={repository:'SUSANO-OOO/Zombieee',previousHead:old.head,base:old.base,prNumber:181,
   action:'synchronize',draft:false,paths,sourceBlobs,token:'fixture-only'};
  const fixture=provenanceFixture({runId:old.runId,head:old.head,base:old.base});

@@ -240,7 +240,7 @@ test('corrected manual observations retain the original failure and their separa
  if(!fixture.retainedEvidence.additionalReports.some(r=>r.originalReportStatus==='failed'&&r.manualCaseIds.length)){
   // Reopening Ranger removes its active manual owners; their original failure
   // and corrected contract still belong to the immutable preceding profile.
-  const previous=fixture.historicalRetainedOwnershipBeforeRangerPairCache?.profile;
+  const previous=fixture.reopenedRangerBufferOwnership??fixture.historicalRetainedOwnershipBeforeRangerPairCache?.profile;
   assert.match(previous?.gitHead??'',/^[a-f0-9]{40}$/u);assert.equal(previous.file,'scripts/v177-native-allunit-recovery.json');
   const raw=execFileSync('git',['show',previous.gitHead+':'+previous.file],{maxBuffer:8*1024*1024});
   assert.equal(createHash('sha256').update(raw).digest('hex'),previous.sha256);fixture=JSON.parse(raw);
@@ -259,4 +259,14 @@ test('corrected manual observations retain the original failure and their separa
   r=>{manualSource(r).contractCorrections[0].conditions.allowedTicks.push(32);},
   r=>{manualSource(r).contractCorrections[0].conditions.numericToleranceAdded=true;},
  ]){const invalid=structuredClone(fixture);mutate(invalid);assert.throws(()=>select(invalid));}
+});
+
+
+test('prepared Ranger capture contains only the actual weighted-lower dependency and preserves every broader fallback',()=>{
+ const rows=planShard('forms-1').filter(r=>r.form==='ranger'),engage=rows.filter(r=>r.phase==='engage');
+ const s={mode:'remaining',shards:['forms-1'],caseIds:rows.map(r=>r.caseId),outcomeCaseIds:engage.map(r=>r.caseId.replace(':engage:',':controlled-outcome:')),manualCaseIds:engage.map(r=>r.caseId.replace(':engage:',':ranger-manual-precision:'))};
+ assert.equal(nativeCaptureHostControl({pull_request:{draft:false}},s),'ranger-motion');
+ assert.equal(nativeCaptureHostControl({inputs:{capture_mode:'remaining'}},s),'none');
+ for(const patch of [{mode:'full'},{caseIds:[...s.caseIds,'forms-1:brawler:move:1280x720']},{shards:['forms-2']},{manualCaseIds:['forms-2:brute:ranger-manual-precision:1280x720']}])assert.notEqual(nativeCaptureHostControl({pull_request:{draft:false}},{...s,...patch}),'ranger-motion');
+ assert.equal(nativeCaptureHostControl({pull_request:{draft:false}},{...s,caseIds:[],outcomeCaseIds:[],manualCaseIds:[s.manualCaseIds[0]]}),'ranger-motion');
 });

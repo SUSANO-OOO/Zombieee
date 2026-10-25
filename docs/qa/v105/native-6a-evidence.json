@@ -293,5 +293,70 @@
     "reencoded": false,
     "newRecordingRequired": true
   },
-  "nextSetup": "Wait only for actual product BGM/loader readiness inside the original5s readiness and30s setup bounds. This remains a pending hypothesis about cold preparation, not a fix claim or cold-start/normal-play/formal33ms acceptance."
+  "nextSetup": "Wait only for actual product BGM/loader readiness inside the original5s readiness and30s setup bounds. This remains a pending hypothesis about cold preparation, not a fix claim or cold-start/normal-play/formal33ms acceptance.",
+  "laterObservations": [
+    {
+      "head": "e87021073d7c8ab93387a4999cfedc46f467943f",
+      "runId": "40185635446",
+      "jobId": 121146445175,
+      "report": {
+        "shard": "forms-4",
+        "head": "e87021073d7c8ab93387a4999cfedc46f467943f",
+        "runId": "40185635446",
+        "sha256": "8455a414ae67d630093115f6b2b31a9ae9d43d88d07d389af0076ef9ecc95cb0",
+        "artifactId": 12596172721,
+        "artifactDigestReportedByGithub": "sha256:5bee2665a378013b87c6fbee20d056dc169ac1e45cab7015724d66c99611c809",
+        "encodedAuditSha256": "a5a4978cf9a43c88442f18c35c96081358ae5a3c251498dd1dad47df6dc24afd",
+        "sourceManifestSha256": "571b58169dc89c15a3772ee549bea35d48e9390acb888834ef1c9ee87cf5f0d3",
+        "sourceManifestAlgorithm": "sha256 of JSON.stringify(original report.sources)",
+        "sourceFilesVerified": 400,
+        "retainedCount": 1,
+        "originalEncodedSummary": {
+          "cases": 1,
+          "passed": 1,
+          "failed": 0
+        }
+      },
+      "caseIds": [
+        "forms-4:mayo-chan:attack:1280x720"
+      ],
+      "originalReportStatus": "completed-diagnostic",
+      "originalRowStatus": "observed-diagnostic",
+      "rawClipEncodedPtsVerified": false,
+      "encodedAudit": {
+        "originalSha256": "a5a4978cf9a43c88442f18c35c96081358ae5a3c251498dd1dad47df6dc24afd",
+        "encodedPtsVerified": true,
+        "decode": {
+          "frames": 71,
+          "completed": true,
+          "errors": 0,
+          "progressSha256": "2f6c8e674954a7afdd068d31b4a82b3a322b36063d49af836ccb88e5f1c54345"
+        },
+        "timeline": {
+          "codec": "vp8",
+          "timebase": [
+            1,
+            1000
+          ],
+          "frames": 71,
+          "maxGapMs": 86,
+          "gapsOver250ms": [],
+          "coverage": {
+            "captureWindowMs": 1946,
+            "firstVideoPtsMs": 0,
+            "lastVideoPtsMs": 1944,
+            "encodedSpanMs": 1944,
+            "headUncoveredMs": 0,
+            "tailUncoveredMs": 2,
+            "formula": "max(0, original captureWindowMs - (lastPts-firstPts)*timebase); asynchronous stop-event delivery is excluded"
+          },
+          "failures": []
+        }
+      },
+      "rawReportsUnmodified": true,
+      "originalFailuresPreserved": true,
+      "physicalSavedAudioAccepted": false,
+      "naturalnessAccepted": false
+    }
+  ]
 }

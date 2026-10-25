@@ -663,3 +663,22 @@ test('variable-size raster eviction releases backing pixels and never leaves a s
   }
   assert.ok(observation.surfaces.length>painter.rasters.length+1,'the case must actually evict physical surfaces');
 });
+
+
+test('invalidating geometry does not rewrite a recently drawn surface when a colder invalid surface exists',()=>{
+ const {painter}=observedPainter();
+ paintPoolInput(painter,.371,120);paintPoolInput(painter,.371,96,true);paintPoolInput(painter,.19);paintPoolInput(painter,.49);
+ assert.ok(painter.rasters.length>=2);
+ const hot=painter.rasters[0],cold=painter.rasters.at(-1),hotPixels=hot.canvas.data;
+ for(const [i,raster]of painter.rasters.entries()){raster.valid=false;raster.lastUsed=90+i;}
+ cold.lastUsed=3;painter.useSequence=100;
+ const actual=paintPoolInput(painter,.73),expected=paintPoolInput(observedPainter().painter,.73);
+ assert.equal(painter.lastRaster,cold);assert.equal(cold.lastUsed,101);assert.equal(hot.canvas.data,hotPixels);
+ assertSameActiveLower(actual,expected);assert.deepEqual(actual.receipt,expected.receipt);
+ assert.ok(painter.rasters.length<=32);assert.ok(painter.rasters.reduce((sum,r)=>sum+r.canvas.width*r.canvas.height,0)<=65536);
+});
+
+
+test('the weighted lower painter dependency remains limited to the Ranger atlas',()=>{
+ assert.deepEqual(Object.entries(V177_JOINT_ATLASES).filter(([,a])=>a.lowerRig).map(([kind])=>kind),['ranger']);
+});
