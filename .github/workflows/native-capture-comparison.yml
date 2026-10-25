@@ -5,6 +5,11 @@ on:
       expected_head:
         required: true
         type: string
+      lane:
+        description: Run only the unresolved owner; do not duplicate a running lane
+        default: both
+        type: choice
+        options: [both, s14, s25]
 permissions:
   contents: read
 concurrency:
@@ -15,9 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - {lane: s14-chromium, os: ubuntu-latest}
-          - {lane: s25-webkit, os: macos-15-intel}
+        include: ${{ fromJSON(inputs.lane == 's14' && '[{"lane":"s14-chromium","os":"ubuntu-latest"}]' || inputs.lane == 's25' && '[{"lane":"s25-webkit","os":"macos-15-intel"}]' || '[{"lane":"s14-chromium","os":"ubuntu-latest"},{"lane":"s25-webkit","os":"macos-15-intel"}]') }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     defaults:

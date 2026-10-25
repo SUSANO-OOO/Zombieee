@@ -246,6 +246,7 @@ async function main() {
 }
 
 export async function runBrowserQa(){
+  await mkdir(path.resolve(process.env.V100_NORMAL_PLAY_EVIDENCE_DIR),{recursive:true});
   const {runNormalPlayChild}=await import('./v177-normal-browser-deadline.mjs');
   const {fileURLToPath}=await import('node:url');
   assert.equal(await runNormalPlayChild(fileURLToPath(import.meta.url)),0,'The original S14 child must finish and retain every technical control');
