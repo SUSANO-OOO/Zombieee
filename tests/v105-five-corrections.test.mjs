@@ -4,7 +4,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {MANUAL_ABILITY_REGISTRY as definitions,createManualAbilityRuntime,beginManualAbility,advanceManualAbility,manualAbilityCheckpointCooldown} from '../app/manualAbilities.js';
 import {queueV105FistWave,resolveV105FistWavePaint,advanceV105FistWaves,v105FistWaveSnapshot} from '../app/v105PaisenFistWave.js';
-import {startV105AbilityName,updateV105AbilityNames,v105AbilityNameSnapshot,layoutV105AbilityNames,v105EnemyAbilityName} from '../app/v105AbilityNames.js';
+import {startV105AbilityName,updateV105AbilityNames,v105AbilityNameSnapshot,layoutV105AbilityNames,v105EnemyAbilityName,drawV105AbilityNames} from '../app/v105AbilityNames.js';
 import {V177_JOINT_ATLASES as atlases,v177JointPose,v105BipedFootPlan,v177CaptureJointPose,drawV177JointPose} from '../app/v177JointPresentation.js';
 import {v105CurrentAbilitySample,v105AbilityFacing} from '../app/v105CurrentAbilityPose.js';
 import {V105_GROUND_STRIKES} from '../app/v105GroundStrikeData.js';
@@ -14,6 +14,20 @@ const definition=definitions.brawler;
 function caster(){return {id:1,kind:'brawler',side:'human',hp:100,combatReady:true,x:100,y:300,
   manualAbility:beginManualAbility(createManualAbilityRuntime('brawler'),{targetId:9,x:240,y:300,direction:1}).runtime};}
 const victim=()=>({id:9,side:'zombie',hp:1000,combatReady:true,bodyRadius:16,x:240,y:300});
+
+test('ability names read display geometry only while a live label is actually painted',()=>{
+  const owner=caster(),world={time:1,fighters:[owner]},paint=[];let geometryReads=0;
+  const ctx={save(){},restore(){},measureText:text=>({width:text.length*20}),fillText(text,x,y){paint.push({text,x,y,font:this.font,alpha:this.globalAlpha});}};
+  const options={width:844,height:340,headY:f=>f.y-10,get cssScale(){geometryReads++;return .4;}};
+  assert.deepEqual(drawV105AbilityNames(ctx,world,options),[]);assert.equal(geometryReads,0);
+  assert.equal(startV105AbilityName(world,owner,{name:definition.displayName,activationId:1}),true);
+  world.time=1.1;
+  const placed=drawV105AbilityNames(ctx,world,options);assert.equal(geometryReads,1);assert.equal(placed.length,1);
+  assert.equal(paint.length,1);assert.equal(paint[0].text,definition.displayName);assert.equal(paint[0].font,'700 32px "Noto Sans JP",sans-serif');
+  assert.equal(placed[0].ownerId,owner.id);assert.equal(paint[0].alpha,1);
+  world.time=3;assert.deepEqual(drawV105AbilityNames(ctx,world,options),[]);assert.equal(geometryReads,1);
+  world.over=true;assert.deepEqual(drawV105AbilityNames(ctx,world,options),[]);assert.equal(geometryReads,1);
+});
 
 test('Paisen replaces the five timed hits with one real release and retains total cast/cooldown/damage/range budget',()=>{
   const owner=caster(),result=advanceManualAbility(owner.manualAbility,.26);

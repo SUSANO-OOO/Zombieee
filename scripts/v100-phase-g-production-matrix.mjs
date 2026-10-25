@@ -1098,7 +1098,7 @@ async function withDeploymentPreinputDeadline(page, operationPromise, deadlineMs
 
 // Opt in for sustain manual ability and barrage. Default deployment and
 // ordinary tactical input keep their original ordered acknowledgement path.
-function phaseGSustainAbilityObserver({ mode, attemptId, selection }) {
+function phaseGSustainAbilityObserver({ mode, attemptId, selection, waitMs=0 }) {
   const registry = window.__V100_PHASE_G_SUSTAIN_POINTERS__ ??= new Map();
   const project = (ownerId, kind) => {
     const s = window.__ASHFALL_BATTLE_QA__?.getPhaseGCombatSnapshot?.();
@@ -1127,12 +1127,24 @@ function phaseGSustainAbilityObserver({ mode, attemptId, selection }) {
   if (mode === 'finish') {
     const entry = registry.get(attemptId);
     if (!entry) return {status:'missing',attemptId};
-    try { return {status:'finished',attemptId,identity:entry.identity,point:entry.point,before:entry.before,
+    const receipt=()=>({status:'finished',attemptId,identity:entry.identity,point:entry.point,before:entry.before,
       after:project(entry.identity.ownerId,entry.identity.kind),events:entry.events,errors:entry.errors,
       overflow:entry.overflow,armedAt:entry.armedAt,finishedAt:performance.now(),
       sameRealm:window===entry.window && performance===entry.performance,
-      sameDocument:document === entry.document && document.documentElement === entry.documentElement}; }
-    finally { entry.dispose(); }
+      sameDocument:document === entry.document && document.documentElement === entry.documentElement});
+    if(!Number.isFinite(waitMs)||waitMs<0||waitMs>500){entry.dispose();throw new Error('Invalid remaining sustain observation budget');}
+    if(!waitMs){try{return receipt();}finally{entry.dispose();}}
+    // A protocol ACK is not a DOM click/handler receipt. Await that one native
+    // click, then cross a task boundary so its synchronous bubble handler has
+    // finished. Never await an activation, resend input, or extend the budget.
+    return new Promise((resolve,reject)=>{
+      let finished=false,afterClick;
+      const finish=()=>{if(finished)return;finished=true;clearTimeout(deadline);clearTimeout(afterClick);
+        entry.onTerminal=null;try{resolve(receipt());}catch(error){reject(error);}finally{entry.dispose();}};
+      const terminal=()=>{if(!finished&&afterClick===undefined)afterClick=setTimeout(finish,0);};
+      const deadline=setTimeout(finish,waitMs);entry.onTerminal=terminal;
+      if(entry.events.some(event=>event.type==='click'))terminal();
+    });
   }
   if (mode !== 'arm' || registry.size) throw new Error('Invalid or overlapping sustain observer');
   const el = document.querySelectorAll(selection.selector)[selection.index];
@@ -1161,6 +1173,7 @@ function phaseGSustainAbilityObserver({ mode, attemptId, selection }) {
         sameNode:target===el,hitOwner:document.elementFromPoint(event.clientX,event.clientY)?.closest('button')===el,
         sameOwner:barrage?el.matches(controlSelector):String(el.dataset.fighterId)===identity.ownerId && el.dataset.abilityKind===identity.kind,
         connected:el.isConnected,ready:!el.disabled && el.getAttribute('aria-disabled')!=='true'});
+      if(event.type==='click')entry.onTerminal?.();
     } catch(error) {if(entry.errors.length<16)entry.errors.push(String(error));throw error;}
   };
   entry.dispose=()=>{for(const type of types)document.removeEventListener(type,handler,true);registry.delete(attemptId);};
@@ -1253,7 +1266,8 @@ async function phaseGSustainAbilityTap(page, selection, phases, evidenceRecord) 
   if(armed.status!=='armed')throw new Error('Sustain observer failed to arm');
   // One existing native API; no DOM dispatch, forced click, delay, or retry.
   await step('native-click',()=>page.mouse.click(armed.point.x,armed.point.y));
-  const actual=await step('read-and-dispose',()=>page.evaluate(phaseGSustainAbilityObserver,{mode:'finish',attemptId}));
+  const actual=await step('read-and-dispose',()=>page.evaluate(phaseGSustainAbilityObserver,
+    {mode:'finish',attemptId,waitMs:Math.max(0,500-(performance.now()-startedAt))}));
   guard();const decision=validatePhaseGSustainAbilityReceipt(armed,actual);
   phases.at(-1).decision=decision;
   if(!decision.ok)throw new Error('Sustain native input evidence invalid: '+decision.errors.join(','));

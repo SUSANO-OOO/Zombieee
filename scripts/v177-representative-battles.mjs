@@ -137,6 +137,17 @@ async function main() {
       const saveAt = () => page.evaluate(() => JSON.parse(localStorage.getItem('nishijin-campaign-v100')));
       const phaseAt = () => page.evaluate(readRepresentativeBattlePhase);
       const persist = () => writeFile(path.join(out, 'report.json'), JSON.stringify(report, null, 2) + '\n');
+      // Local event receipts only: no extra page RPC, polling, timeout or input.
+      // A later closed-page save error must retain the first protocol failure.
+      row.lifecycle={events:[],overflow:0};
+      const lifecycle=(event,details={})=>{
+        if(row.lifecycle.events.length<128)row.lifecycle.events.push({event,at:performance.now(),...details});
+        else row.lifecycle.overflow++;
+      };
+      rawPage.on('framenavigated',frame=>{if(frame===rawPage.mainFrame())lifecycle('main-frame-navigation',{url:frame.url()});});
+      rawPage.on('crash',()=>lifecycle('page-crash'));
+      rawPage.on('close',()=>lifecycle('page-close'));
+      context.on('close',()=>lifecycle('context-close'));
       page.on('pageerror', error => row.errors.push(String(error)));
       page.on('console', message => { if (message.type() === 'error') row.errors.push(message.text()); });
       page.on('response', response => { if (response.status() >= 400) row.errors.push(`${response.status()}: ${response.url()}`); });
@@ -219,7 +230,10 @@ async function main() {
         row.framePerformance??=await finishNormalFrameCapture(rawPage,frameCapture,frameOwner).catch(error=>({status:'incomplete',error:String(error),performanceAcceptance:false}));
         if (clip) await finishClip(false).catch(error => { row.captureError = String(error); row.status = 'failed'; });
         try { row.finalSave ??= await normalCleanupWithin(()=>rawPage.evaluate(()=>JSON.parse(localStorage.getItem('nishijin-campaign-v100'))),'representative final save',{timeoutMs:30_000}); await normalCleanupWithin(()=>context.storageState({ path: path.join(out, `s${number}-browser-storage.json`), indexedDB: true }),'representative storage',{timeoutMs:30_000}); }
-        catch (error) { row.saveCaptureError = String(error); row.status = 'failed'; }
+        catch (error) { row.saveCaptureError = String(error); row.status = 'failed';
+          if(rpc.failure)row.saveCaptureDependency={primary:'original-protocol-timeout',pageClosed:rawPage.isClosed(),
+            independentSaveCorruptionProven:false};
+        }
         try { await normalCleanupWithin(closeOwnedContext,'representative context'); row.video = await normalCleanupWithin(()=>video.path(),'representative video'); row.videoBytes = (await stat(row.video)).size; }
         catch (error) { row.videoCaptureError = String(error); row.status = 'failed'; }
         if (row.status !== 'failed') {

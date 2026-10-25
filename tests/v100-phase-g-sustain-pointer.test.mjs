@@ -36,6 +36,7 @@ function fixture(change={}){
  const window={__ASHFALL_BATTLE_QA__:{getPhaseGCombatSnapshot(){gets++;if(change.readFails&&gets===2)throw Error('post observation failed');return clone(snapshot);}},
   __ASHFALL_AUDIO_QA__:{getCueRequests:()=>clone(rejectRequests)}};
  const context=vm.createContext({window,document,Element,performance:{now:()=>clock,timeOrigin:100000},Date:{now:()=>clock},Math,
+  setTimeout:(fn,ms)=>setTimeout(()=>{clock++;fn();},ms),clearTimeout,
   JSON:{stringify:value=>{if(change.slowValidation&&gets===2)clock=601;return JSON.stringify(value);}},
   gameRef:{current:snapshot},selectedActionRef:{current:null},rejectBattleSaveBoundary:()=>false,
   manualAbilityTargetCandidates:()=>[],canActivateManualAbility:()=>false,
@@ -69,14 +70,16 @@ function fixture(change={}){
   snapshot.manualAbilityReceipts.push({ownerId:9,kind:'brute',eventType:'start',activationId:snapshot.fighters[0].manualAbility.activationId,at:snapshot.time});
   if(change.sameIdStart||change.regressedStart){snapshot.fighters[0].manualAbility.activationId--;snapshot.manualAbilityReceipts.at(-1).activationId=change.regressedStart?-1:0;}};
  const page={isClosed:()=>closed,async evaluate(fn,arg){calls.push(arg.mode);clock++;
-  const result=fn(arg);if(arg.mode==='finish')result.cleanupFixtureObserved=listeners.size===0;return clone(result);},
+  const result=await fn(arg);if(arg.mode==='finish')result.cleanupFixtureObserved=listeners.size===0;return clone(result);},
   mouse:{async click(x,y){calls.push('native-click');if(change.nativeError)throw Error('native input rejected');
    if(change.lateClick){clock=601;return;}
    let types=['pointermove','pointerdown','pointerup','click'];if(change.missingUp)types=types.filter(t=>t!=='pointerup');
    if(change.reordered)types=['pointermove','pointerup','pointerdown','click'];if(change.duplicateClick)types.push('click');
-   for(const type of types){clock++;if(change.wrongTarget)hitBlocked=true;if(change.disabledAtDown&&type==='pointerdown')el.disabled=true;
+   const deliver=delivery=>{for(const type of delivery){clock++;if(change.wrongTarget)hitBlocked=true;if(change.disabledAtDown&&type==='pointerdown')el.disabled=true;
     const event={type,target:change.wrongTarget?other:el,isTrusted:!change.untrusted,pointerType:change.touch?'touch':'mouse',button:type==='pointermove'?-1:0,clientX:x,clientY:y};
-    listeners.get(type)?.(event);if(type==='click'){activate();if(change.removeButton)el.isConnected=false;}}
+    listeners.get(type)?.(event);if(type==='click'){activate();if(change.removeButton)el.isConnected=false;}}};
+   if(change.delayedDelivery){deliver(['pointermove']);setTimeout(()=>deliver(types.slice(1)),15);}
+   else if(change.noTerminal)deliver(['pointermove']);else deliver(types);
    if(change.multipleStarts)activate();if(change.generationChange)snapshot.battleGeneration++;
    if(change.removeActor)snapshot.fighters=[];
    snapshot.time+=1/60;if(change.originChange)context.performance={...context.performance,timeOrigin:context.performance.timeOrigin+1};
@@ -113,6 +116,18 @@ test('a real synchronous unavailable handler response is distinct from activatio
  await run('synchronous validation also consumes the original500ms',{productionReject:true,slowValidation:true},'fail-finalized');
  await run('same-id new start cannot be hidden by the unchanged counter',{productionReject:true,mixedStartReject:true,sameIdStart:true},'fail-finalized');
  await run('regressed-id new start cannot be hidden by the unchanged counter',{productionReject:true,mixedStartReject:true,regressedStart:true},'fail-finalized');
+});
+
+test('one ACKed native click can finish before DOM delivery; observe its terminal task without resending or waiting for activation',async()=>{
+ await run('delayed real-shaped delivery remains one input and one actual start',{delayedDelivery:true},'pass');
+ await run('delayed delivered rejection remains rejection',{delayedDelivery:true,productionReject:true},'rejected');
+ await run('delivered click without a handler response fails immediately after that task',{delayedDelivery:true,noActivation:true},'fail-finalized');
+ await run('an ACK and pointermove alone never become an accepted ability',{noTerminal:true},'fail-finalized');
+ for(const waitMs of [-1,Infinity,NaN,501]){
+  const f=fixture();f.context.api.observer({mode:'arm',attemptId:'invalid-budget',selection:{selector:'button.manual-ability-ready.available',index:0}});
+  assert.throws(()=>f.context.api.observer({mode:'finish',attemptId:'invalid-budget',waitMs}),/Invalid remaining/);
+  assert.equal(f.listeners.size,0);assert.equal(f.handlerCalls,0);
+ }
 });
 
 test('barrage uses one native click and proves its real handler start inside the original500ms',async()=>{

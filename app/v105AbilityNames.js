@@ -68,9 +68,10 @@ export function layoutV105AbilityNames(rows,{width,height,fontSize,measure}={}){
   return placed;
 }
 
-export function drawV105AbilityNames(ctx,world,{width,height,headY,cssScale=1}={}){
+export function drawV105AbilityNames(ctx,world,options={}){
   updateV105AbilityNames(world);
   const state=battles.get(world);if(!state?.active.length||world.ended||world.over)return [];
+  const {width,height,headY,cssScale=1}=options;
   const fontSize=Math.max(22,Math.min(32,13/Math.max(.25,cssScale)));
   ctx.save();ctx.font=`700 ${fontSize}px "Noto Sans JP",sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
   const rows=state.active.map(row=>{const owner=liveOwner(world,row);return{...row,owner,headX:owner.x,headY:headY(owner)};});

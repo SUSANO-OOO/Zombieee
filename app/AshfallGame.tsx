@@ -9277,7 +9277,7 @@ function drawWorld(
   }
   ctx.globalAlpha = 1; ctx.shadowBlur = 0; ctx.textAlign = "left";
   drawV105AbilityNames(ctx,g,{width:W,height:H,headY:f=>fighterHealthBarWorldY(f)-7,
-    cssScale:Math.min(ctx.canvas.clientWidth/W||1,ctx.canvas.clientHeight/H||1)});
+    get cssScale(){return Math.min(ctx.canvas.clientWidth/W||1,ctx.canvas.clientHeight/H||1);}});
   if (g.flashOverlay > 0) {
     ctx.fillStyle = `rgba(255,193,106,${Math.min(.48, g.flashOverlay)})`; ctx.fillRect(0, 0, W, H);
   }

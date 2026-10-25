@@ -357,6 +357,79 @@
       "originalFailuresPreserved": true,
       "physicalSavedAudioAccepted": false,
       "naturalnessAccepted": false
+    },
+    {
+      "head": "6e00e3c5f084a9fe633ea28888460f6d63e880b5",
+      "runId": "40204024457",
+      "jobId": 121201618705,
+      "report": {
+        "shard": "forms-1",
+        "head": "6e00e3c5f084a9fe633ea28888460f6d63e880b5",
+        "runId": "40204024457",
+        "sha256": "ec98dd500c74b84972c0a8406cf6ec9b5a67116e0f352b42da0cf7814871a1d9",
+        "artifactId": 12603535546,
+        "artifactDigestReportedByGithub": "sha256:a5c08880f46fbec243d82c8bb688e04ad67ba6daf024e72c973e07a7ef90584c",
+        "sourceFilesVerified": 400,
+        "sourceManifestSha256": "2d8b9263bf56cdc5373d4aa9dffa6551678f705a03aefec68338144d1a4dc3a6",
+        "retainedCount": 10
+      },
+      "originalReportStatus": "failed",
+      "originalJobConclusion": "failure",
+      "caseIds": [
+        "forms-1:ranger:move:844x390",
+        "forms-1:ranger:attack:844x390",
+        "forms-1:ranger:engage:844x390",
+        "forms-1:ranger:move:844x340",
+        "forms-1:ranger:attack:844x340",
+        "forms-1:ranger:engage:844x340"
+      ],
+      "manualCaseIds": [
+        "forms-1:ranger:ranger-manual-precision:844x390",
+        "forms-1:ranger:ranger-manual-precision:844x340"
+      ],
+      "outcomeCaseIds": [
+        "forms-1:ranger:controlled-outcome:844x390",
+        "forms-1:ranger:controlled-outcome:844x340"
+      ],
+      "originalMembers": [
+        {
+          "file": "report.json",
+          "bytes": 25012872,
+          "crc32": "532e0a86",
+          "sha256": "ec98dd500c74b84972c0a8406cf6ec9b5a67116e0f352b42da0cf7814871a1d9"
+        }
+      ],
+      "localEncodedAuditSha256": "d1d62c03373865525864fc5946e6772119a010b6fd02dc8b33cd95c603275729",
+      "rawReportsUnmodified": true,
+      "originalFailuresPreserved": true,
+      "failedCases": [
+        {
+          "caseId": "forms-1:ranger:move:1280x720",
+          "error": "AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(last.at-first.at>=1000)\n"
+        }
+      ],
+      "unexecuted": [
+        "forms-1:ranger:attack:1280x720",
+        "forms-1:ranger:engage:1280x720",
+        "forms-1:ranger:ranger-manual-precision:1280x720",
+        "forms-1:ranger:controlled-outcome:1280x720"
+      ],
+      "scope": "Retain only the ten individually observed mobile rows with original bytes, strict existing clocks/250ms/decode. Desktop move stays failed and four desktop cases remain pending. No whole-run promotion.",
+      "appearanceDependency": "The follow-up only defers idle ability-name CSS dimension reads; active name calculations and model/asset/geometry are unchanged. Independent review plus targeted new desktop manual capture covers the shared display change.",
+      "visualReview": {
+        "method": "Original bytes, continuous 1.0x browser playback and time-ordered screenshots; short mobile340 outcome supplemented at1.0x",
+        "checked": [
+          "current model",
+          "walking contact",
+          "approach-stop-ordinary22damage-return",
+          "manual current model and Japanese text-only 精密排除",
+          "hurt facing and defeat"
+        ],
+        "humanListening": false,
+        "physicalDevice": false
+      },
+      "physicalSavedAudioAccepted": false,
+      "wholeGameAccepted": false
     }
   ]
 }

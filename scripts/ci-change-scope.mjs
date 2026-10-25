@@ -44,7 +44,8 @@ export const ABILITY_NAME_BASELINE=Object.freeze({head:'6a5226647ebf9ba7692c69b9
  base:'e22b134a38409b9d2f86660ee351e616c28fbf44',runId:40120044446,prNumber:181});
 // Preserve the original browser/Quality owners. The two audio jobs below are
 // separately owned by the completed repaired-audio candidate, never its failures.
-export const ABILITY_NAME_PREDECESSOR=Object.freeze({head:'a8f4f5986d8f66423c422a37f32400c1a3009551',runId:40198626338});
+export const ABILITY_NAME_PREDECESSOR=Object.freeze({head:'6e00e3c5f084a9fe633ea28888460f6d63e880b5',runId:40204024443});
+export const ABILITY_NAME_AUDIO_OWNER=Object.freeze({head:'a8f4f5986d8f66423c422a37f32400c1a3009551',runId:40198626338});
 export const ABILITY_NAME_PREDECESSOR_AUDIO_JOBS=Object.freeze({
  'V1.0.3 Media Output (chromium)':121185029269,'V1.0.3 Media Output (webkit)':121185029364});
 export const RANGER_BUFFER_FILE='app/v177RangerLowerPaint.js';
@@ -55,12 +56,17 @@ export const RANGER_PROVENANCE_FILE='assets/source/v177/ranger/lower-r3/provenan
 export const RANGER_REPAIR_PRODUCT_BEFORE=Object.freeze({
  [RANGER_BUFFER_FILE]:RANGER_BUFFER_BEFORE_BLOB,
  [RANGER_PROVENANCE_FILE]:'39a6fa601520e00c2c022153f4ae7746b46f8f7d'});
+export const ABILITY_LAYOUT_PRODUCT_BEFORE=Object.freeze({
+ 'app/AshfallGame.tsx':'004c5f5e25a6ff63c029d6f06d4c29f92efbd859',
+ 'app/v105AbilityNames.js':'28cf501a28e033f75e643259aec2e14eab144d97'});
 export const ABILITY_NAME_BLOBS=Object.freeze({
- "app/AshfallGame.tsx": "004c5f5e25a6ff63c029d6f06d4c29f92efbd859",
+ "app/AshfallGame.tsx": "a0a873098b12f6de62548f83e3f6773e2aca0592",
+ "app/v105AbilityNames.js": "ebe6a7ecb6ea702944d45a1502b3134ac9004b38",
  ".github/workflows/ci.yml": "3b402dfbe2a8a0922c694cc00f1762eb6d52ed33",
- "scripts/v177-representative-battles.mjs": "c5359ed5edf24403c427c64832e5d140806eb9c8",
+ "scripts/v177-representative-battles.mjs": "e7b0bb62e83f3527a0282f7fbfaa58ed6174c68f",
  "scripts/v100-device-runtime-browser.mjs": "0c4c5090222f58ab5f36be802c642f526997f574",
- "scripts/v100-phase-g-production-matrix.mjs": "bda9a822f16342ef09180c0e1b02a699208a09f2",
+ "scripts/v100-phase-g-production-matrix.mjs": "c3b0ea060df71d55106cd54200febf0b44000470",
+ "scripts/v177-native-allunit-cases.mjs": "e5d27c160ec2eb04d8a0109c0a39918174c6b5ac",
  "scripts/v177-normal-browser-deadline.mjs": "f60a49ca98db5a8059de56a04073a50b9e6b862f",
  "scripts/v105-five-corrections-capture.mjs": "c266140d17b1176024bb9066424d37cd91675d16",
  "scripts/v177-native-allunit-browser.mjs": "c936e79a3131210f29e3d01a18455419ffe249a5",
@@ -70,7 +76,7 @@ export const ABILITY_NAME_BLOBS=Object.freeze({
  "scripts/v100-macos-indexing-control.mjs": "d00ae47eb420f113af07437a55c47203e7446207",
  "scripts/v177-native-allunit-selection.mjs": "6a11cf23189e7f69f67bb21e1e2938084f81cd83",
  "app/v177RangerLowerPaint.js": "c9d74ef6b47a377778498569221232dae12a6ba3",
- "docs/qa/v105/native-6a-evidence.json": "3d14dd05bf6804ff91ab3762e0f4b04a2a402189",
+ "docs/qa/v105/native-6a-evidence.json": "a2a755ead78ec291ebaa04545cb343ae5d32203d",
  "app/battleAudioRuntime.js": "65e612cbc460eaf27eb3ba8894feb692563f27d8",
  "assets/source/v177/ranger/lower-r3/provenance.json": "66d32b5c69c8a3c1acf1efe1e53287efaf3e48ad"
 });
@@ -84,7 +90,8 @@ const abilityNameFiles=new Set([...Object.keys(ABILITY_NAME_BLOBS),'scripts/ci-c
  'scripts/v177-normal-browser-deadline.mjs','tests/v177-normal-browser-deadline.test.mjs',
  'docs/qa/v105/five-corrections-6a-evidence.json','docs/qa/v105/ci-6a-infrastructure-failure.json',
  'docs/PROJECT_STATE.md','docs/qa/v105/native-6a-evidence.json',
- RETIRED_AUDIO_OWNER_FILE,RANGER_PROVENANCE_FILE,'tests/battle-audio-runtime.test.mjs','tests/v100-phase-g-capture.test.mjs']);
+ RETIRED_AUDIO_OWNER_FILE,RANGER_PROVENANCE_FILE,'tests/battle-audio-runtime.test.mjs','tests/v100-phase-g-capture.test.mjs',
+ 'tests/v105-five-corrections.test.mjs','tests/v177-native-realm-owner.test.mjs']);
 export const ABILITY_NAME_REUSED_JOBS=Object.freeze(BASELINE_JOB_NAMES.filter(name=>
  !['PR Verify','V1 Guardian Control Diagnostic','WebKit Compact Shadow Diagnostic','V1 WebKit Frame and Boss Performance',
  'V1 Phase G Production Matrix','V1 Representative Normal Play (chromium)','V1 Representative Normal Play (webkit)'].includes(name)));
@@ -94,14 +101,15 @@ export function reviewedAbilityNamePaths(paths,sourceBlobs={}){
   &&Object.entries(ABILITY_NAME_BLOBS).every(([file,blob])=>!paths.includes(file)||sourceBlobs[file]===blob);
 }
 export function reviewedAbilityContinuationPaths(paths,sourceBlobs={}){
- return Array.isArray(paths)&&paths.length>0&&paths.every(file=>abilityNameFiles.has(file)
-   &&file!=='app/AshfallGame.tsx')
+ return Array.isArray(paths)&&paths.length>0&&paths.every(file=>abilityNameFiles.has(file))
   &&Object.entries(ABILITY_NAME_BLOBS).every(([file,blob])=>sourceBlobs[file]===blob);
 }
 export async function previousAbilityNameEvidence({repository,previousHead,base,prNumber,action,draft,paths,sourceBlobs,
- productUnchanged=false,rangerBufferDelta=false,originalAncestor=false,token,request=fetch}={}){
+ productUnchanged=false,rangerBufferDelta=false,layoutReadDelta=false,originalAncestor=false,token,request=fetch}={}){
  const old=ABILITY_NAME_BASELINE;
- const compatible=paths?.includes(RANGER_BUFFER_FILE)
+ const compatible=paths?.some(file=>Object.hasOwn(ABILITY_LAYOUT_PRODUCT_BEFORE,file))
+  ?layoutReadDelta===true&&rangerBufferDelta===false&&productUnchanged===false
+  :paths?.includes(RANGER_BUFFER_FILE)
   ?rangerBufferDelta===true&&productUnchanged===false&&sourceBlobs[RANGER_BUFFER_FILE]===RANGER_BUFFER_BLOB
   :productUnchanged===true&&rangerBufferDelta===false;
  const continuation=previousHead===ABILITY_NAME_PREDECESSOR.head&&compatible&&originalAncestor===true
@@ -197,28 +205,35 @@ export async function previousAbilityNameEvidence({repository,previousHead,base,
   if(!ABILITY_NAME_REUSED_JOBS.every(successful))return{passed:false,reason:'an-unchanged-browser-gate-is-not-successful'};
   const provenance=await immutablePrProvenance({get,runId:old.runId,head:old.head,base:old.base});
   const normalNames=['chromium','webkit'].map(engine=>`V1 Representative Normal Play (${engine})`),
-    normalComplete=!rangerBufferDelta&&!paths.includes('scripts/v177-representative-battles.mjs')&&normalNames.every(successful);
+    normalComplete=!rangerBufferDelta&&!layoutReadDelta&&!paths.includes('scripts/v177-representative-battles.mjs')&&normalNames.every(successful);
   const freshAudioRequired=rangerBufferDelta&&paths.includes(RETIRED_AUDIO_OWNER_FILE);
   if(continuation&&!freshAudioRequired){
-   const data=await get(`actions/runs/${ABILITY_NAME_PREDECESSOR.runId}/jobs?filter=latest&per_page=100`);
+   const audioOwner=ABILITY_NAME_AUDIO_OWNER,audioRun=await get(`actions/runs/${audioOwner.runId}`);
+   if(audioRun.id!==audioOwner.runId||audioRun.head_sha!==audioOwner.head||audioRun.status!=='completed'
+     ||audioRun.conclusion!=='failure'||audioRun.run_attempt!==1||audioRun.event!=='pull_request'
+     ||!audioRun.pull_requests?.some(pr=>pr.number===old.prNumber))return{passed:false,reason:'repaired-audio-run-owner-invalid'};
+   const audioProvenance=await immutablePrProvenance({get,runId:audioOwner.runId,head:audioOwner.head,base:old.base});
+   const data=await get(`actions/runs/${audioOwner.runId}/jobs?filter=latest&per_page=100`);
    if(!Array.isArray(data.jobs)||data.total_count!==data.jobs.length||data.total_count>100
      ||new Set(data.jobs.map(j=>j.id)).size!==data.jobs.length)return{passed:false,reason:'repaired-audio-jobs-inventory-invalid'};
    const adopted=[];
    for(const [name,id]of Object.entries(ABILITY_NAME_PREDECESSOR_AUDIO_JOBS)){
     const rows=data.jobs.filter(j=>j.name===name),j=rows[0],step=label=>j?.steps?.some(s=>s.name===label&&s.status==='completed'&&s.conclusion==='success');
-    if(rows.length!==1||j.id!==id||j.run_id!==ABILITY_NAME_PREDECESSOR.runId||j.head_sha!==previousHead
+    if(rows.length!==1||j.id!==id||j.run_id!==audioOwner.runId||j.head_sha!==audioOwner.head
       ||j.run_attempt!==1||j.status!=='completed'||j.conclusion!=='success'
       ||!step('Verify iPhone media output and encoded mix without microphone access')||!step('Run actions/upload-artifact@v4'))
       return{passed:false,reason:'repaired-audio-measurement-not-successful'};
     adoptedJobs.splice(adoptedJobs.findIndex(old=>old.name===name),1,j);adopted.push({name,id,head_sha:j.head_sha,run_id:j.run_id,run_attempt:j.run_attempt});
    }
-   predecessor.measurementOwnersAdopted=true;predecessor.adoptedJobs=adopted;
+   predecessor.measurementOwnersAdopted=true;predecessor.adoptedJobs=adopted;predecessor.audioProvenance=audioProvenance;
   }
   return{passed:true,head:old.head,base:old.base,prNumber:old.prNumber,runId:old.runId,provenance,infrastructureRecovery,predecessor,
    originalRunConclusion:run.conclusion,
-   productUnchanged,rangerBufferDelta,freshRangerRequired:rangerBufferDelta,rangerBufferScope:rangerBufferDelta?{file:RANGER_BUFFER_FILE,before:RANGER_BUFFER_BEFORE_BLOB,after:RANGER_BUFFER_BLOB}:null,
+   productUnchanged,rangerBufferDelta,layoutReadDelta,freshRangerRequired:rangerBufferDelta||layoutReadDelta,
+   layoutReadScope:layoutReadDelta?Object.entries(ABILITY_LAYOUT_PRODUCT_BEFORE).map(([file,before])=>({file,before,after:ABILITY_NAME_BLOBS[file]})):null,
+   rangerBufferScope:rangerBufferDelta?{file:RANGER_BUFFER_FILE,before:RANGER_BUFFER_BEFORE_BLOB,after:RANGER_BUFFER_BLOB}:null,
    freshAudioRequired,
-   reusedJobs:[...ABILITY_NAME_REUSED_JOBS.filter(name=>(!rangerBufferDelta||name!=='Ranger Turn Regression')
+   reusedJobs:[...ABILITY_NAME_REUSED_JOBS.filter(name=>(!(rangerBufferDelta||layoutReadDelta)||name!=='Ranger Turn Regression')
     &&(!freshAudioRequired||!name.startsWith('V1.0.3 Media Output ('))),...(normalComplete?normalNames:[])].map(name=>{const j=adoptedJobs.find(j=>j.name===name);
     return{name,id:j.id,head_sha:j.head_sha,run_id:j.run_id,run_attempt:j.run_attempt};}),
    freshVerifyRequired:true,freshPerformanceRequired:true,freshPhaseGRequired:true,
@@ -378,7 +393,7 @@ export function ciChangeScope(paths,{draft,sourceBlobs={},reuseNativeQa=false,re
   const combatQaOnly=reuseCombatQa&&reviewedCombatQaPaths(paths,sourceBlobs);
   const combatFixtureOnly=reuseCombatFixture&&reviewedCombatFixturePaths(paths,sourceBlobs);
   const abilityNameOnly=reuseAbilityNames&&(reviewedAbilityNamePaths(paths,sourceBlobs)||reviewedAbilityContinuationPaths(paths,sourceBlobs));
-  let full=!draft&&!nativeQaOnly&&!combatQaOnly&&!combatFixtureOnly&&!abilityNameOnly,rangerChanged=abilityNameOnly&&paths.includes(RANGER_BUFFER_FILE),
+  let full=!draft&&!nativeQaOnly&&!combatQaOnly&&!combatFixtureOnly&&!abilityNameOnly,rangerChanged=abilityNameOnly&&(paths.includes(RANGER_BUFFER_FILE)||paths.includes('app/v105AbilityNames.js')),
     normalChanged=abilityNameOnly&&freshNormal,allunitChanged=false,r9Changed=false,combatChanged=false;
   for(const file of paths){
     if(abilityNameOnly&&abilityNameFiles.has(file)){if(allunit.has(file))allunitChanged=true;continue;}
@@ -405,7 +420,7 @@ export function ciChangeScope(paths,{draft,sourceBlobs={},reuseNativeQa=false,re
   }
   return {full,verify_full:full||abilityNameOnly,performance:full||abilityNameOnly,phaseg:full||abilityNameOnly,ranger:full||rangerChanged,normal:full||normalChanged,allunit:full||allunitChanged,r9:full||r9Changed,combat:full||combatChanged,
     audio:full||(abilityNameOnly&&paths.includes(RETIRED_AUDIO_OWNER_FILE)),
-    scope:full?'full-regression':abilityNameOnly?(paths.includes(RANGER_BUFFER_FILE)?(paths.includes(RETIRED_AUDIO_OWNER_FILE)?'ranger-buffer-and-audio-lifecycle-delta':'ranger-buffer-selection-delta'):'ability-name-display-delta'):draft?'targeted-draft':combatQaOnly?'combat-qa-update-product-unchanged':combatFixtureOnly?'combat-fixture-update-product-unchanged':'native-qa-update-product-unchanged',wholeGameAccepted:false,
+    scope:full?'full-regression':abilityNameOnly?(paths.includes('app/v105AbilityNames.js')?'ability-name-lazy-layout-delta':paths.includes(RANGER_BUFFER_FILE)?(paths.includes(RETIRED_AUDIO_OWNER_FILE)?'ranger-buffer-and-audio-lifecycle-delta':'ranger-buffer-selection-delta'):'ability-name-display-delta'):draft?'targeted-draft':combatQaOnly?'combat-qa-update-product-unchanged':combatFixtureOnly?'combat-fixture-update-product-unchanged':'native-qa-update-product-unchanged',wholeGameAccepted:false,
     finalIntegrationRequiresFullRegression:true};
 }
 
@@ -453,6 +468,9 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
   const rangerBufferDelta=eligibleAbilityContinuation&&JSON.stringify(changedProductPaths)===JSON.stringify(Object.keys(RANGER_REPAIR_PRODUCT_BEFORE).sort())
     &&Object.entries(RANGER_REPAIR_PRODUCT_BEFORE).every(([file,before])=>sourceBlobs[file]===ABILITY_NAME_BLOBS[file]
       &&execFileSync('git',['rev-parse',previousHead+':'+file],{encoding:'utf8',windowsHide:true}).trim()===before);
+  const layoutReadDelta=eligibleAbilityContinuation&&JSON.stringify(changedProductPaths)===JSON.stringify(Object.keys(ABILITY_LAYOUT_PRODUCT_BEFORE).sort())
+    &&Object.entries(ABILITY_LAYOUT_PRODUCT_BEFORE).every(([file,before])=>sourceBlobs[file]===ABILITY_NAME_BLOBS[file]
+      &&execFileSync('git',['rev-parse',previousHead+':'+file],{encoding:'utf8',windowsHide:true}).trim()===before);
   const combatQaEvidence=await previousCombatQaEvidence({repository:process.env.GITHUB_REPOSITORY,previousHead,
     base:process.env.CI_SCOPE_PR_BASE,prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),action,draft:draft==='true',productUnchanged,
     paths,sourceBlobs,token:process.env.CI_SCOPE_ACTIONS_TOKEN});
@@ -460,7 +478,7 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
     base:process.env.CI_SCOPE_PR_BASE,prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),action,draft:draft==='true',productUnchanged,
     paths,sourceBlobs,token:process.env.CI_SCOPE_ACTIONS_TOKEN});
   const abilityNameEvidence=eligibleNativeReuse?await previousAbilityNameEvidence({repository:process.env.GITHUB_REPOSITORY,previousHead,
-    base:process.env.CI_SCOPE_PR_BASE,prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),action,draft:draft==='true',paths,sourceBlobs,productUnchanged,rangerBufferDelta,
+    base:process.env.CI_SCOPE_PR_BASE,prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),action,draft:draft==='true',paths,sourceBlobs,productUnchanged,rangerBufferDelta,layoutReadDelta,
     originalAncestor:eligibleAbilityContinuation&&execFileSync('git',['merge-base',ABILITY_NAME_BASELINE.head,previousHead],{encoding:'utf8',windowsHide:true}).trim()===ABILITY_NAME_BASELINE.head,
     token:process.env.CI_SCOPE_ACTIONS_TOKEN})
     :{passed:false,reason:'previous-head-not-exact-ancestor'};
