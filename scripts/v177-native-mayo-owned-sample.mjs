@@ -20,7 +20,7 @@ const unavailable=reason=>Object.assign(Error(reason),{name:'DiagnosticUnavailab
 function owned(file,args,{signal,timeoutMs,allowHelpExit=false}={}){
   assert.ok(file==='/bin/ps'||file==='/usr/bin/sample');
   if(file==='/bin/ps')assert.deepEqual(args,PS);
-  else assert.ok(JSON.stringify(args)==='["-h"]'||(args.length===5&&/^[1-9][0-9]*$/u.test(args[0])&&args[1]==='2'&&args[2]==='10'&&args[3]==='-file'&&path.isAbsolute(args[4])));
+  else assert.ok(args.length===0||(args.length===5&&/^[1-9][0-9]*$/u.test(args[0])&&args[1]==='2'&&args[2]==='10'&&args[3]==='-file'&&path.isAbsolute(args[4])));
   if(signal?.aborted)return Promise.reject(Object.assign(Error('Original owner closed before spawn'),{name:'AbortError'}));
   return new Promise((resolve,reject)=>{
     const child=spawn(file,args,{shell:false,stdio:['ignore','pipe','pipe'],env:{...process.env,LC_ALL:'C',TZ:'UTC'},windowsHide:true});
@@ -47,7 +47,7 @@ function owned(file,args,{signal,timeoutMs,allowHelpExit=false}={}){
     child.once('error',e=>stop(e));
     child.once('close',(code,signalName)=>{
       if(finished)return;receipt.closeSeen=true;receipt.code=code;receipt.signal=signalName;
-      if(code!==0&&!(allowHelpExit&&[1,64].includes(code)))primary??=unavailable('Observer exit '+code+'/'+signalName);
+      if(code!==0&&!(allowHelpExit&&file==='/usr/bin/sample'&&args.length===0&&code===255))primary??=unavailable('Observer exit '+code+'/'+signalName);
       finish();
     });
     timer=setTimeout(()=>stop(unavailable('Observer wall timeout')),timeoutMs);
@@ -111,7 +111,7 @@ export async function prepareMayoOwnedSample({out,selection,binding,browserType,
     assert.equal(process.getuid(),process.geteuid());
     record.executable=await realpath(browserType.executablePath());record.bundleRoot=await realpath(path.dirname(browserType.executablePath()));
     assert.equal(path.basename(record.bundleRoot),'webkit-2380');assert.ok(inside(record.bundleRoot,record.executable));
-    const help=await command('sample-help','/usr/bin/sample',['-h'],{signal:lifecycleSignal,timeoutMs:1500,allowHelpExit:true});
+    const help=await command('sample-help','/usr/bin/sample',[],{signal:lifecycleSignal,timeoutMs:1500,allowHelpExit:true});
     const usage=help.stdout+'\n'+help.stderr;
     if(!/\bpid\b|process\s+id/iu.test(usage)||!/duration/iu.test(usage)||!/interval/iu.test(usage)||!/-file\b/u.test(usage)||!/\bseconds\b/iu.test(usage)||!/milliseconds|millisecond|msec/iu.test(usage))throw unavailable('Builtin sample positional syntax/units unverified');
     const first=await ps('before',lifecycleSignal);baseline=first.rows;
