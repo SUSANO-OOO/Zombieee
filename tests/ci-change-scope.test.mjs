@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {ciChangeScope,framePerformanceRuntimes,previousFullCiEvidence,previousQualityEvidence,
- previousAbilityNameEvidence,reviewedAbilityNamePaths,reviewedAbilityContinuationPaths,ABILITY_NAME_BASELINE,ABILITY_NAME_PREDECESSOR,ABILITY_NAME_BLOBS,ABILITY_NAME_REUSED_JOBS,RANGER_BUFFER_FILE,RANGER_BUFFER_BLOB} from '../scripts/ci-change-scope.mjs';
+ previousAbilityNameEvidence,reviewedAbilityNamePaths,reviewedAbilityContinuationPaths,ABILITY_NAME_BASELINE,ABILITY_NAME_PREDECESSOR,ABILITY_NAME_BLOBS,ABILITY_NAME_REUSED_JOBS,RANGER_BUFFER_FILE,RANGER_BUFFER_BLOB,RETIRED_AUDIO_OWNER_FILE,RANGER_PROVENANCE_FILE} from '../scripts/ci-change-scope.mjs';
 import {assertEphemeralPerformanceHost} from '../scripts/v100-macos-indexing-control.mjs';
 import {readFileSync} from 'node:fs';
 import {load} from 'js-yaml';
@@ -54,6 +54,22 @@ test('the exact reviewed QA continuation keeps original6a owners, requires produ
  const stillFresh=await previousAbilityNameEvidence({...rangerOptions,request:api({rows:[...jobs,...oldNormalJobs]})});assert.equal(stillFresh.passed,true);assert.equal(stillFresh.freshNormalRequired,true);assert.equal(stillFresh.reusedJobs.length,42);
  const rangerScope=ciChangeScope(rangerPaths,{draft:false,sourceBlobs,reuseAbilityNames:true,freshNormal:true});
  assert.equal(rangerScope.full,false);for(const f of ['verify_full','performance','phaseg','normal','ranger','allunit'])assert.equal(rangerScope[f],true);
+ const combinedPaths=[...rangerPaths,RETIRED_AUDIO_OWNER_FILE,RANGER_PROVENANCE_FILE,'.github/workflows/ci.yml'],
+   combined=await previousAbilityNameEvidence({...rangerOptions,paths:combinedPaths,request:api()});
+ assert.equal(combined.passed,true);assert.equal(combined.freshAudioRequired,true);
+ assert.equal(combined.reusedJobs.length,40);
+ assert.ok(combined.reusedJobs.every(j=>j.head_sha===old.head&&j.run_id===old.runId
+   &&j.name!=='Ranger Turn Regression'&&!j.name.startsWith('V1.0.3 Media Output (')));
+ const combinedScope=ciChangeScope(combinedPaths,{draft:false,sourceBlobs,reuseAbilityNames:true,freshNormal:true});
+ assert.equal(combinedScope.full,false);assert.equal(combinedScope.audio,true);
+ assert.equal(combinedScope.scope,'ranger-buffer-and-audio-lifecycle-delta');
+ for(const f of ['verify_full','performance','phaseg','normal','ranger'])assert.equal(combinedScope[f],true);
+ for(const file of [RETIRED_AUDIO_OWNER_FILE,RANGER_PROVENANCE_FILE,'.github/workflows/ci.yml'])
+  assert.equal((await previousAbilityNameEvidence({...rangerOptions,paths:combinedPaths,
+    sourceBlobs:{...sourceBlobs,[file]:'f'.repeat(40)},request:()=>assert.fail('Reject an unknown repair before network')})).passed,false);
+ const workflow=load(readFileSync('.github/workflows/ci.yml','utf8'));
+ assert.equal(workflow.jobs.scope.outputs.audio,'${{ steps.scope.outputs.audio }}');
+ assert.ok(workflow.jobs['v103-audio-output'].if.includes("needs.scope.outputs.audio == 'true'"));
  for(const bad of [{rangerBufferDelta:false},{productUnchanged:true},{sourceBlobs:{...sourceBlobs,[RANGER_BUFFER_FILE]:'f'.repeat(40)}},{paths:[...rangerPaths,'app/unknown.js']}])
   assert.equal((await previousAbilityNameEvidence({...rangerOptions,...bad,request:()=>assert.fail('Reject unrelated product changes before network')})).passed,false);
  assert.equal(reviewedAbilityNamePaths([...Object.keys(ABILITY_NAME_BLOBS)],sourceBlobs),false,'The old display-only entry cannot adopt a new Ranger renderer');
@@ -64,7 +80,7 @@ test('the exact reviewed QA continuation keeps original6a owners, requires produ
 });
 
 test('the exact boss-label deletion retains successful browser owners but repeats Verify, performance and unfinished normal play',async()=>{
- const old=ABILITY_NAME_BASELINE,paths=[...Object.keys(ABILITY_NAME_BLOBS).filter(f=>f!==RANGER_BUFFER_FILE),'scripts/ci-change-scope.mjs','tests/ci-combat-qa-reuse.test.mjs'];
+ const old=ABILITY_NAME_BASELINE,paths=[...Object.keys(ABILITY_NAME_BLOBS).filter(f=>f!==RANGER_BUFFER_FILE&&f!==RETIRED_AUDIO_OWNER_FILE),'scripts/ci-change-scope.mjs','tests/ci-combat-qa-reuse.test.mjs'];
  const sourceBlobs={...ABILITY_NAME_BLOBS},options={repository:'SUSANO-OOO/Zombieee',previousHead:old.head,base:old.base,prNumber:181,
   action:'synchronize',draft:false,paths,sourceBlobs,token:'fixture-only'};
  const fixture=provenanceFixture({runId:old.runId,head:old.head,base:old.base});
@@ -539,6 +555,9 @@ test('new source heads do not wait behind a previous head and all original full 
  assert.equal(current.jobs.scope.outputs.performance,'${{ steps.scope.outputs.performance }}');delete current.jobs.scope.outputs.performance;
  assert.equal(current.jobs.scope.outputs.verify_full,'${{ steps.scope.outputs.verify_full }}');delete current.jobs.scope.outputs.verify_full;
  assert.equal(current.jobs.scope.outputs.phaseg,'${{ steps.scope.outputs.phaseg }}');delete current.jobs.scope.outputs.phaseg;
+ assert.equal(current.jobs.scope.outputs.audio,'${{ steps.scope.outputs.audio }}');delete current.jobs.scope.outputs.audio;
+ assert.equal(current.jobs['v103-audio-output'].if,"${{ needs.scope.outputs.full == 'true' || needs.scope.outputs.audio == 'true' }}");
+ current.jobs['v103-audio-output'].if=original.jobs['v103-audio-output'].if;
  assert.equal(current.jobs['v100-phase-g-production'].if,"${{ needs.scope.outputs.full == 'true' || needs.scope.outputs.phaseg == 'true' }}");
  current.jobs['v100-phase-g-production'].if=original.jobs['v100-phase-g-production'].if;
  const verifyOnly=original.jobs.verify.steps.filter(step=>step.if?.includes("needs.scope.outputs.full == 'true'"));assert.equal(verifyOnly.length,19);

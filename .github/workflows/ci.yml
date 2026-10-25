@@ -32,6 +32,7 @@ jobs:
       normal: ${{ steps.scope.outputs.normal }}
       r9: ${{ steps.scope.outputs.r9 }}
       combat: ${{ steps.scope.outputs.combat }}
+      audio: ${{ steps.scope.outputs.audio }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -270,7 +271,7 @@ jobs:
         run: test "$V177_COMBAT_MATRIX_RESULT" = success
 
   v103-audio-output:
-    if: ${{ needs.scope.outputs.full == 'true' }}
+    if: ${{ needs.scope.outputs.full == 'true' || needs.scope.outputs.audio == 'true' }}
     needs: [scope]
     name: V1.0.3 Media Output (${{ matrix.engine }})
     strategy:

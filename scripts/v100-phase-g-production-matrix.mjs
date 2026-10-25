@@ -1642,6 +1642,17 @@ async function installDeploymentPointerReceipt(page, attemptId, expectedIdentity
       diagnosticSnapshot,
       diagnostics: { rawEventTrail, handlerExceptions, before: diagnosticSnapshot(), after: null },
       dispatchStartedAtPerformanceMs: null,
+      dispose: () => {
+        const startedAt = performance.now();
+        for (const type of ["pointerdown", "pointerup", "mousedown", "mouseup", "click"]) {
+          window.removeEventListener(type, rawEventHandler, true);
+          document.removeEventListener(type, rawEventHandler, true);
+        }
+        for (const type of ["pointerdown", "pointerup", "click"]) document.removeEventListener(type, handler, true);
+        receiptRegistry.delete(receiptAttemptId);
+        return { attemptId: receiptAttemptId, registrationCount: 13, registryRemoved: !receiptRegistry.has(receiptAttemptId),
+          startedAt, endedAt: performance.now() };
+      },
     });
     return true;
   }, { receiptAttemptId: attemptId, identity: expectedIdentity });
@@ -1658,7 +1669,12 @@ async function readDeploymentPointerReceipts(page, attemptId, timeoutMs) {
         // The captured event owns its actual hit-test proof. Reading it must not force another layout.
         entry.diagnostics.after = entry.diagnosticSnapshot(point, { hitTest: false });
       }
-      return { receipts: entry?.receipts ?? [], diagnostics: entry?.diagnostics ?? null };
+      const receipts = entry?.receipts ?? [];
+      // Once the actual sequence is collected, remove its observation hooks in
+      // this same task. A separate cleanup RPC must not race the live game.
+      const complete = ["pointerdown", "pointerup", "click"].every(type => receipts.some(receipt => receipt.type === type));
+      const cleanup = complete ? entry.dispose() : null;
+      return { receipts, diagnostics: entry?.diagnostics ?? null, cleanup };
     })()
   ), attemptId), timeoutMs);
   return {
@@ -1666,6 +1682,7 @@ async function readDeploymentPointerReceipts(page, attemptId, timeoutMs) {
     value: undefined,
     receipts: result.status === "fulfilled" && Array.isArray(result.value?.receipts) ? result.value.receipts : [],
     diagnostics: result.status === "fulfilled" ? result.value?.diagnostics ?? null : null,
+    cleanup: result.status === "fulfilled" ? result.value?.cleanup ?? null : null,
   };
 }
 
@@ -1673,19 +1690,29 @@ async function waitForDeploymentPointerReceipts(page, attemptId, deadlineAt) {
   const reads = [];
   let receipts = [];
   let diagnostics = null;
+  let cleanup = null;
   while (Date.now() < deadlineAt && !page.isClosed()) {
     const read = await readDeploymentPointerReceipts(page, attemptId, deadlineAt - Date.now());
     reads.push({ ...read, receiptCount: read.receipts.length });
     if (read.status === "fulfilled") receipts = read.receipts;
     if (read.status === "fulfilled") diagnostics = read.diagnostics;
+    if (read.status === "fulfilled") cleanup = read.cleanup;
     if (receipts.length >= 3 && receipts.some((receipt) => receipt.type === "click")) break;
     if (read.status !== "fulfilled") break;
     await new Promise((resolve) => setTimeout(resolve, Math.min(8, Math.max(1, deadlineAt - Date.now()))));
   }
-  return { receipts, reads, diagnostics };
+  return { receipts, reads, diagnostics, cleanup };
 }
 
-async function removeDeploymentPointerReceipt(page, attemptId) {
+async function removeDeploymentPointerReceipt(page, attemptId, cleanup = null) {
+  if (cleanup !== null) {
+    if (cleanup.attemptId !== attemptId || cleanup.registrationCount !== 13 || cleanup.registryRemoved !== true
+      || !Number.isFinite(cleanup.startedAt) || !Number.isFinite(cleanup.endedAt)
+      || cleanup.endedAt < cleanup.startedAt || cleanup.endedAt - cleanup.startedAt > DEPLOYMENT_POINTER_DIAGNOSTIC_READ_TIMEOUT_MS) {
+      throw phaseGPointerFailure("QA_HARNESS_POINTER_RECEIPT_CLEANUP_DIVERGENCE", { attemptId, cleanup }, 1);
+    }
+    return { status: "removed", cleanup };
+  }
   if (page.isClosed()) return { status: "disposed-with-page" };
   const removal = await observePromiseWithin(page.evaluate((receiptAttemptId) => {
     const registry = window.__V100_PHASE_G_DEPLOYMENT_POINTER_RECEIPTS__;
@@ -1942,6 +1969,7 @@ async function performVerifiedDeploymentPointer(page, {
 
     const attemptId = `deployment-pointer-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     let receiptInstalled = false;
+    let receiptCleanup = null;
     let primaryError = null;
     try {
       preflightEvidence.receiptInstallation = await preflightStep(
@@ -2057,6 +2085,7 @@ async function performVerifiedDeploymentPointer(page, {
           dispatchStartedAt + DEPLOYMENT_POINTER_DISPATCH_DEADLINE_MS,
         )
         : { receipts: [], reads: [], diagnostics: null };
+      receiptCleanup = receiptResult.cleanup ?? null;
       const receipts = receiptResult.receipts;
       const receiptOutcome = deploymentPointerOutcome({
         dispatch,
@@ -2116,6 +2145,7 @@ async function performVerifiedDeploymentPointer(page, {
         dispatch,
         receipts,
         pointerDiagnostics: receiptResult.diagnostics,
+        receiptCleanup,
         samples,
         before: terminalDiagnostics,
         after: acceptance.diagnostics,
@@ -2140,7 +2170,7 @@ async function performVerifiedDeploymentPointer(page, {
     } finally {
       if (receiptInstalled) {
         try {
-          await removeDeploymentPointerReceipt(page, attemptId);
+          await removeDeploymentPointerReceipt(page, attemptId, receiptCleanup);
         } catch (cleanupError) {
           const cleanupEvidence = cleanupError?.phaseGPointerEvidence ?? { attemptId, error: String(cleanupError) };
           if (!primaryError) throw cleanupError;

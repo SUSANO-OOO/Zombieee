@@ -311,6 +311,7 @@ test("deployment pointer diagnostics are bounded, capture handler failures, and 
   const removeFn = vm.runInNewContext(`${remove.getText(parsed)}\nremoveDeploymentPointerReceipt`, {
     observePromiseWithin: async (value) => ({ status: "fulfilled", value: await value }),
     DEPLOYMENT_POINTER_DIAGNOSTIC_READ_TIMEOUT_MS: 100,
+    phaseGPointerFailure: code => Object.assign(new Error(code), { code }),
   });
   const readFn = vm.runInNewContext(`${read.getText(parsed)}\nreadDeploymentPointerReceipts`, {
     observePromiseWithin: async (value) => ({ status: "fulfilled", value: await value }),
@@ -343,6 +344,30 @@ test("deployment pointer diagnostics are bounded, capture handler failures, and 
   await removeFn({ evaluate, isClosed: () => false }, "attempt");
   assert.equal((windowListeners.get("click") ?? []).length, 0);
   assert.equal((documentListeners.get("click") ?? []).length, 0);
+
+  window.__ASHFALL_BATTLE_QA__ = { getPhaseGCombatSnapshot: () => ({ screen: "battle", running: true,
+    paused: false, over: false, won: false, energy: 10, deployQueue: [], deployCooldowns: { scout: 0 } }) };
+  await installFn({ evaluate }, "complete-attempt", { nodeId: "deployment-card-1", kind: "scout", slot: "1" });
+  for (const type of ["pointerdown", "pointerup", "click"]) (documentListeners.get(type) ?? []).at(-1)({ ...rawEvent, type });
+  const completeRead = await readFn({ evaluate, isClosed: () => false }, "complete-attempt", 100);
+  assert.equal(completeRead.receipts.length, 3);
+  assert.equal(completeRead.cleanup.attemptId, "complete-attempt");
+  assert.equal(completeRead.cleanup.registrationCount, 13);
+  assert.equal(completeRead.cleanup.registryRemoved, true);
+  assert.equal(registry.has("complete-attempt"), false);
+  for (const type of ["pointerdown", "pointerup", "mousedown", "mouseup", "click"]) {
+    assert.equal((windowListeners.get(type) ?? []).length, 0);
+    assert.equal((documentListeners.get(type) ?? []).length, 0);
+  }
+  const removed = await removeFn({ evaluate: () => { throw Error("a completed cleanup must add no second RPC"); },
+    isClosed: () => false }, "complete-attempt", completeRead.cleanup);
+  assert.equal(removed.status, "removed");
+  for (const invalid of [{ attemptId: "another-attempt" }, { registrationCount: 12 }, { registryRemoved: false },
+    { endedAt: NaN }, { endedAt: completeRead.cleanup.startedAt - 1 }, { endedAt: completeRead.cleanup.startedAt + 101 }]) {
+    await assert.rejects(removeFn({ evaluate: () => { throw Error("invalid proof must not retry cleanup"); },
+      isClosed: () => false }, "complete-attempt", { ...completeRead.cleanup, ...invalid }),
+    error => error.code === "QA_HARNESS_POINTER_RECEIPT_CLEANUP_DIVERGENCE");
+  }
 });
 test("canonical capture selection rejects empty filters and missing/foreign results independently of results.length", () => {
   const constants = ["requiredViewports", "extraBattleViewports", "MAXED_QA_UNIT_LEVELS", "extraBattleContracts", "coreStates"];

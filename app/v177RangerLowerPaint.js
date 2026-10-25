@@ -81,6 +81,10 @@ function selectRaster(p,w,h) {
   // first array slot while another unused/cold surface is available.
   let raster=null;
   for(const candidate of p.rasters)if(!candidate.valid&&(!raster||candidate.lastUsed<raster.lastUsed))raster=candidate;
+  // A spare surface avoids synchronizing a just-drawn backing store even when
+  // it is the only invalid geometry. Keep the original pool and pixel bounds.
+  if(raster?.lastUsed>0&&p.useSequence-raster.lastUsed<MAX_SURFACES
+    &&p.rasters.length<MAX_SURFACES&&total+pixels<=MAX_PIXELS)raster=null;
   if(!raster&&(p.rasters.length>=MAX_SURFACES||total+pixels>MAX_PIXELS))
     raster=p.rasters.reduce((oldest,current)=>!oldest||current.lastUsed<oldest.lastUsed?current:oldest,null);
   let transient;

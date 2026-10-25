@@ -176,8 +176,9 @@ test('alternating Ranger owners keep exact pixels and current draw state without
     assert.equal(after.rasterizedDraws,before.rasterizedDraws);
     assert.equal(after.reusedDraws-before.reusedDraws,20);
     assert.equal(observation.writes,uploadsBefore,'alternating cached owners must never upload their pixels again');
-    assert.equal(painter.rasters.length,2);
-    assert.equal(new Set(painter.rasters.map(raster=>raster.canvas)).size,2);
+    assert.equal(painter.rasters.filter(raster=>raster.valid).length,2);
+    assert.equal(painter.rasters.length,3,'two current payloads plus the still-retained retired surface');
+    assert.equal(new Set(painter.rasters.map(raster=>raster.canvas)).size,3);
     assert.ok(painter.rasters.reduce((sum,raster)=>sum+raster.imageData.data.byteLength,0)<=65536*4);
     assert.ok(painter.rasters.reduce((sum,raster)=>sum+raster.canvas.width*raster.canvas.height,0)<=65536);
     const failedTarget=main({width,height,matrix:[scale,0,0,scale,320.25,160]});
@@ -216,8 +217,9 @@ test('sampler growth preserves exact small surfaces and a missing context never 
   const {painter,observation}=observedPainter();
   const paint=(size,phase)=>paintV177RangerLower(painter,main({width:1600,height:1600,matrix:[1,0,0,1,600,350]}).ctx,phase,.5,-size/2,-size*.8,size,size*448/480);
   paint(120,.371);paintV177RangerLower(painter,main({matrix:[1,0,0,1,-10000,350]}).ctx,.371,.5,-48,-80,96,89.6);
-  paint(96,.371);paint(96,.762);paint(96,.371);assert.equal(painter.rasters.length,2);
-  const alternate=painter.rasters[1].canvas,dimensions=[alternate.width,alternate.height];paint(480,.371);
+  paint(96,.371);paint(96,.762);paint(96,.371);assert.equal(painter.rasters.filter(raster=>raster.valid).length,2);
+  assert.equal(painter.rasters.length,3);
+  const alternate=painter.rasters.find(raster=>raster.valid&&raster!==painter.lastRaster).canvas,dimensions=[alternate.width,alternate.height];paint(480,.371);
   assert.deepEqual([alternate.width,alternate.height],dimensions);
   const writes=observation.writes;paint(96,.762);assert.equal(observation.writes,writes,
     'a larger sampler workspace must not force a still-retained small payload to upload again');
@@ -241,7 +243,8 @@ test('Ranger releases source readback and retains the original generated-RGBA su
   assert.equal(observations[0].attributes.willReadFrequently,true);assert.equal(observations[0].reads,rig.parts.length);
   assert.equal(observations[0].canvas.width,0);assert.equal(observations[0].canvas.height,0);
   const paint=phase=>paintV177RangerLower(painter,main({matrix:[1,0,0,1,640,360]}).ctx,phase,.5,-48,-80,96,89.6);
-  paint(.371);paint(.762);paint(.371);assert.equal(painter.rasters.length,2);
+  paint(.371);paint(.762);paint(.371);assert.equal(painter.rasters.filter(raster=>raster.valid).length,2);
+  assert.equal(painter.rasters.length,3);
   for(const row of observations.slice(1)){assert.equal(row.attributes.willReadFrequently,true);assert.equal(row.reads,0);}
   for(const raster of painter.rasters)assert.equal(raster.attributes.willReadFrequently,true);
   assert.ok(painter.rasters.reduce((sum,raster)=>sum+raster.canvas.width*raster.canvas.height,0)<=65536);
@@ -579,7 +582,9 @@ test('eight alternating Ranger owners preserve exact pixels and stop uploading u
     assert.ok(painter.rasters.reduce((sum,raster)=>sum+raster.canvas.width*raster.canvas.height,0)<=65536);
     assert.ok(painter.rasters.reduce((sum,raster)=>sum+raster.imageData.data.byteLength,0)<=65536*4);
   }
-  assert.equal(painter.rasters.length,8);assert.equal(observation.writes,9,'one warmup plus eight distinct exact payloads');
+  assert.equal(painter.rasters.filter(raster=>raster.valid).length,8);
+  assert.equal(painter.rasters.length,9,'the original warmup surface is retained while the pool has spare capacity');
+  assert.equal(observation.writes,9,'one warmup plus eight distinct exact payloads');
 });
 test('evicting a Ranger upload owner cannot leave an alias pointing through a newly borrowed payload',()=>{
   const {painter}=observedPainter(),a=.371,b=.372,near=1e-12;
@@ -609,7 +614,9 @@ test('sixteen rotating poses retain exact pixels inside the original total pixel
     assert.ok(painter.rasters.reduce((sum,r)=>sum+r.canvas.width*r.canvas.height,0)<=65536);
     assert.ok(painter.rasters.reduce((sum,r)=>sum+r.imageData.data.byteLength,0)<=65536*4);
   }
-  assert.equal(painter.rasters.length,16);assert.equal(observation.writes,17,'one warmup and sixteen independent uploads; later rotations reuse them');
+  assert.equal(painter.rasters.filter(raster=>raster.valid).length,16);
+  assert.equal(painter.rasters.length,17,'the retired warmup does not displace a current exact payload');
+  assert.equal(observation.writes,17,'one warmup and sixteen independent uploads; later rotations reuse them');
   const churn=[...phases.map(p=>p+1e-12),...Array.from({length:20},(_,i)=>.041+i*.043),...phases.map(p=>p+2e-12),...phases];
   for(const phase of churn){
     const actual=paintPoolInput(painter,phase),control=observedPainter(),expected=paintPoolInput(control.painter,phase);
@@ -678,6 +685,19 @@ test('invalidating geometry does not rewrite a recently drawn surface when a col
  assert.ok(painter.rasters.length<=32);assert.ok(painter.rasters.reduce((sum,r)=>sum+r.canvas.width*r.canvas.height,0)<=65536);
 });
 
+
+test('a recently drawn invalid surface stays intact while the original pool has spare capacity',()=>{
+ const {painter}=observedPainter();
+ paintPoolInput(painter,.371);
+ const hot=painter.lastRaster,pixels=hot.canvas.data;
+ paintPoolInput(painter,.371,96,true);
+ const actual=paintPoolInput(painter,.73),expected=paintPoolInput(observedPainter().painter,.73);
+ assert.notEqual(painter.lastRaster.canvas,hot.canvas);
+ assert.equal(hot.canvas.data,pixels,'an invalid geometry key does not make a queued surface safe to rewrite');
+ assertSameActiveLower(actual,expected);assert.deepEqual(actual.receipt,expected.receipt);
+ assert.ok(painter.rasters.length<=32);
+ assert.ok(painter.rasters.reduce((sum,r)=>sum+r.canvas.width*r.canvas.height,0)<=65536);
+});
 
 test('the weighted lower painter dependency remains limited to the Ranger atlas',()=>{
  assert.deepEqual(Object.entries(V177_JOINT_ATLASES).filter(([,a])=>a.lowerRig).map(([kind])=>kind),['ranger']);
