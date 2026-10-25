@@ -1,50 +1,93 @@
-name: Native Capture Comparison Diagnostic
-
+name: Musashi Original Native AV Codec Diagnostic
 on:
   workflow_dispatch:
     inputs:
       expected_head:
-        description: Exact 40-character candidate SHA for this diagnostic
+        description: Exact immutable two-path Musashi diagnostic source
         required: true
         type: string
-
 permissions:
   contents: read
-
 concurrency:
-  group: native-capture-comparison-${{ inputs.expected_head }}
+  group: musashi-av-codec-${{ inputs.expected_head }}
   cancel-in-progress: false
-
 jobs:
-  native-capture-comparison:
-    name: Native WebKit Capture Comparison Diagnostic
-    runs-on: macos-15-intel
+  capture:
+    runs-on: macos-15
     timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+    env:
+      V177_EXPECTED_HEAD_SHA: ${{ inputs.expected_head }}
+      GITHUB_PAGES_RELEASE_SHA: ${{ inputs.expected_head }}
     steps:
       - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.expected_head }}
+          fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: npm
-      - name: Verify immutable candidate before running the diagnostic
-        env:
-          EXPECTED_HEAD: ${{ inputs.expected_head }}
-        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_HEAD??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_HEAD);'
-      - run: npm ci
-      - name: Install the pinned native WebKit runtime
+      - name: Bind the immutable product and only two diagnostic paths
         run: |
-          npm ci --prefix scripts/pwa-native-runtime
-          node scripts/pwa-native-runtime/node_modules/playwright/cli.js install webkit
-      - name: Compare original native canvas recording conditions
-        env:
-          V177_NATIVE_CAPTURE_OUT: outputs/v177-native-capture-comparison
-        run: node scripts/v177-native-canvas-comparison-browser.mjs
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';import fs from 'node:fs';import{execFileSync}from'node:child_process';import{createHash}from'node:crypto';
+          const base='45e46b90be77cd349670157974646dcc7f16b1cd',g=a=>execFileSync('git',a,{encoding:'utf8',maxBuffer:8*1024*1024}).trim(),hash=b=>createHash('sha256').update(b).digest('hex');
+          assert.equal(process.platform,'darwin');assert.equal(process.arch,'arm64');assert.equal(process.env.GITHUB_EVENT_NAME,'workflow_dispatch');assert.equal(process.env.GITHUB_RUN_ATTEMPT,'1');
+          assert.equal(g(['rev-parse','HEAD']),process.env.V177_EXPECTED_HEAD_SHA);assert.equal(process.env.GITHUB_SHA,process.env.V177_EXPECTED_HEAD_SHA);assert.equal(g(['merge-base',base,'HEAD']),base);
+          const paths=['scripts/v105-five-corrections-capture.mjs','.github/workflows/native-capture-comparison.yml'];assert.deepEqual(g(['diff','--name-only',base,'HEAD']).split('\n').sort(),paths.sort());
+          const roots=['app','public','assets','package.json','package-lock.json','scripts/pwa-native-runtime','scripts/native-recording-runtime'];for(const p of roots)assert.equal(g(['rev-parse','HEAD:'+p]),g(['rev-parse',base+':'+p]));
+          const sources=paths.concat(['scripts/v177-native-encoded-clips.mjs','scripts/v177-native-game-capture-browser.mjs','scripts/v177-native-allunit-recording-runtime.mjs','scripts/native-recording-runtime/package.json','scripts/native-recording-runtime/package-lock.json','scripts/run-browser-qa-with-server.mjs','scripts/browser-qa-build-identity.mjs','app/manualAbilities.js','app/AshfallGame.tsx','app/audioMixer.js']);
+          const proof={head:g(['rev-parse','HEAD']),tree:g(['rev-parse','HEAD^{tree}']),sourceProductBase:base,runId:process.env.GITHUB_RUN_ID,runAttempt:process.env.GITHUB_RUN_ATTEMPT,order:['vp8','mp4','mp4','vp8'],productTrees:roots.map(p=>({path:p,gitObject:g(['rev-parse',base+':'+p])})),sources:sources.map(file=>({file,gitBlob:g(['rev-parse','HEAD:'+file]),sha256:hash(fs.readFileSync(file))})),originalCapture:{file:'scripts/v105-five-corrections-capture.mjs',gitBlob:g(['rev-parse',base+':scripts/v105-five-corrections-capture.mjs']),sha256:hash(execFileSync('git',['show',base+':scripts/v105-five-corrections-capture.mjs']))},diagnosticOnly:true,formalAccepted:false,releaseAccepted:false};
+          fs.mkdirSync('outputs/musashi-av-codec',{recursive:true});fs.writeFileSync('outputs/musashi-av-codec/source-binding.json',JSON.stringify(proof,null,2)+'\n',{flag:'wx'});
+          JS
+      - run: npm ci
+      - name: Install the unchanged dedicated native WebKit recording runtime
+        run: |
+          npm ci --prefix scripts/native-recording-runtime
+          node scripts/native-recording-runtime/node_modules/playwright/cli.js install webkit
+      - run: npm run build
+      - name: Preserve the one shared build identity
+        run: |
+          node --input-type=module <<'JS'
+          import fs from'node:fs';import{productionBuildIdentity}from'./scripts/browser-qa-build-identity.mjs';fs.writeFileSync('outputs/musashi-av-codec/build-identity.json',JSON.stringify(await productionBuildIdentity(),null,2)+'\n',{flag:'wx'});
+          JS
+      - name: One fixed VP8 MP4 MP4 VP8 sequence of the original Musashi manual case
+        run: |
+          set -euo pipefail
+          result=0
+          for episode in 1-vp8 2-mp4 3-mp4 4-vp8; do
+            export V105_CAPTURE_SCOPE=desktop V105_MUSASHI_CODEC="${episode#*-}"
+            export V105_CAPTURE_OUT="outputs/musashi-av-codec/$episode"
+            set +e
+            node scripts/v105-five-corrections-capture.mjs
+            capture_exit=$?
+            set -e
+            export V105_DIAGNOSTIC_CAPTURE_EXIT="$capture_exit"
+            node --input-type=module <<'JS'
+          import assert from'node:assert/strict';import fs from'node:fs';import{canContinueCompletedCorrection}from'./scripts/v105-five-corrections-capture.mjs';
+          const r=JSON.parse(fs.readFileSync(process.env.V105_CAPTURE_OUT+'/report.json')),row=r.cases[0],exit=Number(process.env.V105_DIAGNOSTIC_CAPTURE_EXIT);
+          assert.equal(r.head,process.env.V177_EXPECTED_HEAD_SHA);assert.equal(r.sourceProductBase,'45e46b90be77cd349670157974646dcc7f16b1cd');assert.equal(r.scope,'desktop');assert.equal(r.cases.length,1);assert.equal(row.kind,'miyamoto-musashi');assert.equal(row.mode,'manual');assert.equal(r.diagnosticOnly,true);assert.equal(r.releaseAccepted,false);
+          if(exit===0){assert.equal(row.status,'recorded');assert.equal(row.codecControl.matched,true);assert.equal(r.errors.length,0);}else{assert.equal(exit,1);assert.equal(r.errors.length,1);assert.equal(r.errors[0],'miyamoto-musashi/manual: '+row.error);assert.equal(row.status,'failed');assert.equal(r.contexts.length,1);assert.equal(r.requests.unexpectedFailures.length,0);assert.equal(canContinueCompletedCorrection(row,{pageClosed:row.context?.pageClosedBeforeCleanup!==false||row.context?.completed!==true,fatalErrors:0,errorsBefore:0,errorsAfter:r.errors.length}),true,'Only a retained completed assertion failure permits the next independent episode');}
+          fs.writeFileSync(process.env.V105_CAPTURE_OUT+'/diagnostic-exit.json',JSON.stringify({exit,retainedFailure:exit!==0,retried:false,formalAccepted:false,releaseAccepted:false},null,2)+'\n',{flag:'wx'});
+          JS
+            if [[ "$capture_exit" -ne 0 ]]; then result=1; fi
+          done
+          exit "$result"
+      - name: Preserve all failed or unexecuted episodes without acceptance
+        if: always()
+        run: |
+          node --input-type=module <<'JS'
+          import fs from'node:fs';const root='outputs/musashi-av-codec';fs.mkdirSync(root,{recursive:true});const episodes=['1-vp8','2-mp4','3-mp4','4-vp8'].map(id=>{const file=root+'/'+id+'/report.json';if(!fs.existsSync(file))return{id,status:'unexecuted'};const r=JSON.parse(fs.readFileSync(file));return{id,head:r.head,scope:r.scope,status:r.status,requestedCodec:r.selection.requestedCodec,cases:r.cases.map(c=>({kind:c.kind,mode:c.mode,status:c.status,file:c.file,sha256:c.sha256,bytes:c.bytes,codecControl:c.codecControl,error:c.error})),errors:r.errors};});fs.writeFileSync(root+'/diagnostic-scope.json',JSON.stringify({head:process.env.GITHUB_SHA,sourceProductBase:'45e46b90be77cd349670157974646dcc7f16b1cd',order:['vp8','mp4','mp4','vp8'],episodes,productChanged:false,originalMediaRewritten:false,thresholdsRelaxed:false,deadlinesRelaxed:false,diagnosticOnly:true,formalAccepted:false,releaseAccepted:false,wholeGameAccepted:false},null,2)+'\n',{flag:'wx'});
+          JS
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: v177-native-capture-comparison
-          path: outputs/v177-native-capture-comparison
-          retention-days: 7
+          name: musashi-av-codec-original
+          path: outputs/musashi-av-codec
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 14

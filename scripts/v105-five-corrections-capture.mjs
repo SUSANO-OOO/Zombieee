@@ -201,7 +201,7 @@ export async function startCorrectionRecording({ids,durationMs,preferMp4=false})
   const watchdog=setTimeout(()=>{state.failed??='Original15s real recorder deadline exceeded';
     state.stopAt??=performance.now();cancelAnimationFrame(state.raf);if(recorder.state!=='inactive')recorder.stop();},15000);
   window.__V105_RECORDING__={state,recorder,stopped,tap,stream,watchdog};
-  return {mime,startAt:state.startAt,initial:state.initial};
+  return {mime,actualMime:recorder.mimeType,startAt:state.startAt,initial:state.initial};
 }
 export async function stopCorrectionRecording(){
   const owned=window.__V105_RECORDING__;if(!owned)throw Error('No owned AV recording');
@@ -217,7 +217,7 @@ export async function stopCorrectionRecording(){
     if(!validBytes)state.failed??='Original encoded byte limit';
     const data=validBytes?await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result.split('base64,')[1]);reader.onerror=reject;reader.readAsDataURL(blob);}):'';
     const receipt={...state};delete receipt.chunks;
-    return {data,...receipt,canvas:{width:document.querySelector('.game-shell canvas').width,height:document.querySelector('.game-shell canvas').height}};
+    return {data,...receipt,actualMime:recorder.mimeType,blobMime:blob.type,canvas:{width:document.querySelector('.game-shell canvas').width,height:document.querySelector('.game-shell canvas').height}};
   }finally{clearTimeout(stopTimer);tap.release();stream.getTracks().forEach(t=>t.stop());delete window.__V105_RECORDING__;}
 }
 
@@ -225,10 +225,14 @@ export async function runBrowserQa(){
   const binding=await nativeGameCaptureBinding(),scope=process.env.V105_CAPTURE_SCOPE;
   const {V177_JOINT_ATLASES:currentAtlases}=await import('../app/v177JointPresentation.js');
   const atlasPaths=Object.fromEntries(Object.entries(currentAtlases).map(([kind,atlas])=>[kind,atlas.path]));
-  const selection=await correctionCaseSelection(scope,{event:JSON.parse(await readFile(process.env.GITHUB_EVENT_PATH,'utf8'))});
+  assert.equal(process.env.GITHUB_EVENT_NAME,'workflow_dispatch');assert.equal(scope,'desktop');
+  const codec=process.env.V105_MUSASHI_CODEC;assert.ok(['vp8','mp4'].includes(codec));
+  const planOnly=correctionCases(scope).filter(row=>row.kind==='miyamoto-musashi'&&row.mode==='manual');
+  assert.deepEqual(planOnly,[{kind:'miyamoto-musashi',mode:'manual'}]);
+  const selection={mode:'musashi-av-codec-diagnostic',requestedCodec:codec,plan:planOnly,retained:[]};
   const {plan}=selection,viewport=scope==='desktop'?{width:1280,height:720}:{width:844,height:scope==='mobile390'?390:340};
   const out=path.resolve(process.env.V105_CAPTURE_OUT??'outputs/v105-five-corrections/'+scope);await mkdir(out,{recursive:true});
-  const report={...binding,architecture:process.arch,scope,viewport,runtime:NATIVE_RECORDING_WEBKIT_RUNTIME,selection,cases:[],contexts:[],errors:[],status:'starting',
+  const report={...binding,architecture:process.arch,scope,viewport,runtime:NATIVE_RECORDING_WEBKIT_RUNTIME,selection,sourceProductBase:'45e46b90be77cd349670157974646dcc7f16b1cd',diagnosticOnly:true,releaseAccepted:false,formalPerformanceAccepted:false,allUnitAcceptance:false,cases:[],contexts:[],errors:[],status:'starting',
     recordingConditions:{independentContextPerCase:true,actualAudioReadinessBeforeRecording:true,caseDeadlineMs:30000,
       retainedObservationsKeepTheirOriginalConditions:true,coldStartupAccepted:false,formalPerformanceAccepted:false},
     acceptance:{physicalIphone:false,humanVisualAndListening:false,normalCampaign:false,wholeGame:false}};
@@ -269,7 +273,7 @@ export async function runBrowserQa(){
         await page.waitForFunction(ids=>ids.every(id=>window.__ASHFALL_BATTLE_QA__.getEnemyFacingRuntimeAudit(id).renderHistory.at(-1)?.jointDrawSucceeded),ids,{timeout:5000});
         const d=manual[item.kind],durationMs=item.kind==='mayo-chan'&&manualCase?15000:
           manualCase?Math.ceil(Math.max(3,(d.windupSeconds??0)+(d.activeSeconds??d.guardSeconds??0)+(d.recoverySeconds??0)+1.2)*1000):item.mode==='enemy'?8000:6500;
-        row.start=await page.evaluate(startCorrectionRecording,{ids:proof.trackedIds,durationMs,preferMp4:viewport.width<1000});
+        row.start=await page.evaluate(startCorrectionRecording,{ids:proof.trackedIds,durationMs,preferMp4:codec==='mp4'});
         row.release=await page.evaluate(()=>{const q=window.__ASHFALL_BATTLE_QA__;q.setEnemyVfxProofPaused(false);
           return {at:performance.now(),time:q.getV105CorrectionAudit([]).time};});
         if(manualCase){
@@ -291,7 +295,13 @@ export async function runBrowserQa(){
         }else await page.waitForTimeout(durationMs);
         const capture=await page.evaluate(stopCorrectionRecording),bytes=Buffer.from(capture.data,'base64');delete capture.data;
         const file=`${String(report.cases.length).padStart(2,'0')}-${item.kind}-${item.mode}.${capture.mime.startsWith('video/mp4')?'mp4':'webm'}`;
-        await writeFile(path.join(out,file),bytes,{flag:'wx'});Object.assign(row,{file,sha256:sha(bytes),bytes:bytes.length,capture,status:'retained-pending-checks'});await persist();
+        await writeFile(path.join(out,file),bytes,{flag:'wx'});Object.assign(row,{file,sha256:sha(bytes),bytes:bytes.length,capture,status:'retained-pending-checks'});
+        const isExpectedMime=value=>typeof value==='string'&&(codec==='mp4'?/^video\/mp4(?:;|$)/iu.test(value)
+          :/^video\/webm(?:;|$)/iu.test(value)&&/(?:^|[;,=\s"])vp8(?:[;,.\s"]|$)/iu.test(value));
+        row.codecControl={requestedCodec:codec,selectedStartMime:row.start.mime,selectedStoppedMime:capture.mime,
+          actualStartMime:row.start.actualMime,actualStoppedMime:capture.actualMime,blobMime:capture.blobMime,
+          matched:[row.start.mime,capture.mime,row.start.actualMime,capture.actualMime,capture.blobMime].every(isExpectedMime),
+          fallbackAccepted:false,fullOriginalAvChecksStillRequired:true,releaseAccepted:false};await persist();
         assert.equal(capture.failed,null);assert.ok(capture.rows.length>=30,'actual continuous paint receipts missing');
         assert.equal(capture.bytes,bytes.length,'Original encoded bytes must remain intact');
         row.originalAv=await auditCorrectionEncodedClip(path.join(out,file),capture);
@@ -318,6 +328,7 @@ export async function runBrowserQa(){
           assert.ok(capture.rows.some(r=>r.fighters.some(f=>ids.includes(f.id)&&f.draw?.jointGroundStrike?.contactReady)),'No actual floor strike paint');
           assert.ok(capture.rows.some(r=>r.contacts.some(c=>ids.includes(c.ownerId)&&c.resolvedSocket)),'Ground impact must bind an actual painted weapon point');
         }
+        assert.equal(row.codecControl.matched,true,'Requested native codec was not actually used; original fallback bytes remain a failed diagnostic');
         assert.equal(fatalErrors,0,'A product/page error invalidated this recording');
         assertCorrectionCaseDeadline(row,caseStartedAt);
         row.status='verified-awaiting-owned-cleanup';
