@@ -87,6 +87,10 @@ test('workflow preserves every command/deadline and current script drift rejects
   before.jobs.scope.outputs.performance='${{ steps.scope.outputs.performance }}';
   before.jobs.scope.outputs.verify_full='${{ steps.scope.outputs.verify_full }}';
   before.jobs.scope.outputs.phaseg='${{ steps.scope.outputs.phaseg }}';
+  // Audio-owner changes require both native media-output jobs. Only their
+  // selection changes; the full comparison below still freezes every command.
+  before.jobs.scope.outputs.audio='${{ steps.scope.outputs.audio }}';
+  before.jobs['v103-audio-output'].if="${{ needs.scope.outputs.full == 'true' || needs.scope.outputs.audio == 'true' }}";
   before.jobs['v100-phase-g-production'].if="${{ needs.scope.outputs.full == 'true' || needs.scope.outputs.phaseg == 'true' }}";
   const verify=before.jobs.verify.steps.filter(step=>step.if?.includes("needs.scope.outputs.full == 'true'"));assert.equal(verify.length,19);
   for(const step of verify)step.if=step.if.replaceAll("needs.scope.outputs.full == 'true'","(needs.scope.outputs.full == 'true' || needs.scope.outputs.verify_full == 'true')");

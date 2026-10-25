@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {ciChangeScope,framePerformanceRuntimes,previousFullCiEvidence,previousQualityEvidence,
- previousAbilityNameEvidence,reviewedAbilityNamePaths,reviewedAbilityContinuationPaths,ABILITY_NAME_BASELINE,ABILITY_NAME_PREDECESSOR,ABILITY_NAME_BLOBS,ABILITY_NAME_REUSED_JOBS,RANGER_BUFFER_FILE,RANGER_BUFFER_BLOB,RETIRED_AUDIO_OWNER_FILE,RANGER_PROVENANCE_FILE} from '../scripts/ci-change-scope.mjs';
+ previousAbilityNameEvidence,reviewedAbilityNamePaths,reviewedAbilityContinuationPaths,ABILITY_NAME_BASELINE,ABILITY_NAME_PREDECESSOR,ABILITY_NAME_PREDECESSOR_AUDIO_JOBS,ABILITY_NAME_BLOBS,ABILITY_NAME_REUSED_JOBS,RANGER_BUFFER_FILE,RANGER_BUFFER_BLOB,RETIRED_AUDIO_OWNER_FILE,RANGER_PROVENANCE_FILE} from '../scripts/ci-change-scope.mjs';
 import {assertEphemeralPerformanceHost} from '../scripts/v100-macos-indexing-control.mjs';
 import {readFileSync} from 'node:fs';
 import {load} from 'js-yaml';
@@ -21,17 +21,22 @@ test('the exact reviewed QA continuation keeps original6a owners, requires produ
    predecessor={...oldRun,id:prev.runId,head_sha:prev.head},
    original=provenanceFixture({runId:old.runId,head:old.head,base:old.base,artifactId:91}),
    previous=provenanceFixture({runId:prev.runId,head:prev.head,base:old.base,artifactId:92});
- const api=({previousRun=predecessor,rows=jobs,previousProof=previous}={})=>async url=>({ok:true,
+ const audioJobs=Object.entries(ABILITY_NAME_PREDECESSOR_AUDIO_JOBS).map(([name,id])=>({name,id,run_id:prev.runId,head_sha:prev.head,run_attempt:1,status:'completed',conclusion:'success',
+  steps:['Verify iPhone media output and encoded mix without microphone access','Run actions/upload-artifact@v4'].map(name=>({name,status:'completed',conclusion:'success'}))}));
+ const api=({previousRun=predecessor,rows=jobs,previousRows=audioJobs,previousProof=previous}={})=>async url=>({ok:true,
    arrayBuffer:async()=>url.includes('/92/')?previousProof.zip:original.zip,
    json:async()=>url.includes('/artifacts?')?(url.includes('/'+prev.runId+'/')?previousProof.artifacts:original.artifacts)
-     :url.includes('/jobs?')?{total_count:rows.length,jobs:rows}:url.endsWith('/'+prev.runId)?previousRun:oldRun});
+     :url.includes('/jobs?')?url.includes('/'+prev.runId+'/')?{total_count:previousRows.length,jobs:previousRows}:{total_count:rows.length,jobs:rows}:url.endsWith('/'+prev.runId)?previousRun:oldRun});
  const options={repository:'SUSANO-OOO/Zombieee',previousHead:prev.head,base:old.base,prNumber:181,action:'synchronize',draft:false,
    paths,sourceBlobs,productUnchanged:true,originalAncestor:true,token:'fixture-only'};
  const evidence=await previousAbilityNameEvidence({...options,request:api()});assert.equal(evidence.passed,true);
  assert.equal(evidence.head,old.head);assert.equal(evidence.runId,old.runId);assert.equal(evidence.predecessor.head,prev.head);
- assert.equal(evidence.predecessor.conclusion,'failure');assert.equal(evidence.predecessor.measurementOwnersAdopted,false);
+ assert.equal(evidence.predecessor.conclusion,'failure');assert.equal(evidence.predecessor.measurementOwnersAdopted,true);
  assert.equal(evidence.predecessor.provenance.head,prev.head);assert.equal(evidence.provenance.head,old.head);
- assert.equal(evidence.reusedJobs.length,43);assert.ok(evidence.reusedJobs.every(j=>j.head_sha===old.head&&j.run_id===old.runId));
+ assert.equal(evidence.reusedJobs.length,43);
+ for(const j of evidence.reusedJobs){const audioId=ABILITY_NAME_PREDECESSOR_AUDIO_JOBS[j.name];
+  if(audioId){assert.equal(j.id,audioId);assert.equal(j.head_sha,prev.head);assert.equal(j.run_id,prev.runId);}
+  else{assert.equal(j.head_sha,old.head);assert.equal(j.run_id,old.runId);}}
  for(const field of ['freshVerifyRequired','freshPerformanceRequired','freshPhaseGRequired','freshNormalRequired'])assert.equal(evidence[field],true);
  const scope=ciChangeScope(paths,{draft:false,sourceBlobs,reuseAbilityNames:true,freshNormal:true});
  assert.equal(scope.full,false);for(const field of ['verify_full','performance','phaseg','normal'])assert.equal(scope[field],true);
@@ -49,6 +54,16 @@ test('the exact reviewed QA continuation keeps original6a owners, requires produ
  const rangerEvidence=await previousAbilityNameEvidence({...rangerOptions,request:api()});assert.equal(rangerEvidence.passed,true);
  assert.equal(rangerEvidence.productUnchanged,false);assert.equal(rangerEvidence.rangerBufferDelta,true);
  assert.equal(rangerEvidence.reusedJobs.length,42);assert.equal(rangerEvidence.reusedJobs.some(j=>j.name==='Ranger Turn Regression'),false);
+ assert.equal(rangerEvidence.predecessor.measurementOwnersAdopted,true);
+ assert.equal(rangerEvidence.predecessor.adoptedJobs.length,2);
+ for(const [name,id]of Object.entries(ABILITY_NAME_PREDECESSOR_AUDIO_JOBS)){
+  const job=rangerEvidence.reusedJobs.find(j=>j.name===name);assert.equal(job.id,id);assert.equal(job.head_sha,prev.head);assert.equal(job.run_id,prev.runId);
+ }
+ assert.ok(rangerEvidence.reusedJobs.filter(j=>!j.name.startsWith('V1.0.3 Media Output (')).every(j=>j.head_sha===old.head&&j.run_id===old.runId));
+ for(const previousRows of [audioJobs.slice(1),[...audioJobs,audioJobs[0]],
+  ...[{id:1},{run_id:old.runId},{head_sha:old.head},{run_attempt:2},{status:'in_progress'},{conclusion:'failure'},{conclusion:'skipped'},
+    {steps:[]},{steps:audioJobs[0].steps.map((s,i)=>i?{...s,conclusion:'failure'}:s)}].map(change=>audioJobs.map((j,i)=>i?j:{...j,...change}))])
+  assert.equal((await previousAbilityNameEvidence({...rangerOptions,request:api({previousRows})})).passed,false,'Only two actual source-owned audio measurements may replace their original owners');
  assert.equal(sourceBlobs[RANGER_BUFFER_FILE],RANGER_BUFFER_BLOB);
  const oldNormalJobs=['chromium','webkit'].map((engine,i)=>({id:900+i,name:'V1 Representative Normal Play ('+engine+')',...owner,status:'completed',conclusion:'success'}));
  const stillFresh=await previousAbilityNameEvidence({...rangerOptions,request:api({rows:[...jobs,...oldNormalJobs]})});assert.equal(stillFresh.passed,true);assert.equal(stillFresh.freshNormalRequired,true);assert.equal(stillFresh.reusedJobs.length,42);

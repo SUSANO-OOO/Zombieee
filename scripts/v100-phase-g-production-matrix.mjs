@@ -1096,13 +1096,18 @@ async function withDeploymentPreinputDeadline(page, operationPromise, deadlineMs
   }
 }
 
-// Opt in only for sustain ability. Default deployment and ordinary tactical
-// input keep their original ordered acknowledgement path.
+// Opt in for sustain manual ability and barrage. Default deployment and
+// ordinary tactical input keep their original ordered acknowledgement path.
 function phaseGSustainAbilityObserver({ mode, attemptId, selection }) {
   const registry = window.__V100_PHASE_G_SUSTAIN_POINTERS__ ??= new Map();
   const project = (ownerId, kind) => {
     const s = window.__ASHFALL_BATTLE_QA__?.getPhaseGCombatSnapshot?.();
     if (!s) throw new Error('Missing existing Phase G runtime observation');
+    if(kind==='crawler-barrage')return {screen:s.screen,stageId:s.stageId,battleGeneration:s.battleGeneration,time:s.time,
+      timeOrigin:performance.timeOrigin,running:s.running,paused:s.paused,over:s.over,
+      crawlerAbility:{...s.crawlerAbility},supportGauge:s.supportGauge,
+      abilityRejectRequests:(window.__ASHFALL_AUDIO_QA__?.getCueRequests?.()??[])
+        .filter(r=>r.cueId==='v100-ui-reject'&&r.dedupeKey?.startsWith('crawler-barrage:')).map(r=>({...r}))};
     const owner = s.fighters?.find(f => String(f.id) === ownerId && f.kind === kind);
     return { screen:s.screen, stageId:s.stageId, battleGeneration:s.battleGeneration, time:s.time,
       timeOrigin:performance.timeOrigin,
@@ -1131,14 +1136,16 @@ function phaseGSustainAbilityObserver({ mode, attemptId, selection }) {
   }
   if (mode !== 'arm' || registry.size) throw new Error('Invalid or overlapping sustain observer');
   const el = document.querySelectorAll(selection.selector)[selection.index];
-  if (!el || !el.matches('button.manual-ability-ready.available') || el.disabled
+  const barrage=selection.control==='barrage',controlSelector=barrage?'button.support-btn.barrage[data-state="ready"]':'button.manual-ability-ready.available';
+  if (!el || !el.matches(controlSelector) || el.disabled
     || el.getAttribute('aria-disabled') === 'true') return {status:'unavailable'};
   const r = el.getBoundingClientRect(),point={x:r.x+r.width/2,y:r.y+r.height/2};
   if (!(r.width>0 && r.height>0)
     || document.elementFromPoint(point.x,point.y)?.closest('button') !== el) return {status:'unavailable'};
-  const identity={ownerId:String(el.dataset.fighterId),kind:el.dataset.abilityKind},before=project(identity.ownerId,identity.kind);
-  const owner=before.fighters[0];
-  if (!owner || owner.side !== 'human' || !(owner.hp>0) || !Number.isSafeInteger(owner.manualAbility.activationId)
+  const identity=barrage?{ownerId:'crawler',kind:'crawler-barrage'}:{ownerId:String(el.dataset.fighterId),kind:el.dataset.abilityKind},before=project(identity.ownerId,identity.kind);
+  const owner=before.fighters?.[0];
+  if ((barrage?before.crawlerAbility.phase!=='ready'||before.crawlerAbility.charge!==1
+    :!owner || owner.side !== 'human' || !(owner.hp>0) || !Number.isSafeInteger(owner.manualAbility.activationId))
     || before.screen !== 'battle' || !before.running || before.paused || before.over) return {status:'unavailable'};
   const types=['pointermove','pointerdown','pointerup','click'];
   const entry={identity,point,before,events:[],errors:[],overflow:false,document,window,performance,
@@ -1152,7 +1159,7 @@ function phaseGSustainAbilityObserver({ mode, attemptId, selection }) {
         at:performance.now(),sameDocument:document===entry.document && document.documentElement===entry.documentElement,
         sameRealm:window===entry.window && performance===entry.performance,
         sameNode:target===el,hitOwner:document.elementFromPoint(event.clientX,event.clientY)?.closest('button')===el,
-        sameOwner:String(el.dataset.fighterId)===identity.ownerId && el.dataset.abilityKind===identity.kind,
+        sameOwner:barrage?el.matches(controlSelector):String(el.dataset.fighterId)===identity.ownerId && el.dataset.abilityKind===identity.kind,
         connected:el.isConnected,ready:!el.disabled && el.getAttribute('aria-disabled')!=='true'});
     } catch(error) {if(entry.errors.length<16)entry.errors.push(String(error));throw error;}
   };
@@ -1180,6 +1187,19 @@ function validatePhaseGSustainAbilityReceipt(armed, actual) {
     && Number.isFinite(e.at) && e.at>=actual.armedAt && e.at<=actual.finishedAt && (!i||e.at>=events[i-1].at)
     && (e.type==='pointermove'||e.button===0)),'SUSTAIN_REAL_DELIVERY_INVALID');
   const before=armed?.before,after=actual?.after,ownerId=armed?.identity?.ownerId,kind=armed?.identity?.kind;
+  if(kind==='crawler-barrage'){
+    check(ownerId==='crawler'&&Number.isSafeInteger(before?.battleGeneration)&&before.battleGeneration===after?.battleGeneration
+      &&typeof before?.stageId==='string'&&before.stageId.length>0&&before.stageId===after?.stageId
+      &&before.screen==='battle'&&after?.screen==='battle'&&before.running===true&&after.running===true
+      &&before.paused===false&&after.paused===false&&before.over===false&&after.over===false
+      &&Number.isFinite(before.timeOrigin)&&before.timeOrigin>0&&Number.isFinite(after?.timeOrigin)&&after.timeOrigin>0
+      &&Number.isFinite(before.time)&&Number.isFinite(after?.time)&&after.time>=before.time,'SUSTAIN_BATTLE_OR_CLOCK_CHANGED');
+    check(before?.crawlerAbility?.phase==='ready'&&before.crawlerAbility.charge===1
+      &&['deploying','firing','recovering'].includes(after?.crawlerAbility?.phase)&&after.crawlerAbility.charge===0
+      &&Number.isFinite(after.crawlerAbility.phaseTime)&&after.crawlerAbility.phaseTime>0
+      &&JSON.stringify(before.abilityRejectRequests)===JSON.stringify(after.abilityRejectRequests),'SUSTAIN_BARRAGE_START_UNPROVEN');
+    return {ok:errors.length===0,errors,outcome:errors.length?'invalid':'activated',rejection:null};
+  }
   const prior=before?.fighters?.find(f=>String(f.id)===ownerId)?.manualAbility?.activationId;
   const current=after?.fighters?.find(f=>String(f.id)===ownerId)?.manualAbility?.activationId;
   const starts=(after?.manualAbilityReceipts??[]).filter(r=>String(r.ownerId)===ownerId && r.kind===kind
@@ -1215,9 +1235,10 @@ function validatePhaseGSustainAbilityReceipt(armed, actual) {
 
 async function phaseGSustainAbilityTap(page, selection, phases, evidenceRecord) {
   const startedAt=performance.now(),attemptId='sustain-ability-'+Date.now()+'-'+Math.random().toString(36).slice(2);
+  const control=selection.control==='barrage'?'sustain-barrage':'sustain-ability';
   const guard=()=>{
     if(performance.now()-startedAt>=500)throw phaseGPointerFailure('QA_HARNESS_CONTROL_INPUT_TIMEOUT',
-      {control:'sustain-ability',deadlineMs:500,reason:'original-budget-exhausted-before-next-rpc',phases},0);
+      {control,deadlineMs:500,reason:'original-budget-exhausted-before-next-rpc',phases},0);
     if(page.isClosed())throw new Error('Sustain page closed before next native transaction phase');
   };
   const step=async(name,action)=>{
@@ -1236,12 +1257,12 @@ async function phaseGSustainAbilityTap(page, selection, phases, evidenceRecord) 
   guard();const decision=validatePhaseGSustainAbilityReceipt(armed,actual);
   phases.at(-1).decision=decision;
   if(!decision.ok)throw new Error('Sustain native input evidence invalid: '+decision.errors.join(','));
-  if(evidenceRecord)(evidenceRecord.sustainAbilityInputs??=[]).push({outcome:decision.outcome,phases});
+  if(evidenceRecord)(evidenceRecord[control==='sustain-barrage'?'sustainBarrageInputs':'sustainAbilityInputs']??=[]).push({outcome:decision.outcome,phases});
   guard();
   return decision.outcome==='activated';
   } catch(error) {
     const failure=error?.phaseGTerminalInputFailure===true?error:phaseGPointerFailure('QA_HARNESS_CONTROL_INPUT_FAILURE',
-      {control:'sustain-ability',phases,error:String(error)},0);
+      {control,phases,error:String(error)},0);
     failure.phaseGCausalNoFurtherPageRpc=true;
     throw failure;
   }
@@ -4377,7 +4398,7 @@ async function battlePage(page, save, stageName = null, { bossKind = null, proof
           const selector='button.support-btn.barrage[data-state="ready"][aria-disabled="false"]';
           const lockedCrawler = page.locator(selector).first();
           if (await lockedCrawler.count().catch(() => 0)) await phaseGOrderedControlInput(page,
-            (phases) => nativeBattleTap(page, lockedCrawler, phases,{selector,index:0}), 500, "sustain-barrage");
+            (phases) => phaseGSustainAbilityTap(page,{selector,index:0,control:'barrage'},phases,tacticalRecord), 500, "sustain-barrage");
         });
       }
 

@@ -5,6 +5,7 @@ import ts from 'typescript';
 import test from 'node:test';
 import{execFileSync}from'node:child_process';
 import{performance}from'node:perf_hooks';
+import{createCrawlerAbilityRuntime,requestCrawlerBarrage}from'../app/gameRules.js';
 const source=fs.readFileSync('scripts/v100-phase-g-production-matrix.mjs','utf8');
 const tree=ts.createSourceFile('matrix.mjs',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);
 const helpers=['phaseGSustainAbilityObserver','validatePhaseGSustainAbilityReceipt','phaseGSustainAbilityTap'].map(name=>{const n=tree.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text===name);assert.ok(n,name);return n.getText(tree);}).join('\n');
@@ -14,17 +15,19 @@ const marker=parsed.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text
 const clone=x=>JSON.parse(JSON.stringify(x));
 const appSource=fs.readFileSync('app/AshfallGame.tsx','utf8');
 const appTree=ts.createSourceFile('app.tsx',appSource,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);
-let actualAbilityCallback;
-const findAbility=n=>{if(ts.isVariableDeclaration(n)&&n.name.getText(appTree)==='activateManualAbility')actualAbilityCallback=n.initializer.arguments[0].getText(appTree);ts.forEachChild(n,findAbility);};
-findAbility(appTree);assert.ok(actualAbilityCallback);
+let actualAbilityCallback,actualBarrageCallback;
+const findAbility=n=>{if(ts.isVariableDeclaration(n)&&n.name.getText(appTree)==='activateManualAbility')actualAbilityCallback=n.initializer.arguments[0].getText(appTree);if(ts.isVariableDeclaration(n)&&n.name.getText(appTree)==='triggerCrawlerBarrage')actualBarrageCallback=n.initializer.arguments[0].getText(appTree);ts.forEachChild(n,findAbility);};
+findAbility(appTree);assert.ok(actualAbilityCallback);assert.ok(actualBarrageCallback);
 const actualHandlerJs=ts.transpileModule('this.actualHandler='+actualAbilityCallback,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
+const actualBarrageJs=ts.transpileModule('this.actualBarrageHandler='+actualBarrageCallback,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
 function fixture(change={}){
  let clock=100,gets=0,handlerCalls=0,closed=false,hitBlocked=false;
  const rejectRequests=[];
  const calls=[],listeners=new Map(),snapshot={screen:'battle',stageId:'stage-3',battleGeneration:2,time:3,
-  running:true,paused:false,over:false,fighters:[{id:9,kind:'brute',side:'human',hp:100,manualAbility:{activationId:0}}],manualAbilityReceipts:[]};
- class Element{constructor(){this.dataset={fighterId:'9',abilityKind:'brute'};this.disabled=false;this.isConnected=true;}
-  closest(s){assert.equal(s,'button');return this;}matches(s){assert.equal(s,'button.manual-ability-ready.available');return true;}
+  running:true,paused:false,over:false,fighters:[{id:9,kind:'brute',side:'human',hp:100,manualAbility:{activationId:0}}],manualAbilityReceipts:[],
+  crawlerAbility:createCrawlerAbilityRuntime(1,true),supportGauge:100,definition:{missionConfig:{v100StageNumber:3}}};
+ class Element{constructor(){this.dataset={fighterId:'9',abilityKind:'brute',state:'ready'};this.disabled=false;this.isConnected=true;}
+  closest(s){assert.equal(s,'button');return this;}matches(s){assert.equal(s,change.barrage?'button.support-btn.barrage[data-state="ready"]':'button.manual-ability-ready.available');return true;}
   getBoundingClientRect(){return{x:10.25,y:20,width:60,height:30};}getAttribute(s){assert.equal(s,'aria-disabled');return change.disabled?'true':'false';}}
  const el=new Element(),other=new Element();other.dataset.fighterId='10';
  const document={documentElement:{},querySelectorAll:()=>change.missing?[]:[el],elementFromPoint:()=>change.covered||hitBlocked?other:el,
@@ -36,11 +39,21 @@ function fixture(change={}){
   JSON:{stringify:value=>{if(change.slowValidation&&gets===2)clock=601;return JSON.stringify(value);}},
   gameRef:{current:snapshot},selectedActionRef:{current:null},rejectBattleSaveBoundary:()=>false,
   manualAbilityTargetCandidates:()=>[],canActivateManualAbility:()=>false,
+  requestCrawlerBarrage,v100BasePresentationFor:()=>({onFoot:false}),playCue:()=>{},emitBattleBark:()=>{},
   playUiOperationCue:(action,dedupeKey)=>{assert.equal(action,'reject');rejectRequests.push({cueId:'v100-ui-reject',dedupeKey,at:clock});},
   phaseGPointerFailure:(code,evidence)=>Object.assign(new Error(code),{code,evidence,phaseGTerminalInputFailure:true})});
  vm.runInContext(actualHandlerJs,context);
+ vm.runInContext(actualBarrageJs,context);
  vm.runInContext(marker+'\n'+helpers+'\nthis.api={observer:phaseGSustainAbilityObserver,validate:validatePhaseGSustainAbilityReceipt,tap:phaseGSustainAbilityTap};',context);
  const activate=()=>{handlerCalls++;
+  if(change.barrage){
+   if(change.noActivation)return;
+   if(change.productionReject)snapshot.supportGauge=0;
+   context.actualBarrageHandler();
+   if(change.wrongCharge)snapshot.crawlerAbility.charge=1;
+   if(change.wrongPhase)snapshot.crawlerAbility.phase='ready';
+   return;
+  }
   if(change.productionReject){assert.equal(context.actualHandler(9),false);
    const r=rejectRequests.at(-1);
    if(change.wrongRejectOwner)r.dedupeKey='ability:10:unavailable';
@@ -101,10 +114,51 @@ test('a real synchronous unavailable handler response is distinct from activatio
  await run('same-id new start cannot be hidden by the unchanged counter',{productionReject:true,mixedStartReject:true,sameIdStart:true},'fail-finalized');
  await run('regressed-id new start cannot be hidden by the unchanged counter',{productionReject:true,mixedStartReject:true,regressedStart:true},'fail-finalized');
 });
+
+test('barrage uses one native click and proves its real handler start inside the original500ms',async()=>{
+ for(const change of [{},{noActivation:true},{wrongCharge:true},{wrongPhase:true},{productionReject:true},
+   {missingUp:true},{wrongTarget:true},{generationChange:true},{duplicateClick:true},{untrusted:true},{readFails:true},{lateClick:true}]){
+  const f=fixture({...change,barrage:true}),record={},phases=[];
+  const action=f.context.api.tap(f.page,{selector:'button.support-btn.barrage[data-state="ready"][aria-disabled="false"]',index:0,control:'barrage'},phases,record);
+  if(Object.keys(change).length){await assert.rejects(action);assert.equal(record.sustainBarrageInputs,undefined);}
+  else{
+   assert.equal(await action,true);assert.equal(f.snapshot.crawlerAbility.phase,'deploying');assert.equal(f.snapshot.crawlerAbility.charge,0);
+   assert.equal(f.snapshot.supportGauge<100,true);assert.equal(record.sustainBarrageInputs[0].outcome,'activated');
+   assert.equal(record.sustainAbilityInputs,undefined);assert.deepEqual(f.calls,['arm','native-click','finish']);
+   assert.equal(f.handlerCalls,1);assert.equal(f.gets,2);
+  }
+  assert.equal(f.calls.filter(x=>x==='native-click').length,1);
+  if(change.lateClick){assert.deepEqual(f.calls,['arm','native-click']);f.closeContext();}
+  assert.equal(f.listeners.size,0);
+ }
+ assert.match(source,/phaseGSustainAbilityTap\(page,\{selector,index:0,control:'barrage'\},phases,tacticalRecord\), 500, "sustain-barrage"/u);
+});
 test('the native sustain change preserves the original500ms lock, terminal cancellation and default deployment input',()=>{
 const original=ts.createSourceFile('original.mjs',execFileSync('git',['show','6a5226647ebf9ba7692c69b9c64af4ce32059d1b:scripts/v100-phase-g-production-matrix.mjs'],{encoding:'utf8',windowsHide:true}),ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);
 const candidate=tree;
-for(const name of ['phaseGPageInputState','withPhaseGPageInputLock','phaseGPointerFailure','withDeploymentPreinputDeadline','phaseGOrderedControlInput','installDeploymentPointerReceipt','readDeploymentPointerReceipts','removeDeploymentPointerReceipt','performVerifiedDeploymentPointer']){const a=original.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text===name),b=candidate.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text===name);assert.ok(a&&b);assert.equal(a.getText(original),b.getText(candidate),name);}
+const declaration=(file,name)=>{const node=file.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text===name);assert.ok(node,name);return node;};
+const replaceOnce=(value,from,to='')=>{assert.equal(value.split(from).length,2,from);return value.replace(from,to);};
+for(const name of ['phaseGPageInputState','withPhaseGPageInputLock','phaseGPointerFailure','withDeploymentPreinputDeadline','phaseGOrderedControlInput'])
+ assert.equal(declaration(original,name).getText(original),declaration(candidate,name).getText(candidate),name);
+// The receipt observer now disposes its hooks in the successful read task.
+// Its real listener lifecycle and invalid-proof rejection are exercised by the
+// capture tests. Freeze the surrounding input, lock, timeout and fallback RPCs.
+const withoutNode=(file,parent,predicate)=>{const nodes=[];const visit=n=>{if(predicate(n))nodes.push(n);ts.forEachChild(n,visit);};visit(parent);assert.equal(nodes.length,1);const n=nodes[0];return parent.getText(file).slice(0,n.getFullStart()-parent.getStart(file))+parent.getText(file).slice(n.end-parent.getStart(file));};
+const install=declaration(candidate,'installDeploymentPointerReceipt');
+let normalized=withoutNode(candidate,install,n=>ts.isPropertyAssignment(n)&&n.name.getText(candidate)==='dispose');
+normalized=replaceOnce(normalized,',\n    });','\n    });');
+assert.equal(normalized,declaration(original,'installDeploymentPointerReceipt').getText(original));
+const reader=file=>{const node=declaration(file,'readDeploymentPointerReceipts');const callbacks=[];const visit=n=>{if(ts.isCallExpression(n)&&n.expression.getText(file)==='page.evaluate')callbacks.push(n.arguments[0]);ts.forEachChild(n,visit);};visit(node);assert.equal(callbacks.length,1);return replaceOnce(node.getText(file),callbacks[0].getText(file),'ATOMIC_RECEIPT_READER');};
+assert.equal(replaceOnce(reader(candidate),'    cleanup: result.status === "fulfilled" ? result.value?.cleanup ?? null : null,\n'),reader(original));
+const remove=declaration(candidate,'removeDeploymentPointerReceipt');
+assert.equal(remove.body.statements[0].expression.getText(candidate),'cleanup !== null');
+normalized=withoutNode(candidate,remove,n=>n===remove.body.statements[0]);
+normalized=replaceOnce(normalized,', cleanup = null','');
+assert.equal(normalized,declaration(original,'removeDeploymentPointerReceipt').getText(original));
+normalized=declaration(candidate,'performVerifiedDeploymentPointer').getText(candidate);
+for(const added of ['    let receiptCleanup = null;\n','      receiptCleanup = receiptResult.cleanup ?? null;\n','        receiptCleanup,\n'])normalized=replaceOnce(normalized,added);
+normalized=replaceOnce(normalized,'await removeDeploymentPointerReceipt(page, attemptId, receiptCleanup);','await removeDeploymentPointerReceipt(page, attemptId);');
+assert.equal(normalized,declaration(original,'performVerifiedDeploymentPointer').getText(original));
 assert.match(source,/phaseGSustainAbilityTap\(page,\{selector:sustainAbilitySelector,index\},phases,tacticalRecord\), 500, "sustain-ability"/u);
 });
 

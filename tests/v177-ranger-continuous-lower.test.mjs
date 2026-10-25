@@ -702,3 +702,27 @@ test('a recently drawn invalid surface stays intact while the original pool has 
 test('the weighted lower painter dependency remains limited to the Ranger atlas',()=>{
  assert.deepEqual(Object.entries(V177_JOINT_ATLASES).filter(([,a])=>a.lowerRig).map(([kind])=>kind),['ranger']);
 });
+
+test('a full Ranger pool reuses a matching backing size without recreating it or rewriting the last draw',()=>{
+ const {painter}=observedPainter();
+ paintPoolInput(painter,.371,120);paintPoolInput(painter,.371,96,true);
+ const phases=Array.from({length:32},(_,i)=>.01+i*.025);
+ for(const phase of phases)paintPoolInput(painter,phase);
+ assert.equal(painter.rasters.length,32);
+ const oldest=painter.rasters.reduce((a,b)=>b.lastUsed<a.lastUsed?b:a),hot=painter.lastRaster;
+ let choice;
+ for(const phase of phases){
+  const value=phase+1e-5,expected=paintPoolInput(observedPainter().painter,value),{width,height}=expected.receipt;
+  const w=width+(painter.width>width?1:0),h=height+(painter.width===width&&painter.height>height?1:0);
+  const matching=painter.rasters.filter(r=>r.canvas.width===w&&r.canvas.height===h&&r.lastUsed<painter.useSequence);
+  if(matching.length&&(oldest.canvas.width!==w||oldest.canvas.height!==h)){choice={value,expected,matching};break;}
+ }
+ assert.ok(choice,'actual new geometry must have a retained matching size and a different-sized global LRU');
+ const allocate=painter.context.createImageData;let allocations=0;
+ painter.context.createImageData=(...args)=>{allocations++;return allocate(...args);};
+ const hotPixels=hot.canvas.data,actual=paintPoolInput(painter,choice.value);
+ assert.equal(allocations,0,'an existing correctly sized backing must not be destroyed and recreated');
+ assert.ok(choice.matching.includes(painter.lastRaster));assert.notEqual(painter.lastRaster,hot);
+ assert.equal(hot.canvas.data,hotPixels);assertSameActiveLower(actual,choice.expected);assert.deepEqual(actual.receipt,choice.expected.receipt);
+ assert.ok(painter.rasters.length<=32);assert.ok(painter.rasters.reduce((n,r)=>n+r.canvas.width*r.canvas.height,0)<=65536);
+});

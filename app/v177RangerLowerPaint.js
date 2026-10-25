@@ -85,8 +85,13 @@ function selectRaster(p,w,h) {
   // it is the only invalid geometry. Keep the original pool and pixel bounds.
   if(raster?.lastUsed>0&&p.useSequence-raster.lastUsed<MAX_SURFACES
     &&p.rasters.length<MAX_SURFACES&&total+pixels<=MAX_PIXELS)raster=null;
-  if(!raster&&(p.rasters.length>=MAX_SURFACES||total+pixels>MAX_PIXELS))
-    raster=p.rasters.reduce((oldest,current)=>!oldest||current.lastUsed<oldest.lastUsed?current:oldest,null);
+  if(!raster&&(p.rasters.length>=MAX_SURFACES||total+pixels>MAX_PIXELS)){
+    // Keep a matching backing store instead of resizing a different-sized LRU.
+    // Exclude the last drawn surface; its browser read can still be queued.
+    for(const candidate of p.rasters)if(candidate.canvas.width===w&&candidate.canvas.height===h
+      &&candidate.lastUsed<p.useSequence&&(!raster||candidate.lastUsed<raster.lastUsed))raster=candidate;
+    raster??=p.rasters.reduce((oldest,current)=>!oldest||current.lastUsed<oldest.lastUsed?current:oldest,null);
+  }
   let transient;
   try{
     if(!raster){

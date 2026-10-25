@@ -42,24 +42,25 @@ const nativeQaOnlyPaths=(paths,sourceBlobs)=>paths.length>0&&paths.every(file=>
 // afresh; a failed normal-play lane also runs again. Unknown changes stay full.
 export const ABILITY_NAME_BASELINE=Object.freeze({head:'6a5226647ebf9ba7692c69b9c64af4ce32059d1b',
  base:'e22b134a38409b9d2f86660ee351e616c28fbf44',runId:40120044446,prNumber:181});
-// The predecessor is a context/ancestry check, never a replacement owner for
-// the successful browser and Quality measurements on the original baseline.
-export const ABILITY_NAME_PREDECESSOR=Object.freeze({head:'948e3932fdeb6bd4a762f20580e526fcd48665d8',runId:40193648835});
+// Preserve the original browser/Quality owners. The two audio jobs below are
+// separately owned by the completed repaired-audio candidate, never its failures.
+export const ABILITY_NAME_PREDECESSOR=Object.freeze({head:'a8f4f5986d8f66423c422a37f32400c1a3009551',runId:40198626338});
+export const ABILITY_NAME_PREDECESSOR_AUDIO_JOBS=Object.freeze({
+ 'V1.0.3 Media Output (chromium)':121185029269,'V1.0.3 Media Output (webkit)':121185029364});
 export const RANGER_BUFFER_FILE='app/v177RangerLowerPaint.js';
-export const RANGER_BUFFER_BEFORE_BLOB='3f21644839d81fd90a5ac362a118e501e0b76eef';
-export const RANGER_BUFFER_BLOB='59675f3cdd93f58773a284537ac89b678ada3af6';
+export const RANGER_BUFFER_BEFORE_BLOB='59675f3cdd93f58773a284537ac89b678ada3af6';
+export const RANGER_BUFFER_BLOB='c9d74ef6b47a377778498569221232dae12a6ba3';
 export const RETIRED_AUDIO_OWNER_FILE='app/battleAudioRuntime.js';
 export const RANGER_PROVENANCE_FILE='assets/source/v177/ranger/lower-r3/provenance.json';
 export const RANGER_REPAIR_PRODUCT_BEFORE=Object.freeze({
- [RETIRED_AUDIO_OWNER_FILE]:'24a9593caba56b2b6d2c2a3aea24e6df3bc28bf5',
  [RANGER_BUFFER_FILE]:RANGER_BUFFER_BEFORE_BLOB,
- [RANGER_PROVENANCE_FILE]:'aba5c66d3183fbe0d5ae849b7a3a48b026b0f1f6'});
+ [RANGER_PROVENANCE_FILE]:'39a6fa601520e00c2c022153f4ae7746b46f8f7d'});
 export const ABILITY_NAME_BLOBS=Object.freeze({
  "app/AshfallGame.tsx": "004c5f5e25a6ff63c029d6f06d4c29f92efbd859",
  ".github/workflows/ci.yml": "3b402dfbe2a8a0922c694cc00f1762eb6d52ed33",
  "scripts/v177-representative-battles.mjs": "c5359ed5edf24403c427c64832e5d140806eb9c8",
  "scripts/v100-device-runtime-browser.mjs": "0c4c5090222f58ab5f36be802c642f526997f574",
- "scripts/v100-phase-g-production-matrix.mjs": "bfdbc3471438dafa2c48dfe593c1e38c81e4316e",
+ "scripts/v100-phase-g-production-matrix.mjs": "bda9a822f16342ef09180c0e1b02a699208a09f2",
  "scripts/v177-normal-browser-deadline.mjs": "f60a49ca98db5a8059de56a04073a50b9e6b862f",
  "scripts/v105-five-corrections-capture.mjs": "c266140d17b1176024bb9066424d37cd91675d16",
  "scripts/v177-native-allunit-browser.mjs": "c936e79a3131210f29e3d01a18455419ffe249a5",
@@ -68,10 +69,10 @@ export const ABILITY_NAME_BLOBS=Object.freeze({
  ".github/workflows/five-corrections-capture.yml": "bf347a5923b8b31a0451e4358901feaa5040752a",
  "scripts/v100-macos-indexing-control.mjs": "d00ae47eb420f113af07437a55c47203e7446207",
  "scripts/v177-native-allunit-selection.mjs": "6a11cf23189e7f69f67bb21e1e2938084f81cd83",
- "app/v177RangerLowerPaint.js": "59675f3cdd93f58773a284537ac89b678ada3af6",
+ "app/v177RangerLowerPaint.js": "c9d74ef6b47a377778498569221232dae12a6ba3",
  "docs/qa/v105/native-6a-evidence.json": "3d14dd05bf6804ff91ab3762e0f4b04a2a402189",
  "app/battleAudioRuntime.js": "65e612cbc460eaf27eb3ba8894feb692563f27d8",
- "assets/source/v177/ranger/lower-r3/provenance.json": "39a6fa601520e00c2c022153f4ae7746b46f8f7d"
+ "assets/source/v177/ranger/lower-r3/provenance.json": "66d32b5c69c8a3c1acf1efe1e53287efaf3e48ad"
 });
 const abilityNameFiles=new Set([...Object.keys(ABILITY_NAME_BLOBS),'scripts/ci-change-scope.mjs',
  'tests/ci-change-scope.test.mjs','tests/ci-contract.test.mjs','tests/ci-combat-qa-reuse.test.mjs',
@@ -198,6 +199,21 @@ export async function previousAbilityNameEvidence({repository,previousHead,base,
   const normalNames=['chromium','webkit'].map(engine=>`V1 Representative Normal Play (${engine})`),
     normalComplete=!rangerBufferDelta&&!paths.includes('scripts/v177-representative-battles.mjs')&&normalNames.every(successful);
   const freshAudioRequired=rangerBufferDelta&&paths.includes(RETIRED_AUDIO_OWNER_FILE);
+  if(continuation&&!freshAudioRequired){
+   const data=await get(`actions/runs/${ABILITY_NAME_PREDECESSOR.runId}/jobs?filter=latest&per_page=100`);
+   if(!Array.isArray(data.jobs)||data.total_count!==data.jobs.length||data.total_count>100
+     ||new Set(data.jobs.map(j=>j.id)).size!==data.jobs.length)return{passed:false,reason:'repaired-audio-jobs-inventory-invalid'};
+   const adopted=[];
+   for(const [name,id]of Object.entries(ABILITY_NAME_PREDECESSOR_AUDIO_JOBS)){
+    const rows=data.jobs.filter(j=>j.name===name),j=rows[0],step=label=>j?.steps?.some(s=>s.name===label&&s.status==='completed'&&s.conclusion==='success');
+    if(rows.length!==1||j.id!==id||j.run_id!==ABILITY_NAME_PREDECESSOR.runId||j.head_sha!==previousHead
+      ||j.run_attempt!==1||j.status!=='completed'||j.conclusion!=='success'
+      ||!step('Verify iPhone media output and encoded mix without microphone access')||!step('Run actions/upload-artifact@v4'))
+      return{passed:false,reason:'repaired-audio-measurement-not-successful'};
+    adoptedJobs.splice(adoptedJobs.findIndex(old=>old.name===name),1,j);adopted.push({name,id,head_sha:j.head_sha,run_id:j.run_id,run_attempt:j.run_attempt});
+   }
+   predecessor.measurementOwnersAdopted=true;predecessor.adoptedJobs=adopted;
+  }
   return{passed:true,head:old.head,base:old.base,prNumber:old.prNumber,runId:old.runId,provenance,infrastructureRecovery,predecessor,
    originalRunConclusion:run.conclusion,
    productUnchanged,rangerBufferDelta,freshRangerRequired:rangerBufferDelta,rangerBufferScope:rangerBufferDelta?{file:RANGER_BUFFER_FILE,before:RANGER_BUFFER_BEFORE_BLOB,after:RANGER_BUFFER_BLOB}:null,
@@ -431,8 +447,8 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
     return [previousHead,...(eligibleFixtureReuse?[COMBAT_QA_BASELINE.head]:[])].every(ref=>
       execFileSync('git',['rev-parse',`${ref}:${file}`],{encoding:'utf8',windowsHide:true}).trim()===blob);
   });
-  // Exact buffer selection, removed-owner preflight and regenerated provenance
-  // only. Unknown product edits still restore the complete regression.
+  // Exact backing-size selection and regenerated provenance only. Audio and
+  // all other product paths must be unchanged; unknown edits restore full QA.
   const changedProductPaths=eligibleAbilityContinuation?execFileSync('git',['diff','--no-renames','--name-only',previousHead,head,'--',...productPaths],{encoding:'utf8',windowsHide:true}).trim().split(/\r?\n/u).filter(Boolean):[];
   const rangerBufferDelta=eligibleAbilityContinuation&&JSON.stringify(changedProductPaths)===JSON.stringify(Object.keys(RANGER_REPAIR_PRODUCT_BEFORE).sort())
     &&Object.entries(RANGER_REPAIR_PRODUCT_BEFORE).every(([file,before])=>sourceBlobs[file]===ABILITY_NAME_BLOBS[file]
