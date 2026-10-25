@@ -8,6 +8,7 @@ import {nativeGameCaptureBinding,withNativeGameCaseDeadline,closeNativeGameConte
   NATIVE_GAME_CAPTURE_SOURCES} from './v177-native-game-capture-browser.mjs';
 import {SHARDS,VIEWPORTS,FORM_BINDINGS,LIMITS,planShard,assertRetainedBindings} from './v177-native-allunit-manifest.mjs';
 import {captureAllUnitCase} from './v177-native-allunit-cases.mjs';
+import {observeUnrecordedMayo} from './v177-native-mayo-recorder-presence.mjs';
 import {planRangerManualShard,rangerManualEnvelopeReference} from './v177-native-allunit-ranger-manual-contract.mjs';
 import {captureNativeRangerManualCase} from './v177-native-allunit-ranger-manual.mjs';
 import {nativeCaseSelection} from './v177-native-allunit-selection.mjs';
@@ -118,6 +119,7 @@ export async function main({load=url=>import(url),argv=process.argv,...guard}={}
   finally{if(length<3)argv.length=length;else argv[2]=original;}
 }
 const additions=[
+  'scripts/v177-native-mayo-recorder-presence.mjs','.github/workflows/native-capture-comparison.yml',
   '.github/workflows/native-allunit-capture.yml','scripts/v177-native-allunit-browser.mjs',
   'scripts/v177-native-allunit-build.mjs',
   'scripts/v100-macos-indexing-control.mjs',
@@ -155,7 +157,10 @@ export async function retainAllUnitSources(out){
 }
 export async function runBrowserQa(){
   const binding=await nativeAllUnitBinding();
-  const selection=nativeCaseSelection({event:JSON.parse(await readFile(process.env.GITHUB_EVENT_PATH,'utf8'))});
+  assert.equal(process.env.GITHUB_EVENT_NAME,'workflow_dispatch');
+  const recorderPresence=process.env.V105_RECORDER_PRESENCE;
+  assert.ok(['native-vp8','absent'].includes(recorderPresence));
+  const selection={mode:'recorder-presence-control',caseIds:['forms-4:mayo-chan:attack:1280x720'],manualCaseIds:[],outcomeCaseIds:[],shards:['forms-4']};
   const requestedMimeType=process.env.V177_NATIVE_VIDEO_MIME??'video/webm;codecs=vp8';
   assert.ok(['video/webm;codecs=vp8','video/mp4'].includes(requestedMimeType),'Unknown native recorder comparison');
   assert.ok(selection.mode==='codec-control'||requestedMimeType==='video/webm;codecs=vp8','Container comparison is isolated from the remaining/full inventory');
@@ -177,7 +182,10 @@ export async function runBrowserQa(){
     engine:'webkit',runtime:deps.NATIVE_RECORDING_WEBKIT_RUNTIME,build:await deps.productionBuildIdentity(),
     status:'running-diagnostic',selection,recording:{requestedMimeType,requestedCaptureHz,codecControl:selection.mode==='codec-control'},fullPlan,excludedCaseIds:fullPlan.filter(r=>!selection.caseIds.includes(r.caseId)).map(r=>r.caseId),
     plan,manualPlan,manualCases:[],outcomePlan,outcomeCases:[],sources:[],contexts:[],cases:[],errors:[],persistenceErrors:[],...acceptance(),
-    scope:selection.mode==='acquisition-control'
+    recorderPresence,sourceProductBase:'45e46b90be77cd349670157974646dcc7f16b1cd',diagnosticOnly:true,releaseAccepted:false,
+    scope:selection.mode==='recorder-presence-control'
+      ?'Fixed ABBA of original ordinary Mayo attack1280 with original nativeVP8 recording versus no recorder, stream or capture-request timer. No product change; original free game/RAF, prepared scene,15x120ms reads, original30s case/cleanup and source data. No absent-media, allunit, original-speed, formal or release acceptance.'
+      :selection.mode==='acquisition-control'
       ?'One original Abomination attack case with a 60Hz canvas acquisition-request timer. Native VP8 bytes, free RAF/simulation, source clocks, 15x120ms sampling and encoded thresholds stay unchanged. Diagnostic only; no retained, all-unit, performance, release or physical acceptance.'
       :selection.mode==='codec-control'
       ?'One original Brute attack case with a native container comparison. Original scene, free RAF/simulation, source clock and deadlines remain unchanged. This dispatch supplies no all-unit, performance, release, naturalness or physical audio acceptance.'
@@ -267,7 +275,7 @@ export async function runBrowserQa(){
           for(const planned of rows){
             const row={...planned,status:'starting',samples:[],...acceptance()};report.cases.push(row);
             const processObservationOwner=new AbortController();
-            try{await withNativeGameCaseDeadline(()=>withNativeProcessTimeline(()=>captureAllUnitCase(page,row,{out,onFailure:fail,requestedMimeType,requestedCaptureHz,codecControl:selection.mode==='codec-control',acquisitionControl:selection.mode==='acquisition-control'}),{selection,row,out,binding,signal:processObservationOwner.signal}),closeOwned,
+            try{await withNativeGameCaseDeadline(()=>withNativeProcessTimeline(()=>(recorderPresence==='absent'?observeUnrecordedMayo: captureAllUnitCase)(page,row,{out,onFailure:fail,requestedMimeType,requestedCaptureHz,codecControl:selection.mode==='codec-control',acquisitionControl:selection.mode==='acquisition-control'}),{selection,row,out,binding,signal:processObservationOwner.signal}),closeOwned,
               {onDeadline:error=>{processObservationOwner.abort();row.deadlineExpired=true;fail(error);}});}
             catch(error){row.status='failed';row.error=String(error);row.operationSettledAtOwnerReturn=error.operationSettledAtOwnerReturn??null;fail(error);await persist();break;}
             finally{processObservationOwner.abort();}
@@ -308,7 +316,7 @@ export async function runBrowserQa(){
     report.outcomeUnexecuted=outcomePlan.filter(p=>!report.outcomeCases.some(r=>r.caseId===p.caseId)).map(p=>p.caseId);
     report.status=report.errors.length||report.unexecuted.length||report.manualUnexecuted.length||report.outcomeUnexecuted.length
       ||report.outcomeCases.some(r=>r.status!=='observed-outcome-diagnostic')
-      ||report.manualCases.some(r=>r.status!=='observed-manual-diagnostic')||report.cases.some(r=>r.status!=='observed-diagnostic')
+      ||report.manualCases.some(r=>r.status!=='observed-manual-diagnostic')||report.cases.some(r=>r.status!==(recorderPresence==='absent'?'observed-unrecorded-control':'observed-diagnostic'))
       ||report.contexts.some(c=>c.cleanup!=='completed')?'failed':'completed-diagnostic';
     await persist();
   }
