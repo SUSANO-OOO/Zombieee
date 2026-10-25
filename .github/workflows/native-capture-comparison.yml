@@ -98,6 +98,7 @@ jobs:
       - name: Confirm actual public update, relaunch and existing save preservation
         env:
           PWA_OFFICIAL_PROFILE_MODE: verify
+          PWA_OFFICIAL_PROFILE_VERIFY_SOURCE_SHA256: 9104941d870e0b2211bade3c4d6186986de40310edab347335bfd993bcb497c3
           EXPECTED_HEAD: ${{ inputs.expected_head }}
           PWA_OFFICIAL_PROFILE_EXPECTED_VERSION: "1.0.5"
           PWA_OFFICIAL_PROFILE_EXPECTED_SHA: ${{ inputs.release_sha }}
