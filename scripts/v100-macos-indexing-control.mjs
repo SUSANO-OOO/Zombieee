@@ -5,7 +5,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import {isRangerCaptureSelection,isFullNativeCaptureSelection} from './v177-native-allunit-selection.mjs';
 
-import {correctionCases} from './v105-five-corrections-cases.mjs';
+import {correctionCapturePart,correctionCaptureFolder} from './v105-five-corrections-cases.mjs';
 
 function assertFreshFullCaptureHost(env,platform,arch){
  assert.equal(platform,'darwin');assert.equal(arch,'arm64');
@@ -48,7 +48,7 @@ export function assertEphemeralNativeCaptureHost(env, platform, arch, selection)
 
 export const correctionPreparationNeeded = (selection,scope) => selection.mode==='full'
  ?(scope?[scope]:['desktop','mobile390','mobile340']).some(s=>
-  ['desktop','mobile390','mobile340'].includes(s)&&JSON.stringify(selection.plan)===JSON.stringify(correctionCases(s)))
+  ['desktop','mobile390','mobile340'].includes(s)&&JSON.stringify(selection.plan)===JSON.stringify(correctionCapturePart(s,selection.part??'all')))
  :selection.mode==='remaining'
   &&[JSON.stringify([{kind:'miyamoto-musashi',mode:'manual'},{kind:'mayo-chan',mode:'manual'}]),
      JSON.stringify([{kind:'ranger',mode:'manual'}])].includes(JSON.stringify(selection.plan));
@@ -56,7 +56,8 @@ export const correctionPreparationNeeded = (selection,scope) => selection.mode==
 export function assertEphemeralCorrectionCaptureHost(env, platform, arch, selection) {
   if(selection.mode==='full'){
     assertFreshFullCaptureHost(env,platform,arch);
-    assert.deepEqual(selection.plan,correctionCases(env.V105_CAPTURE_SCOPE));
+    assert.equal(selection.part??'all',env.V105_CAPTURE_PART??'all');
+    assert.deepEqual(selection.plan,correctionCapturePart(env.V105_CAPTURE_SCOPE,selection.part??'all'));
     return;
   }
   assert.equal(platform, "darwin"); assert.equal(arch, "arm64");
@@ -77,7 +78,7 @@ export function validateCapturePreparationRecord(record, {env=process.env,platfo
   const diagnostic=!correction&&env.V177_NATIVE_HOST_INDEXING_CONTROL==='brute-attack-1280';
   assert.equal(record.diagnosticOnly,diagnostic);
   assert.equal(record.purpose,correction?'correction-capture-preparation':diagnostic?'native-capture-diagnostic':'native-capture-preparation');
-  if(correction){assert.equal(record.scope,env.V105_CAPTURE_SCOPE);assert.deepEqual(record.plan,selection.plan);}
+  if(correction){assert.equal(record.scope,env.V105_CAPTURE_SCOPE);assert.equal(record.part??'all',selection.part??'all');assert.deepEqual(record.plan,selection.plan);}
   else {assert.equal(record.shard,binding.shardId);if(isRangerCaptureSelection(selection)||isFullNativeCaptureSelection(selection)){
     for(const k of ['caseIds','manualCaseIds','outcomeCaseIds'])assert.deepEqual(record[k],selection[k]);
   }else assert.equal(record.caseId,selection.caseIds[0]);}
@@ -116,6 +117,40 @@ export function restoreEnabledVolumes(volumes, restore) {
     catch (error) { errors.push(error); attempts.push({ mount: volume.mount, ok: false, code: error.code ?? null, status: error.status ?? null }); }
   }
   return { attempts, errors };
+}
+
+// mdutil -a can fail on an already transitioning Preboot volume. Request each
+// originally enabled volume once, then observe completion within the original
+// command budget. Unknown errors and a still-enabled volume never become ready.
+export async function pauseEnabledVolumes(before,disable,status,{now=Date.now,sleep=ms=>new Promise(r=>setTimeout(r,ms)),timeoutMs=30000}={}){
+  assert.ok(timeoutMs>0&&timeoutMs<=30000,'Indexing preparation cannot extend30s');
+  const started=now(),commands=[];let observations=0;
+  const remaining=()=>{const ms=timeoutMs-(now()-started);assert.ok(ms>0,'Indexing preparation exceeded30s');return ms;};
+  const transitioning=error=>{
+    if(error.signal||!(error.status===1||error.mdutilStatus===0))return false;
+    const output=error.stdout??error.mdutilOutput;
+    if(typeof output!=='string'||!output.includes('kMDConfigSearchLevelTransitioning'))return false;
+    const lines=output.split(/\r?\n/u).map(s=>s.trim()).filter(Boolean);
+    if(!lines.every(line=>/^\/[^\r\n]*:$/u.test(line)||['Indexing enabled.','Indexing disabled.','Spotlight server is disabled.','Error: invalid operation.'].includes(line)
+      ||/^Error: unexpected indexing state\.\s+kMDConfigSearchLevelTransitioning$/u.test(line)))return false;
+    const stderr=String(error.stderr??'').split(/\r?\n/u).filter(s=>s.trim());
+    return stderr.every(line=>/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d+)? mdutil\[\d+:\d+\] mdutil disabling Spotlight: \/.* -> kMDConfigSearchLevelFSSearchOnly$/u.test(line));
+  };
+  for(const volume of before.filter(v=>v.enabled)){
+    try{disable(volume.mount,remaining());commands.push({mount:volume.mount,ok:true});}
+    catch(error){commands.push({mount:volume.mount,ok:false,status:error.status??null,transitioning:transitioning(error)});
+      if(!transitioning(error))throw error;}
+  }
+  for(;;){
+    remaining();let after;
+    try{after=status(remaining());observations++;remaining();}
+    catch(error){if(!transitioning(error))throw error;}
+    if(after){
+      assert.deepEqual(after.map(v=>v.mount).sort(),before.map(v=>v.mount).sort());
+      if(after.every(v=>!v.enabled))return{after,commands,observations,elapsedMs:now()-started};
+    }
+    await sleep(Math.min(100,remaining()));
+  }
 }
 
 export function validateBenchmarkPreparationRecord(record, env, platform, arch) {
@@ -165,13 +200,17 @@ async function main(mode) {
   } else assertEphemeralPerformanceHost(process.env, process.platform, process.arch);
   const workspace = await realpath(process.env.GITHUB_WORKSPACE);
   assert.equal(await realpath(process.cwd()), workspace, "owned checkout required");
-  const directory = path.join(workspace, "outputs", native ? "v177-native-allunit-"+nativeBinding.shardId : correction ? "v105-five-corrections/"+process.env.V105_CAPTURE_SCOPE : "v100-device-runtime");
+  const directory = path.join(workspace, "outputs", native ? "v177-native-allunit-"+nativeBinding.shardId : correction ? "v105-five-corrections/"+correctionCaptureFolder(process.env.V105_CAPTURE_SCOPE,selection.part??'all') : "v100-device-runtime");
   const benchmark = mode.endsWith("benchmark");
   const recordPath = path.join(directory, native||correction ? "native-host-indexing-control.json" : benchmark ? "spotlight-benchmark-preparation.json" : "spotlight-indexing-control.json");
   const diagnosticNative=native&&process.env.V177_NATIVE_HOST_INDEXING_CONTROL==='brute-attack-1280';
   const purpose = native ? diagnosticNative?"native-capture-diagnostic":"native-capture-preparation" : correction ? "correction-capture-preparation" : benchmark ? "benchmark-preparation" : "causal-diagnostic";
   const options = { encoding: "utf8", timeout: 30_000, maxBuffer: 64 * 1024, env: { ...process.env, LC_ALL: "C" } };
-  const status = () => parseIndexingStatus(execFileSync("/usr/bin/mdutil", ["-a", "-s"], options));
+  const status = (timeout=options.timeout) => {
+    const output=execFileSync("/usr/bin/mdutil", ["-a", "-s"], {...options,timeout});
+    try{return parseIndexingStatus(output);}
+    catch(error){error.mdutilOutput=output;error.mdutilStatus=0;throw error;}
+  };
   if (mode === "pause" || mode.startsWith("prepare-")) {
     await mkdir(directory, { recursive: true });
     const before = status();
@@ -180,14 +219,14 @@ async function main(mode) {
       purpose, diagnosticOnly: native?diagnosticNative:!benchmark&&!correction, acceptanceOverride: false,
       ...(native||correction ? { attempt:process.env.GITHUB_RUN_ATTEMPT,candidateHead:nativeBinding.head,
         ...(native?{shard:nativeBinding.shardId,...(isFullNativeCaptureSelection(selection)?{selectionMode:"full"}:{}),...(isRangerCaptureSelection(selection)||isFullNativeCaptureSelection(selection)
-          ?Object.fromEntries(['caseIds','manualCaseIds','outcomeCaseIds'].map(k=>[k,selection[k]])):{caseId:selection.caseIds[0]})}:{scope:process.env.V105_CAPTURE_SCOPE,plan:selection.plan}),arch:process.arch,
+          ?Object.fromEntries(['caseIds','manualCaseIds','outcomeCaseIds'].map(k=>[k,selection[k]])):{caseId:selection.caseIds[0]})}:{scope:process.env.V105_CAPTURE_SCOPE,part:selection.part??'all',plan:selection.plan}),arch:process.arch,
         processBefore:execFileSync("/bin/ps",["-axo","pid=,comm=,%cpu="],options) } : {}),
       ...(benchmark ? { basis: { run: 36944517519, primaryDigest: "fa3a2bf9a5c3ece6ddc63bcaf77c0c03308c7b6d7b6e37bb4699539c6c20f83b", controlDigest: "41e03d4975a2504984a5f1b98804a3c4aed248186e3f67a0c5bfeeccfcca5b94" } } : {}),
       before, attemptedAt: new Date().toISOString(), state: "pause-attempted" };
     await writeFile(recordPath, JSON.stringify(record, null, 2) + "\n", { flag: "wx" });
     if(correction)await writeFile(process.env.GITHUB_OUTPUT,'prepared=true\n',{flag:'a'});
-    execFileSync("/usr/bin/sudo", ["-n", "/usr/bin/mdutil", "-a", "-i", "off"], options);
-    const after = status();
+    const pause=await pauseEnabledVolumes(before,(mount,timeout)=>execFileSync("/usr/bin/sudo", ["-n", "/usr/bin/mdutil", "-i", "off",mount], {...options,timeout}),status);
+    const {after}=pause;record.pause=pause;
     assert.deepEqual(after.map(v => v.mount).sort(), before.map(v => v.mount).sort());
     assert.ok(after.every(v => !v.enabled), "indexing remained enabled");
     Object.assign(record, { after, pausedAt: new Date().toISOString(), state: "paused" });
@@ -203,7 +242,7 @@ async function main(mode) {
       if(native){assert.equal(record.shard,nativeBinding.shardId);if(isFullNativeCaptureSelection(selection))assert.equal(record.selectionMode,"full");if(isRangerCaptureSelection(selection)||isFullNativeCaptureSelection(selection)){
         for(const k of ['caseIds','manualCaseIds','outcomeCaseIds'])assert.deepEqual(record[k],selection[k]);
       }else assert.equal(record.caseId,selection.caseIds[0]);}
-      else {assert.equal(record.scope,process.env.V105_CAPTURE_SCOPE);assert.deepEqual(record.plan,selection.plan);}
+      else {assert.equal(record.scope,process.env.V105_CAPTURE_SCOPE);assert.equal(record.part??'all',selection.part??'all');assert.deepEqual(record.plan,selection.plan);}
       assert.equal(record.diagnosticOnly,native?diagnosticNative:false);assert.equal(record.acceptanceOverride,false);
     }
     Object.assign(record, { restorationStartedAt: new Date().toISOString(), state: "restoration-attempted" });

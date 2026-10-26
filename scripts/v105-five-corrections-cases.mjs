@@ -8,3 +8,14 @@ export function correctionCases(scope){
       'kurome','mother','ooguchi','gairen','mugarian-president-mutated','takuya-omega','takuya'].map(kind=>({kind,mode:'enemy'})),
     ...['brute','guardian','tky','takuya','takuya-omega','crazy-king','kumaverson','babayaga','brawler'].map(kind=>({kind,mode:'engage'}))];
 }
+
+// Divide only the work, never the original cases or their acceptance limits.
+export function correctionCapturePart(scope,part='all'){
+  const plan=correctionCases(scope);
+  assert.ok(part==='all'||scope==='desktop'&&['1','2'].includes(part),'Unknown correction partition');
+  return part==='all'?plan:plan.filter((_,i)=>i%2===Number(part)-1);
+}
+export function correctionCaptureFolder(scope,part='all'){
+  correctionCapturePart(scope,part);
+  return scope+(part==='all'?'':'-'+part);
+}

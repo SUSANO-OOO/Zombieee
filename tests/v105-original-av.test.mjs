@@ -8,6 +8,36 @@ import path from 'node:path';
 import vm from 'node:vm';
 import {auditCorrectionEncodedClip,startCorrectionRecording,assertCorrectionCaseDeadline,canContinueCompletedCorrection,assertMayoCorrectionRetreat,
   correctionCaseSelection,withCorrectionCaseContext,completeCorrectionCase} from '../scripts/v105-five-corrections-capture.mjs';
+import {correctionCases,correctionCapturePart,correctionCaptureFolder} from '../scripts/v105-five-corrections-cases.mjs';
+import {load as yaml} from 'js-yaml';
+
+test('four bounded capture jobs partition every original correction exactly once without extending deadlines',async()=>{
+  const workflow=yaml(await readFile('.github/workflows/five-corrections-capture.yml','utf8'));
+  const rows=workflow.jobs.capture.strategy.matrix.include;
+  const ids=rows.flatMap(({scope,part,name})=>{
+    assert.equal(correctionCaptureFolder(scope,part),name);
+    return correctionCapturePart(scope,part).map(r=>scope+':'+r.kind+':'+r.mode);
+  });
+  const original=['desktop','mobile390','mobile340'].flatMap(scope=>correctionCases(scope).map(r=>scope+':'+r.kind+':'+r.mode));
+  assert.equal(ids.length,56);assert.equal(new Set(ids).size,56);assert.deepEqual(ids.sort(),original.sort());
+  assert.equal(rows.length,4);assert.equal(workflow.jobs.capture['timeout-minutes'],15);
+  assert.equal(workflow.jobs.capture.strategy['fail-fast'],false);
+  assert.match(workflow.jobs.result.steps[0].run,/success/);
+  assert.equal(correctionCapturePart('desktop','1').length,21);assert.equal(correctionCapturePart('desktop','2').length,21);
+  for(const [scope,part]of [['desktop','3'],['mobile390','1'],['../elsewhere','all']])
+    assert.throws(()=>correctionCapturePart(scope,part));
+  const selected=await correctionCaseSelection('desktop',{event:{},part:'2',select:()=>({mode:'full'})});
+  assert.equal(selected.part,'2');assert.deepEqual(selected.plan,correctionCapturePart('desktop','2'));
+});
+
+test('owned game cleanup precedes synchronous decode and is still performed only once',async()=>{
+  const events=[],page={on(){},setDefaultTimeout(){},isClosed:()=>false};
+  const browser={newContext:async()=>({newPage:async()=>page})};
+  await withCorrectionCaseContext(browser,{},async(_page,close)=>{
+    events.push('saved-original');await close();events.push('decode-original');
+  },{audit:()=>({report:{unexpectedFailures:[]}}),deadline:async action=>action(),closeContext:async()=>{events.push('close');}});
+  assert.deepEqual(events,['saved-original','close','decode-original']);
+});
 
 test('a last-fixture error delivered during cleanup cannot become a reusable recorded success',()=>{
   const row={status:'verified-awaiting-owned-cleanup',context:{completed:true,pageClosedBeforeCleanup:false}};
@@ -140,11 +170,18 @@ test('mobile native MP4 preference preserves the original stream request, bitrat
     const tap={stream:{getAudioTracks:()=>[{}]},release(){}};
     ctx.window={__ASHFALL_BATTLE_QA__:{getV105CorrectionAudit:()=>({fighters:[]})},__ASHFALL_AUDIO_QA__:{unlock:async()=>{},createLocalRecordingTap:()=>tap}};
     ctx.document={querySelector:()=>({captureStream:hz=>{ctx.requestedHz=hz;return stream;}})};
-    ctx.performance={now:()=>100,timeOrigin:1};ctx.requestAnimationFrame=()=>1;ctx.setTimeout=()=>1;ctx.clearTimeout=()=>{};
+    ctx.performance={now:()=>100,timeOrigin:1};const callbacks=[];
+    ctx.requestAnimationFrame=fn=>{callbacks.push(fn);return 1;};ctx.setTimeout=()=>1;ctx.clearTimeout=()=>{};
+    const cpu={sequence:7,rafTimestamp:90,entryAt:91,exitAt:95};
+    ctx.window.__ASHFALL_RUNTIME_PERFORMANCE__={frameCpuTimings:[cpu]};
     ctx.MediaRecorder=class {static isTypeSupported(type){return supported.includes(type);}constructor(_stream,options){ctx.options=options;}start(...args){ctx.startArguments=args;this.onstart();}};
     const result=await vm.runInNewContext(`(${startCorrectionRecording.toString()})({ids,durationMs,preferMp4})`,ctx);
     assert.equal(result.mime,expected);assert.equal(ctx.requestedHz,60);assert.equal(ctx.startArguments.length,0);
     assert.equal(ctx.options.videoBitsPerSecond,5000000);assert.equal(ctx.options.audioBitsPerSecond,128000);
     assert.equal(ctx.window.__V105_RECORDING__.state.audioTracks,1);
+    callbacks.shift()(100);cpu.sequence=8;cpu.exitAt=105;
+    const observed=ctx.window.__V105_RECORDING__.state.rows[0];
+    assert.deepEqual(Array.from(observed.frameCpu),[7,90,91,null,null,null,95,null]);
+    assert.equal(observed.at,100);assert.equal(observed.enteredAt,100);assert.equal(observed.observedAt,100);
   }
 });

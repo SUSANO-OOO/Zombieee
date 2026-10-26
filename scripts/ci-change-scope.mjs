@@ -26,7 +26,7 @@ export const LANE_JOBS=Object.freeze({
   ...['entrance-candidate','final-candidate','final-base'].map(n=>'WebKit Stage 3 Audio Route ('+n+')')],
  quality:['V1 Quality UI and Play (chromium)','V1 Quality UI and Play (webkit)'],
  allunit:['Native Motion Build',...Array.from({length:12},(_,i)=>'Native Motion (forms-'+(i+1)+')')],
- five:['desktop','mobile390','mobile340'].map(v=>'Five Corrections ('+v+')'),
+ five:['desktop-1','desktop-2','mobile390','mobile340'].map(v=>'Five Corrections ('+v+')'),
  pages:['Pages Preview'],
 });
 export const JOB_LANES=Object.freeze({

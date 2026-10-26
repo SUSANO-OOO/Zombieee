@@ -1,8 +1,34 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { assertEphemeralPerformanceHost, assertEphemeralNativeCaptureHost, parseIndexingStatus, restoreEnabledVolumes, validateBenchmarkPreparationRecord, assertEphemeralCorrectionCaptureHost, validateCapturePreparationRecord, correctionPreparationNeeded } from "../scripts/v100-macos-indexing-control.mjs";
+import { assertEphemeralPerformanceHost, assertEphemeralNativeCaptureHost, parseIndexingStatus, restoreEnabledVolumes, pauseEnabledVolumes, validateBenchmarkPreparationRecord, assertEphemeralCorrectionCaptureHost, validateCapturePreparationRecord, correctionPreparationNeeded } from "../scripts/v100-macos-indexing-control.mjs";
 
 const env = { GITHUB_ACTIONS: "true", RUNNER_ENVIRONMENT: "github-hosted", RUNNER_OS: "macOS", GITHUB_REPOSITORY: "SUSANO-OOO/Zombieee", GITHUB_EVENT_NAME: "pull_request", GITHUB_JOB: "v100-webkit-frame-control", GITHUB_RUN_ID: "36935406773", GITHUB_SHA: "0284f0f616c695e45a7e73c5b9979c1d1c15b1d1" };
+
+test('preparation requests each enabled volume once and verifies a transitioning request without retrying it',async()=>{
+  const before=[{mount:'/',enabled:true},{mount:'/Preboot',enabled:false}],after=before.map(v=>({...v,enabled:false}));
+  let time=0,reads=0;const calls=[];
+  const transition='/:\nError: invalid operation.\nError: unexpected indexing state.  kMDConfigSearchLevelTransitioning\n';
+  const result=await pauseEnabledVolumes(before,mount=>{calls.push(mount);throw Object.assign(Error('transition'),{stdout:transition,status:1,
+    stderr:'2026-10-26 09:19:47.430 mdutil[1933:8012] mdutil disabling Spotlight: / -> kMDConfigSearchLevelFSSearchOnly\n'});},
+    ()=>{if(reads++===0)throw Object.assign(Error('transition'),{mdutilOutput:transition,mdutilStatus:0});return after;},
+    {now:()=>time,sleep:async ms=>{time+=ms;}});
+  assert.deepEqual(calls,['/']);assert.deepEqual(result.after,after);assert.equal(result.commands[0].transitioning,true);
+  assert.equal(time,100);
+  for(const failure of [Error('permission denied'),Error('unrecognized volume')])
+    await assert.rejects(pauseEnabledVolumes(before,()=>{throw failure;},()=>after),e=>e===failure);
+  for(const change of [{stdout:transition+'Permission denied\n'},{stderr:'Permission denied'},
+    {status:2},{signal:'SIGTERM'},{stdout:undefined,message:transition}]){
+    const failure=Object.assign(Error('fixture'),{stdout:transition,status:1},change);
+    await assert.rejects(pauseEnabledVolumes(before,()=>{throw failure;},()=>after),e=>e===failure);
+  }
+  time=0;
+  await assert.rejects(pauseEnabledVolumes(before,()=>{},()=>before,{now:()=>time,sleep:async ms=>{time+=ms;}}),/exceeded30s/);
+  assert.equal(time,30000);
+  time=0;
+  await assert.rejects(pauseEnabledVolumes(before,()=>{},()=>{time=30000;return after;},{now:()=>time}),/exceeded30s/);
+  await assert.rejects(pauseEnabledVolumes(before,()=>{},()=>[{mount:'/wrong',enabled:false}]),/deep-equal/);
+  await assert.rejects(pauseEnabledVolumes(before,()=>{},()=>after,{timeoutMs:30001}),/cannot extend30s/);
+});
 
 test("native single-case diagnostic cannot authorize the formal host or any broader capture selection", () => {
   const native={...env,GITHUB_JOB:"capture",GITHUB_RUN_ATTEMPT:"1",V177_CAPTURE_SHARD:"forms-2",V177_NATIVE_HOST_INDEXING_CONTROL:"brute-attack-1280",V177_EXPECTED_HEAD_SHA:"a".repeat(40)};
@@ -119,6 +145,13 @@ test('full capture preparation stays within exact hosted ARM plans and binds eve
   assert.doesNotThrow(()=>validateCapturePreparationRecord(r,{env:e,platform:'darwin',arch:'arm64',selection,binding:{head:e.V177_EXPECTED_HEAD_SHA},correction:true}));
   for(const change of [{scope:'wrong'},{run:'wrong'},{attempt:'2'},{candidateHead:'b'.repeat(40)},{acceptanceOverride:true}])
    assert.throws(()=>validateCapturePreparationRecord({...r,...change},{env:e,platform:'darwin',arch:'arm64',selection,binding:{head:e.V177_EXPECTED_HEAD_SHA},correction:true}));
+ }
+ const {correctionCapturePart}=await import('../scripts/v105-five-corrections-cases.mjs');
+ for(const part of ['1','2']){
+  const selection={mode:'full',part,plan:correctionCapturePart('desktop',part)},e={...owned,V105_CAPTURE_SCOPE:'desktop',V105_CAPTURE_PART:part};
+  assert.doesNotThrow(()=>assertEphemeralCorrectionCaptureHost(e,'darwin','arm64',selection));
+  assert.throws(()=>assertEphemeralCorrectionCaptureHost({...e,V105_CAPTURE_PART:part==='1'?'2':'1'},'darwin','arm64',selection));
+  assert.throws(()=>assertEphemeralCorrectionCaptureHost(e,'darwin','arm64',{...selection,plan:correctionCases('desktop')}));
  }
  for(const patch of [{CI_CAPTURE_FRESH:''},{GITHUB_EVENT_NAME:'workflow_dispatch'},{V177_CAPTURE_SHARD:'forms-99'},{GITHUB_JOB:'other'}])
   assert.throws(()=>assertEphemeralNativeCaptureHost({...owned,...patch},'darwin','arm64',full));

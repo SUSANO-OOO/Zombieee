@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   capture:
-    name: Five Corrections (${{ matrix.scope }})
+    name: Five Corrections (${{ matrix.name }})
     # Keep the original viewport, 60fps stream request and clock/deadline bounds.
     # The Intel recording control remains in Targeted Frame Performance; use
     # the formal benchmark's ARM host for the product's original AV evidence.
@@ -23,10 +23,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        scope: [desktop, mobile390, mobile340]
+        include:
+          - {name: desktop-1, scope: desktop, part: '1'}
+          - {name: desktop-2, scope: desktop, part: '2'}
+          - {name: mobile390, scope: mobile390, part: all}
+          - {name: mobile340, scope: mobile340, part: all}
     env:
       V177_EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
       V105_CAPTURE_SCOPE: ${{ matrix.scope }}
+      V105_CAPTURE_PART: ${{ matrix.part }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -58,8 +63,8 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: v105-five-corrections-${{ matrix.scope }}
-          path: outputs/v105-five-corrections/${{ matrix.scope }}
+          name: v105-five-corrections-${{ matrix.name }}
+          path: outputs/v105-five-corrections/${{ matrix.name }}
           if-no-files-found: error
           retention-days: 14
 

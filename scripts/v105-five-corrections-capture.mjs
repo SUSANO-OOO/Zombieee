@@ -17,14 +17,14 @@ import {installRequestFailureAudit} from './browser-request-failure-audit.mjs';
 import {nativeCaseSelection} from './v177-native-allunit-selection.mjs';
 import {validateCapturePreparationRecord,correctionPreparationNeeded} from './v100-macos-indexing-control.mjs';
 const sha=b=>createHash('sha256').update(b).digest('hex');
-import {correctionCases} from './v105-five-corrections-cases.mjs';
+import {correctionCases,correctionCapturePart,correctionCaptureFolder} from './v105-five-corrections-cases.mjs';
 export {correctionCases} from './v105-five-corrections-cases.mjs';
 
 // Reuse is limited by the same exact-source guard as the original motion
 // inventory. Unknown revisions run the whole original plan. Earlier failures
 // and the boss whose name changed remain fresh observations, never old passes.
-export async function correctionCaseSelection(scope,{event,root=process.cwd(),select=nativeCaseSelection}={}){
-  const plan=correctionCases(scope),full={mode:'full',plan,retained:[]};
+export async function correctionCaseSelection(scope,{event,root=process.cwd(),select=nativeCaseSelection,part=process.env.V105_CAPTURE_PART??'all'}={}){
+  const plan=correctionCapturePart(scope,part),full={mode:'full',plan,retained:[],...(part==='all'?{}:{part})};
   const selection=select({event,root});if(selection.mode!=='remaining')return full;
   const profile=JSON.parse(await readFile(path.join(root,'scripts/v177-native-allunit-recovery.json'),'utf8'));
   const source=profile.fiveCorrections;if(!source)return full;
@@ -50,7 +50,7 @@ export async function correctionCaseSelection(scope,{event,root=process.cwd(),se
     assert.ok(Number.isFinite(row.maxGapMs)&&row.maxGapMs<=250&&row.maxGapMs>0);
     assert.ok(Number.isFinite(row.caseElapsedMs)&&row.caseElapsedMs<30000);
   }
-  return{mode:'remaining',source:{file:source.file,sha256:source.sha256,head:inventory.head,runId:inventory.runId},
+  return{mode:'remaining',...(part==='all'?{}:{part}),source:{file:source.file,sha256:source.sha256,head:inventory.head,runId:inventory.runId},
     plan:plan.filter(r=>pending.includes(scope+':'+r.kind+':'+r.mode)),retained:inventory.retained.filter(r=>r.caseId.startsWith(scope+':'))};
 }
 
@@ -76,7 +76,7 @@ export async function withCorrectionCaseContext(browser,options,operation,{onFat
     requests=audit(page);
     page.on('pageerror',e=>onFatal(e.stack??String(e)));page.on('console',m=>{if(m.type()==='error')onFatal(m.text());});
     page.on('response',r=>{if(r.status()>=400)onFatal(`${r.status()} ${r.url()}`);});
-    return await operation(page);
+    return await operation(page,close);
   }catch(error){primary??=error;throw error;}finally{await cleanup();}
   },close,{onDeadline:error=>{expired=true;primary??=error;onDeadline(error);}});}
   catch(error){primary=error;throw error;}
@@ -190,9 +190,15 @@ export async function startCorrectionRecording({ids,durationMs,preferMp4=false})
   // MP4 timeslices produced repeated packet timestamps and missing frames.
   await Promise.race([new Promise(resolve=>{recorder.onstart=()=>{state.startAt=performance.now();resolve();};recorder.start();}),
     new Promise((_,reject)=>{startTimer=setTimeout(()=>reject(Error('Native start exceeded3s')),3000);})]).finally(()=>clearTimeout(startTimer));
+  state.cpuColumns=['sequence','rafTimestamp','entryAt','previousExitAt','simulationFinishedAt','drawFinishedAt','exitAt','simulationTime'];
   const observe=at=>{if(state.stopAt!==null)return;
     if(state.rows.length>=4096){state.failed='Original4096-frame receipt limit';return;}
-    state.rows.push({at,enteredAt:performance.now(),...q.getV105CorrectionAudit(ids)});state.raf=requestAnimationFrame(observe);};
+    const enteredAt=performance.now(),cpu=window.__ASHFALL_RUNTIME_PERFORMANCE__?.frameCpuTimings?.at(-1);
+    // Copy only eight existing numbers. No RPC, polling, product getter or
+    // retained mutable ring reference is added to the measured interval.
+    state.rows.push({at,enteredAt,...q.getV105CorrectionAudit(ids),
+      frameCpu:cpu?state.cpuColumns.map(key=>cpu[key]??null):null,observedAt:performance.now()});
+    state.raf=requestAnimationFrame(observe);};
   state.raf=requestAnimationFrame(observe);
   const watchdog=setTimeout(()=>{state.failed??='Original15s real recorder deadline exceeded';
     state.stopAt??=performance.now();cancelAnimationFrame(state.raf);if(recorder.state!=='inactive')recorder.stop();},15000);
@@ -218,13 +224,13 @@ export async function stopCorrectionRecording(){
 }
 
 export async function runBrowserQa(){
-  const binding=await nativeGameCaptureBinding(),scope=process.env.V105_CAPTURE_SCOPE;
+  const binding=await nativeGameCaptureBinding(),scope=process.env.V105_CAPTURE_SCOPE,part=process.env.V105_CAPTURE_PART??'all';
   const {V177_JOINT_ATLASES:currentAtlases}=await import('../app/v177JointPresentation.js');
   const atlasPaths=Object.fromEntries(Object.entries(currentAtlases).map(([kind,atlas])=>[kind,atlas.path]));
   const selection=await correctionCaseSelection(scope,{event:JSON.parse(await readFile(process.env.GITHUB_EVENT_PATH,'utf8'))});
   const {plan}=selection,viewport=scope==='desktop'?{width:1280,height:720}:{width:844,height:scope==='mobile390'?390:340};
-  const out=path.resolve(process.env.V105_CAPTURE_OUT??'outputs/v105-five-corrections/'+scope);await mkdir(out,{recursive:true});
-  const report={...binding,architecture:process.arch,scope,viewport,runtime:NATIVE_RECORDING_WEBKIT_RUNTIME,selection,cases:[],contexts:[],errors:[],status:'starting',
+  const out=path.resolve(process.env.V105_CAPTURE_OUT??'outputs/v105-five-corrections/'+correctionCaptureFolder(scope,part));await mkdir(out,{recursive:true});
+  const report={...binding,architecture:process.arch,scope,part,viewport,runtime:NATIVE_RECORDING_WEBKIT_RUNTIME,selection,cases:[],contexts:[],errors:[],status:'starting',
     recordingConditions:{independentContextPerCase:true,actualAudioReadinessBeforeRecording:true,caseDeadlineMs:30000,
       retainedObservationsKeepTheirOriginalConditions:true,coldStartupAccepted:false,formalPerformanceAccepted:false},
     acceptance:{physicalIphone:false,humanVisualAndListening:false,normalCampaign:false,wholeGame:false}};
@@ -247,7 +253,7 @@ export async function runBrowserQa(){
       assert.equal(fatalErrors,0,'A prior product/page error invalidated the recording context');
       const errorsBefore=report.errors.length;
       const caseStartedAt=performance.now();
-      try{await withCorrectionCaseContext(browser,{viewport,deviceScaleFactor:1,isMobile:viewport.width<1000,hasTouch:viewport.width<1000},async page=>{
+      try{await withCorrectionCaseContext(browser,{viewport,deviceScaleFactor:1,isMobile:viewport.width<1000,hasTouch:viewport.width<1000},async(page,closeOwned)=>{
       await page.addInitScript(seedV100BrowserSaveOnce,serializeV100Save(save));
       await page.goto(new URL('v100',process.env.V100_CAMPAIGN_QA_BASE_URL).href);await enterNativeAllUnitSurface(page);await enterV100FromTitle(page);
       await page.getByRole('button',{name:'戦闘へ',exact:true}).click();await page.waitForFunction(()=>window.__ASHFALL_BATTLE_QA__?.getSnapshot().running);
@@ -293,6 +299,9 @@ export async function runBrowserQa(){
         const capture=await page.evaluate(stopCorrectionRecording),bytes=Buffer.from(capture.data,'base64');delete capture.data;
         const file=`${String(report.cases.length).padStart(2,'0')}-${item.kind}-${item.mode}.${capture.mime.startsWith('video/mp4')?'mp4':'webm'}`;
         await writeFile(path.join(out,file),bytes,{flag:'wx'});Object.assign(row,{file,sha256:sha(bytes),bytes:bytes.length,capture,status:'retained-pending-checks'});await persist();
+        // The original bytes and observations are saved. Release the owned
+        // game before synchronous decoding; all work keeps the same30s budget.
+        await closeOwned();
         assert.equal(capture.failed,null);assert.ok(capture.rows.length>=30,'actual continuous paint receipts missing');
         assert.equal(capture.bytes,bytes.length,'Original encoded bytes must remain intact');
         row.originalAv=await auditCorrectionEncodedClip(path.join(out,file),capture);
