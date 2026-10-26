@@ -24,10 +24,21 @@ test('whole PR docs are outside product acceptance on Draft and Ready, never reu
   assert.equal(s.code_checks,false);assert.equal(s.wholeGameAccepted,false);
   for(const gate of Object.values(validationPlan(s,{head,base,merge,fingerprints}).gates))assert.equal(gate.state,'outside');
  }
- for(const file of ['app/new-shared.js','public/asset-manifest.json','package-lock.json','unclassified.config.js']){
+ for(const file of ['app/new-shared.js','public/asset-manifest.json','package-lock.json','unclassified.config.js',
+  'docs/story/v10/全脚本_R9.md','docs/story/v10/PRODUCER_DECISIONS_FINAL_RELEASE.md','docs/story/new-dialogue.md']){
   const s=scopes([file,'docs/PROJECT_STATE.md']);
   for(const key of Object.keys(LANE_JOBS))assert.equal(s[key],true,file+' must retain '+key);
  }
+});
+test('story sources stay bound to runtime evidence while known development guides remain documentation',()=>{
+ const sets=Object.fromEntries(Object.keys(LANE_JOBS).map(k=>[k,new Set()]));
+ const entries=[['docs/story/v10/全脚本_R9.md','a'.repeat(40)],['docs/story/v10/README.md','b'.repeat(40)]];
+ const before=laneFingerprints(entries,sets,{base});
+ const changed=laneFingerprints(entries.map(([f,h])=>[f,f.endsWith('全脚本_R9.md')?'c'.repeat(40):h]),sets,{base});
+ for(const k of Object.keys(LANE_JOBS))assert.notEqual(changed[k],before[k]);
+ assert.deepEqual(before,laneFingerprints(entries.map(([f,h])=>[f,f.endsWith('README.md')?'d'.repeat(40):h]),sets,{base}));
+ assert.notDeepEqual(before,laneFingerprints(entries,sets,{base,historicalDocs:true}));
+ assert.equal(planFor(['docs/story/v10/README.md']).fingerprintAlgorithm,'runtime-source-v3');
 });
 test('known QA changes target their dependants; shared and unknown helpers fail closed',()=>{
  for(const [file,lane] of [['scripts/v100-r9-full-story-browser.mjs','r9'],
@@ -143,6 +154,13 @@ test('legacy runtime evidence is recomputed from its immutable source, not re-pi
  const sourceFingerprints=revision=>{calls++;assert.equal(revision,head);return {legacy:{...fingerprints,allunit:old},current:fingerprints};};
  const e=await previousLaneEvidence({...options,request:request(),sourceFingerprints});
  assert.equal(e.allunit.sourceFingerprint,old);assert.equal(e.allunit.fingerprint,fp);assert.equal(calls,1);
+ const v2=()=>evidenceApi({mutate:x=>{x.p.fingerprintAlgorithm='runtime-source-v2';x.p.gates.allunit.fingerprint=old;}});
+ assert.equal((await previousLaneEvidence({...options,request:v2()})).allunit,null,'A v2 owner needs its immutable source proof');
+ const upgraded=await previousLaneEvidence({...options,request:v2(),sourceFingerprints:()=>({v2:{...fingerprints,allunit:old},current:fingerprints})});
+ assert.equal(upgraded.allunit.sourceFingerprintAlgorithm,'runtime-source-v2');
+ assert.equal(upgraded.allunit.fingerprint,fp);
+ for(const proof of [{v2:fingerprints,current:fingerprints},{v2:{...fingerprints,allunit:old},current:{...fingerprints,allunit:'3'.repeat(64)}}])
+  assert.equal((await previousLaneEvidence({...options,request:v2(),sourceFingerprints:()=>proof})).allunit,null);
  for(const proof of [{legacy:fingerprints,current:fingerprints},{legacy:{...fingerprints,allunit:old},current:{...fingerprints,allunit:'3'.repeat(64)}}])
   assert.equal((await previousLaneEvidence({...options,request:request(),sourceFingerprints:()=>proof})).allunit,null);
  assert.equal((await previousLaneEvidence({...options,request:evidenceApi({mutate:x=>{x.p.fingerprintAlgorithm='unknown';}})})).allunit,null);

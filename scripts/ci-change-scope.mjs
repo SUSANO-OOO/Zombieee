@@ -44,8 +44,11 @@ const control=new Set(['AGENTS.md','README.md','.gitignore','.gitattributes','pn
  'scripts/build-v104-combat-voices.py',
  '.github/workflows/ci.yml','.github/workflows/targeted-frame-performance.yml']);
 const diagnostic=/^\.github\/workflows\/(?:native-(?:aac|audio|opus|pcm|capture|game)|normal-campaign-observation)/u;
-export const isDocumentation=file=>/\.md$/u.test(file)&&!/^docs\/story\/v10\/STORY_SCRIPT/u.test(file)
+const historicalDocumentation=file=>/\.md$/u.test(file)&&!/^docs\/story\/v10\/STORY_SCRIPT/u.test(file)
  ||/^docs\/qa\/.+\.(?:png|webp|mp4|webm)$/u.test(file);
+const storyGuides=new Set(['docs/story/v10/README.md','docs/story/v10/CODEX_SOL_DESIGN_MISSION.md']);
+export const isDocumentation=file=>historicalDocumentation(file)
+ &&(!file.startsWith('docs/story/')||storyGuides.has(file));
 const isControl=file=>control.has(file)||/^docs\/qa\/.+\.json$/u.test(file)||/^tests\/[^/]+\.test\.mjs$/u.test(file);
 const product=file=>/^(?:app\/|public\/|assets\/|reference\/|package(?:-lock)?\.json$)/u.test(file);
 const fallbackRoots={
@@ -130,9 +133,10 @@ export function dependencyInputs(files,read){
  return {sets,dependencies};
 }
 const digest=text=>createHash('sha256').update(text).digest('hex');
-export function laneFingerprints(entries,sets,{base,workflowContracts={},legacy=false}={}){
+export function laneFingerprints(entries,sets,{base,workflowContracts={},legacy=false,historicalDocs=legacy}={}){
  const assigned=new Set(Object.values(sets).flatMap(s=>[...s]));
- const common=file=>!isDocumentation(file)&&file!=='.github/workflows/ci.yml'&&!diagnostic.test(file)&&!/^tests\/[^/]+\.test\.mjs$/u.test(file)
+ const documentation=historicalDocs?historicalDocumentation:isDocumentation;
+ const common=file=>!documentation(file)&&file!=='.github/workflows/ci.yml'&&!diagnostic.test(file)&&!/^tests\/[^/]+\.test\.mjs$/u.test(file)
   &&(legacy||!control.has(file)||file==='.gitattributes')
   &&(!/^(?:scripts\/|\.github\/workflows\/)/u.test(file)||!assigned.has(file));
  return Object.fromEntries(lanes.map(k=>[k,digest(JSON.stringify({base,
@@ -172,11 +176,12 @@ export async function previousLaneEvidence({repository,previousHead,base,prNumbe
  const sourceCache=new Map();
  const matches=async(record,k)=>{
   const gate=record.plan.gates[k];
-  if(record.plan.fingerprintAlgorithm==='runtime-source-v2')assert.equal(gate.fingerprint,fingerprints[k]);
-  else if(record.plan.fingerprintAlgorithm===undefined&&sourceFingerprints){
+  if(record.plan.fingerprintAlgorithm==='runtime-source-v3')assert.equal(gate.fingerprint,fingerprints[k]);
+  else if([undefined,'runtime-source-v2'].includes(record.plan.fingerprintAlgorithm)&&sourceFingerprints){
    if(!sourceCache.has(record.run.head_sha))sourceCache.set(record.run.head_sha,Promise.resolve().then(()=>sourceFingerprints(record.run.head_sha)));
    const proof=await sourceCache.get(record.run.head_sha);
-   assert.equal(gate.fingerprint,proof.legacy[k],'Original fingerprint must match its immutable source tree');
+   const original=record.plan.fingerprintAlgorithm==='runtime-source-v2'?proof.v2:proof.legacy;
+   assert.equal(gate.fingerprint,original[k],'Original fingerprint must match its immutable source tree');
    assert.equal(proof.current[k],fingerprints[k],'Actual runtime inputs changed');
   }else {assert.equal(record.plan.fingerprintAlgorithm,undefined,'Unknown fingerprint algorithm');assert.equal(gate.fingerprint,fingerprints[k]);}
  };
@@ -219,7 +224,7 @@ export function validationPlan(scope,{head,base,merge,fingerprints,evidence={},a
  if(attempt>1)evidence=Object.fromEntries(Object.entries(evidence).filter(([,e])=>e?.conclusion!=='failure'));
  const gates=Object.fromEntries(lanes.map(k=>[k,{required:scope[k],fingerprint:fingerprints[k],
   state:!scope[k]?'outside':evidence[k]?.conclusion==='failure'?'blocked':evidence[k]?'reused':'fresh',...(scope[k]&&evidence[k]?{owner:evidence[k]}:{})}]));
- return {schema:'zombieee-validation-scope/v1',fingerprintAlgorithm:'runtime-source-v2',head,base,merge,gates,scope:scope.scope,
+ return {schema:'zombieee-validation-scope/v1',fingerprintAlgorithm:'runtime-source-v3',head,base,merge,gates,scope:scope.scope,
   ...(attempt>1&&Object.keys(priorFailures).length?{explicitRevalidation:{attempt,priorFailures,resolutionClaimed:false}}:{}),
   code_checks:scope.code_checks,wholeGameAccepted:false};
 }
@@ -284,7 +289,9 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
    prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),fingerprints,token:process.env.CI_SCOPE_ACTIONS_TOKEN,
    sourceFingerprints:revision=>{
     const old=snapshot(revision),{sets}=dependencyInputs(old.files,old.read),workflowContracts=workflowRuntimeContracts(old.read('.github/workflows/ci.yml'));
-    return {legacy:laneFingerprints(old.entries,sets,{base,workflowContracts,legacy:true}),current:laneFingerprints(old.entries,sets,{base,workflowContracts})};
+    return {legacy:laneFingerprints(old.entries,sets,{base,workflowContracts,legacy:true}),
+     v2:laneFingerprints(old.entries,sets,{base,workflowContracts,historicalDocs:true}),
+     current:laneFingerprints(old.entries,sets,{base,workflowContracts})};
    }});
  // A new commit with identical inputs is not permission to retry a failure.
  // An operator's existing explicit Actions re-run remains a fresh execution,
