@@ -12,7 +12,7 @@ import {
  releasePreparedShardClock,assertNativeRealmMember,postpaintCaptureBoundary,assertShardPostpaintContract,assertShardProof
 } from '../scripts/v177-native-allunit-contract.mjs';
 import {startNativeCanvasClip,finishNativeCanvasClip,beginV177NativeCanvasClip} from '../scripts/v177-native-canvas-clips.mjs';
-import {startNativeGameRafObservation,stopNativeGameRafObservation} from '../scripts/v177-native-game-capture-browser.mjs';
+import {startNativeGameRafObservation,stopNativeGameRafObservation,nativeGameDamageReceipt} from '../scripts/v177-native-game-capture-browser.mjs';
 import {assertAllUnitClip} from '../scripts/v177-native-allunit-cases.mjs';
 import {SHARDS,planShard,LIMITS,assertPlannedCase} from '../scripts/v177-native-allunit-manifest.mjs';
 import {MANUAL_ABILITY_REGISTRY} from '../app/manualAbilities.js';
@@ -31,14 +31,14 @@ function declaration(source,name){
  assert.ok(node,name);return node.getText(tree).replace(/^export\s+/u,'');
 }
 function callback(realm,fn){return vm.runInContext('('+fn.toString()+')',realm.context);}
-function fixture({form='medic',origin=1000000,startEvent=true,stopEvent=true,chunks=['pure-node-fixture'],nativeError=false,failAtSample=null,cleanupFailure=false,manualSampleTimer=false,sampleTransportMs=0,sampleHandleTransportMs=0,startBoundaryTransportMs=0}={}){
+function fixture({form='medic',origin=1000000,startEvent=true,stopEvent=true,chunks=['pure-node-fixture'],nativeError=false,failAtSample=null,cleanupFailure=false,manualSampleTimer=false,sampleTransportMs=0,sampleHandleTransportMs=0,startBoundaryTransportMs=0,firstSampleHandleDelayMs=0}={}){
  const plan=SHARDS.flatMap(s=>planShard(s.id)).find(r=>r.form===form&&r.phase==='move'&&r.viewport.height===390);
  const row={...clone(plan),samples:[],status:'starting'};
  const stats={speed:38,laneSpeed:20,damage:10,range:180,attackEvery:1,hp:100,maxHp:100};
  const proof={schema:'v177-native-shard-proof/v1',proofId:'2:medic:4:move',battleGeneration:2,route:'/v100',
   owner:plan.owner,kind:plan.binding.kind,side:'human',renderKind:form,v100TwinPart:null,
   legacyFusedFixture:false,phase:'move',fighterId:4,targetId:5,originalActorStats:stats,ownerEvidence:{constructorFixture:true}};
- const log=[],raf=new Map(),scheduled=[];let now=1000,rawOrigin=origin,paused=true,simulation=0,seq=1,reads=0,nextRaf=0,streamStops=0;
+ const log=[],raf=new Map(),scheduled=[];let now=1000,rawOrigin=origin,paused=true,simulation=0,seq=1,reads=0,nextRaf=0,streamStops=0,scheduledReads=0;
  function advanceClock(ms){
   now+=ms;if(!paused){simulation+=ms/1000;seq++;}
   const frameAt=now;
@@ -130,6 +130,8 @@ function fixture({form='medic',origin=1000000,startEvent=true,stopEvent=true,chu
   };
   const evaluateHandle=h.evaluateHandle.bind(h);h.evaluateHandle=async(fn,arg)=>{
    if(fn.name==='readNativeAllUnitSample'&&++reads===failAtSample)throw sentinel;
+   if(fn.name==='readNativeAllUnitSample'&&arg?.sampleAt!==undefined&&scheduledReads++===0&&firstSampleHandleDelayMs)
+    advanceClock(firstSampleHandleDelayMs);
    const result=await evaluateHandle(fn,arg);
    if(fn.name==='readNativeAllUnitSample'&&arg?.sampleAt!==undefined&&sampleHandleTransportMs)advanceClock(sampleHandleTransportMs);
    return result;
@@ -421,10 +423,11 @@ test('actual capture transfers large immutable samples only after recording, ret
  assert.equal(f.row.status,'observed-diagnostic');assert.equal(f.row.samples.length,LIMITS.moveAttackSamples);
  for(let i=0;i<f.row.samples.length;i++){
   const sample=f.row.samples[i],planned=f.row.captureStart.at+(i+1)*LIMITS.sampleDelayMs;
-  assert.ok(sample.at>=planned&&sample.at<planned+.1);
+  const previous=i?f.row.samples[i-1]:f.row.captureStart,notBefore=Math.max(planned,previous.at+120);
+  assert.ok(sample.at>=notBefore&&sample.at<notBefore+.1);
   const timing=sample.readTiming;
-  assert.equal(timing.sampleAt,planned);assert.ok(timing.startedAt>=planned);
-  assert.ok(timing.scheduleLatenessMs>=0&&timing.scheduleLatenessMs<.1);
+  assert.equal(timing.sampleAt,planned);assert.equal(timing.notBeforeAt,notBefore);assert.ok(timing.startedAt>=notBefore);
+  assert.equal(timing.scheduleLatenessMs,timing.startedAt-planned);
   const stages=['startedAt','snapshotAt','auditAt','targetAuditAt','phaseGAt','boundaryAt','finishedAt'];
   assert.ok(stages.every((key,j)=>Number.isFinite(timing[key])&&(j===0||timing[key]>=timing[stages[j-1]])));
   const rpc=f.row.sampleRpcTimings[i];assert.equal(rpc.index,i);assert.equal(rpc.sampleAt,planned);
@@ -450,6 +453,62 @@ test('actual capture retains a late handle response time instead of fabricating 
  assert.equal(f.row.postpaintReceipt.naturalnessAccepted,false);
 });
 
+test('a recorded 1442ms first-read delay cannot compress fifteen real observations into a catch-up burst',async()=>{
+ const f=fixture({firstSampleHandleDelayMs:1442}),{run}=actualCaptureWithExternalControls();
+ await run(f.page,f.row,{out:path.join(fixtureDirectory,randomUUID())});
+ const samples=f.row.samples;
+ assert.equal(samples.length,15);assert.ok(samples[0].readTiming.scheduleLatenessMs>1300);
+ assert.ok(samples.at(-1).at-samples[0].at>=14*120);
+ assert.ok(samples.at(-1).simulationTime-samples[0].simulationTime>=.5);
+ for(let i=0;i<samples.length;i++){
+  const previous=i?samples[i-1]:f.row.captureStart;
+  assert.equal(samples[i].readTiming.sampleAt,f.row.captureStart.at+(i+1)*120);
+  assert.equal(samples[i].readTiming.notBeforeAt,Math.max(samples[i].readTiming.sampleAt,previous.at+120));
+  assert.ok(samples[i].at>=previous.at+120);
+ }
+ assert.equal(f.row.recordingMetadata.samplingProtocol,'native-min-spacing-v2');
+ assert.equal(f.row.nativeClip.originalSpeedAccepted,false);assert.ok(f.row.nativeClip.captureWindowMs<15000);
+});
+
+test('spacing cannot turn an over15s recording into success even when a delayed timer has not fired',async()=>{
+ const f=fixture({firstSampleHandleDelayMs:14500}),{run}=actualCaptureWithExternalControls();
+ await assert.rejects(run(f.page,f.row,{out:path.join(fixtureDirectory,randomUUID())}),/Original15s recording window/);
+ assert.equal(f.row.status,'starting');assert.equal(f.row.summary,undefined);
+ assert.ok(f.row.nativeClip.captureWindowMs>15000);assert.equal(f.row.nativeClip.originalSpeedAccepted,false);
+ assert.equal(f.log.at(-1),'owner-dispose');
+});
+
+test('atomic release keeps the first real impact in its recorded baseline and never borrows post-stop damage',async()=>{
+ const f=fixture(),owner=f.owner(),audit=f.qa.getEnemyFacingRuntimeAudit,pause=f.qa.setEnemyVfxProofPaused;
+ let sequence=0,hp=1000000;
+ f.qa.getEnemyFacingRuntimeAudit=id=>id===4?{...audit(id),fighter:{...audit(id).fighter,attackSequence:sequence}}
+  :{fighter:{id:5,kind:'walker',side:'zombie',hp,maxHp:1000000,speed:0,laneSpeed:0,damage:0}};
+ f.qa.setEnemyVfxProofPaused=value=>{pause(value);if(!value)queueMicrotask(()=>{sequence++;hp-=35;});};
+ f.run(readNativeAllUnitRealmOwner,owner);
+ const first=f.run(readNativeAllUnitSample,owner,{...f.proof,releaseClock:true,performanceBoundary:true,immutableSnapshot:true});
+ assert.equal(first.paused,false);assert.equal(first.fighter.attackSequence,0);assert.equal(first.target.hp,1000000);
+ assert.equal(first.releaseReceipt.beforeTime,first.releaseReceipt.afterTime);
+ assertNativeRealmMember(first.releaseReceipt.realm,first.realm,'sample',first.releaseReceipt.realm);
+ await Promise.resolve();
+ const last=await f.run(readNativeAllUnitSample,owner,{...f.proof,sampleAt:first.at+120,previousSample:first});
+ const row={phase:'attack',proof:f.proof,captureStart:first,samples:[last]};
+ assert.equal(nativeGameDamageReceipt(row).appliedDamage,35);
+ assert.throws(()=>nativeGameDamageReceipt({...row,captureStart:last,
+  captureEnd:{...last,target:{...last.target,hp:999930},fighter:{...last.fighter,attackSequence:2}}}),/real attack must apply damage/);
+});
+
+test('atomic release and spacing reject scheduled releases, foreign predecessors and changed world clocks',()=>{
+ const f=fixture(),owner=f.owner();f.run(readNativeAllUnitRealmOwner,owner);
+ for(const change of [{releaseClock:true,sampleAt:f.now+120},{releaseClock:'true'}])
+  assert.throws(()=>f.run(readNativeAllUnitSample,owner,{...f.proof,...change}),/immediate owned baseline/);
+ const first=f.run(readNativeAllUnitSample,owner,f.proof);
+ for(const change of [{at:NaN},{realm:{...first.realm,ownerId:randomUUID()}},{realm:{...first.realm,sequence:first.realm.sequence-1}}])
+  assert.throws(()=>f.run(readNativeAllUnitSample,owner,{...f.proof,sampleAt:f.now+120,previousSample:{...first,...change}}),/actual previous realm sample/);
+ const pause=f.qa.setEnemyVfxProofPaused;
+ f.qa.setEnemyVfxProofPaused=value=>{pause(value);if(!value)f.advanceClock(1);};
+ assert.throws(()=>f.run(readNativeAllUnitSample,owner,{...f.proof,releaseClock:true}),/changed original simulation clock/);
+});
+
 test('Ranger start history is immutable and exported after encoding while its original scalar clock schedules all samples',async()=>{
  const f=fixture({form:'ranger',sampleTransportMs:800,startBoundaryTransportMs:900}),{run}=actualCaptureWithExternalControls();
  await run(f.page,f.row,{out:path.join(fixtureDirectory,randomUUID())});
@@ -457,7 +516,9 @@ test('Ranger start history is immutable and exported after encoding while its or
  assert.equal(f.row.captureStart.simulationTime,0);assert.equal(f.row.captureStart.readTiming.sampleAt,null);
  for(let i=0;i<15;i++){
   const sample=f.row.samples[i],due=f.row.captureStart.at+(i+1)*120;
-  assert.equal(sample.readTiming.sampleAt,due);assert.ok(sample.at>=due&&sample.at<due+.1);
+  const previous=i?f.row.samples[i-1]:f.row.captureStart,notBefore=Math.max(due,previous.at+120);
+  assert.equal(sample.readTiming.sampleAt,due);assert.equal(sample.readTiming.notBeforeAt,notBefore);
+  assert.ok(sample.at>=notBefore&&sample.at<notBefore+.1);
  }
  assert.ok(f.row.samples.at(-1).at-f.row.samples[0].at>1679);
  assert.ok(f.log.indexOf('track-stop')<f.log.indexOf('start-boundary-export'));
@@ -567,7 +628,7 @@ test('expiry while a source timer is pending cannot append that late sample or p
   return schedule(fn,ms,...args);
  };
  await assert.rejects(run(f.page,f.row,{out:path.join(fixtureDirectory,randomUUID())}),/Late capture/u);
- assert.ok(f.row.captureStart);assert.equal(f.row.samples.length,0);assert.equal(f.row.status,'starting');
+ assert.ok(f.row.interruptedCaptureStart);assert.equal(f.row.samples.length,0);assert.equal(f.row.status,'starting');
  assert.equal(f.row.interruptedClip.status,'invalid');assert.equal(externalCalls.length,0);
  assert.equal(f.streamStops,1);assert.equal(f.log.at(-1),'owner-dispose');
 });
@@ -587,7 +648,7 @@ test('late successful sample cannot promote an expired capture and owner disposa
  f.page.evaluateHandle=async(fn,arg)=>{
   const h=await original(fn,arg);
   if(fn.name==='createNativeAllUnitRealmOwner'){
-   const evaluate=h.evaluate.bind(h);h.evaluate=async(fn,arg)=>{
+   const evaluate=h.evaluateHandle.bind(h);h.evaluateHandle=async(fn,arg)=>{
     const result=await evaluate(fn,arg);
     if(fn.name==='readNativeAllUnitSample'&&++reads===2)f.row.deadlineExpired=true;
     return result;
