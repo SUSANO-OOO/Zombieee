@@ -22,6 +22,8 @@
 
 ## 製品と証拠の保全
 
+素材の配布・原版・provenanceの境界は[ASSET_STORAGE_POLICY](docs/ASSET_STORAGE_POLICY.md)を参照する。
+
 - 人物identity、承認済み衣装・武器・正史・素材条件、stable ID、音声の人物対応を維持する。未承認人物や別人物voiceで穴埋めしない。全文読み上げの禁止を戦闘voice削除へ読み替えない。
 - save全体の自動初期化、既存backupの削除、migrationや同一receiptによる報酬の二重適用は禁止。限定変更の許可があっても非対象データは保全する。
 - 失敗・未実行・対象外・再利用・新規成功・未確認を区別する。テスト本数や静止画だけで、動き・音・遊びの完成としない。
@@ -30,6 +32,7 @@
 
 ## 検証とGitHub
 
+- AshfallGame.tsx等の共有処理を構造整理する場合、変更前後の契約・副作用を比較してから差分を採用する。
 - 変更依存で対象test、Lint、build、content／生成検査、browser回帰を選ぶ。共有処理や影響不明の変更は範囲を広げる。品質基準・期限を緩めず、検査の修正は正常例と異常例で保証する。
 - 製品・検査・実行環境・通信・後始末の二次障害を切り分ける。同条件の反復だけで原因解消としない。
 - mainは保護されたPR経由のみ。操作直前にbase／head／CI／mergeabilityを再取得する。直接push、force push、共有履歴のrebase／amend、既存tag移動は禁止。

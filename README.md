@@ -57,7 +57,7 @@ Actionsの検査選択と証拠条件は [ci-change-scope.mjs](scripts/ci-change
 
 ## 音声の再生成
 
-通常buildは保存済み音声を使い、VOICEVOXの導入は不要です。専用短声を再生成する場合だけ、[既存generator](scripts/build-v104-combat-voices.py)へ --runtime <directory> またはVOICEVOX_RUNTIMEを明示します。先に --check-runtime で必要ファイルを確認できます。これは合成成功やbyte一致の確認ではありません。
+通常buildは保存済み音声を使い、VOICEVOXの導入は不要です。専用短声を再生成する場合だけ、[既存generator](scripts/build-v104-combat-voices.py)へ `--runtime <directory>` またはVOICEVOX_RUNTIMEを明示します。先に --check-runtime で必要ファイルを確認できます。これは合成成功やbyte一致の確認ではありません。
 
 runtimeは既存台帳と同じVOICEVOX Core 0.17.0、Windows用ONNX Runtime、Open JTalk辞書、4.vvmを用意したsite/・runtime/構成です。12.vvmだけはgeneratorが[公式0.17.0配布](https://github.com/VOICEVOX/voicevox_vvm/releases/tag/0.17.0)から取得し、固定SHA-256を照合します。Core・辞書・各voiceの条件は[出典台帳](docs/THIRD_PARTY_ASSETS.md)とassets/source/v104/combat-audio/を参照し、元台帳・WAV・queryを保全してから差分を確認してください。所在不明の古いpromotion用フォルダを再生成の前提にしません。
 

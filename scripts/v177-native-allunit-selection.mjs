@@ -15,10 +15,11 @@ export function selectNativeCases(ids,{allowEmpty=false}={}){
     shards:SHARDS.filter(s=>ids.some(id=>id.startsWith(s.id+':'))).map(s=>s.id)};
 }
 
-export function nativeCaseSelection({event,root=process.cwd(),git=args=>execFileSync('git',args,
+export function nativeCaseSelection({event,forceFull=process.env.CI_CAPTURE_FRESH==='true',root=process.cwd(),git=args=>execFileSync('git',args,
   {cwd:root,encoding:'utf8',windowsHide:true,maxBuffer:8*1024*1024}).trim()}={}){
   const all=SHARDS.flatMap(s=>planShard(s.id)),full={mode:'full',...selectNativeCases(all.map(r=>r.caseId))};
-  if(event.inputs?.capture_mode==='full')return full;
+  assert.equal(typeof forceFull,'boolean');
+  if(forceFull||event.inputs?.capture_mode==='full')return full;
   if(event.inputs?.capture_mode==='abomination-acquisition-control'){
     assert.equal(event.pull_request,undefined,'An isolated acquisition comparison is dispatch-only');
     return{mode:'acquisition-control',...selectNativeCases(['forms-6:abomination:attack:844x340']),manualCaseIds:[],outcomeCaseIds:[],

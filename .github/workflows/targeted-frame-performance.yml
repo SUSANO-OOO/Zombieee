@@ -17,6 +17,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   scope:
+    if: github.event.pull_request.draft
     runs-on: ubuntu-latest
     outputs:
       run: ${{ steps.changed.outputs.run }}
@@ -33,7 +34,7 @@ jobs:
       - id: changed
         env:
           EVENT_NAME: ${{ github.event_name }}
-          BEFORE: ${{ github.event.before || github.event.pull_request.base.sha }}
+          BEFORE: ${{ github.event.pull_request.base.sha }}
           AFTER: ${{ github.event.pull_request.head.sha || inputs.expected_head }}
         run: |
           node --input-type=module <<'JS'

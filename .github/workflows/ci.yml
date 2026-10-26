@@ -33,18 +33,28 @@ jobs:
       r9: ${{ steps.scope.outputs.r9 }}
       combat: ${{ steps.scope.outputs.combat }}
       audio: ${{ steps.scope.outputs.audio }}
+      legacy: ${{ steps.scope.outputs.legacy }}
+      quality: ${{ steps.scope.outputs.quality }}
+      allunit: ${{ steps.scope.outputs.allunit }}
+      five: ${{ steps.scope.outputs.five }}
+      pages: ${{ steps.scope.outputs.pages }}
+      code_checks: ${{ steps.scope.outputs.code_checks }}
+      plan: ${{ steps.scope.outputs.plan }}
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: false
+      - name: Verify exact checkout
+        env:
+          EXPECTED_CHECKOUT: ${{ github.sha }}
+        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_CHECKOUT??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_CHECKOUT);'
       - uses: actions/setup-node@v6
         with:
           node-version: '22.13.0'
       - id: scope
         env:
-          CI_SCOPE_BASE: ${{ github.event.before || github.event.pull_request.base.sha }}
+          CI_SCOPE_BASE: ${{ github.event.pull_request.base.sha }}
           CI_SCOPE_HEAD: ${{ github.event.pull_request.head.sha }}
           CI_SCOPE_DRAFT: ${{ github.event.pull_request.draft }}
           CI_SCOPE_ACTION: ${{ github.event.action }}
@@ -53,6 +63,12 @@ jobs:
           CI_SCOPE_PR_NUMBER: ${{ github.event.pull_request.number }}
           CI_SCOPE_ACTIONS_TOKEN: ${{ github.token }}
         run: node scripts/ci-change-scope.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: validation-scope
+          path: outputs/ci-scope/validation-scope.json
+          if-no-files-found: error
+          retention-days: 90
 
   ranger-turn-smoke:
     name: Ranger Turn Regression
@@ -66,6 +82,10 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: false
+      - name: Verify exact checkout
+        env:
+          EXPECTED_CHECKOUT: ${{ github.event.pull_request.head.sha }}
+        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_CHECKOUT??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_CHECKOUT);'
       - uses: actions/setup-node@v6
         with:
           node-version: '22.13.0'
@@ -91,7 +111,7 @@ jobs:
   v177-guardian-control-diagnostic:
     needs: [scope]
     name: V1 Guardian Control Diagnostic
-    if: ${{ needs.scope.outputs.full == 'true' && (github.head_ref == 'codex/177-combat-clarity') }}
+    if: ${{ needs.scope.outputs.legacy == 'true' && (github.head_ref == 'codex/177-combat-clarity') }}
     runs-on: macos-15-intel
     timeout-minutes: 20
     defaults:
@@ -103,6 +123,10 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: false
+      - name: Verify exact checkout
+        env:
+          EXPECTED_CHECKOUT: ${{ github.event.pull_request.head.sha }}
+        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_CHECKOUT??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_CHECKOUT);'
       - uses: actions/setup-node@v6
         with:
           node-version: "22.13.0"
@@ -162,6 +186,10 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: false
+      - name: Verify exact checkout
+        env:
+          EXPECTED_CHECKOUT: ${{ github.event.pull_request.head.sha }}
+        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_CHECKOUT??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_CHECKOUT);'
       - uses: actions/setup-node@v6
         with:
           node-version: "22.13.0"
@@ -230,6 +258,10 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: false
+      - name: Verify exact checkout
+        env:
+          EXPECTED_CHECKOUT: ${{ github.event.pull_request.head.sha }}
+        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_CHECKOUT??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_CHECKOUT);'
       - uses: actions/setup-node@v6
         with:
           node-version: "22.13.0"
@@ -290,6 +322,10 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+      - name: Verify exact checkout
+        env:
+          EXPECTED_CHECKOUT: ${{ github.sha }}
+        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_CHECKOUT??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_CHECKOUT);'
       - uses: actions/setup-node@v6
         with:
           node-version: "22.13.0"
@@ -320,7 +356,7 @@ jobs:
           retention-days: 14
 
   v102-enemy-contacts:
-    if: ${{ needs.scope.outputs.full == 'true' }}
+    if: ${{ needs.scope.outputs.legacy == 'true' }}
     needs: [scope]
     name: V1 Ordinary Enemy Contacts (${{ matrix.engine }})
     strategy:
@@ -339,6 +375,10 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+      - name: Verify exact checkout
+        env:
+          EXPECTED_CHECKOUT: ${{ github.sha }}
+        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_CHECKOUT??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_CHECKOUT);'
       - uses: actions/setup-node@v6
         with:
           node-version: "22.13.0"
@@ -391,6 +431,10 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: false
+      - name: Verify exact checkout
+        env:
+          EXPECTED_CHECKOUT: ${{ github.event.pull_request.head.sha }}
+        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_CHECKOUT??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_CHECKOUT);'
       - uses: actions/setup-node@v6
         with:
           node-version: "22.13.0"
@@ -425,7 +469,7 @@ jobs:
 
   verify:
     needs: [scope]
-    name: PR Verify
+    name: Build and Node Checks
     runs-on: ubuntu-latest
     timeout-minutes: 60
 
@@ -436,6 +480,10 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Verify exact checkout
+        env:
+          EXPECTED_CHECKOUT: ${{ github.sha }}
+        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_CHECKOUT??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_CHECKOUT);'
       - name: Verify PR provenance
         env:
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
@@ -468,6 +516,9 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+      - name: Check current documentation links
+        run: node scripts/check-development-docs.mjs
+
       - name: Check patch whitespace
         env:
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
@@ -482,20 +533,25 @@ jobs:
           cache-dependency-path: package-lock.json
 
       - name: Install dependencies
+        if: needs.scope.outputs.code_checks == 'true'
         run: npm ci
 
       - name: Lint
         env:
           NODE_OPTIONS: --max-old-space-size=4096
+        if: needs.scope.outputs.code_checks == 'true'
         run: npm run lint
 
       - name: Validate production content
+        if: needs.scope.outputs.code_checks == 'true'
         run: npm run content:validate
 
       - name: Build production application
+        if: needs.scope.outputs.code_checks == 'true'
         run: npm run build
 
       - name: Test
+        if: needs.scope.outputs.code_checks == 'true'
         run: node --test tests/*.test.mjs
 
       - name: Audit all 30 story stages in developer mode
@@ -691,6 +747,10 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Verify exact checkout
+        env:
+          EXPECTED_CHECKOUT: ${{ github.sha }}
+        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_CHECKOUT??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_CHECKOUT);'
       - name: Verify Apple Silicon performance host
         run: |
           uname -m
@@ -828,7 +888,7 @@ jobs:
   v177-webkit-shadow-diagnostic:
     needs: [scope, v100-webkit-frame-control]
     name: WebKit Compact Shadow Diagnostic
-    if: ${{ needs.scope.outputs.full == 'true' && (always() && (needs.v100-webkit-frame-control.result == 'failure' || needs.v100-webkit-frame-control.result == 'cancelled')) }}
+    if: ${{ needs.scope.outputs.legacy == 'true' && (always() && (needs.v100-webkit-frame-control.result == 'failure' || needs.v100-webkit-frame-control.result == 'cancelled')) }}
     runs-on: macos-15
     defaults:
       run:
@@ -841,6 +901,10 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+      - name: Verify exact checkout
+        env:
+          EXPECTED_CHECKOUT: ${{ github.sha }}
+        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_CHECKOUT??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_CHECKOUT);'
       - name: Verify Apple Silicon diagnostic host
         run: |
           uname -m
@@ -896,6 +960,10 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Verify exact checkout
+        env:
+          EXPECTED_CHECKOUT: ${{ github.sha }}
+        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_CHECKOUT??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_CHECKOUT);'
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
@@ -959,7 +1027,7 @@ jobs:
           retention-days: 14
 
   v100-native-webkit-pwa:
-    if: ${{ needs.scope.outputs.full == 'true' }}
+    if: ${{ needs.scope.outputs.legacy == 'true' }}
     needs: [scope]
     name: V1 Native WebKit PWA Update and Recovery
     # playwright#41701 fixes the disk-response codec on every WebKit port.
@@ -978,6 +1046,10 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Verify exact checkout
+        env:
+          EXPECTED_CHECKOUT: ${{ github.sha }}
+        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_CHECKOUT??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_CHECKOUT);'
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
@@ -1119,7 +1191,7 @@ jobs:
           retention-days: 14
 
   webkit-hosted:
-    if: ${{ needs.scope.outputs.full == 'true' }}
+    if: ${{ needs.scope.outputs.legacy == 'true' }}
     needs: [scope, webkit-enemy-runtime-shard]
     name: WebKit Hosted Runner Evidence
     runs-on: macos-15-intel
@@ -1132,6 +1204,10 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Verify exact checkout
+        env:
+          EXPECTED_CHECKOUT: ${{ github.sha }}
+        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_CHECKOUT??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_CHECKOUT);'
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
@@ -1194,7 +1270,7 @@ jobs:
           retention-days: 14
 
   webkit-enemy-runtime-shard:
-    if: ${{ needs.scope.outputs.full == 'true' }}
+    if: ${{ needs.scope.outputs.legacy == 'true' }}
     needs: [scope]
     name: WebKit Enemy Runtime Evidence (${{ matrix.shard.name }})
     runs-on: macos-15-intel
@@ -1218,6 +1294,10 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Verify exact checkout
+        env:
+          EXPECTED_CHECKOUT: ${{ github.sha }}
+        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_CHECKOUT??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_CHECKOUT);'
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
@@ -1269,7 +1349,7 @@ jobs:
           retention-days: 14
 
   webkit-viewport:
-    if: ${{ needs.scope.outputs.full == 'true' }}
+    if: ${{ needs.scope.outputs.legacy == 'true' }}
     needs: [scope, webkit-deployment-viewport, webkit-hosted]
     name: WebKit Canonical Viewport Evidence (${{ matrix.viewport }})
     runs-on: macos-15-intel
@@ -1293,6 +1373,10 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Verify exact checkout
+        env:
+          EXPECTED_CHECKOUT: ${{ github.sha }}
+        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_CHECKOUT??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_CHECKOUT);'
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
@@ -1338,7 +1422,7 @@ jobs:
   webkit-deployment-viewport:
     needs: [scope, webkit-stage3-audio]
     name: WebKit Deployment Viewport Evidence (${{ matrix.viewport }})
-    if: ${{ needs.scope.outputs.full == 'true' && (!cancelled()) }}
+    if: ${{ needs.scope.outputs.legacy == 'true' && (!cancelled()) }}
     runs-on: macos-15-intel
     defaults:
       run:
@@ -1361,6 +1445,10 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+      - name: Verify exact checkout
+        env:
+          EXPECTED_CHECKOUT: ${{ github.sha }}
+        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_CHECKOUT??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_CHECKOUT);'
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
@@ -1396,7 +1484,7 @@ jobs:
           retention-days: 14
 
   webkit-stage3-audio:
-    if: ${{ needs.scope.outputs.full == 'true' }}
+    if: ${{ needs.scope.outputs.legacy == 'true' }}
     needs: [scope, webkit-hosted]
     name: WebKit Stage 3 Audio Route (${{ matrix.audio_case }})
     runs-on: macos-15-intel
@@ -1421,6 +1509,10 @@ jobs:
           fetch-depth: 2
           persist-credentials: false
 
+      - name: Verify exact checkout
+        env:
+          EXPECTED_CHECKOUT: ${{ github.sha }}
+        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_CHECKOUT??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_CHECKOUT);'
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
@@ -1495,3 +1587,94 @@ jobs:
           path: issue156-stage3-audio
           if-no-files-found: error
           retention-days: 14
+
+  quality:
+    needs: scope
+    if: needs.scope.outputs.quality == 'true'
+    permissions:
+      contents: read
+      actions: read
+    uses: ./.github/workflows/v1-quality-acceptance.yml
+
+  allunit:
+    needs: scope
+    if: needs.scope.outputs.allunit == 'true'
+    permissions:
+      contents: read
+      actions: read
+    uses: ./.github/workflows/native-allunit-capture.yml
+    with:
+      fresh: true
+
+  five:
+    needs: scope
+    if: needs.scope.outputs.five == 'true'
+    permissions:
+      contents: read
+      actions: read
+    uses: ./.github/workflows/five-corrections-capture.yml
+    with:
+      fresh: true
+
+  pages-preview:
+    name: Pages Preview
+    needs: scope
+    if: needs.scope.outputs.pages == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify exact checkout
+        env:
+          EXPECTED_CHECKOUT: ${{ github.sha }}
+        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_CHECKOUT??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_CHECKOUT);'
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22.13.0'
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Build the candidate static site without deployment
+        env:
+          GITHUB_PAGES_BASE_PATH: /Zombieee
+          GITHUB_PAGES_RELEASE_SHA: ${{ github.sha }}
+        run: node scripts/build-github-pages.mjs
+      - run: npx playwright install --with-deps chromium
+      - name: Verify the static candidate in the browser
+        env:
+          GITHUB_PAGES_BASE_PATH: /Zombieee
+          GITHUB_PAGES_EVIDENCE_DIR: outputs/pages-preview
+        run: node scripts/github-pages-smoke.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pages-preview
+          path: outputs/pages-preview
+          if-no-files-found: error
+          retention-days: 14
+
+  required-validation:
+    name: PR Verify
+    if: always()
+    needs: [scope, ranger-turn-smoke, r9-story, v102-combat, v102-combat-webkit-summary, v103-audio-output, v102-enemy-contacts, v177-normal-campaign, verify, v100-webkit-frame-control, v100-phase-g-production, v100-native-webkit-pwa, webkit-hosted, webkit-enemy-runtime-shard, webkit-viewport, webkit-deployment-viewport, webkit-stage3-audio, quality, allunit, five, pages-preview]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Verify exact checkout
+        env:
+          EXPECTED_CHECKOUT: ${{ github.sha }}
+        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_CHECKOUT??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_CHECKOUT);'
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22.13.0'
+      - name: Require every selected matrix and preserved evidence owner
+        env:
+          VALIDATION_PLAN: ${{ needs.scope.outputs.plan }}
+          VALIDATION_RESULTS: ${{ toJSON(needs) }}
+        run: node scripts/ci-validation-result.mjs

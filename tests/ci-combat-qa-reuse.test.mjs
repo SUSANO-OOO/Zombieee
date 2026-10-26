@@ -2,7 +2,7 @@ import test from 'node:test';import assert from 'node:assert/strict';import {exe
 import {COMBAT_QA_BASELINE as old,COMBAT_QA_BLOBS,COMBAT_QA_WORKFLOW_BLOB,COMBAT_QA_QUALITY_WORKFLOW_BLOB,BASELINE_JOB_NAMES,reviewedCombatQaPaths,previousCombatQaEvidence} from '../scripts/ci-combat-qa-reuse.mjs';
 import {COMBAT_FIXTURE_BASELINE as repair,COMBAT_FIXTURE_BLOB,COMBAT_FIXTURE_SKIPPED_JOBS,
   reviewedCombatFixturePaths,previousCombatFixtureEvidence} from '../scripts/ci-combat-qa-reuse.mjs';
-import {ciChangeScope} from '../scripts/ci-change-scope.mjs';import {provenanceFixture} from './helpers/ci-pr-provenance.mjs';
+import {provenanceFixture} from './helpers/ci-pr-provenance.mjs';
 const paths=[...Object.keys(COMBAT_QA_BLOBS),'.github/workflows/ci.yml','scripts/ci-change-scope.mjs','scripts/ci-combat-qa-reuse.mjs',
   'tests/ci-combat-qa-reuse.test.mjs','scripts/v177-native-allunit-recovery.json','docs/PROJECT_STATE.md','.github/workflows/v1-quality-acceptance.yml'];
 const sourceBlobs={...COMBAT_QA_BLOBS,'.github/workflows/ci.yml':COMBAT_QA_WORKFLOW_BLOB,'.github/workflows/v1-quality-acceptance.yml':COMBAT_QA_QUALITY_WORKFLOW_BLOB};
@@ -25,9 +25,6 @@ test('unchanged completed product gates are retained while all affected combat g
   assert.equal(result.originalRunConclusion,'failure');assert.equal(result.originalFailures.length,2);assert.ok(result.originalFailures.every(j=>j.conclusion==='failure'));
   assert.equal(result.retainedJobs.length,46);assert.equal(result.wholeGameAccepted,false);assert.equal(result.provenance.head,old.head);assert.equal(calls.length,6);
   assert.equal(result.qualityEvidence.runId,old.qualityRunId);assert.equal(result.qualityEvidence.jobs.length,2);
-  const scope=ciChangeScope(paths,{draft:false,sourceBlobs,reuseCombatQa:result.passed});
-  assert.equal(scope.full,false);assert.equal(scope.combat,true);for(const key of ['ranger','normal','r9','wholeGameAccepted'])assert.equal(scope[key],false);
-  assert.equal(scope.finalIntegrationRequiresFullRegression,true);assert.equal(scope.scope,'combat-qa-update-product-unchanged');
 });
 
 test('changed product, unknown paths, source drift and different integration context cannot reuse gates',async()=>{
@@ -39,8 +36,6 @@ test('changed product, unknown paths, source drift and different integration con
     const result=await previousCombatQaEvidence({...options,...changed,request:()=>assert.fail('ineligible changes must not query old evidence')});assert.equal(result.passed,false);
   }
   assert.equal(reviewedCombatQaPaths(paths.filter(p=>p!=='scripts/v102-combat-browser.mjs'),sourceBlobs),false);
-  assert.equal(ciChangeScope(paths,{draft:false,sourceBlobs}).full,true);
-  assert.equal(ciChangeScope([...paths,'app/AshfallGame.tsx'],{draft:false,sourceBlobs,reuseCombatQa:true}).full,true);
 });
 
 test('incomplete, cancelled, missing, duplicate and unrelated failing original gates restore full validation',async()=>{
@@ -79,66 +74,17 @@ test('Quality reuse requires both original engine jobs to pass on the same exact
     assert.equal((await previousCombatQaEvidence({...options,request:api({qualityJobs})})).passed,false);
 });
 
-test('workflow preserves every command/deadline and current script drift rejects reuse and requires full validation',async()=>{
-  const current=readFileSync('.github/workflows/ci.yml','utf8'),before=load(execFileSync('git',['show',old.head+':.github/workflows/ci.yml'],{encoding:'utf8',windowsHide:true}));
-  before.jobs.scope.outputs.combat='${{ steps.scope.outputs.combat }}';
-  before.jobs['v102-combat'].if="${{ needs.scope.outputs.full == 'true' || needs.scope.outputs.combat == 'true' }}";
-  before.jobs['v102-combat-webkit-summary'].if="${{ (needs.scope.outputs.full == 'true' || needs.scope.outputs.combat == 'true') && (always()) }}";
-  before.jobs.scope.outputs.performance='${{ steps.scope.outputs.performance }}';
-  before.jobs.scope.outputs.verify_full='${{ steps.scope.outputs.verify_full }}';
-  before.jobs.scope.outputs.phaseg='${{ steps.scope.outputs.phaseg }}';
-  // Audio-owner changes require both native media-output jobs. Only their
-  // selection changes; the full comparison below still freezes every command.
-  before.jobs.scope.outputs.audio='${{ steps.scope.outputs.audio }}';
-  before.jobs['v103-audio-output'].if="${{ needs.scope.outputs.full == 'true' || needs.scope.outputs.audio == 'true' }}";
-  before.jobs['v100-phase-g-production'].if="${{ needs.scope.outputs.full == 'true' || needs.scope.outputs.phaseg == 'true' }}";
-  const verify=before.jobs.verify.steps.filter(step=>step.if?.includes("needs.scope.outputs.full == 'true'"));assert.equal(verify.length,19);
-  for(const step of verify)step.if=step.if.replaceAll("needs.scope.outputs.full == 'true'","(needs.scope.outputs.full == 'true' || needs.scope.outputs.verify_full == 'true')");
-  before.jobs['v100-webkit-frame-control'].if="${{ needs.scope.outputs.full == 'true' || needs.scope.outputs.performance == 'true' }}";
+test('retired candidate proofs reject current workflow drift without freezing future orchestration',async()=>{
+  const current=load(readFileSync('.github/workflows/ci.yml','utf8'));
   const command='node scripts/run-browser-qa-with-server.mjs scripts/v100-device-runtime-browser.mjs';
-  const formal=before.jobs['v100-webkit-frame-control'].steps.filter(step=>step.run===command);
-  assert.equal(formal.length,4);
-  for(const step of formal){assert.equal(step.env.V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC,'1');step.env.V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC='0';}
-  const currentFormal=load(current).jobs['v100-webkit-frame-control'].steps.filter(step=>step.run===command);
-  assert.equal(currentFormal.length,4);for(const step of currentFormal)assert.equal(step.env.V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC,'0');
-  assert.deepEqual(load(current),before);
-  const workflowBlob=execFileSync('git',['hash-object','.github/workflows/ci.yml'],{encoding:'utf8',windowsHide:true}).trim();
-  if(workflowBlob!==COMBAT_QA_WORKFLOW_BLOB)assert.equal(reviewedCombatQaPaths(paths,{...sourceBlobs,'.github/workflows/ci.yml':workflowBlob}),false,
-    'Changed workflow must not inherit the old exact-workflow QA owner');
-  for(const [file,blob]of Object.entries(COMBAT_QA_BLOBS)){
+  const formal=current.jobs['v100-webkit-frame-control'].steps.filter(step=>step.run===command);
+  assert.equal(formal.length,4);for(const step of formal)assert.equal(step.env.V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC,'0');
+  for(const file of ['.github/workflows/ci.yml','.github/workflows/v1-quality-acceptance.yml',...Object.keys(COMBAT_QA_BLOBS)]){
     const actual=execFileSync('git',['hash-object',file],{encoding:'utf8',windowsHide:true}).trim();
-    if(actual===blob)assert.equal(actual,blob);
-    else{
-      // Keep the immutable reuse hash and inspect the CURRENT file. Its drift
-      // must reject the old receipts and select full regression, even if a
-      // caller incorrectly asks to reuse them. Never repin an old QA owner.
-      const currentBlobs={...sourceBlobs,[file]:actual};
-      assert.equal(reviewedCombatQaPaths(paths,currentBlobs),false,file);
-      const currentScope=ciChangeScope(paths,{draft:false,sourceBlobs:currentBlobs,reuseCombatQa:true});
-      assert.equal(currentScope.full,true,file);assert.equal(currentScope.scope,'full-regression');
-      let requests=0;
-      assert.equal((await previousCombatQaEvidence({...options,sourceBlobs:currentBlobs,
-        request:()=>{requests++;assert.fail('Changed current scripts cannot query or inherit old QA');}})).passed,false);
-      assert.equal(requests,0,'Changed current scripts must fail before requesting old QA');
-    }
-  }
-  const qualityFile='.github/workflows/v1-quality-acceptance.yml',quality=load(readFileSync(qualityFile,'utf8'));
-  const oldQuality=load(execFileSync('git',['show',old.head+':'+qualityFile],{encoding:'utf8',windowsHide:true}));
-  oldQuality.concurrency={group:'${{ github.workflow }}-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}','cancel-in-progress':false};
-  oldQuality.jobs['quality-ui-play'].needs='scope';oldQuality.jobs['quality-ui-play'].if="${{ !github.event.pull_request.draft && needs.scope.outputs.reuse_quality != 'true' }}";
-  const scope=quality.jobs.scope;delete quality.jobs.scope;assert.deepEqual(quality,oldQuality);
-  assert.equal(scope['timeout-minutes'],5);assert.deepEqual(scope.permissions,{contents:'read',actions:'read'});
-  assert.deepEqual(scope.steps.find(s=>s.id==='scope').env,before.jobs.scope.steps.find(s=>s.id==='scope').env);
-  assert.equal(scope.steps.find(s=>s.id==='scope').run,'node scripts/ci-change-scope.mjs');
-  const qualityBlob=execFileSync('git',['hash-object',qualityFile],{encoding:'utf8',windowsHide:true}).trim();
-  if(qualityBlob!==COMBAT_QA_QUALITY_WORKFLOW_BLOB){
-    const currentBlobs={...sourceBlobs,[qualityFile]:qualityBlob};
-    assert.equal(reviewedCombatQaPaths(paths,currentBlobs),false);
-    assert.equal(ciChangeScope(paths,{draft:false,sourceBlobs:currentBlobs,reuseCombatQa:true}).full,true);
-    let requests=0;
-    assert.equal((await previousCombatQaEvidence({...options,sourceBlobs:currentBlobs,
-      request:()=>{requests++;assert.fail('The changed workflow cannot inherit the old combat QA owner');}})).passed,false);
-    assert.equal(requests,0);
+    if(actual===sourceBlobs[file])continue;
+    const blobs={...sourceBlobs,[file]:actual};assert.equal(reviewedCombatQaPaths(paths,blobs),false);
+    assert.equal((await previousCombatQaEvidence({...options,sourceBlobs:blobs,
+      request:()=>assert.fail('Changed inputs cannot query the retired original owner')})).passed,false);
   }
 });
 
@@ -170,10 +116,6 @@ test('reviewed Mayo VM fixture repair retains completed combat groups and runs t
   assert.equal(result.originalVerifyFailure.conclusion,'failure');assert.equal(result.retainedCombatJobs.length,4);
   assert.ok(result.retainedCombatJobs.every(j=>j.conclusion==='success'));assert.equal(result.wholeGameAccepted,false);
   assert.equal(calls.length,10);assert.equal(result.provenance.head,repair.head);
-  const scope=ciChangeScope(fixturePaths,{draft:false,sourceBlobs:fixtureBlobs,reuseCombatFixture:result.passed});
-  assert.equal(scope.full,false);assert.equal(scope.combat,false);assert.equal(scope.scope,'combat-fixture-update-product-unchanged');
-  for(const key of ['ranger','normal','r9','wholeGameAccepted'])assert.equal(scope[key],false);
-  assert.equal(scope.finalIntegrationRequiresFullRegression,true);
   assert.equal(execFileSync('git',['hash-object',fixtureFile],{encoding:'utf8',windowsHide:true}).trim(),COMBAT_FIXTURE_BLOB);
 });
 
@@ -184,8 +126,6 @@ test('fixture continuation rejects different sources, product, context or unknow
     ...Object.keys(fixtureBlobs).map(file=>({sourceBlobs:{...fixtureBlobs,[file]:'f'.repeat(40)}}))])
     assert.equal((await previousCombatFixtureEvidence({...fixtureOptions,...changed,request:()=>assert.fail('ineligible fixture repair must fail closed')})).passed,false);
   assert.equal(reviewedCombatFixturePaths(fixturePaths,fixtureBlobs),true);
-  assert.equal(ciChangeScope(fixturePaths,{draft:false,sourceBlobs:fixtureBlobs}).full,true);
-  assert.equal(ciChangeScope([...fixturePaths,'app/AshfallGame.tsx'],{draft:false,sourceBlobs:fixtureBlobs,reuseCombatFixture:true}).full,true);
 });
 
 test('fixture continuation cannot adopt an unfinished, failed or missing combat group or an altered failed Verify',async()=>{

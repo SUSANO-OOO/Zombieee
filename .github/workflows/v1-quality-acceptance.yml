@@ -1,54 +1,18 @@
 name: V1 Quality Acceptance
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
-    branches:
-      - main
-      - "integration/**"
-      - "codex/v1.0.0-sol-design"
+  workflow_call:
 
 permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
+  group: quality-acceptance-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
   cancel-in-progress: false
 
 # Linux WPE backend only; no application or Chromium rendering flag changes.
 jobs:
-  scope:
-    if: ${{ !github.event.pull_request.draft }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    permissions:
-      contents: read
-      actions: read
-    outputs:
-      reuse_quality: ${{ steps.scope.outputs.reuse_quality }}
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          fetch-depth: 0
-          persist-credentials: false
-      - uses: actions/setup-node@v6
-        with:
-          node-version: '22.13.0'
-      - id: scope
-        env:
-          CI_SCOPE_BASE: ${{ github.event.before || github.event.pull_request.base.sha }}
-          CI_SCOPE_HEAD: ${{ github.event.pull_request.head.sha }}
-          CI_SCOPE_DRAFT: ${{ github.event.pull_request.draft }}
-          CI_SCOPE_ACTION: ${{ github.event.action }}
-          CI_SCOPE_PREVIOUS_HEAD: ${{ github.event.before }}
-          CI_SCOPE_PR_BASE: ${{ github.event.pull_request.base.sha }}
-          CI_SCOPE_PR_NUMBER: ${{ github.event.pull_request.number }}
-          CI_SCOPE_ACTIONS_TOKEN: ${{ github.token }}
-        run: node scripts/ci-change-scope.mjs
   quality-ui-play:
-    needs: scope
-    if: ${{ !github.event.pull_request.draft && needs.scope.outputs.reuse_quality != 'true' }}
     name: V1 Quality UI and Play (${{ matrix.engine }})
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -63,6 +27,10 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 1
           persist-credentials: false
+      - name: Verify exact checkout
+        env:
+          EXPECTED_CHECKOUT: ${{ github.event.pull_request.head.sha }}
+        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_CHECKOUT??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_CHECKOUT);'
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
@@ -117,3 +85,12 @@ jobs:
           path: quality-ui-evidence
           if-no-files-found: warn
           retention-days: 14
+
+  result:
+    if: always()
+    needs: quality-ui-play
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          MATRIX_RESULT: ${{ needs.quality-ui-play.result }}
+        run: test "$MATRIX_RESULT" = success

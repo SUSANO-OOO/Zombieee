@@ -131,7 +131,11 @@ test("release workflow is explicit, immutable, and deploy-gated", async () => {
   const pagesBuilder = await readFile("scripts/build-github-pages.mjs", "utf8");
   const pagesIdentity = await readFile("scripts/pages-release-identity.mjs", "utf8");
 
-  assert.match(releaseTrigger, /pull_request:/u);
+  assert.doesNotMatch(releaseTrigger, /pull_request:/u);
+  const requiredPreview=await readFile(".github/workflows/ci.yml","utf8");
+  assert.match(requiredPreview,/name: Pages Preview/u);
+  assert.match(requiredPreview,/run: node scripts\/github-pages-smoke\.mjs/u);
+  assert.match(requiredPreview,/needs: \[[^\n]*pages-preview/u);
   assert.match(releaseTrigger, /workflow_dispatch:/u);
   assert.doesNotMatch(releaseTrigger, /^\s+push:/mu);
   assert.doesNotMatch(releaseWorkflow, /pages-release-request\.json/u);

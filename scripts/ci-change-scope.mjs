@@ -1,608 +1,292 @@
 import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
-import {appendFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
+import {appendFileSync,mkdirSync,writeFileSync} from 'node:fs';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
-import {immutablePrProvenance} from './ci-pr-provenance.mjs';
-import {COMBAT_QA_BASELINE,COMBAT_QA_BLOBS,reviewedCombatQaPaths,previousCombatQaEvidence,
-  COMBAT_FIXTURE_BASELINE,reviewedCombatFixturePaths,previousCombatFixtureEvidence,BASELINE_JOB_NAMES} from './ci-combat-qa-reuse.mjs';
+import {immutablePrProvenance,readSingleTextArchive} from './ci-pr-provenance.mjs';
 
-const governance=new Set(['AGENTS.md','docs/PROJECT_STATE.md','docs/CODEX_SOL_ROLE.md','docs/CODEX_LUNA_ROLE.md',
-  'docs/CODEX_TWO_THREAD_WORKFLOW.md','docs/PRODUCER_DECISIONS_1.0.3.md',
-  'docs/design/v1.0.0/DESIGN_LOCK.md','docs/design/v1.0.0/LUNA_HANDOFF.md']);
-const ranger=new Set(['app/v177RangerFootPlacement.js','app/v177RangerLowerMotion.js','assets/source/v177/ranger/lower-r3/provenance.json','scripts/silent-browser-output.mjs']);
-const normal=new Set(['scripts/v100-normal-campaign-playthrough.mjs','scripts/v100-normal-play-contract.mjs',
-  'scripts/v177-representative-normal-play.mjs','scripts/v177-representative-battles.mjs',
-  'scripts/v177-normal-audio-unlock-observation.mjs','tests/fixtures/v177-native-auto-unlocked-audio.json',
-  'tests/fixtures/v177-native-success-control-audio.json','scripts/v100-normal-visible-aim.mjs']);
-const allunit=new Set(['.github/workflows/native-allunit-capture.yml','scripts/v177-native-allunit-build.mjs',
-  'scripts/v177-native-allunit-browser.mjs','scripts/v177-native-allunit-cases.mjs',
-  'scripts/v177-native-allunit-manifest.mjs','scripts/v177-native-allunit-contract.mjs',
-  'scripts/v177-native-allunit-selection.mjs','scripts/v177-native-allunit-recovery.json',
-  'scripts/v177-native-allunit-ranger-manual.mjs','scripts/v177-native-canvas-clips.mjs']);
-const nativeQaTests=new Set(['tests/v177-native-allunit.test.mjs','tests/v177-native-allunit-build.test.mjs',
-  'tests/v177-native-allunit-selection.test.mjs','tests/v177-native-allunit-outcomes.test.mjs',
-  'tests/v177-native-allunit-ranger-manual.test.mjs','tests/v177-native-canvas-clips.test.mjs',
-  'tests/v177-native-realm-owner.test.mjs','tests/v177-native-capture-realm.test.mjs',
-  'tests/v177-native-encoded-clips.test.mjs','tests/v177-native-frame-timing.test.mjs',
-  'tests/v177-native-setup-overlap.test.mjs','tests/v177-native-incoming-stun.test.mjs',
-  'tests/v177-native-turned-getup.test.mjs','tests/v177-native-born-readiness.test.mjs']);
-// Only these independently reviewed five-correction recording revisions are QA-only.
-const reviewedCorrectionQaBlobs=Object.freeze({
-  ".github/workflows/five-corrections-capture.yml": "de854ae8d30599ef1dc13806c9ac3089ad587145",
-  "scripts/v105-five-corrections-capture.mjs": "bcef5dd74c3ef17fde504d1ffc07522c747224dd",
-  "tests/v177-native-allunit-recording-runtime.test.mjs": "30ac4642f2b1c2f4728c0fcc08f9b7321cb2ec3b"
+// These are existing acceptance lanes, not new quality criteria.
+export const LANE_JOBS=Object.freeze({
+ verify_full:['Build and Node Checks'],
+ ranger:['Ranger Turn Regression'],
+ normal:['V1 Representative Normal Play (chromium)','V1 Representative Normal Play (webkit)'],
+ performance:['V1 WebKit Frame and Boss Performance'],
+ phaseg:['V1 Phase G Production Matrix'],
+ r9:['chromium','webkit'].flatMap(engine=>[
+  ...['composition','bookends'].map(phase=>'R9 Story ('+engine+', '+phase+', )'),
+  ...['1280x720','844x390','844x340'].map(view=>'R9 Story ('+engine+', full-story, '+view+')')]),
+ combat:['V1.0.2 Combat (chromium)','V1.0.2 Combat (webkit desktop-phone)','V1.0.2 Combat (webkit phone-short)','V1.0.2 Combat (webkit)'],
+ audio:['V1.0.3 Media Output (chromium)','V1.0.3 Media Output (webkit)'],
+ legacy:['V1 Ordinary Enemy Contacts (chromium)','V1 Ordinary Enemy Contacts (webkit)',
+  'V1 Native WebKit PWA Update and Recovery','WebKit Hosted Runner Evidence',
+  ...['01','02','03','04','05','06'].map(n=>'WebKit Enemy Runtime Evidence ('+n+')'),
+  ...['667x375','736x414','844x390','844x340','932x430','1280x720'].flatMap(v=>[
+   'WebKit Deployment Viewport Evidence ('+v+')','WebKit Canonical Viewport Evidence ('+v+')']),
+  ...['entrance-candidate','final-candidate','final-base'].map(n=>'WebKit Stage 3 Audio Route ('+n+')')],
+ quality:['V1 Quality UI and Play (chromium)','V1 Quality UI and Play (webkit)'],
+ allunit:['Native Motion Build',...Array.from({length:12},(_,i)=>'Native Motion (forms-'+(i+1)+')')],
+ five:['desktop','mobile390','mobile340'].map(v=>'Five Corrections ('+v+')'),
+ pages:['Pages Preview'],
 });
-const nativeQaOnlyPaths=(paths,sourceBlobs)=>paths.length>0&&paths.every(file=>
-  allunit.has(file)||file==='docs/PROJECT_STATE.md'||nativeQaTests.has(file)
-  ||(reviewedCorrectionQaBlobs[file]&&sourceBlobs[file]===reviewedCorrectionQaBlobs[file]));
-
-// Reviewed display and Ranger-buffer deltas. Reused browser jobs must have actually
-// completed on the immutable preceding candidate. Verify and performance run
-// afresh; a failed normal-play lane also runs again. Unknown changes stay full.
-export const ABILITY_NAME_BASELINE=Object.freeze({head:'6a5226647ebf9ba7692c69b9c64af4ce32059d1b',
- base:'e22b134a38409b9d2f86660ee351e616c28fbf44',runId:40120044446,prNumber:181});
-// Preserve the original browser/Quality owners. The two audio jobs below are
-// separately owned by the completed repaired-audio candidate, never its failures.
-export const ABILITY_NAME_PREDECESSOR=Object.freeze({head:'4c68dbfd03fe5e639b33c95f612824ab459c74d4',runId:40210584510});
-export const QA_FORMATTING_PREDECESSOR=Object.freeze({head:'a12b63d29ccf646f9d6bd06c0d26dab4db7b2c0b',runId:40217815362,
- test:'tests/v177-ranger-deferred-observation.test.mjs',before:'c557b63efecdbf07365b026bed3bb2016b7042e8',after:'a14a00f267bef56b38597f961ee21cd2ef2f58aa',verifyJob:121242881557});
-export const QA_FORMATTING_MEASURED_JOBS=Object.freeze({
- 'V1 WebKit Frame and Boss Performance':{id:121242881532,steps:[
-  'Verify Apple Silicon performance host','Verify pinned macOS WebKit runtime','Capture blank and active-canvas frame controls',
-  'Prepare isolated Mac benchmark environment','Measure V1 native boss battle performance (WebKit)',
-  'Preserve the first WebKit performance report before repeats','Independently repeat narrow landscape boss performance (WebKit)',
-  'Independently repeat 844x390 boss performance (WebKit)','Measure 844x390 WebKit performance at DPR2',
-  'Preserve measured WebKit performance before diagnostics']},
- 'V1 Phase G Production Matrix':{id:121242881601,steps:[
-  'Verify pinned macOS WebKit runtime','Capture native WebKit Stage 3 battle music gate',
-  'Diagnose native pointer transport before production capture','Verify decoded and visible battle card portraits across native state transitions',
-  'Verify portrait fidelity after native viewport transitions','Capture and validate the full Phase G production matrix','Upload Phase G production evidence']}
+export const JOB_LANES=Object.freeze({
+ 'ranger-turn-smoke':'ranger','r9-story':'r9','v102-combat':'combat','v102-combat-webkit-summary':'combat',
+ 'v103-audio-output':'audio','v102-enemy-contacts':'legacy','v177-normal-campaign':'normal',
+ verify:'verify_full','v100-webkit-frame-control':'performance','v100-phase-g-production':'phaseg',
+ 'v100-native-webkit-pwa':'legacy','webkit-hosted':'legacy','webkit-enemy-runtime-shard':'legacy',
+ 'webkit-viewport':'legacy','webkit-deployment-viewport':'legacy','webkit-stage3-audio':'legacy',
+ quality:'quality',allunit:'allunit',five:'five','pages-preview':'pages',
 });
-export const FORMAL_TRANSFER_FILES=Object.freeze(['scripts/v100-device-runtime-browser.mjs','scripts/v100-normal-tactical-input.mjs']);
-export const FORMAL_TRANSFER_PRODUCT_STEPS=Object.freeze([
- "Audit all 30 story stages in developer mode",
- "Audit V1 CAPS purchasing power",
- "Upload developer mode campaign audit",
- "Install focused browser engines",
- "Verify PWA shell commit and offline relaunch (Chromium)",
- "Verify online play after PWA registration failure (Chromium)",
- "Verify installed PWA launch when update metadata stalls (Chromium)",
- "Upload stalled PWA metadata browser evidence",
- "Build exact base and candidate PWA sites for partial-update QA",
- "Classify whether PWA asset update QA applies",
- "Reproduce and recover the partial-failed existing PWA (Chromium)",
- "Capture Issue 156 canonical HUD evidence (Chromium)",
- "Capture Issue 156 final-canvas deployment evidence (Chromium)",
- "Capture Issue 156 safe-area, portrait, and metadata evidence",
- "Capture Issue 156 physical-width records evidence (Chromium)",
- "Capture Issue 156 physical-width TAKUYA audio route (Chromium)",
- "Capture Version 0.9.9.5 enemy runtime and station final-canvas evidence",
- "Upload Issue 165 visual remediation evidence",
- "Upload Issue 156 remediation evidence"
-]);
-export const FORMAL_TRANSFER_CONTROL_JOBS=Object.freeze({'PR Verify':121220946144,'Ranger Turn Regression':121220946200,
- 'V1 Representative Normal Play (chromium)':121220946183,'V1 Representative Normal Play (webkit)':121220946224});
-export const ABILITY_NAME_AUDIO_OWNER=Object.freeze({head:'a8f4f5986d8f66423c422a37f32400c1a3009551',runId:40198626338});
-export const ABILITY_NAME_PREDECESSOR_AUDIO_JOBS=Object.freeze({
- 'V1.0.3 Media Output (chromium)':121185029269,'V1.0.3 Media Output (webkit)':121185029364});
-export const RANGER_BUFFER_FILE='app/v177RangerLowerPaint.js';
-export const RANGER_BUFFER_BEFORE_BLOB='59675f3cdd93f58773a284537ac89b678ada3af6';
-export const RANGER_BUFFER_BLOB='c9d74ef6b47a377778498569221232dae12a6ba3';
-export const RETIRED_AUDIO_OWNER_FILE='app/battleAudioRuntime.js';
-export const RANGER_PROVENANCE_FILE='assets/source/v177/ranger/lower-r3/provenance.json';
-export const RANGER_REPAIR_PRODUCT_BEFORE=Object.freeze({
- [RANGER_BUFFER_FILE]:RANGER_BUFFER_BEFORE_BLOB,
- [RANGER_PROVENANCE_FILE]:'39a6fa601520e00c2c022153f4ae7746b46f8f7d'});
-export const ABILITY_LAYOUT_PRODUCT_BEFORE=Object.freeze({
- 'app/AshfallGame.tsx':'004c5f5e25a6ff63c029d6f06d4c29f92efbd859',
- 'app/v105AbilityNames.js':'28cf501a28e033f75e643259aec2e14eab144d97'});
-export const ABILITY_NAME_BLOBS=Object.freeze({
- "app/AshfallGame.tsx": "a0a873098b12f6de62548f83e3f6773e2aca0592",
- "app/v105AbilityNames.js": "ebe6a7ecb6ea702944d45a1502b3134ac9004b38",
- ".github/workflows/ci.yml": "3b402dfbe2a8a0922c694cc00f1762eb6d52ed33",
- "scripts/v177-representative-battles.mjs": "e7b0bb62e83f3527a0282f7fbfaa58ed6174c68f",
- "scripts/v100-device-runtime-browser.mjs": "88e522d267de0e6604b56c9f49e6e217473ff05d",
- "scripts/v100-normal-tactical-input.mjs": "574d7a5eadc6fd7212d61bc6118518daf0091600",
- "scripts/v100-phase-g-production-matrix.mjs": "593e2bb3034ced9bc235a4c582c7d7f25381468d",
- "scripts/v177-native-allunit-cases.mjs": "e5d27c160ec2eb04d8a0109c0a39918174c6b5ac",
- "scripts/v177-normal-browser-deadline.mjs": "f60a49ca98db5a8059de56a04073a50b9e6b862f",
- "scripts/v105-five-corrections-capture.mjs": "c266140d17b1176024bb9066424d37cd91675d16",
- "scripts/v177-native-allunit-browser.mjs": "c936e79a3131210f29e3d01a18455419ffe249a5",
- "docs/qa/v105/five-corrections-6a-evidence.json": "5c93688db5cee8e52703e9d46acdf92e410ad0e2",
- ".github/workflows/native-allunit-capture.yml": "6fbcbea4dd55623fd7f4c8bbceda5c3c79bcc9f5",
- ".github/workflows/five-corrections-capture.yml": "bf347a5923b8b31a0451e4358901feaa5040752a",
- "scripts/v100-macos-indexing-control.mjs": "d00ae47eb420f113af07437a55c47203e7446207",
- "scripts/v177-native-allunit-selection.mjs": "6a11cf23189e7f69f67bb21e1e2938084f81cd83",
- "app/v177RangerLowerPaint.js": "c9d74ef6b47a377778498569221232dae12a6ba3",
- "docs/qa/v105/native-6a-evidence.json": "86bb4523488a3cd38827731771118697bb754313",
- "app/battleAudioRuntime.js": "65e612cbc460eaf27eb3ba8894feb692563f27d8",
- "assets/source/v177/ranger/lower-r3/provenance.json": "66d32b5c69c8a3c1acf1efe1e53287efaf3e48ad"
-});
-const abilityNameFiles=new Set([...Object.keys(ABILITY_NAME_BLOBS),'scripts/ci-change-scope.mjs',
- 'tests/ci-change-scope.test.mjs','tests/ci-contract.test.mjs','tests/ci-combat-qa-reuse.test.mjs',
- 'scripts/v177-native-allunit-recovery.json','tests/v177-representative-battles.test.mjs',
- 'scripts/v105-five-corrections-capture.mjs','tests/v105-original-av.test.mjs',
- 'scripts/v177-native-allunit-browser.mjs','tests/v177-native-setup-overlap.test.mjs',
- 'tests/v177-ranger-performance-receipts.test.mjs','tests/v100-macos-indexing-control.test.mjs','tests/v177-native-allunit-selection.test.mjs','tests/v177-ranger-continuous-lower.test.mjs',
- 'scripts/v100-phase-g-production-matrix.mjs','tests/v100-phase-g-sustain-pointer.test.mjs',
- 'scripts/v177-normal-browser-deadline.mjs','tests/v177-normal-browser-deadline.test.mjs',
- 'docs/qa/v105/five-corrections-6a-evidence.json','docs/qa/v105/ci-6a-infrastructure-failure.json',
- 'docs/PROJECT_STATE.md','docs/qa/v105/native-6a-evidence.json',
- RETIRED_AUDIO_OWNER_FILE,RANGER_PROVENANCE_FILE,'tests/battle-audio-runtime.test.mjs','tests/v100-phase-g-capture.test.mjs',
- 'tests/v105-five-corrections.test.mjs','tests/v177-native-realm-owner.test.mjs','tests/v177-ranger-deferred-observation.test.mjs']);
-export const ABILITY_NAME_REUSED_JOBS=Object.freeze(BASELINE_JOB_NAMES.filter(name=>
- !['PR Verify','V1 Guardian Control Diagnostic','WebKit Compact Shadow Diagnostic','V1 WebKit Frame and Boss Performance',
- 'V1 Phase G Production Matrix','V1 Representative Normal Play (chromium)','V1 Representative Normal Play (webkit)'].includes(name)));
-export function reviewedAbilityNamePaths(paths,sourceBlobs={}){
- return Array.isArray(paths)&&paths.length>0&&!paths.includes(RANGER_BUFFER_FILE)&&!paths.includes(RETIRED_AUDIO_OWNER_FILE)&&paths.every(file=>abilityNameFiles.has(file))
-  &&['app/AshfallGame.tsx','.github/workflows/ci.yml'].every(file=>paths.includes(file))
-  &&Object.entries(ABILITY_NAME_BLOBS).every(([file,blob])=>!paths.includes(file)||sourceBlobs[file]===blob);
+const lanes=Object.keys(LANE_JOBS);
+const control=new Set(['AGENTS.md','README.md','.gitignore','.gitattributes','pnpm-lock.yaml',
+ 'scripts/ci-change-scope.mjs','scripts/ci-pr-provenance.mjs','scripts/ci-combat-qa-reuse.mjs',
+ 'scripts/ci-validation-result.mjs','scripts/check-development-docs.mjs','tests/helpers/ci-pr-provenance.mjs',
+ 'scripts/build-v104-combat-voices.py',
+ '.github/workflows/ci.yml','.github/workflows/targeted-frame-performance.yml']);
+const diagnostic=/^\.github\/workflows\/(?:native-(?:aac|audio|opus|pcm|capture|game)|normal-campaign-observation)/u;
+export const isDocumentation=file=>/\.md$/u.test(file)&&!/^docs\/story\/v10\/STORY_SCRIPT/u.test(file)
+ ||/^docs\/qa\/.+\.(?:png|webp|mp4|webm)$/u.test(file);
+const isControl=file=>control.has(file)||/^docs\/qa\/.+\.json$/u.test(file)||/^tests\/[^/]+\.test\.mjs$/u.test(file);
+const product=file=>/^(?:app\/|public\/|assets\/|reference\/|package(?:-lock)?\.json$)/u.test(file);
+const fallbackRoots={
+ ranger:['scripts/v177Ranger','app/v177Ranger'],
+ normal:['scripts/v177-representative-','scripts/v100-normal-'],
+ r9:['scripts/v100-r9-','scripts/v100-dialogue-composition','scripts/v100-story-bookends'],
+ allunit:['.github/workflows/native-allunit-capture.yml','scripts/v177-native-allunit','scripts/v177-native-canvas','scripts/v177-native-encoded'],
+ five:['.github/workflows/five-corrections-capture.yml','scripts/v105-five-corrections-'],performance:['scripts/v100-device-runtime','scripts/v177-ranger-performance'],
+ audio:['scripts/v103-audio-output'],combat:['scripts/v102-combat'],quality:['.github/workflows/v1-quality-acceptance.yml','scripts/v101-quality-'],
+ pages:['.github/workflows/github-pages-release.yml','.github/workflows/github-pages-public-qa.yml','scripts/build-github-pages.mjs','scripts/github-pages-smoke.mjs'],
+};
+export function ciChangeScope(paths,{draft=false,dependencies={}}={}){
+ assert.equal(typeof draft,'boolean');
+ assert.ok(Array.isArray(paths)&&paths.every(p=>typeof p==='string'&&p&&!p.includes('\\')&&!p.startsWith('/')));
+ const required=Object.fromEntries(lanes.map(k=>[k,false]));let unknown=false;
+ for(const file of paths){
+  if(isDocumentation(file)||diagnostic.test(file))continue;
+  if(file==='.github/workflows/ci.yml'&&dependencies[file]){
+   for(const k of dependencies[file])required[k]=true;continue;
+  }
+  if(isControl(file))continue;
+  const affected=dependencies[file]??Object.entries(fallbackRoots).filter(([,roots])=>roots.some(p=>file.startsWith(p))).map(([k])=>k);
+  if(!product(file)&&affected.length){for(const k of affected){assert.ok(lanes.includes(k));required[k]=true;}}
+  else {unknown=true;for(const k of lanes)required[k]=true;}
+ }
+ // Draft observations are not formal integration performance/Quality acceptance.
+ if(draft){required.performance=false;required.quality=false;}
+ const all=lanes.filter(k=>!draft||!['performance','quality'].includes(k));
+ return {...required,full:unknown&&all.every(k=>required[k]),code_checks:paths.some(p=>!isDocumentation(p)),
+  scope:unknown?'shared-or-product':Object.values(required).some(Boolean)?'affected-validation':'documentation-or-control',
+  wholeGameAccepted:false};
 }
-export function reviewedAbilityContinuationPaths(paths,sourceBlobs={}){
- return Array.isArray(paths)&&paths.length>0&&paths.every(file=>abilityNameFiles.has(file))
-  &&Object.entries(ABILITY_NAME_BLOBS).every(([file,blob])=>sourceBlobs[file]===blob);
+export function framePerformanceRuntimes(paths){
+ return paths.some(p=>product(p)||p==='.github/workflows/targeted-frame-performance.yml'
+  ||p==='scripts/v100-device-runtime-browser.mjs'||p==='scripts/v177-ranger-performance-receipts.mjs')
+  ?[{runtime:'formal',host:'macos-15'},{runtime:'native-recording-control',host:'macos-15-intel'}]:[];
 }
-export function reviewedQaFormattingPaths(paths,sourceBlobs={}){
- return reviewedAbilityContinuationPaths(paths,sourceBlobs)&&paths.includes(QA_FORMATTING_PREDECESSOR.test)
-  &&sourceBlobs[QA_FORMATTING_PREDECESSOR.test]===QA_FORMATTING_PREDECESSOR.after
-  &&paths.every(file=>[QA_FORMATTING_PREDECESSOR.test,'scripts/ci-change-scope.mjs','tests/ci-change-scope.test.mjs',
-   'scripts/v177-native-allunit-recovery.json','docs/PROJECT_STATE.md'].includes(file));
+const workflowLanes={quality:'v1-quality-acceptance',allunit:'native-allunit-capture',five:'five-corrections-capture'};
+export function dependencyInputs(files,read){
+ const sets=Object.fromEntries(lanes.map(k=>[k,new Set()])),queue=[];
+ const add=(lane,file)=>{if(files.has(file)&&!sets[lane].has(file)){sets[lane].add(file);if(!file.endsWith('.yml'))queue.push([lane,file]);}};
+ const references=(body,owner)=>{
+  const found=new Set();
+  for(const match of body.matchAll(/['"\x60]((?:\.{1,2}\/|scripts\/)[^'"\x60$\s]+)['"\x60]/gu)){
+   const value=match[1],relative=value.startsWith('.')?path.posix.normalize(path.posix.join(path.posix.dirname(owner),value)):value;
+   for(const candidate of [relative,relative+'.mjs',relative+'.js',relative+'.json',relative+'.ts',relative+'.tsx'])if(files.has(candidate))found.add(candidate);
+  }
+  for(const match of body.matchAll(/\bscripts\/[\w./-]+\.(?:mjs|js|json|py|ts)\b/gu))if(files.has(match[0]))found.add(match[0]);
+  const pkg=JSON.parse(read('package.json'));
+  for(const match of body.matchAll(/\bnpm run ([\w:.-]+)/gu)){
+   const command=pkg.scripts?.[match[1]]??'';
+   for(const r of command.matchAll(/\bscripts\/[\w./-]+\.(?:mjs|js|json|py|ts)\b/gu))if(files.has(r[0]))found.add(r[0]);
+  }
+  return [...found];
+ };
+ const ci=read('.github/workflows/ci.yml');
+ const blocks=[...ci.matchAll(/^  ([\w-]+):\n([\s\S]*?)(?=^  [\w-]+:\n|(?![\s\S]))/gmu)];
+ for(const [,id,body] of blocks){
+  const lane=JOB_LANES[id];if(!lane)continue;
+  for(const file of references(body,'.github/workflows/ci.yml'))add(lane,file);
+ }
+ for(const [lane,name] of Object.entries(workflowLanes)){
+  const file='.github/workflows/'+name+'.yml';add(lane,file);
+  for(const ref of references(read(file),file))add(lane,ref);
+ }
+ while(queue.length){
+  const [lane,file]=queue.shift();
+  if(/\.(?:mjs|js|ts|tsx|json|py)$/u.test(file))for(const ref of references(read(file),file))add(lane,ref);
+ }
+ for(const f of ['.github/workflows/github-pages-release.yml','.github/workflows/github-pages-public-qa.yml'])add('pages',f);
+ const dependencies={};
+ for(const [lane,inputs] of Object.entries(sets))for(const file of inputs)(dependencies[file]??=[]).push(lane);
+ return {sets,dependencies};
 }
-export async function previousAbilityNameEvidence({repository,previousHead,base,prNumber,action,draft,paths,sourceBlobs,
- productUnchanged=false,rangerBufferDelta=false,layoutReadDelta=false,originalAncestor=false,formattingTextUnchanged=false,token,request=fetch}={}){
- const old=ABILITY_NAME_BASELINE;
- const compatible=paths?.some(file=>Object.hasOwn(ABILITY_LAYOUT_PRODUCT_BEFORE,file))
-  ?layoutReadDelta===true&&rangerBufferDelta===false&&productUnchanged===false
-  :paths?.includes(RANGER_BUFFER_FILE)
-  ?rangerBufferDelta===true&&productUnchanged===false&&sourceBlobs[RANGER_BUFFER_FILE]===RANGER_BUFFER_BLOB
-  :productUnchanged===true&&rangerBufferDelta===false;
- const formattingContinuation=previousHead===QA_FORMATTING_PREDECESSOR.head&&compatible&&productUnchanged===true
-  &&originalAncestor===true&&formattingTextUnchanged===true&&reviewedQaFormattingPaths(paths,sourceBlobs);
- const continuation=formattingContinuation||previousHead===ABILITY_NAME_PREDECESSOR.head&&compatible&&originalAncestor===true
-  &&reviewedAbilityContinuationPaths(paths,sourceBlobs);
- if(repository!=='SUSANO-OOO/Zombieee'||base!==old.base||prNumber!==old.prNumber
-  ||action!=='synchronize'||draft!==false||!token
-  ||!(previousHead===old.head&&reviewedAbilityNamePaths(paths,sourceBlobs)||continuation))
-  return{passed:false,reason:'not-the-reviewed-ability-name-display-delta'};
- const get=async(suffix,binary=false)=>{const response=await request(`https://api.github.com/repos/${repository}/${suffix}`,{
-  headers:{Accept:'application/vnd.github+json',Authorization:`Bearer ${token}`,'X-GitHub-Api-Version':'2022-11-28'},signal:AbortSignal.timeout(10000)});
-  if(!response.ok)throw Error('Original browser evidence unavailable');return binary?response.arrayBuffer():response.json();};
+const digest=text=>createHash('sha256').update(text).digest('hex');
+export function laneFingerprints(entries,sets,{base,workflowContracts={}}={}){
+ const assigned=new Set(Object.values(sets).flatMap(s=>[...s]));
+ const common=file=>!isDocumentation(file)&&file!=='.github/workflows/ci.yml'&&!diagnostic.test(file)&&!/^tests\/[^/]+\.test\.mjs$/u.test(file)
+  &&(!/^(?:scripts\/|\.github\/workflows\/)/u.test(file)||!assigned.has(file));
+ return Object.fromEntries(lanes.map(k=>[k,digest(JSON.stringify({base,
+  workflow:workflowContracts[k],inputs:entries.filter(([file])=>common(file)||sets[k].has(file))}))]));
+}
+export async function previousLaneEvidence({repository,previousHead,base,prNumber,fingerprints,token,request=fetch}={}){
+ const none=Object.fromEntries(lanes.map(k=>[k,null]));
+ if(!/^[\w.-]+\/[\w.-]+$/u.test(repository??'')||!/^[a-f0-9]{40}$/u.test(previousHead??'')
+  ||!/^[a-f0-9]{40}$/u.test(base??'')||!Number.isSafeInteger(prNumber)||prNumber<1||!token)return none;
+ const cache=new Map();
+ const get=async(suffix,binary=false)=>{
+  const key=suffix+':'+binary;
+  if(!cache.has(key))cache.set(key,(async()=>{
+   const r=await request('https://api.github.com/repos/'+repository+'/'+suffix,{headers:{
+    Accept:'application/vnd.github+json',Authorization:'Bearer '+token,'X-GitHub-Api-Version':'2022-11-28'},signal:AbortSignal.timeout(10000)});
+   assert.equal(r.ok,true);return binary?r.arrayBuffer():r.json();
+  })());return cache.get(key);
+ };
+ const owner=async id=>{
+  const run=await get('actions/runs/'+id);
+  assert.equal(run.id,id);assert.equal(run.status,'completed');assert.equal(run.event,'pull_request');assert.equal(run.run_attempt,1);
+  assert.ok(['success','failure'].includes(run.conclusion));assert.ok(run.pull_requests?.some(p=>p.number===prNumber));
+  const data=await get('actions/runs/'+id+'/artifacts?per_page=100');
+  assert.equal(data.total_count,data.artifacts.length);assert.ok(data.total_count<=100);
+  const matches=data.artifacts.filter(a=>a.name==='validation-scope');assert.equal(matches.length,1);
+  const a=matches[0];assert.equal(a.expired,false);assert.equal(a.workflow_run?.id,id);assert.equal(a.workflow_run?.head_sha,run.head_sha);
+  const bytes=Buffer.from(await get('actions/artifacts/'+a.id+'/zip',true));
+  assert.equal(bytes.length,a.size_in_bytes);assert.equal('sha256:'+digest(bytes),a.digest);
+  const plan=JSON.parse(readSingleTextArchive(bytes,'validation-scope.json'));
+  assert.equal(plan.schema,'zombieee-validation-scope/v1');assert.equal(plan.head,run.head_sha);assert.equal(plan.base,base);
+  const provenance=await immutablePrProvenance({get,runId:id,head:run.head_sha,base});
+  assert.equal(plan.merge,provenance.merge);
+  const jobs=await get('actions/runs/'+id+'/jobs?filter=latest&per_page=100');
+  assert.equal(jobs.total_count,jobs.jobs.length);assert.ok(jobs.total_count<=100);
+  return {run,plan,jobs:jobs.jobs,provenance};
+ };
  try{
-  let predecessor=null;
-  if(continuation){
-   const context=formattingContinuation?QA_FORMATTING_PREDECESSOR:ABILITY_NAME_PREDECESSOR;
-   const record=await get(`actions/runs/${context.runId}`);
-   if(record.id!==context.runId||record.head_sha!==previousHead||record.status!=='completed'
-     ||record.conclusion!=='failure'||record.run_attempt!==1||record.event!=='pull_request'||!record.pull_requests?.some(pr=>pr.number===old.prNumber))
-    return{passed:false,reason:'reviewed-predecessor-context-unavailable'};
-   const provenance=await immutablePrProvenance({get,runId:record.id,head:previousHead,base:old.base});
-   predecessor={head:previousHead,runId:record.id,conclusion:record.conclusion,provenance,measurementOwnersAdopted:false};
-  }
-  const run=await get(`actions/runs/${old.runId}`);
-  if(run.id!==old.runId||run.head_sha!==old.head||run.status!=='completed'||![1,2].includes(run.run_attempt)||run.event!=='pull_request'
-   ||!run.pull_requests?.some(pr=>pr.number===old.prNumber))return{passed:false,reason:'original-candidate-not-complete'};
-  const data=await get(run.run_attempt===1?`actions/runs/${old.runId}/jobs?filter=latest&per_page=100`
-    :`actions/runs/${old.runId}/attempts/1/jobs?per_page=100`);
-  if(!Array.isArray(data.jobs)||!Number.isSafeInteger(data.total_count)||data.total_count>100||data.total_count!==data.jobs.length)
-   return{passed:false,reason:'original-jobs-pagination-or-count-mismatch'};
-  if(new Set(data.jobs.map(j=>j.id)).size!==data.jobs.length||!data.jobs.every(j=>Number.isSafeInteger(j.id)&&j.id>0
-   &&j.run_id===old.runId&&j.head_sha===old.head&&j.run_attempt===1&&j.status==='completed'))
-   return{passed:false,reason:'original-job-owner-mismatch'};
-  const adoptedJobs=[...data.jobs];let infrastructureRecovery=null;
-  if(run.run_attempt===2){
-   // Only this original host's DNS failure is eligible. No game or HUD test
-   // ran there. Preserve all attempt1 owners and require the one replacement
-   // job to run its actual capture and upload under the unchanged workflow.
-   const name='WebKit Canonical Viewport Evidence (844x340)',original=data.jobs.filter(j=>j.name===name),step=(j,n,c)=>
-    j.steps?.some(s=>s.name===n&&s.status==='completed'&&s.conclusion===c);
-   if(original.length!==1||original[0].id!==120981969541||original[0].conclusion!=='failure'
-     ||!step(original[0],'Setup Node.js','failure')||!step(original[0],'Capture canonical HUD evidence','skipped'))
-    return{passed:false,reason:'not-the-original-unexecuted-dns-failure'};
-   const retry=await get(`actions/runs/${old.runId}/attempts/2/jobs?per_page=100`);
-   // GitHub also emits new-ID copies of unchanged results in attempt2. They
-   // are not new measurements and never replace their original owners.
-   const names=rows=>rows.map(j=>j.name).sort();
-   if(!Array.isArray(retry.jobs)||retry.total_count!==data.jobs.length||retry.jobs.length!==data.jobs.length
-     ||new Set(data.jobs.map(j=>j.name)).size!==data.jobs.length||new Set(retry.jobs.map(j=>j.id)).size!==retry.jobs.length
-     ||JSON.stringify(names(retry.jobs))!==JSON.stringify(names(data.jobs)))return{passed:false,reason:'specific-retry-inventory-mismatch'};
-   const execution=j=>[j.status,j.conclusion,j.started_at,j.completed_at,j.runner_id,j.runner_name,
-    j.steps?.map(s=>[s.name,s.number,s.status,s.conclusion,s.started_at,s.completed_at])];
-   const clock=(start,end)=>typeof start==='string'&&typeof end==='string'
-    &&Number.isFinite(Date.parse(start))&&Date.parse(end)>=Date.parse(start);
-   const executed=j=>clock(j.started_at,j.completed_at)&&Number.isSafeInteger(j.runner_id)&&j.runner_id>0
-    &&typeof j.runner_name==='string'&&j.runner_name.length>0&&Array.isArray(j.steps)&&j.steps.length>0
-    &&new Set(j.steps.map(s=>s.number)).size===j.steps.length&&j.steps.every(s=>
-      typeof s.name==='string'&&s.name.length>0&&Number.isSafeInteger(s.number)&&s.number>0&&s.status==='completed'
-      &&['success','failure','cancelled','skipped','neutral','timed_out','action_required'].includes(s.conclusion)
-      &&clock(s.started_at,s.completed_at));
-   for(const alias of retry.jobs){
-    if(!Number.isSafeInteger(alias.id)||alias.id<=0||data.jobs.some(j=>j.id===alias.id)||alias.head_sha!==old.head
-      ||alias.run_id!==old.runId||alias.run_attempt!==2||alias.status!=='completed')
-     return{passed:false,reason:'specific-retry-owner-mismatch'};
-    if(alias.name===name)continue;
-    const source=data.jobs.find(j=>j.name===alias.name);
-    // This optional diagnostic never executed. GitHub changes its synthetic
-    // start timestamp on retry, although it still has no runner or steps.
-    // It is not in the adopted gate inventory and supplies no measurement.
-    if(source.id===120949556263&&source.name==='V1 Guardian Control Diagnostic'
-      &&!ABILITY_NAME_REUSED_JOBS.includes(source.name)){
-     const unexecuted=j=>j.conclusion==='skipped'&&j.runner_id===null&&j.runner_name===null
-      &&Array.isArray(j.steps)&&j.steps.length===0&&typeof j.started_at==='string'&&Number.isFinite(Date.parse(j.started_at))
-      &&typeof j.completed_at==='string'&&Number.isFinite(Date.parse(j.completed_at));
-     if(!unexecuted(source)||!unexecuted(alias)||source.completed_at!==alias.completed_at)
-      return{passed:false,reason:'unexecuted-diagnostic-copy-mismatch'};
-     continue;
-    }
-    if(!executed(source)||!executed(alias)||JSON.stringify(execution(source))!==JSON.stringify(execution(alias)))
-     return{passed:false,reason:'another-job-executed-in-the-recovery'};
+  const runs=await get('actions/workflows/ci.yml/runs?head_sha='+previousHead+'&event=pull_request&per_page=10');
+  for(const r of runs.workflow_runs??[]){
+   if(r.head_sha!==previousHead||r.status!=='completed'||r.run_attempt!==1)continue;
+   let prior;try{prior=await owner(r.id);}catch{continue;}
+   for(const k of lanes){
+    try{
+     const gate=prior.plan.gates[k];assert.equal(gate.required,true);assert.equal(gate.fingerprint,fingerprints[k]);
+     const original=gate.state==='reused'?await owner(gate.owner.runId):prior;
+     const originalGate=original.plan.gates[k];
+     assert.equal(originalGate.state,'fresh');assert.equal(originalGate.required,true);
+     assert.equal(originalGate.fingerprint,fingerprints[k]);
+     if(gate.state==='reused'){assert.equal(gate.owner.head,original.run.head_sha);assert.equal(gate.owner.base,base);}
+     const jobs=LANE_JOBS[k].map(name=>{
+      const rows=original.jobs.filter(j=>j.name===name||j.name.endsWith(' / '+name));assert.equal(rows.length,1);
+      const j=rows[0];assert.equal(j.status,'completed');assert.equal(j.conclusion,'success');
+      assert.equal(j.run_id,original.run.id);assert.equal(j.run_attempt,1);assert.equal(j.head_sha,original.run.head_sha);
+      assert.ok(Number.isSafeInteger(j.id)&&j.id>0);
+      // The WebKit summary derives its result from all three proven combat jobs.
+      if(name!=='V1.0.2 Combat (webkit)')assert.ok(j.steps?.some(s=>s.name==='Verify exact checkout'&&s.status==='completed'&&s.conclusion==='success'));
+      return {id:j.id,name:j.name};
+     });
+     none[k]={runId:original.run.id,head:original.run.head_sha,base,fingerprint:fingerprints[k],jobs,
+      provenance:original.provenance};
+    }catch{/* Missing, failed, skipped or incompatible evidence must run fresh. */}
    }
-   const j=retry.jobs.find(j=>j.name===name);
-   if(!Number.isSafeInteger(j?.id)||j.id<=0||data.jobs.some(old=>old.id===j.id)
-     ||j.name!==name||j.run_id!==old.runId||j.head_sha!==old.head||j.run_attempt!==2||j.status!=='completed'||j.conclusion!=='success'
-     ||!executed(original[0])||!executed(j)
-     ||!(Date.parse(j.started_at)>Date.parse(original[0].completed_at))||!(Date.parse(j.completed_at)>=Date.parse(j.started_at))
-     ||!step(j,'Setup Node.js','success')||!step(j,'Capture canonical HUD evidence','success')
-     ||!step(j,'Upload canonical WebKit viewport evidence','success'))return{passed:false,reason:'specific-hud-recovery-not-successful'};
-   adoptedJobs.splice(adoptedJobs.findIndex(j=>j.name===name),1,j);
-   infrastructureRecovery={original:{id:original[0].id,run_attempt:1,conclusion:'failure',capture:'skipped'},unchangedCopiesNotAdopted:retry.jobs.length-1,
-    replacement:{id:j.id,run_attempt:2,conclusion:'success',capture:'success'},head:old.head,runId:old.runId,name};
+   break;
   }
-  const successful=name=>{const rows=adoptedJobs.filter(j=>j.name===name);return rows?.length===1&&rows[0].status==='completed'
-   &&rows[0].conclusion==='success'&&Number.isSafeInteger(rows[0].id);};
-  if(!ABILITY_NAME_REUSED_JOBS.every(successful))return{passed:false,reason:'an-unchanged-browser-gate-is-not-successful'};
-  const provenance=await immutablePrProvenance({get,runId:old.runId,head:old.head,base:old.base});
-  const normalNames=['chromium','webkit'].map(engine=>`V1 Representative Normal Play (${engine})`);
-  let normalComplete=!rangerBufferDelta&&!layoutReadDelta&&!paths.includes('scripts/v177-representative-battles.mjs')&&normalNames.every(successful);
-  const formalTransferDelta=continuation&&productUnchanged&&(formattingContinuation||FORMAL_TRANSFER_FILES.every(file=>paths.includes(file)));
-  let productValidationOwner=null,formattingEvidence=null;
-  if(formalTransferDelta){
-   const data=await get(`actions/runs/${ABILITY_NAME_PREDECESSOR.runId}/jobs?filter=latest&per_page=100`);
-   if(!Array.isArray(data.jobs)||data.total_count!==data.jobs.length||data.total_count>100
-     ||new Set(data.jobs.map(j=>j.id)).size!==data.jobs.length)return{passed:false,reason:'formal-control-inventory-invalid'};
-   const adopted=[];
-   for(const [name,id]of Object.entries(FORMAL_TRANSFER_CONTROL_JOBS)){
-    const rows=data.jobs.filter(j=>j.name===name),j=rows[0];
-    const required=name==='PR Verify'?FORMAL_TRANSFER_PRODUCT_STEPS:name==='Ranger Turn Regression'
-      ?['Recheck the original Stage 4 rendering failure','Run actions/upload-artifact@v4']
-      :['Observe opening stages using a fresh save, earned CAPS and real UI','Preserve normal-play results, saves, diagnostics and original-speed video'];
-    if(rows.length!==1||j.id!==id||j.run_id!==ABILITY_NAME_PREDECESSOR.runId||j.head_sha!==ABILITY_NAME_PREDECESSOR.head||j.run_attempt!==1
-      ||j.status!=='completed'||j.conclusion!=='success'||!required.every(label=>j.steps?.filter(s=>s.name===label&&s.status==='completed'&&s.conclusion==='success').length===1))
-      return{passed:false,reason:'formal-control-measurement-not-successful'};
-    const owner={name,id,head_sha:j.head_sha,run_id:j.run_id,run_attempt:j.run_attempt};
-    if(name==='PR Verify')productValidationOwner={...owner,stepNames:required};
-    else{const index=adoptedJobs.findIndex(old=>old.name===name);if(index<0)adoptedJobs.push(j);else adoptedJobs.splice(index,1,j);adopted.push(owner);}
-   }
-   normalComplete=normalNames.every(successful);predecessor.controlJobs=adopted;
+ }catch{/* Network and evidence failures never become reused success. */}
+ return none;
+}
+export function validationPlan(scope,{head,base,merge,fingerprints,evidence={}}){
+ const gates=Object.fromEntries(lanes.map(k=>[k,{required:scope[k],fingerprint:fingerprints[k],
+  state:!scope[k]?'outside':evidence[k]?'reused':'fresh',...(scope[k]&&evidence[k]?{owner:evidence[k]}:{})}]));
+ return {schema:'zombieee-validation-scope/v1',head,base,merge,gates,scope:scope.scope,
+  code_checks:scope.code_checks,wholeGameAccepted:false};
+}
+export function assertValidationResults(plan,needs){
+ assert.equal(plan.schema,'zombieee-validation-scope/v1');assert.equal(needs.scope?.result,'success');
+ assert.equal(needs.verify?.result,'success','Build, tests and current provenance must succeed');
+ for(const [id,job] of Object.entries(needs)){
+  assert.ok(id==='scope'||Object.hasOwn(JOB_LANES,id),'Unclassified validation job: '+id);
+  assert.ok(!['failure','cancelled'].includes(job.result),'Validation failed: '+id);
+ }
+ for(const k of lanes){
+  const g=plan.gates[k];assert.equal(typeof g.required,'boolean');assert.match(g.fingerprint,/^[a-f0-9]{64}$/u);
+  if(!g.required){assert.equal(g.state,'outside');
+   for(const [id,lane] of Object.entries(JOB_LANES))if(lane===k&&id!=='verify')assert.equal(needs[id]?.result,'skipped','Outside job ran unexpectedly: '+id);
+   continue;
   }
-  if(formattingContinuation){
-   const owner=QA_FORMATTING_PREDECESSOR,data=await get(`actions/runs/${owner.runId}/jobs?filter=latest&per_page=100`);
-   if(!Array.isArray(data.jobs)||data.total_count!==data.jobs.length||data.total_count>100
-     ||new Set(data.jobs.map(j=>j.id)).size!==data.jobs.length||!data.jobs.every(j=>j.status==='completed'
-      &&j.run_id===owner.runId&&j.head_sha===owner.head&&j.run_attempt===1))return{passed:false,reason:'formatting-job-inventory-invalid'};
-   const failures=data.jobs.filter(j=>!['success','skipped'].includes(j.conclusion)),verify=failures[0];
-   const step=(j,name,conclusion)=>j.steps?.filter(s=>s.name===name&&s.status==='completed'&&s.conclusion===conclusion).length===1;
-   if(failures.length!==1||verify.id!==owner.verifyJob||verify.name!=='PR Verify'||verify.conclusion!=='failure'
-     ||verify.steps?.filter(s=>s.conclusion==='failure').length!==1||!step(verify,'Check patch whitespace','failure')
-     ||!['Checkout synthetic PR merge','Verify PR provenance','Upload PR provenance'].every(name=>step(verify,name,'success'))
-     ||!['Setup Node.js','Install dependencies','Lint','Validate production content','Build production application','Test',...FORMAL_TRANSFER_PRODUCT_STEPS]
-      .every(name=>step(verify,name,'skipped')))return{passed:false,reason:'formatting-was-not-the-only-verify-failure'};
-   const jobs=[];
-   for(const [name,contract]of Object.entries(QA_FORMATTING_MEASURED_JOBS)){
-    const rows=data.jobs.filter(j=>j.name===name),j=rows[0];
-    if(rows.length!==1||j.id!==contract.id||j.conclusion!=='success'||!contract.steps.every(label=>step(j,label,'success')))
-     return{passed:false,reason:'formatting-measurement-not-successful'};
-    jobs.push({name,id:j.id,head_sha:j.head_sha,run_id:j.run_id,run_attempt:j.run_attempt,status:j.status,conclusion:j.conclusion,stepNames:contract.steps});
-   }
-   formattingEvidence={passed:true,head:owner.head,runId:owner.runId,verifyFailure:{id:verify.id,step:'Check patch whitespace',preserved:true},
-    measuredJobs:jobs,sourceOnlyCorrection:{file:owner.test,before:owner.before,after:owner.after,change:'one CRLF to LF; all other characters identical'}};
+  if(g.state==='reused'){
+   assert.equal(g.owner?.fingerprint,g.fingerprint);assert.equal(g.owner?.base,plan.base);
+   assert.ok(Number.isSafeInteger(g.owner?.runId)&&g.owner.runId>0);
+   assert.match(g.owner.head,/^[a-f0-9]{40}$/u);assert.equal(g.owner.provenance?.head,g.owner.head);
+   assert.equal(g.owner.provenance?.base,plan.base);assert.equal(g.owner.jobs.length,LANE_JOBS[k].length);
+   for(const [id,lane] of Object.entries(JOB_LANES))if(lane===k&&id!=='verify')assert.equal(needs[id]?.result,'skipped','Reused job ran unexpectedly: '+id);
+   continue;
   }
-  const freshAudioRequired=rangerBufferDelta&&paths.includes(RETIRED_AUDIO_OWNER_FILE);
-  if(continuation&&!freshAudioRequired){
-   const audioOwner=ABILITY_NAME_AUDIO_OWNER,audioRun=await get(`actions/runs/${audioOwner.runId}`);
-   if(audioRun.id!==audioOwner.runId||audioRun.head_sha!==audioOwner.head||audioRun.status!=='completed'
-     ||audioRun.conclusion!=='failure'||audioRun.run_attempt!==1||audioRun.event!=='pull_request'
-     ||!audioRun.pull_requests?.some(pr=>pr.number===old.prNumber))return{passed:false,reason:'repaired-audio-run-owner-invalid'};
-   const audioProvenance=await immutablePrProvenance({get,runId:audioOwner.runId,head:audioOwner.head,base:old.base});
-   const data=await get(`actions/runs/${audioOwner.runId}/jobs?filter=latest&per_page=100`);
-   if(!Array.isArray(data.jobs)||data.total_count!==data.jobs.length||data.total_count>100
-     ||new Set(data.jobs.map(j=>j.id)).size!==data.jobs.length)return{passed:false,reason:'repaired-audio-jobs-inventory-invalid'};
-   const adopted=[];
-   for(const [name,id]of Object.entries(ABILITY_NAME_PREDECESSOR_AUDIO_JOBS)){
-    const rows=data.jobs.filter(j=>j.name===name),j=rows[0],step=label=>j?.steps?.some(s=>s.name===label&&s.status==='completed'&&s.conclusion==='success');
-    if(rows.length!==1||j.id!==id||j.run_id!==audioOwner.runId||j.head_sha!==audioOwner.head
-      ||j.run_attempt!==1||j.status!=='completed'||j.conclusion!=='success'
-      ||!step('Verify iPhone media output and encoded mix without microphone access')||!step('Run actions/upload-artifact@v4'))
-      return{passed:false,reason:'repaired-audio-measurement-not-successful'};
-    adoptedJobs.splice(adoptedJobs.findIndex(old=>old.name===name),1,j);adopted.push({name,id,head_sha:j.head_sha,run_id:j.run_id,run_attempt:j.run_attempt});
-   }
-   predecessor.measurementOwnersAdopted=true;predecessor.adoptedJobs=adopted;predecessor.audioProvenance=audioProvenance;
-  }
-  return{passed:true,head:old.head,base:old.base,prNumber:old.prNumber,runId:old.runId,provenance,infrastructureRecovery,predecessor,
-   originalRunConclusion:run.conclusion,
-   productUnchanged,rangerBufferDelta,layoutReadDelta,formalTransferDelta,productValidationOwner,formattingEvidence,
-   freshRangerRequired:rangerBufferDelta||layoutReadDelta,
-   layoutReadScope:layoutReadDelta?Object.entries(ABILITY_LAYOUT_PRODUCT_BEFORE).map(([file,before])=>({file,before,after:ABILITY_NAME_BLOBS[file]})):null,
-   rangerBufferScope:rangerBufferDelta?{file:RANGER_BUFFER_FILE,before:RANGER_BUFFER_BEFORE_BLOB,after:RANGER_BUFFER_BLOB}:null,
-   freshAudioRequired,
-   reusedJobs:[...ABILITY_NAME_REUSED_JOBS.filter(name=>(!(rangerBufferDelta||layoutReadDelta)||name!=='Ranger Turn Regression')
-    &&(!freshAudioRequired||!name.startsWith('V1.0.3 Media Output ('))),...(normalComplete?normalNames:[])].map(name=>{const j=adoptedJobs.find(j=>j.name===name);
-    return{name,id:j.id,head_sha:j.head_sha,run_id:j.run_id,run_attempt:j.run_attempt};}),
-   freshVerifyRequired:true,freshProductValidationsRequired:!formalTransferDelta,freshPerformanceRequired:!formattingContinuation,freshPhaseGRequired:!formattingContinuation,
-   freshNormalRequired:!normalComplete};
- }catch{return{passed:false,reason:'original-browser-evidence-unavailable'};}
+  assert.equal(g.state,'fresh');
+  for(const [id,lane] of Object.entries(JOB_LANES))if(lane===k)assert.equal(needs[id]?.result,'success',id+' was required');
+ }
+ return true;
 }
-const r9=new Set(['scripts/v100-dialogue-composition-browser.mjs','scripts/v100-story-bookends-browser-smoke.mjs',
-  'scripts/v100-r9-full-story-browser.mjs','scripts/v100-r9-story-plan.mjs']);
-const orchestration=new Set(['.github/workflows/ci.yml','scripts/ci-change-scope.mjs',
-  'scripts/ci-combat-qa-reuse.mjs',
-  '.github/workflows/targeted-frame-performance.yml','scripts/v100-device-runtime-browser.mjs',
-  '.github/workflows/native-aac-probe.yml','.github/workflows/normal-campaign-observation.yml',
-  '.github/workflows/native-allunit-capture.yml','.github/workflows/v1-quality-acceptance.yml',
-  '.github/workflows/native-aac-graph-probe.yml','.github/workflows/native-audio-capabilities.yml',
-  '.github/workflows/native-opus-streaming.yml','.github/workflows/native-pcm-streaming.yml',
-  '.github/workflows/native-capture-comparison.yml','.github/workflows/native-game-capture.yml',
-  'scripts/v177-native-opus-probe.mjs','scripts/v177-native-audio-capabilities.mjs',
-  'scripts/v177-native-game-capture-browser.mjs','scripts/v177-quality-apt-mirror.mjs']);
-// Reviewed validation and QA-only observation revisions. Gameplay, rendering
-// and limits are unchanged; a different blob restores full regression.
-const reviewedValidationBlobs=Object.freeze({
-  'scripts/v177-ranger-performance-receipts.mjs':'5b7edbda4231ae997eee17876805e449d95242dc',
-  'scripts/v177-reaction-render-contract.mjs':'fb84ffd008b65864539c914c84a0f9b910c9acd7',
-  // Preparation plus living/corpse observation and synchronous sample timing.
-  'app/AshfallGame.tsx':'4445d531b03a44a1147a3ae44d74a8e869d7ba37',
-  'scripts/v177-native-allunit-ranger-manual-contract.mjs':'5ef03bf92c4a8bcf455bf263e22aeeee6f1ba2b6',
-  'scripts/v177-native-allunit-outcomes.mjs':'12e9ee396cc426db1a46d942de515c14a54b774b',
-  'tests/helpers/v177-corpse-joint-render.mjs':'62813dcbd9eb06cd1ccf82ce38cf232da36b4f4c',
-});
-// These exact lifecycle revisions preserve existing paints until an actual
-// registered boss phase increase. Down/rise reuse their original lifecycle clocks.
-const reviewedLifecycleBlobs=Object.freeze({
-  "app/AshfallGame.tsx": "36a0e8f329b34a778938d1a4fe0ee6c19c6712a6",
-  "app/v177JointPresentation.js": "05ff9ad9def6c050c29eb7f81650aca6cddc6e37",
-  "app/v177LifecyclePresentation.js": "dc13038fa0a3a9bb35f6aef0c06eca80eed4d760"
-});
-// Only Brute's knee solution changes. Native Brute cases are reopened by the
-// source-pinned recovery profile; other forms keep identical draw matrices.
-const reviewedBruteBlobs=Object.freeze({
-  'app/v177JointPresentation.js':'e2e63704e18e43718fb9a332b689bc0f3c55987e',
-});
-const reviewedNativeControlBlobs=Object.freeze({
-  'scripts/v100-macos-indexing-control.mjs':'d00ae47eb420f113af07437a55c47203e7446207',
-});
-// Analytic vertical support preserves every original outline and floor value.
-const reviewedSupportBlobs=Object.freeze({
-  'app/v177CorpseJointPresentation.js':'b339f6379b252c2687e16361004e184d3029a85b',
-});
-// This stricter raw-RAF validation changes observation acceptance only. Its
-// failed or missing recordings are selected by the source-pinned recovery.
-const reviewedRawClockBlobs=Object.freeze({
-  'scripts/v177-native-allunit-outcomes.mjs':'6d10a2beb094414f8b9b941d964962a3cc3f9f72',
-});
-
-export function framePerformanceRuntimes(paths,{workflowBlob}={}){
-  const formal={runtime:'formal',host:'macos-15'},native={runtime:'native-recording-control',host:'macos-15-intel'};
-  const workflow='.github/workflows/targeted-frame-performance.yml';
-  const relevant=paths.some(p=>/^(app\/|public\/|package(-lock)?\.json$)/u.test(p)
-    ||[workflow,'scripts/v100-device-runtime-browser.mjs','scripts/v177-ranger-performance-receipts.mjs'].includes(p));
-  if(!relevant)return[];
-  // Exact job-name/dispatch correction only. The recorded/native commands and
-  // product are identical to2746; its running comparison must not be duplicated.
-  if(workflowBlob==='774c4b1f8589ea83b407ef385bb09b1904519645'&&paths.includes(workflow)
-    &&paths.every(p=>[workflow,'scripts/ci-change-scope.mjs','tests/ci-change-scope.test.mjs'].includes(p)))return[formal];
-  return[formal,native];
-}
-const reviewedMotionBlobs=Object.freeze({
-  'app/v177RangerLowerPaint.js':'463a8d228e93e722713af8d3e09a2809ea4e0255',
-  'app/v177WeaponChoreography.js':'a01def970c07107bf764a1b0eecf8eeafea4e08e',
-  'app/combatPresentation.js':'327c7a1dd55707c16385d01d28030a37dc4b27c7',
-  'app/AshfallGame.tsx':'95df06a678e2be79ec076059df910dc95c33298c',
-  'app/v177HitReaction.js':'6e7dc3705b3fa8ee8095c675b4046571a085e5af',
-  'app/v100SoukiCollision.js':'bbb80fe0b36ff9c6ea2c37aa2d4de617be75b7be',
-  'app/v100SoukiPresentation.js':'9769a43da24230afe829f9a423a2b8cd706f95b1',
-  'app/v177JointPresentation.js':'46309033f92f10577af7135f34d1215fa8292466',
-  'app/v177HumanCorpsePresentation.js':'0422000720875df12b57c9c721fa4c13a8317869',
-  'scripts/v177-native-allunit-outcomes.mjs':'3044d3a932b23e74eecc5e6a937aec1b5f36e7d1',
-  'scripts/v177-human-corpse-contract.mjs':'17568cb76138783d88365660e1ef04e23be26008',
-});
-
-export async function previousFullCiEvidence({repository,head,base,prNumber,token,request=fetch}={}){
-  if(!/^[\w.-]+\/[\w.-]+$/u.test(repository??'')||!/^[a-f0-9]{40}$/u.test(head??'')
-    ||!/^[a-f0-9]{40}$/u.test(base??'')||!Number.isSafeInteger(prNumber)||prNumber<1||!token)
-    return{passed:false,reason:'previous-full-evidence-unavailable'};
-  const get=async(suffix,binary=false)=>{
-    const response=await request(`https://api.github.com/repos/${repository}/${suffix}`,{
-      headers:{Accept:'application/vnd.github+json',Authorization:`Bearer ${token}`,'X-GitHub-Api-Version':'2022-11-28'},
-      signal:AbortSignal.timeout(10_000),
-    });
-    if(!response.ok)throw Error('Actions evidence unavailable');return binary?response.arrayBuffer():response.json();
-  };
-  try{
-    const data=await get(`actions/workflows/ci.yml/runs?head_sha=${head}&event=pull_request&per_page=10`);
-    for(const run of data.workflow_runs??[]){
-      if(run.head_sha!==head||run.status!=='completed'||run.conclusion!=='success'||!Number.isSafeInteger(run.id))continue;
-      // PR associations expose the live branch tips. Only the original run
-      // head and its digest-verified checkout provenance bind the old snapshot.
-      if(!run.pull_requests?.some(pr=>pr.number===prNumber))continue;
-      const data=await get(`actions/runs/${run.id}/jobs?filter=latest&per_page=100`);
-      const phaseG=data.jobs?.find(job=>job.name==='V1 Phase G Production Matrix'&&job.status==='completed'
-        &&job.conclusion==='success'&&Number.isSafeInteger(job.id));
-      if(phaseG){
-        const provenance=await immutablePrProvenance({get,runId:run.id,head,base});
-        return{passed:true,head,base,prNumber,runId:run.id,fullOnlyJobId:phaseG.id,provenance};
-      }
-    }
-    return{passed:false,reason:'no-successful-full-ci-for-previous-head'};
-  }catch{return{passed:false,reason:'previous-full-evidence-unavailable'};}
-}
-
-// A completed CI does not establish the separate Quality result. Retain its
-// own exact-head owner only when both original engine jobs actually passed.
-export async function previousQualityEvidence({repository,head,prNumber,token,fullEvidence,displayEvidence,request=fetch}={}){
-  const formatting=displayEvidence?.formattingEvidence;
-  const measuredFormatting=formatting?.passed===true&&formatting.head===QA_FORMATTING_PREDECESSOR.head
-    &&formatting.runId===QA_FORMATTING_PREDECESSOR.runId&&formatting.measuredJobs?.length===2
-    &&Object.entries(QA_FORMATTING_MEASURED_JOBS).every(([name,contract])=>{
-      const rows=formatting.measuredJobs.filter(j=>j.name===name),j=rows[0];
-      return rows.length===1&&j.id===contract.id&&j.head_sha===formatting.head&&j.run_id===formatting.runId&&j.run_attempt===1
-        &&j.status==='completed'&&j.conclusion==='success'&&JSON.stringify(j.stepNames)===JSON.stringify(contract.steps);
-    });
-  const displayOnly=displayEvidence?.passed===true&&displayEvidence.head===ABILITY_NAME_BASELINE.head
-    &&displayEvidence.base===ABILITY_NAME_BASELINE.base&&displayEvidence.freshVerifyRequired===true
-    &&(displayEvidence.freshPerformanceRequired===true&&displayEvidence.freshPhaseGRequired===true
-      ||measuredFormatting&&displayEvidence.freshPerformanceRequired===false&&displayEvidence.freshPhaseGRequired===false);
-  const sourceOwner=displayOnly?displayEvidence:fullEvidence;
-  if(sourceOwner?.passed!==true||sourceOwner.head!==head||sourceOwner.prNumber!==prNumber
-    ||!/^[\w.-]+\/[\w.-]+$/u.test(repository??'')||!/^[a-f0-9]{40}$/u.test(head??'')||!Number.isSafeInteger(prNumber)||prNumber<1||!token)
-    return{passed:false,reason:'verified-full-owner-required'};
-  const get=async suffix=>{
-    const response=await request(`https://api.github.com/repos/${repository}/${suffix}`,{
-      headers:{Accept:'application/vnd.github+json',Authorization:`Bearer ${token}`,'X-GitHub-Api-Version':'2022-11-28'},
-      signal:AbortSignal.timeout(10_000)});
-    if(!response.ok)throw Error('Quality evidence unavailable');return response.json();
-  };
-  try{
-    const data=await get(`actions/workflows/v1-quality-acceptance.yml/runs?head_sha=${head}&event=pull_request&per_page=10`);
-    for(const run of data.workflow_runs??[]){
-      if(run.head_sha!==head||run.status!=='completed'||run.conclusion!=='success'||!Number.isSafeInteger(run.id)
-        ||!run.pull_requests?.some(pr=>pr.number===prNumber))continue;
-      if(displayOnly&&(run.run_attempt!==1||run.event!=='pull_request'))continue;
-      const data=await get(`actions/runs/${run.id}/jobs?filter=latest&per_page=100`);
-      const names=['V1 Quality UI and Play (chromium)','V1 Quality UI and Play (webkit)'];
-      const jobs=names.map(name=>data.jobs?.filter(job=>job.name===name));
-      if(!jobs.every(rows=>rows?.length===1&&rows[0].status==='completed'&&rows[0].conclusion==='success'&&Number.isSafeInteger(rows[0].id)))continue;
-      if(displayOnly&&(!Number.isSafeInteger(data.total_count)||data.total_count!==data.jobs.length||data.total_count>100
-        ||!jobs.every(rows=>rows[0].id>0&&rows[0].run_id===run.id&&rows[0].head_sha===head&&rows[0].run_attempt===1)
-        ||new Set(jobs.map(rows=>rows[0].id)).size!==jobs.length))continue;
-      return{passed:true,head,prNumber,runId:run.id,jobIds:jobs.map(rows=>rows[0].id)};
-    }
-    return{passed:false,reason:'no-completed-original-quality-engines'};
-  }catch{return{passed:false,reason:'quality-evidence-unavailable'};}
-}
-
-export function ciChangeScope(paths,{draft,sourceBlobs={},reuseNativeQa=false,reuseCombatQa=false,reuseCombatFixture=false,reuseAbilityNames=false,reuseProductValidation=false,reuseMeasuredQa=false,freshNormal=false}={}){
-  assert.equal(typeof draft,'boolean');
-  assert.equal(typeof reuseNativeQa,'boolean');
-  assert.equal(typeof reuseCombatQa,'boolean');
-  assert.equal(typeof reuseCombatFixture,'boolean');
-  assert.equal(typeof reuseAbilityNames,'boolean');assert.equal(typeof freshNormal,'boolean');
-  assert.equal(typeof reuseProductValidation,'boolean');
-  assert.ok(Array.isArray(paths)&&paths.length>0&&paths.every(p=>typeof p==='string'&&p&&!p.includes('\\')));
-  // A synchronize update containing only native QA, its tests and the status
-  // ledger cannot change the shipped app. Keep the prior full product run and
-  // run the changed QA; Ready transitions and any product/unknown path stay full.
-  const nativeQaOnly=reuseNativeQa&&nativeQaOnlyPaths(paths,sourceBlobs);
-  const combatQaOnly=reuseCombatQa&&reviewedCombatQaPaths(paths,sourceBlobs);
-  const combatFixtureOnly=reuseCombatFixture&&reviewedCombatFixturePaths(paths,sourceBlobs);
-  const abilityNameOnly=reuseAbilityNames&&(reviewedAbilityNamePaths(paths,sourceBlobs)||reviewedAbilityContinuationPaths(paths,sourceBlobs));
-  const formattingCarry=abilityNameOnly&&reuseMeasuredQa&&reviewedQaFormattingPaths(paths,sourceBlobs);
-  let full=!draft&&!nativeQaOnly&&!combatQaOnly&&!combatFixtureOnly&&!abilityNameOnly,rangerChanged=abilityNameOnly&&(paths.includes(RANGER_BUFFER_FILE)||paths.includes('app/v105AbilityNames.js')),
-    normalChanged=abilityNameOnly&&freshNormal,allunitChanged=false,r9Changed=false,combatChanged=false;
-  for(const file of paths){
-    if(abilityNameOnly&&abilityNameFiles.has(file)){if(allunit.has(file))allunitChanged=true;continue;}
-    if(ranger.has(file))rangerChanged=true;
-    else if(normal.has(file))normalChanged=true;
-    else if(allunit.has(file))allunitChanged=true;
-    else if(r9.has(file))r9Changed=true;
-    else if(reviewedCorrectionQaBlobs[file]){
-      if(sourceBlobs[file]!==reviewedCorrectionQaBlobs[file])full=true;
-    }
-    else if(COMBAT_QA_BLOBS[file]&&sourceBlobs[file]===COMBAT_QA_BLOBS[file])combatChanged=true;
-    else if(governance.has(file)||orchestration.has(file)||/^tests\/[^/]+\.test\.mjs$/u.test(file))continue;
-    else if(reviewedBruteBlobs[file]&&sourceBlobs[file]===reviewedBruteBlobs[file])allunitChanged=true;
-    else if(reviewedNativeControlBlobs[file]&&sourceBlobs[file]===reviewedNativeControlBlobs[file])allunitChanged=true;
-    else if(reviewedSupportBlobs[file]&&sourceBlobs[file]===reviewedSupportBlobs[file])continue;
-    else if(reviewedRawClockBlobs[file]&&sourceBlobs[file]===reviewedRawClockBlobs[file])continue;
-    else if(reviewedLifecycleBlobs[file]&&sourceBlobs[file]===reviewedLifecycleBlobs[file]){normalChanged=true;allunitChanged=true;}
-    else if(reviewedValidationBlobs[file]&&sourceBlobs[file]===reviewedValidationBlobs[file])continue;
-    else if(reviewedMotionBlobs[file]&&sourceBlobs[file]===reviewedMotionBlobs[file]){
-      normalChanged=true;allunitChanged=true;
-      if(file==='app/v177JointPresentation.js'||file==='app/v177RangerLowerPaint.js')rangerChanged=true;
-    }
-    else full=true; // Unclassified changes retain the complete regression.
-  }
-  const retainedProductValidation=abilityNameOnly&&reuseProductValidation&&(formattingCarry||FORMAL_TRANSFER_FILES.every(file=>paths.includes(file)));
-  return {full,verify_full:full||(abilityNameOnly&&!retainedProductValidation),performance:full||abilityNameOnly&&!formattingCarry,phaseg:full||abilityNameOnly&&!formattingCarry,ranger:full||rangerChanged,normal:full||normalChanged,allunit:full||allunitChanged,r9:full||r9Changed,combat:full||combatChanged,
-    audio:full||(abilityNameOnly&&paths.includes(RETIRED_AUDIO_OWNER_FILE)),
-    scope:full?'full-regression':formattingCarry?'qa-formatting-correction':retainedProductValidation?'formal-evidence-transfer-delta':abilityNameOnly?(paths.includes('app/v105AbilityNames.js')?'ability-name-lazy-layout-delta':paths.includes(RANGER_BUFFER_FILE)?(paths.includes(RETIRED_AUDIO_OWNER_FILE)?'ranger-buffer-and-audio-lifecycle-delta':'ranger-buffer-selection-delta'):'ability-name-display-delta'):draft?'targeted-draft':combatQaOnly?'combat-qa-update-product-unchanged':combatFixtureOnly?'combat-fixture-update-product-unchanged':'native-qa-update-product-unchanged',wholeGameAccepted:false,
-    finalIntegrationRequiresFullRegression:true};
-}
-
 if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href){
-  const {CI_SCOPE_BASE:base,CI_SCOPE_HEAD:head,CI_SCOPE_DRAFT:draft,CI_SCOPE_ACTION:action,CI_SCOPE_PREVIOUS_HEAD:previousHead}=process.env;
-  for(const sha of [base,head])assert.match(sha??'',/^[0-9a-f]{40}$/u);
-  assert.ok(['true','false'].includes(draft));
-  const comparisonBase=execFileSync('git',['merge-base',base,head],{encoding:'utf8',windowsHide:true}).trim();
-  assert.match(comparisonBase,/^[0-9a-f]{40}$/u);
-  const paths=execFileSync('git',['diff','--no-renames','--name-only',`${comparisonBase}..${head}`],{encoding:'utf8',windowsHide:true}).trim().split(/\r?\n/u).filter(Boolean);
-  const sourceFiles=new Set([...paths.filter(file=>ABILITY_NAME_BLOBS[file]||reviewedCorrectionQaBlobs[file]||reviewedValidationBlobs[file]||reviewedMotionBlobs[file]||reviewedLifecycleBlobs[file]||reviewedBruteBlobs[file]||reviewedNativeControlBlobs[file]||reviewedSupportBlobs[file]||reviewedRawClockBlobs[file]||COMBAT_QA_BLOBS[file]),
-    ...([ABILITY_NAME_PREDECESSOR.head,QA_FORMATTING_PREDECESSOR.head].includes(previousHead)?Object.keys(ABILITY_NAME_BLOBS):[]),
-    ...(previousHead===QA_FORMATTING_PREDECESSOR.head?[QA_FORMATTING_PREDECESSOR.test]:[]),
-    ...(Object.keys(COMBAT_QA_BLOBS).every(file=>paths.includes(file))?['.github/workflows/ci.yml','.github/workflows/v1-quality-acceptance.yml']:[]),
-    ...(paths.includes('tests/v177-native-canvas-clips.test.mjs')?[...Object.keys(COMBAT_QA_BLOBS),
-      '.github/workflows/ci.yml','.github/workflows/v1-quality-acceptance.yml','tests/v177-native-canvas-clips.test.mjs']:[])]);
-  const sourceBlobs=Object.fromEntries([...sourceFiles].map(file=>{
-    try{return[file,execFileSync('git',['rev-parse',`${head}:${file}`],{encoding:'utf8',windowsHide:true}).trim()];}
-    catch{return[file,null];}
-  }));
-  const eligibleNativeReuse=action==='synchronize'&&previousHead===base&&comparisonBase===base
-    &&/^[0-9a-f]{40}$/u.test(previousHead??'');
-  const nativeQaOnlyCandidate=eligibleNativeReuse&&nativeQaOnlyPaths(paths,sourceBlobs);
-  const previousFullEvidence=draft==='false'&&nativeQaOnlyCandidate
-    ?await previousFullCiEvidence({repository:process.env.GITHUB_REPOSITORY,head:previousHead,
-      base:process.env.CI_SCOPE_PR_BASE,prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),token:process.env.CI_SCOPE_ACTIONS_TOKEN}):null;
-  const reuseNativeQa=previousFullEvidence?.passed===true;
-  const qualityPathsUnchanged=paths.every(file=>file==='docs/PROJECT_STATE.md'
-    ||(reviewedCorrectionQaBlobs[file]&&sourceBlobs[file]===reviewedCorrectionQaBlobs[file]));
-  let qualityEvidence=qualityPathsUnchanged?await previousQualityEvidence({repository:process.env.GITHUB_REPOSITORY,
-    head:previousHead,prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),token:process.env.CI_SCOPE_ACTIONS_TOKEN,fullEvidence:previousFullEvidence})
-    :{passed:false,reason:'quality-dependencies-not-proven-unchanged'};
-  const productPaths=['app','public','assets','package.json','package-lock.json','scripts/pwa-native-runtime/package.json','scripts/pwa-native-runtime/package-lock.json'];
-  const eligibleCombatReuse=eligibleNativeReuse&&previousHead===COMBAT_QA_BASELINE.head&&reviewedCombatQaPaths(paths,sourceBlobs);
-  const eligibleFixtureReuse=eligibleNativeReuse&&previousHead===COMBAT_FIXTURE_BASELINE.head&&reviewedCombatFixturePaths(paths,sourceBlobs);
-  const formattingTextUnchanged=eligibleNativeReuse&&previousHead===QA_FORMATTING_PREDECESSOR.head&&reviewedQaFormattingPaths(paths,sourceBlobs)
-    &&execFileSync('git',['rev-parse',previousHead+':'+QA_FORMATTING_PREDECESSOR.test],{encoding:'utf8',windowsHide:true}).trim()===QA_FORMATTING_PREDECESSOR.before
-    &&execFileSync('git',['show',previousHead+':'+QA_FORMATTING_PREDECESSOR.test],{encoding:'utf8',windowsHide:true}).replace(/\r\n/gu,'\n')
-      ===execFileSync('git',['show',head+':'+QA_FORMATTING_PREDECESSOR.test],{encoding:'utf8',windowsHide:true});
-  const eligibleAbilityContinuation=eligibleNativeReuse&&([ABILITY_NAME_PREDECESSOR.head,QA_FORMATTING_PREDECESSOR.head].includes(previousHead))
-    &&reviewedAbilityContinuationPaths(paths,sourceBlobs);
-  const productUnchanged=(eligibleCombatReuse||eligibleFixtureReuse||eligibleAbilityContinuation)&&productPaths.every(file=>{
-    const blob=execFileSync('git',['rev-parse',`${head}:${file}`],{encoding:'utf8',windowsHide:true}).trim();
-    return [previousHead,...(eligibleFixtureReuse?[COMBAT_QA_BASELINE.head]:[])].every(ref=>
-      execFileSync('git',['rev-parse',`${ref}:${file}`],{encoding:'utf8',windowsHide:true}).trim()===blob);
-  });
-  // Exact backing-size selection and regenerated provenance only. Audio and
-  // all other product paths must be unchanged; unknown edits restore full QA.
-  const changedProductPaths=eligibleAbilityContinuation?execFileSync('git',['diff','--no-renames','--name-only',previousHead,head,'--',...productPaths],{encoding:'utf8',windowsHide:true}).trim().split(/\r?\n/u).filter(Boolean):[];
-  const rangerBufferDelta=eligibleAbilityContinuation&&JSON.stringify(changedProductPaths)===JSON.stringify(Object.keys(RANGER_REPAIR_PRODUCT_BEFORE).sort())
-    &&Object.entries(RANGER_REPAIR_PRODUCT_BEFORE).every(([file,before])=>sourceBlobs[file]===ABILITY_NAME_BLOBS[file]
-      &&execFileSync('git',['rev-parse',previousHead+':'+file],{encoding:'utf8',windowsHide:true}).trim()===before);
-  const layoutReadDelta=eligibleAbilityContinuation&&JSON.stringify(changedProductPaths)===JSON.stringify(Object.keys(ABILITY_LAYOUT_PRODUCT_BEFORE).sort())
-    &&Object.entries(ABILITY_LAYOUT_PRODUCT_BEFORE).every(([file,before])=>sourceBlobs[file]===ABILITY_NAME_BLOBS[file]
-      &&execFileSync('git',['rev-parse',previousHead+':'+file],{encoding:'utf8',windowsHide:true}).trim()===before);
-  const combatQaEvidence=await previousCombatQaEvidence({repository:process.env.GITHUB_REPOSITORY,previousHead,
-    base:process.env.CI_SCOPE_PR_BASE,prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),action,draft:draft==='true',productUnchanged,
-    paths,sourceBlobs,token:process.env.CI_SCOPE_ACTIONS_TOKEN});
-  const combatFixtureEvidence=await previousCombatFixtureEvidence({repository:process.env.GITHUB_REPOSITORY,previousHead,
-    base:process.env.CI_SCOPE_PR_BASE,prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),action,draft:draft==='true',productUnchanged,
-    paths,sourceBlobs,token:process.env.CI_SCOPE_ACTIONS_TOKEN});
-  const abilityNameEvidence=eligibleNativeReuse?await previousAbilityNameEvidence({repository:process.env.GITHUB_REPOSITORY,previousHead,
-    base:process.env.CI_SCOPE_PR_BASE,prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),action,draft:draft==='true',paths,sourceBlobs,productUnchanged,rangerBufferDelta,layoutReadDelta,formattingTextUnchanged,
-    originalAncestor:eligibleAbilityContinuation&&execFileSync('git',['merge-base',ABILITY_NAME_BASELINE.head,previousHead],{encoding:'utf8',windowsHide:true}).trim()===ABILITY_NAME_BASELINE.head,
-    token:process.env.CI_SCOPE_ACTIONS_TOKEN})
-    :{passed:false,reason:'previous-head-not-exact-ancestor'};
-  if(abilityNameEvidence.passed)qualityEvidence=await previousQualityEvidence({repository:process.env.GITHUB_REPOSITORY,
-    head:abilityNameEvidence.head,prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),token:process.env.CI_SCOPE_ACTIONS_TOKEN,displayEvidence:abilityNameEvidence});
-  const scope=ciChangeScope(paths,{draft:draft==='true',sourceBlobs,reuseNativeQa,reuseCombatQa:combatQaEvidence.passed,reuseCombatFixture:combatFixtureEvidence.passed,
-    reuseAbilityNames:abilityNameEvidence.passed,reuseProductValidation:abilityNameEvidence.freshProductValidationsRequired===false,
-    reuseMeasuredQa:abilityNameEvidence.formattingEvidence?.passed===true,freshNormal:abilityNameEvidence.freshNormalRequired??false});
-  if(process.env.GITHUB_OUTPUT)appendFileSync(process.env.GITHUB_OUTPUT,['full','verify_full','performance','phaseg','ranger','normal','allunit','r9','combat','audio'].map(k=>`${k}=${scope[k]}\n`).join(''));
-  if(process.env.GITHUB_OUTPUT)appendFileSync(process.env.GITHUB_OUTPUT,`reuse_quality=${combatQaEvidence.passed||combatFixtureEvidence.passed||qualityEvidence.passed}\n`);
-  if(process.env.GITHUB_STEP_SUMMARY)appendFileSync(process.env.GITHUB_STEP_SUMMARY,
-    `Validation: ${scope.scope}. Ready transitions and unknown product changes run full regression. Exact reviewed deltas retain only completed original gates with their source owners. ${abilityNameEvidence.formattingEvidence?.passed
-      ?'Only the fixed test CRLF is corrected. The original failed whitespace check stays failed; the same whitespace check, tests, lint, content and build run fresh. Completed formal6 and PhaseG stay with their actual a12 owners; earlier45 jobs and19 product steps keep their separate original owners.'
-      :abilityNameEvidence.formalTransferDelta
-      ?'This QA-only delta retains the completed19 conditional Verify browser/audit steps, normal-play and Ranger gates with their verified original owners; tests, lint, content, build, all6 formal performance windows and PhaseG run fresh.'
-      :'The ability-name display delta reruns all19 conditional Verify browser/audit steps, tests, lint, content, build and formal performance; failed or missing normal-play evidence also runs again.'} Original failures remain failures.\n`);
-  console.log(JSON.stringify({...scope,base,comparisonBase,head,eligibleNativeReuse,previousFullEvidence,qualityEvidence,combatQaEvidence,combatFixtureEvidence,abilityNameEvidence,changedPaths:paths}));
+ const git=(args,{raw=false}={})=>{const value=execFileSync('git',args,{encoding:'utf8',windowsHide:true,maxBuffer:16*1024*1024});return raw?value:value.trim();};
+ const {CI_SCOPE_HEAD:head,CI_SCOPE_PR_BASE:prBase,CI_SCOPE_BASE:fallbackBase,CI_SCOPE_DRAFT:draft,CI_SCOPE_PREVIOUS_HEAD:before}=process.env;
+ const base=prBase||fallbackBase;
+ for(const value of [head,base])assert.match(value??'',/^[a-f0-9]{40}$/u);
+ assert.ok(['true','false'].includes(draft));
+ const merge=git(['rev-parse','HEAD']);
+ if(process.env.GITHUB_ACTIONS==='true'){
+  git(['merge-base','--is-ancestor',head,merge]);git(['merge-base','--is-ancestor',base,merge]);
+ }
+ const paths=git(['diff','--no-renames','--name-only','-z',base+'...'+head],{raw:true}).split('\0').filter(Boolean);
+ const entries=git(['ls-tree','-r','-z',head],{raw:true}).split('\0').filter(Boolean).map(line=>{const tab=line.indexOf('\t');return [line.slice(tab+1),line.slice(0,tab).split(' ')[2]];});
+ const files=new Set(entries.map(([file])=>file)),cache=new Map();
+ const read=file=>{if(!cache.has(file))cache.set(file,git(['show',head+':'+file]).replaceAll('\r\n','\n'));return cache.get(file);};
+ const {sets,dependencies}=dependencyInputs(files,read),workflowContracts=workflowRuntimeContracts(read('.github/workflows/ci.yml')),
+  fingerprints=laneFingerprints(entries,sets,{base,workflowContracts});
+ dependencies['.github/workflows/ci.yml']=workflowJobChanges(git(['show',base+':.github/workflows/ci.yml']),read('.github/workflows/ci.yml'));
+ const scope=ciChangeScope(paths,{draft:draft==='true',dependencies});
+ let evidence={},previousIsAncestor=false;
+ try{previousIsAncestor=/^[a-f0-9]{40}$/u.test(before??'')&&before!==head&&git(['merge-base',before,head])===before;}catch{/* Missing old objects require fresh gates. */}
+ if(previousIsAncestor)
+  evidence=await previousLaneEvidence({repository:process.env.GITHUB_REPOSITORY,previousHead:before,base,
+   prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),fingerprints,token:process.env.CI_SCOPE_ACTIONS_TOKEN});
+ const plan=validationPlan(scope,{head,base,merge,fingerprints,evidence});
+ mkdirSync('outputs/ci-scope',{recursive:true});writeFileSync('outputs/ci-scope/validation-scope.json',JSON.stringify(plan,null,2)+'\n');
+ const fresh=Object.fromEntries(lanes.map(k=>[k,plan.gates[k].state==='fresh']));
+ const outputs={...fresh,full:lanes.every(k=>fresh[k]),code_checks:scope.code_checks,plan:JSON.stringify(plan)};
+ if(process.env.GITHUB_OUTPUT)appendFileSync(process.env.GITHUB_OUTPUT,Object.entries(outputs).map(([k,v])=>k+'='+v+'\n').join(''));
+ const states=Object.entries(plan.gates).map(([k,g])=>k+': '+g.state+(g.owner?' (run '+g.owner.runId+')':'')).join('\n');
+ if(process.env.GITHUB_STEP_SUMMARY)appendFileSync(process.env.GITHUB_STEP_SUMMARY,'Whole PR validation: '+scope.scope+'\n\n'+states+'\n\nOutside is not a passed test. Failed/missing evidence runs fresh. Whole-game acceptance is not claimed.\n');
+ console.log(JSON.stringify({...plan,changedPaths:paths}));
+}
+
+
+
+// Runtime contracts also feed reuse hashes, so changing one lane does not
+// invalidate unrelated lanes, and global env/defaults cannot escape selection.
+export function workflowRuntimeContracts(text){
+ text=text.replaceAll('\r\n','\n');
+ const header=text.split(/^jobs:\n/mu,1)[0];
+ const global=header.replace(/^name:[^\n]*\n/gmu,'')
+  .replace(/^(?:on|permissions|concurrency):\n[\s\S]*?(?=^[\w-]+:|(?![\s\S]))/gmu,'')
+  .replace(/^\s*#.*\n/gmu,'').trim();
+ const blocks=Object.fromEntries([...text.split(/^jobs:\n/mu)[1]?.matchAll(/^  ([\w-]+):\n([\s\S]*?)(?=^  [\w-]+:\n|(?![\s\S]))/gmu)??[]].map(m=>[m[1],m[2]]));
+ const guardCommand="node --input-type=module -e 'import assert from \"node:assert/strict\";import{execFileSync}from\"node:child_process\";assert.match(process.env.EXPECTED_CHECKOUT??\"\",/^[a-f0-9]{40}$/u);assert.equal(execFileSync(\"git\",[\"rev-parse\",\"HEAD\"],{encoding:\"utf8\"}).trim(),process.env.EXPECTED_CHECKOUT);'";
+ const normalize=(body,lane)=>{
+  const ref=body.match(/^          ref: (.+)$/mu)?.[1];
+  body=body.replace(/\n      - name: Verify exact checkout\n        env:\n          EXPECTED_CHECKOUT: ([^\n]+)\n        run: ([^\n]+)\n/gu,(all,expected,command)=>
+   command===guardCommand&&(ref?expected===ref:/^\$\{\{ github\.sha \}\}$/u.test(expected))?'\n':all);
+  if(lane==='legacy')body=body.replaceAll('needs.scope.outputs.full','needs.scope.outputs.legacy');
+  return body.replace(/^    name:[^\n]*\n/gmu,'').replace(/^\s*#.*\n/gmu,'')
+   .replace(/^        if: needs\.scope\.outputs\.code_checks == 'true'\n/gmu,'')
+   .replace(/\n      - name: Check current documentation links\n        run: node scripts\/check-development-docs\.mjs\n/gu,'').trim();
+ };
+ const contracts=Object.fromEntries(lanes.map(k=>[k,{global,jobs:[]}]));
+ const unknown=[];
+ for(const [id,body] of Object.entries(blocks)){
+  if(['scope','required-validation','v177-guardian-control-diagnostic','v177-webkit-shadow-diagnostic'].includes(id))continue;
+  const lane=JOB_LANES[id];
+  if(lane)contracts[lane].jobs.push([id,normalize(body,lane)]);else unknown.push([id,body]);
+ }
+ for(const c of Object.values(contracts))c.unknown=unknown;
+ return contracts;
+}
+export function workflowJobChanges(before,after){
+ const old=workflowRuntimeContracts(before),current=workflowRuntimeContracts(after);
+ return lanes.filter(k=>JSON.stringify(old[k])!==JSON.stringify(current[k]));
 }

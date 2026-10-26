@@ -1,14 +1,12 @@
 name: Five Product Corrections Capture
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
-    branches: [main]
-    paths:
-      - 'app/**'
-      - 'public/art/v105/**'
-      - 'public/audio/v105/**'
-      - 'scripts/v105-five-corrections-capture.mjs'
-      - '.github/workflows/five-corrections-capture.yml'
+  workflow_call:
+    inputs:
+      fresh:
+        required: true
+        type: boolean
+env:
+  CI_CAPTURE_FRESH: ${{ inputs.fresh && 'true' || 'false' }}
 permissions:
   contents: read
 concurrency:
@@ -16,7 +14,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   capture:
-    if: github.head_ref == 'codex/177-five-corrections-v105'
+    name: Five Corrections (${{ matrix.scope }})
     # Keep the original viewport, 60fps stream request and clock/deadline bounds.
     # The Intel recording control remains in Targeted Frame Performance; use
     # the formal benchmark's ARM host for the product's original AV evidence.
@@ -35,6 +33,10 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: false
+      - name: Verify exact checkout
+        env:
+          EXPECTED_CHECKOUT: ${{ github.event.pull_request.head.sha }}
+        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_CHECKOUT??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_CHECKOUT);'
       - uses: actions/setup-node@v6
         with:
           node-version: 24
@@ -61,3 +63,12 @@ jobs:
           path: outputs/v105-five-corrections/${{ matrix.scope }}
           if-no-files-found: error
           retention-days: 14
+
+  result:
+    if: always()
+    needs: capture
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          CAPTURE_RESULT: ${{ needs.capture.result }}
+        run: test "$CAPTURE_RESULT" = success
