@@ -216,9 +216,10 @@ export async function previousLaneEvidence({repository,previousHead,base,prNumbe
    let prior;try{prior=await owner(r.id);}catch(error){
     if(error instanceof EvidenceResolutionError)throw error;
     const data=await get('actions/runs/'+r.id+'/jobs?filter=latest&per_page=100');
-    const onlyScopeFailed=data.total_count===data.jobs?.length&&data.total_count<=100
-     &&data.jobs.some(j=>j.name==='Validation Scope'&&j.status==='completed'&&j.conclusion==='failure')
-     &&data.jobs.every(j=>['Validation Scope','PR Verify'].includes(j.name)||j.status==='completed'&&j.conclusion==='skipped');
+    const onlyScopeFailed=r.status==='completed'&&r.conclusion==='failure'
+     &&data.total_count===data.jobs?.length&&data.total_count<=100
+     &&['Validation Scope','PR Verify'].every(name=>data.jobs.filter(j=>j.name===name).length===1)
+     &&data.jobs.every(j=>j.status==='completed'&&j.conclusion===(['Validation Scope','PR Verify'].includes(j.name)?'failure':'skipped'));
     if(onlyScopeFailed)continue; // No product check ran; retain the earlier qualified owner.
     return none; // Never walk past an unqualified executed product attempt.
    }

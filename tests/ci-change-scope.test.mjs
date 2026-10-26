@@ -211,6 +211,11 @@ test('a metadata-only scope failure retains the nearest qualified ancestor but n
   const executed=rows.map(j=>j.name==='Build and Node Checks'?{...j,conclusion}:j);
   assert.equal((await previousLaneEvidence({...opts,request:request(executed)})).allunit,null);
  }
+ assert.equal((await previousLaneEvidence({...opts,request:request(rows,{...recentRun,conclusion:'cancelled'})})).allunit,null);
+ for(const name of ['Validation Scope','PR Verify']){
+  const cancelled=rows.map(j=>j.name===name?{...j,conclusion:'cancelled'}:j);
+  assert.equal((await previousLaneEvidence({...opts,request:request(cancelled)})).allunit,null,'A cancelled '+name+' cannot authorize ancestor reuse');
+ }
  await assert.rejects(previousLaneEvidence({...opts,request:request(rows,{...recentRun,status:'in_progress'})}),/still running/u);
 });
 
