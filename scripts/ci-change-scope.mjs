@@ -50,6 +50,10 @@ const storyGuides=new Set(['docs/story/v10/README.md','docs/story/v10/CODEX_SOL_
 export const isDocumentation=file=>historicalDocumentation(file)
  &&(!file.startsWith('docs/story/')||storyGuides.has(file));
 const isControl=file=>control.has(file)||/^docs\/qa\/.+\.json$/u.test(file)||/^tests\/[^/]+\.test\.mjs$/u.test(file);
+const readOnlyBasePath=file=>isDocumentation(file)||isControl(file)&&!['.gitattributes','.github/workflows/ci.yml'].includes(file);
+export function readOnlyBaseCompatibility(paths,oldSets,currentSets){
+ return Object.fromEntries(lanes.map(k=>[k,paths.every(file=>readOnlyBasePath(file)&&!oldSets[k].has(file)&&!currentSets[k].has(file))]));
+}
 const product=file=>/^(?:app\/|public\/|assets\/|reference\/|package(?:-lock)?\.json$)/u.test(file);
 const fallbackRoots={
  ranger:['scripts/v177Ranger','app/v177Ranger'],
@@ -133,7 +137,10 @@ export function dependencyInputs(files,read){
  return {sets,dependencies};
 }
 const digest=text=>createHash('sha256').update(text).digest('hex');
-class EvidenceTransportError extends Error{}
+class EvidenceResolutionError extends Error{}
+class EvidenceTransportError extends EvidenceResolutionError{
+ constructor(message,retryable=false){super(message);this.retryable=retryable;}
+}
 export function laneFingerprints(entries,sets,{base,workflowContracts={},legacy=false,historicalDocs=legacy}={}){
  const assigned=new Set(Object.values(sets).flatMap(s=>[...s]));
  const documentation=historicalDocs?historicalDocumentation:isDocumentation;
@@ -143,26 +150,35 @@ export function laneFingerprints(entries,sets,{base,workflowContracts={},legacy=
  return Object.fromEntries(lanes.map(k=>[k,digest(JSON.stringify({base,
   workflow:workflowContracts[k],inputs:entries.filter(([file])=>common(file)||sets[k].has(file))}))]));
 }
-export async function previousLaneEvidence({repository,previousHead,base,prNumber,fingerprints,token,request=fetch,sourceFingerprints,requiredLanes=lanes}={}){
+export async function previousLaneEvidence({repository,previousHead,base,prNumber,fingerprints,token,request=fetch,sourceFingerprints,requiredLanes=lanes,previousHeads=[previousHead],onAcquisitionRetry=()=>{}}={}){
  const none=Object.fromEntries(lanes.map(k=>[k,null]));
  assert.ok(Array.isArray(requiredLanes)&&requiredLanes.every(k=>lanes.includes(k)));
  if(!requiredLanes.length)return none;
+ assert.ok(Array.isArray(previousHeads)&&previousHeads.length<=20&&previousHeads[0]===previousHead
+  &&new Set(previousHeads).size===previousHeads.length&&previousHeads.every(h=>/^[a-f0-9]{40}$/u.test(h)));
  if(!/^[\w.-]+\/[\w.-]+$/u.test(repository??'')||!/^[a-f0-9]{40}$/u.test(previousHead??'')
   ||!/^[a-f0-9]{40}$/u.test(base??'')||!Number.isSafeInteger(prNumber)||prNumber<1||!token)return none;
  const cache=new Map();
  const get=async(suffix,binary=false)=>{
   const key=suffix+':'+binary;
   if(!cache.has(key))cache.set(key,(async()=>{
+   for(let attempt=0;attempt<2;attempt++)try{
    let r;
    try{r=await request('https://api.github.com/repos/'+repository+'/'+suffix,{headers:{
-    Accept:'application/vnd.github+json',Authorization:'Bearer '+token,'X-GitHub-Api-Version':'2022-11-28'},signal:AbortSignal.timeout(10000)});}
-   catch{throw new EvidenceTransportError('CI evidence transport unavailable; do not launch replacement product checks');}
+    Accept:'application/vnd.github+json',Authorization:'Bearer '+token,'X-GitHub-Api-Version':'2022-11-28'},signal:AbortSignal.timeout(30000)});}
+   catch(error){const kind=['TimeoutError','AbortError','TypeError'].includes(error?.name)?error.name:'request error';
+    throw new EvidenceTransportError('CI evidence transport unavailable ('+kind+'); do not launch replacement product checks',true);}
    if(!r.ok&&([401,403,429].includes(r.status)||r.status>=500))
-    throw new EvidenceTransportError('CI evidence transport HTTP '+r.status+'; do not launch replacement product checks');
+    throw new EvidenceTransportError('CI evidence transport HTTP '+r.status+'; do not launch replacement product checks',[500,502,503,504].includes(r.status));
    assert.equal(r.ok,true);
    try{return binary?await r.arrayBuffer():await r.json();}
    catch(error){if(error?.name==='SyntaxError')throw error;
-    throw new EvidenceTransportError('CI evidence body transport unavailable; do not launch replacement product checks');}
+    throw new EvidenceTransportError('CI evidence body transport unavailable; do not launch replacement product checks',true);}
+   }catch(error){
+    if(!(error instanceof EvidenceTransportError)||!error.retryable||attempt!==0)throw error;
+    const note='Read-only evidence GET retry 1/1: '+error.message+' Original product outcomes remain unchanged.';
+    onAcquisitionRetry(note);
+   }
   })());return cache.get(key);
  };
  const owner=async id=>{
@@ -176,8 +192,8 @@ export async function previousLaneEvidence({repository,previousHead,base,prNumbe
   const bytes=Buffer.from(await get('actions/artifacts/'+a.id+'/zip',true));
   assert.equal(bytes.length,a.size_in_bytes);assert.equal('sha256:'+digest(bytes),a.digest);
   const plan=JSON.parse(readSingleTextArchive(bytes,'validation-scope.json'));
-  assert.equal(plan.schema,'zombieee-validation-scope/v1');assert.equal(plan.head,run.head_sha);assert.equal(plan.base,base);
-  const provenance=await immutablePrProvenance({get,runId:id,head:run.head_sha,base});
+  assert.equal(plan.schema,'zombieee-validation-scope/v1');assert.equal(plan.head,run.head_sha);assert.match(plan.base,/^[a-f0-9]{40}$/u);
+  const provenance=await immutablePrProvenance({get,runId:id,head:run.head_sha,base:plan.base});
   assert.equal(plan.merge,provenance.merge);
   const jobs=await get('actions/runs/'+id+'/jobs?filter=latest&per_page=100');
   assert.equal(jobs.total_count,jobs.jobs.length);assert.ok(jobs.total_count<=100);
@@ -186,20 +202,35 @@ export async function previousLaneEvidence({repository,previousHead,base,prNumbe
  const sourceCache=new Map();
  const matches=async(record,k)=>{
   const gate=record.plan.gates[k];
-  if(record.plan.fingerprintAlgorithm==='runtime-source-v3')assert.equal(gate.fingerprint,fingerprints[k]);
-  else if([undefined,'runtime-source-v2'].includes(record.plan.fingerprintAlgorithm)&&sourceFingerprints){
-   if(!sourceCache.has(record.run.head_sha))sourceCache.set(record.run.head_sha,Promise.resolve().then(()=>sourceFingerprints(record.run.head_sha)));
-   const proof=await sourceCache.get(record.run.head_sha);
-   const original=record.plan.fingerprintAlgorithm==='runtime-source-v2'?proof.v2:proof.legacy;
+  if(record.plan.fingerprintAlgorithm==='runtime-source-v3'&&record.plan.base===base)assert.equal(gate.fingerprint,fingerprints[k]);
+  else if([undefined,'runtime-source-v2','runtime-source-v3'].includes(record.plan.fingerprintAlgorithm)&&sourceFingerprints){
+   const key=record.run.head_sha+':'+record.plan.base;
+   if(!sourceCache.has(key))sourceCache.set(key,Promise.resolve().then(()=>sourceFingerprints(record.run.head_sha,record.plan.base)));
+   const proof=await sourceCache.get(key);
+   const original=record.plan.fingerprintAlgorithm==='runtime-source-v3'?proof.v3:record.plan.fingerprintAlgorithm==='runtime-source-v2'?proof.v2:proof.legacy;
    assert.equal(gate.fingerprint,original[k],'Original fingerprint must match its immutable source tree');
    assert.equal(proof.current[k],fingerprints[k],'Actual runtime inputs changed');
-  }else {assert.equal(record.plan.fingerprintAlgorithm,undefined,'Unknown fingerprint algorithm');assert.equal(gate.fingerprint,fingerprints[k]);}
+   if(record.plan.base!==base){assert.equal(proof.baseCompatible?.[k],true,'Base changed runtime conditions');
+    assert.ok(Array.isArray(proof.baseDeltaPaths)&&proof.baseDeltaPaths.every(readOnlyBasePath),'Base delta must remain read-only');}
+  }else {assert.equal(record.plan.fingerprintAlgorithm,undefined,'Unknown fingerprint algorithm');assert.equal(record.plan.base,base,'A different base needs source proof');assert.equal(gate.fingerprint,fingerprints[k]);}
  };
  try{
-  const runs=await get('actions/workflows/ci.yml/runs?head_sha='+previousHead+'&event=pull_request&per_page=10');
+  for(const previous of previousHeads){
+  const runs=await get('actions/workflows/ci.yml/runs?head_sha='+previous+'&event=pull_request&per_page=10');
   for(const r of runs.workflow_runs??[]){
-   if(r.head_sha!==previousHead||r.status!=='completed'||r.run_attempt!==1)continue;
-   let prior;try{prior=await owner(r.id);}catch(error){if(error instanceof EvidenceTransportError)throw error;continue;}
+   if(r.head_sha!==previous||!r.pull_requests?.some(p=>p.number===prNumber))continue;
+   if(r.status!=='completed')throw new EvidenceResolutionError('Previous candidate validation is still running; do not launch duplicate checks');
+   if(r.run_attempt!==1)return none;
+   let prior;try{prior=await owner(r.id);}catch(error){
+    if(error instanceof EvidenceResolutionError)throw error;
+    const data=await get('actions/runs/'+r.id+'/jobs?filter=latest&per_page=100');
+    const onlyScopeFailed=r.status==='completed'&&r.conclusion==='failure'
+     &&data.total_count===data.jobs?.length&&data.total_count<=100
+     &&['Validation Scope','PR Verify'].every(name=>data.jobs.filter(j=>j.name===name).length===1)
+     &&data.jobs.every(j=>j.status==='completed'&&j.conclusion===(['Validation Scope','PR Verify'].includes(j.name)?'failure':'skipped'));
+    if(onlyScopeFailed)continue; // No product check ran; retain the earlier qualified owner.
+    return none; // Never walk past an unqualified executed product attempt.
+   }
    for(const k of requiredLanes){
     try{
      const gate=prior.plan.gates[k];assert.equal(gate.required,true);await matches(prior,k);
@@ -207,7 +238,8 @@ export async function previousLaneEvidence({repository,previousHead,base,prNumbe
      const originalGate=original.plan.gates[k];
      assert.equal(originalGate.state,'fresh');assert.equal(originalGate.required,true);
      await matches(original,k);
-     if(imported){assert.equal(gate.owner.head,original.run.head_sha);assert.equal(gate.owner.base,base);}
+     if(imported){assert.equal(gate.owner.head,original.run.head_sha);assert.equal(gate.owner.base,original.plan.base);
+      assert.equal(gate.owner.validationBase??gate.owner.base,prior.plan.base);}
      const jobs=LANE_JOBS[k].map(name=>{
       const rows=original.jobs.filter(j=>j.name===name||j.name.endsWith(' / '+name));assert.equal(rows.length,1);
       const j=rows[0];assert.equal(j.status,'completed');assert.ok(['success','failure'].includes(j.conclusion));
@@ -219,13 +251,14 @@ export async function previousLaneEvidence({repository,previousHead,base,prNumbe
      });
      const conclusion=jobs.some(j=>j.conclusion==='failure')?'failure':'success';
      if(imported)assert.equal(conclusion,gate.state==='blocked'?'failure':'success');
-     none[k]={runId:original.run.id,head:original.run.head_sha,base,fingerprint:fingerprints[k],jobs,
+     none[k]={runId:original.run.id,head:original.run.head_sha,base:original.plan.base,validationBase:base,fingerprint:fingerprints[k],jobs,
       conclusion,sourceFingerprint:originalGate.fingerprint,sourceFingerprintAlgorithm:original.plan.fingerprintAlgorithm??'legacy-v1',provenance:original.provenance};
-    }catch(error){if(error instanceof EvidenceTransportError)throw error;/* Missing, skipped, cancelled or incompatible evidence must run fresh. */}
+    }catch(error){if(error instanceof EvidenceResolutionError)throw error;/* Missing, skipped, cancelled or incompatible evidence must run fresh. */}
    }
-   break;
+   return none;
   }
- }catch(error){if(error instanceof EvidenceTransportError)throw error;/* Invalid evidence never becomes reused success. */}
+  }
+ }catch(error){if(error instanceof EvidenceResolutionError)throw error;/* Invalid evidence never becomes reused success. */}
  return none;
 }
 export function validationPlan(scope,{head,base,merge,fingerprints,evidence={},attempt=1}){
@@ -251,10 +284,10 @@ export function assertValidationResults(plan,needs){
    continue;
   }
   if(['reused','blocked'].includes(g.state)){
-   assert.equal(g.owner?.fingerprint,g.fingerprint);assert.equal(g.owner?.base,plan.base);
+   assert.equal(g.owner?.fingerprint,g.fingerprint);assert.equal(g.owner?.validationBase??g.owner?.base,plan.base);
    assert.ok(Number.isSafeInteger(g.owner?.runId)&&g.owner.runId>0);
    assert.match(g.owner.head,/^[a-f0-9]{40}$/u);assert.equal(g.owner.provenance?.head,g.owner.head);
-   assert.equal(g.owner.provenance?.base,plan.base);assert.equal(g.owner.jobs.length,LANE_JOBS[k].length);
+   assert.equal(g.owner.provenance?.base,g.owner.base);assert.equal(g.owner.jobs.length,LANE_JOBS[k].length);
    for(const [id,lane] of Object.entries(JOB_LANES))if(lane===k&&id!=='verify')assert.equal(needs[id]?.result,'skipped','Reused job ran unexpectedly: '+id);
    if(g.state==='blocked'){
     assert.equal(g.owner.conclusion,'failure');assert.ok(g.owner.jobs.some(j=>j.conclusion==='failure'));
@@ -291,17 +324,24 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
   fingerprints=laneFingerprints(entries,sets,{base,workflowContracts});
  dependencies['.github/workflows/ci.yml']=workflowJobChanges(git(['show',base+':.github/workflows/ci.yml']),read('.github/workflows/ci.yml'));
  const scope=ciChangeScope(paths,{draft:draft==='true',dependencies});
- let evidence={},previousIsAncestor=false;
+ let evidence={},previousIsAncestor=false;const baseDeltas=new Map();
  try{previousIsAncestor=/^[a-f0-9]{40}$/u.test(before??'')&&before!==head&&git(['merge-base',before,head])===before;}catch{/* Missing old objects require fresh gates. */}
  const requiredLanes=lanes.filter(k=>scope[k]);
  if(previousIsAncestor&&requiredLanes.length)
   evidence=await previousLaneEvidence({repository:process.env.GITHUB_REPOSITORY,previousHead:before,base,
    prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),fingerprints,token:process.env.CI_SCOPE_ACTIONS_TOKEN,requiredLanes,
-   sourceFingerprints:revision=>{
-    const old=snapshot(revision),{sets}=dependencyInputs(old.files,old.read),workflowContracts=workflowRuntimeContracts(old.read('.github/workflows/ci.yml'));
-    return {legacy:laneFingerprints(old.entries,sets,{base,workflowContracts,legacy:true}),
-     v2:laneFingerprints(old.entries,sets,{base,workflowContracts,historicalDocs:true}),
-     current:laneFingerprints(old.entries,sets,{base,workflowContracts})};
+   onAcquisitionRetry:note=>console.warn(note),
+   previousHeads:git(['rev-list','--first-parent','--max-count=20',before]).trim().split(/\r?\n/u),
+   sourceFingerprints:(revision,originalBase)=>{
+    const old=snapshot(revision),oldSets=dependencyInputs(old.files,old.read).sets,workflowContracts=workflowRuntimeContracts(old.read('.github/workflows/ci.yml'));
+    if(!baseDeltas.has(originalBase))baseDeltas.set(originalBase,{ancestor:git(['merge-base',originalBase,base])===originalBase,
+     paths:git(['diff','--no-renames','--name-only','-z',originalBase+'..'+base],{raw:true}).split('\0').filter(Boolean)});
+    const delta=baseDeltas.get(originalBase),compatible=readOnlyBaseCompatibility(delta.paths,oldSets,sets);
+    return {legacy:laneFingerprints(old.entries,oldSets,{base:originalBase,workflowContracts,legacy:true}),
+     v2:laneFingerprints(old.entries,oldSets,{base:originalBase,workflowContracts,historicalDocs:true}),
+     v3:laneFingerprints(old.entries,oldSets,{base:originalBase,workflowContracts}),
+     current:laneFingerprints(old.entries,oldSets,{base,workflowContracts}),baseDeltaPaths:delta.paths,
+     baseCompatible:Object.fromEntries(lanes.map(k=>[k,delta.ancestor&&compatible[k]]))};
    }});
  // A new commit with identical inputs is not permission to retry a failure.
  // An Actions retry may only be recovering scope transport. Its attempt number
