@@ -133,6 +133,7 @@ export function dependencyInputs(files,read){
  return {sets,dependencies};
 }
 const digest=text=>createHash('sha256').update(text).digest('hex');
+class EvidenceTransportError extends Error{}
 export function laneFingerprints(entries,sets,{base,workflowContracts={},legacy=false,historicalDocs=legacy}={}){
  const assigned=new Set(Object.values(sets).flatMap(s=>[...s]));
  const documentation=historicalDocs?historicalDocumentation:isDocumentation;
@@ -150,8 +151,12 @@ export async function previousLaneEvidence({repository,previousHead,base,prNumbe
  const get=async(suffix,binary=false)=>{
   const key=suffix+':'+binary;
   if(!cache.has(key))cache.set(key,(async()=>{
-   const r=await request('https://api.github.com/repos/'+repository+'/'+suffix,{headers:{
-    Accept:'application/vnd.github+json',Authorization:'Bearer '+token,'X-GitHub-Api-Version':'2022-11-28'},signal:AbortSignal.timeout(10000)});
+   let r;
+   try{r=await request('https://api.github.com/repos/'+repository+'/'+suffix,{headers:{
+    Accept:'application/vnd.github+json',Authorization:'Bearer '+token,'X-GitHub-Api-Version':'2022-11-28'},signal:AbortSignal.timeout(10000)});}
+   catch{throw new EvidenceTransportError('CI evidence transport unavailable; do not launch replacement product checks');}
+   if(!r.ok&&([401,403,429].includes(r.status)||r.status>=500))
+    throw new EvidenceTransportError('CI evidence transport HTTP '+r.status+'; do not launch replacement product checks');
    assert.equal(r.ok,true);return binary?r.arrayBuffer():r.json();
   })());return cache.get(key);
  };
@@ -189,7 +194,7 @@ export async function previousLaneEvidence({repository,previousHead,base,prNumbe
   const runs=await get('actions/workflows/ci.yml/runs?head_sha='+previousHead+'&event=pull_request&per_page=10');
   for(const r of runs.workflow_runs??[]){
    if(r.head_sha!==previousHead||r.status!=='completed'||r.run_attempt!==1)continue;
-   let prior;try{prior=await owner(r.id);}catch{continue;}
+   let prior;try{prior=await owner(r.id);}catch(error){if(error instanceof EvidenceTransportError)throw error;continue;}
    for(const k of lanes){
     try{
      const gate=prior.plan.gates[k];assert.equal(gate.required,true);await matches(prior,k);
@@ -211,11 +216,11 @@ export async function previousLaneEvidence({repository,previousHead,base,prNumbe
      if(imported)assert.equal(conclusion,gate.state==='blocked'?'failure':'success');
      none[k]={runId:original.run.id,head:original.run.head_sha,base,fingerprint:fingerprints[k],jobs,
       conclusion,sourceFingerprint:originalGate.fingerprint,sourceFingerprintAlgorithm:original.plan.fingerprintAlgorithm??'legacy-v1',provenance:original.provenance};
-    }catch{/* Missing, skipped, cancelled or incompatible evidence must run fresh. */}
+    }catch(error){if(error instanceof EvidenceTransportError)throw error;/* Missing, skipped, cancelled or incompatible evidence must run fresh. */}
    }
    break;
   }
- }catch{/* Network and evidence failures never become reused success. */}
+ }catch(error){if(error instanceof EvidenceTransportError)throw error;/* Invalid evidence never becomes reused success. */}
  return none;
 }
 export function validationPlan(scope,{head,base,merge,fingerprints,evidence={},attempt=1}){

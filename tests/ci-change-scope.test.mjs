@@ -124,7 +124,7 @@ test('reuse requires every actual matrix job, original ZIP digest and both head/
   const rejected=await previousLaneEvidence({...options,request:evidenceApi({mutate})});
   assert.equal(rejected.allunit,null);
  }
- assert.equal((await previousLaneEvidence({...options,request:evidenceApi({offline:true})})).allunit,null);
+ await assert.rejects(previousLaneEvidence({...options,request:evidenceApi({offline:true})}),/CI evidence transport unavailable/u);
  assert.equal((await previousLaneEvidence({...options,token:'',request:()=>assert.fail('no token')})).allunit,null);
 });
 
@@ -145,6 +145,17 @@ test('qualified unchanged failures block a docs push without another recording; 
  const changedInput=await previousLaneEvidence({...options,fingerprints:{...fingerprints,allunit:'2'.repeat(64)},
   request:evidenceApi({mutate:x=>{x.jobs[1].conclusion='failure';}})});
  assert.equal(changedInput.allunit,null,'A relevant input change requires a new execution');
+});
+
+test('transport failures stop scope resolution instead of launching costly replacement product checks',async()=>{
+ for(const status of [401,403,429,500,502,503])
+  await assert.rejects(previousLaneEvidence({...options,request:async()=>({ok:false,status})}),/CI evidence transport HTTP/u);
+ await assert.rejects(previousLaneEvidence({...options,request:async()=>{throw Error('offline');}}),/CI evidence transport unavailable/u);
+ const api=evidenceApi();
+ await assert.rejects(previousLaneEvidence({...options,request:url=>url.endsWith('/artifacts?per_page=100')
+  ?Promise.resolve({ok:false,status:502}):api(url)}),/CI evidence transport HTTP 502/u);
+ const missing=await previousLaneEvidence({...options,request:async()=>({ok:false,status:404})});
+ assert.ok(Object.values(missing).every(value=>value===null),'Absent evidence requires fresh checks; it is not a passed owner');
 });
 
 test('legacy runtime evidence is recomputed from its immutable source, not re-pinned to a new expected hash',async()=>{
