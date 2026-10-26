@@ -88,7 +88,14 @@ export function dependencyInputs(files,read){
  const sets=Object.fromEntries(lanes.map(k=>[k,new Set()])),queue=[];
  const add=(lane,file)=>{if(files.has(file)&&!sets[lane].has(file)){sets[lane].add(file);if(!file.endsWith('.yml'))queue.push([lane,file]);}};
  const references=(body,owner)=>{
-  const found=new Set();
+  const found=new Set(),executedTests=new Set();
+  // A retained-source inventory also names unit tests. Merely copying those
+  // files into an artifact must not import their entire test graph at runtime.
+  // An actual static/dynamic import of a test remains a runtime dependency.
+  for(const match of body.matchAll(/\b(?:import|export)\s+(?:[^'";()]*?\bfrom\s*)?['"]([^'"]+)['"]|\b(?:import|require)\s*\(\s*['"]([^'"]+)['"]/gu)){
+   const value=match[1]??match[2];
+   if(value.startsWith('.'))executedTests.add(path.posix.normalize(path.posix.join(path.posix.dirname(owner),value)));
+  }
   for(const match of body.matchAll(/['"\x60]((?:\.{1,2}\/|scripts\/)[^'"\x60$\s]+)['"\x60]/gu)){
    const value=match[1],relative=value.startsWith('.')?path.posix.normalize(path.posix.join(path.posix.dirname(owner),value)):value;
    for(const candidate of [relative,relative+'.mjs',relative+'.js',relative+'.json',relative+'.ts',relative+'.tsx'])if(files.has(candidate))found.add(candidate);
@@ -99,7 +106,7 @@ export function dependencyInputs(files,read){
    const command=pkg.scripts?.[match[1]]??'';
    for(const r of command.matchAll(/\bscripts\/[\w./-]+\.(?:mjs|js|json|py|ts)\b/gu))if(files.has(r[0]))found.add(r[0]);
   }
-  return [...found];
+  return [...found].filter(file=>!file.endsWith('.test.mjs')||executedTests.has(file));
  };
  const ci=read('.github/workflows/ci.yml');
  const blocks=[...ci.matchAll(/^  ([\w-]+):\n([\s\S]*?)(?=^  [\w-]+:\n|(?![\s\S]))/gmu)];
@@ -113,7 +120,9 @@ export function dependencyInputs(files,read){
  }
  while(queue.length){
   const [lane,file]=queue.shift();
-  if(/\.(?:mjs|js|ts|tsx|json|py)$/u.test(file))for(const ref of references(read(file),file))add(lane,ref);
+  // JSON stays a hashed data input. Its historical filenames and changed-blob
+  // maps are not executable imports of every old script they happen to name.
+  if(/\.(?:mjs|js|ts|tsx|py)$/u.test(file))for(const ref of references(read(file),file))add(lane,ref);
  }
  for(const f of ['.github/workflows/github-pages-release.yml','.github/workflows/github-pages-public-qa.yml'])add('pages',f);
  const dependencies={};

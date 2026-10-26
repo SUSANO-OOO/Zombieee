@@ -5,7 +5,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import {isRangerCaptureSelection,isFullNativeCaptureSelection} from './v177-native-allunit-selection.mjs';
 
-import {correctionCapturePart,correctionCaptureFolder} from './v105-five-corrections-cases.mjs';
+import {correctionCaseSelection,correctionCapturePart,correctionCaptureFolder} from './v105-five-corrections-cases.mjs';
 
 function assertFreshFullCaptureHost(env,platform,arch){
  assert.equal(platform,'darwin');assert.equal(arch,'arm64');
@@ -187,7 +187,6 @@ async function main(mode) {
     const { nativeAllUnitBinding } = await import("./v177-native-allunit-browser.mjs");
     nativeBinding = await nativeAllUnitBinding();
   } else if(correction) {
-    const { correctionCaseSelection } = await import("./v105-five-corrections-capture.mjs");
     const event = JSON.parse(await readFile(process.env.GITHUB_EVENT_PATH,"utf8"));
     selection = await correctionCaseSelection(process.env.V105_CAPTURE_SCOPE,{event});
     if(!correctionPreparationNeeded(selection,process.env.V105_CAPTURE_SCOPE)){

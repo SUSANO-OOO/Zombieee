@@ -51,8 +51,20 @@ test('actual import closure reaches shared browser identity, launcher and quiet-
  }
  assert.ok(dependencies['scripts/silent-browser-output.mjs']?.includes('phaseg'));
  assert.ok(dependencies['scripts/silent-browser-output.mjs']?.includes('quality'));
+ assert.deepEqual(dependencies['scripts/v105-five-corrections-capture.mjs'],['five'],
+  'Reading correction selection must not import the recorder into native/performance');
+ const importing=dependencyInputs(files,file=>read(file)+(file==='scripts/v177-native-allunit-browser.mjs'
+  ?"\nimport '../tests/v105-original-av.test.mjs';\n":''));
+ assert.ok(importing.dependencies['scripts/v105-five-corrections-capture.mjs'].includes('allunit'),
+  'An actually imported test is executable and cannot be discarded as provenance');
  const entries=list.map(file=>[file,'a'.repeat(40)]);
  const before=laneFingerprints(entries,sets,{base});
+ const recordingChange=laneFingerprints(entries.map(([f,h])=>[f,f==='scripts/v105-five-corrections-capture.mjs'?'c'.repeat(40):h]),sets,{base});
+ assert.notEqual(recordingChange.five,before.five);
+ assert.equal(recordingChange.performance,before.performance);assert.equal(recordingChange.allunit,before.allunit);
+ assert.ok(sets.allunit.has('scripts/v177-native-allunit-recovery.json'),'JSON data itself remains bound');
+ const recoveryChange=laneFingerprints(entries.map(([f,h])=>[f,f==='scripts/v177-native-allunit-recovery.json'?'d'.repeat(40):h]),sets,{base});
+ assert.notEqual(recoveryChange.allunit,before.allunit,'Changing the actual selection data still invalidates its consumers');
  const after=laneFingerprints(entries.map(([f,h])=>[f,f==='scripts/silent-browser-output.mjs'?'b'.repeat(40):h]),sets,{base});
  assert.notEqual(before.phaseg,after.phaseg);assert.notEqual(before.quality,after.quality);
  assert.notEqual(laneFingerprints(entries,sets,{base:'c'.repeat(40)}).normal,before.normal);

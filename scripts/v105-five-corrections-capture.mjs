@@ -14,45 +14,10 @@ import {createDefaultV100Save,normalizeV100Save,serializeV100Save} from '../app/
 import {V100_UNITS,V100_STAGE_IDS} from '../app/v100Registry.js';
 import {MANUAL_ABILITY_REGISTRY as manual} from '../app/manualAbilities.js';
 import {installRequestFailureAudit} from './browser-request-failure-audit.mjs';
-import {nativeCaseSelection} from './v177-native-allunit-selection.mjs';
 import {validateCapturePreparationRecord,correctionPreparationNeeded} from './v100-macos-indexing-control.mjs';
 const sha=b=>createHash('sha256').update(b).digest('hex');
-import {correctionCases,correctionCapturePart,correctionCaptureFolder} from './v105-five-corrections-cases.mjs';
-export {correctionCases} from './v105-five-corrections-cases.mjs';
-
-// Reuse is limited by the same exact-source guard as the original motion
-// inventory. Unknown revisions run the whole original plan. Earlier failures
-// and the boss whose name changed remain fresh observations, never old passes.
-export async function correctionCaseSelection(scope,{event,root=process.cwd(),select=nativeCaseSelection,part=process.env.V105_CAPTURE_PART??'all'}={}){
-  const plan=correctionCapturePart(scope,part),full={mode:'full',plan,retained:[],...(part==='all'?{}:{part})};
-  const selection=select({event,root});if(selection.mode!=='remaining')return full;
-  const profile=JSON.parse(await readFile(path.join(root,'scripts/v177-native-allunit-recovery.json'),'utf8'));
-  const source=profile.fiveCorrections;if(!source)return full;
-  const bytes=await readFile(path.join(root,source.file));assert.equal(sha(bytes),source.sha256);
-  const inventory=JSON.parse(bytes),all=['desktop','mobile390','mobile340'].flatMap(s=>correctionCases(s).map(r=>s+':'+r.kind+':'+r.mode));
-  assert.equal(inventory.head,source.head);assert.equal(inventory.runId,source.runId);
-  assert.equal(inventory.schema,'v105-five-corrections-retained/v1');
-  assert.deepEqual([...new Set(inventory.reports.map(r=>r.scope))].sort(),['desktop','mobile340','mobile390']);
-  assert.equal(new Set(inventory.reports.map(r=>r.head+':'+r.runId+':'+r.scope)).size,inventory.reports.length,
-    'One report identity per original candidate and scope');
-  const kept=inventory.retained.map(r=>r.caseId),pending=inventory.pending;
-  assert.deepEqual([...kept,...pending].sort(),[...all].sort(),'All original correction cases need one owner or a fresh recording');
-  assert.equal(new Set([...kept,...pending]).size,all.length);
-  for(const row of inventory.retained){
-    const report=inventory.reports.find(r=>r.scope===row.caseId.split(':')[0] && r.head===row.head && r.runId===row.runId);
-    assert.ok(report&&report.head===row.head&&report.runId===row.runId&&report.reportSha256===row.reportSha256
-      &&report.artifactId===row.artifactId,'Retained AV must belong to its original scope report');
-    assert.match(row.reportSha256,/^[a-f0-9]{64}$/u);assert.match(row.clipSha256,/^[a-f0-9]{64}$/u);
-    assert.ok(Number.isSafeInteger(row.artifactId)&&row.artifactId>0&&row.bytes>0&&row.bytes<=8388608);
-    assert.equal(row.originalStatus,'recorded');assert.equal(row.encodedPtsVerified,true);
-    assert.equal(row.fullAvDecode.completed,true);assert.equal(row.fullAvDecode.requiredMixerAudioStream,true);assert.equal(row.fullAvDecode.errors,0);
-    assert.ok(Number.isFinite(row.driftMs)&&Math.abs(row.driftMs)<=120);
-    assert.ok(Number.isFinite(row.maxGapMs)&&row.maxGapMs<=250&&row.maxGapMs>0);
-    assert.ok(Number.isFinite(row.caseElapsedMs)&&row.caseElapsedMs<30000);
-  }
-  return{mode:'remaining',...(part==='all'?{}:{part}),source:{file:source.file,sha256:source.sha256,head:inventory.head,runId:inventory.runId},
-    plan:plan.filter(r=>pending.includes(scope+':'+r.kind+':'+r.mode)),retained:inventory.retained.filter(r=>r.caseId.startsWith(scope+':'))};
-}
+import {correctionCaseSelection,correctionCaptureFolder} from './v105-five-corrections-cases.mjs';
+export {correctionCases,correctionCaseSelection} from './v105-five-corrections-cases.mjs';
 
 // Every independent fixture owns its page and native recorder resources.
 // Cold entry, capture, decode and cleanup share the existing30s case budget.
