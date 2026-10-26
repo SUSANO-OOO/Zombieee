@@ -136,11 +136,11 @@ test('qualified unchanged failures block a docs push without another recording; 
  assert.equal(p.gates.allunit.state,'blocked');assert.throws(()=>assertValidationResults(p,needs),/Unresolved unchanged allunit failure.*72/u);
  const forged=structuredClone(p);forged.gates.allunit.state='reused';
  assert.throws(()=>assertValidationResults(forged,needs),/failed owner/u);
- const explicit=validationPlan(scopes(changed),{...args,attempt:2});
- assert.equal(explicit.gates.allunit.state,'fresh');assert.equal(explicit.explicitRevalidation.priorFailures.allunit.runId,72);
- assert.equal(explicit.explicitRevalidation.resolutionClaimed,false);
- assert.throws(()=>assertValidationResults(explicit,needs));
- assert.equal(assertValidationResults(explicit,{...needs,allunit:{result:'success'}}),true);
+ const retry=validationPlan(scopes(changed),{...args,attempt:2});
+ assert.equal(retry.gates.allunit.state,'blocked');assert.equal(retry.retry.priorFailures.allunit.runId,72);
+ assert.equal(retry.retry.resolutionClaimed,false);assert.equal(retry.retry.failuresRetained,true);
+ assert.throws(()=>assertValidationResults(retry,needs),/Unresolved unchanged allunit failure/u);
+ assert.throws(()=>assertValidationResults(retry,{...needs,allunit:{result:'success'}}),'A retry cannot replace the unchanged failed owner with a successful job');
  for(const attempt of [0,1.5,NaN])assert.throws(()=>validationPlan(scopes(changed),{...args,attempt}));
  const changedInput=await previousLaneEvidence({...options,fingerprints:{...fingerprints,allunit:'2'.repeat(64)},
   request:evidenceApi({mutate:x=>{x.jobs[1].conclusion='failure';}})});

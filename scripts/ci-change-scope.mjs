@@ -229,11 +229,10 @@ export async function previousLaneEvidence({repository,previousHead,base,prNumbe
 export function validationPlan(scope,{head,base,merge,fingerprints,evidence={},attempt=1}){
  assert.ok(Number.isSafeInteger(attempt)&&attempt>=1);
  const priorFailures=Object.fromEntries(Object.entries(evidence).filter(([,e])=>e?.conclusion==='failure'));
- if(attempt>1)evidence=Object.fromEntries(Object.entries(evidence).filter(([,e])=>e?.conclusion!=='failure'));
  const gates=Object.fromEntries(lanes.map(k=>[k,{required:scope[k],fingerprint:fingerprints[k],
   state:!scope[k]?'outside':evidence[k]?.conclusion==='failure'?'blocked':evidence[k]?'reused':'fresh',...(scope[k]&&evidence[k]?{owner:evidence[k]}:{})}]));
  return {schema:'zombieee-validation-scope/v1',fingerprintAlgorithm:'runtime-source-v3',head,base,merge,gates,scope:scope.scope,
-  ...(attempt>1&&Object.keys(priorFailures).length?{explicitRevalidation:{attempt,priorFailures,resolutionClaimed:false}}:{}),
+  ...(attempt>1&&Object.keys(priorFailures).length?{retry:{attempt,priorFailures,failuresRetained:true,resolutionClaimed:false}}:{}),
   code_checks:scope.code_checks,wholeGameAccepted:false};
 }
 export function assertValidationResults(plan,needs){
@@ -302,8 +301,8 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
      current:laneFingerprints(old.entries,sets,{base,workflowContracts})};
    }});
  // A new commit with identical inputs is not permission to retry a failure.
- // An operator's existing explicit Actions re-run remains a fresh execution,
- // with the original failure linked; it is never imported as a past success.
+ // An Actions retry may only be recovering scope transport. Its attempt number
+ // cannot erase a qualified failure; changed runtime inputs require fresh QA.
  const attempt=Number(process.env.GITHUB_RUN_ATTEMPT??1);assert.ok(Number.isSafeInteger(attempt)&&attempt>=1);
  const plan=validationPlan(scope,{head,base,merge,fingerprints,evidence,attempt});
  mkdirSync('outputs/ci-scope',{recursive:true});writeFileSync('outputs/ci-scope/validation-scope.json',JSON.stringify(plan,null,2)+'\n');
@@ -311,7 +310,7 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
  const outputs={...fresh,full:lanes.every(k=>fresh[k]),code_checks:scope.code_checks,plan:JSON.stringify(plan)};
  if(process.env.GITHUB_OUTPUT)appendFileSync(process.env.GITHUB_OUTPUT,Object.entries(outputs).map(([k,v])=>k+'='+v+'\n').join(''));
  const states=Object.entries(plan.gates).map(([k,g])=>k+': '+g.state+(g.owner?' (run '+g.owner.runId+')':'')).join('\n');
- if(process.env.GITHUB_STEP_SUMMARY)appendFileSync(process.env.GITHUB_STEP_SUMMARY,'Whole PR validation: '+scope.scope+'\n\n'+states+'\n\nOutside is not a passed test. Qualified unchanged failures remain blocking without an automatic retry. Missing/incompatible evidence runs fresh. An explicit revalidation must use Actions Re-run all jobs to recompute scope; successful owners can still be reused. Re-run failed jobs alone keeps the prior blocked outputs. A re-run does not itself resolve the original failure. Whole-game acceptance is not claimed.\n');
+ if(process.env.GITHUB_STEP_SUMMARY)appendFileSync(process.env.GITHUB_STEP_SUMMARY,'Whole PR validation: '+scope.scope+'\n\n'+states+'\n\nOutside is not a passed test. Qualified unchanged failures remain blocking, including Actions retries. Changed runtime inputs or missing/incompatible evidence require fresh checks. Evidence transport failures stop scope resolution without launching replacement product checks. A re-run does not itself resolve the original failure. Whole-game acceptance is not claimed.\n');
  console.log(JSON.stringify({...plan,changedPaths:paths}));
 }
 
