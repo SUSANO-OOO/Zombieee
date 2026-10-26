@@ -1,50 +1,51 @@
-name: Native Capture Comparison Diagnostic
-
+name: Isolated F5 Encoder Control
 on:
   workflow_dispatch:
     inputs:
       expected_head:
-        description: Exact 40-character candidate SHA for this diagnostic
+        description: Exact diagnostic head; not an acceptance or deployment
         required: true
         type: string
-
 permissions:
   contents: read
-
 concurrency:
-  group: native-capture-comparison-${{ inputs.expected_head }}
+  group: ops-f5-recorder-control-${{ inputs.expected_head }}
   cancel-in-progress: false
-
 jobs:
-  native-capture-comparison:
-    name: Native WebKit Capture Comparison Diagnostic
-    runs-on: macos-15-intel
+  f5-recorder-control:
+    runs-on: macos-15
     timeout-minutes: 15
+    env:
+      V177_EXPECTED_HEAD_SHA: ${{ inputs.expected_head }}
     steps:
       - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.expected_head }}
+          fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: npm
-      - name: Verify immutable candidate before running the diagnostic
-        env:
-          EXPECTED_HEAD: ${{ inputs.expected_head }}
-        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_HEAD??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_HEAD);'
+      - run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.V177_EXPECTED_HEAD_SHA);'
       - run: npm ci
-      - name: Install the pinned native WebKit runtime
-        run: |
-          npm ci --prefix scripts/pwa-native-runtime
-          node scripts/pwa-native-runtime/node_modules/playwright/cli.js install webkit
-      - name: Compare original native canvas recording conditions
+      - run: npm ci --prefix scripts/native-recording-runtime
+      - run: node scripts/native-recording-runtime/node_modules/playwright/cli.js install webkit
+      - run: npm run build
         env:
-          V177_NATIVE_CAPTURE_OUT: outputs/v177-native-capture-comparison
-        run: node scripts/v177-native-canvas-comparison-browser.mjs
+          GITHUB_PAGES_RELEASE_SHA: ${{ inputs.expected_head }}
+      - name: Prepare only this ephemeral host
+        id: prepare
+        run: node scripts/ops-f5-recorder-control.mjs prepare
+      - name: Four independent Brawler fixtures; encoding ABBA
+        run: node scripts/run-browser-qa-with-server.mjs scripts/ops-f5-recorder-control.mjs
+      - name: Restore every original volume state
+        if: always() && steps.prepare.outcome != 'skipped'
+        run: node scripts/ops-f5-recorder-control.mjs restore
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: v177-native-capture-comparison
-          path: outputs/v177-native-capture-comparison
-          retention-days: 7
+          name: ops-f5-recorder-control
+          path: outputs/ops-f5-recorder-control
+          if-no-files-found: error
+          retention-days: 14
