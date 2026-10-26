@@ -1,14 +1,27 @@
 """Dedicated synthetic battle calls. Never imports/overwrites promotion audio."""
 from pathlib import Path
-import sys,json,dataclasses,hashlib,urllib.request,argparse
+import sys,json,dataclasses,hashlib,urllib.request,argparse,os
 parser=argparse.ArgumentParser()
 parser.add_argument('--only-red-panther',action='store_true')
+parser.add_argument('--runtime',type=Path,default=os.environ.get('VOICEVOX_RUNTIME'),help='VOICEVOX Core 0.17.0 directory containing site/ and runtime/')
+parser.add_argument('--check-runtime',action='store_true',help='Check required runtime files without downloading models or rendering audio')
 args=parser.parse_args()
 ROOT=Path(__file__).resolve().parents[1]
-RUNTIME=Path('C:/Users/okait/Documents/Codex/2026-07-11/new-chat/output/promo-20261010/r3/voicevox')
-OUT=ROOT/'assets/source/v104/combat-audio';OUT.mkdir(parents=True,exist_ok=True)
+if args.runtime is None:
+    parser.error('Specify --runtime or VOICEVOX_RUNTIME; no machine-specific runtime is assumed.')
+RUNTIME=Path(args.runtime).expanduser().resolve()
+required=['site/voicevox_core/__init__.py','runtime/onnxruntime/lib/voicevox_onnxruntime.dll',
+          'runtime/dict/open_jtalk_dic_utf_8-1.11/sys.dic','runtime/models/vvms/4.vvm']
+missing=[name for name in required if not (RUNTIME/name).is_file()]
+if missing:
+    parser.error('Incomplete VOICEVOX Core 0.17.0 runtime: '+', '.join(missing))
+if args.check_runtime:
+    print('Required runtime files are present. No model download or synthesis was performed.')
+    raise SystemExit(0)
+OUT=ROOT/'assets/source/v104/combat-audio'
 MODEL=ROOT/'outputs/motion-review/remediation-r3/12.vvm'
 if not MODEL.exists():
+    MODEL.parent.mkdir(parents=True,exist_ok=True)
     with urllib.request.urlopen('https://github.com/VOICEVOX/voicevox_vvm/releases/download/0.17.0/12.vvm',timeout=60) as r:MODEL.write_bytes(r.read())
 assert hashlib.sha256(MODEL.read_bytes()).hexdigest()=='894464a6cbf59bdf930b8406097f44d2f25bb762db5bc71c9e9c31e1f904c715'
 sys.path.insert(0,str(RUNTIME/'site'))
@@ -18,6 +31,7 @@ ort=Onnxruntime.load_once(filename=str(rt/'onnxruntime/lib/voicevox_onnxruntime.
 synth=Synthesizer(ort,OpenJtalk(rt/'dict/open_jtalk_dic_utf_8-1.11'),acceleration_mode='CPU',cpu_num_threads=4)
 for model in [rt/'models/vvms/4.vvm',MODEL]:
     with VoiceModelFile.open(model) as m:synth.load_voice_model(m)
+OUT.mkdir(parents=True,exist_ok=True)
 cast=[('crazy-king',21,'剣崎雌雄',['いくぜ！','おらぁ！','ぐっ！','くそっ……。'],1.18),
       ('kumaverson',53,'麒ヶ島宗麟',['任せておけ。','せいっ！','ぬうっ。','ここまでか……。'],1.12),
       ('babayaga',11,'玄野武宏',['行くぞ。','はっ。','ぐっ。','まだ……。'],1.2)]
