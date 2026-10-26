@@ -138,7 +138,9 @@ export function dependencyInputs(files,read){
 }
 const digest=text=>createHash('sha256').update(text).digest('hex');
 class EvidenceResolutionError extends Error{}
-class EvidenceTransportError extends EvidenceResolutionError{}
+class EvidenceTransportError extends EvidenceResolutionError{
+ constructor(message,retryable=false){super(message);this.retryable=retryable;}
+}
 export function laneFingerprints(entries,sets,{base,workflowContracts={},legacy=false,historicalDocs=legacy}={}){
  const assigned=new Set(Object.values(sets).flatMap(s=>[...s]));
  const documentation=historicalDocs?historicalDocumentation:isDocumentation;
@@ -148,7 +150,7 @@ export function laneFingerprints(entries,sets,{base,workflowContracts={},legacy=
  return Object.fromEntries(lanes.map(k=>[k,digest(JSON.stringify({base,
   workflow:workflowContracts[k],inputs:entries.filter(([file])=>common(file)||sets[k].has(file))}))]));
 }
-export async function previousLaneEvidence({repository,previousHead,base,prNumber,fingerprints,token,request=fetch,sourceFingerprints,requiredLanes=lanes,previousHeads=[previousHead]}={}){
+export async function previousLaneEvidence({repository,previousHead,base,prNumber,fingerprints,token,request=fetch,sourceFingerprints,requiredLanes=lanes,previousHeads=[previousHead],onAcquisitionRetry=()=>{}}={}){
  const none=Object.fromEntries(lanes.map(k=>[k,null]));
  assert.ok(Array.isArray(requiredLanes)&&requiredLanes.every(k=>lanes.includes(k)));
  if(!requiredLanes.length)return none;
@@ -160,17 +162,23 @@ export async function previousLaneEvidence({repository,previousHead,base,prNumbe
  const get=async(suffix,binary=false)=>{
   const key=suffix+':'+binary;
   if(!cache.has(key))cache.set(key,(async()=>{
+   for(let attempt=0;attempt<2;attempt++)try{
    let r;
    try{r=await request('https://api.github.com/repos/'+repository+'/'+suffix,{headers:{
     Accept:'application/vnd.github+json',Authorization:'Bearer '+token,'X-GitHub-Api-Version':'2022-11-28'},signal:AbortSignal.timeout(30000)});}
    catch(error){const kind=['TimeoutError','AbortError','TypeError'].includes(error?.name)?error.name:'request error';
-    throw new EvidenceTransportError('CI evidence transport unavailable ('+kind+'); do not launch replacement product checks');}
+    throw new EvidenceTransportError('CI evidence transport unavailable ('+kind+'); do not launch replacement product checks',true);}
    if(!r.ok&&([401,403,429].includes(r.status)||r.status>=500))
-    throw new EvidenceTransportError('CI evidence transport HTTP '+r.status+'; do not launch replacement product checks');
+    throw new EvidenceTransportError('CI evidence transport HTTP '+r.status+'; do not launch replacement product checks',[500,502,503,504].includes(r.status));
    assert.equal(r.ok,true);
    try{return binary?await r.arrayBuffer():await r.json();}
    catch(error){if(error?.name==='SyntaxError')throw error;
-    throw new EvidenceTransportError('CI evidence body transport unavailable; do not launch replacement product checks');}
+    throw new EvidenceTransportError('CI evidence body transport unavailable; do not launch replacement product checks',true);}
+   }catch(error){
+    if(!(error instanceof EvidenceTransportError)||!error.retryable||attempt!==0)throw error;
+    const note='Read-only evidence GET retry 1/1: '+error.message+' Original product outcomes remain unchanged.';
+    onAcquisitionRetry(note);
+   }
   })());return cache.get(key);
  };
  const owner=async id=>{
@@ -322,6 +330,7 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
  if(previousIsAncestor&&requiredLanes.length)
   evidence=await previousLaneEvidence({repository:process.env.GITHUB_REPOSITORY,previousHead:before,base,
    prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),fingerprints,token:process.env.CI_SCOPE_ACTIONS_TOKEN,requiredLanes,
+   onAcquisitionRetry:note=>console.warn(note),
    previousHeads:git(['rev-list','--first-parent','--max-count=20',before]).trim().split(/\r?\n/u),
    sourceFingerprints:(revision,originalBase)=>{
     const old=snapshot(revision),oldSets=dependencyInputs(old.files,old.read).sets,workflowContracts=workflowRuntimeContracts(old.read('.github/workflows/ci.yml'));

@@ -148,6 +148,17 @@ test('qualified unchanged failures block a docs push without another recording; 
 });
 
 test('transport failures stop scope resolution instead of launching costly replacement product checks',async()=>{
+ const recoveredApi=evidenceApi(),notices=[];let acquisitionCalls=0;
+ const recovered=await previousLaneEvidence({...options,onAcquisitionRetry:note=>notices.push(note),request:async url=>{
+  if(++acquisitionCalls===1)return {ok:false,status:502};return recoveredApi(url);
+ }});
+ assert.equal(recovered.allunit.runId,72,'One idempotent metadata retry still requires the original ZIP and provenance');
+ assert.equal(notices.length,1);assert.ok(notices[0].includes('retry 1/1'));
+ for(const status of [403,429,502]){
+  let attempts=0;
+  await assert.rejects(previousLaneEvidence({...options,request:async()=>{attempts++;return {ok:false,status};}}),/CI evidence transport HTTP/u);
+  assert.equal(attempts,status===502?2:1,'Retry is bounded and excludes authorization/rate-limit failures');
+ }
  const outside=await previousLaneEvidence({...options,requiredLanes:[],request:()=>assert.fail('Outside lanes need no evidence API')});
  assert.ok(Object.values(outside).every(value=>value===null));
  const selected=await previousLaneEvidence({...options,requiredLanes:['allunit'],request:evidenceApi()});
