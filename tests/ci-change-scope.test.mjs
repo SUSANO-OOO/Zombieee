@@ -148,6 +148,10 @@ test('qualified unchanged failures block a docs push without another recording; 
 });
 
 test('transport failures stop scope resolution instead of launching costly replacement product checks',async()=>{
+ const outside=await previousLaneEvidence({...options,requiredLanes:[],request:()=>assert.fail('Outside lanes need no evidence API')});
+ assert.ok(Object.values(outside).every(value=>value===null));
+ const selected=await previousLaneEvidence({...options,requiredLanes:['allunit'],request:evidenceApi()});
+ assert.equal(selected.allunit.conclusion,'success');assert.equal(selected.performance,null);
  for(const status of [401,403,429,500,502,503])
   await assert.rejects(previousLaneEvidence({...options,request:async()=>({ok:false,status})}),/CI evidence transport HTTP/u);
  await assert.rejects(previousLaneEvidence({...options,request:async()=>{throw Error('offline');}}),/CI evidence transport unavailable/u);

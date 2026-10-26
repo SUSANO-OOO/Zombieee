@@ -143,8 +143,10 @@ export function laneFingerprints(entries,sets,{base,workflowContracts={},legacy=
  return Object.fromEntries(lanes.map(k=>[k,digest(JSON.stringify({base,
   workflow:workflowContracts[k],inputs:entries.filter(([file])=>common(file)||sets[k].has(file))}))]));
 }
-export async function previousLaneEvidence({repository,previousHead,base,prNumber,fingerprints,token,request=fetch,sourceFingerprints}={}){
+export async function previousLaneEvidence({repository,previousHead,base,prNumber,fingerprints,token,request=fetch,sourceFingerprints,requiredLanes=lanes}={}){
  const none=Object.fromEntries(lanes.map(k=>[k,null]));
+ assert.ok(Array.isArray(requiredLanes)&&requiredLanes.every(k=>lanes.includes(k)));
+ if(!requiredLanes.length)return none;
  if(!/^[\w.-]+\/[\w.-]+$/u.test(repository??'')||!/^[a-f0-9]{40}$/u.test(previousHead??'')
   ||!/^[a-f0-9]{40}$/u.test(base??'')||!Number.isSafeInteger(prNumber)||prNumber<1||!token)return none;
  const cache=new Map();
@@ -198,7 +200,7 @@ export async function previousLaneEvidence({repository,previousHead,base,prNumbe
   for(const r of runs.workflow_runs??[]){
    if(r.head_sha!==previousHead||r.status!=='completed'||r.run_attempt!==1)continue;
    let prior;try{prior=await owner(r.id);}catch(error){if(error instanceof EvidenceTransportError)throw error;continue;}
-   for(const k of lanes){
+   for(const k of requiredLanes){
     try{
      const gate=prior.plan.gates[k];assert.equal(gate.required,true);await matches(prior,k);
      const imported=['reused','blocked'].includes(gate.state),original=imported?await owner(gate.owner.runId):prior;
@@ -291,9 +293,10 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
  const scope=ciChangeScope(paths,{draft:draft==='true',dependencies});
  let evidence={},previousIsAncestor=false;
  try{previousIsAncestor=/^[a-f0-9]{40}$/u.test(before??'')&&before!==head&&git(['merge-base',before,head])===before;}catch{/* Missing old objects require fresh gates. */}
- if(previousIsAncestor)
+ const requiredLanes=lanes.filter(k=>scope[k]);
+ if(previousIsAncestor&&requiredLanes.length)
   evidence=await previousLaneEvidence({repository:process.env.GITHUB_REPOSITORY,previousHead:before,base,
-   prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),fingerprints,token:process.env.CI_SCOPE_ACTIONS_TOKEN,
+   prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),fingerprints,token:process.env.CI_SCOPE_ACTIONS_TOKEN,requiredLanes,
    sourceFingerprints:revision=>{
     const old=snapshot(revision),{sets}=dependencyInputs(old.files,old.read),workflowContracts=workflowRuntimeContracts(old.read('.github/workflows/ci.yml'));
     return {legacy:laneFingerprints(old.entries,sets,{base,workflowContracts,legacy:true}),
