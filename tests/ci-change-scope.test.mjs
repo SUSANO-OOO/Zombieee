@@ -278,10 +278,31 @@ test('the exact boss-label deletion retains successful browser owners but repeat
  assert.equal(ciChangeScope([...paths,'app/unknown.js'],{draft:false,sourceBlobs,reuseAbilityNames:true}).full,true);
  assert.equal(ciChangeScope(paths,{draft:false,sourceBlobs}).full,true,'No verified preceding browser owners means full regression');
 });
-test('a ready candidate always gets full regression, including governance-only changes',()=>{
- for(const paths of [['AGENTS.md'],['tests/ci-contract.test.mjs'],['app/v177RangerFootPlacement.js']]){
+test('Ready product and unknown validation changes keep full regression',()=>{
+ for(const paths of [['docs/story/v10/STORY_SCRIPT_V100_PRODUCER_R9.md'],['tests/ci-contract.test.mjs'],['app/v177RangerFootPlacement.js']]){
   const scope=ciChangeScope(paths,{draft:false});assert.equal(scope.full,true);assert.equal(scope.ranger,true);assert.equal(scope.normal,true);
   assert.equal(scope.wholeGameAccepted,false);
+ }
+ assert.equal(ciChangeScope(['README.md'],{draft:false,wholePrPaths:null}).full,true,'Unknown PR base cannot authorize this exemption');
+ assert.equal(ciChangeScope(['README.md'],{draft:false,wholePrPaths:['app/new.js','README.md']}).full,true,'Earlier product commits remain in the PR');
+});
+
+test('independent documentation and preparation changes keep all Node checks without new product acceptance',()=>{
+ const paths=['AGENTS.md','README.md','docs/PROJECT_STATE.md','docs/PROJECT_STATE_HISTORY_PRE_20261026.md',
+  '.gitignore','pnpm-lock.yaml','scripts/build-v104-combat-voices.py','scripts/check-development-docs.mjs',
+  'scripts/ci-change-scope.mjs','tests/ci-change-scope.test.mjs','tests/operating-model-docs.test.mjs'];
+ for(const draft of [false,true]){
+  const scope=ciChangeScope(paths,{draft,wholePrPaths:paths});assert.equal(scope.scope,'documentation-and-preparation');
+  for(const key of ['full','verify_full','performance','phaseg','ranger','normal','allunit','r9','combat','audio'])assert.equal(scope[key],false);
+  assert.equal(scope.wholeGameAccepted,false);
+ }
+ for(const file of ['app/v100Save.js','public/asset-manifest.json','assets/new-source.json','package-lock.json',
+  'scripts/v177-native-allunit-contract.mjs','scripts/v105-five-corrections-capture.mjs','scripts/v100-macos-indexing-control.mjs',
+  '.github/workflows/ci.yml','scripts/unknown.mjs','docs/story/v10/STORY_SCRIPT_V100_PRODUCER_R9.md','docs/story/v10/全脚本_R9.md'])
+  assert.equal(ciChangeScope([...paths,file],{draft:false,wholePrPaths:[...paths,file]}).full,true,file+' is outside this maintenance scope');
+ const verify=load(readFileSync('.github/workflows/ci.yml','utf8')).jobs.verify.steps;
+ for(const run of ['npm ci','npm run lint','npm run content:validate','npm run build','node --test tests/*.test.mjs']){
+  const step=verify.find(s=>s.run===run);assert.ok(step,run);assert.equal(step.if,undefined,run+' must always execute');
  }
 });
 
@@ -340,11 +361,11 @@ test('completed full evidence may retain only the exact reviewed correction QA o
  const files=['.github/workflows/five-corrections-capture.yml','scripts/v105-five-corrections-capture.mjs','tests/v177-native-allunit-recording-runtime.test.mjs'];
  const sourceBlobs=Object.fromEntries(files.map(file=>[file,execFileSync('git',['rev-parse','c4e146f664a9c6801c2e404c59f0d3b8a1f5a1ce:'+file],{encoding:'utf8',windowsHide:true}).trim()]));
  for(const paths of [files,['docs/PROJECT_STATE.md']]){
-  const scope=ciChangeScope(paths,{draft:false,reuseNativeQa:true,sourceBlobs});
+  const scope=ciChangeScope(paths,{draft:false,wholePrPaths:paths,reuseNativeQa:true,sourceBlobs});
   for(const lane of ['full','ranger','normal','allunit','r9','combat','wholeGameAccepted'])assert.equal(scope[lane],false);
-  assert.equal(ciChangeScope(paths,{draft:false,sourceBlobs}).full,true,'No previous successful full owner means no reuse');
+  assert.equal(ciChangeScope(paths,{draft:false,wholePrPaths:paths,sourceBlobs}).full,paths===files,'QA still needs its owner; proven pure documentation does not borrow one');
   for(const extra of ['app/v177RangerLowerPaint.js','public/asset-manifest.json','package-lock.json','unknown','scripts/ci-change-scope.mjs'])
-    assert.equal(ciChangeScope([...paths,extra],{draft:false,reuseNativeQa:true,sourceBlobs}).full,true);
+    assert.equal(ciChangeScope([...paths,extra],{draft:false,wholePrPaths:[...paths,extra],reuseNativeQa:true,sourceBlobs}).full,paths===files||extra!=='scripts/ci-change-scope.mjs');
  }
  for(const file of files)assert.equal(ciChangeScope(files,{draft:false,reuseNativeQa:true,sourceBlobs:{...sourceBlobs,[file]:'f'.repeat(40)}}).full,true);
  const native=load(readFileSync('.github/workflows/native-allunit-capture.yml','utf8'));
@@ -464,7 +485,7 @@ test('ready events run integration gates and research cannot block representativ
   assert.ok(gate.on.pull_request.types.includes('ready_for_review'));
   if(path==='native-allunit-capture'){
     assert.ok(gate.jobs.build.if.includes("needs.scope.outputs.full == 'true' || needs.scope.outputs.allunit == 'true'"));
-    const ready=ciChangeScope(['docs/PROJECT_STATE.md'],{draft:false});assert.equal(ready.full,true);assert.equal(ready.allunit,true);
+    const ready=ciChangeScope(['app/v100Save.js'],{draft:false});assert.equal(ready.full,true);assert.equal(ready.allunit,true);
   }else assert.ok(Object.values(gate.jobs).some(job=>job.if?.includes('!github.event.pull_request.draft')));
  }
 });
@@ -586,6 +607,31 @@ test('the exact Ranger knock repair rechecks Ranger, motion and normal play whil
  for(const sourceBlobs of [{},{[file]:'f'.repeat(40)}])assert.equal(ciChangeScope([file],{draft:true,sourceBlobs}).full,true);
  assert.equal(ciChangeScope([file],{...options,draft:false}).full,true);
  assert.equal(ciChangeScope([file,'app/v100Save.js'],options).full,true);
+});
+
+test('the real maintenance CLI summary matches the selected checks without claiming product success',()=>{
+ const directory=mkdtempSync(join(tmpdir(),'zombieee-docs-scope-'));
+ const git=(...args)=>execFileSync('git',args,{cwd:directory,encoding:'utf8',windowsHide:true}).trim();
+ const commit=()=>git('-c','user.name=scope-test','-c','user.email=scope-test@example.invalid','-c','commit.gpgsign=false','commit','-qm','fixture');
+ git('init','-q');writeFileSync(join(directory,'README.md'),'base');git('add','.');commit();
+ const base=git('rev-parse','HEAD');writeFileSync(join(directory,'README.md'),'maintenance');
+ mkdirSync(join(directory,'docs'));writeFileSync(join(directory,'docs','監査記録.md'),'maintenance');git('add','.');commit();
+ const head=git('rev-parse','HEAD'),summary=join(directory,'.git','summary');
+ const result=JSON.parse(execFileSync(process.execPath,[resolve('scripts/ci-change-scope.mjs')],{
+  cwd:directory,encoding:'utf8',windowsHide:true,env:{...process.env,CI_SCOPE_BASE:base,CI_SCOPE_PR_BASE:base,CI_SCOPE_HEAD:head,CI_SCOPE_DRAFT:'false',GITHUB_OUTPUT:'',GITHUB_STEP_SUMMARY:summary}}));
+ assert.equal(result.scope,'documentation-and-preparation');assert.equal(result.full,false);
+ assert.deepEqual(result.changedPaths,['README.md','docs/監査記録.md']);
+ const text=readFileSync(summary,'utf8');assert.ok(text.includes('Node tests, lint, content validation and build run fresh'));
+ assert.ok(text.includes('no previous product failure is resolved or reused as success'));
+ assert.equal(text.includes('reruns all19'),false);assert.equal(text.includes('run full regression'),false);
+ mkdirSync(join(directory,'app'));writeFileSync(join(directory,'app/new.js'),'product');git('add','.');commit();
+ const productHead=git('rev-parse','HEAD');writeFileSync(join(directory,'README.md'),'later docs');git('add','.');commit();
+ const later=git('rev-parse','HEAD');
+ for(const prBase of [base,'']){
+  const mixed=JSON.parse(execFileSync(process.execPath,[resolve('scripts/ci-change-scope.mjs')],{
+   cwd:directory,encoding:'utf8',windowsHide:true,env:{...process.env,CI_SCOPE_BASE:productHead,CI_SCOPE_PR_BASE:prBase,CI_SCOPE_HEAD:later,CI_SCOPE_DRAFT:'false',GITHUB_OUTPUT:'',GITHUB_STEP_SUMMARY:''}}));
+  assert.deepEqual(mixed.changedPaths,['README.md']);assert.equal(mixed.full,true,'The last docs commit cannot hide earlier product changes or an unknown PR base');
+ }
 });
 
 test('the CLI handles a PR whose base branch advanced without requiring another merge',()=>{

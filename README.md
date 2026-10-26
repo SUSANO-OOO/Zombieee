@@ -1,98 +1,27 @@
 # 西新世紀末物語
 
-西新・早良区周辺を再構成した区域で、生存者部隊と移動拠点CRAWLERを指揮するリアルタイムCanvas戦略・防衛ゲームです。
+西新・早良区周辺を再構成した区域で、生存者部隊と装甲車両を指揮する、スマートフォン横画面・PC対応のリアルタイムCanvas戦略・防衛ゲームです。
 
-## プレイ
+**[正式プレイURL](https://susano-ooo.github.io/Zombieee/)**
 
-**正式URL：<https://susano-ooo.github.io/Zombieee/>**
+現在の配信版・release SHA・確認済み範囲・残件は **[PROJECT_STATE](docs/PROJECT_STATE.md)** を入口にしてください。mainは運用改修で公開版より先へ進むことがあります。Releaseの作成とPagesへの実配信は別です。ChatGPT Sitesは旧公開先です。
 
-正式公開先はGitHub Pagesだけです。現在の正式公開版は**Version 0.9.9.0**です。ChatGPT Sitesは旧公開先であり、公開・QA・正式判定には使用しません。
+## 開発を始める
 
-- release SHA：`19a79404822ebc8f0cbd8a3b809b8ed0adbc28af`
-- release tree：`305af62474c8a1ea118251023ec4ad58bee17975`
-- annotated tag：`v0.9.9.0`
-- 実行台帳：Issue #136（completed）
+1. [AGENTS.md](AGENTS.md)の短い安全境界を読む。
+2. [PROJECT_STATE](docs/PROJECT_STATE.md)から対象のProducer Decisionsと実行台帳へ進み、最新のユーザー指示・Issue／PR・実行結果と照合する。
+3. ローカル変更と実行中作業を保全して、変更依存の実装・検証を行う。固定Sol／Luna間の往復や、新たな計画書は通常作業の前提ではありません。
 
-主対象はスマートフォン横画面です。844×390、844×340、iPhone Safariのsafe areaとブラウザUI表示状態を優先し、PC横画面も正式対応します。
+Node.js `>=22.13.0` とnpmを使用します。依存の正本は `package-lock.json` です。
 
-## Version 0.9.9.0
-
-Version 0.9.9.0は、戦闘体験・音響・演出・app iconの品質更新です。
-
-- selection／confirm／back／purchase／upgrade／reward／deploy／rejectのUI操作SE
-- durable save成功後だけ成立する雇用・強化feedback
-- normal／pressure／bossの戦況別BGM
-- 全16unitの固有ability activation／timeline／ready audio
-- boss entrance／defeat、explosion、drum arrival、CRAWLER／barrage／airstrike presentation
-- Producer承認A2による感染者face app icon
-- save schema v14、PWA全件install、active／previous、rollback、offlineの維持
-- final independent audit：High 0／Medium 0／Low 0
-
-公開後QAでは1280×720、844×390、844×340、fresh／schema v13／schema v14 save、title→map→loadout→assets ready→battle、主要障害fixtureを確認し、console／page／HTTP／request failureは0でした。
-
-物理iPhone本体speakerの聴感と発熱は未確認の残存QAです。自動WebKit結果を物理実機確認済みとは扱いません。
-
-詳細は[Version 0.9.9.0 Release Notes](docs/RELEASE_NOTES_0.9.9.0.md)と[PROJECT_STATE](docs/PROJECT_STATE.md)を参照してください。
-
-## 現行ゲーム
-
-- Campaign Stage 1〜20、Survival、異常発生任務5件
-- playable 16名、最大7枠、3 formation presets
-- 全16体のmanual ability、Level 1〜50基盤、equipment
-- 通常感染体6種、既存boss改修、新boss5体
-- CRAWLER deployment、戦場物資、航空支援、一斉掃射
-- localStorage／IndexedDB、migration snapshot、last-known-good、recovery、export／import
-- PWA初回全件download、size／SHA-256検証、Cache Storage、manifest commit
-- offline、差分update、active／previous generation、rollback
-
-## 開発運用
-
-今後の通常実装は、**同じプロジェクト内のSolスレッドとLunaスレッドを順番に使います。並列実行や自動role切替はしません。**
-
-1. Producer／司令塔が主目的と製品境界を固定
-2. **元のSol thread**が全体を細かく設計し、Design LockとLuna Handoffを作る
-3. Solは待機し、**Luna thread**へhandoffを渡す
-4. Lunaが実装、trial-and-error、self-review、QA、fixed HEAD／tree固定まで行う
-5. Luna完了物を**元のSol thread**へ戻す
-6. 元のSolが最終review
-7. 小さいFindingならSolが限定修正し、Lunaが回帰validationした後に元のSolが再確認
-8. 設計変更が必要ならSolがDesign revisionを上げ、Lunaへ再handoff
-9. 対象Versionが独立監査を明示要求する場合だけ、別のfresh Sol Auditorを追加
-
-Sol threadとLuna threadが読む専用MDも分離しています。
-
-- [CODEX_TWO_THREAD_WORKFLOW](docs/CODEX_TWO_THREAD_WORKFLOW.md)：2スレッド全体の順序・handoff
-- [CODEX_SOL_ROLE](docs/CODEX_SOL_ROLE.md)：Sol thread専用
-- [CODEX_LUNA_ROLE](docs/CODEX_LUNA_ROLE.md)：Luna thread専用
-
-Codexの`/goal`は、時間の長短ではなく**複数工程・複数checkpoint・反復検証をまたいで同じ目標を保持する必要があるmission**で使います。正式設計や通常feature実装は原則goal-managedです。一方、read-only確認、単発test、typo修正、設計判断を伴わない小修正は通常promptで処理できます。
-
-## 文書
-
-| 文書 | 役割 |
-|---|---|
-| [AGENTS.md](AGENTS.md) | 恒久的な安全境界、Sol/Luna分業、`/goal`、GitHub、release原則 |
-| [docs/CODEX_TWO_THREAD_WORKFLOW.md](docs/CODEX_TWO_THREAD_WORKFLOW.md) | Sol→Luna→元のSolの実行順序、handoff、review/remediation |
-| [docs/CODEX_SOL_ROLE.md](docs/CODEX_SOL_ROLE.md) | Sol threadの設計・最終review・限定remediation規約 |
-| [docs/CODEX_LUNA_ROLE.md](docs/CODEX_LUNA_ROLE.md) | Luna threadの実装・trial-and-error・self-review・validation規約 |
-| [docs/PROJECT_STATE.md](docs/PROJECT_STATE.md) | 現在の正式release、SHA、QA、次工程境界 |
-| [docs/PRODUCT_ROADMAP.md](docs/PRODUCT_ROADMAP.md) | 長期目標、Version順、Stage／unit拡張方針 |
-| [docs/RELEASE_NOTES_0.9.9.0.md](docs/RELEASE_NOTES_0.9.9.0.md) | 0.9.9.0の正式変更、save／PWA互換、QA、残存物理端末境界 |
-| [docs/RELEASE_BACKUP_RECOVERY.md](docs/RELEASE_BACKUP_RECOVERY.md) | GitHub Pages公開、tag、Release、rollback |
-| [docs/PLAYABLE_UNIT_ABILITIES_0.9.0.md](docs/PLAYABLE_UNIT_ABILITIES_0.9.0.md) | 全16体のmanual ability仕様 |
-| GitHub Issue / PR | 製品判断、承認、実行ログ、QA証拠 |
-
-## 前提環境
-
-- Node.js `>=22.13.0`
-- npm
+新しくcloneする場合は `git clone --config core.autocrlf=false https://github.com/SUSANO-OOO/Zombieee.git` を使います。生成元や過去の原本をバイト単位で照合するため、Gitによる自動改行変換をこのcloneだけで無効にします。PC全体の設定は変えません。既存の作業フォルダを一括で上書きして改行を戻さないでください。
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
-WindowsでPowerShellの実行ポリシーにより`npm`を使えない場合は、`npm.cmd`を使用します。
+PowerShellの実行ポリシーでnpmを呼べない場合は `npm.cmd` を使います。Playwright／WebKitの固定runtimeは検証条件なので、依存PRと一括で更新しません。
 
 ## 検証
 
@@ -103,25 +32,37 @@ npm run content:validate
 git diff --check
 ```
 
-`npm test`はproduction buildを含みます。release candidateではChromium／WebKit、PWA full install／update／rollback／offline、save migration、対象Version固有のbrowser QAも実行します。
+`npm test` はproduction buildと全Nodeテストを含みます。build済みなら `node --test tests/<対象>.test.mjs` で対象検査を実行でき、CIはbuildを一度行ってからNodeテストを呼びます。変更した製品・共有処理には対応するbrowser・save・PWA・音・動作の確認を加えます。文書やCIだけの変更を、ゲーム全体の品質合格とは呼びません。
 
-## 主要構成
+Actionsの検査選択と証拠条件は [ci-change-scope.mjs](scripts/ci-change-scope.mjs) とそのテストが所有します。実行したlane、再利用元、対象外と失敗は分けて確認してください。正式性能・物理iPhone・人間の聴感／実プレイ評価を混同しないでください。
 
-- `app/AshfallGame.tsx`：戦闘、描画、入力、HUD
-- `app/CampaignScreens.tsx`：タイトル、map、編成、隊員、会話、result
-- `app/productionAudio.js`：production cue／scene registry
-- `app/battleAudioRuntime.js`：semantic receipt／delayed cue runtime
-- `app/battlePresentationV099.js`：0.9.9.0 presentation state
-- `app/pwaRuntime.js`：PWA runtime／generation管理
-- `public/asset-manifest.json`：全件install manifest
-- `public/sw.js`：Service Worker
-- `tests/`、`scripts/*browser-smoke.mjs`：仕様・browser回帰
+## Codexの設定と分担
 
-## 開発と公開
+プロジェクトはモデルを固定しません。ユーザーが選んだモデルと推論設定を尊重し、旧版のSol／Luna役割名を現在のモデル指定として扱いません。独立した調査・レビューを分担できる場合も、親担当が結果を統合します。
 
-- 公開中の正式コードはannotated tag／GitHub Releaseが指すrelease SHAです。
-- `main` HEADは、release後のdocs-only更新等により公開release SHAより先へ進む場合があります。現在値は必要時にGitHubから再取得します。
-- feature／integration branchはPR、CI、QA、Producer gateを通過するまで候補です。
-- `main`直接push、force push、共有履歴rebase・amend、既存tag移動は禁止です。
-- 正式releaseはfinal main PRのmerge result SHAへ固定します。
-- 公開後の重大不具合はrevert PRまたはimmutable release再deploymentで復旧します。
+設定は実行時指定、信頼されたプロジェクト設定、profile、ユーザー設定などの優先順位で決まります。AGENTSは別の指示読込経路です。設定を変える前に、利用中の版の `codex --help`、`codex doctor --help`、`codex debug prompt-input --help` と [公式の設定資料](https://learn.chatgpt.com/docs/config-file/config-basic)、[AGENTSの読込仕様](https://learn.chatgpt.com/docs/agent-configuration/agents-md)を照合します。利用可能モデル・推論段階はアカウントと実行環境で確認し、存在しない設定キーや機能を追加しません。
+
+設定・指示ファイルの変更は、進行中のチャットへ即反映した証拠にはなりません。必要な場合は新しいセッションの実効設定・指示読込を確認します。ローカル診断の全文や認証情報はGitへ入れません。
+
+## 文書と構成
+
+| 入口 | 内容 |
+|---|---|
+| [PROJECT_STATE](docs/PROJECT_STATE.md) | 公開版、対象Issue、判断の優先順位、確認と残件 |
+| [AGENTS](AGENTS.md) | 作業時の安全境界 |
+| [公開・復旧手順](docs/RELEASE_BACKUP_RECOVERY.md) | PR、tag／Release、明示Pages配信、save／PWA復旧 |
+| [製品判断と正史](docs/story/v10/PRODUCER_DECISIONS_FINAL_RELEASE.md) | 日付付きのProducer判断。新しい明示判断を優先 |
+| [素材・音の出典](docs/THIRD_PARTY_ASSETS.md) | 世代別の由来・条件と現行台帳への参照 |
+| [ロードマップ](docs/PRODUCT_ROADMAP.md) | 過去の構想と後続判断の関係。実行許可ではない |
+
+製品コードは `app/`、配信素材は `public/`、元素材は `assets/source/`、生成・検査は `scripts/` と `tests/` です。旧版名でも現行から参照されるものは保持します。`output/`・`outputs/` はローカル生成物で、必要な原証拠はIssueに記録した保存先と対応させて保全します。
+
+## 音声の再生成
+
+通常buildは保存済み音声を使い、VOICEVOXの導入は不要です。専用短声を再生成する場合だけ、[既存generator](scripts/build-v104-combat-voices.py)へ `--runtime <directory>` またはVOICEVOX_RUNTIMEを明示します。先に --check-runtime で必要ファイルを確認できます。これは合成成功やbyte一致の確認ではありません。
+
+runtimeは既存台帳と同じVOICEVOX Core 0.17.0、Windows用ONNX Runtime、Open JTalk辞書、4.vvmを用意したsite/・runtime/構成です。12.vvmだけはgeneratorが[公式0.17.0配布](https://github.com/VOICEVOX/voicevox_vvm/releases/tag/0.17.0)から取得し、固定SHA-256を照合します。Core・辞書・各voiceの条件は[出典台帳](docs/THIRD_PARTY_ASSETS.md)とassets/source/v104/combat-audio/を参照し、元台帳・WAV・queryを保全してから差分を確認してください。所在不明の古いpromotion用フォルダを再生成の前提にしません。
+
+## 公開を伴わない改修
+
+通常のmain push、文書・CIの統合でゲームを再配信しません。公開は承認されたrelease request／安全なmanual dispatchと[公開手順](docs/RELEASE_BACKUP_RECOVERY.md)に従います。既存タグ、共有履歴、saveを維持し、復旧も通常PRで行います。

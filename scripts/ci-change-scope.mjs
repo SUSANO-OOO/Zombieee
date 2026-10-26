@@ -480,7 +480,7 @@ export async function previousQualityEvidence({repository,head,prNumber,token,fu
   }catch{return{passed:false,reason:'quality-evidence-unavailable'};}
 }
 
-export function ciChangeScope(paths,{draft,sourceBlobs={},reuseNativeQa=false,reuseCombatQa=false,reuseCombatFixture=false,reuseAbilityNames=false,reuseProductValidation=false,reuseMeasuredQa=false,freshNormal=false}={}){
+export function ciChangeScope(paths,{draft,wholePrPaths=null,sourceBlobs={},reuseNativeQa=false,reuseCombatQa=false,reuseCombatFixture=false,reuseAbilityNames=false,reuseProductValidation=false,reuseMeasuredQa=false,freshNormal=false}={}){
   assert.equal(typeof draft,'boolean');
   assert.equal(typeof reuseNativeQa,'boolean');
   assert.equal(typeof reuseCombatQa,'boolean');
@@ -488,6 +488,18 @@ export function ciChangeScope(paths,{draft,sourceBlobs={},reuseNativeQa=false,re
   assert.equal(typeof reuseAbilityNames,'boolean');assert.equal(typeof freshNormal,'boolean');
   assert.equal(typeof reuseProductValidation,'boolean');
   assert.ok(Array.isArray(paths)&&paths.length>0&&paths.every(p=>typeof p==='string'&&p&&!p.includes('\\')));
+  const maintenanceFiles=new Set(['.gitignore','pnpm-lock.yaml','scripts/ci-change-scope.mjs',
+    'scripts/check-development-docs.mjs','scripts/build-v104-combat-voices.py',
+    'tests/ci-change-scope.test.mjs','tests/operating-model-docs.test.mjs',
+    'docs/story/v10/README.md','docs/story/v10/CODEX_SOL_DESIGN_MISSION.md']);
+  const maintenance=file=>maintenanceFiles.has(file)
+    ||/^(?:README|AGENTS)\.md$/u.test(file)
+    ||file.startsWith('docs/')&&file.endsWith('.md')&&!file.startsWith('docs/story/');
+  const maintenanceOnly=Array.isArray(wholePrPaths)&&wholePrPaths.length>0
+    &&wholePrPaths.every(maintenance)&&paths.every(maintenance);
+  if(maintenanceOnly)return {full:false,verify_full:false,performance:false,phaseg:false,ranger:false,normal:false,
+    allunit:false,r9:false,combat:false,audio:false,scope:'documentation-and-preparation',wholeGameAccepted:false,
+    finalIntegrationRequiresFullRegression:false};
   // A synchronize update containing only native QA, its tests and the status
   // ledger cannot change the shipped app. Keep the prior full product run and
   // run the changed QA; Ready transitions and any product/unknown path stay full.
@@ -534,7 +546,15 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
   assert.ok(['true','false'].includes(draft));
   const comparisonBase=execFileSync('git',['merge-base',base,head],{encoding:'utf8',windowsHide:true}).trim();
   assert.match(comparisonBase,/^[0-9a-f]{40}$/u);
-  const paths=execFileSync('git',['diff','--no-renames','--name-only',`${comparisonBase}..${head}`],{encoding:'utf8',windowsHide:true}).trim().split(/\r?\n/u).filter(Boolean);
+  const paths=execFileSync('git',['diff','--no-renames','--name-only','-z',`${comparisonBase}..${head}`],{encoding:'utf8',windowsHide:true}).split('\0').filter(Boolean);
+  let wholePrPaths=null;
+  const prBase=process.env.CI_SCOPE_PR_BASE;
+  if(/^[0-9a-f]{40}$/u.test(prBase??'')){
+    try{
+      const wholeBase=execFileSync('git',['merge-base',prBase,head],{encoding:'utf8',windowsHide:true}).trim();
+      wholePrPaths=execFileSync('git',['diff','--no-renames','--name-only','-z',`${wholeBase}..${head}`],{encoding:'utf8',windowsHide:true}).split('\0').filter(Boolean);
+    }catch{/* An unavailable PR base cannot authorize the maintenance exemption. */}
+  }
   const sourceFiles=new Set([...paths.filter(file=>ABILITY_NAME_BLOBS[file]||reviewedCorrectionQaBlobs[file]||reviewedValidationBlobs[file]||reviewedMotionBlobs[file]||reviewedLifecycleBlobs[file]||reviewedBruteBlobs[file]||reviewedNativeControlBlobs[file]||reviewedSupportBlobs[file]||reviewedRawClockBlobs[file]||COMBAT_QA_BLOBS[file]),
     ...([ABILITY_NAME_PREDECESSOR.head,QA_FORMATTING_PREDECESSOR.head].includes(previousHead)?Object.keys(ABILITY_NAME_BLOBS):[]),
     ...(previousHead===QA_FORMATTING_PREDECESSOR.head?[QA_FORMATTING_PREDECESSOR.test]:[]),
@@ -593,13 +613,15 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
     :{passed:false,reason:'previous-head-not-exact-ancestor'};
   if(abilityNameEvidence.passed)qualityEvidence=await previousQualityEvidence({repository:process.env.GITHUB_REPOSITORY,
     head:abilityNameEvidence.head,prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),token:process.env.CI_SCOPE_ACTIONS_TOKEN,displayEvidence:abilityNameEvidence});
-  const scope=ciChangeScope(paths,{draft:draft==='true',sourceBlobs,reuseNativeQa,reuseCombatQa:combatQaEvidence.passed,reuseCombatFixture:combatFixtureEvidence.passed,
+  const scope=ciChangeScope(paths,{draft:draft==='true',wholePrPaths,sourceBlobs,reuseNativeQa,reuseCombatQa:combatQaEvidence.passed,reuseCombatFixture:combatFixtureEvidence.passed,
     reuseAbilityNames:abilityNameEvidence.passed,reuseProductValidation:abilityNameEvidence.freshProductValidationsRequired===false,
     reuseMeasuredQa:abilityNameEvidence.formattingEvidence?.passed===true,freshNormal:abilityNameEvidence.freshNormalRequired??false});
   if(process.env.GITHUB_OUTPUT)appendFileSync(process.env.GITHUB_OUTPUT,['full','verify_full','performance','phaseg','ranger','normal','allunit','r9','combat','audio'].map(k=>`${k}=${scope[k]}\n`).join(''));
   if(process.env.GITHUB_OUTPUT)appendFileSync(process.env.GITHUB_OUTPUT,`reuse_quality=${combatQaEvidence.passed||combatFixtureEvidence.passed||qualityEvidence.passed}\n`);
   if(process.env.GITHUB_STEP_SUMMARY)appendFileSync(process.env.GITHUB_STEP_SUMMARY,
-    `Validation: ${scope.scope}. Ready transitions and unknown product changes run full regression. Exact reviewed deltas retain only completed original gates with their source owners. ${abilityNameEvidence.formattingEvidence?.passed
+    scope.scope==='documentation-and-preparation'
+    ?'Validation: documentation-and-preparation. Node tests, lint, content validation and build run fresh. Product acceptance is outside this independent maintenance change; no previous product failure is resolved or reused as success.\n'
+    :`Validation: ${scope.scope}. Ready transitions and unknown product changes run full regression. Exact reviewed deltas retain only completed original gates with their source owners. ${abilityNameEvidence.formattingEvidence?.passed
       ?'Only the fixed test CRLF is corrected. The original failed whitespace check stays failed; the same whitespace check, tests, lint, content and build run fresh. Completed formal6 and PhaseG stay with their actual a12 owners; earlier45 jobs and19 product steps keep their separate original owners.'
       :abilityNameEvidence.formalTransferDelta
       ?'This QA-only delta retains the completed19 conditional Verify browser/audit steps, normal-play and Ranger gates with their verified original owners; tests, lint, content, build, all6 formal performance windows and PhaseG run fresh.'
