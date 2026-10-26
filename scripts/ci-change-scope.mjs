@@ -157,7 +157,10 @@ export async function previousLaneEvidence({repository,previousHead,base,prNumbe
    catch{throw new EvidenceTransportError('CI evidence transport unavailable; do not launch replacement product checks');}
    if(!r.ok&&([401,403,429].includes(r.status)||r.status>=500))
     throw new EvidenceTransportError('CI evidence transport HTTP '+r.status+'; do not launch replacement product checks');
-   assert.equal(r.ok,true);return binary?r.arrayBuffer():r.json();
+   assert.equal(r.ok,true);
+   try{return binary?await r.arrayBuffer():await r.json();}
+   catch(error){if(error?.name==='SyntaxError')throw error;
+    throw new EvidenceTransportError('CI evidence body transport unavailable; do not launch replacement product checks');}
   })());return cache.get(key);
  };
  const owner=async id=>{

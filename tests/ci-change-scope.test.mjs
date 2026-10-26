@@ -154,6 +154,12 @@ test('transport failures stop scope resolution instead of launching costly repla
  const api=evidenceApi();
  await assert.rejects(previousLaneEvidence({...options,request:url=>url.endsWith('/artifacts?per_page=100')
   ?Promise.resolve({ok:false,status:502}):api(url)}),/CI evidence transport HTTP 502/u);
+ await assert.rejects(previousLaneEvidence({...options,request:async()=>({ok:true,json:async()=>{throw TypeError('body disconnected');}})}),/CI evidence body transport unavailable/u);
+ const zipApi=evidenceApi();
+ await assert.rejects(previousLaneEvidence({...options,request:async url=>url.endsWith('/artifacts/92/zip')
+  ?{ok:true,arrayBuffer:async()=>{throw Error('body disconnected');}}:zipApi(url)}),/CI evidence body transport unavailable/u);
+ const malformed=await previousLaneEvidence({...options,request:async()=>({ok:true,json:async()=>{throw SyntaxError('invalid JSON');}})});
+ assert.ok(Object.values(malformed).every(value=>value===null),'Completed invalid content remains invalid evidence');
  const missing=await previousLaneEvidence({...options,request:async()=>({ok:false,status:404})});
  assert.ok(Object.values(missing).every(value=>value===null),'Absent evidence requires fresh checks; it is not a passed owner');
 });
