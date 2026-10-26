@@ -278,10 +278,29 @@ test('the exact boss-label deletion retains successful browser owners but repeat
  assert.equal(ciChangeScope([...paths,'app/unknown.js'],{draft:false,sourceBlobs,reuseAbilityNames:true}).full,true);
  assert.equal(ciChangeScope(paths,{draft:false,sourceBlobs}).full,true,'No verified preceding browser owners means full regression');
 });
-test('a ready candidate always gets full regression, including governance-only changes',()=>{
- for(const paths of [['AGENTS.md'],['tests/ci-contract.test.mjs'],['app/v177RangerFootPlacement.js']]){
+test('Ready product and unknown validation changes keep full regression',()=>{
+ for(const paths of [['docs/story/v10/STORY_SCRIPT_V100_PRODUCER_R9.md'],['tests/ci-contract.test.mjs'],['app/v177RangerFootPlacement.js']]){
   const scope=ciChangeScope(paths,{draft:false});assert.equal(scope.full,true);assert.equal(scope.ranger,true);assert.equal(scope.normal,true);
   assert.equal(scope.wholeGameAccepted,false);
+ }
+});
+
+test('independent documentation and preparation changes keep all Node checks without new product acceptance',()=>{
+ const paths=['AGENTS.md','README.md','docs/PROJECT_STATE.md','docs/PROJECT_STATE_HISTORY_PRE_20261026.md',
+  '.gitignore','pnpm-lock.yaml','scripts/build-v104-combat-voices.py','scripts/check-development-docs.mjs',
+  'scripts/ci-change-scope.mjs','tests/ci-change-scope.test.mjs','tests/operating-model-docs.test.mjs'];
+ for(const draft of [false,true]){
+  const scope=ciChangeScope(paths,{draft});assert.equal(scope.scope,'documentation-and-preparation');
+  for(const key of ['full','verify_full','performance','phaseg','ranger','normal','allunit','r9','combat','audio'])assert.equal(scope[key],false);
+  assert.equal(scope.wholeGameAccepted,false);
+ }
+ for(const file of ['app/v100Save.js','public/asset-manifest.json','assets/new-source.json','package-lock.json',
+  'scripts/v177-native-allunit-contract.mjs','scripts/v105-five-corrections-capture.mjs','scripts/v100-macos-indexing-control.mjs',
+  '.github/workflows/ci.yml','scripts/unknown.mjs','docs/story/v10/STORY_SCRIPT_V100_PRODUCER_R9.md','docs/story/v10/全脚本_R9.md'])
+  assert.equal(ciChangeScope([...paths,file],{draft:false}).full,true,file+' is outside this maintenance scope');
+ const verify=load(readFileSync('.github/workflows/ci.yml','utf8')).jobs.verify.steps;
+ for(const run of ['npm ci','npm run lint','npm run content:validate','npm run build','node --test tests/*.test.mjs']){
+  const step=verify.find(s=>s.run===run);assert.ok(step,run);assert.equal(step.if,undefined,run+' must always execute');
  }
 });
 
@@ -342,9 +361,9 @@ test('completed full evidence may retain only the exact reviewed correction QA o
  for(const paths of [files,['docs/PROJECT_STATE.md']]){
   const scope=ciChangeScope(paths,{draft:false,reuseNativeQa:true,sourceBlobs});
   for(const lane of ['full','ranger','normal','allunit','r9','combat','wholeGameAccepted'])assert.equal(scope[lane],false);
-  assert.equal(ciChangeScope(paths,{draft:false,sourceBlobs}).full,true,'No previous successful full owner means no reuse');
+  assert.equal(ciChangeScope(paths,{draft:false,sourceBlobs}).full,paths===files,'QA still needs its owner; pure documentation does not borrow one');
   for(const extra of ['app/v177RangerLowerPaint.js','public/asset-manifest.json','package-lock.json','unknown','scripts/ci-change-scope.mjs'])
-    assert.equal(ciChangeScope([...paths,extra],{draft:false,reuseNativeQa:true,sourceBlobs}).full,true);
+    assert.equal(ciChangeScope([...paths,extra],{draft:false,reuseNativeQa:true,sourceBlobs}).full,paths===files||extra!=='scripts/ci-change-scope.mjs');
  }
  for(const file of files)assert.equal(ciChangeScope(files,{draft:false,reuseNativeQa:true,sourceBlobs:{...sourceBlobs,[file]:'f'.repeat(40)}}).full,true);
  const native=load(readFileSync('.github/workflows/native-allunit-capture.yml','utf8'));
@@ -464,7 +483,7 @@ test('ready events run integration gates and research cannot block representativ
   assert.ok(gate.on.pull_request.types.includes('ready_for_review'));
   if(path==='native-allunit-capture'){
     assert.ok(gate.jobs.build.if.includes("needs.scope.outputs.full == 'true' || needs.scope.outputs.allunit == 'true'"));
-    const ready=ciChangeScope(['docs/PROJECT_STATE.md'],{draft:false});assert.equal(ready.full,true);assert.equal(ready.allunit,true);
+    const ready=ciChangeScope(['app/v100Save.js'],{draft:false});assert.equal(ready.full,true);assert.equal(ready.allunit,true);
   }else assert.ok(Object.values(gate.jobs).some(job=>job.if?.includes('!github.event.pull_request.draft')));
  }
 });

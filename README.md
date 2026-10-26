@@ -14,6 +14,8 @@
 
 Node.js `>=22.13.0` とnpmを使用します。依存の正本は `package-lock.json` です。
 
+新しくcloneする場合は `git clone --config core.autocrlf=false https://github.com/SUSANO-OOO/Zombieee.git` を使います。生成元や過去の原本をバイト単位で照合するため、Gitによる自動改行変換をこのcloneだけで無効にします。PC全体の設定は変えません。既存の作業フォルダを一括で上書きして改行を戻さないでください。
+
 ```bash
 npm ci
 npm run dev
@@ -57,7 +59,7 @@ Actionsの検査選択と証拠条件は [ci-change-scope.mjs](scripts/ci-change
 
 ## 音声の再生成
 
-通常buildは保存済み音声を使い、VOICEVOXの導入は不要です。専用短声を再生成する場合だけ、[既存generator](scripts/build-v104-combat-voices.py)へ --runtime <directory> またはVOICEVOX_RUNTIMEを明示します。先に --check-runtime で必要ファイルを確認できます。これは合成成功やbyte一致の確認ではありません。
+通常buildは保存済み音声を使い、VOICEVOXの導入は不要です。専用短声を再生成する場合だけ、[既存generator](scripts/build-v104-combat-voices.py)へ `--runtime <directory>` またはVOICEVOX_RUNTIMEを明示します。先に --check-runtime で必要ファイルを確認できます。これは合成成功やbyte一致の確認ではありません。
 
 runtimeは既存台帳と同じVOICEVOX Core 0.17.0、Windows用ONNX Runtime、Open JTalk辞書、4.vvmを用意したsite/・runtime/構成です。12.vvmだけはgeneratorが[公式0.17.0配布](https://github.com/VOICEVOX/voicevox_vvm/releases/tag/0.17.0)から取得し、固定SHA-256を照合します。Core・辞書・各voiceの条件は[出典台帳](docs/THIRD_PARTY_ASSETS.md)とassets/source/v104/combat-audio/を参照し、元台帳・WAV・queryを保全してから差分を確認してください。所在不明の古いpromotion用フォルダを再生成の前提にしません。
 

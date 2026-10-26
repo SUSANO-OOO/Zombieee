@@ -488,6 +488,16 @@ export function ciChangeScope(paths,{draft,sourceBlobs={},reuseNativeQa=false,re
   assert.equal(typeof reuseAbilityNames,'boolean');assert.equal(typeof freshNormal,'boolean');
   assert.equal(typeof reuseProductValidation,'boolean');
   assert.ok(Array.isArray(paths)&&paths.length>0&&paths.every(p=>typeof p==='string'&&p&&!p.includes('\\')));
+  const maintenanceFiles=new Set(['.gitignore','pnpm-lock.yaml','scripts/ci-change-scope.mjs',
+    'scripts/check-development-docs.mjs','scripts/build-v104-combat-voices.py',
+    'tests/ci-change-scope.test.mjs','tests/operating-model-docs.test.mjs',
+    'docs/story/v10/README.md','docs/story/v10/CODEX_SOL_DESIGN_MISSION.md']);
+  const maintenanceOnly=paths.every(file=>maintenanceFiles.has(file)
+    ||/^(?:README|AGENTS)\.md$/u.test(file)
+    ||file.startsWith('docs/')&&file.endsWith('.md')&&!file.startsWith('docs/story/'));
+  if(maintenanceOnly)return {full:false,verify_full:false,performance:false,phaseg:false,ranger:false,normal:false,
+    allunit:false,r9:false,combat:false,audio:false,scope:'documentation-and-preparation',wholeGameAccepted:false,
+    finalIntegrationRequiresFullRegression:false};
   // A synchronize update containing only native QA, its tests and the status
   // ledger cannot change the shipped app. Keep the prior full product run and
   // run the changed QA; Ready transitions and any product/unknown path stay full.
