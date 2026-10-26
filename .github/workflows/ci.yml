@@ -517,7 +517,7 @@ jobs:
           retention-days: 14
 
       - name: Check current documentation links
-        run: node scripts/check-development-docs.mjs
+        run: node --test tests/operating-model-docs.test.mjs
 
       - name: Check patch whitespace
         env:

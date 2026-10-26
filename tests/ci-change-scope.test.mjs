@@ -102,7 +102,7 @@ test('reuse requires every actual matrix job, original ZIP digest and both head/
  assert.equal(evidence.allunit.provenance.head,head);assert.equal(evidence.allunit.provenance.merge,merge);
  assert.equal(evidence.normal,null,'unexecuted lanes cannot be borrowed from a failed run');
  for(const mutate of [
-  x=>{x.jobs.pop();},x=>{x.jobs[0].conclusion='failure';},x=>{x.jobs[0].conclusion='skipped';},
+  x=>{x.jobs.pop();},x=>{x.jobs[0].conclusion='skipped';},
   x=>{x.jobs[0].conclusion='cancelled';},x=>{x.jobs[0].status='in_progress';},
   x=>{x.jobs[0].steps=[];},x=>{x.jobs[0].head_sha='f'.repeat(40);},x=>{x.jobs[0].run_attempt=2;},
   x=>{x.run.run_attempt=2;},x=>{x.run.pull_requests=[];},x=>{x.p.base='f'.repeat(40);},
@@ -115,6 +115,43 @@ test('reuse requires every actual matrix job, original ZIP digest and both head/
  }
  assert.equal((await previousLaneEvidence({...options,request:evidenceApi({offline:true})})).allunit,null);
  assert.equal((await previousLaneEvidence({...options,token:'',request:()=>assert.fail('no token')})).allunit,null);
+});
+
+test('qualified unchanged failures block a docs push without another recording; explicit revalidation needs fresh success',async()=>{
+ const evidence=await previousLaneEvidence({...options,request:evidenceApi({mutate:x=>{x.jobs[1].conclusion='failure';}})});
+ assert.equal(evidence.allunit.conclusion,'failure');assert.equal(evidence.allunit.jobs.filter(j=>j.conclusion==='failure').length,1);
+ const args={head,base,merge,fingerprints,evidence},p=validationPlan(scopes([...changed,'docs/extra.md']),args);
+ const needs={...Object.fromEntries(Object.keys(JOB_LANES).map(k=>[k,{result:'skipped'}])),scope:{result:'success'},verify:{result:'success'}};
+ assert.equal(p.gates.allunit.state,'blocked');assert.throws(()=>assertValidationResults(p,needs),/Unresolved unchanged allunit failure.*72/u);
+ const forged=structuredClone(p);forged.gates.allunit.state='reused';
+ assert.throws(()=>assertValidationResults(forged,needs),/failed owner/u);
+ const explicit=validationPlan(scopes(changed),{...args,attempt:2});
+ assert.equal(explicit.gates.allunit.state,'fresh');assert.equal(explicit.explicitRevalidation.priorFailures.allunit.runId,72);
+ assert.equal(explicit.explicitRevalidation.resolutionClaimed,false);
+ assert.throws(()=>assertValidationResults(explicit,needs));
+ assert.equal(assertValidationResults(explicit,{...needs,allunit:{result:'success'}}),true);
+ for(const attempt of [0,1.5,NaN])assert.throws(()=>validationPlan(scopes(changed),{...args,attempt}));
+ const changedInput=await previousLaneEvidence({...options,fingerprints:{...fingerprints,allunit:'2'.repeat(64)},
+  request:evidenceApi({mutate:x=>{x.jobs[1].conclusion='failure';}})});
+ assert.equal(changedInput.allunit,null,'A relevant input change requires a new execution');
+});
+
+test('legacy runtime evidence is recomputed from its immutable source, not re-pinned to a new expected hash',async()=>{
+ const old='2'.repeat(64),request=()=>evidenceApi({mutate:x=>{delete x.p.fingerprintAlgorithm;x.p.gates.allunit.fingerprint=old;}});
+ assert.equal((await previousLaneEvidence({...options,request:request()})).allunit,null);
+ let calls=0;
+ const sourceFingerprints=revision=>{calls++;assert.equal(revision,head);return {legacy:{...fingerprints,allunit:old},current:fingerprints};};
+ const e=await previousLaneEvidence({...options,request:request(),sourceFingerprints});
+ assert.equal(e.allunit.sourceFingerprint,old);assert.equal(e.allunit.fingerprint,fp);assert.equal(calls,1);
+ for(const proof of [{legacy:fingerprints,current:fingerprints},{legacy:{...fingerprints,allunit:old},current:{...fingerprints,allunit:'3'.repeat(64)}}])
+  assert.equal((await previousLaneEvidence({...options,request:request(),sourceFingerprints:()=>proof})).allunit,null);
+ assert.equal((await previousLaneEvidence({...options,request:evidenceApi({mutate:x=>{x.p.fingerprintAlgorithm='unknown';}})})).allunit,null);
+ const entries=[['scripts/ci-change-scope.mjs','a'.repeat(40)],['.gitattributes','b'.repeat(40)],['app/shared.js','c'.repeat(40)]],sets=Object.fromEntries(Object.keys(LANE_JOBS).map(k=>[k,new Set()]));
+ const a=laneFingerprints(entries,sets,{base}),b=laneFingerprints(entries.map(([f,h])=>[f,f==='scripts/ci-change-scope.mjs'?'d'.repeat(40):h]),sets,{base});
+ assert.deepEqual(a,b,'Read-only orchestration changes do not change runtime acquisition conditions');
+ assert.notDeepEqual(a,laneFingerprints(entries.map(([f,h])=>[f,f==='.gitattributes'?'e'.repeat(40):h]),sets,{base}),'Checkout byte conditions remain runtime inputs');
+ sets.allunit.add('scripts/ci-change-scope.mjs');
+ assert.notEqual(laneFingerprints(entries,sets,{base}).allunit,laneFingerprints(entries.map(([f,h])=>[f,f==='scripts/ci-change-scope.mjs'?'d'.repeat(40):h]),sets,{base}).allunit,'An actual runtime import remains bound');
 });
 test('required PR Verify rejects missing, skipped, cancelled and failed lanes and scope even after a docs push',()=>{
  const p=planFor(changed),needs={...Object.fromEntries(Object.keys(JOB_LANES).map(k=>[k,{result:'skipped'}])),scope:{result:'success'},verify:{result:'success'},allunit:{result:'success'}};
@@ -160,6 +197,8 @@ test('all called workflows feed one always-run protected check without duplicate
  assert.equal(read('v1-quality-acceptance').concurrency.group.startsWith('quality-acceptance-'),true);
  for(const id of ['allunit','five'])assert.equal(jobs[id].with.fresh,true);
  assert.equal(read('five-corrections-capture').jobs.capture.if,undefined);
+ assert.equal(read('native-allunit-capture').jobs.capture.strategy['max-parallel'],2);
+ assert.equal(read('five-corrections-capture').jobs.capture.strategy['max-parallel'],1);
  assert.equal(read('targeted-frame-performance').jobs.scope.if,'github.event.pull_request.draft');
  assert.deepEqual(Object.keys(read('github-pages-release').on),['workflow_dispatch']);
  assert.equal(read('github-pages-release').on.workflow_dispatch.inputs.deploy.default,false);

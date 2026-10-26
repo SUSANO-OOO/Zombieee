@@ -130,14 +130,15 @@ export function dependencyInputs(files,read){
  return {sets,dependencies};
 }
 const digest=text=>createHash('sha256').update(text).digest('hex');
-export function laneFingerprints(entries,sets,{base,workflowContracts={}}={}){
+export function laneFingerprints(entries,sets,{base,workflowContracts={},legacy=false}={}){
  const assigned=new Set(Object.values(sets).flatMap(s=>[...s]));
  const common=file=>!isDocumentation(file)&&file!=='.github/workflows/ci.yml'&&!diagnostic.test(file)&&!/^tests\/[^/]+\.test\.mjs$/u.test(file)
+  &&(legacy||!control.has(file)||file==='.gitattributes')
   &&(!/^(?:scripts\/|\.github\/workflows\/)/u.test(file)||!assigned.has(file));
  return Object.fromEntries(lanes.map(k=>[k,digest(JSON.stringify({base,
   workflow:workflowContracts[k],inputs:entries.filter(([file])=>common(file)||sets[k].has(file))}))]));
 }
-export async function previousLaneEvidence({repository,previousHead,base,prNumber,fingerprints,token,request=fetch}={}){
+export async function previousLaneEvidence({repository,previousHead,base,prNumber,fingerprints,token,request=fetch,sourceFingerprints}={}){
  const none=Object.fromEntries(lanes.map(k=>[k,null]));
  if(!/^[\w.-]+\/[\w.-]+$/u.test(repository??'')||!/^[a-f0-9]{40}$/u.test(previousHead??'')
   ||!/^[a-f0-9]{40}$/u.test(base??'')||!Number.isSafeInteger(prNumber)||prNumber<1||!token)return none;
@@ -168,6 +169,17 @@ export async function previousLaneEvidence({repository,previousHead,base,prNumbe
   assert.equal(jobs.total_count,jobs.jobs.length);assert.ok(jobs.total_count<=100);
   return {run,plan,jobs:jobs.jobs,provenance};
  };
+ const sourceCache=new Map();
+ const matches=async(record,k)=>{
+  const gate=record.plan.gates[k];
+  if(record.plan.fingerprintAlgorithm==='runtime-source-v2')assert.equal(gate.fingerprint,fingerprints[k]);
+  else if(record.plan.fingerprintAlgorithm===undefined&&sourceFingerprints){
+   if(!sourceCache.has(record.run.head_sha))sourceCache.set(record.run.head_sha,Promise.resolve().then(()=>sourceFingerprints(record.run.head_sha)));
+   const proof=await sourceCache.get(record.run.head_sha);
+   assert.equal(gate.fingerprint,proof.legacy[k],'Original fingerprint must match its immutable source tree');
+   assert.equal(proof.current[k],fingerprints[k],'Actual runtime inputs changed');
+  }else {assert.equal(record.plan.fingerprintAlgorithm,undefined,'Unknown fingerprint algorithm');assert.equal(gate.fingerprint,fingerprints[k]);}
+ };
  try{
   const runs=await get('actions/workflows/ci.yml/runs?head_sha='+previousHead+'&event=pull_request&per_page=10');
   for(const r of runs.workflow_runs??[]){
@@ -175,34 +187,40 @@ export async function previousLaneEvidence({repository,previousHead,base,prNumbe
    let prior;try{prior=await owner(r.id);}catch{continue;}
    for(const k of lanes){
     try{
-     const gate=prior.plan.gates[k];assert.equal(gate.required,true);assert.equal(gate.fingerprint,fingerprints[k]);
-     const original=gate.state==='reused'?await owner(gate.owner.runId):prior;
+     const gate=prior.plan.gates[k];assert.equal(gate.required,true);await matches(prior,k);
+     const imported=['reused','blocked'].includes(gate.state),original=imported?await owner(gate.owner.runId):prior;
      const originalGate=original.plan.gates[k];
      assert.equal(originalGate.state,'fresh');assert.equal(originalGate.required,true);
-     assert.equal(originalGate.fingerprint,fingerprints[k]);
-     if(gate.state==='reused'){assert.equal(gate.owner.head,original.run.head_sha);assert.equal(gate.owner.base,base);}
+     await matches(original,k);
+     if(imported){assert.equal(gate.owner.head,original.run.head_sha);assert.equal(gate.owner.base,base);}
      const jobs=LANE_JOBS[k].map(name=>{
       const rows=original.jobs.filter(j=>j.name===name||j.name.endsWith(' / '+name));assert.equal(rows.length,1);
-      const j=rows[0];assert.equal(j.status,'completed');assert.equal(j.conclusion,'success');
+      const j=rows[0];assert.equal(j.status,'completed');assert.ok(['success','failure'].includes(j.conclusion));
       assert.equal(j.run_id,original.run.id);assert.equal(j.run_attempt,1);assert.equal(j.head_sha,original.run.head_sha);
       assert.ok(Number.isSafeInteger(j.id)&&j.id>0);
       // The WebKit summary derives its result from all three proven combat jobs.
       if(name!=='V1.0.2 Combat (webkit)')assert.ok(j.steps?.some(s=>s.name==='Verify exact checkout'&&s.status==='completed'&&s.conclusion==='success'));
-      return {id:j.id,name:j.name};
+      return {id:j.id,name:j.name,conclusion:j.conclusion};
      });
+     const conclusion=jobs.some(j=>j.conclusion==='failure')?'failure':'success';
+     if(imported)assert.equal(conclusion,gate.state==='blocked'?'failure':'success');
      none[k]={runId:original.run.id,head:original.run.head_sha,base,fingerprint:fingerprints[k],jobs,
-      provenance:original.provenance};
-    }catch{/* Missing, failed, skipped or incompatible evidence must run fresh. */}
+      conclusion,sourceFingerprint:originalGate.fingerprint,sourceFingerprintAlgorithm:original.plan.fingerprintAlgorithm??'legacy-v1',provenance:original.provenance};
+    }catch{/* Missing, skipped, cancelled or incompatible evidence must run fresh. */}
    }
    break;
   }
  }catch{/* Network and evidence failures never become reused success. */}
  return none;
 }
-export function validationPlan(scope,{head,base,merge,fingerprints,evidence={}}){
+export function validationPlan(scope,{head,base,merge,fingerprints,evidence={},attempt=1}){
+ assert.ok(Number.isSafeInteger(attempt)&&attempt>=1);
+ const priorFailures=Object.fromEntries(Object.entries(evidence).filter(([,e])=>e?.conclusion==='failure'));
+ if(attempt>1)evidence=Object.fromEntries(Object.entries(evidence).filter(([,e])=>e?.conclusion!=='failure'));
  const gates=Object.fromEntries(lanes.map(k=>[k,{required:scope[k],fingerprint:fingerprints[k],
-  state:!scope[k]?'outside':evidence[k]?'reused':'fresh',...(scope[k]&&evidence[k]?{owner:evidence[k]}:{})}]));
- return {schema:'zombieee-validation-scope/v1',head,base,merge,gates,scope:scope.scope,
+  state:!scope[k]?'outside':evidence[k]?.conclusion==='failure'?'blocked':evidence[k]?'reused':'fresh',...(scope[k]&&evidence[k]?{owner:evidence[k]}:{})}]));
+ return {schema:'zombieee-validation-scope/v1',fingerprintAlgorithm:'runtime-source-v2',head,base,merge,gates,scope:scope.scope,
+  ...(attempt>1&&Object.keys(priorFailures).length?{explicitRevalidation:{attempt,priorFailures,resolutionClaimed:false}}:{}),
   code_checks:scope.code_checks,wholeGameAccepted:false};
 }
 export function assertValidationResults(plan,needs){
@@ -218,12 +236,17 @@ export function assertValidationResults(plan,needs){
    for(const [id,lane] of Object.entries(JOB_LANES))if(lane===k&&id!=='verify')assert.equal(needs[id]?.result,'skipped','Outside job ran unexpectedly: '+id);
    continue;
   }
-  if(g.state==='reused'){
+  if(['reused','blocked'].includes(g.state)){
    assert.equal(g.owner?.fingerprint,g.fingerprint);assert.equal(g.owner?.base,plan.base);
    assert.ok(Number.isSafeInteger(g.owner?.runId)&&g.owner.runId>0);
    assert.match(g.owner.head,/^[a-f0-9]{40}$/u);assert.equal(g.owner.provenance?.head,g.owner.head);
    assert.equal(g.owner.provenance?.base,plan.base);assert.equal(g.owner.jobs.length,LANE_JOBS[k].length);
    for(const [id,lane] of Object.entries(JOB_LANES))if(lane===k&&id!=='verify')assert.equal(needs[id]?.result,'skipped','Reused job ran unexpectedly: '+id);
+   if(g.state==='blocked'){
+    assert.equal(g.owner.conclusion,'failure');assert.ok(g.owner.jobs.some(j=>j.conclusion==='failure'));
+    assert.fail('Unresolved unchanged '+k+' failure remains blocking: run '+g.owner.runId);
+   }
+   assert.notEqual(g.owner.conclusion,'failure','A failed owner cannot become reused success');
    continue;
   }
   assert.equal(g.state,'fresh');
@@ -242,9 +265,14 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
   git(['merge-base','--is-ancestor',head,merge]);git(['merge-base','--is-ancestor',base,merge]);
  }
  const paths=git(['diff','--no-renames','--name-only','-z',base+'...'+head],{raw:true}).split('\0').filter(Boolean);
- const entries=git(['ls-tree','-r','-z',head],{raw:true}).split('\0').filter(Boolean).map(line=>{const tab=line.indexOf('\t');return [line.slice(tab+1),line.slice(0,tab).split(' ')[2]];});
- const files=new Set(entries.map(([file])=>file)),cache=new Map();
- const read=file=>{if(!cache.has(file))cache.set(file,git(['show',head+':'+file]).replaceAll('\r\n','\n'));return cache.get(file);};
+ const snapshot=revision=>{
+  assert.match(revision,/^[a-f0-9]{40}$/u);
+  const entries=git(['ls-tree','-r','-z',revision],{raw:true}).split('\0').filter(Boolean).map(line=>{const tab=line.indexOf('\t');return [line.slice(tab+1),line.slice(0,tab).split(' ')[2]];});
+  const files=new Set(entries.map(([file])=>file)),cache=new Map();
+  const read=file=>{if(!cache.has(file))cache.set(file,git(['show',revision+':'+file]).replaceAll('\r\n','\n'));return cache.get(file);};
+  return {entries,files,read};
+ };
+ const {entries,files,read}=snapshot(head);
  const {sets,dependencies}=dependencyInputs(files,read),workflowContracts=workflowRuntimeContracts(read('.github/workflows/ci.yml')),
   fingerprints=laneFingerprints(entries,sets,{base,workflowContracts});
  dependencies['.github/workflows/ci.yml']=workflowJobChanges(git(['show',base+':.github/workflows/ci.yml']),read('.github/workflows/ci.yml'));
@@ -253,14 +281,22 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
  try{previousIsAncestor=/^[a-f0-9]{40}$/u.test(before??'')&&before!==head&&git(['merge-base',before,head])===before;}catch{/* Missing old objects require fresh gates. */}
  if(previousIsAncestor)
   evidence=await previousLaneEvidence({repository:process.env.GITHUB_REPOSITORY,previousHead:before,base,
-   prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),fingerprints,token:process.env.CI_SCOPE_ACTIONS_TOKEN});
- const plan=validationPlan(scope,{head,base,merge,fingerprints,evidence});
+   prNumber:Number(process.env.CI_SCOPE_PR_NUMBER),fingerprints,token:process.env.CI_SCOPE_ACTIONS_TOKEN,
+   sourceFingerprints:revision=>{
+    const old=snapshot(revision),{sets}=dependencyInputs(old.files,old.read),workflowContracts=workflowRuntimeContracts(old.read('.github/workflows/ci.yml'));
+    return {legacy:laneFingerprints(old.entries,sets,{base,workflowContracts,legacy:true}),current:laneFingerprints(old.entries,sets,{base,workflowContracts})};
+   }});
+ // A new commit with identical inputs is not permission to retry a failure.
+ // An operator's existing explicit Actions re-run remains a fresh execution,
+ // with the original failure linked; it is never imported as a past success.
+ const attempt=Number(process.env.GITHUB_RUN_ATTEMPT??1);assert.ok(Number.isSafeInteger(attempt)&&attempt>=1);
+ const plan=validationPlan(scope,{head,base,merge,fingerprints,evidence,attempt});
  mkdirSync('outputs/ci-scope',{recursive:true});writeFileSync('outputs/ci-scope/validation-scope.json',JSON.stringify(plan,null,2)+'\n');
  const fresh=Object.fromEntries(lanes.map(k=>[k,plan.gates[k].state==='fresh']));
  const outputs={...fresh,full:lanes.every(k=>fresh[k]),code_checks:scope.code_checks,plan:JSON.stringify(plan)};
  if(process.env.GITHUB_OUTPUT)appendFileSync(process.env.GITHUB_OUTPUT,Object.entries(outputs).map(([k,v])=>k+'='+v+'\n').join(''));
  const states=Object.entries(plan.gates).map(([k,g])=>k+': '+g.state+(g.owner?' (run '+g.owner.runId+')':'')).join('\n');
- if(process.env.GITHUB_STEP_SUMMARY)appendFileSync(process.env.GITHUB_STEP_SUMMARY,'Whole PR validation: '+scope.scope+'\n\n'+states+'\n\nOutside is not a passed test. Failed/missing evidence runs fresh. Whole-game acceptance is not claimed.\n');
+ if(process.env.GITHUB_STEP_SUMMARY)appendFileSync(process.env.GITHUB_STEP_SUMMARY,'Whole PR validation: '+scope.scope+'\n\n'+states+'\n\nOutside is not a passed test. Qualified unchanged failures remain blocking without an automatic retry. Missing/incompatible evidence runs fresh. An explicit revalidation must use Actions Re-run all jobs to recompute scope; successful owners can still be reused. Re-run failed jobs alone keeps the prior blocked outputs. A re-run does not itself resolve the original failure. Whole-game acceptance is not claimed.\n');
  console.log(JSON.stringify({...plan,changedPaths:paths}));
 }
 
@@ -283,7 +319,7 @@ export function workflowRuntimeContracts(text){
   if(lane==='legacy')body=body.replaceAll('needs.scope.outputs.full','needs.scope.outputs.legacy');
   return body.replace(/^    name:[^\n]*\n/gmu,'').replace(/^\s*#.*\n/gmu,'')
    .replace(/^        if: needs\.scope\.outputs\.code_checks == 'true'\n/gmu,'')
-   .replace(/\n      - name: Check current documentation links\n        run: node scripts\/check-development-docs\.mjs\n/gu,'').trim();
+   .replace(/\n      - name: Check current documentation links\n        run: (?:node scripts\/check-development-docs\.mjs|node --test tests\/operating-model-docs\.test\.mjs)\n/gu,'').trim();
  };
  const contracts=Object.fromEntries(lanes.map(k=>[k,{global,jobs:[]}]));
  const unknown=[];

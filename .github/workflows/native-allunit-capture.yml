@@ -111,6 +111,7 @@ jobs:
     timeout-minutes: 15
     strategy:
       fail-fast: false
+      max-parallel: 2
       matrix:
         shard: ${{ fromJSON(needs.build.outputs.shards) }}
     env:
