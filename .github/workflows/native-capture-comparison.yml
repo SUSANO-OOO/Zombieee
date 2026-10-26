@@ -1,4 +1,4 @@
-name: Isolated F5 Encoder Control
+name: Isolated F5 Process Control
 on:
   workflow_dispatch:
     inputs:
@@ -37,8 +37,8 @@ jobs:
       - name: Prepare only this ephemeral host
         id: prepare
         run: node scripts/ops-f5-recorder-control.mjs prepare
-      - name: Four independent Brawler fixtures; encoding ABBA
-        run: node scripts/run-browser-qa-with-server.mjs scripts/ops-f5-recorder-control.mjs
+      - name: Six fixed Guardian fixtures; raw process CPU and collector GC
+        run: node --trace-gc-nvp scripts/run-browser-qa-with-server.mjs scripts/ops-f5-recorder-control.mjs
       - name: Restore every original volume state
         if: always() && steps.prepare.outcome != 'skipped'
         run: node scripts/ops-f5-recorder-control.mjs restore

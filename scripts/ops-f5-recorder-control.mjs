@@ -10,6 +10,7 @@ import {createDefaultV100Save,normalizeV100Save,serializeV100Save} from '../app/
 import {V100_UNITS,V100_STAGE_IDS} from '../app/v100Registry.js';
 import {MANUAL_ABILITY_REGISTRY as manual} from '../app/manualAbilities.js';
 import {parseIndexingStatus,pauseEnabledVolumes,restoreEnabledVolumes} from './v100-macos-indexing-control.mjs';
+import {withNativeProcessTimeline} from './v177-native-process-timeline.mjs';
 
 const out=path.resolve('outputs/ops-f5-recorder-control');
 const git=args=>execFileSync('git',args,{encoding:'utf8'}).trim();
@@ -46,28 +47,13 @@ async function host(mode){
   }
 }
 
-// B retains the real canvas stream, mixer tap, original observer and real game
-// audio. It substitutes only the recorder interface; it produces NO media and
-// can NEVER satisfy a recording acceptance condition. All clocks remain native.
-function omitEncoderOnly(mode){
-  if(mode==='native-av'){window.__OPS_ENCODER_CONTROL__={encoderCreated:true};return;}
-  const Native=window.MediaRecorder;
-  const receipt=window.__OPS_ENCODER_CONTROL__={encoderCreated:false,constructorCalls:0,startCalls:0,stopCalls:0};
-  window.MediaRecorder=class NoEncoderDiagnostic {
-    static isTypeSupported(type){return Native.isTypeSupported(type);}
-    constructor(stream,options){receipt.constructorCalls++;receipt.tracks=stream.getTracks().map(t=>t.kind);this.mimeType=options.mimeType;this.state='inactive';}
-    start(){receipt.startCalls++;this.state='recording';queueMicrotask(()=>this.onstart?.());}
-    stop(){receipt.stopCalls++;this.state='inactive';queueMicrotask(()=>this.onstop?.());}
-  };
-}
-
 export async function runBrowserQa(){
   await guard();await mkdir(out,{recursive:true});
   const report={head:git(['rev-parse','HEAD']),productHead:'677795f000435d79d2f50a1643e2e9adb849a9dd',
     diagnosticOnly:true,accepted:false,run:process.env.GITHUB_RUN_ID,runtime:NATIVE_RECORDING_WEBKIT_RUNTIME,
-    plan:['native-av','no-encoder','no-encoder','native-av'],kind:'brawler',viewport:{width:844,height:340},
-    hypothesis:'The connected native MediaRecorder path is necessary for the large unmeasured frame intervals. Both conditions create the same canvas stream and mixer tap, but downstream consumption may differ.',
-    decision:'Both no-encoder fixtures with large stalls reject the connected recorder path as the sole explanation. Both native-AV fixtures alone with stalls support path involvement, not codec CPU versus capture delivery ownership. Mixed outcomes remain inconclusive. No diagnostic success replaces a required recording.',
+    plan:Array(6).fill('native-av'),kind:'guardian',viewport:{width:844,height:340},
+    hypothesis:'Large frame stalls lie outside the measured game callback and audit. Use bounded cumulative process CPU and collector GC traces to distinguish active CPU work from callback delivery waits.',
+    decision:'Six predeclared independent fixtures, never repeat-until-pass. Attribute only CPU deltas whose actual wall-time brackets overlap a source-RAF stall. PS overhead, coarse brackets and profiling perturbation remain explicit. No diagnostic result replaces an acceptance.',
     cases:[],errors:[],status:'starting'};
   const persist=()=>writeFile(path.join(out,'report.json'),JSON.stringify(report,null,2)+'\n');
   const browser=await(await nativeRecordingBrowserType()).launch({headless:true});
@@ -77,7 +63,7 @@ export async function runBrowserQa(){
     const save=normalizeV100Save({...base,campaignStarted:true,revision:3,ownedUnitIds:owned,registeredUnitIds:owned,formationSlots:owned.slice(0,7),
       flowState:{phase:'formation',stageId:V100_STAGE_IDS[0],stageNumber:1,eventId:null,destination:'formation',nodeIndex:0,firstClear:false,finalized:true}});
     for(const [index,mode] of report.plan.entries()){
-      const row={index,mode,status:'starting',accepted:false};report.cases.push(row);await persist();
+      const row={index,mode,caseId:'ops-guardian-manual-844x340-'+index,status:'starting',accepted:false};report.cases.push(row);await persist();
       const caseStartedAt=performance.now();
       await withCorrectionCaseContext(browser,{viewport:report.viewport,deviceScaleFactor:1,isMobile:true,hasTouch:true},async(page,closeOwned)=>{
         await page.addInitScript(seedV100BrowserSaveOnce,serializeV100Save(save));
@@ -85,23 +71,22 @@ export async function runBrowserQa(){
         await page.getByRole('button',{name:'戦闘へ',exact:true}).click();await page.waitForFunction(()=>window.__ASHFALL_BATTLE_QA__?.getSnapshot().running);
         await page.evaluate(async()=>{await window.__ASHFALL_BATTLE_QA__.ensureUnitRenderProofAsset('guardian');await window.__ASHFALL_BATTLE_QA__.ensureEnemyFacingProofAsset('walker');});
         await waitForNativeCaptureAudio(page,row);
-        row.proof=await page.evaluate(async()=>{const q=window.__ASHFALL_BATTLE_QA__;await q.ensureUnitRenderProofAsset('brawler');
-          const p=q.prepareManualAbilityProof('brawler');q.setEnemyVfxProofPaused(true);window.__ASHFALL_AUDIO_QA__.resetCueRequests();
-          return {...p,trackedIds:q.getSnapshot().fighters.map(f=>f.id)};});
+        row.proof=await page.evaluate(async kind=>{const q=window.__ASHFALL_BATTLE_QA__;await q.ensureUnitRenderProofAsset(kind);
+          const p=q.prepareManualAbilityProof(kind);q.setEnemyVfxProofPaused(true);window.__ASHFALL_AUDIO_QA__.resetCueRequests();
+          return {...p,trackedIds:q.getSnapshot().fighters.map(f=>f.id)};},report.kind);
         await page.waitForFunction(ids=>ids.every(id=>window.__ASHFALL_BATTLE_QA__.getEnemyFacingRuntimeAudit(id).renderHistory.at(-1)?.jointDrawSucceeded),row.proof.ownerIds,{timeout:5000});
         row.document=await page.evaluate(()=>({visibility:document.visibilityState,focus:document.hasFocus()}));
-        await page.evaluate(omitEncoderOnly,mode);
-        const d=manual.brawler,durationMs=Math.ceil(Math.max(3,(d.windupSeconds??0)+(d.activeSeconds??d.guardSeconds??0)+(d.recoverySeconds??0)+1.2)*1000);
+        const d=manual[report.kind],durationMs=Math.ceil(Math.max(3,(d.windupSeconds??0)+(d.activeSeconds??d.guardSeconds??0)+(d.recoverySeconds??0)+1.2)*1000);
+        let capture,bytes;
+        await withNativeProcessTimeline(async()=>{
         row.start=await page.evaluate(startCorrectionRecording,{ids:row.proof.trackedIds,durationMs,preferMp4:true});
         row.release=await page.evaluate(()=>{const q=window.__ASHFALL_BATTLE_QA__;q.setEnemyVfxProofPaused(false);return {at:performance.now(),time:q.getV105CorrectionAudit([]).time};});
         await page.locator(`.manual-ability-ready[data-fighter-id="${row.proof.ownerIds[0]}"]`).tap({timeout:5000});
         row.input='one actual enabled tap for this independent fixture';
         await page.waitForTimeout(durationMs);
-        const capture=await page.evaluate(stopCorrectionRecording),bytes=Buffer.from(capture.data,'base64');delete capture.data;row.capture=capture;
-        row.encoder=await page.evaluate(()=>window.__OPS_ENCODER_CONTROL__??{encoderCreated:true});
-        if(mode==='native-av'){
-          row.file=path.join(out,index+'-original.mp4');await writeFile(row.file,bytes,{flag:'wx'});
-        }else{assert.equal(bytes.length,0);assert.equal(capture.failed,'Original encoded byte limit');assert.equal(row.encoder.constructorCalls,1);assert.equal(row.encoder.stopCalls,1);}
+        capture=await page.evaluate(stopCorrectionRecording);bytes=Buffer.from(capture.data,'base64');delete capture.data;row.capture=capture;
+        row.file=path.join(out,index+'-original.mp4');await writeFile(row.file,bytes,{flag:'wx'});
+        },{selection:{mode:'ops-guardian-process-diagnostic'},row,out,binding:{head:report.head}});
         await closeOwned();
         if(row.file)row.originalAv=await auditCorrectionEncodedClip(row.file,capture);
         assertCorrectionCaseDeadline(row,caseStartedAt);

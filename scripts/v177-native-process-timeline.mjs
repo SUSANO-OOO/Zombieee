@@ -10,7 +10,7 @@ export const PROCESS_TIMELINE_LIMITS=Object.freeze({intervalMs:200,childTimeoutM
 
 export function readOwnedNativeProcesses(file,args,{signal,spawnProcess=spawn,schedule=setTimeout,cancel=clearTimeout,
   now=Date.now,maxBuffer=1024*1024}={}){
-  assert.equal(file,'/bin/ps');assert.deepEqual(args,['-A','-o','pid=,ppid=,state=,time=,comm=']);
+  assert.equal(file,'/bin/ps');assert.ok([['-A','-o','pid=,ppid=,state=,time=,comm='],['-A','-ww','-o','pid=,ppid=,state=,time=,comm=']].some(a=>JSON.stringify(a)===JSON.stringify(args)));
   if(signal?.aborted)return Promise.reject(Object.assign(Error('Process observation owner is already closed'),{name:'AbortError'}));
   return new Promise((resolve,reject)=>{
     const child=spawnProcess(file,args,{stdio:['ignore','pipe','pipe'],windowsHide:true}),stdout=[],stderr=[];
@@ -49,15 +49,16 @@ export function readOwnedNativeProcesses(file,args,{signal,spawnProcess=spawn,sc
 }
 
 export function selectNativeProcessTimeline(selection,row){
+  if(selection.mode==='ops-guardian-process-diagnostic')return /^ops-guardian-manual-844x340-[0-5]$/u.test(row.caseId);
   return selection.mode==='remaining'&&row.caseId===PROCESS_TIMELINE_CASE
     &&selection.caseIds.length===1&&selection.caseIds[0]===PROCESS_TIMELINE_CASE
     &&selection.manualCaseIds.length===0&&selection.outcomeCaseIds.length===0;
 }
 
-export function assertNativeProcessTimelineHost(env,platform,arch){
+export function assertNativeProcessTimelineHost(env,platform,arch,opsDiagnostic=false){
   assert.equal(platform,'darwin');assert.equal(arch,'arm64');
   for(const [key,value]of Object.entries({GITHUB_ACTIONS:'true',RUNNER_ENVIRONMENT:'github-hosted',RUNNER_OS:'macOS',
-    GITHUB_REPOSITORY:'SUSANO-OOO/Zombieee',GITHUB_EVENT_NAME:'pull_request',GITHUB_JOB:'capture',V177_CAPTURE_SHARD:'forms-2'}))
+    GITHUB_REPOSITORY:'SUSANO-OOO/Zombieee',GITHUB_EVENT_NAME:opsDiagnostic?'workflow_dispatch':'pull_request',GITHUB_JOB:opsDiagnostic?'f5-recorder-control':'capture',...(opsDiagnostic?{}:{V177_CAPTURE_SHARD:'forms-2'})}))
     assert.equal(env[key],value,'Native process observation is restricted to the owned ephemeral capture job: '+key);
   assert.match(env.GITHUB_RUN_ID??'',/^[1-9][0-9]*$/u);
   assert.match(env.GITHUB_RUN_ATTEMPT??'',/^[1-9][0-9]*$/u);
@@ -88,11 +89,13 @@ export function parseNativeProcessRows(text){
 export async function withNativeProcessTimeline(operation,{selection,row,out,binding,env=process.env,
   platform=process.platform,arch=process.arch,signal,run=readOwnedNativeProcesses,pause=delay,now=Date.now,monotonic=()=>Number(process.hrtime.bigint())/1e6}={}){
   if(!selectNativeProcessTimeline(selection,row))return operation();
-  assertNativeProcessTimelineHost(env,platform,arch);assert.equal(binding.head,env.V177_EXPECTED_HEAD_SHA);
+  const opsDiagnostic=selection.mode==='ops-guardian-process-diagnostic';
+  assertNativeProcessTimelineHost(env,platform,arch,opsDiagnostic);assert.equal(binding.head,env.V177_EXPECTED_HEAD_SHA);
   const controller=new AbortController(),snapshots=[],errors=[],ownedProcesses=[];
   const record={schema:'v177-native-process-timeline/v1',caseId:row.caseId,head:binding.head,runId:env.GITHUB_RUN_ID,
     runAttempt:env.GITHUB_RUN_ATTEMPT,host:{platform,arch},limits:PROCESS_TIMELINE_LIMITS,
-    command:{file:'/bin/ps',args:['-A','-o','pid=,ppid=,state=,time=,comm=']},
+    command:{file:'/bin/ps',args:['-A',...(opsDiagnostic?['-ww']:[]),'-o','pid=,ppid=,state=,time=,comm=']},
+    ...(opsDiagnostic?{nodePid:process.pid,nodeTimeOrigin:performance.timeOrigin,diagnosticOnly:true,accepted:false}:{}),
     hostStartedAtMs:now(),monotonicStartedAtMs:monotonic(),snapshots,errors,ownedProcesses,attempts:0,limitReached:null,
     scope:'Read-only cumulative process CPU observations around one original case. No process settings, game clock, recording cadence, sample count, deadline or acceptance threshold changes. No profiler, frame filtering or retry.',
     originalSourceClockRequired:true,productVersusBrowserOsCauseResolved:false};
@@ -130,7 +133,7 @@ export async function withNativeProcessTimeline(operation,{selection,row,out,bin
   // closes the context. The original case deadline remains its sole deadline.
   const finished=worker.then(async()=>{
     record.hostFinishedAtMs=now();record.monotonicFinishedAtMs=monotonic();record.sampleBytes=bytes;
-    const file=path.join(out,'process-timeline-gunner-engage-844x340.json'),text=JSON.stringify(record)+'\n';
+    const file=path.join(out,opsDiagnostic?'process-timeline-'+row.caseId+'.json':'process-timeline-gunner-engage-844x340.json'),text=JSON.stringify(record)+'\n';
     assert.ok(Buffer.byteLength(text)<=PROCESS_TIMELINE_LIMITS.maxBytes);
     await writeFile(file,text,{flag:'wx'});
     row.nativeProcessTimeline={file,sha256:createHash('sha256').update(text).digest('hex'),snapshots:snapshots.length,
