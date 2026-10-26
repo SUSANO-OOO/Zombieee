@@ -97,8 +97,8 @@ export async function runBrowserQa(){
         await page.locator(`.manual-ability-ready[data-fighter-id="${row.proof.ownerIds[0]}"]`).tap({timeout:5000});
         row.input='one actual enabled tap for this independent fixture';
         await page.waitForTimeout(durationMs);
-        row.encoder=await page.evaluate(()=>window.__OPS_ENCODER_CONTROL__??{encoderCreated:true});
         const capture=await page.evaluate(stopCorrectionRecording),bytes=Buffer.from(capture.data,'base64');delete capture.data;row.capture=capture;
+        row.encoder=await page.evaluate(()=>window.__OPS_ENCODER_CONTROL__??{encoderCreated:true});
         if(mode==='native-av'){
           row.file=path.join(out,index+'-original.mp4');await writeFile(row.file,bytes,{flag:'wx'});
         }else{assert.equal(bytes.length,0);assert.equal(capture.failed,'Original encoded byte limit');assert.equal(row.encoder.constructorCalls,1);assert.equal(row.encoder.stopCalls,1);}
