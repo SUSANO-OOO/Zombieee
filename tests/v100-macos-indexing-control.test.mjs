@@ -84,3 +84,42 @@ test('Ranger continuation uses the same prepared-host ownership without permitti
  const c={...e,V105_CAPTURE_SCOPE:'desktop'},s={mode:'remaining',plan:[{kind:'ranger',mode:'manual'}]};
  assert.equal(correctionPreparationNeeded(s),true);assert.doesNotThrow(()=>assertEphemeralCorrectionCaptureHost(c,'darwin','arm64',s));
 });
+
+test('full capture preparation stays within exact hosted ARM plans and binds every scope',async()=>{
+ const {nativeCaseSelection,nativeCaptureHostControl}=await import('../scripts/v177-native-allunit-selection.mjs');
+ const {correctionCases}=await import('../scripts/v105-five-corrections-cases.mjs');
+ const full=nativeCaseSelection({event:{},forceFull:true});
+ const owned={...env,GITHUB_JOB:'capture',GITHUB_RUN_ATTEMPT:'1',CI_CAPTURE_FRESH:'true',
+  V177_EXPECTED_HEAD_SHA:'a'.repeat(40),V177_NATIVE_HOST_INDEXING_CONTROL:'full-native-motion',V177_CAPTURE_SHARD:'forms-1'};
+ assert.equal(nativeCaptureHostControl({pull_request:{}},full,{fresh:true}),'full-native-motion');
+ assert.equal(nativeCaptureHostControl({pull_request:{}},full,{fresh:false}),'none');
+ for(const shard of full.shards)assert.doesNotThrow(()=>assertEphemeralNativeCaptureHost({...owned,V177_CAPTURE_SHARD:shard},'darwin','arm64',full));
+ for(const change of [{caseIds:full.caseIds.slice(1)},{caseIds:[...full.caseIds,full.caseIds[0]]},{shards:['forms-1']}])
+  assert.throws(()=>assertEphemeralNativeCaptureHost(owned,'darwin','arm64',{...full,...change}));
+ const nativeRecord=JSON.parse(JSON.stringify({run:owned.GITHUB_RUN_ID,head:owned.GITHUB_SHA,attempt:owned.GITHUB_RUN_ATTEMPT,
+ candidateHead:owned.V177_EXPECTED_HEAD_SHA,arch:'arm64',state:'paused',acceptanceOverride:false,diagnosticOnly:false,
+ purpose:'native-capture-preparation',shard:'forms-1',selectionMode:'full',caseIds:full.caseIds,
+ before:[{mount:'/',enabled:true}],after:[{mount:'/',enabled:false}],pausedAt:'2026-10-26T00:00:00Z'}));
+ const nativeOptions={env:owned,platform:'darwin',arch:'arm64',selection:full,binding:{head:owned.V177_EXPECTED_HEAD_SHA,shardId:'forms-1'}};
+ assert.doesNotThrow(()=>validateCapturePreparationRecord(nativeRecord,nativeOptions));
+ for(const change of [{selectionMode:'remaining'},{shard:'forms-2'},{caseIds:full.caseIds.slice(1)},{manualCaseIds:['unexpected']}])
+  assert.throws(()=>validateCapturePreparationRecord({...nativeRecord,...change},nativeOptions));
+ for(const scope of ['desktop','mobile390','mobile340']){
+  const selection={mode:'full',plan:correctionCases(scope),retained:[]},e={...owned,V105_CAPTURE_SCOPE:scope};
+  assert.equal(correctionPreparationNeeded(selection,scope),true);
+  assert.doesNotThrow(()=>assertEphemeralCorrectionCaptureHost(e,'darwin','arm64',selection));
+  for(const [key,value] of [['CI_CAPTURE_FRESH',''],['RUNNER_ENVIRONMENT','self-hosted'],['GITHUB_EVENT_NAME','workflow_dispatch'],
+   ['GITHUB_JOB','other'],['GITHUB_RUN_ATTEMPT',''],['GITHUB_SHA','main'],['V105_CAPTURE_SCOPE','../elsewhere']])
+   assert.throws(()=>assertEphemeralCorrectionCaptureHost({...e,[key]:value},'darwin','arm64',selection));
+  for(const plan of [[],selection.plan.slice(1),[...selection.plan,selection.plan[0]]])
+   assert.throws(()=>assertEphemeralCorrectionCaptureHost(e,'darwin','arm64',{...selection,plan}));
+  const r={run:e.GITHUB_RUN_ID,head:e.GITHUB_SHA,attempt:e.GITHUB_RUN_ATTEMPT,candidateHead:e.V177_EXPECTED_HEAD_SHA,
+   arch:'arm64',state:'paused',acceptanceOverride:false,diagnosticOnly:false,purpose:'correction-capture-preparation',
+   scope,plan:selection.plan,before:[{mount:'/',enabled:true}],after:[{mount:'/',enabled:false}],pausedAt:'2026-10-26T00:00:00Z'};
+  assert.doesNotThrow(()=>validateCapturePreparationRecord(r,{env:e,platform:'darwin',arch:'arm64',selection,binding:{head:e.V177_EXPECTED_HEAD_SHA},correction:true}));
+  for(const change of [{scope:'wrong'},{run:'wrong'},{attempt:'2'},{candidateHead:'b'.repeat(40)},{acceptanceOverride:true}])
+   assert.throws(()=>validateCapturePreparationRecord({...r,...change},{env:e,platform:'darwin',arch:'arm64',selection,binding:{head:e.V177_EXPECTED_HEAD_SHA},correction:true}));
+ }
+ for(const patch of [{CI_CAPTURE_FRESH:''},{GITHUB_EVENT_NAME:'workflow_dispatch'},{V177_CAPTURE_SHARD:'forms-99'},{GITHUB_JOB:'other'}])
+  assert.throws(()=>assertEphemeralNativeCaptureHost({...owned,...patch},'darwin','arm64',full));
+});

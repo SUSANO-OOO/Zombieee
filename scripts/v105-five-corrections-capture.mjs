@@ -17,14 +17,8 @@ import {installRequestFailureAudit} from './browser-request-failure-audit.mjs';
 import {nativeCaseSelection} from './v177-native-allunit-selection.mjs';
 import {validateCapturePreparationRecord,correctionPreparationNeeded} from './v100-macos-indexing-control.mjs';
 const sha=b=>createHash('sha256').update(b).digest('hex');
-export function correctionCases(scope){
-  assert.ok(['desktop','mobile390','mobile340'].includes(scope));
-  if(scope!=='desktop')return [...['brawler','crazy-king','guardian','gunner','zakimiya','mrs-chiha'].map(kind=>({kind,mode:'manual'})),{kind:'brawler',mode:'duet'}];
-  return [...Object.keys(manual).map(kind=>({kind,mode:'manual'})),
-    ...['grappler','ooze','sprinter','gate-eater','spindle','resonator','cagewalker','choir-knot','pall-manta','anchor-bloom',
-      'kurome','mother','ooguchi','gairen','mugarian-president-mutated','takuya-omega','takuya'].map(kind=>({kind,mode:'enemy'})),
-    ...['brute','guardian','tky','takuya','takuya-omega','crazy-king','kumaverson','babayaga','brawler'].map(kind=>({kind,mode:'engage'}))];
-}
+import {correctionCases} from './v105-five-corrections-cases.mjs';
+export {correctionCases} from './v105-five-corrections-cases.mjs';
 
 // Reuse is limited by the same exact-source guard as the original motion
 // inventory. Unknown revisions run the whole original plan. Earlier failures
@@ -235,7 +229,7 @@ export async function runBrowserQa(){
       retainedObservationsKeepTheirOriginalConditions:true,coldStartupAccepted:false,formalPerformanceAccepted:false},
     acceptance:{physicalIphone:false,humanVisualAndListening:false,normalCampaign:false,wholeGame:false}};
   const persist=()=>writeFile(path.join(out,'report.json'),JSON.stringify(report,null,2)+'\n');
-  if(scope==='desktop'&&process.env.GITHUB_EVENT_NAME==='pull_request'&&correctionPreparationNeeded(selection)){
+  if(process.env.GITHUB_EVENT_NAME==='pull_request'&&correctionPreparationNeeded(selection,scope)){
     const file=path.join(out,'native-host-indexing-prepared.json'),bytes=await readFile(file);
     const prepared=JSON.parse(bytes);validateCapturePreparationRecord(prepared,{selection,binding,correction:true});
     report.hostPreparation={purpose:prepared.purpose,file,sha256:sha(bytes),diagnosticOnly:false,acceptanceOverride:false};

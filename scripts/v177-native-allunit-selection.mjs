@@ -165,6 +165,12 @@ export function nativeCaseSelection({event,forceFull=process.env.CI_CAPTURE_FRES
     profileSha256:createHash('sha256').update(bytes).digest('hex'),...selected};
 }
 
+export function isFullNativeCaptureSelection(selection){
+ const expected=nativeCaseSelection({event:{},forceFull:true});
+ return selection?.mode==='full'&&['caseIds','shards'].every(k=>
+  Array.isArray(selection[k])&&JSON.stringify(selection[k])===JSON.stringify(expected[k]));
+}
+
 export function isRangerCaptureSelection(selection){
   const normal=planShard('forms-1').filter(r=>r.form==='ranger'),engage=normal.filter(r=>r.phase==='engage');
   const allowed={caseIds:normal.map(r=>r.caseId),outcomeCaseIds:engage.map(r=>r.caseId.replace(':engage:',':controlled-outcome:')),
@@ -173,7 +179,8 @@ export function isRangerCaptureSelection(selection){
     &&Object.keys(allowed).every(k=>Array.isArray(selection[k])&&new Set(selection[k]).size===selection[k].length&&selection[k].every(id=>allowed[k].includes(id)))
     &&Object.keys(allowed).some(k=>selection[k].length>0);
 }
-export function nativeCaptureHostControl(event,selection){
+export function nativeCaptureHostControl(event,selection,{fresh=process.env.CI_CAPTURE_FRESH==='true'}={}){
+  if(event.pull_request&&fresh&&isFullNativeCaptureSelection(selection))return 'full-native-motion';
   if(event.pull_request&&isRangerCaptureSelection(selection))return 'ranger-motion';
   return event.pull_request?.draft===true&&selection.mode==='remaining'&&selection.caseIds.length===1
     &&selection.caseIds[0]==='forms-2:brute:attack:1280x720'&&selection.outcomeCaseIds.length===0

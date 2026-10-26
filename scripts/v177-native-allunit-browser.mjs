@@ -121,7 +121,7 @@ export async function main({load=url=>import(url),argv=process.argv,...guard}={}
 const additions=[
   '.github/workflows/native-allunit-capture.yml','scripts/v177-native-allunit-browser.mjs',
   'scripts/v177-native-allunit-build.mjs',
-  'scripts/v100-macos-indexing-control.mjs',
+  'scripts/v100-macos-indexing-control.mjs','scripts/v105-five-corrections-cases.mjs',
   'scripts/v177-native-allunit-cases.mjs','scripts/v177-native-allunit-manifest.mjs',
   'scripts/v177-native-encoded-clips.mjs','tests/v177-native-encoded-clips.test.mjs',
   'scripts/v177-native-allunit-contract.mjs','scripts/v177-native-allunit-owners.mjs',

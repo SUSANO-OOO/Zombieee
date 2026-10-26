@@ -149,7 +149,7 @@ jobs:
         run: node scripts/v177-native-allunit-build.mjs restore outputs/v177-native-allunit-build outputs/v177-native-allunit-${{ matrix.shard }}
       - name: Prepare single-case native timing control
         id: native-preparation
-        if: env.V177_NATIVE_HOST_INDEXING_CONTROL == 'brute-attack-1280' || env.V177_NATIVE_HOST_INDEXING_CONTROL == 'mayo-attack-1280' || env.V177_NATIVE_HOST_INDEXING_CONTROL == 'ranger-motion'
+        if: env.V177_NATIVE_HOST_INDEXING_CONTROL == 'full-native-motion' || env.V177_NATIVE_HOST_INDEXING_CONTROL == 'brute-attack-1280' || env.V177_NATIVE_HOST_INDEXING_CONTROL == 'mayo-attack-1280' || env.V177_NATIVE_HOST_INDEXING_CONTROL == 'ranger-motion'
         run: node scripts/v100-macos-indexing-control.mjs prepare-native-capture
       - name: Capture actual movement and attacks for this four-form shard
         id: capture
