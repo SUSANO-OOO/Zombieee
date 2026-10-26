@@ -1,6 +1,6 @@
 # 西新世紀末物語 — GitHub Pages公開・復元手順
 
-更新日：2026-08-08
+更新日：2026-10-26
 
 ## 1. 正式公開経路
 
@@ -55,6 +55,8 @@ release requestは次の7 fieldだけを持つ。unknown field、欠落field、�
 
 ## 4. 公開前ゲート
 
+以下は製品releaseの条件であり、公開を伴わない文書・CI改修に無関係な製品検証を追加する一覧ではない。改修の検証は変更依存で選び、公開契約そのものは維持する。
+
 対象バージョンのProducer Decisions、Execution Lock、Implementation Directive、Issueを完了する。
 
 最低条件：
@@ -65,8 +67,8 @@ release requestは次の7 fieldだけを持つ。unknown field、欠落field、�
 - BGM、SE、戦闘ボイス、復帰後二重再生なし
 - console error、page error、request failure、主要asset 404が0
 - build、全test、Lint、`git diff --check`、CI成功
-- Luna self-reviewと元のSol threadのSol Final ReviewでHigh／Medium未解消0
-- fresh independent Sol Auditorは対象Issue、Producer、risk/release policyが明示した場合だけ追加する。同じSol threadのFinal Reviewを独立reviewとは呼ばない
+- 実装担当の確認と、対象指示が要求する独立read-only reviewでHigh／Medium未解消0。固定モデル名や旧Sol／Luna間の往復はゲートにしない
+- 自分の変更の確認を独立reviewとは呼ばない。未確認の物理端末項目は対象Issueへ残し、既存の公開条件に従う
 - 対象画像の確認ゲート完了
 
 workflowやpreview成功だけでは公開前ゲート通過としない。

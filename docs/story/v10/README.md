@@ -1,5 +1,7 @@
 # 西新世紀末物語 — v10正史・Version 1.0.0設計基準
 
+> **現在の入口**：正史・人物・製品の固定判断は保持します。以下の1.0.0設計時の役割順・Sol／Luna手順は実行履歴です。後続判断は[Producer Decisionsの新しい日付付き追記](PRODUCER_DECISIONS_FINAL_RELEASE.md)、実行状態は[PROJECT_STATE](../../PROJECT_STATE.md)、安全境界は[AGENTS](../../../AGENTS.md)を参照してください。旧Design Lockを通常修正の追加承認待ちとして使いません。
+
 更新日：2026-08-14
 
 ## 1. 目的

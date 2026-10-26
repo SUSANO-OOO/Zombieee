@@ -1,5 +1,7 @@
 # 西新世紀末物語 — PRODUCT ROADMAP
 
+> **過去の構想（2026-10-26整理）**：以下は2026-08-08時点のロードマップを保持したものです。「V1=50stage／30unit」、次版未定、Sol／Luna逐次実行は後続判断の根拠にしません。V1の30作戦等の確定判断は[Producer Decisions](story/v10/PRODUCER_DECISIONS_FINAL_RELEASE.md)、現在の作業は[PROJECT_STATE](PROJECT_STATE.md)を参照してください。将来候補は実行許可ではありません。
+
 更新日：2026-08-08
 
 ## 1. 役割
