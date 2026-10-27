@@ -1,4 +1,4 @@
-name: Isolated F5 Stack Cause Diagnostic
+name: Isolated F5 Source and Observer Control
 on:
   workflow_dispatch:
     inputs:
@@ -31,13 +31,17 @@ jobs:
       - run: npm ci
       - run: npm ci --prefix scripts/native-recording-runtime
       - run: node scripts/native-recording-runtime/node_modules/playwright/cli.js install webkit
+      - name: Check source omission and absence of a native encoder
+        run: node --test tests/ops-canvas-source-adapter.test.mjs
+      - name: Lint the bounded source control
+        run: npx eslint scripts/ops-canvas-source-adapter.mjs scripts/ops-f5-recorder-control.mjs tests/ops-canvas-source-adapter.test.mjs
       - run: npm run build
         env:
           GITHUB_PAGES_RELEASE_SHA: ${{ inputs.expected_head }}
       - name: Prepare only this ephemeral host
         id: prepare
         run: node scripts/ops-f5-recorder-control.mjs prepare
-      - name: Original mobile340 prefix once with owned native stack samples
+      - name: Eight fixed source and snapshot controls, with no encoded media
         run: node scripts/run-browser-qa-with-server.mjs scripts/ops-f5-recorder-control.mjs
       - name: Restore every original volume state
         if: always() && steps.prepare.outcome != 'skipped'
@@ -45,7 +49,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ops-f5-recorder-control
+          name: ops-canvas-source-control
           path: outputs/ops-f5-recorder-control
           if-no-files-found: error
           retention-days: 14
