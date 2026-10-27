@@ -124,9 +124,13 @@ export async function runBrowserQa(){
         row.originalFailures=[...row.originalAv.failures];
         if(Math.abs(row.driftMs)>120)row.originalFailures.push('Original120ms game/native clock bound');
         assert.ok(row.acceptedRealAbility&&capture.rows.some(r=>r.abilityNames.active.some(a=>row.proof.ownerIds.includes(a.ownerId)&&a.lastPaint)),'Actual accepted ability and owner name paint required');
+        row.unclassifiedIntervals=[];
         row.outsideIntervals=capture.rows.slice(1).flatMap((r,i)=>{
           const previous=capture.rows[i],from=previous.frameCpu?.[6],to=r.frameCpu?.[2];
           if(!(Number.isFinite(from)&&Number.isFinite(to)&&to-from>1000/60*5&&previous.at>=row.release.at&&r.at<=capture.stopAt))return [];
+          if(r.frameCpu[0]!==previous.frameCpu[0]+1||r.frameCpu[1]!==r.at||previous.frameCpu[1]!==previous.at){
+            row.unclassifiedIntervals.push({from,to,previousRaf:previous.at,raf:r.at,reason:'CPU sequence/RAF owner was not consecutive'});return [];
+          }
           return [{from,to,ms:to-from,previousRaf:previous.at,raf:r.at,actualTimerCallbacks:row.timerProbe.rows.filter(at=>at>from&&at<to)}];
         });
         row.status=row.originalFailures.length?'diagnostic-with-original-failures':'observed-diagnostic';
