@@ -91,6 +91,8 @@ export async function runBrowserQa(){
         row.file=`${index}-${mode}.${capture.mime.startsWith('video/mp4')?'mp4':'webm'}`;
         await writeFile(path.join(out,row.file),bytes,{flag:'wx'});
         row.bytes=bytes.length;row.sha256=createHash('sha256').update(bytes).digest('hex');await persist();
+        row.contextModeAfter=await page.evaluate(readCanvasReadbackReceipt);
+        assert.deepEqual(row.contextModeAfter,row.contextMode,'Actual canvas owner, mode and dimensions must remain unchanged throughout capture');
         // Observe the original canvas after timing has ended; do not add a
         // readback/screenshot to the live interval under comparison.
         row.canvasPng=`${index}-${mode}-actual-canvas.png`;

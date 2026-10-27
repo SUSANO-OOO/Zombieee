@@ -8,6 +8,7 @@ export function selectCanvasReadbackMode(mode){
     if(type!=='2d'||options?.alpha!==false||options?.desynchronized!==true)
       return original.call(this,type,options,...rest);
     if(owners.has(this))return owners.get(this);
+    if(this!==document.querySelector('.game-shell canvas'))return original.call(this,type,options,...rest);
     const selected=mode==='readback'?{...options,willReadFrequently:true}:options;
     const context=original.call(this,type,selected,...rest);
     if(!context)throw Error('Actual game canvas context unavailable');
