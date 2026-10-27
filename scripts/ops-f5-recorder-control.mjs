@@ -14,6 +14,7 @@ import {parseIndexingStatus,pauseEnabledVolumes,restoreEnabledVolumes} from './v
 import {selectCanvasReadbackMode,readCanvasReadbackReceipt} from './ops-canvas-readback-adapter.mjs';
 import {withNativeGameCaseDeadline,closeNativeGameContext} from './v177-native-game-capture-browser.mjs';
 import {startAvailabilityProbe,stopAvailabilityProbe} from './ops-timer-availability-probe.mjs';
+import {createGpuSampleOwner,beginGpuSample} from './ops-native-gpu-sample.mjs';
 
 const out=path.resolve('outputs/ops-f5-recorder-control');
 const git=args=>execFileSync('git',args,{encoding:'utf8'}).trim();
@@ -54,15 +55,16 @@ export async function runBrowserQa(){
   await guard();await mkdir(out,{recursive:true});
   const report={head:git(['rev-parse','HEAD']),productHead:'7cb606f033bf2472f330b6def52b6329b48bdd4c',
     diagnosticOnly:true,accepted:false,run:process.env.GITHUB_RUN_ID,runtime:NATIVE_RECORDING_WEBKIT_RUNTIME,
-    plan:['unobserved','timer-observed','timer-observed','unobserved'],kind:'mrs-chiha',viewport:{width:844,height:340},
-    hypothesis:'Readback hint and browser lifetime did not repair or consistently reproduce failures. Existing failed rows contain218ms RAF gaps but only7ms from that RAF timestamp through the observer. Observe whether actual JS timer callbacks continue inside the unaccounted interval, separating RAF dispatch-only delay from whole-thread unavailability without assigning GPU/GC/OS ownership prematurely.',
-    decision:'One fixed ABBA comparison on the original failed Mrs-Chiha/mobile340 ability condition. Same shared browser, independent contexts, original default canvas and real AV. B alone adds a16ms timer retaining only actual performance.now values; no replacement clocks, RAF changes, interpolation, media or snapshot omission. Include all original120ms/250ms/8MiB/30s/15m checks. Compare A/B disturbance; never treat this as formal performance or a recording repair. If no long unaccounted RAF interval occurs, classify as not reproduced, not fixed. For each original outside-CPU interval, retain the actual timer callbacks inside it; callbacks demonstrate JS availability, their absence alone does not prove GPU/GC/OS ownership.',
+    plan:['gpu-sampled'],kind:'mrs-chiha',viewport:{width:844,height:340},
+    hypothesis:'The original Mrs-Chiha/mobile340 failure reproduced in40463164027. Real timers also ran inside long outside-game-CPU intervals, while native encoded gaps separately exceeded the source RAF gap. Source/no-source controls implicate acquisition. Inspect the unique GPU process in that actual condition, rather than guess an active WebContent PID or repeat the failed three-process profiler.',
+    decision:'One original AV window, diagnostic only. No timer probe or context hint. One verified GPU alone, one-second2ms samples, unchanged4.5s owned child deadline and original30s/15m case/job bounds. This is not a retry of broad concurrent symbolication or performance acceptance. Retain original child code/signal/stdout/stderr and any incomplete file. Save AV before checking sample success; await every owned child before context cleanup. A stack without a corresponding relevant stall does not prove the cause; sampler perturbation remains possible. No game, RAF, media timestamps, graphics or acceptance thresholds change.',
     cases:[],errors:[],status:'starting'};
   const persist=()=>writeFile(path.join(out,'report.json'),JSON.stringify(report,null,2)+'\n');
-  const browserType=await nativeRecordingBrowserType(),browser=await browserType.launch({headless:true});
+  const browserType=await nativeRecordingBrowserType();let browser;
   const processes=()=>execFileSync('/bin/ps',['-axo','pid,ppid,comm'],{encoding:'utf8',timeout:2000}).split('\n')
     .filter(line=>/Playwright|WebKit|WebProcess|GPUProcess|NetworkProcess/u.test(line));
   try{
+    report.gpuOwner=await createGpuSampleOwner();await persist();browser=await browserType.launch({headless:true});
     assert.equal(browser.version(),NATIVE_RECORDING_WEBKIT_RUNTIME.browserVersion);
     const {V177_JOINT_ATLASES:atlases}=await import('../app/v177JointPresentation.js');
     const atlasPaths=Object.fromEntries(Object.entries(atlases).map(([kind,atlas])=>[kind,atlas.path]));
@@ -79,6 +81,8 @@ export async function runBrowserQa(){
       assert.equal(caseBrowser,browser);assert.equal(caseBrowser.version(),NATIVE_RECORDING_WEBKIT_RUNTIME.browserVersion);
       row.processesBefore=processes();
       await withCorrectionCaseContext(caseBrowser,{viewport:report.viewport,deviceScaleFactor:1,isMobile:true,hasTouch:true},async(page,closeOwned)=>{
+        let gpuSample;
+        try{
         await page.addInitScript(selectCanvasReadbackMode,'default');
         await page.addInitScript(seedV100BrowserSaveOnce,serializeV100Save(save));
         await page.goto(new URL('v100',process.env.V100_CAMPAIGN_QA_BASE_URL).href);await enterNativeAllUnitSurface(page);await enterV100FromTitle(page);
@@ -97,7 +101,11 @@ export async function runBrowserQa(){
         row.release=await page.evaluate(()=>{const q=window.__ASHFALL_BATTLE_QA__;q.setEnemyVfxProofPaused(false);return {at:performance.now(),time:q.getV105CorrectionAudit([]).time};});
         await page.locator(`.manual-ability-ready[data-fighter-id="${row.proof.ownerIds[0]}"]`).tap({timeout:5000});
         row.input='one actual enabled tap for this independent fixture';
-        await page.waitForTimeout(durationMs);
+        await page.waitForTimeout(500);
+        row.sampleRequestBrowserClock=await page.evaluate(()=>({at:performance.now(),timeOrigin:performance.timeOrigin}));
+        try{gpuSample=await beginGpuSample(path.join(out,index+'-gpu'),{owner:report.gpuOwner});}
+        catch(error){row.gpuSetupError=String(error);}
+        await page.waitForTimeout(durationMs-500);
         const capture=await page.evaluate(stopCorrectionRecording),bytes=Buffer.from(capture.data,'base64');delete capture.data;row.capture=capture;
         row.file=`${index}-${mode}.${capture.mime.startsWith('video/mp4')?'mp4':'webm'}`;
         await writeFile(path.join(out,row.file),bytes,{flag:'wx'});
@@ -109,6 +117,7 @@ export async function runBrowserQa(){
         // readback/screenshot to the live interval under comparison.
         row.canvasPng=`${index}-${mode}-actual-canvas.png`;
         await page.locator('.game-shell canvas').screenshot({path:path.join(out,row.canvasPng)});
+        if(gpuSample)row.gpuSample=await gpuSample.completed;
         await closeOwned();
         assert.equal(capture.failed,null);assert.equal(capture.bytes,bytes.length);assert.ok(capture.rows.length>=30);
         row.originalAv=await auditCorrectionEncodedClip(path.join(out,row.file),capture);
@@ -134,6 +143,9 @@ export async function runBrowserQa(){
           return [{from,to,ms:to-from,previousRaf:previous.at,raf:r.at,actualTimerCallbacks:row.timerProbe.rows.filter(at=>at>from&&at<to)}];
         });
         row.status=row.originalFailures.length?'diagnostic-with-original-failures':'observed-diagnostic';
+        assert.equal(row.gpuSetupError,undefined,'GPU setup failed; original AV retained');
+        assert.equal(row.gpuSample?.status,'retained','GPU sample failed; original AV retained');
+        }finally{if(gpuSample&&!row.gpuSample)row.gpuSample=await gpuSample.completed;}
       },{onFatal:error=>{report.errors.push(String(error));},onRequests:receipt=>{row.context=receipt;},onDeadline:()=>{row.deadlineExpired=true;}});
       }catch(error){primary=error;row.primaryError=String(error);throw error;}
       finally{
@@ -152,7 +164,7 @@ export async function runBrowserQa(){
     }
     report.status=report.cases.some(r=>r.originalFailures.length)?'diagnostic-with-original-failures':'diagnostic-complete';
   }catch(error){report.errors.push(String(error));report.status='protocol-failed';throw error;}
-  finally{try{await browser.close();}finally{await persist();}}
+  finally{try{if(browser)await browser.close();}finally{await persist();}}
 }
 
 if(process.argv[2]==='prepare'||process.argv[2]==='restore')await host(process.argv[2]);
