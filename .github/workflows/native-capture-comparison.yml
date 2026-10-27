@@ -1,15 +1,15 @@
-name: Isolated Instruments Capability Preflight
+name: Isolated Instruments Self Trace Preflight
 on:
   workflow_dispatch:
     inputs:
       expected_head:
-        description: Immutable diagnostic head; no game or live profiling
+        description: Immutable self-only diagnostic head; no game
         required: true
         type: string
 permissions:
   contents: read
 jobs:
-  instruments-capability:
+  instruments-self:
     runs-on: macos-15
     timeout-minutes: 2
     env:
@@ -19,51 +19,15 @@ jobs:
         with:
           ref: ${{ inputs.expected_head }}
           persist-credentials: false
-      - name: Inspect installed Instruments CLI without profiling a target
-        shell: bash
-        run: |
-          /usr/bin/python3 - <<'PY'
-          import os,json,pathlib,subprocess,signal,platform,time,re
-          assert platform.system()=='Darwin' and platform.machine()=='arm64'
-          assert os.environ['GITHUB_REPOSITORY']=='SUSANO-OOO/Zombieee' and os.environ['GITHUB_EVENT_NAME']=='workflow_dispatch'
-          assert os.environ['GITHUB_JOB']=='instruments-capability'
-          assert pathlib.Path.cwd().resolve()==pathlib.Path(os.environ['GITHUB_WORKSPACE']).resolve()
-          head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
-          assert re.fullmatch('[0-9a-f]{40}',os.environ['V177_EXPECTED_HEAD_SHA']) and head==os.environ['V177_EXPECTED_HEAD_SHA']
-          out=pathlib.Path('outputs/ops-instruments-capability');out.mkdir(parents=True)
-          report={'head':head,'run':os.environ['GITHUB_RUN_ID'],'accepted':False,'diagnosticOnly':True,
-            'gameStarted':False,'liveProfiling':False,'sudoUsed':False,'commands':[]}
-          commands=[['/usr/bin/xcodebuild','-version'],['/usr/bin/xcrun','--find','xctrace'],
-            ['/usr/bin/xcrun','xctrace','help'],['/usr/bin/xcrun','xctrace','help','record'],
-            ['/usr/bin/xcrun','xctrace','help','export'],['/usr/bin/xcrun','xctrace','list','templates']]
-          for index,argv in enumerate(commands):
-            started=time.monotonic()
-            child=subprocess.Popen(argv,stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,start_new_session=True)
-            timedout=False
-            try:
-              stdout,stderr=child.communicate(timeout=8)
-            except subprocess.TimeoutExpired:
-              timedout=True
-              try:
-                assert child.pid>1 and os.getpgid(child.pid)==child.pid
-                os.killpg(child.pid,signal.SIGKILL)
-              except ProcessLookupError:
-                pass
-              stdout,stderr=child.communicate()
-            row={'argv':argv,'code':child.returncode,'timedOut':timedout,'elapsedSeconds':time.monotonic()-started,
-              'stdout':stdout,'stderr':stderr}
-            report['commands'].append(row)
-            (out/f'{index}-stdout.txt').write_text(stdout)
-            (out/f'{index}-stderr.txt').write_text(stderr)
-            (out/'report.json').write_text(json.dumps(report,indent=2)+'\n')
-          report['status']='inspected' if all(not r['timedOut'] and r['code']==0 for r in report['commands']) else 'failed'
-          (out/'report.json').write_text(json.dumps(report,indent=2)+'\n')
-          assert report['status']=='inspected','CLI inspection did not complete; no game or live profile was started'
-          PY
+      - name: Record one second of this worker and retain original trace before export
+        run: /usr/bin/python3 scripts/ops-instruments-self-preflight.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ops-instruments-capability
-          path: outputs/ops-instruments-capability
+          name: ops-instruments-self
+          path: |
+            outputs/ops-instruments-self/*.json
+            outputs/ops-instruments-self/*.tar.gz
+            outputs/ops-instruments-self/*.xml
           if-no-files-found: error
           retention-days: 14
