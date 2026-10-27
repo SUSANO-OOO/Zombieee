@@ -1,4 +1,4 @@
-name: Isolated macOS Observer Capability Readout
+name: Isolated macOS Raw Observer Preflight
 on:
   workflow_dispatch:
     inputs:
@@ -23,7 +23,7 @@ jobs:
         shell: bash
         run: |
           /usr/bin/python3 - <<'PY'
-          import os,sys,platform,subprocess,json,pathlib,gzip
+          import os,sys,platform,subprocess,json,pathlib,gzip,hashlib
           assert platform.system()=='Darwin' and platform.machine()=='arm64'
           assert os.environ['GITHUB_EVENT_NAME']=='workflow_dispatch'
           assert os.environ['GITHUB_REPOSITORY']=='SUSANO-OOO/Zombieee'
@@ -48,9 +48,21 @@ jobs:
                 dest=out/file.name.replace('.gz','')
                 dest.write_bytes(raw)
                 report['manuals'].append({'source':str(file),'file':dest.name,'originalCompressedBytes':len(data),'textBytes':len(raw)})
+          raw=out.resolve()/'own-python.spindump'
+          argv=['/usr/sbin/spindump',str(os.getpid()),'1','10','-onlyTarget','-noText','-noProcessingWhileSampling','-timelimit','4','-o',str(raw)]
+          preflight=report['spindumpPreflight']={'argv':argv,'targetIsThisOwnedPythonProcess':True,'accepted':False}
+          try:
+            result=subprocess.run(argv,stdin=subprocess.DEVNULL,capture_output=True,text=True,timeout=4.5)
+            preflight.update({'code':result.returncode,'stdout':result.stdout,'stderr':result.stderr})
+          except subprocess.TimeoutExpired as error:
+            preflight.update({'timedOut':True,'stdout':str(error.stdout),'stderr':str(error.stderr)})
+          if raw.exists():
+            data=raw.read_bytes();preflight.update({'rawBytes':len(data),'rawSha256':hashlib.sha256(data).hexdigest()})
           (out/'report.json').write_text(json.dumps(report,indent=2)+'\n')
           assert not report['sampleHelp'].get('timedOut',False),'Help command timed out; no capability inferred'
           assert report['manuals'] or 'usage' in (report['sampleHelp']['stdout']+report['sampleHelp']['stderr']).lower(),'No installed documentation found'
+          assert not preflight.get('timedOut',False),'Raw observer exceeded its4.5s owned child limit'
+          assert preflight['code']==0 and preflight.get('rawBytes',0)>0,'Raw observer unavailable; original exit and stderr retained'
           print(json.dumps({'head':head,'manuals':report['manuals'],'sampleHelpCode':report['sampleHelp']['code'],'accepted':False}))
           PY
       - uses: actions/upload-artifact@v4
