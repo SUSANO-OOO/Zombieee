@@ -6,7 +6,7 @@ import {tmpdir} from 'node:os';
 import {join,resolve} from 'node:path';
 import {load} from 'js-yaml';
 import {ciChangeScope,dependencyInputs,laneFingerprints,validationPlan,previousLaneEvidence,
- assertValidationResults,LANE_JOBS,JOB_LANES,framePerformanceRuntimes,workflowJobChanges,workflowRuntimeContracts} from '../scripts/ci-change-scope.mjs';
+ assertValidationResults,LANE_JOBS,JOB_LANES,framePerformanceRuntimes,workflowJobChanges,workflowRuntimeContracts,readOnlyBaseCompatibility} from '../scripts/ci-change-scope.mjs';
 import {nativeCaseSelection} from '../scripts/v177-native-allunit-selection.mjs';
 import {correctionCaseSelection,correctionCases} from '../scripts/v105-five-corrections-capture.mjs';
 import {provenanceFixture} from './helpers/ci-pr-provenance.mjs';
@@ -24,10 +24,21 @@ test('whole PR docs are outside product acceptance on Draft and Ready, never reu
   assert.equal(s.code_checks,false);assert.equal(s.wholeGameAccepted,false);
   for(const gate of Object.values(validationPlan(s,{head,base,merge,fingerprints}).gates))assert.equal(gate.state,'outside');
  }
- for(const file of ['app/new-shared.js','public/asset-manifest.json','package-lock.json','unclassified.config.js']){
+ for(const file of ['app/new-shared.js','public/asset-manifest.json','package-lock.json','unclassified.config.js',
+  'docs/story/v10/全脚本_R9.md','docs/story/v10/PRODUCER_DECISIONS_FINAL_RELEASE.md','docs/story/new-dialogue.md']){
   const s=scopes([file,'docs/PROJECT_STATE.md']);
   for(const key of Object.keys(LANE_JOBS))assert.equal(s[key],true,file+' must retain '+key);
  }
+});
+test('story sources stay bound to runtime evidence while known development guides remain documentation',()=>{
+ const sets=Object.fromEntries(Object.keys(LANE_JOBS).map(k=>[k,new Set()]));
+ const entries=[['docs/story/v10/全脚本_R9.md','a'.repeat(40)],['docs/story/v10/README.md','b'.repeat(40)]];
+ const before=laneFingerprints(entries,sets,{base});
+ const changed=laneFingerprints(entries.map(([f,h])=>[f,f.endsWith('全脚本_R9.md')?'c'.repeat(40):h]),sets,{base});
+ for(const k of Object.keys(LANE_JOBS))assert.notEqual(changed[k],before[k]);
+ assert.deepEqual(before,laneFingerprints(entries.map(([f,h])=>[f,f.endsWith('README.md')?'d'.repeat(40):h]),sets,{base}));
+ assert.notDeepEqual(before,laneFingerprints(entries,sets,{base,historicalDocs:true}));
+ assert.equal(planFor(['docs/story/v10/README.md']).fingerprintAlgorithm,'runtime-source-v3');
 });
 test('known QA changes target their dependants; shared and unknown helpers fail closed',()=>{
  for(const [file,lane] of [['scripts/v100-r9-full-story-browser.mjs','r9'],
@@ -102,7 +113,7 @@ test('reuse requires every actual matrix job, original ZIP digest and both head/
  assert.equal(evidence.allunit.provenance.head,head);assert.equal(evidence.allunit.provenance.merge,merge);
  assert.equal(evidence.normal,null,'unexecuted lanes cannot be borrowed from a failed run');
  for(const mutate of [
-  x=>{x.jobs.pop();},x=>{x.jobs[0].conclusion='failure';},x=>{x.jobs[0].conclusion='skipped';},
+  x=>{x.jobs.pop();},x=>{x.jobs[0].conclusion='skipped';},
   x=>{x.jobs[0].conclusion='cancelled';},x=>{x.jobs[0].status='in_progress';},
   x=>{x.jobs[0].steps=[];},x=>{x.jobs[0].head_sha='f'.repeat(40);},x=>{x.jobs[0].run_attempt=2;},
   x=>{x.run.run_attempt=2;},x=>{x.run.pull_requests=[];},x=>{x.p.base='f'.repeat(40);},
@@ -113,9 +124,138 @@ test('reuse requires every actual matrix job, original ZIP digest and both head/
   const rejected=await previousLaneEvidence({...options,request:evidenceApi({mutate})});
   assert.equal(rejected.allunit,null);
  }
- assert.equal((await previousLaneEvidence({...options,request:evidenceApi({offline:true})})).allunit,null);
+ await assert.rejects(previousLaneEvidence({...options,request:evidenceApi({offline:true})}),/CI evidence transport unavailable/u);
  assert.equal((await previousLaneEvidence({...options,token:'',request:()=>assert.fail('no token')})).allunit,null);
 });
+
+test('qualified unchanged failures block a docs push without another recording; explicit revalidation needs fresh success',async()=>{
+ const evidence=await previousLaneEvidence({...options,request:evidenceApi({mutate:x=>{x.jobs[1].conclusion='failure';}})});
+ assert.equal(evidence.allunit.conclusion,'failure');assert.equal(evidence.allunit.jobs.filter(j=>j.conclusion==='failure').length,1);
+ const args={head,base,merge,fingerprints,evidence},p=validationPlan(scopes([...changed,'docs/extra.md']),args);
+ const needs={...Object.fromEntries(Object.keys(JOB_LANES).map(k=>[k,{result:'skipped'}])),scope:{result:'success'},verify:{result:'success'}};
+ assert.equal(p.gates.allunit.state,'blocked');assert.throws(()=>assertValidationResults(p,needs),/Unresolved unchanged allunit failure.*72/u);
+ const forged=structuredClone(p);forged.gates.allunit.state='reused';
+ assert.throws(()=>assertValidationResults(forged,needs),/failed owner/u);
+ const retry=validationPlan(scopes(changed),{...args,attempt:2});
+ assert.equal(retry.gates.allunit.state,'blocked');assert.equal(retry.retry.priorFailures.allunit.runId,72);
+ assert.equal(retry.retry.resolutionClaimed,false);assert.equal(retry.retry.failuresRetained,true);
+ assert.throws(()=>assertValidationResults(retry,needs),/Unresolved unchanged allunit failure/u);
+ assert.throws(()=>assertValidationResults(retry,{...needs,allunit:{result:'success'}}),'A retry cannot replace the unchanged failed owner with a successful job');
+ for(const attempt of [0,1.5,NaN])assert.throws(()=>validationPlan(scopes(changed),{...args,attempt}));
+ const changedInput=await previousLaneEvidence({...options,fingerprints:{...fingerprints,allunit:'2'.repeat(64)},
+  request:evidenceApi({mutate:x=>{x.jobs[1].conclusion='failure';}})});
+ assert.equal(changedInput.allunit,null,'A relevant input change requires a new execution');
+});
+
+test('transport failures stop scope resolution instead of launching costly replacement product checks',async()=>{
+ const recoveredApi=evidenceApi(),notices=[];let acquisitionCalls=0;
+ const recovered=await previousLaneEvidence({...options,onAcquisitionRetry:note=>notices.push(note),request:async url=>{
+  if(++acquisitionCalls===1)return {ok:false,status:502};return recoveredApi(url);
+ }});
+ assert.equal(recovered.allunit.runId,72,'One idempotent metadata retry still requires the original ZIP and provenance');
+ assert.equal(notices.length,1);assert.ok(notices[0].includes('retry 1/1'));
+ for(const status of [403,429,502]){
+  let attempts=0;
+  await assert.rejects(previousLaneEvidence({...options,request:async()=>{attempts++;return {ok:false,status};}}),/CI evidence transport HTTP/u);
+  assert.equal(attempts,status===502?2:1,'Retry is bounded and excludes authorization/rate-limit failures');
+ }
+ const outside=await previousLaneEvidence({...options,requiredLanes:[],request:()=>assert.fail('Outside lanes need no evidence API')});
+ assert.ok(Object.values(outside).every(value=>value===null));
+ const selected=await previousLaneEvidence({...options,requiredLanes:['allunit'],request:evidenceApi()});
+ assert.equal(selected.allunit.conclusion,'success');assert.equal(selected.performance,null);
+ for(const status of [401,403,429,500,502,503])
+  await assert.rejects(previousLaneEvidence({...options,request:async()=>({ok:false,status})}),/CI evidence transport HTTP/u);
+ await assert.rejects(previousLaneEvidence({...options,request:async()=>{throw Error('offline');}}),/CI evidence transport unavailable/u);
+ const api=evidenceApi();
+ await assert.rejects(previousLaneEvidence({...options,request:url=>url.endsWith('/artifacts?per_page=100')
+  ?Promise.resolve({ok:false,status:502}):api(url)}),/CI evidence transport HTTP 502/u);
+ await assert.rejects(previousLaneEvidence({...options,request:async()=>({ok:true,json:async()=>{throw TypeError('body disconnected');}})}),/CI evidence body transport unavailable/u);
+ const zipApi=evidenceApi();
+ await assert.rejects(previousLaneEvidence({...options,request:async url=>url.endsWith('/artifacts/92/zip')
+  ?{ok:true,arrayBuffer:async()=>{throw Error('body disconnected');}}:zipApi(url)}),/CI evidence body transport unavailable/u);
+ const malformed=await previousLaneEvidence({...options,request:async()=>({ok:true,json:async()=>{throw SyntaxError('invalid JSON');}})});
+ assert.ok(Object.values(malformed).every(value=>value===null),'Completed invalid content remains invalid evidence');
+ const missing=await previousLaneEvidence({...options,request:async()=>({ok:false,status:404})});
+ assert.ok(Object.values(missing).every(value=>value===null),'Absent evidence requires fresh checks; it is not a passed owner');
+});
+
+test('legacy runtime evidence is recomputed from its immutable source, not re-pinned to a new expected hash',async()=>{
+ const old='2'.repeat(64),request=()=>evidenceApi({mutate:x=>{delete x.p.fingerprintAlgorithm;x.p.gates.allunit.fingerprint=old;}});
+ assert.equal((await previousLaneEvidence({...options,request:request()})).allunit,null);
+ let calls=0;
+ const sourceFingerprints=revision=>{calls++;assert.equal(revision,head);return {legacy:{...fingerprints,allunit:old},current:fingerprints};};
+ const e=await previousLaneEvidence({...options,request:request(),sourceFingerprints});
+ assert.equal(e.allunit.sourceFingerprint,old);assert.equal(e.allunit.fingerprint,fp);assert.equal(calls,1);
+ const v2=()=>evidenceApi({mutate:x=>{x.p.fingerprintAlgorithm='runtime-source-v2';x.p.gates.allunit.fingerprint=old;}});
+ assert.equal((await previousLaneEvidence({...options,request:v2()})).allunit,null,'A v2 owner needs its immutable source proof');
+ const upgraded=await previousLaneEvidence({...options,request:v2(),sourceFingerprints:()=>({v2:{...fingerprints,allunit:old},current:fingerprints})});
+ assert.equal(upgraded.allunit.sourceFingerprintAlgorithm,'runtime-source-v2');
+ assert.equal(upgraded.allunit.fingerprint,fp);
+ for(const proof of [{v2:fingerprints,current:fingerprints},{v2:{...fingerprints,allunit:old},current:{...fingerprints,allunit:'3'.repeat(64)}}])
+  assert.equal((await previousLaneEvidence({...options,request:v2(),sourceFingerprints:()=>proof})).allunit,null);
+ for(const proof of [{legacy:fingerprints,current:fingerprints},{legacy:{...fingerprints,allunit:old},current:{...fingerprints,allunit:'3'.repeat(64)}}])
+  assert.equal((await previousLaneEvidence({...options,request:request(),sourceFingerprints:()=>proof})).allunit,null);
+ assert.equal((await previousLaneEvidence({...options,request:evidenceApi({mutate:x=>{x.p.fingerprintAlgorithm='unknown';}})})).allunit,null);
+ const entries=[['scripts/ci-change-scope.mjs','a'.repeat(40)],['.gitattributes','b'.repeat(40)],['app/shared.js','c'.repeat(40)]],sets=Object.fromEntries(Object.keys(LANE_JOBS).map(k=>[k,new Set()]));
+ const a=laneFingerprints(entries,sets,{base}),b=laneFingerprints(entries.map(([f,h])=>[f,f==='scripts/ci-change-scope.mjs'?'d'.repeat(40):h]),sets,{base});
+ assert.deepEqual(a,b,'Read-only orchestration changes do not change runtime acquisition conditions');
+ assert.notDeepEqual(a,laneFingerprints(entries.map(([f,h])=>[f,f==='.gitattributes'?'e'.repeat(40):h]),sets,{base}),'Checkout byte conditions remain runtime inputs');
+ sets.allunit.add('scripts/ci-change-scope.mjs');
+ assert.notEqual(laneFingerprints(entries,sets,{base}).allunit,laneFingerprints(entries.map(([f,h])=>[f,f==='scripts/ci-change-scope.mjs'?'d'.repeat(40):h]),sets,{base}).allunit,'An actual runtime import remains bound');
+});
+test('a metadata-only scope failure retains the nearest qualified ancestor but never skips an executed product attempt',async()=>{
+ const recent='e'.repeat(40),api=evidenceApi(),rows=[
+  {name:'Validation Scope',status:'completed',conclusion:'failure'},
+  {name:'PR Verify',status:'completed',conclusion:'failure'},
+  {name:'Build and Node Checks',status:'completed',conclusion:'skipped'}];
+ const recentRun={id:71,head_sha:recent,status:'completed',conclusion:'failure',run_attempt:1,pull_requests:[{number:182}]};
+ const request=(jobs=rows,run=recentRun)=>async url=>{
+  if(url.includes('head_sha='+recent))return {ok:true,json:async()=>({workflow_runs:[run]})};
+  if(url.endsWith('/runs/71'))return {ok:true,json:async()=>run};
+  if(url.endsWith('/runs/71/artifacts?per_page=100'))return {ok:true,json:async()=>({total_count:0,artifacts:[]})};
+  if(url.endsWith('/runs/71/jobs?filter=latest&per_page=100'))return {ok:true,json:async()=>({total_count:jobs.length,jobs})};
+  return api(url);
+ };
+ const opts={...options,previousHead:recent,previousHeads:[recent,head]};
+ assert.equal((await previousLaneEvidence({...opts,request:request()})).allunit.runId,72);
+ for(const conclusion of ['success','failure','cancelled','in_progress']){
+  const executed=rows.map(j=>j.name==='Build and Node Checks'?{...j,conclusion}:j);
+  assert.equal((await previousLaneEvidence({...opts,request:request(executed)})).allunit,null);
+ }
+ assert.equal((await previousLaneEvidence({...opts,request:request(rows,{...recentRun,conclusion:'cancelled'})})).allunit,null);
+ for(const name of ['Validation Scope','PR Verify']){
+  const cancelled=rows.map(j=>j.name===name?{...j,conclusion:'cancelled'}:j);
+  assert.equal((await previousLaneEvidence({...opts,request:request(cancelled)})).allunit,null,'A cancelled '+name+' cannot authorize ancestor reuse');
+ }
+ await assert.rejects(previousLaneEvidence({...opts,request:request(rows,{...recentRun,status:'in_progress'})}),/still running/u);
+});
+
+test('a read-only main advance preserves the original base and needs both source and base-delta proof',async()=>{
+ const nextBase='c'.repeat(40),current=Object.fromEntries(Object.keys(LANE_JOBS).map(k=>[k,'7'.repeat(64)]));
+ const compatible=Object.fromEntries(Object.keys(LANE_JOBS).map(k=>[k,true]));
+ const proof={v3:fingerprints,current,baseCompatible:compatible,baseDeltaPaths:['README.md','docs/notes.md']};
+ const opts={...options,base:nextBase,fingerprints:current};
+ const e=await previousLaneEvidence({...opts,request:evidenceApi(),sourceFingerprints:(revision,originalBase)=>{
+  assert.equal(revision,head);assert.equal(originalBase,base);return proof;
+ }});
+ assert.equal(e.allunit.base,base);assert.equal(e.allunit.provenance.base,base);assert.equal(e.allunit.validationBase,nextBase);
+ const p=validationPlan(scopes(changed),{head,base:nextBase,merge,fingerprints:current,evidence:e});
+ const needs={...Object.fromEntries(Object.keys(JOB_LANES).map(k=>[k,{result:'skipped'}])),scope:{result:'success'},verify:{result:'success'}};
+ assert.equal(assertValidationResults(p,needs),true);
+ for(const invalid of [{...proof,v3:current},{...proof,current:fingerprints},
+  {...proof,baseCompatible:{...compatible,allunit:false}},{...proof,baseDeltaPaths:['app/new.js']}])
+  assert.equal((await previousLaneEvidence({...opts,request:evidenceApi(),sourceFingerprints:()=>invalid})).allunit,null);
+ assert.equal((await previousLaneEvidence({...options,base:nextBase,request:evidenceApi()})).allunit,null,'Base mismatch cannot be waived without immutable source proof');
+ const failed=await previousLaneEvidence({...opts,request:evidenceApi({mutate:x=>{x.jobs[1].conclusion='failure';}}),sourceFingerprints:()=>proof});
+ assert.equal(validationPlan(scopes(changed),{head,base:nextBase,merge,fingerprints:current,evidence:failed}).gates.allunit.state,'blocked');
+ const sets=Object.fromEntries(Object.keys(LANE_JOBS).map(k=>[k,new Set()]));
+ assert.ok(Object.values(readOnlyBaseCompatibility(proof.baseDeltaPaths,sets,sets)).every(Boolean));
+ for(const file of ['app/new.js','package-lock.json','.gitattributes','.github/workflows/ci.yml','scripts/unknown.mjs','docs/story/v10/全脚本_R9.md'])
+  assert.ok(Object.values(readOnlyBaseCompatibility([file],sets,sets)).every(value=>!value),file);
+ const imported=structuredClone(sets);imported.allunit.add('scripts/ci-change-scope.mjs');
+ assert.equal(readOnlyBaseCompatibility(['scripts/ci-change-scope.mjs'],sets,imported).allunit,false,'Imported control files remain runtime inputs');
+});
+
 test('required PR Verify rejects missing, skipped, cancelled and failed lanes and scope even after a docs push',()=>{
  const p=planFor(changed),needs={...Object.fromEntries(Object.keys(JOB_LANES).map(k=>[k,{result:'skipped'}])),scope:{result:'success'},verify:{result:'success'},allunit:{result:'success'}};
  assert.equal(assertValidationResults(p,needs),true);
@@ -160,6 +300,8 @@ test('all called workflows feed one always-run protected check without duplicate
  assert.equal(read('v1-quality-acceptance').concurrency.group.startsWith('quality-acceptance-'),true);
  for(const id of ['allunit','five'])assert.equal(jobs[id].with.fresh,true);
  assert.equal(read('five-corrections-capture').jobs.capture.if,undefined);
+ assert.equal(read('native-allunit-capture').jobs.capture.strategy['max-parallel'],2);
+ assert.equal(read('five-corrections-capture').jobs.capture.strategy['max-parallel'],1);
  assert.equal(read('targeted-frame-performance').jobs.scope.if,'github.event.pull_request.draft');
  assert.deepEqual(Object.keys(read('github-pages-release').on),['workflow_dispatch']);
  assert.equal(read('github-pages-release').on.workflow_dispatch.inputs.deploy.default,false);

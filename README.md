@@ -14,6 +14,8 @@
 
 Node.js `>=22.13.0` とnpmを使用します。依存の正本は `package-lock.json` です。
 
+新しくcloneする場合は `git clone --config core.autocrlf=false https://github.com/SUSANO-OOO/Zombieee.git` を使います。生成元や過去の原本をバイト単位で照合するため、Gitによる自動改行変換をこのcloneだけで無効にします。PC全体の設定は変えません。既存の作業フォルダを一括で上書きして改行を戻さないでください。
+
 ```bash
 npm ci
 npm run dev
