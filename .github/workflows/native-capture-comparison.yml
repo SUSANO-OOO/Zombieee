@@ -1,20 +1,17 @@
-name: Isolated Observer Supplemental Offline Readback
+name: Isolated Instruments Capability Preflight
 on:
   workflow_dispatch:
     inputs:
       expected_head:
-        description: Immutable diagnostic head; no live sampling or game
+        description: Immutable diagnostic head; no game or live profiling
         required: true
         type: string
 permissions:
   contents: read
 jobs:
-  observer-offline:
+  instruments-capability:
     runs-on: macos-15
     timeout-minutes: 2
-    permissions:
-      contents: read
-      actions: read
     env:
       V177_EXPECTED_HEAD_SHA: ${{ inputs.expected_head }}
     steps:
@@ -22,57 +19,51 @@ jobs:
         with:
           ref: ${{ inputs.expected_head }}
           persist-credentials: false
-      - name: Read the existing supplemental buffer from this repository only
-        uses: actions/download-artifact@v4
-        with:
-          github-token: ${{ github.token }}
-          repository: SUSANO-OOO/Zombieee
-          run-id: 40474716363
-          name: ops-owned-stackshot
-          path: outputs/observer-offline-source
-      - name: Parse existing bytes without a browser, live target, or sudo
+      - name: Inspect installed Instruments CLI without profiling a target
         shell: bash
         run: |
           /usr/bin/python3 - <<'PY'
-          import os,json,pathlib,hashlib,subprocess,signal,platform,re
+          import os,json,pathlib,subprocess,signal,platform,time,re
           assert platform.system()=='Darwin' and platform.machine()=='arm64'
           assert os.environ['GITHUB_REPOSITORY']=='SUSANO-OOO/Zombieee' and os.environ['GITHUB_EVENT_NAME']=='workflow_dispatch'
-          assert os.environ['GITHUB_JOB']=='observer-offline'
+          assert os.environ['GITHUB_JOB']=='instruments-capability'
+          assert pathlib.Path.cwd().resolve()==pathlib.Path(os.environ['GITHUB_WORKSPACE']).resolve()
           head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
-          assert head==os.environ['V177_EXPECTED_HEAD_SHA']
-          src=pathlib.Path('outputs/observer-offline-source');out=pathlib.Path('outputs/ops-observer-offline');out.mkdir(parents=True)
-          manifest=json.loads((src/'0-native-stackshot-collection.json').read_text())
-          assert manifest['head']=='db992ebbe17e97eb053e953122b55b8c77e7a6d6' and manifest['run']=='40474716363'
-          assert manifest['status']=='failed' and manifest['collection']['code']==75 and manifest['raw']['bytes']==0
-          raw=src/'0-native-collect-observer-0.buf';expected='fde559dd7c12859157ccd7bd8bdc0234c9252233730d365f99c5dab92d3277f9'
-          assert raw.stat().st_size==799568 and hashlib.sha256(raw.read_bytes()).hexdigest()==expected
-          text=out/'supplemental.txt';report={'head':head,'accepted':False,'diagnosticOnly':True,'sourceRun':'40474716363',
-            'sourcePrimaryFailed':True,'sourceCode':75,'sourcePrimaryRawBytes':0,'sourceBufSha256':expected,
-            'sourceType':'observer supplemental failure buffer; target contents not yet verified','gameStarted':False,'liveSampling':False}
-          argv=['/usr/sbin/spindump','-i',str(raw.resolve()),'-timeline','-noBinary','-noIPC','-timelimit','14','-o',str(text.resolve())]
-          child=subprocess.Popen(argv,stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,start_new_session=True)
-          timedout=False
-          try:
-            stdout,stderr=child.communicate(timeout=15)
-          except subprocess.TimeoutExpired:
-            timedout=True
+          assert re.fullmatch('[0-9a-f]{40}',os.environ['V177_EXPECTED_HEAD_SHA']) and head==os.environ['V177_EXPECTED_HEAD_SHA']
+          out=pathlib.Path('outputs/ops-instruments-capability');out.mkdir(parents=True)
+          report={'head':head,'run':os.environ['GITHUB_RUN_ID'],'accepted':False,'diagnosticOnly':True,
+            'gameStarted':False,'liveProfiling':False,'sudoUsed':False,'commands':[]}
+          commands=[['/usr/bin/xcodebuild','-version'],['/usr/bin/xcrun','--find','xctrace'],
+            ['/usr/bin/xcrun','xctrace','help'],['/usr/bin/xcrun','xctrace','help','record'],
+            ['/usr/bin/xcrun','xctrace','help','export'],['/usr/bin/xcrun','xctrace','list','templates']]
+          for index,argv in enumerate(commands):
+            started=time.monotonic()
+            child=subprocess.Popen(argv,stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,start_new_session=True)
+            timedout=False
             try:
-              assert child.pid>1 and os.getpgid(child.pid)==child.pid
-              os.killpg(child.pid,signal.SIGKILL)
-            except ProcessLookupError:
-              pass
-            stdout,stderr=child.communicate()
-          report.update({'argv':argv,'code':child.returncode,'timedOut':timedout,'stdout':stdout,'stderr':stderr})
-          assert hashlib.sha256(raw.read_bytes()).hexdigest()==expected
-          if text.exists():
-            data=text.read_bytes();report['parsed']={'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()}
+              stdout,stderr=child.communicate(timeout=8)
+            except subprocess.TimeoutExpired:
+              timedout=True
+              try:
+                assert child.pid>1 and os.getpgid(child.pid)==child.pid
+                os.killpg(child.pid,signal.SIGKILL)
+              except ProcessLookupError:
+                pass
+              stdout,stderr=child.communicate()
+            row={'argv':argv,'code':child.returncode,'timedOut':timedout,'elapsedSeconds':time.monotonic()-started,
+              'stdout':stdout,'stderr':stderr}
+            report['commands'].append(row)
+            (out/f'{index}-stdout.txt').write_text(stdout)
+            (out/f'{index}-stderr.txt').write_text(stderr)
+            (out/'report.json').write_text(json.dumps(report,indent=2)+'\n')
+          report['status']='inspected' if all(not r['timedOut'] and r['code']==0 for r in report['commands']) else 'failed'
           (out/'report.json').write_text(json.dumps(report,indent=2)+'\n')
-          assert not timedout and child.returncode==0 and report.get('parsed',{}).get('bytes',0)>0,'Offline readback did not complete; source failure remains unchanged'
+          assert report['status']=='inspected','CLI inspection did not complete; no game or live profile was started'
           PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ops-observer-offline
-          path: outputs/ops-observer-offline
+          name: ops-instruments-capability
+          path: outputs/ops-instruments-capability
           if-no-files-found: error
           retention-days: 14
