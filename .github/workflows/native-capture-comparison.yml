@@ -1,4 +1,4 @@
-name: Isolated F5 Stack Cause Diagnostic
+name: Isolated Native Postpaint Acquisition Comparison
 on:
   workflow_dispatch:
     inputs:
@@ -31,21 +31,25 @@ jobs:
       - run: npm ci
       - run: npm ci --prefix scripts/native-recording-runtime
       - run: node scripts/native-recording-runtime/node_modules/playwright/cli.js install webkit
+      - name: Original capture contracts and postpaint normal and abnormal controls
+        run: node --test tests/v177-native-canvas-clips.test.mjs tests/v177-native-encoded-clips.test.mjs tests/v177-native-allunit.test.mjs tests/ops-native-postpaint-control.test.mjs
       - run: npm run build
         env:
           GITHUB_PAGES_RELEASE_SHA: ${{ inputs.expected_head }}
       - name: Prepare only this ephemeral host
         id: prepare
         run: node scripts/ops-f5-recorder-control.mjs prepare
-      - name: Original mobile340 prefix once with owned native stack samples
-        run: node scripts/run-browser-qa-with-server.mjs scripts/ops-f5-recorder-control.mjs
+      - name: One original Gate Eater condition in fixed timer-postpaint-postpaint-timer order
+        run: node scripts/run-browser-qa-with-server.mjs scripts/ops-native-postpaint-control.mjs
       - name: Restore every original volume state
         if: always() && steps.prepare.outcome != 'skipped'
         run: node scripts/ops-f5-recorder-control.mjs restore
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ops-f5-recorder-control
-          path: outputs/ops-f5-recorder-control
+          name: ops-native-postpaint-control
+          path: |
+            outputs/ops-native-postpaint-control
+            outputs/ops-f5-recorder-control/host.json
           if-no-files-found: error
           retention-days: 14

@@ -3,15 +3,30 @@ import {createHash} from 'node:crypto';
 import {mkdir,writeFile} from 'node:fs/promises';
 import path from 'node:path';
 
+export function nativeCaptureRafWindow(rows,clip){
+  const start=clip.startedAt,stop=clip.stopRequestedAt;
+  assert.ok(Number.isFinite(start)&&Number.isFinite(stop)&&stop>start);
+  assert.ok(Array.isArray(rows)&&rows.length>1);
+  const pairs=rows.slice(1).map((r,i)=>{const from=rows[i].at,to=r.at;
+    assert.ok(Number.isFinite(from)&&Number.isFinite(to)&&to>from);return {from,to,gapMs:to-from};});
+  const overlap=pairs.filter(r=>r.from<stop&&r.to>start),inside=overlap.filter(r=>r.from>=start&&r.to<=stop);
+  const max=list=>list.length?Math.max(...list.map(r=>r.gapMs)):null;
+  return {startedAt:start,stopRequestedAt:stop,maxAllObservationGapMs:max(pairs),
+    maxRawOverlappingPairMs:max(overlap),maxFullyInsideGapMs:max(inside),
+    boundaryPairs:overlap.filter(r=>r.from<start||r.to>stop),
+    scope:'Original adjacent RAF pairs; boundary-crossing pairs are separate and cannot prove the full raw gap occurred during capture. Raw rows are unchanged.'};
+}
+
 // These two functions execute only in the existing hosted game page. They
 // capture its original canvas track with a bounded native acquisition request
 // timer; no copied frames, playback, game-clock changes, microphone, audio
 // routing or encoder-frame-rate override is used. Actual track settings and
 // encoded timestamps, rather than the requested rate, remain the evidence.
-export function startNativeCanvasClip(canvas,{metadata,engine='chromium',requestedMimeType=null,requestedCaptureHz=60,maxBytes=8*1024*1024,maxMs=15_000,stopMs=3_000,realmOwner=null}){
+export function startNativeCanvasClip(canvas,{metadata,engine='chromium',requestedMimeType=null,requestedCaptureHz=60,postpaintRequests=false,maxBytes=8*1024*1024,maxMs=15_000,stopMs=3_000,realmOwner=null}){
   if(requestedMimeType!==null&&!['video/mp4','video/webm;codecs=vp8','video/webm'].includes(requestedMimeType))throw new RangeError('Unknown diagnostic native container');
-  if(requestedCaptureHz!==null&&requestedCaptureHz!==60)throw new RangeError('Unknown native acquisition request rate');
-  const state={metadata,requestedMimeType,requestedCaptureHz,width:canvas?.width,height:canvas?.height,timeOrigin:performance.timeOrigin,
+  if(typeof postpaintRequests!=='boolean'||postpaintRequests&&requestedCaptureHz!==0)throw new RangeError('Postpaint requests require explicit rate zero');
+  if(requestedCaptureHz!==null&&requestedCaptureHz!==60&&!(postpaintRequests&&requestedCaptureHz===0))throw new RangeError('Unknown native acquisition request rate');
+  const state={metadata,requestedMimeType,requestedCaptureHz,postpaintRequests,width:canvas?.width,height:canvas?.height,timeOrigin:performance.timeOrigin,
     requestedAt:performance.now(),startedAt:null,stopRequestedAt:null,stoppedAt:null,
     status:'starting',mimeType:null,chunks:[],bytes:0,dataEvents:[],errors:[],maxBytes,stopMs};
   if(realmOwner!==null){
@@ -22,6 +37,7 @@ export function startNativeCanvasClip(canvas,{metadata,engine='chromium',request
   state.stopped=new Promise(resolve=>{resolveStopped=resolve;});
   state.cleanup=()=>{
     clearTimeout(state.limitTimer);
+    if(state.paintRaf!==undefined)cancelAnimationFrame(state.paintRaf);
     if(state.cleaned)return;
     state.cleaned=true;
     for(const track of state.stream?.getTracks()??[])track.stop();
@@ -30,6 +46,7 @@ export function startNativeCanvasClip(canvas,{metadata,engine='chromium',request
   state.stop=()=>{
     if(state.stopRequestedAt!==null)return;
     state.stopRequestedAt=performance.now();
+    if(state.paintRaf!==undefined)cancelAnimationFrame(state.paintRaf);
     try{if(state.recorder?.state!=='inactive')state.recorder.stop();}
     catch(error){state.errors.push(String(error));resolveStopped();}
   };
@@ -48,6 +65,30 @@ export function startNativeCanvasClip(canvas,{metadata,engine='chromium',request
     state.stream=requestedCaptureHz===null?canvas.captureStream():canvas.captureStream(requestedCaptureHz);
     if(state.stream.getVideoTracks().length!==1||state.stream.getAudioTracks().length!==0)throw Error('Expected only the original canvas video track');
     state.trackSettings={...state.stream.getVideoTracks()[0].getSettings()};
+    if(postpaintRequests){
+      const track=state.stream.getVideoTracks()[0],counter=globalThis.__ASHFALL_RUNTIME_PERFORMANCE__;
+      if(typeof track.requestFrame!=='function'||!Number.isSafeInteger(counter?.renderFrames))throw Error('Actual paint counter and original track requestFrame required');
+      state.paintRequests={initialRenderFrames:counter.renderFrames,rows:[],counterSkips:[],failure:null};
+      let previous=counter.renderFrames;
+      const requestAfterPaint=()=>{
+        if(state.cleaned||state.stopRequestedAt!==null||state.stoppedAt!==null)return;
+        try{
+          if(globalThis.__ASHFALL_RUNTIME_PERFORMANCE__!==counter)throw Error('Original paint counter owner changed');
+          const current=counter.renderFrames;
+          if(!Number.isSafeInteger(current)||current<previous)throw Error('Original paint counter regressed');
+          if(current>previous){
+            if(state.paintRequests.rows.length>=4096)throw Error('Original4096 observation bound');
+            if(current>previous+1)state.paintRequests.counterSkips.push({from:previous,to:current,at:performance.now()});
+            // Request once for the newest completed draw; never catch up,
+            // copy pixels, supply timestamps or infer an encoded frame.
+            track.requestFrame();state.paintRequests.rows.push({renderFrames:current,previousRenderFrames:previous,at:performance.now()});
+            previous=current;
+          }
+          state.paintRaf=requestAnimationFrame(requestAfterPaint);
+        }catch(error){state.paintRequests.failure=String(error);state.errors.push(String(error));state.stop();}
+      };
+      state.paintRaf=requestAnimationFrame(requestAfterPaint);
+    }
     state.canvas=canvas;
     state.recorder=new MediaRecorder(state.stream,{mimeType:state.mimeType});
     state.listeners=[
@@ -91,6 +132,7 @@ export async function finishNativeCanvasClip(state,{completed}){
     let binary='';
     for(let i=0;i<bytes.length;i+=0x8000)binary+=String.fromCharCode(...bytes.subarray(i,i+0x8000));
     return {schema:'v177-native-canvas-clip/v1',metadata:state.metadata,status:state.status,mimeType:blob.type,mimePreferences:state.mimePreferences??null,requestedMimeType:state.requestedMimeType,requestedCaptureHz:state.requestedCaptureHz,
+      ...(state.postpaintRequests?{postpaintRequests:true,paintRequests:state.paintRequests}:{}),
       width:state.width,height:state.height,timeOrigin:state.timeOrigin,requestedAt:state.requestedAt,...(state.realmOwner?{realm:{created:state.realmCreated,started:state.realmStarted??null,finished:state.realmFinished??null}}:{}),
       startedAt:state.startedAt,stopRequestedAt:state.stopRequestedAt,stoppedAt:state.stoppedAt,
       nativeElapsedMs:state.startedAt!==null&&state.stoppedAt!==null?state.stoppedAt-state.startedAt:null,
@@ -101,7 +143,7 @@ export async function finishNativeCanvasClip(state,{completed}){
   }finally{clearTimeout(timer);state.cleanup();state.chunks.length=0;}
 }
 
-export async function beginV177NativeCanvasClip(page,metadata,{directory,engine,requestedMimeType=null,requestedCaptureHz=60,realmOwner=null}={}){
+export async function beginV177NativeCanvasClip(page,metadata,{directory,engine,requestedMimeType=null,requestedCaptureHz=60,postpaintRequests=false,realmOwner=null}={}){
   assert.match(metadata.form,/^[a-z0-9-]+$/u);assert.ok(['move','attack','engage','incoming-stun','turned-getup','ranger-manual-precision','controlled-outcome'].includes(metadata.phase));
   const controlledOutcome=metadata.phase==='controlled-outcome';
   if(controlledOutcome){
@@ -148,7 +190,7 @@ export async function beginV177NativeCanvasClip(page,metadata,{directory,engine,
   const identity=unborn?`corpse-${metadata.corpseId}-variant-${metadata.variant}`:metadata.fighterId;
   const stem=path.join(directory,`${metadata.fixtureGroup}-${metadata.form}-${metadata.phase}-${identity}`);
   let handle,error,finished=false;
-  try{handle=await page.locator('.game-shell canvas').evaluateHandle(startNativeCanvasClip,{metadata,engine,requestedMimeType,requestedCaptureHz,...(realmOwner!==null?{realmOwner}:{})});}
+  try{handle=await page.locator('.game-shell canvas').evaluateHandle(startNativeCanvasClip,{metadata,engine,requestedMimeType,requestedCaptureHz,postpaintRequests,...(realmOwner!==null?{realmOwner}:{})});}
   catch(cause){error=String(cause);}
   return {async waitForStart(){
     if(finished||!handle)throw Error('Native canvas recorder did not become available');

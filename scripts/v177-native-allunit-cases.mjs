@@ -164,12 +164,17 @@ export async function prepareCase(page,row,owned,active,resources){
     ownerEvidence:proof.ownerEvidence??proof.origin??{constructorFixture:true,legacyFusedFixture:proof.legacyFusedFixture}};
 }
 
-export function assertAllUnitClip(row,bytes,{codecControl=false,requestedMimeType='video/webm;codecs=vp8',requestedCaptureHz=60,acquisitionControl=false}={}){
+export function assertAllUnitClip(row,bytes,{codecControl=false,requestedMimeType='video/webm;codecs=vp8',requestedCaptureHz=60,acquisitionControl=false,postpaintControl=false}={}){
   const c=row.nativeClip;
+  if(!postpaintControl)assert.equal(row.recordingMetadata.postpaintControl,undefined,'A normal observation cannot acquire the postpaint diagnostic label');
   if(acquisitionControl){
     assert.equal(row.caseId,'forms-6:abomination:attack:844x340');assert.equal(row.recordingMetadata.acquisitionControl,true);
   }else assert.equal(row.recordingMetadata.acquisitionControl,undefined,'A normal observation cannot acquire a diagnostic label');
-  if(requestedCaptureHz===null)assert.ok(c.requestedCaptureHz===null||c.requestedCaptureHz===undefined,'Historical noargs evidence keeps its original method');
+  if(postpaintControl){
+    assert.equal(row.caseId,'forms-7:gate-eater:attack:844x390');assert.equal(row.recordingMetadata.postpaintControl,true);
+    assert.ok([0,60].includes(requestedCaptureHz));assert.equal(c.requestedCaptureHz,requestedCaptureHz);
+    assert.equal(c.postpaintRequests===true,requestedCaptureHz===0);
+  }else if(requestedCaptureHz===null)assert.ok(c.requestedCaptureHz===null||c.requestedCaptureHz===undefined,'Historical noargs evidence keeps its original method');
   else{assert.equal(requestedCaptureHz,60);assert.equal(c.requestedCaptureHz,60);}
   if(codecControl){
     assert.equal(row.caseId,'forms-2:brute:attack:1280x720');assert.equal(row.form,'brute');assert.equal(row.phase,'attack');
@@ -206,7 +211,7 @@ export function assertAllUnitClip(row,bytes,{codecControl=false,requestedMimeTyp
     assert.equal(r.renderKind,row.form);if(i)assert.ok(r.at>row.sourceRaf.rows[i-1].at);
   }
 }
-export async function captureAllUnitCase(page,row,{out,onFailure=()=>{},requestedMimeType='video/webm;codecs=vp8',requestedCaptureHz=60,codecControl=false,acquisitionControl=false}={}){
+export async function captureAllUnitCase(page,row,{out,onFailure=()=>{},requestedMimeType='video/webm;codecs=vp8',requestedCaptureHz=60,codecControl=false,acquisitionControl=false,postpaintControl=false}={}){
   assertPlannedCase(row);let clip,observation,primary;
   const resources={pointer:null,realmOwner:null,captureStartHandle:null,captureStartExported:false,sampleHandles:[]};
   const active=()=>{assert.notEqual(row.deadlineExpired,true,'Late capture cannot become accepted');assert.equal(page.isClosed(),false);};
@@ -223,9 +228,9 @@ export async function captureAllUnitCase(page,row,{out,onFailure=()=>{},requeste
       proofId:row.proof.proofId,battleGeneration:row.proof.battleGeneration,
       legacyFusedFixture:row.proof.legacyFusedFixture,diagnosticOnly:true,controlledOpponent:true,
       samplingProtocol:'native-min-spacing-v2',
-      ...(codecControl?{codecControl:true}:{}),...(acquisitionControl?{acquisitionControl:true}:{})};
+      ...(codecControl?{codecControl:true}:{}),...(acquisitionControl?{acquisitionControl:true}:{}),...(postpaintControl?{postpaintControl:true}:{})};
     clip=await beginV177NativeCanvasClip(page,row.recordingMetadata,{directory:path.join(out,
-      row.viewport.width+'x'+row.viewport.height,'native-canvas-clips'),engine:'webkit',requestedMimeType,requestedCaptureHz,realmOwner:resources.realmOwner});active();
+      row.viewport.width+'x'+row.viewport.height,'native-canvas-clips'),engine:'webkit',requestedMimeType,requestedCaptureHz,postpaintRequests:postpaintControl&&requestedCaptureHz===0,realmOwner:resources.realmOwner});active();
     row.recordingStart=await owned(()=>clip.waitForStart());
     row.pausedCaptureStart=await owned(()=>resources.realmOwner.evaluate(readNativeAllUnitSample,{...row.proof,performanceBoundary:true}));
     row.boundary=postpaintCaptureBoundary(row,row.proof,row.pausedCaptureStart,row.recordingStart);
@@ -279,7 +284,7 @@ export async function captureAllUnitCase(page,row,{out,onFailure=()=>{},requeste
       assert.ok(sample.at>=notBefore,'Delayed reads must not consume the next sample early');
       previous=sample;
     }
-    assertAllUnitClip(row,await readFile(row.nativeClip.file),{codecControl,requestedMimeType,requestedCaptureHz,acquisitionControl});
+    assertAllUnitClip(row,await readFile(row.nativeClip.file),{codecControl,requestedMimeType,requestedCaptureHz,acquisitionControl,postpaintControl});
     row.postpaintReceipt=assertShardPostpaintContract(row,row.proof,row.boundary,row.release,row.samples);
     const windowSamples=row.samples.map(s=>({...s,renders:s.renders.filter(r=>r.renderSequence>row.sequenceBaseline
       &&r.jointPaintedAt>=row.boundary.simulationTime&&r.jointPaintedAt<=s.simulationTime)}));
