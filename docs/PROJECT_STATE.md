@@ -22,7 +22,7 @@ v1.0.5の公開は完了しています。これは全製品課題や実機受�
 - **開発運用の整理： [Issue #182](https://github.com/SUSANO-OOO/Zombieee/issues/182)**。ゲーム仕様・人物・素材・saveの意味を変えず、公開版を維持する作業です。この作業のための新release／Pages配信はしません。
 - 依存更新PRは製品・build・検証runtimeの影響を分けて判断します。Playwright／WebKit固定とvinext補修を、一括更新で無条件に置き換えません。
 
-物理iPhoneで保存した画面録画のBGM／SE、実speaker聴感、発熱、物理インストール／操作、人間の最終実プレイ評価は未確認です。Issue #177と[音声残件 #24](https://github.com/SUSANO-OOO/Zombieee/issues/24)、[実機PWA #161](https://github.com/SUSANO-OOO/Zombieee/issues/161)を、技術合格だけで閉じません。技術的な録音・decode成功は人間の聴感確認ではありません。
+2026-10-28受領のProducer実機報告：公開版v1.0.5をiPhoneのホーム画面から起動し、標準画面収録で保存した動画を写真アプリで再生して、映像とゲーム音声が正常に再生されることを本人が確認しました（[Issue #177](https://github.com/SUSANO-OOO/Zombieee/issues/177)）。当該端末・手順での確認済み結果で、Codexによる原動画の独立再生確認ではありません。全端末、BGM・SE・ボイス全項目の個別聴感、ゲーム中の実speaker聴感、発熱、今回の起動以外の物理インストール／操作、ゲーム全体の最終受入は未確認です。[音声残件 #24](https://github.com/SUSANO-OOO/Zombieee/issues/24)と[実機PWA #161](https://github.com/SUSANO-OOO/Zombieee/issues/161)を一括完了にはしません。新しい再現報告や関連変更なしに保存録画音声の調査は反復せず、[PR #183](https://github.com/SUSANO-OOO/Zombieee/pull/183)の自動録画・同期不良と[PR #185](https://github.com/SUSANO-OOO/Zombieee/pull/185)の正式性能不合格は別の未解決事項として扱います。
 
 過去S14／S30の30秒読取失敗は履歴を保持します。後始末で画面を閉じた後のsave取得失敗を、別のsave破損と確定していません。後続の通常プレイ成功は元の間欠障害の原原因確定とは区別します。
 
