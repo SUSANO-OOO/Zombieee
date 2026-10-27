@@ -10,7 +10,8 @@ import {createDefaultV100Save,normalizeV100Save,serializeV100Save} from '../app/
 import {V100_UNITS,V100_STAGE_IDS} from '../app/v100Registry.js';
 import {MANUAL_ABILITY_REGISTRY as manual} from '../app/manualAbilities.js';
 import {parseIndexingStatus,pauseEnabledVolumes,restoreEnabledVolumes} from './v100-macos-indexing-control.mjs';
-import {withNativeProcessTimeline} from './v177-native-process-timeline.mjs';
+import {beginStackSamples} from './ops-f5-stack-sample.mjs';
+import {correctionCases} from './v105-five-corrections-cases.mjs';
 
 const out=path.resolve('outputs/ops-f5-recorder-control');
 const git=args=>execFileSync('git',args,{encoding:'utf8'}).trim();
@@ -51,9 +52,9 @@ export async function runBrowserQa(){
   await guard();await mkdir(out,{recursive:true});
   const report={head:git(['rev-parse','HEAD']),productHead:'677795f000435d79d2f50a1643e2e9adb849a9dd',
     diagnosticOnly:true,accepted:false,run:process.env.GITHUB_RUN_ID,runtime:NATIVE_RECORDING_WEBKIT_RUNTIME,
-    plan:Array(6).fill('native-av'),kind:'guardian',viewport:{width:844,height:340},
-    hypothesis:'Large frame stalls lie outside the measured game callback and audit. Use bounded cumulative process CPU and collector GC traces to distinguish active CPU work from callback delivery waits.',
-    decision:'Six predeclared independent fixtures, never repeat-until-pass. Attribute only CPU deltas whose actual wall-time brackets overlap a source-RAF stall. PS overhead, coarse brackets and profiling perturbation remain explicit. No diagnostic result replaces an acceptance.',
+    plan:['unprofiled','stack-profiled'].flatMap(observation=>correctionCases('mobile340').map(item=>({...item,observation}))),viewport:{width:844,height:340},
+    hypothesis:'The seven actual failing-scope fixtures, in their original order, distinguish WebContent/GPU active stacks from callback-delivery waits. Repeated83.333ms gaps can lose120ms without one250ms stall.',
+    decision:'One original seven-case unprofiled prefix, then one identical prefix with3s/2ms native stack samples. No retry. If only profiled cases stall, retain profiling perturbation instead of attributing a product cause. If no matching stalls occur, this diagnostic is inconclusive and is not repeated. All results remain diagnostic and never replace acceptance.',
     cases:[],errors:[],status:'starting'};
   const persist=()=>writeFile(path.join(out,'report.json'),JSON.stringify(report,null,2)+'\n');
   const browser=await(await nativeRecordingBrowserType()).launch({headless:true});
@@ -62,8 +63,8 @@ export async function runBrowserQa(){
     const owned=V100_UNITS.map(u=>u.id),base=createDefaultV100Save();
     const save=normalizeV100Save({...base,campaignStarted:true,revision:3,ownedUnitIds:owned,registeredUnitIds:owned,formationSlots:owned.slice(0,7),
       flowState:{phase:'formation',stageId:V100_STAGE_IDS[0],stageNumber:1,eventId:null,destination:'formation',nodeIndex:0,firstClear:false,finalized:true}});
-    for(const [index,mode] of report.plan.entries()){
-      const row={index,mode,caseId:'ops-guardian-manual-844x340-'+index,status:'starting',accepted:false};report.cases.push(row);await persist();
+    for(const [index,item] of report.plan.entries()){
+      const row={index,...item,caseId:'ops-mobile340-'+index+'-'+item.kind+'-'+item.mode,status:'starting',accepted:false};report.cases.push(row);await persist();
       const caseStartedAt=performance.now();
       await withCorrectionCaseContext(browser,{viewport:report.viewport,deviceScaleFactor:1,isMobile:true,hasTouch:true},async(page,closeOwned)=>{
         await page.addInitScript(seedV100BrowserSaveOnce,serializeV100Save(save));
@@ -71,24 +72,28 @@ export async function runBrowserQa(){
         await page.getByRole('button',{name:'戦闘へ',exact:true}).click();await page.waitForFunction(()=>window.__ASHFALL_BATTLE_QA__?.getSnapshot().running);
         await page.evaluate(async()=>{await window.__ASHFALL_BATTLE_QA__.ensureUnitRenderProofAsset('guardian');await window.__ASHFALL_BATTLE_QA__.ensureEnemyFacingProofAsset('walker');});
         await waitForNativeCaptureAudio(page,row);
-        row.proof=await page.evaluate(async kind=>{const q=window.__ASHFALL_BATTLE_QA__;await q.ensureUnitRenderProofAsset(kind);
-          const p=q.prepareManualAbilityProof(kind);q.setEnemyVfxProofPaused(true);window.__ASHFALL_AUDIO_QA__.resetCueRequests();
-          return {...p,trackedIds:q.getSnapshot().fighters.map(f=>f.id)};},report.kind);
+        row.proof=await page.evaluate(async kind=>{const q=window.__ASHFALL_BATTLE_QA__;await q.ensureUnitRenderProofAsset(kind.kind);
+          const p=q.prepareManualAbilityProof(kind.mode==='duet'?[kind.kind,kind.kind]:kind.kind);q.setEnemyVfxProofPaused(true);window.__ASHFALL_AUDIO_QA__.resetCueRequests();
+          return {...p,trackedIds:q.getSnapshot().fighters.map(f=>f.id)};},item);
         await page.waitForFunction(ids=>ids.every(id=>window.__ASHFALL_BATTLE_QA__.getEnemyFacingRuntimeAudit(id).renderHistory.at(-1)?.jointDrawSucceeded),row.proof.ownerIds,{timeout:5000});
         row.document=await page.evaluate(()=>({visibility:document.visibilityState,focus:document.hasFocus()}));
-        const d=manual[report.kind],durationMs=Math.ceil(Math.max(3,(d.windupSeconds??0)+(d.activeSeconds??d.guardSeconds??0)+(d.recoverySeconds??0)+1.2)*1000);
-        let capture,bytes;
-        await withNativeProcessTimeline(async()=>{
+        const d=manual[item.kind],durationMs=Math.ceil(Math.max(3,(d.windupSeconds??0)+(d.activeSeconds??d.guardSeconds??0)+(d.recoverySeconds??0)+1.2)*1000);
+        let capture,bytes,samples;
         row.start=await page.evaluate(startCorrectionRecording,{ids:row.proof.trackedIds,durationMs,preferMp4:true});
+        if(item.observation==='stack-profiled')try{samples=await beginStackSamples(path.join(out,index+'-stack'));}
+          catch(error){row.stackSetupError=String(error);}
+        try{
         row.release=await page.evaluate(()=>{const q=window.__ASHFALL_BATTLE_QA__;q.setEnemyVfxProofPaused(false);return {at:performance.now(),time:q.getV105CorrectionAudit([]).time};});
-        await page.locator(`.manual-ability-ready[data-fighter-id="${row.proof.ownerIds[0]}"]`).tap({timeout:5000});
-        row.input='one actual enabled tap for this independent fixture';
+        for(const id of row.proof.ownerIds)await page.locator(`.manual-ability-ready[data-fighter-id="${id}"]`).tap({timeout:5000});
+        row.input='one actual enabled tap per independent owner';
         await page.waitForTimeout(durationMs);
         capture=await page.evaluate(stopCorrectionRecording);bytes=Buffer.from(capture.data,'base64');delete capture.data;row.capture=capture;
         row.file=path.join(out,index+'-original.mp4');await writeFile(row.file,bytes,{flag:'wx'});
-        },{selection:{mode:'ops-guardian-process-diagnostic'},row,out,binding:{head:report.head}});
+        }finally{if(samples)row.stackSamples=await samples.completed;}
         await closeOwned();
         if(row.file)row.originalAv=await auditCorrectionEncodedClip(row.file,capture);
+        assert.equal(row.stackSetupError,undefined,'Stack setup failed; original AV remains retained');
+        if(samples)assert.ok(row.stackSamples.every(r=>r.status==='retained'),'Original bounded stack sampling failed; AV retained');
         assertCorrectionCaseDeadline(row,caseStartedAt);
         row.driftMs=(capture.final.time-row.release.time)*1000-(capture.stopAt-row.release.at);
         row.droppedSimulationSeconds=capture.final.timing.droppedSimulationSeconds-capture.initial.timing.droppedSimulationSeconds;
@@ -97,7 +102,7 @@ export async function runBrowserQa(){
         row.status='observed-diagnostic';
       },{onFatal:error=>{report.errors.push(String(error));},onRequests:receipt=>{row.context=receipt;},onDeadline:()=>{row.deadlineExpired=true;}});
       assertCorrectionCaseDeadline(row,caseStartedAt);
-      await persist();console.log(JSON.stringify({index,mode,driftMs:row.driftMs,maxRafIntervalMs:row.maxRafIntervalMs,originalAv:row.originalAv?.failures,accepted:false}));
+      await persist();console.log(JSON.stringify({index,...item,driftMs:row.driftMs,maxRafIntervalMs:row.maxRafIntervalMs,originalAv:row.originalAv?.failures,accepted:false}));
       assert.deepEqual(report.errors,[]);
     }
     report.status='diagnostic-complete';
