@@ -38,7 +38,7 @@ v10の正史・人物・30作戦の判断は維持します。[旧ロードマ�
 
 ## 確認結果の扱いと履歴
 
-v1.0.5では対象五点の修正、影響する動作映像、通常プレイ、Phase G、正式Mac ARM性能と公開後save／PWA技術確認を、各実owner・条件で記録しています。正式性能の基準は33ms／54Hz・30秒を維持し、診断用Intelや過去候補の成功と混同しません。数字・原本・再利用条件はIssue #177と `docs/qa/v105/` の証拠索引を参照します。
+v1.0.5では対象五点の修正、影響する動作映像、通常プレイ、Phase G、正式Mac ARM性能と公開後save／PWA技術確認を、各実owner・条件で記録しています。正式High性能はrAF間隔p95が33ms以下・中央値の換算50FPS以上となる30秒測定を維持します。描画cadenceは各viewportの既定graphics profileに既存の許容幅（±10%、最低±3Hz）で照合し、Highは通常60Hz、スマホ横画面は画質を維持して45Hz描画です。診断用Intelや過去候補の成功と混同しません。判定の実装は `scripts/browser-performance-budget.mjs` と `app/renderPerformance.js`、数字・原本・再利用条件はIssue #177と `docs/qa/v105/` の証拠索引を参照します。
 
 従来の巨大な状態文書は、当時の記述を保った[状態履歴](PROJECT_STATE_HISTORY_PRE_20261026.md)へ移しました。「未公開」「実行中」「現在」等は各記録当時の表現です。今の状態や新規作業の許可をそこから判断しないでください。存在しない `outputs/completion/tatara-ground-review-r1/native-last4s.mp4` の古いリンクは、現時点で復元を確認できない過去証拠として扱います。
 
