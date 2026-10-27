@@ -13,25 +13,51 @@ import threading
 import time
 
 
-def observe(argv, timeout):
+def observe(argv, timeout, inspect_startup=False):
     started = time.monotonic()
     child = subprocess.Popen(argv, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE, text=True, start_new_session=True)
     timed_out = False
+    startup = None
+
+    def remaining():
+        seconds = started + timeout - time.monotonic()
+        if seconds <= 0:
+            raise subprocess.TimeoutExpired(argv, timeout)
+        return seconds
+
     try:
-        stdout, stderr = child.communicate(timeout=timeout)
+        if inspect_startup:
+            try:
+                stdout, stderr = child.communicate(timeout=min(5, remaining()))
+            except subprocess.TimeoutExpired:
+                remaining()
+                if child.returncode is None:
+                    # The unreaped owned child cannot have its PID reused here.
+                    try:
+                        probe = subprocess.run(["/bin/ps", "-o", "pid,ppid,uid,etime,state,wchan,comm", "-p", str(child.pid)],
+                                               capture_output=True, text=True, timeout=min(1, remaining()), check=False)
+                        startup = {"pid": child.pid, "code": probe.returncode, "stdout": probe.stdout, "stderr": probe.stderr}
+                    except Exception as probe_error:
+                        startup = {"pid": child.pid, "error": repr(probe_error)}
+                stdout, stderr = child.communicate(timeout=remaining())
+            remaining()
+        else:
+            stdout, stderr = child.communicate(timeout=timeout)
     except subprocess.TimeoutExpired:
         timed_out = True
         try:
-            if child.pid > 1 and os.getpgid(child.pid) == child.pid:
-                os.killpg(child.pid, signal.SIGKILL)
-            else:
-                child.kill()
+            if child.returncode is None:
+                if child.pid > 1 and os.getpgid(child.pid) == child.pid:
+                    os.killpg(child.pid, signal.SIGKILL)
+                else:
+                    child.kill()
         except ProcessLookupError:
             pass
         stdout, stderr = child.communicate()
     return {"argv": argv, "limitSeconds": timeout, "elapsedSeconds": time.monotonic() - started,
-            "code": child.returncode, "timedOut": timed_out, "stdout": stdout, "stderr": stderr}
+            "code": child.returncode, "timedOut": timed_out, "stdout": stdout, "stderr": stderr,
+            "startupObservation": startup}
 
 
 def worker(workspace, uid, gid, head, run_id):
@@ -47,6 +73,9 @@ def worker(workspace, uid, gid, head, run_id):
     report = {"head": head, "run": run_id, "accepted": False, "diagnosticOnly": True,
               "gameStarted": False, "targetIsThisWorkerOnly": True, "uid": uid, "sudoUsed": False, "pid": os.getpid(),
               "template": "System Trace", "requestedDurationSeconds": 1, "status": "starting"}
+    report["targetExecutable"] = sys.executable
+    report["targetSigning"] = observe(["/usr/bin/codesign", "--display", "--verbose=4", sys.executable], 3)
+    report["targetEntitlements"] = observe(["/usr/bin/codesign", "--display", "--entitlements", ":-", sys.executable], 3)
     stop = threading.Event()
 
     def exercise():
@@ -62,7 +91,7 @@ def worker(workspace, uid, gid, head, run_id):
     try:
         report["collection"] = observe(["/usr/bin/xcrun", "xctrace", "record", "--template", "System Trace",
                                          "--attach", str(os.getpid()), "--time-limit", "1s", "--no-prompt",
-                                         "--output", str(trace)], 10)
+                                         "--output", str(trace)], 10, inspect_startup=True)
         stop.set()
         thread.join()
         # Archive the original trace before any export/analysis can touch it.
@@ -82,6 +111,14 @@ def worker(workspace, uid, gid, head, run_id):
     except Exception as error:
         report["status"] = "self-trace-failed"
         report["error"] = repr(error)
+        stop.set()
+        thread.join()
+        try:
+            report["toolLogs"] = observe(["/usr/bin/log", "show", "--style", "compact", "--last", "30s",
+                "--predicate", 'process == "xctrace" OR process == "DTServiceHub" OR process == "taskgated"',
+                "--info", "--debug"], 5)
+        except Exception as log_error:
+            report["toolLogsError"] = repr(log_error)
         raise
     finally:
         stop.set()
