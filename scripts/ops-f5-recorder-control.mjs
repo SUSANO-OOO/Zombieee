@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
 import {mkdir,readFile,realpath,writeFile} from 'node:fs/promises';
 import path from 'node:path';
-import {startCorrectionRecording,stopCorrectionRecording,withCorrectionCaseContext,assertCorrectionCaseDeadline} from './v105-five-corrections-capture.mjs';
+import {createHash} from 'node:crypto';
+import {startCorrectionRecording,stopCorrectionRecording,withCorrectionCaseContext,assertCorrectionCaseDeadline,auditCorrectionEncodedClip,assertCurrentCorrectionPaints} from './v105-five-corrections-capture.mjs';
 import {nativeRecordingBrowserType,NATIVE_RECORDING_WEBKIT_RUNTIME} from './v177-native-allunit-recording-runtime.mjs';
 import {enterNativeAllUnitSurface,waitForNativeCaptureAudio} from './v177-native-allunit-browser.mjs';
 import {seedV100BrowserSaveOnce,enterV100FromTitle} from './v100-title-qa-entry.mjs';
@@ -10,7 +11,7 @@ import {createDefaultV100Save,normalizeV100Save,serializeV100Save} from '../app/
 import {V100_UNITS,V100_STAGE_IDS} from '../app/v100Registry.js';
 import {MANUAL_ABILITY_REGISTRY as manual} from '../app/manualAbilities.js';
 import {parseIndexingStatus,pauseEnabledVolumes,restoreEnabledVolumes} from './v100-macos-indexing-control.mjs';
-import {omitEncoderAndSelectCanvasSource} from './ops-canvas-source-adapter.mjs';
+import {selectCanvasReadbackMode,readCanvasReadbackReceipt} from './ops-canvas-readback-adapter.mjs';
 
 const out=path.resolve('outputs/ops-f5-recorder-control');
 const git=args=>execFileSync('git',args,{encoding:'utf8'}).trim();
@@ -51,15 +52,16 @@ export async function runBrowserQa(){
   await guard();await mkdir(out,{recursive:true});
   const report={head:git(['rev-parse','HEAD']),productHead:'7cb606f033bf2472f330b6def52b6329b48bdd4c',
     diagnosticOnly:true,accepted:false,run:process.env.GITHUB_RUN_ID,runtime:NATIVE_RECORDING_WEBKIT_RUNTIME,
-    plan:['canvas-source','no-canvas-source','canvas-source-light','no-canvas-source-light',
-      'no-canvas-source-light','canvas-source-light','no-canvas-source','canvas-source'],kind:'brawler',viewport:{width:844,height:340},
-    hypothesis:'The old encoder A/B retained a real canvas source and full per-frame snapshots in both conditions; its no-encoder rows were still23-26Hz. Separate those two remaining harness costs in one fixed2x2 comparison.',
-    decision:'Eight fixed ABCDDCBA windows, never repeat-until-pass. All modes have NO real encoder and NO media. Source omission uses a labelled interface placeholder. Light observation omits only per-frame QA payload, with no replacement game timestamps; initial/release/final snapshots remain actual. Observer RAF cadence is not game-render or encoded FPS: compare actual frameCpu/draw/simulation receipts too. Separated results support a harness path, not GPU or GC ownership. Overlap remains inconclusive; none replaces recording or formal performance acceptance.',
+    plan:['default','readback','readback','default'],kind:'brawler',viewport:{width:844,height:340},
+    hypothesis:'The fixed source/no-source2x2 showed lower RAF cadence with a real canvas source even without the encoder. Pinned WebKit selects a different backing path for willReadFrequently. Compare that standard context hint in the recording page only, using actual original AV bytes and unchanged product/observer/60Hz acquisition.',
+    decision:'Four fixed ABBA windows, never retry-until-pass. Confirm native context attributes and exact canvas owner. Keep alpha/desynchronized, original dimensions, assets, all real snapshots and audio. Original120ms sync,250ms raw PTS gaps/head/tail,8MiB and30s case bounds remain; failures stay failures. A faster observer alone or both controls passing does not prove the original failure fixed. Preserve actual canvas PNG after the recording, model receipts and raw AV for visual review; no formal-performance, naturalness or physical acceptance.',
     cases:[],errors:[],status:'starting'};
   const persist=()=>writeFile(path.join(out,'report.json'),JSON.stringify(report,null,2)+'\n');
   const browser=await(await nativeRecordingBrowserType()).launch({headless:true});
   try{
     assert.equal(browser.version(),NATIVE_RECORDING_WEBKIT_RUNTIME.browserVersion);
+    const {V177_JOINT_ATLASES:atlases}=await import('../app/v177JointPresentation.js');
+    const atlasPaths=Object.fromEntries(Object.entries(atlases).map(([kind,atlas])=>[kind,atlas.path]));
     const owned=V100_UNITS.map(u=>u.id),base=createDefaultV100Save();
     const save=normalizeV100Save({...base,campaignStarted:true,revision:3,ownedUnitIds:owned,registeredUnitIds:owned,formationSlots:owned.slice(0,7),
       flowState:{phase:'formation',stageId:V100_STAGE_IDS[0],stageNumber:1,eventId:null,destination:'formation',nodeIndex:0,firstClear:false,finalized:true}});
@@ -67,6 +69,7 @@ export async function runBrowserQa(){
       const row={index,mode,status:'starting',accepted:false};report.cases.push(row);await persist();
       const caseStartedAt=performance.now();
       await withCorrectionCaseContext(browser,{viewport:report.viewport,deviceScaleFactor:1,isMobile:true,hasTouch:true},async(page,closeOwned)=>{
+        await page.addInitScript(selectCanvasReadbackMode,mode);
         await page.addInitScript(seedV100BrowserSaveOnce,serializeV100Save(save));
         await page.goto(new URL('v100',process.env.V100_CAMPAIGN_QA_BASE_URL).href);await enterNativeAllUnitSurface(page);await enterV100FromTitle(page);
         await page.getByRole('button',{name:'戦闘へ',exact:true}).click();await page.waitForFunction(()=>window.__ASHFALL_BATTLE_QA__?.getSnapshot().running);
@@ -77,7 +80,7 @@ export async function runBrowserQa(){
           return {...p,trackedIds:q.getSnapshot().fighters.map(f=>f.id)};});
         await page.waitForFunction(ids=>ids.every(id=>window.__ASHFALL_BATTLE_QA__.getEnemyFacingRuntimeAudit(id).renderHistory.at(-1)?.jointDrawSucceeded),row.proof.ownerIds,{timeout:5000});
         row.document=await page.evaluate(()=>({visibility:document.visibilityState,focus:document.hasFocus()}));
-        await page.evaluate(omitEncoderAndSelectCanvasSource,mode);
+        row.contextMode=await page.evaluate(readCanvasReadbackReceipt);
         const d=manual.brawler,durationMs=Math.ceil(Math.max(3,(d.windupSeconds??0)+(d.activeSeconds??d.guardSeconds??0)+(d.recoverySeconds??0)+1.2)*1000);
         row.start=await page.evaluate(startCorrectionRecording,{ids:row.proof.trackedIds,durationMs,preferMp4:true});
         row.release=await page.evaluate(()=>{const q=window.__ASHFALL_BATTLE_QA__;q.setEnemyVfxProofPaused(false);return {at:performance.now(),time:q.getV105CorrectionAudit([]).time};});
@@ -85,12 +88,17 @@ export async function runBrowserQa(){
         row.input='one actual enabled tap for this independent fixture';
         await page.waitForTimeout(durationMs);
         const capture=await page.evaluate(stopCorrectionRecording),bytes=Buffer.from(capture.data,'base64');delete capture.data;row.capture=capture;
-        row.encoder=await page.evaluate(()=>window.__OPS_ENCODER_CONTROL__??{encoderCreated:true});
-        assert.equal(bytes.length,0);assert.equal(capture.failed,'Original encoded byte limit');assert.equal(row.encoder.encoderCreated,false);
-        assert.equal(row.encoder.constructorCalls,1);assert.equal(row.encoder.stopCalls,1);
-        assert.equal(row.encoder.realCanvasSourceCalls,mode.startsWith('no-')?0:1);
-        assert.equal(row.encoder.sourceOmitted,mode.startsWith('no-'));
+        row.file=`${index}-${mode}.${capture.mime.startsWith('video/mp4')?'mp4':'webm'}`;
+        await writeFile(path.join(out,row.file),bytes,{flag:'wx'});
+        row.bytes=bytes.length;row.sha256=createHash('sha256').update(bytes).digest('hex');await persist();
+        // Observe the original canvas after timing has ended; do not add a
+        // readback/screenshot to the live interval under comparison.
+        row.canvasPng=`${index}-${mode}-actual-canvas.png`;
+        await page.locator('.game-shell canvas').screenshot({path:path.join(out,row.canvasPng)});
         await closeOwned();
+        assert.equal(capture.failed,null);assert.equal(capture.bytes,bytes.length);assert.ok(capture.rows.length>=30);
+        row.originalAv=await auditCorrectionEncodedClip(path.join(out,row.file),capture);
+        row.currentModelPaints=assertCurrentCorrectionPaints(capture,row.proof.ownerIds,atlasPaths);
         assertCorrectionCaseDeadline(row,caseStartedAt);
         row.driftMs=(capture.final.time-row.release.time)*1000-(capture.stopAt-row.release.at);
         row.droppedSimulationSeconds=capture.final.timing.droppedSimulationSeconds-capture.initial.timing.droppedSimulationSeconds;
@@ -98,14 +106,24 @@ export async function runBrowserQa(){
         const live=capture.rows.filter(r=>r.at>=row.release.at&&r.at<=capture.stopAt),intervals=live.slice(1).map((r,i)=>r.at-live[i].at).sort((a,b)=>a-b);
         row.liveCadence={rows:live.length,hz:1000*(live.length-1)/(live.at(-1).at-live[0].at),
           medianMs:intervals[Math.floor(intervals.length*.5)],p95Ms:intervals[Math.floor(intervals.length*.95)]};
-        assert.ok(capture.final.abilityNames.starts.some(a=>row.proof.ownerIds.includes(a.ownerId)),'One accepted real ability must occur');
-        row.status='observed-diagnostic';
+        row.acceptedRealAbility=capture.final.abilityNames.starts.some(a=>row.proof.ownerIds.includes(a.ownerId));
+        const launch=capture.final.fistWave.receipts.find(r=>r.type==='launch'),contact=capture.final.fistWave.receipts.find(r=>r.type==='contact');
+        row.fistWave={launch,contact,observedFlight:capture.rows.some(r=>r.fistWave.waves.length)};
+        const before=capture.initial.fighters.find(f=>f.id===contact?.targetId),after=capture.final.fighters.find(f=>f.id===contact?.targetId);
+        row.fistWave.actualDamage=before&&after?before.hp-after.hp:null;
+        row.originalFailures=[...row.originalAv.failures];
+        if(Math.abs(row.driftMs)>120)row.originalFailures.push('Original120ms game/native clock bound');
+        assert.ok(row.acceptedRealAbility&&launch&&contact&&contact.at>launch.at&&row.fistWave.observedFlight,'Actual accepted ability, flight and contact required');
+        assert.ok(before&&after&&Math.abs(row.fistWave.actualDamage-manual.brawler.impactDamage)<.0001,'One actual contact keeps original damage');
+        assert.ok(capture.rows.filter(r=>r.time<contact.at).every(r=>r.fighters.find(f=>f.id===contact.targetId)?.hp===before.hp),'No early damage');
+        row.status=row.originalFailures.length?'diagnostic-with-original-failures':'observed-diagnostic';
       },{onFatal:error=>{report.errors.push(String(error));},onRequests:receipt=>{row.context=receipt;},onDeadline:()=>{row.deadlineExpired=true;}});
       assertCorrectionCaseDeadline(row,caseStartedAt);
-      await persist();console.log(JSON.stringify({index,mode,driftMs:row.driftMs,maxRafIntervalMs:row.maxRafIntervalMs,liveCadence:row.liveCadence,noEncodedMedia:true,accepted:false}));
+      await persist();console.log(JSON.stringify({index,mode,driftMs:row.driftMs,maxRafIntervalMs:row.maxRafIntervalMs,liveCadence:row.liveCadence,
+        contextMode:row.contextMode,encoded:row.originalAv.timeline,originalFailures:row.originalFailures,accepted:false}));
       assert.deepEqual(report.errors,[]);
     }
-    report.status='diagnostic-complete';
+    report.status=report.cases.some(r=>r.originalFailures.length)?'diagnostic-with-original-failures':'diagnostic-complete';
   }catch(error){report.errors.push(String(error));report.status='protocol-failed';throw error;}
   finally{try{await browser.close();}finally{await persist();}}
 }
