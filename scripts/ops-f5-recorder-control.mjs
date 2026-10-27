@@ -74,14 +74,29 @@ export async function runBrowserQa(){
     for(const [index,mode] of report.plan.entries()){
       const row={index,mode,status:'starting',accepted:false};report.cases.push(row);await persist();
       const caseStartedAt=performance.now();
-      let caseBrowser=browser,primary;
+      let caseBrowser=browser,primary,gpuSample,sampleSetup,samplerClosed=false;
+      const finishSample=async()=>{
+        if(sampleSetup&&!gpuSample)try{gpuSample=await sampleSetup;}catch(error){row.gpuSetupError??=String(error);}
+        if(gpuSample)row.gpuSample=await gpuSample.completed;
+      };
+      // Closing admission prevents a ps result from launching a late sampler.
+      // Child settlement and context/browser close share the original5s
+      // cleanup bound, and every timeout path waits through this owner.
+      const closeAfterSample=async close=>{
+        samplerClosed=true;
+        try{await closeNativeGameContext({close:async()=>{await finishSample();await close();}});}
+        catch(error){
+          // The5s overrun remains a failure. Still reap and retain the owned
+          // child before any outer finally can close its sampled browser.
+          row.samplerCleanupError=String(error);await finishSample();throw error;
+        }
+      };
       await withNativeGameCaseDeadline(async()=>{
       try{
       assertCorrectionCaseDeadline(row,caseStartedAt);
       assert.equal(caseBrowser,browser);assert.equal(caseBrowser.version(),NATIVE_RECORDING_WEBKIT_RUNTIME.browserVersion);
       row.processesBefore=processes();
       await withCorrectionCaseContext(caseBrowser,{viewport:report.viewport,deviceScaleFactor:1,isMobile:true,hasTouch:true},async(page,closeOwned)=>{
-        let gpuSample;
         try{
         await page.addInitScript(selectCanvasReadbackMode,'default');
         await page.addInitScript(seedV100BrowserSaveOnce,serializeV100Save(save));
@@ -103,7 +118,8 @@ export async function runBrowserQa(){
         row.input='one actual enabled tap for this independent fixture';
         await page.waitForTimeout(500);
         row.sampleRequestBrowserClock=await page.evaluate(()=>({at:performance.now(),timeOrigin:performance.timeOrigin}));
-        try{gpuSample=await beginGpuSample(path.join(out,index+'-gpu'),{owner:report.gpuOwner});}
+        try{sampleSetup=beginGpuSample(path.join(out,index+'-gpu'),{owner:report.gpuOwner,
+          isCanceled:()=>samplerClosed||row.deadlineExpired===true||performance.now()-caseStartedAt>=30000});gpuSample=await sampleSetup;}
         catch(error){row.gpuSetupError=String(error);}
         await page.waitForTimeout(durationMs-500);
         const capture=await page.evaluate(stopCorrectionRecording),bytes=Buffer.from(capture.data,'base64');delete capture.data;row.capture=capture;
@@ -145,9 +161,10 @@ export async function runBrowserQa(){
         row.status=row.originalFailures.length?'diagnostic-with-original-failures':'observed-diagnostic';
         assert.equal(row.gpuSetupError,undefined,'GPU setup failed; original AV retained');
         assert.equal(row.gpuSample?.status,'retained','GPU sample failed; original AV retained');
-        }finally{if(gpuSample&&!row.gpuSample)row.gpuSample=await gpuSample.completed;}
-      },{onFatal:error=>{report.errors.push(String(error));},onRequests:receipt=>{row.context=receipt;},onDeadline:()=>{row.deadlineExpired=true;}});
-      }catch(error){primary=error;row.primaryError=String(error);throw error;}
+        }finally{await finishSample();}
+      },{onFatal:error=>{report.errors.push(String(error));},onRequests:receipt=>{row.context=receipt;},onDeadline:error=>{row.deadlineExpired=true;row.primaryError??=String(error);samplerClosed=true;},
+        closeContext:(context,requests)=>closeAfterSample(()=>requests?requests.closeContext(context):context.close())});
+      }catch(error){primary=error;row.primaryError??=String(error);throw error;}
       finally{
         const cleanupErrors=[];
         if(caseBrowser!==browser)try{await closeNativeGameContext(caseBrowser);}catch(error){cleanupErrors.push('Owned browser close: '+String(error));}
@@ -156,7 +173,7 @@ export async function runBrowserQa(){
           if(primary)report.errors.push(...cleanupErrors.map(e=>'Secondary cleanup: '+e));
           else throw new AggregateError(cleanupErrors.map(e=>Error(e)),'Recording browser cleanup failed');}
       }
-      },()=>closeNativeGameContext(caseBrowser),{onDeadline:()=>{row.deadlineExpired=true;}});
+      },()=>closeAfterSample(()=>caseBrowser.close()),{onDeadline:error=>{row.deadlineExpired=true;row.primaryError??=String(error);samplerClosed=true;}});
       assertCorrectionCaseDeadline(row,caseStartedAt);
       await persist();console.log(JSON.stringify({index,mode,driftMs:row.driftMs,maxRafIntervalMs:row.maxRafIntervalMs,liveCadence:row.liveCadence,
         contextMode:row.contextMode,encoded:row.originalAv.timeline,originalFailures:row.originalFailures,accepted:false}));

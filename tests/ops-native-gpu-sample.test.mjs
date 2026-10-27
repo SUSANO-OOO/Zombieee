@@ -25,3 +25,14 @@ test('timeout/permission details and partial output remain failed; owner ambigui
     run:async command=>{if(command!=='/bin/ps')sampled=true;return {stdout:processRows+`13 1 ${gpu}\n`,stderr:''};}}),/Exactly one owned GPU/u);
   assert.equal(sampled,false);
 });
+test('deadline closure during inventory cannot start a late child, and file errors preserve successful child output',async()=>{
+  let closed=false,samples=0;const owner={schema:'single-ephemeral-gpu-owner/v1',pinnedBefore:[],uiPid:null};
+  await assert.rejects(beginGpuSample('/proof/GPU',{owner,isCanceled:()=>closed,run:async command=>{
+    if(command==='/bin/ps'){closed=true;return {stdout:processRows,stderr:''};}samples++;return {stdout:'',stderr:''};
+  }}),/cancelled before child launch/u);assert.equal(samples,0);
+  const sample=await beginGpuSample('/proof/GPU',{owner:{...owner},run:async command=>command==='/bin/ps'
+    ?{stdout:processRows,stderr:''}:{stdout:'successful original stdout',stderr:'successful original stderr'},
+  read:async()=>{throw Object.assign(Error('missing original file'),{code:'ENOENT'});}});
+  const record=await sample.completed;assert.equal(record.status,'failed');assert.equal(record.failureStage,'sample-file-validation');
+  assert.equal(record.processExitedSuccessfully,true);assert.equal(record.stdout,'successful original stdout');assert.equal(record.stderr,'successful original stderr');
+});
