@@ -1,50 +1,48 @@
-name: Native Capture Comparison Diagnostic
-
+name: Isolated Vite Same Host Performance Comparison
 on:
   workflow_dispatch:
     inputs:
       expected_head:
-        description: Exact 40-character candidate SHA for this diagnostic
         required: true
         type: string
-
+      comparison_base:
+        required: true
+        type: string
+      comparison_candidate:
+        required: true
+        type: string
 permissions:
   contents: read
-
 concurrency:
-  group: native-capture-comparison-${{ inputs.expected_head }}
+  group: ops-vite-comparison-${{ inputs.expected_head }}
   cancel-in-progress: false
-
 jobs:
-  native-capture-comparison:
-    name: Native WebKit Capture Comparison Diagnostic
-    runs-on: macos-15-intel
+  dependency-frame-comparison:
+    runs-on: macos-15
     timeout-minutes: 15
+    env:
+      EXPECTED_HEAD: ${{ inputs.expected_head }}
+      COMPARISON_BASE: ${{ inputs.comparison_base }}
+      COMPARISON_CANDIDATE: ${{ inputs.comparison_candidate }}
     steps:
       - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.expected_head }}
+          fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@v6
         with:
-          node-version: 24
+          node-version: '22.13.0'
           cache: npm
-      - name: Verify immutable candidate before running the diagnostic
-        env:
-          EXPECTED_HEAD: ${{ inputs.expected_head }}
-        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_HEAD??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_HEAD);'
-      - run: npm ci
-      - name: Install the pinned native WebKit runtime
-        run: |
-          npm ci --prefix scripts/pwa-native-runtime
-          node scripts/pwa-native-runtime/node_modules/playwright/cli.js install webkit
-      - name: Compare original native canvas recording conditions
-        env:
-          V177_NATIVE_CAPTURE_OUT: outputs/v177-native-capture-comparison
-        run: node scripts/v177-native-canvas-comparison-browser.mjs
+      - name: Fixed old/new builds and four original 30-second windows on one Mac
+        run: node scripts/ops-vite-performance-comparison.mjs
+      - name: Restore original host state even if the comparison step stopped
+        if: always()
+        run: node scripts/ops-vite-performance-comparison.mjs restore
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: v177-native-capture-comparison
-          path: outputs/v177-native-capture-comparison
-          retention-days: 7
+          name: ops-vite-performance-comparison
+          path: outputs/ops-vite-performance-comparison
+          if-no-files-found: error
+          retention-days: 14
