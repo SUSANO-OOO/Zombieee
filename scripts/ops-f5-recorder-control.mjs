@@ -14,7 +14,7 @@ import {parseIndexingStatus,pauseEnabledVolumes,restoreEnabledVolumes} from './v
 import {selectCanvasReadbackMode,readCanvasReadbackReceipt} from './ops-canvas-readback-adapter.mjs';
 import {withNativeGameCaseDeadline,closeNativeGameContext} from './v177-native-game-capture-browser.mjs';
 import {startAvailabilityProbe,stopAvailabilityProbe} from './ops-timer-availability-probe.mjs';
-import {createGpuSampleOwner,beginGpuSample} from './ops-native-gpu-sample.mjs';
+import {createGpuSampleOwner,beginRawStackshot} from './ops-native-gpu-sample.mjs';
 
 const out=path.resolve('outputs/ops-f5-recorder-control');
 const git=args=>execFileSync('git',args,{encoding:'utf8'}).trim();
@@ -55,9 +55,9 @@ export async function runBrowserQa(){
   await guard();await mkdir(out,{recursive:true});
   const report={head:git(['rev-parse','HEAD']),productHead:'7cb606f033bf2472f330b6def52b6329b48bdd4c',
     diagnosticOnly:true,accepted:false,run:process.env.GITHUB_RUN_ID,runtime:NATIVE_RECORDING_WEBKIT_RUNTIME,
-    plan:['gpu-sampled'],kind:'mrs-chiha',viewport:{width:844,height:340},
+    plan:['raw-stackshot'],kind:'mrs-chiha',viewport:{width:844,height:340},
     hypothesis:'The original Mrs-Chiha/mobile340 failure reproduced in40463164027. Real timers also ran inside long outside-game-CPU intervals, while native encoded gaps separately exceeded the source RAF gap. Source/no-source controls implicate acquisition. Inspect the unique GPU process in that actual condition, rather than guess an active WebContent PID or repeat the failed three-process profiler.',
-    decision:'One original AV window, diagnostic only. No timer probe or context hint. One verified GPU alone, one-second2ms samples, unchanged4.5s owned child deadline and original30s/15m case/job bounds. This is not a retry of broad concurrent symbolication or performance acceptance. Retain original child code/signal/stdout/stderr and any incomplete file. Save AV before checking sample success; await every owned child before context cleanup. A stack without a corresponding relevant stall does not prove the cause; sampler perturbation remains possible. No game, RAF, media timestamps, graphics or acceptance thresholds change.',
+    decision:'One original AV window, diagnostic only. No timer probe or context hint. The raw method passed self-PID preflight40469906209: collection2.827s and later readback0.362s, unchanged hash. One root worker now verifies GPU and one WebContent under the single new UI, collects both via one onlyTarget/proc spindump for1s/10ms, noText, child4.5s, and reaps its direct child. No sudo wrapper SIGKILL. Root admission also checks the original case cut-off. Keep original30s case/15m job,120ms sync,250ms PTS and original AV. Symbolication is a separate post-case step, with no live product or timestamp change. No acceptance or cause claim unless relevant stall and readable evidence align; profiler disturbance remains possible.',
     cases:[],errors:[],status:'starting'};
   const persist=()=>writeFile(path.join(out,'report.json'),JSON.stringify(report,null,2)+'\n');
   const browserType=await nativeRecordingBrowserType();let browser;
@@ -118,7 +118,8 @@ export async function runBrowserQa(){
         row.input='one actual enabled tap for this independent fixture';
         await page.waitForTimeout(500);
         row.sampleRequestBrowserClock=await page.evaluate(()=>({at:performance.now(),timeOrigin:performance.timeOrigin}));
-        try{sampleSetup=beginGpuSample(path.join(out,index+'-gpu'),{owner:report.gpuOwner,
+        try{sampleSetup=beginRawStackshot({owner:report.gpuOwner,
+          admissionDeadlineUnixMs:Date.now()+Math.max(0,30000-(performance.now()-caseStartedAt)),
           isCanceled:()=>samplerClosed||row.deadlineExpired===true||performance.now()-caseStartedAt>=30000});gpuSample=await sampleSetup;}
         catch(error){row.gpuSetupError=String(error);}
         await page.waitForTimeout(durationMs-500);

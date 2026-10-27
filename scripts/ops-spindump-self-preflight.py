@@ -28,7 +28,7 @@ def observe(argv, timeout):
             "elapsedSeconds": time.monotonic() - started, **record}
 
 
-def worker(workspace, uid, gid, head, run_id):
+def validate_workspace(workspace, uid, head, run_id):
     assert os.geteuid() == 0
     root = Path(workspace).resolve()
     assert Path.cwd().resolve() == root and root.stat().st_uid == uid and uid > 0
@@ -36,10 +36,15 @@ def worker(workspace, uid, gid, head, run_id):
     actual = subprocess.check_output(["git", "-c", "safe.directory=" + str(root),
                                       "rev-parse", "HEAD"], text=True).strip()
     assert actual == head
+    return root
+
+
+def worker(workspace, uid, gid, head, run_id):
+    root = validate_workspace(workspace, uid, head, run_id)
     out = root / "outputs" / "ops-raw-self-preflight"
     assert out.is_dir() and out.resolve() == out and not out.is_symlink() and out.stat().st_uid == uid
     raw, parsed, receipt = out / "self.spindump", out / "self.txt", out / "report.json"
-    assert not any(p.exists() for p in (raw, parsed, receipt))
+    assert not any(p.exists() or p.is_symlink() for p in (raw, parsed, receipt))
     record = {"head": head, "run": run_id, "accepted": False, "diagnosticOnly": True,
               "targetIsThisRootWorkerOnly": True, "pid": os.getpid(),
               "gameStarted": False, "rawCollectionLimitSeconds": 4.5,
@@ -77,24 +82,105 @@ def worker(workspace, uid, gid, head, run_id):
                 os.chown(file, uid, gid)
 
 
+def owned_targets(stdout, uid, ui_pid, gpu_pid, web_pid):
+    rows = []
+    for line in stdout.splitlines():
+        fields = line.strip().split(None, 2)
+        if len(fields) == 3 and "/webkit-2380/" in fields[2]:
+            rows.append({"pid": int(fields[0]), "uid": int(fields[1]), "comm": fields[2]})
+    roles = {"ui": (ui_pid, "/Playwright.app/Contents/MacOS/Playwright"),
+             "gpu": (gpu_pid, "/com.apple.WebKit.GPU.Development"),
+             "webContent": (web_pid, "/com.apple.WebKit.WebContent.Development")}
+    selected = {}
+    assert len(set((ui_pid, gpu_pid, web_pid))) == 3
+    for role, (pid, suffix) in roles.items():
+        matches = [r for r in rows if r["comm"].endswith(suffix)]
+        assert len(matches) == 1 and matches[0]["pid"] == pid and matches[0]["uid"] == uid
+        selected[role] = matches[0]
+    return selected
+
+
+def owned_webkit_worker(workspace, uid, gid, head, run_id, phase, extra):
+    root = validate_workspace(workspace, uid, head, run_id)
+    out = root / "outputs" / "ops-f5-recorder-control"
+    assert out.is_dir() and out.resolve() == out and out.stat().st_uid == uid
+    raw, parsed = out / "0-native-stackshot.spindump", out / "0-native-stackshot.txt"
+    collection = out / "0-native-stackshot-collection.json"
+    receipt = collection if phase == "collect" else out / "0-native-stackshot-postprocess.json"
+    assert phase in ("collect", "parse") and not receipt.exists() and not receipt.is_symlink()
+    record = {"schema": "owned-webkit-stackshot/v1", "head": head, "run": run_id,
+              "phase": phase, "accepted": False, "diagnosticOnly": True, "status": "starting"}
+    artifacts = [receipt]
+    try:
+        if phase == "collect":
+            ui_pid, gpu_pid, web_pid, deadline = map(int, extra)
+            assert time.time() * 1000 < deadline
+            result = subprocess.check_output(["/bin/ps", "-A", "-ww", "-o", "pid=,uid=,comm="], text=True, timeout=1.5)
+            selected = owned_targets(result, uid, ui_pid, gpu_pid, web_pid)
+            assert not raw.exists() and not raw.is_symlink()
+            record.update({"targets": selected, "admissionDeadlineUnixMs": deadline})
+            assert time.time() * 1000 < deadline, "No profiling may start after the parent case deadline"
+            argv = ["/usr/sbin/spindump", str(gpu_pid), "1", "10", "-onlyTarget", "-proc", str(web_pid),
+                    "-noText", "-noProcessingWhileSampling", "-timelimit", "4", "-o", str(raw)]
+            artifacts.append(raw)
+            record["collection"] = observe(argv, 4.5)
+            if raw.exists():
+                data = raw.read_bytes()
+                record["raw"] = {"file": raw.name, "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()}
+            assert not record["collection"]["timedOut"] and record["collection"]["code"] == 0
+            assert 0 < record.get("raw", {}).get("bytes", 0) <= 4 * 1024 * 1024
+            record["status"] = "raw-retained"
+        else:
+            source = json.loads(collection.read_text(encoding="utf-8"))
+            assert source["schema"] == "owned-webkit-stackshot/v1" and source["phase"] == "collect" and source["accepted"] is False
+            assert source["head"] == head and source["run"] == run_id and source["status"] == "raw-retained" and source["raw"]["file"] == raw.name
+            assert raw.is_file() and not raw.is_symlink() and raw.stat().st_uid == uid and not parsed.exists() and not parsed.is_symlink()
+            assert hashlib.sha256(raw.read_bytes()).hexdigest() == source["raw"]["sha256"]
+            record["source"] = {"raw": source["raw"], "targets": source["targets"]}
+            artifacts.append(parsed)
+            record["postprocess"] = observe(["/usr/sbin/spindump", "-i", str(raw), "-timeline", "-noBinary", "-o", str(parsed)], 15)
+            assert hashlib.sha256(raw.read_bytes()).hexdigest() == source["raw"]["sha256"]
+            assert not record["postprocess"]["timedOut"] and record["postprocess"]["code"] == 0
+            data = parsed.read_bytes()
+            assert 0 < len(data) <= 4 * 1024 * 1024
+            record["parsed"] = {"file": parsed.name, "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()}
+            record["status"] = "raw-readback-complete"
+    except Exception as error:
+        record["status"] = "failed"
+        record["error"] = repr(error)
+        raise
+    finally:
+        receipt.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
+        for file in artifacts:
+            if file.exists():
+                assert not file.is_symlink()
+                os.chown(file, uid, gid)
+
+
 def main():
     assert platform.system() == "Darwin" and platform.machine() == "arm64"
     if sys.argv[1:] and sys.argv[1] == "--worker":
         worker(sys.argv[2], int(sys.argv[3]), int(sys.argv[4]), sys.argv[5], sys.argv[6])
         return
+    if sys.argv[1:] and sys.argv[1] in ("--collect-worker", "--parse-worker"):
+        owned_webkit_worker(sys.argv[2], int(sys.argv[3]), int(sys.argv[4]), sys.argv[5], sys.argv[6],
+                            "collect" if sys.argv[1] == "--collect-worker" else "parse", sys.argv[7:])
+        return
+    parse_owned = sys.argv[1:] == ["--parse-owned"]
     for key, value in {"GITHUB_ACTIONS": "true", "RUNNER_ENVIRONMENT": "github-hosted",
                        "GITHUB_REPOSITORY": "SUSANO-OOO/Zombieee",
                        "GITHUB_EVENT_NAME": "workflow_dispatch",
-                       "GITHUB_JOB": "observer-capabilities"}.items():
+                       "GITHUB_JOB": "f5-recorder-control" if parse_owned else "observer-capabilities"}.items():
         assert os.environ[key] == value, key
     root = Path.cwd().resolve()
     head = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
     assert head == os.environ["V177_EXPECTED_HEAD_SHA"]
-    (root / "outputs" / "ops-raw-self-preflight").mkdir(parents=True)
+    if not parse_owned:
+        (root / "outputs" / "ops-raw-self-preflight").mkdir(parents=True)
     # No parent timeout/SIGKILL is applied to sudo. The directly owning worker
     # enforces collection/postprocess deadlines and reaps every actual child.
     result = subprocess.run(["/usr/bin/sudo", "-n", "/usr/bin/python3", str(Path(__file__).resolve()),
-                             "--worker", str(root), str(os.getuid()), str(os.getgid()),
+                             "--parse-worker" if parse_owned else "--worker", str(root), str(os.getuid()), str(os.getgid()),
                              head, os.environ["GITHUB_RUN_ID"]], check=False)
     raise SystemExit(result.returncode)
 

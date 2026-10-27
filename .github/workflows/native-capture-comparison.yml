@@ -1,30 +1,61 @@
-name: Isolated macOS Raw Self Preflight
+name: Isolated F5 Owned Raw Stackshot
 on:
   workflow_dispatch:
     inputs:
       expected_head:
-        description: Immutable diagnostic head; no game or product validation
+        description: Exact diagnostic head; not an acceptance or deployment
         required: true
         type: string
 permissions:
   contents: read
+concurrency:
+  group: ops-f5-recorder-control-${{ inputs.expected_head }}
+  cancel-in-progress: false
 jobs:
-  observer-capabilities:
+  f5-recorder-control:
     runs-on: macos-15
-    timeout-minutes: 2
+    timeout-minutes: 15
     env:
       V177_EXPECTED_HEAD_SHA: ${{ inputs.expected_head }}
     steps:
       - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.expected_head }}
+          fetch-depth: 0
           persist-credentials: false
-      - name: Collect only the worker own PID and re-report its raw data
-        run: /usr/bin/python3 scripts/ops-spindump-self-preflight.py
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.V177_EXPECTED_HEAD_SHA);'
+      - run: npm ci
+      - run: npm ci --prefix scripts/native-recording-runtime
+      - run: node scripts/native-recording-runtime/node_modules/playwright/cli.js install webkit
+      - name: Check raw worker ownership and original result preservation
+        run: node --test tests/ops-native-gpu-sample.test.mjs
+      - name: Check root worker target rejection without profiling
+        run: /usr/bin/python3 tests/ops_owned_stackshot_worker_test.py
+      - name: Lint the bounded readback control
+        run: npx eslint scripts/ops-native-gpu-sample.mjs scripts/ops-f5-recorder-control.mjs tests/ops-native-gpu-sample.test.mjs
+      - run: npm run build
+        env:
+          GITHUB_PAGES_RELEASE_SHA: ${{ inputs.expected_head }}
+      - name: Prepare only this ephemeral host
+        id: prepare
+        run: node scripts/ops-f5-recorder-control.mjs prepare
+      - name: One original AV window with owned raw stackshots and unchanged clocks
+        id: capture
+        run: node scripts/run-browser-qa-with-server.mjs scripts/ops-f5-recorder-control.mjs
+      - name: Restore every original volume state
+        if: always() && steps.prepare.outcome != 'skipped'
+        run: node scripts/ops-f5-recorder-control.mjs restore
+      - name: Read back retained raw data only after the original case and browser ended
+        if: always() && steps.capture.outcome == 'success'
+        run: /usr/bin/python3 scripts/ops-spindump-self-preflight.py --parse-owned
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ops-raw-self-preflight
-          path: outputs/ops-raw-self-preflight
+          name: ops-owned-stackshot
+          path: outputs/ops-f5-recorder-control
           if-no-files-found: error
           retention-days: 14
