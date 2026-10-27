@@ -12,6 +12,7 @@ import {V100_UNITS,V100_STAGE_IDS} from '../app/v100Registry.js';
 import {MANUAL_ABILITY_REGISTRY as manual} from '../app/manualAbilities.js';
 import {parseIndexingStatus,pauseEnabledVolumes,restoreEnabledVolumes} from './v100-macos-indexing-control.mjs';
 import {selectCanvasReadbackMode,readCanvasReadbackReceipt} from './ops-canvas-readback-adapter.mjs';
+import {withNativeGameCaseDeadline,closeNativeGameContext} from './v177-native-game-capture-browser.mjs';
 
 const out=path.resolve('outputs/ops-f5-recorder-control');
 const git=args=>execFileSync('git',args,{encoding:'utf8'}).trim();
@@ -52,12 +53,14 @@ export async function runBrowserQa(){
   await guard();await mkdir(out,{recursive:true});
   const report={head:git(['rev-parse','HEAD']),productHead:'7cb606f033bf2472f330b6def52b6329b48bdd4c',
     diagnosticOnly:true,accepted:false,run:process.env.GITHUB_RUN_ID,runtime:NATIVE_RECORDING_WEBKIT_RUNTIME,
-    plan:['default','readback','readback','default'],kind:'brawler',viewport:{width:844,height:340},
-    hypothesis:'The fixed source/no-source2x2 showed lower RAF cadence with a real canvas source even without the encoder. Pinned WebKit selects a different backing path for willReadFrequently. Compare that standard context hint in the recording page only, using actual original AV bytes and unchanged product/observer/60Hz acquisition.',
-    decision:'Four fixed ABBA windows, never retry-until-pass. Confirm native context attributes and exact canvas owner. Keep alpha/desynchronized, original dimensions, assets, all real snapshots and audio. Original120ms sync,250ms raw PTS gaps/head/tail,8MiB and30s case bounds remain; failures stay failures. A faster observer alone or both controls passing does not prove the original failure fixed. Preserve actual canvas PNG after the recording, model receipts and raw AV for visual review; no formal-performance, naturalness or physical acceptance.',
+    plan:['shared','fresh','fresh','shared'],kind:'brawler',viewport:{width:844,height:340},
+    hypothesis:'Original AV comparison40458865440 degraded in both context modes late in one shared browser (38.7/43.8 then22.8/25.9 observer Hz); the hint retained a248.7ms sync failure and is rejected. Separate browser-owned completed recording resource lifetime from the unchanged page, observer, encoder and default canvas.',
+    decision:'Four fixed ABBA windows, never retry-until-pass. A keeps the original shared browser with independently owned contexts. B launches and closes an owned browser inside the original30s case budget; the shared A browser stays idle with no pages. Every canvas remains the original default willReadFrequently=false. Preserve original AV, snapshots and all120ms/250ms/8MiB/30s/15m bounds. Record process ownership before recording and after cleanup, never sample during it. Only a consistent reduction in source stalls and simulation loss, with original failures absent in both B windows, supports lifecycle involvement. Both A and B passing or overlapping results do not prove a repair. No formal, naturalness or physical acceptance.',
     cases:[],errors:[],status:'starting'};
   const persist=()=>writeFile(path.join(out,'report.json'),JSON.stringify(report,null,2)+'\n');
-  const browser=await(await nativeRecordingBrowserType()).launch({headless:true});
+  const browserType=await nativeRecordingBrowserType(),browser=await browserType.launch({headless:true});
+  const processes=()=>execFileSync('/bin/ps',['-axo','pid,ppid,comm'],{encoding:'utf8',timeout:2000}).split('\n')
+    .filter(line=>/Playwright|WebKit|WebProcess|GPUProcess|NetworkProcess/u.test(line));
   try{
     assert.equal(browser.version(),NATIVE_RECORDING_WEBKIT_RUNTIME.browserVersion);
     const {V177_JOINT_ATLASES:atlases}=await import('../app/v177JointPresentation.js');
@@ -68,8 +71,15 @@ export async function runBrowserQa(){
     for(const [index,mode] of report.plan.entries()){
       const row={index,mode,status:'starting',accepted:false};report.cases.push(row);await persist();
       const caseStartedAt=performance.now();
-      await withCorrectionCaseContext(browser,{viewport:report.viewport,deviceScaleFactor:1,isMobile:true,hasTouch:true},async(page,closeOwned)=>{
-        await page.addInitScript(selectCanvasReadbackMode,mode);
+      let caseBrowser=browser;
+      await withNativeGameCaseDeadline(async()=>{
+      try{
+      if(mode==='fresh')caseBrowser=await browserType.launch({headless:true,timeout:5000});
+      if(row.deadlineExpired)throw Error('Late browser launch cannot resume after original case deadline');
+      assert.equal(caseBrowser===browser,mode==='shared');assert.equal(caseBrowser.version(),NATIVE_RECORDING_WEBKIT_RUNTIME.browserVersion);
+      row.processesBefore=processes();
+      await withCorrectionCaseContext(caseBrowser,{viewport:report.viewport,deviceScaleFactor:1,isMobile:true,hasTouch:true},async(page,closeOwned)=>{
+        await page.addInitScript(selectCanvasReadbackMode,'default');
         await page.addInitScript(seedV100BrowserSaveOnce,serializeV100Save(save));
         await page.goto(new URL('v100',process.env.V100_CAMPAIGN_QA_BASE_URL).href);await enterNativeAllUnitSurface(page);await enterV100FromTitle(page);
         await page.getByRole('button',{name:'戦闘へ',exact:true}).click();await page.waitForFunction(()=>window.__ASHFALL_BATTLE_QA__?.getSnapshot().running);
@@ -120,6 +130,8 @@ export async function runBrowserQa(){
         assert.ok(capture.rows.filter(r=>r.time<contact.at).every(r=>r.fighters.find(f=>f.id===contact.targetId)?.hp===before.hp),'No early damage');
         row.status=row.originalFailures.length?'diagnostic-with-original-failures':'observed-diagnostic';
       },{onFatal:error=>{report.errors.push(String(error));},onRequests:receipt=>{row.context=receipt;},onDeadline:()=>{row.deadlineExpired=true;}});
+      }finally{if(caseBrowser!==browser)await closeNativeGameContext(caseBrowser);row.processesAfter=processes();}
+      },()=>closeNativeGameContext(caseBrowser),{onDeadline:()=>{row.deadlineExpired=true;}});
       assertCorrectionCaseDeadline(row,caseStartedAt);
       await persist();console.log(JSON.stringify({index,mode,driftMs:row.driftMs,maxRafIntervalMs:row.maxRafIntervalMs,liveCadence:row.liveCadence,
         contextMode:row.contextMode,encoded:row.originalAv.timeline,originalFailures:row.originalFailures,accepted:false}));

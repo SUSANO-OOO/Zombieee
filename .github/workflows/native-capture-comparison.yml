@@ -1,4 +1,4 @@
-name: Isolated F5 Canvas Readback Control
+name: Isolated F5 Recording Resource Lifetime Control
 on:
   workflow_dispatch:
     inputs:
@@ -41,7 +41,7 @@ jobs:
       - name: Prepare only this ephemeral host
         id: prepare
         run: node scripts/ops-f5-recorder-control.mjs prepare
-      - name: Four fixed context modes with original native AV and unchanged clocks
+      - name: Four fixed browser lifetimes with original native AV and unchanged clocks
         run: node scripts/run-browser-qa-with-server.mjs scripts/ops-f5-recorder-control.mjs
       - name: Restore every original volume state
         if: always() && steps.prepare.outcome != 'skipped'
@@ -49,7 +49,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ops-canvas-readback-control
+          name: ops-recorder-lifetime-control
           path: outputs/ops-f5-recorder-control
           if-no-files-found: error
           retention-days: 14
