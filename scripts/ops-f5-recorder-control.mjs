@@ -13,6 +13,7 @@ import {MANUAL_ABILITY_REGISTRY as manual} from '../app/manualAbilities.js';
 import {parseIndexingStatus,pauseEnabledVolumes,restoreEnabledVolumes} from './v100-macos-indexing-control.mjs';
 import {selectCanvasReadbackMode,readCanvasReadbackReceipt} from './ops-canvas-readback-adapter.mjs';
 import {withNativeGameCaseDeadline,closeNativeGameContext} from './v177-native-game-capture-browser.mjs';
+import {startAvailabilityProbe,stopAvailabilityProbe} from './ops-timer-availability-probe.mjs';
 
 const out=path.resolve('outputs/ops-f5-recorder-control');
 const git=args=>execFileSync('git',args,{encoding:'utf8'}).trim();
@@ -53,9 +54,9 @@ export async function runBrowserQa(){
   await guard();await mkdir(out,{recursive:true});
   const report={head:git(['rev-parse','HEAD']),productHead:'7cb606f033bf2472f330b6def52b6329b48bdd4c',
     diagnosticOnly:true,accepted:false,run:process.env.GITHUB_RUN_ID,runtime:NATIVE_RECORDING_WEBKIT_RUNTIME,
-    plan:['shared','fresh','fresh','shared'],kind:'brawler',viewport:{width:844,height:340},
-    hypothesis:'Original AV comparison40458865440 degraded in both context modes late in one shared browser (38.7/43.8 then22.8/25.9 observer Hz); the hint retained a248.7ms sync failure and is rejected. Separate browser-owned completed recording resource lifetime from the unchanged page, observer, encoder and default canvas.',
-    decision:'Four fixed ABBA windows, never retry-until-pass. A keeps the original shared browser with independently owned contexts. B launches and closes an owned browser inside the original30s case budget; the shared A browser stays idle with no pages. Every canvas remains the original default willReadFrequently=false. Preserve original AV, snapshots and all120ms/250ms/8MiB/30s/15m bounds. Record process ownership before recording and after cleanup, never sample during it. Only a consistent reduction in source stalls and simulation loss, with original failures absent in both B windows, supports lifecycle involvement. Both A and B passing or overlapping results do not prove a repair. No formal, naturalness or physical acceptance.',
+    plan:['unobserved','timer-observed','timer-observed','unobserved'],kind:'mrs-chiha',viewport:{width:844,height:340},
+    hypothesis:'Readback hint and browser lifetime did not repair or consistently reproduce failures. Existing failed rows contain218ms RAF gaps but only7ms from that RAF timestamp through the observer. Observe whether actual JS timer callbacks continue inside the unaccounted interval, separating RAF dispatch-only delay from whole-thread unavailability without assigning GPU/GC/OS ownership prematurely.',
+    decision:'One fixed ABBA comparison on the original failed Mrs-Chiha/mobile340 ability condition. Same shared browser, independent contexts, original default canvas and real AV. B alone adds a16ms timer retaining only actual performance.now values; no replacement clocks, RAF changes, interpolation, media or snapshot omission. Include all original120ms/250ms/8MiB/30s/15m checks. Compare A/B disturbance; never treat this as formal performance or a recording repair. If no long unaccounted RAF interval occurs, classify as not reproduced, not fixed. For each original outside-CPU interval, retain the actual timer callbacks inside it; callbacks demonstrate JS availability, their absence alone does not prove GPU/GC/OS ownership.',
     cases:[],errors:[],status:'starting'};
   const persist=()=>writeFile(path.join(out,'report.json'),JSON.stringify(report,null,2)+'\n');
   const browserType=await nativeRecordingBrowserType(),browser=await browserType.launch({headless:true});
@@ -74,9 +75,8 @@ export async function runBrowserQa(){
       let caseBrowser=browser,primary;
       await withNativeGameCaseDeadline(async()=>{
       try{
-      if(mode==='fresh')caseBrowser=await browserType.launch({headless:true,timeout:5000});
       assertCorrectionCaseDeadline(row,caseStartedAt);
-      assert.equal(caseBrowser===browser,mode==='shared');assert.equal(caseBrowser.version(),NATIVE_RECORDING_WEBKIT_RUNTIME.browserVersion);
+      assert.equal(caseBrowser,browser);assert.equal(caseBrowser.version(),NATIVE_RECORDING_WEBKIT_RUNTIME.browserVersion);
       row.processesBefore=processes();
       await withCorrectionCaseContext(caseBrowser,{viewport:report.viewport,deviceScaleFactor:1,isMobile:true,hasTouch:true},async(page,closeOwned)=>{
         await page.addInitScript(selectCanvasReadbackMode,'default');
@@ -85,13 +85,14 @@ export async function runBrowserQa(){
         await page.getByRole('button',{name:'戦闘へ',exact:true}).click();await page.waitForFunction(()=>window.__ASHFALL_BATTLE_QA__?.getSnapshot().running);
         await page.evaluate(async()=>{await window.__ASHFALL_BATTLE_QA__.ensureUnitRenderProofAsset('guardian');await window.__ASHFALL_BATTLE_QA__.ensureEnemyFacingProofAsset('walker');});
         await waitForNativeCaptureAudio(page,row);
-        row.proof=await page.evaluate(async()=>{const q=window.__ASHFALL_BATTLE_QA__;await q.ensureUnitRenderProofAsset('brawler');
-          const p=q.prepareManualAbilityProof('brawler');q.setEnemyVfxProofPaused(true);window.__ASHFALL_AUDIO_QA__.resetCueRequests();
-          return {...p,trackedIds:q.getSnapshot().fighters.map(f=>f.id)};});
+        row.proof=await page.evaluate(async kind=>{const q=window.__ASHFALL_BATTLE_QA__;await q.ensureUnitRenderProofAsset(kind);
+          const p=q.prepareManualAbilityProof(kind);q.setEnemyVfxProofPaused(true);window.__ASHFALL_AUDIO_QA__.resetCueRequests();
+          return {...p,trackedIds:q.getSnapshot().fighters.map(f=>f.id)};},report.kind);
         await page.waitForFunction(ids=>ids.every(id=>window.__ASHFALL_BATTLE_QA__.getEnemyFacingRuntimeAudit(id).renderHistory.at(-1)?.jointDrawSucceeded),row.proof.ownerIds,{timeout:5000});
         row.document=await page.evaluate(()=>({visibility:document.visibilityState,focus:document.hasFocus()}));
         row.contextMode=await page.evaluate(readCanvasReadbackReceipt);
-        const d=manual.brawler,durationMs=Math.ceil(Math.max(3,(d.windupSeconds??0)+(d.activeSeconds??d.guardSeconds??0)+(d.recoverySeconds??0)+1.2)*1000);
+        row.probeStart=await page.evaluate(startAvailabilityProbe,mode==='timer-observed');
+        const d=manual[report.kind],durationMs=Math.ceil(Math.max(3,(d.windupSeconds??0)+(d.activeSeconds??d.guardSeconds??0)+(d.recoverySeconds??0)+1.2)*1000);
         row.start=await page.evaluate(startCorrectionRecording,{ids:row.proof.trackedIds,durationMs,preferMp4:true});
         row.release=await page.evaluate(()=>{const q=window.__ASHFALL_BATTLE_QA__;q.setEnemyVfxProofPaused(false);return {at:performance.now(),time:q.getV105CorrectionAudit([]).time};});
         await page.locator(`.manual-ability-ready[data-fighter-id="${row.proof.ownerIds[0]}"]`).tap({timeout:5000});
@@ -101,6 +102,7 @@ export async function runBrowserQa(){
         row.file=`${index}-${mode}.${capture.mime.startsWith('video/mp4')?'mp4':'webm'}`;
         await writeFile(path.join(out,row.file),bytes,{flag:'wx'});
         row.bytes=bytes.length;row.sha256=createHash('sha256').update(bytes).digest('hex');await persist();
+        row.timerProbe=await page.evaluate(stopAvailabilityProbe);assert.equal(row.timerProbe.overflow,false);
         row.contextModeAfter=await page.evaluate(readCanvasReadbackReceipt);
         assert.deepEqual(row.contextModeAfter,row.contextMode,'Actual canvas owner, mode and dimensions must remain unchanged throughout capture');
         // Observe the original canvas after timing has ended; do not add a
@@ -119,15 +121,14 @@ export async function runBrowserQa(){
         row.liveCadence={rows:live.length,hz:1000*(live.length-1)/(live.at(-1).at-live[0].at),
           medianMs:intervals[Math.floor(intervals.length*.5)],p95Ms:intervals[Math.floor(intervals.length*.95)]};
         row.acceptedRealAbility=capture.final.abilityNames.starts.some(a=>row.proof.ownerIds.includes(a.ownerId));
-        const launch=capture.final.fistWave.receipts.find(r=>r.type==='launch'),contact=capture.final.fistWave.receipts.find(r=>r.type==='contact');
-        row.fistWave={launch,contact,observedFlight:capture.rows.some(r=>r.fistWave.waves.length)};
-        const before=capture.initial.fighters.find(f=>f.id===contact?.targetId),after=capture.final.fighters.find(f=>f.id===contact?.targetId);
-        row.fistWave.actualDamage=before&&after?before.hp-after.hp:null;
         row.originalFailures=[...row.originalAv.failures];
         if(Math.abs(row.driftMs)>120)row.originalFailures.push('Original120ms game/native clock bound');
-        assert.ok(row.acceptedRealAbility&&launch&&contact&&contact.at>launch.at&&row.fistWave.observedFlight,'Actual accepted ability, flight and contact required');
-        assert.ok(before&&after&&Math.abs(row.fistWave.actualDamage-manual.brawler.impactDamage)<.0001,'One actual contact keeps original damage');
-        assert.ok(capture.rows.filter(r=>r.time<contact.at).every(r=>r.fighters.find(f=>f.id===contact.targetId)?.hp===before.hp),'No early damage');
+        assert.ok(row.acceptedRealAbility&&capture.rows.some(r=>r.abilityNames.active.some(a=>row.proof.ownerIds.includes(a.ownerId)&&a.lastPaint)),'Actual accepted ability and owner name paint required');
+        row.outsideIntervals=capture.rows.slice(1).flatMap((r,i)=>{
+          const previous=capture.rows[i],from=previous.frameCpu?.[6],to=r.frameCpu?.[2];
+          if(!(Number.isFinite(from)&&Number.isFinite(to)&&to-from>1000/60*5&&previous.at>=row.release.at&&r.at<=capture.stopAt))return [];
+          return [{from,to,ms:to-from,previousRaf:previous.at,raf:r.at,actualTimerCallbacks:row.timerProbe.rows.filter(at=>at>from&&at<to)}];
+        });
         row.status=row.originalFailures.length?'diagnostic-with-original-failures':'observed-diagnostic';
       },{onFatal:error=>{report.errors.push(String(error));},onRequests:receipt=>{row.context=receipt;},onDeadline:()=>{row.deadlineExpired=true;}});
       }catch(error){primary=error;row.primaryError=String(error);throw error;}
