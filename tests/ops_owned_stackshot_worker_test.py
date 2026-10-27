@@ -2,6 +2,8 @@ import importlib.util
 from pathlib import Path
 import subprocess
 import sys
+import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -44,6 +46,37 @@ class OwnedWorkerTests(unittest.TestCase):
             self.assertTrue(result["timedOut"])
             self.assertIsNone(result["code"])
             self.assertEqual(result["stderr"], "partial stderr")
+
+    def test_observer_failure_buffer_copy_is_bounded_and_never_changes_original_failure(self):
+        name = "/var/tmp/spindump-stuck-stackshot.2026-10-27-08:23:49.4661.buf"
+        data = b"original observer diagnostic"
+        canonical = object()
+        for uid, size, retained in ((0, len(data), True), (501, len(data), False), (0, 5 * 1024 * 1024, False)):
+            with self.subTest(uid=uid, size=size), tempfile.TemporaryDirectory(prefix="owned-stackshot-test-") as temporary:
+                out = Path(temporary).resolve()
+                self.assertTrue(out.is_relative_to(Path(tempfile.gettempdir()).resolve()))
+                source = SimpleNamespace(parent=SimpleNamespace(resolve=lambda: canonical), is_symlink=lambda: False,
+                                         stat=lambda: SimpleNamespace(st_uid=uid, st_size=size), read_bytes=lambda: data)
+                def paths(value):
+                    if value == name:
+                        return source
+                    self.assertEqual(value, "/var/tmp")
+                    return SimpleNamespace(resolve=lambda: canonical)
+                record = {"collection": {"code": 75, "stderr": "Wrote stackshot to " + name + "\n"}}
+                artifacts = []
+                with patch.object(worker, "Path", side_effect=paths):
+                    worker.retain_observer_failure(record, out, "collect", artifacts)
+                self.assertEqual(record["collection"]["code"], 75)
+                self.assertEqual(record["observerFailureEvidence"][0]["status"], "retained" if retained else "not-retained", record)
+                if retained:
+                    self.assertEqual(artifacts[0].read_bytes(), data)
+                    self.assertFalse(record["observerFailureEvidence"][0]["targetContentVerified"])
+                else:
+                    self.assertEqual(artifacts, [])
+        record = {"collection": {"code": 75, "stderr": "Wrote stackshot to /etc/passwd\n"}}
+        with patch.object(worker, "Path", side_effect=AssertionError("Unapproved path must not be read")):
+            worker.retain_observer_failure(record, Path(temporary), "collect", [])
+        self.assertEqual(record["observerFailureEvidence"], [])
 
 
 if __name__ == "__main__":

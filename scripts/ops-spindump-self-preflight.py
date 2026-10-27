@@ -100,6 +100,33 @@ def owned_targets(stdout, uid, ui_pid, gpu_pid, web_pid):
     return selected
 
 
+def retain_observer_failure(record, out, phase, artifacts):
+    # Run40472718771 emitted this bounded diagnostic path before exiting75.
+    # It is evidence about the observer, not a verified game-target stackshot.
+    records = record["observerFailureEvidence"] = []
+    paths = re.findall(r"Wrote stackshot to (/var/tmp/spindump-stuck-stackshot\.[0-9:.-]+\.buf)",
+                       record.get("collection", record.get("postprocess", {})).get("stderr", ""))
+    for index, name in enumerate(dict.fromkeys(paths)):
+        entry = {"source": name, "targetContentVerified": False}
+        records.append(entry)
+        try:
+            source = Path(name)
+            assert source.parent.resolve() == Path("/var/tmp").resolve() and not source.is_symlink()
+            info = source.stat()
+            assert info.st_uid == 0 and 0 < info.st_size <= 4 * 1024 * 1024
+            dest = out / f"0-native-{phase}-observer-{index}.buf"
+            assert not dest.exists() and not dest.is_symlink()
+            data = source.read_bytes()
+            with dest.open("xb") as stream:
+                stream.write(data)
+            artifacts.append(dest)
+            assert dest.read_bytes() == data
+            entry.update({"file": dest.name, "bytes": len(data),
+                          "sha256": hashlib.sha256(data).hexdigest(), "status": "retained"})
+        except Exception as error:
+            entry.update({"status": "not-retained", "error": repr(error)})
+
+
 def owned_webkit_worker(workspace, uid, gid, head, run_id, phase, extra):
     root = validate_workspace(workspace, uid, head, run_id)
     out = root / "outputs" / "ops-f5-recorder-control"
@@ -121,9 +148,10 @@ def owned_webkit_worker(workspace, uid, gid, head, run_id, phase, extra):
             record.update({"targets": selected, "admissionDeadlineUnixMs": deadline})
             assert time.time() * 1000 < deadline, "No profiling may start after the parent case deadline"
             argv = ["/usr/sbin/spindump", str(gpu_pid), "1", "10", "-onlyTarget", "-proc", str(web_pid),
-                    "-noText", "-noProcessingWhileSampling", "-timelimit", "4", "-o", str(raw)]
+                    "-noText", "-noProcessingWhileSampling", "-noIPC", "-timelimit", "4", "-o", str(raw)]
             artifacts.append(raw)
             record["collection"] = observe(argv, 4.5)
+            retain_observer_failure(record, out, phase, artifacts)
             if raw.exists():
                 data = raw.read_bytes()
                 record["raw"] = {"file": raw.name, "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()}
@@ -138,7 +166,8 @@ def owned_webkit_worker(workspace, uid, gid, head, run_id, phase, extra):
             assert hashlib.sha256(raw.read_bytes()).hexdigest() == source["raw"]["sha256"]
             record["source"] = {"raw": source["raw"], "targets": source["targets"]}
             artifacts.append(parsed)
-            record["postprocess"] = observe(["/usr/sbin/spindump", "-i", str(raw), "-timeline", "-noBinary", "-o", str(parsed)], 15)
+            record["postprocess"] = observe(["/usr/sbin/spindump", "-i", str(raw), "-timeline", "-noBinary", "-noIPC", "-o", str(parsed)], 15)
+            retain_observer_failure(record, out, phase, artifacts)
             assert hashlib.sha256(raw.read_bytes()).hexdigest() == source["raw"]["sha256"]
             assert not record["postprocess"]["timedOut"] and record["postprocess"]["code"] == 0
             data = parsed.read_bytes()
