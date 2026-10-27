@@ -10,7 +10,7 @@ import {createDefaultV100Save,normalizeV100Save,serializeV100Save} from '../app/
 import {V100_UNITS,V100_STAGE_IDS} from '../app/v100Registry.js';
 import {MANUAL_ABILITY_REGISTRY as manual} from '../app/manualAbilities.js';
 import {parseIndexingStatus,pauseEnabledVolumes,restoreEnabledVolumes} from './v100-macos-indexing-control.mjs';
-import {beginStackSamples} from './ops-f5-stack-sample.mjs';
+import {beginStackSamples,createProfilerOwner} from './ops-f5-stack-sample.mjs';
 import {correctionCases} from './v105-five-corrections-cases.mjs';
 
 const out=path.resolve('outputs/ops-f5-recorder-control');
@@ -52,11 +52,12 @@ export async function runBrowserQa(){
   await guard();await mkdir(out,{recursive:true});
   const report={head:git(['rev-parse','HEAD']),productHead:'677795f000435d79d2f50a1643e2e9adb849a9dd',
     diagnosticOnly:true,accepted:false,run:process.env.GITHUB_RUN_ID,runtime:NATIVE_RECORDING_WEBKIT_RUNTIME,
-    plan:['unprofiled','stack-profiled'].flatMap(observation=>correctionCases('mobile340').map(item=>({...item,observation}))),viewport:{width:844,height:340},
+    plan:correctionCases('mobile340').map(item=>({...item,observation:'stack-profiled'})),viewport:{width:844,height:340},
     hypothesis:'The seven actual failing-scope fixtures, in their original order, distinguish WebContent/GPU active stacks from callback-delivery waits. Repeated83.333ms gaps can lose120ms without one250ms stall.',
-    decision:'One original seven-case unprofiled prefix, then one identical prefix with3s/2ms native stack samples. No retry. If only profiled cases stall, retain profiling perturbation instead of attributing a product cause. If no matching stalls occur, this diagnostic is inconclusive and is not repeated. All results remain diagnostic and never replace acceptance.',
+    decision:'The seven unprofiled windows in run40445941425 remain retained and are not repeated. That run stopped at ambiguous process selection before sampling. This corrected run collects the seven profiled windows once, on a different host: do not claim a same-host A/B or exclude profiler perturbation. No matching stall means inconclusive, not another repetition or acceptance.',
     cases:[],errors:[],status:'starting'};
   const persist=()=>writeFile(path.join(out,'report.json'),JSON.stringify(report,null,2)+'\n');
+  report.profilerOwner=await createProfilerOwner();await persist();
   const browser=await(await nativeRecordingBrowserType()).launch({headless:true});
   try{
     assert.equal(browser.version(),NATIVE_RECORDING_WEBKIT_RUNTIME.browserVersion);
@@ -80,7 +81,7 @@ export async function runBrowserQa(){
         const d=manual[item.kind],durationMs=Math.ceil(Math.max(3,(d.windupSeconds??0)+(d.activeSeconds??d.guardSeconds??0)+(d.recoverySeconds??0)+1.2)*1000);
         let capture,bytes,samples;
         row.start=await page.evaluate(startCorrectionRecording,{ids:row.proof.trackedIds,durationMs,preferMp4:true});
-        if(item.observation==='stack-profiled')try{samples=await beginStackSamples(path.join(out,index+'-stack'));}
+        if(item.observation==='stack-profiled')try{samples=await beginStackSamples(path.join(out,index+'-stack'),{owner:report.profilerOwner});}
           catch(error){row.stackSetupError=String(error);}
         try{
         row.release=await page.evaluate(()=>{const q=window.__ASHFALL_BATTLE_QA__;q.setEnemyVfxProofPaused(false);return {at:performance.now(),time:q.getV105CorrectionAudit([]).time};});

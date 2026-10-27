@@ -37,7 +37,7 @@ jobs:
       - name: Prepare only this ephemeral host
         id: prepare
         run: node scripts/ops-f5-recorder-control.mjs prepare
-      - name: Original mobile340 prefix, then the same prefix with native stack samples
+      - name: Original mobile340 prefix once with owned native stack samples
         run: node scripts/run-browser-qa-with-server.mjs scripts/ops-f5-recorder-control.mjs
       - name: Restore every original volume state
         if: always() && steps.prepare.outcome != 'skipped'
