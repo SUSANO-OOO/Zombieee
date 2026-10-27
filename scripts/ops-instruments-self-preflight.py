@@ -1,6 +1,5 @@
 """One Instruments trace of this worker; never a game or foreign target."""
 import hashlib
-import importlib.util
 import json
 import os
 from pathlib import Path
@@ -36,16 +35,17 @@ def observe(argv, timeout):
 
 
 def worker(workspace, uid, gid, head, run_id):
-    spec = importlib.util.spec_from_file_location("owned_workspace_guard", Path(__file__).with_name("ops-spindump-self-preflight.py"))
-    guard = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(guard)
-    root = guard.validate_workspace(workspace, uid, head, run_id)
+    root = Path(workspace).resolve()
+    assert os.geteuid() == uid and uid > 0 and os.getgid() == gid
+    assert Path.cwd().resolve() == root and root.stat().st_uid == uid
+    assert re.fullmatch(r"[a-f0-9]{40}", head) and run_id == os.environ["GITHUB_RUN_ID"] and run_id.isdigit()
+    assert subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip() == head
     out = root / "outputs" / "ops-instruments-self"
     assert out.is_dir() and out.resolve() == out and not out.is_symlink() and out.stat().st_uid == uid
     assert not any(out.iterdir())
     trace, archive, toc, receipt = out / "self.trace", out / "original.trace.tar.gz", out / "toc.xml", out / "report.json"
     report = {"head": head, "run": run_id, "accepted": False, "diagnosticOnly": True,
-              "gameStarted": False, "targetIsThisRootWorkerOnly": True, "pid": os.getpid(),
+              "gameStarted": False, "targetIsThisWorkerOnly": True, "uid": uid, "sudoUsed": False, "pid": os.getpid(),
               "template": "System Trace", "requestedDurationSeconds": 1, "status": "starting"}
     stop = threading.Event()
 
@@ -87,18 +87,15 @@ def worker(workspace, uid, gid, head, run_id):
         stop.set()
         thread.join()
         receipt.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
-        # Only these generated transport files are handed back. Do not recurse
-        # through a trace's possible links or change any system permissions.
+        # Outputs already belong to this ordinary runner. Do not recurse through
+        # a trace's possible links or change any ownership/system permissions.
         for file in (archive, toc, receipt):
             if file.exists():
                 assert not file.is_symlink() and file.parent.resolve() == out
-                os.chown(file, uid, gid)
+                assert file.stat().st_uid == uid
 
 
 def main():
-    if len(sys.argv) == 7 and sys.argv[1] == "--worker":
-        worker(sys.argv[2], int(sys.argv[3]), int(sys.argv[4]), sys.argv[5], sys.argv[6])
-        return
     assert len(sys.argv) == 1 and platform.system() == "Darwin" and platform.machine() == "arm64" and os.geteuid() > 0
     for key, value in {"GITHUB_ACTIONS": "true", "RUNNER_ENVIRONMENT": "github-hosted",
                        "GITHUB_REPOSITORY": "SUSANO-OOO/Zombieee", "GITHUB_EVENT_NAME": "workflow_dispatch",
@@ -110,9 +107,7 @@ def main():
     assert re.fullmatch(r"[0-9a-f]{40}", head) and head == os.environ["V177_EXPECTED_HEAD_SHA"]
     out = root / "outputs" / "ops-instruments-self"
     out.mkdir(parents=True, exist_ok=False)
-    result = subprocess.run(["sudo", "-n", "/usr/bin/python3", str(Path(__file__).resolve()), "--worker",
-                             str(root), str(os.getuid()), str(os.getgid()), head, os.environ["GITHUB_RUN_ID"]], check=False)
-    assert result.returncode == 0, "Self-only Instruments preflight failed; no game was started"
+    worker(str(root), os.getuid(), os.getgid(), head, os.environ["GITHUB_RUN_ID"])
 
 
 if __name__ == "__main__":
