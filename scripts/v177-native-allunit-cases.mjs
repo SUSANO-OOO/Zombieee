@@ -12,7 +12,7 @@ import {startNativeGameRafObservation,stopNativeGameRafObservation,
 import {LIMITS,assertPlannedCase} from './v177-native-allunit-manifest.mjs';
 import {readNativeAllUnitSample,assertShardProof,postpaintCaptureBoundary,
   assertShardPostpaintContract,createNativeAllUnitRealmOwner,readNativeAllUnitRealmOwner,
-  assertNativeRealmMember,releasePreparedShardClock} from './v177-native-allunit-contract.mjs';
+  assertNativeRealmMember} from './v177-native-allunit-contract.mjs';
 import {assertMayoFeralReceipt,assertFutagoPairDamageAndOwner} from './v177-native-allunit-owners.mjs';
 
 export function hasPreparedAllUnitPaint(proof){
@@ -183,6 +183,8 @@ export function assertAllUnitClip(row,bytes,{codecControl=false,requestedMimeTyp
   assert.equal(bytes.length,c.bytes);assert.equal(createHash('sha256').update(bytes).digest('hex'),c.sha256);
   for(const [key,value]of Object.entries(row.recordingMetadata))assert.deepEqual(c.metadata[key],value,'Original clip binding: '+key);
   assert.equal(c.timeOrigin,row.recordingStart.timeOrigin);assert.equal(c.startedAt,row.recordingStart.startedAt);
+  assert.ok(Number.isFinite(c.stopRequestedAt)&&c.stopRequestedAt>c.startedAt
+    &&c.stopRequestedAt-c.startedAt<=LIMITS.clipMs,'Original15s recording window');
   assert.ok(c.startedAt<=row.boundary.at&&row.boundary.at<=row.release.at);
   assert.ok(row.samples.at(-1).at<=c.stopRequestedAt);
   assert.ok(Number.isFinite(c.timeOrigin)&&Number.isFinite(row.sourceRaf.timeOrigin),'Original raw clock origins must remain recorded');
@@ -220,6 +222,7 @@ export async function captureAllUnitCase(page,row,{out,onFailure=()=>{},requeste
       fighterId:row.proof.fighterId,preparedRenderKind:row.form,owner:row.owner,caseId:row.caseId,
       proofId:row.proof.proofId,battleGeneration:row.proof.battleGeneration,
       legacyFusedFixture:row.proof.legacyFusedFixture,diagnosticOnly:true,controlledOpponent:true,
+      samplingProtocol:'native-min-spacing-v2',
       ...(codecControl?{codecControl:true}:{}),...(acquisitionControl?{acquisitionControl:true}:{})};
     clip=await beginV177NativeCanvasClip(page,row.recordingMetadata,{directory:path.join(out,
       row.viewport.width+'x'+row.viewport.height,'native-canvas-clips'),engine:'webkit',requestedMimeType,requestedCaptureHz,realmOwner:resources.realmOwner});active();
@@ -227,20 +230,13 @@ export async function captureAllUnitCase(page,row,{out,onFailure=()=>{},requeste
     row.pausedCaptureStart=await owned(()=>resources.realmOwner.evaluate(readNativeAllUnitSample,{...row.proof,performanceBoundary:true}));
     row.boundary=postpaintCaptureBoundary(row,row.proof,row.pausedCaptureStart,row.recordingStart);
     row.sequenceBaseline=row.boundary.renderSequence;
-    row.release=await owned(()=>resources.realmOwner.evaluate(releasePreparedShardClock,row.proof));
-    let captureStartAt;
-    if(row.form==='ranger'){
-      // Keep this original, immutable boundary in its actual browser realm.
-      // Only its scalar clock is needed to schedule the original 120ms reads;
-      // avoid the remaining full-history transfer during encoding. Its share
-      // of the observed first-read delay has not been isolated.
-      await owned(async()=>{resources.captureStartHandle=await resources.realmOwner.evaluateHandle(readNativeAllUnitSample,
-        {...row.proof,performanceBoundary:true,immutableSnapshot:true});});
-      captureStartAt=await owned(()=>resources.captureStartHandle.evaluate(value=>value.at));
-    }else{
-      row.captureStart=await owned(()=>resources.realmOwner.evaluate(readNativeAllUnitSample,{...row.proof,performanceBoundary:true}));
-      captureStartAt=row.captureStart.at;
-    }
+    // Release and baseline are one browser task, so the first live attack
+    // cannot occur between them. Keep every form's large snapshot in its realm
+    // until encoding has finished; only the real scalar receipts cross now.
+    await owned(async()=>{resources.captureStartHandle=await resources.realmOwner.evaluateHandle(readNativeAllUnitSample,
+      {...row.proof,releaseClock:true,performanceBoundary:true,immutableSnapshot:true});});
+    const start=await owned(()=>resources.captureStartHandle.evaluate(value=>({at:value.at,release:value.releaseReceipt})));
+    row.release=start.release;const captureStartAt=start.at;
     const count=row.phase==='engage'?LIMITS.engageSamples:LIMITS.moveAttackSamples;
     row.sampleRpcTimings=[];
     for(let i=0;i<count;i++){
@@ -251,7 +247,8 @@ export async function captureAllUnitCase(page,row,{out,onFailure=()=>{},requeste
         // history while encoding can stall WebKit even when the reader is fast.
         await owned(async()=>{
           const handle=await resources.realmOwner.evaluateHandle(readNativeAllUnitSample,{...row.proof,
-            sampleAt,performanceBoundary:i===count-1,immutableSnapshot:true});
+            sampleAt,previousSample:resources.sampleHandles.at(-1)?.handle??resources.captureStartHandle,
+            performanceBoundary:i===count-1,immutableSnapshot:true});
           resources.sampleHandles.push({handle,exported:false});
         });rpc.status='completed';
       }catch(error){rpc.status='error';rpc.error=String(error);throw error;}
@@ -271,6 +268,16 @@ export async function captureAllUnitCase(page,row,{out,onFailure=()=>{},requeste
     }
     for(const entry of resources.sampleHandles){
       row.samples.push(await owned(()=>entry.handle.evaluate(value=>value)));entry.exported=true;
+    }
+    let previous=row.captureStart;
+    for(const [i,sample]of row.samples.entries()){
+      const planned=captureStartAt+(i+1)*LIMITS.sampleDelayMs;
+      const notBefore=Math.max(planned,previous.at+LIMITS.sampleDelayMs);
+      assert.equal(sample.readTiming.sampleAt,planned,'Keep the original plan, including its lateness');
+      assert.equal(sample.readTiming.notBeforeAt,notBefore);
+      assert.equal(sample.readTiming.spacingAnchorAt,previous.at);
+      assert.ok(sample.at>=notBefore,'Delayed reads must not consume the next sample early');
+      previous=sample;
     }
     assertAllUnitClip(row,await readFile(row.nativeClip.file),{codecControl,requestedMimeType,requestedCaptureHz,acquisitionControl});
     row.postpaintReceipt=assertShardPostpaintContract(row,row.proof,row.boundary,row.release,row.samples);

@@ -43,14 +43,16 @@ test('focused Draft verification selects R9 and the capture workflow without ena
  }
  const capture=ciChangeScope(['.github/workflows/native-allunit-capture.yml'],{draft:true});
  assert.equal(capture.full,false);assert.equal(capture.allunit,true);assert.equal(capture.normal,false);
- const ready=ciChangeScope(['AGENTS.md'],{draft:false});assert.equal(ready.r9,true);assert.equal(ready.allunit,true);
+ const ready=ciChangeScope(['AGENTS.md'],{draft:false});assert.equal(ready.r9,false);assert.equal(ready.allunit,false);
  const workflow=load(readFileSync('.github/workflows/native-allunit-capture.yml','utf8'));
  assert.equal(workflow.on.workflow_dispatch.inputs.expected_head.required,true);
  assert.ok(workflow.jobs.build.if.includes('needs.scope.outputs.allunit'));
  assert.ok(workflow.jobs.build.if.includes("needs.scope.outputs.full == 'true'"));
  assert.ok(!workflow.jobs.build.if.includes('!github.event.pull_request.draft'),'Ready status alone cannot repeat completed source-bound captures');
  assert.equal(workflow.jobs.capture.strategy.matrix.shard,'${{ fromJSON(needs.build.outputs.shards) }}');
- for(const path of ['app/manualAbilityUi.js','app/v104CombatVfx.js'])assert.ok(workflow.on.pull_request.paths.includes(path),'Changed UI/VFX must reach capture source guards');
+ assert.ok(Object.hasOwn(workflow.on,'workflow_call'),'The required CI owns all product and shared-helper triggers');
+ const nativeCall=load(readFileSync('.github/workflows/ci.yml','utf8')).jobs.allunit;
+ assert.equal(nativeCall.with.fresh,true);
  const allCases=nativeCaseSelection({event:{pull_request:{draft:false},inputs:{capture_mode:'full'}}});
  assert.equal(allCases.shards.length,12);assert.equal(allCases.caseIds.length,432);
  assert.equal(workflow.jobs.capture.if,"${{ !cancelled() && needs.build.result == 'success' && needs.build.outputs.shards != '[]' }}",

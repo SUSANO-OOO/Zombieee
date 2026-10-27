@@ -15,7 +15,9 @@ export function assertShardProof(row,proof){
  // Per-owner birth/ability/pair/damage contracts remain the actual adapter's responsibility.
  return proof;
 }
-// Serializable read-only browser callback. It does not stamp expected proof values onto a paint.
+// Browser callbacks retain actual source values, never expected paint stamps.
+// The explicit startup option below releases an already paused proof and reads
+// its baseline in the same task. Ordinary samples only observe the running game.
 // Existing fighterId -> Map/history binding is the source ownership boundary.
 // No new paint state/ring/stamp is required. Separate realm receipts bind clocks.
 // Identical plausible rows maliciously substituted
@@ -67,20 +69,38 @@ export function assertNativeRealmMember(expected,actual,member,after=expected){
 
 export function readNativeAllUnitSample(input,ownedProof){
  const realmOwner=ownedProof===undefined?null:input;
- const {fighterId,targetId,owner,proofId,performanceBoundary=false,sampleAt,immutableSnapshot=false}=ownedProof??input;
- // Absolute times in the original Performance clock avoid adding a full delay
- // after every transport round trip. Late reads still retain their actual time.
+ const {fighterId,targetId,owner,proofId,performanceBoundary=false,sampleAt,immutableSnapshot=false,
+  previousSample=null,releaseClock=false}=ownedProof??input;
+ // Retain the original absolute plan and the actual read times separately.
+ // A late transport must not compress later samples into a catch-up burst.
+ if(typeof releaseClock!=='boolean'||releaseClock&&(!realmOwner||sampleAt!==undefined||previousSample!==null))
+  throw Error('Atomic release requires an immediate owned baseline');
+ let notBeforeAt=sampleAt;
+ if(previousSample!==null){
+  if(!realmOwner||!Number.isFinite(sampleAt)||!Number.isFinite(previousSample.at)||previousSample.realm?.ownerId!==realmOwner.ownerId
+   ||previousSample.realm?.sequence!==realmOwner.sequence)throw Error('Sample spacing requires its actual previous realm sample');
+  notBeforeAt=Math.max(sampleAt,previousSample.at+120);
+ }
  if(sampleAt!==undefined){
   if(!realmOwner||!Number.isFinite(sampleAt))throw Error('Scheduled sample requires its original realm and a finite time');
   realmOwner.check({window,document,performance,canvas:document.querySelector('.game-shell canvas')});
   const now=performance.now();
   if(!Number.isFinite(now))throw Error('Invalid native sample clock');
-  const delay=sampleAt-now;
+  const delay=notBeforeAt-now;
   if(delay>0)return new Promise((resolve,reject)=>{
    setTimeout(function readNativeSampleOnSchedule(){
     try{resolve(readNativeAllUnitSample(realmOwner,ownedProof));}catch(error){reject(error);}
    },delay);
   });
+ }
+ let releaseReceipt;
+ if(releaseClock){
+  const releaseRealm=realmOwner.member({window,document,performance,canvas:document.querySelector('.game-shell canvas')},'release');
+  const qa=window.__ASHFALL_BATTLE_QA__,before=qa.getSnapshot();if(before.paused!==true)throw Error('Prepared clock was not paused');
+  if(owner==='mayo-activation')qa.releaseV177NativeMayoProof(proofId);else qa.setEnemyVfxProofPaused(false);
+  const after=qa.getSnapshot();if(after.paused!==false||after.time!==before.time)throw Error('Release changed original simulation clock');
+  releaseReceipt={at:performance.now(),timeOrigin:performance.timeOrigin,realm:releaseRealm,
+   beforePaused:before.paused,afterPaused:after.paused,beforeTime:before.time,afterTime:after.time};
  }
  const realm=realmOwner===null?null:realmOwner.member({window,document,performance,canvas:document.querySelector('.game-shell canvas')},'sample');
  const startedAt=performance.now(),qa=window.__ASHFALL_BATTLE_QA__,snapshot=qa.getSnapshot(),snapshotAt=performance.now();
@@ -97,6 +117,7 @@ export function readNativeAllUnitSample(input,ownedProof){
  })():{};
  const boundaryAt=performance.now();
  const result={schema:'v177-native-shard-postpaint/v1',at:performance.now(),timeOrigin:performance.timeOrigin,...(realm?{realm}:{}),
+  ...(releaseReceipt?{releaseReceipt}:{}),
   simulationTime:snapshot.time,route:location.pathname,visible:document.visibilityState==='visible',
   running:snapshot.running,paused:snapshot.paused,viewport:{width:innerWidth,height:innerHeight},...boundary,
   lookup:{requestedFighterId:fighterId,observedFighterId:audit.fighter?.id,requestedTargetId:targetId,observedTargetId:target.fighter?.id},
@@ -122,9 +143,11 @@ export function readNativeAllUnitSample(input,ownedProof){
  // including nested joint geometry that later game frames may replace/mutate.
  const stored=immutableSnapshot?structuredClone(result):result;
  const finishedAt=performance.now();
- return {...stored,readTiming:{sampleAt:sampleAt??null,startedAt,snapshotAt,auditAt,targetAuditAt,phaseGAt,boundaryAt,finishedAt,
+ return {...stored,readTiming:{sampleAt:sampleAt??null,notBeforeAt:notBeforeAt??null,spacingAnchorAt:previousSample?.at??null,
+  startedAt,snapshotAt,auditAt,targetAuditAt,phaseGAt,boundaryAt,finishedAt,
   scheduleLatenessMs:sampleAt===undefined?null:startedAt-sampleAt,durationMs:finishedAt-startedAt,
-  scope:'Original synchronous reader only. RPC/serialization/encoding and native RAF wait are separate; no acceptance or clock change.'}};
+  scope:releaseReceipt?'Existing proof release and immediate actual baseline in one realm task; no simulation advance/reset.'
+   :'Actual synchronous read; original plan, minimum spacing and actual lateness are separate. No clock rewrite.'}};
 }
 function assertRawEnvelope(row,proof,raw,pausedState=false){
  assertShardProof(row,proof);assert.equal(raw?.schema,'v177-native-shard-postpaint/v1');assert.ok(finite(raw.at)&&finite(raw.timeOrigin)&&finite(raw.simulationTime));

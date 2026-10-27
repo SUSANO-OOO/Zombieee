@@ -81,7 +81,7 @@ test('split native combat, audio and ordinary contacts remain mandatory in both 
     for (const [id, script, env, artifact] of lanes) {
       const job = jobs[id];assert.ok(job, id + ' remains required');
       assert.equal(job['timeout-minutes'], 30);assert.equal(job['continue-on-error'], undefined);
-      assert.ok(job.if.includes("needs.scope.outputs.full == 'true'"));assert.equal(job.strategy['fail-fast'], false);
+      assert.ok(job.if.includes("needs.scope.outputs."+(id==='v102-enemy-contacts'?'legacy':'full')+" == 'true'"));assert.equal(job.strategy['fail-fast'], false);
       assert.deepEqual(job.strategy.matrix.include, id === 'v102-combat' ? [
         {engine:'chromium',os:'ubuntu-latest',viewportGroup:'all',checkLabel:'chromium'},
         {engine:'webkit',os:'macos-15-intel',viewportGroup:'desktop-phone',checkLabel:'webkit desktop-phone'},
@@ -210,7 +210,7 @@ test("CI is a pull-request-only, fail-closed PR Verify workflow", async () => {
   const phaseGJob = workflow.match(/  v100-phase-g-production:\n([\s\S]*?)\n  v100-native-webkit-pwa:/u)?.[1] ?? "";
   assert.match(phaseGJob, /Capture and validate the full Phase G production matrix[\s\S]*DEBUG: pw:browser/u);
   assert.doesNotMatch(phaseGJob, /continue-on-error:/u);
-  const stage3Job = workflow.match(/  webkit-stage3-audio:\n([\s\S]*)$/u)?.[1] ?? "";
+  const stage3Job = workflow.match(/  webkit-stage3-audio:\n([\s\S]*?)(?=\n  [\w-]+:\n|$)/u)?.[1] ?? "";
   assert.ok(loadYaml(workflow).jobs['webkit-stage3-audio'].needs.includes('webkit-hosted'));
   assert.match(stage3Job, /fail-fast: false/u);
   assert.match(stage3Job, /max-parallel: 1/u);
@@ -408,7 +408,7 @@ test("parsed required CI graph retains every WebKit lane, dependency and viewpor
       assert.equal(job.container, undefined);
       assert.equal(job.steps.filter(step => step.run === "node scripts/verify-playwright-container-runtime.mjs --macos").length, 1);
     }
-    assert.ok(job.if.includes("needs.scope.outputs.full == 'true'"), `${id} retains full regression on integration candidates`);
+    assert.ok(job.if.includes("needs.scope.outputs.legacy == 'true'")||job.if.includes("needs.scope.outputs.full == 'true'"), `${id} retains full regression on integration candidates`);
   }
   const frameControl = jobs["v100-webkit-frame-control"];
   const frameSteps = frameControl.steps;

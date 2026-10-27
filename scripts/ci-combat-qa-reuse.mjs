@@ -1,3 +1,4 @@
+// Historical v1.0.4 evidence verifier. No current workflow selects gates through this module.
 import assert from 'node:assert/strict';
 import {immutablePrProvenance} from './ci-pr-provenance.mjs';
 

@@ -1,29 +1,11 @@
 name: All Unit Native Motion Capture
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
-    paths:
-      - '.github/workflows/native-allunit-capture.yml'
-      - 'scripts/v177-native-allunit-*.mjs'
-      - 'scripts/v177-native-allunit-recovery.json'
-      - 'scripts/native-recording-runtime/package.json'
-      - 'scripts/native-recording-runtime/package-lock.json'
-      - 'scripts/v177-native-process-timeline.mjs'
-      - 'tests/v177-native-process-timeline.test.mjs'
-      - 'scripts/v100-macos-indexing-control.mjs'
-      - 'tests/v177-native-allunit*.test.mjs'
-      - 'scripts/v177-native-encoded-clips.mjs'
-      - 'tests/v177-native-encoded-clips.test.mjs'
-      - 'scripts/v177-native-canvas-clips.mjs'
-      - 'app/AshfallGame.tsx'
-      - 'app/v177*.js'
-      - 'app/spriteManifest.js'
-      - 'app/combatPresentation.js'
-      - 'app/manualAbilities.js'
-      - 'app/manualAbilityUi.js'
-      - 'app/v104CombatVfx.js'
-      - 'public/art/v100/joints/**'
+  workflow_call:
+    inputs:
+      fresh:
+        required: true
+        type: boolean
   workflow_dispatch:
     inputs:
       expected_head:
@@ -41,6 +23,8 @@ on:
         options: [vp8, mp4]
         default: vp8
 
+env:
+  CI_CAPTURE_FRESH: ${{ inputs.fresh && 'true' || 'false' }}
 permissions:
   contents: read
 
@@ -56,8 +40,8 @@ jobs:
       contents: read
       actions: read
     outputs:
-      full: ${{ steps.scope.outputs.full }}
-      allunit: ${{ steps.scope.outputs.allunit }}
+      full: 'true'
+      allunit: 'true'
       shards: ${{ steps.selection.outputs.shards }}
     steps:
       - uses: actions/checkout@v7
@@ -65,23 +49,17 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || inputs.expected_head }}
           fetch-depth: 0
           persist-credentials: false
+      - name: Verify exact checkout
+        env:
+          EXPECTED_CHECKOUT: ${{ github.event.pull_request.head.sha || inputs.expected_head }}
+        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_CHECKOUT??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_CHECKOUT);'
       - uses: actions/setup-node@v6
         with:
           node-version: '22.13.0'
-      - id: scope
-        env:
-          CI_SCOPE_BASE: ${{ github.event.before || github.event.pull_request.base.sha }}
-          CI_SCOPE_HEAD: ${{ github.event.pull_request.head.sha || inputs.expected_head }}
-          CI_SCOPE_DRAFT: ${{ github.event.pull_request.draft }}
-          CI_SCOPE_ACTION: ${{ github.event.action }}
-          CI_SCOPE_PREVIOUS_HEAD: ${{ github.event.before }}
-          CI_SCOPE_PR_BASE: ${{ github.event.pull_request.base.sha }}
-          CI_SCOPE_PR_NUMBER: ${{ github.event.pull_request.number }}
-          CI_SCOPE_ACTIONS_TOKEN: ${{ github.token }}
-        run: node scripts/ci-change-scope.mjs
       - id: selection
         run: node scripts/v177-native-allunit-selection.mjs
   build:
+    name: Native Motion Build
     needs: scope
     if: ${{ always() && !cancelled() && (github.event_name == 'workflow_dispatch' || (needs.scope.result == 'success' && needs.scope.outputs.shards != '[]' && (needs.scope.outputs.full == 'true' || needs.scope.outputs.allunit == 'true'))) }}
     runs-on: ubuntu-24.04
@@ -99,6 +77,10 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || inputs.expected_head }}
           persist-credentials: false
           fetch-depth: 0
+      - name: Verify exact checkout
+        env:
+          EXPECTED_CHECKOUT: ${{ github.event.pull_request.head.sha || inputs.expected_head }}
+        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_CHECKOUT??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_CHECKOUT);'
       - uses: actions/setup-node@v6
         with:
           node-version: 24
@@ -122,12 +104,14 @@ jobs:
           if-no-files-found: error
           retention-days: 7
   capture:
+    name: Native Motion (${{ matrix.shard }})
     needs: build
     if: ${{ !cancelled() && needs.build.result == 'success' && needs.build.outputs.shards != '[]' }}
     runs-on: macos-15
     timeout-minutes: 15
     strategy:
       fail-fast: false
+      max-parallel: 2
       matrix:
         shard: ${{ fromJSON(needs.build.outputs.shards) }}
     env:
@@ -144,6 +128,10 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || inputs.expected_head }}
           persist-credentials: false
           fetch-depth: 0
+      - name: Verify exact checkout
+        env:
+          EXPECTED_CHECKOUT: ${{ github.event.pull_request.head.sha || inputs.expected_head }}
+        run: node --input-type=module -e 'import assert from "node:assert/strict";import{execFileSync}from"node:child_process";assert.match(process.env.EXPECTED_CHECKOUT??"",/^[a-f0-9]{40}$/u);assert.equal(execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),process.env.EXPECTED_CHECKOUT);'
       - uses: actions/setup-node@v6
         with:
           node-version: 24
@@ -162,7 +150,7 @@ jobs:
         run: node scripts/v177-native-allunit-build.mjs restore outputs/v177-native-allunit-build outputs/v177-native-allunit-${{ matrix.shard }}
       - name: Prepare single-case native timing control
         id: native-preparation
-        if: env.V177_NATIVE_HOST_INDEXING_CONTROL == 'brute-attack-1280' || env.V177_NATIVE_HOST_INDEXING_CONTROL == 'mayo-attack-1280' || env.V177_NATIVE_HOST_INDEXING_CONTROL == 'ranger-motion'
+        if: env.V177_NATIVE_HOST_INDEXING_CONTROL == 'full-native-motion' || env.V177_NATIVE_HOST_INDEXING_CONTROL == 'brute-attack-1280' || env.V177_NATIVE_HOST_INDEXING_CONTROL == 'mayo-attack-1280' || env.V177_NATIVE_HOST_INDEXING_CONTROL == 'ranger-motion'
         run: node scripts/v100-macos-indexing-control.mjs prepare-native-capture
       - name: Capture actual movement and attacks for this four-form shard
         id: capture
@@ -180,3 +168,15 @@ jobs:
           path: outputs/v177-native-allunit-${{ matrix.shard }}
           if-no-files-found: error
           retention-days: 7
+
+  result:
+    if: always()
+    needs: [scope, build, capture]
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          BUILD_RESULT: ${{ needs.build.result }}
+          CAPTURE_RESULT: ${{ needs.capture.result }}
+        run: |
+          test "$BUILD_RESULT" = success
+          test "$CAPTURE_RESULT" = success

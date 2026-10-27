@@ -14,51 +14,10 @@ import {createDefaultV100Save,normalizeV100Save,serializeV100Save} from '../app/
 import {V100_UNITS,V100_STAGE_IDS} from '../app/v100Registry.js';
 import {MANUAL_ABILITY_REGISTRY as manual} from '../app/manualAbilities.js';
 import {installRequestFailureAudit} from './browser-request-failure-audit.mjs';
-import {nativeCaseSelection} from './v177-native-allunit-selection.mjs';
 import {validateCapturePreparationRecord,correctionPreparationNeeded} from './v100-macos-indexing-control.mjs';
 const sha=b=>createHash('sha256').update(b).digest('hex');
-export function correctionCases(scope){
-  assert.ok(['desktop','mobile390','mobile340'].includes(scope));
-  if(scope!=='desktop')return [...['brawler','crazy-king','guardian','gunner','zakimiya','mrs-chiha'].map(kind=>({kind,mode:'manual'})),{kind:'brawler',mode:'duet'}];
-  return [...Object.keys(manual).map(kind=>({kind,mode:'manual'})),
-    ...['grappler','ooze','sprinter','gate-eater','spindle','resonator','cagewalker','choir-knot','pall-manta','anchor-bloom',
-      'kurome','mother','ooguchi','gairen','mugarian-president-mutated','takuya-omega','takuya'].map(kind=>({kind,mode:'enemy'})),
-    ...['brute','guardian','tky','takuya','takuya-omega','crazy-king','kumaverson','babayaga','brawler'].map(kind=>({kind,mode:'engage'}))];
-}
-
-// Reuse is limited by the same exact-source guard as the original motion
-// inventory. Unknown revisions run the whole original plan. Earlier failures
-// and the boss whose name changed remain fresh observations, never old passes.
-export async function correctionCaseSelection(scope,{event,root=process.cwd(),select=nativeCaseSelection}={}){
-  const plan=correctionCases(scope),full={mode:'full',plan,retained:[]};
-  const selection=select({event,root});if(selection.mode!=='remaining')return full;
-  const profile=JSON.parse(await readFile(path.join(root,'scripts/v177-native-allunit-recovery.json'),'utf8'));
-  const source=profile.fiveCorrections;if(!source)return full;
-  const bytes=await readFile(path.join(root,source.file));assert.equal(sha(bytes),source.sha256);
-  const inventory=JSON.parse(bytes),all=['desktop','mobile390','mobile340'].flatMap(s=>correctionCases(s).map(r=>s+':'+r.kind+':'+r.mode));
-  assert.equal(inventory.head,source.head);assert.equal(inventory.runId,source.runId);
-  assert.equal(inventory.schema,'v105-five-corrections-retained/v1');
-  assert.deepEqual([...new Set(inventory.reports.map(r=>r.scope))].sort(),['desktop','mobile340','mobile390']);
-  assert.equal(new Set(inventory.reports.map(r=>r.head+':'+r.runId+':'+r.scope)).size,inventory.reports.length,
-    'One report identity per original candidate and scope');
-  const kept=inventory.retained.map(r=>r.caseId),pending=inventory.pending;
-  assert.deepEqual([...kept,...pending].sort(),[...all].sort(),'All original correction cases need one owner or a fresh recording');
-  assert.equal(new Set([...kept,...pending]).size,all.length);
-  for(const row of inventory.retained){
-    const report=inventory.reports.find(r=>r.scope===row.caseId.split(':')[0] && r.head===row.head && r.runId===row.runId);
-    assert.ok(report&&report.head===row.head&&report.runId===row.runId&&report.reportSha256===row.reportSha256
-      &&report.artifactId===row.artifactId,'Retained AV must belong to its original scope report');
-    assert.match(row.reportSha256,/^[a-f0-9]{64}$/u);assert.match(row.clipSha256,/^[a-f0-9]{64}$/u);
-    assert.ok(Number.isSafeInteger(row.artifactId)&&row.artifactId>0&&row.bytes>0&&row.bytes<=8388608);
-    assert.equal(row.originalStatus,'recorded');assert.equal(row.encodedPtsVerified,true);
-    assert.equal(row.fullAvDecode.completed,true);assert.equal(row.fullAvDecode.requiredMixerAudioStream,true);assert.equal(row.fullAvDecode.errors,0);
-    assert.ok(Number.isFinite(row.driftMs)&&Math.abs(row.driftMs)<=120);
-    assert.ok(Number.isFinite(row.maxGapMs)&&row.maxGapMs<=250&&row.maxGapMs>0);
-    assert.ok(Number.isFinite(row.caseElapsedMs)&&row.caseElapsedMs<30000);
-  }
-  return{mode:'remaining',source:{file:source.file,sha256:source.sha256,head:inventory.head,runId:inventory.runId},
-    plan:plan.filter(r=>pending.includes(scope+':'+r.kind+':'+r.mode)),retained:inventory.retained.filter(r=>r.caseId.startsWith(scope+':'))};
-}
+import {correctionCaseSelection,correctionCaptureFolder} from './v105-five-corrections-cases.mjs';
+export {correctionCases,correctionCaseSelection} from './v105-five-corrections-cases.mjs';
 
 // Every independent fixture owns its page and native recorder resources.
 // Cold entry, capture, decode and cleanup share the existing30s case budget.
@@ -82,7 +41,7 @@ export async function withCorrectionCaseContext(browser,options,operation,{onFat
     requests=audit(page);
     page.on('pageerror',e=>onFatal(e.stack??String(e)));page.on('console',m=>{if(m.type()==='error')onFatal(m.text());});
     page.on('response',r=>{if(r.status()>=400)onFatal(`${r.status()} ${r.url()}`);});
-    return await operation(page);
+    return await operation(page,close);
   }catch(error){primary??=error;throw error;}finally{await cleanup();}
   },close,{onDeadline:error=>{expired=true;primary??=error;onDeadline(error);}});}
   catch(error){primary=error;throw error;}
@@ -196,9 +155,15 @@ export async function startCorrectionRecording({ids,durationMs,preferMp4=false})
   // MP4 timeslices produced repeated packet timestamps and missing frames.
   await Promise.race([new Promise(resolve=>{recorder.onstart=()=>{state.startAt=performance.now();resolve();};recorder.start();}),
     new Promise((_,reject)=>{startTimer=setTimeout(()=>reject(Error('Native start exceeded3s')),3000);})]).finally(()=>clearTimeout(startTimer));
+  state.cpuColumns=['sequence','rafTimestamp','entryAt','previousExitAt','simulationFinishedAt','drawFinishedAt','exitAt','simulationTime'];
   const observe=at=>{if(state.stopAt!==null)return;
     if(state.rows.length>=4096){state.failed='Original4096-frame receipt limit';return;}
-    state.rows.push({at,enteredAt:performance.now(),...q.getV105CorrectionAudit(ids)});state.raf=requestAnimationFrame(observe);};
+    const enteredAt=performance.now(),cpu=window.__ASHFALL_RUNTIME_PERFORMANCE__?.frameCpuTimings?.at(-1);
+    // Copy only eight existing numbers. No RPC, polling, product getter or
+    // retained mutable ring reference is added to the measured interval.
+    state.rows.push({at,enteredAt,...q.getV105CorrectionAudit(ids),
+      frameCpu:cpu?state.cpuColumns.map(key=>cpu[key]??null):null,observedAt:performance.now()});
+    state.raf=requestAnimationFrame(observe);};
   state.raf=requestAnimationFrame(observe);
   const watchdog=setTimeout(()=>{state.failed??='Original15s real recorder deadline exceeded';
     state.stopAt??=performance.now();cancelAnimationFrame(state.raf);if(recorder.state!=='inactive')recorder.stop();},15000);
@@ -224,18 +189,18 @@ export async function stopCorrectionRecording(){
 }
 
 export async function runBrowserQa(){
-  const binding=await nativeGameCaptureBinding(),scope=process.env.V105_CAPTURE_SCOPE;
+  const binding=await nativeGameCaptureBinding(),scope=process.env.V105_CAPTURE_SCOPE,part=process.env.V105_CAPTURE_PART??'all';
   const {V177_JOINT_ATLASES:currentAtlases}=await import('../app/v177JointPresentation.js');
   const atlasPaths=Object.fromEntries(Object.entries(currentAtlases).map(([kind,atlas])=>[kind,atlas.path]));
   const selection=await correctionCaseSelection(scope,{event:JSON.parse(await readFile(process.env.GITHUB_EVENT_PATH,'utf8'))});
   const {plan}=selection,viewport=scope==='desktop'?{width:1280,height:720}:{width:844,height:scope==='mobile390'?390:340};
-  const out=path.resolve(process.env.V105_CAPTURE_OUT??'outputs/v105-five-corrections/'+scope);await mkdir(out,{recursive:true});
-  const report={...binding,architecture:process.arch,scope,viewport,runtime:NATIVE_RECORDING_WEBKIT_RUNTIME,selection,cases:[],contexts:[],errors:[],status:'starting',
+  const out=path.resolve(process.env.V105_CAPTURE_OUT??'outputs/v105-five-corrections/'+correctionCaptureFolder(scope,part));await mkdir(out,{recursive:true});
+  const report={...binding,architecture:process.arch,scope,part,viewport,runtime:NATIVE_RECORDING_WEBKIT_RUNTIME,selection,cases:[],contexts:[],errors:[],status:'starting',
     recordingConditions:{independentContextPerCase:true,actualAudioReadinessBeforeRecording:true,caseDeadlineMs:30000,
       retainedObservationsKeepTheirOriginalConditions:true,coldStartupAccepted:false,formalPerformanceAccepted:false},
     acceptance:{physicalIphone:false,humanVisualAndListening:false,normalCampaign:false,wholeGame:false}};
   const persist=()=>writeFile(path.join(out,'report.json'),JSON.stringify(report,null,2)+'\n');
-  if(scope==='desktop'&&process.env.GITHUB_EVENT_NAME==='pull_request'&&correctionPreparationNeeded(selection)){
+  if(process.env.GITHUB_EVENT_NAME==='pull_request'&&correctionPreparationNeeded(selection,scope)){
     const file=path.join(out,'native-host-indexing-prepared.json'),bytes=await readFile(file);
     const prepared=JSON.parse(bytes);validateCapturePreparationRecord(prepared,{selection,binding,correction:true});
     report.hostPreparation={purpose:prepared.purpose,file,sha256:sha(bytes),diagnosticOnly:false,acceptanceOverride:false};
@@ -253,7 +218,7 @@ export async function runBrowserQa(){
       assert.equal(fatalErrors,0,'A prior product/page error invalidated the recording context');
       const errorsBefore=report.errors.length;
       const caseStartedAt=performance.now();
-      try{await withCorrectionCaseContext(browser,{viewport,deviceScaleFactor:1,isMobile:viewport.width<1000,hasTouch:viewport.width<1000},async page=>{
+      try{await withCorrectionCaseContext(browser,{viewport,deviceScaleFactor:1,isMobile:viewport.width<1000,hasTouch:viewport.width<1000},async(page,closeOwned)=>{
       await page.addInitScript(seedV100BrowserSaveOnce,serializeV100Save(save));
       await page.goto(new URL('v100',process.env.V100_CAMPAIGN_QA_BASE_URL).href);await enterNativeAllUnitSurface(page);await enterV100FromTitle(page);
       await page.getByRole('button',{name:'戦闘へ',exact:true}).click();await page.waitForFunction(()=>window.__ASHFALL_BATTLE_QA__?.getSnapshot().running);
@@ -299,6 +264,9 @@ export async function runBrowserQa(){
         const capture=await page.evaluate(stopCorrectionRecording),bytes=Buffer.from(capture.data,'base64');delete capture.data;
         const file=`${String(report.cases.length).padStart(2,'0')}-${item.kind}-${item.mode}.${capture.mime.startsWith('video/mp4')?'mp4':'webm'}`;
         await writeFile(path.join(out,file),bytes,{flag:'wx'});Object.assign(row,{file,sha256:sha(bytes),bytes:bytes.length,capture,status:'retained-pending-checks'});await persist();
+        // The original bytes and observations are saved. Release the owned
+        // game before synchronous decoding; all work keeps the same30s budget.
+        await closeOwned();
         assert.equal(capture.failed,null);assert.ok(capture.rows.length>=30,'actual continuous paint receipts missing');
         assert.equal(capture.bytes,bytes.length,'Original encoded bytes must remain intact');
         row.originalAv=await auditCorrectionEncodedClip(path.join(out,file),capture);
