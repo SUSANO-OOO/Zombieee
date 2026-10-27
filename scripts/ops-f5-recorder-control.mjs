@@ -71,11 +71,11 @@ export async function runBrowserQa(){
     for(const [index,mode] of report.plan.entries()){
       const row={index,mode,status:'starting',accepted:false};report.cases.push(row);await persist();
       const caseStartedAt=performance.now();
-      let caseBrowser=browser;
+      let caseBrowser=browser,primary;
       await withNativeGameCaseDeadline(async()=>{
       try{
       if(mode==='fresh')caseBrowser=await browserType.launch({headless:true,timeout:5000});
-      if(row.deadlineExpired)throw Error('Late browser launch cannot resume after original case deadline');
+      assertCorrectionCaseDeadline(row,caseStartedAt);
       assert.equal(caseBrowser===browser,mode==='shared');assert.equal(caseBrowser.version(),NATIVE_RECORDING_WEBKIT_RUNTIME.browserVersion);
       row.processesBefore=processes();
       await withCorrectionCaseContext(caseBrowser,{viewport:report.viewport,deviceScaleFactor:1,isMobile:true,hasTouch:true},async(page,closeOwned)=>{
@@ -130,7 +130,15 @@ export async function runBrowserQa(){
         assert.ok(capture.rows.filter(r=>r.time<contact.at).every(r=>r.fighters.find(f=>f.id===contact.targetId)?.hp===before.hp),'No early damage');
         row.status=row.originalFailures.length?'diagnostic-with-original-failures':'observed-diagnostic';
       },{onFatal:error=>{report.errors.push(String(error));},onRequests:receipt=>{row.context=receipt;},onDeadline:()=>{row.deadlineExpired=true;}});
-      }finally{if(caseBrowser!==browser)await closeNativeGameContext(caseBrowser);row.processesAfter=processes();}
+      }catch(error){primary=error;row.primaryError=String(error);throw error;}
+      finally{
+        const cleanupErrors=[];
+        if(caseBrowser!==browser)try{await closeNativeGameContext(caseBrowser);}catch(error){cleanupErrors.push('Owned browser close: '+String(error));}
+        try{row.processesAfter=processes();}catch(error){cleanupErrors.push('Post-cleanup process observation: '+String(error));}
+        if(cleanupErrors.length){row.browserCleanupErrors=cleanupErrors;
+          if(primary)report.errors.push(...cleanupErrors.map(e=>'Secondary cleanup: '+e));
+          else throw new AggregateError(cleanupErrors.map(e=>Error(e)),'Recording browser cleanup failed');}
+      }
       },()=>closeNativeGameContext(caseBrowser),{onDeadline:()=>{row.deadlineExpired=true;}});
       assertCorrectionCaseDeadline(row,caseStartedAt);
       await persist();console.log(JSON.stringify({index,mode,driftMs:row.driftMs,maxRafIntervalMs:row.maxRafIntervalMs,liveCadence:row.liveCadence,
