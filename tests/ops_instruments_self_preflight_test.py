@@ -1,4 +1,6 @@
 import importlib.util
+import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -142,6 +144,41 @@ class InstrumentsSelfTests(unittest.TestCase):
             self.assertEqual(result["code"], 0)
             self.assertEqual(result["stdout"], "retained child output")
             child.poll.assert_not_called()
+
+    def test_failed_preparation_never_starts_the_profile_or_workload(self):
+        root = Path.cwd().resolve()
+        self.assertEqual(root, source.parents[1])
+        out = root / "outputs" / "ops-instruments-self"
+        self.assertFalse(out.exists(), "never replace an existing diagnostic output")
+        original_stat = Path.stat
+        def owner_stat(path, *args, **kwargs):
+            values = list(original_stat(path, *args, **kwargs))
+            values[4:6] = [501, 20]
+            return os.stat_result(values)
+        for code, timed_out in ((1, False), (0, True)):
+            out.mkdir(parents=True)
+            calls, thread = [], Mock()
+            def observe(argv, timeout, **kwargs):
+                calls.append(argv)
+                if argv[:4] == ["/usr/bin/xcrun", "xctrace", "list", "devices"]:
+                    return {"code": code, "timedOut": timed_out}
+                self.assertNotIn("record", argv)
+                return {"code": 0, "timedOut": False}
+            try:
+                env = SimpleNamespace(geteuid=lambda: 501, getgid=lambda: 20, getpid=lambda: 123, environ={"GITHUB_RUN_ID": "1"})
+                with self.subTest(code=code, timed_out=timed_out), patch.object(Path, "stat", owner_stat), patch.object(worker, "os", env), patch.object(worker.subprocess, "check_output", return_value="a" * 40), patch.object(worker, "observe", side_effect=observe), patch.object(worker.threading, "Thread", return_value=thread), self.assertRaises(AssertionError):
+                    worker.worker(str(root), 501, 20, "a" * 40, "1")
+                row = json.loads((out / "report.json").read_text())
+                self.assertEqual(row["phase"], "tool-preparation")
+                self.assertNotIn("collection", row)
+                self.assertEqual(row["status"], "self-trace-failed")
+                thread.start.assert_not_called()
+                thread.join.assert_not_called()
+            finally:
+                # Only this test-created file and empty leaf directory are removed.
+                self.assertEqual(out.resolve().parent, root / "outputs")
+                (out / "report.json").unlink(missing_ok=True)
+                out.rmdir()
 
 
 if __name__ == "__main__":

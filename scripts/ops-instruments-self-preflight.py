@@ -87,8 +87,14 @@ def worker(workspace, uid, gid, head, run_id):
             stop.wait(.03)
 
     thread = threading.Thread(target=exercise, daemon=True)
-    thread.start()
+    thread_started = False
     try:
+        report["phase"] = "tool-preparation"
+        report["preparation"] = observe(["/usr/bin/xcrun", "xctrace", "list", "devices"], 15)
+        assert report["preparation"]["code"] == 0 and not report["preparation"]["timedOut"]
+        report["phase"] = "self-collection"
+        thread.start()
+        thread_started = True
         report["collection"] = observe(["/usr/bin/xcrun", "xctrace", "record", "--template", "System Trace",
                                          "--attach", str(os.getpid()), "--time-limit", "1s", "--no-prompt",
                                          "--output", str(trace)], 10, inspect_startup=True)
@@ -112,7 +118,8 @@ def worker(workspace, uid, gid, head, run_id):
         report["status"] = "self-trace-failed"
         report["error"] = repr(error)
         stop.set()
-        thread.join()
+        if thread_started:
+            thread.join()
         try:
             report["toolLogs"] = observe(["/usr/bin/log", "show", "--style", "compact", "--last", "30s",
                 "--predicate", 'process == "xctrace" OR process == "DTServiceHub" OR process == "taskgated"',
@@ -122,7 +129,8 @@ def worker(workspace, uid, gid, head, run_id):
         raise
     finally:
         stop.set()
-        thread.join()
+        if thread_started:
+            thread.join()
         receipt.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
         # Outputs already belong to this ordinary runner. Do not recurse through
         # a trace's possible links or change any ownership/system permissions.
