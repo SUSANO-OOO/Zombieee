@@ -8,9 +8,11 @@ import {V105_MEDIA_ADDITIONS,V105_MEDIA_RETIREMENTS,V105_ASSET_BYTES_DELTA} from
 import {evaluateUpdate} from '../app/pwaUpdatePlanner.js';
 import {correctionCases,canContinueCompletedCorrection,assertCurrentCorrectionPaints} from '../scripts/v105-five-corrections-capture.mjs';
 
-test('v105 changes exactly six named runtime payloads and retires only the previous skirt/icon selection',async()=>{
+test('the published v105 delta changes exactly six named payloads and its corrections remain installed',async()=>{
   const baseline=JSON.parse(execFileSync('git',['show','e22b134a38409b9d2f86660ee351e616c28fbf44:public/asset-manifest.json'],{encoding:'utf8',maxBuffer:4*1024*1024}));
-  const current=JSON.parse(await readFile(new URL('../public/asset-manifest.json',import.meta.url),'utf8'));
+  // This is a historical release delta, not a ban on later quality updates.
+  const current=JSON.parse(execFileSync('git',['show','ff5dba24e88c810182cda1f044bd26dfc3e512c1:public/asset-manifest.json'],{encoding:'utf8',maxBuffer:4*1024*1024}));
+  const candidate=JSON.parse(await readFile(new URL('../public/asset-manifest.json',import.meta.url),'utf8'));
   const before=new Map(baseline.assets.map(a=>[a.path,a])),after=new Map(current.assets.map(a=>[a.path,a]));
   assert.equal(baseline.version,'1.0.4');assert.equal(current.version,'1.0.5');
   const newPaths=current.assets.filter(a=>!before.has(a.path)).map(a=>a.path).sort();
@@ -22,6 +24,9 @@ test('v105 changes exactly six named runtime payloads and retires only the previ
     assert.equal(actual.bytes,expected.bytes);assert.equal(bytes.length,expected.bytes);
     assert.equal('sha256-'+createHash('sha256').update(bytes).digest('hex'),expected.hash);
     assert.equal(actual.hash,expected.hash);assert.equal(actual.criticality,expected.criticality);
+    const installed=candidate.assets.find(asset=>asset.path===expected.path);
+    assert.ok(installed,`retained v105 correction ${expected.path}`);
+    for(const key of ['bytes','hash','criticality'])assert.equal(installed[key],expected[key]);
   }
   assert.equal(current.assets.reduce((n,a)=>n+a.bytes,0)-baseline.assets.reduce((n,a)=>n+a.bytes,0),V105_ASSET_BYTES_DELTA);
   const update=evaluateUpdate({installedManifest:baseline,publishedManifest:current,storedHashes:new Set(baseline.assets.map(a=>a.hash))});
