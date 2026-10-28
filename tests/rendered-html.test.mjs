@@ -1735,7 +1735,7 @@ test("exposes localhost-only QA routes and wires deterministic battle and lifecy
   assert.match(game, /resolveTataraStrikeDamage\(f\.damage, tataraTarget\)[\s\S]*humanAttackMultiplier\(f\.kind, target\.kind, targetHpRatio, target\.marked > 0\)/);
   assert.match(game, /effectDistance\(candidate, f\) <= preview\.radius/);
   assert.match(game, /data-portrait=\{portraitArt \? "approved" : "diagnostic"\}/);
-  assert.match(game, /style=\{portraitArt \? \{ "--unit-card-art": `url\('\$\{portraitArt\}'\)` \} as CSSProperties : undefined\}/);
+  assert.match(game, /style=\{portraitArt \? \{ "--unit-card-art": `url\('\$\{portraitArt\}'\)`, \.\.\.\(externalSessionActive \? v100PortraitFraming\(combatKindToCampaignUnitId\(card.kind\)\) : \{\}\) \} as CSSProperties : undefined\}/);
   assert.match(game, /className="diagnostic-portrait" aria-hidden="true">\{card\.kind === "guardian" \? "盾" : "工"\}/);
   assert.match(css, /\.diagnostic-portrait \{[^}]*display:grid; place-items:center;[^}]*background:linear-gradient\(155deg,#354443,#18201f\);/);
   assert.match(game, /g\.supportGauge = 0/);

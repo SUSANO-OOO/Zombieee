@@ -15,6 +15,7 @@ import {V177_RETIRED_JOINT_SOURCE_ASSETS,V177_JOINT_ASSET_ADDITIONS} from '../sc
 const kinds=['brute','brawler','crazy-king','kumaverson'];
 const transform=(m,[x,y])=>[m[0]*x+m[2]*y+m[4],m[1]*x+m[3]*y+m[5]],distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
+const headRevisions=JSON.parse(await readFile('assets/source/quality-20261028/identity/head-runtime-provenance.json')).entries;
 const pixels=async url=>sharp(await readFile(url)).ensureAlpha().raw().toBuffer();
 function inside([x,y],polygon){
  let hit=false;for(let i=0,j=polygon.length-1;i<polygon.length;j=i++){
@@ -93,12 +94,15 @@ for(const kind of kinds){
   for(const state of ['hit-light','death','ability'])assert.equal(v177JointPose(kind,{requestedState:state},{}),null);
   assert.equal(v177JointPose(kind,{requestedState:'active'},{},{ownedPose:true}),null);
  });
- test(kind+': original head, hands, weapon and visible costume survive, with an opaque contact point at the exact rendered socket',async()=>{
+ test(kind+': source body and weapon survive the independently bound head revision, with an opaque contact at the rendered socket',async()=>{
   if(kind==='brawler'){
    const reference=await pixels(new URL('identity-reference.png',dir)),head=await pixels(new URL('head.png',dir)),shirt=await pixels(new URL('torso.png',dir));let originalHead=0;
    for(let i=0;i<head.length;i+=4)if(head[i+3]>=32&&shirt[i+3]===0){assert.deepEqual(head.subarray(i,i+4),reference.subarray(i,i+4),'Photo-bound full-body reference head');originalHead++;}
    assert.ok(originalHead>1000);assert.equal(hash(await readFile(new URL('identity-reference.png',dir))),d.sourceSha256);
-   const texture=await pixels(new URL('../public'+atlas.path,import.meta.url));let authoredPaint=0;
+   // Preserve the original complete paint proof, then bind the current head
+   // derivative below. quality-character-heads checks every outside-head pixel.
+   const originalPath=headRevisions.find(a=>a.kind===kind)?.basePath??atlas.path;
+   const texture=await pixels(new URL('../public'+originalPath,import.meta.url));let authoredPaint=0;
    for(const part of atlas.parts){
     const source=d.parts.find(p=>p.name===part.name),bytes=await readFile(new URL(source.file,dir));assert.equal(hash(bytes),source.sha256);
     const b=part.destination,s=part.source,expected=await sharp(bytes).extract({left:b.x,top:b.y,width:b.w,height:b.h}).resize(s.w,s.h,{kernel:'lanczos3'}).ensureAlpha().raw().toBuffer();
@@ -135,7 +139,9 @@ for(const kind of kinds){
   }
   const binding=await readFile(new URL('../public'+d.identityBinding.path,import.meta.url));assert.equal(hash(binding),d.identityBinding.sourceSha256);
   const weapon=await pixels(new URL('weapon-and-hands.png',dir)),[mx,my]=atlas.muzzle;assert.ok(weapon[(my*480+mx)*4+3]>=32,'Contact marker must touch the original weapon or fist');
-  const bytes=await readFile(new URL('../public'+atlas.path,import.meta.url)),expected=V177_JOINT_ASSET_ADDITIONS.map(applyV105Source).find(a=>a.path===atlas.path),metadata=await sharp(bytes).metadata();
+  const revision=headRevisions.find(a=>a.kind===kind);
+  const bytes=await readFile(new URL('../public'+atlas.path,import.meta.url)),expected=revision?{path:revision.assetPath,bytes:revision.bytes,hash:'sha256-'+revision.sha256}:V177_JOINT_ASSET_ADDITIONS.map(applyV105Source).find(a=>a.path===atlas.path),metadata=await sharp(bytes).metadata();
+  assert.equal(atlas.path,expected.path);
   assert.equal(bytes.length,expected.bytes);assert.equal('sha256-'+hash(bytes),expected.hash);assert.equal(metadata.width*metadata.height*4,atlas.decodedBytes);assert.ok(atlas.decodedBytes<=512*1024);
   for(const direction of ['left','right'])for(const scale of [.12,.2]){
    const plan=v177JointPose(kind,{requestedState:'active',clipProgress:.26},{locomotionPhase:.1371,locomotionSettle:1}),{raw,calls,frame,size}=record(kind,plan,{direction,scale,x:300,y:500});

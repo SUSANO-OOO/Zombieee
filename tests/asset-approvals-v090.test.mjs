@@ -119,7 +119,7 @@ test("Version 0.9.0 visual approval ledger covers every active file and exact by
   }
 });
 
-test("each active character resolves only to its producer master and both builds fail closed on source revision", async () => {
+test("canonical masters remain bound and each current portrait belongs to its own candidate provenance", async () => {
   const ledger = JSON.parse(await readFile(LEDGER_PATH, "utf8"));
   const v0995Ledger = JSON.parse(await readFile(path.join(ROOT, "docs", "ASSET_APPROVALS_0.9.9.5.json"), "utf8"));
   const records = new Map(ledger.assets.map((record) => [record.assetId, record]));
@@ -135,6 +135,17 @@ test("each active character resolves only to its producer master and both builds
     ...v0995Ledger.assets.map(({ path: assetPath }) => assetPath),
   ]);
   for (const [kind, prefix] of unitContracts) {
+    const candidateName = {"mrs-chiha":"chiha","miyamoto-musashi":"musashi","mayo-chan":"mayo"}[kind] ?? kind;
+    const provenance = JSON.parse(await readFile(path.join(ROOT, `assets/source/quality-20261028/identity/${candidateName}-runtime-provenance.json`), "utf8"));
+    const stageProvenance = JSON.parse(await readFile(path.join(ROOT, 'assets/source/quality-20261028/identity/stage-portrait-provenance-r1.json'), "utf8"));
+    const stageOutputs = stageProvenance.records.filter(row=>row.kind===candidateName).map(row=>({path:row.output,bytes:row.bytes,sha256:row.sha256}));
+    const candidatePaths = new Set();
+    for (const output of [...provenance.outputs,...stageOutputs]) {
+      const bytes = await readFile(path.join(ROOT, output.path));
+      assert.equal(bytes.length, output.bytes);
+      assert.equal(createHash("sha256").update(bytes).digest("hex"), output.sha256);
+      candidatePaths.add(output.path);
+    }
     const masterId = `${prefix}-IDENTITY@r1`;
     const unitRecords = ledger.assets.filter(({ assetId }) => assetId.startsWith(`${prefix}-`));
     for (const record of unitRecords) {
@@ -157,7 +168,7 @@ test("each active character resolves only to its producer master and both builds
       profile.personnelCard.path,
       profile.battleSprite.path,
     ].map((assetPath) => `public${assetPath}`);
-    for (const runtimePath of runtimePaths) assert.equal(registeredPaths.has(runtimePath), true, runtimePath);
+    for (const runtimePath of runtimePaths) assert.equal(registeredPaths.has(runtimePath) || candidatePaths.has(runtimePath), true, runtimePath);
     if (kind === "mayo-chan") {
       assert.equal(registeredPaths.has(`public${profile.feralBattleSprite.path}`), true);
     }

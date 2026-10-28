@@ -12,10 +12,13 @@ import {V177_JOINT_ASSET_ADDITIONS} from '../scripts/v177-joint-asset-contract.m
 import {V177_JOINT_ATLASES,v177JointPose,drawV177JointPose,v177RenderedJointWeaponSocket} from '../app/v177JointPresentation.js';
 const transform=(m,[x,y])=>[m[0]*x+m[2]*y+m[4],m[1]*x+m[3]*y+m[5]],distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 const hash=b=>createHash('sha256').update(b).digest('hex');
+const headRevisions=JSON.parse(await readFile('assets/source/quality-20261028/identity/head-runtime-provenance.json')).entries;
 test('Babayaga original contact planes and original suppressed-pistol muzzle survive actual native-frame scaling and facing; atlas loads only with its enemy',async()=>{
  for(const kind of ['babayaga']){
   const atlas=V177_JOINT_ATLASES[kind],d=JSON.parse(await readFile('assets/source/v100/joints/'+kind+'-r1/parts.json'));
-  const bytes=await readFile('public'+atlas.path),expected=V177_JOINT_ASSET_ADDITIONS.find(a=>a.path===atlas.path),meta=await sharp(bytes).metadata();
+  const revision=headRevisions.find(a=>a.kind===kind);
+  const bytes=await readFile('public'+atlas.path),expected=revision?{path:revision.assetPath,bytes:revision.bytes,hash:'sha256-'+revision.sha256}:V177_JOINT_ASSET_ADDITIONS.find(a=>a.path===atlas.path),meta=await sharp(bytes).metadata();
+  assert.equal(atlas.path,expected.path);
   assert.equal(bytes.length,expected.bytes);assert.equal('sha256-'+hash(bytes),expected.hash);assert.equal(meta.width*meta.height*4,atlas.decodedBytes);assert.ok(atlas.decodedBytes<=512*1024);
   for(const [pose,binding]of Object.entries(d.poseBindings)){const frame=spriteFrameFor(kind,pose,'right');assert.equal(frame.path,binding.path);assert.deepEqual(frame.sourceRect,binding.sourceRect);assert.equal(frame.flipX,false);}
   for(const direction of ['left','right'])for(const scale of [.12,.2]){
