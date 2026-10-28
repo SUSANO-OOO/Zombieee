@@ -3563,7 +3563,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 3567623,
       "bundleBytes": 925037,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/music/battle-stage2.mp3",
@@ -3578,7 +3578,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 4492660,
       "bundleBytes": 617862,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/music/battle-stage3.mp3",
@@ -3593,7 +3593,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 5110522,
       "bundleBytes": 941189,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/music/boss.mp3",
@@ -3608,7 +3608,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 6051711,
       "bundleBytes": 968316,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/music/defeat.mp3",
@@ -3623,7 +3623,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 7116751,
       "bundleBytes": 317185,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/music/intro.mp3",
@@ -3638,7 +3638,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 1236298,
       "bundleBytes": 1129998,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/music/map.mp3",
@@ -3653,7 +3653,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 2366296,
       "bundleBytes": 1201327,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/music/title.mp3",
@@ -3668,7 +3668,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 120806,
       "bundleBytes": 1115492,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/music/victory.mp3",
@@ -3683,7 +3683,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 7020027,
       "bundleBytes": 96724,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/corpse-burn-loop.mp3",
@@ -3698,7 +3698,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 7737797,
       "bundleBytes": 28647,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/corpse-ignite.mp3",
@@ -3713,7 +3713,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 7732678,
       "bundleBytes": 5119,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-abomination-attack-01.mp3",
@@ -3726,9 +3726,9 @@
       "audioId": "enemy-abomination-attack-01",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8243874,
+      "bundleOffset": 8254450,
       "bundleBytes": 4319,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-abomination-attack-02.mp3",
@@ -3741,9 +3741,9 @@
       "audioId": "enemy-abomination-attack-02",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8248193,
+      "bundleOffset": 8258769,
       "bundleBytes": 7952,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-abomination-death-01.mp3",
@@ -3756,9 +3756,9 @@
       "audioId": "enemy-abomination-death-01",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8268632,
+      "bundleOffset": 8279208,
       "bundleBytes": 10698,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-abomination-death-02.mp3",
@@ -3771,9 +3771,9 @@
       "audioId": "enemy-abomination-death-02",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8279330,
+      "bundleOffset": 8289906,
       "bundleBytes": 5905,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-abomination-hurt-01.mp3",
@@ -3786,9 +3786,9 @@
       "audioId": "enemy-abomination-hurt-01",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8256145,
+      "bundleOffset": 8266721,
       "bundleBytes": 6499,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-abomination-hurt-02.mp3",
@@ -3801,9 +3801,9 @@
       "audioId": "enemy-abomination-hurt-02",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8262644,
+      "bundleOffset": 8273220,
       "bundleBytes": 5988,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-crusher-attack-01.mp3",
@@ -3816,9 +3816,9 @@
       "audioId": "enemy-crusher-attack-01",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8162303,
+      "bundleOffset": 8172879,
       "bundleBytes": 4790,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-crusher-attack-02.mp3",
@@ -3831,9 +3831,9 @@
       "audioId": "enemy-crusher-attack-02",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8167093,
+      "bundleOffset": 8177669,
       "bundleBytes": 6902,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-crusher-death-01.mp3",
@@ -3846,9 +3846,9 @@
       "audioId": "enemy-crusher-death-01",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8187722,
+      "bundleOffset": 8198298,
       "bundleBytes": 4006,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-crusher-death-02.mp3",
@@ -3861,9 +3861,9 @@
       "audioId": "enemy-crusher-death-02",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8191728,
+      "bundleOffset": 8202304,
       "bundleBytes": 9415,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-crusher-hurt-01.mp3",
@@ -3876,9 +3876,9 @@
       "audioId": "enemy-crusher-hurt-01",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8173995,
+      "bundleOffset": 8184571,
       "bundleBytes": 6668,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-crusher-hurt-02.mp3",
@@ -3891,9 +3891,9 @@
       "audioId": "enemy-crusher-hurt-02",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8180663,
+      "bundleOffset": 8191239,
       "bundleBytes": 7059,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-runner-attack-01.mp3",
@@ -3906,9 +3906,9 @@
       "audioId": "enemy-runner-attack-01",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8092694,
+      "bundleOffset": 8103270,
       "bundleBytes": 6901,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-runner-attack-02.mp3",
@@ -3921,9 +3921,9 @@
       "audioId": "enemy-runner-attack-02",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8099595,
+      "bundleOffset": 8110171,
       "bundleBytes": 5416,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-runner-death-01.mp3",
@@ -3936,9 +3936,9 @@
       "audioId": "enemy-runner-death-01",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8114565,
+      "bundleOffset": 8125141,
       "bundleBytes": 8600,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-runner-death-02.mp3",
@@ -3951,9 +3951,9 @@
       "audioId": "enemy-runner-death-02",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8123165,
+      "bundleOffset": 8133741,
       "bundleBytes": 10265,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-runner-hurt-01.mp3",
@@ -3966,9 +3966,9 @@
       "audioId": "enemy-runner-hurt-01",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8105011,
+      "bundleOffset": 8115587,
       "bundleBytes": 4294,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-runner-hurt-02.mp3",
@@ -3981,9 +3981,9 @@
       "audioId": "enemy-runner-hurt-02",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8109305,
+      "bundleOffset": 8119881,
       "bundleBytes": 5260,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-shade-attack-01.mp3",
@@ -3996,9 +3996,9 @@
       "audioId": "enemy-shade-attack-01",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8201143,
+      "bundleOffset": 8211719,
       "bundleBytes": 5756,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-shade-attack-02.mp3",
@@ -4011,9 +4011,9 @@
       "audioId": "enemy-shade-attack-02",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8206899,
+      "bundleOffset": 8217475,
       "bundleBytes": 5675,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-shade-death-01.mp3",
@@ -4026,9 +4026,9 @@
       "audioId": "enemy-shade-death-01",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8231795,
+      "bundleOffset": 8242371,
       "bundleBytes": 5753,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-shade-death-02.mp3",
@@ -4041,9 +4041,9 @@
       "audioId": "enemy-shade-death-02",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8237548,
+      "bundleOffset": 8248124,
       "bundleBytes": 6326,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-shade-hurt-01.mp3",
@@ -4056,9 +4056,9 @@
       "audioId": "enemy-shade-hurt-01",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8212574,
+      "bundleOffset": 8223150,
       "bundleBytes": 9505,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-shade-hurt-02.mp3",
@@ -4071,9 +4071,9 @@
       "audioId": "enemy-shade-hurt-02",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8222079,
+      "bundleOffset": 8232655,
       "bundleBytes": 9716,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-spitter-attack-01.mp3",
@@ -4086,9 +4086,9 @@
       "audioId": "enemy-spitter-attack-01",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8133430,
+      "bundleOffset": 8144006,
       "bundleBytes": 5598,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-spitter-attack-02.mp3",
@@ -4101,9 +4101,9 @@
       "audioId": "enemy-spitter-attack-02",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8139028,
+      "bundleOffset": 8149604,
       "bundleBytes": 6928,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-spitter-death-01.mp3",
@@ -4116,9 +4116,9 @@
       "audioId": "enemy-spitter-death-01",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8152589,
+      "bundleOffset": 8163165,
       "bundleBytes": 5679,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-spitter-death-02.mp3",
@@ -4131,9 +4131,9 @@
       "audioId": "enemy-spitter-death-02",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8158268,
+      "bundleOffset": 8168844,
       "bundleBytes": 4035,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-spitter-hurt-01.mp3",
@@ -4146,9 +4146,9 @@
       "audioId": "enemy-spitter-hurt-01",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8145956,
+      "bundleOffset": 8156532,
       "bundleBytes": 2756,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-spitter-hurt-02.mp3",
@@ -4161,9 +4161,9 @@
       "audioId": "enemy-spitter-hurt-02",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8148712,
+      "bundleOffset": 8159288,
       "bundleBytes": 3877,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-takuya-attack-01.mp3",
@@ -4176,9 +4176,9 @@
       "audioId": "enemy-takuya-attack-01",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8365138,
+      "bundleOffset": 8375714,
       "bundleBytes": 9268,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-takuya-attack-02.mp3",
@@ -4191,9 +4191,9 @@
       "audioId": "enemy-takuya-attack-02",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8374406,
+      "bundleOffset": 8384982,
       "bundleBytes": 10070,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-takuya-death-01.mp3",
@@ -4206,9 +4206,9 @@
       "audioId": "enemy-takuya-death-01",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8399852,
+      "bundleOffset": 8410428,
       "bundleBytes": 9707,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-takuya-death-02.mp3",
@@ -4221,9 +4221,9 @@
       "audioId": "enemy-takuya-death-02",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8409559,
+      "bundleOffset": 8420135,
       "bundleBytes": 9392,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-takuya-hurt-01.mp3",
@@ -4236,9 +4236,9 @@
       "audioId": "enemy-takuya-hurt-01",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8384476,
+      "bundleOffset": 8395052,
       "bundleBytes": 7572,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-takuya-hurt-02.mp3",
@@ -4251,9 +4251,9 @@
       "audioId": "enemy-takuya-hurt-02",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8392048,
+      "bundleOffset": 8402624,
       "bundleBytes": 7804,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-turned-attack-01.mp3",
@@ -4266,9 +4266,9 @@
       "audioId": "enemy-turned-attack-01",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8285235,
+      "bundleOffset": 8295811,
       "bundleBytes": 6459,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-turned-attack-02.mp3",
@@ -4281,9 +4281,9 @@
       "audioId": "enemy-turned-attack-02",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8291694,
+      "bundleOffset": 8302270,
       "bundleBytes": 12561,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-turned-death-01.mp3",
@@ -4296,9 +4296,9 @@
       "audioId": "enemy-turned-death-01",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8328315,
+      "bundleOffset": 8338891,
       "bundleBytes": 16652,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-turned-death-02.mp3",
@@ -4311,9 +4311,9 @@
       "audioId": "enemy-turned-death-02",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8344967,
+      "bundleOffset": 8355543,
       "bundleBytes": 20171,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-turned-hurt-01.mp3",
@@ -4326,9 +4326,9 @@
       "audioId": "enemy-turned-hurt-01",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8304255,
+      "bundleOffset": 8314831,
       "bundleBytes": 9095,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-turned-hurt-02.mp3",
@@ -4341,9 +4341,9 @@
       "audioId": "enemy-turned-hurt-02",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8313350,
+      "bundleOffset": 8323926,
       "bundleBytes": 14965,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-walker-attack-01.mp3",
@@ -4356,9 +4356,9 @@
       "audioId": "enemy-walker-attack-01",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8056114,
+      "bundleOffset": 8066690,
       "bundleBytes": 4346,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-walker-attack-02.mp3",
@@ -4371,9 +4371,9 @@
       "audioId": "enemy-walker-attack-02",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8060460,
+      "bundleOffset": 8071036,
       "bundleBytes": 4424,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-walker-death-01.mp3",
@@ -4386,9 +4386,9 @@
       "audioId": "enemy-walker-death-01",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8080507,
+      "bundleOffset": 8091083,
       "bundleBytes": 8023,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-walker-death-02.mp3",
@@ -4401,9 +4401,9 @@
       "audioId": "enemy-walker-death-02",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8088530,
+      "bundleOffset": 8099106,
       "bundleBytes": 4164,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-walker-hurt-01.mp3",
@@ -4416,9 +4416,9 @@
       "audioId": "enemy-walker-hurt-01",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8064884,
+      "bundleOffset": 8075460,
       "bundleBytes": 6351,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/enemy-walker-hurt-02.mp3",
@@ -4431,9 +4431,9 @@
       "audioId": "enemy-walker-hurt-02",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8071235,
+      "bundleOffset": 8081811,
       "bundleBytes": 9272,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/human-female-attack-01.mp3",
@@ -4446,9 +4446,9 @@
       "audioId": "human-female-attack-01",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 7855763,
+      "bundleOffset": 7866339,
       "bundleBytes": 3669,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/human-female-attack-02.mp3",
@@ -4461,9 +4461,9 @@
       "audioId": "human-female-attack-02",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 7859432,
+      "bundleOffset": 7870008,
       "bundleBytes": 4192,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/human-female-death-01.mp3",
@@ -4476,9 +4476,9 @@
       "audioId": "human-female-death-01",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 7872891,
+      "bundleOffset": 7883467,
       "bundleBytes": 17690,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/human-female-death-02.mp3",
@@ -4491,9 +4491,9 @@
       "audioId": "human-female-death-02",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 7890581,
+      "bundleOffset": 7901157,
       "bundleBytes": 7114,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/human-female-hurt-01.mp3",
@@ -4506,9 +4506,9 @@
       "audioId": "human-female-hurt-01",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 7863624,
+      "bundleOffset": 7874200,
       "bundleBytes": 4973,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/human-female-hurt-02.mp3",
@@ -4521,9 +4521,9 @@
       "audioId": "human-female-hurt-02",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 7868597,
+      "bundleOffset": 7879173,
       "bundleBytes": 4294,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/human-male-heavy-attack-01.mp3",
@@ -4536,9 +4536,9 @@
       "audioId": "human-male-heavy-attack-01",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 7897695,
+      "bundleOffset": 7908271,
       "bundleBytes": 6018,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/human-male-heavy-attack-02.mp3",
@@ -4551,9 +4551,9 @@
       "audioId": "human-male-heavy-attack-02",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 7903713,
+      "bundleOffset": 7914289,
       "bundleBytes": 3747,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/human-male-heavy-death-01.mp3",
@@ -4566,9 +4566,9 @@
       "audioId": "human-male-heavy-death-01",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 7927999,
+      "bundleOffset": 7938575,
       "bundleBytes": 45354,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/human-male-heavy-death-02.mp3",
@@ -4581,9 +4581,9 @@
       "audioId": "human-male-heavy-death-02",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 7973353,
+      "bundleOffset": 7983929,
       "bundleBytes": 33956,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/human-male-heavy-hurt-01.mp3",
@@ -4596,9 +4596,9 @@
       "audioId": "human-male-heavy-hurt-01",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 7907460,
+      "bundleOffset": 7918036,
       "bundleBytes": 9930,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/human-male-heavy-hurt-02.mp3",
@@ -4611,9 +4611,9 @@
       "audioId": "human-male-heavy-hurt-02",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 7917390,
+      "bundleOffset": 7927966,
       "bundleBytes": 10609,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/human-male-light-attack-01.mp3",
@@ -4626,9 +4626,9 @@
       "audioId": "human-male-light-attack-01",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8007309,
+      "bundleOffset": 8017885,
       "bundleBytes": 8207,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/human-male-light-attack-02.mp3",
@@ -4641,9 +4641,9 @@
       "audioId": "human-male-light-attack-02",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8015516,
+      "bundleOffset": 8026092,
       "bundleBytes": 8836,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/human-male-light-death-01.mp3",
@@ -4656,9 +4656,9 @@
       "audioId": "human-male-light-death-01",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8038969,
+      "bundleOffset": 8049545,
       "bundleBytes": 10137,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/human-male-light-death-02.mp3",
@@ -4671,9 +4671,9 @@
       "audioId": "human-male-light-death-02",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8049106,
+      "bundleOffset": 8059682,
       "bundleBytes": 7008,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/human-male-light-hurt-01.mp3",
@@ -4686,9 +4686,9 @@
       "audioId": "human-male-light-hurt-01",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8024352,
+      "bundleOffset": 8034928,
       "bundleBytes": 7297,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/human-male-light-hurt-02.mp3",
@@ -4701,9 +4701,9 @@
       "audioId": "human-male-light-hurt-02",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8031649,
+      "bundleOffset": 8042225,
       "bundleBytes": 7320,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/infection-twitch-01.mp3",
@@ -4718,7 +4718,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 7722653,
       "bundleBytes": 3956,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/infection-warning-01.mp3",
@@ -4733,7 +4733,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 7726609,
       "bundleBytes": 6069,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/radio-close.mp3",
@@ -4748,7 +4748,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 7514604,
       "bundleBytes": 4506,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/radio-open.mp3",
@@ -4763,7 +4763,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 7454553,
       "bundleBytes": 60051,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/radio-static-loop.mp3",
@@ -4778,7 +4778,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 7519110,
       "bundleBytes": 44534,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/support-airstrike.mp3",
@@ -4793,7 +4793,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 7563644,
       "bundleBytes": 39180,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/support-barrier.mp3",
@@ -4808,7 +4808,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 7602824,
       "bundleBytes": 6765,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/support-explosion.mp3",
@@ -4823,7 +4823,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 7609589,
       "bundleBytes": 3479,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/support-heal.mp3",
@@ -4838,7 +4838,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 7613068,
       "bundleBytes": 23326,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/support-pod-deploy.mp3",
@@ -4853,7 +4853,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 7636394,
       "bundleBytes": 68772,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/support-pod-impact.mp3",
@@ -4868,7 +4868,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 7705166,
       "bundleBytes": 17487,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/ui-cancel.mp3",
@@ -4883,7 +4883,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 7433936,
       "bundleBytes": 1922,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/ui-confirm.mp3",
@@ -4898,7 +4898,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 7435858,
       "bundleBytes": 3897,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/ui-error.mp3",
@@ -4913,7 +4913,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 7439755,
       "bundleBytes": 4714,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/ui-hover.mp3",
@@ -4928,7 +4928,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 7444469,
       "bundleBytes": 6677,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/ui-select.mp3",
@@ -4943,7 +4943,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 7451146,
       "bundleBytes": 3407,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/voice-babayaga-attack.mp3",
@@ -4956,9 +4956,9 @@
       "audioId": "voice-babayaga-attack",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8585465,
+      "bundleOffset": 8596041,
       "bundleBytes": 4432,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/voice-babayaga-death.mp3",
@@ -4971,9 +4971,9 @@
       "audioId": "voice-babayaga-death",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8594956,
+      "bundleOffset": 8605532,
       "bundleBytes": 10702,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/voice-babayaga-deploy.mp3",
@@ -4986,9 +4986,9 @@
       "audioId": "voice-babayaga-deploy",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8579466,
+      "bundleOffset": 8590042,
       "bundleBytes": 5999,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/voice-babayaga-hurt.mp3",
@@ -5001,9 +5001,9 @@
       "audioId": "voice-babayaga-hurt",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8589897,
+      "bundleOffset": 8600473,
       "bundleBytes": 5059,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/voice-crazy-king-attack.mp3",
@@ -5016,9 +5016,9 @@
       "audioId": "voice-crazy-king-attack",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8533081,
+      "bundleOffset": 8543657,
       "bundleBytes": 4432,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/voice-crazy-king-death.mp3",
@@ -5031,9 +5031,9 @@
       "audioId": "voice-crazy-king-death",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8542572,
+      "bundleOffset": 8553148,
       "bundleBytes": 10702,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/voice-crazy-king-deploy.mp3",
@@ -5046,9 +5046,9 @@
       "audioId": "voice-crazy-king-deploy",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8527082,
+      "bundleOffset": 8537658,
       "bundleBytes": 5999,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/voice-crazy-king-hurt.mp3",
@@ -5061,9 +5061,9 @@
       "audioId": "voice-crazy-king-hurt",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8537513,
+      "bundleOffset": 8548089,
       "bundleBytes": 5059,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/voice-kumaverson-attack.mp3",
@@ -5076,9 +5076,9 @@
       "audioId": "voice-kumaverson-attack",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8559273,
+      "bundleOffset": 8569849,
       "bundleBytes": 4432,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/voice-kumaverson-death.mp3",
@@ -5091,9 +5091,9 @@
       "audioId": "voice-kumaverson-death",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8568764,
+      "bundleOffset": 8579340,
       "bundleBytes": 10702,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/voice-kumaverson-deploy.mp3",
@@ -5106,9 +5106,9 @@
       "audioId": "voice-kumaverson-deploy",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8553274,
+      "bundleOffset": 8563850,
       "bundleBytes": 5999,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/voice-kumaverson-hurt.mp3",
@@ -5121,9 +5121,9 @@
       "audioId": "voice-kumaverson-hurt",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8563705,
+      "bundleOffset": 8574281,
       "bundleBytes": 5059,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/weapon-barrage-01.mp3",
@@ -5138,7 +5138,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 7766444,
       "bundleBytes": 12605,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/weapon-barrage-02.mp3",
@@ -5153,7 +5153,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 7779049,
       "bundleBytes": 8230,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/weapon-chainsaw-attack.mp3",
@@ -5166,9 +5166,9 @@
       "audioId": "weapon-chainsaw-attack",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8442862,
+      "bundleOffset": 8453438,
       "bundleBytes": 6313,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/weapon-chainsaw-flesh-hit.mp3",
@@ -5181,9 +5181,9 @@
       "audioId": "weapon-chainsaw-flesh-hit",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8449175,
+      "bundleOffset": 8459751,
       "bundleBytes": 5059,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/weapon-chainsaw-hard-hit.mp3",
@@ -5196,9 +5196,9 @@
       "audioId": "weapon-chainsaw-hard-hit",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8454234,
+      "bundleOffset": 8464810,
       "bundleBytes": 6626,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/weapon-chainsaw-idle-loop.mp3",
@@ -5211,9 +5211,9 @@
       "audioId": "weapon-chainsaw-idle-loop",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8432474,
+      "bundleOffset": 8443050,
       "bundleBytes": 10388,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/weapon-chainsaw-start.mp3",
@@ -5226,9 +5226,9 @@
       "audioId": "weapon-chainsaw-start",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8418951,
+      "bundleOffset": 8429527,
       "bundleBytes": 13523,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/weapon-chainsaw-stop.mp3",
@@ -5241,9 +5241,9 @@
       "audioId": "weapon-chainsaw-stop",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8460860,
+      "bundleOffset": 8471436,
       "bundleBytes": 10075,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/weapon-crowbar-01.mp3",
@@ -5258,7 +5258,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 7787279,
       "bundleBytes": 3409,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/weapon-crowbar-02.mp3",
@@ -5273,7 +5273,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 7790688,
       "bundleBytes": 2934,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/weapon-gunner-01.mp3",
@@ -5288,7 +5288,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 7793622,
       "bundleBytes": 9895,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/weapon-gunner-02.mp3",
@@ -5303,7 +5303,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 7803517,
       "bundleBytes": 9790,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/weapon-hammer-01.mp3",
@@ -5316,9 +5316,9 @@
       "audioId": "weapon-hammer-01",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 7813307,
+      "bundleOffset": 7823883,
       "bundleBytes": 2313,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/weapon-hammer-02.mp3",
@@ -5331,9 +5331,9 @@
       "audioId": "weapon-hammer-02",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 7815620,
+      "bundleOffset": 7826196,
       "bundleBytes": 1841,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/weapon-melee-impact-01.mp3",
@@ -5346,9 +5346,9 @@
       "audioId": "weapon-melee-impact-01",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 7817461,
+      "bundleOffset": 7828037,
       "bundleBytes": 2179,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/weapon-melee-impact-02.mp3",
@@ -5361,9 +5361,9 @@
       "audioId": "weapon-melee-impact-02",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 7819640,
+      "bundleOffset": 7830216,
       "bundleBytes": 1997,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/weapon-melee-swing-01.mp3",
@@ -5376,9 +5376,9 @@
       "audioId": "weapon-melee-swing-01",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 7821637,
+      "bundleOffset": 7832213,
       "bundleBytes": 2339,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/weapon-melee-swing-02.mp3",
@@ -5391,9 +5391,9 @@
       "audioId": "weapon-melee-swing-02",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 7823976,
+      "bundleOffset": 7834552,
       "bundleBytes": 2184,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/weapon-pan-heavy-hit.mp3",
@@ -5406,9 +5406,9 @@
       "audioId": "weapon-pan-heavy-hit",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8482934,
+      "bundleOffset": 8493510,
       "bundleBytes": 9448,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/weapon-pan-hit.mp3",
@@ -5421,9 +5421,9 @@
       "audioId": "weapon-pan-hit",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8475054,
+      "bundleOffset": 8485630,
       "bundleBytes": 7880,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/weapon-pan-stun.mp3",
@@ -5436,9 +5436,9 @@
       "audioId": "weapon-pan-stun",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8492382,
+      "bundleOffset": 8502958,
       "bundleBytes": 11015,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/weapon-pan-swing.mp3",
@@ -5451,9 +5451,9 @@
       "audioId": "weapon-pan-swing",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8470935,
+      "bundleOffset": 8481511,
       "bundleBytes": 4119,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/weapon-rifle-01.mp3",
@@ -5466,9 +5466,9 @@
       "audioId": "weapon-rifle-01",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 7826160,
+      "bundleOffset": 7836736,
       "bundleBytes": 11276,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/weapon-rifle-02.mp3",
@@ -5481,9 +5481,9 @@
       "audioId": "weapon-rifle-02",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 7837436,
+      "bundleOffset": 7848012,
       "bundleBytes": 11222,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/weapon-special-kill.mp3",
@@ -5496,9 +5496,9 @@
       "audioId": "weapon-special-kill",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8518575,
+      "bundleOffset": 8529151,
       "bundleBytes": 8507,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/weapon-suppressed-hit.mp3",
@@ -5511,9 +5511,9 @@
       "audioId": "weapon-suppressed-hit",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8506576,
+      "bundleOffset": 8517152,
       "bundleBytes": 3805,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/weapon-suppressed-pistol.mp3",
@@ -5526,9 +5526,9 @@
       "audioId": "weapon-suppressed-pistol",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8503397,
+      "bundleOffset": 8513973,
       "bundleBytes": 3179,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/weapon-suppressed-reload.mp3",
@@ -5541,9 +5541,9 @@
       "audioId": "weapon-suppressed-reload",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8510381,
+      "bundleOffset": 8520957,
       "bundleBytes": 8194,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/weapon-unarmed-01.mp3",
@@ -5556,9 +5556,9 @@
       "audioId": "weapon-unarmed-01",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 7848658,
+      "bundleOffset": 7859234,
       "bundleBytes": 3618,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v060/sfx/weapon-unarmed-02.mp3",
@@ -5571,9 +5571,9 @@
       "audioId": "weapon-unarmed-02",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 7852276,
+      "bundleOffset": 7862852,
       "bundleBytes": 3487,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v070/ambience/ambience-v070-collapse-city-loop.mp3",
@@ -5586,9 +5586,9 @@
       "audioId": "ambience-v070-collapse-city-loop",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 10692803,
+      "bundleOffset": 10703379,
       "bundleBytes": 112660,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v070/ambience/ambience-v070-crawler-canteen-loop.mp3",
@@ -5601,9 +5601,9 @@
       "audioId": "ambience-v070-crawler-canteen-loop",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 10918123,
+      "bundleOffset": 10928699,
       "bundleBytes": 112660,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v070/ambience/ambience-v070-crawler-ops-loop.mp3",
@@ -5616,9 +5616,9 @@
       "audioId": "ambience-v070-crawler-ops-loop",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 10805463,
+      "bundleOffset": 10816039,
       "bundleBytes": 112660,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v070/ambience/ambience-v070-kumaya-crisis-loop.mp3",
@@ -5631,9 +5631,9 @@
       "audioId": "ambience-v070-kumaya-crisis-loop",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 10129503,
+      "bundleOffset": 10140079,
       "bundleBytes": 112660,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v070/ambience/ambience-v070-kumaya-daily-loop.mp3",
@@ -5646,9 +5646,9 @@
       "audioId": "ambience-v070-kumaya-daily-loop",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 10016843,
+      "bundleOffset": 10027419,
       "bundleBytes": 112660,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v070/ambience/ambience-v070-medical-bay-loop.mp3",
@@ -5661,9 +5661,9 @@
       "audioId": "ambience-v070-medical-bay-loop",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 10467483,
+      "bundleOffset": 10478059,
       "bundleBytes": 112660,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v070/ambience/ambience-v070-radio-signal-loop.mp3",
@@ -5676,9 +5676,9 @@
       "audioId": "ambience-v070-radio-signal-loop",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 11030783,
+      "bundleOffset": 11041359,
       "bundleBytes": 84500,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v070/ambience/ambience-v070-rain-street-loop.mp3",
@@ -5691,9 +5691,9 @@
       "audioId": "ambience-v070-rain-street-loop",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 10242163,
+      "bundleOffset": 10252739,
       "bundleBytes": 112660,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v070/ambience/ambience-v070-stage2-engine-loop.mp3",
@@ -5706,9 +5706,9 @@
       "audioId": "ambience-v070-stage2-engine-loop",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 10354823,
+      "bundleOffset": 10365399,
       "bundleBytes": 112660,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v070/ambience/ambience-v070-stage3-wind-loop.mp3",
@@ -5721,9 +5721,9 @@
       "audioId": "ambience-v070-stage3-wind-loop",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 10580143,
+      "bundleOffset": 10590719,
       "bundleBytes": 112660,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v070/ambience/ambience-v070-station-gate-loop.mp3",
@@ -5736,9 +5736,9 @@
       "audioId": "ambience-v070-station-gate-loop",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 11115283,
+      "bundleOffset": 11125859,
       "bundleBytes": 112660,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v070/ambience/ambience-v070-station-platform-loop.mp3",
@@ -5751,9 +5751,9 @@
       "audioId": "ambience-v070-station-platform-loop",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 11227943,
+      "bundleOffset": 11238519,
       "bundleBytes": 112660,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v070/ambience/ambience-v070-station-seal-aftermath-loop.mp3",
@@ -5766,9 +5766,9 @@
       "audioId": "ambience-v070-station-seal-aftermath-loop",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 11453263,
+      "bundleOffset": 11463839,
       "bundleBytes": 84500,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v070/ambience/ambience-v070-station-tunnel-loop.mp3",
@@ -5781,9 +5781,9 @@
       "audioId": "ambience-v070-station-tunnel-loop",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 11340603,
+      "bundleOffset": 11351179,
       "bundleBytes": 112660,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v070/music/music-v070-collapse-montage.mp3",
@@ -5796,9 +5796,9 @@
       "audioId": "music-v070-collapse-montage",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 9056298,
+      "bundleOffset": 9066874,
       "bundleBytes": 112660,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v070/music/music-v070-crawler-briefing.mp3",
@@ -5811,9 +5811,9 @@
       "audioId": "music-v070-crawler-briefing",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 9281618,
+      "bundleOffset": 9292194,
       "bundleBytes": 112660,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v070/music/music-v070-crawler-life.mp3",
@@ -5826,9 +5826,9 @@
       "audioId": "music-v070-crawler-life",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8718318,
+      "bundleOffset": 8728894,
       "bundleBytes": 112660,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v070/music/music-v070-crawler-montage.mp3",
@@ -5841,9 +5841,9 @@
       "audioId": "music-v070-crawler-montage",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 9168958,
+      "bundleOffset": 9179534,
       "bundleBytes": 112660,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v070/music/music-v070-crawler-morning.mp3",
@@ -5856,9 +5856,9 @@
       "audioId": "music-v070-crawler-morning",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 9904183,
+      "bundleOffset": 9914759,
       "bundleBytes": 112660,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v070/music/music-v070-kumaya-daily.mp3",
@@ -5871,9 +5871,9 @@
       "audioId": "music-v070-kumaya-daily",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8605658,
+      "bundleOffset": 8616234,
       "bundleBytes": 112660,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v070/music/music-v070-rescue.mp3",
@@ -5886,9 +5886,9 @@
       "audioId": "music-v070-rescue",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 9732258,
+      "bundleOffset": 9742834,
       "bundleBytes": 59265,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v070/music/music-v070-return.mp3",
@@ -5901,9 +5901,9 @@
       "audioId": "music-v070-return",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 9791523,
+      "bundleOffset": 9802099,
       "bundleBytes": 112660,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v070/music/music-v070-stage2-tension.mp3",
@@ -5916,9 +5916,9 @@
       "audioId": "music-v070-stage2-tension",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8830978,
+      "bundleOffset": 8841554,
       "bundleBytes": 112660,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v070/music/music-v070-stage3-approach.mp3",
@@ -5931,9 +5931,9 @@
       "audioId": "music-v070-stage3-approach",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 8943638,
+      "bundleOffset": 8954214,
       "bundleBytes": 112660,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v070/music/music-v070-station-gate.mp3",
@@ -5946,9 +5946,9 @@
       "audioId": "music-v070-station-gate",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 9394278,
+      "bundleOffset": 9404854,
       "bundleBytes": 112660,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v070/music/music-v070-station-platform.mp3",
@@ -5961,9 +5961,9 @@
       "audioId": "music-v070-station-platform",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 9506938,
+      "bundleOffset": 9517514,
       "bundleBytes": 112660,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v070/music/music-v070-station-tunnel.mp3",
@@ -5976,9 +5976,9 @@
       "audioId": "music-v070-station-tunnel",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 9619598,
+      "bundleOffset": 9630174,
       "bundleBytes": 112660,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v070/sfx/sfx-v070-cart-stall.mp3",
@@ -5991,9 +5991,9 @@
       "audioId": "sfx-v070-cart-stall",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 11616451,
+      "bundleOffset": 11627027,
       "bundleBytes": 16111,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v070/sfx/sfx-v070-machine-stop.mp3",
@@ -6006,9 +6006,9 @@
       "audioId": "sfx-v070-machine-stop",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 11657085,
+      "bundleOffset": 11667661,
       "bundleBytes": 20865,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v070/sfx/sfx-v070-power-switch.mp3",
@@ -6021,9 +6021,9 @@
       "audioId": "sfx-v070-power-switch",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 11603997,
+      "bundleOffset": 11614573,
       "bundleBytes": 12454,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v070/sfx/sfx-v070-rescue-confirm.mp3",
@@ -6036,9 +6036,9 @@
       "audioId": "sfx-v070-rescue-confirm",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 11677950,
+      "bundleOffset": 11688526,
       "bundleBytes": 13917,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v070/sfx/sfx-v070-return-marker.mp3",
@@ -6051,9 +6051,9 @@
       "audioId": "sfx-v070-return-marker",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 11691867,
+      "bundleOffset": 11702443,
       "bundleBytes": 10625,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v070/sfx/sfx-v070-seal-engage.mp3",
@@ -6066,9 +6066,9 @@
       "audioId": "sfx-v070-seal-engage",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 11632562,
+      "bundleOffset": 11643138,
       "bundleBytes": 24523,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v070/sfx/sfx-v070-station-warning.mp3",
@@ -6081,9 +6081,9 @@
       "audioId": "sfx-v070-station-warning",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 11586057,
+      "bundleOffset": 11596633,
       "bundleBytes": 17940,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v070/sfx/sfx-v070-takuya-entrance.mp3",
@@ -6096,9 +6096,9 @@
       "audioId": "sfx-v070-takuya-entrance",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 11537763,
+      "bundleOffset": 11548339,
       "bundleBytes": 48294,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v070/sfx/sfx-v070-terminal-confirm.mp3",
@@ -6111,9 +6111,9 @@
       "audioId": "sfx-v070-terminal-confirm",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 11702492,
+      "bundleOffset": 11713068,
       "bundleBytes": 7700,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v080/sfx/weapon-suppressed-carbine-01.mp3",
@@ -6126,9 +6126,9 @@
       "audioId": "weapon-suppressed-carbine-01",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 11822877,
+      "bundleOffset": 11833453,
       "bundleBytes": 5060,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v080/sfx/weapon-suppressed-carbine-02.mp3",
@@ -6141,9 +6141,9 @@
       "audioId": "weapon-suppressed-carbine-02",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 11827937,
+      "bundleOffset": 11838513,
       "bundleBytes": 5060,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v090/sfx/ability-mayo-feral-end.wav",
@@ -6156,9 +6156,9 @@
       "audioId": "ability-mayo-feral-end",
       "audioType": "audio/wav",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 12097743,
+      "bundleOffset": 12108319,
       "bundleBytes": 37088,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v090/sfx/ability-mayo-feral-rush.wav",
@@ -6171,9 +6171,9 @@
       "audioId": "ability-mayo-feral-rush",
       "audioType": "audio/wav",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 12071239,
+      "bundleOffset": 12081815,
       "bundleBytes": 26504,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v090/sfx/ability-mayo-feral-start.wav",
@@ -6186,9 +6186,9 @@
       "audioId": "ability-mayo-feral-start",
       "audioType": "audio/wav",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 12044735,
+      "bundleOffset": 12055311,
       "bundleBytes": 26504,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v090/sfx/ability-mrs-chiha-salvo-cylinder.wav",
@@ -6201,9 +6201,9 @@
       "audioId": "ability-mrs-chiha-salvo-cylinder",
       "audioType": "audio/wav",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 11969252,
+      "bundleOffset": 11979828,
       "bundleBytes": 17684,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v090/sfx/ability-mrs-chiha-salvo-final.mp3",
@@ -6216,9 +6216,9 @@
       "audioId": "ability-mrs-chiha-salvo-final",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 11996741,
+      "bundleOffset": 12007317,
       "bundleBytes": 6313,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v090/sfx/ability-mrs-chiha-salvo-impact.mp3",
@@ -6231,9 +6231,9 @@
       "audioId": "ability-mrs-chiha-salvo-impact",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 11991368,
+      "bundleOffset": 12001944,
       "bundleBytes": 5373,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v090/sfx/ability-mrs-chiha-salvo-ready.mp3",
@@ -6246,9 +6246,9 @@
       "audioId": "ability-mrs-chiha-salvo-ready",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 11961372,
+      "bundleOffset": 11971948,
       "bundleBytes": 7880,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v090/sfx/ability-mrs-chiha-salvo-shot.mp3",
@@ -6261,9 +6261,9 @@
       "audioId": "ability-mrs-chiha-salvo-shot",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 11986936,
+      "bundleOffset": 11997512,
       "bundleBytes": 4432,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v090/sfx/ability-musashi-counter.mp3",
@@ -6276,9 +6276,9 @@
       "audioId": "ability-musashi-counter",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 12011918,
+      "bundleOffset": 12022494,
       "bundleBytes": 6313,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v090/sfx/ability-musashi-cross-guard.mp3",
@@ -6291,9 +6291,9 @@
       "audioId": "ability-musashi-cross-guard",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 12007486,
+      "bundleOffset": 12018062,
       "bundleBytes": 4432,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v090/sfx/ability-tky-light-blade-charge.mp3",
@@ -6306,9 +6306,9 @@
       "audioId": "ability-tky-light-blade-charge",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 11837429,
+      "bundleOffset": 11848005,
       "bundleBytes": 7880,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v090/sfx/ability-tky-light-blade-impact.mp3",
@@ -6321,9 +6321,9 @@
       "audioId": "ability-tky-light-blade-impact",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 11851622,
+      "bundleOffset": 11862198,
       "bundleBytes": 5373,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v090/sfx/ability-tky-light-blade-release.mp3",
@@ -6336,9 +6336,9 @@
       "audioId": "ability-tky-light-blade-release",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 11845309,
+      "bundleOffset": 11855885,
       "bundleBytes": 6313,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v090/sfx/boss-futago-cross-impact.wav",
@@ -6351,9 +6351,9 @@
       "audioId": "boss-futago-cross-impact",
       "audioType": "audio/wav",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 12971627,
+      "bundleOffset": 12982203,
       "bundleBytes": 63548,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v090/sfx/boss-futago-cross-warning.wav",
@@ -6366,9 +6366,9 @@
       "audioId": "boss-futago-cross-warning",
       "audioType": "audio/wav",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 12915135,
+      "bundleOffset": 12925711,
       "bundleBytes": 56492,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v090/sfx/boss-futago-entrance.wav",
@@ -6381,9 +6381,9 @@
       "audioId": "boss-futago-entrance",
       "audioType": "audio/wav",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 12839239,
+      "bundleOffset": 12849815,
       "bundleBytes": 75896,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v090/sfx/boss-gairen-entrance.wav",
@@ -6396,9 +6396,9 @@
       "audioId": "boss-gairen-entrance",
       "audioType": "audio/wav",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 12643303,
+      "bundleOffset": 12653879,
       "bundleBytes": 75896,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v090/sfx/boss-gairen-shell-sweep.wav",
@@ -6411,9 +6411,9 @@
       "audioId": "boss-gairen-shell-sweep",
       "audioType": "audio/wav",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 12775691,
+      "bundleOffset": 12786267,
       "bundleBytes": 63548,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v090/sfx/boss-gairen-shell-warning.wav",
@@ -6426,9 +6426,9 @@
       "audioId": "boss-gairen-shell-warning",
       "audioType": "audio/wav",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 12719199,
+      "bundleOffset": 12729775,
       "bundleBytes": 56492,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v090/sfx/boss-mother-brood-eruption.wav",
@@ -6441,9 +6441,9 @@
       "audioId": "boss-mother-brood-eruption",
       "audioType": "audio/wav",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 12383819,
+      "bundleOffset": 12394395,
       "bundleBytes": 63548,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v090/sfx/boss-mother-brood-warning.wav",
@@ -6456,9 +6456,9 @@
       "audioId": "boss-mother-brood-warning",
       "audioType": "audio/wav",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 12327327,
+      "bundleOffset": 12337903,
       "bundleBytes": 56492,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v090/sfx/boss-mother-entrance.wav",
@@ -6471,9 +6471,9 @@
       "audioId": "boss-mother-entrance",
       "audioType": "audio/wav",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 12251431,
+      "bundleOffset": 12262007,
       "bundleBytes": 75896,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v090/sfx/boss-ooguchi-charge-impact.wav",
@@ -6486,9 +6486,9 @@
       "audioId": "boss-ooguchi-charge-impact",
       "audioType": "audio/wav",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 12579755,
+      "bundleOffset": 12590331,
       "bundleBytes": 63548,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v090/sfx/boss-ooguchi-charge-warning.wav",
@@ -6501,9 +6501,9 @@
       "audioId": "boss-ooguchi-charge-warning",
       "audioType": "audio/wav",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 12523263,
+      "bundleOffset": 12533839,
       "bundleBytes": 56492,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v090/sfx/boss-ooguchi-entrance.wav",
@@ -6516,9 +6516,9 @@
       "audioId": "boss-ooguchi-entrance",
       "audioType": "audio/wav",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 12447367,
+      "bundleOffset": 12457943,
       "bundleBytes": 75896,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v090/sfx/voice-mayo-attack.wav",
@@ -6531,9 +6531,9 @@
       "audioId": "voice-mayo-attack",
       "audioType": "audio/wav",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 12161335,
+      "bundleOffset": 12171911,
       "bundleBytes": 26504,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v090/sfx/voice-mayo-deploy.wav",
@@ -6546,9 +6546,9 @@
       "audioId": "voice-mayo-deploy",
       "audioType": "audio/wav",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 12134831,
+      "bundleOffset": 12145407,
       "bundleBytes": 26504,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v090/sfx/voice-mayo-hurt.wav",
@@ -6561,9 +6561,9 @@
       "audioId": "voice-mayo-hurt",
       "audioType": "audio/wav",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 12187839,
+      "bundleOffset": 12198415,
       "bundleBytes": 26504,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v090/sfx/voice-mayo-retreat.wav",
@@ -6576,9 +6576,9 @@
       "audioId": "voice-mayo-retreat",
       "audioType": "audio/wav",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 12214343,
+      "bundleOffset": 12224919,
       "bundleBytes": 37088,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v090/sfx/weapon-mayo-bite.wav",
@@ -6591,9 +6591,9 @@
       "audioId": "weapon-mayo-bite",
       "audioType": "audio/wav",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 12018231,
+      "bundleOffset": 12028807,
       "bundleBytes": 26504,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v090/sfx/weapon-mrs-chiha-grenade-flight.wav",
@@ -6606,9 +6606,9 @@
       "audioId": "weapon-mrs-chiha-grenade-flight",
       "audioType": "audio/wav",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 11910128,
+      "bundleOffset": 11920704,
       "bundleBytes": 30032,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v090/sfx/weapon-mrs-chiha-grenade-impact.mp3",
@@ -6621,9 +6621,9 @@
       "audioId": "weapon-mrs-chiha-grenade-impact",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 11861427,
+      "bundleOffset": 11872003,
       "bundleBytes": 5373,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v090/sfx/weapon-mrs-chiha-grenade-launcher.mp3",
@@ -6636,9 +6636,9 @@
       "audioId": "weapon-mrs-chiha-grenade-launcher",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 11856995,
+      "bundleOffset": 11867571,
       "bundleBytes": 4432,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v090/sfx/weapon-mrs-chiha-launcher-aim.wav",
@@ -6651,9 +6651,9 @@
       "audioId": "weapon-mrs-chiha-launcher-aim",
       "audioType": "audio/wav",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 11892444,
+      "bundleOffset": 11903020,
       "bundleBytes": 17684,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v090/sfx/weapon-mrs-chiha-launcher-bash.mp3",
@@ -6666,9 +6666,9 @@
       "audioId": "weapon-mrs-chiha-launcher-bash",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 11866800,
+      "bundleOffset": 11877376,
       "bundleBytes": 4432,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v090/sfx/weapon-mrs-chiha-launcher-retrieve.wav",
@@ -6681,9 +6681,9 @@
       "audioId": "weapon-mrs-chiha-launcher-retrieve",
       "audioType": "audio/wav",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 11871232,
+      "bundleOffset": 11881808,
       "bundleBytes": 21212,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v090/sfx/weapon-mrs-chiha-launcher-stow.wav",
@@ -6696,9 +6696,9 @@
       "audioId": "weapon-mrs-chiha-launcher-stow",
       "audioType": "audio/wav",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 11940160,
+      "bundleOffset": 11950736,
       "bundleBytes": 21212,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v090/sfx/weapon-musashi-dual-katana.mp3",
@@ -6711,9 +6711,9 @@
       "audioId": "weapon-musashi-dual-katana",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 12003054,
+      "bundleOffset": 12013630,
       "bundleBytes": 4432,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v090/sfx/weapon-tky-plasma-blade.mp3",
@@ -6726,9 +6726,9 @@
       "audioId": "weapon-tky-plasma-blade",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 11832997,
+      "bundleOffset": 11843573,
       "bundleBytes": 4432,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v098/music/music-v098-loadout.mp3",
@@ -6741,9 +6741,9 @@
       "audioId": "music-v098-loadout",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 11710192,
+      "bundleOffset": 11720768,
       "bundleBytes": 112685,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v099/music/music-v099-boss.mp3",
@@ -6756,9 +6756,9 @@
       "audioId": "music-v099-boss",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 17216467,
+      "bundleOffset": 17227043,
       "bundleBytes": 1413269,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v099/music/music-v099-normal.mp3",
@@ -6771,9 +6771,9 @@
       "audioId": "music-v099-normal",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 13035175,
+      "bundleOffset": 13045751,
       "bundleBytes": 1355277,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v099/music/music-v099-pressure-station.mp3",
@@ -6786,9 +6786,9 @@
       "audioId": "music-v099-pressure-station",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 15796929,
+      "bundleOffset": 15807505,
       "bundleBytes": 1419538,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v099/music/music-v099-pressure-surface.mp3",
@@ -6801,9 +6801,9 @@
       "audioId": "music-v099-pressure-surface",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 14390452,
+      "bundleOffset": 14401028,
       "bundleBytes": 1406477,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v099/sfx/ability-babayaga-appraise-activate.mp3",
@@ -6816,9 +6816,9 @@
       "audioId": "ability-babayaga-appraise-activate",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 18735366,
+      "bundleOffset": 18745942,
       "bundleBytes": 13836,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v099/sfx/ability-babayaga-appraise-mark.mp3",
@@ -6831,9 +6831,9 @@
       "audioId": "ability-babayaga-appraise-mark",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 18894382,
+      "bundleOffset": 18904958,
       "bundleBytes": 10911,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v099/sfx/ability-babayaga-appraise-shot.mp3",
@@ -6846,9 +6846,9 @@
       "audioId": "ability-babayaga-appraise-shot",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 18888487,
+      "bundleOffset": 18899063,
       "bundleBytes": 5895,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v099/sfx/ability-brawler-kiai-activate.mp3",
@@ -6861,9 +6861,9 @@
       "audioId": "ability-brawler-kiai-activate",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 18629736,
+      "bundleOffset": 18640312,
       "bundleBytes": 14254,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v099/sfx/ability-brawler-kiai-combo-impact.mp3",
@@ -6876,9 +6876,9 @@
       "audioId": "ability-brawler-kiai-combo-impact",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 18812488,
+      "bundleOffset": 18823064,
       "bundleBytes": 8403,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v099/sfx/ability-brute-groundbreak-activate.mp3",
@@ -6891,9 +6891,9 @@
       "audioId": "ability-brute-groundbreak-activate",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 18685080,
+      "bundleOffset": 18695656,
       "bundleBytes": 15926,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v099/sfx/ability-brute-groundbreak-impact.mp3",
@@ -6906,9 +6906,9 @@
       "audioId": "ability-brute-groundbreak-impact",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 18854502,
+      "bundleOffset": 18865078,
       "bundleBytes": 11328,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v099/sfx/ability-crazy-king-overdrive-activate.mp3",
@@ -6921,9 +6921,9 @@
       "audioId": "ability-crazy-king-overdrive-activate",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 18701006,
+      "bundleOffset": 18711582,
       "bundleBytes": 18434,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v099/sfx/ability-crazy-king-overdrive-active.mp3",
@@ -6936,9 +6936,9 @@
       "audioId": "ability-crazy-king-overdrive-active",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 18865830,
+      "bundleOffset": 18876406,
       "bundleBytes": 10493,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v099/sfx/ability-engineer-trap-arm-activate.mp3",
@@ -6951,9 +6951,9 @@
       "audioId": "ability-engineer-trap-arm-activate",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 18781890,
+      "bundleOffset": 18792466,
       "bundleBytes": 14672,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v099/sfx/ability-engineer-trap-spring.mp3",
@@ -6966,9 +6966,9 @@
       "audioId": "ability-engineer-trap-spring",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 18930501,
+      "bundleOffset": 18941077,
       "bundleBytes": 7985,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v099/sfx/ability-guardian-shieldwall-activate.mp3",
@@ -6981,9 +6981,9 @@
       "audioId": "ability-guardian-shieldwall-activate",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 18764292,
+      "bundleOffset": 18774868,
       "bundleBytes": 17598,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v099/sfx/ability-guardian-shieldwall-hold.mp3",
@@ -6996,9 +6996,9 @@
       "audioId": "ability-guardian-shieldwall-hold",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 18917083,
+      "bundleOffset": 18927659,
       "bundleBytes": 13418,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v099/sfx/ability-gunner-suppression-activate.mp3",
@@ -7011,9 +7011,9 @@
       "audioId": "ability-gunner-suppression-activate",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 18749202,
+      "bundleOffset": 18759778,
       "bundleBytes": 15090,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v099/sfx/ability-gunner-suppression-impact.mp3",
@@ -7026,9 +7026,9 @@
       "audioId": "ability-gunner-suppression-impact",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 18910352,
+      "bundleOffset": 18920928,
       "bundleBytes": 6731,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v099/sfx/ability-gunner-suppression-muzzle.mp3",
@@ -7041,9 +7041,9 @@
       "audioId": "ability-gunner-suppression-muzzle",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 18905293,
+      "bundleOffset": 18915869,
       "bundleBytes": 5059,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v099/sfx/ability-kumaverson-iron-pan-activate.mp3",
@@ -7056,9 +7056,9 @@
       "audioId": "ability-kumaverson-iron-pan-activate",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 18719440,
+      "bundleOffset": 18730016,
       "bundleBytes": 15926,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v099/sfx/ability-kumaverson-stance.mp3",
@@ -7071,9 +7071,9 @@
       "audioId": "ability-kumaverson-stance",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 18876323,
+      "bundleOffset": 18886899,
       "bundleBytes": 12164,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v099/sfx/ability-medic-emergency-activate.mp3",
@@ -7086,9 +7086,9 @@
       "audioId": "ability-medic-emergency-activate",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 18668736,
+      "bundleOffset": 18679312,
       "bundleBytes": 16344,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v099/sfx/ability-medic-treatment.mp3",
@@ -7101,9 +7101,9 @@
       "audioId": "ability-medic-treatment",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 18841920,
+      "bundleOffset": 18852496,
       "bundleBytes": 12582,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v099/sfx/ability-musashi-fallback-cross.mp3",
@@ -7116,9 +7116,9 @@
       "audioId": "ability-musashi-fallback-cross",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 18971636,
+      "bundleOffset": 18982212,
       "bundleBytes": 10075,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v099/sfx/ability-ranger-precision-activate.mp3",
@@ -7131,9 +7131,9 @@
       "audioId": "ability-ranger-precision-activate",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 18655736,
+      "bundleOffset": 18666312,
       "bundleBytes": 13000,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v099/sfx/ability-ranger-precision-impact.mp3",
@@ -7146,9 +7146,9 @@
       "audioId": "ability-ranger-precision-impact",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 18834353,
+      "bundleOffset": 18844929,
       "bundleBytes": 7567,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v099/sfx/ability-ranger-precision-shot.mp3",
@@ -7161,9 +7161,9 @@
       "audioId": "ability-ranger-precision-shot",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 18828040,
+      "bundleOffset": 18838616,
       "bundleBytes": 6313,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v099/sfx/ability-ready-melee.mp3",
@@ -7176,9 +7176,9 @@
       "audioId": "ability-ready-melee",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 18981711,
+      "bundleOffset": 18992287,
       "bundleBytes": 5895,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v099/sfx/ability-ready-ranged.mp3",
@@ -7191,9 +7191,9 @@
       "audioId": "ability-ready-ranged",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 18987606,
+      "bundleOffset": 18998182,
       "bundleBytes": 6731,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v099/sfx/ability-ready-support.mp3",
@@ -7206,9 +7206,9 @@
       "audioId": "ability-ready-support",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 18994337,
+      "bundleOffset": 19004913,
       "bundleBytes": 7985,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v099/sfx/ability-scout-intercept-activate.mp3",
@@ -7221,9 +7221,9 @@
       "audioId": "ability-scout-intercept-activate",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 18643990,
+      "bundleOffset": 18654566,
       "bundleBytes": 11746,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v099/sfx/ability-scout-intercept-impact.mp3",
@@ -7236,9 +7236,9 @@
       "audioId": "ability-scout-intercept-impact",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 18820891,
+      "bundleOffset": 18831467,
       "bundleBytes": 7149,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v099/sfx/ability-zakimiya-molotov-activate.mp3",
@@ -7251,9 +7251,9 @@
       "audioId": "ability-zakimiya-molotov-activate",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 18796562,
+      "bundleOffset": 18807138,
       "bundleBytes": 15926,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v099/sfx/ability-zakimiya-molotov-burn.mp3",
@@ -7266,9 +7266,9 @@
       "audioId": "ability-zakimiya-molotov-burn",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 18957382,
+      "bundleOffset": 18967958,
       "bundleBytes": 14254,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v099/sfx/ability-zakimiya-molotov-impact.mp3",
@@ -7281,9 +7281,9 @@
       "audioId": "ability-zakimiya-molotov-impact",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 18947307,
+      "bundleOffset": 18957883,
       "bundleBytes": 10075,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v099/sfx/ability-zakimiya-molotov-throw.mp3",
@@ -7296,9 +7296,9 @@
       "audioId": "ability-zakimiya-molotov-throw",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 18938486,
+      "bundleOffset": 18949062,
       "bundleBytes": 8821,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/ambience/kitchen.mp3",
@@ -7311,9 +7311,9 @@
       "audioId": "install-v100-ambience-kitchen",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19139307,
+      "bundleOffset": 19175178,
       "bundleBytes": 166098,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/ambience/medical.mp3",
@@ -7326,9 +7326,9 @@
       "audioId": "install-v100-ambience-medical",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19453552,
+      "bundleOffset": 19489423,
       "bundleBytes": 149782,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/ambience/receiver.mp3",
@@ -7341,9 +7341,9 @@
       "audioId": "install-v100-ambience-receiver",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19603334,
+      "bundleOffset": 19639205,
       "bundleBytes": 180955,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/ambience/room.mp3",
@@ -7356,9 +7356,9 @@
       "audioId": "install-v100-ambience-room",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19305405,
+      "bundleOffset": 19341276,
       "bundleBytes": 148147,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/credits/maou_31_tsuioku_no_gensosekai.mp3",
@@ -7404,9 +7404,9 @@
       "audioId": "install-v100-foley-body",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19055684,
+      "bundleOffset": 19077987,
       "bundleBytes": 2466,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/foley/explosion.mp3",
@@ -7419,9 +7419,9 @@
       "audioId": "install-v100-foley-explosion",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19002322,
+      "bundleOffset": 19018564,
       "bundleBytes": 24929,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/foley/fall.mp3",
@@ -7436,7 +7436,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 106568,
       "bundleBytes": 2336,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/foley/heavy-metal.mp3",
@@ -7449,9 +7449,9 @@
       "audioId": "install-v100-foley-heavy-metal",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19047167,
+      "bundleOffset": 19069470,
       "bundleBytes": 8517,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/foley/mechanism.mp3",
@@ -7464,9 +7464,9 @@
       "audioId": "install-v100-foley-mechanism",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19031884,
+      "bundleOffset": 19048126,
       "bundleBytes": 3955,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/foley/metal.mp3",
@@ -7479,24 +7479,9 @@
       "audioId": "install-v100-foley-metal",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19077042,
+      "bundleOffset": 19112913,
       "bundleBytes": 2493,
-      "bundleLength": 34781770
-    },
-    {
-      "path": "/audio/v100/foley/rifle.mp3",
-      "bytes": 6225,
-      "hash": "sha256-805eacd7367c72d2e96628d8bc8d539f8401d225164c8def9caaad9eb726e96f",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-v100-foley-rifle",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19040942,
-      "bundleBytes": 6225,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/foley/story-dish.mp3",
@@ -7509,9 +7494,9 @@
       "audioId": "install-v100-foley-story-dish",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19784289,
+      "bundleOffset": 19820160,
       "bundleBytes": 7264,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/foley/story-door-close.mp3",
@@ -7524,9 +7509,9 @@
       "audioId": "install-v100-foley-story-door-close",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19801919,
+      "bundleOffset": 19837790,
       "bundleBytes": 7732,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/foley/story-door-open.mp3",
@@ -7539,9 +7524,9 @@
       "audioId": "install-v100-foley-story-door-open",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19791553,
+      "bundleOffset": 19827424,
       "bundleBytes": 10366,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/foley/story-fabric.mp3",
@@ -7554,9 +7539,9 @@
       "audioId": "install-v100-foley-story-fabric",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19815432,
+      "bundleOffset": 19851303,
       "bundleBytes": 4890,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/foley/story-footsteps.mp3",
@@ -7569,9 +7554,9 @@
       "audioId": "install-v100-foley-story-footsteps",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19833055,
+      "bundleOffset": 19868926,
       "bundleBytes": 1634,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/foley/story-glass.mp3",
@@ -7586,7 +7571,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 93050,
       "bundleBytes": 2859,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/foley/story-latch.mp3",
@@ -7599,9 +7584,9 @@
       "audioId": "install-v100-foley-story-latch",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19829257,
+      "bundleOffset": 19865128,
       "bundleBytes": 3798,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/foley/story-pan.mp3",
@@ -7614,9 +7599,9 @@
       "audioId": "install-v100-foley-story-pan",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19820322,
+      "bundleOffset": 19856193,
       "bundleBytes": 8935,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/foley/story-paper.mp3",
@@ -7629,9 +7614,9 @@
       "audioId": "install-v100-foley-story-paper",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19809651,
+      "bundleOffset": 19845522,
       "bundleBytes": 5781,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/foley/swing.mp3",
@@ -7644,9 +7629,9 @@
       "audioId": "install-v100-foley-swing",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19035839,
+      "bundleOffset": 19052081,
       "bundleBytes": 5103,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/foley/treatment.mp3",
@@ -7659,9 +7644,9 @@
       "audioId": "install-v100-foley-treatment",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19027251,
+      "bundleOffset": 19043493,
       "bundleBytes": 4633,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/r9/barrier-raise.mp3",
@@ -7674,9 +7659,9 @@
       "audioId": "install-v100-r9-barrier-raise",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 33813912,
+      "bundleOffset": 33849783,
       "bundleBytes": 16338,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/r9/bridge-wind.mp3",
@@ -7689,9 +7674,9 @@
       "audioId": "install-v100-r9-bridge-wind",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 34164229,
+      "bundleOffset": 34200100,
       "bundleBytes": 227306,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/r9/cable-disconnect.mp3",
@@ -7704,9 +7689,9 @@
       "audioId": "install-v100-r9-cable-disconnect",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 33727932,
+      "bundleOffset": 33763803,
       "bundleBytes": 6586,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/r9/card-burnout.mp3",
@@ -7719,9 +7704,9 @@
       "audioId": "install-v100-r9-card-burnout",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 33887070,
+      "bundleOffset": 33922941,
       "bundleBytes": 14161,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/r9/cargo-door.mp3",
@@ -7734,9 +7719,9 @@
       "audioId": "install-v100-r9-cargo-door",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 33676816,
+      "bundleOffset": 33712687,
       "bundleBytes": 10152,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/r9/case-close.mp3",
@@ -7749,9 +7734,9 @@
       "audioId": "install-v100-r9-case-close",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 33919058,
+      "bundleOffset": 33954929,
       "bundleBytes": 10834,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/r9/ceiling-fall.mp3",
@@ -7764,9 +7749,9 @@
       "audioId": "install-v100-r9-ceiling-fall",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 33740730,
+      "bundleOffset": 33776601,
       "bundleBytes": 20107,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/r9/chair-scrape.mp3",
@@ -7779,9 +7764,9 @@
       "audioId": "install-v100-r9-chair-scrape",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 33636969,
+      "bundleOffset": 33672840,
       "bundleBytes": 11230,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/r9/coupler-release.mp3",
@@ -7794,9 +7779,9 @@
       "audioId": "install-v100-r9-coupler-release",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 33804909,
+      "bundleOffset": 33840780,
       "bundleBytes": 9003,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/r9/door-battering.mp3",
@@ -7809,9 +7794,9 @@
       "audioId": "install-v100-r9-door-battering",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 33877106,
+      "bundleOffset": 33912977,
       "bundleBytes": 9964,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/r9/engine-pass.mp3",
@@ -7824,9 +7809,9 @@
       "audioId": "install-v100-r9-engine-pass",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 33830250,
+      "bundleOffset": 33866121,
       "bundleBytes": 31551,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/r9/extinguisher.mp3",
@@ -7839,9 +7824,9 @@
       "audioId": "install-v100-r9-extinguisher",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 33648199,
+      "bundleOffset": 33684070,
       "bundleBytes": 28617,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/r9/fire-catch.mp3",
@@ -7854,9 +7839,9 @@
       "audioId": "install-v100-r9-fire-catch",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 33929892,
+      "bundleOffset": 33965763,
       "bundleBytes": 26476,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/r9/gas-ignition.mp3",
@@ -7869,9 +7854,9 @@
       "audioId": "install-v100-r9-gas-ignition",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 33956368,
+      "bundleOffset": 33992239,
       "bundleBytes": 19326,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/r9/glass-knock.mp3",
@@ -7884,9 +7869,9 @@
       "audioId": "install-v100-r9-glass-knock",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 33734518,
+      "bundleOffset": 33770389,
       "bundleBytes": 6212,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/r9/kitchen-air.mp3",
@@ -7899,9 +7884,9 @@
       "audioId": "install-v100-r9-kitchen-air",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 34568899,
+      "bundleOffset": 34604770,
       "bundleBytes": 212871,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/r9/lab-air.mp3",
@@ -7914,9 +7899,9 @@
       "audioId": "install-v100-r9-lab-air",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 33990966,
+      "bundleOffset": 34026837,
       "bundleBytes": 173263,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/r9/oxygen-valve.mp3",
@@ -7929,9 +7914,9 @@
       "audioId": "install-v100-r9-oxygen-valve",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 33760837,
+      "bundleOffset": 33796708,
       "bundleBytes": 25745,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/r9/plate-stack.mp3",
@@ -7944,9 +7929,9 @@
       "audioId": "install-v100-r9-plate-stack",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 33975694,
+      "bundleOffset": 34011565,
       "bundleBytes": 15272,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/r9/rail-strain.mp3",
@@ -7959,9 +7944,9 @@
       "audioId": "install-v100-r9-rail-strain",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 33786582,
+      "bundleOffset": 33822453,
       "bundleBytes": 18327,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/r9/sample-lids.mp3",
@@ -7974,9 +7959,9 @@
       "audioId": "install-v100-r9-sample-lids",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 33908938,
+      "bundleOffset": 33944809,
       "bundleBytes": 10120,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/r9/shutter-jam.mp3",
@@ -7989,9 +7974,9 @@
       "audioId": "install-v100-r9-shutter-jam",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 33712475,
+      "bundleOffset": 33748346,
       "bundleBytes": 15457,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/r9/shutter-open.mp3",
@@ -8004,9 +7989,9 @@
       "audioId": "install-v100-r9-shutter-open",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 33686968,
+      "bundleOffset": 33722839,
       "bundleBytes": 25507,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/r9/vehicle-collision.mp3",
@@ -8019,9 +8004,9 @@
       "audioId": "install-v100-r9-vehicle-collision",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 33861801,
+      "bundleOffset": 33897672,
       "bundleBytes": 15305,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/r9/vehicle-idle.mp3",
@@ -8034,9 +8019,9 @@
       "audioId": "install-v100-r9-vehicle-idle",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 34391535,
+      "bundleOffset": 34427406,
       "bundleBytes": 177364,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/r9/weapon-handle.mp3",
@@ -8049,9 +8034,9 @@
       "audioId": "install-v100-r9-weapon-handle",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 33901231,
+      "bundleOffset": 33937102,
       "bundleBytes": 7707,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/score/daily.mp3",
@@ -8064,9 +8049,9 @@
       "audioId": "install-v100-score-daily",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 24029875,
+      "bundleOffset": 24065746,
       "bundleBytes": 1536879,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/score/ending.mp3",
@@ -8079,9 +8064,9 @@
       "audioId": "install-v100-score-ending",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 32100090,
+      "bundleOffset": 32135961,
       "bundleBytes": 1536879,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/score/horror.mp3",
@@ -8094,9 +8079,9 @@
       "audioId": "install-v100-score-horror",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 28128930,
+      "bundleOffset": 28164801,
       "bundleBytes": 1536879,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/score/loss.mp3",
@@ -8109,9 +8094,9 @@
       "audioId": "install-v100-score-loss",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 30946897,
+      "bundleOffset": 30982768,
       "bundleBytes": 1153193,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/score/normal.mp3",
@@ -8124,9 +8109,9 @@
       "audioId": "install-v100-score-normal",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 21211908,
+      "bundleOffset": 21247779,
       "bundleBytes": 1536879,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/score/opening.mp3",
@@ -8139,9 +8124,9 @@
       "audioId": "install-v100-score-opening",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19834689,
+      "bundleOffset": 19870560,
       "bundleBytes": 1377219,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/score/preparation.mp3",
@@ -8154,9 +8139,9 @@
       "audioId": "install-v100-score-preparation",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 25566754,
+      "bundleOffset": 25602625,
       "bundleBytes": 1281088,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/score/pressure.mp3",
@@ -8169,9 +8154,9 @@
       "audioId": "install-v100-score-pressure",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 22748787,
+      "bundleOffset": 22784658,
       "bundleBytes": 1281088,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/score/relief.mp3",
@@ -8184,9 +8169,9 @@
       "audioId": "install-v100-score-relief",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 29665809,
+      "bundleOffset": 29701680,
       "bundleBytes": 1281088,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/score/tension.mp3",
@@ -8199,9 +8184,9 @@
       "audioId": "install-v100-score-tension",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 26847842,
+      "bundleOffset": 26883713,
       "bundleBytes": 1281088,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/title/k4ito-title-call-r1.wav",
@@ -8227,7 +8212,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 108904,
       "bundleBytes": 3044,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/ui/v100-ui-cancel.mp3",
@@ -8242,7 +8227,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 113478,
       "bundleBytes": 2704,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/ui/v100-ui-confirm.mp3",
@@ -8257,7 +8242,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 116182,
       "bundleBytes": 2939,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/ui/v100-ui-navigate.mp3",
@@ -8272,7 +8257,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 111948,
       "bundleBytes": 1530,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v100/ui/v100-ui-reject.mp3",
@@ -8287,7 +8272,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 119121,
       "bundleBytes": 1685,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v104/combat/armor-hit.mp3",
@@ -8302,7 +8287,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 17685,
       "bundleBytes": 2414,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v104/combat/crossbow-release.mp3",
@@ -8317,7 +8302,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 23343,
       "bundleBytes": 3198,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v104/combat/eye-fire.mp3",
@@ -8332,7 +8317,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 101728,
       "bundleBytes": 4840,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v104/combat/eye-warning.mp3",
@@ -8347,7 +8332,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 95909,
       "bundleBytes": 5819,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v104/combat/handgun.mp3",
@@ -8362,7 +8347,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 20099,
       "bundleBytes": 3244,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v104/combat/pan-heavy.mp3",
@@ -8375,9 +8360,9 @@
       "audioId": "install-v104-combat-pan-heavy",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19065780,
+      "bundleOffset": 19101651,
       "bundleBytes": 8565,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v104/combat/pan-hit.mp3",
@@ -8390,9 +8375,9 @@
       "audioId": "install-v104-combat-pan-hit",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19058150,
+      "bundleOffset": 19094021,
       "bundleBytes": 7630,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v104/combat/suppressed-pistol.mp3",
@@ -8405,9 +8390,9 @@
       "audioId": "install-v104-combat-suppressed-pistol",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19074345,
+      "bundleOffset": 19110216,
       "bundleBytes": 2697,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v104/combat/voice-babayaga-attack.mp3",
@@ -8420,9 +8405,9 @@
       "audioId": "install-v104-combat-voice-babayaga-attack",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19130026,
+      "bundleOffset": 19165897,
       "bundleBytes": 2885,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v104/combat/voice-babayaga-death.mp3",
@@ -8435,9 +8420,9 @@
       "audioId": "install-v104-combat-voice-babayaga-death",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19135275,
+      "bundleOffset": 19171146,
       "bundleBytes": 4032,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v104/combat/voice-babayaga-deploy.mp3",
@@ -8450,9 +8435,9 @@
       "audioId": "install-v104-combat-voice-babayaga-deploy",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19124794,
+      "bundleOffset": 19160665,
       "bundleBytes": 5232,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v104/combat/voice-babayaga-hurt.mp3",
@@ -8465,9 +8450,9 @@
       "audioId": "install-v104-combat-voice-babayaga-hurt",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19132911,
+      "bundleOffset": 19168782,
       "bundleBytes": 2364,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v104/combat/voice-crazy-king-attack.mp3",
@@ -8480,9 +8465,9 @@
       "audioId": "install-v104-combat-voice-crazy-king-attack",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19085002,
+      "bundleOffset": 19120873,
       "bundleBytes": 6196,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v104/combat/voice-crazy-king-death.mp3",
@@ -8495,9 +8480,9 @@
       "audioId": "install-v104-combat-voice-crazy-king-death",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19094995,
+      "bundleOffset": 19130866,
       "bundleBytes": 4501,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v104/combat/voice-crazy-king-deploy.mp3",
@@ -8510,9 +8495,9 @@
       "audioId": "install-v104-combat-voice-crazy-king-deploy",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19079535,
+      "bundleOffset": 19115406,
       "bundleBytes": 5467,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v104/combat/voice-crazy-king-hurt.mp3",
@@ -8525,9 +8510,9 @@
       "audioId": "install-v104-combat-voice-crazy-king-hurt",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19091198,
+      "bundleOffset": 19127069,
       "bundleBytes": 3797,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v104/combat/voice-kumaverson-attack.mp3",
@@ -8540,9 +8525,9 @@
       "audioId": "install-v104-combat-voice-kumaverson-attack",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19108141,
+      "bundleOffset": 19144012,
       "bundleBytes": 5414,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v104/combat/voice-kumaverson-death.mp3",
@@ -8555,9 +8540,9 @@
       "audioId": "install-v104-combat-voice-kumaverson-death",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19118237,
+      "bundleOffset": 19154108,
       "bundleBytes": 6557,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v104/combat/voice-kumaverson-deploy.mp3",
@@ -8570,9 +8555,9 @@
       "audioId": "install-v104-combat-voice-kumaverson-deploy",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19099496,
+      "bundleOffset": 19135367,
       "bundleBytes": 8645,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v104/combat/voice-kumaverson-hurt.mp3",
@@ -8585,9 +8570,9 @@
       "audioId": "install-v104-combat-voice-kumaverson-hurt",
       "audioType": "audio/mpeg",
       "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19113555,
+      "bundleOffset": 19149426,
       "bundleBytes": 4682,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v104/combat/voice-red-panther-commander-attack.mp3",
@@ -8602,7 +8587,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 72853,
       "bundleBytes": 8385,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v104/combat/voice-red-panther-commander-death.mp3",
@@ -8617,7 +8602,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 85347,
       "bundleBytes": 7703,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v104/combat/voice-red-panther-commander-hurt.mp3",
@@ -8632,7 +8617,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 81238,
       "bundleBytes": 4109,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v104/combat/voice-red-panther-knife-attack.mp3",
@@ -8647,7 +8632,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 26541,
       "bundleBytes": 6484,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v104/combat/voice-red-panther-knife-death.mp3",
@@ -8662,7 +8647,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 36742,
       "bundleBytes": 5931,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v104/combat/voice-red-panther-knife-hurt.mp3",
@@ -8677,7 +8662,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 33025,
       "bundleBytes": 3717,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v104/combat/voice-red-panther-shield-attack.mp3",
@@ -8692,7 +8677,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 42673,
       "bundleBytes": 6667,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v104/combat/voice-red-panther-shield-death.mp3",
@@ -8707,7 +8692,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 53971,
       "bundleBytes": 5021,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v104/combat/voice-red-panther-shield-hurt.mp3",
@@ -8722,7 +8707,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 49340,
       "bundleBytes": 4631,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v104/combat/voice-red-panther-smg-attack.mp3",
@@ -8737,7 +8722,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 58992,
       "bundleBytes": 4994,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v104/combat/voice-red-panther-smg-death.mp3",
@@ -8752,7 +8737,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 67312,
       "bundleBytes": 5541,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v104/combat/voice-red-panther-smg-hurt.mp3",
@@ -8767,7 +8752,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 63986,
       "bundleBytes": 3326,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v105/fist-wave-charge.mp3",
@@ -8782,7 +8767,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 0,
       "bundleBytes": 5059,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v105/fist-wave-impact.mp3",
@@ -8797,7 +8782,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 10954,
       "bundleBytes": 6731,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
     },
     {
       "path": "/audio/v105/fist-wave-launch.mp3",
@@ -8812,7 +8797,112 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 5059,
       "bundleBytes": 5895,
-      "bundleLength": 34781770
+      "bundleLength": 34817641
+    },
+    {
+      "path": "/audio/weapons/recorded/v104-handgun.mp3",
+      "bytes": 5666,
+      "hash": "sha256-f8a06b9910bb19253354b533ce9ed1cf41988ca8226679a43e32d9e52cb4d541",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-recorded-v104-handgun",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19012898,
+      "bundleBytes": 5666,
+      "bundleLength": 34817641
+    },
+    {
+      "path": "/audio/weapons/recorded/weapon-gunner-01.mp3",
+      "bytes": 6234,
+      "hash": "sha256-f2d84bff20bf4010fe9a24849598dbaa113eeb6e58692a16ddeeb8fe6a0deaa2",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-recorded-weapon-gunner-01",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19057184,
+      "bundleBytes": 6234,
+      "bundleLength": 34817641
+    },
+    {
+      "path": "/audio/weapons/recorded/weapon-gunner-02.mp3",
+      "bytes": 6052,
+      "hash": "sha256-eee63b13a259c476640d589a50791bbfee0fd9234f320a39f2a1792f29813d53",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-recorded-weapon-gunner-02",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19063418,
+      "bundleBytes": 6052,
+      "bundleLength": 34817641
+    },
+    {
+      "path": "/audio/weapons/recorded/weapon-rifle-01.mp3",
+      "bytes": 6771,
+      "hash": "sha256-a16abba2aa984f94943f73c97714638611ce76960e78b06bbbf190b852eb24fd",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-recorded-weapon-rifle-01",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19080453,
+      "bundleBytes": 6771,
+      "bundleLength": 34817641
+    },
+    {
+      "path": "/audio/weapons/recorded/weapon-rifle-02.mp3",
+      "bytes": 6797,
+      "hash": "sha256-b62c3ffd7a9ddb76308ef945dfc6728c01bfdd9d1195feaf4eaf4401317f4c39",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-recorded-weapon-rifle-02",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19087224,
+      "bundleBytes": 6797,
+      "bundleLength": 34817641
+    },
+    {
+      "path": "/audio/weapons/recorded/weapon-smg-01.mp3",
+      "bytes": 5354,
+      "hash": "sha256-8509f2b80e625cd37562829c280474be88dcbc0a13e93ec67f51176232b0e358",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "weapon-smg-01",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 7813307,
+      "bundleBytes": 5354,
+      "bundleLength": 34817641
+    },
+    {
+      "path": "/audio/weapons/recorded/weapon-smg-02.mp3",
+      "bytes": 5222,
+      "hash": "sha256-46aee2cd8c892d749fa617344b2a8537f586fc36416a2d5bff40f6e604c3befd",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "weapon-smg-02",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 7818661,
+      "bundleBytes": 5222,
+      "bundleLength": 34817641
     },
     {
       "path": "/explosive-drum-v1.png",
