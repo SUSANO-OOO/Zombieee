@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { observeEventPortraitLayout } from "./eventPortraitLayout.js";
 import { PRODUCTION_VISUALS, STORY_BACKGROUND_VISUALS, stageVisualFor } from "./productionVisuals.js";
 import { FORMATION_CARD_ART, PERSONNEL_CARD_ART, PORTRAIT_ART } from "./spriteManifest.js";
 import { PROLOGUE_SYNOPSIS, getStoryEvent, storyEventLog } from "./storyEvents.js";
@@ -472,8 +473,10 @@ function StoryScreen({ eventId, readStoryEventIds, autoSkipReadStory, forceStory
   const completedRef = useRef(false);
   const silenceTailStartedRef = useRef(false);
   const silenceTimerRef = useRef<number | null>(null);
+  const eventScreenRef = useRef<HTMLDivElement>(null);
   const event = eventId ? getStoryEvent(eventId) : null;
   const line = event?.lines[index] ?? null;
+  useEffect(() => observeEventPortraitLayout(eventScreenRef.current), [eventId, line?.portrait]);
   const storyEventId = event?.id ?? null;
   const storyEventLineCount = event?.lines.length ?? 0;
   const authoredSilenceAfterMs = event?.presentation.silenceAfterMs ?? 0;
@@ -531,7 +534,7 @@ function StoryScreen({ eventId, readStoryEventIds, autoSkipReadStory, forceStory
     else completeWithAuthoredSilence();
   };
   const backgroundArt = STORY_BACKGROUND_VISUALS[event.background as keyof typeof STORY_BACKGROUND_VISUALS] ?? PRODUCTION_VISUALS.command;
-  return <div className={`campaign-overlay event-screen event-${event.background} effect-${line.effect ?? "none"}`} style={artStyle(backgroundArt)} aria-label="会話イベント">
+  return <div ref={eventScreenRef} className={`campaign-overlay event-screen event-${event.background} effect-${line.effect ?? "none"}`} style={artStyle(backgroundArt)} aria-label="会話イベント">
     <div className="event-vignette" />
     <div className={`event-portrait active ${line.side} ${line.portrait === "guide" ? "guide" : line.portrait === "radio" ? "radio" : ""}`} data-expression={line.expression} data-portrait={line.portrait} style={portraitStyle} aria-hidden="true" />
     <div className="event-controls"><button onClick={() => setLogOpen((value) => !value)}>会話ログ</button><button onClick={() => setSkipOpen(true)}>スキップ</button></div>

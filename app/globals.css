@@ -749,6 +749,10 @@ button[aria-disabled="true"]:focus-visible {
 /* Issue #156 F4: StoryScreen owns portrait presentation and consumes the
    profile focus/crop contract instead of duplicating per-character CSS. */
 .event-portrait[data-portrait] {
+  box-sizing:border-box;
+  padding-top:8px;
+  background-origin:content-box;
+  background-clip:content-box;
   background-size:var(--event-portrait-crop,cover);
   background-position:var(--event-portrait-focus-x,50%) var(--event-portrait-focus-y,28%);
   transform-origin:center bottom;

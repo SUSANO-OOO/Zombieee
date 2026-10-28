@@ -199,6 +199,8 @@ async function runCase(engine, viewport, safeAreaMode) {
         image.src = portraitProfile.path;
         await image.decode();
         portrait.dataset.portrait = portraitKind;
+        portrait.classList.toggle('guide', portraitKind === 'guide');
+        portrait.classList.toggle('radio', portraitKind === 'radio');
         portrait.style.backgroundImage = `url('${portraitProfile.path}')`;
         portrait.style.setProperty("--event-portrait-focus-x", `${portraitProfile.focusX * 100}%`);
         portrait.style.setProperty("--event-portrait-focus-y", `${portraitProfile.focusY * 100}%`);
@@ -211,8 +213,11 @@ async function runCase(engine, viewport, safeAreaMode) {
         const advanceRect = advance.getBoundingClientRect();
         const portraitStyle = getComputedStyle(portrait);
         const dialogueStyle = getComputedStyle(dialogue);
-        const renderedHeight = portrait.offsetHeight * source.renderedHeightRatio;
-        const backgroundOffset = (portrait.offsetHeight - renderedHeight) * portraitProfile.focusY;
+        const paddingTop = Number.parseFloat(portraitStyle.paddingTop);
+        const paddingBottom = Number.parseFloat(portraitStyle.paddingBottom);
+        const contentHeight = portrait.clientHeight - paddingTop - paddingBottom;
+        const renderedHeight = contentHeight * source.renderedHeightRatio;
+        const backgroundOffset = paddingTop + (contentHeight - renderedHeight) * portraitProfile.focusY;
         const headMargin = backgroundOffset + source.alphaTop / source.sourceHeight * renderedHeight;
         const paintedBottom = rect.top + backgroundOffset
           + ((source.alphaBottom + 1) / source.sourceHeight) * renderedHeight;
