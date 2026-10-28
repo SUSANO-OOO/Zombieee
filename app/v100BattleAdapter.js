@@ -7,6 +7,7 @@ import { V100_DEFENSE_OBJECTIVES } from "./v100DefenseObjectives.js";
 import { researchCoreObjective } from "./v100ResearchCore.js";
 import { v100IncreaseWaveDensity } from "./v100CombatTuning.js";
 import { withClearDrivenAssaultWaves } from "./wavePacing.js";
+import { v100AvailableFormation, v100StageAbsenceReason } from "./v100StageParticipation.js";
 import { v100EquipmentSnapshot, v100OpeningSupportGauge } from "./v100Equipment.js";
 import {
   V100_BOSS_BY_ID,
@@ -326,7 +327,7 @@ export function v100SupportSupplyFor(supportId) {
 }
 
 export function v100ProductionSessionFor({ save, stageId, resultId, onBattleResult = null }) {
-  const formationUnitIds = save?.formationSlots?.filter(Boolean).slice(0, 7) ?? [];
+  const formationUnitIds = v100AvailableFormation(stageId, save?.formationSlots);
   const formationKinds = v100FormationCombatKinds(formationUnitIds);
   const definition = v100BattleDefinitionFor(stageId);
   const enemyKinds = [...new Set(definition?.timeline?.flatMap((event) => event.units) ?? [])];
@@ -341,7 +342,7 @@ export function v100ProductionSessionFor({ save, stageId, resultId, onBattleResu
     formationKinds: freeze([...formationKinds]),
     // Ikura is a rescued radio operator, not a purchasable combat unit.
     barkSpeakerKinds: freeze([...new Set([
-      ...(save?.ownedUnitIds ?? []).map(v100CombatKindForUnit).filter(Boolean),
+      ...(save?.ownedUnitIds ?? []).filter(id => !v100StageAbsenceReason(stageId, id)).map(v100CombatKindForUnit).filter(Boolean),
       ...(save?.completedStageIds?.includes(V100_STAGE_IDS[0]) ? ["guide"] : []),
     ])]),
     enemyKinds: freeze([...enemyKinds]),

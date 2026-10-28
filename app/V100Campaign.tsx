@@ -63,6 +63,7 @@ import {
 } from "./v100StoryFlow.js";
 import { V100_STORY_POST_CREDITS_FILM, v100StoryEventFor, v100StoryEventView } from "./v100StoryEvents.js";
 import { v100MissionObjectiveFor, v100ProductionSessionFor } from "./v100BattleAdapter.js";
+import { v100AvailableFormation, v100StageAbsenceReason } from "./v100StageParticipation.js";
 import { createV100EventAudioOwner } from "./v100EventAudio.js";
 import { v100EventPresentationFor } from "./v100EventPresentation.js";
 import { v100SurfaceScore } from "./v100Music.js";
@@ -776,6 +777,10 @@ export function V100Campaign() {
 
   const startBattle = () => {
     const entered = enterV100Battle(flow);
+    if (!v100AvailableFormation(flow.stageId, save.formationSlots).length) {
+      setNotice("この作戦に出撃できる仲間を編成してください。");
+      return;
+    }
     if (!entered.accepted) {
       setNotice(formatReason(entered.reason));
       return;
@@ -801,6 +806,10 @@ export function V100Campaign() {
   const retryDefeat = () => {
     if (saveBusyRef.current) return;
     const next = retryV100Battle(flow);
+    if (!v100AvailableFormation(flow.stageId, save.formationSlots).length) {
+      setNotice("この編成では出撃できません。「編成を見直す」から仲間を選んでください。");
+      return;
+    }
     if (next.accepted) { setNotice(""); void updateFlow(next.state); }
   };
 
@@ -1060,7 +1069,9 @@ export function V100Campaign() {
       )}
 
       {flow.phase === "battle" && productionSession && (
-        <AshfallGame externalSession={{ ...productionSession, onBattleResult: handleProductionBattleResult, onBattleAction: handleProductionBattleAction, onSettingsChange: handleProductionSettingsChange }} key={productionSession.resultId} />
+        productionSession.formationKinds.length > 0
+          ? <AshfallGame externalSession={{ ...productionSession, onBattleResult: handleProductionBattleResult, onBattleAction: handleProductionBattleAction, onSettingsChange: handleProductionSettingsChange }} key={productionSession.resultId} />
+          : <section className="v100-panel"><h2>出撃する仲間を選び直そう</h2><p>{v100StageAbsenceReason(flow.stageId, "unit-paisen") ?? "出撃する仲間が編成されていません。"} 編成画面で別の仲間を選んでください。</p><button type="button" onClick={() => { const next = leaveV100Battle(flow, "loadout"); if (next.accepted) void updateFlow(next.state); }}>編成を見直す</button></section>
       )}
 
       {flow.phase === "result" && (
@@ -1248,32 +1259,36 @@ function FormationView({ save, stageId, onSlotChange, onStart, onBack, onLoadout
   const basePresentation = v100BasePresentationFor(stage?.number);
   const threats = v100MissionThreatsFor(stageId);
   const ownedUnits = save.ownedUnitIds.map((unitId) => UNIT_BY_ID.get(unitId)).filter(Boolean) as Array<(typeof V100_UNITS)[number]>;
+  const availableSlots = v100AvailableFormation(stageId, save.formationSlots);
+  const absence = v100StageAbsenceReason(stageId, "unit-paisen");
   const activeUnitId = save.formationSlots[activeSlot] ?? null;
   const activeUnit = activeUnitId ? UNIT_BY_ID.get(activeUnitId) ?? null : null;
   const activePresentation = activeUnitId ? v100UnitPresentation(save, activeUnitId) : null;
   const support = V100_SUPPORTS.find((entry) => entry.id === save.equippedSupportId);
   const assignActiveSlot = (unitId: string) => { onSlotChange(activeSlot, unitId); setPickerOpen(false); };
   return <section className={"v100-panel v100-formation-panel v100-sortie-panel v100-command-formation " + (pickerOpen ? "picker-open" : "")} data-v100-surface="formation" style={{ "--v100-stage-art": "url(" + (stage ? stageVisualFor(stage.id) : PRODUCTION_VISUALS.command) + ")" } as CSSProperties}>
-    <div className="v100-panel-heading v100-sortie-heading"><h2>出撃編成</h2><strong className="v100-sortie-count">{save.formationSlots.filter(Boolean).length}<small>/ 7 呼び出し枠</small></strong></div>
+    <div className="v100-panel-heading v100-sortie-heading"><h2>出撃編成</h2><strong className="v100-sortie-count">{availableSlots.length}<small>/ 7 呼び出し枠</small></strong></div>
     <div className="v100-formation-board">
       <div className="v100-slot-rail" aria-label="7枠の編成">
         <div className="v100-field-map-pane">
           <span className="v100-field-map-title"><strong>{stage ? "S" + String(stage.number).padStart(2, "0") + " / " + stageDisplayNameFor(stage) : "異常発生・サバイバル / 出撃準備"}</strong></span>
           <div className="v100-field-map-intel"><strong>{modePreparation ? "仲間を選び、次の迎撃に備える" : objectiveLabelFor(stage)}</strong></div>
+          {absence && <p className="v100-stage-absence" role="note">{absence}</p>}
           {activeUnit && activePresentation ? <div className="v100-briefing-person" data-v100-focused-unit={activeUnit.id}>
             <img src={portraitFor(activeUnit.id) ?? formationCardForUnit(activeUnit.id) ?? ""} alt={activeUnit.displayName} />
             <div tabIndex={0} aria-label={`${activeUnit.displayName}の役割・固有技`}><h3>{activeUnit.displayName} <small>Lv.{activePresentation.level}</small></h3><strong className="v100-briefing-role-description">{activePresentation.description.split("・").map((part, index, parts) => <span key={`${index}-${part}`}>{part}{index < parts.length - 1 ? "・" : ""}</span>)}</strong><span className="v100-briefing-callin">指揮 {activePresentation.commandCost} / 再配備 {formatV100Number(activePresentation.redeploySeconds)}秒</span>{activePresentation.skill && <p>{activePresentation.skill.name}：{activePresentation.skill.summary}</p>}</div>
           </div> : <div className="v100-briefing-empty"><strong>この枠に呼ぶ仲間を選ぶ</strong><span>出撃中は、同じ仲間を繰り返し呼べます。</span></div>}
         </div>
         <div className="v100-callin-roster">
-          <div className="v100-callin-heading"><strong>呼び出し枠 {save.formationSlots.filter(Boolean).length} / 7</strong><details className="v100-briefing-details"><summary>ステージ情報・操作</summary><div><strong>{modePreparation ? "各ステージの条件は出撃前に確認できます" : objectiveLabelFor(stage)}</strong>{stage && <><MissionBriefingDiagram stageId={stageId} /><p>{missionLabelFor(stage)} / {enemyPackLabelFor(stage?.enemyPack, stage?.number)}</p>{threats.length > 0 && <ul aria-label="出現候補の行動">{threats.map(threat => <li key={threat.id}>{threat.name}：{threat.purpose}</li>)}</ul>}<p>{v100TacticalHintFor(stage)}</p></>}<p>同時出撃は全ユニット合わせて7体まで。同じユニットを複数枠に入れても、出撃ボタンの待ち時間は共通です。枠を増やしても、上限や再配備の速さは変わりません。</p>{!modePreparation && <StarCriteria vehicleMaxHp={save.vehicle.maxHp} />}</div></details><small>同じ仲間は1枠から何度でも出撃できます。複数枠に入れても、次の出撃までの待ち時間は短くなりません。</small></div>
+          <div className="v100-callin-heading"><strong>呼び出し枠 {availableSlots.length} / 7</strong><details className="v100-briefing-details"><summary>ステージ情報・操作</summary><div><strong>{modePreparation ? "各ステージの条件は出撃前に確認できます" : objectiveLabelFor(stage)}</strong>{stage && <><MissionBriefingDiagram stageId={stageId} /><p>{missionLabelFor(stage)} / {enemyPackLabelFor(stage?.enemyPack, stage?.number)}</p>{threats.length > 0 && <ul aria-label="出現候補の行動">{threats.map(threat => <li key={threat.id}>{threat.name}：{threat.purpose}</li>)}</ul>}<p>{v100TacticalHintFor(stage)}</p></>}<p>同時出撃は全ユニット合わせて7体まで。同じユニットを複数枠に入れても、出撃ボタンの待ち時間は共通です。枠を増やしても、上限や再配備の速さは変わりません。</p>{!modePreparation && <StarCriteria vehicleMaxHp={save.vehicle.maxHp} />}</div></details><small>同じ仲間は1枠から何度でも出撃できます。複数枠に入れても、次の出撃までの待ち時間は短くなりません。</small></div>
           <div className="v100-slot-track">{save.formationSlots.map((unitId, index) => {
             const art = unitId ? portraitFor(unitId) ?? formationCardForUnit(unitId) : null;
             const unit = unitId ? UNIT_BY_ID.get(unitId) : null;
             const info = unitId ? v100UnitPresentation(save, unitId) : null;
+            const unavailable = v100StageAbsenceReason(stageId, unitId);
             return <button type="button" key={"slot-" + index} className={"v100-slot " + (activeSlot === index ? "selected " : "") + (unitId ? "filled" : "empty")} onClick={() => { setActiveSlot(index); setPickerOpen(true); }} aria-pressed={activeSlot === index} aria-label={"編成枠" + (index + 1) + (unit ? " " + unit.displayName : " 空き")}>
               <span className="v100-slot-portrait">{art ? <img key={art} src={art} alt="" onLoad={(event) => { const image = event.currentTarget; const decoded = typeof image.decode === "function" ? image.decode().catch(() => {}) : Promise.resolve(); void decoded.then(() => requestAnimationFrame(() => { if (image.isConnected && image.naturalWidth > 0) image.dataset.loaded = "true"; })); }} /> : <i aria-hidden="true">＋</i>}</span>
-              <span className="v100-slot-meta"><small>{index + 1}枠</small><strong>{unit ? unit.displayName : "空き"}</strong><b>{info ? `指揮 ${info.commandCost}` : "ユニットを選ぶ"}</b></span>
+              <span className="v100-slot-meta"><small>{index + 1}枠</small><strong>{unit ? unit.displayName : "空き"}</strong><b>{unavailable ? "救助中・出撃不可" : info ? `指揮 ${info.commandCost}` : "ユニットを選ぶ"}</b></span>
             </button>;
           })}</div>
         </div>
@@ -1283,9 +1298,10 @@ function FormationView({ save, stageId, onSlotChange, onStart, onBack, onLoadout
         <div className="v100-formation-columns"><div className="v100-roster-grid">{ownedUnits.map((unit) => {
           const art = formationCardForUnit(unit.id);
           const info = v100UnitPresentation(save, unit.id);
-          return <button type="button" className={"v100-roster-card game-unit-card " + (activeUnitId === unit.id ? "selected" : "")} key={unit.id} onClick={() => assignActiveSlot(unit.id)} aria-label={unit.displayName + "を枠" + (activeSlot + 1) + "へ配置"}>
+          const unavailable = v100StageAbsenceReason(stageId, unit.id);
+          return <button type="button" disabled={Boolean(unavailable)} className={"v100-roster-card game-unit-card " + (activeUnitId === unit.id ? "selected" : "")} key={unit.id} onClick={() => assignActiveSlot(unit.id)} aria-label={unavailable ?? unit.displayName + "を枠" + (activeSlot + 1) + "へ配置"}>
             <span className="v100-roster-card-art">{art && <img src={art} alt="" />}</span>
-            <span className="v100-roster-card-copy"><strong>{unit.displayName} <b>Lv.{info?.level ?? 1}</b></strong><small>{v100RoleLabelFor(unit.role)} / {info?.description}</small><small>指揮 {info?.commandCost} / 再配備 <span className="v100-time-value">{formatV100Number(info?.redeploySeconds ?? 0)}秒</span></small></span>
+            <span className="v100-roster-card-copy"><strong>{unit.displayName} <b>Lv.{info?.level ?? 1}</b></strong><small>{unavailable ?? `${v100RoleLabelFor(unit.role)} / ${info?.description}`}</small><small>指揮 {info?.commandCost} / 再配備 <span className="v100-time-value">{formatV100Number(info?.redeploySeconds ?? 0)}秒</span></small></span>
           </button>;
         })}</div></div>
       </div>
@@ -1294,7 +1310,7 @@ function FormationView({ save, stageId, onSlotChange, onStart, onBack, onLoadout
       <button type="button" className="v100-sortie-selected" aria-label="ユニットの育成" onClick={() => onPersonnel(activeUnitId)}><strong>ユニットの育成</strong><small>{activeUnit ? `${activeUnit.displayName}の能力・強化効果を確認` : "仲間の能力・強化効果を確認"}</small></button>
       <button type="button" className="v100-sortie-loadout" onClick={onLoadout}><strong>支援：{support?.displayName ?? "未選択"}</strong><small>{basePresentation.label} 耐久 {save.vehicle.maxHp} / 装備を確認</small></button>
     </div>
-    <div className="v100-formation-footer"><button type="button" onClick={onBack}>{modePreparation ? "ステージ一覧へ" : "ステージ選択へ"}</button><button type="button" onClick={() => onSlotChange(activeSlot, "")} disabled={!save.formationSlots[activeSlot]}>枠を空ける</button><button className="v100-primary" type="button" aria-label={modePreparation ? "この編成でステージを選ぶ" : "戦闘へ"} disabled={!save.formationSlots.some(Boolean)} onClick={onStart}>{modePreparation ? "この編成でステージを選ぶ" : "出撃"}</button></div>
+    <div className="v100-formation-footer"><button type="button" onClick={onBack}>{modePreparation ? "ステージ一覧へ" : "ステージ選択へ"}</button><button type="button" onClick={() => onSlotChange(activeSlot, "")} disabled={!save.formationSlots[activeSlot]}>枠を空ける</button><button className="v100-primary" type="button" aria-label={modePreparation ? "この編成でステージを選ぶ" : "戦闘へ"} disabled={!availableSlots.length} onClick={onStart}>{modePreparation ? "この編成でステージを選ぶ" : "出撃"}</button></div>
   </section>;
 }
 

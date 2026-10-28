@@ -91,7 +91,10 @@ function plannedFormation(save) {
   // arrived17-22s and its Chromium run cleared the boss. These are controls,
   // not fresh all30 acceptance. Keep early healing behind ranged/scout.
   const preference=["unit-babayaga","unit-hachi","unit-nao","unit-kumaverson","unit-paisen","unit-mizuchi","unit-gantetsu","unit-tatara","unit-monkey"];
-  return preference.filter(id=>save.ownedUnitIds.includes(id)).slice(0,7);
+  // S01/S02 put Paisen inside the rescue building. Choose the other visible
+  // available companions instead of trying to click his disabled roster card.
+  const rescue = V100_STAGES.slice(0,2).some(stage=>stage.id===save.flowState.stageId);
+  return preference.filter(id=>save.ownedUnitIds.includes(id) && !(rescue && id==='unit-paisen')).slice(0,7);
 }
 async function prepareEconomy(stageNumber) {
   await deferNormalRecruitOffer(page,{saveAt,uiClick,stageNumber,transactions:report.transactions});
@@ -101,7 +104,7 @@ async function prepareEconomy(stageNumber) {
     const unit=V100_UNITS.find(unit=>unit.id===id);
     if(!save.ownedUnitIds.includes(id)&&save.registeredUnitIds.includes(id)&&save.caps>=unit.registrationCostCaps) {
       await selectPersonnel(unit);
-      await uiClick(button(`配備登録 / ${unit.registrationCostCaps} CAPS`));
+      await uiClick(button(`出撃を解禁 / ${unit.registrationCostCaps} CAPS`));
       save=await saveAt(); report.transactions.push({stageNumber,action:"register",id,caps:save.caps});
     }
   }
@@ -146,7 +149,11 @@ async function configureFormation() {
     if(wanted[index]) {
       const unit=V100_UNITS.find(unit=>unit.id===wanted[index]);
       await uiClick(button(`${unit.displayName}を枠${index+1}へ配置`));
-    } else await uiClick(button("枠を空ける"));
+    } else {
+      // On short screens the picker covers the footer's clear action.
+      await uiClick(button("編成に戻る"));
+      await uiClick(button("枠を空ける"));
+    }
   }
   await uiClick(button("戦闘へ"));
 }
