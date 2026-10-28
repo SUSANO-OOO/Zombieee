@@ -1358,7 +1358,7 @@ function PersonnelView({ save, initialUnitId, returnLabel, onBack, onPurchase, o
           <div className="v100-personnel-focus-copy">
             <div className="v100-unit-record-heading"><h3>{selectedUnit.displayName}</h3><span className="v100-unit-level">Lv.{info.level}{info.nextLevel !== null && <> → {info.nextLevel}</>} <small>/ 上限 {info.levelCap}</small></span><small className="v100-unit-registration">{info.status}</small></div>
             <p className="v100-unit-record-meta">{info.roleLabel} / 指揮 {info.commandCost} / 再配備 {formatV100Number(info.redeploySeconds)}秒</p>
-            {info.skill && <p className="v100-unit-skill"><strong>固有技：{info.skill.name}</strong><span>再使用 {info.skill.cooldownSeconds}秒</span><br />{info.skill.summary}</p>}
+            {info.skill && <p className="v100-unit-skill"><strong>固有技：{info.skill.name}</strong><span>再使用 {info.skill.cooldownSeconds}秒</span><br />{info.skill.summary}<small className="v100-unit-level-effect">{info.skill.levelEffect}</small></p>}
             <div key={selectedUnit.id + ":" + info.level} className={"v100-personnel-stats v100-stat-reveal " + (currentStats.healing > 0 ? "is-healer" : "")} aria-label="装備込みの戦闘能力と強化後の値">{[
               showStat("HP", currentStats.hp, nextStats?.hp ?? null),
               showStat("防御力", (currentStats.defense * 100).toFixed(2) + "%", nextStats ? (nextStats.defense * 100).toFixed(2) + "%" : null),
@@ -1371,7 +1371,7 @@ function PersonnelView({ save, initialUnitId, returnLabel, onBack, onPurchase, o
                 showStat("射程", formatV100Number(currentStats.range)),
               ] : []),
             ]}</div>
-            <div className="v100-unit-transaction"><p>所持 {save.caps} CAPS{price > 0 && <> / 必要 {price}{save.caps < price && <> / あと {price - save.caps}</>}</>}</p>
+            <div className="v100-unit-transaction">{nextStats && <p className="v100-upgrade-preview">今回の強化：{nextGrowth || "数値変化なし"}</p>}<p>所持 {save.caps} CAPS{price > 0 && <> / 必要 {price}{save.caps < price && <> / あと {price - save.caps}</>}</>}</p>
               {info.owned ? <button type="button" className="v100-primary" data-ui-sound="transaction" onClick={() => onLevel(selectedUnit.id, info.level)} disabled={info.upgradeCost <= 0 || save.caps < info.upgradeCost}>{info.upgradeCost <= 0 ? "強化上限" : save.caps < info.upgradeCost ? "あと " + (info.upgradeCost - save.caps) + " CAPS必要" : "Lv." + info.nextLevel + "へ強化 / " + info.upgradeCost + " CAPS"}</button>
                 : info.registered ? <button type="button" className="v100-primary" data-ui-sound="transaction" onClick={() => onPurchase(selectedUnit.id)} disabled={save.caps < info.registrationCost}>{save.caps < info.registrationCost ? "あと " + (info.registrationCost - save.caps) + " CAPS必要" : "出撃を解禁 / " + info.registrationCost + " CAPS"}</button>
                   : <p className="v100-focus-lock">S{String(selectedUnit.availabilityStageNumber).padStart(2, "0")}クリアで解放</p>}

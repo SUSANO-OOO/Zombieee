@@ -29,6 +29,18 @@ const ABILITY_SELECTION_ADVICE = Object.freeze({
   "miyamoto-musashi": "攻撃を受け流して反撃。来なければ踏み込む。",
 });
 
+// These notes follow the current battle branches: fixed manual hits, normal-attack
+// bursts, target-HP healing, self-HP recovery, and fixed protection/trap effects.
+const ABILITY_LEVEL_EFFECT = Object.freeze({
+  ...Object.fromEntries(['brawler','scout','ranger','brute','babayaga','gunner','zakimiya','tky','mrs-chiha','miyamoto-musashi'].map(kind => [kind, '通常攻撃は育成で強くなる。この技の威力と効果時間はそのまま。'])),
+  'crazy-king': '通常攻撃が強くなると、暴走中の一撃も強くなる。速さと効果時間はそのまま。',
+  'mayo-chan': '通常攻撃が強くなると、凶暴化中の一撃も強くなる。効果時間と毎秒のHP消費はそのまま。',
+  medic: '育成で通常治療と緊急処置の回復量が伸びる。守りの効果と再使用時間はそのまま。',
+  kumaverson: 'HPが増えるほど、技の自己回復量も増える。ダメージの軽減率と効果時間はそのまま。',
+  guardian: '育成で伸びるのは自身の能力。この技で守る範囲・軽減率・効果時間は変わらない。',
+  engineer: '育成で伸びるのは自身の能力。罠の捕縛・減速時間は変わらない。',
+});
+
 export function formatV100Number(value, digits = 2) {
   return Number(value).toFixed(digits).replace(/(\.\d*?[1-9])0+$|\.0+$/u, "$1");
 }
@@ -80,7 +92,7 @@ export function v100UnitPresentation(save, unitId) {
     attackType: base.range >= 80 ? "ranged" : "melee",
     current, next, nextOutputGrowth,
     equipmentNames: Object.freeze(equipmentIds.map((id) => EQUIPMENT_BY_ID[id]?.displayName).filter(Boolean)),
-    skill: ability ? Object.freeze({ name: ability.displayName, summary: ability.unitId === "unit-nao" ? "HPの減った味方を回復。4秒間、受けるダメージを28%軽減。" : ability.summary, detail: ability.summary, cooldownSeconds: ability.cooldownSeconds }) : null,
+    skill: ability ? Object.freeze({ levelEffect: ABILITY_LEVEL_EFFECT[kind], name: ability.displayName, summary: ability.unitId === "unit-nao" ? "HPの減った味方を回復。4秒間、受けるダメージを28%軽減。" : ability.summary, detail: ability.summary, cooldownSeconds: ability.cooldownSeconds }) : null,
     treatmentProtection: kind === "medic" ? Object.freeze({
       reduction: UNIT_ROLE_TUNING.nao.damageReduction,
       seconds: UNIT_ROLE_TUNING.nao.damageReductionSeconds,
