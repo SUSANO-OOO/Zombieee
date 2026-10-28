@@ -1,0 +1,36 @@
+{
+  "method": "built-in image_gen",
+  "args": [
+    {
+      "expression": "determined",
+      "args": {
+        "referenced_image_paths": [
+          "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/hachi-master-r4.png"
+        ],
+        "transparent_background": true,
+        "prompt": "Edit this exact Hachi artwork. Make ONE image of this same character in the SAME complete full-body framing and EXACT same body pose, coat, bag, hands, crowbar, legs, boots, lighting, realistic materials, camera and transparent silhouette. Change ONLY the small facial-expression area to quiet focused determination, relaxed but attentive eyes and firm closed mouth. Preserve precisely his short black hair/orange streak, bandaged nose, cheek scuffs, eye spacing, nose, jaw, mouth proportions and youthful apparent age. Do not change his pose, proportions, outfit, weapon or scale. Keep the entire head and both boots visible in the same positions as this input. This is one full-body expression variant, NOT a sheet, collage, cropped portrait or different view. No new text, floor, scene, background or border; preserve genuine transparent alpha. Strict identity and composition consistency."
+      }
+    },
+    {
+      "expression": "alarm",
+      "args": {
+        "referenced_image_paths": [
+          "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/hachi-master-r4.png"
+        ],
+        "transparent_background": true,
+        "prompt": "Edit this exact Hachi artwork. Make ONE image of this same character in the SAME complete full-body framing and EXACT same body pose, coat, bag, hands, crowbar, legs, boots, lighting, realistic materials, camera and transparent silhouette. Change ONLY the small facial-expression area to mild worried surprise, slightly raised eyebrows and lips a little parted. Preserve precisely his short black hair/orange streak, bandaged nose, cheek scuffs, eye spacing, nose, jaw, mouth proportions and youthful apparent age. Do not change his pose, proportions, outfit, weapon or scale. Keep the entire head and both boots visible in the same positions as this input. This is one full-body expression variant, NOT a sheet, collage, cropped portrait or different view. No new text, floor, scene, background or border; preserve genuine transparent alpha. Strict identity and composition consistency."
+      }
+    },
+    {
+      "expression": "grief",
+      "args": {
+        "referenced_image_paths": [
+          "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/hachi-master-r4.png"
+        ],
+        "transparent_background": true,
+        "prompt": "Edit this exact Hachi artwork. Make ONE image of this same character in the SAME complete full-body framing and EXACT same body pose, coat, bag, hands, crowbar, legs, boots, lighting, realistic materials, camera and transparent silhouette. Change ONLY the small facial-expression area to subdued sadness, gaze slightly lowered, closed mouth. Preserve precisely his short black hair/orange streak, bandaged nose, cheek scuffs, eye spacing, nose, jaw, mouth proportions and youthful apparent age. Do not change his pose, proportions, outfit, weapon or scale. Keep the entire head and both boots visible in the same positions as this input. This is one full-body expression variant, NOT a sheet, collage, cropped portrait or different view. No new text, floor, scene, background or border; preserve genuine transparent alpha. Strict identity and composition consistency."
+      }
+    }
+  ],
+  "status": "Local quality-r1 dialogue/formation/personnel images connected. See runtime provenance and support-cards-r4; Nao dialogue checkpoints in nao-runtime-r1. Battle/cuts/credits and Producer final acceptance remain open."
+}

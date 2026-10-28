@@ -1,0 +1,51 @@
+{
+  "method": "built-in image_gen",
+  "variants": [
+    {
+      "kind": "musashi",
+      "expression": "determined",
+      "args": {
+        "referenced_image_paths": [
+          "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/musashi-master-r4.png"
+        ],
+        "transparent_background": true,
+        "prompt": "Edit this exact established adult game character Miyamoto Musashi. Change ONLY the facial expression to quiet resolve, focused eyes and a firm closed mouth. Preserve the same individual identity, facial proportions, eyes, nose, mouth, age, hair/fur, body pose and silhouette, exact full-body composition, camera and image dimensions. Keep all clothing and its coverage, every accessory and piece of equipment exactly as the reference, with no additions or omissions. Keep every limb, hand, foot and weapon intact and in the exact same place. Do not make a generic replacement face. Preserve the matte realistic textures and subtle painted finish. Genuine transparent alpha in all empty space; no backdrop, gradient, ground shadow, text, collage, crop or border. One full-body expression variant."
+      },
+      "output": "assets/source/quality-20261028/identity/musashi-determined-r6.png",
+      "outputSha256": "0c3e9856a9911c691d12fd6191a8a20aa57c62aa996f5548370dd19df750b287",
+      "outputBytes": 2141251,
+      "status": "Generated local candidate, not yet runtime verified."
+    },
+    {
+      "kind": "musashi",
+      "expression": "alarm",
+      "args": {
+        "referenced_image_paths": [
+          "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/musashi-master-r4.png"
+        ],
+        "transparent_background": true,
+        "prompt": "Edit this exact established adult game character Miyamoto Musashi. Change ONLY the facial expression to restrained surprise and concern, subtly raised eyebrows and slightly parted lips. Preserve the same individual identity, facial proportions, eyes, nose, mouth, age, hair/fur, body pose and silhouette, exact full-body composition, camera and image dimensions. Keep all clothing and its coverage, every accessory and piece of equipment exactly as the reference, with no additions or omissions. Keep every limb, hand, foot and weapon intact and in the exact same place. Do not make a generic replacement face. Preserve the matte realistic textures and subtle painted finish. Genuine transparent alpha in all empty space; no backdrop, gradient, ground shadow, text, collage, crop or border. One full-body expression variant."
+      },
+      "output": "assets/source/quality-20261028/identity/musashi-alarm-r6.png",
+      "outputSha256": "520fe4430ccdcfa89f218d46eed799281b1618a6c6a2a11cddc8d87901c2d3df",
+      "outputBytes": 2129258,
+      "status": "Generated local candidate, not yet runtime verified."
+    },
+    {
+      "kind": "musashi",
+      "expression": "grief",
+      "args": {
+        "referenced_image_paths": [
+          "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/musashi-master-r4.png"
+        ],
+        "transparent_background": true,
+        "prompt": "Edit this exact established adult game character Miyamoto Musashi. Change ONLY the facial expression to subdued sadness, slightly lowered gaze and relaxed closed mouth, no tears. Preserve the same individual identity, facial proportions, eyes, nose, mouth, age, hair/fur, body pose and silhouette, exact full-body composition, camera and image dimensions. Keep all clothing and its coverage, every accessory and piece of equipment exactly as the reference, with no additions or omissions. Keep every limb, hand, foot and weapon intact and in the exact same place. Do not make a generic replacement face. Preserve the matte realistic textures and subtle painted finish. Genuine transparent alpha in all empty space; no backdrop, gradient, ground shadow, text, collage, crop or border. One full-body expression variant."
+      },
+      "output": "assets/source/quality-20261028/identity/musashi-grief-r6.png",
+      "outputSha256": "7eda015656ba23cc879024ef83887aaff5c7abce9059977ac57f506bc1cef9ff",
+      "outputBytes": 2078365,
+      "status": "Generated local candidate, not yet runtime verified."
+    }
+  ],
+  "status": "Three variants generated and alpha-composited at runtime output size for visual inspection. Connected to four-state dialogue mapping; actual story coverage is documented separately, not all variants were displayed in story."
+}

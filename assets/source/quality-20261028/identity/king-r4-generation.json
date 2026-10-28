@@ -1,0 +1,17 @@
+{
+  "method": "built-in image_gen",
+  "canonical": "reference/characters/producer-masters-v2/crazy-king-producer-master-v2.png",
+  "args": {
+    "referenced_image_paths": [
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\reference/characters/producer-masters-v2/crazy-king-producer-master-v2.png",
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\public/art/v060/characters/portraits/crazy-king-portrait-v2.webp"
+    ],
+    "transparent_background": true,
+    "prompt": "Create one neutral full-body transparent game character from these exact established Crazy King references. Reference1 is the sole full-body costume and identity authority; reference2 supplies close-up helmet, jacket and equipment details. Keep the original adult male stature, green hooded zip-up jacket, BLACK PLEATED SKIRT, RED TALL HEELED BOOTS, and distinctive yellow cylindrical bucket helmet with black top, two round black eye holes with pale rims, and red smile marking. Face remains completely concealed. Preserve the original red/black chainsaw design, switched off and held lowered in a relaxed two-hand grip. One upright balanced resting pose with two separate natural legs and planted boots, not a battle action or sheet. Improve realistic matte cloth, worn metal, rubber and human hands, subtle painted finish; avoid plastic-shiny jacket and exaggerated anatomy. All skirt, boots, hands and entire chainsaw within frame, generous transparent margin. No new clothing, trousers, armor, facial features or accessories. Genuine transparent alpha background, no checkerboard, floor, backdrop, text or border."
+  },
+  "status": "Own canonical identity retained; alpha-composited image inspected. Connected to local dialogue mapping and cards. Stage portrait rendering confirmed except Mayo, who has no separate portrait cue in the inspected stage pre/post script. Battle, dedicated scenes, credits and Producer acceptance remain open.",
+  "output": "assets/source/quality-20261028/identity/king-master-r4.png",
+  "outputSha256": "37f68d4df0962bfead20bbdfd16113f05ea3b5f42488e9d22b958a4e7718e5dc",
+  "outputBytes": 1947605,
+  "referenceSha256": "0a4329786e31f6a10d646e3145eaed188ff434cedcb58a346ae8efa29161c789"
+}

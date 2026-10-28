@@ -1,0 +1,16 @@
+{
+  "method": "built-in image_gen",
+  "canonical": "assets/source/v090/characters/mrs-chiha-identity-master-r1.png",
+  "args": {
+    "referenced_image_paths": [
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets/source/v090/characters/mrs-chiha-identity-master-r1.png"
+    ],
+    "transparent_background": true,
+    "prompt": "Identity-preserve background extraction for an existing game character. Edit this exact image of the established adult Mrs. Chiha. Preserve her distinctive face, eye shape and spacing, mouth, age, hairstyle and hairband exactly; keep her black long coat, white ruffled blouse with exactly the existing coverage, fitted black trousers, heel boots, straps, gloves and rotary grenade launcher exactly. The original already has the desired realistic anatomy and subtle painted finish: do not redesign her or substitute a generic beautiful face. Remove the white studio background and ground shadow to genuine transparent alpha. Keep the same full-body pose, full equipment, framing and proportions with a little clear margin. No extra objects, no added exposure, no new pose, no text, no collage. One intact transparent character."
+  },
+  "status": "Own canonical identity retained; alpha-composited image inspected. Connected to local dialogue mapping and cards. Stage portrait rendering confirmed except Mayo, who has no separate portrait cue in the inspected stage pre/post script. Battle, dedicated scenes, credits and Producer acceptance remain open.",
+  "output": "assets/source/quality-20261028/identity/chiha-master-r4.png",
+  "outputSha256": "d9acf14c0f75ce8e80b4dd2e7f8285e154562e72082200be68983ef292369705",
+  "outputBytes": 1008532,
+  "referenceSha256": "5f7b3cb8047804b595d5de57727e34a39fdd7eb6744a2ed859ebd22bb42f3b83"
+}

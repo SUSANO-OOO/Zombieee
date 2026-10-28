@@ -43,11 +43,19 @@ async function alphaAudit(assetPath) {
 test("all five newcomer event and card derivatives keep transparent UI-owned backgrounds without white matte fringe", async () => {
   for (const kind of NEWCOMERS) {
     const profile = V090_UNIT_VISUAL_PROFILES[kind];
-    assert.match(profile.eventPortrait.path, /^\/art\/v0995\/characters\/portraits\//);
-    assert.match(profile.formationCard.path, /^\/art\/v0995\/characters\/cards\//);
+    if (['zakimiya','tky'].includes(kind)) {
+      assert.equal(profile.identityMaster.path, kind==='zakimiya' ? '/art/v090/characters/reference/zakimiya-identity-master-r1.png' : '/art/v100/portraits/tky-warm-quality-r1.webp');
+      assert.equal(profile.eventPortrait.path, `/art/v100/portraits/${kind}-determined-quality-r1.webp`);
+      assert.equal(profile.formationCard.path, `/art/v100/portraits/${kind}-formation-card-quality-r1.webp`);
+    } else {
+      const owner={'mrs-chiha':'chiha','miyamoto-musashi':'musashi','mayo-chan':'mayo'}[kind];
+      assert.equal(profile.identityMaster.path, `/art/v090/characters/reference/${kind}-identity-master-r1.png`);
+      assert.equal(profile.eventPortrait.path, `/art/v100/portraits/${owner}-determined-${owner==='musashi'?'stage':'quality'}-r1.webp`);
+      assert.equal(profile.formationCard.path, `/art/v100/portraits/${owner}-formation-card-quality-r1.webp`);
+    }
 
     const portrait = await alphaAudit(profile.eventPortrait.path);
-    assert.deepEqual([portrait.width, portrait.height], [512, 640]);
+    assert.deepEqual([portrait.width, portrait.height], kind==='miyamoto-musashi' ? [1024, 1280] : [512, 640]);
     assert.ok(portrait.visibleRatio >= .22 && portrait.visibleRatio <= .82, `${kind} portrait is a readable transparent subject`);
     // A resized eye highlight or white clothing can legitimately be fractional;
     // compare against the former derivative and require a substantial reduction.
@@ -81,12 +89,19 @@ test("Monkey runtime identity is the exact producer-approved V070 r11 lineage", 
   });
   for (const [key, assetPath] of Object.entries({
     identity: profile.identityMaster.path,
-    portrait: profile.eventPortrait.path,
+    portrait: '/art/v070/characters/portraits/engineer-portrait-v1.webp',
     battle: profile.battleSprite.path,
   })) {
     const digest = createHash("sha256").update(await readFile(publicFile(assetPath))).digest("hex");
     assert.equal(digest, expected[key], `${key} is the approved byte revision`);
   }
+  const currentPortrait=JSON.parse(await readFile(path.join(ROOT,'assets/source/quality-20261028/identity/monkey-runtime-provenance.json'),'utf8'));
+  assert.equal(currentPortrait.canonical.sha256,expected.identity);
+  assert.equal(profile.eventPortrait.path,'/art/v100/portraits/monkey-determined-quality-r1.webp');
+  const derivative=currentPortrait.outputs.find(row=>row.path===`public${profile.eventPortrait.path}`);
+  assert.ok(derivative,'The current candidate must have output provenance');
+  assert.equal(createHash('sha256').update(await readFile(publicFile(profile.eventPortrait.path))).digest('hex'),derivative.sha256);
+  assert.match(currentPortrait.approval,/final visual acceptance.*open/,'New portrait cannot inherit historical approval');
   const runtimeDigest = createHash("sha256").update(await readFile(publicFile(runtimeBattlePath))).digest("hex");
   const campaignDigest = createHash("sha256").update(await readFile(publicFile(campaign.spritePath))).digest("hex");
   assert.equal(runtimeDigest, expected.battle, "runtime manifest points at the approved V070 atlas bytes");

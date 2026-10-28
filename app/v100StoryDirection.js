@@ -23,10 +23,20 @@ export const V100_R9_STORY_CUTS = Object.freeze(Object.fromEntries(Object.entrie
 
 export function v100EventPortraitPath(owner, expression = "determined") {
   const profile = V100_EVENT_PORTRAIT_PROFILES[owner];
+  // Gantetsu's opaque full-face protection stays closed in every emotional beat.
+  if(owner==='unit-gantetsu'&&V100_EVENT_EXPRESSIONS.includes(expression))return '/art/v100/portraits/gantetsu-determined-stage-r1.webp';
+  if(['unit-babayaga','unit-kumaverson','unit-tatara','unit-miyamoto-musashi','guide-ikura','segawa','mugarian-president','red-panther-commander'].includes(owner)&&V100_EVENT_EXPRESSIONS.includes(expression))return `/art/v100/portraits/${profile}-${expression}-stage-r1.webp`;
+  if(owner==='unit-crazy-king'&&V100_EVENT_EXPRESSIONS.includes(expression))return '/art/v100/portraits/king-determined-quality-r1.webp';
+  if (['unit-mrs-chiha','unit-miyamoto-musashi','unit-mayo-chan'].includes(owner) && V100_EVENT_EXPRESSIONS.includes(expression)) {
+    return `/art/v100/portraits/${profile}-${expression}-quality-r1.webp`;
+  }
+  if (['unit-zakimiya','unit-tky','unit-hachi','unit-nao','unit-mizuchi','unit-monkey','guide-ikura','unit-raider'].includes(owner) && V100_EVENT_EXPRESSIONS.includes(expression)) {
+    return `/art/v100/portraits/${profile}-${expression}-quality-r1.webp`;
+  }
   // The producer replaced Paisen's identity with three photos on 2026-10-15.
   // Every expression must follow that same face, including secondary speakers.
   if (owner === 'unit-paisen' && V100_EVENT_EXPRESSIONS.includes(expression)) {
-    return `/art/v100/portraits/paisen-${expression}-r2.webp`;
+    return `/art/v100/portraits/paisen-${expression}-quality-r1.webp`;
   }
   return profile && V100_EVENT_EXPRESSIONS.includes(expression)
     ? `/art/v100/story-r5/portraits/${profile}-${expression}.webp` : null;

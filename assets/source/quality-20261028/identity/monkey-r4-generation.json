@@ -1,0 +1,14 @@
+{
+  "method": "built-in image_gen",
+  "args": {
+    "referenced_image_paths": [
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\public\\art\\v070\\characters\\reference\\monkey-base-r11.png"
+    ],
+    "transparent_background": true,
+    "prompt": "Re-render this canonical fictional game character, Monkey, as a believable real adult man photographed in his exact costume, with only a subtle illustrative finish. Use the provided original as the sole facial identity and costume authority. Preserve his silver-gray shaggy layered hair, sharp but natural individual face, original eye shape and spacing, brows, straight nose, mouth, youthful adult age, lean engineer build and composed expression. Make eyes, skin, hands and body anatomically human; no manga eyes, heavy outlines, plasticky sheen or inflated musculature. Soft neutral diffuse lighting, realistic hair strands, matte skin, real woven and weathered materials. Preserve charcoal work shirt and trousers, olive chest harness with tool pouches, gloves, elbow and knee guards, utility belt and worn boots. Preserve his exact compact black mechanical crossbow, supported naturally with both hands at waist level, angled down, with visible coherent bow limbs, cable and stock. No gun substitution and no new gear. Full-body natural balanced standing stance, no deep crouch, two separated legs and both boots on the same implied ground level. Body turned slightly toward image right; face readable toward viewer. Entire hair, silhouette, crossbow and boots inside the frame with margins. One character on genuinely transparent alpha, no setting, floor, shadow plate, text or border. Preserve this specific character's identity while replacing the cartoon rendering with photographic plausibility."
+  },
+  "output": "monkey-master-r4.png",
+  "status": "Local quality-r1 portraits connected; see monkey-runtime-r1 and docs/qa/quality-20261028.md for exact observed scope. Battle/cuts/credits and Producer acceptance remain open. Source family storage review required before commit.",
+  "referenceSha256": "8dbe4f5cf4e64160d7fdd22f246b4762a650988fc6bac4ad13021ba418820ad7",
+  "outputSha256": "feefc4b9959e8ce45955c1915338aec029fb1b58892f79528a1359d97ad5f2e1"
+}

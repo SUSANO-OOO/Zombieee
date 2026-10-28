@@ -1,0 +1,75 @@
+{
+  "generator": "scripts/build-quality-support-portraits.mjs",
+  "canonical": {
+    "path": "public/art/v070/characters/reference/hachi-base-r2.png",
+    "sha256": "27d61a658e4cc8d6bccf367658308f93ff31795e6513c33549818587681343f3"
+  },
+  "inputs": [
+    {
+      "expression": "warm",
+      "path": "assets/source/quality-20261028/identity/hachi-master-r4.png",
+      "sha256": "e722cc7aca81806cd7d2d1403c425262466ea4f1aa44b877731dcef79ee080bb",
+      "width": 1024,
+      "height": 1536
+    },
+    {
+      "expression": "determined",
+      "path": "assets/source/quality-20261028/identity/hachi-determined-r6.png",
+      "sha256": "7fa76889d0549e74ab9c31192d6f02e9a770ac9518b168252f7954a4914a9d6b",
+      "width": 1024,
+      "height": 1536
+    },
+    {
+      "expression": "alarm",
+      "path": "assets/source/quality-20261028/identity/hachi-alarm-r6.png",
+      "sha256": "a8014d45e0668ce5d5b64a8c636662c256095595165874365cfdf8d5890ec6a2",
+      "width": 1024,
+      "height": 1536
+    },
+    {
+      "expression": "grief",
+      "path": "assets/source/quality-20261028/identity/hachi-grief-r6.png",
+      "sha256": "6ea3c485dd7088ac57e106315a8abe3ad97fdec4cdb148acc7c429970490afbe",
+      "width": 1024,
+      "height": 1536
+    }
+  ],
+  "crop": {
+    "left": 270,
+    "top": 0,
+    "width": 660,
+    "height": 800
+  },
+  "outputs": [
+    {
+      "path": "public/art/v100/portraits/hachi-warm-quality-r1.webp",
+      "sha256": "651bb947390fd3c9a374d8f362f572764511db4d12714b8175df1cb27d122a93",
+      "bytes": 79134
+    },
+    {
+      "path": "public/art/v100/portraits/hachi-formation-card-quality-r1.webp",
+      "sha256": "3c5f7906c71fa3e0df8d4fb35d23e6283fc547263e1097cf4e5fcfcff6cabaf8",
+      "bytes": 63902
+    },
+    {
+      "path": "public/art/v100/portraits/hachi-determined-quality-r1.webp",
+      "sha256": "109a31d6d5dfed645976e4eafd08c2eeeaef85d90e5b11796c7d5e136903deca",
+      "bytes": 73210
+    },
+    {
+      "path": "public/art/v100/portraits/hachi-alarm-quality-r1.webp",
+      "sha256": "7bbe07d0b8ef5e5394b2d505137b4dff7bfab0b229fa79d7b15328685a6a8332",
+      "bytes": 75880
+    },
+    {
+      "path": "public/art/v100/portraits/hachi-grief-quality-r1.webp",
+      "sha256": "e71a08655f6937186716b7fe68539ef07ee58ed8264d66fb1e5ce75e3b37eead",
+      "bytes": 74416
+    }
+  ],
+  "runtimeAssetCount": 5,
+  "logicalBytes": 366542,
+  "distinctBytes": 366542,
+  "scope": "Local dialogue and card candidate. Battle, dedicated scenes and credits are not replaced by this builder.",
+  "approval": "Producer requested the redesign; final visual acceptance and integration remain open."
+}

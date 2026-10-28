@@ -1,0 +1,14 @@
+{
+  "method": "built-in image_gen",
+  "args": {
+    "referenced_image_paths": [
+      "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028\\public\\art\\v070\\characters\\reference\\tatara-base-r8.png"
+    ],
+    "transparent_background": true,
+    "prompt": "Re-render this exact established fictional adult game character with photographic anatomy, believable skin and hair, real fabric and worn metal, retaining only a subtle hand-painted finish. The provided image is the sole identity, body, clothing and equipment authority; do not substitute another face or character. Tatara is the same adult man with dark wavy medium-length hair, strong angular face, thick brows, rugged build and heavy navy workwear, armored shoulders/forearms, tan harness and pouches, armored knees, black boots. His distinctive oversized dark blue industrial hammer has the exact rectangular head, steel rim, hexagonal center and worn yellow stripe details. Keep this hammer design unchanged and support its weight with both hands as in the reference. Preserve the recognizable face, silhouette and every distinctive accessory. Natural matte materials, neutral soft light, no plastic shine, no oversized anime eyes or thick comic outlines. A clean full-body standing character cutout, upright balanced weight, two separate anatomically plausible legs with both boots planted. Keep body turned slightly toward image right and face nearly toward viewer when visible. Preserve proportions rather than exaggerating muscularity. Show the entire figure and equipment with transparent margin. Genuinely transparent alpha background; no scene, gray paper backdrop, floor, ground shadow, gradient, border or text. One character only, not a sheet."
+  },
+  "status": "Connected to local dialogue/card candidate. Battle, dedicated scenes, credits and Producer visual acceptance remain open.",
+  "referenceSha256": "c297171a498cd8d05adbf377d26d1bb47fb89a9f19ac4aa69d34f4e3b36e84a1",
+  "outputSha256": "dc28b9b8cedb6b96fe14c5003f510466056baf06ea172cceccc83727a08d2def",
+  "output": "tatara-master-r4.png"
+}

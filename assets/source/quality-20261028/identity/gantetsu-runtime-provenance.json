@@ -1,0 +1,40 @@
+{
+  "generator": "scripts/build-quality-support-portraits.mjs",
+  "canonical": {
+    "path": "public/art/v070/characters/reference/gantetsu-base-r7.png",
+    "sha256": "a70035ddc266a2b1d9646628363d2adff6f64fe0c22f3205a89ba16f128d771d"
+  },
+  "inputs": [
+    {
+      "expression": "determined",
+      "path": "assets/source/quality-20261028/identity/gantetsu-master-r4.png",
+      "sha256": "ec06125c13977b05bbc704a7b8594b2c3b3bf716f7954e4647158ec8edadf51d",
+      "width": 1024,
+      "height": 1536
+    }
+  ],
+  "crop": {
+    "left": 210,
+    "top": 0,
+    "width": 620,
+    "height": 827
+  },
+  "outputs": [
+    {
+      "path": "public/art/v100/portraits/gantetsu-determined-quality-r1.webp",
+      "sha256": "ea83420146d1d1d1e3edae94e68cc99e8f074408200d2127e3d15fb38cfffcaf",
+      "bytes": 78862
+    },
+    {
+      "path": "public/art/v100/portraits/gantetsu-formation-card-quality-r1.webp",
+      "sha256": "d3a0e559f17d57e3759fc89e9da19239d220ba8c5cbde67cd4c3dd9aef95001b",
+      "bytes": 53492
+    }
+  ],
+  "expressionPolicy": "One opaque-visor portrait covers all four dialogue states; no face or facial expression was invented.",
+  "runtimeAssetCount": 2,
+  "logicalBytes": 132354,
+  "distinctBytes": 132354,
+  "scope": "Local dialogue and card candidate. Battle, dedicated scenes and credits are not replaced by this builder.",
+  "approval": "Producer requested the redesign; final visual acceptance and integration remain open."
+}

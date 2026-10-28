@@ -112,6 +112,7 @@ import "./v100CommandPolish.css";
 import "./v100ExperiencePolish.css";
 import "./v100RegionalMap.css";
 import "./v100MobileLayout.css";
+import "./v100DialogueStage.css";
 
 type Save = NonNullable<StorageOutcome["save"]> & { bestStars: Record<string, number> };
 type StorageOutcome = Awaited<ReturnType<typeof readV100BrowserSave>>;
@@ -777,11 +778,11 @@ export function V100Campaign() {
   };
 
   const startBattle = () => {
-    const entered = enterV100Battle(flow);
     if (!v100AvailableFormation(flow.stageId, save.formationSlots).length) {
       setNotice("この作戦に出撃できる仲間を編成してください。");
       return;
     }
+    const entered = enterV100Battle(flow);
     if (!entered.accepted) {
       setNotice(formatReason(entered.reason));
       return;
@@ -806,11 +807,11 @@ export function V100Campaign() {
   };
   const retryDefeat = () => {
     if (saveBusyRef.current) return;
-    const next = retryV100Battle(flow);
     if (!v100AvailableFormation(flow.stageId, save.formationSlots).length) {
       setNotice("この編成では出撃できません。「編成を見直す」から仲間を選んでください。");
       return;
     }
+    const next = retryV100Battle(flow);
     if (next.accepted) { setNotice(""); void updateFlow(next.state); }
   };
 
@@ -979,10 +980,9 @@ export function V100Campaign() {
         <section key={flow.eventId ?? flow.phase} className={`v100-event-layout v100-event-${flow.phase} v100-event-category-${eventPresentation?.category ?? "scene"}`} aria-label={flow.phase === "first-clear-post" ? "確定したクリア報酬" : `${eventDisplayLabel(flow.eventId)}イベント`} data-v100-surface={flow.phase} data-v100-event-id={flow.eventId ?? undefined} data-v100-event-category={eventPresentation?.category ?? undefined} data-v100-node-index={eventPresentation?.nodeIndex ?? undefined} data-v100-transition={eventPresentation?.transition ?? undefined} data-v100-audio-owner={eventPresentation?.audioOwner ?? undefined} data-v100-audio-state={eventAudioSnapshot?.audioStatus?.state ?? "locked"} data-v100-audio-revision={eventAudioRevision}>
           <V100EventBackdrop src={eventBackdropFor(eventPresentation, eventRuntime?.backgroundPath ?? "/art/v060/title-key-visual-v1.webp")} description={eventPresentation?.backgroundAlt} scene={eventPresentation?.sceneLabel} location={currentNode?.sceneTag ?? currentNode?.sceneLabel} title={currentNode?.kind === "title"} cinematic={eventPresentation?.cinematic} />
           <article className="v100-event-panel">
-            <div className="v100-event-heading"><span className="v100-kicker">{flow.phase === "first-clear-post" && !flow.firstClear ? `${V100_STAGE_BY_ID[flow.stageId ?? ""]?.displayName ?? "ステージ"} / クリア報酬` : eventDisplayLabel(flow.eventId)}</span>{flow.phase !== "first-clear-post" && <button type="button" className="v100-event-readback" onClick={() => setLogOpen(true)}>読み返す</button>}</div>
+            <div className="v100-event-heading"><span className="v100-kicker">{flow.phase === "first-clear-post" && !flow.firstClear ? `${V100_STAGE_BY_ID[flow.stageId ?? ""]?.displayName ?? "ステージ"} / クリア報酬` : eventDisplayLabel(flow.eventId)}</span>{flow.phase !== "first-clear-post" && <div className="v100-story-tools"><button type="button" className="v100-event-readback" onClick={() => setLogOpen(true)}>会話ログ</button>{flow.canSkip && <button type="button" className="v100-event-skip" data-ui-sound="advance" onClick={() => markAndAdvanceEvent(true)}>スキップ</button>}</div>}</div>
             {flow.phase === "first-clear-post" ? <><RewardSummaryView result={save.lastResult} /><div className="v100-event-actions"><button type="button" className="v100-primary" onClick={() => markAndAdvanceEvent(false)}>続ける</button></div></> : currentNode ? <StoryNodeView node={currentNode} leadingActions={storyPage.leadingActions} eventId={flow.eventId} phase={flow.phase} nodeIndex={storyPage.nodeIndex} presentation={eventPresentation} actions={<div className="v100-event-actions">
               <button type="button" className="v100-primary" onClick={() => markAndAdvanceEvent(false)}>{storyPage.endIndex < event.nodes.length - 1 ? "次へ" : flow.phase === "ending" ? "次の場面へ" : "続ける"}</button>
-              {flow.canSkip && <button type="button" onClick={() => markAndAdvanceEvent(true)}>スキップ</button>}
             </div>} /> : <p className="v100-action-node">このイベントを確認して次へ進みます。</p>}
           </article>
         </section>
@@ -1113,7 +1113,7 @@ function StoryNodeView({ node, eventId = null, phase = "event", nodeIndex = 0, p
   const secondaryPortraitSide = portraitSide === "right" ? "left" : portraitSide === "left" ? "right" : "none";
   const nodeLabel = node.kind === "dialogue" ? storySpeakerLabel(node.speaker) : node.kind === "player-action" ? "主人公" : node.kind === "battle-marker" ? "ステージ情報" : node.kind === "system" ? "無線記録" : "";
   const playerFacingText = publicDisplayText(node.text || "…");
-  const framingStyle = (owner: string | null | undefined) => { const framing = v100EventPortraitPath(owner) ? {scale:"100%",shift:"0%",headroom:"0px"} : v100PortraitFraming(owner); return { "--portrait-scale": framing.scale, "--portrait-shift": framing.shift, "--portrait-headroom": framing.headroom } as CSSProperties; };
+  const framingStyle = (owner: string | null | undefined) => v100PortraitFraming(owner) as CSSProperties;
   if (node.kind === "title") return <div className="v100-story-node v100-node-title" data-v100-node-kind="title"><h2>{playerFacingText}</h2>{actions}</div>;
   if (node.kind === "montage") return <div className="v100-story-node v100-credits-shot" data-v100-node-kind="montage" data-v100-credit-scene={node.sceneLabel}><span className="v100-kicker">西新の、その後</span><h2>{node.sceneLabel}</h2><p>{playerFacingText}</p>{actions}</div>;
   return <div className={`v100-story-node v100-node-${node.kind ?? "action"}`} data-portrait-side={portraitSide} data-portrait-count={portrait ? secondaryPortrait ? "2" : "1" : "0"} data-v100-state={`dialogue-${portraitSide}`} data-v100-node-kind={resolvedPresentation?.nodeKind ?? node.kind ?? "action"} data-v100-node-label={resolvedPresentation?.nodeLabel ?? "場面"} data-v100-transition={resolvedPresentation?.transition ?? undefined} data-v100-audio-cue={resolvedPresentation?.cueId ?? undefined}>

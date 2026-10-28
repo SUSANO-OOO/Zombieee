@@ -1,0 +1,122 @@
+{
+  "generator": "scripts/build-quality-identity-portraits.mjs",
+  "sources": [
+    {
+      "path": "assets/source/quality-20261028/identity/babayaga-expressions-r2.png",
+      "sha256": "f5ceac48ad53144e19f7d9dd0a04004733d4d4772145362d27e788d5a505e3e6",
+      "width": 1086,
+      "height": 1448,
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 543,
+        "height": 710
+      }
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/kumaverson-expressions-r2.png",
+      "sha256": "2f2a75d2bc75beecf6e93cac42b2926584ad18040e75382c61fd62ecef7c7084",
+      "width": 1312,
+      "height": 1199,
+      "crop": {
+        "left": 88,
+        "top": 0,
+        "width": 480,
+        "height": 599
+      }
+    }
+  ],
+  "outputs": [
+    {
+      "path": "/art/v100/portraits/babayaga-warm-r3.webp",
+      "bytes": 73334,
+      "sha256": "3bbd4b7b40e1996d520c12779b67a2a3f4a488a85c45c9de30e91e938d9c5f82",
+      "width": 512,
+      "height": 640,
+      "hasAlpha": true
+    },
+    {
+      "path": "/art/v100/portraits/babayaga-determined-r3.webp",
+      "bytes": 74644,
+      "sha256": "8a26fa186c245b6da698a8a8b3d73213777031a39f877a1c5c76d34a3912f7ec",
+      "width": 512,
+      "height": 640,
+      "hasAlpha": true
+    },
+    {
+      "path": "/art/v100/portraits/babayaga-alarm-r3.webp",
+      "bytes": 72956,
+      "sha256": "4b513e724695f559ba77b9d285586db8988b72ebc0f5e73357d80d902e6ea66e",
+      "width": 512,
+      "height": 640,
+      "hasAlpha": true
+    },
+    {
+      "path": "/art/v100/portraits/babayaga-grief-r3.webp",
+      "bytes": 77856,
+      "sha256": "da46a65a4f0c6e57b59003c62c26fa6c09a7c227ba09dff60468335c2834773a",
+      "width": 512,
+      "height": 640,
+      "hasAlpha": true
+    },
+    {
+      "path": "/art/v100/portraits/babayaga-formation-card-r3.webp",
+      "bytes": 52554,
+      "sha256": "e16b4fa7cb20c143e1e5cb12378e58bceaf0b288e7fde90544c1975f98a6a384",
+      "width": 512,
+      "height": 512,
+      "hasAlpha": true
+    },
+    {
+      "path": "/art/v100/portraits/kumaverson-warm-r3.webp",
+      "bytes": 71814,
+      "sha256": "f47f957a09af719c9c7b3e2be5817a65a5a0e56ff14175b692420283cdacc055",
+      "width": 512,
+      "height": 640,
+      "hasAlpha": true
+    },
+    {
+      "path": "/art/v100/portraits/kumaverson-determined-r3.webp",
+      "bytes": 71678,
+      "sha256": "6d4a196f32fb7f5e094826f7eb21963aad2fa7bb3ddab764cb7cd70c7fd67085",
+      "width": 512,
+      "height": 640,
+      "hasAlpha": true
+    },
+    {
+      "path": "/art/v100/portraits/kumaverson-alarm-r3.webp",
+      "bytes": 78504,
+      "sha256": "f017f7d81f14e7658f6a419d973879c28ca6544651fdb06a7dc61d73b4bba2c9",
+      "width": 512,
+      "height": 640,
+      "hasAlpha": true
+    },
+    {
+      "path": "/art/v100/portraits/kumaverson-grief-r3.webp",
+      "bytes": 78078,
+      "sha256": "bfbcad9d2a40d8c0feeb3b6197939d3bb62b594d04620a611dbe41fb32070d59",
+      "width": 512,
+      "height": 640,
+      "hasAlpha": true
+    },
+    {
+      "path": "/art/v100/portraits/kumaverson-formation-card-r3.webp",
+      "bytes": 56076,
+      "sha256": "6e0e470bd3324193708a73776dd5f549dcc7b5e8d57fb862a508495b09fc27e1",
+      "width": 512,
+      "height": 512,
+      "hasAlpha": true
+    },
+    {
+      "path": "/art/v100/portraits/kumaverson-formation-card-r3.png",
+      "bytes": 351883,
+      "sha256": "a254d9f1f860ee2e61ffe825a03969675a355f97bcf56e91a9630506d17bb8d4",
+      "width": 512,
+      "height": 512,
+      "hasAlpha": true
+    }
+  ],
+  "scope": "Cards, identity portraits and all four dialogue expressions. Battle rigs, scene paintings and staff-roll paintings remain a separate uncompleted task.",
+  "likeness": "Producer photo identity is the artistic reference; no numeric similarity score measured.",
+  "alphaReview": "Review after normal source-over alpha composition; low-alpha RGB is not opaque fringe."
+}

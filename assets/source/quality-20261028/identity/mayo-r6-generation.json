@@ -1,0 +1,51 @@
+{
+  "method": "built-in image_gen",
+  "variants": [
+    {
+      "kind": "mayo",
+      "expression": "determined",
+      "args": {
+        "referenced_image_paths": [
+          "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/mayo-master-r4.png"
+        ],
+        "transparent_background": true,
+        "prompt": "Edit this exact established cream long-haired Chihuahua game character Mayo-chan. Change ONLY the facial expression to an alert attentive dog, closed relaxed mouth and focused eyes; ears naturally attentive. Preserve the same individual identity, facial proportions, eyes, nose, mouth, age, hair/fur, body pose and silhouette, exact full-body composition, camera and image dimensions. Keep all clothing and its coverage, every accessory and piece of equipment exactly as the reference, with no additions or omissions. Keep all four paws, fluffy tail, both ears, yellow neckerchief and medical harness intact. Do not change breed or anatomy. Preserve the matte realistic textures and subtle painted finish. Genuine transparent alpha in all empty space; no backdrop, gradient, ground shadow, text, collage, crop or border. One full-body expression variant."
+      },
+      "output": "assets/source/quality-20261028/identity/mayo-determined-r6.png",
+      "outputSha256": "b804d89866eb8018251d12c05cdd26ee13e276d8120118b7b2ce7ff1e6222678",
+      "outputBytes": 2052430,
+      "status": "Generated local candidate, not yet runtime verified."
+    },
+    {
+      "kind": "mayo",
+      "expression": "alarm",
+      "args": {
+        "referenced_image_paths": [
+          "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/mayo-master-r4.png"
+        ],
+        "transparent_background": true,
+        "prompt": "Edit this exact established cream long-haired Chihuahua game character Mayo-chan. Change ONLY the facial expression to a naturally startled alert dog, ears attentive and mouth slightly open; no human eyebrows or exaggerated human expression. Preserve the same individual identity, facial proportions, eyes, nose, mouth, age, hair/fur, body pose and silhouette, exact full-body composition, camera and image dimensions. Keep all clothing and its coverage, every accessory and piece of equipment exactly as the reference, with no additions or omissions. Keep all four paws, fluffy tail, both ears, yellow neckerchief and medical harness intact. Do not change breed or anatomy. Preserve the matte realistic textures and subtle painted finish. Genuine transparent alpha in all empty space; no backdrop, gradient, ground shadow, text, collage, crop or border. One full-body expression variant."
+      },
+      "output": "assets/source/quality-20261028/identity/mayo-alarm-r6.png",
+      "outputSha256": "4667b3f51e76fb62621764aa3f9a8cfe582ab33f253a6735b1d2d9e9a6d50e31",
+      "outputBytes": 2027883,
+      "status": "Generated local candidate, not yet runtime verified."
+    },
+    {
+      "kind": "mayo",
+      "expression": "grief",
+      "args": {
+        "referenced_image_paths": [
+          "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/mayo-master-r4.png"
+        ],
+        "transparent_background": true,
+        "prompt": "Edit this exact established cream long-haired Chihuahua game character Mayo-chan. Change ONLY the facial expression to a quiet subdued dog, relaxed closed mouth and slightly lowered gaze; no tears, no human expression. Preserve the same individual identity, facial proportions, eyes, nose, mouth, age, hair/fur, body pose and silhouette, exact full-body composition, camera and image dimensions. Keep all clothing and its coverage, every accessory and piece of equipment exactly as the reference, with no additions or omissions. Keep all four paws, fluffy tail, both ears, yellow neckerchief and medical harness intact. Do not change breed or anatomy. Preserve the matte realistic textures and subtle painted finish. Genuine transparent alpha in all empty space; no backdrop, gradient, ground shadow, text, collage, crop or border. One full-body expression variant."
+      },
+      "output": "assets/source/quality-20261028/identity/mayo-grief-r6.png",
+      "outputSha256": "d6c9cb4dfa7ad25103c5100d92d855ce3f93f11121588c32fc4cae60713500f8",
+      "outputBytes": 2052858,
+      "status": "Generated local candidate, not yet runtime verified."
+    }
+  ],
+  "status": "Three variants generated and alpha-composited at runtime output size for visual inspection. Connected to four-state dialogue mapping; actual story coverage is documented separately, not all variants were displayed in story."
+}

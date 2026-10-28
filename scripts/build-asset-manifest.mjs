@@ -81,6 +81,7 @@ function optimizedRasterPath(assetPath) {
   // WebKit corrupts this transparent card when decoded from WebP, including
   // the otherwise lossless PWA transport derivative.
   if (assetPath === "/art/v080/characters/cards/kumaverson-formation-card-r2.png") return null;
+  if (assetPath === "/art/v100/portraits/kumaverson-formation-card-r3.png") return null;
   if (!assetPath.endsWith(".png") || assetPath.startsWith("/icons/")) return null;
   return `/pwa-optimized${assetPath.replace(/\.png$/i, ".webp")}`;
 }
