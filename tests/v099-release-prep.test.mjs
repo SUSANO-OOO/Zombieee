@@ -13,7 +13,7 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { readFile } from "node:fs/promises";
+
 import test from "node:test";
 
 import { RELEASE_VERSION } from "../app/releaseIdentity.js";
@@ -45,7 +45,8 @@ const publishedV0993Source = JSON.parse(execFileSync("git", [
 ], { encoding: "utf8" }));
 const publishedV0993 = { ...publishedV0993Source, releaseSha: PUBLISHED_V0993_SHA };
 const publishedV0995 = { ...JSON.parse(execFileSync("git", ["show", `${PUBLISHED_V0995_SHA}:public/asset-manifest.json`], { encoding: "utf8" })), releaseSha: PUBLISHED_V0995_SHA };
-const candidate = JSON.parse(await readFile(new URL("../public/asset-manifest.json", import.meta.url), "utf8"));
+// Historical release contract; the current candidate is tested in quality-runtime-update.test.mjs.
+const candidate = JSON.parse(execFileSync('git', ['show', 'ff5dba24e88c810182cda1f044bd26dfc3e512c1:public/asset-manifest.json'], {encoding:'utf8',maxBuffer:4*1024*1024}));
 const v100ApprovedAssets = candidate.assets.filter(({ path }) => path.startsWith("/art/v100/"));
 const spriteRefreshBytes=V177_SPRITE_REPLACEMENTS.reduce((sum,row)=>sum+row.next.bytes,0);
 const spriteRefreshPaths=V177_SPRITE_REPLACEMENTS.map(row=>row.path);

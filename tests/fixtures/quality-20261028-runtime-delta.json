@@ -1,0 +1,1501 @@
+{
+  "base": "ff5dba24e88c810182cda1f044bd26dfc3e512c1",
+  "source": "2d32ac03ccd38b81664b5133759d1fcb0fe2d8d7",
+  "scope": "Local quality candidate transport contract; not likeness, rights, listening, release or physical-device approval.",
+  "added": [
+    {
+      "path": "/art/v100/joints/babayaga-quality-head-r1.webp",
+      "hash": "sha256-4622b14b346602af8e5d269720fa301afcf948c22db07db0ad56baf24699b09c",
+      "bytes": 22626,
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/joints/brawler-quality-head-r1.webp",
+      "hash": "sha256-041763e670aa2f22eacade93b0e746a19ffbe44620284656ba5a6defac49a013",
+      "bytes": 36006,
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/joints/kumaverson-quality-head-r1.webp",
+      "hash": "sha256-3baa1326f2f6020c8f0386c8beac83e0eaf0bfb129afcf71644e34253818f9dc",
+      "bytes": 33682,
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/joints/tky-quality-head-r1.webp",
+      "hash": "sha256-c8fdc326605466be8fedf44fa00543b0b9f6c6c2b1174fff1a0eaffccc53d7a9",
+      "bytes": 36576,
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/joints/zakimiya-quality-head-r1.webp",
+      "hash": "sha256-9bf647045ed7eb614cd92f6556aeab2fd3c9aa6451cec00e3d039df10aa6990b",
+      "bytes": 30154,
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/babayaga-alarm-stage-r1.webp",
+      "hash": "sha256-4eac63becbce72a76741e9984fa28b1af51a6c50ffd4bb97e44e2e4632be16b6",
+      "bytes": 134232,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/babayaga-determined-stage-r1.webp",
+      "hash": "sha256-e2bd870378222785718421b5bc03030d17eebb40d4a7241f045427e309db2847",
+      "bytes": 136636,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v100/portraits/babayaga-formation-card-r3.webp",
+      "hash": "sha256-e16b4fa7cb20c143e1e5cb12378e58bceaf0b288e7fde90544c1975f98a6a384",
+      "bytes": 52554,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v100/portraits/babayaga-grief-stage-r1.webp",
+      "hash": "sha256-006cf58abc03f3a1bf2911b80f1b9d2fdbd4ce989543d0c08eddee7560b04659",
+      "bytes": 134738,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/babayaga-warm-stage-r1.webp",
+      "hash": "sha256-95b2e34b565f867b4b6ddb7284c0b103fa5540f617405f3e68bfbf28b2ed1523",
+      "bytes": 157202,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/chiha-alarm-quality-r1.webp",
+      "hash": "sha256-7c48dc80a60413cd2d2e01f6a2dd957e6f33fa7d95b798c898da91d51fb47f4e",
+      "bytes": 69512,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/chiha-determined-quality-r1.webp",
+      "hash": "sha256-b5fa5a41ca28b7181b30c5729e1b088fe2304a4d266734af24b6c9250e46d34b",
+      "bytes": 70348,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v100/portraits/chiha-formation-card-quality-r1.webp",
+      "hash": "sha256-d63ff0bc5073b237f2202166fcda82fc7b897e012a58fb1804dfa6efff59ff82",
+      "bytes": 47504,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v100/portraits/chiha-grief-quality-r1.webp",
+      "hash": "sha256-8ef77c43861ea155388b78fc8622349fb691ea174e33595e1ec8c278571aaeff",
+      "bytes": 68350,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/chiha-warm-quality-r1.webp",
+      "hash": "sha256-25a9ac1ead7b69c75e3e294db5adc5a7fdac6890d02512478a9bc8ab77f32b8e",
+      "bytes": 70464,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/commander-alarm-stage-r1.webp",
+      "hash": "sha256-58018d19530918de6c4ff02cbe2bf9d0d9cb0631daf1ec207c4f1076f305fbb2",
+      "bytes": 319682,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/commander-determined-stage-r1.webp",
+      "hash": "sha256-6a893b6654d2fec07b5e837b00da2137602bc94a7641001d62776b535d8ad3ed",
+      "bytes": 321418,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/commander-grief-stage-r1.webp",
+      "hash": "sha256-82abaa302394b081950d7b6d43d166d88c2aa3451b9885f015af4382cb3dab1f",
+      "bytes": 267754,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/commander-warm-stage-r1.webp",
+      "hash": "sha256-008bff7d37e7ed41dc7ada226a2c918f4039a566239d209294f421b3864721ca",
+      "bytes": 292536,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/gantetsu-determined-stage-r1.webp",
+      "hash": "sha256-7111c37441279f3acf4db2977f50401f57ac231e0a288b92eb30849d29586d03",
+      "bytes": 310108,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v100/portraits/gantetsu-formation-card-quality-r1.webp",
+      "hash": "sha256-d3a0e559f17d57e3759fc89e9da19239d220ba8c5cbde67cd4c3dd9aef95001b",
+      "bytes": 53492,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v100/portraits/hachi-alarm-quality-r1.webp",
+      "hash": "sha256-7bbe07d0b8ef5e5394b2d505137b4dff7bfab0b229fa79d7b15328685a6a8332",
+      "bytes": 75880,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/hachi-determined-quality-r1.webp",
+      "hash": "sha256-109a31d6d5dfed645976e4eafd08c2eeeaef85d90e5b11796c7d5e136903deca",
+      "bytes": 73210,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v100/portraits/hachi-formation-card-quality-r1.webp",
+      "hash": "sha256-3c5f7906c71fa3e0df8d4fb35d23e6283fc547263e1097cf4e5fcfcff6cabaf8",
+      "bytes": 63902,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v100/portraits/hachi-grief-quality-r1.webp",
+      "hash": "sha256-e71a08655f6937186716b7fe68539ef07ee58ed8264d66fb1e5ce75e3b37eead",
+      "bytes": 74416,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/hachi-warm-quality-r1.webp",
+      "hash": "sha256-651bb947390fd3c9a374d8f362f572764511db4d12714b8175df1cb27d122a93",
+      "bytes": 79134,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/ikura-alarm-stage-r1.webp",
+      "hash": "sha256-7a6ab2c074a8dd6e3640590dfa8d2111702877e5dcb238e5f10d9b7a2636f0de",
+      "bytes": 299418,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/ikura-determined-stage-r1.webp",
+      "hash": "sha256-2034425f0e17185d51423b90e8924d981c24d78388890962e5676fa53b0f2875",
+      "bytes": 294984,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/ikura-grief-stage-r1.webp",
+      "hash": "sha256-eb4f0fa38204fa9d7a7e163c406d5d35e426e2d62364c378303e084d9bc50af2",
+      "bytes": 290496,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/ikura-warm-stage-r1.webp",
+      "hash": "sha256-2d88a414272caea3fa1924e08aa86fbebad0a2d024daa67eda590ff8afeeb436",
+      "bytes": 330548,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v100/portraits/king-determined-quality-r1.webp",
+      "hash": "sha256-3894b555959b9dff2f86faf67e71eaa9256764626f1d1b733807bd7e965954b3",
+      "bytes": 63902,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v100/portraits/king-formation-card-quality-r1.webp",
+      "hash": "sha256-b0e8908a109b93460586b473dbec3e9eb358b0df9c0914fe84d39145257b6777",
+      "bytes": 50818,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v100/portraits/kumaverson-alarm-stage-r1.webp",
+      "hash": "sha256-31231cdc15db6222370eb661a12f4f805b2ff0f8c7b783d55835ce77c208caab",
+      "bytes": 162648,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/kumaverson-determined-stage-r1.webp",
+      "hash": "sha256-735722b557a5e7dfcc7a72711bd6f9dcb99d6bb796c26241d6bab8fc6ee80525",
+      "bytes": 166148,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v100/portraits/kumaverson-formation-card-r3.png",
+      "hash": "sha256-a254d9f1f860ee2e61ffe825a03969675a355f97bcf56e91a9630506d17bb8d4",
+      "bytes": 351883,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v100/portraits/kumaverson-grief-stage-r1.webp",
+      "hash": "sha256-461dcb1a7178ae34ff5fb44f9bb30fddc5aae3976cc990d5f475dc6b9bfb333d",
+      "bytes": 175476,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/kumaverson-warm-stage-r1.webp",
+      "hash": "sha256-9b45830bc765a740ab21bb5e1ea29b93735ba6f5528c9c4af8129908a124c7e6",
+      "bytes": 179404,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/mayo-alarm-quality-r1.webp",
+      "hash": "sha256-0e01062fc6aacbe2af904f17316ca59e553bf036af66e44bf1e5e755ef9c19a8",
+      "bytes": 90684,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/mayo-determined-quality-r1.webp",
+      "hash": "sha256-42a704a8adc9c45c42b29bee56944ab7151fabe7f5e651c7b88b8f00ce7d85f4",
+      "bytes": 93150,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v100/portraits/mayo-formation-card-quality-r1.webp",
+      "hash": "sha256-83bf5ab9d3793a78dcc7d8140470659f22adb61e7a945a91a9b6ed0d488e832c",
+      "bytes": 82996,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v100/portraits/mayo-grief-quality-r1.webp",
+      "hash": "sha256-88a4b0c548479e3956b7bdf34487565b66e2f87f53904b92755af343c82a5287",
+      "bytes": 92996,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/mayo-warm-quality-r1.webp",
+      "hash": "sha256-690a5c67c975bd6d5de5ca84853301e66277874ac8cdca8814d7ed159d07fa54",
+      "bytes": 101040,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/mizuchi-alarm-quality-r1.webp",
+      "hash": "sha256-ad4e0179f035d8e55f515b4071e000d57a9051f362c496b4e9f0fe581da458b7",
+      "bytes": 64030,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/mizuchi-determined-quality-r1.webp",
+      "hash": "sha256-53ede9aa543a09d4004b7acae3947abe03acc4af11664ba22709b3ffc4844d5a",
+      "bytes": 62044,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v100/portraits/mizuchi-formation-card-quality-r1.webp",
+      "hash": "sha256-cae3d1082f791f50e35af3d8926642f6d5d1ca42a2bb44ab54a584037874fdc2",
+      "bytes": 46814,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v100/portraits/mizuchi-grief-quality-r1.webp",
+      "hash": "sha256-8643a09acdd20f91d574666ea352d2b206bcb32e61748766d1cc3170b539ab32",
+      "bytes": 60788,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/mizuchi-warm-quality-r1.webp",
+      "hash": "sha256-103aaf8ad9fd7b42828783521b888e1d84d310a00e840ec1abca114072881760",
+      "bytes": 63928,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/monkey-alarm-quality-r1.webp",
+      "hash": "sha256-d7220c8b1781bff2d22d3c58e370b56b38af10e4824569cd69eb678adbb89a74",
+      "bytes": 79068,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/monkey-determined-quality-r1.webp",
+      "hash": "sha256-d65a413c1728ab31071888419b30e73cdc042c5ba33174c45fca1f600234149b",
+      "bytes": 82798,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v100/portraits/monkey-formation-card-quality-r1.webp",
+      "hash": "sha256-7f3efc1a6dc943c21ffcee8df87344ae1bd34f201a224516bfd34abd675f799d",
+      "bytes": 56296,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v100/portraits/monkey-grief-quality-r1.webp",
+      "hash": "sha256-b2cc9bd3e5a8e2bbc488f79612c28712e8488f240caa51dbe3d5922b133748cb",
+      "bytes": 84946,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/monkey-warm-quality-r1.webp",
+      "hash": "sha256-3455ba405a5c00eda5c487dcdf2d03de9ea9f58e95a6d26cafaf008a54a2bfd5",
+      "bytes": 83380,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/musashi-alarm-stage-r1.webp",
+      "hash": "sha256-894faaed0ae16ca4d357d5802fa0b75cbe63610417693c4d33bcd27e380188eb",
+      "bytes": 274534,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/musashi-determined-stage-r1.webp",
+      "hash": "sha256-03d19686d514d36eae82aca60247f192eea40ea890a8ccede1831d5a8a21b186",
+      "bytes": 296228,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v100/portraits/musashi-formation-card-quality-r1.webp",
+      "hash": "sha256-4937e616ca1157d778a9567816ef296d18d1a9c3224968b1e4d252fb5958dfa7",
+      "bytes": 65920,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v100/portraits/musashi-grief-stage-r1.webp",
+      "hash": "sha256-fe4a96f768ea5a13b6586436c074b754952be1ed3807bfacbd7e73f573a31870",
+      "bytes": 269240,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/musashi-warm-stage-r1.webp",
+      "hash": "sha256-2e3b33b0ac4f19dcc8d74333d6e26c2174b4b0302f251468fe5a2668d41fe0e5",
+      "bytes": 281350,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/nao-alarm-quality-r1.webp",
+      "hash": "sha256-42a5346a8ea488cc5f4242e9cc55d016bd61276f2c80a164d411839e60dbc612",
+      "bytes": 82562,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/nao-determined-quality-r1.webp",
+      "hash": "sha256-a1eab19905313c8043c5d18f9ecb0ee0cb4094f711d1dd10dc38aef87cfd2add",
+      "bytes": 81876,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v100/portraits/nao-formation-card-quality-r1.webp",
+      "hash": "sha256-3806d428ad5a30dc8b1a471de95928e051ccfa8a20f2d77a0ffc051882e6822e",
+      "bytes": 65604,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v100/portraits/nao-grief-quality-r1.webp",
+      "hash": "sha256-8531cfd3419a70bef6f125dcd65c1caca99ef8b5babf670abcb709d09780f9fe",
+      "bytes": 82290,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/nao-warm-quality-r1.webp",
+      "hash": "sha256-028d961557bb123019eb69522f5890a5c42cc78f3b18d6759eb6f9fe5011f6f7",
+      "bytes": 88660,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/paisen-alarm-quality-r1.webp",
+      "hash": "sha256-31942e6b4a612ea2fd73801346ea263c4a2d7355b219bbe249e14173be0c1c02",
+      "bytes": 39094,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/paisen-determined-quality-r1.webp",
+      "hash": "sha256-ff9a362e5defb7d5d4ac305ee56d1705808b1bdcf3796f3255c06864e3461331",
+      "bytes": 37788,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v100/portraits/paisen-formation-card-quality-r1.webp",
+      "hash": "sha256-8b8bb5ecfb3d23c87b5bebda19764b57cf38f6c2dd538bb3582dcd54acb6d6d9",
+      "bytes": 28822,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v100/portraits/paisen-grief-quality-r1.webp",
+      "hash": "sha256-95e777a8708e6e25c13e5c8a1fbf8d62efb83e64f1f87c3ede8c8c1b378a6d78",
+      "bytes": 38104,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/paisen-warm-quality-r1.webp",
+      "hash": "sha256-bfef5f2254320445a849d7cec60bb12197e4012e019970a15e25dace9bdc6f10",
+      "bytes": 36518,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/president-alarm-stage-r1.webp",
+      "hash": "sha256-185ce12b23eb43aa3bc1dacada958c13937e2a029e88eedbcc01d876aec328fa",
+      "bytes": 325852,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/president-determined-stage-r1.webp",
+      "hash": "sha256-c0f02817ed636576e8873953ec4290caf9f0ce1bb3e2c1cf59e34816f21a5506",
+      "bytes": 271566,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/president-grief-stage-r1.webp",
+      "hash": "sha256-004b99d6b7b261286ff9e4d8857d42e84ab00a8c7f573c3857b36ddddb6612c2",
+      "bytes": 243494,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/president-warm-stage-r1.webp",
+      "hash": "sha256-9d5bc096438c789df02d235b0083621306d05fb8b724a6520d4a9d68ddc2c9c6",
+      "bytes": 282242,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/raider-alarm-quality-r1.webp",
+      "hash": "sha256-0321daed6e98fba250ba25eeab0369a3ff441505d3010757e29d0269fafd96f4",
+      "bytes": 84514,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/raider-determined-quality-r1.webp",
+      "hash": "sha256-4c7103bae7dfa1113778bc7c0f477db6063fbb7c7f5db87d2c65b6e71dc418d9",
+      "bytes": 84650,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v100/portraits/raider-formation-card-quality-r1.webp",
+      "hash": "sha256-d379597c766ff697748743fd52640e6fa93d938ed30abaf87f830d3e72f82363",
+      "bytes": 60586,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v100/portraits/raider-grief-quality-r1.webp",
+      "hash": "sha256-6e8230216d6cb1f254cb2dd75287375542789ad6b6ff69d298acfda1a03b30c4",
+      "bytes": 84062,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/raider-warm-quality-r1.webp",
+      "hash": "sha256-4c7103bae7dfa1113778bc7c0f477db6063fbb7c7f5db87d2c65b6e71dc418d9",
+      "bytes": 84650,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/segawa-alarm-stage-r1.webp",
+      "hash": "sha256-90daeaf8523780fc41ca1b477cf11ff39eac4cdf3db6a21e72fb1992c038b271",
+      "bytes": 259914,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/segawa-determined-stage-r1.webp",
+      "hash": "sha256-dbce5fe632c2e571539cd2acd0d94afbf385b703bd46f344bca546a45d563541",
+      "bytes": 289476,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/segawa-grief-stage-r1.webp",
+      "hash": "sha256-9fa34059e474b6737321619592d61d85dffef6a836a8a5371368e1ffcfe1d052",
+      "bytes": 266424,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/segawa-warm-stage-r1.webp",
+      "hash": "sha256-e63120afd585b0f19e65524c4140088d28fb935052a1acf0b9edab8d2f6a941a",
+      "bytes": 279922,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/tatara-alarm-stage-r1.webp",
+      "hash": "sha256-2fc9aca1add69423b801827f42975926935ee53b8fa367fb4b0554f6038d8c35",
+      "bytes": 275996,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/tatara-determined-stage-r1.webp",
+      "hash": "sha256-79cdd5c00bbe8cbfbdd51ffdd87a36b853adaf73c3ebd1d954c2e615083ba595",
+      "bytes": 280764,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v100/portraits/tatara-formation-card-quality-r1.webp",
+      "hash": "sha256-b17553a9a94157309e8867b18b66785096e1d1d0d51d05651addafdfc16247b4",
+      "bytes": 75596,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v100/portraits/tatara-grief-stage-r1.webp",
+      "hash": "sha256-1625ed1b7c4b663d79fae21513660621c9a2d0f464ad812b171f9c7bd64c3d18",
+      "bytes": 277824,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/tatara-warm-stage-r1.webp",
+      "hash": "sha256-8e7ddd153bd13b2209a5fc264a3030c21a2ab45969c7f82cc02da80141bc4c0d",
+      "bytes": 291632,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/tky-alarm-quality-r1.webp",
+      "hash": "sha256-3f1dfd598c5ee1034df4eeb7e7538a23e8be9f4274dfce1036d11a942df6d7a5",
+      "bytes": 96314,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/tky-determined-quality-r1.webp",
+      "hash": "sha256-892f7eb38aed170f6b48360418a2b74ab9ce085a44cfc18ec4d7de02159585be",
+      "bytes": 96674,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v100/portraits/tky-formation-card-quality-r1.webp",
+      "hash": "sha256-a26841c5d2b66d9fe13b5bb7f9a55061f3c238c03f790ce82653e298a04486fc",
+      "bytes": 67678,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v100/portraits/tky-grief-quality-r1.webp",
+      "hash": "sha256-5e15ffba885539642b8ab419347fab3ded905ecc27568fa3f8995071fa16e0c5",
+      "bytes": 98746,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/tky-warm-quality-r1.webp",
+      "hash": "sha256-6823d01d54620af671926e62f09a0cd57e21b75fca839e8b16e11926afe519fe",
+      "bytes": 96782,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/zakimiya-alarm-quality-r1.webp",
+      "hash": "sha256-7a4339575c79d2307c5da93d5d60da8a612f5614d06074b8d51b84c099599ab7",
+      "bytes": 86430,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/zakimiya-determined-quality-r1.webp",
+      "hash": "sha256-efc17ab1bd90a15739265e2634e1851fc77450f7e0e2359f3b230cd440bd3a34",
+      "bytes": 84752,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v100/portraits/zakimiya-formation-card-quality-r1.webp",
+      "hash": "sha256-a30d22f93ba2a8ac8ed65b0e3497795a22b7f93b377f1aef3aa3ed51373453bb",
+      "bytes": 58404,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v100/portraits/zakimiya-grief-quality-r1.webp",
+      "hash": "sha256-b46de5fd451d37db3036ca6ecd54e43713883867239d8c7be38fde54241c471b",
+      "bytes": 84172,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/zakimiya-warm-quality-r1.webp",
+      "hash": "sha256-a7573b6fdc0178192393641ae149a13fb8373084b045c49f8d1b522248cf4190",
+      "bytes": 84606,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-locations/refrigerated-cargo-r1.webp",
+      "hash": "sha256-ba943a2219d1c402bfe0452707423ddb3ef45bad0a67a0033cd778ff55293da2",
+      "bytes": 263800,
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-locations/rescue-vehicle-interior-r1.webp",
+      "hash": "sha256-8b1a224064d94fcbfa8ddfb95224f09e7272fa3595797005eccaafda171f2b6d",
+      "bytes": 324376,
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/audio/weapons/recorded/v104-handgun.mp3",
+      "hash": "sha256-f8a06b9910bb19253354b533ce9ed1cf41988ca8226679a43e32d9e52cb4d541",
+      "bytes": 5666,
+      "category": "audio",
+      "criticality": "optional",
+      "audioId": "install-weapons-recorded-v104-handgun"
+    },
+    {
+      "path": "/audio/weapons/recorded/weapon-gunner-01.mp3",
+      "hash": "sha256-f2d84bff20bf4010fe9a24849598dbaa113eeb6e58692a16ddeeb8fe6a0deaa2",
+      "bytes": 6234,
+      "category": "audio",
+      "criticality": "optional",
+      "audioId": "install-weapons-recorded-weapon-gunner-01"
+    },
+    {
+      "path": "/audio/weapons/recorded/weapon-gunner-02.mp3",
+      "hash": "sha256-eee63b13a259c476640d589a50791bbfee0fd9234f320a39f2a1792f29813d53",
+      "bytes": 6052,
+      "category": "audio",
+      "criticality": "optional",
+      "audioId": "install-weapons-recorded-weapon-gunner-02"
+    },
+    {
+      "path": "/audio/weapons/recorded/weapon-rifle-01.mp3",
+      "hash": "sha256-a16abba2aa984f94943f73c97714638611ce76960e78b06bbbf190b852eb24fd",
+      "bytes": 6771,
+      "category": "audio",
+      "criticality": "optional",
+      "audioId": "install-weapons-recorded-weapon-rifle-01"
+    },
+    {
+      "path": "/audio/weapons/recorded/weapon-rifle-02.mp3",
+      "hash": "sha256-b62c3ffd7a9ddb76308ef945dfc6728c01bfdd9d1195feaf4eaf4401317f4c39",
+      "bytes": 6797,
+      "category": "audio",
+      "criticality": "optional",
+      "audioId": "install-weapons-recorded-weapon-rifle-02"
+    },
+    {
+      "path": "/audio/weapons/recorded/weapon-smg-01.mp3",
+      "hash": "sha256-8509f2b80e625cd37562829c280474be88dcbc0a13e93ec67f51176232b0e358",
+      "bytes": 5354,
+      "category": "audio",
+      "criticality": "optional",
+      "audioId": "weapon-smg-01"
+    },
+    {
+      "path": "/audio/weapons/recorded/weapon-smg-02.mp3",
+      "hash": "sha256-46aee2cd8c892d749fa617344b2a8537f586fc36416a2d5bff40f6e604c3befd",
+      "bytes": 5222,
+      "category": "audio",
+      "criticality": "optional",
+      "audioId": "weapon-smg-02"
+    }
+  ],
+  "retired": [
+    {
+      "path": "/art/v075/characters/portraits/ikura-event-portrait-v4.webp",
+      "hash": "sha256-9fdc78abe6f192235e433fb96221625a7082c3d0fa310868b7ea6b7bccba11c3",
+      "bytes": 110740,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v080/characters/cards/babayaga-formation-card-r2.webp",
+      "hash": "sha256-6af05149eb99e1880227578c134f9546150e9a662ead4adfe6f246a080bc88a0",
+      "bytes": 43804,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v080/characters/cards/brute-formation-card-r2.webp",
+      "hash": "sha256-f124ddf777cdd8f4430b08f4d91ef4d88f6dfcc0e21f00f7c6cdc366edcf9753",
+      "bytes": 57724,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v080/characters/cards/crazy-king-formation-card-r2.webp",
+      "hash": "sha256-b1e722fb14cd72a0dcaefdaea399a75275b014e414956eb29086cb2be50f0b90",
+      "bytes": 49302,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v080/characters/cards/guardian-formation-card-r2.webp",
+      "hash": "sha256-94b52abea738971148cd852509064bf86df5deeb71a747f0d21b686e0698e8c9",
+      "bytes": 35042,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v080/characters/cards/gunner-formation-card-r2.webp",
+      "hash": "sha256-f7f1032d756be3ca02e50e524c2df8ef5410f53bf92dcf81da6c7a32cc6b0f24",
+      "bytes": 52308,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v080/characters/cards/kumaverson-formation-card-r2.png",
+      "hash": "sha256-fc36119a1af2eff154380fc9ca821370edae06825e50250e4565683a0bb241ba",
+      "bytes": 396090,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v080/characters/cards/medic-formation-card-r2.webp",
+      "hash": "sha256-a9a1eac0599e34a1173f395d8ab3090a7265537307cabb6cbefbb60f49927730",
+      "bytes": 65178,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v080/characters/cards/ranger-formation-card-r2.webp",
+      "hash": "sha256-9c631d32c0f06c81ffea6ec4bda0918b0059c2e6e55ac16bab6333463caf9639",
+      "bytes": 40198,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v080/characters/cards/scout-formation-card-r2.webp",
+      "hash": "sha256-99bbaeca6e2ae498ae1a88504627254cacc5daf97a8db37cb10ef15830d3f92f",
+      "bytes": 56460,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v0995/characters/cards/mayo-chan-formation-card-r2.webp",
+      "hash": "sha256-6ad5c460c870ebf138d53cc0fd24024117488eb157e1235922161b923745492b",
+      "bytes": 75442,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v0995/characters/cards/miyamoto-musashi-formation-card-r2.webp",
+      "hash": "sha256-34541913794aa86474287e6db6989266fa3219b02de93f8927f311d0ac579408",
+      "bytes": 54022,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v0995/characters/cards/monkey-formation-card-r3.webp",
+      "hash": "sha256-48f45ece5ee8a30d53c06689cb8b3fd72d06908832b917982b538f1810e5e0a4",
+      "bytes": 57806,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v0995/characters/cards/mrs-chiha-formation-card-r2.webp",
+      "hash": "sha256-b9ca1e75642a11b18874a4d5a1c54a9802a91b27767f0f1cbdd7845dc01545b3",
+      "bytes": 45616,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v0995/characters/cards/tky-formation-card-r2.webp",
+      "hash": "sha256-ac5b4699e1098b1a4dfcbf07788624f3ff82e05c22ef06b92c4b0110cdb90c71",
+      "bytes": 47538,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v0995/characters/cards/zakimiya-formation-card-r2.webp",
+      "hash": "sha256-075f1a28b537cd8ed9078b03b07871be71c41751e41c007c99cc27cdcc70659e",
+      "bytes": 43726,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v0995/characters/portraits/mayo-chan-event-portrait-r2.webp",
+      "hash": "sha256-fce7149d3f4fe7abd6b417fed98cc3e8904e5263001b0d7a95662e46576e5607",
+      "bytes": 108524,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v0995/characters/portraits/miyamoto-musashi-event-portrait-r2.webp",
+      "hash": "sha256-0bc224025e99093d2337b4c6d0d14acc06604fa79bc6c68231ac33bcd7ba2e62",
+      "bytes": 89808,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v0995/characters/portraits/mrs-chiha-event-portrait-r2.webp",
+      "hash": "sha256-eac852cbce801871e04c68fece726ea381f33bdfd52b44b7b9845faed75a44a5",
+      "bytes": 65336,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v0995/characters/portraits/tky-event-portrait-r2.webp",
+      "hash": "sha256-bcb28022021c8b3765f0a32ec706ea8ba5903034cc787a919d30fca3765f5f97",
+      "bytes": 69674,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v0995/characters/portraits/zakimiya-event-portrait-r2.webp",
+      "hash": "sha256-b76a370986289841fd67ba57d246fc5ba702869df9a8baa65af4c4984424198b",
+      "bytes": 64102,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v100/joints/babayaga-r1.webp",
+      "hash": "sha256-68963ba9025a3b597f2f83600761b360ecb4e080848712bdaffae67d2b6ccecd",
+      "bytes": 22584,
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/joints/brawler-photo-r2.webp",
+      "hash": "sha256-e318ae905df6d0fe24d69ecc71bc5796aebfde3a50defde1c59b3cf0196707cb",
+      "bytes": 36100,
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/joints/kumaverson-r1.webp",
+      "hash": "sha256-b21eb685a87bc72b7ce7687f78eb6b3b486f37a6a0b59bf11a2fc87ad5266364",
+      "bytes": 33956,
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/joints/tky-r1.webp",
+      "hash": "sha256-59495022d95a45677605e04887d72e5359a63e3c5a94203315d4bfe4053aad22",
+      "bytes": 36212,
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/joints/zakimiya-r1.webp",
+      "hash": "sha256-5859fd70326d70e0e29a35019216276951e0388656779611405bb78ec686a86f",
+      "bytes": 30216,
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/paisen-alarm-r2.webp",
+      "hash": "sha256-1131c3938ecc9b5315c463b3c8e6f4567a87b8c09ba0fbe97aab23c5c4bf3b20",
+      "bytes": 238130,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/paisen-determined-r2.webp",
+      "hash": "sha256-1835312115771633a9ffd0ff449e8214671dfe49645f88f686a887b1259ec06d",
+      "bytes": 249968,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/paisen-formation-card-r3.webp",
+      "hash": "sha256-75a83b82d6c0f6721b3bbcc9a638a276a74a4166179bf15b9839a4ebbb7da573",
+      "bytes": 160328,
+      "category": "portrait",
+      "criticality": "optional"
+    },
+    {
+      "path": "/art/v100/portraits/paisen-grief-r2.webp",
+      "hash": "sha256-2c9ae38f6e199dca2db145f783255c34d6a3784fc08f5def512d56e4e8e311b4",
+      "bytes": 244180,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/paisen-warm-r2.webp",
+      "hash": "sha256-626251dba8c16b6db122684ca449444daba3cf8e230fc3c2af6ad34b43ba74da",
+      "bytes": 244534,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/babayaga-alarm.webp",
+      "hash": "sha256-ca668a041c9d59c773f9313e67789273228ede481f20b2d52b001ec7ca566ed1",
+      "bytes": 94520,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/babayaga-determined.webp",
+      "hash": "sha256-a82cada49375fc8ffc70ab02f82538afba867a65e8ce44b59e3c8e2cc936ae49",
+      "bytes": 90544,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/babayaga-grief.webp",
+      "hash": "sha256-a4d617eb5c8418ad22949d70a822d006fb72ea1052b5df78d3fa6c237cb419b6",
+      "bytes": 94536,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/babayaga-warm.webp",
+      "hash": "sha256-001a378975a781d4948aac1702c4044c01a01b835f1d52346671d9a425fa8305",
+      "bytes": 91432,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/chiha-alarm.webp",
+      "hash": "sha256-f055bef0ca80ec76cb3532498fa50fb42b2812fa38bca8b423f11e4bf8414198",
+      "bytes": 113598,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/chiha-determined.webp",
+      "hash": "sha256-cb0cef72211908226eca89a5c150f512e3c6ac026dae3c5726f772c5c163a098",
+      "bytes": 118260,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/chiha-grief.webp",
+      "hash": "sha256-e95611a07e8175ae185b61e14d316b373493df9c91fc6e561a196937e5e1e09d",
+      "bytes": 123276,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/chiha-warm.webp",
+      "hash": "sha256-fc7d0a9a44cb9174dca2fac14aecd47e623d30afe04000c9f3d620470d9f2682",
+      "bytes": 111262,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/commander-alarm.webp",
+      "hash": "sha256-c5c55b4c1d665e8af6e2a6ab043699c4ed7928c260bd50f4c486e10d4d63cdcc",
+      "bytes": 126798,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/commander-determined.webp",
+      "hash": "sha256-cf116834fede3c07fae1286f78533ba79d490e8f226dfdc35ee9239d136d8f39",
+      "bytes": 127046,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/commander-grief.webp",
+      "hash": "sha256-47bb4f61bae5647d0e119329433c181e4146e2d717759f458bd19cb95a2ab475",
+      "bytes": 129584,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/commander-warm.webp",
+      "hash": "sha256-4ad081dd1c79245eb42696c0c888bb7bfaac4376beb5e054de6ff7078c62f2be",
+      "bytes": 115300,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/gantetsu-alarm.webp",
+      "hash": "sha256-3718e6442dc109da75fc78f1fcbd20827126022b2a2e2a75b0413a4e77f78155",
+      "bytes": 118198,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/gantetsu-determined.webp",
+      "hash": "sha256-dbb937183710656c7d9bafd47b063317be36804ea7b413e52f1d214d1b336546",
+      "bytes": 111846,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/gantetsu-grief.webp",
+      "hash": "sha256-afdf700b98c6b5f4c281c6d23738182b17775c60e6459b091cd37c1ec4dfb811",
+      "bytes": 117894,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/gantetsu-warm.webp",
+      "hash": "sha256-4f01e785b79027a91ddda592a7d2cb73618f618be4042c9294d7086b77b1da12",
+      "bytes": 108208,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/hachi-alarm.webp",
+      "hash": "sha256-df1bff7342b48e0fae07023d409f7887ee0b689048dac0aad06a21fc49370345",
+      "bytes": 115932,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/hachi-determined.webp",
+      "hash": "sha256-f031fc806b6fd5957deb1070df03148ecc74a95982a2e344d0c2514a10fabd06",
+      "bytes": 114086,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/hachi-grief.webp",
+      "hash": "sha256-4e29196df11e274f22fe4b0ef71942d9de74f8ed061d3e587df96285d73c2751",
+      "bytes": 115856,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/hachi-warm.webp",
+      "hash": "sha256-fcb5830eb630d36bd0f21d9456230940407deb535a1cadd7c81681c1a5876f0e",
+      "bytes": 112812,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/ikura-alarm.webp",
+      "hash": "sha256-d529005ac62ad045301de2f7397822847d5660ea6c0f7e63bc654549805e7e6d",
+      "bytes": 142190,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/ikura-determined.webp",
+      "hash": "sha256-9eb426c3140b087f65770aa7f0858870f36cbb98754f29a1e1d0477b2d4cc1dd",
+      "bytes": 149404,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/ikura-grief.webp",
+      "hash": "sha256-e98c234ea79719fd4b643bb1096a77ce7f385fc569e6ab8099bab39a873cd41c",
+      "bytes": 152334,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/ikura-warm.webp",
+      "hash": "sha256-cff5c2a1001395730bd9607f2a3fa13096067ffbb1437746e75233e8e4fe0da3",
+      "bytes": 142660,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/king-alarm.webp",
+      "hash": "sha256-bfd0aae255078e34bb5e76f40ceb5111adbc1d5564b69e9a54ca417157ac4e06",
+      "bytes": 122812,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/king-determined.webp",
+      "hash": "sha256-ecab1d943b18c982ea807df2200b2d7ac22dbd38f0bef571d4f4f255de796943",
+      "bytes": 118194,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/king-grief.webp",
+      "hash": "sha256-8e0c3b9062183ed06629720fdca741ffe10e5b5f47a21dbd26196baf5075706f",
+      "bytes": 118034,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/king-warm.webp",
+      "hash": "sha256-00367c6c8bfbbc17c0dc058274b24fba9c76963ce8898a7160632d1675f938e1",
+      "bytes": 106394,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/kumaverson-alarm.webp",
+      "hash": "sha256-2ac1547f6583a5e34219258dcf2bd4cfca633661ba16b3fc740808632c65f1f9",
+      "bytes": 107742,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/kumaverson-determined.webp",
+      "hash": "sha256-89667dee92bb80796eb6ec60e45be3fd256345b945641da1c72227edba2ebeec",
+      "bytes": 106640,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/kumaverson-grief.webp",
+      "hash": "sha256-07a9771592aa69094af00044676ba486251f51637313d2d57b7b864b0362e2d0",
+      "bytes": 110366,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/kumaverson-warm.webp",
+      "hash": "sha256-1e690f66c5f8bd34c225920ab9e60cf7d952d8303647d81ea43a06c7bc84c0b7",
+      "bytes": 107464,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/mayo-alarm.webp",
+      "hash": "sha256-97bfb8c211d478b013d55c239e27325bef60d02a65ea94e2629f3c1e4adb413f",
+      "bytes": 177360,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/mayo-determined.webp",
+      "hash": "sha256-35763f30f81ee1d8274bc5f20fdc081efb0eed75467d216f4ece80dd15f28e3d",
+      "bytes": 151970,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/mayo-grief.webp",
+      "hash": "sha256-fa342bc5d357c397ac070d3f03bfa23749ccda8f2ff170878b1faca8e91f17a9",
+      "bytes": 160048,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/mayo-warm.webp",
+      "hash": "sha256-9463623f99e43a8dac2615e6d98b8431bf473e32abfbc439b6c8139d9538d3ad",
+      "bytes": 162296,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/mizuchi-alarm.webp",
+      "hash": "sha256-01d55768f39ddeaac4d7abfde32e7e4673492764b1b90fd67d1586bbe7b609f6",
+      "bytes": 109364,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/mizuchi-determined.webp",
+      "hash": "sha256-060009239c6cce7dc65735a6a21a21a30950caf54a36c2f257e84a869d8f933c",
+      "bytes": 107636,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/mizuchi-grief.webp",
+      "hash": "sha256-22954392db6cb75b94f4101757b786087d206aa9298dff6125658255a7294e8c",
+      "bytes": 105670,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/mizuchi-warm.webp",
+      "hash": "sha256-9d9e62f6ba0d38541b24f9582fe529cd5e447cd49472d94842baf7df607f5b95",
+      "bytes": 106636,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/monkey-alarm.webp",
+      "hash": "sha256-033ad371f6bfc7b71eda49734cebec9654f306652b37904ea3ef7294be418f6c",
+      "bytes": 126956,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/monkey-determined.webp",
+      "hash": "sha256-e3142e9a9944def71154d5aab6450f3d06dc447aae54dfb8ba61e7f0a505e255",
+      "bytes": 123430,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/monkey-grief.webp",
+      "hash": "sha256-1b970d1bfe2e16b51b056cf3378e73c577aee0b333cb8646e6946e3a9b568a17",
+      "bytes": 129294,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/monkey-warm.webp",
+      "hash": "sha256-9e4c37f91be65c6613ca011c9ae7942660bcaf73e2fdacd561303cf6284f75a6",
+      "bytes": 121966,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/musashi-alarm.webp",
+      "hash": "sha256-0ace5dfcf6393f23fc8cd90cd9cec439276f7f21d3bfba05f423eff5a208f6be",
+      "bytes": 136626,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/musashi-determined.webp",
+      "hash": "sha256-a5074836469850e03c68b488f9807a9b209e19a556b7429e25166cd5dfa3ae98",
+      "bytes": 145684,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/musashi-grief.webp",
+      "hash": "sha256-ab4fac36e7f898e5042f711c26554cc75f7e437bc81b111931260972fd3a3d48",
+      "bytes": 148384,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/musashi-warm.webp",
+      "hash": "sha256-56e1677cf2e8103589428ac30440fbad23f95865bbbab6350241dc6ce90ca3d9",
+      "bytes": 134082,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/nao-alarm.webp",
+      "hash": "sha256-84c831963ba6137a018075568a7f30cf5ff0b4187078b79ddb37664787a95e16",
+      "bytes": 124980,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/nao-determined.webp",
+      "hash": "sha256-e1be74e44fc0b56b51a5a5712dc59c19352ba364c7fa01d04a6de36d7a221540",
+      "bytes": 122590,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/nao-grief.webp",
+      "hash": "sha256-d0ce4cea21aab9bfbcd0c107147f47e4720a2d2e870b05852a1abdbce2268019",
+      "bytes": 122856,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/nao-warm.webp",
+      "hash": "sha256-4b717cfd82db02167dd74605c60d6b9fb70b2e6b3a588704bc2169306fda77bb",
+      "bytes": 122276,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/president-alarm.webp",
+      "hash": "sha256-98ded9f431ba29e3d9b18f044b3d61a8f263d2ba7c1ea667a88afe3b237cbf3a",
+      "bytes": 127258,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/president-determined.webp",
+      "hash": "sha256-6be3e5cb21e403c86e5136d2eef47b96d42eb5c47bcc8900613c5261aee2d69e",
+      "bytes": 121582,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/president-grief.webp",
+      "hash": "sha256-81cdeab2fb439d424d309c8279933796c7ce9aa4ccbe441f3656dbcf884b6e23",
+      "bytes": 126094,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/president-warm.webp",
+      "hash": "sha256-4d3b983c5d7bd099eec13862553cd0d2e34b7dc438cbec66740b7fbef497dc98",
+      "bytes": 123412,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/raider-alarm.webp",
+      "hash": "sha256-bca3bfb390ff9371c1023e399a7b45b20611a9dfd405d1d557ced5355ef8162a",
+      "bytes": 111250,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/raider-determined.webp",
+      "hash": "sha256-92e5d586d6dedf1a9815cf09d6ce2eaeebefb9f54537f7bc674a74b5f1079709",
+      "bytes": 108000,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/raider-grief.webp",
+      "hash": "sha256-e87837add70eed8a73c864aa4c43fd89237f2252f6c972f860d44cc8bdcb44d0",
+      "bytes": 110078,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/raider-warm.webp",
+      "hash": "sha256-641ebcf6e91f94d7bc755eb6014e0f96c4f5aa8f2612b74fe0d004c88dbe4d23",
+      "bytes": 108338,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/segawa-alarm.webp",
+      "hash": "sha256-5eb90e6e94a0483f72c96e0cf89e7062cec5a2bdeb84c2e35b5f022b72a6ce69",
+      "bytes": 127218,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/segawa-determined.webp",
+      "hash": "sha256-aa8cfb113427cd85ef3bcaa97aef26b79902633b94deb586c51514eac984030c",
+      "bytes": 130624,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/segawa-grief.webp",
+      "hash": "sha256-94e01ca0d81f508c0981d962e3ca2a054c160b2b5e6e530d50c9f3246df2c5dd",
+      "bytes": 135278,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/segawa-warm.webp",
+      "hash": "sha256-df29171e89cf3c503bb65a5c26a3220191118daa66d42c38a3bac1e8259898e2",
+      "bytes": 123120,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/tatara-alarm.webp",
+      "hash": "sha256-cb43457d9b3938ff2de99d746042066b06e869254df3ac44d3be60fa64fcc97f",
+      "bytes": 152706,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/tatara-determined.webp",
+      "hash": "sha256-e3ca14a3cab7043b75386d47a3c85238f34435442feee724ff7552aeb5a89df7",
+      "bytes": 150640,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/tatara-grief.webp",
+      "hash": "sha256-05b96b7bc118273ce899321370cfd2a4baee7451ff70a88db0a8be155a231453",
+      "bytes": 155546,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/tatara-warm.webp",
+      "hash": "sha256-a7553a32b31042b63c5373c604016ff55bdf104d6f3a17fe8c6d90fc5d2ec138",
+      "bytes": 150322,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/tky-alarm.webp",
+      "hash": "sha256-f4260793c4ecf9cce693b004b8d1d30a416ef5e515709f24de904d8a76ced7de",
+      "bytes": 117190,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/tky-determined.webp",
+      "hash": "sha256-801a25e3c2ebbbdec54d9a84c6a996d9301eccd754206cfbac37d1d95c7b71c8",
+      "bytes": 120826,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/tky-grief.webp",
+      "hash": "sha256-61edb3034992fe9d0a0079a83d0afad7ca811501715ab48f174eb30f63ae810e",
+      "bytes": 123236,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/tky-warm.webp",
+      "hash": "sha256-f18fe6e74329515648ffdb99a6fa42aa080c6c1f71af8f3a4ab8df088bf45e60",
+      "bytes": 114730,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/zakimiya-alarm.webp",
+      "hash": "sha256-807325f24c432e80b00345171f1d380da513d85c9471ff634d8adc523b63af43",
+      "bytes": 124306,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/zakimiya-determined.webp",
+      "hash": "sha256-f02f1122626b0214126fa2b7d0624035a8ce0c1d89ef4abc0429f28825fd6008",
+      "bytes": 127476,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/zakimiya-grief.webp",
+      "hash": "sha256-edfb7cb6fb85e8b91b2d0eb92639be959a47382f187e3823e69c8a75814cca7d",
+      "bytes": 129668,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/portraits/zakimiya-warm.webp",
+      "hash": "sha256-3db8847b824d4698fc77fc0a58d42582f3b95946bb32cc2c4cf5316270789327",
+      "bytes": 122458,
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/audio/v100/foley/rifle.mp3",
+      "hash": "sha256-805eacd7367c72d2e96628d8bc8d539f8401d225164c8def9caaad9eb726e96f",
+      "bytes": 6225,
+      "category": "audio",
+      "criticality": "optional",
+      "audioId": "install-v100-foley-rifle"
+    }
+  ]
+}

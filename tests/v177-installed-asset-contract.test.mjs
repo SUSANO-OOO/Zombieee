@@ -4,12 +4,13 @@ import { V177_PAISEN_CREDITS_REPLACEMENTS } from '../scripts/v177-paisen-credits
 import { V177_PAISEN_ASSET_ADDITIONS, V177_PAISEN_RETIRED_ASSETS, V177_PAISEN_LEGACY_RETIREMENTS } from '../scripts/v177-paisen-asset-contract.mjs';
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+
 import test from "node:test";
 import { V177_INSTALLED_ASSET_CONTRACT, v177InstalledSourceReplacementsMatch } from "../scripts/v177-installed-asset-contract.mjs";
 import { V100_RELEASE_ASSET_CONTRACT } from "../scripts/v100-release-asset-contract.mjs";
 
-const candidate = JSON.parse(readFileSync(new URL("../public/asset-manifest.json", import.meta.url)));
+// Historical release contract; the current candidate is tested in quality-runtime-update.test.mjs.
+const candidate = JSON.parse(execFileSync('git', ['show', 'ff5dba24e88c810182cda1f044bd26dfc3e512c1:public/asset-manifest.json'], {encoding:'utf8',maxBuffer:4*1024*1024}));
 const record = ({path, bytes, hash}) => ({path, bytes, hash});
 const ordered = assets => assets.map(record).sort((a, b) => a.path.localeCompare(b.path));
 const expectedUpgradeDeltas = [
