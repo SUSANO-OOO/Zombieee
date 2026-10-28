@@ -1131,6 +1131,7 @@ function MapView({ save, selectedStageId, onSelect, onStart, onRename, onBackup,
   const stage = V100_STAGE_BY_ID[selectedStageId];
   const discovered = v100StageDiscovered(save, selectedStageId);
   const completedNumber = Math.max(0, ...save.completedStageIds.map(stageNumberFor));
+  const storyComplete = save.postGameAvailable && V100_STAGE_IDS.every(id => save.completedStageIds.includes(id)) && save.readStoryEventIds.includes(v100StoryEventFor("v100:event:epilogue")?.nodes.length ? "v100:event:epilogue" : "v100:event:credits");
   const [chapterIndex, setChapterIndex] = useState(() => chapterIndexForStage(stage?.number ?? 1));
   const chapter = V100_CHAPTERS[chapterIndex] ?? V100_CHAPTERS[0];
   const chapterStages = V100_STAGES.filter((entry) => entry.number >= chapter.start && entry.number <= chapter.end);
@@ -1176,7 +1177,7 @@ function MapView({ save, selectedStageId, onSelect, onStart, onRename, onBackup,
         const disclosure = v100RegionalMapDisclosure(region, entries.map((candidate) => candidate.id), save);
         return <button type="button" key={entry.id} className={index === chapterIndex ? "selected" : ""} onClick={() => selectChapter(index)} aria-pressed={index === chapterIndex} aria-label={`${entry.label} ${disclosure.regionLabel}、ステージ ${complete}/${entries.length}、記録星 ${stars}/${entries.length * 3}`}><strong>{entry.label}</strong><small>{disclosure.regionLabel}</small><span className="v100-chapter-counts"><b>{complete}/{entries.length}ステージ</b><b>★{stars}/{entries.length * 3}</b></span></button>;
       })}</nav>
-      <div className="v100-regional-progress" aria-label={`全ステージの記録 ${save.completedStageIds.length} / ${V100_STAGES.length} ステージ、星 ${campaignStars} / ${V100_STAGES.length * 3}`}><strong>{mapDisclosure.regionLabel}</strong><span>{chapterComplete}/{chapterStages.length} ステージ完了</span><span>記録星 {chapterStars}/{chapterStages.length * 3}</span><span>全体 {save.completedStageIds.length}/{V100_STAGES.length} / ★ {campaignStars}/{V100_STAGES.length * 3}</span></div>
+      <div className="v100-regional-progress" data-story-complete={storyComplete} aria-label={`全ステージの記録 ${save.completedStageIds.length} / ${V100_STAGES.length} ステージ、星 ${campaignStars} / ${V100_STAGES.length * 3}`}>{storyComplete ? <><strong>物語クリア</strong><span>ここからは、自由に再戦・星集め。</span></> : <><strong>{mapDisclosure.regionLabel}</strong><span>{chapterComplete}/{chapterStages.length} ステージ完了</span><span>記録星 {chapterStars}/{chapterStages.length * 3}</span></>}<span>全体 {save.completedStageIds.length}/{V100_STAGES.length} / ★ {campaignStars}/{V100_STAGES.length * 3}</span></div>
       <div className="v100-route-label" aria-label={`${mapDisclosure.regionLabel} ステージ経路`}><span>{mapDisclosure.regionLabel}</span><i />{chapterStages.map((entry) => <b key={`route-${entry.id}`} className={`${entry.number === completedNumber + 1 ? "current" : ""} ${save.completedStageIds.includes(entry.id) ? "clear" : ""}`} aria-hidden="true" />)}<span>次の区域</span></div>
       <div className="v100-map-grid">
         <div className="v100-map-canvas-shell v100-regional-map-canvas" data-map-region={chapter.id}>

@@ -17,9 +17,31 @@ import {
 import { createDefaultV100Save } from "../app/v100Save.js";
 import { v100BattleDefinitionFor, v100MissionObjectiveFor, v100ProductionSessionFor } from "../app/v100BattleAdapter.js";
 import { objectiveForBattle } from "../app/battleDefinitions.js";
+import { v100StoryEventFor } from "../app/v100StoryEvents.js";
 import { V100_STAGE_IDS } from "../app/v100Registry.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+test("story completion is separate from optional stars and requires the completed ending", async () => {
+  const source = await readFile(path.join(ROOT, "app/V100Campaign.tsx"), "utf8");
+  const tree = ts.createSourceFile("campaign.tsx", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const expressions = [];
+  const visit = node => {
+    if (ts.isVariableDeclaration(node) && node.name.getText(tree) === "storyComplete") expressions.push(node.initializer.getText(tree));
+    ts.forEachChild(node, visit);
+  };
+  visit(tree); assert.equal(expressions.length, 1);
+  const save = { postGameAvailable: true, completedStageIds: [...V100_STAGE_IDS], readStoryEventIds: ["v100:event:credits"], bestStars: Object.fromEntries(V100_STAGE_IDS.map(id => [id, 1])) };
+  const completed = value => vm.runInNewContext(`(${expressions[0]})`, { save: value, V100_STAGE_IDS, v100StoryEventFor });
+  assert.equal(v100StoryEventFor("v100:event:epilogue")?.nodes.length ?? 0, 0, "current canon finishes at the credits");
+  const before = JSON.stringify(save);
+  assert.equal(completed(save), true, "a 30-star story clear does not require all 90 optional stars");
+  assert.equal(completed({ ...save, readStoryEventIds: [] }), false, "the unviewed finale is not complete");
+  assert.equal(completed({ ...save, completedStageIds: V100_STAGE_IDS.slice(0, 29) }), false);
+  assert.equal(completed({ ...save, completedStageIds: Array(30).fill(V100_STAGE_IDS[0]) }), false);
+  assert.equal(completed({ ...save, postGameAvailable: false }), false);
+  assert.equal(JSON.stringify(save), before);
+});
 
 test("title recall cannot resume an automatic finale or an active side-mode battle behind the log", async () => {
   const source = await readFile(path.join(ROOT, "app/V100Campaign.tsx"), "utf8");

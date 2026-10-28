@@ -9,6 +9,7 @@
 .v100-credit-roll-window { position: absolute; z-index: 2; top: var(--credits-top); right: var(--credits-edge-right); width: var(--credits-side); bottom: calc(var(--credits-control-height, 44px) + max(8px, env(safe-area-inset-bottom)) + 8px); overflow: hidden; mask-image: linear-gradient(0deg, transparent, #000 6%, #000 94%, transparent); }
 .v100-credit-roll-track { width: 100%; text-align: center; will-change: transform; transform: translate3d(0, 100vh, 0); padding-inline: 5px; text-shadow: 0 2px 5px #000; }
 .v100-credit-roll-track header { padding: 14px 0 28px; }
+.v100-credit-roll-track .v100-credit-time-context { margin:0 0 20px; font-size:clamp(16px,1.8vw,22px); line-height:1.5; letter-spacing:.12em; color:#eed8ae; }
 .v100-credit-roll-track header small { font-size: 14px; letter-spacing: .24em; color: #cfb680; }
 .v100-credit-roll-track header h1 { margin: 12px 0 0; font-size: clamp(21px, 2.2vw, 28px); line-height: 1.45; }
 .v100-credit-roll-track .v100-credit-section { padding: 0; }
