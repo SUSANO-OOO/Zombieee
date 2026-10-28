@@ -14,6 +14,7 @@ import { assertV100ArtAllowed } from './rejected-v100-art.mjs';
 import { RELEASE_VERSION } from "../app/releaseIdentity.js";
 import { V100_EVENT_PORTRAIT_PROFILES, V100_EVENT_EXPRESSIONS, V100_R5_STORY_CUTS, V100_R9_STORY_CUTS, v100EventPortraitPath } from "../app/v100StoryDirection.js";
 import { V100_RETREAT_DOOR_ART } from "../app/v100BasePresentation.js";
+import { V100_STORY_LOCATION_BACKDROPS } from "../app/v100StoryLocations.js";
 import {
   ASSET_MANIFEST_SCHEMA,
   RELEASE_SHA_PLACEHOLDER,
@@ -277,6 +278,7 @@ for (const owner of Object.keys(V100_EVENT_PORTRAIT_PROFILES)) for (const expres
 }
 for (const assetPath of Object.values(V100_R5_STORY_CUTS)) record(assetPath,{pack:"campaign-core",category:"background",criticality:"critical"});
 for (const assetPath of Object.values(V100_R9_STORY_CUTS)) record(assetPath,{pack:"campaign-core",category:"background",criticality:"critical"});
+for (const {path:assetPath} of Object.values(V100_STORY_LOCATION_BACKDROPS)) record(assetPath,{pack:"campaign-core",category:"background",criticality:"critical"});
 record(V100_RETREAT_DOOR_ART,{pack:"campaign-core",category:"object",criticality:"critical"});
 for (const assetPath of Object.values(V100_RUNTIME_ASSET_MANIFEST.missionObjects)) {
   record(assetPath, { pack: "campaign-core", category: "object", criticality: "critical" });

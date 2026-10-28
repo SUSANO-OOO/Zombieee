@@ -1,5 +1,6 @@
 // Preserve every authored node and its saved cursor. Only short introductory
 // action beats share a page with the following line in the same location.
+import { v100StoryLocationFor } from './v100StoryLocations.js';
 export function v100StoryPageFor(eventId, nodes, startIndex = 0) {
   const start = Math.max(0, Math.min(Math.max(0, nodes.length - 1), Math.floor(Number(startIndex) || 0)));
   let end = start;
@@ -9,6 +10,7 @@ export function v100StoryPageFor(eventId, nodes, startIndex = 0) {
     while (end + 1 < nodes.length && end - start < 2) {
       const next = nodes[end + 1];
       if (!["action", "dialogue"].includes(next.kind) || next.sceneTag !== first.sceneTag
+        || v100StoryLocationFor(eventId,next)?.path !== v100StoryLocationFor(eventId,first)?.path
         || first.cueId || next.cueId || next.cutId !== first.cutId || next.insertId !== first.insertId) break;
       const length = Array.from(next.text ?? "").length;
       if (characters + length > 90) break;

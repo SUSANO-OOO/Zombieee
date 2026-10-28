@@ -19,7 +19,9 @@ const sourcePath='docs/story/v10/STORY_SCRIPT_V100_PRODUCER_R9.md';
 const nodes=Object.values(V100_STORY_EVENTS).flatMap(event=>event.nodes);
 test('R9 round-trips all 1116 narrative source lines exactly once and in order',async()=>{
  const source=await readFile(sourcePath),lines=source.toString('utf8').split(/\r?\n/u);
- assert.equal(createHash('sha256').update(source).digest('hex'),'e4e01bef66d518e5c97f2b7de04b6a3607a3a9ee30619675b15e1c4a89ee7c34');
+ // 5471457c clarified unlock guidance and the S28 control-line wording.
+ // Keep an exact source pin and the full text/order round-trip below.
+ assert.equal(createHash('sha256').update(source).digest('hex'),'1bdde3d7b3187e7f5970de3b25003eb3cad078270d1361db013aadf03fa4aec9');
  assert.equal(V100_STORY_SOURCE_SHA256,createHash('sha256').update(source).digest('hex'));
  const current=nodes.filter(node=>node.sourceDocument==='STORY_SCRIPT_V100_PRODUCER_R9.md');
  assert.equal(current.length,1115);

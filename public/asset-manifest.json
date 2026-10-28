@@ -2619,6 +2619,22 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/v100/story-locations/refrigerated-cargo-r1.webp",
+      "bytes": 263800,
+      "hash": "sha256-ba943a2219d1c402bfe0452707423ddb3ef45bad0a67a0033cd778ff55293da2",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-locations/rescue-vehicle-interior-r1.webp",
+      "bytes": 324376,
+      "hash": "sha256-8b1a224064d94fcbfa8ddfb95224f09e7272fa3595797005eccaafda171f2b6d",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/story-r5/cuts/chiha-confession.webp",
       "bytes": 962892,
       "hash": "sha256-8c025bff25e87e0d5f4e71a1d0a84cde754c92891c89c49b24db613e919e44fc",
