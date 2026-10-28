@@ -5,7 +5,7 @@ import crypto from 'node:crypto';
 import vm from 'node:vm';
 import sharp from 'sharp';
 import ts from 'typescript';
-import {V100_UNITS} from '../app/v100Registry.js';
+import {V100_UNITS,V100_STAGES} from '../app/v100Registry.js';
 import {readVisibleBattleHealthBars,visibleAirstrikeTarget,observeVisibleBattleHealthBars} from '../scripts/v100-normal-visible-aim.mjs';
 import {normalCampaignCanSpendVehicleGauge} from '../scripts/v100-normal-play-contract.mjs';
 
@@ -75,15 +75,19 @@ test('the actual ordinary-UI formation keeps the measured starters and its earne
   const source=fs.readFileSync(new URL('../scripts/v100-normal-campaign-playthrough.mjs',import.meta.url),'utf8');
   const tree=ts.createSourceFile('campaign.mjs',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);
   const declaration=tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name.text==='plannedFormation');
-  const plan=vm.runInNewContext('('+declaration.getText(tree)+')');
-  const owned=[...provenance.openingOwnedIds],formation=Array.from(plan({ownedUnitIds:owned}));
+  const plan=vm.runInNewContext('('+declaration.getText(tree)+')',{V100_STAGES});
+  const stageSave=(ownedUnitIds,number=3)=>({ownedUnitIds,flowState:{stageId:V100_STAGES[number-1].id}});
+  const owned=[...provenance.openingOwnedIds],formation=Array.from(plan(stageSave(owned)));
   assert.deepEqual(formation.slice(0,3),['unit-babayaga','unit-hachi','unit-nao']);
   assert.deepEqual(formation.slice(3),['unit-kumaverson','unit-paisen']);
   const evidence=JSON.parse(fs.readFileSync(new URL('formation-native-provenance.json',fixtures)));
-  const initial=Array.from(plan({ownedUnitIds:evidence.stage1OwnedIds}));
+  // Preserve the original measured fixture as history, then apply current
+  // rescue participation explicitly instead of pretending Paisen is present.
+  const initial=Array.from(plan(stageSave(evidence.stage1OwnedIds)));
   assert.deepEqual(initial,evidence.measuredWinningStage1Ids);assert.equal(formation.length,5);
   assert.deepEqual([...formation].sort(),[...owned].sort());assert.deepEqual(owned,provenance.openingOwnedIds);
-  assert.ok(plan({ownedUnitIds:V100_UNITS.map(unit=>unit.id)}).length<=7);
+  for(const number of [1,2])assert.deepEqual(Array.from(plan(stageSave(evidence.stage1OwnedIds,number))),evidence.measuredWinningStage1Ids.filter(id=>id!=='unit-paisen'));
+  assert.ok(plan(stageSave(V100_UNITS.map(unit=>unit.id))).length<=7);
 });
 
 test('an observed target preserves first-aircraft funding; absent targets release legal defense',()=>{

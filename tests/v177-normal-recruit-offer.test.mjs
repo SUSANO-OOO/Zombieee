@@ -5,7 +5,7 @@ import vm from 'node:vm';
 import ts from 'typescript';
 import * as React from 'react';
 import { applyV100SaveMutation } from '../app/v100Save.js';
-import { V100_UNITS,V100_VEHICLE,v100LevelCost } from '../app/v100Registry.js';
+import { V100_STAGES, V100_UNITS,V100_VEHICLE,v100LevelCost } from '../app/v100Registry.js';
 import { deferNormalRecruitOffer } from '../scripts/v100-normal-recruit-offer.mjs';
 
 const earned=JSON.parse(fs.readFileSync('tests/fixtures/v177-earned-stage1-recruit.json','utf8')).save;
@@ -84,7 +84,7 @@ function fixture({modalType='recruit',badHeading=false,tamperCaps=false,labelCas
       }};
     },
   };
-  const bindings={page,uiClick:locator=>locator.click(),saveAt:async()=>structuredClone(save),V100_UNITS,V100_VEHICLE,v100LevelCost,report,deferNormalRecruitOffer};
+  const bindings={page,uiClick:locator=>locator.click(),saveAt:async()=>structuredClone(save),V100_STAGES,V100_UNITS,V100_VEHICLE,v100LevelCost,report,deferNormalRecruitOffer};
   return{bindings,before,events,stop,report,get save(){return save;}};
 }
 
