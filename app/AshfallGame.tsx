@@ -15765,7 +15765,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     if (!isBattleSaveBoundaryActive()) return false;
     const g = gameRef.current;
     if (g.running && !g.over) {
-      g.banner = "保存処理中 // 操作を待機";
+      g.banner = "保存中…完了すると操作できます";
       g.bannerTime = Math.max(g.bannerTime, .9);
     }
     playUiOperationCue("reject", dedupeKey);
@@ -16399,7 +16399,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       ...result.runtime,
       receiptId: `airstrike:${g.battleAudioGeneration}:${g.time.toFixed(3)}`,
     } as AirstrikeRuntime;
-    g.banner = placement.adjusted ? "航空支援 // 最寄りの有効地点へ補正" : "航空支援要請 // 指定地点";
+    g.banner = placement.adjusted ? "航空支援：近くの攻撃可能な場所を狙います" : "航空支援要請 // 指定地点";
     g.bannerTime = 1; playCue("airstrike-request");
     emitBattleBark(g, "airstrike-request", "guide", "airstrike");
     return true;
@@ -24699,10 +24699,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     ?? (hud.airstrikePhase !== "idle"
       ? "航空支援実行中"
       : hud.supportGauge < airstrikeCost
-        ? `支援不足 ${hud.supportGauge}/${airstrikeCost}`
+        ? `支援ゲージ不足 ${hud.supportGauge}/${airstrikeCost}`
         : null);
   const crawlerBlockReason = commonBattleActionBlockReason
-    ?? (hud.crawlerPhase !== "ready" ? `再装填 ${Math.round(hud.crawlerCharge * 100)}%` : hud.supportGauge < barrageCost ? `支援不足 ${hud.supportGauge}/${barrageCost}` : null);
+    ?? (hud.crawlerPhase !== "ready" ? `再装填 ${Math.round(hud.crawlerCharge * 100)}%` : hud.supportGauge < barrageCost ? `支援ゲージ不足 ${hud.supportGauge}/${barrageCost}` : null);
   const selectedSupplyCompactDetail = (!selectedSupplyDefinition ? "出撃装備で選択" : null) ?? commonBattleActionBlockReason
     ?? (hud.supportItemCooldowns[selectedSupply] > 0
       ? `再準備 ${Math.ceil(hud.supportItemCooldowns[selectedSupply])}秒`
@@ -24782,8 +24782,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         {externalSessionActive && (!assetsReady || assetError) && <section className="v100-battle-asset-status" aria-label="戦闘データの準備">
           <div><h2>{assetError ? "戦闘データを準備できませんでした" : "戦闘データを準備しています"}</h2>
             <p role={assetError ? "alert" : "status"}>{assetError ? "戦闘に必要な画像を読み込めませんでした。接続を確認して、もう一度お試しください。" : "必要な画像がそろうまで戦闘は始まりません。"}</p>
-            <p>確認済み {assetReadiness.completed} / {assetReadiness.total} 件{assetReadiness.pending > 0 ? `・待機中 ${assetReadiness.pending} 件` : ""}{assetReadiness.failed > 0 ? `・失敗 ${assetReadiness.failed} 件` : ""}</p>
-            {(assetReadiness.retryAvailable || assetError || assetReadiness.retrying) && <button type="button" disabled={assetReadiness.retrying} onClick={retryAssets}>{assetReadiness.retrying ? "画像を再読み込みしています…" : "失敗・待機中の画像を再読み込み"}</button>}
+            <p>読み込み完了 {assetReadiness.completed} / {assetReadiness.total}{assetReadiness.pending > 0 ? `・読み込み待ち ${assetReadiness.pending}` : ""}{assetReadiness.failed > 0 ? `・読み込めなかった画像 ${assetReadiness.failed}` : ""}</p>
+            {(assetReadiness.retryAvailable || assetError || assetReadiness.retrying) && <button type="button" disabled={assetReadiness.retrying} onClick={retryAssets}>{assetReadiness.retrying ? "画像を再読み込みしています…" : "画像をもう一度読み込む"}</button>}
           </div>
         </section>}
         {screen === "battle" && hud.manualAbilityIcons.map((icon) => {
@@ -25068,7 +25068,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             </button>
           </section>
           {!isSurvivalBattle && !externalSessionActive && <section className="pause-story" aria-label="戦闘中の会話設定"><span><b>戦闘中の会話</b><small>既読イベントの再表示方法</small></span><button disabled={externalSettingsPending} onClick={cycleBattleEventMode}>{campaignSave.settings.battleEventMode === "first-time" ? "初回のみ" : campaignSave.settings.battleEventMode === "compact" ? "通信を簡略表示" : "毎回すべて表示"}</button></section>}
-          {pauseConfirm && <div className="pause-confirm" role="alertdialog" aria-modal="true"><div><h3>{pauseConfirm === "restart" ? "ステージをやり直しますか？" : pauseConfirm === "loadout" ? "編成画面へ戻りますか？" : "ステージから撤退しますか？"}</h3><p>{isSurvivalBattle ? (externalSessionActive ? "制圧済みの波の未受取報酬を保存してステージを終了します。" : "制圧済みの波の報酬を一括保存してステージを終了します。") : "現在の戦闘状態は破棄されます。星・報酬・解放は発生しません。"}</p><span><button onClick={cancelPauseAction}>キャンセル</button><button className="danger" onClick={confirmPauseAction}>実行する</button></span></div></div>}
+          {pauseConfirm && <div className="pause-confirm" role="alertdialog" aria-modal="true"><div><h3>{pauseConfirm === "restart" ? "ステージをやり直しますか？" : pauseConfirm === "loadout" ? "編成画面へ戻りますか？" : "ステージから撤退しますか？"}</h3><p>{isSurvivalBattle ? (externalSessionActive ? "制圧済みの波の未受取報酬を保存してステージを終了します。" : "制圧済みの波の報酬を一括保存してステージを終了します。") : "この戦闘の途中経過は失われます。星や報酬は獲得できず、新しい仲間や装備も解禁されません。"}</p><span><button onClick={cancelPauseAction}>キャンセル</button><button className="danger" onClick={confirmPauseAction}>{pauseConfirm === "restart" ? "最初からやり直す" : pauseConfirm === "loadout" ? "編成に戻る" : "撤退する"}</button></span></div></div>}
         </div></div>}
         </>}
         {screen === "survival" && <div className="survival-lobby campaign-overlay"><section>

@@ -44,7 +44,7 @@ export function V100ModesView({ save, onBack, onLoadout, onSave, initialTab = "o
         return onSave(applyV100SaveMutation(save, (draft: Save) => ({ ...draft, settings: { ...draft.settings, ...settings } })));
       },
     }} />
-    {unsaved && <div className="v100-save-retry" role="alertdialog" aria-label="異常発生の戦果保存"><div><h2>戦果を保存できませんでした</h2><p>この画面で戦果を保持しています。保存完了後に報酬を受け取れます。</p><button type="button" onClick={() => void settle(unsaved)}>戦果の保存を再試行</button></div></div>}
+    {unsaved && <div className="v100-save-retry" role="alertdialog" aria-label="異常発生の戦果保存"><div><h2>戦果を保存できませんでした</h2><p>戦闘結果をまだ保存できていません。この画面を閉じずに、もう一度保存してください。保存できると報酬を受け取れます。</p><button type="button" onClick={() => void settle(unsaved)}>もう一度保存する</button></div></div>}
   </>;
   const result = save.outbreak.lastResult;
   if (save.outbreak.view === "result" && result) return <section className="v100-panel v100-mode-result" data-v100-surface="outbreak-result" aria-label="異常発生の戦果">
@@ -57,7 +57,7 @@ export function V100ModesView({ save, onBack, onLoadout, onSave, initialTab = "o
     <div className="v100-panel-heading"><h2>{tab === "overview" ? "モード選択" : tab === "outbreak" ? "異常発生" : tab === "survival" ? "サバイバル" : tab === "compendium" ? "ボス図鑑" : "戦績"}</h2><button type="button" onClick={tab === "overview" ? onBack : () => setTab("overview")}>{tab === "overview" ? "ステージ選択へ" : "モード選択へ"}</button></div>
     {tab === "overview" && <>
       <div className="v100-mode-catalog">
-        <button type="button" className="v100-mode-entry v100-mode-outbreak" onClick={() => setTab("outbreak")}><span className="v100-mode-entry-copy"><strong>異常発生</strong><span>撃破済みのボスと再戦</span><small>ボスを選んで出撃。CAPSと初回装備を獲得。</small><b>{bosses.length ? `${bosses.length}体と再戦可能` : "物語でボスを撃破すると解放"}</b></span><span className="v100-mode-entry-arrow" aria-hidden="true">›</span></button>
+        <button type="button" className="v100-mode-entry v100-mode-outbreak" onClick={() => setTab("outbreak")}><span className="v100-mode-entry-copy"><strong>異常発生</strong><span>撃破済みのボスと再戦</span><small>ボスを倒すとCAPSを獲得。初回クリアでは装備も手に入ります。</small><b>{bosses.length ? `${bosses.length}体と再戦可能` : "物語でボスを撃破すると解放"}</b></span><span className="v100-mode-entry-arrow" aria-hidden="true">›</span></button>
         <button type="button" className="v100-mode-entry v100-mode-survival" onClick={() => setTab("survival")}><span className="v100-mode-entry-copy"><strong>サバイバル</strong><span>強化を選び、押し寄せる敵を迎撃</span><small>5波ごとにボス戦・報酬・中間セーブ。</small><b>{bosses.length ? `最高制圧 第${save.survival.highestCompletedWave}波` : "物語でボスを撃破すると解放"}</b></span><span className="v100-mode-entry-arrow" aria-hidden="true">›</span></button>
       </div>
       <nav className="v100-mode-record-links" aria-label="プレイ記録"><button type="button" onClick={() => setTab("compendium")}>ボス図鑑</button><button type="button" onClick={() => setTab("records")}>戦績</button></nav>

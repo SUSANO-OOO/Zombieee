@@ -251,6 +251,15 @@ export function defeatV100Flow(state, destination = "formation") {
   return { accepted: true, state: stateWith(state, { phase: destination, eventId: null, pendingResult: null, destination, canSkip: false, finalized: true }) };
 }
 
+// A retry leaves the defeat and enters a fresh battle in one saved transition.
+// It does not replay story, settle rewards, or mutate the player's loadout.
+export function retryV100Battle(state) {
+  const preparation = defeatV100Flow(state, 'formation');
+  if (!preparation.accepted) return preparation;
+  const entered = enterV100Battle(preparation.state);
+  return entered.accepted ? {...entered,state:stateWith(entered.state,{finalized:false})} : entered;
+}
+
 export function skipV100StoryEvent(state) {
   if (state.phase !== "event" || !state.canSkip) return { accepted: false, reason: "skip-blocked", state };
   return completeV100Event(state, { skipped: true });

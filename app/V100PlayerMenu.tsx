@@ -27,6 +27,6 @@ export function V100PlayerMenu({ settings, busy, onApply, onClose, onData, onLog
         </div>
       </fieldset>}
     </div>
-    {tab === "settings" && <div className="v100-menu-footer"><span role="status">{failed ? "設定を保存できませんでした。もう一度お試しください。" : saved ? "設定を保存しました。" : "初めて読む会話と報酬の確認は表示します。"}</span><button type="button" className="v100-primary" disabled={busy} onClick={() => void apply()}>設定を保存</button></div>}
+    {tab === "settings" && <div className="v100-menu-footer"><span role="status">{failed ? "設定を保存できませんでした。もう一度お試しください。" : saved ? "設定を保存しました。" : "初めて読む会話と報酬画面は、スキップしません。"}</span><button type="button" className="v100-primary" disabled={busy} onClick={() => void apply()}>設定を保存</button></div>}
   </section></div>;
 }

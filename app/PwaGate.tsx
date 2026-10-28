@@ -863,7 +863,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       <div><dt>ひとつ前のバージョン</dt><dd>{previousManifest?.version ?? "なし"}</dd></div>
       <div><dt>保存済みアセット</dt><dd>{storedHashes.size}件</dd></div>
       <div><dt>このバージョンが使用中</dt><dd>{installPlan ? `${installPlan.satisfied.length}件・${formatBytes(installPlan.satisfiedBytes ?? 0)}` : "未インストール"}</dd></div>
-      <div><dt>不足・破損</dt><dd>{installPlan ? `${installPlan.pendingCount}件・${formatBytes(installPlan.pendingBytes)}` : "未インストール"}</dd></div>
+      <div><dt>{installedManifest ? "不足・破損" : "オフライン未保存"}</dt><dd>{installPlan ? `${installPlan.pendingCount}件・${formatBytes(installPlan.pendingBytes)}` : "未保存"}</dd></div>
       <div><dt>参照されていないデータ</dt><dd>{orphanCount == null ? "なし" : `${orphanCount}件`}</dd></div>
     </dl>
     <details><summary>保存先と診断情報</summary><dl>
