@@ -141,7 +141,13 @@ async function prepareEconomy(stageNumber) {
   await uiClick(preparationTab("ステージ"));
 }
 async function configureFormation() {
-  const save=await saveAt();const wanted=plannedFormation(save);
+  const save=await saveAt();
+  const planned=plannedFormation(save);
+  const wanted=report.retry?.stageId===save.flowState.stageId && report.retry?.formationUnitIds
+    ? report.retry.formationUnitIds : planned;
+  // A reasoned retry may reorder this same earned roster through normal UI.
+  // It cannot add an unavailable companion or silently change later stages.
+  assert.deepEqual([...wanted].sort(), [...planned].sort(), "Retry keeps the same eligible roster");
   for(let index=0;index<7;index++) {
     if((save.formationSlots[index]??null)===(wanted[index]??null))continue;
     const slot=page.locator(".v100-slot-track button").nth(index);
@@ -351,7 +357,7 @@ try {
      await uiClick(button("ステージ選択へ"));
      const after=await saveAt();
      for(const key of ["caps","receipts","completedStageIds","unitLevels","ownedUnitIds"])assert.deepEqual(after[key],restored[key],`Defeat return preserves ${key}`);
-     report.retry={...reason,path:reasonPath,sha256:createHash("sha256").update(bytes).digest("hex"),defeatReturnPreserved:true};
+     report.retry={...reason,stageId:restored.lastResult.stageId,path:reasonPath,sha256:createHash("sha256").update(bytes).digest("hex"),defeatReturnPreserved:true};
    }
    if (report.stages.at(-1)?.status === "running" && await phaseAt() === "formation") {
      report.stages.at(-1).status = "interrupted-driver";
