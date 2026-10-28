@@ -41,6 +41,8 @@
 #v100-campaign .v100-node-copy > p,
 #v100-campaign .v100-node-copy .v100-story-prose { max-height: 28dvh; overflow-y: auto; overscroll-behavior: contain; }
 #v100-campaign .v100-node-copy .v100-story-prose p { overflow: visible; max-height: none; }
+#v100-campaign .v100-node-copy .v100-exchange-speaker { color: #f0c985; font-size: .85em; margin-right: .65em; white-space: nowrap; }
+#v100-campaign .v100-node-copy .v100-story-exchange { gap: 5px; }
 #v100-campaign .v100-node-copy .v100-event-actions { border-left: 1px solid #64706766; padding-left: 18px; }
 #v100-campaign .v100-node-copy .v100-event-actions button { min-width: 80px; min-height: 44px; }
 #v100-campaign .v100-node-copy .v100-event-actions .v100-primary { background: #784b28; border-color: #d1a061; border-radius: 3px; }
