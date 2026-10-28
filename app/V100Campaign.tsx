@@ -913,6 +913,7 @@ export function V100Campaign() {
       canContinue={save.campaignStarted} canOpenModes={save.campaignStarted && flow.phase === "map" && save.outbreak.view === "hub" && save.survival.view === "hub"}
       busy={saveBusy} reducedMotion={save.settings.reducedMotion} settings={save.settings}
       onNew={() => { setNotice(""); if (save.campaignStarted) setNewGameConfirm(true); else { setSurface("campaign"); setEntryOpen(false); } }}
+      onRecall={["map", "formation", "result"].includes(flow.phase) && save.outbreak.view === "hub" && save.survival.view === "hub" ? () => { setNotice(""); setEntryOpen(false); setLogOpen(true); } : undefined}
       onContinue={() => { setNotice(""); setEntryOpen(false); }} onSettings={() => setMenuOpen(true)} onCredits={() => setCreditsOpen(true)}
       onModes={() => { setModeTab("overview"); openSurface("modes"); setEntryOpen(false); }} onData={() => openSurface("data")} />}
     {notice && surface !== "data" && <p className="v100-title-feedback" role="status">{notice}</p>}
@@ -1080,7 +1081,7 @@ export function V100Campaign() {
         <ResultView result={flow.pendingResult} previousBestStars={Number(save.bestStars[String(flow.pendingResult?.stageId ?? "")]) || 0} alreadyCompleted={save.completedStageIds.includes(String(flow.pendingResult?.stageId ?? ""))} onContinue={continueFromResult} onRetry={retryDefeat} onFormation={() => leaveDefeatResult("formation")} onMap={() => leaveDefeatResult("map")} />
       )}
 
-      {logOpen && <EventLogView save={save} currentNodes={isEventPhase(flow.phase) && event ? event.nodes.slice(0,storyPage.endIndex+1) : []} busy={saveBusy} onAutoSkipChange={enabled => applySaveTransaction(applyV100SaveMutation(save, draft => ({ ...draft, settings: { ...draft.settings, autoSkipReadStory: enabled } })))} onReplay={(eventId) => { setReplayEventId(eventId); setReplayNodeIndex(0); }} onClose={() => setLogOpen(false)} />}
+      {logOpen && <EventLogView save={save} resumeLabel={flow.eventId ? eventDisplayLabel(flow.eventId) : flow.stageId ? stageDisplayNameFor(V100_STAGE_BY_ID[flow.stageId]) : "ステージ選択"} resumeObjective={flow.stageId && ["formation", "battle", "map"].includes(flow.phase) ? objectiveLabelFor(V100_STAGE_BY_ID[flow.stageId]) : null} currentNodes={isEventPhase(flow.phase) && event ? event.nodes.slice(0,storyPage.endIndex+1) : []} busy={saveBusy} onAutoSkipChange={enabled => applySaveTransaction(applyV100SaveMutation(save, draft => ({ ...draft, settings: { ...draft.settings, autoSkipReadStory: enabled } })))} onReplay={(eventId) => { setReplayEventId(eventId); setReplayNodeIndex(0); }} onClose={() => setLogOpen(false)} />}
       {menuOpen && <V100PlayerMenu settings={save.settings} busy={saveBusy} onClose={() => setMenuOpen(false)} onData={() => { setMenuOpen(false); openSurface("data"); }} onLog={() => { setMenuOpen(false); setLogOpen(true); }} onApply={async settings => {
         if (battleAudioActive || saveBusyRef.current) return false;
         const changed = applyV100SaveMutation(saveRef.current, (draft: Save) => ({ ...draft, settings: { ...draft.settings, ...settings } }));
@@ -1495,9 +1496,15 @@ function ResultView({ result, previousBestStars, alreadyCompleted, onContinue, o
   </section>;
 }
 
-function EventLogView({ save, currentNodes = [], busy, onAutoSkipChange, onReplay, onClose }: { save: Save; currentNodes?: StoryNode[]; busy: boolean; onAutoSkipChange: (enabled: boolean) => void; onReplay: (eventId: string) => void; onClose: () => void }) {
-  const replayableIds = save.readStoryEventIds.filter(eventId => v100StoryEventFor(eventId)?.nodes.length);
-  return <div className="v100-modal-backdrop"><section className="v100-modal v100-log-modal" role="dialog" aria-modal="true" aria-label="会話記録"><div className="v100-panel-heading"><div><span className="v100-kicker">会話記録</span><h2>{replayableIds.length}件を読了</h2></div><button type="button" onClick={onClose}>閉じる</button></div><label className="v100-read-story-setting"><input type="checkbox" checked={save.settings.autoSkipReadStory} disabled={busy} onChange={event => onAutoSkipChange(event.currentTarget.checked)} /><span>既読の会話を自動でスキップ<small>この記録から選んだ会話は、いつでも再生できます。</small></span></label><div className="v100-current-transcript">{currentNodes.length > 0 && <><h3>ここまでの会話</h3><p className="v100-transcript-note">閉じると、いま読んでいる場面に戻ります。</p><ol>{currentNodes.filter(node => node.text).map((node,index) => <li key={index}>{node.speaker && <strong>{publicDisplayText(node.speaker)}</strong>}<p>{publicDisplayText(node.text)}</p></li>)}</ol></>}</div><div className="v100-log-list">{replayableIds.map((eventId) => <button type="button" key={eventId} onClick={() => { onReplay(eventId); onClose(); }}>{eventDisplayLabel(eventId)}</button>)}</div></section></div>;
+function EventLogView({ save, resumeLabel, resumeObjective, currentNodes = [], busy, onAutoSkipChange, onReplay, onClose }: { save: Save; resumeLabel: string; resumeObjective?: string | null; currentNodes?: StoryNode[]; busy: boolean; onAutoSkipChange: (enabled: boolean) => void; onReplay: (eventId: string) => void; onClose: () => void }) {
+  const replayableIds = save.readStoryEventIds.filter(eventId => v100StoryEventFor(eventId)?.nodes.length).slice().reverse();
+  return <div className="v100-modal-backdrop"><section className="v100-modal v100-log-modal" role="dialog" aria-modal="true" aria-label="会話記録">
+    <div className="v100-panel-heading"><div><span className="v100-kicker">会話記録</span><h2>{replayableIds.length}件を読了</h2></div><button type="button" onClick={onClose}>閉じる</button></div>
+    <section className="v100-resume-context" aria-label="再開する場面"><h3>いまはここ</h3><p>{resumeLabel}</p>{resumeObjective && <p>{resumeObjective}</p>}<p>直前のやりとりから、読み返せます。</p></section>
+    <div className="v100-current-transcript">{currentNodes.length > 0 && <><h3>ここまでの会話</h3><p className="v100-transcript-note">閉じると、いま読んでいる場面に戻ります。</p><ol>{currentNodes.filter(node => node.text).map((node,index) => <li key={index}>{node.speaker && <strong>{publicDisplayText(node.speaker)}</strong>}<p>{publicDisplayText(node.text)}</p></li>)}</ol></>}</div>
+    <div className="v100-log-list">{replayableIds.map((eventId) => <button type="button" key={eventId} onClick={() => { onReplay(eventId); onClose(); }}>{eventDisplayLabel(eventId)}</button>)}</div>
+    <label className="v100-read-story-setting"><input type="checkbox" checked={save.settings.autoSkipReadStory} disabled={busy} onChange={event => onAutoSkipChange(event.currentTarget.checked)} /><span>既読の会話を自動でスキップ<small>この記録から選んだ会話は、いつでも再生できます。</small></span></label>
+  </section></div>;
 }
 
 function ReplayView({ event, node, index, leadingNodes = [], onNext, onClose }: { event: ReturnType<typeof v100StoryEventView>; node: StoryNode | null; index: number; leadingNodes?: StoryNode[]; onNext: () => void; onClose: () => void }) {

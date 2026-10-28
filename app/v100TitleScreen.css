@@ -27,6 +27,11 @@
 .v100-start-mode-note { text-align: center; font-size: 11px; line-height: 1.4; color: #b1ada4; }
 .v100-start-screen .v100-start-data { position: absolute; right: max(14px,env(safe-area-inset-right)); bottom: max(10px,env(safe-area-inset-bottom)); min-height: 44px; padding: 8px 16px; border: 0; background: #061015a8; border-radius: 3px; color: #bab6aa; font-size: 12px; }
 .v100-title-credits-close { position: fixed; z-index: 110; left: max(12px,env(safe-area-inset-left)); top: max(12px,env(safe-area-inset-top)); min-height: 44px; background: #071015df; border: 1px solid #b9a27d; color: #eee5d4; border-radius: 3px; padding: 8px 14px; }
+.v100-start-screen .v100-start-recall { position:absolute; left:max(14px,env(safe-area-inset-left)); bottom:max(10px,env(safe-area-inset-bottom)); min-height:44px; padding:8px 16px; border:1px solid #b9a27d66; background:#061015df; border-radius:3px; color:#e7d8bd; font-size:12px; }
+.v100-resume-context { margin:12px 0; padding:12px; border-left:3px solid #c58b54; background:#ffffff09; }
+.v100-resume-context h3 { margin:0 0 6px; font-size:15px; }
+.v100-resume-context p { margin:4px 0; font-size:14px; line-height:1.5; }
+.v100-start-screen[data-title-intro="intro"] .v100-start-recall,.v100-start-screen[data-title-intro="waiting"] .v100-start-recall { visibility:hidden; }
 .v100-start-wordmark { position: relative; }
 #v100-campaign .v100-start-heading h1 { position: relative; opacity: var(--title-reveal,1); transform: translate3d(0,var(--title-rise,0px),0); }
 #v100-campaign .v100-start-heading h1::before,#v100-campaign .v100-start-heading h1::after { content: attr(data-title); position: absolute; inset: 0; font: inherit; letter-spacing: inherit; color: transparent; -webkit-background-clip: text; background-clip: text; pointer-events: none; }

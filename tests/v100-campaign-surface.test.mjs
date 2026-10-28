@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import vm from "node:vm";
+import ts from "typescript";
 
 import { readFile } from "node:fs/promises";
 import path from "node:path";
@@ -18,6 +20,25 @@ import { objectiveForBattle } from "../app/battleDefinitions.js";
 import { V100_STAGE_IDS } from "../app/v100Registry.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+test("title recall cannot resume an automatic finale or an active side-mode battle behind the log", async () => {
+  const source = await readFile(path.join(ROOT, "app/V100Campaign.tsx"), "utf8");
+  const tree = ts.createSourceFile("campaign.tsx", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const expressions = [];
+  const visit = node => {
+    if (ts.isJsxAttribute(node) && node.name.text === "onRecall") expressions.push(node.initializer.expression.getText(tree));
+    ts.forEachChild(node, visit);
+  };
+  visit(tree); assert.equal(expressions.length, 1);
+  for (const phase of ["map", "formation", "result", "pre", "post", "first-clear-post", "battle", "credits", "epilogue", "ending"])
+    for (const outbreakView of ["hub", "battle"]) for (const survivalView of ["hub", "battle"]) {
+      const calls = [];
+      const handler = vm.runInNewContext(`(${expressions[0]})`, { flow: { phase }, save: { outbreak: { view: outbreakView }, survival: { view: survivalView } }, setNotice: value => calls.push(["notice", value]), setEntryOpen: value => calls.push(["entry", value]), setLogOpen: value => calls.push(["log", value]) });
+      if (["map", "formation", "result"].includes(phase) && outbreakView === "hub" && survivalView === "hub") {
+        handler(); assert.deepEqual(calls, [["notice", ""], ["entry", false], ["log", true]]);
+      } else assert.equal(handler, undefined, `${phase}/${outbreakView}/${survivalView}`);
+    }
+});
 
 test("map briefings describe the authored task rather than number words in objective IDs", () => {
   const expected = new Map([
