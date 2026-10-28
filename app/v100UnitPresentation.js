@@ -9,6 +9,26 @@ import { applyV100UnitLevelProgression, v100UnitLevelFor } from "./v100Progressi
 import { V100_UNIT_BY_ID, v100BossForStage, v100LevelCost, v100UnitStatAtLevel } from "./v100Registry.js";
 import { v100RoleLabelFor } from "./v100Terminology.js";
 
+// Short selection advice describes the existing manual ability, not a new AI order.
+const ABILITY_SELECTION_ADVICE = Object.freeze({
+  scout: "速い敵に追いつき、バールで怯ませる。",
+  brawler: "拳波を飛ばし、前方の敵を押し戻す。",
+  kumaverson: "敵を引きつけ、耐えながら自分を回復する。",
+  babayaga: "危険な敵を狙い撃ちし、弱点をさらす。",
+  medic: "傷ついた味方を回復し、敵の攻撃から守る。",
+  ranger: "離れた強敵を、貫通する一発で狙い撃つ。",
+  engineer: "罠で敵を捕らえ、動きを鈍らせる。",
+  "crazy-king": "敵の群れへ切り込み、素早く切り裂く。",
+  gunner: "連続射撃で敵の群れを足止めする。",
+  brute: "地面を叩いて敵を怯ませ、装甲を弱める。",
+  guardian: "敵を引きつけ、自分と周囲の味方を守る。",
+  "mayo-chan": "HPを使って連続攻撃。消耗すると退避する。",
+  zakimiya: "敵が集まる場所へ火酒を投げ、炎を残す。",
+  tky: "大きな光の刃で、前方の敵を薙ぎ払う。",
+  "mrs-chiha": "離れた敵の群れを、榴弾でまとめて攻撃する。",
+  "miyamoto-musashi": "攻撃を受け流して反撃。来なければ踏み込む。",
+});
+
 export function formatV100Number(value, digits = 2) {
   return Number(value).toFixed(digits).replace(/(\.\d*?[1-9])0+$|\.0+$/u, "$1");
 }
@@ -51,6 +71,7 @@ export function v100UnitPresentation(save, unitId) {
   return Object.freeze({
     unitId, kind, displayName: unit.displayName, role: unit.role,
     roleLabel: v100RoleLabelFor(unit.role), description: base.desc,
+    abilityAdvice: ABILITY_SELECTION_ADVICE[kind] ?? null,
     owned, registered, level, levelCap, nextLevel,
     status: owned ? "配備登録済" : registered ? "配備登録可" : "未解放",
     registrationCost: unit.registrationCostCaps,

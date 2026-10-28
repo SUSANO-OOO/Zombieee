@@ -1297,14 +1297,14 @@ function FormationView({ save, stageId, onSlotChange, onStart, onBack, onLoadout
         </div>
       </div>
       <div className="v100-formation-workspace">
-        <div className="v100-roster-heading"><h3>枠 {activeSlot + 1} / ユニットを選ぶ</h3><span>選んだ仲間が{activeSlot + 1}枠に入ります</span><button type="button" className="v100-picker-close" onClick={() => setPickerOpen(false)}>編成に戻る</button></div>
+        <div className="v100-roster-heading"><h3>{activeSlot + 1}枠目に入れる仲間</h3><span>固有技と出撃に必要な指揮を見て選ぼう</span><button type="button" className="v100-picker-close" onClick={() => setPickerOpen(false)}>編成に戻る</button></div>
         <div className="v100-formation-columns"><div className="v100-roster-grid">{ownedUnits.map((unit) => {
           const art = formationCardForUnit(unit.id);
           const info = v100UnitPresentation(save, unit.id);
           const unavailable = v100StageAbsenceReason(stageId, unit.id);
-          return <button type="button" disabled={Boolean(unavailable)} className={"v100-roster-card game-unit-card " + (activeUnitId === unit.id ? "selected" : "")} key={unit.id} onClick={() => assignActiveSlot(unit.id)} aria-label={unavailable ?? unit.displayName + "を枠" + (activeSlot + 1) + "へ配置"}>
+          return <button type="button" disabled={Boolean(unavailable)} data-roster-unit={unit.id} className={"v100-roster-card game-unit-card " + (activeUnitId === unit.id ? "selected" : "")} key={unit.id} onClick={() => assignActiveSlot(unit.id)} aria-label={unavailable ?? unit.displayName + "を枠" + (activeSlot + 1) + "へ配置"}>
             <span className="v100-roster-card-art">{art && <img src={art} alt="" />}</span>
-            <span className="v100-roster-card-copy"><strong>{unit.displayName} <b>Lv.{info?.level ?? 1}</b></strong><small>{unavailable ?? `${v100RoleLabelFor(unit.role)} / ${info?.description}`}</small><small>指揮 {info?.commandCost} / 再配備 <span className="v100-time-value">{formatV100Number(info?.redeploySeconds ?? 0)}秒</span></small></span>
+            <span className="v100-roster-card-copy"><strong>{unit.displayName} <b>Lv.{info?.level ?? 1}</b></strong><small className="v100-roster-role">{v100RoleLabelFor(unit.role)}</small><span className="v100-roster-advice">{unavailable ?? `固有技：${info?.abilityAdvice}`}</span><small className="v100-roster-callin"><span>指揮 <b>{info?.commandCost}</b></span><span>次の出撃まで <b>{formatV100Number(info?.redeploySeconds ?? 0)}秒</b></span></small></span>
           </button>;
         })}</div></div>
       </div>

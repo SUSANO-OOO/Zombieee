@@ -35,6 +35,36 @@
 #v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-meta em { font-size: 12px; color: #c5d3c8; }
 #v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-meta b { font-size: 12px; color: #d9c58f; font-weight: 500; }
 #v100-campaign .v100-briefing-callin { display: block; color: #d9c58f; font-size: 12px; line-height: 1.35; }
+/* Selection cards keep the decision text and real call-in cost together.
+ * Only the roster scrolls; individual cards never clip or hide their timings. */
+#v100-campaign[data-v100-phase] .v100-command-formation.picker-open .v100-roster-grid {
+  display: grid; grid-template-columns: repeat(auto-fit,minmax(250px,1fr));
+  grid-auto-rows: minmax(156px,auto); grid-auto-flow: row; grid-auto-columns: auto;
+  align-content: start; gap: 8px; overflow-x: hidden; overflow-y: auto;
+  padding: 2px 4px 10px; margin: 0;
+}
+#v100-campaign[data-v100-phase] .v100-command-formation.picker-open .v100-roster-card {
+  display: grid; grid-template-columns: 76px minmax(0,1fr); grid-template-rows: auto;
+  align-items: stretch; min-height: 156px; height: auto; padding: 7px; gap: 9px;
+}
+#v100-campaign[data-v100-phase] .v100-command-formation.picker-open .v100-roster-card-art {
+  grid-column: 1; grid-row: 1; height: 100%; min-height: 120px; border-bottom: 0;
+}
+#v100-campaign[data-v100-phase] .v100-command-formation.picker-open .v100-roster-card-copy {
+  display: flex; flex-direction: column; justify-content: flex-start; gap: 4px;
+  min-width: 0; overflow: visible; white-space: normal;
+}
+#v100-campaign[data-v100-phase] .v100-command-formation.picker-open .v100-roster-card-copy strong {
+  font-size: 16px; line-height: 1.3; overflow-wrap: anywhere;
+}
+#v100-campaign[data-v100-phase] .v100-command-formation.picker-open .v100-roster-card-copy strong b { font-size: 12px; white-space: nowrap; }
+#v100-campaign[data-v100-phase] .v100-command-formation.picker-open .v100-roster-role { display: block; font-size: 12px; color: #e1bc7c; }
+#v100-campaign[data-v100-phase] .v100-command-formation.picker-open .v100-roster-advice { display: block; color: #eee9da; font-size: 13px; line-height: 1.5; }
+#v100-campaign[data-v100-phase] .v100-command-formation.picker-open .v100-roster-callin {
+  display: flex; flex-wrap: wrap; gap: 2px 10px; margin-top: auto; padding-top: 5px;
+  border-top: 1px solid #897a5f; font-size: 12px; line-height: 1.5; color: #e3d2a6;
+}
+#v100-campaign[data-v100-phase] .v100-command-formation.picker-open .v100-roster-callin span { white-space: nowrap; }
 #v100-campaign[data-v100-phase] .v100-command-formation.picker-open .v100-roster-card-art img { width: 100%; height: 100%; object-fit: contain; }
 #v100-campaign .v100-save-meta .v100-caps-balance { position: static; flex: 0 0 auto; min-width: 78px; padding: 3px 5px; text-align: right; font-size: 14px; color: #e0cf9d; }
 #v100-campaign .v100-topbar-title:empty { display: none; }
