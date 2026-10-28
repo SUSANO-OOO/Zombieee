@@ -68,13 +68,14 @@ export function v100UnitPresentation(save, unitId) {
 }
 
 export function v100TacticalHintFor(stage) {
-  if (!stage) return "前衛で敵を止め、射撃と回復を組み合わせる。";
+  if (!stage) return "前衛が敵を引き受け、後ろから射撃で援護しよう。";
+  if (Number(stage.number) === 1) return "クマバーソンが敵を引き受け、ババヤガが射撃で援護。「鉄鍋仁王立ち」を使うと、クマバーソンは自分のHPを少しずつ回復できる。敵が増えたら前衛を追加で出撃させよう。";
   if (v100BossForStage(stage.number)?.id === "boss-kurome") return "クロメの照準が付いたユニットをタップで回避。";
-  if (stage.missionType === "boss") return "大技の予告を確認。守備の固有技と回復支援で持ちこたえる。";
+  if (stage.missionType === "boss") return "大技の予告を見逃さず、守備役の固有技を敵の攻撃に合わせて使おう。";
   if (stage.missionType === "escort") return "前衛と足止め役で、護衛対象へ近づく敵を止める。";
-  if (stage.missionType === "timed-defense") return "前衛・射撃・回復を組み合わせ、防衛線を維持する。";
+  if (stage.missionType === "timed-defense") return "前衛と射撃役を揃え、防衛地点へ迫る敵を迎え撃とう。敵が増えたら前衛を追加で出撃させよう。";
   if (Number(stage.number) >= 21) return "盾持ちには重装兵、射撃兵には遊撃兵。固有技で敵を足止め。";
-  return "前衛で敵を止め、射撃と回復で部隊を支える。";
+  return "前衛が敵を引き受け、後ろから射撃で援護しよう。敵が増えたら前衛を追加で出撃させよう。";
 }
 
 export function v100SupportPurposeFor(supportId) {
