@@ -387,3 +387,11 @@
 
 #v100-campaign .v100-unit-level-effect { display:block; margin-top:4px; color:#294832; font-size:13px; line-height:1.4; }
 #v100-campaign .v100-unit-transaction .v100-upgrade-preview { margin:2px 0 4px; color:#27482e; font-size:13px; line-height:1.4; white-space:normal; overflow-wrap:anywhere; }
+
+/* Inspect the whole authored portrait; the square roster crop is only for lists. */
+#v100-campaign .v100-command-personnel.detail-open .v100-personnel-focus-art { max-height:none; }
+#v100-campaign .v100-command-personnel.detail-open .v100-personnel-focus-art img { object-fit:contain; object-position:center bottom; }
+@media (min-height:461px) and (min-width:900px) {
+  #v100-campaign .v100-command-personnel.detail-open .v100-personnel-focus { grid-template-columns:minmax(240px,30%) minmax(0,1fr); }
+  #v100-campaign .v100-command-personnel.detail-open .v100-unit-transaction { position:static; margin-top:16px; }
+}

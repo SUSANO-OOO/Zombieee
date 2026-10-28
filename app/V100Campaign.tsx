@@ -1326,6 +1326,7 @@ function PersonnelView({ save, initialUnitId, returnLabel, onBack, onPurchase, o
   const [selectedUnitId, setSelectedUnitId] = useState(() => focusedUnitId ?? save.ownedUnitIds[0] ?? V100_UNITS[0]?.id ?? "");
   const [detailOpen, setDetailOpen] = useState(Boolean(focusedUnitId));
   const selectedUnit = UNIT_BY_ID.get(selectedUnitId) ?? V100_UNITS[0];
+  const detailPortrait = selectedUnit ? v100StoryPortraitPath(selectedUnit.id) ?? v100StoryPortraitPath(campaignUnitIdToCombatKind(selectedUnit.id)) ?? formationCardForUnit(selectedUnit.id) : null;
   const info = selectedUnit ? v100UnitPresentation(save, selectedUnit.id) : null;
   const currentStats = info?.current;
   const nextStats = info?.next;
@@ -1352,7 +1353,7 @@ function PersonnelView({ save, initialUnitId, returnLabel, onBack, onPurchase, o
       </div>
       <aside className="v100-personnel-focus v100-unit-focus" aria-label="選択中のユニット" data-unit-id={selectedUnit?.id} data-unit-level={info?.level}>
         {selectedUnit && info && currentStats && <>
-          <div className="v100-personnel-focus-art">{formationCardForUnit(selectedUnit.id) && <img src={formationCardForUnit(selectedUnit.id) as string} alt={selectedUnit.displayName + "の立ち絵"} />}</div>
+          <div className="v100-personnel-focus-art">{detailPortrait && <img src={detailPortrait} alt={selectedUnit.displayName + "の立ち絵"} />}</div>
           <div className="v100-unit-growth-notes"><details><summary>育成の変化</summary><p>{nextStats ? "今回：" + (nextGrowth || "数値変化なし") : "現在の育成上限"}{info.nextOutputGrowth && <><br />{info.nextOutputGrowth.stat === "healing" ? "治療" : info.attackType === "ranged" ? "射撃ダメージ" : "近接ダメージ"}はLv.{info.nextOutputGrowth.level}で{formatV100Number(info.nextOutputGrowth.value)}。{!info.nextOutputGrowth.withinCap && "上限解禁後に育成できます。"}</>}<br />{info.equipmentNames.length ? info.equipmentNames.join(" / ") : "装備なし"}<br />防御力は受けるダメージの軽減率です。{info.skill && <><br />{info.skill.name}：{info.skill.detail}</>}{info.treatmentProtection && <><br />通常治療後は {Math.round(info.treatmentProtection.reduction * 100)}%の被害軽減が{info.treatmentProtection.seconds}秒間続きます。</>}</p></details></div>
           <button type="button" className="v100-personnel-detail-back" onClick={() => focusedUnitId ? onBack() : setDetailOpen(false)}>{focusedUnitId ? returnLabel : "ユニット一覧へ"}</button>
           <div className="v100-personnel-focus-copy">
