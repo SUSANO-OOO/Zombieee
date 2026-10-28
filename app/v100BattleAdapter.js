@@ -75,7 +75,11 @@ export function v100MissionObjectiveFor(stageId) {
   if (stage.number === 3) return "大型変異感染者TAKUYAを撃破";
   if (stage.number === 30) return "TAKUYA-Ωを撃破し、西新を守る";
   const control = V100_CORPORATE_CONTROLS[stageId];
-  if (control) return stage.missionType === "boss" ? `異常個体を撃破し、${control}を破壊` : `${control}を破壊`;
+  if (control) {
+    const bossId = stage.firstClearPayload.find(value => value.startsWith("boss-"));
+    const bossName = V100_BOSS_BY_ID[bossId]?.displayName;
+    return bossName ? `${bossName}を倒し、${control}を破壊` : `${control}を破壊`;
+  }
   const defense = V100_DEFENSE_OBJECTIVES[stageId];
   if (defense) return defense.recordCount ? `${defense.goal}（全${defense.recordCount}室）` : defense.goal;
   if (stage.number === 29) return researchCoreObjective(null);
