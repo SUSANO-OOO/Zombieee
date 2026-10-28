@@ -6,6 +6,7 @@ import { queueV105FistWave, resolveV105FistWavePaint, advanceV105FistWaves, draw
 import { startV105AbilityName, drawV105AbilityNames, v105AbilityNameSnapshot, v105EnemyAbilityName, clearV105AbilityNames } from './v105AbilityNames.js';
 import { v105CurrentAbilitySample, v105AbilityFacing } from './v105CurrentAbilityPose.js';
 import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
+import { v100PortraitFraming } from "./v100PortraitFraming.js";
 import { v100BasePresentationFor } from "./v100BasePresentation.js";
 import { createV100HumanWalkRenderer, v100HumanWalkPhase, v100UsesHumanWalk, v100HumanWalkCycleDistance, v100HumanWalkFrame } from "./v100HumanWalk.js";
 import { V177_JOINT_ATLASES, v177JointCycleDistance, v177JointPose, v177RangerFootPlan, v105BipedFootPlan, drawV177JointPose, v177CaptureJointPose, v177RenderedJointWeaponSocket, v177RenderedWeightedLowerReceipt } from "./v177JointPresentation.js";
@@ -9711,7 +9712,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     () => mobileBattleHudUnitSlots(cards, activeFormationKinds),
     [activeFormationKinds],
   );
-  const battleHudLayout = useMemo(() => mobileBattleHudLayout(battleHudViewport), [battleHudViewport]);
+  const battleHudLayout = useMemo(() => mobileBattleHudLayout({...battleHudViewport, deploymentReadout: externalSessionActive}), [battleHudViewport, externalSessionActive]);
   const formationKindKey = activeFormationKinds.join("|");
   const [campaignResult, setCampaignResult] = useState<CampaignResultView | null>(null);
   const [outbreakResult, setOutbreakResult] = useState<OutbreakResultView | null>(null);
@@ -24950,12 +24951,23 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                       : hud.energy < card.cost
                         ? "指揮不足"
                         : null);
-                 const cardState = cooldown > 0 ? "cooldown" : cardBlockReason ? (cardBlockReason === "指揮不足" ? "insufficient" : cardBlockReason === "同時出撃の上限" ? "full" : "blocked") : "ready";
+                 const cardState = commonBattleActionBlockReason ? "blocked" : cardBlockReason === "同時出撃の上限" ? "full" : cooldown > 0 ? "cooldown" : cardBlockReason ? (cardBlockReason === "指揮不足" ? "insufficient" : "blocked") : "ready";
                  const missingCommandPoints = Math.max(0, Math.ceil(card.cost - hud.energy));
                  const cardBlockCopy = cardBlockReason === "指揮不足" ? `指揮があと${missingCommandPoints}必要` : cardBlockReason;
+                 const cardAccessibleState = externalSessionActive && cardState === "cooldown"
+                   ? `再出撃まで${cooldown}秒${missingCommandPoints > 0 ? ` / 指揮があと${missingCommandPoints}必要` : ""}`
+                   : cardBlockCopy ?? "出撃可能";
                  return (
-                   <button key={`${card.kind}-${slotIndex}`} className={`unit-card ${cooldown > 0 ? "cooling" : ""} state-${cardState}`} data-kind={card.kind} data-slot-index={slotIndex} data-portrait={portraitArt ? "approved" : "diagnostic"} data-block-reason={cardBlockReason ?? "ready"} data-state={cardState} aria-label={`${card.name} / ${cardBlockCopy ?? "出撃可能"} / コスト ${card.cost}`} aria-disabled={Boolean(cardBlockReason)} onClick={() => deployHuman(card.kind)} style={portraitArt ? { "--unit-card-art": `url('${portraitArt}')` } as CSSProperties : undefined}>
+                   <button key={`${card.kind}-${slotIndex}`} className={`unit-card ${externalSessionActive ? "v100-deploy-card" : ""} ${cooldown > 0 ? "cooling" : ""} state-${cardState}`} data-kind={card.kind} data-slot-index={slotIndex} data-portrait={portraitArt ? "approved" : "diagnostic"} data-block-reason={cardBlockReason ?? "ready"} data-state={cardState} data-cooldown={cooldown} data-missing-command={missingCommandPoints} aria-label={`${card.name} / ${cardAccessibleState} / ${externalSessionActive ? "必要指揮" : "コスト"} ${card.cost}`} aria-disabled={Boolean(cardBlockReason)} onClick={() => deployHuman(card.kind)} style={portraitArt ? { "--unit-card-art": `url('${portraitArt}')`, ...(externalSessionActive ? v100PortraitFraming(combatKindToCampaignUnitId(card.kind)) : {}) } as CSSProperties : undefined}>
                     <span className="portrait"><i />{portraitArt ? <img src={portraitArt} alt="" aria-hidden="true" draggable={false} decoding="async" /> : <b className="diagnostic-portrait" aria-hidden="true">{card.kind === "guardian" ? "盾" : "工"}</b>}</span>
+                    {externalSessionActive ? <>
+                      <span className="v100-deploy-name" aria-hidden="true">{card.name}</span>
+                      <span className="v100-deploy-readout" aria-hidden="true">
+                        <span className="v100-deploy-cost"><small>指揮</small><b>{card.cost}</b></span>
+                        <span className="v100-deploy-status">{cardState === "ready" ? "出撃できる" : cardState === "cooldown" ? `再出撃 ${cooldown}秒` : cardState === "insufficient" ? `指揮 あと${missingCommandPoints}` : cardState === "full" ? "出撃枠待ち" : cardBlockCopy}</span>
+                        {cardState === "cooldown" && missingCommandPoints > 0 && <span className="v100-deploy-shortage">指揮 あと{missingCommandPoints}</span>}
+                      </span>
+                    </> : <>
                     <span className="card-copy" aria-hidden="true"><b>{card.name}</b><small>{card.desc}</small></span><span className="cost"><i className="cost-mark" aria-hidden="true">指揮</i>{card.cost}</span>
                     {!cooldown && cardState !== "ready" && <span className="card-state" data-state={cardState}>
                       <span className="card-state-full">{cardBlockCopy}</span>
@@ -24965,6 +24977,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                       className="cooldown-mask"
                       style={{ "--cooldown-progress": `${Math.min(100, cooldown / Math.max(1, card.deployCooldown) * 100)}%` } as CSSProperties}
                     ><small><span className="cooldown-full">再準備 {cooldown}秒</span><span className="cooldown-compact">{cooldown}秒</span></small></span>}
+                    </>}
                   </button>
                 );
               })}
