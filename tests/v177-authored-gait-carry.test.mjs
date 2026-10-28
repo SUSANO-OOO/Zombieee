@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { createHash } from 'node:crypto';
+import { gaitSourceHash } from '../scripts/gait-source-hash.mjs';
 import { V177_AUTHORED_GAITS } from '../app/v177GaitSourceData.js';
 import { V177_JOINT_ATLASES as atlases, v177JointPose, v105BipedFootPlan, v177CaptureJointPose, drawV177JointPose } from '../app/v177JointPresentation.js';
 import { v177WeaponChoreography } from '../app/v177WeaponChoreography.js';
@@ -12,7 +12,8 @@ test('every runtime biped uses phase and stance metadata from its matching sourc
     const gait=V177_AUTHORED_GAITS[kind]; assert.ok(gait,kind);
     for(const source of gait.sources){
       const bytes=await readFile(source.file),d=JSON.parse(bytes);
-      assert.equal(createHash('sha256').update(bytes).digest('hex'),source.sha256,kind);
+      assert.equal(source.hashEncoding,'utf8-lf',kind);
+      assert.equal(gaitSourceHash(bytes),source.sha256,kind);
       assert.deepEqual(d.legConstraints,atlas.legConstraints,kind);
       assert.equal(gait.stanceFraction,d.motion.walk.stanceFraction,kind);
       for(const [index,leg]of atlas.legConstraints.entries())assert.equal(gait.offsets[leg.effectorBone],d.rig.legs[index].offset,kind);
@@ -90,4 +91,11 @@ test('walking carry moves both held and free wrists while all shoulder/elbow/gri
     const idle=v177JointPose(kind,{requestedState:'idle'},runtime,{actor:{kind,animationPresentation:runtime}});
     assert.equal(idle.choreography.walkingCarry,undefined,'standing carry remains unchanged');
   }
+});
+
+test('gait source identity ignores only checkout CRLF while rejecting authored changes',()=>{
+  const lf=Buffer.from('{\n  "stance": 0.62\n}\n');
+  assert.equal(gaitSourceHash(lf),gaitSourceHash(Buffer.from(lf.toString().replaceAll('\n','\r\n'))));
+  assert.notEqual(gaitSourceHash(lf),gaitSourceHash(Buffer.from(lf.toString().replace('0.62','0.63'))));
+  assert.notEqual(gaitSourceHash(lf),gaitSourceHash(Buffer.from(lf.toString().replace('  "stance"',' "stance"'))));
 });

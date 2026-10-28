@@ -9,7 +9,8 @@ export const V177_AUTHORED_GAITS = {
     "sources": [
       {
         "file": "assets/source/v100/joints/scout-r1/parts.json",
-        "sha256": "680f732e66d91825f94ab40d717a0950b781a006fae3efab445b36aa0d61d354"
+        "sha256": "c6a879a190535889fe4b80fb8c176590a42c200e5bd816fb9bba4e0dbc79c039",
+        "hashEncoding": "utf8-lf"
       }
     ]
   },
@@ -22,7 +23,8 @@ export const V177_AUTHORED_GAITS = {
     "sources": [
       {
         "file": "assets/source/v100/joints/walker-r1/parts.json",
-        "sha256": "7425b141548534f9346f3e56a17ee411206ae1342f1f0e797a0dc281a62fba36"
+        "sha256": "ac77f88f0cd60c3ee2b365631c84358c2cff870d8c86f2e1f5e46be571bd5246",
+        "hashEncoding": "utf8-lf"
       }
     ]
   },
@@ -35,7 +37,8 @@ export const V177_AUTHORED_GAITS = {
     "sources": [
       {
         "file": "assets/source/v100/joints/gairen-r1/parts.json",
-        "sha256": "e9a4b9c7c9c92653f6698a0fb30b4eeacd45512d2d7c5cad749475f6fb1cfefb"
+        "sha256": "c6f781a32071f53ac330303cdea76949e7f5e15ad39b813c19ab70586469c3c8",
+        "hashEncoding": "utf8-lf"
       }
     ]
   },
@@ -48,7 +51,8 @@ export const V177_AUTHORED_GAITS = {
     "sources": [
       {
         "file": "assets/source/v100/joints/walker-r1/parts.json",
-        "sha256": "7425b141548534f9346f3e56a17ee411206ae1342f1f0e797a0dc281a62fba36"
+        "sha256": "ac77f88f0cd60c3ee2b365631c84358c2cff870d8c86f2e1f5e46be571bd5246",
+        "hashEncoding": "utf8-lf"
       }
     ]
   },
@@ -61,7 +65,8 @@ export const V177_AUTHORED_GAITS = {
     "sources": [
       {
         "file": "assets/source/v100/joints/runner-r1/parts.json",
-        "sha256": "afa2a956293b47ba0af5bbeaba6c147e65fd97ce95adedd0a5a6bbb4dd477c4f"
+        "sha256": "f06eb78a56b306105a27e2735e33c69788121ea4ef25793b3690523744c5be06",
+        "hashEncoding": "utf8-lf"
       }
     ]
   },
@@ -74,7 +79,8 @@ export const V177_AUTHORED_GAITS = {
     "sources": [
       {
         "file": "assets/source/v100/joints/gunner-r1/parts.json",
-        "sha256": "decf4fc47e76f044fd5464d88fe6a87a88a3b07e9fc96b713eda60e93f6d1ca6"
+        "sha256": "848f6c07c424ab58d9d7b12c17de266ebfc75c511c0791c54dfe9a22e5ea7045",
+        "hashEncoding": "utf8-lf"
       }
     ]
   },
@@ -87,7 +93,8 @@ export const V177_AUTHORED_GAITS = {
     "sources": [
       {
         "file": "assets/source/v100/joints/medic-r1/parts.json",
-        "sha256": "a74e809fc888e3c831e69ae83a892d5d43f37362250aa3cfd45ac4cdd6d537ff"
+        "sha256": "e7773823cdb72b4a7e68c2133e36c226633343e8bf8ee7760768cf37f5e344f1",
+        "hashEncoding": "utf8-lf"
       }
     ]
   },
@@ -100,7 +107,8 @@ export const V177_AUTHORED_GAITS = {
     "sources": [
       {
         "file": "assets/source/v100/joints/engineer-r1/parts.json",
-        "sha256": "994da5ca7e47a87eaf4458e70b3eb0d1847caaa187e9b8d7768ba57081041674"
+        "sha256": "1b496e5e24f40a0ff19dec31c34614ce6175e3be34d9e60a5d43350935780240",
+        "hashEncoding": "utf8-lf"
       }
     ]
   },
@@ -113,7 +121,8 @@ export const V177_AUTHORED_GAITS = {
     "sources": [
       {
         "file": "assets/source/v100/joints/babayaga-r1/parts.json",
-        "sha256": "8b44f71e991f09e575642e37f6945dd61f6c513d2dc860729429ca8638e7985f"
+        "sha256": "63cd705ff2ab6cc0cd51c747811565bf7e9e7a13f3ddea009ff6e4dd610bdf55",
+        "hashEncoding": "utf8-lf"
       }
     ]
   },
@@ -126,7 +135,8 @@ export const V177_AUTHORED_GAITS = {
     "sources": [
       {
         "file": "assets/source/v100/joints/red-panther-knife-r1/parts.json",
-        "sha256": "237eea204ea171dedd5dc057fd83acbce722753b69c91c7ecc41c3a10e662f5a"
+        "sha256": "472059cd477c07735fa327c5a25f02455924682f66727748c3be3f52c5661886",
+        "hashEncoding": "utf8-lf"
       }
     ]
   },
@@ -139,7 +149,8 @@ export const V177_AUTHORED_GAITS = {
     "sources": [
       {
         "file": "assets/source/v100/joints/red-panther-smg-r1/parts.json",
-        "sha256": "d266e613f7b09c904ef43761a5640b79579c94de2c6577a9df86442eb20b8f82"
+        "sha256": "4318424e1197e0cd27ff08d63e84d7159b834eb73ed3939066b63fea5a0642ed",
+        "hashEncoding": "utf8-lf"
       }
     ]
   },
@@ -152,7 +163,8 @@ export const V177_AUTHORED_GAITS = {
     "sources": [
       {
         "file": "assets/source/v100/joints/red-panther-shield-r1/parts.json",
-        "sha256": "04eb927aacf2ee76282974b26a4be79a180d4d7636a520f3fb22366a90258798"
+        "sha256": "4733ba780cff30530c210649b7d9db945560943ee9f74b842e6ae9d4f462cb2e",
+        "hashEncoding": "utf8-lf"
       }
     ]
   },
@@ -165,7 +177,8 @@ export const V177_AUTHORED_GAITS = {
     "sources": [
       {
         "file": "assets/source/v100/joints/red-panther-commander-r1/parts.json",
-        "sha256": "797833c6f670902990f7cb981e3c072b588234d818d0b86542ad80ee24cfb0c8"
+        "sha256": "5fbe35cb68535e19075723805d8b781747d7eb50122f005af671ea3a1ae5bc55",
+        "hashEncoding": "utf8-lf"
       }
     ]
   },
@@ -178,7 +191,8 @@ export const V177_AUTHORED_GAITS = {
     "sources": [
       {
         "file": "assets/source/v100/joints/brute-r1/parts.json",
-        "sha256": "093f1ccfbe4b389542c1355ff4d58261cd94aaf1126c15ed595637256e386580"
+        "sha256": "7f33876d5dfd9dec81694b721684289142ae0bc54a3ba602c38d8114499ad4ab",
+        "hashEncoding": "utf8-lf"
       }
     ]
   },
@@ -191,7 +205,8 @@ export const V177_AUTHORED_GAITS = {
     "sources": [
       {
         "file": "assets/source/v177/paisen/battle-r8/parts.json",
-        "sha256": "9deecbf423cad8cb4b12e316c13e6a857e3cbb895de1b857c2f0f06c7be114c3"
+        "sha256": "9deecbf423cad8cb4b12e316c13e6a857e3cbb895de1b857c2f0f06c7be114c3",
+        "hashEncoding": "utf8-lf"
       }
     ]
   },
@@ -204,7 +219,8 @@ export const V177_AUTHORED_GAITS = {
     "sources": [
       {
         "file": "assets/source/v100/joints/crazy-king-r1/parts.json",
-        "sha256": "7dffe6eda8b9784423ccda68171598458aa37b8fe006458c5dfe3b39544dac8a"
+        "sha256": "673e7592b758e2bf9cb3e2f2d98b359ba968504d2e19cdbe00fb6d39de8d32c0",
+        "hashEncoding": "utf8-lf"
       }
     ]
   },
@@ -217,7 +233,8 @@ export const V177_AUTHORED_GAITS = {
     "sources": [
       {
         "file": "assets/source/v100/joints/kumaverson-r1/parts.json",
-        "sha256": "29395be6d92dd47460188246139f15eaf4218bb4767a091307119f417c56daca"
+        "sha256": "14110caf422b2162013b43940578cd29f764d625a9f257e1f20d8501a470e359",
+        "hashEncoding": "utf8-lf"
       }
     ]
   },
@@ -230,7 +247,8 @@ export const V177_AUTHORED_GAITS = {
     "sources": [
       {
         "file": "assets/source/v100/joints/takuya-r1/parts.json",
-        "sha256": "affc86db73d74738da2c58ee555661e6351e8bc9ef7e3c5e940c28e0fd77433b"
+        "sha256": "76d761b2cf88a70f7a3d91ef6a60c15a9a8e08569b34f11ca0ae103cdfcf0dc2",
+        "hashEncoding": "utf8-lf"
       }
     ]
   },
@@ -243,7 +261,8 @@ export const V177_AUTHORED_GAITS = {
     "sources": [
       {
         "file": "assets/source/v100/joints/guardian-r1/parts.json",
-        "sha256": "d448cc5be139d8051ad52368947250bff4b3488685c0e32614c289324dcb5aa3"
+        "sha256": "4e8299cefc7f39369c4f3379379187adf9330e40c17e6ca73f5ab2d0549df090",
+        "hashEncoding": "utf8-lf"
       }
     ]
   },
@@ -256,7 +275,8 @@ export const V177_AUTHORED_GAITS = {
     "sources": [
       {
         "file": "assets/source/v100/joints/grappler-r1/parts.json",
-        "sha256": "3e1644a235b94ecaa813b590c4898e3d50ea0ff05f9ed7e65ced87f4c1618004"
+        "sha256": "d85441963a0f8209418b822e02a180072a2e865d60a35ef313257147c8d568b7",
+        "hashEncoding": "utf8-lf"
       }
     ]
   },
@@ -269,7 +289,8 @@ export const V177_AUTHORED_GAITS = {
     "sources": [
       {
         "file": "assets/source/v100/joints/sprinter-r1/parts.json",
-        "sha256": "020c50a5b652ed1ec5e047578550374f901a24f7fa808624254a52009cf5d371"
+        "sha256": "d8977633addb4d423a90f37803643b40a79838c508c0c638ccdc47bdc89d9c94",
+        "hashEncoding": "utf8-lf"
       }
     ]
   },
@@ -282,7 +303,8 @@ export const V177_AUTHORED_GAITS = {
     "sources": [
       {
         "file": "assets/source/v100/joints/crusher-r1/parts.json",
-        "sha256": "04017ec1c548710ed67bff6b2ed93afcd837e45444f5eeb7b470368c3504c773"
+        "sha256": "5112851f85b6e91272c6a4cc133c6aa70479377338c5d7b779217327ba2ad2af",
+        "hashEncoding": "utf8-lf"
       }
     ]
   },
@@ -295,7 +317,8 @@ export const V177_AUTHORED_GAITS = {
     "sources": [
       {
         "file": "assets/source/v100/joints/crusher-r1/parts.json",
-        "sha256": "04017ec1c548710ed67bff6b2ed93afcd837e45444f5eeb7b470368c3504c773"
+        "sha256": "5112851f85b6e91272c6a4cc133c6aa70479377338c5d7b779217327ba2ad2af",
+        "hashEncoding": "utf8-lf"
       }
     ]
   },
@@ -308,7 +331,8 @@ export const V177_AUTHORED_GAITS = {
     "sources": [
       {
         "file": "assets/source/v100/joints/zakimiya-r1/parts.json",
-        "sha256": "452802081526c8d8ae361956f56469618fd43b977361b1ed1ce33cf7a4222bc4"
+        "sha256": "ce1f883d43caf7f7668908649123f2419fcd27a027a755855fdb241fc9b48fa3",
+        "hashEncoding": "utf8-lf"
       }
     ]
   },
@@ -321,7 +345,8 @@ export const V177_AUTHORED_GAITS = {
     "sources": [
       {
         "file": "assets/source/v100/joints/tky-r1/parts.json",
-        "sha256": "c63040db330763f30b69c2914a8b8cf4cdf13cc9d788b5355bec83d2bd9360d1"
+        "sha256": "7ee92bb3346a2f02521b5175a807f43bcc1f26df71627194a58450e19a72728f",
+        "hashEncoding": "utf8-lf"
       }
     ]
   },
@@ -334,7 +359,8 @@ export const V177_AUTHORED_GAITS = {
     "sources": [
       {
         "file": "assets/source/v100/joints/mrs-chiha-r1/parts.json",
-        "sha256": "b4d17fd811e1ecd4c503e0ec0ce76f9fedae4f7adba70268af9eeda6b41cf84c"
+        "sha256": "e7cb759aa46be23bbfa7cadfa3c88149685dd6c39fa6613d2f8eb350af66a573",
+        "hashEncoding": "utf8-lf"
       }
     ]
   },
@@ -347,7 +373,8 @@ export const V177_AUTHORED_GAITS = {
     "sources": [
       {
         "file": "assets/source/v100/joints/miyamoto-musashi-r1/parts.json",
-        "sha256": "45e8a52593196a11bd01b6975b0935a3679df77fbf8ff92dfadd159edaf17d96"
+        "sha256": "4b9c1fcd88f78f7c159c33f5e00c198d46623aad5971ffabbbf67be2d0187e69",
+        "hashEncoding": "utf8-lf"
       }
     ]
   },
@@ -360,7 +387,8 @@ export const V177_AUTHORED_GAITS = {
     "sources": [
       {
         "file": "assets/source/v100/joints/shade-r1/parts.json",
-        "sha256": "f5b31350f5a55881e2e32469f2bef86792af7558354c89f882d7c5b97ce10585"
+        "sha256": "5eb2b2f4398a63c018d8ac63b9f638121779190f1961499b993c8dc3775dd4be",
+        "hashEncoding": "utf8-lf"
       }
     ]
   },
@@ -373,7 +401,8 @@ export const V177_AUTHORED_GAITS = {
     "sources": [
       {
         "file": "assets/source/v100/joints/spitter-r1/parts.json",
-        "sha256": "f0b38338f7f423a4dc9f2cab233166428537258a8b1f2b69aa5d5d5282e98a78"
+        "sha256": "9facc160c03887b000b98db22fae5e166c157adc5190da1d97405976bc403974",
+        "hashEncoding": "utf8-lf"
       }
     ]
   },
@@ -386,7 +415,8 @@ export const V177_AUTHORED_GAITS = {
     "sources": [
       {
         "file": "assets/source/v100/joints/ooze-r1/parts.json",
-        "sha256": "f604afe8ab0c352097871fd2ff5e699bcda09a216de2c6a5a02d17a742894e04"
+        "sha256": "982637faf6c7b52d16fe8fd39203959773afc67b73241dd188f39752c2878323",
+        "hashEncoding": "utf8-lf"
       }
     ]
   },
@@ -399,7 +429,8 @@ export const V177_AUTHORED_GAITS = {
     "sources": [
       {
         "file": "assets/source/v100/joints/gate-eater-r1/parts.json",
-        "sha256": "e029c8b42c4f7be2af4bf6fdf253f92214acfd06c524569e11ebb4f871797906"
+        "sha256": "a283fba950f9f19552b6a218c8bc6de9407c6672bb3e66d9b5f6a6e1b66c6e56",
+        "hashEncoding": "utf8-lf"
       }
     ]
   },
@@ -412,7 +443,8 @@ export const V177_AUTHORED_GAITS = {
     "sources": [
       {
         "file": "assets/source/v100/joints/kurome-r1/parts.json",
-        "sha256": "24c4d9468ff93e9911888dc1feaa9c85b2c1bd122df62eb30b1bcca2fa07b3fa"
+        "sha256": "cc86f68730b5c02b522c141cd218900c0674ba1cdbfac8a676d972ec428a925e",
+        "hashEncoding": "utf8-lf"
       }
     ]
   },
@@ -425,7 +457,8 @@ export const V177_AUTHORED_GAITS = {
     "sources": [
       {
         "file": "assets/source/v100/joints/resonator-r1/parts.json",
-        "sha256": "3b1ed7ed18bac08ae6af4f378ef138f3fe59506407284b957409c4ace7d8399f"
+        "sha256": "20636ab7c79ec3c417656630202a9ee8b2a459388455295716d0ef5966676695",
+        "hashEncoding": "utf8-lf"
       }
     ]
   },
@@ -438,7 +471,8 @@ export const V177_AUTHORED_GAITS = {
     "sources": [
       {
         "file": "assets/source/v100/joints/choir-knot-r1/parts.json",
-        "sha256": "d3e9d76545de7e77a0d786df5df6fbf619ed072731cb24b6aaface46cf114a32"
+        "sha256": "35679bdfedd6d90fed6310915b78dedc9702f5241ab367efaa502003635375bf",
+        "hashEncoding": "utf8-lf"
       }
     ]
   },
@@ -451,7 +485,8 @@ export const V177_AUTHORED_GAITS = {
     "sources": [
       {
         "file": "assets/source/v100/joints/mugarian-president-mutated-r1/parts.json",
-        "sha256": "9c061e0f72f4f14755d36dcace2f82458717c0b511d42c6478130f9957cb72f0"
+        "sha256": "35035f5dfb749e249c148ec40013e515f4d5d002554a2f1cfa6438e3d249f821",
+        "hashEncoding": "utf8-lf"
       }
     ]
   },
@@ -464,7 +499,8 @@ export const V177_AUTHORED_GAITS = {
     "sources": [
       {
         "file": "assets/source/v100/joints/takuya-omega-r3/parts.json",
-        "sha256": "ef710c6131cd09822d7b99cb566d441c657db66bd61f68686723c96524e5a8d8"
+        "sha256": "dc03c395e42836abb6e5e6b46aa4180945a8feb47e69beaafed3ded0dc510554",
+        "hashEncoding": "utf8-lf"
       }
     ]
   },
@@ -477,7 +513,8 @@ export const V177_AUTHORED_GAITS = {
     "sources": [
       {
         "file": "assets/source/v100/joints/futago-separated-a-r1/parts.json",
-        "sha256": "de7c09967a404b0c20ac1679a97da9ec57650ef805ac44b42ce13b3f9cfcef62"
+        "sha256": "a5b2963f64cb36eeb5e9922e648654236f085ce1b118763a7145d5f43ddd095b",
+        "hashEncoding": "utf8-lf"
       }
     ]
   },
@@ -490,7 +527,8 @@ export const V177_AUTHORED_GAITS = {
     "sources": [
       {
         "file": "assets/source/v100/joints/futago-separated-b-r1/parts.json",
-        "sha256": "5324b8dbf03f6496b4da5464500b5851ccca8c173ae9e70009e86edf8cc594d8"
+        "sha256": "d89937bec28488bc2b349f3977d095b35ed33695dc8c814b729a6e64480bb644",
+        "hashEncoding": "utf8-lf"
       }
     ]
   }
