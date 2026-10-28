@@ -361,16 +361,30 @@ export function survivalUpgradeChoices(
   runId,
   checkpointWave,
   upgradePool = SURVIVAL_UPGRADES,
+  run = null,
 ) {
   const stableRunId = normalizedId(runId, "Survival upgrade choice");
   const wave = clampInteger(checkpointWave, SURVIVAL_BLOCK_WAVES, SURVIVAL_MAX_SAFE_WAVE, SURVIVAL_BLOCK_WAVES);
   const upgradeIds = uniqueStrings((Array.isArray(upgradePool) ? upgradePool : [])
-    .map((upgrade) => (typeof upgrade === "string" ? upgrade : upgrade?.id)));
+    .map((upgrade) => (typeof upgrade === "string" ? upgrade : upgrade?.id)))
+    .filter(id => !run || survivalUpgradeHasEffect(run,id));
   if (upgradeIds.length < 3) {
     throw new RangeError("Survival upgrade choices require at least three unique upgrades");
   }
   const seed = fnv1a32(`${stableRunId}:${wave}:${upgradeIds.join("\u0000")}`);
   return seededShuffle(upgradeIds, seed).slice(0, 3);
+}
+
+export const SURVIVAL_UPGRADE_EFFECT_FLOORS = Object.freeze({'layered-armor':.2,'rapid-redeployment':.25});
+export function survivalUpgradeHasEffect(run, id) {
+  if (id === 'crawler-field-repair') return run.crawler.hp < run.crawler.maxHp;
+  // The run's formation is fixed. Only Nao consumes healingMultiplier in
+  // combat, so a known formation without her cannot benefit from this choice.
+  const unitIds = run.formation?.unitIds;
+  if (id === 'field-triage' && unitIds?.length) return unitIds.includes('unit-nao');
+  const floor = SURVIVAL_UPGRADE_EFFECT_FLOORS[id];
+  return floor === undefined || (run.temporaryUpgradeStacks?.[id] ?? 0)
+    * SURVIVAL_UPGRADE_BY_ID[id].effectPerStack < 1-floor-1e-9;
 }
 
 function normalizeCheckpointReward(value, runId) {
@@ -444,10 +458,19 @@ export function normalizeSurvivalRun(value) {
     ? uniqueStrings(source.pendingUpgradeChoices, 3)
       .filter((upgradeId) => Object.hasOwn(SURVIVAL_UPGRADE_BY_ID, upgradeId))
     : [];
-  const pendingUpgradeChoices = phase === SURVIVAL_RUN_PHASES.UPGRADE_SELECTION
-    && storedUpgradeChoices.length !== 3
-    ? survivalUpgradeChoices(runId, lastCompletedWave)
-    : storedUpgradeChoices;
+  const upgradeState = {crawler:{hp:clampInteger(source.crawler?.hp,0,crawlerMaxHp,crawlerMaxHp),maxHp:crawlerMaxHp},
+    temporaryUpgradeStacks:normalizeUpgradeStacks(source.temporaryUpgradeStacks),
+    formation:normalizeFormationSnapshot(source.formation, source.modePolicy === 'v100')};
+  let pendingUpgradeChoices = storedUpgradeChoices;
+  if (phase === SURVIVAL_RUN_PHASES.UPGRADE_SELECTION) {
+    const retained = storedUpgradeChoices.filter(id=>survivalUpgradeHasEffect(upgradeState,id));
+    const replacements = survivalUpgradeChoices(runId,lastCompletedWave,SURVIVAL_UPGRADES,upgradeState)
+      .filter(id=>!retained.includes(id));
+    // Keep each effective saved choice in its original slot. Only useless or
+    // missing slots change; previously earned stacks/rewards stay untouched.
+    pendingUpgradeChoices = Array.from({length:3},(_,index)=>retained.includes(storedUpgradeChoices[index])
+      ? storedUpgradeChoices[index] : replacements.shift());
+  }
   const v100 = source.modePolicy === "v100";
   const bossPool = normalizeSurvivalBossPool(source.bossPool, { strict: v100 });
   const lastBossKind = typeof source.lastBossKind === "string"
@@ -624,7 +647,8 @@ export function completeSurvivalWave(run, {
       hp: clampInteger(crawlerHp, 0, current.crawler.maxHp, current.crawler.hp),
     },
     pendingUpgradeChoices: descriptor.isBoss
-      ? survivalUpgradeChoices(current.runId, current.currentWave)
+      ? survivalUpgradeChoices(current.runId, current.currentWave, SURVIVAL_UPGRADES,
+        {...current,crawler:{...current.crawler,hp:clampInteger(crawlerHp,0,current.crawler.maxHp,current.crawler.hp)}})
       : [],
     stats,
   };
