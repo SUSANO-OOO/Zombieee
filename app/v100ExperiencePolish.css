@@ -28,6 +28,14 @@
 #v100-campaign .pwa-storage-inline button, #v100-campaign .pwa-storage-inline summary { min-height: 44px; font-size: 14px; }
 #v100-campaign .pwa-storage-inline summary { display: flex; align-items: center; cursor: pointer; }
 #v100-campaign .pwa-storage-inline dd { overflow-wrap: anywhere; font-size: 14px; }
+#v100-campaign .pwa-return-install-help { padding: 4px 12px; margin: 12px 0; border: 1px solid #6e806b; background: #18231d; }
+#v100-campaign .pwa-return-install-help p, #v100-campaign .pwa-return-install-help ol { font-size: 14px; line-height: 1.65; }
+#v100-campaign .pwa-return-install-help li { margin: 6px 0; }
+#v100-campaign .pwa-return-install-help[open] { margin: 0; }
+#v100-campaign .pwa-storage-inline:has(.pwa-return-install-help[open]) > h3 { display: none; }
+#v100-campaign .pwa-return-install-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+#v100-campaign .pwa-return-install-columns p, #v100-campaign .pwa-return-install-columns ol { margin: 0; }
+@media (max-width: 640px) { #v100-campaign .pwa-return-install-columns { grid-template-columns: 1fr; } }
 #v100-campaign .v100-briefing-person { display: grid; grid-template-columns: 38% 1fr; gap: 8px; flex: 1; min-height: 0; margin: 8px -8px -8px; background: linear-gradient(90deg, transparent, #0a1712c9 48%); }
 #v100-campaign .v100-briefing-person img { width: 100%; height: 100%; min-height: 0; object-fit: cover; object-position: center 12%; mask-image: linear-gradient(0deg, transparent, #000 12%); }
 #v100-campaign .v100-briefing-person > div { align-self: center; max-height: 100%; overflow-y: auto; overscroll-behavior: contain; padding: 4px 10px 4px 0; min-width: 0; }
