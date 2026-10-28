@@ -8,6 +8,7 @@ import { V100StaffRoll } from "./V100EndingRoll";
 import { V100PostCreditsFilm } from "./V100PostCreditsFilm";
 import { V100PlayerMenu } from "./V100PlayerMenu";
 import { V100TitleScreen } from "./V100TitleScreen";
+import { V100BattleBriefing } from "./V100BattleBriefing";
 import { V100EventBackdrop } from "./V100EventBackdrop";
 import { V100StoryInsert } from "./V100StoryInsert";
 import { v100EventPortraitPath, v100StoryExpressionFor } from "./v100StoryDirection.js";
@@ -1255,6 +1256,7 @@ function V100StageStars({ stars, label = "記録星" }: { stars: number; label?:
 function FormationView({ save, stageId, onSlotChange, onStart, onBack, onLoadout, onPersonnel, modePreparation = false }: { save: Save; stageId: string | null; onSlotChange: (slot: number, value: string) => void; onStart: () => void; onBack: () => void; onLoadout: () => void; onPersonnel: (unitId: string | null) => void; modePreparation?: boolean }) {
   const [activeSlot, setActiveSlot] = useState(0);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [briefingOpen, setBriefingOpen] = useState(false);
   const stage = stageId ? V100_STAGE_BY_ID[stageId] : null;
   const basePresentation = v100BasePresentationFor(stage?.number);
   const threats = v100MissionThreatsFor(stageId);
@@ -1280,7 +1282,8 @@ function FormationView({ save, stageId, onSlotChange, onStart, onBack, onLoadout
           </div> : <div className="v100-briefing-empty"><strong>この枠に呼ぶ仲間を選ぶ</strong><span>出撃中は、同じ仲間を繰り返し呼べます。</span></div>}
         </div>
         <div className="v100-callin-roster">
-          <div className="v100-callin-heading"><strong>呼び出し枠 {availableSlots.length} / 7</strong><details className="v100-briefing-details"><summary>ステージ情報・操作</summary><div><strong>{modePreparation ? "各ステージの条件は出撃前に確認できます" : objectiveLabelFor(stage)}</strong>{stage && <><MissionBriefingDiagram stageId={stageId} /><p>{missionLabelFor(stage)} / {enemyPackLabelFor(stage?.enemyPack, stage?.number)}</p>{threats.length > 0 && <ul aria-label="出現候補の行動">{threats.map(threat => <li key={threat.id}>{threat.name}：{threat.purpose}</li>)}</ul>}<p>{v100TacticalHintFor(stage)}</p></>}<p>同時出撃は全ユニット合わせて7体まで。同じユニットを複数枠に入れても、出撃ボタンの待ち時間は共通です。枠を増やしても、上限や再配備の速さは変わりません。</p>{!modePreparation && <StarCriteria vehicleMaxHp={save.vehicle.maxHp} />}</div></details><small>同じ仲間は1枠から何度でも出撃できます。複数枠に入れても、次の出撃までの待ち時間は短くなりません。</small></div>
+          <div className="v100-callin-heading"><strong>{modePreparation ? "次の迎撃に備えて仲間を選ぶ" : "カードで出撃・頭上で固有技"}</strong><button type="button" className="v100-open-briefing" onClick={(event) => { event.currentTarget.focus(); setBriefingOpen(true); }}>{modePreparation ? "編成の確認" : "作戦と戦い方"}</button><small>{modePreparation ? "編成が決まったら、異常発生かサバイバルを選ぶ。" : "移動・通常攻撃は自動。同じ仲間も繰り返し呼べる。"}</small></div>
+          {briefingOpen && <V100BattleBriefing allowControls={!modePreparation} initiallyShowControls={stage?.number === 1 && !modePreparation} onClose={() => setBriefingOpen(false)}><div className="v100-briefing-plan"><section><h3>{stage ? stageDisplayNameFor(stage) : "次の迎撃に備える"}</h3><strong>{modePreparation ? "各ステージの条件は出撃前に確認できます" : objectiveLabelFor(stage)}</strong>{stage && <><MissionBriefingDiagram stageId={stageId} /><p>{missionLabelFor(stage)} / {enemyPackLabelFor(stage?.enemyPack, stage?.number)}</p></>}{!modePreparation && <StarCriteria vehicleMaxHp={save.vehicle.maxHp} />}</section><section><h3>敵の動き</h3>{threats.length > 0 ? <ul aria-label="出現候補の行動">{threats.map(threat => <li key={threat.id}>{threat.name}：{threat.purpose}</li>)}</ul> : <p>ステージを選ぶと、出現する敵を確認できます。</p>}<p>同時に出せる仲間は7体まで。同じ仲間を複数枠に入れても、出撃の待ち時間は共通です。</p></section>{stage && <p className="v100-briefing-advice">{v100TacticalHintFor(stage)}</p>}</div></V100BattleBriefing>}
           <div className="v100-slot-track">{save.formationSlots.map((unitId, index) => {
             const art = unitId ? portraitFor(unitId) ?? formationCardForUnit(unitId) : null;
             const unit = unitId ? UNIT_BY_ID.get(unitId) : null;

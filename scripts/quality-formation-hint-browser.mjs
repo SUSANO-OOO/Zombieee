@@ -25,7 +25,9 @@ try {
       await page.goto(process.env.V100_CAMPAIGN_QA_BASE_URL);
       await dismissInstallOffer(page,{timeout:20000,readySelector:'.v100-start-screen',waitForFictionDismissal:true});
       await enterV100FromTitle(page);
-      const details=page.locator('.v100-briefing-details');await details.locator('summary').click();
+      let details;
+      if(before){details=page.locator('.v100-briefing-details');await details.locator('summary').click();}
+      else {await page.getByRole('button',{name:'作戦と戦い方',exact:true}).click();details=page.getByRole('dialog',{name:'作戦と戦い方',exact:true});await details.getByRole('button',{name:'作戦',exact:true}).click();}
       const text=await details.innerText();
       if(before)assert.match(text,/射撃と回復/u);
       else if(stage===1){assert.match(text,/鉄鍋仁王立ち/u);assert.match(text,/自分のHP/u);assert.doesNotMatch(text,/射撃と回復で/u);}
@@ -34,7 +36,7 @@ try {
       const hint=details.locator('p').filter({hasText:/鉄鍋仁王立ち|大技の予告|クロメの照準|前衛が敵|前衛と射撃役|射撃と回復/u}).first();
       await hint.scrollIntoViewIfNeeded();
       const visibility=await hint.evaluate(el=>{
-        const r=el.getBoundingClientRect(),panel=el.closest('details').querySelector(':scope > div').getBoundingClientRect();
+        const r=el.getBoundingClientRect(),panel=(el.closest('.v100-briefing-page')??el.closest('details').querySelector(':scope > div')).getBoundingClientRect();
         return {visible:r.top>=panel.top && r.bottom<=panel.bottom && r.left>=panel.left && r.right<=panel.right,top:r.top,bottom:r.bottom,panelTop:panel.top,panelBottom:panel.bottom};
       });
       assert.equal(visibility.visible,true,JSON.stringify(visibility));
