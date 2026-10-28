@@ -9,6 +9,10 @@ import {V177_CORPSE_JOINT_DATA} from '../app/v177CorpseJointData.js';
 const before=execFileSync('git',['show','eabe9195c6277c4b27b3709871a6a2dc5b9657cc:app/v177JointPresentation.js'],{encoding:'utf8',maxBuffer:512*1024});
 const resolved=before.replace(/(from\s+['"])(\.\/[^'"]+)(['"])/gu,(_all,a,p,b)=>a+new URL('../app/'+p.slice(2),import.meta.url).href+b);
 const original=await import('data:text/javascript;base64,'+Buffer.from(resolved).toString('base64'));
+// Compare the cached and uncached algorithms with identical current inputs.
+// Later portrait replacements and Panther body projection are product changes,
+// not cache differences; their independent asset/geometry tests remain required.
+Object.assign(original.V177_JOINT_ATLASES,current.V177_JOINT_ATLASES);
 function draw(module,kind,plan){
   const calls=[],values={globalAlpha:1};
   const ctx=new Proxy(values,{

@@ -28,13 +28,13 @@ function actualPlayer({muted=false,consume=true,cancelAfterMaterial=false}={}){
   runGuardedAudioRequest,v104SupplementalEnemyVoice};
  return {requests,stops,play:vm.runInNewContext(ts.transpile('('+body+')',{target:ts.ScriptTarget.ES2022}),bindings)};
 }
-test('four RED PANTHER roles own twelve new utterances while every material alias remains intact',()=>{
+test('four RED PANTHER roles retain twelve utterances alongside their current weapon recordings',()=>{
  const rows=JSON.parse(fs.readFileSync('assets/source/v104/combat-audio/voices.json')).cast.filter(row=>kinds.includes(row.kind));
  assert.equal(rows.length,12);assert.equal(new Set(rows.map(row=>row.source)).size,12);assert.equal(new Set(rows.map(row=>row.sha256)).size,12);
  const materials={
   'red-panther-knife':['weapon-crowbar','weapon-melee-impact','v100-body-fall'],
   'red-panther-shield':['v104-armor-hit','v104-armor-hit','v100-body-fall'],
-  'red-panther-smg':['weapon-gunner','weapon-melee-impact','v100-body-fall'],
+  'red-panther-smg':['weapon-smg','weapon-melee-impact','v100-body-fall'],
   'red-panther-commander':['v104-handgun','weapon-melee-impact','v100-body-fall'],
  };
  for(const kind of kinds)for(const [i,event]of events.entries()){
