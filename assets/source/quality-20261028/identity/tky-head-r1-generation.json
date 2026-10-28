@@ -1,0 +1,30 @@
+{
+  "method": "built-in image_gen",
+  "args": {
+    "referenced_image_paths": [
+      "C:\\Users\\okait\\.codex\\codex-remote-attachments\\01a180c8-9e05-7871-b287-613f7c7eb364\\8441CFE0-5253-47B9-B6AD-34D38BCC7A8C\\1-写真1.jpg",
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\identity\\tky-determined-r8.png",
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\output\\quality-20261028\\head-trio\\tky-before.png"
+    ],
+    "transparent_background": true,
+    "prompt": "Generate ONE isolated transparent production battle sprite HEAD for TKY. Reference 1 is the real adult man's original photograph: strict identity, preserve his particular narrow eyelids, eye spacing, gently full cheeks, nose shape and original lips and rounded chin. Reference 2 is his existing dialogue portrait and its restrained realistic painterly treatment; match the person but do not sharpen his face into a different generic model. Reference 3 is ONLY pose/neck attachment reference. Facing screen RIGHT in almost side profile, upright, level gaze, head pitch matching reference 3. Full black center-part curtain hairstyle, long fringe, subtle ear stud as original. Clean-shaven, groomed and subtly flattering Korean-drama styling without altering identity or age. Isolate only full hair, ears, face, short bare neck. NO shoulders, body, clothes, red cord, scarves, weapons, duplicate heads, background, borders or text. Lower edge ends at base of neck for connecting to black coat. Real transparent alpha margins around the entire head. Natural matte skin, diffuse light, realistic anatomy with just a restrained illustration finish. Maintain recognizable original individual features."
+  },
+  "generatedPath": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-5105627a-abad-4c8b-b8de-38ca178829e6.png",
+  "output": "tky-head-r1.png",
+  "status": "Candidate; not Producer-approved. Original photo files excluded from Git.",
+  "referenceHashes": [
+    {
+      "sha256": "71505f3b1b6eafc0c70c8e41f7c1563a731b1e9a270932c005baf0991beedd3a",
+      "role": "private producer reference; not copied to repository"
+    },
+    {
+      "sha256": "f5e45655736ea324d3f9e997e762a93a965c24c6c9a06f4808d876a9caa9d383",
+      "role": "project reference"
+    },
+    {
+      "sha256": "9f2d0a404fd1222eec80ecca3c546c42942cbb5015cf3aef615e30b8f301b859",
+      "role": "project reference"
+    }
+  ],
+  "masterSha256": "dae4d08df58764fe66138079108e7ae1b7831060b1fc9bb0fdb3015f18bbfd58"
+}

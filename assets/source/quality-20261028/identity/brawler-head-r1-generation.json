@@ -1,0 +1,30 @@
+{
+  "method": "built-in image_gen",
+  "args": {
+    "referenced_image_paths": [
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\v100-dialogue-natural-20261001\\output\\issue177-paisen-producer-photos-r1\\codex-clipboard-3b180a11-73f9-46ab-9b5e-73e2f1edc53e.png",
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\identity\\paisen-photo-master-r7.png",
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\output\\quality-20261028\\head-trio\\brawler-before.png"
+    ],
+    "transparent_background": true,
+    "prompt": "Create ONE transparent game sprite head for Paisen, the SAME adult man in reference 1 (original photograph, strict facial identity) and reference 2 (current dialogue portrait). Reference 3 is ONLY the existing battle pose and scale/neck attachment reference, not a source of facial identity. Isolated complete hair, face, ears and short neck, no shoulders, shirt, body, weapons, text, border or background. Facing screen RIGHT in almost side profile, same head pitch and upright neck as reference 3. Maintain the original man's softly full cheeks, broad gently rounded jaw and chin, modest straight eyebrows, exact eyes/eyelids, broad nose and rounded tip, original lip proportions, youthful adult age, and very short straight black hair. Do not turn him into a generic rugged action hero or add a scowl. Calm focused expression; gaze level to right. Clean-shaven per Producer request. Realistic anatomy and skin with a restrained painterly game finish, matte diffuse light, no shiny plastic skin, no photographic environment. Whole hair and short neck visible with transparent margins on every side. The lower edge is the base of the short neck for joining his navy T-shirt collar; no clothing. One head only. Preserve real alpha. This is a production battle head matching his established dialogue identity."
+  },
+  "generatedPath": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-af91756b-4d38-45e1-964e-ca832f748e1c.png",
+  "output": "brawler-head-r1.png",
+  "status": "Candidate; not Producer-approved. Original photo files excluded from Git.",
+  "referenceHashes": [
+    {
+      "sha256": "bfa5a71f1a1cb294ab583e51ac6e343eac6e6fd9d3e996fcd24a50cbf6a74def",
+      "role": "private producer reference; not copied to repository"
+    },
+    {
+      "sha256": "c769eb81a096e9fb1747df0c4ab93452b2ad844fb37e21707d5ef51aec76de66",
+      "role": "project reference"
+    },
+    {
+      "sha256": "86724f76d9d8455a5b9e77e50317edd5380b7b2e490da00432b996be96abb28e",
+      "role": "project reference"
+    }
+  ],
+  "masterSha256": "1f465ee45649da85e3bcc41b4bc7e1b7c1ebf3534eb2d8e735ae9d6549589e50"
+}

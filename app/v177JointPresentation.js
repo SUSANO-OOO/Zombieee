@@ -1,4 +1,5 @@
 import { V177_PAISEN_PHOTO_JOINT_ATLASES as paisenPhotoAtlases } from './v177PaisenPhotoJointData.js';
+import { QUALITY_CHARACTER_ATLASES } from './qualityCharacterAtlases.js';
 import { withQualityPantherBodyScale } from './qualityPantherBodyScale.js';
 import { V177_AUTHORED_GAITS } from './v177GaitSourceData.js';
 import { V177_JOINT_ATLASES as bakedAtlases } from './v177JointData.js';
@@ -57,7 +58,7 @@ export function v177RenderedWeightedLowerReceipt(actor,world) {
 const clamp = p => Math.max(0, Math.min(1, Number(p) || 0));
 const cycle = p => ((Number(p) || 0) % 1 + 1) % 1;
 
-export const V177_JOINT_ATLASES = Object.fromEntries(Object.entries({...bakedAtlases,...quadrupedAtlases,...bipedAtlases,...enemyAtlases,...runnerAtlases,...firearmAtlases,...pantherAtlases,...meleeAtlases,...guardEnemyAtlases,...newcomerAtlases,...infectedAtlases,...feralAtlases,...futagoAtlases,...paisenPhotoAtlases,...omegaRightAtlases,'crazy-king':crazyKingRestoredAtlas}).map(([kind,atlas])=>[kind,withQualityPantherBodyScale(kind,atlas)]));
+export const V177_JOINT_ATLASES = Object.fromEntries(Object.entries({...bakedAtlases,...quadrupedAtlases,...bipedAtlases,...enemyAtlases,...runnerAtlases,...firearmAtlases,...pantherAtlases,...meleeAtlases,...guardEnemyAtlases,...newcomerAtlases,...infectedAtlases,...feralAtlases,...futagoAtlases,...paisenPhotoAtlases,...omegaRightAtlases,...QUALITY_CHARACTER_ATLASES,'crazy-king':crazyKingRestoredAtlas}).map(([kind,atlas])=>[kind,withQualityPantherBodyScale(kind,atlas)]));
 
 const mrsNormalWeaponCycle=createV177MrsNormalWeaponCycle({
   animationClipFor,attackPresentationDuration,captureStatusJoints,jointMatrix,

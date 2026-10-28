@@ -1,0 +1,29 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+import sharp from 'sharp';
+import {V177_JOINT_ATLASES} from '../app/v177JointPresentation.js';
+import {V177_PAISEN_PHOTO_JOINT_ATLASES} from '../app/v177PaisenPhotoJointData.js';
+import {V177_NEWCOMER_JOINT_ATLASES} from '../app/v177NewcomerJointData.js';
+import {V177_MELEE_JOINT_ATLASES} from '../app/v177MeleeJointData.js';
+import {V177_FIREARM_JOINT_ATLASES} from '../app/v177FirearmJointData.js';
+const bases={brawler:V177_PAISEN_PHOTO_JOINT_ATLASES.brawler,tky:V177_NEWCOMER_JOINT_ATLASES.tky,zakimiya:V177_NEWCOMER_JOINT_ATLASES.zakimiya,kumaverson:V177_MELEE_JOINT_ATLASES.kumaverson,babayaga:V177_FIREARM_JOINT_ATLASES.babayaga};
+const provenance=JSON.parse(await readFile('assets/source/quality-20261028/identity/head-runtime-provenance.json','utf8'));
+const manifest=JSON.parse(await readFile('public/asset-manifest.json','utf8'));
+for(const [kind,base] of Object.entries(bases))test(kind+' battle identity replaces the head paint, preserving body, weapon and all motion geometry',async()=>{
+ const current=V177_JOINT_ATLASES[kind],entry=provenance.entries.find(e=>e.kind===kind);
+ assert.equal(current.path,entry.assetPath);assert.notEqual(current.path,base.path);
+ assert.deepEqual({...current,path:base.path},base);
+ const bytes=await readFile('public'+current.path);assert.equal(createHash('sha256').update(bytes).digest('hex'),entry.sha256);
+ assert.ok(manifest.assets.some(a=>a.path===current.path),'runtime asset is distributable');
+ const a=await sharp(bytes).ensureAlpha().raw().toBuffer({resolveWithObject:true}),b=await sharp('public'+base.path).ensureAlpha().raw().toBuffer({resolveWithObject:true});
+ assert.equal(a.info.width,b.info.width);assert.equal(a.info.height,b.info.height);
+ const head=base.parts.find(p=>p.bone==='head').source;let changedHeadPixels=0;
+ for(let y=0;y<a.info.height;y++)for(let x=0;x<a.info.width;x++){
+  const i=(y*a.info.width+x)*4,inside=x>=head.x&&x<head.x+head.w&&y>=head.y&&y<head.y+head.h;
+  if(inside){if(!a.data.subarray(i,i+4).equals(b.data.subarray(i,i+4)))changedHeadPixels++;continue;}
+  assert.equal(a.data[i+3],b.data[i+3]);if(b.data[i+3]>0)assert.ok(a.data.subarray(i,i+3).equals(b.data.subarray(i,i+3)),'body/weapon pixel changed outside head');
+ }
+ assert.ok(changedHeadPixels>10,'head actually differs');
+});
