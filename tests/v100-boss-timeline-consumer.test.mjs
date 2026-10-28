@@ -8,6 +8,7 @@ import { battleOutcomeFor, objectiveForBattle } from "../app/battleDefinitions.j
 import { V100_STAGES } from "../app/v100Registry.js";
 import { isBossFighter } from "../app/bossFoundation.js";
 import { v100AssaultObjectProfile } from "../app/v100AssaultObjects.js";
+import { campaignWaveReady } from "../app/wavePacing.js";
 
 const source=await readFile("app/AshfallGame.tsx","utf8");
 const ast=ts.createSourceFile("AshfallGame.tsx",source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);
@@ -19,6 +20,29 @@ const visit=node=>{
 visit(ast);assert.ok(consumer,"Test must exercise Ashfall's production timeline consumer");
 const code=ts.transpileModule(consumer,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText;
 
+test('all ordinary assault consumers advance once after clearance and never pile up overdue waves',()=>{
+  for(const stage of V100_STAGES){
+    const definition=createBattleDefinition(stage.id,{v100:true});
+    if(definition.missionType!=='assault')continue;
+    const g={definition,eventIndex:1,time:10,bannerTime:0,fighters:Array.from({length:3},()=>({side:'human',hp:100,combatReady:true})),enemySpawn:{nextEntryId:1,pending:[]}};
+    const queued=[];
+    const context={g,campaignWaveReady,isBossFighter,v100AssaultObjectProfile,isBossEnemyKind:()=>false,activeStageViewportId:'844x340',
+      enqueueEnemyWave:(runtime,event)=>{queued.push(event);return{...runtime,nextEntryId:runtime.nextEntryId+event.units.length,
+        pending:event.units.map((kind,index)=>({kind,entryId:runtime.nextEntryId+index}))};},
+      enemySpawnPortalPoint:()=>({legacyLane:1}),announceBossEntrance:()=>{},playCue:()=>{},emitBattleBark:()=>{},
+    };
+    vm.runInNewContext(code,context);assert.equal(queued.length,0,stage.id);
+    g.time=12.5;vm.runInNewContext(code,context);
+    assert.deepEqual(queued.map(event=>event.wave),[2],stage.id);
+    g.time=1000;vm.runInNewContext(code,context);assert.equal(queued.length,1,'queue blocks overdue waves');
+    g.enemySpawn.pending=[];g.bannerTime=0;g.fighters=[{side:'zombie',hp:1}];
+    vm.runInNewContext(code,context);assert.equal(queued.length,1,'living enemy blocks overdue waves');
+    g.fighters=[];vm.runInNewContext(code,context);assert.equal(queued.length,1);
+    g.time=1002.5;vm.runInNewContext(code,context);
+    assert.deepEqual(queued.map(event=>event.wave),[2,3],'only one event after a new recovery window');
+  }
+});
+
 test("the actual consumer establishes combat before Omega, then emits both A reinforcements",()=>{
   const definition=createBattleDefinition(V100_STAGES[29].id,{v100:true});
   const g={definition,eventIndex:0,time:definition.timeline[0].at,fighters:[],enemySpawn:{nextEntryId:1,pending:[]}};
@@ -27,20 +51,20 @@ test("the actual consumer establishes combat before Omega, then emits both A rei
     enqueueEnemyWave:(runtime,event)=>{queued.push(event);return {...runtime,nextEntryId:runtime.nextEntryId+event.units.length,pending:event.units.map((kind,index)=>({kind,entryId:runtime.nextEntryId+index}))};},
     enemySpawnPortalPoint:()=>({legacyLane:1}),announceBossEntrance:(_game,kind)=>announced.push(kind),playCue:()=>{},emitBattleBark:()=>{},
   };
-  vm.runInNewContext(code,fixture);
+  vm.runInNewContext(code, { ...fixture, campaignWaveReady });
   assert.deepEqual(queued.flatMap(event=>event.units),definition.timeline[0].units);
   assert.deepEqual(announced,[]);
   const entrance=definition.timeline.findIndex(event=>event.units.includes("takuya-omega"));
-  g.time=definition.timeline[entrance].at-0.01;vm.runInNewContext(code,fixture);assert.deepEqual(announced,[]);
-  g.time=definition.timeline[entrance].at;vm.runInNewContext(code,fixture);assert.deepEqual(announced,[],"Prelude guards must clear first");
-  g.enemySpawn.pending=[];vm.runInNewContext(code,fixture);assert.deepEqual(announced,["takuya-omega"]);
+  g.time=definition.timeline[entrance].at-0.01;vm.runInNewContext(code, { ...fixture, campaignWaveReady });assert.deepEqual(announced,[]);
+  g.time=definition.timeline[entrance].at;vm.runInNewContext(code, { ...fixture, campaignWaveReady });assert.deepEqual(announced,[],"Prelude guards must clear first");
+  g.enemySpawn.pending=[];vm.runInNewContext(code, { ...fixture, campaignWaveReady });assert.deepEqual(announced,["takuya-omega"]);
   g.fighters.push({kind:"takuya-omega",hp:9200});
   g.enemySpawn.pending=[];
   g.time=definition.timeline.at(-1).at;
-  vm.runInNewContext(code,fixture);
+  vm.runInNewContext(code, { ...fixture, campaignWaveReady });
   assert.deepEqual(queued.map(event=>event.wave),[1,2,3,4,5,6,7,8]);
   assert.deepEqual(queued.slice(entrance+1).flatMap(event=>event.units),["walker","runner","crusher","spitter","runner","walker","crusher","spitter","walker","spitter","crusher","walker","runner","spitter","crusher","runner","crusher","spitter","crusher"]);
-  vm.runInNewContext(code,fixture);
+  vm.runInNewContext(code, { ...fixture, campaignWaveReady });
   assert.equal(queued.length,8,"Every real event is consumed once");
 });
 
@@ -59,7 +83,7 @@ test("escort waves wait for travelled distance even after a long stall, then fin
     enqueueEnemyWave:(runtime,event)=>{queued.push(event);return {...runtime,nextEntryId:runtime.nextEntryId+event.units.length,pending:[]};},
     enemySpawnPortalPoint:()=>({legacyLane:1}),playCue:()=>{},emitBattleBark:()=>{},announceBossEntrance:()=>{throw new Error("Escort cannot introduce a boss");},
   };
-  const advance=()=>vm.runInNewContext(code,fixture);
+  const advance=()=>vm.runInNewContext(code, { ...fixture, campaignWaveReady });
   advance();assert.equal(queued.length,2,"A stalled convoy cannot exhaust its distance-owned waves");
   g.stageMission.progress=.69;advance();assert.equal(queued.length,4);
   g.stageMission.progress=.87;advance();assert.equal(queued.length,5);
@@ -77,7 +101,7 @@ test("TAKUYA's two actual reinforcement waves follow HP phases, including a burs
       enqueueEnemyWave: (runtime, event) => { queued.push(event); return { ...runtime, nextEntryId: runtime.nextEntryId + event.units.length, pending: [] }; },
       enemySpawnPortalPoint: () => ({}), announceBossEntrance: () => {}, playCue: () => {}, emitBattleBark: () => {},
     };
-    const advance = () => vm.runInNewContext(code, context);
+    const advance = () => vm.runInNewContext(code, { ...context, campaignWaveReady });
     advance(); assert.equal(queued.length, 7, "pending entrance cannot consume a phase wave");
     g.fighters.push({ kind: "takuya", hp: 2400, maxHp: 2400 });
     advance(); assert.equal(queued.length, 7, "elapsed time alone cannot activate HP reinforcements");
@@ -138,7 +162,7 @@ test("Stages 3 and 5 bring the next contact forward only after the prior wave cl
       enqueueEnemyWave:(runtime,event)=>{queued.push(event);return {...runtime,nextEntryId:runtime.nextEntryId+event.units.length,pending:[]};},
       enemySpawnPortalPoint:()=>({legacyLane:1}),announceBossEntrance:()=>{},playCue:()=>{},emitBattleBark:()=>{},
     };
-    const advance=()=>vm.runInNewContext(code,fixture);
+    const advance=()=>vm.runInNewContext(code, { ...fixture, campaignWaveReady });
     advance();assert.equal(queued.length,0);
     g.enemySpawn.pending=[{entryId:1,kind:"walker"}];g.time=second.advanceOnClearAfter;
     advance();assert.equal(queued.length,0,"a queued enemy still occupies the previous wave");
@@ -164,7 +188,7 @@ test("Stages 3 and 5 fill an early-cleared final lane before the boss arrives", 
       enqueueEnemyWave: (runtime, event) => { queued.push(event); return { ...runtime, nextEntryId: runtime.nextEntryId + event.units.length, pending: event.units.map((kind, index) => ({ kind, entryId: runtime.nextEntryId + index })) }; },
       enemySpawnPortalPoint: () => ({ legacyLane: 1 }), announceBossEntrance: (_game, kind) => announced.push(kind), playCue: () => {}, emitBattleBark: () => {},
     };
-    const advance = () => vm.runInNewContext(code, fixture);
+    const advance = () => vm.runInNewContext(code, { ...fixture, campaignWaveReady });
     advance(); assert.deepEqual(queued.map(event => event.wave), [guard.wave]);
     g.time = boss.advanceOnClearAfter;
     advance(); assert.equal(queued.length, 1, "the final guard's pending spawn queue blocks the boss");
@@ -223,7 +247,7 @@ test("Futago retains both bodies and its final group cannot overlap surviving pr
   const context={g,isBossFighter,isBossEnemyKind:kind=>kind==="futago",activeStageViewportId:"844x340",
     enqueueEnemyWave:(runtime,event)=>{queued.push(event);return{...runtime,nextEntryId:runtime.nextEntryId+event.units.length,pending:[]};},
     enemySpawnPortalPoint:()=>({}),announceBossEntrance:(_game,kind)=>announced.push(kind),playCue:()=>{},emitBattleBark:()=>{}};
-  const advance=()=>vm.runInNewContext(code,context);
+  const advance=()=>vm.runInNewContext(code, { ...context, campaignWaveReady });
   advance();assert.equal(g.eventIndex,3);assert.equal(queued.length,0);assert.deepEqual(announced,[]);
   g.time=140;advance();assert.equal(g.eventIndex,3,"time cannot discard a surviving prior guard");
   g.fighters[0].hp=0;g.enemySpawn.pending=[{entryId:7,kind:"red-panther-commander"}];

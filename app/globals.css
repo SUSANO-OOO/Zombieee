@@ -107,6 +107,8 @@ button[aria-disabled="true"]:focus-visible {
 .phase-block small { padding:0 8px; color:#a99c85; font-size:8px; font-weight:700; letter-spacing:.14em; }
 .phase-block strong { padding:0 11px; border-left:1px solid rgba(235,205,161,.2); border-right:1px solid rgba(235,205,161,.2); color:var(--gold); font-size:15px; font-weight:900; letter-spacing:.08em; }
 .phase-block em { padding:0 8px; color:#c7b89d; font-size:9px; font-weight:800; letter-spacing:.08em; }
+.phase-block.next-wave-control { min-height:44px; padding:0; cursor:pointer; border-color:var(--gold); }
+.phase-block.next-wave-control:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
 .icon-btn { width:38px; height:38px; border:1px solid rgba(235,205,161,.28); background:rgba(18,20,20,.72); color:#d7c6a9; cursor:pointer; }
 .icon-btn:not([aria-disabled="true"]):not(:disabled):active { transform:scale(.94); }
 .audio-btn { position:relative; width:46px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; }

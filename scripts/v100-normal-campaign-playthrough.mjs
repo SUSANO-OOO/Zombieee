@@ -172,6 +172,11 @@ async function battle(stage) {
     frameStarted=true;await frameCapture.record(observed.frames);
     const deploymentCount=normalCampaignDeploymentCount(observed.value);
     record.maximumObservedActive=Math.max(record.maximumObservedActive??0,deploymentCount.active);
+    const waveDisplay=await page.locator('.phase-block').evaluate(node=>({label:node.querySelector('em')?.textContent??'',preparation:node.tagName==='BUTTON'}));
+    if(record.waveDisplayTransitions?.at(-1)?.label!==waveDisplay.label||record.waveDisplayTransitions?.at(-1)?.preparation!==waveDisplay.preparation){
+      // This is visible HUD text, not a spawn timestamp; the preparation button names the NEXT wave.
+      (record.waveDisplayTransitions??=[]).push({...waveDisplay,seconds:(Date.now()-start)/1000,activeAllies:deploymentCount.active});
+    }
     if(report.errors.length||requests.report.unexpectedFailures.length)throw new Error("Browser diagnostics during normal battle");
     if(Date.now()-start>15*60_000)throw new Error(`Stage ${stage.number} exceeded the observation window; no victory or clock change injected`);
     const audio=page.getByRole("button",{name:"音声を有効にする",exact:true});

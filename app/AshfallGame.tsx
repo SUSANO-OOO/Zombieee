@@ -1,6 +1,7 @@
 "use client";
 
 import { v177PaisenPhotoComboJointPose } from './v177PaisenPhotoCombo.js';
+import { campaignWaveReady, campaignWavePrompt, requestCampaignWave } from './wavePacing.js';
 import { queueV105FistWave, resolveV105FistWavePaint, advanceV105FistWaves, drawV105FistWaves, v105FistWaveSnapshot, clearV105FistWaves } from './v105PaisenFistWave.js';
 import { startV105AbilityName, drawV105AbilityNames, v105AbilityNameSnapshot, v105EnemyAbilityName, clearV105AbilityNames } from './v105AbilityNames.js';
 import { v105CurrentAbilitySample, v105AbilityFacing } from './v105CurrentAbilityPose.js';
@@ -792,7 +793,7 @@ type UnitCard = {
   trapDurationMultiplier?: number;
 };
 
-type MissionEvent = { at: number; wave: number; label: string; bossOnly?: boolean; bossHpRatio?: number; escortProgress?: number; waitForPriorWaveClear?: boolean; advanceOnClearAfter?: number; units: string[] };
+type MissionEvent = { at: number; wave: number; label: string; bossOnly?: boolean; bossHpRatio?: number; escortProgress?: number; waitForPriorWaveClear?: boolean; advanceOnClearAfter?: number; clearDelaySeconds?: number; units: string[] };
 type BattleDefinition = {
   stageId: string;
   operationId: string;
@@ -1436,6 +1437,7 @@ type Game = {
 };
 
 type Hud = {
+  wavePrompt?: { label: string; canAdvance: boolean } | null;
   v100SupportId?: string | null;
   missionType: BattleDefinition["missionType"];
   energy: number;
@@ -20587,10 +20589,12 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         } else {
           while (g.eventIndex < g.definition.timeline.length) {
             const mission = g.definition.timeline[g.eventIndex] as MissionEvent;
+            const clearDriven = Number.isFinite(mission.clearDelaySeconds);
+            if (clearDriven && !campaignWaveReady(g, mission)) break;
             const scheduled = g.time >= mission.at;
             const earlyCandidate = !scheduled && Number.isFinite(mission.advanceOnClearAfter)
               && g.time >= Number(mission.advanceOnClearAfter);
-            if (!scheduled && !earlyCandidate) break;
+            if (!scheduled && !earlyCandidate && !clearDriven) break;
             const priorWaveClear = (earlyCandidate || mission.waitForPriorWaveClear)
               && g.enemySpawn.pending.length === 0
               && !g.fighters.some(fighter => fighter.side === "zombie" && fighter.hp > 0);
@@ -23641,7 +23645,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             const dx = target.x - f.x;
             const stoppingDistance = Math.max(18, f.range + target.bodyRadius * .55);
             const desiredX = allyIntent?.destinationX ?? (target.x - Math.sign(dx || 1) * stoppingDistance);
-            if (Math.abs(desiredX - f.x) > 2) {
+            if (Math.abs(desiredX - f.x) > (allyIntent?.precisionApproach ? 0 : 2)) {
               f.x += Math.sign(desiredX - f.x) * Math.min(Math.abs(desiredX - f.x), combatApproachSpeed(humanMovementSpeed,desiredX-f.x) * dt);
               f.x = Math.max(humanMinX, Math.min(humanMaxX, f.x));
             }
@@ -24555,6 +24559,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           });
         }
         setHud({
+          wavePrompt: campaignWavePrompt(g),
           missionType: g.definition.missionType, energy: Math.floor(g.energy), supportGauge: Math.floor(g.supportGauge), scrap: g.scrap, kills: g.kills,
           supportItemCooldowns: { ...g.supportItemCooldowns },
           v100SupportId: g.v100SupportId,
@@ -24877,7 +24882,12 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               </>}
             </div>
             <div className="battle-controls-zone">
-              <div className="phase-block"><small>第{hud.phase}段階</small><strong>{phaseName}</strong><em>第{hud.wave}波</em></div>
+              {hud.wavePrompt?.canAdvance
+                ? <button className="phase-block next-wave-control" aria-label="準備を終えて次の波へ" disabled={paused || Boolean(end || battleSaveBoundaryRef.current)} onClick={() => {
+                  const g = gameRef.current;
+                  if (g.running && !g.paused && !g.over && !battleSaveBoundaryRef.current) requestCampaignWave(g);
+                }}><small>{hud.wavePrompt.label}</small><strong>次波へ</strong><em>第{hud.wave + 1}波</em></button>
+                : <div className="phase-block"><small>第{hud.phase}段階</small><strong>{hud.wavePrompt?.label ?? phaseName}</strong><em>第{hud.wave}波</em></div>}
               <button className="icon-btn" onClick={togglePause} aria-disabled={battleSaveBoundaryRef.current} aria-label={paused ? "再開" : "一時停止"}>{paused ? "▶" : "Ⅱ"}</button>
               {compactBattleAudioUnlock ? <button className="icon-btn audio-btn audio-unlock-inline" data-state={audioUnlockUi} data-audio-unlock-control="true" onClick={enableAudio} disabled={audioUnlockUi === "pending" || Boolean(end || pendingResultCommit || battleSaveBoundaryRef.current)} aria-label={audioUnlockUi === "failed" ? "音声を再試行" : audioUnlockUi === "partial" ? "利用できない音声だけ再試行" : "音声を有効にする"} aria-live="polite"><b>♫</b><small>{compactAudioUnlockLabel}</small></button> : <button className={`icon-btn audio-btn ${musicActive ? "playing" : ""}`} data-playing={musicActive} data-muted={bgmMuted} disabled={Boolean(end || pendingResultCommit || battleSaveBoundaryRef.current)} onClick={toggleBgm} aria-label={bgmMuted ? "音楽を再生" : "音楽をミュート"}><b>{bgmMuted ? "×" : "♫"}</b><small>音楽</small></button>}
               <button className="icon-btn audio-btn" data-muted={sfxMuted} disabled={Boolean(end || pendingResultCommit || battleSaveBoundaryRef.current)} onClick={toggleSfx} aria-label={sfxMuted ? "効果音を再生" : "効果音をミュート"}><b>{sfxMuted ? "×" : "効"}</b><small>効果音</small></button>

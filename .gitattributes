@@ -59,3 +59,23 @@ assets/source/v100/runtime/paisen-battle-atlas-provenance.json text eol=lf
 app/v177PaisenPhotoJointData.js text eol=lf
 app/v177PaisenPhotoSpriteData.js text eol=lf
 app/v102CorpsePoseData.js text eol=lf
+
+# Hash-bound source recipes and deterministic outputs must replay on Windows.
+assets/source/v100/joints/corpse-collapse-r1.json text eol=lf
+assets/source/v100/joints/ranger-r1/author.py text eol=lf
+assets/source/v100/joints/ranger-r1/parts.json text eol=lf
+assets/source/v177/ranger/lower-r3/provenance.json text eol=lf
+app/v177JointData.js text eol=lf
+app/v100R9SceneAssets.js text eol=lf
+public/art/v100/enemies/red-panther-knife-battle-v2-metadata.json text eol=lf
+public/art/v100/provenance.json text eol=lf
+assets/source/v100/runtime/v100-runtime-assets-provenance.json text eol=lf
+assets/source/v100/sprite-repairs/ground-matte-provenance.json text eol=lf
+scripts/v177-ground-matte-repair-asset-contract.mjs text eol=lf
+assets/source/v100/joints/kurome-r1/provenance.json text eol=lf
+assets/source/v100/joints/red-panther-knife-r1/provenance.json text eol=lf
+scripts/build-v177-ranger-upper.mjs text eol=lf
+app/v177RangerUpperMotion.js text eol=lf
+app/v177RangerLowerMotion.js text eol=lf
+app/v177RangerLowerPaint.js text eol=lf
+app/v177RangerFootPlacement.js text eol=lf

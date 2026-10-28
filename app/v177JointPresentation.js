@@ -1,4 +1,5 @@
 import { V177_PAISEN_PHOTO_JOINT_ATLASES as paisenPhotoAtlases } from './v177PaisenPhotoJointData.js';
+import { V177_AUTHORED_GAITS } from './v177GaitSourceData.js';
 import { V177_JOINT_ATLASES as bakedAtlases } from './v177JointData.js';
 import { V177_QUADRUPED_JOINT_ATLASES as quadrupedAtlases } from './v177QuadrupedJointData.js';
 import { V177_BIPED_JOINT_ATLASES as bipedAtlases } from './v177BipedJointData.js';
@@ -598,7 +599,9 @@ export function v105BipedFootPlan(kind,plan,{actor,world,width,frame,direction}=
     ||plan.resolvedJointPose||plan.turnedGetup||plan.phaseChange||!world||!frame)return plan;
   let rig=bipedFootRigs.get(atlas);
   if(!rig){
-    const factor=plan.groundedMotion.stride,legs=atlas.legConstraints.map((leg,index)=>{
+    const gait=V177_AUTHORED_GAITS[kind];
+    if(!gait)return plan;
+    const factor=plan.groundedMotion.stride,legs=atlas.legConstraints.map(leg=>{
       const positions=atlas.poses.slice(0,atlas.frameCount).map(p=>matrixPoint(p[leg.effectorBone],leg.ankle));
       const center=(Math.min(...positions.map(p=>p[0]))+Math.max(...positions.map(p=>p[0])))/2;
       return{...leg,footCenter:center,restOffset:leg.ankle[0]-center,
@@ -607,13 +610,13 @@ export function v105BipedFootPlan(kind,plan,{actor,world,width,frame,direction}=
         // The authored standing ankle and hip are one anatomical pair.
         // A walking maximum Y combined with standing X can overextend a
         // nearly straight leg and make a stationary turn wait forever.
-        groundAnkle:leg.ankle[1],offset:index*.5};
+        groundAnkle:leg.ankle[1],offset:gait.offsets[leg.effectorBone]};
     });
     const sourceLift=Math.max(...atlas.legConstraints.flatMap(leg=>{
       const ys=atlas.poses.slice(0,atlas.frameCount).map(p=>matrixPoint(p[leg.effectorBone],leg.ankle)[1]);
       return Math.max(...ys)-Math.min(...ys);
     }));
-    rig={legs,phaseOwned:true,stanceFraction:.62,spanPx:atlas.cycleDistance*.62*factor,
+    rig={legs,phaseOwned:true,stanceFraction:gait.stanceFraction,spanPx:atlas.cycleDistance*gait.stanceFraction*factor,
       liftPx:Math.max(8,sourceLift*plan.groundedMotion.lift),bob:()=>0};
     bipedFootRigs.set(atlas,rig);
   }
