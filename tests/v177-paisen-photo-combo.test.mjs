@@ -7,6 +7,19 @@ const definition = MANUAL_ABILITY_REGISTRY.brawler;
 const runtimeAt = time => ({ phase: time<definition.windupSeconds?'windup':'recovery',abilityElapsed:time,
   windupRemaining:time<definition.windupSeconds?definition.windupSeconds-time:definition.windupSeconds+definition.recoverySeconds-time });
 
+test('the current repainted photo rig owns preparation, launch and return poses',()=>{
+  const owner={kind:'brawler',side:'human',hp:100,combatReady:true,stunned:0,
+    animationPresentation:{locomotionPhase:.2,locomotionSettle:0},manualAbility:null};
+  const phases=[];
+  for(const time of [.13,definition.windupSeconds,definition.windupSeconds+.1]){
+    owner.manualAbility=runtimeAt(time);
+    const plan=v177PaisenPhotoComboJointPose(owner,definition);
+    assert.ok(plan,'current live atlas must resolve the dedicated fist-wave pose');
+    assert.equal(plan.abilityPresentation,'fist-wave');phases.push(plan.attackPhase);
+  }
+  assert.ok(phases[0]<phases[1]&&phases[1]<phases[2]);
+});
+
 test('photo fist-wave rig reaches release pose at the actual gameplay launch event', () => {
   const before = structuredClone(definition);
   for(const steps of [[.26],[.13,.13],[.2,.06]]){

@@ -1,7 +1,8 @@
 import { v100BrawlerCanAct } from './v100BrawlerCombo.js';
 import { V177_JOINT_ATLASES, v177JointPose } from './v177JointPresentation.js';
+import { V177_PAISEN_PHOTO_JOINT_ATLASES } from './v177PaisenPhotoJointData.js';
 
-const PHOTO_PATH = '/art/v100/joints/brawler-photo-r2.webp';
+const PHOTO_RIG = V177_PAISEN_PHOTO_JOINT_ATLASES.brawler;
 const RELEASE_SECONDS = .065;
 const clamp = value => Math.max(0, Math.min(1, value));
 
@@ -25,8 +26,11 @@ export function v177PaisenPhotoComboSample(runtime, definition) {
 }
 
 export function v177PaisenPhotoComboJointPose(owner, definition, { world } = {}) {
+  const atlas=V177_JOINT_ATLASES.brawler;
   if (owner?.kind !== 'brawler' || !v100BrawlerCanAct(owner)
-    || V177_JOINT_ATLASES.brawler?.path !== PHOTO_PATH) return null;
+    // Identity repainting may change the texture URL. The authored body and
+    // pose data own the fist-wave timing, rather than that historical URL.
+    || atlas?.parts !== PHOTO_RIG.parts || atlas?.poses !== PHOTO_RIG.poses) return null;
   const sample = v177PaisenPhotoComboSample(owner.manualAbility, definition);
   return sample ? v177JointPose('brawler', sample, owner.animationPresentation,
     { grounded:true, actor:owner, world, stunRemaining:owner.stunned }) : null;

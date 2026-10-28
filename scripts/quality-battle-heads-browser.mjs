@@ -27,8 +27,14 @@ try{
   await page.getByRole('button',{name:'戦闘へ',exact:true}).click();await page.waitForFunction(()=>window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().running&&document.documentElement.dataset.assetLoadState==='ready');
   const seen=new Set(),deployed=new Set(),abilities=new Set(),deadline=Date.now()+105000;let resized=false;
   while(Date.now()<deadline){
-   const s=await page.evaluate(()=>{const s=window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();if(!s)return null;return{time:s.time,running:s.running,fighters:s.fighters.filter(f=>['brawler','tky','zakimiya'].includes(f.kind)).map(f=>({id:f.id,kind:f.kind,hp:f.hp,x:f.x,y:f.y,state:f.renderAudit?.requestedState,lifecycleState:f.animationPresentation.state,manual:f.manualAbility,render:f.renderAudit}))};});
+   const s=await page.evaluate(()=>{const s=window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();if(!s)return null;return{time:s.time,running:s.running,fistWave:s.fistWave,fighters:s.fighters.filter(f=>['brawler','tky','zakimiya'].includes(f.kind)).map(f=>({id:f.id,kind:f.kind,hp:f.hp,x:f.x,y:f.y,state:f.renderAudit?.requestedState,lifecycleState:f.animationPresentation.state,manual:f.manualAbility,render:f.renderAudit}))};});
    if(!s)break;
+   report.fistWave=s.fistWave;
+   report.fistWaveReceipts??=[];
+   for(const receipt of s.fistWave?.receipts??[])if(!report.fistWaveReceipts.some(r=>r.key===receipt.key&&r.type===receipt.type)){
+    report.fistWaveReceipts.push(receipt);
+    await page.screenshot({path:path.join(out,`fist-wave-${receipt.type}.png`)});
+   }
    for(const f of s.fighters){deployed.add(f.kind);if(f.hp<=0||!f.render?.assetReady)continue;const key=f.kind+':'+f.state;const row={time:s.time,...f};report.rows.push(row);assert.equal(f.render.jointDrawSucceeded,true,f.kind+' articulated draw');assert.equal(f.render.jointAtlasPath,'/art/v100/joints/'+f.kind+'-quality-head-r1.webp');if(!seen.has(key)){seen.add(key);await page.screenshot({path:path.join(out,`${resized?'small':'large'}-${f.kind}-${f.state}.png`)});}}
    for(const kind of kinds)if(!deployed.has(kind)&&await nativeBattleTap(page,page.locator(`button.unit-card[data-kind="${kind}"]`).first()))report.inputs.push({time:s.time,action:'deploy',kind});
    for(const f of s.fighters)if(f.hp>0&&!abilities.has(f.kind)&&await nativeBattleTap(page,page.locator(`button[data-fighter-id="${f.id}"][data-ability-kind]`).first())){abilities.add(f.kind);report.inputs.push({time:s.time,action:'ability',kind:f.kind});}
@@ -38,6 +44,10 @@ try{
    if(!s.running)break;await page.waitForTimeout(150);
   }
   report.states=[...seen];report.abilityInputs=[...abilities];assert.ok(kinds.every(k=>deployed.has(k)),'all three deployed');assert.ok(kinds.every(k=>report.rows.some(r=>r.kind===k&&r.state==='active'&&r.render.resolvedState==='active')),'all three normal attacks painted');assert.equal(abilities.size,3,'native ability input for every character');assert.ok(kinds.every(k=>report.rows.some(r=>r.kind===k&&r.manual?.activationId>0&&r.render.resolvedState==='special')),'each manual ability actually painted with the same head atlas');assert.equal(resized,true,'both viewport sizes captured');
+  if(process.env.QUALITY_HEAD_OBSERVE_FIST_WAVE!=='1'){
+   assert.ok(report.fistWaveReceipts?.some(r=>r.type==='launch'&&r.sourceAtlas==='/art/v100/joints/brawler-quality-head-r1.webp'),'Paisen fist-wave must launch from the currently painted fist, not merely show a special pose');
+   assert.ok(report.fistWaveReceipts?.some(r=>r.type==='contact'),'Paisen fist-wave must reach an enemy in this native-input scenario');
+  }
   const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('nishijin-campaign-v100')));for(const key of ['ownedUnitIds','registeredUnitIds','caps','receipts'])assert.deepEqual(saved[key],seed[key],key);
   assert.deepEqual(report.errors,[]);report.status='passed';await context.close();report.video=await page.video().path();
  }finally{await context.close();}
