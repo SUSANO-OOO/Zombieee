@@ -1,0 +1,20 @@
+{
+  "name": "s19-seven-second-crossing-quality-r1",
+  "args": {
+    "referenced_image_paths": [
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\v100\\story-r9\\s19-seven-second-crossing.png"
+    ],
+    "transparent_background": false,
+    "prompt": "Reframe this EXISTING GENERATED GAME SCENE into one very wide 3:1 panoramic illustration while preserving its exact THREE vehicle identities, paint, armor, road, floodgate/checkpoint, lights and perspective logic. No new vehicle and no named character portrait. The PLAYER'S armored truck on the LEFT pushes the enemy armored SUV against the left road edge, holding it out of the separate RIGHT lane. The white HOSPITAL VAN with red crosses is safely passing out through the RIGHT lane as the boom barrier lowers BEHIND its rear. Keep a CLEAR AIR GAP between the barrier arm and the van: do not run the bar through its roof, doors or body. Both armored vehicles touch at their actual bumpers/side armor, not interpenetrating. All tires are attached and supported by the wet road; no floating vehicle, no wheel through chassis, no impossible intersecting lanes. Show the whole three-vehicle spatial relationship and barrier in a horizontal composition, all vehicle roofs fully within frame, enough tarmac for the tire contacts. Same rainy ruined industrial checkpoint, gritty semi-realistic painterly game artwork. No explosions, bodies, text, labels or UI."
+  },
+  "references": [
+    {
+      "path": "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\v100\\story-r9\\s19-seven-second-crossing.png",
+      "sha256": "276388f2a18f0a2d595dc565385549ad1015be989ffaca74483c444028a9c10b",
+      "bytes": 3613348
+    }
+  ],
+  "stage": "candidate, not selected",
+  "primaryReferencePolicy": "Existing generated models/scenes are primary; original art/photos only check drift.",
+  "generatedOriginal": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-4eaaa1fb-2de4-4fcd-afa0-5464ab1cf235.png"
+}

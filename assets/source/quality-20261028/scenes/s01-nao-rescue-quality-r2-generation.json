@@ -1,0 +1,13 @@
+{
+  "tool": "built-in image_gen",
+  "referenced_image_paths": [
+    "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/nao-master-r4.png",
+    "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/paisen-photo-master-r7.png",
+    "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/public/art/v100/story-r9/cuts/s01-nao-rescue.webp"
+  ],
+  "transparent_background": false,
+  "prompt": "ONE VERY WIDE 3:1 CINEMASCOPE PANORAMA, approximately3072x1024, NOT16:9, no panels. Use IMAGES1 and2 as STRICT EXISTING GENERATED PRIMARY MODELS:1 NAO, exact adult woman/face/eyes/nose/age/long braided brown ponytail, teal medical jacket with orange lining/straps, WHITE HIGH-NECK knitted shirt and medical bag;2 PAISEN, exact adult short-haired Japanese man, naturally sturdy normal build/purple-navy T-shirt/pale shorts, no bodybuilder exaggeration. IMAGE3 supplies the existing event/environment/pose only, NOT its old anime faces. Recompose this same early rescue INSIDE THE OPEN REAR OF THE ARMORED VEHICLE into a shallow horizontal panoramic view. Nao at center/right attentively examines the SAME frail grey-haired elderly man lying under the dark blanket, her hands keep the same gentle support/examination contacts. Keep the elderly man's original face/age/clothing, not another named actor. Paisen seated/slumped at LEFT after carrying him, catching his breath with the same raised palm, not posing triumphantly or doing Nao's medical work. Preserve the open vehicle rear framing the ruined street, racks, worn metal, warm lamp/cool daylight, examination blanket and Nao's organized medical bag. Keep both faces, the old man's head and Nao's hand contacts together at large readable size across the wide band, no clipped head or missing action. Photographic people/skin/hair/knit/cloth/metal, restrained painterly atmosphere, no anime eyes/contours or glossy plastic skin. No reference-model gun newly imported into the rescue, no new people/medical procedure/plot, no labels/text. One single3:1 panorama. Keep this NON-GRAPHIC: intact clothed people, no visible blood, open wounds or exposed anatomy. Do not transfer any firearm from the model references into this scene. This is gentle medical care of an elderly clothed man resting under a blanket, not an attack; no visible weapon.",
+  "output": "s01-nao-rescue-quality-r2.png",
+  "statusAtGeneration": "Non-graphic model-based story candidate; runtime selection, framing and native review pending.",
+  "generatedOriginal": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-2f4f7da7-7d49-46ba-a2e4-1cb3c15b2f73.png"
+}

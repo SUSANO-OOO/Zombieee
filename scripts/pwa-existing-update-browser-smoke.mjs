@@ -1,5 +1,6 @@
 import { legacyQaUrl } from "./legacy-qa-url.mjs";
-import { V100_RELEASE_ASSET_CONTRACT as assetContract, V100_WEBKIT_CARD_REPLACEMENT } from "./v100-release-asset-contract.mjs";
+import {assertQualityInstalledAssetTransition} from './quality-installed-update-contract.mjs';
+import {inspectPwaContentTransportCoverage} from './pwa-update-request-ownership.mjs';
 // Persistent existing-PWA update smoke.
 //
 // This is deliberately a two-release, same-origin test. The server switches
@@ -11,6 +12,7 @@ import { V100_RELEASE_ASSET_CONTRACT as assetContract, V100_WEBKIT_CARD_REPLACEM
 // public/sw.js.
 
 import { createHash } from "node:crypto";
+import { execFileSync } from 'node:child_process';
 import { createServer } from "node:http";
 import { mkdir, mkdtemp, readFile, stat, writeFile } from "node:fs/promises";
 import os from "node:os";
@@ -24,7 +26,7 @@ import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
 import { disconnectPwaOrigin } from "./pwa-offline-origin.mjs";
 import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
-import { V177_INSTALLED_ASSET_CONTRACT, v177InstalledSourceReplacementsMatch } from './v177-installed-asset-contract.mjs';
+import { V177_INSTALLED_ASSET_CONTRACT } from './v177-installed-asset-contract.mjs';
 import { inspectV177InstalledSaveTransition } from './v177-installed-save-contract.mjs';
 
 if(process.platform==='win32')throw new Error('Installed PWA QA is hosted-only; local game, browser and audio are disabled');
@@ -193,13 +195,16 @@ await ensureRoot(oldRoot);
 await ensureRoot(candidateRoot);
 const oldManifest = await readManifest(oldRoot);
 const candidateManifest = await readManifest(candidateRoot);
+const qualityDelta=JSON.parse(await readFile(new URL('../tests/fixtures/quality-20261028-runtime-delta.json',import.meta.url)));
+if(qualityDelta.base!=='ff5dba24e88c810182cda1f044bd26dfc3e512c1')throw new Error('Unexpected quality baseline');
+const qualityBaseline=JSON.parse(execFileSync('git',['show',qualityDelta.base+':public/asset-manifest.json'],{maxBuffer:4*1024*1024}));
 record("old and candidate static roots are complete", (
   oldManifest.version === oldVersion
   && oldManifest.releaseSha === expectedOldReleaseSha
   && candidateManifest.version === RELEASE_VERSION
   && candidateManifest.releaseSha === expectedCandidateReleaseSha
   && oldManifest.assets?.length === oldContract.assets
-  && candidateManifest.assets?.length === assetContract.count
+  && candidateManifest.assets?.length === qualityBaseline.assets.length-qualityDelta.retired.length+qualityDelta.added.length
 ), {
   oldVersion: oldManifest.version,
   candidateVersion: candidateManifest.version,
@@ -227,22 +232,14 @@ const retainedCacheEntryCount = new Set([...oldDistinctHashes, ...candidateDisti
 const candidateExpectedNetworkPaths = new Set(candidateNewHashAssets.map((asset) => (
   `${basePath}${asset.bundlePath ?? asset.sourcePath ?? asset.path}`
 )));
+const candidateExpectedTransports=candidateNewHashAssets.map(asset=>({pathname:`${basePath}${asset.bundlePath??asset.sourcePath??asset.path}`,contentKey:asset.bundlePath?'bundle:'+asset.bundlePath:asset.hash}));
+let reviewedMedia;
+try{reviewedMedia={ok:true,...assertQualityInstalledAssetTransition({oldManifest,baseline:qualityBaseline,candidate:candidateManifest,oldVersion,delta:qualityDelta})};}
+catch(error){reviewedMedia={ok:false,error:String(error)};}
 record("candidate preserves unchanged assets and declares only the approved media changes", (
-  oldDistinctHashes.size === oldContract.distinct
-  && candidateDistinctHashes.size === assetContract.distinctHashes
-  && JSON.stringify(replacedOldPaths.slice().sort()) === JSON.stringify(oldContract.replaced.slice().sort())
-  && v177InstalledSourceReplacementsMatch(oldManifest,candidateManifest,oldVersion)
-  && candidateByPath.get(V100_WEBKIT_CARD_REPLACEMENT.path)?.hash === V100_WEBKIT_CARD_REPLACEMENT.hash
-  && candidateManifest.assets.length === assetContract.count
-  && candidateNewHashAssets.length === oldContract.additions
-  && (!oldContract.changed || JSON.stringify(candidateNewHashAssets.map(({path,bytes,hash}) => ({path,bytes,hash})).sort((a,b) => a.path.localeCompare(b.path)))
-    === JSON.stringify(oldContract.changed.map(({path,bytes,hash}) => ({path,bytes,hash})).sort((a,b) => a.path.localeCompare(b.path))))
-  && candidateNewHashAssets.reduce((sum, asset) => sum + asset.bytes, 0) === oldContract.bytes
-  && candidateNewHashAssets.length === candidateNewHashes.size
-  && candidateNewBundledAssets.length === oldContract.bundled
-  && candidateNewBundledAssets.every((asset) => asset.bundlePath === assetContract.audioBundlePath)
-  && candidateExpectedNetworkPaths.size === oldContract.network
+  reviewedMedia.ok
 ), {
+  reviewedMedia,
   oldDistinctHashes: oldDistinctHashes.size,
   replacedOldPaths,
   candidateDistinctHashes: candidateDistinctHashes.size,
@@ -763,11 +760,7 @@ try {
   const candidateV100 = await v100State(page);
   const candidateCache = await cacheState(page);
   const candidateNetworkRequestsAfterClick = candidateNetworkAssetRequests.slice(updateNetworkAssetStart);
-  const candidateNetworkRequestSet = new Set(candidateNetworkRequestsAfterClick);
-  const unexpectedCandidateNetworkRequests = [...candidateNetworkRequestSet]
-    .filter((pathname) => !candidateExpectedNetworkPaths.has(pathname));
-  const missingCandidateNetworkRequests = [...candidateExpectedNetworkPaths]
-    .filter((pathname) => !candidateNetworkRequestSet.has(pathname));
+  const transportCoverage=inspectPwaContentTransportCoverage(candidateNetworkRequestsAfterClick,candidateExpectedTransports);
   record(`the update commits ${RELEASE_VERSION} and activates the waiting worker`, (
     updatedWorker?.activeState?.active?.version === RELEASE_VERSION
     && updatedWorker.activeWorkerState === "activated"
@@ -792,14 +785,11 @@ try {
     legacyWrites: candidateV100.legacyWrites,
   });
   record("the update fetches every changed hash exactly through its preferred source and no unchanged hash", (
-    unexpectedCandidateNetworkRequests.length === 0
-    && missingCandidateNetworkRequests.length === 0
-    && candidateNetworkRequestsAfterClick.length === candidateExpectedNetworkPaths.size
+    transportCoverage.ok
   ), {
     expected: [...candidateExpectedNetworkPaths].sort(),
     actual: candidateNetworkRequestsAfterClick,
-    unexpected: unexpectedCandidateNetworkRequests,
-    missing: missingCandidateNetworkRequests,
+    transportCoverage,
   });
   await screenshot(page, "v1-update-committed");
 

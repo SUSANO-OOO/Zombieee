@@ -86,6 +86,16 @@
       "id": "segawa",
       "source": "assets/source/quality-20261028/identity/segawa-warm-extended-r1.png",
       "sha256": "459c3535c5edcfff551ba7c5cee4e81a9fef082bdb19ba37626e7300eacf821b"
+    },
+    {
+      "id": "musashi",
+      "source": "assets/source/quality-20261028/identity/musashi-master-r4.png",
+      "sha256": "7ce937bddf0ac7bbb4e068b916625e4cd629411d6cc561946f88c22492c39c17"
+    },
+    {
+      "id": "president",
+      "source": "assets/source/quality-20261028/identity/president-warm-extended-r1.png",
+      "sha256": "14ec1e067895e20e7f7596a5f54fd279af56e9b313820490ec9d103bd3a7c4b8"
     }
   ],
   "scenes": [
@@ -528,6 +538,454 @@
       ],
       "alt": "ザキミヤが眠る息子を抱き、妻と一緒に顔を見つめる。",
       "newEvent": false
+    },
+    {
+      "id": "prologue-extinguisher-escape",
+      "master": "assets/source/quality-20261028/scenes/prologue-extinguisher-escape-quality-r2.png",
+      "masterSha256": "022ae0815366ba7e8c53120c9b350953e83d106f1eb2cfb6a36ac86dbeb299ff",
+      "previousPath": "/art/v100/story-r9/cuts/prologue-extinguisher-escape.webp",
+      "previousSha256": "9ad6e25610a1a0be51fa4ca9507c94f818ad7eee5f0976f1b4c1983c809d4081",
+      "path": "/art/v100/quality-20261028/scenes/prologue-extinguisher-escape-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "ババヤガが消火器を噴き、クマが椅子を押して退路を作る。",
+      "newEvent": false,
+      "modelIds": [
+        "babayaga",
+        "kumaverson",
+        "paisen"
+      ]
+    },
+    {
+      "id": "s01-nao-rescue",
+      "master": "assets/source/quality-20261028/scenes/s01-nao-rescue-quality-r2.png",
+      "masterSha256": "46adbb725c80d2065dd1b48d2a153305576a36217c7cddb231ced40bfc965076",
+      "previousPath": "/art/v100/story-r9/cuts/s01-nao-rescue.webp",
+      "previousSha256": "ae684ae099ea339497a899dedb86ca9cecb7ae6ad694a9a10785d15573a28e48",
+      "path": "/art/v100/quality-20261028/scenes/s01-nao-rescue-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "車内でナオが老人に毛布を敷き、運び終えたパイセンが床に座り込む。",
+      "newEvent": false,
+      "modelIds": [
+        "paisen",
+        "nao"
+      ],
+      "detail": {
+        "rect": [
+          1020,
+          340,
+          670,
+          270
+        ],
+        "sourceWidth": 1920,
+        "sourceHeight": 640,
+        "landmarkSourcePath": "/art/v100/quality-20261028/scenes/s01-nao-rescue-r1.webp",
+        "landmarkSourceHash": "57db60fdfc0008c525931a0478f33a769c1360e041b418f93da6a595d1d99a01",
+        "landmarks": [
+          {
+            "id": "paisen-face",
+            "rect": [
+              282,
+              110,
+              146,
+              126
+            ]
+          },
+          {
+            "id": "nao-face",
+            "rect": [
+              1086,
+              156,
+              145,
+              130
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "s03-cold-retrieval",
+      "master": "assets/source/quality-20261028/scenes/s03-cold-retrieval-quality-r1.png",
+      "masterSha256": "32a6d2c8c2018eceda2d6d6bc4cfe8cb7ee25193f1ce46f6405ce7079c5edb07",
+      "previousPath": "/art/v100/story-r9/cuts/s03-cold-retrieval.webp",
+      "previousSha256": "583856a8921eced27a05a227f7d6e0ae4895e0040735f6cd7acf0d6ac989f866",
+      "path": "/art/v100/quality-20261028/scenes/s03-cold-retrieval-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "赤いレンズの防護服隊員三人が、タクヤの担架と黒い収容袋を扱う。",
+      "newEvent": false,
+      "modelIds": [],
+      "continuity": "The existing generated scene is the primary reference for the unchanged anonymous crew, established Takuya boss or vehicles. No new named face is invented."
+    },
+    {
+      "id": "s04-monkey-shutter",
+      "master": "assets/source/quality-20261028/scenes/s04-monkey-shutter-quality-r2.png",
+      "masterSha256": "14709c1b3a89242ac03137d6792c593af298bdfbd2ffcc2b0ce8a7a4caa43297",
+      "previousPath": "/art/v100/story-r9/cuts/s04-monkey-shutter.webp",
+      "previousSha256": "2b6e5c577e1b08b5ac686402369aa2fad7412ba993291ac280622cdb1a9dcdf2",
+      "path": "/art/v100/quality-20261028/scenes/s04-monkey-shutter-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "クマが女性駅員を運び出す。配線盤の前にはモンキーと主人公の手。",
+      "newEvent": false,
+      "modelIds": [
+        "kumaverson",
+        "monkey"
+      ]
+    },
+    {
+      "id": "s09-transfer-disconnect",
+      "master": "assets/source/quality-20261028/scenes/s09-transfer-disconnect-quality-r2.png",
+      "masterSha256": "4534068fac2c50b47640c07cc1a16f4ccacd6e34b0c80a860739056b767689c6",
+      "previousPath": "/art/v100/story-r9/cuts/s09-transfer-disconnect.webp",
+      "previousSha256": "0620920717a200aa2b5bbf303a52e0f98e3abdbd94f13a7bd89161dc08d5d279",
+      "path": "/art/v100/quality-20261028/scenes/s09-transfer-disconnect-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "いくらが記録した転送先を確認し、赤いケーブルを接続口から抜いた。",
+      "newEvent": false,
+      "modelIds": [
+        "ikura"
+      ],
+      "detail": {
+        "rect": [
+          1370,
+          270,
+          530,
+          250
+        ],
+        "sourceWidth": 1920,
+        "sourceHeight": 640,
+        "landmarkSourcePath": "/art/v100/quality-20261028/scenes/s09-transfer-disconnect-r1.webp",
+        "landmarkSourceHash": "6d78525b765cebb2de5fc3dfc60cbf044ded57548f3ff7c6a1f600e1f986a94a",
+        "landmarks": [
+          {
+            "id": "paisen-face",
+            "rect": [
+              283,
+              176,
+              135,
+              152
+            ]
+          },
+          {
+            "id": "ikura-face",
+            "rect": [
+              715,
+              132,
+              130,
+              160
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "s10-rescue-surveillance",
+      "master": "assets/source/quality-20261028/scenes/s10-rescue-surveillance-quality-r1.png",
+      "masterSha256": "6aed3ddf523372ad2d61e8f22e3bca5d5bde00338571388f9e15eb1f1034a94e",
+      "previousPath": "/art/v100/story-r9/cuts/s10-rescue-surveillance.webp",
+      "previousSha256": "ff4e147999f3ff6c5193885d2761c0f95549a5131fda18e4cc6040fed9d33cf6",
+      "path": "/art/v100/quality-20261028/scenes/s10-rescue-surveillance-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "ババヤガが監視映像を確認する。映像のパイセンが階段を上り、二階の女性が白いタオルを振る。",
+      "newEvent": false,
+      "modelIds": [
+        "babayaga",
+        "paisen"
+      ]
+    },
+    {
+      "id": "s11-oxygen-rescue",
+      "master": "assets/source/quality-20261028/scenes/s11-oxygen-rescue-quality-r1.png",
+      "masterSha256": "6776825856c9bc1ee48c47cd6477cd2e81ebebf14ed79cc7f4e39c2980993094",
+      "previousPath": "/art/v100/story-r9/cuts/s11-oxygen-rescue.webp",
+      "previousSha256": "872ab0c62d97039419feed4488da8c9b7019a91f99334bbf7b55372f5fee12db",
+      "path": "/art/v100/quality-20261028/scenes/s11-oxygen-rescue-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "クマが酸素弁を回す。ガラスの向こうには研究員三人と、止まりかけた隔壁が見える。",
+      "newEvent": false,
+      "modelIds": [
+        "kumaverson"
+      ]
+    },
+    {
+      "id": "s17-chiha-baba-reunion",
+      "master": "assets/source/quality-20261028/scenes/s17-chiha-baba-reunion-quality-r3.png",
+      "masterSha256": "396bf03ac9968b87b262281c631d23a54d61a15a838b8b1b4e103b398b13806a",
+      "previousPath": "/art/v100/story-r9/cuts/s17-chiha-baba-reunion.webp",
+      "previousSha256": "d61deb19cb1ab3b6881d82edaf3d4010ef99aa3799b74efea467ff5e1da098e7",
+      "path": "/art/v100/quality-20261028/scenes/s17-chiha-baba-reunion-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "搬入口でババヤガがチハを抱きとめる。",
+      "newEvent": false,
+      "modelIds": [
+        "babayaga",
+        "chiha"
+      ]
+    },
+    {
+      "id": "s19-seven-second-crossing",
+      "master": "assets/source/quality-20261028/scenes/s19-seven-second-crossing-quality-r1.png",
+      "masterSha256": "47adbe2b1fbee1a6e64eae43d22f63bf94bbebe0c0d64e5b3a8b1f2b77ebb378",
+      "previousPath": "/art/v100/story-r9/cuts/s19-seven-second-crossing.webp",
+      "previousSha256": "880490a98efc3ebd18bbf855a2a1da1b3d67929f8e7527bc9ad98942f0536555",
+      "path": "/art/v100/quality-20261028/scenes/s19-seven-second-crossing-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "装甲車が敵車両を左へ押さえ、右の通路を病院の白い車が抜ける。遮断機が下がり始めている。",
+      "newEvent": false,
+      "modelIds": [],
+      "continuity": "The existing generated scene is the primary reference for the unchanged anonymous crew, established Takuya boss or vehicles. No new named face is invented."
+    },
+    {
+      "id": "s22-zakimiya-holds-son",
+      "master": "assets/source/quality-20261028/scenes/s22-zakimiya-holds-son-quality-r1.png",
+      "masterSha256": "8458f78574fc7e3e7e0ea82537a45f8160368402a726a167d593774fd3142bcb",
+      "previousPath": "/art/v100/story-r9/cuts/s22-zakimiya-holds-son.webp",
+      "previousSha256": "27723b719dd9bc2516000b92ea4fd21b966948fd839d44918e740e5208ab1026",
+      "path": "/art/v100/quality-20261028/scenes/s22-zakimiya-holds-son-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "ザキミヤが息子を自分の腕で抱き、妻がその肩に寄り添う。",
+      "newEvent": false,
+      "modelIds": [
+        "zakimiya"
+      ]
+    },
+    {
+      "id": "chiha-confession",
+      "master": "assets/source/quality-20261028/scenes/chiha-confession-quality-r2.png",
+      "masterSha256": "982be314d937e016ed60207ecb36795b35338fe6a37b8835953014545bc0aa80",
+      "previousPath": "/art/v100/story-r5/cuts/chiha-confession.webp",
+      "previousSha256": "8c025bff25e87e0d5f4e71a1d0a84cde754c92891c89c49b24db613e919e44fc",
+      "path": "/art/v100/quality-20261028/scenes/chiha-confession-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "チハは視線を落とす。ババヤガがカードを持ち、背後のクマは腕を組み、パイセンが机に手をつく。",
+      "newEvent": false,
+      "modelIds": [
+        "babayaga",
+        "chiha",
+        "kumaverson",
+        "paisen"
+      ]
+    },
+    {
+      "id": "s23-chiha-evidence-send",
+      "master": "assets/source/quality-20261028/scenes/s23-chiha-evidence-send-quality-r3.png",
+      "masterSha256": "d2fc9806e29d68289015da9237a75b5112fbc740feb9957e4fb11e97c64a46a1",
+      "previousPath": "/art/v100/story-r9/cuts/s23-chiha-evidence-send.webp",
+      "previousSha256": "61fd61c6244fada85ad407f706d85d1ed1d56683e7492dea2fcfcdebffaf8687",
+      "path": "/art/v100/quality-20261028/scenes/s23-chiha-evidence-send-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "チハが証拠を送る。受信灯三つが緑になり、カードから煙が上がる。パイセンとクマは扉を支える。",
+      "newEvent": false,
+      "modelIds": [
+        "babayaga",
+        "chiha",
+        "kumaverson",
+        "paisen"
+      ],
+      "detail": {
+        "rect": [
+          615,
+          350,
+          460,
+          200
+        ],
+        "sourceWidth": 1920,
+        "sourceHeight": 640,
+        "landmarkSourcePath": "/art/v100/quality-20261028/scenes/s23-chiha-evidence-send-r1.webp",
+        "landmarkSourceHash": "f60dcd834f82bb436f30013ff83184c72a9d733db6f864d34af1952c29985822",
+        "landmarks": [
+          {
+            "id": "babayaga-face",
+            "rect": [
+              370,
+              155,
+              130,
+              152
+            ]
+          },
+          {
+            "id": "chiha-face",
+            "rect": [
+              756,
+              177,
+              132,
+              145
+            ]
+          },
+          {
+            "id": "paisen-face",
+            "rect": [
+              1340,
+              219,
+              108,
+              104
+            ]
+          },
+          {
+            "id": "kumaverson-face",
+            "rect": [
+              1622,
+              214,
+              100,
+              108
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "president-restrained-alive",
+      "master": "assets/source/quality-20261028/scenes/president-restrained-alive-quality-r3.png",
+      "masterSha256": "93e0e066afe0b4cf25699ad4fca904e7fd16e2a9294d1a4090aa2e5a14083a15",
+      "previousPath": "/art/v100/story-r5/cuts/president-restrained-alive.webp",
+      "previousSha256": "269a923c0c344ddbcb1070e00cb63ea71d3b66faeb86adb97714af2b97d9e173",
+      "path": "/art/v100/quality-20261028/scenes/president-restrained-alive-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "ババヤガとチハが、生きている社長の両手首を拘束する。床の契約書へ指先だけが動く。",
+      "newEvent": false,
+      "modelIds": [
+        "babayaga",
+        "chiha",
+        "president"
+      ]
+    },
+    {
+      "id": "s27-takuya-conditioning",
+      "master": "assets/source/quality-20261028/scenes/s27-takuya-conditioning-quality-r1.png",
+      "masterSha256": "dc1b18f2a48e000d331a7b310197780421acc6e3794f770b8074a888d312a0d7",
+      "previousPath": "/art/v100/story-r9/cuts/s27-takuya-conditioning.webp",
+      "previousSha256": "16196b9675cfeb13245db56366bb20ddb092bcd60aac90f189af8f9ac27bf0b8",
+      "path": "/art/v100/quality-20261028/scenes/s27-takuya-conditioning-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "三面の記録映像に、タクヤの試験行動、標的と音の合図、壊れた音響装置が映る。",
+      "newEvent": false,
+      "modelIds": [],
+      "continuity": "The existing generated scene is the primary reference for the unchanged anonymous crew, established Takuya boss or vehicles. No new named face is invented."
+    },
+    {
+      "id": "s28-physical-stop",
+      "master": "assets/source/quality-20261028/scenes/s28-physical-stop-quality-r2.png",
+      "masterSha256": "3e90e5371d21c54a43f4813cc456e80865144e2b2ab8b622cdc660d9e3fba3b6",
+      "previousPath": "/art/v100/story-r9/cuts/s28-physical-stop.webp",
+      "previousSha256": "50bb91af6d0ccd5f71c15081df062eca085d405d65faef72a605024845290d19",
+      "path": "/art/v100/quality-20261028/scenes/s28-physical-stop-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "ムサシとザキミヤが鋼のカバーを支え、主人公が隙間から赤い停止レバーへ手を伸ばす。",
+      "newEvent": false,
+      "modelIds": [
+        "musashi",
+        "zakimiya"
+      ]
+    },
+    {
+      "id": "s30-three-samples",
+      "master": "assets/source/quality-20261028/scenes/s30-three-samples-quality-r1.png",
+      "masterSha256": "291f0516e0d1a35308131ee72527ba4390f7182a0ce5567afb6b93e5c396c658",
+      "previousPath": "/art/v100/story-r9/cuts/s30-three-samples.webp",
+      "previousSha256": "db69ffc042d9e5d893bc6c6622fba5599a6bbe206047c0b1beffd89946e23b59",
+      "path": "/art/v100/quality-20261028/scenes/s30-three-samples-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "別々の溝に密封された薬剤管、血液、骨髄の三試料。主人公が左の管へ手を伸ばし、クマがケースを支える。",
+      "newEvent": false,
+      "modelIds": [
+        "kumaverson"
+      ]
+    },
+    {
+      "id": "ending-chiha-baba-distance",
+      "master": "assets/source/quality-20261028/scenes/ending-chiha-baba-distance-quality-r1.png",
+      "masterSha256": "b6b1763deaa5ee579b0a3310e8f87b2f1964339d9ded7559e219ea42a295dc06",
+      "previousPath": "/art/v100/story-r9/cuts/ending-chiha-baba-distance.webp",
+      "previousSha256": "33d5961855f2e4e445aab8cedeb8c1be5243ea178040b34d69616a26e6801779",
+      "path": "/art/v100/quality-20261028/scenes/ending-chiha-baba-distance-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "店のカウンターでチハが手を伸ばすが、ババヤガは手を引き、二人の手の間に隙間が残る。",
+      "newEvent": false,
+      "modelIds": [
+        "babayaga",
+        "chiha"
+      ],
+      "detail": {
+        "rect": [
+          470,
+          390,
+          670,
+          150
+        ],
+        "sourceWidth": 1920,
+        "sourceHeight": 640,
+        "landmarkSourcePath": "/art/v100/quality-20261028/scenes/ending-chiha-baba-distance-r1.webp",
+        "landmarkSourceHash": "ba73897cbff1b81b3eaefe187ffd42038d556278589f9bb9b888ed7d050febd9",
+        "landmarks": [
+          {
+            "id": "babayaga-face",
+            "rect": [
+              437,
+              146,
+              185,
+              158
+            ]
+          },
+          {
+            "id": "chiha-face",
+            "rect": [
+              1262,
+              151,
+              158,
+              162
+            ]
+          }
+        ]
+      }
     }
   ],
   "reusedScenes": [

@@ -13,7 +13,8 @@ import {createV100DialogueFixture} from './v100-dialogue-fixture.mjs';
 import {dismissInstallOffer} from './pwa-gate-qa.mjs';
 import {enterV100FromTitle,seedV100BrowserSaveOnce} from './v100-title-qa-entry.mjs';
 import {productionBuildIdentity} from './browser-qa-build-identity.mjs';
-import {readV177PaintedSceneImage,readV177PaintedSceneSource} from './v177-painted-scene-geometry.mjs';
+import {readV177PaintedSceneImage,readV177PaintedSceneSource,inspectV177PaintedSceneFaces} from './v177-painted-scene-geometry.mjs';
+import {v177StoryDetailShotFor} from '../app/v177StoryDetailShots.js';
 
 const engine=process.env.QUALITY_SCENE_ENGINE??'chromium';
 const out=path.resolve(process.env.QUALITY_SCENE_OUT);await mkdir(out,{recursive:true});
@@ -23,14 +24,15 @@ const fixtures=Object.entries(V100_QUALITY_SCENE_ASSETS).flatMap(([id,asset])=>{
  const found=nodes.find(({eventId,node,nodeIndex})=>v100StoryDirectionFor(eventId,nodeIndex,node).cut===id);
  return found?[{id,asset,...found}]:[];
 });
-assert.equal(fixtures.length,6,'three revised story scenes and three new Babayaga scenes; the other five belong to the credits film');
+assert.equal(fixtures.length,23,'all active story illustrations must use their selected model-based scenes');
 const requestedIds=process.env.QUALITY_SCENE_ONLY_ID?.split(',');
 if(requestedIds)assert.equal(new Set(requestedIds).size,requestedIds.length,'an explicit scene selection cannot repeat an ID');
 const selectedFixtures=requestedIds?fixtures.filter(f=>requestedIds.includes(f.id)):fixtures;
 assert.equal(selectedFixtures.length,requestedIds?.length??fixtures.length,'each explicitly selected scene must resolve exactly once');
-const report={engine,build:await productionBuildIdentity(),selectedIds:selectedFixtures.map(f=>f.id),scope:'Prepared story checkpoints; native title continue, real decoded source bytes, log and next controls. Not campaign wins, numeric likeness, listening or physical-device acceptance.',cases:[],errors:[]};
+const report={engine,build:await productionBuildIdentity(),selectedIds:selectedFixtures.map(f=>f.id),scope:'Prepared muted story checkpoints; native title continue, real decoded source bytes, log and next controls. Not campaign wins, numeric likeness, listening or physical-device acceptance.',cases:[],errors:[]};
 const persist=()=>writeFile(path.join(out,'report.json'),JSON.stringify(report,null,2));
-const browser=await({chromium,webkit}[engine]).launch({headless:true});
+const browser=await({chromium,webkit}[engine]).launch({headless:true,...(engine==='chromium'?{args:['--mute-audio']}:{})});
+report.browser={engine,version:browser.version()};
 try{
  for(const viewport of [{width:844,height:340},{width:1280,height:720}])for(const fixture of selectedFixtures){
   const label=`${viewport.width}x${viewport.height}-${fixture.id}`;
@@ -38,7 +40,9 @@ try{
   const page=await context.newPage();page.setDefaultTimeout(20000);page.on('pageerror',e=>report.errors.push(String(e)));
   const row={label,fixture:{id:fixture.id,eventId:fixture.eventId,nodeIndex:fixture.nodeIndex},status:'running'};report.cases.push(row);
   try{
-   await context.addInitScript(seedV100BrowserSaveOnce,serializeV100Save(createV100DialogueFixture(fixture)));
+   const save=createV100DialogueFixture(fixture);
+   save.settings={...save.settings,bgmEnabled:false,sfxEnabled:false};
+   await context.addInitScript(seedV100BrowserSaveOnce,serializeV100Save(save));
    await page.goto(process.env.V100_CAMPAIGN_QA_BASE_URL);
    await dismissInstallOffer(page,{timeout:25000,readySelector:'.v100-start-screen',waitForFictionDismissal:true});
    await enterV100FromTitle(page);
@@ -61,8 +65,8 @@ try{
     const rect=el=>{const r=el.getBoundingClientRect();return{x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:r.width,height:r.height};};
     const copy=element.querySelector('.v100-node-copy'),button=copy.querySelector('button.v100-primary');
     const r=button.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);
-    const details=[...element.querySelectorAll('.v177-story-detail-shot:not(.v177-story-detail-previous)')].map(figure=>({rect:rect(figure),imageWidth:Number(figure.querySelector('image')?.getAttribute('width')),imageHeight:Number(figure.querySelector('image')?.getAttribute('height'))}));
-    return {heading:rect(element.querySelector('.v100-event-heading')),copy:rect(copy),button:rect(button),details,nextReachable:hit===button||button.contains(hit),overflow:Math.max(document.documentElement.scrollWidth-innerWidth,document.body.scrollWidth-innerWidth)};
+    const details=[...element.querySelectorAll('.v177-story-detail-shot:not(.v177-story-detail-previous)')].map(figure=>({id:figure.dataset.v177StoryDetail,rect:rect(figure),imageWidth:Number(figure.querySelector('image')?.getAttribute('width')),imageHeight:Number(figure.querySelector('image')?.getAttribute('height'))}));
+    return {scene:rect(element),heading:rect(element.querySelector('.v100-event-heading')),copy:rect(copy),button:rect(button),details,nextReachable:hit===button||button.contains(hit),overflow:Math.max(document.documentElement.scrollWidth-innerWidth,document.body.scrollWidth-innerWidth)};
    });
    const fits=r=>r.x>=0&&r.y>=0&&r.right<=viewport.width+1&&r.bottom<=viewport.height+1;
    assert.ok(fits(row.geometry.copy)&&fits(row.geometry.button));assert.ok(row.geometry.nextReachable);assert.ok(row.geometry.overflow<=1);
@@ -74,6 +78,12 @@ try{
     assert.equal(detail.imageWidth,row.image.naturalWidth);assert.equal(detail.imageHeight,row.image.naturalHeight);
     assert.ok(Math.abs(detail.rect.width/detail.rect.height-authored.rect[2]/authored.rect[3])<.05,'the action inset follows its painted crop without empty bars');
     assert.ok(fits(detail.rect));
+   }
+   const authored=v177StoryDetailShotFor(fixture.asset.path);
+   if(authored?.landmarks){
+    assert.equal(row.source.sha256,authored.landmarkSourceHash);
+    row.paintedFaces=inspectV177PaintedSceneFaces(authored,{scene:row.geometry.scene,copy:row.geometry.copy,headingBox:row.geometry.heading,paintedImage:row.image,detailShots:row.geometry.details.map(detail=>({id:detail.id,frame:detail.rect}))});
+    assert.deepEqual(row.paintedFaces.issues,[],'current painted face cores clear the heading, dialogue, frame and action inset');
    }
    const screenshot=await page.screenshot({path:path.join(out,label+'.png')});
    const scale=Math.min(row.image.rect.width/row.image.naturalWidth,row.image.rect.height/row.image.naturalHeight);

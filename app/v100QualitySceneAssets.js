@@ -199,6 +199,254 @@ export const V100_QUALITY_SCENE_ASSETS=Object.freeze({
     "previousPath": "/art/v100/story-r5/cuts/ending-zakimiya-family.webp",
     "alt": "ザキミヤが眠る息子を抱き、妻と一緒に顔を見つめる。",
     "newEvent": false
+  },
+  "prologue-extinguisher-escape": {
+    "path": "/art/v100/quality-20261028/scenes/prologue-extinguisher-escape-r1.webp",
+    "previousPath": "/art/v100/story-r9/cuts/prologue-extinguisher-escape.webp",
+    "alt": "ババヤガが消火器を噴き、クマが椅子を押して退路を作る。",
+    "newEvent": false
+  },
+  "s01-nao-rescue": {
+    "path": "/art/v100/quality-20261028/scenes/s01-nao-rescue-r1.webp",
+    "previousPath": "/art/v100/story-r9/cuts/s01-nao-rescue.webp",
+    "alt": "車内でナオが老人に毛布を敷き、運び終えたパイセンが床に座り込む。",
+    "newEvent": false,
+    "detail": {
+      "rect": [
+        1020,
+        340,
+        670,
+        270
+      ],
+      "sourceWidth": 1920,
+      "sourceHeight": 640,
+      "landmarkSourcePath": "/art/v100/quality-20261028/scenes/s01-nao-rescue-r1.webp",
+      "landmarkSourceHash": "57db60fdfc0008c525931a0478f33a769c1360e041b418f93da6a595d1d99a01",
+      "landmarks": [
+        {
+          "id": "paisen-face",
+          "rect": [
+            282,
+            110,
+            146,
+            126
+          ]
+        },
+        {
+          "id": "nao-face",
+          "rect": [
+            1086,
+            156,
+            145,
+            130
+          ]
+        }
+      ]
+    }
+  },
+  "s03-cold-retrieval": {
+    "path": "/art/v100/quality-20261028/scenes/s03-cold-retrieval-r1.webp",
+    "previousPath": "/art/v100/story-r9/cuts/s03-cold-retrieval.webp",
+    "alt": "赤いレンズの防護服隊員三人が、タクヤの担架と黒い収容袋を扱う。",
+    "newEvent": false
+  },
+  "s04-monkey-shutter": {
+    "path": "/art/v100/quality-20261028/scenes/s04-monkey-shutter-r1.webp",
+    "previousPath": "/art/v100/story-r9/cuts/s04-monkey-shutter.webp",
+    "alt": "クマが女性駅員を運び出す。配線盤の前にはモンキーと主人公の手。",
+    "newEvent": false
+  },
+  "s09-transfer-disconnect": {
+    "path": "/art/v100/quality-20261028/scenes/s09-transfer-disconnect-r1.webp",
+    "previousPath": "/art/v100/story-r9/cuts/s09-transfer-disconnect.webp",
+    "alt": "いくらが記録した転送先を確認し、赤いケーブルを接続口から抜いた。",
+    "newEvent": false,
+    "detail": {
+      "rect": [
+        1370,
+        270,
+        530,
+        250
+      ],
+      "sourceWidth": 1920,
+      "sourceHeight": 640,
+      "landmarkSourcePath": "/art/v100/quality-20261028/scenes/s09-transfer-disconnect-r1.webp",
+      "landmarkSourceHash": "6d78525b765cebb2de5fc3dfc60cbf044ded57548f3ff7c6a1f600e1f986a94a",
+      "landmarks": [
+        {
+          "id": "paisen-face",
+          "rect": [
+            283,
+            176,
+            135,
+            152
+          ]
+        },
+        {
+          "id": "ikura-face",
+          "rect": [
+            715,
+            132,
+            130,
+            160
+          ]
+        }
+      ]
+    }
+  },
+  "s10-rescue-surveillance": {
+    "path": "/art/v100/quality-20261028/scenes/s10-rescue-surveillance-r1.webp",
+    "previousPath": "/art/v100/story-r9/cuts/s10-rescue-surveillance.webp",
+    "alt": "ババヤガが監視映像を確認する。映像のパイセンが階段を上り、二階の女性が白いタオルを振る。",
+    "newEvent": false
+  },
+  "s11-oxygen-rescue": {
+    "path": "/art/v100/quality-20261028/scenes/s11-oxygen-rescue-r1.webp",
+    "previousPath": "/art/v100/story-r9/cuts/s11-oxygen-rescue.webp",
+    "alt": "クマが酸素弁を回す。ガラスの向こうには研究員三人と、止まりかけた隔壁が見える。",
+    "newEvent": false
+  },
+  "s17-chiha-baba-reunion": {
+    "path": "/art/v100/quality-20261028/scenes/s17-chiha-baba-reunion-r1.webp",
+    "previousPath": "/art/v100/story-r9/cuts/s17-chiha-baba-reunion.webp",
+    "alt": "搬入口でババヤガがチハを抱きとめる。",
+    "newEvent": false
+  },
+  "s19-seven-second-crossing": {
+    "path": "/art/v100/quality-20261028/scenes/s19-seven-second-crossing-r1.webp",
+    "previousPath": "/art/v100/story-r9/cuts/s19-seven-second-crossing.webp",
+    "alt": "装甲車が敵車両を左へ押さえ、右の通路を病院の白い車が抜ける。遮断機が下がり始めている。",
+    "newEvent": false
+  },
+  "s22-zakimiya-holds-son": {
+    "path": "/art/v100/quality-20261028/scenes/s22-zakimiya-holds-son-r1.webp",
+    "previousPath": "/art/v100/story-r9/cuts/s22-zakimiya-holds-son.webp",
+    "alt": "ザキミヤが息子を自分の腕で抱き、妻がその肩に寄り添う。",
+    "newEvent": false
+  },
+  "chiha-confession": {
+    "path": "/art/v100/quality-20261028/scenes/chiha-confession-r1.webp",
+    "previousPath": "/art/v100/story-r5/cuts/chiha-confession.webp",
+    "alt": "チハは視線を落とす。ババヤガがカードを持ち、背後のクマは腕を組み、パイセンが机に手をつく。",
+    "newEvent": false
+  },
+  "s23-chiha-evidence-send": {
+    "path": "/art/v100/quality-20261028/scenes/s23-chiha-evidence-send-r1.webp",
+    "previousPath": "/art/v100/story-r9/cuts/s23-chiha-evidence-send.webp",
+    "alt": "チハが証拠を送る。受信灯三つが緑になり、カードから煙が上がる。パイセンとクマは扉を支える。",
+    "newEvent": false,
+    "detail": {
+      "rect": [
+        615,
+        350,
+        460,
+        200
+      ],
+      "sourceWidth": 1920,
+      "sourceHeight": 640,
+      "landmarkSourcePath": "/art/v100/quality-20261028/scenes/s23-chiha-evidence-send-r1.webp",
+      "landmarkSourceHash": "f60dcd834f82bb436f30013ff83184c72a9d733db6f864d34af1952c29985822",
+      "landmarks": [
+        {
+          "id": "babayaga-face",
+          "rect": [
+            370,
+            155,
+            130,
+            152
+          ]
+        },
+        {
+          "id": "chiha-face",
+          "rect": [
+            756,
+            177,
+            132,
+            145
+          ]
+        },
+        {
+          "id": "paisen-face",
+          "rect": [
+            1340,
+            219,
+            108,
+            104
+          ]
+        },
+        {
+          "id": "kumaverson-face",
+          "rect": [
+            1622,
+            214,
+            100,
+            108
+          ]
+        }
+      ]
+    }
+  },
+  "president-restrained-alive": {
+    "path": "/art/v100/quality-20261028/scenes/president-restrained-alive-r1.webp",
+    "previousPath": "/art/v100/story-r5/cuts/president-restrained-alive.webp",
+    "alt": "ババヤガとチハが、生きている社長の両手首を拘束する。床の契約書へ指先だけが動く。",
+    "newEvent": false
+  },
+  "s27-takuya-conditioning": {
+    "path": "/art/v100/quality-20261028/scenes/s27-takuya-conditioning-r1.webp",
+    "previousPath": "/art/v100/story-r9/cuts/s27-takuya-conditioning.webp",
+    "alt": "三面の記録映像に、タクヤの試験行動、標的と音の合図、壊れた音響装置が映る。",
+    "newEvent": false
+  },
+  "s28-physical-stop": {
+    "path": "/art/v100/quality-20261028/scenes/s28-physical-stop-r1.webp",
+    "previousPath": "/art/v100/story-r9/cuts/s28-physical-stop.webp",
+    "alt": "ムサシとザキミヤが鋼のカバーを支え、主人公が隙間から赤い停止レバーへ手を伸ばす。",
+    "newEvent": false
+  },
+  "s30-three-samples": {
+    "path": "/art/v100/quality-20261028/scenes/s30-three-samples-r1.webp",
+    "previousPath": "/art/v100/story-r9/cuts/s30-three-samples.webp",
+    "alt": "別々の溝に密封された薬剤管、血液、骨髄の三試料。主人公が左の管へ手を伸ばし、クマがケースを支える。",
+    "newEvent": false
+  },
+  "ending-chiha-baba-distance": {
+    "path": "/art/v100/quality-20261028/scenes/ending-chiha-baba-distance-r1.webp",
+    "previousPath": "/art/v100/story-r9/cuts/ending-chiha-baba-distance.webp",
+    "alt": "店のカウンターでチハが手を伸ばすが、ババヤガは手を引き、二人の手の間に隙間が残る。",
+    "newEvent": false,
+    "detail": {
+      "rect": [
+        470,
+        390,
+        670,
+        150
+      ],
+      "sourceWidth": 1920,
+      "sourceHeight": 640,
+      "landmarkSourcePath": "/art/v100/quality-20261028/scenes/ending-chiha-baba-distance-r1.webp",
+      "landmarkSourceHash": "ba73897cbff1b81b3eaefe187ffd42038d556278589f9bb9b888ed7d050febd9",
+      "landmarks": [
+        {
+          "id": "babayaga-face",
+          "rect": [
+            437,
+            146,
+            185,
+            158
+          ]
+        },
+        {
+          "id": "chiha-face",
+          "rect": [
+            1262,
+            151,
+            158,
+            162
+          ]
+        }
+      ]
+    }
   }
 });
 const byPrevious=new Map(Object.values(V100_QUALITY_SCENE_ASSETS).filter(row=>row.previousPath).map(row=>[row.previousPath,row.path]));

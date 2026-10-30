@@ -1,0 +1,12 @@
+{
+  "tool": "built-in image_gen",
+  "referenced_image_paths": [
+    "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/scenes/s09-transfer-disconnect-quality-r1.png",
+    "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/ikura-master-r4.png"
+  ],
+  "transparent_background": false,
+  "prompt": "Camera/framing correction of IMAGE1 only. Preserve exactly the same photographic people and faces, expressions, poses, wardrobe, physical tablet/SEG-LAB saved-footage display, fingertip/hand/plug positions and clearly disconnected red cable, environment and realistic finish. IMAGE2 is the SAME locked existing Ikura model, for completing the correct hair shape only. Make ONE VERY WIDE3:1 panorama again. The TOP OF IKURA'S PINK HAIR BUNS is clipped in image1: move the camera slightly back/reframe the existing group so BOTH COMPLETE BUNS AND ALL HAIR have clear 30–50px-equivalent breathing room below the top edge. Do not change her face or invent new hair/ears/accessories. Keep both people's full heads and all meaningful hand/tablet/connector action visible, no stretching/squeezing people or small thumbnail actors. Only finish the missing top hair from the primary model and adjust framing. Do not revert to the older anime face, black top or inserted connector. Non-graphic, no blood/wounds/weapons/new text/actors. Single3:1 panoramic illustration, not16:9 or panels.",
+  "output": "s09-transfer-disconnect-quality-r2.png",
+  "statusAtGeneration": "Model-based panoramic candidate; runtime selection, detail crops and native review pending.",
+  "generatedOriginal": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-c7d7c92e-4b9d-4de0-8f44-20019cd8c3f4.png"
+}

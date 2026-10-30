@@ -1,0 +1,14 @@
+{
+  "purpose": "Deterministic identity-reference packing from the existing generated master, with no face redraw, retouch or geometry change. Not a new character model.",
+  "source": "assets/source/quality-20261028/identity/babayaga-master-r1.png",
+  "sourceSha256": "c571d91e3ae9b97f0ac558ae6cacffa4661b268dadf0a46e6f47a7b2fb670aa4",
+  "crop": {
+    "left": 250,
+    "top": 0,
+    "width": 500,
+    "height": 420
+  },
+  "scale": 2,
+  "output": "assets/source/quality-20261028/scenes/references/babayaga-face-model-r1.png",
+  "sha256": "e90faa1952a56855ef5a6ec0f4612b2d4b43a07e076c9b0b5b6086f3d96094e3"
+}

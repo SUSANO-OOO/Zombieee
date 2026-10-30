@@ -8,10 +8,10 @@ import {v100StoryDirectionFor} from '../app/v100StoryDirection.js';
 import {V100_QUALITY_SCENE_ASSETS,v100QualityScenePathFor} from '../app/v100QualitySceneAssets.js';
 import {v177StoryDetailShotFor} from '../app/v177StoryDetailShots.js';
 
-test('versioned scene payloads replace only the twenty-seven declared paths and add three Babayaga events',async()=>{
+test('versioned scene payloads replace only the forty-four declared paths and add three Babayaga events',async()=>{
  const provenance=JSON.parse(await readFile('assets/source/quality-20261028/scenes/runtime-provenance-r1.json'));
  const manifest=JSON.parse(await readFile('public/asset-manifest.json'));
- assert.equal(provenance.records.length,30);
+ assert.equal(provenance.records.length,47);
  assert.equal(provenance.records.filter(row=>row.newEvent).length,3);
  const livePaths=new Set([...V100_CREDITS_FILM.map(shot=>shot.src),...Object.entries(V100_STORY_EVENTS).flatMap(([id,event])=>event.nodes.map((node,i)=>v100StoryDirectionFor(id,i,node).backgroundPath))]);
  for(const record of provenance.records){
@@ -26,6 +26,10 @@ test('versioned scene payloads replace only the twenty-seven declared paths and 
    assert.ok(shot);assert.deepEqual(shot.rect,record.detail.rect);
    assert.equal(shot.sourceWidth,record.dimensions[0]);assert.equal(shot.sourceHeight,record.dimensions[1]);
    const [x,y,w,h]=shot.rect;assert.ok(x>=0&&y>=0&&w>0&&h>0&&x+w<=shot.sourceWidth&&y+h<=shot.sourceHeight,'authored action crop stays inside its current source');
+   if(shot.landmarks){
+    assert.equal(shot.landmarkSourcePath,record.path);assert.equal(shot.landmarkSourceHash,record.sha256);
+    for(const mark of shot.landmarks){const [x,y,w,h]=mark.rect;assert.ok(x>=0&&y>=0&&w>0&&h>0&&x+w<=shot.sourceWidth&&y+h<=shot.sourceHeight,'face coordinates stay inside their exact source');}
+   }
   }
   if(record.previousPath){
    assert.equal(v100QualityScenePathFor(record.previousPath),record.path);
@@ -43,7 +47,7 @@ test('versioned scene payloads replace only the twenty-seven declared paths and 
 
 test('all twenty-five film images have a selected master or an unchanged reviewed source',async()=>{
  const provenance=JSON.parse(await readFile('assets/source/quality-20261028/scenes/runtime-provenance-r1.json'));
- assert.equal(provenance.models.length,17);
+ assert.equal(provenance.models.length,19);
  assert.deepEqual(provenance.reusedScenes.map(scene=>scene.id),['hospital-serum']);
  const reviewed=new Map([...provenance.records,...provenance.reusedScenes].map(scene=>[scene.path,scene]));
  assert.equal(V100_CREDITS_FILM.length,25);
@@ -52,6 +56,15 @@ test('all twenty-five film images have a selected master or an unchanged reviewe
  assert.equal(bytes.length,original.bytes);
  assert.equal(createHash('sha256').update(bytes).digest('hex'),original.sha256,'retained Nao image is not silently regenerated');
  assert.deepEqual(original.modelIds,['nao']);
+});
+
+test('all twenty-three active story illustrations use their selected panoramas rather than an old fallback',()=>{
+ const cuts=new Map();
+ for(const[eventId,event]of Object.entries(V100_STORY_EVENTS))for(const[i,node]of event.nodes.entries()){
+  const direction=v100StoryDirectionFor(eventId,i,node);
+  if(direction.cut){const source=V100_QUALITY_SCENE_ASSETS[direction.cut];assert.ok(source,'unreviewed active cut '+direction.cut);assert.equal(direction.backgroundPath,source.path);cuts.set(direction.cut,source.path);}
+ }
+ assert.equal(cuts.size,23);assert.equal(new Set(cuts.values()).size,23);
 });
 
 test('new Babayaga cuts begin on their authored action and preserve the preceding phone diagram and plot',()=>{

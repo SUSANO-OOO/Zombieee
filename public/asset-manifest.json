@@ -2843,6 +2843,14 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/v100/quality-20261028/scenes/chiha-confession-r1.webp",
+      "bytes": 375972,
+      "hash": "sha256-b2f5337677b1dfff02177c0f55ead8eb245669851d34556bd3e0ff88ccbde09a",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/quality-20261028/scenes/defense-bench-r1.webp",
       "bytes": 443520,
       "hash": "sha256-0b32968df6201217d083b7a92895b6c755f5950c5fe12920cd085ce8ae7e2713",
@@ -2862,6 +2870,14 @@
       "path": "/art/v100/quality-20261028/scenes/defense-watch-r1.webp",
       "bytes": 421874,
       "hash": "sha256-1868b8fc2d9ea7dab085382e308c90092dd13b1e4425fcc1fd78d7e0d36eb263",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/ending-chiha-baba-distance-r1.webp",
+      "bytes": 375608,
+      "hash": "sha256-ba73897cbff1b81b3eaefe187ffd42038d556278589f9bb9b888ed7d050febd9",
       "pack": "campaign-core",
       "category": "background",
       "criticality": "critical"
@@ -2939,9 +2955,73 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/v100/quality-20261028/scenes/president-restrained-alive-r1.webp",
+      "bytes": 352600,
+      "hash": "sha256-1104aa676dee8077be84b0f3173c5a6761909f0b9bdd47a176a06805b8dcb744",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/prologue-extinguisher-escape-r1.webp",
+      "bytes": 416508,
+      "hash": "sha256-5d7572fc10d28dedc7bc1f59236c35f005fa128d4ead5628bbcdd1ae410a5791",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/s01-nao-rescue-r1.webp",
+      "bytes": 442440,
+      "hash": "sha256-57db60fdfc0008c525931a0478f33a769c1360e041b418f93da6a595d1d99a01",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/s03-cold-retrieval-r1.webp",
+      "bytes": 490278,
+      "hash": "sha256-ac3eb41d866be5bfb642d8af7fcc2f8da1c4b340beb4e52dad9f3ee085ab9c14",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/s04-monkey-shutter-r1.webp",
+      "bytes": 437188,
+      "hash": "sha256-bf3ae475628b6fa8be224a77aae2d6c126fead86d290d292b21cc6f0831e4f21",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/quality-20261028/scenes/s06-babayaga-old-message-r1.webp",
       "bytes": 305886,
       "hash": "sha256-a886081cae7b38a040770cb79dddf2e5a813222418fa2b6404e3b1783af29038",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/s09-transfer-disconnect-r1.webp",
+      "bytes": 371918,
+      "hash": "sha256-6d78525b765cebb2de5fc3dfc60cbf044ded57548f3ff7c6a1f600e1f986a94a",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/s10-rescue-surveillance-r1.webp",
+      "bytes": 402174,
+      "hash": "sha256-c917b9b0c21a8d0d231363368b5a38d3575d7675c9e0e84cacf0cbb192540134",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/s11-oxygen-rescue-r1.webp",
+      "bytes": 469846,
+      "hash": "sha256-b2c8e91479fe1081d70c048051d37dcc8642939491fb913f3deb424b601e7470",
       "pack": "campaign-core",
       "category": "background",
       "criticality": "critical"
@@ -2955,6 +3035,14 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/v100/quality-20261028/scenes/s17-chiha-baba-reunion-r1.webp",
+      "bytes": 405278,
+      "hash": "sha256-da30a604cdf63b0bca82290f70f2a4f75513f6376aa170879053dca04c41a6dd",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/quality-20261028/scenes/s18-babayaga-chiha-records-r1.webp",
       "bytes": 323800,
       "hash": "sha256-d4d267474b1cd467fc0ff74b8c68af5fe9bcfff62ac2a04fb5d9a5270ec13391",
@@ -2963,9 +3051,57 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/v100/quality-20261028/scenes/s19-seven-second-crossing-r1.webp",
+      "bytes": 644714,
+      "hash": "sha256-c7e8578b2bb8c73d3dae89c72362d5bf1031d970ea5a1e25b386e6a1892d9174",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/s22-zakimiya-holds-son-r1.webp",
+      "bytes": 398054,
+      "hash": "sha256-afd7044e6388a2aa948d598e87fe08ae6df23c50e1737183ecd76844bdf98beb",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/s23-chiha-evidence-send-r1.webp",
+      "bytes": 457326,
+      "hash": "sha256-f60dcd834f82bb436f30013ff83184c72a9d733db6f864d34af1952c29985822",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/quality-20261028/scenes/s27-babayaga-cover-r1.webp",
       "bytes": 392024,
       "hash": "sha256-f2520b88776a2d21131cfdb6e70a506975e36e487f0e57d7ce0f43aa735714e3",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/s27-takuya-conditioning-r1.webp",
+      "bytes": 354146,
+      "hash": "sha256-6fe76b5388834ec46a8b7da34d00ed756d0afc091e4e4f3f7393150facd81fc1",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/s28-physical-stop-r1.webp",
+      "bytes": 410322,
+      "hash": "sha256-1139936df1f5ff3c1848a0feedf82385b58896eb4133c99d253136cadc34b24b",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/s30-three-samples-r1.webp",
+      "bytes": 419902,
+      "hash": "sha256-2213e59abbceab5bc5c4b991b523088325c705db16b9834e3a7c859c83737425",
       "pack": "campaign-core",
       "category": "background",
       "criticality": "critical"
@@ -3227,22 +3363,6 @@
       "criticality": "critical"
     },
     {
-      "path": "/art/v100/story-r5/cuts/chiha-confession.webp",
-      "bytes": 962892,
-      "hash": "sha256-8c025bff25e87e0d5f4e71a1d0a84cde754c92891c89c49b24db613e919e44fc",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/story-r5/cuts/president-restrained-alive.webp",
-      "bytes": 281400,
-      "hash": "sha256-269a923c0c344ddbcb1070e00cb63ea71d3b66faeb86adb97714af2b97d9e173",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
       "path": "/art/v100/story-r5/cuts/prologue-door-crisis.webp",
       "bytes": 297116,
       "hash": "sha256-25990213d1251f9c4018d02070388eda0e006fdded830c625f3e5dd1bb3fa13f",
@@ -3264,126 +3384,6 @@
       "hash": "sha256-aeeeb2fa81f1b8063f6e8310e244ecfd2a24fb2bc85730ada34f7c5875e1fcc3",
       "pack": "campaign-core",
       "category": "object",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/story-r9/cuts/ending-chiha-baba-distance.webp",
-      "bytes": 313374,
-      "hash": "sha256-33d5961855f2e4e445aab8cedeb8c1be5243ea178040b34d69616a26e6801779",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/story-r9/cuts/prologue-extinguisher-escape.webp",
-      "bytes": 969994,
-      "hash": "sha256-9ad6e25610a1a0be51fa4ca9507c94f818ad7eee5f0976f1b4c1983c809d4081",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/story-r9/cuts/s01-nao-rescue.webp",
-      "bytes": 1210640,
-      "hash": "sha256-ae684ae099ea339497a899dedb86ca9cecb7ae6ad694a9a10785d15573a28e48",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/story-r9/cuts/s03-cold-retrieval.webp",
-      "bytes": 335386,
-      "hash": "sha256-583856a8921eced27a05a227f7d6e0ae4895e0040735f6cd7acf0d6ac989f866",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/story-r9/cuts/s04-monkey-shutter.webp",
-      "bytes": 353464,
-      "hash": "sha256-2b6e5c577e1b08b5ac686402369aa2fad7412ba993291ac280622cdb1a9dcdf2",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/story-r9/cuts/s09-transfer-disconnect.webp",
-      "bytes": 1057694,
-      "hash": "sha256-0620920717a200aa2b5bbf303a52e0f98e3abdbd94f13a7bd89161dc08d5d279",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/story-r9/cuts/s10-rescue-surveillance.webp",
-      "bytes": 991058,
-      "hash": "sha256-ff4e147999f3ff6c5193885d2761c0f95549a5131fda18e4cc6040fed9d33cf6",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/story-r9/cuts/s11-oxygen-rescue.webp",
-      "bytes": 1139376,
-      "hash": "sha256-872ab0c62d97039419feed4488da8c9b7019a91f99334bbf7b55372f5fee12db",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/story-r9/cuts/s17-chiha-baba-reunion.webp",
-      "bytes": 255426,
-      "hash": "sha256-d61deb19cb1ab3b6881d82edaf3d4010ef99aa3799b74efea467ff5e1da098e7",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/story-r9/cuts/s19-seven-second-crossing.webp",
-      "bytes": 486138,
-      "hash": "sha256-880490a98efc3ebd18bbf855a2a1da1b3d67929f8e7527bc9ad98942f0536555",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/story-r9/cuts/s22-zakimiya-holds-son.webp",
-      "bytes": 330890,
-      "hash": "sha256-27723b719dd9bc2516000b92ea4fd21b966948fd839d44918e740e5208ab1026",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/story-r9/cuts/s23-chiha-evidence-send.webp",
-      "bytes": 1055442,
-      "hash": "sha256-61fd61c6244fada85ad407f706d85d1ed1d56683e7492dea2fcfcdebffaf8687",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/story-r9/cuts/s27-takuya-conditioning.webp",
-      "bytes": 259526,
-      "hash": "sha256-16196b9675cfeb13245db56366bb20ddb092bcd60aac90f189af8f9ac27bf0b8",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/story-r9/cuts/s28-physical-stop.webp",
-      "bytes": 233424,
-      "hash": "sha256-50bb91af6d0ccd5f71c15081df062eca085d405d65faef72a605024845290d19",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/story-r9/cuts/s30-three-samples.webp",
-      "bytes": 292014,
-      "hash": "sha256-db69ffc042d9e5d893bc6c6622fba5599a6bbe206047c0b1beffd89946e23b59",
-      "pack": "campaign-core",
-      "category": "background",
       "criticality": "critical"
     },
     {

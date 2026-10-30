@@ -1,0 +1,26 @@
+{
+  "name": "chiha-confession-quality-r2",
+  "args": {
+    "referenced_image_paths": [
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\scenes\\chiha-confession-quality-r1.png",
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\identity\\kumaverson-master-r2.png"
+    ],
+    "transparent_background": false,
+    "prompt": "This is a precise revision of the EXISTING GENERATED GAME SCENE in reference 1. Keep the same character identities, ages, facial proportions, outfits, lighting and continuous gritty semi-realistic painterly game style. Do not beautify into strangers, substitute people, add people, add labels, flatten faces or turn into an anime drawing. One very wide 3:1 panoramic illustration, opaque background. Composition correction ONLY: the man standing BEHIND the others has his hair cut by the top edge. Pull camera back about 10 percent so all FOUR complete hair crowns and their hands fit, with 35–45 pixels of real room above the tallest head. Keep all existing faces, emotion and clothing unchanged; reference 2 is that standing man's existing generated model for his hair shape. Same Baba LEFT holding the card, same Chiha CENTER looking down, Kuma standing BEHIND with arms folded, Paisen RIGHT with both hands on the table. Maintain this truthful standing/seated depth and natural proportions. No new props or face redesign."
+  },
+  "stage": "candidate, not selected",
+  "primaryReferencePolicy": "Existing generated models are primary; original art/photos check identity drift.",
+  "generatedOriginal": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-20d2d512-1fe9-4382-8f23-210c6a943578.png",
+  "references": [
+    {
+      "path": "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\scenes\\chiha-confession-quality-r1.png",
+      "sha256": "69f754e8f26409815d9df6aae9a2dab61fdfa1831de7ff7e6215593d3d87ba75",
+      "bytes": 2462681
+    },
+    {
+      "path": "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\identity\\kumaverson-master-r2.png",
+      "sha256": "51a5acb5a77f53eac921b49a5adefd681218f9f44f64e70caaf416ed2b6ed501",
+      "bytes": 1857208
+    }
+  ]
+}
