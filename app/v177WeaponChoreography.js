@@ -12,6 +12,9 @@ const swingKinds=new Set(['scout','brute','guardian','gate-eater','red-panther-s
 const kinds=new Set(['babayaga',...swingKinds,...contactKinds]);
 const carryPlans=new WeakMap();
 const carryMotion={
+ // Paisen's far fist shares the leg-0 side. Counter-swing it against that
+ // leg, while the near free hand balances in the opposite direction.
+ brawler:{weapon:18,lift:4,roll:.028,free:28,phaseOffset:.5},
  'crazy-king':{weapon:5,lift:2,roll:.018,free:8},
  babayaga:{weapon:7,lift:2,roll:.025,free:14},
  'takuya-omega':{weapon:4,lift:2,roll:.012,free:10},
@@ -21,7 +24,7 @@ const carryMotion={
 function walkingCarry(kind,atlas,plan,carry,blend=1){
  const profile=carryMotion[kind],amount=(1-clamp(plan.paintLocomotion?.settle??1))*blend;
  if(!profile||amount<=0)return carry;
- const phase=(plan.paintLocomotion?.phase??plan.phase??0)*2*Math.PI;
+ const phase=((plan.paintLocomotion?.phase??plan.phase??0)+(profile.phaseOffset??0))*2*Math.PI;
  const sway=Math.sin(phase)*amount,lift=(1-Math.cos(phase*2))*amount;
  const waist=atlas.interpolationPivots?.spine??[240,250];
  const chest=rigid(waist,waist,profile.roll*sway);
@@ -171,7 +174,8 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
  if(!kinds.has(kind)||plan.resolvedJointPose||plan.liveStun||plan.turnedGetup)return plan;
  const attacking=Number.isFinite(plan.attackPhase),p=attacking?plan.attackPhase:0;
  const envelope=attacking?Math.min(ease(p/.08),ease((1-p)/.16)):0;
- if(!attacking&&!['crazy-king','babayaga','takuya-omega','kumaverson'].includes(kind))return plan;
+ if(!attacking&&!carryMotion[kind])return plan;
+ if(!attacking&&kind==='brawler'&&(plan.paintLocomotion?.settle??1)>=1)return plan;
  if(!attacking&&carryPlans.has(atlas))return{...plan,choreography:walkingCarry(kind,atlas,plan,carryPlans.get(atlas)),upperOffsetY:0};
  // Sequence commits at impact. Windup uses the upcoming sequence, while
  // active/recovery use the committed one, so the cut cannot change mid-swing.

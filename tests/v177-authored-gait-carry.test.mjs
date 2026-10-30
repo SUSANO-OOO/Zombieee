@@ -51,7 +51,7 @@ test('running actors entering in flight keep both feet moving, land at a stop, a
   }
 });
 test('walk carry reaches attack entry continuously and fades before the strike',()=>{
-  for(const kind of ['babayaga','kumaverson','crazy-king','takuya-omega']){
+  for(const kind of ['brawler','babayaga','kumaverson','crazy-king','takuya-omega']){
     const atlas=atlases[kind],base={phase:.125,paintLocomotion:{phase:.125,settle:0},attackPhase:null};
     const walk=v177WeaponChoreography(kind,atlas,base).choreography;
     const entry=v177WeaponChoreography(kind,atlas,{...base,attackPhase:0}).choreography;
@@ -66,7 +66,7 @@ test('walk carry reaches attack entry continuously and fades before the strike',
   }
 });
 test('walking carry moves both held and free wrists while all shoulder/elbow/grip attachments remain joined',()=>{
-  for(const kind of ['babayaga','kumaverson','crazy-king','takuya-omega']){
+  for(const kind of ['brawler','babayaga','kumaverson','crazy-king','takuya-omega']){
     const atlas=atlases[kind],poses=[];
     for(const phase of [.125,.375,.625,.875]){
       const runtime={moving:true,locomotionPhase:phase,locomotionSettle:0,direction:'right'};
@@ -89,8 +89,35 @@ test('walking carry moves both held and free wrists while all shoulder/elbow/gri
     }
     const runtime={moving:false,locomotionPhase:.25,locomotionSettle:1,direction:'right'};
     const idle=v177JointPose(kind,{requestedState:'idle'},runtime,{actor:{kind,animationPresentation:runtime}});
-    assert.equal(idle.choreography.walkingCarry,undefined,'standing carry remains unchanged');
+    assert.equal(idle.choreography?.walkingCarry,undefined,'standing carry remains unchanged');
+    if(kind==='brawler')assert.equal(idle.choreography,undefined,'Paisen keeps his original authored standing pose');
   }
+});
+
+test('Paisen near and far fists counterbalance each other at battlefield scale',()=>{
+  const kind='brawler',atlas=atlases[kind],hands=[];
+  for(const phase of [.125,.625]){
+    const runtime={moving:true,locomotionPhase:phase,locomotionSettle:0,direction:'right'};
+    const actor={id:1,kind,hp:100,x:300,y:300,animationPresentation:runtime},world={time:phase};
+    let plan=v177JointPose(kind,{requestedState:'move',clipProgress:phase},runtime,{grounded:true,actor,world});
+    plan=v105BipedFootPlan(kind,plan,{actor,world,width:100,frame:{anchorX:.5},direction:'right'});
+    const captured=v177CaptureJointPose(kind,plan);
+    hands.push(atlas.armConstraints.map(a=>point(captured.upper[a.effectorBone],a.effectorWrist??a.wrist)));
+  }
+  // The near arm is arm-0, paired anatomically with near leg-1. The far fist
+  // belongs to arm-1/leg-0. They must not advance together with the same leg.
+  assert.ok(hands[0][0][0]>hands[1][0][0],'near hand advances as the far hand retreats');
+  assert.ok(hands[0][1][0]<hands[1][1][0],'far hand counterbalances the near hand');
+  for(let i=0;i<2;i++)assert.ok(Math.abs(hands[0][i][0]-hands[1][i][0])*100/atlas.referenceFrame.width>3,'both fists move visibly at 100px actor width');
+});
+
+test('Paisen walk carry settles continuously into his unchanged authored idle',()=>{
+  const kind='brawler',atlas=atlases[kind],runtime={moving:false,locomotionPhase:.125,locomotionSettle:1,direction:'right'};
+  const rest=v177JointPose(kind,{requestedState:'idle'},runtime,{actor:{kind,animationPresentation:runtime}});
+  const almost=v177WeaponChoreography(kind,atlas,{...rest,paintLocomotion:{phase:.125,settle:1-1e-8}});
+  const a=v177CaptureJointPose(kind,rest),b=v177CaptureJointPose(kind,almost);
+  assert.deepEqual(a.lower,b.lower,'The drawn lower body is untouched by upper carry');
+  for(const bone of new Set(atlas.parts.filter(p=>p.upper).map(p=>p.bone)))for(let i=0;i<6;i++)assert.ok(Math.abs(a.upper[bone][i]-b.upper[bone][i])<.002,'no final standing snap: '+bone);
 });
 
 test('gait source identity ignores only checkout CRLF while rejecting authored changes',()=>{
