@@ -11,8 +11,8 @@
   },
   "producerApproval": "Creation and integration requested; final likeness and art acceptance remain open",
   "runtimeAssetCount": 5,
-  "logicalBytes": 159238,
-  "distinctBytes": 159238,
+  "logicalBytes": 159056,
+  "distinctBytes": 159056,
   "entries": [
     {
       "kind": "kumaverson",
@@ -103,15 +103,15 @@
     },
     {
       "kind": "tky",
-      "sourcePath": "assets/source/quality-20261028/identity/tky-head-r3.png",
-      "sourceSha256": "235f9a1048c9b41c7cf1b01d8ddf1ad45598091e994b7532ce08e5545afd5d19",
+      "sourcePath": "assets/source/quality-20261028/identity/tky-89-head-r1.png",
+      "sourceSha256": "ed9d9655b6c5093ce35870946bc1270f14259f34febb5ab61c68feac3addbbf4",
       "basePath": "/art/v100/joints/tky-r1.webp",
       "baseSha256": "59495022d95a45677605e04887d72e5359a63e3c5a94203315d4bfe4053aad22",
       "crop": {
-        "left": 231,
-        "top": 16,
-        "width": 947,
-        "height": 1093
+        "left": 225,
+        "top": 13,
+        "width": 973,
+        "height": 1095
       },
       "headSource": {
         "x": 2,
@@ -126,8 +126,8 @@
         "h": 72
       },
       "assetPath": "/art/v100/joints/tky-quality-head-r1.webp",
-      "bytes": 36770,
-      "sha256": "fae56b32679fe35d49be0face1968af7740e08d31aefe2ddc486f07341138fc2",
+      "bytes": 36588,
+      "sha256": "57c45e88810758a7bb1afc9f1eff3011142602069b540087fdc971ddda8b4716",
       "geometry": "Original pose matrices, neck attachment, tile rectangle and body paint retained; only head texture replaced."
     },
     {

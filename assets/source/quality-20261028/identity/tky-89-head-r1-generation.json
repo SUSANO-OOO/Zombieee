@@ -1,0 +1,12 @@
+{
+  "tool": "built-in image_gen",
+  "args": {
+    "transparent_background": true,
+    "referenced_image_paths": [
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\identity\\tky-head-r3.png",
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\identity\\tky-89-warm-r1.png"
+    ],
+    "prompt": "用途: identity-preserve / 承認済みTKYの戦闘用HEAD ONLYスプライト。\n画像1は頭の向きと切り取りのテンプレートだけ。画像2の、承認済み89入り黒狐の半面を付けたTKYの顔と髪を、そのまま画像1のような『画面右を向く斜め横顔』の頭部として作ってください。顔・肌・スマートに整えた骨格・髪型・仮面は画像2と同じ本人で、端正で清潔な韓流俳優風の印象。\n画像2と同じ額から両目元まで覆う黒狐の硬い半面、額の左8・右9の朱の紋と全ての赤い曲線を正確に保ち、顔の角度に自然に沿わせる。89の数字順序を変えず、鏡文字・88・98にしない。本人の目は開口から見える、鼻先・口・顎は露出。狐耳・猫耳・動物耳・角・房・頭飾りは付けない。元の人間の耳とスタッドは自然に。\n頭の向き・大きさの比率・頭の傾き・短い首の切り口は画像1のテンプレートに合わせ、既存の戦闘身体へ自然につなぐ。元画像2の大きいコートの襟や肩・胸は描かず、頭全体と短い首だけ。髪の全頭頂を収める。頭を動物やヘルメットに変えず、写真寄り＋少しイラストの同じ高品質ゲームアート。完全に透明alpha、余白あり、一つの頭部だけ、背景・霞・文字ラベル・グリッドなし。"
+  },
+  "scope": "approved89 mask head; screen-right orientation and neck template from r3; no whole-product acceptance"
+}

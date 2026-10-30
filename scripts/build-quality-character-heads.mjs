@@ -15,7 +15,7 @@ const reviewOut=process.env.QUALITY_HEAD_REVIEW_OUT??'output/quality-20261028/he
 await mkdir(reviewOut,{recursive:true});
 async function emit(file,bytes){if(check)assert.deepEqual(await readFile(file),bytes,file);else await writeFile(file,bytes);}
 for(const [kind,atlas] of [['kumaverson',V177_MELEE_JOINT_ATLASES.kumaverson],['babayaga',V177_FIREARM_JOINT_ATLASES.babayaga],['brawler',V177_PAISEN_PHOTO_JOINT_ATLASES.brawler],['tky',V177_NEWCOMER_JOINT_ATLASES.tky],['zakimiya',V177_NEWCOMER_JOINT_ATLASES.zakimiya]]) {
- const sourcePath=`${output}/${kind}-head-${kind==='tky'?'r3':'r1'}.png`,source=await readFile(sourcePath),base=await readFile('public'+atlas.path);
+ const sourcePath=kind==='tky'?`${output}/tky-89-head-r1.png`:`${output}/${kind}-head-r1.png`,source=await readFile(sourcePath),base=await readFile('public'+atlas.path);
  const head=atlas.parts.find(p=>p.bone==='head');assert.ok(head);
  const {data,info}=await sharp(source).ensureAlpha().raw().toBuffer({resolveWithObject:true});
  // Find visible content for packing only. Preserve generated color and alpha.

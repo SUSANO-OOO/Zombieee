@@ -10,7 +10,7 @@ const check = process.argv.includes('--check');
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 for(const {kind, sourceName, masterHash, rightGutter=0, masterFile=null, sheet=true} of [
   {kind:'zakimiya',sourceName:'zakimiya-canonical-expressions-r1.png',masterHash:'78405e4610f6d8d71c0e094bcf2cf125522ca9b869db2146e39b9e6122ba88d7',rightGutter:36},
-  {kind:'tky',sourceName:'tky-warm-r10.png',masterHash:'52b444b935443afffaf66f818182adff59e4cc4b5c51c1f095fcd67e463662d0',masterFile:'assets/source/quality-20261028/identity/tky-warm-r10.png',sheet:false},
+  {kind:'tky',sourceName:'tky-89-warm-r1.png',masterHash:'b49532ac389340e952707d6f102933c3f7b716aa6743ba0778be3b313377325e',masterFile:'assets/source/quality-20261028/identity/tky-89-warm-r1.png',sheet:false},
   {kind:'paisen',sourceName:'paisen-photo-master-r7.png',masterHash:'c769eb81a096e9fb1747df0c4ab93452b2ad844fb37e21707d5ef51aec76de66',masterFile:'assets/source/quality-20261028/identity/paisen-photo-master-r7.png',sheet:false},
 ]) {
 const sourcePath = `assets/source/quality-20261028/identity/${sourceName}`;
@@ -33,7 +33,7 @@ for (const [index, expression] of expressions.entries()) {
   // Remove only that packing spill, keeping the subject's original coordinates.
   const gutter = index % 2 ? rightGutter : 0;
   const overridePath = kind==='paisen' ? (expression==='warm' ? sourcePath : `assets/source/quality-20261028/identity/paisen-${expression}-r7.png`)
-    : kind==='tky' ? `assets/source/quality-20261028/identity/tky-${expression}-r10.png` : null;
+    : kind==='tky' ? `assets/source/quality-20261028/identity/tky-89-${expression}-r1.png` : null;
   const isolated = overridePath ? await readFile(path.join(root,overridePath)) : await sharp(source).extract({left: index % 2 * width / 2 + gutter,
     top: Math.floor(index / 2) * height / 2, width: width / 2 - gutter, height: height / 2})
     .extend({left:gutter,right:0,top:0,bottom:0,background:'#00000000'}).png().toBuffer();
@@ -56,7 +56,7 @@ for (const [index, expression] of expressions.entries()) {
 const report = {generator: 'scripts/build-quality-canonical-portraits.mjs',
   master: {path: masterPath, sha256: masterHash}, source: {path: sourcePath, sha256: sha(source), width, height},
   masterRole: kind==='paisen' ? 'Directly generated from recovered original three photographs; see paisen-photo-r7-generation.json. Supersedes rejected r5/r6 candidates.'
-    : kind==='tky' ? 'Photo identity plus refined handsome Korean-drama grooming; see tky-photo-r10-generation.json' : 'Approved identity and costume',
+    : kind==='tky' ? 'Producer-approved photo identity with smarter face, Korean actor styling and forehead fox half-mask incorporating89; see tky-89-r1-generation.json' : 'Approved identity and costume',
   expressions, additionalSources, outputs,
   runtimeAssetCount: outputs.length,
   logicalBytes: outputs.reduce((sum, output) => sum + output.bytes, 0),
