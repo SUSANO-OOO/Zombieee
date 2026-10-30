@@ -15,7 +15,7 @@ import {V177_RETIRED_JOINT_SOURCE_ASSETS,V177_JOINT_ASSET_ADDITIONS} from '../sc
 const kinds=['brute','brawler','crazy-king','kumaverson'];
 const transform=(m,[x,y])=>[m[0]*x+m[2]*y+m[4],m[1]*x+m[3]*y+m[5]],distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
-const headRevisions=JSON.parse(await readFile('assets/source/quality-20261028/identity/head-runtime-provenance.json')).entries;
+const headRevisions=[...JSON.parse(await readFile('assets/source/quality-20261028/identity/head-runtime-provenance.json')).entries,...JSON.parse(await readFile('assets/source/quality-20261028/identity/battle-heads-r3/runtime-provenance.json')).entries];
 const pixels=async url=>sharp(await readFile(url)).ensureAlpha().raw().toBuffer();
 function inside([x,y],polygon){
  let hit=false;for(let i=0,j=polygon.length-1;i<polygon.length;j=i++){

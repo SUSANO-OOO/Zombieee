@@ -7,6 +7,7 @@ import sharp from 'sharp';
 import ts from 'typescript';
 import {MANUAL_ABILITY_REGISTRY,createManualAbilityRuntime,beginManualAbility,advanceManualAbility} from '../app/manualAbilities.js';
 import {V177_JOINT_ATLASES,v177JointPose,v177RangerFootPlan,drawV177JointPose,v177RenderedWeightedLowerReceipt,v177RenderedJointWeaponSocket,v177JointCycleDistance} from '../app/v177JointPresentation.js';
+import {V177_JOINT_ATLASES as authoredAtlases} from '../app/v177JointData.js';
 import {createV177RangerLowerPose,v177RangerLowerPose} from '../app/v177RangerLowerMotion.js';
 import {createV177RangerLowerPainter,paintV177RangerLower,getV177RangerLowerPaintSnapshot} from '../app/v177RangerLowerPaint.js';
 const atlas=V177_JOINT_ATLASES.ranger,rig=atlas.lowerRig,sha=b=>createHash('sha256').update(b).digest('hex');
@@ -324,14 +325,16 @@ test('Ranger cloth never repairs a collapsed or crossed quad into a false succes
     if(entry.overlap)assert.ok(receipt.duplicateWithinPart>0);
   }
 });
-test('append-only Ranger atlas retains every r2 RGBA byte, upper rig and full original five lower crops',async()=>{
+test('the authored append-only Ranger atlas retains every r2 RGBA byte and crop; runtime derivatives retain its rig',async()=>{
   const oldBytes=await readFile('public/art/v100/joints/ranger-r2.webp');assert.equal(sha(oldBytes),'08440e6c182f562e3fda394a9f12b5e21ca0e9abfa95da104d1dc397f3a412db');
-  const old=await sharp(oldBytes).ensureAlpha().raw().toBuffer();assert.ok(texture.data.subarray(0,old.length).equals(old));
+  const authoredTexture=await sharp(await readFile('public'+authoredAtlases.ranger.path)).ensureAlpha().raw().toBuffer({resolveWithObject:true});
+  assert.deepEqual({...atlas,path:authoredAtlases.ranger.path},authoredAtlases.ranger);
+  const old=await sharp(oldBytes).ensureAlpha().raw().toBuffer();assert.ok(authoredTexture.data.subarray(0,old.length).equals(old));
   assert.equal(sha(JSON.stringify(atlas.upperRig)),'23a2419c59a55c90e7528840fcf1d1f6d97167bfbfad622858416404c8f5d51a');
   assert.equal(atlas.frames.length,152);assert.equal(atlas.upperRig.parts.length,7);assert.ok(atlas.decodedBytes<=6*1024*1024);
   for(const part of rig.parts){const p=JSON.parse(await readFile(source+'parts.json')).parts.find(p=>p.name===part.name),raw=await sharp(await readFile(source+p.file)).ensureAlpha().raw().toBuffer();
     for(let y=0;y<part.source.h;y++){const from=((part.destination.y+y)*480+part.destination.x)*4,to=((part.source.y+y)*atlas.decodedWidth+part.source.x)*4;
-      assert.ok(raw.subarray(from,from+part.source.w*4).equals(texture.data.subarray(to,to+part.source.w*4)),part.name);}}
+      assert.ok(raw.subarray(from,from+part.source.w*4).equals(authoredTexture.data.subarray(to,to+part.source.w*4)),part.name);}}
   for(const leg of rig.legs){assert.equal(leg.weights.length,65);assert.equal(leg.triangles.length,288);assert.equal(leg.sourcePositions.length,130);}
 });
 test('the original lower remains reproducible as a legacy control with its original feet and far leg',()=>{

@@ -9,7 +9,7 @@ const baseline=historical(delta.base),candidate=JSON.parse(fs.readFileSync('publ
 const releases=[['0.9.9.5','55d796cc577d1d9f903a4d2c6b4382196511db27'],['1.0.1','634f8de4b0fb15df902a7dd5983ea94237cfea9d'],['1.0.2','cd246a3d8e93b69d8cb6b370d40f28924a0d86b6'],['1.0.3','99f9c193ab1e35531db39225c839138cdb1c33cd']];
 const inputs=releases.map(([oldVersion,sha])=>({oldVersion,oldManifest:historical(sha),baseline,candidate,delta}));
 for(const input of inputs)test('installed '+input.oldVersion+' composes its frozen source repairs with the reviewed quality delta',()=>{
- const result=assertQualityInstalledAssetTransition(input);assert.equal(result.baselineAssets,808);assert.equal(result.candidateAssets,807);assert.equal(result.qualityAdded,151);assert.equal(result.qualityRetired,152);
+ const result=assertQualityInstalledAssetTransition(input);assert.equal(result.baselineAssets,808);assert.equal(result.candidateAssets,807);assert.equal(result.qualityAdded,162);assert.equal(result.qualityRetired,163);
 });
 
 test('unapproved paths, transport changes, aliases, missing content and altered historical sources fail closed',()=>{

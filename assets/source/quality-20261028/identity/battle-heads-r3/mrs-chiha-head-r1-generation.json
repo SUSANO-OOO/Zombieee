@@ -1,0 +1,12 @@
+{
+  "tool": "OpenAI built-in image_gen",
+  "args": {
+    "transparent_background": true,
+    "referenced_image_paths": [
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\output\\quality-20261028\\model-heads-r2\\mrs-chiha-head.png"
+    ],
+    "prompt": "ゲーム『西新世紀末物語』の既存2D関節アニメーションへ取り付けるHEAD ONLY素材です。添付は、既に採用されている生成モデルそのものから切り出した、今回唯一の人物・動物identity基準です。別人化、美形化の再解釈、年齢変更、アニメ顔化をせず、この顔・髪・色・描画タッチをそのまま保ってください。画面右へ進む身体へ自然につながる、右向きの斜め横顔（約25〜35度、両目の特徴が分かる程度）。頭頂、髪、耳、顎を全て収め、周囲に透明余白。頭全体とごく短い首の切り口だけを描き、肩・胸・衣服・襟・武器・別の身体片・背景の茶色い霞は完全に除去。頭の周囲は本当の透明alpha、色付きハローや四角い背景なし。正面顔を身体の横向きに無理に貼り付けた形にしない。一つの頭だけ、文字・枠・比較パネルなし。\nチハ。黒髪のまとめ髪と細い金のヘアバンド、細い後れ毛、同じ柔らかな目元と顔の輪郭、同じ成人女性を維持。落ち着いた自然な口元。襟を一切含めない。"
+  },
+  "generatedOriginal": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-b134cbd3-bf70-45a2-b120-8ac33346189c.png",
+  "primaryReference": "Selected existing generated model crop; no original photograph or other identity reference."
+}

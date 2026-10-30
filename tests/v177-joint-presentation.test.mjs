@@ -9,7 +9,7 @@ import {createCombatAnimationRuntime,advanceCombatAnimationRuntime,sampleAnimati
 import {requiredBattleAssetPlan} from '../app/battleAssetPlan.js';
 import {CAMPAIGN_STAGE_IDS} from '../app/campaign.js';
 import {spriteFrameFor} from '../app/spriteManifest.js';
-import {V177_JOINT_ASSET_ADDITIONS} from '../scripts/v177-joint-asset-contract.mjs';
+import {V177_JOINT_ASSET_ADDITIONS} from '../scripts/v177-runtime-joint-asset-contract.mjs';
 import {traceRangerPose,rangerPoint} from './helpers/v177-ranger-render.mjs';
 
 const dir=new URL('../assets/source/v100/joints/ranger-r1/',import.meta.url);

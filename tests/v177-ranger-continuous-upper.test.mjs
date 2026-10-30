@@ -5,6 +5,7 @@ import {createHash} from 'node:crypto';
 import {gunzipSync} from 'node:zlib';
 import sharp from 'sharp';
 import {V177_JOINT_ATLASES,v177JointPose,v177CaptureJointPose} from '../app/v177JointPresentation.js';
+import {V177_JOINT_ATLASES as authoredAtlases} from '../app/v177JointData.js';
 import {createCombatAnimationRuntime,advanceCombatAnimationRuntime} from '../app/combatPresentation.js';
 import {buildV177RangerUpper} from '../scripts/build-v177-ranger-upper.mjs';
 import {traceRangerPose,rangerPoint as point} from './helpers/v177-ranger-render.mjs';
@@ -34,9 +35,10 @@ function paintDifference(a,b) {
   return error;
 }
 
-test('all original 152 decoded cells, including weighted lower120, remain byte-exact with stable coordinates',async()=>{
+test('the authored atlas retains all original 152 decoded cells byte-exact; runtime head derivatives retain its geometry',async()=>{
   const old=await sharp(await readFile(new URL('../public/art/v100/joints/ranger-r1.webp',import.meta.url))).ensureAlpha().raw().toBuffer();
-  const bytes=await readFile(new URL('../public'+atlas.path,import.meta.url));
+  const bytes=await readFile(new URL('../public'+authoredAtlases.ranger.path,import.meta.url));
+  assert.deepEqual({...atlas,path:authoredAtlases.ranger.path},authoredAtlases.ranger);
   const packed=await sharp(bytes).ensureAlpha().raw().toBuffer({resolveWithObject:true});
   assert.ok(packed.data.subarray(0,old.length).equals(old),'every original RGBA byte, even under alpha0, is retained');
   const keys=['key','width','height','frameCount','settleLevels','cycleDistance','frames','pelvisOffsets','muzzles','lowerCount'];

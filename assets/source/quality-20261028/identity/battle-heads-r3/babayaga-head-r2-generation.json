@@ -1,0 +1,12 @@
+{
+  "tool": "OpenAI built-in image_gen",
+  "args": {
+    "transparent_background": true,
+    "referenced_image_paths": [
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\output\\quality-20261028\\model-heads-r2\\babayaga-head.png"
+    ],
+    "prompt": "添付のババヤガは、このゲームですでに選ばれている生成モデルそのものから切り出した本人性の唯一の基準です。この同じ人物の顔をそのまま、ゲーム戦闘用の頭部素材へ仕上げてください。いまの顔と髪の角度、目元、眉、鼻筋と鼻先の形、頬の厚み、口元の小さな笑み、顎の輪郭、同じ年齢感、髪型、肌の特徴を保ち、別人化や追加の美形化・韓流顔化・小顔化・若返りはしない。添付にある右寄りの斜め顔を維持し、鼻先は画面右、見える耳は画面左側。『どこかのイケメン』に描き直さず、モデルのこの顔のまま。\n変更は頭部と短い首への切り出しだけ。薄いシャツ、襟、サスペンダー、肩と胸、背景の茶色い霞を完全に取り除き、頭全体とごく短い自然な首の切り口だけにする。髪の一番高い毛先、両耳の見える部分、顎はすべて入れる。カメラを引いて頭をキャンバス中央70%以内に収め、四辺に15%以上の完全透明な余白。頭頂や毛先を切らない。本当の透明alpha、色付きの四角い背景やハローなし。一つの頭だけ、文字・枠・比較パネル・衣装・武器なし。モデルと同じ写実感に控えめなイラストの質感。"
+  },
+  "generatedOriginal": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-098ce303-8e91-4590-a71c-1bdd9787469f.png",
+  "scope": "Correct the remaining drift in the previously integrated Babayaga head. The selected existing generated model is the sole identity input, not an old idealized profile or another person."
+}

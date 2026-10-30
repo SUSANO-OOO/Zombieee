@@ -20,7 +20,7 @@ test('boarding and cargo anchors match the current canonical actions; vehicle me
 
 test('authored rescue cut overrides the vehicle backdrop and returns to it on the next page',()=>{
  assert.equal(present('s01:post',269).backgroundPath,art['rescue-vehicle'].path);
- assert.match(present('s01:post',271).backgroundPath,/s01-nao-rescue\.webp$/u);
+ assert.equal(present('s01:post',271).backgroundPath,'/art/v100/quality-20261028/scenes/s01-nao-rescue-r1.webp');
  assert.equal(present('s01:post',273).backgroundPath,art['rescue-vehicle'].path);
  assert.equal(present('s26:post',2084).backgroundPath,art['refrigerated-cargo'].path);
  assert.equal(present('s26:post',2100).backgroundPath,null);

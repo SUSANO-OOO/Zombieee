@@ -1,0 +1,12 @@
+{
+  "tool": "OpenAI built-in image_gen",
+  "args": {
+    "transparent_background": true,
+    "referenced_image_paths": [
+      "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-b87c3d62-f745-4c98-8fd3-c8d41570da4b.png"
+    ],
+    "prompt": "このミズチの完成済み頭部の局所修正だけ。顔の同一性、右向きの顔と視線、目鼻立ち、顎、ピアス、ほくろ、髪型、編み込み、金レンズのゴーグル、短い首の切り口、構図と透明余白を全て保つ。修正は一つだけ：こめかみの編み込み根元に誤って入った白髪・銀色のメッシュを取り除き、その束を周りと同じ自然な黒髪へ戻す。黒髪の細い自然な光沢は残してよいが、白い帯・白髪・灰色の染め束は作らない。顔や頭の角度を変えない。襟・肩・身体・背景・文字は入れない。本当の透明alpha。"
+  },
+  "generatedOriginal": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-51600454-9724-48e2-9125-82d8e7196eb3.png",
+  "scope": "Correction of clipped tips or unintended hair color; existing generated-model identity and current angle retained."
+}

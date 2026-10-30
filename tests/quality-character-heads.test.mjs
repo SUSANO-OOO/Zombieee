@@ -4,12 +4,15 @@ import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import sharp from 'sharp';
 import {V177_JOINT_ATLASES} from '../app/v177JointPresentation.js';
-import {V177_PAISEN_PHOTO_JOINT_ATLASES} from '../app/v177PaisenPhotoJointData.js';
-import {V177_NEWCOMER_JOINT_ATLASES} from '../app/v177NewcomerJointData.js';
-import {V177_MELEE_JOINT_ATLASES} from '../app/v177MeleeJointData.js';
-import {V177_FIREARM_JOINT_ATLASES} from '../app/v177FirearmJointData.js';
-const bases={brawler:V177_PAISEN_PHOTO_JOINT_ATLASES.brawler,tky:V177_NEWCOMER_JOINT_ATLASES.tky,zakimiya:V177_NEWCOMER_JOINT_ATLASES.zakimiya,kumaverson:V177_MELEE_JOINT_ATLASES.kumaverson,babayaga:V177_FIREARM_JOINT_ATLASES.babayaga};
-const provenance=JSON.parse(await readFile('assets/source/quality-20261028/identity/head-runtime-provenance.json','utf8'));
+import {QUALITY_CHARACTER_BASE_ATLASES as bases} from '../app/qualityCharacterAtlases.js';
+import {CAMPAIGN_UNITS} from '../app/campaign.js';
+const legacy=JSON.parse(await readFile('assets/source/quality-20261028/identity/head-runtime-provenance.json','utf8'));
+const completed=JSON.parse(await readFile('assets/source/quality-20261028/identity/battle-heads-r3/runtime-provenance.json','utf8'));
+const provenance={entries:[...legacy.entries.filter(row=>!completed.entries.some(next=>next.kind===row.kind)),...completed.entries]};
+test('normal battle-head assignments cover the complete playable roster without mixing character kinds',()=>{
+ assert.deepEqual([...new Set(CAMPAIGN_UNITS.map(unit=>unit.combatKind))].sort(),Object.keys(bases).sort());
+ assert.equal(provenance.entries.length,16);assert.equal(new Set(provenance.entries.map(row=>row.kind)).size,16);
+});
 const manifest=JSON.parse(await readFile('public/asset-manifest.json','utf8'));
 for(const [kind,base] of Object.entries(bases))test(kind+' battle identity replaces the head paint, preserving body, weapon and all motion geometry',async()=>{
  const current=V177_JOINT_ATLASES[kind],entry=provenance.entries.find(e=>e.kind===kind);
@@ -19,7 +22,7 @@ for(const [kind,base] of Object.entries(bases))test(kind+' battle identity repla
  assert.ok(manifest.assets.some(a=>a.path===current.path),'runtime asset is distributable');
  const a=await sharp(bytes).ensureAlpha().raw().toBuffer({resolveWithObject:true}),b=await sharp('public'+base.path).ensureAlpha().raw().toBuffer({resolveWithObject:true});
  assert.equal(a.info.width,b.info.width);assert.equal(a.info.height,b.info.height);
- const head=base.parts.find(p=>p.bone==='head').source;let changedHeadPixels=0;
+ const head=(base.parts??base.upperRig.parts).find(p=>p.bone==='head').source;let changedHeadPixels=0;
  for(let y=0;y<a.info.height;y++)for(let x=0;x<a.info.width;x++){
   const i=(y*a.info.width+x)*4,inside=x>=head.x&&x<head.x+head.w&&y>=head.y&&y<head.y+head.h;
   if(inside){if(!a.data.subarray(i,i+4).equals(b.data.subarray(i,i+4)))changedHeadPixels++;continue;}
