@@ -10,7 +10,7 @@ const check = process.argv.includes('--check');
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 for(const {kind, sourceName, masterHash, rightGutter=0, masterFile=null, sheet=true} of [
   {kind:'zakimiya',sourceName:'zakimiya-canonical-expressions-r1.png',masterHash:'78405e4610f6d8d71c0e094bcf2cf125522ca9b869db2146e39b9e6122ba88d7',rightGutter:36},
-  {kind:'tky',sourceName:'tky-photo-expressions-r7.png',masterHash:'6897a7406bcb6fc36b3e376f0f6db8c9240c83641e71e013a6252458531917c8',rightGutter:24},
+  {kind:'tky',sourceName:'tky-warm-r9.png',masterHash:'6af684cca28a24c937fb8c4aa59e276326cddc4d355a367c8bee1eddb2591ea8',masterFile:'assets/source/quality-20261028/identity/tky-warm-r9.png',sheet:false},
   {kind:'paisen',sourceName:'paisen-photo-master-r7.png',masterHash:'c769eb81a096e9fb1747df0c4ab93452b2ad844fb37e21707d5ef51aec76de66',masterFile:'assets/source/quality-20261028/identity/paisen-photo-master-r7.png',sheet:false},
 ]) {
 const sourcePath = `assets/source/quality-20261028/identity/${sourceName}`;
@@ -33,7 +33,7 @@ for (const [index, expression] of expressions.entries()) {
   // Remove only that packing spill, keeping the subject's original coordinates.
   const gutter = index % 2 ? rightGutter : 0;
   const overridePath = kind==='paisen' ? (expression==='warm' ? sourcePath : `assets/source/quality-20261028/identity/paisen-${expression}-r7.png`)
-    : kind==='tky' ? `assets/source/quality-20261028/identity/tky-${expression}-r8.png` : null;
+    : kind==='tky' ? `assets/source/quality-20261028/identity/tky-${expression}-r9.png` : null;
   const isolated = overridePath ? await readFile(path.join(root,overridePath)) : await sharp(source).extract({left: index % 2 * width / 2 + gutter,
     top: Math.floor(index / 2) * height / 2, width: width / 2 - gutter, height: height / 2})
     .extend({left:gutter,right:0,top:0,bottom:0,background:'#00000000'}).png().toBuffer();
@@ -56,7 +56,7 @@ for (const [index, expression] of expressions.entries()) {
 const report = {generator: 'scripts/build-quality-canonical-portraits.mjs',
   master: {path: masterPath, sha256: masterHash}, source: {path: sourcePath, sha256: sha(source), width, height},
   masterRole: kind==='paisen' ? 'Directly generated from recovered original three photographs; see paisen-photo-r7-generation.json. Supersedes rejected r5/r6 candidates.'
-    : kind==='tky' ? 'Approved costume; face follows Producer photos in tky-generation.json' : 'Approved identity and costume',
+    : kind==='tky' ? 'Costume from r8, facial proportions corrected from original Producer photos; see tky-photo-r9-generation.json' : 'Approved identity and costume',
   expressions, additionalSources, outputs,
   runtimeAssetCount: outputs.length,
   logicalBytes: outputs.reduce((sum, output) => sum + output.bytes, 0),

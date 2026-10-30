@@ -27,7 +27,7 @@ try{
   await page.getByRole('button',{name:'戦闘へ',exact:true}).click();await page.waitForFunction(()=>window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().running&&document.documentElement.dataset.assetLoadState==='ready');
   const seen=new Set(),deployed=new Set(),abilities=new Set(),deadline=Date.now()+105000;let resized=false;
   while(Date.now()<deadline){
-   const s=await page.evaluate(()=>{const s=window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();if(!s)return null;return{time:s.time,running:s.running,fistWave:s.fistWave,fighters:s.fighters.filter(f=>['brawler','tky','zakimiya'].includes(f.kind)).map(f=>({id:f.id,kind:f.kind,hp:f.hp,x:f.x,y:f.y,state:f.renderAudit?.requestedState,lifecycleState:f.animationPresentation.state,manual:f.manualAbility,render:f.renderAudit}))};});
+   const s=await page.evaluate(()=>{const s=window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();if(!s)return null;return{time:s.time,running:s.running,fistWave:s.fistWave,enemies:s.fighters.filter(f=>f.side!=='human'&&f.hp>0&&f.combatReady&&!f.contained).map(f=>({id:f.id,x:f.x,y:f.y,hp:f.hp})),fighters:s.fighters.filter(f=>['brawler','tky','zakimiya'].includes(f.kind)).map(f=>({id:f.id,kind:f.kind,hp:f.hp,x:f.x,y:f.y,state:f.renderAudit?.requestedState,lifecycleState:f.animationPresentation.state,manual:f.manualAbility,render:f.renderAudit}))};});
    if(!s)break;
    report.fistWave=s.fistWave;
    report.fistWaveReceipts??=[];
@@ -37,7 +37,7 @@ try{
    }
    for(const f of s.fighters){deployed.add(f.kind);if(f.hp<=0||!f.render?.assetReady)continue;const key=f.kind+':'+f.state;const row={time:s.time,...f};report.rows.push(row);assert.equal(f.render.jointDrawSucceeded,true,f.kind+' articulated draw');assert.equal(f.render.jointAtlasPath,'/art/v100/joints/'+f.kind+'-quality-head-r1.webp');if(!seen.has(key)){seen.add(key);await page.screenshot({path:path.join(out,`${resized?'small':'large'}-${f.kind}-${f.state}.png`)});}}
    for(const kind of kinds)if(!deployed.has(kind)&&await nativeBattleTap(page,page.locator(`button.unit-card[data-kind="${kind}"]`).first()))report.inputs.push({time:s.time,action:'deploy',kind});
-   for(const f of s.fighters)if(f.hp>0&&!abilities.has(f.kind)&&await nativeBattleTap(page,page.locator(`button[data-fighter-id="${f.id}"][data-ability-kind]`).first())){abilities.add(f.kind);report.inputs.push({time:s.time,action:'ability',kind:f.kind});}
+   for(const f of s.fighters){const inReach=s.enemies.filter(e=>e.x>=f.x&&Math.hypot(e.x-f.x,e.y-f.y)<=80);if(f.kind==='brawler'&&inReach.length===0)continue;if(f.hp>0&&!abilities.has(f.kind)&&await nativeBattleTap(page,page.locator(`button[data-fighter-id="${f.id}"][data-ability-kind]`).first())){abilities.add(f.kind);report.inputs.push({time:s.time,action:'ability',kind:f.kind,nearbyTargets:inReach});}}
    const attacked=kinds.every(k=>['active','recovery'].some(state=>seen.has(k+':'+state)));
    if(attacked&&abilities.size===3&&!resized){await page.screenshot({path:path.join(out,'trio-1280x720.png')});await page.setViewportSize({width:844,height:340});resized=true;}
    if(resized&&s.time>45){await page.screenshot({path:path.join(out,'trio-844x340.png')});break;}

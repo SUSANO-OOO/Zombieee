@@ -21,7 +21,7 @@ function assertDelta(next){
 test('quality candidate contains exactly the reviewed art and firearm delta while retaining unrelated payloads',async()=>{
   assertDelta(candidate);
   assert.equal(contract.added.length,104);assert.equal(contract.retired.length,108);
-  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),13615383);
+  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),13563175);
   for(const row of contract.added){
     const bytes=await readFile(new URL('../public'+(row.sourcePath??row.path),import.meta.url));
     assert.equal(bytes.length,row.bytes,row.path);

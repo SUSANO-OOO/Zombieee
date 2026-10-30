@@ -11,10 +11,11 @@ const check=process.argv.includes('--check');
 const hash=b=>createHash('sha256').update(b).digest('hex');
 const output='assets/source/quality-20261028/identity';
 const entries=[];
-await mkdir('output/quality-20261028/head-adoption',{recursive:true});
+const reviewOut=process.env.QUALITY_HEAD_REVIEW_OUT??'output/quality-20261028/head-adoption';
+await mkdir(reviewOut,{recursive:true});
 async function emit(file,bytes){if(check)assert.deepEqual(await readFile(file),bytes,file);else await writeFile(file,bytes);}
 for(const [kind,atlas] of [['kumaverson',V177_MELEE_JOINT_ATLASES.kumaverson],['babayaga',V177_FIREARM_JOINT_ATLASES.babayaga],['brawler',V177_PAISEN_PHOTO_JOINT_ATLASES.brawler],['tky',V177_NEWCOMER_JOINT_ATLASES.tky],['zakimiya',V177_NEWCOMER_JOINT_ATLASES.zakimiya]]) {
- const sourcePath=`${output}/${kind}-head-r1.png`,source=await readFile(sourcePath),base=await readFile('public'+atlas.path);
+ const sourcePath=`${output}/${kind}-head-${kind==='tky'?'r2':'r1'}.png`,source=await readFile(sourcePath),base=await readFile('public'+atlas.path);
  const head=atlas.parts.find(p=>p.bone==='head');assert.ok(head);
  const {data,info}=await sharp(source).ensureAlpha().raw().toBuffer({resolveWithObject:true});
  // Find visible content for packing only. Preserve generated color and alpha.
@@ -45,7 +46,7 @@ for(const [kind,atlas] of [['kumaverson',V177_MELEE_JOINT_ATLASES.kumaverson],['
  for(const [version,texture] of [['before',base],['after',bytes]]) {
   const layers=[];
   for(const part of atlas.parts){const r=part.source,d=part.destination;layers.push({input:await sharp(texture).extract({left:r.x,top:r.y,width:r.w,height:r.h}).resize(d.w,d.h).png().toBuffer(),left:d.x,top:d.y});}
-  await sharp({create:{width:atlas.width,height:atlas.height,channels:4,background:'#29313a'}}).composite(layers).png().toFile(`output/quality-20261028/head-adoption/${kind}-${version}-rest.png`);
+  await sharp({create:{width:atlas.width,height:atlas.height,channels:4,background:'#29313a'}}).composite(layers).png().toFile(`${reviewOut}/${kind}-${version}-rest.png`);
  }
 }
 await emit(`${output}/head-runtime-provenance.json`,Buffer.from(JSON.stringify({generator:'scripts/build-quality-character-heads.mjs',creator:'OpenAI built-in image_gen under Producer direction; deterministic atlas packing by this script',source:'Producer-provided photographs for brawler, tky, babayaga and kumaverson; project canonical v090 identity for zakimiya. Private photos are not copied into Git or public.',license:'Generated project derivative; no third-party stock license. Formal rights review remains open before final asset adoption.',permissions:{modification:'Producer requested',inGameRedistribution:'Producer requested playable game candidate',commercialUse:'Not separately reviewed in this change',referencePhotoRedistribution:false},producerApproval:'Creation and integration requested; final likeness and art acceptance remain open',runtimeAssetCount:entries.length,logicalBytes:entries.reduce((n,e)=>n+e.bytes,0),distinctBytes:entries.reduce((n,e)=>n+e.bytes,0),entries,scope:'Shared battle head texture candidate. Fallback raster sheets, scene paintings, credits and whole-cast acceptance remain open. Numeric likeness percentage not asserted.'},null,2)+'\n'));

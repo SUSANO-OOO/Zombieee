@@ -8,7 +8,7 @@ import {createV100BattleResult} from '../app/v100Transactions.js';
 import {V100_STORY_SCRIPT_VERSION,V100_STORY_EVENTS} from '../app/v100StoryEvents.js';
 import {v100StoryExpressionFor} from '../app/v100StoryDirection.js';
 import {v100EventPresentationFor} from '../app/v100EventPresentation.js';
-import {pwaBrowserType} from './pwa-browser-runtime.mjs';
+import {chromium,webkit} from 'playwright';
 import {dismissInstallOffer} from './pwa-gate-qa.mjs';
 import {enterV100FromTitle,seedV100BrowserSaveOnce} from './v100-title-qa-entry.mjs';
 import {productionBuildIdentity} from './browser-qa-build-identity.mjs';
@@ -18,7 +18,8 @@ assert.ok(['zakimiya','tky','paisen','nao','mizuchi','monkey','ikura','tatara','
 const owner=({ikura:'guide-ikura',segawa:'segawa',president:'mugarian-president',commander:'red-panther-commander'})[kind]??`unit-${({chiha:'mrs-chiha',musashi:'miyamoto-musashi',king:'crazy-king'})[kind]??kind}`;
 const out=path.resolve(process.env.QUALITY_ZAKIMIYA_OUT??`output/quality-20261028/${kind}-runtime-r2`);
 await mkdir(out,{recursive:true});
-const report={scope:'Prepared dialogue checkpoint in isolated Chromium, normal title continue. Visual rendering evidence only, not campaign progression or Producer acceptance.',kind,build:await productionBuildIdentity(),cases:[],errors:[]};
+const engine=process.env.QUALITY_PORTRAIT_ENGINE??'chromium';
+const report={engine,scope:'Prepared dialogue checkpoint in isolated browser, normal title continue. Visual rendering evidence only, not campaign progression or Producer acceptance.',kind,build:await productionBuildIdentity(),cases:[],errors:[]};
 const initial=createDefaultV100Save();
 let checkpoints=kind==='paisen' ? [
   {eventId:'v100:event:prologue',nodeIndex:2,expression:'warm'},
@@ -54,7 +55,7 @@ let checkpoints=kind==='paisen' ? [
   {eventId:'v100:event:s09:post',nodeIndex:3,expression:'alarm',insertId:'seg-lab-transfer'},
   {eventId:'v100:event:s01:post',nodeIndex:10,expression:'warm'},
 ] : [{eventId:kind==='tky'?'v100:event:s14:pre':'v100:event:s12:pre',nodeIndex:kind==='tky'?2:4,expression:'determined'}];
-if(['babayaga','kumaverson','segawa','president','commander'].includes(kind)) {
+if(['tky','babayaga','kumaverson','segawa','president','commander'].includes(kind)) {
   checkpoints=[];
   for(const [eventId,event] of Object.entries(V100_STORY_EVENTS))for(const [nodeIndex,node] of event.nodes.entries()) {
     if(node.kind!=='dialogue'||node.portraitOwner!==owner)continue;
@@ -65,7 +66,9 @@ if(['babayaga','kumaverson','segawa','president','commander'].includes(kind)) {
   assert.ok(checkpoints.length>0,'No actual authored dialogue for this owner');
 }
 if(process.env.QUALITY_PORTRAIT_FIRST_ONLY==='1')checkpoints=checkpoints.slice(0,1);
-const browser=await (await pwaBrowserType('chromium')).launch({headless:true});
+// This checks dialogue rendering only; persistent PWA storage uses its separate native gate.
+assert.ok(['chromium','webkit'].includes(engine));
+const browser=await ({chromium,webkit}[engine]).launch({headless:true});
 const alphaBottoms=new Map();
 const viewports=[{width:844,height:340},{width:1280,height:720}];
 if(process.env.QUALITY_STAGE_LARGE==='1')viewports.push({width:1920,height:1080});

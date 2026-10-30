@@ -26,8 +26,8 @@
     },
     {
       "path": "/art/v100/joints/tky-quality-head-r1.webp",
-      "hash": "sha256-c8fdc326605466be8fedf44fa00543b0b9f6c6c2b1174fff1a0eaffccc53d7a9",
-      "bytes": 36576,
+      "hash": "sha256-4b58ace45143d7c05ad64155ba4778af46b7324093a4f02e052088973970f63e",
+      "bytes": 36710,
       "category": "unit",
       "criticality": "critical"
     },
@@ -600,36 +600,36 @@
     },
     {
       "path": "/art/v100/portraits/tky-alarm-quality-r1.webp",
-      "hash": "sha256-3f1dfd598c5ee1034df4eeb7e7538a23e8be9f4274dfce1036d11a942df6d7a5",
-      "bytes": 96314,
+      "hash": "sha256-6a51aa8c5181f5764f0749c388d5f665ccc9ceb27a5a3fc6ca1de3d6cecfd18b",
+      "bytes": 87298,
       "category": "portrait",
       "criticality": "critical"
     },
     {
       "path": "/art/v100/portraits/tky-determined-quality-r1.webp",
-      "hash": "sha256-892f7eb38aed170f6b48360418a2b74ab9ce085a44cfc18ec4d7de02159585be",
-      "bytes": 96674,
+      "hash": "sha256-c1cb5752250fb97224a8a2573aec1b9b3cdb91a568b897085e51128d08f0df0e",
+      "bytes": 87508,
       "category": "portrait",
       "criticality": "optional"
     },
     {
       "path": "/art/v100/portraits/tky-formation-card-quality-r1.webp",
-      "hash": "sha256-a26841c5d2b66d9fe13b5bb7f9a55061f3c238c03f790ce82653e298a04486fc",
-      "bytes": 67678,
+      "hash": "sha256-8702b81175b55b746174f8c0fc9ff852a57c8be94f8d86f98586284d7a241ebf",
+      "bytes": 58560,
       "category": "portrait",
       "criticality": "optional"
     },
     {
       "path": "/art/v100/portraits/tky-grief-quality-r1.webp",
-      "hash": "sha256-5e15ffba885539642b8ab419347fab3ded905ecc27568fa3f8995071fa16e0c5",
-      "bytes": 98746,
+      "hash": "sha256-bcfb5e4001e550cfa1f691aa7fd6cb6229a12179cf26512707b449b9c296032f",
+      "bytes": 85004,
       "category": "portrait",
       "criticality": "critical"
     },
     {
       "path": "/art/v100/portraits/tky-warm-quality-r1.webp",
-      "hash": "sha256-6823d01d54620af671926e62f09a0cd57e21b75fca839e8b16e11926afe519fe",
-      "bytes": 96782,
+      "hash": "sha256-2ad71309644faff1eb07c7b094c805eb22311d68de8d457e97fb54206b53d821",
+      "bytes": 85482,
       "category": "portrait",
       "criticality": "critical"
     },
@@ -1496,6 +1496,12 @@
       "category": "audio",
       "criticality": "optional",
       "audioId": "install-v100-foley-rifle"
+    }
+  ],
+  "revisions": [
+    {
+      "scope": "TKY r9 photo-based face correction: five portrait rows and one battle head atlas; all other payloads retained",
+      "source": "assets/source/quality-20261028/identity/tky-photo-r9-generation.json"
     }
   ]
 }
