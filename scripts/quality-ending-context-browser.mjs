@@ -7,13 +7,21 @@ import { V100_STAGE_IDS } from '../app/v100Registry.js';
 import { seedV100BrowserSaveOnce,enterV100FromTitle } from './v100-title-qa-entry.mjs';
 import { dismissInstallOffer } from './pwa-gate-qa.mjs';
 import { productionBuildIdentity } from './browser-qa-build-identity.mjs';
-import {V100_QUALITY_SCENE_ASSETS} from '../app/v100QualitySceneAssets.js';
+import {V100_CREDITS_FILM} from '../app/v100CreditsFilm.js';
 import sharp from 'sharp';
 import {inspectScenePaintContrast} from './quality-scene-paint.mjs';
 
 const engine=process.env.QUALITY_ENDING_ENGINE??'chromium';
 const out=path.resolve(process.env.QUALITY_ENDING_OUT);await mkdir(out,{recursive:true});
 const provenance=JSON.parse(await readFile('assets/source/quality-20261028/scenes/runtime-provenance-r1.json'));
+const sceneRecords=[...provenance.records,...(provenance.reusedScenes??[]).map(scene=>({...scene,reused:true}))];
+const recordsById=new Map(sceneRecords.map(scene=>[scene.id,scene]));
+const filmAssetIds=new Map(sceneRecords.map(scene=>[scene.path,scene.id]));
+const filmSceneIds=V100_CREDITS_FILM.map(shot=>{
+ const id=filmAssetIds.get(shot.src);assert.ok(id,'Unreviewed film image: '+shot.id);return id;
+});
+assert.equal(filmSceneIds.length,25,'all actual movie images, including retained art, are included in the native playback check');
+assert.equal(new Set(filmSceneIds).size,25);
 const report={engine,build:await productionBuildIdentity(),scope:'Prepared finale and postgame saves; native UI and real-time credits. Not a natural all-30 clear, physical-device or listening acceptance.',cases:[],errors:[]};
 const browser=await({chromium,webkit}[engine]).launch({headless:true});
 const persist=()=>writeFile(path.join(out,'report.json'),JSON.stringify(report,null,2));
@@ -61,16 +69,9 @@ try{
   try{
     const start=Date.now(),roll=page.locator('.v100-staff-roll');await roll.waitFor();
     const audio=page.getByRole('button',{name:'曲を再生して始める',exact:true});if(await audio.isVisible())await audio.click();
-    await page.waitForFunction(()=>{const el=document.querySelector('.v100-credit-time-context'),win=document.querySelector('.v100-credit-roll-window');if(!el||!win)return false;const r=el.getBoundingClientRect(),w=win.getBoundingClientRect();return r.top>=w.top+4&&r.bottom<=w.bottom-4;},null,{timeout:30000});
-    row.caption=await page.locator('.v100-credit-time-context').innerText();assert.equal(row.caption,'その後の西新');
-    row.captionAtSeconds=(Date.now()-start)/1000;
-    await page.screenshot({path:path.join(out,`${label}-caption.png`)});
-    row.speed=viewport.width===844?1:4;
-    if(row.speed===4){await page.getByRole('button',{name:'映像と文字の速さ：通常。曲は通常速度',exact:true}).click();await page.getByRole('button',{name:'映像と文字の速さ：2倍。曲は通常速度',exact:true}).click();}
-    await persist();
     row.modelSceneFrames=[];
-    for(const id of ['facility-power','vehicle-patch','vehicle-mayo-splash','epilogue-tky-receipt','epilogue-main-table']){
-      const expected=V100_QUALITY_SCENE_ASSETS[id].path;
+    const captureModelScene=async id=>{
+      const record=recordsById.get(id),expected=record.path;
       await page.waitForFunction(expected=>[...document.querySelectorAll('img.v100-credit-shot:not(.v100-credit-shot-next)')].some(img=>img.complete&&img.naturalWidth>0&&getComputedStyle(img).opacity==='1'&&new URL(img.currentSrc||img.src).pathname.endsWith(expected)),expected,{timeout:115000});
       const image=await page.locator('img.v100-credit-shot:not(.v100-credit-shot-next)').evaluateAll((images,expected)=>{
         const img=images.find(img=>new URL(img.currentSrc||img.src).pathname.endsWith(expected));
@@ -85,7 +86,7 @@ try{
         const bytes=await response.arrayBuffer(),digest=await crypto.subtle.digest('SHA-256',bytes);
         return {bytes:bytes.byteLength,sha256:[...new Uint8Array(digest)].map(n=>n.toString(16).padStart(2,'0')).join('')};
       });
-      const record=provenance.records.find(r=>r.id===id);assert.equal(source.bytes,record.bytes);assert.equal(source.sha256,record.sha256);
+      assert.equal(source.bytes,record.bytes);assert.equal(source.sha256,record.sha256);
       const screenshot=await page.screenshot({path:path.join(out,`${label}-${id}.png`)});
       const sample={left:Math.round(viewport.width*.08),top:Math.round(viewport.height*.25),width:Math.floor(viewport.width*.45),height:Math.floor(viewport.height*.5)};
       const {data,info}=await sharp(screenshot).extract(sample).removeAlpha().raw().toBuffer({resolveWithObject:true});
@@ -98,9 +99,25 @@ try{
       });
       assert.ok(layout.movie.width>0&&layout.movie.height>0&&layout.movie.right<=layout.credits.x-6,'the film stays clear of all scrolling credits');
       assert.equal(layout.overflowX,'hidden');assert.equal(layout.overflowY,'hidden');
-      row.modelSceneFrames.push({id,image,source,paintContrast,layout,elapsedSeconds:(Date.now()-start)/1000});
+      row.modelSceneFrames.push({id,reused:record.reused===true,image,source,paintContrast,layout,elapsedSeconds:(Date.now()-start)/1000});
       await persist();
-    }
+    };
+    const earlyFilmSceneIds=filmSceneIds.filter(id=>V100_CREDITS_FILM.slice(0,3).some(shot=>shot.src===recordsById.get(id).path));
+    const captionTask=(async()=>{
+      await page.waitForFunction(()=>{const el=document.querySelector('.v100-credit-time-context'),win=document.querySelector('.v100-credit-roll-window');if(!el||!win)return false;const r=el.getBoundingClientRect(),w=win.getBoundingClientRect();return r.top>=w.top+4&&r.bottom<=w.bottom-4;},null,{timeout:30000});
+      row.caption=await page.locator('.v100-credit-time-context').innerText();assert.equal(row.caption,'その後の西新');
+      row.captionAtSeconds=(Date.now()-start)/1000;
+      await page.screenshot({path:path.join(out,`${label}-caption.png`)});
+      return true;
+    })().catch(error=>{row.captionError=String(error);return false;});
+    for(const id of earlyFilmSceneIds)await captureModelScene(id);
+    assert.ok(await captionTask,row.captionError);
+    row.speed=viewport.width===844?1:4;
+    if(row.speed===4){await page.getByRole('button',{name:'映像と文字の速さ：通常。曲は通常速度',exact:true}).click();await page.getByRole('button',{name:'映像と文字の速さ：2倍。曲は通常速度',exact:true}).click();}
+    row.speedChangeAtSeconds=(Date.now()-start)/1000;
+    await persist();
+    for(const id of filmSceneIds.filter(id=>!earlyFilmSceneIds.includes(id)))await captureModelScene(id);
+    assert.deepEqual(row.modelSceneFrames.map(frame=>frame.id),filmSceneIds);
     await page.locator('.v100-shell[data-v100-phase="map"]').waitFor({timeout:140000});
     row.transitionSeconds=(Date.now()-start)/1000;
     assert.ok(row.transitionSeconds>=(row.speed===1?100:25)&&row.transitionSeconds<140);

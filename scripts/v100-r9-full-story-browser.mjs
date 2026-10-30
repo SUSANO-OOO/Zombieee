@@ -12,6 +12,7 @@ import {r9StoryPlan,readR9PageGeometry,assertR9PageGeometry} from './v100-r9-sto
 import {enterV100FromTitle} from './v100-title-qa-entry.mjs';
 import {installRequestFailureAudit} from './browser-request-failure-audit.mjs';
 import {readV177StoryPortraitPaint} from './v177-story-portrait-paint.mjs';
+import {isV100StoryBackdropReady} from './v100-story-backdrop-ready.mjs';
 
 const origin=new URL(process.env.V100_CAMPAIGN_QA_BASE_URL??'http://127.0.0.1:4177/');
 assert.ok(['localhost','127.0.0.1'].includes(origin.hostname),'Story QA is local-only');
@@ -58,10 +59,7 @@ for(const engine of engines){
     for(const expected of event.pages){
      const selector=`[data-v100-event-id="${event.eventId}"][data-v100-node-index="${expected.nodeIndex}"]`,surface=page.locator(selector);
      await surface.waitFor({state:'visible'});
-     if(expected.presentation.backgroundPath)await page.waitForFunction(({selector,background})=>{
-      const back=document.querySelector(selector)?.querySelector('.v100-event-backdrop'),image=back?.querySelector('.v100-event-image:not(.v100-event-image-previous)');
-      return Boolean(back&&getComputedStyle(back).backgroundImage.includes(background)&&image?.complete&&image.naturalWidth>0&&new URL(image.src).pathname.endsWith(background));
-     },{selector,background:expected.presentation.backgroundPath});
+     if(expected.presentation.backgroundPath)await page.waitForFunction(isV100StoryBackdropReady,{selector,background:expected.presentation.backgroundPath});
      await page.waitForFunction(({eventId,nodeIndex,sceneId,cueId,requiresAudio,sceneAudio})=>{
       const a=window.__V100_EVENT_AUDIO_QA__?.getSnapshot?.();
       return a?.desired?.sceneId===sceneId&&a?.sceneState?.sceneId===sceneId&&a?.diagnostics?.contextState==='running'

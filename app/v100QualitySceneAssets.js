@@ -85,6 +85,120 @@ export const V100_QUALITY_SCENE_ASSETS=Object.freeze({
     "previousPath": null,
     "alt": "車体の陰で、サプレッサー付きのタクティカルハンドガンを構えるババヤガ。",
     "newEvent": true
+  },
+  "facility-chiha-baba-tender": {
+    "path": "/art/v100/quality-20261028/scenes/facility-chiha-baba-tender-r1.webp",
+    "previousPath": "/art/v100/credits/chiha-baba-tender-r1.webp",
+    "alt": "Mrs.チハがババヤガのネクタイを直し、頬にキスをする。彼の手がそっと重なる。",
+    "newEvent": false
+  },
+  "defense-paisen-kuma-kiss": {
+    "path": "/art/v100/quality-20261028/scenes/defense-paisen-kuma-kiss-r1.webp",
+    "previousPath": "/art/v100/credits/defense-paisen-kuma-kiss-r1.webp",
+    "alt": "クマバーソンがパイセンの頬にキスをする。パイセンは肩を抱き、大げさな身ぶりで喜ぶ。",
+    "newEvent": false
+  },
+  "armory-couple-dance": {
+    "path": "/art/v100/quality-20261028/scenes/armory-couple-dance-r1.webp",
+    "previousPath": "/art/v100/credits/armory-couple-dance-r1.webp",
+    "alt": "片づけの合間に、ババヤガとMrs.チハが手を取り踊る。パイセンが歌い、タタラが横目で見守る。",
+    "newEvent": false
+  },
+  "ward-supplies": {
+    "path": "/art/v100/quality-20261028/scenes/ward-supplies-r1.webp",
+    "previousPath": "/art/v100/credits/ward-supplies-r4.webp",
+    "alt": "区役所に届いた物資を、いくらちゃんたちが仕分ける。",
+    "newEvent": false
+  },
+  "ward-king-fan": {
+    "path": "/art/v100/quality-20261028/scenes/ward-king-fan-r1.webp",
+    "previousPath": "/art/v100/credits/ward-king-fan-r2.webp",
+    "alt": "直した扇風機がキングの毛布を巻き上げる。いくらちゃんは笑い、ミズチは点検の手を止める。",
+    "newEvent": false
+  },
+  "street-community": {
+    "path": "/art/v100/quality-20261028/scenes/street-community-r1.webp",
+    "previousPath": "/art/v100/credits/street-community-r1.webp",
+    "alt": "商店街のあちこちで、仲間たちがシャッターを直し、物資を運び、道を掃く。",
+    "newEvent": false
+  },
+  "street-shutter": {
+    "path": "/art/v100/quality-20261028/scenes/street-shutter-r1.webp",
+    "previousPath": "/art/v100/credits/street-shutter-r2.webp",
+    "alt": "ハチとパイセンが、曲がった店のシャッターを開ける。",
+    "newEvent": false
+  },
+  "street-paisen-broom": {
+    "path": "/art/v100/quality-20261028/scenes/street-paisen-broom-r1.webp",
+    "previousPath": "/art/v100/credits/street-paisen-broom-r1.webp",
+    "alt": "ほうきをギターに見立て、パイセンが熱唱する。ハチは腹を抱え、レイダーはあきれながら笑う。",
+    "newEvent": false
+  },
+  "station-repair": {
+    "path": "/art/v100/quality-20261028/scenes/station-repair-r1.webp",
+    "previousPath": "/art/v100/credits/station-repair-r1.webp",
+    "alt": "モンキーが改札の灯りを修理し、タタラがカバーを支える。",
+    "newEvent": false
+  },
+  "station-cart-parade": {
+    "path": "/art/v100/quality-20261028/scenes/station-cart-parade-r1.webp",
+    "previousPath": "/art/v100/credits/station-cart-parade-r1.webp",
+    "alt": "動かない整備台車の上で、モンキーが車掌気取り。タタラが一礼し、ガンテツは小さな飾りをつけて立つ。",
+    "newEvent": false
+  },
+  "armory-evidence": {
+    "path": "/art/v100/quality-20261028/scenes/armory-evidence-r1.webp",
+    "previousPath": "/art/v100/credits/armory-evidence-r2.webp",
+    "alt": "ババヤガとレイダーが証拠を封じる。扉のそばではタタラが待つ。",
+    "newEvent": false
+  },
+  "floodgate-rations": {
+    "path": "/art/v100/quality-20261028/scenes/floodgate-rations-r1.webp",
+    "previousPath": "/art/v100/credits/floodgate-rations-r2.webp",
+    "alt": "クレイジーキングとモンキーが、防潮門の詰所へ食料を運ぶ。",
+    "newEvent": false
+  },
+  "floodgate-king-riceball": {
+    "path": "/art/v100/quality-20261028/scenes/floodgate-king-riceball-r1.webp",
+    "previousPath": "/art/v100/credits/floodgate-king-riceball-r2.webp",
+    "alt": "キングがおにぎりをバケツの目に押しつける。モンキーが吹き出し、ガンテツが弁当箱を差し出す。",
+    "newEvent": false
+  },
+  "defense-bench": {
+    "path": "/art/v100/quality-20261028/scenes/defense-bench-r1.webp",
+    "previousPath": "/art/v100/credits/defense-bench-r3.webp",
+    "alt": "タタラたちが瓦礫を運び出す。レイダーの笑い声が響き、道端に休める場所が戻る。",
+    "newEvent": false
+  },
+  "zakimiya-bottles": {
+    "path": "/art/v100/quality-20261028/scenes/zakimiya-bottles-r1.webp",
+    "previousPath": "/art/v100/credits/zakimiya-bottles-r2.webp",
+    "alt": "ザキミヤが一人、哺乳瓶を洗う。小さな毎日の世話が戻り始める。",
+    "newEvent": false
+  },
+  "defense-watch": {
+    "path": "/art/v100/quality-20261028/scenes/defense-watch-r1.webp",
+    "previousPath": "/art/v100/credits/defense-watch-r1.webp",
+    "alt": "ババヤガが一人、戦闘の終わった道と見張りの持ち場を確かめる。",
+    "newEvent": false
+  },
+  "segawa-record": {
+    "path": "/art/v100/quality-20261028/scenes/segawa-record-r1.webp",
+    "previousPath": "/art/v100/credits/segawa-record-r2.webp",
+    "alt": "回収された研究記録の中で、セガワが暴走したプリンターの紙に埋もれ、呆れた顔でコーヒーを持っている。",
+    "newEvent": false
+  },
+  "hospital-courtyard": {
+    "path": "/art/v100/quality-20261028/scenes/hospital-courtyard-r1.webp",
+    "previousPath": "/art/v100/story-r5/cuts/ending-medical-progress.webp",
+    "alt": "病院で進行の止まった腕を確かめる。仲間たちは医師の説明を聞き、次の診察を待つ。",
+    "newEvent": false
+  },
+  "zakimiya-family-morning": {
+    "path": "/art/v100/quality-20261028/scenes/zakimiya-family-morning-r1.webp",
+    "previousPath": "/art/v100/story-r5/cuts/ending-zakimiya-family.webp",
+    "alt": "ザキミヤが眠る息子を抱き、妻と一緒に顔を見つめる。",
+    "newEvent": false
   }
 });
 const byPrevious=new Map(Object.values(V100_QUALITY_SCENE_ASSETS).filter(row=>row.previousPath).map(row=>[row.previousPath,row.path]));

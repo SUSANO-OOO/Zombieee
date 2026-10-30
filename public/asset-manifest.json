@@ -1307,145 +1307,9 @@
       "criticality": "critical"
     },
     {
-      "path": "/art/v100/credits/armory-couple-dance-r1.webp",
-      "bytes": 1578982,
-      "hash": "sha256-ae7b72cc136174d49f64e910eae20ebe0b573133d1d1318ba0c47a4117ec83ef",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/credits/armory-evidence-r2.webp",
-      "bytes": 220458,
-      "hash": "sha256-a04ba551f93498dcf65bde9e62546f129f2a742a20525796dc92739ee83253c7",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/credits/chiha-baba-tender-r1.webp",
-      "bytes": 251756,
-      "hash": "sha256-9c53b335820c0d574fa611e9ebec8a21249f5067a291cb345a35d8d3b2ad7c50",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/credits/defense-bench-r3.webp",
-      "bytes": 252678,
-      "hash": "sha256-a3e71d403251f2a0b6f5fa4e5b56ba455e7757743403f734d325bad9623302c5",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/credits/defense-paisen-kuma-kiss-r1.webp",
-      "bytes": 1478320,
-      "hash": "sha256-d7edb79d335dce91f9c0d57f928190f56c23c3808b97a86660e43149e283c3fd",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/credits/defense-watch-r1.webp",
-      "bytes": 276070,
-      "hash": "sha256-71de3a013e9d3a01f02b766deb83fd7279167f7a69c6158d97ec5227eb51e3d8",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/credits/floodgate-king-riceball-r2.webp",
-      "bytes": 285510,
-      "hash": "sha256-c6e8c6cbceffafd95720f5139205fdcdea9e62f63f6b94a3a91b584dd283af97",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/credits/floodgate-rations-r2.webp",
-      "bytes": 320154,
-      "hash": "sha256-e33883a9a22d878ea034b003341e9dfad7e30f970227bd9ec5948648c2010847",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
       "path": "/art/v100/credits/hospital-serum-r2.webp",
       "bytes": 204042,
       "hash": "sha256-300dfe499afb3dc1efbd265eacec7ddaff1051d89e83e3d09fd1b1b76aa0f777",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/credits/segawa-record-r2.webp",
-      "bytes": 220206,
-      "hash": "sha256-ec9b1a1d48097edf52929cb5555334f01662a013fb279bdc2838ff0e2e7fb91f",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/credits/station-cart-parade-r1.webp",
-      "bytes": 337952,
-      "hash": "sha256-145975cd2d725248f7883217c323d4e42507437033a636191cd8447445e439cc",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/credits/station-repair-r1.webp",
-      "bytes": 243008,
-      "hash": "sha256-91955f19b73698d01029b98a1827acf59b3051202da739144795a2ad812b157b",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/credits/street-community-r1.webp",
-      "bytes": 1762610,
-      "hash": "sha256-1b336554b7b8baf9d0b3bbff8c1b7786cb7a262fe553b65990d1b3d24c53bc62",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/credits/street-paisen-broom-r1.webp",
-      "bytes": 1710536,
-      "hash": "sha256-e5d166760860292ff143c30729cc501d59886c4aa42869d9ef7cc4d43482eb26",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/credits/street-shutter-r2.webp",
-      "bytes": 1451784,
-      "hash": "sha256-3e585b642bdade97a9c6ebd8c3cee47d772d597e69558d14b8325209877ab103",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/credits/ward-king-fan-r2.webp",
-      "bytes": 272778,
-      "hash": "sha256-0a022b8fff3da29b65aa97678f09b5cb0a10247e2b892222cb6315fb13e32dd7",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/credits/ward-supplies-r4.webp",
-      "bytes": 280084,
-      "hash": "sha256-cdbe3542f9856ce9efb88e96d8b74e49783912476dca075e1644dd5dbba1235b",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/credits/zakimiya-bottles-r2.webp",
-      "bytes": 215678,
-      "hash": "sha256-3d1eb1a0d0a7c5769bf52d4cb2edbaaf8f9dde8e21c8ed69573130ac85d2dd53",
       "pack": "campaign-core",
       "category": "background",
       "criticality": "critical"
@@ -2963,6 +2827,46 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/v100/quality-20261028/scenes/armory-couple-dance-r1.webp",
+      "bytes": 446160,
+      "hash": "sha256-dc3ae41b01cc81f9f62a51c3924ee584c9420ac3e68f60b0545ae0764326f304",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/armory-evidence-r1.webp",
+      "bytes": 346006,
+      "hash": "sha256-13605a82b72304183303a87bedfe84d63b23d29b06202bd4736b0a8bf7f84731",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/defense-bench-r1.webp",
+      "bytes": 443520,
+      "hash": "sha256-0b32968df6201217d083b7a92895b6c755f5950c5fe12920cd085ce8ae7e2713",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/defense-paisen-kuma-kiss-r1.webp",
+      "bytes": 392778,
+      "hash": "sha256-85de25d9a8eafd5cdf911a20c5de0ad5944193f5f3e17425c549b1118b40499e",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/defense-watch-r1.webp",
+      "bytes": 421874,
+      "hash": "sha256-1868b8fc2d9ea7dab085382e308c90092dd13b1e4425fcc1fd78d7e0d36eb263",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/quality-20261028/scenes/ending-plates-and-karaage-r1.webp",
       "bytes": 388634,
       "hash": "sha256-fb6457bfb46ba9c1cb1337e6c007f429af6e9808b41db4b0adedbc368ac0d5a3",
@@ -2995,9 +2899,41 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/v100/quality-20261028/scenes/facility-chiha-baba-tender-r1.webp",
+      "bytes": 433364,
+      "hash": "sha256-2aa84684549e11689e0e65ce424f0dfcc52c816e0d7cc552b714a4731a9cc51f",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/quality-20261028/scenes/facility-power-r1.webp",
       "bytes": 412444,
       "hash": "sha256-83de39b2525b26ee94967a6782216b3e762caa057d6355e0485c1d56f7cc49de",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/floodgate-king-riceball-r1.webp",
+      "bytes": 501772,
+      "hash": "sha256-dd676747c162d71afff0d56a1d7e3a4a9064d0b60ab798790cba97eee7f8c40f",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/floodgate-rations-r1.webp",
+      "bytes": 544488,
+      "hash": "sha256-0f9e4a6ce047a9ea6b830e29b8959d8992fee3a0109056a559a15a0858e7a8e9",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/hospital-courtyard-r1.webp",
+      "bytes": 341194,
+      "hash": "sha256-8899aad521939dbc16886e649c26be4f00829f7dda79cb3a608b7c538ca7cec6",
       "pack": "campaign-core",
       "category": "background",
       "criticality": "critical"
@@ -3035,6 +2971,54 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/v100/quality-20261028/scenes/segawa-record-r1.webp",
+      "bytes": 274648,
+      "hash": "sha256-0c64790a5063f8e173392ab8d63cde8f6656c2dcaaebe2d1d0b5fc336018ffbd",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/station-cart-parade-r1.webp",
+      "bytes": 491394,
+      "hash": "sha256-215f7af45da7428dd97a38f6c694fa55dc8c690f517325ca19d23fcc87c8d311",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/station-repair-r1.webp",
+      "bytes": 389906,
+      "hash": "sha256-7432005aa70eefece6acd8d637023377a875c5f35acb43294c6a09a3857e6051",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/street-community-r1.webp",
+      "bytes": 514712,
+      "hash": "sha256-c1ebce5f1c9a7877a088aa37cada41073560df5be89b878f30979fe6f844a260",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/street-paisen-broom-r1.webp",
+      "bytes": 453616,
+      "hash": "sha256-df0635cf2c38d16b62b7ed7e3a38aefda6b2dc21cd00f3c42841a5e2844265b5",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/street-shutter-r1.webp",
+      "bytes": 379748,
+      "hash": "sha256-014815b75c8f83932e9dd7beda9f955f299c4765f0e0e3bb05a3dbd19b6bad1d",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/quality-20261028/scenes/vehicle-mayo-splash-r1.webp",
       "bytes": 571424,
       "hash": "sha256-a706ace61ec5b75e9a94b49fdfa29e88bdd472a001e337791dfc2a11e8fba33e",
@@ -3046,6 +3030,38 @@
       "path": "/art/v100/quality-20261028/scenes/vehicle-patch-r1.webp",
       "bytes": 366154,
       "hash": "sha256-fe1e41f0cfc9d8ac0d846b99776530e0a93ae158f37bbbde28dbc53991bbb447",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/ward-king-fan-r1.webp",
+      "bytes": 434558,
+      "hash": "sha256-fd384de58569730b0f39684ce87a92afc50ee975561a3e096d32e2d85d0cb327",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/ward-supplies-r1.webp",
+      "bytes": 381672,
+      "hash": "sha256-70b57dc0d1a81c100d412bbcf061a42c38e7d1771d509a3e95ad55380c0b18a8",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/zakimiya-bottles-r1.webp",
+      "bytes": 337010,
+      "hash": "sha256-29a4d507a26ce049ad2ebd878c77d8081b21301f5d695bd96c803cc565bf4824",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/zakimiya-family-morning-r1.webp",
+      "bytes": 354482,
+      "hash": "sha256-d56e398545fb61d608010e5981d7d2dcfb0c33123a8b3ed1028b6d9ab8fe4c44",
       "pack": "campaign-core",
       "category": "background",
       "criticality": "critical"
@@ -3214,22 +3230,6 @@
       "path": "/art/v100/story-r5/cuts/chiha-confession.webp",
       "bytes": 962892,
       "hash": "sha256-8c025bff25e87e0d5f4e71a1d0a84cde754c92891c89c49b24db613e919e44fc",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/story-r5/cuts/ending-medical-progress.webp",
-      "bytes": 981894,
-      "hash": "sha256-e5f0d6cc5d67a3b62fab08b4e5cc176e77532ed4fc4254980796b4ff27884f02",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/story-r5/cuts/ending-zakimiya-family.webp",
-      "bytes": 265350,
-      "hash": "sha256-2c3e706f0be974fe3cc422696d2d7bedeba824b6dba93b0235e1d3265a10ffa1",
       "pack": "campaign-core",
       "category": "background",
       "criticality": "critical"

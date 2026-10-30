@@ -1,6 +1,7 @@
 // Presentation fixtures only. This is not a substitute for the normal
 // name-to-Stage-30 playthrough or a physical-device/audio listening pass.
 import assert from "node:assert/strict";
+import { isV100StoryBackdropReady } from './v100-story-backdrop-ready.mjs';
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pwaBrowserType } from './pwa-browser-runtime.mjs';
@@ -39,14 +40,11 @@ async function inspect(page, eventId, phase, index, result) {
   await surface.waitFor({ state: "visible", timeout: 15000 });
   // A node's text changes before the new backdrop finishes decoding. Verify
   // the decoded destination instead of sampling the retained previous cut.
-  if (expected.backgroundPath) await page.waitForFunction(({ selector, background }) => {
-    const backdrop = document.querySelector(selector)?.querySelector(".v100-event-backdrop");
-    const image = backdrop?.querySelector(".v100-event-image:not(.v100-event-image-previous)");
-    return Boolean(backdrop && getComputedStyle(backdrop).backgroundImage.includes(background)
-      && image?.complete && image.naturalWidth > 0 && new URL(image.src).pathname.endsWith(background));
-  }, { selector: `[data-v100-event-id="${eventId}"][data-v100-node-index="${index}"]`, background: expected.backgroundPath }, { timeout: 15000 });
+  if (expected.backgroundPath) await page.waitForFunction(isV100StoryBackdropReady,
+    { selector: `[data-v100-event-id="${eventId}"][data-v100-node-index="${index}"]`, background: expected.backgroundPath }, { timeout: 15000 });
   const state = await surface.evaluate(element => {
     const backdrop = element.querySelector(".v100-event-backdrop");
+    const sceneImage = backdrop?.querySelector('.v100-event-image:not(.v100-event-image-previous)');
     const copy = element.querySelector(".v100-credits-shot, .v100-node-copy, .v100-node-title");
     const rect = copy?.getBoundingClientRect();
     const action = element.querySelector(".v100-primary");
@@ -63,6 +61,7 @@ async function inspect(page, eventId, phase, index, result) {
     ).map(other => [block.text, other.text]));
     return {
       background: backdrop ? getComputedStyle(backdrop).backgroundImage : null,
+      imageSource: sceneImage?.currentSrc || sceneImage?.src || null,
       titleCard: backdrop?.getAttribute("data-v100-title-card") === "true",
       text: copy?.textContent ?? "", scene: copy?.getAttribute("data-v100-credit-scene"),
       copyFits: Boolean(rect && rect.top >= 0 && rect.left >= 0 && rect.right <= innerWidth && rect.bottom <= innerHeight),
@@ -74,7 +73,7 @@ async function inspect(page, eventId, phase, index, result) {
       bodyOverflow: Math.max(document.documentElement.scrollWidth - innerWidth, document.body.scrollWidth - innerWidth),
     };
   });
-  if (expected.backgroundPath) assert.ok(state.background?.includes(expected.backgroundPath), JSON.stringify(state));
+  if (expected.backgroundPath) assert.ok(state.imageSource&&new URL(state.imageSource).pathname.endsWith(expected.backgroundPath), JSON.stringify(state));
   if (node.kind === "title") assert.equal(state.titleCard, true);
   if (node.kind === "montage") assert.equal(state.scene, node.sceneLabel);
   if (node.kind === "montage") {

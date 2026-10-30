@@ -1,0 +1,17 @@
+{
+  "purpose": "Deterministic reference packing to fit the image tool reference limit. Not a new character model or an in-game size comparison. No semantic redraw.",
+  "sources": [
+    {
+      "id": "PAISEN",
+      "path": "assets/source/quality-20261028/identity/paisen-photo-master-r7.png",
+      "sha256": "c769eb81a096e9fb1747df0c4ab93452b2ad844fb37e21707d5ef51aec76de66"
+    },
+    {
+      "id": "MAYO",
+      "path": "assets/source/quality-20261028/identity/mayo-master-r4.png",
+      "sha256": "ed4804adffdc00585130dda8803f5f1d2ccc3d818c15191a23e38558476a434c"
+    }
+  ],
+  "output": "assets/source/quality-20261028/scenes/references/paisen-mayo-models-r1.png",
+  "sha256": "6737b459bd2fac6ac9ffbd6460fab95b71c7621443ec24bda09d1e730f63ad36"
+}

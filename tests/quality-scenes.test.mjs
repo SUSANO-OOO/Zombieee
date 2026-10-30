@@ -8,10 +8,10 @@ import {v100StoryDirectionFor} from '../app/v100StoryDirection.js';
 import {V100_QUALITY_SCENE_ASSETS,v100QualityScenePathFor} from '../app/v100QualitySceneAssets.js';
 import {v177StoryDetailShotFor} from '../app/v177StoryDetailShots.js';
 
-test('versioned scene payloads replace only the eight declared paths and add three Babayaga events',async()=>{
+test('versioned scene payloads replace only the twenty-seven declared paths and add three Babayaga events',async()=>{
  const provenance=JSON.parse(await readFile('assets/source/quality-20261028/scenes/runtime-provenance-r1.json'));
  const manifest=JSON.parse(await readFile('public/asset-manifest.json'));
- assert.equal(provenance.records.length,11);
+ assert.equal(provenance.records.length,30);
  assert.equal(provenance.records.filter(row=>row.newEvent).length,3);
  const livePaths=new Set([...V100_CREDITS_FILM.map(shot=>shot.src),...Object.entries(V100_STORY_EVENTS).flatMap(([id,event])=>event.nodes.map((node,i)=>v100StoryDirectionFor(id,i,node).backgroundPath))]);
  for(const record of provenance.records){
@@ -39,6 +39,19 @@ test('versioned scene payloads replace only the eight declared paths and add thr
   const sceneId=id==='kumaya-main-table'?'epilogue-main-table':id;
   assert.equal(V100_CREDITS_FILM.find(s=>s.id===id).src,V100_QUALITY_SCENE_ASSETS[sceneId].path);
  }
+});
+
+test('all twenty-five film images have a selected master or an unchanged reviewed source',async()=>{
+ const provenance=JSON.parse(await readFile('assets/source/quality-20261028/scenes/runtime-provenance-r1.json'));
+ assert.equal(provenance.models.length,17);
+ assert.deepEqual(provenance.reusedScenes.map(scene=>scene.id),['hospital-serum']);
+ const reviewed=new Map([...provenance.records,...provenance.reusedScenes].map(scene=>[scene.path,scene]));
+ assert.equal(V100_CREDITS_FILM.length,25);
+ for(const shot of V100_CREDITS_FILM){const source=reviewed.get(shot.src);assert.ok(source,'unreviewed '+shot.id);}
+ const original=provenance.reusedScenes[0],bytes=await readFile('public'+original.path);
+ assert.equal(bytes.length,original.bytes);
+ assert.equal(createHash('sha256').update(bytes).digest('hex'),original.sha256,'retained Nao image is not silently regenerated');
+ assert.deepEqual(original.modelIds,['nao']);
 });
 
 test('new Babayaga cuts begin on their authored action and preserve the preceding phone diagram and plot',()=>{
