@@ -38,7 +38,7 @@ try {
       await ready();await page.waitForFunction(()=>[...document.querySelectorAll('.v100-event-panel img')].every(img=>img.complete));
       await shot('story');
       const before=await stored();const cursor=await page.locator('.v100-event-layout').getAttribute('data-v100-node-index');
-      await click('読み返す');await page.getByRole('heading',{name:'ここまでの会話',exact:true}).waitFor();
+      await click('会話ログ');await page.getByRole('heading',{name:'ここまでの会話',exact:true}).waitFor();
       assert.ok(await page.locator('.v100-current-transcript li').count()>0);await shot('transcript');
       await page.getByRole('dialog').getByRole('button',{name:'閉じる',exact:true}).click();
       assert.equal(await stored(),before,'Transcript must not change cursor, receipts, settings, or revision');

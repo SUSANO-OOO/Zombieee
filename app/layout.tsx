@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { V099_APP_ICON_IDENTITY } from "./appIconIdentity.js";
 import { RELEASE_TITLE, RELEASE_VERSION } from "./releaseIdentity.js";
-import { V075_VISUAL_PROFILES } from "./visualProfiles.js";
 import { FictionNotice } from "./FictionNotice";
 import { LandscapeGate } from "./LandscapeGate";
 import "./globals.css";
@@ -50,7 +49,6 @@ export default function RootLayout({
     <html lang="ja">
       <head>
         <link rel="preload" as="image" href="/art/v060/title-key-visual-v1.webp" fetchPriority="high" />
-        <link rel="preload" as="image" href={V075_VISUAL_PROFILES.ikura.eventPortrait.path} />
         <link rel="preload" as="font" type="font/woff2" href="/fonts/v100/BIZUDPGothic-Regular.woff2" crossOrigin="anonymous" />
         <link rel="preload" as="font" type="font/woff2" href="/fonts/v100/ZenKakuGothicNew-Bold.woff2" crossOrigin="anonymous" />
         <link rel="preload" as="font" type="font/woff2" href="/fonts/v100/Rajdhani-Bold.woff2" crossOrigin="anonymous" />
