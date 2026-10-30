@@ -121,7 +121,7 @@ for(const engine of engines){
     const insertLabels=[...element.querySelectorAll('.v100-story-insert svg text')].map(rect);
     const phoneMessage=element.querySelector('.v100-insert-phone-message');
     const phone=phoneMessage?{text:phoneMessage.textContent,lines:[...phoneMessage.querySelectorAll('tspan')].map(rect),panel:rect(element.querySelector('[data-v100-insert="message-backlog"] .v100-insert-arrival'))}:null;
-      return {scene:rect(element),copy:rect(box),text:rect(box.querySelector('p')),textValue:[...box.querySelectorAll('p')].map(p=>p.innerText).join(''),backdrop:getComputedStyle(element.querySelector('.v100-event-backdrop')).backgroundImage,actions:rect(box.querySelector('.v100-event-actions')),heading:element.querySelector('.v100-event-heading').innerText,headingBox:rect(element.querySelector('.v100-event-heading')),insertTitle:insertTitle?rect(insertTitle):null,insertCaption,insertLabels,phone,portraits:[...element.querySelectorAll('.v100-portrait-frame')].map(e=>({owner:e.dataset.portraitOwner,side:e.dataset.portraitSide,rect:rect(e),image:rect(e.querySelector('img'))}))};
+      return {scene:rect(element),copy:rect(box),text:rect(box.querySelector('p')),textValue:[...box.querySelectorAll('p')].map(p=>p.innerText).join(''),backdrop:getComputedStyle(element.querySelector('.v100-event-backdrop')).backgroundImage,actions:rect(box.querySelector('.v100-event-actions')),heading:element.querySelector('.v100-event-heading .v100-kicker').innerText,headingBox:rect(element.querySelector('.v100-event-heading')),insertTitle:insertTitle?rect(insertTitle):null,insertCaption,insertLabels,phone,portraits:[...element.querySelectorAll('.v100-portrait-frame')].map(e=>({owner:e.dataset.portraitOwner,side:e.dataset.portraitSide,rect:rect(e),image:rect(e.querySelector('img'))}))};
    });
    geometry.identityFrames=await scene.evaluate(readV100IdentityFrames);
    geometry.detailShots=await scene.evaluate(readDetailShots);
@@ -255,6 +255,22 @@ for(const engine of engines){
    if(fixture.id==='pair'){
     const afterSides=await page.locator('.v100-portrait-frame').evaluateAll(xs=>Object.fromEntries(xs.map(x=>[x.dataset.portraitOwner,x.dataset.portraitSide])));
     for(const owner of Object.keys(beforeSides))if(afterSides[owner])assert.equal(afterSides[owner],beforeSides[owner]);
+   }
+   if(await scene.locator('.v100-insert-expand').count()){
+    const opener=scene.getByRole('button',{name:'資料を拡大',exact:true});
+    const copyBefore=await scene.locator('.v100-node-copy').innerText();
+    const saveBefore=await page.evaluate(()=>localStorage.getItem('nishijin-campaign-v100'));
+    await opener.click();const reader=page.getByRole('dialog');await reader.waitFor({state:'visible'});
+    const material=await reader.evaluate(el=>{const b=el.getBoundingClientRect(),heading=el.querySelector('.v100-insert-heading').getBoundingClientRect();return {x:b.x,y:b.y,width:b.width,height:b.height,headingHeight:heading.height};});
+    assert.ok(material.x>=0&&material.y>=0&&material.x+material.width<=viewport.width+1&&material.y+material.height<=viewport.height+1,'material reader fits viewport');
+    assert.ok(material.headingHeight>=12,'expanded diagram heading is readable');
+    await page.screenshot({path:out+'/'+engine+'-'+viewport.width+'x'+viewport.height+'-'+fixture.id+'-expanded.png'});
+    if(fixture.id==='insert-message-backlog')await page.keyboard.press('Escape');
+    else await reader.getByRole('button',{name:'閉じる',exact:true}).click();
+    await reader.waitFor({state:'hidden'});
+    assert.equal(await scene.locator('.v100-node-copy').innerText(),copyBefore,'material reading does not advance story');
+    assert.equal(await page.evaluate(()=>localStorage.getItem('nishijin-campaign-v100')),saveBefore,'material reading preserves save');
+    result.insertReader=material;
    }
    assert.deepEqual(result.errors,[]);result.status='passed';
   }catch(error){result.status='failed';result.error=String(error);await page.screenshot({path:out+'/'+engine+'-'+viewport.width+'x'+viewport.height+'-'+fixture.id+'-failure.png'}).catch(()=>{});}
