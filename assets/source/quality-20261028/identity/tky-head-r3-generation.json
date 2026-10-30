@@ -1,0 +1,10 @@
+{
+  "method": "built-in image_gen",
+  "prompt": "Use case: identity-preserve. Edit the HEAD-ONLY sprite in image 1 to exactly match the corrected handsome Korean-drama-styled TKY portrait in image 2, strongly preserving the specific real man's recognizable facial features in original photographs 3 and 4. Image 1 controls only precise three-quarter view facing screen RIGHT, head tilt, crop, full hair/short neck and transparent margins. Image 2 controls finished face identity and polished handsome grooming. Refine the same man's natural face outline, eyes/nose/lips; keep characteristic narrow hooded eyes with a clear confident gaze and subtle attractive closed-mouth expression, not a generic pointed-jaw actor. Clear healthy natural matte skin, clean-shaven including beard shadow; soften tired under-eye/forehead shadows and harsh ageing creases. Neatly styled healthy black curtain fringe and controlled volume, matching portrait 2. Preserve actual adult age. No comic hatching, plastic sheen or pasted face edges. One complete head with short neck only, no shoulders or clothing or weapons, same orientation and neck cut as image 1 so it attaches to the existing battle body. Genuine transparent alpha, no glow/backdrop, text, border or grid.",
+  "references": [
+    "tky-head-r2.png: orientation/neck template",
+    "tky-warm-r10.png: corrected handsome identity",
+    "Private TKY photographs 1 and 3"
+  ],
+  "scope": "Current r10 grooming and identity; no Producer acceptance or numeric likeness claim"
+}

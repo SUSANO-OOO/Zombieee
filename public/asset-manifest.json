@@ -1960,8 +1960,8 @@
     },
     {
       "path": "/art/v100/joints/tky-quality-head-r1.webp",
-      "bytes": 36710,
-      "hash": "sha256-4b58ace45143d7c05ad64155ba4778af46b7324093a4f02e052088973970f63e",
+      "bytes": 36770,
+      "hash": "sha256-fae56b32679fe35d49be0face1968af7740e08d31aefe2ddc486f07341138fc2",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"
@@ -2908,40 +2908,40 @@
     },
     {
       "path": "/art/v100/portraits/tky-alarm-quality-r1.webp",
-      "bytes": 87298,
-      "hash": "sha256-6a51aa8c5181f5764f0749c388d5f665ccc9ceb27a5a3fc6ca1de3d6cecfd18b",
+      "bytes": 86568,
+      "hash": "sha256-142cfea4453ea1e644a7dec235e01030adda9f0d07cb9b92c0846d256b30c82e",
       "pack": "units",
       "category": "portrait",
       "criticality": "critical"
     },
     {
       "path": "/art/v100/portraits/tky-determined-quality-r1.webp",
-      "bytes": 87508,
-      "hash": "sha256-c1cb5752250fb97224a8a2573aec1b9b3cdb91a568b897085e51128d08f0df0e",
+      "bytes": 88522,
+      "hash": "sha256-294c4387cb5b2343f34532662d311f4fcdb2e638c623137768072a14ae277d9f",
       "pack": "units",
       "category": "portrait",
       "criticality": "optional"
     },
     {
       "path": "/art/v100/portraits/tky-formation-card-quality-r1.webp",
-      "bytes": 58560,
-      "hash": "sha256-8702b81175b55b746174f8c0fc9ff852a57c8be94f8d86f98586284d7a241ebf",
+      "bytes": 59646,
+      "hash": "sha256-f4c667ee78d94721b62bda2306403bc0989f764085fe79cc7cb4579b18340c69",
       "pack": "units",
       "category": "portrait",
       "criticality": "optional"
     },
     {
       "path": "/art/v100/portraits/tky-grief-quality-r1.webp",
-      "bytes": 85004,
-      "hash": "sha256-bcfb5e4001e550cfa1f691aa7fd6cb6229a12179cf26512707b449b9c296032f",
+      "bytes": 88600,
+      "hash": "sha256-ed5d725dbd97f5ce3dec2b81ce14d0faf29dbbea63a8cba3c74b413c5aa49019",
       "pack": "units",
       "category": "portrait",
       "criticality": "critical"
     },
     {
       "path": "/art/v100/portraits/tky-warm-quality-r1.webp",
-      "bytes": 85482,
-      "hash": "sha256-2ad71309644faff1eb07c7b094c805eb22311d68de8d457e97fb54206b53d821",
+      "bytes": 86670,
+      "hash": "sha256-9a7aad7f31567740f74cf7caf31da604c95f792276395bc2073976a56fa9c8e9",
       "pack": "units",
       "category": "portrait",
       "criticality": "critical"

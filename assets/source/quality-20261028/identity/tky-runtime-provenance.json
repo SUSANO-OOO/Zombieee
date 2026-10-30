@@ -1,16 +1,16 @@
 {
   "generator": "scripts/build-quality-canonical-portraits.mjs",
   "master": {
-    "path": "assets/source/quality-20261028/identity/tky-warm-r9.png",
-    "sha256": "6af684cca28a24c937fb8c4aa59e276326cddc4d355a367c8bee1eddb2591ea8"
+    "path": "assets/source/quality-20261028/identity/tky-warm-r10.png",
+    "sha256": "52b444b935443afffaf66f818182adff59e4cc4b5c51c1f095fcd67e463662d0"
   },
   "source": {
-    "path": "assets/source/quality-20261028/identity/tky-warm-r9.png",
-    "sha256": "6af684cca28a24c937fb8c4aa59e276326cddc4d355a367c8bee1eddb2591ea8",
+    "path": "assets/source/quality-20261028/identity/tky-warm-r10.png",
+    "sha256": "52b444b935443afffaf66f818182adff59e4cc4b5c51c1f095fcd67e463662d0",
     "width": 1024,
     "height": 1536
   },
-  "masterRole": "Costume from r8, facial proportions corrected from original Producer photos; see tky-photo-r9-generation.json",
+  "masterRole": "Photo identity plus refined handsome Korean-drama grooming; see tky-photo-r10-generation.json",
   "expressions": [
     "warm",
     "determined",
@@ -20,55 +20,55 @@
   "additionalSources": [
     {
       "expression": "warm",
-      "path": "assets/source/quality-20261028/identity/tky-warm-r9.png",
-      "sha256": "6af684cca28a24c937fb8c4aa59e276326cddc4d355a367c8bee1eddb2591ea8"
+      "path": "assets/source/quality-20261028/identity/tky-warm-r10.png",
+      "sha256": "52b444b935443afffaf66f818182adff59e4cc4b5c51c1f095fcd67e463662d0"
     },
     {
       "expression": "determined",
-      "path": "assets/source/quality-20261028/identity/tky-determined-r9.png",
-      "sha256": "cb27b0f1974793f81f3740408c3658a57e07fd82ea3917f9ecb6d1a456d26574"
+      "path": "assets/source/quality-20261028/identity/tky-determined-r10.png",
+      "sha256": "5defbfce7998b30cd7389d4a760673a034e200b8c33eb93451b4ad4f524a3f5d"
     },
     {
       "expression": "alarm",
-      "path": "assets/source/quality-20261028/identity/tky-alarm-r9.png",
-      "sha256": "be029327678b1c178b990e81e40cd42218b813cba2907d7cb72d08139c98b1d0"
+      "path": "assets/source/quality-20261028/identity/tky-alarm-r10.png",
+      "sha256": "f8a40d0309007175a6245931e923467470f5b29a55e4c6d17bb7b1927c001eaf"
     },
     {
       "expression": "grief",
-      "path": "assets/source/quality-20261028/identity/tky-grief-r9.png",
-      "sha256": "6c5d4e53f6e061ac1dc86d0f64d59d1707a18afaaea1f3b71c94b6e139b13957"
+      "path": "assets/source/quality-20261028/identity/tky-grief-r10.png",
+      "sha256": "c2c78ad54834bd2f0cc331883b009b1557a319e92691306e693a602de1c6a348"
     }
   ],
   "outputs": [
     {
       "path": "public/art/v100/portraits/tky-warm-quality-r1.webp",
-      "sha256": "2ad71309644faff1eb07c7b094c805eb22311d68de8d457e97fb54206b53d821",
-      "bytes": 85482
+      "sha256": "9a7aad7f31567740f74cf7caf31da604c95f792276395bc2073976a56fa9c8e9",
+      "bytes": 86670
     },
     {
       "path": "public/art/v100/portraits/tky-formation-card-quality-r1.webp",
-      "sha256": "8702b81175b55b746174f8c0fc9ff852a57c8be94f8d86f98586284d7a241ebf",
-      "bytes": 58560
+      "sha256": "f4c667ee78d94721b62bda2306403bc0989f764085fe79cc7cb4579b18340c69",
+      "bytes": 59646
     },
     {
       "path": "public/art/v100/portraits/tky-determined-quality-r1.webp",
-      "sha256": "c1cb5752250fb97224a8a2573aec1b9b3cdb91a568b897085e51128d08f0df0e",
-      "bytes": 87508
+      "sha256": "294c4387cb5b2343f34532662d311f4fcdb2e638c623137768072a14ae277d9f",
+      "bytes": 88522
     },
     {
       "path": "public/art/v100/portraits/tky-alarm-quality-r1.webp",
-      "sha256": "6a51aa8c5181f5764f0749c388d5f665ccc9ceb27a5a3fc6ca1de3d6cecfd18b",
-      "bytes": 87298
+      "sha256": "142cfea4453ea1e644a7dec235e01030adda9f0d07cb9b92c0846d256b30c82e",
+      "bytes": 86568
     },
     {
       "path": "public/art/v100/portraits/tky-grief-quality-r1.webp",
-      "sha256": "bcfb5e4001e550cfa1f691aa7fd6cb6229a12179cf26512707b449b9c296032f",
-      "bytes": 85004
+      "sha256": "ed5d725dbd97f5ce3dec2b81ce14d0faf29dbbea63a8cba3c74b413c5aa49019",
+      "bytes": 88600
     }
   ],
   "runtimeAssetCount": 5,
-  "logicalBytes": 403852,
-  "distinctBytes": 403852,
+  "logicalBytes": 410006,
+  "distinctBytes": 410006,
   "scope": "Dialogue expressions and formation/personnel cards. Battle and scene paintings require separate verification.",
   "acceptance": "Canonical identity reference restored; not a numeric likeness score or Producer acceptance."
 }
