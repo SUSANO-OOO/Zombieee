@@ -4261,8 +4261,9 @@ export const V100_STORY_EVENTS=Object.freeze({
         "sourceDocument": "STORY_SCRIPT_V100_PRODUCER_R9.md",
         "sourceKey": "r9:618",
         "audioSceneId": "v100-r9-s06-old-message",
-        "insertId": "message-backlog",
+        "insertId": null,
         "expression": "alarm",
+        "cutId": "s06-babayaga-old-message",
         "cueId": "v100-story-latch"
       },
       {
@@ -4276,7 +4277,9 @@ export const V100_STORY_EVENTS=Object.freeze({
           620
         ],
         "sourceDocument": "STORY_SCRIPT_V100_PRODUCER_R9.md",
-        "sourceKey": "r9:620"
+        "sourceKey": "r9:620",
+        "cutId": "s06-babayaga-old-message",
+        "insertId": null
       },
       {
         "kind": "action",
@@ -10709,6 +10712,8 @@ export const V100_STORY_EVENTS=Object.freeze({
         ],
         "sourceDocument": "STORY_SCRIPT_V100_PRODUCER_R9.md",
         "sourceKey": "r9:1553",
+        "cutId": "s18-babayaga-chiha-records",
+        "insertId": null,
         "cueId": "v100-story-fabric",
         "actionSubjects": [
           "unit-mrs-chiha",
@@ -14703,7 +14708,9 @@ export const V100_STORY_EVENTS=Object.freeze({
           2115
         ],
         "sourceDocument": "STORY_SCRIPT_V100_PRODUCER_R9.md",
-        "sourceKey": "r9:2115"
+        "sourceKey": "r9:2115",
+        "cutId": "s27-babayaga-cover",
+        "insertId": null
       },
       {
         "kind": "dialogue",
@@ -14716,7 +14723,9 @@ export const V100_STORY_EVENTS=Object.freeze({
           2117
         ],
         "sourceDocument": "STORY_SCRIPT_V100_PRODUCER_R9.md",
-        "sourceKey": "r9:2117"
+        "sourceKey": "r9:2117",
+        "cutId": "s27-babayaga-cover",
+        "insertId": null
       },
       {
         "kind": "battle-marker",

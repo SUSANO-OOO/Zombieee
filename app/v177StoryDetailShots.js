@@ -1,3 +1,4 @@
+import {V100_QUALITY_SCENE_ASSETS,v100QualityScenePathFor} from './v100QualitySceneAssets.js';
 const shots={
   's01-nao-rescue':{rect:[610,365,570,310],side:'right',compactEdge:true,focus:[.5,0],
     landmarkSourceHash:'ae684ae099ea339497a899dedb86ca9cecb7ae6ad694a9a10785d15573a28e48',
@@ -16,7 +17,15 @@ export const V177_STORY_DETAIL_SHOTS=Object.freeze(Object.fromEntries(Object.ent
 export function v177StoryDetailShotFor(src){
   if(typeof src!=='string')return null;
   const pathname=src.split(/[?#]/u)[0];
-  return Object.values(V177_STORY_DETAIL_SHOTS).find(shot=>pathname.endsWith(`/art/v100/story-r9/cuts/${shot.id}.webp`))??null;
+  for(const shot of Object.values(V177_STORY_DETAIL_SHOTS)){
+    const original=`/art/v100/story-r9/cuts/${shot.id}.webp`;
+    if(pathname.endsWith(original))return shot;
+    if(pathname.endsWith(v100QualityScenePathFor(original))){
+      const detail=V100_QUALITY_SCENE_ASSETS[shot.id]?.detail;
+      return detail?Object.freeze({...shot,...detail,rect:Object.freeze(detail.rect)}):shot;
+    }
+  }
+  return null;
 }
 
 export function v177StoryImagePositionFor(src){

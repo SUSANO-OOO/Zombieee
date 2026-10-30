@@ -20,8 +20,8 @@ function assertDelta(next){
 
 test('quality candidate contains exactly the reviewed art and firearm delta while retaining unrelated payloads',async()=>{
   assertDelta(candidate);
-  assert.equal(contract.added.length,104);assert.equal(contract.retired.length,108);
-  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),13597959);
+  assert.equal(contract.added.length,115);assert.equal(contract.retired.length,116);
+  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),17816963);
   for(const row of contract.added){
     const bytes=await readFile(new URL('../public'+(row.sourcePath??row.path),import.meta.url));
     assert.equal(bytes.length,row.bytes,row.path);

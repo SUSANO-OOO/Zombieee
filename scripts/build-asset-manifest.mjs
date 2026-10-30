@@ -64,6 +64,7 @@ import { V100_KUMAVERSON_GUARD_ART } from "../app/v100KumaversonPresentation.js"
 import { V100_FONT_ASSETS } from "../app/v100Typography.js";
 import { v100RegionalMapPaths } from "../app/v100RegionalMap.js";
 import { V177_JOINT_ATLASES } from "../app/v177JointPresentation.js";
+import {v100QualityScenePathFor} from '../app/v100QualitySceneAssets.js';
 
 const root = process.cwd();
 const publicDir = path.join(root, "public");
@@ -116,6 +117,7 @@ const excluded = new Set();
  * explicit registrations below take precedence over the generic sweeps.
  */
 function record(assetPath, classification) {
+  assetPath=v100QualityScenePathFor(assetPath);
   if (typeof assetPath !== "string" || !assetPath.startsWith("/")) return;
   assertV100ArtAllowed(assetPath);
   if (!ASSET_EXTENSION.test(assetPath)) return;

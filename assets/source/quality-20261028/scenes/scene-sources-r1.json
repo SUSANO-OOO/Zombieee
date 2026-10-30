@@ -1,0 +1,227 @@
+{
+  "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+  "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open.",
+  "models": [
+    {
+      "id": "babayaga",
+      "source": "assets/source/quality-20261028/identity/babayaga-master-r1.png",
+      "sha256": "c571d91e3ae9b97f0ac558ae6cacffa4661b268dadf0a46e6f47a7b2fb670aa4"
+    },
+    {
+      "id": "kumaverson",
+      "source": "assets/source/quality-20261028/identity/kumaverson-master-r2.png",
+      "sha256": "51a5acb5a77f53eac921b49a5adefd681218f9f44f64e70caaf416ed2b6ed501"
+    },
+    {
+      "id": "paisen",
+      "source": "assets/source/quality-20261028/identity/paisen-photo-master-r7.png",
+      "sha256": "c769eb81a096e9fb1747df0c4ab93452b2ad844fb37e21707d5ef51aec76de66"
+    },
+    {
+      "id": "tky",
+      "source": "assets/source/quality-20261028/identity/tky-89-warm-r1.png",
+      "sha256": "b49532ac389340e952707d6f102933c3f7b716aa6743ba0778be3b313377325e"
+    },
+    {
+      "id": "chiha",
+      "source": "assets/source/quality-20261028/identity/chiha-master-r4.png",
+      "sha256": "d9acf14c0f75ce8e80b4dd2e7f8285e154562e72082200be68983ef292369705"
+    },
+    {
+      "id": "zakimiya",
+      "source": "assets/source/quality-20261028/identity/zakimiya-canonical-master-r1.png",
+      "sha256": "303adc8b4126badbc98969b476b773bd4a35c3817b34d3de6478842245dfa389"
+    },
+    {
+      "id": "hachi",
+      "source": "assets/source/quality-20261028/identity/hachi-master-r4.png",
+      "sha256": "e722cc7aca81806cd7d2d1403c425262466ea4f1aa44b877731dcef79ee080bb"
+    },
+    {
+      "id": "mayo",
+      "source": "assets/source/quality-20261028/identity/mayo-master-r4.png",
+      "sha256": "ed4804adffdc00585130dda8803f5f1d2ccc3d818c15191a23e38558476a434c"
+    },
+    {
+      "id": "gantetsu",
+      "source": "assets/source/quality-20261028/identity/gantetsu-master-r4.png",
+      "sha256": "ec06125c13977b05bbc704a7b8594b2c3b3bf716f7954e4647158ec8edadf51d"
+    }
+  ],
+  "scenes": [
+    {
+      "id": "ending-plates-and-karaage",
+      "master": "assets/source/quality-20261028/scenes/ending-plates-and-karaage-quality-r4.png",
+      "masterSha256": "32ef6801c8054474fda1b56c9608aa9163149c1dfab4ad4cdae2bd335c12a5c5",
+      "previousPath": "/art/v100/story-r9/cuts/ending-plates-and-karaage.webp",
+      "previousSha256": "6646693e93e20fc4f29f86e0fcc4ef8aadf9b6d8e88f0fb6e426b9ef044ff3a9",
+      "path": "/art/v100/quality-20261028/scenes/ending-plates-and-karaage-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "パイセンが皿を受け取り、TKYは食卓で皿を渡す。マヨは机の下で寝返りを打つ。",
+      "newEvent": false,
+      "detail": {
+        "rect": [
+          1460,
+          430,
+          400,
+          190
+        ],
+        "sourceWidth": 1920,
+        "sourceHeight": 640
+      }
+    },
+    {
+      "id": "epilogue-tky-receipt",
+      "master": "assets/source/quality-20261028/scenes/epilogue-tky-receipt-quality-r2.png",
+      "masterSha256": "787f7e792e417ecc788c87977b24072c882f089e20229a0ee4901bc4ea9dc9e3",
+      "previousPath": "/art/v100/story-r5/cuts/epilogue-tky-receipt.webp",
+      "previousSha256": "888b64289b35a60779de2d3acfe99257512b0f11b0188e6338b3ba1440f26932",
+      "path": "/art/v100/quality-20261028/scenes/epilogue-tky-receipt-r1.webp",
+      "dimensions": [
+        1280,
+        720
+      ],
+      "alt": "TKYが領収書を差し出し、パイセンは唐揚げを食べ、クマバーソンがしゃもじを向ける。",
+      "newEvent": false
+    },
+    {
+      "id": "facility-power",
+      "master": "assets/source/quality-20261028/scenes/facility-power-quality-r2.png",
+      "masterSha256": "672883e9bf6cbabecb96022934cdbd69e4b9d22926f419d7db02b01f54a7b262",
+      "previousPath": "/art/v100/credits/facility-power-r1.webp",
+      "previousSha256": "e06468bee34ad9968755307f678e72409309f1374642dc8d30a46c2cb3aac8e9",
+      "path": "/art/v100/quality-20261028/scenes/facility-power-r1.webp",
+      "dimensions": [
+        1600,
+        900
+      ],
+      "alt": "TKYが臨時診療所の電源をつなぎ、チハが手元を照らす。",
+      "newEvent": false
+    },
+    {
+      "id": "vehicle-patch",
+      "master": "assets/source/quality-20261028/scenes/vehicle-patch-quality-r2.png",
+      "masterSha256": "a17ff99ee39e30de584d15aa4bc60310c750710db0c030bc9b68b3f5ef01af55",
+      "previousPath": "/art/v100/credits/vehicle-patch-r2.webp",
+      "previousSha256": "e1acf21a03581a9a78028e8c197d4f56396a3af0b769a84fefdfb736d24226e6",
+      "path": "/art/v100/quality-20261028/scenes/vehicle-patch-r1.webp",
+      "dimensions": [
+        1600,
+        900
+      ],
+      "alt": "TKYと顔を覆ったガンテツが車体を修理する。",
+      "newEvent": false
+    },
+    {
+      "id": "vehicle-mayo-splash",
+      "master": "assets/source/quality-20261028/scenes/vehicle-mayo-splash-quality-r1.png",
+      "masterSha256": "30586f804468ffb1b71612fb27a6b72540cbacd5b0619940cfe3a025cf3fc179",
+      "previousPath": "/art/v100/credits/vehicle-mayo-splash-r1.webp",
+      "previousSha256": "d50b3c1030d11a4aa7367ce99d2aeb348c797a6ab5275b022bb0d70c20011a19",
+      "path": "/art/v100/quality-20261028/scenes/vehicle-mayo-splash-r1.webp",
+      "dimensions": [
+        1600,
+        900
+      ],
+      "alt": "マヨが水を振り払い、ハチとTKYが驚き、ガンテツはタオルを持つ。",
+      "newEvent": false
+    },
+    {
+      "id": "s14-train-couplers",
+      "master": "assets/source/quality-20261028/scenes/s14-train-couplers-quality-r3.png",
+      "masterSha256": "b71ff91efdd25b13f164dc323d9b7ebee09cda22dbb36a2fd0435d420f3dd7cd",
+      "previousPath": "/art/v100/story-r9/cuts/s14-train-couplers.webp",
+      "previousSha256": "96a72df5e0e97aaf91f3ef44c24441fea9abd8976868f50be9f728ce621b2e33",
+      "path": "/art/v100/quality-20261028/scenes/s14-train-couplers-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "TKYが大口を押さえ、仲間が赤い連結解除レバーを操作する。青いブレーキ管は切らずに残す。",
+      "newEvent": false,
+      "detail": {
+        "rect": [
+          750,
+          375,
+          1130,
+          255
+        ],
+        "sourceWidth": 1920,
+        "sourceHeight": 640
+      }
+    },
+    {
+      "id": "epilogue-main-table",
+      "master": "assets/source/quality-20261028/scenes/epilogue-main-table-quality-r2.png",
+      "masterSha256": "5ff1f12776302ae7f87c775b59a1a19467333121e18acb8f40cb337cd7b174f3",
+      "previousPath": "/art/v100/story-r5/cuts/epilogue-main-table.webp",
+      "previousSha256": "6d645384d976136a41b559a3cc02b541040cdab03f0aacb7a4a2388330980ba2",
+      "path": "/art/v100/quality-20261028/scenes/epilogue-main-table-r1.webp",
+      "dimensions": [
+        1280,
+        720
+      ],
+      "alt": "くまやで六人の仲間とマヨが食卓を囲む。",
+      "newEvent": false
+    },
+    {
+      "id": "ending-tky-transport",
+      "master": "assets/source/quality-20261028/scenes/ending-tky-transport-quality-r3.png",
+      "masterSha256": "954d7fa3ecf9499e377a2a461c9b2d254052410348dd4ea55ebe11e0d70e23a5",
+      "previousPath": "/art/v100/story-r5/cuts/ending-tky-transport.webp",
+      "previousSha256": "4fc1cd8e5dd892e0d11e8c16584c5c96da6884f2bc80e728d60e48d3f3a4a613",
+      "path": "/art/v100/quality-20261028/scenes/ending-tky-transport-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "TKYが運転席に座り、クマバーソンが医療箱を抱え、パイセンが車両の扉を押さえる。",
+      "newEvent": false
+    },
+    {
+      "id": "s06-babayaga-old-message",
+      "master": "assets/source/quality-20261028/scenes/s06-babayaga-old-message-quality-r2.png",
+      "masterSha256": "197f566e3603eee115b9e6e17b1ab45aa940225d46d03db1c71b613dd0a3d0d5",
+      "previousPath": null,
+      "previousSha256": null,
+      "path": "/art/v100/quality-20261028/scenes/s06-babayaga-old-message-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "古い通知を探すババヤガが、中継器の下に立ち止まっている。",
+      "newEvent": true
+    },
+    {
+      "id": "s18-babayaga-chiha-records",
+      "master": "assets/source/quality-20261028/scenes/s18-babayaga-chiha-records-quality-r2.png",
+      "masterSha256": "793bc14cb93827bad8db797adcaca2626f65c2abe275fd0c1dfa08ecd651b60d",
+      "previousPath": null,
+      "previousSha256": null,
+      "path": "/art/v100/quality-20261028/scenes/s18-babayaga-chiha-records-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "問いへの返事をしないババヤガが、チハと一緒に記録の箱を搬送車へ運ぶ。",
+      "newEvent": true
+    },
+    {
+      "id": "s27-babayaga-cover",
+      "master": "assets/source/quality-20261028/scenes/s27-babayaga-cover-quality-r3.png",
+      "masterSha256": "c3b22b4bed01e09fcb39e2dc61c8f9affd5f2db6da98ebb3b5024f1c750a9e30",
+      "previousPath": null,
+      "previousSha256": null,
+      "path": "/art/v100/quality-20261028/scenes/s27-babayaga-cover-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "車体の陰で、サプレッサー付きのタクティカルハンドガンを構えるババヤガ。",
+      "newEvent": true
+    }
+  ]
+}

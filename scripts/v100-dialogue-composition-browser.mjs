@@ -4,6 +4,7 @@ import {dirname} from 'node:path';
 import {pwaBrowserType} from './pwa-browser-runtime.mjs';
 import {V100_STORY_EVENTS} from '../app/v100StoryEvents.js';
 import {V100_R9_SCENE_ASSETS} from '../app/v100R9SceneAssets.js';
+import {V100_QUALITY_SCENE_ASSETS,v100QualityScenePathFor} from '../app/v100QualitySceneAssets.js';
 import {V100_R5_STORY_CUTS} from '../app/v100StoryDirection.js';
 import {V177_PAISEN_STORY_REPLACEMENTS} from './v177-paisen-story-asset-contract.mjs';
 import {v100StoryInsertFor} from '../app/v100StoryInserts.js';
@@ -43,20 +44,21 @@ const all=Object.entries(V100_STORY_EVENTS).flatMap(([eventId,event])=>event.nod
 const longest=all.filter(x=>x.node.kind==='dialogue').sort((a,b)=>b.node.text.length-a.node.text.length)[0];
 // Every new illustrated cut and explanatory insert is inspected. Fixtures
 // bind to the current producer script, rather than obsolete R5 node indices.
-const cutCases=Object.entries(V100_R9_SCENE_ASSETS).map(([cutId,asset])=>{
+const currentCuts={...V100_R9_SCENE_ASSETS,...Object.fromEntries(Object.entries(V100_QUALITY_SCENE_ASSETS).filter(([,asset])=>asset.newEvent))};
+const cutCases=Object.entries(currentCuts).map(([cutId,asset])=>{
  const found=all.find(({node})=>node.cutId===cutId);
  assert.ok(found,`Unbound R9 cut: ${cutId}`);
- return {id:cutId,eventId:found.eventId,nodeIndex:found.nodeIndex,backdrop:asset.path};
+ return {id:cutId,eventId:found.eventId,nodeIndex:found.nodeIndex,backdrop:v100QualityScenePathFor(asset.path)};
 });
 const insertIds=[...new Set(all.map(({node})=>node.insertId).filter(Boolean))];
 const insertCases=insertIds.map(insertId=>{
  const found=all.find(({node})=>node.insertId===insertId);
  return {id:'insert-'+insertId,eventId:found.eventId,nodeIndex:found.nodeIndex,insertId};
 });
-assert.equal(cutCases.length,17);
+assert.equal(cutCases.length,20);
 function revisedLegacyCutCases() {
  return V177_PAISEN_STORY_REPLACEMENTS.flatMap(revision=>{
-  const asset=Object.entries(V100_R5_STORY_CUTS).find(([,path])=>path===revision.path);
+  const asset=Object.entries(V100_R5_STORY_CUTS).find(([,path])=>path===v100QualityScenePathFor(revision.path));
   if(!asset)return [];
   const [cutId,backdrop]=asset,found=all.find(({node})=>node.cutId===cutId);
   assert.ok(found,'Unbound revised legacy cut: '+cutId);

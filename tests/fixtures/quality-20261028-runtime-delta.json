@@ -669,6 +669,83 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/v100/quality-20261028/scenes/ending-plates-and-karaage-r1.webp",
+      "hash": "sha256-fb6457bfb46ba9c1cb1337e6c007f429af6e9808b41db4b0adedbc368ac0d5a3",
+      "bytes": 388634,
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/ending-tky-transport-r1.webp",
+      "hash": "sha256-99b5219f9284b144f9a8e2a2686dd50d66829a9f27887d97e9923a7923b11006",
+      "bytes": 397770,
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/epilogue-main-table-r1.webp",
+      "hash": "sha256-5cd84f58ced7257e0c0df51da50af7dd29e07a4d71354651fc2dd0b8ff1f861c",
+      "bytes": 321608,
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/epilogue-tky-receipt-r1.webp",
+      "hash": "sha256-3ffd9767e4f80b5f3f80243e10fe1a6d0a147a9b2625ea90ecebccb7fa6e883d",
+      "bytes": 264412,
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/facility-power-r1.webp",
+      "hash": "sha256-83de39b2525b26ee94967a6782216b3e762caa057d6355e0485c1d56f7cc49de",
+      "bytes": 412444,
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/s06-babayaga-old-message-r1.webp",
+      "hash": "sha256-a886081cae7b38a040770cb79dddf2e5a813222418fa2b6404e3b1783af29038",
+      "bytes": 305886,
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/s14-train-couplers-r1.webp",
+      "hash": "sha256-828b0c316d6b117de60c7ac9d5e3b320f375b1e87aa7f9b6c9c2d201aca8c4b0",
+      "bytes": 474848,
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/s18-babayaga-chiha-records-r1.webp",
+      "hash": "sha256-d4d267474b1cd467fc0ff74b8c68af5fe9bcfff62ac2a04fb5d9a5270ec13391",
+      "bytes": 323800,
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/s27-babayaga-cover-r1.webp",
+      "hash": "sha256-f2520b88776a2d21131cfdb6e70a506975e36e487f0e57d7ce0f43aa735714e3",
+      "bytes": 392024,
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/vehicle-mayo-splash-r1.webp",
+      "hash": "sha256-a706ace61ec5b75e9a94b49fdfa29e88bdd472a001e337791dfc2a11e8fba33e",
+      "bytes": 571424,
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/vehicle-patch-r1.webp",
+      "hash": "sha256-fe1e41f0cfc9d8ac0d846b99776530e0a93ae158f37bbbde28dbc53991bbb447",
+      "bytes": 366154,
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/story-locations/refrigerated-cargo-r1.webp",
       "hash": "sha256-ba943a2219d1c402bfe0452707423ddb3ef45bad0a67a0033cd778ff55293da2",
       "bytes": 263800,
@@ -888,6 +965,27 @@
       "criticality": "optional"
     },
     {
+      "path": "/art/v100/credits/facility-power-r1.webp",
+      "hash": "sha256-e06468bee34ad9968755307f678e72409309f1374642dc8d30a46c2cb3aac8e9",
+      "bytes": 300926,
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/credits/vehicle-mayo-splash-r1.webp",
+      "hash": "sha256-d50b3c1030d11a4aa7367ce99d2aeb348c797a6ab5275b022bb0d70c20011a19",
+      "bytes": 395446,
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/credits/vehicle-patch-r2.webp",
+      "hash": "sha256-e1acf21a03581a9a78028e8c197d4f56396a3af0b769a84fefdfb736d24226e6",
+      "bytes": 229286,
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/joints/babayaga-r1.webp",
       "hash": "sha256-68963ba9025a3b597f2f83600761b360ecb4e080848712bdaffae67d2b6ccecd",
       "bytes": 22584,
@@ -955,6 +1053,27 @@
       "hash": "sha256-626251dba8c16b6db122684ca449444daba3cf8e230fc3c2af6ad34b43ba74da",
       "bytes": 244534,
       "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/cuts/ending-tky-transport.webp",
+      "hash": "sha256-4fc1cd8e5dd892e0d11e8c16584c5c96da6884f2bc80e728d60e48d3f3a4a613",
+      "bytes": 1021992,
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/cuts/epilogue-main-table.webp",
+      "hash": "sha256-6d645384d976136a41b559a3cc02b541040cdab03f0aacb7a4a2388330980ba2",
+      "bytes": 1190224,
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r5/cuts/epilogue-tky-receipt.webp",
+      "hash": "sha256-888b64289b35a60779de2d3acfe99257512b0f11b0188e6338b3ba1440f26932",
+      "bytes": 1132306,
+      "category": "background",
       "criticality": "critical"
     },
     {
@@ -1487,6 +1606,20 @@
       "hash": "sha256-3db8847b824d4698fc77fc0a58d42582f3b95946bb32cc2c4cf5316270789327",
       "bytes": 122458,
       "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r9/cuts/ending-plates-and-karaage.webp",
+      "hash": "sha256-6646693e93e20fc4f29f86e0fcc4ef8aadf9b6d8e88f0fb6e426b9ef044ff3a9",
+      "bytes": 1167152,
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-r9/cuts/s14-train-couplers.webp",
+      "hash": "sha256-96a72df5e0e97aaf91f3ef44c24441fea9abd8976868f50be9f728ce621b2e33",
+      "bytes": 1106538,
+      "category": "background",
       "criticality": "critical"
     },
     {

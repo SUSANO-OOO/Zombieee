@@ -1355,14 +1355,6 @@
       "criticality": "critical"
     },
     {
-      "path": "/art/v100/credits/facility-power-r1.webp",
-      "bytes": 300926,
-      "hash": "sha256-e06468bee34ad9968755307f678e72409309f1374642dc8d30a46c2cb3aac8e9",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
       "path": "/art/v100/credits/floodgate-king-riceball-r2.webp",
       "bytes": 285510,
       "hash": "sha256-c6e8c6cbceffafd95720f5139205fdcdea9e62f63f6b94a3a91b584dd283af97",
@@ -1430,22 +1422,6 @@
       "path": "/art/v100/credits/street-shutter-r2.webp",
       "bytes": 1451784,
       "hash": "sha256-3e585b642bdade97a9c6ebd8c3cee47d772d597e69558d14b8325209877ab103",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/credits/vehicle-mayo-splash-r1.webp",
-      "bytes": 395446,
-      "hash": "sha256-d50b3c1030d11a4aa7367ce99d2aeb348c797a6ab5275b022bb0d70c20011a19",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/credits/vehicle-patch-r2.webp",
-      "bytes": 229286,
-      "hash": "sha256-e1acf21a03581a9a78028e8c197d4f56396a3af0b769a84fefdfb736d24226e6",
       "pack": "campaign-core",
       "category": "background",
       "criticality": "critical"
@@ -2987,6 +2963,94 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/v100/quality-20261028/scenes/ending-plates-and-karaage-r1.webp",
+      "bytes": 388634,
+      "hash": "sha256-fb6457bfb46ba9c1cb1337e6c007f429af6e9808b41db4b0adedbc368ac0d5a3",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/ending-tky-transport-r1.webp",
+      "bytes": 397770,
+      "hash": "sha256-99b5219f9284b144f9a8e2a2686dd50d66829a9f27887d97e9923a7923b11006",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/epilogue-main-table-r1.webp",
+      "bytes": 321608,
+      "hash": "sha256-5cd84f58ced7257e0c0df51da50af7dd29e07a4d71354651fc2dd0b8ff1f861c",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/epilogue-tky-receipt-r1.webp",
+      "bytes": 264412,
+      "hash": "sha256-3ffd9767e4f80b5f3f80243e10fe1a6d0a147a9b2625ea90ecebccb7fa6e883d",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/facility-power-r1.webp",
+      "bytes": 412444,
+      "hash": "sha256-83de39b2525b26ee94967a6782216b3e762caa057d6355e0485c1d56f7cc49de",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/s06-babayaga-old-message-r1.webp",
+      "bytes": 305886,
+      "hash": "sha256-a886081cae7b38a040770cb79dddf2e5a813222418fa2b6404e3b1783af29038",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/s14-train-couplers-r1.webp",
+      "bytes": 474848,
+      "hash": "sha256-828b0c316d6b117de60c7ac9d5e3b320f375b1e87aa7f9b6c9c2d201aca8c4b0",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/s18-babayaga-chiha-records-r1.webp",
+      "bytes": 323800,
+      "hash": "sha256-d4d267474b1cd467fc0ff74b8c68af5fe9bcfff62ac2a04fb5d9a5270ec13391",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/s27-babayaga-cover-r1.webp",
+      "bytes": 392024,
+      "hash": "sha256-f2520b88776a2d21131cfdb6e70a506975e36e487f0e57d7ce0f43aa735714e3",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/vehicle-mayo-splash-r1.webp",
+      "bytes": 571424,
+      "hash": "sha256-a706ace61ec5b75e9a94b49fdfa29e88bdd472a001e337791dfc2a11e8fba33e",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/quality-20261028/scenes/vehicle-patch-r1.webp",
+      "bytes": 366154,
+      "hash": "sha256-fe1e41f0cfc9d8ac0d846b99776530e0a93ae158f37bbbde28dbc53991bbb447",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/stages/s09-hospital-mechanical-room-v1.webp",
       "bytes": 298998,
       "hash": "sha256-1307a7aa6fdb7a0022b04bad8414dd91ec8a07d2e0eb409e2484d248ed45697d",
@@ -3163,33 +3227,9 @@
       "criticality": "critical"
     },
     {
-      "path": "/art/v100/story-r5/cuts/ending-tky-transport.webp",
-      "bytes": 1021992,
-      "hash": "sha256-4fc1cd8e5dd892e0d11e8c16584c5c96da6884f2bc80e728d60e48d3f3a4a613",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
       "path": "/art/v100/story-r5/cuts/ending-zakimiya-family.webp",
       "bytes": 265350,
       "hash": "sha256-2c3e706f0be974fe3cc422696d2d7bedeba824b6dba93b0235e1d3265a10ffa1",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/story-r5/cuts/epilogue-main-table.webp",
-      "bytes": 1190224,
-      "hash": "sha256-6d645384d976136a41b559a3cc02b541040cdab03f0aacb7a4a2388330980ba2",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/story-r5/cuts/epilogue-tky-receipt.webp",
-      "bytes": 1132306,
-      "hash": "sha256-888b64289b35a60779de2d3acfe99257512b0f11b0188e6338b3ba1440f26932",
       "pack": "campaign-core",
       "category": "background",
       "criticality": "critical"
@@ -3230,14 +3270,6 @@
       "path": "/art/v100/story-r9/cuts/ending-chiha-baba-distance.webp",
       "bytes": 313374,
       "hash": "sha256-33d5961855f2e4e445aab8cedeb8c1be5243ea178040b34d69616a26e6801779",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/story-r9/cuts/ending-plates-and-karaage.webp",
-      "bytes": 1167152,
-      "hash": "sha256-6646693e93e20fc4f29f86e0fcc4ef8aadf9b6d8e88f0fb6e426b9ef044ff3a9",
       "pack": "campaign-core",
       "category": "background",
       "criticality": "critical"
@@ -3294,14 +3326,6 @@
       "path": "/art/v100/story-r9/cuts/s11-oxygen-rescue.webp",
       "bytes": 1139376,
       "hash": "sha256-872ab0c62d97039419feed4488da8c9b7019a91f99334bbf7b55372f5fee12db",
-      "pack": "campaign-core",
-      "category": "background",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/v100/story-r9/cuts/s14-train-couplers.webp",
-      "bytes": 1106538,
-      "hash": "sha256-96a72df5e0e97aaf91f3ef44c24441fea9abd8976868f50be9f728ce621b2e33",
       "pack": "campaign-core",
       "category": "background",
       "criticality": "critical"

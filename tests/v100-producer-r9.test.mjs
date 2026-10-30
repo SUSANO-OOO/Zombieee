@@ -10,6 +10,7 @@ import {V100_STAGE_IDS} from '../app/v100Registry.js';
 import {V100_AUDIO_MANIFEST} from '../app/productionAudio.js';
 import {V100_R9_INSERTS,v100StoryInsertFor} from '../app/v100StoryInserts.js';
 import {V100_R9_SCENE_ASSETS} from '../app/v100R9SceneAssets.js';
+import {V100_QUALITY_SCENE_ASSETS,v100QualityScenePathFor} from '../app/v100QualitySceneAssets.js';
 import {v100StoryDirectionFor} from '../app/v100StoryDirection.js';
 import {v100StoryPageFor} from '../app/v100StoryPages.js';
 import {createV100StoryFlowState,shouldAutoSkipV100StoryEvent,v100StoryFlowCheckpoint} from '../app/v100StoryFlow.js';
@@ -70,7 +71,7 @@ test('all R9 stage scenes own valid foley and every authored insert has an acces
  assert.equal(v100StoryInsertFor('medical-observation',2351).observed,false);assert.equal(v100StoryInsertFor('medical-observation',2353).observed,true);
 });
 
-test('each new R9 illustration reaches its source action without being covered by a schematic',async()=>{
+test('each historical R9 scene remains on its source action through explicit versioned model revisions',async()=>{
  const provenance=JSON.parse(await readFile('assets/source/v100/story-r9/runtime-provenance.json','utf8'));
  assert.equal(provenance.records.length,17);
  for(const record of provenance.records){
@@ -80,8 +81,8 @@ test('each new R9 illustration reaches its source action without being covered b
   for(const node of uses){
    assert.ok(!node.insertId,`${record.id}: illustration hidden by an insert`);
    const direction=v100StoryDirectionFor(null,0,node);
-   assert.equal(direction.backgroundPath,V100_R9_SCENE_ASSETS[record.id].path);
-   assert.equal(direction.backgroundAlt,record.alt);
+   assert.equal(direction.backgroundPath,v100QualityScenePathFor(V100_R9_SCENE_ASSETS[record.id].path));
+   assert.equal(direction.backgroundAlt,V100_QUALITY_SCENE_ASSETS[record.id]?.alt??record.alt);
   }
   const bytes=await readFile('public'+record.path);
   assert.equal(bytes.length,record.bytes);assert.equal('sha256-'+createHash('sha256').update(bytes).digest('hex'),record.hash);
