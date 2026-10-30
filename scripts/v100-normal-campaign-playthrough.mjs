@@ -14,7 +14,7 @@ import { inspectStaffRoll } from "./v100-staff-roll-audit.mjs";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
 import { installRequestFailureAudit } from "./browser-request-failure-audit.mjs";
-import {normalCampaignCanSpendVehicleGauge, normalCampaignDeploymentCount, normalCampaignDeployOrder } from "./v100-normal-play-contract.mjs";
+import {normalCampaignCanSpendVehicleGauge, normalCampaignDeploymentCount, normalCampaignDeployOrder,readNormalCampaignHud,normalCampaignHudReady } from "./v100-normal-play-contract.mjs";
 import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
 import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
 import { deferNormalRecruitOffer } from "./v100-normal-recruit-offer.mjs";
@@ -85,12 +85,17 @@ async function selectPersonnel(unit) {
   await uiClick(page.locator("button.v100-personnel-card").filter({has:page.getByRole("heading",{name:unit.displayName,exact:true})}));
 }
 function plannedFormation(save) {
-  // Both451 Stage1 wins retain ranged/scout/Kuma/Paisen: no medic is owned yet.
-  // In a92, delaying the earned medic to fifth made Stage3 arrivals55-60s
-  // and left one native run with zero medic healing. The872 third-slot medic
-  // arrived17-22s and its Chromium run cleared the boss. These are controls,
-  // not fresh all30 acceptance. Keep early healing behind ranged/scout.
-  const preference=["unit-babayaga","unit-hachi","unit-nao","unit-kumaverson","unit-paisen","unit-mizuchi","unit-gantetsu","unit-tatara","unit-monkey"];
+  // Use only companions paid for in this actual save. Preserve the ordinary
+  // card order outside the first boss; its newly affordable recruit permits
+  // the separate S03 formation choice below.
+  const regular=["unit-babayaga","unit-hachi","unit-nao","unit-kumaverson","unit-paisen","unit-mizuchi","unit-gantetsu","unit-tatara","unit-monkey"];
+  // The cheaper second rescue permits a different ordinary S03 formation:
+  // deploy the defender, healer and newly earned riflewoman before the damage
+  // dealers. This changes the test player's chosen card order, not battle AI,
+  // resources, enemy statistics or the selected order of later stages.
+  const front=["unit-kumaverson","unit-nao","unit-mizuchi"];
+  const preference=save.flowState.stageId===V100_STAGES[2].id&&save.ownedUnitIds.includes("unit-mizuchi")
+    ? [...front,...regular.filter(id=>!front.includes(id))] : regular;
   // S01/S02 put Paisen inside the rescue building. Choose the other visible
   // available companions instead of trying to click his disabled roster card.
   const rescue = V100_STAGES.slice(0,2).some(stage=>stage.id===save.flowState.stageId);
@@ -178,14 +183,12 @@ async function battle(stage) {
   while(await phaseAt()==="battle") {
     await continueRequested();
     try {
-    const observed=await page.locator('.v100-deployed-count').evaluateAll((nodes,{owner,action})=>({
-      value:nodes.length===1?nodes[0].getAttribute('aria-label'):null,
-      frames:globalThis.__V177_READ_NORMAL_FRAMES__?.(owner,action)??null,
-    }),{owner:frameOwner,action:frameStarted?'drain':'start'});
+    const observed=await page.evaluate(readNormalCampaignHud,{owner:frameOwner,action:frameStarted?'drain':'start'});
     frameStarted=true;await frameCapture.record(observed.frames);
+    if(!normalCampaignHudReady(observed,await phaseAt()))break;
     const deploymentCount=normalCampaignDeploymentCount(observed.value);
     record.maximumObservedActive=Math.max(record.maximumObservedActive??0,deploymentCount.active);
-    const waveDisplay=await page.locator('.phase-block').evaluate(node=>({label:node.querySelector('em')?.textContent??'',preparation:node.tagName==='BUTTON'}));
+    const waveDisplay=observed.waveDisplay;
     if(record.waveDisplayTransitions?.at(-1)?.label!==waveDisplay.label||record.waveDisplayTransitions?.at(-1)?.preparation!==waveDisplay.preparation){
       // This is visible HUD text, not a spawn timestamp; the preparation button names the NEXT wave.
       (record.waveDisplayTransitions??=[]).push({...waveDisplay,seconds:(Date.now()-start)/1000,activeAllies:deploymentCount.active});

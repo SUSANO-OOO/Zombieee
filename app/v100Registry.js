@@ -174,8 +174,10 @@ const UNIT_ROWS = [
   ["PAISEN", "パイセン", "frontline", 0, "initial"],
   ["KUMAVERSON", "クマバーソン", "heavy", 0, "initial"],
   ["BABAYAGA", "ババヤガ", "marksman", 0, "initial"],
-  ["NAO", "ナオ", "support", 85, 1],
-  ["MIZUCHI", "ミズチ", "suppression", 155, 2],
+  // Two minimum first-clear awards cover these two rescued allies and one
+  // 30-CAPS upgrade, without replay income, gifts or a changed reward curve.
+  ["NAO", "ナオ", "support", 55, 1],
+  ["MIZUCHI", "ミズチ", "suppression", 95, 2],
   ["MONKEY", "モンキー", "engineer", 190, 4],
   ["CRAZY_KING", "クレイジーキング", "frontline", 220, 5],
   ["RAIDER", "レイダー", "suppression", 240, 6],
