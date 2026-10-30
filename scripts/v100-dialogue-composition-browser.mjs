@@ -250,12 +250,7 @@ for(const engine of engines){
    assert.ok(geometry.actions.x>=geometry.text.right,'Actions must not overlap the dialogue');
    assert.ok(geometry.actions.bottom<=geometry.copy.bottom&&geometry.actions.y>=geometry.copy.y);
    await page.screenshot({path:out+'/'+engine+'-'+viewport.width+'x'+viewport.height+'-'+fixture.id+'.png'});
-   const beforeSides=Object.fromEntries(geometry.portraits.map(p=>[p.owner,p.side]));
-   await page.getByRole('button',{name:'次へ',exact:true}).click();
-   if(fixture.id==='pair'){
-    const afterSides=await page.locator('.v100-portrait-frame').evaluateAll(xs=>Object.fromEntries(xs.map(x=>[x.dataset.portraitOwner,x.dataset.portraitSide])));
-    for(const owner of Object.keys(beforeSides))if(afterSides[owner])assert.equal(afterSides[owner],beforeSides[owner]);
-   }
+   // Read the fixture material before any explicit next-page input.
    if(await scene.locator('.v100-insert-expand').count()){
     const opener=scene.getByRole('button',{name:'資料を拡大',exact:true});
     const copyBefore=await scene.locator('.v100-node-copy').innerText();
@@ -271,6 +266,12 @@ for(const engine of engines){
     assert.equal(await scene.locator('.v100-node-copy').innerText(),copyBefore,'material reading does not advance story');
     assert.equal(await page.evaluate(()=>localStorage.getItem('nishijin-campaign-v100')),saveBefore,'material reading preserves save');
     result.insertReader=material;
+   }
+   const beforeSides=Object.fromEntries(geometry.portraits.map(p=>[p.owner,p.side]));
+   await page.getByRole('button',{name:'次へ',exact:true}).click();
+   if(fixture.id==='pair'){
+    const afterSides=await page.locator('.v100-portrait-frame').evaluateAll(xs=>Object.fromEntries(xs.map(x=>[x.dataset.portraitOwner,x.dataset.portraitSide])));
+    for(const owner of Object.keys(beforeSides))if(afterSides[owner])assert.equal(afterSides[owner],beforeSides[owner]);
    }
    assert.deepEqual(result.errors,[]);result.status='passed';
   }catch(error){result.status='failed';result.error=String(error);await page.screenshot({path:out+'/'+engine+'-'+viewport.width+'x'+viewport.height+'-'+fixture.id+'-failure.png'}).catch(()=>{});}

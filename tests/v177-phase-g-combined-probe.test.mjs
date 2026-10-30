@@ -13,7 +13,7 @@ function browserReader({cards=[{}],patch={}}={}){
   constructor(options={}){Object.assign(this,{kind:'scout',state:'ready',cost:25,x:10,disabled:false,hidden:false,ariaDisabled:'false'},options);}
   getBoundingClientRect(){return{x:this.x,y:10,width:80,height:40};}
   closest(selector){return selector==='button.unit-card'?this:null;}
-  getAttribute(name){return({'data-kind':this.kind,'data-slot-index':'0','data-state':this.state,'aria-label':this.cost==null?'Scout':`Scout コスト ${this.cost}`,'aria-disabled':this.ariaDisabled})[name]??null;}
+  getAttribute(name){return({'data-kind':this.kind,'data-slot-index':'0','data-state':this.state,'aria-label':this.cost==null?'Scout':`Scout ${this.costLabel??'指揮'} ${this.cost}`,'aria-disabled':this.ariaDisabled})[name]??null;}
   getAnimations(){return[];}
  }
  const elements=cards.map(c=>new Element(c));
@@ -55,6 +55,20 @@ test('browser probe eligibility exactly matches the original host eligibility an
   const candidate=requestedKind?d.cards.find(c=>c.kind===requestedKind):d.cards.find(c=>c.actionability.eligible);
   assert.equal(b.rafCount(),candidate?.actionability.eligible?1:0,JSON.stringify({options,requestedKind}));
   assert.equal(b.reads(),1);
+ }
+});
+
+test('current 指揮 and legacy コスト prices remain readable while missing prices fail closed',async()=>{
+ for(const costLabel of ['指揮','コスト']){
+  const b=browserReader({cards:[{costLabel,cost:55}]}),d=await b.readBattleDeploymentDiagnostics(b.page);
+  assert.equal(d.cards[0].cost,55,costLabel);
+  assert.equal(d.cards[0].actionability.eligible,true,costLabel);
+ }
+ for(const card of [{cost:null},{costLabel:'費用',cost:55}]){
+  const b=browserReader({cards:[card]}),d=await b.readBattleDeploymentDiagnostics(b.page);
+  assert.equal(d.cards[0].cost,null);
+  assert.equal(d.cards[0].actionability.eligible,false);
+  assert.ok(d.cards[0].actionability.reasons.includes('cost-not-finite'));
  }
 });
 

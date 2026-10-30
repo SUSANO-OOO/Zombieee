@@ -48,10 +48,12 @@ try{
    const geometry=await diagram.evaluate(el=>{
     const stage=el.closest('.v100-event-layout'),heading=stage.querySelector('.v100-event-heading').getBoundingClientRect(),copy=stage.querySelector('.v100-node-copy').getBoundingClientRect();
     const title=el.querySelector('.v100-insert-heading').getBoundingClientRect(),caption=el.querySelector('figcaption').getBoundingClientRect();
-    return {headingBottom:heading.bottom,titleTop:title.top,captionBottom:caption.bottom,copyTop:copy.top};
+    const labelBottoms=[...el.querySelectorAll('svg text')].map(text=>text.getBoundingClientRect().bottom);
+    return {headingBottom:heading.bottom,titleTop:title.top,captionTop:caption.top,captionBottom:caption.bottom,copyTop:copy.top,labelBottoms};
    });
    assert.ok(geometry.titleTop>=geometry.headingBottom+1,JSON.stringify(geometry));
    assert.ok(geometry.captionBottom<=geometry.copyTop-4,JSON.stringify(geometry));
+   assert.ok(geometry.labelBottoms.every(bottom=>geometry.captionTop>=bottom+1),'material caption overlaps a diagram label: '+JSON.stringify(geometry));
    const beforeCopy=await stage.locator('.v100-node-copy').innerText(),beforeSave=await page.evaluate(()=>localStorage.getItem('nishijin-campaign-v100'));
    if(index===0)await page.screenshot({path:path.join(out,label+'-preview.png')});
    await diagram.getByRole('button',{name:'資料を拡大',exact:true}).click();

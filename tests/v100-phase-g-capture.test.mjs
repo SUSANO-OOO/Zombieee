@@ -362,6 +362,19 @@ test("deployment pointer diagnostics are bounded, capture handler failures, and 
   const removed = await removeFn({ evaluate: () => { throw Error("a completed cleanup must add no second RPC"); },
     isClosed: () => false }, "complete-attempt", completeRead.cleanup);
   assert.equal(removed.status, "removed");
+  targetCard.attrs.set("data-state", "ready");
+  targetCard.attrs.set("aria-disabled", "false");
+  for (const [label,cost,eligible] of [["ハチ 指揮5",5,true],["ハチ コスト 5",5,true],["ハチ",null,false],["ハチ 指揮55",55,false]]) {
+    targetCard.attrs.set("aria-label",label);
+    await installFn({evaluate},"price-attempt",{nodeId:"deployment-card-1",kind:"scout",slot:"1"});
+    (documentListeners.get("click")??[]).at(-1)(rawEvent);
+    const priceRead=await readFn({evaluate,isClosed:()=>false},"price-attempt",100);
+    const observed=priceRead.receipts[0].preHandler;
+    assert.equal(observed.card.cost,cost,label);
+    assert.equal(observed.eligible,eligible,label);
+    if(cost===null)assert.ok(observed.reasons.includes("cost-not-finite"));
+    if(cost===55)assert.ok(observed.reasons.includes("insufficient-energy"));
+  }
   for (const invalid of [{ attemptId: "another-attempt" }, { registrationCount: 12 }, { registryRemoved: false },
     { endedAt: NaN }, { endedAt: completeRead.cleanup.startedAt - 1 }, { endedAt: completeRead.cleanup.startedAt + 101 }]) {
     await assert.rejects(removeFn({ evaluate: () => { throw Error("invalid proof must not retry cleanup"); },

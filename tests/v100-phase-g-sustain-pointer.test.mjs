@@ -162,6 +162,10 @@ const withoutNode=(file,parent,predicate)=>{const nodes=[];const visit=n=>{if(pr
 const install=declaration(candidate,'installDeploymentPointerReceipt');
 let normalized=withoutNode(candidate,install,n=>ts.isPropertyAssignment(n)&&n.name.getText(candidate)==='dispose');
 normalized=replaceOnce(normalized,',\n    });','\n    });');
+// The current card copy uses 指揮. Price parsing and the missing-price guard
+// have separate live-reader and receipt tests; all other input code stays frozen.
+normalized=replaceOnce(normalized,'/(?:指揮|コスト)\\s*(\\d+)/u','/コスト\\s*(\\d+)/u');
+normalized=replaceOnce(normalized,'card?.cost == null ? Number.NaN : Number(card.cost)','Number(card?.cost)');
 assert.equal(normalized,declaration(original,'installDeploymentPointerReceipt').getText(original));
 const reader=file=>{const node=declaration(file,'readDeploymentPointerReceipts');const callbacks=[];const visit=n=>{if(ts.isCallExpression(n)&&n.expression.getText(file)==='page.evaluate')callbacks.push(n.arguments[0]);ts.forEachChild(n,visit);};visit(node);assert.equal(callbacks.length,1);return replaceOnce(node.getText(file),callbacks[0].getText(file),'ATOMIC_RECEIPT_READER');};
 assert.equal(replaceOnce(reader(candidate),'    cleanup: result.status === "fulfilled" ? result.value?.cleanup ?? null : null,\n'),reader(original));
