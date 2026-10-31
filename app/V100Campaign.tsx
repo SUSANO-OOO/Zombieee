@@ -355,6 +355,7 @@ export function V100Campaign() {
   const [saveOwnerId] = useState(() => createV100SaveOwnerId());
   const [surface, setSurface] = useState<CampaignSurface>("campaign");
   const [personnelSelection, setPersonnelSelection] = useState<string | null>(null);
+  const [formationRequestedUnitId, setFormationRequestedUnitId] = useState<string | null>(null);
   const eventAudioOwnerRef = useRef<ReturnType<typeof createV100EventAudioOwner> | null>(null);
   const [eventAudioRevision, setEventAudioRevision] = useState(0);
   const [eventAudioSnapshot, setEventAudioSnapshot] = useState<ReturnType<ReturnType<typeof createV100EventAudioOwner>["snapshot"]> | null>(null);
@@ -611,6 +612,7 @@ export function V100Campaign() {
     if (!persisted.applied) { setNotice(formatReason(persisted.reason)); return null; }
     return commitSave(persisted.save, (committed) => {
       setFlow(next);
+      if (next.phase === "battle") setFormationRequestedUnitId(null);
       setBattleRunId(next.phase === "battle" ? `v100:${next.stageId}:${committed.revision}` : null);
       setStoryIndex(Math.max(0, Math.floor(Number(nodeIndex) || 0)));
       setSurface("campaign");
@@ -633,6 +635,7 @@ export function V100Campaign() {
   }, [commitSave]);
 
   const openSurface = useCallback((next: CampaignSurface, unitId: string | null = null) => {
+    if (next !== "campaign" && next !== "mode-formation" && next !== "personnel") setFormationRequestedUnitId(null);
     if (next === "data") dataReturnSurfaceRef.current = surface;
     if (next === "mode-formation") setModePreparation(true);
     if (next === "modes" || next === "campaign") setModePreparation(false);
@@ -758,7 +761,8 @@ export function V100Campaign() {
     void markAndAdvanceEvent(true);
   }, [entryOpen, flow, hydrated, loadFailure, logOpen, menuOpen, creditsOpen, surface, markAndAdvanceEvent, replayEventId, save.settings.autoSkipReadStory, saveBusy]);
 
-  const startStage = (stageId: string) => {
+  const startStage = (stageId: string, requestedUnitId: string | null = null) => {
+    if (!save.availableStageIds.includes(stageId)) { setNotice(formatReason("stage-locked")); return; }
     const transition = beginV100StageAttempt(flow, stageId);
     if (!transition.accepted) {
       setNotice(formatReason(transition.reason));
@@ -766,7 +770,7 @@ export function V100Campaign() {
     }
     setSelectedStageId(stageId);
     setNotice("");
-    updateFlow(transition.state);
+    void updateFlow(transition.state).then(saved => { if (saved) setFormationRequestedUnitId(requestedUnitId); });
   };
 
   const chooseFormation = (slot: number, value: string) => {
@@ -775,7 +779,12 @@ export function V100Campaign() {
       formationSlots[slot] = value || null;
       return { ...draft, formationSlots };
     });
-    if (next.applied) commitSave(next.save);
+    if (next.applied) void commitSave(next.save).then(saved => {
+      if (saved) {
+        setNotice("");
+        if (value === formationRequestedUnitId) setFormationRequestedUnitId(null);
+      }
+    });
   };
 
   const startBattle = () => {
@@ -793,6 +802,7 @@ export function V100Campaign() {
   };
 
   const leavePreparation = () => {
+    setFormationRequestedUnitId(null);
     const next = leaveV100Preparation(flow);
     if (next.accepted) updateFlow(next.state);
   };
@@ -1027,7 +1037,15 @@ export function V100Campaign() {
           save={save}
           initialUnitId={personnelSelection}
           returnLabel={flow.phase === "formation" || modePreparation ? "出撃編成へ" : "ステージ選択へ"}
-          onBack={() => openSurface(modePreparation ? "mode-formation" : "campaign")}
+          onBack={() => { setFormationRequestedUnitId(null); openSurface(modePreparation ? "mode-formation" : "campaign"); }}
+          onPrepare={(unitId) => {
+            if (!save.ownedUnitIds.includes(unitId)) return;
+            const requested = save.formationSlots.includes(unitId) ? null : unitId;
+            if (modePreparation) { setFormationRequestedUnitId(requested); openSurface("mode-formation"); }
+            else if (flow.phase === "formation") { setFormationRequestedUnitId(requested); openSurface("campaign"); }
+            else startStage(selectedStageId, requested);
+          }}
+          preparationLabel={modePreparation ? "迎撃の編成へ" : flow.phase === "formation" ? "出撃編成へ" : "S" + String(V100_STAGE_BY_ID[selectedStageId]?.number ?? 1).padStart(2, "0") + "の編成へ"}
           onPurchase={(unitId) => applySaveTransaction(purchaseV100Unit(save, unitId))}
           onLevel={(unitId, expectedLevel) => applySaveTransaction(upgradeV100Unit(save, unitId, { expectedLevel }))}
         />
@@ -1065,10 +1083,10 @@ export function V100Campaign() {
         <DataManagementView save={save} notice={notice} onBack={() => openSurface(dataReturnSurfaceRef.current)} onBackup={downloadBackup} onNewGameBackup={downloadNewGameBackup} onImport={importBackup} onLegacyHistory={importLegacyHistory} />
       )}
 
-      {flow.phase === "map" && surface === "mode-formation" && <FormationView save={save} stageId={null} onSlotChange={chooseFormation} onStart={() => openSurface("modes")} onBack={() => openSurface("modes")} onLoadout={() => openSurface("support-vehicle")} onPersonnel={id => openSurface("personnel", id)} modePreparation />}
+      {flow.phase === "map" && surface === "mode-formation" && <FormationView save={save} stageId={null} requestedUnitId={formationRequestedUnitId} onCancelRequested={() => setFormationRequestedUnitId(null)} onSlotChange={chooseFormation} onStart={() => openSurface("modes")} onBack={() => openSurface("modes")} onLoadout={() => openSurface("support-vehicle")} onPersonnel={id => openSurface("personnel", id)} modePreparation />}
 
       {flow.phase === "formation" && surface === "campaign" && (
-        <FormationView save={save} stageId={flow.stageId} onSlotChange={chooseFormation} onStart={startBattle} onBack={leavePreparation} onLoadout={() => openSurface("support-vehicle")} onPersonnel={(unitId) => openSurface("personnel", unitId)} />
+        <FormationView save={save} stageId={flow.stageId} requestedUnitId={formationRequestedUnitId} onCancelRequested={() => setFormationRequestedUnitId(null)} onSlotChange={chooseFormation} onStart={startBattle} onBack={leavePreparation} onLoadout={() => openSurface("support-vehicle")} onPersonnel={(unitId) => openSurface("personnel", unitId)} />
       )}
 
       {flow.phase === "battle" && productionSession && (
@@ -1087,7 +1105,11 @@ export function V100Campaign() {
         const changed = applyV100SaveMutation(saveRef.current, (draft: Save) => ({ ...draft, settings: { ...draft.settings, ...settings } }));
         return changed.applied && Boolean(await commitSave(changed.save));
       }} />}
-      {recruitOffer && <div className="v100-modal-backdrop" role="presentation"><section className="v100-modal v100-recruit-modal" role="dialog" aria-modal="true" aria-labelledby="v100-recruit-title"><span className="v100-kicker">仲間の出撃準備</span><div className="v100-recruit-content"><div className="v100-recruit-art">{formationCardForUnit(recruitOffer.id) && <img src={formationCardForUnit(recruitOffer.id) as string} alt={`${recruitOffer.displayName}の立ち絵`} />}</div><div><h2 id="v100-recruit-title">{recruitOffer.displayName}</h2><strong>{v100RoleLabelFor(recruitOffer.role)}</strong><p>{unitDescriptionFor(recruitOffer.id)}</p><p className="v100-recruit-explanation">CAPSで支度を整えると、この仲間を編成に加えられる。</p><dl><div><dt>支度に必要</dt><dd>{recruitOffer.registrationCostCaps} CAPS</dd></div><div><dt>所持</dt><dd>{save.caps} CAPS</dd></div></dl>{save.caps < recruitOffer.registrationCostCaps && <p className="v100-recruit-shortage">あと {recruitOffer.registrationCostCaps - save.caps} CAPSあれば支度を整えられる。</p>}</div></div><div className="v100-recruit-actions"><button type="button" onClick={() => applySaveTransaction(applyV100SaveMutation(save, next => ({ ...next, receipts: [...new Set([...next.receipts, `v100:recruit-offer:${recruitOffer.id}:seen`])] })))}>後で決める</button><button className="v100-primary" type="button" data-ui-sound="transaction" disabled={saveBusy || save.caps < recruitOffer.registrationCostCaps} onClick={() => applySaveTransaction(purchaseV100Unit(save, recruitOffer.id))}>{recruitOffer.registrationCostCaps} CAPSで支度を整える</button></div></section></div>}
+      {recruitOffer && <div className="v100-modal-backdrop" role="presentation"><section className="v100-modal v100-recruit-modal" role="dialog" aria-modal="true" aria-labelledby="v100-recruit-title"><span className="v100-kicker">仲間の出撃準備</span><div className="v100-recruit-content"><div className="v100-recruit-art">{formationCardForUnit(recruitOffer.id) && <img src={formationCardForUnit(recruitOffer.id) as string} alt={`${recruitOffer.displayName}の立ち絵`} />}</div><div><h2 id="v100-recruit-title">{recruitOffer.displayName}</h2><strong>{v100RoleLabelFor(recruitOffer.role)}</strong><p>{unitDescriptionFor(recruitOffer.id)}</p><p className="v100-recruit-explanation">CAPSで支度を整えると、この仲間を編成に加えられる。</p><dl><div><dt>支度に必要</dt><dd>{recruitOffer.registrationCostCaps} CAPS</dd></div><div><dt>所持</dt><dd>{save.caps} CAPS</dd></div></dl>{save.caps < recruitOffer.registrationCostCaps && <p className="v100-recruit-shortage">あと {recruitOffer.registrationCostCaps - save.caps} CAPSあれば支度を整えられる。</p>}</div></div><div className="v100-recruit-actions"><button type="button" onClick={() => applySaveTransaction(applyV100SaveMutation(save, next => ({ ...next, receipts: [...new Set([...next.receipts, `v100:recruit-offer:${recruitOffer.id}:seen`])] })))}>後で決める</button><button className="v100-primary" type="button" data-ui-sound="transaction" disabled={saveBusy || save.caps < recruitOffer.registrationCostCaps} onClick={() => {
+        const unitId = recruitOffer.id, result = purchaseV100Unit(save, unitId);
+        if (result.applied) void Promise.resolve(applySaveTransaction(result)).then(saved => { if (saved) openSurface("personnel", unitId); });
+        else applySaveTransaction(result);
+      }}>{recruitOffer.registrationCostCaps} CAPSで支度を整える</button></div></section></div>}
       {creditsOpen && flow.phase === "name" && <div className="v100-modal-backdrop" role="presentation"><section className="v100-modal v100-credits-modal" role="dialog" aria-modal="true" aria-labelledby="v100-credits-title"><div className="v100-panel-heading"><div><span className="v100-kicker">{RELEASE_LABEL}</span><h2 id="v100-credits-title">権利・クレジット</h2></div><button type="button" onClick={() => setCreditsOpen(false)}>閉じる</button></div><V100AssetCredits expanded /></section></div>}
       {replayEventId === "v100:event:credits" && replayEvent ? <div className="v100-staff-roll-replay">{replayFinale && V100_STORY_POST_CREDITS_FILM ? <V100PostCreditsFilm settings={save.settings} onComplete={() => { setReplayFinale(false); setReplayEventId(null); return true; }} /> : <V100StaffRoll nodes={replayEvent.nodes} playerName={save.playerName} settings={save.settings} onComplete={() => { if(V100_STORY_POST_CREDITS_FILM) setReplayFinale(true); else setReplayEventId(null); return true; }} />}</div> : replayEvent && <ReplayView event={replayEvent} node={replayNode} index={replayPage.nodeIndex} leadingNodes={replayPage.leadingNodes} onNext={() => setReplayNodeIndex(replayPage.endIndex + 1)} onClose={() => setReplayEventId(null)} />}
       {giftError && !giftPopup && <button type="button" onClick={() => { setGiftError(false); setGiftWake(value => value + 1); }}>特典の保存を再試行</button>}
@@ -1257,7 +1279,7 @@ function V100StageStars({ stars, label = "記録星" }: { stars: number; label?:
   </span>;
 }
 
-function FormationView({ save, stageId, onSlotChange, onStart, onBack, onLoadout, onPersonnel, modePreparation = false }: { save: Save; stageId: string | null; onSlotChange: (slot: number, value: string) => void; onStart: () => void; onBack: () => void; onLoadout: () => void; onPersonnel: (unitId: string | null) => void; modePreparation?: boolean }) {
+function FormationView({ save, stageId, requestedUnitId = null, onCancelRequested, onSlotChange, onStart, onBack, onLoadout, onPersonnel, modePreparation = false }: { save: Save; stageId: string | null; requestedUnitId?: string | null; onCancelRequested: () => void; onSlotChange: (slot: number, value: string) => void; onStart: () => void; onBack: () => void; onLoadout: () => void; onPersonnel: (unitId: string | null) => void; modePreparation?: boolean }) {
   const [activeSlot, setActiveSlot] = useState(0);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [briefingOpen, setBriefingOpen] = useState(false);
@@ -1267,12 +1289,15 @@ function FormationView({ save, stageId, onSlotChange, onStart, onBack, onLoadout
   const ownedUnits = save.ownedUnitIds.map((unitId) => UNIT_BY_ID.get(unitId)).filter(Boolean) as Array<(typeof V100_UNITS)[number]>;
   const availableSlots = v100AvailableFormation(stageId, save.formationSlots);
   const absence = v100StageAbsenceReason(stageId, "unit-paisen");
-  const activeUnitId = save.formationSlots[activeSlot] ?? null;
+  const requestedUnit = requestedUnitId && save.ownedUnitIds.includes(requestedUnitId) && !save.formationSlots.includes(requestedUnitId) ? UNIT_BY_ID.get(requestedUnitId) ?? null : null;
+  const requestedAbsence = requestedUnit ? v100StageAbsenceReason(stageId, requestedUnit.id) : null;
+  const placingUnit = requestedAbsence ? null : requestedUnit;
+  const activeUnitId = placingUnit?.id ?? save.formationSlots[activeSlot] ?? null;
   const activeUnit = activeUnitId ? UNIT_BY_ID.get(activeUnitId) ?? null : null;
   const activePresentation = activeUnitId ? v100UnitPresentation(save, activeUnitId) : null;
   const support = V100_SUPPORTS.find((entry) => entry.id === save.equippedSupportId);
   const assignActiveSlot = (unitId: string) => { onSlotChange(activeSlot, unitId); setPickerOpen(false); };
-  return <section className={"v100-panel v100-formation-panel v100-sortie-panel v100-command-formation " + (pickerOpen ? "picker-open" : "")} data-v100-surface="formation" style={{ "--v100-stage-art": "url(" + (stage ? stageVisualFor(stage.id) : PRODUCTION_VISUALS.command) + ")" } as CSSProperties}>
+  return <section className={"v100-panel v100-formation-panel v100-sortie-panel v100-command-formation " + (pickerOpen ? "picker-open" : "")} data-v100-surface="formation" data-v100-requested-unit={requestedUnit?.id} style={{ "--v100-stage-art": "url(" + (stage ? stageVisualFor(stage.id) : PRODUCTION_VISUALS.command) + ")" } as CSSProperties}>
     <div className="v100-panel-heading v100-sortie-heading"><h2>出撃編成</h2><strong className="v100-sortie-count">{availableSlots.length}<small>/ 7 呼び出し枠</small></strong></div>
     <div className="v100-formation-board">
       <div className="v100-slot-rail" aria-label="7枠の編成">
@@ -1286,14 +1311,14 @@ function FormationView({ save, stageId, onSlotChange, onStart, onBack, onLoadout
           </div> : <div className="v100-briefing-empty"><strong>この枠に呼ぶ仲間を選ぶ</strong><span>出撃中は、同じ仲間を繰り返し呼べます。</span></div>}
         </div>
         <div className="v100-callin-roster">
-          <div className="v100-callin-heading"><strong>{modePreparation ? "次の迎撃に備えて仲間を選ぶ" : "カードで出撃・頭上で固有技"}</strong><button type="button" className="v100-open-briefing" onClick={(event) => { event.currentTarget.focus(); setBriefingOpen(true); }}>{modePreparation ? "編成の確認" : "作戦と戦い方"}</button><small>{modePreparation ? "編成が決まったら、異常発生かサバイバルを選ぶ。" : "移動・通常攻撃は自動。同じ仲間も繰り返し呼べる。"}</small></div>
+          <div className="v100-callin-heading"><strong>{requestedUnit ? requestedAbsence ?? requestedUnit.displayName + "を入れる枠を選ぶ" : modePreparation ? "次の迎撃に備えて仲間を選ぶ" : "カードで出撃・頭上で固有技"}</strong><button type="button" className="v100-open-briefing" onClick={(event) => { event.currentTarget.focus(); if (requestedUnit) onCancelRequested(); else setBriefingOpen(true); }}>{requestedUnit ? "あとで選ぶ" : modePreparation ? "編成の確認" : "作戦と戦い方"}</button><small>{placingUnit ? "空き枠なら追加、埋まった枠なら入れ替え。" : requestedUnit ? "この仲間は、別の作戦で試そう。" : modePreparation ? "編成が決まったら、異常発生かサバイバルを選ぶ。" : "移動・通常攻撃は自動。同じ仲間も繰り返し呼べる。"}</small></div>
           {briefingOpen && <V100BattleBriefing allowControls={!modePreparation} initiallyShowControls={stage?.number === 1 && !modePreparation} onClose={() => setBriefingOpen(false)}><div className="v100-briefing-plan"><section><h3>{stage ? stageDisplayNameFor(stage) : "次の迎撃に備える"}</h3><strong>{modePreparation ? "各ステージの条件は出撃前に確認できます" : objectiveLabelFor(stage)}</strong>{stage && <><MissionBriefingDiagram stageId={stageId} /><p>{missionLabelFor(stage)} / {enemyPackLabelFor(stage?.enemyPack, stage?.number)}</p></>}{!modePreparation && <StarCriteria vehicleMaxHp={save.vehicle.maxHp} />}</section><section><h3>敵の動き</h3>{threats.length > 0 ? <ul aria-label="出現候補の行動">{threats.map(threat => <li key={threat.id}>{threat.name}：{threat.purpose}</li>)}</ul> : <p>ステージを選ぶと、出現する敵を確認できます。</p>}<p>同時に出せる仲間は7体まで。同じ仲間を複数枠に入れても、出撃の待ち時間は共通です。</p></section>{stage && <p className="v100-briefing-advice">{v100TacticalHintFor(stage)}</p>}</div></V100BattleBriefing>}
           <div className="v100-slot-track">{save.formationSlots.map((unitId, index) => {
             const art = unitId ? portraitFor(unitId) ?? formationCardForUnit(unitId) : null;
             const unit = unitId ? UNIT_BY_ID.get(unitId) : null;
             const info = unitId ? v100UnitPresentation(save, unitId) : null;
             const unavailable = v100StageAbsenceReason(stageId, unitId);
-            return <button type="button" key={"slot-" + index} className={"v100-slot " + (activeSlot === index ? "selected " : "") + (unitId ? "filled" : "empty")} onClick={() => { setActiveSlot(index); setPickerOpen(true); }} aria-pressed={activeSlot === index} aria-label={"編成枠" + (index + 1) + (unit ? " " + unit.displayName : " 空き")}>
+            return <button type="button" key={"slot-" + index} className={"v100-slot " + (activeSlot === index ? "selected " : "") + (unitId ? "filled" : "empty")} onClick={() => { setActiveSlot(index); if (placingUnit) { onSlotChange(index, placingUnit.id); setPickerOpen(false); } else setPickerOpen(true); }} aria-pressed={activeSlot === index} aria-label={"編成枠" + (index + 1) + (unit ? " " + unit.displayName : " 空き")}>
               <span className="v100-slot-portrait">{art ? <img key={art} src={art} alt="" onLoad={(event) => { const image = event.currentTarget; const decoded = typeof image.decode === "function" ? image.decode().catch(() => {}) : Promise.resolve(); void decoded.then(() => requestAnimationFrame(() => { if (image.isConnected && image.naturalWidth > 0) image.dataset.loaded = "true"; })); }} /> : <i aria-hidden="true">＋</i>}</span>
               <span className="v100-slot-meta"><small>{index + 1}枠</small><strong>{unit ? unit.displayName : "空き"}</strong><b>{unavailable ? "救助中・出撃不可" : info ? `指揮 ${info.commandCost}` : "ユニットを選ぶ"}</b></span>
             </button>;
@@ -1321,13 +1346,14 @@ function FormationView({ save, stageId, onSlotChange, onStart, onBack, onLoadout
   </section>;
 }
 
-function PersonnelView({ save, initialUnitId, returnLabel, onBack, onPurchase, onLevel }: { save: Save; initialUnitId: string | null; returnLabel: string; onBack: () => void; onPurchase: (unitId: string) => void; onLevel: (unitId: string, expectedLevel: number) => void }) {
+function PersonnelView({ save, initialUnitId, returnLabel, preparationLabel, onBack, onPrepare, onPurchase, onLevel }: { save: Save; initialUnitId: string | null; returnLabel: string; preparationLabel: string; onBack: () => void; onPrepare: (unitId: string) => void; onPurchase: (unitId: string) => void; onLevel: (unitId: string, expectedLevel: number) => void }) {
   const focusedUnitId = initialUnitId && save.ownedUnitIds.includes(initialUnitId) ? initialUnitId : null;
   const [selectedUnitId, setSelectedUnitId] = useState(() => focusedUnitId ?? save.ownedUnitIds[0] ?? V100_UNITS[0]?.id ?? "");
   const [detailOpen, setDetailOpen] = useState(Boolean(focusedUnitId));
   const [portraitCloseup, setPortraitCloseup] = useState(true);
   const selectedUnit = UNIT_BY_ID.get(selectedUnitId) ?? V100_UNITS[0];
-  const detailPortrait = selectedUnit ? v100StoryPortraitPath(selectedUnit.id) ?? v100StoryPortraitPath(campaignUnitIdToCombatKind(selectedUnit.id)) ?? formationCardForUnit(selectedUnit.id) : null;
+  const selectedKnown = selectedUnit && (save.ownedUnitIds.includes(selectedUnit.id) || save.registeredUnitIds.includes(selectedUnit.id));
+  const detailPortrait = selectedKnown ? v100StoryPortraitPath(selectedUnit.id) ?? v100StoryPortraitPath(campaignUnitIdToCombatKind(selectedUnit.id)) ?? formationCardForUnit(selectedUnit.id) : null;
   const info = selectedUnit ? v100UnitPresentation(save, selectedUnit.id) : null;
   const currentStats = info?.current;
   const nextStats = info?.next;
@@ -1342,18 +1368,22 @@ function PersonnelView({ save, initialUnitId, returnLabel, onBack, onPurchase, o
   return <section className={"v100-panel v100-management-panel v100-personnel-screen v100-command-personnel " + (detailOpen ? "detail-open" : "")} data-v100-surface="personnel" aria-label="ユニット">
     <div className="v100-panel-heading v100-management-heading"><h2>ユニット記録</h2><button type="button" onClick={onBack}>{returnLabel}</button></div>
     <div className="v100-personnel-workspace">
-      <div className="v100-personnel-roster"><div className="v100-roster-heading"><h3>ユニット一覧</h3><span>出撃可能 {save.ownedUnitIds.length}名 / 16名</span></div>
+      <div className="v100-personnel-roster"><div className="v100-roster-heading"><h3>ユニット一覧</h3><span>支度済み {save.ownedUnitIds.length}名 / 16名</span></div>
         <div className="v100-personnel-grid">{V100_UNITS.map((unit) => {
           const owned = save.ownedUnitIds.includes(unit.id), registered = save.registeredUnitIds.includes(unit.id);
-          const art = formationCardForUnit(unit.id);
-          return <button type="button" className={"v100-personnel-card game-unit-card " + (selectedUnit?.id === unit.id ? "selected " : "") + (owned ? "owned" : registered ? "registered" : "locked")} key={unit.id} onClick={() => { setSelectedUnitId(unit.id); setDetailOpen(true); }} aria-pressed={selectedUnit?.id === unit.id}>
-            <div className="v100-personnel-art">{art && <img src={art} alt="" />}{!owned && !registered && <V100LockChain />}</div>
-            <div className="v100-personnel-copy"><h3>{unit.displayName}</h3><span>{v100RoleLabelFor(unit.role)}</span><small>{owned ? (unit.initial ? "最初から / " : "") + "Lv." + Math.max(1, Number(save.unitLevels[unit.id]) || 1) : registered ? "出撃の支度 " + unit.registrationCostCaps + " CAPS" : "S" + String(unit.availabilityStageNumber).padStart(2, "0") + "クリア後"}</small></div>
+          const known = owned || registered, art = known ? formationCardForUnit(unit.id) : null;
+          return <button type="button" data-personnel-unit={unit.id} data-personnel-known={known ? "true" : "false"} className={"v100-personnel-card game-unit-card " + (selectedUnit?.id === unit.id ? "selected " : "") + (owned ? "owned" : registered ? "registered" : "locked")} key={unit.id} onClick={() => { setSelectedUnitId(unit.id); setDetailOpen(true); }} aria-pressed={selectedUnit?.id === unit.id}>
+            <div className="v100-personnel-art">{art && <img src={art} alt="" />}{!known && <span className="v100-unmet-mark" aria-hidden="true">？</span>}</div>
+            <div className="v100-personnel-copy"><h3>{known ? unit.displayName : "まだ見ぬ仲間"}</h3><span>{v100RoleLabelFor(unit.role)}</span><small>{owned ? (unit.initial ? "最初から / " : "") + "Lv." + Math.max(1, Number(save.unitLevels[unit.id]) || 1) : registered ? "出撃の支度 " + unit.registrationCostCaps + " CAPS" : "S" + String(unit.availabilityStageNumber).padStart(2, "0") + "クリア後"}</small></div>
           </button>;
         })}</div>
       </div>
-      <aside className="v100-personnel-focus v100-unit-focus" aria-label="選択中のユニット" data-unit-id={selectedUnit?.id} data-unit-level={info?.level}>
-        {selectedUnit && info && currentStats && <>
+      <aside className="v100-personnel-focus v100-unit-focus" aria-label="選択中のユニット" data-unit-id={selectedUnit?.id} data-unit-level={selectedKnown ? info?.level : undefined}>
+        {selectedUnit && !selectedKnown ? <div className="v100-unmet-record">
+          <button type="button" className="v100-personnel-detail-back" onClick={() => setDetailOpen(false)}>ユニット一覧へ</button>
+          <span className="v100-unmet-mark" aria-hidden="true">？</span><h3>まだ見ぬ仲間</h3><strong>{v100RoleLabelFor(selectedUnit.role)}</strong>
+          <p>S{String(selectedUnit.availabilityStageNumber).padStart(2, "0")}をクリアすると出会える。</p><button type="button" onClick={onBack}>{returnLabel}</button>
+        </div> : selectedUnit && info && currentStats && <>
           <div className="v100-personnel-focus-art" data-portrait-view={portraitCloseup ? "face" : "whole"} style={v100PortraitFraming(selectedUnit.id) as CSSProperties}>{detailPortrait && <img src={detailPortrait} alt={selectedUnit.displayName + (portraitCloseup ? "の顔" : "の立ち絵全体")} />}</div>
           <div className="v100-unit-growth-notes"><div className="v100-portrait-views" role="group" aria-label="立ち絵の見方"><button type="button" aria-pressed={portraitCloseup} onClick={() => setPortraitCloseup(true)}>顔</button><button type="button" aria-pressed={!portraitCloseup} onClick={() => setPortraitCloseup(false)}>全体</button></div><details><summary>育成</summary><p>{nextStats ? "今回：" + (nextGrowth || "数値変化なし") : "現在の育成上限"}{info.nextOutputGrowth && <><br />{info.nextOutputGrowth.stat === "healing" ? "治療" : info.attackType === "ranged" ? "射撃ダメージ" : "近接ダメージ"}はLv.{info.nextOutputGrowth.level}で{formatV100Number(info.nextOutputGrowth.value)}。{!info.nextOutputGrowth.withinCap && "上限解禁後に育成できます。"}</>}<br />{info.equipmentNames.length ? info.equipmentNames.join(" / ") : "装備なし"}<br />防御力は受けるダメージの軽減率です。{info.skill && <><br />{info.skill.name}：{info.skill.detail}</>}{info.treatmentProtection && <><br />通常治療後は {Math.round(info.treatmentProtection.reduction * 100)}%の被害軽減が{info.treatmentProtection.seconds}秒間続きます。</>}</p></details></div>
           <button type="button" className="v100-personnel-detail-back" onClick={() => focusedUnitId ? onBack() : setDetailOpen(false)}>{focusedUnitId ? returnLabel : "ユニット一覧へ"}</button>
@@ -1373,7 +1403,7 @@ function PersonnelView({ save, initialUnitId, returnLabel, onBack, onPurchase, o
                 ? showStat("治療後の守り", Math.round(info.treatmentProtection.reduction * 100) + "% / " + info.treatmentProtection.seconds + "秒")
                 : showStat("攻撃間隔", formatV100Number(currentStats.attackEvery) + "秒"),
             ]}</div>
-            <div className="v100-unit-transaction">{nextStats && <p className="v100-upgrade-preview">今回の強化：{nextGrowth || "数値変化なし"}</p>}<p>所持 {save.caps} CAPS{price > 0 && <> / 必要 {price}{save.caps < price && <> / あと {price - save.caps}</>}</>}</p>
+            <div className={"v100-unit-transaction" + (info.owned ? " has-prepare" : "")}>{info.owned && <button type="button" className="v100-primary v100-unit-prepare" onClick={() => onPrepare(selectedUnit.id)}>{preparationLabel}<small>{save.formationSlots.includes(selectedUnit.id) ? "この仲間は編成中" : "出撃させる枠を選ぶ"}</small></button>}{nextStats && <p className="v100-upgrade-preview">今回の強化：{nextGrowth || "数値変化なし"}</p>}<p>所持 {save.caps} CAPS{price > 0 && <> / 必要 {price}{save.caps < price && <> / あと {price - save.caps}</>}</>}</p>
               {info.owned ? <button type="button" className="v100-primary" data-ui-sound="transaction" onClick={() => onLevel(selectedUnit.id, info.level)} disabled={info.upgradeCost <= 0 || save.caps < info.upgradeCost}>{info.upgradeCost <= 0 ? "強化上限" : save.caps < info.upgradeCost ? "あと " + (info.upgradeCost - save.caps) + " CAPS必要" : "Lv." + info.nextLevel + "へ強化 / " + info.upgradeCost + " CAPS"}</button>
                 : info.registered ? <button type="button" className="v100-primary" data-ui-sound="transaction" onClick={() => onPurchase(selectedUnit.id)} disabled={save.caps < info.registrationCost}>{save.caps < info.registrationCost ? "あと " + (info.registrationCost - save.caps) + " CAPS必要" : "支度を整える / " + info.registrationCost + " CAPS"}</button>
                   : <p className="v100-focus-lock">第{selectedUnit.availabilityStageNumber}作戦クリアで出撃の支度ができる。</p>}
