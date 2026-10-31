@@ -19,14 +19,21 @@ export function V100PlayerMenu({ settings, busy, onApply, onClose, onData, onLog
     <div className="v100-menu-scroll">
       {tab === "credits" ? <V100AssetCredits expanded /> : <fieldset disabled={busy}>
         <legend>音・画面・会話</legend>
-        <div className="v100-menu-audio"><label><input type="checkbox" checked={draft.bgmEnabled} onChange={e => change({ bgmEnabled: e.target.checked })} /> BGM</label><label>音量 <output>{Math.round(draft.bgmVolume * 100)}%</output><input aria-label="BGMの音量" type="range" min="0" max="100" value={Math.round(draft.bgmVolume * 100)} onChange={e => change({ bgmVolume: Number(e.target.value) / 100 })} /></label></div>
-        <div className="v100-menu-audio"><label><input type="checkbox" checked={draft.sfxEnabled} onChange={e => change({ sfxEnabled: e.target.checked })} /> 効果音・戦闘ボイス</label><label>音量 <output>{Math.round(draft.sfxVolume * 100)}%</output><input aria-label="効果音と戦闘ボイスの音量" type="range" min="0" max="100" value={Math.round(draft.sfxVolume * 100)} onChange={e => change({ sfxVolume: Number(e.target.value) / 100 })} /></label></div>
-        <div className="v100-menu-options"><label className="v100-menu-option">画質<select value={draft.graphicsQuality} onChange={e => change({ graphicsQuality: e.target.value })}><option value="high">高画質</option><option value="auto">自動</option><option value="power-save">省電力</option></select></label>
-        <label className="v100-menu-option"><input type="checkbox" checked={draft.reducedMotion} onChange={e => change({ reducedMotion: e.target.checked })} /> 演出の動きを抑える</label>
-        <label className="v100-menu-option"><input type="checkbox" checked={draft.autoSkipReadStory} onChange={e => change({ autoSkipReadStory: e.target.checked })} /> 読んだ会話を自動でスキップ</label>
+        <div className="v100-menu-audio"><label><input type="checkbox" checked={draft.bgmEnabled} onChange={e => change({ bgmEnabled: e.target.checked })} /> 音楽（BGM）</label><label className="v100-menu-volume"><span className="v100-menu-volume-label">音量</span><output>{Math.round(draft.bgmVolume * 100)}%</output><input aria-label="BGMの音量" type="range" min="0" max="100" value={Math.round(draft.bgmVolume * 100)} onChange={e => change({ bgmVolume: Number(e.target.value) / 100 })} /></label></div>
+        <div className="v100-menu-audio"><label><input type="checkbox" checked={draft.sfxEnabled} onChange={e => change({ sfxEnabled: e.target.checked })} /> 効果音・ボイス</label><label className="v100-menu-volume"><span className="v100-menu-volume-label">音量</span><output>{Math.round(draft.sfxVolume * 100)}%</output><input aria-label="効果音とボイスの音量" type="range" min="0" max="100" value={Math.round(draft.sfxVolume * 100)} onChange={e => change({ sfxVolume: Number(e.target.value) / 100 })} /></label></div>
+        <div className="v100-menu-options">
+          <div className="v100-menu-option v100-menu-quality">
+            <label htmlFor="v100-menu-quality">画質</label>
+            <select id="v100-menu-quality" aria-describedby="v100-menu-quality-help" value={draft.graphicsQuality} onChange={e => change({ graphicsQuality: e.target.value })}>
+              <option value="high">高画質</option><option value="auto">自動（おすすめ）</option><option value="power-save">省電力</option>
+            </select>
+            <small id="v100-menu-quality-help">{draft.graphicsQuality === "power-save" ? "効果を減らして軽く。戦闘の速さは変わりません。" : draft.graphicsQuality === "high" ? "絵や光をくっきり。カクつくときは省電力へ。" : "画面の大きさや端末に合わせて調整します。"}</small>
+          </div>
+          <label className="v100-menu-option v100-menu-choice"><input type="checkbox" aria-label="会話・ムービーの動きを抑える" aria-describedby="v100-menu-motion-help" checked={draft.reducedMotion} onChange={e => change({ reducedMotion: e.target.checked })} /><span>会話・ムービーの動きを抑える<small id="v100-menu-motion-help">ズームや切り替えを控えめに。</small></span></label>
+          <label className="v100-menu-option v100-menu-choice"><input type="checkbox" aria-label="読んだ会話を自動でスキップ" aria-describedby="v100-menu-skip-help" checked={draft.autoSkipReadStory} onChange={e => change({ autoSkipReadStory: e.target.checked })} /><span>読んだ会話を自動でスキップ<small id="v100-menu-skip-help">初めての会話と報酬画面は、そのまま表示します。</small></span></label>
         </div>
       </fieldset>}
     </div>
-    {tab === "settings" && <div className="v100-menu-footer"><span role="status">{failed ? "設定を保存できませんでした。もう一度お試しください。" : saved ? "設定を保存しました。" : "初めて読む会話と報酬画面は、スキップしません。"}</span><button type="button" className="v100-primary" disabled={busy} onClick={() => void apply()}>設定を保存</button></div>}
+    {tab === "settings" && <div className="v100-menu-footer"><span role="status">{failed ? "設定を保存できませんでした。もう一度お試しください。" : saved ? "設定を保存しました。" : "変更した設定は「設定を保存」で反映します。"}</span><button type="button" className="v100-primary" disabled={busy} onClick={() => void apply()}>設定を保存</button></div>}
   </section></div>;
 }

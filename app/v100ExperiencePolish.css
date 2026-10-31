@@ -73,3 +73,19 @@
   #v100-campaign .survival-save-retry { grid-column: 1 / -1; }
 }
 @media (max-height: 400px) { #v100-campaign .v100-player-menu { gap: 6px; padding: 8px 12px; } #v100-campaign .v100-briefing-person { margin-top: 4px; } #v100-campaign .v100-briefing-person p { margin: 2px 0; font-size: 12px; line-height: 1.35; } }
+
+/* Settings describe the actual effect, with a full touch target for each choice. */
+#v100-campaign .v100-menu-quality { display:grid; grid-template-columns:auto minmax(0,1fr); gap:4px 8px; }
+#v100-campaign .v100-menu-quality select { width:100%; min-height:44px; margin:0; }
+#v100-campaign .v100-menu-quality small { grid-column:1 / -1; }
+#v100-campaign .v100-menu-choice { align-items:flex-start; gap:8px; }
+#v100-campaign .v100-menu-choice input { margin-top:5px; }
+#v100-campaign .v100-menu-option small { display:block; color:#c5c7b7; font-size:12px; line-height:1.4; font-weight:400; }
+#v100-campaign .v100-menu-choice span { min-width:0; }
+
+#v100-campaign .v100-menu-audio { grid-template-columns:minmax(0,1fr) minmax(144px,1.1fr); gap:6px; }
+#v100-campaign .v100-menu-audio > label:first-child { display:flex; align-items:center; gap:5px; min-height:44px; white-space:nowrap; }
+#v100-campaign .v100-menu-audio label.v100-menu-volume { display:grid; grid-template-columns:minmax(0,1fr) 38px; align-items:center; gap:5px; }
+#v100-campaign .v100-menu-volume output { grid-column:2; grid-row:1; justify-self:end; }
+#v100-campaign .v100-menu-volume input[type="range"] { grid-column:1; grid-row:1; min-width:0; }
+#v100-campaign .v100-menu-volume-label { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }

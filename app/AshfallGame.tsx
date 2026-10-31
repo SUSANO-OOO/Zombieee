@@ -11855,6 +11855,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           attackerKind?: EnemyKind;
           lane?: Lane;
           existingClaim?: boolean;
+          staleLiveTarget?: boolean;
         } = "walker",
       ) => {
         const g = gameRef.current;
@@ -11919,6 +11920,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             claimant.crawlerDefenseTargetId = null;
             claimant.retargetIn = 99;
             existingClaimId = claimant.id;
+            // Keep a live but out-of-policy old identity for the target-release regression.
+            if (options.staleLiveTarget === true) attacker.targetId = claimant.id;
           }
         }
         return {
@@ -11928,6 +11931,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           lane: proofLane,
           initialAttackerHp: attacker.hp,
           existingClaimId,
+          staleLiveTarget: options.staleLiveTarget === true && existingClaimId !== null,
         };
       },
       queueCrawlerDefenseUnit: (kind: UnitKind, lane: Lane = 1) => {

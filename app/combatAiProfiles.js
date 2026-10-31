@@ -380,7 +380,6 @@ export function chooseEnemyTargetForProfile({
       const capacity = Math.max(1, finite(candidate.capacity, profile.maxPursuersPerTarget));
       const pursuable = inContact
         || blocksRoute
-        || current
         || (profile.humanPursuit && distance <= profile.engagementRadius);
       if (!pursuable || (!inContact && !blocksRoute && !current && claimed >= capacity)) return null;
       return {
