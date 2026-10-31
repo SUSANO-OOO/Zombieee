@@ -32,13 +32,13 @@ const ABILITY_SELECTION_ADVICE = Object.freeze({
 // These notes follow the current battle branches: fixed manual hits, normal-attack
 // bursts, target-HP healing, self-HP recovery, and fixed protection/trap effects.
 const ABILITY_LEVEL_EFFECT = Object.freeze({
-  ...Object.fromEntries(['brawler','scout','ranger','brute','babayaga','gunner','zakimiya','tky','mrs-chiha','miyamoto-musashi'].map(kind => [kind, '通常攻撃は育成で強くなる。この技の威力と効果時間はそのまま。'])),
-  'crazy-king': '通常攻撃が強くなると、暴走中の一撃も強くなる。速さと効果時間はそのまま。',
-  'mayo-chan': '通常攻撃が強くなると、凶暴化中の一撃も強くなる。効果時間と毎秒のHP消費はそのまま。',
-  medic: '育成で通常治療と緊急処置の回復量が伸びる。守りの効果と再使用時間はそのまま。',
-  kumaverson: 'HPが増えるほど、技の自己回復量も増える。ダメージの軽減率と効果時間はそのまま。',
-  guardian: '育成で伸びるのは自身の能力。この技で守る範囲・軽減率・効果時間は変わらない。',
-  engineer: '育成で伸びるのは自身の能力。罠の捕縛・減速時間は変わらない。',
+  ...Object.fromEntries(['brawler','scout','ranger','brute','babayaga','gunner','zakimiya','tky','mrs-chiha','miyamoto-musashi'].map(kind => [kind, 'レベルアップで伸びるのは通常攻撃。技の威力・効果時間は変わらない。'])),
+  'crazy-king': 'レベルアップで通常攻撃と暴走中の一撃が強くなる。速さ・効果時間は変わらない。',
+  'mayo-chan': 'レベルアップで通常攻撃と凶暴化中の一撃が強くなる。HP消費・効果時間は変わらない。',
+  medic: '育成で通常治療も緊急処置も回復量が増える。軽減率・再使用時間は変わらない。',
+  kumaverson: '最大HPが増えると、技の自己回復量も増える。軽減率・効果時間は変わらない。',
+  guardian: 'レベルアップで自身の能力が伸びる。技で守る範囲・軽減率・効果時間は変わらない。',
+  engineer: 'レベルアップで自身の能力が伸びる。罠で捕らえる時間・減速時間は変わらない。',
 });
 
 export function formatV100Number(value, digits = 2) {
@@ -85,7 +85,7 @@ export function v100UnitPresentation(save, unitId) {
     roleLabel: v100RoleLabelFor(unit.role), description: base.desc,
     abilityAdvice: ABILITY_SELECTION_ADVICE[kind] ?? null,
     owned, registered, level, levelCap, nextLevel,
-    status: owned ? "配備登録済" : registered ? "配備登録可" : "未解放",
+    status: owned ? "仲間" : registered ? "支度待ち" : "未解放",
     registrationCost: unit.registrationCostCaps,
     upgradeCost: nextLevel === null ? 0 : v100LevelCost(nextLevel),
     commandCost: base.cost, redeploySeconds: current.deployCooldown,

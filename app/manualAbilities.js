@@ -4,7 +4,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   brawler: {
     unitId: "unit-paisen",
     displayName: "気合拳波",
-    summary: "拳から拳波を放つ。直進して最初に当たった敵へ打撃を与え、周囲を押し戻す。",
+    summary: "拳波を放ち、最初に当たった敵へ大打撃。周囲の敵も押し戻す。",
     iconMotif: "fist-wave",
     runtimeStatus: "integrated",
     cooldownSeconds: 12,
@@ -21,7 +21,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   scout: {
     unitId: "unit-hachi",
     displayName: "疾駆迎撃",
-    summary: "高速型や突破中の敵を優先して急接近し、バールで怯ませる。",
+    summary: "足の速い敵や、突破してくる敵を迎え撃つ。駆け寄ってバールでひるませる。",
     iconMotif: "crowbar-dash",
     runtimeStatus: "integrated",
     cooldownSeconds: 13,
@@ -35,7 +35,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   ranger: {
     unitId: "unit-mizuchi",
     displayName: "精密排除",
-    summary: "遠距離・特殊・高HPの敵を自動選択し、高威力の貫通射撃を行う。",
+    summary: "遠くの射手や手強い敵に狙いを定め、強力な貫通射撃を放つ。",
     iconMotif: "rifle-crosshair",
     runtimeStatus: "integrated",
     cooldownSeconds: 16,
@@ -49,7 +49,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   medic: {
     unitId: "unit-nao",
     displayName: "緊急処置",
-    summary: "射程内でHP割合が最も低い味方を回復し、短時間守る。",
+    summary: "射程内で最も傷ついた味方を回復。しばらく受けるダメージも減らす。",
     iconMotif: "medical-cross",
     runtimeStatus: "integrated",
     cooldownSeconds: 15,
@@ -63,7 +63,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   brute: {
     unitId: "unit-tatara",
     displayName: "地砕衝",
-    summary: "前方へ踏み込み地面を叩き、範囲ダメージ・怯み・装甲低下を与える。",
+    summary: "踏み込んで地面を叩き、周囲の敵に打撃。ひるませて装甲も弱める。",
     iconMotif: "hammer-impact",
     runtimeStatus: "integrated",
     cooldownSeconds: 18,
@@ -79,7 +79,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   "crazy-king": {
     unitId: "unit-crazy-king",
     displayName: "狂王暴走",
-    summary: "短時間、移動と攻撃を高速化し、近接範囲を切り裂き続ける。",
+    summary: "移動と攻撃が速まり、近くの敵をまとめて切り裂く。",
     iconMotif: "chainsaw-crown",
     runtimeStatus: "integrated",
     cooldownSeconds: 22,
@@ -96,7 +96,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   kumaverson: {
     unitId: "unit-kumaverson",
     displayName: "鉄鍋仁王立ち",
-    summary: "周囲の敵を引きつけ、被ダメージを抑えながら徐々に回復する。",
+    summary: "敵を引きつけて踏ん張る。受けるダメージを減らし、自分のHPを少しずつ回復。",
     iconMotif: "pan-guard",
     runtimeStatus: "integrated",
     cooldownSeconds: 20,
@@ -110,7 +110,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   babayaga: {
     unitId: "unit-babayaga",
     displayName: "弱点査定",
-    summary: "危険な敵を自動査定して狙撃し、一定時間弱点を露出させる。",
+    summary: "厄介な敵を狙い撃ち、しばらく弱点をさらす。仲間の追撃も通りやすくなる。",
     iconMotif: "weak-point-ledger",
     runtimeStatus: "integrated",
     cooldownSeconds: 17,
@@ -123,7 +123,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   gunner: {
     unitId: "unit-raider",
     displayName: "制圧掃射",
-    summary: "前方の敵群を連続射撃し、移動と攻撃の勢いを抑える。",
+    summary: "前方へ連射し、敵の移動と攻撃を鈍らせる。",
     iconMotif: "machine-gun-fan",
     runtimeStatus: "integrated",
     cooldownSeconds: 18,
@@ -142,7 +142,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   guardian: {
     unitId: "unit-gantetsu",
     displayName: "鉄壁展開",
-    summary: "敵を引きつけ、自身と周囲の味方の被ダメージを軽減する。",
+    summary: "敵を引きつけ、自分と周囲の仲間を盾で守る。受けるダメージを減らす。",
     iconMotif: "shield-wall",
     runtimeStatus: "integrated",
     cooldownSeconds: 22,
@@ -157,7 +157,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   engineer: {
     unitId: "unit-monkey",
     displayName: "即席捕縛罠",
-    summary: "敵の進路へ罠を自動設置し、捕縛後も移動を鈍らせる。",
+    summary: "敵の進路に罠を仕掛けて足止めする。抜け出した後もしばらく動きを鈍らせる。",
     iconMotif: "tripwire-trap",
     runtimeStatus: "integrated",
     cooldownSeconds: 16,
@@ -171,7 +171,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   zakimiya: {
     unitId: "unit-zakimiya",
     displayName: "火酒投擲",
-    summary: "敵が最も密集する地点へ火酒を投げ、炎上領域を残す。",
+    summary: "敵が集まる場所へ火酒を投げる。地面に残った炎でも焼き払う。",
     iconMotif: "burning-whisky-bottle-arc",
     runtimeStatus: "integrated",
     cooldownSeconds: 14,
@@ -186,7 +186,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   tky: {
     unitId: "unit-tky",
     displayName: "光刃解放",
-    summary: "光刃を巨大化して前方を薙ぎ払い、群体を押し戻して怯ませる。",
+    summary: "大きな光の刃で前方を薙ぎ払い、敵の群れを押し戻してひるませる。",
     iconMotif: "released-light-blade",
     runtimeStatus: "integrated",
     cooldownSeconds: 16,
@@ -201,7 +201,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   "mrs-chiha": {
     unitId: "unit-mrs-chiha",
     displayName: "全弾制圧",
-    summary: "複数の敵密集地点へ榴弾を連射し、最終弾で強く押し戻す。",
+    summary: "敵の群れへ次々と榴弾を撃ち込む。最後の一発で強く押し戻す。",
     iconMotif: "rotary-gun-sweep",
     runtimeStatus: "integrated",
     cooldownSeconds: 19,
@@ -224,7 +224,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   "miyamoto-musashi": {
     unitId: "unit-miyamoto-musashi",
     displayName: "二天一流・無空",
-    summary: "近接・予告攻撃を受け流して交差斬り。未被弾時は踏み込み斬り。",
+    summary: "近接・予告攻撃を受け流して二刀で反撃。攻撃が来なければ自ら踏み込む。",
     iconMotif: "crossed-dual-blades",
     runtimeStatus: "integrated",
     cooldownSeconds: 20,
@@ -239,7 +239,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   "mayo-chan": {
     unitId: "unit-mayo-chan",
     displayName: "凶暴マヨ",
-    summary: "HPを消耗しながら高速化して敵を連続攻撃し、安全下限で退避する。",
+    summary: "HPを使って素早く連続攻撃。消耗すると自ら退く。",
     iconMotif: "chihuahua-infection-bloom",
     runtimeStatus: "integrated",
     cooldownSeconds: 34,

@@ -173,16 +173,19 @@
 #v100-campaign .v100-unit-skill strong { color: #254831; font-size: 14px; }
 #v100-campaign .v100-unit-skill span { margin-left: 10px; color: #493f29; font-size: 14px; }
 #v100-campaign .v100-command-personnel.detail-open .v100-personnel-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 48px; flex: none; gap: 4px; margin: 1px 0; }
-#v100-campaign .v100-command-personnel.detail-open .v100-personnel-stats.is-healer { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+#v100-campaign .v100-command-personnel.detail-open .v100-personnel-stats.is-healer { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 #v100-campaign .v100-command-personnel .v100-unit-stat { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: 18px minmax(0, 1fr); align-items: center; gap: 0 4px; min-height: 0; padding: 3px 6px; border: 0; border-bottom: 1px solid #a0ad91; border-left: 3px solid #719278; border-radius: 0; background: #f2f2e3; }
 #v100-campaign .v100-command-personnel .v100-unit-stat span { grid-column: 1 / -1; color: #233b2c; font-size: 14px; font-weight: 600; line-height: 1.2; white-space: normal; }
 #v100-campaign .v100-command-personnel .v100-unit-stat strong { grid-column: 1; grid-row: 2; color: #122d1e; font-size: 22px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums lining-nums; }
 #v100-campaign .v100-command-personnel .v100-unit-stat small { grid-column: 2; grid-row: 2; color: #195335; font-size: 18px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums lining-nums; white-space: nowrap; }
-#v100-campaign .v100-unit-growth-notes { position: relative; display: block; grid-column: 1; grid-row: 2; min-height: 18px; font-size: 12px; line-height: 1.2; }
+#v100-campaign .v100-unit-growth-notes { position: relative; display: grid; grid-template-columns: 92px minmax(0,1fr); gap: 4px; grid-column: 1; grid-row: 2; min-height: 44px; font-size: 12px; line-height: 1.2; }
+#v100-campaign .v100-portrait-views { display: grid; grid-template-columns: repeat(2,44px); gap: 4px; }
+#v100-campaign .v100-portrait-views button { min-width: 44px; width: 44px; min-height: 44px; height: 44px; padding: 0; font-size: 13px; border: 1px solid #71866d; color: #e9e0c4; background: #31483c; }
+#v100-campaign .v100-portrait-views button[aria-pressed="true"] { color: #211b12; background: #d1ac62; border-color: #785b2f; }
 #v100-campaign .v100-unit-growth-notes > strong { color: #2e6548; font-size: 12px; }
 #v100-campaign .v100-unit-growth-notes details { color: #324d3c; }
-#v100-campaign .v100-unit-growth-notes summary { display: flex; align-items: center; min-height: 44px; padding: 4px 8px; border: 1px solid #71866d; background: #e9e0c4; cursor: pointer; font-size: 14px; }
-#v100-campaign .v100-unit-growth-notes summary::after { content: "+"; margin-left: auto; padding-left: 6px; font-size: 20px; }
+#v100-campaign .v100-unit-growth-notes summary { display: flex; align-items: center; min-height: 44px; padding: 4px; border: 1px solid #71866d; background: #e9e0c4; cursor: pointer; font-size: 13px; white-space: nowrap; }
+#v100-campaign .v100-unit-growth-notes summary::after { content: "+"; margin-left: auto; padding-left: 2px; font-size: 16px; }
 #v100-campaign .v100-unit-growth-notes details[open] summary::after { content: "−"; }
 #v100-campaign .v100-unit-growth-notes details[open] > p { position: absolute; z-index: 4; left: 0; bottom: 48px; width: min(400px, 75vw); max-width: none; max-height: min(160px, calc(100svh - 180px)); margin: 0; overflow-y: auto; touch-action: pan-y; overscroll-behavior: contain; padding: 10px; border: 1px solid #647d68; background: #f0e6c8; color: #233f2d; font-size: 14px; line-height: 1.5; }
 #v100-campaign .v100-unit-transaction { position: sticky; bottom: 0; flex: none; margin-top: auto; padding-top: 1px; background: #ddd4b8; }
@@ -388,9 +391,11 @@
 #v100-campaign .v100-unit-level-effect { display:block; margin-top:4px; color:#294832; font-size:13px; line-height:1.4; }
 #v100-campaign .v100-unit-transaction .v100-upgrade-preview { margin:2px 0 4px; color:#27482e; font-size:13px; line-height:1.4; white-space:normal; overflow-wrap:anywhere; }
 
-/* Inspect the whole authored portrait; the square roster crop is only for lists. */
-#v100-campaign .v100-command-personnel.detail-open .v100-personnel-focus-art { max-height:none; }
+/* Match authored head/chin landmarks without changing the generated image.
+   The local view switch still exposes the complete outfit and weapon. */
+#v100-campaign .v100-command-personnel.detail-open .v100-personnel-focus-art { position:relative; max-height:none; --unit-profile-face-size:clamp(56px,12vh,96px); }
 #v100-campaign .v100-command-personnel.detail-open .v100-personnel-focus-art img { object-fit:contain; object-position:center bottom; }
+#v100-campaign .v100-command-personnel.detail-open .v100-personnel-focus-art[data-portrait-view="face"] img { position:absolute; width:calc(var(--unit-profile-face-size) * var(--portrait-width-factor)); height:auto; max-width:none; max-height:none; left:50%; top:calc(32px + var(--unit-profile-face-size) * var(--portrait-top-factor)); transform:translateX(calc(-100% * var(--portrait-face-fraction))); }
 @media (min-height:461px) and (min-width:900px) {
   #v100-campaign .v100-command-personnel.detail-open .v100-personnel-focus { grid-template-columns:minmax(240px,30%) minmax(0,1fr); }
   #v100-campaign .v100-command-personnel.detail-open .v100-unit-transaction { position:static; margin-top:16px; }

@@ -18,17 +18,19 @@ const fullLevelOneUnit = V100_LEVEL_COSTS.reduce((sum, cost) => sum + cost, 0);
 
 const choices = {
   afterStage1: { earnedAtOneStar: first(1, 1), earnedAtTwoStars: first(1, 2), earnedAtThreeStars: first(1, 3), nao: registration["unit-nao"], naoAndOneLevel: registration["unit-nao"] + secondLevel },
-  afterStage2: { earned: first(2), naoAndMizuchi: registration["unit-nao"] + registration["unit-mizuchi"], naoAndFourLevels: registration["unit-nao"] + secondLevel * 4 },
-  afterStage4: { earned: first(4), battleReady: registration["unit-nao"] + registration["unit-mizuchi"] + secondLevel * 4 + 50, battleReadyAndVehicle: registration["unit-nao"] + registration["unit-mizuchi"] + secondLevel * 4 + 50 + V100_VEHICLE.upgradeCosts[0] },
+  afterStage2: { earned: first(2), earnedAtOneStar: first(2, 1), naoAndMizuchi: registration["unit-nao"] + registration["unit-mizuchi"], naoAndMizuchiAndOneLevel: registration["unit-nao"] + registration["unit-mizuchi"] + secondLevel, naoAndFourLevels: registration["unit-nao"] + secondLevel * 4 },
+  afterStage4: { earned: first(4), earnedAtOneStar: first(4, 1), battleReady: registration["unit-nao"] + registration["unit-mizuchi"] + secondLevel * 4 + 50, battleReadyAndVehicle: registration["unit-nao"] + registration["unit-mizuchi"] + secondLevel * 4 + 50 + V100_VEHICLE.upgradeCosts[0] },
   fullCampaign: { earnedAtOneStar: first(30, 1), earnedAtThreeStars: first(30, 3), registrationTotal, vehicleTotal, fullLevelOneUnit, allRegistrationVehicleOneMaxUnit: registrationTotal + vehicleTotal + fullLevelOneUnit },
 };
 assert.equal(choices.afterStage1.earnedAtOneStar >= choices.afterStage1.nao, true, "even a one-star first clear can register Nao");
 assert.equal(choices.afterStage1.earnedAtTwoStars >= choices.afterStage1.nao, true);
-assert.equal(choices.afterStage1.earnedAtThreeStars < choices.afterStage1.naoAndOneLevel, true, "a three-star first clear still cannot buy both Nao and the first level");
-assert.equal(choices.afterStage2.earned < choices.afterStage2.naoAndMizuchi, true);
+assert.equal(choices.afterStage1.earnedAtOneStar >= choices.afterStage1.naoAndOneLevel, true, "a one-star first clear can prepare Nao and buy the first level");
+assert.equal(choices.afterStage2.earnedAtOneStar >= choices.afterStage2.naoAndMizuchiAndOneLevel, true, "two one-star first clears can prepare both rescued allies and buy the first level");
 assert.equal(choices.afterStage2.earned >= choices.afterStage2.naoAndFourLevels, true);
 assert.equal(choices.afterStage4.earned >= choices.afterStage4.battleReady, true);
-assert.equal(choices.afterStage4.earned < choices.afterStage4.battleReadyAndVehicle, true);
+assert.equal(choices.afterStage4.earnedAtOneStar >= choices.afterStage4.battleReady, true);
+assert.equal(choices.afterStage4.earnedAtOneStar < choices.afterStage4.battleReadyAndVehicle, true);
+assert.equal(choices.afterStage4.earned >= choices.afterStage4.battleReadyAndVehicle, true);
 assert.equal(choices.fullCampaign.earnedAtThreeStars, V100_STAGE_REWARD_TOTAL);
 assert.equal(choices.fullCampaign.earnedAtThreeStars < choices.fullCampaign.allRegistrationVehicleOneMaxUnit, true);
 assert.equal(v100StageReward(1, "replay") > 0, true, "replay reward prevents a permanent spending dead end");

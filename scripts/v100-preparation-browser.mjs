@@ -58,7 +58,7 @@ for(const [engine,browserType] of Object.entries({chromium,webkit})){
    await page.waitForFunction(()=>window.__V100_EVENT_AUDIO_QA__?.getSnapshot().desired?.sceneId==='map');
    await nav.getByRole('button',{name:'ユニット',exact:true}).click();
    await page.locator('.v100-personnel-card').filter({has:page.getByRole('heading',{name:'ナオ',exact:true})}).click();
-   const purchase=page.getByRole('button',{name:/配備登録 \d+ CAPS/});
+   const purchase=page.getByRole('button',{name:/支度を整える \/ \d+ CAPS/});
    await visibleControl(purchase);await visibleControl(page.locator('.v100-personnel-focus h3'));
    assert.equal(await page.locator('.v100-personnel-screen').evaluate(e=>e.scrollTop),0,'Only roster scrolls');
    result.personnelStyle=await page.locator('.v100-personnel-grid,.v100-personnel-card,.v100-personnel-copy,.v100-personnel-copy h3').evaluateAll(es=>es.slice(0,5).map(e=>({name:e.className,rect:e.getBoundingClientRect().toJSON(),style:Object.fromEntries(['display','height','min-height','grid-template-rows','position','line-height','margin','transform','align-items'].map(p=>[p,getComputedStyle(e).getPropertyValue(p)]))})));

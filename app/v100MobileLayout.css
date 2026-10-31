@@ -101,12 +101,15 @@
    or face, and a second shortage remains visible while the timer counts down. */
 .v100-shell .game-frame .unit-card.v100-deploy-card {
  display: grid; grid-template-columns: 48px minmax(0,1fr); grid-template-rows: 18px minmax(0,1fr);
- flex: 0 0 136px; min-width: 136px; max-width: 136px; gap: 0; padding: 0;
+ flex: 0 0 auto; width: max-content; min-width: 136px; max-width: none; gap: 0; padding: 0;
  border-width: 1px; border-radius: 3px; opacity: 1; filter: none;
 }
+.v100-shell .game-frame .v100-deploy-heading {
+ grid-column: 1 / -1; grid-row: 1; z-index: 3; display: flex; align-items: center; justify-content: space-between;
+ min-width: max-content; gap: 2px; padding: 1px 2px; background: #101b20ee;
+}
 .v100-shell .game-frame .v100-deploy-card .v100-deploy-name {
- grid-column: 1 / -1; grid-row: 1; z-index: 3; padding: 1px 4px; overflow: hidden; white-space: nowrap;
- color: #f6e7c6; background: #101b20ee; font: 700 14px/16px var(--v100-reading-font); text-align: left;
+ white-space: nowrap; color: #f6e7c6; font: 700 14px/16px var(--v100-reading-font); text-align: left;
 }
 .v100-shell .game-frame .v100-deploy-card .portrait {
  position: relative; grid-column: 1; grid-row: 2; inset: auto; width: 100%; height: 100%; min-height: 0;
@@ -119,13 +122,13 @@
 }
 .v100-shell .game-frame .v100-deploy-readout {
  grid-column: 2; grid-row: 2; display: flex; flex-direction: column; justify-content: center;
- min-width: 0; padding: 0 3px; background: #18262def; font-variant-numeric: tabular-nums; text-align: right;
+ min-width: 0; gap: 2px; padding: 2px 3px; background: #18262def; font-variant-numeric: tabular-nums; text-align: right;
 }
-.v100-shell .game-frame .v100-deploy-cost { display: flex; align-items: baseline; justify-content: flex-end; gap: 4px; color: #ffe19a; line-height: 16px; white-space: nowrap; }
+.v100-shell .game-frame .v100-deploy-cost { display: flex; flex: none; align-items: baseline; justify-content: flex-end; gap: 3px; color: #ffe19a; line-height: 16px; white-space: nowrap; }
 .v100-shell .game-frame .v100-deploy-cost small { font-size: 12px; font-style: normal; }
 .v100-shell .game-frame .v100-deploy-cost b { font: 800 16px/16px var(--v100-numeric-font); }
 .v100-shell .game-frame .v100-deploy-status,
-.v100-shell .game-frame .v100-deploy-shortage { font: 700 12px/13px var(--v100-reading-font); white-space: nowrap; color: #dce9ed; }
+.v100-shell .game-frame .v100-deploy-shortage { font: 700 13px/16px var(--v100-reading-font); white-space: nowrap; color: #dce9ed; }
 .v100-shell .game-frame .v100-deploy-card[data-state="ready"] .v100-deploy-status { color: #b8e2b0; }
 .v100-shell .game-frame .v100-deploy-card[data-state="insufficient"] .v100-deploy-status,
 .v100-shell .game-frame .v100-deploy-shortage { color: #ffd0a6; }
