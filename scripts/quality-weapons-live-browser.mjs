@@ -15,7 +15,7 @@ await mkdir(out,{recursive:true});
 const url=new URL(process.env.V100_CAMPAIGN_QA_BASE_URL);
 assert.ok(['127.0.0.1','localhost'].includes(url.hostname));
 const baseline=process.env.QUALITY_WEAPONS_BASELINE==='1';
-const report={build:await productionBuildIdentity(),baseline,scope:'Prepared S23 formation, native deployment, ordinary simulation. Local canvas + production mixer tap recording at 15fps; not physical recording, full-speed visual review or subjective listening acceptance.',baselineScope:baseline?'Same candidate game with the seven changed firearm response bodies substituted by their prior audio sources. Not a historical executable or equal-loudness playback.':'Unmodified candidate runtime responses.',substitutions:[],requests:[],cues:[],snapshots:[],errors:[]};
+const report={build:await productionBuildIdentity(path.resolve(process.env.QUALITY_WEAPONS_BUILD_ROOT??process.cwd())),baseline,scope:'Prepared S23 formation, native deployment, ordinary simulation. Local canvas + production mixer tap recording at 15fps; not physical recording, full-speed visual review or subjective listening acceptance.',baselineScope:baseline?'Same candidate game with the seven changed firearm response bodies substituted by their prior audio sources. Not a historical executable or equal-loudness playback.':'Unmodified candidate runtime responses.',substitutions:[],requests:[],cues:[],snapshots:[],errors:[]};
 const ids=['unit-mizuchi','unit-raider','unit-babayaga'];
 const seed=normalizeV100Save({...createDefaultV100Save(),campaignStarted:true,ownedUnitIds:ids,registeredUnitIds:ids,formationSlots:ids,availableStageIds:V100_STAGE_IDS,completedStageIds:V100_STAGE_IDS.slice(0,22),flowState:{phase:'formation',stageId:V100_STAGE_IDS[22],stageNumber:23,eventId:null,destination:'formation',nodeIndex:0,firstClear:false,finalized:true}});
 const browser=await chromium.launch({headless:true});
@@ -52,7 +52,7 @@ try{
  });
  const deployed=new Set(),cues=new Map(),deadline=Date.now()+45000;let lastTap=0;
  while(Date.now()<deadline){
-  const snapshot=await page.evaluate(()=>{const s=window.__ASHFALL_BATTLE_QA__?.getSnapshot();return s?{time:s.time,running:s.running,fighters:s.fighters.map(f=>({id:f.id,kind:f.kind,side:f.side,hp:f.hp}))}:null;});
+  const snapshot=await page.evaluate(()=>{const s=window.__ASHFALL_BATTLE_QA__?.getSnapshot();return s?{time:s.time,running:s.running,fighters:s.fighters.map(f=>({id:f.id,kind:f.kind,side:f.side,hp:f.hp,attackSequence:f.attackSequence}))}:null;});
   if(!snapshot?.running)break;
   report.snapshots.push(snapshot);
   for(const fighter of snapshot.fighters)if(fighter.side==='human')deployed.add(fighter.kind);

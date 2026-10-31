@@ -1825,7 +1825,11 @@ test("keeps BGM and production SFX lifecycle bounded across pause, mute, retry, 
   assert.doesNotMatch(game, /if \(kind === "pod"\) playCue\("pod-descent"\)/);
   assert.match(game, /airstrikeStep\.events\.includes\("targeting"\)[\s\S]*playCue\("airstrike-targeting"\)/);
   assert.match(game, /areaStep\.changes\.some\(\(change\) => change\.kind === "healing"\)[\s\S]*playCue\("medical-heal"\)/);
-  assert.match(game, /if \(roleEffect && !\["crazy-king", "kumaverson", "babayaga"\]\.includes\(f\.kind\)\) playCue\(`role-\$\{roleEffect\}` as SfxCueId\)/);
+  const roleAudioStart=game.indexOf('if (roleEffect && !["crazy-king", "kumaverson", "babayaga"].includes(f.kind)');
+  assert.ok(roleAudioStart>0);
+  const roleAudio=game.slice(roleAudioStart,game.indexOf('if (!productionMixerRef.current)',roleAudioStart));
+  assert.match(roleAudio,/LEGACY_SFX_CUE_MAP\[.*role-.*roleEffect.*\] !== attackAudioCueId/);
+  assert.match(roleAudio,/playCue\(`role-/);
   const deployAudioStart = game.indexOf("if (g.deployQueue.length");
   const deployAudio = game.slice(deployAudioStart, game.indexOf("const crawlerStep =", deployAudioStart));
   assert.match(deployAudio, /playProductionCue\("support-pod-deploy", deploymentX,[\s\S]*volume: kind === "brute" \? \.42 : \.32[\s\S]*maxInstances: 1/);

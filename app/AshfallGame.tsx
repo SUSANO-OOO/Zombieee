@@ -9356,6 +9356,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     at: number;
     x: number;
     dedupeKey: string | null;
+    instanceKey?: string;
     semantic?: string;
     receiptId?: string;
     ownerId?: number | string;
@@ -15617,6 +15618,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           at: performance.now(),
           x,
           dedupeKey: options.dedupeKey ?? null,
+          instanceKey: options.instanceKey,
           semantic: options.semantic,
           receiptId: options.receiptId,
           ownerId: options.ownerId,
@@ -19891,6 +19893,25 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               targetX: locksGrenadeLandingPoint ? hit.targetX : target?.x ?? hit.targetX,
               targetY: locksGrenadeLandingPoint ? hit.targetY : target ? target.y - 28 : hit.targetY,
             });
+            // Later normal LMG rounds emit at their scheduled muzzle event.
+            if (hit.weapon === "gunner" && (hit.raiderLineHit === true || hit.targetKind === "enemy-base")
+              && hit.raiderSecondary !== true && hit.shotIndex > 0 && hit.transactionId
+              && hit.attackSequence !== undefined) {
+              playProductionCue(weaponCueForUnit("gunner"), hit.originX, {
+                priority: 74,
+                // The timeline owns cadence; the transaction key deduplicates each round.
+                cooldownMs: 0,
+                maxInstances: 5,
+                instanceKey: `gunner-burst:${hit.sourceId}:${hit.attackSequence}`,
+                fallbackCue: "ranged-shot",
+                dedupeKey: `gunner-muzzle:${hit.transactionId}`,
+                ...(hit.attackObservation ? {
+                  receiptId: `${hit.attackObservation.audioReceiptId}:shot:${hit.shotIndex}`,
+                  ownerId: hit.attackObservation.sourceId,
+                  activationId: hit.attackObservation.attackSequence,
+                } : {}),
+              });
+            }
             if (hit.weapon === "mrs-chiha") {
               playProductionCue(unitAudioCueFor("mrs-chiha", "weapon", "shot"), hit.originX, {
                 priority: 72,
@@ -22862,6 +22883,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                     raiderLineHit: true,
                     raiderSecondary: false,
                     sourceId: f.id,
+                    attackSequence: committedAttackSequence,
                     targetId: target.id,
                     targetX: target.x,
                     targetY: target.y - 28,
@@ -23149,6 +23171,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                     priority: f.kind === "gunner" || f.kind === "brute" || f.kind === "crazy-king" ? 74 : 64,
                     cooldownMs: f.kind === "crazy-king" ? 110 : f.kind === "kumaverson" ? 120 : f.kind === "babayaga" ? 90 : f.kind === "gunner" ? 45 : 70,
                     volume: f.kind === "crazy-king" ? .66 : f.kind === "kumaverson" ? .52 : undefined,
+                    instanceKey: f.kind === "gunner" ? `gunner-burst:${f.id}:${f.attackSequence}` : undefined,
                     maxInstances: f.kind === "crazy-king" || f.kind === "kumaverson" ? 1 : f.kind === "babayaga" ? 4 : 5,
                     fallbackCue: ["ranger", "gunner", "medic", "babayaga", "engineer"].includes(f.kind)
                       ? "ranged-shot"
@@ -23334,7 +23357,11 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                   const muzzle = weaponAnchorForTarget(f, target);
                   addShot(g, muzzle.x, muzzle.y, target.x, target.y - 28, .26, "human", .26, ranged ? "projectile" : "melee", f.kind, roleEffect ?? undefined, f.id, target.id, target.id, emphasized, undefined, undefined, undefined, undefined, undefined);
                 }
-                if (roleEffect && !["crazy-king", "kumaverson", "babayaga"].includes(f.kind)) playCue(`role-${roleEffect}` as SfxCueId);
+                if (roleEffect && !["crazy-king", "kumaverson", "babayaga"].includes(f.kind)
+                  && (!productionMixerRef.current
+                    || LEGACY_SFX_CUE_MAP[`role-${roleEffect}` as SfxCueId] !== attackAudioCueId)) {
+                  playCue(`role-${roleEffect}` as SfxCueId);
+                }
                 if (!productionMixerRef.current) {
                   if (["ranger", "gunner", "medic", "babayaga", "engineer"].includes(f.kind)) playCue("ranged-shot", { frequency: 310 + Math.random() * 50 });
                   else playCue("melee-hit");
@@ -23387,6 +23414,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                     priority: f.kind === "brute" || f.kind === "gunner" || f.kind === "crazy-king" ? 76 : 64,
                     cooldownMs: f.kind === "crazy-king" ? 110 : f.kind === "kumaverson" ? 125 : f.kind === "babayaga" ? 90 : f.kind === "gunner" ? 45 : 75,
                     volume: f.kind === "crazy-king" ? .64 : f.kind === "kumaverson" ? .5 : undefined,
+                    instanceKey: f.kind === "gunner" ? `gunner-burst:${f.id}:${f.attackSequence}` : undefined,
                     maxInstances: f.kind === "crazy-king" || f.kind === "kumaverson" ? 1 : f.kind === "babayaga" ? 4 : 5,
                     fallbackCue: f.kind === "brute" ? "structure-heavy" : "structure-light",
                     dedupeKey: f.kind === "babayaga"
@@ -23425,6 +23453,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                       targetKind: "enemy-base" as const,
                       researchTargetId: enemyBaseTarget.researchTargetId,
                       sourceId: f.id,
+                      attackSequence: f.attackSequence,
                       targetId: null,
                       targetX: enemyBaseTarget.x,
                       targetY: enemyBaseTarget.y,
