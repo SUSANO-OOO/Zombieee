@@ -6,6 +6,8 @@ import { V100_CORPORATE_CONTROLS } from "./v100CorporateControl.js";
 import { V100_DEFENSE_OBJECTIVES } from "./v100DefenseObjectives.js";
 import { researchCoreObjective } from "./v100ResearchCore.js";
 import { v100IncreaseWaveDensity } from "./v100CombatTuning.js";
+import { withClearDrivenAssaultWaves } from "./wavePacing.js";
+import { v100AvailableFormation, v100StageAbsenceReason } from "./v100StageParticipation.js";
 import { v100EquipmentSnapshot, v100OpeningSupportGauge } from "./v100Equipment.js";
 import {
   V100_BOSS_BY_ID,
@@ -74,7 +76,11 @@ export function v100MissionObjectiveFor(stageId) {
   if (stage.number === 3) return "大型変異感染者TAKUYAを撃破";
   if (stage.number === 30) return "TAKUYA-Ωを撃破し、西新を守る";
   const control = V100_CORPORATE_CONTROLS[stageId];
-  if (control) return stage.missionType === "boss" ? `異常個体を撃破し、${control}を破壊` : `${control}を破壊`;
+  if (control) {
+    const bossId = stage.firstClearPayload.find(value => value.startsWith("boss-"));
+    const bossName = V100_BOSS_BY_ID[bossId]?.displayName;
+    return bossName ? `${bossName}を倒し、${control}を破壊` : `${control}を破壊`;
+  }
   const defense = V100_DEFENSE_OBJECTIVES[stageId];
   if (defense) return defense.recordCount ? `${defense.goal}（全${defense.recordCount}室）` : defense.goal;
   if (stage.number === 29) return researchCoreObjective(null);
@@ -260,7 +266,7 @@ export function v100BattleDefinitionFor(stageId) {
   const missionNode = V100_NODE_PROFILES[stageId];
   const objective = v100MissionObjectiveFor(stageId);
   const phase = phaseScheduleFor(stage, missionType, objective);
-  const timeline = v100IncreaseWaveDensity(stageTimeline(stage, missionType, bossKind), Object.values(BOSS_KIND_BY_V100_ID), { preserveEscalation: missionType === 'escort' });
+  const timeline = withClearDrivenAssaultWaves(v100IncreaseWaveDensity(stageTimeline(stage, missionType, bossKind), Object.values(BOSS_KIND_BY_V100_ID), { preserveEscalation: missionType === 'escort' }), missionType);
   const baseMaxHp = V100_VEHICLE.baseHp;
   const station = missionType === "escort"
     ? { durationSeconds: phase.durationSeconds, maxIntegrity: 500, repairSeconds: 5, minimumEscortReadiness: 1, startX: missionVehicle?.count === 3 ? 450 : 258, endX: missionVehicle?.count === 3 ? 650 : 720 }
@@ -321,7 +327,7 @@ export function v100SupportSupplyFor(supportId) {
 }
 
 export function v100ProductionSessionFor({ save, stageId, resultId, onBattleResult = null }) {
-  const formationUnitIds = save?.formationSlots?.filter(Boolean).slice(0, 7) ?? [];
+  const formationUnitIds = v100AvailableFormation(stageId, save?.formationSlots);
   const formationKinds = v100FormationCombatKinds(formationUnitIds);
   const definition = v100BattleDefinitionFor(stageId);
   const enemyKinds = [...new Set(definition?.timeline?.flatMap((event) => event.units) ?? [])];
@@ -336,7 +342,7 @@ export function v100ProductionSessionFor({ save, stageId, resultId, onBattleResu
     formationKinds: freeze([...formationKinds]),
     // Ikura is a rescued radio operator, not a purchasable combat unit.
     barkSpeakerKinds: freeze([...new Set([
-      ...(save?.ownedUnitIds ?? []).map(v100CombatKindForUnit).filter(Boolean),
+      ...(save?.ownedUnitIds ?? []).filter(id => !v100StageAbsenceReason(stageId, id)).map(v100CombatKindForUnit).filter(Boolean),
       ...(save?.completedStageIds?.includes(V100_STAGE_IDS[0]) ? ["guide"] : []),
     ])]),
     enemyKinds: freeze([...enemyKinds]),

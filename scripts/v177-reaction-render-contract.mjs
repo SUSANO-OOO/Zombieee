@@ -138,7 +138,9 @@ export function assertV177ReactionRender({form,proof,before,after,late}){
     }
     assert.equal(new Set(body.corpseRenderHistory.map(r=>r.renderSequence)).size,body.corpseRenderHistory.length);
     if(identity.side==='human'&&frame.derivedFrom==='hit')assert.ok(body.corpseRenderHistory.some(r=>r.fallProgress>0&&r.fallProgress<1),'a fallback ally body must actually paint the intermediate fall');
-    if(v102HasFallingDeathFrame(form,frame)){
+    // Continuous rig corpses retain the last real paint, not the retired
+    // raster boss-fall key. Their matrix/outline handoff is checked above.
+    if(!jointOwner&&!humanOwner&&v102HasFallingDeathFrame(form,frame)){
       assert.ok(body.corpseRenderHistory.some(r=>r.corpsePoseProgress>0&&r.corpsePoseProgress<1),'a falling boss key must paint its intermediate collapse');
       for(const r of body.corpseRenderHistory)assert.equal(r.corpsePoseSourceBound,true,'the falling pose must use its exact original source outline');
     }

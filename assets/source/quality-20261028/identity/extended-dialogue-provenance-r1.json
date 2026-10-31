@@ -1,0 +1,274 @@
+{
+  "generator": "scripts/build-quality-extended-dialogue.mjs",
+  "records": [
+    {
+      "kind": "segawa",
+      "expression": "warm",
+      "input": "assets/source/quality-20261028/identity/segawa-warm-extended-r1.png",
+      "inputSha256": "459c3535c5edcfff551ba7c5cee4e81a9fef082bdb19ba37626e7300eacf821b",
+      "previewAnchor": {
+        "crown": 8,
+        "chin": 103,
+        "center": 126
+      },
+      "cropTop": 0,
+      "scale": 0.7894736842105263,
+      "left": 370,
+      "top": 95,
+      "width": 808,
+      "height": 1213,
+      "output": "public/art/v100/portraits/segawa-warm-stage-r1.webp",
+      "sha256": "e63120afd585b0f19e65524c4140088d28fb935052a1acf0b9edab8d2f6a941a",
+      "bytes": 279922
+    },
+    {
+      "kind": "segawa",
+      "expression": "determined",
+      "input": "assets/source/quality-20261028/identity/segawa-determined-extended-r1.png",
+      "inputSha256": "be51653e03e9cb6ef6d2f18d051060b0add0c7497809ac314c2fdf0e8fd63150",
+      "previewAnchor": {
+        "crown": 14,
+        "chin": 100,
+        "center": 114
+      },
+      "cropTop": 0,
+      "scale": 0.7236817308054728,
+      "left": 509,
+      "top": 71,
+      "width": 615,
+      "height": 1340,
+      "output": "public/art/v100/portraits/segawa-determined-stage-r1.webp",
+      "sha256": "dbce5fe632c2e571539cd2acd0d94afbf385b703bd46f344bca546a45d563541",
+      "bytes": 289476
+    },
+    {
+      "kind": "segawa",
+      "expression": "alarm",
+      "input": "assets/source/quality-20261028/identity/segawa-alarm-extended-r1.png",
+      "inputSha256": "060e2a5c262b361d676847fdbde6e78eb1ce5d550a6494ddad47611ef74cbdeb",
+      "previewAnchor": {
+        "crown": 7,
+        "chin": 102,
+        "center": 116
+      },
+      "cropTop": 0,
+      "scale": 0.7894736842105263,
+      "left": 402,
+      "top": 98,
+      "width": 808,
+      "height": 1213,
+      "output": "public/art/v100/portraits/segawa-alarm-stage-r1.webp",
+      "sha256": "90daeaf8523780fc41ca1b477cf11ff39eac4cdf3db6a21e72fb1992c038b271",
+      "bytes": 259914
+    },
+    {
+      "kind": "segawa",
+      "expression": "grief",
+      "input": "assets/source/quality-20261028/identity/segawa-grief-extended-r1.png",
+      "inputSha256": "16ef98ab007fe112c1192edb1ebfb481d751f7f6365783dba5f4e324667dfa14",
+      "previewAnchor": {
+        "crown": 43,
+        "chin": 123,
+        "center": 115
+      },
+      "cropTop": 0,
+      "scale": 0.8556149732620321,
+      "left": 337,
+      "top": 79,
+      "width": 960,
+      "height": 1200,
+      "output": "public/art/v100/portraits/segawa-grief-stage-r1.webp",
+      "sha256": "9fa34059e474b6737321619592d61d85dffef6a836a8a5371368e1ffcfe1d052",
+      "bytes": 266424
+    },
+    {
+      "kind": "president",
+      "expression": "warm",
+      "input": "assets/source/quality-20261028/identity/president-warm-extended-r1.png",
+      "inputSha256": "14ec1e067895e20e7f7596a5f54fd279af56e9b313820490ec9d103bd3a7c4b8",
+      "previewAnchor": {
+        "crown": 34,
+        "chin": 116,
+        "center": 133
+      },
+      "cropTop": 0,
+      "scale": 0.8347463153775923,
+      "left": 281,
+      "top": 113,
+      "width": 937,
+      "height": 1170,
+      "output": "public/art/v100/portraits/president-warm-stage-r1.webp",
+      "sha256": "9d5bc096438c789df02d235b0083621306d05fb8b724a6520d4a9d68ddc2c9c6",
+      "bytes": 282242
+    },
+    {
+      "kind": "president",
+      "expression": "determined",
+      "input": "assets/source/quality-20261028/identity/president-determined-extended-r1.png",
+      "inputSha256": "e50216674529030e5c225972c00e649e163c35d11bf98485a8d62c2442d6b137",
+      "previewAnchor": {
+        "crown": 36,
+        "chin": 118,
+        "center": 121
+      },
+      "cropTop": 0,
+      "scale": 0.8347463153775923,
+      "left": 325,
+      "top": 106,
+      "width": 937,
+      "height": 1170,
+      "output": "public/art/v100/portraits/president-determined-stage-r1.webp",
+      "sha256": "c0f02817ed636576e8873953ec4290caf9f0ce1bb3e2c1cf59e34816f21a5506",
+      "bytes": 271566
+    },
+    {
+      "kind": "president",
+      "expression": "alarm",
+      "input": "assets/source/quality-20261028/identity/president-alarm-extended-r1.png",
+      "inputSha256": "976f71c1493ac5653ea9e9ea63554aba387eb25992a223ac7fde9368f7f1d0c4",
+      "previewAnchor": {
+        "crown": 5,
+        "chin": 88,
+        "center": 124
+      },
+      "cropTop": 0,
+      "scale": 0.9036144578313253,
+      "left": 320,
+      "top": 102,
+      "width": 925,
+      "height": 1388,
+      "output": "public/art/v100/portraits/president-alarm-stage-r1.webp",
+      "sha256": "185ce12b23eb43aa3bc1dacada958c13937e2a029e88eedbcc01d876aec328fa",
+      "bytes": 325852
+    },
+    {
+      "kind": "president",
+      "expression": "grief",
+      "input": "assets/source/quality-20261028/identity/president-grief-extended-r1.png",
+      "inputSha256": "5a87b04ee2569f3abbb45ff91c4a9bf23b974d05d90c5c3800aad5fdd9eeff44",
+      "previewAnchor": {
+        "crown": 36,
+        "chin": 119,
+        "center": 127
+      },
+      "cropTop": 0,
+      "scale": 0.8246891308549706,
+      "left": 309,
+      "top": 106,
+      "width": 925,
+      "height": 1156,
+      "output": "public/art/v100/portraits/president-grief-stage-r1.webp",
+      "sha256": "004b99d6b7b261286ff9e4d8857d42e84ab00a8c7f573c3857b36ddddb6612c2",
+      "bytes": 243494
+    },
+    {
+      "kind": "commander",
+      "expression": "warm",
+      "input": "assets/source/quality-20261028/identity/commander-warm-extended-r1.png",
+      "inputSha256": "97c93f4999bbb4bd0668b87aabcc3c7cee2a2c1939f1e662373b228e7a3ec5e3",
+      "previewAnchor": {
+        "crown": 23,
+        "chin": 113,
+        "center": 127
+      },
+      "cropTop": 0,
+      "scale": 0.8333333333333334,
+      "left": 345,
+      "top": 43,
+      "width": 853,
+      "height": 1280,
+      "output": "public/art/v100/portraits/commander-warm-stage-r1.webp",
+      "sha256": "008bff7d37e7ed41dc7ada226a2c918f4039a566239d209294f421b3864721ca",
+      "bytes": 292536
+    },
+    {
+      "kind": "commander",
+      "expression": "determined",
+      "input": "assets/source/quality-20261028/identity/commander-determined-extended-r1.png",
+      "inputSha256": "f437efe7243df03e61f287ba3d16ac9615341e7c30a9f05eb626268b983421be",
+      "previewAnchor": {
+        "crown": 8,
+        "chin": 100,
+        "center": 129
+      },
+      "cropTop": 0,
+      "scale": 0.8152173913043478,
+      "left": 347,
+      "top": 94,
+      "width": 835,
+      "height": 1252,
+      "output": "public/art/v100/portraits/commander-determined-stage-r1.webp",
+      "sha256": "6a893b6654d2fec07b5e837b00da2137602bc94a7641001d62776b535d8ad3ed",
+      "bytes": 321418
+    },
+    {
+      "kind": "commander",
+      "expression": "alarm",
+      "input": "assets/source/quality-20261028/identity/commander-alarm-extended-r1.png",
+      "inputSha256": "cba57ca53ebaf38bb7448a95484438b6a806247b4de1474fcda3fbfb68c487b1",
+      "previewAnchor": {
+        "crown": 11,
+        "chin": 104,
+        "center": 126
+      },
+      "cropTop": 0,
+      "scale": 0.8064516129032258,
+      "left": 362,
+      "top": 85,
+      "width": 826,
+      "height": 1239,
+      "output": "public/art/v100/portraits/commander-alarm-stage-r1.webp",
+      "sha256": "58018d19530918de6c4ff02cbe2bf9d0d9cb0631daf1ec207c4f1076f305fbb2",
+      "bytes": 319682
+    },
+    {
+      "kind": "commander",
+      "expression": "grief",
+      "input": "assets/source/quality-20261028/identity/commander-grief-extended-r1.png",
+      "inputSha256": "652e4e3a6c423e8507cd726e46acff9f3c9f002438601024ffb1a5ec8e3408e7",
+      "previewAnchor": {
+        "crown": 40,
+        "chin": 130,
+        "center": 123
+      },
+      "cropTop": 0,
+      "scale": 0.7605466428995841,
+      "left": 358,
+      "top": 94,
+      "width": 853,
+      "height": 1066,
+      "output": "public/art/v100/portraits/commander-grief-stage-r1.webp",
+      "sha256": "82abaa302394b081950d7b6d43d166d88c2aa3451b9885f015af4382cb3dab1f",
+      "bytes": 267754
+    },
+    {
+      "kind": "minor-human",
+      "expression": "neutral",
+      "input": "assets/source/quality-20261028/identity/minor-human-neutral-extended-r1.png",
+      "inputSha256": "41f5e436545f69ebf3ba4695254e8f12d6f5d61956a3b63f8923205d01b7c7c8",
+      "previewAnchor": {
+        "crown": 24,
+        "chin": 115,
+        "center": 125
+      },
+      "cropTop": 0,
+      "scale": 0.7771234290571307,
+      "left": 356,
+      "top": 111,
+      "width": 844,
+      "height": 1125,
+      "output": "public/art/v100/portraits/minor-human-neutral-stage-r1.webp",
+      "sha256": "5a7e5f6e70dfc5697f4ceb0da8f4e0b514a57f8f0ee37f05d7004998bef6f24b",
+      "bytes": 79946
+    }
+  ],
+  "pixelDensity": 2,
+  "headAnchor": {
+    "top": 60,
+    "height": 150,
+    "center": 384,
+    "width": 768
+  },
+  "logicalBytes": 3500226,
+  "scope": "Dialogue framing only. Existing R5 source and runtime files preserved; no battle replacement or visual acceptance implied."
+}

@@ -12,6 +12,13 @@ export function v102HasFallingDeathFrame(kind, frame) {
   return Boolean(boundFrame(kind, frame));
 }
 
+// Shared by the legacy source-bound fall and the current painted Paisen rig.
+export function v102PaisenFallProgress(progress) {
+  const t=Math.max(0,Math.min(1,Number(progress)||0)),ramp=.3,speed=1/(1-ramp);
+  return t<ramp?speed*t*t/(2*ramp)
+    :t>1-ramp?1-speed*(1-t)*(1-t)/(2*ramp):speed*(t-ramp/2);
+}
+
 // A mid-fall source key must reach a horizontal, grounded final pose. Use the
 // exact visible source outline so either fall direction and either mirror can
 // touch the floor without sinking a claw, boot or weapon below it.
@@ -23,11 +30,7 @@ export function v102CorpseFallingPose(kind, frame, width, height, fallDirection,
   // The photo Paisen falls through ninety degrees on the existing .42s clock.
   // A 30% acceleration ramp, constant middle and matching deceleration keep
   // each 60Hz turn below the original .09rad limit without easing twice.
-  const ramp = .3, speed = 1 / (1 - ramp);
-  const allyProgress = t < ramp ? speed * t * t / (2 * ramp)
-    : t > 1 - ramp ? 1 - speed * (1 - t) * (1 - t) / (2 * ramp)
-      : speed * (t - ramp / 2);
-  const poseProgress = source.kind === 'brawler' ? allyProgress : t * t * (3 - 2 * t);
+  const poseProgress = source.kind === 'brawler' ? v102PaisenFallProgress(t) : t * t * (3 - 2 * t);
   const angle = (fallDirection < 0 ? -1 : 1) * source.fallAngleRadians * poseProgress;
   const rotationRadians = angle === 0 ? 0 : angle;
   const c = Math.cos(rotationRadians), s = Math.sin(rotationRadians), sign = frame.flipX ? -1 : 1;

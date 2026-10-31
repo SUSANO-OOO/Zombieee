@@ -1,3 +1,4 @@
+import {useEffect,useLayoutEffect,useRef,useState} from 'react';
 import {v100StoryInsertFor} from './v100StoryInserts.js';
 
 function Vehicle({x,y,van=false}:{x:number;y:number;van?:boolean}) {
@@ -5,11 +6,31 @@ function Vehicle({x,y,van=false}:{x:number;y:number;van?:boolean}) {
 }
 
 export function V100StoryInsert({id,sourceLine}:{id:string;sourceLine:number}) {
+ const frame=useRef<HTMLElement>(null),reader=useRef<HTMLDialogElement>(null);
+ const [expanded,setExpanded]=useState(false);
+ useLayoutEffect(()=>{
+  const figure=frame.current,stage=figure?.closest('.v100-event-layout');
+  const heading=stage?.querySelector('.v100-event-heading'),copy=stage?.querySelector('.v100-node-copy');
+  if(!figure||!stage||!heading||!copy)return;
+  const fit=()=>{
+   const origin=(figure.offsetParent??stage).getBoundingClientRect();
+   const top=heading.getBoundingClientRect().bottom-origin.top+8;
+   const bottom=copy.getBoundingClientRect().top-origin.top-8;
+   figure.style.top=`${top}px`;figure.style.height=`${Math.max(1,bottom-top)}px`;
+  };
+  fit();const observer=new ResizeObserver(fit);
+  for(const element of [stage,heading,copy])observer.observe(element);
+  return()=>observer.disconnect();
+ },[id,sourceLine]);
+ useEffect(()=>{
+  const dialog=reader.current;if(!expanded||!dialog)return;
+  dialog.showModal();return()=>{if(dialog.open)dialog.close();};
+ },[expanded]);
  const scene=v100StoryInsertFor(id,sourceLine);
  if(!scene) return null;
  const {type}=scene;
  const title=scene.dated?'41日前のメッセージ':scene.familyConfirmed?'家族の生存確認印':scene.observed?'24時間後も変色の広がりなし':scene.label;
- return <figure className="v100-story-insert" data-v100-insert={id} data-crossing={scene.crossing||undefined} data-stopped={scene.stopped||undefined} role="img" aria-label={scene.alt}>
+ const illustration=<>
   <svg viewBox="0 0 1000 450" aria-hidden="true" preserveAspectRatio="xMidYMid meet">
    <defs><linearGradient id={`steel-${id}`} x2="0" y2="1"><stop stopColor="#344b4b"/><stop offset="1" stopColor="#0b181c"/></linearGradient><pattern id={`grain-${id}`} width="7" height="7" patternUnits="userSpaceOnUse"><path d="M0 0h1v1H0z" fill="#ccd7cb" opacity=".09"/></pattern></defs>
    <rect x="7" y="7" width="986" height="436" rx="18" fill={`url(#steel-${id})`} stroke="#75867a" strokeWidth="3"/>
@@ -43,5 +64,15 @@ export function V100StoryInsert({id,sourceLine}:{id:string;sourceLine:number}) {
    {type==='medical'&&<g>{(scene.observed?['1時間','6時間','24時間']:['投与開始']).map((label,i)=><g key={i} transform={`translate(${scene.observed?200+i*300:500} 140)`}><rect x="-105" y="0" width="210" height="205" fill="#b5bdaa" stroke="#283f3b" strokeWidth="5"/><path d="M-85 130q60-30 145-12l22 25q-87-14-155 17z" fill="#ae8c76" stroke="#775f52" strokeWidth="3"/><path d="M-44 128l28-5 15 15-33 7z" fill="#6b6758"/><text x="0" y="50" textAnchor="middle" fill="#263e36" fontSize="28">{label}</text></g>)}<text x="500" y="395" textAnchor="middle" className="v100-insert-small">{scene.observed?'初期感染の進行抑制 / 完治はまだ確認できない':'同意を得た初期感染者へ少量投与'}</text></g>}
   </svg>
   <figcaption>{scene.detail}</figcaption>
- </figure>;
+ </>;
+ return <>
+  <figure ref={frame} className="v100-story-insert" data-v100-insert={id} data-crossing={scene.crossing||undefined} data-stopped={scene.stopped||undefined} aria-label={scene.alt}>
+   {!expanded&&illustration}
+   <button type="button" className="v100-insert-expand" onClick={()=>setExpanded(true)} aria-haspopup="dialog">資料を拡大</button>
+  </figure>
+  {expanded&&<dialog ref={reader} className="v100-insert-reader" aria-label={`資料：${title}`} onClose={()=>setExpanded(false)}>
+   <header><h2>{title}</h2><button type="button" onClick={()=>reader.current?.close()}>閉じる</button></header>
+   <figure className="v100-insert-reader-page" data-crossing={scene.crossing||undefined} data-stopped={scene.stopped||undefined} aria-label={scene.alt}>{illustration}</figure>
+  </dialog>}
+ </>;
 }

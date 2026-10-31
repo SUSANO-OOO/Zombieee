@@ -1,0 +1,26 @@
+{
+  "name": "s30-three-samples-quality-r1",
+  "args": {
+    "referenced_image_paths": [
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\v100\\story-r9\\s30-three-samples.png",
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\identity\\kumaverson-master-r2.png"
+    ],
+    "transparent_background": false,
+    "prompt": "Reframe reference 1 into a very wide 3:1 panoramic CLOSE-UP OF THE CASE AND HANDS, preserving its existing generated props and action. Keep EXACTLY THREE separate sealed sample containers in THREE independent protective foam grooves in the same open rugged case: the clear drug tube at LEFT, red blood sample CENTER, pale bone-marrow sample RIGHT. Lids closed, no mixing or spills, no extra vial, no wound or sampling from a body. Keep the player's gloved LEFT foreground hand correctly attached and reaching only for the LEFT container; Kuma's bare hands securely steady the case at the opposite edge. His partial torso, if visible, must match model 2's distressed off-white SHORT-SLEEVE CREW-NECK T-SHIRT, no collared shirt, no buttons/tie. Model 2 is the existing generated Kuma identity/wardrobe; this is deliberately a prop close-up with his HEAD OUTSIDE the shot, not an accidental half face. The full case, all three lid tops, both hand contacts and separate grooves must fit comfortably vertically; make camera/foreshortening suited to the wide panorama instead of cutting off the case lid or bottle bottoms. Same ruined lab street and gritty semi-realistic painterly game style and materials. No text, UI, border, extra people or extra hands."
+  },
+  "references": [
+    {
+      "path": "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\v100\\story-r9\\s30-three-samples.png",
+      "sha256": "266a50f4f334bf014f3bdc5d37653dc7733da24129a6336935a195f91fd8b811",
+      "bytes": 2561654
+    },
+    {
+      "path": "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\identity\\kumaverson-master-r2.png",
+      "sha256": "51a5acb5a77f53eac921b49a5adefd681218f9f44f64e70caaf416ed2b6ed501",
+      "bytes": 1857208
+    }
+  ],
+  "stage": "candidate, not selected",
+  "primaryReferencePolicy": "Existing generated models/scenes are primary; original art/photos only check drift.",
+  "generatedOriginal": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-5e4e8b5c-1121-4d46-b77f-79f1366cf759.png"
+}

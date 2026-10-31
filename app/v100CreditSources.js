@@ -1,5 +1,6 @@
 // Public credits match the adopted material ledger; no private identity sources are distributed.
 export const V100_SOUND_CREDITS = Object.freeze([
+  {role:"ライフル・機関銃・SMG・拳銃の実録SE",author:"Ben Jaszczak / Brian Nelson / Kevin Heras / Matthew Nanney",works:["The Free Firearm Sound Library"],page:"https://opengameart.org/content/the-free-firearm-sound-library",license:"CC0 1.0"},
   {role:"RED PANTHER四兵種の合成戦闘音声",author:"VOICEVOX:雀松朱司",works:["VOICEVOX"],page:"https://www.virvoxproject.com/voicevoxの利用規約",license:"音声ライブラリ利用規約"},
   {role:"クレイジーキングの合成戦闘音声",author:"VOICEVOX:剣崎雌雄",works:["VOICEVOX"],page:"https://frontier.creatia.cc/fanclubs/413/posts/4507",license:"音声ライブラリ利用規約"},
   {role:"クマバーソンの合成戦闘音声",author:"VOICEVOX:麒ヶ島宗麟",works:["VOICEVOX"],page:"https://www.virvoxproject.com/voicevoxの利用規約",license:"音声ライブラリ利用規約"},

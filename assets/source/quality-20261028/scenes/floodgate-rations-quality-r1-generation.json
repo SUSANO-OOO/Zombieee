@@ -1,0 +1,13 @@
+{
+  "tool": "built-in image_gen",
+  "referenced_image_paths": [
+    "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/public/art/v100/credits/floodgate-rations-r2.webp",
+    "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/king-master-r4.png",
+    "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/monkey-master-r4.png"
+  ],
+  "transparent_background": false,
+  "prompt": "Edit IMAGE1, the existing 16:9 floodgate staff-roll scene. Preserve this exact event/composition: KING at left and MONKEY just to his right push the loaded food-supply cart toward the floodgate guardhouse; keep the wet ground, guardhouse canopy, sunset, damaged gate, cart/cargo and their hand positions and supported walking foot contacts. IMAGE2 is the LOCKED EXISTING GENERATED PRIMARY MODEL of KING, IMAGE3 that of MONKEY. Use those same specific characters: King's opaque scratched yellow bucket helmet with its exact painted cheerful face, green hoodie, pleated black skirt and red thigh boots; Monkey's specific recognizable adult Japanese man's face, silver tousled hair, dark repair/tactical clothing, brown harness and gloves. Keep helmet fully opaque, with no human face revealed. Match Monkey's actual facial structure/age, not an interchangeable anime boy. Preserve scene's slung-back gear where present; don't put the reference-model weapons in their busy hands. Realistic photographic skin/hair/cloth/weathered metal with a restrained painterly illustration finish, coherent sunset lighting, no old anime outline/flat face. No new actors or plot, no labels/text/panels. One finished widescreen 16:9 image.",
+  "output": "floodgate-rations-quality-r1.png",
+  "statusAtGeneration": "Model-based candidate; runtime connection and native review pending.",
+  "generatedOriginal": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-c858762d-3271-4343-82dc-39bd5716cab2.png"
+}

@@ -470,7 +470,7 @@ test("sixteen canonical playable units and guide-ikura use approved player-facin
   assert.equal(CAMPAIGN_GUIDE.roleName, "通信・地図・情報分析");
   assert.equal(CAMPAIGN_GUIDE.combatant, false);
   assert.equal(CAMPAIGN_GUIDE.age, 18);
-  assert.equal(CAMPAIGN_GUIDE.portraitPath, "/art/v075/characters/portraits/ikura-event-portrait-v4.webp");
+  assert.equal(CAMPAIGN_GUIDE.portraitPath, "/art/v100/portraits/ikura-warm-stage-r1.webp");
   assert.equal(CAMPAIGN_GUIDE.assetStatus, "approved");
   assert.match(CAMPAIGN_GUIDE.appearanceAudit.presentation, /pink space bun/);
   assert.doesNotMatch(

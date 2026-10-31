@@ -1,0 +1,20 @@
+{
+  "name": "president-restrained-alive-quality-r3",
+  "args": {
+    "referenced_image_paths": [
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\scenes\\president-restrained-alive-quality-r2.png"
+    ],
+    "transparent_background": false,
+    "prompt": "Precise local restraint correction to this EXISTING GENERATED scene. Keep EVERY existing face, costume, hairstyle, pose, scene and framing unchanged. The older president has exactly TWO arms: ONE giant scaled LEFT arm, ONE normal human RIGHT arm. In this picture the normal right hand at the FAR RIGHT remains free. Add a clearly visible SMALL closed steel restraint cuff around that NORMAL RIGHT WRIST just above his hand, not a watch. Connect that small cuff to the already existing LARGE cuff around his mutant LEFT WRIST by ONE SHORT UNBROKEN SILVER RESTRAINT CHAIN across the narrow visible space BETWEEN HIS TWO WRISTS. It must be visually obvious the two wrists are secured to EACH OTHER, with no freely reaching arm. Keep the wrists close together supported on the floor. Only the fingertips curl toward the floor papers. Do NOT merely add more bands along the mutant arm; the normal right wrist must also be restrained and connected. Keep him ALIVE and looking at the contracts. Same Baba and Chiha crouching at left, both full hair crowns inside frame. No extra hand or arm, no injury, no gore, no labels. Single opaque panoramic 3:1 image."
+  },
+  "references": [
+    {
+      "path": "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\scenes\\president-restrained-alive-quality-r2.png",
+      "sha256": "90aee164cfa02764c36badd17135cbb0f1b4900fd92018fed223dca2f27ef67b",
+      "bytes": 2421657
+    }
+  ],
+  "stage": "candidate, not selected",
+  "primaryReferencePolicy": "Existing generated models/scenes are primary; original art/photos only check drift.",
+  "generatedOriginal": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-29c687a4-29aa-4b36-a24a-95ef437fbacd.png"
+}

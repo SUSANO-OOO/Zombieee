@@ -9,7 +9,7 @@ import {V177_JOINT_ATLASES,v177JointPose,drawV177JointPose,v177JointCycleDistanc
 import {spriteFrameFor} from '../app/spriteManifest.js';
 import {requiredBattleAssetPlan} from '../app/battleAssetPlan.js';
 import {CAMPAIGN_STAGE_IDS} from '../app/campaign.js';
-import {V177_JOINT_ASSET_ADDITIONS} from '../scripts/v177-joint-asset-contract.mjs';
+import {V177_JOINT_ASSET_ADDITIONS} from '../scripts/v177-runtime-joint-asset-contract.mjs';
 const kinds=['guardian','grappler','sprinter','crusher'];
 const transform=(m,[x,y])=>[m[0]*x+m[2]*y+m[4],m[1]*x+m[3]*y+m[5]],distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');

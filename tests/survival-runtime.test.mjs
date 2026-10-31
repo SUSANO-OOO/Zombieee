@@ -78,13 +78,11 @@ test("checkpoint previews show actual capped effects, repair and the exact next 
     assert.equal(survivalHudSnapshot(run).upgradePreviews[id].after, preview.after);
     const capped = survivalUpgradePreview({ ...run, temporaryUpgradeStacks: { [id]: 100 } }, id);
     if (["layered-armor", "rapid-redeployment"].includes(id)) {
-      assert.equal(capped.before, capped.after);
-      assert.match(capped.note, /上限/u);
+      assert.equal(capped, null, 'Capped upgrades are replaced with useful choices');
     }
     if (id === "crawler-field-repair") {
       const full = survivalUpgradePreview({ ...run, crawler: { hp: 700, maxHp: 700 } }, id);
-      assert.equal(full.after, full.before);
-      assert.match(full.note, /満タン/u);
+      assert.equal(full, null, 'A full crawler must not consume a repair choice');
     }
   }
   assert.equal(survivalNextWavePreview(newRun()), null);

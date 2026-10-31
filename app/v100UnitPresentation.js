@@ -9,6 +9,38 @@ import { applyV100UnitLevelProgression, v100UnitLevelFor } from "./v100Progressi
 import { V100_UNIT_BY_ID, v100BossForStage, v100LevelCost, v100UnitStatAtLevel } from "./v100Registry.js";
 import { v100RoleLabelFor } from "./v100Terminology.js";
 
+// Short selection advice describes the existing manual ability, not a new AI order.
+const ABILITY_SELECTION_ADVICE = Object.freeze({
+  scout: "速い敵に追いつき、バールで怯ませる。",
+  brawler: "拳波を飛ばし、前方の敵を押し戻す。",
+  kumaverson: "敵を引きつけ、耐えながら自分を回復する。",
+  babayaga: "危険な敵を狙い撃ちし、弱点をさらす。",
+  medic: "傷ついた味方を回復し、敵の攻撃から守る。",
+  ranger: "離れた強敵を、貫通する一発で狙い撃つ。",
+  engineer: "罠で敵を捕らえ、動きを鈍らせる。",
+  "crazy-king": "敵の群れへ切り込み、素早く切り裂く。",
+  gunner: "連続射撃で敵の群れを足止めする。",
+  brute: "地面を叩いて敵を怯ませ、装甲を弱める。",
+  guardian: "敵を引きつけ、自分と周囲の味方を守る。",
+  "mayo-chan": "HPを使って連続攻撃。消耗すると退避する。",
+  zakimiya: "敵が集まる場所へ火酒を投げ、炎を残す。",
+  tky: "大きな光の刃で、前方の敵を薙ぎ払う。",
+  "mrs-chiha": "離れた敵の群れを、榴弾でまとめて攻撃する。",
+  "miyamoto-musashi": "攻撃を受け流して反撃。来なければ踏み込む。",
+});
+
+// These notes follow the current battle branches: fixed manual hits, normal-attack
+// bursts, target-HP healing, self-HP recovery, and fixed protection/trap effects.
+const ABILITY_LEVEL_EFFECT = Object.freeze({
+  ...Object.fromEntries(['brawler','scout','ranger','brute','babayaga','gunner','zakimiya','tky','mrs-chiha','miyamoto-musashi'].map(kind => [kind, 'レベルアップで伸びるのは通常攻撃。技の威力・効果時間は変わらない。'])),
+  'crazy-king': 'レベルアップで通常攻撃と暴走中の一撃が強くなる。速さ・効果時間は変わらない。',
+  'mayo-chan': 'レベルアップで通常攻撃と凶暴化中の一撃が強くなる。HP消費・効果時間は変わらない。',
+  medic: '育成で通常治療も緊急処置も回復量が増える。軽減率・再使用時間は変わらない。',
+  kumaverson: '最大HPが増えると、技の自己回復量も増える。軽減率・効果時間は変わらない。',
+  guardian: 'レベルアップで自身の能力が伸びる。技で守る範囲・軽減率・効果時間は変わらない。',
+  engineer: 'レベルアップで自身の能力が伸びる。罠で捕らえる時間・減速時間は変わらない。',
+});
+
 export function formatV100Number(value, digits = 2) {
   return Number(value).toFixed(digits).replace(/(\.\d*?[1-9])0+$|\.0+$/u, "$1");
 }
@@ -51,15 +83,16 @@ export function v100UnitPresentation(save, unitId) {
   return Object.freeze({
     unitId, kind, displayName: unit.displayName, role: unit.role,
     roleLabel: v100RoleLabelFor(unit.role), description: base.desc,
+    abilityAdvice: ABILITY_SELECTION_ADVICE[kind] ?? null,
     owned, registered, level, levelCap, nextLevel,
-    status: owned ? "配備登録済" : registered ? "配備登録可" : "未解放",
+    status: owned ? "仲間" : registered ? "支度待ち" : "未解放",
     registrationCost: unit.registrationCostCaps,
     upgradeCost: nextLevel === null ? 0 : v100LevelCost(nextLevel),
     commandCost: base.cost, redeploySeconds: current.deployCooldown,
     attackType: base.range >= 80 ? "ranged" : "melee",
     current, next, nextOutputGrowth,
     equipmentNames: Object.freeze(equipmentIds.map((id) => EQUIPMENT_BY_ID[id]?.displayName).filter(Boolean)),
-    skill: ability ? Object.freeze({ name: ability.displayName, summary: ability.unitId === "unit-nao" ? "HPの減った味方を回復。4秒間、受けるダメージを28%軽減。" : ability.summary, detail: ability.summary, cooldownSeconds: ability.cooldownSeconds }) : null,
+    skill: ability ? Object.freeze({ levelEffect: ABILITY_LEVEL_EFFECT[kind], name: ability.displayName, summary: ability.unitId === "unit-nao" ? "HPの減った味方を回復。4秒間、受けるダメージを28%軽減。" : ability.summary, detail: ability.summary, cooldownSeconds: ability.cooldownSeconds }) : null,
     treatmentProtection: kind === "medic" ? Object.freeze({
       reduction: UNIT_ROLE_TUNING.nao.damageReduction,
       seconds: UNIT_ROLE_TUNING.nao.damageReductionSeconds,
@@ -68,13 +101,14 @@ export function v100UnitPresentation(save, unitId) {
 }
 
 export function v100TacticalHintFor(stage) {
-  if (!stage) return "前衛で敵を止め、射撃と回復を組み合わせる。";
+  if (!stage) return "前衛が敵を引き受け、後ろから射撃で援護しよう。";
+  if (Number(stage.number) === 1) return "クマバーソンが敵を引き受け、ババヤガが射撃で援護。「鉄鍋仁王立ち」を使うと、クマバーソンは自分のHPを少しずつ回復できる。敵が増えたら前衛を追加で出撃させよう。";
   if (v100BossForStage(stage.number)?.id === "boss-kurome") return "クロメの照準が付いたユニットをタップで回避。";
-  if (stage.missionType === "boss") return "大技の予告を確認。守備の固有技と回復支援で持ちこたえる。";
+  if (stage.missionType === "boss") return "大技の予告を見逃さず、守備役の固有技を敵の攻撃に合わせて使おう。";
   if (stage.missionType === "escort") return "前衛と足止め役で、護衛対象へ近づく敵を止める。";
-  if (stage.missionType === "timed-defense") return "前衛・射撃・回復を組み合わせ、防衛線を維持する。";
+  if (stage.missionType === "timed-defense") return "前衛と射撃役を揃え、防衛地点へ迫る敵を迎え撃とう。敵が増えたら前衛を追加で出撃させよう。";
   if (Number(stage.number) >= 21) return "盾持ちには重装兵、射撃兵には遊撃兵。固有技で敵を足止め。";
-  return "前衛で敵を止め、射撃と回復で部隊を支える。";
+  return "前衛が敵を引き受け、後ろから射撃で援護しよう。敵が増えたら前衛を追加で出撃させよう。";
 }
 
 export function v100SupportPurposeFor(supportId) {

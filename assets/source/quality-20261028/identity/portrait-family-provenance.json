@@ -1,0 +1,1219 @@
+{
+  "creator": "OpenAI built-in image_gen under Producer direction; deterministic packing by the five recorded generators",
+  "source": "Producer photos for Paisen, TKY, Babayaga and Kumaverson; existing project canonical references for other characters. Original private photographs excluded.",
+  "license": "Generated project derivatives, no third-party stock license. Formal rights review remains open before final asset adoption.",
+  "permissions": {
+    "modification": "Producer requested",
+    "inGameRedistribution": "Producer requested playable game candidate",
+    "commercialUse": "Not separately reviewed in this change",
+    "referencePhotoRedistribution": false
+  },
+  "producerApproval": "Redesign and Git storage of adopted generated originals authorized; final likeness and whole-cast visual acceptance remain open.",
+  "storageApproval": "Producer explicitly approved adopted originals in assets/source and local readback duplicates for rejected work; private photographs excluded.",
+  "scope": "Adopted dialogue/card candidates and reproducible input closure; no private original photographs, no final likeness acceptance.",
+  "runtimeAssetCount": 113,
+  "logicalBytes": 14846539,
+  "distinctBytes": 14761889,
+  "files": [
+    {
+      "path": "assets/source/quality-20261028/identity/authority-extension-generation-r1.json",
+      "bytes": 31836,
+      "sha256": "f4ed7aef7ceac4d606cb7f4da243dd05408fc9e114684fa0e8cb461fc2076aea"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/babayaga-expressions-r2.png",
+      "bytes": 2215059,
+      "sha256": "f5ceac48ad53144e19f7d9dd0a04004733d4d4772145362d27e788d5a505e3e6"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/babayaga-master-r1.png",
+      "bytes": 1655598,
+      "sha256": "c571d91e3ae9b97f0ac558ae6cacffa4661b268dadf0a46e6f47a7b2fb670aa4"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/babayaga-waist-alarm-r1.png",
+      "bytes": 1622657,
+      "sha256": "c50055917799dc5ee54ee724ebb823a6acecf2df21c46be2b9de33cf1dae1408"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/babayaga-waist-determined-r1.png",
+      "bytes": 1621577,
+      "sha256": "909a09661e4d52e27502fc6d172e1f7530b6d1c154319b480afb546e3dd57e95"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/babayaga-waist-grief-r1.png",
+      "bytes": 1608502,
+      "sha256": "a60ad8891071abbb158a0e2aeca8d01f22f83a9e104288245f0738bbc032e7e6"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/chiha-alarm-r6.png",
+      "bytes": 1039896,
+      "sha256": "e1d08d2ae6f60dc2f64e7a1b24744c1541f5c636950c8ea3bfe90aca393a0aa0"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/chiha-determined-r6.png",
+      "bytes": 1023936,
+      "sha256": "f3d3209de6a2fdd4c6a3cbddaf896750112ecc540228d10c69e19eaa23b141fc"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/chiha-grief-r6.png",
+      "bytes": 1036978,
+      "sha256": "0f171d80cf3537bdd1c0616754b5dc35c3272a807f1bae417f8ea3adad5b38f3"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/chiha-master-r4.png",
+      "bytes": 1008532,
+      "sha256": "d9acf14c0f75ce8e80b4dd2e7f8285e154562e72082200be68983ef292369705"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/chiha-r4-generation.json",
+      "bytes": 1808,
+      "sha256": "abbb9c6f0ed7eca06ef0f89f91227a1551b0f7ae76730002e7190e9cb8f20c00"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/chiha-r6-generation.json",
+      "bytes": 4575,
+      "sha256": "dd8c4a34bf692f668b6a3d40c366c09122da077dc1067f266babe53b241292c2"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/chiha-runtime-provenance.json",
+      "bytes": 2613,
+      "sha256": "f2b21506d7deca769c04e022e965c32e7e8ea12a323aabb1bf731eb5fdba2a36"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/commander-alarm-extended-r1.png",
+      "bytes": 2636401,
+      "sha256": "cba57ca53ebaf38bb7448a95484438b6a806247b4de1474fcda3fbfb68c487b1"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/commander-determined-extended-r1.png",
+      "bytes": 2614459,
+      "sha256": "f437efe7243df03e61f287ba3d16ac9615341e7c30a9f05eb626268b983421be"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/commander-grief-extended-r1.png",
+      "bytes": 2084917,
+      "sha256": "652e4e3a6c423e8507cd726e46acff9f3c9f002438601024ffb1a5ec8e3408e7"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/commander-warm-extended-r1.png",
+      "bytes": 2434487,
+      "sha256": "97c93f4999bbb4bd0668b87aabcc3c7cee2a2c1939f1e662373b228e7a3ec5e3"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/expression-provenance.json",
+      "bytes": 4058,
+      "sha256": "6f59d6bd0aa987f11737c64bf06a6d735a1ba65884f1ac2e5965c79d18bb23e4"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/extended-dialogue-provenance-r1.json",
+      "bytes": 8953,
+      "sha256": "6098a3a7d05feef78616d577965e1a25548a49692fc944388b93bd67fa664f8d"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/gantetsu-master-r4.png",
+      "bytes": 2346085,
+      "sha256": "ec06125c13977b05bbc704a7b8594b2c3b3bf716f7954e4647158ec8edadf51d"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/gantetsu-r4-generation.json",
+      "bytes": 2108,
+      "sha256": "8f9775680965166cce7a7a108bb4aa57500bb6b8599c934f9a00afe08fb10233"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/gantetsu-runtime-provenance.json",
+      "bytes": 1442,
+      "sha256": "f23b861a2528c29140e4fce3f47c38a886a9db7749b09f9f10d876477419997b"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/generation-prompts-batch2.json",
+      "bytes": 5938,
+      "sha256": "ae70940cd71164f9b62b5d1a5f2e267d7191d4978a9f52ebbeb5b0f71e464070"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/generation-prompts-batch3.json",
+      "bytes": 12620,
+      "sha256": "5a207e182a15120d649101330bcade6937d84e6df5b1e027730a500edea4c98a"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/generation-prompts.json",
+      "bytes": 9698,
+      "sha256": "823ac5bef96f3c46f94d65ccafa626b18a3403907e4a8464aa8395aaace88f9b"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/hachi-alarm-r6.png",
+      "bytes": 2142148,
+      "sha256": "a8014d45e0668ce5d5b64a8c636662c256095595165874365cfdf8d5890ec6a2"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/hachi-determined-r6.png",
+      "bytes": 2094311,
+      "sha256": "7fa76889d0549e74ab9c31192d6f02e9a770ac9518b168252f7954a4914a9d6b"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/hachi-grief-r6.png",
+      "bytes": 2091660,
+      "sha256": "6ea3c485dd7088ac57e106315a8abe3ad97fdec4cdb148acc7c429970490afbe"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/hachi-master-r4.png",
+      "bytes": 2141009,
+      "sha256": "e722cc7aca81806cd7d2d1403c425262466ea4f1aa44b877731dcef79ee080bb"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/hachi-r4-generation.json",
+      "bytes": 2315,
+      "sha256": "9db336d4628de2a0cc64ed5b19be2563ee29df45b7c00a1b8123881f0fad1838"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/hachi-r6-generation.json",
+      "bytes": 3907,
+      "sha256": "2b27f0628d84128c65cad81f76ca123d4fdf3816c7d7739534e44574d2b6f2d4"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/hachi-runtime-provenance.json",
+      "bytes": 2605,
+      "sha256": "022152946036b3b8437642212908524ca5cbd3435b6b8fc554a72189efa32a6f"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/ikura-alarm-r6.png",
+      "bytes": 1487828,
+      "sha256": "deadb81765a36f230684c10a5345255864e07251313bdea6ab6f0df25446f744"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/ikura-determined-r6.png",
+      "bytes": 1466353,
+      "sha256": "d722c52a9b9a800ed4ffaf0bc16eb16e5e4e28b017f24d2bc2ce5331a1eac4cb"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/ikura-grief-r6.png",
+      "bytes": 1457828,
+      "sha256": "0738c6083d0a591eefbed49d2ebcd16f04ead92ced35fc15c930c23595711b84"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/ikura-master-r4.png",
+      "bytes": 1546115,
+      "sha256": "9c17e1b090a147c1994045c99690965776d6951e76f52ef3a5622a2f73dea2dc"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/ikura-r4-generation.json",
+      "bytes": 2236,
+      "sha256": "cd92c32d28ba3df1b3e1087809242c3952bfc062e8dab9c8fb30988e6dba7638"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/ikura-r6-generation.json",
+      "bytes": 4694,
+      "sha256": "b0e965ae9e47caadf882ec1eb47465d577a3d759a741d3b2da398aef0e20cf22"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/ikura-runtime-provenance.json",
+      "bytes": 2418,
+      "sha256": "ac7caf5ec41566419a23656e66d73416256b6c6b90f4189674a427afc3565e7a"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/king-master-r4.png",
+      "bytes": 1947605,
+      "sha256": "37f68d4df0962bfead20bbdfd16113f05ea3b5f42488e9d22b958a4e7718e5dc"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/king-r4-generation.json",
+      "bytes": 2284,
+      "sha256": "5edbaa0f9e344f019ff386e23567edad042cbca5afbaae6a6fd8227fcbd41489"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/king-runtime-provenance.json",
+      "bytes": 1462,
+      "sha256": "2ae4b9336bf24599c6524489798895f710ae455ece6358cc9008289127f57281"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/kumaverson-expressions-r2.png",
+      "bytes": 1806321,
+      "sha256": "2f2a75d2bc75beecf6e93cac42b2926584ad18040e75382c61fd62ecef7c7084"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/kumaverson-master-r2.png",
+      "bytes": 1857208,
+      "sha256": "51a5acb5a77f53eac921b49a5adefd681218f9f44f64e70caaf416ed2b6ed501"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/kumaverson-waist-alarm-r1.png",
+      "bytes": 1794707,
+      "sha256": "a3c39f3b5c8664b7ebe0ae0709b2ba8d13dc5bc58079462e0fc58571636044b5"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/kumaverson-waist-determined-r1.png",
+      "bytes": 1804580,
+      "sha256": "f64f162061697a4c4b56d7827dfc28d3f274e07a8223d01767c2787a8b873e9b"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/kumaverson-waist-grief-r1.png",
+      "bytes": 1830327,
+      "sha256": "f55633b72894694d74356ef57b69a1e1a6f8e6e0da28eec27e66e1d10a8ec553"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/mayo-alarm-r6.png",
+      "bytes": 2027883,
+      "sha256": "4667b3f51e76fb62621764aa3f9a8cfe582ab33f253a6735b1d2d9e9a6d50e31"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/mayo-determined-r6.png",
+      "bytes": 2052430,
+      "sha256": "b804d89866eb8018251d12c05cdd26ee13e276d8120118b7b2ce7ff1e6222678"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/mayo-grief-r6.png",
+      "bytes": 2052858,
+      "sha256": "d6c9cb4dfa7ad25103c5100d92d855ce3f93f11121588c32fc4cae60713500f8"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/mayo-master-r4.png",
+      "bytes": 2168302,
+      "sha256": "ed4804adffdc00585130dda8803f5f1d2ccc3d818c15191a23e38558476a434c"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/mayo-r4-generation.json",
+      "bytes": 1758,
+      "sha256": "e1b97dee5519a23a795dca77b664dd15443e63be383272069bde8bc61b1ab573"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/mayo-r6-generation.json",
+      "bytes": 4755,
+      "sha256": "10eba2dc36f05cbaf2ae6e340201ba156339e850725696d66a94026ff67c875a"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/mayo-runtime-provenance.json",
+      "bytes": 2605,
+      "sha256": "c54158c8f66186afbfdd7e59ddd2cb31d8bee6af372586260f885e954035cbef"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/minor-human-neutral-extended-r1.png",
+      "bytes": 843179,
+      "sha256": "41f5e436545f69ebf3ba4695254e8f12d6f5d61956a3b63f8923205d01b7c7c8"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/mizuchi-alarm-r6.png",
+      "bytes": 1286929,
+      "sha256": "fd77816f447728997a8dd91732c5c07aecb570dc012dbcbe3fa9b30e4cfb504b"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/mizuchi-determined-r6.png",
+      "bytes": 1237895,
+      "sha256": "9a16063a6f437fc3176429180efdcd65f6d1f31c745af914a116549aa70069ec"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/mizuchi-grief-r6.png",
+      "bytes": 1225647,
+      "sha256": "daa62e0924aa57a8a997148cc898e9d75dc5beb3538c4cf787a1cf5d7eafc47f"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/mizuchi-master-r4.png",
+      "bytes": 1277592,
+      "sha256": "c0f013dea12be7dc54055adfba4fd7b4a9703141eb8d9c0109d5b3087580ce3f"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/mizuchi-r4-generation.json",
+      "bytes": 2277,
+      "sha256": "512241c8d167824da1b28728208b793d159f30cfd55a8e2773d1750ebffb9b17"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/mizuchi-r6-generation.json",
+      "bytes": 4195,
+      "sha256": "2126bdd44ae7c51151da10f6eb70abb9f179a49e04d3443c008c2b9a470020c0"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/mizuchi-runtime-provenance.json",
+      "bytes": 2621,
+      "sha256": "4e58705aa6527aafc2f216420a22c007933776ed575e193a61bbca4523dd1366"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/monkey-alarm-r6.png",
+      "bytes": 1923764,
+      "sha256": "ad48e17795ac47ba11e3097a36105c1f12e21cfa1fbac64fc03ee6e8da7d9cc0"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/monkey-determined-r6.png",
+      "bytes": 1951626,
+      "sha256": "0ad74b9ff999232d73bcc5ee0f04ef3dcd8cce0128910103399717430f73ec16"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/monkey-grief-r6.png",
+      "bytes": 2002632,
+      "sha256": "9af1706d41957b5ba67b56b945c4e28368a176a48ca95ccfc620d2a55c8f169f"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/monkey-master-r4.png",
+      "bytes": 1967807,
+      "sha256": "feefc4b9959e8ce45955c1915338aec029fb1b58892f79528a1359d97ad5f2e1"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/monkey-r4-generation.json",
+      "bytes": 2262,
+      "sha256": "2dd1e372195e0e42d15c7ba48c336ea17e8875c6bc737b06ac70c0e3ef2c23f1"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/monkey-r6-generation.json",
+      "bytes": 4632,
+      "sha256": "bb3cf5b8403f46b7bc2c61ad181fbd2ddec306d7be140222f0281c17159b5c46"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/monkey-runtime-provenance.json",
+      "bytes": 2616,
+      "sha256": "4bcbe19c62fb274f5350b884d288690e99f145d6e80cebb274801db4489611a2"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/musashi-alarm-r6.png",
+      "bytes": 2129258,
+      "sha256": "520fe4430ccdcfa89f218d46eed799281b1618a6c6a2a11cddc8d87901c2d3df"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/musashi-determined-r6.png",
+      "bytes": 2141251,
+      "sha256": "0c3e9856a9911c691d12fd6191a8a20aa57c62aa996f5548370dd19df750b287"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/musashi-grief-r6.png",
+      "bytes": 2078365,
+      "sha256": "7eda015656ba23cc879024ef83887aaff5c7abce9059977ac57f506bc1cef9ff"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/musashi-master-r4.png",
+      "bytes": 2167988,
+      "sha256": "7ce937bddf0ac7bbb4e068b916625e4cd629411d6cc561946f88c22492c39c17"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/musashi-r4-generation.json",
+      "bytes": 1854,
+      "sha256": "6ff702b3a0490116d536d5122af5ff0c1784ad4eb2dc470b3ee5818123fd6af1"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/musashi-r6-generation.json",
+      "bytes": 4611,
+      "sha256": "326eba34965268cc3c625af64f599a0254497709229bac9a3b90f5ab630c1e8c"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/musashi-runtime-provenance.json",
+      "bytes": 2638,
+      "sha256": "7fff044dcd840bd1023656c55ad4d11e9793b95f480dd2c4f8e8611bfe34fa04"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/nao-alarm-r6.png",
+      "bytes": 1572856,
+      "sha256": "0dc3a12bf9376ce39f434b7272f0fde130c26f9ee15efcb6a3ca4d20082ce29c"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/nao-determined-r6.png",
+      "bytes": 1529393,
+      "sha256": "ed7048c059323c05e2ff79282ba88488c2f82f788db3c9a6a2cf2136aa8107c6"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/nao-grief-r6.png",
+      "bytes": 1575235,
+      "sha256": "d75c31b1fcda626049ee9a33bf55e42421e1c41146ea3995915cec394127c39b"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/nao-master-r4.png",
+      "bytes": 1652392,
+      "sha256": "3bc43907891d7eafbdf86a08a501a5a7cbec9f9b5f3cacd7e0c73099ddfff7ba"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/nao-r4-generation.json",
+      "bytes": 2297,
+      "sha256": "928b940b059206fad01c1912353613df232e507f047baa5e6faccd03c36e28fa"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/nao-r6-generation.json",
+      "bytes": 3711,
+      "sha256": "c6aefe96c8530cd7f303a77d2d09d52806441a9ad5a77e3f96f39c6a92ff3b49"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/nao-runtime-provenance.json",
+      "bytes": 2581,
+      "sha256": "ef7a19329a46e27dda3e3648fed5c3685ffce877a1d770b0590d4aa85a5cce66"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/paisen-alarm-r7.png",
+      "bytes": 1808304,
+      "sha256": "712d310702e47be2ff05c7afdf5c69b46749687d39e34e958e9376008f297def"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/paisen-determined-r7.png",
+      "bytes": 1849197,
+      "sha256": "e227b1d999960b48b089c3d644646bb0b5a83674df6ff00f77fc4a5140049351"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/paisen-grief-r7.png",
+      "bytes": 1868009,
+      "sha256": "a2da765cda0a5643c2e08ef92bd00641e4477fea5a55f0ea858134eb11f11b3c"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/paisen-photo-expressions-r7-generation.json",
+      "bytes": 5056,
+      "sha256": "80ca3e7db6ff7432d3c4ed2129d8fb4b72878f42b7dfd4ccdc5e0636dc099137"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/paisen-photo-master-r7.png",
+      "bytes": 1822871,
+      "sha256": "c769eb81a096e9fb1747df0c4ab93452b2ad844fb37e21707d5ef51aec76de66"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/paisen-photo-r7-generation.json",
+      "bytes": 3564,
+      "sha256": "915cc14d43cc96f0d7697d34d8aae3650c82c22174651a821d546320a9955f33"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/paisen-runtime-provenance.json",
+      "bytes": 2854,
+      "sha256": "4057ab9861df2b7e314eb0176d65576010101944986fbf9d3c8439c1e70a6f03"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/portrait-runtime-provenance.json",
+      "bytes": 3865,
+      "sha256": "06c599d7636f674cf8f324a869ea64af10c462565367462c66f6e1388b99dc76"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/president-alarm-extended-r1.png",
+      "bytes": 2379702,
+      "sha256": "976f71c1493ac5653ea9e9ea63554aba387eb25992a223ac7fde9368f7f1d0c4"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/president-determined-extended-r1.png",
+      "bytes": 1756655,
+      "sha256": "e50216674529030e5c225972c00e649e163c35d11bf98485a8d62c2442d6b137"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/president-grief-extended-r1.png",
+      "bytes": 1635775,
+      "sha256": "5a87b04ee2569f3abbb45ff91c4a9bf23b974d05d90c5c3800aad5fdd9eeff44"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/president-warm-extended-r1.png",
+      "bytes": 1884509,
+      "sha256": "14ec1e067895e20e7f7596a5f54fd279af56e9b313820490ec9d103bd3a7c4b8"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/raider-alarm-r6.png",
+      "bytes": 1972219,
+      "sha256": "6fc71277502f49e8ec19aebe83eff6861365cb9a6dd60bbc387f96aea85a35ec"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/raider-grief-r6.png",
+      "bytes": 1981788,
+      "sha256": "ae168377d5d92dd6fd4e8e6f65304cb723139812bb261e1bb531a5ea3b9caf27"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/raider-master-r4.png",
+      "bytes": 2005518,
+      "sha256": "c9173aa44138f5796bdae3d4d680cd26b24ee16741020c42bcd8d0a1751a0b47"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/raider-r4-generation.json",
+      "bytes": 2173,
+      "sha256": "4e9ab7ac352fa62f7d9400eebab89afa62773b856acb9332dfd3682c6916f99c"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/raider-r6-generation.json",
+      "bytes": 4856,
+      "sha256": "e3c7dfc0d73a03a1aceb224a634915aed4c4cbb0aa33bd8cb57152bf0d58472b"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/raider-runtime-provenance.json",
+      "bytes": 2819,
+      "sha256": "5e3cdf52b0390c960cd495b402a9d8340890a200d512e797359359c9fe6d70a2"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/segawa-alarm-extended-r1.png",
+      "bytes": 2394676,
+      "sha256": "060e2a5c262b361d676847fdbde6e78eb1ce5d550a6494ddad47611ef74cbdeb"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/segawa-determined-extended-r1.png",
+      "bytes": 2379877,
+      "sha256": "be51653e03e9cb6ef6d2f18d051060b0add0c7497809ac314c2fdf0e8fd63150"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/segawa-grief-extended-r1.png",
+      "bytes": 1782961,
+      "sha256": "16ef98ab007fe112c1192edb1ebfb481d751f7f6365783dba5f4e324667dfa14"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/segawa-warm-extended-r1.png",
+      "bytes": 2497848,
+      "sha256": "459c3535c5edcfff551ba7c5cee4e81a9fef082bdb19ba37626e7300eacf821b"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/stage-portrait-provenance-r1.json",
+      "bytes": 11540,
+      "sha256": "271ef4673494001753b027cef5384a2bdb6d3cadf4d105082d06ba6263c64783"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/tatara-alarm-r6.png",
+      "bytes": 2213804,
+      "sha256": "1c8880d528b01dbd4434602bfc5d24981c6047438b13f8e7ceefacaaf956d750"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/tatara-determined-r6.png",
+      "bytes": 2239587,
+      "sha256": "537fc28104c768ea73044a7725341fac4418904c3cf422c8107d43510f4666ec"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/tatara-grief-r6.png",
+      "bytes": 2210360,
+      "sha256": "c947631a4d93d543be8986b5d0b6150e8908c169eb250232b5585fcce93fd307"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/tatara-master-r4.png",
+      "bytes": 2251962,
+      "sha256": "dc28b9b8cedb6b96fe14c5003f510466056baf06ea172cceccc83727a08d2def"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/tatara-r4-generation.json",
+      "bytes": 2100,
+      "sha256": "d3a596f314b8dc917f3c73699751678173aef53decad934d80050d7532b59a54"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/tatara-r6-generation.json",
+      "bytes": 4725,
+      "sha256": "3e175fba3a9e6a2a695e446876300f0b42281f8d51fdcd97477470459ecbe24d"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/tatara-runtime-provenance.json",
+      "bytes": 2619,
+      "sha256": "ff4f9f18cba1cc1a896e084fe9ee474e6e17638f783af4a978c4b865a93bf90c"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/tky-alarm-r8.png",
+      "bytes": 2731061,
+      "sha256": "3ed4d98984d27a49361f5fc8e3db757ca855aff6d9a717120b9af3c15bb9a56a"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/tky-determined-r8.png",
+      "bytes": 2764506,
+      "sha256": "f5e45655736ea324d3f9e997e762a93a965c24c6c9a06f4808d876a9caa9d383"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/tky-generation.json",
+      "bytes": 2353,
+      "sha256": "7cc2a29da6c85c7872ea7ca780618094c85e4432831f18c6adc468424d4b10ae"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/tky-grief-generation.json",
+      "bytes": 1058,
+      "sha256": "b271a0b83d5cddc3926db51f62b44e4a6feffb5553ea163f6c557eee1d317000"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/tky-grief-r8.png",
+      "bytes": 2846346,
+      "sha256": "3d559964f941273654fca3020026e4b29caae20b9e7c27318b7a6af66b30fbe4"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/tky-isolated-generation.json",
+      "bytes": 2708,
+      "sha256": "e84144e0e7c3527ae94b437479efb870c5e4141427d8e75a928e6f841974539c"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/tky-photo-expressions-r7.png",
+      "bytes": 3030094,
+      "sha256": "ae706488268067afbb773d32a89f27f57a5811c2357051868f7f098bb6f600bb"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/tky-runtime-provenance.json",
+      "bytes": 2744,
+      "sha256": "5095dc49531a4b61b58d1d628fbfaaa250a8b5453eafadf6192297877234c1b9"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/tky-warm-r8.png",
+      "bytes": 2818738,
+      "sha256": "1c679f26fba88a4f299796f812af5e4d130671cc736de45da63604c68e6961ad"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/waist-expression-generation-r1.json",
+      "bytes": 15874,
+      "sha256": "310891a9bd2d1bf23b351853366fb97c7e1b01631d7a10d18673621bec9f71ec"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/zakimiya-canonical-expressions-r1.png",
+      "bytes": 3009736,
+      "sha256": "dbc7fe73422ad2010cbaba0cb14b6a0fdc43c5b388886e04d3692974ddb103bf"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/zakimiya-canonical-master-r1.png",
+      "bytes": 2665591,
+      "sha256": "303adc8b4126badbc98969b476b773bd4a35c3817b34d3de6478842245dfa389"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/zakimiya-generation.json",
+      "bytes": 1772,
+      "sha256": "cc217034bdb2bdf8419c39003623563d4d659025bab27d45395c21387c575a71"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/zakimiya-runtime-provenance.json",
+      "bytes": 1937,
+      "sha256": "c2a217e7586c067b56eb5b4a4a8ac2224e42a4e3f1cc97f2045b20f144d0ea24"
+    },
+    {
+      "path": "public/art/v100/portraits/babayaga-alarm-r3.webp",
+      "bytes": 72956,
+      "sha256": "4b513e724695f559ba77b9d285586db8988b72ebc0f5e73357d80d902e6ea66e"
+    },
+    {
+      "path": "public/art/v100/portraits/babayaga-alarm-stage-r1.webp",
+      "bytes": 134232,
+      "sha256": "4eac63becbce72a76741e9984fa28b1af51a6c50ffd4bb97e44e2e4632be16b6"
+    },
+    {
+      "path": "public/art/v100/portraits/babayaga-determined-r3.webp",
+      "bytes": 74644,
+      "sha256": "8a26fa186c245b6da698a8a8b3d73213777031a39f877a1c5c76d34a3912f7ec"
+    },
+    {
+      "path": "public/art/v100/portraits/babayaga-determined-stage-r1.webp",
+      "bytes": 136636,
+      "sha256": "e2bd870378222785718421b5bc03030d17eebb40d4a7241f045427e309db2847"
+    },
+    {
+      "path": "public/art/v100/portraits/babayaga-formation-card-r3.webp",
+      "bytes": 52554,
+      "sha256": "e16b4fa7cb20c143e1e5cb12378e58bceaf0b288e7fde90544c1975f98a6a384"
+    },
+    {
+      "path": "public/art/v100/portraits/babayaga-grief-r3.webp",
+      "bytes": 77856,
+      "sha256": "da46a65a4f0c6e57b59003c62c26fa6c09a7c227ba09dff60468335c2834773a"
+    },
+    {
+      "path": "public/art/v100/portraits/babayaga-grief-stage-r1.webp",
+      "bytes": 134738,
+      "sha256": "006cf58abc03f3a1bf2911b80f1b9d2fdbd4ce989543d0c08eddee7560b04659"
+    },
+    {
+      "path": "public/art/v100/portraits/babayaga-warm-r3.webp",
+      "bytes": 73334,
+      "sha256": "3bbd4b7b40e1996d520c12779b67a2a3f4a488a85c45c9de30e91e938d9c5f82"
+    },
+    {
+      "path": "public/art/v100/portraits/babayaga-warm-stage-r1.webp",
+      "bytes": 157202,
+      "sha256": "95b2e34b565f867b4b6ddb7284c0b103fa5540f617405f3e68bfbf28b2ed1523"
+    },
+    {
+      "path": "public/art/v100/portraits/chiha-alarm-quality-r1.webp",
+      "bytes": 69512,
+      "sha256": "7c48dc80a60413cd2d2e01f6a2dd957e6f33fa7d95b798c898da91d51fb47f4e"
+    },
+    {
+      "path": "public/art/v100/portraits/chiha-determined-quality-r1.webp",
+      "bytes": 70348,
+      "sha256": "b5fa5a41ca28b7181b30c5729e1b088fe2304a4d266734af24b6c9250e46d34b"
+    },
+    {
+      "path": "public/art/v100/portraits/chiha-formation-card-quality-r1.webp",
+      "bytes": 47504,
+      "sha256": "d63ff0bc5073b237f2202166fcda82fc7b897e012a58fb1804dfa6efff59ff82"
+    },
+    {
+      "path": "public/art/v100/portraits/chiha-grief-quality-r1.webp",
+      "bytes": 68350,
+      "sha256": "8ef77c43861ea155388b78fc8622349fb691ea174e33595e1ec8c278571aaeff"
+    },
+    {
+      "path": "public/art/v100/portraits/chiha-warm-quality-r1.webp",
+      "bytes": 70464,
+      "sha256": "25a9ac1ead7b69c75e3e294db5adc5a7fdac6890d02512478a9bc8ab77f32b8e"
+    },
+    {
+      "path": "public/art/v100/portraits/commander-alarm-stage-r1.webp",
+      "bytes": 319682,
+      "sha256": "58018d19530918de6c4ff02cbe2bf9d0d9cb0631daf1ec207c4f1076f305fbb2"
+    },
+    {
+      "path": "public/art/v100/portraits/commander-determined-stage-r1.webp",
+      "bytes": 321418,
+      "sha256": "6a893b6654d2fec07b5e837b00da2137602bc94a7641001d62776b535d8ad3ed"
+    },
+    {
+      "path": "public/art/v100/portraits/commander-grief-stage-r1.webp",
+      "bytes": 267754,
+      "sha256": "82abaa302394b081950d7b6d43d166d88c2aa3451b9885f015af4382cb3dab1f"
+    },
+    {
+      "path": "public/art/v100/portraits/commander-warm-stage-r1.webp",
+      "bytes": 292536,
+      "sha256": "008bff7d37e7ed41dc7ada226a2c918f4039a566239d209294f421b3864721ca"
+    },
+    {
+      "path": "public/art/v100/portraits/gantetsu-determined-quality-r1.webp",
+      "bytes": 78862,
+      "sha256": "ea83420146d1d1d1e3edae94e68cc99e8f074408200d2127e3d15fb38cfffcaf"
+    },
+    {
+      "path": "public/art/v100/portraits/gantetsu-determined-stage-r1.webp",
+      "bytes": 310108,
+      "sha256": "7111c37441279f3acf4db2977f50401f57ac231e0a288b92eb30849d29586d03"
+    },
+    {
+      "path": "public/art/v100/portraits/gantetsu-formation-card-quality-r1.webp",
+      "bytes": 53492,
+      "sha256": "d3a0e559f17d57e3759fc89e9da19239d220ba8c5cbde67cd4c3dd9aef95001b"
+    },
+    {
+      "path": "public/art/v100/portraits/hachi-alarm-quality-r1.webp",
+      "bytes": 75880,
+      "sha256": "7bbe07d0b8ef5e5394b2d505137b4dff7bfab0b229fa79d7b15328685a6a8332"
+    },
+    {
+      "path": "public/art/v100/portraits/hachi-determined-quality-r1.webp",
+      "bytes": 73210,
+      "sha256": "109a31d6d5dfed645976e4eafd08c2eeeaef85d90e5b11796c7d5e136903deca"
+    },
+    {
+      "path": "public/art/v100/portraits/hachi-formation-card-quality-r1.webp",
+      "bytes": 63902,
+      "sha256": "3c5f7906c71fa3e0df8d4fb35d23e6283fc547263e1097cf4e5fcfcff6cabaf8"
+    },
+    {
+      "path": "public/art/v100/portraits/hachi-grief-quality-r1.webp",
+      "bytes": 74416,
+      "sha256": "e71a08655f6937186716b7fe68539ef07ee58ed8264d66fb1e5ce75e3b37eead"
+    },
+    {
+      "path": "public/art/v100/portraits/hachi-warm-quality-r1.webp",
+      "bytes": 79134,
+      "sha256": "651bb947390fd3c9a374d8f362f572764511db4d12714b8175df1cb27d122a93"
+    },
+    {
+      "path": "public/art/v100/portraits/ikura-alarm-quality-r1.webp",
+      "bytes": 107102,
+      "sha256": "a0bcd2d80404c1c2c7d8b55972067e9e27f7b14282720f8e39d572a85b1eedb4"
+    },
+    {
+      "path": "public/art/v100/portraits/ikura-alarm-stage-r1.webp",
+      "bytes": 299418,
+      "sha256": "7a6ab2c074a8dd6e3640590dfa8d2111702877e5dcb238e5f10d9b7a2636f0de"
+    },
+    {
+      "path": "public/art/v100/portraits/ikura-determined-quality-r1.webp",
+      "bytes": 105370,
+      "sha256": "1a87a2183629c4802cff79d4948f00daf37cf0bfd28a57537d88e3e3502611b3"
+    },
+    {
+      "path": "public/art/v100/portraits/ikura-determined-stage-r1.webp",
+      "bytes": 294984,
+      "sha256": "2034425f0e17185d51423b90e8924d981c24d78388890962e5676fa53b0f2875"
+    },
+    {
+      "path": "public/art/v100/portraits/ikura-grief-quality-r1.webp",
+      "bytes": 103808,
+      "sha256": "e66865b077c930f24b48eaa92cabb8fd2bf41826589973f4a8b97e03c12bb66e"
+    },
+    {
+      "path": "public/art/v100/portraits/ikura-grief-stage-r1.webp",
+      "bytes": 290496,
+      "sha256": "eb4f0fa38204fa9d7a7e163c406d5d35e426e2d62364c378303e084d9bc50af2"
+    },
+    {
+      "path": "public/art/v100/portraits/ikura-warm-quality-r1.webp",
+      "bytes": 115618,
+      "sha256": "9507ef2f18c4872dba20860491ad22763c5f9bc00b0d49b9cb24e0f1fa30d783"
+    },
+    {
+      "path": "public/art/v100/portraits/ikura-warm-stage-r1.webp",
+      "bytes": 330548,
+      "sha256": "2d88a414272caea3fa1924e08aa86fbebad0a2d024daa67eda590ff8afeeb436"
+    },
+    {
+      "path": "public/art/v100/portraits/king-determined-quality-r1.webp",
+      "bytes": 63902,
+      "sha256": "3894b555959b9dff2f86faf67e71eaa9256764626f1d1b733807bd7e965954b3"
+    },
+    {
+      "path": "public/art/v100/portraits/king-formation-card-quality-r1.webp",
+      "bytes": 50818,
+      "sha256": "b0e8908a109b93460586b473dbec3e9eb358b0df9c0914fe84d39145257b6777"
+    },
+    {
+      "path": "public/art/v100/portraits/kumaverson-alarm-r3.webp",
+      "bytes": 78504,
+      "sha256": "f017f7d81f14e7658f6a419d973879c28ca6544651fdb06a7dc61d73b4bba2c9"
+    },
+    {
+      "path": "public/art/v100/portraits/kumaverson-alarm-stage-r1.webp",
+      "bytes": 162648,
+      "sha256": "31231cdc15db6222370eb661a12f4f805b2ff0f8c7b783d55835ce77c208caab"
+    },
+    {
+      "path": "public/art/v100/portraits/kumaverson-determined-r3.webp",
+      "bytes": 71678,
+      "sha256": "6d4a196f32fb7f5e094826f7eb21963aad2fa7bb3ddab764cb7cd70c7fd67085"
+    },
+    {
+      "path": "public/art/v100/portraits/kumaverson-determined-stage-r1.webp",
+      "bytes": 166148,
+      "sha256": "735722b557a5e7dfcc7a72711bd6f9dcb99d6bb796c26241d6bab8fc6ee80525"
+    },
+    {
+      "path": "public/art/v100/portraits/kumaverson-formation-card-r3.png",
+      "bytes": 351883,
+      "sha256": "a254d9f1f860ee2e61ffe825a03969675a355f97bcf56e91a9630506d17bb8d4"
+    },
+    {
+      "path": "public/art/v100/portraits/kumaverson-formation-card-r3.webp",
+      "bytes": 56076,
+      "sha256": "6e0e470bd3324193708a73776dd5f549dcc7b5e8d57fb862a508495b09fc27e1"
+    },
+    {
+      "path": "public/art/v100/portraits/kumaverson-grief-r3.webp",
+      "bytes": 78078,
+      "sha256": "bfbcad9d2a40d8c0feeb3b6197939d3bb62b594d04620a611dbe41fb32070d59"
+    },
+    {
+      "path": "public/art/v100/portraits/kumaverson-grief-stage-r1.webp",
+      "bytes": 175476,
+      "sha256": "461dcb1a7178ae34ff5fb44f9bb30fddc5aae3976cc990d5f475dc6b9bfb333d"
+    },
+    {
+      "path": "public/art/v100/portraits/kumaverson-warm-r3.webp",
+      "bytes": 71814,
+      "sha256": "f47f957a09af719c9c7b3e2be5817a65a5a0e56ff14175b692420283cdacc055"
+    },
+    {
+      "path": "public/art/v100/portraits/kumaverson-warm-stage-r1.webp",
+      "bytes": 179404,
+      "sha256": "9b45830bc765a740ab21bb5e1ea29b93735ba6f5528c9c4af8129908a124c7e6"
+    },
+    {
+      "path": "public/art/v100/portraits/mayo-alarm-quality-r1.webp",
+      "bytes": 90684,
+      "sha256": "0e01062fc6aacbe2af904f17316ca59e553bf036af66e44bf1e5e755ef9c19a8"
+    },
+    {
+      "path": "public/art/v100/portraits/mayo-determined-quality-r1.webp",
+      "bytes": 93150,
+      "sha256": "42a704a8adc9c45c42b29bee56944ab7151fabe7f5e651c7b88b8f00ce7d85f4"
+    },
+    {
+      "path": "public/art/v100/portraits/mayo-formation-card-quality-r1.webp",
+      "bytes": 82996,
+      "sha256": "83bf5ab9d3793a78dcc7d8140470659f22adb61e7a945a91a9b6ed0d488e832c"
+    },
+    {
+      "path": "public/art/v100/portraits/mayo-grief-quality-r1.webp",
+      "bytes": 92996,
+      "sha256": "88a4b0c548479e3956b7bdf34487565b66e2f87f53904b92755af343c82a5287"
+    },
+    {
+      "path": "public/art/v100/portraits/mayo-warm-quality-r1.webp",
+      "bytes": 101040,
+      "sha256": "690a5c67c975bd6d5de5ca84853301e66277874ac8cdca8814d7ed159d07fa54"
+    },
+    {
+      "path": "public/art/v100/portraits/minor-human-neutral-stage-r1.webp",
+      "bytes": 79946,
+      "sha256": "5a7e5f6e70dfc5697f4ceb0da8f4e0b514a57f8f0ee37f05d7004998bef6f24b"
+    },
+    {
+      "path": "public/art/v100/portraits/mizuchi-alarm-quality-r1.webp",
+      "bytes": 64030,
+      "sha256": "ad4e0179f035d8e55f515b4071e000d57a9051f362c496b4e9f0fe581da458b7"
+    },
+    {
+      "path": "public/art/v100/portraits/mizuchi-determined-quality-r1.webp",
+      "bytes": 62044,
+      "sha256": "53ede9aa543a09d4004b7acae3947abe03acc4af11664ba22709b3ffc4844d5a"
+    },
+    {
+      "path": "public/art/v100/portraits/mizuchi-formation-card-quality-r1.webp",
+      "bytes": 46814,
+      "sha256": "cae3d1082f791f50e35af3d8926642f6d5d1ca42a2bb44ab54a584037874fdc2"
+    },
+    {
+      "path": "public/art/v100/portraits/mizuchi-grief-quality-r1.webp",
+      "bytes": 60788,
+      "sha256": "8643a09acdd20f91d574666ea352d2b206bcb32e61748766d1cc3170b539ab32"
+    },
+    {
+      "path": "public/art/v100/portraits/mizuchi-warm-quality-r1.webp",
+      "bytes": 63928,
+      "sha256": "103aaf8ad9fd7b42828783521b888e1d84d310a00e840ec1abca114072881760"
+    },
+    {
+      "path": "public/art/v100/portraits/monkey-alarm-quality-r1.webp",
+      "bytes": 79068,
+      "sha256": "d7220c8b1781bff2d22d3c58e370b56b38af10e4824569cd69eb678adbb89a74"
+    },
+    {
+      "path": "public/art/v100/portraits/monkey-determined-quality-r1.webp",
+      "bytes": 82798,
+      "sha256": "d65a413c1728ab31071888419b30e73cdc042c5ba33174c45fca1f600234149b"
+    },
+    {
+      "path": "public/art/v100/portraits/monkey-formation-card-quality-r1.webp",
+      "bytes": 56296,
+      "sha256": "7f3efc1a6dc943c21ffcee8df87344ae1bd34f201a224516bfd34abd675f799d"
+    },
+    {
+      "path": "public/art/v100/portraits/monkey-grief-quality-r1.webp",
+      "bytes": 84946,
+      "sha256": "b2cc9bd3e5a8e2bbc488f79612c28712e8488f240caa51dbe3d5922b133748cb"
+    },
+    {
+      "path": "public/art/v100/portraits/monkey-warm-quality-r1.webp",
+      "bytes": 83380,
+      "sha256": "3455ba405a5c00eda5c487dcdf2d03de9ea9f58e95a6d26cafaf008a54a2bfd5"
+    },
+    {
+      "path": "public/art/v100/portraits/musashi-alarm-quality-r1.webp",
+      "bytes": 91018,
+      "sha256": "7eecb55a05e866791e5ce3469ada6496ce5a05e2954ded4ff40a4d1025c1e378"
+    },
+    {
+      "path": "public/art/v100/portraits/musashi-alarm-stage-r1.webp",
+      "bytes": 274534,
+      "sha256": "894faaed0ae16ca4d357d5802fa0b75cbe63610417693c4d33bcd27e380188eb"
+    },
+    {
+      "path": "public/art/v100/portraits/musashi-determined-quality-r1.webp",
+      "bytes": 98180,
+      "sha256": "1103cf3048ce8f20ec3114bb91fb6096d21a2a923c8516697dc4acd9716a0f09"
+    },
+    {
+      "path": "public/art/v100/portraits/musashi-determined-stage-r1.webp",
+      "bytes": 296228,
+      "sha256": "03d19686d514d36eae82aca60247f192eea40ea890a8ccede1831d5a8a21b186"
+    },
+    {
+      "path": "public/art/v100/portraits/musashi-formation-card-quality-r1.webp",
+      "bytes": 65920,
+      "sha256": "4937e616ca1157d778a9567816ef296d18d1a9c3224968b1e4d252fb5958dfa7"
+    },
+    {
+      "path": "public/art/v100/portraits/musashi-grief-quality-r1.webp",
+      "bytes": 90352,
+      "sha256": "4f40ba111a0db0d1d045b67ab2d1b14e071132bdc7ea5db8f4944b6e8cdf77ed"
+    },
+    {
+      "path": "public/art/v100/portraits/musashi-grief-stage-r1.webp",
+      "bytes": 269240,
+      "sha256": "fe4a96f768ea5a13b6586436c074b754952be1ed3807bfacbd7e73f573a31870"
+    },
+    {
+      "path": "public/art/v100/portraits/musashi-warm-quality-r1.webp",
+      "bytes": 92762,
+      "sha256": "3234605e37034e793166ac56563ade1a7738c7bf57f5e44f77edc5a10013be93"
+    },
+    {
+      "path": "public/art/v100/portraits/musashi-warm-stage-r1.webp",
+      "bytes": 281350,
+      "sha256": "2e3b33b0ac4f19dcc8d74333d6e26c2174b4b0302f251468fe5a2668d41fe0e5"
+    },
+    {
+      "path": "public/art/v100/portraits/nao-alarm-quality-r1.webp",
+      "bytes": 82562,
+      "sha256": "42a5346a8ea488cc5f4242e9cc55d016bd61276f2c80a164d411839e60dbc612"
+    },
+    {
+      "path": "public/art/v100/portraits/nao-determined-quality-r1.webp",
+      "bytes": 81876,
+      "sha256": "a1eab19905313c8043c5d18f9ecb0ee0cb4094f711d1dd10dc38aef87cfd2add"
+    },
+    {
+      "path": "public/art/v100/portraits/nao-formation-card-quality-r1.webp",
+      "bytes": 65604,
+      "sha256": "3806d428ad5a30dc8b1a471de95928e051ccfa8a20f2d77a0ffc051882e6822e"
+    },
+    {
+      "path": "public/art/v100/portraits/nao-grief-quality-r1.webp",
+      "bytes": 82290,
+      "sha256": "8531cfd3419a70bef6f125dcd65c1caca99ef8b5babf670abcb709d09780f9fe"
+    },
+    {
+      "path": "public/art/v100/portraits/nao-warm-quality-r1.webp",
+      "bytes": 88660,
+      "sha256": "028d961557bb123019eb69522f5890a5c42cc78f3b18d6759eb6f9fe5011f6f7"
+    },
+    {
+      "path": "public/art/v100/portraits/paisen-alarm-quality-r1.webp",
+      "bytes": 39094,
+      "sha256": "31942e6b4a612ea2fd73801346ea263c4a2d7355b219bbe249e14173be0c1c02"
+    },
+    {
+      "path": "public/art/v100/portraits/paisen-determined-quality-r1.webp",
+      "bytes": 37788,
+      "sha256": "ff9a362e5defb7d5d4ac305ee56d1705808b1bdcf3796f3255c06864e3461331"
+    },
+    {
+      "path": "public/art/v100/portraits/paisen-formation-card-quality-r1.webp",
+      "bytes": 28822,
+      "sha256": "8b8bb5ecfb3d23c87b5bebda19764b57cf38f6c2dd538bb3582dcd54acb6d6d9"
+    },
+    {
+      "path": "public/art/v100/portraits/paisen-grief-quality-r1.webp",
+      "bytes": 38104,
+      "sha256": "95e777a8708e6e25c13e5c8a1fbf8d62efb83e64f1f87c3ede8c8c1b378a6d78"
+    },
+    {
+      "path": "public/art/v100/portraits/paisen-warm-quality-r1.webp",
+      "bytes": 36518,
+      "sha256": "bfef5f2254320445a849d7cec60bb12197e4012e019970a15e25dace9bdc6f10"
+    },
+    {
+      "path": "public/art/v100/portraits/president-alarm-stage-r1.webp",
+      "bytes": 325852,
+      "sha256": "185ce12b23eb43aa3bc1dacada958c13937e2a029e88eedbcc01d876aec328fa"
+    },
+    {
+      "path": "public/art/v100/portraits/president-determined-stage-r1.webp",
+      "bytes": 271566,
+      "sha256": "c0f02817ed636576e8873953ec4290caf9f0ce1bb3e2c1cf59e34816f21a5506"
+    },
+    {
+      "path": "public/art/v100/portraits/president-grief-stage-r1.webp",
+      "bytes": 243494,
+      "sha256": "004b99d6b7b261286ff9e4d8857d42e84ab00a8c7f573c3857b36ddddb6612c2"
+    },
+    {
+      "path": "public/art/v100/portraits/president-warm-stage-r1.webp",
+      "bytes": 282242,
+      "sha256": "9d5bc096438c789df02d235b0083621306d05fb8b724a6520d4a9d68ddc2c9c6"
+    },
+    {
+      "path": "public/art/v100/portraits/raider-alarm-quality-r1.webp",
+      "bytes": 84514,
+      "sha256": "0321daed6e98fba250ba25eeab0369a3ff441505d3010757e29d0269fafd96f4"
+    },
+    {
+      "path": "public/art/v100/portraits/raider-determined-quality-r1.webp",
+      "bytes": 84650,
+      "sha256": "4c7103bae7dfa1113778bc7c0f477db6063fbb7c7f5db87d2c65b6e71dc418d9"
+    },
+    {
+      "path": "public/art/v100/portraits/raider-formation-card-quality-r1.webp",
+      "bytes": 60586,
+      "sha256": "d379597c766ff697748743fd52640e6fa93d938ed30abaf87f830d3e72f82363"
+    },
+    {
+      "path": "public/art/v100/portraits/raider-grief-quality-r1.webp",
+      "bytes": 84062,
+      "sha256": "6e8230216d6cb1f254cb2dd75287375542789ad6b6ff69d298acfda1a03b30c4"
+    },
+    {
+      "path": "public/art/v100/portraits/raider-warm-quality-r1.webp",
+      "bytes": 84650,
+      "sha256": "4c7103bae7dfa1113778bc7c0f477db6063fbb7c7f5db87d2c65b6e71dc418d9"
+    },
+    {
+      "path": "public/art/v100/portraits/segawa-alarm-stage-r1.webp",
+      "bytes": 259914,
+      "sha256": "90daeaf8523780fc41ca1b477cf11ff39eac4cdf3db6a21e72fb1992c038b271"
+    },
+    {
+      "path": "public/art/v100/portraits/segawa-determined-stage-r1.webp",
+      "bytes": 289476,
+      "sha256": "dbce5fe632c2e571539cd2acd0d94afbf385b703bd46f344bca546a45d563541"
+    },
+    {
+      "path": "public/art/v100/portraits/segawa-grief-stage-r1.webp",
+      "bytes": 266424,
+      "sha256": "9fa34059e474b6737321619592d61d85dffef6a836a8a5371368e1ffcfe1d052"
+    },
+    {
+      "path": "public/art/v100/portraits/segawa-warm-stage-r1.webp",
+      "bytes": 279922,
+      "sha256": "e63120afd585b0f19e65524c4140088d28fb935052a1acf0b9edab8d2f6a941a"
+    },
+    {
+      "path": "public/art/v100/portraits/tatara-alarm-quality-r1.webp",
+      "bytes": 99300,
+      "sha256": "ac0dbaeab2c0a73818ee5926f7889548ab59208b9b1dcf15a018c83c28571b8f"
+    },
+    {
+      "path": "public/art/v100/portraits/tatara-alarm-stage-r1.webp",
+      "bytes": 275996,
+      "sha256": "2fc9aca1add69423b801827f42975926935ee53b8fa367fb4b0554f6038d8c35"
+    },
+    {
+      "path": "public/art/v100/portraits/tatara-determined-quality-r1.webp",
+      "bytes": 100366,
+      "sha256": "2ce16985ef16d5e64cf8da789735dc36a63f7e01142473afbca6a4b66d228d5f"
+    },
+    {
+      "path": "public/art/v100/portraits/tatara-determined-stage-r1.webp",
+      "bytes": 280764,
+      "sha256": "79cdd5c00bbe8cbfbdd51ffdd87a36b853adaf73c3ebd1d954c2e615083ba595"
+    },
+    {
+      "path": "public/art/v100/portraits/tatara-formation-card-quality-r1.webp",
+      "bytes": 75596,
+      "sha256": "b17553a9a94157309e8867b18b66785096e1d1d0d51d05651addafdfc16247b4"
+    },
+    {
+      "path": "public/art/v100/portraits/tatara-grief-quality-r1.webp",
+      "bytes": 99320,
+      "sha256": "5981e9f82a21a7f99218aa18b20c63ad01a777e8b20326698a62a40fb7625236"
+    },
+    {
+      "path": "public/art/v100/portraits/tatara-grief-stage-r1.webp",
+      "bytes": 277824,
+      "sha256": "1625ed1b7c4b663d79fae21513660621c9a2d0f464ad812b171f9c7bd64c3d18"
+    },
+    {
+      "path": "public/art/v100/portraits/tatara-warm-quality-r1.webp",
+      "bytes": 103528,
+      "sha256": "108835cab0f8261192c2fa395f7595a0d1d042e74215c6b04757d7fa2f52d178"
+    },
+    {
+      "path": "public/art/v100/portraits/tatara-warm-stage-r1.webp",
+      "bytes": 291632,
+      "sha256": "8e7ddd153bd13b2209a5fc264a3030c21a2ab45969c7f82cc02da80141bc4c0d"
+    },
+    {
+      "path": "public/art/v100/portraits/tky-alarm-quality-r1.webp",
+      "bytes": 96314,
+      "sha256": "3f1dfd598c5ee1034df4eeb7e7538a23e8be9f4274dfce1036d11a942df6d7a5"
+    },
+    {
+      "path": "public/art/v100/portraits/tky-determined-quality-r1.webp",
+      "bytes": 96674,
+      "sha256": "892f7eb38aed170f6b48360418a2b74ab9ce085a44cfc18ec4d7de02159585be"
+    },
+    {
+      "path": "public/art/v100/portraits/tky-formation-card-quality-r1.webp",
+      "bytes": 67678,
+      "sha256": "a26841c5d2b66d9fe13b5bb7f9a55061f3c238c03f790ce82653e298a04486fc"
+    },
+    {
+      "path": "public/art/v100/portraits/tky-grief-quality-r1.webp",
+      "bytes": 98746,
+      "sha256": "5e15ffba885539642b8ab419347fab3ded905ecc27568fa3f8995071fa16e0c5"
+    },
+    {
+      "path": "public/art/v100/portraits/tky-warm-quality-r1.webp",
+      "bytes": 96782,
+      "sha256": "6823d01d54620af671926e62f09a0cd57e21b75fca839e8b16e11926afe519fe"
+    },
+    {
+      "path": "public/art/v100/portraits/zakimiya-alarm-quality-r1.webp",
+      "bytes": 86430,
+      "sha256": "7a4339575c79d2307c5da93d5d60da8a612f5614d06074b8d51b84c099599ab7"
+    },
+    {
+      "path": "public/art/v100/portraits/zakimiya-determined-quality-r1.webp",
+      "bytes": 84752,
+      "sha256": "efc17ab1bd90a15739265e2634e1851fc77450f7e0e2359f3b230cd440bd3a34"
+    },
+    {
+      "path": "public/art/v100/portraits/zakimiya-formation-card-quality-r1.webp",
+      "bytes": 58404,
+      "sha256": "a30d22f93ba2a8ac8ed65b0e3497795a22b7f93b377f1aef3aa3ed51373453bb"
+    },
+    {
+      "path": "public/art/v100/portraits/zakimiya-grief-quality-r1.webp",
+      "bytes": 84172,
+      "sha256": "b46de5fd451d37db3036ca6ecd54e43713883867239d8c7be38fde54241c471b"
+    },
+    {
+      "path": "public/art/v100/portraits/zakimiya-warm-quality-r1.webp",
+      "bytes": 84606,
+      "sha256": "a7573b6fdc0178192393641ae149a13fb8373084b045c49f8d1b522248cf4190"
+    }
+  ]
+}

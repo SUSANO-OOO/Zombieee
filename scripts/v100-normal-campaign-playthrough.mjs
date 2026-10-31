@@ -14,7 +14,7 @@ import { inspectStaffRoll } from "./v100-staff-roll-audit.mjs";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
 import { installRequestFailureAudit } from "./browser-request-failure-audit.mjs";
-import {normalCampaignCanSpendVehicleGauge, normalCampaignDeploymentCount, normalCampaignDeployOrder } from "./v100-normal-play-contract.mjs";
+import {normalCampaignCanSpendVehicleGauge, normalCampaignDeploymentCount, normalCampaignDeployOrder,readNormalCampaignHud,normalCampaignHudReady } from "./v100-normal-play-contract.mjs";
 import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
 import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
 import { deferNormalRecruitOffer } from "./v100-normal-recruit-offer.mjs";
@@ -85,13 +85,21 @@ async function selectPersonnel(unit) {
   await uiClick(page.locator("button.v100-personnel-card").filter({has:page.getByRole("heading",{name:unit.displayName,exact:true})}));
 }
 function plannedFormation(save) {
-  // Both451 Stage1 wins retain ranged/scout/Kuma/Paisen: no medic is owned yet.
-  // In a92, delaying the earned medic to fifth made Stage3 arrivals55-60s
-  // and left one native run with zero medic healing. The872 third-slot medic
-  // arrived17-22s and its Chromium run cleared the boss. These are controls,
-  // not fresh all30 acceptance. Keep early healing behind ranged/scout.
-  const preference=["unit-babayaga","unit-hachi","unit-nao","unit-kumaverson","unit-paisen","unit-mizuchi","unit-gantetsu","unit-tatara","unit-monkey"];
-  return preference.filter(id=>save.ownedUnitIds.includes(id)).slice(0,7);
+  // Use only companions paid for in this actual save. Preserve the ordinary
+  // card order outside the first boss; its newly affordable recruit permits
+  // the separate S03 formation choice below.
+  const regular=["unit-babayaga","unit-hachi","unit-nao","unit-kumaverson","unit-paisen","unit-mizuchi","unit-gantetsu","unit-tatara","unit-monkey"];
+  // The cheaper second rescue permits a different ordinary S03 formation:
+  // deploy the defender, healer and newly earned riflewoman before the damage
+  // dealers. This changes the test player's chosen card order, not battle AI,
+  // resources, enemy statistics or the selected order of later stages.
+  const front=["unit-kumaverson","unit-nao","unit-mizuchi"];
+  const preference=save.flowState.stageId===V100_STAGES[2].id&&save.ownedUnitIds.includes("unit-mizuchi")
+    ? [...front,...regular.filter(id=>!front.includes(id))] : regular;
+  // S01/S02 put Paisen inside the rescue building. Choose the other visible
+  // available companions instead of trying to click his disabled roster card.
+  const rescue = V100_STAGES.slice(0,2).some(stage=>stage.id===save.flowState.stageId);
+  return preference.filter(id=>save.ownedUnitIds.includes(id) && !(rescue && id==='unit-paisen')).slice(0,7);
 }
 async function prepareEconomy(stageNumber) {
   await deferNormalRecruitOffer(page,{saveAt,uiClick,stageNumber,transactions:report.transactions});
@@ -101,7 +109,7 @@ async function prepareEconomy(stageNumber) {
     const unit=V100_UNITS.find(unit=>unit.id===id);
     if(!save.ownedUnitIds.includes(id)&&save.registeredUnitIds.includes(id)&&save.caps>=unit.registrationCostCaps) {
       await selectPersonnel(unit);
-      await uiClick(button(`配備登録 / ${unit.registrationCostCaps} CAPS`));
+      await uiClick(button(`支度を整える / ${unit.registrationCostCaps} CAPS`));
       save=await saveAt(); report.transactions.push({stageNumber,action:"register",id,caps:save.caps});
     }
   }
@@ -138,7 +146,13 @@ async function prepareEconomy(stageNumber) {
   await uiClick(preparationTab("ステージ"));
 }
 async function configureFormation() {
-  const save=await saveAt();const wanted=plannedFormation(save);
+  const save=await saveAt();
+  const planned=plannedFormation(save);
+  const wanted=report.retry?.stageId===save.flowState.stageId && report.retry?.formationUnitIds
+    ? report.retry.formationUnitIds : planned;
+  // A reasoned retry may reorder this same earned roster through normal UI.
+  // It cannot add an unavailable companion or silently change later stages.
+  assert.deepEqual([...wanted].sort(), [...planned].sort(), "Retry keeps the same eligible roster");
   for(let index=0;index<7;index++) {
     if((save.formationSlots[index]??null)===(wanted[index]??null))continue;
     const slot=page.locator(".v100-slot-track button").nth(index);
@@ -146,7 +160,11 @@ async function configureFormation() {
     if(wanted[index]) {
       const unit=V100_UNITS.find(unit=>unit.id===wanted[index]);
       await uiClick(button(`${unit.displayName}を枠${index+1}へ配置`));
-    } else await uiClick(button("枠を空ける"));
+    } else {
+      // On short screens the picker covers the footer's clear action.
+      await uiClick(button("編成に戻る"));
+      await uiClick(button("枠を空ける"));
+    }
   }
   await uiClick(button("戦闘へ"));
 }
@@ -165,13 +183,16 @@ async function battle(stage) {
   while(await phaseAt()==="battle") {
     await continueRequested();
     try {
-    const observed=await page.locator('.v100-deployed-count').evaluateAll((nodes,{owner,action})=>({
-      value:nodes.length===1?nodes[0].getAttribute('aria-label'):null,
-      frames:globalThis.__V177_READ_NORMAL_FRAMES__?.(owner,action)??null,
-    }),{owner:frameOwner,action:frameStarted?'drain':'start'});
+    const observed=await page.evaluate(readNormalCampaignHud,{owner:frameOwner,action:frameStarted?'drain':'start'});
     frameStarted=true;await frameCapture.record(observed.frames);
+    if(!normalCampaignHudReady(observed,await phaseAt()))break;
     const deploymentCount=normalCampaignDeploymentCount(observed.value);
     record.maximumObservedActive=Math.max(record.maximumObservedActive??0,deploymentCount.active);
+    const waveDisplay=observed.waveDisplay;
+    if(record.waveDisplayTransitions?.at(-1)?.label!==waveDisplay.label||record.waveDisplayTransitions?.at(-1)?.preparation!==waveDisplay.preparation){
+      // This is visible HUD text, not a spawn timestamp; the preparation button names the NEXT wave.
+      (record.waveDisplayTransitions??=[]).push({...waveDisplay,seconds:(Date.now()-start)/1000,activeAllies:deploymentCount.active});
+    }
     if(report.errors.length||requests.report.unexpectedFailures.length)throw new Error("Browser diagnostics during normal battle");
     if(Date.now()-start>15*60_000)throw new Error(`Stage ${stage.number} exceeded the observation window; no victory or clock change injected`);
     const audio=page.getByRole("button",{name:"音声を有効にする",exact:true});
@@ -339,7 +360,7 @@ try {
      await uiClick(button("ステージ選択へ"));
      const after=await saveAt();
      for(const key of ["caps","receipts","completedStageIds","unitLevels","ownedUnitIds"])assert.deepEqual(after[key],restored[key],`Defeat return preserves ${key}`);
-     report.retry={...reason,path:reasonPath,sha256:createHash("sha256").update(bytes).digest("hex"),defeatReturnPreserved:true};
+     report.retry={...reason,stageId:restored.lastResult.stageId,path:reasonPath,sha256:createHash("sha256").update(bytes).digest("hex"),defeatReturnPreserved:true};
    }
    if (report.stages.at(-1)?.status === "running" && await phaseAt() === "formation") {
      report.stages.at(-1).status = "interrupted-driver";

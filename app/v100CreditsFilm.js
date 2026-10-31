@@ -1,6 +1,7 @@
 import { v100EditedCreditsFilm } from "./v100CreditsFilmEdit.js";
+import {v100QualityScenePathFor} from './v100QualitySceneAssets.js';
 // Visual cuts can vary within each of the 11 canonical scenes. Saved cursors stay at 0–10.
-export const V100_CREDITS_FILM = v100EditedCreditsFilm([
+export const V100_CREDITS_FILM = Object.freeze(v100EditedCreditsFilm([
   {
     "id": "street-community",
     "sceneIndex": 0,
@@ -416,4 +417,4 @@ export const V100_CREDITS_FILM = v100EditedCreditsFilm([
     "description": "くまやに料理と仲間が集まる。笑う者、話に耳を傾ける者、それぞれの夜が続いていく。",
     "durationWeight": 1.4
   }
-]);
+]).map(shot=>Object.freeze({...shot,src:v100QualityScenePathFor(shot.src)})));

@@ -1605,7 +1605,7 @@ async function installDeploymentPointerReceipt(page, attemptId, expectedIdentity
       const hitOwner = hitTarget instanceof Element ? hitTarget.closest("button.unit-card") : null;
       const snapshot = window.__ASHFALL_BATTLE_QA__.getPhaseGCombatSnapshot();
       const ariaLabel = owner?.getAttribute("aria-label") ?? "";
-      const costMatch = ariaLabel.match(/コスト\s*(\d+)/u);
+      const costMatch = ariaLabel.match(/(?:指揮|コスト)\s*(\d+)/u);
       const card = owner ? {
         nodeId: nodeIdFor(owner),
         kind: owner.getAttribute("data-kind"),
@@ -1627,7 +1627,7 @@ async function installDeploymentPointerReceipt(page, attemptId, expectedIdentity
         deployCooldowns: snapshot.deployCooldowns ?? {},
       } : null;
       const reasons = [];
-      const numericCost = Number(card?.cost);
+      const numericCost = card?.cost == null ? Number.NaN : Number(card.cost);
       const energy = Number(battle?.energy);
       const cooldown = card?.kind ? Number(battle?.deployCooldowns?.[card.kind]) : Number.NaN;
       if (!card?.kind) reasons.push("missing-kind");
@@ -3692,7 +3692,7 @@ async function readBattleDeploymentDiagnostics(page, {
       const hitOwner = hitTarget instanceof Element ? hitTarget.closest("button.unit-card") : null;
       const nodeId = nodeIdFor(card);
       const ariaLabel = card.getAttribute("aria-label") ?? "";
-      const cost = ariaLabel.match(/コスト\s*(\d+)/u)?.[1] ?? null;
+      const cost = ariaLabel.match(/(?:指揮|コスト)\s*(\d+)/u)?.[1] ?? null;
       return {
         nodeId,
         kind: card.getAttribute("data-kind"),

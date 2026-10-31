@@ -1,0 +1,74 @@
+{
+  "generator": "scripts/build-quality-canonical-portraits.mjs",
+  "master": {
+    "path": "assets/source/quality-20261028/identity/tky-89-warm-r1.png",
+    "sha256": "b49532ac389340e952707d6f102933c3f7b716aa6743ba0778be3b313377325e"
+  },
+  "source": {
+    "path": "assets/source/quality-20261028/identity/tky-89-warm-r1.png",
+    "sha256": "b49532ac389340e952707d6f102933c3f7b716aa6743ba0778be3b313377325e",
+    "width": 1024,
+    "height": 1536
+  },
+  "masterRole": "Producer-approved photo identity with smarter face, Korean actor styling and forehead fox half-mask incorporating89; see tky-89-r1-generation.json",
+  "expressions": [
+    "warm",
+    "determined",
+    "alarm",
+    "grief"
+  ],
+  "additionalSources": [
+    {
+      "expression": "warm",
+      "path": "assets/source/quality-20261028/identity/tky-89-warm-r1.png",
+      "sha256": "b49532ac389340e952707d6f102933c3f7b716aa6743ba0778be3b313377325e"
+    },
+    {
+      "expression": "determined",
+      "path": "assets/source/quality-20261028/identity/tky-89-determined-r1.png",
+      "sha256": "1745c35e2f97ac419e20ed477668abf567f00f0ddb7d1041ee58cee03cfb2105"
+    },
+    {
+      "expression": "alarm",
+      "path": "assets/source/quality-20261028/identity/tky-89-alarm-r1.png",
+      "sha256": "260185709c5952fd473ec7aa5d441cf518c524a87a1c97184100da5cac5eb56a"
+    },
+    {
+      "expression": "grief",
+      "path": "assets/source/quality-20261028/identity/tky-89-grief-r1.png",
+      "sha256": "e79490f09dbd12548388efa29250adf8691ed851a13960a525809653c7ed9301"
+    }
+  ],
+  "outputs": [
+    {
+      "path": "public/art/v100/portraits/tky-warm-quality-r1.webp",
+      "sha256": "c7056479c96bd84ff71b8a23b0ac2ae35902a7ec29d028de6a124597ffdb3f7a",
+      "bytes": 91696
+    },
+    {
+      "path": "public/art/v100/portraits/tky-formation-card-quality-r1.webp",
+      "sha256": "1bfc2fe18b61b4a60eada92b9f818f42481a52eb87e88ab10a9fc1321396af83",
+      "bytes": 64546
+    },
+    {
+      "path": "public/art/v100/portraits/tky-determined-quality-r1.webp",
+      "sha256": "b7fdd081e308d892488a9c53cc7fedbe880c312c843c90af2e40323c15ebb189",
+      "bytes": 93890
+    },
+    {
+      "path": "public/art/v100/portraits/tky-alarm-quality-r1.webp",
+      "sha256": "1ce098230be33e0e6771a490c26c20aa4685b95ee85d2eec903ce1e74754ca04",
+      "bytes": 94778
+    },
+    {
+      "path": "public/art/v100/portraits/tky-grief-quality-r1.webp",
+      "sha256": "e741c51302f35c5e27ba29020874a4a44f2e11f1185a45cda0e50c6fc034a270",
+      "bytes": 93848
+    }
+  ],
+  "runtimeAssetCount": 5,
+  "logicalBytes": 438758,
+  "distinctBytes": 438758,
+  "scope": "Dialogue expressions and formation/personnel cards. Battle and scene paintings require separate verification.",
+  "acceptance": "Canonical identity reference restored; not a numeric likeness score or Producer acceptance."
+}

@@ -1,0 +1,165 @@
+{
+  "scope": "Existing adopted model pixels mechanically extracted and registered to unchanged muzzle and both wrist points; the original hand region is reused. All non-weapon body/head paint remains exact. No alternate generated weapon.",
+  "model": "assets/source/quality-20261028/identity/babayaga-master-r1.png",
+  "modelSha256": "c571d91e3ae9b97f0ac558ae6cacffa4661b268dadf0a46e6f47a7b2fb670aa4",
+  "baseAtlas": "/art/v100/joints/babayaga-quality-model-r3.webp",
+  "baseAtlasSha256": "09d65cc54c77d1b530db2e1906469fafef19bdd4e34af83aec08c839a4b23a0d",
+  "extractOrigin": [
+    450,
+    810
+  ],
+  "sourceAxis": [
+    25,
+    221
+  ],
+  "sourceAnchor": [
+    515.1745510990039,
+    1057.543031715194
+  ],
+  "scale": 0.33812452974019785,
+  "density": 2,
+  "destination": {
+    "x": 226,
+    "y": 168,
+    "w": 106,
+    "h": 51
+  },
+  "muzzle": [
+    326,
+    179
+  ],
+  "wristPoints": [
+    [
+      234,
+      195
+    ],
+    [
+      233,
+      207
+    ]
+  ],
+  "handPolygon": [
+    [
+      0,
+      6
+    ],
+    [
+      5,
+      5
+    ],
+    [
+      8,
+      4
+    ],
+    [
+      14,
+      5
+    ],
+    [
+      18,
+      8
+    ],
+    [
+      20,
+      12
+    ],
+    [
+      18,
+      18
+    ],
+    [
+      15,
+      22
+    ],
+    [
+      10,
+      23
+    ],
+    [
+      2,
+      20
+    ],
+    [
+      0,
+      18
+    ]
+  ],
+  "authored": "weapon-and-hands-authored-r1.png",
+  "retainedBase": "assets/source/quality-20261028/weapon-sidearm-r1/base-head-r3.webp",
+  "extractionPolygon": [
+    [
+      478,
+      830
+    ],
+    [
+      499,
+      827
+    ],
+    [
+      510,
+      838
+    ],
+    [
+      513,
+      945
+    ],
+    [
+      505,
+      955
+    ],
+    [
+      513,
+      971
+    ],
+    [
+      530,
+      1046
+    ],
+    [
+      531,
+      1054
+    ],
+    [
+      505,
+      1064
+    ],
+    [
+      494,
+      1056
+    ],
+    [
+      476,
+      971
+    ],
+    [
+      477,
+      959
+    ],
+    [
+      471,
+      943
+    ],
+    [
+      470,
+      928
+    ],
+    [
+      478,
+      918
+    ]
+  ],
+  "skinExclusion": "R-G>24 and G>B+8 and R>100",
+  "sourcePartDensity": "Two texture pixels per existing rig reference-plane unit",
+  "nativeAcceptance": "Fixed viewport native recordings: PC before/after each 9 observed states; after Chromium phone 8 states and WebKit phone 9 states, including mirrored turn on PC and WebKit phone. Static full-frame inspection and technical checks only; whole-video human viewing, physical devices and final appearance acceptance remain unconfirmed.",
+  "axisReference": [
+    515,
+    1056
+  ],
+  "muzzleInsetSourcePixels": 2.75,
+  "extractedRect": {
+    "left": 450,
+    "top": 810,
+    "width": 100,
+    "height": 270
+  }
+}

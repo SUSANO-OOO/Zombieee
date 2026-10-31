@@ -1,4 +1,6 @@
+import {withV104CombatAudio} from './v104CombatAudio.js';
 import { createAudioManifest } from "./audioManifest.js";
+import { withRecordedWeapons, recordedWeaponSources } from "./weaponRecordingRecipes.js";
 import { CAMPAIGN_STAGE_IDS } from "./campaign.js";
 import {
   V099_BATTLE_AUDIO_ASSET_SPECS,
@@ -69,6 +71,7 @@ const WEAPON_POOL_CATEGORIES = Object.freeze({
   "weapon-barrage": "weapons",
   "weapon-crowbar": "melee",
   "weapon-gunner": "weapons",
+  "weapon-smg": "weapons",
   "weapon-hammer": "melee",
   "weapon-melee-impact": "melee",
   "weapon-melee-swing": "melee",
@@ -101,7 +104,7 @@ const ENEMY_VOICE_EVENTS = Object.freeze(["attack", "hurt", "death"]);
 const V100_ENEMY_COMBAT_CUE_TARGETS = Object.freeze({
   "red-panther-knife": Object.freeze({ attack: "weapon-crowbar", hurt: "weapon-melee-impact", death: "v100-body-fall" }),
   "red-panther-shield": Object.freeze({ attack: "v104-armor-hit", hurt: "v104-armor-hit", death: "v100-body-fall" }),
-  "red-panther-smg": Object.freeze({ attack: "weapon-gunner", hurt: "weapon-melee-impact", death: "v100-body-fall" }),
+  "red-panther-smg": Object.freeze({ attack: "weapon-smg", hurt: "weapon-melee-impact", death: "v100-body-fall" }),
   "red-panther-commander": Object.freeze({ attack: "v104-handgun", hurt: "weapon-melee-impact", death: "v100-body-fall" }),
   "mugarian-president-mutated": Object.freeze({
     entrance: "boss-mother-entrance",
@@ -396,12 +399,12 @@ function variationPool(baseId, category, options = {}) {
 const weaponAssets = Object.entries(WEAPON_POOL_CATEGORIES).flatMap(([baseId, category]) => variationAssets(baseId, category, {
   gain: category === "melee" ? 0.82 : 0.76,
   priority: 62,
-  cooldownMs: baseId === "weapon-gunner" || baseId === "weapon-barrage" ? 45 : 70,
+  cooldownMs: ["weapon-gunner", "weapon-barrage", "weapon-smg"].includes(baseId) ? 45 : 70,
   maxInstances: 5,
-}));
+})).map(asset => asset.id.startsWith('weapon-smg-') ? { ...asset, sources: recordedWeaponSources(asset.id) } : asset);
 const weaponPools = Object.entries(WEAPON_POOL_CATEGORIES).map(([baseId, category]) => variationPool(baseId, category, {
   priority: 62,
-  cooldownMs: baseId === "weapon-gunner" || baseId === "weapon-barrage" ? 45 : 70,
+  cooldownMs: ["weapon-gunner", "weapon-barrage", "weapon-smg"].includes(baseId) ? 45 : 70,
   maxInstances: 5,
 }));
 
@@ -761,7 +764,8 @@ export const PRODUCTION_AUDIO_MANIFEST = createAudioManifest({
   scenes,
 });
 
-export const V100_AUDIO_MANIFEST = createAudioManifest(v100AudioDesignCandidate(PRODUCTION_AUDIO_MANIFEST));
+export const GAMEPLAY_PRODUCTION_AUDIO_MANIFEST=createAudioManifest(withRecordedWeapons(withV104CombatAudio(PRODUCTION_AUDIO_MANIFEST)));
+export const V100_AUDIO_MANIFEST = createAudioManifest(withRecordedWeapons(v100AudioDesignCandidate(PRODUCTION_AUDIO_MANIFEST)));
 // Installation inventories physical files, whereas playback addresses cues.
 // A V1 replacement must not steal a legacy cue's metadata or offline entry.
 const installAudioBySource = new Map(PRODUCTION_AUDIO_MANIFEST.assets.map(asset => [

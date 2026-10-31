@@ -19,6 +19,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { readPwaBootState } from "./pwaBoot.js";
 import { createPaintedBrowserEntry } from "./pwaBrowserEntry.js";
+import { readBrowserPlayChoice, rememberBrowserPlayChoice } from "./pwaBrowserChoice.js";
 import { useGameModalScope } from "./useGameModalScope";
 
 import {
@@ -173,9 +174,8 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   const [manifestUnreachable, setManifestUnreachable] = useState(false);
   const [deferredPublishedManifest, setDeferredPublishedManifest] = useState<Manifest | null>(null);
   // The player chose to keep playing in the browser instead of installing.
-  // Remembered for the visit only, so the invitation is never nagged twice in
-  // one session.
-  const [offerDismissed, setOfferDismissed] = useState(false);
+  // Remember across visits; installation help remains available in Data.
+  const [offerDismissed, setOfferDismissed] = useState(() => readBrowserPlayChoice());
   const [browserPlayPending, setBrowserPlayPending] = useState(false);
   // The last failure, kept until the next success or an explicit dismissal, so
   // a player can still read it after they have looked away from the screen.
@@ -225,7 +225,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       requestFrame: (callback: FrameRequestCallback) => window.requestAnimationFrame(callback),
       cancelFrame: (frame: number) => window.cancelAnimationFrame(frame),
       onPending: setBrowserPlayPending,
-      onEnter: () => setOfferDismissed(true),
+      onEnter: () => { rememberBrowserPlayChoice(); setOfferDismissed(true); },
     });
     browserPlayTransitionRef.current.request();
   }, []);
@@ -858,12 +858,13 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
 
   const storagePanel = <aside className={storageHost ? "pwa-storage pwa-storage-inline" : "pwa-notice pwa-storage"} role={storageHost ? "region" : "dialog"} aria-label={storageHost ? "アプリのデータ管理" : "データ管理"}>
     <h3>アプリの容量・更新</h3>
+    {!standalone && guidance && <details className="pwa-return-install-help"><summary>ホーム画面で遊ぶ</summary><div className="pwa-return-install-columns"><InstallSteps steps={guidance.steps as Array<Record<string, unknown>>} /><p>続きから遊ぶには、先に下の「セーブを書き出す」でバックアップを。追加したアプリで復元してください。保存先が別になる場合があります。</p></div></details>}
     <dl>
       <div><dt>保存中のバージョン</dt><dd>{installedManifest?.version ?? "ブラウザでプレイ中"}</dd></div>
       <div><dt>ひとつ前のバージョン</dt><dd>{previousManifest?.version ?? "なし"}</dd></div>
       <div><dt>保存済みアセット</dt><dd>{storedHashes.size}件</dd></div>
       <div><dt>このバージョンが使用中</dt><dd>{installPlan ? `${installPlan.satisfied.length}件・${formatBytes(installPlan.satisfiedBytes ?? 0)}` : "未インストール"}</dd></div>
-      <div><dt>不足・破損</dt><dd>{installPlan ? `${installPlan.pendingCount}件・${formatBytes(installPlan.pendingBytes)}` : "未インストール"}</dd></div>
+      <div><dt>{installedManifest ? "不足・破損" : "オフライン未保存"}</dt><dd>{installPlan ? `${installPlan.pendingCount}件・${formatBytes(installPlan.pendingBytes)}` : "未保存"}</dd></div>
       <div><dt>参照されていないデータ</dt><dd>{orphanCount == null ? "なし" : `${orphanCount}件`}</dd></div>
     </dl>
     <details><summary>保存先と診断情報</summary><dl>

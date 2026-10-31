@@ -1,0 +1,53 @@
+{
+  "generator": "scripts/build-quality-sidearm.mjs",
+  "operation": "Mechanical extraction of the handgun already present in the adopted Baba model; the original hand region is reused with both wrist anchors fixed. All non-weapon body/head paint is retained exactly. No newly generated firearm image.",
+  "creator": "Existing Producer-selected OpenAI model; deterministic project component registration and packing",
+  "license": "Same project-generated source rights as the adopted model. No third-party asset, new purchase or contract.",
+  "privatePhotosIncluded": false,
+  "preferredRuntime": "/art/v100/joints/babayaga-suppressed-sidearm-r1.webp",
+  "retiredRuntime": "/art/v100/joints/babayaga-quality-model-r3.webp",
+  "retainedBase": "assets/source/quality-20261028/weapon-sidearm-r1/base-head-r3.webp",
+  "acceptance": "Technical/source checks only; full-size game comparison and final appearance acceptance remain separate.",
+  "entries": [
+    {
+      "kind": "babayaga",
+      "basePath": "/art/v100/joints/babayaga-quality-model-r3.webp",
+      "retainedBase": "assets/source/quality-20261028/weapon-sidearm-r1/base-head-r3.webp",
+      "baseSha256": "09d65cc54c77d1b530db2e1906469fafef19bdd4e34af83aec08c839a4b23a0d",
+      "assetPath": "/art/v100/joints/babayaga-suppressed-sidearm-r1.webp",
+      "bytes": 31102,
+      "sha256": "ebc4d1267dd1dda3afac8b20f4c5e70f9a13247d54fc6d029c4663d18260c48b",
+      "model": "assets/source/quality-20261028/identity/babayaga-master-r1.png",
+      "modelSha256": "c571d91e3ae9b97f0ac558ae6cacffa4661b268dadf0a46e6f47a7b2fb670aa4",
+      "authored": "assets/source/quality-20261028/weapon-sidearm-r1/weapon-and-hands-authored-r1.png",
+      "authoredSha256": "5e8c521ce9872f20da14ba0af91569a2f93bc47644e5793cb09ba667de5e7eaa",
+      "source": {
+        "x": 2,
+        "y": 67,
+        "w": 212,
+        "h": 102
+      },
+      "destination": {
+        "x": 226,
+        "y": 168,
+        "w": 106,
+        "h": 51
+      },
+      "decodedBytes": 350208,
+      "muzzle": [
+        326,
+        179
+      ],
+      "wristPoints": [
+        [
+          234,
+          195
+        ],
+        [
+          233,
+          207
+        ]
+      ]
+    }
+  ]
+}

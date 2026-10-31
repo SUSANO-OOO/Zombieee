@@ -1,0 +1,75 @@
+{
+  "generator": "scripts/build-quality-support-portraits.mjs",
+  "canonical": {
+    "path": "assets/source/v090/characters/mayo-chan-identity-master-r1.png",
+    "sha256": "dcbe04ca93d758da12e3c073c3b4fb36e5b8854ffcfcfcb6c1357596b589849c"
+  },
+  "inputs": [
+    {
+      "expression": "warm",
+      "path": "assets/source/quality-20261028/identity/mayo-master-r4.png",
+      "sha256": "ed4804adffdc00585130dda8803f5f1d2ccc3d818c15191a23e38558476a434c",
+      "width": 1122,
+      "height": 1402
+    },
+    {
+      "expression": "determined",
+      "path": "assets/source/quality-20261028/identity/mayo-determined-r6.png",
+      "sha256": "b804d89866eb8018251d12c05cdd26ee13e276d8120118b7b2ce7ff1e6222678",
+      "width": 1122,
+      "height": 1402
+    },
+    {
+      "expression": "alarm",
+      "path": "assets/source/quality-20261028/identity/mayo-alarm-r6.png",
+      "sha256": "4667b3f51e76fb62621764aa3f9a8cfe582ab33f253a6735b1d2d9e9a6d50e31",
+      "width": 1122,
+      "height": 1402
+    },
+    {
+      "expression": "grief",
+      "path": "assets/source/quality-20261028/identity/mayo-grief-r6.png",
+      "sha256": "d6c9cb4dfa7ad25103c5100d92d855ce3f93f11121588c32fc4cae60713500f8",
+      "width": 1122,
+      "height": 1402
+    }
+  ],
+  "crop": {
+    "left": 0,
+    "top": 0,
+    "width": 1122,
+    "height": 1402
+  },
+  "outputs": [
+    {
+      "path": "public/art/v100/portraits/mayo-warm-quality-r1.webp",
+      "sha256": "690a5c67c975bd6d5de5ca84853301e66277874ac8cdca8814d7ed159d07fa54",
+      "bytes": 101040
+    },
+    {
+      "path": "public/art/v100/portraits/mayo-formation-card-quality-r1.webp",
+      "sha256": "83bf5ab9d3793a78dcc7d8140470659f22adb61e7a945a91a9b6ed0d488e832c",
+      "bytes": 82996
+    },
+    {
+      "path": "public/art/v100/portraits/mayo-determined-quality-r1.webp",
+      "sha256": "42a704a8adc9c45c42b29bee56944ab7151fabe7f5e651c7b88b8f00ce7d85f4",
+      "bytes": 93150
+    },
+    {
+      "path": "public/art/v100/portraits/mayo-alarm-quality-r1.webp",
+      "sha256": "0e01062fc6aacbe2af904f17316ca59e553bf036af66e44bf1e5e755ef9c19a8",
+      "bytes": 90684
+    },
+    {
+      "path": "public/art/v100/portraits/mayo-grief-quality-r1.webp",
+      "sha256": "88a4b0c548479e3956b7bdf34487565b66e2f87f53904b92755af343c82a5287",
+      "bytes": 92996
+    }
+  ],
+  "runtimeAssetCount": 5,
+  "logicalBytes": 460866,
+  "distinctBytes": 460866,
+  "scope": "Local dialogue and card candidate. Battle, dedicated scenes and credits are not replaced by this builder.",
+  "approval": "Producer requested the redesign; final visual acceptance and integration remain open."
+}

@@ -1,0 +1,15 @@
+{
+  "tool": "built-in image_gen",
+  "referenced_image_paths": [
+    "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\public\\art\\v100\\credits\\vehicle-mayo-splash-r1.webp",
+    "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\identity\\tky-89-warm-r1.png",
+    "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\identity\\hachi-master-r4.png",
+    "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\identity\\mayo-master-r4.png",
+    "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\identity\\gantetsu-master-r4.png"
+  ],
+  "transparent_background": false,
+  "prompt": "Use case: identity-preserve / precise-object-edit. Image 1 is the wide playful vehicle wash scene to edit. Strict identities: image 2 TKY CENTER holding a towel, image 3 Hachi LEFT orange coat/short dark hair orange streaks/bridge-of-nose bandage, image 4 Mayo foreground tan dog with yellow bandana and medic harness, image 5 Gantetsu RIGHT with CLOSED opaque helmet and green hood. Match TKY's handsome recognizable face and exact black/crimson forehead-to-both-eyes fox half-mask with sculpted red ornamental 89; visible real eyes, nose tip/mouth/jaw exposed; keep surprised flinching expression. No animal ears or extra mask ornaments. Match Hachi's reference face and short spiky hair/undercut/orange streaks, slim youthful adult physique, nose bandage and bright laughing expression; preserve his sponge and raised hands. Match Mayo's reference dog face/fur/ears/physique and joyful water-shaking action; dog ears must remain. Gantetsu's helmet stays CLOSED and opaque, preserve glove/towel grip and green coat. Harmonize all anatomy, fur, water and materials to realistic cinematic illustration, removing heavy comic hatching, no photopaste seams. Keep every position, head size, body/hand pose, dog location, droplets, vehicle, bucket, rainy garage and sunset, same wide 16:9 camera. No added people, limbs, text or watermark.",
+  "output": "vehicle-mayo-splash-quality-r1.png",
+  "generatedOriginal": "C:/Users/okait/.codex/generated_images/01a180c8-9e05-7871-b287-613f7c7eb364/exec-a86ab494-5a6d-49c1-a0eb-c8ac1a6a476e.png",
+  "producerApproval": "TKY89 design approved with おけ; derived scene implementation; not whole-game acceptance"
+}

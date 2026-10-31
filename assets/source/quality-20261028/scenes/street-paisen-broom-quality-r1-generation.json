@@ -1,0 +1,14 @@
+{
+  "tool": "built-in image_gen",
+  "referenced_image_paths": [
+    "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/public/art/v100/credits/street-paisen-broom-r1.webp",
+    "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/paisen-photo-master-r7.png",
+    "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/hachi-master-r4.png",
+    "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/raider-master-r4.png"
+  ],
+  "transparent_background": false,
+  "prompt": "Edit IMAGE1, the exact existing 16:9 humorous staff-roll scene, preserving the composition and playful performance: PAISEN stands in the center using a broom as a guitar while singing, HACHI crouches laughing at LEFT, RAIDER stands amused at RIGHT holding her own broom. It is the same repaired post-apocalyptic shopping street at warm sunset. Images2/3/4 are the LOCKED EXISTING GENERATED PRIMARY MODELS of PAISEN, HACHI and RAIDER respectively. Reproduce those specific faces, ages, hair and physiques naturally in these strong joyful expressions, not generic anime faces or blended identities. Paisen is the distinct short-haired sturdy adult man in his same dark indigo/navy-purple shirt and pale shorts, with natural arms/legs rather than inflated muscles; keep his singing pose and both plausible broom/guitar hand grips. Hachi is the adult young man with the same black/orange short spiky undercut, nose bandage, orange coat, blue backpack and attached red bicycle helmet. Raider is the same 27-year-old Japanese adult WOMAN, athletic, short ash-blond hair, dark sleeveless outfit/tactical harness/headphones and gloves; preserve her femininity and exact model face without increasing exposure or replacing her with a man. The references establish identity/wardrobe, not new actions: do NOT add a machine gun, crowbar or other combat weapon to this broom performance. Preserve all existing props, shadows and supported foot contacts. Render a coherent photographic-real human/material/light treatment with only restrained painterly illustration, removing heavy anime outlines and exaggerated cartoon eyes while preserving the original humor. No cast/plot changes, no extra actors or limbs, no captions/text/panels. One finished 16:9 illustration.",
+  "output": "street-paisen-broom-quality-r1.png",
+  "generatedOriginal": "C:/Users/okait/.codex/generated_images/01a180c8-9e05-7871-b287-613f7c7eb364/exec-1fc0a83e-1076-4f12-b8d9-23056879a020.png",
+  "statusAtGeneration": "Model-based scene candidate; native connection and review not yet performed."
+}

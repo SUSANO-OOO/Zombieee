@@ -1,0 +1,75 @@
+{
+  "generator": "scripts/build-quality-support-portraits.mjs",
+  "canonical": {
+    "path": "public/art/v070/characters/reference/monkey-base-r11.png",
+    "sha256": "8dbe4f5cf4e64160d7fdd22f246b4762a650988fc6bac4ad13021ba418820ad7"
+  },
+  "inputs": [
+    {
+      "expression": "warm",
+      "path": "assets/source/quality-20261028/identity/monkey-master-r4.png",
+      "sha256": "feefc4b9959e8ce45955c1915338aec029fb1b58892f79528a1359d97ad5f2e1",
+      "width": 1024,
+      "height": 1536
+    },
+    {
+      "expression": "determined",
+      "path": "assets/source/quality-20261028/identity/monkey-determined-r6.png",
+      "sha256": "0ad74b9ff999232d73bcc5ee0f04ef3dcd8cce0128910103399717430f73ec16",
+      "width": 1024,
+      "height": 1536
+    },
+    {
+      "expression": "alarm",
+      "path": "assets/source/quality-20261028/identity/monkey-alarm-r6.png",
+      "sha256": "ad48e17795ac47ba11e3097a36105c1f12e21cfa1fbac64fc03ee6e8da7d9cc0",
+      "width": 1024,
+      "height": 1536
+    },
+    {
+      "expression": "grief",
+      "path": "assets/source/quality-20261028/identity/monkey-grief-r6.png",
+      "sha256": "9af1706d41957b5ba67b56b945c4e28368a176a48ca95ccfc620d2a55c8f169f",
+      "width": 1024,
+      "height": 1536
+    }
+  ],
+  "crop": {
+    "left": 180,
+    "top": 0,
+    "width": 645,
+    "height": 860
+  },
+  "outputs": [
+    {
+      "path": "public/art/v100/portraits/monkey-warm-quality-r1.webp",
+      "sha256": "3455ba405a5c00eda5c487dcdf2d03de9ea9f58e95a6d26cafaf008a54a2bfd5",
+      "bytes": 83380
+    },
+    {
+      "path": "public/art/v100/portraits/monkey-formation-card-quality-r1.webp",
+      "sha256": "7f3efc1a6dc943c21ffcee8df87344ae1bd34f201a224516bfd34abd675f799d",
+      "bytes": 56296
+    },
+    {
+      "path": "public/art/v100/portraits/monkey-determined-quality-r1.webp",
+      "sha256": "d65a413c1728ab31071888419b30e73cdc042c5ba33174c45fca1f600234149b",
+      "bytes": 82798
+    },
+    {
+      "path": "public/art/v100/portraits/monkey-alarm-quality-r1.webp",
+      "sha256": "d7220c8b1781bff2d22d3c58e370b56b38af10e4824569cd69eb678adbb89a74",
+      "bytes": 79068
+    },
+    {
+      "path": "public/art/v100/portraits/monkey-grief-quality-r1.webp",
+      "sha256": "b2cc9bd3e5a8e2bbc488f79612c28712e8488f240caa51dbe3d5922b133748cb",
+      "bytes": 84946
+    }
+  ],
+  "runtimeAssetCount": 5,
+  "logicalBytes": 386488,
+  "distinctBytes": 386488,
+  "scope": "Local dialogue and card candidate. Battle, dedicated scenes and credits are not replaced by this builder.",
+  "approval": "Producer requested the redesign; final visual acceptance and integration remain open."
+}

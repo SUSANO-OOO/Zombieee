@@ -19,6 +19,8 @@ import { v100DiscoveredBosses } from "./v100BossProgress.js";
 import { v100OutbreakEncounters, v100OutbreakRunIdValid } from "./v100Outbreak.js";
 import { storyResultIdentity, isSettledStoryResult, isValidStoryVictory } from "./v100ResultIntegrity.js";
 
+import { collectV100ReadReplayFlow, createV100StoryFlowState } from "./v100StoryFlow.js";
+
 export function beginV100Outbreak(save, bossId, { runId, now } = {}) {
   const current = normalizeV100Save(save);
   if (!v100OutbreakEncounters(current).some(boss => boss.id === bossId)) return { applied: false, reason: "boss-undiscovered", save: current };
@@ -300,6 +302,18 @@ export function finalizeV100PendingResult(save, { result = null, now } = {}) {
     if (stageNumber === 30 && firstClear) updated.postGameAvailable = true;
     return updated;
   }, { now });
+}
+
+// The caller persists this save and the returned flow checkpoint together.
+export function collectV100ReadReplayReward(save, result, { now } = {}) {
+  const current = normalizeV100Save(save);
+  const flow = createV100StoryFlowState(current);
+  const transition = collectV100ReadReplayFlow(flow);
+  if (!transition.accepted) return { applied: false, reason: transition.reason, save: current, flow };
+  // Bind the UI result to the durable pending result before paying any reward.
+  if (!result) return { applied: false, reason: "pending-result-mismatch", save: current, flow };
+  const settled = finalizeV100PendingResult(current, { result, now });
+  return { ...settled, flow: settled.applied ? transition.state : flow };
 }
 
 export function purchaseV100Unit(save, unitId, { now } = {}) {

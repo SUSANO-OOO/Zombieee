@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
@@ -235,12 +236,14 @@ test("transport optimizations preserve every runtime asset contract", async () =
   }
 
   const bundled = manifest.assets.filter((asset) => asset.bundlePath);
-  assert.equal(bundled.length, 348, "retain all345 prior recordings and add three fist-wave cues");
+  assert.equal(bundled.length, 354, "348 previous cues minus retired rifle plus seven distinct firearm recordings");
   assert.ok(bundled.every((asset) => asset.bundlePath === "/pwa-bundles/audio-v1.bin"));
   assert.ok(bundled.every((asset) => asset.bundleBytes === asset.bytes));
   const bundle = await readFile(new URL("../public/pwa-bundles/audio-v1.bin", import.meta.url));
-  for (const asset of bundled.slice(0, 5)) {
-    assert.equal(bundle.subarray(asset.bundleOffset, asset.bundleOffset + asset.bundleBytes).byteLength, asset.bytes);
+  for (const asset of bundled) {
+    const payload = bundle.subarray(asset.bundleOffset, asset.bundleOffset + asset.bundleBytes);
+    assert.equal(payload.byteLength, asset.bytes);
+    assert.equal('sha256-' + createHash('sha256').update(payload).digest('hex'), asset.hash, asset.path);
   }
 });
 

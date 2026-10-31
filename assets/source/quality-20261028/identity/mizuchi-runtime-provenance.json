@@ -1,0 +1,75 @@
+{
+  "generator": "scripts/build-quality-support-portraits.mjs",
+  "canonical": {
+    "path": "public/art/v070/characters/reference/mizuchi-base-r3.png",
+    "sha256": "4b11d38cdca1421cdafa77a3a8cb8eac5d9f8ffa35aacddfcb3de4381012eade"
+  },
+  "inputs": [
+    {
+      "expression": "warm",
+      "path": "assets/source/quality-20261028/identity/mizuchi-master-r4.png",
+      "sha256": "c0f013dea12be7dc54055adfba4fd7b4a9703141eb8d9c0109d5b3087580ce3f",
+      "width": 864,
+      "height": 1821
+    },
+    {
+      "expression": "determined",
+      "path": "assets/source/quality-20261028/identity/mizuchi-determined-r6.png",
+      "sha256": "9a16063a6f437fc3176429180efdcd65f6d1f31c745af914a116549aa70069ec",
+      "width": 864,
+      "height": 1821
+    },
+    {
+      "expression": "alarm",
+      "path": "assets/source/quality-20261028/identity/mizuchi-alarm-r6.png",
+      "sha256": "fd77816f447728997a8dd91732c5c07aecb570dc012dbcbe3fa9b30e4cfb504b",
+      "width": 864,
+      "height": 1821
+    },
+    {
+      "expression": "grief",
+      "path": "assets/source/quality-20261028/identity/mizuchi-grief-r6.png",
+      "sha256": "daa62e0924aa57a8a997148cc898e9d75dc5beb3538c4cf787a1cf5d7eafc47f",
+      "width": 864,
+      "height": 1821
+    }
+  ],
+  "crop": {
+    "left": 120,
+    "top": 0,
+    "width": 650,
+    "height": 830
+  },
+  "outputs": [
+    {
+      "path": "public/art/v100/portraits/mizuchi-warm-quality-r1.webp",
+      "sha256": "103aaf8ad9fd7b42828783521b888e1d84d310a00e840ec1abca114072881760",
+      "bytes": 63928
+    },
+    {
+      "path": "public/art/v100/portraits/mizuchi-formation-card-quality-r1.webp",
+      "sha256": "cae3d1082f791f50e35af3d8926642f6d5d1ca42a2bb44ab54a584037874fdc2",
+      "bytes": 46814
+    },
+    {
+      "path": "public/art/v100/portraits/mizuchi-determined-quality-r1.webp",
+      "sha256": "53ede9aa543a09d4004b7acae3947abe03acc4af11664ba22709b3ffc4844d5a",
+      "bytes": 62044
+    },
+    {
+      "path": "public/art/v100/portraits/mizuchi-alarm-quality-r1.webp",
+      "sha256": "ad4e0179f035d8e55f515b4071e000d57a9051f362c496b4e9f0fe581da458b7",
+      "bytes": 64030
+    },
+    {
+      "path": "public/art/v100/portraits/mizuchi-grief-quality-r1.webp",
+      "sha256": "8643a09acdd20f91d574666ea352d2b206bcb32e61748766d1cc3170b539ab32",
+      "bytes": 60788
+    }
+  ],
+  "runtimeAssetCount": 5,
+  "logicalBytes": 297604,
+  "distinctBytes": 297604,
+  "scope": "Local dialogue and card candidate. Battle, dedicated scenes and credits are not replaced by this builder.",
+  "approval": "Producer requested the redesign; final visual acceptance and integration remain open."
+}

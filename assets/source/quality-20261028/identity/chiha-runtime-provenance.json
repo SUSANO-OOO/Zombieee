@@ -1,0 +1,75 @@
+{
+  "generator": "scripts/build-quality-support-portraits.mjs",
+  "canonical": {
+    "path": "assets/source/v090/characters/mrs-chiha-identity-master-r1.png",
+    "sha256": "5f7b3cb8047804b595d5de57727e34a39fdd7eb6744a2ed859ebd22bb42f3b83"
+  },
+  "inputs": [
+    {
+      "expression": "warm",
+      "path": "assets/source/quality-20261028/identity/chiha-master-r4.png",
+      "sha256": "d9acf14c0f75ce8e80b4dd2e7f8285e154562e72082200be68983ef292369705",
+      "width": 1086,
+      "height": 1448
+    },
+    {
+      "expression": "determined",
+      "path": "assets/source/quality-20261028/identity/chiha-determined-r6.png",
+      "sha256": "f3d3209de6a2fdd4c6a3cbddaf896750112ecc540228d10c69e19eaa23b141fc",
+      "width": 1086,
+      "height": 1448
+    },
+    {
+      "expression": "alarm",
+      "path": "assets/source/quality-20261028/identity/chiha-alarm-r6.png",
+      "sha256": "e1d08d2ae6f60dc2f64e7a1b24744c1541f5c636950c8ea3bfe90aca393a0aa0",
+      "width": 1086,
+      "height": 1448
+    },
+    {
+      "expression": "grief",
+      "path": "assets/source/quality-20261028/identity/chiha-grief-r6.png",
+      "sha256": "0f171d80cf3537bdd1c0616754b5dc35c3272a807f1bae417f8ea3adad5b38f3",
+      "width": 1086,
+      "height": 1448
+    }
+  ],
+  "crop": {
+    "left": 270,
+    "top": 0,
+    "width": 600,
+    "height": 800
+  },
+  "outputs": [
+    {
+      "path": "public/art/v100/portraits/chiha-warm-quality-r1.webp",
+      "sha256": "25a9ac1ead7b69c75e3e294db5adc5a7fdac6890d02512478a9bc8ab77f32b8e",
+      "bytes": 70464
+    },
+    {
+      "path": "public/art/v100/portraits/chiha-formation-card-quality-r1.webp",
+      "sha256": "d63ff0bc5073b237f2202166fcda82fc7b897e012a58fb1804dfa6efff59ff82",
+      "bytes": 47504
+    },
+    {
+      "path": "public/art/v100/portraits/chiha-determined-quality-r1.webp",
+      "sha256": "b5fa5a41ca28b7181b30c5729e1b088fe2304a4d266734af24b6c9250e46d34b",
+      "bytes": 70348
+    },
+    {
+      "path": "public/art/v100/portraits/chiha-alarm-quality-r1.webp",
+      "sha256": "7c48dc80a60413cd2d2e01f6a2dd957e6f33fa7d95b798c898da91d51fb47f4e",
+      "bytes": 69512
+    },
+    {
+      "path": "public/art/v100/portraits/chiha-grief-quality-r1.webp",
+      "sha256": "8ef77c43861ea155388b78fc8622349fb691ea174e33595e1ec8c278571aaeff",
+      "bytes": 68350
+    }
+  ],
+  "runtimeAssetCount": 5,
+  "logicalBytes": 326178,
+  "distinctBytes": 326178,
+  "scope": "Local dialogue and card candidate. Battle, dedicated scenes and credits are not replaced by this builder.",
+  "approval": "Producer requested the redesign; final visual acceptance and integration remain open."
+}

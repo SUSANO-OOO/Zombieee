@@ -35,7 +35,11 @@ test("battle barks respect recruited units and Ikura's separate rescue milestone
   const first = session(initial).barkSpeakerKinds;
   assert.equal(bark("ally-down", "medic", first).shown, false);
   assert.equal(bark("crawler-barrage", "guide", first).shown, false);
-  assert.equal(bark("role-cue", "brawler", first).shown, true);
+  assert.equal(bark("role-cue", "brawler", first).shown, false, "Paisen is rescuing people inside during S01");
+  const second = v100ProductionSessionFor({ save: initial, stageId: V100_STAGE_IDS[1] }).barkSpeakerKinds;
+  assert.equal(bark("role-cue", "brawler", second).shown, false, "S02 keeps Paisen on the separate rescue");
+  const reunited = v100ProductionSessionFor({ save: initial, stageId: V100_STAGE_IDS[2] }).barkSpeakerKinds;
+  assert.equal(bark("role-cue", "brawler", reunited).shown, true, "Paisen retains his own battle voice after rejoining");
   const rescued = session(normalizeV100Save({ ...initial, completedStageIds: [V100_STAGE_IDS[0]] })).barkSpeakerKinds;
   assert.equal(bark("crawler-barrage", "guide", rescued).shown, true);
   assert.equal(bark("ally-down", "medic", rescued).shown, false);
@@ -63,7 +67,7 @@ test("reward presentation reads only the finalized transaction and never predict
   assert.equal(pending.save.caps, 0);
   const final = finalizeV100PendingResult(pending.save);
   assert.equal(final.applied, true);
-  assert.deepEqual(v100RewardPresentationFor(final.save.lastResult), { stageNumber: 1, rewardCaps: 87, unlocks: ["ナオの配備登録が可能に"], unlockedUnitIds: ["unit-nao"], breakdown: { firstClear: 87, replay: 0, star2: 0, star3: 0 } });
+  assert.deepEqual(v100RewardPresentationFor(final.save.lastResult), { stageNumber: 1, rewardCaps: 87, unlocks: ["ナオの出撃を準備しよう"], unlockedUnitIds: ["unit-nao"], breakdown: { firstClear: 87, replay: 0, star2: 0, star3: 0 } });
   assert.equal(finalizeV100PendingResult(final.save).applied, false);
   assert.equal(final.save.caps, 87);
   assert.equal(v100RewardPresentationFor({ ...final.save.lastResult, won: false }), null);

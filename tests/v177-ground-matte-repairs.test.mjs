@@ -88,8 +88,9 @@ test("Knife death gap and cord hole use original RGB while eight nondeath cells 
   assert.equal(current.groundAnchorPixels,previous.groundAnchorPixels);
 });
 
-test("the source-bound matte, R9 action and Paisen identity repairs are the exact manifest replacements",async()=>{
-  const current=JSON.parse(await disk("public/asset-manifest.json")),previous=JSON.parse(old("public/asset-manifest.json"));
+test("the published source-bound repairs retain their exact historical delta and current matte bindings",async()=>{
+  const current=JSON.parse(execFileSync('git',['show','ff5dba24e88c810182cda1f044bd26dfc3e512c1:public/asset-manifest.json'],{cwd:root,maxBuffer:8*1024*1024})),previous=JSON.parse(old("public/asset-manifest.json"));
+  const candidate=JSON.parse(await disk("public/asset-manifest.json"));
   const previousByPath=new Map(previous.assets.map(a=>[a.path,a]));
   assert.equal(current.assets.length,previous.assets.length+V104_MEDIA_ADDITIONS.length-V104_AUDIO_RETIREMENTS.length+V105_MEDIA_ADDITIONS.length-V105_MEDIA_RETIREMENTS.length);
   const changed=current.assets.filter(a=>a.hash!==previousByPath.get(a.path)?.hash);
@@ -125,7 +126,8 @@ test("the source-bound matte, R9 action and Paisen identity repairs are the exac
   const provenance=JSON.parse(await disk("assets/source/v100/sprite-repairs/ground-matte-provenance.json"));
   assert.equal(provenance.kuromeBuilderMode,"--battle-only");
   for(const binding of V177_GROUND_MATTE_SPRITE_REPLACEMENTS){
-    const actual=current.assets.find(a=>a.path===binding.path),source=provenance.records.find(a=>a.path===binding.path);
+    const actual=candidate.assets.find(a=>a.path===binding.path),source=provenance.records.find(a=>a.path===binding.path);
+    assert.ok(actual,`current matte repair ${binding.path}`);
     for(const key of ["hash","bytes","sourcePath","criticality"])assert.equal(actual[key],binding.next[key]);
     assert.equal(hash(await disk(source.guide.path)),source.guide.sha256);
     const png=await raw(await disk("public"+binding.path)),webp=await raw(await disk("public"+actual.sourcePath));

@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import {readFile} from "node:fs/promises";
+import {V100_AUDIO_MANIFEST} from "../app/productionAudio.js";
 
 import { createAudioManifest } from "../app/audioManifest.js";
 import { createAudioMixer } from "../app/audioMixer.js";
@@ -1159,4 +1161,42 @@ test("dedupe keys prevent double playback and dispose performs idempotent voice 
   assert.equal(context.closeCount, 1);
   assert.equal(target.listenerCount(), 0);
   assert.equal(await mixer.play("ui-click"), null);
+});
+
+test('committed burst rounds survive 45Hz frame quantization and retain per-event deduplication',async()=>{
+ async function render(laterCooldown){
+  const context=new FakeAudioContext(),network=makeFetcher();
+  const mixer=createAudioMixer({manifest:createTestManifest(),contextFactory:()=>context,fetcher:network.fetcher,enableAcknowledgementTone:false});
+  await mixer.unlock();const played=[];
+  for(const [index,time]of[0,3/45,5/45].entries()){
+   context.currentTime=1+time;
+   played.push(await mixer.play('weapon-variations',{cooldownMs:index?laterCooldown:45,maxInstances:5,dedupeKey:'burst:'+index}));
+  }
+  const before=context.sources.length,last=played[2];
+  const duplicate=await mixer.play('weapon-variations',{cooldownMs:laterCooldown,maxInstances:5,dedupeKey:'burst:2'});
+  const result={accepted:played.filter(Boolean).length,starts:before,afterDuplicate:context.sources.length,duplicateSameId:!!last&&duplicate?.id===last.id};
+  await mixer.dispose();return result;
+ }
+ const throttled=await render(45);assert.equal(throttled.accepted,2,'44.44ms between the later quantized frames is shorter than the old global throttle');
+ const committed=await render(0);assert.equal(committed.accepted,3);assert.equal(committed.starts,3);assert.equal(committed.afterDuplicate,3);assert.equal(committed.duplicateSameId,true);
+});
+
+test('consecutive normal LMG bursts retain all nine starts with actual recording tails and unchanged global voice limits',async()=>{
+ const provenance=JSON.parse(await readFile(new URL('../assets/source/weapon-recordings/provenance.json',import.meta.url)));
+ const takes=provenance.records.filter(r=>/weapon-gunner-0[12]\.mp3$/.test(r.file));assert.equal(takes.length,2);
+ const duration=Math.min(...takes.map(r=>r.decoded.seconds));assert.ok(duration>.46);
+ async function render(perBurstKey){
+  const context=new FakeAudioContext(),decode=context.decodeAudioData.bind(context);context.decodeAudioData=async raw=>({...await decode(raw),duration});
+  const mixer=createAudioMixer({manifest:V100_AUDIO_MANIFEST,contextFactory:()=>context,fetcher:async()=>({ok:true,status:200,arrayBuffer:async()=>new Uint8Array([1]).buffer}),random:()=>.5,maxVoices:24,enableAcknowledgementTone:false});
+  await mixer.unlock();const handles=[];
+  for(let burst=0;burst<3;burst++)for(const [shot,offset]of[0,3/45,5/45].entries()){
+   context.currentTime=1+burst*.35+offset;
+   for(const source of context.sources)if(!source.endedForBurstTest&&source.startAt!==null&&!source.loop&&context.currentTime>=source.startAt+source.buffer.duration){source.endedForBurstTest=true;source.end();}
+   handles.push(await mixer.play('weapon-gunner',{priority:74,cooldownMs:shot?0:45,maxInstances:5,instanceKey:perBurstKey?'gunner-burst:1:'+(burst+1):undefined,dedupeKey:shot?'gunner-muzzle:1:'+(burst+1)+':fighter:2:'+shot:undefined}));
+  }
+  const starts=context.sources.filter(s=>s.startAt!==null).length;
+  const duplicate=await mixer.play('weapon-gunner',{priority:74,cooldownMs:0,maxInstances:5,instanceKey:perBurstKey?'gunner-burst:1:3':undefined,dedupeKey:'gunner-muzzle:1:3:fighter:2:2'});
+  const result={accepted:handles.filter(Boolean).length,starts,afterDuplicate:context.sources.filter(s=>s.startAt!==null).length,sameLast:!!handles[8]&&duplicate?.id===handles[8].id,maxVoices:mixer.maxVoices};await mixer.dispose();return result;
+ }
+ const shared=await render(false),grouped=await render(true);assert.equal(shared.accepted,8);assert.equal(grouped.accepted,9);assert.equal(grouped.starts,9);assert.equal(grouped.afterDuplicate,9);assert.equal(grouped.sameLast,true);assert.equal(shared.maxVoices,24);assert.equal(grouped.maxVoices,24);
 });

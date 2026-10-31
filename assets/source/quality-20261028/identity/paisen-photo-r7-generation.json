@@ -1,0 +1,21 @@
+{
+  "method": "built-in image_gen",
+  "args": {
+    "referenced_image_paths": [
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\v100-dialogue-natural-20261001\\output\\issue177-paisen-producer-photos-r1\\codex-clipboard-3b180a11-73f9-46ab-9b5e-73e2f1edc53e.png",
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\v100-dialogue-natural-20261001\\output\\issue177-paisen-producer-photos-r1\\codex-clipboard-25d36678-020f-4fca-9e8f-0f4989df7f37.png",
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\v100-dialogue-natural-20261001\\output\\issue177-paisen-producer-photos-r1\\codex-clipboard-f7346372-9c4e-400f-8cc9-ccef2931291c.png"
+    ],
+    "transparent_background": true,
+    "prompt": "Use case: identity-preserve. Create one waist-up standing character portrait for a Japanese survival game, faithfully depicting the SAME ADULT man in these three provided original photographs. Image 1 is the strict facial identity reference; images 2 and 3 provide the real physique and exactly the same clothing. Do NOT substitute a generic handsome action hero. Preserve the specific face from image 1: short straight dark hair with a soft natural hairline (not spiky, curly or longer), original forehead height, exact eyes and eyelids and eye spacing, modest straight eyebrows, broad nose and rounded nose tip, original mouth and full lip proportions, softly full cheeks, broad gently rounded jaw and chin, and the original youthful-adult age. Keep the face angle and calm closed-mouth expression very close to photo 1; no frown, no raised eyebrows, no smile reshaping the mouth. Keep his actual moderately sturdy build and natural shoulders; do not inflate chest, trapezius or arm muscles. Clothing: plain dark navy-purple cotton short-sleeve crew-neck T-shirt, loose plain white shorts only visible at the waist. Arms relaxed naturally at sides, no accessories or weapons. Standing portrait from full hair top down to the top of the shorts; maintain his actual head-to-body proportions. Entire hair and both shoulders and elbows within frame with clear transparent margins. Treatment: realistic human face, anatomy and cotton with a subtle restrained illustration finish appropriate to the game; softly diffuse neutral lighting to reduce the photograph's strong forehead sheen. Preserve identity rather than idealizing facial structure; optional clean grooming must not alter his jaw, lips or cheeks. The output should be unmistakably the specific man in PHOTO 1. ONE person only, real transparent alpha, no chair, room, scenery, text, grid, background gradient or border."
+  },
+  "output": "paisen-photo-master-r7.png",
+  "referenceHashes": [
+    "bfa5a71f1a1cb294ab583e51ac6e343eac6e6fd9d3e996fcd24a50cbf6a74def",
+    "b93dfa892a588013f8bdc9ca1670ccb3874f47ce17eabe585a96f00e60349ee7",
+    "8309ecff99eadc5f9e5ac6cdf23fb536e5930931c9acdba7518e2f3f67d947c4"
+  ],
+  "referenceVerification": "Recovered original files matched all 3 hashes in assets/source/v177/paisen/identity-revision.json and were visually inspected in this turn.",
+  "rejectedAncestry": "r5/r6 are not inputs; only the three original photographs are used.",
+  "status": "Local corrective candidate connected to dialogue, identity and formation/personnel cards through quality-r1 outputs. Four expressions rendered at 844x340 and 1280x720 in isolated Chromium; see paisen-runtime-r1/r3 reports. Not Producer-approved, integrated, published, or verified across battle/cuts/credits. No numeric similarity score claimed."
+}

@@ -1,0 +1,33 @@
+{
+  "creator": "OpenAI built-in image_gen, directed for this project",
+  "source": "Project-original environment illustrations; existing project vehicle used as design reference. No private photos or external downloaded art.",
+  "license": "Project-original generated assets; governed by the existing OpenAI service agreement.",
+  "commercialUse": true,
+  "modification": true,
+  "redistribution": true,
+  "producerApproval": "2026-10-28 full quality update and adopted-master storage authorization; final visual acceptance pending.",
+  "method": "Resize to 1600 px and encode WebP quality 86; no content editing.",
+  "runtimeAssetCount": 2,
+  "logicalBytes": 588176,
+  "distinctBytes": 588176,
+  "records": [
+    {
+      "source": "assets/source/quality-20261028/locations/rescue-vehicle-interior-r1.png",
+      "sourceSha256": "c5bfa6ad6d2657b537ed9f4e744cdf86e4d12c04046035af50818e770946ded8",
+      "output": "public/art/v100/story-locations/rescue-vehicle-interior-r1.webp",
+      "sha256": "8b1a224064d94fcbfa8ddfb95224f09e7272fa3595797005eccaafda171f2b6d",
+      "bytes": 324376,
+      "width": 1600,
+      "height": 900
+    },
+    {
+      "source": "assets/source/quality-20261028/locations/refrigerated-cargo-r1.png",
+      "sourceSha256": "502b87bb39d15427d9ca437400a0f093955191f10f09160244581b86c3f4d3a1",
+      "output": "public/art/v100/story-locations/refrigerated-cargo-r1.webp",
+      "sha256": "ba943a2219d1c402bfe0452707423ddb3ef45bad0a67a0033cd778ff55293da2",
+      "bytes": 263800,
+      "width": 1600,
+      "height": 900
+    }
+  ]
+}

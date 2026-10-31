@@ -15,6 +15,13 @@ import { survivalWaveReward } from "../app/survivalBattleRuntime.js";
 const origin = new URL(process.env.V100_CAMPAIGN_QA_BASE_URL); assert.ok(["127.0.0.1", "localhost"].includes(origin.hostname));
 const out = path.resolve(process.env.V100_RELEASE_METADATA_EVIDENCE_DIR ?? "outputs/v100-release-metadata"); await fs.mkdir(out, { recursive: false });
 const sha = bytes => crypto.createHash("sha256").update(bytes).digest("hex");
+// The public v1.0.5 contract remains frozen. This development candidate has an
+// explicit reviewed art delta; verify every served row, not only its count.
+const assetDelta=JSON.parse(await fs.readFile('tests/fixtures/quality-20261028-runtime-delta.json','utf8'));
+assert.equal(assetDelta.base,'ff5dba24e88c810182cda1f044bd26dfc3e512c1');
+const expectedAssetCount=assetContract.count+assetDelta.added.length-assetDelta.retired.length;
+const expectedAssets=JSON.parse(await fs.readFile('public/asset-manifest.json','utf8')).assets;
+assert.equal(expectedAssets.length,expectedAssetCount,'reviewed candidate asset count');
 const report = { host: process.platform, node: process.version, build: await productionBuildIdentity(), fullAcceptance: false,
   scope: "Synthetic paid Survival checkpoint for Japanese upgrade/result labels and V1 metadata only. Audio disabled. Not actual wave completion, natural progression, native audio, official root-entry or public release acceptance.", cases: [] };
 report.sources = await Promise.all(["app/releaseIdentity.js", "app/layout.tsx", "app/AshfallGame.tsx", "app/V100Campaign.tsx", "public/manifest.webmanifest", "public/asset-manifest.json", "scripts/v100-release-metadata-browser-smoke.mjs"].map(async file => ({ file, sha256: sha(await fs.readFile(file)) })));
@@ -48,7 +55,8 @@ try {
           const offer = page.getByRole("button", { name: "ブラウザで遊ぶ", exact: true }); if (await offer.isVisible()) await offer.click(); await ready(page);
           assert.equal(await page.title(), RELEASE_TITLE);
           record.metadata = await page.evaluate(async () => ({ app: await (await fetch("/manifest.webmanifest")).json(), assets: await (await fetch("/asset-manifest.json")).json() }));
-          assert.equal(record.metadata.assets.version, RELEASE_VERSION); assert.equal(record.metadata.assets.assets.length, assetContract.count);
+          assert.equal(record.metadata.assets.version, RELEASE_VERSION); assert.equal(record.metadata.assets.assets.length, expectedAssetCount);
+          assert.deepEqual(record.metadata.assets.assets,expectedAssets,'served assets must match every source-bound candidate row');
           assert.match(record.metadata.app.description, /装甲車両/u); assert.doesNotMatch(record.metadata.app.description, /CRAWLER|移動拠点/u);
           await page.getByRole("dialog", { name: "ボス撃破強化選択", exact: true }).waitFor();
           const repair = page.locator(".survival-upgrade-choices button").filter({ hasText: "装甲車両応急修理" }); await repair.waitFor();

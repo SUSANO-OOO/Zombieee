@@ -1,0 +1,14 @@
+{
+  "tool": "built-in image_gen",
+  "referenced_image_paths": [
+    "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/public/art/v100/credits/armory-evidence-r2.webp",
+    "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/babayaga-master-r1.png",
+    "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/raider-master-r4.png",
+    "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/tatara-master-r4.png"
+  ],
+  "transparent_background": false,
+  "prompt": "Edit IMAGE1, the existing 16:9 staff-roll evidence review in the armory. Preserve the exact composition, actors, objects and quiet investigation: BABAYAGA is the white-shirt/dark red tie/black shoulder-harness man seen from the back and side at foreground LEFT, holding the existing clear evidence bag; RAIDER sits at center studying it; TATARA stands at RIGHT with his existing warhammer on his shoulder. Keep the existing bag's red/black circular object and scorched device, papers/photos/map on table, cases and same battered rainy armory, without inventing new legible evidence or plot. IMAGE2 is the LOCKED EXISTING GENERATED PRIMARY MODEL of BABAYAGA; IMAGE3 RAIDER; IMAGE4 TATARA. Match those particular identities/ages/hair/face structures faithfully, never blend faces. Babayaga's swept dark hair, side profile and natural lean proportions must be the same model2, clean shaven. Raider is the SAME 27-year-old Japanese adult WOMAN as model3: short ash-blond hair, distinctive feminine athletic face, dark sleeveless suit/harness/headphones/gloves; do not replace her with a man or increase exposure. Tatara is the same dark-haired armored adult man with his specific face; preserve his original carried warhammer, matching the reference design and physically connected grip. Do not add a machine gun or other reference-only weapon to Raider or Babayaga. Preserve all original poses, hand grips and table object relationships. Use coherent realistic photographic faces/anatomy/skin/hair/cloth/armor/light with restrained painterly illustration instead of old heavy anime facial outlines. No new cast/events, no added text/labels/panels. One finished 16:9 illustration.",
+  "output": "armory-evidence-quality-r1.png",
+  "generatedOriginal": "C:/Users/okait/.codex/generated_images/01a180c8-9e05-7871-b287-613f7c7eb364/exec-73830025-32d8-40c3-9498-14f87d4281e9.png",
+  "statusAtGeneration": "Generated model-based candidate; runtime connection and native review pending."
+}

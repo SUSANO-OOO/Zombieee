@@ -1,0 +1,1643 @@
+{
+  "generator": "scripts/build-quality-battle-neck-calibration.mjs",
+  "method": "Source bare-neck cutoff and cheek centre mapped to original visible skin/garment seam and face-centre placement, with explicit refinements after full-body static review. Original source rig pivots and pose arrays retained. Original collar/shoulder/accessory paint restored under spine ownership. Final motion acceptance remains open.",
+  "precision": {
+    "sourcePixels": 25,
+    "targetLogicalPixels": 3,
+    "maskLogicalPixels": 2
+  },
+  "scope": "Thirteen head placements; complete Kuma combat model and original dog/toy heads are separate. Neither manual landmarks nor texture packing accept motion or likeness.",
+  "entries": [
+    {
+      "kind": "scout",
+      "sourcePath": "assets/source/quality-20261028/identity/battle-directions-r5/scout-right-facing-r5.png",
+      "sourceSha256": "ae102e31187292f4ec4649b4abd187def4b49915f5e46f18f311826c8b77ba2c",
+      "sourceVisibleBounds": {
+        "left": 202,
+        "top": 50,
+        "width": 1041,
+        "height": 1050
+      },
+      "sourceSeam": [
+        465,
+        1020
+      ],
+      "sourceFaceCenter": [
+        810,
+        790
+      ],
+      "targetSkinSeam": [
+        278,
+        99
+      ],
+      "targetFaceCenter": [
+        304.319587628866,
+        81.45360824742268
+      ],
+      "rigPivot": [
+        274,
+        119
+      ],
+      "baseAtlasPath": "/art/v100/joints/scout-r1.webp",
+      "baseAtlasSha256": "57b5823be6f2e4fd36cf971d6406a33df639657fb0db0e50d43b75a823f1dbaa",
+      "garmentPolygons": [
+        [
+          [
+            258,
+            100
+          ],
+          [
+            268,
+            100
+          ],
+          [
+            278,
+            103
+          ],
+          [
+            287,
+            111
+          ],
+          [
+            291,
+            123
+          ],
+          [
+            284,
+            130
+          ],
+          [
+            273,
+            126
+          ],
+          [
+            267,
+            119
+          ],
+          [
+            261,
+            110
+          ]
+        ]
+      ],
+      "lowerNeckPolygon": null,
+      "landmarkType": "bare-neck-cut-midpoint",
+      "measuredTargetFaceCenter": [
+        298.5,
+        83.5
+      ],
+      "previousDirectionSource": "assets/source/quality-20261028/identity/battle-heads-r3/scout-head-r2.png",
+      "directionRegistration": {
+        "facing": "right",
+        "gaze": "offscreen right",
+        "sourceLandmarks": "manual neck-cut and cheek center; hair-top height retained from previous runtime",
+        "previousSource": "assets/source/quality-20261028/identity/battle-heads-r3/scout-head-r2.png",
+        "previousRegistration": {
+          "kind": "scout",
+          "sourcePath": "assets/source/quality-20261028/identity/battle-heads-r3/scout-head-r2.png",
+          "sourceSha256": "5156c5cc2d7b2e90de0687298a35542b48932285c5a9a3e49ff69e45718edd25",
+          "sourceVisibleBounds": {
+            "left": 304,
+            "top": 146,
+            "width": 825,
+            "height": 875
+          },
+          "sourceSeam": [
+            470,
+            965
+          ],
+          "sourceFaceCenter": [
+            675,
+            757.5
+          ],
+          "targetSkinSeam": [
+            278,
+            99
+          ],
+          "targetFaceCenter": [
+            298.5,
+            83.5
+          ],
+          "rigPivot": [
+            274,
+            119
+          ],
+          "baseAtlasPath": "/art/v100/joints/scout-r1.webp",
+          "baseAtlasSha256": "57b5823be6f2e4fd36cf971d6406a33df639657fb0db0e50d43b75a823f1dbaa",
+          "garmentPolygons": [
+            [
+              [
+                258,
+                100
+              ],
+              [
+                268,
+                100
+              ],
+              [
+                278,
+                103
+              ],
+              [
+                287,
+                111
+              ],
+              [
+                291,
+                123
+              ],
+              [
+                284,
+                130
+              ],
+              [
+                273,
+                126
+              ],
+              [
+                267,
+                119
+              ],
+              [
+                261,
+                110
+              ]
+            ]
+          ],
+          "lowerNeckPolygon": null,
+          "landmarkType": "bare-neck-cut-midpoint",
+          "measuredTargetFaceCenter": [
+            298.5,
+            83.5
+          ]
+        },
+        "producerAcceptance": "pending"
+      },
+      "basePath": "/art/v100/joints/scout-quality-model-r3.webp",
+      "baseSha256": "683204f486edaddc61644f526c956b319c00d8295072f3619f350e09a1701011",
+      "matrix": [
+        0.07628865979381443,
+        -1.0580133218239676e-17,
+        1.0580133218239676e-17,
+        0.07628865979381443,
+        242.5257731958763,
+        21.185567010309285
+      ],
+      "scale": 0.07628865979381443,
+      "rotationRadians": -1.3868553002287145e-16,
+      "assetPath": "/art/v100/joints/scout-quality-neck-r4.webp",
+      "sha256": "81789399c49dc50ff051dacd80a4522fea9cb7b3be1a1e12cba0b2a26cf57eaa",
+      "bytes": 52058,
+      "headDestination": {
+        "x": 254,
+        "y": 21,
+        "w": 87,
+        "h": 88
+      },
+      "headSource": {
+        "x": 104,
+        "y": 133,
+        "w": 87,
+        "h": 88
+      },
+      "garmentPixels": 156,
+      "unchangedVisibleNonHeadPixels": 18527,
+      "materialCorrections": [],
+      "acceptance": "placement candidate; original-speed, whole-character and Producer acceptance pending"
+    },
+    {
+      "kind": "guardian",
+      "sourcePath": "assets/source/quality-20261028/identity/battle-heads-r3/guardian-head-r1.png",
+      "sourceSha256": "f9924bf4f46c63ec77597aad60d7db84a0e314812758955296d7b7c223f735b4",
+      "sourceVisibleBounds": {
+        "left": 186,
+        "top": 202,
+        "width": 857,
+        "height": 884
+      },
+      "sourceSeam": [
+        630,
+        1065
+      ],
+      "sourceFaceCenter": [
+        685,
+        575
+      ],
+      "targetSkinSeam": [
+        246,
+        91
+      ],
+      "targetFaceCenter": [
+        252,
+        49
+      ],
+      "rigPivot": [
+        244,
+        87
+      ],
+      "baseAtlasPath": "/art/v100/joints/guardian-r1.webp",
+      "baseAtlasSha256": "d187f913f9ea170856f59b7df142f6408759ca405caf355c8797e1baa179102d",
+      "garmentPolygons": [],
+      "lowerNeckPolygon": null,
+      "landmarkType": "helmet-connection",
+      "measuredTargetFaceCenter": [
+        252,
+        49
+      ],
+      "basePath": "/art/v100/joints/guardian-quality-model-r3.webp",
+      "baseSha256": "1e2878c1206a56ea3490ce082e487722e81b67846f3798b7af689786ece4f9db",
+      "matrix": [
+        0.0860051413881748,
+        0.002591259640102828,
+        -0.002591259640102828,
+        0.0860051413881748,
+        194.5764524421594,
+        -2.2279691516709477
+      ],
+      "scale": 0.08604416872584895,
+      "rotationRadians": 0.030120013069685127,
+      "assetPath": "/art/v100/joints/guardian-quality-neck-r4.webp",
+      "sha256": "2db1d4c79bb0425228207f1b9a4d071eebc638738524a010ab42affe62c22c78",
+      "bytes": 47712,
+      "headDestination": {
+        "x": 204,
+        "y": 12,
+        "w": 83,
+        "h": 85
+      },
+      "headSource": {
+        "x": 2,
+        "y": 99,
+        "w": 83,
+        "h": 85
+      },
+      "garmentPixels": 0,
+      "unchangedVisibleNonHeadPixels": 23775,
+      "materialCorrections": [],
+      "acceptance": "placement candidate; original-speed, whole-character and Producer acceptance pending"
+    },
+    {
+      "kind": "brute",
+      "sourcePath": "assets/source/quality-20261028/identity/battle-heads-r3/brute-head-r1.png",
+      "sourceSha256": "5cd301b113108d1b0cef4ef3b9fbaefeb6bfa42257cf95c576f99ef4aec4d9a0",
+      "sourceVisibleBounds": {
+        "left": 220,
+        "top": 166,
+        "width": 891,
+        "height": 844
+      },
+      "sourceSeam": [
+        565,
+        1000
+      ],
+      "sourceFaceCenter": [
+        772.5,
+        732.5
+      ],
+      "targetSkinSeam": [
+        274,
+        134
+      ],
+      "targetFaceCenter": [
+        288,
+        112
+      ],
+      "rigPivot": [
+        271,
+        133
+      ],
+      "baseAtlasPath": "/art/v100/joints/brute-r1.webp",
+      "baseAtlasSha256": "8fe2d63e4cf27485fbf2de83512a002e85e76d2973dc8e42ba4dca2582b8c8b5",
+      "garmentPolygons": [],
+      "lowerNeckPolygon": null,
+      "landmarkType": "bare-neck-cut-midpoint",
+      "measuredTargetFaceCenter": [
+        289,
+        110
+      ],
+      "placementRefinement": "Static full-body refinement to retain original apparent head/body balance.",
+      "basePath": "/art/v100/joints/brute-quality-model-r3.webp",
+      "baseSha256": "685403a148d743f575a50dc116ae17fb4dc383aedf7af70769ba5dd43a3c4890",
+      "matrix": [
+        0.07669320536590686,
+        -0.007154542480095976,
+        0.007154542480095976,
+        0.07669320536590686,
+        223.51379648816663,
+        61.34911113534736
+      ],
+      "scale": 0.07702619831847253,
+      "rotationRadians": -0.09301861526409579,
+      "assetPath": "/art/v100/joints/brute-quality-neck-r4.webp",
+      "sha256": "d4b19976ff39dd9884d11d41104fee928f43175efee59c368299db9881ef0709",
+      "bytes": 41104,
+      "headDestination": {
+        "x": 238,
+        "y": 63,
+        "w": 81,
+        "h": 78
+      },
+      "headSource": {
+        "x": 2,
+        "y": 64,
+        "w": 81,
+        "h": 78
+      },
+      "garmentPixels": 0,
+      "unchangedVisibleNonHeadPixels": 15269,
+      "materialCorrections": [],
+      "acceptance": "placement candidate; original-speed, whole-character and Producer acceptance pending"
+    },
+    {
+      "kind": "ranger",
+      "sourcePath": "assets/source/quality-20261028/identity/battle-heads-r3/ranger-head-r3.png",
+      "sourceSha256": "e589580a2e9accb5e6925c00d37611040952039deb4b2176b84bc0be8a20c417",
+      "sourceVisibleBounds": {
+        "left": 241,
+        "top": 99,
+        "width": 825,
+        "height": 942
+      },
+      "sourceSeam": [
+        620,
+        985
+      ],
+      "sourceFaceCenter": [
+        790,
+        715
+      ],
+      "targetSkinSeam": [
+        245,
+        75
+      ],
+      "targetFaceCenter": [
+        259,
+        60
+      ],
+      "rigPivot": [
+        230.5,
+        112
+      ],
+      "baseAtlasPath": "/art/v100/joints/ranger-r3.webp",
+      "baseAtlasSha256": "75232265921b216bf7897c564bed939fadc4b1f04d36095801c6cf28731cfa5e",
+      "garmentPolygons": [
+        [
+          [
+            235,
+            76
+          ],
+          [
+            244,
+            78
+          ],
+          [
+            252,
+            77
+          ],
+          [
+            257,
+            84
+          ],
+          [
+            265,
+            90
+          ],
+          [
+            263,
+            104
+          ],
+          [
+            249,
+            107
+          ],
+          [
+            242,
+            97
+          ],
+          [
+            227,
+            93
+          ],
+          [
+            213,
+            86
+          ],
+          [
+            211,
+            81
+          ],
+          [
+            223,
+            77
+          ]
+        ]
+      ],
+      "lowerNeckPolygon": null,
+      "landmarkType": "bare-neck-cut-midpoint",
+      "measuredTargetFaceCenter": [
+        263,
+        62
+      ],
+      "placementRefinement": "Static full-body review: original candidate head leaned too far forward.",
+      "basePath": "/art/v100/joints/ranger-quality-model-r3.webp",
+      "baseSha256": "9524e272c296118651ad57ab707345da471339e40d582da8b4457cb0c4c593b0",
+      "matrix": [
+        0.06316306483300589,
+        0.012082514734774067,
+        -0.012082514734774067,
+        0.06316306483300589,
+        217.7401768172888,
+        5.293222003929273
+      ],
+      "scale": 0.0643083192239895,
+      "rotationRadians": 0.18900750014112502,
+      "assetPath": "/art/v100/joints/ranger-quality-neck-r4.webp",
+      "sha256": "b1e1bc34c028a8e36a96f6672e78c2b16701cd6799be5319926c1771b53d9295",
+      "bytes": 957462,
+      "headDestination": {
+        "x": 217,
+        "y": 11,
+        "w": 70,
+        "h": 76
+      },
+      "headSource": {
+        "x": 2,
+        "y": 1320,
+        "w": 70,
+        "h": 76
+      },
+      "garmentPixels": 251,
+      "unchangedVisibleNonHeadPixels": 5226,
+      "materialCorrections": [],
+      "acceptance": "placement candidate; original-speed, whole-character and Producer acceptance pending"
+    },
+    {
+      "kind": "engineer",
+      "sourcePath": "assets/source/quality-20261028/identity/battle-heads-r3/engineer-head-r1.png",
+      "sourceSha256": "94d1ccae80f6fcd13fe1d05ee1442b17aa87b3df52a33da964ea4511fcb29a4a",
+      "sourceVisibleBounds": {
+        "left": 209,
+        "top": 139,
+        "width": 890,
+        "height": 947
+      },
+      "sourceSeam": [
+        590,
+        1080
+      ],
+      "sourceFaceCenter": [
+        750,
+        767.5
+      ],
+      "targetSkinSeam": [
+        252,
+        94
+      ],
+      "targetFaceCenter": [
+        262,
+        69
+      ],
+      "rigPivot": [
+        256,
+        100
+      ],
+      "baseAtlasPath": "/art/v100/joints/engineer-r1.webp",
+      "baseAtlasSha256": "564e3640d01f581f3317f9401ee10e919ed58d7bff9580e1d15bb72010e1c197",
+      "garmentPolygons": [],
+      "lowerNeckPolygon": [
+        [
+          247,
+          94
+        ],
+        [
+          256,
+          94
+        ],
+        [
+          260,
+          99
+        ],
+        [
+          251,
+          101
+        ],
+        [
+          246,
+          98
+        ]
+      ],
+      "landmarkType": "bare-neck-cut-midpoint",
+      "measuredTargetFaceCenter": [
+        263.5,
+        65
+      ],
+      "placementRefinement": "Static full-body review: head/hair too large for torso.",
+      "basePath": "/art/v100/joints/engineer-quality-model-r3.webp",
+      "baseSha256": "4cdb51bb3ee04b73156aedb587d123dec092bb6adc38d81f7563972e599256f7",
+      "matrix": [
+        0.076365295877491,
+        -0.0070990314892753915,
+        0.0070990314892753915,
+        0.076365295877491,
+        199.27752142386288,
+        15.713909030982208
+      ],
+      "scale": 0.0766945543212976,
+      "rotationRadians": -0.09269508132603836,
+      "assetPath": "/art/v100/joints/engineer-quality-neck-r4.webp",
+      "sha256": "85d6a348c631e91629f104c7d1024d2d006013fed6f80179f7bc6b9f8afed451",
+      "bytes": 32406,
+      "headDestination": {
+        "x": 213,
+        "y": 15,
+        "w": 81,
+        "h": 86
+      },
+      "headSource": {
+        "x": 394,
+        "y": 2,
+        "w": 81,
+        "h": 86
+      },
+      "garmentPixels": 22,
+      "unchangedVisibleNonHeadPixels": 11146,
+      "materialCorrections": [],
+      "acceptance": "placement candidate; original-speed, whole-character and Producer acceptance pending"
+    },
+    {
+      "kind": "gunner",
+      "sourcePath": "assets/source/quality-20261028/identity/battle-heads-r3/gunner-head-r1.png",
+      "sourceSha256": "7ea8c26c954a44d4b2cdf1e8f50a93afac6449cc01f97401acddc5378f8ef09f",
+      "sourceVisibleBounds": {
+        "left": 250,
+        "top": 142,
+        "width": 804,
+        "height": 873
+      },
+      "sourceSeam": [
+        605,
+        995
+      ],
+      "sourceFaceCenter": [
+        767.5,
+        747.5
+      ],
+      "targetSkinSeam": [
+        202,
+        79
+      ],
+      "targetFaceCenter": [
+        209.5,
+        62
+      ],
+      "rigPivot": [
+        202,
+        93
+      ],
+      "baseAtlasPath": "/art/v100/joints/gunner-r1.webp",
+      "baseAtlasSha256": "3407a631718bc0129f2e6d2839a02bc819f93536764b71fcf5231b1875b92879",
+      "garmentPolygons": [
+        [
+          [
+            174,
+            78
+          ],
+          [
+            184,
+            75
+          ],
+          [
+            193,
+            77
+          ],
+          [
+            200,
+            80
+          ],
+          [
+            200,
+            94
+          ],
+          [
+            190,
+            95
+          ],
+          [
+            177,
+            90
+          ],
+          [
+            173,
+            84
+          ]
+        ],
+        [
+          [
+            211,
+            78
+          ],
+          [
+            222,
+            79
+          ],
+          [
+            230,
+            84
+          ],
+          [
+            230,
+            90
+          ],
+          [
+            219,
+            96
+          ],
+          [
+            208,
+            93
+          ],
+          [
+            209,
+            84
+          ]
+        ]
+      ],
+      "lowerNeckPolygon": null,
+      "landmarkType": "bare-neck-cut-midpoint",
+      "measuredTargetFaceCenter": [
+        209.5,
+        62
+      ],
+      "basePath": "/art/v100/joints/gunner-quality-model-r3.webp",
+      "baseSha256": "550f009472bf32d2c1a616e674ad33c45c6114df272aafd21dfad42a77b9acbf",
+      "matrix": [
+        0.0618993298160559,
+        -0.010337943818622557,
+        0.010337943818622557,
+        0.0618993298160559,
+        154.2646513617567,
+        23.664622843291028
+      ],
+      "scale": 0.06275667386082426,
+      "rotationRadians": -0.16548486207941107,
+      "assetPath": "/art/v100/joints/gunner-quality-neck-r4.webp",
+      "sha256": "2d9edb910e7c615e8480a7f0285eea8b13c98ab5c5a5ddfaea0ca3315a9c91fc",
+      "bytes": 33274,
+      "headDestination": {
+        "x": 168,
+        "y": 18,
+        "w": 65,
+        "h": 69
+      },
+      "headSource": {
+        "x": 436,
+        "y": 2,
+        "w": 65,
+        "h": 69
+      },
+      "garmentPixels": 200,
+      "unchangedVisibleNonHeadPixels": 12702,
+      "materialCorrections": [],
+      "acceptance": "placement candidate; original-speed, whole-character and Producer acceptance pending"
+    },
+    {
+      "kind": "medic",
+      "sourcePath": "assets/source/quality-20261028/identity/battle-directions-r5/medic-right-facing-r5.png",
+      "sourceSha256": "d037bf4db149afc1c3a354590c7fe6187cf34c1f79e555b843c31268f247384e",
+      "sourceVisibleBounds": {
+        "left": 186,
+        "top": 88,
+        "width": 1046,
+        "height": 982
+      },
+      "sourceSeam": [
+        705,
+        1000
+      ],
+      "sourceFaceCenter": [
+        900,
+        760
+      ],
+      "targetSkinSeam": [
+        253,
+        87
+      ],
+      "targetFaceCenter": [
+        266.8980263157895,
+        69.89473684210526
+      ],
+      "rigPivot": [
+        265,
+        100
+      ],
+      "baseAtlasPath": "/art/v100/joints/medic-r1.webp",
+      "baseAtlasSha256": "a0242fdaaee0cbf14bf61e517bbcd3e9e77f471221db6b5a2d0686b91a64b5e7",
+      "garmentPolygons": [
+        [
+          [
+            248,
+            85
+          ],
+          [
+            255,
+            88
+          ],
+          [
+            260,
+            93
+          ],
+          [
+            253,
+            93
+          ],
+          [
+            247,
+            89
+          ]
+        ],
+        [
+          [
+            262,
+            85
+          ],
+          [
+            278,
+            92
+          ],
+          [
+            273,
+            97
+          ],
+          [
+            272,
+            104
+          ],
+          [
+            259,
+            101
+          ],
+          [
+            260,
+            93
+          ]
+        ]
+      ],
+      "lowerNeckPolygon": null,
+      "landmarkType": "bare-neck-cut-midpoint",
+      "measuredTargetFaceCenter": [
+        264.5,
+        71.5
+      ],
+      "previousDirectionSource": "assets/source/quality-20261028/identity/battle-heads-r3/medic-head-r1.png",
+      "directionRegistration": {
+        "facing": "right",
+        "gaze": "offscreen right",
+        "sourceLandmarks": "manual neck-cut and cheek center; hair-top height retained from previous runtime",
+        "previousSource": "assets/source/quality-20261028/identity/battle-heads-r3/medic-head-r1.png",
+        "previousRegistration": {
+          "kind": "medic",
+          "sourcePath": "assets/source/quality-20261028/identity/battle-heads-r3/medic-head-r1.png",
+          "sourceSha256": "71120372dc08a9b1b90e2e9b9c341ff07f8c613cf0ea94f8a766dc2c256d04a7",
+          "sourceVisibleBounds": {
+            "left": 289,
+            "top": 147,
+            "width": 836,
+            "height": 852
+          },
+          "sourceSeam": [
+            690,
+            965
+          ],
+          "sourceFaceCenter": [
+            815,
+            737.5
+          ],
+          "targetSkinSeam": [
+            253,
+            87
+          ],
+          "targetFaceCenter": [
+            264.5,
+            71.5
+          ],
+          "rigPivot": [
+            265,
+            100
+          ],
+          "baseAtlasPath": "/art/v100/joints/medic-r1.webp",
+          "baseAtlasSha256": "a0242fdaaee0cbf14bf61e517bbcd3e9e77f471221db6b5a2d0686b91a64b5e7",
+          "garmentPolygons": [
+            [
+              [
+                248,
+                85
+              ],
+              [
+                255,
+                88
+              ],
+              [
+                260,
+                93
+              ],
+              [
+                253,
+                93
+              ],
+              [
+                247,
+                89
+              ]
+            ],
+            [
+              [
+                262,
+                85
+              ],
+              [
+                278,
+                92
+              ],
+              [
+                273,
+                97
+              ],
+              [
+                272,
+                104
+              ],
+              [
+                259,
+                101
+              ],
+              [
+                260,
+                93
+              ]
+            ]
+          ],
+          "lowerNeckPolygon": null,
+          "landmarkType": "bare-neck-cut-midpoint",
+          "measuredTargetFaceCenter": [
+            264.5,
+            71.5
+          ]
+        },
+        "producerAcceptance": "pending"
+      },
+      "basePath": "/art/v100/joints/medic-quality-model-r3.webp",
+      "baseSha256": "8af49aee35cf82a1062d8514729dc0d9df4b17010e744bbcc02f6f2df56f4e68",
+      "matrix": [
+        0.07127192982456142,
+        9.511055704814936e-18,
+        -9.511055704814936e-18,
+        0.07127192982456142,
+        202.7532894736842,
+        15.728070175438589
+      ],
+      "scale": 0.07127192982456142,
+      "rotationRadians": 1.3344742773524954e-16,
+      "assetPath": "/art/v100/joints/medic-quality-neck-r4.webp",
+      "sha256": "4ac386afdf9618d0cafae614b4cfa3d8d5e0c6b7e105b7a647e8774b74867e39",
+      "bytes": 38132,
+      "headDestination": {
+        "x": 213,
+        "y": 18,
+        "w": 81,
+        "h": 77
+      },
+      "headSource": {
+        "x": 68,
+        "y": 70,
+        "w": 81,
+        "h": 77
+      },
+      "garmentPixels": 78,
+      "unchangedVisibleNonHeadPixels": 12587,
+      "materialCorrections": [],
+      "acceptance": "placement candidate; original-speed, whole-character and Producer acceptance pending"
+    },
+    {
+      "kind": "mrs-chiha",
+      "sourcePath": "assets/source/quality-20261028/identity/battle-directions-r5/mrs-chiha-right-facing-r5.png",
+      "sourceSha256": "65b516b2a76fd07b3a7279802cf8ebbfa31a5f41371e984a9c7d120242a88db2",
+      "sourceVisibleBounds": {
+        "left": 58,
+        "top": 34,
+        "width": 1121,
+        "height": 1216
+      },
+      "sourceSeam": [
+        650,
+        1155
+      ],
+      "sourceFaceCenter": [
+        860,
+        795
+      ],
+      "targetSkinSeam": [
+        243,
+        73
+      ],
+      "targetFaceCenter": [
+        253.11596788581625,
+        55.65834076717216
+      ],
+      "rigPivot": [
+        244,
+        80
+      ],
+      "baseAtlasPath": "/art/v100/joints/mrs-chiha-r1.webp",
+      "baseAtlasSha256": "5ff2ba98e8a67e1cc24fa2404ffd94b68cdbc7b6696c8eb08e536f3114ff4fec",
+      "garmentPolygons": [
+        [
+          [
+            240,
+            74
+          ],
+          [
+            246,
+            74
+          ],
+          [
+            254,
+            77
+          ],
+          [
+            258,
+            80
+          ],
+          [
+            247,
+            82
+          ],
+          [
+            240,
+            78
+          ]
+        ]
+      ],
+      "lowerNeckPolygon": null,
+      "landmarkType": "bare-neck-cut-midpoint",
+      "measuredTargetFaceCenter": [
+        256.5,
+        59
+      ],
+      "previousDirectionSource": "assets/source/quality-20261028/identity/battle-heads-r3/mrs-chiha-head-r1.png",
+      "directionRegistration": {
+        "facing": "right",
+        "gaze": "offscreen right",
+        "sourceLandmarks": "manual neck-cut and cheek center; hair-top height retained from previous runtime",
+        "previousSource": "assets/source/quality-20261028/identity/battle-heads-r3/mrs-chiha-head-r1.png",
+        "previousRegistration": {
+          "kind": "mrs-chiha",
+          "sourcePath": "assets/source/quality-20261028/identity/battle-heads-r3/mrs-chiha-head-r1.png",
+          "sourceSha256": "3b3e3580bfdd1c78f5e13328d01585938a190496c8f572e61db481668b5b61e2",
+          "sourceVisibleBounds": {
+            "left": 102,
+            "top": 36,
+            "width": 1013,
+            "height": 1157
+          },
+          "sourceSeam": [
+            535,
+            1100
+          ],
+          "sourceFaceCenter": [
+            752.5,
+            755
+          ],
+          "targetSkinSeam": [
+            243,
+            73
+          ],
+          "targetFaceCenter": [
+            256.5,
+            59
+          ],
+          "rigPivot": [
+            244,
+            80
+          ],
+          "baseAtlasPath": "/art/v100/joints/mrs-chiha-r1.webp",
+          "baseAtlasSha256": "5ff2ba98e8a67e1cc24fa2404ffd94b68cdbc7b6696c8eb08e536f3114ff4fec",
+          "garmentPolygons": [
+            [
+              [
+                240,
+                74
+              ],
+              [
+                246,
+                74
+              ],
+              [
+                254,
+                77
+              ],
+              [
+                258,
+                80
+              ],
+              [
+                247,
+                82
+              ],
+              [
+                240,
+                78
+              ]
+            ]
+          ],
+          "lowerNeckPolygon": null,
+          "landmarkType": "bare-neck-cut-midpoint",
+          "measuredTargetFaceCenter": [
+            256.5,
+            59
+          ]
+        },
+        "producerAcceptance": "pending",
+        "neckCutValidation": "Skin pixels verified at neck-cut midpoint; excludes the hanging hair strand."
+      },
+      "basePath": "/art/v100/joints/mrs-chiha-quality-model-r3.webp",
+      "baseSha256": "fef0ff857594de7effb094a11048c4c1b288c2ebdb8a2fec9ff648002871306a",
+      "matrix": [
+        0.048171275646744,
+        1.8326030260248985e-17,
+        -1.8326030260248985e-17,
+        0.048171275646744,
+        211.68867082961643,
+        17.362176628010666
+      ],
+      "scale": 0.048171275646744,
+      "rotationRadians": 3.8043481336553895e-16,
+      "assetPath": "/art/v100/joints/mrs-chiha-quality-neck-r4.webp",
+      "sha256": "6bb0d985ef5d17297b761c39f067beab64c1a24617b995193cb6a29a350f817d",
+      "bytes": 40394,
+      "headDestination": {
+        "x": 211,
+        "y": 15,
+        "w": 61,
+        "h": 66
+      },
+      "headSource": {
+        "x": 2,
+        "y": 96,
+        "w": 61,
+        "h": 66
+      },
+      "garmentPixels": 27,
+      "unchangedVisibleNonHeadPixels": 15259,
+      "materialCorrections": [],
+      "acceptance": "placement candidate; original-speed, whole-character and Producer acceptance pending"
+    },
+    {
+      "kind": "miyamoto-musashi",
+      "sourcePath": "assets/source/quality-20261028/identity/battle-heads-r3/miyamoto-musashi-head-r1.png",
+      "sourceSha256": "8956f72bfffa93ae438f30b2a9708a7cd96dddd401c1453f6a8de92cd8858545",
+      "sourceVisibleBounds": {
+        "left": 147,
+        "top": 209,
+        "width": 793,
+        "height": 991
+      },
+      "sourceSeam": [
+        445,
+        1165
+      ],
+      "sourceFaceCenter": [
+        627.5,
+        957.5
+      ],
+      "targetSkinSeam": [
+        273,
+        94
+      ],
+      "targetFaceCenter": [
+        290,
+        79
+      ],
+      "rigPivot": [
+        279,
+        101
+      ],
+      "baseAtlasPath": "/art/v100/joints/miyamoto-musashi-r1.webp",
+      "baseAtlasSha256": "d8fd78012fa9dc63631b7e724d94953ff04c010c2f017176d7d04b684e2430a8",
+      "garmentPolygons": [],
+      "lowerNeckPolygon": null,
+      "landmarkType": "bare-neck-cut-midpoint",
+      "measuredTargetFaceCenter": [
+        288,
+        84
+      ],
+      "placementRefinement": "Static full-body review: original candidate head was too small and chin too tucked.",
+      "basePath": "/art/v100/joints/miyamoto-musashi-quality-model-r3.webp",
+      "baseSha256": "cf127489ecc104ef0f3e452e6343236d3b9ded7f4ba36c48271fd79800313f44",
+      "matrix": [
+        0.08138811589458177,
+        0.010345392044524473,
+        -0.010345392044524473,
+        0.08138811589458177,
+        248.83467015878213,
+        -5.420854477001143
+      ],
+      "scale": 0.08204299205553624,
+      "rotationRadians": 0.1264337878303014,
+      "assetPath": "/art/v100/joints/miyamoto-musashi-quality-neck-r4.webp",
+      "sha256": "6d677c8e0c94c40e0c6646b2d0cd763002554f6d787dbd4aac055b4d9bb4ddd5",
+      "bytes": 48006,
+      "headDestination": {
+        "x": 245,
+        "y": 10,
+        "w": 82,
+        "h": 95
+      },
+      "headSource": {
+        "x": 2,
+        "y": 85,
+        "w": 82,
+        "h": 95
+      },
+      "garmentPixels": 0,
+      "unchangedVisibleNonHeadPixels": 15783,
+      "materialCorrections": [],
+      "acceptance": "placement candidate; original-speed, whole-character and Producer acceptance pending"
+    },
+    {
+      "kind": "babayaga",
+      "sourcePath": "assets/source/quality-20261028/identity/battle-directions-r5/babayaga-right-facing-r5.png",
+      "sourceSha256": "37e060ebd3f51e689d0e0e75ca0a834827dc685a950333c413cb9ec5b02c0ac7",
+      "sourceVisibleBounds": {
+        "left": 197,
+        "top": 101,
+        "width": 928,
+        "height": 1000
+      },
+      "sourceSeam": [
+        510,
+        1030
+      ],
+      "sourceFaceCenter": [
+        785,
+        800
+      ],
+      "targetSkinSeam": [
+        244,
+        104
+      ],
+      "targetFaceCenter": [
+        262.94510226049516,
+        88.15500538213132
+      ],
+      "rigPivot": [
+        248,
+        108
+      ],
+      "baseAtlasPath": "/art/v100/joints/babayaga-r1.webp",
+      "baseAtlasSha256": "68963ba9025a3b597f2f83600761b360ecb4e080848712bdaffae67d2b6ccecd",
+      "garmentPolygons": [
+        [
+          [
+            226,
+            94
+          ],
+          [
+            232,
+            96
+          ],
+          [
+            240,
+            103
+          ],
+          [
+            244,
+            106
+          ],
+          [
+            245,
+            112
+          ],
+          [
+            238,
+            112
+          ],
+          [
+            230,
+            104
+          ],
+          [
+            225,
+            99
+          ]
+        ]
+      ],
+      "lowerNeckPolygon": null,
+      "landmarkType": "bare-neck-cut-midpoint",
+      "measuredTargetFaceCenter": [
+        258,
+        89
+      ],
+      "previousDirectionSource": "assets/source/quality-20261028/identity/battle-heads-r3/babayaga-head-r2.png",
+      "directionRegistration": {
+        "facing": "right",
+        "gaze": "offscreen right",
+        "sourceLandmarks": "manual neck-cut and cheek center; hair-top height retained from previous runtime",
+        "previousSource": "assets/source/quality-20261028/identity/battle-heads-r3/babayaga-head-r2.png",
+        "previousRegistration": {
+          "kind": "babayaga",
+          "sourcePath": "assets/source/quality-20261028/identity/battle-heads-r3/babayaga-head-r2.png",
+          "sourceSha256": "2f9a859125ae0a0b619afeb707f7dbf2f99e7d6efcbf660da357b3580dd68bff",
+          "sourceVisibleBounds": {
+            "left": 245,
+            "top": 104,
+            "width": 818,
+            "height": 964
+          },
+          "sourceSeam": [
+            515,
+            1030
+          ],
+          "sourceFaceCenter": [
+            695,
+            777.5
+          ],
+          "targetSkinSeam": [
+            244,
+            104
+          ],
+          "targetFaceCenter": [
+            258,
+            89
+          ],
+          "rigPivot": [
+            248,
+            108
+          ],
+          "baseAtlasPath": "/art/v100/joints/babayaga-r1.webp",
+          "baseAtlasSha256": "68963ba9025a3b597f2f83600761b360ecb4e080848712bdaffae67d2b6ccecd",
+          "garmentPolygons": [
+            [
+              [
+                226,
+                94
+              ],
+              [
+                232,
+                96
+              ],
+              [
+                240,
+                103
+              ],
+              [
+                244,
+                106
+              ],
+              [
+                245,
+                112
+              ],
+              [
+                238,
+                112
+              ],
+              [
+                230,
+                104
+              ],
+              [
+                225,
+                99
+              ]
+            ]
+          ],
+          "lowerNeckPolygon": null,
+          "landmarkType": "bare-neck-cut-midpoint",
+          "measuredTargetFaceCenter": [
+            258,
+            89
+          ]
+        },
+        "producerAcceptance": "pending"
+      },
+      "basePath": "/art/v100/joints/babayaga-suppressed-sidearm-r1.webp",
+      "baseSha256": "ebc4d1267dd1dda3afac8b20f4c5e70f9a13247d54fc6d029c4663d18260c48b",
+      "matrix": [
+        0.06889128094725512,
+        7.076403048223522e-18,
+        -7.076403048223522e-18,
+        0.06889128094725512,
+        208.8654467168999,
+        33.04198062432722
+      ],
+      "scale": 0.06889128094725512,
+      "rotationRadians": 1.0271841299686955e-16,
+      "assetPath": "/art/v100/joints/babayaga-quality-neck-r4.webp",
+      "sha256": "7bea041cda29b2e9488a164ae4da7cfd729b4c5914efe3c8ee4f41f000589231",
+      "bytes": 36184,
+      "headDestination": {
+        "x": 219,
+        "y": 36,
+        "w": 71,
+        "h": 76
+      },
+      "headSource": {
+        "x": 294,
+        "y": 2,
+        "w": 71,
+        "h": 76
+      },
+      "garmentPixels": 55,
+      "unchangedVisibleNonHeadPixels": 6290,
+      "materialCorrections": [
+        {
+          "name": "torso",
+          "file": "assets/source/quality-20261028/babayaga-material-r2/torso.png",
+          "sha256": "b8d18b9e46e5d517576d96eb4e5af2f0aaa6c5258c13f22fb4452912cc9856d4",
+          "width": 43,
+          "height": 56
+        },
+        {
+          "name": "far-upper-arm",
+          "file": "assets/source/quality-20261028/babayaga-material-r2/far-upper-arm.png",
+          "sha256": "dc5fcabade69e4f9aa224a6a6e28a1781b99135a0faed5c097d6c416d8a7b486",
+          "width": 16,
+          "height": 38
+        },
+        {
+          "name": "far-forearm",
+          "file": "assets/source/quality-20261028/babayaga-material-r2/far-forearm.png",
+          "sha256": "79ec254107ac81b443c4df38d6197086e4962fbe3d3c31601ed039d5618c4bec",
+          "width": 14,
+          "height": 39,
+          "destination": {
+            "x": 259,
+            "y": 167,
+            "w": 28,
+            "h": 77
+          }
+        },
+        {
+          "name": "weapon-and-hands",
+          "file": "assets/source/quality-20261028/babayaga-material-r2/weapon-and-hands.png",
+          "sha256": "f479eab8db6e470f802e74f177ba169bafde7420d2d49ae24c5f2b92dd9408f7",
+          "width": 212,
+          "height": 102
+        }
+      ],
+      "acceptance": "placement candidate; original-speed, whole-character and Producer acceptance pending"
+    },
+    {
+      "kind": "brawler",
+      "sourcePath": "assets/source/quality-20261028/identity/brawler-head-r1.png",
+      "sourceSha256": "1f465ee45649da85e3bcc41b4bc7e1b7c1ebf3534eb2d8e735ae9d6549589e50",
+      "sourceVisibleBounds": {
+        "left": 204,
+        "top": 49,
+        "width": 831,
+        "height": 1123
+      },
+      "sourceSeam": [
+        585,
+        1145
+      ],
+      "sourceFaceCenter": [
+        787.5,
+        760
+      ],
+      "targetSkinSeam": [
+        231,
+        92
+      ],
+      "targetFaceCenter": [
+        247,
+        66
+      ],
+      "rigPivot": [
+        234,
+        90
+      ],
+      "baseAtlasPath": "/art/v100/joints/brawler-photo-r2.webp",
+      "baseAtlasSha256": "e318ae905df6d0fe24d69ecc71bc5796aebfde3a50defde1c59b3cf0196707cb",
+      "garmentPolygons": [
+        [
+          [
+            210,
+            89
+          ],
+          [
+            215,
+            89
+          ],
+          [
+            224,
+            91
+          ],
+          [
+            233,
+            94
+          ],
+          [
+            243,
+            95
+          ],
+          [
+            246,
+            94
+          ],
+          [
+            251,
+            95
+          ],
+          [
+            250,
+            100
+          ],
+          [
+            215,
+            95
+          ]
+        ]
+      ],
+      "lowerNeckPolygon": null,
+      "landmarkType": "bare-neck-cut-midpoint",
+      "measuredTargetFaceCenter": [
+        247,
+        66
+      ],
+      "basePath": "/art/v100/joints/brawler-quality-head-r1.webp",
+      "baseSha256": "041763e670aa2f22eacade93b0e746a19ffbe44620284656ba5a6defac49a013",
+      "matrix": [
+        0.07002014730653632,
+        0.004729662780328302,
+        -0.004729662780328302,
+        0.07002014730653632,
+        195.45367770915215,
+        9.060078607523863
+      ],
+      "scale": 0.07017970318293366,
+      "rotationRadians": 0.06744471943802216,
+      "assetPath": "/art/v100/joints/brawler-quality-neck-r4.webp",
+      "sha256": "5f9fa0f00eecb6b8767426b97f94c00e5400b920a85058bf757a793f04f8c0cd",
+      "bytes": 40368,
+      "headDestination": {
+        "x": 201,
+        "y": 10,
+        "w": 70,
+        "h": 90
+      },
+      "headSource": {
+        "x": 433,
+        "y": 2,
+        "w": 70,
+        "h": 90
+      },
+      "garmentPixels": 55,
+      "unchangedVisibleNonHeadPixels": 14111,
+      "materialCorrections": [],
+      "acceptance": "placement candidate; original-speed, whole-character and Producer acceptance pending"
+    },
+    {
+      "kind": "tky",
+      "sourcePath": "assets/source/quality-20261028/identity/tky-89-head-r1.png",
+      "sourceSha256": "ed9d9655b6c5093ce35870946bc1270f14259f34febb5ab61c68feac3addbbf4",
+      "sourceVisibleBounds": {
+        "left": 225,
+        "top": 13,
+        "width": 973,
+        "height": 1095
+      },
+      "sourceSeam": [
+        580,
+        1090
+      ],
+      "sourceFaceCenter": [
+        787.5,
+        755
+      ],
+      "targetSkinSeam": [
+        261,
+        81
+      ],
+      "targetFaceCenter": [
+        274,
+        63.5
+      ],
+      "rigPivot": [
+        258,
+        81
+      ],
+      "baseAtlasPath": "/art/v100/joints/tky-r1.webp",
+      "baseAtlasSha256": "59495022d95a45677605e04887d72e5359a63e3c5a94203315d4bfe4053aad22",
+      "garmentPolygons": [],
+      "lowerNeckPolygon": null,
+      "landmarkType": "bare-neck-cut-midpoint",
+      "measuredTargetFaceCenter": [
+        274,
+        63.5
+      ],
+      "basePath": "/art/v100/joints/tky-quality-head-r1.webp",
+      "baseSha256": "57c45e88810758a7bb1afc9f1eff3011142602069b540087fdc971ddda8b4716",
+      "matrix": [
+        0.05512577983497686,
+        0.004660897564902395,
+        -0.004660897564902395,
+        0.05512577983497686,
+        234.10742604145702,
+        18.209579392231838
+      ],
+      "scale": 0.05532246893012688,
+      "rotationRadians": 0.0843496175005106,
+      "assetPath": "/art/v100/joints/tky-quality-neck-r4.webp",
+      "sha256": "b1b34548553f01e7cd78a9166de59eb1f018b77175b4c9bbf995de7924d870b0",
+      "bytes": 40504,
+      "headDestination": {
+        "x": 238,
+        "y": 16,
+        "w": 66,
+        "h": 72
+      },
+      "headSource": {
+        "x": 2,
+        "y": 89,
+        "w": 66,
+        "h": 72
+      },
+      "garmentPixels": 0,
+      "unchangedVisibleNonHeadPixels": 14615,
+      "materialCorrections": [],
+      "acceptance": "placement candidate; original-speed, whole-character and Producer acceptance pending"
+    },
+    {
+      "kind": "zakimiya",
+      "sourcePath": "assets/source/quality-20261028/identity/zakimiya-head-r1.png",
+      "sourceSha256": "db3170acec775316ad4dcfae651ff10c0937d52117afc0ce69f3ebd1d0fb97b2",
+      "sourceVisibleBounds": {
+        "left": 294,
+        "top": 36,
+        "width": 851,
+        "height": 1046
+      },
+      "sourceSeam": [
+        530,
+        1065
+      ],
+      "sourceFaceCenter": [
+        740,
+        715
+      ],
+      "targetSkinSeam": [
+        253,
+        80
+      ],
+      "targetFaceCenter": [
+        266.5,
+        57
+      ],
+      "rigPivot": [
+        250,
+        82
+      ],
+      "baseAtlasPath": "/art/v100/joints/zakimiya-r1.webp",
+      "baseAtlasSha256": "5859fd70326d70e0e29a35019216276951e0388656779611405bb78ec686a86f",
+      "garmentPolygons": [],
+      "lowerNeckPolygon": null,
+      "landmarkType": "bare-neck-cut-midpoint",
+      "measuredTargetFaceCenter": [
+        266.5,
+        57
+      ],
+      "basePath": "/art/v100/joints/zakimiya-quality-head-r1.webp",
+      "baseSha256": "9bf647045ed7eb614cd92f6556aeab2fd3c9aa6451cec00e3d039df10aa6990b",
+      "matrix": [
+        0.06533613445378152,
+        -0.0006302521008403362,
+        0.0006302521008403362,
+        0.06533613445378152,
+        217.70063025210084,
+        10.75105042016807
+      ],
+      "scale": 0.06533917418420002,
+      "rotationRadians": -0.009646003067677333,
+      "assetPath": "/art/v100/joints/zakimiya-quality-neck-r4.webp",
+      "sha256": "25a336700f522b1c2e23251469e338f78303949893afc1205de5d02b10ab5941",
+      "bytes": 33794,
+      "headDestination": {
+        "x": 233,
+        "y": 9,
+        "w": 64,
+        "h": 76
+      },
+      "headSource": {
+        "x": 367,
+        "y": 2,
+        "w": 64,
+        "h": 76
+      },
+      "garmentPixels": 0,
+      "unchangedVisibleNonHeadPixels": 12082,
+      "materialCorrections": [],
+      "acceptance": "placement candidate; original-speed, whole-character and Producer acceptance pending"
+    }
+  ]
+}

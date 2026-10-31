@@ -1,0 +1,53 @@
+{
+  "method": "built-in image_gen",
+  "variants": [
+    {
+      "expression": "determined",
+      "args": {
+        "referenced_image_paths": [
+          "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028\\assets\\source\\quality-20261028\\identity\\monkey-master-r4.png"
+        ],
+        "transparent_background": true,
+        "prompt": "Edit this exact established fictional adult character monkey. Keep precisely the same person, full-body framing, camera, image dimensions, pose, body silhouette, head placement, hands and equipment. Preserve silver layered hair, lean adult male face, dark work clothes, olive tool harness, gloves, compound crossbow held by both hands, knee pads and boots. Change ONLY the facial expression to quiet alert determination with a firm closed mouth. Retain the original eye size and spacing, brows, nose, lips, jaw, age and recognizable individual identity, realistic matte skin and subdued painterly finish. Keep exact clothing and coverage. Do not reposition the body, add objects, redesign the person, crop the feet or equipment, or create a sheet/collage. One full-body expression variant. Preserve the existing genuine transparent alpha, including openings around arms and equipment. No visible backdrop, floor, gradient, text or border."
+      }
+    },
+    {
+      "expression": "alarm",
+      "args": {
+        "referenced_image_paths": [
+          "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028\\assets\\source\\quality-20261028\\identity\\monkey-master-r4.png"
+        ],
+        "transparent_background": true,
+        "prompt": "Edit this exact established fictional adult character monkey. Keep precisely the same person, full-body framing, camera, image dimensions, pose, body silhouette, head placement, hands and equipment. Preserve silver layered hair, lean adult male face, dark work clothes, olive tool harness, gloves, compound crossbow held by both hands, knee pads and boots. Change ONLY the facial expression to restrained surprise and concern, slightly raised eyebrows and parted lips. Retain the original eye size and spacing, brows, nose, lips, jaw, age and recognizable individual identity, realistic matte skin and subdued painterly finish. Keep exact clothing and coverage. Do not reposition the body, add objects, redesign the person, crop the feet or equipment, or create a sheet/collage. One full-body expression variant. Preserve the existing genuine transparent alpha, including openings around arms and equipment. No visible backdrop, floor, gradient, text or border."
+      }
+    },
+    {
+      "expression": "grief",
+      "args": {
+        "referenced_image_paths": [
+          "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028\\assets\\source\\quality-20261028\\identity\\monkey-master-r4.png"
+        ],
+        "transparent_background": true,
+        "prompt": "Edit this exact established fictional adult character monkey. Keep precisely the same person, full-body framing, camera, image dimensions, pose, body silhouette, head placement, hands and equipment. Preserve silver layered hair, lean adult male face, dark work clothes, olive tool harness, gloves, compound crossbow held by both hands, knee pads and boots. Change ONLY the facial expression to subdued sadness, gaze slightly lowered and closed mouth. Retain the original eye size and spacing, brows, nose, lips, jaw, age and recognizable individual identity, realistic matte skin and subdued painterly finish. Keep exact clothing and coverage. Do not reposition the body, add objects, redesign the person, crop the feet or equipment, or create a sheet/collage. One full-body expression variant. Preserve the existing genuine transparent alpha, including openings around arms and equipment. No visible backdrop, floor, gradient, text or border."
+      }
+    }
+  ],
+  "status": "Local quality-r1 portraits connected; see monkey-runtime-r1 and docs/qa/quality-20261028.md for exact observed scope. Battle/cuts/credits and Producer acceptance remain open. Source family storage review required before commit.",
+  "outputs": [
+    {
+      "path": "monkey-determined-r6.png",
+      "sha256": "0ad74b9ff999232d73bcc5ee0f04ef3dcd8cce0128910103399717430f73ec16",
+      "bytes": 1951626
+    },
+    {
+      "path": "monkey-alarm-r6.png",
+      "sha256": "ad48e17795ac47ba11e3097a36105c1f12e21cfa1fbac64fc03ee6e8da7d9cc0",
+      "bytes": 1923764
+    },
+    {
+      "path": "monkey-grief-r6.png",
+      "sha256": "9af1706d41957b5ba67b56b945c4e28368a176a48ca95ccfc620d2a55c8f169f",
+      "bytes": 2002632
+    }
+  ]
+}

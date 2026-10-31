@@ -1,0 +1,50 @@
+{
+  "method": "built-in image_gen",
+  "revision": "tky-photo-r10",
+  "reason": "Producer reiterated that strong photo likeness and handsome Korean-drama styling must both be met; r9/cut candidates leaned too far toward plain or tired literal likeness.",
+  "inputRoles": [
+    "tky-warm-r9.png: edit target/costume/identity continuity",
+    "Private original TKY photograph 1: face identity",
+    "Private original TKY photograph 3: face identity"
+  ],
+  "prompts": {
+    "warm": "Use case: identity-preserve. Edit image 1 into the FINISHED HANDSOME Korean-drama-styled version of TKY requested by the Producer, while staying strongly recognizable as the specific adult man in original photographs 2 and 3. The earlier candidate image 1 is insufficiently handsome: it looks tired and plain. Achieve a clearly polished, appealing leading-man look through refined grooming, flattering soft light and a confident expression, with only modest anatomical refinement. Preserve the photographs' recognizable eye shape/spacing, nose, lips and overall face identity; retain his characteristic cheek and jaw outline while gently defining the jaw with lighting, without making him puffy or carving a different pointed V-shaped idol face. Keep the same actual adult age, avoid adding wrinkles or ageing. Clean-shaven including beard shadow. Skin should be clear, healthy, even-toned and natural matte, with subtle real texture; soften the forehead and under-eye fatigue shadows, harsh nasolabial creases, acne/redness and oily shine. Eyes retain the real narrow hooded shape but have a clear lively, confident gaze rather than sleepy squinting; tidy the natural brows. Hair: glossy healthy BLACK, carefully styled smooth Korean curtain fringe with a clean center part and controlled natural volume, a little face-framing fall, NOT messy wavy/curl clumps. Show enough of the eyes to read his expression. Mouth relaxed with a small attractive confident closed-mouth smile; calm charismatic warmth, no sad/scowling/blank or strained look. This should look like the SAME real man professionally groomed and attractively illustrated for his game character. Keep image 1's exact waist-up standing composition, body build, all black/magenta coat/scarf/straps/buckles/gloves, pose and hand positions. Do not copy the photographs' casual shirt or red neck cord. Unified realistic skin/anatomy/materials with a subtle high-quality game illustration finish. Genuine transparent alpha in all background space, full hair and shoulders and waist inside the frame, generous margins; one character, no background glow, text, border or grid.",
+    "determined": "Use case: identity-preserve. Image 1 is the corrected handsome Korean-drama-styled TKY master. Photographs 2 and 3 preserve the specific real person's identity. Create ONLY the focused determined expression for exactly this SAME polished man: calm direct confident eyes, quietly resolved closed mouth, subtle concentration, attractive composed presence. Retain his real recognizable face shape, eye/nose/lip proportions, the master portrait's carefully groomed smooth dark curtain fringe, clean-shaven clear healthy matte skin and refined handsome styling. Keep facial contours and head scale exactly consistent; no aged/tired/plain/scowling face, no deep forehead creases, no generic actor replacement or pointed V jaw. Preserve exact body pose, camera, waist-up framing, all clothing/scarf/magenta straps/buckles/gloves and hand positions of image 1. Same realistic anatomy and materials with subtle refined game illustration finish. Full crown and waist within transparent margins. One character on genuine transparent background, no glow/backdrop/text/grid.",
+    "alarm": "Use case: identity-preserve. Make the alert/surprised dialogue expression of image 1, the corrected handsome Korean-drama-styled TKY. Original photographs 2 and 3 remain facial identity references. Change ONLY the expression: a subtle quick lift of the eyebrows, attentive eyes and slightly parted lips, natural restrained surprise. Keep exactly this same specific man and refined handsome styling: the real recognizable face outline and eyes/nose/lips, narrow hooded eyes opening only slightly, tidy black curtain hairstyle, healthy clear matte skin, no beard or beard shadow, flattering soft light. Preserve his real adult age and charisma; no exaggerated anime eyes, comical grimace, forehead ageing lines or tired/rough/plain replacement face. Keep the exact master body pose, head size/position, camera, waist-up composition, all coat/scarf/magenta straps/buckles/gloves and hands. Same realistic human anatomy/materials with a subtle polished game illustration finish. One isolated character, full crown and waist within generous transparent margins, genuine alpha; no glow, background, text or grid.",
+    "grief": "Use case: identity-preserve. Create ONLY the quiet grief expression of image 1, the corrected handsome Korean-drama-styled TKY, retaining his recognizable identity from original photographs 2 and 3. Subtly lower the gaze, relax the attractive closed lips into restrained sadness and gently tense the inner brows. He remains the same handsomely groomed adult man; preserve exactly his face outline, narrow hooded eyes, real nose/lip proportions, smooth groomed dark curtain fringe, clean-shaven clear healthy matte skin and flattering lighting. Sadness must not turn him into a tired older rough or plain face: no deep new wrinkles, hollow cheeks, oily skin, beard shadow or generic replacement actor. Keep the exact master head size/location and camera, body pose, waist-up composition, all costume/scarf/magenta straps/buckles/gloves and hands. Same subtly illustrated realistic finish throughout, one isolated character, genuine transparent background and margins with full crown and waist inside; no glow/backdrop/text/grid."
+  },
+  "outputs": {
+    "warm": "tky-warm-r10.png",
+    "determined": "tky-determined-r10.png",
+    "alarm": "tky-alarm-r10.png",
+    "grief": "tky-grief-r10.png"
+  },
+  "acceptance": "Corrective candidate. No numerical similarity score or Producer acceptance asserted. Expressions, battle and scene integration pending.",
+  "source": {
+    "path": "assets/source/quality-20261028/identity/tky-warm-r10.png",
+    "bytes": 2674437,
+    "sha256": "52b444b935443afffaf66f818182adff59e4cc4b5c51c1f095fcd67e463662d0"
+  },
+  "sources": [
+    {
+      "path": "assets/source/quality-20261028/identity/tky-warm-r10.png",
+      "bytes": 2674437,
+      "sha256": "52b444b935443afffaf66f818182adff59e4cc4b5c51c1f095fcd67e463662d0"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/tky-determined-r10.png",
+      "bytes": 2690205,
+      "sha256": "5defbfce7998b30cd7389d4a760673a034e200b8c33eb93451b4ad4f524a3f5d"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/tky-alarm-r10.png",
+      "bytes": 2635824,
+      "sha256": "f8a40d0309007175a6245931e923467470f5b29a55e4c6d17bb7b1927c001eaf"
+    },
+    {
+      "path": "assets/source/quality-20261028/identity/tky-grief-r10.png",
+      "bytes": 2692342,
+      "sha256": "c2c78ad54834bd2f0cc331883b009b1557a319e92691306e693a602de1c6a348"
+    }
+  ]
+}

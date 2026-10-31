@@ -1,0 +1,51 @@
+{
+  "method": "built-in image_gen",
+  "variants": [
+    {
+      "kind": "chiha",
+      "expression": "determined",
+      "args": {
+        "referenced_image_paths": [
+          "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/chiha-master-r4.png"
+        ],
+        "transparent_background": true,
+        "prompt": "Edit this exact established adult game character Mrs. Chiha. Change ONLY the facial expression to quiet resolve, focused eyes and a firm closed mouth. Preserve the same individual identity, facial proportions, eyes, nose, mouth, age, hair/fur, body pose and silhouette, exact full-body composition, camera and image dimensions. Keep all clothing and its coverage, every accessory and piece of equipment exactly as the reference, with no additions or omissions. Keep every limb, hand, foot and weapon intact and in the exact same place. Do not make a generic replacement face. Preserve the matte realistic textures and subtle painted finish. Genuine transparent alpha in all empty space; no backdrop, gradient, ground shadow, text, collage, crop or border. One full-body expression variant."
+      },
+      "output": "assets/source/quality-20261028/identity/chiha-determined-r6.png",
+      "outputSha256": "f3d3209de6a2fdd4c6a3cbddaf896750112ecc540228d10c69e19eaa23b141fc",
+      "outputBytes": 1023936,
+      "status": "Generated local candidate, not yet runtime verified."
+    },
+    {
+      "kind": "chiha",
+      "expression": "alarm",
+      "args": {
+        "referenced_image_paths": [
+          "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/chiha-master-r4.png"
+        ],
+        "transparent_background": true,
+        "prompt": "Edit this exact established adult game character Mrs. Chiha. Change ONLY the facial expression to restrained surprise and concern, subtly raised eyebrows and slightly parted lips. Preserve the same individual identity, facial proportions, eyes, nose, mouth, age, hair/fur, body pose and silhouette, exact full-body composition, camera and image dimensions. Keep all clothing and its coverage, every accessory and piece of equipment exactly as the reference, with no additions or omissions. Keep every limb, hand, foot and weapon intact and in the exact same place. Do not make a generic replacement face. Preserve the matte realistic textures and subtle painted finish. Genuine transparent alpha in all empty space; no backdrop, gradient, ground shadow, text, collage, crop or border. One full-body expression variant."
+      },
+      "output": "assets/source/quality-20261028/identity/chiha-alarm-r6.png",
+      "outputSha256": "e1d08d2ae6f60dc2f64e7a1b24744c1541f5c636950c8ea3bfe90aca393a0aa0",
+      "outputBytes": 1039896,
+      "status": "Generated local candidate, not yet runtime verified."
+    },
+    {
+      "kind": "chiha",
+      "expression": "grief",
+      "args": {
+        "referenced_image_paths": [
+          "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/chiha-master-r4.png"
+        ],
+        "transparent_background": true,
+        "prompt": "Edit this exact established adult game character Mrs. Chiha. Change ONLY the facial expression to subdued sadness, slightly lowered gaze and relaxed closed mouth, no tears. Preserve the same individual identity, facial proportions, eyes, nose, mouth, age, hair/fur, body pose and silhouette, exact full-body composition, camera and image dimensions. Keep all clothing and its coverage, every accessory and piece of equipment exactly as the reference, with no additions or omissions. Keep every limb, hand, foot and weapon intact and in the exact same place. Do not make a generic replacement face. Preserve the matte realistic textures and subtle painted finish. Genuine transparent alpha in all empty space; no backdrop, gradient, ground shadow, text, collage, crop or border. One full-body expression variant."
+      },
+      "output": "assets/source/quality-20261028/identity/chiha-grief-r6.png",
+      "outputSha256": "0f171d80cf3537bdd1c0616754b5dc35c3272a807f1bae417f8ea3adad5b38f3",
+      "outputBytes": 1036978,
+      "status": "Generated local candidate, not yet runtime verified."
+    }
+  ],
+  "status": "Three variants generated and alpha-composited at runtime output size for visual inspection. Connected to four-state dialogue mapping; actual story coverage is documented separately, not all variants were displayed in story."
+}

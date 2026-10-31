@@ -1,0 +1,75 @@
+{
+  "generator": "scripts/build-quality-support-portraits.mjs",
+  "canonical": {
+    "path": "assets/source/v090/characters/miyamoto-musashi-identity-master-r1.png",
+    "sha256": "9d2a1ee6e8dd56b5993a1386bcecaa89c219b83cd77a0aaadab080553f6182e9"
+  },
+  "inputs": [
+    {
+      "expression": "warm",
+      "path": "assets/source/quality-20261028/identity/musashi-master-r4.png",
+      "sha256": "7ce937bddf0ac7bbb4e068b916625e4cd629411d6cc561946f88c22492c39c17",
+      "width": 1024,
+      "height": 1536
+    },
+    {
+      "expression": "determined",
+      "path": "assets/source/quality-20261028/identity/musashi-determined-r6.png",
+      "sha256": "0c3e9856a9911c691d12fd6191a8a20aa57c62aa996f5548370dd19df750b287",
+      "width": 1024,
+      "height": 1536
+    },
+    {
+      "expression": "alarm",
+      "path": "assets/source/quality-20261028/identity/musashi-alarm-r6.png",
+      "sha256": "520fe4430ccdcfa89f218d46eed799281b1618a6c6a2a11cddc8d87901c2d3df",
+      "width": 1024,
+      "height": 1536
+    },
+    {
+      "expression": "grief",
+      "path": "assets/source/quality-20261028/identity/musashi-grief-r6.png",
+      "sha256": "7eda015656ba23cc879024ef83887aaff5c7abce9059977ac57f506bc1cef9ff",
+      "width": 1024,
+      "height": 1536
+    }
+  ],
+  "crop": {
+    "left": 270,
+    "top": 0,
+    "width": 620,
+    "height": 827
+  },
+  "outputs": [
+    {
+      "path": "public/art/v100/portraits/musashi-warm-quality-r1.webp",
+      "sha256": "3234605e37034e793166ac56563ade1a7738c7bf57f5e44f77edc5a10013be93",
+      "bytes": 92762
+    },
+    {
+      "path": "public/art/v100/portraits/musashi-formation-card-quality-r1.webp",
+      "sha256": "4937e616ca1157d778a9567816ef296d18d1a9c3224968b1e4d252fb5958dfa7",
+      "bytes": 65920
+    },
+    {
+      "path": "public/art/v100/portraits/musashi-determined-quality-r1.webp",
+      "sha256": "1103cf3048ce8f20ec3114bb91fb6096d21a2a923c8516697dc4acd9716a0f09",
+      "bytes": 98180
+    },
+    {
+      "path": "public/art/v100/portraits/musashi-alarm-quality-r1.webp",
+      "sha256": "7eecb55a05e866791e5ce3469ada6496ce5a05e2954ded4ff40a4d1025c1e378",
+      "bytes": 91018
+    },
+    {
+      "path": "public/art/v100/portraits/musashi-grief-quality-r1.webp",
+      "sha256": "4f40ba111a0db0d1d045b67ab2d1b14e071132bdc7ea5db8f4944b6e8cdf77ed",
+      "bytes": 90352
+    }
+  ],
+  "runtimeAssetCount": 5,
+  "logicalBytes": 438232,
+  "distinctBytes": 438232,
+  "scope": "Local dialogue and card candidate. Battle, dedicated scenes and credits are not replaced by this builder.",
+  "approval": "Producer requested the redesign; final visual acceptance and integration remain open."
+}

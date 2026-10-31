@@ -153,7 +153,7 @@ try {
           result.title = titleState;
           await picture(page, `${id}-title.png`);
           await button(page, "設定").click();
-          await page.getByLabel("演出の動きを抑える").check();
+          await page.getByLabel("会話・ムービーの動きを抑える").check();
           await button(page, "設定を保存").click(); await ready(page);
           await button(page, "タイトルへ").click();
           assert.equal((await helper(page, "read")).settings.reducedMotion, true);

@@ -7,20 +7,21 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {V100_STORY_EVENTS} from '../app/v100StoryEvents.js';
 import {v100StoryDirectionFor} from '../app/v100StoryDirection.js';
+import {v100QualityScenePathFor} from '../app/v100QualitySceneAssets.js';
 import {inspectPaisenStoryCuts} from '../scripts/build-v177-paisen-story-cuts.mjs';
 
 const manifest = JSON.parse(fs.readFileSync('assets/source/v177/paisen/cuts/registered-story-r1/runtime-adoption-r1.json'));
 
-test('the nine photo-identity story scenes are used by real final R9 nodes at their existing URLs', () => {
+test('the nine photo-identity story scenes remain bound to real R9 nodes after explicit versioned scene revisions', () => {
   const actual = new Set(Object.values(V100_STORY_EVENTS).flatMap(event => event.nodes
     .map((node,index) => v100StoryDirectionFor(event.id,index,node).backgroundPath)).filter(Boolean));
   assert.equal(manifest.entries.length,9);
-  for (const entry of manifest.entries) assert.ok(actual.has(entry.runtimePath), 'Unused scene '+entry.sceneId);
+  for (const entry of manifest.entries) assert.ok(actual.has(v100QualityScenePathFor(entry.runtimePath)), 'Unused scene '+entry.sceneId);
   assert.equal(manifest.identityMasterSha256,'a1d5517fc1a500c4e949b0ec6c522efa0404ebd4ddd3b548994713a918983257');
   assert.equal(manifest.visibleAppearances,10,'foreground and CCTV Paisen are both included');
 });
 
-test('the nine runtime story images retain original pixels outside the actor masks and reproduce losslessly', async () => {
+test('the nine preserved historical story sources retain pixels outside actor masks and reproduce losslessly', async () => {
   const result = await inspectPaisenStoryCuts({assetRoot:'public'});
   assert.equal(result.sceneCount,9);
   assert.ok(result.entries.every(entry => entry.outsideRegisteredRegion === 0 && entry.losslessPixelExact));

@@ -1,0 +1,14 @@
+{
+  "tool": "built-in image_gen",
+  "referenced_image_paths": [
+    "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/public/art/v100/credits/ward-king-fan-r2.webp",
+    "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/ikura-master-r4.png",
+    "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/mizuchi-master-r4.png",
+    "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/king-master-r4.png"
+  ],
+  "transparent_background": false,
+  "prompt": "Edit IMAGE1, the existing 16:9 humorous staff-roll scene in the repaired city hall. Preserve this exact story beat: a desk fan blows a silver emergency blanket over CRAZY KING, who raises both hands comically; IKURA laughs behind her hand at LEFT while holding her cup; MIZUCHI sits in the middle with a clipboard and amused weary expression. Preserve the warm window light, supplies/blankets/cups, all poses, the fan and airborne foil, the same three named adult actors and unidentifiable background workers. The remaining images are the LOCKED EXISTING GENERATED PRIMARY MODELS: IMAGE2 is IKURA, IMAGE3 is MIZUCHI, IMAGE4 is KING. Match those exact people, ages, facial structure, eyes/nose/mouth, hair, established physiques and wardrobes, rather than inventing new attractive faces. Ikura's pink double buns, long hair, headset and covered green outfit remain; do not add exposure. Mizuchi has the same short asymmetrical black hair, goggles on head, respirator at neck and purple suit; IMPORTANT match her model's glove asymmetry: her LEFT hand/arm has the long yellow glove and her RIGHT hand is bare, so the hand near her cheek is bare. King wears the exact green jacket, black pleated skirt, shiny red thigh-high boots and opaque cheerful yellow bucket helmet of image4; keep his human face completely hidden. Do not copy a chainsaw, rifle or other combat weapon from the model references into this quiet scene. Render realistic photographic human anatomy, expressive natural faces, hair, skin, foil, cloth and sunlight with a restrained painterly illustration finish, coherent with these models and the other Nishijin RPG scenes. No anime eye exaggeration, plastic doll skin, blended identities, extra hands or floating objects. Preserve the existing frame, no added text or panels. One finished 16:9 illustration.",
+  "output": "ward-king-fan-quality-r1.png",
+  "generatedOriginal": "C:/Users/okait/.codex/generated_images/01a180c8-9e05-7871-b287-613f7c7eb364/exec-85a6dc6f-294c-4721-8b18-d3eff9d396af.png",
+  "statusAtGeneration": "Generated model-based candidate; runtime connection and native review not yet performed."
+}

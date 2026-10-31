@@ -1,3 +1,4 @@
+import {assertMaterialRigGeometry} from './helpers/quality-material-contract.mjs';
 import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
 import {readFile} from 'node:fs/promises';
@@ -21,7 +22,7 @@ test('the real close-range sample carries complete phase information through the
  assert.equal(variant.startIndex,151);assert.deepEqual(variant.attackBoundaries,[.28,.7]);assert.equal(atlas.poses.length,182);
  for(let n=0;n<=1080;n++){const {sample,plan,raw}=rendered(sampleMrsChihaLauncherBash(.27*n/1080));states.add(sample.requestedState);
   assert.equal(sample.resolvedState,sample.requestedState);assert.equal(sample.attackVariant,'launcher-bash');assert.ok(Number.isFinite(sample.clipProgress)&&sample.clipProgress>=0&&sample.clipProgress<=1);
-  assert.ok(plan.upperIndex>=151&&plan.upperIndex<182&&plan.upperNextIndex<182);assert.equal(raw.length,16);assert.ok(raw.every(m=>m.every(Number.isFinite)));
+  assert.ok(plan.upperIndex>=151&&plan.upperIndex<182&&plan.upperNextIndex<182);assert.equal(raw.length,atlas.parts.length);assert.ok(raw.every(m=>m.every(Number.isFinite)));
  }
  assert.deepEqual([...states],['wind-up','active','recovery']);
  assert.equal(v177JointPose(kind,{...sampleMrsChihaLauncherBash(.13),attackVariant:'unknown'},runtime),null,'An unbound action must not silently use a firing pose');
@@ -46,8 +47,8 @@ test('normal windup, close-range contact and recovery keep both grips, fixed ana
 });
 test('the new Blender action retains every original walking and firing sample and every other newcomer atlas',async()=>{
  const source=execFileSync('git',['show','c858205c427aad2f583f79abfa0a8903e0171de3:app/v177NewcomerJointData.js'],{encoding:'utf8',maxBuffer:4*1024*1024}),begin=source.indexOf('Object.entries(')+'Object.entries('.length,baseline=JSON.parse(source.slice(begin,source.lastIndexOf('));')));
- assert.deepEqual(atlas.poses.slice(0,151),baseline[kind].poses);assert.deepEqual(atlas.parts,baseline[kind].parts);
- for(const other of ['zakimiya','tky','miyamoto-musashi'])assert.deepEqual(V177_JOINT_ATLASES[other],baseline[other]);
+ assert.deepEqual(atlas.poses.slice(0,151),baseline[kind].poses);assertMaterialRigGeometry({parts:atlas.parts},{parts:baseline[kind].parts});
+ for(const other of ['zakimiya','tky','miyamoto-musashi'])assertMaterialRigGeometry(V177_JOINT_ATLASES[other],baseline[other]);
  const old=JSON.parse(gunzipSync(execFileSync('git',['show','c858205c427aad2f583f79abfa0a8903e0171de3:assets/source/v100/joints/mrs-chiha-r1/motion.json.gz'],{maxBuffer:4*1024*1024}))),motion=JSON.parse(gunzipSync(await readFile('assets/source/v100/joints/mrs-chiha-r1/motion.json.gz')));
  assert.equal(motion.actions.length,6);assert.deepEqual(motion.actions.filter(a=>a.name!=='launcher-bash'),old.actions);assert.equal(motion.actions.find(a=>a.name==='launcher-bash').frames.length,61);
  const texture=execFileSync('git',['show','c858205c427aad2f583f79abfa0a8903e0171de3:public/art/v100/joints/mrs-chiha-r1.webp'],{maxBuffer:2*1024*1024});assert.deepEqual(await readFile('public/art/v100/joints/mrs-chiha-r1.webp'),texture);

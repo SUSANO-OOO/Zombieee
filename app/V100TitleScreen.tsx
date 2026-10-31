@@ -14,11 +14,12 @@ type Props = {
   settings: { sfxEnabled: boolean; sfxVolume: number; bgmEnabled: boolean; bgmVolume: number };
   onNew: () => void; onContinue: () => void; onSettings: () => void;
   onCredits: () => void; onModes: () => void; onData: () => void;
+  onRecall?: () => void;
 };
 
 // Once per opened page; settings/credits do not repeat the title call.
 let titleIntroSeen = false;
-export function V100TitleScreen({ canContinue, canOpenModes, busy, reducedMotion, settings, onNew, onContinue, onSettings, onCredits, onModes, onData }: Props) {
+export function V100TitleScreen({ canContinue, canOpenModes, busy, reducedMotion, settings, onNew, onContinue, onSettings, onCredits, onModes, onData, onRecall }: Props) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const mixerRef = useRef<ReturnType<typeof createEndingAudioMix> | null>(null);
   const rafRef = useRef(0);
@@ -165,5 +166,6 @@ export function V100TitleScreen({ canContinue, canOpenModes, busy, reducedMotion
       </nav>}
     </div>
     <button type="button" className="v100-start-data" disabled={busy || phase !== "complete"} onClick={onData}>データ管理</button>
+    {canContinue && onRecall && <button type="button" className="v100-start-recall" disabled={busy || phase !== "complete"} onClick={onRecall}>物語を振り返る</button>}
   </section>;
 }

@@ -1,6 +1,7 @@
 // Authored against Producer R5 (2026-10-08). Stable event IDs and source-node
 // indices bind staging to the screenplay; no dialogue-text guessing at runtime.
 import {V100_R9_SCENE_ASSETS} from './v100R9SceneAssets.js';
+import {V100_QUALITY_SCENE_ASSETS,v100QualityScenePathFor} from './v100QualitySceneAssets.js';
 export const V100_MAIN_CAST = Object.freeze([
   "unit-kumaverson", "unit-babayaga", "unit-zakimiya", "unit-tky",
   "unit-mrs-chiha", "unit-paisen", "unit-mayo-chan",
@@ -18,15 +19,28 @@ export const V100_EVENT_PORTRAIT_PROFILES = Object.freeze({
 export const V100_R5_STORY_CUTS = Object.freeze(Object.fromEntries([
   "prologue-door-crisis", "chiha-confession", "ending-zakimiya-family", "zakimiya-c4-reunion",
   "epilogue-tky-receipt", "epilogue-main-table", "ending-tky-transport", "ending-medical-progress", "president-restrained-alive",
-].map(name => [name, `/art/v100/story-r5/cuts/${name}.webp`])));
-export const V100_R9_STORY_CUTS = Object.freeze(Object.fromEntries(Object.entries(V100_R9_SCENE_ASSETS).map(([id,scene])=>[id,scene.path])));
+].map(name => [name, v100QualityScenePathFor(`/art/v100/story-r5/cuts/${name}.webp`)])));
+export const V100_R9_STORY_CUTS = Object.freeze(Object.fromEntries([
+  ...Object.entries(V100_R9_SCENE_ASSETS).map(([id,scene])=>[id,v100QualityScenePathFor(scene.path)]),
+  ...Object.entries(V100_QUALITY_SCENE_ASSETS).filter(([,scene])=>scene.newEvent).map(([id,scene])=>[id,scene.path]),
+]));
 
 export function v100EventPortraitPath(owner, expression = "determined") {
   const profile = V100_EVENT_PORTRAIT_PROFILES[owner];
+  // Gantetsu's opaque full-face protection stays closed in every emotional beat.
+  if(owner==='unit-gantetsu'&&V100_EVENT_EXPRESSIONS.includes(expression))return '/art/v100/portraits/gantetsu-determined-stage-r1.webp';
+  if(['unit-babayaga','unit-kumaverson','unit-tatara','unit-miyamoto-musashi','guide-ikura','segawa','mugarian-president','red-panther-commander'].includes(owner)&&V100_EVENT_EXPRESSIONS.includes(expression))return `/art/v100/portraits/${profile}-${expression}-stage-r1.webp`;
+  if(owner==='unit-crazy-king'&&V100_EVENT_EXPRESSIONS.includes(expression))return '/art/v100/portraits/king-determined-quality-r1.webp';
+  if (['unit-mrs-chiha','unit-miyamoto-musashi','unit-mayo-chan'].includes(owner) && V100_EVENT_EXPRESSIONS.includes(expression)) {
+    return `/art/v100/portraits/${profile}-${expression}-quality-r1.webp`;
+  }
+  if (['unit-zakimiya','unit-tky','unit-hachi','unit-nao','unit-mizuchi','unit-monkey','guide-ikura','unit-raider'].includes(owner) && V100_EVENT_EXPRESSIONS.includes(expression)) {
+    return `/art/v100/portraits/${profile}-${expression}-quality-r1.webp`;
+  }
   // The producer replaced Paisen's identity with three photos on 2026-10-15.
   // Every expression must follow that same face, including secondary speakers.
   if (owner === 'unit-paisen' && V100_EVENT_EXPRESSIONS.includes(expression)) {
-    return `/art/v100/portraits/paisen-${expression}-r2.webp`;
+    return `/art/v100/portraits/paisen-${expression}-quality-r1.webp`;
   }
   return profile && V100_EVENT_EXPRESSIONS.includes(expression)
     ? `/art/v100/story-r5/portraits/${profile}-${expression}.webp` : null;
@@ -87,7 +101,7 @@ const cues = Object.freeze({
 export function v100StoryDirectionFor(eventId, nodeIndex, node) {
   if (node?.sourceDocument === 'STORY_SCRIPT_V100_PRODUCER_R9.md') {
     const cut=node.cutId??null;
-    return Object.freeze({cut,backgroundPath:V100_R9_STORY_CUTS[cut]??V100_R5_STORY_CUTS[cut]??null,backgroundAlt:V100_R9_SCENE_ASSETS[cut]?.alt??null,
+    return Object.freeze({cut,backgroundPath:V100_R9_STORY_CUTS[cut]??V100_R5_STORY_CUTS[cut]??null,backgroundAlt:V100_QUALITY_SCENE_ASSETS[cut]?.alt??V100_R9_SCENE_ASSETS[cut]?.alt??null,
       insertId:node.insertId??null,cinematic:Boolean(cut||node.insertId),expression:v100StoryExpressionFor(eventId,nodeIndex,node),cueId:node.cueId??null});
   }
   let cut = null;

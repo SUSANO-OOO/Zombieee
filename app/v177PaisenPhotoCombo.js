@@ -1,9 +1,33 @@
 import { v100BrawlerCanAct } from './v100BrawlerCombo.js';
 import { V177_JOINT_ATLASES, v177JointPose } from './v177JointPresentation.js';
+import { V177_PAISEN_PHOTO_JOINT_ATLASES } from './v177PaisenPhotoJointData.js';
 
-const PHOTO_PATH = '/art/v100/joints/brawler-photo-r2.webp';
+const PHOTO_RIG = V177_PAISEN_PHOTO_JOINT_ATLASES.brawler;
 const RELEASE_SECONDS = .065;
 const clamp = value => Math.max(0, Math.min(1, value));
+const partMeaning=part=>JSON.stringify(Object.fromEntries(Object.entries(part)
+ .filter(([key])=>key!=='source'&&!(key==='destination'&&part.bone==='head'))
+ .sort(([a],[b])=>a.localeCompare(b))));
+const photoMeanings=new Map(PHOTO_RIG.parts.map(part=>[part.name,partMeaning(part)]));
+
+// A material repack changes UVs and adds the source collar. It must not
+// substitute a different action rig or discard per-part pose ownership.
+export function v177PaisenPhotoPoseOwner(atlas){
+ if(atlas?.poses!==PHOTO_RIG.poses||!Array.isArray(atlas.parts))return false;
+ if(atlas.key!==PHOTO_RIG.key||atlas.armConstraints!==PHOTO_RIG.armConstraints||atlas.legConstraints!==PHOTO_RIG.legConstraints)return false;
+ if(atlas.parts===PHOTO_RIG.parts)return true;
+ const names=new Set();let originals=0;
+ for(const part of atlas.parts){
+  if(names.has(part.name))return false;names.add(part.name);
+  const expected=photoMeanings.get(part.name);
+  if(expected!==undefined){if(partMeaning(part)!==expected)return false;originals++;}
+  else if(part.name==='source-neck-garment'){
+   const head=PHOTO_RIG.parts.find(p=>p.bone==='head');
+   if(partMeaning(part)!==partMeaning({...head,name:'source-neck-garment',bone:'spine',upper:true}))return false;
+  }else return false;
+ }
+ return originals===PHOTO_RIG.parts.length;
+}
 
 // Keep the approved photo identity on its current rig for the complete
 // fist-wave stance, two-hand release and return. No timed damage is applied.
@@ -25,8 +49,11 @@ export function v177PaisenPhotoComboSample(runtime, definition) {
 }
 
 export function v177PaisenPhotoComboJointPose(owner, definition, { world } = {}) {
+  const atlas=V177_JOINT_ATLASES.brawler;
   if (owner?.kind !== 'brawler' || !v100BrawlerCanAct(owner)
-    || V177_JOINT_ATLASES.brawler?.path !== PHOTO_PATH) return null;
+    // Identity repainting may change the texture URL. The authored body and
+    // pose data own the fist-wave timing, rather than that historical URL.
+    || !v177PaisenPhotoPoseOwner(atlas)) return null;
   const sample = v177PaisenPhotoComboSample(owner.manualAbility, definition);
   return sample ? v177JointPose('brawler', sample, owner.animationPresentation,
     { grounded:true, actor:owner, world, stunRemaining:owner.stunned }) : null;

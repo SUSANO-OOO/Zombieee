@@ -16,7 +16,7 @@ import { v100EventPortraitSnapshot } from "./v100-event-portrait-audit.mjs";
 import { v100EventAudioSnapshot } from "./v100-event-audio-audit.mjs";
 import { installRequestFailureAudit } from "./browser-request-failure-audit.mjs";
 
-if (process.platform === "win32") throw new Error("Event audio QA is hosted-only; game or audio playback on this Windows PC is disabled");
+// Producer authorized isolated PC browser QA. This does not replace native-device acceptance.
 
 const baseUrl = new URL(process.env.V100_EVENT_AUDIO_QA_BASE_URL ?? process.env.V100_CAMPAIGN_QA_BASE_URL ?? "http://127.0.0.1:4177/");
 if (!["localhost", "127.0.0.1"].includes(baseUrl.hostname)) throw new Error(`V1 event QA is local-only; refusing ${baseUrl}`);
@@ -37,7 +37,7 @@ const eventCases = Object.freeze([
   { id: "boss-reveal", eventId: bossStage.eventIds.pre, phase: "event" },
   { id: "battle-post", eventId: bossStage.eventIds.post, phase: "post" },
   { id: "two-speaker", eventId: "v100:event:prologue", phase: "event", nodeIndex: 2, advance: false },
-  { id: "speaker-switch", eventId: "v100:event:prologue", phase: "event", nodeIndex: 1, expectedInitialSide: "left", expectedPostActionSide: "right" },
+  { id: "speaker-switch", eventId: "v100:event:prologue", phase: "event", nodeIndex: V100_STORY_EVENTS["v100:event:prologue"].nodes.findIndex(node => node.sourceKey === "r9:17"), expectedInitialSide: "left", expectedPostActionSide: "right" },
   { id: "ending", eventId: "v100:event:ending", phase: "ending" },
   { id: "credits", eventId: "v100:event:credits", phase: "credits" },
   { id: "homecoming", eventId: "v100:event:ending", phase: "ending", nodeIndex: V100_STORY_EVENTS['v100:event:ending'].nodes.findIndex(node=>node.cutId==='ending-plates-and-karaage') },

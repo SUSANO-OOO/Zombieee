@@ -93,10 +93,11 @@ async function probe(page, row, state, targets) {
     const expectedState = state === "returned-ready" ? "ready" : state;
     const card = page.locator(`button.unit-card[data-kind="${kind}"]`);
     assert.equal(await card.getAttribute("data-state"), expectedState, "expected native card state before pixel probe");
+    await card.scrollIntoViewIfNeeded();
     const img = page.locator(`button.unit-card[data-kind="${kind}"] .portrait > img`);
     const geometry = await img.evaluate(el => {
-      const card = el.closest("button"), r = el.getBoundingClientRect(), c = card.getBoundingClientRect();
-      const cost = card.querySelector(".cost"), timer = card.querySelector(".cooldown-mask small");
+      const card = el.closest("button"), r = el.getBoundingClientRect(), c = card.getBoundingClientRect(), frame = el.closest(".portrait").getBoundingClientRect();
+      const cost = card.querySelector(".v100-deploy-cost,.cost"), timer = card.querySelector(".v100-deploy-status,.cooldown-mask small");
       const labels = [cost, timer].filter(Boolean).map(label => {
         const b = label.getBoundingClientRect();
         return { kind: label === cost ? "cost" : "timer", rect: { x: b.x, y: b.y, width: b.width, height: b.height },
@@ -106,9 +107,9 @@ async function probe(page, row, state, targets) {
       const a = cost.getBoundingClientRect(), b = timer?.getBoundingClientRect();
       const timerCostOverlap = b ? Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left))
         * Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top)) : 0;
-      const x = Math.ceil(Math.max(r.x, c.x + 3)), y = Math.ceil(r.y + 3);
-      const width = Math.floor(Math.min(r.right, c.right - 3) - x), height = Math.floor(r.bottom - y - 3);
-      return { clip: { x, y, width, height }, labels, timerCostOverlap, originalStyle: el.getAttribute("style"), masks: [...card.querySelectorAll(".cost,.card-state,.cooldown-mask small")].map(e => {
+      const x = Math.ceil(Math.max(r.x, c.x + 3, frame.left)), y = Math.ceil(Math.max(r.y + 3, frame.top + 1));
+      const width = Math.floor(Math.min(r.right, c.right - 3, frame.right) - x), height = Math.floor(Math.min(r.bottom, c.bottom, frame.bottom) - y - 1);
+      return { clip: { x, y, width, height }, labels, timerCostOverlap, originalStyle: el.getAttribute("style"), masks: [...card.querySelectorAll(".v100-deploy-name,.v100-deploy-cost,.v100-deploy-status,.v100-deploy-shortage,.cost,.card-state,.cooldown-mask small")].map(e => {
         const m = e.getBoundingClientRect(); return { x: m.x - x, y: m.y - y, width: m.width, height: m.height };
       }).concat([{ x: c.x - x, y: c.bottom - y - 13, width: c.width, height: 13 }]) };
     });

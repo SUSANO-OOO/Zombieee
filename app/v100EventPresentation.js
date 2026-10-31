@@ -9,6 +9,7 @@ import { V100_RUNTIME_ASSET_MANIFEST } from "./v100RuntimeAssetManifest.js";
 import { v100EndingScoreScene, v100StoryScoreScene } from "./v100Music.js";
 import { V100_CREDITS_FILM } from "./v100CreditsFilm.js";
 import { v100StoryDirectionFor } from "./v100StoryDirection.js";
+import { v100StoryLocationFor } from "./v100StoryLocations.js";
 
 const visuals = PRODUCTION_VISUALS.stages;
 const cuts = V100_RUNTIME_ASSET_MANIFEST.storyCuts;
@@ -114,19 +115,20 @@ export function v100EventPresentationFor({ eventId, phase, node = null, nodeInde
     : "left";
   const sceneId = sceneFor(eventId, phase, stage, category, node);
   const direction = v100StoryDirectionFor(eventId, nodeIndex, node);
+  const location = v100StoryLocationFor(eventId, node);
   return Object.freeze({
     eventId: eventId ?? null,
     phase: phase ?? null,
     stageId: stage?.id ?? (eventId === "v100:event:epilogue" ? V100_STAGE_IDS[29] : null),
     stageNumber: stage?.number ?? null,
     category,
-    backgroundPath: direction.backgroundPath ?? backdropFor(eventId, node),
-    backgroundAlt: direction.backgroundAlt ?? null,
+    backgroundPath: direction.backgroundPath ?? location?.path ?? backdropFor(eventId, node),
+    backgroundAlt: direction.backgroundPath ? direction.backgroundAlt ?? null : location?.alt ?? null,
     cinematic: direction.cinematic,
     cutId: direction.cut,
     insertId: direction.insertId ?? null,
     expression: direction.expression,
-    sceneLabel: node?.sceneLabel ?? null,
+    sceneLabel: location?.label ?? node?.sceneLabel ?? null,
     nodeIndex: Math.max(0, Math.floor(Number(nodeIndex) || 0)),
     nodeKind: node?.kind ?? "action",
     nodeLabel: EVENT_KIND_LABELS[node?.kind ?? "action"] ?? "場面",

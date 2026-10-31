@@ -3,6 +3,7 @@ import {
   SURVIVAL_END_REASONS,
   SURVIVAL_RUN_PHASES,
   SURVIVAL_UPGRADE_BY_ID,
+  SURVIVAL_UPGRADE_EFFECT_FLOORS,
   beginSurvivalWave,
   completeSurvivalBossEntrance,
   completeSurvivalWave,
@@ -195,7 +196,7 @@ export function survivalWaveSpawnPlan(waveNumber, {
   );
   const units = Array.from({ length: normalCount }, (_, index) => (
     SURVIVAL_NORMAL_ENEMY_KINDS[
-      (descriptor.waveNumber * 5 + descriptor.blockNumber * 3 + index * 7) % unlockedKinds
+      (descriptor.waveNumber * 5 + descriptor.blockNumber * 3 + index * (unlockedKinds - 1)) % unlockedKinds
     ]
   ));
   if (descriptor.isBoss) {
@@ -232,10 +233,10 @@ export function survivalUpgradeEffects(run) {
   );
   return {
     attackMultiplier: 1 + effect("assault-drill"),
-    defenseMultiplier: Math.max(.2, 1 - effect("layered-armor")),
+    defenseMultiplier: Math.max(SURVIVAL_UPGRADE_EFFECT_FLOORS['layered-armor'], 1 - effect("layered-armor")),
     healingMultiplier: 1 + effect("field-triage"),
     rangeMultiplier: 1 + effect("range-calibration"),
-    redeployMultiplier: Math.max(.25, 1 - effect("rapid-redeployment")),
+    redeployMultiplier: Math.max(SURVIVAL_UPGRADE_EFFECT_FLOORS['rapid-redeployment'], 1 - effect("rapid-redeployment")),
     bossDamageMultiplier: 1 + effect("boss-breaker"),
   };
 }

@@ -71,7 +71,8 @@ test("the approved-icon integration preserves every unrelated pre-icon hash and 
     "show",
     "3e09b4c09cb1bc67cf1322bd539f5b0bc7e5d060:public/asset-manifest.json",
   ], { encoding: "utf8" }));
-  const current = JSON.parse(await readFile(new URL("../public/asset-manifest.json", import.meta.url), "utf8"));
+  // Historical release contract; the current candidate is tested in quality-runtime-update.test.mjs.
+  const current = JSON.parse(execFileSync('git', ['show', 'ff5dba24e88c810182cda1f044bd26dfc3e512c1:public/asset-manifest.json'], {encoding:'utf8',maxBuffer:4*1024*1024}));
   const v100ApprovedPaths = new Set(current.assets
     .filter(({ path }) => path.startsWith("/art/v100/"))
     .map(({ path }) => path));

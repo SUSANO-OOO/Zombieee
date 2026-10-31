@@ -5,7 +5,7 @@ import vm from 'node:vm';
 import ts from 'typescript';
 import * as React from 'react';
 import { createDefaultV100Save } from '../app/v100Save.js';
-import { normalCampaignDeploymentCount } from '../scripts/v100-normal-play-contract.mjs';
+import { normalCampaignDeploymentCount,readNormalCampaignHud,normalCampaignHudReady } from '../scripts/v100-normal-play-contract.mjs';
 import {createNormalBrowserDeadline} from '../scripts/v177-normal-browser-deadline.mjs';
 
 const driverSource = fs.readFileSync('scripts/v100-normal-campaign-playthrough.mjs', 'utf8');
@@ -33,7 +33,14 @@ function fixture({ ready = false, stuck = false, duplicate = false } = {}) {
   const probe = new Error('Stop the offline source probe after reading the real counter');
   const timeout = new Error('Battle HUD did not become visible within the original 15000ms step deadline');
   let parsed;
-  const page = { locator(selector) {
+  const page = { async evaluate(read,args) {
+    assert.equal(read,readNormalCampaignHud);
+    events.push('read-counter');
+    const node={getAttribute(name){assert.equal(name,'aria-label');return renderCounter({summonedCount:0}).props['aria-label'];}};
+    const root={querySelectorAll(selector){assert.equal(selector,'.v100-deployed-count');return ready?(duplicate?[node,node]:[node]):[];},
+      querySelector(selector){assert.equal(selector,'.phase-block');return ready?{tagName:'DIV',querySelector:()=>({textContent:'第1波'})}:null;}};
+    return read(args,root,()=>({owner:'inert',sequence:0,times:[]}));
+  },locator(selector) {
     assert.equal(selector, '.v100-deployed-count', 'no inputs may run before the visible battle HUD');
     return {
       async waitFor(options) {
@@ -42,14 +49,6 @@ function fixture({ ready = false, stuck = false, duplicate = false } = {}) {
         if (stuck) throw timeout;
         await Promise.resolve();ready = true;
       },
-      async evaluateAll(read,args) {
-        events.push('read-counter');
-        const node = { getAttribute(name) {
-          assert.equal(name, 'aria-label');
-          return renderCounter({ summonedCount: 0 }).props['aria-label'];
-        } };
-        return read(ready ? (duplicate ? [node, node] : [node]) : [],args);
-      },
     };
   } };
   const battle = vm.runInNewContext(declaration.getText(driver) + '\nbattle;', {
@@ -57,7 +56,7 @@ function fixture({ ready = false, stuck = false, duplicate = false } = {}) {
     createNormalFrameCapture:async()=>({record:async()=>{}}),
     finishNormalFrameCapture:async()=>({status:'incomplete',performanceAcceptance:false}),
     __V177_READ_NORMAL_FRAMES__:()=>({owner:'inert',sequence:0,times:[]}),
-    phaseAt: async () => 'battle', continueRequested: async () => {},
+    phaseAt: async () => 'battle', continueRequested: async () => {},readNormalCampaignHud,normalCampaignHudReady,
     normalCampaignDeploymentCount(label) {
       parsed = normalCampaignDeploymentCount(label);
       throw probe;
@@ -87,6 +86,6 @@ test('stuck asset preparation fails once within the original step deadline witho
 
 test('a visible but duplicated production counter still fails the original strict deployment contract', async () => {
   const f = fixture({ duplicate: true });
-  await assert.rejects(f.run(), /normal play requires the actual deployment counter/u);
+  await assert.rejects(f.run(), /Normal play requires the live counter and wave HUD/u);
   assert.equal(f.report.stages[0].inputs.length, 0);f.verifySave();
 });

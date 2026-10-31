@@ -1,0 +1,61 @@
+/* One anatomical camera for the cast, independent of image/equipment width. */
+#v100-campaign .v100-story-node {
+  --portrait-head-size: max(52px, calc((100dvh - 154px) / 3.95));
+  --portrait-head-top: calc(var(--portrait-head-size) * 1.3);
+}
+#v100-campaign .v100-story-node .v100-portrait-frame {
+  --portrait-slot-center: 25%;
+  top: 0; bottom: 14px; left: 0; right: 0; width: 100%;
+  aspect-ratio: auto; overflow: hidden;
+}
+#v100-campaign .v100-story-node .v100-portrait-frame[data-portrait-side="right"] { left: 0; right: 0; --portrait-slot-center: 75%; }
+#v100-campaign .v100-story-node .v100-portrait-frame[data-portrait-side="left"] { left: 0; right: 0; }
+#v100-campaign .v100-story-node .v100-portrait-frame .v100-portrait {
+  left: clamp(calc(var(--portrait-head-size) * var(--portrait-width-factor) * var(--portrait-face-fraction)), var(--portrait-slot-center), calc(100% - var(--portrait-head-size) * var(--portrait-width-factor) * (1 - var(--portrait-face-fraction))));
+  right: auto;
+  top: calc(var(--portrait-head-top) + var(--portrait-head-size) * var(--portrait-top-factor));
+  width: calc(var(--portrait-head-size) * var(--portrait-width-factor));
+  height: auto;
+  transform: translateX(calc(-1 * var(--portrait-face-center)));
+}
+#v100-campaign .v100-event-heading { display: flex; align-items: center; gap: 12px; padding-right: 84px; }
+#v100-campaign .v100-event-heading > .v100-kicker { flex: 1; min-width: 0; line-height: 1.35; text-align: center; text-shadow: 0 2px 4px #000, 0 0 12px #000; }
+#v100-campaign .v100-story-tools { display: flex; gap: 8px; flex-shrink: 0; }
+#v100-campaign .v100-story-tools button { min-height: 44px; padding: 6px 12px; font-size: 13px; background: #101b1de8; }
+
+/* Opaque reading surface, a nameplate, and one clearly separated advance action. */
+#v100-campaign .v100-event-layout .v100-story-node .v100-node-copy {
+  left: 4%; right: 4%; bottom: 14px;
+  min-height: 128px; padding: 15px 20px; gap: 7px 22px;
+  align-content: center; align-items: center;
+  border: 1px solid #836c46; border-top: 2px solid #c7a261;
+  border-radius: 2px 2px 12px 2px;
+  background: #0b1315; opacity: 1; isolation: isolate;
+  box-shadow: 0 8px 28px #000a, inset 4px 0 #ad8248;
+}
+#v100-campaign .v100-node-copy .v100-node-kind {
+  align-self: end; border: 0; margin: 0; padding: 0;
+  color: #f0c985; font-size: clamp(14px, 1.4vw, 18px); font-weight: 800;
+}
+#v100-campaign .v100-node-copy p { margin: 0; font-size: clamp(15px, 1.75vw, 22px); line-height: 1.55; }
+#v100-campaign .v100-node-copy > p,
+#v100-campaign .v100-node-copy .v100-story-prose { max-height: 28dvh; overflow-y: auto; overscroll-behavior: contain; }
+#v100-campaign .v100-node-copy .v100-story-prose p { overflow: visible; max-height: none; }
+#v100-campaign .v100-node-copy .v100-exchange-speaker { color: #f0c985; font-size: .85em; margin-right: .65em; white-space: nowrap; }
+#v100-campaign .v100-node-copy .v100-story-exchange { gap: 5px; }
+#v100-campaign .v100-node-copy .v100-event-actions { border-left: 1px solid #64706766; padding-left: 18px; }
+#v100-campaign .v100-node-copy .v100-event-actions button { min-width: 80px; min-height: 44px; }
+#v100-campaign .v100-node-copy .v100-event-actions .v100-primary { background: #784b28; border-color: #d1a061; border-radius: 3px; }
+#v100-campaign .v100-node-copy .v100-event-actions .v100-primary::after { content: ''; display: inline-block; width: 5px; height: 5px; margin-left: 9px; border-top: 2px solid currentColor; border-right: 2px solid currentColor; transform: rotate(45deg); }
+@media (max-height: 480px) and (orientation: landscape) {
+  #v100-campaign .v100-story-node { --portrait-head-size: max(48px, calc((100dvh - 100px) / 3.95)); }
+  #v100-campaign .v100-story-node .v100-portrait-frame { bottom: 8px; }
+  #v100-campaign .v100-event-heading { top: 5px; gap: 8px; }
+  #v100-campaign .v100-event-heading > .v100-kicker { font-size: 12px; }
+  #v100-campaign .v100-story-tools { gap: 5px; }
+  #v100-campaign .v100-story-tools button { padding: 5px 9px; font-size: 12px; }
+  #v100-campaign .v100-event-layout .v100-story-node .v100-node-copy { bottom: 8px; min-height: 76px; padding: 9px 13px; gap: 4px 12px; }
+  #v100-campaign .v100-node-copy .v100-node-kind { font-size: 13px; }
+  #v100-campaign .v100-node-copy p { font-size: 15px; line-height: 1.5; }
+  #v100-campaign .v100-node-copy .v100-event-actions { padding-left: 12px; }
+}

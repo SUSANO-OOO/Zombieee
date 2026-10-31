@@ -1,10 +1,13 @@
 "use client";
+import {GAMEPLAY_PRODUCTION_AUDIO_MANIFEST} from './productionAudio.js';
 
 import { v177PaisenPhotoComboJointPose } from './v177PaisenPhotoCombo.js';
+import { campaignWaveReady, campaignWavePrompt, requestCampaignWave } from './wavePacing.js';
 import { queueV105FistWave, resolveV105FistWavePaint, advanceV105FistWaves, drawV105FistWaves, v105FistWaveSnapshot, clearV105FistWaves } from './v105PaisenFistWave.js';
 import { startV105AbilityName, drawV105AbilityNames, v105AbilityNameSnapshot, v105EnemyAbilityName, clearV105AbilityNames } from './v105AbilityNames.js';
 import { v105CurrentAbilitySample, v105AbilityFacing } from './v105CurrentAbilityPose.js';
 import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
+import { v100PortraitFraming } from "./v100PortraitFraming.js";
 import { v100BasePresentationFor } from "./v100BasePresentation.js";
 import { createV100HumanWalkRenderer, v100HumanWalkPhase, v100UsesHumanWalk, v100HumanWalkCycleDistance, v100HumanWalkFrame } from "./v100HumanWalk.js";
 import { V177_JOINT_ATLASES, v177JointCycleDistance, v177JointPose, v177RangerFootPlan, v105BipedFootPlan, drawV177JointPose, v177CaptureJointPose, v177RenderedJointWeaponSocket, v177RenderedWeightedLowerReceipt } from "./v177JointPresentation.js";
@@ -792,7 +795,7 @@ type UnitCard = {
   trapDurationMultiplier?: number;
 };
 
-type MissionEvent = { at: number; wave: number; label: string; bossOnly?: boolean; bossHpRatio?: number; escortProgress?: number; waitForPriorWaveClear?: boolean; advanceOnClearAfter?: number; units: string[] };
+type MissionEvent = { at: number; wave: number; label: string; bossOnly?: boolean; bossHpRatio?: number; escortProgress?: number; waitForPriorWaveClear?: boolean; advanceOnClearAfter?: number; clearDelaySeconds?: number; units: string[] };
 type BattleDefinition = {
   stageId: string;
   operationId: string;
@@ -1436,6 +1439,7 @@ type Game = {
 };
 
 type Hud = {
+  wavePrompt?: { label: string; canAdvance: boolean } | null;
   v100SupportId?: string | null;
   missionType: BattleDefinition["missionType"];
   energy: number;
@@ -9353,6 +9357,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     at: number;
     x: number;
     dedupeKey: string | null;
+    instanceKey?: string;
     semantic?: string;
     receiptId?: string;
     ownerId?: number | string;
@@ -9644,7 +9649,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   }, [campaignSave]);
   const externalStageId = externalSession?.stageId ?? null;
   const externalSessionActive = Boolean(externalSession);
-  const playbackManifest = externalSessionActive ? V100_AUDIO_MANIFEST : PRODUCTION_AUDIO_MANIFEST;
+  const playbackManifest = externalSessionActive ? V100_AUDIO_MANIFEST : GAMEPLAY_PRODUCTION_AUDIO_MANIFEST;
   const formatBattleText = (value: string) => publicDisplayText(value, { crawlerLabel: externalSessionActive ? v100BasePresentationFor(gameRef.current.definition.missionConfig.v100StageNumber).label : "装甲車両" });
   useEffect(() => { externalSessionRef.current = externalSession; }, [externalSession]);
   const externalFormationKindsKey = externalSession?.formationKinds.join("|") ?? "";
@@ -9709,7 +9714,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     () => mobileBattleHudUnitSlots(cards, activeFormationKinds),
     [activeFormationKinds],
   );
-  const battleHudLayout = useMemo(() => mobileBattleHudLayout(battleHudViewport), [battleHudViewport]);
+  const battleHudLayout = useMemo(() => mobileBattleHudLayout({...battleHudViewport, deploymentReadout: externalSessionActive}), [battleHudViewport, externalSessionActive]);
   const formationKindKey = activeFormationKinds.join("|");
   const [campaignResult, setCampaignResult] = useState<CampaignResultView | null>(null);
   const [outbreakResult, setOutbreakResult] = useState<OutbreakResultView | null>(null);
@@ -11850,6 +11855,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           attackerKind?: EnemyKind;
           lane?: Lane;
           existingClaim?: boolean;
+          staleLiveTarget?: boolean;
         } = "walker",
       ) => {
         const g = gameRef.current;
@@ -11914,6 +11920,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             claimant.crawlerDefenseTargetId = null;
             claimant.retargetIn = 99;
             existingClaimId = claimant.id;
+            // Keep a live but out-of-policy old identity for the target-release regression.
+            if (options.staleLiveTarget === true) attacker.targetId = claimant.id;
           }
         }
         return {
@@ -11923,6 +11931,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           lane: proofLane,
           initialAttackerHp: attacker.hp,
           existingClaimId,
+          staleLiveTarget: options.staleLiveTarget === true && existingClaimId !== null,
         };
       },
       queueCrawlerDefenseUnit: (kind: UnitKind, lane: Lane = 1) => {
@@ -15614,6 +15623,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           at: performance.now(),
           x,
           dedupeKey: options.dedupeKey ?? null,
+          instanceKey: options.instanceKey,
           semantic: options.semantic,
           receiptId: options.receiptId,
           ownerId: options.ownerId,
@@ -15763,7 +15773,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     if (!isBattleSaveBoundaryActive()) return false;
     const g = gameRef.current;
     if (g.running && !g.over) {
-      g.banner = "保存処理中 // 操作を待機";
+      g.banner = "保存中…完了すると操作できます";
       g.bannerTime = Math.max(g.bannerTime, .9);
     }
     playUiOperationCue("reject", dedupeKey);
@@ -16397,7 +16407,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       ...result.runtime,
       receiptId: `airstrike:${g.battleAudioGeneration}:${g.time.toFixed(3)}`,
     } as AirstrikeRuntime;
-    g.banner = placement.adjusted ? "航空支援 // 最寄りの有効地点へ補正" : "航空支援要請 // 指定地点";
+    g.banner = placement.adjusted ? "航空支援：近くの攻撃可能な場所を狙います" : "航空支援要請 // 指定地点";
     g.bannerTime = 1; playCue("airstrike-request");
     emitBattleBark(g, "airstrike-request", "guide", "airstrike");
     return true;
@@ -19888,6 +19898,25 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               targetX: locksGrenadeLandingPoint ? hit.targetX : target?.x ?? hit.targetX,
               targetY: locksGrenadeLandingPoint ? hit.targetY : target ? target.y - 28 : hit.targetY,
             });
+            // Later normal LMG rounds emit at their scheduled muzzle event.
+            if (hit.weapon === "gunner" && (hit.raiderLineHit === true || hit.targetKind === "enemy-base")
+              && hit.raiderSecondary !== true && hit.shotIndex > 0 && hit.transactionId
+              && hit.attackSequence !== undefined) {
+              playProductionCue(weaponCueForUnit("gunner"), hit.originX, {
+                priority: 74,
+                // The timeline owns cadence; the transaction key deduplicates each round.
+                cooldownMs: 0,
+                maxInstances: 5,
+                instanceKey: `gunner-burst:${hit.sourceId}:${hit.attackSequence}`,
+                fallbackCue: "ranged-shot",
+                dedupeKey: `gunner-muzzle:${hit.transactionId}`,
+                ...(hit.attackObservation ? {
+                  receiptId: `${hit.attackObservation.audioReceiptId}:shot:${hit.shotIndex}`,
+                  ownerId: hit.attackObservation.sourceId,
+                  activationId: hit.attackObservation.attackSequence,
+                } : {}),
+              });
+            }
             if (hit.weapon === "mrs-chiha") {
               playProductionCue(unitAudioCueFor("mrs-chiha", "weapon", "shot"), hit.originX, {
                 priority: 72,
@@ -20587,10 +20616,12 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         } else {
           while (g.eventIndex < g.definition.timeline.length) {
             const mission = g.definition.timeline[g.eventIndex] as MissionEvent;
+            const clearDriven = Number.isFinite(mission.clearDelaySeconds);
+            if (clearDriven && !campaignWaveReady(g, mission)) break;
             const scheduled = g.time >= mission.at;
             const earlyCandidate = !scheduled && Number.isFinite(mission.advanceOnClearAfter)
               && g.time >= Number(mission.advanceOnClearAfter);
-            if (!scheduled && !earlyCandidate) break;
+            if (!scheduled && !earlyCandidate && !clearDriven) break;
             const priorWaveClear = (earlyCandidate || mission.waitForPriorWaveClear)
               && g.enemySpawn.pending.length === 0
               && !g.fighters.some(fighter => fighter.side === "zombie" && fighter.hp > 0);
@@ -22857,6 +22888,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                     raiderLineHit: true,
                     raiderSecondary: false,
                     sourceId: f.id,
+                    attackSequence: committedAttackSequence,
                     targetId: target.id,
                     targetX: target.x,
                     targetY: target.y - 28,
@@ -23144,6 +23176,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                     priority: f.kind === "gunner" || f.kind === "brute" || f.kind === "crazy-king" ? 74 : 64,
                     cooldownMs: f.kind === "crazy-king" ? 110 : f.kind === "kumaverson" ? 120 : f.kind === "babayaga" ? 90 : f.kind === "gunner" ? 45 : 70,
                     volume: f.kind === "crazy-king" ? .66 : f.kind === "kumaverson" ? .52 : undefined,
+                    instanceKey: f.kind === "gunner" ? `gunner-burst:${f.id}:${f.attackSequence}` : undefined,
                     maxInstances: f.kind === "crazy-king" || f.kind === "kumaverson" ? 1 : f.kind === "babayaga" ? 4 : 5,
                     fallbackCue: ["ranger", "gunner", "medic", "babayaga", "engineer"].includes(f.kind)
                       ? "ranged-shot"
@@ -23329,7 +23362,11 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                   const muzzle = weaponAnchorForTarget(f, target);
                   addShot(g, muzzle.x, muzzle.y, target.x, target.y - 28, .26, "human", .26, ranged ? "projectile" : "melee", f.kind, roleEffect ?? undefined, f.id, target.id, target.id, emphasized, undefined, undefined, undefined, undefined, undefined);
                 }
-                if (roleEffect && !["crazy-king", "kumaverson", "babayaga"].includes(f.kind)) playCue(`role-${roleEffect}` as SfxCueId);
+                if (roleEffect && !["crazy-king", "kumaverson", "babayaga"].includes(f.kind)
+                  && (!productionMixerRef.current
+                    || LEGACY_SFX_CUE_MAP[`role-${roleEffect}` as SfxCueId] !== attackAudioCueId)) {
+                  playCue(`role-${roleEffect}` as SfxCueId);
+                }
                 if (!productionMixerRef.current) {
                   if (["ranger", "gunner", "medic", "babayaga", "engineer"].includes(f.kind)) playCue("ranged-shot", { frequency: 310 + Math.random() * 50 });
                   else playCue("melee-hit");
@@ -23382,6 +23419,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                     priority: f.kind === "brute" || f.kind === "gunner" || f.kind === "crazy-king" ? 76 : 64,
                     cooldownMs: f.kind === "crazy-king" ? 110 : f.kind === "kumaverson" ? 125 : f.kind === "babayaga" ? 90 : f.kind === "gunner" ? 45 : 75,
                     volume: f.kind === "crazy-king" ? .64 : f.kind === "kumaverson" ? .5 : undefined,
+                    instanceKey: f.kind === "gunner" ? `gunner-burst:${f.id}:${f.attackSequence}` : undefined,
                     maxInstances: f.kind === "crazy-king" || f.kind === "kumaverson" ? 1 : f.kind === "babayaga" ? 4 : 5,
                     fallbackCue: f.kind === "brute" ? "structure-heavy" : "structure-light",
                     dedupeKey: f.kind === "babayaga"
@@ -23420,6 +23458,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                       targetKind: "enemy-base" as const,
                       researchTargetId: enemyBaseTarget.researchTargetId,
                       sourceId: f.id,
+                      attackSequence: f.attackSequence,
                       targetId: null,
                       targetX: enemyBaseTarget.x,
                       targetY: enemyBaseTarget.y,
@@ -23641,7 +23680,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             const dx = target.x - f.x;
             const stoppingDistance = Math.max(18, f.range + target.bodyRadius * .55);
             const desiredX = allyIntent?.destinationX ?? (target.x - Math.sign(dx || 1) * stoppingDistance);
-            if (Math.abs(desiredX - f.x) > 2) {
+            if (Math.abs(desiredX - f.x) > (allyIntent?.precisionApproach ? 0 : 2)) {
               f.x += Math.sign(desiredX - f.x) * Math.min(Math.abs(desiredX - f.x), combatApproachSpeed(humanMovementSpeed,desiredX-f.x) * dt);
               f.x = Math.max(humanMinX, Math.min(humanMaxX, f.x));
             }
@@ -24555,6 +24594,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           });
         }
         setHud({
+          wavePrompt: campaignWavePrompt(g),
           missionType: g.definition.missionType, energy: Math.floor(g.energy), supportGauge: Math.floor(g.supportGauge), scrap: g.scrap, kills: g.kills,
           supportItemCooldowns: { ...g.supportItemCooldowns },
           v100SupportId: g.v100SupportId,
@@ -24694,10 +24734,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     ?? (hud.airstrikePhase !== "idle"
       ? "航空支援実行中"
       : hud.supportGauge < airstrikeCost
-        ? `支援不足 ${hud.supportGauge}/${airstrikeCost}`
+        ? `支援ゲージ不足 ${hud.supportGauge}/${airstrikeCost}`
         : null);
   const crawlerBlockReason = commonBattleActionBlockReason
-    ?? (hud.crawlerPhase !== "ready" ? `再装填 ${Math.round(hud.crawlerCharge * 100)}%` : hud.supportGauge < barrageCost ? `支援不足 ${hud.supportGauge}/${barrageCost}` : null);
+    ?? (hud.crawlerPhase !== "ready" ? `再装填 ${Math.round(hud.crawlerCharge * 100)}%` : hud.supportGauge < barrageCost ? `支援ゲージ不足 ${hud.supportGauge}/${barrageCost}` : null);
   const selectedSupplyCompactDetail = (!selectedSupplyDefinition ? "出撃装備で選択" : null) ?? commonBattleActionBlockReason
     ?? (hud.supportItemCooldowns[selectedSupply] > 0
       ? `再準備 ${Math.ceil(hud.supportItemCooldowns[selectedSupply])}秒`
@@ -24777,8 +24817,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         {externalSessionActive && (!assetsReady || assetError) && <section className="v100-battle-asset-status" aria-label="戦闘データの準備">
           <div><h2>{assetError ? "戦闘データを準備できませんでした" : "戦闘データを準備しています"}</h2>
             <p role={assetError ? "alert" : "status"}>{assetError ? "戦闘に必要な画像を読み込めませんでした。接続を確認して、もう一度お試しください。" : "必要な画像がそろうまで戦闘は始まりません。"}</p>
-            <p>確認済み {assetReadiness.completed} / {assetReadiness.total} 件{assetReadiness.pending > 0 ? `・待機中 ${assetReadiness.pending} 件` : ""}{assetReadiness.failed > 0 ? `・失敗 ${assetReadiness.failed} 件` : ""}</p>
-            {(assetReadiness.retryAvailable || assetError || assetReadiness.retrying) && <button type="button" disabled={assetReadiness.retrying} onClick={retryAssets}>{assetReadiness.retrying ? "画像を再読み込みしています…" : "失敗・待機中の画像を再読み込み"}</button>}
+            <p>読み込み完了 {assetReadiness.completed} / {assetReadiness.total}{assetReadiness.pending > 0 ? `・読み込み待ち ${assetReadiness.pending}` : ""}{assetReadiness.failed > 0 ? `・読み込めなかった画像 ${assetReadiness.failed}` : ""}</p>
+            {(assetReadiness.retryAvailable || assetError || assetReadiness.retrying) && <button type="button" disabled={assetReadiness.retrying} onClick={retryAssets}>{assetReadiness.retrying ? "画像を再読み込みしています…" : "画像をもう一度読み込む"}</button>}
           </div>
         </section>}
         {screen === "battle" && hud.manualAbilityIcons.map((icon) => {
@@ -24877,7 +24917,12 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               </>}
             </div>
             <div className="battle-controls-zone">
-              <div className="phase-block"><small>第{hud.phase}段階</small><strong>{phaseName}</strong><em>第{hud.wave}波</em></div>
+              {hud.wavePrompt?.canAdvance
+                ? <button className="phase-block next-wave-control" aria-label="準備を終えて次の波へ" disabled={paused || Boolean(end || battleSaveBoundaryRef.current)} onClick={() => {
+                  const g = gameRef.current;
+                  if (g.running && !g.paused && !g.over && !battleSaveBoundaryRef.current) requestCampaignWave(g);
+                }}><small>{hud.wavePrompt.label}</small><strong>次波へ</strong><em>第{hud.wave + 1}波</em></button>
+                : <div className="phase-block"><small>第{hud.phase}段階</small><strong>{hud.wavePrompt?.label ?? phaseName}</strong><em>第{hud.wave}波</em></div>}
               <button className="icon-btn" onClick={togglePause} aria-disabled={battleSaveBoundaryRef.current} aria-label={paused ? "再開" : "一時停止"}>{paused ? "▶" : "Ⅱ"}</button>
               {compactBattleAudioUnlock ? <button className="icon-btn audio-btn audio-unlock-inline" data-state={audioUnlockUi} data-audio-unlock-control="true" onClick={enableAudio} disabled={audioUnlockUi === "pending" || Boolean(end || pendingResultCommit || battleSaveBoundaryRef.current)} aria-label={audioUnlockUi === "failed" ? "音声を再試行" : audioUnlockUi === "partial" ? "利用できない音声だけ再試行" : "音声を有効にする"} aria-live="polite"><b>♫</b><small>{compactAudioUnlockLabel}</small></button> : <button className={`icon-btn audio-btn ${musicActive ? "playing" : ""}`} data-playing={musicActive} data-muted={bgmMuted} disabled={Boolean(end || pendingResultCommit || battleSaveBoundaryRef.current)} onClick={toggleBgm} aria-label={bgmMuted ? "音楽を再生" : "音楽をミュート"}><b>{bgmMuted ? "×" : "♫"}</b><small>音楽</small></button>}
               <button className="icon-btn audio-btn" data-muted={sfxMuted} disabled={Boolean(end || pendingResultCommit || battleSaveBoundaryRef.current)} onClick={toggleSfx} aria-label={sfxMuted ? "効果音を再生" : "効果音をミュート"}><b>{sfxMuted ? "×" : "効"}</b><small>効果音</small></button>
@@ -24940,12 +24985,25 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                       : hud.energy < card.cost
                         ? "指揮不足"
                         : null);
-                 const cardState = cooldown > 0 ? "cooldown" : cardBlockReason ? (cardBlockReason === "指揮不足" ? "insufficient" : cardBlockReason === "同時出撃の上限" ? "full" : "blocked") : "ready";
+                 const cardState = commonBattleActionBlockReason ? "blocked" : cardBlockReason === "同時出撃の上限" ? "full" : cooldown > 0 ? "cooldown" : cardBlockReason ? (cardBlockReason === "指揮不足" ? "insufficient" : "blocked") : "ready";
                  const missingCommandPoints = Math.max(0, Math.ceil(card.cost - hud.energy));
                  const cardBlockCopy = cardBlockReason === "指揮不足" ? `指揮があと${missingCommandPoints}必要` : cardBlockReason;
+                 const cardAccessibleState = externalSessionActive && cardState === "cooldown"
+                   ? `再出撃まで${cooldown}秒${missingCommandPoints > 0 ? ` / 指揮があと${missingCommandPoints}必要` : ""}`
+                   : cardBlockCopy ?? "出撃可能";
                  return (
-                   <button key={`${card.kind}-${slotIndex}`} className={`unit-card ${cooldown > 0 ? "cooling" : ""} state-${cardState}`} data-kind={card.kind} data-slot-index={slotIndex} data-portrait={portraitArt ? "approved" : "diagnostic"} data-block-reason={cardBlockReason ?? "ready"} data-state={cardState} aria-label={`${card.name} / ${cardBlockCopy ?? "出撃可能"} / コスト ${card.cost}`} aria-disabled={Boolean(cardBlockReason)} onClick={() => deployHuman(card.kind)} style={portraitArt ? { "--unit-card-art": `url('${portraitArt}')` } as CSSProperties : undefined}>
+                   <button key={`${card.kind}-${slotIndex}`} className={`unit-card ${externalSessionActive ? "v100-deploy-card" : ""} ${cooldown > 0 ? "cooling" : ""} state-${cardState}`} data-kind={card.kind} data-slot-index={slotIndex} data-portrait={portraitArt ? "approved" : "diagnostic"} data-block-reason={cardBlockReason ?? "ready"} data-state={cardState} data-cooldown={cooldown} data-missing-command={missingCommandPoints} aria-label={`${card.name} / ${cardAccessibleState} / ${externalSessionActive ? "必要指揮" : "コスト"} ${card.cost}`} aria-disabled={Boolean(cardBlockReason)} onClick={() => deployHuman(card.kind)} style={portraitArt ? { "--unit-card-art": `url('${portraitArt}')`, ...(externalSessionActive ? v100PortraitFraming(combatKindToCampaignUnitId(card.kind)) : {}) } as CSSProperties : undefined}>
                     <span className="portrait"><i />{portraitArt ? <img src={portraitArt} alt="" aria-hidden="true" draggable={false} decoding="async" /> : <b className="diagnostic-portrait" aria-hidden="true">{card.kind === "guardian" ? "盾" : "工"}</b>}</span>
+                    {externalSessionActive ? <>
+                      <span className="v100-deploy-heading" aria-hidden="true">
+                        <span className="v100-deploy-name">{card.name}</span>
+                        <span className="v100-deploy-cost"><small>指揮</small><b>{card.cost}</b></span>
+                      </span>
+                      <span className="v100-deploy-readout" aria-hidden="true">
+                        <span className="v100-deploy-status">{cardState === "ready" ? "出撃できる" : cardState === "cooldown" ? `再出撃 ${cooldown}秒` : cardState === "insufficient" ? `指揮 あと${missingCommandPoints}` : cardState === "full" ? "出撃枠待ち" : cardBlockCopy}</span>
+                        {cardState === "cooldown" && missingCommandPoints > 0 && <span className="v100-deploy-shortage">指揮 あと{missingCommandPoints}</span>}
+                      </span>
+                    </> : <>
                     <span className="card-copy" aria-hidden="true"><b>{card.name}</b><small>{card.desc}</small></span><span className="cost"><i className="cost-mark" aria-hidden="true">指揮</i>{card.cost}</span>
                     {!cooldown && cardState !== "ready" && <span className="card-state" data-state={cardState}>
                       <span className="card-state-full">{cardBlockCopy}</span>
@@ -24955,6 +25013,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                       className="cooldown-mask"
                       style={{ "--cooldown-progress": `${Math.min(100, cooldown / Math.max(1, card.deployCooldown) * 100)}%` } as CSSProperties}
                     ><small><span className="cooldown-full">再準備 {cooldown}秒</span><span className="cooldown-compact">{cooldown}秒</span></small></span>}
+                    </>}
                   </button>
                 );
               })}
@@ -25058,7 +25117,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             </button>
           </section>
           {!isSurvivalBattle && !externalSessionActive && <section className="pause-story" aria-label="戦闘中の会話設定"><span><b>戦闘中の会話</b><small>既読イベントの再表示方法</small></span><button disabled={externalSettingsPending} onClick={cycleBattleEventMode}>{campaignSave.settings.battleEventMode === "first-time" ? "初回のみ" : campaignSave.settings.battleEventMode === "compact" ? "通信を簡略表示" : "毎回すべて表示"}</button></section>}
-          {pauseConfirm && <div className="pause-confirm" role="alertdialog" aria-modal="true"><div><h3>{pauseConfirm === "restart" ? "ステージをやり直しますか？" : pauseConfirm === "loadout" ? "編成画面へ戻りますか？" : "ステージから撤退しますか？"}</h3><p>{isSurvivalBattle ? (externalSessionActive ? "制圧済みの波の未受取報酬を保存してステージを終了します。" : "制圧済みの波の報酬を一括保存してステージを終了します。") : "現在の戦闘状態は破棄されます。星・報酬・解放は発生しません。"}</p><span><button onClick={cancelPauseAction}>キャンセル</button><button className="danger" onClick={confirmPauseAction}>実行する</button></span></div></div>}
+          {pauseConfirm && <div className="pause-confirm" role="alertdialog" aria-modal="true"><div><h3>{pauseConfirm === "restart" ? "ステージをやり直しますか？" : pauseConfirm === "loadout" ? "編成画面へ戻りますか？" : "ステージから撤退しますか？"}</h3><p>{isSurvivalBattle ? (externalSessionActive ? "制圧済みの波の未受取報酬を保存してステージを終了します。" : "制圧済みの波の報酬を一括保存してステージを終了します。") : "この戦闘の途中経過は失われます。星や報酬は獲得できず、新しい仲間や装備も解禁されません。"}</p><span><button onClick={cancelPauseAction}>キャンセル</button><button className="danger" onClick={confirmPauseAction}>{pauseConfirm === "restart" ? "最初からやり直す" : pauseConfirm === "loadout" ? "編成に戻る" : "撤退する"}</button></span></div></div>}
         </div></div>}
         </>}
         {screen === "survival" && <div className="survival-lobby campaign-overlay"><section>

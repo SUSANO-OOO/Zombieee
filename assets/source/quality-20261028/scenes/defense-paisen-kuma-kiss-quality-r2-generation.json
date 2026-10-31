@@ -1,0 +1,13 @@
+{
+  "tool": "built-in image_gen",
+  "referenced_image_paths": [
+    "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/public/art/v100/credits/defense-paisen-kuma-kiss-r1.webp",
+    "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/paisen-photo-master-r7.png",
+    "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/kumaverson-master-r2.png"
+  ],
+  "transparent_background": false,
+  "prompt": "Edit IMAGE 1, the existing 16:9 staff-roll scene, preserving its exact affectionate comedy and composition: PAISEN on the LEFT in navy shirt and pale shorts sings/shouts joyfully with one open raised hand and windblown white towel; KUMAVERSON on the RIGHT in stained off-white short-sleeve shirt kisses Paisen's cheek, an arm around his shoulders, holding his existing frying pan down at his side. These are two adult men. IMAGE2 is the locked EXISTING GENERATED PRIMARY MODEL of PAISEN. IMAGE3 is the locked EXISTING GENERATED PRIMARY MODEL of KUMAVERSON. Match those two particular faces, hairstyle, skull proportions, age and physiques closely, adapted naturally to these expressions; do not invent replacement handsome men, do not mix their faces, do not give Kuma Babayaga's narrower face. Paisen retains his short dark crew-cut, distinct face and sturdy natural build without bodybuilder inflation. Kuma retains image3's dark medium parted hair, characteristic eyes, nose/mouth and broader cheeks/jaw, with the handsome clean grooming of that SAME model. Preserve all clothing, towel, pan, the sunset fortified street, contact of the kiss, natural hands/fingers and the existing scene's warmth. Unify the whole image with realistic photographic human skin, hair, cloth and worn materials plus a subtle illustrative finish, coherent with the supplied models and post-apocalyptic RPG art, no heavy anime linework or plastic shine. Keep both heads and the raised hand inside the frame. No new actors, no plot change, no text/captions/panels. One finished 16:9 illustration.",
+  "output": "defense-paisen-kuma-kiss-quality-r2.png",
+  "generatedOriginal": "C:/Users/okait/.codex/generated_images/01a180c8-9e05-7871-b287-613f7c7eb364/exec-76b6749f-5ad6-457f-ad1d-ba599a9ff949.png",
+  "statusAtGeneration": "Generated scene candidate; not connected to runtime yet. Identity and in-game review pending."
+}

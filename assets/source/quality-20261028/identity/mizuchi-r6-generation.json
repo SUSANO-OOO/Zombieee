@@ -1,0 +1,53 @@
+{
+  "method": "built-in image_gen",
+  "variants": [
+    {
+      "expression": "determined",
+      "args": {
+        "referenced_image_paths": [
+          "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028\\assets\\source\\quality-20261028\\identity\\mizuchi-master-r4.png"
+        ],
+        "transparent_background": true,
+        "prompt": "Edit this exact established adult woman Mizuchi. Preserve precisely the same complete full-body camera, image dimensions, silhouette, pose, head position, face identity, hairstyle, amber glasses, beauty mark, purple suit, respirator, yellow glove, long scoped rifle pointed down, hands, equipment, legs and boots. Change ONLY her facial expression to quiet firm determination, lips closed and eyes focused. Preserve her individual facial proportions, eye spacing, nose, lips, jaw, age, matte skin and restrained realistic painted rendering. Do not reposition any body part, change clothing coverage, crop the figure, or add any object. One individual expression variant, never a collage or sheet. Genuinely transparent alpha background, no backdrop, floor, shadow rectangle, text or border."
+      }
+    },
+    {
+      "expression": "alarm",
+      "args": {
+        "referenced_image_paths": [
+          "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028\\assets\\source\\quality-20261028\\identity\\mizuchi-master-r4.png"
+        ],
+        "transparent_background": true,
+        "prompt": "Edit this exact established adult woman Mizuchi. Preserve precisely the same complete full-body camera, image dimensions, silhouette, pose, head position, face identity, hairstyle, amber glasses, beauty mark, purple suit, respirator, yellow glove, long scoped rifle pointed down, hands, equipment, legs and boots. Change ONLY her facial expression to restrained concern and surprise, eyebrows slightly raised and lips slightly parted. Preserve her individual facial proportions, eye spacing, nose, lips, jaw, age, matte skin and restrained realistic painted rendering. Do not reposition any body part, change clothing coverage, crop the figure, or add any object. One individual expression variant, never a collage or sheet. Genuinely transparent alpha background, no backdrop, floor, shadow rectangle, text or border."
+      }
+    },
+    {
+      "expression": "grief",
+      "args": {
+        "referenced_image_paths": [
+          "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028\\assets\\source\\quality-20261028\\identity\\mizuchi-master-r4.png"
+        ],
+        "transparent_background": true,
+        "prompt": "Edit this exact established adult woman Mizuchi. Preserve precisely the same complete full-body camera, image dimensions, silhouette, pose, head position, face identity, hairstyle, amber glasses, beauty mark, purple suit, respirator, yellow glove, long scoped rifle pointed down, hands, equipment, legs and boots. Change ONLY her facial expression to quiet sadness, gaze slightly lowered and mouth subdued. Preserve her individual facial proportions, eye spacing, nose, lips, jaw, age, matte skin and restrained realistic painted rendering. Do not reposition any body part, change clothing coverage, crop the figure, or add any object. One individual expression variant, never a collage or sheet. Genuinely transparent alpha background, no backdrop, floor, shadow rectangle, text or border."
+      }
+    }
+  ],
+  "status": "Local quality-r1 portraits connected; see mizuchi-runtime-r1 and docs/qa/quality-20261028.md for exact observed scope. Battle/cuts/credits and Producer acceptance remain open. Source family storage review required before commit.",
+  "outputs": [
+    {
+      "path": "mizuchi-determined-r6.png",
+      "sha256": "9a16063a6f437fc3176429180efdcd65f6d1f31c745af914a116549aa70069ec",
+      "bytes": 1237895
+    },
+    {
+      "path": "mizuchi-alarm-r6.png",
+      "sha256": "fd77816f447728997a8dd91732c5c07aecb570dc012dbcbe3fa9b30e4cfb504b",
+      "bytes": 1286929
+    },
+    {
+      "path": "mizuchi-grief-r6.png",
+      "sha256": "daa62e0924aa57a8a997148cc898e9d75dc5beb3538c4cf787a1cf5d7eafc47f",
+      "bytes": 1225647
+    }
+  ]
+}

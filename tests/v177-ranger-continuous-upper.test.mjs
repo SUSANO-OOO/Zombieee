@@ -1,3 +1,4 @@
+import {assertMaterialRigGeometry} from './helpers/quality-material-contract.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
@@ -5,6 +6,7 @@ import {createHash} from 'node:crypto';
 import {gunzipSync} from 'node:zlib';
 import sharp from 'sharp';
 import {V177_JOINT_ATLASES,v177JointPose,v177CaptureJointPose} from '../app/v177JointPresentation.js';
+import {V177_JOINT_ATLASES as authoredAtlases} from '../app/v177JointData.js';
 import {createCombatAnimationRuntime,advanceCombatAnimationRuntime} from '../app/combatPresentation.js';
 import {buildV177RangerUpper} from '../scripts/build-v177-ranger-upper.mjs';
 import {traceRangerPose,rangerPoint as point} from './helpers/v177-ranger-render.mjs';
@@ -34,23 +36,24 @@ function paintDifference(a,b) {
   return error;
 }
 
-test('all original 152 decoded cells, including weighted lower120, remain byte-exact with stable coordinates',async()=>{
+test('the authored atlas retains all original 152 decoded cells byte-exact; runtime head derivatives retain its geometry',async()=>{
   const old=await sharp(await readFile(new URL('../public/art/v100/joints/ranger-r1.webp',import.meta.url))).ensureAlpha().raw().toBuffer();
-  const bytes=await readFile(new URL('../public'+atlas.path,import.meta.url));
+  const bytes=await readFile(new URL('../public'+authoredAtlases.ranger.path,import.meta.url));
+  assertMaterialRigGeometry(atlas,authoredAtlases.ranger);
   const packed=await sharp(bytes).ensureAlpha().raw().toBuffer({resolveWithObject:true});
   assert.ok(packed.data.subarray(0,old.length).equals(old),'every original RGBA byte, even under alpha0, is retained');
   const keys=['key','width','height','frameCount','settleLevels','cycleDistance','frames','pelvisOffsets','muzzles','lowerCount'];
   assert.equal(createHash('sha256').update(JSON.stringify(Object.fromEntries(keys.map(k=>[k,atlas[k]])))).digest('hex'),
     'd1320ed433a08eebdf64047e5b1fb80e780be0bdfc3f322b0b71f21b27ae115e');
   assert.equal(atlas.key,'joint-ranger');assert.equal(atlas.lowerCount,120);assert.equal(atlas.frames.length,152);
-  assert.equal(atlas.decodedBytes,packed.info.width*packed.info.height*4);assert.ok(atlas.decodedBytes<=6*1024*1024);
+  assert.equal(authoredAtlases.ranger.decodedBytes,packed.info.width*packed.info.height*4);assert.ok(atlas.decodedBytes<=6*1024*1024);
   assert.ok(rig.parts.every(p=>p.source.y>=1015));
 });
 
 test('real upper paint follows continuous weapon IK with fixed shoulder, elbow, wrist and neck attachments',()=>{
   for(const phase of [0,.071,.249,.371,.673,.999])for(const settle of [0,.33,.66,1])for(let i=0;i<=300;i++) {
     const plan=v177JointPose('ranger',sample(i/300),{locomotionPhase:phase,locomotionSettle:settle});
-    const trace=traceRangerPose(plan);assert.equal(trace.painted,true);assert.equal(trace.calls.length,8);
+    const trace=traceRangerPose(plan);assert.equal(trace.painted,true);assert.equal(trace.calls.length,1+V177_JOINT_ATLASES.ranger.upperRig.parts.length);
     connected(upperMatrices(trace),`${phase}/${settle}/${i}`);
   }
 });

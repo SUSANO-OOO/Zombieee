@@ -11,7 +11,7 @@ import {v102BattleDisplaySize} from '../app/v102BattleScale.js';
 import {v102BattleBodyScale} from '../app/v102CombatMotion.js';
 import {requiredBattleAssetPlan} from '../app/battleAssetPlan.js';
 import {CAMPAIGN_STAGE_IDS} from '../app/campaign.js';
-import {V177_JOINT_ASSET_ADDITIONS} from '../scripts/v177-joint-asset-contract.mjs';
+import {V177_JOINT_ASSET_ADDITIONS} from '../scripts/v177-runtime-joint-asset-contract.mjs';
 
 const dir=new URL('../assets/source/v100/joints/scout-r1/',import.meta.url);
 const definition=JSON.parse(await readFile(new URL('parts.json',dir)));
@@ -24,7 +24,7 @@ function render(plan){
  const matrices=[],calls=[];
  const ctx={save(){},restore(){},translate(){},scale(){},transform(...m){matrices.push(m);},drawImage(...a){calls.push(a);}};
  assert.equal(withV177PaintPartIdentity(()=>drawV177JointPose(ctx,{naturalWidth:atlas.decodedWidth},'scout',plan,0,0,480,448),ctx,'scout',[matrices,calls]),true);
- assert.equal(calls.length,16);return matrices;
+  assert.equal(calls.length,atlas.parts.length,'Every active material, including the restored collar, is painted once');return matrices;
 }
 
 test('both biped legs keep fixed lengths, painted ground support and a travel-scaled stride; the crowbar stays in its hand',async()=>{

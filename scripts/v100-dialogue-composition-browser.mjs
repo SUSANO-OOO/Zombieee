@@ -3,9 +3,8 @@ import {mkdir,writeFile} from 'node:fs/promises';
 import {dirname} from 'node:path';
 import {pwaBrowserType} from './pwa-browser-runtime.mjs';
 import {V100_STORY_EVENTS} from '../app/v100StoryEvents.js';
-import {V100_R9_SCENE_ASSETS} from '../app/v100R9SceneAssets.js';
-import {V100_R5_STORY_CUTS} from '../app/v100StoryDirection.js';
-import {V177_PAISEN_STORY_REPLACEMENTS} from './v177-paisen-story-asset-contract.mjs';
+import {v100StoryDirectionFor} from '../app/v100StoryDirection.js';
+import {isV100StoryBackdropReady} from './v100-story-backdrop-ready.mjs';
 import {v100StoryInsertFor} from '../app/v100StoryInserts.js';
 import {v100StoryPageFor} from '../app/v100StoryPages.js';
 import {enterV100FromTitle} from './v100-title-qa-entry.mjs';
@@ -43,29 +42,18 @@ const all=Object.entries(V100_STORY_EVENTS).flatMap(([eventId,event])=>event.nod
 const longest=all.filter(x=>x.node.kind==='dialogue').sort((a,b)=>b.node.text.length-a.node.text.length)[0];
 // Every new illustrated cut and explanatory insert is inspected. Fixtures
 // bind to the current producer script, rather than obsolete R5 node indices.
-const cutCases=Object.entries(V100_R9_SCENE_ASSETS).map(([cutId,asset])=>{
- const found=all.find(({node})=>node.cutId===cutId);
- assert.ok(found,`Unbound R9 cut: ${cutId}`);
- return {id:cutId,eventId:found.eventId,nodeIndex:found.nodeIndex,backdrop:asset.path};
-});
+const currentCuts=new Map();
+for(const {eventId,nodeIndex,node}of all){
+ const direction=v100StoryDirectionFor(eventId,nodeIndex,node);
+ if(direction.cut&&!currentCuts.has(direction.cut))currentCuts.set(direction.cut,{id:direction.cut,eventId,nodeIndex,backdrop:direction.backgroundPath});
+}
+const cutCases=[...currentCuts.values()];
 const insertIds=[...new Set(all.map(({node})=>node.insertId).filter(Boolean))];
 const insertCases=insertIds.map(insertId=>{
  const found=all.find(({node})=>node.insertId===insertId);
  return {id:'insert-'+insertId,eventId:found.eventId,nodeIndex:found.nodeIndex,insertId};
 });
-assert.equal(cutCases.length,17);
-function revisedLegacyCutCases() {
- return V177_PAISEN_STORY_REPLACEMENTS.flatMap(revision=>{
-  const asset=Object.entries(V100_R5_STORY_CUTS).find(([,path])=>path===revision.path);
-  if(!asset)return [];
-  const [cutId,backdrop]=asset,found=all.find(({node})=>node.cutId===cutId);
-  assert.ok(found,'Unbound revised legacy cut: '+cutId);
-  assert.notEqual(revision.previous.hash,revision.next.hash,'The fixture must exercise a changed painted source');
-  return [{id:'revised-'+cutId,eventId:found.eventId,nodeIndex:found.nodeIndex,backdrop}];
- });
-}
-const revisedLegacyCases=revisedLegacyCutCases();
-assert.equal(revisedLegacyCases.length,2);
+assert.equal(cutCases.length,23,'all active R9 and retained R5 story cuts, including the three new Babayaga scenes');
 assert.equal(insertCases.length,18);
 const insertStateCases=[
  {id:'message-backlog-received',insertId:'message-backlog',matches:state=>state.messageVisible&&!state.dated},
@@ -79,16 +67,20 @@ const insertStateCases=[
 });
 const phoneMessage=all.find(({node})=>node.insertId==='message-backlog'&&node.sourceLine===604)?.node.text;
 assert.ok(phoneMessage,'the phone graphic must retain the received producer message');
-const cases=[{id:'pair',eventId:'v100:event:prologue',nodeIndex:2},ownerCase('guide-ikura'),ownerCase('red-panther-commander'),ownerCase('mugarian-president'),{id:'longest-dialogue',eventId:longest.eventId,nodeIndex:longest.nodeIndex},...cutCases,...revisedLegacyCases,...insertCases,...insertStateCases];
+const cases=[{id:'pair',eventId:'v100:event:prologue',nodeIndex:2},ownerCase('guide-ikura'),ownerCase('red-panther-commander'),ownerCase('mugarian-president'),{id:'longest-dialogue',eventId:longest.eventId,nodeIndex:longest.nodeIndex},...cutCases,...insertCases,...insertStateCases];
 // Validate every checkpoint before starting a browser, including the settled
 // reward-confirmation phase. A malformed seed must not become a UI timeout.
 const fixtureSaves=new Map(cases.map(fixture=>[fixture.id,serializeV100Save(createV100DialogueFixture(fixture))]));
-const report={scope:'Explicit isolated story fixtures; visual composition and native next controls, not whole-campaign acceptance',build:await productionBuildIdentity(),results:[]};
+const requestedIds=process.env.V100_DIALOGUE_QA_ONLY_IDS?.split(',');
+if(requestedIds)assert.equal(new Set(requestedIds).size,requestedIds.length,'explicit scene selection cannot repeat');
+const selectedCases=requestedIds?cases.filter(fixture=>requestedIds.includes(fixture.id)):cases;
+assert.equal(selectedCases.length,requestedIds?.length??cases.length,'each selected scene must resolve exactly once');
+const report={scope:'Explicit isolated story fixtures; visual composition and native next controls, not whole-campaign acceptance',selectedCaseIds:selectedCases.map(fixture=>fixture.id),build:await productionBuildIdentity(),results:[]};
 const engines=(process.env.V100_DIALOGUE_QA_ENGINES??'chromium,webkit').split(',');
 for(const engine of engines){
  const browserType=await pwaBrowserType(engine);
- const browser=await browserType.launch({headless:true,...(process.env.V100_DIALOGUE_QA_EXECUTABLE?{executablePath:process.env.V100_DIALOGUE_QA_EXECUTABLE}:{})});
- try{for(const viewport of [{width:844,height:340},{width:844,height:390},{width:1280,height:720}])for(const fixture of cases){
+ const browser=await browserType.launch({headless:true,...(engine==='chromium'?{args:['--mute-audio']} : {}),...(process.env.V100_DIALOGUE_QA_EXECUTABLE?{executablePath:process.env.V100_DIALOGUE_QA_EXECUTABLE}:{})});
+ try{for(const viewport of [{width:844,height:340},{width:844,height:390},{width:1280,height:720}])for(const fixture of selectedCases){
   const context=await browser.newContext({viewport,hasTouch:true,isMobile:true});
   const page=await context.newPage();page.setDefaultTimeout(20000);
   const result={engine,viewport,fixture,errors:[],status:'running'};report.results.push(result);
@@ -104,7 +96,7 @@ for(const engine of engines){
    await play.or(page.locator('.v100-start-screen')).or(scene).first().waitFor({state:'visible'});if(await play.isVisible())await play.click();
    await enterV100FromTitle(page);
    await scene.waitFor({state:'visible'});
-   if(fixture.backdrop)await page.waitForFunction(({selector,path})=>getComputedStyle(document.querySelector(selector+' .v100-event-backdrop')).backgroundImage.includes(path),{selector:'[data-v100-event-id="'+fixture.eventId+'"]',path:fixture.backdrop});
+   if(fixture.backdrop)await page.waitForFunction(isV100StoryBackdropReady,{selector:'[data-v100-event-id="'+fixture.eventId+'"]',background:fixture.backdrop});
    await page.waitForFunction(()=>[...document.images].every(img=>img.complete&&img.naturalWidth>0));
    const portraitPaint = await page.waitForFunction(readV177StoryPortraitPaint, '[data-v100-event-id="'+fixture.eventId+'"]');
    try { result.portraitPaint = await portraitPaint.jsonValue(); }
@@ -121,7 +113,7 @@ for(const engine of engines){
     const insertLabels=[...element.querySelectorAll('.v100-story-insert svg text')].map(rect);
     const phoneMessage=element.querySelector('.v100-insert-phone-message');
     const phone=phoneMessage?{text:phoneMessage.textContent,lines:[...phoneMessage.querySelectorAll('tspan')].map(rect),panel:rect(element.querySelector('[data-v100-insert="message-backlog"] .v100-insert-arrival'))}:null;
-      return {scene:rect(element),copy:rect(box),text:rect(box.querySelector('p')),textValue:[...box.querySelectorAll('p')].map(p=>p.innerText).join(''),backdrop:getComputedStyle(element.querySelector('.v100-event-backdrop')).backgroundImage,actions:rect(box.querySelector('.v100-event-actions')),heading:element.querySelector('.v100-event-heading').innerText,headingBox:rect(element.querySelector('.v100-event-heading')),insertTitle:insertTitle?rect(insertTitle):null,insertCaption,insertLabels,phone,portraits:[...element.querySelectorAll('.v100-portrait-frame')].map(e=>({owner:e.dataset.portraitOwner,side:e.dataset.portraitSide,rect:rect(e),image:rect(e.querySelector('img'))}))};
+      return {scene:rect(element),copy:rect(box),text:rect(box.querySelector('p')),textValue:[...box.querySelectorAll('p')].map(p=>p.innerText).join(''),backdrop:getComputedStyle(element.querySelector('.v100-event-backdrop')).backgroundImage,imageSource:element.querySelector('.v100-event-image:not(.v100-event-image-previous)')?.currentSrc,actions:rect(box.querySelector('.v100-event-actions')),heading:element.querySelector('.v100-event-heading .v100-kicker').innerText,headingBox:rect(element.querySelector('.v100-event-heading')),insertTitle:insertTitle?rect(insertTitle):null,insertCaption,insertLabels,phone,portraits:[...element.querySelectorAll('.v100-portrait-frame')].map(e=>({owner:e.dataset.portraitOwner,side:e.dataset.portraitSide,rect:rect(e),image:rect(e.querySelector('img'))}))};
    });
    geometry.identityFrames=await scene.evaluate(readV100IdentityFrames);
    geometry.detailShots=await scene.evaluate(readDetailShots);
@@ -151,27 +143,35 @@ for(const engine of engines){
     assert.deepEqual(geometry.paintedFaces.issues,[],'critical painted faces must clear the frame, heading, dialogue and action close-up');
     if(viewport.height<=430){
      const image=scene.locator('.v100-event-image:not(.v100-event-image-previous)'),originalStyle=await image.getAttribute('style');
+     const panorama=Boolean(detail.landmarkSourcePath);
      try{
-      await image.evaluate(element=>element.style.setProperty('object-position','50% 50%','important'));
+      await image.evaluate((element,panorama)=>{
+       if(panorama)element.style.setProperty('object-fit','cover','important');
+       element.style.setProperty('object-position',panorama?'50% 100%':'50% 50%','important');
+      },panorama);
       const centered=await scene.evaluate(readV177PaintedSceneImage);
       const rejected=inspectV177PaintedSceneFaces(detail,{...geometry,paintedImage:centered});
-      assert.ok(rejected.issues.length>0,'actual centered compact crop must expose the face occlusion');
-      geometry.paintedFaceCropControl={operation:'actual-css-object-position-center',rejected:true,issues:rejected.issues};
+      assert.ok(rejected.issues.length>0,'the actual wrong compact image fit/crop must be rejected');
+      geometry.paintedFaceCropControl={operation:panorama?'actual-css-cover-bottom':'actual-css-object-position-center',rejected:true,issues:rejected.issues};
      }finally{
       await image.evaluate((element,value)=>value===null?element.removeAttribute('style'):element.setAttribute('style',value),originalStyle);
       assert.equal(await image.getAttribute('style'),originalStyle);
       assert.deepEqual(inspectV177PaintedSceneFaces(detail,{...geometry,paintedImage:await scene.evaluate(readV177PaintedSceneImage)}).issues,[]);
      }
-     const figure=scene.locator('.v177-story-detail-shot:not(.v177-story-detail-previous)'),originalSide=await figure.getAttribute('data-side');
+     const figure=scene.locator('.v177-story-detail-shot:not(.v177-story-detail-previous)'),originalInsetStyle=await figure.getAttribute('style');
      try{
-      await figure.evaluate(element=>element.setAttribute('data-side','left'));
+      const face=geometry.paintedFaces.faces[0];
+      await figure.evaluate((element,target)=>{
+       const r=element.getBoundingClientRect(),css=getComputedStyle(element),sx=r.width/parseFloat(css.width),sy=r.height/parseFloat(css.height);
+       element.style.setProperty('transform',`translate(${(target.x-r.x)/sx}px,${(target.y-r.y)/sy}px)`,'important');
+      },face.rect);
       const shifted=await scene.evaluate(readDetailShots);
       const rejected=inspectV177PaintedSceneFaces(detail,{...geometry,detailShots:shifted});
-      assert.ok(rejected.issues.length>0,'actual left compact inset must expose the face occlusion');
-      geometry.paintedFaceInsetControl={operation:'actual-data-side-left',rejected:true,issues:rejected.issues};
+      assert.ok(rejected.issues.some(issue=>issue.includes('covered by detail:')),'moving the actual close-up over a painted face must be rejected');
+      geometry.paintedFaceInsetControl={operation:'actual-css-translate-inset-over-painted-face',target:face.id,rejected:true,issues:rejected.issues};
      }finally{
-      await figure.evaluate((element,value)=>value===null?element.removeAttribute('data-side'):element.setAttribute('data-side',value),originalSide);
-      assert.equal(await figure.getAttribute('data-side'),originalSide);
+      await figure.evaluate((element,value)=>value===null?element.removeAttribute('style'):element.setAttribute('style',value),originalInsetStyle);
+      assert.equal(await figure.getAttribute('style'),originalInsetStyle);
       const restored=await scene.evaluate(readDetailShots);checkDetail(restored);assert.deepEqual(restored,geometry.detailShots);
       assert.deepEqual(inspectV177PaintedSceneFaces(detail,{...geometry,detailShots:restored}).issues,[]);
      }
@@ -200,7 +200,7 @@ for(const engine of engines){
    }
    const expectedText=[...storyPage.leadingActions,storyPage.node].map(node=>publicDisplayText(node.text.replaceAll('{{PLAYER_NAME}}','構図確認'))).join('');
    assert.ok(geometry.textValue.replace(/\s/gu,'').includes(expectedText.replace(/\s/gu,'')),`${fixture.id} authored text missing`);
-   if(fixture.backdrop)assert.ok(geometry.backdrop.includes(fixture.backdrop),`${fixture.id} backdrop ${geometry.backdrop}`);
+   if(fixture.backdrop)assert.ok(geometry.imageSource?.endsWith(fixture.backdrop),`${fixture.id} actual image ${geometry.imageSource}`);
    if(fixture.insertId)assert.equal(await scene.locator('[data-v100-insert="'+fixture.insertId+'"]').count(),1,'the explanatory diagram must be visible');
    if(geometry.insertTitle)assert.ok(geometry.insertTitle.y>=geometry.headingBox.bottom+1,'diagram title must sit below the location heading and its rule');
    if(geometry.insertTitle){
@@ -250,6 +250,23 @@ for(const engine of engines){
    assert.ok(geometry.actions.x>=geometry.text.right,'Actions must not overlap the dialogue');
    assert.ok(geometry.actions.bottom<=geometry.copy.bottom&&geometry.actions.y>=geometry.copy.y);
    await page.screenshot({path:out+'/'+engine+'-'+viewport.width+'x'+viewport.height+'-'+fixture.id+'.png'});
+   // Read the fixture material before any explicit next-page input.
+   if(await scene.locator('.v100-insert-expand').count()){
+    const opener=scene.getByRole('button',{name:'資料を拡大',exact:true});
+    const copyBefore=await scene.locator('.v100-node-copy').innerText();
+    const saveBefore=await page.evaluate(()=>localStorage.getItem('nishijin-campaign-v100'));
+    await opener.click();const reader=page.getByRole('dialog');await reader.waitFor({state:'visible'});
+    const material=await reader.evaluate(el=>{const b=el.getBoundingClientRect(),heading=el.querySelector('.v100-insert-heading').getBoundingClientRect();return {x:b.x,y:b.y,width:b.width,height:b.height,headingHeight:heading.height};});
+    assert.ok(material.x>=0&&material.y>=0&&material.x+material.width<=viewport.width+1&&material.y+material.height<=viewport.height+1,'material reader fits viewport');
+    assert.ok(material.headingHeight>=12,'expanded diagram heading is readable');
+    await page.screenshot({path:out+'/'+engine+'-'+viewport.width+'x'+viewport.height+'-'+fixture.id+'-expanded.png'});
+    if(fixture.id==='insert-message-backlog')await page.keyboard.press('Escape');
+    else await reader.getByRole('button',{name:'閉じる',exact:true}).click();
+    await reader.waitFor({state:'hidden'});
+    assert.equal(await scene.locator('.v100-node-copy').innerText(),copyBefore,'material reading does not advance story');
+    assert.equal(await page.evaluate(()=>localStorage.getItem('nishijin-campaign-v100')),saveBefore,'material reading preserves save');
+    result.insertReader=material;
+   }
    const beforeSides=Object.fromEntries(geometry.portraits.map(p=>[p.owner,p.side]));
    await page.getByRole('button',{name:'次へ',exact:true}).click();
    if(fixture.id==='pair'){

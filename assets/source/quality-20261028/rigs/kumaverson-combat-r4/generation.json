@@ -1,0 +1,21 @@
+{
+  "at": "2026-10-31T10:04:25.876Z",
+  "method": "built-in image_gen.imagegen",
+  "useCase": "precise-object-edit",
+  "transparentBackground": true,
+  "originalResult": "C:/Users/okait/.codex/generated_images/01a180c8-9e05-7871-b287-613f7c7eb364/exec-767b997f-ab1a-4b2f-8e85-d1cde46a19df.png",
+  "output": {
+    "path": "assets/source/quality-20261028/rigs/kumaverson-combat-r4/combat-model-r4.png",
+    "bytes": 1244307,
+    "sha256": "089d50e55d1f4e009a66858b500c923b41a5ed478b91826c491c5334ee190b3c",
+    "width": 1298,
+    "height": 1212
+  },
+  "roles": "Adopted generated master-r2 head identity; original producer master-v2 combat clothing/ready pose, not its old face. No private original photograph supplied or added.",
+  "status": "working combat-model candidate; visual and native-motion acceptance pending",
+  "savedGenerationReferences": [
+    "generation-face-reference.png",
+    "combat-ready-reference.png"
+  ],
+  "rigIdentityReference": "identity-reference.png is the complete combat model used for rig source validation, separate from the face-only generation reference."
+}

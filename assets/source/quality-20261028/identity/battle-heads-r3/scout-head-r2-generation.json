@@ -1,0 +1,12 @@
+{
+  "tool": "OpenAI built-in image_gen",
+  "args": {
+    "transparent_background": true,
+    "referenced_image_paths": [
+      "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-51746394-22d1-4129-8957-fc41c0061545.png"
+    ],
+    "prompt": "この完成済みのハチの頭部を非破壊で仕上げる編集。顔、表情、歯、鼻の絆創膏、黒髪と赤橙の毛先、目鼻立ち、傷と描画タッチは変更禁止。現在、頭頂の一番高い毛先が画像の上端に接して切れているので、その毛先だけ自然に復元し、カメラを25%引いて頭全体を中央へ収める。四辺に最低15%の完全透明余白、特に頭頂の上に150px相当以上の透明余白を作る。現在と同じ斜め右向きの一つの頭とごく短い首のみ。肩・襟・背景・文字なし。耳と髪の一番高い先端が全て画像の内部に収まること。顔を再解釈しない。"
+  },
+  "generatedOriginal": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-304fb71d-9b86-4fe8-a19e-7f038d248f1e.png",
+  "scope": "Correction of clipped tips or unintended hair color; existing generated-model identity and current angle retained."
+}

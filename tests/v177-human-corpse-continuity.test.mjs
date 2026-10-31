@@ -13,7 +13,7 @@ const paint={root,outline,kind:'scout',fallDirection:-1};
 const transformed=(m,p)=>[m[0]*p[0]+m[2]*p[1]+m[4],m[1]*p[0]+m[3]*p[1]+m[5]];
 
 test('the death starts on the actual last live transform and reaches the floor continuously on the original clock',()=>{
-  assert.equal(V177_CONTINUOUS_HUMAN_CORPSE_KINDS.length,14);
+  assert.equal(V177_CONTINUOUS_HUMAN_CORPSE_KINDS.length,15);
   for(const kind of V177_CONTINUOUS_HUMAN_CORPSE_KINDS)for(const flipX of [false,true])for(const fallDirection of [-1,1]){
     assert.equal(animationClipFor(kind,'death').durationSeconds,.42);
     assert.equal(ALLY_DEATH_CONFIG.dyingSeconds,.55);assert.equal(ALLY_DEATH_CONFIG.infectionSeconds,12);
@@ -77,7 +77,9 @@ test('corpse ownership is per original battle and actor, prunes removal, and nev
   rememberV177HumanCorpsePaint(world,actor,'scout',null);
   assert.equal(v177HumanCorpsePresentation(world,corpse,'scout',options),null);
   rememberV177HumanCorpsePaint(world,actor,'brawler',living('brawler'));
-  assert.equal(v177HumanCorpsePresentation(world,corpse,'brawler',options),null);
+  assert.equal(v177HumanCorpsePresentation(world,corpse,'brawler',options).paint.kind,'brawler');
+  rememberV177HumanCorpsePaint(world,actor,'mayo-chan',living('mayo-chan'));
+  assert.equal(v177HumanCorpsePresentation(world,corpse,'mayo-chan',options),null);
 });
 
 test('failed or unbounded source readback cannot claim a continuous corpse',()=>{

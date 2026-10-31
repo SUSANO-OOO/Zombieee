@@ -9,3 +9,27 @@ export function partitionPwaUpdateTransportPaths(paths, downloadTransportPaths, 
   }
   return result;
 }
+
+// A content-addressed update can satisfy several manifest paths with one
+// verified download. Account for that sharing without forgiving a missing
+// hash or a second request for already-downloaded content through an alias.
+export function inspectPwaContentTransportCoverage(paths, expected, { repeatablePaths = new Set() } = {}) {
+  const keysByPath = new Map(), expectedKeys = new Set();
+  for (const { pathname, contentKey } of expected) {
+    if (!pathname || !contentKey || (keysByPath.has(pathname) && keysByPath.get(pathname) !== contentKey)) {
+      throw new TypeError('Ambiguous or missing PWA transport content identity');
+    }
+    keysByPath.set(pathname, contentKey);
+    expectedKeys.add(contentKey);
+  }
+  const observed = new Set(), duplicate = [], unexpected = [];
+  for (const pathname of paths) {
+    const key = keysByPath.get(pathname);
+    if (!key) unexpected.push(pathname);
+    else if (observed.has(key) && !repeatablePaths.has(pathname)) duplicate.push({ pathname, contentKey: key });
+    else observed.add(key);
+  }
+  const missing = [...expectedKeys].filter(key => !observed.has(key));
+  return { ok: !missing.length && !duplicate.length && !unexpected.length,
+    expected: expectedKeys.size, observed: observed.size, missing, duplicate, unexpected };
+}

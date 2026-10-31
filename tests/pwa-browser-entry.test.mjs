@@ -43,6 +43,7 @@ test('the actual PWA play-button callback defers entry through the painted trans
     const find=node=>{if(ts.isVariableDeclaration(node)&&node.name.getText(tree)===click.text)callback=node.initializer.arguments[0];ts.forEachChild(node,find);};find(tree);
   }else callback=click;
   assert.ok(callback);const f=frames(),events=[],context={browserPlayTransitionRef:{current:null},createPaintedBrowserEntry,
+    rememberBrowserPlayChoice:()=>true,
     window:{requestAnimationFrame:f.requestFrame,cancelAnimationFrame:f.cancelFrame},
     setBrowserPlayPending:value=>events.push(['pending',value]),setOfferDismissed:value=>events.push(['enter',value])};
   const code=ts.transpileModule('const click='+callback.getText(tree)+';click;', {compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;

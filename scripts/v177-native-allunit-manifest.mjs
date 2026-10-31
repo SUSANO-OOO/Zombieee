@@ -3,6 +3,8 @@ import {spriteKinds} from '../app/spriteManifest.js';
 import {PLAYABLE_COMBAT_KINDS} from '../app/combatPresentation.js';
 import {v177ProofFormIdentity} from '../app/v177ContinuousProof.js';
 import {V177_JOINT_ATLASES} from '../app/v177JointPresentation.js';
+import {QUALITY_CHARACTER_ATLASES} from '../app/qualityCharacterAtlases.js';
+import {V105_CRAZY_KING_JOINT_ATLAS} from '../app/v105CrazyKingJointData.js';
 
 const freeze=value=>{
   if(value&&typeof value==='object'){
@@ -38,7 +40,10 @@ export function validateManifest(forms=FORM_BINDINGS,shards=SHARDS){
     assert.deepEqual(forms[i],FORM_BINDINGS[i],'Capture must use the actual renderer identity');
     assert.ok(OWNER_KINDS.includes(forms[i].owner));
     const atlasPath=forms[i].atlas.path??'';
-    if(forms[i].form==='crazy-king')assert.equal(atlasPath,'/art/v105/joints/crazy-king-skirt-r1.webp');
+    if(forms[i].form==='crazy-king'){
+      assert.equal(atlasPath,QUALITY_CHARACTER_ATLASES['crazy-king'].path);
+      assert.deepEqual({...V177_JOINT_ATLASES['crazy-king'],path:V105_CRAZY_KING_JOINT_ATLAS.path},V105_CRAZY_KING_JOINT_ATLAS,'Approved skirt, body geometry and all poses remain intact');
+    }
     else assert.match(atlasPath,/^\/art\/v100\/joints\/.+\.webp$/u);
   }
   assert.deepEqual(shards,SHARDS);assert.ok(shards.every(s=>s.forms.length===4));

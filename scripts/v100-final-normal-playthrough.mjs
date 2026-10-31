@@ -98,7 +98,7 @@ async function prepareEconomy(stageNumber) {
     const unit=V100_UNITS.find(unit=>unit.id===id);
     if(!save.ownedUnitIds.includes(id)&&save.registeredUnitIds.includes(id)&&save.caps>=unit.registrationCostCaps) {
       await selectPersonnel(unit);
-      await uiClick(button(`配備登録 / ${unit.registrationCostCaps} CAPS`));
+      await uiClick(button(`支度を整える / ${unit.registrationCostCaps} CAPS`));
       save=await saveAt(); report.transactions.push({stageNumber,action:"register",id,caps:save.caps});
     }
   }

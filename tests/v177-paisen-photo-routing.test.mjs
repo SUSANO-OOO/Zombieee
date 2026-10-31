@@ -14,7 +14,7 @@ import {alphaBounds,decodeRgbaPng,hasTransparentPerimeter} from './image-asset-h
 
 test('all21 live Paisen routes use the opponent-facing photo source in both directions, including separate pose owners',()=>{
  assert.equal(COMBAT_ANIMATION_STATES.length,21);assert.equal(Object.keys(V177_JOINT_ATLASES).length,48);
- assert.equal(spriteSheetPath('brawler'),data.sixPath);assert.equal(V177_JOINT_ATLASES.brawler.path,data.jointPath);
+ assert.equal(spriteSheetPath('brawler'),data.sixPath);assert.equal(V177_JOINT_ATLASES.brawler.path,'/art/v100/joints/brawler-quality-neck-r4.webp');
  const parts=V177_JOINT_ATLASES.brawler.parts;assert.ok(parts.findIndex(p=>p.name==='head')<parts.findIndex(p=>p.name==='torso'));
  let samples=0;
  for(const state of COMBAT_ANIMATION_STATES)for(const direction of ['left','right'])for(const p of [0,.2,.5,.8,.99]){
@@ -51,9 +51,9 @@ test('every fallback source pixel, alpha bound, sixteen-pixel gutter and lossles
 
 test('selected battle loads the complete photo body while retired battle and joint sources stay outside the runtime pack',async()=>{
  const plan=requiredBattleAssetPlan({stageId:CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE,formationKinds:['brawler'],enemyKinds:['walker']});
- for(const path of [data.sixPath,data.jointPath])assert.ok(plan.paths.includes(path));
+ for(const path of [data.sixPath,V177_JOINT_ATLASES.brawler.path])assert.ok(plan.paths.includes(path));
  const manifest=JSON.parse(await readFile(new URL('../public/asset-manifest.json',import.meta.url)));
- for(const path of ['/art/v060/characters/legacy/brawler-battle-gutter-v1.png','/art/v100/joints/brawler-r1.webp']){
+ for(const path of ['/art/v060/characters/legacy/brawler-battle-gutter-v1.png','/art/v100/joints/brawler-r1.webp',data.jointPath]){
   assert.ok(!plan.paths.includes(path));assert.ok(!manifest.assets.some(a=>a.path===path));
  }
 });

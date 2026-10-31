@@ -409,7 +409,7 @@ export function V100StaffRoll({ nodes, initialNodeIndex = 0, settings, busy = fa
     <V100CreditsFilmView initialFrame={initialFilmFrame} paintRef={filmPaintRef} reducedMotion={settings.reducedMotion} className="v100-credit-cinema" />
     <div className="v100-credit-cinema-shade" aria-hidden="true" />
     <div ref={rollWindowRef} className="v100-credit-roll-window"><div ref={rollRef} className="v100-credit-roll-track">
-      <header><small>STAFF &amp; CREDITS</small><h1>西新世紀末物語</h1></header>
+      <header><p className="v100-credit-time-context">その後の西新</p><small>STAFF &amp; CREDITS</small><h1>西新世紀末物語</h1></header>
       {creditSections.map((section, index) => <section key={index} className={"v100-credit-section v100-credit-section-" + section.kind}>
         <h2>{section.title}</h2>
         {section.entries ? <div className="v100-credit-materials">{section.entries.map(entry => <p key={entry.author}><strong>{entry.author} · {entry.license}</strong><span>{entry.works.join(" / ")}</span></p>)}</div>

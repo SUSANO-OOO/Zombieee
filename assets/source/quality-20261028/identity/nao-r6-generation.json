@@ -1,0 +1,36 @@
+{
+  "method": "built-in image_gen",
+  "variants": [
+    {
+      "expression": "determined",
+      "args": {
+        "referenced_image_paths": [
+          "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/nao-master-r4.png"
+        ],
+        "transparent_background": true,
+        "prompt": "Edit this exact adult Nao character image. Keep precisely the same person and the SAME complete FULL-BODY framing, camera, dimensions, pose, braid, torso, arms, hands, medical bag, firearm, trousers, boots, clothing, lighting and realistic material treatment. Change ONLY her facial expression to quiet attentive determination, firm but relaxed closed mouth. Preserve her original eye size and spacing, brows, nose, lips, jaw, skin tone, age and recognizable individual identity. Do not alter her body's silhouette or reposition any part, do not crop the feet or bag, and do not make a collage or portrait sheet. One full-body expression variant, using the identical entire figure positions as the reference. Preserve genuinely transparent alpha; no setting, floor, gradient background, text, border or added object."
+      }
+    },
+    {
+      "expression": "alarm",
+      "args": {
+        "referenced_image_paths": [
+          "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/nao-master-r4.png"
+        ],
+        "transparent_background": true,
+        "prompt": "Edit this exact adult Nao character image. Keep precisely the same person and the SAME complete FULL-BODY framing, camera, dimensions, pose, braid, torso, arms, hands, medical bag, firearm, trousers, boots, clothing, lighting and realistic material treatment. Change ONLY her facial expression to slight worried surprise, gently raised eyebrows and lips just parted. Preserve her original eye size and spacing, brows, nose, lips, jaw, skin tone, age and recognizable individual identity. Do not alter her body's silhouette or reposition any part, do not crop the feet or bag, and do not make a collage or portrait sheet. One full-body expression variant, using the identical entire figure positions as the reference. Preserve genuinely transparent alpha; no setting, floor, gradient background, text, border or added object."
+      }
+    },
+    {
+      "expression": "grief",
+      "args": {
+        "referenced_image_paths": [
+          "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/nao-master-r4.png"
+        ],
+        "transparent_background": true,
+        "prompt": "Edit this exact adult Nao character image. Keep precisely the same person and the SAME complete FULL-BODY framing, camera, dimensions, pose, braid, torso, arms, hands, medical bag, firearm, trousers, boots, clothing, lighting and realistic material treatment. Change ONLY her facial expression to quiet sadness, gaze subtly lowered, subdued closed mouth. Preserve her original eye size and spacing, brows, nose, lips, jaw, skin tone, age and recognizable individual identity. Do not alter her body's silhouette or reposition any part, do not crop the feet or bag, and do not make a collage or portrait sheet. One full-body expression variant, using the identical entire figure positions as the reference. Preserve genuinely transparent alpha; no setting, floor, gradient background, text, border or added object."
+      }
+    }
+  ],
+  "status": "Local quality-r1 dialogue/formation/personnel images connected. See runtime provenance and support-cards-r4; Nao dialogue checkpoints in nao-runtime-r1. Battle/cuts/credits and Producer final acceptance remain open."
+}

@@ -1,0 +1,74 @@
+{
+  "generator": "scripts/build-quality-canonical-portraits.mjs",
+  "master": {
+    "path": "assets/source/quality-20261028/identity/paisen-photo-master-r7.png",
+    "sha256": "c769eb81a096e9fb1747df0c4ab93452b2ad844fb37e21707d5ef51aec76de66"
+  },
+  "source": {
+    "path": "assets/source/quality-20261028/identity/paisen-photo-master-r7.png",
+    "sha256": "c769eb81a096e9fb1747df0c4ab93452b2ad844fb37e21707d5ef51aec76de66",
+    "width": 1024,
+    "height": 1536
+  },
+  "masterRole": "Directly generated from recovered original three photographs; see paisen-photo-r7-generation.json. Supersedes rejected r5/r6 candidates.",
+  "expressions": [
+    "warm",
+    "determined",
+    "alarm",
+    "grief"
+  ],
+  "additionalSources": [
+    {
+      "expression": "warm",
+      "path": "assets/source/quality-20261028/identity/paisen-photo-master-r7.png",
+      "sha256": "c769eb81a096e9fb1747df0c4ab93452b2ad844fb37e21707d5ef51aec76de66"
+    },
+    {
+      "expression": "determined",
+      "path": "assets/source/quality-20261028/identity/paisen-determined-r7.png",
+      "sha256": "e227b1d999960b48b089c3d644646bb0b5a83674df6ff00f77fc4a5140049351"
+    },
+    {
+      "expression": "alarm",
+      "path": "assets/source/quality-20261028/identity/paisen-alarm-r7.png",
+      "sha256": "712d310702e47be2ff05c7afdf5c69b46749687d39e34e958e9376008f297def"
+    },
+    {
+      "expression": "grief",
+      "path": "assets/source/quality-20261028/identity/paisen-grief-r7.png",
+      "sha256": "a2da765cda0a5643c2e08ef92bd00641e4477fea5a55f0ea858134eb11f11b3c"
+    }
+  ],
+  "outputs": [
+    {
+      "path": "public/art/v100/portraits/paisen-warm-quality-r1.webp",
+      "sha256": "bfef5f2254320445a849d7cec60bb12197e4012e019970a15e25dace9bdc6f10",
+      "bytes": 36518
+    },
+    {
+      "path": "public/art/v100/portraits/paisen-formation-card-quality-r1.webp",
+      "sha256": "8b8bb5ecfb3d23c87b5bebda19764b57cf38f6c2dd538bb3582dcd54acb6d6d9",
+      "bytes": 28822
+    },
+    {
+      "path": "public/art/v100/portraits/paisen-determined-quality-r1.webp",
+      "sha256": "ff9a362e5defb7d5d4ac305ee56d1705808b1bdcf3796f3255c06864e3461331",
+      "bytes": 37788
+    },
+    {
+      "path": "public/art/v100/portraits/paisen-alarm-quality-r1.webp",
+      "sha256": "31942e6b4a612ea2fd73801346ea263c4a2d7355b219bbe249e14173be0c1c02",
+      "bytes": 39094
+    },
+    {
+      "path": "public/art/v100/portraits/paisen-grief-quality-r1.webp",
+      "sha256": "95e777a8708e6e25c13e5c8a1fbf8d62efb83e64f1f87c3ede8c8c1b378a6d78",
+      "bytes": 38104
+    }
+  ],
+  "runtimeAssetCount": 5,
+  "logicalBytes": 180326,
+  "distinctBytes": 180326,
+  "scope": "Dialogue expressions and formation/personnel cards. Battle and scene paintings require separate verification.",
+  "acceptance": "Canonical identity reference restored; not a numeric likeness score or Producer acceptance."
+}

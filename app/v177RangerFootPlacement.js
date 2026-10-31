@@ -57,9 +57,13 @@ function helperX(from,to,u,vx,duration) {
   return from+diff*u*u*(3-2*u)+tangent*u*(1-u)*(1-u);
 }
 function groundLanding(rig,leg,sign) {
-  const radius=leg.upperLength+leg.lowerLength-1.2,vertical=leg.groundAnkle-leg.hip[1]+1.2;
+  // Common bipeds fit their pelvis after resolving the current plants. The
+  // next landing must use that planned support height, rather than clipping
+  // the short leg's future step against the uncorrected standing hip.
+  const hip=leg.landingHip??leg.hip;
+  const radius=leg.upperLength+leg.lowerLength-1.2,vertical=leg.groundAnkle-hip[1]+1.2;
   const maxDx=Math.sqrt(Math.max(0,radius*radius-vertical*vertical)),goal=leg.footCenter+sign*rig.spanPx*.5;
-  return Math.max(leg.hip[0]-maxDx,Math.min(leg.hip[0]+maxDx,goal));
+  return Math.max(hip[0]-maxDx,Math.min(hip[0]+maxDx,goal));
 }
 function makeFlight(foot,previous,input,i,localGoal,kind,nominalEnd=null,duration=STEP_SECONDS) {
   const at=previous.time,endAt=at+duration;
@@ -110,7 +114,9 @@ function stopping(rig,previous,input) {
   }
   const feet=previous.feet.map((foot,i)=>{
     if(foot.flight)return finishFlight(foot,previous,input,i,rig,true);
-    if(i===first){const flight=makeFlight(foot,previous,input,i,rig.legs[i].footCenter+restOffset(rig.legs[i],i),'stop');return sampleFlight(foot,input,flight);}
+    // A running gait can enter a stop with both feet already airborne. Each
+    // existing airborne foot must land; only new grounded steps take turns.
+    if(i===first||rig.stanceFraction<.5&&foot.height>0){const flight=makeFlight(foot,previous,input,i,rig.legs[i].footCenter+restOffset(rig.legs[i],i),'stop');return sampleFlight(foot,input,flight);}
     return {...foot,mode:foot.height>0?'swing':'plant'};
   });
   return {time:input.time,root:input.root,facing:input.facing,scale:input.scale,phase:input.phase,
@@ -134,8 +140,9 @@ function moving(rig,previous,input) {
   const delta=phase-previous.phase,travelSign=Math.abs(delta)>1e-9?Math.sign(delta):previous.travelSign||1;
   const hasFlight=previous.feet.some(foot=>foot.flight);
   const offset=resumed&&!hasFlight?resumedOffset(rig,previous,input,travelSign):previous.offset;
+  const requiresSupport=rig.phaseOwned&&rig.stanceFraction>=.5;
   let swingOwner=-1;
-  if(rig.phaseOwned){
+  if(requiresSupport){
     swingOwner=previous.feet.findIndex(foot=>foot.flight?foot.flight.endAt>time+1e-10:foot.height>1e-7);
     if(swingOwner<0){
       const candidates=previous.feet.map((foot,i)=>{
@@ -147,7 +154,7 @@ function moving(rig,previous,input) {
   }
   const feet=previous.feet.map((foot,i)=>{
     if(foot.flight)return finishFlight(foot,previous,input,i,rig,false);
-    if(rig.phaseOwned&&i!==swingOwner)return{...foot,mode:'plant',flight:null};
+    if(requiresSupport&&i!==swingOwner)return{...foot,mode:'plant',flight:null};
     const leg=rig.legs[i],absolute=phase+offset+leg.offset,q=wrap(absolute),local=localX(foot.x,root,facing,scale);
     const vertical=leg.groundAnkle-leg.hip[1]-lowerBob(rig,phase+offset,input.settle??0);
     const toeOff=Math.hypot(local-leg.hip[0],vertical)>leg.upperLength+leg.lowerLength-1.2;
@@ -155,10 +162,10 @@ function moving(rig,previous,input) {
     if(foot.landedPaintTime===input.paintTime&&reachable(rig,foot,i,input,offset))return {...foot,height:0,angle:0,mode:'plant',flight:null};
     const supportInFlight=previous.feet[1-i].flight&&previous.feet[1-i].flight.endAt>time+1e-10;
     // Other bipeds share this planner but own a phase-scheduled gait. Start
-    // their swing before the support runs out of reach, and never lift a
-    // second boot while the first has an outstanding landing. Ranger keeps
+    // their swing before the support runs out of reach. Walking retains one
+    // support; authored running gaits below .5 allow a flight interval. Ranger keeps
     // its separately accepted reach-driven continuous-mesh stride unchanged.
-    if(rig.phaseOwned&&supportInFlight)return {...foot,mode:'plant',flight:null};
+    if(requiresSupport&&supportInFlight)return {...foot,mode:'plant',flight:null};
     if(foot.height===0&&!toeOff&&(!rig.phaseOwned||q<=rig.stanceFraction))return {...foot,mode:'plant',flight:null};
     const nominalEnd=travelSign>0?Math.floor(absolute)+1:Math.floor(absolute)+(q<=rig.stanceFraction?-1:0)+rig.stanceFraction;
     const rate=time>previous.time?Math.abs(delta/(time-previous.time)):0;

@@ -110,9 +110,9 @@ test('voice intervals survive real fighter copies; boss damage and interception 
  assert.equal(queueV104HumanHurt(world,{...actor,id:19},90,'blocked-hurt'),false);
  assert.equal(queueV104HumanHurt(world,{...actor,id:20,hp:0},90,'dead-hurt'),false);
  assert.deepEqual(world.pendingBattleAudioCues.map(c=>c.cueId),['own-hurt','other-hurt']);
- assert.equal(battleVoiceReady(actor,'attack',0,world),true);
- assert.equal(battleVoiceReady({...actor},'attack',.1,world),false);
- assert.equal(battleVoiceReady({...actor},'attack',.1,{}),true,'new battle retires the old interval');
+ assert.equal(battleVoiceReady({...actor,kind:'kumaverson'},'attack',0,world),true);
+ assert.equal(battleVoiceReady({...actor,kind:'kumaverson'},'attack',.1,world),false);
+ assert.equal(battleVoiceReady({...actor,kind:'kumaverson'},'attack',.1,{}),true,'new battle retires the old interval');
 });
 
 test('actual front guard contact emits the matching shield or pan sound once; miss/back/expired contact emits none',()=>{

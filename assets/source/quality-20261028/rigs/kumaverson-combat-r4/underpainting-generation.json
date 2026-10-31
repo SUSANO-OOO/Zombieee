@@ -1,0 +1,21 @@
+{
+  "method": "built-in image_gen.imagegen",
+  "useCase": "precise-object-edit",
+  "transparentBackground": true,
+  "reference": "assets/source/quality-20261028/rigs/kumaverson-combat-r4/occluded-trousers-reference.png",
+  "crop": [
+    350,
+    610,
+    700,
+    400
+  ],
+  "originalResult": "C:/Users/okait/.codex/generated_images/01a180c8-9e05-7871-b287-613f7c7eb364/exec-d0725f3b-2a96-4d1d-8566-54f8b2036a61.png",
+  "output": {
+    "file": "trouser-underpainting-r4.png",
+    "bytes": 1698213,
+    "sha256": "921b84a59409c92f540866d00e8284f5cc7107ee423f703be29a622fc500befc",
+    "width": 1659,
+    "height": 948
+  },
+  "scope": "Hidden-cloth repair polygon plus declared seam overlap. Original combat-model upper-body and head retained."
+}

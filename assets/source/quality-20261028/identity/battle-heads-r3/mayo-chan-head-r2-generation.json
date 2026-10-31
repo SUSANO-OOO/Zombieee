@@ -1,0 +1,12 @@
+{
+  "tool": "OpenAI built-in image_gen",
+  "args": {
+    "transparent_background": true,
+    "referenced_image_paths": [
+      "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-fa8fc99a-941c-4ca9-9ed3-39bdcd1dd0d5.png"
+    ],
+    "prompt": "この完成済みの同じマヨちゃんの頭だけを保つ編集。丸い黒い瞳、短い鼻、口、同じ薄茶の長毛、立ち耳の大きさ・角度、右向きの顔、可愛らしさを変更しない。現在左の耳先が上端で少し切れているので、その毛先を自然に復元し、カメラを25%引き、耳の全体と顎の毛を中央70%以内に収める。四辺に最低15%の本当の透明余白、耳の上に150px相当以上の透明余白。頭と首のふわふわな切り口だけ、胴・尻尾・足・ハーネス・バンダナ・背景・文字は一切入れない。別の犬の顔・鼻・犬種に変えない。"
+  },
+  "generatedOriginal": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-f2986300-257f-43ed-9c94-7d54131b0ad4.png",
+  "scope": "Correction of clipped tips or unintended hair color; existing generated-model identity and current angle retained."
+}

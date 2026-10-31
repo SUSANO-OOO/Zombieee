@@ -1,0 +1,40 @@
+{
+  "method": "built-in image_gen",
+  "variants": [
+    {
+      "expression": "determined",
+      "args": {
+        "referenced_image_paths": [
+          "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\identity\\paisen-photo-master-r7.png",
+          "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\v100-dialogue-natural-20261001\\output\\issue177-paisen-producer-photos-r1\\codex-clipboard-3b180a11-73f9-46ab-9b5e-73e2f1edc53e.png"
+        ],
+        "transparent_background": true,
+        "prompt": "Use case: identity-preserve. Image 1 is the edit target, one standing waist-up game portrait. Image 2 is the ORIGINAL photograph and strict facial identity authority of the same adult man, Paisen. Keep exactly the same person as photo 2: short straight dark hair and soft hairline, full cheeks, gently broad jaw, original nose/mouth, eye shape and spacing, normal eyebrows and real adult age. Do not narrow his face or jaw, sharpen his eyes, spike his hair, exaggerate muscles or beautify him into a different person. Keep all of image 1 outside the small facial-expression change unchanged: torso/arm pose, natural physique, plain dark navy-purple T-shirt, white shorts, dimensions, crop, lighting, transparency. Change only his expression: calm determination, a very slight brow lowering and firm closed mouth, gaze forward. Do not turn this into an angry furrowed action hero face. One isolated person, real transparent alpha background, no text or border."
+      }
+    },
+    {
+      "expression": "alarm",
+      "args": {
+        "referenced_image_paths": [
+          "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\identity\\paisen-photo-master-r7.png",
+          "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\v100-dialogue-natural-20261001\\output\\issue177-paisen-producer-photos-r1\\codex-clipboard-3b180a11-73f9-46ab-9b5e-73e2f1edc53e.png"
+        ],
+        "transparent_background": true,
+        "prompt": "Use case: identity-preserve. Image 1 is the edit target, one standing waist-up game portrait. Image 2 is the ORIGINAL photograph and strict facial identity authority of the same adult man, Paisen. Keep exactly the same person as photo 2: short straight dark hair and soft hairline, full cheeks, gently broad jaw, original nose/mouth, eye shape and spacing, normal eyebrows and real adult age. Do not narrow his face or jaw, sharpen his eyes, spike his hair, exaggerate muscles or beautify him into a different person. Keep all of image 1 outside the small facial-expression change unchanged: torso/arm pose, natural physique, plain dark navy-purple T-shirt, white shorts, dimensions, crop, lighting, transparency. Change only his expression: mild concern and surprise, gently raised brows and slightly parted mouth, still recognizably the original man with his own eye shape. No cartoon-wide eyes or exaggerated fear. One isolated person, real transparent alpha background, no text or border."
+      }
+    },
+    {
+      "expression": "grief",
+      "args": {
+        "referenced_image_paths": [
+          "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\identity\\paisen-photo-master-r7.png",
+          "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\v100-dialogue-natural-20261001\\output\\issue177-paisen-producer-photos-r1\\codex-clipboard-3b180a11-73f9-46ab-9b5e-73e2f1edc53e.png"
+        ],
+        "transparent_background": true,
+        "prompt": "Use case: identity-preserve. Image 1 is the edit target, one standing waist-up game portrait. Image 2 is the ORIGINAL photograph and strict facial identity authority of the same adult man, Paisen. Keep exactly the same person as photo 2: short straight dark hair and soft hairline, full cheeks, gently broad jaw, original nose/mouth, eye shape and spacing, normal eyebrows and real adult age. Do not narrow his face or jaw, sharpen his eyes, spike his hair, exaggerate muscles or beautify him into a different person. Keep all of image 1 outside the small facial-expression change unchanged: torso/arm pose, natural physique, plain dark navy-purple T-shirt, white shorts, dimensions, crop, lighting, transparency. Change only his expression: quiet sadness, eyes slightly lowered, subdued closed mouth. Keep his forehead/eyebrow structure and full cheeks; no drastic frown or age wrinkles. Preserve the overall head angle and upright stance. One isolated person, real transparent alpha background, no text or border."
+      }
+    }
+  ],
+  "identity": "Original primary-face photograph included separately in every expression request; r5/r6 are rejected and not used.",
+  "status": "Local quality-r1 runtime expressions. All four rendered at two viewport sizes in isolated Chromium (paisen-runtime-r1/r3). No physical-device, whole-game, numeric similarity or Producer acceptance claim."
+}

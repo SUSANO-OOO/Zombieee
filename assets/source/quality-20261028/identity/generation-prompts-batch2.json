@@ -1,0 +1,29 @@
+{
+  "date": "2026-10-28",
+  "entries": [
+    {
+      "key": "paisenExpression",
+      "prompt": "Create a revised 2 by 2 expression sprite sheet for the ADULT character Paisen using reference 1 as the authoritative identity and clothing. Reference 2 is ONLY the rendering-style example of a different character; do not copy its face, hair, clothes or body. Preserve Paisen's recognizable short black hair, broad rounded-square face, subtly narrow eyes, broad athletic stocky shoulders and navy-purple plain crew-neck T-shirt. Clean-shaven; remove beard/stubble; refine attractive natural facial features without making him a different person or slimming his face. Match a grounded, near-photographic face and anatomy with restrained hand-painted texture, suited to a worn Japanese city survival game. Remove the harsh orange outline, oily skin highlights, plastic skin and scratchy polygonal brush strokes of reference 1. Natural matte skin, soft diffuse neutral light, precise anatomy. Four equal clean cells in a 2x2 grid, each the exact same bust camera from lower chest upward, whole hair and both shoulders visible with safe margins, all facing slightly right. Top left friendly relaxed smile; top right determined; bottom left surprised/concerned; bottom right quiet grief with downcast eyes. Expression changes only, all same identity, shirt, camera scale and lighting. Real transparent alpha background, four isolated bust cutouts, no background glow, no text, no labels, no border, no extra people or props. This is the new portrait source for a fictional game, keep recognizable likeness of the already-established Paisen illustration.",
+      "scope": "portrait source candidate; not whole-character acceptance"
+    },
+    {
+      "key": "kumaHead",
+      "prompt": "Edit reference 1 into a new game sprite HEAD component matching the identity of the ADULT man in reference 2. Reference 1 provides ONLY the direction/pose: three-quarter profile facing right, with neck slightly leaning forward. Reference 2 provides the exact Kumaverson face and hair. Keep the handsome, recognizable broad oval-round face, substantial jaw and neck, dark middle-parted hair, narrow dark eyes; clean-shaven, calm determined expression. Do not copy the thin angry face of reference 1. Head and short neck only; white T-shirt neckline is acceptable, no shoulders, no torso, no other objects. Use near-photographic natural matte skin and hair with subtle restrained hand-painted texture, matching reference 2. Transparent background. Center ONE isolated head at large scale on a 512x512 square, with ample empty padding; include all hair and both sides of neck, no detached pixels. This is a texture component for an established fictional character, the programmer will pack it onto the rig. No text, no grid, no watermark.",
+      "scope": "battle head texture candidate"
+    },
+    {
+      "key": "babaHead",
+      "prompt": "Create one isolated HEAD-and-short-NECK sprite component for the ADULT fictional character Babayaga. Reference 1 is the exact old head pose and view to match, a three-quarter right-facing side view looking toward the right edge; do not copy its old generic facial identity. Reference 2 is the authoritative new face identity: preserve that man's recognizable swept center-parted wavy black hair, strong eyebrows, large dark eyes, straight nose, slim defined jaw and clean-shaven handsome appearance. Use a natural near-photographic likeness with restrained hand-painted texture, matte skin and neutral soft lighting matching reference 2. Keep a determined closed mouth and look to the right, not at camera. Include all hair, the complete face and a small white shirt collar around the base of the short neck. No torso or shoulders. ONE head centered large on a 512x512 square, generous transparent padding, clean real alpha. No text, borders, props or additional heads. The isolated component will be packed into an existing animation rig; natural anatomy and matching the old pose are important.",
+      "scope": "battle head texture candidate"
+    },
+    {
+      "key": "ikuraExpression",
+      "prompt": "Repaint the ADULT female fictional guide Ikura from reference 1 into the coherent grounded rendering style of reference 2 (the different male is ONLY a skin/material realism style guide, not a character to copy). Preserve all Ikura design identifiers: long voluminous pink twin tails and two pink buns, amber eyes, black/amber tactical communications headset with microphone, weathered teal cropped jacket with pink trim, fitted white structured top, practical dark trousers and belt, dark fingerless gloves, rugged map tablet. Preserve the original clothing coverage, body type and identity; do not add or emphasize sexual details. Replace the large anime eyes and outlined cartoon face with believable adult Japanese facial anatomy, natural matte skin, realistically scaled eyes/nose/mouth, individual hair strands and subtle painterly texture. Keep her recognizably the same pink-haired character. Deliver FOUR waist-up portraits as an evenly spaced 2x2 expression sheet: top left warm friendly, top right focused determined, bottom left concerned alarm, bottom right quiet sadness. Same torso pose and head angle, same face and clothing in all four. The full waist belt, both shoulders, complete hair top, tablet and hands must be inside each cell, not cut off. Hair may fall behind shoulders to the waist. Common head-to-waist framing with equal head-top and belt-bottom positions in all cells. Soft neutral diffuse lighting, no harsh orange rim, no oily/plastic skin. Transparent background with clean alpha, no labels, no text, no border. Restrained realistic illustrated game art, not photomontage.",
+      "scope": "portrait source candidate; not whole-character acceptance"
+    },
+    {
+      "key": "paisenWaist",
+      "scope": "portrait source candidate; not whole-character acceptance"
+    }
+  ]
+}

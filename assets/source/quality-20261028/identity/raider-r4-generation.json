@@ -1,0 +1,14 @@
+{
+  "method": "built-in image_gen",
+  "args": {
+    "referenced_image_paths": [
+      "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028\\public\\art\\v070\\characters\\reference\\raider-base-r10.png"
+    ],
+    "transparent_background": true,
+    "prompt": "Re-render this exact established fictional adult game character with photographic anatomy, believable skin and hair, real fabric and worn metal, retaining only a subtle hand-painted finish. The provided image is the sole identity, body, clothing and equipment authority; do not substitute another face or character. Raider is the same adult woman with short tousled light-brown hair, sharp calm eyes, strong individual nose and jaw, athletic arms and practical lean build. Preserve her navy sleeveless zippered work suit, tan tactical harness and pouches, hearing protectors around her neck, gloves, knee pads and combat boots, exact neckline and coverage. Preserve her exact black belt-fed light machine gun with tan ammunition box, supported naturally by both hands and pointed downward at rest. Do not add exposure or change her proportions. Preserve the recognizable face, silhouette and every distinctive accessory. Natural matte materials, neutral soft light, no plastic shine, no oversized anime eyes or thick comic outlines. A clean full-body standing character cutout, upright balanced weight, two separate anatomically plausible legs with both boots planted. Keep body turned slightly toward image right and face nearly toward viewer when visible. Preserve proportions rather than exaggerating muscularity. Show the entire figure and equipment with transparent margin. Genuinely transparent alpha background; no scene, gray paper backdrop, floor, ground shadow, gradient, border or text. One character only, not a sheet."
+  },
+  "status": "Connected to local dialogue/card candidate. Battle, dedicated scenes, credits and Producer visual acceptance remain open.",
+  "referenceSha256": "50c6e63f96f5841f0945a6b6f0e7b692c6f4f944fc36950cdd3ce6e91c6b7cf8",
+  "outputSha256": "c9173aa44138f5796bdae3d4d680cd26b24ee16741020c42bcd8d0a1751a0b47",
+  "output": "raider-master-r4.png"
+}
