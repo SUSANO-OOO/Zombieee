@@ -18,17 +18,27 @@ const carryMotion={
  'crazy-king':{weapon:5,lift:2,roll:.018,free:8},
  babayaga:{weapon:7,lift:2,roll:.025,free:14},
  'takuya-omega':{weapon:4,lift:2,roll:.012,free:10},
- kumaverson:{weapon:4,lift:1.5,roll:.014,free:10},
+ // His source torso leans far forward even at rest. Lift the carry posture
+ // about the existing waist, keeping the adopted face level at its neck.
+ // The neck is the lower opaque head edge in the unchanged runtime atlas.
+ kumaverson:{weapon:12,lift:3,roll:.02,free:20,postureRadians:-.2,neckPivot:[322.555,117.029]},
 };
 
 function walkingCarry(kind,atlas,plan,carry,blend=1){
- const profile=carryMotion[kind],amount=(1-clamp(plan.paintLocomotion?.settle??1))*blend;
- if(!profile||amount<=0)return carry;
+ const profile=carryMotion[kind];
+ if(!profile)return carry;
+ const amount=(1-clamp(plan.paintLocomotion?.settle??1))*blend;
+ const posture=(profile.postureRadians??0)*blend;
+ if(amount<=0&&posture===0)return carry;
  const phase=((plan.paintLocomotion?.phase??plan.phase??0)+(profile.phaseOffset??0))*2*Math.PI;
  const sway=Math.sin(phase)*amount,lift=(1-Math.cos(phase*2))*amount;
  const waist=atlas.interpolationPivots?.spine??[240,250];
- const chest=rigid(waist,waist,profile.roll*sway);
+ const chest=rigid(waist,waist,posture+profile.roll*sway);
  const upper=Object.fromEntries(Object.entries(carry.upper).map(([bone,m])=>[bone,multiply(chest,m)]));
+ if(profile.neckPivot){
+  const neck=point(upper.head,profile.neckPivot),head=carry.upper.head;
+  upper.head=rigid(profile.neckPivot,neck,Math.atan2(head[1],head[0]));
+ }
  // A shared weapon owns both grips. Free hands counterbalance independently;
  // the existing IK and ground constraints still own actual elbows and soles.
  for(const weapon of new Set(carry.arms.filter(c=>c.effectorBone.startsWith('weapon')).map(c=>c.effectorBone))){
@@ -45,7 +55,7 @@ function walkingCarry(kind,atlas,plan,carry,blend=1){
   const m=upper['weapon-0'];
   upper['arm-1-hand']=rigid(carry.arms[1].wrist,point(m,[195,253]),Math.atan2(m[1],m[0]));
  }
- return{...carry,upper,walkingCarry:true};
+ return{...carry,upper,...(amount>0?{walkingCarry:true}:{}),...(posture!==0?{carryPosture:true}:{})};
 }
 // Source-pixel travel, performed by alternating planted feet. Short weapons
 // need a real body step to bridge their gameplay engagement distance.
