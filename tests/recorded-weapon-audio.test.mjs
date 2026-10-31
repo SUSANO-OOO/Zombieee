@@ -5,7 +5,7 @@ import {createHash} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 import ffmpeg from '@ffmpeg-installer/ffmpeg';
 import {V100_AUDIO_MANIFEST, PRODUCTION_AUDIO_MANIFEST, enemyCombatCueFor, weaponCueForUnit} from '../app/productionAudio.js';
-import {RECORDED_WEAPON_TAKES,withRecordedWeapons} from '../app/weaponRecordingRecipes.js';
+import {RECORDED_WEAPON_TAKES,RECORDED_WEAPON_CUE_SOURCES,withRecordedWeapons} from '../app/weaponRecordingRecipes.js';
 import {v100AudioDesignCandidate} from '../app/v100SoundDesign.js';
 const provenance=JSON.parse(fs.readFileSync('assets/source/weapon-recordings/provenance.json'));
 const hash=file=>createHash('sha256').update(fs.readFileSync(file)).digest('hex');
@@ -20,14 +20,14 @@ test('recorded source adoption leaves every other asset and playback policy unch
   const changed=[];
   for(const [i,asset] of original.assets.entries()){
     const adopted=result.assets[i];
-    if(RECORDED_WEAPON_TAKES[asset.id]){
+    if(RECORDED_WEAPON_TAKES[asset.id]||RECORDED_WEAPON_CUE_SOURCES[asset.id]||['weapon-suppressed-pistol','ability-babayaga-appraise-shot','weapon-special-kill'].includes(asset.id)){
       changed.push(asset.id);
       const {sources:oldSources,...before}=asset,{sources:newSources,...after}=adopted;
       assert.deepEqual(after,before,'gain, pitch, category, cooldown and ownership remain authored');
       assert.equal(newSources.length,2);assert.ok(oldSources.length>0);
     }else assert.equal(adopted,asset,'BGM, voices, melee, suppressed pistol and other effects retain their asset');
   }
-  assert.deepEqual(changed.sort(),Object.keys(RECORDED_WEAPON_TAKES).sort());
+  assert.deepEqual(changed.sort(),[...Object.keys(RECORDED_WEAPON_TAKES),...Object.keys(RECORDED_WEAPON_CUE_SOURCES),'weapon-suppressed-pistol','ability-babayaga-appraise-shot','weapon-special-kill'].sort());
   for(const key of Object.keys(original).filter(key=>key!=='assets'))assert.equal(result[key],original[key]);
 });
 test('runtime firearm cues resolve distinct recorded families and retain real shot cadence contracts',()=>{
@@ -46,7 +46,7 @@ test('runtime firearm cues resolve distinct recorded families and retain real sh
     sources.push(...rows.map(a=>a.sources[0].src));
   }
   assert.equal(new Set(sources).size,6);
-  assert.equal(V100_AUDIO_MANIFEST.assetById['weapon-suppressed-pistol'].sources[0].src,'/audio/v104/combat/suppressed-pistol.mp3');
+  assert.equal(V100_AUDIO_MANIFEST.assetById['weapon-suppressed-pistol'].sources[0].src,'/audio/quality-20261028/babayaga-suppressed-r2.mp3');
 });
 test('adopted takes have licensed immutable sources, distinct decoded samples and no clipped or truncated tail',()=>{
   assert.equal(provenance.license,'CC0-1.0');assert.ok(fs.existsSync(provenance.notice));

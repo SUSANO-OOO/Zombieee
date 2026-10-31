@@ -1,3 +1,4 @@
+import {GAMEPLAY_PRODUCTION_AUDIO_MANIFEST} from './productionAudio.js';
 "use client";
 
 import { v177PaisenPhotoComboJointPose } from './v177PaisenPhotoCombo.js';
@@ -9648,7 +9649,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   }, [campaignSave]);
   const externalStageId = externalSession?.stageId ?? null;
   const externalSessionActive = Boolean(externalSession);
-  const playbackManifest = externalSessionActive ? V100_AUDIO_MANIFEST : PRODUCTION_AUDIO_MANIFEST;
+  const playbackManifest = externalSessionActive ? V100_AUDIO_MANIFEST : GAMEPLAY_PRODUCTION_AUDIO_MANIFEST;
   const formatBattleText = (value: string) => publicDisplayText(value, { crawlerLabel: externalSessionActive ? v100BasePresentationFor(gameRef.current.definition.missionConfig.v100StageNumber).label : "装甲車両" });
   useEffect(() => { externalSessionRef.current = externalSession; }, [externalSession]);
   const externalFormationKindsKey = externalSession?.formationKinds.join("|") ?? "";

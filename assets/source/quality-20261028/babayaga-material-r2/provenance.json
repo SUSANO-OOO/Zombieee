@@ -1,0 +1,107 @@
+{
+  "sourceMaster": "assets/source/quality-20261028/babayaga-material-r2/tti-style-suppressed-pistol-r2.png",
+  "sourceSha256": "cdf309c06e4dce8b2cf1b3e815fbf98850ffcd9d84601ddfe2ec2414a5ae14f7",
+  "creator": "OpenAI image generation; project part authoring",
+  "license": "Generated asset under service terms; existing source rights retained",
+  "producerAuthorization": "2026-10-31 explicit TTI-style pistol and tie/strap correction request",
+  "producerAcceptance": "pending",
+  "tieSpinePolygon": [
+    [
+      250,
+      120
+    ],
+    [
+      258,
+      120
+    ],
+    [
+      263,
+      141
+    ],
+    [
+      266,
+      165
+    ],
+    [
+      272,
+      187
+    ],
+    [
+      274,
+      207
+    ],
+    [
+      268,
+      211
+    ],
+    [
+      261,
+      201
+    ],
+    [
+      256,
+      179
+    ],
+    [
+      252,
+      154
+    ]
+  ],
+  "occludedSleeves": "Original hidden-parts-study cells 8 and 9; no borrowed character parts",
+  "handRegistration": {
+    "sourceGrip": [
+      422,
+      500
+    ],
+    "sourceMuzzle": [
+      1760,
+      224
+    ],
+    "targetGrip": [
+      248,
+      195
+    ],
+    "targetMuzzle": [
+      326,
+      179
+    ],
+    "matrix": [
+      0.05828270164271707,
+      0.00006429421030636192,
+      -0.00006429421030636192,
+      0.05828270164271707,
+      223.43684701192657,
+      165.83151702189218
+    ]
+  },
+  "outputs": [
+    {
+      "name": "torso",
+      "file": "assets/source/quality-20261028/babayaga-material-r2/torso.png",
+      "sha256": "b8d18b9e46e5d517576d96eb4e5af2f0aaa6c5258c13f22fb4452912cc9856d4",
+      "width": 43,
+      "height": 56
+    },
+    {
+      "name": "far-upper-arm",
+      "file": "assets/source/quality-20261028/babayaga-material-r2/far-upper-arm.png",
+      "sha256": "dc5fcabade69e4f9aa224a6a6e28a1781b99135a0faed5c097d6c416d8a7b486",
+      "width": 16,
+      "height": 38
+    },
+    {
+      "name": "far-forearm",
+      "file": "assets/source/quality-20261028/babayaga-material-r2/far-forearm.png",
+      "sha256": "b696461744f80c52ae92fae5fa5b48259bc0c46748ebcc02c4a4e192d7f7ff26",
+      "width": 14,
+      "height": 29
+    },
+    {
+      "name": "weapon-and-hands",
+      "file": "assets/source/quality-20261028/babayaga-material-r2/weapon-and-hands.png",
+      "sha256": "f479eab8db6e470f802e74f177ba169bafde7420d2d49ae24c5f2b92dd9408f7",
+      "width": 212,
+      "height": 102
+    }
+  ]
+}

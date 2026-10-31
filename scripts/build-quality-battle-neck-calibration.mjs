@@ -61,6 +61,13 @@ for(const row of plan.entries){
  }
  // Rigid atlases can repack their owned rectangles. Ranger retains legacy
  // mesh/sprite UVs, so only that texture appends its calibrated upper layers.
+ const materialOverrides=row.kind==='babayaga'?JSON.parse(await readFile('assets/source/quality-20261028/babayaga-material-r2/provenance.json')):null;
+ for(const override of materialOverrides?.outputs??[]){
+  const item=ordered.find(p=>p.name===override.name);assert.ok(item);
+  const png=await readFile(override.file);assert.equal(hash(png),override.sha256);
+  assert.equal(item.width,override.width);assert.equal(item.height,override.height);
+  item.input=png;item.materialCorrection=override;
+ }
  const packItems=atlas.parts?ordered:items,newWidth=atlas.parts?512:raw.info.width;
  let x=2,y=atlas.parts?2:raw.info.height+2,rowHeight=0;
  for(const item of packItems){assert.ok(item.width<=newWidth);if(x+item.width>newWidth){x=2;y+=rowHeight+2;rowHeight=0;}
@@ -87,7 +94,7 @@ for(const row of plan.entries){
   for(let py=0;py<s.h;py++)for(let px=0;px<s.w;px++){
    const i=(py*s.w+px)*4,j=((s.y+py)*newWidth+s.x+px)*4;
    assert.equal(actual[j+3],expectedTile[i+3],`${row.kind}/${item.name}: original alpha`);
-   if(expectedTile[i+3]){unchangedPixels++;for(let c=0;c<3;c++)assert.equal(actual[j+c],expectedTile[i+c],`${row.kind}/${item.name}: original visible RGB`);}
+   if(expectedTile[i+3]){if(!item.materialCorrection)unchangedPixels++;for(let c=0;c<3;c++)assert.equal(actual[j+c],expectedTile[i+c],`${row.kind}/${item.name}: original visible RGB`);}
   }
  }
  if(!atlas.parts){
@@ -100,6 +107,7 @@ for(const row of plan.entries){
  }
  entries.push({...row,basePath:atlas.path,baseSha256:hash(base),matrix,scale:Math.hypot(matrix[0],matrix[1]),rotationRadians:Math.atan2(matrix[1],matrix[0]),assetPath,sha256:hash(packed),bytes:packed.length,
   headDestination:items[0].destination,headSource:items[0].source,garmentPixels,unchangedVisibleNonHeadPixels:unchangedPixels,
+  materialCorrections:materialOverrides?.outputs??[],
   acceptance:'placement candidate; original-speed, whole-character and Producer acceptance pending'});
  await emit('public'+assetPath,packed);
  if(!check){

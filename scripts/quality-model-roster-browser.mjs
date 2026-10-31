@@ -24,18 +24,21 @@ assert.ok(selected.length&&new Set(selected).size===selected.length&&selected.ev
 const only=process.env.QUALITY_MODEL_ROSTER_ONLY_KINDS?.split(',');
 if(only)assert.ok(only.length&&new Set(only).size===only.length&&only.every(kind=>selected.some(index=>groups[index].includes(kind))),'Focused kinds must belong to the selected canonical groups');
 assert.deepEqual(groups.flat().sort(),Object.keys(QUALITY_CHARACTER_ATLASES).sort());
-const report={engine,before,build:await productionBuildIdentity(process.env.QUALITY_MODEL_ROSTER_BUILD_ROOT??process.cwd()),scope:'Prepared owned level-1 groups or focused members at S03. Native title, deployment and available ability controls; ordinary simulation speed, muted. Before substitutes only twelve retained previous head rectangles on the same build, preserving later weapon layers with service workers blocked; four integrated heads stay unchanged. Not natural unlocks, all 48 forms, continuous human viewing, audio listening, body/movement acceptance or physical QA.',cases:[],errors:[]};
+const stageNumber=Number(process.env.QUALITY_MODEL_ROSTER_STAGE??3);assert.ok([1,3].includes(stageNumber));
+const solo=process.env.QUALITY_MODEL_ROSTER_SOLO==='1';
+const runs=selected.flatMap(index=>solo?groups[index].filter(kind=>!only||only.includes(kind)).map(kind=>({index,kinds:[kind]})):[{index,kinds:groups[index].filter(kind=>!only||only.includes(kind))}]);
+const report={stageNumber,solo,engine,before,build:await productionBuildIdentity(process.env.QUALITY_MODEL_ROSTER_BUILD_ROOT??process.cwd()),scope:'Prepared owned level-1 groups or single members on the explicitly recorded stage. Native title, deployment and available ability controls; ordinary simulation speed, muted. Before substitutes only twelve retained previous head rectangles on the same build, preserving later weapon layers with service workers blocked; four integrated heads stay unchanged. Not natural unlocks, all 48 forms, continuous human viewing, audio listening, body/movement acceptance or physical QA.',cases:[],errors:[]};
 const headSources=JSON.parse(await readFile('assets/source/quality-20261028/identity/battle-heads-r3/runtime-provenance.json','utf8')).entries;
 const browser=await({chromium,webkit}[engine]).launch({headless:true,...(engine==='chromium'?{args:['--mute-audio']}:{})});
 try{
- for(const index of selected){
-  const kinds=groups[index].filter(kind=>!only||only.includes(kind));if(!kinds.length)continue;
+ for(const {index,kinds} of runs){
+  if(!kinds.length)continue;
   const ids=kinds.map(kind=>{const unit=CAMPAIGN_UNITS.find(u=>u.combatKind===kind);assert.ok(unit,kind);return unit.id;});
   const record={group:index,kinds,inputs:[],rows:[],overrides:[],screenshots:[],states:[],abilityKinds:[]};report.cases.push(record);
   const context=await browser.newContext({viewport:{width:1280,height:720},hasTouch:true,serviceWorkers:'block',recordVideo:{dir:path.join(out,`group-${index}-video`),size:{width:1280,height:720}}});
   const page=await context.newPage();page.setDefaultTimeout(25000);page.on('pageerror',e=>report.errors.push(String(e)));
   try{
-   const seed=normalizeV100Save({...createDefaultV100Save({settings:{bgmEnabled:false,sfxEnabled:false}}),campaignStarted:true,ownedUnitIds:ids,registeredUnitIds:ids,formationSlots:ids,availableStageIds:V100_STAGE_IDS,completedStageIds:V100_STAGE_IDS.slice(0,2),flowState:{phase:'formation',stageId:V100_STAGE_IDS[2],stageNumber:3,eventId:null,destination:'formation',nodeIndex:0,firstClear:false,finalized:true}});
+   const seed=normalizeV100Save({...createDefaultV100Save({settings:{bgmEnabled:false,sfxEnabled:false}}),campaignStarted:true,ownedUnitIds:ids,registeredUnitIds:ids,formationSlots:ids,availableStageIds:V100_STAGE_IDS,completedStageIds:V100_STAGE_IDS.slice(0,2),flowState:{phase:'formation',stageId:V100_STAGE_IDS[stageNumber-1],stageNumber,eventId:null,destination:'formation',nodeIndex:0,firstClear:false,finalized:true}});
    await context.addInitScript(seedV100BrowserSaveOnce,serializeV100Save(seed));
    if(before){
     const changes=new Map(headSources.map(row=>[QUALITY_CHARACTER_ATLASES[row.kind].path,row.kind]));

@@ -12,7 +12,16 @@ export const RECORDED_WEAPON_TAKES = Object.freeze({
 export const recordedWeaponSources = id => ['mp3', 'ogg'].map(ext => ({
   src: `/audio/weapons/recorded/${id}.${ext}`, type: ext === 'mp3' ? 'audio/mpeg' : 'audio/ogg',
 }));
+export const RECORDED_WEAPON_CUE_SOURCES=Object.freeze({
+ 'ability-ranger-precision-shot':'weapon-rifle-01',
+ 'ability-gunner-suppression-muzzle':'weapon-gunner-01',
+});
+export const QUALITY_SUPPRESSED_SOURCES=['mp3','ogg'].map(ext=>({src:'/audio/quality-20261028/babayaga-suppressed-r2.'+ext,type:ext==='mp3'?'audio/mpeg':'audio/ogg'}));
 export function withRecordedWeapons(manifest) {
-  return { ...manifest, assets: manifest.assets.map(asset => RECORDED_WEAPON_TAKES[asset.id]
-    ? { ...asset, sources: recordedWeaponSources(asset.id) } : asset) };
+ return {...manifest,assets:manifest.assets.map(asset=>{
+  if(asset.id==='weapon-special-kill')return {...asset,sources:['mp3','ogg'].map(ext=>({src:'/audio/v100/foley/body.'+ext,type:ext==='mp3'?'audio/mpeg':'audio/ogg'}))};
+  if(['weapon-suppressed-pistol','ability-babayaga-appraise-shot'].includes(asset.id))return {...asset,sources:QUALITY_SUPPRESSED_SOURCES};
+  const sourceId=RECORDED_WEAPON_CUE_SOURCES[asset.id]??(RECORDED_WEAPON_TAKES[asset.id]?asset.id:null);
+  return sourceId?{...asset,sources:recordedWeaponSources(sourceId)}:asset;
+ })};
 }

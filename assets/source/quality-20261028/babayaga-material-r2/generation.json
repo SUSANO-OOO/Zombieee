@@ -1,0 +1,8 @@
+{
+  "tool": "built-in image_gen",
+  "input": "assets/source/quality-20261028/weapon-sidearm-r1/weapon-and-hands-authored-r1.png",
+  "output": "tti-style-suppressed-pistol-r2.png",
+  "original": "C:/Users/okait/.codex/generated_images/01a180c8-9e05-7871-b287-613f7c7eb364/exec-45fb3f42-df5e-4b07-91e3-25faf100e639.png",
+  "instruction": "User 2026-10-31 TTI / John Wick inspired suppressed tactical pistol; coaxial cylinder, restrained bronze accents, no logo; preserve rightward aim and hand connection.",
+  "status": "runtime candidate; Producer acceptance pending"
+}

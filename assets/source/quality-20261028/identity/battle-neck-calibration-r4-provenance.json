@@ -115,6 +115,7 @@
       },
       "garmentPixels": 156,
       "unchangedVisibleNonHeadPixels": 18527,
+      "materialCorrections": [],
       "acceptance": "placement candidate; original-speed, whole-character and Producer acceptance pending"
     },
     {
@@ -185,6 +186,7 @@
       },
       "garmentPixels": 0,
       "unchangedVisibleNonHeadPixels": 23775,
+      "materialCorrections": [],
       "acceptance": "placement candidate; original-speed, whole-character and Producer acceptance pending"
     },
     {
@@ -256,6 +258,7 @@
       },
       "garmentPixels": 0,
       "unchangedVisibleNonHeadPixels": 15269,
+      "materialCorrections": [],
       "acceptance": "placement candidate; original-speed, whole-character and Producer acceptance pending"
     },
     {
@@ -378,6 +381,7 @@
       },
       "garmentPixels": 251,
       "unchangedVisibleNonHeadPixels": 5226,
+      "materialCorrections": [],
       "acceptance": "placement candidate; original-speed, whole-character and Producer acceptance pending"
     },
     {
@@ -470,6 +474,7 @@
       },
       "garmentPixels": 22,
       "unchangedVisibleNonHeadPixels": 11146,
+      "materialCorrections": [],
       "acceptance": "placement candidate; original-speed, whole-character and Producer acceptance pending"
     },
     {
@@ -605,6 +610,7 @@
       },
       "garmentPixels": 200,
       "unchangedVisibleNonHeadPixels": 12702,
+      "materialCorrections": [],
       "acceptance": "placement candidate; original-speed, whole-character and Producer acceptance pending"
     },
     {
@@ -724,6 +730,7 @@
       },
       "garmentPixels": 78,
       "unchangedVisibleNonHeadPixels": 12587,
+      "materialCorrections": [],
       "acceptance": "placement candidate; original-speed, whole-character and Producer acceptance pending"
     },
     {
@@ -821,6 +828,7 @@
       },
       "garmentPixels": 27,
       "unchangedVisibleNonHeadPixels": 15259,
+      "materialCorrections": [],
       "acceptance": "placement candidate; original-speed, whole-character and Producer acceptance pending"
     },
     {
@@ -892,6 +900,7 @@
       },
       "garmentPixels": 0,
       "unchangedVisibleNonHeadPixels": 15783,
+      "materialCorrections": [],
       "acceptance": "placement candidate; original-speed, whole-character and Producer acceptance pending"
     },
     {
@@ -981,8 +990,8 @@
       "scale": 0.06616865226628416,
       "rotationRadians": 0.13161678326349222,
       "assetPath": "/art/v100/joints/babayaga-quality-neck-r4.webp",
-      "sha256": "6bf707af6aa9a6c4a09c36bf25d30a858c63c5b8b83e4eea48f46fee5995fb9c",
-      "bytes": 33268,
+      "sha256": "f35e7ad1fe8377e947e6df9e1ff115efcfd696bf23f698c1347bfa07523a81cc",
+      "bytes": 35102,
       "headDestination": {
         "x": 222,
         "y": 37,
@@ -996,7 +1005,37 @@
         "h": 78
       },
       "garmentPixels": 55,
-      "unchangedVisibleNonHeadPixels": 17516,
+      "unchangedVisibleNonHeadPixels": 6290,
+      "materialCorrections": [
+        {
+          "name": "torso",
+          "file": "assets/source/quality-20261028/babayaga-material-r2/torso.png",
+          "sha256": "b8d18b9e46e5d517576d96eb4e5af2f0aaa6c5258c13f22fb4452912cc9856d4",
+          "width": 43,
+          "height": 56
+        },
+        {
+          "name": "far-upper-arm",
+          "file": "assets/source/quality-20261028/babayaga-material-r2/far-upper-arm.png",
+          "sha256": "dc5fcabade69e4f9aa224a6a6e28a1781b99135a0faed5c097d6c416d8a7b486",
+          "width": 16,
+          "height": 38
+        },
+        {
+          "name": "far-forearm",
+          "file": "assets/source/quality-20261028/babayaga-material-r2/far-forearm.png",
+          "sha256": "b696461744f80c52ae92fae5fa5b48259bc0c46748ebcc02c4a4e192d7f7ff26",
+          "width": 14,
+          "height": 29
+        },
+        {
+          "name": "weapon-and-hands",
+          "file": "assets/source/quality-20261028/babayaga-material-r2/weapon-and-hands.png",
+          "sha256": "f479eab8db6e470f802e74f177ba169bafde7420d2d49ae24c5f2b92dd9408f7",
+          "width": 212,
+          "height": 102
+        }
+      ],
       "acceptance": "placement candidate; original-speed, whole-character and Producer acceptance pending"
     },
     {
@@ -1106,6 +1145,7 @@
       },
       "garmentPixels": 55,
       "unchangedVisibleNonHeadPixels": 14111,
+      "materialCorrections": [],
       "acceptance": "placement candidate; original-speed, whole-character and Producer acceptance pending"
     },
     {
@@ -1176,6 +1216,7 @@
       },
       "garmentPixels": 0,
       "unchangedVisibleNonHeadPixels": 14615,
+      "materialCorrections": [],
       "acceptance": "placement candidate; original-speed, whole-character and Producer acceptance pending"
     },
     {
@@ -1246,6 +1287,7 @@
       },
       "garmentPixels": 0,
       "unchangedVisibleNonHeadPixels": 12082,
+      "materialCorrections": [],
       "acceptance": "placement candidate; original-speed, whole-character and Producer acceptance pending"
     }
   ]
