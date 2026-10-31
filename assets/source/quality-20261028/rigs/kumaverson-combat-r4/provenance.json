@@ -1,0 +1,119 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "kumaverson",
+  "assetPath": "/art/v100/joints/kumaverson-combat-r4.webp",
+  "bytes": 53524,
+  "sha256": "7ac77ff8defbc423f5b3c3ad8e87c14e62288741215a7d1ac5ca026e8e381064",
+  "generatedPartsStudySha256": "921b84a59409c92f540866d00e8284f5cc7107ee423f703be29a622fc500befc",
+  "identitySourceSha256": "089d50e55d1f4e009a66858b500c923b41a5ed478b91826c491c5334ee190b3c",
+  "identityBinding": {
+    "path": "/art/v100/portraits/kumaverson-warm-stage-r1.webp",
+    "sourceSha256": "9b45830bc765a740ab21bb5e1ea29b93735ba6f5528c9c4af8129908a124c7e6",
+    "modelSource": "assets/source/quality-20261028/identity/kumaverson-master-r2.png",
+    "modelSha256": "51a5acb5a77f53eac921b49a5adefd681218f9f44f64e70caaf416ed2b6ed501",
+    "combatSource": "assets/source/quality-20261028/rigs/kumaverson-combat-r4/combat-model-r4.png",
+    "combatSha256": "089d50e55d1f4e009a66858b500c923b41a5ed478b91826c491c5334ee190b3c"
+  },
+  "motionSha256": "65d2487daeae1b27d3715beaa84162baac6940f84cf8f45558ef67d28a55033f",
+  "parts": [
+    {
+      "name": "far-thigh",
+      "file": "far-thigh.png",
+      "sha256": "49cb9ccfc0abb96faa54050385cd775c64406a602031b5a283e129b1412bc089",
+      "original": false
+    },
+    {
+      "name": "far-shin",
+      "file": "far-shin.png",
+      "sha256": "4495b2d328437369a3ac251f482bf03ca180776aa0b4159915aad605db6025f2",
+      "original": false
+    },
+    {
+      "name": "far-boot",
+      "file": "far-boot.png",
+      "sha256": "fe80cac3e0941e48f14ef5ecd230cf1903b9f27525d6b9cab25b1a2d5d3f1864",
+      "original": false
+    },
+    {
+      "name": "far-upper-arm",
+      "file": "far-upper-arm.png",
+      "sha256": "b04a2aad3db55a4450e834f5691f44ca4aec1d5e42838a0377ed1ae85f900fb1",
+      "original": true
+    },
+    {
+      "name": "far-forearm",
+      "file": "far-forearm.png",
+      "sha256": "bdec08a125258cd609970506e7d50baf3a954d5d7ccbca9bbd1ad57a04640dce",
+      "original": true
+    },
+    {
+      "name": "free-hand",
+      "file": "free-hand.png",
+      "sha256": "d4d6a0e4997a05a953e7378ae5720c73e37625e27b5679947d00b626527be2b0",
+      "original": true
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "63f6f64691b86db9e424d6ecddfa6b5f50245b187cd73d5287f10d46a7c652b5",
+      "original": false
+    },
+    {
+      "name": "near-thigh",
+      "file": "near-thigh.png",
+      "sha256": "d421a297daa307a51a53f08dcdc52aafed46387125ac075efca998164d55e699",
+      "original": false
+    },
+    {
+      "name": "near-shin",
+      "file": "near-shin.png",
+      "sha256": "d8f048df6597e518aac7859f79ed87e4b9dd7df22ae2974856eee7cd37607dbd",
+      "original": false
+    },
+    {
+      "name": "near-boot",
+      "file": "near-boot.png",
+      "sha256": "f255819d423a7acec849fd088ff4e5e6c84e8925791c673fd4124222ef9957ae",
+      "original": false
+    },
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "e8beec308265face9dddcf34d0a051413843f4062dd7aa4a69e0a6b7f5c29f80",
+      "original": true
+    },
+    {
+      "name": "near-upper-arm",
+      "file": "near-upper-arm.png",
+      "sha256": "2ee4dd1b973bea80a55e3fac7e5ac31ae016e8230177f4753376ee64459f2e0e",
+      "original": true
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "85d2e57622106216bacdd3d8936d76275f915958618865ecd7daf6eb0e58bc42",
+      "original": true
+    },
+    {
+      "name": "near-forearm",
+      "file": "near-forearm.png",
+      "sha256": "45a3b65850674e5f31c67014d45738173b74a12c584059e9438d0a318bb939af",
+      "original": true
+    },
+    {
+      "name": "weapon-and-hands",
+      "file": "weapon-and-hands.png",
+      "sha256": "0cca4ddef128c66f157865e476918c738413d514964fab960aa326c6aebb3df4",
+      "original": true
+    }
+  ],
+  "source": "Generated coherent combat model bound to adopted master-r2 identity and original producer combat clothing/ready stance. Deterministic 2D kinematics, not a Blender execution. Visible head/neck/shoulder paint retained from one combat source; only hidden trouser repair is separate. Motion, all48, normal-play and human acceptance pending.",
+  "groundY": 401,
+  "decodedBytes": 307200,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}

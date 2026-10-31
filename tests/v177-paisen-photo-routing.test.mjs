@@ -14,7 +14,7 @@ import {alphaBounds,decodeRgbaPng,hasTransparentPerimeter} from './image-asset-h
 
 test('all21 live Paisen routes use the opponent-facing photo source in both directions, including separate pose owners',()=>{
  assert.equal(COMBAT_ANIMATION_STATES.length,21);assert.equal(Object.keys(V177_JOINT_ATLASES).length,48);
- assert.equal(spriteSheetPath('brawler'),data.sixPath);assert.equal(V177_JOINT_ATLASES.brawler.path,'/art/v100/joints/brawler-quality-head-r1.webp');
+ assert.equal(spriteSheetPath('brawler'),data.sixPath);assert.equal(V177_JOINT_ATLASES.brawler.path,'/art/v100/joints/brawler-quality-neck-r4.webp');
  const parts=V177_JOINT_ATLASES.brawler.parts;assert.ok(parts.findIndex(p=>p.name==='head')<parts.findIndex(p=>p.name==='torso'));
  let samples=0;
  for(const state of COMBAT_ANIMATION_STATES)for(const direction of ['left','right'])for(const p of [0,.2,.5,.8,.99]){

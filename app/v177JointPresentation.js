@@ -40,6 +40,8 @@ const locomotionStates = new Set(['idle','deploy','move','start-move','stop-move
 const attackStates = new Set(['wind-up','active','recovery']);
 const recoveryStates = new Set(['reload','weapon-cycle']);
 const hitStates = new Set(['hit','hit-light','hit-heavy']);
+const forwardBipedKeys = new Set(['joint-brute','joint-guardian','joint-tky','joint-miyamoto-musashi',
+  'joint-takuya','joint-takuya-omega','joint-crazy-king','joint-kumaverson','joint-babayaga']);
 const renderedJointPoses = new WeakMap();
 const bipedFootRigs = new WeakMap();
 const livingStunPoses = new WeakMap();
@@ -84,6 +86,15 @@ export function v177JointCycleDistance(kind, renderScale) {
 
 export function v177GroundedJointPose(kind,source,sample,runtime){
   const atlas=V177_JOINT_ATLASES[kind];
+  if(atlas?.upperFollowsPelvis&&source?.choreography&&!source.groundedMotion){
+    const waist=atlas.interpolationPivots.spine;
+    const pelvis=interpolatedMatrix(new Float64Array(6),atlas,source,'pelvis',false);
+    const rest=atlas.poses[atlas.lowerCount-atlas.frameCount].pelvis;
+    const current=matrixPoint(pelvis,waist),home=matrixPoint(rest,waist);
+    const dx=current[0]-home[0],dy=current[1]-home[1];
+    source={...source,choreography:{...source.choreography,upper:Object.fromEntries(
+      Object.entries(source.choreography.upper).map(([bone,m])=>[bone,[m[0],m[1],m[2],m[3],m[4]+dx,m[5]+dy]]))}};
+  }
   let sourceFeet;
   if(source?.choreography?.stepDistance>0&&!source.stepLeadBone&&atlas?.legConstraints?.length===2){
     sourceFeet={};const foot=new Float64Array(6);
@@ -595,6 +606,19 @@ export function v177RangerFootPlan(kind,plan,{actor,world,width,direction}={}) {
 // Keep anatomical leg identity through stops and reflection, using the same
 // actual-painted foot history as Ranger. Side-view overlap remains legal.
 // Original hips, limb lengths, near/far paint order and attack steps survive.
+function withBipedLandingHips(rig) {
+  let drop=0;
+  for(const leg of rig.legs){
+    const radius=leg.upperLength+leg.lowerLength-1.2;
+    const dx=Math.abs(leg.footCenter-leg.hip[0])+rig.spanPx*.5;
+    // A source step wider than the entire leg still needs its own rig fix.
+    if(dx>=radius)return rig;
+    drop=Math.max(drop,leg.groundAnkle-leg.hip[1]+1.2-Math.sqrt(radius*radius-dx*dx));
+  }
+  if(drop<=0)return rig;
+  return {...rig,legs:rig.legs.map(leg=>({...leg,landingHip:[leg.hip[0],leg.hip[1]+drop]}))};
+}
+
 export function v105BipedFootPlan(kind,plan,{actor,world,width,frame,direction}={}) {
   const atlas=V177_JOINT_ATLASES[kind],runtime=actor?.animationPresentation;
   if(atlas?.type!=='rigid-parts'||atlas.legConstraints?.length!==2||!plan?.groundedMotion
@@ -632,7 +656,7 @@ export function v105BipedFootPlan(kind,plan,{actor,world,width,frame,direction}=
     hip:matrixPoint(interpolatedMatrix(new Float64Array(6),atlas,plan,leg.parentBone,leg.parentUpper!==false),leg.hip)
       .map((value,index)=>value+(index===0?basisOffset:0))}))};
   const previous=renderedJointPoses.get(v177JointActorKey(actor,world));
-  const feet=v177RangerFootPlacement(dynamicRig,previous?.kind===kind?previous.plan.bipedFeet:undefined,{
+  const feet=v177RangerFootPlacement(atlas.reserveBipedLanding?withBipedLandingHips(dynamicRig):dynamicRig,previous?.kind===kind?previous.plan.bipedFeet:undefined,{
     time:world.time,root,scale,phase:runtime?.locomotionPhase??0,moving:runtime?.moving,
     facing:requestedFacing,settle:plan.paintLocomotion?.settle??runtime?.locomotionSettle??1,
     frozen:plan.reactionHeld||plan.liveStun||Math.abs(actor.knock??0)>.1,
@@ -649,8 +673,14 @@ export function v105BipedFootPlan(kind,plan,{actor,world,width,frame,direction}=
   // Fit the original hips above both new plants. Never stretch a thigh or
   // detach a shin to mask an unreachable ankle during weight transfer.
   let lo=-Infinity,hi=Infinity;
+  const walk=1-clamp(plan.paintLocomotion?.settle??runtime?.locomotionSettle??1);
   for(const leg of dynamicRig.legs){
-    const t=targets[leg.effectorBone],reach=leg.upperLength+leg.lowerLength-.001;
+    const length=leg.upperLength+leg.lowerLength;
+    // A straight short leg left the longer thigh folded across it. Retain a
+    // small supporting bend during this forward-knee gait, moving the pelvis
+    // over the unchanged plants; all source bone lengths stay fixed.
+    const margin=atlas.reserveBipedLanding&&forwardBipedKeys.has(atlas.key)?Math.max(.001,length*.03*walk):.001;
+    const t=targets[leg.effectorBone],reach=length-margin;
     const vertical=Math.sqrt(Math.max(0,reach*reach-(t.x-(leg.hip[0]-basisOffset))**2));
     lo=Math.max(lo,t.y-leg.hip[1]-vertical);hi=Math.min(hi,t.y-leg.hip[1]+vertical);
   }
@@ -893,8 +923,7 @@ function jointChainGeometry(atlas,plan,chain,upper,scratch){
   const along=(a*a+d*d-b*b)/(2*d),height=Math.sqrt(Math.max(0,a*a-along*along));
   // These right-facing biped sources have wide resting stances; their drawn
   // static knee angle is not an anatomical walking bend direction.
-  const forwardBiped=leg&&['joint-brute','joint-guardian','joint-tky','joint-miyamoto-musashi',
-    'joint-takuya','joint-takuya-omega','joint-crazy-king','joint-kumaverson','joint-babayaga'].includes(atlas.key);
+  const forwardBiped=leg&&forwardBipedKeys.has(atlas.key);
   const sign=forwardBiped?-1:((ex-sx)*-(wy-sy)+(ey-sy)*(wx-sx)>=0?1:-1);
   const kx=hx+dx/d*along-dy/d*height*sign,ky=hy+dy/d*along+dx/d*height*sign;
   const geometry={sx,sy,ex,ey,wx,wy,hx,hy,tx,ty,kx,ky};

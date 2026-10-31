@@ -8,6 +8,8 @@ import {V177_QUADRUPED_JOINT_ATLASES} from './v177QuadrupedJointData.js';
 import {V105_CRAZY_KING_JOINT_ATLAS} from './v105CrazyKingJointData.js';
 import {V177_GUARD_ENEMY_JOINT_ATLASES} from './v177GuardEnemyJointData.js';
 import {withQualitySidearmAtlas} from './qualitySidearmAtlas.js';
+import {QUALITY_KUMAVERSON_COMBAT_ATLAS} from './qualityKumaversonCombatJointData.js';
+import {withQualityBattleHeadCalibration} from './qualityBattleHeadCalibration.js';
 
 const baseAtlases={...V177_JOINT_ATLASES,...V177_QUADRUPED_JOINT_ATLASES,
   ...V177_BIPED_JOINT_ATLASES,...V177_FIREARM_JOINT_ATLASES,...V177_MELEE_JOINT_ATLASES,
@@ -30,5 +32,7 @@ export const QUALITY_CHARACTER_HEAD_ATLASES = Object.freeze({
       kind,{...QUALITY_CHARACTER_BASE_ATLASES[kind],path:`/art/v100/joints/${kind}-quality-model-r3.webp`},
     ])),
 });
-export const QUALITY_CHARACTER_ATLASES=Object.freeze(Object.fromEntries(
- Object.entries(QUALITY_CHARACTER_HEAD_ATLASES).map(([kind,atlas])=>[kind,withQualitySidearmAtlas(kind,atlas)])));
+export const QUALITY_CHARACTER_ATLASES=Object.freeze({
+ ...Object.fromEntries(Object.entries(QUALITY_CHARACTER_HEAD_ATLASES).map(([kind,atlas])=>[kind,withQualityBattleHeadCalibration(kind,withQualitySidearmAtlas(kind,atlas))])),
+ kumaverson:QUALITY_KUMAVERSON_COMBAT_ATLAS,
+});

@@ -5,8 +5,10 @@ import {createHash} from 'node:crypto';
 import sharp from 'sharp';
 import {V177_JOINT_ATLASES} from '../app/v177JointPresentation.js';
 import {QUALITY_CHARACTER_BASE_ATLASES as bases,QUALITY_CHARACTER_HEAD_ATLASES} from '../app/qualityCharacterAtlases.js';
-import {QUALITY_SIDEARM_RETAINED_BASE,QUALITY_SIDEARM_PATH} from '../app/qualitySidearmAtlas.js';
+import {QUALITY_SIDEARM_RETAINED_BASE} from '../app/qualitySidearmAtlas.js';
 import {CAMPAIGN_UNITS} from '../app/campaign.js';
+import {QUALITY_BATTLE_HEAD_CALIBRATIONS} from '../app/qualityBattleHeadCalibrationData.js';
+import {QUALITY_KUMAVERSON_COMBAT_ATLAS} from '../app/qualityKumaversonCombatJointData.js';
 const legacy=JSON.parse(await readFile('assets/source/quality-20261028/identity/head-runtime-provenance.json','utf8'));
 const completed=JSON.parse(await readFile('assets/source/quality-20261028/identity/battle-heads-r3/runtime-provenance.json','utf8'));
 const provenance={entries:[...legacy.entries.filter(row=>!completed.entries.some(next=>next.kind===row.kind)),...completed.entries]};
@@ -15,10 +17,15 @@ test('normal battle-head assignments cover the complete playable roster without 
  assert.equal(provenance.entries.length,16);assert.equal(new Set(provenance.entries.map(row=>row.kind)).size,16);
 });
 const manifest=JSON.parse(await readFile('public/asset-manifest.json','utf8'));
-for(const [kind,base] of Object.entries(bases))test(kind+' battle identity replaces the head paint, preserving body, weapon and all motion geometry',async()=>{
+for(const [kind,base] of Object.entries(bases))test(kind+' keeps its checked identity lineage and the correct current runtime material',async()=>{
  const current=QUALITY_CHARACTER_HEAD_ATLASES[kind],preferred=V177_JOINT_ATLASES[kind],entry=provenance.entries.find(e=>e.kind===kind);
- if(kind==='babayaga')assert.equal(preferred.path,QUALITY_SIDEARM_PATH);
- else assert.deepEqual(preferred,current,'Current rendering still owns the checked head version');
+ if(kind==='kumaverson')assert.deepEqual(preferred,QUALITY_KUMAVERSON_COMBAT_ATLAS,'The current combat body replaces the retired head-only approach');
+ else if(QUALITY_BATTLE_HEAD_CALIBRATIONS[kind]){
+  const update=QUALITY_BATTLE_HEAD_CALIBRATIONS[kind],rig=preferred.parts?preferred:preferred.upperRig;
+  assert.equal(preferred.path,update.path);assert.deepEqual(rig.parts,update.parts);
+  const originalRig=base.parts?base:base.upperRig;assert.deepEqual(rig.poses,originalRig.poses,'Source pose angles remain source-bound');
+  assert.deepEqual(rig.parentAttachments,originalRig.parentAttachments,'Original anatomical pivots and reaction owners remain source-bound');
+ }else assert.deepEqual(preferred,current,'The original dog/toy head remains intentionally distinct');
  assert.equal(current.path,entry.assetPath);assert.notEqual(current.path,base.path);
  assert.deepEqual({...current,path:base.path},base);
  const bytes=await readFile(kind==='babayaga'?QUALITY_SIDEARM_RETAINED_BASE:'public'+current.path);assert.equal(createHash('sha256').update(bytes).digest('hex'),entry.sha256);

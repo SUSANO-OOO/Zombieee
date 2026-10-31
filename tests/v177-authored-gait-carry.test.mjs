@@ -65,23 +65,18 @@ test('walk carry reaches attack entry continuously and fades before the strike',
     assert.equal(v177WeaponChoreography(kind,atlas,{...base,attackPhase:.3}).choreography.walkingCarry,undefined);
   }
 });
-test('Kuma keeps a joined neck and level gaze in his raised carry posture while walking and stopping',()=>{
+test('Kuma neck follows the same-source shoulders instead of counter-rotating the shirt collar',()=>{
   const atlas=atlases.kumaverson;
-  // Independently measured at the bottom opaque head pixels of the adopted
-  // runtime atlas. Counter-rotating about the waist would detach this seam.
-  const neck=[322.55529115341545,117.02941176470588],waist=[247,235];
-  const neutral=atlas.poses[atlas.lowerCount-atlas.frameCount];
-  const baseNeck=point(neutral.spine,neck),baseWaist=point(neutral.spine,waist);
-  const oldLean=Math.atan2(baseNeck[0]-baseWaist[0],baseWaist[1]-baseNeck[1]);
+  // Measured on the adopted master at the upper bare neck, above the collar.
+  const neck=[780*428/1298+29,270*400/1212+7];
+  assert.deepEqual(atlas.parentAttachments.head.pivot,neck);
   for(const settle of [0,.2,.6,.9,1])for(let n=0;n<24;n++){
     const phase=n/24,plan={phase,paintLocomotion:{phase,settle},attackPhase:null};
     const upper=v177WeaponChoreography('kumaverson',atlas,plan).choreography.upper;
-    const headNeck=point(upper.head,neck),bodyNeck=point(upper.spine,neck),hip=point(upper.spine,waist);
+    const headNeck=point(upper.head,neck),bodyNeck=point(upper.spine,neck);
     assert.ok(Math.hypot(headNeck[0]-bodyNeck[0],headNeck[1]-bodyNeck[1])<.002,'neck remains attached');
-    assert.ok(Math.abs(Math.atan2(upper.head[1],upper.head[0]))<.0001,'face keeps its forward gaze');
-    assert.ok(bodyNeck[1]<hip[1],'neck stays above the hip');
-    const lean=Math.atan2(bodyNeck[0]-hip[0],hip[1]-bodyNeck[1]);
-    assert.ok(lean>0&&lean<oldLean-.1,'carry is raised without leaning backward');
+    assert.ok(Math.abs(Math.atan2(upper.head[1],upper.head[0])-Math.atan2(upper.spine[1],upper.spine[0]))<.02,
+      'the upper neck shares shoulder motion without a horizontal collar hinge');
   }
 });
 

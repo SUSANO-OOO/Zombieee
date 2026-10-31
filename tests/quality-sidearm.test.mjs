@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import sharp from 'sharp';
 import {QUALITY_CHARACTER_BASE_ATLASES,QUALITY_CHARACTER_HEAD_ATLASES,QUALITY_CHARACTER_ATLASES} from '../app/qualityCharacterAtlases.js';
-import {QUALITY_SIDEARM_PATH,QUALITY_SIDEARM_BASE_PATH,QUALITY_SIDEARM_RETAINED_BASE} from '../app/qualitySidearmAtlas.js';
+import {QUALITY_SIDEARM_PATH,QUALITY_SIDEARM_BASE_PATH,QUALITY_SIDEARM_RETAINED_BASE,withQualitySidearmAtlas} from '../app/qualitySidearmAtlas.js';
 import {qualityHeadOnlyOverride} from '../scripts/quality-head-only-override.mjs';
 const hash=b=>createHash('sha256').update(b).digest('hex');
 function assertRetainedPaint(original,current){
@@ -13,8 +13,8 @@ function assertRetainedPaint(original,current){
   if(original.data[a+3])assert.deepEqual(current.data.subarray(b,b+3),original.data.subarray(a,a+3));
  }
 }
-test('Baba final atlas retains the selected face, every non-weapon part, joints and all action poses',async()=>{
- const before=QUALITY_CHARACTER_HEAD_ATLASES.babayaga,after=QUALITY_CHARACTER_ATLASES.babayaga;
+test('Baba source-bound sidearm layer retains the selected face, every non-weapon part, joints and all action poses',async()=>{
+ const before=QUALITY_CHARACTER_HEAD_ATLASES.babayaga,after=withQualitySidearmAtlas('babayaga',before);
  const part=after.parts.find(p=>p.bone===after.weaponBone);
  assert.deepEqual({...after,path:before.path,decodedWidth:before.decodedWidth,decodedHeight:before.decodedHeight,decodedBytes:before.decodedBytes,parts:before.parts},before);
  assert.deepEqual(after.parts.filter(p=>p.bone!==after.weaponBone),before.parts.filter(p=>p.bone!==before.weaponBone));
@@ -26,7 +26,7 @@ test('Baba final atlas retains the selected face, every non-weapon part, joints 
  assert.ok(current.data[(Math.floor(sy)*current.info.width+Math.floor(sx))*4+3]>=128,'measured muzzle remains on the new barrel');
  const oldWeapon=before.parts.find(p=>p.bone===before.weaponBone),crop=(raw,p)=>sharp(raw.data,{raw:raw.info}).extract({left:p.source.x,top:p.source.y,width:p.source.w,height:p.source.h}).resize(102,46).raw().toBuffer();
  assert.notDeepEqual(await crop(current,part),await crop(original,oldWeapon),'weapon paint actually changes');
- for(const kind of Object.keys(QUALITY_CHARACTER_ATLASES).filter(k=>k!=='babayaga'))assert.strictEqual(QUALITY_CHARACTER_ATLASES[kind],QUALITY_CHARACTER_HEAD_ATLASES[kind]);
+ for(const kind of Object.keys(QUALITY_CHARACTER_ATLASES).filter(k=>k!=='babayaga'))assert.strictEqual(withQualitySidearmAtlas(kind,QUALITY_CHARACTER_HEAD_ATLASES[kind]),QUALITY_CHARACTER_HEAD_ATLASES[kind]);
 });
 test('The final-paint preservation guard rejects a changed face pixel and alpha, including otherwise valid sidearm data',async()=>{
  const before=await sharp(QUALITY_SIDEARM_RETAINED_BASE).ensureAlpha().raw().toBuffer({resolveWithObject:true});
@@ -42,7 +42,7 @@ test('The sole preferred sidearm runtime derives from the adopted model, with th
  assert.equal(entry.model,'assets/source/quality-20261028/identity/babayaga-master-r1.png');assert.equal(hash(await readFile(entry.model)),entry.modelSha256);
  assert.equal(hash(await readFile(QUALITY_SIDEARM_RETAINED_BASE)),entry.baseSha256);assert.equal(hash(await readFile('public'+QUALITY_SIDEARM_PATH)),entry.sha256);
  assert.equal(entry.assetPath,QUALITY_SIDEARM_PATH);assert.equal(entry.basePath,QUALITY_SIDEARM_BASE_PATH);
- const manifest=JSON.parse(await readFile('public/asset-manifest.json'));assert.equal(manifest.assets.filter(a=>a.path===QUALITY_SIDEARM_PATH).length,1);assert.equal(manifest.assets.filter(a=>a.path===QUALITY_SIDEARM_BASE_PATH).length,0);
+ const manifest=JSON.parse(await readFile('public/asset-manifest.json'));assert.equal(manifest.assets.filter(a=>a.path===QUALITY_CHARACTER_ATLASES.babayaga.path).length,1);assert.equal(manifest.assets.filter(a=>a.path===QUALITY_SIDEARM_BASE_PATH).length,0);
  await assert.rejects(readFile('public'+QUALITY_SIDEARM_BASE_PATH),{code:'ENOENT'});
 });
 test('Head-only comparison preserves the later handgun and rejects out-of-bound source rectangles',async()=>{

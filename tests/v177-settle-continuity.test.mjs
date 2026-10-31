@@ -25,7 +25,7 @@ function paint(kind,plan,rendered={}) {
     beginPath(){},moveTo(){},lineTo(){},closePath(){},fill(){}};
   assert.equal(drawV177JointPose(ctx,{naturalWidth:atlas.decodedWidth},kind,plan,
     -r.width*(r.frame?.anchorX??0),-r.height*(r.frame?.anchorY??0),r.width,r.height),true);
-  assert.equal(calls.length,atlas.parts?.length??8,'each source part is painted once');assert.equal(stack.length,0);
+  assert.equal(calls.length,atlas.parts?.length??(1+atlas.upperRig.parts.length),'each source part is painted once');assert.equal(stack.length,0);
   return calls;
 }
 function paintDelta(a,b) {
@@ -113,7 +113,7 @@ test('Ranger retains one original weighted lower cell and its7 upper parts witho
   for(const settle of [0,1/6,.5,5/6,1])for(const state of ['move','active','recovery']){
     const phase=.371,plan=v177JointPose('ranger',{requestedState:state,clipProgress:.371},{locomotionPhase:phase,locomotionSettle:settle});
     const calls=paint('ranger',plan),index=Math.round(settle*(atlas.settleLevels-1))*atlas.frameCount+Math.floor(phase*atlas.frameCount);
-    assert.equal(plan.lowerIndex,index);assert.equal(calls.length,8);
+    assert.equal(plan.lowerIndex,index);assert.equal(calls.length,1+atlas.upperRig.parts.length);
     assert.deepEqual(calls[0].rect.slice(0,4),Object.values(atlas.frames[index].source));
   }
   assert.equal(JSON.stringify(atlas),before);

@@ -1,3 +1,4 @@
+import {assertMaterialRigGeometry} from './helpers/quality-material-contract.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
@@ -328,10 +329,10 @@ test('Ranger cloth never repairs a collapsed or crossed quad into a false succes
 test('the authored append-only Ranger atlas retains every r2 RGBA byte and crop; runtime derivatives retain its rig',async()=>{
   const oldBytes=await readFile('public/art/v100/joints/ranger-r2.webp');assert.equal(sha(oldBytes),'08440e6c182f562e3fda394a9f12b5e21ca0e9abfa95da104d1dc397f3a412db');
   const authoredTexture=await sharp(await readFile('public'+authoredAtlases.ranger.path)).ensureAlpha().raw().toBuffer({resolveWithObject:true});
-  assert.deepEqual({...atlas,path:authoredAtlases.ranger.path},authoredAtlases.ranger);
+  assertMaterialRigGeometry(atlas,authoredAtlases.ranger);
   const old=await sharp(oldBytes).ensureAlpha().raw().toBuffer();assert.ok(authoredTexture.data.subarray(0,old.length).equals(old));
-  assert.equal(sha(JSON.stringify(atlas.upperRig)),'23a2419c59a55c90e7528840fcf1d1f6d97167bfbfad622858416404c8f5d51a');
-  assert.equal(atlas.frames.length,152);assert.equal(atlas.upperRig.parts.length,7);assert.ok(atlas.decodedBytes<=6*1024*1024);
+  assert.equal(sha(JSON.stringify(authoredAtlases.ranger.upperRig)),'23a2419c59a55c90e7528840fcf1d1f6d97167bfbfad622858416404c8f5d51a');
+  assert.equal(atlas.frames.length,152);assert.equal(authoredAtlases.ranger.upperRig.parts.length,7);assert.equal(atlas.upperRig.parts.length,8);assert.ok(atlas.decodedBytes<=6*1024*1024);
   for(const part of rig.parts){const p=JSON.parse(await readFile(source+'parts.json')).parts.find(p=>p.name===part.name),raw=await sharp(await readFile(source+p.file)).ensureAlpha().raw().toBuffer();
     for(let y=0;y<part.source.h;y++){const from=((part.destination.y+y)*480+part.destination.x)*4,to=((part.source.y+y)*atlas.decodedWidth+part.source.x)*4;
       assert.ok(raw.subarray(from,from+part.source.w*4).equals(authoredTexture.data.subarray(to,to+part.source.w*4)),part.name);}}
@@ -394,7 +395,7 @@ test('actual joint draw paints one continuous lower and seven upper parts under 
     const receipt=v177RenderedWeightedLowerReceipt(actor,world);assert.equal(receipt.mode,'continuous-weighted-mesh');
     assert.equal(receipt.parts,5);assert.equal(receipt.meshVertices,130);assert.equal(receipt.meshTriangles,192);assert.equal(receipt.coverageSamples,4);
     assert.equal(receipt.duplicateWithinPart,0);assert.equal(receipt.degenerate,0);assert.equal(receipt.phase,plan.phase);assert.equal(receipt.settle,plan.lowerSettle);
-    assert.equal(target.calls.length,8);assert.deepEqual(target.calls[0].matrix,[1,0,0,1,0,0]);assert.ok(target.calls[0].pixels.some(v=>v));
+    assert.equal(target.calls.length,1+atlas.upperRig.parts.length);assert.deepEqual(target.calls[0].matrix,[1,0,0,1,0,0]);assert.ok(target.calls[0].pixels.some(v=>v));
     assert.equal(target.ctx.globalAlpha,.73);assert.equal(target.ctx.globalCompositeOperation,'source-over');assert.equal(target.stack.length,0);
     assert.deepEqual(Object.values(target.ctx.getTransform()),m);
     const again=main({width,height,matrix:m});drawV177JointPose(again.ctx,img,'ranger',plan,-48,-80,96,89.6,{actor,world});

@@ -24,7 +24,7 @@ function render(plan){
  const matrices=[],calls=[];
  const ctx={save(){},restore(){},translate(){},scale(){},transform(...m){matrices.push(m);},drawImage(...a){calls.push(a);}};
  assert.equal(withV177PaintPartIdentity(()=>drawV177JointPose(ctx,{naturalWidth:atlas.decodedWidth},'scout',plan,0,0,480,448),ctx,'scout',[matrices,calls]),true);
- assert.equal(calls.length,16);return matrices;
+  assert.equal(calls.length,atlas.parts.length,'Every active material, including the restored collar, is painted once');return matrices;
 }
 
 test('both biped legs keep fixed lengths, painted ground support and a travel-scaled stride; the crowbar stays in its hand',async()=>{

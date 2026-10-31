@@ -1,3 +1,5 @@
+import {v177PaisenPhotoPoseOwner} from '../app/v177PaisenPhotoCombo.js';
+import {V177_JOINT_ATLASES} from '../app/v177JointPresentation.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { v177PaisenPhotoComboSample, v177PaisenPhotoComboJointPose } from '../app/v177PaisenPhotoCombo.js';
@@ -55,4 +57,18 @@ test('ready, cooldown, interrupted or invalid clocks cannot create a photo fist-
     stunned: 1, manualAbility: runtimeAt(definition.windupSeconds) };
   assert.equal(v177PaisenPhotoComboJointPose(owner, definition), null);
   assert.equal(v177PaisenPhotoComboJointPose({ ...owner, kind: 'scout', stunned: 0 }, definition), null);
+});
+
+test('material repacks keep the dedicated photo ability while a different pose owner is rejected',()=>{
+ const current=V177_JOINT_ATLASES.brawler;
+ assert.equal(v177PaisenPhotoPoseOwner(current),true);
+ const clone={...current,parts:current.parts.map(p=>({...p,source:{...p.source,x:p.source.x+1}}))};
+ assert.equal(v177PaisenPhotoPoseOwner(clone),true,'UV-only repacks keep the real ability rig');
+ for(const wrong of [
+  {...current,key:'other-owner'},
+  {...current,poses:{...current.poses}},
+  {...clone,parts:clone.parts.map((p,i)=>i===0?{...p,bone:'other-owner'}:p)},
+  {...clone,parts:[...clone.parts,{...clone.parts[0],name:'unknown-extra'}]},
+  {...clone,parts:[...clone.parts,clone.parts[0]]}
+ ])assert.equal(v177PaisenPhotoPoseOwner(wrong),false);
 });

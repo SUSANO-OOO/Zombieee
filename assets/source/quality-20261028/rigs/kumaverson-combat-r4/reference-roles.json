@@ -1,0 +1,26 @@
+{
+  "roles": {
+    "identity": {
+      "path": "assets/source/quality-20261028/identity/kumaverson-master-r2.png",
+      "bytes": 1857208,
+      "sha256": "51a5acb5a77f53eac921b49a5adefd681218f9f44f64e70caaf416ed2b6ed501"
+    },
+    "combatDesign": {
+      "path": "reference/characters/producer-masters-v2/kumaverson-producer-master-v2.png",
+      "bytes": 1408886,
+      "sha256": "1ea53c1c22cc811a6163246b88b749d7aeed69eff636ec60ec5f6d2228d70e68"
+    },
+    "readyPose": {
+      "path": "public/art/v060/characters/kumaverson-battle-v1.png",
+      "bytes": 1760286,
+      "sha256": "b1ae3aaa673e08fe842f654cea808e189c1cc0dc5bdaad7641e375abf9f7c4ed",
+      "crop": [
+        0,
+        0,
+        480,
+        448
+      ]
+    }
+  },
+  "constraints": "Keep adopted face identity; use existing combat clothing, low-cut shoes and pan-ready posture. The standing reference is not the combat-body design."
+}

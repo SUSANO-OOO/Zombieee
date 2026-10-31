@@ -57,9 +57,13 @@ function helperX(from,to,u,vx,duration) {
   return from+diff*u*u*(3-2*u)+tangent*u*(1-u)*(1-u);
 }
 function groundLanding(rig,leg,sign) {
-  const radius=leg.upperLength+leg.lowerLength-1.2,vertical=leg.groundAnkle-leg.hip[1]+1.2;
+  // Common bipeds fit their pelvis after resolving the current plants. The
+  // next landing must use that planned support height, rather than clipping
+  // the short leg's future step against the uncorrected standing hip.
+  const hip=leg.landingHip??leg.hip;
+  const radius=leg.upperLength+leg.lowerLength-1.2,vertical=leg.groundAnkle-hip[1]+1.2;
   const maxDx=Math.sqrt(Math.max(0,radius*radius-vertical*vertical)),goal=leg.footCenter+sign*rig.spanPx*.5;
-  return Math.max(leg.hip[0]-maxDx,Math.min(leg.hip[0]+maxDx,goal));
+  return Math.max(hip[0]-maxDx,Math.min(hip[0]+maxDx,goal));
 }
 function makeFlight(foot,previous,input,i,localGoal,kind,nominalEnd=null,duration=STEP_SECONDS) {
   const at=previous.time,endAt=at+duration;

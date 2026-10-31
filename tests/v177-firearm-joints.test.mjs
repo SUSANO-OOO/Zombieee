@@ -31,7 +31,7 @@ function record(kind,plan,{direction='right',scale=1,x=0,y=0}={}){
  const ctx={save(){stack.push([...m]);},restore(){m=stack.pop();},translate(x,y){multiply([1,0,0,1,x,y]);},scale(x,y){multiply([x,0,0,y,0,0]);},transform(...a){raw.push(a);multiply(a);},drawImage(){calls.push([...m]);}};
  if(direction==='left')ctx.scale(-1,1);
  assert.equal(drawV177JointPose(ctx,{naturalWidth:atlas.decodedWidth},kind,plan,-size.w*frame.anchorX,-size.h*frame.anchorY,size.w,size.h),true);
- assert.equal(raw.length,kind==='medic'?16:14);return {raw,calls,frame,size};
+ assert.equal(raw.length,atlas.parts.length);return {raw,calls,frame,size};
 }
 for(const kind of kinds){
  const dir=new URL('../assets/source/v100/joints/'+kind+'-r1/',import.meta.url),d=JSON.parse(await readFile(new URL('parts.json',dir))),motion=JSON.parse(gunzipSync(await readFile(new URL('motion.json.gz',dir)))),atlas=V177_JOINT_ATLASES[kind];

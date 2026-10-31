@@ -225,15 +225,15 @@ export const V177_AUTHORED_GAITS = {
     ]
   },
   "kumaverson": {
-    "stanceFraction": 0.55,
+    "stanceFraction": 0.62,
     "offsets": {
       "leg-0-foot": 0.5,
       "leg-1-foot": 0
     },
     "sources": [
       {
-        "file": "assets/source/v100/joints/kumaverson-r1/parts.json",
-        "sha256": "14110caf422b2162013b43940578cd29f764d625a9f257e1f20d8501a470e359",
+        "file": "assets/source/quality-20261028/rigs/kumaverson-combat-r4/parts.json",
+        "sha256": "da04679d35f8ec9e9d249f92e8c9147b4a2d335ec56856a0e4216f01cdfa6504",
         "hashEncoding": "utf8-lf"
       }
     ]

@@ -1,3 +1,4 @@
+import {v177PaisenPhotoPoseOwner} from '../app/v177PaisenPhotoCombo.js';
 import {withV177PaintPartIdentity} from './helpers/v177-render-trace.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -10,9 +11,10 @@ for(const dir of await readdir(new URL('../assets/source/v100/joints/',import.me
  try{const d=JSON.parse(await readFile(new URL('../assets/source/v100/joints/'+dir+'/parts.json',import.meta.url)));definitions.set(d.kind,d);}
  catch(e){if(!['ENOENT','ENOTDIR'].includes(e.code))throw e;}
 }
-if(['/art/v100/joints/brawler-photo-r2.webp','/art/v100/joints/brawler-quality-head-r1.webp'].includes(V177_JOINT_ATLASES.brawler?.path)){
+if(v177PaisenPhotoPoseOwner(V177_JOINT_ATLASES.brawler)){
  definitions.set('brawler',JSON.parse(await readFile(new URL('../assets/source/v177/paisen/battle-r8/parts.json',import.meta.url))));
 }
+if(V177_JOINT_ATLASES.kumaverson.path==='/art/v100/joints/kumaverson-combat-r4.webp')definitions.set('kumaverson',JSON.parse(await readFile('assets/source/quality-20261028/rigs/kumaverson-combat-r4/parts.json')));
 const transform=(m,[x,y])=>[m[0]*x+m[2]*y+m[4],m[1]*x+m[3]*y+m[5]];
 const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 function paintedBones(kind,atlas,sample,runtime){

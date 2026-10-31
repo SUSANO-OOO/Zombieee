@@ -4,25 +4,25 @@
   "scope": "Local quality candidate transport contract; not likeness, rights, listening, release or physical-device approval.",
   "added": [
     {
-      "path": "/art/v100/joints/babayaga-suppressed-sidearm-r1.webp",
-      "bytes": 31102,
-      "hash": "sha256-ebc4d1267dd1dda3afac8b20f4c5e70f9a13247d54fc6d029c4663d18260c48b",
+      "path": "/art/v100/joints/babayaga-quality-neck-r4.webp",
+      "bytes": 33268,
+      "hash": "sha256-6bf707af6aa9a6c4a09c36bf25d30a858c63c5b8b83e4eea48f46fee5995fb9c",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"
     },
     {
-      "path": "/art/v100/joints/brawler-quality-head-r1.webp",
-      "bytes": 36006,
-      "hash": "sha256-041763e670aa2f22eacade93b0e746a19ffbe44620284656ba5a6defac49a013",
+      "path": "/art/v100/joints/brawler-quality-neck-r4.webp",
+      "bytes": 40368,
+      "hash": "sha256-5f9fa0f00eecb6b8767426b97f94c00e5400b920a85058bf757a793f04f8c0cd",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"
     },
     {
-      "path": "/art/v100/joints/brute-quality-model-r3.webp",
-      "bytes": 36332,
-      "hash": "sha256-685403a148d743f575a50dc116ae17fb4dc383aedf7af70769ba5dd43a3c4890",
+      "path": "/art/v100/joints/brute-quality-neck-r4.webp",
+      "bytes": 41104,
+      "hash": "sha256-d4b19976ff39dd9884d11d41104fee928f43175efee59c368299db9881ef0709",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"
@@ -36,33 +36,33 @@
       "criticality": "critical"
     },
     {
-      "path": "/art/v100/joints/engineer-quality-model-r3.webp",
-      "bytes": 27334,
-      "hash": "sha256-4cdb51bb3ee04b73156aedb587d123dec092bb6adc38d81f7563972e599256f7",
+      "path": "/art/v100/joints/engineer-quality-neck-r4.webp",
+      "bytes": 32406,
+      "hash": "sha256-85d6a348c631e91629f104c7d1024d2d006013fed6f80179f7bc6b9f8afed451",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"
     },
     {
-      "path": "/art/v100/joints/guardian-quality-model-r3.webp",
-      "bytes": 42630,
-      "hash": "sha256-1e2878c1206a56ea3490ce082e487722e81b67846f3798b7af689786ece4f9db",
+      "path": "/art/v100/joints/guardian-quality-neck-r4.webp",
+      "bytes": 47712,
+      "hash": "sha256-2db1d4c79bb0425228207f1b9a4d071eebc638738524a010ab42affe62c22c78",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"
     },
     {
-      "path": "/art/v100/joints/gunner-quality-model-r3.webp",
-      "bytes": 30484,
-      "hash": "sha256-550f009472bf32d2c1a616e674ad33c45c6114df272aafd21dfad42a77b9acbf",
+      "path": "/art/v100/joints/gunner-quality-neck-r4.webp",
+      "bytes": 33274,
+      "hash": "sha256-2d9edb910e7c615e8480a7f0285eea8b13c98ab5c5a5ddfaea0ca3315a9c91fc",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"
     },
     {
-      "path": "/art/v100/joints/kumaverson-quality-head-r1.webp",
-      "bytes": 33682,
-      "hash": "sha256-3baa1326f2f6020c8f0386c8beac83e0eaf0bfb129afcf71644e34253818f9dc",
+      "path": "/art/v100/joints/kumaverson-combat-r4.webp",
+      "bytes": 53524,
+      "hash": "sha256-7ac77ff8defbc423f5b3c3ad8e87c14e62288741215a7d1ac5ca026e8e381064",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"
@@ -76,57 +76,57 @@
       "criticality": "critical"
     },
     {
-      "path": "/art/v100/joints/medic-quality-model-r3.webp",
-      "bytes": 34286,
-      "hash": "sha256-8af49aee35cf82a1062d8514729dc0d9df4b17010e744bbcc02f6f2df56f4e68",
+      "path": "/art/v100/joints/medic-quality-neck-r4.webp",
+      "bytes": 36222,
+      "hash": "sha256-ca216f97e07e91ae562bc33b2105c3cfde6d98c4f742ff343b74918108fe05dc",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"
     },
     {
-      "path": "/art/v100/joints/miyamoto-musashi-quality-model-r3.webp",
-      "bytes": 42234,
-      "hash": "sha256-cf127489ecc104ef0f3e452e6343236d3b9ded7f4ba36c48271fd79800313f44",
+      "path": "/art/v100/joints/miyamoto-musashi-quality-neck-r4.webp",
+      "bytes": 48006,
+      "hash": "sha256-6d677c8e0c94c40e0c6646b2d0cd763002554f6d787dbd4aac055b4d9bb4ddd5",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"
     },
     {
-      "path": "/art/v100/joints/mrs-chiha-quality-model-r3.webp",
-      "bytes": 37668,
-      "hash": "sha256-fef0ff857594de7effb094a11048c4c1b288c2ebdb8a2fec9ff648002871306a",
+      "path": "/art/v100/joints/mrs-chiha-quality-neck-r4.webp",
+      "bytes": 40790,
+      "hash": "sha256-482b1035ee0d5e4930678ded28116d3b03704f95ee531b35f4576c60c56329a4",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"
     },
     {
-      "path": "/art/v100/joints/ranger-quality-model-r3.webp",
-      "bytes": 954548,
-      "hash": "sha256-9524e272c296118651ad57ab707345da471339e40d582da8b4457cb0c4c593b0",
+      "path": "/art/v100/joints/ranger-quality-neck-r4.webp",
+      "bytes": 957462,
+      "hash": "sha256-b1e1bc34c028a8e36a96f6672e78c2b16701cd6799be5319926c1771b53d9295",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"
     },
     {
-      "path": "/art/v100/joints/scout-quality-model-r3.webp",
-      "bytes": 46620,
-      "hash": "sha256-683204f486edaddc61644f526c956b319c00d8295072f3619f350e09a1701011",
+      "path": "/art/v100/joints/scout-quality-neck-r4.webp",
+      "bytes": 51524,
+      "hash": "sha256-716756b8f4613ffcdeff539a764cdae2499594f594bafb0fe30e63722decdf47",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"
     },
     {
-      "path": "/art/v100/joints/tky-quality-head-r1.webp",
-      "bytes": 36588,
-      "hash": "sha256-57c45e88810758a7bb1afc9f1eff3011142602069b540087fdc971ddda8b4716",
+      "path": "/art/v100/joints/tky-quality-neck-r4.webp",
+      "bytes": 40504,
+      "hash": "sha256-b1b34548553f01e7cd78a9166de59eb1f018b77175b4c9bbf995de7924d870b0",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"
     },
     {
-      "path": "/art/v100/joints/zakimiya-quality-head-r1.webp",
-      "bytes": 30154,
-      "hash": "sha256-9bf647045ed7eb614cd92f6556aeab2fd3c9aa6451cec00e3d039df10aa6990b",
+      "path": "/art/v100/joints/zakimiya-quality-neck-r4.webp",
+      "bytes": 33794,
+      "hash": "sha256-25a336700f522b1c2e23251469e338f78303949893afc1205de5d02b10ab5941",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"
@@ -2698,6 +2698,68 @@
       "source": "assets/source/quality-20261028/weapon-sidearm-r1/runtime-provenance.json",
       "retainedBase": "assets/source/quality-20261028/weapon-sidearm-r1/base-head-r3.webp",
       "acceptance": "Source/technical checks and native game comparison; not new generation, release or physical-device approval"
+    },
+    {
+      "at": "2026-10-31",
+      "scope": "Full coherent Kuma combat model; thirteen neck/face placements with recovered original garment layers and compact UV repack. Historical base/transport and unrelated content retained.",
+      "paths": [
+        [
+          "/art/v100/joints/scout-quality-model-r3.webp",
+          "/art/v100/joints/scout-quality-neck-r4.webp"
+        ],
+        [
+          "/art/v100/joints/guardian-quality-model-r3.webp",
+          "/art/v100/joints/guardian-quality-neck-r4.webp"
+        ],
+        [
+          "/art/v100/joints/brute-quality-model-r3.webp",
+          "/art/v100/joints/brute-quality-neck-r4.webp"
+        ],
+        [
+          "/art/v100/joints/ranger-quality-model-r3.webp",
+          "/art/v100/joints/ranger-quality-neck-r4.webp"
+        ],
+        [
+          "/art/v100/joints/engineer-quality-model-r3.webp",
+          "/art/v100/joints/engineer-quality-neck-r4.webp"
+        ],
+        [
+          "/art/v100/joints/gunner-quality-model-r3.webp",
+          "/art/v100/joints/gunner-quality-neck-r4.webp"
+        ],
+        [
+          "/art/v100/joints/medic-quality-model-r3.webp",
+          "/art/v100/joints/medic-quality-neck-r4.webp"
+        ],
+        [
+          "/art/v100/joints/mrs-chiha-quality-model-r3.webp",
+          "/art/v100/joints/mrs-chiha-quality-neck-r4.webp"
+        ],
+        [
+          "/art/v100/joints/miyamoto-musashi-quality-model-r3.webp",
+          "/art/v100/joints/miyamoto-musashi-quality-neck-r4.webp"
+        ],
+        [
+          "/art/v100/joints/babayaga-suppressed-sidearm-r1.webp",
+          "/art/v100/joints/babayaga-quality-neck-r4.webp"
+        ],
+        [
+          "/art/v100/joints/brawler-quality-head-r1.webp",
+          "/art/v100/joints/brawler-quality-neck-r4.webp"
+        ],
+        [
+          "/art/v100/joints/tky-quality-head-r1.webp",
+          "/art/v100/joints/tky-quality-neck-r4.webp"
+        ],
+        [
+          "/art/v100/joints/zakimiya-quality-head-r1.webp",
+          "/art/v100/joints/zakimiya-quality-neck-r4.webp"
+        ],
+        [
+          "/art/v100/joints/kumaverson-quality-head-r1.webp",
+          "/art/v100/joints/kumaverson-combat-r4.webp"
+        ]
+      ]
     }
   ],
   "baseAssetsSha256": "a953511eb95b7a2a2eae3efd27a8c7a8460cafc4f1df14b73c6a6686006c4e69",

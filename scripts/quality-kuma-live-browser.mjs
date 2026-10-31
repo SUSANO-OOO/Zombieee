@@ -42,14 +42,16 @@ try {
   page = await context.newPage(); page.setDefaultTimeout(25000);
   page.on('pageerror', e => report.errors.push(String(e)));
   page.on('response', res => {
-    if (runtime !== 'development' || !res.url().includes('/app/v177WeaponChoreography.js')) return;
+    const modulePath=new URL(res.url()).pathname;
+    if (runtime !== 'development' || !['/app/v177WeaponChoreography.js','/app/qualityKumaversonCombatJointData.js',
+      '/app/qualityCharacterAtlases.js','/app/v177JointPresentation.js','/app/v177RangerFootPlacement.js'].includes(modulePath)) return;
     const observationIndex = responseTasks.length;
     responseTasks.push((async () => {
       const text = await res.text();
       const file = 'served-choreography-' + observationIndex + '.js';
       await writeFile(path.join(out, file), text, { flag: 'wx' });
-      report.moduleResponses.push({ status: res.status(), sha256: hash(text), file,
-        containsCandidateNeck: text.includes('322.555') && text.includes('neckPivot') });
+      report.moduleResponses.push({ modulePath, status: res.status(), sha256: hash(text), file,
+        containsCandidateMaster: modulePath==='/app/qualityKumaversonCombatJointData.js'&&text.includes('kumaverson-combat-r4.webp') });
     })().catch(e => report.errors.push('module observation: ' + String(e))));
   });
   await page.goto(process.env.V100_CAMPAIGN_QA_BASE_URL);
@@ -96,8 +98,9 @@ try {
       report.rows.push({ observedAt: snapshot.observedAt, time: snapshot.time, ...f });
       if (f.hp > 0 && f.render?.assetReady) {
         const state = f.render.requestedState; if (state) seen.add(state);
-        if (f.render.jointAtlasPath && f.render.jointAtlasPath !== QUALITY_CHARACTER_ATLASES.kumaverson.path)
-          report.renderMismatches.push({ time: snapshot.time, state, path: f.render.jointAtlasPath });
+        if (!f.render.jointDrawSucceeded || f.render.jointAtlasPath !== QUALITY_CHARACTER_ATLASES.kumaverson.path)
+          report.renderMismatches.push({ time: snapshot.time, state, path: f.render.jointAtlasPath,
+            jointDrawSucceeded: f.render.jointDrawSucceeded });
         if (!ability && seen.has('active') && await nativeBattleTap(page,
           page.locator(`button[data-fighter-id="${f.id}"][data-ability-kind]`).first(), report.inputPhases)) {
           ability = true; report.inputs.push({ time: snapshot.time, action: 'ability', kind: 'kumaverson' });
@@ -149,7 +152,7 @@ try {
     await page.screenshot({ path: path.join(out, 'after-recording.png') });
   } catch (e) { report.status = 'failed'; report.recordingError = String(e); process.exitCode = 1; }
   await Promise.allSettled(responseTasks);
-  if (runtime === 'development' && !report.moduleResponses.some(r => r.containsCandidateNeck)) {
+  if (runtime === 'development' && !report.moduleResponses.some(r => r.containsCandidateMaster)) {
     report.status = 'failed'; report.sourceObservationError = 'Candidate module was not observed'; process.exitCode = 1;
   }
   if (report.errors.length) { report.status = 'failed'; process.exitCode = 1; }
