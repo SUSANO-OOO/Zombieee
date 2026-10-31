@@ -418,3 +418,8 @@
 #v100-campaign .v100-command-personnel.detail-open .v100-unmet-record > .v100-personnel-detail-back { grid-column:1/-1; grid-row:1; }
 #v100-campaign .v100-unmet-record > button:not(.v100-personnel-detail-back) { grid-row:5; }
 #v100-campaign .v100-unmet-record { justify-self:center; width:100%; max-width:640px; }
+
+#v100-campaign .v100-result-actions .v100-primary:has(small) { line-height:1.15; }
+#v100-campaign .v100-result-actions .v100-primary small { display:block; margin-top:2px; font-size:12px; line-height:1.15; }
+
+#v100-campaign .v100-result-actions .v100-collect-reward-amount { margin-left:6px; color:#fff0b5; font-size:inherit; }

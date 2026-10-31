@@ -41,6 +41,7 @@ import {
   purchaseV100Equipment,
   upgradeV100Equipment,
   finalizeV100PendingResult,
+  collectV100ReadReplayReward,
   purchaseV100Support,
   purchaseV100Unit,
   recordV100PendingResult,
@@ -55,6 +56,7 @@ import {
   retryV100Battle,
   enterV100Battle,
   enterV100PostResult,
+  collectV100ReadReplayFlow,
   finishV100Battle,
   leaveV100Battle,
   leaveV100Preparation,
@@ -62,7 +64,7 @@ import {
   shouldAutoSkipV100StoryEvent,
   v100StoryFlowCheckpoint,
 } from "./v100StoryFlow.js";
-import { V100_STORY_POST_CREDITS_FILM, v100StoryEventFor, v100StoryEventView } from "./v100StoryEvents.js";
+import { V100_STORY_POST_CREDITS_FILM, v100StoryEventFor, v100StoryEventView, v100StoryEventIdsForStage } from "./v100StoryEvents.js";
 import { v100MissionObjectiveFor, v100ProductionSessionFor } from "./v100BattleAdapter.js";
 import { v100AvailableFormation, v100StageAbsenceReason } from "./v100StageParticipation.js";
 import { createV100EventAudioOwner } from "./v100EventAudio.js";
@@ -132,6 +134,8 @@ function formatReason(reason: string | undefined) {
     "invalid-characters": "使用できない文字が含まれています",
     "too-long": "名前は12文字以内で入力してください",
     "stage-locked": "ひとつ前の作戦をクリアすると、ここへ進める。",
+    "read-replay-required": "再挑戦の戦果から受け取ってください。",
+    "unread-post-story": "まだ読んでいない会話があります。物語の続きへ進もう。",
     "objective-incomplete": "まだ目標が残っている。画面の目標を確認。",
     "vehicle-destroyed": "車両が破壊された。これ以上は出撃できない。",
     "formation-full": "同時に出撃できるのは7体まで。枠が空くまで待とう。",
@@ -804,6 +808,22 @@ export function V100Campaign() {
     if (next.accepted) updateFlow(next.state);
   };
 
+  const readReplayCollection = collectV100ReadReplayFlow(createV100StoryFlowState(save));
+  const canCollectReadReplay = flow.phase === "result" && readReplayCollection.accepted
+    && flow.pendingResult?.battleRunId === save.pendingResult?.battleRunId;
+  const collectReadReplayReward = () => {
+    if (saveBusyRef.current || replayEventId || logOpen || menuOpen || creditsOpen || surface !== "campaign") return;
+    const collected = collectV100ReadReplayReward(save, flow.pendingResult);
+    if (!collected.applied) { setNotice(formatReason(collected.reason)); return; }
+    setNotice("");
+    void updateFlow(collected.flow, { baseSave: collected.save });
+  };
+  const readResultConversation = () => {
+    if (saveBusyRef.current || replayEventId) return;
+    const postId = v100StoryEventIdsForStage(Number(flow.pendingResult?.stageNumber))[1];
+    if (postId) { setReplayEventId(postId); setReplayNodeIndex(0); }
+  };
+
   const continueFromResult = () => {
     const next = enterV100PostResult(flow);
     if (next.accepted) updateFlow(next.state, { baseSave: save });
@@ -1093,7 +1113,7 @@ export function V100Campaign() {
       )}
 
       {flow.phase === "result" && (
-        <ResultView result={flow.pendingResult} previousBestStars={Number(save.bestStars[String(flow.pendingResult?.stageId ?? "")]) || 0} alreadyCompleted={save.completedStageIds.includes(String(flow.pendingResult?.stageId ?? ""))} onContinue={continueFromResult} onRetry={retryDefeat} onFormation={() => leaveDefeatResult("formation")} onMap={() => leaveDefeatResult("map")} />
+        <ResultView result={flow.pendingResult} previousBestStars={Number(save.bestStars[String(flow.pendingResult?.stageId ?? "")]) || 0} alreadyCompleted={save.completedStageIds.includes(String(flow.pendingResult?.stageId ?? ""))} canCollectReadReplay={canCollectReadReplay} onCollectReadReplay={collectReadReplayReward} onReadConversation={readResultConversation} onContinue={continueFromResult} onRetry={retryDefeat} onFormation={() => leaveDefeatResult("formation")} onMap={() => leaveDefeatResult("map")} />
       )}
 
       {logOpen && <EventLogView save={save} resumeLabel={flow.eventId ? eventDisplayLabel(flow.eventId) : flow.stageId ? stageDisplayNameFor(V100_STAGE_BY_ID[flow.stageId]) : "ステージ選択"} resumeObjective={flow.stageId && ["formation", "battle", "map"].includes(flow.phase) ? objectiveLabelFor(V100_STAGE_BY_ID[flow.stageId]) : null} currentNodes={isEventPhase(flow.phase) && event ? event.nodes.slice(0,storyPage.endIndex+1) : []} busy={saveBusy} onAutoSkipChange={enabled => applySaveTransaction(applyV100SaveMutation(save, draft => ({ ...draft, settings: { ...draft.settings, autoSkipReadStory: enabled } })))} onReplay={(eventId) => { setReplayEventId(eventId); setReplayNodeIndex(0); }} onClose={() => setLogOpen(false)} />}
@@ -1483,7 +1503,7 @@ function StarCriteria({ vehicleMaxHp }: { vehicleMaxHp: number }) {
   </div>;
 }
 
-function ResultView({ result, previousBestStars, alreadyCompleted, onContinue, onRetry, onFormation, onMap }: { result: Record<string, unknown> | null; previousBestStars: number; alreadyCompleted: boolean; onContinue: () => void; onRetry: () => void; onFormation: () => void; onMap: () => void }) {
+function ResultView({ result, previousBestStars, alreadyCompleted, canCollectReadReplay, onCollectReadReplay, onReadConversation, onContinue, onRetry, onFormation, onMap }: { result: Record<string, unknown> | null; previousBestStars: number; alreadyCompleted: boolean; canCollectReadReplay: boolean; onCollectReadReplay: () => void; onReadConversation: () => void; onContinue: () => void; onRetry: () => void; onFormation: () => void; onMap: () => void }) {
   const won = result?.won === true;
   const stageNumber = Number(result?.stageNumber) || 0;
   const runStars = won ? Math.max(0, Math.min(3, Number(result?.stars) || 0)) : 0;
@@ -1521,7 +1541,7 @@ function ResultView({ result, previousBestStars, alreadyCompleted, onContinue, o
     </div>
     <div className="v100-result-footer">
       {report && <details className="v100-battle-report"><summary>戦闘記録 / 第{report.wave}波・撃破{report.kills}</summary><div><p>同じ仲間が何度出撃しても、戦績はまとめて表示します。自分を回復した分も含みます。支援と車両のダメージは対象外です。</p>{report.units.length > 0 ? <table><thead><tr><th scope="col">ユニット</th><th scope="col">与ダメージ</th><th scope="col">被ダメージ</th><th scope="col">回復したHP</th></tr></thead><tbody>{report.units.map(unit => <tr key={unit.unitId}><th scope="row">{UNIT_BY_ID.get(unit.unitId)?.displayName}</th><td>{Math.round(unit.damage)}</td><td>{Math.round(unit.damageTaken)}</td><td>{Math.round(unit.healing)}</td></tr>)}</tbody></table> : <p>ユニットの実績は記録されていません。</p>}</div></details>}
-      <div className="v100-result-actions"><button className="v100-primary" type="button" onClick={won ? onContinue : onRetry}>{won ? "次の場面へ" : "同じ編成で再挑戦"}</button>{!won && <><button type="button" onClick={onFormation}>編成を見直す</button><button type="button" onClick={onMap}>ステージ選択へ</button></>}</div>
+      <div className="v100-result-actions">{won && canCollectReadReplay ? <><button className="v100-primary" type="button" data-v100-reward-caps={rewardCaps + bonusStar2 + bonusStar3} onClick={onCollectReadReplay}>報酬を受け取る <span className="v100-collect-reward-amount">+{rewardCaps + bonusStar2 + bonusStar3} CAPS</span><small>既読の会話を省略してステージ選択へ</small></button><button type="button" onClick={onReadConversation}>会話を読み返す</button></> : <button className="v100-primary" type="button" onClick={won ? onContinue : onRetry}>{won ? "次の場面へ" : "同じ編成で再挑戦"}</button>}{!won && <><button type="button" onClick={onFormation}>編成を見直す</button><button type="button" onClick={onMap}>ステージ選択へ</button></>}</div>
     </div>
   </section>;
 }

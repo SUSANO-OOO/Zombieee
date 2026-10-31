@@ -219,6 +219,22 @@ export function enterV100PostResult(state) {
   return { accepted: true, state: stateWith(state, { phase: "post", eventId, destination: "post", canSkip: true }) };
 }
 
+// Explicit reward collection after a replay, rather than a generic story skip.
+// Both post events must have been read in this exact script version.
+export function collectV100ReadReplayFlow(state) {
+  const pending = state?.pendingResult;
+  if (state?.phase !== "result" || !pending || state.finalized) return { accepted: false, reason: "result-not-active", state };
+  if (state.firstClear || !state.completedStageIds.includes(state.stageId)) return { accepted: false, reason: "read-replay-required", state };
+  const stage = V100_STAGE_BY_ID[state.stageId];
+  if (!stage || pending.stageId !== stage.id || pending.stageNumber !== stage.number || pending.won !== true) return { accepted: false, reason: "stage-result-mismatch", state };
+  const ids = v100StoryEventIdsForStage(stage.number).filter(id => !id.endsWith(":pre"));
+  if (ids.length !== 2 || ids.some(id => !state.readStoryEventIds.includes(id) || state.readStoryVersions[id] !== V100_STORY_SCRIPT_VERSION)) return { accepted: false, reason: "unread-post-story", state };
+  const post = enterV100PostResult(state);
+  if (!post.accepted) return post;
+  const confirmation = completeV100Event(post.state, { skipped: true });
+  return confirmation.accepted ? finalizeV100Flow(confirmation.state) : confirmation;
+}
+
 export function finalizeV100Flow(state) {
   if (state.phase !== "first-clear-post" || !state.pendingResult) return { accepted: false, reason: "first-clear-finalize-required", state };
   const completed = state.completedStageIds.includes(state.stageId) ? [...state.completedStageIds] : [...state.completedStageIds, state.stageId];
