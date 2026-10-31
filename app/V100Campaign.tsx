@@ -779,11 +779,8 @@ export function V100Campaign() {
       formationSlots[slot] = value || null;
       return { ...draft, formationSlots };
     });
-    if (next.applied) void commitSave(next.save).then(saved => {
-      if (saved) {
-        setNotice("");
-        if (value === formationRequestedUnitId) setFormationRequestedUnitId(null);
-      }
+    if (next.applied) void commitSave(next.save, () => setNotice("")).then(saved => {
+      if (saved && value === formationRequestedUnitId) setFormationRequestedUnitId(null);
     });
   };
 
