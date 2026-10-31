@@ -4,9 +4,9 @@
   "scope": "Local quality candidate transport contract; not likeness, rights, listening, release or physical-device approval.",
   "added": [
     {
-      "path": "/art/v100/joints/babayaga-quality-model-r3.webp",
-      "bytes": 22536,
-      "hash": "sha256-09d65cc54c77d1b530db2e1906469fafef19bdd4e34af83aec08c839a4b23a0d",
+      "path": "/art/v100/joints/babayaga-suppressed-sidearm-r1.webp",
+      "bytes": 31102,
+      "hash": "sha256-ebc4d1267dd1dda3afac8b20f4c5e70f9a13247d54fc6d029c4663d18260c48b",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"
@@ -2678,6 +2678,26 @@
       "scope": "Producer-approved forehead fox half-mask with89, smarter photo-based face and Korean actor styling; four expressions/card/battle head",
       "changedAssets": 6,
       "acceptance": "Design approved by おけ; runtime and full-product verification remain separate"
+    },
+    {
+      "date": "2026-10-31",
+      "scope": "Baba suppressed tactical handgun mechanically derived from the adopted model, all non-weapon body/head pixels and rig anchors retained",
+      "previous": {
+        "path": "/art/v100/joints/babayaga-quality-model-r3.webp",
+        "bytes": 22536,
+        "hash": "sha256-09d65cc54c77d1b530db2e1906469fafef19bdd4e34af83aec08c839a4b23a0d"
+      },
+      "next": {
+        "path": "/art/v100/joints/babayaga-suppressed-sidearm-r1.webp",
+        "bytes": 31102,
+        "hash": "sha256-ebc4d1267dd1dda3afac8b20f4c5e70f9a13247d54fc6d029c4663d18260c48b",
+        "pack": "units",
+        "category": "unit",
+        "criticality": "critical"
+      },
+      "source": "assets/source/quality-20261028/weapon-sidearm-r1/runtime-provenance.json",
+      "retainedBase": "assets/source/quality-20261028/weapon-sidearm-r1/base-head-r3.webp",
+      "acceptance": "Source/technical checks and native game comparison; not new generation, release or physical-device approval"
     }
   ],
   "baseAssetsSha256": "a953511eb95b7a2a2eae3efd27a8c7a8460cafc4f1df14b73c6a6686006c4e69",

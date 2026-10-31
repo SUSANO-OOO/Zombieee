@@ -11,6 +11,7 @@ import {enterV100FromTitle,seedV100BrowserSaveOnce} from './v100-title-qa-entry.
 import {dismissInstallOffer} from './pwa-gate-qa.mjs';
 import {nativeBattleTap} from './v100-normal-tactical-input.mjs';
 import {productionBuildIdentity} from './browser-qa-build-identity.mjs';
+import {qualityHeadOnlyOverride} from './quality-head-only-override.mjs';
 
 const engine=process.env.QUALITY_MODEL_ROSTER_ENGINE??'chromium',before=process.env.QUALITY_MODEL_ROSTER_BEFORE==='1';
 assert.ok(['chromium','webkit'].includes(engine));
@@ -23,7 +24,7 @@ assert.ok(selected.length&&new Set(selected).size===selected.length&&selected.ev
 const only=process.env.QUALITY_MODEL_ROSTER_ONLY_KINDS?.split(',');
 if(only)assert.ok(only.length&&new Set(only).size===only.length&&only.every(kind=>selected.some(index=>groups[index].includes(kind))),'Focused kinds must belong to the selected canonical groups');
 assert.deepEqual(groups.flat().sort(),Object.keys(QUALITY_CHARACTER_ATLASES).sort());
-const report={engine,before,build:await productionBuildIdentity(process.env.QUALITY_MODEL_ROSTER_BUILD_ROOT??process.cwd()),scope:'Prepared owned level-1 groups or focused members at S03. Native title, deployment and available ability controls; ordinary simulation speed, muted. Before substitutes twelve retained previous textures on the same build with service workers blocked, including Babayaga\'s previous photo head; four integrated heads stay unchanged. Not natural unlocks, all 48 forms, continuous human viewing, audio listening, body/movement acceptance or physical QA.',cases:[],errors:[]};
+const report={engine,before,build:await productionBuildIdentity(process.env.QUALITY_MODEL_ROSTER_BUILD_ROOT??process.cwd()),scope:'Prepared owned level-1 groups or focused members at S03. Native title, deployment and available ability controls; ordinary simulation speed, muted. Before substitutes only twelve retained previous head rectangles on the same build, preserving later weapon layers with service workers blocked; four integrated heads stay unchanged. Not natural unlocks, all 48 forms, continuous human viewing, audio listening, body/movement acceptance or physical QA.',cases:[],errors:[]};
 const headSources=JSON.parse(await readFile('assets/source/quality-20261028/identity/battle-heads-r3/runtime-provenance.json','utf8')).entries;
 const browser=await({chromium,webkit}[engine]).launch({headless:true,...(engine==='chromium'?{args:['--mute-audio']}:{})});
 try{
@@ -37,8 +38,15 @@ try{
    const seed=normalizeV100Save({...createDefaultV100Save({settings:{bgmEnabled:false,sfxEnabled:false}}),campaignStarted:true,ownedUnitIds:ids,registeredUnitIds:ids,formationSlots:ids,availableStageIds:V100_STAGE_IDS,completedStageIds:V100_STAGE_IDS.slice(0,2),flowState:{phase:'formation',stageId:V100_STAGE_IDS[2],stageNumber:3,eventId:null,destination:'formation',nodeIndex:0,firstClear:false,finalized:true}});
    await context.addInitScript(seedV100BrowserSaveOnce,serializeV100Save(seed));
    if(before){
-    const changes=new Map(Object.entries(QUALITY_CHARACTER_ATLASES).filter(([,a])=>a.path.endsWith('-quality-model-r3.webp')).map(([kind,a])=>[a.path,kind]));
-    await context.route(url=>changes.has(url.pathname),async route=>{const kind=changes.get(new URL(route.request().url()).pathname),file='public'+(headSources.find(row=>row.kind===kind)?.beforeAssetPath??QUALITY_CHARACTER_BASE_ATLASES[kind].path),body=await readFile(file);if(!record.overrides.some(r=>r.kind===kind))record.overrides.push({kind,file,sha256:createHash('sha256').update(body).digest('hex')});await route.fulfill({body,contentType:'image/webp'});});
+    const changes=new Map(headSources.map(row=>[QUALITY_CHARACTER_ATLASES[row.kind].path,row.kind]));
+    await context.route(url=>changes.has(url.pathname),async route=>{
+     const kind=changes.get(new URL(route.request().url()).pathname),atlas=QUALITY_CHARACTER_ATLASES[kind];
+     const file='public'+(headSources.find(row=>row.kind===kind)?.beforeAssetPath??QUALITY_CHARACTER_BASE_ATLASES[kind].path),previous=await readFile(file);
+     const head=(QUALITY_CHARACTER_BASE_ATLASES[kind].parts??QUALITY_CHARACTER_BASE_ATLASES[kind].upperRig.parts).find(part=>part.bone==='head').source;
+     const body=await qualityHeadOnlyOverride(await readFile('public'+atlas.path),previous,head);
+     if(!record.overrides.some(r=>r.kind===kind))record.overrides.push({kind,file,head,sourceSha256:createHash('sha256').update(previous).digest('hex'),sha256:createHash('sha256').update(body).digest('hex')});
+     await route.fulfill({body,contentType:'image/webp'});
+    });
    }
    await page.goto(origin.href);await dismissInstallOffer(page,{timeout:25000,readySelector:'.v100-start-screen',waitForFictionDismissal:true});await enterV100FromTitle(page);
    const offline=page.getByText('オフライン用の設定に失敗しました。通信できる状態ではゲームを続けられます。',{exact:true});if(await offline.isVisible())await offline.locator('..').getByRole('button',{name:'閉じる',exact:true}).click();

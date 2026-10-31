@@ -1,4 +1,5 @@
 import {readFileSync} from 'node:fs';
+import assert from 'node:assert/strict';
 import {V177_JOINT_ASSET_ADDITIONS as authored} from './v177-joint-asset-contract.mjs';
 
 // Keep the authored/historical contract unchanged. Current rendering uses
@@ -12,4 +13,9 @@ const byBase=new Map(entries.map(row=>[row.basePath,row]));
 const asset=row=>Object.freeze({path:row.assetPath,bytes:row.bytes,hash:'sha256-'+row.sha256});
 const rows=authored.map(row=>byBase.has(row.path)?asset(byBase.get(row.path)):row);
 for(const row of entries)if(!rows.some(item=>item.path===row.assetPath))rows.push(asset(row));
+// A versioned weapon layer replaces its retained head-only base in distribution.
+for(const row of read('../assets/source/quality-20261028/weapon-sidearm-r1/runtime-provenance.json').entries){
+ const index=rows.findIndex(item=>item.path===row.basePath);assert.ok(index>=0,'Sidearm base must be the registered head version');
+ rows[index]=asset(row);
+}
 export const V177_JOINT_ASSET_ADDITIONS=Object.freeze(rows);

@@ -3,6 +3,7 @@ import {createHash} from 'node:crypto';
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import sharp from 'sharp';
 import {QUALITY_CHARACTER_BASE_ATLASES as bases} from '../app/qualityCharacterAtlases.js';
+import {QUALITY_SIDEARM_BASE_PATH,QUALITY_SIDEARM_RETAINED_BASE} from '../app/qualitySidearmAtlas.js';
 
 const root='assets/source/quality-20261028/identity/battle-heads-r3';
 const plan=JSON.parse(await readFile(`${root}/source-plan.json`,'utf8'));
@@ -10,7 +11,10 @@ const check=process.argv.includes('--check');
 const review=process.env.QUALITY_MODEL_HEAD_REVIEW_OUT??'output/quality-20261028/model-heads-r3';
 await mkdir(review,{recursive:true});
 const digest=bytes=>createHash('sha256').update(bytes).digest('hex');
-async function emit(file,bytes){if(check)assert.deepEqual(await readFile(file),bytes,file);else await writeFile(file,bytes);}
+async function emit(file,bytes){
+ const target=file==='public'+QUALITY_SIDEARM_BASE_PATH?QUALITY_SIDEARM_RETAINED_BASE:file;
+ if(check)assert.deepEqual(await readFile(target),bytes,target);else await writeFile(target,bytes);
+}
 assert.equal(plan.entries.length,12);assert.equal(new Set(plan.entries.map(row=>row.kind)).size,12);
 assert.equal(plan.reusedKinds.length,4);
 assert.deepEqual([...plan.entries.map(row=>row.kind),...plan.reusedKinds].sort(),Object.keys(bases).sort());
