@@ -89,3 +89,11 @@
 #v100-campaign .v100-menu-volume output { grid-column:2; grid-row:1; justify-self:end; }
 #v100-campaign .v100-menu-volume input[type="range"] { grid-column:1; grid-row:1; min-width:0; }
 #v100-campaign .v100-menu-volume-label { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+
+/* Use the same readable controls in WebKit and Chromium. Native picker semantics remain. */
+#v100-campaign .v100-menu-quality select { appearance:none; -webkit-appearance:none; color-scheme:dark; color:#fff3d6; background-color:#14251e; border:1px solid #a7b28f; border-radius:3px; padding-right:30px; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='m3 5 4 4 4-4' fill='none' stroke='%23e7ba73' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-position:right 9px center; background-size:14px 14px; background-repeat:no-repeat; }
+#v100-campaign .v100-menu-quality option { color:#fff3d6; background:#14251e; }
+#v100-campaign .v100-player-menu input[type="checkbox"] { appearance:none; -webkit-appearance:none; flex:none; border:1px solid #bac3a1; border-radius:3px; background-color:#14251e; background-position:center; background-size:18px 18px; background-repeat:no-repeat; }
+#v100-campaign .v100-player-menu input[type="checkbox"]:checked { border-color:#e7ba73; background-color:#e7ba73; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 22'%3E%3Cpath d='m5 11 4 4 8-9' fill='none' stroke='%2316251e' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+#v100-campaign .v100-player-menu :is(input,select):focus-visible { outline:2px solid #f2cf84; outline-offset:3px; }
+@media (forced-colors:active) { #v100-campaign .v100-player-menu input[type="checkbox"], #v100-campaign .v100-menu-quality select { appearance:auto; -webkit-appearance:auto; background-image:none; } }
