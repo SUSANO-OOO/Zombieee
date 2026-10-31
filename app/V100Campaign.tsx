@@ -634,14 +634,14 @@ export function V100Campaign() {
     return commitSave(result.save).then(saved => { void eventAudioOwnerRef.current?.operation(saved ? "confirm" : "reject"); return saved; });
   }, [commitSave]);
 
-  const openSurface = useCallback((next: CampaignSurface, unitId: string | null = null) => {
+  const openSurface = useCallback((next: CampaignSurface, unitId: string | null = null, preserveNotice = false) => {
     if (next !== "campaign" && next !== "mode-formation" && next !== "personnel") setFormationRequestedUnitId(null);
     if (next === "data") dataReturnSurfaceRef.current = surface;
     if (next === "mode-formation") setModePreparation(true);
     if (next === "modes" || next === "campaign") setModePreparation(false);
     setSurface(next);
     setPersonnelSelection(next === "personnel" ? unitId : null);
-    setNotice("");
+    if (!preserveNotice) setNotice("");
   }, [surface]);
 
   const handleProductionBattleResult = useCallback(async (raw: AshfallBattleResult) => {
@@ -1104,7 +1104,7 @@ export function V100Campaign() {
       }} />}
       {recruitOffer && <div className="v100-modal-backdrop" role="presentation"><section className="v100-modal v100-recruit-modal" role="dialog" aria-modal="true" aria-labelledby="v100-recruit-title"><span className="v100-kicker">仲間の出撃準備</span><div className="v100-recruit-content"><div className="v100-recruit-art">{formationCardForUnit(recruitOffer.id) && <img src={formationCardForUnit(recruitOffer.id) as string} alt={`${recruitOffer.displayName}の立ち絵`} />}</div><div><h2 id="v100-recruit-title">{recruitOffer.displayName}</h2><strong>{v100RoleLabelFor(recruitOffer.role)}</strong><p>{unitDescriptionFor(recruitOffer.id)}</p><p className="v100-recruit-explanation">CAPSで支度を整えると、この仲間を編成に加えられる。</p><dl><div><dt>支度に必要</dt><dd>{recruitOffer.registrationCostCaps} CAPS</dd></div><div><dt>所持</dt><dd>{save.caps} CAPS</dd></div></dl>{save.caps < recruitOffer.registrationCostCaps && <p className="v100-recruit-shortage">あと {recruitOffer.registrationCostCaps - save.caps} CAPSあれば支度を整えられる。</p>}</div></div><div className="v100-recruit-actions"><button type="button" onClick={() => applySaveTransaction(applyV100SaveMutation(save, next => ({ ...next, receipts: [...new Set([...next.receipts, `v100:recruit-offer:${recruitOffer.id}:seen`])] })))}>後で決める</button><button className="v100-primary" type="button" data-ui-sound="transaction" disabled={saveBusy || save.caps < recruitOffer.registrationCostCaps} onClick={() => {
         const unitId = recruitOffer.id, result = purchaseV100Unit(save, unitId);
-        if (result.applied) void Promise.resolve(applySaveTransaction(result)).then(saved => { if (saved) openSurface("personnel", unitId); });
+        if (result.applied) void Promise.resolve(applySaveTransaction(result)).then(saved => { if (saved) openSurface("personnel", unitId, true); });
         else applySaveTransaction(result);
       }}>{recruitOffer.registrationCostCaps} CAPSで支度を整える</button></div></section></div>}
       {creditsOpen && flow.phase === "name" && <div className="v100-modal-backdrop" role="presentation"><section className="v100-modal v100-credits-modal" role="dialog" aria-modal="true" aria-labelledby="v100-credits-title"><div className="v100-panel-heading"><div><span className="v100-kicker">{RELEASE_LABEL}</span><h2 id="v100-credits-title">権利・クレジット</h2></div><button type="button" onClick={() => setCreditsOpen(false)}>閉じる</button></div><V100AssetCredits expanded /></section></div>}
