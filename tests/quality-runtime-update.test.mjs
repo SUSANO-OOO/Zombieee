@@ -26,7 +26,7 @@ test('quality candidate contains exactly the reviewed art and firearm delta whil
   assertDelta(candidate);
   assert.equal(contract.added.length,163);assert.equal(contract.retired.length,164);
   assert.equal(contract.transportChanges.length,346);
-  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),34380331);
+  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),34383461);
   for(const row of contract.added){
     const bytes=await readFile(new URL('../public'+(row.sourcePath??row.path),import.meta.url));
     assert.equal(bytes.length,row.bytes,row.path);

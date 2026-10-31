@@ -16,7 +16,7 @@ const carryMotion={
  // leg, while the near free hand balances in the opposite direction.
  brawler:{weapon:18,lift:4,roll:.028,free:28,phaseOffset:.5},
  'crazy-king':{weapon:5,lift:2,roll:.018,free:8},
- babayaga:{weapon:7,lift:2,roll:.025,free:14},
+ babayaga:{weapon:9,lift:2,roll:.018,free:18,phaseOffset:.5},
  'takuya-omega':{weapon:4,lift:2,roll:.012,free:10},
  // The adopted full-body master owns the neck, collar and shoulder pose.
  kumaverson:{weapon:12,lift:3,roll:.02,free:20},
@@ -197,7 +197,15 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
   const pivot=atlas.interpolationPivots?.[bone]??[0,0];
   upper[bone]=multiply(torso,rigid(pivot,point(m,pivot),Math.atan2(m[1],m[0])));
  }
- const arms=atlas.armConstraints.map(c=>({...c})),weaponOwners=[...arms];
+ const arms=atlas.armConstraints.map(c=>({...c}));
+ if(kind==='babayaga'){
+  // His original source owns one pistol hand. The other arm must have its
+  // own wrist; forcing both elbows onto that one hand folds the support arm.
+  const free=arms[1];free.effectorBone='arm-1-hand';
+  free.effectorWrist=free.wrist;free.grip=free.wrist;free.bendSign=1;
+  handPose(upper,free,point(upper[free.parentBone],free.wrist),bodyAngle);
+ }
+ const weaponOwners=[...arms];
  const strikeBones=contactKinds.has(kind)?[]:kind==='miyamoto-musashi'?['weapon-0','weapon-1']:[atlas.weaponBone];
  const primary=arms.find(c=>c.effectorBone===atlas.weaponBone),pivot=primary.effectorWrist??primary.wrist;
  const rest=point(base[atlas.weaponBone],pivot),restAngle=Math.atan2(base[atlas.weaponBone][1],base[atlas.weaponBone][0]);
@@ -254,11 +262,13 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
   upper['arm-1-hand']=rigid(arms[1].wrist,hand,angle+bodyAngle);
  }else{
   if(kind==='babayaga'){
-   const raise=attacking?keys(p,[[0,0],[.22,1],[.7,1],[1,0]])[0]:0;
+   const [aimAt,lowerAt]=atlas.attackBoundaries;
+   const raise=attacking?keys(p,[[0,0],[aimAt,1],[lowerAt,1],[1,0]])[0]:0;
    const recoil=attacking?keys(p,[[0,0],[.28,0],[.32,-6],[.42,0],[.7,0],[1,0]])[0]:0;
-   // Low carry and two-handed firing share both original grip points.
-   target=[245+raise*35+recoil,216-raise*44];
-   angle=.95*(1-raise);
+   // Lower the pistol beside the body while travelling. Raise it only for
+   // the actual shot; the free arm continues to belong to its own shoulder.
+   target=[198+raise*82+recoil,228-raise*56];
+   angle=1.35*(1-raise);
   }else if(attacking){
    const sourceDirection=Math.atan2(atlas.muzzle[1]-pivot[1],atlas.muzzle[0]-pivot[0]),restDirection=restAngle+sourceDirection;
    const reach=armReach(primary).max,reverse=variant===1&&['tky','miyamoto-musashi','red-panther-knife','scout'].includes(kind);
@@ -287,7 +297,7 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
   }
   // A free hand braces the chest and counterbalances the striking shoulder.
   // It is never left frozen against the hip while the weapon alone rotates.
-  if(attacking)for(const c of arms.filter(c=>!c.effectorBone.startsWith('weapon'))){
+  if(attacking&&kind!=='babayaga')for(const c of arms.filter(c=>!c.effectorBone.startsWith('weapon'))){
    const wrist=c.effectorWrist??c.wrist,home=point(base[c.effectorBone],wrist),reach=armReach(c).max;
    const t=point(torso,shoulderTarget(c,p,home,[[.18,reach*.35,reach*.15],[.23,reach*.35,reach*.15],[.28,-reach*.35,reach*.4],[.48,reach*.12,reach*.25],[.64,reach*.12,reach*.25]]));
    handPose(upper,c,t,Math.atan2(base[c.effectorBone][1],base[c.effectorBone][0])+bodyAngle,2*envelope);
@@ -309,6 +319,7 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
  }
  const frontBones=(!attacking||['crazy-king','babayaga','kumaverson','takuya-omega'].includes(kind)||p>.06&&p<.94)?arms.flatMap(c=>[c.upperBone,c.lowerBone,c.effectorBone]):[];
  const stationaryAbility=['guard','fist-wave','cross-guard','ground-slam','slam'].includes(plan.abilityPresentation);
+ if(kind==='babayaga'){const far=new Set([arms[1].upperBone,arms[1].lowerBone,arms[1].effectorBone]);for(let i=frontBones.length-1;i>=0;i--)if(far.has(frontBones[i]))frontBones.splice(i,1);}
  const choreography={kind,variant,sequence,upper,arms,frontBones,strikeBones,bodyWeight:weight,stepDistance:attacking&&!stationaryAbility?attackSteps[kind]??0:0,
   ...(kind==='mugarian-president-mutated'?{strikePoints:{'arm-1-hand':[228,326]}}:{})};if(!attacking)carryPlans.set(atlas,choreography);
  return{...plan,choreography:walkingCarry(kind,atlas,plan,choreography,attacking?1-envelope:1),upperOffsetY:0};

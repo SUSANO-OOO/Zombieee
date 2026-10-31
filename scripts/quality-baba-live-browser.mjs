@@ -36,7 +36,7 @@ const responseTasks = [];
 try {
   await writeFile(path.join(out, 'started.json'), JSON.stringify({ at: new Date().toISOString(), pid: process.pid,
     runtime, source: report.source, driverSha256: report.driverSha256 }, null, 2) + '\n', { flag: 'wx' });
-  browser = await chromium.launch({ headless: true });
+  browser = await chromium.launch({ headless: true,args:['--mute-audio'] });
   context = await browser.newContext({ viewport, hasTouch: true, serviceWorkers: 'block' });
   await context.addInitScript(seedV100BrowserSaveOnce, serializeV100Save(seed));
   await context.addInitScript(()=>{

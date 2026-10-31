@@ -15,29 +15,29 @@
   "entries": [
     {
       "kind": "scout",
-      "sourcePath": "assets/source/quality-20261028/identity/battle-heads-r3/scout-head-r2.png",
-      "sourceSha256": "5156c5cc2d7b2e90de0687298a35542b48932285c5a9a3e49ff69e45718edd25",
+      "sourcePath": "assets/source/quality-20261028/identity/battle-directions-r5/scout-right-facing-r5.png",
+      "sourceSha256": "ae102e31187292f4ec4649b4abd187def4b49915f5e46f18f311826c8b77ba2c",
       "sourceVisibleBounds": {
-        "left": 304,
-        "top": 146,
-        "width": 825,
-        "height": 875
+        "left": 202,
+        "top": 50,
+        "width": 1041,
+        "height": 1050
       },
       "sourceSeam": [
-        470,
-        965
+        465,
+        1020
       ],
       "sourceFaceCenter": [
-        675,
-        757.5
+        810,
+        790
       ],
       "targetSkinSeam": [
         278,
         99
       ],
       "targetFaceCenter": [
-        298.5,
-        83.5
+        304.319587628866,
+        81.45360824742268
       ],
       "rigPivot": [
         274,
@@ -90,7 +90,94 @@
       "measuredTargetFaceCenter": [
         298.5,
         83.5
-      ]
+      ],
+      "previousDirectionSource": "assets/source/quality-20261028/identity/battle-heads-r3/scout-head-r2.png",
+      "directionRegistration": {
+        "facing": "right",
+        "gaze": "offscreen right",
+        "sourceLandmarks": "manual neck-cut and cheek center; hair-top height retained from previous runtime",
+        "previousSource": "assets/source/quality-20261028/identity/battle-heads-r3/scout-head-r2.png",
+        "previousRegistration": {
+          "kind": "scout",
+          "sourcePath": "assets/source/quality-20261028/identity/battle-heads-r3/scout-head-r2.png",
+          "sourceSha256": "5156c5cc2d7b2e90de0687298a35542b48932285c5a9a3e49ff69e45718edd25",
+          "sourceVisibleBounds": {
+            "left": 304,
+            "top": 146,
+            "width": 825,
+            "height": 875
+          },
+          "sourceSeam": [
+            470,
+            965
+          ],
+          "sourceFaceCenter": [
+            675,
+            757.5
+          ],
+          "targetSkinSeam": [
+            278,
+            99
+          ],
+          "targetFaceCenter": [
+            298.5,
+            83.5
+          ],
+          "rigPivot": [
+            274,
+            119
+          ],
+          "baseAtlasPath": "/art/v100/joints/scout-r1.webp",
+          "baseAtlasSha256": "57b5823be6f2e4fd36cf971d6406a33df639657fb0db0e50d43b75a823f1dbaa",
+          "garmentPolygons": [
+            [
+              [
+                258,
+                100
+              ],
+              [
+                268,
+                100
+              ],
+              [
+                278,
+                103
+              ],
+              [
+                287,
+                111
+              ],
+              [
+                291,
+                123
+              ],
+              [
+                284,
+                130
+              ],
+              [
+                273,
+                126
+              ],
+              [
+                267,
+                119
+              ],
+              [
+                261,
+                110
+              ]
+            ]
+          ],
+          "lowerNeckPolygon": null,
+          "landmarkType": "bare-neck-cut-midpoint",
+          "measuredTargetFaceCenter": [
+            298.5,
+            83.5
+          ]
+        },
+        "producerAcceptance": "pending"
+      }
     },
     {
       "kind": "guardian",
@@ -434,29 +521,29 @@
     },
     {
       "kind": "medic",
-      "sourcePath": "assets/source/quality-20261028/identity/battle-heads-r3/medic-head-r1.png",
-      "sourceSha256": "71120372dc08a9b1b90e2e9b9c341ff07f8c613cf0ea94f8a766dc2c256d04a7",
+      "sourcePath": "assets/source/quality-20261028/identity/battle-directions-r5/medic-right-facing-r5.png",
+      "sourceSha256": "d037bf4db149afc1c3a354590c7fe6187cf34c1f79e555b843c31268f247384e",
       "sourceVisibleBounds": {
-        "left": 289,
-        "top": 147,
-        "width": 836,
-        "height": 852
+        "left": 186,
+        "top": 88,
+        "width": 1046,
+        "height": 982
       },
       "sourceSeam": [
-        690,
-        965
+        705,
+        1000
       ],
       "sourceFaceCenter": [
-        815,
-        737.5
+        900,
+        760
       ],
       "targetSkinSeam": [
         253,
         87
       ],
       "targetFaceCenter": [
-        264.5,
-        71.5
+        266.8980263157895,
+        69.89473684210526
       ],
       "rigPivot": [
         265,
@@ -519,33 +606,130 @@
       "measuredTargetFaceCenter": [
         264.5,
         71.5
-      ]
+      ],
+      "previousDirectionSource": "assets/source/quality-20261028/identity/battle-heads-r3/medic-head-r1.png",
+      "directionRegistration": {
+        "facing": "right",
+        "gaze": "offscreen right",
+        "sourceLandmarks": "manual neck-cut and cheek center; hair-top height retained from previous runtime",
+        "previousSource": "assets/source/quality-20261028/identity/battle-heads-r3/medic-head-r1.png",
+        "previousRegistration": {
+          "kind": "medic",
+          "sourcePath": "assets/source/quality-20261028/identity/battle-heads-r3/medic-head-r1.png",
+          "sourceSha256": "71120372dc08a9b1b90e2e9b9c341ff07f8c613cf0ea94f8a766dc2c256d04a7",
+          "sourceVisibleBounds": {
+            "left": 289,
+            "top": 147,
+            "width": 836,
+            "height": 852
+          },
+          "sourceSeam": [
+            690,
+            965
+          ],
+          "sourceFaceCenter": [
+            815,
+            737.5
+          ],
+          "targetSkinSeam": [
+            253,
+            87
+          ],
+          "targetFaceCenter": [
+            264.5,
+            71.5
+          ],
+          "rigPivot": [
+            265,
+            100
+          ],
+          "baseAtlasPath": "/art/v100/joints/medic-r1.webp",
+          "baseAtlasSha256": "a0242fdaaee0cbf14bf61e517bbcd3e9e77f471221db6b5a2d0686b91a64b5e7",
+          "garmentPolygons": [
+            [
+              [
+                248,
+                85
+              ],
+              [
+                255,
+                88
+              ],
+              [
+                260,
+                93
+              ],
+              [
+                253,
+                93
+              ],
+              [
+                247,
+                89
+              ]
+            ],
+            [
+              [
+                262,
+                85
+              ],
+              [
+                278,
+                92
+              ],
+              [
+                273,
+                97
+              ],
+              [
+                272,
+                104
+              ],
+              [
+                259,
+                101
+              ],
+              [
+                260,
+                93
+              ]
+            ]
+          ],
+          "lowerNeckPolygon": null,
+          "landmarkType": "bare-neck-cut-midpoint",
+          "measuredTargetFaceCenter": [
+            264.5,
+            71.5
+          ]
+        },
+        "producerAcceptance": "pending"
+      }
     },
     {
       "kind": "mrs-chiha",
-      "sourcePath": "assets/source/quality-20261028/identity/battle-heads-r3/mrs-chiha-head-r1.png",
-      "sourceSha256": "3b3e3580bfdd1c78f5e13328d01585938a190496c8f572e61db481668b5b61e2",
+      "sourcePath": "assets/source/quality-20261028/identity/battle-directions-r5/mrs-chiha-right-facing-r5.png",
+      "sourceSha256": "65b516b2a76fd07b3a7279802cf8ebbfa31a5f41371e984a9c7d120242a88db2",
       "sourceVisibleBounds": {
-        "left": 102,
-        "top": 36,
-        "width": 1013,
-        "height": 1157
+        "left": 58,
+        "top": 34,
+        "width": 1121,
+        "height": 1216
       },
       "sourceSeam": [
-        535,
-        1100
+        650,
+        1155
       ],
       "sourceFaceCenter": [
-        752.5,
-        755
+        860,
+        795
       ],
       "targetSkinSeam": [
         243,
         73
       ],
       "targetFaceCenter": [
-        256.5,
-        59
+        253.11596788581625,
+        55.65834076717216
       ],
       "rigPivot": [
         244,
@@ -586,7 +770,83 @@
       "measuredTargetFaceCenter": [
         256.5,
         59
-      ]
+      ],
+      "previousDirectionSource": "assets/source/quality-20261028/identity/battle-heads-r3/mrs-chiha-head-r1.png",
+      "directionRegistration": {
+        "facing": "right",
+        "gaze": "offscreen right",
+        "sourceLandmarks": "manual neck-cut and cheek center; hair-top height retained from previous runtime",
+        "previousSource": "assets/source/quality-20261028/identity/battle-heads-r3/mrs-chiha-head-r1.png",
+        "previousRegistration": {
+          "kind": "mrs-chiha",
+          "sourcePath": "assets/source/quality-20261028/identity/battle-heads-r3/mrs-chiha-head-r1.png",
+          "sourceSha256": "3b3e3580bfdd1c78f5e13328d01585938a190496c8f572e61db481668b5b61e2",
+          "sourceVisibleBounds": {
+            "left": 102,
+            "top": 36,
+            "width": 1013,
+            "height": 1157
+          },
+          "sourceSeam": [
+            535,
+            1100
+          ],
+          "sourceFaceCenter": [
+            752.5,
+            755
+          ],
+          "targetSkinSeam": [
+            243,
+            73
+          ],
+          "targetFaceCenter": [
+            256.5,
+            59
+          ],
+          "rigPivot": [
+            244,
+            80
+          ],
+          "baseAtlasPath": "/art/v100/joints/mrs-chiha-r1.webp",
+          "baseAtlasSha256": "5ff2ba98e8a67e1cc24fa2404ffd94b68cdbc7b6696c8eb08e536f3114ff4fec",
+          "garmentPolygons": [
+            [
+              [
+                240,
+                74
+              ],
+              [
+                246,
+                74
+              ],
+              [
+                254,
+                77
+              ],
+              [
+                258,
+                80
+              ],
+              [
+                247,
+                82
+              ],
+              [
+                240,
+                78
+              ]
+            ]
+          ],
+          "lowerNeckPolygon": null,
+          "landmarkType": "bare-neck-cut-midpoint",
+          "measuredTargetFaceCenter": [
+            256.5,
+            59
+          ]
+        },
+        "producerAcceptance": "pending",
+        "neckCutValidation": "Skin pixels verified at neck-cut midpoint; excludes the hanging hair strand."
+      }
     },
     {
       "kind": "miyamoto-musashi",
@@ -631,29 +891,29 @@
     },
     {
       "kind": "babayaga",
-      "sourcePath": "assets/source/quality-20261028/identity/battle-heads-r3/babayaga-head-r2.png",
-      "sourceSha256": "2f9a859125ae0a0b619afeb707f7dbf2f99e7d6efcbf660da357b3580dd68bff",
+      "sourcePath": "assets/source/quality-20261028/identity/battle-directions-r5/babayaga-right-facing-r5.png",
+      "sourceSha256": "37e060ebd3f51e689d0e0e75ca0a834827dc685a950333c413cb9ec5b02c0ac7",
       "sourceVisibleBounds": {
-        "left": 245,
-        "top": 104,
-        "width": 818,
-        "height": 964
+        "left": 197,
+        "top": 101,
+        "width": 928,
+        "height": 1000
       },
       "sourceSeam": [
-        515,
+        510,
         1030
       ],
       "sourceFaceCenter": [
-        695,
-        777.5
+        785,
+        800
       ],
       "targetSkinSeam": [
         244,
         104
       ],
       "targetFaceCenter": [
-        258,
-        89
+        262.94510226049516,
+        88.15500538213132
       ],
       "rigPivot": [
         248,
@@ -702,7 +962,90 @@
       "measuredTargetFaceCenter": [
         258,
         89
-      ]
+      ],
+      "previousDirectionSource": "assets/source/quality-20261028/identity/battle-heads-r3/babayaga-head-r2.png",
+      "directionRegistration": {
+        "facing": "right",
+        "gaze": "offscreen right",
+        "sourceLandmarks": "manual neck-cut and cheek center; hair-top height retained from previous runtime",
+        "previousSource": "assets/source/quality-20261028/identity/battle-heads-r3/babayaga-head-r2.png",
+        "previousRegistration": {
+          "kind": "babayaga",
+          "sourcePath": "assets/source/quality-20261028/identity/battle-heads-r3/babayaga-head-r2.png",
+          "sourceSha256": "2f9a859125ae0a0b619afeb707f7dbf2f99e7d6efcbf660da357b3580dd68bff",
+          "sourceVisibleBounds": {
+            "left": 245,
+            "top": 104,
+            "width": 818,
+            "height": 964
+          },
+          "sourceSeam": [
+            515,
+            1030
+          ],
+          "sourceFaceCenter": [
+            695,
+            777.5
+          ],
+          "targetSkinSeam": [
+            244,
+            104
+          ],
+          "targetFaceCenter": [
+            258,
+            89
+          ],
+          "rigPivot": [
+            248,
+            108
+          ],
+          "baseAtlasPath": "/art/v100/joints/babayaga-r1.webp",
+          "baseAtlasSha256": "68963ba9025a3b597f2f83600761b360ecb4e080848712bdaffae67d2b6ccecd",
+          "garmentPolygons": [
+            [
+              [
+                226,
+                94
+              ],
+              [
+                232,
+                96
+              ],
+              [
+                240,
+                103
+              ],
+              [
+                244,
+                106
+              ],
+              [
+                245,
+                112
+              ],
+              [
+                238,
+                112
+              ],
+              [
+                230,
+                104
+              ],
+              [
+                225,
+                99
+              ]
+            ]
+          ],
+          "lowerNeckPolygon": null,
+          "landmarkType": "bare-neck-cut-midpoint",
+          "measuredTargetFaceCenter": [
+            258,
+            89
+          ]
+        },
+        "producerAcceptance": "pending"
+      }
     },
     {
       "kind": "brawler",

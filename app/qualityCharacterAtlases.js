@@ -1,3 +1,4 @@
+import {withQualityBabaCombatRig} from './qualityBabaCombatRig.js';
 import {V177_MELEE_JOINT_ATLASES} from './v177MeleeJointData.js';
 import {V177_FIREARM_JOINT_ATLASES} from './v177FirearmJointData.js';
 import {V177_PAISEN_PHOTO_JOINT_ATLASES} from './v177PaisenPhotoJointData.js';
@@ -33,6 +34,6 @@ export const QUALITY_CHARACTER_HEAD_ATLASES = Object.freeze({
     ])),
 });
 export const QUALITY_CHARACTER_ATLASES=Object.freeze({
- ...Object.fromEntries(Object.entries(QUALITY_CHARACTER_HEAD_ATLASES).map(([kind,atlas])=>[kind,withQualityBattleHeadCalibration(kind,withQualitySidearmAtlas(kind,atlas))])),
+ ...Object.fromEntries(Object.entries(QUALITY_CHARACTER_HEAD_ATLASES).map(([kind,atlas])=>[kind,withQualityBabaCombatRig(kind,withQualityBattleHeadCalibration(kind,withQualitySidearmAtlas(kind,atlas)))])),
  kumaverson:QUALITY_KUMAVERSON_COMBAT_ATLAS,
 });

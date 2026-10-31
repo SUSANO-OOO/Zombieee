@@ -65,7 +65,8 @@ for(const row of plan.entries){
  for(const override of materialOverrides?.outputs??[]){
   const item=ordered.find(p=>p.name===override.name);assert.ok(item);
   const png=await readFile(override.file);assert.equal(hash(png),override.sha256);
-  assert.equal(item.width,override.width);assert.equal(item.height,override.height);
+  assert.equal(item.width,override.width);
+  if(override.destination){assert.equal(override.name,'far-forearm');item.destination=override.destination;item.height=override.height;}else assert.equal(item.height,override.height);
   item.input=png;item.materialCorrection=override;
  }
  const packItems=atlas.parts?ordered:items,newWidth=atlas.parts?512:raw.info.width;
@@ -84,7 +85,7 @@ for(const row of plan.entries){
  const outputParts=ordered.map(item=>({...item.originalPart,...(item.bone==='head'||item.name==='source-neck-garment'?head:{}),name:item.name,bone:item.bone,source:item.source,destination:item.destination,upper:item.upper}));
  for(const item of ordered.filter(i=>i.originalPart)){
   const output=outputParts.find(p=>p.name===item.name);
-  assert.deepEqual({...output,source:item.originalPart.source},item.originalPart,`${row.kind}/${item.name}: preserve every pose-owner and material flag`);
+  assert.deepEqual({...output,source:item.originalPart.source,...(item.materialCorrection?.destination?{destination:item.originalPart.destination}:{})},item.originalPart,`${row.kind}/${item.name}: preserve every pose-owner and material flag`);
  }
  const assetPath=`/art/v100/joints/${row.kind}-quality-neck-r4.webp`;
  updates[row.kind]={path:assetPath,parts:outputParts,decodedWidth:newWidth,decodedHeight:newHeight,decodedBytes:newWidth*newHeight*4,headRig:atlas.parts?'standard':'ranger-upper',neckAttachment:{parent:'spine',pivot:row.targetSkinSeam}};

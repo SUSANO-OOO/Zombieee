@@ -23,7 +23,10 @@ for(const [kind,base] of Object.entries(bases))test(kind+' keeps its checked ide
  else if(QUALITY_BATTLE_HEAD_CALIBRATIONS[kind]){
   const update=QUALITY_BATTLE_HEAD_CALIBRATIONS[kind],rig=preferred.parts?preferred:preferred.upperRig;
   assert.equal(preferred.path,update.path);assert.deepEqual(rig.parts,update.parts);
-  const originalRig=base.parts?base:base.upperRig;assert.deepEqual(rig.poses,originalRig.poses,'Source pose angles remain source-bound');
+  const originalRig=base.parts?base:base.upperRig;if(kind==='babayaga'){
+   for(const[i,pose]of rig.poses.entries()){const original=originalRig.poses[i];for(const[bone,m]of Object.entries(original))assert.deepEqual(pose[bone],m,'Original action bone stays source-bound');assert.deepEqual(pose['arm-1-hand'],original.spine,'Supplemental independent wrist control follows body source');}
+   assert.equal(rig.armPosePolicy,'one-handed-pistol-and-free-arm');
+  }else assert.deepEqual(rig.poses,originalRig.poses,'Source pose angles remain source-bound');
   assert.deepEqual(rig.parentAttachments,originalRig.parentAttachments,'Original anatomical pivots and reaction owners remain source-bound');
  }else assert.deepEqual(preferred,current,'The original dog/toy head remains intentionally distinct');
  assert.equal(current.path,entry.assetPath);assert.notEqual(current.path,base.path);

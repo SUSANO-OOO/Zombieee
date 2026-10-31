@@ -7,7 +7,9 @@ import {V177_CORPSE_JOINT_DATA} from '../app/v177CorpseJointData.js';
 // The unchanged pre-optimization algorithm is an immutable image/matrix
 // oracle. This does not inherit any old runtime or performance acceptance.
 const before=execFileSync('git',['show','eabe9195c6277c4b27b3709871a6a2dc5b9657cc:app/v177JointPresentation.js'],{encoding:'utf8',maxBuffer:512*1024});
-const resolved=before.replace(/(from\s+['"])(\.\/[^'"]+)(['"])/gu,(_all,a,p,b)=>a+new URL('../app/'+p.slice(2),import.meta.url).href+b);
+// The authored Baba free elbow is an input policy, not a cache behavior.
+const authoredBefore=before.replace('const sign=forwardBiped?-1:((ex-sx)*-(wy-sy)+(ey-sy)*(wx-sx)>=0?1:-1);','const sign=forwardBiped?-1:(chain.bendSign??((ex-sx)*-(wy-sy)+(ey-sy)*(wx-sx)>=0?1:-1));');
+const resolved=authoredBefore.replace(/(from\s+['"])(\.\/[^'"]+)(['"])/gu,(_all,a,p,b)=>a+new URL('../app/'+p.slice(2),import.meta.url).href+b);
 const original=await import('data:text/javascript;base64,'+Buffer.from(resolved).toString('base64'));
 // Compare the cached and uncached algorithms with identical current inputs.
 // Later portrait replacements and Panther body projection are product changes,

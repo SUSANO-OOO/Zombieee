@@ -47,6 +47,68 @@
       154
     ]
   ],
+  "freeHandRegistration": {
+    "source": "assets/source/v100/joints/babayaga-r1/identity-reference.png",
+    "sourceHandWrist": [
+      194,
+      234
+    ],
+    "targetHandWrist": [
+      278,
+      221
+    ],
+    "handScale": 0.65,
+    "handMatrix": [
+      -0.65,
+      0,
+      0,
+      0.65,
+      404.1,
+      68.9
+    ],
+    "handPolygon": [
+      [
+        186,
+        234
+      ],
+      [
+        197,
+        233
+      ],
+      [
+        204,
+        239
+      ],
+      [
+        208,
+        244
+      ],
+      [
+        205,
+        252
+      ],
+      [
+        201,
+        265
+      ],
+      [
+        196,
+        267
+      ],
+      [
+        190,
+        259
+      ],
+      [
+        183,
+        252
+      ],
+      [
+        181,
+        243
+      ]
+    ]
+  },
   "occludedSleeves": "Original hidden-parts-study cells 8 and 9; no borrowed character parts",
   "handRegistration": {
     "sourceGrip": [
@@ -92,9 +154,15 @@
     {
       "name": "far-forearm",
       "file": "assets/source/quality-20261028/babayaga-material-r2/far-forearm.png",
-      "sha256": "b696461744f80c52ae92fae5fa5b48259bc0c46748ebcc02c4a4e192d7f7ff26",
+      "sha256": "79ec254107ac81b443c4df38d6197086e4962fbe3d3c31601ed039d5618c4bec",
       "width": 14,
-      "height": 29
+      "height": 39,
+      "destination": {
+        "x": 259,
+        "y": 167,
+        "w": 28,
+        "h": 77
+      }
     },
     {
       "name": "weapon-and-hands",

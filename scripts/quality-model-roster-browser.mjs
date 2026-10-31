@@ -38,7 +38,7 @@ try{
   const context=await browser.newContext({viewport:{width:1280,height:720},hasTouch:true,serviceWorkers:'block',recordVideo:{dir:path.join(out,`group-${index}-video`),size:{width:1280,height:720}}});
   const page=await context.newPage();page.setDefaultTimeout(25000);page.on('pageerror',e=>report.errors.push(String(e)));
   try{
-   const seed=normalizeV100Save({...createDefaultV100Save({settings:{bgmEnabled:false,sfxEnabled:false}}),campaignStarted:true,ownedUnitIds:ids,registeredUnitIds:ids,formationSlots:ids,availableStageIds:V100_STAGE_IDS,completedStageIds:V100_STAGE_IDS.slice(0,2),flowState:{phase:'formation',stageId:V100_STAGE_IDS[stageNumber-1],stageNumber,eventId:null,destination:'formation',nodeIndex:0,firstClear:false,finalized:true}});
+   const seed=normalizeV100Save({...createDefaultV100Save({settings:{bgmEnabled:false,sfxEnabled:false}}),campaignStarted:true,ownedUnitIds:ids,registeredUnitIds:ids,formationSlots:ids,availableStageIds:V100_STAGE_IDS,completedStageIds:V100_STAGE_IDS.slice(0,solo?22:2),flowState:{phase:'formation',stageId:V100_STAGE_IDS[stageNumber-1],stageNumber,eventId:null,destination:'formation',nodeIndex:0,firstClear:false,finalized:true}});
    await context.addInitScript(seedV100BrowserSaveOnce,serializeV100Save(seed));
    if(before){
     const changes=new Map(headSources.map(row=>[QUALITY_CHARACTER_ATLASES[row.kind].path,row.kind]));

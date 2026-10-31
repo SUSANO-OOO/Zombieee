@@ -924,7 +924,7 @@ function jointChainGeometry(atlas,plan,chain,upper,scratch){
   // These right-facing biped sources have wide resting stances; their drawn
   // static knee angle is not an anatomical walking bend direction.
   const forwardBiped=leg&&forwardBipedKeys.has(atlas.key);
-  const sign=forwardBiped?-1:((ex-sx)*-(wy-sy)+(ey-sy)*(wx-sx)>=0?1:-1);
+  const sign=forwardBiped?-1:(chain.bendSign??((ex-sx)*-(wy-sy)+(ey-sy)*(wx-sx)>=0?1:-1));
   const kx=hx+dx/d*along-dy/d*height*sign,ky=hy+dy/d*along+dx/d*height*sign;
   const geometry={sx,sy,ex,ey,wx,wy,hx,hy,tx,ty,kx,ky};
   if(slots)slots[slot]=geometry;return geometry;

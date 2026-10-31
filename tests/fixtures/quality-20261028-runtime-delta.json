@@ -5,8 +5,8 @@
   "added": [
     {
       "path": "/art/v100/joints/babayaga-quality-neck-r4.webp",
-      "bytes": 35102,
-      "hash": "sha256-f35e7ad1fe8377e947e6df9e1ff115efcfd696bf23f698c1347bfa07523a81cc",
+      "bytes": 36184,
+      "hash": "sha256-7bea041cda29b2e9488a164ae4da7cfd729b4c5914efe3c8ee4f41f000589231",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"
@@ -77,8 +77,8 @@
     },
     {
       "path": "/art/v100/joints/medic-quality-neck-r4.webp",
-      "bytes": 36222,
-      "hash": "sha256-ca216f97e07e91ae562bc33b2105c3cfde6d98c4f742ff343b74918108fe05dc",
+      "bytes": 38132,
+      "hash": "sha256-4ac386afdf9618d0cafae614b4cfa3d8d5e0c6b7e105b7a647e8774b74867e39",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"
@@ -93,8 +93,8 @@
     },
     {
       "path": "/art/v100/joints/mrs-chiha-quality-neck-r4.webp",
-      "bytes": 40790,
-      "hash": "sha256-482b1035ee0d5e4930678ded28116d3b03704f95ee531b35f4576c60c56329a4",
+      "bytes": 40394,
+      "hash": "sha256-6bb0d985ef5d17297b761c39f067beab64c1a24617b995193cb6a29a350f817d",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"
@@ -109,8 +109,8 @@
     },
     {
       "path": "/art/v100/joints/scout-quality-neck-r4.webp",
-      "bytes": 51524,
-      "hash": "sha256-716756b8f4613ffcdeff539a764cdae2499594f594bafb0fe30e63722decdf47",
+      "bytes": 52058,
+      "hash": "sha256-81789399c49dc50ff051dacd80a4522fea9cb7b3be1a1e12cba0b2a26cf57eaa",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"
@@ -2794,6 +2794,10 @@
     {
       "at": "2026-10-31",
       "scope": "Producer-requested Baba TTI-style handgun, tie ownership correction and recorded suppressed discharge; no unrelated content changes."
+    },
+    {
+      "at": "2026-10-31",
+      "scope": "Four actual right-facing battle heads; source yaw and gaze corrected, original rig pivots/poses retained."
     }
   ],
   "baseAssetsSha256": "a953511eb95b7a2a2eae3efd27a8c7a8460cafc4f1df14b73c6a6686006c4e69",

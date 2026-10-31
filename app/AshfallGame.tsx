@@ -1,5 +1,5 @@
-import {GAMEPLAY_PRODUCTION_AUDIO_MANIFEST} from './productionAudio.js';
 "use client";
+import {GAMEPLAY_PRODUCTION_AUDIO_MANIFEST} from './productionAudio.js';
 
 import { v177PaisenPhotoComboJointPose } from './v177PaisenPhotoCombo.js';
 import { campaignWaveReady, campaignWavePrompt, requestCampaignWave } from './wavePacing.js';
