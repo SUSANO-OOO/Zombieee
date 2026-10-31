@@ -71,7 +71,7 @@ import { createV100EventAudioOwner } from "./v100EventAudio.js";
 import { v100EventPresentationFor } from "./v100EventPresentation.js";
 import { v100SurfaceScore } from "./v100Music.js";
 import { v100ActionPortraitSubjects, v100DialogueSlots, v100PortraitFraming } from "./v100DialogueComposition.js";
-import { normalizeV100BattleReport, v100BattleReportFor, v100LastVehicleHitText } from "./v100BattleReport.js";
+import { normalizeV100BattleReport, v100BattleMeritsFor, v100BattleReportFor, v100LastVehicleHitText } from "./v100BattleReport.js";
 import { v100MissionBriefingFor, v100MissionThreatsFor } from "./v100MissionBriefing.js";
 import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
 import { v100RewardPresentationFor } from "./v100RewardPresentation.js";
@@ -1113,7 +1113,7 @@ export function V100Campaign() {
       )}
 
       {flow.phase === "result" && (
-        <ResultView result={flow.pendingResult} previousBestStars={Number(save.bestStars[String(flow.pendingResult?.stageId ?? "")]) || 0} alreadyCompleted={save.completedStageIds.includes(String(flow.pendingResult?.stageId ?? ""))} canCollectReadReplay={canCollectReadReplay} onCollectReadReplay={collectReadReplayReward} onReadConversation={readResultConversation} onContinue={continueFromResult} onRetry={retryDefeat} onFormation={() => leaveDefeatResult("formation")} onMap={() => leaveDefeatResult("map")} />
+        <ResultView result={flow.pendingResult} previousResult={save.lastResult} previousBestStars={Number(save.bestStars[String(flow.pendingResult?.stageId ?? "")]) || 0} alreadyCompleted={save.completedStageIds.includes(String(flow.pendingResult?.stageId ?? ""))} canCollectReadReplay={canCollectReadReplay} onCollectReadReplay={collectReadReplayReward} onReadConversation={readResultConversation} onContinue={continueFromResult} onRetry={retryDefeat} onFormation={() => leaveDefeatResult("formation")} onMap={() => leaveDefeatResult("map")} />
       )}
 
       {logOpen && <EventLogView save={save} resumeLabel={flow.eventId ? eventDisplayLabel(flow.eventId) : flow.stageId ? stageDisplayNameFor(V100_STAGE_BY_ID[flow.stageId]) : "ステージ選択"} resumeObjective={flow.stageId && ["formation", "battle", "map"].includes(flow.phase) ? objectiveLabelFor(V100_STAGE_BY_ID[flow.stageId]) : null} currentNodes={isEventPhase(flow.phase) && event ? event.nodes.slice(0,storyPage.endIndex+1) : []} busy={saveBusy} onAutoSkipChange={enabled => applySaveTransaction(applyV100SaveMutation(save, draft => ({ ...draft, settings: { ...draft.settings, autoSkipReadStory: enabled } })))} onReplay={(eventId) => { setReplayEventId(eventId); setReplayNodeIndex(0); }} onClose={() => setLogOpen(false)} />}
@@ -1503,12 +1503,15 @@ function StarCriteria({ vehicleMaxHp }: { vehicleMaxHp: number }) {
   </div>;
 }
 
-function ResultView({ result, previousBestStars, alreadyCompleted, canCollectReadReplay, onCollectReadReplay, onReadConversation, onContinue, onRetry, onFormation, onMap }: { result: Record<string, unknown> | null; previousBestStars: number; alreadyCompleted: boolean; canCollectReadReplay: boolean; onCollectReadReplay: () => void; onReadConversation: () => void; onContinue: () => void; onRetry: () => void; onFormation: () => void; onMap: () => void }) {
+function ResultView({ result, previousResult, previousBestStars, alreadyCompleted, canCollectReadReplay, onCollectReadReplay, onReadConversation, onContinue, onRetry, onFormation, onMap }: { result: Record<string, unknown> | null; previousResult: Record<string, unknown> | null; previousBestStars: number; alreadyCompleted: boolean; canCollectReadReplay: boolean; onCollectReadReplay: () => void; onReadConversation: () => void; onContinue: () => void; onRetry: () => void; onFormation: () => void; onMap: () => void }) {
   const won = result?.won === true;
   const stageNumber = Number(result?.stageNumber) || 0;
   const runStars = won ? Math.max(0, Math.min(3, Number(result?.stars) || 0)) : 0;
   const nextBestStars = Math.max(previousBestStars, runStars);
   const report = normalizeV100BattleReport(result?.battleReport);
+  const merits = v100BattleMeritsFor(result, previousResult);
+  const recordedSeconds = typeof result?.elapsedSeconds === "number" && Number.isFinite(result.elapsedSeconds) && result.elapsedSeconds >= 0 && result.elapsedSeconds <= Number.MAX_SAFE_INTEGER ? Math.round(result.elapsedSeconds) : null;
+  const recordedDeaths = typeof result?.unitDeaths === "number" && Number.isSafeInteger(result.unitDeaths) && result.unitDeaths >= 0 ? result.unitDeaths : null;
   const nextStar = runStars === 1 ? 2 : runStars === 2 ? 3 : null;
   const maxHp = Math.max(0, Number(result?.vehicleMaxHp) || 0);
   const basePresentation = v100BasePresentationFor(stageNumber);
@@ -1525,10 +1528,12 @@ function ResultView({ result, previousBestStars, alreadyCompleted, canCollectRea
       : "クリア目標を達成できず、ステージを中断しました。";
   return <section className={`v100-panel v100-result-panel ${won ? "win" : "lose"}`} data-v100-surface={won ? "result-win" : "result-lose"} aria-label="戦闘結果">
     <div className="v100-result-scroll" role="region" aria-label="戦闘結果の詳細" tabIndex={0}>
-      <span className="v100-kicker">戦闘結果 / {won ? "成功" : "失敗"}</span><h2>{won ? "ステージクリア" : "ステージ失敗"}</h2><p>{outcome}<span className="v100-result-scroll-guide">結果の詳細は下へスクロール</span></p>
+      <span className="v100-kicker">戦闘結果 / {won ? "成功" : "失敗"}</span><h2>{won ? "ステージクリア" : "ステージ失敗"}</h2><p>{merits[0] ? <span className="v100-result-lead-merit" data-v100-merit={merits[0].id}><strong>{merits[0].title}</strong><small>{merits[0].detail}<span className="v100-merit-scroll-hint"> · 詳細は下へ</span></small></span> : outcome}<span className="v100-result-scroll-guide">結果の詳細は下へスクロール</span></p>
       <div className={`v100-result-highlight ${won ? "has-earned-stars" : "no-earned-stars"}`}><strong>{won ? <V100StageStars stars={runStars} label="今回の評価" /> : <V100StageStars stars={previousBestStars} label="現在の記録" />}</strong><span>{won ? `今回 ${runStars}/3　記録 ${previousBestStars} → ${nextBestStars}/3` : `今回 —　現在の記録 ${previousBestStars}/3`}</span></div>
-      <dl className="v100-result-records"><div><dt>{basePresentation.healthLabel}</dt><dd>{vehicleHp} / {maxHp}（{Math.floor(hpPercent)}%）</dd></div><div><dt>クリア目標</dt><dd>{result?.objectiveComplete === true ? stageNumber === 22 ? "収容室43室の開放完了" : "達成" : "未達"}</dd></div><div><dt>経過時間</dt><dd>{Math.round(Number(result?.elapsedSeconds) || 0)}秒</dd></div><div><dt>戦闘不能</dt><dd>{Number(result?.unitDeaths) || 0}回</dd></div></dl>
+      <dl className="v100-result-records"><div><dt>{basePresentation.healthLabel}</dt><dd>{vehicleHp} / {maxHp}（{Math.floor(hpPercent)}%）</dd></div><div><dt>クリア目標</dt><dd>{result?.objectiveComplete === true ? stageNumber === 22 ? "収容室43室の開放完了" : "達成" : "未達"}</dd></div></dl>
+      {merits.length > 1 && <div className="v100-result-other-merits" role="list" aria-label="この一戦の成果">{merits.slice(1).map(merit => <span key={merit.id} role="listitem" data-v100-merit={merit.id}><strong>{merit.title}</strong><small>{merit.detail}</small></span>)}</div>}
       <div className="v100-result-feedback">
+        <dl className="v100-result-extra-records"><div><dt>経過時間</dt><dd>{recordedSeconds === null ? "記録なし" : `${recordedSeconds}秒`}</dd></div><div><dt>戦闘不能</dt><dd>{recordedDeaths === null ? "記録なし" : `${recordedDeaths}回`}</dd></div></dl>
         {lastVehicleHit && <p className="v100-result-last-hit"><strong>直前の被害</strong> {lastVehicleHit}</p>}
         <div className="v100-vehicle-hp-meter" role="meter" aria-label={basePresentation.healthLabel} aria-valuemin={0} aria-valuemax={maxHp} aria-valuenow={vehicleHp} aria-valuetext={`${vehicleHp} / ${maxHp}、${Math.floor(hpPercent)}%`}>
           <i style={{ width: `${hpPercent}%` }} /><b className="threshold-70" style={{ left: `${maxHp ? starTargets[2] / maxHp * 100 : 70}%` }} /><b className="threshold-90" style={{ left: `${maxHp ? starTargets[3] / maxHp * 100 : 90}%` }} />

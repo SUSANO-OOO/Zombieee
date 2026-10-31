@@ -1,5 +1,5 @@
 import { campaignUnitIdToCombatKind } from "./campaign.js";
-import { V100_BOSS_BY_ID, V100_UNITS } from "./v100Registry.js";
+import { V100_BOSS_BY_ID, V100_STAGE_IDS, V100_UNITS } from "./v100Registry.js";
 import { ENEMY_CONTENT } from "./content/enemyCatalog.js";
 
 const amount = value => typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= Number.MAX_SAFE_INTEGER;
@@ -59,4 +59,43 @@ export function v100BattleReportFor(raw) {
     return [{ unitId: unit.id, damage: values[0], damageTaken: values[1], healing: values[2] }];
   });
   return normalizeV100BattleReport({ wave: raw.wave, kills: raw.kills, units, bossProgress: raw.bossProgress, lastVehicleHit: raw.lastVehicleHit });
+}
+
+// A run's measured contribution, not a new grade, currency or permanent record.
+// Compare only the last completed win on this same stage. Missing legacy data
+// must never turn into a zero-casualty or faster-clear claim.
+export function v100BattleMeritsFor(result, previousResult = null) {
+  if (!record(result) || result.won !== true || result.objectiveComplete !== true
+    || !V100_STAGE_IDS.includes(result.stageId)) return [];
+  const previous = record(previousResult) && previousResult.won === true
+    && previousResult.objectiveComplete === true && previousResult.stageId === result.stageId
+    && typeof previousResult.battleRunId === "string" && previousResult.battleRunId.length > 0
+    && typeof result.battleRunId === "string" && result.battleRunId.length > 0
+    && previousResult.battleRunId !== result.battleRunId ? previousResult : null;
+  const merits = [];
+  if (counter(result.unitDeaths) && result.unitDeaths === 0) {
+    merits.push({ id: "no-down", title: "戦闘不能なし", detail: previous && counter(previous.unitDeaths) && previous.unitDeaths > 0
+      ? `前回${previous.unitDeaths}回 → 今回0回` : "仲間を倒されずに目標達成" });
+  } else if (previous && counter(result.unitDeaths) && counter(previous.unitDeaths)
+    && result.unitDeaths < previous.unitDeaths) {
+    merits.push({ id: "fewer-downs", title: "戦闘不能を減らした", detail: `前回${previous.unitDeaths}回 → 今回${result.unitDeaths}回` });
+  }
+  if (previous && amount(previous.elapsedSeconds) && previous.elapsedSeconds > 0
+    && amount(result.elapsedSeconds) && result.elapsedSeconds > 0
+    && previous.elapsedSeconds - result.elapsedSeconds >= 1) {
+    merits.push({ id: "faster-clear", title: "前回より速く突破",
+      detail: `前回${Math.round(previous.elapsedSeconds)}秒 → 今回${Math.round(result.elapsedSeconds)}秒` });
+  }
+  const report = normalizeV100BattleReport(result.battleReport);
+  for (const [metric, id, title, suffix] of [["damage", "damage", "攻撃を支えた", "ダメージ"], ["healing", "healing", "回復で支えた", "HP回復"]]) {
+    const rows = report?.units ?? [];
+    const most = Math.max(0, ...rows.map(unit => unit[metric]));
+    if (most < 1) continue;
+    const leaders = rows.filter(unit => unit[metric] === most);
+    const names = leaders.map(unit => V100_UNITS.find(candidate => candidate.id === unit.unitId).displayName);
+    merits.push({ id, title: `${title} ${names.length <= 2 ? names.join("・") : `${names.length}人`}`,
+      detail: `${Math.round(most).toLocaleString("ja-JP")} ${suffix}${names.length > 1 ? "ずつ" : ""}${metric === "healing" ? "（自分への回復も含む）" : ""}`,
+      unitIds: leaders.map(unit => unit.unitId) });
+  }
+  return merits;
 }

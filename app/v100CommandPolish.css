@@ -423,3 +423,33 @@
 #v100-campaign .v100-result-actions .v100-primary small { display:block; margin-top:2px; font-size:12px; line-height:1.15; }
 
 #v100-campaign .v100-result-actions .v100-collect-reward-amount { margin-left:6px; color:#fff0b5; font-size:inherit; }
+
+#v100-campaign .v100-result-lead-merit { display:block; margin:4px 0; padding:3px 8px; border-left:3px solid #d9b26b; background:#172a21; }
+#v100-campaign .v100-result-lead-merit strong,
+#v100-campaign .v100-result-other-merits strong { display:block; color:#ffe0a0; font-size:14px; line-height:1.25; overflow-wrap:anywhere; }
+#v100-campaign .v100-result-lead-merit small,
+#v100-campaign .v100-result-other-merits small { display:block; color:#e0e6d7; font-size:12px; line-height:1.25; }
+#v100-campaign[data-v100-phase="result"] .v100-result-other-merits { grid-column:1/-1; grid-row:4; display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:5px; margin:3px 0; text-align:left; }
+#v100-campaign .v100-result-other-merits > span { min-width:0; padding:5px 8px; border:1px solid #778761; background:#14241d; }
+#v100-campaign[data-v100-phase="result"] .v100-result-scroll:has(> .v100-result-other-merits) > .v100-result-feedback { grid-row:5; }
+#v100-campaign .v100-merit-scroll-hint { display:none; }
+#v100-campaign .v100-result-extra-records { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin:6px 0; }
+#v100-campaign .v100-result-extra-records > div { display:flex; justify-content:space-between; gap:8px; padding:4px 8px; background:#07131075; }
+#v100-campaign .v100-result-extra-records dt { color:#b4c4b8; font-size:12px; }
+#v100-campaign .v100-result-extra-records dd { margin:0; color:#efebd4; font-size:14px; }
+@media (max-height:520px) and (min-width:640px) and (orientation:landscape) {
+  #v100-campaign .v100-result-lead-merit { margin:0; }
+  #v100-campaign .v100-result-lead-merit .v100-merit-scroll-hint { display:inline; color:#e2b666; }
+  #v100-campaign .v100-result-scroll > p:has(.v100-result-lead-merit) > .v100-result-scroll-guide { display:none; }
+}
+@media (max-height:420px) and (min-width:640px) and (orientation:landscape) {
+  #v100-campaign[data-v100-phase="result"] section.v100-result-panel { padding:8px 12px; gap:6px; }
+  #v100-campaign[data-v100-phase="result"] .v100-result-scroll { gap:2px 14px; }
+  #v100-campaign[data-v100-phase="result"] .v100-result-scroll > .v100-kicker { line-height:1.1; }
+  #v100-campaign[data-v100-phase="result"] .v100-result-scroll > h2 { font-size:20px; line-height:1.1; }
+  #v100-campaign[data-v100-phase="result"] .v100-result-lead-merit { padding:2px 6px; }
+  #v100-campaign[data-v100-phase="result"] .v100-result-scroll > div.v100-result-highlight { margin:2px 0; padding:2px; gap:2px; }
+  #v100-campaign[data-v100-phase="result"] .v100-result-scroll > div.v100-result-highlight > strong { display:flex; line-height:1; }
+  #v100-campaign[data-v100-phase="result"] .v100-result-scroll > div.v100-result-highlight > span { font-size:11px; line-height:1.2; letter-spacing:0; white-space:nowrap; }
+  #v100-campaign[data-v100-phase="result"] .v100-result-scroll > .v100-result-records { margin:2px 0 !important; }
+}
