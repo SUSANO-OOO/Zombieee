@@ -39,7 +39,7 @@ import { v102CombatMotionSample, v102GroundLift, v102TravelCycleDistance, v102Ba
 import { v102CorpseFallingPose, v102HasFallingDeathFrame } from "./v102CorpsePose.js";
 import { beginV102GoreStep, finishV102GoreStep, noteV102GoreImpact, noteV102GorePeriodicDamage, clearV102CombatGore, drawV102GoreGround, drawV102GoreAir, drawV102GoreWound, v102CorpseSeverPlan, beginV102CorpseSever, endV102CorpseSever, getV102GoreSnapshot } from "./v102CombatGore.js";
 
-import { v100DamageTextPosition } from "./v100DamageTextPlacement.js";
+import { v100DamageTextPosition, resetV100DamageTextPaint, layoutV100DamageTextPaint } from "./v100DamageTextPlacement.js";
 import { V100_CANVAS_FONT } from "./v100Typography.js";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
@@ -2098,6 +2098,7 @@ function addDamageText(
     g.renderObjectPools.damageTexts,
     DAMAGE_TEXT_POOL_KEYS,
   ) as DamageText;
+  resetV100DamageTextPaint(text);
   const position = v100DamageTextPosition(x, y, value, g.damageTexts);
   text.x = position.x;
   text.y = position.y;
@@ -9344,12 +9345,6 @@ function drawWorld(
     ctx.beginPath(); ctx.ellipse(p.x + p.size * .5, p.y + p.size * .5, Math.max(1, p.size * .62), Math.max(1, p.size * .34), 0, 0, Math.PI * 2); ctx.fill();
   }
   ctx.globalAlpha = 1;
-  for (const d of g.damageTexts) {
-    if (!visibleRenderPoint(d.x, d.y, graphicsProfile.cullingMargin)) continue;
-    ctx.globalAlpha = Math.min(1, d.life * 2); ctx.fillStyle = d.color; ctx.font = V100_CANVAS_FONT.numeric(14); ctx.textAlign = "center";
-    ctx.shadowColor = "#000"; ctx.shadowBlur = 3; ctx.fillText(d.value, d.x, d.y);
-  }
-  ctx.globalAlpha = 1; ctx.shadowBlur = 0; ctx.textAlign = "left";
   // Bodies keep their ground-depth order; status must remain readable even
   // when a large foreground enemy legitimately hides the allied body.
   const {scale,offsetX,offsetY}=presentationLayout?.transform??{scale:1,offsetX:0,offsetY:0};
@@ -9360,9 +9355,19 @@ function drawWorld(
     width:r.width/scale,height:r.height/scale}))??[];
   const healthLayout=layoutV100AllyHealthBars(allyHealthBars.map(bar=>({...bar,x:bar.fighter.x})),{bounds,obstacles:statusObstacles});
   for(const bar of healthLayout)drawFighterHealthBar(ctx,bar.fighter,bar.width,bar.height,bar.y,bar.x);
-  drawV105AbilityNames(ctx,g,{width:W,height:H,headY:f=>fighterHealthBarWorldY(f)-7,bounds,
+  const abilityLayout=drawV105AbilityNames(ctx,g,{width:W,height:H,headY:f=>fighterHealthBarWorldY(f)-7,bounds,
     obstacles:[...statusObstacles,...healthLayout.map(bar=>({x:bar.x-bar.width/2-1,y:bar.y-1,width:bar.width+2,height:bar.height+2}))],
     get cssScale(){return Math.min(ctx.canvas.clientWidth/W||1,ctx.canvas.clientHeight/H||1);}});
+  ctx.font = V100_CANVAS_FONT.numeric(14); ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+  const damageLayout=layoutV100DamageTextPaint(g.damageTexts.filter(d=>visibleRenderPoint(d.x,d.y,graphicsProfile.cullingMargin)),{
+    measure:value=>ctx.measureText(value),bounds,obstacles:[...statusObstacles,
+      ...healthLayout.map(bar=>({x:bar.x-bar.width/2-1,y:bar.y-1,width:bar.width+2,height:bar.height+2})),
+      ...abilityLayout.map(name=>({x:name.x-name.width/2,y:name.y-name.height/2,width:name.width,height:name.height}))]});
+  ctx.shadowColor = "#000"; ctx.shadowBlur = 3;
+  for(const {label:d,x,y} of damageLayout){
+    ctx.globalAlpha=Math.min(1,d.life*2);ctx.fillStyle=d.color;ctx.fillText(d.value,x,y);
+  }
+  ctx.globalAlpha=1;ctx.shadowBlur=0;ctx.textAlign="left";
   if (g.flashOverlay > 0) {
     ctx.fillStyle = `rgba(255,193,106,${Math.min(.48, g.flashOverlay)})`; ctx.fillRect(0, 0, W, H);
   }
