@@ -16,6 +16,23 @@ function escortPriority(unit) {
   return 2;
 }
 
+// Pursuit is bounded by the moving objective, not by a guard that can drift
+// farther away with every retarget. An anchor must still clear intruders:
+// blindly holding its formation point can strand a melee escort indefinitely.
+export function escortMayPursueTarget({
+  unit, humans = [], target, duty, cartX, cartY, leash, config = {},
+} = {}) {
+  if (!aliveEscort(unit) || !target || target.hp <= 0 || target.contained === true
+    || !Number.isFinite(target.x) || !Number.isFinite(target.y)
+    || !Number.isFinite(cartX) || !Number.isFinite(cartY)
+    || !(Number(leash) > 0) || Math.abs(target.x - cartX) > leash) return false;
+  if (duty !== 'escort-anchor') return true;
+  if (humans.filter(aliveEscort).length === 1) return true;
+  const radiusX = Number(config.threatRadiusX) > 0 ? Number(config.threatRadiusX) : 90;
+  const radiusY = Number(config.threatRadiusY) > 0 ? Number(config.threatRadiusY) : 55;
+  return ((target.x - cartX) / radiusX) ** 2 + ((target.y - cartY) / radiusY) ** 2 <= 1;
+}
+
 export function escortFormationDestination({
   unit,
   humans = [],

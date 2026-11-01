@@ -636,7 +636,7 @@ import {
   damageAfterUnitDefense,
   unitLevelMilestones,
 } from "./unitProgression.js";
-import { escortFormationDestination } from "./escortFormation.js";
+import { escortFormationDestination, escortMayPursueTarget } from "./escortFormation.js";
 import { deviceObjectiveDestination, deviceObjectiveMayEngage } from './deviceObjectiveAi.js';
 import {
   MANUAL_ABILITY_REGISTRY,
@@ -12291,6 +12291,34 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         return {node:{...node},humanIds:ids,enemyId:enemy.id,solo,
           scope:'Prepared actor positions and clear reinforcement timeline; actual mission, stats, AI, clock and objective progression. No forced outcome.'};
       },
+      prepareEscortCombatProof: (mode = 'solo') => {
+        const g = gameRef.current;
+        if (g.definition.missionType !== STATION_MISSION_TYPES.ESCORT) throw new Error('Escort proof requires an actual escort mission');
+        g.fighters = []; g.corpses = []; g.deployQueue = [];
+        g.enemySpawn = createEnemySpawnRuntime() as EnemySpawnRuntime;
+        g.eventIndex = g.definition.timeline.length;
+        clearTransientRenderObjects(g);
+        g.stageMission = createStationMissionRuntime(g.definition.missionType, g.definition.missionConfig) as StageMissionRuntime;
+        g.stageMission = { ...g.stageMission, progress: .35 };
+        g.time = g.definition.prepSeconds + 1;
+        const cartX = escortCartX(g.stageMission, g.definition.missionConfig), lane = 1 as Lane;
+        const ids: number[] = [];
+        for (const kind of (mode === 'solo' ? ['scout'] : ['scout','medic']) as UnitKind[]) {
+          if (!spawnHuman(g,kind,true)) throw new Error('Escort proof could not create its owned human');
+          const f = g.fighters[g.fighters.length - 1];
+          f.x = cartX + (kind === 'scout' ? 86 : -10); f.y = activeLaneCenters[lane];
+          f.lane = lane; f.anchorLane = lane; f.combatReady = true; f.gateEntering = false; f.spawnGrace = 0;
+          if (mode === 'handoff' && kind === 'medic') f.stunned = 4;
+          ids.push(f.id);
+        }
+        const enemy = spawnEnemy(g,'spitter',lane);
+        enemy.x = cartX - 30; enemy.y = activeLaneCenters[lane]; enemy.lane = lane; enemy.anchorLane = lane;
+        enemy.combatReady = true; enemy.gateEntering = false; enemy.spawnGrace = 0;
+        g.running = true; g.paused = false; g.over = false; g.won = false;
+        setPaused(false); setEnd(null);
+        return {cartX,humanIds:ids,enemyId:enemy.id,mode,
+          scope:'Prepared mid-route cart/actor positions, optional four-second medic stun, and exhausted reinforcements. Actual stats, AI, clock, damage and objective completion; no forced win.'};
+      },
       prepareEscortMissionObjectState: (
         state: "start" | "moving" | "stalled" | "damaged" | "result-won" | "result-lost",
       ) => {
@@ -22523,8 +22551,13 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             const stationObjective = stationObjectiveDestination(g, f);
             if (stationObjective && allyIntent.reason !== "crawler-under-attack") {
               const preservesThreatIntent = (g.definition.missionType === STATION_MISSION_TYPES.ESCORT
-                && stationObjective.duty !== "escort-anchor"
-                && allyIntent.targetId !== null)
+                && escortMayPursueTarget({
+                  unit: f, humans: g.fighters, target: fighterById.get(allyIntent.targetId),
+                  duty: stationObjective.duty,
+                  cartX: escortCartX(g.stageMission, g.definition.missionConfig),
+                  cartY: activeLaneCenters[Number(g.definition.missionConfig.cartLane ?? 1)],
+                  leash: allyProfile.defenseLeash, config: g.definition.missionConfig,
+                }))
                 || (stationObjective.duty.startsWith('device-') && deviceObjectiveMayEngage({
                   destination:stationObjective,target:fighterById.get(allyIntent.targetId),unit:f,leash:allyProfile.defenseLeash,
                 }));
