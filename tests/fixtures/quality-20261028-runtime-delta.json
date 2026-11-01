@@ -1,6 +1,6 @@
 {
   "base": "ff5dba24e88c810182cda1f044bd26dfc3e512c1",
-  "source": "a74e51e40e191a2fb82efb129262b8dfa6c414ac plus complete Monkey body candidate",
+  "source": "3dd7ba86 plus complete Mizuchi hybrid body candidate",
   "scope": "Local quality candidate transport contract; not likeness, rights, listening, release or physical-device approval.",
   "added": [
     {
@@ -100,9 +100,9 @@
       "criticality": "critical"
     },
     {
-      "path": "/art/v100/joints/ranger-quality-neck-r4.webp",
-      "bytes": 957462,
-      "hash": "sha256-b1e1bc34c028a8e36a96f6672e78c2b16701cd6799be5319926c1771b53d9295",
+      "path": "/art/v100/joints/ranger-combat-r1.webp",
+      "bytes": 886328,
+      "hash": "sha256-11ee83f279e2331b0bbbb1b1f0dee6f2150c07768355728ae2f8d1b3f4f18370",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"

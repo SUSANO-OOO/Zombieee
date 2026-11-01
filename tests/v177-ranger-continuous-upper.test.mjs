@@ -1,4 +1,4 @@
-import {assertMaterialRigGeometry} from './helpers/quality-material-contract.mjs';
+import {assertRangerRepaintGeometry} from './helpers/quality-material-contract.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
@@ -39,15 +39,15 @@ function paintDifference(a,b) {
 test('the authored atlas retains all original 152 decoded cells byte-exact; runtime head derivatives retain its geometry',async()=>{
   const old=await sharp(await readFile(new URL('../public/art/v100/joints/ranger-r1.webp',import.meta.url))).ensureAlpha().raw().toBuffer();
   const bytes=await readFile(new URL('../public'+authoredAtlases.ranger.path,import.meta.url));
-  assertMaterialRigGeometry(atlas,authoredAtlases.ranger);
+  assertRangerRepaintGeometry(atlas,authoredAtlases.ranger);
   const packed=await sharp(bytes).ensureAlpha().raw().toBuffer({resolveWithObject:true});
   assert.ok(packed.data.subarray(0,old.length).equals(old),'every original RGBA byte, even under alpha0, is retained');
   const keys=['key','width','height','frameCount','settleLevels','cycleDistance','frames','pelvisOffsets','muzzles','lowerCount'];
-  assert.equal(createHash('sha256').update(JSON.stringify(Object.fromEntries(keys.map(k=>[k,atlas[k]])))).digest('hex'),
+  assert.equal(createHash('sha256').update(JSON.stringify(Object.fromEntries(keys.map(k=>[k,authoredAtlases.ranger[k]])))).digest('hex'),
     'd1320ed433a08eebdf64047e5b1fb80e780be0bdfc3f322b0b71f21b27ae115e');
   assert.equal(atlas.key,'joint-ranger');assert.equal(atlas.lowerCount,120);assert.equal(atlas.frames.length,152);
   assert.equal(authoredAtlases.ranger.decodedBytes,packed.info.width*packed.info.height*4);assert.ok(atlas.decodedBytes<=6*1024*1024);
-  assert.ok(rig.parts.every(p=>p.source.y>=1015));
+  assert.ok(authoredAtlases.ranger.upperRig.parts.every(p=>p.source.y>=1015));
 });
 
 test('real upper paint follows continuous weapon IK with fixed shoulder, elbow, wrist and neck attachments',()=>{

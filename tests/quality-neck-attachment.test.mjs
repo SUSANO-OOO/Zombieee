@@ -14,7 +14,7 @@ test('all calibrated human/helmet materials retain their own torso garment and a
  assert.equal(Object.keys(QUALITY_BATTLE_HEAD_CALIBRATIONS).length,13);
  for(const kind of Object.keys(QUALITY_BATTLE_HEAD_CALIBRATIONS)){
   const atlas=V177_JOINT_ATLASES[kind],rig=atlas.parts?atlas:atlas.upperRig;
-  assert.equal(atlas.path,['scout','medic','engineer'].includes(kind)?`/art/v100/joints/${kind}-combat-r1.webp`:QUALITY_BATTLE_HEAD_CALIBRATIONS[kind].path);
+  assert.equal(atlas.path,['scout','medic','engineer','ranger'].includes(kind)?`/art/v100/joints/${kind}-combat-r1.webp`:QUALITY_BATTLE_HEAD_CALIBRATIONS[kind].path);
   const original=QUALITY_CHARACTER_BASE_ATLASES[kind],originalRig=original.parts?original:original.upperRig;
   const expected=['scout','medic','engineer'].includes(kind)?JSON.parse(await readFile(`assets/source/quality-20261028/rigs/${kind}-combat-r1/parts.json`)).parentAttachments:originalRig.parentAttachments;
   assert.deepEqual(rig.parentAttachments,expected,'material registration must use its declared anatomical pivot');

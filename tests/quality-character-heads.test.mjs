@@ -12,6 +12,7 @@ import {QUALITY_KUMAVERSON_COMBAT_ATLAS} from '../app/qualityKumaversonCombatJoi
 import {QUALITY_SCOUT_COMBAT_ATLAS} from '../app/qualityScoutCombatJointData.js';
 import {QUALITY_MEDIC_COMBAT_ATLAS} from '../app/qualityMedicCombatJointData.js';
 import {QUALITY_ENGINEER_COMBAT_ATLAS} from '../app/qualityEngineerCombatJointData.js';
+import {QUALITY_RANGER_COMBAT_ATLAS} from '../app/qualityRangerCombatJointData.js';
 const legacy=JSON.parse(await readFile('assets/source/quality-20261028/identity/head-runtime-provenance.json','utf8'));
 const completed=JSON.parse(await readFile('assets/source/quality-20261028/identity/battle-heads-r3/runtime-provenance.json','utf8'));
 const provenance={entries:[...legacy.entries.filter(row=>!completed.entries.some(next=>next.kind===row.kind)),...completed.entries]};
@@ -26,6 +27,7 @@ for(const [kind,base] of Object.entries(bases))test(kind+' keeps its checked ide
  else if(kind==='scout')assert.deepEqual(preferred,QUALITY_SCOUT_COMBAT_ATLAS,'Complete Hachi paint replaces the old head-only material and rig');
  else if(kind==='medic')assert.deepEqual(preferred,QUALITY_MEDIC_COMBAT_ATLAS,'Complete Nao paint replaces the old head-only material and rig');
  else if(kind==='engineer')assert.deepEqual(preferred,QUALITY_ENGINEER_COMBAT_ATLAS,'Complete Monkey paint replaces the old head-only material and rig');
+ else if(kind==='ranger')assert.deepEqual(preferred,QUALITY_RANGER_COMBAT_ATLAS,'Complete Mizuchi paint replaces old material while retaining hybrid geometry');
  else if(QUALITY_BATTLE_HEAD_CALIBRATIONS[kind]){
   const update=QUALITY_BATTLE_HEAD_CALIBRATIONS[kind],rig=preferred.parts?preferred:preferred.upperRig;
   assert.equal(preferred.path,update.path);assert.deepEqual(rig.parts,update.parts);

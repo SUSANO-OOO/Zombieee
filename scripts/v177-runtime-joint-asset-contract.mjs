@@ -38,4 +38,8 @@ const engineer=read('../assets/source/quality-20261028/rigs/engineer-combat-r1/p
 const engineerIndex=rows.findIndex(row=>row.path==='/art/v100/joints/engineer-quality-neck-r4.webp');
 assert.ok(engineerIndex>=0,'Complete Monkey body replaces its registered head-only predecessor');
 rows[engineerIndex]=asset(engineer);
+const ranger=read('../assets/source/quality-20261028/rigs/ranger-combat-r1/provenance.json').asset;
+const rangerIndex=rows.findIndex(row=>row.path==='/art/v100/joints/ranger-quality-neck-r4.webp');
+assert.ok(rangerIndex>=0,'Complete Mizuchi paint replaces its registered head-only predecessor');
+rows[rangerIndex]=asset({...ranger,assetPath:ranger.path});
 export const V177_JOINT_ASSET_ADDITIONS=Object.freeze(rows);
