@@ -1,11 +1,36 @@
 import { campaignUnitIdToCombatKind } from "./campaign.js";
 import { V100_BOSS_BY_ID, V100_STAGE_IDS, V100_UNITS } from "./v100Registry.js";
 import { ENEMY_CONTENT } from "./content/enemyCatalog.js";
+import { V100_MISSION_VEHICLES } from "./v100MissionVehicles.js";
 
 const amount = value => typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= Number.MAX_SAFE_INTEGER;
 const counter = value => amount(value) && Number.isInteger(value);
 const record = value => value !== null && typeof value === "object" && !Array.isArray(value);
 const enemies = new Map(ENEMY_CONTENT.map(enemy => [enemy.id, enemy]));
+
+function normalizeEscortProgress(value) {
+  if (!record(value) || !Object.hasOwn(V100_MISSION_VEHICLES, value.stageId)
+    || !amount(value.progress) || value.progress > 1
+    || !amount(value.integrity) || !amount(value.maxIntegrity) || value.maxIntegrity <= 0 || value.integrity > value.maxIntegrity
+    || typeof value.failed !== "boolean" || typeof value.completed !== "boolean"
+    || (value.failed && value.completed)) return null;
+  return Object.freeze({ stageId: value.stageId, progress: value.progress, integrity: value.integrity,
+    maxIntegrity: value.maxIntegrity, failed: value.failed, completed: value.completed });
+}
+
+export function v100EscortResultText(result) {
+  const escort = normalizeEscortProgress(result?.battleReport?.escortProgress);
+  if (result?.won !== false || !escort || escort.stageId !== result.stageId) return null;
+  const vehicle = V100_MISSION_VEHICLES[escort.stageId];
+  const destroyed = escort.failed && escort.integrity === 0;
+  return {
+    outcome: destroyed ? `${vehicle.targetLabel}が破壊された。${vehicle.count === 3 ? "確保" : "護送"}は失敗だ。` : null,
+    progress: escort.progress >= 1 ? `${vehicle.targetLabel}は${vehicle.count === 3 ? "封鎖地点" : "目的地"}に到着`
+      : `${vehicle.count === 3 ? "冷蔵車列の確保" : "護送"} ${Math.floor(escort.progress * 100)}%まで到達`,
+    advice: destroyed ? vehicle.count === 3 ? "車列を守る味方に加え、攻撃役も早めに出して周囲の敵を倒そう。"
+      : "護送役だけに任せず、攻撃役も早めに出して車を守ろう。" : null,
+  };
+}
 
 function normalizeVehicleHit(value) {
   if (!record(value) || !enemies.has(value.enemyKind) || !amount(value.time) || !amount(value.damage) || value.damage <= 0) return null;
@@ -44,7 +69,8 @@ export function normalizeV100BattleReport(report) {
   });
   const bossProgress = normalizeBossProgress(report.bossProgress);
   const lastVehicleHit = normalizeVehicleHit(report.lastVehicleHit);
-  return Object.freeze({ wave: report.wave, kills: report.kills, units: Object.freeze(units), ...(bossProgress ? { bossProgress } : {}), ...(lastVehicleHit ? { lastVehicleHit } : {}) });
+  const escortProgress = normalizeEscortProgress(report.escortProgress);
+  return Object.freeze({ wave: report.wave, kills: report.kills, units: Object.freeze(units), ...(bossProgress ? { bossProgress } : {}), ...(lastVehicleHit ? { lastVehicleHit } : {}), ...(escortProgress ? { escortProgress } : {}) });
 }
 
 export function v100BattleReportFor(raw) {
@@ -58,7 +84,8 @@ export function v100BattleReportFor(raw) {
     if (!values.every(amount)) return [];
     return [{ unitId: unit.id, damage: values[0], damageTaken: values[1], healing: values[2] }];
   });
-  return normalizeV100BattleReport({ wave: raw.wave, kills: raw.kills, units, bossProgress: raw.bossProgress, lastVehicleHit: raw.lastVehicleHit });
+  const escortProgress = normalizeEscortProgress({ ...raw.missionRuntime, stageId: raw.stageId });
+  return normalizeV100BattleReport({ wave: raw.wave, kills: raw.kills, units, bossProgress: raw.bossProgress, lastVehicleHit: raw.lastVehicleHit, escortProgress });
 }
 
 // A run's measured contribution, not a new grade, currency or permanent record.
