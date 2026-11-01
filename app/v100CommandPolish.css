@@ -443,6 +443,14 @@
 #v100-campaign .v100-result-extra-records > div { display:flex; justify-content:space-between; gap:8px; padding:4px 8px; background:#07131075; }
 #v100-campaign .v100-result-extra-records dt { color:#b4c4b8; font-size:12px; }
 #v100-campaign .v100-result-extra-records dd { margin:0; color:#efebd4; font-size:14px; }
+/* A lost attempt leads with measured progress, while keeping the saved star record. */
+#v100-campaign[data-v100-phase="result"] .v100-result-scroll > .v100-defeat-progress { grid-column:1/-1; grid-row:3; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:3px 12px; margin:4px 0; padding:8px 10px; border-left:3px solid #d4a461; background:#18251e; text-align:left; }
+#v100-campaign .v100-defeat-progress strong { color:#f3d28e; font-size:18px; line-height:1.25; }
+#v100-campaign .v100-defeat-progress > span { color:#f4e4c4; font-size:16px; }
+#v100-campaign .v100-defeat-progress small { grid-column:1/-1; color:#c9d3c4; font-size:13px; line-height:1.3; }
+#v100-campaign[data-v100-phase="result"] .lose .v100-result-scroll > .v100-result-records { grid-column:1/-1; grid-row:4; }
+#v100-campaign[data-v100-phase="result"] .lose .v100-result-scroll > .v100-result-feedback { grid-row:5; }
+@media (max-width:639px) { #v100-campaign .v100-defeat-progress > span { grid-column:1/-1; } }
 @media (max-height:520px) and (min-width:640px) and (orientation:landscape) {
   #v100-campaign .v100-result-lead-merit { margin:0; }
   #v100-campaign .v100-result-lead-merit .v100-merit-scroll-hint { display:inline; color:#e2b666; }

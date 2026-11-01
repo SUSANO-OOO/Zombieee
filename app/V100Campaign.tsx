@@ -1534,19 +1534,25 @@ function ResultView({ result, previousResult, previousBestStars, alreadyComplete
   return <section className={`v100-panel v100-result-panel ${won ? "win" : "lose"}`} data-v100-surface={won ? "result-win" : "result-lose"} aria-label="戦闘結果">
     <div className="v100-result-scroll" role="region" aria-label="戦闘結果の詳細" tabIndex={0}>
       <span className="v100-kicker">戦闘結果 / {won ? "成功" : "失敗"}</span><h2>{won ? "ステージクリア" : "ステージ失敗"}</h2><p>{merits[0] ? <span className="v100-result-lead-merit" data-v100-merit={merits[0].id}><strong>{merits[0].title}</strong><small>{merits[0].detail}<span className="v100-merit-scroll-hint"> · 詳細は下へ</span></small></span> : outcome}<span className="v100-result-scroll-guide">結果の詳細は下へスクロール</span></p>
-      <div className={`v100-result-highlight ${won ? "has-earned-stars" : "no-earned-stars"}`}><strong>{won ? <V100StageStars stars={runStars} label="今回の評価" /> : <V100StageStars stars={previousBestStars} label="現在の記録" />}</strong><span>{won ? `今回 ${runStars}/3　記録 ${previousBestStars} → ${nextBestStars}/3` : `今回 —　現在の記録 ${previousBestStars}/3`}</span></div>
+      {won ? <div className="v100-result-highlight has-earned-stars"><strong><V100StageStars stars={runStars} label="今回の評価" /></strong><span>{`今回 ${runStars}/3　記録 ${previousBestStars} → ${nextBestStars}/3`}</span></div>
+        : <div className="v100-defeat-progress" aria-label="今回どこまで進めたか">
+          <strong>{boss ? boss.state === "not-encountered" ? `${boss.displayName}の出現前に終了` : boss.state === "defeated" ? `${boss.displayName}は撃破` : `${boss.displayName}に到達` : report ? report.wave > 0 ? `第${report.wave}波まで到達` : "開始直後に終了" : "到達地点の記録なし"}</strong>
+          {boss?.state === "active" && <span>残りHP {Math.ceil(boss.hp ?? 0)} / {boss.maxHp}（{Math.round((boss.hp ?? 0) / (boss.maxHp ?? 1) * 100)}%）</span>}
+          <small>{report ? `第${report.wave}波・${report.kills}体撃破` : "波数・撃破数の記録なし"}{recordedDeaths !== null && ` / 戦闘不能 ${recordedDeaths}回`}</small>
+        </div>}
       <dl className="v100-result-records"><div><dt>{basePresentation.healthLabel}</dt><dd>{vehicleHp} / {maxHp}（{Math.floor(hpPercent)}%）</dd></div><div><dt>クリア目標</dt><dd>{result?.objectiveComplete === true ? stageNumber === 22 ? "収容室43室の開放完了" : "達成" : "未達"}</dd></div></dl>
       {merits.length > 1 && <div className="v100-result-other-merits" role="list" aria-label="この一戦の成果">{merits.slice(1).map(merit => <span key={merit.id} role="listitem" data-v100-merit={merit.id}><strong>{merit.title}</strong><small>{merit.detail}</small></span>)}</div>}
       <div className="v100-result-feedback">
         <dl className="v100-result-extra-records"><div><dt>経過時間</dt><dd>{recordedSeconds === null ? "記録なし" : `${recordedSeconds}秒`}</dd></div><div><dt>戦闘不能</dt><dd>{recordedDeaths === null ? "記録なし" : `${recordedDeaths}回`}</dd></div></dl>
         {lastVehicleHit && <p className="v100-result-last-hit"><strong>直前の被害</strong> {lastVehicleHit}</p>}
-        <div className="v100-vehicle-hp-meter" role="meter" aria-label={basePresentation.healthLabel} aria-valuemin={0} aria-valuemax={maxHp} aria-valuenow={vehicleHp} aria-valuetext={`${vehicleHp} / ${maxHp}、${Math.floor(hpPercent)}%`}>
+        {won && <><div className="v100-vehicle-hp-meter" role="meter" aria-label={basePresentation.healthLabel} aria-valuemin={0} aria-valuemax={maxHp} aria-valuenow={vehicleHp} aria-valuetext={`${vehicleHp} / ${maxHp}、${Math.floor(hpPercent)}%`}>
           <i style={{ width: `${hpPercent}%` }} /><b className="threshold-70" style={{ left: `${maxHp ? starTargets[2] / maxHp * 100 : 70}%` }} /><b className="threshold-90" style={{ left: `${maxHp ? starTargets[3] / maxHp * 100 : 90}%` }} />
         </div>
-        <div className="v100-result-threshold-labels"><span><V100StageStars stars={2} label="条件" /> 70% / {starTargets[2]} HP</span><span><V100StageStars stars={3} label="条件" /> 90% / {starTargets[3]} HP</span></div>
+        <div className="v100-result-threshold-labels"><span><V100StageStars stars={2} label="条件" /> 70% / {starTargets[2]} HP</span><span><V100StageStars stars={3} label="条件" /> 90% / {starTargets[3]} HP</span></div></>}
+        {!won && <p className="v100-retained-stars">これまでの最高記録：★{previousBestStars}/3。今回の敗北で記録は下がりません。</p>}
         {won && nextStar && <p className="v100-result-next-star">★{nextStar}の条件：耐久{starTargets[nextStar]}以上を残してクリア（今回はあと{Math.max(0, Math.ceil(starTargets[nextStar] - vehicleHp))} HP不足）</p>}
         {won && <div className="v100-result-caps-preview" aria-label="確定後に加算されるCAPSの内訳"><span>{alreadyCompleted ? "再挑戦報酬" : "初回達成"}<strong>+{rewardCaps} CAPS</strong></span>{bonusStar2 > 0 && <span><V100StageStars stars={2} label="新規獲得" /><strong>+{bonusStar2} CAPS</strong></span>}{bonusStar3 > 0 && <span><V100StageStars stars={3} label="新規獲得" /><strong>+{bonusStar3} CAPS</strong></span>}</div>}
-        {boss && <p className="v100-result-boss"><strong>{boss.displayName}</strong>：{boss.state === "not-encountered" ? "出現前に戦闘終了" : boss.state === "defeated" ? "撃破済み" : `残りHP ${Math.ceil(boss.hp ?? 0)} / ${boss.maxHp}（${Math.round((boss.hp ?? 0) / (boss.maxHp ?? 1) * 100)}%）`}</p>}
+        {won && boss && <p className="v100-result-boss"><strong>{boss.displayName}</strong>：{boss.state === "not-encountered" ? "出現前に戦闘終了" : boss.state === "defeated" ? "撃破済み" : `残りHP ${Math.ceil(boss.hp ?? 0)} / ${boss.maxHp}（${Math.round((boss.hp ?? 0) / (boss.maxHp ?? 1) * 100)}%）`}</p>}
       </div>
     </div>
     <div className="v100-result-footer">
