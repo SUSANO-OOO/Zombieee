@@ -49,7 +49,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   medic: {
     unitId: "unit-nao",
     displayName: "緊急処置",
-    summary: "射程内で最も傷ついた味方を回復。しばらく受けるダメージも減らす。",
+    summary: "自分も含め、近くでいちばん傷ついた1人を手当て。しばらく受けるダメージも減らす。",
     iconMotif: "medical-cross",
     runtimeStatus: "integrated",
     cooldownSeconds: 15,

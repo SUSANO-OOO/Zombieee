@@ -92,7 +92,7 @@ export function v100UnitPresentation(save, unitId) {
     attackType: base.range >= 80 ? "ranged" : "melee",
     current, next, nextOutputGrowth,
     equipmentNames: Object.freeze(equipmentIds.map((id) => EQUIPMENT_BY_ID[id]?.displayName).filter(Boolean)),
-    skill: ability ? Object.freeze({ levelEffect: ABILITY_LEVEL_EFFECT[kind], name: ability.displayName, summary: ability.unitId === "unit-nao" ? "HPの減った味方を回復。4秒間、受けるダメージを28%軽減。" : ability.summary, detail: ability.summary, cooldownSeconds: ability.cooldownSeconds }) : null,
+    skill: ability ? Object.freeze({ levelEffect: ABILITY_LEVEL_EFFECT[kind], name: ability.displayName, summary: ability.unitId === "unit-nao" ? "自分か近くの仲間1人を回復。4秒間、受けるダメージを28%軽減。" : ability.summary, detail: ability.summary, cooldownSeconds: ability.cooldownSeconds }) : null,
     treatmentProtection: kind === "medic" ? Object.freeze({
       reduction: UNIT_ROLE_TUNING.nao.damageReduction,
       seconds: UNIT_ROLE_TUNING.nao.damageReductionSeconds,
