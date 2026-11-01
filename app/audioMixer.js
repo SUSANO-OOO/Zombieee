@@ -13,6 +13,15 @@ const DEFAULT_CATEGORY_VOLUMES = Object.freeze({
   support: 0.9,
 });
 
+const ORDINARY_COMBAT_CATEGORIES = ["weapons", "melee", "monsters"];
+function foregroundCombatCue(asset, options, priority) {
+  if (["bgm", "ambience"].includes(asset.category)) return false;
+  return asset.category === "humanVoices" || Boolean(options.duck)
+    || asset.id.startsWith("ability-")
+    || String(options.dedupeKey ?? "").startsWith("manual-ability:")
+    || (priority >= 85 && [...ORDINARY_COMBAT_CATEGORIES, "support"].includes(asset.category));
+}
+
 export const AUDIO_MIXER_STATES = Object.freeze({
   LOCKED: "locked",
   UNLOCKING: "unlocking",
@@ -164,6 +173,9 @@ export class AudioMixer {
     this.master = null;
     this.limiter = null;
     this.buses = {};
+    this.ordinaryCombatBuses = {};
+    this.combatDuckTarget = 1;
+    this.combatForegroundCount = 0;
     // Dialogue ducking and short semantic-event ducking intentionally use
     // separate serial gain stages. A transient entrance/impact envelope must
     // never cancel the persistent dialogue envelope (or vice versa).
@@ -477,12 +489,16 @@ export class AudioMixer {
     this.lastPlayedAt.clear();
     this.sceneState = { sceneId: null, bgm: null, ambience: [] };
     for (const bus of Object.values(this.buses)) safeDisconnect(bus);
+    for (const bus of Object.values(this.ordinaryCombatBuses)) safeDisconnect(bus);
     safeDisconnect(this.dialogueMusicDuck);
     safeDisconnect(this.transientMusicDuck);
     safeDisconnect(this.ambienceDuck);
     safeDisconnect(this.master);
     safeDisconnect(this.limiter);
     this.buses = {};
+    this.ordinaryCombatBuses = {};
+    this.combatDuckTarget = 1;
+    this.combatForegroundCount = 0;
     this.dialogueMusicDuck = null;
     this.transientMusicDuck = null;
     this.ambienceDuck = null;
@@ -673,6 +689,14 @@ export class AudioMixer {
       this.buses[category] = bus;
       bus.connect(category === "bgm" ? this.transientMusicDuck : category === "ambience" ? this.ambienceDuck : this.master);
     }
+    // Ordinary shots/contacts have a separate gain before their existing
+    // category bus. Foreground cues bypass it, retaining user category levels.
+    for (const category of ORDINARY_COMBAT_CATEGORIES) {
+      const bus = context.createGain();
+      setParamValue(bus.gain, 1, context.currentTime);
+      bus.connect(this.buses[category]);
+      this.ordinaryCombatBuses[category] = bus;
+    }
     this.#applySettings();
   }
 
@@ -771,6 +795,24 @@ export class AudioMixer {
       else if (category === "ambience") volume = this.settings.sfxEnabled ? volume * this.settings.ambienceVolume * this.settings.sfxVolume : 0;
       else volume = this.settings.sfxEnabled ? volume * this.settings.sfxVolume : 0;
       setParamValue(this.buses[category]?.gain, clamp(volume, 0, 1), at);
+    }
+    this.#syncCombatDucking();
+  }
+
+  #syncCombatDucking() {
+    const audible = !this.settings.muted && this.settings.sfxEnabled
+      && this.settings.masterVolume > 0 && this.settings.sfxVolume > 0;
+    this.combatForegroundCount = audible ? [...this.activeVoices.values()].filter(voice => (
+      !voice.cleaned && voice.combatForeground && voice.volume > 0 && this.categoryVolumes[voice.category] > 0
+    )).length : 0;
+    const target = this.combatForegroundCount ? 0.45 : 1;
+    if (target === this.combatDuckTarget) return;
+    this.combatDuckTarget = target;
+    const now = this.context?.currentTime ?? 0;
+    for (const bus of Object.values(this.ordinaryCombatBuses)) {
+      cancelParamSchedule(bus.gain, now);
+      setParamValue(bus.gain, bus.gain.value ?? 1, now);
+      rampParamValue(bus.gain, target, now + (target < 1 ? 0.035 : 0.18));
     }
   }
 
@@ -1204,6 +1246,7 @@ export class AudioMixer {
     if (!voice || voice.cleaned) return;
     voice.cleaned = true;
     this.activeVoices.delete(voice.id);
+    this.#syncCombatDucking();
     safeDisconnect(voice.source);
     safeDisconnect(voice.gain);
     safeDisconnect(voice.panner);
@@ -1266,13 +1309,15 @@ export class AudioMixer {
     } else {
       setParamValue(gain.gain, volume, now);
     }
+    const combatForeground = foregroundCombatCue(asset, options, priority);
+    const destination = (!combatForeground && this.ordinaryCombatBuses[asset.category]) || this.buses[asset.category];
     source.connect(gain);
     if (panner) {
       setParamValue(panner.pan, clamp(options.pan ?? 0, -1, 1), now);
       gain.connect(panner);
-      panner.connect(this.buses[asset.category]);
+      panner.connect(destination);
     } else {
-      gain.connect(this.buses[asset.category]);
+      gain.connect(destination);
     }
     const id = `voice-${++this.voiceSequence}`;
     const voice = {
@@ -1281,6 +1326,7 @@ export class AudioMixer {
       assetId: asset.id,
       category: asset.category,
       priority,
+      combatForeground,
       instanceKey,
       dedupeKey: options.dedupeKey ?? null,
       source,
@@ -1311,6 +1357,7 @@ export class AudioMixer {
       this.#warn(`play:${asset.id}`, `Failed to start ${asset.id}; the cue was skipped.`, error);
       return null;
     }
+    this.#syncCombatDucking();
     return handle;
   }
 
@@ -1604,6 +1651,7 @@ export class AudioMixer {
       assetDecodeTimeoutMs: this.assetDecodeTimeoutMs,
       disposed: this.disposed,
       activeVoices: active.length,
+      combatMix: { foregroundVoices: this.combatForegroundCount, ordinaryTargetGain: this.combatDuckTarget },
       activeLoopVoices: active.filter((voice) => voice.loop).length,
       activeSceneVoices: active.filter((voice) => voice.instanceKey?.startsWith("scene:")).length,
       activeBgmVoices: active.filter((voice) => voice.category === "bgm").length,
@@ -1633,6 +1681,7 @@ export class AudioMixer {
       ),
       gainStages: {
         master: this.master?.gain?.value ?? 0,
+        ordinaryCombat: Object.fromEntries(ORDINARY_COMBAT_CATEGORIES.map(category => [category, this.ordinaryCombatBuses[category]?.gain?.value ?? 1])),
         dialogueMusicDuck: this.dialogueMusicDuck?.gain?.value ?? 0,
         transientMusicDuck: this.transientMusicDuck?.gain?.value ?? 0,
         dialogueAmbienceDuck: this.ambienceDuck?.gain?.value ?? 0,
@@ -1671,6 +1720,7 @@ export class AudioMixer {
     for (const item of [...this.preloadTasks.values()]) this.#settlePreloadTask(item, false);
     this.preloadTasks.clear();
     for (const bus of Object.values(this.buses)) safeDisconnect(bus);
+    for (const bus of Object.values(this.ordinaryCombatBuses)) safeDisconnect(bus);
     safeDisconnect(this.dialogueMusicDuck);
     safeDisconnect(this.transientMusicDuck);
     safeDisconnect(this.ambienceDuck);
@@ -1678,6 +1728,9 @@ export class AudioMixer {
     safeDisconnect(this.limiter);
     const context = this.context;
     this.buses = {};
+    this.ordinaryCombatBuses = {};
+    this.combatDuckTarget = 1;
+    this.combatForegroundCount = 0;
     this.dialogueMusicDuck = null;
     this.transientMusicDuck = null;
     this.ambienceDuck = null;

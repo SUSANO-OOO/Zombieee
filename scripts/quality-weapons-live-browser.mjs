@@ -52,7 +52,7 @@ try{
  });
  const deployed=new Set(),cues=new Map(),deadline=Date.now()+45000;let lastTap=0;
  while(Date.now()<deadline){
-  const snapshot=await page.evaluate(()=>{const s=window.__ASHFALL_BATTLE_QA__?.getSnapshot();return s?{time:s.time,running:s.running,fighters:s.fighters.map(f=>({id:f.id,kind:f.kind,side:f.side,hp:f.hp,attackSequence:f.attackSequence}))}:null;});
+  const snapshot=await page.evaluate(()=>{const s=window.__ASHFALL_BATTLE_QA__?.getSnapshot(),audio=window.__ASHFALL_AUDIO_QA__?.getDiagnostics();return s?{time:s.time,running:s.running,combatMix:audio?.combatMix??null,gainStages:audio?.gainStages??null,fighters:s.fighters.map(f=>({id:f.id,kind:f.kind,side:f.side,hp:f.hp,attackSequence:f.attackSequence}))}:null;});
   if(!snapshot?.running)break;
   report.snapshots.push(snapshot);
   for(const fighter of snapshot.fighters)if(fighter.side==='human')deployed.add(fighter.kind);

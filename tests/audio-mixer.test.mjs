@@ -247,6 +247,86 @@ async function flushAsyncWork() {
   for (let index = 0; index < 6; index += 1) await new Promise((resolve) => setImmediate(resolve));
 }
 
+test("foreground combat audio bypasses ordinary gain and overlapping voices release it only after the last end", async () => {
+  const context = new FakeAudioContext(), network = makeFetcher();
+  const mixer = createAudioMixer({ manifest: createTestManifest(), contextFactory: () => context, fetcher: network.fetcher });
+  await mixer.unlock();
+  const shot = await mixer.play("weapon-a");
+  const route = mixer.activeVoices.get(shot.id);
+  assert.equal((route.panner ?? route.gain).connections[0], mixer.ordinaryCombatBuses.weapons);
+  assert.equal(mixer.ordinaryCombatBuses.weapons.connections[0], mixer.buses.weapons);
+  const manualContact = await mixer.play("melee-hit", { dedupeKey: "manual-ability:42:1:impact" });
+  assert.equal(mixer.activeVoices.get(manualContact.id).combatForeground, true, "ability contact can reuse an ordinary weapon recording");
+  manualContact.stop();
+  const first = await mixer.play("voice-a"), second = await mixer.play("voice-b");
+  assert.deepEqual(mixer.getDiagnostics().combatMix, { foregroundVoices: 2, ordinaryTargetGain: .45 });
+  assert.equal(mixer.ordinaryCombatBuses.weapons.gain.events.at(-1).at, context.currentTime + .035);
+  const warning = await mixer.play("weapon-b", { duck: { level: .3 } });
+  const important = mixer.activeVoices.get(warning.id);
+  assert.equal((important.panner ?? important.gain).connections[0], mixer.buses.weapons, "important sound must not attenuate itself");
+  first.stop(); second.stop();
+  assert.equal(mixer.getDiagnostics().combatMix.ordinaryTargetGain, .45);
+  mixer.activeVoices.get(warning.id).source.end();
+  assert.deepEqual(mixer.getDiagnostics().combatMix, { foregroundVoices: 0, ordinaryTargetGain: 1 });
+  assert.equal(mixer.ordinaryCombatBuses.weapons.gain.events.at(-1).at, context.currentTime + .18);
+  assert.equal(mixer.activeVoices.has(shot.id), true, "ordinary shot remains playing");
+  mixer.dispose();
+});
+
+test("inaudible foreground, muted categories and stopped voices cannot leave ordinary combat attenuated", async () => {
+  const context = new FakeAudioContext(), network = makeFetcher();
+  const mixer = createAudioMixer({ manifest: createTestManifest(), contextFactory: () => context, fetcher: network.fetcher });
+  await mixer.unlock();
+  await mixer.play("voice-a", { volume: 0 });
+  assert.equal(mixer.getDiagnostics().combatMix.ordinaryTargetGain, 1);
+  await mixer.play("voice-b");
+  assert.equal(mixer.getDiagnostics().combatMix.ordinaryTargetGain, .45);
+  mixer.setCategoryVolume("humanVoices", 0);
+  assert.equal(mixer.getDiagnostics().combatMix.ordinaryTargetGain, 1);
+  mixer.setCategoryVolume("humanVoices", .9);
+  assert.equal(mixer.getDiagnostics().combatMix.ordinaryTargetGain, .45);
+  mixer.setSettings({ sfxEnabled: false });
+  assert.equal(mixer.getDiagnostics().combatMix.ordinaryTargetGain, 1);
+  mixer.setSettings({ sfxEnabled: true });
+  mixer.stopAll();
+  assert.deepEqual(mixer.getDiagnostics().combatMix, { foregroundVoices: 0, ordinaryTargetGain: 1 });
+  mixer.dispose();
+  assert.deepEqual(mixer.ordinaryCombatBuses, {});
+});
+
+test("rejected or failed voice playback never starts combat ducking; UI and music stay independent", async () => {
+  const context = new FakeAudioContext(), network = makeFetcher({ fail: new Set(["/audio/voice-b.ogg"]) });
+  const mixer = createAudioMixer({ manifest: createTestManifest(), contextFactory: () => context, fetcher: network.fetcher, maxVoices: 1, logger: { warn() {} } });
+  await mixer.unlock();
+  const music = await mixer.play("bgm-title", { priority: 500 });
+  assert.equal(await mixer.play("voice-a"), null);
+  assert.equal(mixer.getDiagnostics().combatMix.ordinaryTargetGain, 1);
+  music.stop();
+  assert.equal(await mixer.play("voice-b"), null);
+  await mixer.play("ui-click", { priority: 100 });
+  mixer.duckMusic({ level: .2 });
+  assert.equal(mixer.getDiagnostics().combatMix.ordinaryTargetGain, 1);
+  mixer.dispose();
+});
+
+test("authored ability sounds and eye warnings bypass the attenuation applied to ordinary monster contacts", async () => {
+  const context = new FakeAudioContext(), network = makeFetcher();
+  const mixer = createAudioMixer({ manifest: V100_AUDIO_MANIFEST, contextFactory: () => context, fetcher: network.fetcher });
+  await mixer.unlock();
+  const ability = await mixer.play("ability-tky-light-blade-charge");
+  assert.ok(ability);
+  assert.equal(mixer.activeVoices.get(ability.id).combatForeground, true);
+  assert.equal(mixer.getDiagnostics().combatMix.ordinaryTargetGain, .45);
+  assert.equal(mixer.ordinaryCombatBuses.monsters.gain.events.at(-1).value, .45);
+  const warning = await mixer.play("v104-eye-warning");
+  assert.ok(warning);
+  const warningVoice = mixer.activeVoices.get(warning.id);
+  assert.equal(warningVoice.combatForeground, true);
+  assert.equal((warningVoice.panner ?? warningVoice.gain).connections[0], mixer.buses.melee);
+  mixer.stopAll();
+  mixer.dispose();
+});
+
 function largeMusicMixer({ maxCacheBytes = 64 * 1024 * 1024, pcmBytes = 40 * 1024 * 1024 } = {}) {
   const context = new FakeAudioContext();
   context.decodeAudioData = async () => ({ length: pcmBytes / 8, numberOfChannels: 2, duration: 120 });
@@ -508,6 +588,7 @@ test("scene transitions crossfade once, dialogue and major cues duck music, and 
     loop: true,
   }]);
   assert.deepEqual(mixer.getDiagnostics().gainStages, {
+    ordinaryCombat: { weapons: 1, melee: 1, monsters: 1 },
     master: 0.9,
     dialogueMusicDuck: 1,
     transientMusicDuck: 1,
