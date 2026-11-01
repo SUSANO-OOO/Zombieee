@@ -142,3 +142,27 @@
  .v100-shell .game-frame .battle-banner { padding: 2px 4px; line-height: 1.25; }
  .v100-shell .game-frame .barrier-health { top: calc(86px + var(--app-viewport-safe-top)); }
 }
+
+/* Paused tactical inspection stays outside the live battlefield and its hit boxes. */
+.manual-tactics { margin-top:10px; border:1px solid #796445; background:#151a1c; text-align:left; color:#eee1c9; }
+.manual-tactics > summary { display:flex; align-items:center; justify-content:space-between; min-height:44px; padding:8px 12px; cursor:pointer; font:800 14px/1.4 sans-serif; list-style:none; }
+.manual-tactics > summary::before { content:'＋'; margin-right:8px; color:#e8b766; }
+.manual-tactics[open] > summary::before { content:'−'; }
+.manual-tactics > summary > span { margin-left:auto; font-size:12px; color:#c4b08c; }
+.manual-tactics > summary:focus-visible { outline:2px solid #f4c975; outline-offset:-3px; }
+.manual-tactics p { margin:7px 0; font:500 12px/1.6 sans-serif; letter-spacing:normal; overflow-wrap:anywhere; }
+.manual-tactics > p { margin:8px 12px; }
+.manual-tactics-roster { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; padding:0 10px 10px; }
+.manual-tactics article { min-width:0; border:1px solid #4e4b40; border-left:3px solid #9c7850; background:#222626; padding:10px; }
+.manual-tactics header { display:flex; flex-wrap:wrap; gap:6px; align-items:flex-start; justify-content:space-between; }
+.manual-tactics h3 { margin:0; font:800 14px/1.4 sans-serif; color:#f3dfb5; }
+.manual-tactics h3 > span { display:block; font-size:12px; color:#d4bb8e; }
+.manual-tactics header > b { padding:3px 6px; background:#363831; color:#ccc5b6; font:700 11px/1.4 sans-serif; }
+.manual-tactics header > b.ready { background:#314b3b; color:#d4efc3; }
+.manual-tactics .manual-tactics-target { color:#f4cb7d; font-weight:700; }
+.manual-tactics .manual-tactics-use { padding-top:7px; border-top:1px solid #4e4b40; color:#d6d5ca; }
+.manual-tactics-use strong { display:block; color:#bda881; font-size:11px; }
+@media(max-width:600px) { .manual-tactics-roster { grid-template-columns:1fr; } }
+
+.pause-panel:has(.manual-tactics[open]) { scroll-padding-top:58px; }
+.pause-panel:has(.manual-tactics[open]) .pause-actions { position:sticky; top:0; z-index:3; background:#191917; box-shadow:0 5px 8px #111; }

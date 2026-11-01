@@ -14,6 +14,8 @@ import { createV100HumanWalkRenderer, v100HumanWalkPhase, v100UsesHumanWalk, v10
 import { V177_JOINT_ATLASES, v177JointCycleDistance, v177JointPose, v177RangerFootPlan, v105BipedFootPlan, drawV177JointPose, v177CaptureJointPose, v177RenderedJointWeaponSocket, v177RenderedWeightedLowerReceipt } from "./v177JointPresentation.js";
 import {battleVoiceReady,queueV104HumanHurt,v104ContactIsHard,v104SupplementalEnemyVoice} from "./v104CombatAudio.js";
 import {createManualAbilityPointerHold} from "./manualAbilityUi.js";
+import {manualAbilityTacticalView} from "./manualAbilityTactics.js";
+import {ManualAbilityTactics} from "./BattleAbilityGuide";
 import {drawV104WeaponWake,drawV104InfectedWake,drawV104EyeBeam,drawV104CrossbowBolt,drawV104BiteContact,v104WeaponWakeCandidate,v104MeleeImpactPoint} from "./v104CombatVfx.js";
 import { v177GroundedStrideFactor } from "./v177GroundedMotion.js";
 import {getV177RangerLowerPaintSnapshot} from "./v177RangerLowerPaint.js";
@@ -25368,6 +25370,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             {!isSurvivalBattle && <button onClick={() => requestPauseAction("loadout")}>編成画面へ戻る</button>}
             <button className="danger" onClick={() => requestPauseAction("withdraw")}>{externalSessionActive ? "ステージ選択へ撤退" : "エリアマップへ撤退"}</button>
           </div>
+          <ManualAbilityTactics entries={gameRef.current.fighters
+            .filter(fighter=>fighter.side==='human' && fighter.hp>0 && fighter.manualAbility)
+            .map(owner=>manualAbilityTacticalView({owner,fighters:manualAbilityTargetCandidates(gameRef.current,owner),actionSelected:Boolean(selectedAction)}))
+            .filter((entry): entry is NonNullable<typeof entry> => entry!==null)} />
           {externalSettingsPending && <p role="status">設定を保存しています…</p>}
           {externalSettingsRetry && !externalSettingsPending && <p role="alert">設定を保存できませんでした。変更前の設定を維持しています。<button onClick={() => void commitExternalSettings(externalSettingsRetry)}>設定の保存を再試行</button></p>}
           <section className="pause-volume" aria-label="音量設定"><h3>音量設定</h3>

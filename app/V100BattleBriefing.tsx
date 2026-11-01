@@ -19,7 +19,7 @@ export function V100BattleBriefing({children,initiallyShowControls=false,allowCo
         {controls?<>
           <ol className="v100-battle-instructions">
             <li><span aria-hidden="true">01</span><h3>仲間を呼ぶ</h3><p>画面下のカードを押すと、車両から出撃。移動と通常攻撃は、仲間が自動で行う。</p></li>
-            <li><span aria-hidden="true">02</span><h3>固有技を使う</h3><p>仲間の頭上に出る技ボタンを押そう。技ごとの準備が終わると、また使える。</p></li>
+            <li><span aria-hidden="true">02</span><h3>固有技を使う</h3><p>仲間の頭上の技ボタンで発動。使いどきや狙い先に迷ったら、一時停止から「仲間の技」を確かめよう。</p></li>
             <li><span aria-hidden="true">03</span><h3>支援を使う</h3><p>航空支援は、ボタンを押してから戦場で着弾地点を選ぶ。車両砲撃はボタンを押すだけ。どちらも支援ゲージが必要だ。</p></li>
           </ol>
           <p className="v100-battle-instructions-note">指揮は時間で回復する。仲間は同時に7体まで。車両の耐久がなくなる前に、画面上の目標を達成しよう。</p>
