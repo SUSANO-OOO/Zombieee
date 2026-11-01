@@ -35,7 +35,7 @@ function record(kind,plan,{direction='right',scale=1,x=0,y=0}={}){
 }
 for(const kind of kinds){
  const dir=new URL('../assets/source/v100/joints/'+kind+'-r1/',import.meta.url),d=JSON.parse(await readFile(new URL('parts.json',dir))),motion=JSON.parse(gunzipSync(await readFile(new URL('motion.json.gz',dir)))),atlas=V177_JOINT_ATLASES[kind];
- const currentDefinition=['medic','engineer'].includes(kind)?JSON.parse(await readFile(`assets/source/quality-20261028/rigs/${kind}-combat-r1/parts.json`)):d;
+ const currentDefinition=['gunner','medic','engineer'].includes(kind)?JSON.parse(await readFile(`assets/source/quality-20261028/rigs/${kind}-combat-r1/parts.json`)):d;
  const matrixFor=(raw,bone)=>raw[atlas.parts.findIndex(p=>p.bone===bone)];
  test(kind+': evaluated Blender limbs retain fixed lengths, planted painted soles and both original grips',async()=>{
   const soles=[];for(const leg of d.rig.legs){
@@ -57,7 +57,7 @@ for(const kind of kinds){
   }
   for(const [measure,value]of Object.entries({boneError,groundError,drift,gripError}))assert.ok(value<.001,JSON.stringify({kind,measure,value}));
   const walk=motion.actions.find(a=>a.name==='walk');assert.ok(Math.abs(walk.frames.at(-1).bones.root.head[0]-walk.frames[0].bones.root.head[0]-atlas.cycleDistance)<.001);
-  assert.ok(Math.abs(v177JointCycleDistance(kind,.2)-atlas.cycleDistance/d.referenceFrame.scale*.2)<1e-10);
+  assert.ok(Math.abs(v177JointCycleDistance(kind,.2)-atlas.cycleDistance/currentDefinition.referenceFrame.scale*.2)<1e-10);
  });
  test(kind+': production interpolation keeps elbows and both weapon grips attached through travel, aim, recoil and recovery',()=>{
   const d=currentDefinition;

@@ -233,7 +233,7 @@ export function v177JointPose(kind, sample, runtime, { grounded=false,ownedPose=
       upperOffsetY:offset+(nextOffset-offset)*settleBlend};
     if((kind==='medic'||kind==='engineer'||kind==='gunner')&&attackStates.has(state)){
       const spine=jointMatrix(new Float64Array(6),atlas,plan,'spine',true);
-      const follow=v177FirearmUpperMotion(kind,sample,spine,{actor:actualActor,world});
+      const follow=v177FirearmUpperMotion(kind,sample,spine,{actor:actualActor,world,waist:atlas.interpolationPivots?.spine});
       if(follow)plan.firearmUpperTransform=follow;
       const pullback=v177FirearmWeaponPullback(kind,sample);
       if(pullback)plan.firearmWeaponPullback=pullback;

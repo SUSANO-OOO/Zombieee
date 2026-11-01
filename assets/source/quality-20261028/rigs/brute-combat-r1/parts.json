@@ -1,0 +1,1451 @@
+{
+  "schema": "zombieee-authored-combat-parts/1",
+  "kind": "brute",
+  "status": "candidate-not-motion-or-producer-accepted",
+  "width": 480,
+  "height": 448,
+  "paintStyle": "source-pixel-combat-model",
+  "sourceSha256": "b5a353e527dcf5f258710999768e50d9644a96a017d7c339910d5d354f2d9c95",
+  "sheetSha256": "a5c3386c0f51c8d98bdbe41471fd01b3de2693362bd55e7d391eb579e1f56282",
+  "modelSource": "assets/source/quality-20261028/rigs/brute-combat-r1/combat-model-r1.png",
+  "parts": [
+    {
+      "name": "far-upper-arm",
+      "bone": "arm-1-upper",
+      "file": "far-upper-arm.png",
+      "sha256": "a77624f00afdb1fb85cedcea1a141e15d5e51254266bbf1571ce0a5033b5c9d5",
+      "source": "model",
+      "masterPolygon": [
+        [
+          641,
+          260
+        ],
+        [
+          691,
+          261
+        ],
+        [
+          735,
+          286
+        ],
+        [
+          767,
+          334
+        ],
+        [
+          783,
+          378
+        ],
+        [
+          788,
+          414
+        ],
+        [
+          795,
+          459
+        ],
+        [
+          780,
+          481
+        ],
+        [
+          742,
+          485
+        ],
+        [
+          700,
+          450
+        ],
+        [
+          671,
+          410
+        ],
+        [
+          643,
+          366
+        ],
+        [
+          621,
+          312
+        ]
+      ]
+    },
+    {
+      "name": "far-forearm",
+      "bone": "arm-1-lower",
+      "file": "far-forearm.png",
+      "sha256": "a57a8a762361b99e040589b0d14c34268caee4bf5735f1fab8d3e87c9a3ab50d",
+      "source": "model",
+      "masterPolygon": [
+        [
+          751,
+          463
+        ],
+        [
+          784,
+          454
+        ],
+        [
+          814,
+          480
+        ],
+        [
+          820,
+          518
+        ],
+        [
+          810,
+          551
+        ],
+        [
+          784,
+          578
+        ],
+        [
+          751,
+          577
+        ],
+        [
+          726,
+          557
+        ],
+        [
+          710,
+          534
+        ],
+        [
+          716,
+          505
+        ]
+      ]
+    },
+    {
+      "name": "far-thigh",
+      "bone": "leg-0-upper",
+      "file": "far-thigh.png",
+      "sha256": "be7e3d6406b0a46ad2a5cd8b3d6f2d1349e5a4b7062b9e62d15c48562e96f11f",
+      "source": "model",
+      "masterPolygon": [
+        [
+          563,
+          571
+        ],
+        [
+          622,
+          576
+        ],
+        [
+          672,
+          616
+        ],
+        [
+          721,
+          656
+        ],
+        [
+          762,
+          709
+        ],
+        [
+          806,
+          756
+        ],
+        [
+          838,
+          805
+        ],
+        [
+          832,
+          854
+        ],
+        [
+          800,
+          887
+        ],
+        [
+          757,
+          894
+        ],
+        [
+          710,
+          860
+        ],
+        [
+          666,
+          811
+        ],
+        [
+          623,
+          773
+        ],
+        [
+          570,
+          715
+        ],
+        [
+          537,
+          658
+        ]
+      ]
+    },
+    {
+      "name": "far-shin",
+      "bone": "leg-0-lower",
+      "file": "far-shin.png",
+      "sha256": "35bf3fc31b6f6c88ea6fe8ffef97127f02baab2a65a646c31795ad448856f949",
+      "source": "model",
+      "masterPolygon": [
+        [
+          738,
+          824
+        ],
+        [
+          813,
+          820
+        ],
+        [
+          841,
+          857
+        ],
+        [
+          845,
+          909
+        ],
+        [
+          850,
+          950
+        ],
+        [
+          854,
+          990
+        ],
+        [
+          825,
+          1022
+        ],
+        [
+          768,
+          1030
+        ],
+        [
+          731,
+          1005
+        ],
+        [
+          710,
+          963
+        ],
+        [
+          705,
+          916
+        ],
+        [
+          719,
+          873
+        ]
+      ]
+    },
+    {
+      "name": "far-boot",
+      "bone": "leg-0-foot",
+      "file": "far-boot.png",
+      "sha256": "f5088e76d47453c1daf0da23ffd34573bdfac467a3fc9b642b781206764cfc73",
+      "source": "model",
+      "masterPolygon": [
+        [
+          736,
+          978
+        ],
+        [
+          832,
+          970
+        ],
+        [
+          853,
+          1011
+        ],
+        [
+          859,
+          1062
+        ],
+        [
+          893,
+          1096
+        ],
+        [
+          941,
+          1107
+        ],
+        [
+          976,
+          1131
+        ],
+        [
+          989,
+          1166
+        ],
+        [
+          947,
+          1181
+        ],
+        [
+          856,
+          1176
+        ],
+        [
+          783,
+          1174
+        ],
+        [
+          720,
+          1157
+        ],
+        [
+          720,
+          1124
+        ],
+        [
+          732,
+          1077
+        ]
+      ]
+    },
+    {
+      "name": "near-thigh",
+      "bone": "leg-1-upper",
+      "file": "near-thigh.png",
+      "sha256": "72dcd5e54e952fe911cff48f0c6b1db8d07cba0862ea86213163620a549ce455",
+      "source": "under",
+      "masterPolygon": [
+        [
+          432,
+          552
+        ],
+        [
+          507,
+          560
+        ],
+        [
+          552,
+          614
+        ],
+        [
+          543,
+          672
+        ],
+        [
+          498,
+          730
+        ],
+        [
+          444,
+          789
+        ],
+        [
+          409,
+          843
+        ],
+        [
+          370,
+          889
+        ],
+        [
+          321,
+          909
+        ],
+        [
+          270,
+          883
+        ],
+        [
+          243,
+          848
+        ],
+        [
+          268,
+          792
+        ],
+        [
+          306,
+          739
+        ],
+        [
+          358,
+          673
+        ],
+        [
+          397,
+          607
+        ]
+      ]
+    },
+    {
+      "name": "near-shin",
+      "bone": "leg-1-lower",
+      "file": "near-shin.png",
+      "sha256": "ea919c666c9df22e20764cf911f57d2f287f5790fe4ec716ce5ef58e3cb2ac6e",
+      "source": "model",
+      "masterPolygon": [
+        [
+          280,
+          819
+        ],
+        [
+          355,
+          835
+        ],
+        [
+          392,
+          872
+        ],
+        [
+          363,
+          913
+        ],
+        [
+          331,
+          957
+        ],
+        [
+          298,
+          1003
+        ],
+        [
+          258,
+          1032
+        ],
+        [
+          201,
+          1016
+        ],
+        [
+          173,
+          990
+        ],
+        [
+          176,
+          953
+        ],
+        [
+          203,
+          910
+        ],
+        [
+          239,
+          859
+        ]
+      ]
+    },
+    {
+      "name": "near-boot",
+      "bone": "leg-1-foot",
+      "file": "near-boot.png",
+      "sha256": "6c4fa57fcfa6e067fab473fa5bbf8e015397dad6b36a0b7212b0ee3ff987bd2f",
+      "source": "model",
+      "masterPolygon": [
+        [
+          185,
+          983
+        ],
+        [
+          273,
+          993
+        ],
+        [
+          277,
+          1037
+        ],
+        [
+          267,
+          1071
+        ],
+        [
+          292,
+          1104
+        ],
+        [
+          345,
+          1106
+        ],
+        [
+          380,
+          1126
+        ],
+        [
+          391,
+          1164
+        ],
+        [
+          360,
+          1181
+        ],
+        [
+          278,
+          1180
+        ],
+        [
+          208,
+          1171
+        ],
+        [
+          141,
+          1155
+        ],
+        [
+          139,
+          1125
+        ],
+        [
+          152,
+          1082
+        ],
+        [
+          166,
+          1028
+        ]
+      ]
+    },
+    {
+      "name": "pelvis",
+      "bone": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "a5e72ab4fa81052ac88680ee84d196dd3965563643a609fc616a2812f97c583b",
+      "source": "under",
+      "masterPolygon": [
+        [
+          409,
+          456
+        ],
+        [
+          505,
+          472
+        ],
+        [
+          596,
+          476
+        ],
+        [
+          651,
+          493
+        ],
+        [
+          671,
+          553
+        ],
+        [
+          707,
+          603
+        ],
+        [
+          717,
+          651
+        ],
+        [
+          669,
+          681
+        ],
+        [
+          600,
+          688
+        ],
+        [
+          537,
+          673
+        ],
+        [
+          475,
+          674
+        ],
+        [
+          412,
+          665
+        ],
+        [
+          377,
+          619
+        ],
+        [
+          386,
+          552
+        ]
+      ]
+    },
+    {
+      "name": "torso",
+      "bone": "spine",
+      "file": "torso.png",
+      "sha256": "d63ca42f2f01d5b12635c29efc0525622c57bf8756ea9756343919020589f9d6",
+      "source": "under",
+      "masterPolygon": [
+        [
+          443,
+          200
+        ],
+        [
+          494,
+          208
+        ],
+        [
+          530,
+          239
+        ],
+        [
+          580,
+          256
+        ],
+        [
+          626,
+          227
+        ],
+        [
+          664,
+          245
+        ],
+        [
+          696,
+          288
+        ],
+        [
+          692,
+          345
+        ],
+        [
+          681,
+          399
+        ],
+        [
+          652,
+          450
+        ],
+        [
+          651,
+          492
+        ],
+        [
+          604,
+          521
+        ],
+        [
+          542,
+          514
+        ],
+        [
+          479,
+          503
+        ],
+        [
+          424,
+          489
+        ],
+        [
+          376,
+          474
+        ],
+        [
+          374,
+          431
+        ],
+        [
+          383,
+          389
+        ],
+        [
+          369,
+          340
+        ],
+        [
+          350,
+          297
+        ],
+        [
+          363,
+          251
+        ],
+        [
+          398,
+          215
+        ]
+      ]
+    },
+    {
+      "name": "head",
+      "bone": "head",
+      "file": "head.png",
+      "sha256": "e7613bf0dd5099954680bcc45cd6856a58dc231b3118a5381ce5050111c48e79",
+      "source": "model",
+      "masterPolygon": [
+        [
+          449,
+          212
+        ],
+        [
+          438,
+          170
+        ],
+        [
+          443,
+          125
+        ],
+        [
+          471,
+          86
+        ],
+        [
+          521,
+          55
+        ],
+        [
+          575,
+          57
+        ],
+        [
+          626,
+          79
+        ],
+        [
+          659,
+          109
+        ],
+        [
+          681,
+          145
+        ],
+        [
+          665,
+          193
+        ],
+        [
+          653,
+          231
+        ],
+        [
+          623,
+          252
+        ],
+        [
+          584,
+          271
+        ],
+        [
+          557,
+          292
+        ],
+        [
+          522,
+          282
+        ],
+        [
+          496,
+          253
+        ],
+        [
+          479,
+          226
+        ]
+      ]
+    },
+    {
+      "name": "near-upper-arm",
+      "bone": "arm-0-upper",
+      "file": "near-upper-arm.png",
+      "sha256": "1a7c9c75dae53d3aae83327cf6bfeee4ee62b5ce2971c1dfb2eb793b8bf52ba7",
+      "source": "model",
+      "masterPolygon": [
+        [
+          339,
+          229
+        ],
+        [
+          385,
+          215
+        ],
+        [
+          420,
+          245
+        ],
+        [
+          415,
+          292
+        ],
+        [
+          392,
+          339
+        ],
+        [
+          359,
+          377
+        ],
+        [
+          339,
+          419
+        ],
+        [
+          319,
+          453
+        ],
+        [
+          281,
+          464
+        ],
+        [
+          242,
+          447
+        ],
+        [
+          217,
+          418
+        ],
+        [
+          234,
+          374
+        ],
+        [
+          262,
+          325
+        ],
+        [
+          289,
+          275
+        ]
+      ]
+    },
+    {
+      "name": "near-forearm",
+      "bone": "arm-0-lower",
+      "file": "near-forearm.png",
+      "sha256": "4842e4adcb9e3d7d44e63b9afd3b1f5872f4bb8f65a82fb93c99965be5087dba",
+      "source": "model",
+      "masterPolygon": [
+        [
+          240,
+          398
+        ],
+        [
+          293,
+          386
+        ],
+        [
+          327,
+          410
+        ],
+        [
+          343,
+          452
+        ],
+        [
+          361,
+          490
+        ],
+        [
+          380,
+          530
+        ],
+        [
+          372,
+          566
+        ],
+        [
+          347,
+          583
+        ],
+        [
+          314,
+          568
+        ],
+        [
+          294,
+          535
+        ],
+        [
+          265,
+          495
+        ],
+        [
+          238,
+          452
+        ],
+        [
+          225,
+          420
+        ]
+      ]
+    },
+    {
+      "name": "weapon-and-hands",
+      "bone": "weapon-0",
+      "file": "weapon-and-hands.png",
+      "sha256": "b8bae6ec840542d89330a9dcacf21e054486701c3fc2e95ce9693abace32c355",
+      "source": "model",
+      "masterPolygon": [
+        [
+          69,
+          704
+        ],
+        [
+          92,
+          676
+        ],
+        [
+          159,
+          633
+        ],
+        [
+          181,
+          620
+        ],
+        [
+          295,
+          589
+        ],
+        [
+          315,
+          561
+        ],
+        [
+          345,
+          540
+        ],
+        [
+          380,
+          548
+        ],
+        [
+          408,
+          563
+        ],
+        [
+          420,
+          575
+        ],
+        [
+          678,
+          493
+        ],
+        [
+          675,
+          469
+        ],
+        [
+          696,
+          453
+        ],
+        [
+          725,
+          442
+        ],
+        [
+          755,
+          442
+        ],
+        [
+          782,
+          459
+        ],
+        [
+          920,
+          382
+        ],
+        [
+          1009,
+          322
+        ],
+        [
+          985,
+          275
+        ],
+        [
+          946,
+          209
+        ],
+        [
+          917,
+          164
+        ],
+        [
+          929,
+          136
+        ],
+        [
+          1061,
+          46
+        ],
+        [
+          1100,
+          45
+        ],
+        [
+          1161,
+          136
+        ],
+        [
+          1183,
+          184
+        ],
+        [
+          1217,
+          216
+        ],
+        [
+          1245,
+          278
+        ],
+        [
+          1290,
+          352
+        ],
+        [
+          1290,
+          388
+        ],
+        [
+          1184,
+          466
+        ],
+        [
+          1138,
+          481
+        ],
+        [
+          1097,
+          422
+        ],
+        [
+          1062,
+          365
+        ],
+        [
+          1013,
+          373
+        ],
+        [
+          796,
+          494
+        ],
+        [
+          784,
+          524
+        ],
+        [
+          753,
+          543
+        ],
+        [
+          707,
+          541
+        ],
+        [
+          693,
+          526
+        ],
+        [
+          428,
+          614
+        ],
+        [
+          407,
+          640
+        ],
+        [
+          378,
+          651
+        ],
+        [
+          340,
+          646
+        ],
+        [
+          323,
+          627
+        ],
+        [
+          213,
+          674
+        ],
+        [
+          183,
+          683
+        ],
+        [
+          157,
+          718
+        ],
+        [
+          122,
+          751
+        ],
+        [
+          81,
+          765
+        ],
+        [
+          68,
+          747
+        ]
+      ]
+    }
+  ],
+  "order": [
+    "far-upper-arm",
+    "far-forearm",
+    "far-thigh",
+    "far-shin",
+    "far-boot",
+    "near-thigh",
+    "near-shin",
+    "near-boot",
+    "pelvis",
+    "torso",
+    "head",
+    "near-upper-arm",
+    "near-forearm",
+    "weapon-and-hands"
+  ],
+  "lowerLayers": [
+    "far-thigh",
+    "far-shin",
+    "far-boot",
+    "near-thigh",
+    "near-shin",
+    "near-boot",
+    "pelvis"
+  ],
+  "pelvisY": 199.76878612716763,
+  "upperFollowsPelvis": true,
+  "reserveBipedLanding": true,
+  "atlasPacking": "height-descending-shelves",
+  "atlasPartPadding": 3,
+  "identityBinding": {
+    "path": "/art/v070/characters/brute-battle-v1.png",
+    "sourceSha256": "8b51f82432280661d6bb35786ee74c8e583f4da22ac4805e80072750657a2b95",
+    "sourceRect": {
+      "x": 480,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "referenceTransform": {
+      "scale": 1,
+      "tx": 0.5,
+      "ty": 0,
+      "flipX": false
+    },
+    "modelSource": "assets/source/quality-20261028/identity/tatara-master-r4.png",
+    "modelSha256": "dc28b9b8cedb6b96fe14c5003f510466056baf06ea172cceccc83727a08d2def",
+    "combatSource": "assets/source/quality-20261028/rigs/brute-combat-r1/combat-model-r1.png",
+    "combatSha256": "b5a353e527dcf5f258710999768e50d9644a96a017d7c339910d5d354f2d9c95"
+  },
+  "interpolationPivots": {
+    "spine": [
+      197.6905311778291,
+      199.76878612716763
+    ],
+    "head": [
+      202.86374133949192,
+      92.48554913294798
+    ],
+    "weapon-0": [
+      140.0461893764434,
+      223.8150289017341
+    ]
+  },
+  "parentAttachments": {
+    "head": {
+      "parent": "spine",
+      "pivot": [
+        202.86374133949192,
+        92.48554913294798
+      ]
+    }
+  },
+  "referenceFrame": {
+    "width": 480,
+    "height": 448,
+    "scale": 1,
+    "tx": 0,
+    "ty": 0
+  },
+  "motion": {
+    "walk": {
+      "spanPx": 76,
+      "liftPx": 12,
+      "stanceFraction": 0.7,
+      "groundY": 432
+    },
+    "paintBounds": {
+      "x": 0,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    }
+  },
+  "muzzle": [
+    460.0461893764434,
+    137.2485549132948
+  ],
+  "weaponBone": "weapon-0",
+  "rig": {
+    "root": [
+      240,
+      432
+    ],
+    "pelvis": [
+      [
+        197.6905311778291,
+        199.76878612716763
+      ],
+      [
+        235,
+        183
+      ]
+    ],
+    "spine": [
+      [
+        197.6905311778291,
+        199.76878612716763
+      ],
+      [
+        197.6905311778291,
+        133.17919075144508
+      ]
+    ],
+    "head": [
+      [
+        202.86374133949192,
+        92.48554913294798
+      ],
+      [
+        213.94919168591224,
+        59.190751445086704
+      ]
+    ],
+    "legs": [
+      {
+        "hip": [
+          229.09930715935334,
+          236.76300578034682
+        ],
+        "knee": [
+          288.9607390300231,
+          311.12138728323697
+        ],
+        "ankle": [
+          296.35103926096997,
+          395.83815028901734
+        ],
+        "toe": [
+          349.5612009237875,
+          422.47398843930637
+        ],
+        "offset": 0.5,
+        "center": 280,
+        "paintedPaw": "far-boot",
+        "groundAnkleY": 396.83815028901734,
+        "paintedSoleY": 431
+      },
+      {
+        "hip": [
+          172.19399538106236,
+          236.76300578034682
+        ],
+        "knee": [
+          121.57043879907621,
+          314.8208092485549
+        ],
+        "ankle": [
+          85.72748267898383,
+          396.5780346820809
+        ],
+        "toe": [
+          132.28637413394918,
+          424.32369942196533
+        ],
+        "offset": 0,
+        "center": 170,
+        "paintedPaw": "near-boot",
+        "groundAnkleY": 396.5780346820809,
+        "paintedSoleY": 432
+      }
+    ],
+    "arms": [
+      {
+        "shoulder": [
+          137.45958429561202,
+          108.76300578034682
+        ],
+        "elbow": [
+          102.72517321016166,
+          159.07514450867052
+        ],
+        "wrist": [
+          129.33025404157044,
+          210.1271676300578
+        ],
+        "grip": [
+          140.0461893764434,
+          223.8150289017341
+        ]
+      },
+      {
+        "shoulder": [
+          255.70438799076211,
+          120.97109826589596
+        ],
+        "elbow": [
+          291.17782909930713,
+          194.58959537572255
+        ],
+        "wrist": [
+          273.44110854503464,
+          183.8612716763006
+        ],
+        "grip": [
+          269.7459584295612,
+          183.121387283237
+        ]
+      }
+    ],
+    "firearm": false,
+    "weapons": [
+      {
+        "name": "weapon-0",
+        "a": [
+          140.0461893764434,
+          223.8150289017341
+        ],
+        "b": [
+          460.0461893764434,
+          137.2485549132948
+        ],
+        "armIndex": 0,
+        "supportArm": 1
+      }
+    ],
+    "attack": {
+      "style": "hammer",
+      "windupEnd": 0.28,
+      "activeEnd": 0.55,
+      "aimAngle": 1.88986592246727,
+      "aimShift": [
+        90,
+        16
+      ],
+      "recoilPx": 0,
+      "anticipationShift": [
+        -5,
+        7
+      ],
+      "attackAngle": 2.05,
+      "anticipationAngle": -0.1,
+      "torsoAngle": 0.7,
+      "torsoEase": "out-cubic",
+      "torsoAnticipation": 0.11,
+      "walkWeaponSwing": 2
+    }
+  },
+  "armConstraints": [
+    {
+      "parentBone": "spine",
+      "upperBone": "arm-0-upper",
+      "lowerBone": "arm-0-lower",
+      "effectorBone": "weapon-0",
+      "bendSign": 1,
+      "shoulder": [
+        137.45958429561202,
+        108.76300578034682
+      ],
+      "elbow": [
+        102.72517321016166,
+        159.07514450867052
+      ],
+      "wrist": [
+        129.33025404157044,
+        210.1271676300578
+      ],
+      "grip": [
+        140.0461893764434,
+        223.8150289017341
+      ]
+    },
+    {
+      "parentBone": "spine",
+      "upperBone": "arm-1-upper",
+      "lowerBone": "arm-1-lower",
+      "effectorBone": "weapon-0",
+      "bendSign": -1,
+      "shoulder": [
+        255.70438799076211,
+        120.97109826589596
+      ],
+      "elbow": [
+        291.17782909930713,
+        194.58959537572255
+      ],
+      "wrist": [
+        273.44110854503464,
+        183.8612716763006
+      ],
+      "grip": [
+        269.7459584295612,
+        183.121387283237
+      ]
+    }
+  ],
+  "legConstraints": [
+    {
+      "parentBone": "pelvis",
+      "parentUpper": false,
+      "upperBone": "leg-0-upper",
+      "lowerBone": "leg-0-lower",
+      "effectorBone": "leg-0-foot",
+      "hip": [
+        229.09930715935334,
+        236.76300578034682
+      ],
+      "knee": [
+        288.9607390300231,
+        311.12138728323697
+      ],
+      "ankle": [
+        296.35103926096997,
+        395.83815028901734
+      ]
+    },
+    {
+      "parentBone": "pelvis",
+      "parentUpper": false,
+      "upperBone": "leg-1-upper",
+      "lowerBone": "leg-1-lower",
+      "effectorBone": "leg-1-foot",
+      "hip": [
+        172.19399538106236,
+        236.76300578034682
+      ],
+      "knee": [
+        121.57043879907621,
+        314.8208092485549
+      ],
+      "ankle": [
+        85.72748267898383,
+        396.5780346820809
+      ]
+    }
+  ],
+  "sourceOperation": {
+    "body": "Complete adopted-model repaint, not a head-only replacement",
+    "underpainting": "assets/source/quality-20261028/rigs/brute-combat-r1/body-underpainting-r1.png",
+    "underpaintingSha256": "a5c3386c0f51c8d98bdbe41471fd01b3de2693362bd55e7d391eb579e1f56282",
+    "hiddenBody": "Source-bound chest, belt and coat underpainting beneath moving arms and blade",
+    "weapon": "Both hands and the complete industrial hammer share one transform",
+    "sourceToLogical": {
+      "source": [
+        1299,
+        1211
+      ],
+      "resized": [
+        480,
+        448
+      ]
+    },
+    "acceptance": false
+  }
+}

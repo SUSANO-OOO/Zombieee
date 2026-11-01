@@ -58,4 +58,12 @@ const musashi=read('../assets/source/quality-20261028/rigs/miyamoto-musashi-comb
 const musashiIndex=rows.findIndex(row=>row.path==='/art/v100/joints/miyamoto-musashi-quality-neck-r4.webp');
 assert.ok(musashiIndex>=0,'Complete Musashi body replaces head-only predecessor');
 rows[musashiIndex]=asset(musashi);
+const brute=read('../assets/source/quality-20261028/rigs/brute-combat-r1/provenance.json');
+const bruteIndex=rows.findIndex(row=>row.path==='/art/v100/joints/brute-quality-neck-r4.webp');
+assert.ok(bruteIndex>=0,'Complete Tatara body replaces head-only predecessor');
+rows[bruteIndex]=asset(brute);
+const gunner=read('../assets/source/quality-20261028/rigs/gunner-combat-r1/provenance.json');
+const gunnerIndex=rows.findIndex(row=>row.path==='/art/v100/joints/gunner-quality-neck-r4.webp');
+assert.ok(gunnerIndex>=0,'Complete Raider body replaces head-only predecessor');
+rows[gunnerIndex]=asset(gunner);
 export const V177_JOINT_ASSET_ADDITIONS=Object.freeze(rows);

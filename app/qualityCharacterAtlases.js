@@ -1,3 +1,5 @@
+import {QUALITY_TATARA_COMBAT_ATLAS} from './qualityTataraCombatJointData.js';
+import {QUALITY_RAIDER_COMBAT_ATLAS} from './qualityRaiderCombatJointData.js';
 import {QUALITY_MUSASHI_COMBAT_ATLAS} from './qualityMusashiCombatJointData.js';
 import {QUALITY_CHIHA_COMBAT_ATLAS} from './qualityChihaCombatJointData.js';
 import {withQualityBabaCombatRig} from './qualityBabaCombatRig.js';
@@ -50,6 +52,8 @@ export const QUALITY_CHARACTER_ATLASES=Object.freeze({
  ranger:QUALITY_RANGER_COMBAT_ATLAS,
  'mrs-chiha':QUALITY_CHIHA_COMBAT_ATLAS,
  'miyamoto-musashi':QUALITY_MUSASHI_COMBAT_ATLAS,
+ brute:QUALITY_TATARA_COMBAT_ATLAS,
+ gunner:QUALITY_RAIDER_COMBAT_ATLAS,
  tky:QUALITY_TKY_COMBAT_ATLAS,
  zakimiya:QUALITY_ZAKIMIYA_COMBAT_ATLAS,
 });

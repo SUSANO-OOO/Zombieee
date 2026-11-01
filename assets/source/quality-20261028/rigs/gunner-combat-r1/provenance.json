@@ -1,0 +1,126 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "gunner",
+  "assetPath": "/art/v100/joints/gunner-combat-r1.webp",
+  "bytes": 41828,
+  "sha256": "32fd3bce321810958cd2dc673f0dcadfe24d8843943e62270b01e992a7697f54",
+  "atlasPacking": "height-descending-shelves",
+  "generatedPartsStudySha256": "1a3e9d0035151338d966a1d617bdd177d1ebd4712077fa9ff3cb9231964c9662",
+  "identitySourceSha256": "311055d04458976d1481182b3b51989dc5e5aada8354ce99ee7920443535ceb4",
+  "identityBinding": {
+    "path": "/art/v070/characters/gunner-battle-v1.png",
+    "sourceSha256": "b47f4ecfe80d2c8bd8dcbb42f71d76b9092a1506a5db6eeca4aefb584f6387a7",
+    "sourceRect": {
+      "x": 480,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "referenceTransform": {
+      "scale": 1.178470254957507,
+      "tx": -42.83286118980169,
+      "ty": -77.09915014164301,
+      "flipX": false
+    },
+    "modelSource": "assets/source/quality-20261028/identity/raider-master-r4.png",
+    "modelSha256": "c9173aa44138f5796bdae3d4d680cd26b24ee16741020c42bcd8d0a1751a0b47",
+    "combatSource": "assets/source/quality-20261028/rigs/gunner-combat-r1/combat-model-r1.png",
+    "combatSha256": "311055d04458976d1481182b3b51989dc5e5aada8354ce99ee7920443535ceb4"
+  },
+  "motionSha256": "ba4eef9e75a25563e141da61c90cee020c288f96e18b0bf2044b9abd892e546b",
+  "parts": [
+    {
+      "name": "far-upper-arm",
+      "file": "far-upper-arm.png",
+      "sha256": "b9e2b20b511e9b6c227987afa025500950b7f01af50bf9dfdeb1a77d88539ea2",
+      "original": false
+    },
+    {
+      "name": "far-forearm",
+      "file": "far-forearm.png",
+      "sha256": "efe39996565c55e03eca177dca68deaa57a17cec6186dcf31499018e8570dfcd",
+      "original": false
+    },
+    {
+      "name": "far-thigh",
+      "file": "far-thigh.png",
+      "sha256": "05d90dba2c6379e7e6f4667df12f11328d9ae0933ab274f37d2811c03ebbffa7",
+      "original": false
+    },
+    {
+      "name": "far-shin",
+      "file": "far-shin.png",
+      "sha256": "b04f881ceb4a59ca780ffca1b3b5b7304576c4004ce7934db98348cad3c14431",
+      "original": false
+    },
+    {
+      "name": "far-boot",
+      "file": "far-boot.png",
+      "sha256": "d56fba92eb0144a45dd515e0ce61d9e3e4fbad1863e73bf9b02d002076ef020e",
+      "original": false
+    },
+    {
+      "name": "near-thigh",
+      "file": "near-thigh.png",
+      "sha256": "c31d2ed4a493c394b4acdd138a35b5097b0d60aa02fe0d3e0a016902b89c1343",
+      "original": false
+    },
+    {
+      "name": "near-shin",
+      "file": "near-shin.png",
+      "sha256": "e5b01bc2476d7816b8ce38ed9d151be3ae2eeb170edddc5f17779de141b91ac4",
+      "original": false
+    },
+    {
+      "name": "near-boot",
+      "file": "near-boot.png",
+      "sha256": "e9da37928e7561b8a28814fa8a7f311b97fed68742a74bb338e685af6cda6bfc",
+      "original": false
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "024c6befd4848f664582e4f525bc058ce62496f1e96267835b71fae34e405b0b",
+      "original": false
+    },
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "d439b859522fbb371f4897842903550b0ddc27b8c6b59ee2abf58dfec7832000",
+      "original": false
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "6450e7bc5ae43445da4daf80aad1a2ebacc6ffde6958ca23e4ef996b61df7f31",
+      "original": false
+    },
+    {
+      "name": "near-upper-arm",
+      "file": "near-upper-arm.png",
+      "sha256": "b3b640d8d8a3c83f48db02c34977da06deb20a88e1dc7298520d1a67b81cbaaf",
+      "original": false
+    },
+    {
+      "name": "near-forearm",
+      "file": "near-forearm.png",
+      "sha256": "834aef2b7707f14faea08655ba9522e74839894983d69c179b03603a2eac5286",
+      "original": false
+    },
+    {
+      "name": "weapon-and-hands",
+      "file": "weapon-and-hands.png",
+      "sha256": "f55f60dae43b1ec59a64f84f99210812d01bdbf33aa3360d20d7a5c77b6b5fa0",
+      "original": false
+    }
+  ],
+  "source": "Complete Raider body from current generated master with hidden-cloth underpainting; both hands share the held weapon transform. Deterministic fixed-length 2D kinematics, not Blender execution. Motion and human acceptance pending.",
+  "groundY": 438,
+  "decodedBytes": 239616,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}

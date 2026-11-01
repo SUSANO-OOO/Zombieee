@@ -14,6 +14,7 @@ import {CAMPAIGN_STAGE_IDS} from '../app/campaign.js';
 import {V177_MELEE_JOINT_ATLASES} from '../app/v177MeleeJointData.js';
 import {V177_RETIRED_JOINT_SOURCE_ASSETS} from '../scripts/v177-joint-asset-contract.mjs';
 const combatKuma=JSON.parse(await readFile('assets/source/quality-20261028/rigs/kumaverson-combat-r4/parts.json'));
+const combatTatara=JSON.parse(await readFile('assets/source/quality-20261028/rigs/brute-combat-r1/parts.json'));
 const kinds=['brute','brawler','crazy-king','kumaverson'];
 const transform=(m,[x,y])=>[m[0]*x+m[2]*y+m[4],m[1]*x+m[3]*y+m[5]],distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
@@ -62,12 +63,12 @@ for(const kind of kinds){
    }
   }
   for(const [measure,value]of Object.entries({boneError,groundError,drift,gripError}))assert.ok(value<.001,JSON.stringify({kind,measure,value}));
-  const authored=kind==='kumaverson'?V177_MELEE_JOINT_ATLASES[kind]:atlas;
+  const authored=['brute','kumaverson'].includes(kind)?V177_MELEE_JOINT_ATLASES[kind]:atlas;
   const walk=motion.actions.find(a=>a.name==='walk');assert.ok(Math.abs(walk.frames.at(-1).bones.root.head[0]-walk.frames[0].bones.root.head[0]-authored.cycleDistance)<.001);
-  const definition=kind==='kumaverson'?combatKuma:d;assert.ok(Math.abs(v177JointCycleDistance(kind,.2)-atlas.cycleDistance/definition.referenceFrame.scale*.2)<1e-10);
+  const definition=kind==='brute'?combatTatara:kind==='kumaverson'?combatKuma:d;assert.ok(Math.abs(v177JointCycleDistance(kind,.2)-atlas.cycleDistance/definition.referenceFrame.scale*.2)<1e-10);
  });
  test(kind+': production interpolation keeps elbows and weapon and free hands attached through travel, anticipation, contact and recovery',()=>{
-  const d=kind==='kumaverson'?combatKuma:authoredDefinition;
+  const d=kind==='brute'?combatTatara:kind==='kumaverson'?combatKuma:authoredDefinition;
   function checkArms(raw){for(const arm of d.armConstraints){
    const upper=matrixFor(raw,arm.upperBone),lower=matrixFor(raw,arm.lowerBone),parent=matrixFor(raw,arm.parentBone),weapon=matrixFor(raw,arm.effectorBone);
    const target=distance(transform(parent,arm.shoulder),transform(weapon,arm.wrist)),a=distance(arm.shoulder,arm.elbow),b=distance(arm.elbow,arm.wrist);
@@ -143,19 +144,19 @@ for(const kind of kinds){
   assert.ok(originalPixels>1000);assert.ok(torsoPixels>1000,JSON.stringify({kind,torsoPixels}));assert.ok(armPaintPixels>100);
   }
   const binding=await readFile(new URL('../public'+d.identityBinding.path,import.meta.url));assert.equal(hash(binding),d.identityBinding.sourceSha256);
-  const weapon=await pixels(new URL('weapon-and-hands.png',dir)),[mx,my]=(kind==='kumaverson'?V177_MELEE_JOINT_ATLASES[kind]:atlas).muzzle;assert.ok(weapon[(my*480+mx)*4+3]>=32,'Contact marker must touch the original weapon or fist');
+  const weapon=await pixels(new URL('weapon-and-hands.png',dir)),[mx,my]=(['brute','kumaverson'].includes(kind)?V177_MELEE_JOINT_ATLASES[kind]:atlas).muzzle;assert.ok(weapon[(my*480+mx)*4+3]>=32,'Contact marker must touch the original weapon or fist');
   const bytes=await readFile(new URL('../public'+atlas.path,import.meta.url)),expected=RUNTIME_JOINT_ASSETS.find(a=>a.path===atlas.path),metadata=await sharp(bytes).metadata();
   assert.equal(atlas.path,expected.path);
   assert.equal(bytes.length,expected.bytes);assert.equal('sha256-'+hash(bytes),expected.hash);assert.equal(metadata.width*metadata.height*4,atlas.decodedBytes);assert.ok(atlas.decodedBytes<=512*1024);
-  const runtimeDefinition=kind==='kumaverson'?combatKuma:d;
+  const runtimeDefinition=kind==='brute'?combatTatara:kind==='kumaverson'?combatKuma:d;
   for(const direction of ['left','right'])for(const scale of [.12,.2]){
    const plan=v177JointPose(kind,{requestedState:'active',clipProgress:.26},{locomotionPhase:.1371,locomotionSettle:1}),{raw,calls,frame,size}=record(kind,plan,{direction,scale,x:300,y:500});
    const contact=transform(calls[atlas.parts.findIndex(p=>p.name==='weapon-and-hands')],atlas.muzzle),socket=v177RenderedJointWeaponSocket({kind,plan,direction,frame,size,pose:{offsetX:0,offsetY:0,scaleX:1,scaleY:1,rotationRadians:0},x:300,y:500});
    assert.ok(distance(contact,[socket.x,socket.y])<1e-10,'Paint and effects share normalization and mirror');
    for(const leg of runtimeDefinition.rig.legs){const p=[leg.ankle[0],leg.ankle[1]+runtimeDefinition.motion.walk.groundY-leg.groundAnkleY],m=calls[atlas.parts.findIndex(p=>p.name===leg.paintedPaw)];const sourcePlaneY=kind==='brawler'?500+((d.motion.walk.groundY-d.referenceFrame.ty)/d.referenceFrame.scale-frame.anchorY*d.referenceFrame.height)*scale:500;assert.ok(Math.abs(transform(m,p)[1]-sourcePlaneY)<.001,'Planted sole retains its exact source-to-frame ground plane');}
    const point=[240,75],p=transform(matrixFor(raw,'head'),point),actual=transform(calls[atlas.parts.findIndex(p=>p.name==='head')],point),ref=runtimeDefinition.referenceFrame;
-   assert.ok(Math.abs(actual[0]-(300+(direction==='left'?-1:1)*((p[0]-ref.tx)/ref.scale-frame.anchorX*d.referenceFrame.width)*scale))<1e-10);
-   assert.ok(Math.abs(actual[1]-(500+((p[1]-ref.ty)/ref.scale-frame.anchorY*d.referenceFrame.height)*scale))<1e-10);
+   assert.ok(Math.abs(actual[0]-(300+(direction==='left'?-1:1)*((p[0]-ref.tx)/ref.scale-frame.anchorX*ref.width)*scale))<1e-10);
+   assert.ok(Math.abs(actual[1]-(500+((p[1]-ref.ty)/ref.scale-frame.anchorY*ref.height)*scale))<1e-10);
   }
  });
  test(kind+': distinct hammer, guarded punch, two-handed saw sweep and downward pan strike follow the actual hands',()=>{
@@ -163,7 +164,11 @@ for(const kind of kinds){
   const runtime={locomotionPhase:.1371,locomotionSettle:1},idle=record(kind,v177JointPose(kind,{requestedState:'wind-up',clipProgress:0},runtime)).raw,active=record(kind,v177JointPose(kind,{requestedState:'active',clipProgress:.5},runtime)).raw;
   const start=transform(matrixFor(idle,'weapon-0'),atlas.muzzle),end=transform(matrixFor(active,'weapon-0'),atlas.muzzle);
   if(kind==='brute'){
-   assert.equal(d.armConstraints.filter(a=>a.effectorBone==='weapon-0').length,2);assert.ok(end[0]-start[0]>200);assert.ok(end[1]-start[1]>140);
+   assert.equal(d.armConstraints.filter(a=>a.effectorBone==='weapon-0').length,2);const raised=record(kind,v177JointPose(kind,{requestedState:'wind-up',clipProgress:5/7},runtime)).raw;
+   const overhead=transform(matrixFor(raised,'weapon-0'),atlas.muzzle);
+   // The new ready pose already holds the long hammer forward. Preserve the
+   // broad strike thresholds from the actual wind-up, not the old carry pose.
+   assert.ok(end[0]-overhead[0]>200);assert.ok(end[1]-overhead[1]>140);
    assert.ok(Math.atan2(matrixFor(active,'spine')[1],matrixFor(active,'spine')[0])>.6,'The torso follows the heavy forward swing');
   }else if(kind==='brawler'){
    assert.equal(d.rig.attack.style,'punch');assert.equal(d.armConstraints.filter(a=>a.effectorBone==='weapon-0').length,1);
@@ -209,7 +214,8 @@ test('Melee textures load only for selected forms and never change legacy asset 
 
 test('legacy hammer interpolation keeps its grip control and the new broad swing keeps both actual hands joined',()=>{
  const atlas=V177_JOINT_ATLASES.brute,pivot=atlas.interpolationPivots['weapon-0'];
- assert.deepEqual(pivot,[254,168]);
+ assert.deepEqual(V177_MELEE_JOINT_ATLASES.brute.interpolationPivots['weapon-0'],[254,168]);
+ assert.deepEqual(pivot,combatTatara.interpolationPivots['weapon-0']);
  for(const state of ['wind-up','active','recovery'])for(let n=0;n<=180;n++){
   const plan=v177JointPose('brute',{requestedState:state,clipProgress:n/180},{locomotionPhase:.1371,locomotionSettle:1});
   const {raw}=record('brute',{...plan,choreography:undefined}),a=transform(atlas.poses[plan.upperIndex]['weapon-0'],pivot),b=transform(atlas.poses[plan.upperNextIndex]['weapon-0'],pivot);

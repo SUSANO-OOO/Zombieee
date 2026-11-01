@@ -1495,9 +1495,9 @@
       "criticality": "critical"
     },
     {
-      "path": "/art/v100/joints/brute-quality-neck-r4.webp",
-      "bytes": 41104,
-      "hash": "sha256-d4b19976ff39dd9884d11d41104fee928f43175efee59c368299db9881ef0709",
+      "path": "/art/v100/joints/brute-combat-r1.webp",
+      "bytes": 56050,
+      "hash": "sha256-38dcda0f9d9e620a48b9c3a44ce55556dbc2a3d1ac7315bbff857095dde5cec4",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"
@@ -1599,9 +1599,9 @@
       "criticality": "critical"
     },
     {
-      "path": "/art/v100/joints/gunner-quality-neck-r4.webp",
-      "bytes": 33274,
-      "hash": "sha256-2d9edb910e7c615e8480a7f0285eea8b13c98ab5c5a5ddfaea0ca3315a9c91fc",
+      "path": "/art/v100/joints/gunner-combat-r1.webp",
+      "bytes": 41828,
+      "hash": "sha256-32fd3bce321810958cd2dc673f0dcadfe24d8843943e62270b01e992a7697f54",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"

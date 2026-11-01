@@ -30,7 +30,7 @@ function gunnerUpperAngle(sample,actor,world) {
   return base-.08*gunnerShotPulse(actor,world);
 }
 
-export function v177FirearmUpperMotion(kind,sample,spine,{actor,world}={}) {
+export function v177FirearmUpperMotion(kind,sample,spine,{actor,world,waist=waists[kind]}={}) {
   if(kind!=='medic'&&kind!=='engineer'&&kind!=='gunner')return null;
   const p=Math.max(0,Math.min(1,Number(sample?.clipProgress)||0));
   const support=kind==='medic',ready=support ? .014 : .018,
@@ -44,7 +44,7 @@ export function v177FirearmUpperMotion(kind,sample,spine,{actor,world}={}) {
     case 'recovery':if(p===1)return null;angle=mix(release,0,p);break;
     default:return null;
   }
-  const [wx,wy]=waists[kind],x=spine[0]*wx+spine[2]*wy+spine[4],
+  const [wx,wy]=waist,x=spine[0]*wx+spine[2]*wy+spine[4],
     y=spine[1]*wx+spine[3]*wy+spine[5],c=Math.cos(angle),s=Math.sin(angle);
   return [c,s,-s,c,x-c*x+s*y,y-s*x-c*y];
 }

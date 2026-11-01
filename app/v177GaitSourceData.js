@@ -78,8 +78,8 @@ export const V177_AUTHORED_GAITS = {
     },
     "sources": [
       {
-        "file": "assets/source/v100/joints/gunner-r1/parts.json",
-        "sha256": "848f6c07c424ab58d9d7b12c17de266ebfc75c511c0791c54dfe9a22e5ea7045",
+        "file": "assets/source/quality-20261028/rigs/gunner-combat-r1/parts.json",
+        "sha256": "dc1e0feff6624707a30229f6d6c7f0a1533b326bc07776ab272cbb8a0a6f5fe6",
         "hashEncoding": "utf8-lf"
       }
     ]
@@ -190,8 +190,8 @@ export const V177_AUTHORED_GAITS = {
     },
     "sources": [
       {
-        "file": "assets/source/v100/joints/brute-r1/parts.json",
-        "sha256": "7f33876d5dfd9dec81694b721684289142ae0bc54a3ba602c38d8114499ad4ab",
+        "file": "assets/source/quality-20261028/rigs/brute-combat-r1/parts.json",
+        "sha256": "5c6b0e7dc71732736e0d2fe2518bdb252f63dc91a0a763bc65941c24726741ff",
         "hashEncoding": "utf8-lf"
       }
     ]
