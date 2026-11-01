@@ -54,4 +54,8 @@ const chiha=read('../assets/source/quality-20261028/rigs/mrs-chiha-combat-r1/pro
 const chihaIndex=rows.findIndex(row=>row.path==='/art/v100/joints/mrs-chiha-quality-neck-r4.webp');
 assert.ok(chihaIndex>=0,'Complete Chiha body replaces head-only predecessor');
 rows[chihaIndex]=asset(chiha);
+const musashi=read('../assets/source/quality-20261028/rigs/miyamoto-musashi-combat-r1/provenance.json');
+const musashiIndex=rows.findIndex(row=>row.path==='/art/v100/joints/miyamoto-musashi-quality-neck-r4.webp');
+assert.ok(musashiIndex>=0,'Complete Musashi body replaces head-only predecessor');
+rows[musashiIndex]=asset(musashi);
 export const V177_JOINT_ASSET_ADDITIONS=Object.freeze(rows);

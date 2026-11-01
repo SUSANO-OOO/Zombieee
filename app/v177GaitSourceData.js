@@ -372,8 +372,8 @@ export const V177_AUTHORED_GAITS = {
     },
     "sources": [
       {
-        "file": "assets/source/v100/joints/miyamoto-musashi-r1/parts.json",
-        "sha256": "4b9c1fcd88f78f7c159c33f5e00c198d46623aad5971ffabbbf67be2d0187e69",
+        "file": "assets/source/quality-20261028/rigs/miyamoto-musashi-combat-r1/parts.json",
+        "sha256": "55c81052df71ed243c92b136ab34c04e255778fb77df067c8335322921187fe1",
         "hashEncoding": "utf8-lf"
       }
     ]

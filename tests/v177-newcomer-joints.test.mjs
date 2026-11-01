@@ -53,7 +53,7 @@ for(const kind of kinds)test(kind+': original paint, fixed anatomy, support, gri
  }
  for(const [metric,value]of Object.entries({boneError,groundError,gripError,drift}))assert.ok(value<.001,JSON.stringify({kind,metric,value}));
  // Historical source checks above remain unchanged. Runtime anatomy follows the current complete combat bodies.
- const runtimeDir=['tky','zakimiya','mrs-chiha'].includes(kind)?`assets/source/quality-20261028/rigs/${kind}-combat-r1/`:dir;
+ const runtimeDir=['tky','zakimiya','mrs-chiha','miyamoto-musashi'].includes(kind)?`assets/source/quality-20261028/rigs/${kind}-combat-r1/`:dir;
  const runtimeD=JSON.parse(await readFile(runtimeDir+'parts.json'));
  const matrix=(raw,bone)=>raw[atlas.parts.findIndex(p=>p.bone===bone)];let dense=0,minMargin=Infinity,previous;
  function checkArms(raw){for(const arm of runtimeD.armConstraints){
@@ -70,7 +70,7 @@ for(const kind of kinds)test(kind+': original paint, fixed anatomy, support, gri
  const runtime={locomotionPhase:.1371,locomotionSettle:1},idle=record(kind,v177JointPose(kind,{requestedState:'idle'},runtime));
  for(const state of ['wind-up','active','recovery'])for(let n=0;n<=60;n++){const raw=record(kind,v177JointPose(kind,{requestedState:state,clipProgress:n/60},runtime));checkArms(raw);dense++;for(let i=0;i<raw.length;i++)if(!atlas.parts[i].upper)assert.deepEqual(raw[i],idle[i]);
   if(state==='wind-up'&&n===0||state==='recovery'&&n===60)for(const arm of runtimeD.armConstraints)assert.ok(distance(transform(matrix(raw,arm.effectorBone),arm.effectorWrist??arm.wrist),transform(matrix(idle,arm.effectorBone),arm.effectorWrist??arm.wrist))<.001,'No attack handover jump');}
- const weapon=await pixels(runtimeDir+'weapon-and-hands.png'),[mx,my]=atlas.muzzle.map(Math.floor);assert.ok(weapon[(my*480+mx)*4+3]>=32,JSON.stringify({kind,muzzle:atlas.muzzle,alpha:weapon[(my*480+mx)*4+3]}));
+ const weapon=await pixels(runtimeDir+runtimeD.parts.find(p=>p.bone===atlas.weaponBone).file),[mx,my]=atlas.muzzle.map(Math.floor);assert.ok(weapon[(my*480+mx)*4+3]>=32,JSON.stringify({kind,muzzle:atlas.muzzle,alpha:weapon[(my*480+mx)*4+3]}));
  assert.equal(d.rig.legs.length,2);assert.equal(d.rig.arms.length,2);assert.equal(d.rig.weapons.length,kind==='miyamoto-musashi'?2:1);assert.ok(originalPixels>1000&&overlayPixels>1000);
  for(const [pose,binding]of Object.entries(d.poseBindings)){assert.equal(hash(await readFile(dir+binding.file)),binding.sha256);assert.equal(hash(await readFile('public'+binding.path)),binding.sourceSha256);assert.ok(pose==='walk-a'||binding.sourceRect.x>=1440);}
  assert.equal(poses,kind==='mrs-chiha'?366:305);assert.equal(dense,1986);assert.ok(minMargin>.001);
@@ -79,7 +79,7 @@ for(const kind of kinds)test(kind+': original paint, fixed anatomy, support, gri
 test('original-bound human weapons and soles share mirrored production coordinates and conditional loading',async()=>{
  for(const kind of kinds){
   const atlas=V177_JOINT_ATLASES[kind],d=JSON.parse(await readFile('assets/source/v100/joints/'+kind+'-r1/parts.json'));
-  const runtimeD=['tky','zakimiya','mrs-chiha'].includes(kind)?JSON.parse(await readFile(`assets/source/quality-20261028/rigs/${kind}-combat-r1/parts.json`)):d;
+  const runtimeD=['tky','zakimiya','mrs-chiha','miyamoto-musashi'].includes(kind)?JSON.parse(await readFile(`assets/source/quality-20261028/rigs/${kind}-combat-r1/parts.json`)):d;
   const originalPath=V177_NEWCOMER_JOINT_ATLASES[kind].path,originalBytes=await readFile('public'+originalPath),expected=V177_JOINT_ASSET_ADDITIONS.find(a=>a.path===originalPath);
   assert.equal(originalBytes.length,expected.bytes);assert.equal('sha256-'+hash(originalBytes),expected.hash);
   const bytes=await readFile('public'+atlas.path),meta=await sharp(bytes).metadata();
@@ -90,7 +90,7 @@ test('original-bound human weapons and soles share mirrored production coordinat
    const ctx={save(){stack.push([...m]);},restore(){m=stack.pop();},translate(x,y){mul([1,0,0,1,x,y]);},scale(x,y){mul([x,0,0,y,0,0]);},transform(...a){mul(a);},drawImage(){calls.push([...m]);}};
    if(direction==='left')ctx.scale(-1,1);const frame={...spriteFrameFor(kind,'walk-a',direction),flipX:direction==='left'},size={w:atlas.referenceFrame.width*scale,h:atlas.referenceFrame.height*scale},plan=v177JointPose(kind,{requestedState:'active',clipProgress:.26},{locomotionPhase:.1371,locomotionSettle:1});
    assert.ok(withV177PaintPartIdentity(()=>drawV177JointPose(ctx,{naturalWidth:512},kind,plan,-size.w*frame.anchorX,-size.h*frame.anchorY,size.w,size.h),ctx,kind,[calls]));assert.equal(calls.length,atlas.parts.length);
-   const contact=transform(calls[atlas.parts.findIndex(p=>p.name==='weapon-and-hands')],atlas.muzzle),socket=v177RenderedJointWeaponSocket({kind,plan,direction,frame,size,pose:{offsetX:0,offsetY:0,scaleX:1,scaleY:1,rotationRadians:0},x:300,y:500});assert.ok(distance(contact,[socket.x,socket.y])<1e-10);
+   const contact=transform(calls[atlas.parts.findIndex(p=>p.bone===atlas.weaponBone)],atlas.muzzle),socket=v177RenderedJointWeaponSocket({kind,plan,direction,frame,size,pose:{offsetX:0,offsetY:0,scaleX:1,scaleY:1,rotationRadians:0},x:300,y:500});assert.ok(distance(contact,[socket.x,socket.y])<1e-10);
    for(const leg of runtimeD.rig.legs){const p=[leg.ankle[0],leg.ankle[1]+runtimeD.motion.walk.groundY-leg.groundAnkleY],matrix=calls[atlas.parts.findIndex(p=>p.name===leg.paintedPaw)];assert.ok(Math.abs(transform(matrix,p)[1]-500)<.001);}
   }
   const input={stageId:CAMPAIGN_STAGE_IDS.NISHIJIN_SHOPPING_STREET,formationKinds:[kind,kind],enemyKinds:['walker']};const plan=requiredBattleAssetPlan(input);

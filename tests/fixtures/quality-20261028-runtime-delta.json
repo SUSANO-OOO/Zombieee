@@ -1,6 +1,6 @@
 {
   "base": "ff5dba24e88c810182cda1f044bd26dfc3e512c1",
-  "source": "1e980fef916cd5e6932774eb01e6efc28dbbb293 plus complete Chiha combat body",
+  "source": "fe29c40004d318e9da980f328ce42484890fdf2a plus complete Musashi combat body",
   "scope": "Local quality candidate transport contract; not likeness, rights, listening, release or physical-device approval.",
   "added": [
     {
@@ -84,9 +84,9 @@
       "criticality": "critical"
     },
     {
-      "path": "/art/v100/joints/miyamoto-musashi-quality-neck-r4.webp",
-      "bytes": 48006,
-      "hash": "sha256-6d677c8e0c94c40e0c6646b2d0cd763002554f6d787dbd4aac055b4d9bb4ddd5",
+      "path": "/art/v100/joints/miyamoto-musashi-combat-r1.webp",
+      "bytes": 53034,
+      "hash": "sha256-07a49d405b0396f31ac43fad5aa7ff44d26ff1589d8162d49f5a483399b97972",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"

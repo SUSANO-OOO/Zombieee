@@ -1,3 +1,4 @@
+import {QUALITY_MUSASHI_COMBAT_ATLAS} from '../app/qualityMusashiCombatJointData.js';
 import {QUALITY_CHIHA_COMBAT_ATLAS} from '../app/qualityChihaCombatJointData.js';
 import {QUALITY_ZAKIMIYA_COMBAT_ATLAS} from '../app/qualityZakimiyaCombatJointData.js';
 import test from 'node:test';
@@ -32,6 +33,7 @@ for(const [kind,base] of Object.entries(bases))test(kind+' keeps its checked ide
  else if(kind==='engineer')assert.deepEqual(preferred,QUALITY_ENGINEER_COMBAT_ATLAS,'Complete Monkey paint replaces the old head-only material and rig');
  else if(kind==='zakimiya')assert.deepEqual(preferred,QUALITY_ZAKIMIYA_COMBAT_ATLAS,'Complete canonical Zakimiya body replaces head-only material');
  else if(kind==='mrs-chiha')assert.deepEqual(preferred,QUALITY_CHIHA_COMBAT_ATLAS,'Complete Chiha replaces head-only material');
+ else if(kind==='miyamoto-musashi')assert.deepEqual(preferred,QUALITY_MUSASHI_COMBAT_ATLAS,'Complete Musashi replaces head-only material');
  else if(kind==='tky')assert.deepEqual(preferred,QUALITY_TKY_COMBAT_ATLAS,'Complete approved89 body replaces head-only material');
  else if(kind==='ranger')assert.deepEqual(preferred,QUALITY_RANGER_COMBAT_ATLAS,'Complete Mizuchi paint replaces old material while retaining hybrid geometry');
  else if(QUALITY_BATTLE_HEAD_CALIBRATIONS[kind]){

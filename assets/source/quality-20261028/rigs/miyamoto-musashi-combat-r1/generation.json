@@ -1,0 +1,36 @@
+{
+  "tool": "OpenAI built-in image_gen",
+  "creator": "OpenAI image generation directed for this project",
+  "license": "Project-generated derivative; commercial use, modification and redistribution under applicable OpenAI terms",
+  "producerApproval": "Current generated Musashi is identity authority; new combat derivative not Producer accepted",
+  "master": "assets/source/quality-20261028/identity/musashi-master-r4.png",
+  "outputs": {
+    "combat": {
+      "file": "combat-model-r1.png",
+      "original": "C:/Users/okait/.codex/generated_images/01a180c8-9e05-7871-b287-613f7c7eb364/exec-fb1251a6-86cd-4b3d-bb85-ee9fb8db06c3.png",
+      "prompt": "Use case: identity-preserve. One full-body battle sprite of the exact Miyamoto Musashi in reference1, for a Japanese post-apocalyptic action game. Preserve the distinctive rugged angular adult face, mustache and short beard, stern brow, long black tied-up topknot and loose strands, age and lean athletic build. Same distressed dark navy layered samurai robes/scarf, asymmetrical dark metal shoulder armor, chest radio, belt pouches, wrapped shins and sandals. Detailed realistic anatomy and materials with restrained painted finish. Do not change him into another handsome face.\nPut this same man into a readable combat-ready pose facing screen RIGHT, eyes/head aligned right instead of looking at viewer. Entire figure, both sandals and TWO whole sword blades/tips fit comfortably inside canvas. He holds exactly two independent Japanese swords, ONE hilt in EACH hand. Both hands anatomically grip only their own hilt; no two-handed grip on one blade. Near hand/arm is low-forward, sword angled upward/right about30 degrees, far hand raised slightly behind/above, second blade angled upward/right about55 degrees with tips separated, no crossing blades in front of face. Avoid blade/arm overlaps that obscure grips. Keep natural elbows below shoulder level and neck attached into scarf. Comfortable separated front/back feet, both toes point right, knees slightly bent, no crossed legs. Robe may separate naturally below knees enough to see individual shin/foot silhouettes.\nTransparent alpha background, no floor, glow, gradients, drop shadows, text, grid or duplicate character. Approx1298x1212 landscape composition, entire character about88%height with room for both swords. Keep all approved outfit/equipment elements, no extra weapons or limbs.",
+      "sha256": "b53e64a4a303468b5d19dd7ace6f57d4642c1129f4c9d92837082ee2fc81ed61",
+      "references": [
+        {
+          "role": "sole current identity, costume and weapon reference",
+          "path": "assets/source/quality-20261028/identity/musashi-master-r4.png",
+          "sha256": "7ce937bddf0ac7bbb4e068b916625e4cd629411d6cc561946f88c22492c39c17"
+        }
+      ]
+    },
+    "underpainting": {
+      "file": "body-underpainting-r1.png",
+      "original": "C:/Users/okait/.codex/generated_images/01a180c8-9e05-7871-b287-613f7c7eb364/exec-1db71582-b8cb-4042-ba18-59958831ad23.png",
+      "prompt": "Use case: precise-object-edit. Make a registered hidden-body underpainting for this EXACT Miyamoto Musashi sprite. Preserve the exact canvas dimensions, pose, face, hair, scarf, torso lean, chest radio, belt pouches, skirt and legs and both sandals in their exact positions. Remove ONLY BOTH entire arms/hands including shoulder armor and BOTH swords. Reconstruct the hidden opaque navy robe torso where the arms and swords covered it. Shoulder outlines smoothly end in the sleeveless body silhouette, no limb stumps, no phantom weapons or hands. Everything below the waist is pixel-registration-consistent with the input; do not change leg stance, sandals, cloth geometry or proportions. Preserve fully clothed adult anatomy. This is a hidden game layer, not a new character or new pose. Transparent alpha background, no floor, shadows, gradients, text.",
+      "sha256": "a1c57c517b6d77475c5eee6343b960be7ee8c3baf5f9a20b9b10914a82955236",
+      "references": [
+        {
+          "role": "exact edit target",
+          "path": "assets/source/quality-20261028/rigs/miyamoto-musashi-combat-r1/combat-model-r1.png",
+          "sha256": "b53e64a4a303468b5d19dd7ace6f57d4642c1129f4c9d92837082ee2fc81ed61"
+        }
+      ]
+    }
+  },
+  "masterSha256": "7ce937bddf0ac7bbb4e068b916625e4cd629411d6cc561946f88c22492c39c17"
+}

@@ -1,0 +1,132 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "miyamoto-musashi",
+  "assetPath": "/art/v100/joints/miyamoto-musashi-combat-r1.webp",
+  "bytes": 53034,
+  "sha256": "07a49d405b0396f31ac43fad5aa7ff44d26ff1589d8162d49f5a483399b97972",
+  "atlasPacking": "height-descending-shelves",
+  "generatedPartsStudySha256": "a1c57c517b6d77475c5eee6343b960be7ee8c3baf5f9a20b9b10914a82955236",
+  "identitySourceSha256": "b53e64a4a303468b5d19dd7ace6f57d4642c1129f4c9d92837082ee2fc81ed61",
+  "identityBinding": {
+    "path": "/art/v090/characters/miyamoto-musashi-battle-r1.png",
+    "sourceSha256": "34bdfe8792d017d500d8b0622e0387639185dab0e6a193cefdd5b3e47dee8db7",
+    "sourceRect": {
+      "x": 480,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "referenceTransform": {
+      "scale": 1,
+      "tx": 0,
+      "ty": 0,
+      "flipX": false
+    },
+    "modelSource": "assets/source/quality-20261028/identity/musashi-master-r4.png",
+    "modelSha256": "7ce937bddf0ac7bbb4e068b916625e4cd629411d6cc561946f88c22492c39c17",
+    "combatSource": "assets/source/quality-20261028/rigs/miyamoto-musashi-combat-r1/combat-model-r1.png",
+    "combatSha256": "b53e64a4a303468b5d19dd7ace6f57d4642c1129f4c9d92837082ee2fc81ed61"
+  },
+  "motionSha256": "b20377f57015718635de1309c9b02bf48b30ca24bda2a68522706708794fef4e",
+  "parts": [
+    {
+      "name": "far-upper-arm",
+      "file": "far-upper-arm.png",
+      "sha256": "cd6fbd7f49773ceb048d2c92319802fc3d3d2f386250e08ca80f38975f5a73c8",
+      "original": false
+    },
+    {
+      "name": "far-forearm",
+      "file": "far-forearm.png",
+      "sha256": "1afcf1df895a54fa3030745d835d76f9cb3aa1d46b703bf2f73771059debe382",
+      "original": false
+    },
+    {
+      "name": "far-sword-hand",
+      "file": "far-sword-hand.png",
+      "sha256": "eb3d63199337d98beaf0424d27b7a49ef30f23e44d163d9f5a63d8f1bfedde61",
+      "original": false
+    },
+    {
+      "name": "far-thigh",
+      "file": "far-thigh.png",
+      "sha256": "0c4669cc676fd2d0369a35a004ed66d8d62fea434cbd4761b67e8026539dbcf0",
+      "original": false
+    },
+    {
+      "name": "far-shin",
+      "file": "far-shin.png",
+      "sha256": "239ca5d354cad69b9596ac04d66d3872cde48858b06dea51f40e9f397e79544a",
+      "original": false
+    },
+    {
+      "name": "far-boot",
+      "file": "far-boot.png",
+      "sha256": "ec26587d4fa9e47e3af8a07737f2c1b5496a5d6adabeccf22302f9e43711328c",
+      "original": false
+    },
+    {
+      "name": "near-thigh",
+      "file": "near-thigh.png",
+      "sha256": "9f22c44a70e2e8a322836901ea6f40633cf9c8df88ba9b039a92443aed468dfe",
+      "original": false
+    },
+    {
+      "name": "near-shin",
+      "file": "near-shin.png",
+      "sha256": "4cef62f616d669e5dee7e49237f0bee7ba386af4ecbcaa5d51a317631508ef8f",
+      "original": false
+    },
+    {
+      "name": "near-boot",
+      "file": "near-boot.png",
+      "sha256": "4968b8531e5b32c7d08988e034672a9635a9100d9a08aa6b8a17f91928b5c4ea",
+      "original": false
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "fafa68dc62001179c8190256ec987939b28121ba1282886509f18852b7c29112",
+      "original": false
+    },
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "3d0d9ebca547adee201e2f431350db54c4cbc5b76e9e3c057e5bf66e3831333f",
+      "original": false
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "470b25f33d96f59a99eecb960c31810c8b736435c776cd38675737f2cd1f8aa7",
+      "original": false
+    },
+    {
+      "name": "near-upper-arm",
+      "file": "near-upper-arm.png",
+      "sha256": "a9ce8ccee1c084077bd798b83fbc9d01da7a9b5f98ea41449a0761f9ed33c034",
+      "original": false
+    },
+    {
+      "name": "near-forearm",
+      "file": "near-forearm.png",
+      "sha256": "4cb5c75879a21c95ae114fb10a85238371a07a09fd9636f7738253566b755d93",
+      "original": false
+    },
+    {
+      "name": "near-sword-hand",
+      "file": "near-sword-hand.png",
+      "sha256": "09c455d2d2217f457df5bb7dbaefa1b39dc13c4cf63bbbfd0edd8e7ae1eb9671",
+      "original": false
+    }
+  ],
+  "source": "Complete Musashi body from current generated master with hidden-cloth underpainting; each sword has its own hand and transform. Deterministic fixed-length 2D kinematics, not Blender execution. Motion and human acceptance pending.",
+  "groundY": 435,
+  "decodedBytes": 292864,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}
