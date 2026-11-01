@@ -31,24 +31,25 @@ test('the real close-range sample carries complete phase information through the
  assert.equal(v177JointPose(kind,sampleMrsChihaLauncherBash(.13),runtime,{ownedPose:true}),null);
 });
 test('normal windup, close-range contact and recovery keep both grips, fixed anatomy and the same planted soles',async()=>{
- const d=JSON.parse(await readFile('assets/source/v100/joints/mrs-chiha-r1/parts.json')),ready=rendered(sampleMrsChihaLauncherBashWindup(0));let maxError=0,groundError=0,margin=Infinity;
+ const d=JSON.parse(await readFile('assets/source/quality-20261028/rigs/mrs-chiha-combat-r1/parts.json')),ready=rendered(sampleMrsChihaLauncherBashWindup(0));let maxError=0,groundError=0,margin=Infinity;
  const samples=[...Array.from({length:241},(_,n)=>sampleMrsChihaLauncherBashWindup(duration*n/240)),...Array.from({length:1081},(_,n)=>sampleMrsChihaLauncherBash(.27*n/1080))];
  for(const sample of samples){const {raw}=rendered(sample);
   for(let i=0;i<raw.length;i++)if(!atlas.parts[i].upper)assert.deepEqual(raw[i],ready.raw[i],'Attack never advances the standing walking phase');
-  for(const arm of d.armConstraints){const shoulder=transform(matrix(raw,arm.parentBone),arm.shoulder),elbow=transform(matrix(raw,arm.upperBone),arm.elbow),wrist=transform(matrix(raw,arm.lowerBone),arm.wrist),grip=transform(matrix(raw,arm.effectorBone),arm.effectorWrist);
+  for(const arm of d.armConstraints){const shoulder=transform(matrix(raw,arm.parentBone),arm.shoulder),elbow=transform(matrix(raw,arm.upperBone),arm.elbow),wrist=transform(matrix(raw,arm.lowerBone),arm.wrist),grip=transform(matrix(raw,arm.effectorBone),arm.effectorWrist??arm.wrist);
    maxError=Math.max(maxError,distance(wrist,grip),distance(transform(matrix(raw,arm.upperBone),arm.shoulder),shoulder),distance(transform(matrix(raw,arm.lowerBone),arm.elbow),elbow));
    margin=Math.min(margin,distance(arm.shoulder,arm.elbow)+distance(arm.elbow,arm.wrist)-distance(shoulder,grip));
   }
-  for(let li=0;li<2;li++){const leg=d.rig.legs[li],p=[leg.ankle[0],leg.ankle[1]+432-leg.groundAnkleY];groundError=Math.max(groundError,Math.abs(transform(matrix(raw,'leg-'+li+'-foot'),p)[1]-432));}
+  for(let li=0;li<2;li++){const leg=d.rig.legs[li],p=[leg.ankle[0],leg.ankle[1]+d.motion.walk.groundY-leg.groundAnkleY];groundError=Math.max(groundError,Math.abs(transform(matrix(raw,'leg-'+li+'-foot'),p)[1]-d.motion.walk.groundY));}
  }
  assert.ok(maxError<.001,JSON.stringify({maxError}));assert.ok(groundError<.001,JSON.stringify({groundError}));assert.ok(margin>.001);
  const before=rendered(sampleMrsChihaLauncherBashWindup(duration)),after=rendered(sampleMrsChihaLauncherBash(0)),returned=rendered(sampleMrsChihaLauncherBash(.27));
  for(let i=0;i<before.raw.length;i++)for(let k=0;k<6;k++)assert.ok(Math.abs(before.raw[i][k]-after.raw[i][k])<.001,'No weapon/body snap at windup handover');
- for(const arm of d.armConstraints)assert.ok(distance(transform(matrix(returned.raw,arm.effectorBone),arm.effectorWrist),transform(matrix(ready.raw,arm.effectorBone),arm.effectorWrist))<.001,'Return to the same ready grip');
+ for(const arm of d.armConstraints)assert.ok(distance(transform(matrix(returned.raw,arm.effectorBone),arm.effectorWrist??arm.wrist),transform(matrix(ready.raw,arm.effectorBone),arm.effectorWrist??arm.wrist))<.001,'Return to the same ready grip');
 });
 test('the new Blender action retains every original walking and firing sample and every other newcomer atlas',async()=>{
  const source=execFileSync('git',['show','c858205c427aad2f583f79abfa0a8903e0171de3:app/v177NewcomerJointData.js'],{encoding:'utf8',maxBuffer:4*1024*1024}),begin=source.indexOf('Object.entries(')+'Object.entries('.length,baseline=JSON.parse(source.slice(begin,source.lastIndexOf('));')));
- assert.deepEqual(atlas.poses.slice(0,151),baseline[kind].poses);assertMaterialRigGeometry({parts:atlas.parts},{parts:baseline[kind].parts});
+ const original=V177_NEWCOMER_JOINT_ATLASES[kind];
+ assert.deepEqual(original.poses.slice(0,151),baseline[kind].poses);assertMaterialRigGeometry({parts:original.parts},{parts:baseline[kind].parts});
  for(const other of ['zakimiya','tky','miyamoto-musashi'])assertMaterialRigGeometry(['tky','zakimiya'].includes(other)?V177_NEWCOMER_JOINT_ATLASES[other]:V177_JOINT_ATLASES[other],baseline[other]); // TKY and Zakimiya full-body runtime is verified separately; preserve this launcher-action baseline.
  const old=JSON.parse(gunzipSync(execFileSync('git',['show','c858205c427aad2f583f79abfa0a8903e0171de3:assets/source/v100/joints/mrs-chiha-r1/motion.json.gz'],{maxBuffer:4*1024*1024}))),motion=JSON.parse(gunzipSync(await readFile('assets/source/v100/joints/mrs-chiha-r1/motion.json.gz')));
  assert.equal(motion.actions.length,6);assert.deepEqual(motion.actions.filter(a=>a.name!=='launcher-bash'),old.actions);assert.equal(motion.actions.find(a=>a.name==='launcher-bash').frames.length,61);

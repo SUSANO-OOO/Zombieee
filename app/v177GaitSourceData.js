@@ -358,8 +358,8 @@ export const V177_AUTHORED_GAITS = {
     },
     "sources": [
       {
-        "file": "assets/source/v100/joints/mrs-chiha-r1/parts.json",
-        "sha256": "e7cb759aa46be23bbfa7cadfa3c88149685dd6c39fa6613d2f8eb350af66a573",
+        "file": "assets/source/quality-20261028/rigs/mrs-chiha-combat-r1/parts.json",
+        "sha256": "8a0d744c7cf5960321970cf41800bce5bebb13293cc4877d5af3ab5fd78f5394",
         "hashEncoding": "utf8-lf"
       }
     ]

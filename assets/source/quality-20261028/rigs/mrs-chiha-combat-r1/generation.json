@@ -1,0 +1,42 @@
+{
+  "tool": "OpenAI built-in image_gen",
+  "creator": "OpenAI image generation directed for this project",
+  "license": "Project-generated derivative; commercial use, modification and redistribution under applicable OpenAI terms",
+  "producerApproval": "Established Chiha identity/costume retained; new combat derivative and closed combat blouse remain subject to visual review",
+  "master": "assets/source/quality-20261028/identity/chiha-master-r4.png",
+  "masterSha256": "d9acf14c0f75ce8e80b4dd2e7f8285e154562e72082200be68983ef292369705",
+  "outputs": {
+    "combat": {
+      "file": "combat-model-r1.png",
+      "original": "C:/Users/okait/.codex/generated_images/01a180c8-9e05-7871-b287-613f7c7eb364/exec-a11d8d5d-1b6a-4b80-8282-cdeb5534e41c.png",
+      "prompt": "Use case: identity-preserve. Non-sexual, fully clothed action-game character sprite. Use reference1 as the exact current Mrs. Chiha face, age, hairstyle, hairband, outfit and weapon design reference. Produce one full-length side-facing combat pose looking screen RIGHT, with a natural connected neck and shoulders, stable separated feet, both boot toes right, relaxed slightly bent knees. Keep the recognizable adult woman's exact face and dark updo. Same long black leather coat, white high-ruffled blouse, belts, black gloves, full-length black trousers and buckled heeled boots. For this practical action pose CLOSE the blouse and coat across the chest: opaque clothing covers chest and torso completely, no cleavage or exposed torso. Keep the existing costume colors, materials and design rather than inventing another outfit. Detailed painted-realistic game art, no glamour framing.\nExactly one compact dark steel/brass rotary-cylinder grenade launcher matching the reference, held securely at waist height pointing screen RIGHT slightly downward. Rear hand holds pistol grip, forward hand supports the front, both arms anatomically connected with bent elbows below the weapon. Keep large chamber cylinder, vented barrel guard, compact optic; no additional weapons, ammunition effects or loose hanging sling. Both gloved hands stay visible enough to read their grips. Full body and full weapon inside frame, modest naturally balanced stance, no crossed legs, no extra limbs. Approximately 1298x1212 composition with sufficient space for barrel and boots. Truly transparent alpha background, no floor or shadow, no text, no duplicate views.",
+      "sha256": "709bda80fb68ffcfa6a678dd0ba42916a63a9d2972ac7c73f3c605afa2d0e7bb",
+      "references": [
+        {
+          "role": "sole current identity/costume/weapon master",
+          "path": "assets/source/quality-20261028/identity/chiha-master-r4.png",
+          "sha256": "d9acf14c0f75ce8e80b4dd2e7f8285e154562e72082200be68983ef292369705"
+        }
+      ]
+    },
+    "underpainting": {
+      "file": "body-underpainting-r1.png",
+      "original": "C:/Users/okait/.codex/generated_images/01a180c8-9e05-7871-b287-613f7c7eb364/exec-4550afac-861b-45e6-9bdf-81c37217bd1d.png",
+      "prompt": "Use case: precise-object-edit. Create the hidden torso/legs underpainting of this exact fully clothed combat sprite. Preserve exact canvas size, registration, pose, face, hair, headband, covered high-neck blouse, black leather coat, belt/harness, coat tails, trousers and both heeled boots. Remove ONLY the entire launcher and BOTH arms/hands from shoulders downward. Reconstruct the opaque coat/chest/waist behind them, closed over the white blouse. Shoulders end in smooth continuous coat contours, no arm stumps. Keep all visible torso and lower-body details in their exact places and scale. The new image is a hidden sprite layer, not another pose. No weapon, extra hands, exposed torso or other additions. Transparent alpha, no background or ground shadow.",
+      "sha256": "1a91eb24999889633c58b6d5b391d84559df9f41f6dee5ba60f1d6607ce9a060",
+      "references": [
+        {
+          "role": "exact edit target",
+          "path": "assets/source/quality-20261028/rigs/mrs-chiha-combat-r1/combat-model-r1.png",
+          "sha256": "709bda80fb68ffcfa6a678dd0ba42916a63a9d2972ac7c73f3c605afa2d0e7bb"
+        }
+      ]
+    }
+  },
+  "failedAttempt": {
+    "status": "image generation rejected at output; no image produced",
+    "requestId": "d2f61ff3-219a-4eec-9865-a8f748050593",
+    "prompt": "Use case: identity-preserve. Production full-body combat sprite for Nishijin Japanese post-apocalyptic game. Image1 is the current generated character identity and costume authority; preserve her exact face, adult age, dark upswept hair and slim gold-black headband, not a generic young anime girl. Keep black leather long coat with tattered knee-to-calf tails and light lining, white ruffled blouse, brown-black buckle harness/belt, black fitted pants, black gloves, buckled black heeled boots. Maintain detailed painted-realistic materials and natural anatomy.\nCreate ONE whole body from head to both complete boots, facing screen RIGHT in a stable ready stance, head looking right in the same direction as the torso, not at the viewer. Both knees softly bent, feet naturally separated fore/aft without crossing, both boot toes pointing right. No extreme wide stance and no extreme foreshortening. Shoulders relaxed, elbows below shoulders, neck connected naturally into collar.\nShe is holding exactly ONE short heavy rotary-cylinder grenade launcher with the same brass/black steel, huge six-chamber cylinder, vented barrel guard and compact optic as image1. The right-side muzzle points screen RIGHT, slightly downward in low-ready at waist/lower chest height. Rear hand firmly on pistol grip, forward support hand under front handguard near the heavy cylinder; BOTH hands clearly grip only this weapon. Expose the shoulder-to-elbow-to-wrist paths sufficiently for a game rig, elbows below gun, no forearm fused into cylinder. Preserve the distinctive launcher design from image1, not rifle, minigun or rocket tube. No loose weapon sling or straps hanging from hands; body harness remains attached to torso. No muzzle flash or fired projectile.\nComposition: single character, approximately 1298x1212 transparent-alpha canvas with moderate horizontal room for the barrel and separate legs, character about 90% canvas height. No floor/shadow/background/text/frames/duplicates. This is a new combat pose of exactly image1's character, not a new outfit or identity."
+  },
+  "scope": "Source creation only, not whole-body motion or human acceptance."
+}

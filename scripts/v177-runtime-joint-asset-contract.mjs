@@ -50,4 +50,8 @@ const zakimiya=read('../assets/source/quality-20261028/rigs/zakimiya-combat-r1/p
 const zakimiyaIndex=rows.findIndex(row=>row.path==='/art/v100/joints/zakimiya-quality-neck-r4.webp');
 assert.ok(zakimiyaIndex>=0,'Complete Zakimiya body replaces its registered head-only predecessor');
 rows[zakimiyaIndex]=asset(zakimiya);
+const chiha=read('../assets/source/quality-20261028/rigs/mrs-chiha-combat-r1/provenance.json');
+const chihaIndex=rows.findIndex(row=>row.path==='/art/v100/joints/mrs-chiha-quality-neck-r4.webp');
+assert.ok(chihaIndex>=0,'Complete Chiha body replaces head-only predecessor');
+rows[chihaIndex]=asset(chiha);
 export const V177_JOINT_ASSET_ADDITIONS=Object.freeze(rows);

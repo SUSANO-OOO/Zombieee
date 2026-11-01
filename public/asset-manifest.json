@@ -1663,9 +1663,9 @@
       "criticality": "critical"
     },
     {
-      "path": "/art/v100/joints/mrs-chiha-quality-neck-r4.webp",
-      "bytes": 40394,
-      "hash": "sha256-6bb0d985ef5d17297b761c39f067beab64c1a24617b995193cb6a29a350f817d",
+      "path": "/art/v100/joints/mrs-chiha-combat-r1.webp",
+      "bytes": 50388,
+      "hash": "sha256-efff1ae72dbc6858ae37bde64d4686de3956a0d4f5e7f418bbdcff5d0c045c7a",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"
