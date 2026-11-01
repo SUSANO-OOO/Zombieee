@@ -48,6 +48,8 @@ export function V100SurvivalView({ save, onSave, onLoadout }: Props) {
     <span className="v100-kicker">サバイバル</span><h3>サバイバル</h3>
     <p>5波ごとにボスを迎撃し、報酬と中間記録を保存します。3つの強化から1つを選び、装甲車両を守り続けてください。</p>
     <p>物語で撃破したボスだけが出現します。再読み込み時は最後の中間記録から再開します。途中の未制圧の波には報酬はありません。</p>
+    {v100SurvivalBossPool(save.receipts).includes("kurome") && <p>第16波から湾岸の異形も1体ずつ現れます。いつもの感染群に紛れた相手を見逃さないように。</p>}
+    {v100SurvivalBossPool(save.receipts).includes("futago") && <p>第21波からはRED PANTHER兵も1体ずつ参戦。盾役や射撃兵、離れて撃つ指揮官にも備えましょう。</p>}
     <p>最高制圧 {progress.highestCompletedWave}波 / 最高到達 {progress.highestReachedWave}波 / プレイ回数 {progress.totalRuns}回</p>
     {v100SurvivalBossPool(save.receipts).length === 0 ? <p>物語で初めてボスを撃破すると出撃できます。</p> : <>
       <label>開始する波 <input type="number" min={1} max={highestStart} step={10} value={startWave} onChange={event => setStartWave(Number(event.target.value))} /></label>
