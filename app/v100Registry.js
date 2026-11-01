@@ -178,16 +178,19 @@ const UNIT_ROWS = [
   // 30-CAPS upgrade, without replay income, gifts or a changed reward curve.
   ["NAO", "ナオ", "support", 55, 1],
   ["MIZUCHI", "ミズチ", "suppression", 95, 2],
-  ["MONKEY", "モンキー", "engineer", 190, 4],
-  ["CRAZY_KING", "クレイジーキング", "frontline", 220, 5],
-  ["RAIDER", "レイダー", "suppression", 240, 6],
-  ["TATARA", "タタラ", "heavy", 260, 7],
-  ["GANTETSU", "ガンテツ", "heavy", 280, 8],
-  ["MAYO_CHAN", "マヨちゃん", "skirmisher", 300, 10],
-  ["ZAKIMIYA", "ザキミヤ", "frontline", 320, 12],
-  ["TKY", "TKY", "skirmisher", 340, 14],
-  ["MRS_CHIHA", "Mrs.チハ", "marksman", 370, 17],
-  ["MIYAMOTO_MUSASHI", "宮本武蔵", "frontline", 400, 20],
+  // Ten one-star first clears can ready every rescued ally, train four
+  // starters to level 3 and buy healing support, without replay farming.
+  // Later readiness does not exceed its rescue mission's first-clear award.
+  ["MONKEY", "モンキー", "engineer", 90, 4],
+  ["CRAZY_KING", "クレイジーキング", "frontline", 100, 5],
+  ["RAIDER", "レイダー", "suppression", 110, 6],
+  ["TATARA", "タタラ", "heavy", 120, 7],
+  ["GANTETSU", "ガンテツ", "heavy", 130, 8],
+  ["MAYO_CHAN", "マヨちゃん", "skirmisher", 145, 10],
+  ["ZAKIMIYA", "ザキミヤ", "frontline", 160, 12],
+  ["TKY", "TKY", "skirmisher", 175, 14],
+  ["MRS_CHIHA", "Mrs.チハ", "marksman", 195, 17],
+  ["MIYAMOTO_MUSASHI", "宮本武蔵", "frontline", 220, 20],
 ];
 
 export const V100_UNITS = deepFreeze(UNIT_ROWS.map(([key, displayName, role, costCaps, availability]) => ({

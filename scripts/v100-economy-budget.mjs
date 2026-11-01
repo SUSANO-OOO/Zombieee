@@ -20,6 +20,12 @@ const choices = {
   afterStage1: { earnedAtOneStar: first(1, 1), earnedAtTwoStars: first(1, 2), earnedAtThreeStars: first(1, 3), nao: registration["unit-nao"], naoAndOneLevel: registration["unit-nao"] + secondLevel },
   afterStage2: { earned: first(2), earnedAtOneStar: first(2, 1), naoAndMizuchi: registration["unit-nao"] + registration["unit-mizuchi"], naoAndMizuchiAndOneLevel: registration["unit-nao"] + registration["unit-mizuchi"] + secondLevel, naoAndFourLevels: registration["unit-nao"] + secondLevel * 4 },
   afterStage4: { earned: first(4), earnedAtOneStar: first(4, 1), battleReady: registration["unit-nao"] + registration["unit-mizuchi"] + secondLevel * 4 + 50, battleReadyAndVehicle: registration["unit-nao"] + registration["unit-mizuchi"] + secondLevel * 4 + 50 + V100_VEHICLE.upgradeCosts[0] },
+  midCampaign: [10, 14, 20].map(number => {
+    const allRescuedReadiness = V100_UNITS.filter(unit => unit.availabilityStageNumber <= number).reduce((sum, unit) => sum + unit.registrationCostCaps, 0);
+    const fourStartersToLevel3 = 4 * (V100_LEVEL_COSTS[0] + V100_LEVEL_COSTS[1]);
+    return { afterStage: number, earnedAtOneStar: first(number, 1), allRescuedReadiness, fourStartersToLevel3,
+      healingSupport: 50, remaining: first(number, 1) - allRescuedReadiness - fourStartersToLevel3 - 50 };
+  }),
   fullCampaign: { earnedAtOneStar: first(30, 1), earnedAtThreeStars: first(30, 3), registrationTotal, vehicleTotal, fullLevelOneUnit, allRegistrationVehicleOneMaxUnit: registrationTotal + vehicleTotal + fullLevelOneUnit },
 };
 assert.equal(choices.afterStage1.earnedAtOneStar >= choices.afterStage1.nao, true, "even a one-star first clear can register Nao");
@@ -32,6 +38,7 @@ assert.equal(choices.afterStage4.earnedAtOneStar >= choices.afterStage4.battleRe
 assert.equal(choices.afterStage4.earnedAtOneStar < choices.afterStage4.battleReadyAndVehicle, true);
 assert.equal(choices.afterStage4.earned >= choices.afterStage4.battleReadyAndVehicle, true);
 assert.equal(choices.fullCampaign.earnedAtThreeStars, V100_STAGE_REWARD_TOTAL);
+assert.ok(choices.midCampaign.every(choice => choice.remaining >= 0), 'minimum first clears fund rescued allies plus modest core training and healing');
 assert.equal(choices.fullCampaign.earnedAtThreeStars < choices.fullCampaign.allRegistrationVehicleOneMaxUnit, true);
 assert.equal(v100StageReward(1, "replay") > 0, true, "replay reward prevents a permanent spending dead end");
 
