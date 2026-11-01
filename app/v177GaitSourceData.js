@@ -204,8 +204,8 @@ export const V177_AUTHORED_GAITS = {
     },
     "sources": [
       {
-        "file": "assets/source/v177/paisen/battle-r8/parts.json",
-        "sha256": "9deecbf423cad8cb4b12e316c13e6a857e3cbb895de1b857c2f0f06c7be114c3",
+        "file": "assets/source/quality-20261028/rigs/brawler-combat-r1/parts.json",
+        "sha256": "4b822ba4ded4a6c2857295402ae7eb054021994c047707f4138711c382e9fbed",
         "hashEncoding": "utf8-lf"
       }
     ]
@@ -260,8 +260,8 @@ export const V177_AUTHORED_GAITS = {
     },
     "sources": [
       {
-        "file": "assets/source/v100/joints/guardian-r1/parts.json",
-        "sha256": "4e8299cefc7f39369c4f3379379187adf9330e40c17e6ca73f5ab2d0549df090",
+        "file": "assets/source/quality-20261028/rigs/guardian-combat-r1/parts.json",
+        "sha256": "dcf5892ecbc96a5769f7b1dc3f4640e2453542c3983d0435a4e98704ce5dda6b",
         "hashEncoding": "utf8-lf"
       }
     ]

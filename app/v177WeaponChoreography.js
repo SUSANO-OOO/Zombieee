@@ -217,7 +217,9 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
   const shoulder=point(torso,primary.shoulder);
   const goal=[shoulder[0]+reach*.72,shoulder[1]+reach*.28];
   const hand=[home[0]+(goal[0]-home[0])*raised,home[1]+(goal[1]-home[1])*raised];
-  const aim=nearAngle(-Math.PI*.5-sourceDirection,restAngle);
+  // A shield is already upright in its own source paint. Its impact socket
+  // marks the forward face, not an axis to rotate upward like Kuma's pan.
+  const aim=kind==='guardian'?restAngle:nearAngle(-Math.PI*.5-sourceDirection,restAngle);
   upper[atlas.weaponBone]=rigid(pivot,hand,restAngle+(aim-restAngle)*raised);
  }else if(kind==='brawler'&&plan.abilityPresentation==='fist-wave'){
   // Bring both fists from the waist to the same forward pressure plane.
@@ -279,7 +281,7 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
     rows=[[.18,reach*.45,reach*.70],[.23,reach*.45,reach*.70],[.28,reach*.88,reach*.06],[.48,reach*.35,-reach*.70],[.64,reach*.35,-reach*.70]];
    }
    if(kind==='brute'){[wind,hit,follow]=[-2.25,-.65,-.3];rows=[[.18,23,-26],[.23,23,-26],[.28,38,13],[.48,35,28],[.64,35,28]];}
-   else if(['guardian','gate-eater','red-panther-shield'].includes(kind)){[wind,hit,follow]=[restDirection-.25,restDirection,restDirection+.10];rows=[[.18,23,38],[.23,23,38],[.28,66,16],[.48,62,24],[.64,62,24]];}
+   else if(['guardian','gate-eater','red-panther-shield'].includes(kind)){[wind,hit,follow]=[restDirection-.25,restDirection,restDirection+(kind==='guardian'?0:.10)];rows=[[.18,23,38],[.23,23,38],[.28,66,16],[.48,62,24],[.64,62,24]];}
    else if(kind==='kumaverson'){[wind,hit,follow]=[-1.7,-.08,.85];rows=[[.18,9,-reach*.95],[.23,9,-reach*.95],[.28,reach*.96,0],[.48,reach*.77,reach*.52],[.64,reach*.77,reach*.52]];}
    else if(kind==='takuya-omega'){[wind,hit,follow]=[-2.75,.25,.9];rows=[[.08,0,150],[.18,45,140],[.23,45,140],[.25,0,165],[.28,reach*.55,reach*.83],[.48,reach*.62,reach*.5],[.64,reach*.62,reach*.5]];}
    else if(kind==='takuya'){rows=[[.18,70,-10],[.23,70,-10],[.28,90,35],[.48,70,65],[.64,70,65]];}

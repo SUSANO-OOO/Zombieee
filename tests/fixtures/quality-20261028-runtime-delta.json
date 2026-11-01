@@ -1,6 +1,6 @@
 {
   "base": "ff5dba24e88c810182cda1f044bd26dfc3e512c1",
-  "source": "19c748453e5328f3350ce71c9c05ee0a19c46eb0 plus complete Tatara and Raider combat bodies",
+  "source": "0495b06f54f9de8a8d336f8ca08ea5aad4279668 plus complete Gantetsu and Paisen combat bodies",
   "scope": "Local quality candidate transport contract; not likeness, rights, listening, release or physical-device approval.",
   "added": [
     {
@@ -12,9 +12,9 @@
       "criticality": "critical"
     },
     {
-      "path": "/art/v100/joints/brawler-quality-neck-r4.webp",
-      "bytes": 40368,
-      "hash": "sha256-5f9fa0f00eecb6b8767426b97f94c00e5400b920a85058bf757a793f04f8c0cd",
+      "path": "/art/v100/joints/brawler-combat-r1.webp",
+      "bytes": 30884,
+      "hash": "sha256-d444e32ddc317662f05890460bb82659c2c29350cb96f784501705fed29ba949",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"
@@ -44,9 +44,9 @@
       "criticality": "critical"
     },
     {
-      "path": "/art/v100/joints/guardian-quality-neck-r4.webp",
-      "bytes": 47712,
-      "hash": "sha256-2db1d4c79bb0425228207f1b9a4d071eebc638738524a010ab42affe62c22c78",
+      "path": "/art/v100/joints/guardian-combat-r1.webp",
+      "bytes": 46064,
+      "hash": "sha256-1906e56f9bb7e77334de879c0a80cde61f578f4ef5c5c7fefbefbfa2a41f0bdb",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"

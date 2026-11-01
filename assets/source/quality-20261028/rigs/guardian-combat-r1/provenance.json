@@ -1,0 +1,138 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "guardian",
+  "assetPath": "/art/v100/joints/guardian-combat-r1.webp",
+  "bytes": 46064,
+  "sha256": "1906e56f9bb7e77334de879c0a80cde61f578f4ef5c5c7fefbefbfa2a41f0bdb",
+  "atlasPacking": "height-descending-shelves",
+  "generatedPartsStudySha256": "759fa89aed0022e5b59e6c837f884693b09c03bd47e6fcb04eca6cdf9a67426d",
+  "identitySourceSha256": "1e76ef00d2281c8992c71334b57188e88f6dd26523da6260aa846710c1abb79e",
+  "identityBinding": {
+    "path": "/art/v070/characters/guardian-battle-v1.png",
+    "sourceSha256": "df8f55392dbe96426684bc05a159c82558071c7dbba6db0d4119f2bcdeffb39e",
+    "sourceRect": {
+      "x": 480,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "referenceTransform": {
+      "scale": 1.219941348973607,
+      "tx": -52.175953079178896,
+      "ty": -95.01466275659823,
+      "flipX": false
+    },
+    "modelSource": "assets/source/quality-20261028/identity/gantetsu-master-r4.png",
+    "modelSha256": "ec06125c13977b05bbc704a7b8594b2c3b3bf716f7954e4647158ec8edadf51d",
+    "combatSource": "assets/source/quality-20261028/rigs/guardian-combat-r1/combat-model-r1.png",
+    "combatSha256": "1e76ef00d2281c8992c71334b57188e88f6dd26523da6260aa846710c1abb79e"
+  },
+  "motionSha256": "4cee52c75dab24339548e20af26e82c0659d521f49dcc97612f5124b369bd90f",
+  "parts": [
+    {
+      "name": "coat-far",
+      "file": "coat-far.png",
+      "sha256": "6683d5c291b73f81f7a1b75d6037fd82ba14c79743185b716b57da1f56eb7d3c",
+      "original": false
+    },
+    {
+      "name": "far-upper-arm",
+      "file": "far-upper-arm.png",
+      "sha256": "a2da7de3ee076f247970dea0c1bac84a9f4c8d57db494f1e6ebb40f603ea11e7",
+      "original": false
+    },
+    {
+      "name": "far-forearm",
+      "file": "far-forearm.png",
+      "sha256": "3041cfeb8354b470b4cedd3959cc24136edbc29ad1912d3b4d7fa30f10b92741",
+      "original": false
+    },
+    {
+      "name": "far-thigh",
+      "file": "far-thigh.png",
+      "sha256": "d1ed6a2a92f072f8405585e6e21229cbfc0d9eb9d4a3bd46624c6ecfdc7d772c",
+      "original": false
+    },
+    {
+      "name": "far-shin",
+      "file": "far-shin.png",
+      "sha256": "b33cee64b3dc204a17fae4d4bd5d437c8d1ea7b6f4971d90d306e902a7e44778",
+      "original": false
+    },
+    {
+      "name": "far-boot",
+      "file": "far-boot.png",
+      "sha256": "e8fe4dfc0b066b78228b47eb91e057048b436146499140cae51d63c1d1c3fb38",
+      "original": false
+    },
+    {
+      "name": "near-thigh",
+      "file": "near-thigh.png",
+      "sha256": "67caba63a1dfcdfb7dabd89479a4fb85b796d92fb14f8f4cdba4f89609137d9d",
+      "original": false
+    },
+    {
+      "name": "near-shin",
+      "file": "near-shin.png",
+      "sha256": "f847a2a7bf8efbb60dc04e94cb9f8816c62e929d98e7590f22cdc5a93040fcd1",
+      "original": false
+    },
+    {
+      "name": "near-boot",
+      "file": "near-boot.png",
+      "sha256": "369830be0c60079f549ae6a3e30ec667bfd6958c239909e92da1452197ba31d2",
+      "original": false
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "d3a82a8307c49d35a47d695c16d0afc43e7cbb6767ad06298e2d16b1d9dd41c7",
+      "original": false
+    },
+    {
+      "name": "coat-near",
+      "file": "coat-near.png",
+      "sha256": "b2e13435ff7fecbaca14eb656772653105f5b6e9d80e30b556ef66b648ba769b",
+      "original": false
+    },
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "a943b97d2fb6205a1e2a979665ee2f1edc9b3141150ef963cac23dd95574fbc1",
+      "original": false
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "b99c2313e3f542384b5c3b490f7841f0d99af76b1e6aeed96a5af7e97e726787",
+      "original": false
+    },
+    {
+      "name": "near-upper-arm",
+      "file": "near-upper-arm.png",
+      "sha256": "c1324488ccb547b7f314c7444e2b68d0c73310a971063815b9e59d60f298602c",
+      "original": false
+    },
+    {
+      "name": "near-forearm",
+      "file": "near-forearm.png",
+      "sha256": "08ba8ad64a1d28829b8844873c0df29756ce077eecc4e38127d9bed4a2586b91",
+      "original": false
+    },
+    {
+      "name": "weapon-and-hands",
+      "file": "weapon-and-hands.png",
+      "sha256": "f99a0a703cb617398df9ddc970af30e284597fd61ef05568a63dd42c73019695",
+      "original": false
+    }
+  ],
+  "source": "Complete Gantetsu body from current generated master with hidden-cloth underpainting; both hands share the held shield transform. Deterministic fixed-length 2D kinematics, not Blender execution. Motion and human acceptance pending.",
+  "groundY": 433,
+  "decodedBytes": 387072,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}

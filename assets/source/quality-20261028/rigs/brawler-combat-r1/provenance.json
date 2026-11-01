@@ -1,0 +1,123 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "brawler",
+  "assetPath": "/art/v100/joints/brawler-combat-r1.webp",
+  "bytes": 30884,
+  "sha256": "d444e32ddc317662f05890460bb82659c2c29350cb96f784501705fed29ba949",
+  "atlasPacking": "height-descending-shelves",
+  "generatedPartsStudySha256": "4a536a4ef2f6ee5a04daa4f8671506c9378a69d16937870dbae6b1d2415f7f0d",
+  "identitySourceSha256": "f0b9801dbe690e55ed31c11cdd24dccdcea8f397f1b5834787e86ca4740a6bee",
+  "identityBinding": {
+    "path": "/art/v100/portraits/paisen-identity-r2.webp",
+    "sourceSha256": "2abe752277e3c7947755b9af17c77d9e563233073ad428dcda8397106b3b2342",
+    "role": "Producer-photo identity master; battle derivative separately source-bound",
+    "battleReference": "assets/source/v177/paisen/battle-r8/identity-reference.png",
+    "bodyReference": "assets/source/v177/paisen/battle-reference-r2.png",
+    "modelSource": "assets/source/quality-20261028/identity/paisen-photo-master-r7.png",
+    "modelSha256": "c769eb81a096e9fb1747df0c4ab93452b2ad844fb37e21707d5ef51aec76de66",
+    "combatSource": "assets/source/quality-20261028/rigs/brawler-combat-r1/combat-model-r2.png",
+    "combatSha256": "f0b9801dbe690e55ed31c11cdd24dccdcea8f397f1b5834787e86ca4740a6bee"
+  },
+  "motionSha256": "ae4a500e13ac5de177b413eb7ff8678a01a80c6aadd6e69e6cbe5dc3c3dcbf8a",
+  "parts": [
+    {
+      "name": "far-upper-arm",
+      "file": "far-upper-arm.png",
+      "sha256": "044f898541f2ca8da97b9c0a3885f86ac99cc691097acc872d7be8abd9a1cfcc",
+      "original": false
+    },
+    {
+      "name": "far-forearm",
+      "file": "far-forearm.png",
+      "sha256": "4ea2417d3430fda0ac01b85012f480dc8bc17a64f56632570655de30bf23f503",
+      "original": false
+    },
+    {
+      "name": "far-thigh",
+      "file": "far-thigh.png",
+      "sha256": "860fcd66be18aab2704dbe8651172dde3878219498f80c9b57be62346f0b7c15",
+      "original": false
+    },
+    {
+      "name": "far-shin",
+      "file": "far-shin.png",
+      "sha256": "ea4e76d90bb38cd89020d5417e26579be9394bbae642f1809f95404abb44147d",
+      "original": false
+    },
+    {
+      "name": "far-boot",
+      "file": "far-boot.png",
+      "sha256": "393eaaf9fe8002394e980d9e650eb008a8e9754c1252af0d062144394c561b5f",
+      "original": false
+    },
+    {
+      "name": "near-thigh",
+      "file": "near-thigh.png",
+      "sha256": "e391417619c74ce29d90763262426701c3ecc1ff91c89c5f5cd5f11bdc936250",
+      "original": false
+    },
+    {
+      "name": "near-shin",
+      "file": "near-shin.png",
+      "sha256": "47760e54148ecbc8a8ec529444db67ef41ed6f284a2f765a61a96fc4074122c6",
+      "original": false
+    },
+    {
+      "name": "near-boot",
+      "file": "near-boot.png",
+      "sha256": "fe16359e04f3fa9548075db9980770d44da4b3926e07ac637bdaa67da367446d",
+      "original": false
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "f78268fcc8985c7c7bbc85e4071225929556f10ac23bf8e2e4fb08f111281c8e",
+      "original": false
+    },
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "43e14a2bca2383d1eebe0259590a2186c3a6f9876748510fda9b6367c37156a2",
+      "original": false
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "6336055f5646906463256af09c9e7e493bad199dc83963dfd8c887b158324dd5",
+      "original": false
+    },
+    {
+      "name": "near-upper-arm",
+      "file": "near-upper-arm.png",
+      "sha256": "78a96d5c03718498fd16d1ce822fdc365d8c52b4bd9c1df719b03a49c2f5cc8c",
+      "original": false
+    },
+    {
+      "name": "near-forearm",
+      "file": "near-forearm.png",
+      "sha256": "5e5cfc081e43314095aee4aa9e2f03f07bfbf4f8ca4d59e63a3e121f23f90fc7",
+      "original": false
+    },
+    {
+      "name": "free-hand",
+      "file": "free-hand.png",
+      "sha256": "146b16877901715411e02875f23ab376028321fa96d4115a6f21ccc8327557e8",
+      "original": false
+    },
+    {
+      "name": "weapon-and-hands",
+      "file": "weapon-and-hands.png",
+      "sha256": "0ba04d0d36bd22ad488189acbc18d981dccbc04f2bdee4b2b81e867983054b57",
+      "original": false
+    }
+  ],
+  "source": "Complete Paisen body from current generated master with hidden-cloth underpainting; each bare fist retains its independent arm transform. Deterministic fixed-length 2D kinematics, not Blender execution. Motion and human acceptance pending.",
+  "groundY": 425,
+  "decodedBytes": 223232,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}

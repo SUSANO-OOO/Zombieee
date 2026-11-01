@@ -66,4 +66,12 @@ const gunner=read('../assets/source/quality-20261028/rigs/gunner-combat-r1/prove
 const gunnerIndex=rows.findIndex(row=>row.path==='/art/v100/joints/gunner-quality-neck-r4.webp');
 assert.ok(gunnerIndex>=0,'Complete Raider body replaces head-only predecessor');
 rows[gunnerIndex]=asset(gunner);
+const guardian=read('../assets/source/quality-20261028/rigs/guardian-combat-r1/provenance.json');
+const guardianIndex=rows.findIndex(row=>row.path==='/art/v100/joints/guardian-quality-neck-r4.webp');
+assert.ok(guardianIndex>=0,'Complete Gantetsu body replaces head-only predecessor');
+rows[guardianIndex]=asset(guardian);
+const brawler=read('../assets/source/quality-20261028/rigs/brawler-combat-r1/provenance.json');
+const brawlerIndex=rows.findIndex(row=>row.path==='/art/v100/joints/brawler-quality-neck-r4.webp');
+assert.ok(brawlerIndex>=0,'Complete Paisen body replaces head-only predecessor');
+rows[brawlerIndex]=asset(brawler);
 export const V177_JOINT_ASSET_ADDITIONS=Object.freeze(rows);

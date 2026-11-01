@@ -1,0 +1,30 @@
+{
+  "creator": "OpenAI built-in imagegen",
+  "role": "Current generated Paisen r7 is face authority; old r8 reference is lower-clothing and shoes only",
+  "master": "assets/source/quality-20261028/identity/paisen-photo-master-r7.png",
+  "masterSha256": "c769eb81a096e9fb1747df0c4ab93452b2ad844fb37e21707d5ef51aec76de66",
+  "generations": [
+    {
+      "file": "combat-model-r1.png",
+      "original": "exec-43e916ac-eb64-4b1b-9ad1-2e6df10cdf83.png",
+      "prompt": "Use case: identity-preserve. Asset type: full-body 2D tactical game battle character, one transparent cutout. Input1 is the current approved generated face/body/clothing authority for Paisen. Input2 is ONLY supporting evidence for the white knee-length shorts and dark sneakers; do not take its obsolete face as authority. Make this same adult man from image1, with his recognizable short straight black hair, rounded jaw and cheeks, natural eyebrows and eye shape, normal strong but not exaggerated body, plain navy-purple short-sleeved crew-neck T-shirt and white knee-length shorts. Preserve his own face proportions, do not make a different handsome model or overmuscular action star. Pose him fully standing in a natural boxer-ready stance facing image RIGHT, approximately 70 degrees away from the camera, looking at an opponent to the right. Both bare fists raised independently in front of his chest, one slightly higher/forward, with clear anatomically correct shoulders, elbows and wrists. No fist overlaps his face, no crossed arms. Relaxed shoulders and natural neck; two distinct knees, lightly flexed, modest staggered stance with both feet and toes pointing right and planted on the same horizontal ground line. Do not use a deep squat, overly wide spread, crossed legs, or a front-facing rear shoe. His dark low-top sneakers with pale soles are fully visible. Clean-shaven, no tattoos or accessories, no weapons, no gloves, no added clothes. Real skin and cloth detail with a very restrained painterly finish matching input1, not thick comic outlines, not plastic. Show head to both soles with ample empty transparent margin on all sides. True transparent alpha background, absolutely no gray/black background, no glow/halo/vignette, no floor/shadow, text, collage, or other person.",
+      "sha256": "3690311d610cab75d2c91c78ceb8696e9c73bc5d8c1acde8e6962cdd6d98a257"
+    },
+    {
+      "file": "body-underpainting-r1.png",
+      "original": "exec-d95679d2-b6f4-4f30-8b94-1706302d11dd.png",
+      "prompt": "Edit this exact Paisen combat sprite into a hidden-body underpainting for cutout animation. Preserve the SAME canvas dimensions, head and recognizable face, short black hair, natural neck, purple/navy crew-neck T-shirt, white knee-length shorts, lower legs, sneakers and exact pose/position. Remove BOTH arms and both fists completely from the shoulder seams down, including the hanging shirt sleeve pieces, and reconstruct the normally hidden solid T-shirt cloth over his torso. Leave an anatomically natural clothed shoulder-to-waist contour with no arm or sleeve stumps sticking out. This is a fully clothed game animation underlayer, not injury. Keep the neckline, shirt hem, shorts, both knees and shoes precisely aligned to input; do not slim him, add muscles, alter facial proportions, or change camera/lighting. True transparent alpha outside the figure, no background halo, scenery, floor, shadow, text or additional panels.",
+      "sha256": "4a536a4ef2f6ee5a04daa4f8671506c9378a69d16937870dbae6b1d2415f7f0d"
+    },
+    {
+      "prompt": "Precise LOWER-BODY-ONLY revision of this exact adult Paisen combat sprite, not a new identity. Keep the exact face, short black hair, rounded cheeks, navy-purple plain T-shirt, white knee-length shorts, bare fists and all upper-body pose/scale/position unchanged. Correct from waist down for a side-view action game: both dark sneakers point fully screen RIGHT in side profile; BOTH complete soles rest on the SAME horizontal baseline near y1460, with no perspective height difference. Legs in a modest ready stance, rear foot slightly left, front foot slightly right, feet roughly under the hips, knees subtly bent forward toward screen right; not a squat, lunge or crossed legs. Keep realistic ordinary athletic proportions, calves not bulging, natural knee contours. Shorts hang naturally to just above knees. Entire figure inside same1024x1536 canvas, retain matching painted-realistic style. True transparent alpha outside the figure; no floor/background/gradient/shadow/text. Preserve upper-body identity and clothing exactly; alter only legs/shorts as needed to make a neutral, grounded, animation-ready standing pose.",
+      "original": "exec-c03e0afc-55dc-49a6-b783-d9c20569422e.png",
+      "role": "Lower-body revision of own combat model; previous upper-body identity and underpainting remain bound",
+      "file": "combat-model-r2.png",
+      "sha256": "f0b9801dbe690e55ed31c11cdd24dccdcea8f397f1b5834787e86ca4740a6bee"
+    }
+  ],
+  "tool": "OpenAI built-in image_gen",
+  "license": "Project-generated derivative; commercial use, modification and redistribution under applicable OpenAI terms",
+  "producerApproval": "Existing generated model is identity authority; this combat derivative remains not Producer accepted"
+}

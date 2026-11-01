@@ -1,3 +1,5 @@
+import {QUALITY_GANTETSU_COMBAT_ATLAS} from './qualityGantetsuCombatJointData.js';
+import {QUALITY_PAISEN_COMBAT_ATLAS} from './qualityPaisenCombatJointData.js';
 import {QUALITY_TATARA_COMBAT_ATLAS} from './qualityTataraCombatJointData.js';
 import {QUALITY_RAIDER_COMBAT_ATLAS} from './qualityRaiderCombatJointData.js';
 import {QUALITY_MUSASHI_COMBAT_ATLAS} from './qualityMusashiCombatJointData.js';
@@ -54,6 +56,8 @@ export const QUALITY_CHARACTER_ATLASES=Object.freeze({
  'miyamoto-musashi':QUALITY_MUSASHI_COMBAT_ATLAS,
  brute:QUALITY_TATARA_COMBAT_ATLAS,
  gunner:QUALITY_RAIDER_COMBAT_ATLAS,
+ guardian:QUALITY_GANTETSU_COMBAT_ATLAS,
+ brawler:QUALITY_PAISEN_COMBAT_ATLAS,
  tky:QUALITY_TKY_COMBAT_ATLAS,
  zakimiya:QUALITY_ZAKIMIYA_COMBAT_ATLAS,
 });
