@@ -255,17 +255,19 @@ test("marker input uses the production-selected target without bypassing health,
   assert.equal(ready([owner, { ...enemy, x: 900 }]), false);
   assert.equal(ready([owner, { ...enemy, combatReady: false }]), false);
   assert.equal(ready([owner, enemy], 8), false);
-  const priorityThreat = { ...enemy, id: 4, kind: "spitter", hp: 40 };
+  const priorityThreat = { ...enemy, id: 4, kind: "kurome", hp: 40 };
   assert.equal(ready([owner, enemy, priorityThreat]), false, "cannot silently choose a healthier lower-priority target");
   const before = JSON.stringify([owner, enemy]);
   ready([owner, enemy]);
   assert.equal(JSON.stringify([owner, enemy]), before);
 });
 
-test("marker input excludes the actual Stage21 committed contact race without reserving a target", () => {
+test("marker input excludes a committed contact on the selected target without reserving it", () => {
   const owner = { id: 9, side: "human", kind: "babayaga", hp: 76, combatReady: true, x: 203, y: 262, attackWindup: 0, cooldown: .9 };
   const target = { id: 8, side: "zombie", kind: "turned", hp: 95, combatReady: true, x: 368, y: 242 };
-  const lowerPriority = { ...target, id: 3, kind: "red-panther-smg", hp: 149, x: 444 };
+  // Preserve the historical contact geometry, but use a genuinely lower-priority crowd.
+  // Gunmen now intentionally outrank the turned enemy.
+  const lowerPriority = { ...target, id: 3, kind: "walker", hp: 149, x: 444 };
   const hit = { eventKind: "impact", applyDamage: true, damage: 31, targetKind: "fighter", targetId: 8 };
   const sample = { fighters: [owner, target, lowerPriority], pendingWeaponHits: [hit] };
   const before = JSON.stringify(sample);
@@ -277,6 +279,15 @@ test("marker input excludes the actual Stage21 committed contact race without re
     { ...hit, applyDamage: false }, { ...hit, damage: 0 }, { ...hit, targetKind: "enemy-base" }]) {
     assert.equal(babayagaMarkerInputReady({ ...sample, pendingWeaponHits: [irrelevant] }, 9), true);
   }
+});
+
+test("Stage21 historical pair now selects the gunman without inheriting another enemy's contact", () => {
+  const owner = { id: 9, side: "human", kind: "babayaga", hp: 76, combatReady: true, x: 203, y: 262, attackWindup: 0, cooldown: .9 };
+  const turned = { id: 8, side: "zombie", kind: "turned", hp: 95, combatReady: true, x: 368, y: 242 };
+  const gunman = { ...turned, id: 3, kind: "red-panther-smg", hp: 149, x: 444 };
+  const hit = { eventKind: "impact", applyDamage: true, damage: 31, targetKind: "fighter", targetId: 8 };
+  assert.equal(babayagaMarkerInputReady({ fighters: [owner, turned, gunman], pendingWeaponHits: [hit] }, 9), true);
+  assert.equal(babayagaMarkerInputReady({ fighters: [owner, turned, { ...gunman, hp: 95 }], pendingWeaponHits: [{ ...hit, targetId: 3 }] }, 9), false);
 });
 
 test("marker input waits past Stage21's impending direct ally hit on the selected target", () => {

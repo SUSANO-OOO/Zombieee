@@ -11176,6 +11176,35 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         setScreen("battle");
         return proof;
       },
+      prepareManualAbilityTargetChoiceProof: (kind: UnitKind, gunman: "red-panther-smg" | "red-panther-commander" = "red-panther-smg") => {
+        if (!["ranger", "babayaga", "scout", "engineer"].includes(kind)
+          || !["red-panther-smg", "red-panther-commander"].includes(gunman)) {
+          throw new RangeError("Unknown manual ability target-choice proof");
+        }
+        const g = gameRef.current;
+        const proof = prepareManualAbilityProof(g, [kind]);
+        const owner = g.fighters.find(fighter => fighter.id === proof.ownerIds[0])!;
+        g.fighters = [owner];
+        owner.lane = 1; owner.anchorLane = 1;
+        owner.x = 300; owner.y = activeLaneCenters[1];
+        const precision = kind === "ranger" || kind === "babayaga";
+        const pair: EnemyKind[] = precision ? ["runner", gunman] : ["pall-manta", "red-panther-knife"];
+        const targets = pair.map((enemyKind, index) => {
+          const enemy = spawnEnemy(g, enemyKind, 1);
+          enemy.x = owner.x + (index === 0 ? 75 : 140);
+          enemy.y = owner.y + (index === 0 ? 0 : 50);
+          enemy.laneSpeed = 0;
+          enemy.cooldown = 99; enemy.abilityCooldown = 99;
+          enemy.combatReady = true; enemy.gateEntering = false;
+          enemy.targetId = null; enemy.retargetIn = 99;
+          return { id: enemy.id, kind: enemy.kind, hp: enemy.hp, x: enemy.x, y: enemy.y, speed: enemy.speed };
+        });
+        g.paused = true;
+        selectedActionRef.current = null; setSelectedAction(null);
+        setStarted(true); setPaused(true); setEnd(null); setScreen("battle");
+        return { ownerId: owner.id, kind, targets,
+          scope: "Prepared target choice; ordinary enemy movement and native ability input after resume. Enemy attacks and owner's ordinary attacks are held for isolation." };
+      },
       prepareCrazyKingIndicatorContinuityProof: () => {
         const g = gameRef.current;
         const proof = prepareManualAbilityProof(g, ["crazy-king"]);

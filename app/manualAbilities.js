@@ -1,4 +1,5 @@
 import { deepFreeze } from "./content/freeze.js";
+import { ENEMY_CONTENT } from "./content/enemyCatalog.js";
 
 export const MANUAL_ABILITY_REGISTRY = deepFreeze({
   brawler: {
@@ -321,13 +322,17 @@ function stableId(left, right) {
   return String(left).localeCompare(String(right));
 }
 
+const BOSS_ENEMY_KINDS = new Set(ENEMY_CONTENT.filter(enemy => enemy.spawnClass === "boss").map(enemy => enemy.id));
+const HEAVY_ENEMY_KINDS = new Set(ENEMY_CONTENT.filter(enemy => enemy.spawnClass === "heavy").map(enemy => enemy.id));
+
 function bossTarget(candidate) {
   return candidate?.isBoss === true
     || candidate?.boss === true
-    || ["takuya", "gate-eater", "kurome", "mother", "ooguchi", "gairen", "futago"].includes(candidate?.kind);
+    || BOSS_ENEMY_KINDS.has(candidate?.kind);
 }
 
-const FAST_ENEMY_KINDS = Object.freeze(["runner", "sprinter", "turned", "spindle", "pall-manta"]);
+// A projectile canopy is slow cover, while knife troops charge the back line.
+const FAST_ENEMY_KINDS = Object.freeze(["runner", "sprinter", "turned", "spindle", "red-panther-knife"]);
 const RANGED_SPECIAL_KINDS = Object.freeze([
   "spitter",
   "ooze",
@@ -335,13 +340,15 @@ const RANGED_SPECIAL_KINDS = Object.freeze([
   "resonator",
   "choir-knot",
   "anchor-bloom",
+  "red-panther-smg",
+  "red-panther-commander",
 ]);
 
 function threatPriority(candidate) {
   if (bossTarget(candidate)) return 4;
   if (RANGED_SPECIAL_KINDS.includes(candidate?.kind)) return 3;
   if (FAST_ENEMY_KINDS.includes(candidate?.kind)) return 2;
-  return ["crusher", "abomination", "grappler", "cagewalker"].includes(candidate?.kind) ? 1 : 0;
+  return HEAVY_ENEMY_KINDS.has(candidate?.kind) ? 1 : 0;
 }
 
 function forwardCandidates(owner, fighters, range, effectHalfHeight = Infinity) {
