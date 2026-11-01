@@ -591,7 +591,7 @@ import {
   escortCartX,
   stationHumanMoveSpeed,
 } from "./stationStageMechanics.js";
-import { drawV100MissionVehicles, V100_MISSION_VEHICLES, V100_MISSION_VEHICLE_ART } from "./v100MissionVehicles.js";
+import { drawV100MissionVehicles, drawV100MissionVehicleBody, v100MissionVehiclePlacements, V100_MISSION_VEHICLES, V100_MISSION_VEHICLE_ART } from "./v100MissionVehicles.js";
 import { v100VehicleSprite, v100EscortDestinationState } from "./v100MissionVehicleSprites.js";
 import { drawV100MissionNode, V100_NODE_PROFILES } from "./v100MissionNodes.js";
 import { drawV100ClinicalControl } from "./v100ClinicalControl.js";
@@ -6166,15 +6166,15 @@ function drawStationHazard(ctx: CanvasRenderingContext2D, hazard: StationHazard,
 
 let stationMissionDiagnosticFallbackDrawCount = 0;
 
-function drawStationMission(ctx: CanvasRenderingContext2D, g: Game, stageObjects: SpriteMap, allowDiagnosticFallback = false) {
+function drawStationMission(ctx: CanvasRenderingContext2D, g: Game, stageObjects: SpriteMap, allowDiagnosticFallback = false, deferVehicles = false) {
   drawV100DefensePerimeter(ctx, g, stageObjects, 340, activeLaneCenters[2] + 30);
   if (drawV100ClinicalControl(ctx, g, stageObjects, 650, activeLaneCenters[0] + 30)) return;
   if (g.definition.missionType === STATION_MISSION_TYPES.ESCORT) {
     const x = escortCartX(g.stageMission, g.definition.missionConfig);
-    const y = activeLaneCenters[1] + 13;
+    const y = activeLaneCenters[1] + (g.definition.missionConfig.v100StageNumber ? 0 : 13);
     const integrity = Math.max(0, g.stageMission.integrity ?? 0);
     const maxIntegrity = Math.max(1, g.stageMission.maxIntegrity ?? 1);
-    if (drawV100MissionVehicles(ctx,g,stageObjects,x,y)) return;
+    if (drawV100MissionVehicles(ctx,g,stageObjects,x,y,{deferBodies:deferVehicles})) return;
     ctx.save();
     ctx.translate(x, y);
     ctx.fillStyle = "rgba(0,0,0,.45)";
@@ -8868,7 +8868,7 @@ function drawWorld(
   for (const effect of g.manualAbilityVfx) drawManualAbilityVfx(ctx, effect,Boolean(g.definition.missionConfig.v100StageNumber));
   if (!g.definition.missionConfig.v100StageNumber) for (const fighter of g.fighters) drawCrazyKingAbilityIndicator(ctx, fighter, g.time);
   for (const hazard of g.stationHazards) drawStationHazard(ctx, hazard, g.time);
-  drawStationMission(ctx, g, stageObjects, allowDiagnosticFallback);
+  drawStationMission(ctx, g, stageObjects, allowDiagnosticFallback, true);
   drawEmergencySupport(ctx, g, stageObjects);
   drawPlacementIndicator(ctx, g.placementIndicator);
 
@@ -9118,6 +9118,7 @@ function drawWorld(
   const centralBossKind = g.definition.missionConfig.v100StageNumber
     ? bossBattleHudSnapshot(g)?.enemyKind : null;
   const renderables = [
+    ...v100MissionVehiclePlacements(g, escortCartX(g.stageMission, g.definition.missionConfig), activeLaneCenters[1]),
     ...g.fighters.map((fighter) => ({
       type: "fighter" as const,
       pass: interiorDeploymentFighterIds.has(fighter.id) ? 0 : 2,
@@ -9138,8 +9139,13 @@ function drawWorld(
       y: object.y,
       object,
     })),
-  ].sort((a, b) => a.pass - b.pass || a.y - b.y || a.x - b.x);
+  ].sort((a, b) => a.pass - b.pass || a.y - b.y
+    || Number(b.type === 'mission-vehicle') - Number(a.type === 'mission-vehicle') || a.x - b.x);
   for (const renderable of renderables) {
+    if (renderable.type === 'mission-vehicle') {
+      drawV100MissionVehicleBody(ctx, renderable, stageObjects);
+      continue;
+    }
     if (renderable.type === "crawler-foreground") {
       drawCrawlerForegroundMask(ctx, g, sprites, graphicsProfile);
       continue;

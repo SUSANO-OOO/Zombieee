@@ -32,7 +32,26 @@ export function v100MissionVehicleImage(intact, damaged, damagedState) {
 
 export const V100_VEHICLE_SOURCE_CROP = Object.freeze({x:134,y:145,width:1506,height:670});
 
-export function drawV100MissionVehicles(context, game, stageObjects, x, y) {
+export function v100MissionVehiclePlacements(game, x, y) {
+  const profile = V100_MISSION_VEHICLES[game.definition.stageId];
+  if (!game.definition.missionConfig.v100StageNumber || game.definition.missionType !== 'escort' || !profile) return [];
+  const sprite = v100VehicleSprite(game.definition.stageId, game.stageMission);
+  return Array.from({length:profile.count},(_,index)=>{
+    const offset=index-(profile.count-1)/2;
+    return {type:'mission-vehicle',pass:2,x:x+offset*150,y:y+offset*32,sprite};
+  });
+}
+
+export function drawV100MissionVehicleBody(context, placement, stageObjects) {
+  const image=stageObjects[`v100-mission-vehicle-${placement.sprite.assetKey}`];
+  if (!image?.complete || !image.naturalWidth) throw new Error('Mission vehicle body must be decoded');
+  context.save();
+  context.imageSmoothingEnabled=true;context.imageSmoothingQuality='high';
+  drawV100VehicleSprite(context,image,placement.sprite,placement.x,placement.y);
+  context.restore();
+}
+
+export function drawV100MissionVehicles(context, game, stageObjects, x, y, {deferBodies=false}={}) {
   if (!game.definition.missionConfig.v100StageNumber) return false;
   const profile = V100_MISSION_VEHICLES[game.definition.stageId];
   if (!profile) return false;
@@ -48,7 +67,7 @@ export function drawV100MissionVehicles(context, game, stageObjects, x, y) {
   for(let index=0;index<profile.count;index++) {
     const offset=index-(profile.count-1)/2,px=x+offset*150,py=y+offset*32;
     context.fillStyle="rgba(0,0,0,.4)";context.beginPath();context.ellipse(px,py+3,width*.46,7,0,0,Math.PI*2);context.fill();
-    drawV100VehicleSprite(context,image,sprite,px,py);
+    if (!deferBodies) drawV100VehicleSprite(context,image,sprite,px,py);
   }
   const span = profile.count === 3 ? 504 : width,barY=y-height-13-(profile.count===3?32:0);
   context.fillStyle="rgba(0,0,0,.75)";context.fillRect(x-span/2,barY,span,5);
