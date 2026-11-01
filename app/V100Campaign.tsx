@@ -712,6 +712,7 @@ export function V100Campaign() {
       save,
       stageId: flow.stageId,
       resultId: battleRunId,
+      battleMode: "campaign",
     });
   }, [battleRunId, flow.phase, flow.stageId, save]);
 

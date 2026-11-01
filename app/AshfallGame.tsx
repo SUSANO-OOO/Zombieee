@@ -1,5 +1,6 @@
 "use client";
 import {GAMEPLAY_PRODUCTION_AUDIO_MANIFEST} from './productionAudio.js';
+import { createCommandRecoveryRuntime, armCommandRecovery, advanceCommandRecovery, commandDeploymentWait, commandRecoveryWorldActionPending } from './commandRecovery.js';
 
 import { v177PaisenPhotoComboJointPose } from './v177PaisenPhotoCombo.js';
 import { campaignWaveReady, campaignWavePrompt, requestCampaignWave } from './wavePacing.js';
@@ -1342,6 +1343,7 @@ type Game = {
   time: number;
   last: number;
   energy: number;
+  commandRecovery: ReturnType<typeof createCommandRecoveryRuntime>;
   supportGauge: number;
   supportItemCooldowns: Record<SupplyKind, number>;
   scrap: number;
@@ -1443,6 +1445,8 @@ type Hud = {
   v100SupportId?: string | null;
   missionType: BattleDefinition["missionType"];
   energy: number;
+  commandBaseRate: number;
+  commandRecovery: ReturnType<typeof createCommandRecoveryRuntime>;
   supportGauge: number;
   supportItemCooldowns: Record<SupplyKind, number>;
   scrap: number;
@@ -1505,6 +1509,7 @@ export type AshfallBattleResult = {
 export type AshfallExternalSession = {
   stageId: string;
   resultId: string;
+  battleMode?: "campaign" | "outbreak" | null;
   displayName?: string;
   formationKinds: readonly UnitKind[];
   barkSpeakerKinds?: readonly UnitKind[];
@@ -1547,6 +1552,37 @@ function commandRegenForGame(game: Game) {
     return STAGE_20_COMMAND_REGEN;
   }
   return STANDARD_COMMAND_REGEN;
+}
+
+function advanceCommandForGame(g: Game, seconds: number, battleMode: string | null) {
+  const baseRate = commandRegenForGame(g);
+  if (!g.commandRecovery.armed && !g.commandRecovery.active) {
+    g.energy = advanceCommand(g.energy, seconds, baseRate);
+    return;
+  }
+  const supply = battlefieldSupplyDefinition(g.selectedSupply, g.v100SupportId);
+  const supportReady = (g.crawlerAbility.phase === "ready"
+      && g.supportGauge >= vehicleAbilityDefinition("vehicle-barrage", g.crawlerAbility.v100).battleCost)
+    || (g.airstrike.phase === "idle" && (g.airstrike.cooldownRemaining ?? 0) <= 0
+      && g.supportGauge >= vehicleAbilityDefinition("vehicle-airstrike", g.airstrike.v100).battleCost)
+    || Boolean(supply && g.selectedSupply !== "medical" && g.scrap >= supply.cost
+      && (g.supportItemCooldowns[g.selectedSupply] ?? 0) <= 0);
+  const fistWaves = v105FistWaveSnapshot(g);
+  const recovery = advanceCommandRecovery({
+    runtime: g.commandRecovery, command: g.energy, seconds, baseRate,
+    mode: battleMode === "campaign" && !g.survivalRun && g.definition.missionConfig.v100StageNumber ? "campaign" : null,
+    activeHumans: g.fighters.filter(fighter => fighter.side === "human" && fighter.hp > 0).length,
+    queued: g.deployQueue.length,
+    enemies: g.fighters.filter(fighter => fighter.side === "zombie" && fighter.hp > 0 && !fighter.contained).length,
+    supportReady,
+    playerAttackPending: commandRecoveryWorldActionPending({ pendingWeaponHits: g.pendingWeaponHits,
+      areaEffects: g.areaEffects, battlefieldObjects: g.battlefieldObjects, fistWaves,
+      airstrikePhase: g.airstrike.phase, crawlerPhase: g.crawlerAbility.phase }),
+    cards: cards.filter(card => g.formationKinds.includes(card.kind))
+      .map(card => ({ cost: card.cost, cooldown: g.deployCooldowns[card.kind] ?? 0 })),
+  });
+  g.energy = recovery.command;
+  g.commandRecovery = recovery.runtime;
 }
 
 type SavePersistenceState = "checking" | "saved" | "recovered" | "unavailable";
@@ -1841,6 +1877,7 @@ const initialGame = (
   time: 0,
   last: 0,
   energy: Math.min(COMMAND_MAX, COMMAND_INITIAL + tacticalEffects.startingEnergyFlat),
+  commandRecovery: createCommandRecoveryRuntime(),
   supportGauge: Math.min(SUPPORT_GAUGE_MAX, tacticalEffects.supportGaugeFlat),
   supportItemCooldowns: createBattlefieldSupplyCooldowns() as Record<SupplyKind, number>,
   scrap: 0,
@@ -9649,6 +9686,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   }, [campaignSave]);
   const externalStageId = externalSession?.stageId ?? null;
   const externalSessionActive = Boolean(externalSession);
+  const externalBattleMode = externalSession?.battleMode ?? null;
   const playbackManifest = externalSessionActive ? V100_AUDIO_MANIFEST : GAMEPLAY_PRODUCTION_AUDIO_MANIFEST;
   const formatBattleText = (value: string) => publicDisplayText(value, { crawlerLabel: externalSessionActive ? v100BasePresentationFor(gameRef.current.definition.missionConfig.v100StageNumber).label : "装甲車両" });
   useEffect(() => { externalSessionRef.current = externalSession; }, [externalSession]);
@@ -9730,6 +9768,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   const [pendingSurvivalSettlement, setPendingSurvivalSettlement] = useState<PendingSurvivalSettlement | null>(null);
   const [hud, setHud] = useState<Hud>({
     missionType: "assault", energy: COMMAND_INITIAL, supportGauge: 0, scrap: 0, kills: 0, wave: 1, phase: 1, baseHp: 1000, baseMaxHp: 1000,
+    commandBaseRate: STANDARD_COMMAND_REGEN, commandRecovery: createCommandRecoveryRuntime(),
     supportItemCooldowns: createBattlefieldSupplyCooldowns() as Record<SupplyKind, number>,
     barricadeHp: BARRICADE_MAX_HP, barricadeMaxHp: BARRICADE_MAX_HP, barricadeVulnerable: true, barricadeHitFlash: 0,
     deployQueue: 0, summonedCount: 0, airstrikePhase: "idle", crawlerPhase: "cooldown", crawlerCharge: .5, combo: 0, bossHp: 0, bossMax: 0, bossKind: null, bossWorldX: null, bossTelegraphWarning: null,
@@ -11957,6 +11996,74 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         attacker.cooldown = 99;
         attacker.contained = true;
         return true;
+      },
+      prepareV100ResourcePressureProof: (options: { attackerKind?: "walker" | "runner"; supportReserve?: boolean; mayoWithdrawal?: boolean; mayoCompanionWithdrawal?: boolean; reentrySeconds?: number } = {}): Record<string, unknown> | null => {
+        const g = gameRef.current;
+        if (!["localhost", "127.0.0.1"].includes(window.location.hostname)
+          || new URLSearchParams(window.location.search).get("qaResourcePressure") !== "1"
+          || !externalSessionActive || !g.definition.missionConfig.v100StageNumber) return null;
+        // Explicit prepared initial conditions, not a naturally earned collapse.
+        // All subsequent time, AI, damage and deployment use the real runtime.
+        const proof = bridge.prepareCrawlerDefenseProof({ attackerKind: options.attackerKind ?? "walker", lane: 1 });
+        const pressureCards = cards.filter(card => g.formationKinds.includes(card.kind));
+        g.energy = 0;
+        g.scrap = 0;
+        g.supportGauge = options.supportReserve ? 85 : 0;
+        g.unitsLost = 1;
+        g.commandRecovery = options.mayoWithdrawal ? createCommandRecoveryRuntime() : armCommandRecovery(createCommandRecoveryRuntime());
+        g.pendingWeaponHits = [];
+        g.areaEffects = [];
+        selectedActionRef.current = null;
+        setSelectedAction(null);
+        const reentry = Math.max(0, Math.min(42, Number(options.reentrySeconds) || 0));
+        for (const card of pressureCards) g.deployCooldowns[card.kind] = reentry;
+        if (options.mayoWithdrawal || options.mayoCompanionWithdrawal) {
+          const card = pressureCards.find(card => card.kind === "mayo-chan");
+          if (!card || (options.mayoWithdrawal && pressureCards.some(card => card.kind !== "mayo-chan"))) throw new Error("Mayo withdrawal proof requires Mayo");
+          g.deployCooldowns[card.kind] = Math.max(36, card.deployCooldown * 1.75);
+        }
+        g.paused = true;
+        setStarted(true);
+        setPaused(true);
+        setEnd(null);
+        setScreen("battle");
+        setHud(current => ({ ...current, energy: g.energy, scrap: g.scrap, supportGauge: g.supportGauge, baseHp: g.baseHp, deployCooldowns: { ...g.deployCooldowns }, commandBaseRate: commandRegenForGame(g), commandRecovery: g.commandRecovery }));
+        return { ...proof, prepared: true, supportReserve: Boolean(options.supportReserve), mayoWithdrawal: Boolean(options.mayoWithdrawal), mayoCompanionWithdrawal: Boolean(options.mayoCompanionWithdrawal),
+          initialTime: g.time, energy: g.energy, scrap: g.scrap, supportGauge: g.supportGauge,
+          baseHp: g.baseHp, baseMaxHp: g.baseMaxHp, cards: pressureCards.map(card => ({ kind: card.kind, cost: card.cost, cooldown: g.deployCooldowns[card.kind] ?? 0 })) };
+      },
+      prepareV100ActualDefeatProof: (): Record<string, unknown> | null => {
+        const setup = bridge.prepareV100ResourcePressureProof({});
+        if (!setup) return null;
+        const g = gameRef.current;
+        const roster = cards.filter(card => g.formationKinds.includes(card.kind));
+        if (roster.length !== 1 || !["miyamoto-musashi", "mayo-chan"].includes(roster[0].kind)) throw new Error("Actual defeat probe requires Musashi or Mayo alone");
+        g.unitsLost = 0;
+        g.commandRecovery = createCommandRecoveryRuntime();
+        if (!spawnHuman(g, roster[0].kind)) throw new Error("Prepared actor could not spawn");
+        const actor = g.fighters.find(fighter => fighter.side === "human" && fighter.hp > 0)!;
+        const enemy = g.fighters.find(fighter => fighter.side === "zombie" && fighter.hp > 0)!;
+        // Fault-injection fixture only: let an unchanged enemy perform the real
+        // hit/KO (or Mayo retreat). This is not normal progression or balance proof.
+        Object.assign(actor, { hp: 1, stunned: 3, spawnGrace: 0, lane: 1, anchorLane: 1,
+          x: BASE_X + 100, y: laneY(1), combatReadyX: BASE_X + 100, combatReadyY: laneY(1), aiDestinationX: BASE_X + 100 });
+        actor.animationPresentation = createCombatAnimationRuntime({ deploying: false, direction: "right", x: actor.x, y: actor.y });
+        enemy.x = BASE_X + 140;
+        setHud(current => ({ ...current, summonedCount: 1, commandRecovery: g.commandRecovery }));
+        return { ...setup, actualDefeatProbe: true, actor: { id: actor.id, kind: actor.kind, hp: actor.hp, maxHp: actor.maxHp, stunned: actor.stunned, x: actor.x }, enemyX: enemy.x };
+      },
+      getV100ResourcePressureProof: () => {
+        if (!["localhost", "127.0.0.1"].includes(window.location.hostname)
+          || new URLSearchParams(window.location.search).get("qaResourcePressure") !== "1") return null;
+        const g = gameRef.current;
+        return { time: g.time, running: g.running, paused: g.paused, over: g.over, won: g.won,
+          stageId: g.definition.stageId, energy: g.energy, scrap: g.scrap, supportGauge: g.supportGauge,
+          commandRegen: commandRegenForGame(g), baseHp: g.baseHp, baseMaxHp: g.baseMaxHp, unitsLost: g.unitsLost,
+          commandRecovery: { ...g.commandRecovery }, battleMode: externalBattleMode,
+          active: g.fighters.filter(fighter => fighter.side === "human" && fighter.hp > 0).length, queued: g.deployQueue.length,
+          combatReady: g.fighters.filter(fighter => fighter.side === "human" && fighter.hp > 0 && fighter.combatReady && fighter.animationPresentation?.deployCompleted).length,
+          enemies: g.fighters.filter(fighter => fighter.side === "zombie" && fighter.hp > 0).map(fighter => ({ id: fighter.id, kind: fighter.kind, hp: fighter.hp, x: fighter.x, lane: fighter.lane })),
+          cards: cards.filter(card => g.formationKinds.includes(card.kind)).map(card => ({ kind: card.kind, cost: card.cost, cooldown: g.deployCooldowns[card.kind] ?? 0 })) };
       },
       prepareNavigationRouteReleaseProof: () => {
         const g = gameRef.current;
@@ -14743,7 +14850,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         delete qaWindow.__ASHFALL_RUNTIME_PERFORMANCE__;
       }
     };
-  }, [beginSaveMutation, campaignSave.caps, campaignSave.completedStageIds, campaignSave.processedResultIds, campaignSave.readStoryEventIds, campaignSave.settings, campaignSave.unitLevels, campaignSave.unitRanks, campaignSave.unlockedStageIds, finishSaveMutation, outbreakSavePending, pendingOutbreakSettlement, pendingResultCommit, pendingSurvivalCheckpoint, pendingSurvivalSettlement, pendingSurvivalWaveEntitlement, persistCampaignSave, qaMode, qaScenario, screen, survivalSavePending, survivalSettlementAwaitingRetry]);
+  }, [beginSaveMutation, campaignSave.caps, campaignSave.completedStageIds, campaignSave.processedResultIds, campaignSave.readStoryEventIds, campaignSave.settings, campaignSave.unitLevels, campaignSave.unitRanks, campaignSave.unlockedStageIds, externalBattleMode, externalSessionActive, finishSaveMutation, outbreakSavePending, pendingOutbreakSettlement, pendingResultCommit, pendingSurvivalCheckpoint, pendingSurvivalSettlement, pendingSurvivalWaveEntitlement, persistCampaignSave, qaMode, qaScenario, screen, survivalSavePending, survivalSettlementAwaitingRetry]);
 
   useEffect(() => {
     const syncVisualViewport = () => {
@@ -17116,6 +17223,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       setSurvivalHud(survivalHudSnapshot(external.survivalRun));
     }
     setHud({ missionType: fresh.definition.missionType, energy: Math.floor(fresh.energy), supportGauge: Math.floor(fresh.supportGauge), scrap: fresh.scrap, kills: fresh.kills,
+      commandBaseRate: commandRegenForGame(fresh), commandRecovery: fresh.commandRecovery,
       supportItemCooldowns: { ...fresh.supportItemCooldowns },
       wave: fresh.wave, phase: fresh.phase, baseHp: fresh.baseHp, baseMaxHp: fresh.baseMaxHp,
       barricadeHp: fresh.barricadeHp, barricadeMaxHp: fresh.barricadeMaxHp, barricadeVulnerable: fresh.barricadeVulnerable, barricadeHitFlash: 0,
@@ -20372,7 +20480,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             g.civiliansEvacuated = Math.min(5, Math.floor((nextMission.progress ?? 0) * 5));
           }
         }
-        g.energy = advanceCommand(g.energy, dt, commandRegenForGame(g));
+        advanceCommandForGame(g, dt, externalBattleMode);
         if (!preservesAcceptedSupportTempo(g)
           && Object.values(g.supportItemCooldowns).some((cooldown) => cooldown > 0)) {
           g.supportItemCooldowns = advanceBattlefieldSupplyCooldowns(
@@ -24144,6 +24252,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             }
           } else {
             g.unitsLost++;
+            if (externalBattleMode === "campaign") g.commandRecovery = armCommandRecovery(g.commandRecovery);
             emitBattleBark(g, "ally-down", "medic", `ally-down-${fighter.id}`);
           }
         }
@@ -24596,6 +24705,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         setHud({
           wavePrompt: campaignWavePrompt(g),
           missionType: g.definition.missionType, energy: Math.floor(g.energy), supportGauge: Math.floor(g.supportGauge), scrap: g.scrap, kills: g.kills,
+          commandBaseRate: commandRegenForGame(g), commandRecovery: g.commandRecovery,
           supportItemCooldowns: { ...g.supportItemCooldowns },
           v100SupportId: g.v100SupportId,
           wave: g.wave, phase: g.phase, baseHp: Math.max(0, g.baseHp), baseMaxHp: g.baseMaxHp,
@@ -24664,7 +24774,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       window.removeEventListener("pageshow", onPageShow);
       rotation.removeEventListener("change", onVisibilityChange);
     };
-  }, [announceBossEntrance, assetError, assetsReady, chooseAction, dispatchBattleStoryEvents, graphicsProfileView.renderHz, playBattleSemanticCue, playCue, playEndJingle, playManualAbilityTimelineCue, playProductionCue, qaMode, qaScenario, queueManualAbilityTimelineCue, resumeBattleAudioLoops, screen, stopMusic, stopSfx, syncMusicMode]);
+  }, [announceBossEntrance, assetError, assetsReady, chooseAction, dispatchBattleStoryEvents, externalBattleMode, graphicsProfileView.renderHz, playBattleSemanticCue, playCue, playEndJingle, playManualAbilityTimelineCue, playProductionCue, qaMode, qaScenario, queueManualAbilityTimelineCue, resumeBattleAudioLoops, screen, stopMusic, stopSfx, syncMusicMode]);
 
   const healthPct = Math.max(0, hud.baseHp / hud.baseMaxHp * 100);
   const barricadePct = Math.max(0, hud.barricadeHp / hud.barricadeMaxHp * 100);
@@ -24946,7 +25056,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
 
         <div className="bottom-hud">
           <div className="resource-stack">
-            <div className="resource command" title="指揮はユニットの出撃に使います。カード右下の数字が必要量です。" aria-label={`出撃用の指揮 ${hud.energy} / ${COMMAND_MAX}`}><span>指揮</span><strong>{hud.energy}</strong><small>/{COMMAND_MAX}</small><i><em style={{ width: `${hud.energy / COMMAND_MAX * 100}%` }} /></i></div>
+            <div className={`resource command${hud.commandRecovery.active ? " recovering" : ""}`} title={hud.commandRecovery.active ? "立て直し中。最初の一人を出せるまで、指揮が早く戻ります。一戦に一度だけ使えます。" : "指揮はユニットの出撃に使います。カード右下の数字が必要量です。"} aria-label={`出撃用の指揮 ${hud.energy} / ${COMMAND_MAX}${hud.commandRecovery.active ? "、立て直し中" : ""}`}><span>{hud.commandRecovery.active ? "指揮 ↑" : "指揮"}</span><strong>{hud.energy}</strong><small>/{COMMAND_MAX}</small><i><em style={{ width: `${hud.energy / COMMAND_MAX * 100}%` }} /></i></div>
             <div className="resource rage"><span>支援</span><strong>{hud.supportGauge}</strong><small>/{SUPPORT_GAUGE_MAX}</small><i><em style={{ width: `${hud.supportGauge}%` }} /></i></div>
             <div className="stats-strip battle-stats">
               {externalSessionActive && !isSurvivalBattle ? <>
@@ -24987,9 +25097,11 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                         : null);
                  const cardState = commonBattleActionBlockReason ? "blocked" : cardBlockReason === "同時出撃の上限" ? "full" : cooldown > 0 ? "cooldown" : cardBlockReason ? (cardBlockReason === "指揮不足" ? "insufficient" : "blocked") : "ready";
                  const missingCommandPoints = Math.max(0, Math.ceil(card.cost - hud.energy));
+                 const commandWaitSeconds = Math.ceil(commandDeploymentWait({ command: hud.energy, cost: card.cost, cooldown, baseRate: hud.commandBaseRate, recovery: hud.commandRecovery }));
+                 const deploymentWaitCopy = `出撃まで約${commandWaitSeconds}秒`;
                  const cardBlockCopy = cardBlockReason === "指揮不足" ? `指揮があと${missingCommandPoints}必要` : cardBlockReason;
-                 const cardAccessibleState = externalSessionActive && cardState === "cooldown"
-                   ? `再出撃まで${cooldown}秒${missingCommandPoints > 0 ? ` / 指揮があと${missingCommandPoints}必要` : ""}`
+                 const cardAccessibleState = externalSessionActive && (cardState === "cooldown" || cardState === "insufficient")
+                   ? `${deploymentWaitCopy}${missingCommandPoints > 0 ? ` / 指揮があと${missingCommandPoints}必要` : ""}`
                    : cardBlockCopy ?? "出撃可能";
                  return (
                    <button key={`${card.kind}-${slotIndex}`} className={`unit-card ${externalSessionActive ? "v100-deploy-card" : ""} ${cooldown > 0 ? "cooling" : ""} state-${cardState}`} data-kind={card.kind} data-slot-index={slotIndex} data-portrait={portraitArt ? "approved" : "diagnostic"} data-block-reason={cardBlockReason ?? "ready"} data-state={cardState} data-cooldown={cooldown} data-missing-command={missingCommandPoints} aria-label={`${card.name} / ${cardAccessibleState} / ${externalSessionActive ? "必要指揮" : "コスト"} ${card.cost}`} aria-disabled={Boolean(cardBlockReason)} onClick={() => deployHuman(card.kind)} style={portraitArt ? { "--unit-card-art": `url('${portraitArt}')`, ...(externalSessionActive ? v100PortraitFraming(combatKindToCampaignUnitId(card.kind)) : {}) } as CSSProperties : undefined}>
@@ -25000,7 +25112,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                         <span className="v100-deploy-cost"><small>指揮</small><b>{card.cost}</b></span>
                       </span>
                       <span className="v100-deploy-readout" aria-hidden="true">
-                        <span className="v100-deploy-status">{cardState === "ready" ? "出撃できる" : cardState === "cooldown" ? `再出撃 ${cooldown}秒` : cardState === "insufficient" ? `指揮 あと${missingCommandPoints}` : cardState === "full" ? "出撃枠待ち" : cardBlockCopy}</span>
+                        <span className="v100-deploy-status">{cardState === "ready" ? "出撃できる" : cardState === "cooldown" || cardState === "insufficient" ? `あと約${commandWaitSeconds}秒` : cardState === "full" ? "出撃枠待ち" : cardBlockCopy}</span>
                         {cardState === "cooldown" && missingCommandPoints > 0 && <span className="v100-deploy-shortage">指揮 あと{missingCommandPoints}</span>}
                       </span>
                     </> : <>

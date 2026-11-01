@@ -23,7 +23,7 @@ export function V100ModesView({ save, onBack, onLoadout, onSave, initialTab = "o
   const defeatCounts: Record<string, number> = save.bosses.defeatCounts;
   const active = save.outbreak.active;
   const activeBoss = bosses.find(boss => boss.id === active?.bossId);
-  const session = active && activeBoss ? v100ProductionSessionFor({ save, stageId: activeBoss.stageId, resultId: active.runId }) : null;
+  const session = active && activeBoss ? v100ProductionSessionFor({ save, stageId: activeBoss.stageId, resultId: active.runId, battleMode: "outbreak" }) : null;
   const settle = async (result: AshfallBattleResult) => {
     const change = settleV100Outbreak(save, result);
     if (!change.applied || !await onSave(change)) { setUnsaved(result); return; }

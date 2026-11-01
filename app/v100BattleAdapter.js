@@ -326,7 +326,7 @@ export function v100SupportSupplyFor(supportId) {
   return "drum";
 }
 
-export function v100ProductionSessionFor({ save, stageId, resultId, onBattleResult = null }) {
+export function v100ProductionSessionFor({ save, stageId, resultId, onBattleResult = null, battleMode = null }) {
   const formationUnitIds = v100AvailableFormation(stageId, save?.formationSlots);
   const formationKinds = v100FormationCombatKinds(formationUnitIds);
   const definition = v100BattleDefinitionFor(stageId);
@@ -337,6 +337,7 @@ export function v100ProductionSessionFor({ save, stageId, resultId, onBattleResu
   return freeze({
     stageId,
     resultId: resultId ?? `v100:${stageId}:${Date.now()}`,
+    battleMode: battleMode === "campaign" || battleMode === "outbreak" ? battleMode : null,
     displayName: definition?.displayName ?? stageId,
     formationUnitIds: freeze([...formationUnitIds]),
     formationKinds: freeze([...formationKinds]),
