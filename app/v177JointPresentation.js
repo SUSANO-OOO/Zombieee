@@ -60,7 +60,14 @@ export function v177RenderedWeightedLowerReceipt(actor,world) {
 const clamp = p => Math.max(0, Math.min(1, Number(p) || 0));
 const cycle = p => ((Number(p) || 0) % 1 + 1) % 1;
 
-export const V177_JOINT_ATLASES = Object.fromEntries(Object.entries({...bakedAtlases,...quadrupedAtlases,...bipedAtlases,...enemyAtlases,...runnerAtlases,...firearmAtlases,...pantherAtlases,...meleeAtlases,...guardEnemyAtlases,...newcomerAtlases,...infectedAtlases,...feralAtlases,...futagoAtlases,...paisenPhotoAtlases,...omegaRightAtlases,'crazy-king':crazyKingRestoredAtlas,...QUALITY_CHARACTER_ATLASES}).map(([kind,atlas])=>[kind,withQualityPantherBodyScale(kind,atlas)]));
+function withPresidentCoatOwnership(kind,atlas){
+  if(kind!=='mugarian-president-mutated')return atlas;
+  // The original coat pixels belong to the torso, including its grounded lean
+  // and captured hit/stun/death poses. Lower ownership leaves these panels
+  // behind when the jacket bends forward, even though its legs stay planted.
+  return {...atlas,parts:atlas.parts.map(part=>['coat-far','coat-near'].includes(part.bone)?{...part,upper:true}:part)};
+}
+export const V177_JOINT_ATLASES = Object.fromEntries(Object.entries({...bakedAtlases,...quadrupedAtlases,...bipedAtlases,...enemyAtlases,...runnerAtlases,...firearmAtlases,...pantherAtlases,...meleeAtlases,...guardEnemyAtlases,...newcomerAtlases,...infectedAtlases,...feralAtlases,...futagoAtlases,...paisenPhotoAtlases,...omegaRightAtlases,'crazy-king':crazyKingRestoredAtlas,...QUALITY_CHARACTER_ATLASES}).map(([kind,atlas])=>[kind,withPresidentCoatOwnership(kind,withQualityPantherBodyScale(kind,atlas))]));
 
 const mrsNormalWeaponCycle=createV177MrsNormalWeaponCycle({
   animationClipFor,attackPresentationDuration,captureStatusJoints,jointMatrix,
