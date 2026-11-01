@@ -482,10 +482,9 @@ test("keeps the battlefield centered in the visual viewport while routing across
   assert.match(game, /w: authoredSize\.w \* compactScale \* depthScale \* animationSample\.bodyScale/);
   assert.match(game, /h: authoredSize\.h \* compactScale \* depthScale \* animationSample\.bodyScale/);
   assert.match(game, /CAMPAIGN_STAGE_IDS\.NISHIJIN_STATION_TUNNEL,[\s\S]*background\.naturalHeight \* \.44/);
-  assert.match(
-    game,
-    /enemyBaseSpriteRef\.current,\s*staticBattlefieldCacheRef\.current,\s*graphicsProfile,\s*false,\s*Boolean\(qaMode \|\| qaScenario\),\s*\);/,
-  );
+  const productionDraw = /enemyBaseSpriteRef\.current,\s*staticBattlefieldCacheRef\.current,\s*graphicsProfile,\s*false,\s*Boolean\(qaMode \|\| qaScenario\),\s*\{ obstacles: abilityNameObstaclesRef\.current, transform: canvasTransformRef\.current \},\s*\);/;
+  assert.match(game, productionDraw);
+  assert.doesNotMatch(game.replaceAll('Boolean(qaMode || qaScenario)', 'true'), productionDraw);
   assert.match(game, /canvasPointerToWorld\(\{ clientX: event\.clientX, clientY: event\.clientY, rect, transform, worldWidth: W, worldHeight: H \}\)/);
   assert.doesNotMatch(game, /placement-hint|placement-cancel/);
   assert.match(game, /selectedAction === "airstrike" && !paused && !end && <div className="v100-targeting-guide"/);

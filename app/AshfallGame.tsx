@@ -262,6 +262,7 @@ import {
   isBossFighter,
 } from "./bossFoundation.js";
 import { v100BossCounterplayHint, v100BossCounterplayTapObstacles, V100_BOSS_COUNTERPLAY_FALLBACK } from "./v100BossCounterplay.js";
+import { layoutV100AllyHealthBars } from './v100BattleStatusLayout.js';
 import { TAKUYA_SLAM_PRESENTATION, TAKUYA_STABLE_POSE, takuyaSlamPresentationPose } from "./v100TakuyaPresentation.js";
 import { mugarianPresidentCompactScale } from "./v100BossPresentation.js";
 import {
@@ -8804,6 +8805,16 @@ function drawAuthoredShotVfx(
   return true;
 }
 
+function drawFighterHealthBar(ctx: CanvasRenderingContext2D, f: Fighter, barW: number, barHeight: number, barY: number, x = f.x) {
+  ctx.fillStyle = "rgba(0,0,0,.78)"; ctx.fillRect(x - barW / 2 - 1, barY - 1, barW + 2, barHeight + 2);
+  ctx.fillStyle = f.side === "human" ? "#e9c65a" : isKuromeClone(f) ? "#62e8ef" : "#cb5037";
+  ctx.fillRect(x - barW / 2, barY, barW * Math.max(0, f.hp / f.maxHp), barHeight);
+  if (isKuromeClone(f)) {
+    ctx.save(); ctx.textAlign = "center"; ctx.font = "bold 10px sans-serif";
+    ctx.fillText("分身", x, barY - 4); ctx.restore();
+  }
+}
+
 function drawWorld(
   ctx: CanvasRenderingContext2D,
   g: Game,
@@ -8815,7 +8826,9 @@ function drawWorld(
   graphicsProfile: GraphicsProfile,
   debugGeometry = false,
   allowDiagnosticFallback = false,
+  presentationLayout?: { obstacles: ReturnType<typeof manualAbilityObstacleRects>; transform: { scale: number; offsetX: number; offsetY: number } },
 ) {
+  const allyHealthBars: { fighter: Fighter; width: number; height: number; y: number }[] = [];
   const shakeAmplitude = cameraShakeAmplitude(g.shake);
   const sx = shakeAmplitude > 0 ? (Math.random() - .5) * shakeAmplitude : 0;
   const sy = shakeAmplitude > 0 ? (Math.random() - .5) * shakeAmplitude : 0;
@@ -9175,13 +9188,9 @@ function drawWorld(
     const renderAudit = fighterRenderAudit.get(f);
     if (renderAudit) renderAudit.healthBarVisible = showHealthBar;
     if (showHealthBar) {
-      ctx.fillStyle = "rgba(0,0,0,.78)"; ctx.fillRect(f.x - barW / 2 - 1, barY - 1, barW + 2, barHeight + 2);
-      ctx.fillStyle = f.side === "human" ? "#e9c65a" : isKuromeClone(f) ? "#62e8ef" : "#cb5037";
-      ctx.fillRect(f.x - barW / 2, barY, barW * Math.max(0, f.hp / f.maxHp), barHeight);
-      if (isKuromeClone(f)) {
-        ctx.save(); ctx.textAlign = "center"; ctx.font = "bold 10px sans-serif";
-        ctx.fillText("分身", f.x, barY - 4); ctx.restore();
-      }
+      if (f.side === "human" && g.definition.missionConfig.v100StageNumber) {
+        allyHealthBars.push({ fighter: f, width: barW, height: barHeight, y: barY });
+      } else drawFighterHealthBar(ctx, f, barW, barHeight, barY);
     }
     if (f.side === "zombie" && f.marked > 0) {
       ctx.save();
@@ -9331,7 +9340,18 @@ function drawWorld(
     ctx.shadowColor = "#000"; ctx.shadowBlur = 3; ctx.fillText(d.value, d.x, d.y);
   }
   ctx.globalAlpha = 1; ctx.shadowBlur = 0; ctx.textAlign = "left";
-  drawV105AbilityNames(ctx,g,{width:W,height:H,headY:f=>fighterHealthBarWorldY(f)-7,
+  // Bodies keep their ground-depth order; status must remain readable even
+  // when a large foreground enemy legitimately hides the allied body.
+  const {scale,offsetX,offsetY}=presentationLayout?.transform??{scale:1,offsetX:0,offsetY:0};
+  const bounds=presentationLayout?{left:Math.max(0,-offsetX/scale-sx),top:Math.max(0,-offsetY/scale-sy),
+    right:Math.min(W,(ctx.canvas.clientWidth-offsetX)/scale-sx),bottom:Math.min(H,(ctx.canvas.clientHeight-offsetY)/scale-sy)}
+    :{left:0,top:0,right:W,bottom:H};
+  const statusObstacles=presentationLayout?.obstacles.map(r=>({x:(r.x-offsetX)/scale-sx,y:(r.y-offsetY)/scale-sy,
+    width:r.width/scale,height:r.height/scale}))??[];
+  const healthLayout=layoutV100AllyHealthBars(allyHealthBars.map(bar=>({...bar,x:bar.fighter.x})),{bounds,obstacles:statusObstacles});
+  for(const bar of healthLayout)drawFighterHealthBar(ctx,bar.fighter,bar.width,bar.height,bar.y,bar.x);
+  drawV105AbilityNames(ctx,g,{width:W,height:H,headY:f=>fighterHealthBarWorldY(f)-7,bounds,
+    obstacles:[...statusObstacles,...healthLayout.map(bar=>({x:bar.x-bar.width/2-1,y:bar.y-1,width:bar.width+2,height:bar.height+2}))],
     get cssScale(){return Math.min(ctx.canvas.clientWidth/W||1,ctx.canvas.clientHeight/H||1);}});
   if (g.flashOverlay > 0) {
     ctx.fillStyle = `rgba(255,193,106,${Math.min(.48, g.flashOverlay)})`; ctx.fillRect(0, 0, W, H);
@@ -9363,6 +9383,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const manualAbilityLayoutInputRef = useRef<Parameters<typeof layoutManualAbilityIcons>[0] | null>(null);
   const manualAbilityTapObstaclesRef = useRef<ReturnType<typeof v100BossCounterplayTapObstacles>>([]);
+  const abilityNameObstaclesRef = useRef<ReturnType<typeof manualAbilityObstacleRects>>([]);
   const canvasTransformRef = useRef({ scale: 1, offsetX: 0, offsetY: 0 });
   const graphicsProfileRef = useRef<GraphicsProfile>(resolveGraphicsProfile("auto"));
   const staticBattlefieldCacheRef = useRef<StaticBattlefieldCache>({
@@ -9799,8 +9820,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   useLayoutEffect(() => {
     const canvas = canvasRef.current, input = manualAbilityLayoutInputRef.current;
     if (!hud.bossTelegraphWarning || !canvas || !input) return;
-    const positions = layoutManualAbilityIcons({ ...input,
-      obstacles: [...manualAbilityObstacleRects(canvas), ...manualAbilityTapObstaclesRef.current] });
+    const refreshedInput = { ...input, obstacles: [...manualAbilityObstacleRects(canvas), ...manualAbilityTapObstaclesRef.current] };
+    manualAbilityLayoutInputRef.current = refreshedInput;
+    const positions = layoutManualAbilityIcons(refreshedInput);
     setHud(current => {
       const icons = current.manualAbilityIcons.map(icon => {
         const next = positions.find(position => Number(position.fighterId) === icon.fighterId);
@@ -9811,6 +9833,17 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         ? { ...current, manualAbilityIcons: icons } : current;
     });
   }, [hud.bossTelegraphWarning]);
+
+  useLayoutEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const bounds = canvas.getBoundingClientRect();
+    abilityNameObstaclesRef.current = [...manualAbilityObstacleRects(canvas),
+      ...[...(canvas.closest('.game-frame')?.querySelectorAll('.manual-ability-ready') ?? [])].map(element => {
+        const rect = element.getBoundingClientRect();
+        return {ownerId:null,x:rect.left-bounds.left,y:rect.top-bounds.top,width:rect.width,height:rect.height};
+      })];
+  }, [hud.manualAbilityIcons, hud.bossTelegraphWarning]);
 
   // All battle operations must re-check the save boundary at handler time.
   // React state can lag one render behind a save effect, so this ref is also
@@ -24657,6 +24690,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         graphicsProfile,
         false,
         Boolean(qaMode || qaScenario),
+        { obstacles: abilityNameObstaclesRef.current, transform: canvasTransformRef.current },
       );
       performanceCounters.renderFrames += 1;
       const drawFinishedAt=cpuEntryAt===null?null:performance.now();

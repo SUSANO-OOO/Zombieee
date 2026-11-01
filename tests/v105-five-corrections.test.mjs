@@ -113,6 +113,38 @@ test('simultaneous ability names stay inside the mobile battle and remain distin
   }
 });
 
+test('ability names avoid top controls, boss advice and bottom cards while following their owners',()=>{
+  const obstacles=[{x:0,y:0,width:960,height:56},{x:0,y:420,width:960,height:120},{x:300,y:60,width:360,height:35}];
+  const rows=Array.from({length:8},(_,i)=>({ownerId:i,name:i%2?'Ω大剣薙ぎ払い':'気合拳波',headX:i<4?90:850,headY:30+i%4*8}));
+  const layout=layoutV105AbilityNames(rows,{width:960,height:540,fontSize:26,measure:t=>t.length*26,obstacles});
+  assert.equal(layout.length,rows.length);
+  for(const a of layout){
+    assert.equal(a.name,rows[a.ownerId].name);
+    for(const b of obstacles)assert.ok(a.x+a.width/2<=b.x||a.x-a.width/2>=b.x+b.width||a.y+a.height/2<=b.y||a.y-a.height/2>=b.y+b.height,JSON.stringify({a,b}));
+  }
+  for(let i=0;i<layout.length;i++)for(let j=i+1;j<layout.length;j++){
+    const a=layout[i],b=layout[j];assert.ok(Math.abs(a.x-b.x)>=(a.width+b.width)/2||Math.abs(a.y-b.y)>=(a.height+b.height)/2);
+  }
+});
+
+test('the actual name painter uses live obstacles without querying them when no label is alive',()=>{
+  const owner=caster(),world={time:1,fighters:[owner]},paint=[];let reads=0;
+  const ctx={save(){},restore(){},measureText:t=>({width:t.length*20}),fillText(text,x,y){paint.push({text,x,y});}};
+  const options={width:960,height:540,headY:()=>25,cssScale:1,get obstacles(){reads++;return[{x:0,y:0,width:960,height:70}];}};
+  drawV105AbilityNames(ctx,world,options);assert.equal(reads,0);
+  startV105AbilityName(world,owner,{name:definition.displayName,activationId:1});world.time=1.1;
+  const [actual]=drawV105AbilityNames(ctx,world,options);assert.equal(reads,1);assert.ok(actual.y-actual.height/2>=70);
+  assert.equal(paint[0].y,actual.y);assert.equal(v105AbilityNameSnapshot(world).active[0].lastPaint.y,actual.y);
+  world.time=3;drawV105AbilityNames(ctx,world,options);assert.equal(reads,1);
+});
+
+test('cropped mobile canvas bounds prevent moving a label above the visible battlefield',()=>{
+  const bounds={left:0,top:78,right:960,bottom:464},obstacles=[{x:0,y:78,width:960,height:62},{x:286,y:144,width:388,height:31}];
+  const rows=[{ownerId:1,name:'増殖室離床',headX:560,headY:35},{ownerId:2,name:'Ω大剣薙ぎ払い',headX:930,headY:25}];
+  const placed=layoutV105AbilityNames(rows,{width:960,height:540,fontSize:22,measure:t=>t.length*22,obstacles,bounds});
+  for(const p of placed){assert.ok(p.y-p.height/2>=bounds.top);assert.ok(p.y+p.height/2<=bounds.bottom);assert.ok(p.x-p.width/2>=bounds.left);assert.ok(p.x+p.width/2<=bounds.right);}
+});
+
 const point=(m,p)=>[m[0]*p[0]+m[2]*p[1]+m[4],m[1]*p[0]+m[3]*p[1]+m[5]];
 const ctx=new Proxy({},{get:(_target,key)=>key==='drawImage'?()=>{}:()=>{},set:()=>true});
 test('ground strikes move original held weapons to the actual boot floor and recover with attached original limbs',()=>{

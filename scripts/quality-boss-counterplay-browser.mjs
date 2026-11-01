@@ -10,13 +10,14 @@ import {enterV100FromTitle,seedV100BrowserSaveOnce} from './v100-title-qa-entry.
 import {dismissInstallOffer} from './pwa-gate-qa.mjs';
 import {nativeBattleTap} from './v100-normal-tactical-input.mjs';
 const engine=process.env.QUALITY_BOSS_ENGINE??'chromium',before=process.env.QUALITY_BOSS_BEFORE==='1';
+const readability=process.env.QUALITY_BOSS_READABILITY==='1';
 const out=path.resolve(process.env.QUALITY_BOSS_OUT);await mkdir(out,{recursive:true});
 await writeFile(path.join(out,'harness.mjs'),await readFile(new URL(import.meta.url)),{flag:'wx'});
 const base=process.env.V100_CAMPAIGN_QA_BASE_URL;
 assert.ok(['localhost','127.0.0.1'].includes(new URL(base).hostname),'prepared boss QA is local only');
 const build=await productionBuildIdentity(path.resolve(process.env.QUALITY_BOSS_BUILD_ROOT??'.'));
 const sizes=(process.env.QUALITY_BOSS_SIZES??'844x340,1280x720').split(',').map(s=>{const [width,height]=s.split('x').map(Number);return{width,height};});
-const bosses=V100_BOSSES.filter(b=>!process.env.QUALITY_BOSS_ONLY||b.id===process.env.QUALITY_BOSS_ONLY);
+const bosses=V100_BOSSES.filter(b=>!process.env.QUALITY_BOSS_ONLY||process.env.QUALITY_BOSS_ONLY.split(',').includes(b.id));
 const report={engine,before,build,scope:'Prepared V1 stage/owned-unit fixtures. Existing QA boss setup adjusts time, actors, entry and warning positions; not natural progression, difficulty or performance evidence. Native title, deployment and ability controls; canvas text observation preserves the original paint calls. Silent video; no physical-device/listening acceptance.',
  scriptSha256:createHash('sha256').update(await readFile(new URL(import.meta.url))).digest('hex'),cases:[],errors:[]};
 const browserType={chromium,webkit}[engine];assert.ok(browserType,'known rendering engine');
@@ -35,7 +36,20 @@ try{
    flowState:{phase:'formation',stageId:V100_STAGE_IDS[boss.stageNumber-1],stageNumber:boss.stageNumber,eventId:null,destination:'formation',nodeIndex:0,firstClear:false,finalized:true}});
   const context=await browser.newContext({viewport,hasTouch:viewport.width<1000,serviceWorkers:'block',recordVideo:{dir:path.join(out,label),size:viewport}});
   await context.addInitScript(seedV100BrowserSaveOnce,serializeV100Save(save));
-  await context.addInitScript(captureRay=>{
+  await context.addInitScript(({captureRay,readability})=>{
+   window.__BOSS_LABEL_PAINTS__=[];window.__ALLY_HP_PAINTS__=[];
+   const paintedRect=(ctx,x,y,w,h)=>{
+    const m=ctx.getTransform(),r=ctx.canvas.getBoundingClientRect(),sx=r.width/ctx.canvas.width,sy=r.height/ctx.canvas.height;
+    const points=[[x,y],[x+w,y],[x,y+h],[x+w,y+h]].map(([px,py])=>({x:r.left+(m.a*px+m.c*py+m.e)*sx,y:r.top+(m.b*px+m.d*py+m.f)*sy}));
+    return{x:Math.min(...points.map(p=>p.x)),y:Math.min(...points.map(p=>p.y)),right:Math.max(...points.map(p=>p.x)),bottom:Math.max(...points.map(p=>p.y))};
+   };
+   if(readability){
+    const fill=CanvasRenderingContext2D.prototype.fillRect;
+    CanvasRenderingContext2D.prototype.fillRect=function(x,y,w,h){
+     if(this.fillStyle==='#e9c65a'&&w>0&&h>0){window.__ALLY_HP_PAINTS__.push({at:performance.now(),rect:paintedRect(this,x,y,w,h)});if(window.__ALLY_HP_PAINTS__.length>128)window.__ALLY_HP_PAINTS__.shift();}
+     return fill.call(this,x,y,w,h);
+    };
+   }
    window.__BOSS_POINTER_EVENTS__=[];
    for(const type of ['pointerdown','pointerup','pointercancel','click'])document.addEventListener(type,event=>{
     const button=event.target.closest?.('button');
@@ -44,6 +58,12 @@ try{
    },true);
    const original=CanvasRenderingContext2D.prototype.fillText;window.__BOSS_HINT_PAINTS__=[];
    CanvasRenderingContext2D.prototype.fillText=function(text,...args){
+    const name=this[Symbol.for('Zombieee.actualAbilityNamePaint')];
+    if(readability&&name&&this.globalAlpha>=.1){
+     const w=this.measureText(text).width+16,h=Number(/\s([\d.]+)px/.exec(this.font)?.[1]??32)+10;
+     window.__BOSS_LABEL_PAINTS__.push({name:text,ownerId:name.ownerId,at:performance.now(),rect:paintedRect(this,args[0]-w/2,args[1]-h/2,w,h)});
+     if(window.__BOSS_LABEL_PAINTS__.length>128)window.__BOSS_LABEL_PAINTS__.shift();
+    }
     if(typeof text==='string'&&(text.includes('！')||text.includes(' // '))){
      window.__BOSS_HINT_PAINTS__.push({text,at:performance.now()});
      if(window.__BOSS_HINT_PAINTS__.length>100)window.__BOSS_HINT_PAINTS__.shift();
@@ -66,7 +86,7 @@ try{
      return stroke.call(this,...args);
     };
    }
-  },kind==='kurome');
+  },{captureRay:kind==='kurome',readability});
   const page=await context.newPage();page.setDefaultTimeout(20000);page.on('pageerror',e=>report.errors.push(label+': '+String(e)));
   const dismissIsolationNotice=async()=>{
    const notice=page.getByText('オフライン用の設定に失敗しました。通信できる状態ではゲームを続けられます。',{exact:true});
@@ -119,7 +139,29 @@ try{
        visibleRect:{x:v.x,y:v.y,right:v.right,bottom:v.bottom}};}),
       humans:s.fighters.filter(f=>f.side==='human').map(f=>({id:f.id,kind:f.kind,hp:f.hp,manualAbility:f.manualAbility}))};
     },{kind,at});
-    row.observations.push({tag,...result});
+    if(readability){
+     result.readability=await page.evaluate(async at=>{
+      // Observe a new real canvas frame after React's DOM layout has committed;
+      // never compare an earlier canvas paint to later DOM button positions.
+      const frameStart=performance.now();
+      await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+      const field=document.querySelector('.battlefield'),r=field.getBoundingClientRect(),ctx=field.getContext('2d');
+      const hp=window.__ALLY_HP_PAINTS__.filter(p=>p.at>=Math.max(at,frameStart)).at(-1);
+      const hpPixel=hp?[...ctx.getImageData(Math.floor(((hp.rect.x+hp.rect.right)/2-r.left)*field.width/r.width),Math.floor(((hp.rect.y+hp.rect.bottom)/2-r.top)*field.height/r.height),1,1).data]:null;
+      const names=window.__BOSS_LABEL_PAINTS__.filter(p=>p.at>=Math.max(at,frameStart)),latest=names.at(-1)?.at??0;
+      return{hp,hpPixel,names:[...new Map(names.filter(p=>p.at>=latest-100).map(p=>[p.ownerId,p])).values()],
+       hud:[...document.querySelectorAll('.top-hud,.bottom-hud,.v100-boss-telegraph-warning,.manual-ability-ready')].map(e=>{const q=e.getBoundingClientRect();return{kind:e.className,x:q.x,y:q.y,right:q.right,bottom:q.bottom};})};
+     },at);
+     row.observations.push({tag,...result});
+     if(!before){
+      assert.ok(result.readability.names.length,'real ability-name paint must be observed');
+      for(const {rect:a} of result.readability.names)assert.ok(a.x>=0&&a.y>=0&&a.right<=viewport.width&&a.bottom<=viewport.height,'name stays in the actually visible cropped canvas');
+      for(const a of result.readability.names.map(n=>n.rect))for(const b of result.readability.hud)assert.ok(!(a.x<b.right&&a.right>b.x&&a.y<b.bottom&&a.bottom>b.y),'ability name must avoid live HUD rectangles');
+      if(tag==='initial')assert.ok(result.readability.hpPixel?.slice(0,3).every((v,i)=>Math.abs(v-[233,198,90][i])<=12),'allied HP remains visible in the final canvas after boss paint');
+      if(tag==='initial')for(const b of result.readability.hud){const a=result.readability.hp.rect;assert.ok(!(a.x<b.right&&a.right>b.x&&a.y<b.bottom&&a.bottom>b.y),'allied HP is also clear of the DOM HUD and skill buttons');}
+     }
+    }
+    if(!readability)row.observations.push({tag,...result});
     assert.ok(result.text,label+': missing rendered warning');
     if(!before&&kind==='kurome'){
      assert.ok(result.ray?.at>=at,'the real targeting ray is painted during this warning');
