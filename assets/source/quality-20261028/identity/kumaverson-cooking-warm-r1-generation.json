@@ -1,0 +1,20 @@
+{
+  "method": "built-in image_gen",
+  "creator": "OpenAI image_gen, directed for this project",
+  "rights": "Project-directed generated derivative of the adopted model; same commercial/modification/redistribution boundary as kumaverson-master-r2. No supplied private photos added to Git.",
+  "producerApproval": "Task-authorized quality correction; candidate likeness and motion acceptance not claimed.",
+  "generatedPath": "C:/Users/okait/.codex/generated_images/01a180c8-9e05-7871-b287-613f7c7eb364/exec-1b9b386f-8589-48fe-b561-b90786d73467.png",
+  "args": {
+    "referenced_image_paths": [
+      "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/kumaverson-master-r2.png"
+    ],
+    "transparent_background": true,
+    "prompt": "Edit target and sole identity/style authority: the supplied adopted generated master of Kumaverson. Produce one full-body game dialogue sprite of this EXACT SAME adult man in a friendly everyday cooking scene, not a new character. Preserve his exact recognizable face, relaxed warm closed-mouth smile, broad facial bone structure, eyes/nose/mouth, black parted hair, clean-shaven appearance, healthy build, worn white crew-neck T-shirt, thin silver chain, dark cargo trousers and boots. Keep the same camera, body proportions, head position/scale, full-body framing, and restrained realistic painted finish. The only narrative change is the kitchen utensil and its natural hand/arm pose: REMOVE the frying pan completely. In the same hand that held the pan, hold ONE large recognizable wooden Japanese rice paddle (shamoji), raised comfortably to lower chest height as a cook welcoming customers; broad flat rounded/oval paddle blade, short wooden handle. A relaxed anatomically connected shoulder, elbow, wrist, five natural fingers gripping the handle; the other arm rests naturally at his side. No weapon, no pan, no knife, no rice pile, no extra prop. Keep arms clear of the neck and chain. Preserve the current identity and face, do not beautify again or replace with a generic handsome face. Canvas 1024x1536 portrait, centered full body with all extremities inside the canvas and margins. TRUE transparent RGBA background: remove the entire brown glow/background from the reference, no backdrop, no gradient, no ground shadow, no horizontal smears, no labels, no text, no collage. This is the adopted same character with a cooking prop for all applicable everyday dialogue, not a design alternative."
+  },
+  "inputSha256": "51a5acb5a77f53eac921b49a5adefd681218f9f44f64e70caaf416ed2b6ed501",
+  "output": {
+    "path": "assets/source/quality-20261028/identity/kumaverson-cooking-warm-r1.png",
+    "sha256": "0726517ca390d5608bdfe7b83101b30a535c32b2b731a7b3c39b9f945edfe6f9",
+    "bytes": 1803104
+  }
+}

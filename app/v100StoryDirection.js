@@ -25,7 +25,21 @@ export const V100_R9_STORY_CUTS = Object.freeze(Object.fromEntries([
   ...Object.entries(V100_QUALITY_SCENE_ASSETS).filter(([,scene])=>scene.newEvent).map(([id,scene])=>[id,scene.path]),
 ]));
 
-export function v100EventPortraitPath(owner, expression = "determined") {
+// Props follow the current scene for both speaker and listener. Everyday
+// serving scenes keep the screenplay's rice paddle; combat retains the pan.
+export const V100_SCENE_PORTRAITS = Object.freeze([
+  Object.freeze({owner:'unit-kumaverson',expression:'warm',sceneTags:Object.freeze(['daily','soup']),path:'/art/v100/portraits/kumaverson-cooking-warm-stage-r1.webp'}),
+]);
+// This three-person exchange addresses Zakimiya, not his wife who spoke last.
+// Bind the authored direction to the R9 source key rather than matching text.
+export function v100StoryListenerFor(eventId,node) {
+  return eventId==='v100:event:s25:post'&&node?.sourceDocument==='STORY_SCRIPT_V100_PRODUCER_R9.md'
+    &&node.sourceKey==='r9:2036'&&node.kind==='dialogue'&&node.portraitOwner==='unit-kumaverson'&&node.sceneTag==='soup'
+    ?'unit-zakimiya':null;
+}
+export function v100EventPortraitPath(owner, expression = "determined", sceneTag = null) {
+  const scenePortrait=V100_SCENE_PORTRAITS.find(item=>item.owner===owner&&item.expression===expression&&item.sceneTags.includes(sceneTag));
+  if(scenePortrait)return scenePortrait.path;
   const profile = V100_EVENT_PORTRAIT_PROFILES[owner];
   // Gantetsu's opaque full-face protection stays closed in every emotional beat.
   if(owner==='unit-gantetsu'&&V100_EVENT_EXPRESSIONS.includes(expression))return '/art/v100/portraits/gantetsu-determined-stage-r1.webp';

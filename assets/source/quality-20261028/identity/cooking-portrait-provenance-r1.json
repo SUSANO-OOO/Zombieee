@@ -1,0 +1,20 @@
+{
+  "generator": "scripts/build-quality-cooking-portrait.mjs",
+  "input": "assets/source/quality-20261028/identity/kumaverson-cooking-warm-r1.png",
+  "inputSha256": "0726517ca390d5608bdfe7b83101b30a535c32b2b731a7b3c39b9f945edfe6f9",
+  "crop": {
+    "left": 0,
+    "top": 0,
+    "width": 1024,
+    "height": 1280
+  },
+  "output": "public/art/v100/portraits/kumaverson-cooking-warm-stage-r1.webp",
+  "sha256": "f24cad713bb970a2f025c51ab09249eda7c90863ad677dbb6e30fd28c6c03569",
+  "bytes": 162104,
+  "pixelDensity": 2,
+  "designCanvas": {
+    "width": 512,
+    "height": 640
+  },
+  "scope": "Kumaverson warm daily/soup dialogue, both speaker and listener. Battle, cards, other expressions and canonical screenplay unchanged."
+}

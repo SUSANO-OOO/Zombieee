@@ -11,7 +11,7 @@ import { V100TitleScreen } from "./V100TitleScreen";
 import { V100BattleBriefing } from "./V100BattleBriefing";
 import { V100EventBackdrop } from "./V100EventBackdrop";
 import { V100StoryInsert } from "./V100StoryInsert";
-import { v100EventPortraitPath, v100StoryExpressionFor } from "./v100StoryDirection.js";
+import { v100EventPortraitPath, v100StoryExpressionFor, v100StoryListenerFor } from "./v100StoryDirection.js";
 import { v100BasePresentationFor } from "./v100BasePresentation.js";
 import { describeSaveEnvironment } from "./saveEnvironment.js";
 import { V100_PREPARATION_ART } from "./v100PreparationArt.js";
@@ -1141,17 +1141,17 @@ function StoryNodeView({ node, eventId = null, phase = "event", nodeIndex = 0, p
   const displayOwner = node.portraitOwner ?? actionSubjects[0] ?? null;
   const resolvedPresentation = presentation ?? v100EventPresentationFor({ eventId, phase, node, nodeIndex });
   const expression = v100StoryExpressionFor(eventId, nodeIndex, node, displayOwner);
-  const portrait = resolvedPresentation.cinematic ? null : v100EventPortraitPath(displayOwner, expression) ?? portraitFor(displayOwner);
+  const portrait = resolvedPresentation.cinematic ? null : v100EventPortraitPath(displayOwner, expression, node.sceneTag) ?? portraitFor(displayOwner);
   const slots = v100DialogueSlots(eventId ? v100StoryEventFor(eventId)?.nodes ?? [node] : [node], nodeIndex);
   const portraitSide = portrait ? slots.right?.portraitOwner === displayOwner ? "right" : "left" : "none";
   // An offscreen/radio voice has no on-screen speaker. Do not leave the
   // previous interlocutor's portrait beside that voice as a false speaker.
   const secondaryNode = node.kind === "dialogue" && portrait ? slots[portraitSide === "right" ? "left" : "right"] : null;
-  const secondaryOwner = secondaryNode?.portraitOwner ?? actionSubjects[1] ?? null;
+  const secondaryOwner = v100StoryListenerFor(eventId,node) ?? secondaryNode?.portraitOwner ?? actionSubjects[1] ?? null;
   // The listener reacts to this beat, rather than retaining the expression
   // from their most recent spoken line.
   const secondaryExpression = v100StoryExpressionFor(eventId, nodeIndex, node, secondaryOwner);
-  const secondaryPortrait = resolvedPresentation.cinematic ? null : v100EventPortraitPath(secondaryOwner, secondaryExpression) ?? portraitFor(secondaryOwner);
+  const secondaryPortrait = resolvedPresentation.cinematic ? null : v100EventPortraitPath(secondaryOwner, secondaryExpression, node.sceneTag) ?? portraitFor(secondaryOwner);
   const secondaryPortraitSide = portraitSide === "right" ? "left" : portraitSide === "left" ? "right" : "none";
   const nodeLabel = node.kind === "dialogue" ? storySpeakerLabel(node.speaker) : node.kind === "player-action" ? "主人公" : node.kind === "battle-marker" ? "ステージ情報" : node.kind === "system" ? "無線記録" : "";
   const playerFacingText = publicDisplayText(node.text || "…");

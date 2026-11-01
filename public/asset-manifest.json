@@ -2267,6 +2267,14 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/v100/portraits/kumaverson-cooking-warm-stage-r1.webp",
+      "bytes": 162104,
+      "hash": "sha256-f24cad713bb970a2f025c51ab09249eda7c90863ad677dbb6e30fd28c6c03569",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/portraits/kumaverson-determined-stage-r1.webp",
       "bytes": 166148,
       "hash": "sha256-735722b557a5e7dfcc7a72711bd6f9dcb99d6bb796c26241d6bab8fc6ee80525",
