@@ -336,20 +336,28 @@ export function purchaseV100Unit(save, unitId, { now } = {}) {
 /**
  * @param {unknown} save
  * @param {string} unitId
- * @param {{expectedLevel?: number | null, now?: string}} [options]
+ * @param {{expectedLevel?: number | null, targetLevel?: number | null, now?: string}} [options]
  */
-export function upgradeV100Unit(save, unitId, { expectedLevel = null, now } = {}) {
+export function upgradeV100Unit(save, unitId, { expectedLevel = null, targetLevel = null, now } = {}) {
   const current = normalizeV100Save(save);
   if (!V100_UNIT_BY_ID[unitId] || !current.ownedUnitIds.includes(unitId)) return { applied: false, reason: "unit-not-owned", save: current };
   if (expectedLevel !== null && v100UnitLevelFor(current.unitLevels, unitId) !== expectedLevel) return { applied: false, reason: "stale-level", save: current };
-  const upgrade = applyV100LevelUpgrade({
-    levels: current.unitLevels, unitId, caps: current.caps, receiptIds: current.receipts,
-    clearedStageNumber: Math.max(0, ...current.completedStageIds.map(stageNumberFor)),
-  });
-  if (!upgrade.applied) return { applied: false, duplicate: upgrade.duplicate === true, reason: upgrade.reason, save: current };
+  const fromLevel = v100UnitLevelFor(current.unitLevels, unitId);
+  const destination = targetLevel ?? fromLevel + 1;
+  const clearedStageNumber = Math.max(0, ...current.completedStageIds.map(stageNumberFor));
+  if (!Number.isInteger(destination) || destination <= fromLevel) return { applied: false, reason: "invalid-level-target", save: current };
+  if (destination > v100LevelCapForStage(clearedStageNumber)) return { applied: false, reason: "level-cap", save: current };
+  // Apply each existing level contract in memory, then persist once.
+  // A shortfall or conflicting receipt rejects the entire purchase.
+  let levels = current.unitLevels, caps = current.caps;
+  const receipts = [...current.receipts];
+  for (let level = fromLevel + 1; level <= destination; level += 1) {
+    const upgrade = applyV100LevelUpgrade({ levels, unitId, caps, receiptIds: receipts, clearedStageNumber });
+    if (!upgrade.applied) return { applied: false, duplicate: upgrade.duplicate === true, reason: upgrade.reason, save: current };
+    levels = upgrade.levels; caps = upgrade.capsAfter; receipts.push(upgrade.receipt);
+  }
   return applyV100SaveMutation(current, (next) => ({
-    ...next, caps: upgrade.capsAfter, unitLevels: { ...upgrade.levels },
-    receipts: [...next.receipts, upgrade.receipt],
+    ...next, caps, unitLevels: { ...levels }, receipts,
   }), { now });
 }
 

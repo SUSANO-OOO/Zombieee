@@ -413,6 +413,12 @@
 #v100-campaign .v100-unit-transaction.has-prepare > .v100-upgrade-preview { grid-row:1; }
 #v100-campaign .v100-unit-transaction.has-prepare > .v100-unit-prepare { grid-column:1; grid-row:3; background:linear-gradient(#35674d,#204733); font-size:14px; line-height:1.15; }
 #v100-campaign .v100-unit-transaction.has-prepare > button:not(.v100-unit-prepare) { grid-column:2; grid-row:3; }
+#v100-campaign .v100-unit-transaction .v100-unit-level-target { grid-column:1/-1; grid-row:3; display:flex; align-items:center; gap:10px; color:#27482e; font-size:14px; font-weight:700; }
+#v100-campaign .v100-unit-level-target select { flex:1; min-width:0; min-height:44px; padding:6px 10px; color:#263b23; background:#f1ead7; border:1px solid #74866d; font:inherit; }
+#v100-campaign .v100-unit-transaction.has-prepare:has(.v100-unit-level-target) > button { grid-row:4; }
+@media (max-height:460px) {
+  #v100-campaign .v100-command-personnel.detail-open .v100-unit-transaction:has(.v100-unit-level-target) { position:static; margin-top:8px; }
+}
 #v100-campaign .v100-unit-prepare small { display:block; font-size:12px; line-height:1.15; }
 
 #v100-campaign .v100-command-personnel.detail-open .v100-unmet-record > .v100-personnel-detail-back { grid-column:1/-1; grid-row:1; }

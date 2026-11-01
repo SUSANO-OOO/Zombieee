@@ -46,7 +46,7 @@ export function formatV100Number(value, digits = 2) {
 }
 
 /** A read-only quote from the same level, allocation and equipment formula as battle. */
-export function v100UnitPresentation(save, unitId) {
+export function v100UnitPresentation(save, unitId, { targetLevel = null } = {}) {
   const unit = V100_UNIT_BY_ID[unitId];
   const kind = campaignUnitIdToCombatKind(unitId);
   const base = unitContentFor(kind);
@@ -58,7 +58,8 @@ export function v100UnitPresentation(save, unitId) {
   const levelCap = Math.max(1, Math.min(30, Number(save?.levelCap) || 5));
   const owned = (save?.ownedUnitIds ?? []).includes(unitId);
   const registered = (save?.registeredUnitIds ?? []).includes(unitId);
-  const nextLevel = owned && level < levelCap ? level + 1 : null;
+  const requestedLevel = Number.isInteger(targetLevel) && targetLevel > level && targetLevel <= levelCap ? targetLevel : level + 1;
+  const nextLevel = owned && level < levelCap ? requestedLevel : null;
   const statsAt = (atLevel) => {
     const equipped = applyUnitEquipmentEffects(applyV100UnitLevelProgression(base, atLevel), effects);
     return Object.freeze({
@@ -87,7 +88,7 @@ export function v100UnitPresentation(save, unitId) {
     owned, registered, level, levelCap, nextLevel,
     status: owned ? "仲間" : registered ? "支度待ち" : "未解放",
     registrationCost: unit.registrationCostCaps,
-    upgradeCost: nextLevel === null ? 0 : v100LevelCost(nextLevel),
+    upgradeCost: nextLevel === null ? 0 : Array.from({length: nextLevel - level}, (_, index) => v100LevelCost(level + index + 1)).reduce((sum, cost) => sum + cost, 0),
     commandCost: base.cost, redeploySeconds: current.deployCooldown,
     attackType: base.range >= 80 ? "ranged" : "melee",
     current, next, nextOutputGrowth,

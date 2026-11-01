@@ -146,6 +146,7 @@ function formatReason(reason: string | undefined) {
     "support-not-owned": "使う支援をまだ持っていない。支援画面で手に入れよう。",
     "upgrade-cap": "この装備は最大まで強化済み。",
     "level-cap": "今の育成上限に到達。先の作戦をクリアすると、さらに育てられる。",
+    "invalid-level-target": "育成するレベルを選び直そう。",
     "stale-level": "レベルが変わっている。いまの表示を確認してから、もう一度選ぼう。",
     "unknown-unit": "仲間の情報を読み込めなかった。前の画面に戻って選び直そう。",
     "boss-undiscovered": "物語でこのボスを倒すと、ここで再戦できる。",
@@ -1065,7 +1066,7 @@ export function V100Campaign() {
           }}
           preparationLabel={modePreparation ? "迎撃の編成へ" : flow.phase === "formation" ? "出撃編成へ" : "S" + String(V100_STAGE_BY_ID[selectedStageId]?.number ?? 1).padStart(2, "0") + "の編成へ"}
           onPurchase={(unitId) => applySaveTransaction(purchaseV100Unit(save, unitId))}
-          onLevel={(unitId, expectedLevel) => applySaveTransaction(upgradeV100Unit(save, unitId, { expectedLevel }))}
+          onLevel={(unitId, expectedLevel, targetLevel) => applySaveTransaction(upgradeV100Unit(save, unitId, { expectedLevel, targetLevel }))}
         />
       )}
 
@@ -1364,15 +1365,17 @@ function FormationView({ save, stageId, requestedUnitId = null, onCancelRequeste
   </section>;
 }
 
-function PersonnelView({ save, initialUnitId, returnLabel, preparationLabel, onBack, onPrepare, onPurchase, onLevel }: { save: Save; initialUnitId: string | null; returnLabel: string; preparationLabel: string; onBack: () => void; onPrepare: (unitId: string) => void; onPurchase: (unitId: string) => void; onLevel: (unitId: string, expectedLevel: number) => void }) {
+function PersonnelView({ save, initialUnitId, returnLabel, preparationLabel, onBack, onPrepare, onPurchase, onLevel }: { save: Save; initialUnitId: string | null; returnLabel: string; preparationLabel: string; onBack: () => void; onPrepare: (unitId: string) => void; onPurchase: (unitId: string) => void; onLevel: (unitId: string, expectedLevel: number, targetLevel: number) => void }) {
   const focusedUnitId = initialUnitId && save.ownedUnitIds.includes(initialUnitId) ? initialUnitId : null;
   const [selectedUnitId, setSelectedUnitId] = useState(() => focusedUnitId ?? save.ownedUnitIds[0] ?? V100_UNITS[0]?.id ?? "");
   const [detailOpen, setDetailOpen] = useState(Boolean(focusedUnitId));
   const [portraitCloseup, setPortraitCloseup] = useState(true);
+  const [levelTarget, setLevelTarget] = useState<{ unitId: string; fromLevel: number; target: number } | null>(null);
   const selectedUnit = UNIT_BY_ID.get(selectedUnitId) ?? V100_UNITS[0];
   const selectedKnown = selectedUnit && (save.ownedUnitIds.includes(selectedUnit.id) || save.registeredUnitIds.includes(selectedUnit.id));
   const detailPortrait = selectedKnown ? v100StoryPortraitPath(selectedUnit.id) ?? v100StoryPortraitPath(campaignUnitIdToCombatKind(selectedUnit.id)) ?? formationCardForUnit(selectedUnit.id) : null;
-  const info = selectedUnit ? v100UnitPresentation(save, selectedUnit.id) : null;
+  const targetLevel = levelTarget?.unitId === selectedUnit?.id && levelTarget.fromLevel === (save.unitLevels[selectedUnit.id] ?? 1) ? levelTarget.target : null;
+  const info = selectedUnit ? v100UnitPresentation(save, selectedUnit.id, { targetLevel }) : null;
   const currentStats = info?.current;
   const nextStats = info?.next;
   const nextGrowth = currentStats && nextStats ? [
@@ -1422,7 +1425,8 @@ function PersonnelView({ save, initialUnitId, returnLabel, preparationLabel, onB
                 : showStat("攻撃間隔", formatV100Number(currentStats.attackEvery) + "秒"),
             ]}</div>
             <div className={"v100-unit-transaction" + (info.owned ? " has-prepare" : "")}>{info.owned && <button type="button" className="v100-primary v100-unit-prepare" onClick={() => onPrepare(selectedUnit.id)}>{preparationLabel}<small>{save.formationSlots.includes(selectedUnit.id) ? "この仲間は編成中" : "出撃させる枠を選ぶ"}</small></button>}{nextStats && <p className="v100-upgrade-preview">今回の強化：{nextGrowth || "数値変化なし"}</p>}<p>所持 {save.caps} CAPS{price > 0 && <> / 必要 {price}{save.caps < price && <> / あと {price - save.caps}</>}</>}</p>
-              {info.owned ? <button type="button" className="v100-primary" data-ui-sound="transaction" onClick={() => onLevel(selectedUnit.id, info.level)} disabled={info.upgradeCost <= 0 || save.caps < info.upgradeCost}>{info.upgradeCost <= 0 ? "強化上限" : save.caps < info.upgradeCost ? "あと " + (info.upgradeCost - save.caps) + " CAPS必要" : "Lv." + info.nextLevel + "へ強化 / " + info.upgradeCost + " CAPS"}</button>
+              {info.owned && info.nextLevel !== null && <label className="v100-unit-level-target">育成先<select aria-label="育成するレベル" value={info.nextLevel} onChange={event => setLevelTarget({unitId:selectedUnit.id,fromLevel:info.level,target:Number(event.target.value)})}>{Array.from({length:info.levelCap-info.level},(_,index)=>info.level+index+1).map(level=><option key={level} value={level}>Lv.{level}まで</option>)}</select></label>}
+              {info.owned ? <button type="button" className="v100-primary" data-ui-sound="transaction" onClick={() => info.nextLevel !== null && onLevel(selectedUnit.id, info.level, info.nextLevel)} disabled={info.upgradeCost <= 0 || save.caps < info.upgradeCost}>{info.upgradeCost <= 0 ? "強化上限" : save.caps < info.upgradeCost ? "あと " + (info.upgradeCost - save.caps) + " CAPS必要" : "Lv." + info.nextLevel + "へ強化 / " + info.upgradeCost + " CAPS"}</button>
                 : info.registered ? <button type="button" className="v100-primary" data-ui-sound="transaction" onClick={() => onPurchase(selectedUnit.id)} disabled={save.caps < info.registrationCost}>{save.caps < info.registrationCost ? "あと " + (info.registrationCost - save.caps) + " CAPS必要" : "支度を整える / " + info.registrationCost + " CAPS"}</button>
                   : <p className="v100-focus-lock">第{selectedUnit.availabilityStageNumber}作戦クリアで出撃の支度ができる。</p>}
             </div>
