@@ -344,8 +344,8 @@ export const V177_AUTHORED_GAITS = {
     },
     "sources": [
       {
-        "file": "assets/source/v100/joints/tky-r1/parts.json",
-        "sha256": "7ee92bb3346a2f02521b5175a807f43bcc1f26df71627194a58450e19a72728f",
+        "file": "assets/source/quality-20261028/rigs/tky-combat-r1/parts.json",
+        "sha256": "1920d5b8def2d31ce3db9ded70aa6e42b320790e30441564dbf029014f847fa2",
         "hashEncoding": "utf8-lf"
       }
     ]

@@ -42,4 +42,8 @@ const ranger=read('../assets/source/quality-20261028/rigs/ranger-combat-r1/prove
 const rangerIndex=rows.findIndex(row=>row.path==='/art/v100/joints/ranger-quality-neck-r4.webp');
 assert.ok(rangerIndex>=0,'Complete Mizuchi paint replaces its registered head-only predecessor');
 rows[rangerIndex]=asset({...ranger,assetPath:ranger.path});
+const tky=read('../assets/source/quality-20261028/rigs/tky-combat-r1/provenance.json');
+const tkyIndex=rows.findIndex(row=>row.path==='/art/v100/joints/tky-quality-neck-r4.webp');
+assert.ok(tkyIndex>=0,'Complete TKY body replaces its registered head-only predecessor');
+rows[tkyIndex]=asset(tky);
 export const V177_JOINT_ASSET_ADDITIONS=Object.freeze(rows);

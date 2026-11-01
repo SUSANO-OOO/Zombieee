@@ -1,3 +1,4 @@
+import {V177_NEWCOMER_JOINT_ATLASES} from '../app/v177NewcomerJointData.js';
 import {assertMaterialRigGeometry} from './helpers/quality-material-contract.mjs';
 import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
@@ -48,7 +49,7 @@ test('normal windup, close-range contact and recovery keep both grips, fixed ana
 test('the new Blender action retains every original walking and firing sample and every other newcomer atlas',async()=>{
  const source=execFileSync('git',['show','c858205c427aad2f583f79abfa0a8903e0171de3:app/v177NewcomerJointData.js'],{encoding:'utf8',maxBuffer:4*1024*1024}),begin=source.indexOf('Object.entries(')+'Object.entries('.length,baseline=JSON.parse(source.slice(begin,source.lastIndexOf('));')));
  assert.deepEqual(atlas.poses.slice(0,151),baseline[kind].poses);assertMaterialRigGeometry({parts:atlas.parts},{parts:baseline[kind].parts});
- for(const other of ['zakimiya','tky','miyamoto-musashi'])assertMaterialRigGeometry(V177_JOINT_ATLASES[other],baseline[other]);
+ for(const other of ['zakimiya','tky','miyamoto-musashi'])assertMaterialRigGeometry(other==='tky'?V177_NEWCOMER_JOINT_ATLASES[other]:V177_JOINT_ATLASES[other],baseline[other]); // TKY full-body runtime is verified separately; preserve this launcher-action baseline.
  const old=JSON.parse(gunzipSync(execFileSync('git',['show','c858205c427aad2f583f79abfa0a8903e0171de3:assets/source/v100/joints/mrs-chiha-r1/motion.json.gz'],{maxBuffer:4*1024*1024}))),motion=JSON.parse(gunzipSync(await readFile('assets/source/v100/joints/mrs-chiha-r1/motion.json.gz')));
  assert.equal(motion.actions.length,6);assert.deepEqual(motion.actions.filter(a=>a.name!=='launcher-bash'),old.actions);assert.equal(motion.actions.find(a=>a.name==='launcher-bash').frames.length,61);
  const texture=execFileSync('git',['show','c858205c427aad2f583f79abfa0a8903e0171de3:public/art/v100/joints/mrs-chiha-r1.webp'],{maxBuffer:2*1024*1024});assert.deepEqual(await readFile('public/art/v100/joints/mrs-chiha-r1.webp'),texture);

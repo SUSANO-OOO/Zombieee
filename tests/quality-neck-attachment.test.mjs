@@ -14,9 +14,9 @@ test('all calibrated human/helmet materials retain their own torso garment and a
  assert.equal(Object.keys(QUALITY_BATTLE_HEAD_CALIBRATIONS).length,13);
  for(const kind of Object.keys(QUALITY_BATTLE_HEAD_CALIBRATIONS)){
   const atlas=V177_JOINT_ATLASES[kind],rig=atlas.parts?atlas:atlas.upperRig;
-  assert.equal(atlas.path,['scout','medic','engineer','ranger'].includes(kind)?`/art/v100/joints/${kind}-combat-r1.webp`:QUALITY_BATTLE_HEAD_CALIBRATIONS[kind].path);
+  assert.equal(atlas.path,['tky','scout','medic','engineer','ranger'].includes(kind)?`/art/v100/joints/${kind}-combat-r1.webp`:QUALITY_BATTLE_HEAD_CALIBRATIONS[kind].path);
   const original=QUALITY_CHARACTER_BASE_ATLASES[kind],originalRig=original.parts?original:original.upperRig;
-  const expected=['scout','medic','engineer'].includes(kind)?JSON.parse(await readFile(`assets/source/quality-20261028/rigs/${kind}-combat-r1/parts.json`)).parentAttachments:originalRig.parentAttachments;
+  const expected=['tky','scout','medic','engineer'].includes(kind)?JSON.parse(await readFile(`assets/source/quality-20261028/rigs/${kind}-combat-r1/parts.json`)).parentAttachments:originalRig.parentAttachments;
   assert.deepEqual(rig.parentAttachments,expected,'material registration must use its declared anatomical pivot');
   const head=rig.parts.find(p=>p.bone==='head'),s=head.source;
   const{data,info}=await sharp('public'+atlas.path).extract({left:s.x,top:s.y,width:s.w,height:s.h}).ensureAlpha().raw().toBuffer({resolveWithObject:true});
@@ -34,7 +34,7 @@ test('material registration retains the original anatomical joint through actual
    const p=n/30,runtime={moving:state==='move',locomotionPhase:p,locomotionSettle:state==='move'?0:1,direction:'right'};
    const base=v177JointPose(kind,{requestedState:state,clipProgress:p},runtime,{actor:{kind,animationPresentation:runtime}});assert.ok(base,kind+'/'+state);
    const plan=v177WeaponChoreography(kind,atlas,{...base,paintLocomotion:{phase:p,settle:runtime.locomotionSettle}});
-   const pivot=['scout','medic','engineer'].includes(kind)?atlas.parentAttachments.head.pivot:calibration.entries.find(e=>e.kind===kind).rigPivot;
+   const pivot=['tky','scout','medic','engineer'].includes(kind)?atlas.parentAttachments.head.pivot:calibration.entries.find(e=>e.kind===kind).rigPivot;
    const captured=v177CaptureJointPose(kind,plan),a=point(captured.upper.head,pivot),b=point(captured.upper.spine,pivot);
    assert.ok(Math.hypot(a[0]-b[0],a[1]-b[1])<.002,kind+'/'+state+'/'+n+' visible neck attachment');
   }
@@ -52,5 +52,5 @@ test('the complete Kuma combat painting is registered to the visible road contac
   for(let i=0;i<info.width*info.height;i++)if(data[i*4+3]>=32)sole=Math.max(sole,Math.floor(i/info.width)+1);
  }
  assert.ok(Math.abs((sole-atlas.referenceFrame.ty)/atlas.referenceFrame.scale-atlas.referenceFrame.height*spriteFrameFor('kumaverson','walk-a','right').anchorY)<1e-8,'painted soles meet the game ground anchor');
- assert.deepEqual(Object.entries(V177_JOINT_ATLASES).filter(([,a])=>a.reserveBipedLanding).map(([kind])=>kind).sort(),['engineer','kumaverson','medic','scout'],'landing reserve applies only to declared complete-body replacements');
+ assert.deepEqual(Object.entries(V177_JOINT_ATLASES).filter(([,a])=>a.reserveBipedLanding).map(([kind])=>kind).sort(),['engineer','kumaverson','medic','scout','tky'],'landing reserve applies only to declared complete-body replacements');
 });
