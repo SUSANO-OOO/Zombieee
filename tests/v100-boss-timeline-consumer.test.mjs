@@ -102,18 +102,18 @@ test("TAKUYA's two actual reinforcement waves follow HP phases, including a burs
       enemySpawnPortalPoint: () => ({}), announceBossEntrance: () => {}, playCue: () => {}, emitBattleBark: () => {},
     };
     const advance = () => vm.runInNewContext(code, { ...context, campaignWaveReady });
-    advance(); assert.equal(queued.length, 7, "pending entrance cannot consume a phase wave");
+    advance(); assert.equal(queued.length, 4, "pending entrance cannot consume a phase wave");
     g.fighters.push({ kind: "takuya", hp: 2400, maxHp: 2400 });
-    advance(); assert.equal(queued.length, 7, "elapsed time alone cannot activate HP reinforcements");
+    advance(); assert.equal(queued.length, 4, "elapsed time alone cannot activate HP reinforcements");
     if (burstDefeat) {
       g.fighters = []; g.bossDefeated = true;
-      advance(); assert.equal(queued.length, 9, "burst defeat cannot discard either reinforcement");
+      advance(); assert.equal(queued.length, 6, "burst defeat cannot discard either reinforcement");
     } else {
-      g.fighters[0].hp = 2400 * .70; advance(); assert.equal(queued.length, 8);
-      g.fighters[0].hp = 2400 * .35; advance(); assert.equal(queued.length, 9);
+      g.fighters[0].hp = 2400 * .70; advance(); assert.equal(queued.length, 5);
+      g.fighters[0].hp = 2400 * .35; advance(); assert.equal(queued.length, 6);
     }
-    advance(); assert.equal(queued.length, 9, "phase waves commit once");
-    assert.deepEqual(queued.slice(7).map(event => event.units), [["runner", "shade", "walker"], ["spitter", "walker", "runner", "spitter"]]);
+    advance(); assert.equal(queued.length, 6, "phase waves commit once");
+    assert.deepEqual(queued.slice(4).map(event => event.units), [["runner", "shade", "walker"], ["spitter", "walker", "runner", "spitter"]]);
     assert.equal(battleOutcomeFor(definition, { baseHp: 680, barricadeHp: 0, bossDefeated: true, wavesResolved: false }), null);
   }
 });
@@ -141,10 +141,10 @@ test("Stage 3 ends after TAKUYA and his final reinforcements, without an empty g
 test("Stage 3's final preboss contact flows into TAKUYA without an empty-lane timer", () => {
   const definition=createBattleDefinition(V100_STAGES[2].id,{v100:true});
   const entrance=definition.timeline.findIndex(event=>event.units.includes("takuya"));
-  assert.equal(entrance,6);
-  assert.ok(definition.timeline[entrance].at-definition.prepSeconds>=90);
+  assert.equal(entrance,3);
+  assert.equal(definition.timeline[entrance].at-definition.prepSeconds,50);
   assert.ok(definition.timeline[entrance].at-definition.timeline[entrance-1].at<=20);
-  assert.deepEqual(definition.timeline.slice(0,entrance).map(event=>event.units.length),[6,6,6,7,7,6]);
+  assert.deepEqual(definition.timeline.slice(0,entrance).map(event=>event.units.length),[6,6,7]);
   assert.ok(definition.timeline.slice(1,entrance).every((event,index)=>event.at-definition.timeline[index].at<=21));
   assert.equal(definition.timeline[entrance].waitForPriorWaveClear,true);
   assert.equal(definition.timeline[entrance].advanceOnClearAfter-definition.timeline[entrance-1].advanceOnClearAfter,10);
@@ -170,6 +170,25 @@ test("Stages 3 and 5 bring the next contact forward only after the prior wave cl
     advance();assert.equal(queued.length,0,"a living enemy still occupies the previous wave");
     g.fighters=[];advance();assert.deepEqual(queued.map(event=>event.wave),[2]);
     advance();assert.equal(queued.length,1,"early contact must be consumed once");
+  }
+});
+
+test("S03 overdue prelude contacts cannot stack on a living or queued prior wave", () => {
+  const definition = createBattleDefinition(V100_STAGES[2].id, { v100: true });
+  for (const index of [1, 2, 3]) {
+    const g = { definition, eventIndex: index, time: 1000, fighters: [{side:'zombie',hp:1}], enemySpawn: {nextEntryId:1,pending:[]} };
+    const queued = [], announced = [];
+    const context = {g,campaignWaveReady,isBossFighter,v100AssaultObjectProfile,activeStageViewportId:'844x340',
+      isBossEnemyKind:kind=>kind==='takuya',
+      enqueueEnemyWave:(runtime,event)=>{queued.push(event);return {...runtime,nextEntryId:runtime.nextEntryId+event.units.length,pending:event.units.map((kind,i)=>({kind,entryId:runtime.nextEntryId+i}))};},
+      enemySpawnPortalPoint:()=>({legacyLane:1}),announceBossEntrance:(_g,kind)=>announced.push(kind),playCue:()=>{},emitBattleBark:()=>{}};
+    const advance = () => vm.runInNewContext(code, context);
+    advance(); assert.equal(queued.length,0,'living prior enemy blocks even an overdue event');
+    g.fighters=[];g.enemySpawn.pending=[{entryId:0,kind:'walker'}];
+    advance();assert.equal(queued.length,0,'pending prior spawn blocks even an overdue event');
+    g.enemySpawn.pending=[];advance();assert.equal(queued.length,1,'exactly one contact after clearance');
+    advance();assert.equal(queued.length,1,'new pending queue prevents an overdue cascade');
+    assert.deepEqual(announced,index===3?['takuya']:[],'boss entrance announcement remains attached');
   }
 });
 

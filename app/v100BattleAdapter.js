@@ -137,17 +137,14 @@ function stageTimeline(stage, missionType, bossKind) {
     const thresholds = V100_BOSS_BY_ID["boss-takuya"].phaseThresholds;
     return freeze([
       freeze({ at: PREP_SECONDS, wave: 1, label: "防衛線 // 先行感染群", units: freeze(["walker", "runner", "walker", "runner", "walker"]) }),
-      freeze({ at: PREP_SECONDS + 16, advanceOnClearAfter: PREP_SECONDS + 12, wave: 2, label: "防衛線 // 左翼に接敵", units: freeze(["walker", "spitter", "runner", "walker", "runner"]) }),
-      freeze({ at: PREP_SECONDS + 34, advanceOnClearAfter: PREP_SECONDS + 28, wave: 3, label: "防衛線 // 中央突破", units: freeze(["shade", "walker", "spitter", "runner", "walker"]) }),
-      freeze({ at: PREP_SECONDS + 54, advanceOnClearAfter: PREP_SECONDS + 44, wave: 4, label: "防衛線 // 重量級接近", units: freeze(["crusher", "walker", "shade", "runner", "spitter", "walker"]) }),
-      freeze({ at: PREP_SECONDS + 75, advanceOnClearAfter: PREP_SECONDS + 60, wave: 5, label: "防衛線 // 防壁に接近", units: freeze(["runner", "spitter", "crusher", "walker", "runner", "shade"]) }),
-      // A last guard keeps the lane occupied while TAKUYA reaches the gate.
-      // A fast squad can bring both this contact and the entrance forward,
-      // but only after clearing each preceding group and its spawn queue.
-      freeze({ at: PREP_SECONDS + 87, advanceOnClearAfter: PREP_SECONDS + 75, wave: 6, label: "防衛線 // 最後の防壁", units: freeze(["walker", "runner", "shade", "walker", "spitter"]) }),
-      freeze({ at: PREP_SECONDS + 95, advanceOnClearAfter: PREP_SECONDS + 85, wave: 7, label: `警告 // ${bossLabel}`, units: freeze([bossKind]), waitForPriorWaveClear: true }),
-      freeze({ at: PREP_SECONDS + 110, wave: 8, label: "防衛線 // 増援1/2", units: freeze(["runner", "shade", "walker"]), bossHpRatio: thresholds[0], addWave: true }),
-      freeze({ at: PREP_SECONDS + 128, wave: 9, label: "防衛線 // 増援2/2", units: freeze(["spitter", "walker", "runner"]), bossHpRatio: thresholds[1], addWave: true }),
+      // The first boss teaches three distinct contacts, not six attrition waves.
+      // Even overdue contacts wait for living enemies and the pending queue.
+      freeze({ at: PREP_SECONDS + 16, advanceOnClearAfter: PREP_SECONDS + 12, wave: 2, label: "防衛線 // 遠隔感染体に注意", units: freeze(["walker", "spitter", "runner", "walker", "runner"]), waitForPriorWaveClear: true }),
+      freeze({ at: PREP_SECONDS + 34, advanceOnClearAfter: PREP_SECONDS + 30, wave: 3, label: "防衛線 // 重量級接近", units: freeze(["crusher", "walker", "shade", "runner", "spitter", "walker"]), waitForPriorWaveClear: true }),
+      freeze({ at: PREP_SECONDS + 50, advanceOnClearAfter: PREP_SECONDS + 40, wave: 4, label: `警告 // ${bossLabel}`, units: freeze([bossKind]), waitForPriorWaveClear: true }),
+      // Once the entrance is due, reinforcements follow HP, not the old prelude clock.
+      freeze({ at: PREP_SECONDS + 51, wave: 5, label: "防衛線 // 増援1/2", units: freeze(["runner", "shade", "walker"]), bossHpRatio: thresholds[0], addWave: true }),
+      freeze({ at: PREP_SECONDS + 52, wave: 6, label: "防衛線 // 増援2/2", units: freeze(["spitter", "walker", "runner"]), bossHpRatio: thresholds[1], addWave: true }),
     ]);
   }
   if (stage.number === 5) {
