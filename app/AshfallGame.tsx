@@ -1928,7 +1928,7 @@ const initialGame = (
   shake: createCameraShakeRuntime(),
   enemyBaseCollapse: 0,
   resultPresented: false,
-  banner: `${definition.displayName} // 出撃準備 ${definition.prepSeconds}`,
+  banner: `${definition.displayName}｜準備時間 ${definition.prepSeconds}秒`,
   bannerTime: .2,
   flashOverlay: 0,
   combo: 0,
@@ -20579,7 +20579,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           }
         }
         if (g.time < g.definition.prepSeconds && g.bannerTime <= .05) {
-          g.banner = `出撃準備 // ${Math.max(1, Math.ceil(g.definition.prepSeconds - g.time))}`;
+          g.banner = `準備時間 あと${Math.max(1, Math.ceil(g.definition.prepSeconds - g.time))}秒`;
           g.bannerTime = .22;
         }
 
@@ -25031,8 +25031,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 ? <button className="phase-block next-wave-control" aria-label="準備を終えて次の波へ" disabled={paused || Boolean(end || battleSaveBoundaryRef.current)} onClick={() => {
                   const g = gameRef.current;
                   if (g.running && !g.paused && !g.over && !battleSaveBoundaryRef.current) requestCampaignWave(g);
-                }}><small>{hud.wavePrompt.label}</small><strong>次波へ</strong><em>第{hud.wave + 1}波</em></button>
-                : <div className="phase-block"><small>第{hud.phase}段階</small><strong>{hud.wavePrompt?.label ?? phaseName}</strong><em>第{hud.wave}波</em></div>}
+                }}><small>{hud.wavePrompt.label}</small><strong>次の波へ</strong><em>第{hud.wave + 1}波</em></button>
+                : <div className="phase-block"><small>戦況</small><strong>{hud.wavePrompt?.label ?? phaseName}</strong><em>第{hud.wave}波</em></div>}
               <button className="icon-btn" onClick={togglePause} aria-disabled={battleSaveBoundaryRef.current} aria-label={paused ? "再開" : "一時停止"}>{paused ? "▶" : "Ⅱ"}</button>
               {compactBattleAudioUnlock ? <button className="icon-btn audio-btn audio-unlock-inline" data-state={audioUnlockUi} data-audio-unlock-control="true" onClick={enableAudio} disabled={audioUnlockUi === "pending" || Boolean(end || pendingResultCommit || battleSaveBoundaryRef.current)} aria-label={audioUnlockUi === "failed" ? "音声を再試行" : audioUnlockUi === "partial" ? "利用できない音声だけ再試行" : "音声を有効にする"} aria-live="polite"><b>♫</b><small>{compactAudioUnlockLabel}</small></button> : <button className={`icon-btn audio-btn ${musicActive ? "playing" : ""}`} data-playing={musicActive} data-muted={bgmMuted} disabled={Boolean(end || pendingResultCommit || battleSaveBoundaryRef.current)} onClick={toggleBgm} aria-label={bgmMuted ? "音楽を再生" : "音楽をミュート"}><b>{bgmMuted ? "×" : "♫"}</b><small>音楽</small></button>}
               <button className="icon-btn audio-btn" data-muted={sfxMuted} disabled={Boolean(end || pendingResultCommit || battleSaveBoundaryRef.current)} onClick={toggleSfx} aria-label={sfxMuted ? "効果音を再生" : "効果音をミュート"}><b>{sfxMuted ? "×" : "効"}</b><small>効果音</small></button>

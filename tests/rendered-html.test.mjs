@@ -282,7 +282,7 @@ test("keeps the main player-facing battle and result UI Japanese-first", async (
   ]);
   const battleUi = game.slice(game.indexOf("const healthPct"));
   assert.match(battleUi, /<b>\{compactBattleStageName\(selectedOperationView\.displayName\)}<\/b>/);
-  assert.match(battleUi, /第\{hud\.phase\}段階/);
+  assert.match(battleUi, /<small>戦況<\/small>/);
   assert.match(battleUi, /aria-label="生存者ユニット"/);
   assert.match(battleUi, /同時出撃 \{hud\.summonedCount\}\/7/);
   assert.match(battleUi, /装甲車両一斉掃射/);
@@ -583,7 +583,7 @@ test("provides stage-aware preparation and phase banners with no manual-tactics 
 
   assert.equal(PREP_SECONDS, 5);
   assert.match(game, /g\.time < g\.definition\.prepSeconds/);
-  assert.match(game, /`出撃準備 \/\/ \$\{Math\.max\(1, Math\.ceil\(g\.definition\.prepSeconds - g\.time\)\)\}`/);
+  assert.match(game, /`準備時間 あと\$\{Math\.max\(1, Math\.ceil\(g\.definition\.prepSeconds - g\.time\)\)\}秒`/);
   assert.match(game, /const nextPhase = phaseForBattle\(g\.definition, g\.time\)/);
   assert.match(game, /g\.banner = phaseBannerForBattle\(g\.definition, nextPhase\)/);
   assert.match(game, /deployQueue: UnitKind\[\]/);
