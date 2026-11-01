@@ -1,0 +1,126 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "engineer",
+  "assetPath": "/art/v100/joints/engineer-combat-r1.webp",
+  "bytes": 33250,
+  "sha256": "111458dcde7a11c3e7a968c0f7e1d5db9c202a5376aae6ab5e6875e93b9cfc5d",
+  "atlasPacking": "height-descending-shelves",
+  "generatedPartsStudySha256": "cdad2a5d8fc6180902e9b3759bedf4b485e0e2b5761b9a19e1348ae6752be72e",
+  "identitySourceSha256": "a328d476834e440b3f7af04d40d1f844c6f60f5bcf7a5cea296e913d8e0bc7d6",
+  "identityBinding": {
+    "path": "/art/v070/characters/engineer-battle-v1.png",
+    "sourceSha256": "8b8587b1fba86e2a44cbe15576e6d64407ecfca4d1c1747eb460583c17669d8e",
+    "sourceRect": {
+      "x": 480,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "referenceTransform": {
+      "scale": 1,
+      "tx": 0.5,
+      "ty": 0,
+      "flipX": false
+    },
+    "modelSource": "assets/source/quality-20261028/identity/monkey-master-r4.png",
+    "modelSha256": "feefc4b9959e8ce45955c1915338aec029fb1b58892f79528a1359d97ad5f2e1",
+    "combatSource": "assets/source/quality-20261028/rigs/engineer-combat-r1/combat-model-r1.png",
+    "combatSha256": "a328d476834e440b3f7af04d40d1f844c6f60f5bcf7a5cea296e913d8e0bc7d6"
+  },
+  "motionSha256": "474e03935590bc19c376caac6a0a3b0966118535093ebe7d9137a9b600a5d96c",
+  "parts": [
+    {
+      "name": "far-upper-arm",
+      "file": "far-upper-arm.png",
+      "sha256": "578ac0954568286fb4b4bbe12e9cd6e152e1d91a184044320ecce62340fe8a0e",
+      "original": false
+    },
+    {
+      "name": "far-forearm",
+      "file": "far-forearm.png",
+      "sha256": "a936d9c43d584bb80a28fcb68ffdfee5817bd84ea97286fd29d5cdc7a7902125",
+      "original": false
+    },
+    {
+      "name": "far-thigh",
+      "file": "far-thigh.png",
+      "sha256": "8e714e708f1522e860440d25ea728feb60893e6a01284f3237ccace2f90a29dd",
+      "original": false
+    },
+    {
+      "name": "far-shin",
+      "file": "far-shin.png",
+      "sha256": "511a9706ed904100bccba6f9b77bc4c6cedb03339f3b018e210d57fc45568ec0",
+      "original": false
+    },
+    {
+      "name": "far-boot",
+      "file": "far-boot.png",
+      "sha256": "2fad7d053e44cb2e9cb2f9b7e8f73d26c0097b98e047570499989832c491a674",
+      "original": false
+    },
+    {
+      "name": "near-thigh",
+      "file": "near-thigh.png",
+      "sha256": "82f3807af5dd2e9e226a4236df3eb39e6e918f79e65dcc02258fc44dacb4578e",
+      "original": false
+    },
+    {
+      "name": "near-shin",
+      "file": "near-shin.png",
+      "sha256": "2835b911f53206a3813640c91c4990257693a8a03fd67f8962f519361fd66470",
+      "original": false
+    },
+    {
+      "name": "near-boot",
+      "file": "near-boot.png",
+      "sha256": "eec0dd2e8823ec4c8c333b5e92bfac4ca6009c044b7b22d8cb87a021298187f8",
+      "original": false
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "ef855d786c75d2bd794ef637c9c651cb1f1dd4e4045b5ecc2495278fb645b5c8",
+      "original": false
+    },
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "160b56530448520f1feaa60c7fd6adb5a98d218087890ad9bd74d87601d2c1d8",
+      "original": false
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "56b9d219b99edcde4bbb45c6c848b7d5c3a34afd51abdffe732264f8ffa93f01",
+      "original": false
+    },
+    {
+      "name": "near-upper-arm",
+      "file": "near-upper-arm.png",
+      "sha256": "4d5fc5a50d7176f970c9a5e24b79c6128cc84d91150392c76457b5ed306aca9e",
+      "original": false
+    },
+    {
+      "name": "near-forearm",
+      "file": "near-forearm.png",
+      "sha256": "088dbea8be58fcf0fd8cb57b25d5fec1fa462414932c37c11bf769b77eb300ea",
+      "original": false
+    },
+    {
+      "name": "weapon-and-hands",
+      "file": "weapon-and-hands.png",
+      "sha256": "b45e8045f4aab233b4198e64dd9208a8ce7922d2fabe008e552319a8154aa85d",
+      "original": false
+    }
+  ],
+  "source": "Complete Monkey body from adopted master-r4 with hidden-cloth underpainting; both hands share crossbow transform. Deterministic fixed-length 2D kinematics, not Blender execution. Motion and human acceptance pending.",
+  "groundY": 443,
+  "decodedBytes": 194560,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}

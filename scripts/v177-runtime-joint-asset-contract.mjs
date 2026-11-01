@@ -34,4 +34,8 @@ const medic=read('../assets/source/quality-20261028/rigs/medic-combat-r1/provena
 const medicIndex=rows.findIndex(row=>row.path==='/art/v100/joints/medic-quality-neck-r4.webp');
 assert.ok(medicIndex>=0,'Complete Nao body replaces its registered head-only predecessor');
 rows[medicIndex]=asset(medic);
+const engineer=read('../assets/source/quality-20261028/rigs/engineer-combat-r1/provenance.json');
+const engineerIndex=rows.findIndex(row=>row.path==='/art/v100/joints/engineer-quality-neck-r4.webp');
+assert.ok(engineerIndex>=0,'Complete Monkey body replaces its registered head-only predecessor');
+rows[engineerIndex]=asset(engineer);
 export const V177_JOINT_ASSET_ADDITIONS=Object.freeze(rows);

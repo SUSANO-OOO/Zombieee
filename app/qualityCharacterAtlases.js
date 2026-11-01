@@ -12,6 +12,7 @@ import {withQualitySidearmAtlas} from './qualitySidearmAtlas.js';
 import {QUALITY_KUMAVERSON_COMBAT_ATLAS} from './qualityKumaversonCombatJointData.js';
 import {QUALITY_SCOUT_COMBAT_ATLAS} from './qualityScoutCombatJointData.js';
 import {QUALITY_MEDIC_COMBAT_ATLAS} from './qualityMedicCombatJointData.js';
+import {QUALITY_ENGINEER_COMBAT_ATLAS} from './qualityEngineerCombatJointData.js';
 import {withQualityBattleHeadCalibration} from './qualityBattleHeadCalibration.js';
 
 const baseAtlases={...V177_JOINT_ATLASES,...V177_QUADRUPED_JOINT_ATLASES,
@@ -40,4 +41,5 @@ export const QUALITY_CHARACTER_ATLASES=Object.freeze({
  kumaverson:QUALITY_KUMAVERSON_COMBAT_ATLAS,
  scout:QUALITY_SCOUT_COMBAT_ATLAS,
  medic:QUALITY_MEDIC_COMBAT_ATLAS,
+ engineer:QUALITY_ENGINEER_COMBAT_ATLAS,
 });

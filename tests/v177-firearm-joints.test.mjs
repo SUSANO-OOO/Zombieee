@@ -35,7 +35,7 @@ function record(kind,plan,{direction='right',scale=1,x=0,y=0}={}){
 }
 for(const kind of kinds){
  const dir=new URL('../assets/source/v100/joints/'+kind+'-r1/',import.meta.url),d=JSON.parse(await readFile(new URL('parts.json',dir))),motion=JSON.parse(gunzipSync(await readFile(new URL('motion.json.gz',dir)))),atlas=V177_JOINT_ATLASES[kind];
- const currentDefinition=kind==='medic'?JSON.parse(await readFile('assets/source/quality-20261028/rigs/medic-combat-r1/parts.json')):d;
+ const currentDefinition=['medic','engineer'].includes(kind)?JSON.parse(await readFile(`assets/source/quality-20261028/rigs/${kind}-combat-r1/parts.json`)):d;
  const matrixFor=(raw,bone)=>raw[atlas.parts.findIndex(p=>p.bone===bone)];
  test(kind+': evaluated Blender limbs retain fixed lengths, planted painted soles and both original grips',async()=>{
   const soles=[];for(const leg of d.rig.legs){

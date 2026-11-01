@@ -106,8 +106,8 @@ export const V177_AUTHORED_GAITS = {
     },
     "sources": [
       {
-        "file": "assets/source/v100/joints/engineer-r1/parts.json",
-        "sha256": "1b496e5e24f40a0ff19dec31c34614ce6175e3be34d9e60a5d43350935780240",
+        "file": "assets/source/quality-20261028/rigs/engineer-combat-r1/parts.json",
+        "sha256": "e058344a9f85ee9c3625409b3bd77750eb203a4fb1ef341da054a14bc5351192",
         "hashEncoding": "utf8-lf"
       }
     ]

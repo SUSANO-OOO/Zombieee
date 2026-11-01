@@ -12,8 +12,8 @@ const point=(m,p)=>[m[0]*p[0]+m[2]*p[1]+m[4],m[1]*p[0]+m[3]*p[1]+m[5]];
 const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 const runtime={locomotionPhase:.37,locomotionSettle:1};
 const original=plan=>{const result={...plan};delete result.firearmUpperTransform;return result;};
-const parts=kind=>JSON.parse(fs.readFileSync(kind==='medic'
-  ?'assets/source/quality-20261028/rigs/medic-combat-r1/parts.json'
+const parts=kind=>JSON.parse(fs.readFileSync(['medic','engineer'].includes(kind)
+  ?`assets/source/quality-20261028/rigs/${kind}-combat-r1/parts.json`
   :'assets/source/v100/joints/'+kind+'-r1/parts.json'));
 
 function record(kind,plan,{actor,world,scale=1,direction='right',x=0,y=0}={}){
