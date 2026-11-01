@@ -1639,9 +1639,9 @@
       "criticality": "critical"
     },
     {
-      "path": "/art/v100/joints/medic-quality-neck-r4.webp",
-      "bytes": 38132,
-      "hash": "sha256-4ac386afdf9618d0cafae614b4cfa3d8d5e0c6b7e105b7a647e8774b74867e39",
+      "path": "/art/v100/joints/medic-combat-r1.webp",
+      "bytes": 40132,
+      "hash": "sha256-4c4e82d6a3bc3e5acd12af57d2e89f209667e4383d840af212ef7c876d0a71c3",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"

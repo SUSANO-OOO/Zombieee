@@ -11,6 +11,7 @@ import {V177_GUARD_ENEMY_JOINT_ATLASES} from './v177GuardEnemyJointData.js';
 import {withQualitySidearmAtlas} from './qualitySidearmAtlas.js';
 import {QUALITY_KUMAVERSON_COMBAT_ATLAS} from './qualityKumaversonCombatJointData.js';
 import {QUALITY_SCOUT_COMBAT_ATLAS} from './qualityScoutCombatJointData.js';
+import {QUALITY_MEDIC_COMBAT_ATLAS} from './qualityMedicCombatJointData.js';
 import {withQualityBattleHeadCalibration} from './qualityBattleHeadCalibration.js';
 
 const baseAtlases={...V177_JOINT_ATLASES,...V177_QUADRUPED_JOINT_ATLASES,
@@ -38,4 +39,5 @@ export const QUALITY_CHARACTER_ATLASES=Object.freeze({
  ...Object.fromEntries(Object.entries(QUALITY_CHARACTER_HEAD_ATLASES).map(([kind,atlas])=>[kind,withQualityBabaCombatRig(kind,withQualityBattleHeadCalibration(kind,withQualitySidearmAtlas(kind,atlas)))])),
  kumaverson:QUALITY_KUMAVERSON_COMBAT_ATLAS,
  scout:QUALITY_SCOUT_COMBAT_ATLAS,
+ medic:QUALITY_MEDIC_COMBAT_ATLAS,
 });

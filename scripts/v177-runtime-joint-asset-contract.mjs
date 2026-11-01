@@ -30,4 +30,8 @@ const scout=read('../assets/source/quality-20261028/rigs/scout-combat-r1/provena
 const scoutIndex=rows.findIndex(row=>row.path==='/art/v100/joints/scout-quality-neck-r4.webp');
 assert.ok(scoutIndex>=0,'Complete Hachi body replaces its registered head-only predecessor');
 rows[scoutIndex]=asset(scout);
+const medic=read('../assets/source/quality-20261028/rigs/medic-combat-r1/provenance.json');
+const medicIndex=rows.findIndex(row=>row.path==='/art/v100/joints/medic-quality-neck-r4.webp');
+assert.ok(medicIndex>=0,'Complete Nao body replaces its registered head-only predecessor');
+rows[medicIndex]=asset(medic);
 export const V177_JOINT_ASSET_ADDITIONS=Object.freeze(rows);

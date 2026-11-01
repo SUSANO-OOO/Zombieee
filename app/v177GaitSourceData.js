@@ -92,8 +92,8 @@ export const V177_AUTHORED_GAITS = {
     },
     "sources": [
       {
-        "file": "assets/source/v100/joints/medic-r1/parts.json",
-        "sha256": "e7773823cdb72b4a7e68c2133e36c226633343e8bf8ee7760768cf37f5e344f1",
+        "file": "assets/source/quality-20261028/rigs/medic-combat-r1/parts.json",
+        "sha256": "8d5b1ad8057855525757c370474395e7ab01e012bb27c077b28907455439bff6",
         "hashEncoding": "utf8-lf"
       }
     ]

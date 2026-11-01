@@ -1,6 +1,6 @@
 {
   "base": "ff5dba24e88c810182cda1f044bd26dfc3e512c1",
-  "source": "83d3b7bed3bc13254b151bceb2637e7f8b8813b1 plus complete Hachi body candidate",
+  "source": "65faa420c24a8a4c748355f6b93af64a78c35649 plus complete Nao body candidate",
   "scope": "Local quality candidate transport contract; not likeness, rights, listening, release or physical-device approval.",
   "added": [
     {
@@ -76,9 +76,9 @@
       "criticality": "critical"
     },
     {
-      "path": "/art/v100/joints/medic-quality-neck-r4.webp",
-      "bytes": 38132,
-      "hash": "sha256-4ac386afdf9618d0cafae614b4cfa3d8d5e0c6b7e105b7a647e8774b74867e39",
+      "path": "/art/v100/joints/medic-combat-r1.webp",
+      "bytes": 40132,
+      "hash": "sha256-4c4e82d6a3bc3e5acd12af57d2e89f209667e4383d840af212ef7c876d0a71c3",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"

@@ -1,0 +1,138 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "medic",
+  "assetPath": "/art/v100/joints/medic-combat-r1.webp",
+  "bytes": 40132,
+  "sha256": "4c4e82d6a3bc3e5acd12af57d2e89f209667e4383d840af212ef7c876d0a71c3",
+  "atlasPacking": "height-descending-shelves",
+  "generatedPartsStudySha256": "c373e143db8ac343435414bbb2c19fe93eafc3ff63a7ee7ba68e2894957a72b1",
+  "identitySourceSha256": "daa347155a850f4d2ea5c7c35c1dd30c6eaa9fe73aab3313d06dea489928e58f",
+  "identityBinding": {
+    "path": "/art/v070/characters/medic-battle-v1.png",
+    "sourceSha256": "af6334921739405e331d3ebdf578a2961c462c7f96a12a6328deda4d9b81801d",
+    "sourceRect": {
+      "x": 480,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "referenceTransform": {
+      "scale": 1,
+      "tx": 0,
+      "ty": 0,
+      "flipX": false
+    },
+    "modelSource": "assets/source/quality-20261028/identity/nao-master-r4.png",
+    "modelSha256": "3bc43907891d7eafbdf86a08a501a5a7cbec9f9b5f3cacd7e0c73099ddfff7ba",
+    "combatSource": "assets/source/quality-20261028/rigs/medic-combat-r1/combat-model-r1.png",
+    "combatSha256": "daa347155a850f4d2ea5c7c35c1dd30c6eaa9fe73aab3313d06dea489928e58f"
+  },
+  "motionSha256": "98a2dc0a2522c88c8a7ca970daa8ebf3a648761ec4487ee5133ea52c3617564f",
+  "parts": [
+    {
+      "name": "far-upper-arm",
+      "file": "far-upper-arm.png",
+      "sha256": "4317af312e8b2f9da48b88e10daa25377b8fb3dd73a41a60c7f24a29dda03583",
+      "original": false
+    },
+    {
+      "name": "far-forearm",
+      "file": "far-forearm.png",
+      "sha256": "769e7d2cb9b4fbe8f597f6015a8333131e5aa614f74bcc73537947b44d26fb31",
+      "original": false
+    },
+    {
+      "name": "far-thigh",
+      "file": "far-thigh.png",
+      "sha256": "2744722977cd871b31d353368487cd531333152277c34e24584544284bfdf779",
+      "original": false
+    },
+    {
+      "name": "far-shin",
+      "file": "far-shin.png",
+      "sha256": "4fb06807c6945855b4d5fe4e6e4eba290d6f628ecdf9fe3b1361c61189456fb3",
+      "original": false
+    },
+    {
+      "name": "far-boot",
+      "file": "far-boot.png",
+      "sha256": "595cfffa1facbc3c95d886dec28dfe5edacf5e38d3329bcdfa266bd3db632c1d",
+      "original": false
+    },
+    {
+      "name": "near-thigh",
+      "file": "near-thigh.png",
+      "sha256": "a18e96a5cc358b8c9c4391e505f8c64f4a1ce0cba08ff8944835d3adb9475982",
+      "original": false
+    },
+    {
+      "name": "near-shin",
+      "file": "near-shin.png",
+      "sha256": "ba1e3c3c634acd228014c4bfd01e62e3b7d70c314897128fa111d42f688368a1",
+      "original": false
+    },
+    {
+      "name": "near-boot",
+      "file": "near-boot.png",
+      "sha256": "6aa752209b91d3377e31acb5d291cdde335c30d5fb5019e6cf4bbd2f4c227ddb",
+      "original": false
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "3b41ad7ba052a6ca3890a0397ed5e40f8c004b333ee3801fa08be71f69b8dc04",
+      "original": false
+    },
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "f48e76d0af95c04c1735e6b9d558a6474d5129ef068f7e9006abc168e1af8fae",
+      "original": false
+    },
+    {
+      "name": "bag-straps",
+      "file": "bag-straps.png",
+      "sha256": "4c4157b2956142795a318fdace2e680effc2ee9396a24522bdf3335a637deb4b",
+      "original": false
+    },
+    {
+      "name": "medical-bag",
+      "file": "medical-bag.png",
+      "sha256": "c5614bc7e00384f3ce651f9322bfa12d5f05f5d5cc9f117b4ef83e625c6d3419",
+      "original": false
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "b48efe95935b1ea7ed13a7f35fa5b2327d1f494762618fdc49c752cf8e0b994b",
+      "original": false
+    },
+    {
+      "name": "near-upper-arm",
+      "file": "near-upper-arm.png",
+      "sha256": "387bae56d98eee2a59bba6a4e64327dde22efbd35e4ed9d8b04e4ca38d44c02c",
+      "original": false
+    },
+    {
+      "name": "near-forearm",
+      "file": "near-forearm.png",
+      "sha256": "35a8da4376cf991e0fa928501b376405cb4b791e277e664e713026fbe6ce04be",
+      "original": false
+    },
+    {
+      "name": "weapon-and-hands",
+      "file": "weapon-and-hands.png",
+      "sha256": "21658a75572835d2743e1acfe0ec420fd911dec5201508d0ddf81b046bdefbb9",
+      "original": false
+    }
+  ],
+  "source": "Complete Nao body from adopted master-r4 with hidden-cloth underpainting; both hands share firearm transform. Deterministic fixed-length 2D kinematics, not Blender execution. Motion and human acceptance pending.",
+  "groundY": 443,
+  "decodedBytes": 212992,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}
