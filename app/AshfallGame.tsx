@@ -12362,11 +12362,12 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           scope:'Prepared mid-route cart/actor positions, optional four-second medic stun, and exhausted reinforcements. Actual stats, AI, clock, damage and objective completion; no forced win.'};
       },
       prepareEscortMissionObjectState: (
-        state: "start" | "moving" | "stalled" | "damaged" | "result-won" | "result-lost",
+        state: "start" | "moving" | "stalled" | "damaged" | "arrived-defending" | "result-won" | "result-lost",
       ) => {
         const g = gameRef.current;
         if (g.definition.missionType !== STATION_MISSION_TYPES.ESCORT
-          || g.definition.stageId === CAMPAIGN_STAGE_IDS.COASTAL_LINK_BRIDGE) {
+          || (g.definition.stageId === CAMPAIGN_STAGE_IDS.COASTAL_LINK_BRIDGE
+            && !g.definition.missionConfig.v100StageNumber)) {
           return null;
         }
         const maxIntegrity = Math.max(1, Number(g.stageMission.maxIntegrity) || 100);
@@ -12407,6 +12408,16 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             stalled: false,
             contaminated: false,
             completed: false,
+            failed: false,
+            over: false,
+            won: false,
+          },
+          "arrived-defending": {
+            progress: 1,
+            integrity: Math.max(1, Math.round(maxIntegrity * .72)),
+            stalled: false,
+            contaminated: false,
+            completed: true,
             failed: false,
             over: false,
             won: false,

@@ -170,6 +170,18 @@ export function objectiveForBattle(definition, state) {
   }
   if (definition.missionType === STATION_MISSION_TYPES.ESCORT
     || definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL) {
+    // Reaching the destination does not end an escort battle: unresolved
+    // waves can still destroy the vehicle. Keep that responsibility visible
+    // until the actual battle result, rather than announcing safety early.
+    if (definition.missionType === STATION_MISSION_TYPES.ESCORT
+      && state.stageMission?.completed === true && state.stageMission.failed !== true
+      && state.over !== true) {
+      if (definition.missionConfig?.convoyInterception === true) {
+        return "冷蔵車3台を確保。敵を倒して守れ";
+      }
+      const target = definition.missionConfig?.targetLabel || "保守台車";
+      return `${target}は到着。残る敵を倒して守れ`;
+    }
     return stationMissionObjective(state.stageMission, definition.missionConfig) || definition.objective;
   }
   if (definition.missionType === "assault") {
