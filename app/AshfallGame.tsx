@@ -637,6 +637,7 @@ import {
   unitLevelMilestones,
 } from "./unitProgression.js";
 import { escortFormationDestination } from "./escortFormation.js";
+import { deviceObjectiveDestination, deviceObjectiveMayEngage } from './deviceObjectiveAi.js';
 import {
   MANUAL_ABILITY_REGISTRY,
   advanceManualAbility,
@@ -755,6 +756,7 @@ function stationObjectiveDestination(g: Game, fighter: Fighter) {
   if (g.stageMission.gateEaterDefeated && g.stageMission.researchContainerContained) return null;
   const powerNode = currentPowerNode(g.stageMission, g.definition.missionConfig);
   if (powerNode) {
+    if (g.definition.missionConfig.v100StageNumber) return deviceObjectiveDestination({unit:fighter,humans:g.fighters,node:powerNode,maxX:BARRICADE_X});
     return {
       x: powerNode.x - 12 - (fighter.id % 3) * 15,
       lane: powerNode.lane as Lane,
@@ -12261,6 +12263,34 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           initialThreatHp: proof.initialThreatHp,
         };
       },
+      prepareStationObjectiveCombatProof: (solo = false) => {
+        const g = gameRef.current;
+        if (g.definition.missionType !== STATION_MISSION_TYPES.SEQUENTIAL_SEAL) throw new Error('Device objective proof requires an actual device mission');
+        g.fighters = []; g.corpses = []; g.deployQueue = [];
+        g.enemySpawn = createEnemySpawnRuntime() as EnemySpawnRuntime;
+        g.eventIndex = g.definition.timeline.length;
+        clearTransientRenderObjects(g);
+        g.stageMission = createStationMissionRuntime(g.definition.missionType, g.definition.missionConfig) as StageMissionRuntime;
+        g.time = g.definition.prepSeconds + 1;
+        const node = currentPowerNode(g.stageMission, g.definition.missionConfig);
+        if (!node) throw new Error('Device objective proof requires an active node');
+        const lane = node.lane as Lane;
+        const ids: number[] = [];
+        for (const kind of (solo ? ['scout'] : ['scout','medic']) as UnitKind[]) {
+          if (!spawnHuman(g,kind,true)) throw new Error('Device proof could not create its owned human');
+          const f = g.fighters[g.fighters.length - 1];
+          f.x = node.x + (kind === 'scout' ? 25 : -12); f.y = activeLaneCenters[lane];
+          f.lane = lane; f.anchorLane = lane; f.combatReady = true; f.gateEntering = false; f.spawnGrace = 0;
+          ids.push(f.id);
+        }
+        const enemy = spawnEnemy(g,'spitter',lane);
+        enemy.x = node.x + 120; enemy.y = activeLaneCenters[lane]; enemy.lane = lane; enemy.anchorLane = lane;
+        enemy.combatReady = true; enemy.gateEntering = false; enemy.spawnGrace = 0;
+        g.running = true; g.paused = false; g.over = false; g.won = false;
+        setPaused(false); setEnd(null);
+        return {node:{...node},humanIds:ids,enemyId:enemy.id,solo,
+          scope:'Prepared actor positions and clear reinforcement timeline; actual mission, stats, AI, clock and objective progression. No forced outcome.'};
+      },
       prepareEscortMissionObjectState: (
         state: "start" | "moving" | "stalled" | "damaged" | "result-won" | "result-lost",
       ) => {
@@ -22492,9 +22522,12 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             }
             const stationObjective = stationObjectiveDestination(g, f);
             if (stationObjective && allyIntent.reason !== "crawler-under-attack") {
-              const preservesThreatIntent = g.definition.missionType === STATION_MISSION_TYPES.ESCORT
+              const preservesThreatIntent = (g.definition.missionType === STATION_MISSION_TYPES.ESCORT
                 && stationObjective.duty !== "escort-anchor"
-                && allyIntent.targetId !== null;
+                && allyIntent.targetId !== null)
+                || (stationObjective.duty.startsWith('device-') && deviceObjectiveMayEngage({
+                  destination:stationObjective,target:fighterById.get(allyIntent.targetId),unit:f,leash:allyProfile.defenseLeash,
+                }));
               if (!preservesThreatIntent) {
                 f.anchorLane = stationObjective.lane;
                 allyIntent = {
@@ -22502,6 +22535,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                   destinationX: stationObjective.x,
                   desiredX: stationObjective.x,
                   destinationLane: stationObjective.lane,
+                  destinationY: null,
                   moveDirection: Math.sign(stationObjective.x - f.x),
                 };
               }
