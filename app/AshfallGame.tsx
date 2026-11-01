@@ -257,11 +257,11 @@ import {
   bossBattleHudSnapshot,
   bossBattleResultSnapshot,
   bossTelegraphSnapshot,
-  v100BossActionGuidanceFor,
   enforceBossBodyBarrier,
   isBossEnemyKind,
   isBossFighter,
 } from "./bossFoundation.js";
+import { v100BossCounterplayHint, v100BossCounterplayTapObstacles, V100_BOSS_COUNTERPLAY_FALLBACK } from "./v100BossCounterplay.js";
 import { TAKUYA_SLAM_PRESENTATION, TAKUYA_STABLE_POSE, takuyaSlamPresentationPose } from "./v100TakuyaPresentation.js";
 import { mugarianPresidentCompactScale } from "./v100BossPresentation.js";
 import {
@@ -2406,6 +2406,17 @@ function fighterHealthBarWorldY(fighter: Pick<Fighter, "kind" | "y" | "summonSou
         ? 94
         : 80) * compactScale;
   return fighter.y - height * depthScale * (isKuromeClone(fighter) ? V100_KUROME_CLONE_TUNING.bodyScale : 1) - (compactScale > 1 ? 2 : 0);
+}
+
+function manualAbilityObstacleRects(canvas: HTMLCanvasElement) {
+  const canvasRect = canvas.getBoundingClientRect();
+  return [...(canvas.closest(".game-frame")?.querySelectorAll(
+    ".top-hud,.survival-hud,.boss-hud,.v100-boss-telegraph-warning,.crawler-alert,.bottom-hud,.stats-strip",
+  ) ?? [])].map(element => {
+    const rect = element.getBoundingClientRect();
+    return { ownerId: null, x: rect.left - canvasRect.left, y: rect.top - canvasRect.top,
+      width: rect.width, height: rect.height };
+  });
 }
 
 function battleBannerDomRect(canvas: HTMLCanvasElement | null) {
@@ -6406,8 +6417,8 @@ const COMPACT_BOSS_TELEGRAPH_LABELS: Record<string, string> = {
   "cross-strike": "交差中心 // 離脱",
 };
 
-function bossTelegraphDisplayLabel(telegraph: { bossId?: string; kind: string; displayName: string; counterplay: string }, compact: boolean, v100 = false) {
-  if (v100) return `${telegraph.displayName} // ${v100BossActionGuidanceFor(telegraph.bossId) ?? telegraph.counterplay}`;
+function bossTelegraphDisplayLabel(telegraph: { bossId?: string; kind: string; displayName: string; counterplay: string }, compact: boolean, v100 = false, actionHint?: string) {
+  if (v100) return `${telegraph.displayName}！ ${actionHint ?? V100_BOSS_COUNTERPLAY_FALLBACK}`;
   return compact && COMPACT_BOSS_TELEGRAPH_LABELS[telegraph.kind]
     ? COMPACT_BOSS_TELEGRAPH_LABELS[telegraph.kind]
     : `${telegraph.displayName} // ${telegraph.counterplay}`;
@@ -6617,9 +6628,9 @@ function drawBossTelegraph(ctx: CanvasRenderingContext2D, f: Fighter, g: Game) {
     ctx.stroke();
   }
   ctx.setLineDash([]);
-  // Keep the geometric warning on the battlefield. Mobile V1 renders the
-  // counterplay text in a dedicated HUD lane so fighters cannot cover it.
-  if (g.definition.missionConfig.v100StageNumber && compactBattleViewport()) {
+  // Keep geometry on the battlefield and current V1 advice in its HUD lane
+  // at every viewport, clear of actors and their one-shot ability names.
+  if (g.definition.missionConfig.v100StageNumber) {
     ctx.restore();
     return;
   }
@@ -6627,7 +6638,7 @@ function drawBossTelegraph(ctx: CanvasRenderingContext2D, f: Fighter, g: Game) {
   ctx.fillStyle = "#f4dfb8";
   ctx.font = V100_CANVAS_FONT.display(10);
   ctx.textAlign = "center";
-  const label = bossTelegraphDisplayLabel(telegraph, compactBattleViewport(), Boolean(g.definition.missionConfig?.v100StageNumber));
+  const label = bossTelegraphDisplayLabel(telegraph, compactBattleViewport());
   const labelY = ["brood-radial", "shell-sweep", "cross-strike"].includes(telegraph.kind)
     ? f.y + Math.min(82, (telegraph.radius ?? 0) * .5 + 18)
     : telegraph.kind === "lane-rectangle"
@@ -9120,13 +9131,16 @@ function drawWorld(
     }
     if (renderable.type === "object") { drawBattlefieldSupply(ctx, renderable.object, sprites, allowDiagnosticFallback); continue; }
     const f = renderable.fighter;
-    if (f.combatReady) drawBossTelegraph(ctx, f, g);
+    if (f.combatReady && f.kind !== "kurome") drawBossTelegraph(ctx, f, g);
     if (f.combatReady) drawStationEnemyTelegraph(ctx, f, g, stageObjects);
     drawSpriteFighter(ctx, f, sprites, { world: g, v100StageObjects: stageObjects, allowDiagnosticFallback,
       smoothMinification: Boolean(g.definition.missionConfig.v100StageNumber),
       v100AuthoredPresentation: Boolean(g.definition.missionConfig.v100StageNumber),
       enemyGateOcclusionX: g.definition.missionConfig.v100StageNumber && v100AssaultObjectProfile(g.definition.stageId) ? WORLD_GEOMETRY.enemyBase.drawX + 18 : undefined,
     });
+    // Simulation creates new actor objects. Kurome's eye socket belongs to
+    // this actual body draw, so the ray and its label must follow that draw.
+    if (f.combatReady && f.kind === "kurome") drawBossTelegraph(ctx, f, g);
     if(f.combatReady&&g.definition.missionConfig.v100StageNumber){
       const weapon=fighterJointWeapons.get(f);
       if(weapon)for(const stroke of weapon)drawV104WeaponWake(ctx,stageObjects,{actor:f,world:g,time:g.time,...stroke});
@@ -9347,6 +9361,8 @@ function drawWorld(
 export function AshfallGame({ externalSession = null }: { externalSession?: AshfallExternalSession | null } = {}) {
   useEffect(() => () => v100HumanWalkRenderer.clear(), []);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const manualAbilityLayoutInputRef = useRef<Parameters<typeof layoutManualAbilityIcons>[0] | null>(null);
+  const manualAbilityTapObstaclesRef = useRef<ReturnType<typeof v100BossCounterplayTapObstacles>>([]);
   const canvasTransformRef = useRef({ scale: 1, offsetX: 0, offsetY: 0 });
   const graphicsProfileRef = useRef<GraphicsProfile>(resolveGraphicsProfile("auto"));
   const staticBattlefieldCacheRef = useRef<StaticBattlefieldCache>({
@@ -9777,6 +9793,24 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     objective: objectiveFor(1, false), deployCooldowns: emptyCooldowns(), banner: null, battleBarks: [], manualAbilityIcons: [],
   });
   const [end, setEnd] = useState<BattleResult | null>(null);
+
+  // A newly mounted warning was absent when the 100ms HUD snapshot laid out
+  // the icons. Resolve that first-frame collision before the browser paints.
+  useLayoutEffect(() => {
+    const canvas = canvasRef.current, input = manualAbilityLayoutInputRef.current;
+    if (!hud.bossTelegraphWarning || !canvas || !input) return;
+    const positions = layoutManualAbilityIcons({ ...input,
+      obstacles: [...manualAbilityObstacleRects(canvas), ...manualAbilityTapObstaclesRef.current] });
+    setHud(current => {
+      const icons = current.manualAbilityIcons.map(icon => {
+        const next = positions.find(position => Number(position.fighterId) === icon.fighterId);
+        return next && (next.x !== icon.x || next.y !== icon.y)
+          ? { ...icon, x: next.x, y: next.y } : icon;
+      });
+      return icons.some((icon, index) => icon !== current.manualAbilityIcons[index])
+        ? { ...current, manualAbilityIcons: icons } : current;
+    });
+  }, [hud.bossTelegraphWarning]);
 
   // All battle operations must re-check the save boundary at handler time.
   // React state can lag one render behind a save effect, so this ref is also
@@ -24630,30 +24664,13 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         lastHudRef.current = now;
         const bossHud = bossBattleHudSnapshot(g);
         let bossTelegraphWarning: string | null = null;
-        if (g.definition.missionConfig.v100StageNumber && compactBattleViewport()) {
-          for (const fighter of g.fighters) {
-            const telegraph = bossTelegraphSnapshot(fighter, { fallbackTargetX: BASE_X + 48 });
-            if (!telegraph) continue;
-            bossTelegraphWarning = bossTelegraphDisplayLabel(telegraph, true, true);
-            break;
-          }
-        }
         const nearestEnemyX = g.fighters.reduce((nearest, fighter) => fighter.side === "zombie" && fighter.hp > 0 && fighter.combatReady ? Math.min(nearest, fighter.x) : nearest, Infinity);
         const canvasRect = canvas.getBoundingClientRect();
         const transform = canvasTransformRef.current;
-        const frameElement = canvas.closest(".game-frame");
-        const obstacleRects = [...(frameElement?.querySelectorAll(
-          ".top-hud,.survival-hud,.boss-hud,.crawler-alert,.bottom-hud,.stats-strip",
-        ) ?? [])].map((element) => {
-          const rect = element.getBoundingClientRect();
-          return {
-            ownerId: null,
-            x: rect.left - canvasRect.left,
-            y: rect.top - canvasRect.top,
-            width: rect.width,
-            height: rect.height,
-          };
-        });
+        const tapObstacles = g.definition.missionConfig.v100StageNumber && g.running && !g.over
+          ? v100BossCounterplayTapObstacles({ fighters: g.fighters, transform }) : [];
+        manualAbilityTapObstaclesRef.current = tapObstacles;
+        const obstacleRects = [...manualAbilityObstacleRects(canvas), ...tapObstacles];
         const readyAbilityFighters = g.running && !g.over
           ? g.fighters.filter((fighter) => isManualAbilityReady(fighter))
             .map((fighter) => {
@@ -24672,17 +24689,30 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               };
             })
           : [];
+        if (g.definition.missionConfig.v100StageNumber && g.running && !g.over) {
+          for (const fighter of g.fighters) {
+            const telegraph = bossTelegraphSnapshot(fighter, { fallbackTargetX: BASE_X + 48 });
+            if (!telegraph) continue;
+            const hint = v100BossCounterplayHint({ boss: fighter, telegraph, readyAbilities: readyAbilityFighters,
+              fighters: g.fighters, laneCenters: activeLaneCenters, beamOrigin: fighterWeaponSockets.get(fighter) });
+            if (!hint) continue;
+            bossTelegraphWarning = bossTelegraphDisplayLabel(telegraph, compactBattleViewport(), true, hint);
+            break;
+          }
+        }
         const safeInsets = Object.fromEntries(["top", "right", "bottom", "left"].map((edge) => [
           edge,
           viewportSafeAreaRef.current[edge as keyof typeof viewportSafeAreaRef.current] + 6,
         ]));
-        const manualAbilityIcons: ManualAbilityIconView[] = layoutManualAbilityIcons({
+        const abilityLayoutInput = {
           fighters: readyAbilityFighters,
           obstacles: obstacleRects,
           displayWidth: canvasRect.width,
           displayHeight: canvasRect.height,
           safeInsets,
-        }).map((icon) => ({
+        };
+        manualAbilityLayoutInputRef.current = abilityLayoutInput;
+        const manualAbilityIcons: ManualAbilityIconView[] = layoutManualAbilityIcons(abilityLayoutInput).map((icon) => ({
           fighterId: Number(icon.fighterId),
           kind: icon.kind as UnitKind,
           x: icon.x,
