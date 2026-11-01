@@ -52,8 +52,8 @@ for(const kind of kinds)test(kind+': original paint, fixed anatomy, support, gri
   for(const part of d.parts)for(const p of outlines.get(part.name)){const q=transform(f.deform[part.bone],p);q[0]-=f.bones.root.head[0]-d.rig.root[0];assert.ok(q[0]>=0&&q[0]<=480&&q[1]>=0&&q[1]<=448,JSON.stringify({kind,action:action.name,frame:n+1,part:part.name,q}));}
  }
  for(const [metric,value]of Object.entries({boneError,groundError,gripError,drift}))assert.ok(value<.001,JSON.stringify({kind,metric,value}));
- // Historical source checks above remain unchanged. Runtime anatomy follows the current complete TKY body.
- const runtimeDir=kind==='tky'?'assets/source/quality-20261028/rigs/tky-combat-r1/':dir;
+ // Historical source checks above remain unchanged. Runtime anatomy follows the current complete combat bodies.
+ const runtimeDir=['tky','zakimiya'].includes(kind)?`assets/source/quality-20261028/rigs/${kind}-combat-r1/`:dir;
  const runtimeD=JSON.parse(await readFile(runtimeDir+'parts.json'));
  const matrix=(raw,bone)=>raw[atlas.parts.findIndex(p=>p.bone===bone)];let dense=0,minMargin=Infinity,previous;
  function checkArms(raw){for(const arm of runtimeD.armConstraints){
@@ -79,7 +79,7 @@ for(const kind of kinds)test(kind+': original paint, fixed anatomy, support, gri
 test('original-bound human weapons and soles share mirrored production coordinates and conditional loading',async()=>{
  for(const kind of kinds){
   const atlas=V177_JOINT_ATLASES[kind],d=JSON.parse(await readFile('assets/source/v100/joints/'+kind+'-r1/parts.json'));
-  const runtimeD=kind==='tky'?JSON.parse(await readFile('assets/source/quality-20261028/rigs/tky-combat-r1/parts.json')):d;
+  const runtimeD=['tky','zakimiya'].includes(kind)?JSON.parse(await readFile(`assets/source/quality-20261028/rigs/${kind}-combat-r1/parts.json`)):d;
   const originalPath=V177_NEWCOMER_JOINT_ATLASES[kind].path,originalBytes=await readFile('public'+originalPath),expected=V177_JOINT_ASSET_ADDITIONS.find(a=>a.path===originalPath);
   assert.equal(originalBytes.length,expected.bytes);assert.equal('sha256-'+hash(originalBytes),expected.hash);
   const bytes=await readFile('public'+atlas.path),meta=await sharp(bytes).metadata();

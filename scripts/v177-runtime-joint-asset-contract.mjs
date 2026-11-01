@@ -46,4 +46,8 @@ const tky=read('../assets/source/quality-20261028/rigs/tky-combat-r1/provenance.
 const tkyIndex=rows.findIndex(row=>row.path==='/art/v100/joints/tky-quality-neck-r4.webp');
 assert.ok(tkyIndex>=0,'Complete TKY body replaces its registered head-only predecessor');
 rows[tkyIndex]=asset(tky);
+const zakimiya=read('../assets/source/quality-20261028/rigs/zakimiya-combat-r1/provenance.json');
+const zakimiyaIndex=rows.findIndex(row=>row.path==='/art/v100/joints/zakimiya-quality-neck-r4.webp');
+assert.ok(zakimiyaIndex>=0,'Complete Zakimiya body replaces its registered head-only predecessor');
+rows[zakimiyaIndex]=asset(zakimiya);
 export const V177_JOINT_ASSET_ADDITIONS=Object.freeze(rows);

@@ -1823,9 +1823,9 @@
       "criticality": "critical"
     },
     {
-      "path": "/art/v100/joints/zakimiya-quality-neck-r4.webp",
-      "bytes": 33794,
-      "hash": "sha256-25a336700f522b1c2e23251469e338f78303949893afc1205de5d02b10ab5941",
+      "path": "/art/v100/joints/zakimiya-combat-r1.webp",
+      "bytes": 45890,
+      "hash": "sha256-7ba7735be39c8ba21a203b89fd4bfba5d50a04bab38b22f32b66eb902d36e167",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"

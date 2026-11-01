@@ -330,8 +330,8 @@ export const V177_AUTHORED_GAITS = {
     },
     "sources": [
       {
-        "file": "assets/source/v100/joints/zakimiya-r1/parts.json",
-        "sha256": "ce1f883d43caf7f7668908649123f2419fcd27a027a755855fdb241fc9b48fa3",
+        "file": "assets/source/quality-20261028/rigs/zakimiya-combat-r1/parts.json",
+        "sha256": "cfa2bacd410921d99eb6f0aea8726770caff8df23b04f8256323db8eba4167cb",
         "hashEncoding": "utf8-lf"
       }
     ]

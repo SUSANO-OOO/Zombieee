@@ -1,0 +1,47 @@
+{
+  "tool": "OpenAI built-in image_gen",
+  "creator": "OpenAI image generation directed for this project",
+  "license": "Project-generated derivative; commercial use, modification and redistribution under applicable OpenAI terms",
+  "producerApproval": "User directs preservation of existing generated Zakimiya identity; this combat derivative remains subject to in-game review",
+  "master": "assets/source/quality-20261028/identity/zakimiya-canonical-master-r1.png",
+  "outputs": {
+    "combat": {
+      "file": "combat-model-r1.png",
+      "original": "C:/Users/okait/.codex/generated_images/01a180c8-9e05-7871-b287-613f7c7eb364/exec-7df462f0-ccfa-4505-84b4-f7873fd0d3bd.png",
+      "prompt": "Use case: identity-preserve. Production full-body combat sprite for Nishijin action RPG. Image1 is the CURRENT canonical generated Zakimiya model and the main face/costume reference. Image2 is his original approved full-body identity and equipment authority for cross-checking, not a new man. Image3 is the old runtime sprite for side-facing direction and footprint ONLY; improve its complete anatomy/materials.\nCreate ONE fully visible Zakimiya from hair to both boots, in a practical balanced combat-ready stance facing SCREEN RIGHT, gaze toward an enemy on right, not camera. Preserve image1's EXACT recognizable mature Japanese man: narrow relaxed soft eyes, long lean face, cheek folds, subtle asymmetric mouth, short tousled dark hair, lean physique. Not a young square-jawed hero, no heavier anime eyebrows, no different actor, no exaggeration of aging. Naturally connected neck and shoulders.\nKeep the worn black hooded field jacket with pale piping and dark red arm band, rolled sleeves, dirty cream shirt, necklaces close to chest, brown shoulder strap, belt and hip pouches of amber whiskey bottles, dark charcoal cargo trousers, weathered brown combat boots. Do not add tactical armor, change colors or replace outfit. Real skin and fabric with restrained painted illustration as image1. No unrelated character parts.\nMain weapon is an AMBER WHISKEY BOTTLE (not knife, pistol or sword). The nearer hand, on left side of image, grips the neck of ONE substantial sturdy glass whiskey bottle, low in front of the waist, bottle base angled diagonally forward/down RIGHT for a blunt strike. Wrapped wrist with natural visible fingers closing firmly around bottle neck. One small unlit cloth wick tied at bottle mouth. No flames, glow, broken glass, labels with readable words. The far arm is free, elbow gently bent and open relaxed hand slightly ahead of abdomen; no second held weapon. Show continuous anatomical shoulders, elbows, wrists and knuckles. Keep hands apart and unobscured enough to rig. Belt bottles are secured in leather pouches, distinct from held bottle.\nLegs shoulder-width apart, front foot a small step toward screen right, rear foot back left. BOTH boots/toes point generally screen RIGHT, full side/threequarter view. Slight knee bends, no crossed legs, no huge lunge, no frontal boot staring at viewer. Torso upright and relaxed with slight fighting lean, head aligned naturally.\nTransparent alpha, no floor or cast shadow, no background, frame, label, collage or duplicate. One fullbody landscape composition approximately1298x1212 with generous empty margins, character about90%canvas height. All hair, fingers, held bottle and boots fully inside canvas.",
+      "sha256": "1bc21cbc744feaba931a073776cea0c6ef831fa351bc1427001676cff3bceffd",
+      "references": [
+        {
+          "role": "primary generated canonical identity and costume",
+          "path": "assets/source/quality-20261028/identity/zakimiya-canonical-master-r1.png",
+          "sha256": "303adc8b4126badbc98969b476b773bd4a35c3817b34d3de6478842245dfa389"
+        },
+        {
+          "role": "original approved identity and equipment cross-check",
+          "path": "assets/source/v090/characters/zakimiya-identity-master-r1.png",
+          "sha256": "78405e4610f6d8d71c0e094bcf2cf125522ca9b869db2146e39b9e6122ba88d7"
+        },
+        {
+          "role": "old runtime pose and direction only, not face or paint-quality authority",
+          "path": "assets/source/quality-20261028/rigs/zakimiya-combat-r1/pose-reference-r1.png",
+          "sha256": "fade4354264b5eab9754ed2400c6478aaa1f6bea59c49fc1567772c21414d8ca"
+        }
+      ]
+    },
+    "underpainting": {
+      "file": "body-underpainting-r1.png",
+      "original": "C:/Users/okait/.codex/generated_images/01a180c8-9e05-7871-b287-613f7c7eb364/exec-6092c88e-2cc6-4d55-ad9d-598ccbf7ba0e.png",
+      "prompt": "Use case: precise-object-edit. Hidden torso underpainting for the exact combat sprite in image1. Keep identical canvas, pose, scale, registration, face, hair, neck, clothes, belt bottles, trousers and BOTH boots. Remove ONLY both arms from shoulders downward, their hands and the single bottle being held on the left. Reconstruct the jacket sides/shoulder surfaces and cream shirt beneath occluded arms. Retain ALL bottles secured to belt/thigh pouches; these are not the held weapon. Preserve exact face and every existing visible torso, leg, boot and equipment detail, no redesign. No amputated stumps: this is a clean complete torso layer for arms to be composited over. Transparent alpha, no ground shadow, no background, no new props. Do not move any part or change size. Same image dimensions.",
+      "sha256": "ab31bb0d9f9af5b584e599ebfc51141f3f98cafb3c2a92482e33da2b1345bc40",
+      "references": [
+        {
+          "role": "exact edit target",
+          "path": "assets/source/quality-20261028/rigs/zakimiya-combat-r1/combat-model-r1.png",
+          "sha256": "1bc21cbc744feaba931a073776cea0c6ef831fa351bc1427001676cff3bceffd"
+        }
+      ]
+    }
+  },
+  "scope": "Full-body source creation, not motion, audio, device or producer acceptance.",
+  "masterSha256": "303adc8b4126badbc98969b476b773bd4a35c3817b34d3de6478842245dfa389"
+}

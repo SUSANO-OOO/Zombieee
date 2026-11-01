@@ -69,13 +69,15 @@ export async function buildRigidJointAtlas({sourceDirectory,assetPath,dataFile,e
   }
  }
  const width=512,ratio=.5,padding=2,rows=[];let x=padding,y=padding,lineHeight=0;
+ const partPadding=d.atlasPartPadding??1;
+ assert.ok(Number.isInteger(partPadding)&&partPadding>=1&&partPadding<=8,'Explicit part padding must be 1..8 source pixels');
  for(const name of d.order){
   const p=d.parts.find(p=>p.name===name),bytes=await readFile(path.join(dir,p.file));
   assert.equal(sha(bytes),p.sha256,`Changed source paint: ${name}`);assert.ok(p.bone&&!p.kind,'Only explicitly rigid parts');
   const {data,info}=await sharp(bytes).ensureAlpha().raw().toBuffer({resolveWithObject:true});
   let x0=info.width,y0=info.height,x1=-1,y1=-1;
   for(let yy=0;yy<info.height;yy++)for(let xx=0;xx<info.width;xx++)if(data[(yy*info.width+xx)*4+3]>0){x0=Math.min(x0,xx);x1=Math.max(x1,xx);y0=Math.min(y0,yy);y1=Math.max(y1,yy);}
-  assert.ok(x1>=x0&&y1>=y0,name);x0=Math.max(0,x0-1);y0=Math.max(0,y0-1);x1=Math.min(info.width-1,x1+1);y1=Math.min(info.height-1,y1+1);
+  assert.ok(x1>=x0&&y1>=y0,name);x0=Math.max(0,x0-partPadding);y0=Math.max(0,y0-partPadding);x1=Math.min(info.width-1,x1+partPadding);y1=Math.min(info.height-1,y1+partPadding);
   const destination={x:x0,y:y0,w:x1-x0+1,h:y1-y0+1};
   const w=Math.ceil(destination.w*ratio),h=Math.ceil(destination.h*ratio);
   if(x+w+padding>width){x=padding;y+=lineHeight+padding;lineHeight=0;}

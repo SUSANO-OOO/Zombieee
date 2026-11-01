@@ -13,6 +13,7 @@ import {QUALITY_KUMAVERSON_COMBAT_ATLAS} from './qualityKumaversonCombatJointDat
 import {QUALITY_SCOUT_COMBAT_ATLAS} from './qualityScoutCombatJointData.js';
 import {QUALITY_MEDIC_COMBAT_ATLAS} from './qualityMedicCombatJointData.js';
 import {QUALITY_ENGINEER_COMBAT_ATLAS} from './qualityEngineerCombatJointData.js';
+import {QUALITY_ZAKIMIYA_COMBAT_ATLAS} from './qualityZakimiyaCombatJointData.js';
 import {QUALITY_TKY_COMBAT_ATLAS} from './qualityTkyCombatJointData.js';
 import {QUALITY_RANGER_COMBAT_ATLAS} from './qualityRangerCombatJointData.js';
 import {withQualityBattleHeadCalibration} from './qualityBattleHeadCalibration.js';
@@ -46,4 +47,5 @@ export const QUALITY_CHARACTER_ATLASES=Object.freeze({
  engineer:QUALITY_ENGINEER_COMBAT_ATLAS,
  ranger:QUALITY_RANGER_COMBAT_ATLAS,
  tky:QUALITY_TKY_COMBAT_ATLAS,
+ zakimiya:QUALITY_ZAKIMIYA_COMBAT_ATLAS,
 });

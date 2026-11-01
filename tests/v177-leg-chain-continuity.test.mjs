@@ -18,6 +18,7 @@ if(V177_JOINT_ATLASES.kumaverson.path==='/art/v100/joints/kumaverson-combat-r4.w
 if(V177_JOINT_ATLASES.scout.path==='/art/v100/joints/scout-combat-r1.webp')definitions.set('scout',JSON.parse(await readFile('assets/source/quality-20261028/rigs/scout-combat-r1/parts.json')));
 if(V177_JOINT_ATLASES.medic.path==='/art/v100/joints/medic-combat-r1.webp')definitions.set('medic',JSON.parse(await readFile('assets/source/quality-20261028/rigs/medic-combat-r1/parts.json')));
 if(V177_JOINT_ATLASES.engineer.path==='/art/v100/joints/engineer-combat-r1.webp')definitions.set('engineer',JSON.parse(await readFile('assets/source/quality-20261028/rigs/engineer-combat-r1/parts.json')));
+if(V177_JOINT_ATLASES.zakimiya.path==='/art/v100/joints/zakimiya-combat-r1.webp')definitions.set('zakimiya',JSON.parse(await readFile('assets/source/quality-20261028/rigs/zakimiya-combat-r1/parts.json')));
 if(V177_JOINT_ATLASES.tky.path==='/art/v100/joints/tky-combat-r1.webp')definitions.set('tky',JSON.parse(await readFile('assets/source/quality-20261028/rigs/tky-combat-r1/parts.json')));
 const transform=(m,[x,y])=>[m[0]*x+m[2]*y+m[4],m[1]*x+m[3]*y+m[5]];
 const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);

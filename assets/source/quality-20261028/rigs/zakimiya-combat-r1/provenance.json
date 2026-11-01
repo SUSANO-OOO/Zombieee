@@ -1,0 +1,132 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "zakimiya",
+  "assetPath": "/art/v100/joints/zakimiya-combat-r1.webp",
+  "bytes": 45890,
+  "sha256": "7ba7735be39c8ba21a203b89fd4bfba5d50a04bab38b22f32b66eb902d36e167",
+  "atlasPacking": "height-descending-shelves",
+  "generatedPartsStudySha256": "ab31bb0d9f9af5b584e599ebfc51141f3f98cafb3c2a92482e33da2b1345bc40",
+  "identitySourceSha256": "1bc21cbc744feaba931a073776cea0c6ef831fa351bc1427001676cff3bceffd",
+  "identityBinding": {
+    "path": "/art/v090/characters/zakimiya-battle-r1.png",
+    "sourceSha256": "9b6ca1bfa7a51cb2a06122fb925a8b67979ae8d9885a606f4984ae2c9758cd39",
+    "sourceRect": {
+      "x": 480,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "referenceTransform": {
+      "scale": 1,
+      "tx": 4.5,
+      "ty": 0,
+      "flipX": false
+    },
+    "modelSource": "assets/source/quality-20261028/identity/zakimiya-canonical-master-r1.png",
+    "modelSha256": "303adc8b4126badbc98969b476b773bd4a35c3817b34d3de6478842245dfa389",
+    "combatSource": "assets/source/quality-20261028/rigs/zakimiya-combat-r1/combat-model-r1.png",
+    "combatSha256": "1bc21cbc744feaba931a073776cea0c6ef831fa351bc1427001676cff3bceffd"
+  },
+  "motionSha256": "f51b482db5aca6a99e29c55b41949eb9fa898fe091bfe0e325793f5e60e438ef",
+  "parts": [
+    {
+      "name": "far-upper-arm",
+      "file": "far-upper-arm.png",
+      "sha256": "ae5d2cf22e20232d532c2a13c1036375b3924885245ace86ba9db6c57cfb8bdd",
+      "original": false
+    },
+    {
+      "name": "far-forearm",
+      "file": "far-forearm.png",
+      "sha256": "630aea77b4a793ac0d411b88e8765e9231ae89851b3578dcc1f0f0bd8706a281",
+      "original": false
+    },
+    {
+      "name": "far-thigh",
+      "file": "far-thigh.png",
+      "sha256": "157a7a9ffb66cd658195c887221858009dd6a7958e64655d0e80e5a50cda52fa",
+      "original": false
+    },
+    {
+      "name": "far-shin",
+      "file": "far-shin.png",
+      "sha256": "007070823fa589bfdc6a9c19dc23beced0d8fcb94593951d4d21998b34db6b05",
+      "original": false
+    },
+    {
+      "name": "far-boot",
+      "file": "far-boot.png",
+      "sha256": "301d1e76a8b0847a7135c0b4bce763bf55a7054b4634e6bdc703b72f17182b6e",
+      "original": false
+    },
+    {
+      "name": "near-thigh",
+      "file": "near-thigh.png",
+      "sha256": "f4ee309f4b632ba5cd2acb81813eb2c3e1792627747271ef0e9ec8b74d5351a3",
+      "original": false
+    },
+    {
+      "name": "near-shin",
+      "file": "near-shin.png",
+      "sha256": "b1fe14dc7b060c0fe3eeb7d165500c85858bc4f30b2a541e11b252e394a82727",
+      "original": false
+    },
+    {
+      "name": "near-boot",
+      "file": "near-boot.png",
+      "sha256": "0f651dfe3bb7ca3319c5051f026f0c953f95761e6c834c6b3d9ad298293e053d",
+      "original": false
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "746c433205889abf08a04a349c5f3ef43b259c565b1a1d69a48e90672aac78de",
+      "original": false
+    },
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "4853c2111d94b2395e2f4fe2907579e3961a4674833af3c185b3a77b4cae112d",
+      "original": false
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "e82eaffe53c1cd61ffa46f3ac4f6cc9c6ec020437ca03ac9736803c0bd1e3b54",
+      "original": false
+    },
+    {
+      "name": "near-upper-arm",
+      "file": "near-upper-arm.png",
+      "sha256": "e6184a4ef723546eea4d3d03805ac95145c0d0d7c3b8004651d50d99659a38a3",
+      "original": false
+    },
+    {
+      "name": "near-forearm",
+      "file": "near-forearm.png",
+      "sha256": "4a543b0c25eb5d7060677106c9e0c4f7f351e1a06f11c3c22237a5bfc0dbb0f2",
+      "original": false
+    },
+    {
+      "name": "free-hand",
+      "file": "free-hand.png",
+      "sha256": "d9770d2d13b136ffd5f413f3a7c4c2712144f286a89055d6aab21572099517b3",
+      "original": false
+    },
+    {
+      "name": "weapon-and-hands",
+      "file": "weapon-and-hands.png",
+      "sha256": "9ad0310d28fa4ea62cca7b3f0a1b9a75048054809e4d2871ef96140144cec651",
+      "original": false
+    }
+  ],
+  "source": "Complete Zakimiya body from canonical face and costume master; held bottle stays with its gripping hand, free hand has independent motion. Deterministic fixed-length 2D kinematics, not Blender execution. Motion and human acceptance pending.",
+  "groundY": 445,
+  "decodedBytes": 258048,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}
