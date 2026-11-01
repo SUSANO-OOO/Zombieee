@@ -8,8 +8,8 @@ export const V177_AUTHORED_GAITS = {
     },
     "sources": [
       {
-        "file": "assets/source/v100/joints/scout-r1/parts.json",
-        "sha256": "c6a879a190535889fe4b80fb8c176590a42c200e5bd816fb9bba4e0dbc79c039",
+        "file": "assets/source/quality-20261028/rigs/scout-combat-r1/parts.json",
+        "sha256": "055b1d7c844460ab7326de9cb25b895d1e893e139608704acbeec6bbe997c557",
         "hashEncoding": "utf8-lf"
       }
     ]

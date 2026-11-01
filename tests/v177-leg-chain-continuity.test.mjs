@@ -15,6 +15,7 @@ if(v177PaisenPhotoPoseOwner(V177_JOINT_ATLASES.brawler)){
  definitions.set('brawler',JSON.parse(await readFile(new URL('../assets/source/v177/paisen/battle-r8/parts.json',import.meta.url))));
 }
 if(V177_JOINT_ATLASES.kumaverson.path==='/art/v100/joints/kumaverson-combat-r4.webp')definitions.set('kumaverson',JSON.parse(await readFile('assets/source/quality-20261028/rigs/kumaverson-combat-r4/parts.json')));
+if(V177_JOINT_ATLASES.scout.path==='/art/v100/joints/scout-combat-r1.webp')definitions.set('scout',JSON.parse(await readFile('assets/source/quality-20261028/rigs/scout-combat-r1/parts.json')));
 const transform=(m,[x,y])=>[m[0]*x+m[2]*y+m[4],m[1]*x+m[3]*y+m[5]];
 const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 function paintedBones(kind,atlas,sample,runtime){

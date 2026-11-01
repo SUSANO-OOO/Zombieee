@@ -26,4 +26,8 @@ for(const row of [...calibrated,{...kuma,basePath:'/art/v100/joints/kumaverson-q
  const index=rows.findIndex(item=>item.path===row.basePath);assert.ok(index>=0,'Current identity material must have a registered predecessor: '+row.kind);
  rows[index]=asset(row);
 }
+const scout=read('../assets/source/quality-20261028/rigs/scout-combat-r1/provenance.json');
+const scoutIndex=rows.findIndex(row=>row.path==='/art/v100/joints/scout-quality-neck-r4.webp');
+assert.ok(scoutIndex>=0,'Complete Hachi body replaces its registered head-only predecessor');
+rows[scoutIndex]=asset(scout);
 export const V177_JOINT_ASSET_ADDITIONS=Object.freeze(rows);

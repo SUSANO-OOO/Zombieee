@@ -1,0 +1,130 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "scout",
+  "assetPath": "/art/v100/joints/scout-combat-r1.webp",
+  "bytes": 59796,
+  "sha256": "6e33f9dd5524d1938e0695fb00df622b76ef878a6a120f18d9c3ff3983416eb4",
+  "generatedPartsStudySha256": "a377859badf4c7d38c6e6c35a4a17997c63ef8b28f7c991f6706d42e15f72ec1",
+  "identitySourceSha256": "52a18a7eeba3d83ea361a4bf0ea2ee5807a4a0481ac16f5092f8b234cb459204",
+  "identityBinding": {
+    "path": "/art/v070/characters/scout-battle-v1.png",
+    "sourceSha256": "902eadc217a2fca212f57abd079c021d4ea2a441d9bbb648699b19ab749a5762",
+    "sourceRect": {
+      "x": 480,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "referenceTransform": {
+      "scale": 1,
+      "tx": 0,
+      "ty": 0
+    },
+    "modelSource": "assets/source/quality-20261028/identity/hachi-master-r4.png",
+    "modelSha256": "e722cc7aca81806cd7d2d1403c425262466ea4f1aa44b877731dcef79ee080bb",
+    "combatSource": "assets/source/quality-20261028/rigs/scout-combat-r1/combat-model-r2.png",
+    "combatSha256": "52a18a7eeba3d83ea361a4bf0ea2ee5807a4a0481ac16f5092f8b234cb459204"
+  },
+  "motionSha256": "79a8096ac1e6d9b809a71279ce0223d244f18ef23fa803b3313e24beab5d8eda",
+  "parts": [
+    {
+      "name": "far-upper-arm",
+      "file": "far-upper-arm.png",
+      "sha256": "32f23ed051370eb3346d6f9be0b34177a98f1dea9c0543c511193679bb3bc028",
+      "original": false
+    },
+    {
+      "name": "far-forearm",
+      "file": "far-forearm.png",
+      "sha256": "e093aca88d431e264bc50dc347542b733f214089f54f6124e748cc095c9efb22",
+      "original": true
+    },
+    {
+      "name": "far-hand",
+      "file": "far-hand.png",
+      "sha256": "de6b877856ae67a5765a77d9167f5fa61e0005649c1944dcf996f01dcc0f7047",
+      "original": true
+    },
+    {
+      "name": "far-thigh",
+      "file": "far-thigh.png",
+      "sha256": "87c2bd605a87cb824701c711c1ba19769e85f64d8850b043b7264b482e56bc38",
+      "original": false
+    },
+    {
+      "name": "far-shin",
+      "file": "far-shin.png",
+      "sha256": "515ea93f85066a438fd87ba570b7855bde7a2970aef642fddc6ba2cd4d80b4cc",
+      "original": false
+    },
+    {
+      "name": "far-boot",
+      "file": "far-boot.png",
+      "sha256": "1628d9739be179efba4601a1b6b94976020e41a0c75957234db94607a95f20d3",
+      "original": false
+    },
+    {
+      "name": "near-thigh",
+      "file": "near-thigh.png",
+      "sha256": "9133460f880a2a00d3db2c6f434f224416e0994cf8403d4de441835e3e027595",
+      "original": false
+    },
+    {
+      "name": "near-shin",
+      "file": "near-shin.png",
+      "sha256": "1686962132a86138ae758508eeca6c0f6ae7ba44316adf93c6b609b188dacd65",
+      "original": false
+    },
+    {
+      "name": "near-boot",
+      "file": "near-boot.png",
+      "sha256": "2021666f87b7819b500eb76cdfae8dcdc291e722c1563e72fabb71e5a91e50fd",
+      "original": false
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "6c431cb3497ad93d0ca6579691000e3fa1ae5961ac60d76b3e1acda6388a8fde",
+      "original": false
+    },
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "7fd5384f46f53131c775e10256c089e9933a73f47943cee0b2eb3319a648dafd",
+      "original": false
+    },
+    {
+      "name": "near-upper-arm",
+      "file": "near-upper-arm.png",
+      "sha256": "83eb3c902855ef9a004693a237c64de9bffb12deaba3e73535fbd3188ff05e8d",
+      "original": true
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "74017ec42f7bfd17a7beb2ad26b086ec088d1a71739a5b3538bf538bbd403a86",
+      "original": true
+    },
+    {
+      "name": "near-forearm",
+      "file": "near-forearm.png",
+      "sha256": "97197a360339b45684c834996cafc576a4091c5eeeb3fbabde3ae861880f7643",
+      "original": true
+    },
+    {
+      "name": "crowbar-and-hand",
+      "file": "crowbar-and-hand.png",
+      "sha256": "4cb6a35dd6504fbbad296ee2d116768515499f7d433e1740ef8272277122a615",
+      "original": true
+    }
+  ],
+  "source": "Complete Hachi body matching adopted master-r4; plain steel crowbar correction; explicit hidden-cloth underpainting and part masks. Deterministic 2D kinematics, not Blender execution. Motion and human acceptance pending.",
+  "groundY": 442,
+  "decodedBytes": 499712,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}

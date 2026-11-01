@@ -1,0 +1,23 @@
+{
+  "method": "built-in image_gen",
+  "kind": "scout",
+  "primaryReference": "assets/source/quality-20261028/identity/hachi-master-r4.png",
+  "poseReference": "assets/source/v100/joints/scout-r1/identity-reference.png",
+  "edits": [
+    {
+      "output": "combat-model-r2.png",
+      "prompt": "Use case: precise-object-edit. Edit the single supplied transparent Hachi combat sprite. Replace ONLY the strange decorative hooked weapon held in his near/right-visible hand with an ordinary realistic 45-centimeter steel wrecking crowbar: straight dark worn hexagonal steel shaft, a small practical curved flattened fork at its distal end, simple dull metal throughout, NO gold endcap, NO blue wrapped grip, NO giant circular hook, no fantasy ornament. The closed hand must grip the straight shaft naturally at the same point. Shaft points diagonally down and right from the hand, ending before the front knee, staying wholly inside the canvas. Preserve the EXACT face identity, hair, side profile facing right, orange coat, backpack, red cycling helmet, all clothes, pose, hand and wrist placement, shoulder, elbow, hips, knees, feet, scale, framing and painterly realistic style. No other object or body change. True transparent background, no ground, no text, no panel.",
+      "role": "Complete body candidate with canonical plain steel crowbar; previous decorative-hook candidate retained, not adopted."
+    },
+    {
+      "output": "body-underpainting-r1.png",
+      "prompt": "Use case: precise-object-edit. Production 2D rig UNDERPAINTING of the supplied transparent Hachi sprite. Keep the exact original canvas dimensions, full-body position, silhouette of head/torso/clothes/backpack/legs/shoes, original face and hair. Remove BOTH arms and hands and the crowbar completely: remove the large foreground orange sleeve from its shoulder at x700 y280 down through bare forearm/glove x800 y680, and remove the small background hanging forearm/glove beside the left hip around x490 y720. Reconstruct ONLY the orange jacket, dark navy shirt and black trousers that were hidden BEHIND these arms and crowbar. No arm stumps, no new arms. The body's shoulder contour should be smoothly closed by the orange jacket fabric at the original shoulder location; keep the jacket's chest and waist fitted to the original lean. This is the armless base layer for an animation rig; do not turn toward the viewer, do not change pose, do not shift anything, no new accessories. All existing legs, shoes, head, backpack, red helmet and long orange coat tail must remain. True transparent background. Do not add ground or shadow or labels.",
+      "role": "Hidden torso cloth only; original visible head, arms and hands retained from full combat model."
+    }
+  ],
+  "creator": "OpenAI built-in image_gen under Producer direction",
+  "license": "Generated project derivative; no third-party stock license. Formal rights review remains open before final adoption.",
+  "rightsScope": "No new purchase, third-party license or external contract. Commercial use, modification and redistribution remain subject to existing source rights and final review.",
+  "producerApproval": "User authorizes full-character style remake and actual-game integration. This specific candidate is not human accepted.",
+  "status": "work-in-progress; runtime and visual validation pending"
+}
