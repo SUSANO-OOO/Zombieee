@@ -8,6 +8,7 @@ import { pwaBrowserType } from './pwa-browser-runtime.mjs';
 import { createDefaultV100Save, normalizeV100Save, serializeV100Save } from "../app/v100Save.js";
 import { V100_STORY_EVENTS, V100_STORY_SCRIPT_VERSION, v100StoryEventView } from "../app/v100StoryEvents.js";
 import { enterV100FromTitle } from './v100-title-qa-entry.mjs';
+import { dismissInstallOffer } from './pwa-gate-qa.mjs';
 import { v100StoryPageFor } from "../app/v100StoryPages.js";
 import { inspectStaffRoll, completeStaffRollByFilmEnd } from "./v100-staff-roll-audit.mjs";
 import { V100_STAGE_IDS } from "../app/v100Registry.js";
@@ -147,7 +148,7 @@ try {
             }, { origin: origin.origin, serialized: serializeV100Save(save) });
             const response = await page.goto(new URL("?event-audio-qa=1", origin).href, { waitUntil: "domcontentloaded" });
             assert.equal(response?.ok(), true);
-            await page.getByRole("button", { name: "ブラウザで遊ぶ", exact: true }).click();
+            await dismissInstallOffer(page, { timeout: 30000, readySelector: '.v100-start-screen', waitForFictionDismissal: true });
             await enterV100FromTitle(page);
             if (suffix === "credits") {
               result.staffRollEvidence = "native media seeks through all 11 scenes; full-duration completion is verified separately";

@@ -3,6 +3,7 @@ import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
+import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
 import { silenceBrowserOutput } from "./silent-browser-output.mjs";
 
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
@@ -2318,6 +2319,10 @@ async function performVerifiedDeploymentPointer(page, {
 async function openRoute(page, save = null) {
   const url = new URL("v100", baseUrl);
   url.searchParams.set("phase-g", "1");
+  // Each capture owns a fresh browser context. Seed before the first mount:
+  // direct browser entry now initializes IndexedDB immediately, and its durable
+  // current save correctly takes precedence over later localStorage mirrors.
+  if (save) await seedPage(page, save);
   await page.goto(String(url), { waitUntil: "domcontentloaded", timeout });
   const waitForGateOrShell = () => page.waitForFunction(() => Boolean(
     document.querySelector(".v100-shell")
@@ -2325,21 +2330,11 @@ async function openRoute(page, save = null) {
   ), null, { timeout });
   await waitForGateOrShell();
   checkpointRecorderFor(page)?.markOnce("route-opened", "completed", { url: page.url() });
-  // PwaGate starts the published metadata fetch without blocking an already
-  // playable shell. A seeded route reload must wait for that real fetch to
-  // settle; otherwise WebKit reports the first-party request as cancelled at
-  // the reload boundary and the evidence becomes a lifecycle artifact rather
-  // than a production failure.
+  // Observe the real metadata request without manufacturing a reload boundary.
   await page.waitForFunction(() => ["ready", "unreachable", "unsupported"].includes(
     document.documentElement.dataset.pwaManifestState,
   ), null, { timeout });
   if (save) {
-    await seedPage(page, save);
-    await page.reload({ waitUntil: "domcontentloaded", timeout });
-    await waitForGateOrShell();
-    await page.waitForFunction(() => ["ready", "unreachable", "unsupported"].includes(
-      document.documentElement.dataset.pwaManifestState,
-    ), null, { timeout });
     const seeded = await page.evaluate(() => {
       try {
         const raw = localStorage.getItem("nishijin-campaign-v100");
@@ -2355,11 +2350,11 @@ async function openRoute(page, save = null) {
       `QA save seed drifted before route validation: ${JSON.stringify({ expected: { equippedSupportId: save.equippedSupportId, caps: save.caps, completedStages: save.completedStageIds.length }, actual: { equippedSupportId: seeded?.equippedSupportId ?? null, caps: seeded?.caps ?? null, completedStages: seeded?.completedStageIds?.length ?? null } })}`,
     );
   }
-  const offer = page.getByRole("button", { name: "ブラウザで遊ぶ", exact: true });
-  await offer.waitFor({ state: "visible", timeout: Math.min(timeout, 10_000) }).catch(() => {});
-  if (await offer.isVisible().catch(() => false)) {
+  if (await dismissInstallOffer(page, {
+    timeout, readySelector: ".v100-start-screen", waitForFictionDismissal: true,
+    clickControl: (control, label) => click(page, control, label),
+  })) {
     await page.evaluate(() => { document.documentElement.dataset.phaseGPwaOffer = "shown"; });
-    await click(page, offer, "PWA browser play");
   }
   await page.locator(".v100-shell").waitFor({ state: "attached", timeout });
   await enterV100FromTitle(page, { timeout });

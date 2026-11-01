@@ -29,6 +29,7 @@ export const V100_R9_STORY_CUTS = Object.freeze(Object.fromEntries([
 // serving scenes keep the screenplay's rice paddle; combat retains the pan.
 export const V100_SCENE_PORTRAITS = Object.freeze([
   Object.freeze({owner:'unit-kumaverson',expression:'warm',sceneTags:Object.freeze(['daily','soup']),path:'/art/v100/portraits/kumaverson-cooking-warm-stage-r1.webp'}),
+  Object.freeze({owner:'unit-zakimiya',expression:'warm',sceneTags:Object.freeze(['soup']),path:'/art/v100/portraits/zakimiya-family-warm-quality-r1.webp'}),
 ]);
 // This three-person exchange addresses Zakimiya, not his wife who spoke last.
 // Bind the authored direction to the R9 source key rather than matching text.

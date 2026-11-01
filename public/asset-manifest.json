@@ -2819,6 +2819,14 @@
       "criticality": "optional"
     },
     {
+      "path": "/art/v100/portraits/zakimiya-family-warm-quality-r1.webp",
+      "bytes": 99412,
+      "hash": "sha256-9efa96fef0c5c53e3bd660f59b0314dfde0aeac20a6d9683f036638891bdd006",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/portraits/zakimiya-formation-card-quality-r1.webp",
       "bytes": 58404,
       "hash": "sha256-a30d22f93ba2a8ac8ed65b0e3497795a22b7f93b377f1aef3aa3ed51373453bb",

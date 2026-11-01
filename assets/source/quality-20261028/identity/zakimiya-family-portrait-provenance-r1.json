@@ -1,0 +1,36 @@
+{
+  "generator": "scripts/build-quality-cooking-portrait.mjs",
+  "input": "assets/source/quality-20261028/identity/zakimiya-family-warm-r1.png",
+  "inputSha256": "5d13f69064c1351274598914c53a7ea276b22a58066839b1ff0acd5c225c88af",
+  "transform": {
+    "resize": {
+      "width": 561,
+      "height": 701
+    },
+    "crop": {
+      "left": 20,
+      "top": 0,
+      "width": 512,
+      "height": 640
+    },
+    "sourceHead": {
+      "top": 80,
+      "height": 376,
+      "center": 536
+    },
+    "targetHead": {
+      "top": 40,
+      "height": 188,
+      "center": 248
+    }
+  },
+  "output": "public/art/v100/portraits/zakimiya-family-warm-quality-r1.webp",
+  "sha256": "9efa96fef0c5c53e3bd660f59b0314dfde0aeac20a6d9683f036638891bdd006",
+  "bytes": 99412,
+  "pixelDensity": 1,
+  "designCanvas": {
+    "width": 512,
+    "height": 640
+  },
+  "scope": "S25 soup: adopted Zakimiya holds his existing son and infant milk bottle. Both dialogue roles; no battle/card replacement."
+}

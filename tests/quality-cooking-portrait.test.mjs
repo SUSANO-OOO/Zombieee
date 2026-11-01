@@ -31,3 +31,16 @@ test('the rice-serving invitation addresses Zakimiya without replacing his wife 
   }
   assert.equal(overrides,1);
 });
+test('Zakimiya keeps his son and milk bottle throughout the authored soup scene only',()=>{
+  let count=0;
+  for(const [id,event]of Object.entries(V100_STORY_EVENTS))for(const [index,node]of event.nodes.entries()){
+    if(node.sceneTag!=='soup')continue;
+    assert.equal(id,'v100:event:s25:post','new soup scene needs a prop continuity review');
+    const expression=v100StoryExpressionFor(id,index,node,'unit-zakimiya');
+    assert.equal(expression,'warm','new emotion needs a matching family portrait');
+    assert.equal(v100EventPortraitPath('unit-zakimiya',expression,node.sceneTag),'/art/v100/portraits/zakimiya-family-warm-quality-r1.webp');
+    count++;
+  }
+  assert.equal(count,9);
+  for(const expression of V100_EVENT_EXPRESSIONS)for(const tag of ['daily','crisis',null])assert.equal(v100EventPortraitPath('unit-zakimiya',expression,tag),`/art/v100/portraits/zakimiya-${expression}-quality-r1.webp`);
+});

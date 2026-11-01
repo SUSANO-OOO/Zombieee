@@ -12,12 +12,13 @@ import {dismissInstallOffer} from './pwa-gate-qa.mjs';
 import {productionBuildIdentity} from './browser-qa-build-identity.mjs';
 
 const engine=process.env.QUALITY_COOKING_ENGINE??'chromium',before=process.env.QUALITY_COOKING_BEFORE==='1';
+const family=process.env.QUALITY_COOKING_FAMILY==='1';
 const out=path.resolve(process.env.QUALITY_COOKING_OUT);await mkdir(out,{recursive:false});
 const harness=await readFile(new URL(import.meta.url));await writeFile(path.join(out,'harness-used.mjs'),harness);
-const report={engine,before,build:await productionBuildIdentity(path.resolve(process.env.QUALITY_COOKING_BUILD_ROOT)),driverSha256:createHash('sha256').update(harness).digest('hex'),scope:'Prepared isolated prologue and S25 soup checkpoints, native Next through all applicable pages. Silent browser recordings, not full campaign progression or human likeness acceptance.',cases:[],errors:[]};
+const report={engine,before,family,build:await productionBuildIdentity(path.resolve(process.env.QUALITY_COOKING_BUILD_ROOT)),driverSha256:createHash('sha256').update(harness).digest('hex'),scope:'Prepared isolated story checkpoints, native Next through all applicable pages. Family mode covers S25 soup; default mode also covers prologue. Silent browser recordings, not full campaign progression or human likeness acceptance.',cases:[],errors:[]};
 const browser=await({chromium,webkit}[engine]).launch({headless:true});
 try{
- for(const viewport of before?[{width:844,height:340}]:[{width:844,height:340},{width:1280,height:720}])for(const [eventId,start,last]of [['v100:event:prologue',0,29],['v100:event:s25:post',4,12]]){
+ for(const viewport of before?[{width:844,height:340}]:[{width:844,height:340},{width:1280,height:720}])for(const [eventId,start,last]of (family?[['v100:event:s25:post',4,12]]:[['v100:event:prologue',0,29],['v100:event:s25:post',4,12]])){
   const label=`${viewport.width}x${viewport.height}-${eventId.split(':').slice(2).join('-')}`;
   const seed=createV100DialogueFixture({eventId,nodeIndex:start,playerName:'会話確認'});
   seed.settings={...seed.settings,autoSkipReadStory:false,bgmEnabled:false,sfxEnabled:false};
@@ -38,12 +39,16 @@ try{
     // actual page text as well, so the previous frame cannot satisfy this row.
     await page.waitForFunction(text=>document.querySelector('.v100-event-panel .v100-node-copy')?.textContent.includes(text),group.node.text);
     await page.waitForFunction(()=>[...document.querySelectorAll('.v100-event-panel .v100-portrait-frame img')].every(img=>img.complete&&img.naturalWidth>0));
-    const portraits=await panel.locator('[data-portrait-owner="unit-kumaverson"]').evaluateAll(els=>els.map(el=>{const img=el.querySelector('img'),r=el.getBoundingClientRect(),s=getComputedStyle(el);return{path:new URL(img.currentSrc||img.src).pathname,role:el.classList.contains('v100-portrait-frame-secondary')?'listener':'speaker',bounds:{x:r.x,y:r.y,width:r.width,height:r.height},camera:{top:s.getPropertyValue('--portrait-top-factor'),width:s.getPropertyValue('--portrait-width-factor'),center:s.getPropertyValue('--portrait-face-center')}};}));
+    // WebKit can expose an empty animation list before the dissolve starts.
+    // Require the visible result too; a ghosted intermediate frame is not proof.
+    await page.waitForFunction(()=>[...document.querySelectorAll('.v100-event-panel .v100-portrait-frame img')].every(img=>Number(getComputedStyle(img).opacity)>=0.99));
+    const portraits=await panel.locator(`[data-portrait-owner="${family?'unit-zakimiya':'unit-kumaverson'}"]`).evaluateAll(els=>els.map(el=>{const img=el.querySelector('img'),r=el.getBoundingClientRect(),s=getComputedStyle(el);return{path:new URL(img.currentSrc||img.src).pathname,role:el.classList.contains('v100-portrait-frame-secondary')?'listener':'speaker',bounds:{x:r.x,y:r.y,width:r.width,height:r.height},camera:{top:s.getPropertyValue('--portrait-top-factor'),width:s.getPropertyValue('--portrait-width-factor'),center:s.getPropertyValue('--portrait-face-center')}};}));
     if(!before&&eventId==='v100:event:s25:post'&&group.node.sourceKey==='r9:2036'){
       assert.deepEqual((await panel.locator('[data-portrait-owner]').evaluateAll(els=>els.map(el=>el.dataset.portraitOwner))).sort(),['unit-kumaverson','unit-zakimiya']);
     }
     for(const p of portraits){
-     assert.ok(p.path.endsWith(before?'/kumaverson-warm-stage-r1.webp':'/kumaverson-cooking-warm-stage-r1.webp'),`${label}:${index}: ${p.path}`);
+     const expected=family?(before?'/zakimiya-warm-quality-r1.webp':'/zakimiya-family-warm-quality-r1.webp'):(before?'/kumaverson-warm-stage-r1.webp':'/kumaverson-cooking-warm-stage-r1.webp');
+     assert.ok(p.path.endsWith(expected),`${label}:${index}: ${p.path}`);
      assert.ok(p.bounds.width>0&&p.bounds.height>0);
      if(!seen.has(p.role)){
       await page.evaluate(()=>document.fonts.ready);
@@ -56,7 +61,8 @@ try{
     await panel.getByRole('button',{name:'次へ',exact:true}).click();
     await page.waitForFunction(expected=>JSON.parse(localStorage.getItem('nishijin-campaign-v100'))?.eventCursor?.nodeIndex===expected,index);
    }
-   assert.ok(row.pages.some(p=>p.portraits.length),'Kuma must be visible in this authored scene');
+   assert.ok(row.pages.some(p=>p.portraits.length),'The target actor must be visible in this authored scene');
+   if(family)assert.deepEqual([...seen].sort(),['listener','speaker']);
    row.status='passed';row.video=await page.video().path();
   }catch(e){row.status='failed';row.error=String(e);if(page&&!page.isClosed()){await page.screenshot({path:path.join(out,label+'-failure.png')});row.failureText=await page.locator('body').innerText();}throw e;}
   finally{await context.close();}

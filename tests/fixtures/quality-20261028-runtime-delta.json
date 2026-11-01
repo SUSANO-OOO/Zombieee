@@ -1362,6 +1362,22 @@
       "bundleOffset": 7818661,
       "bundleBytes": 5222,
       "bundleLength": 34819822
+    },
+    {
+      "path": "/art/v100/portraits/kumaverson-cooking-warm-stage-r1.webp",
+      "bytes": 162104,
+      "hash": "sha256-f24cad713bb970a2f025c51ab09249eda7c90863ad677dbb6e30fd28c6c03569",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/zakimiya-family-warm-quality-r1.webp",
+      "bytes": 99412,
+      "hash": "sha256-9efa96fef0c5c53e3bd660f59b0314dfde0aeac20a6d9683f036638891bdd006",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "critical"
     }
   ],
   "retired": [
@@ -2798,6 +2814,10 @@
     {
       "at": "2026-10-31",
       "scope": "Four actual right-facing battle heads; source yaw and gaze corrected, original rig pivots/poses retained."
+    },
+    {
+      "at": "2026-11-01",
+      "scope": "Contextual meal portraits: adopted Kumaverson uses a rice paddle in daily/soup; adopted Zakimiya holds the existing son and milk bottle in soup. Only these two runtime assets added; unrelated payloads and historical release contracts retained."
     }
   ],
   "baseAssetsSha256": "a953511eb95b7a2a2eae3efd27a8c7a8460cafc4f1df14b73c6a6686006c4e69",
