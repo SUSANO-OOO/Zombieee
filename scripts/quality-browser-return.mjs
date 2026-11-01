@@ -1,35 +1,50 @@
 import assert from 'node:assert/strict';
-import {mkdir,writeFile} from 'node:fs/promises';
+import {mkdir,writeFile,readFile} from 'node:fs/promises';
 import path from 'node:path';
+import {createHash} from 'node:crypto';
 import {chromium,webkit} from 'playwright';
 import {createDefaultV100Save,normalizeV100Save,serializeV100Save} from '../app/v100Save.js';
 import {finishV100TitleIntro,seedV100BrowserSaveOnce} from './v100-title-qa-entry.mjs';
 import {productionBuildIdentity} from './browser-qa-build-identity.mjs';
 
-const before=process.env.QUALITY_RETURN_BEFORE==='1';
+const before=process.env.QUALITY_RETURN_BEFORE==='1',standalone=process.env.QUALITY_RETURN_STANDALONE==='1';
 const out=path.resolve(process.env.QUALITY_RETURN_OUT??`output/quality-20261028/browser-return-${before?'before':'after'}-r1`);
 const choiceKey='nishijin:pwa-browser-choice:v1';
 const engine=process.env.QUALITY_RETURN_ENGINE??'chromium',iphone=process.env.QUALITY_RETURN_IPHONE==='1';
 assert.ok(['chromium','webkit'].includes(engine));
-await mkdir(out,{recursive:true});
-const report={engine,iphoneUserAgent:iphone,build:await productionBuildIdentity(),scope:'Native notice, install-offer choice, title, reload and data-screen controls. Prepared existing save separately from fresh origin. Not physical PWA installation or title audio listening.',cases:[],errors:[]};
+await mkdir(out,{recursive:false});
+const fixed=JSON.parse(await readFile(path.join(process.env.QUALITY_RETURN_BUILD_ROOT,'snapshot.json'),'utf8'));
+const scriptBytes=await readFile(new URL(import.meta.url));await writeFile(path.join(out,'harness-used.mjs'),scriptBytes);
+const report={scriptSha256:createHash('sha256').update(scriptBytes).digest('hex'),engine,iphoneUserAgent:iphone,build:await productionBuildIdentity(process.env.QUALITY_RETURN_BUILD_ROOT),scope:'Fresh entry, optional installation in Data, reload and existing-save preservation. Prepared existing save separately from fresh origin. Not physical PWA installation or title audio listening.',cases:[],errors:[]};
+assert.equal(report.build.combinedSha256,fixed.combinedSha256);
 const browser=await({chromium,webkit}[engine]).launch({headless:true});
 try{
- for(const profile of before||iphone?['fresh']:['fresh','existing','preference-storage-denied']){
+ for(const profile of before||iphone||standalone?['fresh']:['fresh','existing','preference-storage-denied','legacy-preference']){
   const context=await browser.newContext({viewport:{width:844,height:340},hasTouch:true,...(iphone?{userAgent:'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1'}:{}),recordVideo:{dir:path.join(out,'video'),size:{width:844,height:340}}});
   try{
+   if(standalone)await context.addInitScript(()=>Object.defineProperty(navigator,'standalone',{value:true,configurable:true}));
+   if(profile==='legacy-preference')await context.addInitScript(key=>localStorage.setItem(key,'browser'),choiceKey);
    if(profile==='existing')await context.addInitScript(seedV100BrowserSaveOnce,serializeV100Save(normalizeV100Save({...createDefaultV100Save(),campaignStarted:true,caps:123})));
    if(profile==='preference-storage-denied')await context.addInitScript(key=>{const original=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k===key)throw new DOMException('QA preference storage denied','QuotaExceededError');return original.call(this,k,v);};},choiceKey);
    const page=await context.newPage();page.setDefaultTimeout(25000);page.on('pageerror',error=>report.errors.push(String(error)));
    const notice=async()=>{await page.locator('.fiction-notice').waitFor({state:'visible'});await page.getByRole('button',{name:'続ける',exact:true}).click();await page.locator('.fiction-notice').waitFor({state:'detached'});};
    await page.goto(process.env.V100_CAMPAIGN_QA_BASE_URL);await notice();
-   await page.getByRole('button',{name:'ブラウザで遊ぶ',exact:true}).waitFor();await page.screenshot({path:path.join(out,`${profile}-first-offer.png`)});
-   await page.getByRole('button',{name:'ブラウザで遊ぶ',exact:true}).click();await finishV100TitleIntro(page);
+   if(standalone){
+    await page.getByRole('button',{name:'ダウンロードを開始',exact:true}).waitFor();
+    assert.equal(await page.locator('.v100-start-screen').count(),0);
+    await page.screenshot({path:path.join(out,'standalone-empty-pack.png')});
+    await context.close();report.cases.push({profile:'emulated-standalone-empty-pack',requiresExplicitDownload:true,titleNotMounted:true,video:await page.video().path()});continue;
+   }
+
+   if(before){await page.getByRole('button',{name:'ブラウザで遊ぶ',exact:true}).waitFor();await page.screenshot({path:path.join(out,`${profile}-first-offer.png`)});await page.getByRole('button',{name:'ブラウザで遊ぶ',exact:true}).click();}
+   await finishV100TitleIntro(page);
+   assert.equal(await page.getByRole('button',{name:'ブラウザで遊ぶ',exact:true}).count(),0);
+   await page.screenshot({path:path.join(out,`${profile}-first-title.png`)});
    const initialSave=await page.evaluate(()=>localStorage.getItem('nishijin-campaign-v100'));
    const choice=await page.evaluate(key=>localStorage.getItem(key),choiceKey);
-   if(!before)assert.equal(choice,profile==='preference-storage-denied'?null:'browser');
+   assert.equal(choice,before||profile==='legacy-preference'?'browser':null,'new direct entry must not fabricate an installation preference');
    await page.reload();await notice();
-   const repeatedOffer=before||profile==='preference-storage-denied';
+   const repeatedOffer=false;
    if(repeatedOffer){await page.getByRole('button',{name:'ブラウザで遊ぶ',exact:true}).waitFor();await page.screenshot({path:path.join(out,`${profile}-return-offer.png`)});await page.getByRole('button',{name:'ブラウザで遊ぶ',exact:true}).click();}
    await finishV100TitleIntro(page);assert.equal(await page.getByRole('button',{name:'ブラウザで遊ぶ',exact:true}).count(),0);await page.screenshot({path:path.join(out,`${profile}-return-title.png`)});
    if(!before){
@@ -40,6 +55,15 @@ try{
     assert.ok(help.top>=help.frameTop-1&&help.bottom<=help.frameBottom+1,`install instructions must fit the data panel: ${JSON.stringify(help)}`);
     assert.equal(await page.getByText('オフライン未保存',{exact:true}).count(),1);assert.equal(await page.getByText('不足・破損',{exact:true}).count(),0);
     await page.screenshot({path:path.join(out,`${profile}-install-help.png`)});
+    if(profile==='fresh'&&!iphone){
+     await page.evaluate(()=>{window.__QA_INSTALL_REQUESTS__=0;const event=new Event('beforeinstallprompt',{cancelable:true});event.prompt=()=>{window.__QA_INSTALL_REQUESTS__++;return Promise.resolve();};window.dispatchEvent(event);});
+     const add=page.getByRole('button',{name:'ホーム画面に追加する',exact:true});await add.waitFor();
+     assert.equal(await page.evaluate(()=>window.__QA_INSTALL_REQUESTS__),0,'offering installation does not invoke the OS prompt');
+     await add.click();await page.waitForFunction(()=>window.__QA_INSTALL_REQUESTS__===1);
+     await add.waitFor({state:'detached'});await page.getByText('追加画面が出ないときは、下の手順を試してください。',{exact:true}).waitFor();
+     await page.screenshot({path:path.join(out,'explicit-prompt-fallback.png')});
+    }
+
    }
    const saved=await page.evaluate(()=>localStorage.getItem('nishijin-campaign-v100'));assert.equal(saved,initialSave,'navigation preserves the complete save bytes');
    await context.close();report.cases.push({profile,repeatedOffer,choice,saveBytesUnchanged:true,video:await page.video().path()});

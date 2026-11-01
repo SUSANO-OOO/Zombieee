@@ -56,7 +56,6 @@ export function derivePwaPhase({
   installPlan = null,
   downloadState = null,
   updateEvaluation = null,
-  offerDismissed = false,
   commitRequired = false,
   commitRecoveryBusy = false,
 } = {}) {
@@ -90,12 +89,9 @@ export function derivePwaPhase({
   if (downloadState === "complete") return "download-complete";
 
   if (!standalone) {
-    // An ordinary tab may still run an update check, but never an install gate.
-    if (offerDismissed && installedManifest && updateEvaluation?.available) return "update-available";
-    // The invitation to install is the first thing a browser visitor sees, and
-    // it is an offer rather than a wall: dismissing it plays straight from the
-    // network, exactly as a tab did before.
-    if (!offerDismissed) return "install-offer";
+    // Browser play starts at the game. Installation is an explicit Data-screen
+    // action; interrupted transfers and generation recovery still take priority.
+    if (installedManifest && updateEvaluation?.available) return "update-available";
     return "browser";
   }
 

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import ts from 'typescript';
+import {derivePwaPhase,canPlayOffline} from '../app/pwaRuntime.js';
 import {createPaintedBrowserEntry} from '../app/pwaBrowserEntry.js';
 
 function frames(){let next=0;const queue=new Map();return {
@@ -34,21 +35,23 @@ test('disposal caused by pending feedback never mounts a stale game owner',()=>{
     entry.request();f.paint();f.paint();assert.equal(events.some(e=>e[0]==='enter'),false);assert.equal(f.size(),0);
   }
 });
-test('the actual PWA play-button callback defers entry through the painted transition',()=>{
-  const source=fs.readFileSync('app/PwaGate.tsx','utf8'),tree=ts.createSourceFile('PwaGate.tsx',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);
-  let button,callback;
-  const visit=node=>{if(ts.isJsxElement(node)&&node.openingElement.tagName.getText(tree)==='button'&&node.getText(tree).includes('offerCopy?.skipLabel'))button=node;ts.forEachChild(node,visit);};visit(tree);assert.ok(button);
-  const click=button.openingElement.attributes.properties.find(p=>p.name?.getText(tree)==='onClick').initializer.expression;
-  if(ts.isIdentifier(click)){
-    const find=node=>{if(ts.isVariableDeclaration(node)&&node.name.getText(tree)===click.text)callback=node.initializer.arguments[0];ts.forEachChild(node,find);};find(tree);
-  }else callback=click;
-  assert.ok(callback);const f=frames(),events=[],context={browserPlayTransitionRef:{current:null},createPaintedBrowserEntry,
-    rememberBrowserPlayChoice:()=>true,
-    window:{requestAnimationFrame:f.requestFrame,cancelAnimationFrame:f.cancelFrame},
-    setBrowserPlayPending:value=>events.push(['pending',value]),setOfferDismissed:value=>events.push(['enter',value])};
-  const code=ts.transpileModule('const click='+callback.getText(tree)+';click;', {compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
-  vm.runInNewContext(code,context)();
-  assert.equal(events.some(e=>e[0]==='enter'),false,'the old synchronous state update mounts the heavy game inside its native input');
-  f.paint();assert.equal(events.some(e=>e[0]==='enter'),false);
-  f.paint();assert.deepEqual(events,[['pending',true],['pending',false],['enter',true]]);
+test('actual gate opens fresh browser play while retaining recovery and standalone boundaries',()=>{
+ const source=fs.readFileSync('app/PwaGate.tsx','utf8'),tree=ts.createSourceFile('PwaGate.tsx',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX),expressions={};
+ const visit=node=>{if(ts.isVariableDeclaration(node)&&['settling','blocking'].includes(node.name.getText(tree)))expressions[node.name.getText(tree)]=node.initializer.getText(tree);ts.forEachChild(node,visit);};visit(tree);
+ assert.ok(expressions.settling);assert.ok(expressions.blocking);
+ const rows=[
+  [{},false], [{offerDismissed:false},false], [{offerDismissed:true},false],
+  [{booted:false},true], [{bootFailure:true},true],
+  [{standalone:true},true], [{downloadState:'running'},true], [{downloadState:'paused'},true],
+  [{downloadState:'failed'},true], [{downloadState:'cancelled'},true], [{downloadState:'complete'},true],
+  [{commitRequired:true},true], [{commitRequired:true,commitRecoveryBusy:true},true],
+  [{standalone:true,installedManifest:{version:'test'},installPlan:{complete:true},publishedChecked:false},true],
+  [{standalone:true,installedManifest:{version:'test'},installPlan:{complete:true},publishedChecked:true},false],
+ ];
+ for(const [changes,expected] of rows){
+  const values={supported:true,standalone:false,booted:true,bootFailure:false,publishedChecked:true,...changes};
+  values.phase=derivePwaPhase(values);values.playable=canPlayOffline({phase:values.phase,installPlan:values.installPlan});
+  const result=vm.runInNewContext('const settling='+expressions.settling+';'+expressions.blocking,values);
+  assert.equal(result,expected,JSON.stringify(changes));
+ }
 });

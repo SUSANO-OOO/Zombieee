@@ -1,3 +1,4 @@
+import { finishV100TitleIntro, enterV100FromTitle } from "./v100-title-qa-entry.mjs";
 import { legacyQaUrl } from "./legacy-qa-url.mjs";
 // Version 0.9.6 PWA browser smoke.
 //
@@ -391,129 +392,24 @@ entryPage.on("request", (request) => {
 await routeSmallPack(entryContext);
 await entryPage.goto(legacyQaUrl(baseUrl), { waitUntil: "domcontentloaded" });
 
-const skipLabel = entryPage.getByRole("button", { name: "ブラウザで遊ぶ" });
-await skipLabel.waitFor({ state: "visible", timeout: 30_000 }).catch(() => {});
-
-const offerCase = await entryPage.evaluate(() => {
-  const gate = document.querySelector(".pwa-gate");
-  const text = gate?.innerText ?? "";
-  const steps = [...document.querySelectorAll(".pwa-install-steps li")].map((li) => ({
-    number: li.querySelector(".pwa-step-number")?.textContent ?? "",
-    hasIcon: Boolean(li.querySelector(".pwa-step-icon svg")),
-    arrow: li.querySelector(".pwa-step-arrow")?.textContent ?? null,
-    text: li.querySelector(".pwa-step-text")?.textContent ?? "",
-  }));
-  return {
-    gateVisible: Boolean(gate),
-    gameMounted: Boolean(document.querySelector(".game-shell, .game-frame")),
-    headline: document.querySelector(".pwa-gate-panel h2")?.textContent ?? "",
-    saysInstall: text.includes("西新世紀末物語をインストール"),
-    saysNoDownload: text.includes("ダウンロードしません"),
-    // No control on this screen may start a download.
-    downloadButtons: [...document.querySelectorAll(".pwa-gate button")]
-      .map((button) => button.textContent ?? "")
-      .filter((label) => /ダウンロードを開始|ダウンロードを再開/.test(label)),
-    steps,
-  };
+// Browser visitors enter directly. Network gameplay assets are expected, but
+// optional installation must not populate the offline asset pack automatically.
+await entryPage.locator(".game-shell, .game-frame").first().waitFor({state:"visible",timeout:30000});
+const directEntry = await entryPage.evaluate(async () => {
+ const names=await caches.keys();const cache=names.includes("zombieee-assets-v1")?await caches.open("zombieee-assets-v1"):null;
+ return {gateVisible:Boolean(document.querySelector(".pwa-gate")),gameMounted:Boolean(document.querySelector(".game-shell, .game-frame")),stored:cache?(await cache.keys()).length:0};
 });
-record("a browser tab is invited to install before it reaches the title", (
-  offerCase.gateVisible && !offerCase.gameMounted && offerCase.saysInstall
-), offerCase);
-record("the invitation offers no way to start a download in the browser", (
-  offerCase.downloadButtons.length === 0 && offerCase.saysNoDownload
-), { downloadButtons: offerCase.downloadButtons, saysNoDownload: offerCase.saysNoDownload });
-
-// The manual route is the one iOS players actually walk, so check it is a
-// numbered list, that each step carries the control's own label in brackets,
-// that the share step shows a glyph, and that it points at the right edge of
-// the screen.
-const stepText = offerCase.steps.map((step) => step.text);
-record("iOS gets numbered home-screen steps with the share glyph and bracketed labels", (
-  offerCase.steps.length === 3
-  && offerCase.steps.map((step) => step.number).join("") === "123"
-  && offerCase.steps.every((step) => /「.+」/.test(step.text))
-  && offerCase.steps[0].hasIcon
-  && offerCase.steps[0].arrow === "↓"
-  && /共有/.test(stepText[0])
-  && /ホーム画面に追加/.test(stepText[1])
-  && /追加/.test(stepText[2])
-), offerCase.steps);
-
-// Nothing may be saved to the device, and the only things fetched are the shell
-// images the document itself declares for first paint. Comparing against the
-// document's own preload list rather than a fixed number means any new
-// unsolicited fetch fails this immediately.
-const consentCase = await entryPage.evaluate(async () => {
-  const preloads = [...document.querySelectorAll('link[rel="preload"]')]
-    .map((link) => new URL(link.getAttribute("href"), location.href).pathname);
-  const names = await caches.keys();
-  const cache = names.includes("zombieee-assets-v1") ? await caches.open("zombieee-assets-v1") : null;
-  return { preloads, storedInBrowser: cache ? (await cache.keys()).length : 0 };
-});
-const unsolicited = entryAssetRequests.filter((path) => !consentCase.preloads.includes(path));
-record("a browser tab saves no game data at all", (
-  consentCase.storedInBrowser === 0
-), { storedInBrowser: consentCase.storedInBrowser });
-record("nothing beyond the document's own first-paint preloads is fetched", (
-  unsolicited.length === 0
-), {
-  unsolicited,
-  fetchedInBrowser: entryAssetRequests.length,
-  declaredPreloads: consentCase.preloads.length,
-});
-
-// The invitation carries the most content of any gate screen, so check the
-// shortest supported viewport: the decline action must stay reachable and the
-// page must never scroll sideways.
-await entryPage.setViewportSize({ width: 844, height: 340 });
-const compactCase = await entryPage.evaluate(() => {
-  const button = [...document.querySelectorAll(".pwa-gate button")]
-    .find((candidate) => /ブラウザで遊ぶ/.test(candidate.textContent ?? ""));
-  const rect = button?.getBoundingClientRect();
-  return {
-    horizontalOverflow: document.documentElement.scrollWidth > window.innerWidth
-      || document.body.scrollWidth > window.innerWidth,
-    buttonWidthWithinViewport: rect ? rect.right <= window.innerWidth + 1 && rect.left >= -1 : false,
-    buttonTapHeight: rect ? Math.round(rect.height) : 0,
-    stepsReadable: [...document.querySelectorAll(".pwa-install-steps li")]
-      .every((li) => li.getBoundingClientRect().right <= window.innerWidth + 1),
-  };
-});
-record("the invitation fits the shortest supported viewport without sideways scroll", (
-  !compactCase.horizontalOverflow
-  && compactCase.buttonWidthWithinViewport
-  && compactCase.buttonTapHeight >= 40
-  && compactCase.stepsReadable
-), compactCase);
-await entryPage.setViewportSize({ width: 844, height: 390 });
-
-// --- 11. Declining the invitation still plays -------------------------------
-//
-// The invitation is an offer, not a wall, and no particular browser is required
-// to get past it.
-
-await skipLabel.click();
-await entryPage.locator(".game-shell, .game-frame").first().waitFor({ state: "visible", timeout: 30_000 }).catch(() => {});
-const skipCase = await entryPage.evaluate(async () => {
-  const names = await caches.keys();
-  const cache = names.includes("zombieee-assets-v1") ? await caches.open("zombieee-assets-v1") : null;
-  return {
-    gateVisible: Boolean(document.querySelector(".pwa-gate")),
-    gameMounted: Boolean(document.querySelector(".game-shell, .game-frame")),
-    storedAfterDecline: cache ? (await cache.keys()).length : 0,
-  };
-});
-record("declining the invitation still lets the player into the game", (
-  !skipCase.gateVisible && skipCase.gameMounted && skipCase.storedAfterDecline === 0
-), skipCase);
+record("fresh browser enters the game without an installation choice",!directEntry.gateVisible&&directEntry.gameMounted,directEntry);
+record("browser gameplay does not automatically store the offline pack",directEntry.stored===0,directEntry);
 
 // --- 12. データ管理 appears only where a player would look for it ------------
 //
 // It is a maintenance tool. On the title it belongs; over the map, the loadout,
 // dialogue, battle or the result it is developer furniture on a player's screen.
 
+if(await entryPage.locator(".v100-start-screen").count())await finishV100TitleIntro(entryPage);
 const dataScreenCase = await entryPage.evaluate(() => {
-  const visible = () => [...document.querySelectorAll(".pwa-storage-toggle")].length > 0;
+  const visible = () => [...document.querySelectorAll("button")].some(b=>b.textContent.trim()==="データ管理"&&b.getBoundingClientRect().height>0);
   return { screen: document.documentElement.dataset.pwaScreen ?? null, toggleOnTitle: visible() };
 });
 record("データ管理 is offered on the title screen", (
@@ -538,11 +434,20 @@ record("the save environment is shown in データ管理 and no longer on the ti
   && panelCase.environmentKind !== "checking"
   && !panelCase.badgeOnTitle
 ), panelCase);
+await entryPage.getByText("ホーム画面で遊ぶ",{exact:true}).click();
+await entryPage.setViewportSize({width:844,height:340});
+const helpCase=await entryPage.locator(".pwa-return-install-help").evaluate(el=>({
+ steps:[...el.querySelectorAll(".pwa-install-steps li")].map(li=>({number:li.querySelector(".pwa-step-number")?.textContent??"",text:li.querySelector(".pwa-step-text")?.textContent??"",icon:Boolean(li.querySelector(".pwa-step-icon svg"))})),
+ overflow:document.documentElement.scrollWidth>innerWidth,
+ backup:el.textContent.includes("セーブを書き出す")
+}));
+record("iOS installation remains explicit in Data with numbered steps and save transfer guidance",helpCase.steps.length===3&&helpCase.steps.map(x=>x.number).join("")==="123"&&helpCase.steps.every(x=>/「.+」/.test(x.text))&&helpCase.steps[0].icon&&helpCase.backup&&!helpCase.overflow,helpCase);
+await entryPage.setViewportSize({width:844,height:390});
 await entryPage.getByRole("button", { name: "閉じる" }).click();
 
 // Walk into the game and confirm the button is gone from a play screen.
-await entryPage.locator(".title-start").click();
-await entryPage.locator(".event-screen, .map-screen").first().waitFor({ state: "visible", timeout: 30_000 }).catch(() => {});
+if(await entryPage.locator(".v100-start-screen").count())await enterV100FromTitle(entryPage);else await entryPage.locator(".title-start").click();
+await entryPage.waitForFunction(()=>document.documentElement.dataset.pwaScreen!=="title",null,{timeout:30000});
 const playScreenCase = await entryPage.evaluate(() => ({
   screen: document.documentElement.dataset.pwaScreen ?? null,
   toggleVisible: [...document.querySelectorAll(".pwa-storage-toggle")].length > 0,
