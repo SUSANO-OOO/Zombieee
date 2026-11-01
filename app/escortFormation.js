@@ -58,20 +58,49 @@ export function escortFormationDestination({
     });
   }
 
-  const stableId = Math.abs(Math.floor(Number(unit.id) || 0));
-  const slot = available.findIndex((candidate) => String(candidate.id) === String(unit.id));
-  const ranged = Number(unit.range) > 64;
-  const support = SUPPORT_ESCORT_KINDS.has(unit.kind);
-  const forwardOffset = support
-    ? 28 + (stableId % 2) * 12
-    : ranged
-      ? 54 + (stableId % 3) * 13
-      : 86 + (stableId % 3) * 14;
   const lanes = Math.max(1, Math.floor(Number(laneCount) || 3));
-  const lane = (stableId + Math.max(0, slot)) % lanes;
-  return Object.freeze({
-    x: Number(cartX) + forwardOffset,
-    lane,
-    duty: support ? "support-screen" : ranged ? "ranged-screen" : "front-screen",
+  // Reserve the coverage post too: the old independent ID/modulo choices
+  // sent multiple guards (sometimes even the anchor) to the same point.
+  const occupied = anchor ? [{
+    x: escortPriority(anchor) === 2 ? 86 : -10,
+    lane: Number(cartLane),
+  }] : [];
+  const screens = available.filter(candidate => candidate !== anchor);
+  // Preserve a destination for callers observing a unit not ready to move.
+  if (!screens.some(candidate => String(candidate.id) === String(unit.id))) screens.push(unit);
+  const preferences = screens.map(candidate => {
+    const stableId = Math.abs(Math.floor(Number(candidate.id) || 0));
+    const slot = Math.max(0, available.findIndex(other => String(other.id) === String(candidate.id)));
+    const ranged = Number(candidate.range) > 64;
+    const support = SUPPORT_ESCORT_KINDS.has(candidate.kind);
+    return {id:String(candidate.id),available:available.includes(candidate),
+      x:support ? 28 + (stableId % 2) * 12 : ranged ? 54 + (stableId % 3) * 13 : 86 + (stableId % 3) * 14,
+      lane:(stableId + slot) % lanes,duty:support ? 'support-screen' : ranged ? 'ranged-screen' : 'front-screen'};
   });
+  // A duplicate's escape must not occupy a later guard's already-clear post.
+  const original = [...occupied,...preferences.filter(preference => preference.available)];
+  const clear = new Set(preferences.filter(preference => preference.available
+    && original.every(other => other === preference || other.lane !== preference.lane
+      || Math.abs(other.x - preference.x) >= 28)).map(preference => preference.id));
+  occupied.push(...preferences.filter(preference => clear.has(preference.id)));
+  for (const preference of preferences) {
+    let post = clear.has(preference.id) ? preference : null;
+    for (let column = 0; !post; column++) {
+      for (let offset = 0; offset < lanes; offset++) {
+        if (column === 0 && offset > 0) continue;
+        // Keep a clear original post. For a clash, try one step forward in
+        // the same lane before moving sideways, without stretching one file.
+        const x = preference.x + (offset === 0 ? column : column - 1) * 28;
+        const lane = (preference.lane + offset) % lanes;
+        if (occupied.some(other => other.lane === lane && Math.abs(other.x - x) < 28)) continue;
+        post = { x, lane }; break;
+      }
+    }
+    if (!clear.has(preference.id)) occupied.push(post);
+    if (preference.id === String(unit.id)) return Object.freeze({
+      x: Number(cartX) + post.x,
+      lane: post.lane,
+      duty: preference.duty,
+    });
+  }
 }

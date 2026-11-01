@@ -18,6 +18,46 @@ const human = (id, kind, range) => ({
   stunned: 0,
 });
 
+test('seven living escorts receive separated posts, including repeated role and ID residues', () => {
+  for (const step of [1, 2, 3, 9]) for (const roles of [
+    Array.from({ length: 7 }, () => ['scout', 46]),
+    Array.from({ length: 7 }, () => ['gunner', 230]),
+    [['medic',210],['engineer',210],['babayaga',230],['ranger',260],['scout',46],['brute',34],['guardian',42]],
+  ]) {
+    const humans = roles.map(([kind,range],i) => human(1 + i * step, kind, range));
+    const original = structuredClone(humans);
+    const posts = humans.map(unit => escortFormationDestination({unit,humans,cartX:400}));
+    assert.equal(posts.filter(p => p.duty === 'escort-anchor').length,1);
+    for (let i=0;i<posts.length;i++) {
+      assert.ok(posts[i].lane>=0 && posts[i].lane<3);
+      assert.ok(posts[i].x>=390 && posts[i].x<=570,'stay in the local escort formation');
+      for (let j=i+1;j<posts.length;j++) if(posts[i].lane===posts[j].lane)
+        assert.ok(Math.abs(posts[i].x-posts[j].x)>=28,'two living guards must not converge on the same post');
+      assert.deepEqual(escortFormationDestination({unit:humans[i],humans:[...humans].reverse(),cartX:400}),posts[i]);
+      assert.deepEqual(escortFormationDestination({unit:humans[i],humans,cartX:420}),{...posts[i],x:posts[i].x+20});
+    }
+    assert.deepEqual(humans,original);
+  }
+});
+
+test('clear posts retain their previous lanes and offsets; a clash first separates along the lane', () => {
+  const anchor=human(2,'guardian',42),scout=human(9,'scout',46);
+  const alone=escortFormationDestination({unit:anchor,humans:[anchor],cartX:400});
+  const together=[anchor,scout].map(unit=>escortFormationDestination({unit,humans:[anchor,scout],cartX:400}));
+  assert.deepEqual(together[0],alone);
+  assert.deepEqual(together[1],{x:514,lane:1,duty:'front-screen'});
+  const medic=human(12,'medic',210),gunner=human(11,'gunner',230);
+  assert.deepEqual(escortFormationDestination({unit:gunner,humans:[medic,gunner],cartX:400}),{x:480,lane:0,duty:'ranged-screen'});
+});
+
+test('moving an earlier duplicate does not take a later guards originally clear post', () => {
+  const humans=[4,6,8].map(id=>human(id,'scout',42));
+  const posts=humans.map(unit=>escortFormationDestination({unit,humans,cartX:400}));
+  assert.deepEqual(posts[0],{x:486,lane:1,duty:'escort-anchor'});
+  assert.deepEqual(posts[2],{x:514,lane:1,duty:'front-screen'});
+  assert.ok(posts[1].lane!==1||Math.abs(posts[1].x-514)>=28);
+});
+
 test("escort formation keeps one support in coverage and sends combat roles ahead", () => {
   const units = [
     human(10, "brawler", 42),
