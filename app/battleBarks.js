@@ -49,7 +49,7 @@ export const BATTLE_BARK_CONFIG = Object.freeze({
  *   speakerReadyAt: Record<string, number>,
  *   lineReadyAt: Record<string, number>,
  * }} BattleBarkRuntime
- * @typedef {{trigger: string, speakerKind: string, speakerId?: string | number}} BattleBarkEvent
+ * @typedef {{trigger: string, speakerKind: string, speakerId?: string | number, lineId?: string}} BattleBarkEvent
  * @typedef {{
  *   id: string,
  *   eventId?: string,
@@ -432,7 +432,8 @@ export const queueScriptedBattleBarks = queueScriptedBattleBarkCue;
 
 /** @param {BattleBarkLine} line @param {BattleBarkEvent} event */
 function lineMatches(line, event) {
-  return line.trigger === event.trigger && (!line.speakerKind || line.speakerKind === event.speakerKind);
+  return line.trigger === event.trigger && (!line.speakerKind || line.speakerKind === event.speakerKind)
+    && (event.lineId === undefined || line.id === event.lineId);
 }
 
 /**

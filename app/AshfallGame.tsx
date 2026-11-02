@@ -3387,8 +3387,8 @@ function prepareMayoQa(g: Game) {
   g.bannerTime = 1.4;
 }
 
-function emitBattleBark(g: Game, trigger: string, speakerKind: string, speakerId?: number | string) {
-  const result = queueBattleBark({ runtime: g.battleBarks, event: { trigger, speakerKind, speakerId }, qa: g.qaBarks, allowedSpeakerKinds: g.barkSpeakerKinds });
+function emitBattleBark(g: Game, trigger: string, speakerKind: string, speakerId?: number | string, lineId?: string) {
+  const result = queueBattleBark({ runtime: g.battleBarks, event: { trigger, speakerKind, speakerId, lineId }, qa: g.qaBarks, allowedSpeakerKinds: g.barkSpeakerKinds });
   g.battleBarks = result.runtime as BattleBarkRuntime;
   return result.shown;
 }
@@ -11619,6 +11619,21 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           retainedHumanCount: g.fighters.filter((fighter) => fighter.side === "human" && fighter.hp > 0).length,
           fallbackHumanSpawned: retainedHumanCount === 0,
         };
+      },
+      defeatV100BossForObjectiveProof: () => {
+        const g = gameRef.current;
+        if (![3, 30].includes(g.definition.missionConfig?.v100StageNumber)
+          || g.over || g.bossDefeated || g.bossDefeatPending) return null;
+        const boss = g.fighters.find(fighter => fighter.side === "zombie"
+          && fighter.kind === g.definition.bossEnemyKind && fighter.hp > 0
+          && fighter.combatReady && !fighter.gateEntering);
+        if (!boss) return null;
+        // Local developer boundary fixture only: leave waves, reinforcements,
+        // base HP and victory untouched; the real frame handles the death.
+        const before = { bossId: boss.id, hp: boss.hp, barricadeHp: g.barricadeHp,
+          eventIndex: g.eventIndex, pending: g.enemySpawn.pending.length };
+        boss.hp = 0;
+        return before;
       },
       prepareBossFoundationProof: (kind: "takuya" | "gate-eater" | "kurome" | "mother" | "ooguchi" | "gairen" | "futago") => {
         const g = gameRef.current;
@@ -24396,8 +24411,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 ? `${defeatedBossName}撃破 — 残存感染体を掃討`
                 : v100CorporateControlLabel(g.definition)
                 ? `${defeatedBossName}撃破 — ${v100CorporateControlLabel(g.definition)}の防護を解除`
+                : g.definition.missionConfig.v100StageNumber === 30
+                ? `${defeatedBossName}撃破 — 残敵を掃討`
                 : g.definition.missionConfig.v100StageNumber === 3
-                ? "TAKUYA撃破 — 残存感染体を掃討"
+                ? `${defeatedBossName}撃破 — 残存感染体を掃討`
                 : fighter.kind === "takuya"
                 ? "TAKUYA撃破 — 感染拠点が露出"
                 : `${defeatedBossName}撃破 — 感染核が露出`;
@@ -24405,6 +24422,11 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaDefeat);
               if (g.definition.operationCategory === "outbreak") {
                 emitBattleBark(g, "victory", "guide", `outbreak-boss-down-${fighter.kind}`);
+              } else if (g.definition.missionConfig.v100StageNumber === 30) {
+                // This route ends after reinforcements, not after core damage.
+                // Keep the existing speaker/line; do not announce completion
+                // or tell players to advance into an exposed base.
+                emitBattleBark(g, "takuya-down", "crawler", "tactical", "takuya-down-02");
               } else if (g.definition.missionConfig.v100StageNumber === 3) {
                 emitBattleBark(g, "takuya-down", "crawler", "tactical");
               } else if (fighter.kind === "takuya") {
@@ -24968,7 +24990,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   const isStationPlatformAssault = activeBattlefieldStageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM && hud.missionType === "assault";
   const currentNodeProfile = externalSession ? V100_NODE_PROFILES[activeBattlefieldStageId] : null;
   const defenseObjective = v100DefenseStatus(gameRef.current.definition, gameRef.current);
-  const phaseName = defenseObjective ? phaseBannerForBattle(gameRef.current.definition, hud.phase) : hud.missionType === "escort"
+  const isFinalDefense = gameRef.current.definition.missionConfig.v100StageNumber === 30;
+  const phaseName = isFinalDefense && gameRef.current.bossDefeated ? "残敵を掃討"
+    : defenseObjective ? phaseBannerForBattle(gameRef.current.definition, hud.phase) : hud.missionType === "escort"
     ? gameRef.current.definition.missionConfig.convoyInterception === true
       ? hud.phase === 1 ? "追跡" : hud.phase === 2 ? "包囲" : "確保"
       : hud.phase === 1 ? "発進" : hud.phase === 2 ? "突破" : "護送"
@@ -25231,7 +25255,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               {defenseObjective.recordCount && <div className="defense-room-records" aria-label="収容室の開放記録">{Array.from({length:defenseObjective.recordCount},(_,index)=><span key={index} data-opened={index < defenseObjective.openedRecords} aria-label={`収容室${index+1}・${index < defenseObjective.openedRecords ? "開放済" : "開放待ち"}`} />)}</div>}
               <small>{defenseObjective.statusLabel}</small>
             </div>
-            : stationMissionHud || selectedOutbreakMissionId || isTakuyaInterception
+            : stationMissionHud || selectedOutbreakMissionId || isTakuyaInterception || isFinalDefense
             ? externalSessionActive ? null : <div className="health-hud barrier-health mission-health"><div><span>クリア目標</span><b>{formatBattleText(hud.objective)}</b></div></div>
             : <div className={`health-hud barrier-health ${omegaProtectedObjective && bossHudSide === "boss-hud-left" ? "omega-objective-left" : ""} ${v100CorporateControlLabel(gameRef.current.definition) || gameRef.current.researchCoreTargets ? "v100-control-health" : ""} ${hud.barricadeVulnerable ? "vulnerable" : "reinforced"} ${hud.barricadeHitFlash > 0 ? "hit" : ""}`}><div><span>{hud.missionType === "timed-defense" ? "救援区域" : enemyBaseLabel}</span><b>{hud.missionType === "timed-defense" ? "防衛対象外" : hud.barricadeVulnerable ? `${Math.ceil(hud.barricadeHp)} / ${hud.barricadeMaxHp}` : "防護中"}</b></div><i><em style={{ width: `${barricadePct}%` }} /></i>{hud.barricadeVulnerable && <small>{barricadeCondition}</small>}</div>}
           {!externalSessionActive && started && !end && hud.threat > .55 && <div className={`crawler-alert ${hud.threat > .82 ? "imminent" : ""} ${hud.bossMax > 0 && bossHudSide === "boss-hud-left" ? "crawler-alert-right" : ""}`}><b>{battleStageLabel} 警戒</b><span>{hud.threat > .82 ? "接触寸前" : "接近中"}</span></div>}

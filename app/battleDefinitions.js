@@ -155,7 +155,7 @@ export function objectiveForBattle(definition, state) {
       : "警備部隊を迎撃（最終ウェーブで防護解除）";
   }
   if (definition.missionConfig?.v100StageNumber === 29) return researchCoreObjective(state.researchCoreTargets);
-  if (definition.missionConfig?.v100StageNumber === 3) {
+  if ([3, 30].includes(definition.missionConfig?.v100StageNumber)) {
     return state.bossDefeated ? "残存感染体を掃討" : definition.objective;
   }
   const defense = v100DefenseStatus(definition, state);
