@@ -34,6 +34,6 @@ export function V100PlayerMenu({ settings, busy, onApply, onClose, onData, onLog
         </div>
       </fieldset>}
     </div>
-    {tab === "settings" && <div className="v100-menu-footer"><span role="status">{failed ? "設定を保存できませんでした。もう一度お試しください。" : saved ? "設定を保存しました。" : "変更した設定は「設定を保存」で反映します。"}</span><button type="button" className="v100-primary" disabled={busy} onClick={() => void apply()}>設定を保存</button></div>}
+    {tab === "settings" && <div className="v100-menu-footer"><span role="status">{failed ? "設定を保存できなかった。もう一度「設定を保存」を押そう。" : saved ? "設定を保存した。" : "好みに合わせたら「設定を保存」を押そう。"}</span><button type="button" className="v100-primary" disabled={busy} onClick={() => void apply()}>設定を保存</button></div>}
   </section></div>;
 }

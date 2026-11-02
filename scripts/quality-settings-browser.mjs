@@ -44,7 +44,7 @@ try{
  await menu.getByRole('checkbox',{name:/演出の動きを抑える|会話・ムービーの動きを抑える/}).check();
  await menu.getByRole('checkbox',{name:'読んだ会話を自動でスキップ',exact:true}).check();
  for(const [slider,value] of [[menu.getByRole('slider',{name:'BGMの音量',exact:true}),41],[menu.getByRole('slider',{name:/効果音と.*ボイスの音量/}),32]]){await slider.press('Home');for(let n=0;n<value;n++)await slider.press('ArrowRight');}
- await menu.getByRole('button',{name:'設定を保存',exact:true}).click();await menu.getByRole('status').filter({hasText:'設定を保存しました。'}).waitFor();
+ await menu.getByRole('button',{name:'設定を保存',exact:true}).click();await menu.getByRole('status').filter({hasText:/^設定を保存(?:しました|した)。$/u}).waitFor();
  const saved=await readSave();assert.deepEqual(progress(saved),progress(before));assert.deepEqual(saved.settings,{...before.settings,bgmVolume:.41,sfxVolume:.32,graphicsQuality:'power-save',reducedMotion:true,autoSkipReadStory:true});
  await page.reload();await enter();assert.equal(await page.locator(campaign?'#v100-campaign':'.v100-start-screen').getAttribute(campaign?'data-v100-reduced-motion':'data-reduced-motion'),'true');await page.getByRole('button',{name:campaign?'メニュー':'設定',exact:true}).click();
  assert.equal(await menu.getByRole('combobox').inputValue(),'power-save');assert.equal(await menu.getByRole('checkbox',{name:/演出の動きを抑える|会話・ムービーの動きを抑える/}).isChecked(),true);assert.equal(await menu.getByRole('checkbox',{name:'読んだ会話を自動でスキップ',exact:true}).isChecked(),true);const reloaded=await readSave();assert.deepEqual(progress(reloaded),progress(saved));assert.deepEqual(reloaded.settings,saved.settings);await page.screenshot({path:path.join(out,'saved-reloaded.png')});

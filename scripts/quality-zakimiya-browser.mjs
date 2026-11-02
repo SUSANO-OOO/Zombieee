@@ -110,7 +110,12 @@ try {
       const shown=await portrait.evaluate(img=>({src:img.getAttribute('src'),width:img.getBoundingClientRect().width,height:img.getBoundingClientRect().height,naturalWidth:img.naturalWidth}));
       const assetExpression=['gantetsu','king'].includes(kind)?'determined':expression;
       const revision=['babayaga','kumaverson','tatara','gantetsu','musashi','ikura','segawa','president','commander'].includes(kind)?'stage-r1':'quality-r1';
-      const expected=`/art/v100/portraits/${kind}-${assetExpression}-${revision}.webp`;
+      const sceneTag=V100_STORY_EVENTS[eventId].nodes[nodeIndex].sceneTag;
+      const expected=kind==='kumaverson'&&expression==='warm'&&['daily','soup'].includes(sceneTag)
+        ?'/art/v100/portraits/kumaverson-cooking-warm-stage-r1.webp'
+        :kind==='zakimiya'&&expression==='warm'&&sceneTag==='soup'
+          ?'/art/v100/portraits/zakimiya-family-warm-quality-r1.webp'
+          :`/art/v100/portraits/${kind}-${assetExpression}-${revision}.webp`;
       assert.equal(shown.src,expected);
       assert.ok(shown.width>100&&shown.height>100);
       await page.screenshot({path:path.join(out,`${label}.png`)});

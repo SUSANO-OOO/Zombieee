@@ -56,7 +56,7 @@ export function V100EquipmentView({ save, onBack, onPurchase, onUpgrade, onEquip
       ["personal", "個人装備"], ["tactical", "部隊装備"], ["shop", "補給所"],
     ] as const).map(([id, label]) => <button type="button" key={id} aria-pressed={tab === id} onClick={() => setTab(id)}>{label}</button>)}</nav><button type="button" onClick={onBack}>支援へ</button></div>
     {tab !== "shop" && <div className="v100-equipment-assignment">
-      {tab === "personal" ? <label>装備するユニット<select value={selectedUnit} onChange={event => setUnitId(event.target.value)}>{UNITS.filter(unit => save.ownedUnitIds.includes(unit.id)).map(unit => <option key={unit.id} value={unit.id}>{unit.displayName}</option>)}</select></label> : <span>部隊全員に適用 / 2枠</span>}
+      {tab === "personal" ? <label>装備する仲間<select value={selectedUnit} onChange={event => setUnitId(event.target.value)}>{UNITS.filter(unit => save.ownedUnitIds.includes(unit.id)).map(unit => <option key={unit.id} value={unit.id}>{unit.displayName}</option>)}</select></label> : <span>部隊全員に効果 / 2枠</span>}
       {[0, 1].map(slot => <label key={slot}>枠 {slot + 1}<select aria-label={`装備枠 ${slot + 1}`} value={slots[slot] ?? ""} onChange={event => onEquip(tab === "personal" ? selectedUnit : null, slot, event.target.value || null)}>
         <option value="">装備なし</option>{items.map(entry => <option key={entry.id} value={entry.id}>{entry.displayName}</option>)}
       </select></label>)}

@@ -169,8 +169,8 @@ try {
           await withCase(browser, engine, viewport, "legacy-title-popup-and-older-restore", { label: "validated legacy played-history fixture; actual production UI", legacySerialized }, async (page, record) => {
             const popup = page.getByRole("dialog", { name: "新しい戦闘記録を開始しました", exact: true });
             await popup.waitFor();
-            assert.ok((await popup.innerText()).includes("付与CAPS: 180"));
-            assert.ok((await popup.innerText()).includes("新しいCAPS残高: 180"));
+            assert.match(await popup.innerText(), /(?:付与|受け取った)CAPS: 180/u);
+            assert.match(await popup.innerText(), /(?:新しいCAPS残高|現在のCAPS): 180/u);
             await page.waitForFunction(key => JSON.parse(localStorage.getItem(key)).legacy.popupAcknowledged === true, key);
             await ready(page);
             assert.equal((await saveAt(page)).caps, 180);

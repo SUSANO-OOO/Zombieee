@@ -16,6 +16,9 @@
   top: calc(var(--portrait-head-top) + var(--portrait-head-size) * var(--portrait-top-factor));
   width: calc(var(--portrait-head-size) * var(--portrait-width-factor));
   height: auto;
+  /* Filtering the transparent image can leave it translucent in WebKit.
+   * Keep the image opaque; the secondary frame still controls speaker emphasis. */
+  filter: none;
   transform: translateX(calc(-1 * var(--portrait-face-center)));
 }
 #v100-campaign .v100-event-heading { display: flex; align-items: center; gap: 12px; padding-right: 84px; }

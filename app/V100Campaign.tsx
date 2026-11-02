@@ -134,7 +134,7 @@ function formatReason(reason: string | undefined) {
     "invalid-characters": "使用できない文字が含まれています",
     "too-long": "名前は12文字以内で入力してください",
     "stage-locked": "ひとつ前の作戦をクリアすると、ここへ進める。",
-    "read-replay-required": "再挑戦の戦果から受け取ってください。",
+    "read-replay-required": "報酬は、再挑戦後の戦果画面で受け取れる。",
     "unread-post-story": "まだ読んでいない会話があります。物語の続きへ進もう。",
     "objective-incomplete": "まだ目標が残っている。画面の目標を確認。",
     "vehicle-destroyed": "車両が破壊された。これ以上は出撃できない。",
@@ -155,15 +155,15 @@ function formatReason(reason: string | undefined) {
     "invalid-mode-run": "いまの作戦と保存内容が合っていない。ステージ画面へ戻って確認しよう。",
     "equipment-unavailable": "この装備は、いまは購入できない。",
     "equipment-locked": "指定の作戦をクリアすると、この装備を買える。",
-    "equipment-not-owned": "先に装備を取得してください。",
-    "equipment-cap": "この装備は所持上限です。",
-    "stale-equipment": "装備情報が更新されました。現在の所持数と強化段階をご確認ください。",
-    "invalid-equipment-slot": "この枠には装備できません。",
-    "equipment-in-use": "同じ装備を重ねて装着できません。別のユニットが使用中の場合は追加購入するか外してください。",
-    "unknown-support": "支援情報を読み込めませんでした。",
+    "equipment-not-owned": "まだ持っていない装備だ。手持ちの装備から選ぼう。",
+    "equipment-cap": "この装備は、これ以上持てない。",
+    "stale-equipment": "装備の数か強化段階が変わっている。選び直してから試そう。",
+    "invalid-equipment-slot": "この枠には付けられない。装備の種類を確認しよう。",
+    "equipment-in-use": "同じ装備は重ねて付けられない。ほかの仲間が使っているなら、もう1個用意するか、その仲間から外そう。",
+    "unknown-support": "支援を読み込めなかった。支援画面へ戻って選び直そう。",
     "invalid-result": "戦果の内容を確認できませんでした。保存データは保持しています。",
     "duplicate-result": "この戦果は確定済みです。報酬は重ねて受け取れません。",
-    "pending-result-exists": "先に保存済みの戦果を確定してください。",
+    "pending-result-exists": "前の戦闘の結果がまだ残っている。先に戦果画面へ進もう。",
     "pending-result-missing": "確定する戦果が見つかりません。保存データを確認してください。",
     "pending-result-mismatch": "保存済みの戦果と一致しません。保存データは保持しています。",
   };
@@ -1132,7 +1132,7 @@ export function V100Campaign() {
       {creditsOpen && flow.phase === "name" && <div className="v100-modal-backdrop" role="presentation"><section className="v100-modal v100-credits-modal" role="dialog" aria-modal="true" aria-labelledby="v100-credits-title"><div className="v100-panel-heading"><div><span className="v100-kicker">{RELEASE_LABEL}</span><h2 id="v100-credits-title">権利・クレジット</h2></div><button type="button" onClick={() => setCreditsOpen(false)}>閉じる</button></div><V100AssetCredits expanded /></section></div>}
       {replayEventId === "v100:event:credits" && replayEvent ? <div className="v100-staff-roll-replay">{replayFinale && V100_STORY_POST_CREDITS_FILM ? <V100PostCreditsFilm settings={save.settings} onComplete={() => { setReplayFinale(false); setReplayEventId(null); return true; }} /> : <V100StaffRoll nodes={replayEvent.nodes} playerName={save.playerName} settings={save.settings} onComplete={() => { if(V100_STORY_POST_CREDITS_FILM) setReplayFinale(true); else setReplayEventId(null); return true; }} />}</div> : replayEvent && <ReplayView event={replayEvent} node={replayNode} index={replayPage.nodeIndex} leadingNodes={replayPage.leadingNodes} onNext={() => setReplayNodeIndex(replayPage.endIndex + 1)} onClose={() => setReplayEventId(null)} />}
       {giftError && !giftPopup && <button type="button" onClick={() => { setGiftError(false); setGiftWake(value => value + 1); }}>特典の保存を再試行</button>}
-      {giftPopup && giftScreen && <div className="v100-modal-backdrop"><section ref={giftDialogRef} className="v100-modal v100-gift-modal" role="dialog" aria-modal="true" aria-labelledby="v100-gift-title" aria-describedby="v100-gift-amount v100-gift-balance"><span className="v100-kicker">引き継ぎ特典</span><h2 id="v100-gift-title">新しい戦闘記録を開始しました</h2><p>これまでのプレイへの感謝として、180 CAPSを付与しました。過去の記録は保持しています。</p><div className="v100-gift-balances"><p id="v100-gift-amount">付与CAPS: 180</p><p id="v100-gift-balance">新しいCAPS残高: {giftPopup.balance}</p></div>{giftError ? <button type="button" onClick={() => setGiftError(false)}>表示の保存を再試行</button> : <button className="v100-primary" type="button" disabled={!giftPopup.acknowledged || saveBusy} onClick={() => setGiftPopup(null)}>確認する</button>}</section></div>}
+      {giftPopup && giftScreen && <div className="v100-modal-backdrop"><section ref={giftDialogRef} className="v100-modal v100-gift-modal" role="dialog" aria-modal="true" aria-labelledby="v100-gift-title" aria-describedby="v100-gift-amount v100-gift-balance"><span className="v100-kicker">引き継ぎ特典</span><h2 id="v100-gift-title">新しい戦闘記録を開始しました</h2><p>引き継ぎのお礼に、180 CAPSを受け取った。これまでのプレイ記録も残っている。</p><div className="v100-gift-balances"><p id="v100-gift-amount">受け取ったCAPS: 180</p><p id="v100-gift-balance">現在のCAPS: {giftPopup.balance}</p></div>{giftError ? <button type="button" onClick={() => setGiftError(false)}>表示の保存を再試行</button> : <button className="v100-primary" type="button" disabled={!giftPopup.acknowledged || saveBusy} onClick={() => setGiftPopup(null)}>確認する</button>}</section></div>}
     </main>
   );
 }
@@ -1457,14 +1457,14 @@ function SupportVehicleView({ save, vehicleOnly, returnLabel, onBack, onPurchase
     </div>
   </section>;
   return <section className="v100-panel v100-management-panel v100-loadout-screen v100-command-supply" data-v100-surface="support-vehicle" aria-label="出撃装備">
-    <div className="v100-panel-heading v100-management-heading"><div><h2>戦術支援</h2><p>1種を装備。戦闘中は物資を使用。CAPSとは別で、敵撃破で補充。</p></div><button type="button" onClick={onBack}>{returnLabel}</button></div>
+    <div className="v100-panel-heading v100-management-heading"><div><h2>戦術支援</h2><p>支援を1つ選んで装備しよう。戦闘中は「物資」で設置できる。物資は敵を倒すと増える。</p></div><button type="button" onClick={onBack}>{returnLabel}</button></div>
     <div className="v100-support-management-list">{V100_SUPPORTS.map(support => {
       const owned = save.ownedSupportIds.includes(support.id), unlocked = save.supportPurchaseUnlockedIds.includes(support.id), selected = save.equippedSupportId === support.id;
       return <article className={"v100-support-management-card game-loadout-card " + (selected ? "selected " : "") + (!unlocked ? "locked " : "") + (support.id === "support-incendiary-drum" ? "is-incendiary" : support.id === "support-healing" ? "is-medical" : "is-barrier")} key={support.id}>
         <span className="v100-support-art v100-support-illustration" aria-hidden="true"><img src={support.id === "support-healing" ? V100_PREPARATION_ART.medical : support.id === "support-incendiary-drum" ? V100_PREPARATION_ART.incendiary : V100_PREPARATION_ART.explosive} alt="" />{!unlocked && <V100LockChain />}</span>
         <div className="v100-loadout-card-copy"><h3>{support.displayName}</h3><p className="v100-support-purpose">{v100SupportPurposeFor(support.id)}</p><p>物資 {support.battleCost} / 再使用 {support.cooldownSeconds}秒</p>{!unlocked && <p className="v100-unlock-condition">S{String(support.unlockStageNumber).padStart(2, "0")}クリアで解放</p>}{unlocked && !owned && save.caps < support.unlockCostCaps && <p className="v100-price-shortage">あと {support.unlockCostCaps - save.caps} CAPS</p>}</div>
         {owned ? <button type="button" className={selected ? "selected" : ""} data-ui-sound="transaction" onClick={() => onEquipSupport(selected ? null : support.id)}>{selected ? "装備中" : "装備"}</button>
-          : unlocked ? <button type="button" data-ui-sound="transaction" onClick={() => onPurchaseSupport(support.id)} disabled={save.caps < support.unlockCostCaps}>{support.unlockCostCaps} CAPSで取得</button>
+          : unlocked ? <button type="button" data-ui-sound="transaction" onClick={() => onPurchaseSupport(support.id)} disabled={save.caps < support.unlockCostCaps}>{support.unlockCostCaps} CAPSで購入</button>
             : <span className="v100-state-badge locked">未解放</span>}
       </article>;
     })}</div>
@@ -1558,7 +1558,7 @@ function ResultView({ result, previousResult, previousBestStars, alreadyComplete
       </div>
     </div>
     <div className="v100-result-footer">
-      {report && <details className="v100-battle-report"><summary>戦闘記録 / 第{report.wave}波・撃破{report.kills}</summary><div><p>同じ仲間が何度出撃しても、戦績はまとめて表示します。自分を回復した分も含みます。支援と車両のダメージは対象外です。</p>{report.units.length > 0 ? <table><thead><tr><th scope="col">ユニット</th><th scope="col">与ダメージ</th><th scope="col">被ダメージ</th><th scope="col">回復したHP</th></tr></thead><tbody>{report.units.map(unit => <tr key={unit.unitId}><th scope="row">{UNIT_BY_ID.get(unit.unitId)?.displayName}</th><td>{Math.round(unit.damage)}</td><td>{Math.round(unit.damageTaken)}</td><td>{Math.round(unit.healing)}</td></tr>)}</tbody></table> : <p>ユニットの実績は記録されていません。</p>}</div></details>}
+      {report && <details className="v100-battle-report"><summary>戦闘記録 / 第{report.wave}波・撃破{report.kills}</summary><div><p>同じ仲間が何度出撃しても、戦績はまとめて表示します。自分を回復した分も含みます。支援と車両のダメージは対象外です。</p>{report.units.length > 0 ? <table><thead><tr><th scope="col">ユニット</th><th scope="col">与ダメージ</th><th scope="col">被ダメージ</th><th scope="col">回復したHP</th></tr></thead><tbody>{report.units.map(unit => <tr key={unit.unitId}><th scope="row">{UNIT_BY_ID.get(unit.unitId)?.displayName}</th><td>{Math.round(unit.damage)}</td><td>{Math.round(unit.damageTaken)}</td><td>{Math.round(unit.healing)}</td></tr>)}</tbody></table> : <p>この戦闘での仲間の戦績はありません。</p>}</div></details>}
       <div className="v100-result-actions">{won && canCollectReadReplay ? <><button className="v100-primary" type="button" data-v100-reward-caps={rewardCaps + bonusStar2 + bonusStar3} onClick={onCollectReadReplay}>報酬を受け取る <span className="v100-collect-reward-amount">+{rewardCaps + bonusStar2 + bonusStar3} CAPS</span><small>既読の会話を省略してステージ選択へ</small></button><button type="button" onClick={onReadConversation}>会話を読み返す</button></> : <button className="v100-primary" type="button" onClick={won ? onContinue : onRetry}>{won ? "次の場面へ" : "同じ編成で再挑戦"}</button>}{!won && <><button type="button" onClick={onFormation}>編成を見直す</button><button type="button" onClick={onMap}>ステージ選択へ</button></>}</div>
     </div>
   </section>;

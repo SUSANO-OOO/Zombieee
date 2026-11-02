@@ -277,9 +277,9 @@ try {
         const applyBgm = async enabled => {
           await page.getByRole("button", { name: "メニュー", exact: true }).click();
           const menu = page.getByRole("dialog", { name: "メニュー", exact: true });
-          await menu.getByRole("checkbox", { name: "BGM", exact: true }).setChecked(enabled);
+          await menu.getByRole("checkbox", { name: /^(?:BGM|音楽（BGM）)$/u }).setChecked(enabled);
           await menu.getByRole("button", { name: "設定を保存", exact: true }).click();
-          await menu.getByRole("status").filter({ hasText: "設定を保存しました。" }).waitFor();
+          await menu.getByRole("status").filter({ hasText: /^設定を保存(?:しました|した)。$/u }).waitFor();
           await menu.getByRole("button", { name: "ゲームに戻る", exact: true }).click();
         };
         await applyBgm(true);
