@@ -134,7 +134,7 @@ function formatReason(reason: string | undefined) {
     "invalid-characters": "使用できない文字が含まれています",
     "too-long": "名前は12文字以内で入力してください",
     "stage-locked": "ひとつ前の作戦をクリアすると、ここへ進める。",
-    "read-replay-required": "報酬は、再挑戦後の戦果画面で受け取れる。",
+    "read-replay-required": "初回クリアの報酬は、続きの会話を読んでから受け取れる。「次の場面へ」進もう。",
     "unread-post-story": "まだ読んでいない会話があります。物語の続きへ進もう。",
     "objective-incomplete": "まだ目標が残っている。画面の目標を確認。",
     "vehicle-destroyed": "車両が破壊された。これ以上は出撃できない。",
@@ -144,7 +144,7 @@ function formatReason(reason: string | undefined) {
     "not-unlocked": "この装備はまだ買えない。先の作戦をクリアして解放しよう。",
     "insufficient-caps": "CAPSが足りない。作戦のクリア報酬で補充できる。",
     "support-not-owned": "使う支援をまだ持っていない。支援画面で手に入れよう。",
-    "upgrade-cap": "この装備は最大まで強化済み。",
+    "upgrade-cap": "これ以上は強化できない。最大まで強化済みだ。",
     "level-cap": "今の育成上限に到達。先の作戦をクリアすると、さらに育てられる。",
     "invalid-level-target": "育成するレベルを選び直そう。",
     "stale-level": "レベルが変わっている。いまの表示を確認してから、もう一度選ぼう。",
@@ -171,14 +171,15 @@ function formatReason(reason: string | undefined) {
 }
 
 function storageFailureMessage(reason: string | undefined) {
-  if (reason === "stale-writer" || reason === "popup-owned-by-another-tab") return "別のタブでセーブが更新されました。現在の画面を保持しています。再読み込みして確認してください。";
+  if (reason === "stale-writer") return "別のタブでセーブが更新された。この画面の操作は保存していない。再読み込みして続けよう。";
+  if (reason === "popup-owned-by-another-tab") return "別のタブで引き継ぎ特典を表示している。そのタブで確認を済ませてから、もう一度試そう。";
   if (reason === "invalid-export-size") return "ファイルが空か、容量が大きすぎます。このゲームから書き出したセーブファイルを選んでください。現在のセーブは変更していません。";
   if (["invalid-export-json", "invalid-export-envelope"].includes(reason ?? "")) return "このファイルは復元できません。このゲームから書き出したセーブファイルを選んでください。現在のセーブは変更していません。";
   if (reason === "invalid-inner-save") return "セーブの内容を確認できませんでした。別のバックアップを選んでください。現在のセーブは変更していません。";
   if (reason === "legacy-history-not-eligible") return "このファイルでは旧版のプレイ履歴を確認できません。旧版から書き出したデータを選んでください。現在の進行と残高は変更していません。";
   if (reason === "recovery-source-changed") return "復旧対象のセーブが更新されました。再読み込みして確認してください。";
   if (reason === "recovery-required") return "セーブの復旧が必要です。再読み込みして復旧画面を確認してください。";
-  return "セーブを書き込めませんでした。現在の画面と進行を保持します。";
+  return "保存を確認できなかった。画面はそのまま残している。閉じずに、もう一度試そう。";
 }
 
 function portraitFor(owner: string | null | undefined) {
@@ -411,9 +412,9 @@ export function V100Campaign() {
       }
       publishSave(outcome.save);
       publish?.(outcome.save, outcome);
-      if (!outcome.mirrorSaved) setNotice("セーブは保存済みです。予備コピーを作れませんでした。データ管理から書き出してください。");
+      if (!outcome.mirrorSaved) setNotice("セーブ本体は保存できた。予備コピーを最新にできなかったので、データ管理からセーブを書き出そう。");
       return outcome.save;
-    } catch { setNotice("セーブを書き込めませんでした。現在の画面と進行を保持します。"); return null; }
+    } catch { setNotice("保存を確認できなかった。画面はそのまま残している。閉じずに、もう一度試そう。"); return null; }
     finally {
       saveBusyRef.current = false;
       // Balance the immediate publication even when React batches true -> false
@@ -430,7 +431,7 @@ export function V100Campaign() {
   const loadSave = useCallback(async (isActive: () => boolean = () => true) => {
     const loaded = await readV100BrowserSave();
     if (!isActive()) return;
-    if (loaded.ok && loaded.save) { adoptSave(loaded.save); if (!loaded.mirrorSaved) setNotice("セーブは保存済みです。予備コピーを作れませんでした。"); }
+    if (loaded.ok && loaded.save) { adoptSave(loaded.save); if (!loaded.mirrorSaved) setNotice("セーブ本体は保存できた。予備コピーを最新にできなかったので、データ管理からセーブを書き出そう。"); }
     else { setRecovery(loaded.recovery); setLoadFailure(true); }
   }, [adoptSave]);
   useEffect(() => {
@@ -523,7 +524,12 @@ export function V100Campaign() {
       const acknowledged = await runStorage(() => acknowledgeV100BrowserGift(globalThis, {
         ownerId: saveOwnerId, claimId: giftPopup.claimId, screen: giftScreen, painted: true,
       }), () => setGiftPopup(current => current?.claimId === giftPopup.claimId ? { ...current, acknowledged: true } : current));
-      if (!acknowledged && active) setGiftError(true);
+      if (!acknowledged && active) {
+        setGiftError(true);
+        // The gift is already committed; explain this acknowledgement-only
+        // failure inside its dialog instead of also showing a generic save error.
+        setNotice("");
+      }
     };
     frame = requestAnimationFrame(() => { void observePaint(); });
     return () => { active = false; cancelAnimationFrame(frame); };
@@ -874,7 +880,7 @@ export function V100Campaign() {
   const downloadBackup = () => downloadSaveFile(save, "nishijin-campaign-v100-backup.json");
   const downloadNewGameBackup = async () => {
     const archive = await readV100NewGameArchive();
-    if (!archive.ok || !archive.save) { setNotice("「初めから」を選ぶ前のバックアップはありません。"); return; }
+    if (!archive.ok || !archive.save) { setNotice(archive.reason === "new-game-archive-unavailable" ? "「初めから」を選ぶ前のバックアップは見つからなかった。" : "バックアップを読み込めなかった。もう一度試そう。"); return; }
     downloadSaveFile(archive.save, "nishijin-campaign-v100-before-new-game.json");
   };
   const beginNewCampaign = async () => {
@@ -1132,7 +1138,7 @@ export function V100Campaign() {
       {creditsOpen && flow.phase === "name" && <div className="v100-modal-backdrop" role="presentation"><section className="v100-modal v100-credits-modal" role="dialog" aria-modal="true" aria-labelledby="v100-credits-title"><div className="v100-panel-heading"><div><span className="v100-kicker">{RELEASE_LABEL}</span><h2 id="v100-credits-title">権利・クレジット</h2></div><button type="button" onClick={() => setCreditsOpen(false)}>閉じる</button></div><V100AssetCredits expanded /></section></div>}
       {replayEventId === "v100:event:credits" && replayEvent ? <div className="v100-staff-roll-replay">{replayFinale && V100_STORY_POST_CREDITS_FILM ? <V100PostCreditsFilm settings={save.settings} onComplete={() => { setReplayFinale(false); setReplayEventId(null); return true; }} /> : <V100StaffRoll nodes={replayEvent.nodes} playerName={save.playerName} settings={save.settings} onComplete={() => { if(V100_STORY_POST_CREDITS_FILM) setReplayFinale(true); else setReplayEventId(null); return true; }} />}</div> : replayEvent && <ReplayView event={replayEvent} node={replayNode} index={replayPage.nodeIndex} leadingNodes={replayPage.leadingNodes} onNext={() => setReplayNodeIndex(replayPage.endIndex + 1)} onClose={() => setReplayEventId(null)} />}
       {giftError && !giftPopup && <button type="button" onClick={() => { setGiftError(false); setGiftWake(value => value + 1); }}>特典の保存を再試行</button>}
-      {giftPopup && giftScreen && <div className="v100-modal-backdrop"><section ref={giftDialogRef} className="v100-modal v100-gift-modal" role="dialog" aria-modal="true" aria-labelledby="v100-gift-title" aria-describedby="v100-gift-amount v100-gift-balance"><span className="v100-kicker">引き継ぎ特典</span><h2 id="v100-gift-title">新しい戦闘記録を開始しました</h2><p>引き継ぎのお礼に、180 CAPSを受け取った。これまでのプレイ記録も残っている。</p><div className="v100-gift-balances"><p id="v100-gift-amount">受け取ったCAPS: 180</p><p id="v100-gift-balance">現在のCAPS: {giftPopup.balance}</p></div>{giftError ? <button type="button" onClick={() => setGiftError(false)}>表示の保存を再試行</button> : <button className="v100-primary" type="button" disabled={!giftPopup.acknowledged || saveBusy} onClick={() => setGiftPopup(null)}>確認する</button>}</section></div>}
+      {giftPopup && giftScreen && <div className="v100-modal-backdrop"><section ref={giftDialogRef} className="v100-modal v100-gift-modal" role="dialog" aria-modal="true" aria-labelledby="v100-gift-title" aria-describedby="v100-gift-amount v100-gift-balance"><span className="v100-kicker">引き継ぎ特典</span><h2 id="v100-gift-title">引き継ぎ特典を受け取った</h2><p>引き継ぎのお礼に、180 CAPSを受け取った。これまでのプレイ記録も残っている。</p><div className="v100-gift-balances"><p id="v100-gift-amount">受け取ったCAPS: 180</p><p id="v100-gift-balance">現在のCAPS: {giftPopup.balance}</p></div>{giftError ? <><p role="status">180 CAPSは受け取り済み。お知らせを確認した記録を保存できなかった。</p><button type="button" onClick={() => setGiftError(false)}>確認をやり直す</button></> : <button className="v100-primary" type="button" disabled={!giftPopup.acknowledged || saveBusy} onClick={() => setGiftPopup(null)}>確認する</button>}</section></div>}
     </main>
   );
 }
@@ -1476,14 +1482,14 @@ function DataManagementView({ save, notice, onBack, onBackup, onNewGameBackup, o
     <div className="v100-panel-heading"><div><span className="v100-kicker">戦闘記録</span><h2 id="v100-data-title">データ管理</h2></div><button type="button" onClick={onBack}>閉じる</button></div>
     <div className="v100-data-scroll" tabIndex={0} aria-label="保存内容と過去のプレイ履歴">
       {notice && <p className="v100-notice v100-data-feedback" role="status">{notice}</p>}
-      <p>現在の進行はブラウザ内のセーブデータへ保存されています。復元する時は、このゲームから書き出したセーブファイルを選んでください。</p>
+      <p>この端末のブラウザにセーブしている。別の場所にも残すなら「セーブを書き出す」を押そう。</p>
       <dl className="v100-data-summary"><div><dt>主人公</dt><dd>{save.playerName}</dd></div><div><dt>クリア済みステージ</dt><dd>{save.completedStageIds.length} / {V100_STAGES.length}</dd></div><div><dt>保存状態</dt><dd>保管済み</dd></div><div><dt>最終更新</dt><dd>{new Date(save.updatedAt).toLocaleString("ja-JP")}</dd></div></dl>
       <article><h3>過去のプレイ履歴</h3><p>旧版の書き出しデータで引き継ぎ特典の対象か確認します。現在の進行・残高・設定は変更しません。</p><label>旧版のプレイ履歴を選ぶ<input type="file" accept="application/json,.json" onChange={event => onLegacyHistory(event.currentTarget.files?.[0])} /></label></article>
       <button type="button" onClick={() => void onNewGameBackup()}>「初めから」の直前のセーブを書き出す</button>
       <div data-v100-pwa-storage />
     </div>
     <div className="v100-data-actions"><button className="v100-primary" type="button" onClick={onBackup}>セーブを書き出す</button><label className="v100-file-button">セーブを復元<input type="file" accept="application/json" onChange={(event) => onImport(event.currentTarget.files?.[0])} /></label></div>
-    <small className="v100-data-note">復元に失敗した場合、現在のセーブは変更されません。</small>
+    <small className="v100-data-note">復元すると、進行・育成・装備・CAPS・設定が、選んだファイルの状態に戻る。引き継ぎ特典の受取済み記録は残り、重ねては受け取れない。復元に失敗したときは、現在のセーブを変更しない。</small>
   </section></div>;
 }
 

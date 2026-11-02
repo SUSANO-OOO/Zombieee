@@ -695,7 +695,7 @@ try {
         saveTransition.preserved
         && pendingSave.oldRaw === oldSave.raw
         && pendingSave.legacyWrites.length === 0
-        && await page.getByRole("dialog", { name: "新しい戦闘記録を開始しました", exact: true }).count() === 0
+        && await page.getByRole("dialog", { name: /^(?:新しい戦闘記録を開始しました|引き継ぎ特典を受け取った)$/u }).count() === 0
       ), { saveTransition, legacySavePreserved: pendingSave.oldRaw === oldSave.raw });
       // From this one verified read onward, all reload/commit/offline/rollback
       // checks continue comparing exact mirror bytes rather than normalizing.
@@ -809,7 +809,7 @@ try {
     && relaunchedSave.raw === oldSave.raw
     && relaunchedV100.raw === beforeUpdateV100.raw
     && relaunchedV100.legacyWrites.length === 0
-    && await page.getByRole("dialog", { name: "新しい戦闘記録を開始しました", exact: true }).count() === 0
+    && await page.getByRole("dialog", { name: /^(?:新しい戦闘記録を開始しました|引き継ぎ特典を受け取った)$/u }).count() === 0
   ), {
     relaunchedWorker: workerSummary(relaunchedWorker),
     legacySavePreserved: relaunchedSave.raw === oldSave.raw,
