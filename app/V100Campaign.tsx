@@ -1160,7 +1160,7 @@ function StoryNodeView({ node, eventId = null, phase = "event", nodeIndex = 0, p
   const secondaryExpression = v100StoryExpressionFor(eventId, nodeIndex, node, secondaryOwner);
   const secondaryPortrait = resolvedPresentation.cinematic ? null : v100EventPortraitPath(secondaryOwner, secondaryExpression, node.sceneTag) ?? portraitFor(secondaryOwner);
   const secondaryPortraitSide = portraitSide === "right" ? "left" : portraitSide === "left" ? "right" : "none";
-  const nodeLabel = node.kind === "dialogue" ? storySpeakerLabel(node.speaker) : node.kind === "player-action" ? "主人公" : node.kind === "battle-marker" ? "ステージ情報" : node.kind === "system" ? "無線記録" : "";
+  const nodeLabel = node.kind === "dialogue" ? storySpeakerLabel(node.speaker) : node.kind === "player-action" ? "主人公" : node.kind === "battle-marker" ? "ステージ情報" : node.kind === "system" ? resolvedPresentation.nodeLabel : "";
   const playerFacingText = publicDisplayText(node.text || "…");
   const exchange = leadingNodes.some(line => line.kind === "dialogue");
   const framingStyle = (owner: string | null | undefined) => v100PortraitFraming(owner) as CSSProperties;

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { access } from "node:fs/promises";
 import { V100_STORY_EVENTS } from "../app/v100StoryEvents.js";
+import { V100_UNITS } from "../app/v100Registry.js";
 import { V100_AUDIO_MANIFEST, PRODUCTION_AUDIO_SCENE_IDS } from "../app/productionAudio.js";
 import { V100_R5_STORY_CUTS, v100StoryDirectionFor } from "../app/v100StoryDirection.js";
 
@@ -9,6 +10,25 @@ import {
   V100_EVENT_PRESENTATION_CATEGORIES,
   v100EventPresentationFor,
 } from "../app/v100EventPresentation.js";
+
+test("all recruited allies get readiness guidance at their actual unlock stage, separate from in-world records", () => {
+  const recruits = V100_UNITS.filter(unit => !unit.initial);
+  assert.equal(recruits.length, 12);
+  for (const unit of recruits) {
+    const eventId = `v100:event:s${String(unit.availabilityStageNumber).padStart(2,'0')}:post`;
+    const node = V100_STORY_EVENTS[eventId].nodes.find(n => n.kind === 'system' && n.text.startsWith(unit.displayName));
+    assert.ok(node,unit.id);
+    assert.match(node.text,/「ユニット」でCAPSを使って支度を整え、編成に加えよう。/u);
+    assert.equal(v100EventPresentationFor({eventId,node}).nodeLabel,'仲間の出撃準備');
+  }
+  const notices = Object.values(V100_STORY_EVENTS).flatMap(event => event.nodes.filter(node => node.kind === 'system' && !node.text.includes('CAPS')));
+  const records = notices.filter(node => /SEG-LAB|都市対応実証|RED PANTHER|TAKUYA-Ω/u.test(node.text));
+  assert.equal(records.length,4);
+  for (const node of records) assert.equal(v100EventPresentationFor({node}).nodeLabel,'記録');
+  const objectives = notices.filter(node => !records.includes(node));
+  assert.equal(objectives.length,8);
+  for (const node of objectives) assert.equal(v100EventPresentationFor({node}).nodeLabel,'次の目的');
+});
 
 test("Producer prologue moves from daily life through crisis, escape and radio scenes", () => {
   const eventId = "v100:event:prologue";
