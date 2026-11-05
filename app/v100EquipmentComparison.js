@@ -30,7 +30,6 @@ export function v100EquipmentComparison(save,{unitId,itemId,slot=0}={}){
   changes.push({key,label,before,after,beforeLabel:formatV100Number(before)+suffix,afterLabel:formatV100Number(after)+suffix,improved:lowerBetter?after<before:after>before});
  };
  for(const [key,label,suffix,lowerBetter]of fields){
-  if(key==='damage'&&current.current.healing>0)continue;
   const scale=key==='defense'?100:1;
   add(key,label,current.current[key]*scale,next.current[key]*scale,suffix,lowerBetter);
  }

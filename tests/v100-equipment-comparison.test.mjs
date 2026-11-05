@@ -42,3 +42,23 @@ test('treatment gear has no invented benefit for a fighter, and tactical opening
  assert.ok(v100EquipmentComparison(save,{unitId:'unit-hachi',itemId:'tactical-supply-cache'}).changes.length>0);
  for(const args of [{unitId:'missing',itemId:'field-machete'},{unitId:'unit-hachi',itemId:'unknown'},{unitId:'unit-hachi',itemId:'field-machete',slot:2}])assert.equal(v100EquipmentComparison(save,args),null);
 });
+
+test('Nao can compare shooting gear without hiding damage gains behind her treatment role',()=>{
+ const save=fixture();save.unitLevels['unit-nao']=1;
+ save.equipment.inventory={'field-machete':1,'rescue-pouch':1};
+ const before=structuredClone(save);
+ const weapon=v100EquipmentComparison(save,{unitId:'unit-nao',itemId:'field-machete'});
+ const equipped=equipV100Equipment(save,{unitId:'unit-nao',equipmentId:'field-machete',slot:0});
+ assert.equal(equipped.applied,true);
+ const damage=weapon.changes.find(change=>change.key==='damage');
+ assert.ok(damage,'Nao shoots normally when no ally needs treatment; her weapon gain must be visible');
+ assert.equal(damage.before,weapon.current.current.damage);
+ assert.equal(damage.after,v100UnitPresentation(equipped.save,'unit-nao').current.damage);
+ assert.ok(damage.after>damage.before);assert.equal(damage.improved,true);
+ assert.equal(weapon.next.current.healing,weapon.current.current.healing);
+ assert.equal(weapon.changes.some(change=>change.key==='healing'),false);
+ const treatment=v100EquipmentComparison(save,{unitId:'unit-nao',itemId:'rescue-pouch'});
+ assert.ok(treatment.changes.some(change=>change.key==='healing'&&change.improved));
+ assert.equal(treatment.changes.some(change=>change.key==='damage'),false);
+ assert.deepEqual(save,before,'both comparisons remain read-only');
+});
