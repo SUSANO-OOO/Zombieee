@@ -178,7 +178,21 @@ export function v177JointPose(kind, sample, runtime, { grounded=false,ownedPose=
   if(actorKey(actor))livingStunPoses.delete(actor);
   if(hitStates.has(state)) {
     const previous=actorKey(actor) ? renderedJointPoses.get(actor) : null;
-    if(previous?.kind!==kind) { rememberRenderedJointPose(actor,kind,null); return null; }
+    if(previous?.kind!==kind) {
+      rememberRenderedJointPose(actor,kind,null);
+      // Feral activation can finish while Mayo is still flashing from a hit.
+      // Its new skeleton has no painted history yet. Start on that skeleton's
+      // current gait instead of borrowing the normal body or the legacy bitmap.
+      // Only a successful draw below may turn this seed into held history.
+      if(kind==='mayo-chan-feral'&&actualActor?.kind==='mayo-chan'
+        &&actualActor.manualAbility?.phase==='feral'&&!actualActor.mayoRetreat){
+        const current=v177JointPose(kind,{requestedState:'idle'},runtime,{grounded,actor:actualActor,world});
+        if(!current)return null;
+        const held={...current,reactionHeld:true};
+        return grounded?v177GroundedJointPose(kind,held,sample,runtime):held;
+      }
+      return null;
+    }
     // The existing rigid recoil still moves the body. Keep its last painted
     // feet, head and weapon instead of snapping to a different static hit row.
     const paintLocomotion=previous.plan.paintLocomotion;
