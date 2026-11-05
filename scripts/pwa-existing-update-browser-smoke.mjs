@@ -532,7 +532,7 @@ async function screenshot(page, label) {
   });
 }
 
-async function acknowledgeLegacyGift(page, oldSave, giftLabel = "新しい戦闘記録を開始しました") {
+async function acknowledgeLegacyGift(page, oldSave, giftLabel = "引き継ぎ特典を受け取った") {
   await waitForV100Ready(page);
   const gift = page.getByRole("dialog", { name: giftLabel, exact: true });
   await gift.waitFor({ state: "visible", timeout: 60_000 });
