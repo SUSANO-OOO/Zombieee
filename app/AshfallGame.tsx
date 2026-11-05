@@ -19594,20 +19594,26 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             }
           }
           const previousRuntimeElapsed = owner.manualAbility.abilityElapsed;
+          const previousAbilityTarget = owner.manualAbility.target;
           const abilityStep = advanceManualAbility(owner.manualAbility, dt);
           owner.manualAbility = abilityStep.runtime as ManualAbilityRuntime;
-          if (g.definition.missionConfig.v100StageNumber
-            && owner.kind === "zakimiya"
+          if (owner.kind === "zakimiya"
+            && previousAbilityPhase === "windup"
             && Number.isFinite(previousRuntimeElapsed)
             && Number.isFinite(owner.manualAbility.abilityElapsed)
             && previousRuntimeElapsed < .4
             && owner.manualAbility.abilityElapsed >= .4) {
-            const target = owner.manualAbility.target;
+            const target = previousAbilityTarget;
             const targetX = Number(target?.x);
             const targetY = Number(target?.y);
             const startedAt = g.time - (owner.manualAbility.abilityElapsed - .4);
             if (Number.isFinite(targetX) && Number.isFinite(targetY) && Number.isFinite(startedAt)) {
-              queueAdvancedAbilityPendingOrigin(g, owner, {
+              playManualAbilityTimelineCue(owner, "throw", owner.x, "molotov-throw", {
+                priority: 80,
+                cooldownMs: 140,
+                maxInstances: 1,
+              });
+              if (g.definition.missionConfig.v100StageNumber) queueAdvancedAbilityPendingOrigin(g, owner, {
                 type: "zakimiya-bottle",
                 targetId: target?.targetId,
                 targetX,
@@ -20012,11 +20018,6 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               } else queueV100AdvancedAbilityEffect(g, { ownerId: owner.id, activationId: owner.manualAbility?.activationId ?? 0, type: "zakimiya-impact", x: event.target.x, y: event.target.y, duration: .6 });
               g.flashOverlay = Math.max(g.flashOverlay, .16);
               g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.airstrikeImpact);
-              playManualAbilityTimelineCue(owner, "throw", owner.x, "molotov-throw", {
-                priority: 80,
-                cooldownMs: 140,
-                maxInstances: 1,
-              });
               playManualAbilityTimelineCue(owner, "impact", event.target.x, "molotov-impact", {
                 priority: 84,
                 cooldownMs: 90,
