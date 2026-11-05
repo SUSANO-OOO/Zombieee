@@ -758,7 +758,7 @@ function stationObjectiveDestination(g: Game, fighter: Fighter) {
   if (g.stageMission.gateEaterDefeated && g.stageMission.researchContainerContained) return null;
   const powerNode = currentPowerNode(g.stageMission, g.definition.missionConfig);
   if (powerNode) {
-    if (g.definition.missionConfig.v100StageNumber) return deviceObjectiveDestination({unit:fighter,humans:g.fighters,node:powerNode,maxX:BARRICADE_X});
+    if (g.definition.missionConfig.v100StageNumber) return deviceObjectiveDestination({unit:fighter,humans:g.fighters,node:powerNode,maxX:BARRICADE_X,nodeY:activeYForContentY(powerNode.y)});
     return {
       x: powerNode.x - 12 - (fighter.id % 3) * 15,
       lane: powerNode.lane as Lane,
@@ -12321,7 +12321,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           initialThreatHp: proof.initialThreatHp,
         };
       },
-      prepareStationObjectiveCombatProof: (solo = false) => {
+      prepareStationObjectiveCombatProof: (solo = false, operatorApproach = false) => {
         const g = gameRef.current;
         if (g.definition.missionType !== STATION_MISSION_TYPES.SEQUENTIAL_SEAL) throw new Error('Device objective proof requires an actual device mission');
         g.fighters = []; g.corpses = []; g.deployQueue = [];
@@ -12339,6 +12339,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           const f = g.fighters[g.fighters.length - 1];
           f.x = node.x + (kind === 'scout' ? 25 : -12); f.y = activeLaneCenters[lane];
           f.lane = lane; f.anchorLane = lane; f.combatReady = true; f.gateEntering = false; f.spawnGrace = 0;
+          if (operatorApproach) {
+            if (kind === 'medic') f.x = node.x + 100;
+            else { f.lane = ((lane + 2) % 3) as Lane; f.anchorLane = f.lane; f.y = activeLaneCenters[f.lane]; }
+          }
           ids.push(f.id);
         }
         const enemy = spawnEnemy(g,'spitter',lane);
@@ -12346,7 +12350,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         enemy.combatReady = true; enemy.gateEntering = false; enemy.spawnGrace = 0;
         g.running = true; g.paused = false; g.over = false; g.won = false;
         setPaused(false); setEnd(null);
-        return {node:{...node},humanIds:ids,enemyId:enemy.id,solo,
+        return {node:{...node},humanIds:ids,enemyId:enemy.id,solo,operatorApproach,
+          initialActors:g.fighters.map(f=>({id:f.id,kind:f.kind,x:f.x,y:f.y,range:f.range,hp:f.hp})),nodeY:activeYForContentY(node.y),
           scope:'Prepared actor positions and clear reinforcement timeline; actual mission, stats, AI, clock and objective progression. No forced outcome.'};
       },
       prepareEscortCombatProof: (mode = 'solo') => {
@@ -22634,6 +22639,11 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 f.anchorLane = stationObjective.lane;
                 allyIntent = {
                   ...allyIntent,
+                  // A ranged operator outside the work area must arrive before
+                  // firing at an unrelated enemy. Otherwise the attack branch
+                  // below keeps winning while that enemy remains in range.
+                  ...('needsOperatorArrival' in stationObjective && stationObjective.needsOperatorArrival
+                    ? { targetId: null } : {}),
                   destinationX: stationObjective.x,
                   desiredX: stationObjective.x,
                   destinationLane: stationObjective.lane,

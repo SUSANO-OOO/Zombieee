@@ -41,7 +41,13 @@ try{for(const viewport of sizes)for(const stage of stages){
   const notice=page.getByText('オフライン用の設定に失敗しました。通信できる状態ではゲームを続けられます。',{exact:true});
   if(await notice.isVisible())await notice.locator('..').getByRole('button',{name:'閉じる',exact:true}).click();
   if(process.env.QUALITY_OBJECTIVE_PREPARED==='1'){
-   row.prepared=await page.evaluate(solo=>window.__ASHFALL_BATTLE_QA__.prepareStationObjectiveCombatProof(solo),process.env.QUALITY_OBJECTIVE_SOLO==='1');
+   row.prepared=await page.evaluate(({solo,approach})=>window.__ASHFALL_BATTLE_QA__.prepareStationObjectiveCombatProof(solo,approach),{solo:process.env.QUALITY_OBJECTIVE_SOLO==='1',approach:process.env.QUALITY_OBJECTIVE_APPROACH==='1'});
+   if(process.env.QUALITY_OBJECTIVE_APPROACH==='1'){
+    assert.equal(row.prepared.operatorApproach,true);
+    const operator=row.prepared.initialActors.find(a=>a.kind==='medic'),enemy=row.prepared.initialActors.find(a=>a.id===row.prepared.enemyId);
+    assert.equal(operator.range,118);assert.equal(operator.x,row.prepared.node.x+100);assert.equal(operator.y,row.prepared.nodeY);
+    assert.equal(enemy.x,row.prepared.node.x+120);assert.equal(enemy.y,row.prepared.nodeY);
+   }
    report.scope=row.prepared.scope+' Silent native video. Not natural progression, human or physical acceptance.';
    const t=await page.evaluate(()=>window.__OBJECTIVE_READ__().time);
    await page.waitForFunction(t=>window.__OBJECTIVE_READ__().time>t+.15,t);
@@ -53,9 +59,19 @@ try{for(const viewport of sizes)for(const stage of stages){
    row.samples.push(sample);
    if(row.samples.length===1||Date.now()-start>shot*5000||sample.over){await page.screenshot({path:path.join(out,label+'-'+shot+'.png')});shot++;}
    if(sample.over)break;
-   await page.waitForTimeout(1000);
+   await page.waitForTimeout(process.env.QUALITY_OBJECTIVE_APPROACH==='1'?100:1000);
   }
   assert.equal(report.errors.length,0);assert.ok(row.samples.length>5,'real battle samples');
+  if(process.env.QUALITY_OBJECTIVE_APPROACH==='1'){
+   const {node,nodeY,enemyId}=row.prepared;
+   const operatorId=row.prepared.initialActors.find(a=>a.kind==='medic').id;
+   const inside=f=>Boolean(f)&&((f.x-node.x)/node.radiusX)**2+((f.y-nodeY)/node.radiusY)**2<=1;
+   const arrival=row.samples.find(s=>inside(s.fighters.find(f=>f.id===operatorId&&f.hp>0))&&s.fighters.some(f=>f.id===enemyId&&f.hp>0)&&s.mission.powerHold>0);
+   const delayed=row.samples.find(s=>{const f=s.fighters.find(f=>f.id===operatorId&&f.hp>0);return f&&!inside(f)&&f.targetId===enemyId&&f.attackSequence>0;});
+   row.operatorArrival={duringLivingEnemyAt:arrival?.time??null,workHold:arrival?.mission.powerHold??null,firstOutsideAttackAt:delayed?.time??null};
+   if(process.env.QUALITY_OBJECTIVE_APPROACH_EXPECT==='arrived')assert.ok(arrival,'actual operator enters work ellipse and progresses while the original enemy is alive');
+   if(process.env.QUALITY_OBJECTIVE_APPROACH_EXPECT==='delayed'){assert.ok(delayed);assert.equal(arrival,undefined);}
+  }
   if(process.env.QUALITY_OBJECTIVE_ASSERT==='1'){
    assert.ok(row.prepared,'acceptance assertions require the documented prepared scene');
    const first=row.samples[0],last=row.samples.at(-1),guardId=row.prepared.humanIds[0];
