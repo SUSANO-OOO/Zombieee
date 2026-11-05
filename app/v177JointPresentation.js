@@ -172,9 +172,18 @@ export function v177JointPose(kind, sample, runtime, { grounded=false,ownedPose=
   if (!atlas || ownedPose) { rememberRenderedJointPose(actor,kind,null); return null; }
   if(kind==='mrs-chiha')sample=mrsNormalWeaponCycle.sample(kind,sample,actualActor,{enabled:true,ownedPose});
   const state=sample?.requestedState;
-  if(state==='incapacitated')return kind==='ranger'&&atlas.upperRig
-    ? rangerLivingStunJointPose(kind,atlas,runtime,actor,stunRemaining)
-    : livingStunJointPose(kind,atlas,runtime,actor,stunRemaining,grounded);
+  if(state==='incapacitated'){
+    if(kind==='ranger'&&atlas.upperRig)return rangerLivingStunJointPose(kind,atlas,runtime,actor,stunRemaining);
+    // Mayo's ability clock can finish the form change during a living stun.
+    // The normal body's painted joints cannot seed the feral skeleton. Use a
+    // local current-form pose; only a successful draw publishes its history.
+    const feralEntry=kind==='mayo-chan-feral'&&actualActor?.kind==='mayo-chan'
+      &&actualActor.side==='human'&&actualActor.hp>0&&actualActor.manualAbility?.phase==='feral'
+      &&!actualActor.mayoRetreat&&stunRemaining>0
+      &&renderedJointPoses.get(actor)?.kind!==kind
+      ?v177JointPose(kind,{requestedState:'idle'},runtime,{grounded}):null;
+    return livingStunJointPose(kind,atlas,runtime,actor,stunRemaining,grounded,feralEntry);
+  }
   if(actorKey(actor))livingStunPoses.delete(actor);
   if(hitStates.has(state)) {
     const previous=actorKey(actor) ? renderedJointPoses.get(actor) : null;
@@ -544,8 +553,9 @@ function rangerLivingStunJointPose(kind,atlas,runtime,actor,remaining) {
     liveStun:true,rangerStunUpperPose:upper,rangerStunUpperTransform:transform,stunElapsed:elapsed,stunRemaining:remaining};
 }
 
-function livingStunJointPose(kind,atlas,runtime,actor,remaining,grounded=false) {
-  const key=actorKey(actor),previous=key?renderedJointPoses.get(key):null;
+function livingStunJointPose(kind,atlas,runtime,actor,remaining,grounded=false,initialPlan=null) {
+  const key=actorKey(actor),painted=key?renderedJointPoses.get(key):null;
+  const previous=painted?.kind===kind?painted:initialPlan?{kind,plan:initialPlan}:null;
   if(atlas.type!=='rigid-parts'||!(remaining>0)||previous?.kind!==kind){
     rememberRenderedJointPose(actor,kind,null);return null;
   }
