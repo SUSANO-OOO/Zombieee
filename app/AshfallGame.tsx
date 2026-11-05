@@ -623,7 +623,7 @@ import { clearV100SupportAbilityEffects, drawV100SupportAbilityEffects, getV100S
 import { clearV100AdvancedAbilityEffects, drawV100AdvancedAbilityEffects, getV100AdvancedAbilityEffectsSnapshot, queueV100AdvancedAbilityEffect, resolveV100AdvancedAbilityOrigin, resolveV105CurrentAbilityOrigin } from "./v100AdvancedAbilityVfx.js";
 import { v100AbilityOriginSourcePixel, v100RenderedAbilityOriginSocket } from "./v100AbilityOriginSockets.js";
 import { drawV100DefensePerimeter } from "./v100DefensePerimeter.js";
-import { v100DefenseStatus } from "./v100DefenseObjectives.js";
+import { v100DefenseStatus, v100DefenseResultSnapshot } from "./v100DefenseObjectives.js";
 import { createResearchCoreTargets, researchCoreAttackTarget, applyEnemyBaseDamage, drawResearchCoreTargets } from "./v100ResearchCore.js";
 import {
   createResearchContainerRuntime,
@@ -1506,6 +1506,7 @@ export type AshfallBattleResult = {
   enemyDefeatsByKind: Readonly<Record<string, number>>;
   unitStats: Readonly<Pick<CombatMetrics, "damageByUnit" | "damageTakenByUnit" | "healingByUnit">>;
   bossProgress?: ReturnType<typeof bossBattleResultSnapshot>;
+  defenseProgress?: ReturnType<typeof v100DefenseResultSnapshot>;
   lastVehicleHit?: ReturnType<typeof v100VehicleHitFor>;
   missionRuntime?: StageMissionRuntime;
   researchCoreTargets?: ReturnType<typeof createResearchCoreTargets>;
@@ -24722,6 +24723,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               unitsLost: g.unitsLost,
               bossDefeated: g.bossDefeated,
               bossProgress: bossBattleResultSnapshot(g),
+              defenseProgress: v100DefenseResultSnapshot(g.definition, g),
               lastVehicleHit: g.lastVehicleHit,
               enemyBaseDestroyed,
               encounteredEnemyKinds: [...g.enemyKindsSeen],
@@ -24788,6 +24790,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             unitsLost: g.unitsLost,
             bossDefeated: g.bossDefeated,
             bossProgress: bossBattleResultSnapshot(g),
+            defenseProgress: v100DefenseResultSnapshot(g.definition, g),
             lastVehicleHit: g.lastVehicleHit,
             enemyBaseDestroyed: g.barricadeHp <= 0,
             encounteredEnemyKinds: [...g.enemyKindsSeen],

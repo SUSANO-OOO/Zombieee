@@ -2,11 +2,32 @@ import { campaignUnitIdToCombatKind } from "./campaign.js";
 import { V100_BOSS_BY_ID, V100_STAGE_IDS, V100_UNITS } from "./v100Registry.js";
 import { ENEMY_CONTENT } from "./content/enemyCatalog.js";
 import { V100_MISSION_VEHICLES } from "./v100MissionVehicles.js";
+import { V100_DEFENSE_OBJECTIVES } from "./v100DefenseObjectives.js";
 
 const amount = value => typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= Number.MAX_SAFE_INTEGER;
 const counter = value => amount(value) && Number.isInteger(value);
 const record = value => value !== null && typeof value === "object" && !Array.isArray(value);
 const enemies = new Map(ENEMY_CONTENT.map(enemy => [enemy.id, enemy]));
+
+function normalizeDefenseProgress(value) {
+  if (!record(value) || !Object.hasOwn(V100_DEFENSE_OBJECTIVES, value.stageId)
+    || !amount(value.elapsedSeconds) || !amount(value.durationSeconds) || value.durationSeconds <= 0
+    || value.elapsedSeconds > value.durationSeconds) return null;
+  return Object.freeze({ stageId: value.stageId, elapsedSeconds: value.elapsedSeconds, durationSeconds: value.durationSeconds });
+}
+
+export function v100DefenseResultText(result) {
+  const defense = normalizeDefenseProgress(result?.battleReport?.defenseProgress);
+  if (result?.won !== false || !defense || defense.stageId !== result.stageId) return null;
+  const profile = V100_DEFENSE_OBJECTIVES[defense.stageId];
+  const remaining = Math.ceil(defense.durationSeconds - defense.elapsedSeconds);
+  const opened = Math.min(profile.recordCount ?? 0, Math.floor(defense.elapsedSeconds / defense.durationSeconds * (profile.recordCount ?? 0) + 1e-9));
+  return {
+    progress: profile.recordCount ? `収容室 ${opened}/${profile.recordCount}室を開放`
+      : `${profile.label}を${Math.floor(defense.elapsedSeconds)}秒維持`,
+    detail: remaining > 0 ? `防衛完了まであと${remaining}秒` : "防衛時間は経過・作戦目標は未達",
+  };
+}
 
 function normalizeEscortProgress(value) {
   if (!record(value) || !Object.hasOwn(V100_MISSION_VEHICLES, value.stageId)
@@ -70,7 +91,8 @@ export function normalizeV100BattleReport(report) {
   const bossProgress = normalizeBossProgress(report.bossProgress);
   const lastVehicleHit = normalizeVehicleHit(report.lastVehicleHit);
   const escortProgress = normalizeEscortProgress(report.escortProgress);
-  return Object.freeze({ wave: report.wave, kills: report.kills, units: Object.freeze(units), ...(bossProgress ? { bossProgress } : {}), ...(lastVehicleHit ? { lastVehicleHit } : {}), ...(escortProgress ? { escortProgress } : {}) });
+  const defenseProgress = normalizeDefenseProgress(report.defenseProgress);
+  return Object.freeze({ wave: report.wave, kills: report.kills, units: Object.freeze(units), ...(bossProgress ? { bossProgress } : {}), ...(lastVehicleHit ? { lastVehicleHit } : {}), ...(escortProgress ? { escortProgress } : {}), ...(defenseProgress ? { defenseProgress } : {}) });
 }
 
 export function v100BattleReportFor(raw) {
@@ -85,7 +107,8 @@ export function v100BattleReportFor(raw) {
     return [{ unitId: unit.id, damage: values[0], damageTaken: values[1], healing: values[2] }];
   });
   const escortProgress = normalizeEscortProgress({ ...raw.missionRuntime, stageId: raw.stageId });
-  return normalizeV100BattleReport({ wave: raw.wave, kills: raw.kills, units, bossProgress: raw.bossProgress, lastVehicleHit: raw.lastVehicleHit, escortProgress });
+  const defenseProgress = raw.defenseProgress?.stageId === raw.stageId ? normalizeDefenseProgress(raw.defenseProgress) : null;
+  return normalizeV100BattleReport({ wave: raw.wave, kills: raw.kills, units, bossProgress: raw.bossProgress, lastVehicleHit: raw.lastVehicleHit, escortProgress, defenseProgress });
 }
 
 // A run's measured contribution, not a new grade, currency or permanent record.
