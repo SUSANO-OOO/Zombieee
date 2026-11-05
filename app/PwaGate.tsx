@@ -428,7 +428,6 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   });
 
   const activation = evaluateActivationSafety({ ...safety, downloadActive: downloadState === "running" });
-  const deferAssetNoticeForEvent = String(safety.screen ?? "title") === "event";
 
   const runDownload = useCallback(async (
     assets: Array<Record<string, unknown>>,
@@ -1005,9 +1004,9 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
         </section>
       )}
 
-      {/* Repair and update notices never block play; they sit above the game. */}
+      {/* Keep pending notices until a safe screen, without covering active play. */}
       <div className="pwa-notice-stack">
-      {!blocking && registrationFailed && !deferAssetNoticeForEvent && (
+      {!blocking && registrationFailed && activation.safe && (
         <aside className="pwa-notice" role="status">
           <p>オフライン用の設定に失敗しました。通信できる状態ではゲームを続けられます。</p>
           <button type="button" onClick={() => setRegistrationFailed(false)}>閉じる</button>
@@ -1020,18 +1019,11 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
         </aside>
       )}
 
-      {!blocking && phase === "update-available" && updateCopy && !updateDismissed && !deferAssetNoticeForEvent && (
+      {!blocking && phase === "update-available" && updateCopy && !updateDismissed && activation.safe && (
         <aside className="pwa-notice pwa-update" role="status">
           <p className="pwa-update-headline">{updateCopy.headline}</p>
           <p>{updateCopy.downloadLine}</p>
           <p className="pwa-hint">{updateCopy.fileLine}・{updateCopy.wifiHint}</p>
-          {!activation.safe && (
-            <p className="pwa-hint">
-              {activation.blockers.includes("battle-active") || activation.blockers.includes("unsafe-screen")
-                ? "戦闘の終了後に更新できます"
-                : "保存処理の完了後に更新できます"}
-            </p>
-          )}
           <div className="pwa-actions">
             <button type="button" className="pwa-primary" disabled={!activation.safe} onClick={startUpdate}>
               更新をダウンロード

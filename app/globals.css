@@ -792,12 +792,14 @@ html:has(.v100-start-screen):has(.pwa-notice-stack:not(:empty)) { --v100-notice-
 html:has(.v100-start-screen) .pwa-notice-stack { left:auto; right:calc(12px + var(--app-viewport-safe-right,0px)); transform:none; width:min(360px,42vw); }
 .pwa-notice p { margin:0; }
 /* V1 publishes this fact in its layout effect. Hide synchronously while the
-   MutationObserver-to-React safety state catches up with a newly shown event. */
-html[data-pwa-screen="event"] .pwa-notice { display:none; }
-html[data-pwa-battle-active="true"] .pwa-repair,
-html[data-pwa-result-saving="true"] .pwa-repair,
-html[data-pwa-save-mutation-pending="true"] .pwa-repair,
-html[data-pwa-maintenance-pending="true"] .pwa-repair { display:none; }
+   MutationObserver-to-React safety state catches up with active play or saving. */
+html[data-pwa-screen="event"] .pwa-notice,
+html[data-pwa-screen="battle"] .pwa-notice,
+html[data-pwa-screen="result"] .pwa-notice,
+html[data-pwa-battle-active="true"] .pwa-notice,
+html[data-pwa-result-saving="true"] .pwa-notice,
+html[data-pwa-save-mutation-pending="true"] .pwa-notice,
+html[data-pwa-maintenance-pending="true"] .pwa-notice { display:none; }
 .pwa-repair button { min-height:44px; }
 .pwa-update-headline { font-weight:700; color:#f0bb65; }
 .pwa-storage dl { margin:0; display:flex; flex-direction:column; gap:3px; }
