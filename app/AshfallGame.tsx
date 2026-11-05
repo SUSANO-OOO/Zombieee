@@ -10253,7 +10253,16 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         if(!isLocalQa||!mixer.context||mixer.context.state!=="running")throw new Error("A running local game mixer is required");
         const source=mixer.limiter??mixer.master,destination=mixer.context.createMediaStreamDestination();
         source.connect(destination);
-        return {stream:destination.stream,release:()=>{source.disconnect(destination);destination.stream.getTracks().forEach(track=>track.stop());}};
+        let released=false;
+        return {stream:destination.stream,release:()=>{
+          if(released)return;
+          released=true;
+          try{source.disconnect(destination);}
+          catch(error){
+            // Battle disposal may already have disconnected the output node.
+            if((error as {name?:string})?.name!=="InvalidAccessError")throw error;
+          }finally{destination.stream.getTracks().forEach(track=>track.stop());}
+        }};
       },
       unlock: () => mixer.unlock(),
       play: async (cueId: string, options: Record<string, unknown> = {}) => {
