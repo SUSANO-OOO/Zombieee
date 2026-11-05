@@ -53,13 +53,25 @@ test('hospital transitions follow entry actions and retain the corridor through 
  assert.equal(present('s21:post',1798).backgroundPath,null);
  assert.equal(present('s21:post',1800).backgroundPath,art['clinical-corridor'].path);
  for(const line of [1805,1821,1823])assert.equal(present('s22:pre',line).backgroundPath,art['clinical-corridor'].path);
- for(const eventId of ['v100:event:s07:pre','v100:event:s22:post'])for(const n of V100_STORY_EVENTS[eventId].nodes)assert.equal(v100StoryLocationFor(eventId,n),null);
+ for(const n of V100_STORY_EVENTS['v100:event:s07:pre'].nodes)assert.equal(v100StoryLocationFor('v100:event:s07:pre',n),null);
+});
+
+test('post-battle locations retain the ledger and family cut, then follow the outdoor handover',()=>{
+ assert.match(node('s08:post',741).text,/廊下に出た/u);
+ for(const line of [741,753,773])assert.equal(present('s08:post',line).backgroundPath,art['hospital-corridor'].path);
+ assert.equal(present('s08:post',753).insertId,'patient-ledger');
+ assert.equal(present('s08:pre',716).backgroundPath,null);
+ for(const line of [1828,1842])assert.equal(present('s22:post',line).backgroundPath,art['clinical-room'].path);
+ for(const line of [1844,1854])assert.equal(present('s22:post',line).backgroundPath,'/art/v100/quality-20261028/scenes/s22-zakimiya-holds-son-r1.webp');
+ for(const line of [1856,1858,1860])assert.equal(present('s22:post',line).backgroundPath,art['logistics-gate'].path);
+ assert.equal(v100StoryLocationFor('v100:event:s22:post',node('s22:post',1862)),null,'mixed handover/departure/entry node is not assigned one inferred location');
 });
 
 test('all location outputs match authoring hashes and the offline campaign manifest',async()=>{
  const provenance=JSON.parse(await readFile('assets/source/quality-20261028/locations/provenance.json','utf8'));
  const manifest=JSON.parse(await readFile('public/asset-manifest.json','utf8'));
- assert.equal(provenance.records.length,Object.keys(art).length);
+ assert.equal(provenance.records.length,Object.values(art).filter(a=>!a.existing).length);
+ for(const asset of Object.values(art))assert.ok(manifest.assets.some(a=>a.path===asset.path),asset.path);
  for(const record of provenance.records){
   for(const [path,hash]of [[record.source,record.sourceSha256],[record.output,record.sha256]])assert.equal(createHash('sha256').update(await readFile(path)).digest('hex'),hash);
   const asset=manifest.assets.find(a=>a.path===record.output.slice('public'.length));assert.ok(asset);

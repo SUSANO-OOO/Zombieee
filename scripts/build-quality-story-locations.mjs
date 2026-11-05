@@ -6,7 +6,8 @@ import {V100_STORY_LOCATION_BACKDROPS} from '../app/v100StoryLocations.js';
 const check=process.argv.includes('--check'),records=[];
 const folder='assets/source/quality-20261028/locations';
 await mkdir('public/art/v100/story-locations',{recursive:true});
-for(const {path} of Object.values(V100_STORY_LOCATION_BACKDROPS)){
+for(const {path,existing} of Object.values(V100_STORY_LOCATION_BACKDROPS)){
+ if(existing)continue; // Already distributed by the stage manifest; do not reauthor or duplicate it.
  const name=path.split('/').at(-1).replace(/\.webp$/u,'.png'),source=`${folder}/${name}`,output=`public${path}`;
  const original=await readFile(source),encoded=await sharp(original).resize({width:1600,withoutEnlargement:true}).webp({quality:86,effort:6}).toBuffer();
  if(check){if(!(await readFile(output)).equals(encoded))throw Error(`Stale location: ${output}`);}else await writeFile(output,encoded);

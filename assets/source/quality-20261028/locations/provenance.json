@@ -7,9 +7,9 @@
   "redistribution": true,
   "producerApproval": "2026-10-28 full quality update and adopted-master storage authorization; final visual acceptance pending.",
   "method": "Resize to 1600 px and encode WebP quality 86; no content editing.",
-  "runtimeAssetCount": 4,
-  "logicalBytes": 780186,
-  "distinctBytes": 780186,
+  "runtimeAssetCount": 5,
+  "logicalBytes": 863174,
+  "distinctBytes": 863174,
   "records": [
     {
       "source": "assets/source/quality-20261028/locations/rescue-vehicle-interior-r1.png",
@@ -44,6 +44,15 @@
       "output": "public/art/v100/story-locations/clinical-corridor-r1.webp",
       "sha256": "78b905311d58e175f7d8d30e07a2af2f01cdcfc4127fb708c749385f4a7ca80d",
       "bytes": 84328,
+      "width": 1600,
+      "height": 900
+    },
+    {
+      "source": "assets/source/quality-20261028/locations/clinical-room-r1.png",
+      "sourceSha256": "938c58d9868e802cb1883f4efe0b53aa7435d4384be4418bf9ae295844ac4233",
+      "output": "public/art/v100/story-locations/clinical-room-r1.webp",
+      "sha256": "98abc0ce7df809ce3d3ed0ada71552063812c965332fe0bd59e2f561cef323a0",
+      "bytes": 82988,
       "width": 1600,
       "height": 900
     }

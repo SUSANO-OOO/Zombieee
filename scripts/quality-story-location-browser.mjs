@@ -16,7 +16,8 @@ const before=process.env.QUALITY_LOCATION_BEFORE==='1';
 const out=path.resolve(process.env.QUALITY_LOCATION_OUT??`output/quality-20261028/story-location-${before?'before':'after'}-r1`);
 await mkdir(out,{recursive:true});
 const hospital=process.env.QUALITY_LOCATION_HOSPITAL==='1';
-const cases=hospital?[['s07:post',681,1],['s21:post',1798,2],['s22:pre',1805,2]]:before||process.env.QUALITY_LOCATION_COMPARISON==='1'?[['prologue',167,1],['s26:post',2084,1]]:[['prologue',165,4],['s01:post',269,3],['s12:pre',996,3],['s20:post',1748,3],['s26:post',2098,2]];
+const aftermath=process.env.QUALITY_LOCATION_AFTERMATH==='1';
+const cases=aftermath?[['s08:post',741,1],['s22:post',1828,1],['s22:post',1842,2],['s22:post',1854,2]]:hospital?[['s07:post',681,1],['s21:post',1798,2],['s22:pre',1805,2]]:before||process.env.QUALITY_LOCATION_COMPARISON==='1'?[['prologue',167,1],['s26:post',2084,1]]:[['prologue',165,4],['s01:post',269,3],['s12:pre',996,3],['s20:post',1748,3],['s26:post',2098,2]];
 const report={build:await productionBuildIdentity(process.env.QUALITY_LOCATION_BUILD_ROOT??process.cwd()),scope:'Prepared story checkpoints, real Next controls. No natural campaign progression, listening or physical-device acceptance.',cases:[],errors:[]};
 const browser=await chromium.launch({headless:true});
 try {
