@@ -1,7 +1,7 @@
 {
   "schema": "zombieee-pwa-audio-bundle/1",
   "bundlePath": "/pwa-bundles/audio-v1.bin",
-  "bytes": 35053325,
+  "bytes": 35073508,
   "assets": {
     "/audio/v105/fist-wave-charge.mp3": {
       "id": "v105-fist-wave-charge",
@@ -1701,477 +1701,507 @@
       "bytes": 3955,
       "hash": "sha256-a763d33a3ae7f66b499a5a6d54e7e9caeb80ec3090f5e79a4441361ed0afd437"
     },
-    "/audio/v100/foley/swing.mp3": {
-      "id": "install-v100-foley-swing",
+    "/audio/weapons/melee/weapon-crowbar-01.mp3": {
+      "id": "install-weapons-melee-weapon-crowbar-01",
       "offset": 19052081,
-      "bytes": 5103,
-      "hash": "sha256-fee1ed79807f93b69d97d046f639300c5c4ce93a4bf9b36aa283e3abfa1b45e9"
+      "bytes": 8231,
+      "hash": "sha256-6864624c6ba828ea57b48e4ef42dcfba4485772dd2bc6908ef76abb43ecf5876"
+    },
+    "/audio/weapons/melee/weapon-crowbar-02.mp3": {
+      "id": "install-weapons-melee-weapon-crowbar-02",
+      "offset": 19060312,
+      "bytes": 7735,
+      "hash": "sha256-32451e631062797de5861b0a117d03f6bf0e2226da4563048ab8d38a729d3c12"
     },
     "/audio/weapons/recorded/weapon-gunner-01.mp3": {
       "id": "install-weapons-recorded-weapon-gunner-01",
-      "offset": 19057184,
+      "offset": 19068047,
       "bytes": 6234,
       "hash": "sha256-f2d84bff20bf4010fe9a24849598dbaa113eeb6e58692a16ddeeb8fe6a0deaa2"
     },
     "/audio/weapons/recorded/weapon-gunner-02.mp3": {
       "id": "install-weapons-recorded-weapon-gunner-02",
-      "offset": 19063418,
+      "offset": 19074281,
       "bytes": 6052,
       "hash": "sha256-eee63b13a259c476640d589a50791bbfee0fd9234f320a39f2a1792f29813d53"
     },
-    "/audio/v100/foley/heavy-metal.mp3": {
-      "id": "install-v100-foley-heavy-metal",
-      "offset": 19069470,
-      "bytes": 8517,
-      "hash": "sha256-e4c1f9e8e4383b23843bbdb7d20abdd5cd3bb705ed4c3637a6012e0e459cf4ea"
+    "/audio/weapons/melee/weapon-hammer-01.mp3": {
+      "id": "install-weapons-melee-weapon-hammer-01",
+      "offset": 19080333,
+      "bytes": 3195,
+      "hash": "sha256-a7617083b83fe4b039a7b2430b3f98e77adb5ac1dd03146b003405c23e742379"
+    },
+    "/audio/weapons/melee/weapon-hammer-02.mp3": {
+      "id": "install-weapons-melee-weapon-hammer-02",
+      "offset": 19083528,
+      "bytes": 3143,
+      "hash": "sha256-30f14aabbf5cddb9ad32e9f34d87c86025fb6f86d1456ffffb717b54d3a58c5b"
     },
     "/audio/v100/foley/body.mp3": {
       "id": "install-v100-foley-body",
-      "offset": 19077987,
+      "offset": 19086671,
       "bytes": 2466,
       "hash": "sha256-c5edc01469eebfd1d81fc77e8b79604cf329f99729e8dde12dddda9a201cc8c1"
     },
+    "/audio/v100/foley/swing.mp3": {
+      "id": "install-v100-foley-swing",
+      "offset": 19089137,
+      "bytes": 5103,
+      "hash": "sha256-fee1ed79807f93b69d97d046f639300c5c4ce93a4bf9b36aa283e3abfa1b45e9"
+    },
     "/audio/weapons/recorded/weapon-rifle-01.mp3": {
       "id": "install-weapons-recorded-weapon-rifle-01",
-      "offset": 19080453,
+      "offset": 19094240,
       "bytes": 6771,
       "hash": "sha256-a16abba2aa984f94943f73c97714638611ce76960e78b06bbbf190b852eb24fd"
     },
     "/audio/weapons/recorded/weapon-rifle-02.mp3": {
       "id": "install-weapons-recorded-weapon-rifle-02",
-      "offset": 19087224,
+      "offset": 19101011,
       "bytes": 6797,
       "hash": "sha256-b62c3ffd7a9ddb76308ef945dfc6728c01bfdd9d1195feaf4eaf4401317f4c39"
     },
+    "/audio/weapons/melee/weapon-unarmed-01.mp3": {
+      "id": "install-weapons-melee-weapon-unarmed-01",
+      "offset": 19107808,
+      "bytes": 2388,
+      "hash": "sha256-46c3435e3acddb2bce8342ea7e9afb6cafd17fd42c6a479c3910fda7b75c2d0f"
+    },
+    "/audio/weapons/melee/weapon-unarmed-02.mp3": {
+      "id": "install-weapons-melee-weapon-unarmed-02",
+      "offset": 19110196,
+      "bytes": 4008,
+      "hash": "sha256-9867beaab172526ea4b79788f26da5f26180ae62069300d9eaa1cab02e34cd97"
+    },
     "/audio/weapons/chainsaw/start.mp3": {
       "id": "install-weapons-chainsaw-start",
-      "offset": 19094021,
+      "offset": 19114204,
       "bytes": 13608,
       "hash": "sha256-afe9cb54838de7132f59b629b89cbffc8569d238e0a9a18cdf3fdcf32206ceeb"
     },
     "/audio/weapons/chainsaw/idle-loop.wav": {
       "id": "install-weapons-chainsaw-idle-loop",
-      "offset": 19107629,
+      "offset": 19127812,
       "bytes": 176444,
       "hash": "sha256-a7e7d42c5544e4e8c2272780aeaf85ac7fff47b8991c498af26b5fc42c041ac6"
     },
     "/audio/weapons/chainsaw/attack.mp3": {
       "id": "install-weapons-chainsaw-attack",
-      "offset": 19284073,
+      "offset": 19304256,
       "bytes": 5864,
       "hash": "sha256-ae441b8868f76dc2ff4f99c0944c77bd836ff12f7a596b4ec4f906101f90d638"
     },
     "/audio/weapons/chainsaw/flesh-hit.mp3": {
       "id": "install-weapons-chainsaw-flesh-hit",
-      "offset": 19289937,
+      "offset": 19310120,
       "bytes": 4585,
       "hash": "sha256-d83c7422bf77ddeb45313bd9a372df69ffce8de35a40198713da2fefdec82d92"
     },
     "/audio/weapons/chainsaw/hard-hit.mp3": {
       "id": "install-weapons-chainsaw-hard-hit",
-      "offset": 19294522,
+      "offset": 19314705,
       "bytes": 6099,
       "hash": "sha256-5333370ba2a55767dea6174ac332c91dab013ad969778edde2fb0ef4fa0152b3"
     },
     "/audio/weapons/chainsaw/stop.mp3": {
       "id": "install-weapons-chainsaw-stop",
-      "offset": 19300621,
+      "offset": 19320804,
       "bytes": 9126,
       "hash": "sha256-2152b7e20dbf1dd588c746648586af9d15f6e6ad25f5384928cbd717fd5062ea"
     },
     "/audio/v104/combat/pan-hit.mp3": {
       "id": "install-v104-combat-pan-hit",
-      "offset": 19309747,
+      "offset": 19329930,
       "bytes": 7630,
       "hash": "sha256-b67a70e8ad2f985565f1e947b917a5d55bb68298464eebe0c52d66ec2699c1f6"
     },
     "/audio/v104/combat/pan-heavy.mp3": {
       "id": "install-v104-combat-pan-heavy",
-      "offset": 19317377,
+      "offset": 19337560,
       "bytes": 8565,
       "hash": "sha256-a2fd7cff683d15dc7d39b39d95f0ea22b741767d0b8059037c26f20b8eb51e24"
     },
     "/audio/quality-20261028/babayaga-suppressed-r2.mp3": {
       "id": "install-quality-20261028-babayaga-suppressed-r2",
-      "offset": 19325942,
+      "offset": 19346125,
       "bytes": 4878,
       "hash": "sha256-f3b735124aeed4452025a10da2b9a71371b688c970a4bb46e0ae754a3ea1a16b"
     },
     "/audio/v100/foley/metal.mp3": {
       "id": "install-v100-foley-metal",
-      "offset": 19330820,
+      "offset": 19351003,
       "bytes": 2493,
       "hash": "sha256-326956cc2d60f70d6a76771609a4c9deef2959f788f237cdb0c1402b39b01087"
     },
     "/audio/v104/combat/voice-crazy-king-deploy.mp3": {
       "id": "install-v104-combat-voice-crazy-king-deploy",
-      "offset": 19333313,
+      "offset": 19353496,
       "bytes": 5467,
       "hash": "sha256-b4088d74e5dc588aa5f5303c93aa46230b255c2b4ecc921b4644d029cdc6e171"
     },
     "/audio/v104/combat/voice-crazy-king-attack.mp3": {
       "id": "install-v104-combat-voice-crazy-king-attack",
-      "offset": 19338780,
+      "offset": 19358963,
       "bytes": 6196,
       "hash": "sha256-3d25efd65572325c9639a0f07e352da653af3d9c147d4f7a4c9b2b5d182054e6"
     },
     "/audio/v104/combat/voice-crazy-king-hurt.mp3": {
       "id": "install-v104-combat-voice-crazy-king-hurt",
-      "offset": 19344976,
+      "offset": 19365159,
       "bytes": 3797,
       "hash": "sha256-36f55dbd2ea7fab4202d499c6d9af22efdf04c0df67d2f11feabd2b94a4fae8e"
     },
     "/audio/v104/combat/voice-crazy-king-death.mp3": {
       "id": "install-v104-combat-voice-crazy-king-death",
-      "offset": 19348773,
+      "offset": 19368956,
       "bytes": 4501,
       "hash": "sha256-c37f6533237abfa817af6cca807d34a781ec1dfc3f9c28dee5a9b346ae49c5fc"
     },
     "/audio/v104/combat/voice-kumaverson-deploy.mp3": {
       "id": "install-v104-combat-voice-kumaverson-deploy",
-      "offset": 19353274,
+      "offset": 19373457,
       "bytes": 8645,
       "hash": "sha256-ccbf38db9b33129a87def2315019940ae3803d44bc0303daa28eaea2d9e5c8c2"
     },
     "/audio/v104/combat/voice-kumaverson-attack.mp3": {
       "id": "install-v104-combat-voice-kumaverson-attack",
-      "offset": 19361919,
+      "offset": 19382102,
       "bytes": 5414,
       "hash": "sha256-7a52a049f2dd6acc27a2df86d11037ac9152c4f26364e4f06b568a25db7a0f33"
     },
     "/audio/v104/combat/voice-kumaverson-hurt.mp3": {
       "id": "install-v104-combat-voice-kumaverson-hurt",
-      "offset": 19367333,
+      "offset": 19387516,
       "bytes": 4682,
       "hash": "sha256-97073e9f2782a4439922389807c540e7657881faa3321ede032a9e3246aeeb5e"
     },
     "/audio/v104/combat/voice-kumaverson-death.mp3": {
       "id": "install-v104-combat-voice-kumaverson-death",
-      "offset": 19372015,
+      "offset": 19392198,
       "bytes": 6557,
       "hash": "sha256-daddda3acca603129f8924e346e4f6121850ebe7fcdfb0b031c548da90547966"
     },
     "/audio/v104/combat/voice-babayaga-deploy.mp3": {
       "id": "install-v104-combat-voice-babayaga-deploy",
-      "offset": 19378572,
+      "offset": 19398755,
       "bytes": 5232,
       "hash": "sha256-c9771feb52944a1c66d17a454dd1880032abd60ec6539072580bf8f0cb1cd641"
     },
     "/audio/v104/combat/voice-babayaga-attack.mp3": {
       "id": "install-v104-combat-voice-babayaga-attack",
-      "offset": 19383804,
+      "offset": 19403987,
       "bytes": 2885,
       "hash": "sha256-c94031e47ba6ae1b1fa2820d96e185c55afecd015c8e07f3525d57d940648f82"
     },
     "/audio/v104/combat/voice-babayaga-hurt.mp3": {
       "id": "install-v104-combat-voice-babayaga-hurt",
-      "offset": 19386689,
+      "offset": 19406872,
       "bytes": 2364,
       "hash": "sha256-51283951474d6d6b0e9954fa6b10d5568cae9cb599c850be21ba1d5377f23f52"
     },
     "/audio/v104/combat/voice-babayaga-death.mp3": {
       "id": "install-v104-combat-voice-babayaga-death",
-      "offset": 19389053,
+      "offset": 19409236,
       "bytes": 4032,
       "hash": "sha256-4c3f9d3af3d14c3bd728b0c416d8fcd1cd18a2cf97f4e2966808b900b9c56e6a"
     },
     "/audio/v100/ambience/kitchen.mp3": {
       "id": "install-v100-ambience-kitchen",
-      "offset": 19393085,
+      "offset": 19413268,
       "bytes": 166098,
       "hash": "sha256-77f5ecbab2703f01cdb0c77706131ac372a1a38f7f23bad714c70d4f86ca8572"
     },
     "/audio/v100/ambience/room.mp3": {
       "id": "install-v100-ambience-room",
-      "offset": 19559183,
+      "offset": 19579366,
       "bytes": 148147,
       "hash": "sha256-7a8b06f794efa47378c3ba2af67c947065ee65a80fb0350fb5a1b18f4c040261"
     },
     "/audio/v100/ambience/medical.mp3": {
       "id": "install-v100-ambience-medical",
-      "offset": 19707330,
+      "offset": 19727513,
       "bytes": 149782,
       "hash": "sha256-2faec619fd3cfdd5ebd086d97ab279d660becdcb1a8f09089499f4b461b135af"
     },
     "/audio/v100/ambience/receiver.mp3": {
       "id": "install-v100-ambience-receiver",
-      "offset": 19857112,
+      "offset": 19877295,
       "bytes": 180955,
       "hash": "sha256-25376f2838b434a5da95ad3830e859aa308a3eab624abf8ae7b588deca8330ae"
     },
     "/audio/weapons/chainsaw/overdrive-activate.mp3": {
       "id": "install-weapons-chainsaw-overdrive-activate",
-      "offset": 20038067,
+      "offset": 20058250,
       "bytes": 9383,
       "hash": "sha256-2193f0c40174818ebd28fab85c239995c3362f34e2ac61fb9281a906c17402f7"
     },
     "/audio/weapons/chainsaw/overdrive-active.mp3": {
       "id": "install-weapons-chainsaw-overdrive-active",
-      "offset": 20047450,
+      "offset": 20067633,
       "bytes": 8394,
       "hash": "sha256-edaa744e3f83f5ca4b5c33b23e9e9efa35157f0c0ec3fd67365252de5cacaf65"
     },
     "/audio/v100/foley/story-dish.mp3": {
       "id": "install-v100-foley-story-dish",
-      "offset": 20055844,
+      "offset": 20076027,
       "bytes": 7264,
       "hash": "sha256-802ae8b0a8fa45e2fd9bda6dd1a97f01060ae17b17e9343277e619a7cdbdfc1a"
     },
     "/audio/v100/foley/story-door-open.mp3": {
       "id": "install-v100-foley-story-door-open",
-      "offset": 20063108,
+      "offset": 20083291,
       "bytes": 10366,
       "hash": "sha256-61b8e0816213a2b61b55deda8444c3649c7610c96e2c14a4a4dca0a706b04a4c"
     },
     "/audio/v100/foley/story-door-close.mp3": {
       "id": "install-v100-foley-story-door-close",
-      "offset": 20073474,
+      "offset": 20093657,
       "bytes": 7732,
       "hash": "sha256-df438a46614dcc8cdcab4039f0cce642f3386b5e28397f8f2ea7446c06986284"
     },
     "/audio/v100/foley/story-paper.mp3": {
       "id": "install-v100-foley-story-paper",
-      "offset": 20081206,
+      "offset": 20101389,
       "bytes": 5781,
       "hash": "sha256-79498d1b502b2290ecb617a3a6dbeff7afa91cdbeb3266c8bc10abaa2c9c0a22"
     },
     "/audio/v100/foley/story-fabric.mp3": {
       "id": "install-v100-foley-story-fabric",
-      "offset": 20086987,
+      "offset": 20107170,
       "bytes": 4890,
       "hash": "sha256-4e85796b1ad8e0f89db9bb6903a3294324f44d89ae011a2fbabe6e7152da8a51"
     },
     "/audio/v100/foley/story-pan.mp3": {
       "id": "install-v100-foley-story-pan",
-      "offset": 20091877,
+      "offset": 20112060,
       "bytes": 8935,
       "hash": "sha256-c1a677dbf7f30e8aa7a584ad06a2ee353f2700c36a76b8ea161b427db59452da"
     },
     "/audio/v100/foley/story-latch.mp3": {
       "id": "install-v100-foley-story-latch",
-      "offset": 20100812,
+      "offset": 20120995,
       "bytes": 3798,
       "hash": "sha256-41020d23b95ab6ac1a454a719452ef555641c6f88bb14ba1f4a51343b080f81b"
     },
     "/audio/v100/foley/story-footsteps.mp3": {
       "id": "install-v100-foley-story-footsteps",
-      "offset": 20104610,
+      "offset": 20124793,
       "bytes": 1634,
       "hash": "sha256-9b17e9eb68bc359252c2f5c1eca07334018b4a84c278d50728cf46e701a183f7"
     },
     "/audio/v100/score/opening.mp3": {
       "id": "install-v100-score-opening",
-      "offset": 20106244,
+      "offset": 20126427,
       "bytes": 1377219,
       "hash": "sha256-f7934da2099df7490395cf9a586c2e1e4d4ac040563004d9029b0c54d99f4f4c"
     },
     "/audio/v100/score/normal.mp3": {
       "id": "install-v100-score-normal",
-      "offset": 21483463,
+      "offset": 21503646,
       "bytes": 1536879,
       "hash": "sha256-71fe28ebf9c2b02844b38b0526ef45a31143e02c021c40533c623bcd8cd324fe"
     },
     "/audio/v100/score/pressure.mp3": {
       "id": "install-v100-score-pressure",
-      "offset": 23020342,
+      "offset": 23040525,
       "bytes": 1281088,
       "hash": "sha256-0ef3c44cc05aaa207e8b50dafcaf6b1a7aebe558869274b132d0917a7030fd03"
     },
     "/audio/v100/score/daily.mp3": {
       "id": "install-v100-score-daily",
-      "offset": 24301430,
+      "offset": 24321613,
       "bytes": 1536879,
       "hash": "sha256-0ed37db8fb43def68ff5c41e9771c3f6480b75b6f7293534b8adf8cd6f025e98"
     },
     "/audio/v100/score/preparation.mp3": {
       "id": "install-v100-score-preparation",
-      "offset": 25838309,
+      "offset": 25858492,
       "bytes": 1281088,
       "hash": "sha256-5e405da7375cdd46c61f7edc63b40269ceee8cc21fc1bea01c9abb973db47cb7"
     },
     "/audio/v100/score/tension.mp3": {
       "id": "install-v100-score-tension",
-      "offset": 27119397,
+      "offset": 27139580,
       "bytes": 1281088,
       "hash": "sha256-8424612be4b1d7f6828d3abb6e315b74202a57058a14eaae6194996e99a614c3"
     },
     "/audio/v100/score/horror.mp3": {
       "id": "install-v100-score-horror",
-      "offset": 28400485,
+      "offset": 28420668,
       "bytes": 1536879,
       "hash": "sha256-7b115f45b82b1fcf885d1d6f9f7887576ac53b134c2833db8ca13fe07fc497cf"
     },
     "/audio/v100/score/relief.mp3": {
       "id": "install-v100-score-relief",
-      "offset": 29937364,
+      "offset": 29957547,
       "bytes": 1281088,
       "hash": "sha256-d4bd43bbdaf9d883085a4689164e684890122cfb5fde986152545acfa3702cc0"
     },
     "/audio/v100/score/loss.mp3": {
       "id": "install-v100-score-loss",
-      "offset": 31218452,
+      "offset": 31238635,
       "bytes": 1153193,
       "hash": "sha256-12806ff156d4b2891fd799121c4445dc55e8207ad4409cd911b5f713bffe7aea"
     },
     "/audio/v100/score/ending.mp3": {
       "id": "install-v100-score-ending",
-      "offset": 32371645,
+      "offset": 32391828,
       "bytes": 1536879,
       "hash": "sha256-722b8157b4c7a234bebdb9b9a79c3e8805a8b08a0e1411a3b7f97188cc7f14d5"
     },
     "/audio/v100/r9/chair-scrape.mp3": {
       "id": "install-v100-r9-chair-scrape",
-      "offset": 33908524,
+      "offset": 33928707,
       "bytes": 11230,
       "hash": "sha256-a5baf041c16da39af16430e0882a75319726c7b390096184fc26380766984ccd"
     },
     "/audio/v100/r9/extinguisher.mp3": {
       "id": "install-v100-r9-extinguisher",
-      "offset": 33919754,
+      "offset": 33939937,
       "bytes": 28617,
       "hash": "sha256-6ca4e1b62fed1cb0b62b5fc5e5f5bc570e6525295a9214bc095a6d6cb740aef7"
     },
     "/audio/v100/r9/cargo-door.mp3": {
       "id": "install-v100-r9-cargo-door",
-      "offset": 33948371,
+      "offset": 33968554,
       "bytes": 10152,
       "hash": "sha256-ed80f20427d57a75e30871e559cb2c9f8c5866daa3d99afd32afcc6a437828e5"
     },
     "/audio/v100/r9/shutter-open.mp3": {
       "id": "install-v100-r9-shutter-open",
-      "offset": 33958523,
+      "offset": 33978706,
       "bytes": 25507,
       "hash": "sha256-9a47995423793179d9635c6dd1a1b0b264cf6db0111272653c4d40054a8a9228"
     },
     "/audio/v100/r9/shutter-jam.mp3": {
       "id": "install-v100-r9-shutter-jam",
-      "offset": 33984030,
+      "offset": 34004213,
       "bytes": 15457,
       "hash": "sha256-685649fbe677c0a7d32ecb81364f66bdfa9e061a93e8621a1b2cc2785937548e"
     },
     "/audio/v100/r9/cable-disconnect.mp3": {
       "id": "install-v100-r9-cable-disconnect",
-      "offset": 33999487,
+      "offset": 34019670,
       "bytes": 6586,
       "hash": "sha256-b0c33997ed8ee1a7934e1f5c8bf6e401ea96e797e1ed930acd4a1d55ce915aff"
     },
     "/audio/v100/r9/glass-knock.mp3": {
       "id": "install-v100-r9-glass-knock",
-      "offset": 34006073,
+      "offset": 34026256,
       "bytes": 6212,
       "hash": "sha256-aa7780051e75bb6ef9c4d94e92e74b1564ef739786f2359582d7dc537c13d0de"
     },
     "/audio/v100/r9/ceiling-fall.mp3": {
       "id": "install-v100-r9-ceiling-fall",
-      "offset": 34012285,
+      "offset": 34032468,
       "bytes": 20107,
       "hash": "sha256-8c478dc4998f8b0aa7bc2dbd4fe3bb055e47123e32e8a60fadfdfa1720582b37"
     },
     "/audio/v100/r9/oxygen-valve.mp3": {
       "id": "install-v100-r9-oxygen-valve",
-      "offset": 34032392,
+      "offset": 34052575,
       "bytes": 25745,
       "hash": "sha256-1d38249d16ca6b17f677f87245f011a8784c2c45265c8950a101b1f34a96e474"
     },
     "/audio/v100/r9/rail-strain.mp3": {
       "id": "install-v100-r9-rail-strain",
-      "offset": 34058137,
+      "offset": 34078320,
       "bytes": 18327,
       "hash": "sha256-49d4a44b09c4fbe9c1d49784e6b567299fb533516512df690d1110cd1af58651"
     },
     "/audio/v100/r9/coupler-release.mp3": {
       "id": "install-v100-r9-coupler-release",
-      "offset": 34076464,
+      "offset": 34096647,
       "bytes": 9003,
       "hash": "sha256-c21b24928ac7be325255cf49929143955cb36bdce79f5f5be405e7c8fb6e8460"
     },
     "/audio/v100/r9/barrier-raise.mp3": {
       "id": "install-v100-r9-barrier-raise",
-      "offset": 34085467,
+      "offset": 34105650,
       "bytes": 16338,
       "hash": "sha256-772ba76c71801dfeae8b455cd4809d1b778696eb6d85680fc4438c868f2d1d82"
     },
     "/audio/v100/r9/engine-pass.mp3": {
       "id": "install-v100-r9-engine-pass",
-      "offset": 34101805,
+      "offset": 34121988,
       "bytes": 31551,
       "hash": "sha256-f7d17df884fcc06b0b637db751441ed925fb3fc32fe25c69e9ebb6eeabb8c2d2"
     },
     "/audio/v100/r9/vehicle-collision.mp3": {
       "id": "install-v100-r9-vehicle-collision",
-      "offset": 34133356,
+      "offset": 34153539,
       "bytes": 15305,
       "hash": "sha256-30f86f27a0020e137ac6bb77365feff289883f34facdcf7bc0eb66ddd7f1bb7c"
     },
     "/audio/v100/r9/door-battering.mp3": {
       "id": "install-v100-r9-door-battering",
-      "offset": 34148661,
+      "offset": 34168844,
       "bytes": 9964,
       "hash": "sha256-43157f2b46db044417320a08474dc6de29b31a9a8fcd3bec04d26363bbcaed29"
     },
     "/audio/v100/r9/card-burnout.mp3": {
       "id": "install-v100-r9-card-burnout",
-      "offset": 34158625,
+      "offset": 34178808,
       "bytes": 14161,
       "hash": "sha256-aa633a86d93be4b02497a1f7a4644cde2f1733d295bac1a50d7deb16433aa270"
     },
     "/audio/v100/r9/weapon-handle.mp3": {
       "id": "install-v100-r9-weapon-handle",
-      "offset": 34172786,
+      "offset": 34192969,
       "bytes": 7707,
       "hash": "sha256-6ad9c5a813ac92189b2e411536895eac3a66b70ee82aa686a10c90e2e8b91276"
     },
     "/audio/v100/r9/sample-lids.mp3": {
       "id": "install-v100-r9-sample-lids",
-      "offset": 34180493,
+      "offset": 34200676,
       "bytes": 10120,
       "hash": "sha256-8c1861697f6c1e116493b4799a99f749e1964219bd93de316fcbb2722b91c2db"
     },
     "/audio/v100/r9/case-close.mp3": {
       "id": "install-v100-r9-case-close",
-      "offset": 34190613,
+      "offset": 34210796,
       "bytes": 10834,
       "hash": "sha256-1ceba1edda9595249d37fa1923bb4120d2f1004d0ad673346e280aa467d23bf5"
     },
     "/audio/v100/r9/fire-catch.mp3": {
       "id": "install-v100-r9-fire-catch",
-      "offset": 34201447,
+      "offset": 34221630,
       "bytes": 26476,
       "hash": "sha256-e09a778cd09b5e1b25f1d13dca1263bd8bb0c62453d83cd73e0fccea8933ff19"
     },
     "/audio/v100/r9/gas-ignition.mp3": {
       "id": "install-v100-r9-gas-ignition",
-      "offset": 34227923,
+      "offset": 34248106,
       "bytes": 19326,
       "hash": "sha256-a0f01166947ccf9b5493bf92d539a42d922a270bed696fe2b84ce74496204def"
     },
     "/audio/v100/r9/plate-stack.mp3": {
       "id": "install-v100-r9-plate-stack",
-      "offset": 34247249,
+      "offset": 34267432,
       "bytes": 15272,
       "hash": "sha256-dad8d5442002ae89bd6d542f88ed9720210b907eb4c2f84038693be878985431"
     },
     "/audio/v100/r9/lab-air.mp3": {
       "id": "install-v100-r9-lab-air",
-      "offset": 34262521,
+      "offset": 34282704,
       "bytes": 173263,
       "hash": "sha256-7eeb2bff837e29cda77b3e1719c25a004741505665e7b8b9c3a748f2fdfa333e"
     },
     "/audio/v100/r9/bridge-wind.mp3": {
       "id": "install-v100-r9-bridge-wind",
-      "offset": 34435784,
+      "offset": 34455967,
       "bytes": 227306,
       "hash": "sha256-76ba49a46e04e2966c9cefc96ddc752e4c7b87ab50abffdfda4189a4eeea3b10"
     },
     "/audio/v100/r9/vehicle-idle.mp3": {
       "id": "install-v100-r9-vehicle-idle",
-      "offset": 34663090,
+      "offset": 34683273,
       "bytes": 177364,
       "hash": "sha256-b0d0fbbad851aa11684702b41fc4601a79638a474ea63e8bde511900d308df84"
     },
     "/audio/v100/r9/kitchen-air.mp3": {
       "id": "install-v100-r9-kitchen-air",
-      "offset": 34840454,
+      "offset": 34860637,
       "bytes": 212871,
       "hash": "sha256-8d547ef536e701b79c913b5e41aebebfc761ce76db4de56b7e62e4d5dc920510"
     }

@@ -24,9 +24,9 @@ function assertDelta(next){
 
 test('quality candidate contains exactly the reviewed art and firearm delta while retaining unrelated payloads',async()=>{
   assertDelta(candidate);
-  assert.equal(contract.added.length,173);assert.equal(contract.retired.length,164);
-  assert.equal(contract.transportChanges.length,346);
-  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),34880668);
+  assert.equal(contract.added.length,179);assert.equal(contract.retired.length,165);
+  assert.equal(contract.transportChanges.length,345);
+  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),34909368);
   for(const row of contract.added){
     const bytes=await readFile(new URL('../public'+(row.sourcePath??row.path),import.meta.url));
     assert.equal(bytes.length,row.bytes,row.path);
@@ -43,7 +43,7 @@ test('every bundled audio range still contains its exact encoded content after t
   assert.ok(Number.isSafeInteger(row.bundleOffset)&&row.bundleOffset>=0&&row.bundleOffset+row.bundleBytes<=bytes.length);
   assert.equal('sha256-'+createHash('sha256').update(bytes.subarray(row.bundleOffset,row.bundleOffset+row.bundleBytes)).digest('hex'),row.hash,row.path);checked++;
  }
- assert.equal(checked,362);
+ assert.equal(checked,367);
  assert.deepEqual(candidate.assets.filter(row=>row.category==='audio'&&!row.bundlePath),baseline.assets.filter(row=>row.category==='audio'&&!row.bundlePath),'the four streamed tracks retain their original transport');
 });
 
