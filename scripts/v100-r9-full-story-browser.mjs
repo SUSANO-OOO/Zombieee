@@ -12,6 +12,7 @@ import {r9StoryPlan,readR9PageGeometry,assertR9PageGeometry} from './v100-r9-sto
 import {enterV100FromTitle} from './v100-title-qa-entry.mjs';
 import {installRequestFailureAudit} from './browser-request-failure-audit.mjs';
 import {readV177StoryPortraitPaint} from './v177-story-portrait-paint.mjs';
+import {expectedStoryPortraits,assertStoryPortraitSources} from './v100-story-portrait-contract.mjs';
 import {isV100StoryBackdropReady} from './v100-story-backdrop-ready.mjs';
 
 const origin=new URL(process.env.V100_CAMPAIGN_QA_BASE_URL??'http://127.0.0.1:4177/');
@@ -30,7 +31,7 @@ const report={scope:'All selected R9 text pages through real Next controls in is
  storySourceSha256:V100_STORY_SOURCE_SHA256,scriptVersion:V100_STORY_SCRIPT_VERSION,build:await productionBuildIdentity(),
  fullStorySelection:selected.length===plan.events.length,finalizers:plan.finalizers,creditsCoveredBy:'v100-story-bookends-browser-smoke.mjs',
  physicalAudioAccepted:false,normalCampaignAccepted:false,wholeGameAccepted:false,status:'running',cases:[],sources:[]};
-for(const file of ['scripts/v100-r9-full-story-browser.mjs','scripts/v100-r9-story-plan.mjs','scripts/v177-story-portrait-paint.mjs','app/v100StoryEvents.js','app/v100EventAudio.js']){
+for(const file of ['scripts/v100-r9-full-story-browser.mjs','scripts/v100-r9-story-plan.mjs','scripts/v100-story-portrait-contract.mjs','scripts/v177-story-portrait-paint.mjs','app/V100Campaign.tsx','app/v100StoryDirection.js','app/v100DialogueComposition.js','app/v100StoryPortraitPaths.js','app/visualProfiles.js','app/v100StoryEvents.js','app/v100EventAudio.js']){
  const bytes=await readFile(file);report.sources.push({file,sha256:createHash('sha256').update(bytes).digest('hex')});
 }
 const persist=()=>writeFile(path.join(out,'report.json'),JSON.stringify(report,null,2)+'\n');
@@ -70,6 +71,7 @@ for(const engine of engines){
      },{eventId:event.eventId,nodeIndex:expected.nodeIndex,sceneId:expected.presentation.sceneId,cueId:expected.presentation.cueId,requiresAudio:expected.requiresAudio,sceneAudio:expected.sceneAudio});
      const painted=await page.waitForFunction(readV177StoryPortraitPaint,selector);
      let portraitPaint;try{portraitPaint=await painted.jsonValue();}finally{await painted.dispose();}
+     assertStoryPortraitSources(portraitPaint,expectedStoryPortraits(event.eventId,expected,playerName));
      const state=await surface.evaluate(readR9PageGeometry);assertR9PageGeometry(state,expected);
      row.pages.push({nodeIndex:expected.nodeIndex,sourceIndices:expected.sourceIndices,sourceLines:expected.sourceLines,
       text:state.text,scene:state.audio.sceneState,receipts:state.audio.receipts.filter(r=>r.nodeIndex===expected.nodeIndex),bounds:state.bounds,portraitPaint});
