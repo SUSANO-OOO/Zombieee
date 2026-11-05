@@ -23006,7 +23006,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 : { multiplier: 1 };
               const bossDamageMultiplier = g.survivalRun
                 && f.side === "human"
-                && ["takuya", "gate-eater"].includes(target.kind)
+                && isBossFighter(target)
                 ? survivalUpgradeEffects(g.survivalRun).bossDamageMultiplier
                 : 1;
               const humanAttackKind = f.range > 64 && !mrsLauncherBash ? "ranged" : "melee";

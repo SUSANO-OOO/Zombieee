@@ -1,5 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import vm from "node:vm";
+import { isBossFighter } from "../app/bossFoundation.js";
+import { V100_BOSSES } from "../app/v100Registry.js";
+import { v100SurvivalBossPool } from "../app/v100Survival.js";
 
 import {
   CAMPAIGN_UNIT_IDS,
@@ -437,6 +442,30 @@ test("HUD snapshot exposes wave, next boss, speed lock, CRAWLER HP, and upgrade 
   assert.equal(hud.crawlerHp, 700);
   assert.equal(hud.speed, 1);
   assert.equal(hud.pendingUpgradeChoices.length, 0);
+});
+
+test("normal attacks consume boss breaker for every unlocked boss, excluding clones and ordinary enemies", () => {
+  // Exercise the actual attack consumer, not just the upgrade calculator.
+  const source = readFileSync(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
+  const blocks = [...source.matchAll(/const bossDamageMultiplier = ([\s\S]*?);/g)];
+  assert.equal(blocks.length, 1);
+  const expression = new vm.Script(blocks[0][1]);
+  const multiplier = (run, side, target) => expression.runInNewContext({g:{survivalRun:run}, f:{side}, target, survivalUpgradeEffects, isBossFighter});
+  const pool = v100SurvivalBossPool(V100_BOSSES.map(boss => boss.firstDefeatReceipt));
+  assert.equal(pool.length, 9);
+  for (const stacks of [0, 1, 3]) {
+    const run = {...newRun("boss-breaker-consumer"), temporaryUpgradeStacks:{"boss-breaker":stacks}};
+    const original = structuredClone(run);
+    for (const kind of new Set([...pool, "gate-eater"])) {
+      assert.equal(multiplier(run, "human", {kind}), 1 + stacks * 0.1, kind);
+      assert.equal(multiplier(run, "zombie", {kind}), 1, "enemy attacks");
+      assert.equal(multiplier(null, "human", {kind}), 1, "outside survival");
+    }
+    for (const target of [{kind:"kurome",summonSource:"kurome-clone"},{kind:"walker"},{kind:"red-panther-commander"},{kind:"mayo-chan"}]) {
+      assert.equal(multiplier(run, "human", target), 1, JSON.stringify(target));
+    }
+    assert.deepEqual(run, original);
+  }
 });
 
 test("temporary upgrades expose live combat multipliers for deployed and future units", () => {
