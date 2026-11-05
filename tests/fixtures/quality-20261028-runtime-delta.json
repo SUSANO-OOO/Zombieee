@@ -1,6 +1,6 @@
 {
   "base": "ff5dba24e88c810182cda1f044bd26dfc3e512c1",
-  "source": "68bb3dad614bad25810f2fc2cf6e4aa9e447b1df plus complete source-bound King combat body",
+  "source": "426229a8776b17626a0983d1ea07c0d702a5a25b plus hospital and clinical corridor dialogue backgrounds",
   "scope": "Local quality candidate transport contract; not likeness, rights, listening, release or physical-device approval.",
   "added": [
     {
@@ -1239,6 +1239,22 @@
       "path": "/art/v100/quality-20261028/scenes/zakimiya-family-morning-r1.webp",
       "bytes": 354482,
       "hash": "sha256-d56e398545fb61d608010e5981d7d2dcfb0c33123a8b3ed1028b6d9ab8fe4c44",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-locations/clinical-corridor-r1.webp",
+      "bytes": 84328,
+      "hash": "sha256-78b905311d58e175f7d8d30e07a2af2f01cdcfc4127fb708c749385f4a7ca80d",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/story-locations/hospital-corridor-r1.webp",
+      "bytes": 107682,
+      "hash": "sha256-7c6ff49202e8c79ea40d0d9a910a984f373be602f624685327645e70c9788a8b",
       "pack": "campaign-core",
       "category": "background",
       "criticality": "critical"

@@ -45,7 +45,18 @@ test('short-page grouping never merges across boarding; every authored node is r
  for(const [eventId,first,last] of spans)assert.ok(V100_STORY_EVENTS[eventId].nodes.some(n=>n.sourceLine>=first&&n.sourceLine<=last));
 });
 
-test('both location outputs match authoring hashes and the offline campaign manifest',async()=>{
+test('hospital transitions follow entry actions and retain the corridor through instructions',()=>{
+ assert.match(node('s07:post',681).text,/防火扉が閉まった/u);
+ assert.match(node('s21:post',1800).text,/中へ押し込んだ/u);
+ assert.match(node('s22:pre',1805).text,/消毒液の臭いがする廊下/u);
+ for(const line of [681,707,709,711])assert.equal(present('s07:post',line).backgroundPath,art['hospital-corridor'].path);
+ assert.equal(present('s21:post',1798).backgroundPath,null);
+ assert.equal(present('s21:post',1800).backgroundPath,art['clinical-corridor'].path);
+ for(const line of [1805,1821,1823])assert.equal(present('s22:pre',line).backgroundPath,art['clinical-corridor'].path);
+ for(const eventId of ['v100:event:s07:pre','v100:event:s22:post'])for(const n of V100_STORY_EVENTS[eventId].nodes)assert.equal(v100StoryLocationFor(eventId,n),null);
+});
+
+test('all location outputs match authoring hashes and the offline campaign manifest',async()=>{
  const provenance=JSON.parse(await readFile('assets/source/quality-20261028/locations/provenance.json','utf8'));
  const manifest=JSON.parse(await readFile('public/asset-manifest.json','utf8'));
  assert.equal(provenance.records.length,Object.keys(art).length);

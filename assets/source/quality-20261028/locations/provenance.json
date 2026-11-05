@@ -1,15 +1,15 @@
 {
   "creator": "OpenAI built-in image_gen, directed for this project",
-  "source": "Project-original environment illustrations; existing project vehicle used as design reference. No private photos or external downloaded art.",
+  "source": "Project-original environment illustrations; existing project vehicle used as design reference; empty hospital corridors authored from Producer R9 location actions. No private photos or external downloaded art.",
   "license": "Project-original generated assets; governed by the existing OpenAI service agreement.",
   "commercialUse": true,
   "modification": true,
   "redistribution": true,
   "producerApproval": "2026-10-28 full quality update and adopted-master storage authorization; final visual acceptance pending.",
   "method": "Resize to 1600 px and encode WebP quality 86; no content editing.",
-  "runtimeAssetCount": 2,
-  "logicalBytes": 588176,
-  "distinctBytes": 588176,
+  "runtimeAssetCount": 4,
+  "logicalBytes": 780186,
+  "distinctBytes": 780186,
   "records": [
     {
       "source": "assets/source/quality-20261028/locations/rescue-vehicle-interior-r1.png",
@@ -26,6 +26,24 @@
       "output": "public/art/v100/story-locations/refrigerated-cargo-r1.webp",
       "sha256": "ba943a2219d1c402bfe0452707423ddb3ef45bad0a67a0033cd778ff55293da2",
       "bytes": 263800,
+      "width": 1600,
+      "height": 900
+    },
+    {
+      "source": "assets/source/quality-20261028/locations/hospital-corridor-r1.png",
+      "sourceSha256": "f1531284188fdb63d41a9baff8fae7fab7983d7e9f51c0e06c19137ceb7040b9",
+      "output": "public/art/v100/story-locations/hospital-corridor-r1.webp",
+      "sha256": "7c6ff49202e8c79ea40d0d9a910a984f373be602f624685327645e70c9788a8b",
+      "bytes": 107682,
+      "width": 1600,
+      "height": 900
+    },
+    {
+      "source": "assets/source/quality-20261028/locations/clinical-corridor-r1.png",
+      "sourceSha256": "b383a4f1b7427f423d22127f2f795691db605366fc214131f723fdbcbb4e0852",
+      "output": "public/art/v100/story-locations/clinical-corridor-r1.webp",
+      "sha256": "78b905311d58e175f7d8d30e07a2af2f01cdcfc4127fb708c749385f4a7ca80d",
+      "bytes": 84328,
       "width": 1600,
       "height": 900
     }
