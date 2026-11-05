@@ -663,7 +663,7 @@ const runEngine = async (engineName, browserType) => {
       }).toString();
       await runHostTelemetryOperation("hosted/asset-boundary", { caseKind: "ready" }, async () => {
         await page.goto(url.href, { waitUntil: "domcontentloaded" });
-        await dismissInstallOffer(page);
+        await dismissInstallOffer(page, { readySelector: ".game-shell[data-screen='battle']", waitForFictionDismissal: true });
         await page.waitForFunction(() => document.documentElement.dataset.assetLoadState === "ready", null, { timeout: 120_000 });
         await page.waitForFunction(() => window.__ASHFALL_ASSET_QA__?.getBattleMountState?.().battleMounted === true, null, { timeout: 30_000 });
       });
@@ -838,7 +838,7 @@ const runEngine = async (engineName, browserType) => {
         };
         await runHostTelemetryOperation("hosted/asset-boundary", faultOperationDetails, async () => {
           await page.goto(url.href, { waitUntil: "domcontentloaded" });
-          await dismissInstallOffer(page);
+          await dismissInstallOffer(page, { readySelector: ".game-shell[data-screen='battle']", waitForFictionDismissal: true });
           await page.waitForFunction(({ expectedPath }) => document.documentElement.dataset.assetLoadState === "ready"
             && window.__ASHFALL_ASSET_QA__?.getRequiredPlan?.().background.path === expectedPath,
           { expectedPath: fixture.plan.background.path }, { timeout: 120_000 }).catch(async (error) => {
