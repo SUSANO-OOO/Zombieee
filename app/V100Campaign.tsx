@@ -71,7 +71,7 @@ import { createV100EventAudioOwner } from "./v100EventAudio.js";
 import { v100EventPresentationFor } from "./v100EventPresentation.js";
 import { v100SurfaceScore } from "./v100Music.js";
 import { v100ActionPortraitSubjects, v100DialogueSlots, v100PortraitFraming } from "./v100DialogueComposition.js";
-import { normalizeV100BattleReport, v100BattleMeritsFor, v100BattleReportFor, v100LastVehicleHitText, v100EscortResultText, v100DefenseResultText } from "./v100BattleReport.js";
+import { normalizeV100BattleReport, v100BattleMeritsFor, v100BattleReportFor, v100LastVehicleHitText, v100EscortResultText, v100DefenseResultText, v100DeviceResultText } from "./v100BattleReport.js";
 import { v100MissionBriefingFor, v100MissionThreatsFor } from "./v100MissionBriefing.js";
 import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
 import { v100RewardPresentationFor } from "./v100RewardPresentation.js";
@@ -1539,6 +1539,7 @@ function ResultView({ result, previousResult, previousBestStars, alreadyComplete
   const lastVehicleHit = v100LastVehicleHitText(result);
   const escortResult = v100EscortResultText(result);
   const defenseResult = v100DefenseResultText(result);
+  const deviceResult = v100DeviceResultText(result);
   const outcome = won ? "目標達成！"
     : escortResult?.outcome ?? (typeof result?.vehicleHp === "number" && result.vehicleHp <= 0 ? `${basePresentation.label}を守りきれませんでした。`
       : "目標を達成できなかった。編成と戦い方を見直して、もう一度挑もう。");
@@ -1547,8 +1548,9 @@ function ResultView({ result, previousResult, previousBestStars, alreadyComplete
       <span className="v100-kicker">戦闘結果 / {won ? "成功" : "失敗"}</span><h2>{won ? "ステージクリア" : "ステージ失敗"}</h2><p>{merits[0] ? <span className="v100-result-lead-merit" data-v100-merit={merits[0].id}><strong>{merits[0].title}</strong><small>{merits[0].detail}<span className="v100-merit-scroll-hint"> · 詳細は下へ</span></small></span> : outcome}<span className="v100-result-scroll-guide">結果の詳細は下へスクロール</span></p>
       {won ? <div className="v100-result-highlight has-earned-stars"><strong><V100StageStars stars={runStars} label="今回の評価" /></strong><span>{`今回 ${runStars}/3　記録 ${previousBestStars} → ${nextBestStars}/3`}</span></div>
         : <div className="v100-defeat-progress" aria-label="今回どこまで進めたか">
-          <strong>{escortResult?.progress ?? defenseResult?.progress ?? (boss ? boss.state === "not-encountered" ? `${boss.displayName}の出現前に終了` : boss.state === "defeated" ? `${boss.displayName}は撃破` : `${boss.displayName}に到達` : report ? report.wave > 0 ? `第${report.wave}波まで到達` : "開始直後に終了" : "到達地点の記録なし")}</strong>
+          <strong>{escortResult?.progress ?? defenseResult?.progress ?? deviceResult?.progress ?? (boss ? boss.state === "not-encountered" ? `${boss.displayName}の出現前に終了` : boss.state === "defeated" ? `${boss.displayName}は撃破` : `${boss.displayName}に到達` : report ? report.wave > 0 ? `第${report.wave}波まで到達` : "開始直後に終了" : "到達地点の記録なし")}</strong>
           {defenseResult && <span>{defenseResult.detail}</span>}
+          {deviceResult && <span>{deviceResult.detail}</span>}
           {boss?.state === "active" && <span>{bossRemainingHpText}</span>}
           <small>{report ? `第${report.wave}波・${report.kills}体撃破` : "波数・撃破数の記録なし"}{recordedDeaths !== null && ` / 戦闘不能 ${recordedDeaths}回`}</small>
           {escortResult?.advice && <small>{escortResult.advice}</small>}
