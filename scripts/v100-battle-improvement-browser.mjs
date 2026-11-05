@@ -17,6 +17,7 @@ import {installClawCanvasAudit} from './v100-claw-canvas-audit.mjs';
 import {installManualFirearmCanvasAudit} from './v100-manual-firearm-canvas-audit.mjs';
 import {installGuardianContactTrace} from './v100-guardian-contact-trace.mjs';
 import {enterV100FromTitle} from './v100-title-qa-entry.mjs';
+import {dismissInstallOffer} from './pwa-gate-qa.mjs';
 async function readBattleSkillIconObservation() {
  const decoded=new Map();
  const arrivalWaits=[];
@@ -167,10 +168,9 @@ try{for(const number of numbers){
   if(manualFirearmCheck)await page.addInitScript(installManualFirearmCanvasAudit);
   if(process.env.V100_GUARDIAN_TRACE==='1')await page.addInitScript(installGuardianContactTrace);
   await page.goto(new URL('v100',origin).href);
-  const play=page.getByRole('button',{name:'ブラウザで遊ぶ',exact:true}),start=page.getByRole('button',{name:'戦闘へ',exact:true});
-  await play.or(start).first().waitFor();if(await play.isVisible())await play.click();
+  await dismissInstallOffer(page,{timeout:15000,readySelector:'.v100-start-screen',waitForFictionDismissal:true});
   await enterV100FromTitle(page,{timeout:15000});
-  await start.click();await page.locator('.game-shell canvas').waitFor();
+  await page.getByRole('button',{name:'戦闘へ',exact:true}).click();await page.locator('.game-shell canvas').waitFor();
   await page.waitForFunction(()=>window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().running);
   if(process.env.V100_BATTLE_MUSIC_CHECK==='1'){
    result.musicFailureObserverInstalled=await page.evaluate(()=>{
