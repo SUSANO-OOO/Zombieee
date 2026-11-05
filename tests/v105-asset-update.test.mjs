@@ -7,13 +7,13 @@ import sharp from 'sharp';
 import {V105_MEDIA_ADDITIONS,V105_MEDIA_RETIREMENTS,V105_ASSET_BYTES_DELTA} from '../scripts/v105-five-corrections-asset-contract.mjs';
 import {evaluateUpdate} from '../app/pwaUpdatePlanner.js';
 import {correctionCases,canContinueCompletedCorrection,assertCurrentCorrectionPaints} from '../scripts/v105-five-corrections-capture.mjs';
+import {QUALITY_KING_COMBAT_ATLAS} from '../app/qualityKingCombatJointData.js';
 
 test('the published v105 delta changes exactly six named payloads and its corrections remain installed',async()=>{
   const baseline=JSON.parse(execFileSync('git',['show','e22b134a38409b9d2f86660ee351e616c28fbf44:public/asset-manifest.json'],{encoding:'utf8',maxBuffer:4*1024*1024}));
   // This is a historical release delta, not a ban on later quality updates.
   const current=JSON.parse(execFileSync('git',['show','ff5dba24e88c810182cda1f044bd26dfc3e512c1:public/asset-manifest.json'],{encoding:'utf8',maxBuffer:4*1024*1024}));
   const candidate=JSON.parse(await readFile(new URL('../public/asset-manifest.json',import.meta.url),'utf8'));
-  const kingHead=JSON.parse(await readFile(new URL('../assets/source/quality-20261028/identity/battle-heads-r3/runtime-provenance.json',import.meta.url),'utf8')).entries.find(row=>row.kind==='crazy-king');
   const before=new Map(baseline.assets.map(a=>[a.path,a])),after=new Map(current.assets.map(a=>[a.path,a]));
   assert.equal(baseline.version,'1.0.4');assert.equal(current.version,'1.0.5');
   const newPaths=current.assets.filter(a=>!before.has(a.path)).map(a=>a.path).sort();
@@ -25,9 +25,11 @@ test('the published v105 delta changes exactly six named payloads and its correc
     assert.equal(actual.bytes,expected.bytes);assert.equal(bytes.length,expected.bytes);
     assert.equal('sha256-'+createHash('sha256').update(bytes).digest('hex'),expected.hash);
     assert.equal(actual.hash,expected.hash);assert.equal(actual.criticality,expected.criticality);
-    const replacement=expected.path==='/art/v105/joints/crazy-king-skirt-r1.webp'?kingHead:null;
-    if(replacement){assert.equal(replacement.basePath,expected.path);assert.equal('sha256-'+replacement.baseSha256,expected.hash);}
-    const active=replacement?{path:replacement.assetPath,bytes:replacement.bytes,hash:'sha256-'+replacement.sha256,criticality:expected.criticality}:expected;
+    // Keep the immutable release delta above, then bind the current full-body
+    // replacement (whose source/costume/poses are checked by quality-king-body).
+    const replacement=expected.path==='/art/v105/joints/crazy-king-skirt-r1.webp'?QUALITY_KING_COMBAT_ATLAS:null;
+    const replacementBytes=replacement?await readFile(new URL('../public'+replacement.path,import.meta.url)):null;
+    const active=replacement?{path:replacement.path,bytes:replacementBytes.length,hash:'sha256-'+createHash('sha256').update(replacementBytes).digest('hex'),criticality:expected.criticality}:expected;
     const installed=candidate.assets.find(asset=>asset.path===active.path);
     assert.ok(installed,`retained v105 correction ${expected.path}`);
     for(const key of ['bytes','hash','criticality'])assert.equal(installed[key],active[key]);

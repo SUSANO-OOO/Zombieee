@@ -40,7 +40,11 @@ test('both runtime modes resolve non-repeating melee pools to distinct adopted f
 
 test('both encodings retain provenance, distinct samples, bounded levels and faded tails',()=>{
   assert.equal(provenance.license,'CC0-1.0');
-  for(const notice of provenance.notices)assert.equal(fileHash(notice.file),notice.sha256);
+  for(const notice of provenance.notices){
+    assert.equal(fileHash(notice.file),notice.sha256);
+    assert.ok(execFileSync('git',['check-attr','text','--',notice.file],{encoding:'utf8'}).trim().endsWith(': text: unset'),
+      'License provenance must retain identical bytes in Windows and Linux checkouts');
+  }
   const hashes={mp3:new Set(),ogg:new Set()};
   assert.equal(provenance.records.length,12);
   for(const row of provenance.records){

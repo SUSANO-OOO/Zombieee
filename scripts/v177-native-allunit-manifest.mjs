@@ -4,7 +4,6 @@ import {PLAYABLE_COMBAT_KINDS} from '../app/combatPresentation.js';
 import {v177ProofFormIdentity} from '../app/v177ContinuousProof.js';
 import {V177_JOINT_ATLASES} from '../app/v177JointPresentation.js';
 import {QUALITY_CHARACTER_ATLASES} from '../app/qualityCharacterAtlases.js';
-import {V105_CRAZY_KING_JOINT_ATLAS} from '../app/v105CrazyKingJointData.js';
 
 const freeze=value=>{
   if(value&&typeof value==='object'){
@@ -42,7 +41,10 @@ export function validateManifest(forms=FORM_BINDINGS,shards=SHARDS){
     const atlasPath=forms[i].atlas.path??'';
     if(forms[i].form==='crazy-king'){
       assert.equal(atlasPath,QUALITY_CHARACTER_ATLASES['crazy-king'].path);
-      assert.deepEqual({...V177_JOINT_ATLASES['crazy-king'],path:V105_CRAZY_KING_JOINT_ATLAS.path},V105_CRAZY_KING_JOINT_ATLAS,'Approved skirt, body geometry and all poses remain intact');
+      // The current full body supersedes the head-only v105 derivative. Compare
+      // the actual owner without formatting millions of pose values on failure.
+      assert.ok(V177_JOINT_ATLASES['crazy-king']===QUALITY_CHARACTER_ATLASES['crazy-king'],
+        'Capture must use the current complete King rig');
     }
     else assert.match(atlasPath,/^\/art\/v100\/joints\/.+\.webp$/u);
   }

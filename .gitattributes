@@ -20,6 +20,10 @@ public/fonts/v100/OFL-BIZUDPGothic.txt -text whitespace=-blank-at-eol
 public/fonts/v100/OFL-Rajdhani.txt -text whitespace=-blank-at-eol
 public/fonts/v100/OFL-ZenKakuGothicNew.txt -text whitespace=-blank-at-eol
 
+# Audio provenance hashes the original license bytes, including CRLF.
+assets/source/v100/audio/kenney-rpg/License.txt -text whitespace=cr-at-eol
+assets/source/v100/audio/kenney-impact/License.txt -text whitespace=cr-at-eol
+
 # The generated distribution manifest itself must stay byte-identical across
 # platforms so its drift check is meaningful.
 public/asset-manifest.json -text
