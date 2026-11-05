@@ -10,7 +10,8 @@ import { chromium } from 'playwright';
 const out = path.resolve(process.env.QUALITY_RECORDING_TAP_OUT ?? 'output/playwright/quality-recording-tap-r2');
 await mkdir(out, { recursive: false });
 const current = await readFile('app/AshfallGame.tsx', 'utf8');
-const previous = execFileSync('git', ['show', 'HEAD:app/AshfallGame.tsx'], { encoding: 'utf8', windowsHide: true, maxBuffer: 8 * 1024 * 1024 });
+const beforeHead = '2e925a43053a1ee79cd87867280efe325ee35763';
+const previous = execFileSync('git', ['show', beforeHead + ':app/AshfallGame.tsx'], { encoding: 'utf8', windowsHide: true, maxBuffer: 8 * 1024 * 1024 });
 function extract(source) {
   const tree = ts.createSourceFile('AshfallGame.tsx', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX), matches = [];
   function visit(node) {
@@ -26,7 +27,7 @@ await writeFile(path.join(out, 'before-tap.js'), extract(previous));
 await writeFile(path.join(out, 'after-tap.js'), extract(current));
 await writeFile(path.join(out, 'harness.mjs'), await readFile(new URL(import.meta.url)));
 const report = { scope: 'Short synthetic-tone lifecycle check of the actual production mixer and extracted local recording bridge in native Chromium. No game battle, gameplay injection, listening or full-game acceptance.',
-  sourceHead: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8', windowsHide: true }).trim(),
+  beforeHead, sourceHead: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8', windowsHide: true }).trim(),
   currentSourceSha256: createHash('sha256').update(current).digest('hex'), cases: [] };
 const browser = await chromium.launch({ headless: true, args: ['--autoplay-policy=no-user-gesture-required'] });
 try {
