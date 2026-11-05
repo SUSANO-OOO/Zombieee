@@ -12,6 +12,7 @@ import { MANUAL_ABILITY_REGISTRY } from '../app/manualAbilities.js';
 import { V099_MANUAL_ABILITY_AUDIO_CONTRACTS } from '../app/battleAudioContracts.js';
 
 const kinds = (process.env.QUALITY_MANUAL_KINDS ?? 'engineer,medic,ranger,babayaga,gunner,mrs-chiha,brute,miyamoto-musashi').split(',');
+const musashiCounter = process.env.QUALITY_MANUAL_MUSASHI_COUNTER === '1';
 const supported = new Set(Object.keys(V099_MANUAL_ABILITY_AUDIO_CONTRACTS));
 assert.ok(kinds.every(k => supported.has(k)));
 const url = new URL(process.env.QUALITY_MANUAL_URL);
@@ -70,6 +71,29 @@ try {
       window.__MANUAL_AUDIO_RECORDING__ = r; recorder.start(250); await started; sample();
     }, ownerId);
     await button.click();
+    if (kind === 'miyamoto-musashi' && musashiCounter) {
+      await page.waitForFunction(id => window.__ASHFALL_BATTLE_QA__.getSnapshot().fighters
+        .find(f => f.id === id)?.manualAbility?.phase === 'guard', ownerId);
+      row.counterProof = await page.evaluate(id => {
+        const bridge = window.__ASHFALL_BATTLE_QA__;
+        const before = bridge.getSnapshot();
+        const owner = before.fighters.find(f => f.id === id);
+        const targetId = owner.manualAbility.target.targetId;
+        const hp = s => s.fighters.find(f => f.id === targetId).hp;
+        const first = bridge.applyHumanDamage(id, 35);
+        const afterFirst = bridge.getSnapshot();
+        const second = bridge.applyHumanDamage(id, 35);
+        const afterSecond = bridge.getSnapshot();
+        return { scope: 'Two diagnostic melee damage calls during guard; not natural enemy attacks',
+          first, second, targetHpBefore: hp(before), targetHpAfterFirst: hp(afterFirst),
+          targetHpAfterSecond: hp(afterSecond), at: before.time };
+      }, ownerId);
+      assert.equal(row.counterProof.first.preventedDamage, 35);
+      assert.equal(row.counterProof.first.beforeHp, row.counterProof.first.afterHp);
+      assert.ok(row.counterProof.targetHpAfterFirst < row.counterProof.targetHpBefore);
+      assert.equal(row.counterProof.targetHpAfterSecond, row.counterProof.targetHpAfterFirst);
+      assert.ok(row.counterProof.second.afterHp < row.counterProof.second.beforeHp);
+    }
     // Include authored guard/active time so delayed strikes and Mayo's retreat are observed.
     const definition = MANUAL_ABILITY_REGISTRY[kind];
     const seconds = Math.max(kind === 'mrs-chiha' ? 4 : 3,
@@ -88,9 +112,13 @@ try {
     row.recording = { file, bytes: buffer.length, sha256: createHash('sha256').update(buffer).digest('hex') };
     const own = row.cues.filter(c => String(c.ownerId) === String(ownerId));
     const contract = V099_MANUAL_ABILITY_AUDIO_CONTRACTS[kind];
-    const keys = kind === 'miyamoto-musashi' ? ['fallbackCross'] : Object.keys(contract.timeline);
+    const keys = kind === 'miyamoto-musashi' ? [musashiCounter ? 'counter' : 'fallbackCross'] : Object.keys(contract.timeline);
     row.counts = Object.fromEntries(keys.map(key => [key, own.filter(c => c.cueId === contract.timeline[key]).length]));
     for (const key of keys) assert.ok(row.counts[key] > 0, kind + ':' + key + ' reaches actual audio request');
+    if (kind === 'miyamoto-musashi' && musashiCounter) {
+      assert.equal(row.counts.counter, 1);
+      assert.equal(own.filter(c => c.cueId === contract.timeline.fallbackCross).length, 0);
+    }
     if (kind === 'gunner') {
       assert.equal(row.counts.muzzle, MANUAL_ABILITY_REGISTRY.gunner.burstCount);
       assert.equal(row.counts.impact, MANUAL_ABILITY_REGISTRY.gunner.burstCount);
