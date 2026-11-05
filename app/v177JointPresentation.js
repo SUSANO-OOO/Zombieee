@@ -180,12 +180,15 @@ export function v177JointPose(kind, sample, runtime, { grounded=false,ownedPose=
     const previous=actorKey(actor) ? renderedJointPoses.get(actor) : null;
     if(previous?.kind!==kind) {
       rememberRenderedJointPose(actor,kind,null);
-      // Feral activation can finish while Mayo is still flashing from a hit.
-      // Its new skeleton has no painted history yet. Start on that skeleton's
-      // current gait instead of borrowing the normal body or the legacy bitmap.
+      // A living playable actor can be hit before its first successful paint.
+      // Feral activation can also finish while Mayo is still flashing.
+      // Start on the current skeleton instead of returning to a legacy bitmap
+      // or borrowing a different form's painted body.
       // Only a successful draw below may turn this seed into held history.
-      if(kind==='mayo-chan-feral'&&actualActor?.kind==='mayo-chan'
-        &&actualActor.manualAbility?.phase==='feral'&&!actualActor.mayoRetreat){
+      const currentPlayable=Object.hasOwn(QUALITY_CHARACTER_ATLASES,kind)
+        &&actualActor?.kind===kind&&actualActor.side==='human'&&actualActor.hp>0;
+      if(currentPlayable||(kind==='mayo-chan-feral'&&actualActor?.kind==='mayo-chan'
+        &&actualActor.manualAbility?.phase==='feral'&&!actualActor.mayoRetreat)){
         const current=v177JointPose(kind,{requestedState:'idle'},runtime,{grounded,actor:actualActor,world});
         if(!current)return null;
         const held={...current,reactionHeld:true};
