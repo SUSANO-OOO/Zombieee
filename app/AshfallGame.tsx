@@ -19975,9 +19975,6 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 y: activeLaneCenters[owner.engineerTrapLane],
                 duration: .3,
               });
-              playManualAbilityTimelineCue(owner, "spring", owner.engineerTrapX, "trap-spring", {
-                priority: 80, cooldownMs: 100, maxInstances: 1,
-              });
               continue;
             }
             if (event.kind === "zakimiya") {
@@ -22419,6 +22416,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                   }
                   f.engineerTrapReady = false;
                   f.engineerTrapCooldown = UNIT_ROLE_TUNING.monkey.placementIntervalSeconds;
+                  if (f.engineerTrapManual) playManualAbilityTimelineCue(f, "spring", trap.x, "trap-spring", {
+                    priority: 80, cooldownMs: 100, maxInstances: 1,
+                  });
                   f.engineerTrapManual = false;
                   g.roleMetrics.monkeyTrapTriggers += 1;
                   if (g.definition.missionConfig.v100StageNumber) queueV100SupportAbilityEffect(g, {
