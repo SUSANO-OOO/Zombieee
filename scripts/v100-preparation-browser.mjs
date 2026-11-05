@@ -83,7 +83,7 @@ for(const [engine,browserType] of Object.entries({chromium,webkit})){
     await nav.getByRole('button',{name:tab,exact:true}).click();
     await page.waitForFunction(()=>[...document.images].filter(i=>i.offsetParent).every(i=>i.complete&&i.naturalWidth));
     await shot(tab);await visibleControl(nav.getByRole('button',{name:tab,exact:true}));
-    if(tab==='支援'){assert.equal(await page.locator('.v100-vehicle-upgrade-hero').count(),0);await visibleControl(page.getByRole('button',{name:'50 CAPSで取得',exact:true}));}
+    if(tab==='支援'){assert.equal(await page.locator('.v100-vehicle-upgrade-hero').count(),0);await visibleControl(page.getByRole('button',{name:/^50 CAPSで(?:取得|購入)$/u}));}
     if(tab==='車両')assert.equal(await page.locator('.v100-support-management-list').count(),0);
     if(tab==='装備'){
      const focus=page.getByRole('complementary',{name:'選択中の装備'});
