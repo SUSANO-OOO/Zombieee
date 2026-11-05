@@ -1,0 +1,45 @@
+{
+  "tool": "OpenAI built-in image_gen",
+  "creator": "OpenAI image generation directed for this project",
+  "license": "Project-generated derivative; commercial use, modification and redistribution under applicable OpenAI terms",
+  "runtimeAssetCount": 1,
+  "runtimeLogicalBytes": 48308,
+  "runtimeDistinctBytes": 48308,
+  "producerApproval": "Current generated master is identity authority; combat derivative not Producer accepted",
+  "master": "assets/source/quality-20261028/identity/king-master-r4.png",
+  "outputs": {
+    "combat": {
+      "file": "combat-model-r1.png",
+      "original": "C:/Users/okait/.codex/generated_images/01a180c8-9e05-7871-b287-613f7c7eb364/exec-2d27e776-489d-4479-a2e1-ba01a0a2222c.png",
+      "prompt": "Use case: identity-preserve, production game character sprite. Image 1 is the sole CURRENT approved character, costume, and rendering-style authority: Crazy King. Create one complete combat-ready full-body sprite of EXACTLY this person with the same yellow cylindrical mascot helmet with black circular top, two round black-and-white eyes and red smiling mouth; same worn green zip hoodie, short black pleated skirt, bare thighs and long red high-heeled boots; same industrial red-and-black chainsaw with long weathered steel blade. Preserve adult male physique and no added armor, weapons or decorations. Same photographic anatomy/materials with restrained painted illustration finish, not plastic toy rendering. Turn the whole body and helmet to face SCREEN RIGHT in a readable side/three-quarter combat profile. Both feet point right; feet on the same ground plane, separated about hip width with a modest forward step, knees gently flexed, NO crossing or extreme lunge. Natural connected neck, shoulders and elbows. Two anatomically correct hands visibly gripping the two chainsaw handles, wrists unbroken, chainsaw held just in front of waist with blade pointing right and slightly down; arms bent and comfortable. Full helmet, blade tip, heels and soles must fit with generous transparent margins. Exactly ONE figure, no labels or text, no environment, no floor, no glow, no cast shadow. Actual transparent alpha background. High detail source for a 2D articulated battle rig, near-square composition.",
+      "references": [
+        {
+          "path": "assets/source/quality-20261028/identity/king-master-r4.png",
+          "sha256": "37f68d4df0962bfead20bbdfd16113f05ea3b5f42488e9d22b958a4e7718e5dc"
+        }
+      ],
+      "sha256": "b96fb8cc79884082bf25abcdd947a455facd6b69f43bf60a59dfe6f26d78f02e",
+      "width": 1254,
+      "height": 1254,
+      "originalReadbackMatched": true
+    },
+    "underpainting": {
+      "file": "body-underpainting-r1.png",
+      "original": "C:/Users/okait/.codex/generated_images/01a180c8-9e05-7871-b287-613f7c7eb364/exec-d28adda1-8831-4719-bcbc-f6db7b9dde45.png",
+      "prompt": "Precise registered hidden-body underpainting for the attached Crazy King combat sprite, for a 2D articulated game rig. Keep the EXACT 1280x1280 canvas, scale, location and pose of helmet, neck, clothed trunk, black pleated skirt, bare thighs and both red boots. Remove ONLY the chainsaw and BOTH complete arms/hands from the shoulder sockets down. Reconstruct all hidden green hoodie fabric, zipper, pockets and waistband and black skirt pleats naturally behind those removed moving parts. Smooth sleeveless shoulder contour with NO arm stumps, phantom cuffs, floating hands, weapon fragments or extra limbs. DO NOT move or redesign any remaining body part, footwear, skirt, helmet or facial graphics. Preserve the texture and lighting of the source. True transparent background, no floor or shadow, no labels. This is a registered animation underlayer, not a different figure or a new pose.",
+      "references": [
+        {
+          "path": "assets/source/quality-20261028/rigs/crazy-king-combat-r1/combat-model-r1.png",
+          "sha256": "b96fb8cc79884082bf25abcdd947a455facd6b69f43bf60a59dfe6f26d78f02e"
+        }
+      ],
+      "sha256": "89a8e3c6fc73fcd1c9e87080e3ae6fea1d8985bdac33940b16722cea882fae52",
+      "width": 1254,
+      "height": 1254,
+      "originalReadbackMatched": true
+    }
+  },
+  "transparentBackground": true,
+  "acceptance": false,
+  "masterSha256": "37f68d4df0962bfead20bbdfd16113f05ea3b5f42488e9d22b958a4e7718e5dc"
+}

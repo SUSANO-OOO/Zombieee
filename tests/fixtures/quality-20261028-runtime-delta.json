@@ -1,6 +1,6 @@
 {
   "base": "ff5dba24e88c810182cda1f044bd26dfc3e512c1",
-  "source": "8f29d4464e64fdfc1ffeef0a8beaef466b1abb14 plus six distinct melee foley variants",
+  "source": "68bb3dad614bad25810f2fc2cf6e4aa9e447b1df plus complete source-bound King combat body",
   "scope": "Local quality candidate transport contract; not likeness, rights, listening, release or physical-device approval.",
   "added": [
     {
@@ -28,9 +28,9 @@
       "criticality": "critical"
     },
     {
-      "path": "/art/v100/joints/crazy-king-quality-model-r3.webp",
-      "bytes": 40968,
-      "hash": "sha256-3ba667a575156cb533b0ab6e5151e4608e7801bbb4f8280815121bc4d9e56515",
+      "path": "/art/v100/joints/crazy-king-combat-r1.webp",
+      "bytes": 48308,
+      "hash": "sha256-eecb23b4fed48d0a995054748b780fce6e5f0a57f3b81fda915212f1687c9186",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"

@@ -1,4 +1,5 @@
 import {QUALITY_GANTETSU_COMBAT_ATLAS} from './qualityGantetsuCombatJointData.js';
+import {QUALITY_KING_COMBAT_ATLAS} from './qualityKingCombatJointData.js';
 import {QUALITY_PAISEN_COMBAT_ATLAS} from './qualityPaisenCombatJointData.js';
 import {QUALITY_TATARA_COMBAT_ATLAS} from './qualityTataraCombatJointData.js';
 import {QUALITY_RAIDER_COMBAT_ATLAS} from './qualityRaiderCombatJointData.js';
@@ -57,6 +58,7 @@ export const QUALITY_CHARACTER_ATLASES=Object.freeze({
  brute:QUALITY_TATARA_COMBAT_ATLAS,
  gunner:QUALITY_RAIDER_COMBAT_ATLAS,
  guardian:QUALITY_GANTETSU_COMBAT_ATLAS,
+ 'crazy-king':QUALITY_KING_COMBAT_ATLAS,
  brawler:QUALITY_PAISEN_COMBAT_ATLAS,
  tky:QUALITY_TKY_COMBAT_ATLAS,
  zakimiya:QUALITY_ZAKIMIYA_COMBAT_ATLAS,

@@ -218,8 +218,8 @@ export const V177_AUTHORED_GAITS = {
     },
     "sources": [
       {
-        "file": "assets/source/v100/joints/crazy-king-r1/parts.json",
-        "sha256": "673e7592b758e2bf9cb3e2f2d98b359ba968504d2e19cdbe00fb6d39de8d32c0",
+        "file": "assets/source/quality-20261028/rigs/crazy-king-combat-r1/parts.json",
+        "sha256": "aaf6ed5b940893625497444c2a4fe82324d17d7cb44bc13458af6ce54d585e96",
         "hashEncoding": "utf8-lf"
       }
     ]

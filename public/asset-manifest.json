@@ -1519,9 +1519,9 @@
       "criticality": "critical"
     },
     {
-      "path": "/art/v100/joints/crazy-king-quality-model-r3.webp",
-      "bytes": 40968,
-      "hash": "sha256-3ba667a575156cb533b0ab6e5151e4608e7801bbb4f8280815121bc4d9e56515",
+      "path": "/art/v100/joints/crazy-king-combat-r1.webp",
+      "bytes": 48308,
+      "hash": "sha256-eecb23b4fed48d0a995054748b780fce6e5f0a57f3b81fda915212f1687c9186",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"

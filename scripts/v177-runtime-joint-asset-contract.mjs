@@ -74,4 +74,8 @@ const brawler=read('../assets/source/quality-20261028/rigs/brawler-combat-r1/pro
 const brawlerIndex=rows.findIndex(row=>row.path==='/art/v100/joints/brawler-quality-neck-r4.webp');
 assert.ok(brawlerIndex>=0,'Complete Paisen body replaces head-only predecessor');
 rows[brawlerIndex]=asset(brawler);
+const king=read('../assets/source/quality-20261028/rigs/crazy-king-combat-r1/provenance.json');
+const kingIndex=rows.findIndex(row=>row.path==='/art/v100/joints/crazy-king-quality-model-r3.webp');
+assert.ok(kingIndex>=0,'Complete King body replaces head-only predecessor');
+rows[kingIndex]=asset(king);
 export const V177_JOINT_ASSET_ADDITIONS=Object.freeze(rows);

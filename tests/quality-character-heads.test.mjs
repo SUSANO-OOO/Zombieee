@@ -1,4 +1,5 @@
 import {QUALITY_GANTETSU_COMBAT_ATLAS} from '../app/qualityGantetsuCombatJointData.js';
+import {QUALITY_KING_COMBAT_ATLAS} from '../app/qualityKingCombatJointData.js';
 import {QUALITY_PAISEN_COMBAT_ATLAS} from '../app/qualityPaisenCombatJointData.js';
 import {QUALITY_TATARA_COMBAT_ATLAS} from '../app/qualityTataraCombatJointData.js';
 import {QUALITY_RAIDER_COMBAT_ATLAS} from '../app/qualityRaiderCombatJointData.js';
@@ -44,6 +45,7 @@ for(const [kind,base] of Object.entries(bases))test(kind+' keeps its checked ide
  else if(kind==='brawler')assert.deepEqual(preferred,QUALITY_PAISEN_COMBAT_ATLAS,'Complete Paisen replaces head-only material');
  else if(kind==='tky')assert.deepEqual(preferred,QUALITY_TKY_COMBAT_ATLAS,'Complete approved89 body replaces head-only material');
  else if(kind==='ranger')assert.deepEqual(preferred,QUALITY_RANGER_COMBAT_ATLAS,'Complete Mizuchi paint replaces old material while retaining hybrid geometry');
+ else if(kind==='crazy-king')assert.deepEqual(preferred,QUALITY_KING_COMBAT_ATLAS,'Complete King paint replaces the old body and independently replaced helmet');
  else if(QUALITY_BATTLE_HEAD_CALIBRATIONS[kind]){
   const update=QUALITY_BATTLE_HEAD_CALIBRATIONS[kind],rig=preferred.parts?preferred:preferred.upperRig;
   assert.equal(preferred.path,update.path);assert.deepEqual(rig.parts,update.parts);

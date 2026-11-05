@@ -52,5 +52,5 @@ test('the complete Kuma combat painting is registered to the visible road contac
   for(let i=0;i<info.width*info.height;i++)if(data[i*4+3]>=32)sole=Math.max(sole,Math.floor(i/info.width)+1);
  }
  assert.ok(Math.abs((sole-atlas.referenceFrame.ty)/atlas.referenceFrame.scale-atlas.referenceFrame.height*spriteFrameFor('kumaverson','walk-a','right').anchorY)<1e-8,'painted soles meet the game ground anchor');
- assert.deepEqual(Object.entries(V177_JOINT_ATLASES).filter(([,a])=>a.reserveBipedLanding).map(([kind])=>kind).sort(),['brawler','brute','engineer','guardian','gunner','kumaverson','medic','miyamoto-musashi','mrs-chiha','scout','tky','zakimiya'],'landing reserve applies only to declared complete-body replacements');
+ assert.deepEqual(Object.entries(V177_JOINT_ATLASES).filter(([,a])=>a.reserveBipedLanding).map(([kind])=>kind).sort(),['brawler','brute','crazy-king','engineer','guardian','gunner','kumaverson','medic','miyamoto-musashi','mrs-chiha','scout','tky','zakimiya'],'landing reserve applies only to declared complete-body replacements');
 });

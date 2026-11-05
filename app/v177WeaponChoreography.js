@@ -44,7 +44,7 @@ function walkingCarry(kind,atlas,plan,carry,blend=1){
   const m=upper[c.effectorBone],home=point(m,c.effectorWrist??c.wrist);
   handPose(upper,c,[home[0]-profile.free*sway,home[1]-profile.lift*lift],Math.atan2(m[1],m[0]));
  }
- if(kind==='crazy-king'){
+ if(kind==='crazy-king'&&carry.arms[1].effectorBone!==atlas.weaponBone){
   const m=upper['weapon-0'];
   upper['arm-1-hand']=rigid(carry.arms[1].wrist,point(m,[195,253]),Math.atan2(m[1],m[0]));
  }
@@ -256,12 +256,16 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
   // Both grips belong to the motor housing. Sweep its long bar across the
   // front of the body; never rotate the bar behind the hips at impact.
   const sourceDirection=Math.atan2(atlas.muzzle[1]-pivot[1],atlas.muzzle[0]-pivot[0]);
-  const carry=[227,205],local=attacking?shoulderTarget(primary,p,carry,[[.18,44,-11],[.23,44,-11],[.28,59,37],[.48,44,50],[.64,44,50]]):carry;
+  const carry=atlas.weaponCarryPosition??[227,205],local=attacking?shoulderTarget(primary,p,carry,[[.18,44,-11],[.23,44,-11],[.28,59,37],[.48,44,50],[.64,44,50]]):carry;
   angle=(attacking?swingAngle(p,.15,-2.15,-.05,.8):.15)-sourceDirection;
   upper['weapon-0']=multiply(torso,rigid(pivot,local,angle));
-  weaponOwners.push({...arms[1],effectorBone:'weapon-0',effectorWrist:[195,253]});
-  const hand=point(upper['weapon-0'],[195,253]);
-  upper['arm-1-hand']=rigid(arms[1].wrist,hand,angle+bodyAngle);
+  // Older paint has a separate support hand. Complete combat paint already
+  // binds both hands to this weapon and supplies their own source positions.
+  if(arms[1].effectorBone!==atlas.weaponBone){
+   weaponOwners.push({...arms[1],effectorBone:'weapon-0',effectorWrist:[195,253]});
+   const hand=point(upper['weapon-0'],[195,253]);
+   upper['arm-1-hand']=rigid(arms[1].wrist,hand,angle+bodyAngle);
+  }
  }else{
   if(kind==='babayaga'){
    const [aimAt,lowerAt]=atlas.attackBoundaries;
@@ -315,7 +319,7 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
   }
   constrainHeldWeapon(upper,weapon,owners,['crazy-king','babayaga','kumaverson'].includes(kind)?2:2*envelope);
  }
- if(kind==='crazy-king'){
+ if(kind==='crazy-king'&&arms[1].effectorBone!==atlas.weaponBone){
   const m=upper['weapon-0'],hand=point(m,[195,253]);
   upper['arm-1-hand']=rigid(arms[1].wrist,hand,Math.atan2(m[1],m[0]));
  }

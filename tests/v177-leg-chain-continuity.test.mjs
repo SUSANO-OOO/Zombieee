@@ -27,6 +27,7 @@ if(V177_JOINT_ATLASES.guardian.path==='/art/v100/joints/guardian-combat-r1.webp'
 if(V177_JOINT_ATLASES.brawler.path==='/art/v100/joints/brawler-combat-r1.webp')definitions.set('brawler',JSON.parse(await readFile('assets/source/quality-20261028/rigs/brawler-combat-r1/parts.json')));
 if(V177_JOINT_ATLASES.tky.path==='/art/v100/joints/tky-combat-r1.webp')definitions.set('tky',JSON.parse(await readFile('assets/source/quality-20261028/rigs/tky-combat-r1/parts.json')));
 const transform=(m,[x,y])=>[m[0]*x+m[2]*y+m[4],m[1]*x+m[3]*y+m[5]];
+definitions.set('crazy-king',JSON.parse(await readFile('assets/source/quality-20261028/rigs/crazy-king-combat-r1/parts.json')));
 const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 function paintedBones(kind,atlas,sample,runtime){
  const matrices=[],ctx={save(){},restore(){},translate(){},scale(){},beginPath(){},moveTo(){},lineTo(){},closePath(){},fill(){},transform(...m){matrices.push(m);},drawImage(){}};

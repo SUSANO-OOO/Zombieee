@@ -16,6 +16,7 @@ import {V177_RETIRED_JOINT_SOURCE_ASSETS} from '../scripts/v177-joint-asset-cont
 const combatKuma=JSON.parse(await readFile('assets/source/quality-20261028/rigs/kumaverson-combat-r4/parts.json'));
 const combatTatara=JSON.parse(await readFile('assets/source/quality-20261028/rigs/brute-combat-r1/parts.json'));
 const combatPaisen=JSON.parse(await readFile('assets/source/quality-20261028/rigs/brawler-combat-r1/parts.json'));
+const combatKing=JSON.parse(await readFile('assets/source/quality-20261028/rigs/crazy-king-combat-r1/parts.json'));
 const kinds=['brute','brawler','crazy-king','kumaverson'];
 const transform=(m,[x,y])=>[m[0]*x+m[2]*y+m[4],m[1]*x+m[3]*y+m[5]],distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
@@ -64,12 +65,12 @@ for(const kind of kinds){
    }
   }
   for(const [measure,value]of Object.entries({boneError,groundError,drift,gripError}))assert.ok(value<.001,JSON.stringify({kind,measure,value}));
-  const authored=kind==='brawler'?V177_PAISEN_PHOTO_JOINT_ATLASES.brawler:['brute','kumaverson'].includes(kind)?V177_MELEE_JOINT_ATLASES[kind]:atlas;
+  const authored=kind==='brawler'?V177_PAISEN_PHOTO_JOINT_ATLASES.brawler:V177_MELEE_JOINT_ATLASES[kind];
   const walk=motion.actions.find(a=>a.name==='walk');assert.ok(Math.abs(walk.frames.at(-1).bones.root.head[0]-walk.frames[0].bones.root.head[0]-authored.cycleDistance)<.001);
-  const definition=kind==='brawler'?combatPaisen:kind==='brute'?combatTatara:kind==='kumaverson'?combatKuma:d;assert.ok(Math.abs(v177JointCycleDistance(kind,.2)-atlas.cycleDistance/definition.referenceFrame.scale*.2)<1e-10);
+  const definition=kind==='brawler'?combatPaisen:kind==='brute'?combatTatara:kind==='kumaverson'?combatKuma:kind==='crazy-king'?combatKing:d;assert.ok(Math.abs(v177JointCycleDistance(kind,.2)-atlas.cycleDistance/definition.referenceFrame.scale*.2)<1e-10);
  });
  test(kind+': production interpolation keeps elbows and weapon and free hands attached through travel, anticipation, contact and recovery',()=>{
-  const d=kind==='brawler'?combatPaisen:kind==='brute'?combatTatara:kind==='kumaverson'?combatKuma:authoredDefinition;
+  const d=kind==='brawler'?combatPaisen:kind==='brute'?combatTatara:kind==='kumaverson'?combatKuma:kind==='crazy-king'?combatKing:authoredDefinition;
   function checkArms(raw){for(const arm of d.armConstraints){
    const upper=matrixFor(raw,arm.upperBone),lower=matrixFor(raw,arm.lowerBone),parent=matrixFor(raw,arm.parentBone),weapon=matrixFor(raw,arm.effectorBone);
    const target=distance(transform(parent,arm.shoulder),transform(weapon,arm.wrist)),a=distance(arm.shoulder,arm.elbow),b=distance(arm.elbow,arm.wrist);
@@ -145,11 +146,11 @@ for(const kind of kinds){
   assert.ok(originalPixels>1000);assert.ok(torsoPixels>1000,JSON.stringify({kind,torsoPixels}));assert.ok(armPaintPixels>100);
   }
   const binding=await readFile(new URL('../public'+d.identityBinding.path,import.meta.url));assert.equal(hash(binding),d.identityBinding.sourceSha256);
-  const weapon=await pixels(new URL('weapon-and-hands.png',dir)),[mx,my]=(kind==='brawler'?V177_PAISEN_PHOTO_JOINT_ATLASES.brawler:['brute','kumaverson'].includes(kind)?V177_MELEE_JOINT_ATLASES[kind]:atlas).muzzle;assert.ok(weapon[(my*480+mx)*4+3]>=32,'Contact marker must touch the original weapon or fist');
+  const weapon=await pixels(new URL('weapon-and-hands.png',dir)),[mx,my]=(kind==='brawler'?V177_PAISEN_PHOTO_JOINT_ATLASES.brawler:['brute','kumaverson','crazy-king'].includes(kind)?V177_MELEE_JOINT_ATLASES[kind]:atlas).muzzle;assert.ok(weapon[(my*480+mx)*4+3]>=32,'Contact marker must touch the original weapon or fist');
   const bytes=await readFile(new URL('../public'+atlas.path,import.meta.url)),expected=RUNTIME_JOINT_ASSETS.find(a=>a.path===atlas.path),metadata=await sharp(bytes).metadata();
   assert.equal(atlas.path,expected.path);
   assert.equal(bytes.length,expected.bytes);assert.equal('sha256-'+hash(bytes),expected.hash);assert.equal(metadata.width*metadata.height*4,atlas.decodedBytes);assert.ok(atlas.decodedBytes<=512*1024);
-  const runtimeDefinition=kind==='brawler'?combatPaisen:kind==='brute'?combatTatara:kind==='kumaverson'?combatKuma:d;
+  const runtimeDefinition=kind==='brawler'?combatPaisen:kind==='brute'?combatTatara:kind==='kumaverson'?combatKuma:kind==='crazy-king'?combatKing:d;
   for(const direction of ['left','right'])for(const scale of [.12,.2]){
    const plan=v177JointPose(kind,{requestedState:'active',clipProgress:.26},{locomotionPhase:.1371,locomotionSettle:1}),{raw,calls,frame,size}=record(kind,plan,{direction,scale,x:300,y:500});
    const contact=transform(calls[atlas.parts.findIndex(p=>p.name==='weapon-and-hands')],atlas.muzzle),socket=v177RenderedJointWeaponSocket({kind,plan,direction,frame,size,pose:{offsetX:0,offsetY:0,scaleX:1,scaleY:1,rotationRadians:0},x:300,y:500});
@@ -184,7 +185,8 @@ for(const kind of kinds){
    const raised=record(kind,v177JointPose(kind,{requestedState:'wind-up',clipProgress:5/7},runtime)).raw;
    const a=matrixFor(raised,'weapon-0'),b=matrixFor(active,'weapon-0');
    assert.ok(Math.atan2(b[1],b[0])-Math.atan2(a[1],a[0])>2.8,'The held chainsaw sweeps through roughly half a turn');
-   const hand=transform(matrixFor(active,'arm-1-hand'),atlas.armConstraints[1].wrist),handle=transform(b,[195,253]);
+   const support=atlas.armConstraints[1];
+   const hand=transform(matrixFor(active,support.lowerBone),support.wrist),handle=transform(b,support.wrist);
    assert.ok(Math.hypot(hand[0]-handle[0],hand[1]-handle[1])<.002,'The second actual painted hand holds the second handle');
   }else {
    const raised=record(kind,v177JointPose(kind,{requestedState:'wind-up',clipProgress:5/7},runtime)).raw;
