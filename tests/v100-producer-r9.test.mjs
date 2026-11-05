@@ -20,9 +20,9 @@ const sourcePath='docs/story/v10/STORY_SCRIPT_V100_PRODUCER_R9.md';
 const nodes=Object.values(V100_STORY_EVENTS).flatMap(event=>event.nodes);
 test('R9 round-trips all 1116 narrative source lines exactly once and in order',async()=>{
  const source=await readFile(sourcePath),lines=source.toString('utf8').split(/\r?\n/u);
- // Recruitment guidance now names the current unit screen, preparation and formation steps.
+ // Guidance names the current preparation steps and Hachi's initial availability.
  // Keep an exact source pin and the full text/order round-trip below.
- assert.equal(createHash('sha256').update(source).digest('hex'),'83abeef0a01ca9147fc3bae2b76253a5aed293b71c59288e0f3b9542b1a16226');
+ assert.equal(createHash('sha256').update(source).digest('hex'),'8a6a2dd65f8a920052e178150375143dca41569658037aa6ea3c632bafef58d9');
  assert.equal(V100_STORY_SOURCE_SHA256,createHash('sha256').update(source).digest('hex'));
  const current=nodes.filter(node=>node.sourceDocument==='STORY_SCRIPT_V100_PRODUCER_R9.md');
  assert.equal(current.length,1115);
