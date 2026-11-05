@@ -12,7 +12,7 @@ import { MANUAL_ABILITY_REGISTRY } from '../app/manualAbilities.js';
 import { V099_MANUAL_ABILITY_AUDIO_CONTRACTS } from '../app/battleAudioContracts.js';
 
 const kinds = (process.env.QUALITY_MANUAL_KINDS ?? 'engineer,medic,ranger,babayaga,gunner,mrs-chiha,brute,miyamoto-musashi').split(',');
-const supported = new Set(['engineer','medic','ranger','babayaga','gunner','mrs-chiha','brute','miyamoto-musashi']);
+const supported = new Set(Object.keys(V099_MANUAL_ABILITY_AUDIO_CONTRACTS));
 assert.ok(kinds.every(k => supported.has(k)));
 const url = new URL(process.env.QUALITY_MANUAL_URL);
 assert.ok(['127.0.0.1', 'localhost'].includes(url.hostname));
@@ -70,10 +70,10 @@ try {
       window.__MANUAL_AUDIO_RECORDING__ = r; recorder.start(250); await started; sample();
     }, ownerId);
     await button.click();
-    // Musashi's authored 3.2s guard precedes its fallback strike.
+    // Include authored guard/active time so delayed strikes and Mayo's retreat are observed.
     const definition = MANUAL_ABILITY_REGISTRY[kind];
     const seconds = Math.max(kind === 'mrs-chiha' ? 4 : 3,
-      definition.windupSeconds + (definition.guardSeconds ?? 0) + definition.recoverySeconds + 1);
+      definition.windupSeconds + (definition.guardSeconds ?? definition.activeSeconds ?? 0) + definition.recoverySeconds + 1);
     await page.waitForTimeout(seconds * 1000);
     const data = await page.evaluate(async () => {
       const r = window.__MANUAL_AUDIO_RECORDING__; r.active = false; r.recorder.stop();
