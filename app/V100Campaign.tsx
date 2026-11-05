@@ -1533,6 +1533,9 @@ function ResultView({ result, previousResult, previousBestStars, alreadyComplete
   const bonusStar2 = runStars >= 2 && previousBestStars < 2 ? v100StageReward(stageNumber, "star:2") : 0;
   const bonusStar3 = runStars >= 3 && previousBestStars < 3 ? v100StageReward(stageNumber, "star:3") : 0;
   const boss = report?.bossProgress;
+  const bossHpPercent = boss?.maxHp ? (boss.hp ?? 0) / boss.maxHp * 100 : 0;
+  const bossHpPercentText = bossHpPercent > 0 && bossHpPercent < 1 ? "1%未満" : `${Math.round(bossHpPercent)}%`;
+  const bossRemainingHpText = boss ? `残りHP ${Math.ceil(boss.hp ?? 0)} / ${boss.maxHp}（${bossHpPercentText}）` : "";
   const lastVehicleHit = v100LastVehicleHitText(result);
   const escortResult = v100EscortResultText(result);
   const defenseResult = v100DefenseResultText(result);
@@ -1546,7 +1549,7 @@ function ResultView({ result, previousResult, previousBestStars, alreadyComplete
         : <div className="v100-defeat-progress" aria-label="今回どこまで進めたか">
           <strong>{escortResult?.progress ?? defenseResult?.progress ?? (boss ? boss.state === "not-encountered" ? `${boss.displayName}の出現前に終了` : boss.state === "defeated" ? `${boss.displayName}は撃破` : `${boss.displayName}に到達` : report ? report.wave > 0 ? `第${report.wave}波まで到達` : "開始直後に終了" : "到達地点の記録なし")}</strong>
           {defenseResult && <span>{defenseResult.detail}</span>}
-          {boss?.state === "active" && <span>残りHP {Math.ceil(boss.hp ?? 0)} / {boss.maxHp}（{Math.round((boss.hp ?? 0) / (boss.maxHp ?? 1) * 100)}%）</span>}
+          {boss?.state === "active" && <span>{bossRemainingHpText}</span>}
           <small>{report ? `第${report.wave}波・${report.kills}体撃破` : "波数・撃破数の記録なし"}{recordedDeaths !== null && ` / 戦闘不能 ${recordedDeaths}回`}</small>
           {escortResult?.advice && <small>{escortResult.advice}</small>}
         </div>}
@@ -1562,7 +1565,7 @@ function ResultView({ result, previousResult, previousBestStars, alreadyComplete
         {!won && <p className="v100-retained-stars">これまでの最高記録：★{previousBestStars}/3。今回の敗北で記録は下がりません。</p>}
         {won && nextStar && <p className="v100-result-next-star">★{nextStar}の条件：耐久{starTargets[nextStar]}以上を残してクリア（今回はあと{Math.max(0, Math.ceil(starTargets[nextStar] - vehicleHp))} HP不足）</p>}
         {won && <div className="v100-result-caps-preview" aria-label="確定後に加算されるCAPSの内訳"><span>{alreadyCompleted ? "再挑戦報酬" : "初回達成"}<strong>+{rewardCaps} CAPS</strong></span>{bonusStar2 > 0 && <span><V100StageStars stars={2} label="新規獲得" /><strong>+{bonusStar2} CAPS</strong></span>}{bonusStar3 > 0 && <span><V100StageStars stars={3} label="新規獲得" /><strong>+{bonusStar3} CAPS</strong></span>}</div>}
-        {won && boss && <p className="v100-result-boss"><strong>{boss.displayName}</strong>：{boss.state === "not-encountered" ? "出現前に戦闘終了" : boss.state === "defeated" ? "撃破済み" : `残りHP ${Math.ceil(boss.hp ?? 0)} / ${boss.maxHp}（${Math.round((boss.hp ?? 0) / (boss.maxHp ?? 1) * 100)}%）`}</p>}
+        {won && boss && <p className="v100-result-boss"><strong>{boss.displayName}</strong>：{boss.state === "not-encountered" ? "出現前に戦闘終了" : boss.state === "defeated" ? "撃破済み" : bossRemainingHpText}</p>}
       </div>
     </div>
     <div className="v100-result-footer">
