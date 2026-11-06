@@ -89,11 +89,19 @@ function assertBattleMusicGate(result){
  assert.ok(result.boss?.firstObservedTime!==undefined&&result.bossDefeatedAt!==undefined,'Stage 3 must observe boss arrival and natural defeat');
  assert.equal(result.lastReadableBattleSnapshot?.bossDefeated,true,'Stage 3 must record the actual boss-defeated state');
  assert.ok(samples[bossIndex].time>=result.boss.firstObservedTime&&samples[bossIndex].time<result.bossDefeatedAt,'Boss music must play during the observed boss fight');
- assert.ok(samples.some(s=>s.time>result.bossDefeatedAt&&s.audio.contextState==='running'&&s.audio.audioState==='running'&&s.audio.unlocked===true&&s.audio.activeBgm.some(v=>v.assetId==='music-v100-score-pressure'&&v.voiceGain>0)),'Audible pressure music must follow natural boss defeat');
+ // bossDefeatedAt is the first observed defeated state. It may already be
+ // the real victory/result boundary, where simulation time no longer grows.
+ // Keep the after-defeat music requirement for every continuing battle.
+ const victoryAtFirstDefeatedObservation=result.actualResult?.won===true&&result.actualResult?.loss===false
+  &&result.last?.over===true&&result.last?.bossDefeated===true&&result.lastReadableBattleSnapshot?.over===true
+  &&Number.isFinite(result.bossDefeatedAt)
+  &&result.last.time===result.bossDefeatedAt&&result.lastReadableBattleSnapshot.time===result.bossDefeatedAt;
+ if(!victoryAtFirstDefeatedObservation)assert.ok(samples.some(s=>s.time>result.bossDefeatedAt&&s.audio.contextState==='running'&&s.audio.audioState==='running'&&s.audio.unlocked===true&&s.audio.activeBgm.some(v=>v.assetId==='music-v100-score-pressure'&&v.voiceGain>0)),'Audible pressure music must follow natural boss defeat');
  assert.ok(result.finalRequestFailures&&Array.isArray(result.finalRequestFailures.events)&&result.finalRequestFailures.overflow===0,'Native music failure events must be present and structurally complete');
  assert.deepEqual(result.finalRequestFailures.events,[],'Native music must not report audio failure events');
  assert.ok(Array.isArray(result.networkRequestFailures),'Native music request failure collection is missing');
  assert.deepEqual(result.networkRequestFailures,[],'Native music must not report failed network requests');
+ return{postBossMusic:victoryAtFirstDefeatedObservation?'terminal-victory-at-first-observation':'observed-during-continuing-battle'};
 }
 function assertNaturalBattleOutcome(result){
  const outcome=result.actualResult;
@@ -105,6 +113,23 @@ if(process.env.V100_BATTLE_MUSIC_GATE_FIXTURES==='1'){
  const valid={number:3,musicSamples:[sample('music-v100-score-normal',1),sample('music-boss',2),sample('music-v100-score-pressure',4)],boss:{firstObservedTime:2},bossDefeatedAt:3,lastReadableBattleSnapshot:{bossDefeated:true},finalRequestFailures:retainedFailureGetter(),networkRequestFailures:[]};
  assert.doesNotThrow(()=>assertBattleMusicGate(valid));
  assert.doesNotThrow(()=>assertBattleMusicGate({...valid,musicSamples:[sample('music-v100-score-normal',1),sample('music-v100-score-pressure',1.5),sample('music-boss',2),sample('music-v100-score-pressure',4)]}));
+ const terminalVictory={...valid,musicSamples:[sample('music-v100-score-normal',1),sample('music-v100-score-pressure',1.5),sample('music-boss',2)],
+  actualResult:{won:true,loss:false},last:{time:3,over:true,bossDefeated:true},lastReadableBattleSnapshot:{time:3,over:true,bossDefeated:true}};
+ assert.equal(assertBattleMusicGate(terminalVictory).postBossMusic,'terminal-victory-at-first-observation');
+ for(const invalid of [
+  {...terminalVictory,actualResult:null},
+  {...terminalVictory,actualResult:{won:false,loss:true}},
+  {...terminalVictory,actualResult:{won:true,loss:true}},
+  {...terminalVictory,last:{time:3,over:false,bossDefeated:true}},
+  {...terminalVictory,last:{time:4,over:true,bossDefeated:true}},
+  {...terminalVictory,last:{time:3,over:true,bossDefeated:false}},
+  {...terminalVictory,lastReadableBattleSnapshot:{time:3,over:false,bossDefeated:true}},
+  {...terminalVictory,lastReadableBattleSnapshot:{time:4,over:true,bossDefeated:true}},
+  {...terminalVictory,lastReadableBattleSnapshot:{over:true,bossDefeated:true}},
+  {...terminalVictory,lastReadableBattleSnapshot:{time:3,over:true,bossDefeated:false}},
+  {...terminalVictory,networkRequestFailures:[{url:'/audio.ogg'}]},
+  {...terminalVictory,musicSamples:terminalVictory.musicSamples.map(s=>({...s,audio:{...s.audio,activeBgm:s.audio.activeBgm.map(v=>({...v,voiceGain:0}))}}))},
+ ])assert.throws(()=>assertBattleMusicGate(invalid));
  for(const invalid of [
   {...valid,musicSamples:valid.musicSamples.slice(0,2)},
   {...valid,musicSamples:[sample('music-boss',2),sample('music-v100-score-normal',3),sample('music-v100-score-pressure',4)]},
@@ -395,7 +420,7 @@ try{for(const number of numbers){
   }
   if(process.env.V100_BATTLE_MUSIC_CHECK==='1'){
    assertNaturalBattleOutcome(result);
-   assertBattleMusicGate(result);
+   result.musicGateEvidence=assertBattleMusicGate(result)??{postBossMusic:'not-stage3'};
   }
   assert.ok(last?.over||await page.locator('[data-v100-surface="result-win"],[data-v100-surface="result-lose"]').count(),'Battle must reach its natural result before bounded QA deadline');
   await page.locator('[data-v100-surface="result-win"],[data-v100-surface="result-lose"]').waitFor();
