@@ -11,6 +11,7 @@ import {CHARACTER_PORTRAIT_ART} from '../app/spriteManifest.js';
 import {campaignUnitIdToCombatKind} from '../app/campaign.js';
 import {productionBuildIdentity} from './browser-qa-build-identity.mjs';
 import {enterV100FromTitle} from './v100-title-qa-entry.mjs';
+import {dismissInstallOffer} from './pwa-gate-qa.mjs';
 
 const hash=b=>createHash('sha256').update(b).digest('hex');
 const git=(...args)=>execFileSync('git',args,{encoding:'utf8',windowsHide:true}).trim();
@@ -86,7 +87,7 @@ for(const browserName of matrix){
   page.on('requestfailed',r=>row.errors.push({kind:'request',url:r.url(),text:r.failure()?.errorText}));
   page.on('response',r=>{if(r.status()>=400)row.errors.push({kind:'http',url:r.url(),status:r.status()});});
   assert.equal((await page.goto(new URL('v100',base).href,{waitUntil:'domcontentloaded'})).status(),200);
-  await page.getByRole('button',{name:'ブラウザで遊ぶ',exact:true}).click();
+  await dismissInstallOffer(page,{timeout:30_000,readySelector:'.v100-start-screen',waitForFictionDismissal:true});
   await enterV100FromTitle(page);
   row.beforeStart=await page.evaluate(readStartBoundary);
   await page.getByRole('button',{name:'戦闘へ',exact:true}).click();row.inputs.push({action:'native-start-battle'});

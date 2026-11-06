@@ -11,6 +11,7 @@ import { CHARACTER_PORTRAIT_ART } from "../app/spriteManifest.js";
 import { nativeBattleTap } from "./v100-normal-tactical-input.mjs";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
+import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
 import { installEndingAudioGainObserver } from "./ending-audio-gain-observer.mjs";
 import { isOwnedTitleCloseCancellation } from "./owned-title-close-cancellation.mjs";
 
@@ -243,7 +244,7 @@ try {
       page.on("crash", () => { row.unexpectedPageLoss = true; row.errors.push(errorRecord({ kind: "crash" })); });
       page.on("close", () => { if (row.phase !== "context-closing") row.unexpectedPageLoss = true; });
       assert.equal((await page.goto(new URL("v100", baseUrl).href, { waitUntil: "domcontentloaded" })).status(), 200);
-      await page.getByRole("button", { name: "ブラウザで遊ぶ", exact: true }).click();
+      await dismissInstallOffer(page, { timeout: 30_000, readySelector: ".v100-start-screen", waitForFictionDismissal: true });
       row.phase = "title";
       await enterV100FromTitle(page);
       row.phase = "formation";

@@ -55,7 +55,7 @@ function titleFixture(hasSave, {hasOffer=true, missingTitle=false,maxTimeout=150
     },
   });
   const page = {
-    async goto() { state = missingTitle ? 'missing' : hasOffer ? 'offer' : 'title-waiting'; },
+    async goto() { state = missingTitle ? 'missing' : hasOffer ? 'offer' : 'title-waiting'; return {status:()=>200}; },
     getByRole(_, { name }) { return locator([name === 'ブラウザで遊ぶ' ? 'offer' : name]); },
     locator(selector) { return locator([selector === '.fiction-notice' ? 'notice'
       : selector.includes('data-title-intro') ? 'title-complete' : 'title']); },
@@ -86,6 +86,43 @@ function fixtureEntryBlock(file) {
     ts.forEachChild(node,visit);
   }
   visit(parsed);assert.ok(entry,'find the actual scenario entry');return entry;
+}
+
+function cardEntryBlock(file) {
+  const source=fs.readFileSync(file,'utf8');
+  const parsed=ts.createSourceFile(file,source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);
+  let entry;
+  function visit(node) {
+    if(ts.isBlock(node)) {
+      const statements=node.statements;
+      const start=statements.findIndex(s=>ts.isExpressionStatement(s)&&s.getText(parsed).startsWith('assert.equal((await page.goto('));
+      const end=statements.findIndex(s=>s.expression?.expression?.expression?.getText(parsed)==='enterV100FromTitle');
+      if(start>=0&&end>start) {
+        assert.equal(entry,undefined,'only one card scenario entry');
+        entry=source.slice(statements[start].getStart(parsed),statements[end].end);
+      }
+    }
+    ts.forEachChild(node,visit);
+  }
+  visit(parsed);assert.ok(entry,'exercise the real card entry through the native title');return entry;
+}
+
+for(const file of ['scripts/v100-card-portrait-browser.mjs','scripts/v100-card-resize-browser.mjs']) {
+  async function run(fixture) {
+    const execute=new (async function(){}).constructor('page','baseUrl','base','row','assert','dismissInstallOffer','enterV100FromTitle',cardEntryBlock(file));
+    const base=new URL('http://127.0.0.1/');
+    await execute(fixture.page,base,base,{},assert,dismissInstallOffer,enterV100FromTitle);
+  }
+  for(const hasOffer of [true,false])test(`${file}: card entry resumes the prepared save with invitation ${hasOffer?'present':'absent'}`,async()=>{
+    const fixture=titleFixture(true,{hasOffer,maxTimeout:30000});
+    await run(fixture);
+    assert.equal(fixture.state,'campaign');
+    assert.deepEqual(fixture.clicks,[...(hasOffer?['offer']:[]),'タップして開始','続きから']);
+  });
+  test(`${file}: a missing title cannot count as card readiness`,async()=>{
+    const fixture=titleFixture(true,{hasOffer:false,missingTitle:true,maxTimeout:30000});
+    await assert.rejects(run(fixture));assert.deepEqual(fixture.clicks,[]);
+  });
 }
 
 for(const file of ['scripts/v100-battle-improvement-browser.mjs','scripts/v100-staff-roll-native-browser.mjs']){
