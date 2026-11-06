@@ -12,7 +12,7 @@ import {normalCampaignCanSpendVehicleGauge} from '../scripts/v100-normal-play-co
 const fixtures=new URL('./fixtures/v177-normal-visible-aim/',import.meta.url);
 const provenance=JSON.parse(fs.readFileSync(new URL('provenance.json',fixtures)));
 const projection={x:0,y:0,width:844,height:390,worldScale:844/960,worldOffsetX:0,worldOffsetY:(390-540*844/960)/2};
-async function nativeFrame(file,{dpr=1,occluded=false,geometryChanged=false,screenshotFailure=false}={}) {
+async function nativeFrame(file,{dpr=1,occluded=false,geometryChanged=false,screenshotFailure=false,missingAtRead=0,duplicateCanvas=false,evaluationFailure=false}={}) {
   const original=fs.readFileSync(new URL(file,fixtures));
   const pin=provenance.records.find(record=>record.file===file);
   assert.equal(original.length,pin.bytes);
@@ -26,17 +26,39 @@ async function nativeFrame(file,{dpr=1,occluded=false,geometryChanged=false,scre
     getBoundingClientRect:()=>({...projection,x:projection.x+(geometryChanged&&++geometryReads>1?1:0)}),
     getContext(){contextReads++;throw Error('A live canvas context is forbidden');}};
   const document={elementFromPoint:(x,y)=>y>70&&y<307&&!(occluded&&x>600&&y<180)?canvas:null};
-  const locator={evaluate:async(fn,args)=>vm.runInNewContext('('+fn.toString()+')',{document})(canvas,args),
+  let reads=0;
+  const elements=()=>{reads++;if(evaluationFailure)throw Error('page transport unavailable');return missingAtRead&&reads>=missingAtRead?[]:duplicateCanvas?[canvas,canvas]:[canvas];};
+  const locator={evaluate:async(fn,args)=>{const found=elements();if(found.length!==1)throw Error('locator waits for absent or ambiguous canvas');return vm.runInNewContext('('+fn.toString()+')',{document})(found[0],args);},
+    evaluateAll:async(fn,args)=>vm.runInNewContext('('+fn.toString()+')',{document})(elements(),args),
     screenshot:async()=>assert.fail('A moving canvas must not wait for locator stability')};
   const page={screenshot:async options=>{screenshotCalls++;assert.deepEqual(options,{type:'png',animations:'allow',scale:'css',timeout:2_000,clip:{x:0,y:0,width:844,height:390}});
       if(screenshotFailure)throw Error('native screenshot failed');return png;}};
   try {
     const frame=await observeVisibleBattleHealthBars(locator,{page});
-    assert.equal(contextReads,0);assert.equal(screenshotCalls,1);
+    assert.equal(contextReads,0);assert.equal(screenshotCalls,missingAtRead===1||duplicateCanvas||evaluationFailure?0:1);
     if(frame.status==='read')assert.equal(frame.pngSha256,crypto.createHash('sha256').update(png).digest('hex'));
     return frame;
-  } finally {assert.equal(contextReads,0);assert.equal(screenshotCalls,1);}
+  } finally {assert.equal(contextReads,0);assert.equal(screenshotCalls,missingAtRead===1||duplicateCanvas||evaluationFailure?0:1);}
 }
+
+test('a battle canvas removed by the result transition is unavailable without waiting or inventing a target',async()=>{
+  const frame=await nativeFrame('s3-31s.png',{missingAtRead:1});
+  assert.equal(frame.status,'unavailable');assert.equal(visibleAirstrikeTarget(projection,frame),null);
+});
+
+test('a result transition after the screenshot discards stale targeting pixels',async()=>{
+  const frame=await nativeFrame('s3-31s.png',{missingAtRead:2});
+  assert.equal(frame.status,'stale');assert.equal(visibleAirstrikeTarget(projection,frame),null);
+});
+
+test('ambiguous canvases cannot yield an aircraft target',async()=>{
+  const frame=await nativeFrame('s3-31s.png',{duplicateCanvas:true});
+  assert.equal(frame.status,'unavailable');assert.equal(visibleAirstrikeTarget(projection,frame),null);
+});
+
+test('a real page transport error remains a failure rather than an unavailable frame',async()=>{
+  await assert.rejects(()=>nativeFrame('s3-31s.png',{evaluationFailure:true}),/page transport unavailable/);
+});
 
 test('the original stage3 frame aims at both visible enemy bars, using only painted pixels',async()=>{
   const frame=await nativeFrame('s3-31s.png'),aim=visibleAirstrikeTarget(frame.canvas,frame);
