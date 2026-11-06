@@ -1,0 +1,10 @@
+{
+  "schema": "s14-native-once-scope/v1",
+  "maxObservationSeconds": 90,
+  "maxObservationWindows": 1,
+  "featureBase": "38430c30a3a0aefd063d0233c49a87b42920b777",
+  "runner": "macos-15-intel",
+  "runtime": "Playwright 1.63.0 / WebKit 2359 / 26.6",
+  "diagnostic": "error-only foot inputs; no reachability or quality criteria changes",
+  "wholeGameAcceptance": false
+}

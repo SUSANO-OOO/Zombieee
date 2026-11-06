@@ -1,0 +1,57 @@
+name: Authorized S14 Native Input Diagnostic
+on:
+  push:
+    branches: [codex/177-s14-native-20261106]
+permissions:
+  contents: read
+jobs:
+  observe:
+    name: One S14 window, at most 90 seconds
+    runs-on: macos-15-intel
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
+    env:
+      V100_NORMAL_PLAY_ENGINE: webkit
+      V100_NORMAL_PLAY_EVIDENCE_DIR: outputs/s14-native-once
+      GITHUB_PAGES_RELEASE_SHA: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22.13.0'
+          cache: npm
+      - name: Verify authorized scope and single-attempt execution
+        run: |
+          test "$GITHUB_RUN_ATTEMPT" = 1
+          test "$(git diff --name-only 38430c30a3a0aefd063d0233c49a87b42920b777 HEAD -- app public)" = app/v177RangerLowerPaint.js
+          node --input-type=module -e "import assert from 'node:assert/strict';import fs from 'node:fs';const a=JSON.parse(fs.readFileSync('scripts/fixtures/s14-native-once-scope.json'));assert.equal(a.maxObservationSeconds,90);assert.equal(a.maxObservationWindows,1);"
+      - run: npm ci
+      - name: Install identical native WebKit 26.6 runtime
+        run: |
+          npm ci --prefix scripts/pwa-native-runtime
+          node scripts/pwa-native-runtime/node_modules/playwright/cli.js install webkit
+      - name: Build diagnostic candidate without publication
+        run: npm run build
+      - name: Observe S14 once with an error-only input log
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v177-s14-native-once.mjs
+      - name: Preserve original diagnostic report and recording
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: s14-native-input-once
+          path: |
+            outputs/s14-native-once
+            scripts/.v177-s14-native-once.mjs
+            scripts/v177-s14-native-once.mjs
+            scripts/fixtures/s14-native-once-*.json
+            app/v177RangerLowerPaint.js
+            dist/client/.vite/manifest.json
+            dist/client/assets/*.js
+          include-hidden-files: true
+          retention-days: 14
+          if-no-files-found: warn

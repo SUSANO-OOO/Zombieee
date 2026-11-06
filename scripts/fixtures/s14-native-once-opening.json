@@ -1,0 +1,303 @@
+{
+  "namespace": "nishijin-campaign-v100",
+  "campaignGeneration": "v100-new-campaign-1",
+  "schemaVersion": 1,
+  "revision": 61,
+  "updatedAt": "2026-11-06T06:03:20.961Z",
+  "campaignStarted": true,
+  "playerName": "通常動作確認",
+  "availableStageIds": [
+    "stage-nishijin-shopping-street",
+    "stage-sawara-ward-office",
+    "stage-nishijin-defense-line-takuya",
+    "stage-nishijin-station-gate",
+    "stage-nishijin-station-platform",
+    "stage-nishijin-station-tunnel-seal",
+    "stage-university-hospital-approach",
+    "stage-hospital-emergency-ward",
+    "stage-hospital-evacuation-route",
+    "stage-research-access",
+    "stage-research-containment",
+    "stage-research-freight-passage",
+    "stage-logistics-relay",
+    "stage-evacuation-freight-yard"
+  ],
+  "completedStageIds": [
+    "stage-nishijin-shopping-street",
+    "stage-sawara-ward-office",
+    "stage-nishijin-defense-line-takuya",
+    "stage-nishijin-station-gate",
+    "stage-nishijin-station-platform",
+    "stage-nishijin-station-tunnel-seal",
+    "stage-university-hospital-approach",
+    "stage-hospital-emergency-ward",
+    "stage-hospital-evacuation-route",
+    "stage-research-access",
+    "stage-research-containment",
+    "stage-research-freight-passage",
+    "stage-logistics-relay"
+  ],
+  "bestStars": {
+    "stage-nishijin-shopping-street": 1,
+    "stage-sawara-ward-office": 1,
+    "stage-nishijin-defense-line-takuya": 1,
+    "stage-nishijin-station-gate": 1,
+    "stage-nishijin-station-platform": 1,
+    "stage-nishijin-station-tunnel-seal": 1,
+    "stage-university-hospital-approach": 1,
+    "stage-hospital-emergency-ward": 1,
+    "stage-hospital-evacuation-route": 1,
+    "stage-research-access": 1,
+    "stage-research-containment": 1,
+    "stage-research-freight-passage": 1,
+    "stage-logistics-relay": 1
+  },
+  "caps": 37,
+  "ownedUnitIds": [
+    "unit-hachi",
+    "unit-paisen",
+    "unit-kumaverson",
+    "unit-babayaga",
+    "unit-gantetsu",
+    "unit-nao",
+    "unit-mizuchi",
+    "unit-monkey"
+  ],
+  "registeredUnitIds": [
+    "unit-hachi",
+    "unit-paisen",
+    "unit-kumaverson",
+    "unit-babayaga",
+    "unit-nao",
+    "unit-mizuchi",
+    "unit-monkey",
+    "unit-crazy-king",
+    "unit-raider",
+    "unit-tatara",
+    "unit-gantetsu",
+    "unit-mayo-chan",
+    "unit-zakimiya"
+  ],
+  "unitLevels": {
+    "unit-hachi": 4,
+    "unit-paisen": 5,
+    "unit-kumaverson": 1,
+    "unit-babayaga": 5,
+    "unit-nao": 5,
+    "unit-mizuchi": 5,
+    "unit-monkey": 5,
+    "unit-crazy-king": 1,
+    "unit-raider": 1,
+    "unit-tatara": 1,
+    "unit-gantetsu": 5,
+    "unit-mayo-chan": 1,
+    "unit-zakimiya": 1,
+    "unit-tky": 1,
+    "unit-mrs-chiha": 1,
+    "unit-miyamoto-musashi": 1
+  },
+  "levelCap": 15,
+  "equippedSupportId": "support-healing",
+  "supportPurchaseUnlockedIds": [
+    "support-healing",
+    "support-explosive-drum",
+    "support-incendiary-drum"
+  ],
+  "ownedSupportIds": [
+    "support-healing"
+  ],
+  "equipment": {
+    "inventory": {},
+    "personalByUnit": {},
+    "tacticalIds": [
+      null,
+      null
+    ],
+    "enhancementLevels": {}
+  },
+  "outbreak": {
+    "active": null,
+    "lastResult": null,
+    "view": "hub",
+    "clearCounts": {}
+  },
+  "survival": {
+    "active": null,
+    "lastResult": null,
+    "view": "hub",
+    "highestCompletedWave": 0,
+    "highestReachedWave": 0,
+    "totalRuns": 0,
+    "clearCounts": {
+      "boss-takuya": 0,
+      "boss-gate-eater": 0,
+      "boss-mother": 0
+    }
+  },
+  "vehicle": {
+    "upgradeLevel": 1,
+    "maxHp": 760,
+    "upgradeReceipts": [
+      "v100:vehicle:upgrade:1"
+    ]
+  },
+  "bosses": {
+    "discoveredIds": [
+      "boss-takuya",
+      "boss-gate-eater",
+      "boss-mother"
+    ],
+    "compendiumIds": [
+      "compendium:boss-takuya",
+      "compendium:boss-gate-eater",
+      "compendium:boss-mother"
+    ],
+    "outbreakIds": [
+      "outbreak:boss-takuya",
+      "outbreak:boss-gate-eater",
+      "outbreak:boss-mother"
+    ],
+    "survivalIds": [
+      "survival:boss-takuya",
+      "survival:boss-gate-eater",
+      "survival:boss-mother"
+    ],
+    "storyReplayStageNumbers": [
+      3,
+      5,
+      11
+    ],
+    "defeatCounts": {
+      "boss-takuya": 1,
+      "boss-gate-eater": 1,
+      "boss-mother": 1
+    }
+  },
+  "formationSlots": [
+    "unit-gantetsu",
+    "unit-nao",
+    "unit-babayaga",
+    "unit-mizuchi",
+    "unit-monkey",
+    "unit-paisen",
+    "unit-hachi"
+  ],
+  "receipts": [
+    "v100:s01:result:synthetic-budget-s1",
+    "v100:s01:first-clear",
+    "v100:s02:result:synthetic-budget-s2",
+    "v100:s02:first-clear",
+    "v100:s03:result:synthetic-budget-s3",
+    "v100:s03:first-clear",
+    "v100:s03:boss-takuya:first-defeat",
+    "v100:s04:result:synthetic-budget-s4",
+    "v100:s04:first-clear",
+    "v100:s05:result:synthetic-budget-s5",
+    "v100:s05:first-clear",
+    "v100:s05:boss-gate-eater:first-defeat",
+    "v100:s06:result:synthetic-budget-s6",
+    "v100:s06:first-clear",
+    "v100:s07:result:synthetic-budget-s7",
+    "v100:s07:first-clear",
+    "v100:s08:result:synthetic-budget-s8",
+    "v100:s08:first-clear",
+    "v100:s09:result:synthetic-budget-s9",
+    "v100:s09:first-clear",
+    "v100:s10:result:synthetic-budget-s10",
+    "v100:s10:first-clear",
+    "v100:s11:result:synthetic-budget-s11",
+    "v100:s11:first-clear",
+    "v100:s11:boss-mother:first-defeat",
+    "v100:s12:result:synthetic-budget-s12",
+    "v100:s12:first-clear",
+    "v100:s13:result:synthetic-budget-s13",
+    "v100:s13:first-clear",
+    "v100:unit:unit-gantetsu:purchase",
+    "v100:unit:unit-nao:purchase",
+    "v100:unit:unit-mizuchi:purchase",
+    "v100:unit:unit-monkey:purchase",
+    "v100:support:support-healing:purchase",
+    "v100:vehicle:upgrade:1",
+    "v100:unit:unit-gantetsu:level:2",
+    "v100:unit:unit-nao:level:2",
+    "v100:unit:unit-babayaga:level:2",
+    "v100:unit:unit-mizuchi:level:2",
+    "v100:unit:unit-monkey:level:2",
+    "v100:unit:unit-paisen:level:2",
+    "v100:unit:unit-hachi:level:2",
+    "v100:unit:unit-gantetsu:level:3",
+    "v100:unit:unit-nao:level:3",
+    "v100:unit:unit-babayaga:level:3",
+    "v100:unit:unit-mizuchi:level:3",
+    "v100:unit:unit-monkey:level:3",
+    "v100:unit:unit-paisen:level:3",
+    "v100:unit:unit-hachi:level:3",
+    "v100:unit:unit-gantetsu:level:4",
+    "v100:unit:unit-nao:level:4",
+    "v100:unit:unit-babayaga:level:4",
+    "v100:unit:unit-mizuchi:level:4",
+    "v100:unit:unit-monkey:level:4",
+    "v100:unit:unit-paisen:level:4",
+    "v100:unit:unit-hachi:level:4",
+    "v100:unit:unit-gantetsu:level:5",
+    "v100:unit:unit-nao:level:5",
+    "v100:unit:unit-babayaga:level:5",
+    "v100:unit:unit-mizuchi:level:5",
+    "v100:unit:unit-monkey:level:5",
+    "v100:unit:unit-paisen:level:5"
+  ],
+  "readStoryEventIds": [],
+  "readStoryVersions": {},
+  "eventCursor": null,
+  "flowState": {
+    "phase": "battle",
+    "eventId": null,
+    "stageId": "stage-evacuation-freight-yard",
+    "stageNumber": 14,
+    "destination": "battle",
+    "nodeIndex": 0,
+    "firstClear": false,
+    "finalized": true,
+    "scriptVersion": "producer-r9"
+  },
+  "pendingResult": null,
+  "lastResult": {
+    "resultId": "synthetic-budget-s13",
+    "battleRunId": "synthetic-budget-s13",
+    "stageId": "stage-logistics-relay",
+    "stageNumber": 13,
+    "won": true,
+    "objectiveComplete": true,
+    "bossDefeated": false,
+    "vehicleHp": 1,
+    "vehicleMaxHp": 680,
+    "stars": 1,
+    "elapsedSeconds": 0,
+    "unitDeaths": 0,
+    "firstClear": true,
+    "rewardCaps": 171,
+    "rewardBreakdown": {
+      "firstClear": 171,
+      "replay": 0,
+      "star2": 0,
+      "star3": 0
+    },
+    "finalizedAt": "2026-10-16T00:00:00.000Z"
+  },
+  "postGameAvailable": false,
+  "legacy": {
+    "eligible": false,
+    "entitlementClaimed": false,
+    "popupAcknowledged": false
+  },
+  "settings": {
+    "bgmEnabled": true,
+    "sfxEnabled": true,
+    "bgmVolume": 0.8,
+    "sfxVolume": 0.9,
+    "reducedMotion": false,
+    "battleEventMode": "first-time",
+    "graphicsQuality": "high",
+    "autoSkipReadStory": false
+  }
+}

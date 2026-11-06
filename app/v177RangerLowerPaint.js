@@ -190,7 +190,15 @@ export function paintV177RangerLower(p,ctx,phase,settle,x,y,width,height,feet=nu
   const trace=diagnostic?.rangerPaintActive===true&&typeof diagnostic.rangerPaint==='function'
     ?{startedAt:performance.now()}:null;
   let pose;
-  try{pose=v177RangerLowerPose(p.rig,phase,settle,p.pose,feet);}catch(error){invalidateRasters(p);throw error;}
+  try{pose=v177RangerLowerPose(p.rig,phase,settle,p.pose,feet);}catch(error){
+    invalidateRasters(p);
+    if(error instanceof RangeError && error.message==='Original Ranger ankle target is unreachable'){
+      error.message+='\nRanger failed lower-pose inputs: '+JSON.stringify({phase,settle,feet,
+        legs:p.rig.legs.map(leg=>({hip:leg.hip,upperLength:leg.upperLength,lowerLength:leg.lowerLength,groundAnkle:leg.groundAnkle,footCenter:leg.footCenter,offset:leg.offset})),
+        stanceFraction:p.rig.stanceFraction,spanPx:p.rig.spanPx,liftPx:p.rig.liftPx},(_key,value)=>typeof value==='number'&&!Number.isFinite(value)?{nonFiniteNumber:String(value)}:value);
+    }
+    throw error;
+  }
   if(trace)trace.poseFinishedAt=performance.now();
   const m=ctx.getTransform();
   if(trace){trace.phase=pose.phase;trace.settle=pose.settle;trace.transform=[m.a,m.b,m.c,m.d,m.e,m.f];}
