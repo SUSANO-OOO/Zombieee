@@ -4119,6 +4119,11 @@ async function storyPage(page, targetState) {
   await openRoute(page, eventSave(target.phase, target.eventId, { ...target, nodeIndex: target.startIndex }));
   await page.locator(`[data-v100-event-id="${target.eventId}"][data-v100-node-index="${target.nodeIndex}"]`).waitFor({ state: "visible", timeout });
   await page.locator(`[data-v100-state="dialogue-${side}"]`).waitFor({ state: "visible", timeout });
+  await page.waitForFunction(() => {
+    const portraits = [...document.querySelectorAll(".v100-story-node .v100-portrait")];
+    return portraits.length > 0 && portraits.every(image => image instanceof HTMLImageElement
+      && image.complete && image.naturalWidth > 0 && image.naturalHeight > 0);
+  }, null, { timeout });
 }
 
 async function mapPage(page, save) {

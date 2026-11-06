@@ -15,15 +15,33 @@ const targets = parsed.statements.find(node => ts.isVariableStatement(node)
 const functions = ["eventSave", "storyPage"].map(name => parsed.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === name));
 assert.ok(targets && functions.every(Boolean), "exercise the matrix's actual target selection and callers");
 
-function harness({ wrong = null, events = V100_STORY_EVENTS } = {}) {
-  let displayed, seeded;
+function harness({ wrong = null, images = "ready", events = V100_STORY_EVENTS } = {}) {
+  let displayed, seeded, imageChecks = 0;
   const waits = [];
   const page = { locator(selector) { return { async waitFor(options) {
     waits.push({ selector, ...options });
     assert.equal(options.state, "visible");
     assert.equal(options.timeout, 60_000);
     if (!displayed?.has(selector)) throw new Error(`unmatched-visible-selector: ${selector}`);
-  } }; } };
+  } }; }, async waitForFunction(predicate, argument, options) {
+    imageChecks++;
+    assert.equal(argument, null);
+    assert.equal(options.timeout, 60_000);
+    class HTMLImageElement {
+      complete = images !== "incomplete";
+      naturalWidth = images === "broken" ? 0 : 320;
+      naturalHeight = images === "broken" ? 0 : 480;
+    }
+    const list = images === "missing" ? [] : [new HTMLImageElement(), new HTMLImageElement()];
+    const ready = vm.runInNewContext(`(${predicate.toString()})()`, {
+      HTMLImageElement,
+      document: { querySelectorAll(selector) {
+        assert.equal(selector, ".v100-story-node .v100-portrait");
+        return list;
+      } },
+    });
+    if (!ready) throw new Error("unready-portrait");
+  } };
   const api = vm.runInNewContext([targets, ...functions].map(node => node.getText(parsed)).join("\n")
     + "\n({ targets: dialogueEvidenceTargets, storyPage })", {
     V100_STORY_EVENTS: events, V100_STORY_SCRIPT_VERSION, V100_STAGE_IDS,
@@ -43,7 +61,7 @@ function harness({ wrong = null, events = V100_STORY_EVENTS } = {}) {
       ]);
     },
   });
-  return { ...api, page, waits, seeded: () => seeded };
+  return { ...api, page, waits, seeded: () => seeded, imageChecks: () => imageChecks };
 }
 
 test("the old left fixture waits for node 1 although the game displays merged node 2 on the right", () => {
@@ -70,6 +88,7 @@ for (const side of ["left", "right"]) {
     while (cursor < target.startIndex) cursor = v100StoryPageFor(event.id, event.nodes, cursor).endIndex + 1;
     assert.equal(cursor, target.startIndex, "the fixture starts on a page reachable by ordinary Next inputs");
     assert.equal(h.waits.length, 2);
+    assert.equal(h.imageChecks(), 1);
   });
   for (const wrong of ["index", "side"]) {
     test(`a visible conversation with the wrong ${wrong} cannot satisfy the ${side} capture`, async () => {
@@ -77,6 +96,13 @@ for (const side of ["left", "right"]) {
       await assert.rejects(h.storyPage(h.page, `dialogue-${side}`), /unmatched-visible-selector/);
     });
   }
+}
+
+for (const images of ["missing", "incomplete", "broken"]) {
+  test(`a matching dialogue page with ${images} portraits is rejected`, async () => {
+    const h = harness({ images });
+    await assert.rejects(h.storyPage(h.page, "dialogue-right"), /unready-portrait/);
+  });
 }
 
 test("missing canonical dialogue evidence fails instead of choosing an unrelated visible screen", () => {
