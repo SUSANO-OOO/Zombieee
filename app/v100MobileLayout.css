@@ -100,7 +100,7 @@
 /* Separate identity and deployment facts; a cooldown never covers the cost
    or face, and a second shortage remains visible while the timer counts down. */
 .v100-shell .game-frame .unit-card.v100-deploy-card {
- display: grid; grid-template-columns: 48px minmax(0,1fr); grid-template-rows: 18px minmax(0,1fr);
+ display: grid; grid-template-columns: 48px minmax(0,1fr); grid-template-rows: 22px minmax(0,1fr);
  flex: 0 0 auto; width: max-content; min-width: 136px; max-width: none; gap: 0; padding: 0;
  border-width: 1px; border-radius: 3px; opacity: 1; filter: none;
 }
@@ -124,9 +124,9 @@
  grid-column: 2; grid-row: 2; display: flex; flex-direction: column; justify-content: center;
  min-width: 0; gap: 2px; padding: 2px 3px; background: #18262def; font-variant-numeric: tabular-nums; text-align: right;
 }
-.v100-shell .game-frame .v100-deploy-cost { display: flex; flex: none; align-items: baseline; justify-content: flex-end; gap: 3px; color: #ffe19a; line-height: 16px; white-space: nowrap; }
+.v100-shell .game-frame .v100-deploy-cost { display: flex; flex: none; align-items: center; justify-content: flex-end; gap: 3px; color: #ffe19a; line-height: 20px; white-space: nowrap; }
 .v100-shell .game-frame .v100-deploy-cost small { font-size: 12px; font-style: normal; }
-.v100-shell .game-frame .v100-deploy-cost b { font: 800 16px/16px var(--v100-numeric-font); }
+.v100-shell .game-frame .v100-deploy-cost b { font: 800 16px/20px var(--v100-numeric-font); }
 .v100-shell .game-frame .v100-deploy-status,
 .v100-shell .game-frame .v100-deploy-shortage { font: 700 13px/16px var(--v100-reading-font); white-space: nowrap; color: #dce9ed; }
 .v100-shell .game-frame .v100-deploy-card[data-state="ready"] .v100-deploy-status { color: #b8e2b0; }

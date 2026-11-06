@@ -101,7 +101,9 @@ async function probe(page, row, state, targets) {
       const cost = card.querySelector(".v100-deploy-cost,.cost"), timer = card.querySelector(".v100-deploy-status,.cooldown-mask small");
       const labels = [cost, timer].filter(Boolean).map(label => {
         const b = label.getBoundingClientRect();
-        return { kind: label === cost ? "cost" : "timer", rect: { x: b.x, y: b.y, width: b.width, height: b.height },
+        return { kind: label === cost ? "cost" : "timer", text: label.textContent,
+          scrollWidth: label.scrollWidth, clientWidth: label.clientWidth, scrollHeight: label.scrollHeight, clientHeight: label.clientHeight,
+          rect: { x: b.x, y: b.y, width: b.width, height: b.height },
           fits: label.scrollWidth <= label.clientWidth + 1 && label.scrollHeight <= label.clientHeight + 1,
           contained: b.left >= c.left && b.right <= c.right && b.top >= c.top && b.bottom <= c.bottom };
       });
@@ -110,10 +112,11 @@ async function probe(page, row, state, targets) {
         * Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top)) : 0;
       const x = Math.ceil(Math.max(r.x, c.x + 3, frame.left)), y = Math.ceil(Math.max(r.y + 3, frame.top + 1));
       const width = Math.floor(Math.min(r.right, c.right - 3, frame.right) - x), height = Math.floor(Math.min(r.bottom, c.bottom, frame.bottom) - y - 1);
-      return { clip: { x, y, width, height }, labels, timerCostOverlap, originalStyle: el.getAttribute("style"), masks: [...card.querySelectorAll(".v100-deploy-name,.v100-deploy-cost,.v100-deploy-status,.v100-deploy-shortage,.cost,.card-state,.cooldown-mask small")].map(e => {
+      return { cardRect: { x: c.x, y: c.y, width: c.width, height: c.height }, clip: { x, y, width, height }, labels, timerCostOverlap, originalStyle: el.getAttribute("style"), masks: [...card.querySelectorAll(".v100-deploy-name,.v100-deploy-cost,.v100-deploy-status,.v100-deploy-shortage,.cost,.card-state,.cooldown-mask small")].map(e => {
         const m = e.getBoundingClientRect(); return { x: m.x - x, y: m.y - y, width: m.width, height: m.height };
       }).concat([{ x: c.x - x, y: c.bottom - y - 13, width: c.width, height: 13 }]) };
     });
+    (record.geometryObservations ??= []).push({ kind, expectedState, geometry });
     assert.ok(geometry.labels.every(label => label.fits && label.contained), "card command cost or timer label is clipped");
     assert.equal(geometry.timerCostOverlap, 0, "cooldown timer hides command-cost text");
     const first = await page.screenshot({ clip: geometry.clip, animations: "disabled" });
