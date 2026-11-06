@@ -100,11 +100,15 @@ try {
           record.recoveryHud = await page.evaluate(() => {
             const el = document.querySelector('.resource.command.recovering'), status = document.querySelector('.v100-deploy-status');
             const range = document.createRange(); range.selectNodeContents(status); const text = range.getBoundingClientRect(), card = status.closest('button').getBoundingClientRect();
-            return { resource: el.getAttribute('aria-label'), status: status.textContent, accessibleCard: status.closest('button').getAttribute('aria-label'), text: { left: text.left, right: text.right }, card: { left: card.left, right: card.right }, viewport: innerWidth };
+            return { resource: el.getAttribute('aria-label'), status: status.textContent,
+              detail: status.closest('button').querySelector('.v100-deploy-shortage')?.textContent ?? null,
+              accessibleCard: status.closest('button').getAttribute('aria-label'), text: { left: text.left, right: text.right }, card: { left: card.left, right: card.right }, viewport: innerWidth };
           });
           assert.ok(record.recoveryHud.text.left >= record.recoveryHud.card.left - 1);
           assert.ok(record.recoveryHud.text.right <= record.recoveryHud.card.right + 1);
-          assert.match(record.recoveryHud.status, /あと約\d+秒/u);
+          assert.equal(record.recoveryHud.status, '出撃不可');
+          assert.match(record.recoveryHud.detail, /^(?:あと約\d+秒|指揮 あと\d+)$/u);
+          assert.match(record.recoveryHud.accessibleCard, /出撃まで約\d+秒/u);
           await shot(page, scenario.id + "-recovering.png");
         }
         if (seconds >= nextControlAt) { record.lastControls = await controls(page); nextControlAt = seconds + .4; }

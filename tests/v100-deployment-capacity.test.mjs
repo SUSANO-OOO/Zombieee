@@ -26,9 +26,9 @@ const human = id => ({ id, kind:"scout", side:"human", hp:100, anchorLane:0 });
 function fixture(active = 6, queued = [], v100 = true) {
   const game = { definition:{missionConfig:v100?{v100StageNumber:6}:{}},fighters:Array.from({length:active},(_,id)=>human(id)),
     nextId:50,deployQueue:[...queued],formationKinds:["scout"],energy:150,deployCooldowns:{scout:0},running:true,paused:false,over:false };
-  const cues=[];
+  const cues=[],gameRef={current:game},deploymentHistoryRef={current:null};
   const runtime = vm.runInNewContext(code, {
-    humanDeploymentCapacity,V100_FORMATION_MAX_SLOTS,canDeploy,gameRef:{current:game},useCallback:fn=>fn,
+    humanDeploymentCapacity,V100_FORMATION_MAX_SLOTS,canDeploy,gameRef,deploymentHistoryRef,useCallback:fn=>fn,
     equippedCardForGame:()=>({kind:"scout",name:"ハチ",cost:25,deployCooldown:5,hp:100}),
     playUiOperationCue:(...args)=>cues.push(args),rejectBattleSaveBoundary:()=>false,
     survivalUpgradeEffects:()=>({redeployMultiplier:1}),
@@ -36,7 +36,7 @@ function fixture(active = 6, queued = [], v100 = true) {
     createCombatAnimationRuntime:()=>({}),createNavigationRecoveryState:()=>({}),createStationAbilityRuntime:()=>({}),
     createUnitRoleRuntime:()=>({}),addParticles:()=>{},chooseHumanDeploymentLane:()=>0,
   });
-  return {game,cues,...runtime};
+  return {game,gameRef,deploymentHistoryRef,cues,...runtime};
 }
 
 test("the actual deployment callback reserves the seventh slot once and rejects the eighth without spending", () => {
@@ -75,4 +75,24 @@ test("seven separate copies of one character are allowed and legacy admission is
   assert.equal(f.spawnHuman(f.game,"scout"),null);
   const legacy=fixture(7,[],false);
   assert.equal(legacy.deployHuman("scout"),true);
+});
+
+test("readiness history records accepted deployment only and stays with its original battle", () => {
+  const f=fixture(7);
+  f.game.paused=true;
+  assert.equal(f.deployHuman("scout"),false);
+  assert.equal(f.deploymentHistoryRef.current,null);
+  f.game.paused=false;
+  assert.equal(f.deployHuman("scout"),false);
+  assert.equal(f.deploymentHistoryRef.current,null);
+  f.game.fighters=[];
+  assert.equal(f.deployHuman("scout"),true);
+  const first=f.deploymentHistoryRef.current.get(f.game);
+  assert.ok(first.has("scout"));
+  const next={...f.game,fighters:[],deployQueue:[],deployCooldowns:{scout:0}};
+  f.gameRef.current=next;
+  assert.equal(f.deploymentHistoryRef.current.get(next),undefined);
+  assert.equal(f.deployHuman("scout"),true);
+  assert.ok(f.deploymentHistoryRef.current.get(next).has("scout"));
+  assert.notEqual(f.deploymentHistoryRef.current.get(next),first);
 });
