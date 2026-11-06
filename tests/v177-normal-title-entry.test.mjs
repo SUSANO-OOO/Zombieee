@@ -125,7 +125,7 @@ for(const file of ['scripts/v100-card-portrait-browser.mjs','scripts/v100-card-r
   });
 }
 
-for(const file of ['scripts/v100-battle-improvement-browser.mjs','scripts/v100-staff-roll-native-browser.mjs']){
+for(const file of ['scripts/v100-battle-improvement-browser.mjs','scripts/v100-staff-roll-native-browser.mjs','scripts/v100-president-presentation-browser.mjs']){
   for(const hasOffer of [true,false])test(`${file}: saved scenario enters the title with invitation ${hasOffer?'present':'absent'}`,async()=>{
     const fixture=titleFixture(true,{hasOffer,maxTimeout:file.includes('staff-roll')?30000:15000});
     const run=new (async function(){}).constructor('page','origin','dismissInstallOffer','enterV100FromTitle',fixtureEntryBlock(file));
