@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {readFile,writeFile} from 'node:fs/promises';
+import {mkdir,readFile,writeFile} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import path from 'node:path';
@@ -49,6 +49,9 @@ async function main() {`);
   const generated=path.resolve(`scripts/.v177-s30-bounded-${recording}.mjs`);
   await writeFile(generated,source,{flag:'wx'});
   if(process.env.S30_DIAGNOSTIC_DRY_RUN==='1')return;
+  // The standalone runner creates only its own child directory. Its usual
+  // workflow creates this evidence parent before invocation.
+  await mkdir(path.resolve(process.env.V100_NORMAL_PLAY_EVIDENCE_DIR),{recursive:true});
   await import(pathToFileURL(generated).href);
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href)await runBrowserQa();
