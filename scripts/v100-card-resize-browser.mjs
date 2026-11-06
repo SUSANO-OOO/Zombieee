@@ -35,7 +35,14 @@ const report={schema:'v100-card-resize-fidelity/v2',status:'running',head:git('r
  fixtureSha256:hash(raw),maximumChangedFraction:.01,minimumChannelDelta:12,cases:[],errors:[],physicalDeviceVerified:false};
 
 async function persist(bytes,file){await writeFile(path.join(out,file),bytes,{flag:'wx'});return{file,bytes:bytes.length,sha256:hash(bytes)};}
-const cropPortrait=(bytes,clip)=>sharp(bytes).extract({left:clip.x,top:clip.y,width:clip.width,height:clip.height}).png().toBuffer();
+const cropPortrait=async(bytes,clip,card)=>{
+ const {width,height}=await sharp(bytes).metadata();
+ assert.ok(card&&[card.x,card.y,card.width,card.height].every(Number.isFinite)&&card.width>0&&card.height>0
+  &&card.x>=0&&card.y>=0&&card.x+card.width<=width&&card.y+card.height<=height,'Card extends beyond native screenshot');
+ assert.ok([clip.x,clip.y,clip.width,clip.height].every(Number.isSafeInteger)&&clip.x>=0&&clip.y>=0&&clip.width>0&&clip.height>0
+  &&clip.x+clip.width<=width&&clip.y+clip.height<=height,'Portrait crop extends beyond native screenshot');
+ return sharp(bytes).extract({left:clip.x,top:clip.y,width:clip.width,height:clip.height}).png().toBuffer();
+};
 async function changedPixels(first,last,masks){
  const a=await sharp(first).ensureAlpha().raw().toBuffer({resolveWithObject:true});
  const b=await sharp(last).ensureAlpha().raw().toBuffer({resolveWithObject:true});assert.deepEqual(a.info,b.info);
@@ -51,8 +58,10 @@ async function changedPixels(first,last,masks){
 async function imageGeometry(page,kind){
  return page.locator(`button.unit-card[data-kind="${kind}"] .portrait > img`).evaluate(async img=>{
   await img.decode();const card=img.closest('button'),r=img.getBoundingClientRect(),c=card.getBoundingClientRect();
-  const x=Math.ceil(Math.max(r.left,c.left+3)),y=Math.ceil(r.top+3);
-  const clip={x,y,width:Math.floor(Math.min(r.right,c.right-3)-x),height:Math.floor(r.bottom-y-3)};
+  // The enlarged source portrait is clipped by the production card. Compare
+  // its visible native pixels, while cropPortrait still rejects offscreen cards.
+  const x=Math.ceil(Math.max(r.left,c.left+3)),y=Math.ceil(Math.max(r.top+3,c.top+3));
+  const clip={x,y,width:Math.floor(Math.min(r.right,c.right-3)-x),height:Math.floor(Math.min(r.bottom-3,c.bottom-3)-y)};
   return{kind:card.dataset.kind,state:card.dataset.state,src:img.getAttribute('src'),complete:img.complete,
    naturalWidth:img.naturalWidth,naturalHeight:img.naturalHeight,imageRendering:getComputedStyle(img).imageRendering,
    optimizeQualitySupported:CSS.supports('image-rendering','optimizeQuality'),
@@ -108,12 +117,12 @@ for(const browserName of matrix){
    for(const kind of kinds){const g=await imageGeometry(page,kind);assert.equal(g.src,new URL(CHARACTER_PORTRAIT_ART[kind].slice(1),base).pathname,'battle cards retain the approved original character portrait');assert.ok(decoded.includes(g.src));assert.ok(g.complete&&g.naturalWidth>0&&g.naturalHeight>0);assert.equal(g.state,'ready');if(browserName==='webkit'){assert.equal(g.optimizeQualitySupported,true);assert.equal(g.imageRendering.toLowerCase(),'optimizequality');}row.geometry[kind]=g;geometry.set(kind,g);}
   await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
   const before=await capture(page,row,'before');const baseline=new Map();
-  for(const [kind,g]of geometry)baseline.set(kind,await cropPortrait(before,g.clip));
+  for(const [kind,g]of geometry)baseline.set(kind,await cropPortrait(before,g.clip,g.unroundedRects.card));
   // Keep a native control before any resize. It distinguishes unstable
   // sampling from a resize regression without changing the fidelity gate.
   await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
   const control=await capture(page,row,'no-resize-control');
-  for(const kind of kinds){const g=await imageGeometry(page,kind),original=row.geometry[kind];assert.deepEqual(g.clip,original.clip);const comparison=await changedPixels(baseline.get(kind),await cropPortrait(control,g.clip),original.masks);row.noResizeControl.push({kind,geometry:g,comparison});}
+  for(const kind of kinds){const g=await imageGeometry(page,kind),original=row.geometry[kind];assert.deepEqual(g.clip,original.clip);const comparison=await changedPixels(baseline.get(kind),await cropPortrait(control,g.clip,g.unroundedRects.card),original.masks);row.noResizeControl.push({kind,geometry:g,comparison});}
   for(const size of [{width:844,height:390},{width:1280,height:720},{width:844,height:340}]){
    await page.setViewportSize(size);row.inputs.push({action:'native-setViewportSize',...size});
    await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
@@ -125,7 +134,7 @@ for(const browserName of matrix){
    const bytes=await capture(page,row,'returned-'+delay+'ms');
    for(const kind of kinds){
     const g=await imageGeometry(page,kind),original=row.geometry[kind];assert.equal(g.state,'ready');assert.deepEqual(g.clip,original.clip,'Native portrait geometry did not return');assert.deepEqual(g.opacity,original.opacity,'Native state opacity changed');assert.equal(g.imageRendering,original.imageRendering);
-    const after=await cropPortrait(bytes,g.clip),comparison=await changedPixels(baseline.get(kind),after,original.masks);
+    const after=await cropPortrait(bytes,g.clip,g.unroundedRects.card),comparison=await changedPixels(baseline.get(kind),after,original.masks);
     row.probes.push({kind,delay,geometry:g,comparison});
     if(comparison.fraction>.01)row.fidelityViolations.push({kind,delay,fraction:comparison.fraction});
    }
