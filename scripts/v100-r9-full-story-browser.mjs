@@ -15,6 +15,25 @@ import {readV177StoryPortraitPaint} from './v177-story-portrait-paint.mjs';
 import {expectedStoryPortraits,assertStoryPortraitSources} from './v100-story-portrait-contract.mjs';
 import {isV100StoryBackdropReady} from './v100-story-backdrop-ready.mjs';
 
+function readR9FailureState(){
+ const scalar=(value,keys)=>Object.fromEntries(keys.flatMap(key=>{
+  const item=value?.[key];return typeof item==='string'?[[key,item.slice(0,200)]]:typeof item==='number'&&Number.isFinite(item)||typeof item==='boolean'?[[key,item]]:[];
+ }));
+ const shell=document.querySelector('.v100-shell'),event=shell?.querySelector('[data-v100-event-id]');
+ const audio=window.__V100_EVENT_AUDIO_QA__?.getSnapshot?.();
+ return{phase:shell?.getAttribute('data-v100-phase')??null,eventId:event?.getAttribute('data-v100-event-id')??null,
+  nodeIndex:event?.getAttribute('data-v100-node-index')??null,
+  audio:{desired:scalar(audio?.desired,['eventId','nodeIndex','sceneId','cueId']),active:scalar(audio?.active,['eventId','nodeIndex','sceneId']),
+   sceneState:{...scalar(audio?.sceneState,['sceneId','bgmAssetId']),ambienceAssetIds:(audio?.sceneState?.ambienceAssetIds??[]).filter(x=>typeof x==='string').slice(0,12)},
+   diagnostics:scalar(audio?.diagnostics,['contextState']),receipts:(audio?.receipts??[]).slice(-32).map(x=>scalar(x,['action','eventId','nodeIndex','cueId','sceneId','at','reason']))},
+  images:[...(event?.querySelectorAll('img')??[])].slice(0,8).map(image=>{
+   const style=getComputedStyle(image),rect=image.getBoundingClientRect();
+   return{source:new URL(image.currentSrc||image.src,location.href).pathname.slice(0,200),complete:image.complete,naturalWidth:image.naturalWidth,naturalHeight:image.naturalHeight,
+    opacity:style.opacity,visibility:style.visibility,display:style.display,width:rect.width,height:rect.height,
+    pendingAnimations:image.getAnimations().filter(x=>x.pending||x.playState!=='finished').length};
+  })};
+}
+
 const origin=new URL(process.env.V100_CAMPAIGN_QA_BASE_URL??'http://127.0.0.1:4177/');
 assert.ok(['localhost','127.0.0.1'].includes(origin.hostname),'Story QA is local-only');
 const out=path.resolve(process.env.V100_R9_OUT??'outputs/r9-full-story');
@@ -58,9 +77,11 @@ for(const engine of engines){
     await play.or(page.locator('.v100-start-screen')).first().waitFor();if(await play.isVisible())await play.click();
     await enterV100FromTitle(page);
     for(const expected of event.pages){
+     row.waitingFor={condition:'surface',nodeIndex:expected.nodeIndex,sceneId:expected.presentation.sceneId,cueId:expected.presentation.cueId,requiresAudio:expected.requiresAudio};
      const selector=`[data-v100-event-id="${event.eventId}"][data-v100-node-index="${expected.nodeIndex}"]`,surface=page.locator(selector);
      await surface.waitFor({state:'visible'});
-     if(expected.presentation.backgroundPath)await page.waitForFunction(isV100StoryBackdropReady,{selector,background:expected.presentation.backgroundPath});
+     if(expected.presentation.backgroundPath){row.waitingFor.condition='backdrop';await page.waitForFunction(isV100StoryBackdropReady,{selector,background:expected.presentation.backgroundPath});}
+     row.waitingFor.condition='event-audio';
      await page.waitForFunction(({eventId,nodeIndex,sceneId,cueId,requiresAudio,sceneAudio})=>{
       const a=window.__V100_EVENT_AUDIO_QA__?.getSnapshot?.();
       return a?.desired?.sceneId===sceneId&&a?.sceneState?.sceneId===sceneId&&a?.diagnostics?.contextState==='running'
@@ -69,6 +90,7 @@ for(const engine of engines){
        &&JSON.stringify([...a.sceneState.ambienceAssetIds].sort())===JSON.stringify([...sceneAudio.ambienceAssetIds].sort())
        &&(!cueId||a.receipts.some(r=>r.action==='cue-started'&&r.eventId===eventId&&r.nodeIndex===nodeIndex&&r.cueId===cueId));
      },{eventId:event.eventId,nodeIndex:expected.nodeIndex,sceneId:expected.presentation.sceneId,cueId:expected.presentation.cueId,requiresAudio:expected.requiresAudio,sceneAudio:expected.sceneAudio});
+     row.waitingFor.condition='portrait-paint';
      const painted=await page.waitForFunction(readV177StoryPortraitPaint,selector);
      let portraitPaint;try{portraitPaint=await painted.jsonValue();}finally{await painted.dispose();}
      assertStoryPortraitSources(portraitPaint,expectedStoryPortraits(event.eventId,expected,playerName));
@@ -77,12 +99,20 @@ for(const engine of engines){
       text:state.text,scene:state.audio.sceneState,receipts:state.audio.receipts.filter(r=>r.nodeIndex===expected.nodeIndex),bounds:state.bounds,portraitPaint});
      if(expected.startIndex===0||expected.nodeIndex===event.pages.at(-1).nodeIndex||expected.presentation.cutId||expected.presentation.insertId)
       await page.screenshot({path:path.join(out,`${id}-${expected.nodeIndex}.png`)});
-     await surface.locator('.v100-event-actions .v100-primary').click();
+     row.waitingFor.condition='next-input';await surface.locator('.v100-event-actions .v100-primary').click();
     }
+    row.waitingFor={condition:'event-exit'};
     await page.waitForFunction(id=>!document.querySelector(`[data-v100-event-id="${id}"]`),event.eventId);
     assert.deepEqual(row.pages.flatMap(p=>p.sourceIndices),Array.from({length:event.nodeCount},(_,i)=>i));
-    assert.deepEqual(row.errors,[]);assert.deepEqual(requests.report.unexpectedFailures,[]);row.status='passed';
-   }catch(error){row.status='failed';row.error=String(error);await page.screenshot({path:path.join(out,id+'-failure.png')}).catch(()=>{});}
+    assert.deepEqual(row.errors,[]);assert.deepEqual(requests.report.unexpectedFailures,[]);row.status='passed';delete row.waitingFor;
+   }catch(error){
+    row.status='failed';row.error=String(error);
+    let failureReadTimer;
+    try{row.failureState=await Promise.race([page.evaluate(readR9FailureState),new Promise((_,reject)=>{failureReadTimer=setTimeout(()=>reject(new Error('failure-state-read-deadline-2000ms')),2000);})]);}
+    catch(readError){row.failureStateError=String(readError);}
+    finally{clearTimeout(failureReadTimer);}
+    await page.screenshot({path:path.join(out,id+'-failure.png')}).catch(()=>{});
+   }
    finally{
     try{await requests.closeContext(context);row.cleanup='completed';const file=path.join(out,'video',id+'.webm');await rename(await video.path(),file);row.video={path:file,bytes:(await stat(file)).size};assert.ok(row.video.bytes>0);}
     catch(error){row.cleanup='failed';row.status='failed';row.cleanupError=String(error);}
