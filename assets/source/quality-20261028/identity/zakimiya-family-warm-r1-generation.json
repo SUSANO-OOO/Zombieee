@@ -1,0 +1,35 @@
+{
+  "method": "built-in image_gen",
+  "creator": "OpenAI image_gen, project-directed derivative",
+  "rights": "Existing project generated-model/scene authorization. No private photos distributed.",
+  "producerApproval": "Task-authorized correction of contradictory meal props; likeness and whole-game human acceptance remain open.",
+  "generatedPath": "C:/Users/okait/.codex/generated_images/01a180c8-9e05-7871-b287-613f7c7eb364/exec-32c6df68-c657-43af-a250-f3e2e93aab94.png",
+  "args": {
+    "referenced_image_paths": [
+      "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/public/art/v100/portraits/zakimiya-warm-quality-r1.webp",
+      "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/zakimiya-canonical-master-r1.png",
+      "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/public/art/v100/quality-20261028/scenes/zakimiya-family-morning-r1.webp"
+    ],
+    "transparent_background": true,
+    "prompt": "Edit IMAGE 1 into a production dialogue sprite of the EXACT SAME Zakimiya for the existing hospital meal scene. IMAGE 1 controls the final 4:5 portrait framing, his exact head position, face size, relaxed expression, hair, clothes and lighting. IMAGE 2 is the same adopted generated identity at high resolution: preserve this man's specific face, age, eye spacing, nose, mouth, jaw, hair, worn dark hooded jacket with pale sleeve stripes and red arm band, light shirt, necklaces and wrapped wrists. IMAGE 3 supplies ONLY his already-existing baby son's appearance and cream patterned swaddling blanket, not a new father pose or new adult face. In the screenplay his wife has handed him their baby and a feeding bottle: BOTH HIS HANDS ARE OCCUPIED, so he cannot feed himself. Remove ALL Molotov/alcohol bottles, wicks and weapon pouches from his hands and waist. One arm naturally cradles the SAME small sleeping baby son high across his chest, the baby's head and neck fully supported in the elbow/forearm; his other hand naturally holds ONE recognizable translucent infant milk bottle with a pale cap and silicone teat upright near the baby, not a beer bottle. Show the baby and milk bottle clearly above his waist so they remain visible in a waist-up dialogue crop. Exactly two adult arms and two adult hands, naturally connected shoulders/elbows/wrists/fingers, no floating baby or bottle, no extra adult or dog. Keep the adult's face and hair at EXACTLY the same proportional screen coordinates and scale as IMAGE 1; do not tilt, shrink, enlarge, beautify, replace or re-age his face. Match the restrained realistic painted game finish and natural skin of the references. Output one 1024x1280 transparent RGBA portrait (2x IMAGE 1), upper thighs at bottom, all necessary arms and baby within frame; same transparent margins and camera as IMAGE1. No background, glow, floor, text, panels or collage. The reference's dark background must be transparent. This is the same existing father and child in a different canonical prop/arm pose, not a new design."
+  },
+  "inputs": [
+    {
+      "path": "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/public/art/v100/portraits/zakimiya-warm-quality-r1.webp",
+      "sha256": "a7573b6fdc0178192393641ae149a13fb8373084b045c49f8d1b522248cf4190"
+    },
+    {
+      "path": "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/zakimiya-canonical-master-r1.png",
+      "sha256": "303adc8b4126badbc98969b476b773bd4a35c3817b34d3de6478842245dfa389"
+    },
+    {
+      "path": "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/public/art/v100/quality-20261028/scenes/zakimiya-family-morning-r1.webp",
+      "sha256": "d56e398545fb61d608010e5981d7d2dcfb0c33123a8b3ed1028b6d9ab8fe4c44"
+    }
+  ],
+  "output": {
+    "path": "assets/source/quality-20261028/identity/zakimiya-family-warm-r1.png",
+    "sha256": "5d13f69064c1351274598914c53a7ea276b22a58066839b1ff0acd5c225c88af",
+    "bytes": 1711439
+  }
+}

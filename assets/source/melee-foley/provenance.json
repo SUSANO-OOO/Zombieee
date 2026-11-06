@@ -1,0 +1,394 @@
+{
+  "creator": "Kenney",
+  "license": "CC0-1.0",
+  "notices": [
+    {
+      "file": "assets/source/v100/audio/kenney-rpg/License.txt",
+      "sha256": "7921b864e3bdaf005f8c7ee2e5dc4c0a18a1db38943ccf45962681e2e66f73d0"
+    },
+    {
+      "file": "assets/source/v100/audio/kenney-impact/License.txt",
+      "sha256": "043d5a52d1dc1dfd67437b55b714b7fd629031153ac579b9fdedc5396c037f99"
+    }
+  ],
+  "urls": [
+    "https://kenney.nl/assets/rpg-audio",
+    "https://kenney.nl/assets/impact-sounds"
+  ],
+  "commercialUse": true,
+  "modification": true,
+  "redistribution": true,
+  "authorization": "Producer P03 instruction, 2026-10-28",
+  "adaptation": "Filtered licensed foley layers, no pitch change; material recordings used as designed impact layers, not literal recordings of these weapons hitting enemies.",
+  "subjectiveListening": "not performed",
+  "formats": {
+    "preferred": "mp3",
+    "fallback": "ogg",
+    "reason": "Preserve existing mobile MP3 and browser Ogg compatibility"
+  },
+  "runtimeAssetCount": 12,
+  "logicalBytes": 66140,
+  "records": [
+    {
+      "id": "weapon-crowbar-01",
+      "file": "public/audio/weapons/melee/weapon-crowbar-01.mp3",
+      "bytes": 8231,
+      "sha256": "6864624c6ba828ea57b48e4ef42dcfba4485772dd2bc6908ef76abb43ecf5876",
+      "inputs": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/knifeSlice.ogg",
+          "sha256": "4cd96dc630bed9840c15f1dd2306da2cc56a4da26a5d3f1a03c5a7265ac5e54f",
+          "weight": 1,
+          "filter": "highpass=f=85,lowpass=f=7000"
+        }
+      ],
+      "duration": 0.62,
+      "gain": 0.06659667929899488,
+      "targetActive200msRms": 0.06659667912501693,
+      "reference": {
+        "file": "public/audio/v100/foley/swing.mp3",
+        "sha256": "fee1ed79807f93b69d97d046f639300c5c4ce93a4bf9b36aa283e3abfa1b45e9",
+        "comparisonGain": 1.3542704212866954
+      },
+      "decoded": {
+        "seconds": 0.62,
+        "peak": 0.7166935205459595,
+        "active200msRms": 0.06674470010409496
+      }
+    },
+    {
+      "id": "weapon-crowbar-01",
+      "file": "public/audio/weapons/melee/weapon-crowbar-01.ogg",
+      "bytes": 8471,
+      "sha256": "8011e6779816106b8c97925bf89fd927a4820a75feaeb3a1f06ff0dd1067dc2f",
+      "inputs": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/knifeSlice.ogg",
+          "sha256": "4cd96dc630bed9840c15f1dd2306da2cc56a4da26a5d3f1a03c5a7265ac5e54f",
+          "weight": 1,
+          "filter": "highpass=f=85,lowpass=f=7000"
+        }
+      ],
+      "duration": 0.62,
+      "gain": 0.06659667929899488,
+      "targetActive200msRms": 0.06659667912501693,
+      "reference": {
+        "file": "public/audio/v100/foley/swing.mp3",
+        "sha256": "fee1ed79807f93b69d97d046f639300c5c4ce93a4bf9b36aa283e3abfa1b45e9",
+        "comparisonGain": 1.3542704212866954
+      },
+      "decoded": {
+        "seconds": 0.6312925170068027,
+        "peak": 0.6981775164604187,
+        "active200msRms": 0.06557685466004946
+      }
+    },
+    {
+      "id": "weapon-crowbar-02",
+      "file": "public/audio/weapons/melee/weapon-crowbar-02.mp3",
+      "bytes": 7735,
+      "sha256": "32451e631062797de5861b0a117d03f6bf0e2226da4563048ab8d38a729d3c12",
+      "inputs": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/knifeSlice2.ogg",
+          "sha256": "6c2064d0ef988d1ec3d56868e823ea8823a5cac00f2742560052633529407def",
+          "weight": 1,
+          "filter": "highpass=f=85,lowpass=f=7000"
+        }
+      ],
+      "duration": 0.6,
+      "gain": 0.0530513166758801,
+      "targetActive200msRms": 0.05305131525166978,
+      "reference": {
+        "file": "public/audio/v100/foley/swing.mp3",
+        "sha256": "fee1ed79807f93b69d97d046f639300c5c4ce93a4bf9b36aa283e3abfa1b45e9",
+        "comparisonGain": 1.0788199651940804
+      },
+      "decoded": {
+        "seconds": 0.6,
+        "peak": 0.7225601077079773,
+        "active200msRms": 0.053172047323914895
+      }
+    },
+    {
+      "id": "weapon-crowbar-02",
+      "file": "public/audio/weapons/melee/weapon-crowbar-02.ogg",
+      "bytes": 8468,
+      "sha256": "55186b0425bf9e3d781a6262b4a9a8887afc74ce3e0778ed269daf21c2a02980",
+      "inputs": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/knifeSlice2.ogg",
+          "sha256": "6c2064d0ef988d1ec3d56868e823ea8823a5cac00f2742560052633529407def",
+          "weight": 1,
+          "filter": "highpass=f=85,lowpass=f=7000"
+        }
+      ],
+      "duration": 0.6,
+      "gain": 0.0530513166758801,
+      "targetActive200msRms": 0.05305131525166978,
+      "reference": {
+        "file": "public/audio/v100/foley/swing.mp3",
+        "sha256": "fee1ed79807f93b69d97d046f639300c5c4ce93a4bf9b36aa283e3abfa1b45e9",
+        "comparisonGain": 1.0788199651940804
+      },
+      "decoded": {
+        "seconds": 0.6167800453514739,
+        "peak": 0.7075216770172119,
+        "active200msRms": 0.051355602791766965
+      }
+    },
+    {
+      "id": "weapon-unarmed-01",
+      "file": "public/audio/weapons/melee/weapon-unarmed-01.mp3",
+      "bytes": 2388,
+      "sha256": "46c3435e3acddb2bce8342ea7e9afb6cafd17fd42c6a479c3910fda7b75c2d0f",
+      "inputs": [
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactSoft_heavy_000.ogg",
+          "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1",
+          "weight": 1,
+          "filter": "highpass=f=85,lowpass=f=5200"
+        }
+      ],
+      "duration": 0.36,
+      "gain": 0.07047247368940736,
+      "targetActive200msRms": 0.06999999999401872,
+      "reference": {
+        "file": "public/audio/v100/foley/body.mp3",
+        "sha256": "c5edc01469eebfd1d81fc77e8b79604cf329f99729e8dde12dddda9a201cc8c1",
+        "comparisonGain": 0.3162166665238962
+      },
+      "decoded": {
+        "seconds": 0.36,
+        "peak": 0.2783256769180298,
+        "active200msRms": 0.069950876405395
+      }
+    },
+    {
+      "id": "weapon-unarmed-01",
+      "file": "public/audio/weapons/melee/weapon-unarmed-01.ogg",
+      "bytes": 4294,
+      "sha256": "5d391b78c8357e8deef869971de356258798f026f3986b31954eb38ac7b97313",
+      "inputs": [
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactSoft_heavy_000.ogg",
+          "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1",
+          "weight": 1,
+          "filter": "highpass=f=85,lowpass=f=5200"
+        }
+      ],
+      "duration": 0.36,
+      "gain": 0.07047247368940736,
+      "targetActive200msRms": 0.06999999999401872,
+      "reference": {
+        "file": "public/audio/v100/foley/body.mp3",
+        "sha256": "c5edc01469eebfd1d81fc77e8b79604cf329f99729e8dde12dddda9a201cc8c1",
+        "comparisonGain": 0.3162166665238962
+      },
+      "decoded": {
+        "seconds": 0.3613605442176871,
+        "peak": 0.280681848526001,
+        "active200msRms": 0.07042331049458458
+      }
+    },
+    {
+      "id": "weapon-unarmed-02",
+      "file": "public/audio/weapons/melee/weapon-unarmed-02.mp3",
+      "bytes": 4008,
+      "sha256": "9867beaab172526ea4b79788f26da5f26180ae62069300d9eaa1cab02e34cd97",
+      "inputs": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/dropLeather.ogg",
+          "sha256": "097e1d3b74949b0145fda0519d40b7e0773ab82ec4858727f95be830927e1a45",
+          "weight": 0.75,
+          "filter": "highpass=f=85,lowpass=f=5200"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactSoft_heavy_000.ogg",
+          "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1",
+          "weight": 0.25,
+          "filter": "highpass=f=85,lowpass=f=5200"
+        }
+      ],
+      "duration": 0.36,
+      "gain": 0.08870014328235776,
+      "targetActive200msRms": 0.06999999999537114,
+      "reference": {
+        "file": "public/audio/v100/foley/body.mp3",
+        "sha256": "c5edc01469eebfd1d81fc77e8b79604cf329f99729e8dde12dddda9a201cc8c1",
+        "comparisonGain": 0.3162166665300056
+      },
+      "decoded": {
+        "seconds": 0.36,
+        "peak": 0.35362231731414795,
+        "active200msRms": 0.06983200806164631
+      }
+    },
+    {
+      "id": "weapon-unarmed-02",
+      "file": "public/audio/weapons/melee/weapon-unarmed-02.ogg",
+      "bytes": 6291,
+      "sha256": "86e4eae6a944802d626915c3ce7477adb7af5df7f26502977816c9f3914d7f68",
+      "inputs": [
+        {
+          "file": "assets/source/v100/audio/kenney-rpg/dropLeather.ogg",
+          "sha256": "097e1d3b74949b0145fda0519d40b7e0773ab82ec4858727f95be830927e1a45",
+          "weight": 0.75,
+          "filter": "highpass=f=85,lowpass=f=5200"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactSoft_heavy_000.ogg",
+          "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1",
+          "weight": 0.25,
+          "filter": "highpass=f=85,lowpass=f=5200"
+        }
+      ],
+      "duration": 0.36,
+      "gain": 0.08870014328235776,
+      "targetActive200msRms": 0.06999999999537114,
+      "reference": {
+        "file": "public/audio/v100/foley/body.mp3",
+        "sha256": "c5edc01469eebfd1d81fc77e8b79604cf329f99729e8dde12dddda9a201cc8c1",
+        "comparisonGain": 0.3162166665300056
+      },
+      "decoded": {
+        "seconds": 0.36426303854875286,
+        "peak": 0.3234694004058838,
+        "active200msRms": 0.06977054864973661
+      }
+    },
+    {
+      "id": "weapon-hammer-01",
+      "file": "public/audio/weapons/melee/weapon-hammer-01.mp3",
+      "bytes": 3195,
+      "sha256": "a7617083b83fe4b039a7b2430b3f98e77adb5ac1dd03146b003405c23e742379",
+      "inputs": [
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactSoft_heavy_000.ogg",
+          "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1",
+          "weight": 0.8,
+          "filter": "highpass=f=85,lowpass=f=5200"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_heavy_000.ogg",
+          "sha256": "e07045693e4a2b3d165c424e3dab4c781d9ff8880a386880ac89a51315d7f831",
+          "weight": 0.2,
+          "filter": "highpass=f=85,lowpass=f=5200"
+        }
+      ],
+      "duration": 0.5,
+      "gain": 0.0850114387990179,
+      "targetActive200msRms": 0.07000000004458146,
+      "reference": {
+        "file": "public/audio/v100/foley/heavy-metal.mp3",
+        "sha256": "e4c1f9e8e4383b23843bbdb7d20abdd5cd3bb705ed4c3637a6012e0e459cf4ea",
+        "comparisonGain": 2.6996384095803383
+      },
+      "decoded": {
+        "seconds": 0.5,
+        "peak": 0.2885461151599884,
+        "active200msRms": 0.07003712385891356
+      }
+    },
+    {
+      "id": "weapon-hammer-01",
+      "file": "public/audio/weapons/melee/weapon-hammer-01.ogg",
+      "bytes": 4806,
+      "sha256": "8ac983828c7d50f6b14a10bdc57ab2e872d95c596e850f2726969826e9ebaade",
+      "inputs": [
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactSoft_heavy_000.ogg",
+          "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1",
+          "weight": 0.8,
+          "filter": "highpass=f=85,lowpass=f=5200"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_heavy_000.ogg",
+          "sha256": "e07045693e4a2b3d165c424e3dab4c781d9ff8880a386880ac89a51315d7f831",
+          "weight": 0.2,
+          "filter": "highpass=f=85,lowpass=f=5200"
+        }
+      ],
+      "duration": 0.5,
+      "gain": 0.0850114387990179,
+      "targetActive200msRms": 0.07000000004458146,
+      "reference": {
+        "file": "public/audio/v100/foley/heavy-metal.mp3",
+        "sha256": "e4c1f9e8e4383b23843bbdb7d20abdd5cd3bb705ed4c3637a6012e0e459cf4ea",
+        "comparisonGain": 2.6996384095803383
+      },
+      "decoded": {
+        "seconds": 0.5064852607709751,
+        "peak": 0.29069656133651733,
+        "active200msRms": 0.0701270113497675
+      }
+    },
+    {
+      "id": "weapon-hammer-02",
+      "file": "public/audio/weapons/melee/weapon-hammer-02.mp3",
+      "bytes": 3143,
+      "sha256": "30f14aabbf5cddb9ad32e9f34d87c86025fb6f86d1456ffffb717b54d3a58c5b",
+      "inputs": [
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactWood_heavy_000.ogg",
+          "sha256": "15ff82332f342c30e469215539e1cc57e11b221aa2cf7e11e811d313a9927f3d",
+          "weight": 0.8,
+          "filter": "highpass=f=85,lowpass=f=5200"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_light_000.ogg",
+          "sha256": "33b5e6e37c6e9d54e07bf5a89b12c76e879f40c1ea83cdd82714df1d6f9fec6d",
+          "weight": 0.2,
+          "filter": "highpass=f=85,lowpass=f=5200"
+        }
+      ],
+      "duration": 0.5,
+      "gain": 0.08736379212173509,
+      "targetActive200msRms": 0.06999999997398862,
+      "reference": {
+        "file": "public/audio/v100/foley/heavy-metal.mp3",
+        "sha256": "e4c1f9e8e4383b23843bbdb7d20abdd5cd3bb705ed4c3637a6012e0e459cf4ea",
+        "comparisonGain": 2.6996384068578365
+      },
+      "decoded": {
+        "seconds": 0.5,
+        "peak": 0.5402538180351257,
+        "active200msRms": 0.06996691358721532
+      }
+    },
+    {
+      "id": "weapon-hammer-02",
+      "file": "public/audio/weapons/melee/weapon-hammer-02.ogg",
+      "bytes": 5110,
+      "sha256": "5a6aa75f417e7e101c87b5f45a50afffe6f11f8ba859ab164e23c1e52845f343",
+      "inputs": [
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactWood_heavy_000.ogg",
+          "sha256": "15ff82332f342c30e469215539e1cc57e11b221aa2cf7e11e811d313a9927f3d",
+          "weight": 0.8,
+          "filter": "highpass=f=85,lowpass=f=5200"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_light_000.ogg",
+          "sha256": "33b5e6e37c6e9d54e07bf5a89b12c76e879f40c1ea83cdd82714df1d6f9fec6d",
+          "weight": 0.2,
+          "filter": "highpass=f=85,lowpass=f=5200"
+        }
+      ],
+      "duration": 0.5,
+      "gain": 0.08736379212173509,
+      "targetActive200msRms": 0.06999999997398862,
+      "reference": {
+        "file": "public/audio/v100/foley/heavy-metal.mp3",
+        "sha256": "e4c1f9e8e4383b23843bbdb7d20abdd5cd3bb705ed4c3637a6012e0e459cf4ea",
+        "comparisonGain": 2.6996384068578365
+      },
+      "decoded": {
+        "seconds": 0.5035827664399093,
+        "peak": 0.5371624231338501,
+        "active200msRms": 0.07012411205630008
+      }
+    }
+  ],
+  "distinctBytes": 66140
+}

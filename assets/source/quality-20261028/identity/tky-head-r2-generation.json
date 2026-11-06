@@ -1,0 +1,10 @@
+{
+  "method": "built-in image_gen",
+  "prompt": "Use case: identity-preserve. Produce the corrected battle sprite HEAD ONLY for TKY, the specific adult man in original photographs 1 and 2, matching corrected game portrait 3. Image 4 is a head-tile template for precise viewing direction, neck cut and composition ONLY; its narrow generic face is wrong and is NOT identity authority. Use image 4's same three-quarter view facing screen RIGHT, head tilt, crop including entire hair and short neck ending below jaw, transparent margin and no shoulders. Replace its facial anatomy with photographs 1 and 2: broad cheeks/lower jaw, short rounded chin, small narrow hooded eyes, fine near-straight brows, actual nose width and mouth/lips. Keep straight dark center-part fringe and small ear stud, not wavy idol hair. Corrected portrait 3 establishes the same recognizable person for battle and dialogue. Calm focused closed mouth, clean-shaven. Mild refined Korean-drama grooming without making him a different handsome actor. Consistent photorealistic human anatomy with subtle game illustration finish, soft neutral lighting, no oily shine. No clothes, shoulders, backdrop, floating shadow or glow, text, grid. Genuine transparent alpha. One head only.",
+  "references": [
+    "Private Producer TKY photographs 1 and 3",
+    "tky-warm-r9.png: corrected face",
+    "tky-head-r1.png: viewing direction and neck template only"
+  ],
+  "scope": "Battle head texture; likeness remains unaccepted"
+}

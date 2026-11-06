@@ -1,0 +1,246 @@
+{
+  "_source": {
+    "kind": "actual-normal-S01-replay-result",
+    "sourceHead": "e412752197763a8739264dbe60c318c20b7d304a",
+    "buildSha256": "eaec185041377ea21e2870829b94ef5ebee3be3170f577c4c552a66f7a5ee207",
+    "report": "output/playwright/read-replay-natural-before-e412-r2/report.json",
+    "pendingSaveSha256": "bdb4ccd3415390290f8870b60dd0a141eda14566f25059e095bf1d9827667663",
+    "manualCollectInputs": 21,
+    "openingCaps": 112,
+    "settledCaps": 127,
+    "scope": "Ordinary S01 replay, 100.13 simulation seconds, no victory/currency/clock/fighter injection. Same pre-collection state retained for isolated UI comparison."
+  },
+  "save": {
+    "namespace": "nishijin-campaign-v100",
+    "campaignGeneration": "v100-new-campaign-1",
+    "schemaVersion": 1,
+    "revision": 140,
+    "updatedAt": "2026-10-31T18:04:23.768Z",
+    "campaignStarted": true,
+    "playerName": "西新通し確認",
+    "availableStageIds": [
+      "stage-nishijin-shopping-street",
+      "stage-sawara-ward-office"
+    ],
+    "completedStageIds": [
+      "stage-nishijin-shopping-street"
+    ],
+    "bestStars": {
+      "stage-nishijin-shopping-street": 3
+    },
+    "caps": 112,
+    "ownedUnitIds": [
+      "unit-hachi",
+      "unit-paisen",
+      "unit-kumaverson",
+      "unit-babayaga"
+    ],
+    "registeredUnitIds": [
+      "unit-hachi",
+      "unit-paisen",
+      "unit-kumaverson",
+      "unit-babayaga",
+      "unit-nao"
+    ],
+    "unitLevels": {
+      "unit-hachi": 1,
+      "unit-paisen": 1,
+      "unit-kumaverson": 1,
+      "unit-babayaga": 1,
+      "unit-nao": 1,
+      "unit-mizuchi": 1,
+      "unit-monkey": 1,
+      "unit-crazy-king": 1,
+      "unit-raider": 1,
+      "unit-tatara": 1,
+      "unit-gantetsu": 1,
+      "unit-mayo-chan": 1,
+      "unit-zakimiya": 1,
+      "unit-tky": 1,
+      "unit-mrs-chiha": 1,
+      "unit-miyamoto-musashi": 1
+    },
+    "levelCap": 5,
+    "equippedSupportId": null,
+    "supportPurchaseUnlockedIds": [],
+    "ownedSupportIds": [],
+    "equipment": {
+      "inventory": {},
+      "personalByUnit": {},
+      "tacticalIds": [
+        null,
+        null
+      ],
+      "enhancementLevels": {}
+    },
+    "outbreak": {
+      "active": null,
+      "lastResult": null,
+      "view": "hub",
+      "clearCounts": {}
+    },
+    "survival": {
+      "active": null,
+      "lastResult": null,
+      "view": "hub",
+      "highestCompletedWave": 0,
+      "highestReachedWave": 0,
+      "totalRuns": 0,
+      "clearCounts": {}
+    },
+    "vehicle": {
+      "upgradeLevel": 0,
+      "maxHp": 680,
+      "upgradeReceipts": []
+    },
+    "bosses": {
+      "discoveredIds": [],
+      "compendiumIds": [],
+      "outbreakIds": [],
+      "survivalIds": [],
+      "storyReplayStageNumbers": [],
+      "defeatCounts": {}
+    },
+    "formationSlots": [
+      "unit-babayaga",
+      "unit-hachi",
+      "unit-kumaverson",
+      null,
+      null,
+      null,
+      null
+    ],
+    "receipts": [
+      "v100:s01:result:v100:stage-nishijin-shopping-street:94",
+      "v100:s01:first-clear",
+      "v100:s01:star:2",
+      "v100:s01:star:3",
+      "v100:recruit-offer:unit-nao:seen"
+    ],
+    "readStoryEventIds": [
+      "v100:event:prologue",
+      "v100:event:s01:pre",
+      "v100:event:s01:post",
+      "v100:event:s01:first-clear-post"
+    ],
+    "readStoryVersions": {
+      "v100:event:prologue": "producer-r9",
+      "v100:event:s01:pre": "producer-r9",
+      "v100:event:s01:post": "producer-r9",
+      "v100:event:s01:first-clear-post": "producer-r9"
+    },
+    "eventCursor": null,
+    "flowState": {
+      "phase": "result",
+      "eventId": null,
+      "stageId": "stage-nishijin-shopping-street",
+      "stageNumber": 1,
+      "destination": "result",
+      "nodeIndex": 0,
+      "firstClear": false,
+      "finalized": false,
+      "scriptVersion": "producer-r9"
+    },
+    "pendingResult": {
+      "resultId": "v100:stage-nishijin-shopping-street:138",
+      "battleRunId": "v100:stage-nishijin-shopping-street:138",
+      "stageId": "stage-nishijin-shopping-street",
+      "stageNumber": 1,
+      "won": true,
+      "objectiveComplete": true,
+      "bossDefeated": false,
+      "vehicleHp": 680,
+      "vehicleMaxHp": 680,
+      "stars": 3,
+      "elapsedSeconds": 100.13333333332893,
+      "unitDeaths": 2,
+      "battleReport": {
+        "wave": 5,
+        "kills": 23,
+        "units": [
+          {
+            "unitId": "unit-hachi",
+            "damage": 263.45216000000005,
+            "damageTaken": 160,
+            "healing": 0
+          },
+          {
+            "unitId": "unit-kumaverson",
+            "damage": 857.0256000000006,
+            "damageTaken": 83.745,
+            "healing": 45.599999999999454
+          },
+          {
+            "unitId": "unit-babayaga",
+            "damage": 2226.2422399999996,
+            "damageTaken": 0,
+            "healing": 0
+          }
+        ]
+      }
+    },
+    "lastResult": {
+      "resultId": "v100:stage-nishijin-shopping-street:94",
+      "battleRunId": "v100:stage-nishijin-shopping-street:94",
+      "stageId": "stage-nishijin-shopping-street",
+      "stageNumber": 1,
+      "won": true,
+      "objectiveComplete": true,
+      "bossDefeated": false,
+      "vehicleHp": 680,
+      "vehicleMaxHp": 680,
+      "stars": 3,
+      "elapsedSeconds": 86.1999999999964,
+      "unitDeaths": 1,
+      "battleReport": {
+        "wave": 5,
+        "kills": 22,
+        "units": [
+          {
+            "unitId": "unit-hachi",
+            "damage": 454.03199999999987,
+            "damageTaken": 107.44,
+            "healing": 0
+          },
+          {
+            "unitId": "unit-kumaverson",
+            "damage": 612.5279999999997,
+            "damageTaken": 120.60000000000001,
+            "healing": 22.799999999999727
+          },
+          {
+            "unitId": "unit-babayaga",
+            "damage": 2068.1200000000003,
+            "damageTaken": 0,
+            "healing": 0
+          }
+        ]
+      },
+      "firstClear": true,
+      "rewardCaps": 112,
+      "rewardBreakdown": {
+        "firstClear": 87,
+        "replay": 0,
+        "star2": 10,
+        "star3": 15
+      },
+      "finalizedAt": "2026-10-31T16:11:06.496Z"
+    },
+    "postGameAvailable": false,
+    "legacy": {
+      "eligible": false,
+      "entitlementClaimed": false,
+      "popupAcknowledged": false
+    },
+    "settings": {
+      "bgmEnabled": true,
+      "sfxEnabled": true,
+      "bgmVolume": 0.8,
+      "sfxVolume": 0.9,
+      "reducedMotion": false,
+      "battleEventMode": "first-time",
+      "graphicsQuality": "high",
+      "autoSkipReadStory": false
+    }
+  }
+}

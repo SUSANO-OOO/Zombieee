@@ -1,0 +1,7 @@
+{
+  "tool": "built-in image_gen",
+  "prompt": "Edit the reference expression sheet: extract and faithfully recreate ONLY the BOTTOM RIGHT man's quiet grief expression as ONE standalone transparent waist-up game portrait. The same exact TKY face, haircut, age, broad cheek/jaw structure, eyes, subtle painted skin, black layered coat and dark magenta straps. Do not use the other three expressions. ONE character only, centered, standing, crown to waist/belt, both arms inside frame, 10 percent transparent side margins and 5 percent top margin. No contact sheet, no grid, no duplicates, no stray detached clothing pixels, no background, no brown glow. Keep the facial expression and costume unchanged; this is a clean isolated production cutout of the bottom-right portrait.",
+  "input": "assets/source/quality-20261028/identity/tky-photo-expressions-r7.png",
+  "output": "tky-grief-r8.png",
+  "reason": "The sheet grief cell contained detached sleeve pixels from the neighboring portrait. Recreated one isolated expression without masking the character."
+}

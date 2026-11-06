@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
 import { chromium, webkit } from "playwright";
 import { createDefaultV100Save, normalizeV100Save, serializeV100Save } from "../app/v100Save.js";
-import { V100_STAGE_IDS } from "../app/v100Registry.js";
+import { V100_STAGE_IDS,V100_UNIT_BY_ID } from "../app/v100Registry.js";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 
 const origin = process.env.V100_CAMPAIGN_QA_BASE_URL ?? "http://127.0.0.1:52407/";
@@ -86,22 +86,23 @@ for (const [engine, browserType] of [["chromium", chromium], ["webkit", webkit]]
     await recruitPlay.or(offer).first().waitFor();
     if (await recruitPlay.isVisible()) await recruitPlay.tap();
     await offer.waitFor();
-    assert.match(await offer.innerText(), /85 CAPS/);
+    const price=V100_UNIT_BY_ID["unit-nao"].registrationCostCaps;
+    assert.ok((await offer.innerText()).includes(price+" CAPS"));
     await recruitPage.waitForFunction(() => {
       const button = document.querySelector(".v100-recruit-actions .v100-primary");
       return button instanceof HTMLButtonElement && !button.disabled;
     });
-    for (const name of [/85 CAPSで配備登録/, "後で決める"]) {
+    for (const name of [price+" CAPSで支度を整える", "後で決める"]) {
       const rect = await offer.getByRole("button", { name }).boundingBox();
       assert.ok(rect && rect.y >= 0 && rect.y + rect.height <= 340, "recruit choice must be visible without scrolling on a short phone viewport");
     }
     await recruitPage.screenshot({ path: `${out}/${engine}-recruit-844x340.png` });
     row.captures.push("recruit-844x340");
-    await offer.getByRole("button", { name: /85 CAPSで配備登録/ }).tap();
+    await offer.getByRole("button", { name: price+" CAPSで支度を整える" }).tap();
     await offer.waitFor({ state: "hidden" });
     const persisted = await recruitPage.evaluate(() => JSON.parse(localStorage.getItem("nishijin-campaign-v100") || "null"));
     assert.ok(persisted?.ownedUnitIds?.includes("unit-nao"), "recruit purchase must be saved");
-    assert.equal(persisted.caps, 2);
+    assert.equal(persisted.caps,recruitSave.caps-price);
     row.recruitedNao = true;
     const mapDetails = recruitPage.locator(".v100-map-detail");
     if (await mapDetails.getAttribute("open") === null) await mapDetails.locator(":scope > summary").tap();

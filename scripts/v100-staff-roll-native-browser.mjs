@@ -13,6 +13,7 @@ import { nativeAudioEofControl } from "./native-audio-tail-seek-control.mjs";
 import { installCreditTransitionAudit, assertCreditTransitionProof } from "./v100-staff-roll-transition-audit.mjs";
 import { installEndingAudioGainObserver, assertEndingGainFadeOnset } from "./ending-audio-gain-observer.mjs";
 import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
+import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
 import { installRequestFailureAudit, isInjectedMedia503Console, finalizeRequestFailureEvidence } from "./browser-request-failure-audit.mjs";
 
 if (process.platform === "win32") throw new Error("Staff-roll audio QA is hosted-only; game or audio playback on this Windows PC is disabled");
@@ -119,7 +120,7 @@ async function openCase(name, { muted = false, reducedMotion = false, failSong =
   }, { origin: origin.origin, serialized: serializeV100Save(save) });
   if (name === "106-second-edit-with-loading-pause-rotation-pagehide") await installCreditTransitionAudit(page);
   await page.goto(new URL("?event-audio-qa=1", origin).href, { waitUntil: "domcontentloaded" });
-  await page.getByRole("button", { name: "ブラウザで遊ぶ", exact: true }).click();
+  await dismissInstallOffer(page, { timeout: 30000, readySelector: '.v100-start-screen', waitForFictionDismissal: true });
   await enterV100FromTitle(page);
   await page.locator(".v100-staff-roll").waitFor({ state: "visible" });
   return { page, context, result, requestAudit, releaseSong: () => { holdSong = false; transport.release(); } };
@@ -277,9 +278,9 @@ try {
         const applyBgm = async enabled => {
           await page.getByRole("button", { name: "メニュー", exact: true }).click();
           const menu = page.getByRole("dialog", { name: "メニュー", exact: true });
-          await menu.getByRole("checkbox", { name: "BGM", exact: true }).setChecked(enabled);
+          await menu.getByRole("checkbox", { name: /^(?:BGM|音楽（BGM）)$/u }).setChecked(enabled);
           await menu.getByRole("button", { name: "設定を保存", exact: true }).click();
-          await menu.getByRole("status").filter({ hasText: "設定を保存しました。" }).waitFor();
+          await menu.getByRole("status").filter({ hasText: /^設定を保存(?:しました|した)。$/u }).waitFor();
           await menu.getByRole("button", { name: "ゲームに戻る", exact: true }).click();
         };
         await applyBgm(true);

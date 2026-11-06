@@ -5,14 +5,14 @@ import crypto from 'node:crypto';
 import vm from 'node:vm';
 import sharp from 'sharp';
 import ts from 'typescript';
-import {V100_UNITS} from '../app/v100Registry.js';
+import {V100_UNITS,V100_STAGES} from '../app/v100Registry.js';
 import {readVisibleBattleHealthBars,visibleAirstrikeTarget,observeVisibleBattleHealthBars} from '../scripts/v100-normal-visible-aim.mjs';
 import {normalCampaignCanSpendVehicleGauge} from '../scripts/v100-normal-play-contract.mjs';
 
 const fixtures=new URL('./fixtures/v177-normal-visible-aim/',import.meta.url);
 const provenance=JSON.parse(fs.readFileSync(new URL('provenance.json',fixtures)));
 const projection={x:0,y:0,width:844,height:390,worldScale:844/960,worldOffsetX:0,worldOffsetY:(390-540*844/960)/2};
-async function nativeFrame(file,{dpr=1,occluded=false,geometryChanged=false,screenshotFailure=false}={}) {
+async function nativeFrame(file,{dpr=1,occluded=false,geometryChanged=false,screenshotFailure=false,missingAtRead=0,duplicateCanvas=false,evaluationFailure=false}={}) {
   const original=fs.readFileSync(new URL(file,fixtures));
   const pin=provenance.records.find(record=>record.file===file);
   assert.equal(original.length,pin.bytes);
@@ -26,17 +26,39 @@ async function nativeFrame(file,{dpr=1,occluded=false,geometryChanged=false,scre
     getBoundingClientRect:()=>({...projection,x:projection.x+(geometryChanged&&++geometryReads>1?1:0)}),
     getContext(){contextReads++;throw Error('A live canvas context is forbidden');}};
   const document={elementFromPoint:(x,y)=>y>70&&y<307&&!(occluded&&x>600&&y<180)?canvas:null};
-  const locator={evaluate:async(fn,args)=>vm.runInNewContext('('+fn.toString()+')',{document})(canvas,args),
+  let reads=0;
+  const elements=()=>{reads++;if(evaluationFailure)throw Error('page transport unavailable');return missingAtRead&&reads>=missingAtRead?[]:duplicateCanvas?[canvas,canvas]:[canvas];};
+  const locator={evaluate:async(fn,args)=>{const found=elements();if(found.length!==1)throw Error('locator waits for absent or ambiguous canvas');return vm.runInNewContext('('+fn.toString()+')',{document})(found[0],args);},
+    evaluateAll:async(fn,args)=>vm.runInNewContext('('+fn.toString()+')',{document})(elements(),args),
     screenshot:async()=>assert.fail('A moving canvas must not wait for locator stability')};
   const page={screenshot:async options=>{screenshotCalls++;assert.deepEqual(options,{type:'png',animations:'allow',scale:'css',timeout:2_000,clip:{x:0,y:0,width:844,height:390}});
       if(screenshotFailure)throw Error('native screenshot failed');return png;}};
   try {
     const frame=await observeVisibleBattleHealthBars(locator,{page});
-    assert.equal(contextReads,0);assert.equal(screenshotCalls,1);
+    assert.equal(contextReads,0);assert.equal(screenshotCalls,missingAtRead===1||duplicateCanvas||evaluationFailure?0:1);
     if(frame.status==='read')assert.equal(frame.pngSha256,crypto.createHash('sha256').update(png).digest('hex'));
     return frame;
-  } finally {assert.equal(contextReads,0);assert.equal(screenshotCalls,1);}
+  } finally {assert.equal(contextReads,0);assert.equal(screenshotCalls,missingAtRead===1||duplicateCanvas||evaluationFailure?0:1);}
 }
+
+test('a battle canvas removed by the result transition is unavailable without waiting or inventing a target',async()=>{
+  const frame=await nativeFrame('s3-31s.png',{missingAtRead:1});
+  assert.equal(frame.status,'unavailable');assert.equal(visibleAirstrikeTarget(projection,frame),null);
+});
+
+test('a result transition after the screenshot discards stale targeting pixels',async()=>{
+  const frame=await nativeFrame('s3-31s.png',{missingAtRead:2});
+  assert.equal(frame.status,'stale');assert.equal(visibleAirstrikeTarget(projection,frame),null);
+});
+
+test('ambiguous canvases cannot yield an aircraft target',async()=>{
+  const frame=await nativeFrame('s3-31s.png',{duplicateCanvas:true});
+  assert.equal(frame.status,'unavailable');assert.equal(visibleAirstrikeTarget(projection,frame),null);
+});
+
+test('a real page transport error remains a failure rather than an unavailable frame',async()=>{
+  await assert.rejects(()=>nativeFrame('s3-31s.png',{evaluationFailure:true}),/page transport unavailable/);
+});
 
 test('the original stage3 frame aims at both visible enemy bars, using only painted pixels',async()=>{
   const frame=await nativeFrame('s3-31s.png'),aim=visibleAirstrikeTarget(frame.canvas,frame);
@@ -75,15 +97,19 @@ test('the actual ordinary-UI formation keeps the measured starters and its earne
   const source=fs.readFileSync(new URL('../scripts/v100-normal-campaign-playthrough.mjs',import.meta.url),'utf8');
   const tree=ts.createSourceFile('campaign.mjs',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);
   const declaration=tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name.text==='plannedFormation');
-  const plan=vm.runInNewContext('('+declaration.getText(tree)+')');
-  const owned=[...provenance.openingOwnedIds],formation=Array.from(plan({ownedUnitIds:owned}));
+  const plan=vm.runInNewContext('('+declaration.getText(tree)+')',{V100_STAGES});
+  const stageSave=(ownedUnitIds,number=3)=>({ownedUnitIds,flowState:{stageId:V100_STAGES[number-1].id}});
+  const owned=[...provenance.openingOwnedIds],formation=Array.from(plan(stageSave(owned)));
   assert.deepEqual(formation.slice(0,3),['unit-babayaga','unit-hachi','unit-nao']);
   assert.deepEqual(formation.slice(3),['unit-kumaverson','unit-paisen']);
   const evidence=JSON.parse(fs.readFileSync(new URL('formation-native-provenance.json',fixtures)));
-  const initial=Array.from(plan({ownedUnitIds:evidence.stage1OwnedIds}));
+  // Preserve the original measured fixture as history, then apply current
+  // rescue participation explicitly instead of pretending Paisen is present.
+  const initial=Array.from(plan(stageSave(evidence.stage1OwnedIds)));
   assert.deepEqual(initial,evidence.measuredWinningStage1Ids);assert.equal(formation.length,5);
   assert.deepEqual([...formation].sort(),[...owned].sort());assert.deepEqual(owned,provenance.openingOwnedIds);
-  assert.ok(plan({ownedUnitIds:V100_UNITS.map(unit=>unit.id)}).length<=7);
+  for(const number of [1,2])assert.deepEqual(Array.from(plan(stageSave(evidence.stage1OwnedIds,number))),evidence.measuredWinningStage1Ids.filter(id=>id!=='unit-paisen'));
+  assert.ok(plan(stageSave(V100_UNITS.map(unit=>unit.id))).length<=7);
 });
 
 test('an observed target preserves first-aircraft funding; absent targets release legal defense',()=>{

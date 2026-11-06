@@ -6,7 +6,7 @@ import ts from 'typescript';
 import * as React from 'react';
 import { createDefaultV100Save } from '../app/v100Save.js';
 import { upgradeV100Vehicle } from '../app/v100Transactions.js';
-import { V100_UNITS, V100_VEHICLE, v100LevelCost } from '../app/v100Registry.js';
+import { V100_STAGES, V100_UNITS, V100_VEHICLE, v100LevelCost } from '../app/v100Registry.js';
 import { deferNormalRecruitOffer } from '../scripts/v100-normal-recruit-offer.mjs';
 
 // Render the production navigation only: no game, browser or audio is started.
@@ -90,7 +90,7 @@ function preparationFixture(stageNumber, { earnedVehicleUpgrade = false, missing
     },
   };
   return {
-    bindings: { page, uiClick: locator => locator.click(), saveAt: async () => structuredClone(save), V100_UNITS, V100_VEHICLE, v100LevelCost, report,deferNormalRecruitOffer },
+    bindings: { page, uiClick: locator => locator.click(), saveAt: async () => structuredClone(save), V100_STAGES, V100_UNITS, V100_VEHICLE, v100LevelCost, report,deferNormalRecruitOffer },
     initialSave, clicks, report, get save() { return save; }, get surface() { return surface; },
   };
 }

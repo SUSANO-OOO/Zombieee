@@ -19,6 +19,7 @@ const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
 const pngAssets = (manifest.assets ?? []).filter((asset) => (
   asset.path.endsWith(".png") && !asset.path.startsWith("/icons/")
   && asset.path !== "/art/v080/characters/cards/kumaverson-formation-card-r2.png"
+  && asset.path !== "/art/v100/portraits/kumaverson-formation-card-r3.png"
 ));
 
 let generated = 0;

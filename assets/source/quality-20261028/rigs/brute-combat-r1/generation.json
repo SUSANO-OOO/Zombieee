@@ -1,0 +1,47 @@
+{
+  "tool": "OpenAI built-in image_gen",
+  "creator": "OpenAI image generation directed for this project",
+  "license": "Project-generated derivative; commercial use, modification and redistribution under applicable OpenAI terms",
+  "producerApproval": "Current generated master is identity authority; combat derivative not Producer accepted",
+  "master": "assets/source/quality-20261028/identity/tatara-master-r4.png",
+  "masterSha256": "dc28b9b8cedb6b96fe14c5003f510466056baf06ea172cceccc83727a08d2def",
+  "outputs": {
+    "combat": {
+      "file": "combat-model-r1.png",
+      "original": "C:/Users/okait/.codex/generated_images/01a180c8-9e05-7871-b287-613f7c7eb364/exec-c1770e84-229c-4032-b2b6-3a8b78795547.png",
+      "prompt": "Precise refinement of this exact Tatara full-body game sprite. Keep exact face/hair/clothing/armor and industrial navy hammer design. Fix framing: zoom out the ENTIRE composition by about15 percent so the entire hammer head including its far-right corner, handle end, hair and soles are wholly visible with at least45px transparent margin on every side. Do NOT crop or truncate the large hammer. Fix stance: turn the rear boot at image LEFT to point screen RIGHT in clear side view, matching the forward boot. Bring the feet slightly closer for a natural walking-ready stance without crossed legs; do not change the rest of his recognizable anatomy or equipment. Same two hands gripping the same handle, no added limbs. Keep head looking RIGHT. Transparent alpha, no background, floor, shadow, labels or duplicated figures. Canvas1298x1212.",
+      "sha256": "b5a353e527dcf5f258710999768e50d9644a96a017d7c339910d5d354f2d9c95",
+      "references": [
+        {
+          "role": "sole current identity, costume and weapon authority",
+          "path": "assets/source/quality-20261028/identity/tatara-master-r4.png",
+          "sha256": "dc28b9b8cedb6b96fe14c5003f510466056baf06ea172cceccc83727a08d2def"
+        },
+        {
+          "role": "exact edit target for reframing and rear foot direction",
+          "path": "output/quality-20261028/tatara-rejected-r1/combat-model-r1.png",
+          "sha256": "1884098575aa8e08174b2a76dce731dec5f4b7d6ffad4ab3c61765eb7c492baf"
+        }
+      ]
+    },
+    "underpainting": {
+      "file": "body-underpainting-r1.png",
+      "original": "C:/Users/okait/.codex/generated_images/01a180c8-9e05-7871-b287-613f7c7eb364/exec-1ed6d53c-4da3-4b4b-87fa-a86b30e5a8bd.png",
+      "prompt": "Precise registered hidden-body layer for this exact Tatara sprite. Preserve exact1298x1212 canvas, body position/scale, face/hair/head/neck, navy torso, tan harness/pouches/belt, pants/knee armor and both boots pixel-registration consistent. Remove ONLY the hammer, handle, strap and BOTH entire arms/hands including their armor from shoulder down. Reconstruct the hidden fully clothed torso beneath, continuing the navy work suit and harness naturally. Smooth sleeveless shoulder body contour, no limb stumps or phantom armor/hands/weapons. DO NOT enlarge, recenter or alter posture, legs or face. This is an underpainting for moving sprite limbs, not a new pose. Transparent alpha, no background, floor, shadow or text.",
+      "sha256": "a5c3386c0f51c8d98bdbe41471fd01b3de2693362bd55e7d391eb579e1f56282",
+      "references": [
+        {
+          "role": "exact edit target",
+          "path": "assets/source/quality-20261028/rigs/brute-combat-r1/combat-model-r1.png",
+          "sha256": "b5a353e527dcf5f258710999768e50d9644a96a017d7c339910d5d354f2d9c95"
+        }
+      ]
+    }
+  },
+  "rejectedDraft": {
+    "path": "output/quality-20261028/tatara-rejected-r1/combat-model-r1.png",
+    "sha256": "1884098575aa8e08174b2a76dce731dec5f4b7d6ffad4ab3c61765eb7c492baf",
+    "prompt": "Identity-preserve action-game sprite. Use reference1 as the SOLE current Tatara identity/costume/weapon authority. Exact same adult man, rugged angular face, thick eyebrows, dark wavy medium hair, sturdy natural physique. Same navy workwear, steel shoulder and forearm armor, tan harness and pouches, armored knees and black heavy boots. Preserve his enormous industrial navy rectangular hammer with steel rim, hexagonal center and yellow markings, exact design and mass. One whole body in a calm READY pose facing screen RIGHT, head and eyes looking right rather than at camera. Both hands clearly grip the SAME long hammer handle, hands separated naturally at waist/lower-chest height, near elbow bent low, far elbow anatomically below shoulder. Hammer head is forward/right above handle, handle diagonally upward/right, not vertical across face; the whole hammer and handle end fit on canvas. No attacking lunge. Natural moderate fore/aft separated stance, knees softly bent, both boots side-facing RIGHT and fully visible, no crossed legs or frontal feet. Head connected naturally into collar, shoulders relaxed. Realistic painted materials matching reference, fully clothed. Transparent alpha, NO background gradient/floor/shadow, no labels or multiple figures. Landscape1298x1212, keep entire figure and equipment with margin, body about85%canvas height.",
+    "reason": "Hammer at canvas edge and rear boot facing front; replaced by whole-body reframing edit"
+  }
+}

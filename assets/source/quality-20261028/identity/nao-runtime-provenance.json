@@ -1,0 +1,75 @@
+{
+  "generator": "scripts/build-quality-support-portraits.mjs",
+  "canonical": {
+    "path": "public/art/v070/characters/reference/nao-base-r1.png",
+    "sha256": "b412b49ef4612b557909fdc0d66e482195829d55dadccf941ac6b73966538e6d"
+  },
+  "inputs": [
+    {
+      "expression": "warm",
+      "path": "assets/source/quality-20261028/identity/nao-master-r4.png",
+      "sha256": "3bc43907891d7eafbdf86a08a501a5a7cbec9f9b5f3cacd7e0c73099ddfff7ba",
+      "width": 864,
+      "height": 1821
+    },
+    {
+      "expression": "determined",
+      "path": "assets/source/quality-20261028/identity/nao-determined-r6.png",
+      "sha256": "ed7048c059323c05e2ff79282ba88488c2f82f788db3c9a6a2cf2136aa8107c6",
+      "width": 864,
+      "height": 1821
+    },
+    {
+      "expression": "alarm",
+      "path": "assets/source/quality-20261028/identity/nao-alarm-r6.png",
+      "sha256": "0dc3a12bf9376ce39f434b7272f0fde130c26f9ee15efcb6a3ca4d20082ce29c",
+      "width": 864,
+      "height": 1821
+    },
+    {
+      "expression": "grief",
+      "path": "assets/source/quality-20261028/identity/nao-grief-r6.png",
+      "sha256": "d75c31b1fcda626049ee9a33bf55e42421e1c41146ea3995915cec394127c39b",
+      "width": 864,
+      "height": 1821
+    }
+  ],
+  "crop": {
+    "left": 120,
+    "top": 0,
+    "width": 650,
+    "height": 780
+  },
+  "outputs": [
+    {
+      "path": "public/art/v100/portraits/nao-warm-quality-r1.webp",
+      "sha256": "028d961557bb123019eb69522f5890a5c42cc78f3b18d6759eb6f9fe5011f6f7",
+      "bytes": 88660
+    },
+    {
+      "path": "public/art/v100/portraits/nao-formation-card-quality-r1.webp",
+      "sha256": "3806d428ad5a30dc8b1a471de95928e051ccfa8a20f2d77a0ffc051882e6822e",
+      "bytes": 65604
+    },
+    {
+      "path": "public/art/v100/portraits/nao-determined-quality-r1.webp",
+      "sha256": "a1eab19905313c8043c5d18f9ecb0ee0cb4094f711d1dd10dc38aef87cfd2add",
+      "bytes": 81876
+    },
+    {
+      "path": "public/art/v100/portraits/nao-alarm-quality-r1.webp",
+      "sha256": "42a5346a8ea488cc5f4242e9cc55d016bd61276f2c80a164d411839e60dbc612",
+      "bytes": 82562
+    },
+    {
+      "path": "public/art/v100/portraits/nao-grief-quality-r1.webp",
+      "sha256": "8531cfd3419a70bef6f125dcd65c1caca99ef8b5babf670abcb709d09780f9fe",
+      "bytes": 82290
+    }
+  ],
+  "runtimeAssetCount": 5,
+  "logicalBytes": 400992,
+  "distinctBytes": 400992,
+  "scope": "Local dialogue and card candidate. Battle, dedicated scenes and credits are not replaced by this builder.",
+  "approval": "Producer requested the redesign; final visual acceptance and integration remain open."
+}

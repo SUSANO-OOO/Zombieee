@@ -1,4 +1,3 @@
-import { V100_RUNTIME_ASSET_MANIFEST } from "./v100RuntimeAssetManifest.js";
 import {
   EVENT_PORTRAIT_PROFILES,
   V075_VISUAL_PROFILES,
@@ -23,10 +22,10 @@ const STORY_PORTRAIT_PATHS = Object.freeze({
   "unit-mrs-chiha": V090_UNIT_VISUAL_PROFILES["mrs-chiha"].eventPortrait.path,
   "unit-miyamoto-musashi": V090_UNIT_VISUAL_PROFILES["miyamoto-musashi"].eventPortrait.path,
   "guide-ikura": V075_VISUAL_PROFILES.ikura.eventPortrait.path,
-  segawa: V100_RUNTIME_ASSET_MANIFEST.portraits.segawa,
-  "mugarian-president": V100_RUNTIME_ASSET_MANIFEST.portraits.mugarianPresident,
-  "red-panther-commander": V100_RUNTIME_ASSET_MANIFEST.portraits.redPantherCommander,
-  "minor-human-shared-event-silhouette": V100_RUNTIME_ASSET_MANIFEST.portraits.minorHuman,
+  segawa: "/art/v100/portraits/segawa-determined-stage-r1.webp",
+  "mugarian-president": "/art/v100/portraits/president-determined-stage-r1.webp",
+  "red-panther-commander": "/art/v100/portraits/commander-determined-stage-r1.webp",
+  "minor-human-shared-event-silhouette": "/art/v100/portraits/minor-human-neutral-stage-r1.webp",
 });
 
 export function v100StoryPortraitPath(owner) {

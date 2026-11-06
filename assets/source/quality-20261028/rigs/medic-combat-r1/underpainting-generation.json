@@ -1,0 +1,13 @@
+{
+  "method": "built-in image_gen",
+  "input": "combat-model-r1.png",
+  "output": "body-underpainting-r1.png",
+  "prompt": "Use case: precise-object-edit. This transparent Nao image is being separated into animation layers. Make the armless UNDERPAINTING base of this exact sprite. Keep the exact canvas size and all positions. Remove BOTH arms/hands and the complete firearm, including stock, grip, barrel and optic. Reconstruct the hidden teal jacket sides and ivory ribbed turtleneck chest and orange diagonal bag strap behind the removed forearms, then black trousers/belt where the weapon was. Close both shoulders smoothly in the teal jacket; no arm stumps. Preserve the complete face, head, brown braid, neck, torso lean, jacket collar and hem, medical bag and its supplies/strap, pelvis, BOTH original legs and boots at the exact same positions. Do not add arms or change the pose, legs or outfit. Keep the large medical bag fixed at its original left-side position; no extra bags. Photographic anatomy/material with restrained painted finish, identical lighting and identity. True transparent background. No labels, no scene, no ground shadow.",
+  "role": "Hidden torso cloth only. Near sleeve bulge is excluded by explicit torso mask. Original visible head, limbs, weapon and medical bag remain from combat-model-r1; hidden far sleeve/forearm/boot are source-bound registered paint.",
+  "original": "C:/Users/okait/.codex/generated_images/01a180c8-9e05-7871-b287-613f7c7eb364/exec-2e5d06da-bb30-4799-b4cb-436527b57ecd.png",
+  "creator": "OpenAI built-in image_gen under Producer direction",
+  "license": "Generated project derivative; no third-party stock license. Formal rights review remains open before final adoption.",
+  "rightsScope": "No new purchase, third-party license or external contract. Commercial use, modification and redistribution remain subject to existing source rights and final review.",
+  "producerApproval": "User authorizes full-character style remake and actual-game integration. This specific candidate is not human accepted.",
+  "status": "Integrated into local candidate; current runtime checks and visual validation are recorded separately."
+}

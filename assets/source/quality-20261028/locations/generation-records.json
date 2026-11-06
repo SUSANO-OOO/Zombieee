@@ -1,0 +1,27 @@
+{
+  "method": "built-in image_gen",
+  "privatePhotoInputs": false,
+  "backupScope": "Same-volume readback copy, not off-device backup",
+  "records": [
+    {
+      "generatedPath": "C:/Users/okait/.codex/generated_images/01a180c8-9e05-7871-b287-613f7c7eb364/exec-ecb83aeb-6207-4c07-96f0-e5a86179abf9.png",
+      "source": "assets\\source\\quality-20261028\\locations\\rescue-vehicle-interior-r1.png",
+      "backup": "output\\quality-20261028\\location-master-backup-r1\\rescue-vehicle-interior-r1.png",
+      "bytes": 2935089,
+      "sha256": "c5bfa6ad6d2657b537ed9f4e744cdf86e4d12c04046035af50818e770946ded8",
+      "reference": "public/art/v075/crawler/crawler-command-base-identity-r1.png",
+      "referenceSha256": "7aa082adac522e3342f42cd9dcd3dc264004df83c83b1c003dea7e16f077850e",
+      "direction": "Original matte game-art interior of the existing armored rescue vehicle, right-hand-drive, seats/cargo/radio, no people/private photo input."
+    },
+    {
+      "generatedPath": "C:/Users/okait/.codex/generated_images/01a180c8-9e05-7871-b287-613f7c7eb364/exec-3388b4f6-e9d6-43cf-b7b7-8b1029a47c57.png",
+      "source": "assets\\source\\quality-20261028\\locations\\refrigerated-cargo-r1.png",
+      "backup": "output\\quality-20261028\\location-master-backup-r1\\refrigerated-cargo-r1.png",
+      "bytes": 2648803,
+      "sha256": "502b87bb39d15427d9ca437400a0f093955191f10f09160244581b86c3f4d3a1",
+      "reference": "assets\\source\\quality-20261028\\locations\\rescue-vehicle-interior-r1.png",
+      "referenceSha256": "c5bfa6ad6d2657b537ed9f4e744cdf86e4d12c04046035af50818e770946ded8",
+      "direction": "Separate refrigerated medicine truck cargo bay, medicine cooler boxes and document box, no people."
+    }
+  ]
+}

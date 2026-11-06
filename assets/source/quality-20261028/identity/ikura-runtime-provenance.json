@@ -1,0 +1,70 @@
+{
+  "generator": "scripts/build-quality-support-portraits.mjs",
+  "canonical": {
+    "path": "public/art/v075/characters/reference/ikura-identity-master-r1.png",
+    "sha256": "b095f3ee8eb84422b2f1719a455e049eb0a03f3459e17095df96e4a7d0b7772f"
+  },
+  "inputs": [
+    {
+      "expression": "warm",
+      "path": "assets/source/quality-20261028/identity/ikura-master-r4.png",
+      "sha256": "9c17e1b090a147c1994045c99690965776d6951e76f52ef3a5622a2f73dea2dc",
+      "width": 866,
+      "height": 1816
+    },
+    {
+      "expression": "determined",
+      "path": "assets/source/quality-20261028/identity/ikura-determined-r6.png",
+      "sha256": "d722c52a9b9a800ed4ffaf0bc16eb16e5e4e28b017f24d2bc2ce5331a1eac4cb",
+      "width": 866,
+      "height": 1816
+    },
+    {
+      "expression": "alarm",
+      "path": "assets/source/quality-20261028/identity/ikura-alarm-r6.png",
+      "sha256": "deadb81765a36f230684c10a5345255864e07251313bdea6ab6f0df25446f744",
+      "width": 866,
+      "height": 1816
+    },
+    {
+      "expression": "grief",
+      "path": "assets/source/quality-20261028/identity/ikura-grief-r6.png",
+      "sha256": "0738c6083d0a591eefbed49d2ebcd16f04ead92ced35fc15c930c23595711b84",
+      "width": 866,
+      "height": 1816
+    }
+  ],
+  "crop": {
+    "left": 170,
+    "top": 0,
+    "width": 615,
+    "height": 820
+  },
+  "outputs": [
+    {
+      "path": "public/art/v100/portraits/ikura-warm-quality-r1.webp",
+      "sha256": "9507ef2f18c4872dba20860491ad22763c5f9bc00b0d49b9cb24e0f1fa30d783",
+      "bytes": 115618
+    },
+    {
+      "path": "public/art/v100/portraits/ikura-determined-quality-r1.webp",
+      "sha256": "1a87a2183629c4802cff79d4948f00daf37cf0bfd28a57537d88e3e3502611b3",
+      "bytes": 105370
+    },
+    {
+      "path": "public/art/v100/portraits/ikura-alarm-quality-r1.webp",
+      "sha256": "a0bcd2d80404c1c2c7d8b55972067e9e27f7b14282720f8e39d572a85b1eedb4",
+      "bytes": 107102
+    },
+    {
+      "path": "public/art/v100/portraits/ikura-grief-quality-r1.webp",
+      "sha256": "e66865b077c930f24b48eaa92cabb8fd2bf41826589973f4a8b97e03c12bb66e",
+      "bytes": 103808
+    }
+  ],
+  "runtimeAssetCount": 4,
+  "logicalBytes": 431898,
+  "distinctBytes": 431898,
+  "scope": "Local dialogue and card candidate. Battle, dedicated scenes and credits are not replaced by this builder.",
+  "approval": "Producer requested the redesign; final visual acceptance and integration remain open."
+}

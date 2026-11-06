@@ -5,6 +5,7 @@ import vm from 'node:vm';
 import ts from 'typescript';
 import {drawV104EyeBeam,drawV104BiteContact,v104MeleeImpactPoint} from '../app/v104CombatVfx.js';
 import {V177_JOINT_ATLASES as atlases,v177JointPose,v177CaptureJointPose,v177RenderedJointWeaponSocket} from '../app/v177JointPresentation.js';
+import {spriteFrameFor} from '../app/spriteManifest.js';
 import {queueV100ClawContact,getV100ClawContactSnapshot,queueV100Contact,drawV100ContactQueue} from '../app/v100CombatVfx.js';
 
 const source=readFileSync('app/AshfallGame.tsx','utf8'),tree=ts.createSourceFile('game.tsx',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);
@@ -54,7 +55,7 @@ test('the actual impact resolver follows the striking fist on both alternating P
   const kind='brawler',atlas=atlases[kind],owner={id:7,kind,hp:100,attackSequence},target={id:8,x:450,y:300},g={fighters:[owner,target]},fighterJointWeapons=new Map();
   const plan=v177JointPose(kind,{requestedState:'active',clipProgress:0},{locomotionPhase:.2,locomotionSettle:1},{actor:owner,grounded:true});
   assert.equal(plan.choreography.strikeBones.length,1);
-  const options={kind,plan,direction:'right',frame:{anchorX:.5,anchorY:1,flipX:false},size:{w:atlas.width,h:atlas.height},pose:{offsetX:0,offsetY:0,scaleX:1,scaleY:1,rotationRadians:0},x:400,y:500};
+  const options={kind,plan,direction:'right',frame:spriteFrameFor(kind,'walk-a','right'),size:{w:atlas.referenceFrame.width,h:atlas.referenceFrame.height},pose:{offsetX:0,offsetY:0,scaleX:1,scaleY:1,rotationRadians:0},x:400,y:500};
   const strokes=atlas.armConstraints.map(arm=>({kind,channel:arm.effectorBone,striking:plan.choreography.strikeBones.includes(arm.effectorBone),
    tip:v177RenderedJointWeaponSocket({...options,sourceBone:arm.effectorBone,sourcePoint:arm.grip}),
    grip:v177RenderedJointWeaponSocket({...options,sourceBone:arm.effectorBone,sourcePoint:arm.effectorWrist??arm.wrist})}));

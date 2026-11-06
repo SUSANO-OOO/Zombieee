@@ -58,8 +58,9 @@ export function readVisibleBattleHealthBars(frame) {
     bitmapWidth: width, bitmapHeight: height, bars };
 }
 
-function readCanvasProjectionAndOwners(element, points) {
-  if (element.tagName !== 'CANVAS') return {projection:null, owned:[]};
+function readCanvasProjectionAndOwners(elements, points) {
+  const element = elements.length === 1 ? elements[0] : null;
+  if (!element || element.tagName !== 'CANVAS') return {projection:null, owned:[]};
   const r = element.getBoundingClientRect();
   return {
     projection: {x:r.x, y:r.y, width:r.width, height:r.height,
@@ -71,7 +72,10 @@ function readCanvasProjectionAndOwners(element, points) {
 }
 
 export async function observeVisibleBattleHealthBars(canvasLocator,{page}={}) {
-  const {projection} = await canvasLocator.evaluate(readCanvasProjectionAndOwners, []);
+  // Battle completion removes the canvas between ordinary input steps. A
+  // locator.evaluate would wait for that finished battle to appear again.
+  // Snapshot matching elements once; genuine protocol failures still reject.
+  const {projection} = await canvasLocator.evaluateAll(readCanvasProjectionAndOwners, []);
   const keys = ['x','y','width','height','worldScale','worldOffsetX','worldOffsetY'];
   if (!projection || !keys.every(key => Number.isFinite(projection[key]))
     || projection.width <= 0 || projection.height <= 0 || projection.worldScale <= 0) {
@@ -86,7 +90,7 @@ export async function observeVisibleBattleHealthBars(canvasLocator,{page}={}) {
   const {data, info} = await sharp(png).ensureAlpha().raw().toBuffer({resolveWithObject:true});
   const frame = readVisibleBattleHealthBars({data, width:info.width, height:info.height,
     rect:{x:0,y:0,width:projection.width,height:projection.height}});
-  const current = await canvasLocator.evaluate(readCanvasProjectionAndOwners,
+  const current = await canvasLocator.evaluateAll(readCanvasProjectionAndOwners,
     frame.bars.map(bar => ({x:bar.x,y:bar.y})));
   if (!current.projection || !keys.every(key => current.projection[key] === projection[key])) {
     return {status:'stale', bars:[]};

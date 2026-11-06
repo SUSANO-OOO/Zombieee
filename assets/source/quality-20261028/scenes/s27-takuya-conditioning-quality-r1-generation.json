@@ -1,0 +1,20 @@
+{
+  "name": "s27-takuya-conditioning-quality-r1",
+  "args": {
+    "referenced_image_paths": [
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\v100\\story-r9\\s27-takuya-conditioning.png"
+    ],
+    "transparent_background": false,
+    "prompt": "Reframe this EXISTING GENERATED GAME IMAGE into one very wide 3:1 panoramic RPG scene. Preserve the existing archival laboratory surveillance setting, THREE separate adjacent monitors and the exact existing adult blond muscular Takuya boss identity, clothing/chain/cleaver from the monitor footage. This boss is NOT the separate playable TKY89; no fox mask or dark-haired replacement. Keep the original three anonymous researchers at their console viewed FROM BEHIND, with heads intact inside frame. Their faces need not be invented. Each monitor remains legible as a distinct recorded moment: LEFT, Takuya moving through the test area with intact training dummy; CENTER, same Takuya reacting to the black target/sound cue and swinging toward an INANIMATE test fixture; RIGHT, the fallen broken black acoustic/sound device, dust and fragments only. No human victim, injury, blood or gore, no new attack on people. Keep all three screen borders and important target/device parts fully visible; rearrange camera perspective for a shallow wide view rather than cropping away a monitor or stretching bodies. Same gritty semi-realistic game illustration, coherent lighting and lab hardware. No new readable text, no labels or UI."
+  },
+  "references": [
+    {
+      "path": "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\v100\\story-r9\\s27-takuya-conditioning.png",
+      "sha256": "e8bc3346d834022734820d57601038266ba7228965a883de69f48f86a9fb3414",
+      "bytes": 2415001
+    }
+  ],
+  "stage": "candidate, not selected",
+  "primaryReferencePolicy": "Existing generated models/scenes are primary; original art/photos only check drift.",
+  "generatedOriginal": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-23091752-20bb-432a-8594-0288a4018a69.png"
+}

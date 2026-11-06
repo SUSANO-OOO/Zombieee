@@ -5,7 +5,7 @@ import vm from 'node:vm';
 import ts from 'typescript';
 import * as React from 'react';
 import { applyV100SaveMutation } from '../app/v100Save.js';
-import { V100_UNITS,V100_VEHICLE,v100LevelCost } from '../app/v100Registry.js';
+import { V100_STAGES, V100_UNITS,V100_VEHICLE,v100LevelCost } from '../app/v100Registry.js';
 import { deferNormalRecruitOffer } from '../scripts/v100-normal-recruit-offer.mjs';
 
 const earned=JSON.parse(fs.readFileSync('tests/fixtures/v177-earned-stage1-recruit.json','utf8')).save;
@@ -29,9 +29,19 @@ const renderModal=compile('(save,recruitOffer,applySaveTransaction)=>('+modal.ge
   formationCardForUnit:()=>null,v100RoleLabelFor:()=>'',unitDescriptionFor:()=>'',saveBusy:false,
 });
 const registerButton=compile('(save,info,selectedUnit,onPurchase)=>('+buttonFor('onPurchase(selectedUnit.id)')+');');
-const levelButton=compile('(save,info,selectedUnit,onLevel)=>('+buttonFor('onLevel(selectedUnit.id, info.level)')+');');
+const levelButton=compile('(save,info,selectedUnit,onLevel)=>('+buttonFor('onLevel(selectedUnit.id, info.level, info.nextLevel)')+');');
 const vehicleButton=compile('(save,vehicleLevel,nextCost,onUpgradeVehicle)=>('+buttonFor('onUpgradeVehicle')+');');
 const descendants=node=>React.isValidElement(node)?[node,...React.Children.toArray(node.props.children).flatMap(descendants)]:[];
+
+test('the actual level button submits the displayed target and prevents a purchase at the cap',()=>{
+  const calls=[],onLevel=(...args)=>calls.push(args),unit=V100_UNITS[0];
+  const selected=levelButton({caps:1000},{level:1,nextLevel:10,upgradeCost:590},unit,onLevel);
+  assert.equal(selected.props.disabled,false);selected.props.onClick();
+  assert.deepEqual(calls,[[unit.id,1,10]]);
+  const capped=levelButton({caps:1000},{level:15,nextLevel:null,upgradeCost:0},unit,onLevel);
+  assert.equal(capped.props.disabled,true);capped.props.onClick();
+  assert.equal(calls.length,1);
+});
 
 function prepare(file,bindings){
   const parsed=ts.createSourceFile(file,fs.readFileSync(file,'utf8'),ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);
@@ -84,7 +94,7 @@ function fixture({modalType='recruit',badHeading=false,tamperCaps=false,labelCas
       }};
     },
   };
-  const bindings={page,uiClick:locator=>locator.click(),saveAt:async()=>structuredClone(save),V100_UNITS,V100_VEHICLE,v100LevelCost,report,deferNormalRecruitOffer};
+  const bindings={page,uiClick:locator=>locator.click(),saveAt:async()=>structuredClone(save),V100_STAGES,V100_UNITS,V100_VEHICLE,v100LevelCost,report,deferNormalRecruitOffer};
   return{bindings,before,events,stop,report,get save(){return save;}};
 }
 

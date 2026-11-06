@@ -34,7 +34,7 @@ test("production visual manifest uses dedicated title, command, all stages, and 
   assert.equal(new Set(hashes).size, hashes.length, "production locations and cuts must not reuse identical image bytes");
 });
 
-test("0.7.5 checkpoint identities resolve to purpose-specific production assets", async () => {
+test("checkpoint identities retain their props and use the current guide portrait", async () => {
   assert.equal(PRODUCTION_VISUALS.guide, V075_VISUAL_PROFILES.ikura.eventPortrait.path);
   assert.equal(V075_VISUAL_PROFILES.ikura.identityLock.length, 5);
   assert.equal(V075_VISUAL_PROFILES.crawler.identityLock.length, 4);
@@ -57,7 +57,7 @@ test("0.7.5 checkpoint identities resolve to purpose-specific production assets"
   const portrait = await sharp(repoAssetFile(V075_VISUAL_PROFILES.ikura.eventPortrait.path)).metadata();
   assert.deepEqual(
     { format: portrait.format, width: portrait.width, height: portrait.height, hasAlpha: portrait.hasAlpha },
-    { format: "webp", width: 512, height: 640, hasAlpha: true },
+    { format: "webp", width: 1024, height: 1280, hasAlpha: true },
   );
   const closed = await sharp(repoAssetFile(V075_VISUAL_PROFILES.crawler.closed.path)).metadata();
   const open = await sharp(repoAssetFile(V075_VISUAL_PROFILES.crawler.open.path)).metadata();

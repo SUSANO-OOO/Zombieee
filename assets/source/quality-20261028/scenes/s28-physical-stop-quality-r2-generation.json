@@ -1,0 +1,25 @@
+{
+  "name": "s28-physical-stop-quality-r2",
+  "args": {
+    "referenced_image_paths": [
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\scenes\\s28-physical-stop-quality-r1.png",
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\identity\\musashi-master-r4.png"
+    ],
+    "transparent_background": false,
+    "prompt": "Camera reframe ONLY of existing GENERATED SCENE reference 1. The top of Musashi's tall topknot is cut off. Pull the camera BACK 12 percent, reduce the whole scene/character group uniformly within the same 3:1 panorama, and show the ENTIRE tall topknot plus at least 40 pixels of real background ABOVE it on a 2172x724 canvas. Reference 2 is the same existing generated Musashi model, used only for the missing upper hair/topknot shape, not to redesign his face. Keep BOTH characters' current faces, age, outfits and same facial expressions EXACTLY unchanged. Keep all complete hair crowns INSIDE the frame, no clipping and no blank border. Retain the raised steel cover, both people's coherent attached gripping arms/hands, player foreground hand reaching the same red physical stop lever through the gap, same full mechanism and lighting. The swords/bottle remain stowed, no extra hand, person, prop or text. Complete wide composition, opaque background, same gritty semi-realistic painterly game artwork."
+  },
+  "references": [
+    {
+      "path": "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\scenes\\s28-physical-stop-quality-r1.png",
+      "sha256": "25b28c2a78dfa7682e38ec0b7b162fdc3d2056ecece297a8af01c27a3ee5939f",
+      "bytes": 2725559
+    },
+    {
+      "path": "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\identity\\musashi-master-r4.png",
+      "sha256": "7ce937bddf0ac7bbb4e068b916625e4cd629411d6cc561946f88c22492c39c17",
+      "bytes": 2167988
+    }
+  ],
+  "stage": "candidate, not selected",
+  "generatedOriginal": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-85c67734-cabc-455b-bf4c-d64cce5bcf1b.png"
+}

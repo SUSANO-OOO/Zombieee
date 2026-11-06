@@ -1,0 +1,40 @@
+{
+  "generator": "scripts/build-quality-support-portraits.mjs",
+  "canonical": {
+    "path": "reference/characters/producer-masters-v2/crazy-king-producer-master-v2.png",
+    "sha256": "0a4329786e31f6a10d646e3145eaed188ff434cedcb58a346ae8efa29161c789"
+  },
+  "inputs": [
+    {
+      "expression": "determined",
+      "path": "assets/source/quality-20261028/identity/king-master-r4.png",
+      "sha256": "37f68d4df0962bfead20bbdfd16113f05ea3b5f42488e9d22b958a4e7718e5dc",
+      "width": 1024,
+      "height": 1536
+    }
+  ],
+  "crop": {
+    "left": 150,
+    "top": 0,
+    "width": 874,
+    "height": 1080
+  },
+  "outputs": [
+    {
+      "path": "public/art/v100/portraits/king-determined-quality-r1.webp",
+      "sha256": "3894b555959b9dff2f86faf67e71eaa9256764626f1d1b733807bd7e965954b3",
+      "bytes": 63902
+    },
+    {
+      "path": "public/art/v100/portraits/king-formation-card-quality-r1.webp",
+      "sha256": "b0e8908a109b93460586b473dbec3e9eb358b0df9c0914fe84d39145257b6777",
+      "bytes": 50818
+    }
+  ],
+  "expressionPolicy": "One closed helmet portrait covers all four dialogue states; painted helmet markings never change like a human face.",
+  "runtimeAssetCount": 2,
+  "logicalBytes": 114720,
+  "distinctBytes": 114720,
+  "scope": "Local dialogue and card candidate. Battle, dedicated scenes and credits are not replaced by this builder.",
+  "approval": "Producer requested the redesign; final visual acceptance and integration remain open."
+}

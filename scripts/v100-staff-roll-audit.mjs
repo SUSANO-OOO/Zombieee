@@ -10,6 +10,22 @@ export function staffRollFilmBuffersReady() {
     && image.complete && image.naturalWidth > 0 && image.dataset.creditDecoded === "true");
 }
 
+export function staffRollFilmLayoutReady({ picture, roll, viewport, cinema } = {}) {
+  if (!cinema || !viewport || !Number.isFinite(viewport.width) || !Number.isFinite(viewport.height)
+    || viewport.width <= 0 || viewport.height <= 0) return false;
+  const fits = rect => rect && ["left", "top", "right", "bottom", "width", "height"].every(key => Number.isFinite(rect[key]))
+    && rect.width > 0 && rect.height > 0 && rect.left >= 0 && rect.top >= 0
+    && rect.right <= viewport.width && rect.bottom <= viewport.height
+    && Math.abs(rect.right - rect.left - rect.width) <= .1
+    && Math.abs(rect.bottom - rect.top - rect.height) <= .1;
+  if (!fits(picture) || !fits(roll)) return false;
+  // The complete image occupies the space LEFT of the credits. Requiring it
+  // to cover the entire viewport would restore the face/text overlap.
+  return picture.left <= 1 && picture.top <= 1 && picture.bottom >= viewport.height - 1
+    && Math.abs(roll.left - picture.right - 12) <= .1
+    && roll.width <= viewport.width * .34 && roll.left >= viewport.width * .64;
+}
+
 export async function inspectStaffRoll(page, { index = 0, playerName = "場面確認", seek = false } = {}) {
   const surface = page.locator(".v100-staff-roll");
   await surface.waitFor({ state: "visible", timeout: 15000 });
@@ -52,9 +68,11 @@ export async function inspectStaffRoll(page, { index = 0, playerName = "場面�
       audio: { src: audio.currentSrc, currentTime: audio.currentTime, duration: audio.duration, paused: audio.paused, loop: audio.loop, volume: audio.volume, gain: window.__endingOutputGain?.(audio) ?? audio.volume, readyState: audio.readyState },
       audioElements: document.querySelectorAll(".v100-staff-roll audio").length,
       pictureFits: picture.top >= 0 && picture.left >= 0 && picture.bottom <= innerHeight && picture.right <= innerWidth,
-      cinemaUsesFullFrame: movie.classList.contains("v100-credit-cinema") && picture.left <= 1 && picture.right >= innerWidth - 1,
+      filmLayout: { cinema: movie.classList.contains("v100-credit-cinema"), viewport: { width: innerWidth, height: innerHeight },
+        picture: { left: picture.left, top: picture.top, right: picture.right, bottom: picture.bottom, width: picture.width, height: picture.height },
+        roll: { left: roll.left, top: roll.top, right: roll.right, bottom: roll.bottom, width: roll.width, height: roll.height } },
       rollFits: roll.top >= 0 && roll.left >= 0 && roll.bottom <= innerHeight && roll.right <= innerWidth,
-      rollLeavesMainFilmVisible: roll.width <= picture.width * .34 && roll.left >= picture.left + picture.width * .64,
+      rollLeavesMainFilmVisible: roll.width <= innerWidth * .34 && roll.left >= innerWidth * .64,
       readingFont: Number.parseFloat(getComputedStyle(element.querySelector(".v100-credit-roll-track p")).fontSize),
       controlPanel: (() => { const rect = element.querySelector(".v100-credit-controls").getBoundingClientRect(); return { width: rect.width, height: rect.height }; })(),
       controls: [...element.querySelectorAll(".v100-credit-buttons button")].map(button => { const rect = button.getBoundingClientRect(); const hit = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2); return { text: button.textContent, width: rect.width, height: rect.height, fits: rect.top >= 0 && rect.left >= 0 && rect.bottom <= innerHeight && rect.right <= innerWidth, reachable: hit === button || button.contains(hit) }; }),
@@ -79,7 +97,8 @@ export async function inspectStaffRoll(page, { index = 0, playerName = "場面�
   // decoder metadata must not extend the film or change its saved cursor.
   assert.ok(Math.abs(observed.audio.duration - V100_CREDITS_SONG.duration) < .5, JSON.stringify(observed.audio));
   assert.equal(observed.audio.paused, false); assert.ok(observed.audio.currentTime > 0);
-  assert.equal(observed.pictureFits, true); assert.equal(observed.cinemaUsesFullFrame, true);
+  observed.cinemaUsesAvailableFrame = staffRollFilmLayoutReady(observed.filmLayout);
+  assert.equal(observed.pictureFits, true); assert.equal(observed.cinemaUsesAvailableFrame, true, JSON.stringify(observed.filmLayout));
   assert.equal(observed.rollFits, true); assert.equal(observed.rollLeavesMainFilmVisible, true);
   assert.ok(observed.readingFont >= 14);
   assert.equal(observed.controls.length, 2);

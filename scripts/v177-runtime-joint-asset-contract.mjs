@@ -1,0 +1,81 @@
+import {readFileSync} from 'node:fs';
+import assert from 'node:assert/strict';
+import {V177_JOINT_ASSET_ADDITIONS as authored} from './v177-joint-asset-contract.mjs';
+
+// Keep the authored/historical contract unchanged. Current rendering uses
+// source-bound identity/material derivatives. New coherent bodies and visible
+// neck attachments retain their own source contracts rather than claiming
+// every active version is an unchanged-body head replacement.
+const read=file=>JSON.parse(readFileSync(new URL(file,import.meta.url),'utf8'));
+const entries=[...new Map([
+ ...read('../assets/source/quality-20261028/identity/head-runtime-provenance.json').entries,
+ ...read('../assets/source/quality-20261028/identity/battle-heads-r3/runtime-provenance.json').entries,
+].map(row=>[row.kind,row])).values()];
+const byBase=new Map(entries.map(row=>[row.basePath,row]));
+const asset=row=>Object.freeze({path:row.assetPath,bytes:row.bytes,hash:'sha256-'+row.sha256});
+const rows=authored.map(row=>byBase.has(row.path)?asset(byBase.get(row.path)):row);
+for(const row of entries)if(!rows.some(item=>item.path===row.assetPath))rows.push(asset(row));
+// A versioned weapon layer replaces its retained head-only base in distribution.
+for(const row of read('../assets/source/quality-20261028/weapon-sidearm-r1/runtime-provenance.json').entries){
+ const index=rows.findIndex(item=>item.path===row.basePath);assert.ok(index>=0,'Sidearm base must be the registered head version');
+ rows[index]=asset(row);
+}
+const calibrated=read('../assets/source/quality-20261028/identity/battle-neck-calibration-r4-provenance.json').entries;
+const kuma=read('../assets/source/quality-20261028/rigs/kumaverson-combat-r4/provenance.json');
+for(const row of [...calibrated,{...kuma,basePath:'/art/v100/joints/kumaverson-quality-head-r1.webp'}]){
+ const index=rows.findIndex(item=>item.path===row.basePath);assert.ok(index>=0,'Current identity material must have a registered predecessor: '+row.kind);
+ rows[index]=asset(row);
+}
+const scout=read('../assets/source/quality-20261028/rigs/scout-combat-r1/provenance.json');
+const scoutIndex=rows.findIndex(row=>row.path==='/art/v100/joints/scout-quality-neck-r4.webp');
+assert.ok(scoutIndex>=0,'Complete Hachi body replaces its registered head-only predecessor');
+rows[scoutIndex]=asset(scout);
+const medic=read('../assets/source/quality-20261028/rigs/medic-combat-r1/provenance.json');
+const medicIndex=rows.findIndex(row=>row.path==='/art/v100/joints/medic-quality-neck-r4.webp');
+assert.ok(medicIndex>=0,'Complete Nao body replaces its registered head-only predecessor');
+rows[medicIndex]=asset(medic);
+const engineer=read('../assets/source/quality-20261028/rigs/engineer-combat-r1/provenance.json');
+const engineerIndex=rows.findIndex(row=>row.path==='/art/v100/joints/engineer-quality-neck-r4.webp');
+assert.ok(engineerIndex>=0,'Complete Monkey body replaces its registered head-only predecessor');
+rows[engineerIndex]=asset(engineer);
+const ranger=read('../assets/source/quality-20261028/rigs/ranger-combat-r1/provenance.json').asset;
+const rangerIndex=rows.findIndex(row=>row.path==='/art/v100/joints/ranger-quality-neck-r4.webp');
+assert.ok(rangerIndex>=0,'Complete Mizuchi paint replaces its registered head-only predecessor');
+rows[rangerIndex]=asset({...ranger,assetPath:ranger.path});
+const tky=read('../assets/source/quality-20261028/rigs/tky-combat-r1/provenance.json');
+const tkyIndex=rows.findIndex(row=>row.path==='/art/v100/joints/tky-quality-neck-r4.webp');
+assert.ok(tkyIndex>=0,'Complete TKY body replaces its registered head-only predecessor');
+rows[tkyIndex]=asset(tky);
+const zakimiya=read('../assets/source/quality-20261028/rigs/zakimiya-combat-r1/provenance.json');
+const zakimiyaIndex=rows.findIndex(row=>row.path==='/art/v100/joints/zakimiya-quality-neck-r4.webp');
+assert.ok(zakimiyaIndex>=0,'Complete Zakimiya body replaces its registered head-only predecessor');
+rows[zakimiyaIndex]=asset(zakimiya);
+const chiha=read('../assets/source/quality-20261028/rigs/mrs-chiha-combat-r1/provenance.json');
+const chihaIndex=rows.findIndex(row=>row.path==='/art/v100/joints/mrs-chiha-quality-neck-r4.webp');
+assert.ok(chihaIndex>=0,'Complete Chiha body replaces head-only predecessor');
+rows[chihaIndex]=asset(chiha);
+const musashi=read('../assets/source/quality-20261028/rigs/miyamoto-musashi-combat-r1/provenance.json');
+const musashiIndex=rows.findIndex(row=>row.path==='/art/v100/joints/miyamoto-musashi-quality-neck-r4.webp');
+assert.ok(musashiIndex>=0,'Complete Musashi body replaces head-only predecessor');
+rows[musashiIndex]=asset(musashi);
+const brute=read('../assets/source/quality-20261028/rigs/brute-combat-r1/provenance.json');
+const bruteIndex=rows.findIndex(row=>row.path==='/art/v100/joints/brute-quality-neck-r4.webp');
+assert.ok(bruteIndex>=0,'Complete Tatara body replaces head-only predecessor');
+rows[bruteIndex]=asset(brute);
+const gunner=read('../assets/source/quality-20261028/rigs/gunner-combat-r1/provenance.json');
+const gunnerIndex=rows.findIndex(row=>row.path==='/art/v100/joints/gunner-quality-neck-r4.webp');
+assert.ok(gunnerIndex>=0,'Complete Raider body replaces head-only predecessor');
+rows[gunnerIndex]=asset(gunner);
+const guardian=read('../assets/source/quality-20261028/rigs/guardian-combat-r1/provenance.json');
+const guardianIndex=rows.findIndex(row=>row.path==='/art/v100/joints/guardian-quality-neck-r4.webp');
+assert.ok(guardianIndex>=0,'Complete Gantetsu body replaces head-only predecessor');
+rows[guardianIndex]=asset(guardian);
+const brawler=read('../assets/source/quality-20261028/rigs/brawler-combat-r1/provenance.json');
+const brawlerIndex=rows.findIndex(row=>row.path==='/art/v100/joints/brawler-quality-neck-r4.webp');
+assert.ok(brawlerIndex>=0,'Complete Paisen body replaces head-only predecessor');
+rows[brawlerIndex]=asset(brawler);
+const king=read('../assets/source/quality-20261028/rigs/crazy-king-combat-r1/provenance.json');
+const kingIndex=rows.findIndex(row=>row.path==='/art/v100/joints/crazy-king-quality-model-r3.webp');
+assert.ok(kingIndex>=0,'Complete King body replaces head-only predecessor');
+rows[kingIndex]=asset(king);
+export const V177_JOINT_ASSET_ADDITIONS=Object.freeze(rows);

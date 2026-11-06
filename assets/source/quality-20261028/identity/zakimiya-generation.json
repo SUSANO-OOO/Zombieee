@@ -1,0 +1,11 @@
+{
+  "tool": "built-in image_gen",
+  "prompt": "Edit the supplied canonical Zakimiya portrait into a production game dialogue expression sheet. The second image is the authoritative full body identity master; both depict the SAME man. Preserve his actual narrow soft eyes, long mature face, distinctive cheek folds, slightly asymmetrical mouth, black short tousled hair, age, lean physique. Do not replace him with a generic handsome young hero, heavy sharp anime eyebrows or another face. Match the original realistically painted skin, anatomy and weathered fabric with only restrained illustrative edges. Make a precise 2 by 2 grid of four separate transparent standing portraits: upper left warm slight closed smile; upper right focused serious; lower left genuinely startled but recognizable; lower right quietly grieving. Same camera, pose scale, head top and waist/belt cutoff in every cell. Each portrait fully contained inside its quarter with 32px clear gutter, transparent exterior, no brown backdrop, no labels. Show from crown to just below belt, same dark worn hooded jacket, cream shirt, red upper-arm band, necklaces, shoulder strap, wrapped wrist and belt bottle pouches. Keep the small held bottle from the original at waist level, not covering face. No new props. Face consistency is the priority, expressions change eyebrows/mouth without changing facial structure.",
+  "inputs": [
+    "assets/source/v090/characters/zakimiya-identity-master-r1.png",
+    "assets/source/quality-20261028/identity/zakimiya-canonical-master-r1.png"
+  ],
+  "source": "zakimiya-canonical-expressions-r1.png",
+  "rejected": "exec-408051ed-5a91-4629-9298-4c63b35c659d.png: Producer rejected different face; never selected",
+  "acceptance": "candidate; not Producer accepted"
+}

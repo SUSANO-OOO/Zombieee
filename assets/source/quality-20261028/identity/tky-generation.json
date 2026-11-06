@@ -1,0 +1,19 @@
+{
+  "tool": "built-in image_gen",
+  "prompt": "Create a transparent 2x2 production dialogue expression sheet for the SAME adult TKY character. Reference 1 is the latest candidate to edit; reference 2 is the real person's facial reference and must control the recognizable identity; reference 3 is ONLY the character's approved clothing design, do not copy its different face. Preserve the real person's broad cheek and lower-jaw mass, small narrow eyes, nose and mouth proportions, heavy near-straight black center-parted fringe. Subtle Korean-drama grooming, clean-shaven, mildly handsome, not a different idol. Skin and clothes must share the same realistically painted game illustration: natural skin planes, restrained visible brush texture, soft directional light, no photographic pasted-on face or plastic skin, no heavy comic outlines. Standing upright, crown through waist/belt in every frame, same scale and head-top height. Same black layered high-collar long coat, loose dark inner scarf, dark magenta straps, armored shoulder and fingerless gloves from reference 3. No red neck cord, no shirt from real photo, no new costume, no seated pose. Four expressions in reading order: restrained warm smile; focused determined; alarm; quiet grief. Structure the features consistently, not four different people. IMPORTANT packing: each person fully fits INSIDE their own equal quarter, centered, with generous transparent margins at least 10 percent of cell width on BOTH sides and 5 percent top and bottom. No arm, clothing, hair or shadow may cross a cell boundary. Entire canvas genuine transparent alpha, no backdrop or glows, no text, no labels. Don't hold a prop across a cell boundary.",
+  "faceReference": {
+    "source": "Producer TKY photograph 1, 2026-10-28; original remains private",
+    "sha256": "71505f3b1b6eafc0c70c8e41f7c1563a731b1e9a270932c005baf0991beedd3a"
+  },
+  "inputs": [
+    "assets/source/quality-20261028/identity/tky-master-r6.png",
+    "private Producer TKY photograph 1",
+    "assets/source/v090/characters/tky-identity-master-r1.png (costume only)"
+  ],
+  "source": "tky-photo-expressions-r7.png",
+  "rejected": [
+    "tky-expressions-r3.png",
+    "tky-likeness-r4.png"
+  ],
+  "acceptance": "Unaccepted candidate; no numerical likeness score. Four expressions and cards connected; battle and scenes still pending."
+}

@@ -1,0 +1,76 @@
+{
+  "generator": "scripts/build-quality-support-portraits.mjs",
+  "canonical": {
+    "path": "public/art/v070/characters/reference/raider-base-r10.png",
+    "sha256": "50c6e63f96f5841f0945a6b6f0e7b692c6f4f944fc36950cdd3ce6e91c6b7cf8"
+  },
+  "inputs": [
+    {
+      "expression": "warm",
+      "path": "assets/source/quality-20261028/identity/raider-master-r4.png",
+      "sha256": "c9173aa44138f5796bdae3d4d680cd26b24ee16741020c42bcd8d0a1751a0b47",
+      "width": 1024,
+      "height": 1536
+    },
+    {
+      "expression": "determined",
+      "path": "assets/source/quality-20261028/identity/raider-master-r4.png",
+      "sha256": "c9173aa44138f5796bdae3d4d680cd26b24ee16741020c42bcd8d0a1751a0b47",
+      "width": 1024,
+      "height": 1536
+    },
+    {
+      "expression": "alarm",
+      "path": "assets/source/quality-20261028/identity/raider-alarm-r6.png",
+      "sha256": "6fc71277502f49e8ec19aebe83eff6861365cb9a6dd60bbc387f96aea85a35ec",
+      "width": 1024,
+      "height": 1536
+    },
+    {
+      "expression": "grief",
+      "path": "assets/source/quality-20261028/identity/raider-grief-r6.png",
+      "sha256": "ae168377d5d92dd6fd4e8e6f65304cb723139812bb261e1bb531a5ea3b9caf27",
+      "width": 1024,
+      "height": 1536
+    }
+  ],
+  "crop": {
+    "left": 150,
+    "top": 0,
+    "width": 600,
+    "height": 800
+  },
+  "outputs": [
+    {
+      "path": "public/art/v100/portraits/raider-warm-quality-r1.webp",
+      "sha256": "4c7103bae7dfa1113778bc7c0f477db6063fbb7c7f5db87d2c65b6e71dc418d9",
+      "bytes": 84650
+    },
+    {
+      "path": "public/art/v100/portraits/raider-formation-card-quality-r1.webp",
+      "sha256": "d379597c766ff697748743fd52640e6fa93d938ed30abaf87f830d3e72f82363",
+      "bytes": 60586
+    },
+    {
+      "path": "public/art/v100/portraits/raider-determined-quality-r1.webp",
+      "sha256": "4c7103bae7dfa1113778bc7c0f477db6063fbb7c7f5db87d2c65b6e71dc418d9",
+      "bytes": 84650
+    },
+    {
+      "path": "public/art/v100/portraits/raider-alarm-quality-r1.webp",
+      "sha256": "0321daed6e98fba250ba25eeab0369a3ff441505d3010757e29d0269fafd96f4",
+      "bytes": 84514
+    },
+    {
+      "path": "public/art/v100/portraits/raider-grief-quality-r1.webp",
+      "sha256": "6e8230216d6cb1f254cb2dd75287375542789ad6b6ff69d298acfda1a03b30c4",
+      "bytes": 84062
+    }
+  ],
+  "expressionPolicy": "Three distinct source images cover four states. Warm and determined reuse the r4 master; the requested determined variant was rejected by the generation service and was not retried.",
+  "runtimeAssetCount": 5,
+  "logicalBytes": 398462,
+  "distinctBytes": 313812,
+  "scope": "Local dialogue and card candidate. Battle, dedicated scenes and credits are not replaced by this builder.",
+  "approval": "Producer requested the redesign; final visual acceptance and integration remain open."
+}

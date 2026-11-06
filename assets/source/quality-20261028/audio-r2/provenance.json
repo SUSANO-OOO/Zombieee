@@ -1,0 +1,24 @@
+{
+  "source": "assets/source/weapon-recordings/X_39P.wav",
+  "sourceSha256": "d679a3cd87eae2898d984159f83544392932e6b77526045b672e3aaa9c2dda9f",
+  "license": "CC0-1.0",
+  "notice": "assets/source/weapon-recordings/LICENSE.txt",
+  "creator": "Ben Jaszczak; Brian Nelson; Kevin Heras; Matthew Nanney",
+  "filter": "atrim=start=1.25:end=1.95,asetpts=PTS-STARTPTS,silenceremove=start_periods=1:start_threshold=-42dB:start_silence=0.004,atrim=0:0.42,asetpts=PTS-STARTPTS,highpass=f=100,lowpass=f=3600,afade=t=out:st=0.30:d=0.12,apad=pad_len=1323",
+  "gain": 0.9261311918206064,
+  "records": [
+    {
+      "file": "public/audio/quality-20261028/babayaga-suppressed-r2.mp3",
+      "bytes": 4878,
+      "sha256": "f3b735124aeed4452025a10da2b9a71371b688c970a4bb46e0ae754a3ea1a16b"
+    },
+    {
+      "file": "public/audio/quality-20261028/babayaga-suppressed-r2.ogg",
+      "bytes": 6974,
+      "sha256": "af1fd7f42841099e42685f381524e5cfb91ffbca5d49d5a5e4bed00470caaa72"
+    }
+  ],
+  "adaptation": "Recorded pistol discharge processed for a suppressed game weapon. Not a recording of an actual suppressor. Retains the mechanical transient; no spoken imitation.",
+  "subjectiveListening": "pending",
+  "physicalDeviceAcceptance": "pending"
+}

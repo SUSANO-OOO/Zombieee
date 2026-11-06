@@ -7,6 +7,7 @@ import test from "node:test";
 import sharp from "sharp";
 
 import { EVENT_PORTRAIT_PROFILES } from "../app/visualProfiles.js";
+import { EVENT_PORTRAIT_INK_BOTTOM } from "../app/eventPortraitInkBounds.js";
 import {
   PORTRAIT_DIALOGUE_OVERLAP_MAX_PX,
   PORTRAIT_DIALOGUE_OVERLAP_MIN_PX,
@@ -34,6 +35,12 @@ async function alphaTop(file) {
 }
 
 test("all 18 event portraits retain a safe head margin and authored face-center range", async () => {
+  const css = await readFile(path.join(ROOT, "app", "globals.css"), "utf8");
+  const rule = css.match(/\.event-portrait\[data-portrait\] \{([^}]+)\}/u)?.[1];
+  assert.match(rule, /box-sizing:border-box/u);
+  assert.match(rule, /padding-top:8px/u);
+  assert.match(rule, /background-origin:content-box/u);
+  assert.match(rule, /background-clip:content-box/u);
   assert.equal(Object.keys(EVENT_PORTRAIT_PROFILES).length, 18);
   for (const [kind, profile] of Object.entries(EVENT_PORTRAIT_PROFILES)) {
     assert.match(profile.crop, /^auto (?:92|94)%$/, `${kind}/crop`);
@@ -45,8 +52,9 @@ test("all 18 event portraits retain a safe head margin and authored face-center 
         : compact ? .68
           : kind === "guide" || kind === "radio" ? .74 : .7;
       const containerHeight = viewport.height * portraitHeightRatio;
-      const renderedHeight = containerHeight * (Number.parseFloat(profile.crop.split(" ")[1]) / 100);
-      const backgroundOffset = (containerHeight - renderedHeight) * profile.focusY;
+      const contentHeight = containerHeight - 8;
+      const renderedHeight = contentHeight * (Number.parseFloat(profile.crop.split(" ")[1]) / 100);
+      const backgroundOffset = 8 + (contentHeight - renderedHeight) * profile.focusY;
       const headMargin = backgroundOffset + source.y / source.height * renderedHeight;
       assert.ok(headMargin >= 8,
         `${kind}/${viewport.width}x${viewport.height} head margin ${headMargin.toFixed(2)}px`);
@@ -61,6 +69,20 @@ test("dialogue typography and advance target keep mobile acceptance minima", asy
   assert.match(css, /dialogue-text[^}]*clamp\(12px,/u);
   assert.match(css, /dialogue-box > em[^}]*min-width:44px[^}]*min-height:44px/u);
   assert.doesNotMatch(css, /dialogue-(?:text|name)[^}]*font(?:-size)?:[^;}]*(?:7px|9px)/u);
+});
+
+test("event torso alignment metadata matches all current portrait alpha bounds", async () => {
+  assert.deepEqual(Object.keys(EVENT_PORTRAIT_INK_BOTTOM).sort(), Object.values(EVENT_PORTRAIT_PROFILES).map(p => p.path).sort());
+  for (const profile of Object.values(EVENT_PORTRAIT_PROFILES)) {
+    assert.equal(profile.scale, 1, "alignment requires the authored unscaled portrait container");
+    const { data, info } = await sharp(path.join(ROOT, "public", profile.path)).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+    let lastPixel = -1;
+    for (let i = data.length - 1; i >= 3; i -= 4) {
+      if (data[i] >= 32) { lastPixel = (i - 3) / 4; break; }
+    }
+    assert.ok(lastPixel >= 0);
+    assert.equal(EVENT_PORTRAIT_INK_BOTTOM[profile.path], (Math.floor(lastPixel / info.width) + 1) / info.height, profile.path);
+  }
 });
 
 test("conversation log keeps readable copy, a touch-safe close action, and modal semantics", async () => {

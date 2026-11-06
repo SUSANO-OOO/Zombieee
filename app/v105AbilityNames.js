@@ -49,17 +49,20 @@ export function v105AbilityNameSnapshot(world){
     starts:state.receipts.map(row=>({...row}))}:{active:[],starts:[]};
 }
 
-export function layoutV105AbilityNames(rows,{width,height,fontSize,measure}={}){
+export function layoutV105AbilityNames(rows,{width,height,fontSize,measure,obstacles=[],bounds={left:0,top:0,right:width,bottom:height}}={}){
+  const {left,top,right,bottom}=bounds;
   const placed=[],gap=5,lineHeight=fontSize+10;
   for(const row of [...rows].sort((a,b)=>a.headX-b.headX||String(a.ownerId).localeCompare(String(b.ownerId)))){
-    const textWidth=Math.min(width-20,measure(row.name)),w=textWidth+16;
-    const preferredX=Math.max(w/2+6,Math.min(width-w/2-6,row.headX));
-    const preferredY=Math.max(lineHeight/2+6,Math.min(height-lineHeight/2-6,row.headY-15));
-    const xs=[preferredX,w/2+6,width-w/2-6,...placed.flatMap(p=>[p.x-(p.width+w)/2-gap,p.x+(p.width+w)/2+gap])];
-    const ys=[preferredY,...Array.from({length:Math.ceil(height/(lineHeight+gap))},(_,i)=>[
-      preferredY-(i+1)*(lineHeight+gap),preferredY+(i+1)*(lineHeight+gap),lineHeight/2+6+i*(lineHeight+gap)]).flat()];
+    const textWidth=Math.min(right-left-20,measure(row.name)),w=textWidth+16;
+    const preferredX=Math.max(left+w/2+6,Math.min(right-w/2-6,row.headX));
+    const preferredY=Math.max(top+lineHeight/2+6,Math.min(bottom-lineHeight/2-6,row.headY-15));
+    const xs=[preferredX,left+w/2+6,right-w/2-6,...obstacles.flatMap(p=>[p.x-w/2-gap,p.x+p.width+w/2+gap]),...placed.flatMap(p=>[p.x-(p.width+w)/2-gap,p.x+(p.width+w)/2+gap])];
+    const ys=[preferredY,...Array.from({length:Math.ceil((bottom-top)/(lineHeight+gap))},(_,i)=>[
+      preferredY-(i+1)*(lineHeight+gap),preferredY+(i+1)*(lineHeight+gap),top+lineHeight/2+6+i*(lineHeight+gap)]).flat(),
+      ...obstacles.flatMap(p=>[p.y-lineHeight/2-gap,p.y+p.height+lineHeight/2+gap])];
     const choices=xs.flatMap(x=>ys.map(y=>({x,y,score:Math.abs(x-preferredX)*.7+Math.abs(y-preferredY)})))
-      .filter(p=>p.x>=w/2+5&&p.x<=width-w/2-5&&p.y>=lineHeight/2+5&&p.y<=height-lineHeight/2-5
+      .filter(p=>p.x>=left+w/2+5&&p.x<=right-w/2-5&&p.y>=top+lineHeight/2+5&&p.y<=bottom-lineHeight/2-5
+        &&!obstacles.some(q=>p.x+w/2>q.x-gap&&p.x-w/2<q.x+q.width+gap&&p.y+lineHeight/2>q.y-gap&&p.y-lineHeight/2<q.y+q.height+gap)
         &&!placed.some(q=>Math.abs(q.x-p.x)<(q.width+w)/2+gap-.001&&Math.abs(q.y-p.y)<lineHeight+gap-.001))
       .sort((a,b)=>a.score-b.score||a.y-b.y||a.x-b.x);
     const {x,y}=choices[0]??{x:preferredX,y:preferredY};
@@ -75,7 +78,7 @@ export function drawV105AbilityNames(ctx,world,options={}){
   const fontSize=Math.max(22,Math.min(32,13/Math.max(.25,cssScale)));
   ctx.save();ctx.font=`700 ${fontSize}px "Noto Sans JP",sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
   const rows=state.active.map(row=>{const owner=liveOwner(world,row);return{...row,owner,headX:owner.x,headY:headY(owner)};});
-  const layout=layoutV105AbilityNames(rows,{width,height,fontSize,measure:text=>ctx.measureText(text).width});
+  const layout=layoutV105AbilityNames(rows,{width,height,fontSize,measure:text=>ctx.measureText(text).width,obstacles:options.obstacles,bounds:options.bounds});
   for(const row of layout){
     const age=world.time-row.startedAt;
     ctx.globalAlpha=Math.min(1,age/.06,(row.duration-age)/.23);

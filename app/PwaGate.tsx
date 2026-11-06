@@ -18,7 +18,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { readPwaBootState } from "./pwaBoot.js";
-import { createPaintedBrowserEntry } from "./pwaBrowserEntry.js";
 import { useGameModalScope } from "./useGameModalScope";
 
 import {
@@ -38,7 +37,6 @@ import {
   describeFailureDiagnostics,
   describeInstall,
   describeInstallGuidance,
-  describeInstallOffer,
   describeProgress,
   formatFailureDiagnostics,
   fetchPublishedManifest,
@@ -172,11 +170,6 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [manifestUnreachable, setManifestUnreachable] = useState(false);
   const [deferredPublishedManifest, setDeferredPublishedManifest] = useState<Manifest | null>(null);
-  // The player chose to keep playing in the browser instead of installing.
-  // Remembered for the visit only, so the invitation is never nagged twice in
-  // one session.
-  const [offerDismissed, setOfferDismissed] = useState(false);
-  const [browserPlayPending, setBrowserPlayPending] = useState(false);
   // The last failure, kept until the next success or an explicit dismissal, so
   // a player can still read it after they have looked away from the screen.
   const [diagnostics, setDiagnostics] = useState<ReturnType<typeof describeFailureDiagnostics> | null>(null);
@@ -213,23 +206,6 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   const installPlanRef = useRef<{ pendingCount: number; pendingBytes: number; satisfiedBytes?: number } | null>(null);
   const installedManifestRef = useRef<Manifest | null>(null);
   const storedHashesRef = useRef<Set<string>>(new Set());
-  const browserPlayTransitionRef = useRef<ReturnType<typeof createPaintedBrowserEntry> | null>(null);
-
-  useEffect(() => () => {
-    browserPlayTransitionRef.current?.dispose();
-    browserPlayTransitionRef.current = null;
-  }, []);
-
-  const beginBrowserPlay = useCallback(() => {
-    browserPlayTransitionRef.current ??= createPaintedBrowserEntry({
-      requestFrame: (callback: FrameRequestCallback) => window.requestAnimationFrame(callback),
-      cancelFrame: (frame: number) => window.cancelAnimationFrame(frame),
-      onPending: setBrowserPlayPending,
-      onEnter: () => setOfferDismissed(true),
-    });
-    browserPlayTransitionRef.current.request();
-  }, []);
-
   const refreshStored = useCallback(async () => {
     const store = storeRef.current;
     if (!store) return new Set<string>();
@@ -447,13 +423,11 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     installPlan,
     downloadState,
     updateEvaluation,
-    offerDismissed,
     commitRequired: commitRecovery.required,
     commitRecoveryBusy,
   });
 
   const activation = evaluateActivationSafety({ ...safety, downloadActive: downloadState === "running" });
-  const deferAssetNoticeForEvent = String(safety.screen ?? "title") === "event";
 
   const runDownload = useCallback(async (
     assets: Array<Record<string, unknown>>,
@@ -781,7 +755,6 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   const playable = canPlayOffline({ phase, installPlan });
   const installCopy = describeInstall(installPlan, storage);
   const updateCopy = updateEvaluation ? describeUpdate(updateEvaluation, { formatBytes }) : null;
-  const offerCopy = describeInstallOffer(targetManifest, { promptAvailable: Boolean(installPrompt) });
   const guidance = describeInstallGuidance({
     standalone,
     promptAvailable: Boolean(installPrompt),
@@ -807,21 +780,10 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     void Promise.resolve(prompt.prompt()).catch(() => {});
   }, [installPrompt]);
 
-  // A fully installed app, or a tab whose player chose to keep browsing, renders
-  // the game untouched. The install invitation and the first-run download sit in
-  // front of the title so they are the first thing a new visitor sees.
-  //
-  // `settling` covers the gap before the boot effect has established what this
-  // device is. Without it the very first render is unblocked, the game mounts,
-  // and title art and music are fetched before the player has been asked
-  // anything - which is precisely what a browser tab must not do here. A
-  // standalone launch also waits for the published-manifest lookup:
-  // otherwise a complete uncommitted candidate could slip through on reload.
-  // If the lookup fails offline, `publishedChecked` still releases the retained
-  // active generation rather than treating a network absence as data loss.
+  // Wait for device/generation ownership before mounting the game. Browser tabs
+  // then enter directly; standalone downloads and interrupted updates still gate.
   const settling = !bootFailure && (!booted || (supported && standalone && !publishedChecked));
   const blocking = bootFailure || settling
-    || phase === "install-offer"
     || phase === "download-complete"
     || phase === "download-incomplete"
     || phase === "commit-required"
@@ -858,12 +820,13 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
 
   const storagePanel = <aside className={storageHost ? "pwa-storage pwa-storage-inline" : "pwa-notice pwa-storage"} role={storageHost ? "region" : "dialog"} aria-label={storageHost ? "アプリのデータ管理" : "データ管理"}>
     <h3>アプリの容量・更新</h3>
+    {!standalone && guidance && <details className="pwa-return-install-help"><summary>ホーム画面で遊ぶ</summary><div className="pwa-return-install-columns"><div>{guidance.mode === "prompt" && !installPromptUsed && <button type="button" className="pwa-primary" onClick={acceptInstallPrompt}>ホーム画面に追加する</button>}{installPromptUsed && <p>追加画面が出ないときは、下の手順を試してください。</p>}<InstallSteps steps={guidance.steps as Array<Record<string, unknown>>} /></div><p>続きから遊ぶには、先に下の「セーブを書き出す」でバックアップを。追加したアプリで復元してください。保存先が別になる場合があります。</p></div></details>}
     <dl>
       <div><dt>保存中のバージョン</dt><dd>{installedManifest?.version ?? "ブラウザでプレイ中"}</dd></div>
       <div><dt>ひとつ前のバージョン</dt><dd>{previousManifest?.version ?? "なし"}</dd></div>
       <div><dt>保存済みアセット</dt><dd>{storedHashes.size}件</dd></div>
       <div><dt>このバージョンが使用中</dt><dd>{installPlan ? `${installPlan.satisfied.length}件・${formatBytes(installPlan.satisfiedBytes ?? 0)}` : "未インストール"}</dd></div>
-      <div><dt>不足・破損</dt><dd>{installPlan ? `${installPlan.pendingCount}件・${formatBytes(installPlan.pendingBytes)}` : "未インストール"}</dd></div>
+      <div><dt>{installedManifest ? "不足・破損" : "オフライン未保存"}</dt><dd>{installPlan ? `${installPlan.pendingCount}件・${formatBytes(installPlan.pendingBytes)}` : "未保存"}</dd></div>
       <div><dt>参照されていないデータ</dt><dd>{orphanCount == null ? "なし" : `${orphanCount}件`}</dd></div>
     </dl>
     <details><summary>保存先と診断情報</summary><dl>
@@ -910,46 +873,6 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
 
             {settling && (
               <p className="pwa-hint" role="status">配信データを確認しています…</p>
-            )}
-
-            {!bootFailure && !settling && phase === "install-offer" && (
-              <>
-                <h2>{offerCopy?.headline ?? "西新世紀末物語をインストール"}</h2>
-                <p>{offerCopy?.body ?? "ホーム画面に追加すると、アプリのように全画面で起動できます。"}</p>
-                {offerCopy?.sizeLine && <p className="pwa-hint">{offerCopy.sizeLine}</p>}
-                <p className="pwa-hint">{offerCopy?.noDownloadHint ?? "この画面ではゲームデータをダウンロードしません。"}</p>
-
-                {guidance?.mode === "prompt" && !installPromptUsed && (
-                  <button type="button" className="pwa-primary" onClick={acceptInstallPrompt}>
-                    {offerCopy?.actionLabel ?? guidance.actionLabel}
-                  </button>
-                )}
-
-                {/*
-                  The written route stands in whenever there is no button to
-                  press - either because the browser never offered one, or
-                  because its one-shot prompt has already been used and possibly
-                  dismissed. Without this, dismissing the prompt would leave the
-                  player no way to install at all.
-                */}
-                {guidance && (guidance.mode === "manual" || installPromptUsed) && (
-                  <div className="pwa-install-guidance" data-install-platform={guidance.platform}>
-                    <h3>ホーム画面に追加する手順</h3>
-                    {installPromptUsed && guidance.mode === "prompt" && (
-                      <p className="pwa-hint">インストール画面が出ないときは、この手順でも追加できます。</p>
-                    )}
-                    {!installPromptUsed && <p className="pwa-hint">{guidance.body}</p>}
-                    <InstallSteps steps={guidance.steps as Array<Record<string, unknown>>} />
-                  </div>
-                )}
-
-                <div className="pwa-actions pwa-secondary-actions">
-                  <button type="button" onClick={beginBrowserPlay} disabled={browserPlayPending} aria-busy={browserPlayPending || undefined}>
-                    {browserPlayPending ? "準備しています…" : offerCopy?.skipLabel ?? "ブラウザで遊ぶ"}
-                  </button>
-                </div>
-                <p className="pwa-hint">{offerCopy?.skipHint ?? "インストールせずに遊ぶこともできます。"}</p>
-              </>
             )}
 
             {phase === "download-complete" && (
@@ -1081,9 +1004,9 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
         </section>
       )}
 
-      {/* Repair and update notices never block play; they sit above the game. */}
+      {/* Keep pending notices until a safe screen, without covering active play. */}
       <div className="pwa-notice-stack">
-      {!blocking && registrationFailed && !deferAssetNoticeForEvent && (
+      {!blocking && registrationFailed && activation.safe && (
         <aside className="pwa-notice" role="status">
           <p>オフライン用の設定に失敗しました。通信できる状態ではゲームを続けられます。</p>
           <button type="button" onClick={() => setRegistrationFailed(false)}>閉じる</button>
@@ -1096,18 +1019,11 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
         </aside>
       )}
 
-      {!blocking && phase === "update-available" && updateCopy && !updateDismissed && !deferAssetNoticeForEvent && (
+      {!blocking && phase === "update-available" && updateCopy && !updateDismissed && activation.safe && (
         <aside className="pwa-notice pwa-update" role="status">
           <p className="pwa-update-headline">{updateCopy.headline}</p>
           <p>{updateCopy.downloadLine}</p>
           <p className="pwa-hint">{updateCopy.fileLine}・{updateCopy.wifiHint}</p>
-          {!activation.safe && (
-            <p className="pwa-hint">
-              {activation.blockers.includes("battle-active") || activation.blockers.includes("unsafe-screen")
-                ? "戦闘の終了後に更新できます"
-                : "保存処理の完了後に更新できます"}
-            </p>
-          )}
           <div className="pwa-actions">
             <button type="button" className="pwa-primary" disabled={!activation.safe} onClick={startUpdate}>
               更新をダウンロード

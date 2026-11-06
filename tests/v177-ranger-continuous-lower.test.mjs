@@ -1,3 +1,4 @@
+import {assertRangerRepaintGeometry} from './helpers/quality-material-contract.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
@@ -7,11 +8,13 @@ import sharp from 'sharp';
 import ts from 'typescript';
 import {MANUAL_ABILITY_REGISTRY,createManualAbilityRuntime,beginManualAbility,advanceManualAbility} from '../app/manualAbilities.js';
 import {V177_JOINT_ATLASES,v177JointPose,v177RangerFootPlan,drawV177JointPose,v177RenderedWeightedLowerReceipt,v177RenderedJointWeaponSocket,v177JointCycleDistance} from '../app/v177JointPresentation.js';
+import {V177_JOINT_ATLASES as authoredAtlases} from '../app/v177JointData.js';
 import {createV177RangerLowerPose,v177RangerLowerPose} from '../app/v177RangerLowerMotion.js';
 import {createV177RangerLowerPainter,paintV177RangerLower,getV177RangerLowerPaintSnapshot} from '../app/v177RangerLowerPaint.js';
 const atlas=V177_JOINT_ATLASES.ranger,rig=atlas.lowerRig,sha=b=>createHash('sha256').update(b).digest('hex');
 const source='assets/source/v100/joints/ranger-r1/',motion=JSON.parse(gunzipSync(await readFile(source+'motion.json.gz')));
 const texture=await sharp(await readFile('public'+atlas.path)).ensureAlpha().raw().toBuffer({resolveWithObject:true});
+const historicalTexture=await sharp(await readFile('public'+authoredAtlases.ranger.path)).ensureAlpha().raw().toBuffer({resolveWithObject:true});
 // Actual stopped-foot receipts: 6728 seq2219/2221/2443/2445 and f42 seq915.
 // Neutral boot angles and backing transforms reconstruct the pants geometry;
 // they do not claim the missing original full-body transform or native counts.
@@ -32,14 +35,16 @@ function surface(){
     createImageData(w,h){return {width:w,height:h,data:new Uint8ClampedArray(w*h*4)};},putImageData(data){canvas.data=data;}};
   canvas.getContext=()=>context;return canvas;
 }
-function image(){return {naturalWidth:atlas.decodedWidth,naturalHeight:atlas.decodedHeight,pixels:texture.data,ownerDocument:{createElement:surface}};}
-function observedPainter(){
+function image({legacy=false}={}){const a=legacy?authoredAtlases.ranger:atlas,t=legacy?historicalTexture:texture;return {naturalWidth:a.decodedWidth,naturalHeight:a.decodedHeight,pixels:t.data,ownerDocument:{createElement:surface}};}
+// Fixed cache/allocation controls retain their original paint. Current game draws
+// below use image() and the complete repaint; the two evidence scopes stay distinct.
+function observedPainter({legacy=true}={}){
   const observation={writes:0,failWrite:false,surfaces:[],dirtyRects:[]};
   const create=()=>{const canvas=surface(),context=canvas.getContext(),put=context.putImageData;
     context.putImageData=(...args)=>{if(observation.failWrite)throw Error('write failed');observation.writes++;observation.dirtyRects.push(args.slice(3));put(...args);
       canvas.data={width:args[0].width,height:args[0].height,data:new Uint8ClampedArray(args[0].data)};};
     observation.surfaces.push(canvas);return canvas;};
-  return {painter:createV177RangerLowerPainter(image(),rig,create),observation};
+  return {painter:createV177RangerLowerPainter(image({legacy}),legacy?authoredAtlases.ranger.lowerRig:rig,create),observation};
 }
 function main({width=1280,height=720,matrix=[1,0,0,1,0,0]}={}){
   const calls=[],stack=[];let m=[...matrix];const ctx={canvas:{width,height},globalAlpha:.73,globalCompositeOperation:'source-over',filter:'none',
@@ -72,7 +77,7 @@ test('a newly rasterized exact RGBA match reuses its uploaded owner while a chan
 });
 
 test('exact raster reuse retains the frozen 1658 pixels at all three viewport transforms',()=>{
-  const result=[],painter=createV177RangerLowerPainter(image(),rig);
+  const result=[],painter=createV177RangerLowerPainter(image({legacy:true}),authoredAtlases.ranger.lowerRig);
   for(const [width,height,scale]of[[1280,720,1],[844,390,.8],[844,340,2]])for(const flip of[false,true])for(const angle of[0,.07])for(const phase of[0,.371,.83]){
     const c=Math.cos(angle),s=Math.sin(angle),sign=flip?-1:1;
     const target=main({width,height,matrix:[c*sign*scale,s*sign*scale,-s*scale,c*scale,width/2,height/2]});
@@ -161,7 +166,7 @@ test('alternating Ranger owners keep exact pixels and current draw state without
       const receipt=paintV177RangerLower(p,target.ctx,second?.762:.371,second?.25:.5,-48,-80,96,89.6);
       return {receipt,call:target.calls[0]};
     };
-    const expected=[false,true].map(second=>paint(createV177RangerLowerPainter(image(),rig),second,.73));
+    const expected=[false,true].map(second=>paint(createV177RangerLowerPainter(image({legacy:true}),authoredAtlases.ranger.lowerRig),second,.73));
     for(let i=0;i<6;i++)paint(painter,i%2===1,.73);
     const before=getV177RangerLowerPaintSnapshot();
     const uploadsBefore=observation.writes;
@@ -324,14 +329,16 @@ test('Ranger cloth never repairs a collapsed or crossed quad into a false succes
     if(entry.overlap)assert.ok(receipt.duplicateWithinPart>0);
   }
 });
-test('append-only Ranger atlas retains every r2 RGBA byte, upper rig and full original five lower crops',async()=>{
+test('the authored append-only Ranger atlas retains every r2 RGBA byte and crop; runtime derivatives retain its rig',async()=>{
   const oldBytes=await readFile('public/art/v100/joints/ranger-r2.webp');assert.equal(sha(oldBytes),'08440e6c182f562e3fda394a9f12b5e21ca0e9abfa95da104d1dc397f3a412db');
-  const old=await sharp(oldBytes).ensureAlpha().raw().toBuffer();assert.ok(texture.data.subarray(0,old.length).equals(old));
-  assert.equal(sha(JSON.stringify(atlas.upperRig)),'23a2419c59a55c90e7528840fcf1d1f6d97167bfbfad622858416404c8f5d51a');
-  assert.equal(atlas.frames.length,152);assert.equal(atlas.upperRig.parts.length,7);assert.ok(atlas.decodedBytes<=6*1024*1024);
-  for(const part of rig.parts){const p=JSON.parse(await readFile(source+'parts.json')).parts.find(p=>p.name===part.name),raw=await sharp(await readFile(source+p.file)).ensureAlpha().raw().toBuffer();
-    for(let y=0;y<part.source.h;y++){const from=((part.destination.y+y)*480+part.destination.x)*4,to=((part.source.y+y)*atlas.decodedWidth+part.source.x)*4;
-      assert.ok(raw.subarray(from,from+part.source.w*4).equals(texture.data.subarray(to,to+part.source.w*4)),part.name);}}
+  const authoredTexture=await sharp(await readFile('public'+authoredAtlases.ranger.path)).ensureAlpha().raw().toBuffer({resolveWithObject:true});
+  assertRangerRepaintGeometry(atlas,authoredAtlases.ranger);
+  const old=await sharp(oldBytes).ensureAlpha().raw().toBuffer();assert.ok(authoredTexture.data.subarray(0,old.length).equals(old));
+  assert.equal(sha(JSON.stringify(authoredAtlases.ranger.upperRig)),'23a2419c59a55c90e7528840fcf1d1f6d97167bfbfad622858416404c8f5d51a');
+  assert.equal(atlas.frames.length,152);assert.equal(authoredAtlases.ranger.upperRig.parts.length,7);assert.equal(atlas.upperRig.parts.length,7);assert.ok(atlas.decodedBytes<=6*1024*1024);
+  for(const part of authoredAtlases.ranger.lowerRig.parts){const p=JSON.parse(await readFile(source+'parts.json')).parts.find(p=>p.name===part.name),raw=await sharp(await readFile(source+p.file)).ensureAlpha().raw().toBuffer();
+    for(let y=0;y<part.source.h;y++){const from=((part.destination.y+y)*480+part.destination.x)*4,to=((part.source.y+y)*authoredAtlases.ranger.decodedWidth+part.source.x)*4;
+      assert.ok(raw.subarray(from,from+part.source.w*4).equals(authoredTexture.data.subarray(to,to+part.source.w*4)),part.name);}}
   for(const leg of rig.legs){assert.equal(leg.weights.length,65);assert.equal(leg.triangles.length,288);assert.equal(leg.sourcePositions.length,130);}
 });
 test('the original lower remains reproducible as a legacy control with its original feet and far leg',()=>{
@@ -391,7 +398,7 @@ test('actual joint draw paints one continuous lower and seven upper parts under 
     const receipt=v177RenderedWeightedLowerReceipt(actor,world);assert.equal(receipt.mode,'continuous-weighted-mesh');
     assert.equal(receipt.parts,5);assert.equal(receipt.meshVertices,130);assert.equal(receipt.meshTriangles,192);assert.equal(receipt.coverageSamples,4);
     assert.equal(receipt.duplicateWithinPart,0);assert.equal(receipt.degenerate,0);assert.equal(receipt.phase,plan.phase);assert.equal(receipt.settle,plan.lowerSettle);
-    assert.equal(target.calls.length,8);assert.deepEqual(target.calls[0].matrix,[1,0,0,1,0,0]);assert.ok(target.calls[0].pixels.some(v=>v));
+    assert.equal(target.calls.length,1+atlas.upperRig.parts.length);assert.deepEqual(target.calls[0].matrix,[1,0,0,1,0,0]);assert.ok(target.calls[0].pixels.some(v=>v));
     assert.equal(target.ctx.globalAlpha,.73);assert.equal(target.ctx.globalCompositeOperation,'source-over');assert.equal(target.stack.length,0);
     assert.deepEqual(Object.values(target.ctx.getTransform()),m);
     const again=main({width,height,matrix:m});drawV177JointPose(again.ctx,img,'ranger',plan,-48,-80,96,89.6,{actor,world});
@@ -725,4 +732,16 @@ test('a full Ranger pool reuses a matching backing size without recreating it or
  assert.ok(choice.matching.includes(painter.lastRaster));assert.notEqual(painter.lastRaster,hot);
  assert.equal(hot.canvas.data,hotPixels);assertSameActiveLower(actual,choice.expected);assert.deepEqual(actual.receipt,choice.expected.receipt);
  assert.ok(painter.rasters.length<=32);assert.ok(painter.rasters.reduce((n,r)=>n+r.canvas.width*r.canvas.height,0)<=65536);
+});
+
+
+test('the complete Mizuchi cloth repaint retains active pixels across cache reuse and different owners',()=>{
+ const {painter,observation}=observedPainter({legacy:false});
+ const inputs=[.371,.762,.371+1e-12,.19,.762,.371];
+ for(const phase of inputs){
+  const actual=paintPoolInput(painter,phase,96),expected=paintPoolInput(observedPainter({legacy:false}).painter,phase,96);
+  assert.equal(actual.receipt.mode,'continuous-weighted-mesh');assert.deepEqual(actual.receipt,expected.receipt);assertSameActiveLower(actual,expected);
+ }
+ const writes=observation.writes;paintPoolInput(painter,.371,96);assert.equal(observation.writes,writes);
+ assert.ok(painter.rasters.reduce((sum,r)=>sum+r.canvas.width*r.canvas.height,0)<=65536);
 });

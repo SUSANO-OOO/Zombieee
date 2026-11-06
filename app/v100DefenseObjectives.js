@@ -5,6 +5,17 @@ export const V100_DEFENSE_OBJECTIVES = Object.freeze({
   "stage-mugarian-clinical-trial-wing": Object.freeze({ label: "収容室開放", goal: "収容室を順次開放", recordCount: 43 }),
 });
 
+// Preserve the battle's own clock for result/reload presentation. Never rebuild
+// an old result's progress from today's stage duration or total elapsed time.
+export function v100DefenseResultSnapshot(definition, state) {
+  if (!definition.missionConfig?.v100StageNumber || definition.missionType !== "timed-defense"
+    || !Object.hasOwn(V100_DEFENSE_OBJECTIVES, definition.stageId)) return null;
+  const durationSeconds = definition.defenseEndAt - definition.prepSeconds;
+  if (!Number.isFinite(durationSeconds) || durationSeconds <= 0 || !Number.isFinite(state.time)) return null;
+  return { stageId: definition.stageId, durationSeconds,
+    elapsedSeconds: Math.max(0, Math.min(durationSeconds, state.time - definition.prepSeconds)) };
+}
+
 // The operation's real defense clock owns progress. Preparation, pausing and
 // failed runs cannot advance a separate UI timer or manufacture a completion.
 export function v100DefenseStatus(definition, state) {

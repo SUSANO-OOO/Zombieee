@@ -280,7 +280,7 @@ for (const engine of engines) {
           const response = await page.goto(url.href, { waitUntil: "domcontentloaded", timeout });
           invariant(response?.ok(), `${engine}/${viewport.width}x${viewport.height}/${kind}: navigation failed`);
           await diagnosticControl.calibrate("post-navigation");
-          await dismissInstallOffer(page, { timeout });
+          await dismissInstallOffer(page, { timeout, readySelector: ".game-shell[data-screen='battle'] .battlefield.active", waitForFictionDismissal: true });
           await page.waitForFunction(() => document.documentElement.dataset.assetLoadState === "ready"
             && typeof window.__ASHFALL_BATTLE_QA__?.prepareEnemyFacingRuntimeProof === "function"
             && typeof window.__ASHFALL_BATTLE_QA__?.ensureEnemyFacingProofAsset === "function", null, { timeout }).catch(async (error) => {

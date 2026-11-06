@@ -17,6 +17,7 @@ import {installClawCanvasAudit} from './v100-claw-canvas-audit.mjs';
 import {installManualFirearmCanvasAudit} from './v100-manual-firearm-canvas-audit.mjs';
 import {installGuardianContactTrace} from './v100-guardian-contact-trace.mjs';
 import {enterV100FromTitle} from './v100-title-qa-entry.mjs';
+import {dismissInstallOffer} from './pwa-gate-qa.mjs';
 async function readBattleSkillIconObservation() {
  const decoded=new Map();
  const arrivalWaits=[];
@@ -62,6 +63,16 @@ async function readBattleSkillIconObservation() {
  }
  throw new Error('Skill glyph URLs did not stabilize within32 live observations');
 }
+function readBattleMusicObservation(bossKind){
+ const snapshot=window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();
+ if(!snapshot||snapshot.over||document.querySelector('[data-v100-surface="result-win"],[data-v100-surface="result-lose"]'))return null;
+ const battle=window.__ASHFALL_AUDIO_QA__,shell=window.__V100_EVENT_AUDIO_QA__;
+ const diagnostics=battle?.getDiagnostics?.()??null,status=battle?.getAudioStatus?.()??null;
+ return{time:snapshot.time,battleSnapshot:{time:snapshot.time,over:snapshot.over===true,running:snapshot.running===true,
+  bossKind,bossDefeated:snapshot.bossDefeated===true,bossAlive:Array.isArray(snapshot.fighters)?snapshot.fighters.some(f=>f.side==='zombie'&&f.hp>0&&f.kind===bossKind):null},
+  audio:diagnostics?{activeBgm:diagnostics.activeBgm,duplicateLoopInstanceKeys:diagnostics.duplicateLoopInstanceKeys,contextState:diagnostics.contextState??status?.contextState??null,audioState:diagnostics.audioState??status?.state??null,unlocked:diagnostics.unlocked??null,activeBgmVoices:diagnostics.activeBgmVoices??0}:null,
+  audioStatus:status,shellAudio:shell?.getDiagnostics?.()??null,cueRequests:battle?.getCueRequests?.()??[]};
+}
 const origin=process.env.V100_CAMPAIGN_QA_BASE_URL;
 const out=process.env.V100_BATTLE_IMPROVEMENT_OUT??'outputs/v100-battle-improvement-r1';
 const engine=process.env.V100_BATTLE_IMPROVEMENT_ENGINE??'chromium';
@@ -88,11 +99,29 @@ function assertBattleMusicGate(result){
  assert.ok(result.boss?.firstObservedTime!==undefined&&result.bossDefeatedAt!==undefined,'Stage 3 must observe boss arrival and natural defeat');
  assert.equal(result.lastReadableBattleSnapshot?.bossDefeated,true,'Stage 3 must record the actual boss-defeated state');
  assert.ok(samples[bossIndex].time>=result.boss.firstObservedTime&&samples[bossIndex].time<result.bossDefeatedAt,'Boss music must play during the observed boss fight');
- assert.ok(samples.some(s=>s.time>result.bossDefeatedAt&&s.audio.contextState==='running'&&s.audio.audioState==='running'&&s.audio.unlocked===true&&s.audio.activeBgm.some(v=>v.assetId==='music-v100-score-pressure'&&v.voiceGain>0)),'Audible pressure music must follow natural boss defeat');
+ const liveBossEvidence=result.musicObservationVersion==='live-battle-mixer-v1'||samples.some(s=>Object.hasOwn(s,'battleSnapshot'));
+ if(liveBossEvidence){
+  assert.ok(samples.every(s=>Number.isFinite(s.time)&&s.battleSnapshot?.time===s.time&&s.battleSnapshot.bossKind==='takuya'
+   &&typeof s.battleSnapshot.bossDefeated==='boolean'&&typeof s.battleSnapshot.bossAlive==='boolean'
+   &&s.battleSnapshot.over===false&&s.battleSnapshot.running===true),'Every native mixer sample must carry its own live battle state');
+  assert.equal(samples[bossIndex].battleSnapshot.bossAlive,true,'Boss music must be recorded with the actual living boss');
+ }
+ // bossDefeatedAt is the first observed defeated state. It may already be
+ // the real victory/result boundary, where simulation time no longer grows.
+ // Keep the after-defeat music requirement for every continuing battle.
+ const victoryAtFirstDefeatedObservation=result.actualResult?.won===true&&result.actualResult?.loss===false
+  &&result.last?.over===true&&result.last?.bossDefeated===true&&result.lastReadableBattleSnapshot?.over===true
+  &&Number.isFinite(result.bossDefeatedAt)
+  &&result.last.time===result.bossDefeatedAt&&result.lastReadableBattleSnapshot.time===result.bossDefeatedAt;
+ if(!victoryAtFirstDefeatedObservation)assert.ok(samples.some((s,index)=>(liveBossEvidence
+  ?index>bossIndex&&s.time>=result.boss.firstObservedTime&&s.battleSnapshot.bossDefeated===true&&s.battleSnapshot.bossAlive===false
+  :s.time>result.bossDefeatedAt)
+  &&s.audio.contextState==='running'&&s.audio.audioState==='running'&&s.audio.unlocked===true&&s.audio.activeBgm.some(v=>v.assetId==='music-v100-score-pressure'&&v.voiceGain>0)),'Audible pressure music must follow natural boss defeat');
  assert.ok(result.finalRequestFailures&&Array.isArray(result.finalRequestFailures.events)&&result.finalRequestFailures.overflow===0,'Native music failure events must be present and structurally complete');
  assert.deepEqual(result.finalRequestFailures.events,[],'Native music must not report audio failure events');
  assert.ok(Array.isArray(result.networkRequestFailures),'Native music request failure collection is missing');
  assert.deepEqual(result.networkRequestFailures,[],'Native music must not report failed network requests');
+ return{postBossMusic:victoryAtFirstDefeatedObservation?'terminal-victory-at-first-observation':'observed-during-continuing-battle'};
 }
 function assertNaturalBattleOutcome(result){
  const outcome=result.actualResult;
@@ -104,6 +133,23 @@ if(process.env.V100_BATTLE_MUSIC_GATE_FIXTURES==='1'){
  const valid={number:3,musicSamples:[sample('music-v100-score-normal',1),sample('music-boss',2),sample('music-v100-score-pressure',4)],boss:{firstObservedTime:2},bossDefeatedAt:3,lastReadableBattleSnapshot:{bossDefeated:true},finalRequestFailures:retainedFailureGetter(),networkRequestFailures:[]};
  assert.doesNotThrow(()=>assertBattleMusicGate(valid));
  assert.doesNotThrow(()=>assertBattleMusicGate({...valid,musicSamples:[sample('music-v100-score-normal',1),sample('music-v100-score-pressure',1.5),sample('music-boss',2),sample('music-v100-score-pressure',4)]}));
+ const terminalVictory={...valid,musicSamples:[sample('music-v100-score-normal',1),sample('music-v100-score-pressure',1.5),sample('music-boss',2)],
+  actualResult:{won:true,loss:false},last:{time:3,over:true,bossDefeated:true},lastReadableBattleSnapshot:{time:3,over:true,bossDefeated:true}};
+ assert.equal(assertBattleMusicGate(terminalVictory).postBossMusic,'terminal-victory-at-first-observation');
+ for(const invalid of [
+  {...terminalVictory,actualResult:null},
+  {...terminalVictory,actualResult:{won:false,loss:true}},
+  {...terminalVictory,actualResult:{won:true,loss:true}},
+  {...terminalVictory,last:{time:3,over:false,bossDefeated:true}},
+  {...terminalVictory,last:{time:4,over:true,bossDefeated:true}},
+  {...terminalVictory,last:{time:3,over:true,bossDefeated:false}},
+  {...terminalVictory,lastReadableBattleSnapshot:{time:3,over:false,bossDefeated:true}},
+  {...terminalVictory,lastReadableBattleSnapshot:{time:4,over:true,bossDefeated:true}},
+  {...terminalVictory,lastReadableBattleSnapshot:{over:true,bossDefeated:true}},
+  {...terminalVictory,lastReadableBattleSnapshot:{time:3,over:true,bossDefeated:false}},
+  {...terminalVictory,networkRequestFailures:[{url:'/audio.ogg'}]},
+  {...terminalVictory,musicSamples:terminalVictory.musicSamples.map(s=>({...s,audio:{...s.audio,activeBgm:s.audio.activeBgm.map(v=>({...v,voiceGain:0}))}}))},
+ ])assert.throws(()=>assertBattleMusicGate(invalid));
  for(const invalid of [
   {...valid,musicSamples:valid.musicSamples.slice(0,2)},
   {...valid,musicSamples:[sample('music-boss',2),sample('music-v100-score-normal',3),sample('music-v100-score-pressure',4)]},
@@ -167,10 +213,9 @@ try{for(const number of numbers){
   if(manualFirearmCheck)await page.addInitScript(installManualFirearmCanvasAudit);
   if(process.env.V100_GUARDIAN_TRACE==='1')await page.addInitScript(installGuardianContactTrace);
   await page.goto(new URL('v100',origin).href);
-  const play=page.getByRole('button',{name:'ブラウザで遊ぶ',exact:true}),start=page.getByRole('button',{name:'戦闘へ',exact:true});
-  await play.or(start).first().waitFor();if(await play.isVisible())await play.click();
+  await dismissInstallOffer(page,{timeout:15000,readySelector:'.v100-start-screen',waitForFictionDismissal:true});
   await enterV100FromTitle(page,{timeout:15000});
-  await start.click();await page.locator('.game-shell canvas').waitFor();
+  await page.getByRole('button',{name:'戦闘へ',exact:true}).click();await page.locator('.game-shell canvas').waitFor();
   await page.waitForFunction(()=>window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().running);
   if(process.env.V100_BATTLE_MUSIC_CHECK==='1'){
    result.musicFailureObserverInstalled=await page.evaluate(()=>{
@@ -245,8 +290,9 @@ try{for(const number of numbers){
   // The result transition unmounts the battle mixer. Its post-result state
   // is not an in-battle music sample; keep every pre-result sample strict.
   if(process.env.V100_BATTLE_MUSIC_CHECK==='1'&&!last.over){
-    const audio=await page.evaluate(()=>{if(window.__ASHFALL_BATTLE_QA__?.getSnapshot?.()?.over||document.querySelector('[data-v100-surface="result-win"],[data-v100-surface="result-lose"]'))return null;const battle=window.__ASHFALL_AUDIO_QA__,shell=window.__V100_EVENT_AUDIO_QA__,diagnostics=battle?.getDiagnostics?.()??null,status=battle?.getAudioStatus?.()??null;return{audio:diagnostics?{activeBgm:diagnostics.activeBgm,duplicateLoopInstanceKeys:diagnostics.duplicateLoopInstanceKeys,contextState:diagnostics.contextState??status?.contextState??null,audioState:diagnostics.audioState??status?.state??null,unlocked:diagnostics.unlocked??null,activeBgmVoices:diagnostics.activeBgmVoices??0}:null,audioStatus:status,shellAudio:shell?.getDiagnostics?.()??null,cueRequests:battle?.getCueRequests?.()??[]};});
-    if(audio)(result.musicSamples??=[]).push({time:last.time,...audio});
+    result.musicObservationVersion='live-battle-mixer-v1';
+    const audio=await page.evaluate(readBattleMusicObservation,number===3?'takuya':number===5?'gate-eater':null);
+    if(audio)(result.musicSamples??=[]).push(audio);
    }
    const enemies=last.fighters.filter(f=>f.side==='zombie'&&f.hp>0);
    if((number===3||number===5)&&result.boss&&!result.bossDefeatedAt&&!enemies.some(f=>f.kind===(number===3?'takuya':'gate-eater'))&&last.time>result.boss.firstObservedTime)result.bossDefeatedAt=last.time;
@@ -395,7 +441,7 @@ try{for(const number of numbers){
   }
   if(process.env.V100_BATTLE_MUSIC_CHECK==='1'){
    assertNaturalBattleOutcome(result);
-   assertBattleMusicGate(result);
+   result.musicGateEvidence=assertBattleMusicGate(result)??{postBossMusic:'not-stage3'};
   }
   assert.ok(last?.over||await page.locator('[data-v100-surface="result-win"],[data-v100-surface="result-lose"]').count(),'Battle must reach its natural result before bounded QA deadline');
   await page.locator('[data-v100-surface="result-win"],[data-v100-surface="result-lose"]').waitFor();

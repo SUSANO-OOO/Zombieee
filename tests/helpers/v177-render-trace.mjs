@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';import {createHash} from 'node:crypto';
 import {V177_JOINT_ATLASES,v177JointPose,drawV177JointPose} from '../../app/v177JointPresentation.js';
 import {V177_MELEE_JOINT_ATLASES} from '../../app/v177MeleeJointData.js';
+import {V177_PANTHER_JOINT_ATLASES} from '../../app/v177PantherJointData.js';
 import {readFileSync} from 'node:fs';import {gunzipSync} from 'node:zlib';
+import {QUALITY_CHARACTER_BASE_ATLASES} from '../../app/qualityCharacterAtlases.js';
 
 // Join measurements to the part actually painted, never to its transient
 // foreground order. Retain that order separately for occlusion regressions.
@@ -47,7 +49,7 @@ export function jointLegacyInterpolationControlDigest(kinds){
   // cells are byte-identical; its later continuous upper rig is tested through
   // actual paint separately. Never regenerate this pre-change digest.
   for(const [kind,atlas]of original)V177_JOINT_ATLASES[kind]=kind==='mayo-chan'?JSON.parse(gunzipSync(bytes))
-    :{...(['brawler','crazy-king'].includes(kind)?V177_MELEE_JOINT_ATLASES[kind]:atlas),legConstraints:undefined,
+    :{...(['brawler','crazy-king'].includes(kind)?V177_MELEE_JOINT_ATLASES[kind]:V177_PANTHER_JOINT_ATLASES[kind]??QUALITY_CHARACTER_BASE_ATLASES[kind]??atlas),legConstraints:undefined,
       ...(kind==='ranger'?{upperRig:undefined}:{})};
   return jointRenderTraceDigest(kinds,{legacySettleRows:true,legacyFirearmUpper:true});
  }finally{for(const [kind,atlas]of original)V177_JOINT_ATLASES[kind]=atlas;}

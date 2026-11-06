@@ -1,0 +1,27 @@
+.v100-fitting-backdrop { position:fixed; inset:0; z-index:12000; display:grid; place-items:center; padding:max(8px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left)); background:#080d0bc9; }
+.v100-equipment-fitting { box-sizing:border-box; display:flex; flex-direction:column; gap:12px; width:min(900px,100%); max-height:100%; padding:16px; border:2px solid #a68b53; background:#d5ccb2; color:#263b23; font:15px/1.5 var(--v100-reading-font,"BIZ UDPGothic",sans-serif); box-shadow:0 12px 40px #0009; }
+.v100-equipment-fitting header,.v100-equipment-fitting footer { display:flex; justify-content:space-between; align-items:center; gap:12px; flex:none; }
+.v100-equipment-fitting h2 { font-size:20px; margin:0; color:#263b23; }
+.v100-equipment-fitting button,.v100-equipment-fitting select { min-height:44px; padding:8px 12px; border:1px solid #74866d; background:#283d2b; color:#fff3cf; font:700 14px/1.4 var(--v100-reading-font,"BIZ UDPGothic",sans-serif); }
+.v100-equipment-fitting button { cursor:pointer; }
+.v100-equipment-fitting button:disabled { color:#564d38; background:#bdb49a; cursor:default; }
+.v100-equipment-fitting button:focus-visible,.v100-equipment-fitting select:focus-visible { outline:3px solid #9b5822; outline-offset:2px; }
+.v100-fitting-body { display:grid; grid-template-columns:minmax(220px,.85fr) minmax(0,1.15fr); gap:24px; min-height:0; overflow-y:auto; overscroll-behavior:contain; }
+.v100-fitting-person label { display:grid; gap:4px; }
+.v100-fitting-person select { width:100%; background:#f1ead7; color:#263b23; }
+.v100-fitting-slots { display:flex; gap:6px; margin:6px 0; }
+.v100-fitting-slots button { flex:1; }
+.v100-fitting-slots button[aria-pressed="true"] { outline:2px solid #d6ad5a; outline-offset:-4px; }
+.v100-equipment-fitting small { display:block; font-size:13px; line-height:1.5; color:#43523d; }
+.v100-fitting-result p { margin:4px 0 10px; color:#263b23; }
+.v100-fitting-changes { margin:0 0 10px; }
+.v100-fitting-changes > div { display:flex; align-items:baseline; justify-content:space-between; gap:10px; padding:9px 0; border-bottom:1px solid #aaa188; }
+.v100-fitting-changes dd { display:flex; gap:9px; margin:0; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.v100-fitting-changes [data-improved="true"] strong { color:#185332; }
+.v100-fitting-changes [data-improved="false"] strong { color:#8c3021; }
+#v100-campaign .v100-equipment-empty { padding:18px; grid-column:1 / -1; font-size:15px; line-height:1.6; }
+#v100-campaign .v100-equipment-empty button { min-height:44px; font-size:14px; }
+#v100-campaign .v100-equipment-focus .v100-equipment-empty p,#v100-campaign .v100-equipment-focus .v100-equipment-empty h3 { color:#263b23; }
+#v100-campaign .v100-command-equipment .v100-equipment-focus-actions .v100-open-fitting { grid-column:1 / -1; }
+@media(max-height:420px) { .v100-equipment-fitting { padding:8px 12px; gap:6px; } .v100-equipment-fitting h2 { font-size:18px; } }
+@media(max-width:600px) { .v100-fitting-body { grid-template-columns:1fr; gap:12px; } }

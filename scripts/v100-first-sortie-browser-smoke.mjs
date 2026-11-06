@@ -82,7 +82,7 @@ try {
       }
       await phase(page,"first-clear-post");
       const reward=page.getByLabel("確定したクリア報酬");
-      assert.match(await reward.innerText(),/\+90/); assert.match(await reward.innerText(),/ナオの配備登録/);
+      assert.match(await reward.innerText(),/\+90/); assert.match(await reward.innerText(),/ナオの出撃を準備/);
       assert.equal((await readSave(page)).caps,90);
       await page.screenshot({path:path.join(out,`${name}-reward.png`)});
       item.rewardFits=await reward.evaluate(el=>{const r=el.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight&&r.left>=0&&r.right<=innerWidth;});

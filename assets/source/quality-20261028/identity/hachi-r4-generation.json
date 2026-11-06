@@ -1,0 +1,14 @@
+{
+  "method": "built-in image_gen",
+  "args": {
+    "referenced_image_paths": [
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\public\\art\\v070\\characters\\reference\\hachi-base-r2.png"
+    ],
+    "transparent_background": true,
+    "prompt": "Edit the provided canonical game-character artwork into a realistic live-action-quality character portrait with only a subtle painted finish. Preserve THIS fictional character Hachi's distinctive identity, apparent age and slim wiry physique. Use this one reference only: same short black undercut with the orange forelock, small bandage across the nose, cheek freckles/scuffs, mischievous approachable face with the original nose, mouth and jaw proportions. Translate the drawn eyes into plausible human eyes without changing his recognizable features. Natural skin pores, soft diffuse light, real fabric and hair; no heavy ink outlines, anime eyes, airbrushed plastic skin or exaggerated muscles. Preserve the exact orange hooded weathered coat, dark blue inner shirt, blue messenger bag with map window, attached red bicycle helmet, dark trousers and fingerless gloves. His curved crowbar retains the blue wrapped handle and brass detail. Full body, upright relaxed ready stance with knees gently unlocked, body turned slightly right, face almost toward camera, crowbar held low at his side. Show both hands, the full coat, both separated legs and complete boots. Natural anatomy, each hand holds its actual equipment, no duplicates. Entire person including hair, bag and tool comfortably inside the frame. One person only, isolated on genuinely transparent background, no room, floor, shadow plate, writing or border. The output must look like a believable photographed actor wearing this exact character design, with restrained painterly texture rather than a cartoon."
+  },
+  "output": "hachi-master-r4.png",
+  "status": "Local quality-r1 dialogue/formation/personnel images connected. See runtime provenance and support-cards-r4; Nao dialogue checkpoints in nao-runtime-r1. Battle/cuts/credits and Producer final acceptance remain open.",
+  "referenceSha256": "27d61a658e4cc8d6bccf367658308f93ff31795e6513c33549818587681343f3",
+  "outputSha256": "e722cc7aca81806cd7d2d1403c425262466ea4f1aa44b877731dcef79ee080bb"
+}

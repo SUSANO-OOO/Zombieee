@@ -1,0 +1,1257 @@
+{
+  "schema": "zombieee-authored-combat-parts/1",
+  "kind": "kumaverson",
+  "status": "candidate-not-motion-or-producer-accepted",
+  "width": 480,
+  "height": 448,
+  "paintStyle": "source-pixel-combat-model",
+  "sourceSha256": "089d50e55d1f4e009a66858b500c923b41a5ed478b91826c491c5334ee190b3c",
+  "sheetSha256": "921b84a59409c92f540866d00e8284f5cc7107ee423f703be29a622fc500befc",
+  "modelSource": "assets/source/quality-20261028/rigs/kumaverson-combat-r4/combat-model-r4.png",
+  "parts": [
+    {
+      "name": "far-thigh",
+      "bone": "leg-0-upper",
+      "file": "far-thigh.png",
+      "sha256": "49cb9ccfc0abb96faa54050385cd775c64406a602031b5a283e129b1412bc089",
+      "original": false,
+      "modelSource": "assets/source/quality-20261028/rigs/kumaverson-combat-r4/combat-model-r4.png",
+      "masterPolygon": [
+        [
+          451,
+          631
+        ],
+        [
+          661,
+          637
+        ],
+        [
+          758,
+          697
+        ],
+        [
+          735,
+          774
+        ],
+        [
+          621,
+          887
+        ],
+        [
+          498,
+          981
+        ],
+        [
+          347,
+          943
+        ],
+        [
+          334,
+          889
+        ],
+        [
+          340,
+          830
+        ],
+        [
+          431,
+          757
+        ]
+      ]
+    },
+    {
+      "name": "far-shin",
+      "bone": "leg-0-lower",
+      "file": "far-shin.png",
+      "sha256": "4495b2d328437369a3ac251f482bf03ca180776aa0b4159915aad605db6025f2",
+      "original": false,
+      "modelSource": "assets/source/quality-20261028/rigs/kumaverson-combat-r4/combat-model-r4.png",
+      "masterPolygon": [
+        [
+          347,
+          854
+        ],
+        [
+          553,
+          879
+        ],
+        [
+          489,
+          984
+        ],
+        [
+          429,
+          1089
+        ],
+        [
+          379,
+          1119
+        ],
+        [
+          233,
+          1122
+        ],
+        [
+          220,
+          1042
+        ],
+        [
+          256,
+          982
+        ]
+      ]
+    },
+    {
+      "name": "far-boot",
+      "bone": "leg-0-foot",
+      "file": "far-boot.png",
+      "sha256": "fe80cac3e0941e48f14ef5ecd230cf1903b9f27525d6b9cab25b1a2d5d3f1864",
+      "original": false,
+      "modelSource": "assets/source/quality-20261028/rigs/kumaverson-combat-r4/combat-model-r4.png",
+      "masterPolygon": [
+        [
+          263,
+          1063
+        ],
+        [
+          335,
+          1068
+        ],
+        [
+          357,
+          1113
+        ],
+        [
+          349,
+          1162
+        ],
+        [
+          298,
+          1193
+        ],
+        [
+          164,
+          1195
+        ],
+        [
+          161,
+          1140
+        ],
+        [
+          214,
+          1080
+        ]
+      ]
+    },
+    {
+      "name": "far-upper-arm",
+      "bone": "arm-1-upper",
+      "file": "far-upper-arm.png",
+      "sha256": "b04a2aad3db55a4450e834f5691f44ca4aec1d5e42838a0377ed1ae85f900fb1",
+      "original": true,
+      "modelSource": "assets/source/quality-20261028/rigs/kumaverson-combat-r4/combat-model-r4.png",
+      "masterPolygon": [
+        [
+          824,
+          282
+        ],
+        [
+          898,
+          288
+        ],
+        [
+          929,
+          359
+        ],
+        [
+          960,
+          429
+        ],
+        [
+          973,
+          473
+        ],
+        [
+          942,
+          530
+        ],
+        [
+          935,
+          567
+        ],
+        [
+          893,
+          579
+        ],
+        [
+          845,
+          558
+        ],
+        [
+          832,
+          518
+        ],
+        [
+          817,
+          469
+        ],
+        [
+          812,
+          404
+        ],
+        [
+          801,
+          354
+        ]
+      ]
+    },
+    {
+      "name": "far-forearm",
+      "bone": "arm-1-lower",
+      "file": "far-forearm.png",
+      "sha256": "bdec08a125258cd609970506e7d50baf3a954d5d7ccbca9bbd1ad57a04640dce",
+      "original": true,
+      "modelSource": "assets/source/quality-20261028/rigs/kumaverson-combat-r4/combat-model-r4.png",
+      "masterPolygon": [
+        [
+          897,
+          504
+        ],
+        [
+          959,
+          477
+        ],
+        [
+          990,
+          485
+        ],
+        [
+          1003,
+          530
+        ],
+        [
+          1005,
+          581
+        ],
+        [
+          973,
+          600
+        ],
+        [
+          944,
+          596
+        ],
+        [
+          912,
+          578
+        ],
+        [
+          887,
+          550
+        ]
+      ]
+    },
+    {
+      "name": "free-hand",
+      "bone": "arm-1-hand",
+      "file": "free-hand.png",
+      "sha256": "d4d6a0e4997a05a953e7378ae5720c73e37625e27b5679947d00b626527be2b0",
+      "original": true,
+      "modelSource": "assets/source/quality-20261028/rigs/kumaverson-combat-r4/combat-model-r4.png",
+      "masterPolygon": [
+        [
+          961,
+          469
+        ],
+        [
+          1021,
+          453
+        ],
+        [
+          1069,
+          469
+        ],
+        [
+          1081,
+          514
+        ],
+        [
+          1065,
+          565
+        ],
+        [
+          1003,
+          583
+        ],
+        [
+          970,
+          555
+        ],
+        [
+          957,
+          510
+        ]
+      ]
+    },
+    {
+      "name": "pelvis",
+      "bone": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "63f6f64691b86db9e424d6ecddfa6b5f50245b187cd73d5287f10d46a7c652b5",
+      "original": false,
+      "modelSource": "assets/source/quality-20261028/rigs/kumaverson-combat-r4/combat-model-r4.png",
+      "masterPolygon": [
+        [
+          451,
+          626
+        ],
+        [
+          811,
+          614
+        ],
+        [
+          863,
+          695
+        ],
+        [
+          799,
+          798
+        ],
+        [
+          686,
+          812
+        ],
+        [
+          598,
+          802
+        ],
+        [
+          447,
+          774
+        ]
+      ]
+    },
+    {
+      "name": "near-thigh",
+      "bone": "leg-1-upper",
+      "file": "near-thigh.png",
+      "sha256": "d421a297daa307a51a53f08dcdc52aafed46387125ac075efca998164d55e699",
+      "original": false,
+      "modelSource": "assets/source/quality-20261028/rigs/kumaverson-combat-r4/combat-model-r4.png",
+      "masterPolygon": [
+        [
+          650,
+          647
+        ],
+        [
+          818,
+          625
+        ],
+        [
+          957,
+          699
+        ],
+        [
+          1000,
+          813
+        ],
+        [
+          1009,
+          947
+        ],
+        [
+          889,
+          973
+        ],
+        [
+          783,
+          884
+        ],
+        [
+          661,
+          791
+        ]
+      ]
+    },
+    {
+      "name": "near-shin",
+      "bone": "leg-1-lower",
+      "file": "near-shin.png",
+      "sha256": "d8f048df6597e518aac7859f79ed87e4b9dd7df22ae2974856eee7cd37607dbd",
+      "original": false,
+      "modelSource": "assets/source/quality-20261028/rigs/kumaverson-combat-r4/combat-model-r4.png",
+      "masterPolygon": [
+        [
+          820,
+          805
+        ],
+        [
+          997,
+          812
+        ],
+        [
+          1030,
+          934
+        ],
+        [
+          1081,
+          1054
+        ],
+        [
+          1061,
+          1137
+        ],
+        [
+          870,
+          1131
+        ],
+        [
+          861,
+          1035
+        ],
+        [
+          833,
+          965
+        ],
+        [
+          810,
+          895
+        ]
+      ]
+    },
+    {
+      "name": "near-boot",
+      "bone": "leg-1-foot",
+      "file": "near-boot.png",
+      "sha256": "f255819d423a7acec849fd088ff4e5e6c84e8925791c673fd4124222ef9957ae",
+      "original": false,
+      "modelSource": "assets/source/quality-20261028/rigs/kumaverson-combat-r4/combat-model-r4.png",
+      "masterPolygon": [
+        [
+          931,
+          1063
+        ],
+        [
+          1041,
+          1060
+        ],
+        [
+          1062,
+          1091
+        ],
+        [
+          1136,
+          1107
+        ],
+        [
+          1178,
+          1147
+        ],
+        [
+          1182,
+          1204
+        ],
+        [
+          1028,
+          1211
+        ],
+        [
+          898,
+          1194
+        ],
+        [
+          888,
+          1139
+        ],
+        [
+          909,
+          1097
+        ]
+      ]
+    },
+    {
+      "name": "torso",
+      "bone": "spine",
+      "file": "torso.png",
+      "sha256": "e8beec308265face9dddcf34d0a051413843f4062dd7aa4a69e0a6b7f5c29f80",
+      "original": true,
+      "modelSource": "assets/source/quality-20261028/rigs/kumaverson-combat-r4/combat-model-r4.png",
+      "masterPolygon": [
+        [
+          698,
+          180
+        ],
+        [
+          733,
+          221
+        ],
+        [
+          765,
+          250
+        ],
+        [
+          797,
+          260
+        ],
+        [
+          841,
+          270
+        ],
+        [
+          885,
+          285
+        ],
+        [
+          929,
+          404
+        ],
+        [
+          956,
+          475
+        ],
+        [
+          865,
+          536
+        ],
+        [
+          818,
+          493
+        ],
+        [
+          774,
+          552
+        ],
+        [
+          815,
+          598
+        ],
+        [
+          826,
+          650
+        ],
+        [
+          700,
+          668
+        ],
+        [
+          573,
+          649
+        ],
+        [
+          432,
+          650
+        ],
+        [
+          438,
+          603
+        ],
+        [
+          458,
+          552
+        ],
+        [
+          475,
+          477
+        ],
+        [
+          514,
+          410
+        ],
+        [
+          498,
+          350
+        ],
+        [
+          478,
+          300
+        ],
+        [
+          482,
+          255
+        ],
+        [
+          554,
+          214
+        ]
+      ]
+    },
+    {
+      "name": "near-upper-arm",
+      "bone": "arm-0-upper",
+      "file": "near-upper-arm.png",
+      "sha256": "2ee4dd1b973bea80a55e3fac7e5ac31ae016e8230177f4753376ee64459f2e0e",
+      "original": true,
+      "modelSource": "assets/source/quality-20261028/rigs/kumaverson-combat-r4/combat-model-r4.png",
+      "masterPolygon": [
+        [
+          552,
+          232
+        ],
+        [
+          600,
+          287
+        ],
+        [
+          620,
+          345
+        ],
+        [
+          583,
+          400
+        ],
+        [
+          522,
+          427
+        ],
+        [
+          493,
+          467
+        ],
+        [
+          450,
+          489
+        ],
+        [
+          435,
+          513
+        ],
+        [
+          355,
+          529
+        ],
+        [
+          328,
+          482
+        ],
+        [
+          339,
+          431
+        ],
+        [
+          364,
+          390
+        ],
+        [
+          366,
+          363
+        ],
+        [
+          436,
+          310
+        ],
+        [
+          488,
+          269
+        ]
+      ]
+    },
+    {
+      "name": "head",
+      "bone": "head",
+      "file": "head.png",
+      "sha256": "85d2e57622106216bacdd3d8936d76275f915958618865ecd7daf6eb0e58bc42",
+      "original": true,
+      "modelSource": "assets/source/quality-20261028/rigs/kumaverson-combat-r4/combat-model-r4.png",
+      "masterPolygon": [
+        [
+          671,
+          0
+        ],
+        [
+          1004,
+          0
+        ],
+        [
+          1018,
+          159
+        ],
+        [
+          969,
+          229
+        ],
+        [
+          920,
+          267
+        ],
+        [
+          868,
+          289
+        ],
+        [
+          818,
+          290
+        ],
+        [
+          780,
+          300
+        ],
+        [
+          739,
+          270
+        ],
+        [
+          706,
+          227
+        ],
+        [
+          681,
+          172
+        ]
+      ]
+    },
+    {
+      "name": "near-forearm",
+      "bone": "arm-0-lower",
+      "file": "near-forearm.png",
+      "sha256": "45a3b65850674e5f31c67014d45738173b74a12c584059e9438d0a318bb939af",
+      "original": true,
+      "modelSource": "assets/source/quality-20261028/rigs/kumaverson-combat-r4/combat-model-r4.png",
+      "masterPolygon": [
+        [
+          346,
+          460
+        ],
+        [
+          420,
+          456
+        ],
+        [
+          444,
+          518
+        ],
+        [
+          394,
+          588
+        ],
+        [
+          400,
+          628
+        ],
+        [
+          330,
+          642
+        ],
+        [
+          306,
+          603
+        ],
+        [
+          318,
+          535
+        ],
+        [
+          329,
+          482
+        ]
+      ]
+    },
+    {
+      "name": "weapon-and-hands",
+      "bone": "weapon-0",
+      "file": "weapon-and-hands.png",
+      "sha256": "0cca4ddef128c66f157865e476918c738413d514964fab960aa326c6aebb3df4",
+      "original": true,
+      "modelSource": "assets/source/quality-20261028/rigs/kumaverson-combat-r4/combat-model-r4.png",
+      "masterPolygon": [
+        [
+          311,
+          575
+        ],
+        [
+          375,
+          580
+        ],
+        [
+          398,
+          618
+        ],
+        [
+          411,
+          652
+        ],
+        [
+          442,
+          635
+        ],
+        [
+          486,
+          626
+        ],
+        [
+          545,
+          641
+        ],
+        [
+          588,
+          679
+        ],
+        [
+          622,
+          729
+        ],
+        [
+          627,
+          783
+        ],
+        [
+          590,
+          837
+        ],
+        [
+          538,
+          861
+        ],
+        [
+          465,
+          875
+        ],
+        [
+          403,
+          858
+        ],
+        [
+          367,
+          823
+        ],
+        [
+          352,
+          770
+        ],
+        [
+          356,
+          720
+        ],
+        [
+          379,
+          695
+        ],
+        [
+          364,
+          714
+        ],
+        [
+          321,
+          710
+        ],
+        [
+          292,
+          686
+        ],
+        [
+          277,
+          648
+        ],
+        [
+          290,
+          608
+        ]
+      ]
+    }
+  ],
+  "order": [
+    "far-thigh",
+    "far-shin",
+    "far-boot",
+    "far-upper-arm",
+    "far-forearm",
+    "free-hand",
+    "pelvis",
+    "near-thigh",
+    "near-shin",
+    "near-boot",
+    "torso",
+    "near-upper-arm",
+    "head",
+    "near-forearm",
+    "weapon-and-hands"
+  ],
+  "lowerLayers": [
+    "far-thigh",
+    "far-shin",
+    "far-boot",
+    "pelvis",
+    "near-thigh",
+    "near-shin",
+    "near-boot"
+  ],
+  "pelvisY": 221.5214521452145,
+  "upperFollowsPelvis": true,
+  "reserveBipedLanding": true,
+  "identityBinding": {
+    "path": "/art/v100/portraits/kumaverson-warm-stage-r1.webp",
+    "sourceSha256": "9b45830bc765a740ab21bb5e1ea29b93735ba6f5528c9c4af8129908a124c7e6",
+    "modelSource": "assets/source/quality-20261028/identity/kumaverson-master-r2.png",
+    "modelSha256": "51a5acb5a77f53eac921b49a5adefd681218f9f44f64e70caaf416ed2b6ed501",
+    "combatSource": "assets/source/quality-20261028/rigs/kumaverson-combat-r4/combat-model-r4.png",
+    "combatSha256": "089d50e55d1f4e009a66858b500c923b41a5ed478b91826c491c5334ee190b3c"
+  },
+  "referenceFrame": {
+    "width": 480,
+    "height": 448,
+    "scale": 1.1591591591591592,
+    "tx": -37.42817703622788,
+    "ty": -99.75675675675677
+  },
+  "interpolationPivots": {
+    "spine": [
+      246.6271186440678,
+      221.5214521452145
+    ],
+    "head": [
+      286.1956856702619,
+      96.10891089108911
+    ],
+    "weapon-0": [
+      145.72727272727275,
+      205.01980198019803
+    ],
+    "arm-1-hand": [
+      352.80277349768875,
+      178.94719471947195
+    ]
+  },
+  "parentAttachments": {
+    "head": {
+      "parent": "spine",
+      "pivot": [
+        286.1956856702619,
+        96.10891089108911
+      ]
+    }
+  },
+  "motion": {
+    "walk": {
+      "spanPx": 64,
+      "liftPx": 9,
+      "stanceFraction": 0.62,
+      "groundY": 401
+    },
+    "paintBounds": {
+      "x": 0,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    }
+  },
+  "muzzle": [
+    219.91833590138674,
+    265.0858085808581
+  ],
+  "weaponBone": "weapon-0",
+  "rig": {
+    "root": [
+      240,
+      432
+    ],
+    "pelvis": [
+      [
+        246.6271186440678,
+        221.5214521452145
+      ],
+      [
+        246.6271186440678,
+        201.5214521452145
+      ]
+    ],
+    "spine": [
+      [
+        246.6271186440678,
+        221.5214521452145
+      ],
+      [
+        277.6224961479199,
+        114.92079207920793
+      ]
+    ],
+    "head": [
+      [
+        286.1956856702619,
+        96.10891089108911
+      ],
+      [
+        308.2881355932203,
+        52.54455445544554
+      ]
+    ],
+    "legs": [
+      {
+        "hip": [
+          213.65331278890602,
+          240.003300330033
+        ],
+        "knee": [
+          182.3281972265023,
+          305.6798679867987
+        ],
+        "ankle": [
+          122.9753466872111,
+          371.35643564356434
+        ],
+        "toe": [
+          102.53158705701078,
+          389.5082508250825
+        ],
+        "offset": 0.5,
+        "paintedPaw": "far-boot",
+        "center": 152.9753466872111,
+        "groundAnkleY": 371.35643564356434
+      },
+      {
+        "hip": [
+          282.89830508474574,
+          240.003300330033
+        ],
+        "knee": [
+          335.6563944530046,
+          279.2772277227723
+        ],
+        "ankle": [
+          363.68412942989215,
+          371.6864686468647
+        ],
+        "toe": [
+          399.95531587057013,
+          388.5181518151815
+        ],
+        "offset": 0,
+        "paintedPaw": "near-boot",
+        "center": 343.68412942989215,
+        "groundAnkleY": 371.6864686468647
+      }
+    ],
+    "arms": [
+      {
+        "shoulder": [
+          198.8151001540832,
+          115.91089108910892
+        ],
+        "elbow": [
+          155.94915254237287,
+          165.0858085808581
+        ],
+        "wrist": [
+          145.72727272727275,
+          205.01980198019803
+        ],
+        "grip": [
+          155.28967642526965,
+          230.1023102310231
+        ]
+      },
+      {
+        "shoulder": [
+          316.2018489984592,
+          138.35313531353134
+        ],
+        "elbow": [
+          335.6563944530046,
+          186.20792079207922
+        ],
+        "wrist": [
+          352.80277349768875,
+          178.94719471947195
+        ],
+        "grip": [
+          363.68412942989215,
+          179.6072607260726
+        ]
+      }
+    ],
+    "attack": {
+      "style": "pan",
+      "windupEnd": 0.28,
+      "activeEnd": 0.55,
+      "aimAngle": -0.3759609538713056,
+      "aimShift": [
+        83,
+        -30
+      ],
+      "recoilPx": 0,
+      "anticipationShift": [
+        -7,
+        -15
+      ],
+      "attackAngle": -0.4,
+      "anticipationAngle": 0.12,
+      "torsoAngle": -0.1,
+      "torsoAnticipation": -0.035,
+      "walkWeaponSwing": 5,
+      "walkWeaponShift": [
+        3,
+        -6
+      ]
+    }
+  },
+  "armConstraints": [
+    {
+      "parentBone": "spine",
+      "upperBone": "arm-0-upper",
+      "lowerBone": "arm-0-lower",
+      "effectorBone": "weapon-0",
+      "shoulder": [
+        198.8151001540832,
+        115.91089108910892
+      ],
+      "elbow": [
+        155.94915254237287,
+        165.0858085808581
+      ],
+      "wrist": [
+        145.72727272727275,
+        205.01980198019803
+      ],
+      "grip": [
+        155.28967642526965,
+        230.1023102310231
+      ]
+    },
+    {
+      "parentBone": "spine",
+      "upperBone": "arm-1-upper",
+      "lowerBone": "arm-1-lower",
+      "effectorBone": "arm-1-hand",
+      "shoulder": [
+        316.2018489984592,
+        138.35313531353134
+      ],
+      "elbow": [
+        335.6563944530046,
+        186.20792079207922
+      ],
+      "wrist": [
+        352.80277349768875,
+        178.94719471947195
+      ],
+      "grip": [
+        363.68412942989215,
+        179.6072607260726
+      ]
+    }
+  ],
+  "legConstraints": [
+    {
+      "parentBone": "pelvis",
+      "parentUpper": false,
+      "upperBone": "leg-0-upper",
+      "lowerBone": "leg-0-lower",
+      "effectorBone": "leg-0-foot",
+      "hip": [
+        213.65331278890602,
+        240.003300330033
+      ],
+      "knee": [
+        182.3281972265023,
+        305.6798679867987
+      ],
+      "ankle": [
+        122.9753466872111,
+        371.35643564356434
+      ]
+    },
+    {
+      "parentBone": "pelvis",
+      "parentUpper": false,
+      "upperBone": "leg-1-upper",
+      "lowerBone": "leg-1-lower",
+      "effectorBone": "leg-1-foot",
+      "hip": [
+        282.89830508474574,
+        240.003300330033
+      ],
+      "knee": [
+        335.6563944530046,
+        279.2772277227723
+      ],
+      "ankle": [
+        363.68412942989215,
+        371.6864686468647
+      ]
+    }
+  ],
+  "sourceOperation": {
+    "modelRoles": "Adopted master-r2 identity; producer-master-v2 combat design and ready pose. One generated combat model supplies all visible body paint.",
+    "faceNeckShoulders": "Same combat-model pixels; collar retained in torso, neck overlaps within skin, shoulder caps overlap within shirt.",
+    "clothRepair": "Saved built-in edit only in declared pan-occluded trouser polygon with seam overlap.",
+    "sourceToLogical": {
+      "source": [
+        1298,
+        1212
+      ],
+      "resized": [
+        428,
+        400
+      ],
+      "translation": [
+        29,
+        7
+      ]
+    },
+    "repairPolygon": [
+      [
+        376,
+        654
+      ],
+      [
+        430,
+        631
+      ],
+      [
+        484,
+        625
+      ],
+      [
+        541,
+        638
+      ],
+      [
+        582,
+        676
+      ],
+      [
+        609,
+        728
+      ],
+      [
+        615,
+        780
+      ],
+      [
+        583,
+        834
+      ],
+      [
+        534,
+        861
+      ],
+      [
+        465,
+        870
+      ],
+      [
+        404,
+        857
+      ],
+      [
+        370,
+        823
+      ],
+      [
+        350,
+        767
+      ],
+      [
+        356,
+        710
+      ]
+    ],
+    "frameRegistration": {
+      "paintedSoleY": 401,
+      "sourceTop": 15,
+      "canonicalReadyTop": 98,
+      "canonicalReadyBottom": 431,
+      "canonicalWaistX": 245.0528846153846
+    },
+    "locomotion": "Combat step retains rear/lead ordering; rear centre advances30 and lead centre retreats20 logical pixels from their ready ankles.",
+    "acceptance": false
+  }
+}

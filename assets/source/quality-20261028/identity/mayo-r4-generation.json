@@ -1,0 +1,16 @@
+{
+  "method": "built-in image_gen",
+  "canonical": "assets/source/v090/characters/mayo-chan-identity-master-r1.png",
+  "args": {
+    "referenced_image_paths": [
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets/source/v090/characters/mayo-chan-identity-master-r1.png"
+    ],
+    "transparent_background": true,
+    "prompt": "Identity-preserve background extraction. This exact small cream long-haired Chihuahua is the established game character Mayo-chan. The source already has the desired realistic fur and subtle painted finish. Preserve the individual dog exactly: face proportions, ear shape, dark eyes, muzzle, cream fur pattern, raised fluffy tail, four short legs and paws, yellow neckerchief, black medical harness, medical pouches and existing small canisters. Do not turn it into another breed, change size/proportions or add human anatomy. Remove only the white studio background and ground shadow to genuine transparent alpha, including between the legs and around fine fur. Preserve the exact full-body framing and pose with all ears, tail and paws intact. No extra scene, text or border."
+  },
+  "status": "Own canonical identity retained; alpha-composited image inspected. Connected to local dialogue mapping and cards. Stage portrait rendering confirmed except Mayo, who has no separate portrait cue in the inspected stage pre/post script. Battle, dedicated scenes, credits and Producer acceptance remain open.",
+  "output": "assets/source/quality-20261028/identity/mayo-master-r4.png",
+  "outputSha256": "ed4804adffdc00585130dda8803f5f1d2ccc3d818c15191a23e38558476a434c",
+  "outputBytes": 2168302,
+  "referenceSha256": "dcbe04ca93d758da12e3c073c3b4fb36e5b8854ffcfcfcb6c1357596b589849c"
+}

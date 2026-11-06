@@ -228,8 +228,8 @@ test("registered units and supports are purchased separately from unlock registr
   assert.equal(support.applied, true);
   assert.equal(support.save.ownedUnitIds.includes("unit-nao"), true);
   assert.equal(support.save.ownedSupportIds.includes("support-healing"), true);
-  assert.equal(support.save.caps, 65);
-  assert.equal(v100LevelQuote({ levels: support.save.unitLevels, unitId: "unit-nao", clearedStageNumber: 0, caps: 65 }).costCaps, 30);
+  assert.equal(support.save.caps, 95);
+  assert.equal(v100LevelQuote({ levels: support.save.unitLevels, unitId: "unit-nao", clearedStageNumber: 0, caps: 95 }).costCaps, 30);
 });
 
 test("save round trip retains only V1 state and rejects the wrong namespace", () => {

@@ -365,15 +365,21 @@ test("all seventeen people use independent portrait files and radio remains a se
   const portraitHashes = new Set();
   for (const [kind, assetPath] of Object.entries(CHARACTER_PORTRAIT_ART)) {
     if (kind === "guide") {
-      assert.equal(assetPath, "/art/v075/characters/portraits/ikura-event-portrait-v4.webp");
-    } else if (kind === "engineer") {
-      assert.equal(assetPath, "/art/v070/characters/portraits/engineer-portrait-v1.webp");
-    } else if (kind === "zakimiya") {
-      assert.equal(assetPath, "/art/v0995/characters/portraits/zakimiya-event-portrait-r2.webp");
-    } else if (["tky", "mrs-chiha", "miyamoto-musashi", "mayo-chan"].includes(kind)) {
-      assert.equal(assetPath, `/art/v0995/characters/portraits/${kind}-event-portrait-r2.webp`);
+      assert.equal(assetPath, "/art/v100/portraits/ikura-warm-stage-r1.webp");
+    } else if (["zakimiya", "tky"].includes(kind)) {
+      assert.equal(assetPath, `/art/v100/portraits/${kind}-determined-quality-r1.webp`);
+    } else if (["mrs-chiha", "miyamoto-musashi", "mayo-chan"].includes(kind)) {
+      const owner={'mrs-chiha':'chiha','miyamoto-musashi':'musashi','mayo-chan':'mayo'}[kind];
+      assert.equal(assetPath, `/art/v100/portraits/${owner}-determined-${owner==='musashi'?'stage-r1':'quality-r1'}.webp`);
+    } else if (kind==='crazy-king') {
+      assert.equal(assetPath, '/art/v100/portraits/king-determined-quality-r1.webp');
     } else if (kind === 'brawler') {
-      assert.equal(assetPath, '/art/v100/portraits/paisen-event-portrait-r2.webp');
+      assert.equal(assetPath, '/art/v100/portraits/paisen-determined-quality-r1.webp');
+    } else if (['kumaverson','babayaga'].includes(kind)) {
+      assert.equal(assetPath, `/art/v100/portraits/${kind}-determined-stage-r1.webp`);
+    } else if (['scout','medic','ranger','engineer','brute','gunner','guardian'].includes(kind)) {
+      const owner={scout:'hachi',medic:'nao',ranger:'mizuchi',engineer:'monkey',brute:'tatara',gunner:'raider',guardian:'gantetsu'}[kind];
+      assert.equal(assetPath, `/art/v100/portraits/${owner}-determined-${['brute','guardian'].includes(kind)?'stage-r1':'quality-r1'}.webp`);
     } else if (V070_PORTRAIT_KINDS.has(kind)) {
       assert.equal(assetPath, `/art/v070/characters/portraits/${kind}-portrait-v1.webp`);
     } else {
@@ -382,7 +388,8 @@ test("all seventeen people use independent portrait files and radio remains a se
     assert.equal(battlePaths.has(assetPath), false, `${kind} cannot point at a battle sheet`);
     assert.equal(assetPath.includes("sprites"), false);
     const dimensions = decodeWebpDimensions(await readFile(publicFile(assetPath)));
-    assert.deepEqual({ width: dimensions.width, height: dimensions.height }, { width: 512, height: 640 }, `${kind} is a dedicated waist-up portrait canvas`);
+    const density=assetPath.endsWith('-stage-r1.webp')?2:1;
+    assert.deepEqual({ width: dimensions.width, height: dimensions.height }, { width: 512*density, height: 640*density }, `${kind} is a dedicated waist-up portrait canvas`);
     portraitHashes.add(await sha256(publicFile(assetPath)));
   }
   assert.equal(portraitHashes.size, expectedPeople.length, "no person portrait may reuse another character's bytes");
@@ -439,7 +446,7 @@ test("historical 0.6.0 portrait provenance remains intact after 0.7.0 replacemen
   assert.equal(provenance.entries.length, 10);
   assert.equal(new Set(provenance.entries.map(({ kind }) => kind)).size, 10);
   for (const entry of provenance.entries) {
-    if (V070_PORTRAIT_KINDS.has(entry.kind) || entry.kind === "guide" || entry.kind === 'brawler') {
+    if (V070_PORTRAIT_KINDS.has(entry.kind) || ['guide','brawler','kumaverson','babayaga','crazy-king'].includes(entry.kind)) {
       assert.notEqual(
         entry.finalPath,
         `public${CHARACTER_PORTRAIT_ART[entry.kind]}`,

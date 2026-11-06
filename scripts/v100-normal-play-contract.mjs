@@ -1,5 +1,23 @@
 import assert from 'node:assert/strict';
 
+// Read both parts in one browser task. The result page legitimately unmounts
+// the whole battle HUD; a locator that waits for the old wave node can then
+// time out instead of recording the real win or loss.
+export function readNormalCampaignHud({owner,action},root=globalThis.document,readFrames=globalThis.__V177_READ_NORMAL_FRAMES__) {
+  const counters=root.querySelectorAll('.v100-deployed-count'),wave=root.querySelector('.phase-block');
+  return {value:counters.length===1?counters[0].getAttribute('aria-label'):null,
+    frames:readFrames?.(owner,action)??null,
+    waveDisplay:wave?{label:wave.querySelector('em')?.textContent??'',preparation:wave.tagName==='BUTTON'}:null};
+}
+
+export function normalCampaignHudReady(observed,phase) {
+  if(observed.value===null||observed.waveDisplay===null){
+    assert.notEqual(phase,'battle','Normal play requires the live counter and wave HUD while battle is active');
+    return false;
+  }
+  return true;
+}
+
 // Read the visible counter's accessible label. Compact HUD text contains only
 // "3/7", so searching its text for "同時出撃" silently skipped the cap check
 // and never selected an emergency escort when the actual line was empty.

@@ -1,0 +1,14 @@
+{
+  "method": "built-in image_gen",
+  "args": {
+    "referenced_image_paths": [
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\public\\art\\v075\\characters\\reference\\ikura-identity-master-r1.png"
+    ],
+    "transparent_background": true,
+    "prompt": "Re-render this exact established fictional adult communications operator, Ikura, in a natural realistic-human style with only a subtle painted finish. Preserve her identity and distinct character: pink hair in twin buns flowing into long wavy twin tails, amber-brown eyes, her original friendly face and smile, headset with microphone, and rugged tablet held naturally in both hands. Convert exaggerated anime eyes and drawn facial anatomy into plausible human proportions without borrowing another person's face. Soft diffuse neutral lighting, matte natural skin, actual hair strands, real cloth, worn leather and rugged metal. No cartoon outline, doll-like plastic finish, glamour lighting or exaggerated anatomy. Preserve the exact existing teal communications jacket, cream inner garment and harness, dark pleated overskirt/shorts, stockings, practical dark lace-up boots and belt-mounted radio. Do not add exposure or change the outfit. Ordinary confident working posture, full-body standing with both boots on the same implied ground level, body slightly toward image right and eyes nearly to viewer. Keep the entire hair silhouette, tablet, arms and boots inside the canvas with generous transparent margins. One character only, genuinely transparent alpha background, no setting, floor, cast shadow plate, caption or border. The goal is a believable real person wearing this exact game character design, with recognizable original hair, face, colors and equipment."
+  },
+  "output": "ikura-master-r4.png",
+  "status": "Local quality-r1 portraits connected; see ikura-runtime-r2 and docs/qa/quality-20261028.md for exact observed scope. Battle/cuts/credits and Producer acceptance remain open. Source family storage review required before commit.",
+  "referenceSha256": "b095f3ee8eb84422b2f1719a455e049eb0a03f3459e17095df96e4a7d0b7772f",
+  "outputSha256": "9c17e1b090a147c1994045c99690965776d6951e76f52ef3a5622a2f73dea2dc"
+}

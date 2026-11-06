@@ -1,0 +1,20 @@
+{
+  "name": "s03-cold-retrieval-quality-r1",
+  "args": {
+    "referenced_image_paths": [
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\v100\\story-r9\\s03-cold-retrieval.png"
+    ],
+    "transparent_background": false,
+    "prompt": "Reframe this EXISTING GENERATED GAME SCENE as one very wide 3:1 panoramic illustration for a shallow RPG story window. The existing scene itself is the primary production reference: preserve its THREE anonymous black protective-suit guards, opaque gas masks with red lenses, exact adult blond muscular Takuya identity/body/neck chain, stretcher, black transport bag, wet ruined road and distant transport vehicle. Keep ALL THREE COMPLETE masked heads inside frame with real margin above and the stretcher/guards' gloved hands fully readable. Pull back/rearrange camera perspective to fit the full action horizontally; do not squish bodies or cut off their heads. This is a quiet non-graphic retrieval: the adult man lies still on a properly supported stretcher, his lower body covered by the black bag, no visible wounds or blood or new victims. The guards work with coherent attached arms and grips, never float. Do not replace opaque masks with human faces, do not add people, do not introduce the separate playable TKY89 character/mask. Preserve the original gritty semi-realistic painterly game style and cold rainy mood. No text, no UI, no border."
+  },
+  "references": [
+    {
+      "path": "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\v100\\story-r9\\s03-cold-retrieval.png",
+      "sha256": "422e375a0ccbfd2e1af2d57fa114e7e1993bba2b68cd99a7d73945606d65b81e",
+      "bytes": 2831165
+    }
+  ],
+  "stage": "candidate, not selected",
+  "primaryReferencePolicy": "Existing generated models/scenes are primary; original art/photos only check drift.",
+  "generatedOriginal": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-66b102e7-3a1f-41da-b3ab-f461c339563f.png"
+}

@@ -6,16 +6,31 @@ import ts from "typescript";
 import {beginV102GoreStep,finishV102GoreStep,noteV102GoreImpact,noteV102GorePeriodicDamage,getV102GoreSnapshot} from '../app/v102CombatGore.js';
 import {advanceAreaEffects} from '../app/gameRules.js';
 import {battleVoiceReady} from '../app/v104CombatAudio.js';
+import {weaponCueForUnit,LEGACY_SFX_CUE_MAP} from '../app/productionAudio.js';
 import {
   advancePendingWeaponHits,
   cancelPendingWeaponTransaction,
   createCompletedAttackImpactReceipt,
+  linkedWeaponTransactionId,
 } from "../app/combatPresentation.js";
 
-const source = await readFile(new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
+const source = await readFile(process.env.QUALITY_BURST_AUDIO_SOURCE ?? new URL("../app/AshfallGame.tsx", import.meta.url), "utf8");
 const tree = ts.createSourceFile("AshfallGame.tsx", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
 const found = [];
 function walk(node) {
+  if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.name.text === 'committedAttackSequence') found.push(['committed-sequence',node]);
+  if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.name.text === 'sharedEvent'
+    && ts.isObjectLiteralExpression(node.initializer)
+    && node.initializer.properties.some(p=>ts.isPropertyAssignment(p)&&p.name.getText(tree)==='raiderSecondary'&&p.initializer.kind===ts.SyntaxKind.FalseKeyword)) found.push(['gunner-emitter',node]);
+  if(ts.isExpressionStatement(node)&&ts.isBinaryExpression(node.expression)
+    &&node.expression.left.getText(tree)==='f.attackSequence'
+    &&node.expression.operatorToken.kind===ts.SyntaxKind.PlusEqualsToken)found.push(['sequence-increment',node]);
+  if (ts.isIfStatement(node) && node.expression.getText(tree) === 'f.kind !== "mrs-chiha"') found.push(['structure-first-round-audio',node]);
+  if (ts.isIfStatement(node) && node.expression.getText(tree).startsWith('roleEffect && ![')) found.push(['legacy-role-audio',node]);
+  if (ts.isIfStatement(node) && ts.isPrefixUnaryExpression(node.expression)
+    && node.expression.operator === ts.SyntaxKind.ExclamationToken
+    && ts.isIdentifier(node.expression.operand)
+    && node.expression.operand.text === 'defersMrsLauncherAudio') found.push(['first-round-audio',node]);
   if (ts.isFunctionDeclaration(node) && node.name?.text === "appendCompletedAttackImpact") found.push(["helper", node]);
   if (ts.isForOfStatement(node)) {
     const expression = ts.isAsExpression(node.expression) ? node.expression.expression : node.expression;
@@ -80,18 +95,20 @@ function runContact(mode, options = {}) {
   const g = {
     time: 2, battleAudioGeneration: options.generation ?? 2,
     completedAttackImpacts: [], pendingWeaponHits: [],
-    fighters: options.missingTarget ? [secondary] : [primary, secondary],
+    fighters: [...(options.missingTarget ? [secondary] : [primary, secondary]),
+      ...(options.sourceActor ? [{id:3,side:'human',kind:'gunner',hp:70,combatReady:true,...options.sourceActor}] : [])],
     roleMetrics: { raiderSuppressionApplications: 0, raiderPierceHits: 0 },
   };
   const hits = Array.from({ length: options.hits ?? 1 }, (_, shotIndex) => ({
     eventKind: options.eventKind ?? "impact", applyDamage: options.applyDamage !== false,
     remainingSeconds: 0, transactionId: `3:7:fighter:1:${shotIndex}`,
     targetKind: "fighter", targetSide: original.targetSide, targetId: 1,
-    sourceId: 3, weapon: original.sourceKind,
+    sourceId: 3, attackSequence: original.attackSequence, weapon: original.sourceKind,
     targetX: 0, targetY: -28, originX: 0,
     damageMode: mode, damage: 13, shotIndex, recoil: 0,
     raiderLineHit: mode === "direct",
     attackObservation: observed ? { ...observed, impactOrdinal: shotIndex } : undefined,
+    ...options.hit,
   }));
   const effects = [];
   const goreStep=options.gore?beginV102GoreStep(Object.assign(g,{definition:{missionConfig:{v100StageNumber:1}},corpses:[]})):null;
@@ -122,6 +139,7 @@ function runContact(mode, options = {}) {
     humanVoiceCueForUnit: () => "human-hurt",
     enemyVoiceCue: () => "enemy-hurt",
     unitAudioCueFor: (_kind, _category, event) => event,
+    weaponCueForUnit,
   };
   vm.runInNewContext(dispatchCode, context);
   if(options.burn){
@@ -225,4 +243,68 @@ test("the unchanged normal direct contact owner emits only its exact post-reacti
     assert.equal(g.completedAttackImpacts[0].reactionOutcome, hp === 0 ? "defeated" : "hit");
     assert.equal(g.completedAttackImpacts[0].targetId, 1);
   }
+});
+
+const firstRoundCode=compile(textFor('first-round-audio'));
+function normalGunnerFirstRound(){
+ const requests=[];vm.runInNewContext(firstRoundCode,{
+  defersMrsLauncherAudio:false,f:{kind:'gunner',id:3,attackSequence:7},
+  attackAudioCueId:weaponCueForUnit('gunner'),contactAudioX:0,
+  attackObservationBase:observation('direct'),playProductionCue:(...args)=>requests.push(args),
+ });return JSON.parse(JSON.stringify(requests));
+}
+const burstRequests=result=>result.gameplay.effects.filter(e=>e[0]==='production-audio'&&e[1]===weaponCueForUnit('gunner')).map(e=>e.slice(1));
+test('a normal three-round LMG burst requests one recorded discharge per muzzle, preserving its initial audio policy',()=>{
+ const first=normalGunnerFirstRound(),later=runContact('direct',{eventKind:'muzzle',applyDamage:false,hits:3,sourceActor:{}}),requests=[...first,...burstRequests(later)];
+ assert.equal(first.length,1);assert.equal(requests.length,3);
+ for(const [, ,options]of requests)for(const k of['priority','maxInstances','fallbackCue'])assert.equal(options[k],first[0][2][k],k);
+ assert.equal(first[0][2].cooldownMs,45);
+ for(const [, ,o]of burstRequests(later))assert.equal(o.cooldownMs,0,'committed rounds use event dedupe rather than a global wall-clock throttle');
+ assert.equal(new Set(requests.map(([, ,o])=>o.instanceKey)).size,1,'all three rounds belong to one burst');
+ assert.equal(requests[0][2].instanceKey,'gunner-burst:3:7');
+ assert.equal(new Set(requests.map(([, ,o])=>o.receiptId)).size,3);
+ assert.equal(new Set(burstRequests(later).map(([, ,o])=>o.dedupeKey)).size,2);
+ assert.equal(later.receipts.length,0);assert.equal(later.gameplay.fighters[0].hp,70);
+});
+test('later LMG audio follows the existing shooter cancellation and committed-shot rules',()=>{
+ for(const sourceActor of[{hp:0},{combatReady:false}]){const r=runContact('direct',{eventKind:'muzzle',applyDamage:false,hits:3,sourceActor});assert.equal(burstRequests(r).length,0);assert.equal(r.gameplay.effects.filter(e=>e[0]==='weapon-vfx').length,0);}
+ const missing=runContact('direct',{eventKind:'muzzle',applyDamage:false,hits:3});assert.equal(burstRequests(missing).length,0);
+ const goneTarget=runContact('direct',{eventKind:'muzzle',applyDamage:false,hits:3,sourceActor:{},missingTarget:true});assert.equal(burstRequests(goneTarget).length,2,'a live shooter still emits already-committed later rounds');
+});
+test('normal LMG bursts against enemy bases and S29 apparatus emit the same later discharges without applying impact damage',()=>{
+ const first=[];
+ vm.runInNewContext(compile(textFor('structure-first-round-audio')),{f:{kind:'gunner',id:3,attackSequence:7},
+  structureWeaponEvent:null,structureAudioX:0,weaponCueForUnit,unitAudioCueFor:()=>null,playProductionCue:(...a)=>first.push(a)});
+ assert.equal(first.length,1);assert.equal(first[0][2].instanceKey,'gunner-burst:3:7');
+ for(const researchTargetId of[undefined,'research-apparatus-1']){
+  const r=runContact('direct',{eventKind:'muzzle',applyDamage:false,hits:3,sourceActor:{},
+   hit:{targetKind:'enemy-base',targetId:null,raiderLineHit:false,researchTargetId}});
+  assert.equal(burstRequests(r).length,2);assert.equal(r.receipts.length,0);
+  for(const [, ,options]of burstRequests(r))assert.equal(options.instanceKey,first[0][2].instanceKey);
+  assert.ok(r.gameplay.fighters.every(f=>f.hp===70));
+ }
+});
+test('initial, ability, piercing-secondary and other-weapon events cannot duplicate normal LMG discharge audio',()=>{
+ for(const hit of[{shotIndex:0},{raiderLineHit:false},{raiderSecondary:true},{weapon:'ranger'},{transactionId:undefined},{attackSequence:undefined}]){
+  const r=runContact('direct',{eventKind:'muzzle',applyDamage:false,hits:3,sourceActor:{},hit});assert.equal(burstRequests(r).length,0,JSON.stringify(hit));
+ }
+ const impacts=runContact('direct',{hits:3,sourceActor:{}});assert.equal(burstRequests(impacts).length,0,'contact is not another discharge');
+});
+
+test('normal attack role aliases do not request the same discharge twice, while distinct support and legacy paths remain',()=>{
+ const code=compile(textFor('legacy-role-audio'));
+ const run=(kind,mixer=true)=>{const calls=[];vm.runInNewContext(code,{roleEffect:kind,f:{kind},productionMixerRef:{current:mixer},LEGACY_SFX_CUE_MAP,attackAudioCueId:weaponCueForUnit(kind),playCue:(...a)=>calls.push(a)});return calls;};
+ for(const kind of['scout','ranger','brute','brawler','gunner']){assert.equal(run(kind).length,0,kind);assert.equal(run(kind,false).length,1,'legacy dispatch stays available: '+kind);}
+ assert.equal(run('medic').length,1,'the distinct healing cue is retained');
+ for(const kind of['crazy-king','kumaverson','babayaga'])assert.equal(run(kind).length,0,'existing specialized owners stay exclusive: '+kind);
+});
+
+test('real normal attack producer order gives the initial and pending discharges the same committed burst identity',()=>{
+ const emitter=found.find(([k])=>k==='gunner-emitter')?.[1],first=found.find(([k])=>k==='first-round-audio')?.[1];assert.ok(emitter&&first);
+ const increments=found.filter(([k,n])=>k==='sequence-increment'&&n.getStart(tree)>emitter.end&&n.end<first.getStart(tree));assert.equal(increments.length,1);
+ const initial=[];const context={f:{id:3,kind:'gunner',side:'human',attackSequence:7},target:{id:1,kind:'walker',x:0,y:0},event:{shotIndex:1,recoil:0,casing:false,hitStopSeconds:0,travelSeconds:.1},muzzle:{x:0,y:0},g:{definition:{missionType:''}},linkedWeaponTransactionId,attackObservationBase:null,defersMrsLauncherAudio:false,attackAudioCueId:weaponCueForUnit('gunner'),contactAudioX:0,playProductionCue:(...a)=>initial.push(a)};
+ vm.runInNewContext(compile('const '+textFor('committed-sequence')+';const '+emitter.getText(tree)+';'+increments[0][1].getText(tree)+';'+textFor('first-round-audio')+';globalThis.pending=sharedEvent;'),context);
+ assert.equal(context.f.attackSequence,8);assert.equal(context.pending.attackSequence,8);
+ const later=runContact('direct',{eventKind:'muzzle',applyDamage:false,hits:1,sourceActor:{},observed:false,hit:JSON.parse(JSON.stringify(context.pending))});
+ assert.equal(burstRequests(later).length,1);assert.equal(burstRequests(later)[0][2].instanceKey,initial[0][2].instanceKey);assert.equal(initial[0][2].instanceKey,'gunner-burst:3:8');
 });

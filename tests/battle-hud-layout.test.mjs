@@ -16,6 +16,21 @@ const RELEASE_VIEWPORTS = Object.freeze([
   Object.freeze({ width: 932, height: 430 }),
 ]);
 
+test("campaign deployment readout fits three facts without overlapping the battlefield or objective", () => {
+  for (const viewport of RELEASE_VIEWPORTS) {
+    for (const safeAreaBottom of [0,21]) {
+      const legacy = mobileBattleHudLayout({...viewport, safeAreaBottom});
+      const layout = mobileBattleHudLayout({...viewport, safeAreaBottom, deploymentReadout:true});
+      assert.ok(layout.bottomContent.units.height >= 66);
+      assert.equal(bottom(layout.battlefield),layout.bottom.units.y);
+      assert.equal(bottom(layout.bottomContent.units),layout.bottomContent.objective.y);
+      assert.equal(bottom(layout.bottomContent.objective),viewport.height-safeAreaBottom);
+      assert.deepEqual(layout.top,legacy.top);
+      assert.ok(legacy.battlefield.height-layout.battlefield.height <= 10);
+    }
+  }
+});
+
 function right(rect) {
   return rect.x + rect.width;
 }

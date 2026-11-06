@@ -12,7 +12,9 @@ const point=(m,p)=>[m[0]*p[0]+m[2]*p[1]+m[4],m[1]*p[0]+m[3]*p[1]+m[5]];
 const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 const runtime={locomotionPhase:.37,locomotionSettle:1};
 const original=plan=>{const result={...plan};delete result.firearmUpperTransform;return result;};
-const parts=kind=>JSON.parse(fs.readFileSync('assets/source/v100/joints/'+kind+'-r1/parts.json'));
+const parts=kind=>JSON.parse(fs.readFileSync(['medic','engineer','gunner'].includes(kind)
+  ?`assets/source/quality-20261028/rigs/${kind}-combat-r1/parts.json`
+  :'assets/source/v100/joints/'+kind+'-r1/parts.json'));
 
 function record(kind,plan,{actor,world,scale=1,direction='right',x=0,y=0}={}){
   let m=[1,0,0,1,x,y];const stack=[],calls=[];
@@ -70,7 +72,14 @@ test('all original feet and the resolved waist stay fixed while both complete ar
           pose=v177CaptureJointPose(kind,plan),baseline=v177CaptureJointPose(kind,original(plan));
         assert.deepEqual(pose.lower,baseline.lower);joins(kind,pose);
         assert.ok(distance(point(pose.upper.spine,data.rig.spine[0]),point(baseline.upper.spine,data.rig.spine[0]))<1e-9);
-        for(const bone of ['head',...(kind==='medic'?['bag']:[])]){
+        const followers=['head'];
+        if(kind==='medic')for(const name of ['medical-bag','bag-straps']){
+          const sourcePart=data.parts.find(p=>p.name===name),paintedPart=atlases[kind].parts.find(p=>p.name===name);
+          assert.ok(sourcePart&&paintedPart,'Both medical bag and supporting strap are actually painted');
+          assert.equal(paintedPart.bone,sourcePart.bone);assert.equal(paintedPart.upper,true);
+          followers.push(paintedPart.bone);
+        }
+        for(const bone of followers){
           const source=[data.rig.spine[0][0],100];
           assert.ok(Math.abs(distance(point(pose.upper[bone],source),point(pose.upper.spine,data.rig.spine[0]))
             -distance(point(baseline.upper[bone],source),point(baseline.upper.spine,data.rig.spine[0])))<1e-9);

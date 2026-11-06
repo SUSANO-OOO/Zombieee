@@ -8,7 +8,7 @@ import {V177_JOINT_ATLASES,v177JointPose,drawV177JointPose,v177JointCycleDistanc
 import {spriteFrameFor} from '../app/spriteManifest.js';
 import {requiredBattleAssetPlan} from '../app/battleAssetPlan.js';
 import {CAMPAIGN_STAGE_IDS} from '../app/campaign.js';
-import {V177_JOINT_ASSET_ADDITIONS} from '../scripts/v177-joint-asset-contract.mjs';
+import {V177_JOINT_ASSET_ADDITIONS} from '../scripts/v177-runtime-joint-asset-contract.mjs';
 const kinds=['gunner','medic','engineer'];
 const transform=(m,[x,y])=>[m[0]*x+m[2]*y+m[4],m[1]*x+m[3]*y+m[5]],distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
@@ -31,10 +31,11 @@ function record(kind,plan,{direction='right',scale=1,x=0,y=0}={}){
  const ctx={save(){stack.push([...m]);},restore(){m=stack.pop();},translate(x,y){multiply([1,0,0,1,x,y]);},scale(x,y){multiply([x,0,0,y,0,0]);},transform(...a){raw.push(a);multiply(a);},drawImage(){calls.push([...m]);}};
  if(direction==='left')ctx.scale(-1,1);
  assert.equal(drawV177JointPose(ctx,{naturalWidth:atlas.decodedWidth},kind,plan,-size.w*frame.anchorX,-size.h*frame.anchorY,size.w,size.h),true);
- assert.equal(raw.length,kind==='medic'?16:14);return {raw,calls,frame,size};
+ assert.equal(raw.length,atlas.parts.length);return {raw,calls,frame,size};
 }
 for(const kind of kinds){
  const dir=new URL('../assets/source/v100/joints/'+kind+'-r1/',import.meta.url),d=JSON.parse(await readFile(new URL('parts.json',dir))),motion=JSON.parse(gunzipSync(await readFile(new URL('motion.json.gz',dir)))),atlas=V177_JOINT_ATLASES[kind];
+ const currentDefinition=['gunner','medic','engineer'].includes(kind)?JSON.parse(await readFile(`assets/source/quality-20261028/rigs/${kind}-combat-r1/parts.json`)):d;
  const matrixFor=(raw,bone)=>raw[atlas.parts.findIndex(p=>p.bone===bone)];
  test(kind+': evaluated Blender limbs retain fixed lengths, planted painted soles and both original grips',async()=>{
   const soles=[];for(const leg of d.rig.legs){
@@ -56,9 +57,10 @@ for(const kind of kinds){
   }
   for(const [measure,value]of Object.entries({boneError,groundError,drift,gripError}))assert.ok(value<.001,JSON.stringify({kind,measure,value}));
   const walk=motion.actions.find(a=>a.name==='walk');assert.ok(Math.abs(walk.frames.at(-1).bones.root.head[0]-walk.frames[0].bones.root.head[0]-atlas.cycleDistance)<.001);
-  assert.ok(Math.abs(v177JointCycleDistance(kind,.2)-atlas.cycleDistance/d.referenceFrame.scale*.2)<1e-10);
+  assert.ok(Math.abs(v177JointCycleDistance(kind,.2)-atlas.cycleDistance/currentDefinition.referenceFrame.scale*.2)<1e-10);
  });
  test(kind+': production interpolation keeps elbows and both weapon grips attached through travel, aim, recoil and recovery',()=>{
+  const d=currentDefinition;
   function checkArms(raw){for(const arm of d.armConstraints){
    const upper=matrixFor(raw,arm.upperBone),lower=matrixFor(raw,arm.lowerBone),parent=matrixFor(raw,arm.parentBone),weapon=matrixFor(raw,arm.effectorBone);
    const target=distance(transform(parent,arm.shoulder),transform(weapon,arm.wrist)),a=distance(arm.shoulder,arm.elbow),b=distance(arm.elbow,arm.wrist);
@@ -74,8 +76,8 @@ for(const kind of kinds){
     if(previous)for(let li=0;li<2;li++){
      const leg=d.rig.legs[li],q=(phase+leg.offset)%1,pq=(previous.phase+leg.offset)%1;
      if(q>1/30&&q<d.motion.walk.stanceFraction-1/30&&q>pq&&pq>1/30){
-      const p=[leg.ankle[0],leg.ankle[1]+432-leg.groundAnkleY],bone='leg-'+li+'-foot',now=transform(matrixFor(raw,bone),p),before=transform(matrixFor(previous.raw,bone),p);
-      assert.ok(Math.abs(now[1]-432)<.001);assert.ok(Math.abs(now[0]+phase*atlas.cycleDistance-before[0]-previous.phase*atlas.cycleDistance)<.001,'Planted foot stays fixed in world space');
+      const p=[leg.ankle[0],leg.paintedSoleY??leg.ankle[1]+432-leg.groundAnkleY],bone='leg-'+li+'-foot',now=transform(matrixFor(raw,bone),p),before=transform(matrixFor(previous.raw,bone),p);
+      assert.ok(Math.abs(now[1]-d.motion.walk.groundY)<.001);assert.ok(Math.abs(now[0]+phase*atlas.cycleDistance-before[0]-previous.phase*atlas.cycleDistance)<.001,'Planted foot stays fixed in world space');
      }
     }previous={phase,raw};
    }
@@ -106,15 +108,15 @@ for(const kind of kinds){
   }
   assert.ok(originalPixels>3000);assert.ok(torsoPixels>1500,JSON.stringify({kind,torsoPixels}));
   const binding=await readFile(new URL('../public'+d.identityBinding.path,import.meta.url));assert.equal(hash(binding),d.identityBinding.sourceSha256);
-  const weapon=await pixels(new URL('weapon-and-hands.png',dir)),[mx,my]=atlas.muzzle;assert.ok(weapon[(my*480+mx)*4+3]>=32,'Muzzle marker must touch painted weapon');
+  const weapon=await pixels(new URL('weapon-and-hands.png',dir)),[mx,my]=d.muzzle;assert.ok(weapon[(my*480+mx)*4+3]>=32,'Muzzle marker must touch painted weapon');
   const bytes=await readFile(new URL('../public'+atlas.path,import.meta.url)),expected=V177_JOINT_ASSET_ADDITIONS.find(a=>a.path===atlas.path),metadata=await sharp(bytes).metadata();
   assert.equal(bytes.length,expected.bytes);assert.equal('sha256-'+hash(bytes),expected.hash);assert.equal(metadata.width*metadata.height*4,atlas.decodedBytes);assert.ok(atlas.decodedBytes<=300*1024);
   for(const direction of ['left','right'])for(const scale of [.12,.2]){
    const plan=v177JointPose(kind,{requestedState:'active',clipProgress:.26},{locomotionPhase:.1371,locomotionSettle:1}),{raw,calls,frame,size}=record(kind,plan,{direction,scale,x:300,y:500});
    const contact=transform(calls[atlas.parts.findIndex(p=>p.name==='weapon-and-hands')],atlas.muzzle),socket=v177RenderedJointWeaponSocket({kind,plan,direction,frame,size,pose:{offsetX:0,offsetY:0,scaleX:1,scaleY:1,rotationRadians:0},x:300,y:500});
    assert.ok(distance(contact,[socket.x,socket.y])<1e-10,'Paint and effects share normalization and mirror');
-   for(const leg of d.rig.legs){const p=[leg.ankle[0],leg.ankle[1]+432-leg.groundAnkleY],m=calls[atlas.parts.findIndex(p=>p.name===leg.paintedPaw)];assert.ok(Math.abs(transform(m,p)[1]-500)<.001,'Painted sole meets the original ground anchor');}
-   const point=[240,75],p=transform(matrixFor(raw,'head'),point),actual=transform(calls[atlas.parts.findIndex(p=>p.name==='head')],point),ref=d.referenceFrame;
+   for(const leg of currentDefinition.rig.legs){const p=[leg.ankle[0],leg.paintedSoleY??leg.ankle[1]+432-leg.groundAnkleY],m=calls[atlas.parts.findIndex(p=>p.name===leg.paintedPaw)];assert.ok(Math.abs(transform(m,p)[1]-500)<.001,'Painted sole meets the original ground anchor');}
+   const point=[240,75],p=transform(matrixFor(raw,'head'),point),actual=transform(calls[atlas.parts.findIndex(p=>p.name==='head')],point),ref=currentDefinition.referenceFrame;
    assert.ok(Math.abs(actual[0]-(300+(direction==='left'?-1:1)*((p[0]-ref.tx)/ref.scale-frame.anchorX*480)*scale))<1e-10);
    assert.ok(Math.abs(actual[1]-(500+((p[1]-ref.ty)/ref.scale-frame.anchorY*448)*scale))<1e-10);
   }

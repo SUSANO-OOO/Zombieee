@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
-import { access, readdir } from "node:fs/promises";
+import { access, readdir, readFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
@@ -41,7 +42,7 @@ test("finite production visual inventory resolves every family and direction", a
   )));
 });
 
-test("runtime v0995 contains only registered identity/enemy derivatives", async () => {
+test("v0995 keeps registered runtime derivatives and exact retired originals outside the runtime manifest", async () => {
   const inventory = productionVisualIntegrityInventory();
   const registered = new Set([
     ...inventory.units.flatMap(({ card, portrait, battleSprite }) => [card, portrait, battleSprite]),
@@ -50,5 +51,13 @@ test("runtime v0995 contains only registered identity/enemy derivatives", async 
   ].filter((entry) => entry.includes("/art/v0995/")));
   const rootDir = path.join(root, "public", "art", "v0995");
   const actual = new Set((await walk(rootDir)).map((entry) => `/${path.relative(path.join(root, "public"), entry).replaceAll("\\", "/")}`));
-  assert.deepEqual(actual, registered);
+  const delta=JSON.parse(await readFile(new URL('./fixtures/quality-20261028-runtime-delta.json',import.meta.url)));
+  const manifest=JSON.parse(await readFile(path.join(root,'public','asset-manifest.json')));
+  const retired=delta.retired.filter(row=>row.path.startsWith('/art/v0995/'));
+  for(const row of retired){
+    assert.ok(!manifest.assets.some(asset=>asset.path===row.path),'retired original is not distributed');
+    const bytes=await readFile(path.join(root,'public',row.sourcePath??row.path));
+    assert.equal(bytes.length,row.bytes);assert.equal('sha256-'+createHash('sha256').update(bytes).digest('hex'),row.hash);
+  }
+  assert.deepEqual(actual, new Set([...registered,...retired.map(row=>row.path)]));
 });

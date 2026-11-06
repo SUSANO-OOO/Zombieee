@@ -4,18 +4,19 @@ import fs from 'node:fs';
 import {execFileSync} from 'node:child_process';
 import sharp from 'sharp';
 import {V100_CREDITS_FILM} from '../app/v100CreditsFilm.js';
+import {v100QualityScenePathFor} from '../app/v100QualitySceneAssets.js';
 import {assertPaisenCreditsRegion, inspectPaisenCredits} from '../scripts/build-v177-paisen-credits.mjs';
 
 const manifest = JSON.parse(fs.readFileSync('assets/source/v177/paisen/credits/runtime-adoption-r1.json'));
 
-test('every active Paisen credits scene uses the registered photo identity at its existing URL', () => {
+test('every active Paisen credits scene retains its binding through explicit model revision paths', () => {
   const actual = V100_CREDITS_FILM.filter(scene => scene.actors.includes('unit-paisen'))
     .map(scene => ({sceneId: scene.id, runtimePath: scene.src}));
-  assert.deepEqual(manifest.entries.map(entry => ({sceneId: entry.sceneId, runtimePath: entry.runtimePath})), actual);
+  assert.deepEqual(manifest.entries.map(entry => ({sceneId: entry.sceneId, runtimePath: v100QualityScenePathFor(entry.runtimePath)})), actual);
   assert.equal(manifest.photoReferences.filter(reference => reference.role.startsWith('Producer authoritative photo')).length, 3);
 });
 
-test('all eight runtime illustrations preserve original pixels outside the author regions and encode the sources losslessly', async () => {
+test('all eight historical illustrations preserve original pixels outside author regions and reproduce losslessly', async () => {
   const result = await inspectPaisenCredits({assetRoot: 'public'});
   assert.equal(result.sceneCount, 8);
   assert.ok(result.entries.every(entry => entry.outsideRegisteredRegion === 0 && entry.losslessPixelExact));

@@ -1,0 +1,126 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "crazy-king",
+  "assetPath": "/art/v100/joints/crazy-king-combat-r1.webp",
+  "bytes": 48308,
+  "sha256": "eecb23b4fed48d0a995054748b780fce6e5f0a57f3b81fda915212f1687c9186",
+  "atlasPacking": "height-descending-shelves",
+  "generatedPartsStudySha256": "89a8e3c6fc73fcd1c9e87080e3ae6fea1d8985bdac33940b16722cea882fae52",
+  "identitySourceSha256": "b96fb8cc79884082bf25abcdd947a455facd6b69f43bf60a59dfe6f26d78f02e",
+  "identityBinding": {
+    "path": "/art/v060/characters/crazy-king-battle-v1.png",
+    "sourceSha256": "8858e7a32505baaffb21c3dfc58033a1a2a7b1e3293c370121e03e4328c97e5f",
+    "sourceRect": {
+      "x": 480,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "referenceTransform": {
+      "scale": 1.2307692307692308,
+      "tx": -55.384615384615415,
+      "ty": -99.69230769230774,
+      "flipX": false
+    },
+    "modelSource": "assets/source/quality-20261028/identity/king-master-r4.png",
+    "modelSha256": "37f68d4df0962bfead20bbdfd16113f05ea3b5f42488e9d22b958a4e7718e5dc",
+    "combatSource": "assets/source/quality-20261028/rigs/crazy-king-combat-r1/combat-model-r1.png",
+    "combatSha256": "b96fb8cc79884082bf25abcdd947a455facd6b69f43bf60a59dfe6f26d78f02e"
+  },
+  "motionSha256": "8cef91c6ddc15956c2461eea361e4510924b10f8cbeb931d5d881373307d7beb",
+  "parts": [
+    {
+      "name": "far-upper-arm",
+      "file": "far-upper-arm.png",
+      "sha256": "c7f0ca50c0281a0471bf6a45f87c0cd44fda4664057784582c9f6d91c055be52",
+      "original": false
+    },
+    {
+      "name": "far-forearm",
+      "file": "far-forearm.png",
+      "sha256": "076902ba2e792717d0b049b3f46e7fd64b24bcb52ba6d3f803a07fd5bd7b6def",
+      "original": false
+    },
+    {
+      "name": "far-thigh",
+      "file": "far-thigh.png",
+      "sha256": "c8511f312fd714e17a192ed2be293c1d4598857b2671e665e6b1bf12b1dc0091",
+      "original": false
+    },
+    {
+      "name": "far-shin",
+      "file": "far-shin.png",
+      "sha256": "37ee77a08a6a65431eeba7004b83603b3889b2607dc6f126f9e1cf71dc473799",
+      "original": false
+    },
+    {
+      "name": "far-boot",
+      "file": "far-boot.png",
+      "sha256": "98707d7affe4914e333a26708774ac22d1b09cb4befd23b1cf9b2230ed20bcad",
+      "original": false
+    },
+    {
+      "name": "near-thigh",
+      "file": "near-thigh.png",
+      "sha256": "29ada71e90852ea0dc83019a601acfc5d8d6f8a2479bda2355e2d163945c2074",
+      "original": false
+    },
+    {
+      "name": "near-shin",
+      "file": "near-shin.png",
+      "sha256": "e4667a7582cd756974726fd81801d4ff8326fad3752dcef1f1ebcc1400aa980c",
+      "original": false
+    },
+    {
+      "name": "near-boot",
+      "file": "near-boot.png",
+      "sha256": "dd607a8403f1373fdc38ea76025219741e0a76734c60aa7eede5d6c11c3c1b9e",
+      "original": false
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "0102011da5caae52418f4eedb56cd3fdf9fdfc9a2a15489e7c1e7d3f04654c56",
+      "original": false
+    },
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "1cdc4c22bd79a46ac091c362b3df3460d9fb1caf787d17c0cfd9b2168719f8fb",
+      "original": false
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "989d9119ca294cb81e2d0e5c6561cfa5d4b57f9382bb3f3d24c29f2ffdbf2705",
+      "original": false
+    },
+    {
+      "name": "near-upper-arm",
+      "file": "near-upper-arm.png",
+      "sha256": "d527964c0e68a15c915ec1341e9c7d10af72f72d300e16da869406032fdb2247",
+      "original": false
+    },
+    {
+      "name": "near-forearm",
+      "file": "near-forearm.png",
+      "sha256": "41ed5567265b94495ca5c9c048994f579560ea0caa62f6c98f8df7bb54add5e0",
+      "original": false
+    },
+    {
+      "name": "weapon-and-hands",
+      "file": "weapon-and-hands.png",
+      "sha256": "c16f81f65201ddf6bc9c95e1ac01f2762b37f157beacdc627e3d817df6185540",
+      "original": false
+    }
+  ],
+  "source": "Complete CrazyKing body from current generated master with hidden-cloth underpainting; both hands share the held weapon transform. Deterministic fixed-length 2D kinematics, not Blender execution. Motion and human acceptance pending.",
+  "groundY": 443,
+  "decodedBytes": 284672,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}

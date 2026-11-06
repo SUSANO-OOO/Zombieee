@@ -1,0 +1,51 @@
+{
+  "method": "built-in image_gen",
+  "variants": [
+    {
+      "kind": "tatara",
+      "expression": "determined",
+      "args": {
+        "referenced_image_paths": [
+          "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028\\assets\\source\\quality-20261028\\identity\\tatara-master-r4.png"
+        ],
+        "transparent_background": true,
+        "prompt": "Edit this exact established fictional adult character tatara. Keep precisely the same person and complete full-body framing, camera, image dimensions, pose, body silhouette, head position, his individual angular adult face, dark wavy hair, armored navy work clothes, gloves, heavy industrial hammer supported with both hands, harness, pouches, knee protection and boots. Change ONLY the facial expression to quiet focused determination, firm closed mouth. Preserve the original eye size and spacing, eyebrows, nose, lips, jaw, age, realistic matte skin and subtle painted finish. Do not reposition the figure or any equipment, change clothing coverage, crop the feet or weapon, or make a collage/sheet. One full-body expression variant. Preserve genuine transparent alpha in empty space, around the hair and between the limbs/equipment. No visible backdrop, floor, gradient, text or border."
+      },
+      "output": "tatara-determined-r6.png",
+      "outputSha256": "537fc28104c768ea73044a7725341fac4418904c3cf422c8107d43510f4666ec",
+      "outputBytes": 2239587,
+      "status": "Generated and connected to local dialogue candidate; Producer visual acceptance open."
+    },
+    {
+      "kind": "tatara",
+      "expression": "alarm",
+      "args": {
+        "referenced_image_paths": [
+          "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028\\assets\\source\\quality-20261028\\identity\\tatara-master-r4.png"
+        ],
+        "transparent_background": true,
+        "prompt": "Edit this exact established fictional adult character tatara. Keep precisely the same person and complete full-body framing, camera, image dimensions, pose, body silhouette, head position, his individual angular adult face, dark wavy hair, armored navy work clothes, gloves, heavy industrial hammer supported with both hands, harness, pouches, knee protection and boots. Change ONLY the facial expression to restrained surprise and concern, eyebrows subtly raised and lips slightly parted. Preserve the original eye size and spacing, eyebrows, nose, lips, jaw, age, realistic matte skin and subtle painted finish. Do not reposition the figure or any equipment, change clothing coverage, crop the feet or weapon, or make a collage/sheet. One full-body expression variant. Preserve genuine transparent alpha in empty space, around the hair and between the limbs/equipment. No visible backdrop, floor, gradient, text or border."
+      },
+      "output": "tatara-alarm-r6.png",
+      "outputSha256": "1c8880d528b01dbd4434602bfc5d24981c6047438b13f8e7ceefacaaf956d750",
+      "outputBytes": 2213804,
+      "status": "Generated and connected to local dialogue candidate; Producer visual acceptance open."
+    },
+    {
+      "kind": "tatara",
+      "expression": "grief",
+      "args": {
+        "referenced_image_paths": [
+          "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028\\assets\\source\\quality-20261028\\identity\\tatara-master-r4.png"
+        ],
+        "transparent_background": true,
+        "prompt": "Edit this exact established fictional adult character tatara. Keep precisely the same person and complete full-body framing, camera, image dimensions, pose, body silhouette, head position, his individual angular adult face, dark wavy hair, armored navy work clothes, gloves, heavy industrial hammer supported with both hands, harness, pouches, knee protection and boots. Change ONLY the facial expression to subdued sadness, gaze subtly lowered and a relaxed closed mouth. Preserve the original eye size and spacing, eyebrows, nose, lips, jaw, age, realistic matte skin and subtle painted finish. Do not reposition the figure or any equipment, change clothing coverage, crop the feet or weapon, or make a collage/sheet. One full-body expression variant. Preserve genuine transparent alpha in empty space, around the hair and between the limbs/equipment. No visible backdrop, floor, gradient, text or border."
+      },
+      "output": "tatara-grief-r6.png",
+      "outputSha256": "c947631a4d93d543be8986b5d0b6150e8908c169eb250232b5585fcce93fd307",
+      "outputBytes": 2210360,
+      "status": "Generated and connected to local dialogue candidate; Producer visual acceptance open."
+    }
+  ],
+  "status": "Three expression variants succeeded; r4 master supplies warm state."
+}

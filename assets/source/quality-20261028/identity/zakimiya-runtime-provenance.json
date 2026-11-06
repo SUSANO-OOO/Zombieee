@@ -1,0 +1,53 @@
+{
+  "generator": "scripts/build-quality-canonical-portraits.mjs",
+  "master": {
+    "path": "assets/source/v090/characters/zakimiya-identity-master-r1.png",
+    "sha256": "78405e4610f6d8d71c0e094bcf2cf125522ca9b869db2146e39b9e6122ba88d7"
+  },
+  "source": {
+    "path": "assets/source/quality-20261028/identity/zakimiya-canonical-expressions-r1.png",
+    "sha256": "dbc7fe73422ad2010cbaba0cb14b6a0fdc43c5b388886e04d3692974ddb103bf",
+    "width": 1024,
+    "height": 1536
+  },
+  "masterRole": "Approved identity and costume",
+  "expressions": [
+    "warm",
+    "determined",
+    "alarm",
+    "grief"
+  ],
+  "additionalSources": [],
+  "outputs": [
+    {
+      "path": "public/art/v100/portraits/zakimiya-warm-quality-r1.webp",
+      "sha256": "a7573b6fdc0178192393641ae149a13fb8373084b045c49f8d1b522248cf4190",
+      "bytes": 84606
+    },
+    {
+      "path": "public/art/v100/portraits/zakimiya-formation-card-quality-r1.webp",
+      "sha256": "a30d22f93ba2a8ac8ed65b0e3497795a22b7f93b377f1aef3aa3ed51373453bb",
+      "bytes": 58404
+    },
+    {
+      "path": "public/art/v100/portraits/zakimiya-determined-quality-r1.webp",
+      "sha256": "efc17ab1bd90a15739265e2634e1851fc77450f7e0e2359f3b230cd440bd3a34",
+      "bytes": 84752
+    },
+    {
+      "path": "public/art/v100/portraits/zakimiya-alarm-quality-r1.webp",
+      "sha256": "7a4339575c79d2307c5da93d5d60da8a612f5614d06074b8d51b84c099599ab7",
+      "bytes": 86430
+    },
+    {
+      "path": "public/art/v100/portraits/zakimiya-grief-quality-r1.webp",
+      "sha256": "b46de5fd451d37db3036ca6ecd54e43713883867239d8c7be38fde54241c471b",
+      "bytes": 84172
+    }
+  ],
+  "runtimeAssetCount": 5,
+  "logicalBytes": 398364,
+  "distinctBytes": 398364,
+  "scope": "Dialogue expressions and formation/personnel cards. Battle and scene paintings require separate verification.",
+  "acceptance": "Canonical identity reference restored; not a numeric likeness score or Producer acceptance."
+}

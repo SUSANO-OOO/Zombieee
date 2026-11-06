@@ -1,0 +1,430 @@
+{
+  "method": "built-in image_gen",
+  "jobs": [
+    {
+      "kind": "segawa",
+      "expression": "warm",
+      "generatedPath": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-0c9f151a-4f55-481a-b9ed-e8af62bef0a2.png",
+      "args": {
+        "referenced_image_paths": [
+          "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\public\\art\\v100\\story-r5\\portraits\\segawa-warm.webp"
+        ],
+        "transparent_background": true,
+        "prompt": "Identity-preserve and downward outpainting edit of the attached game portrait. The input is the EDIT TARGET, not loose inspiration. Keep exactly the same face or opaque mask, expression, gaze, hairstyle, head angle, upper-body pose, hands/gesture, clothes, badges, gear, lighting, and ink-painted rendering. Extend the existing character naturally DOWNWARD to mid-thigh and slightly outward if needed so neither arm is cropped. The missing lower torso and hips must continue the existing anatomy and clothes, not a stretched copy of the existing bottom edge. Do not redesign or beautify the person. Keep the head near the top of the image, standing torso proportional, no seated pose, no new props, no added weapons, no second character. Preserve facial features especially eye spacing, brow, nose, jaw and age. Continue the same off-white laboratory coat over dark clothes. One complete head-to-mid-thigh game dialogue cutout, portrait canvas, true alpha background, no ground shadow, no text or grid. This change is only to supply missing lower-body image coverage for a consistent dialogue camera; retain the existing identity and expression."
+      },
+      "output": {
+        "path": "assets/source/quality-20261028/identity/segawa-warm-extended-r1.png",
+        "sha256": "459c3535c5edcfff551ba7c5cee4e81a9fef082bdb19ba37626e7300eacf821b",
+        "bytes": 2497848,
+        "width": 1024,
+        "height": 1536
+      },
+      "inputSha256": "df29171e89cf3c503bb65a5c26a3220191118daa66d42c38a3bac1e8259898e2"
+    },
+    {
+      "kind": "segawa",
+      "expression": "determined",
+      "generatedPath": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-c58ca9b3-19f3-444f-b1ab-670abbd2adb4.png",
+      "args": {
+        "referenced_image_paths": [
+          "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\public\\art\\v100\\story-r5\\portraits\\segawa-determined.webp"
+        ],
+        "transparent_background": true,
+        "prompt": "Identity-preserve and downward outpainting edit of the attached game portrait. The input is the EDIT TARGET, not loose inspiration. Keep exactly the same face or opaque mask, expression, gaze, hairstyle, head angle, upper-body pose, hands/gesture, clothes, badges, gear, lighting, and ink-painted rendering. Extend the existing character naturally DOWNWARD to mid-thigh and slightly outward if needed so neither arm is cropped. The missing lower torso and hips must continue the existing anatomy and clothes, not a stretched copy of the existing bottom edge. Do not redesign or beautify the person. Keep the head near the top of the image, standing torso proportional, no seated pose, no new props, no added weapons, no second character. Preserve facial features especially eye spacing, brow, nose, jaw and age. Continue the same off-white laboratory coat over dark clothes. One complete head-to-mid-thigh game dialogue cutout, portrait canvas, true alpha background, no ground shadow, no text or grid. This change is only to supply missing lower-body image coverage for a consistent dialogue camera; retain the existing identity and expression."
+      },
+      "output": {
+        "path": "assets/source/quality-20261028/identity/segawa-determined-extended-r1.png",
+        "sha256": "be51653e03e9cb6ef6d2f18d051060b0add0c7497809ac314c2fdf0e8fd63150",
+        "bytes": 2379877,
+        "width": 850,
+        "height": 1851
+      },
+      "inputSha256": "aa8cfb113427cd85ef3bcaa97aef26b79902633b94deb586c51514eac984030c"
+    },
+    {
+      "kind": "segawa",
+      "expression": "alarm",
+      "generatedPath": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-3928312b-4a16-413e-ab56-59c336fb4dd4.png",
+      "args": {
+        "referenced_image_paths": [
+          "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\public\\art\\v100\\story-r5\\portraits\\segawa-alarm.webp"
+        ],
+        "transparent_background": true,
+        "prompt": "Identity-preserve and downward outpainting edit of the attached game portrait. The input is the EDIT TARGET, not loose inspiration. Keep exactly the same face or opaque mask, expression, gaze, hairstyle, head angle, upper-body pose, hands/gesture, clothes, badges, gear, lighting, and ink-painted rendering. Extend the existing character naturally DOWNWARD to mid-thigh and slightly outward if needed so neither arm is cropped. The missing lower torso and hips must continue the existing anatomy and clothes, not a stretched copy of the existing bottom edge. Do not redesign or beautify the person. Keep the head near the top of the image, standing torso proportional, no seated pose, no new props, no added weapons, no second character. Preserve facial features especially eye spacing, brow, nose, jaw and age. Continue the same off-white laboratory coat over dark clothes. One complete head-to-mid-thigh game dialogue cutout, portrait canvas, true alpha background, no ground shadow, no text or grid. This change is only to supply missing lower-body image coverage for a consistent dialogue camera; retain the existing identity and expression."
+      },
+      "output": {
+        "path": "assets/source/quality-20261028/identity/segawa-alarm-extended-r1.png",
+        "sha256": "060e2a5c262b361d676847fdbde6e78eb1ce5d550a6494ddad47611ef74cbdeb",
+        "bytes": 2394676,
+        "width": 1024,
+        "height": 1536
+      },
+      "inputSha256": "5eb90e6e94a0483f72c96e0cf89e7062cec5a2bdeb84c2e35b5f022b72a6ce69"
+    },
+    {
+      "kind": "segawa",
+      "expression": "grief",
+      "generatedPath": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-7b7c45a8-36ca-44ee-836a-28575c3fac48.png",
+      "args": {
+        "referenced_image_paths": [
+          "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\public\\art\\v100\\story-r5\\portraits\\segawa-grief.webp"
+        ],
+        "transparent_background": true,
+        "prompt": "Identity-preserve and downward outpainting edit of the attached game portrait. The input is the EDIT TARGET, not loose inspiration. Keep exactly the same face or opaque mask, expression, gaze, hairstyle, head angle, upper-body pose, hands/gesture, clothes, badges, gear, lighting, and ink-painted rendering. Extend the existing character naturally DOWNWARD to mid-thigh and slightly outward if needed so neither arm is cropped. The missing lower torso and hips must continue the existing anatomy and clothes, not a stretched copy of the existing bottom edge. Do not redesign or beautify the person. Keep the head near the top of the image, standing torso proportional, no seated pose, no new props, no added weapons, no second character. Preserve facial features especially eye spacing, brow, nose, jaw and age. Continue the same off-white laboratory coat over dark clothes. One complete head-to-mid-thigh game dialogue cutout, portrait canvas, true alpha background, no ground shadow, no text or grid. This change is only to supply missing lower-body image coverage for a consistent dialogue camera; retain the existing identity and expression."
+      },
+      "output": {
+        "path": "assets/source/quality-20261028/identity/segawa-grief-extended-r1.png",
+        "sha256": "16ef98ab007fe112c1192edb1ebfb481d751f7f6365783dba5f4e324667dfa14",
+        "bytes": 1782961,
+        "width": 1122,
+        "height": 1402
+      },
+      "inputSha256": "94e01ca0d81f508c0981d962e3ca2a054c160b2b5e6e530d50c9f3246df2c5dd"
+    },
+    {
+      "kind": "president",
+      "expression": "warm",
+      "generatedPath": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-7794c392-9702-443a-9b82-701c7ac5643c.png",
+      "args": {
+        "referenced_image_paths": [
+          "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\public\\art\\v100\\story-r5\\portraits\\president-warm.webp"
+        ],
+        "transparent_background": true,
+        "prompt": "Identity-preserve and downward outpainting edit of the attached game portrait. The input is the EDIT TARGET, not loose inspiration. Keep exactly the same face or opaque mask, expression, gaze, hairstyle, head angle, upper-body pose, hands/gesture, clothes, badges, gear, lighting, and ink-painted rendering. Extend the existing character naturally DOWNWARD to mid-thigh and slightly outward if needed so neither arm is cropped. The missing lower torso and hips must continue the existing anatomy and clothes, not a stretched copy of the existing bottom edge. Do not redesign or beautify the person. Keep the head near the top of the image, standing torso proportional, no seated pose, no new props, no added weapons, no second character. Preserve facial features especially eye spacing, brow, nose, jaw and age. Continue the same green jacket and red/gold vest over dark suit trousers, preserving the cane-holding hand. One complete head-to-mid-thigh game dialogue cutout, portrait canvas, true alpha background, no ground shadow, no text or grid. This change is only to supply missing lower-body image coverage for a consistent dialogue camera; retain the existing identity and expression."
+      },
+      "output": {
+        "path": "assets/source/quality-20261028/identity/president-warm-extended-r1.png",
+        "sha256": "14ec1e067895e20e7f7596a5f54fd279af56e9b313820490ec9d103bd3a7c4b8",
+        "bytes": 1884509,
+        "width": 1122,
+        "height": 1402
+      },
+      "inputSha256": "4d3b983c5d7bd099eec13862553cd0d2e34b7dc438cbec66740b7fbef497dc98"
+    },
+    {
+      "kind": "president",
+      "expression": "determined",
+      "generatedPath": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-a5260f47-2db2-4a29-a4d5-63037a71acfa.png",
+      "args": {
+        "referenced_image_paths": [
+          "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\public\\art\\v100\\story-r5\\portraits\\president-determined.webp"
+        ],
+        "transparent_background": true,
+        "prompt": "Identity-preserve and downward outpainting edit of the attached game portrait. The input is the EDIT TARGET, not loose inspiration. Keep exactly the same face or opaque mask, expression, gaze, hairstyle, head angle, upper-body pose, hands/gesture, clothes, badges, gear, lighting, and ink-painted rendering. Extend the existing character naturally DOWNWARD to mid-thigh and slightly outward if needed so neither arm is cropped. The missing lower torso and hips must continue the existing anatomy and clothes, not a stretched copy of the existing bottom edge. Do not redesign or beautify the person. Keep the head near the top of the image, standing torso proportional, no seated pose, no new props, no added weapons, no second character. Preserve facial features especially eye spacing, brow, nose, jaw and age. Continue the same green jacket and red/gold vest over dark suit trousers, preserving the cane-holding hand. One complete head-to-mid-thigh game dialogue cutout, portrait canvas, true alpha background, no ground shadow, no text or grid. This change is only to supply missing lower-body image coverage for a consistent dialogue camera; retain the existing identity and expression."
+      },
+      "output": {
+        "path": "assets/source/quality-20261028/identity/president-determined-extended-r1.png",
+        "sha256": "e50216674529030e5c225972c00e649e163c35d11bf98485a8d62c2442d6b137",
+        "bytes": 1756655,
+        "width": 1122,
+        "height": 1402
+      },
+      "inputSha256": "6be3e5cb21e403c86e5136d2eef47b96d42eb5c47bcc8900613c5261aee2d69e"
+    },
+    {
+      "kind": "president",
+      "expression": "alarm",
+      "generatedPath": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-02579b1f-ddd2-4138-a30d-e3b78684ba95.png",
+      "args": {
+        "referenced_image_paths": [
+          "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\public\\art\\v100\\story-r5\\portraits\\president-alarm.webp"
+        ],
+        "transparent_background": true,
+        "prompt": "Identity-preserve and downward outpainting edit of the attached game portrait. The input is the EDIT TARGET, not loose inspiration. Keep exactly the same face or opaque mask, expression, gaze, hairstyle, head angle, upper-body pose, hands/gesture, clothes, badges, gear, lighting, and ink-painted rendering. Extend the existing character naturally DOWNWARD to mid-thigh and slightly outward if needed so neither arm is cropped. The missing lower torso and hips must continue the existing anatomy and clothes, not a stretched copy of the existing bottom edge. Do not redesign or beautify the person. Keep the head near the top of the image, standing torso proportional, no seated pose, no new props, no added weapons, no second character. Preserve facial features especially eye spacing, brow, nose, jaw and age. Continue the same green jacket and red/gold vest over dark suit trousers, preserving the cane-holding hand. One complete head-to-mid-thigh game dialogue cutout, portrait canvas, true alpha background, no ground shadow, no text or grid. This change is only to supply missing lower-body image coverage for a consistent dialogue camera; retain the existing identity and expression."
+      },
+      "output": {
+        "path": "assets/source/quality-20261028/identity/president-alarm-extended-r1.png",
+        "sha256": "976f71c1493ac5653ea9e9ea63554aba387eb25992a223ac7fde9368f7f1d0c4",
+        "bytes": 2379702,
+        "width": 1024,
+        "height": 1536
+      },
+      "inputSha256": "98ded9f431ba29e3d9b18f044b3d61a8f263d2ba7c1ea667a88afe3b237cbf3a"
+    },
+    {
+      "kind": "president",
+      "expression": "grief",
+      "generatedPath": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-c163daec-7015-4d45-b0da-ad24c55e3e05.png",
+      "args": {
+        "referenced_image_paths": [
+          "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\public\\art\\v100\\story-r5\\portraits\\president-grief.webp"
+        ],
+        "transparent_background": true,
+        "prompt": "Identity-preserve and downward outpainting edit of the attached game portrait. The input is the EDIT TARGET, not loose inspiration. Keep exactly the same face or opaque mask, expression, gaze, hairstyle, head angle, upper-body pose, hands/gesture, clothes, badges, gear, lighting, and ink-painted rendering. Extend the existing character naturally DOWNWARD to mid-thigh and slightly outward if needed so neither arm is cropped. The missing lower torso and hips must continue the existing anatomy and clothes, not a stretched copy of the existing bottom edge. Do not redesign or beautify the person. Keep the head near the top of the image, standing torso proportional, no seated pose, no new props, no added weapons, no second character. Preserve facial features especially eye spacing, brow, nose, jaw and age. Continue the same green jacket and red/gold vest over dark suit trousers, preserving the cane-holding hand. One complete head-to-mid-thigh game dialogue cutout, portrait canvas, true alpha background, no ground shadow, no text or grid. This change is only to supply missing lower-body image coverage for a consistent dialogue camera; retain the existing identity and expression."
+      },
+      "output": {
+        "path": "assets/source/quality-20261028/identity/president-grief-extended-r1.png",
+        "sha256": "5a87b04ee2569f3abbb45ff91c4a9bf23b974d05d90c5c3800aad5fdd9eeff44",
+        "bytes": 1635775,
+        "width": 1122,
+        "height": 1402
+      },
+      "inputSha256": "81cdeab2fb439d424d309c8279933796c7ce9aa4ccbe441f3656dbcf884b6e23"
+    },
+    {
+      "kind": "commander",
+      "expression": "warm",
+      "generatedPath": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-e0d39e85-6460-4b8b-9120-c394a154ff91.png",
+      "args": {
+        "referenced_image_paths": [
+          "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\public\\art\\v100\\story-r5\\portraits\\commander-warm.webp"
+        ],
+        "transparent_background": true,
+        "prompt": "Identity-preserve and downward outpainting edit of the attached game portrait. The input is the EDIT TARGET, not loose inspiration. Keep exactly the same face or opaque mask, expression, gaze, hairstyle, head angle, upper-body pose, hands/gesture, clothes, badges, gear, lighting, and ink-painted rendering. Extend the existing character naturally DOWNWARD to mid-thigh and slightly outward if needed so neither arm is cropped. The missing lower torso and hips must continue the existing anatomy and clothes, not a stretched copy of the existing bottom edge. Do not redesign or beautify the person. Keep the head near the top of the image, standing torso proportional, no seated pose, no new props, no added weapons, no second character. Preserve facial features especially eye spacing, brow, nose, jaw and age. Keep the closed red-lens gas mask and black/red protective coat; the face must never become visible. One complete head-to-mid-thigh game dialogue cutout, portrait canvas, true alpha background, no ground shadow, no text or grid. This change is only to supply missing lower-body image coverage for a consistent dialogue camera; retain the existing identity and expression."
+      },
+      "output": {
+        "path": "assets/source/quality-20261028/identity/commander-warm-extended-r1.png",
+        "sha256": "97c93f4999bbb4bd0668b87aabcc3c7cee2a2c1939f1e662373b228e7a3ec5e3",
+        "bytes": 2434487,
+        "width": 1024,
+        "height": 1536
+      },
+      "inputSha256": "4ad081dd1c79245eb42696c0c888bb7bfaac4376beb5e054de6ff7078c62f2be"
+    },
+    {
+      "kind": "commander",
+      "expression": "determined",
+      "generatedPath": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-35453203-bd31-4726-a85a-fc57d08e749b.png",
+      "args": {
+        "referenced_image_paths": [
+          "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\public\\art\\v100\\story-r5\\portraits\\commander-determined.webp"
+        ],
+        "transparent_background": true,
+        "prompt": "Identity-preserve and downward outpainting edit of the attached game portrait. The input is the EDIT TARGET, not loose inspiration. Keep exactly the same face or opaque mask, expression, gaze, hairstyle, head angle, upper-body pose, hands/gesture, clothes, badges, gear, lighting, and ink-painted rendering. Extend the existing character naturally DOWNWARD to mid-thigh and slightly outward if needed so neither arm is cropped. The missing lower torso and hips must continue the existing anatomy and clothes, not a stretched copy of the existing bottom edge. Do not redesign or beautify the person. Keep the head near the top of the image, standing torso proportional, no seated pose, no new props, no added weapons, no second character. Preserve facial features especially eye spacing, brow, nose, jaw and age. Keep the closed red-lens gas mask and black/red protective coat; the face must never become visible. One complete head-to-mid-thigh game dialogue cutout, portrait canvas, true alpha background, no ground shadow, no text or grid. This change is only to supply missing lower-body image coverage for a consistent dialogue camera; retain the existing identity and expression."
+      },
+      "output": {
+        "path": "assets/source/quality-20261028/identity/commander-determined-extended-r1.png",
+        "sha256": "f437efe7243df03e61f287ba3d16ac9615341e7c30a9f05eb626268b983421be",
+        "bytes": 2614459,
+        "width": 1024,
+        "height": 1536
+      },
+      "inputSha256": "cf116834fede3c07fae1286f78533ba79d490e8f226dfdc35ee9239d136d8f39"
+    },
+    {
+      "kind": "commander",
+      "expression": "alarm",
+      "generatedPath": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-a70ce9df-17f6-4c54-b2c6-1bda3d77d1b4.png",
+      "args": {
+        "referenced_image_paths": [
+          "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\public\\art\\v100\\story-r5\\portraits\\commander-alarm.webp"
+        ],
+        "transparent_background": true,
+        "prompt": "Identity-preserve and downward outpainting edit of the attached game portrait. The input is the EDIT TARGET, not loose inspiration. Keep exactly the same face or opaque mask, expression, gaze, hairstyle, head angle, upper-body pose, hands/gesture, clothes, badges, gear, lighting, and ink-painted rendering. Extend the existing character naturally DOWNWARD to mid-thigh and slightly outward if needed so neither arm is cropped. The missing lower torso and hips must continue the existing anatomy and clothes, not a stretched copy of the existing bottom edge. Do not redesign or beautify the person. Keep the head near the top of the image, standing torso proportional, no seated pose, no new props, no added weapons, no second character. Preserve facial features especially eye spacing, brow, nose, jaw and age. Keep the closed red-lens gas mask and black/red protective coat; the face must never become visible. One complete head-to-mid-thigh game dialogue cutout, portrait canvas, true alpha background, no ground shadow, no text or grid. This change is only to supply missing lower-body image coverage for a consistent dialogue camera; retain the existing identity and expression."
+      },
+      "output": {
+        "path": "assets/source/quality-20261028/identity/commander-alarm-extended-r1.png",
+        "sha256": "cba57ca53ebaf38bb7448a95484438b6a806247b4de1474fcda3fbfb68c487b1",
+        "bytes": 2636401,
+        "width": 1024,
+        "height": 1536
+      },
+      "inputSha256": "c5c55b4c1d665e8af6e2a6ab043699c4ed7928c260bd50f4c486e10d4d63cdcc"
+    },
+    {
+      "kind": "commander",
+      "expression": "grief",
+      "generatedPath": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-81058175-2ad4-45bc-8849-a2836839f8e0.png",
+      "args": {
+        "referenced_image_paths": [
+          "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\public\\art\\v100\\story-r5\\portraits\\commander-grief.webp"
+        ],
+        "transparent_background": true,
+        "prompt": "Identity-preserve and downward outpainting edit of the attached game portrait. The input is the EDIT TARGET, not loose inspiration. Keep exactly the same face or opaque mask, expression, gaze, hairstyle, head angle, upper-body pose, hands/gesture, clothes, badges, gear, lighting, and ink-painted rendering. Extend the existing character naturally DOWNWARD to mid-thigh and slightly outward if needed so neither arm is cropped. The missing lower torso and hips must continue the existing anatomy and clothes, not a stretched copy of the existing bottom edge. Do not redesign or beautify the person. Keep the head near the top of the image, standing torso proportional, no seated pose, no new props, no added weapons, no second character. Preserve facial features especially eye spacing, brow, nose, jaw and age. Keep the closed red-lens gas mask and black/red protective coat; the face must never become visible. One complete head-to-mid-thigh game dialogue cutout, portrait canvas, true alpha background, no ground shadow, no text or grid. This change is only to supply missing lower-body image coverage for a consistent dialogue camera; retain the existing identity and expression."
+      },
+      "output": {
+        "path": "assets/source/quality-20261028/identity/commander-grief-extended-r1.png",
+        "sha256": "652e4e3a6c423e8507cd726e46acff9f3c9f002438601024ffb1a5ec8e3408e7",
+        "bytes": 2084917,
+        "width": 1122,
+        "height": 1402
+      },
+      "inputSha256": "47bb4f61bae5647d0e119329433c181e4146e2d717759f458bd19cb95a2ab475"
+    },
+    {
+      "kind": "minor-human",
+      "expression": "neutral",
+      "args": {
+        "referenced_image_paths": [
+          "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\public\\art\\v100\\portraits\\minor-human-shared-event-silhouette-event-portrait-v1.webp"
+        ],
+        "transparent_background": true,
+        "prompt": "Edit target: this anonymous dark game dialogue silhouette. Extend its existing torso naturally downward to mid-thigh, including the existing arms and hands at the sides. Preserve exactly the anonymous featureless black head shape, neutral standing pose, understated dark charcoal clothing silhouette and thin cool gray edge. No face, no eyes, no new identity, no props, no muscles or detailed costume. Single head-to-mid-thigh cutout, portrait canvas, true transparent background. The purpose is to avoid a cut-off torso floating above the game's dialogue box, not to redesign this deliberately anonymous supporting character."
+      },
+      "generatedPath": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-2b800a96-ebd1-44b8-9289-f5d89d385d2d.png",
+      "output": {
+        "path": "assets/source/quality-20261028/identity/minor-human-neutral-extended-r1.png",
+        "sha256": "41f5e436545f69ebf3ba4695254e8f12d6f5d61956a3b63f8923205d01b7c7c8",
+        "bytes": 843179,
+        "width": 1086,
+        "height": 1448
+      },
+      "inputSha256": "fabffb265dd5c3dfd4a0323e8e2454212e32e9a4cc2083b6966990cbeac6c07b"
+    }
+  ],
+  "acceptance": "Alpha-composited contact sheets inspected; adopted into a local dialogue candidate. Actual authored story expressions are listed separately. Not physical-device, whole-game, or Producer acceptance.",
+  "runtimeCoverage": [
+    {
+      "kind": "chiha",
+      "revision": 5,
+      "cases": 3,
+      "expressions": [
+        "warm"
+      ],
+      "scope": "Prepared dialogue checkpoint in isolated Chromium, normal title continue. Visual rendering evidence only, not campaign progression or Producer acceptance."
+    },
+    {
+      "kind": "babayaga",
+      "revision": 5,
+      "cases": 2,
+      "expressions": [
+        "warm"
+      ],
+      "scope": "Prepared dialogue checkpoint in isolated Chromium, normal title continue. Visual rendering evidence only, not campaign progression or Producer acceptance."
+    },
+    {
+      "kind": "kumaverson",
+      "revision": 5,
+      "cases": 2,
+      "expressions": [
+        "warm"
+      ],
+      "scope": "Prepared dialogue checkpoint in isolated Chromium, normal title continue. Visual rendering evidence only, not campaign progression or Producer acceptance."
+    },
+    {
+      "kind": "tatara",
+      "revision": 5,
+      "cases": 3,
+      "expressions": [
+        "warm"
+      ],
+      "scope": "Prepared dialogue checkpoint in isolated Chromium, normal title continue. Visual rendering evidence only, not campaign progression or Producer acceptance."
+    },
+    {
+      "kind": "gantetsu",
+      "revision": 5,
+      "cases": 2,
+      "expressions": [
+        "warm"
+      ],
+      "scope": "Prepared dialogue checkpoint in isolated Chromium, normal title continue. Visual rendering evidence only, not campaign progression or Producer acceptance."
+    },
+    {
+      "kind": "paisen",
+      "revision": 4,
+      "cases": 2,
+      "expressions": [
+        "warm"
+      ],
+      "scope": "Prepared dialogue checkpoint in isolated Chromium, normal title continue. Visual rendering evidence only, not campaign progression or Producer acceptance."
+    },
+    {
+      "kind": "tky",
+      "revision": 4,
+      "cases": 2,
+      "expressions": [
+        "determined"
+      ],
+      "scope": "Prepared dialogue checkpoint in isolated Chromium, normal title continue. Visual rendering evidence only, not campaign progression or Producer acceptance."
+    },
+    {
+      "kind": "zakimiya",
+      "revision": 4,
+      "cases": 2,
+      "expressions": [
+        "determined"
+      ],
+      "scope": "Prepared dialogue checkpoint in isolated Chromium, normal title continue. Visual rendering evidence only, not campaign progression or Producer acceptance."
+    },
+    {
+      "kind": "nao",
+      "revision": 4,
+      "cases": 2,
+      "expressions": [
+        "warm"
+      ],
+      "scope": "Prepared dialogue checkpoint in isolated Chromium, normal title continue. Visual rendering evidence only, not campaign progression or Producer acceptance."
+    },
+    {
+      "kind": "mizuchi",
+      "revision": 4,
+      "cases": 2,
+      "expressions": [
+        "determined"
+      ],
+      "scope": "Prepared dialogue checkpoint in isolated Chromium, normal title continue. Visual rendering evidence only, not campaign progression or Producer acceptance."
+    },
+    {
+      "kind": "monkey",
+      "revision": 5,
+      "cases": 2,
+      "expressions": [
+        "warm"
+      ],
+      "scope": "Prepared dialogue checkpoint in isolated Chromium, normal title continue. Visual rendering evidence only, not campaign progression or Producer acceptance."
+    },
+    {
+      "kind": "ikura",
+      "revision": 5,
+      "cases": 2,
+      "expressions": [
+        "grief"
+      ],
+      "scope": "Prepared dialogue checkpoint in isolated Chromium, normal title continue. Visual rendering evidence only, not campaign progression or Producer acceptance."
+    },
+    {
+      "kind": "musashi",
+      "revision": 5,
+      "cases": 2,
+      "expressions": [
+        "determined"
+      ],
+      "scope": "Prepared dialogue checkpoint in isolated Chromium, normal title continue. Visual rendering evidence only, not campaign progression or Producer acceptance."
+    },
+    {
+      "kind": "raider",
+      "revision": 4,
+      "cases": 2,
+      "expressions": [
+        "determined"
+      ],
+      "scope": "Prepared dialogue checkpoint in isolated Chromium, normal title continue. Visual rendering evidence only, not campaign progression or Producer acceptance."
+    },
+    {
+      "kind": "king",
+      "revision": 4,
+      "cases": 2,
+      "expressions": [
+        "warm"
+      ],
+      "scope": "Prepared dialogue checkpoint in isolated Chromium, normal title continue. Visual rendering evidence only, not campaign progression or Producer acceptance."
+    },
+    {
+      "kind": "segawa",
+      "revision": 5,
+      "cases": 2,
+      "expressions": [
+        "determined"
+      ],
+      "scope": "Prepared dialogue checkpoint in isolated Chromium, normal title continue. Visual rendering evidence only, not campaign progression or Producer acceptance."
+    },
+    {
+      "kind": "president",
+      "revision": 5,
+      "cases": 2,
+      "expressions": [
+        "determined"
+      ],
+      "scope": "Prepared dialogue checkpoint in isolated Chromium, normal title continue. Visual rendering evidence only, not campaign progression or Producer acceptance."
+    },
+    {
+      "kind": "commander",
+      "revision": 5,
+      "cases": 2,
+      "expressions": [
+        "determined"
+      ],
+      "scope": "Prepared dialogue checkpoint in isolated Chromium, normal title continue. Visual rendering evidence only, not campaign progression or Producer acceptance."
+    }
+  ]
+}

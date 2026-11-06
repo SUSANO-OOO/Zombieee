@@ -128,6 +128,7 @@ function resultForDestination({
   overlapping = false,
   blocksPath = false,
   emergencyDefense = false,
+  precisionApproach = false,
 }) {
   const movement = movementWithDeadband({ currentX: unitX, desiredX, previousIntent, deadband });
   const targetId = target?.id ?? null;
@@ -149,6 +150,7 @@ function resultForDestination({
     overlapping,
     blocksPath,
     emergencyDefense,
+    precisionApproach,
     releaseTarget: Boolean(previousTargetId && previousTargetId !== targetId),
     reassess: Boolean(takuyaDefeated && previousTargetId),
   });
@@ -187,9 +189,8 @@ function selectEnemy({
   missionType,
   claims,
   previousIntent,
-  defenseAnchor,
+  defenseLimit,
   localThreatRadius,
-  defenseLeash,
   maxPursuersPerEnemy,
   hasLineOfSight,
 }) {
@@ -239,8 +240,11 @@ function selectEnemy({
     const claimAvailable = urgentDefense
       ? contact || overlapping || isPrevious || claimed < emergencyCapacity
       : hardEngagement || local || isPrevious || claimed < maxPursuersPerEnemy;
-    const threateningDefense = laneEligible
-      && Math.min(distance, Math.abs(enemy.x - defenseAnchor)) <= defenseLeash;
+    // The perimeter belongs to the defended position, not to a moving pursuer.
+    // Ranged defenders can still fire across it from a legal firing position.
+    const threateningDefense = missionType !== 'timed-defense' || urgentDefense || contact || attackable
+      || enemy.x <= defenseLimit
+      || canNormalAttackTarget({attacker:{...attacker,x:defenseLimit},target,hasLineOfSight});
     const eligible = missionType === "timed-defense"
       ? threateningDefense && claimAvailable
       : claimAvailable;
@@ -307,6 +311,7 @@ export function decideAllyIntent({
   const deploymentLane = assignedLaneFor(unit, assignedLane);
   const anchor = defenseAnchorFor(defenseAnchor, deploymentLane, unitX);
   const forward = defenseAnchorFor(forwardAnchor, deploymentLane, anchor);
+  const defenseLimit = Math.max(forward, anchor + nonNegative(defenseLeash, 220));
   const normalizedClaimLimit = Math.max(1, Math.floor(nonNegative(maxPursuersPerEnemy, 2)));
 
   // TAKUYA's defeat invalidates the old lock, but it never suppresses living
@@ -329,9 +334,8 @@ export function decideAllyIntent({
     missionType,
     claims,
     previousIntent,
-    defenseAnchor: anchor,
+    defenseLimit,
     localThreatRadius: nonNegative(localThreatRadius, 150),
-    defenseLeash: nonNegative(defenseLeash, 220),
     maxPursuersPerEnemy: normalizedClaimLimit,
     hasLineOfSight,
   });
@@ -364,7 +368,7 @@ export function decideAllyIntent({
       : Number.isFinite(unit.y) && Number.isFinite(selected.enemy.y)
         ? Math.abs(unit.y - selected.enemy.y)
         : 0;
-    const desiredX = selected.attackable || selected.overlapping
+    const approachX = selected.attackable || selected.overlapping
       ? unitX
       : destinationWithinRange({
         fromX: unitX,
@@ -376,6 +380,9 @@ export function decideAllyIntent({
         targetRadius: selected.enemy.bodyRadius,
         verticalDistance,
       });
+    const perimeterClamped = missionType === 'timed-defense' && !selected.urgentDefense
+      && !selected.attackable && !selected.overlapping && approachX > defenseLimit;
+    const desiredX = perimeterClamped ? defenseLimit : approachX;
     return resultForDestination({
       intent: ALLY_AI_INTENTS.INTERCEPT_ENEMY,
       reachedIntent: ALLY_AI_INTENTS.HOLD_RANGE,
@@ -397,7 +404,10 @@ export function decideAllyIntent({
       unitX,
       desiredX,
       previousIntent,
-      deadband,
+      // Clamping can consume the normal range padding. Finish the short step
+      // into real reach instead of holding a few pixels outside it forever.
+      deadband: perimeterClamped ? 0 : deadband,
+      precisionApproach: perimeterClamped,
       target: selected.enemy,
       assignedLane: deploymentLane,
       destinationLane,

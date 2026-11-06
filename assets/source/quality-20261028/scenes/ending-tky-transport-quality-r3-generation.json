@@ -1,0 +1,14 @@
+{
+  "tool": "built-in image_gen",
+  "referenced_image_paths": [
+    "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\scenes\\ending-tky-transport-quality-r2.png",
+    "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\identity\\tky-89-warm-r1.png",
+    "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\identity\\paisen-photo-master-r7.png",
+    "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\identity\\kumaverson-master-r2.png"
+  ],
+  "transparent_background": false,
+  "prompt": "Use case: identity-preserve / composition reframe. Image1 is the same dawn transport story scene to recompose. Strict LOCKED generated models: image2 TKY at LEFT driving, image3 Paisen at RIGHT holding the open door, image4 Kumaverson at CENTER with medical crate. VERY WIDE 3:1 CINEMASCOPE, about3072x1024px, not16:9. A tighter waist-up ensemble across the wide cab so each face is large and readable in a shallow game window; all three hair silhouettes stay inside with3-5% top room. Preserve each exact generated identity, facial proportions, age, natural build and wardrobe; no mixing faces. TKY has the exact approved black/red forehead-to-both-eyes fox half-mask with artistic89, real eyes visible, nose tip/mouth/chin exposed, no animal ears/horns or dangling adornments, same handsome Korean-actor grooming. Paisen exact short dark hair/face, navy-purple T-shirt, natural sturdy arms without inflated muscles. Kumaverson exact fuller cheeks/short soft chin/narrower relaxed eyes/straight center-part curtain hair, clean-shaven and subtly handsome, dirty pale T-shirt. Keep roles and actions: TKY's hand at wheel, Kumaverson holding the red-cross medical crate, Paisen holding the same vehicle door, correct wrists/arms/fingers; no extra hands or people. Their faces and important hands/crate must lie in the middle80% of image height. Crop unimportant lower vehicle panels instead of shrinking people. Retain the dawn ruined Fukuoka road/signs and armored vehicle details. Extend environment left/right, realistic anatomy/skin/materials and restrained illustration matching models, no comic hatching, plastic gloss or face-paste seams. No new plot actions, text or watermark.",
+  "output": "ending-tky-transport-quality-r3.png",
+  "generatedOriginal": "C:/Users/okait/.codex/generated_images/01a180c8-9e05-7871-b287-613f7c7eb364/exec-86353929-18df-495e-98e3-4341e5a5c4af.png",
+  "status": "Wider composition using the locked existing models; runtime review and Producer acceptance pending."
+}

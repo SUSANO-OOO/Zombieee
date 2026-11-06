@@ -9,7 +9,7 @@ import {createCombatAnimationRuntime,advanceCombatAnimationRuntime,sampleAnimati
 import {requiredBattleAssetPlan} from '../app/battleAssetPlan.js';
 import {CAMPAIGN_STAGE_IDS} from '../app/campaign.js';
 import {spriteFrameFor} from '../app/spriteManifest.js';
-import {V177_JOINT_ASSET_ADDITIONS} from '../scripts/v177-joint-asset-contract.mjs';
+import {V177_JOINT_ASSET_ADDITIONS} from '../scripts/v177-runtime-joint-asset-contract.mjs';
 import {traceRangerPose,rangerPoint} from './helpers/v177-ranger-render.mjs';
 
 const dir=new URL('../assets/source/v100/joints/ranger-r1/',import.meta.url);
@@ -86,7 +86,7 @@ test('weighted lower and seven continuous upper parts share the actual shot sock
   const runtime={locomotionPhase:.37,locomotionSettle:.5},plan=v177JointPose('ranger',sampleAnimationClip('ranger','active',.03),runtime);
   const size={w:96,h:89.6},frame={...spriteFrameFor('ranger','walk-a','right'),flipX:false};
   const {painted,calls}=traceRangerPose(plan,{x:-frame.anchorX*size.w,y:-frame.anchorY*size.h,width:size.w,height:size.h});
-  assert.equal(painted,true);assert.equal(calls.length,8);
+  assert.equal(painted,true);assert.equal(calls.length,1+atlas.upperRig.parts.length);
   assert.deepEqual(calls[0].rects.slice(0,4),Object.values(atlas.frames[plan.lowerIndex].source));
   atlas.upperRig.parts.forEach((part,i)=>assert.deepEqual(calls[i+1].rects.slice(0,4),Object.values(part.source)));
   const pose={offsetX:0,offsetY:0,rotationRadians:0,scaleX:1,scaleY:1};

@@ -1,0 +1,277 @@
+{
+  "referencePolicy": "Existing generated models are primary production references. Original art/private photos check identity drift only. Four previously integrated heads are retained; twelve derivatives, including the further Babayaga correction, follow the same selected models.",
+  "reusedKinds": [
+    "brawler",
+    "tky",
+    "zakimiya",
+    "kumaverson"
+  ],
+  "entries": [
+    {
+      "kind": "scout",
+      "modelId": "hachi",
+      "model": "assets/source/quality-20261028/identity/hachi-master-r4.png",
+      "modelSha256": "e722cc7aca81806cd7d2d1403c425262466ea4f1aa44b877731dcef79ee080bb",
+      "primaryCrop": {
+        "left": 590,
+        "top": 30,
+        "width": 230,
+        "height": 260
+      },
+      "primaryReference": "assets/source/quality-20261028/identity/battle-heads-r3/references/scout-primary-model-crop.png",
+      "primaryReferenceSha256": "41d52f6ba5ca84f17032b4ce00c58d9951c99ba279a001674c67b7555356b2e6",
+      "sourceHead": "assets/source/quality-20261028/identity/battle-heads-r3/scout-head-r2.png",
+      "sourceHeadSha256": "5156c5cc2d7b2e90de0687298a35542b48932285c5a9a3e49ff69e45718edd25",
+      "visibleBounds": {
+        "left": 304,
+        "top": 146,
+        "width": 825,
+        "height": 875
+      }
+    },
+    {
+      "kind": "mayo-chan",
+      "modelId": "mayo",
+      "model": "assets/source/quality-20261028/identity/mayo-master-r4.png",
+      "modelSha256": "ed4804adffdc00585130dda8803f5f1d2ccc3d818c15191a23e38558476a434c",
+      "primaryCrop": {
+        "left": 100,
+        "top": 55,
+        "width": 760,
+        "height": 650
+      },
+      "primaryReference": "assets/source/quality-20261028/identity/battle-heads-r3/references/mayo-chan-primary-model-crop.png",
+      "primaryReferenceSha256": "d6a97db2cd74889d3802050700ff0c5bf0029381db90eeea2aa7a48ccf483186",
+      "sourceHead": "assets/source/quality-20261028/identity/battle-heads-r3/mayo-chan-head-r2.png",
+      "sourceHeadSha256": "eb030a5db1d89a01f69a854313e926716116c3e5d603e26c21b967a916447661",
+      "visibleBounds": {
+        "left": 231,
+        "top": 123,
+        "width": 932,
+        "height": 943
+      }
+    },
+    {
+      "kind": "guardian",
+      "modelId": "gantetsu",
+      "model": "assets/source/quality-20261028/identity/gantetsu-master-r4.png",
+      "modelSha256": "ec06125c13977b05bbc704a7b8594b2c3b3bf716f7954e4647158ec8edadf51d",
+      "primaryCrop": {
+        "left": 375,
+        "top": 10,
+        "width": 235,
+        "height": 235
+      },
+      "primaryReference": "assets/source/quality-20261028/identity/battle-heads-r3/references/guardian-primary-model-crop.png",
+      "primaryReferenceSha256": "53cebe1a6fda47499c6855e0aad9bead157c3cc3ef9ee9c66fc2ccc0377579f6",
+      "sourceHead": "assets/source/quality-20261028/identity/battle-heads-r3/guardian-head-r1.png",
+      "sourceHeadSha256": "f9924bf4f46c63ec77597aad60d7db84a0e314812758955296d7b7c223f735b4",
+      "visibleBounds": {
+        "left": 186,
+        "top": 202,
+        "width": 857,
+        "height": 884
+      }
+    },
+    {
+      "kind": "brute",
+      "modelId": "tatara",
+      "model": "assets/source/quality-20261028/identity/tatara-master-r4.png",
+      "modelSha256": "dc28b9b8cedb6b96fe14c5003f510466056baf06ea172cceccc83727a08d2def",
+      "primaryCrop": {
+        "left": 520,
+        "top": 235,
+        "width": 220,
+        "height": 245
+      },
+      "primaryReference": "assets/source/quality-20261028/identity/battle-heads-r3/references/brute-primary-model-crop.png",
+      "primaryReferenceSha256": "b255005c7e7cfc706ae5eb3b988e8999d4933c565d69e23d247b8927c439e203",
+      "sourceHead": "assets/source/quality-20261028/identity/battle-heads-r3/brute-head-r1.png",
+      "sourceHeadSha256": "5cd301b113108d1b0cef4ef3b9fbaefeb6bfa42257cf95c576f99ef4aec4d9a0",
+      "visibleBounds": {
+        "left": 220,
+        "top": 166,
+        "width": 891,
+        "height": 844
+      }
+    },
+    {
+      "kind": "ranger",
+      "modelId": "mizuchi",
+      "model": "assets/source/quality-20261028/identity/mizuchi-master-r4.png",
+      "modelSha256": "c0f013dea12be7dc54055adfba4fd7b4a9703141eb8d9c0109d5b3087580ce3f",
+      "primaryCrop": {
+        "left": 310,
+        "top": 35,
+        "width": 215,
+        "height": 295
+      },
+      "primaryReference": "assets/source/quality-20261028/identity/battle-heads-r3/references/ranger-primary-model-crop.png",
+      "primaryReferenceSha256": "caab8e2b84ded51c101e08451f5d52b2911b66a0474878ec41bfc92aaf367159",
+      "sourceHead": "assets/source/quality-20261028/identity/battle-heads-r3/ranger-head-r3.png",
+      "sourceHeadSha256": "e589580a2e9accb5e6925c00d37611040952039deb4b2176b84bc0be8a20c417",
+      "visibleBounds": {
+        "left": 241,
+        "top": 99,
+        "width": 825,
+        "height": 942
+      }
+    },
+    {
+      "kind": "engineer",
+      "modelId": "monkey",
+      "model": "assets/source/quality-20261028/identity/monkey-master-r4.png",
+      "modelSha256": "feefc4b9959e8ce45955c1915338aec029fb1b58892f79528a1359d97ad5f2e1",
+      "primaryCrop": {
+        "left": 415,
+        "top": 20,
+        "width": 235,
+        "height": 300
+      },
+      "primaryReference": "assets/source/quality-20261028/identity/battle-heads-r3/references/engineer-primary-model-crop.png",
+      "primaryReferenceSha256": "daa28ade1fe4ca3f3c131201bc547249b4d37036096f2fc8bde609ad508c70c1",
+      "sourceHead": "assets/source/quality-20261028/identity/battle-heads-r3/engineer-head-r1.png",
+      "sourceHeadSha256": "94d1ccae80f6fcd13fe1d05ee1442b17aa87b3df52a33da964ea4511fcb29a4a",
+      "visibleBounds": {
+        "left": 209,
+        "top": 139,
+        "width": 890,
+        "height": 947
+      }
+    },
+    {
+      "kind": "crazy-king",
+      "modelId": "king",
+      "model": "assets/source/quality-20261028/identity/king-master-r4.png",
+      "modelSha256": "37f68d4df0962bfead20bbdfd16113f05ea3b5f42488e9d22b958a4e7718e5dc",
+      "primaryCrop": {
+        "left": 345,
+        "top": 28,
+        "width": 280,
+        "height": 275
+      },
+      "primaryReference": "assets/source/quality-20261028/identity/battle-heads-r3/references/crazy-king-primary-model-crop.png",
+      "primaryReferenceSha256": "02e7f76883933904b6b4d9ecec1dba3104580e43a12d9b68c4235e668d39f4b0",
+      "sourceHead": "assets/source/quality-20261028/identity/battle-heads-r3/crazy-king-head-r1.png",
+      "sourceHeadSha256": "73dcf44bb235215753cd2a11a1f564130fb42fc5de80d09e878b815667ea8e7a",
+      "visibleBounds": {
+        "left": 212,
+        "top": 224,
+        "width": 843,
+        "height": 840
+      }
+    },
+    {
+      "kind": "gunner",
+      "modelId": "raider",
+      "model": "assets/source/quality-20261028/identity/raider-master-r4.png",
+      "modelSha256": "c9173aa44138f5796bdae3d4d680cd26b24ee16741020c42bcd8d0a1751a0b47",
+      "primaryCrop": {
+        "left": 300,
+        "top": 10,
+        "width": 230,
+        "height": 250
+      },
+      "primaryReference": "assets/source/quality-20261028/identity/battle-heads-r3/references/gunner-primary-model-crop.png",
+      "primaryReferenceSha256": "e55678197fabb14f0f527dde9cb5e72e2ba1da7877abc42246d61b230d92b173",
+      "sourceHead": "assets/source/quality-20261028/identity/battle-heads-r3/gunner-head-r1.png",
+      "sourceHeadSha256": "7ea8c26c954a44d4b2cdf1e8f50a93afac6449cc01f97401acddc5378f8ef09f",
+      "visibleBounds": {
+        "left": 250,
+        "top": 142,
+        "width": 804,
+        "height": 873
+      }
+    },
+    {
+      "kind": "medic",
+      "modelId": "nao",
+      "model": "assets/source/quality-20261028/identity/nao-master-r4.png",
+      "modelSha256": "3bc43907891d7eafbdf86a08a501a5a7cbec9f9b5f3cacd7e0c73099ddfff7ba",
+      "primaryCrop": {
+        "left": 300,
+        "top": 18,
+        "width": 280,
+        "height": 310
+      },
+      "primaryReference": "assets/source/quality-20261028/identity/battle-heads-r3/references/medic-primary-model-crop.png",
+      "primaryReferenceSha256": "54f50db2fe8ec581686572d832a248dca6193c7a7497acb9230e067140ce51d2",
+      "sourceHead": "assets/source/quality-20261028/identity/battle-heads-r3/medic-head-r1.png",
+      "sourceHeadSha256": "71120372dc08a9b1b90e2e9b9c341ff07f8c613cf0ea94f8a766dc2c256d04a7",
+      "visibleBounds": {
+        "left": 289,
+        "top": 147,
+        "width": 836,
+        "height": 852
+      }
+    },
+    {
+      "kind": "mrs-chiha",
+      "modelId": "chiha",
+      "model": "assets/source/quality-20261028/identity/chiha-master-r4.png",
+      "modelSha256": "d9acf14c0f75ce8e80b4dd2e7f8285e154562e72082200be68983ef292369705",
+      "primaryCrop": {
+        "left": 450,
+        "top": 44,
+        "width": 180,
+        "height": 202
+      },
+      "primaryReference": "assets/source/quality-20261028/identity/battle-heads-r3/references/mrs-chiha-primary-model-crop.png",
+      "primaryReferenceSha256": "d2253bdf499d521cb0c0f26b1e623896a95e2e5fdc254c64c3fb299daab909e9",
+      "sourceHead": "assets/source/quality-20261028/identity/battle-heads-r3/mrs-chiha-head-r1.png",
+      "sourceHeadSha256": "3b3e3580bfdd1c78f5e13328d01585938a190496c8f572e61db481668b5b61e2",
+      "visibleBounds": {
+        "left": 102,
+        "top": 36,
+        "width": 1013,
+        "height": 1157
+      }
+    },
+    {
+      "kind": "miyamoto-musashi",
+      "modelId": "musashi",
+      "model": "assets/source/quality-20261028/identity/musashi-master-r4.png",
+      "modelSha256": "7ce937bddf0ac7bbb4e068b916625e4cd629411d6cc561946f88c22492c39c17",
+      "primaryCrop": {
+        "left": 430,
+        "top": 8,
+        "width": 230,
+        "height": 310
+      },
+      "primaryReference": "assets/source/quality-20261028/identity/battle-heads-r3/references/miyamoto-musashi-primary-model-crop.png",
+      "primaryReferenceSha256": "506c9fcd731f870610bdb317f5f5e9fa6e352408f523234a310e70b8ee101836",
+      "sourceHead": "assets/source/quality-20261028/identity/battle-heads-r3/miyamoto-musashi-head-r1.png",
+      "sourceHeadSha256": "8956f72bfffa93ae438f30b2a9708a7cd96dddd401c1453f6a8de92cd8858545",
+      "visibleBounds": {
+        "left": 147,
+        "top": 209,
+        "width": 793,
+        "height": 991
+      }
+    },
+    {
+      "kind": "babayaga",
+      "modelId": "babayaga",
+      "model": "assets/source/quality-20261028/identity/babayaga-master-r1.png",
+      "modelSha256": "c571d91e3ae9b97f0ac558ae6cacffa4661b268dadf0a46e6f47a7b2fb670aa4",
+      "primaryCrop": {
+        "left": 420,
+        "top": 18,
+        "width": 222,
+        "height": 249
+      },
+      "primaryReference": "assets/source/quality-20261028/identity/battle-heads-r3/references/babayaga-primary-model-crop.png",
+      "primaryReferenceSha256": "ffb9d963868ffec2dc28c4f829a6160a0649dc875b20b9d3a9f769b69f5a44d1",
+      "sourceHead": "assets/source/quality-20261028/identity/battle-heads-r3/babayaga-head-r2.png",
+      "sourceHeadSha256": "2f9a859125ae0a0b619afeb707f7dbf2f99e7d6efcbf660da357b3580dd68bff",
+      "visibleBounds": {
+        "left": 245,
+        "top": 104,
+        "width": 818,
+        "height": 964
+      },
+      "beforeAssetPath": "/art/v100/joints/babayaga-quality-head-r1.webp",
+      "beforeAssetSha256": "4622b14b346602af8e5d269720fa301afcf948c22db07db0ad56baf24699b09c"
+    }
+  ]
+}

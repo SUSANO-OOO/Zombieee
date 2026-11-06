@@ -1,0 +1,14 @@
+{
+  "method": "built-in image_gen",
+  "args": {
+    "referenced_image_paths": [
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\public\\art\\v070\\characters\\reference\\mizuchi-base-r3.png"
+    ],
+    "transparent_background": true,
+    "prompt": "Render this exact established fictional adult woman, Mizuchi, with photographic human anatomy and real-world skin, hair, fabric and metal, plus only a subtle painted finish. This reference is the identity and wardrobe authority; do not use another person's face. Preserve her individual narrow oval face, defined eyebrows, nose, mouth, beauty mark below the eye, black asymmetrical bob with braided side, amber glasses perched on her head, quiet confident expression and lean marksman build. Convert drawn eyes to plausible human eyes while maintaining their shape and spacing, no oversized anime eyes or heavy ink lines. Natural matte complexion, diffuse neutral lighting, no oily shine or airbrushing. Preserve the full exact purple tailored jacket and trousers, black high-neck top, respirator resting at her neck, belt pouches, long yellow glove on the same arm, boots, and her long black scoped rifle with the cloth-wrapped lower barrel. Her hand grips the rifle naturally pointed down; no altered weapon or accessories. Full-body relaxed standing portrait, body slightly turned toward image right and face nearly toward viewer; both boots planted and two separate anatomically plausible legs. Show full hair, shoulders, arms, equipment and boots with transparent margins. One person, genuinely transparent alpha background, no floor, backdrop, text or border. The visual goal is a believable photographed adult in this exact character costume, retaining her own recognizable face and restrained painterly finish."
+  },
+  "output": "mizuchi-master-r4.png",
+  "status": "Local quality-r1 portraits connected; see mizuchi-runtime-r1 and docs/qa/quality-20261028.md for exact observed scope. Battle/cuts/credits and Producer acceptance remain open. Source family storage review required before commit.",
+  "referenceSha256": "4b11d38cdca1421cdafa77a3a8cb8eac5d9f8ffa35aacddfcb3de4381012eade",
+  "outputSha256": "c0f013dea12be7dc54055adfba4fd7b4a9703141eb8d9c0109d5b3087580ce3f"
+}

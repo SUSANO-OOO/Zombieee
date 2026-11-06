@@ -157,10 +157,14 @@ test('the exact reviewed QA continuation keeps original6a owners, requires produ
  assert.equal(formatScope.scope,'qa-formatting-correction');
  for(const field of ['full','verify_full','performance','phaseg','normal','ranger','audio'])assert.equal(formatScope[field],false);
  assert.equal(ciChangeScope(formatPaths,{draft:false,sourceBlobs:formatBlobs,reuseAbilityNames:true,reuseProductValidation:true}).performance,true);
- const before=execFileSync('git',['show',format.head+':'+format.test],{encoding:'utf8'}),after=readFileSync(format.test,'utf8');
+ // The exception belongs only to these two immutable blobs. Later test
+ // improvements must not inherit its old CI reuse authorization.
+ const before=execFileSync('git',['show',format.head+':'+format.test],{encoding:'utf8'}),after=execFileSync('git',['cat-file','blob',format.after],{encoding:'utf8'});
  assert.equal((before.match(/\r\n/gu)??[]).length,1);assert.equal(before.replace(/\r\n/gu,'\n'),after);
  assert.equal(execFileSync('git',['hash-object','--stdin'],{input:before,encoding:'utf8'}).trim(),format.before);
  assert.equal(execFileSync('git',['hash-object','--stdin'],{input:after,encoding:'utf8'}).trim(),format.after);
+ const workingBlob=execFileSync('git',['hash-object','--stdin'],{input:readFileSync(format.test,'utf8').replace(/\r\n/gu,'\n'),encoding:'utf8'}).trim();
+ if(workingBlob!==format.after)assert.equal(reviewedQaFormattingPaths(formatPaths,{...formatBlobs,[format.test]:workingBlob}),false,'Current changed tests cannot adopt the historical reuse exception');
  for(const bad of [{formattingTextUnchanged:false},{productUnchanged:false},{originalAncestor:false},{action:'ready_for_review'},
    {sourceBlobs:{...formatBlobs,[format.test]:'f'.repeat(40)}},{sourceBlobs:{...formatBlobs,[FORMAL_TRANSFER_FILES[0]]:'f'.repeat(40)}},
    {paths:[...formatPaths,'app/unknown.js']}])

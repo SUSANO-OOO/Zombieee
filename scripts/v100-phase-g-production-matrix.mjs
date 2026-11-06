@@ -3,6 +3,7 @@ import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
+import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
 import { silenceBrowserOutput } from "./silent-browser-output.mjs";
 
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
@@ -14,6 +15,8 @@ import { createV100BattleResult, recordV100PendingResult } from "../app/v100Tran
 import { V100_STAGE_IDS, V100_STAGES, V100_SUPPORTS, V100_UNITS, V100_VEHICLE } from "../app/v100Registry.js";
 import { v100BattleDefinitionFor } from "../app/v100BattleAdapter.js";
 import { v100DialogueSlots } from "../app/v100DialogueComposition.js";
+import { v100StoryPageFor } from "../app/v100StoryPages.js";
+import { readV177StoryPortraitPaint } from "./v177-story-portrait-paint.mjs";
 import { V100_STORY_EVENTS, V100_STORY_SCRIPT_VERSION } from "../app/v100StoryEvents.js";
 import { enemyAiProfileFor } from "../app/combatAiProfiles.js";
 import { enemyContentFor } from "../app/content/enemyCatalog.js";
@@ -764,19 +767,22 @@ if (process.env.V100_PHASE_G_CHECKPOINT_NEGATIVE === "1") {
 const dialogueEvidenceTargets = Object.freeze(Object.fromEntries(
   ["left", "right"].map((side) => {
     for (const event of Object.values(V100_STORY_EVENTS)) {
-      const nodeIndex = event.nodes.findIndex((node, index) => node.kind === "dialogue"
-        && node.portraitOwner
-        && v100DialogueSlots(event.nodes, index)[side]?.portraitOwner === node.portraitOwner);
-      if (nodeIndex >= 0) {
-        const node = event.nodes[nodeIndex];
-        return [side, Object.freeze({
-          eventId: event.id,
-          phase: event.id.endsWith(":post") ? "post" : "event",
-          stageNumber: event.stageNumber ?? 1,
-          nodeIndex,
-          portraitOwner: node.portraitOwner,
-          nodeKind: node.kind,
-        })];
+      for (let startIndex = 0; startIndex < event.nodes.length;) {
+        const page = v100StoryPageFor(event.id, event.nodes, startIndex);
+        const { node, nodeIndex } = page;
+        if (node?.kind === "dialogue" && node.portraitOwner
+          && v100DialogueSlots(event.nodes, nodeIndex)[side]?.portraitOwner === node.portraitOwner) {
+          return [side, Object.freeze({
+            eventId: event.id,
+            phase: event.id.endsWith(":post") ? "post" : "event",
+            stageNumber: event.stageNumber ?? 1,
+            startIndex,
+            nodeIndex,
+            portraitOwner: node.portraitOwner,
+            nodeKind: node.kind,
+          })];
+        }
+        startIndex = page.endIndex + 1;
       }
     }
     throw new Error(`No canonical ${side} dialogue evidence target exists`);
@@ -1605,7 +1611,7 @@ async function installDeploymentPointerReceipt(page, attemptId, expectedIdentity
       const hitOwner = hitTarget instanceof Element ? hitTarget.closest("button.unit-card") : null;
       const snapshot = window.__ASHFALL_BATTLE_QA__.getPhaseGCombatSnapshot();
       const ariaLabel = owner?.getAttribute("aria-label") ?? "";
-      const costMatch = ariaLabel.match(/コスト\s*(\d+)/u);
+      const costMatch = ariaLabel.match(/(?:指揮|コスト)\s*(\d+)/u);
       const card = owner ? {
         nodeId: nodeIdFor(owner),
         kind: owner.getAttribute("data-kind"),
@@ -1627,7 +1633,7 @@ async function installDeploymentPointerReceipt(page, attemptId, expectedIdentity
         deployCooldowns: snapshot.deployCooldowns ?? {},
       } : null;
       const reasons = [];
-      const numericCost = Number(card?.cost);
+      const numericCost = card?.cost == null ? Number.NaN : Number(card.cost);
       const energy = Number(battle?.energy);
       const cooldown = card?.kind ? Number(battle?.deployCooldowns?.[card.kind]) : Number.NaN;
       if (!card?.kind) reasons.push("missing-kind");
@@ -2318,6 +2324,10 @@ async function performVerifiedDeploymentPointer(page, {
 async function openRoute(page, save = null) {
   const url = new URL("v100", baseUrl);
   url.searchParams.set("phase-g", "1");
+  // Each capture owns a fresh browser context. Seed before the first mount:
+  // direct browser entry now initializes IndexedDB immediately, and its durable
+  // current save correctly takes precedence over later localStorage mirrors.
+  if (save) await seedPage(page, save);
   await page.goto(String(url), { waitUntil: "domcontentloaded", timeout });
   const waitForGateOrShell = () => page.waitForFunction(() => Boolean(
     document.querySelector(".v100-shell")
@@ -2325,21 +2335,11 @@ async function openRoute(page, save = null) {
   ), null, { timeout });
   await waitForGateOrShell();
   checkpointRecorderFor(page)?.markOnce("route-opened", "completed", { url: page.url() });
-  // PwaGate starts the published metadata fetch without blocking an already
-  // playable shell. A seeded route reload must wait for that real fetch to
-  // settle; otherwise WebKit reports the first-party request as cancelled at
-  // the reload boundary and the evidence becomes a lifecycle artifact rather
-  // than a production failure.
+  // Observe the real metadata request without manufacturing a reload boundary.
   await page.waitForFunction(() => ["ready", "unreachable", "unsupported"].includes(
     document.documentElement.dataset.pwaManifestState,
   ), null, { timeout });
   if (save) {
-    await seedPage(page, save);
-    await page.reload({ waitUntil: "domcontentloaded", timeout });
-    await waitForGateOrShell();
-    await page.waitForFunction(() => ["ready", "unreachable", "unsupported"].includes(
-      document.documentElement.dataset.pwaManifestState,
-    ), null, { timeout });
     const seeded = await page.evaluate(() => {
       try {
         const raw = localStorage.getItem("nishijin-campaign-v100");
@@ -2355,11 +2355,11 @@ async function openRoute(page, save = null) {
       `QA save seed drifted before route validation: ${JSON.stringify({ expected: { equippedSupportId: save.equippedSupportId, caps: save.caps, completedStages: save.completedStageIds.length }, actual: { equippedSupportId: seeded?.equippedSupportId ?? null, caps: seeded?.caps ?? null, completedStages: seeded?.completedStageIds?.length ?? null } })}`,
     );
   }
-  const offer = page.getByRole("button", { name: "ブラウザで遊ぶ", exact: true });
-  await offer.waitFor({ state: "visible", timeout: Math.min(timeout, 10_000) }).catch(() => {});
-  if (await offer.isVisible().catch(() => false)) {
+  if (await dismissInstallOffer(page, {
+    timeout, readySelector: ".v100-start-screen", waitForFictionDismissal: true,
+    clickControl: (control, label) => click(page, control, label),
+  })) {
     await page.evaluate(() => { document.documentElement.dataset.phaseGPwaOffer = "shown"; });
-    await click(page, offer, "PWA browser play");
   }
   await page.locator(".v100-shell").waitFor({ state: "attached", timeout });
   await enterV100FromTitle(page, { timeout });
@@ -3692,7 +3692,7 @@ async function readBattleDeploymentDiagnostics(page, {
       const hitOwner = hitTarget instanceof Element ? hitTarget.closest("button.unit-card") : null;
       const nodeId = nodeIdFor(card);
       const ariaLabel = card.getAttribute("aria-label") ?? "";
-      const cost = ariaLabel.match(/コスト\s*(\d+)/u)?.[1] ?? null;
+      const cost = ariaLabel.match(/(?:指揮|コスト)\s*(\d+)/u)?.[1] ?? null;
       return {
         nodeId,
         kind: card.getAttribute("data-kind"),
@@ -4117,9 +4117,15 @@ async function freshNamePage(page) {
 async function storyPage(page, targetState) {
   const side = targetState === "dialogue-left" ? "left" : "right";
   const target = dialogueEvidenceTargets[side];
-  await openRoute(page, eventSave(target.phase, target.eventId, target));
+  await openRoute(page, eventSave(target.phase, target.eventId, { ...target, nodeIndex: target.startIndex }));
   await page.locator(`[data-v100-event-id="${target.eventId}"][data-v100-node-index="${target.nodeIndex}"]`).waitFor({ state: "visible", timeout });
   await page.locator(`[data-v100-state="dialogue-${side}"]`).waitFor({ state: "visible", timeout });
+  await page.waitForFunction(() => {
+    const portraits = [...document.querySelectorAll(".v100-story-node .v100-portrait")];
+    return portraits.length > 0 && portraits.every(image => image instanceof HTMLImageElement
+      && image.complete && image.naturalWidth > 0 && image.naturalHeight > 0);
+  }, null, { timeout });
+  await page.waitForFunction(readV177StoryPortraitPaint, `[data-v100-event-id="${target.eventId}"]`, { timeout });
 }
 
 async function mapPage(page, save) {

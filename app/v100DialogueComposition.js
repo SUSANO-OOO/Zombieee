@@ -39,11 +39,4 @@ export function v100ActionPortraitSubjects(eventId, node, nodeIndex = null) {
   return actionSubjects[eventId]?.[nodeIndex] ?? [];
 }
 
-// Source-image framing: Ikura has 134 px of transparent headroom in a
-// 512 x 640 portrait; the three V1 authority portraits are full-body masters.
-// These offsets change composition only and preserve the identity pixels.
-export function v100PortraitFraming(owner) {
-  if (owner === "guide-ikura") return { scale: "100%", shift: "-20.9375%", headroom: "10px" };
-  if (["segawa", "mugarian-president", "red-panther-commander"].includes(owner)) return { scale: "210%", shift: "0%", headroom: "0px" };
-  return { scale: "100%", shift: "0%", headroom: "0px" };
-}
+export {V100_PORTRAIT_LANDMARKS, v100PortraitFraming} from "./v100PortraitFraming.js";

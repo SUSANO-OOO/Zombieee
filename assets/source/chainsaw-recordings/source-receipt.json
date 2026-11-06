@@ -1,0 +1,20 @@
+{
+  "status": "source-candidate-only-not-runtime-adopted",
+  "title": "Chainsaw #2",
+  "creator": "Joseph SARDIN",
+  "source": "https://bigsoundbank.com/chainsaw-2-s0707.html",
+  "download": "https://bigsoundbank.com/UPLOAD/ogg/0707.ogg?v=d",
+  "license": "CC0-1.0",
+  "commercialUse": true,
+  "modification": true,
+  "redistribution": true,
+  "producerAuthorization": "2026-10-28 P03 instruction: free redistributable audio sources",
+  "originalFormat": "Ogg as offered in public audio player; not a lossless WAV master",
+  "file": "assets/source/chainsaw-recordings/chainsaw-0707.ogg",
+  "bytes": 3720365,
+  "sha256": "f3baeac45d5d2dbd0f6a415e262aa849d9779f314a9c1679318f9eb1cdb6a49b",
+  "sourcePageSha256": "cdd257d3e11b0a878c16efc9963a2e1f94f76d835bddb9b6e856ef5544d50f5b",
+  "subjectiveListening": "not performed",
+  "runtimeAssetCount": 0,
+  "note": "WAV form returned a timed download HTML page, preserved as chainsaw-0707-download. Used the openly available licensed Ogg instead. No login, paid service, runtime replacement, or backend change."
+}

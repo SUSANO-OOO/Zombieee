@@ -1,0 +1,49 @@
+{
+  "method": "built-in image_gen",
+  "variants": [
+    {
+      "kind": "raider",
+      "expression": "determined",
+      "args": {
+        "referenced_image_paths": [
+          "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028\\assets\\source\\quality-20261028\\identity\\raider-master-r4.png"
+        ],
+        "transparent_background": true,
+        "prompt": "Edit this exact established fictional adult character raider. Keep precisely the same person and complete full-body framing, camera, image dimensions, pose, body silhouette, head position, her individual athletic adult face, short tousled light-brown hair, navy sleeveless work suit and its exact neckline/coverage, tan harness, hearing protectors, gloves, belt-fed light machine gun and ammunition box, knee pads and boots. Change ONLY the facial expression to quiet focused determination, firm closed mouth. Preserve the original eye size and spacing, eyebrows, nose, lips, jaw, age, realistic matte skin and subtle painted finish. Do not reposition the figure or any equipment, change clothing coverage, crop the feet or weapon, or make a collage/sheet. One full-body expression variant. Preserve genuine transparent alpha in empty space, around the hair and between the limbs/equipment. No visible backdrop, floor, gradient, text or border."
+      },
+      "status": "Generation rejected by service; no output produced, no retry. Existing r4 master reused for runtime warm/determined.",
+      "failureRecord": "raider-determined-r6-failure.json"
+    },
+    {
+      "kind": "raider",
+      "expression": "alarm",
+      "args": {
+        "referenced_image_paths": [
+          "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028\\assets\\source\\quality-20261028\\identity\\raider-master-r4.png"
+        ],
+        "transparent_background": true,
+        "prompt": "Edit this exact established fictional adult character raider. Keep precisely the same person and complete full-body framing, camera, image dimensions, pose, body silhouette, head position, her individual athletic adult face, short tousled light-brown hair, navy sleeveless work suit and its exact neckline/coverage, tan harness, hearing protectors, gloves, belt-fed light machine gun and ammunition box, knee pads and boots. Change ONLY the facial expression to restrained surprise and concern, eyebrows subtly raised and lips slightly parted. Preserve the original eye size and spacing, eyebrows, nose, lips, jaw, age, realistic matte skin and subtle painted finish. Do not reposition the figure or any equipment, change clothing coverage, crop the feet or weapon, or make a collage/sheet. One full-body expression variant. Preserve genuine transparent alpha in empty space, around the hair and between the limbs/equipment. No visible backdrop, floor, gradient, text or border."
+      },
+      "output": "raider-alarm-r6.png",
+      "outputSha256": "6fc71277502f49e8ec19aebe83eff6861365cb9a6dd60bbc387f96aea85a35ec",
+      "outputBytes": 1972219,
+      "status": "Generated and connected to local dialogue candidate; Producer visual acceptance open."
+    },
+    {
+      "kind": "raider",
+      "expression": "grief",
+      "args": {
+        "referenced_image_paths": [
+          "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028\\assets\\source\\quality-20261028\\identity\\raider-master-r4.png"
+        ],
+        "transparent_background": true,
+        "prompt": "Edit this exact established fictional adult character raider. Keep precisely the same person and complete full-body framing, camera, image dimensions, pose, body silhouette, head position, her individual athletic adult face, short tousled light-brown hair, navy sleeveless work suit and its exact neckline/coverage, tan harness, hearing protectors, gloves, belt-fed light machine gun and ammunition box, knee pads and boots. Change ONLY the facial expression to subdued sadness, gaze subtly lowered and a relaxed closed mouth. Preserve the original eye size and spacing, eyebrows, nose, lips, jaw, age, realistic matte skin and subtle painted finish. Do not reposition the figure or any equipment, change clothing coverage, crop the feet or weapon, or make a collage/sheet. One full-body expression variant. Preserve genuine transparent alpha in empty space, around the hair and between the limbs/equipment. No visible backdrop, floor, gradient, text or border."
+      },
+      "output": "raider-grief-r6.png",
+      "outputSha256": "ae168377d5d92dd6fd4e8e6f65304cb723139812bb261e1bb531a5ea3b9caf27",
+      "outputBytes": 1981788,
+      "status": "Generated and connected to local dialogue candidate; Producer visual acceptance open."
+    }
+  ],
+  "status": "Two expression variants succeeded; determined failed. Three distinct source images cover four runtime states."
+}

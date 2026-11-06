@@ -29,6 +29,7 @@
 .v100-shell .battle-controls-zone .audio-unlock-inline small { font-size: 10px; white-space: nowrap; }
 .v100-shell .manual-ability-ready:is(:disabled,[aria-disabled="true"]) { opacity: 1; filter: none; }
 .v100-shell .v100-boss-telegraph-warning { white-space: normal; }
+.v100-shell .game-frame:not([data-battle-hud-layout="mobile"]) .v100-boss-telegraph-warning { top:74px; width:min(440px,45%); min-height:32px; font-size:14px; }
 .v100-shell .v100-targeting-guide { position: absolute; z-index: 13; left: 50%; bottom: calc(var(--battle-hud-bottom-height, max(96px, 25.5%)) + var(--battle-hud-bottom-inset, var(--app-viewport-safe-bottom, 0px)) + 8px); transform: translateX(-50%); width: min(400px, 70%); padding: 6px 10px; border: 1px solid #edc477; border-radius: 4px; background: #18271df2; color: #ffe6af; font: 700 14px/1.3 var(--v100-display-font); text-align: center; pointer-events: none; }
 .v100-shell .v100-targeting-guide span { display: block; margin-top: 2px; color: #d5dfd0; font-size: 12px; font-weight: 500; }
 @media (max-height: 420px) and (orientation: landscape) {
@@ -88,3 +89,80 @@
 .v100-shell .game-frame[data-battle-hud-layout="mobile"] .resource > span,
 .v100-shell .game-frame[data-battle-hud-layout="mobile"] .resource small { font-size: 14px; letter-spacing: 0; line-height: 1; }
 .v100-shell .game-frame[data-battle-hud-layout="mobile"] .resource strong { font-family: var(--v100-numeric-font); }
+
+/* Keep the status within its own column and preserve real 44px controls. */
+.v100-shell .game-frame .battle-controls-zone .phase-block { transform: none; }
+.v100-shell .game-frame .battle-controls-zone .icon-btn {
+ flex: 0 0 44px;
+ width: 44px;
+ height: 44px;
+ min-width: 44px;
+ min-height: 44px;
+}
+.v100-shell .game-frame .battle-brand-zone {
+ grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+.v100-shell .game-frame .brand-block b {
+ white-space: normal;
+ overflow-wrap: anywhere;
+ line-height: 1.6;
+}
+/* Narrow windows have room for two distinct rows, not three overlapping zones.
+   Supported landscape-phone rectangles (640px and above) stay unchanged. */
+@media (orientation: landscape) and (max-width: 639px) {
+ .v100-shell .game-frame .top-hud {
+  height: calc(82px + var(--app-viewport-safe-top));
+  min-height: calc(82px + var(--app-viewport-safe-top));
+  grid-template-columns: minmax(0, 37fr) minmax(0, 63fr);
+  grid-template-rows: 50px 32px;
+ }
+ .v100-shell .game-frame .battle-brand-zone {
+  grid-column: 1; grid-row: 1;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: center; gap: 0; padding: 1px 4px;
+ }
+ .v100-shell .game-frame .brand-block b { font-size: 14px; line-height: 1.45; }
+ .v100-shell .game-frame .battle-brand-zone .crawler-health { padding: 1px 3px; }
+ .v100-shell .game-frame .crawler-health div { display: flex; gap: 3px; }
+ .v100-shell .game-frame .crawler-health div span { display: none; }
+ .v100-shell .game-frame .crawler-health i { margin-top: 2px; height: 4px; }
+ .v100-shell .game-frame .battle-controls-zone {
+  grid-column: 2; grid-row: 1; gap: 2px; padding: 3px 2px;
+ }
+ .v100-shell .game-frame .battle-controls-zone .phase-block {
+  display: flex; flex-direction: column; justify-content: center; height: 44px;
+ }
+ .v100-shell .game-frame .phase-block small,
+ .v100-shell .game-frame .phase-block em { font-size: 12px; line-height: 1; }
+ .v100-shell .game-frame .phase-block strong { padding: 0 2px; font-size: 14px; line-height: 1.15; }
+ .v100-shell .game-frame .top-hud > .battle-message-stack {
+  grid-column: 1 / -1; grid-row: 2; min-height: 0; height: 32px;
+  padding: 1px 4px; gap: 0;
+ }
+ .v100-shell .game-frame .battle-banner { padding: 2px 4px; line-height: 1.25; }
+ .v100-shell .game-frame .barrier-health { top: calc(86px + var(--app-viewport-safe-top)); }
+}
+
+/* Paused tactical inspection stays outside the live battlefield and its hit boxes. */
+.manual-tactics { margin-top:10px; border:1px solid #796445; background:#151a1c; text-align:left; color:#eee1c9; }
+.manual-tactics > summary { display:flex; align-items:center; justify-content:space-between; min-height:44px; padding:8px 12px; cursor:pointer; font:800 14px/1.4 sans-serif; list-style:none; }
+.manual-tactics > summary::before { content:'＋'; margin-right:8px; color:#e8b766; }
+.manual-tactics[open] > summary::before { content:'−'; }
+.manual-tactics > summary > span { margin-left:auto; font-size:12px; color:#c4b08c; }
+.manual-tactics > summary:focus-visible { outline:2px solid #f4c975; outline-offset:-3px; }
+.manual-tactics p { margin:7px 0; font:500 12px/1.6 sans-serif; letter-spacing:normal; overflow-wrap:anywhere; }
+.manual-tactics > p { margin:8px 12px; }
+.manual-tactics-roster { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; padding:0 10px 10px; }
+.manual-tactics article { min-width:0; border:1px solid #4e4b40; border-left:3px solid #9c7850; background:#222626; padding:10px; }
+.manual-tactics header { display:flex; flex-wrap:wrap; gap:6px; align-items:flex-start; justify-content:space-between; }
+.manual-tactics h3 { margin:0; font:800 14px/1.4 sans-serif; color:#f3dfb5; }
+.manual-tactics h3 > span { display:block; font-size:12px; color:#d4bb8e; }
+.manual-tactics header > b { padding:3px 6px; background:#363831; color:#ccc5b6; font:700 11px/1.4 sans-serif; }
+.manual-tactics header > b.ready { background:#314b3b; color:#d4efc3; }
+.manual-tactics .manual-tactics-target { color:#f4cb7d; font-weight:700; }
+.manual-tactics .manual-tactics-use { padding-top:7px; border-top:1px solid #4e4b40; color:#d6d5ca; }
+.manual-tactics-use strong { display:block; color:#bda881; font-size:11px; }
+@media(max-width:600px) { .manual-tactics-roster { grid-template-columns:1fr; } }
+
+.pause-panel:has(.manual-tactics[open]) { scroll-padding-top:58px; }
+.pause-panel:has(.manual-tactics[open]) .pause-actions { position:sticky; top:0; z-index:3; background:#191917; box-shadow:0 5px 8px #111; }

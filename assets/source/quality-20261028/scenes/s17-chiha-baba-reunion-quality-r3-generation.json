@@ -1,0 +1,26 @@
+{
+  "name": "s17-chiha-baba-reunion-quality-r3",
+  "args": {
+    "referenced_image_paths": [
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\scenes\\s17-chiha-baba-reunion-quality-r2.png",
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\scenes\\references\\babayaga-face-model-r1.png"
+    ],
+    "transparent_background": false,
+    "prompt": "This is a precise revision of the EXISTING GENERATED GAME SCENE in reference 1. Keep the same character identities, ages, facial proportions, outfits, lighting and continuous gritty semi-realistic painterly game style. Do not beautify into strangers, substitute people, add people, add labels, flatten faces or turn into an anime drawing. One very wide 3:1 panoramic illustration, opaque background. Composition correction ONLY. The previous picture clips the top of the man's hair. Pull the camera back approximately 10 percent and put BOTH COMPLETE HAIR CROWNS clearly 40–50 pixels below the top edge of a 2172x724 canvas. Add real room space above them, no border or blank strip. Do not enlarge the heads. Preserve the current man's face EXACTLY; reference 2 is an unaltered crop of his locked generated model, only to supply missing hair. Keep the same woman, their embrace, shoulder/arm contact and grounded room. Both waist-up figures still read large and central. Keep the existing hands and lower framing visible."
+  },
+  "stage": "candidate, not selected",
+  "primaryReferencePolicy": "Existing generated models are primary; original art/photos check identity drift.",
+  "generatedOriginal": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-e7cb0f5e-496e-45c8-aafc-3e425a54871b.png",
+  "references": [
+    {
+      "path": "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\scenes\\s17-chiha-baba-reunion-quality-r2.png",
+      "sha256": "b05a0a708ed56cb3e72af7886b6d175d64ebededddceb05efcd2eff0d915c243",
+      "bytes": 2547570
+    },
+    {
+      "path": "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\scenes\\references\\babayaga-face-model-r1.png",
+      "sha256": "e90faa1952a56855ef5a6ec0f4612b2d4b43a07e076c9b0b5b6086f3d96094e3",
+      "bytes": 953876
+    }
+  ]
+}

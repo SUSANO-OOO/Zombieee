@@ -1,0 +1,11 @@
+{
+  "method": "built-in image_gen",
+  "prompt": "Use case: inpainting / production 2D animation underpainting. Edit the supplied Mizuchi combat-model image. Preserve exactly the same canvas dimensions, framing, alpha silhouette placement, face/hair, purple jacket and trousers, belt pouch, black high-neck undershirt and twin-filter respirator at the neck, black boots and leg pose. Remove ONLY the rifle and BOTH arms/hands, including the yellow glove, leaving the torso and waist unobstructed. Reconstruct the purple jacket front, black undershirt, belt and pants naturally where the arms and rifle hid them. End the sleeve openings cleanly at the shoulders; no arms hanging, no detached parts, no replacement weapon. This is an UNDERPAINT for animated arms to be drawn over, not a new pose or redesign. Keep every other visible pixel as close as possible to original, especially head and legs. Transparent background, no shadows, no scene, no labels.",
+  "input": "combat-model-r1.png",
+  "output": "body-underpainting-r1.png",
+  "creator": "OpenAI built-in image_gen under Producer direction",
+  "license": "Generated project derivative; no third-party stock license. Formal rights review remains open before final adoption.",
+  "rightsScope": "No new purchase, third-party license or external contract. Commercial use, modification and redistribution remain subject to existing source rights and final review.",
+  "producerApproval": "User authorizes full-character style remake and actual-game integration. This specific candidate is not human accepted.",
+  "status": "Generated hidden-body underpaint; not motion accepted."
+}

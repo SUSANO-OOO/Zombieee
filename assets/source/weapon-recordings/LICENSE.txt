@@ -1,0 +1,22 @@
+The Free Firearm Sound Library
+Recorded by Ben Jaszczak, Brian Nelson, Kevin Heras, and Matthew Nanney.
+CC0 1.0 Universal (commercial use, modification and redistribution permitted).
+https://creativecommons.org/publicdomain/zero/1.0/
+Source and license checked 2026-10-28:
+https://opengameart.org/content/the-free-firearm-sound-library
+Archive: https://opengameart.org/sites/default/files/Prepared%20SFX%20Library.7z
+
+Selected original near-field stereo recordings from the archive's master sheet:
+D_32P.wav: AR-15 / M4, semi automatic, 5.56x45, individual shots.
+C_28P.wav: AK-47, 7.62x39, individual shots.
+G_31P.wav: Carl Gustav M45 / Swedish K, 9mm, individual shots.
+X_39P.wav: Walther PPQ, striker handgun, 9mm, individual shots.
+The game uses these as authored weapon families, not exact real-world model claims.
+Runtime derivatives: selected distinct discharges, mono downmix, trimmed lead-in,
+gentle frequency filtering, bounded transient-preserving levels, faded tails.
+A/B comparison clips attenuate the prior recording to match active-signal RMS;
+that numeric normalization is not a subjective listening-quality acceptance.
+No pitch shift, synthetic shot or additional burst is introduced.
+MP3 is the preferred mobile format; Ogg retains the existing browser fallback.
+Producer authorization: 2026-10-28 P03 permits creating and applying licensed SE.
+This records authorization to implement, not subjective audio-quality acceptance.

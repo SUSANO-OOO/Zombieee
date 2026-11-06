@@ -1,0 +1,75 @@
+{
+  "generator": "scripts/build-quality-support-portraits.mjs",
+  "canonical": {
+    "path": "public/art/v070/characters/reference/tatara-base-r8.png",
+    "sha256": "c297171a498cd8d05adbf377d26d1bb47fb89a9f19ac4aa69d34f4e3b36e84a1"
+  },
+  "inputs": [
+    {
+      "expression": "warm",
+      "path": "assets/source/quality-20261028/identity/tatara-master-r4.png",
+      "sha256": "dc28b9b8cedb6b96fe14c5003f510466056baf06ea172cceccc83727a08d2def",
+      "width": 1024,
+      "height": 1536
+    },
+    {
+      "expression": "determined",
+      "path": "assets/source/quality-20261028/identity/tatara-determined-r6.png",
+      "sha256": "537fc28104c768ea73044a7725341fac4418904c3cf422c8107d43510f4666ec",
+      "width": 1024,
+      "height": 1536
+    },
+    {
+      "expression": "alarm",
+      "path": "assets/source/quality-20261028/identity/tatara-alarm-r6.png",
+      "sha256": "1c8880d528b01dbd4434602bfc5d24981c6047438b13f8e7ceefacaaf956d750",
+      "width": 1024,
+      "height": 1536
+    },
+    {
+      "expression": "grief",
+      "path": "assets/source/quality-20261028/identity/tatara-grief-r6.png",
+      "sha256": "c947631a4d93d543be8986b5d0b6150e8908c169eb250232b5585fcce93fd307",
+      "width": 1024,
+      "height": 1536
+    }
+  ],
+  "crop": {
+    "left": 330,
+    "top": 220,
+    "width": 495,
+    "height": 660
+  },
+  "outputs": [
+    {
+      "path": "public/art/v100/portraits/tatara-warm-quality-r1.webp",
+      "sha256": "108835cab0f8261192c2fa395f7595a0d1d042e74215c6b04757d7fa2f52d178",
+      "bytes": 103528
+    },
+    {
+      "path": "public/art/v100/portraits/tatara-formation-card-quality-r1.webp",
+      "sha256": "b17553a9a94157309e8867b18b66785096e1d1d0d51d05651addafdfc16247b4",
+      "bytes": 75596
+    },
+    {
+      "path": "public/art/v100/portraits/tatara-determined-quality-r1.webp",
+      "sha256": "2ce16985ef16d5e64cf8da789735dc36a63f7e01142473afbca6a4b66d228d5f",
+      "bytes": 100366
+    },
+    {
+      "path": "public/art/v100/portraits/tatara-alarm-quality-r1.webp",
+      "sha256": "ac0dbaeab2c0a73818ee5926f7889548ab59208b9b1dcf15a018c83c28571b8f",
+      "bytes": 99300
+    },
+    {
+      "path": "public/art/v100/portraits/tatara-grief-quality-r1.webp",
+      "sha256": "5981e9f82a21a7f99218aa18b20c63ad01a777e8b20326698a62a40fb7625236",
+      "bytes": 99320
+    }
+  ],
+  "runtimeAssetCount": 5,
+  "logicalBytes": 478110,
+  "distinctBytes": 478110,
+  "scope": "Local dialogue and card candidate. Battle, dedicated scenes and credits are not replaced by this builder.",
+  "approval": "Producer requested the redesign; final visual acceptance and integration remain open."
+}

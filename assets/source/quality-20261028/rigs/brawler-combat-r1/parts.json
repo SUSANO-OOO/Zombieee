@@ -1,0 +1,1632 @@
+{
+  "schema": "zombieee-authored-combat-parts/1",
+  "kind": "brawler",
+  "status": "candidate-not-motion-or-producer-accepted",
+  "width": 480,
+  "height": 448,
+  "paintStyle": "source-pixel-combat-model",
+  "sourceSha256": "f0b9801dbe690e55ed31c11cdd24dccdcea8f397f1b5834787e86ca4740a6bee",
+  "sheetSha256": "4a536a4ef2f6ee5a04daa4f8671506c9378a69d16937870dbae6b1d2415f7f0d",
+  "modelSource": "assets/source/quality-20261028/rigs/brawler-combat-r1/combat-model-r2.png",
+  "parts": [
+    {
+      "name": "far-upper-arm",
+      "bone": "arm-1-upper",
+      "file": "far-upper-arm.png",
+      "sha256": "044f898541f2ca8da97b9c0a3885f86ac99cc691097acc872d7be8abd9a1cfcc",
+      "source": "model",
+      "masterPolygon": [
+        [
+          579,
+          309
+        ],
+        [
+          617,
+          315
+        ],
+        [
+          644,
+          340
+        ],
+        [
+          670,
+          380
+        ],
+        [
+          690,
+          417
+        ],
+        [
+          709,
+          439
+        ],
+        [
+          723,
+          463
+        ],
+        [
+          741,
+          502
+        ],
+        [
+          737,
+          529
+        ],
+        [
+          716,
+          550
+        ],
+        [
+          683,
+          560
+        ],
+        [
+          648,
+          541
+        ],
+        [
+          621,
+          515
+        ],
+        [
+          605,
+          485
+        ],
+        [
+          582,
+          448
+        ],
+        [
+          567,
+          391
+        ]
+      ]
+    },
+    {
+      "name": "far-forearm",
+      "bone": "arm-1-lower",
+      "file": "far-forearm.png",
+      "sha256": "4ea2417d3430fda0ac01b85012f480dc8bc17a64f56632570655de30bf23f503",
+      "source": "model",
+      "masterPolygon": [
+        [
+          680,
+          468
+        ],
+        [
+          727,
+          455
+        ],
+        [
+          763,
+          436
+        ],
+        [
+          790,
+          409
+        ],
+        [
+          806,
+          391
+        ],
+        [
+          829,
+          399
+        ],
+        [
+          841,
+          421
+        ],
+        [
+          833,
+          449
+        ],
+        [
+          808,
+          478
+        ],
+        [
+          773,
+          510
+        ],
+        [
+          742,
+          539
+        ],
+        [
+          718,
+          555
+        ],
+        [
+          692,
+          544
+        ],
+        [
+          676,
+          523
+        ]
+      ]
+    },
+    {
+      "name": "far-thigh",
+      "bone": "leg-0-upper",
+      "file": "far-thigh.png",
+      "sha256": "860fcd66be18aab2704dbe8651172dde3878219498f80c9b57be62346f0b7c15",
+      "source": "model",
+      "masterPolygon": [
+        [
+          514,
+          738
+        ],
+        [
+          570,
+          744
+        ],
+        [
+          641,
+          748
+        ],
+        [
+          675,
+          799
+        ],
+        [
+          700,
+          859
+        ],
+        [
+          728,
+          935
+        ],
+        [
+          736,
+          976
+        ],
+        [
+          725,
+          1030
+        ],
+        [
+          702,
+          1059
+        ],
+        [
+          663,
+          1067
+        ],
+        [
+          627,
+          1046
+        ],
+        [
+          609,
+          1007
+        ],
+        [
+          580,
+          976
+        ],
+        [
+          552,
+          943
+        ],
+        [
+          527,
+          897
+        ],
+        [
+          507,
+          845
+        ]
+      ]
+    },
+    {
+      "name": "far-shin",
+      "bone": "leg-0-lower",
+      "file": "far-shin.png",
+      "sha256": "ea4e76d90bb38cd89020d5417e26579be9394bbae642f1809f95404abb44147d",
+      "source": "model",
+      "masterPolygon": [
+        [
+          636,
+          1009
+        ],
+        [
+          647,
+          991
+        ],
+        [
+          680,
+          982
+        ],
+        [
+          711,
+          994
+        ],
+        [
+          727,
+          1017
+        ],
+        [
+          731,
+          1054
+        ],
+        [
+          728,
+          1115
+        ],
+        [
+          722,
+          1172
+        ],
+        [
+          724,
+          1232
+        ],
+        [
+          728,
+          1290
+        ],
+        [
+          727,
+          1339
+        ],
+        [
+          701,
+          1368
+        ],
+        [
+          659,
+          1370
+        ],
+        [
+          634,
+          1346
+        ],
+        [
+          624,
+          1291
+        ],
+        [
+          614,
+          1235
+        ],
+        [
+          604,
+          1170
+        ],
+        [
+          597,
+          1118
+        ],
+        [
+          607,
+          1064
+        ]
+      ]
+    },
+    {
+      "name": "far-boot",
+      "bone": "leg-0-foot",
+      "file": "far-boot.png",
+      "sha256": "393eaaf9fe8002394e980d9e650eb008a8e9754c1252af0d062144394c561b5f",
+      "source": "model",
+      "masterPolygon": [
+        [
+          625,
+          1311
+        ],
+        [
+          648,
+          1316
+        ],
+        [
+          670,
+          1334
+        ],
+        [
+          697,
+          1326
+        ],
+        [
+          715,
+          1304
+        ],
+        [
+          737,
+          1296
+        ],
+        [
+          759,
+          1326
+        ],
+        [
+          795,
+          1351
+        ],
+        [
+          835,
+          1360
+        ],
+        [
+          871,
+          1375
+        ],
+        [
+          893,
+          1397
+        ],
+        [
+          894,
+          1422
+        ],
+        [
+          871,
+          1437
+        ],
+        [
+          815,
+          1440
+        ],
+        [
+          756,
+          1436
+        ],
+        [
+          700,
+          1432
+        ],
+        [
+          640,
+          1428
+        ],
+        [
+          602,
+          1417
+        ],
+        [
+          597,
+          1392
+        ],
+        [
+          611,
+          1350
+        ]
+      ]
+    },
+    {
+      "name": "near-thigh",
+      "bone": "leg-1-upper",
+      "file": "near-thigh.png",
+      "sha256": "e391417619c74ce29d90763262426701c3ecc1ff91c89c5f5cd5f11bdc936250",
+      "source": "model",
+      "masterPolygon": [
+        [
+          322,
+          733
+        ],
+        [
+          391,
+          731
+        ],
+        [
+          468,
+          740
+        ],
+        [
+          515,
+          763
+        ],
+        [
+          527,
+          817
+        ],
+        [
+          516,
+          877
+        ],
+        [
+          490,
+          938
+        ],
+        [
+          477,
+          1008
+        ],
+        [
+          436,
+          1009
+        ],
+        [
+          416,
+          1040
+        ],
+        [
+          392,
+          1061
+        ],
+        [
+          365,
+          1076
+        ],
+        [
+          336,
+          1070
+        ],
+        [
+          311,
+          1051
+        ],
+        [
+          295,
+          1023
+        ],
+        [
+          298,
+          980
+        ],
+        [
+          307,
+          925
+        ],
+        [
+          311,
+          852
+        ]
+      ]
+    },
+    {
+      "name": "near-shin",
+      "bone": "leg-1-lower",
+      "file": "near-shin.png",
+      "sha256": "47760e54148ecbc8a8ec529444db67ef41ed6f284a2f765a61a96fc4074122c6",
+      "source": "model",
+      "masterPolygon": [
+        [
+          315,
+          1026
+        ],
+        [
+          328,
+          1006
+        ],
+        [
+          353,
+          997
+        ],
+        [
+          379,
+          1005
+        ],
+        [
+          397,
+          1024
+        ],
+        [
+          403,
+          1047
+        ],
+        [
+          390,
+          1081
+        ],
+        [
+          373,
+          1124
+        ],
+        [
+          352,
+          1178
+        ],
+        [
+          331,
+          1236
+        ],
+        [
+          310,
+          1296
+        ],
+        [
+          302,
+          1342
+        ],
+        [
+          291,
+          1365
+        ],
+        [
+          268,
+          1384
+        ],
+        [
+          238,
+          1386
+        ],
+        [
+          212,
+          1369
+        ],
+        [
+          214,
+          1330
+        ],
+        [
+          218,
+          1267
+        ],
+        [
+          221,
+          1206
+        ],
+        [
+          224,
+          1147
+        ],
+        [
+          237,
+          1095
+        ],
+        [
+          274,
+          1056
+        ]
+      ]
+    },
+    {
+      "name": "near-boot",
+      "bone": "leg-1-foot",
+      "file": "near-boot.png",
+      "sha256": "fe16359e04f3fa9548075db9980770d44da4b3926e07ac637bdaa67da367446d",
+      "source": "model",
+      "masterPolygon": [
+        [
+          205,
+          1330
+        ],
+        [
+          224,
+          1329
+        ],
+        [
+          246,
+          1344
+        ],
+        [
+          270,
+          1336
+        ],
+        [
+          285,
+          1320
+        ],
+        [
+          307,
+          1317
+        ],
+        [
+          324,
+          1335
+        ],
+        [
+          327,
+          1360
+        ],
+        [
+          348,
+          1373
+        ],
+        [
+          378,
+          1386
+        ],
+        [
+          414,
+          1403
+        ],
+        [
+          434,
+          1430
+        ],
+        [
+          436,
+          1455
+        ],
+        [
+          418,
+          1466
+        ],
+        [
+          366,
+          1470
+        ],
+        [
+          310,
+          1465
+        ],
+        [
+          265,
+          1460
+        ],
+        [
+          215,
+          1451
+        ],
+        [
+          170,
+          1436
+        ],
+        [
+          171,
+          1413
+        ],
+        [
+          184,
+          1374
+        ]
+      ]
+    },
+    {
+      "name": "pelvis",
+      "bone": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "f78268fcc8985c7c7bbc85e4071225929556f10ac23bf8e2e4fb08f111281c8e",
+      "source": "model",
+      "masterPolygon": [
+        [
+          321,
+          707
+        ],
+        [
+          410,
+          712
+        ],
+        [
+          496,
+          725
+        ],
+        [
+          572,
+          732
+        ],
+        [
+          646,
+          724
+        ],
+        [
+          671,
+          771
+        ],
+        [
+          686,
+          820
+        ],
+        [
+          650,
+          859
+        ],
+        [
+          590,
+          881
+        ],
+        [
+          534,
+          870
+        ],
+        [
+          492,
+          859
+        ],
+        [
+          436,
+          881
+        ],
+        [
+          373,
+          878
+        ],
+        [
+          310,
+          863
+        ],
+        [
+          303,
+          820
+        ]
+      ]
+    },
+    {
+      "name": "torso",
+      "bone": "spine",
+      "file": "torso.png",
+      "sha256": "43e14a2bca2383d1eebe0259590a2186c3a6f9876748510fda9b6367c37156a2",
+      "source": "under",
+      "masterPolygon": [
+        [
+          400,
+          245
+        ],
+        [
+          445,
+          255
+        ],
+        [
+          486,
+          288
+        ],
+        [
+          535,
+          310
+        ],
+        [
+          564,
+          291
+        ],
+        [
+          609,
+          309
+        ],
+        [
+          636,
+          346
+        ],
+        [
+          635,
+          395
+        ],
+        [
+          621,
+          457
+        ],
+        [
+          609,
+          525
+        ],
+        [
+          612,
+          577
+        ],
+        [
+          622,
+          637
+        ],
+        [
+          636,
+          692
+        ],
+        [
+          648,
+          747
+        ],
+        [
+          612,
+          762
+        ],
+        [
+          549,
+          761
+        ],
+        [
+          488,
+          749
+        ],
+        [
+          414,
+          740
+        ],
+        [
+          358,
+          737
+        ],
+        [
+          315,
+          754
+        ],
+        [
+          313,
+          710
+        ],
+        [
+          327,
+          656
+        ],
+        [
+          330,
+          606
+        ],
+        [
+          313,
+          546
+        ],
+        [
+          302,
+          478
+        ],
+        [
+          308,
+          428
+        ],
+        [
+          320,
+          377
+        ],
+        [
+          315,
+          333
+        ],
+        [
+          347,
+          290
+        ]
+      ]
+    },
+    {
+      "name": "head",
+      "bone": "head",
+      "file": "head.png",
+      "sha256": "6336055f5646906463256af09c9e7e493bad199dc83963dfd8c887b158324dd5",
+      "source": "model",
+      "masterPolygon": [
+        [
+          401,
+          65
+        ],
+        [
+          430,
+          28
+        ],
+        [
+          475,
+          17
+        ],
+        [
+          526,
+          19
+        ],
+        [
+          577,
+          42
+        ],
+        [
+          601,
+          73
+        ],
+        [
+          612,
+          112
+        ],
+        [
+          610,
+          151
+        ],
+        [
+          620,
+          177
+        ],
+        [
+          609,
+          192
+        ],
+        [
+          607,
+          212
+        ],
+        [
+          604,
+          234
+        ],
+        [
+          584,
+          262
+        ],
+        [
+          547,
+          267
+        ],
+        [
+          532,
+          308
+        ],
+        [
+          486,
+          303
+        ],
+        [
+          447,
+          282
+        ],
+        [
+          410,
+          253
+        ],
+        [
+          427,
+          216
+        ],
+        [
+          411,
+          192
+        ],
+        [
+          400,
+          155
+        ],
+        [
+          392,
+          108
+        ]
+      ]
+    },
+    {
+      "name": "near-upper-arm",
+      "bone": "arm-0-upper",
+      "file": "near-upper-arm.png",
+      "sha256": "78a96d5c03718498fd16d1ce822fdc365d8c52b4bd9c1df719b03a49c2f5cc8c",
+      "source": "model",
+      "masterPolygon": [
+        [
+          302,
+          298
+        ],
+        [
+          337,
+          292
+        ],
+        [
+          372,
+          312
+        ],
+        [
+          399,
+          348
+        ],
+        [
+          418,
+          396
+        ],
+        [
+          418,
+          438
+        ],
+        [
+          415,
+          483
+        ],
+        [
+          415,
+          522
+        ],
+        [
+          400,
+          558
+        ],
+        [
+          380,
+          575
+        ],
+        [
+          355,
+          567
+        ],
+        [
+          329,
+          542
+        ],
+        [
+          309,
+          507
+        ],
+        [
+          290,
+          473
+        ],
+        [
+          279,
+          442
+        ],
+        [
+          269,
+          392
+        ],
+        [
+          264,
+          347
+        ],
+        [
+          278,
+          317
+        ]
+      ]
+    },
+    {
+      "name": "near-forearm",
+      "bone": "arm-0-lower",
+      "file": "near-forearm.png",
+      "sha256": "5e5cfc081e43314095aee4aa9e2f03f07bfbf4f8ca4d59e63a3e121f23f90fc7",
+      "source": "model",
+      "masterPolygon": [
+        [
+          350,
+          475
+        ],
+        [
+          390,
+          455
+        ],
+        [
+          426,
+          441
+        ],
+        [
+          469,
+          416
+        ],
+        [
+          504,
+          389
+        ],
+        [
+          532,
+          374
+        ],
+        [
+          554,
+          391
+        ],
+        [
+          566,
+          412
+        ],
+        [
+          548,
+          438
+        ],
+        [
+          512,
+          462
+        ],
+        [
+          480,
+          489
+        ],
+        [
+          444,
+          516
+        ],
+        [
+          402,
+          547
+        ],
+        [
+          378,
+          567
+        ],
+        [
+          355,
+          560
+        ],
+        [
+          340,
+          535
+        ],
+        [
+          337,
+          502
+        ]
+      ]
+    },
+    {
+      "name": "free-hand",
+      "bone": "arm-0-hand",
+      "file": "free-hand.png",
+      "sha256": "146b16877901715411e02875f23ab376028321fa96d4115a6f21ccc8327557e8",
+      "source": "model",
+      "masterPolygon": [
+        [
+          520,
+          370
+        ],
+        [
+          535,
+          346
+        ],
+        [
+          554,
+          321
+        ],
+        [
+          573,
+          314
+        ],
+        [
+          590,
+          324
+        ],
+        [
+          599,
+          341
+        ],
+        [
+          610,
+          354
+        ],
+        [
+          620,
+          379
+        ],
+        [
+          613,
+          399
+        ],
+        [
+          596,
+          410
+        ],
+        [
+          575,
+          420
+        ],
+        [
+          552,
+          423
+        ],
+        [
+          531,
+          408
+        ],
+        [
+          517,
+          391
+        ]
+      ]
+    },
+    {
+      "name": "weapon-and-hands",
+      "bone": "weapon-0",
+      "file": "weapon-and-hands.png",
+      "sha256": "0ba04d0d36bd22ad488189acbc18d981dccbc04f2bdee4b2b81e867983054b57",
+      "source": "model",
+      "masterPolygon": [
+        [
+          793,
+          344
+        ],
+        [
+          806,
+          338
+        ],
+        [
+          818,
+          343
+        ],
+        [
+          816,
+          332
+        ],
+        [
+          837,
+          325
+        ],
+        [
+          861,
+          331
+        ],
+        [
+          871,
+          345
+        ],
+        [
+          875,
+          368
+        ],
+        [
+          875,
+          388
+        ],
+        [
+          862,
+          409
+        ],
+        [
+          842,
+          422
+        ],
+        [
+          826,
+          430
+        ],
+        [
+          804,
+          420
+        ],
+        [
+          793,
+          402
+        ],
+        [
+          789,
+          382
+        ],
+        [
+          785,
+          365
+        ]
+      ]
+    }
+  ],
+  "order": [
+    "far-upper-arm",
+    "far-forearm",
+    "far-thigh",
+    "far-shin",
+    "far-boot",
+    "near-thigh",
+    "near-shin",
+    "near-boot",
+    "pelvis",
+    "torso",
+    "head",
+    "near-upper-arm",
+    "near-forearm",
+    "free-hand",
+    "weapon-and-hands"
+  ],
+  "lowerLayers": [
+    "far-thigh",
+    "far-shin",
+    "far-boot",
+    "near-thigh",
+    "near-shin",
+    "near-boot",
+    "pelvis"
+  ],
+  "pelvisY": 220.5,
+  "upperFollowsPelvis": true,
+  "reserveBipedLanding": true,
+  "atlasPacking": "height-descending-shelves",
+  "atlasPartPadding": 3,
+  "identityBinding": {
+    "path": "/art/v100/portraits/paisen-identity-r2.webp",
+    "sourceSha256": "2abe752277e3c7947755b9af17c77d9e563233073ad428dcda8397106b3b2342",
+    "role": "Producer-photo identity master; battle derivative separately source-bound",
+    "battleReference": "assets/source/v177/paisen/battle-r8/identity-reference.png",
+    "bodyReference": "assets/source/v177/paisen/battle-reference-r2.png",
+    "modelSource": "assets/source/quality-20261028/identity/paisen-photo-master-r7.png",
+    "modelSha256": "c769eb81a096e9fb1747df0c4ab93452b2ad844fb37e21707d5ef51aec76de66",
+    "combatSource": "assets/source/quality-20261028/rigs/brawler-combat-r1/combat-model-r2.png",
+    "combatSha256": "f0b9801dbe690e55ed31c11cdd24dccdcea8f397f1b5834787e86ca4740a6bee"
+  },
+  "interpolationPivots": {
+    "spine": [
+      231.54166666666666,
+      220.5
+    ],
+    "head": [
+      231.54166666666666,
+      74.375
+    ],
+    "weapon-0": [
+      335.95833333333337,
+      106.45833333333334
+    ],
+    "arm-0-hand": [
+      259.25,
+      107.04166666666667
+    ]
+  },
+  "parentAttachments": {
+    "head": {
+      "parent": "spine",
+      "pivot": [
+        231.54166666666666,
+        74.375
+      ]
+    }
+  },
+  "referenceFrame": {
+    "width": 394,
+    "height": 757,
+    "scale": 0.8489795918367347,
+    "tx": 72.75102040816327,
+    "ty": -89.48163265306118
+  },
+  "motion": {
+    "walk": {
+      "spanPx": 70,
+      "liftPx": 10,
+      "stanceFraction": 0.6666666666666666,
+      "groundY": 425
+    },
+    "paintBounds": {
+      "x": 0,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    }
+  },
+  "muzzle": [
+    342.08333333333337,
+    105
+  ],
+  "weaponBone": "weapon-0",
+  "rig": {
+    "root": [
+      240,
+      432
+    ],
+    "pelvis": [
+      [
+        231.54166666666666,
+        220.5
+      ],
+      [
+        235,
+        183
+      ]
+    ],
+    "spine": [
+      [
+        231.54166666666666,
+        220.5
+      ],
+      [
+        231.54166666666666,
+        147.58333333333334
+      ]
+    ],
+    "head": [
+      [
+        231.54166666666666,
+        74.375
+      ],
+      [
+        234.45833333333334,
+        39.375
+      ]
+    ],
+    "legs": [
+      {
+        "hip": [
+          262.16666666666663,
+          243.83333333333334
+        ],
+        "knee": [
+          289.29166666666663,
+          296.625
+        ],
+        "ankle": [
+          288.125,
+          393.75
+        ],
+        "toe": [
+          338,
+          413.58333333333337
+        ],
+        "offset": 0,
+        "center": 268.5833333333333,
+        "paintedPaw": "far-boot",
+        "groundAnkleY": 401.75,
+        "paintedSoleY": 417
+      },
+      {
+        "hip": [
+          205,
+          245.00000000000003
+        ],
+        "knee": [
+          193.91666666666666,
+          302.1666666666667
+        ],
+        "ankle": [
+          165.91666666666666,
+          396.6666666666667
+        ],
+        "toe": [
+          206.45833333333331,
+          420.875
+        ],
+        "offset": 0.5,
+        "center": 192.75,
+        "paintedPaw": "near-boot",
+        "groundAnkleY": 396.6666666666667,
+        "paintedSoleY": 425
+      }
+    ],
+    "arms": [
+      {
+        "shoulder": [
+          188.08333333333331,
+          102.08333333333334
+        ],
+        "elbow": [
+          199.75,
+          150.79166666666669
+        ],
+        "wrist": [
+          247,
+          118.12500000000001
+        ],
+        "grip": [
+          259.25,
+          107.04166666666667
+        ]
+      },
+      {
+        "shoulder": [
+          269.75,
+          102.08333333333334
+        ],
+        "elbow": [
+          294.83333333333337,
+          148.75
+        ],
+        "wrist": [
+          326.0416666666667,
+          122.50000000000001
+        ],
+        "grip": [
+          335.95833333333337,
+          106.45833333333334
+        ]
+      }
+    ],
+    "firearm": false,
+    "weapons": [
+      {
+        "name": "weapon-0",
+        "a": [
+          335.95833333333337,
+          106.45833333333334
+        ],
+        "b": [
+          342.08333333333337,
+          105
+        ],
+        "armIndex": 1
+      }
+    ],
+    "attack": {
+      "style": "punch",
+      "windupEnd": 0.28,
+      "activeEnd": 0.55,
+      "aimAngle": 0,
+      "aimShift": [
+        31,
+        -58
+      ],
+      "recoilPx": 0,
+      "anticipationShift": [
+        -30,
+        -55
+      ],
+      "attackAngle": -0.12,
+      "anticipationAngle": 0.06,
+      "torsoAngle": 0.06,
+      "torsoAnticipation": -0.025,
+      "walkWeaponSwing": 5,
+      "walkWeaponShift": [
+        -5,
+        -6
+      ],
+      "freeHandAttackShift": [
+        15,
+        -78
+      ],
+      "freeHandAnticipation": [
+        5,
+        -68
+      ]
+    }
+  },
+  "armConstraints": [
+    {
+      "parentBone": "spine",
+      "upperBone": "arm-0-upper",
+      "lowerBone": "arm-0-lower",
+      "effectorBone": "arm-0-hand",
+      "bendSign": 1,
+      "shoulder": [
+        188.08333333333331,
+        102.08333333333334
+      ],
+      "elbow": [
+        199.75,
+        150.79166666666669
+      ],
+      "wrist": [
+        247,
+        118.12500000000001
+      ],
+      "grip": [
+        259.25,
+        107.04166666666667
+      ]
+    },
+    {
+      "parentBone": "spine",
+      "upperBone": "arm-1-upper",
+      "lowerBone": "arm-1-lower",
+      "effectorBone": "weapon-0",
+      "bendSign": 1,
+      "shoulder": [
+        269.75,
+        102.08333333333334
+      ],
+      "elbow": [
+        294.83333333333337,
+        148.75
+      ],
+      "wrist": [
+        326.0416666666667,
+        122.50000000000001
+      ],
+      "grip": [
+        335.95833333333337,
+        106.45833333333334
+      ]
+    }
+  ],
+  "legConstraints": [
+    {
+      "parentBone": "pelvis",
+      "parentUpper": false,
+      "upperBone": "leg-0-upper",
+      "lowerBone": "leg-0-lower",
+      "effectorBone": "leg-0-foot",
+      "bendSign": -1,
+      "hip": [
+        262.16666666666663,
+        243.83333333333334
+      ],
+      "knee": [
+        289.29166666666663,
+        296.625
+      ],
+      "ankle": [
+        288.125,
+        393.75
+      ]
+    },
+    {
+      "parentBone": "pelvis",
+      "parentUpper": false,
+      "upperBone": "leg-1-upper",
+      "lowerBone": "leg-1-lower",
+      "effectorBone": "leg-1-foot",
+      "bendSign": -1,
+      "hip": [
+        205,
+        245.00000000000003
+      ],
+      "knee": [
+        193.91666666666666,
+        302.1666666666667
+      ],
+      "ankle": [
+        165.91666666666666,
+        396.6666666666667
+      ]
+    }
+  ],
+  "sourceOperation": {
+    "body": "Complete adopted-model repaint, not a head-only replacement",
+    "underpainting": "assets/source/quality-20261028/rigs/brawler-combat-r1/body-underpainting-r1.png",
+    "underpaintingSha256": "4a536a4ef2f6ee5a04daa4f8671506c9378a69d16937870dbae6b1d2415f7f0d",
+    "hiddenBody": "Source-bound clothed torso beneath independently moving limbs",
+    "weapon": "Each bare fist belongs to its own arm; no held weapon",
+    "sourceToLogical": {
+      "source": [
+        1024,
+        1536
+      ],
+      "resized": [
+        480,
+        448
+      ],
+      "scale": 0.2916666666666667,
+      "tx": 90.66666666666666,
+      "ty": 0,
+      "aspectPreserved": true
+    },
+    "acceptance": false
+  }
+}

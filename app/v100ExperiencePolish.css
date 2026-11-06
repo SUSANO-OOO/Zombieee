@@ -28,6 +28,14 @@
 #v100-campaign .pwa-storage-inline button, #v100-campaign .pwa-storage-inline summary { min-height: 44px; font-size: 14px; }
 #v100-campaign .pwa-storage-inline summary { display: flex; align-items: center; cursor: pointer; }
 #v100-campaign .pwa-storage-inline dd { overflow-wrap: anywhere; font-size: 14px; }
+#v100-campaign .pwa-return-install-help { padding: 4px 12px; margin: 12px 0; border: 1px solid #6e806b; background: #18231d; }
+#v100-campaign .pwa-return-install-help p, #v100-campaign .pwa-return-install-help ol { font-size: 14px; line-height: 1.65; }
+#v100-campaign .pwa-return-install-help li { margin: 6px 0; }
+#v100-campaign .pwa-return-install-help[open] { margin: 0; }
+#v100-campaign .pwa-storage-inline:has(.pwa-return-install-help[open]) > h3 { display: none; }
+#v100-campaign .pwa-return-install-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+#v100-campaign .pwa-return-install-columns p, #v100-campaign .pwa-return-install-columns ol { margin: 0; }
+@media (max-width: 640px) { #v100-campaign .pwa-return-install-columns { grid-template-columns: 1fr; } }
 #v100-campaign .v100-briefing-person { display: grid; grid-template-columns: 38% 1fr; gap: 8px; flex: 1; min-height: 0; margin: 8px -8px -8px; background: linear-gradient(90deg, transparent, #0a1712c9 48%); }
 #v100-campaign .v100-briefing-person img { width: 100%; height: 100%; min-height: 0; object-fit: cover; object-position: center 12%; mask-image: linear-gradient(0deg, transparent, #000 12%); }
 #v100-campaign .v100-briefing-person > div { align-self: center; max-height: 100%; overflow-y: auto; overscroll-behavior: contain; padding: 4px 10px 4px 0; min-width: 0; }
@@ -50,4 +58,42 @@
 #v100-campaign .v100-checkpoint-reward { display: grid; gap: 4px; padding: 8px 12px; margin: 8px 0; color: #fff1cd; background: #1e3328; border-left: 3px solid #dfbd71; font-size: 14px; line-height: 1.4; }
 #v100-campaign .v100-checkpoint-reward small { color: #c8d1bd; font-size: 12px; }
 #v100-campaign .survival-upgrade-screen p, #v100-campaign .survival-upgrade-choices b { font-family: var(--v100-reading-font); font-size: 14px; line-height: 1.5; }
+
+@media (min-width: 600px) and (max-height: 480px) {
+  #v100-campaign .survival-upgrade-screen > section { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 4px 12px; padding: 10px; max-height: 100%; }
+  #v100-campaign .survival-upgrade-screen > section > small { grid-column: 1; grid-row: 1; font-size: 11px; }
+  #v100-campaign .survival-upgrade-screen h2 { grid-column: 1; grid-row: 2; margin: 0; font-size: 21px; line-height: 1.25; }
+  #v100-campaign .survival-upgrade-screen > section > p { grid-column: 1; grid-row: 3; margin: 0; font-size: 13px; line-height: 1.35; color: #ddd3c0; }
+  #v100-campaign .v100-checkpoint-reward { grid-column: 2; grid-row: 1 / 4; margin: 0; padding: 6px 9px; gap: 2px; font-size: 13px; }
+  #v100-campaign .survival-next-wave-preview { grid-column: 1 / -1; margin: 2px 0; padding: 5px 8px; }
+  #v100-campaign .survival-upgrade-choices { grid-column: 1 / -1; gap: 6px; }
+  #v100-campaign .survival-upgrade-choices button { min-height: 116px; padding: 8px; gap: 3px; }
+  #v100-campaign .survival-upgrade-choices small { font-size: 11px; color: #dfa77c; }
+  #v100-campaign .survival-upgrade-choices span, #v100-campaign .survival-upgrade-choices em { font-size: 12px; line-height: 1.3; }
+  #v100-campaign .survival-save-retry { grid-column: 1 / -1; }
+}
 @media (max-height: 400px) { #v100-campaign .v100-player-menu { gap: 6px; padding: 8px 12px; } #v100-campaign .v100-briefing-person { margin-top: 4px; } #v100-campaign .v100-briefing-person p { margin: 2px 0; font-size: 12px; line-height: 1.35; } }
+
+/* Settings describe the actual effect, with a full touch target for each choice. */
+#v100-campaign .v100-menu-quality { display:grid; grid-template-columns:auto minmax(0,1fr); gap:4px 8px; }
+#v100-campaign .v100-menu-quality select { width:100%; min-height:44px; margin:0; }
+#v100-campaign .v100-menu-quality small { grid-column:1 / -1; }
+#v100-campaign .v100-menu-choice { align-items:flex-start; gap:8px; }
+#v100-campaign .v100-menu-choice input { margin-top:5px; }
+#v100-campaign .v100-menu-option small { display:block; color:#c5c7b7; font-size:12px; line-height:1.4; font-weight:400; }
+#v100-campaign .v100-menu-choice span { min-width:0; }
+
+#v100-campaign .v100-menu-audio { grid-template-columns:minmax(0,1fr) minmax(144px,1.1fr); gap:6px; }
+#v100-campaign .v100-menu-audio > label:first-child { display:flex; align-items:center; gap:5px; min-height:44px; white-space:nowrap; }
+#v100-campaign .v100-menu-audio label.v100-menu-volume { display:grid; grid-template-columns:minmax(0,1fr) 38px; align-items:center; gap:5px; }
+#v100-campaign .v100-menu-volume output { grid-column:2; grid-row:1; justify-self:end; }
+#v100-campaign .v100-menu-volume input[type="range"] { grid-column:1; grid-row:1; min-width:0; }
+#v100-campaign .v100-menu-volume-label { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+
+/* Use the same readable controls in WebKit and Chromium. Native picker semantics remain. */
+#v100-campaign .v100-menu-quality select { appearance:none; -webkit-appearance:none; color-scheme:dark; color:#fff3d6; background-color:#14251e; border:1px solid #a7b28f; border-radius:3px; padding-right:30px; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='m3 5 4 4 4-4' fill='none' stroke='%23e7ba73' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-position:right 9px center; background-size:14px 14px; background-repeat:no-repeat; }
+#v100-campaign .v100-menu-quality option { color:#fff3d6; background:#14251e; }
+#v100-campaign .v100-player-menu input[type="checkbox"] { appearance:none; -webkit-appearance:none; flex:none; border:1px solid #bac3a1; border-radius:3px; background-color:#14251e; background-position:center; background-size:18px 18px; background-repeat:no-repeat; }
+#v100-campaign .v100-player-menu input[type="checkbox"]:checked { border-color:#e7ba73; background-color:#e7ba73; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 22'%3E%3Cpath d='m5 11 4 4 8-9' fill='none' stroke='%2316251e' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+#v100-campaign .v100-player-menu :is(input,select):focus-visible { outline:2px solid #f2cf84; outline-offset:3px; }
+@media (forced-colors:active) { #v100-campaign .v100-player-menu input[type="checkbox"], #v100-campaign .v100-menu-quality select { appearance:auto; -webkit-appearance:auto; background-image:none; } }

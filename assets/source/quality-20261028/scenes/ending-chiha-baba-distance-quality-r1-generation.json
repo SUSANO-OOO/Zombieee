@@ -1,0 +1,13 @@
+{
+  "tool": "built-in image_gen",
+  "referenced_image_paths": [
+    "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/scenes/references/babayaga-face-model-r1.png",
+    "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/chiha-master-r4.png",
+    "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/public/art/v100/story-r9/cuts/ending-chiha-baba-distance.webp"
+  ],
+  "transparent_background": false,
+  "prompt": "One VERY WIDE3:1 CINEMASCOPE PANORAMA, about3072x1024, NOT16:9/panels. IMAGE1 is an unaltered crop of BABAYAGA'S exact EXISTING GENERATED PRIMARY MODEL, same specific adult man/face/age/wavy black hair/white shirt/burgundy tie/black holster. IMAGE2 is CHIHA'S exact existing primary model, same adult woman/face/tied dark hair/headband/black coat/white frilled shirt. These two primary faces have priority over IMAGE3's older generic/anime man. IMAGE3 supplies the same restaurant-counter scene, gestures and props. Preserve the exact uneasy ending moment, NOT a happy reconciliation: Baba at LEFT has withdrawn his hand toward himself but remains seated; Chiha at RIGHT reaches tentatively toward him; there is a CLEAR SMALL AIR GAP between their hands, they do NOT touch or hold hands. Their troubled eyes and restrained expressions convey the unfinished relationship, no smiles at camera. Same physical proximity and adult proportions, connected elbows/wrists and natural empty hands. Same warm worn restaurant counter/interior, mugs/plates/food and practical lamps, not a new hospital/romance location. Recompose complete hair crowns/heads AND both separated hands at clearly readable size together within the shallow panoramic band, no clipped heads or missing hand gap. Photographic skin/hair/cloth/food/metal, restrained painterly atmosphere only; no anime faces/ink contours/plastic skin. No new actors, weapons, captions or changed ending. Non-graphic. Single finished3:1 scene.",
+  "output": "ending-chiha-baba-distance-quality-r1.png",
+  "statusAtGeneration": "Model-based story candidate; runtime selection, authored detail crops and native review pending.",
+  "generatedOriginal": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-a3ab34bf-f4c2-4c59-a38b-90b1626dce31.png"
+}

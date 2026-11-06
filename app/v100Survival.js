@@ -3,7 +3,7 @@ import { v100DiscoveredBosses } from './v100BossProgress.js';
 import { V100_BATTLE_ADAPTER, v100FormationCombatKinds, v100SupportSupplyFor } from './v100BattleAdapter.js';
 import { V100_STAGE_IDS, V100_UNITS, v100SupportFor } from './v100Registry.js';
 import { v100EquipmentFor, v100OpeningSupportGauge } from './v100Equipment.js';
-import { SURVIVAL_NORMAL_ENEMY_KINDS } from './survivalBattleRuntime.js';
+import { SURVIVAL_NORMAL_ENEMY_KINDS, survivalWaveSpawnPlan } from './survivalBattleRuntime.js';
 import { normalizeV100BattleReport } from './v100BattleReport.js';
 
 const kinds = V100_BATTLE_ADAPTER.BOSS_KIND_BY_V100_ID;
@@ -54,10 +54,29 @@ export function normalizeV100SurvivalProgress(raw, receipts, ownedUnitIds) {
   };
 }
 
+// Prepare the next five-wave block, including the previous wave's death art.
+// The existing asset readiness gate pauses combat while a changed plan loads.
+// Do not decode every discovered boss and every future specialist at once.
+export function v100SurvivalEnemyKinds(run) {
+  const kinds = new Set(SURVIVAL_NORMAL_ENEMY_KINDS);
+  const options = { bossPool: run.bossPool, lastBossKind: run.lastBossKind, strictBossPool: true };
+  if (run.lastBossKind) kinds.add(run.lastBossKind);
+  if (run.lastCompletedWave > 0) {
+    for (const kind of survivalWaveSpawnPlan(run.lastCompletedWave, options).units) {
+      if (!run.bossPool.includes(kind)) kinds.add(kind);
+    }
+  }
+  const first = run.lastCompletedWave + 1, last = Math.ceil(first / 5) * 5;
+  for (let wave = first; wave <= last; wave++) {
+    for (const kind of survivalWaveSpawnPlan(wave, options).units) kinds.add(kind);
+  }
+  return [...kinds];
+}
+
 export function v100SurvivalSession(active, settings) {
   const run = active.run;
   return { stageId: V100_STAGE_IDS[0], resultId: run.runId, displayName: 'サバイバル',
-    formationKinds: v100FormationCombatKinds(run.formation.unitIds), enemyKinds: [...SURVIVAL_NORMAL_ENEMY_KINDS, ...run.bossPool],
+    formationKinds: v100FormationCombatKinds(run.formation.unitIds), enemyKinds: v100SurvivalEnemyKinds(run),
     selectedSupply: v100SupportSupplyFor(active.equippedSupportId), equippedSupportId: active.equippedSupportId,
     unitLevels: { ...run.formation.unitLevelsByUnit }, vehicleMaxHp: run.crawler.maxHp,
     equipmentSnapshot: run.formation, initialSupportGauge: active.initialSupportGauge, settings, survivalRun: run };

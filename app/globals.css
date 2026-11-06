@@ -107,6 +107,8 @@ button[aria-disabled="true"]:focus-visible {
 .phase-block small { padding:0 8px; color:#a99c85; font-size:8px; font-weight:700; letter-spacing:.14em; }
 .phase-block strong { padding:0 11px; border-left:1px solid rgba(235,205,161,.2); border-right:1px solid rgba(235,205,161,.2); color:var(--gold); font-size:15px; font-weight:900; letter-spacing:.08em; }
 .phase-block em { padding:0 8px; color:#c7b89d; font-size:9px; font-weight:800; letter-spacing:.08em; }
+.phase-block.next-wave-control { min-height:44px; padding:0; cursor:pointer; border-color:var(--gold); }
+.phase-block.next-wave-control:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
 .icon-btn { width:38px; height:38px; border:1px solid rgba(235,205,161,.28); background:rgba(18,20,20,.72); color:#d7c6a9; cursor:pointer; }
 .icon-btn:not([aria-disabled="true"]):not(:disabled):active { transform:scale(.94); }
 .audio-btn { position:relative; width:46px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; }
@@ -747,6 +749,10 @@ button[aria-disabled="true"]:focus-visible {
 /* Issue #156 F4: StoryScreen owns portrait presentation and consumes the
    profile focus/crop contract instead of duplicating per-character CSS. */
 .event-portrait[data-portrait] {
+  box-sizing:border-box;
+  padding-top:8px;
+  background-origin:content-box;
+  background-clip:content-box;
   background-size:var(--event-portrait-crop,cover);
   background-position:var(--event-portrait-focus-x,50%) var(--event-portrait-focus-y,28%);
   transform-origin:center bottom;
@@ -786,12 +792,14 @@ html:has(.v100-start-screen):has(.pwa-notice-stack:not(:empty)) { --v100-notice-
 html:has(.v100-start-screen) .pwa-notice-stack { left:auto; right:calc(12px + var(--app-viewport-safe-right,0px)); transform:none; width:min(360px,42vw); }
 .pwa-notice p { margin:0; }
 /* V1 publishes this fact in its layout effect. Hide synchronously while the
-   MutationObserver-to-React safety state catches up with a newly shown event. */
-html[data-pwa-screen="event"] .pwa-notice { display:none; }
-html[data-pwa-battle-active="true"] .pwa-repair,
-html[data-pwa-result-saving="true"] .pwa-repair,
-html[data-pwa-save-mutation-pending="true"] .pwa-repair,
-html[data-pwa-maintenance-pending="true"] .pwa-repair { display:none; }
+   MutationObserver-to-React safety state catches up with active play or saving. */
+html[data-pwa-screen="event"] .pwa-notice,
+html[data-pwa-screen="battle"] .pwa-notice,
+html[data-pwa-screen="result"] .pwa-notice,
+html[data-pwa-battle-active="true"] .pwa-notice,
+html[data-pwa-result-saving="true"] .pwa-notice,
+html[data-pwa-save-mutation-pending="true"] .pwa-notice,
+html[data-pwa-maintenance-pending="true"] .pwa-notice { display:none; }
 .pwa-repair button { min-height:44px; }
 .pwa-update-headline { font-weight:700; color:#f0bb65; }
 .pwa-storage dl { margin:0; display:flex; flex-direction:column; gap:3px; }

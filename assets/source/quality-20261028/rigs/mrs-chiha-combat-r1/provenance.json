@@ -1,0 +1,147 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "mrs-chiha",
+  "assetPath": "/art/v100/joints/mrs-chiha-combat-r1.webp",
+  "bytes": 50388,
+  "sha256": "efff1ae72dbc6858ae37bde64d4686de3956a0d4f5e7f418bbdcff5d0c045c7a",
+  "atlasPacking": "height-descending-shelves",
+  "generatedPartsStudySha256": "1a91eb24999889633c58b6d5b391d84559df9f41f6dee5ba60f1d6607ce9a060",
+  "identitySourceSha256": "709bda80fb68ffcfa6a678dd0ba42916a63a9d2972ac7c73f3c605afa2d0e7bb",
+  "identityBinding": {
+    "path": "/art/v090/characters/mrs-chiha-battle-r1.png",
+    "sourceSha256": "b654cb2ae26726a9d5fdb918fd806ec0fed533c56598e217ca2f48f2d35fc834",
+    "sourceRect": {
+      "x": 480,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "referenceTransform": {
+      "scale": 1,
+      "tx": 11,
+      "ty": 0,
+      "flipX": false
+    },
+    "modelSource": "assets/source/quality-20261028/identity/chiha-master-r4.png",
+    "modelSha256": "d9acf14c0f75ce8e80b4dd2e7f8285e154562e72082200be68983ef292369705",
+    "combatSource": "assets/source/quality-20261028/rigs/mrs-chiha-combat-r1/combat-model-r1.png",
+    "combatSha256": "709bda80fb68ffcfa6a678dd0ba42916a63a9d2972ac7c73f3c605afa2d0e7bb"
+  },
+  "motionSha256": "d0321a900fd0e3d6f39ffcfed70fdf4006e7f7f984625fb6bf5fdfa86db36c60",
+  "parts": [
+    {
+      "name": "far-upper-arm",
+      "file": "far-upper-arm.png",
+      "sha256": "786d6f6eb08c7291c3ad9376e683af6a86858676d583f3af90bd2306d523119d",
+      "original": false
+    },
+    {
+      "name": "far-forearm",
+      "file": "far-forearm.png",
+      "sha256": "b4de0b6888e6a7fac871c959063ccd2cc7fa8c522d2bdfea31143601dd4d06ab",
+      "original": false
+    },
+    {
+      "name": "coat-far",
+      "file": "coat-far.png",
+      "sha256": "b84c9b9bb63bdf993553af3f8a4d59bec5cf8cabac2be8b030f70a18d895b600",
+      "original": false
+    },
+    {
+      "name": "coat-near",
+      "file": "coat-near.png",
+      "sha256": "27d7bd2cd5ef26a46aa5c88e891be20b73188a864ffeb08b2343a242e5b38a71",
+      "original": false
+    },
+    {
+      "name": "far-thigh",
+      "file": "far-thigh.png",
+      "sha256": "4267df0e59303c7b1a476556fa586caecef28665c1feb4f0f516ad4c111776f6",
+      "original": false
+    },
+    {
+      "name": "far-shin",
+      "file": "far-shin.png",
+      "sha256": "5cb4d72f615777f91fab28670e4393accf76f28c401a76f19189529f55ba7b65",
+      "original": false
+    },
+    {
+      "name": "far-boot",
+      "file": "far-boot.png",
+      "sha256": "88bb15af3d856abaca017a2b592ffafddc88aa973e89f5d2e3068470b381fea2",
+      "original": false
+    },
+    {
+      "name": "near-thigh",
+      "file": "near-thigh.png",
+      "sha256": "c2e18a40948169ee2059d12ce85c4738bfe7ba2a68b3b2ab4cb179a27084a92a",
+      "original": false
+    },
+    {
+      "name": "near-shin",
+      "file": "near-shin.png",
+      "sha256": "3e5e0605be18928149732e3658fdeddf1cd13ec5b4be00d8705e7b32bdf566fb",
+      "original": false
+    },
+    {
+      "name": "near-boot",
+      "file": "near-boot.png",
+      "sha256": "09e94faec3034fcf4502d43f56d053e8589efbad4513ccec715e82bef8b23afa",
+      "original": false
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "0bf1720dc560450405d65c73fbf3a433519464fac9907b9eac88492cd2ec3a71",
+      "original": false
+    },
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "9743e6b36aa87708b63cacb1b841fd51bdbd94503cf95836ebe812b973e50733",
+      "original": false
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "171001d103091a7345f3c135b17f5e230fb1a21b918d89b2fe3d24658aff117c",
+      "original": false
+    },
+    {
+      "name": "near-upper-arm",
+      "file": "near-upper-arm.png",
+      "sha256": "53dfa9060191587a79728d9353f13858d28f93ea3c6408751000e73971fe9a4f",
+      "original": false
+    },
+    {
+      "name": "near-forearm",
+      "file": "near-forearm.png",
+      "sha256": "424b6ef42cdb380c33fe1056443576e71c2cad5b026e95a2f7e70909a0a76b2a",
+      "original": false
+    },
+    {
+      "name": "weapon-and-hands",
+      "file": "weapon-and-hands.png",
+      "sha256": "3d202d47efa49743f19f3b3606c0b67c93064f694d222f0ea140df0a442fc003",
+      "original": false
+    }
+  ],
+  "source": "Complete Chiha body from adopted master-r4 with hidden-cloth underpainting; both hands share firearm transform. Deterministic fixed-length 2D kinematics, not Blender execution. Motion and human acceptance pending.",
+  "groundY": 438,
+  "decodedBytes": 317440,
+  "poses": 182,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  },
+  "attackVariants": {
+    "launcher-bash": {
+      "startIndex": 151,
+      "attackBoundaries": [
+        0.28,
+        0.7
+      ]
+    }
+  }
+}

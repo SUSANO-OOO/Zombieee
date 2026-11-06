@@ -1,0 +1,12 @@
+{
+  "tool": "built-in image_gen",
+  "referenced_image_paths": [
+    "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\scenes\\epilogue-tky-receipt-quality-r1.png",
+    "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\identity\\tky-89-warm-r1.png"
+  ],
+  "transparent_background": false,
+  "prompt": "Use case: identity-preserve / precise-object-edit. Image 1 is the wide restaurant scene to edit. Image 2 is the strict approved TKY character reference. Change ONLY the CENTER man's face, hair grooming and mask to match image 2: recognizable original TKY with subtly slimmer cheek and jaw, handsome Korean actor styling, the exact black Japanese fox half-mask covering the forehead through both eyes, open visible real eyes, asymmetric sculpted crimson scrolls forming the numerals '89' naturally in the forehead ornament. No animal ears, horns, hanging ornaments, full-face covering or wrestler domino mask. Nose tip, mouth and chin remain visible. Keep his head size, perspective, seated pose and hands giving the same paper receipt. Retain the black/magenta worn coat. Preserve the LEFT Paisen's actual face, short hair, navy shirt and karaage-holding action exactly; preserve the RIGHT Kumaverson's actual face, center-part hair, pale stained shirt, rice paddle and action exactly. Preserve all other hands, people count, food, mugs, warm lantern lighting, background and wide 16:9 composition. Match the scene's realistic materials and restrained cinematic illustration finish. This is one in-game ending shot, not a portrait sheet. No new text beyond the mask's artistic 89; no watermark.",
+  "output": "epilogue-tky-receipt-quality-r2.png",
+  "generatedOriginal": "C:/Users/okait/.codex/generated_images/01a180c8-9e05-7871-b287-613f7c7eb364/exec-66d129f2-592d-40b4-8639-47b67a124c12.png",
+  "producerApproval": "TKY89 design approved with おけ; derived scene implementation, whole-game acceptance not claimed"
+}

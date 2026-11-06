@@ -37,9 +37,15 @@ const validBox=r=>r&&[r.x,r.y,r.width,r.height].every(Number.isFinite)&&r.width>
 export function inspectV177PaintedSceneFaces(shot,geometry){
   if(!shot?.landmarks?.length)return {applicable:false,faces:[],issues:[]};
   const image=geometry.paintedImage,issues=[];
-  if(!image?.src?.split(/[?#]/u)[0].endsWith('/art/v100/story-r9/cuts/'+shot.id+'.webp'))
+  const declared=shot.sourceWidth!==undefined||shot.sourceHeight!==undefined||shot.landmarkSourcePath!==undefined;
+  const width=declared?shot.sourceWidth:1280,height=declared?shot.sourceHeight:720;
+  if(declared&&(!Number.isInteger(width)||!Number.isInteger(height)||width<=0||height<=0
+    ||typeof shot.landmarkSourcePath!=='string'||!shot.landmarkSourcePath.startsWith('/art/')))
+    return {applicable:true,faces:[],issues:['painted face source dimensions or path are not declared together']};
+  const sourcePath=declared?shot.landmarkSourcePath:'/art/v100/story-r9/cuts/'+shot.id+'.webp';
+  if(!image?.src?.split(/[?#]/u)[0].endsWith(sourcePath))
     return {applicable:true,faces:[],issues:['painted face layout refers to a different source image']};
-  if(!image?.complete||image.naturalWidth!==1280||image.naturalHeight!==720||!image.axisAligned||image.objectFit!=='cover'
+  if(!image?.complete||image.naturalWidth!==width||image.naturalHeight!==height||!image.axisAligned||image.objectFit!==(declared?'contain':'cover')
     ||image.opacity!==1||image.visibility!=='visible'||image.display==='none'||image.ancestorPaintHidden)
     return {applicable:true,faces:[],issues:['painted face source is not decoded in a supported actual layout']};
   if(![image.layoutWidth,image.layoutHeight].every(n=>Number.isFinite(n)&&n>0)||!validBox(image.rect))
@@ -50,18 +56,19 @@ export function inspectV177PaintedSceneFaces(shot,geometry){
     return {applicable:true,faces:[],issues:['painted face scene or obstruction rectangles were not actually measured']};
   if(!shot.landmarks.every(mark=>mark.rect?.length===4&&mark.rect.every(Number.isFinite)
     &&mark.rect[0]>=0&&mark.rect[1]>=0&&mark.rect[2]>0&&mark.rect[3]>0
-    &&mark.rect[0]+mark.rect[2]<=1280&&mark.rect[1]+mark.rect[3]<=720))
+    &&mark.rect[0]+mark.rect[2]<=width&&mark.rect[1]+mark.rect[3]<=height))
     return {applicable:true,faces:[],issues:['painted face source landmark is invalid']};
   const tokens=typeof image.objectPosition==='string'?image.objectPosition.trim().split(/\s+/u):[];
   if(tokens.length!==2||!tokens.every(s=>/^\d+(?:\.\d+)?%$/u.test(s)&&parseFloat(s)<=100))
     return {applicable:true,faces:[],issues:['painted face object-position is not an observed percentage pair']};
-  const [px,py]=tokens.map(s=>parseFloat(s)/100),scale=Math.max(image.layoutWidth/1280,image.layoutHeight/720);
-  const ox=(image.layoutWidth-1280*scale)*px,oy=(image.layoutHeight-720*scale)*py;
+  const [px,py]=tokens.map(s=>parseFloat(s)/100),scale=(declared?Math.min:Math.max)(image.layoutWidth/width,image.layoutHeight/height);
+  const ox=(image.layoutWidth-width*scale)*px,oy=(image.layoutHeight-height*scale)*py;
   const sx=image.rect.width/image.layoutWidth,sy=image.rect.height/image.layoutHeight;
   const obstructions=[['heading',geometry.headingBox],['dialogue',geometry.copy],...(geometry.detailShots??[]).map(s=>['detail:'+s.id,s.frame])];
   const faces=shot.landmarks.map(mark=>{
     const [x,y,w,h]=mark.rect,rect={x:image.rect.x+(x*scale+ox)*sx,y:image.rect.y+(y*scale+oy)*sy,width:w*scale*sx,height:h*scale*sy};
     if(!geometry.scene||area(rect)-overlap(rect,geometry.scene)>1e-6)issues.push(mark.id+': clipped outside scene');
+    if(area(rect)-overlap(rect,image.rect)>1e-6)issues.push(mark.id+': clipped outside image');
     for(const [name,box]of obstructions)if(box&&overlap(rect,box)>1e-6)issues.push(mark.id+': covered by '+name);
     return {id:mark.id,rect};
   });

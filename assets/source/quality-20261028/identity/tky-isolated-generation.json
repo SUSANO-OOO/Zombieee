@@ -1,0 +1,15 @@
+{
+  "tool": "built-in image_gen",
+  "input": "tky-photo-expressions-r7.png",
+  "prompts": {
+    "warm": "Edit this reference sheet into ONE isolated production portrait of ONLY the TOP LEFT restrained warm smile. Same TKY person and features, hairstyle, age, physique, clothing, painterly texture and lighting as that exact cell. Do not draw the other three people or change the expression. One character, standing, framed crown through belt/waist, centered, preserving natural head and body proportions. Keep the whole character inside this one image, with transparent margins on all sides. Genuine transparent background. No grid, no contact sheet, no duplicates, no stray fragments from the other cells, no backdrop. Keep the black layered coat, dark inner scarf, magenta accents, gloved hands near belt as in the source. This is a faithful clean standalone version, not a redesign.",
+    "determined": "Edit this reference sheet into ONE isolated production portrait of ONLY the TOP RIGHT focused determined expression. Same TKY person and features, hairstyle, age, physique, clothing, painterly texture and lighting as that exact cell. Do not draw the other three people or change the expression. One character, standing, framed crown through belt/waist, centered, preserving natural head and body proportions. Keep the whole character inside this one image, with transparent margins on all sides. Genuine transparent background. No grid, no contact sheet, no duplicates, no stray fragments from the other cells, no backdrop. Keep the black layered coat, dark inner scarf, magenta accents, gloved hands near belt as in the source. This is a faithful clean standalone version, not a redesign.",
+    "alarm": "Edit this reference sheet into ONE isolated production portrait of ONLY the BOTTOM LEFT alarm expression. Same TKY person and features, hairstyle, age, physique, clothing, painterly texture and lighting as that exact cell. Do not draw the other three people or change the expression. One character, standing, framed crown through belt/waist, centered, preserving natural head and body proportions. Keep the whole character inside this one image, with transparent margins on all sides. Genuine transparent background. No grid, no contact sheet, no duplicates, no stray fragments from the other cells, no backdrop. Keep the black layered coat, dark inner scarf, magenta accents, gloved hands near belt as in the source. This is a faithful clean standalone version, not a redesign."
+  },
+  "outputs": [
+    "tky-warm-r8.png",
+    "tky-determined-r8.png",
+    "tky-alarm-r8.png"
+  ],
+  "reason": "Independent portraits prevent adjacent-cell sleeve contamination observed in actual S14 rendering."
+}

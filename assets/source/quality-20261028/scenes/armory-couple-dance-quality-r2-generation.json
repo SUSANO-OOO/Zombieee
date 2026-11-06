@@ -1,0 +1,15 @@
+{
+  "tool": "built-in image_gen",
+  "referenced_image_paths": [
+    "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/public/art/v100/credits/armory-couple-dance-r1.webp",
+    "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/babayaga-master-r1.png",
+    "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/chiha-master-r4.png",
+    "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/tatara-master-r4.png",
+    "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/paisen-photo-master-r7.png"
+  ],
+  "transparent_background": false,
+  "prompt": "Edit image1, the EXISTING 16:9 staff-roll armory dance illustration; preserve its exact scene, four named adult actors, positions, clothing, interactions and story. Do not add/remove anyone or change what happens. The remaining images are the LOCKED EXISTING GENERATED PRIMARY MODELS, and each person must remain that model across this pose: image2 BABAYAGA (white shirt/dark red tie/black tactical shoulder harness man, center-right dancing); image3 MRS CHIHA (dark-haired adult woman in worn black coat/white blouse, center-left dancing); image4 TATARA (dark-haired armored swordsman seated far LEFT watching with cheek on gloved hand); image5 PAISEN (short-haired sturdy man in navy shirt/pale shorts far RIGHT singing into his broom). Match each model's specific recognizable face, hair, brow/eyes, nose/lips, jaw, age and proportions rather than a generic attractive face or blended identities. Babayaga must NOT look like Kumaverson; Paisen's physique must be naturally sturdy rather than inflated muscles. Preserve the slow gentle dance and the original believable hand clasps/waist hold, boots and feet/ground contacts, Paisen's broom singing, seated Tatara's armor and sword, the same weapon storage cages/crates and warm lantern sunset. Render coherent realistic photographic anatomy, skin, fabric, armor, lighting with restrained painterly illustration throughout, not anime faces or face-photo pasteups. No new weapon in anyone's hand, no masks, no ornaments or text. Keep all existing heads and important limbs inside the frame. One finished 16:9 illustration.",
+  "output": "armory-couple-dance-quality-r2.png",
+  "generatedOriginal": "C:/Users/okait/.codex/generated_images/01a180c8-9e05-7871-b287-613f7c7eb364/exec-f75d4f81-5934-49c7-b949-2c6902d640de.png",
+  "statusAtGeneration": "Generated scene candidate; not connected to runtime yet. Identity and in-game review pending."
+}

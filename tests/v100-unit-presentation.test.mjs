@@ -90,7 +90,7 @@ test("level cap and recruitment quote never offer an upgrade to a nonowned unit"
   assert.equal(locked.owned, false);
   assert.equal(locked.registered, false);
   assert.equal(locked.next, null);
-  assert.equal(locked.registrationCost, 155);
+  assert.equal(locked.registrationCost, 95);
   save.registeredUnitIds.push("unit-mizuchi");
   assert.equal(v100UnitPresentation(save, "unit-mizuchi").registered, true);
 });

@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { V177_JOINT_ATLASES, v177JointPose, drawV177JointPose, v177CaptureJointPose } from '../app/v177JointPresentation.js';
 import { v177LivingStunState, v177LivingStunSample } from '../app/v177LivingStun.js';
+import { createManualAbilityRuntime, advanceManualAbility } from '../app/manualAbilities.js';
+import { v105CurrentAbilitySample } from '../app/v105CurrentAbilityPose.js';
 
 const kinds=Object.keys(V177_JOINT_ATLASES).filter(k=>V177_JOINT_ATLASES[k].type==='rigid-parts');
 const runtime={locomotionPhase:.371,locomotionSettle:.5,elapsedSeconds:0,transitionCount:2};
@@ -32,6 +34,54 @@ function attached(atlas,pose,label) {
     ])assert.ok(distance(a,b)<.001,`${label}/${chain.upperBone}/${name}: ${distance(a,b)}`);
   }
 }
+
+test('Mayo entering feral while stunned starts on the current body and preserves real ability timing',()=>{
+  for(const paintedNormal of [false,true]){
+    const actor={kind:'mayo-chan',side:'human',hp:170,combatReady:true,stunned:.2,
+      manualAbility:{...createManualAbilityRuntime('mayo-chan'),phase:'recovery',windupRemaining:.005}};
+    if(paintedNormal)paint('mayo-chan',v177JointPose('mayo-chan',{requestedState:'idle'},runtime,{actor}),actor);
+    const advance=advanceManualAbility(actor.manualAbility,.016);
+    actor.manualAbility=advance.runtime;
+    assert.equal(actor.manualAbility.phase,'feral');assert.equal(advance.events[0].type,'feral-start');
+    const before=structuredClone(actor),kind='mayo-chan-feral',atlas=V177_JOINT_ATLASES[kind];
+    const sample=v105CurrentAbilitySample(actor,{requestedState:'idle'});
+    assert.equal(sample.requestedState,'incapacitated');
+    const entry=v177JointPose(kind,sample,runtime,{actor,grounded:true,stunRemaining:actor.stunned});
+    assert.ok(entry?.liveStun,'feral must not fall back to the legacy bitmap');
+    sameJoints(v177CaptureJointPose(kind,entry),v177CaptureJointPose(kind,v177JointPose(kind,{requestedState:'idle'},runtime,{grounded:true})),'feral entry');
+    paint(kind,entry,actor);
+    for(const elapsed of [.016,.05,.1,.19]){
+      const plan=v177JointPose(kind,sample,{...runtime,elapsedSeconds:elapsed},{actor,grounded:true,stunRemaining:.2-elapsed});
+      assert.equal(plan.stunElapsed,elapsed);attached(atlas,v177CaptureJointPose(kind,plan),'feral stun');paint(kind,plan,actor);
+      const captured=v177CaptureJointPose(kind,plan);
+      for(let i=0;i<5;i++){
+        const repeat=v177JointPose(kind,sample,{...runtime,elapsedSeconds:elapsed},{actor,grounded:true,stunRemaining:.2-elapsed});
+        sameJoints(v177CaptureJointPose(kind,repeat),captured,'paused feral redraw');paint(kind,repeat,actor);
+      }
+    }
+    const next=v177JointPose(kind,{requestedState:'move'},{...runtime,elapsedSeconds:.2},{actor,grounded:true});
+    assert.ok(next);assert.notEqual(next.liveStun,true);assert.deepEqual(actor,before);
+  }
+});
+
+test('feral stun bootstrap requires its living human owner and never publishes an undrawn pose',()=>{
+  const kind='mayo-chan-feral',sample={requestedState:'incapacitated'};
+  const make=()=>({kind:'mayo-chan',side:'human',hp:170,manualAbility:{phase:'feral'}});
+  for(const patch of [{kind:'scout'},{side:'zombie'},{hp:0},{manualAbility:{phase:'recovery'}},{mayoRetreat:{phase:'run'}}]){
+    const actor={...make(),...patch};
+    assert.equal(v177JointPose(kind,sample,runtime,{actor,stunRemaining:.2}),null);
+  }
+  const actor=make();
+  assert.equal(v177JointPose(kind,sample,runtime,{actor,stunRemaining:0}),null);
+  assert.equal(v177JointPose(kind,sample,runtime,{actor,stunRemaining:.2,ownedPose:true}),null);
+  const plan=v177JointPose(kind,sample,runtime,{actor,stunRemaining:.2});assert.ok(plan?.liveStun);
+  actor.manualAbility={phase:'recovery'};
+  assert.equal(v177JointPose(kind,sample,runtime,{actor,stunRemaining:.2}),null,'resolving an undrawn pose cannot publish history');
+  actor.manualAbility={phase:'feral'};
+  assert.equal(drawV177JointPose(context(),{naturalWidth:0},kind,plan,0,0,100,120,{actor}),false);
+  actor.manualAbility={phase:'recovery'};
+  assert.equal(v177JointPose(kind,sample,runtime,{actor,stunRemaining:.2}),null,'a failed draw cannot supply matching form history');
+});
 
 test('late living stun uses actual eligibility, preserves owners and never chooses a death image',()=>{
   const fighter={kind:'scout',hp:20,stunned:.3,combatReady:true,gateEntering:false,contained:false,

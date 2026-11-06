@@ -1,0 +1,278 @@
+{
+  "method": "built-in image_gen",
+  "jobs": [
+    {
+      "kind": "babayaga",
+      "expression": "determined",
+      "generatedPath": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-8f5ef80b-0bb3-4a16-b1d7-ab898abd5014.png",
+      "args": {
+        "referenced_image_paths": [
+          "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\identity\\babayaga-master-r1.png"
+        ],
+        "transparent_background": true,
+        "prompt": "Edit target: the attached full-body game character master. Identity-preserve expression variant determined. Preserve this exact person's facial bone structure, eye shape and spacing, nose, mouth proportions, age, hairstyle, body build, clothing, accessories, equipment, stance, limb positions, lighting and illustration finish. Change only the facial expression to a restrained resolute expression, brows slightly focused and lips closed. Keep the same full-body framing and camera, 1024x1536 portrait canvas with every part in its original position. Do not beautify, replace, age, masculinize, narrow the jaw or enlarge the eyes. Keep equipment lowered and unchanged. True transparent background, no backdrop, no cast shadow, no text, no collage. One character, one image. This is a dialogue expression sprite of the same character, not a new character design."
+      },
+      "output": {
+        "path": "assets/source/quality-20261028/identity/babayaga-waist-determined-r1.png",
+        "sha256": "909a09661e4d52e27502fc6d172e1f7530b6d1c154319b480afb546e3dd57e95",
+        "bytes": 1621577
+      },
+      "inputSha256": "c571d91e3ae9b97f0ac558ae6cacffa4661b268dadf0a46e6f47a7b2fb670aa4"
+    },
+    {
+      "kind": "babayaga",
+      "expression": "alarm",
+      "generatedPath": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-dea62ba9-b781-43bc-b79f-058f894fd200.png",
+      "args": {
+        "referenced_image_paths": [
+          "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\identity\\babayaga-master-r1.png"
+        ],
+        "transparent_background": true,
+        "prompt": "Edit target: the attached full-body game character master. Identity-preserve expression variant alarm. Preserve this exact person's facial bone structure, eye shape and spacing, nose, mouth proportions, age, hairstyle, body build, clothing, accessories, equipment, stance, limb positions, lighting and illustration finish. Change only the facial expression to a concerned surprised expression, eyes slightly widened, lips subtly parted. Keep the same full-body framing and camera, 1024x1536 portrait canvas with every part in its original position. Do not beautify, replace, age, masculinize, narrow the jaw or enlarge the eyes. Keep equipment lowered and unchanged. True transparent background, no backdrop, no cast shadow, no text, no collage. One character, one image. This is a dialogue expression sprite of the same character, not a new character design."
+      },
+      "output": {
+        "path": "assets/source/quality-20261028/identity/babayaga-waist-alarm-r1.png",
+        "sha256": "c50055917799dc5ee54ee724ebb823a6acecf2df21c46be2b9de33cf1dae1408",
+        "bytes": 1622657
+      },
+      "inputSha256": "c571d91e3ae9b97f0ac558ae6cacffa4661b268dadf0a46e6f47a7b2fb670aa4"
+    },
+    {
+      "kind": "babayaga",
+      "expression": "grief",
+      "generatedPath": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-5f890b73-855f-414d-8a13-5716d75c446c.png",
+      "args": {
+        "referenced_image_paths": [
+          "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\identity\\babayaga-master-r1.png"
+        ],
+        "transparent_background": true,
+        "prompt": "Edit target: the attached full-body game character master. Identity-preserve expression variant grief. Preserve this exact person's facial bone structure, eye shape and spacing, nose, mouth proportions, age, hairstyle, body build, clothing, accessories, equipment, stance, limb positions, lighting and illustration finish. Change only the facial expression to a subdued sad expression, eyes gently lowered, lips closed, no crying caricature. Keep the same full-body framing and camera, 1024x1536 portrait canvas with every part in its original position. Do not beautify, replace, age, masculinize, narrow the jaw or enlarge the eyes. Keep equipment lowered and unchanged. True transparent background, no backdrop, no cast shadow, no text, no collage. One character, one image. This is a dialogue expression sprite of the same character, not a new character design."
+      },
+      "output": {
+        "path": "assets/source/quality-20261028/identity/babayaga-waist-grief-r1.png",
+        "sha256": "a60ad8891071abbb158a0e2aeca8d01f22f83a9e104288245f0738bbc032e7e6",
+        "bytes": 1608502
+      },
+      "inputSha256": "c571d91e3ae9b97f0ac558ae6cacffa4661b268dadf0a46e6f47a7b2fb670aa4"
+    },
+    {
+      "kind": "kumaverson",
+      "expression": "determined",
+      "generatedPath": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-392e8bfa-dd45-4c34-8041-3b800f759394.png",
+      "args": {
+        "referenced_image_paths": [
+          "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\identity\\kumaverson-master-r2.png"
+        ],
+        "transparent_background": true,
+        "prompt": "Edit target: the attached full-body game character master. Identity-preserve expression variant determined. Preserve this exact person's facial bone structure, eye shape and spacing, nose, mouth proportions, age, hairstyle, body build, clothing, accessories, equipment, stance, limb positions, lighting and illustration finish. Change only the facial expression to a restrained resolute expression, brows slightly focused and lips closed. Keep the same full-body framing and camera, 1024x1536 portrait canvas with every part in its original position. Do not beautify, replace, age, masculinize, narrow the jaw or enlarge the eyes. Keep equipment lowered and unchanged. True transparent background, no backdrop, no cast shadow, no text, no collage. One character, one image. This is a dialogue expression sprite of the same character, not a new character design."
+      },
+      "output": {
+        "path": "assets/source/quality-20261028/identity/kumaverson-waist-determined-r1.png",
+        "sha256": "f64f162061697a4c4b56d7827dfc28d3f274e07a8223d01767c2787a8b873e9b",
+        "bytes": 1804580
+      },
+      "inputSha256": "51a5acb5a77f53eac921b49a5adefd681218f9f44f64e70caaf416ed2b6ed501"
+    },
+    {
+      "kind": "kumaverson",
+      "expression": "alarm",
+      "generatedPath": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-a994cba4-bf2e-4f93-9430-4193fab1d070.png",
+      "args": {
+        "referenced_image_paths": [
+          "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\identity\\kumaverson-master-r2.png"
+        ],
+        "transparent_background": true,
+        "prompt": "Edit target: the attached full-body game character master. Identity-preserve expression variant alarm. Preserve this exact person's facial bone structure, eye shape and spacing, nose, mouth proportions, age, hairstyle, body build, clothing, accessories, equipment, stance, limb positions, lighting and illustration finish. Change only the facial expression to a concerned surprised expression, eyes slightly widened, lips subtly parted. Keep the same full-body framing and camera, 1024x1536 portrait canvas with every part in its original position. Do not beautify, replace, age, masculinize, narrow the jaw or enlarge the eyes. Keep equipment lowered and unchanged. True transparent background, no backdrop, no cast shadow, no text, no collage. One character, one image. This is a dialogue expression sprite of the same character, not a new character design."
+      },
+      "output": {
+        "path": "assets/source/quality-20261028/identity/kumaverson-waist-alarm-r1.png",
+        "sha256": "a3c39f3b5c8664b7ebe0ae0709b2ba8d13dc5bc58079462e0fc58571636044b5",
+        "bytes": 1794707
+      },
+      "inputSha256": "51a5acb5a77f53eac921b49a5adefd681218f9f44f64e70caaf416ed2b6ed501"
+    },
+    {
+      "kind": "kumaverson",
+      "expression": "grief",
+      "generatedPath": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-9e7aa24d-c195-4ef0-9db5-1aba86463442.png",
+      "args": {
+        "referenced_image_paths": [
+          "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\identity\\kumaverson-master-r2.png"
+        ],
+        "transparent_background": true,
+        "prompt": "Edit target: the attached full-body game character master. Identity-preserve expression variant grief. Preserve this exact person's facial bone structure, eye shape and spacing, nose, mouth proportions, age, hairstyle, body build, clothing, accessories, equipment, stance, limb positions, lighting and illustration finish. Change only the facial expression to a subdued sad expression, eyes gently lowered, lips closed, no crying caricature. Keep the same full-body framing and camera, 1024x1536 portrait canvas with every part in its original position. Do not beautify, replace, age, masculinize, narrow the jaw or enlarge the eyes. Keep equipment lowered and unchanged. True transparent background, no backdrop, no cast shadow, no text, no collage. One character, one image. This is a dialogue expression sprite of the same character, not a new character design."
+      },
+      "output": {
+        "path": "assets/source/quality-20261028/identity/kumaverson-waist-grief-r1.png",
+        "sha256": "f55633b72894694d74356ef57b69a1e1a6f8e6e0da28eec27e66e1d10a8ec553",
+        "bytes": 1830327
+      },
+      "inputSha256": "51a5acb5a77f53eac921b49a5adefd681218f9f44f64e70caaf416ed2b6ed501"
+    }
+  ],
+  "acceptance": "Alpha-composited contact sheets inspected; adopted into a local dialogue candidate. Actual authored story expressions are listed separately. Not physical-device, whole-game, or Producer acceptance.",
+  "runtimeCoverage": [
+    {
+      "kind": "chiha",
+      "revision": 5,
+      "cases": 3,
+      "expressions": [
+        "warm"
+      ],
+      "scope": "Prepared dialogue checkpoint in isolated Chromium, normal title continue. Visual rendering evidence only, not campaign progression or Producer acceptance."
+    },
+    {
+      "kind": "babayaga",
+      "revision": 5,
+      "cases": 2,
+      "expressions": [
+        "warm"
+      ],
+      "scope": "Prepared dialogue checkpoint in isolated Chromium, normal title continue. Visual rendering evidence only, not campaign progression or Producer acceptance."
+    },
+    {
+      "kind": "kumaverson",
+      "revision": 5,
+      "cases": 2,
+      "expressions": [
+        "warm"
+      ],
+      "scope": "Prepared dialogue checkpoint in isolated Chromium, normal title continue. Visual rendering evidence only, not campaign progression or Producer acceptance."
+    },
+    {
+      "kind": "tatara",
+      "revision": 5,
+      "cases": 3,
+      "expressions": [
+        "warm"
+      ],
+      "scope": "Prepared dialogue checkpoint in isolated Chromium, normal title continue. Visual rendering evidence only, not campaign progression or Producer acceptance."
+    },
+    {
+      "kind": "gantetsu",
+      "revision": 5,
+      "cases": 2,
+      "expressions": [
+        "warm"
+      ],
+      "scope": "Prepared dialogue checkpoint in isolated Chromium, normal title continue. Visual rendering evidence only, not campaign progression or Producer acceptance."
+    },
+    {
+      "kind": "paisen",
+      "revision": 4,
+      "cases": 2,
+      "expressions": [
+        "warm"
+      ],
+      "scope": "Prepared dialogue checkpoint in isolated Chromium, normal title continue. Visual rendering evidence only, not campaign progression or Producer acceptance."
+    },
+    {
+      "kind": "tky",
+      "revision": 4,
+      "cases": 2,
+      "expressions": [
+        "determined"
+      ],
+      "scope": "Prepared dialogue checkpoint in isolated Chromium, normal title continue. Visual rendering evidence only, not campaign progression or Producer acceptance."
+    },
+    {
+      "kind": "zakimiya",
+      "revision": 4,
+      "cases": 2,
+      "expressions": [
+        "determined"
+      ],
+      "scope": "Prepared dialogue checkpoint in isolated Chromium, normal title continue. Visual rendering evidence only, not campaign progression or Producer acceptance."
+    },
+    {
+      "kind": "nao",
+      "revision": 4,
+      "cases": 2,
+      "expressions": [
+        "warm"
+      ],
+      "scope": "Prepared dialogue checkpoint in isolated Chromium, normal title continue. Visual rendering evidence only, not campaign progression or Producer acceptance."
+    },
+    {
+      "kind": "mizuchi",
+      "revision": 4,
+      "cases": 2,
+      "expressions": [
+        "determined"
+      ],
+      "scope": "Prepared dialogue checkpoint in isolated Chromium, normal title continue. Visual rendering evidence only, not campaign progression or Producer acceptance."
+    },
+    {
+      "kind": "monkey",
+      "revision": 5,
+      "cases": 2,
+      "expressions": [
+        "warm"
+      ],
+      "scope": "Prepared dialogue checkpoint in isolated Chromium, normal title continue. Visual rendering evidence only, not campaign progression or Producer acceptance."
+    },
+    {
+      "kind": "ikura",
+      "revision": 5,
+      "cases": 2,
+      "expressions": [
+        "grief"
+      ],
+      "scope": "Prepared dialogue checkpoint in isolated Chromium, normal title continue. Visual rendering evidence only, not campaign progression or Producer acceptance."
+    },
+    {
+      "kind": "musashi",
+      "revision": 5,
+      "cases": 2,
+      "expressions": [
+        "determined"
+      ],
+      "scope": "Prepared dialogue checkpoint in isolated Chromium, normal title continue. Visual rendering evidence only, not campaign progression or Producer acceptance."
+    },
+    {
+      "kind": "raider",
+      "revision": 4,
+      "cases": 2,
+      "expressions": [
+        "determined"
+      ],
+      "scope": "Prepared dialogue checkpoint in isolated Chromium, normal title continue. Visual rendering evidence only, not campaign progression or Producer acceptance."
+    },
+    {
+      "kind": "king",
+      "revision": 4,
+      "cases": 2,
+      "expressions": [
+        "warm"
+      ],
+      "scope": "Prepared dialogue checkpoint in isolated Chromium, normal title continue. Visual rendering evidence only, not campaign progression or Producer acceptance."
+    },
+    {
+      "kind": "segawa",
+      "revision": 5,
+      "cases": 2,
+      "expressions": [
+        "determined"
+      ],
+      "scope": "Prepared dialogue checkpoint in isolated Chromium, normal title continue. Visual rendering evidence only, not campaign progression or Producer acceptance."
+    },
+    {
+      "kind": "president",
+      "revision": 5,
+      "cases": 2,
+      "expressions": [
+        "determined"
+      ],
+      "scope": "Prepared dialogue checkpoint in isolated Chromium, normal title continue. Visual rendering evidence only, not campaign progression or Producer acceptance."
+    },
+    {
+      "kind": "commander",
+      "revision": 5,
+      "cases": 2,
+      "expressions": [
+        "determined"
+      ],
+      "scope": "Prepared dialogue checkpoint in isolated Chromium, normal title continue. Visual rendering evidence only, not campaign progression or Producer acceptance."
+    }
+  ]
+}

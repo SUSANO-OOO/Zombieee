@@ -1,0 +1,12 @@
+{
+  "method": "built-in image_gen",
+  "primaryReference": "assets/source/quality-20261028/identity/monkey-master-r4.png",
+  "poseReference": "pose-reference-r1.png",
+  "output": "combat-model-r1.png",
+  "prompt": "Use case: style-transfer / identity-preserve. Create a production full-body combat sprite repaint, NOT a character redesign. Input 1 is the adopted Monkey model and the authority for his exact face identity, silver-gray shaggy hair, lean adult engineer build, charcoal work shirt/trousers, olive chest harness and tool pouches, fingerless gloves, elbow/knee guards and worn boots. Input 2 is the existing animation REST POSE: preserve its full-body placement, proportional transparent margins and 480:448 canvas aspect; preserve shoulder/elbow/wrist/hip/knee/ankle positions, near-neutral close parallel legs, both boots planted, body facing right and weapon held with both hands angled slightly down at waist/chest. Match input 2's silhouette scale and center, not input 1's wide crouch. Replace cartoon lines and flat shading with believable photographic anatomy, matte skin, real fabric/metal texture and only a restrained painted finish matching input 1. Keep Monkey's same individual face while looking toward the right-side target, not at the viewer. His weapon is a compact mechanical CROSSBOW: coherent stock, central bolt rail, transverse bow limbs and taut cable, held at rear trigger grip by near hand and supported under fore-end by far hand; NO firearm barrel, no rifle substitution, no added gear. Preserve original outfit and equipment; complete head and boots visible inside frame. One figure, true transparent alpha background, no scene, no floor, no cast shadow, no labels, no panels. Prefer1440x1344 output (480:448 ratio).",
+  "status": "Segmented and rigged into local candidate; technical and visual validation recorded separately. Not Producer accepted. Adopted Monkey r4 remains identity authority; r5 is unused.",
+  "creator": "OpenAI built-in image_gen under Producer direction",
+  "license": "Generated project derivative; no third-party stock license. Formal rights review remains open before final adoption.",
+  "rightsScope": "No new purchase, third-party license or external contract. Commercial use, modification and redistribution remain subject to existing source rights and final review.",
+  "producerApproval": "User authorizes full-character style remake and actual-game integration. This specific candidate is not human accepted."
+}

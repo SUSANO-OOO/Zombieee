@@ -2,6 +2,7 @@ import {withV177PaintPartIdentity} from './helpers/v177-render-trace.mjs';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {readFile} from 'node:fs/promises';
+import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import {gunzipSync} from 'node:zlib';
 import sharp from 'sharp';
@@ -11,7 +12,7 @@ import {v102BattleDisplaySize} from '../app/v102BattleScale.js';
 import {v102BattleBodyScale} from '../app/v102CombatMotion.js';
 import {requiredBattleAssetPlan} from '../app/battleAssetPlan.js';
 import {CAMPAIGN_STAGE_IDS} from '../app/campaign.js';
-import {V177_JOINT_ASSET_ADDITIONS} from '../scripts/v177-joint-asset-contract.mjs';
+import {V177_JOINT_ASSET_ADDITIONS} from '../scripts/v177-runtime-joint-asset-contract.mjs';
 
 const dir=new URL('../assets/source/v100/joints/scout-r1/',import.meta.url);
 const definition=JSON.parse(await readFile(new URL('parts.json',dir)));
@@ -24,7 +25,7 @@ function render(plan){
  const matrices=[],calls=[];
  const ctx={save(){},restore(){},translate(){},scale(){},transform(...m){matrices.push(m);},drawImage(...a){calls.push(a);}};
  assert.equal(withV177PaintPartIdentity(()=>drawV177JointPose(ctx,{naturalWidth:atlas.decodedWidth},'scout',plan,0,0,480,448),ctx,'scout',[matrices,calls]),true);
- assert.equal(calls.length,16);return matrices;
+  assert.equal(calls.length,atlas.parts.length,'Every active material, including the restored collar, is painted once');return matrices;
 }
 
 test('both biped legs keep fixed lengths, painted ground support and a travel-scaled stride; the crowbar stays in its hand',async()=>{
@@ -56,10 +57,12 @@ test('both biped legs keep fixed lengths, painted ground support and a travel-sc
 });
 
 test('production interpolation holds both feet through crowbar contact and preserves the rendered hand, weapon and mirrored effect origin',()=>{
+ const definition=JSON.parse(readFileSync(new URL('../assets/source/quality-20261028/rigs/scout-combat-r1/parts.json',import.meta.url)));
+ const motion=JSON.parse(gunzipSync(readFileSync(new URL('../assets/source/quality-20261028/rigs/scout-combat-r1/motion.json.gz',import.meta.url))));
  const runtime={locomotionPhase:.1371,locomotionSettle:1},base=render(v177JointPose('scout',{requestedState:'idle'},runtime));
  for(const state of ['wind-up','active','recovery'])for(const p of Array.from({length:61},(_,i)=>i/60)){
   const plan=v177JointPose('scout',{requestedState:state,clipProgress:p},runtime),matrices=render(plan);
-  for(let i=0;i<16;i++){
+  for(let i=0;i<atlas.parts.length;i++){
    const m=matrices[i];assert.ok(Math.abs(m[0]*m[3]-m[1]*m[2]-1)<1e-12,'No interpolated limb shortening');
    if(!atlas.parts[i].upper)assert.deepEqual(m,base[i],'Attacking must not teleport either foot or the pelvis');
   }
@@ -99,12 +102,12 @@ test('production interpolation holds both feet through crowbar contact and prese
   for(const arm of definition.armConstraints)for(const bone of [arm.upperBone,arm.lowerBone]){
    const actual=matrices[atlas.parts.findIndex(p=>p.bone===bone)],source=attack.frames[i*2].deform[bone];
    const points=bone===arm.upperBone?[arm.shoulder,arm.elbow]:[arm.elbow,arm.wrist];
-   assert.ok(points.every(p=>distance(transform(actual,p),transform(source,p))<.001),JSON.stringify({reason:'Preserve the evaluated Blender joint positions at source keys',i,bone}));
+   assert.ok(points.every(p=>distance(transform(actual,p),transform(source,p))<.001),JSON.stringify({reason:'Preserve the authored joint positions at source keys',i,bone}));
   }
  }
 });
 
-test('the original face, backpack, crowbar and holding hand stay source-bound; only a needed battle decodes the exact small texture',async()=>{
+test('historical source paint remains intact and only a needed battle decodes the current complete-body texture',async()=>{
  const reference=await pixels('identity-reference.png');let originalPixels=0;
  for(const p of definition.parts){
   const bytes=await readFile(new URL(p.file,dir));assert.equal(createHash('sha256').update(bytes).digest('hex'),p.sha256);
@@ -113,7 +116,7 @@ test('the original face, backpack, crowbar and holding hand stay source-bound; o
   for(let i=0;i<data.length;i+=4)if(data[i+3]===255){assert.deepEqual(data.subarray(i,i+4),reference.subarray(i,i+4),p.name);originalPixels++;}
  }
  assert.ok(originalPixels>7000);
- const weapon=await pixels('crowbar-and-hand.png'),[tx,ty]=atlas.muzzle;assert.ok(weapon[(ty*480+tx)*4+3]>=32,'Contact origin is on the painted crowbar');
+ const weapon=await pixels('crowbar-and-hand.png'),[tx,ty]=definition.muzzle;assert.ok(weapon[(ty*480+tx)*4+3]>=32,'Historical contact origin is on its painted crowbar');
  const binding=await readFile(new URL('../public'+definition.identityBinding.path,import.meta.url));
  assert.equal(createHash('sha256').update(binding).digest('hex'),definition.identityBinding.sourceSha256);
  const rect=definition.identityBinding.sourceRect,original=await sharp(binding).extract({left:rect.x,top:rect.y,width:rect.w,height:rect.h}).ensureAlpha().raw().toBuffer();

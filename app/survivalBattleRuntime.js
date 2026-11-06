@@ -3,6 +3,7 @@ import {
   SURVIVAL_END_REASONS,
   SURVIVAL_RUN_PHASES,
   SURVIVAL_UPGRADE_BY_ID,
+  SURVIVAL_UPGRADE_EFFECT_FLOORS,
   beginSurvivalWave,
   completeSurvivalBossEntrance,
   completeSurvivalWave,
@@ -155,6 +156,13 @@ export const SURVIVAL_NORMAL_ENEMY_KINDS = deepFreeze([
   "abomination",
 ]);
 
+// Campaign enemies join only after their region's boss is in the saved pool.
+// Legacy runs retain their roster.
+export const SURVIVAL_LATE_ENEMY_GROUPS = deepFreeze([
+  { bossKind: "kurome", firstWave: 16, kinds: ["resonator", "cagewalker", "spindle", "choir-knot", "pall-manta", "anchor-bloom"] },
+  { bossKind: "futago", firstWave: 21, kinds: ["red-panther-knife", "red-panther-shield", "red-panther-smg", "red-panther-commander"] },
+]);
+
 export function selectSurvivalBossKind({
   waveNumber,
   bossPool,
@@ -195,9 +203,17 @@ export function survivalWaveSpawnPlan(waveNumber, {
   );
   const units = Array.from({ length: normalCount }, (_, index) => (
     SURVIVAL_NORMAL_ENEMY_KINDS[
-      (descriptor.waveNumber * 5 + descriptor.blockNumber * 3 + index * 7) % unlockedKinds
+      (descriptor.waveNumber * 5 + descriptor.blockNumber * 3 + index * (unlockedKinds - 1)) % unlockedKinds
     ]
   ));
+  // At most one replacement per unlocked group, spread through the crowd.
+  // Wave size, spawn cadence, boss slots and stat scaling stay unchanged.
+  if (strictBossPool && Array.isArray(bossPool)) {
+    SURVIVAL_LATE_ENEMY_GROUPS.forEach((group, index) => {
+      if (descriptor.waveNumber < group.firstWave || !bossPool.includes(group.bossKind)) return;
+      units[4 + index * 4] = group.kinds[(descriptor.waveNumber - group.firstWave) % group.kinds.length];
+    });
+  }
   if (descriptor.isBoss) {
     if (!bossKind) throw new Error("A boss wave requires a discovered boss");
     units.splice(Math.min(2, units.length), 0, ...Array(bossBodies).fill(bossKind));
@@ -232,10 +248,10 @@ export function survivalUpgradeEffects(run) {
   );
   return {
     attackMultiplier: 1 + effect("assault-drill"),
-    defenseMultiplier: Math.max(.2, 1 - effect("layered-armor")),
+    defenseMultiplier: Math.max(SURVIVAL_UPGRADE_EFFECT_FLOORS['layered-armor'], 1 - effect("layered-armor")),
     healingMultiplier: 1 + effect("field-triage"),
     rangeMultiplier: 1 + effect("range-calibration"),
-    redeployMultiplier: Math.max(.25, 1 - effect("rapid-redeployment")),
+    redeployMultiplier: Math.max(SURVIVAL_UPGRADE_EFFECT_FLOORS['rapid-redeployment'], 1 - effect("rapid-redeployment")),
     bossDamageMultiplier: 1 + effect("boss-breaker"),
   };
 }
@@ -278,7 +294,11 @@ export function survivalNextWavePreview(run) {
     ["範囲攻撃", ["area"]],
   ].map(([label, profiles]) => ({ label, count: plan.units.filter(kind => profiles.includes(ENEMY_CONTENT.find(enemy => enemy.id === kind)?.aiProfile)).length }))
     .filter(group => group.count > 0).sort((a, b) => b.count - a.count).slice(0, 2);
-  return { wave: plan.wave, total: plan.units.length, threats: groups.map(group => `${group.label} ${group.count}体`).join(" / ") || "通常感染群" };
+  const lateKinds = SURVIVAL_LATE_ENEMY_GROUPS.flatMap(group => group.kinds);
+  const specialists = plan.units.filter(kind => lateKinds.includes(kind))
+    .map(kind => ENEMY_CONTENT.find(enemy => enemy.id === kind)?.displayName).filter(Boolean);
+  return { wave: plan.wave, total: plan.units.length,
+    threats: [...groups.map(group => `${group.label} ${group.count}体`), ...specialists].join(" / ") || "通常感染群" };
 }
 
 export function createSurvivalCombatRuntime(run) {

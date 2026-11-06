@@ -4,6 +4,8 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import {load as loadYaml} from 'js-yaml';
 import {spriteKinds} from '../app/spriteManifest.js';
+import {V177_JOINT_ATLASES} from '../app/v177JointPresentation.js';
+import {QUALITY_CHARACTER_ATLASES} from '../app/qualityCharacterAtlases.js';
 import {normalAttackReach,canAcquireCombatTarget,canNormalAttackTarget} from '../app/combatLifecycle.js';
 import {chooseCommittedEnemyLane} from '../app/lanePlanner.js';
 import {chooseEnemyTargetForProfile,enemyAiProfileFor} from '../app/combatAiProfiles.js';
@@ -49,6 +51,16 @@ test('notice leaving and disappearing during click advance only after actual rem
       scenario==='disabled'?'already-leaving':'dismissed-during-click');assert.equal(removed,true);}
     assert.equal(presses,scenario==='disabled'?0:1);
   }
+});
+
+test('manifest requires the current complete King rig and rejects a different body without a huge diff',()=>{
+ const actual=V177_JOINT_ATLASES['crazy-king'];
+ assert.ok(actual===QUALITY_CHARACTER_ATLASES['crazy-king']);assert.equal(validateManifest().forms,48);
+ try{
+  V177_JOINT_ATLASES['crazy-king']={...actual,parts:[]};
+  assert.throws(()=>validateManifest(),error=>error.code==='ERR_ASSERTION'&&error.message.includes('current complete King rig')&&error.message.length<500);
+ }finally{V177_JOINT_ATLASES['crazy-king']=actual;}
+ assert.equal(validateManifest().forms,48);
 });
 
 test('the recorded 220-to244 HUD movement puts the old y242 point outside; one native pre-down correction owns the real button',async()=>{

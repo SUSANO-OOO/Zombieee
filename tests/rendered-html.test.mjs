@@ -282,7 +282,7 @@ test("keeps the main player-facing battle and result UI Japanese-first", async (
   ]);
   const battleUi = game.slice(game.indexOf("const healthPct"));
   assert.match(battleUi, /<b>\{compactBattleStageName\(selectedOperationView\.displayName\)}<\/b>/);
-  assert.match(battleUi, /第\{hud\.phase\}段階/);
+  assert.match(battleUi, /<small>戦況<\/small>/);
   assert.match(battleUi, /aria-label="生存者ユニット"/);
   assert.match(battleUi, /同時出撃 \{hud\.summonedCount\}\/7/);
   assert.match(battleUi, /装甲車両一斉掃射/);
@@ -482,10 +482,9 @@ test("keeps the battlefield centered in the visual viewport while routing across
   assert.match(game, /w: authoredSize\.w \* compactScale \* depthScale \* animationSample\.bodyScale/);
   assert.match(game, /h: authoredSize\.h \* compactScale \* depthScale \* animationSample\.bodyScale/);
   assert.match(game, /CAMPAIGN_STAGE_IDS\.NISHIJIN_STATION_TUNNEL,[\s\S]*background\.naturalHeight \* \.44/);
-  assert.match(
-    game,
-    /enemyBaseSpriteRef\.current,\s*staticBattlefieldCacheRef\.current,\s*graphicsProfile,\s*false,\s*Boolean\(qaMode \|\| qaScenario\),\s*\);/,
-  );
+  const productionDraw = /enemyBaseSpriteRef\.current,\s*staticBattlefieldCacheRef\.current,\s*graphicsProfile,\s*false,\s*Boolean\(qaMode \|\| qaScenario\),\s*\{ obstacles: abilityNameObstaclesRef\.current, transform: canvasTransformRef\.current \},\s*\);/;
+  assert.match(game, productionDraw);
+  assert.doesNotMatch(game.replaceAll('Boolean(qaMode || qaScenario)', 'true'), productionDraw);
   assert.match(game, /canvasPointerToWorld\(\{ clientX: event\.clientX, clientY: event\.clientY, rect, transform, worldWidth: W, worldHeight: H \}\)/);
   assert.doesNotMatch(game, /placement-hint|placement-cancel/);
   assert.match(game, /selectedAction === "airstrike" && !paused && !end && <div className="v100-targeting-guide"/);
@@ -583,7 +582,7 @@ test("provides stage-aware preparation and phase banners with no manual-tactics 
 
   assert.equal(PREP_SECONDS, 5);
   assert.match(game, /g\.time < g\.definition\.prepSeconds/);
-  assert.match(game, /`出撃準備 \/\/ \$\{Math\.max\(1, Math\.ceil\(g\.definition\.prepSeconds - g\.time\)\)\}`/);
+  assert.match(game, /`準備時間 あと\$\{Math\.max\(1, Math\.ceil\(g\.definition\.prepSeconds - g\.time\)\)\}秒`/);
   assert.match(game, /const nextPhase = phaseForBattle\(g\.definition, g\.time\)/);
   assert.match(game, /g\.banner = phaseBannerForBattle\(g\.definition, nextPhase\)/);
   assert.match(game, /deployQueue: UnitKind\[\]/);
@@ -1735,7 +1734,7 @@ test("exposes localhost-only QA routes and wires deterministic battle and lifecy
   assert.match(game, /resolveTataraStrikeDamage\(f\.damage, tataraTarget\)[\s\S]*humanAttackMultiplier\(f\.kind, target\.kind, targetHpRatio, target\.marked > 0\)/);
   assert.match(game, /effectDistance\(candidate, f\) <= preview\.radius/);
   assert.match(game, /data-portrait=\{portraitArt \? "approved" : "diagnostic"\}/);
-  assert.match(game, /style=\{portraitArt \? \{ "--unit-card-art": `url\('\$\{portraitArt\}'\)` \} as CSSProperties : undefined\}/);
+  assert.match(game, /style=\{portraitArt \? \{ "--unit-card-art": `url\('\$\{portraitArt\}'\)`, \.\.\.\(externalSessionActive \? v100PortraitFraming\(combatKindToCampaignUnitId\(card.kind\)\) : \{\}\) \} as CSSProperties : undefined\}/);
   assert.match(game, /className="diagnostic-portrait" aria-hidden="true">\{card\.kind === "guardian" \? "盾" : "工"\}/);
   assert.match(css, /\.diagnostic-portrait \{[^}]*display:grid; place-items:center;[^}]*background:linear-gradient\(155deg,#354443,#18201f\);/);
   assert.match(game, /g\.supportGauge = 0/);
@@ -1825,7 +1824,11 @@ test("keeps BGM and production SFX lifecycle bounded across pause, mute, retry, 
   assert.doesNotMatch(game, /if \(kind === "pod"\) playCue\("pod-descent"\)/);
   assert.match(game, /airstrikeStep\.events\.includes\("targeting"\)[\s\S]*playCue\("airstrike-targeting"\)/);
   assert.match(game, /areaStep\.changes\.some\(\(change\) => change\.kind === "healing"\)[\s\S]*playCue\("medical-heal"\)/);
-  assert.match(game, /if \(roleEffect && !\["crazy-king", "kumaverson", "babayaga"\]\.includes\(f\.kind\)\) playCue\(`role-\$\{roleEffect\}` as SfxCueId\)/);
+  const roleAudioStart=game.indexOf('if (roleEffect && !["crazy-king", "kumaverson", "babayaga"].includes(f.kind)');
+  assert.ok(roleAudioStart>0);
+  const roleAudio=game.slice(roleAudioStart,game.indexOf('if (!productionMixerRef.current)',roleAudioStart));
+  assert.match(roleAudio,/LEGACY_SFX_CUE_MAP\[.*role-.*roleEffect.*\] !== attackAudioCueId/);
+  assert.match(roleAudio,/playCue\(`role-/);
   const deployAudioStart = game.indexOf("if (g.deployQueue.length");
   const deployAudio = game.slice(deployAudioStart, game.indexOf("const crawlerStep =", deployAudioStart));
   assert.match(deployAudio, /playProductionCue\("support-pod-deploy", deploymentX,[\s\S]*volume: kind === "brute" \? \.42 : \.32[\s\S]*maxInstances: 1/);

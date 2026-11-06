@@ -1,0 +1,12 @@
+{
+  "method": "built-in image_gen",
+  "input": "combat-model-r1.png",
+  "output": "body-underpainting-r1.png",
+  "prompt": "Use case: precise-object-edit. Make the hidden TORSO UNDERPAINTING for animating this exact transparent Monkey sprite. Preserve the exact canvas dimensions, head/face/hair, neck, torso lean, harness, belt, trousers, holsters, knee guards, both legs and boots in their exact positions. Remove BOTH arms and hands completely and remove the ENTIRE crossbow including stock, rail, limbs and cables. Reconstruct only the charcoal shirt and olive harness/pouches hidden behind those arms and crossbow. Close the shoulders naturally in shirt fabric, without hanging sleeve/arm stumps; this is intentionally an armless torso base for a 2D puppet. Do not invent gear, change expression, body proportions, leg pose or clothing. Keep realistic textured cloth/skin/metal and restrained painted finish. Identical composition and transparent margins. True transparent alpha, no floor, no shadow, no background or labels.",
+  "role": "Hidden torso cloth and harness only; visible head, arms, crossbow, legs and boots retained from complete combat model.",
+  "status": "Segmented and rigged into local candidate; technical and visual validation recorded separately. Not Producer accepted. Adopted Monkey r4 remains identity authority; r5 is unused.",
+  "creator": "OpenAI built-in image_gen under Producer direction",
+  "license": "Generated project derivative; no third-party stock license. Formal rights review remains open before final adoption.",
+  "rightsScope": "No new purchase, third-party license or external contract. Commercial use, modification and redistribution remain subject to existing source rights and final review.",
+  "producerApproval": "User authorizes full-character style remake and actual-game integration. This specific candidate is not human accepted."
+}

@@ -3,14 +3,25 @@ import assert from "node:assert/strict";
 import {drawV100CorporateControl,V100_CORPORATE_CONTROLS,V100_CORPORATE_CONTROL_ART,V100_LURE_CONTROL_ART} from "../app/v100CorporateControl.js";
 import {applyEnemyBaseDamage} from "../app/v100ResearchCore.js";
 import {requiredBattleAssetPlan} from "../app/battleAssetPlan.js";
-import {objectiveForBattle} from "../app/battleDefinitions.js";
+import {objectiveForBattle,battleOutcomeFor} from "../app/battleDefinitions.js";
 import {v100BattleDefinitionFor} from "../app/v100BattleAdapter.js";
 test("corporate objectives explain actual protection and destruction while legacy objectives remain intact",()=>{
   for(const [stageId,label] of Object.entries(V100_CORPORATE_CONTROLS)){
     const definition=v100BattleDefinitionFor(stageId);
     assert.equal(objectiveForBattle(definition,{barricadeHp:1000,barricadeVulnerable:true}),`${label}を破壊`);
-    assert.match(objectiveForBattle(definition,{barricadeHp:1000,barricadeVulnerable:false}),/防護を解除/u);
-    assert.equal(objectiveForBattle(definition,{barricadeHp:0,barricadeVulnerable:true}),"残る警備部隊を掃討");
+    const protectedObjective=objectiveForBattle(definition,{barricadeHp:1000,barricadeVulnerable:false});
+    if ([21,23,27].includes(definition.missionConfig.v100StageNumber)) {
+      assert.equal(definition.bossEnemyKind,null);
+      assert.equal(definition.bossUnlocksEnemyBase,false);
+      assert.equal(protectedObjective,"警備部隊を迎撃（最終ウェーブで防護解除）");
+    } else {
+      assert.equal(definition.bossUnlocksEnemyBase,true);
+      assert.match(protectedObjective,definition.missionConfig.v100StageNumber===24?/フタゴを倒し/u:/変異ムガリアン社長を倒し/u);
+      assert.ok(protectedObjective.endsWith(`${label}を破壊`));
+    }
+    const finished={baseHp:680,baseMaxHp:680,barricadeHp:0,barricadeVulnerable:true,bossDefeated:true};
+    assert.equal(battleOutcomeFor(definition,finished),"won");
+    assert.equal(objectiveForBattle(definition,finished),`${label}を破壊した`);
   }
   assert.equal(objectiveForBattle({stageId:"stage-mugarian-logistics-hq",missionType:"assault",missionConfig:{target:"infected-relay"}},{barricadeHp:1000,barricadeVulnerable:true}),"感染中継点を破壊");
 });

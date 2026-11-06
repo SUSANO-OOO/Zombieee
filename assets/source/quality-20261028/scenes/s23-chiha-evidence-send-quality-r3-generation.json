@@ -1,0 +1,26 @@
+{
+  "name": "s23-chiha-evidence-send-quality-r3",
+  "args": {
+    "referenced_image_paths": [
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\identity\\kumaverson-master-r2.png",
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\scenes\\s23-chiha-evidence-send-quality-r2.png"
+    ],
+    "transparent_background": false,
+    "prompt": "Precisely edit reference 2. ONLY correct the RIGHTMOST man bracing the door, to match the EXISTING GENERATED KUMAVERSON model in reference 1. Preserve the other three people and every face except this rightmost man. He has reference 1's fuller cheeks, broad recognizable face, straight dark center-parted hair, same adult age and healthy handsome appearance. He wears reference 1's distressed OFF-WHITE SHORT-SLEEVE CREW-NECK T-SHIRT, chain necklace and gray cargo trousers: NO shirt collar, NO buttons, NO rolled long sleeves, NO tie, NO holster straps. This is NOT another Babayaga. Keep both his hands naturally bracing the door in the existing pose; his frying pan is stowed out of view because his hands are occupied. Keep the navy-shirted short-haired Paisen just LEFT of him unchanged. Keep the actual Babayaga with patterned collared shirt, tie and shoulder straps at FAR LEFT unchanged. Chiha still operates the reader with EXACTLY THREE green lights, scorched IC card and thin chip smoke, other hand at radio. All complete hair crowns remain within frame. Same wide 3:1 panorama, lighting, grim semi-realistic painterly style, physical door, counter and controls. No extra people, no text, no UI."
+  },
+  "references": [
+    {
+      "path": "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\identity\\kumaverson-master-r2.png",
+      "sha256": "51a5acb5a77f53eac921b49a5adefd681218f9f44f64e70caaf416ed2b6ed501",
+      "bytes": 1857208
+    },
+    {
+      "path": "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\scenes\\s23-chiha-evidence-send-quality-r2.png",
+      "sha256": "dfe67c81f461bce56d2bd318df776c75414f9397675059522e788058ca65f130",
+      "bytes": 2819081
+    }
+  ],
+  "stage": "candidate, not selected",
+  "primaryReferencePolicy": "Existing generated models/scenes are primary; original art/photos only check drift.",
+  "generatedOriginal": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-c7fe52ed-a5aa-4232-9f3e-357f115e1520.png"
+}

@@ -86,7 +86,7 @@ test('the actual backdrop and detail components bind the current and previous im
   const Backdrop=compile('V100EventBackdrop','V100EventBackdrop.tsx',{
     React,V177StoryDetailShot:Detail,v177StoryImagePositionFor,
     useState:()=>[{current,previous,description:'救護場面'},()=>{}],
-    useRef:value=>({current:value}),useEffect:()=>{},
+    useRef:value=>({current:value}),useEffect:()=>{},useLayoutEffect:()=>{},
   });
   const html=renderToStaticMarkup(React.createElement(Backdrop,{src:current}));
   const images=[...html.matchAll(/<img\b[^>]*>/gu)].map(m=>m[0]);

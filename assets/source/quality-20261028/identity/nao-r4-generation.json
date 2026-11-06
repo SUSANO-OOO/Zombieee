@@ -1,0 +1,14 @@
+{
+  "method": "built-in image_gen",
+  "args": {
+    "referenced_image_paths": [
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\public\\art\\v070\\characters\\reference\\nao-base-r1.png"
+    ],
+    "transparent_background": true,
+    "prompt": "Edit the provided canonical character art into a realistic live-action-quality portrait with a subtle painted finish. Depict the SAME adult woman Nao, preserving her individual facial shape, eyebrows, nose, lips, warm intelligent expression and long brown braided high ponytail. Translate the reference's stylized eyes to believable human size while preserving their shape and spacing; do not give her a generic model face. Real human skin, matte natural complexion, individual hair strands, real cotton and weathered fabric, soft diffuse neutral light. No anime eyes, heavy black drawn outlines, exaggerated anatomy, plastic shine or fashion glamour pose. Preserve the exact established outfit and role: teal jacket with orange-red lining, fully covering white ribbed high-neck top, orange shoulder strap and belt, dark trousers, practical dark boots, large medical bag with rolled bandages, and her existing compact support firearm pointed down safely. Keep all clothing coverage, equipment and colors unchanged. Full-body standing portrait, relaxed stable stance with both boots planted on the same implied level, face turned almost toward camera, hands naturally holding her own equipment. Entire hair, braid, both arms, equipment and both feet within frame with clear margins. One isolated person only, genuinely transparent alpha background, no floor, backdrop, lettering, borders or extra objects. The result should resemble a believable photographed person in this exact game costume, with restrained painterly finish rather than a comic illustration."
+  },
+  "output": "nao-master-r4.png",
+  "status": "Local quality-r1 dialogue/formation/personnel images connected. See runtime provenance and support-cards-r4; Nao dialogue checkpoints in nao-runtime-r1. Battle/cuts/credits and Producer final acceptance remain open.",
+  "referenceSha256": "b412b49ef4612b557909fdc0d66e482195829d55dadccf941ac6b73966538e6d",
+  "outputSha256": "3bc43907891d7eafbdf86a08a501a5a7cbec9f9b5f3cacd7e0c73099ddfff7ba"
+}

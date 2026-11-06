@@ -1,0 +1,126 @@
+{
+  "schema": "zombieee-joint-atlas/1",
+  "kind": "brute",
+  "assetPath": "/art/v100/joints/brute-combat-r1.webp",
+  "bytes": 56050,
+  "sha256": "38dcda0f9d9e620a48b9c3a44ce55556dbc2a3d1ac7315bbff857095dde5cec4",
+  "atlasPacking": "height-descending-shelves",
+  "generatedPartsStudySha256": "a5c3386c0f51c8d98bdbe41471fd01b3de2693362bd55e7d391eb579e1f56282",
+  "identitySourceSha256": "b5a353e527dcf5f258710999768e50d9644a96a017d7c339910d5d354f2d9c95",
+  "identityBinding": {
+    "path": "/art/v070/characters/brute-battle-v1.png",
+    "sourceSha256": "8b51f82432280661d6bb35786ee74c8e583f4da22ac4805e80072750657a2b95",
+    "sourceRect": {
+      "x": 480,
+      "y": 0,
+      "w": 480,
+      "h": 448
+    },
+    "referenceTransform": {
+      "scale": 1,
+      "tx": 0.5,
+      "ty": 0,
+      "flipX": false
+    },
+    "modelSource": "assets/source/quality-20261028/identity/tatara-master-r4.png",
+    "modelSha256": "dc28b9b8cedb6b96fe14c5003f510466056baf06ea172cceccc83727a08d2def",
+    "combatSource": "assets/source/quality-20261028/rigs/brute-combat-r1/combat-model-r1.png",
+    "combatSha256": "b5a353e527dcf5f258710999768e50d9644a96a017d7c339910d5d354f2d9c95"
+  },
+  "motionSha256": "814fa58fefc98a2eefed8e387419100fb5cdcacd9fc08f82f34176ceb00c0f67",
+  "parts": [
+    {
+      "name": "far-upper-arm",
+      "file": "far-upper-arm.png",
+      "sha256": "a77624f00afdb1fb85cedcea1a141e15d5e51254266bbf1571ce0a5033b5c9d5",
+      "original": false
+    },
+    {
+      "name": "far-forearm",
+      "file": "far-forearm.png",
+      "sha256": "a57a8a762361b99e040589b0d14c34268caee4bf5735f1fab8d3e87c9a3ab50d",
+      "original": false
+    },
+    {
+      "name": "far-thigh",
+      "file": "far-thigh.png",
+      "sha256": "be7e3d6406b0a46ad2a5cd8b3d6f2d1349e5a4b7062b9e62d15c48562e96f11f",
+      "original": false
+    },
+    {
+      "name": "far-shin",
+      "file": "far-shin.png",
+      "sha256": "35bf3fc31b6f6c88ea6fe8ffef97127f02baab2a65a646c31795ad448856f949",
+      "original": false
+    },
+    {
+      "name": "far-boot",
+      "file": "far-boot.png",
+      "sha256": "f5088e76d47453c1daf0da23ffd34573bdfac467a3fc9b642b781206764cfc73",
+      "original": false
+    },
+    {
+      "name": "near-thigh",
+      "file": "near-thigh.png",
+      "sha256": "72dcd5e54e952fe911cff48f0c6b1db8d07cba0862ea86213163620a549ce455",
+      "original": false
+    },
+    {
+      "name": "near-shin",
+      "file": "near-shin.png",
+      "sha256": "ea919c666c9df22e20764cf911f57d2f287f5790fe4ec716ce5ef58e3cb2ac6e",
+      "original": false
+    },
+    {
+      "name": "near-boot",
+      "file": "near-boot.png",
+      "sha256": "6c4fa57fcfa6e067fab473fa5bbf8e015397dad6b36a0b7212b0ee3ff987bd2f",
+      "original": false
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "a5e72ab4fa81052ac88680ee84d196dd3965563643a609fc616a2812f97c583b",
+      "original": false
+    },
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "d63ca42f2f01d5b12635c29efc0525622c57bf8756ea9756343919020589f9d6",
+      "original": false
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "e7613bf0dd5099954680bcc45cd6856a58dc231b3118a5381ce5050111c48e79",
+      "original": false
+    },
+    {
+      "name": "near-upper-arm",
+      "file": "near-upper-arm.png",
+      "sha256": "1a7c9c75dae53d3aae83327cf6bfeee4ee62b5ce2971c1dfb2eb793b8bf52ba7",
+      "original": false
+    },
+    {
+      "name": "near-forearm",
+      "file": "near-forearm.png",
+      "sha256": "4842e4adcb9e3d7d44e63b9afd3b1f5872f4bb8f65a82fb93c99965be5087dba",
+      "original": false
+    },
+    {
+      "name": "weapon-and-hands",
+      "file": "weapon-and-hands.png",
+      "sha256": "b8bae6ec840542d89330a9dcacf21e054486701c3fc2e95ce9693abace32c355",
+      "original": false
+    }
+  ],
+  "source": "Complete Tatara body from current generated master with hidden-cloth underpainting; both hands share the held weapon transform. Deterministic fixed-length 2D kinematics, not Blender execution. Motion and human acceptance pending.",
+  "groundY": 432,
+  "decodedBytes": 387072,
+  "poses": 151,
+  "scope": {
+    "totalUnits": 48,
+    "allUnitAcceptance": false,
+    "normalPlayAcceptance": false
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "purpose": "Deterministic reference packing for the tool reference limit. Existing models only; no semantic redraw or in-game size comparison.",
+  "sources": [
+    {
+      "id": "CHIHA",
+      "path": "assets/source/quality-20261028/identity/chiha-master-r4.png",
+      "sha256": "d9acf14c0f75ce8e80b4dd2e7f8285e154562e72082200be68983ef292369705"
+    },
+    {
+      "id": "ZAKIMIYA",
+      "path": "assets/source/quality-20261028/identity/zakimiya-canonical-master-r1.png",
+      "sha256": "303adc8b4126badbc98969b476b773bd4a35c3817b34d3de6478842245dfa389"
+    }
+  ],
+  "output": "assets/source/quality-20261028/scenes/references/chiha-zakimiya-models-r1.png",
+  "sha256": "023b16377bd377e0bb96e42cf23fecee3dc87502fc9aaf6be49faa72a8ef46ef"
+}

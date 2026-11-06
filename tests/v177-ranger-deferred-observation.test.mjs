@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import {execFileSync} from 'node:child_process';
 import ts from 'typescript';
-const normal=fs.readFileSync('scripts/v100-normal-tactical-input.mjs','utf8');
+const normal=fs.readFileSync('scripts/v100-normal-tactical-input.mjs','utf8').replaceAll('\r\n','\n');
 const runtime=fs.readFileSync('scripts/v100-device-runtime-browser.mjs','utf8');
 const tree=s=>ts.createSourceFile('actual.mjs',s,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);
 function declaration(source,name){const t=tree(source),n=t.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text===name);assert.ok(n,name);return n.getText(t).replace(/^export /u,'');}

@@ -16,7 +16,7 @@ const sample=t=>t<.28?{requestedState:'wind-up',clipProgress:t/.28}:t<.7
 const matrices=trace=>Object.fromEntries(rig.parts.map((part,i)=>[part.bone,trace.calls[i+1].matrix]));
 const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 function connected(trace) {
-  assert.equal(trace.calls.length,8,'one weighted lower and seven upper parts, without ghost feet');
+  assert.equal(trace.calls.length,1+V177_JOINT_ATLASES.ranger.upperRig.parts.length,'one weighted lower and seven upper parts, without ghost feet');
   const m=matrices(trace);
   assert.ok(distance(point(m.spine,[230.5,112]),point(m.head,[230.5,112]))<.001);
   for(const c of rig.armConstraints)for(const [a,b]of [

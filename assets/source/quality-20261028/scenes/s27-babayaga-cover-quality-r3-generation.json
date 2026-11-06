@@ -1,0 +1,12 @@
+{
+  "tool": "built-in image_gen",
+  "referenced_image_paths": [
+    "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\scenes\\s27-babayaga-cover-quality-r2.png",
+    "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\identity\\babayaga-master-r1.png"
+  ],
+  "transparent_background": false,
+  "prompt": "Use case: identity-preserve / composition reframe. Render a VERY WIDE 3:1 CINEMASCOPE PANORAMA, about3072x1024px, NOT16:9. Image1 is the blockade cover scene to recompose; image2 is the ONLY LOCKED BABAYAGA generated model. Keep his exact clean-shaven adult face, eyes/brows/nose/lips/jaw and wavy center-part black hair, pale rolled-sleeve shirt, dark loosened tie, shoulder harness and original age. Do not create a different handsome hero. A tight dynamic chest-up three-quarter composition: Babayaga at LEFT-CENTER behind the edge of the same armored vehicle, face large (head about45% of image height), entire hair silhouette with4% top breathing room. His TWO naturally connected arms form ONE correct two-handed grip on the SAME black TACTICAL SEMIAUTOMATIC HANDGUN with an aligned cylindrical SUPPRESSOR, aiming toward RIGHT. Face, complete hands/grip, pistol including barrel tip must all remain inside the middle75% of image height. Keep the pistol close to the face's height for a clear unified sight line, arms and wrists anatomically coherent. Calm alert focus with his subtle dry half-smile, no exaggerated grimace. Exactly ONE gun, held in hands; shoulder holster is visibly EMPTY leather, no duplicate hanging pistol or cylinder. Keep the vehicle as real cover and distant fully gas-masked red-lens soldiers at the research gate on RIGHT; no new named characters or visible human faces, no kill, explosion or injury. Crop unimportant lower body instead of shrinking his face. Extend ruined industrial gate environment to either side. Realistic skin/cloth/metal and restrained cinematic illustration matching the character model, no heavy comic hatching, plastic gloss or photo-paste seams. No text, UI or watermark.",
+  "output": "s27-babayaga-cover-quality-r3.png",
+  "generatedOriginal": "C:/Users/okait/.codex/generated_images/01a180c8-9e05-7871-b287-613f7c7eb364/exec-ff147cfe-00b1-45e9-963c-fec80330e157.png",
+  "status": "Wide close-up candidate using locked generated models. Native readability and final acceptance pending."
+}

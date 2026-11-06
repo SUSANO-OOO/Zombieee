@@ -19,6 +19,7 @@ v1.0.5の公開は完了しています。これは全製品課題や実機受�
 ## 作業と残件の入口
 
 - **製品の継続課題・証拠・未確認： [Issue #177](https://github.com/SUSANO-OOO/Zombieee/issues/177)**。公開済みの[PR #181](https://github.com/SUSANO-OOO/Zombieee/pull/181)と[PR #180](https://github.com/SUSANO-OOO/Zombieee/pull/180)の履歴を保持します。
+- **今回のゲーム本体の総合更新： [PR #188](https://github.com/SUSANO-OOO/Zombieee/pull/188)**（未統合・未配信）。P01〜P07と全51監査の変更・根拠・残件は[今回の対応表](qa/quality-20261028.md)とIssue #177へ集約します。運用整理のIssue #182とは区別します。
 - **開発運用の整理： [Issue #182](https://github.com/SUSANO-OOO/Zombieee/issues/182)**。ゲーム仕様・人物・素材・saveの意味を変えず、公開版を維持する作業です。この作業のための新release／Pages配信はしません。
 - 依存更新PRは製品・build・検証runtimeの影響を分けて判断します。Playwright／WebKit固定とvinext補修を、一括更新で無条件に置き換えません。
 

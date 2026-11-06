@@ -256,7 +256,7 @@ test('actual record→actual area-copy/assignment→same getSnapshot projection 
 });
 
 test('all original receipt check expressions and the original advancing-actor requirement remain present',()=>{
- const original=execFileSync('git',['show','26440877ee9cb120f0d3e4e38a73c38252cc46a5:scripts/v177-ranger-performance-receipts.mjs'],{encoding:'utf8'}).replaceAll('\r\n','\n'),candidate=fs.readFileSync(new URL('../scripts/v177-ranger-performance-receipts.mjs',import.meta.url),'utf8');
+ const original=execFileSync('git',['show','26440877ee9cb120f0d3e4e38a73c38252cc46a5:scripts/v177-ranger-performance-receipts.mjs'],{encoding:'utf8'}).replaceAll('\r\n','\n'),candidate=fs.readFileSync(new URL('../scripts/v177-ranger-performance-receipts.mjs',import.meta.url),'utf8').replaceAll('\r\n','\n');
  const calls=text=>{const sf=ts.createSourceFile('receipt.mjs',text,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS),found=[];const visit=n=>{if(ts.isCallExpression(n)&&n.expression.getText(sf)==='check')found.push(n.getText(sf));ts.forEachChild(n,visit);};visit(sf);return found;};
  const newer=calls(candidate);for(const call of calls(original))assert(newer.includes(call),call);
  const advancing='const advancingActors=[...actors.values()].filter(actor=>actor.observations>=2&&actor.lastSequence>actor.firstSequence&&actor.lastPaintedAt>actor.firstPaintedAt);';assert(original.includes(advancing));assert(candidate.includes(advancing));

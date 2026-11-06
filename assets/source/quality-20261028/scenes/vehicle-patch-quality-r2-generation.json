@@ -1,0 +1,12 @@
+{
+  "tool": "built-in image_gen",
+  "referenced_image_paths": [
+    "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\scenes\\vehicle-patch-quality-r1.png",
+    "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\identity\\tky-89-warm-r1.png"
+  ],
+  "transparent_background": false,
+  "prompt": "Use case: identity-preserve / precise-object-edit. Edit image 1, the wide armored vehicle repair scene. Image 2 is the strict approved TKY character reference. Change ONLY the standing CENTER LEFT man's face, hair and mask to match the handsome recognizable TKY in image 2, in the SAME downward three-quarter angle and natural head size. Black Japanese fox half-mask reaches forehead/hairline through BOTH eye sockets, real eyes visible, sculpted red ornamental 89 on forehead, asymmetric crimson scroll pattern. Nose tip, mouth and jaw exposed. Preserve original TKY identity with subtly slimmer jaw and Korean actor grooming. No animal ears/horns or dangling ornaments. Preserve his hands bracing the exact same armor panel, black coat/magenta straps, all tools and vehicle geometry. Gantetsu kneeling LEFT must keep the CLOSED helmet and green hood; never invent a human face for him. Keep the entire rainy garage, sunset, vehicle and 16:9 camera framing unchanged. Realistic restrained cinematic illustration, no extra people/hands, no new text or watermark.",
+  "output": "vehicle-patch-quality-r2.png",
+  "generatedOriginal": "C:/Users/okait/.codex/generated_images/01a180c8-9e05-7871-b287-613f7c7eb364/exec-79a3d67e-c07f-447f-bac1-e8215e1154b7.png",
+  "producerApproval": "TKY89 design approved with おけ; derived scene implementation; not whole-game acceptance"
+}

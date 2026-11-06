@@ -1,0 +1,164 @@
+{
+  "generator": "scripts/build-quality-character-heads.mjs",
+  "creator": "OpenAI built-in image_gen under Producer direction; deterministic atlas packing by this script",
+  "source": "Producer-provided photographs for brawler, tky, babayaga and kumaverson; project canonical v090 identity for zakimiya. Private photos are not copied into Git or public.",
+  "license": "Generated project derivative; no third-party stock license. Formal rights review remains open before final asset adoption.",
+  "permissions": {
+    "modification": "Producer requested",
+    "inGameRedistribution": "Producer requested playable game candidate",
+    "commercialUse": "Not separately reviewed in this change",
+    "referencePhotoRedistribution": false
+  },
+  "producerApproval": "Creation and integration requested; final likeness and art acceptance remain open",
+  "runtimeAssetCount": 5,
+  "logicalBytes": 159056,
+  "distinctBytes": 159056,
+  "entries": [
+    {
+      "kind": "kumaverson",
+      "sourcePath": "assets/source/quality-20261028/identity/kumaverson-head-r1.png",
+      "sourceSha256": "3c1a0c2700c5238a1c2544bd6c2e2dadef37f6dc8720299627cd23e6776015fd",
+      "basePath": "/art/v100/joints/kumaverson-r1.webp",
+      "baseSha256": "b21eb685a87bc72b7ce7687f78eb6b3b486f37a6a0b59bf11a2fc87ad5266364",
+      "crop": {
+        "left": 232,
+        "top": 128,
+        "width": 834,
+        "height": 1025
+      },
+      "headSource": {
+        "x": 451,
+        "y": 2,
+        "w": 38,
+        "h": 51
+      },
+      "headDestination": {
+        "x": 290,
+        "y": 19,
+        "w": 75,
+        "h": 101
+      },
+      "assetPath": "/art/v100/joints/kumaverson-quality-head-r1.webp",
+      "bytes": 33682,
+      "sha256": "3baa1326f2f6020c8f0386c8beac83e0eaf0bfb129afcf71644e34253818f9dc",
+      "geometry": "Original pose matrices, neck attachment, tile rectangle and body paint retained; only head texture replaced."
+    },
+    {
+      "kind": "babayaga",
+      "sourcePath": "assets/source/quality-20261028/identity/babayaga-head-r1.png",
+      "sourceSha256": "cd6651cb8725ef37481fe77bfdaeb758492e328f0ac536306e627b1d6fa21550",
+      "basePath": "/art/v100/joints/babayaga-r1.webp",
+      "baseSha256": "68963ba9025a3b597f2f83600761b360ecb4e080848712bdaffae67d2b6ccecd",
+      "crop": {
+        "left": 225,
+        "top": 110,
+        "width": 804,
+        "height": 1035
+      },
+      "headSource": {
+        "x": 176,
+        "y": 2,
+        "w": 29,
+        "h": 36
+      },
+      "headDestination": {
+        "x": 222,
+        "y": 42,
+        "w": 58,
+        "h": 72
+      },
+      "assetPath": "/art/v100/joints/babayaga-quality-head-r1.webp",
+      "bytes": 22626,
+      "sha256": "4622b14b346602af8e5d269720fa301afcf948c22db07db0ad56baf24699b09c",
+      "geometry": "Original pose matrices, neck attachment, tile rectangle and body paint retained; only head texture replaced."
+    },
+    {
+      "kind": "brawler",
+      "sourcePath": "assets/source/quality-20261028/identity/brawler-head-r1.png",
+      "sourceSha256": "1f465ee45649da85e3bcc41b4bc7e1b7c1ebf3534eb2d8e735ae9d6549589e50",
+      "basePath": "/art/v100/joints/brawler-photo-r2.webp",
+      "baseSha256": "e318ae905df6d0fe24d69ecc71bc5796aebfde3a50defde1c59b3cf0196707cb",
+      "crop": {
+        "left": 204,
+        "top": 49,
+        "width": 831,
+        "height": 1123
+      },
+      "headSource": {
+        "x": 399,
+        "y": 2,
+        "w": 32,
+        "h": 43
+      },
+      "headDestination": {
+        "x": 199,
+        "y": 15,
+        "w": 64,
+        "h": 85
+      },
+      "assetPath": "/art/v100/joints/brawler-quality-head-r1.webp",
+      "bytes": 36006,
+      "sha256": "041763e670aa2f22eacade93b0e746a19ffbe44620284656ba5a6defac49a013",
+      "geometry": "Original pose matrices, neck attachment, tile rectangle and body paint retained; only head texture replaced."
+    },
+    {
+      "kind": "tky",
+      "sourcePath": "assets/source/quality-20261028/identity/tky-89-head-r1.png",
+      "sourceSha256": "ed9d9655b6c5093ce35870946bc1270f14259f34febb5ab61c68feac3addbbf4",
+      "basePath": "/art/v100/joints/tky-r1.webp",
+      "baseSha256": "59495022d95a45677605e04887d72e5359a63e3c5a94203315d4bfe4053aad22",
+      "crop": {
+        "left": 225,
+        "top": 13,
+        "width": 973,
+        "height": 1095
+      },
+      "headSource": {
+        "x": 2,
+        "y": 89,
+        "w": 33,
+        "h": 36
+      },
+      "headDestination": {
+        "x": 234,
+        "y": 15,
+        "w": 65,
+        "h": 72
+      },
+      "assetPath": "/art/v100/joints/tky-quality-head-r1.webp",
+      "bytes": 36588,
+      "sha256": "57c45e88810758a7bb1afc9f1eff3011142602069b540087fdc971ddda8b4716",
+      "geometry": "Original pose matrices, neck attachment, tile rectangle and body paint retained; only head texture replaced."
+    },
+    {
+      "kind": "zakimiya",
+      "sourcePath": "assets/source/quality-20261028/identity/zakimiya-head-r1.png",
+      "sourceSha256": "db3170acec775316ad4dcfae651ff10c0937d52117afc0ce69f3ebd1d0fb97b2",
+      "basePath": "/art/v100/joints/zakimiya-r1.webp",
+      "baseSha256": "5859fd70326d70e0e29a35019216276951e0388656779611405bb78ec686a86f",
+      "crop": {
+        "left": 294,
+        "top": 36,
+        "width": 851,
+        "height": 1046
+      },
+      "headSource": {
+        "x": 367,
+        "y": 2,
+        "w": 28,
+        "h": 36
+      },
+      "headDestination": {
+        "x": 234,
+        "y": 16,
+        "w": 56,
+        "h": 72
+      },
+      "assetPath": "/art/v100/joints/zakimiya-quality-head-r1.webp",
+      "bytes": 30154,
+      "sha256": "9bf647045ed7eb614cd92f6556aeab2fd3c9aa6451cec00e3d039df10aa6990b",
+      "geometry": "Original pose matrices, neck attachment, tile rectangle and body paint retained; only head texture replaced."
+    }
+  ],
+  "scope": "Shared battle head texture candidate. Fallback raster sheets, scene paintings, credits and whole-cast acceptance remain open. Numeric likeness percentage not asserted."
+}

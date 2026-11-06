@@ -373,3 +373,19 @@ test("an immobile unit releases a failed route after bounded corrections without
   assert.equal(newObjective.recoveryExhausted, false);
   assert.equal(newObjective.consecutiveRecoveryAttempts, 0);
 });
+
+// A previously valid target must not bypass the caller's pursuit eligibility.
+test("every enemy profile releases a lost old human target instead of blocking crawler engagement",()=>{
+ for(const profile of ENEMY_AI_PROFILE_IDS){const p=enemyAiProfileFor(profile),old={id:"old",side:"human",hp:60,combatReady:true,x:p.engagementRadius+600,y:0,distance:p.engagementRadius+600,inContact:false,blocksRoute:false,attackEligible:true};
+  assert.equal(chooseEnemyTargetForProfile({profile,enemy:{x:0,y:0},candidates:[old],currentTargetId:old.id}),null,profile+" cannot resurrect an out-of-policy target");
+ }
+});
+test("old targets still retain contact and route blocking even when claim capacity is full",()=>{
+ for(const profile of ENEMY_AI_PROFILE_IDS)for(const flags of [{inContact:true,distance:5},{blocksRoute:true,distance:120}]){const old={id:"old",hp:60,attackEligible:true,capacity:1,...flags};assert.equal(chooseEnemyTargetForProfile({profile,enemy:{x:0,y:0},candidates:[old],claims:new Map([[old.id,5]]),currentTargetId:old.id}),old,profile);}
+});
+test("legal in-range pursuit stays stable while a lost target yields to a new valid one",()=>{
+ for(const profile of ENEMY_AI_PROFILE_IDS){const p=enemyAiProfileFor(profile);if(!p.humanPursuit)continue;const near={id:"near",hp:60,distance:p.engagementRadius/2,attackEligible:true,capacity:1},lost={id:"old",hp:60,distance:p.engagementRadius+600,attackEligible:true};
+  assert.equal(chooseEnemyTargetForProfile({profile,enemy:{x:0,y:0},candidates:[near],claims:new Map([[near.id,5]]),currentTargetId:near.id}),near,profile+" legal claim retained");
+  assert.equal(chooseEnemyTargetForProfile({profile,enemy:{x:0,y:0},candidates:[lost,near],currentTargetId:lost.id}),near,profile+" retarget after loss");
+ }
+});

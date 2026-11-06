@@ -1,0 +1,13 @@
+{
+  "tool": "built-in image_gen",
+  "referenced_image_paths": [
+    "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/public/art/v100/credits/street-shutter-r2.webp",
+    "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/hachi-master-r4.png",
+    "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/paisen-photo-master-r7.png"
+  ],
+  "transparent_background": false,
+  "prompt": "Edit IMAGE1, the existing 16:9 staff-roll shot of two adult teammates raising a damaged rolling shutter. Preserve the original exact composition, action, warehouse street and golden sunlight. IMAGE2 is the LOCKED EXISTING GENERATED PRIMARY MODEL of HACHI, the orange-coated adult young man at LEFT levering with his blue hooked crowbar. IMAGE3 is the LOCKED EXISTING GENERATED PRIMARY MODEL of PAISEN, the sturdy short-haired adult man at RIGHT lifting/holding the shutter overhead in his dark indigo/navy-purple T-shirt and pale shorts. Match their specific faces, hairlines, brow/eyes, nose/mouth/jaw, ages and natural proportions rather than generic attractive men. Hachi keeps his black/orange undercut-spiky hair, small bandage over the nose, orange raincoat, blue courier backpack and red bicycle helmet attached to it. Paisen keeps his own distinct face and sturdy physique without inflated bodybuilder muscles. Preserve both hand grips on the actual crowbar/shutter, plausible weight, supported footing, connected shoulders/elbows/wrists, the bar's contact with the shutter rail, and both actors' existing cooperation/exertion. No pose replacement or new weapons. Coherently remake the old anime/inked rendering as realistic photographic anatomy, skin, hair, cloth and weathered metal with a restrained illustrative finish, matching these generated models and the other Nishijin RPG scenes. Keep heads, hands and feet inside the original frame as in image1; no extra actors, no text/panels, no change of story. One finished 16:9 illustration.",
+  "output": "street-shutter-quality-r1.png",
+  "generatedOriginal": "C:/Users/okait/.codex/generated_images/01a180c8-9e05-7871-b287-613f7c7eb364/exec-a8f481ec-8b27-4a8a-b034-e85b6039580d.png",
+  "statusAtGeneration": "Model-based scene candidate; native connection and review not yet performed."
+}

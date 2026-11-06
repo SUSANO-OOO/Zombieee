@@ -1,0 +1,13 @@
+{
+  "tool": "built-in image_gen",
+  "referenced_image_paths": [
+    "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/public/art/v100/credits/chiha-baba-tender-r1.webp",
+    "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/babayaga-master-r1.png",
+    "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/chiha-master-r4.png"
+  ],
+  "transparent_background": false,
+  "prompt": "Edit IMAGE 1, the existing 16:9 in-game staff-roll illustration. It is the target composition and exact narrative action. IMAGE 2 is the LOCKED EXISTING GENERATED MODEL of BABAYAGA, the man on the left. IMAGE 3 is the LOCKED EXISTING GENERATED MODEL of MRS CHIHA, the adult woman on the right. These generated models are the primary production references: reproduce their specific identities faithfully in the target pose rather than inventing attractive substitutes or averaging faces. Make Babayaga's face, hairline, swept black hair, brow/eyes, nose, lips, jaw and apparent age recognizably the SAME man as image2, clean shaven; retain white shirt, loosened dark red tie, black tactical shoulder harness. Make Chiha the SAME adult woman as image3 with her own specific eyes/nose/lips, dark softly pinned hair, black worn leather coat and white blouse, no generic anime beauty. Preserve the existing gentle cheek kiss and hand-on-tie interaction, his restrained soft expression, their exact readable hand relationships, the ruined clinic/cots/window view/lantern/sunset and all existing story content. Improve the entire drawing coherently toward realistic human anatomy, photographic skin/fabric/leather/light with a restrained painterly illustrative finish suitable for the same post-apocalyptic Nishijin RPG. Avoid anime outlines, plastic skin, facial collage, exaggeration, and new jewelry/ears/masks/weapons. Do not add characters or alter the plot. Keep both heads and the important hands inside the image. Preserve the original 16:9 framing; output one finished widescreen illustration, no text, no panels.",
+  "output": "facility-chiha-baba-tender-quality-r2.png",
+  "generatedOriginal": "C:/Users/okait/.codex/generated_images/01a180c8-9e05-7871-b287-613f7c7eb364/exec-b2e8634f-a1da-45de-b262-62eed0256776.png",
+  "statusAtGeneration": "Generated scene candidate; not connected to runtime yet. Identity and in-game review pending."
+}

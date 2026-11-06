@@ -1,0 +1,12 @@
+{
+  "tool": "built-in image_gen",
+  "referenced_image_paths": [
+    "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/public/art/v100/credits/zakimiya-bottles-r2.webp",
+    "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028/assets/source/quality-20261028/identity/zakimiya-canonical-master-r1.png"
+  ],
+  "transparent_background": false,
+  "prompt": "Edit IMAGE1, existing 16:9 staff-roll scene of ZAKIMIYA washing his child's baby bottles in the quiet kitchen. Retain the exact composition, solitary daily-care action, bottle in left image-side hand, brush in other hand, running/pouring water over sink, all baby feeding equipment, towels, worn restaurant kitchen and warm practical lighting/cool dusk outside. IMAGE2 is the LOCKED EXISTING GENERATED PRIMARY MODEL of ZAKIMIYA. Match that exact man, facial structure/eye spacing/age/nose/mouth/jaw/black hairstyle and worn dark hooded jacket with pale sleeve stripes, red armband, light shirt, necklaces, strap and wrist wrapping; no new generic handsome man and no changing his age or identity. Keep his focus on washing the bottle, not posing toward camera. Model reference supplies identity/wardrobe only; do NOT replace the baby bottle with its Molotov or import a flame/weapon into this peaceful care action. Plausible fingers visibly holding bottle and brush, connected wrists/elbows/shoulders. Realistic photographic human skin/hair/water/cloth/metal, restrained painterly illustration finish, subtle pores not waxy/plastic/glossy. Same event and props, no extra actors, no added labels/text/panels. One finished 16:9 illustration.",
+  "output": "zakimiya-bottles-quality-r1.png",
+  "statusAtGeneration": "Model-based scene candidate; runtime connection and native review pending.",
+  "generatedOriginal": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-311213c6-65b2-4a3f-ad69-1b576f5d1220.png"
+}

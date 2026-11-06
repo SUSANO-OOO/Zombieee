@@ -1,0 +1,16 @@
+{
+  "method": "built-in image_gen",
+  "canonical": "assets/source/v090/characters/miyamoto-musashi-identity-master-r1.png",
+  "args": {
+    "referenced_image_paths": [
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets/source/v090/characters/miyamoto-musashi-identity-master-r1.png"
+    ],
+    "transparent_background": true,
+    "prompt": "Identity-preserve game art refinement of this exact established adult male Miyamoto Musashi. Keep his own rugged angular face, facial hair, age, long dark tied-up hair with loose strands, lean muscular build, navy tattered layered samurai clothing, scarf, single shoulder armor, radio, pouches, wrapped shin guards and sandals, and his two distinct swords exactly. Refine toward believable photographic anatomy, matte skin, natural hair, cloth and worn metal, retaining a restrained painted finish. Do not replace his face with a generic handsome man or another character. Keep the same upright full-body stance, camera and silhouette, both swords held lowered, hands naturally gripping hilts and all feet and blade tips visible. Genuine transparent alpha background, no floor/shadow or studio gradient. One complete figure with margin, no text or collage."
+  },
+  "status": "Own canonical identity retained; alpha-composited image inspected. Connected to local dialogue mapping and cards. Stage portrait rendering confirmed except Mayo, who has no separate portrait cue in the inspected stage pre/post script. Battle, dedicated scenes, credits and Producer acceptance remain open.",
+  "output": "assets/source/quality-20261028/identity/musashi-master-r4.png",
+  "outputSha256": "7ce937bddf0ac7bbb4e068b916625e4cd629411d6cc561946f88c22492c39c17",
+  "outputBytes": 2167988,
+  "referenceSha256": "9d2a1ee6e8dd56b5993a1386bcecaa89c219b83cd77a0aaadab080553f6182e9"
+}

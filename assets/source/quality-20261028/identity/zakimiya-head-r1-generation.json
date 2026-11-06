@@ -1,0 +1,30 @@
+{
+  "method": "built-in image_gen",
+  "args": {
+    "referenced_image_paths": [
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\v090\\characters\\zakimiya-identity-master-r1.png",
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\identity\\zakimiya-canonical-master-r1.png",
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\output\\quality-20261028\\head-trio\\zakimiya-before.png"
+    ],
+    "transparent_background": true,
+    "prompt": "Create ONE isolated transparent game battle sprite HEAD of the exact SAME Zakimiya character in reference 1, the canonical identity master. Reference 2 is its current dialogue rendering: same long lean mature adult face, narrow relaxed eyes, nose and mouth proportions, asymmetric subtle expression, cheek lines, dark tousled medium-short hair. Reference 3 supplies ONLY battle pose and neck attachment. Head facing screen RIGHT at three-quarter-to-profile angle, gaze slightly down towards an enemy in front, upright short neck, matching reference 3. Preserve identity, age and facial proportions; do not turn him into a young generic anime hero or substitute another actor. Realistic skin/anatomy with restrained painterly finish as reference 2, neutral diffuse matte lighting. Only full hair, face, ears and short bare neck, ending at neck base. No shoulders, clothes, necklaces, hands, bottle, torso, background, text or duplicates. Genuine transparent alpha, generous clear transparent margin around entire hair and neck. A clean production cutout that can join the existing black jacket battle sprite; one head only."
+  },
+  "generatedPath": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-0fcd7030-d8b8-415f-ab36-a734f1022fae.png",
+  "output": "zakimiya-head-r1.png",
+  "status": "Candidate; not Producer-approved. Original photo files excluded from Git.",
+  "referenceHashes": [
+    {
+      "sha256": "78405e4610f6d8d71c0e094bcf2cf125522ca9b869db2146e39b9e6122ba88d7",
+      "role": "project reference"
+    },
+    {
+      "sha256": "303adc8b4126badbc98969b476b773bd4a35c3817b34d3de6478842245dfa389",
+      "role": "project reference"
+    },
+    {
+      "sha256": "60b627e8ad24c7b06d7f7283d616705109e773e2e67438228a6aa5495ae1e6fa",
+      "role": "project reference"
+    }
+  ],
+  "masterSha256": "db3170acec775316ad4dcfae651ff10c0937d52117afc0ce69f3ebd1d0fb97b2"
+}

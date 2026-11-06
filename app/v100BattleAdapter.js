@@ -6,6 +6,8 @@ import { V100_CORPORATE_CONTROLS } from "./v100CorporateControl.js";
 import { V100_DEFENSE_OBJECTIVES } from "./v100DefenseObjectives.js";
 import { researchCoreObjective } from "./v100ResearchCore.js";
 import { v100IncreaseWaveDensity } from "./v100CombatTuning.js";
+import { withClearDrivenAssaultWaves } from "./wavePacing.js";
+import { v100AvailableFormation, v100StageAbsenceReason } from "./v100StageParticipation.js";
 import { v100EquipmentSnapshot, v100OpeningSupportGauge } from "./v100Equipment.js";
 import {
   V100_BOSS_BY_ID,
@@ -74,7 +76,11 @@ export function v100MissionObjectiveFor(stageId) {
   if (stage.number === 3) return "大型変異感染者TAKUYAを撃破";
   if (stage.number === 30) return "TAKUYA-Ωを撃破し、西新を守る";
   const control = V100_CORPORATE_CONTROLS[stageId];
-  if (control) return stage.missionType === "boss" ? `異常個体を撃破し、${control}を破壊` : `${control}を破壊`;
+  if (control) {
+    const bossId = stage.firstClearPayload.find(value => value.startsWith("boss-"));
+    const bossName = V100_BOSS_BY_ID[bossId]?.displayName;
+    return bossName ? `${bossName}を倒し、${control}を破壊` : `${control}を破壊`;
+  }
   const defense = V100_DEFENSE_OBJECTIVES[stageId];
   if (defense) return defense.recordCount ? `${defense.goal}（全${defense.recordCount}室）` : defense.goal;
   if (stage.number === 29) return researchCoreObjective(null);
@@ -131,17 +137,14 @@ function stageTimeline(stage, missionType, bossKind) {
     const thresholds = V100_BOSS_BY_ID["boss-takuya"].phaseThresholds;
     return freeze([
       freeze({ at: PREP_SECONDS, wave: 1, label: "防衛線 // 先行感染群", units: freeze(["walker", "runner", "walker", "runner", "walker"]) }),
-      freeze({ at: PREP_SECONDS + 16, advanceOnClearAfter: PREP_SECONDS + 12, wave: 2, label: "防衛線 // 左翼に接敵", units: freeze(["walker", "spitter", "runner", "walker", "runner"]) }),
-      freeze({ at: PREP_SECONDS + 34, advanceOnClearAfter: PREP_SECONDS + 28, wave: 3, label: "防衛線 // 中央突破", units: freeze(["shade", "walker", "spitter", "runner", "walker"]) }),
-      freeze({ at: PREP_SECONDS + 54, advanceOnClearAfter: PREP_SECONDS + 44, wave: 4, label: "防衛線 // 重量級接近", units: freeze(["crusher", "walker", "shade", "runner", "spitter", "walker"]) }),
-      freeze({ at: PREP_SECONDS + 75, advanceOnClearAfter: PREP_SECONDS + 60, wave: 5, label: "防衛線 // 防壁に接近", units: freeze(["runner", "spitter", "crusher", "walker", "runner", "shade"]) }),
-      // A last guard keeps the lane occupied while TAKUYA reaches the gate.
-      // A fast squad can bring both this contact and the entrance forward,
-      // but only after clearing each preceding group and its spawn queue.
-      freeze({ at: PREP_SECONDS + 87, advanceOnClearAfter: PREP_SECONDS + 75, wave: 6, label: "防衛線 // 最後の防壁", units: freeze(["walker", "runner", "shade", "walker", "spitter"]) }),
-      freeze({ at: PREP_SECONDS + 95, advanceOnClearAfter: PREP_SECONDS + 85, wave: 7, label: `警告 // ${bossLabel}`, units: freeze([bossKind]), waitForPriorWaveClear: true }),
-      freeze({ at: PREP_SECONDS + 110, wave: 8, label: "防衛線 // 増援1/2", units: freeze(["runner", "shade", "walker"]), bossHpRatio: thresholds[0], addWave: true }),
-      freeze({ at: PREP_SECONDS + 128, wave: 9, label: "防衛線 // 増援2/2", units: freeze(["spitter", "walker", "runner"]), bossHpRatio: thresholds[1], addWave: true }),
+      // The first boss teaches three distinct contacts, not six attrition waves.
+      // Even overdue contacts wait for living enemies and the pending queue.
+      freeze({ at: PREP_SECONDS + 16, advanceOnClearAfter: PREP_SECONDS + 12, wave: 2, label: "防衛線 // 遠隔感染体に注意", units: freeze(["walker", "spitter", "runner", "walker", "runner"]), waitForPriorWaveClear: true }),
+      freeze({ at: PREP_SECONDS + 34, advanceOnClearAfter: PREP_SECONDS + 30, wave: 3, label: "防衛線 // 重量級接近", units: freeze(["crusher", "walker", "shade", "runner", "spitter", "walker"]), waitForPriorWaveClear: true }),
+      freeze({ at: PREP_SECONDS + 50, advanceOnClearAfter: PREP_SECONDS + 40, wave: 4, label: `警告 // ${bossLabel}`, units: freeze([bossKind]), waitForPriorWaveClear: true }),
+      // Once the entrance is due, reinforcements follow HP, not the old prelude clock.
+      freeze({ at: PREP_SECONDS + 51, wave: 5, label: "防衛線 // 増援1/2", units: freeze(["runner", "shade", "walker"]), bossHpRatio: thresholds[0], addWave: true }),
+      freeze({ at: PREP_SECONDS + 52, wave: 6, label: "防衛線 // 増援2/2", units: freeze(["spitter", "walker", "runner"]), bossHpRatio: thresholds[1], addWave: true }),
     ]);
   }
   if (stage.number === 5) {
@@ -260,7 +263,7 @@ export function v100BattleDefinitionFor(stageId) {
   const missionNode = V100_NODE_PROFILES[stageId];
   const objective = v100MissionObjectiveFor(stageId);
   const phase = phaseScheduleFor(stage, missionType, objective);
-  const timeline = v100IncreaseWaveDensity(stageTimeline(stage, missionType, bossKind), Object.values(BOSS_KIND_BY_V100_ID), { preserveEscalation: missionType === 'escort' });
+  const timeline = withClearDrivenAssaultWaves(v100IncreaseWaveDensity(stageTimeline(stage, missionType, bossKind), Object.values(BOSS_KIND_BY_V100_ID), { preserveEscalation: missionType === 'escort' }), missionType);
   const baseMaxHp = V100_VEHICLE.baseHp;
   const station = missionType === "escort"
     ? { durationSeconds: phase.durationSeconds, maxIntegrity: 500, repairSeconds: 5, minimumEscortReadiness: 1, startX: missionVehicle?.count === 3 ? 450 : 258, endX: missionVehicle?.count === 3 ? 650 : 720 }
@@ -320,8 +323,8 @@ export function v100SupportSupplyFor(supportId) {
   return "drum";
 }
 
-export function v100ProductionSessionFor({ save, stageId, resultId, onBattleResult = null }) {
-  const formationUnitIds = save?.formationSlots?.filter(Boolean).slice(0, 7) ?? [];
+export function v100ProductionSessionFor({ save, stageId, resultId, onBattleResult = null, battleMode = null }) {
+  const formationUnitIds = v100AvailableFormation(stageId, save?.formationSlots);
   const formationKinds = v100FormationCombatKinds(formationUnitIds);
   const definition = v100BattleDefinitionFor(stageId);
   const enemyKinds = [...new Set(definition?.timeline?.flatMap((event) => event.units) ?? [])];
@@ -331,12 +334,13 @@ export function v100ProductionSessionFor({ save, stageId, resultId, onBattleResu
   return freeze({
     stageId,
     resultId: resultId ?? `v100:${stageId}:${Date.now()}`,
+    battleMode: battleMode === "campaign" || battleMode === "outbreak" ? battleMode : null,
     displayName: definition?.displayName ?? stageId,
     formationUnitIds: freeze([...formationUnitIds]),
     formationKinds: freeze([...formationKinds]),
     // Ikura is a rescued radio operator, not a purchasable combat unit.
     barkSpeakerKinds: freeze([...new Set([
-      ...(save?.ownedUnitIds ?? []).map(v100CombatKindForUnit).filter(Boolean),
+      ...(save?.ownedUnitIds ?? []).filter(id => !v100StageAbsenceReason(stageId, id)).map(v100CombatKindForUnit).filter(Boolean),
       ...(save?.completedStageIds?.includes(V100_STAGE_IDS[0]) ? ["guide"] : []),
     ])]),
     enemyKinds: freeze([...enemyKinds]),

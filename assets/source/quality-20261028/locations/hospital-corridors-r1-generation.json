@@ -1,0 +1,17 @@
+{
+  "tool": "OpenAI built-in image_gen",
+  "generatedAt": "2026-11-05T13:04:27.720Z",
+  "scope": "Empty environment backgrounds. No characters or plot changes. Producer visual acceptance pending.",
+  "records": [
+    {
+      "name": "hospital-corridor-r1",
+      "prompt": "Use case: illustration-story. Create a production game dialogue background for the Japanese post-apocalyptic game 西新世紀末物語, landscape 16:9. Empty university hospital emergency reception CORRIDOR, seen from inside immediately after evacuees came through a heavy closed double fire door. Grounded realistic painterly game environment, restrained muted gray-green palette, worn utilitarian Japanese hospital materials, dim cool fluorescent emergency lighting, tense but readable. Closed heavy steel fire door with visible latch and frame on left rear, a parked empty stretcher near it, corridor extending toward inpatient rooms on right rear, no views outdoors. Broad central floor space and uncluttered lower third for dialogue UI and separate character portraits. The building is still operating under emergency conditions, worn but structurally intact, no apocalypse rubble piles. No people, faces, figures, zombies, creatures, bodies, blood, weapons, readable labels, logos, text, lettering, UI or watermark. One coherent full-frame environment, not a collage or storyboard. Hospital corridor and fire door are the narrative focus.",
+      "original": "C:/Users/okait/.codex/generated_images/01a1aafe-ec50-73a3-bdea-2bef9bc04c28/exec-6b40a65b-4451-4ddf-9150-73216600c92e.png"
+    },
+    {
+      "name": "clinical-corridor-r1",
+      "prompt": "Use case: illustration-story. Create a production dialogue background for the Japanese post-apocalyptic game 西新世紀末物語. Landscape 16:9, one coherent full-frame environment. Inside a sinister clinical-trial building immediately beyond the entry security door: a clean disinfected institutional corridor with several closed patient room doors, one closed door at the far end, subtly visible red emergency warning light near the ceiling. Grounded realistic painterly game environment, restrained desaturated pale gray-green walls, cool fluorescent light, slightly worn but fully intact architecture, believable hospital materials and restrained tense atmosphere. Empty floor, central walkable space, spacious lower third for dialogue UI and separately composited approved character portraits. Absolutely no living people, portrait photographs, human figures, zombies, creatures, bodies, blood, weapons or story actors. No outdoor gate, warehouse shelves, industrial rubble, exposed giant factory roof, or ruined building. No readable text, signs, numbers, lettering, branding, logos, UI or watermark. View emphasizes the enclosed clinical corridor and closed room doors, not a laboratory experiment. Narrative props or character portraits will be handled separately by the game.",
+      "original": "C:/Users/okait/.codex/generated_images/01a1aafe-ec50-73a3-bdea-2bef9bc04c28/exec-a2f27cf7-587d-489b-90af-a126459f50f8.png"
+    }
+  ]
+}

@@ -1,0 +1,328 @@
+{
+  "generator": "scripts/build-quality-stage-portraits.mjs",
+  "records": [
+    {
+      "kind": "babayaga",
+      "expression": "warm",
+      "input": "assets/source/quality-20261028/identity/babayaga-master-r1.png",
+      "inputSha256": "c571d91e3ae9b97f0ac558ae6cacffa4661b268dadf0a46e6f47a7b2fb670aa4",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1024,
+        "height": 1280
+      },
+      "output": "public/art/v100/portraits/babayaga-warm-stage-r1.webp",
+      "sha256": "95b2e34b565f867b4b6ddb7284c0b103fa5540f617405f3e68bfbf28b2ed1523",
+      "bytes": 157202
+    },
+    {
+      "kind": "babayaga",
+      "expression": "determined",
+      "input": "assets/source/quality-20261028/identity/babayaga-waist-determined-r1.png",
+      "inputSha256": "909a09661e4d52e27502fc6d172e1f7530b6d1c154319b480afb546e3dd57e95",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1024,
+        "height": 1280
+      },
+      "output": "public/art/v100/portraits/babayaga-determined-stage-r1.webp",
+      "sha256": "e2bd870378222785718421b5bc03030d17eebb40d4a7241f045427e309db2847",
+      "bytes": 136636
+    },
+    {
+      "kind": "babayaga",
+      "expression": "alarm",
+      "input": "assets/source/quality-20261028/identity/babayaga-waist-alarm-r1.png",
+      "inputSha256": "c50055917799dc5ee54ee724ebb823a6acecf2df21c46be2b9de33cf1dae1408",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1024,
+        "height": 1280
+      },
+      "output": "public/art/v100/portraits/babayaga-alarm-stage-r1.webp",
+      "sha256": "4eac63becbce72a76741e9984fa28b1af51a6c50ffd4bb97e44e2e4632be16b6",
+      "bytes": 134232
+    },
+    {
+      "kind": "babayaga",
+      "expression": "grief",
+      "input": "assets/source/quality-20261028/identity/babayaga-waist-grief-r1.png",
+      "inputSha256": "a60ad8891071abbb158a0e2aeca8d01f22f83a9e104288245f0738bbc032e7e6",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1024,
+        "height": 1280
+      },
+      "output": "public/art/v100/portraits/babayaga-grief-stage-r1.webp",
+      "sha256": "006cf58abc03f3a1bf2911b80f1b9d2fdbd4ce989543d0c08eddee7560b04659",
+      "bytes": 134738
+    },
+    {
+      "kind": "kumaverson",
+      "expression": "warm",
+      "input": "assets/source/quality-20261028/identity/kumaverson-master-r2.png",
+      "inputSha256": "51a5acb5a77f53eac921b49a5adefd681218f9f44f64e70caaf416ed2b6ed501",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1024,
+        "height": 1280
+      },
+      "output": "public/art/v100/portraits/kumaverson-warm-stage-r1.webp",
+      "sha256": "9b45830bc765a740ab21bb5e1ea29b93735ba6f5528c9c4af8129908a124c7e6",
+      "bytes": 179404
+    },
+    {
+      "kind": "kumaverson",
+      "expression": "determined",
+      "input": "assets/source/quality-20261028/identity/kumaverson-waist-determined-r1.png",
+      "inputSha256": "f64f162061697a4c4b56d7827dfc28d3f274e07a8223d01767c2787a8b873e9b",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1024,
+        "height": 1280
+      },
+      "output": "public/art/v100/portraits/kumaverson-determined-stage-r1.webp",
+      "sha256": "735722b557a5e7dfcc7a72711bd6f9dcb99d6bb796c26241d6bab8fc6ee80525",
+      "bytes": 166148
+    },
+    {
+      "kind": "kumaverson",
+      "expression": "alarm",
+      "input": "assets/source/quality-20261028/identity/kumaverson-waist-alarm-r1.png",
+      "inputSha256": "a3c39f3b5c8664b7ebe0ae0709b2ba8d13dc5bc58079462e0fc58571636044b5",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1024,
+        "height": 1280
+      },
+      "output": "public/art/v100/portraits/kumaverson-alarm-stage-r1.webp",
+      "sha256": "31231cdc15db6222370eb661a12f4f805b2ff0f8c7b783d55835ce77c208caab",
+      "bytes": 162648
+    },
+    {
+      "kind": "kumaverson",
+      "expression": "grief",
+      "input": "assets/source/quality-20261028/identity/kumaverson-waist-grief-r1.png",
+      "inputSha256": "f55633b72894694d74356ef57b69a1e1a6f8e6e0da28eec27e66e1d10a8ec553",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1024,
+        "height": 1280
+      },
+      "output": "public/art/v100/portraits/kumaverson-grief-stage-r1.webp",
+      "sha256": "461dcb1a7178ae34ff5fb44f9bb30fddc5aae3976cc990d5f475dc6b9bfb333d",
+      "bytes": 175476
+    },
+    {
+      "kind": "tatara",
+      "expression": "warm",
+      "input": "assets/source/quality-20261028/identity/tatara-master-r4.png",
+      "inputSha256": "dc28b9b8cedb6b96fe14c5003f510466056baf06ea172cceccc83727a08d2def",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1024,
+        "height": 1280
+      },
+      "output": "public/art/v100/portraits/tatara-warm-stage-r1.webp",
+      "sha256": "8e7ddd153bd13b2209a5fc264a3030c21a2ab45969c7f82cc02da80141bc4c0d",
+      "bytes": 291632
+    },
+    {
+      "kind": "tatara",
+      "expression": "determined",
+      "input": "assets/source/quality-20261028/identity/tatara-determined-r6.png",
+      "inputSha256": "537fc28104c768ea73044a7725341fac4418904c3cf422c8107d43510f4666ec",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1024,
+        "height": 1280
+      },
+      "output": "public/art/v100/portraits/tatara-determined-stage-r1.webp",
+      "sha256": "79cdd5c00bbe8cbfbdd51ffdd87a36b853adaf73c3ebd1d954c2e615083ba595",
+      "bytes": 280764
+    },
+    {
+      "kind": "tatara",
+      "expression": "alarm",
+      "input": "assets/source/quality-20261028/identity/tatara-alarm-r6.png",
+      "inputSha256": "1c8880d528b01dbd4434602bfc5d24981c6047438b13f8e7ceefacaaf956d750",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1024,
+        "height": 1280
+      },
+      "output": "public/art/v100/portraits/tatara-alarm-stage-r1.webp",
+      "sha256": "2fc9aca1add69423b801827f42975926935ee53b8fa367fb4b0554f6038d8c35",
+      "bytes": 275996
+    },
+    {
+      "kind": "tatara",
+      "expression": "grief",
+      "input": "assets/source/quality-20261028/identity/tatara-grief-r6.png",
+      "inputSha256": "c947631a4d93d543be8986b5d0b6150e8908c169eb250232b5585fcce93fd307",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1024,
+        "height": 1280
+      },
+      "output": "public/art/v100/portraits/tatara-grief-stage-r1.webp",
+      "sha256": "1625ed1b7c4b663d79fae21513660621c9a2d0f464ad812b171f9c7bd64c3d18",
+      "bytes": 277824
+    },
+    {
+      "kind": "gantetsu",
+      "expression": "determined",
+      "input": "assets/source/quality-20261028/identity/gantetsu-master-r4.png",
+      "inputSha256": "ec06125c13977b05bbc704a7b8594b2c3b3bf716f7954e4647158ec8edadf51d",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1024,
+        "height": 1280
+      },
+      "output": "public/art/v100/portraits/gantetsu-determined-stage-r1.webp",
+      "sha256": "7111c37441279f3acf4db2977f50401f57ac231e0a288b92eb30849d29586d03",
+      "bytes": 310108
+    },
+    {
+      "kind": "musashi",
+      "expression": "warm",
+      "input": "assets/source/quality-20261028/identity/musashi-master-r4.png",
+      "inputSha256": "7ce937bddf0ac7bbb4e068b916625e4cd629411d6cc561946f88c22492c39c17",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1024,
+        "height": 1280
+      },
+      "output": "public/art/v100/portraits/musashi-warm-stage-r1.webp",
+      "sha256": "2e3b33b0ac4f19dcc8d74333d6e26c2174b4b0302f251468fe5a2668d41fe0e5",
+      "bytes": 281350
+    },
+    {
+      "kind": "musashi",
+      "expression": "determined",
+      "input": "assets/source/quality-20261028/identity/musashi-determined-r6.png",
+      "inputSha256": "0c3e9856a9911c691d12fd6191a8a20aa57c62aa996f5548370dd19df750b287",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1024,
+        "height": 1280
+      },
+      "output": "public/art/v100/portraits/musashi-determined-stage-r1.webp",
+      "sha256": "03d19686d514d36eae82aca60247f192eea40ea890a8ccede1831d5a8a21b186",
+      "bytes": 296228
+    },
+    {
+      "kind": "musashi",
+      "expression": "alarm",
+      "input": "assets/source/quality-20261028/identity/musashi-alarm-r6.png",
+      "inputSha256": "520fe4430ccdcfa89f218d46eed799281b1618a6c6a2a11cddc8d87901c2d3df",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1024,
+        "height": 1280
+      },
+      "output": "public/art/v100/portraits/musashi-alarm-stage-r1.webp",
+      "sha256": "894faaed0ae16ca4d357d5802fa0b75cbe63610417693c4d33bcd27e380188eb",
+      "bytes": 274534
+    },
+    {
+      "kind": "musashi",
+      "expression": "grief",
+      "input": "assets/source/quality-20261028/identity/musashi-grief-r6.png",
+      "inputSha256": "7eda015656ba23cc879024ef83887aaff5c7abce9059977ac57f506bc1cef9ff",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 1024,
+        "height": 1280
+      },
+      "output": "public/art/v100/portraits/musashi-grief-stage-r1.webp",
+      "sha256": "fe4a96f768ea5a13b6586436c074b754952be1ed3807bfacbd7e73f573a31870",
+      "bytes": 269240
+    },
+    {
+      "kind": "ikura",
+      "expression": "warm",
+      "input": "assets/source/quality-20261028/identity/ikura-master-r4.png",
+      "inputSha256": "9c17e1b090a147c1994045c99690965776d6951e76f52ef3a5622a2f73dea2dc",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 866,
+        "height": 1082
+      },
+      "output": "public/art/v100/portraits/ikura-warm-stage-r1.webp",
+      "sha256": "2d88a414272caea3fa1924e08aa86fbebad0a2d024daa67eda590ff8afeeb436",
+      "bytes": 330548
+    },
+    {
+      "kind": "ikura",
+      "expression": "determined",
+      "input": "assets/source/quality-20261028/identity/ikura-determined-r6.png",
+      "inputSha256": "d722c52a9b9a800ed4ffaf0bc16eb16e5e4e28b017f24d2bc2ce5331a1eac4cb",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 866,
+        "height": 1082
+      },
+      "output": "public/art/v100/portraits/ikura-determined-stage-r1.webp",
+      "sha256": "2034425f0e17185d51423b90e8924d981c24d78388890962e5676fa53b0f2875",
+      "bytes": 294984
+    },
+    {
+      "kind": "ikura",
+      "expression": "alarm",
+      "input": "assets/source/quality-20261028/identity/ikura-alarm-r6.png",
+      "inputSha256": "deadb81765a36f230684c10a5345255864e07251313bdea6ab6f0df25446f744",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 866,
+        "height": 1082
+      },
+      "output": "public/art/v100/portraits/ikura-alarm-stage-r1.webp",
+      "sha256": "7a6ab2c074a8dd6e3640590dfa8d2111702877e5dcb238e5f10d9b7a2636f0de",
+      "bytes": 299418
+    },
+    {
+      "kind": "ikura",
+      "expression": "grief",
+      "input": "assets/source/quality-20261028/identity/ikura-grief-r6.png",
+      "inputSha256": "0738c6083d0a591eefbed49d2ebcd16f04ead92ced35fc15c930c23595711b84",
+      "crop": {
+        "left": 0,
+        "top": 0,
+        "width": 866,
+        "height": 1082
+      },
+      "output": "public/art/v100/portraits/ikura-grief-stage-r1.webp",
+      "sha256": "eb4f0fa38204fa9d7a7e163c406d5d35e426e2d62364c378303e084d9bc50af2",
+      "bytes": 290496
+    }
+  ],
+  "pixelDensity": 2,
+  "designCanvas": {
+    "width": 512,
+    "height": 640
+  },
+  "logicalBytes": 5019606,
+  "scope": "Upper body dialogue packing, preserving the full source width and equipment. No face painting or semantic edits in this builder. Cards and battle unchanged.",
+  "acceptance": "Local candidate; likeness and in-game visual acceptance remain open."
+}

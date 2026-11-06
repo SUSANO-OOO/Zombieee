@@ -144,10 +144,18 @@ export function phaseBannerForBattle(definition, phase) {
 }
 
 export function objectiveForBattle(definition, state) {
-  const control=v100CorporateControlLabel(definition);
-  if(control)return state.barricadeHp<=0?"残る警備部隊を掃討":state.barricadeVulnerable?`${control}を破壊`:"異常個体を撃破して制御盤の防護を解除";
+  const control = v100CorporateControlLabel(definition);
+  if (control) {
+    if (state.barricadeHp <= 0) return `${control}を破壊した`;
+    if (state.barricadeVulnerable) return `${control}を破壊`;
+    // Ordinary assault protection opens when the final wave starts; only
+    // boss routes require a boss kill. Do not send players after a fake boss.
+    return definition.bossUnlocksEnemyBase
+      ? definition.objective
+      : "警備部隊を迎撃（最終ウェーブで防護解除）";
+  }
   if (definition.missionConfig?.v100StageNumber === 29) return researchCoreObjective(state.researchCoreTargets);
-  if (definition.missionConfig?.v100StageNumber === 3) {
+  if ([3, 30].includes(definition.missionConfig?.v100StageNumber)) {
     return state.bossDefeated ? "残存感染体を掃討" : definition.objective;
   }
   const defense = v100DefenseStatus(definition, state);
@@ -162,6 +170,18 @@ export function objectiveForBattle(definition, state) {
   }
   if (definition.missionType === STATION_MISSION_TYPES.ESCORT
     || definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL) {
+    // Reaching the destination does not end an escort battle: unresolved
+    // waves can still destroy the vehicle. Keep that responsibility visible
+    // until the actual battle result, rather than announcing safety early.
+    if (definition.missionType === STATION_MISSION_TYPES.ESCORT
+      && state.stageMission?.completed === true && state.stageMission.failed !== true
+      && state.over !== true) {
+      if (definition.missionConfig?.convoyInterception === true) {
+        return "冷蔵車3台を確保。敵を倒して守れ";
+      }
+      const target = definition.missionConfig?.targetLabel || "保守台車";
+      return `${target}は到着。残る敵を倒して守れ`;
+    }
     return stationMissionObjective(state.stageMission, definition.missionConfig) || definition.objective;
   }
   if (definition.missionType === "assault") {

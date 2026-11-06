@@ -1,0 +1,359 @@
+{
+  "source": "https://opengameart.org/content/the-free-firearm-sound-library",
+  "archive": "https://opengameart.org/sites/default/files/Prepared%20SFX%20Library.7z",
+  "creator": "Ben Jaszczak; Brian Nelson; Kevin Heras; Matthew Nanney",
+  "license": "CC0-1.0",
+  "notice": "assets/source/weapon-recordings/LICENSE.txt",
+  "commercialUse": true,
+  "modification": true,
+  "redistribution": true,
+  "producerAuthorization": "2026-10-28 P03 implementation instruction",
+  "subjectiveListening": "not performed",
+  "physicalDeviceAcceptance": "not performed",
+  "formats": {
+    "preferred": "mp3",
+    "fallback": "ogg",
+    "reason": "Preserve existing mobile MP3 and browser Ogg compatibility"
+  },
+  "runtimeAssetCount": 14,
+  "logicalBytes": 96380,
+  "distinctBytes": 96380,
+  "records": [
+    {
+      "id": "weapon-rifle-01",
+      "file": "public/audio/weapons/recorded/weapon-rifle-01.mp3",
+      "bytes": 6771,
+      "sha256": "a16abba2aa984f94943f73c97714638611ce76960e78b06bbbf190b852eb24fd",
+      "source": {
+        "file": "assets/source/weapon-recordings/D_32P.wav",
+        "sha256": "acee9d2106b68fe5956225a19d7aedf943d97793817f9bda9d486a2b74b0a812"
+      },
+      "sourceWindowStart": 0.55,
+      "filter": "aformat=channel_layouts=mono,atrim=start=0.55:end=1.55,asetpts=PTS-STARTPTS,silenceremove=start_periods=1:start_threshold=-42dB:start_silence=0.004,atrim=0:0.55,asetpts=PTS-STARTPTS,highpass=f=80,lowpass=f=9200,afade=t=out:st=0.43000000000000005:d=0.12,apad=pad_len=1323,volume=0.6317144668795658,alimiter=limit=0.8:level=false",
+      "targetActive200msRms": 0.06594242844988747,
+      "reference": {
+        "file": "public/audio/v100/foley/rifle.mp3",
+        "sha256": "805eacd7367c72d2e96628d8bc8d539f8401d225164c8def9caaad9eb726e96f",
+        "active200msRms": 0.1557526241677466,
+        "comparisonGain": 0.42337924514752984
+      },
+      "decoded": {
+        "seconds": 0.5637868480725624,
+        "peak": 0.7578816413879395,
+        "active200msRms": 0.06567824969384432
+      }
+    },
+    {
+      "id": "weapon-rifle-01",
+      "file": "public/audio/weapons/recorded/weapon-rifle-01.ogg",
+      "bytes": 8529,
+      "sha256": "806eebfff91518f84ba6d999b7937a06afc105d3f7a155e69d0285c957bbf5b6",
+      "source": {
+        "file": "assets/source/weapon-recordings/D_32P.wav",
+        "sha256": "acee9d2106b68fe5956225a19d7aedf943d97793817f9bda9d486a2b74b0a812"
+      },
+      "sourceWindowStart": 0.55,
+      "filter": "aformat=channel_layouts=mono,atrim=start=0.55:end=1.55,asetpts=PTS-STARTPTS,silenceremove=start_periods=1:start_threshold=-42dB:start_silence=0.004,atrim=0:0.55,asetpts=PTS-STARTPTS,highpass=f=80,lowpass=f=9200,afade=t=out:st=0.43000000000000005:d=0.12,apad=pad_len=1323,volume=0.6317144668795658,alimiter=limit=0.8:level=false",
+      "targetActive200msRms": 0.06594242844988747,
+      "reference": {
+        "file": "public/audio/v100/foley/rifle.mp3",
+        "sha256": "805eacd7367c72d2e96628d8bc8d539f8401d225164c8def9caaad9eb726e96f",
+        "active200msRms": 0.1557526241677466,
+        "comparisonGain": 0.42337924514752984
+      },
+      "decoded": {
+        "seconds": 0.5848526077097506,
+        "peak": 0.7248882055282593,
+        "active200msRms": 0.06575665464680513
+      }
+    },
+    {
+      "id": "weapon-rifle-02",
+      "file": "public/audio/weapons/recorded/weapon-rifle-02.mp3",
+      "bytes": 6797,
+      "sha256": "b62c3ffd7a9ddb76308ef945dfc6728c01bfdd9d1195feaf4eaf4401317f4c39",
+      "source": {
+        "file": "assets/source/weapon-recordings/D_32P.wav",
+        "sha256": "acee9d2106b68fe5956225a19d7aedf943d97793817f9bda9d486a2b74b0a812"
+      },
+      "sourceWindowStart": 5.5,
+      "filter": "aformat=channel_layouts=mono,atrim=start=5.5:end=6.5,asetpts=PTS-STARTPTS,silenceremove=start_periods=1:start_threshold=-42dB:start_silence=0.004,atrim=0:0.55,asetpts=PTS-STARTPTS,highpass=f=80,lowpass=f=9200,afade=t=out:st=0.43000000000000005:d=0.12,apad=pad_len=1323,volume=0.5937307483239718,alimiter=limit=0.8:level=false",
+      "targetActive200msRms": 0.06134082893889922,
+      "reference": {
+        "file": "public/audio/v100/foley/rifle.mp3",
+        "sha256": "805eacd7367c72d2e96628d8bc8d539f8401d225164c8def9caaad9eb726e96f",
+        "active200msRms": 0.1557526241677466,
+        "comparisonGain": 0.39383496276014424
+      },
+      "decoded": {
+        "seconds": 0.5637868480725624,
+        "peak": 0.7460364103317261,
+        "active200msRms": 0.06101716776229605
+      }
+    },
+    {
+      "id": "weapon-rifle-02",
+      "file": "public/audio/weapons/recorded/weapon-rifle-02.ogg",
+      "bytes": 8433,
+      "sha256": "00ee13f8c397369fa690eb1fc6132e47e659840b82ab8182b3219636fcfef477",
+      "source": {
+        "file": "assets/source/weapon-recordings/D_32P.wav",
+        "sha256": "acee9d2106b68fe5956225a19d7aedf943d97793817f9bda9d486a2b74b0a812"
+      },
+      "sourceWindowStart": 5.5,
+      "filter": "aformat=channel_layouts=mono,atrim=start=5.5:end=6.5,asetpts=PTS-STARTPTS,silenceremove=start_periods=1:start_threshold=-42dB:start_silence=0.004,atrim=0:0.55,asetpts=PTS-STARTPTS,highpass=f=80,lowpass=f=9200,afade=t=out:st=0.43000000000000005:d=0.12,apad=pad_len=1323,volume=0.5937307483239718,alimiter=limit=0.8:level=false",
+      "targetActive200msRms": 0.06134082893889922,
+      "reference": {
+        "file": "public/audio/v100/foley/rifle.mp3",
+        "sha256": "805eacd7367c72d2e96628d8bc8d539f8401d225164c8def9caaad9eb726e96f",
+        "active200msRms": 0.1557526241677466,
+        "comparisonGain": 0.39383496276014424
+      },
+      "decoded": {
+        "seconds": 0.5848526077097506,
+        "peak": 0.6934151649475098,
+        "active200msRms": 0.06066797584677113
+      }
+    },
+    {
+      "id": "weapon-gunner-01",
+      "file": "public/audio/weapons/recorded/weapon-gunner-01.mp3",
+      "bytes": 6234,
+      "sha256": "f2d84bff20bf4010fe9a24849598dbaa113eeb6e58692a16ddeeb8fe6a0deaa2",
+      "source": {
+        "file": "assets/source/weapon-recordings/C_28P.wav",
+        "sha256": "e0934c1d79192d2216db62fdf6ab57bf9d5d585267af367a1cfb21f0972a537d"
+      },
+      "sourceWindowStart": 0.45,
+      "filter": "aformat=channel_layouts=mono,atrim=start=0.45:end=1.45,asetpts=PTS-STARTPTS,silenceremove=start_periods=1:start_threshold=-42dB:start_silence=0.004,atrim=0:0.5,asetpts=PTS-STARTPTS,highpass=f=80,lowpass=f=8400,afade=t=out:st=0.38:d=0.12,apad=pad_len=1323,volume=0.6165775315232339,alimiter=limit=0.8:level=false",
+      "targetActive200msRms": 0.07,
+      "reference": {
+        "file": "public/audio/v100/foley/rifle.mp3",
+        "sha256": "805eacd7367c72d2e96628d8bc8d539f8401d225164c8def9caaad9eb726e96f",
+        "active200msRms": 0.1557526241677466,
+        "comparisonGain": 0.4494306299751942
+      },
+      "decoded": {
+        "seconds": 0.5137868480725624,
+        "peak": 0.6114124059677124,
+        "active200msRms": 0.07083731076671546
+      }
+    },
+    {
+      "id": "weapon-gunner-01",
+      "file": "public/audio/weapons/recorded/weapon-gunner-01.ogg",
+      "bytes": 7870,
+      "sha256": "9d5e63961a400f46f5bf9f2c533f8f79ba5dbb9ad24efdc3c7085088431f7227",
+      "source": {
+        "file": "assets/source/weapon-recordings/C_28P.wav",
+        "sha256": "e0934c1d79192d2216db62fdf6ab57bf9d5d585267af367a1cfb21f0972a537d"
+      },
+      "sourceWindowStart": 0.45,
+      "filter": "aformat=channel_layouts=mono,atrim=start=0.45:end=1.45,asetpts=PTS-STARTPTS,silenceremove=start_periods=1:start_threshold=-42dB:start_silence=0.004,atrim=0:0.5,asetpts=PTS-STARTPTS,highpass=f=80,lowpass=f=8400,afade=t=out:st=0.38:d=0.12,apad=pad_len=1323,volume=0.6165775315232339,alimiter=limit=0.8:level=false",
+      "targetActive200msRms": 0.07,
+      "reference": {
+        "file": "public/audio/v100/foley/rifle.mp3",
+        "sha256": "805eacd7367c72d2e96628d8bc8d539f8401d225164c8def9caaad9eb726e96f",
+        "active200msRms": 0.1557526241677466,
+        "comparisonGain": 0.4494306299751942
+      },
+      "decoded": {
+        "seconds": 0.5268027210884354,
+        "peak": 0.6146706342697144,
+        "active200msRms": 0.06796098943314002
+      }
+    },
+    {
+      "id": "weapon-gunner-02",
+      "file": "public/audio/weapons/recorded/weapon-gunner-02.mp3",
+      "bytes": 6052,
+      "sha256": "eee63b13a259c476640d589a50791bbfee0fd9234f320a39f2a1792f29813d53",
+      "source": {
+        "file": "assets/source/weapon-recordings/C_28P.wav",
+        "sha256": "e0934c1d79192d2216db62fdf6ab57bf9d5d585267af367a1cfb21f0972a537d"
+      },
+      "sourceWindowStart": 3.1,
+      "filter": "aformat=channel_layouts=mono,atrim=start=3.1:end=4.1,asetpts=PTS-STARTPTS,silenceremove=start_periods=1:start_threshold=-42dB:start_silence=0.004,atrim=0:0.5,asetpts=PTS-STARTPTS,highpass=f=80,lowpass=f=8400,afade=t=out:st=0.38:d=0.12,apad=pad_len=1323,volume=0.6276885108114234,alimiter=limit=0.8:level=false",
+      "targetActive200msRms": 0.07,
+      "reference": {
+        "file": "public/audio/v100/foley/rifle.mp3",
+        "sha256": "805eacd7367c72d2e96628d8bc8d539f8401d225164c8def9caaad9eb726e96f",
+        "active200msRms": 0.1557526241677466,
+        "comparisonGain": 0.4494306299751942
+      },
+      "decoded": {
+        "seconds": 0.5137868480725624,
+        "peak": 0.7236464619636536,
+        "active200msRms": 0.06941732359117492
+      }
+    },
+    {
+      "id": "weapon-gunner-02",
+      "file": "public/audio/weapons/recorded/weapon-gunner-02.ogg",
+      "bytes": 7802,
+      "sha256": "e7bb126374166439eb65b8b3d8ca80a223f0fae46473467ecd9684537927afa7",
+      "source": {
+        "file": "assets/source/weapon-recordings/C_28P.wav",
+        "sha256": "e0934c1d79192d2216db62fdf6ab57bf9d5d585267af367a1cfb21f0972a537d"
+      },
+      "sourceWindowStart": 3.1,
+      "filter": "aformat=channel_layouts=mono,atrim=start=3.1:end=4.1,asetpts=PTS-STARTPTS,silenceremove=start_periods=1:start_threshold=-42dB:start_silence=0.004,atrim=0:0.5,asetpts=PTS-STARTPTS,highpass=f=80,lowpass=f=8400,afade=t=out:st=0.38:d=0.12,apad=pad_len=1323,volume=0.6276885108114234,alimiter=limit=0.8:level=false",
+      "targetActive200msRms": 0.07,
+      "reference": {
+        "file": "public/audio/v100/foley/rifle.mp3",
+        "sha256": "805eacd7367c72d2e96628d8bc8d539f8401d225164c8def9caaad9eb726e96f",
+        "active200msRms": 0.1557526241677466,
+        "comparisonGain": 0.4494306299751942
+      },
+      "decoded": {
+        "seconds": 0.5355102040816326,
+        "peak": 0.7316617369651794,
+        "active200msRms": 0.06927079254807503
+      }
+    },
+    {
+      "id": "weapon-smg-01",
+      "file": "public/audio/weapons/recorded/weapon-smg-01.mp3",
+      "bytes": 5354,
+      "sha256": "8509f2b80e625cd37562829c280474be88dcbc0a13e93ec67f51176232b0e358",
+      "source": {
+        "file": "assets/source/weapon-recordings/G_31P.wav",
+        "sha256": "5982c6c2fa44545b750ba6217ed57797a6a15c02f5c9943ac0e99e5f3ab2b158"
+      },
+      "sourceWindowStart": 0.15,
+      "filter": "aformat=channel_layouts=mono,atrim=start=0.15:end=1.15,asetpts=PTS-STARTPTS,silenceremove=start_periods=1:start_threshold=-42dB:start_silence=0.004,atrim=0:0.38,asetpts=PTS-STARTPTS,highpass=f=80,lowpass=f=9000,afade=t=out:st=0.26:d=0.12,apad=pad_len=1323,volume=0.8340070982704367,alimiter=limit=0.8:level=false",
+      "targetActive200msRms": 0.07,
+      "reference": {
+        "file": "public/audio/v100/foley/rifle.mp3",
+        "sha256": "805eacd7367c72d2e96628d8bc8d539f8401d225164c8def9caaad9eb726e96f",
+        "active200msRms": 0.1557526241677466,
+        "comparisonGain": 0.4494306299751942
+      },
+      "decoded": {
+        "seconds": 0.39378684807256237,
+        "peak": 0.7478324174880981,
+        "active200msRms": 0.06949151003033059
+      }
+    },
+    {
+      "id": "weapon-smg-01",
+      "file": "public/audio/weapons/recorded/weapon-smg-01.ogg",
+      "bytes": 7154,
+      "sha256": "549f9d5fa423ab346484c7c0a35f70b314e34a6dfeaedfb5dc71e6a32f21befd",
+      "source": {
+        "file": "assets/source/weapon-recordings/G_31P.wav",
+        "sha256": "5982c6c2fa44545b750ba6217ed57797a6a15c02f5c9943ac0e99e5f3ab2b158"
+      },
+      "sourceWindowStart": 0.15,
+      "filter": "aformat=channel_layouts=mono,atrim=start=0.15:end=1.15,asetpts=PTS-STARTPTS,silenceremove=start_periods=1:start_threshold=-42dB:start_silence=0.004,atrim=0:0.38,asetpts=PTS-STARTPTS,highpass=f=80,lowpass=f=9000,afade=t=out:st=0.26:d=0.12,apad=pad_len=1323,volume=0.8340070982704367,alimiter=limit=0.8:level=false",
+      "targetActive200msRms": 0.07,
+      "reference": {
+        "file": "public/audio/v100/foley/rifle.mp3",
+        "sha256": "805eacd7367c72d2e96628d8bc8d539f8401d225164c8def9caaad9eb726e96f",
+        "active200msRms": 0.1557526241677466,
+        "comparisonGain": 0.4494306299751942
+      },
+      "decoded": {
+        "seconds": 0.4078004535147392,
+        "peak": 0.7041622400283813,
+        "active200msRms": 0.06798770341260575
+      }
+    },
+    {
+      "id": "weapon-smg-02",
+      "file": "public/audio/weapons/recorded/weapon-smg-02.mp3",
+      "bytes": 5222,
+      "sha256": "46aee2cd8c892d749fa617344b2a8537f586fc36416a2d5bff40f6e604c3befd",
+      "source": {
+        "file": "assets/source/weapon-recordings/G_31P.wav",
+        "sha256": "5982c6c2fa44545b750ba6217ed57797a6a15c02f5c9943ac0e99e5f3ab2b158"
+      },
+      "sourceWindowStart": 3.35,
+      "filter": "aformat=channel_layouts=mono,atrim=start=3.35:end=4.35,asetpts=PTS-STARTPTS,silenceremove=start_periods=1:start_threshold=-42dB:start_silence=0.004,atrim=0:0.38,asetpts=PTS-STARTPTS,highpass=f=80,lowpass=f=9000,afade=t=out:st=0.26:d=0.12,apad=pad_len=1323,volume=0.7781649699010141,alimiter=limit=0.8:level=false",
+      "targetActive200msRms": 0.06405846643778057,
+      "reference": {
+        "file": "public/audio/v100/foley/rifle.mp3",
+        "sha256": "805eacd7367c72d2e96628d8bc8d539f8401d225164c8def9caaad9eb726e96f",
+        "active200msRms": 0.1557526241677466,
+        "comparisonGain": 0.4112833846625222
+      },
+      "decoded": {
+        "seconds": 0.39378684807256237,
+        "peak": 0.7710956335067749,
+        "active200msRms": 0.06400653302222786
+      }
+    },
+    {
+      "id": "weapon-smg-02",
+      "file": "public/audio/weapons/recorded/weapon-smg-02.ogg",
+      "bytes": 7146,
+      "sha256": "a2f0aeafbaa6b28f739f5b6f6b26bbe5a9eff6145f18d224d6075a3c51cc1998",
+      "source": {
+        "file": "assets/source/weapon-recordings/G_31P.wav",
+        "sha256": "5982c6c2fa44545b750ba6217ed57797a6a15c02f5c9943ac0e99e5f3ab2b158"
+      },
+      "sourceWindowStart": 3.35,
+      "filter": "aformat=channel_layouts=mono,atrim=start=3.35:end=4.35,asetpts=PTS-STARTPTS,silenceremove=start_periods=1:start_threshold=-42dB:start_silence=0.004,atrim=0:0.38,asetpts=PTS-STARTPTS,highpass=f=80,lowpass=f=9000,afade=t=out:st=0.26:d=0.12,apad=pad_len=1323,volume=0.7781649699010141,alimiter=limit=0.8:level=false",
+      "targetActive200msRms": 0.06405846643778057,
+      "reference": {
+        "file": "public/audio/v100/foley/rifle.mp3",
+        "sha256": "805eacd7367c72d2e96628d8bc8d539f8401d225164c8def9caaad9eb726e96f",
+        "active200msRms": 0.1557526241677466,
+        "comparisonGain": 0.4112833846625222
+      },
+      "decoded": {
+        "seconds": 0.41360544217687073,
+        "peak": 0.7905164957046509,
+        "active200msRms": 0.06377714586520312
+      }
+    },
+    {
+      "id": "v104-handgun",
+      "file": "public/audio/weapons/recorded/v104-handgun.mp3",
+      "bytes": 5666,
+      "sha256": "f8a06b9910bb19253354b533ce9ed1cf41988ca8226679a43e32d9e52cb4d541",
+      "source": {
+        "file": "assets/source/weapon-recordings/X_39P.wav",
+        "sha256": "d679a3cd87eae2898d984159f83544392932e6b77526045b672e3aaa9c2dda9f"
+      },
+      "sourceWindowStart": 1.25,
+      "filter": "aformat=channel_layouts=mono,atrim=start=1.25:end=2.25,asetpts=PTS-STARTPTS,silenceremove=start_periods=1:start_threshold=-42dB:start_silence=0.004,atrim=0:0.42,asetpts=PTS-STARTPTS,highpass=f=80,lowpass=f=9500,afade=t=out:st=0.3:d=0.12,apad=pad_len=1323,volume=0.9098714901781643,alimiter=limit=0.8:level=false",
+      "targetActive200msRms": 0.07,
+      "reference": {
+        "file": "public/audio/v104/combat/handgun.mp3",
+        "sha256": "f0d78c759cbd667a8b079f5e4431eb147b3f6e553786b824595a20d5198e7290",
+        "active200msRms": 0.12218435681932886,
+        "comparisonGain": 0.572904763115522
+      },
+      "decoded": {
+        "seconds": 0.43378684807256235,
+        "peak": 0.7199113368988037,
+        "active200msRms": 0.06968429616117856
+      }
+    },
+    {
+      "id": "v104-handgun",
+      "file": "public/audio/weapons/recorded/v104-handgun.ogg",
+      "bytes": 7350,
+      "sha256": "18781788953e75ad5f6bd6f76ea2f38ee74079999c1385e7eb219326a23851a7",
+      "source": {
+        "file": "assets/source/weapon-recordings/X_39P.wav",
+        "sha256": "d679a3cd87eae2898d984159f83544392932e6b77526045b672e3aaa9c2dda9f"
+      },
+      "sourceWindowStart": 1.25,
+      "filter": "aformat=channel_layouts=mono,atrim=start=1.25:end=2.25,asetpts=PTS-STARTPTS,silenceremove=start_periods=1:start_threshold=-42dB:start_silence=0.004,atrim=0:0.42,asetpts=PTS-STARTPTS,highpass=f=80,lowpass=f=9500,afade=t=out:st=0.3:d=0.12,apad=pad_len=1323,volume=0.9098714901781643,alimiter=limit=0.8:level=false",
+      "targetActive200msRms": 0.07,
+      "reference": {
+        "file": "public/audio/v104/combat/handgun.mp3",
+        "sha256": "f0d78c759cbd667a8b079f5e4431eb147b3f6e553786b824595a20d5198e7290",
+        "active200msRms": 0.12218435681932886,
+        "comparisonGain": 0.572904763115522
+      },
+      "decoded": {
+        "seconds": 0.44263038548752837,
+        "peak": 0.7178410291671753,
+        "active200msRms": 0.06876306142504376
+      }
+    }
+  ]
+}

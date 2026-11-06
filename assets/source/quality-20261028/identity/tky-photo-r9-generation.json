@@ -1,0 +1,61 @@
+{
+  "tool": "built-in image_gen",
+  "revision": "tky-photo-r9",
+  "reason": "r8 narrowed jaw/cheeks, strengthened eyebrows and made hair more wavy than original photographs; r9 restores face proportions. Likeness remains unaccepted.",
+  "references": [
+    {
+      "role": "facial authority",
+      "source": "Producer TKY photograph 1 (private)",
+      "sha256": "71505f3b1b6eafc0c70c8e41f7c1563a731b1e9a270932c005baf0991beedd3a"
+    },
+    {
+      "role": "facial authority",
+      "source": "Producer TKY photograph 3 (private)",
+      "sha256": "98fad23502dd92639e906ee2f74e9d6a4c7fa56e601767d01cd172c23af27773"
+    },
+    {
+      "role": "costume/composition only",
+      "source": "assets/source/quality-20261028/identity/tky-warm-r8.png"
+    }
+  ],
+  "prompts": {
+    "warm": "Use case: identity-preserve. Edit image 3, the game portrait, to faithfully depict the specific adult man in original photographs 1 and 2. Images 1 and 2 are the ONLY facial identity authority. Image 3 is the edit target for costume, pose, composition and finish ONLY; its current face is too narrow and generic and must be replaced. Retain image 3's exact standing waist-up composition, head size/location, black high-collar leather coat, dark scarf, magenta straps, buckles, gloves and hands, all costume details. Facial correction: reproduce the photographs' broad lower face and cheek fullness, shorter rounded chin, small narrow hooded eyes with the real eyelid shape and spacing, fine near-straight natural eyebrows rather than sharply angled strong brows, the real nose width/tip and mouth/lip proportions. Keep the person's recognizable age, asymmetry, understated expression and small ear stud. Hair must be the photographs' smooth nearly straight black center part with heavy long fringe over one eye, NOT wavy curly textured idol hair. Expression: very restrained friendly closed-mouth expression close to photograph 1, no wide smile. Clean-shaven, slightly refined Korean-drama grooming achieved by tidy hair and balanced soft lighting, never by a V-shaped jaw, larger eyes, narrower nose or different anatomy. Same realistic human skin/materials plus subtle restrained illustration finish throughout. No photographic pasted-face edge, plastic skin, harsh oily sheen, new wrinkle aging or anime features. One person only. Preserve full crown and waist with transparent margins. Genuine transparent background, no glow/backdrop/room/grid/text. Face fidelity to the original photographs has priority over conventional handsome hero features.",
+    "determined": "Use case: identity-preserve. Image 1 is the corrected production TKY portrait to edit. Images 2 and 3 are his original facial photographs and remain the authority for face proportions. Make ONLY a subtle focused, determined expression: closed relaxed mouth, slight concentration in the narrow hooded eyes, minimally drawn brows. Preserve this exact man's broad cheeks/lower jaw, short rounded chin, nose and lip shapes, natural fine brows, nearly straight center-part black fringe, head shape and age. No new generic handsome actor face, no V jaw, no big eyes, no curly hair. Keep exact image 1 costume, pose, hands, body, crop, head location/size, lighting and restrained realistic illustration finish. Do not scowl heavily or add age lines. One isolated portrait, genuine transparent background and clear margins, no text/grid/glow/scenery. Full crown through belt/waist. Do not alter any costume detail.",
+    "alarm": "Use case: identity-preserve. Image 1 is corrected TKY game portrait to edit; original photographs 2 and 3 are facial identity authority. Create the alarm expression for the SAME man. Change only the expression: small surprised parting of lips, alert gaze, subtly lifted eyebrows; natural narrow hooded eyes may open slightly but do not become large round eyes. Retain broad cheeks and lower jaw, short rounded chin, real nose/lips/eyebrows and original straight black center-part fringe. Preserve his actual adult age and facial proportions, no generic idol face. Keep image 1 exact standing waist-up pose, body, head scale and location, hands at belt, costume, dark magenta straps, buckles, gloves, scarf, texture and lighting. Realistic person with restrained illustration finish. No forehead aging creases or dramatic grimace. One character on genuine transparent background, full hair and waist inside frame with margins; no backdrop, glow, text or grid. Same composition and costume, only expression changes.",
+    "grief": "Use case: identity-preserve. Image 1 is the corrected TKY portrait to edit; original photographs 2 and 3 are strict facial identity authority. Make ONLY a quiet grief expression: gaze slightly lowered, lips closed and gently pressed, very subtle inner brow tension. Keep exactly the same broad cheeks/lower jaw, short rounded chin, narrow hooded eyes, natural fine eyebrows, actual nose/lip proportions, adult age and straight black center-part fringe. Do not hollow cheeks, lengthen face or turn him into another actor. The head angle changes minimally, without changing head position/size. Preserve exact body, standing waist-up pose, costume, hands, black scarf, coat, magenta belts, buckles and gloves of image 1. Same soft realistic lighting with restrained illustration finish, no extra tears or aging wrinkles. One isolated character, crown through belt, same margins, genuine transparent alpha. No background glow, scenery, text, grid or new props."
+  },
+  "acceptance": "Corrective candidate, not Producer-approved. Dialogue/card integration and runtime tests are separate from battle/cutscene identity acceptance.",
+  "sources": [
+    {
+      "expression": "warm",
+      "path": "assets/source/quality-20261028/identity/tky-warm-r9.png",
+      "bytes": 2636730,
+      "sha256": "6af684cca28a24c937fb8c4aa59e276326cddc4d355a367c8bee1eddb2591ea8"
+    },
+    {
+      "expression": "determined",
+      "path": "assets/source/quality-20261028/identity/tky-determined-r9.png",
+      "bytes": 2639712,
+      "sha256": "cb27b0f1974793f81f3740408c3658a57e07fd82ea3917f9ecb6d1a456d26574"
+    },
+    {
+      "expression": "alarm",
+      "path": "assets/source/quality-20261028/identity/tky-alarm-r9.png",
+      "bytes": 2612408,
+      "sha256": "be029327678b1c178b990e81e40cd42218b813cba2907d7cb72d08139c98b1d0"
+    },
+    {
+      "expression": "grief",
+      "path": "assets/source/quality-20261028/identity/tky-grief-r9.png",
+      "bytes": 2580689,
+      "sha256": "6c5d4e53f6e061ac1dc86d0f64d59d1707a18afaaea1f3b71c94b6e139b13957"
+    }
+  ],
+  "runtimeScope": {
+    "normalDialogueExpressions": [
+      "determined",
+      "warm"
+    ],
+    "otherExpressions": "alarm/grief retained as variants; no noncinematic authored TKY dialogue found using them. Do not describe as played."
+  }
+}

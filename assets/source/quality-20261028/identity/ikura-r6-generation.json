@@ -1,0 +1,53 @@
+{
+  "method": "built-in image_gen",
+  "variants": [
+    {
+      "expression": "determined",
+      "args": {
+        "referenced_image_paths": [
+          "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028\\assets\\source\\quality-20261028\\identity\\ikura-master-r4.png"
+        ],
+        "transparent_background": true,
+        "prompt": "Edit this exact established fictional adult character ikura. Keep precisely the same person, full-body framing, camera, image dimensions, pose, body silhouette, head placement, hands and equipment. Preserve adult woman face, pink twin buns and long wavy twintails, headset microphone, teal costume and cream top, harness, tablet and stylus, skirt and shorts, stockings and boots. Change ONLY the facial expression to quiet alert determination with a firm closed mouth. Retain the original eye size and spacing, brows, nose, lips, jaw, age and recognizable individual identity, realistic matte skin and subdued painterly finish. Keep exact clothing and coverage. Do not reposition the body, add objects, redesign the person, crop the feet or equipment, or create a sheet/collage. One full-body expression variant. Preserve the existing genuine transparent alpha, including openings around arms and equipment. No visible backdrop, floor, gradient, text or border."
+      }
+    },
+    {
+      "expression": "alarm",
+      "args": {
+        "referenced_image_paths": [
+          "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028\\assets\\source\\quality-20261028\\identity\\ikura-master-r4.png"
+        ],
+        "transparent_background": true,
+        "prompt": "Edit this exact established fictional adult character ikura. Keep precisely the same person, full-body framing, camera, image dimensions, pose, body silhouette, head placement, hands and equipment. Preserve adult woman face, pink twin buns and long wavy twintails, headset microphone, teal costume and cream top, harness, tablet and stylus, skirt and shorts, stockings and boots. Change ONLY the facial expression to restrained surprise and concern, slightly raised eyebrows and parted lips. Retain the original eye size and spacing, brows, nose, lips, jaw, age and recognizable individual identity, realistic matte skin and subdued painterly finish. Keep exact clothing and coverage. Do not reposition the body, add objects, redesign the person, crop the feet or equipment, or create a sheet/collage. One full-body expression variant. Preserve the existing genuine transparent alpha, including openings around arms and equipment. No visible backdrop, floor, gradient, text or border."
+      }
+    },
+    {
+      "expression": "grief",
+      "args": {
+        "referenced_image_paths": [
+          "C:/Users/okait/Documents/Codex/2026-07-11/new-chat/_isolated/quality-20261028\\assets\\source\\quality-20261028\\identity\\ikura-master-r4.png"
+        ],
+        "transparent_background": true,
+        "prompt": "Edit this exact established fictional adult character ikura. Keep precisely the same person, full-body framing, camera, image dimensions, pose, body silhouette, head placement, hands and equipment. Preserve adult woman face, pink twin buns and long wavy twintails, headset microphone, teal costume and cream top, harness, tablet and stylus, skirt and shorts, stockings and boots. Change ONLY the facial expression to subdued sadness, gaze slightly lowered and closed mouth. Retain the original eye size and spacing, brows, nose, lips, jaw, age and recognizable individual identity, realistic matte skin and subdued painterly finish. Keep exact clothing and coverage. Do not reposition the body, add objects, redesign the person, crop the feet or equipment, or create a sheet/collage. One full-body expression variant. Preserve the existing genuine transparent alpha, including openings around arms and equipment. No visible backdrop, floor, gradient, text or border."
+      }
+    }
+  ],
+  "status": "Local quality-r1 portraits connected; see ikura-runtime-r2 and docs/qa/quality-20261028.md for exact observed scope. Battle/cuts/credits and Producer acceptance remain open. Source family storage review required before commit.",
+  "outputs": [
+    {
+      "path": "ikura-determined-r6.png",
+      "sha256": "d722c52a9b9a800ed4ffaf0bc16eb16e5e4e28b017f24d2bc2ce5331a1eac4cb",
+      "bytes": 1466353
+    },
+    {
+      "path": "ikura-alarm-r6.png",
+      "sha256": "deadb81765a36f230684c10a5345255864e07251313bdea6ab6f0df25446f744",
+      "bytes": 1487828
+    },
+    {
+      "path": "ikura-grief-r6.png",
+      "sha256": "0738c6083d0a591eefbed49d2ebcd16f04ead92ced35fc15c930c23595711b84",
+      "bytes": 1457828
+    }
+  ]
+}

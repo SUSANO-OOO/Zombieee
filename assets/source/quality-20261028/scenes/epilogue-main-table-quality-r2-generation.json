@@ -1,0 +1,13 @@
+{
+  "tool": "built-in image_gen",
+  "referenced_image_paths": [
+    "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\scenes\\epilogue-main-table-quality-r1.png",
+    "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\assets\\source\\quality-20261028\\identity\\kumaverson-master-r2.png"
+  ],
+  "transparent_background": false,
+  "prompt": "Use case: precise-object-edit / identity-preserve. Image 1 is the restaurant reunion scene to EDIT. Image 2 is the ONLY and LOCKED KUMAVERSON model. Change ONLY the man at BACK LEFT, standing behind the rice tub and holding a wooden rice paddle, to EXACTLY image 2's identity: same fuller round cheek/jaw shape, soft rounded short chin, narrower relaxed eyes and low gently shaped eyebrows, exact nose and lip proportions, medium straight black center-part curtain hair with modest volume, clean shaven and subtly handsome. His current face/hair have drifted toward the OTHER man in a white shirt and tie at BACK RIGHT; fix this and make them unmistakably different. Do not copy that other face. Keep Kumaverson's expression practical and friendly, same head size/location/angle, dirty pale T-shirt, rice paddle, wrist and hand, rice tub and body pose. EVERYTHING ELSE remains unchanged: masked89 TKY at CENTER, Paisen LEFT FRONT, Babayaga BACK RIGHT in white shirt/tie, Chiha, Zakimiya, Mayo dog, all faces/hair/poses/hands/clothes, food/platter/mugs/counter and warm restaurant framing. This is a local one-person identity correction, not a scene redesign. Match lighting/materials and painterly finish seamlessly. No new text or watermark.",
+  "output": "epilogue-main-table-quality-r2.png",
+  "generatedOriginal": "C:/Users/okait/.codex/generated_images/01a180c8-9e05-7871-b287-613f7c7eb364/exec-5e3aa430-24f1-4e23-9969-4d99ddafb4d3.png",
+  "producerApproval": "Existing generated models are the primary production references; photos check identity drift; scene acceptance remains open",
+  "status": "Candidate; runtime integration pending"
+}

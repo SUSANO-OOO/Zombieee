@@ -1,0 +1,12 @@
+{
+  "tool": "OpenAI built-in image_gen",
+  "args": {
+    "transparent_background": true,
+    "referenced_image_paths": [
+      "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-20261028\\output\\quality-20261028\\model-heads-r2\\guardian-head.png"
+    ],
+    "prompt": "ゲーム『西新世紀末物語』の既存2D関節アニメーションへ取り付けるHEAD ONLY素材です。添付は、既に採用されている生成モデルそのものから切り出した、今回唯一の人物・動物identity基準です。別人化、美形化の再解釈、年齢変更、アニメ顔化をせず、この顔・髪・色・描画タッチをそのまま保ってください。画面右へ進む身体へ自然につながる、右向きの斜め横顔（約25〜35度、両目の特徴が分かる程度）。頭頂、髪、耳、顎を全て収め、周囲に透明余白。頭全体とごく短い首の切り口だけを描き、肩・胸・衣服・襟・武器・別の身体片・背景の茶色い霞は完全に除去。頭の周囲は本当の透明alpha、色付きハローや四角い背景なし。正面顔を身体の横向きに無理に貼り付けた形にしない。一つの頭だけ、文字・枠・比較パネルなし。\n構図の必須条件：カメラを十分に引き、頭全体はキャンバス縦横の中央70%以内。四辺それぞれに15%以上の完全透明な余白を確保。髪の一番高い毛先・耳先・結い髪まで、端から十分離す。頭を画面いっぱいに拡大しない。\nガンテツ。添付と全く同じ濃いオリーブ黒の不透明フルフェイスヘルメット、金色の二本の短い斜線、丸いサイド金具、同じ傷と形を維持。頭蓋全体を覆うヘルメット単体と下のごく短い黒い接続部だけ。襟・緑の上着・肩・盾を描かない。バイザーを透明にしない、人間の顔や目や口を一切見せない。画面右方向へ向く自然な斜め角度。"
+  },
+  "generatedOriginal": "C:\\Users\\okait\\.codex\\generated_images\\01a180c8-9e05-7871-b287-613f7c7eb364\\exec-2486608c-8911-43f8-acbd-90bb79644e5f.png",
+  "scope": "Head-only candidate derived from selected existing model. Review and whole-character acceptance remain open."
+}

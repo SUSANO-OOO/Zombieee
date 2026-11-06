@@ -1,0 +1,1418 @@
+{
+  "generator": "scripts/build-quality-scene-assets.mjs",
+  "models": [
+    {
+      "id": "babayaga",
+      "source": "assets/source/quality-20261028/identity/babayaga-master-r1.png",
+      "sha256": "c571d91e3ae9b97f0ac558ae6cacffa4661b268dadf0a46e6f47a7b2fb670aa4"
+    },
+    {
+      "id": "kumaverson",
+      "source": "assets/source/quality-20261028/identity/kumaverson-master-r2.png",
+      "sha256": "51a5acb5a77f53eac921b49a5adefd681218f9f44f64e70caaf416ed2b6ed501"
+    },
+    {
+      "id": "paisen",
+      "source": "assets/source/quality-20261028/identity/paisen-photo-master-r7.png",
+      "sha256": "c769eb81a096e9fb1747df0c4ab93452b2ad844fb37e21707d5ef51aec76de66"
+    },
+    {
+      "id": "tky",
+      "source": "assets/source/quality-20261028/identity/tky-89-warm-r1.png",
+      "sha256": "b49532ac389340e952707d6f102933c3f7b716aa6743ba0778be3b313377325e"
+    },
+    {
+      "id": "chiha",
+      "source": "assets/source/quality-20261028/identity/chiha-master-r4.png",
+      "sha256": "d9acf14c0f75ce8e80b4dd2e7f8285e154562e72082200be68983ef292369705"
+    },
+    {
+      "id": "zakimiya",
+      "source": "assets/source/quality-20261028/identity/zakimiya-canonical-master-r1.png",
+      "sha256": "303adc8b4126badbc98969b476b773bd4a35c3817b34d3de6478842245dfa389"
+    },
+    {
+      "id": "hachi",
+      "source": "assets/source/quality-20261028/identity/hachi-master-r4.png",
+      "sha256": "e722cc7aca81806cd7d2d1403c425262466ea4f1aa44b877731dcef79ee080bb"
+    },
+    {
+      "id": "mayo",
+      "source": "assets/source/quality-20261028/identity/mayo-master-r4.png",
+      "sha256": "ed4804adffdc00585130dda8803f5f1d2ccc3d818c15191a23e38558476a434c"
+    },
+    {
+      "id": "gantetsu",
+      "source": "assets/source/quality-20261028/identity/gantetsu-master-r4.png",
+      "sha256": "ec06125c13977b05bbc704a7b8594b2c3b3bf716f7954e4647158ec8edadf51d"
+    },
+    {
+      "id": "tatara",
+      "source": "assets/source/quality-20261028/identity/tatara-master-r4.png",
+      "sha256": "dc28b9b8cedb6b96fe14c5003f510466056baf06ea172cceccc83727a08d2def"
+    },
+    {
+      "id": "ikura",
+      "source": "assets/source/quality-20261028/identity/ikura-master-r4.png",
+      "sha256": "9c17e1b090a147c1994045c99690965776d6951e76f52ef3a5622a2f73dea2dc"
+    },
+    {
+      "id": "mizuchi",
+      "source": "assets/source/quality-20261028/identity/mizuchi-master-r4.png",
+      "sha256": "c0f013dea12be7dc54055adfba4fd7b4a9703141eb8d9c0109d5b3087580ce3f"
+    },
+    {
+      "id": "monkey",
+      "source": "assets/source/quality-20261028/identity/monkey-master-r4.png",
+      "sha256": "feefc4b9959e8ce45955c1915338aec029fb1b58892f79528a1359d97ad5f2e1"
+    },
+    {
+      "id": "king",
+      "source": "assets/source/quality-20261028/identity/king-master-r4.png",
+      "sha256": "37f68d4df0962bfead20bbdfd16113f05ea3b5f42488e9d22b958a4e7718e5dc"
+    },
+    {
+      "id": "raider",
+      "source": "assets/source/quality-20261028/identity/raider-master-r4.png",
+      "sha256": "c9173aa44138f5796bdae3d4d680cd26b24ee16741020c42bcd8d0a1751a0b47"
+    },
+    {
+      "id": "nao",
+      "source": "assets/source/quality-20261028/identity/nao-master-r4.png",
+      "sha256": "3bc43907891d7eafbdf86a08a501a5a7cbec9f9b5f3cacd7e0c73099ddfff7ba"
+    },
+    {
+      "id": "segawa",
+      "source": "assets/source/quality-20261028/identity/segawa-warm-extended-r1.png",
+      "sha256": "459c3535c5edcfff551ba7c5cee4e81a9fef082bdb19ba37626e7300eacf821b"
+    },
+    {
+      "id": "musashi",
+      "source": "assets/source/quality-20261028/identity/musashi-master-r4.png",
+      "sha256": "7ce937bddf0ac7bbb4e068b916625e4cd629411d6cc561946f88c22492c39c17"
+    },
+    {
+      "id": "president",
+      "source": "assets/source/quality-20261028/identity/president-warm-extended-r1.png",
+      "sha256": "14ec1e067895e20e7f7596a5f54fd279af56e9b313820490ec9d103bd3a7c4b8"
+    }
+  ],
+  "records": [
+    {
+      "id": "ending-plates-and-karaage",
+      "master": "assets/source/quality-20261028/scenes/ending-plates-and-karaage-quality-r4.png",
+      "masterSha256": "32ef6801c8054474fda1b56c9608aa9163149c1dfab4ad4cdae2bd335c12a5c5",
+      "previousPath": "/art/v100/story-r9/cuts/ending-plates-and-karaage.webp",
+      "previousSha256": "6646693e93e20fc4f29f86e0fcc4ef8aadf9b6d8e88f0fb6e426b9ef044ff3a9",
+      "path": "/art/v100/quality-20261028/scenes/ending-plates-and-karaage-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "パイセンが皿を受け取り、TKYは食卓で皿を渡す。マヨは机の下で寝返りを打つ。",
+      "newEvent": false,
+      "detail": {
+        "rect": [
+          1460,
+          430,
+          400,
+          190
+        ],
+        "sourceWidth": 1920,
+        "sourceHeight": 640
+      },
+      "previous": {
+        "path": "/art/v100/story-r9/cuts/ending-plates-and-karaage.webp",
+        "sha256": "6646693e93e20fc4f29f86e0fcc4ef8aadf9b6d8e88f0fb6e426b9ef044ff3a9",
+        "bytes": 1167152
+      },
+      "bytes": 388634,
+      "sha256": "fb6457bfb46ba9c1cb1337e6c007f429af6e9808b41db4b0adedbc368ac0d5a3",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "epilogue-tky-receipt",
+      "master": "assets/source/quality-20261028/scenes/epilogue-tky-receipt-quality-r2.png",
+      "masterSha256": "787f7e792e417ecc788c87977b24072c882f089e20229a0ee4901bc4ea9dc9e3",
+      "previousPath": "/art/v100/story-r5/cuts/epilogue-tky-receipt.webp",
+      "previousSha256": "888b64289b35a60779de2d3acfe99257512b0f11b0188e6338b3ba1440f26932",
+      "path": "/art/v100/quality-20261028/scenes/epilogue-tky-receipt-r1.webp",
+      "dimensions": [
+        1280,
+        720
+      ],
+      "alt": "TKYが領収書を差し出し、パイセンは唐揚げを食べ、クマバーソンがしゃもじを向ける。",
+      "newEvent": false,
+      "previous": {
+        "path": "/art/v100/story-r5/cuts/epilogue-tky-receipt.webp",
+        "sha256": "888b64289b35a60779de2d3acfe99257512b0f11b0188e6338b3ba1440f26932",
+        "bytes": 1132306
+      },
+      "bytes": 264412,
+      "sha256": "3ffd9767e4f80b5f3f80243e10fe1a6d0a147a9b2625ea90ecebccb7fa6e883d",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "facility-power",
+      "master": "assets/source/quality-20261028/scenes/facility-power-quality-r2.png",
+      "masterSha256": "672883e9bf6cbabecb96022934cdbd69e4b9d22926f419d7db02b01f54a7b262",
+      "previousPath": "/art/v100/credits/facility-power-r1.webp",
+      "previousSha256": "e06468bee34ad9968755307f678e72409309f1374642dc8d30a46c2cb3aac8e9",
+      "path": "/art/v100/quality-20261028/scenes/facility-power-r1.webp",
+      "dimensions": [
+        1600,
+        900
+      ],
+      "alt": "TKYが臨時診療所の電源をつなぎ、チハが手元を照らす。",
+      "newEvent": false,
+      "previous": {
+        "path": "/art/v100/credits/facility-power-r1.webp",
+        "sha256": "e06468bee34ad9968755307f678e72409309f1374642dc8d30a46c2cb3aac8e9",
+        "bytes": 300926
+      },
+      "bytes": 412444,
+      "sha256": "83de39b2525b26ee94967a6782216b3e762caa057d6355e0485c1d56f7cc49de",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "vehicle-patch",
+      "master": "assets/source/quality-20261028/scenes/vehicle-patch-quality-r2.png",
+      "masterSha256": "a17ff99ee39e30de584d15aa4bc60310c750710db0c030bc9b68b3f5ef01af55",
+      "previousPath": "/art/v100/credits/vehicle-patch-r2.webp",
+      "previousSha256": "e1acf21a03581a9a78028e8c197d4f56396a3af0b769a84fefdfb736d24226e6",
+      "path": "/art/v100/quality-20261028/scenes/vehicle-patch-r1.webp",
+      "dimensions": [
+        1600,
+        900
+      ],
+      "alt": "TKYと顔を覆ったガンテツが車体を修理する。",
+      "newEvent": false,
+      "previous": {
+        "path": "/art/v100/credits/vehicle-patch-r2.webp",
+        "sha256": "e1acf21a03581a9a78028e8c197d4f56396a3af0b769a84fefdfb736d24226e6",
+        "bytes": 229286
+      },
+      "bytes": 366154,
+      "sha256": "fe1e41f0cfc9d8ac0d846b99776530e0a93ae158f37bbbde28dbc53991bbb447",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "vehicle-mayo-splash",
+      "master": "assets/source/quality-20261028/scenes/vehicle-mayo-splash-quality-r1.png",
+      "masterSha256": "30586f804468ffb1b71612fb27a6b72540cbacd5b0619940cfe3a025cf3fc179",
+      "previousPath": "/art/v100/credits/vehicle-mayo-splash-r1.webp",
+      "previousSha256": "d50b3c1030d11a4aa7367ce99d2aeb348c797a6ab5275b022bb0d70c20011a19",
+      "path": "/art/v100/quality-20261028/scenes/vehicle-mayo-splash-r1.webp",
+      "dimensions": [
+        1600,
+        900
+      ],
+      "alt": "マヨが水を振り払い、ハチとTKYが驚き、ガンテツはタオルを持つ。",
+      "newEvent": false,
+      "previous": {
+        "path": "/art/v100/credits/vehicle-mayo-splash-r1.webp",
+        "sha256": "d50b3c1030d11a4aa7367ce99d2aeb348c797a6ab5275b022bb0d70c20011a19",
+        "bytes": 395446
+      },
+      "bytes": 571424,
+      "sha256": "a706ace61ec5b75e9a94b49fdfa29e88bdd472a001e337791dfc2a11e8fba33e",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "s14-train-couplers",
+      "master": "assets/source/quality-20261028/scenes/s14-train-couplers-quality-r3.png",
+      "masterSha256": "b71ff91efdd25b13f164dc323d9b7ebee09cda22dbb36a2fd0435d420f3dd7cd",
+      "previousPath": "/art/v100/story-r9/cuts/s14-train-couplers.webp",
+      "previousSha256": "96a72df5e0e97aaf91f3ef44c24441fea9abd8976868f50be9f728ce621b2e33",
+      "path": "/art/v100/quality-20261028/scenes/s14-train-couplers-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "TKYが大口を押さえ、仲間が赤い連結解除レバーを操作する。青いブレーキ管は切らずに残す。",
+      "newEvent": false,
+      "detail": {
+        "rect": [
+          750,
+          375,
+          1130,
+          255
+        ],
+        "sourceWidth": 1920,
+        "sourceHeight": 640
+      },
+      "previous": {
+        "path": "/art/v100/story-r9/cuts/s14-train-couplers.webp",
+        "sha256": "96a72df5e0e97aaf91f3ef44c24441fea9abd8976868f50be9f728ce621b2e33",
+        "bytes": 1106538
+      },
+      "bytes": 474848,
+      "sha256": "828b0c316d6b117de60c7ac9d5e3b320f375b1e87aa7f9b6c9c2d201aca8c4b0",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "epilogue-main-table",
+      "master": "assets/source/quality-20261028/scenes/epilogue-main-table-quality-r2.png",
+      "masterSha256": "5ff1f12776302ae7f87c775b59a1a19467333121e18acb8f40cb337cd7b174f3",
+      "previousPath": "/art/v100/story-r5/cuts/epilogue-main-table.webp",
+      "previousSha256": "6d645384d976136a41b559a3cc02b541040cdab03f0aacb7a4a2388330980ba2",
+      "path": "/art/v100/quality-20261028/scenes/epilogue-main-table-r1.webp",
+      "dimensions": [
+        1280,
+        720
+      ],
+      "alt": "くまやで六人の仲間とマヨが食卓を囲む。",
+      "newEvent": false,
+      "previous": {
+        "path": "/art/v100/story-r5/cuts/epilogue-main-table.webp",
+        "sha256": "6d645384d976136a41b559a3cc02b541040cdab03f0aacb7a4a2388330980ba2",
+        "bytes": 1190224
+      },
+      "bytes": 321608,
+      "sha256": "5cd84f58ced7257e0c0df51da50af7dd29e07a4d71354651fc2dd0b8ff1f861c",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "ending-tky-transport",
+      "master": "assets/source/quality-20261028/scenes/ending-tky-transport-quality-r3.png",
+      "masterSha256": "954d7fa3ecf9499e377a2a461c9b2d254052410348dd4ea55ebe11e0d70e23a5",
+      "previousPath": "/art/v100/story-r5/cuts/ending-tky-transport.webp",
+      "previousSha256": "4fc1cd8e5dd892e0d11e8c16584c5c96da6884f2bc80e728d60e48d3f3a4a613",
+      "path": "/art/v100/quality-20261028/scenes/ending-tky-transport-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "TKYが運転席に座り、クマバーソンが医療箱を抱え、パイセンが車両の扉を押さえる。",
+      "newEvent": false,
+      "previous": {
+        "path": "/art/v100/story-r5/cuts/ending-tky-transport.webp",
+        "sha256": "4fc1cd8e5dd892e0d11e8c16584c5c96da6884f2bc80e728d60e48d3f3a4a613",
+        "bytes": 1021992
+      },
+      "bytes": 397770,
+      "sha256": "99b5219f9284b144f9a8e2a2686dd50d66829a9f27887d97e9923a7923b11006",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "s06-babayaga-old-message",
+      "master": "assets/source/quality-20261028/scenes/s06-babayaga-old-message-quality-r2.png",
+      "masterSha256": "197f566e3603eee115b9e6e17b1ab45aa940225d46d03db1c71b613dd0a3d0d5",
+      "previousPath": null,
+      "previousSha256": null,
+      "path": "/art/v100/quality-20261028/scenes/s06-babayaga-old-message-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "古い通知を探すババヤガが、中継器の下に立ち止まっている。",
+      "newEvent": true,
+      "previous": null,
+      "bytes": 305886,
+      "sha256": "a886081cae7b38a040770cb79dddf2e5a813222418fa2b6404e3b1783af29038",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "s18-babayaga-chiha-records",
+      "master": "assets/source/quality-20261028/scenes/s18-babayaga-chiha-records-quality-r2.png",
+      "masterSha256": "793bc14cb93827bad8db797adcaca2626f65c2abe275fd0c1dfa08ecd651b60d",
+      "previousPath": null,
+      "previousSha256": null,
+      "path": "/art/v100/quality-20261028/scenes/s18-babayaga-chiha-records-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "問いへの返事をしないババヤガが、チハと一緒に記録の箱を搬送車へ運ぶ。",
+      "newEvent": true,
+      "previous": null,
+      "bytes": 323800,
+      "sha256": "d4d267474b1cd467fc0ff74b8c68af5fe9bcfff62ac2a04fb5d9a5270ec13391",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "s27-babayaga-cover",
+      "master": "assets/source/quality-20261028/scenes/s27-babayaga-cover-quality-r3.png",
+      "masterSha256": "c3b22b4bed01e09fcb39e2dc61c8f9affd5f2db6da98ebb3b5024f1c750a9e30",
+      "previousPath": null,
+      "previousSha256": null,
+      "path": "/art/v100/quality-20261028/scenes/s27-babayaga-cover-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "車体の陰で、サプレッサー付きのタクティカルハンドガンを構えるババヤガ。",
+      "newEvent": true,
+      "previous": null,
+      "bytes": 392024,
+      "sha256": "f2520b88776a2d21131cfdb6e70a506975e36e487f0e57d7ce0f43aa735714e3",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "facility-chiha-baba-tender",
+      "master": "assets/source/quality-20261028/scenes/facility-chiha-baba-tender-quality-r2.png",
+      "masterSha256": "15858c89b8779edb5f0521bc0f3f179a80c3b4dbfa4a2770f80d2a793bb1f9b6",
+      "previousPath": "/art/v100/credits/chiha-baba-tender-r1.webp",
+      "previousSha256": "9c53b335820c0d574fa611e9ebec8a21249f5067a291cb345a35d8d3b2ad7c50",
+      "path": "/art/v100/quality-20261028/scenes/facility-chiha-baba-tender-r1.webp",
+      "dimensions": [
+        1600,
+        900
+      ],
+      "alt": "Mrs.チハがババヤガのネクタイを直し、頬にキスをする。彼の手がそっと重なる。",
+      "newEvent": false,
+      "previous": {
+        "path": "/art/v100/credits/chiha-baba-tender-r1.webp",
+        "sha256": "9c53b335820c0d574fa611e9ebec8a21249f5067a291cb345a35d8d3b2ad7c50",
+        "bytes": 251756
+      },
+      "bytes": 433364,
+      "sha256": "2aa84684549e11689e0e65ce424f0dfcc52c816e0d7cc552b714a4731a9cc51f",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "defense-paisen-kuma-kiss",
+      "master": "assets/source/quality-20261028/scenes/defense-paisen-kuma-kiss-quality-r2.png",
+      "masterSha256": "de95c649b8d7e1815792cc56ecf44dd4a96f61f3db06e0698ba08f241f7dd211",
+      "previousPath": "/art/v100/credits/defense-paisen-kuma-kiss-r1.webp",
+      "previousSha256": "d7edb79d335dce91f9c0d57f928190f56c23c3808b97a86660e43149e283c3fd",
+      "path": "/art/v100/quality-20261028/scenes/defense-paisen-kuma-kiss-r1.webp",
+      "dimensions": [
+        1600,
+        900
+      ],
+      "alt": "クマバーソンがパイセンの頬にキスをする。パイセンは肩を抱き、大げさな身ぶりで喜ぶ。",
+      "newEvent": false,
+      "previous": {
+        "path": "/art/v100/credits/defense-paisen-kuma-kiss-r1.webp",
+        "sha256": "d7edb79d335dce91f9c0d57f928190f56c23c3808b97a86660e43149e283c3fd",
+        "bytes": 1478320
+      },
+      "bytes": 392778,
+      "sha256": "85de25d9a8eafd5cdf911a20c5de0ad5944193f5f3e17425c549b1118b40499e",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "armory-couple-dance",
+      "master": "assets/source/quality-20261028/scenes/armory-couple-dance-quality-r2.png",
+      "masterSha256": "c88003e875d9b3d70b4e54c4bd71caa4f7d9bb6530e7be4e8c6b7b883b0092c5",
+      "previousPath": "/art/v100/credits/armory-couple-dance-r1.webp",
+      "previousSha256": "ae7b72cc136174d49f64e910eae20ebe0b573133d1d1318ba0c47a4117ec83ef",
+      "path": "/art/v100/quality-20261028/scenes/armory-couple-dance-r1.webp",
+      "dimensions": [
+        1600,
+        900
+      ],
+      "alt": "片づけの合間に、ババヤガとMrs.チハが手を取り踊る。パイセンが歌い、タタラが横目で見守る。",
+      "newEvent": false,
+      "previous": {
+        "path": "/art/v100/credits/armory-couple-dance-r1.webp",
+        "sha256": "ae7b72cc136174d49f64e910eae20ebe0b573133d1d1318ba0c47a4117ec83ef",
+        "bytes": 1578982
+      },
+      "bytes": 446160,
+      "sha256": "dc3ae41b01cc81f9f62a51c3924ee584c9420ac3e68f60b0545ae0764326f304",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "ward-supplies",
+      "master": "assets/source/quality-20261028/scenes/ward-supplies-quality-r1.png",
+      "masterSha256": "54a7f81f6bfdb65f5bd5a1312945a456179e3c4b5908d552b7b774738b196b68",
+      "previousPath": "/art/v100/credits/ward-supplies-r4.webp",
+      "previousSha256": "cdbe3542f9856ce9efb88e96d8b74e49783912476dca075e1644dd5dbba1235b",
+      "path": "/art/v100/quality-20261028/scenes/ward-supplies-r1.webp",
+      "dimensions": [
+        1600,
+        900
+      ],
+      "alt": "区役所に届いた物資を、いくらちゃんたちが仕分ける。",
+      "newEvent": false,
+      "previous": {
+        "path": "/art/v100/credits/ward-supplies-r4.webp",
+        "sha256": "cdbe3542f9856ce9efb88e96d8b74e49783912476dca075e1644dd5dbba1235b",
+        "bytes": 280084
+      },
+      "bytes": 381672,
+      "sha256": "70b57dc0d1a81c100d412bbcf061a42c38e7d1771d509a3e95ad55380c0b18a8",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "ward-king-fan",
+      "master": "assets/source/quality-20261028/scenes/ward-king-fan-quality-r1.png",
+      "masterSha256": "faa8ddc60e51431995ece72dd6c7a4a44ae75d092c40b655ac8ec7374ccbfef4",
+      "previousPath": "/art/v100/credits/ward-king-fan-r2.webp",
+      "previousSha256": "0a022b8fff3da29b65aa97678f09b5cb0a10247e2b892222cb6315fb13e32dd7",
+      "path": "/art/v100/quality-20261028/scenes/ward-king-fan-r1.webp",
+      "dimensions": [
+        1600,
+        900
+      ],
+      "alt": "直した扇風機がキングの毛布を巻き上げる。いくらちゃんは笑い、ミズチは点検の手を止める。",
+      "newEvent": false,
+      "previous": {
+        "path": "/art/v100/credits/ward-king-fan-r2.webp",
+        "sha256": "0a022b8fff3da29b65aa97678f09b5cb0a10247e2b892222cb6315fb13e32dd7",
+        "bytes": 272778
+      },
+      "bytes": 434558,
+      "sha256": "fd384de58569730b0f39684ce87a92afc50ee975561a3e096d32e2d85d0cb327",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "street-community",
+      "master": "assets/source/quality-20261028/scenes/street-community-quality-r1.png",
+      "masterSha256": "ddeb3376998e86d705a6f0ab78dbf3f5b90b3af6101c3d1289d5fd9dae9d3e45",
+      "previousPath": "/art/v100/credits/street-community-r1.webp",
+      "previousSha256": "1b336554b7b8baf9d0b3bbff8c1b7786cb7a262fe553b65990d1b3d24c53bc62",
+      "path": "/art/v100/quality-20261028/scenes/street-community-r1.webp",
+      "dimensions": [
+        1600,
+        900
+      ],
+      "alt": "商店街のあちこちで、仲間たちがシャッターを直し、物資を運び、道を掃く。",
+      "newEvent": false,
+      "previous": {
+        "path": "/art/v100/credits/street-community-r1.webp",
+        "sha256": "1b336554b7b8baf9d0b3bbff8c1b7786cb7a262fe553b65990d1b3d24c53bc62",
+        "bytes": 1762610
+      },
+      "bytes": 514712,
+      "sha256": "c1ebce5f1c9a7877a088aa37cada41073560df5be89b878f30979fe6f844a260",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "street-shutter",
+      "master": "assets/source/quality-20261028/scenes/street-shutter-quality-r1.png",
+      "masterSha256": "d43b254dd8aef24ad1d7f360737686af44c6b1a066dae56863dadb7280eb3371",
+      "previousPath": "/art/v100/credits/street-shutter-r2.webp",
+      "previousSha256": "3e585b642bdade97a9c6ebd8c3cee47d772d597e69558d14b8325209877ab103",
+      "path": "/art/v100/quality-20261028/scenes/street-shutter-r1.webp",
+      "dimensions": [
+        1600,
+        900
+      ],
+      "alt": "ハチとパイセンが、曲がった店のシャッターを開ける。",
+      "newEvent": false,
+      "previous": {
+        "path": "/art/v100/credits/street-shutter-r2.webp",
+        "sha256": "3e585b642bdade97a9c6ebd8c3cee47d772d597e69558d14b8325209877ab103",
+        "bytes": 1451784
+      },
+      "bytes": 379748,
+      "sha256": "014815b75c8f83932e9dd7beda9f955f299c4765f0e0e3bb05a3dbd19b6bad1d",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "street-paisen-broom",
+      "master": "assets/source/quality-20261028/scenes/street-paisen-broom-quality-r1.png",
+      "masterSha256": "25b1d9048f439c4d19ebcf324a755e63a60a4d0cbb5a04f12bb7d9a50b67245d",
+      "previousPath": "/art/v100/credits/street-paisen-broom-r1.webp",
+      "previousSha256": "e5d166760860292ff143c30729cc501d59886c4aa42869d9ef7cc4d43482eb26",
+      "path": "/art/v100/quality-20261028/scenes/street-paisen-broom-r1.webp",
+      "dimensions": [
+        1600,
+        900
+      ],
+      "alt": "ほうきをギターに見立て、パイセンが熱唱する。ハチは腹を抱え、レイダーはあきれながら笑う。",
+      "newEvent": false,
+      "previous": {
+        "path": "/art/v100/credits/street-paisen-broom-r1.webp",
+        "sha256": "e5d166760860292ff143c30729cc501d59886c4aa42869d9ef7cc4d43482eb26",
+        "bytes": 1710536
+      },
+      "bytes": 453616,
+      "sha256": "df0635cf2c38d16b62b7ed7e3a38aefda6b2dc21cd00f3c42841a5e2844265b5",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "station-repair",
+      "master": "assets/source/quality-20261028/scenes/station-repair-quality-r1.png",
+      "masterSha256": "e2509fa87fe8f71ae4041244072ac0b5db645ffe6e07d037a4b6fd57be08d475",
+      "previousPath": "/art/v100/credits/station-repair-r1.webp",
+      "previousSha256": "91955f19b73698d01029b98a1827acf59b3051202da739144795a2ad812b157b",
+      "path": "/art/v100/quality-20261028/scenes/station-repair-r1.webp",
+      "dimensions": [
+        1600,
+        900
+      ],
+      "alt": "モンキーが改札の灯りを修理し、タタラがカバーを支える。",
+      "newEvent": false,
+      "previous": {
+        "path": "/art/v100/credits/station-repair-r1.webp",
+        "sha256": "91955f19b73698d01029b98a1827acf59b3051202da739144795a2ad812b157b",
+        "bytes": 243008
+      },
+      "bytes": 389906,
+      "sha256": "7432005aa70eefece6acd8d637023377a875c5f35acb43294c6a09a3857e6051",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "station-cart-parade",
+      "master": "assets/source/quality-20261028/scenes/station-cart-parade-quality-r1.png",
+      "masterSha256": "7794e8dd725e2cc2863fc615c5942a2f7e1427b092833c7004b827fa11019af9",
+      "previousPath": "/art/v100/credits/station-cart-parade-r1.webp",
+      "previousSha256": "145975cd2d725248f7883217c323d4e42507437033a636191cd8447445e439cc",
+      "path": "/art/v100/quality-20261028/scenes/station-cart-parade-r1.webp",
+      "dimensions": [
+        1600,
+        900
+      ],
+      "alt": "動かない整備台車の上で、モンキーが車掌気取り。タタラが一礼し、ガンテツは小さな飾りをつけて立つ。",
+      "newEvent": false,
+      "previous": {
+        "path": "/art/v100/credits/station-cart-parade-r1.webp",
+        "sha256": "145975cd2d725248f7883217c323d4e42507437033a636191cd8447445e439cc",
+        "bytes": 337952
+      },
+      "bytes": 491394,
+      "sha256": "215f7af45da7428dd97a38f6c694fa55dc8c690f517325ca19d23fcc87c8d311",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "armory-evidence",
+      "master": "assets/source/quality-20261028/scenes/armory-evidence-quality-r1.png",
+      "masterSha256": "94ba3707074ee1d2e1ee741d616b3831d333c77a24334cb83f889ce3af60a62a",
+      "previousPath": "/art/v100/credits/armory-evidence-r2.webp",
+      "previousSha256": "a04ba551f93498dcf65bde9e62546f129f2a742a20525796dc92739ee83253c7",
+      "path": "/art/v100/quality-20261028/scenes/armory-evidence-r1.webp",
+      "dimensions": [
+        1600,
+        900
+      ],
+      "alt": "ババヤガとレイダーが証拠を封じる。扉のそばではタタラが待つ。",
+      "newEvent": false,
+      "previous": {
+        "path": "/art/v100/credits/armory-evidence-r2.webp",
+        "sha256": "a04ba551f93498dcf65bde9e62546f129f2a742a20525796dc92739ee83253c7",
+        "bytes": 220458
+      },
+      "bytes": 346006,
+      "sha256": "13605a82b72304183303a87bedfe84d63b23d29b06202bd4736b0a8bf7f84731",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "floodgate-rations",
+      "master": "assets/source/quality-20261028/scenes/floodgate-rations-quality-r1.png",
+      "masterSha256": "0ec75372a00b2ca950e669d3d1bf3e9b3aa827a89c28f5375c37d1834428b41d",
+      "previousPath": "/art/v100/credits/floodgate-rations-r2.webp",
+      "previousSha256": "e33883a9a22d878ea034b003341e9dfad7e30f970227bd9ec5948648c2010847",
+      "path": "/art/v100/quality-20261028/scenes/floodgate-rations-r1.webp",
+      "dimensions": [
+        1600,
+        900
+      ],
+      "alt": "クレイジーキングとモンキーが、防潮門の詰所へ食料を運ぶ。",
+      "newEvent": false,
+      "previous": {
+        "path": "/art/v100/credits/floodgate-rations-r2.webp",
+        "sha256": "e33883a9a22d878ea034b003341e9dfad7e30f970227bd9ec5948648c2010847",
+        "bytes": 320154
+      },
+      "bytes": 544488,
+      "sha256": "0f9e4a6ce047a9ea6b830e29b8959d8992fee3a0109056a559a15a0858e7a8e9",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "floodgate-king-riceball",
+      "master": "assets/source/quality-20261028/scenes/floodgate-king-riceball-quality-r1.png",
+      "masterSha256": "369100d0c1b395b2084a0da36a8b617877f7f5d09085732a70f7c5879ec95792",
+      "previousPath": "/art/v100/credits/floodgate-king-riceball-r2.webp",
+      "previousSha256": "c6e8c6cbceffafd95720f5139205fdcdea9e62f63f6b94a3a91b584dd283af97",
+      "path": "/art/v100/quality-20261028/scenes/floodgate-king-riceball-r1.webp",
+      "dimensions": [
+        1600,
+        900
+      ],
+      "alt": "キングがおにぎりをバケツの目に押しつける。モンキーが吹き出し、ガンテツが弁当箱を差し出す。",
+      "newEvent": false,
+      "previous": {
+        "path": "/art/v100/credits/floodgate-king-riceball-r2.webp",
+        "sha256": "c6e8c6cbceffafd95720f5139205fdcdea9e62f63f6b94a3a91b584dd283af97",
+        "bytes": 285510
+      },
+      "bytes": 501772,
+      "sha256": "dd676747c162d71afff0d56a1d7e3a4a9064d0b60ab798790cba97eee7f8c40f",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "defense-bench",
+      "master": "assets/source/quality-20261028/scenes/defense-bench-quality-r1.png",
+      "masterSha256": "17bf40d99789229ab243cd1e0a016241ef1a71e962831f8034b3879dc41c7484",
+      "previousPath": "/art/v100/credits/defense-bench-r3.webp",
+      "previousSha256": "a3e71d403251f2a0b6f5fa4e5b56ba455e7757743403f734d325bad9623302c5",
+      "path": "/art/v100/quality-20261028/scenes/defense-bench-r1.webp",
+      "dimensions": [
+        1600,
+        900
+      ],
+      "alt": "タタラたちが瓦礫を運び出す。レイダーの笑い声が響き、道端に休める場所が戻る。",
+      "newEvent": false,
+      "previous": {
+        "path": "/art/v100/credits/defense-bench-r3.webp",
+        "sha256": "a3e71d403251f2a0b6f5fa4e5b56ba455e7757743403f734d325bad9623302c5",
+        "bytes": 252678
+      },
+      "bytes": 443520,
+      "sha256": "0b32968df6201217d083b7a92895b6c755f5950c5fe12920cd085ce8ae7e2713",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "zakimiya-bottles",
+      "master": "assets/source/quality-20261028/scenes/zakimiya-bottles-quality-r1.png",
+      "masterSha256": "145e173a43dfa2181eed5a4cc34b0660d5491994e13106af41a935ae8674ae1b",
+      "previousPath": "/art/v100/credits/zakimiya-bottles-r2.webp",
+      "previousSha256": "3d1eb1a0d0a7c5769bf52d4cb2edbaaf8f9dde8e21c8ed69573130ac85d2dd53",
+      "path": "/art/v100/quality-20261028/scenes/zakimiya-bottles-r1.webp",
+      "dimensions": [
+        1600,
+        900
+      ],
+      "alt": "ザキミヤが一人、哺乳瓶を洗う。小さな毎日の世話が戻り始める。",
+      "newEvent": false,
+      "previous": {
+        "path": "/art/v100/credits/zakimiya-bottles-r2.webp",
+        "sha256": "3d1eb1a0d0a7c5769bf52d4cb2edbaaf8f9dde8e21c8ed69573130ac85d2dd53",
+        "bytes": 215678
+      },
+      "bytes": 337010,
+      "sha256": "29a4d507a26ce049ad2ebd878c77d8081b21301f5d695bd96c803cc565bf4824",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "defense-watch",
+      "master": "assets/source/quality-20261028/scenes/defense-watch-quality-r2.png",
+      "masterSha256": "ec19a73198be7f59ead3172c7d58fae5358c77e8d503ec070897f04de384867d",
+      "previousPath": "/art/v100/credits/defense-watch-r1.webp",
+      "previousSha256": "71de3a013e9d3a01f02b766deb83fd7279167f7a69c6158d97ec5227eb51e3d8",
+      "path": "/art/v100/quality-20261028/scenes/defense-watch-r1.webp",
+      "dimensions": [
+        1600,
+        900
+      ],
+      "alt": "ババヤガが一人、戦闘の終わった道と見張りの持ち場を確かめる。",
+      "newEvent": false,
+      "previous": {
+        "path": "/art/v100/credits/defense-watch-r1.webp",
+        "sha256": "71de3a013e9d3a01f02b766deb83fd7279167f7a69c6158d97ec5227eb51e3d8",
+        "bytes": 276070
+      },
+      "bytes": 421874,
+      "sha256": "1868b8fc2d9ea7dab085382e308c90092dd13b1e4425fcc1fd78d7e0d36eb263",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "segawa-record",
+      "master": "assets/source/quality-20261028/scenes/segawa-record-quality-r2.png",
+      "masterSha256": "4dbbbd7a9818d7c633a46a10db7d1a9335ff17782cab29185070c18fd6717099",
+      "previousPath": "/art/v100/credits/segawa-record-r2.webp",
+      "previousSha256": "ec9b1a1d48097edf52929cb5555334f01662a013fb279bdc2838ff0e2e7fb91f",
+      "path": "/art/v100/quality-20261028/scenes/segawa-record-r1.webp",
+      "dimensions": [
+        1600,
+        900
+      ],
+      "alt": "回収された研究記録の中で、セガワが暴走したプリンターの紙に埋もれ、呆れた顔でコーヒーを持っている。",
+      "newEvent": false,
+      "previous": {
+        "path": "/art/v100/credits/segawa-record-r2.webp",
+        "sha256": "ec9b1a1d48097edf52929cb5555334f01662a013fb279bdc2838ff0e2e7fb91f",
+        "bytes": 220206
+      },
+      "bytes": 274648,
+      "sha256": "0c64790a5063f8e173392ab8d63cde8f6656c2dcaaebe2d1d0b5fc336018ffbd",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "hospital-courtyard",
+      "master": "assets/source/quality-20261028/scenes/hospital-courtyard-quality-r1.png",
+      "masterSha256": "31f8610bd330f1c45abb421f50d294326e54bd4e53a48924e8ac16d33a23cddb",
+      "previousPath": "/art/v100/story-r5/cuts/ending-medical-progress.webp",
+      "previousSha256": "e5f0d6cc5d67a3b62fab08b4e5cc176e77532ed4fc4254980796b4ff27884f02",
+      "path": "/art/v100/quality-20261028/scenes/hospital-courtyard-r1.webp",
+      "dimensions": [
+        1600,
+        900
+      ],
+      "alt": "病院で進行の止まった腕を確かめる。仲間たちは医師の説明を聞き、次の診察を待つ。",
+      "newEvent": false,
+      "previous": {
+        "path": "/art/v100/story-r5/cuts/ending-medical-progress.webp",
+        "sha256": "e5f0d6cc5d67a3b62fab08b4e5cc176e77532ed4fc4254980796b4ff27884f02",
+        "bytes": 981894
+      },
+      "bytes": 341194,
+      "sha256": "8899aad521939dbc16886e649c26be4f00829f7dda79cb3a608b7c538ca7cec6",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "zakimiya-family-morning",
+      "master": "assets/source/quality-20261028/scenes/zakimiya-family-morning-quality-r1.png",
+      "masterSha256": "2ab3ca41ad9ee01cfbe810d27ef9abb9fb41c38d1a103147082e540322a63a7d",
+      "previousPath": "/art/v100/story-r5/cuts/ending-zakimiya-family.webp",
+      "previousSha256": "2c3e706f0be974fe3cc422696d2d7bedeba824b6dba93b0235e1d3265a10ffa1",
+      "path": "/art/v100/quality-20261028/scenes/zakimiya-family-morning-r1.webp",
+      "dimensions": [
+        1600,
+        900
+      ],
+      "alt": "ザキミヤが眠る息子を抱き、妻と一緒に顔を見つめる。",
+      "newEvent": false,
+      "previous": {
+        "path": "/art/v100/story-r5/cuts/ending-zakimiya-family.webp",
+        "sha256": "2c3e706f0be974fe3cc422696d2d7bedeba824b6dba93b0235e1d3265a10ffa1",
+        "bytes": 265350
+      },
+      "bytes": 354482,
+      "sha256": "d56e398545fb61d608010e5981d7d2dcfb0c33123a8b3ed1028b6d9ab8fe4c44",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "prologue-extinguisher-escape",
+      "master": "assets/source/quality-20261028/scenes/prologue-extinguisher-escape-quality-r2.png",
+      "masterSha256": "022ae0815366ba7e8c53120c9b350953e83d106f1eb2cfb6a36ac86dbeb299ff",
+      "previousPath": "/art/v100/story-r9/cuts/prologue-extinguisher-escape.webp",
+      "previousSha256": "9ad6e25610a1a0be51fa4ca9507c94f818ad7eee5f0976f1b4c1983c809d4081",
+      "path": "/art/v100/quality-20261028/scenes/prologue-extinguisher-escape-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "ババヤガが消火器を噴き、クマが椅子を押して退路を作る。",
+      "newEvent": false,
+      "modelIds": [
+        "babayaga",
+        "kumaverson",
+        "paisen"
+      ],
+      "previous": {
+        "path": "/art/v100/story-r9/cuts/prologue-extinguisher-escape.webp",
+        "sha256": "9ad6e25610a1a0be51fa4ca9507c94f818ad7eee5f0976f1b4c1983c809d4081",
+        "bytes": 969994
+      },
+      "bytes": 416508,
+      "sha256": "5d7572fc10d28dedc7bc1f59236c35f005fa128d4ead5628bbcdd1ae410a5791",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "s01-nao-rescue",
+      "master": "assets/source/quality-20261028/scenes/s01-nao-rescue-quality-r2.png",
+      "masterSha256": "46adbb725c80d2065dd1b48d2a153305576a36217c7cddb231ced40bfc965076",
+      "previousPath": "/art/v100/story-r9/cuts/s01-nao-rescue.webp",
+      "previousSha256": "ae684ae099ea339497a899dedb86ca9cecb7ae6ad694a9a10785d15573a28e48",
+      "path": "/art/v100/quality-20261028/scenes/s01-nao-rescue-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "車内でナオが老人に毛布を敷き、運び終えたパイセンが床に座り込む。",
+      "newEvent": false,
+      "modelIds": [
+        "paisen",
+        "nao"
+      ],
+      "detail": {
+        "rect": [
+          1020,
+          340,
+          670,
+          270
+        ],
+        "sourceWidth": 1920,
+        "sourceHeight": 640,
+        "landmarkSourcePath": "/art/v100/quality-20261028/scenes/s01-nao-rescue-r1.webp",
+        "landmarkSourceHash": "57db60fdfc0008c525931a0478f33a769c1360e041b418f93da6a595d1d99a01",
+        "landmarks": [
+          {
+            "id": "paisen-face",
+            "rect": [
+              282,
+              110,
+              146,
+              126
+            ]
+          },
+          {
+            "id": "nao-face",
+            "rect": [
+              1086,
+              156,
+              145,
+              130
+            ]
+          }
+        ]
+      },
+      "previous": {
+        "path": "/art/v100/story-r9/cuts/s01-nao-rescue.webp",
+        "sha256": "ae684ae099ea339497a899dedb86ca9cecb7ae6ad694a9a10785d15573a28e48",
+        "bytes": 1210640
+      },
+      "bytes": 442440,
+      "sha256": "57db60fdfc0008c525931a0478f33a769c1360e041b418f93da6a595d1d99a01",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "s03-cold-retrieval",
+      "master": "assets/source/quality-20261028/scenes/s03-cold-retrieval-quality-r1.png",
+      "masterSha256": "32a6d2c8c2018eceda2d6d6bc4cfe8cb7ee25193f1ce46f6405ce7079c5edb07",
+      "previousPath": "/art/v100/story-r9/cuts/s03-cold-retrieval.webp",
+      "previousSha256": "583856a8921eced27a05a227f7d6e0ae4895e0040735f6cd7acf0d6ac989f866",
+      "path": "/art/v100/quality-20261028/scenes/s03-cold-retrieval-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "赤いレンズの防護服隊員三人が、タクヤの担架と黒い収容袋を扱う。",
+      "newEvent": false,
+      "modelIds": [],
+      "continuity": "The existing generated scene is the primary reference for the unchanged anonymous crew, established Takuya boss or vehicles. No new named face is invented.",
+      "previous": {
+        "path": "/art/v100/story-r9/cuts/s03-cold-retrieval.webp",
+        "sha256": "583856a8921eced27a05a227f7d6e0ae4895e0040735f6cd7acf0d6ac989f866",
+        "bytes": 335386
+      },
+      "bytes": 490278,
+      "sha256": "ac3eb41d866be5bfb642d8af7fcc2f8da1c4b340beb4e52dad9f3ee085ab9c14",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "s04-monkey-shutter",
+      "master": "assets/source/quality-20261028/scenes/s04-monkey-shutter-quality-r2.png",
+      "masterSha256": "14709c1b3a89242ac03137d6792c593af298bdfbd2ffcc2b0ce8a7a4caa43297",
+      "previousPath": "/art/v100/story-r9/cuts/s04-monkey-shutter.webp",
+      "previousSha256": "2b6e5c577e1b08b5ac686402369aa2fad7412ba993291ac280622cdb1a9dcdf2",
+      "path": "/art/v100/quality-20261028/scenes/s04-monkey-shutter-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "クマが女性駅員を運び出す。配線盤の前にはモンキーと主人公の手。",
+      "newEvent": false,
+      "modelIds": [
+        "kumaverson",
+        "monkey"
+      ],
+      "previous": {
+        "path": "/art/v100/story-r9/cuts/s04-monkey-shutter.webp",
+        "sha256": "2b6e5c577e1b08b5ac686402369aa2fad7412ba993291ac280622cdb1a9dcdf2",
+        "bytes": 353464
+      },
+      "bytes": 437188,
+      "sha256": "bf3ae475628b6fa8be224a77aae2d6c126fead86d290d292b21cc6f0831e4f21",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "s09-transfer-disconnect",
+      "master": "assets/source/quality-20261028/scenes/s09-transfer-disconnect-quality-r2.png",
+      "masterSha256": "4534068fac2c50b47640c07cc1a16f4ccacd6e34b0c80a860739056b767689c6",
+      "previousPath": "/art/v100/story-r9/cuts/s09-transfer-disconnect.webp",
+      "previousSha256": "0620920717a200aa2b5bbf303a52e0f98e3abdbd94f13a7bd89161dc08d5d279",
+      "path": "/art/v100/quality-20261028/scenes/s09-transfer-disconnect-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "いくらが記録した転送先を確認し、赤いケーブルを接続口から抜いた。",
+      "newEvent": false,
+      "modelIds": [
+        "ikura"
+      ],
+      "detail": {
+        "rect": [
+          1370,
+          270,
+          530,
+          250
+        ],
+        "sourceWidth": 1920,
+        "sourceHeight": 640,
+        "landmarkSourcePath": "/art/v100/quality-20261028/scenes/s09-transfer-disconnect-r1.webp",
+        "landmarkSourceHash": "6d78525b765cebb2de5fc3dfc60cbf044ded57548f3ff7c6a1f600e1f986a94a",
+        "landmarks": [
+          {
+            "id": "paisen-face",
+            "rect": [
+              283,
+              176,
+              135,
+              152
+            ]
+          },
+          {
+            "id": "ikura-face",
+            "rect": [
+              715,
+              132,
+              130,
+              160
+            ]
+          }
+        ]
+      },
+      "previous": {
+        "path": "/art/v100/story-r9/cuts/s09-transfer-disconnect.webp",
+        "sha256": "0620920717a200aa2b5bbf303a52e0f98e3abdbd94f13a7bd89161dc08d5d279",
+        "bytes": 1057694
+      },
+      "bytes": 371918,
+      "sha256": "6d78525b765cebb2de5fc3dfc60cbf044ded57548f3ff7c6a1f600e1f986a94a",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "s10-rescue-surveillance",
+      "master": "assets/source/quality-20261028/scenes/s10-rescue-surveillance-quality-r1.png",
+      "masterSha256": "6aed3ddf523372ad2d61e8f22e3bca5d5bde00338571388f9e15eb1f1034a94e",
+      "previousPath": "/art/v100/story-r9/cuts/s10-rescue-surveillance.webp",
+      "previousSha256": "ff4e147999f3ff6c5193885d2761c0f95549a5131fda18e4cc6040fed9d33cf6",
+      "path": "/art/v100/quality-20261028/scenes/s10-rescue-surveillance-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "ババヤガが監視映像を確認する。映像のパイセンが階段を上り、二階の女性が白いタオルを振る。",
+      "newEvent": false,
+      "modelIds": [
+        "babayaga",
+        "paisen"
+      ],
+      "previous": {
+        "path": "/art/v100/story-r9/cuts/s10-rescue-surveillance.webp",
+        "sha256": "ff4e147999f3ff6c5193885d2761c0f95549a5131fda18e4cc6040fed9d33cf6",
+        "bytes": 991058
+      },
+      "bytes": 402174,
+      "sha256": "c917b9b0c21a8d0d231363368b5a38d3575d7675c9e0e84cacf0cbb192540134",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "s11-oxygen-rescue",
+      "master": "assets/source/quality-20261028/scenes/s11-oxygen-rescue-quality-r1.png",
+      "masterSha256": "6776825856c9bc1ee48c47cd6477cd2e81ebebf14ed79cc7f4e39c2980993094",
+      "previousPath": "/art/v100/story-r9/cuts/s11-oxygen-rescue.webp",
+      "previousSha256": "872ab0c62d97039419feed4488da8c9b7019a91f99334bbf7b55372f5fee12db",
+      "path": "/art/v100/quality-20261028/scenes/s11-oxygen-rescue-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "クマが酸素弁を回す。ガラスの向こうには研究員三人と、止まりかけた隔壁が見える。",
+      "newEvent": false,
+      "modelIds": [
+        "kumaverson"
+      ],
+      "previous": {
+        "path": "/art/v100/story-r9/cuts/s11-oxygen-rescue.webp",
+        "sha256": "872ab0c62d97039419feed4488da8c9b7019a91f99334bbf7b55372f5fee12db",
+        "bytes": 1139376
+      },
+      "bytes": 469846,
+      "sha256": "b2c8e91479fe1081d70c048051d37dcc8642939491fb913f3deb424b601e7470",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "s17-chiha-baba-reunion",
+      "master": "assets/source/quality-20261028/scenes/s17-chiha-baba-reunion-quality-r3.png",
+      "masterSha256": "396bf03ac9968b87b262281c631d23a54d61a15a838b8b1b4e103b398b13806a",
+      "previousPath": "/art/v100/story-r9/cuts/s17-chiha-baba-reunion.webp",
+      "previousSha256": "d61deb19cb1ab3b6881d82edaf3d4010ef99aa3799b74efea467ff5e1da098e7",
+      "path": "/art/v100/quality-20261028/scenes/s17-chiha-baba-reunion-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "搬入口でババヤガがチハを抱きとめる。",
+      "newEvent": false,
+      "modelIds": [
+        "babayaga",
+        "chiha"
+      ],
+      "previous": {
+        "path": "/art/v100/story-r9/cuts/s17-chiha-baba-reunion.webp",
+        "sha256": "d61deb19cb1ab3b6881d82edaf3d4010ef99aa3799b74efea467ff5e1da098e7",
+        "bytes": 255426
+      },
+      "bytes": 405278,
+      "sha256": "da30a604cdf63b0bca82290f70f2a4f75513f6376aa170879053dca04c41a6dd",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "s19-seven-second-crossing",
+      "master": "assets/source/quality-20261028/scenes/s19-seven-second-crossing-quality-r1.png",
+      "masterSha256": "47adbe2b1fbee1a6e64eae43d22f63bf94bbebe0c0d64e5b3a8b1f2b77ebb378",
+      "previousPath": "/art/v100/story-r9/cuts/s19-seven-second-crossing.webp",
+      "previousSha256": "880490a98efc3ebd18bbf855a2a1da1b3d67929f8e7527bc9ad98942f0536555",
+      "path": "/art/v100/quality-20261028/scenes/s19-seven-second-crossing-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "装甲車が敵車両を左へ押さえ、右の通路を病院の白い車が抜ける。遮断機が下がり始めている。",
+      "newEvent": false,
+      "modelIds": [],
+      "continuity": "The existing generated scene is the primary reference for the unchanged anonymous crew, established Takuya boss or vehicles. No new named face is invented.",
+      "previous": {
+        "path": "/art/v100/story-r9/cuts/s19-seven-second-crossing.webp",
+        "sha256": "880490a98efc3ebd18bbf855a2a1da1b3d67929f8e7527bc9ad98942f0536555",
+        "bytes": 486138
+      },
+      "bytes": 644714,
+      "sha256": "c7e8578b2bb8c73d3dae89c72362d5bf1031d970ea5a1e25b386e6a1892d9174",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "s22-zakimiya-holds-son",
+      "master": "assets/source/quality-20261028/scenes/s22-zakimiya-holds-son-quality-r1.png",
+      "masterSha256": "8458f78574fc7e3e7e0ea82537a45f8160368402a726a167d593774fd3142bcb",
+      "previousPath": "/art/v100/story-r9/cuts/s22-zakimiya-holds-son.webp",
+      "previousSha256": "27723b719dd9bc2516000b92ea4fd21b966948fd839d44918e740e5208ab1026",
+      "path": "/art/v100/quality-20261028/scenes/s22-zakimiya-holds-son-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "ザキミヤが息子を自分の腕で抱き、妻がその肩に寄り添う。",
+      "newEvent": false,
+      "modelIds": [
+        "zakimiya"
+      ],
+      "previous": {
+        "path": "/art/v100/story-r9/cuts/s22-zakimiya-holds-son.webp",
+        "sha256": "27723b719dd9bc2516000b92ea4fd21b966948fd839d44918e740e5208ab1026",
+        "bytes": 330890
+      },
+      "bytes": 398054,
+      "sha256": "afd7044e6388a2aa948d598e87fe08ae6df23c50e1737183ecd76844bdf98beb",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "chiha-confession",
+      "master": "assets/source/quality-20261028/scenes/chiha-confession-quality-r2.png",
+      "masterSha256": "982be314d937e016ed60207ecb36795b35338fe6a37b8835953014545bc0aa80",
+      "previousPath": "/art/v100/story-r5/cuts/chiha-confession.webp",
+      "previousSha256": "8c025bff25e87e0d5f4e71a1d0a84cde754c92891c89c49b24db613e919e44fc",
+      "path": "/art/v100/quality-20261028/scenes/chiha-confession-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "チハは視線を落とす。ババヤガがカードを持ち、背後のクマは腕を組み、パイセンが机に手をつく。",
+      "newEvent": false,
+      "modelIds": [
+        "babayaga",
+        "chiha",
+        "kumaverson",
+        "paisen"
+      ],
+      "previous": {
+        "path": "/art/v100/story-r5/cuts/chiha-confession.webp",
+        "sha256": "8c025bff25e87e0d5f4e71a1d0a84cde754c92891c89c49b24db613e919e44fc",
+        "bytes": 962892
+      },
+      "bytes": 375972,
+      "sha256": "b2f5337677b1dfff02177c0f55ead8eb245669851d34556bd3e0ff88ccbde09a",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "s23-chiha-evidence-send",
+      "master": "assets/source/quality-20261028/scenes/s23-chiha-evidence-send-quality-r3.png",
+      "masterSha256": "d2fc9806e29d68289015da9237a75b5112fbc740feb9957e4fb11e97c64a46a1",
+      "previousPath": "/art/v100/story-r9/cuts/s23-chiha-evidence-send.webp",
+      "previousSha256": "61fd61c6244fada85ad407f706d85d1ed1d56683e7492dea2fcfcdebffaf8687",
+      "path": "/art/v100/quality-20261028/scenes/s23-chiha-evidence-send-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "チハが証拠を送る。受信灯三つが緑になり、カードから煙が上がる。パイセンとクマは扉を支える。",
+      "newEvent": false,
+      "modelIds": [
+        "babayaga",
+        "chiha",
+        "kumaverson",
+        "paisen"
+      ],
+      "detail": {
+        "rect": [
+          615,
+          350,
+          460,
+          200
+        ],
+        "sourceWidth": 1920,
+        "sourceHeight": 640,
+        "landmarkSourcePath": "/art/v100/quality-20261028/scenes/s23-chiha-evidence-send-r1.webp",
+        "landmarkSourceHash": "f60dcd834f82bb436f30013ff83184c72a9d733db6f864d34af1952c29985822",
+        "landmarks": [
+          {
+            "id": "babayaga-face",
+            "rect": [
+              370,
+              155,
+              130,
+              152
+            ]
+          },
+          {
+            "id": "chiha-face",
+            "rect": [
+              756,
+              177,
+              132,
+              145
+            ]
+          },
+          {
+            "id": "paisen-face",
+            "rect": [
+              1340,
+              219,
+              108,
+              104
+            ]
+          },
+          {
+            "id": "kumaverson-face",
+            "rect": [
+              1622,
+              214,
+              100,
+              108
+            ]
+          }
+        ]
+      },
+      "previous": {
+        "path": "/art/v100/story-r9/cuts/s23-chiha-evidence-send.webp",
+        "sha256": "61fd61c6244fada85ad407f706d85d1ed1d56683e7492dea2fcfcdebffaf8687",
+        "bytes": 1055442
+      },
+      "bytes": 457326,
+      "sha256": "f60dcd834f82bb436f30013ff83184c72a9d733db6f864d34af1952c29985822",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "president-restrained-alive",
+      "master": "assets/source/quality-20261028/scenes/president-restrained-alive-quality-r3.png",
+      "masterSha256": "93e0e066afe0b4cf25699ad4fca904e7fd16e2a9294d1a4090aa2e5a14083a15",
+      "previousPath": "/art/v100/story-r5/cuts/president-restrained-alive.webp",
+      "previousSha256": "269a923c0c344ddbcb1070e00cb63ea71d3b66faeb86adb97714af2b97d9e173",
+      "path": "/art/v100/quality-20261028/scenes/president-restrained-alive-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "ババヤガとチハが、生きている社長の両手首を拘束する。床の契約書へ指先だけが動く。",
+      "newEvent": false,
+      "modelIds": [
+        "babayaga",
+        "chiha",
+        "president"
+      ],
+      "previous": {
+        "path": "/art/v100/story-r5/cuts/president-restrained-alive.webp",
+        "sha256": "269a923c0c344ddbcb1070e00cb63ea71d3b66faeb86adb97714af2b97d9e173",
+        "bytes": 281400
+      },
+      "bytes": 352600,
+      "sha256": "1104aa676dee8077be84b0f3173c5a6761909f0b9bdd47a176a06805b8dcb744",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "s27-takuya-conditioning",
+      "master": "assets/source/quality-20261028/scenes/s27-takuya-conditioning-quality-r1.png",
+      "masterSha256": "dc1b18f2a48e000d331a7b310197780421acc6e3794f770b8074a888d312a0d7",
+      "previousPath": "/art/v100/story-r9/cuts/s27-takuya-conditioning.webp",
+      "previousSha256": "16196b9675cfeb13245db56366bb20ddb092bcd60aac90f189af8f9ac27bf0b8",
+      "path": "/art/v100/quality-20261028/scenes/s27-takuya-conditioning-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "三面の記録映像に、タクヤの試験行動、標的と音の合図、壊れた音響装置が映る。",
+      "newEvent": false,
+      "modelIds": [],
+      "continuity": "The existing generated scene is the primary reference for the unchanged anonymous crew, established Takuya boss or vehicles. No new named face is invented.",
+      "previous": {
+        "path": "/art/v100/story-r9/cuts/s27-takuya-conditioning.webp",
+        "sha256": "16196b9675cfeb13245db56366bb20ddb092bcd60aac90f189af8f9ac27bf0b8",
+        "bytes": 259526
+      },
+      "bytes": 354146,
+      "sha256": "6fe76b5388834ec46a8b7da34d00ed756d0afc091e4e4f3f7393150facd81fc1",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "s28-physical-stop",
+      "master": "assets/source/quality-20261028/scenes/s28-physical-stop-quality-r2.png",
+      "masterSha256": "3e90e5371d21c54a43f4813cc456e80865144e2b2ab8b622cdc660d9e3fba3b6",
+      "previousPath": "/art/v100/story-r9/cuts/s28-physical-stop.webp",
+      "previousSha256": "50bb91af6d0ccd5f71c15081df062eca085d405d65faef72a605024845290d19",
+      "path": "/art/v100/quality-20261028/scenes/s28-physical-stop-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "ムサシとザキミヤが鋼のカバーを支え、主人公が隙間から赤い停止レバーへ手を伸ばす。",
+      "newEvent": false,
+      "modelIds": [
+        "musashi",
+        "zakimiya"
+      ],
+      "previous": {
+        "path": "/art/v100/story-r9/cuts/s28-physical-stop.webp",
+        "sha256": "50bb91af6d0ccd5f71c15081df062eca085d405d65faef72a605024845290d19",
+        "bytes": 233424
+      },
+      "bytes": 410322,
+      "sha256": "1139936df1f5ff3c1848a0feedf82385b58896eb4133c99d253136cadc34b24b",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "s30-three-samples",
+      "master": "assets/source/quality-20261028/scenes/s30-three-samples-quality-r1.png",
+      "masterSha256": "291f0516e0d1a35308131ee72527ba4390f7182a0ce5567afb6b93e5c396c658",
+      "previousPath": "/art/v100/story-r9/cuts/s30-three-samples.webp",
+      "previousSha256": "db69ffc042d9e5d893bc6c6622fba5599a6bbe206047c0b1beffd89946e23b59",
+      "path": "/art/v100/quality-20261028/scenes/s30-three-samples-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "別々の溝に密封された薬剤管、血液、骨髄の三試料。主人公が左の管へ手を伸ばし、クマがケースを支える。",
+      "newEvent": false,
+      "modelIds": [
+        "kumaverson"
+      ],
+      "previous": {
+        "path": "/art/v100/story-r9/cuts/s30-three-samples.webp",
+        "sha256": "db69ffc042d9e5d893bc6c6622fba5599a6bbe206047c0b1beffd89946e23b59",
+        "bytes": 292014
+      },
+      "bytes": 419902,
+      "sha256": "2213e59abbceab5bc5c4b991b523088325c705db16b9834e3a7c859c83737425",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    },
+    {
+      "id": "ending-chiha-baba-distance",
+      "master": "assets/source/quality-20261028/scenes/ending-chiha-baba-distance-quality-r1.png",
+      "masterSha256": "b6b1763deaa5ee579b0a3310e8f87b2f1964339d9ded7559e219ea42a295dc06",
+      "previousPath": "/art/v100/story-r9/cuts/ending-chiha-baba-distance.webp",
+      "previousSha256": "33d5961855f2e4e445aab8cedeb8c1be5243ea178040b34d69616a26e6801779",
+      "path": "/art/v100/quality-20261028/scenes/ending-chiha-baba-distance-r1.webp",
+      "dimensions": [
+        1920,
+        640
+      ],
+      "alt": "店のカウンターでチハが手を伸ばすが、ババヤガは手を引き、二人の手の間に隙間が残る。",
+      "newEvent": false,
+      "modelIds": [
+        "babayaga",
+        "chiha"
+      ],
+      "detail": {
+        "rect": [
+          470,
+          390,
+          670,
+          150
+        ],
+        "sourceWidth": 1920,
+        "sourceHeight": 640,
+        "landmarkSourcePath": "/art/v100/quality-20261028/scenes/ending-chiha-baba-distance-r1.webp",
+        "landmarkSourceHash": "ba73897cbff1b81b3eaefe187ffd42038d556278589f9bb9b888ed7d050febd9",
+        "landmarks": [
+          {
+            "id": "babayaga-face",
+            "rect": [
+              437,
+              146,
+              185,
+              158
+            ]
+          },
+          {
+            "id": "chiha-face",
+            "rect": [
+              1262,
+              151,
+              158,
+              162
+            ]
+          }
+        ]
+      },
+      "previous": {
+        "path": "/art/v100/story-r9/cuts/ending-chiha-baba-distance.webp",
+        "sha256": "33d5961855f2e4e445aab8cedeb8c1be5243ea178040b34d69616a26e6801779",
+        "bytes": 313374
+      },
+      "bytes": 375608,
+      "sha256": "ba73897cbff1b81b3eaefe187ffd42038d556278589f9bb9b888ed7d050febd9",
+      "sourceRights": "Original generated scene revisions using existing project character models, under the existing project asset authorization. Private supplied photographs are not distributed.",
+      "producerApproval": "2026-10-30: TKY89 design adopted; existing generated models are the primary production references; additional Babayaga event illustrations requested. Individual scenes and whole-game acceptance remain open."
+    }
+  ],
+  "reusedScenes": [
+    {
+      "id": "hospital-serum",
+      "path": "/art/v100/credits/hospital-serum-r2.webp",
+      "sha256": "300dfe499afb3dc1efbd265eacec7ddaff1051d89e83e3d09fd1b1b76aa0f777",
+      "bytes": 204042,
+      "dimensions": [
+        1600,
+        900
+      ],
+      "modelIds": [
+        "nao"
+      ],
+      "reason": "Current raw-image review: face is out of frame; high-neck white top, teal/orange medical jacket, bag, hands and the three serum vials match the existing Nao model and scripted action. Existing file retained. Native playback and whole-product acceptance are separate."
+    }
+  ],
+  "scope": "Model-based scene candidate. Visual review and in-game proof are separate; no likeness percentage or whole-product acceptance is claimed."
+}

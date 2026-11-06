@@ -35,10 +35,9 @@ test("an unsupported browser never enters an install flow", () => {
   assert.equal(derivePwaPhase({ supported: false, standalone: true }), "unsupported");
 });
 
-test("a browser tab is invited to install before it reaches the title", () => {
-  assert.equal(derivePwaPhase({ supported: true, standalone: false }), "install-offer");
-  // Even a tab that somehow holds a complete pack is still invited: the point is
-  // to get the player into the installed app, not to sell them a download.
+test("a fresh browser tab reaches the game without an installation decision", () => {
+  assert.equal(derivePwaPhase({ supported: true, standalone: false }), "browser");
+  // A retained pack does not add an installation decision either.
   assert.equal(
     derivePwaPhase({
       supported: true,
@@ -46,7 +45,7 @@ test("a browser tab is invited to install before it reaches the title", () => {
       installedManifest: manifest([asset("/a", 1)]),
       installPlan: plan([asset("/a", 1)], []),
     }),
-    "install-offer",
+    "browser",
   );
 });
 
@@ -309,15 +308,13 @@ test("an available update is surfaced in both standalone and tab contexts", () =
     }),
     "update-available",
   );
-  // In a tab the invitation to install comes first; the update notice is what
-  // remains once the player has declined it. Offering both at once would put two
-  // competing asks on one screen.
+  // Existing pack updates remain discoverable without an installation choice.
   assert.equal(
     derivePwaPhase({
       supported: true, standalone: false, installedManifest: installed,
       updateEvaluation: { available: true },
     }),
-    "install-offer",
+    "update-available",
   );
   assert.equal(
     derivePwaPhase({

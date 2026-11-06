@@ -98,7 +98,7 @@ async function prepareEconomy(stageNumber) {
     const unit=V100_UNITS.find(unit=>unit.id===id);
     if(!save.ownedUnitIds.includes(id)&&save.registeredUnitIds.includes(id)&&save.caps>=unit.registrationCostCaps) {
       await selectPersonnel(unit);
-      await uiClick(button(`配備登録 / ${unit.registrationCostCaps} CAPS`));
+      await uiClick(button(`支度を整える / ${unit.registrationCostCaps} CAPS`));
       save=await saveAt(); report.transactions.push({stageNumber,action:"register",id,caps:save.caps});
     }
   }
@@ -107,7 +107,7 @@ async function prepareEconomy(stageNumber) {
   if(save.supportPurchaseUnlockedIds.includes("support-healing")) {
     const healing=page.locator(".v100-support-management-card").filter({has:page.getByRole("heading",{name:"回復支援",exact:true})});
     if(!save.ownedSupportIds.includes("support-healing")&&save.caps>=50) {
-      await uiClick(healing.getByRole("button",{name:"50 CAPSで取得",exact:true})); save=await saveAt();
+      await uiClick(healing.getByRole("button",{name:/^50 CAPSで(?:取得|購入)$/u})); save=await saveAt();
       report.transactions.push({stageNumber,action:"buy-healing",caps:save.caps});
     }
     if(save.ownedSupportIds.includes("support-healing")&&save.equippedSupportId!=="support-healing") {

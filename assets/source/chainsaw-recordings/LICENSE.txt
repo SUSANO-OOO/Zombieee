@@ -1,0 +1,7 @@
+Chainsaw #2 (sound 0707) — Joseph SARDIN / BigSoundBank
+https://bigsoundbank.com/chainsaw-2-s0707.html
+CC0 1.0 — https://creativecommons.org/publicdomain/zero/1.0/
+The creator's source page explicitly permits commercial use, adaptation and redistribution.
+Downloaded the Ogg offered by the public audio player. This is a compressed source, not a lossless master.
+The saved source-page.html and source-receipt.json retain the source and hash evidence.
+Contact foley is separately credited to Kenney under CC0; see ../v100/audio/kenney-impact/License.txt.

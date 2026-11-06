@@ -1,3 +1,4 @@
+import {v177PaisenPhotoPoseOwner} from '../app/v177PaisenPhotoCombo.js';
 import {withV177PaintPartIdentity} from './helpers/v177-render-trace.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -10,10 +11,23 @@ for(const dir of await readdir(new URL('../assets/source/v100/joints/',import.me
  try{const d=JSON.parse(await readFile(new URL('../assets/source/v100/joints/'+dir+'/parts.json',import.meta.url)));definitions.set(d.kind,d);}
  catch(e){if(!['ENOENT','ENOTDIR'].includes(e.code))throw e;}
 }
-if(V177_JOINT_ATLASES.brawler?.path==='/art/v100/joints/brawler-photo-r2.webp'){
+if(v177PaisenPhotoPoseOwner(V177_JOINT_ATLASES.brawler)){
  definitions.set('brawler',JSON.parse(await readFile(new URL('../assets/source/v177/paisen/battle-r8/parts.json',import.meta.url))));
 }
+if(V177_JOINT_ATLASES.kumaverson.path==='/art/v100/joints/kumaverson-combat-r4.webp')definitions.set('kumaverson',JSON.parse(await readFile('assets/source/quality-20261028/rigs/kumaverson-combat-r4/parts.json')));
+if(V177_JOINT_ATLASES.scout.path==='/art/v100/joints/scout-combat-r1.webp')definitions.set('scout',JSON.parse(await readFile('assets/source/quality-20261028/rigs/scout-combat-r1/parts.json')));
+if(V177_JOINT_ATLASES.medic.path==='/art/v100/joints/medic-combat-r1.webp')definitions.set('medic',JSON.parse(await readFile('assets/source/quality-20261028/rigs/medic-combat-r1/parts.json')));
+if(V177_JOINT_ATLASES.engineer.path==='/art/v100/joints/engineer-combat-r1.webp')definitions.set('engineer',JSON.parse(await readFile('assets/source/quality-20261028/rigs/engineer-combat-r1/parts.json')));
+if(V177_JOINT_ATLASES.zakimiya.path==='/art/v100/joints/zakimiya-combat-r1.webp')definitions.set('zakimiya',JSON.parse(await readFile('assets/source/quality-20261028/rigs/zakimiya-combat-r1/parts.json')));
+if(V177_JOINT_ATLASES['mrs-chiha'].path==='/art/v100/joints/mrs-chiha-combat-r1.webp')definitions.set('mrs-chiha',JSON.parse(await readFile('assets/source/quality-20261028/rigs/mrs-chiha-combat-r1/parts.json')));
+if(V177_JOINT_ATLASES['miyamoto-musashi'].path==='/art/v100/joints/miyamoto-musashi-combat-r1.webp')definitions.set('miyamoto-musashi',JSON.parse(await readFile('assets/source/quality-20261028/rigs/miyamoto-musashi-combat-r1/parts.json')));
+if(V177_JOINT_ATLASES.brute.path==='/art/v100/joints/brute-combat-r1.webp')definitions.set('brute',JSON.parse(await readFile('assets/source/quality-20261028/rigs/brute-combat-r1/parts.json')));
+if(V177_JOINT_ATLASES.gunner.path==='/art/v100/joints/gunner-combat-r1.webp')definitions.set('gunner',JSON.parse(await readFile('assets/source/quality-20261028/rigs/gunner-combat-r1/parts.json')));
+if(V177_JOINT_ATLASES.guardian.path==='/art/v100/joints/guardian-combat-r1.webp')definitions.set('guardian',JSON.parse(await readFile('assets/source/quality-20261028/rigs/guardian-combat-r1/parts.json')));
+if(V177_JOINT_ATLASES.brawler.path==='/art/v100/joints/brawler-combat-r1.webp')definitions.set('brawler',JSON.parse(await readFile('assets/source/quality-20261028/rigs/brawler-combat-r1/parts.json')));
+if(V177_JOINT_ATLASES.tky.path==='/art/v100/joints/tky-combat-r1.webp')definitions.set('tky',JSON.parse(await readFile('assets/source/quality-20261028/rigs/tky-combat-r1/parts.json')));
 const transform=(m,[x,y])=>[m[0]*x+m[2]*y+m[4],m[1]*x+m[3]*y+m[5]];
+definitions.set('crazy-king',JSON.parse(await readFile('assets/source/quality-20261028/rigs/crazy-king-combat-r1/parts.json')));
 const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 function paintedBones(kind,atlas,sample,runtime){
  const matrices=[],ctx={save(){},restore(){},translate(){},scale(){},beginPath(){},moveTo(){},lineTo(){},closePath(){},fill(){},transform(...m){matrices.push(m);},drawImage(){}};
@@ -71,11 +85,11 @@ test('All47 rigid forms keep their painted hip, knee and ankle joined through tr
  assert.equal(samples,121965);
 });
 
-test('Mayo reduces only the unreachable anticipation while retaining its painted texture, gait and forward bite',async()=>{
+test('Mayo retains its body geometry, gait and forward bite with the source-bound head revision',async()=>{
  const d=definitions.get('mayo-chan'),atlas=V177_JOINT_ATLASES['mayo-chan'];
  const legacy=JSON.parse(gunzipSync(await readFile(new URL('./fixtures/v177-pre-leg-mayo-atlas-r1.json.gz',import.meta.url))));
  assert.equal(d.rig.attack.anticipationPx,1.5);assert.deepEqual(d.rig.attack.bodyShift,[6,1.4]);
- assert.deepEqual(atlas.parts,legacy.parts);assert.equal(atlas.path,legacy.path);assert.equal(atlas.decodedBytes,legacy.decodedBytes);
+ assert.deepEqual(atlas.parts,legacy.parts);assert.equal(atlas.path,'/art/v100/joints/mayo-chan-quality-model-r3.webp');assert.equal(atlas.decodedBytes,legacy.decodedBytes);
  assert.equal(atlas.cycleDistance,legacy.cycleDistance);assert.deepEqual(atlas.pelvisOffsets,legacy.pelvisOffsets);
  assert.deepEqual(atlas.poses.slice(0,atlas.lowerCount),legacy.poses.slice(0,legacy.lowerCount),'Walk and every settle frame unchanged');
  const active=v177JointPose('mayo-chan',{requestedState:'active',clipProgress:.5},{locomotionPhase:0,locomotionSettle:1});

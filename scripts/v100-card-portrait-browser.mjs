@@ -11,6 +11,7 @@ import { CHARACTER_PORTRAIT_ART } from "../app/spriteManifest.js";
 import { nativeBattleTap } from "./v100-normal-tactical-input.mjs";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
+import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
 import { installEndingAudioGainObserver } from "./ending-audio-gain-observer.mjs";
 import { isOwnedTitleCloseCancellation } from "./owned-title-close-cancellation.mjs";
 
@@ -93,25 +94,33 @@ async function probe(page, row, state, targets) {
     const expectedState = state === "returned-ready" ? "ready" : state;
     const card = page.locator(`button.unit-card[data-kind="${kind}"]`);
     assert.equal(await card.getAttribute("data-state"), expectedState, "expected native card state before pixel probe");
+    const expectedReadiness = state === "returned-ready" ? "再出撃可" : state === "ready" ? "出撃可" : "出撃不可";
+    assert.equal(await card.locator(".v100-deploy-status").innerText(), expectedReadiness);
+    assert.ok((await card.getAttribute("aria-label")).includes(expectedReadiness), "spoken and visible readiness agree");
+    await card.scrollIntoViewIfNeeded();
     const img = page.locator(`button.unit-card[data-kind="${kind}"] .portrait > img`);
     const geometry = await img.evaluate(el => {
-      const card = el.closest("button"), r = el.getBoundingClientRect(), c = card.getBoundingClientRect();
-      const cost = card.querySelector(".cost"), timer = card.querySelector(".cooldown-mask small");
-      const labels = [cost, timer].filter(Boolean).map(label => {
+      const card = el.closest("button"), r = el.getBoundingClientRect(), c = card.getBoundingClientRect(), frame = el.closest(".portrait").getBoundingClientRect();
+      const cost = card.querySelector(".v100-deploy-cost,.cost"), timer = card.querySelector(".v100-deploy-status,.cooldown-mask small");
+      const reason = card.querySelector(".v100-deploy-shortage");
+      const labels = [cost, timer, reason].filter(Boolean).map(label => {
         const b = label.getBoundingClientRect();
-        return { kind: label === cost ? "cost" : "timer", rect: { x: b.x, y: b.y, width: b.width, height: b.height },
+        return { kind: label === cost ? "cost" : label === timer ? "timer" : "reason", text: label.textContent,
+          scrollWidth: label.scrollWidth, clientWidth: label.clientWidth, scrollHeight: label.scrollHeight, clientHeight: label.clientHeight,
+          rect: { x: b.x, y: b.y, width: b.width, height: b.height },
           fits: label.scrollWidth <= label.clientWidth + 1 && label.scrollHeight <= label.clientHeight + 1,
           contained: b.left >= c.left && b.right <= c.right && b.top >= c.top && b.bottom <= c.bottom };
       });
       const a = cost.getBoundingClientRect(), b = timer?.getBoundingClientRect();
       const timerCostOverlap = b ? Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left))
         * Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top)) : 0;
-      const x = Math.ceil(Math.max(r.x, c.x + 3)), y = Math.ceil(r.y + 3);
-      const width = Math.floor(Math.min(r.right, c.right - 3) - x), height = Math.floor(r.bottom - y - 3);
-      return { clip: { x, y, width, height }, labels, timerCostOverlap, originalStyle: el.getAttribute("style"), masks: [...card.querySelectorAll(".cost,.card-state,.cooldown-mask small")].map(e => {
+      const x = Math.ceil(Math.max(r.x, c.x + 3, frame.left)), y = Math.ceil(Math.max(r.y + 3, frame.top + 1));
+      const width = Math.floor(Math.min(r.right, c.right - 3, frame.right) - x), height = Math.floor(Math.min(r.bottom, c.bottom, frame.bottom) - y - 1);
+      return { cardRect: { x: c.x, y: c.y, width: c.width, height: c.height }, clip: { x, y, width, height }, labels, timerCostOverlap, originalStyle: el.getAttribute("style"), masks: [...card.querySelectorAll(".v100-deploy-name,.v100-deploy-cost,.v100-deploy-status,.v100-deploy-shortage,.cost,.card-state,.cooldown-mask small")].map(e => {
         const m = e.getBoundingClientRect(); return { x: m.x - x, y: m.y - y, width: m.width, height: m.height };
       }).concat([{ x: c.x - x, y: c.bottom - y - 13, width: c.width, height: 13 }]) };
     });
+    (record.geometryObservations ??= []).push({ kind, expectedState, geometry });
     assert.ok(geometry.labels.every(label => label.fits && label.contained), "card command cost or timer label is clipped");
     assert.equal(geometry.timerCostOverlap, 0, "cooldown timer hides command-cost text");
     const first = await page.screenshot({ clip: geometry.clip, animations: "disabled" });
@@ -242,7 +251,7 @@ try {
       page.on("crash", () => { row.unexpectedPageLoss = true; row.errors.push(errorRecord({ kind: "crash" })); });
       page.on("close", () => { if (row.phase !== "context-closing") row.unexpectedPageLoss = true; });
       assert.equal((await page.goto(new URL("v100", baseUrl).href, { waitUntil: "domcontentloaded" })).status(), 200);
-      await page.getByRole("button", { name: "ブラウザで遊ぶ", exact: true }).click();
+      await dismissInstallOffer(page, { timeout: 30_000, readySelector: ".v100-start-screen", waitForFictionDismissal: true });
       row.phase = "title";
       await enterV100FromTitle(page);
       row.phase = "formation";

@@ -1,0 +1,448 @@
+{
+  "status": "runtime-candidate-not-listening-accepted",
+  "sourceReceipt": {
+    "status": "source-candidate-only-not-runtime-adopted",
+    "title": "Chainsaw #2",
+    "creator": "Joseph SARDIN",
+    "source": "https://bigsoundbank.com/chainsaw-2-s0707.html",
+    "download": "https://bigsoundbank.com/UPLOAD/ogg/0707.ogg?v=d",
+    "license": "CC0-1.0",
+    "commercialUse": true,
+    "modification": true,
+    "redistribution": true,
+    "producerAuthorization": "2026-10-28 P03 instruction: free redistributable audio sources",
+    "originalFormat": "Ogg as offered in public audio player; not a lossless WAV master",
+    "file": "assets/source/chainsaw-recordings/chainsaw-0707.ogg",
+    "bytes": 3720365,
+    "sha256": "f3baeac45d5d2dbd0f6a415e262aa849d9779f314a9c1679318f9eb1cdb6a49b",
+    "sourcePageSha256": "cdd257d3e11b0a878c16efc9963a2e1f94f76d835bddb9b6e856ef5544d50f5b",
+    "subjectiveListening": "not performed",
+    "runtimeAssetCount": 0,
+    "note": "WAV form returned a timed download HTML page, preserved as chainsaw-0707-download. Used the openly available licensed Ogg instead. No login, paid service, runtime replacement, or backend change."
+  },
+  "creator": "Joseph SARDIN; Kenney (contact foley)",
+  "license": "CC0-1.0",
+  "commercialUse": true,
+  "modification": true,
+  "redistribution": true,
+  "notices": [
+    "assets/source/chainsaw-recordings/LICENSE.txt",
+    "assets/source/v100/audio/kenney-impact/License.txt"
+  ],
+  "adaptation": "Recorded chainsaw windows trimmed, filtered and level bounded. Cyclic crossfade for idle; motor falloff with fade for stop. Contacts mix recorded motor with Kenney body/metal foley. No spoken imitation, pitch-shifted tone or synthesized motor.",
+  "subjectiveListening": "not performed",
+  "physicalDeviceAcceptance": "not performed",
+  "formats": {
+    "preferred": "MP3 one-shots / PCM WAV idle loop",
+    "fallback": "Ogg one-shots",
+    "reason": "Keep existing one-shot codecs; preserve exact loop seam without lossy encoder padding"
+  },
+  "runtimeCueCount": 8,
+  "runtimeAssetCount": 15,
+  "logicalBytes": 300698,
+  "distinctBytes": 300698,
+  "records": [
+    {
+      "name": "start",
+      "file": "public/audio/weapons/chainsaw/start.mp3",
+      "bytes": 13608,
+      "sha256": "afe9cb54838de7132f59b629b89cbffc8569d238e0a9a18cdf3fdcf32206ceeb",
+      "inputs": [
+        {
+          "file": "assets/source/chainsaw-recordings/chainsaw-0707.ogg",
+          "sha256": "f3baeac45d5d2dbd0f6a415e262aa849d9779f314a9c1679318f9eb1cdb6a49b"
+        }
+      ],
+      "recipe": {
+        "start": 11.35,
+        "duration": 1.05,
+        "target": 0.075
+      },
+      "filter": "atrim=start=11.35:duration=1.05,asetpts=PTS-STARTPTS,highpass=f=90,lowpass=f=6500",
+      "gain": 1.1919991851009832,
+      "decoded": {
+        "seconds": 1.05,
+        "peak": 0.46236085891723633,
+        "rms": 0.07496586855704492,
+        "boundaryJump": 0.00006496659125332371
+      }
+    },
+    {
+      "name": "start",
+      "file": "public/audio/weapons/chainsaw/start.ogg",
+      "bytes": 13516,
+      "sha256": "87d6e3f10d9214f48ee13295c26f92d52c12f8d12b0a75f444ecdcf52e48d2cd",
+      "inputs": [
+        {
+          "file": "assets/source/chainsaw-recordings/chainsaw-0707.ogg",
+          "sha256": "f3baeac45d5d2dbd0f6a415e262aa849d9779f314a9c1679318f9eb1cdb6a49b"
+        }
+      ],
+      "recipe": {
+        "start": 11.35,
+        "duration": 1.05,
+        "target": 0.075
+      },
+      "filter": "atrim=start=11.35:duration=1.05,asetpts=PTS-STARTPTS,highpass=f=90,lowpass=f=6500",
+      "gain": 1.1919991851009832,
+      "decoded": {
+        "seconds": 1.050702947845805,
+        "peak": 0.42869049310684204,
+        "rms": 0.07363535388179629,
+        "boundaryJump": 0.00007009332512097899
+      }
+    },
+    {
+      "name": "idle-loop",
+      "file": "public/audio/weapons/chainsaw/idle-loop.wav",
+      "bytes": 176444,
+      "sha256": "a7e7d42c5544e4e8c2272780aeaf85ac7fff47b8991c498af26b5fc42c041ac6",
+      "inputs": [
+        {
+          "file": "assets/source/chainsaw-recordings/chainsaw-0707.ogg",
+          "sha256": "f3baeac45d5d2dbd0f6a415e262aa849d9779f314a9c1679318f9eb1cdb6a49b"
+        }
+      ],
+      "recipe": {
+        "start": 19,
+        "duration": 2,
+        "target": 0.035,
+        "loop": true
+      },
+      "filter": "atrim=start=19:duration=2.1,asetpts=PTS-STARTPTS,highpass=f=90,lowpass=f=6500",
+      "gain": 0.9098790046373747,
+      "decoded": {
+        "seconds": 2,
+        "peak": 0.17999267578125,
+        "rms": 0.010773862720294411,
+        "boundaryJump": 0.00048828125
+      }
+    },
+    {
+      "name": "attack",
+      "file": "public/audio/weapons/chainsaw/attack.mp3",
+      "bytes": 5864,
+      "sha256": "ae441b8868f76dc2ff4f99c0944c77bd836ff12f7a596b4ec4f906101f90d638",
+      "inputs": [
+        {
+          "file": "assets/source/chainsaw-recordings/chainsaw-0707.ogg",
+          "sha256": "f3baeac45d5d2dbd0f6a415e262aa849d9779f314a9c1679318f9eb1cdb6a49b"
+        }
+      ],
+      "recipe": {
+        "start": 28.05,
+        "duration": 0.46,
+        "target": 0.075
+      },
+      "filter": "atrim=start=28.05:duration=0.46,asetpts=PTS-STARTPTS,highpass=f=90,lowpass=f=6500",
+      "gain": 0.8758615629491152,
+      "decoded": {
+        "seconds": 0.46,
+        "peak": 0.3382224440574646,
+        "rms": 0.07516099020176371,
+        "boundaryJump": 0.0005467196897370741
+      }
+    },
+    {
+      "name": "attack",
+      "file": "public/audio/weapons/chainsaw/attack.ogg",
+      "bytes": 7988,
+      "sha256": "100156a1a8482d0e5aec651051e1546c490e6e24e3b001a9826fa6e84268db92",
+      "inputs": [
+        {
+          "file": "assets/source/chainsaw-recordings/chainsaw-0707.ogg",
+          "sha256": "f3baeac45d5d2dbd0f6a415e262aa849d9779f314a9c1679318f9eb1cdb6a49b"
+        }
+      ],
+      "recipe": {
+        "start": 28.05,
+        "duration": 0.46,
+        "target": 0.075
+      },
+      "filter": "atrim=start=28.05:duration=0.46,asetpts=PTS-STARTPTS,highpass=f=90,lowpass=f=6500",
+      "gain": 0.8758615629491152,
+      "decoded": {
+        "seconds": 0.47165532879818595,
+        "peak": 0.29468247294425964,
+        "rms": 0.07272542954655235,
+        "boundaryJump": 0.0003543977363733575
+      }
+    },
+    {
+      "name": "flesh-hit",
+      "file": "public/audio/weapons/chainsaw/flesh-hit.mp3",
+      "bytes": 4585,
+      "sha256": "d83c7422bf77ddeb45313bd9a372df69ffce8de35a40198713da2fefdec82d92",
+      "inputs": [
+        {
+          "file": "assets/source/chainsaw-recordings/chainsaw-0707.ogg",
+          "sha256": "f3baeac45d5d2dbd0f6a415e262aa849d9779f314a9c1679318f9eb1cdb6a49b"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactSoft_heavy_000.ogg",
+          "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1"
+        }
+      ],
+      "recipe": {
+        "start": 38,
+        "duration": 0.34,
+        "target": 0.07,
+        "foley": "assets/source/v100/audio/kenney-impact/impactSoft_heavy_000.ogg",
+        "motorMix": 0.2
+      },
+      "filter": "atrim=start=38:duration=0.34,asetpts=PTS-STARTPTS,highpass=f=90,lowpass=f=6500",
+      "gain": 0.08634610110864838,
+      "decoded": {
+        "seconds": 0.3406575963718821,
+        "peak": 0.3688164949417114,
+        "rms": 0.07001538221012224,
+        "boundaryJump": 0.0007987344361026771
+      }
+    },
+    {
+      "name": "flesh-hit",
+      "file": "public/audio/weapons/chainsaw/flesh-hit.ogg",
+      "bytes": 6689,
+      "sha256": "fb18227333b9902be0d38e5813953e89ce9fc83005f4bcadde3b0feca3ba9dea",
+      "inputs": [
+        {
+          "file": "assets/source/chainsaw-recordings/chainsaw-0707.ogg",
+          "sha256": "f3baeac45d5d2dbd0f6a415e262aa849d9779f314a9c1679318f9eb1cdb6a49b"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactSoft_heavy_000.ogg",
+          "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1"
+        }
+      ],
+      "recipe": {
+        "start": 38,
+        "duration": 0.34,
+        "target": 0.07,
+        "foley": "assets/source/v100/audio/kenney-impact/impactSoft_heavy_000.ogg",
+        "motorMix": 0.2
+      },
+      "filter": "atrim=start=38:duration=0.34,asetpts=PTS-STARTPTS,highpass=f=90,lowpass=f=6500",
+      "gain": 0.08634610110864838,
+      "decoded": {
+        "seconds": 0.3439455782312925,
+        "peak": 0.3701077103614807,
+        "rms": 0.07020576104971273,
+        "boundaryJump": 0.0010830266983248293
+      }
+    },
+    {
+      "name": "hard-hit",
+      "file": "public/audio/weapons/chainsaw/hard-hit.mp3",
+      "bytes": 6099,
+      "sha256": "5333370ba2a55767dea6174ac332c91dab013ad969778edde2fb0ef4fa0152b3",
+      "inputs": [
+        {
+          "file": "assets/source/chainsaw-recordings/chainsaw-0707.ogg",
+          "sha256": "f3baeac45d5d2dbd0f6a415e262aa849d9779f314a9c1679318f9eb1cdb6a49b"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_heavy_000.ogg",
+          "sha256": "e07045693e4a2b3d165c424e3dab4c781d9ff8880a386880ac89a51315d7f831"
+        }
+      ],
+      "recipe": {
+        "start": 51,
+        "duration": 0.48,
+        "target": 0.07,
+        "foley": "assets/source/v100/audio/kenney-impact/impactMetal_heavy_000.ogg",
+        "motorMix": 0.2
+      },
+      "filter": "atrim=start=51:duration=0.48,asetpts=PTS-STARTPTS,highpass=f=90,lowpass=f=6500",
+      "gain": 0.11682356157914225,
+      "decoded": {
+        "seconds": 0.48,
+        "peak": 0.7205336093902588,
+        "rms": 0.051610284610375264,
+        "boundaryJump": 0.004760869720485061
+      }
+    },
+    {
+      "name": "hard-hit",
+      "file": "public/audio/weapons/chainsaw/hard-hit.ogg",
+      "bytes": 8139,
+      "sha256": "04f08dbdeab51fa3659c250afe5cd42ec7aa1ee8a16cf8d7dc0687452127de55",
+      "inputs": [
+        {
+          "file": "assets/source/chainsaw-recordings/chainsaw-0707.ogg",
+          "sha256": "f3baeac45d5d2dbd0f6a415e262aa849d9779f314a9c1679318f9eb1cdb6a49b"
+        },
+        {
+          "file": "assets/source/v100/audio/kenney-impact/impactMetal_heavy_000.ogg",
+          "sha256": "e07045693e4a2b3d165c424e3dab4c781d9ff8880a386880ac89a51315d7f831"
+        }
+      ],
+      "recipe": {
+        "start": 51,
+        "duration": 0.48,
+        "target": 0.07,
+        "foley": "assets/source/v100/audio/kenney-impact/impactMetal_heavy_000.ogg",
+        "motorMix": 0.2
+      },
+      "filter": "atrim=start=51:duration=0.48,asetpts=PTS-STARTPTS,highpass=f=90,lowpass=f=6500",
+      "gain": 0.11682356157914225,
+      "decoded": {
+        "seconds": 0.483265306122449,
+        "peak": 0.7455554604530334,
+        "rms": 0.050805224489878675,
+        "boundaryJump": 0.0007108181889634579
+      }
+    },
+    {
+      "name": "stop",
+      "file": "public/audio/weapons/chainsaw/stop.mp3",
+      "bytes": 9126,
+      "sha256": "2152b7e20dbf1dd588c746648586af9d15f6e6ad25f5384928cbd717fd5062ea",
+      "inputs": [
+        {
+          "file": "assets/source/chainsaw-recordings/chainsaw-0707.ogg",
+          "sha256": "f3baeac45d5d2dbd0f6a415e262aa849d9779f314a9c1679318f9eb1cdb6a49b"
+        }
+      ],
+      "recipe": {
+        "start": 112,
+        "duration": 0.78,
+        "target": 0.045,
+        "fadeOut": 0.4
+      },
+      "filter": "atrim=start=112:duration=0.78,asetpts=PTS-STARTPTS,highpass=f=90,lowpass=f=6500",
+      "gain": 1.9014159302550473,
+      "decoded": {
+        "seconds": 0.78,
+        "peak": 0.2689026892185211,
+        "rms": 0.04532437193871558,
+        "boundaryJump": 0.001985934845833981
+      }
+    },
+    {
+      "name": "stop",
+      "file": "public/audio/weapons/chainsaw/stop.ogg",
+      "bytes": 10556,
+      "sha256": "ef87044640d9025f509e044124a0a6b38890fca57bf5ec92a276ecbdcee7eab9",
+      "inputs": [
+        {
+          "file": "assets/source/chainsaw-recordings/chainsaw-0707.ogg",
+          "sha256": "f3baeac45d5d2dbd0f6a415e262aa849d9779f314a9c1679318f9eb1cdb6a49b"
+        }
+      ],
+      "recipe": {
+        "start": 112,
+        "duration": 0.78,
+        "target": 0.045,
+        "fadeOut": 0.4
+      },
+      "filter": "atrim=start=112:duration=0.78,asetpts=PTS-STARTPTS,highpass=f=90,lowpass=f=6500",
+      "gain": 1.9014159302550473,
+      "decoded": {
+        "seconds": 0.785124716553288,
+        "peak": 0.2700374126434326,
+        "rms": 0.044005916711769004,
+        "boundaryJump": 0.0008584276697547466
+      }
+    },
+    {
+      "name": "overdrive-activate",
+      "file": "public/audio/weapons/chainsaw/overdrive-activate.mp3",
+      "bytes": 9383,
+      "sha256": "2193f0c40174818ebd28fab85c239995c3362f34e2ac61fb9281a906c17402f7",
+      "inputs": [
+        {
+          "file": "assets/source/chainsaw-recordings/chainsaw-0707.ogg",
+          "sha256": "f3baeac45d5d2dbd0f6a415e262aa849d9779f314a9c1679318f9eb1cdb6a49b"
+        }
+      ],
+      "recipe": {
+        "start": 25.15,
+        "duration": 0.7,
+        "target": 0.075
+      },
+      "filter": "atrim=start=25.15:duration=0.7,asetpts=PTS-STARTPTS,highpass=f=90,lowpass=f=6500",
+      "gain": 3.057267478227945,
+      "decoded": {
+        "seconds": 0.7,
+        "peak": 0.7324186563491821,
+        "rms": 0.06220304450429056,
+        "boundaryJump": 0.0010344638176320586
+      }
+    },
+    {
+      "name": "overdrive-activate",
+      "file": "public/audio/weapons/chainsaw/overdrive-activate.ogg",
+      "bytes": 10642,
+      "sha256": "33b413d9fc0abe063f3c8a376a101358c08732845009c20e458a67d8124f90f5",
+      "inputs": [
+        {
+          "file": "assets/source/chainsaw-recordings/chainsaw-0707.ogg",
+          "sha256": "f3baeac45d5d2dbd0f6a415e262aa849d9779f314a9c1679318f9eb1cdb6a49b"
+        }
+      ],
+      "recipe": {
+        "start": 25.15,
+        "duration": 0.7,
+        "target": 0.075
+      },
+      "filter": "atrim=start=25.15:duration=0.7,asetpts=PTS-STARTPTS,highpass=f=90,lowpass=f=6500",
+      "gain": 3.057267478227945,
+      "decoded": {
+        "seconds": 0.7067573696145125,
+        "peak": 0.7170527577400208,
+        "rms": 0.06105438491679793,
+        "boundaryJump": 0.00020803451707251952
+      }
+    },
+    {
+      "name": "overdrive-active",
+      "file": "public/audio/weapons/chainsaw/overdrive-active.mp3",
+      "bytes": 8394,
+      "sha256": "edaa744e3f83f5ca4b5c33b23e9e9efa35157f0c0ec3fd67365252de5cacaf65",
+      "inputs": [
+        {
+          "file": "assets/source/chainsaw-recordings/chainsaw-0707.ogg",
+          "sha256": "f3baeac45d5d2dbd0f6a415e262aa849d9779f314a9c1679318f9eb1cdb6a49b"
+        }
+      ],
+      "recipe": {
+        "start": 71,
+        "duration": 0.65,
+        "target": 0.075
+      },
+      "filter": "atrim=start=71:duration=0.65,asetpts=PTS-STARTPTS,highpass=f=90,lowpass=f=6500",
+      "gain": 1.1087651041197397,
+      "decoded": {
+        "seconds": 0.65,
+        "peak": 0.3872012197971344,
+        "rms": 0.0750816711818988,
+        "boundaryJump": 0.0007830426329746842
+      }
+    },
+    {
+      "name": "overdrive-active",
+      "file": "public/audio/weapons/chainsaw/overdrive-active.ogg",
+      "bytes": 9665,
+      "sha256": "40c1a5c5c7249ad96caa34d352f494cb7f9a825ebb55599882aca75f105f9cc2",
+      "inputs": [
+        {
+          "file": "assets/source/chainsaw-recordings/chainsaw-0707.ogg",
+          "sha256": "f3baeac45d5d2dbd0f6a415e262aa849d9779f314a9c1679318f9eb1cdb6a49b"
+        }
+      ],
+      "recipe": {
+        "start": 71,
+        "duration": 0.65,
+        "target": 0.075
+      },
+      "filter": "atrim=start=71:duration=0.65,asetpts=PTS-STARTPTS,highpass=f=90,lowpass=f=6500",
+      "gain": 1.1087651041197397,
+      "decoded": {
+        "seconds": 0.6690249433106576,
+        "peak": 0.3567201495170593,
+        "rms": 0.07305484363364338,
+        "boundaryJump": 0.0000012713289834209718
+      }
+    }
+  ]
+}

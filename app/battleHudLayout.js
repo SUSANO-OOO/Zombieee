@@ -73,6 +73,7 @@ export function mobileBattleHudLayout({
   safeAreaRight = 0,
   safeAreaBottom = 0,
   safeAreaLeft = 0,
+  deploymentReadout = false,
 } = {}) {
   const viewportWidth = finiteDimension(width);
   const viewportHeight = finiteDimension(height);
@@ -101,8 +102,10 @@ export function mobileBattleHudLayout({
   });
   const compact = viewportHeight <= 350;
   const topHeight = compact ? 54 : 60;
-  const bottomHeight = compact ? 74 : 82;
   const metaHeight = compact ? 18 : 20;
+  // The campaign card needs a name row plus cost, cooldown and shortage.
+  // Reserve their space in the geometry contract, including battlefield bounds.
+  const bottomHeight = Math.max(compact ? 74 : 82, deploymentReadout ? metaHeight + 66 : 0);
   const bottomY = content.y + content.height - bottomHeight;
 
   const top = Object.freeze({

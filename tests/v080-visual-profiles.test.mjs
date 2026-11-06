@@ -66,7 +66,9 @@ test("all eleven units define explicit event, formation, personnel, and battle v
     const eventMetadata = await sharp(publicFile(profile.eventPortrait.path)).metadata();
     assert.deepEqual(
       { width: eventMetadata.width, height: eventMetadata.height, hasAlpha: eventMetadata.hasAlpha },
-      { width: 512, height: 640, hasAlpha: true },
+      ['brute', 'guardian', 'babayaga', 'kumaverson'].includes(kind)
+        ? { width: 1024, height: 1280, hasAlpha: true }
+        : { width: 512, height: 640, hasAlpha: true },
       `${kind} event portrait geometry`,
     );
     const cardMetadata = await sharp(publicFile(profile.formationCard.path)).metadata();
@@ -107,11 +109,11 @@ test("all eleven units define explicit event, formation, personnel, and battle v
   }
 });
 
-test("Monkey restores the producer-approved V070 r11 crossbow identity across every visual surface", async () => {
+test("Monkey retains the V070 r11 crossbow authority while dialogue and cards use the quality candidate", async () => {
   const profile = V080_UNIT_VISUAL_PROFILES.engineer;
   assert.equal(profile.identityMaster.path, "/art/v070/characters/reference/monkey-base-r11.png");
-  assert.equal(profile.eventPortrait.path, "/art/v070/characters/portraits/engineer-portrait-v1.webp");
-  assert.equal(profile.formationCard.path, "/art/v0995/characters/cards/monkey-formation-card-r3.webp");
+  assert.equal(profile.eventPortrait.path, "/art/v100/portraits/monkey-determined-quality-r1.webp");
+  assert.equal(profile.formationCard.path, "/art/v100/portraits/monkey-formation-card-quality-r1.webp");
   assert.equal(profile.battleSprite.path, "/art/v070/characters/engineer-battle-v1.png");
   assert.ok(profile.identityLock.includes("voluminous-layered-silver-gray-hair"));
   assert.ok(profile.identityLock.includes("two-cam-compact-compound-crossbow-with-visible-bolt"));
@@ -225,8 +227,8 @@ test("the rights ledger covers every retained Version 0.8.0 visual with its exac
 });
 
 test("Kumaverson's phone WebKit PNG preserves the approved card pixels and PNG transport", async () => {
-  const source = "/art/v080/characters/cards/kumaverson-formation-card-r2.webp";
-  const replacement = "/art/v080/characters/cards/kumaverson-formation-card-r2.png";
+  const source = "/art/v100/portraits/kumaverson-formation-card-r3.webp";
+  const replacement = "/art/v100/portraits/kumaverson-formation-card-r3.png";
   const [webp, png] = await Promise.all([
     sharp(publicFile(source)).ensureAlpha().raw().toBuffer({ resolveWithObject: true }),
     sharp(publicFile(replacement)).ensureAlpha().raw().toBuffer({ resolveWithObject: true }),

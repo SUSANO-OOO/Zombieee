@@ -1,0 +1,36 @@
+{
+  "tool": "OpenAI built-in image_gen",
+  "creator": "OpenAI image generation directed for this project",
+  "license": "Project-generated derivative; commercial use, modification and redistribution under applicable OpenAI terms",
+  "producerApproval": "Current generated master is identity authority; combat derivative not Producer accepted",
+  "master": "assets/source/quality-20261028/identity/raider-master-r4.png",
+  "masterSha256": "c9173aa44138f5796bdae3d4d680cd26b24ee16741020c42bcd8d0a1751a0b47",
+  "outputs": {
+    "combat": {
+      "file": "combat-model-r1.png",
+      "original": "C:/Users/okait/.codex/generated_images/01a180c8-9e05-7871-b287-613f7c7eb364/exec-a5058574-d8b2-4175-875b-7d72c6a05f64.png",
+      "prompt": "Identity-preserve full-body battle sprite of EXACT Raider in reference1. Same adult woman, short tousled BLONDE hair, recognizable calm eyes, individual nose/jaw, athletic lean build. Preserve navy sleeveless work suit, tan tactical harness and belt pouches, hearing protectors naturally resting around neck, gloves, knee pads and black combat boots. Fully clothed practical action pose, no glamour. Same black belt-fed light machine gun with tan ammunition box attached under receiver and visible short cartridge belt, one gun only. Stand facing screen RIGHT, head/eyes right with neck naturally connected, gun held low-ready pointed right slightly downward. Trigger hand on grip, forward hand supports handguard, both bent elbows naturally connected below shoulders. Keep both arms visible enough to read anatomy. Moderate fore/aft staggered feet, both boots side-view pointing RIGHT, no crossed legs or extremely wide stance. Entire body and whole gun with muzzle fully inside1298x1212 canvas with50px clear margin all sides. Detailed painted-realistic materials matching reference. Truly transparent alpha, no background, floor, shadow, labels, extra figures, limbs or weapons. Preserve exact face, short blonde haircut and outfit identity; do not substitute another person.",
+      "sha256": "311055d04458976d1481182b3b51989dc5e5aada8354ce99ee7920443535ceb4",
+      "references": [
+        {
+          "role": "sole current identity, costume and weapon authority",
+          "path": "assets/source/quality-20261028/identity/raider-master-r4.png",
+          "sha256": "c9173aa44138f5796bdae3d4d680cd26b24ee16741020c42bcd8d0a1751a0b47"
+        }
+      ]
+    },
+    "underpainting": {
+      "file": "body-underpainting-r1.png",
+      "original": "C:/Users/okait/.codex/generated_images/01a180c8-9e05-7871-b287-613f7c7eb364/exec-f9e47bae-72be-4350-ad08-752a88a0ffbb.png",
+      "prompt": "Precise registered hidden-body underpainting for this EXACT fully clothed Raider action-game sprite. Keep canvas1298x1212, exact position/scale, face/short blonde hair/head/neck, hearing protectors, navy work suit, tan harness/pouches/belt, pants/knee pads and BOTH boots unchanged. Remove ONLY the complete machine gun, ammunition box/belt and BOTH entire arms/hands from shoulder down. Reconstruct opaque clothing and existing harness behind removed arms/gun, naturally continuing the suit and belt. Smooth shoulder torso outline, no stumps, exposed torso, phantom hands or weapon fragments. DO NOT recenter, enlarge, change pose, face, legs, feet, outfit coverage or costume design. This is an exact-registration hidden sprite layer. Transparent alpha, no background, floor, shadows, labels.",
+      "sha256": "1a3e9d0035151338d966a1d617bdd177d1ebd4712077fa9ff3cb9231964c9662",
+      "references": [
+        {
+          "role": "exact edit target",
+          "path": "assets/source/quality-20261028/rigs/gunner-combat-r1/combat-model-r1.png",
+          "sha256": "311055d04458976d1481182b3b51989dc5e5aada8354ce99ee7920443535ceb4"
+        }
+      ]
+    }
+  }
+}

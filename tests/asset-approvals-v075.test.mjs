@@ -29,7 +29,9 @@ async function sourceFiles(directoryUrl) {
 function runtimeDescriptors() {
   return [
     ["V075-IKURA-IDENTITY", V075_VISUAL_PROFILES.ikura.identityMaster],
-    ["V075-IKURA-EVENT-PORTRAIT", V075_VISUAL_PROFILES.ikura.eventPortrait],
+    // Preserve the original approval receipt; the new local quality candidate
+    // must not inherit a historical Producer approval.
+    ["V075-IKURA-EVENT-PORTRAIT", {path:"/art/v075/characters/portraits/ikura-event-portrait-v4.webp",revision:"v4"}],
     ["V075-CRAWLER-IDENTITY", V075_VISUAL_PROFILES.crawler.identityMaster],
     ["V075-CRAWLER-CLOSED", V075_VISUAL_PROFILES.crawler.closed],
     ["V075-CRAWLER-OPEN", V075_VISUAL_PROFILES.crawler.open],
@@ -97,7 +99,7 @@ test("0.7.5 derivative source chains resolve to an approved identity lock", asyn
   }
 });
 
-test("0.7.5 approved files exactly match ledger hashes, byte sizes, dimensions, and runtime revisions", async () => {
+test("0.7.5 approved originals exactly match their historical hashes, byte sizes, dimensions, and revisions", async () => {
   const manifest = await loadManifest();
   const byAssetId = new Map(manifest.assets.map((asset) => [asset.assetId, asset]));
 
@@ -137,5 +139,21 @@ test("every 0.7.5 runtime art literal is covered by the approval ledger", async 
     }
   }
 
-  assert.deepEqual([...literals].sort(), approvedPaths);
+  assert.deepEqual([...literals].sort(), approvedPaths.filter(path=>path!=="public/art/v075/characters/portraits/ikura-event-portrait-v4.webp"));
+});
+
+test("Ikura quality dialogue retains the approved identity source without claiming its old approval", async () => {
+  assert.equal(V075_VISUAL_PROFILES.ikura.eventPortrait.path,"/art/v100/portraits/ikura-warm-stage-r1.webp");
+  const provenance=JSON.parse(await readFile(new URL("../assets/source/quality-20261028/identity/ikura-runtime-provenance.json",import.meta.url),"utf8"));
+  const manifest=await loadManifest();
+  assert.equal(provenance.canonical.sha256,manifest.assets.find(asset=>asset.assetId==="V075-IKURA-IDENTITY").sha256);
+  const stage=JSON.parse(await readFile(new URL("../assets/source/quality-20261028/identity/stage-portrait-provenance-r1.json",import.meta.url),"utf8"));
+  const ikuraStage=stage.records.filter(item=>item.kind==='ikura');
+  assert.equal(ikuraStage.length,4);
+  for(const item of ikuraStage)assert.ok(provenance.inputs.some(input=>input.path===item.input&&input.sha256===item.inputSha256),'Stage packing must use the same identity-derived source');
+  assert.match(provenance.approval,/acceptance and integration remain open/);
+  for(const output of provenance.outputs){
+    const bytes=await readFile(new URL(output.path,repositoryRoot));
+    assert.equal(createHash("sha256").update(bytes).digest("hex"),output.sha256);
+  }
 });

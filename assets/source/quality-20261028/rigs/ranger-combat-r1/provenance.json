@@ -1,0 +1,495 @@
+{
+  "schema": "zombieee-quality-ranger-hybrid/1",
+  "primary": {
+    "path": "assets/source/quality-20261028/identity/mizuchi-master-r4.png",
+    "sha256": "c0f013dea12be7dc54055adfba4fd7b4a9703141eb8d9c0109d5b3087580ce3f"
+  },
+  "modelSha256": "2b23d7ae99237b5b993acc9520c883bb7056f23d2b7ed7506847f94ce8bc98b2",
+  "underpaintingSha256": "0407fe09ec68e2eca21f996fe329577be8f5aaab7565cbd57d1d33ba8fce36e1",
+  "geometrySource": "app/v177JointData.js",
+  "geometrySha256": "b521edae2ec1b2239f3fe02ea135712de8cf6d5f893b8aaaa50c9f6e8ba1224d",
+  "asset": {
+    "path": "/art/v100/joints/ranger-combat-r1.webp",
+    "bytes": 886328,
+    "sha256": "11ee83f279e2331b0bbbb1b1f0dee6f2150c07768355728ae2f8d1b3f4f18370",
+    "decodedBytes": 5120000
+  },
+  "parts": [
+    {
+      "name": "far-upper-arm",
+      "file": "far-upper-arm.png",
+      "sha256": "8de41da06f5bfbbedd0350c240c0c7a35f91c4fdf9174f83e96d9e11f37395ad",
+      "source": "primary",
+      "registration": {
+        "method": "affine",
+        "anchors": [
+          [
+            595,
+            402
+          ],
+          [
+            610,
+            620
+          ]
+        ],
+        "target": [
+          [
+            253,
+            114
+          ],
+          [
+            260,
+            173
+          ]
+        ],
+        "matrix": [
+          0.27022213950836105,
+          -0.013277110504477573,
+          0.013277110504477573,
+          0.27022213950836105,
+          85.35128118174732,
+          12.80486182529917
+        ]
+      }
+    },
+    {
+      "name": "far-forearm",
+      "file": "far-forearm.png",
+      "sha256": "ad83599132b1aa6751466ca3fa0bd4d2a13e96920deb4d6473f491cf17e908a3",
+      "source": "primary",
+      "registration": {
+        "method": "affine",
+        "anchors": [
+          [
+            610,
+            635
+          ],
+          [
+            617,
+            880
+          ]
+        ],
+        "target": [
+          [
+            260,
+            173
+          ],
+          [
+            283,
+            191
+          ]
+        ],
+        "matrix": [
+          0.07572450999615322,
+          -0.09124059168229746,
+          0.09124059168229746,
+          0.07572450999615322,
+          155.15080229734284,
+          180.85302062423366
+        ]
+      }
+    },
+    {
+      "name": "far-pants",
+      "file": "far-pants.png",
+      "sha256": "8df1a78fe9ddcaf5c3bf8b51014e13432512f13ce686bce7f8a8635d4013cc03",
+      "source": "under",
+      "registration": {
+        "method": "width-preserving-source-strip",
+        "anchors": [
+          [
+            598,
+            640
+          ],
+          [
+            548,
+            837
+          ],
+          [
+            397,
+            1102
+          ]
+        ],
+        "target": [
+          [
+            224,
+            227
+          ],
+          [
+            202,
+            306
+          ],
+          [
+            158,
+            398
+          ]
+        ]
+      }
+    },
+    {
+      "name": "far-boot",
+      "file": "far-boot.png",
+      "sha256": "fb864fb26c6a3fa887c05b708c30bb185d14289a4c65744eebc05d5ed61c2097",
+      "source": "model",
+      "registration": {
+        "method": "affine",
+        "anchors": [
+          [
+            397,
+            1102
+          ],
+          [
+            478,
+            1175
+          ]
+        ],
+        "target": [
+          [
+            158,
+            398
+          ],
+          [
+            197,
+            428
+          ]
+        ],
+        "matrix": [
+          0.4498738435660218,
+          -0.035071488645920953,
+          0.035071488645920953,
+          0.4498738435660218,
+          -59.24869638351553,
+          -83.83759461732535
+        ]
+      }
+    },
+    {
+      "name": "near-pants",
+      "file": "near-pants.png",
+      "sha256": "6de1c30855eea6f6adc4a5031bd128a96f98899ad116a336cacf7c0b3a4c17b4",
+      "source": "under",
+      "registration": {
+        "method": "width-preserving-source-strip",
+        "anchors": [
+          [
+            643,
+            611
+          ],
+          [
+            746,
+            830
+          ],
+          [
+            815,
+            1104
+          ]
+        ],
+        "target": [
+          [
+            241,
+            230
+          ],
+          [
+            260,
+            307
+          ],
+          [
+            290,
+            398
+          ]
+        ]
+      }
+    },
+    {
+      "name": "near-boot",
+      "file": "near-boot.png",
+      "sha256": "f0a8f9de92abc137930b0f162fddb49ce2f489bc5945f72dac18a6c0e803a99a",
+      "source": "model",
+      "registration": {
+        "method": "affine",
+        "anchors": [
+          [
+            815,
+            1104
+          ],
+          [
+            926,
+            1175
+          ]
+        ],
+        "target": [
+          [
+            290,
+            398
+          ],
+          [
+            328,
+            428
+          ]
+        ],
+        "matrix": [
+          0.3656260799447068,
+          0.03640133625158392,
+          -0.03640133625158392,
+          0.3656260799447068,
+          32.201820066812594,
+          -35.318281303997196
+        ]
+      }
+    },
+    {
+      "name": "pelvis",
+      "file": "pelvis.png",
+      "sha256": "de23bf4d9cd1011be67867619a6a0b68509bc1ec655d846ab091ad407fad9360",
+      "source": "under",
+      "registration": {
+        "method": "affine",
+        "anchors": [
+          [
+            590,
+            290
+          ],
+          [
+            760,
+            290
+          ],
+          [
+            650,
+            610
+          ]
+        ],
+        "target": [
+          [
+            208,
+            110
+          ],
+          [
+            253,
+            114
+          ],
+          [
+            232.5,
+            228.5
+          ]
+        ],
+        "matrix": [
+          0.2647058823529412,
+          0.023529411764705882,
+          0.026930147058823538,
+          0.3659007352941177,
+          44.013786764705884,
+          -9.993566176470594
+        ]
+      }
+    },
+    {
+      "name": "torso",
+      "file": "torso.png",
+      "sha256": "df1c94d1666223a6ff8e2dbb32c5e8dd47a6bd005a0162e1038eac67276e2c4f",
+      "source": "under",
+      "registration": {
+        "method": "affine",
+        "anchors": [
+          [
+            590,
+            290
+          ],
+          [
+            760,
+            290
+          ],
+          [
+            650,
+            610
+          ]
+        ],
+        "target": [
+          [
+            208,
+            110
+          ],
+          [
+            253,
+            114
+          ],
+          [
+            232.5,
+            228.5
+          ]
+        ],
+        "matrix": [
+          0.2647058823529412,
+          0.023529411764705882,
+          0.026930147058823538,
+          0.3659007352941177,
+          44.013786764705884,
+          -9.993566176470594
+        ]
+      }
+    },
+    {
+      "name": "head",
+      "file": "head.png",
+      "sha256": "bc25d6c6f55ff383145c72b9932955f76f287f6d9d8e4fd6989f60ba1f40af29",
+      "source": "model",
+      "registration": {
+        "method": "affine",
+        "anchors": [
+          [
+            700,
+            217
+          ],
+          [
+            719,
+            90
+          ]
+        ],
+        "target": [
+          [
+            230.5,
+            99
+          ],
+          [
+            245,
+            48
+          ]
+        ],
+        "matrix": [
+          0.4094906003638568,
+          0.05291085506367493,
+          -0.05291085506367493,
+          0.4094906003638568,
+          -44.66176470588232,
+          -26.897058823529385
+        ]
+      }
+    },
+    {
+      "name": "near-upper-arm",
+      "file": "near-upper-arm.png",
+      "sha256": "10f6ce6003c33c16b446c270b8ca36ca4f7a30ec7185c6d1f3a4e6622a405fb6",
+      "source": "model",
+      "registration": {
+        "method": "affine",
+        "anchors": [
+          [
+            579,
+            292
+          ],
+          [
+            513,
+            414
+          ]
+        ],
+        "target": [
+          [
+            208,
+            110
+          ],
+          [
+            188,
+            144
+          ]
+        ],
+        "matrix": [
+          0.2841995841995842,
+          0.010187110187110198,
+          -0.010187110187110198,
+          0.2841995841995842,
+          46.423076923076934,
+          21.115384615384613
+        ]
+      }
+    },
+    {
+      "name": "near-forearm",
+      "file": "near-forearm.png",
+      "sha256": "865622a5b2cbcc7ae7983b9987e50beeb8f4ed4d69f7d704cc13561ce1d7ba49",
+      "source": "model",
+      "registration": {
+        "method": "affine",
+        "anchors": [
+          [
+            513,
+            414
+          ],
+          [
+            635,
+            446
+          ]
+        ],
+        "target": [
+          [
+            188,
+            144
+          ],
+          [
+            224,
+            158
+          ]
+        ],
+        "matrix": [
+          0.3042494342469198,
+          0.03495096806638169,
+          -0.03495096806638169,
+          0.3042494342469198,
+          46.389741010812166,
+          0.11088760372139461
+        ]
+      }
+    },
+    {
+      "name": "weapon",
+      "file": "weapon.png",
+      "sha256": "d9cbc479dc7cd185ed62504c7e27e72d1c57d89fa350050efb35c419adf805f2",
+      "source": "model",
+      "registration": {
+        "method": "affine",
+        "anchors": [
+          [
+            635,
+            446
+          ],
+          [
+            822,
+            560
+          ],
+          [
+            1043,
+            786
+          ]
+        ],
+        "target": [
+          [
+            224,
+            158
+          ],
+          [
+            283,
+            191
+          ],
+          [
+            358,
+            260
+          ]
+        ],
+        "matrix": [
+          0.28029060229669567,
+          -0.0239043824701195,
+          0.05776892430278879,
+          0.3286852589641436,
+          20.250527302554474,
+          26.585657370517936
+        ]
+      }
+    }
+  ],
+  "fallbacks": {
+    "lower": 120,
+    "upper": 32,
+    "allRepainted": true
+  },
+  "generatorSha256": "26e7ec43eded3caada757af63dc58ff8ddf269f0e6ef5a4628f8b23949fd9ef5",
+  "runtimeAcceptance": false,
+  "humanAcceptance": false
+}

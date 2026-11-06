@@ -50,10 +50,9 @@ test("final station pixels require the authored silhouette and reject unpainted 
 });
 
 test("production renderers do not synthesize semantic asset placeholders", () => {
-  assert.match(
-    ashfallSource,
-    /drawWorld\([\s\S]*?false,\s*Boolean\(qaMode \|\| qaScenario\),\s*\);/u,
-  );
+  const productionDraw = /drawWorld\([\s\S]*?false,\s*Boolean\(qaMode \|\| qaScenario\),\s*\{ obstacles: abilityNameObstaclesRef\.current, transform: canvasTransformRef\.current \},\s*\);/u;
+  assert.match(ashfallSource, productionDraw);
+  assert.doesNotMatch(ashfallSource.replaceAll('Boolean(qaMode || qaScenario)', 'true'), productionDraw);
   assert.match(ashfallSource, /else if \(allowDiagnosticFallback\) \{\s*stationMissionDiagnosticFallbackDrawCount \+= 1;\s*ctx\.fillStyle = container\.contained/u);
   assert.match(ashfallSource, /else if \(allowDiagnosticFallback\) \{\s*ctx\.fillStyle = "#5d3329"/u);
   assert.match(ashfallSource, /else if \(allowDiagnosticFallback\) drawDiagnosticStationBackground/u);

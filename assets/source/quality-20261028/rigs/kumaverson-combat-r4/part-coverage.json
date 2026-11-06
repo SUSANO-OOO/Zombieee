@@ -1,0 +1,21 @@
+{
+  "source": "assets/source/quality-20261028/rigs/kumaverson-combat-r4/combat-model-r4.png",
+  "sourceSha256": "089d50e55d1f4e009a66858b500c923b41a5ed478b91826c491c5334ee190b3c",
+  "test": "Opaque source coverage after material separation, not naturalness acceptance",
+  "missingOpaquePixels": 0,
+  "missingBounds": null,
+  "sourceToLogical": {
+    "source": [
+      1298,
+      1212
+    ],
+    "resized": [
+      428,
+      400
+    ],
+    "translation": [
+      29,
+      7
+    ]
+  }
+}
