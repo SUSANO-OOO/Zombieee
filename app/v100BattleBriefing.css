@@ -17,7 +17,7 @@
 .v100-briefing-plan h3 { font-size: 18px; margin: 0 0 6px; }
 .v100-briefing-plan p { margin: 6px 0; }
 .v100-briefing-plan ul { margin: 6px 0; padding-left: 20px; }
-.v100-briefing-plan .v100-mission-diagram { display: block; position: static; inset: auto; transform: none; flex: none; width: 100%; height: 100px; margin: 6px 0; opacity: 1; color: #dfc590; }
+.v100-briefing-plan .v100-mission-diagram { display: block; position: static; inset: auto; transform: none; flex: none; width: 100%; height: 100px; margin: 6px 0; opacity: 1; color: #dfc590; pointer-events: none; }
 .v100-briefing-plan .v100-briefing-streets { fill: none; stroke: #485744; }
 .v100-briefing-plan .v100-briefing-route { fill: none; stroke: #dfc590; stroke-width: 2; }
 .v100-briefing-plan .v100-briefing-node { fill: #273a29; stroke: #bca06c; }
