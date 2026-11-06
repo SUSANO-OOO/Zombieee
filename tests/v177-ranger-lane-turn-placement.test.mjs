@@ -119,6 +119,39 @@ test('a moving turn begins its actual lifted step without stretching the newly l
  }
 });
 
+test('the first moving turn after a held hit cannot strand the previously painted support',()=>{
+ // Minimal pure-function failure from seed178/stride3 with held hit motion.
+ // This is a generated unit reproducer, not a replay of the missing S14 frame.
+ const previous={time:6.866666666666648,root:277.1833827953311,facing:-1,scale:.2,
+  phase:1.3829523981225509,offset:-1.684998976030132,moving:true,travelSign:1,
+  requestedFacing:-1,lastLandedLeg:0,bodyCorrection:0,feet:[
+   {x:285.9321863365038,height:0,angle:0,mode:'plant',flight:null,
+    landedPaintTime:6.866666666666648,phaseHold:{nominalEnd:-.38,direction:-1},vx:-28.801682640552873},
+   {x:284.93135910508903,height:11.796338474009376,angle:-.10485634199119445,mode:'swing',phaseHold:null,vx:-51.7771792307546,
+    flight:{id:'6.791666666666648:1',at:6.791666666666648,endAt:7.121366332962517,
+     fromHeight:0,fromAngle:0,peak:18,xAt:6.791666666666648,fromX:287.292974153794,
+     vx:0,goalLocal:279.11207838026235,goalFacing:-1,kind:'move',nominalEnd:0,travelSign:1}},
+  ]};
+ const next={time:6.916666666666647,root:275.73338279533107,scale:.2,
+  phase:1.402161799831953,settle:0,moving:true,facing:'right',frozen:false};
+ for(const mirrored of[false,true]){
+  const state=structuredClone(previous),input={...next};
+  if(mirrored){
+   state.root=660-state.root;state.facing=1;state.requestedFacing=1;
+   for(const foot of state.feet){foot.x=660-foot.x;foot.vx=-foot.vx;
+    if(foot.flight){foot.flight.fromX=660-foot.flight.fromX;foot.flight.vx=-foot.flight.vx;foot.flight.goalFacing=1;}}
+   input.root=660-input.root;input.facing='left';
+  }
+  const before=structuredClone(state),result=v177RangerFootPlacement(rig,state,input);
+  assertOriginalLegs(result,input.settle);
+  assert.deepEqual(state,before,'a pending turn cannot rewrite the successful preceding paint');
+  assert.equal(result.state.moving,true,'actual travel must step from the first turn paint');
+  assert.ok(result.state.feet[0].height>0,'the endangered support must lift rather than slide or stretch');
+  assert.equal(result.state.feet[1].flight.endAt,state.feet[1].flight.endAt,'the original airborne landing keeps its deadline');
+  assert.deepEqual(v177RangerFootPlacement(rig,result.state,input),result,'redrawing the same paint cannot advance a second step');
+ }
+});
+
 test('a pursuit that ends between paints cannot reuse the previous completed stop anchors',()=>{
  // f262 native performance artifact12135499268, webkit-844x390 actor9:
  // the last stop's boots remained at these world coordinates after retreat.

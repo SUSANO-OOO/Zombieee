@@ -235,9 +235,10 @@ function advance(rig,previous,input) {
     // A fixed world ankle can become unreachable when only the body is
     // reflected. Lift that boot first with the existing step and keep the
     // previous display facing until both original legs allow the turn.
-    if(previous.turnTargetFacing&&input.moving){
-      // While the body waits to turn, it can still travel. Keep stepping in
-      // the displayed frame instead of leaving a support behind the root.
+    if(input.moving&&(previous.turnTargetFacing||previous.feet.some(foot=>foot.flight))){
+      // An unfinished step still owns its landing on the first turning paint.
+      // Keep travelling in the displayed frame instead of stranding its support.
+      // With no active flight, the original turn step below lifts a boot first.
       state=moving(rig,previous,{...input,facing:previous.facing});
       if(state.feet.every((foot,i)=>reachable(rig,foot,i,input,state.offset)))state={...state,facing};
       else state={...state,turnTargetFacing:facing};
