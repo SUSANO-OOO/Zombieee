@@ -1,0 +1,54 @@
+name: Bounded S30 Recording Diagnostic
+on:
+  push:
+    branches: [codex/177-s30-bounded-20261106]
+permissions:
+  contents: read
+jobs:
+  observation:
+    name: S30 diagnostic recording-${{ matrix.recording }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        recording: ['on', 'off']
+    defaults:
+      run:
+        shell: bash
+    env:
+      S30_DIAGNOSTIC_RECORDING: ${{ matrix.recording }}
+      S30_DIAGNOSTIC_STOP_AT: '2026-11-06T03:46:28Z'
+      V100_NORMAL_PLAY_ENGINE: chromium
+      V100_NORMAL_PLAY_EVIDENCE_DIR: outputs/s30-bounded-${{ matrix.recording }}
+      GITHUB_PAGES_RELEASE_SHA: 9eeb4b6700a363d6d533dd785b71714351c0e106
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22.13.0'
+          cache: npm
+      - name: Verify authorized time and unchanged product
+        run: |
+          node --input-type=module -e "import assert from 'node:assert/strict';assert.ok(Date.now()<Date.parse(process.env.S30_DIAGNOSTIC_STOP_AT));"
+          test -z "$(git diff --name-only 9eeb4b6700a363d6d533dd785b71714351c0e106 HEAD -- app public)"
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - name: Observe original sequence once with bounded stack capture
+        run: node scripts/run-browser-qa-with-server.mjs scripts/v177-s30-bounded-diagnostic.mjs
+      - name: Preserve diagnostic originals
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: s30-bounded-recording-${{ matrix.recording }}
+          path: |
+            outputs/s30-bounded-${{ matrix.recording }}
+            scripts/.v177-s30-bounded-${{ matrix.recording }}.mjs
+            dist/client/assets/*.js
+          retention-days: 14
+          if-no-files-found: warn
+          include-hidden-files: true
