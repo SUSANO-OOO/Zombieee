@@ -7,6 +7,7 @@ import { V100_STORY_EVENTS, V100_STORY_SCRIPT_VERSION } from "../app/v100StoryEv
 import { V100_STAGE_IDS } from "../app/v100Registry.js";
 import { v100StoryPageFor } from "../app/v100StoryPages.js";
 import { v100DialogueSlots } from "../app/v100DialogueComposition.js";
+import { readV177StoryPortraitPaint } from "../scripts/v177-story-portrait-paint.mjs";
 
 const source = await readFile("scripts/v100-phase-g-production-matrix.mjs", "utf8");
 const parsed = ts.createSourceFile("matrix.mjs", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
@@ -25,19 +26,26 @@ function harness({ wrong = null, images = "ready", events = V100_STORY_EVENTS } 
     if (!displayed?.has(selector)) throw new Error(`unmatched-visible-selector: ${selector}`);
   } }; }, async waitForFunction(predicate, argument, options) {
     imageChecks++;
-    assert.equal(argument, null);
+    if (argument !== null) assert.equal(argument, `[data-v100-event-id="${seeded.eventId}"]`);
     assert.equal(options.timeout, 60_000);
     class HTMLImageElement {
       complete = images !== "incomplete";
       naturalWidth = images === "broken" ? 0 : 320;
       naturalHeight = images === "broken" ? 0 : 480;
+      currentSrc = "/portrait.webp";
+      getBoundingClientRect() { return { width: 320, height: 480 }; }
+      getAnimations() { return images === "transition" ? [{ animationName: "arriving", pending: true, playState: "running" }] : []; }
     }
     const list = images === "missing" ? [] : [new HTMLImageElement(), new HTMLImageElement()];
-    const ready = vm.runInNewContext(`(${predicate.toString()})()`, {
-      HTMLImageElement,
+    const ready = vm.runInNewContext(`(${predicate.toString()})(argument)`, {
+      HTMLImageElement, argument,
+      getComputedStyle: () => ({ opacity: images === "transparent" ? "0" : "1", visibility: images === "hidden" ? "hidden" : "visible", display: "block" }),
       document: { querySelectorAll(selector) {
         assert.equal(selector, ".v100-story-node .v100-portrait");
         return list;
+      }, querySelector(selector) {
+        assert.equal(selector, `[data-v100-event-id="${seeded.eventId}"]`);
+        return { isConnected: true, querySelectorAll: kind => kind === ".v100-portrait" ? list : [] };
       } },
     });
     if (!ready) throw new Error("unready-portrait");
@@ -45,7 +53,7 @@ function harness({ wrong = null, images = "ready", events = V100_STORY_EVENTS } 
   const api = vm.runInNewContext([targets, ...functions].map(node => node.getText(parsed)).join("\n")
     + "\n({ targets: dialogueEvidenceTargets, storyPage })", {
     V100_STORY_EVENTS: events, V100_STORY_SCRIPT_VERSION, V100_STAGE_IDS,
-    v100StoryPageFor, v100DialogueSlots, timeout: 60_000,
+    v100StoryPageFor, v100DialogueSlots, readV177StoryPortraitPaint, timeout: 60_000,
     fullSave: overrides => overrides,
     openRoute: async (_page, save) => {
       seeded = save.flowState;
@@ -88,7 +96,7 @@ for (const side of ["left", "right"]) {
     while (cursor < target.startIndex) cursor = v100StoryPageFor(event.id, event.nodes, cursor).endIndex + 1;
     assert.equal(cursor, target.startIndex, "the fixture starts on a page reachable by ordinary Next inputs");
     assert.equal(h.waits.length, 2);
-    assert.equal(h.imageChecks(), 1);
+    assert.equal(h.imageChecks(), 2);
   });
   for (const wrong of ["index", "side"]) {
     test(`a visible conversation with the wrong ${wrong} cannot satisfy the ${side} capture`, async () => {
@@ -98,7 +106,7 @@ for (const side of ["left", "right"]) {
   }
 }
 
-for (const images of ["missing", "incomplete", "broken"]) {
+for (const images of ["missing", "incomplete", "broken", "transparent", "hidden", "transition"]) {
   test(`a matching dialogue page with ${images} portraits is rejected`, async () => {
     const h = harness({ images });
     await assert.rejects(h.storyPage(h.page, "dialogue-right"), /unready-portrait/);

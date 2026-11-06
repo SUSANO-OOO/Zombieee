@@ -16,6 +16,7 @@ import { V100_STAGE_IDS, V100_STAGES, V100_SUPPORTS, V100_UNITS, V100_VEHICLE } 
 import { v100BattleDefinitionFor } from "../app/v100BattleAdapter.js";
 import { v100DialogueSlots } from "../app/v100DialogueComposition.js";
 import { v100StoryPageFor } from "../app/v100StoryPages.js";
+import { readV177StoryPortraitPaint } from "./v177-story-portrait-paint.mjs";
 import { V100_STORY_EVENTS, V100_STORY_SCRIPT_VERSION } from "../app/v100StoryEvents.js";
 import { enemyAiProfileFor } from "../app/combatAiProfiles.js";
 import { enemyContentFor } from "../app/content/enemyCatalog.js";
@@ -4124,6 +4125,7 @@ async function storyPage(page, targetState) {
     return portraits.length > 0 && portraits.every(image => image instanceof HTMLImageElement
       && image.complete && image.naturalWidth > 0 && image.naturalHeight > 0);
   }, null, { timeout });
+  await page.waitForFunction(readV177StoryPortraitPaint, `[data-v100-event-id="${target.eventId}"]`, { timeout });
 }
 
 async function mapPage(page, save) {
