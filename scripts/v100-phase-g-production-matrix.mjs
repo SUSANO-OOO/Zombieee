@@ -15,6 +15,7 @@ import { createV100BattleResult, recordV100PendingResult } from "../app/v100Tran
 import { V100_STAGE_IDS, V100_STAGES, V100_SUPPORTS, V100_UNITS, V100_VEHICLE } from "../app/v100Registry.js";
 import { v100BattleDefinitionFor } from "../app/v100BattleAdapter.js";
 import { v100DialogueSlots } from "../app/v100DialogueComposition.js";
+import { v100StoryPageFor } from "../app/v100StoryPages.js";
 import { V100_STORY_EVENTS, V100_STORY_SCRIPT_VERSION } from "../app/v100StoryEvents.js";
 import { enemyAiProfileFor } from "../app/combatAiProfiles.js";
 import { enemyContentFor } from "../app/content/enemyCatalog.js";
@@ -765,19 +766,22 @@ if (process.env.V100_PHASE_G_CHECKPOINT_NEGATIVE === "1") {
 const dialogueEvidenceTargets = Object.freeze(Object.fromEntries(
   ["left", "right"].map((side) => {
     for (const event of Object.values(V100_STORY_EVENTS)) {
-      const nodeIndex = event.nodes.findIndex((node, index) => node.kind === "dialogue"
-        && node.portraitOwner
-        && v100DialogueSlots(event.nodes, index)[side]?.portraitOwner === node.portraitOwner);
-      if (nodeIndex >= 0) {
-        const node = event.nodes[nodeIndex];
-        return [side, Object.freeze({
-          eventId: event.id,
-          phase: event.id.endsWith(":post") ? "post" : "event",
-          stageNumber: event.stageNumber ?? 1,
-          nodeIndex,
-          portraitOwner: node.portraitOwner,
-          nodeKind: node.kind,
-        })];
+      for (let startIndex = 0; startIndex < event.nodes.length;) {
+        const page = v100StoryPageFor(event.id, event.nodes, startIndex);
+        const { node, nodeIndex } = page;
+        if (node?.kind === "dialogue" && node.portraitOwner
+          && v100DialogueSlots(event.nodes, nodeIndex)[side]?.portraitOwner === node.portraitOwner) {
+          return [side, Object.freeze({
+            eventId: event.id,
+            phase: event.id.endsWith(":post") ? "post" : "event",
+            stageNumber: event.stageNumber ?? 1,
+            startIndex,
+            nodeIndex,
+            portraitOwner: node.portraitOwner,
+            nodeKind: node.kind,
+          })];
+        }
+        startIndex = page.endIndex + 1;
       }
     }
     throw new Error(`No canonical ${side} dialogue evidence target exists`);
@@ -4112,7 +4116,7 @@ async function freshNamePage(page) {
 async function storyPage(page, targetState) {
   const side = targetState === "dialogue-left" ? "left" : "right";
   const target = dialogueEvidenceTargets[side];
-  await openRoute(page, eventSave(target.phase, target.eventId, target));
+  await openRoute(page, eventSave(target.phase, target.eventId, { ...target, nodeIndex: target.startIndex }));
   await page.locator(`[data-v100-event-id="${target.eventId}"][data-v100-node-index="${target.nodeIndex}"]`).waitFor({ state: "visible", timeout });
   await page.locator(`[data-v100-state="dialogue-${side}"]`).waitFor({ state: "visible", timeout });
 }
