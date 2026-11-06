@@ -9435,6 +9435,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   // load, but does not prove that the browser can decode the image.
   const decodedBattleImagesRef = useRef(new WeakSet<HTMLImageElement>());
   const gameRef = useRef<Game>(initialGame("pod", INITIAL_STAGE_ID, ["brawler", "scout", "ranger", "medic"]));
+  const deploymentHistoryRef = useRef<WeakMap<Game, Set<UnitKind>> | null>(null);
   const phaseGCombatObservabilityEnabledRef = useRef(
     typeof window !== "undefined"
       && ["127.0.0.1", "localhost"].includes(window.location.hostname)
@@ -16619,6 +16620,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     g.deployCooldowns[kind] = card.deployCooldown
       * survivalUpgradeEffects(g.survivalRun).redeployMultiplier;
     g.deployQueue.push(kind);
+    const deploymentHistory = deploymentHistoryRef.current ??= new WeakMap<Game, Set<UnitKind>>();
+    const deployedKinds = deploymentHistory.get(g) ?? new Set<UnitKind>();
+    deployedKinds.add(kind);
+    deploymentHistory.set(g, deployedKinds);
     g.banner = `${card.name} // 出撃待機 ${g.deployQueue.length}/3`;
     g.bannerTime = .7;
     playUiOperationCue("deploy", `deploy:${kind}:queue`);
@@ -25331,8 +25336,16 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                  const commandWaitSeconds = Math.ceil(commandDeploymentWait({ command: hud.energy, cost: card.cost, cooldown, baseRate: hud.commandBaseRate, recovery: hud.commandRecovery }));
                  const deploymentWaitCopy = `出撃まで約${commandWaitSeconds}秒`;
                  const cardBlockCopy = cardBlockReason === "指揮不足" ? `指揮があと${missingCommandPoints}必要` : cardBlockReason;
-                 const cardAccessibleState = externalSessionActive && (cardState === "cooldown" || cardState === "insufficient")
+                 const hasDeployed = deploymentHistoryRef.current?.get(gameRef.current)?.has(card.kind) ?? false;
+                 const cardReadinessLabel = cardState === "ready" ? hasDeployed ? "再出撃可" : "出撃可" : "出撃不可";
+                 const cardReadinessDetail = cardState === "cooldown" ? `あと約${commandWaitSeconds}秒`
+                   : cardState === "insufficient" ? `指揮 あと${missingCommandPoints}`
+                     : cardState === "full" ? "出撃枠待ち" : cardBlockCopy;
+                 const cardAccessibleDetail = externalSessionActive && (cardState === "cooldown" || cardState === "insufficient")
                    ? `${deploymentWaitCopy}${missingCommandPoints > 0 ? ` / 指揮があと${missingCommandPoints}必要` : ""}`
+                   : cardBlockCopy;
+                 const cardAccessibleState = externalSessionActive
+                   ? `${cardReadinessLabel}${cardAccessibleDetail ? ` / ${cardAccessibleDetail}` : ""}`
                    : cardBlockCopy ?? "出撃可能";
                  return (
                    <button key={`${card.kind}-${slotIndex}`} className={`unit-card ${externalSessionActive ? "v100-deploy-card" : ""} ${cooldown > 0 ? "cooling" : ""} state-${cardState}`} data-kind={card.kind} data-slot-index={slotIndex} data-portrait={portraitArt ? "approved" : "diagnostic"} data-block-reason={cardBlockReason ?? "ready"} data-state={cardState} data-cooldown={cooldown} data-missing-command={missingCommandPoints} aria-label={`${card.name} / ${cardAccessibleState} / ${externalSessionActive ? "必要指揮" : "コスト"} ${card.cost}`} aria-disabled={Boolean(cardBlockReason)} onClick={() => deployHuman(card.kind)} style={portraitArt ? { "--unit-card-art": `url('${portraitArt}')`, ...(externalSessionActive ? v100PortraitFraming(combatKindToCampaignUnitId(card.kind)) : {}) } as CSSProperties : undefined}>
@@ -25343,8 +25356,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                         <span className="v100-deploy-cost"><small>指揮</small><b>{card.cost}</b></span>
                       </span>
                       <span className="v100-deploy-readout" aria-hidden="true">
-                        <span className="v100-deploy-status">{cardState === "ready" ? "出撃できる" : cardState === "cooldown" || cardState === "insufficient" ? `あと約${commandWaitSeconds}秒` : cardState === "full" ? "出撃枠待ち" : cardBlockCopy}</span>
-                        {cardState === "cooldown" && missingCommandPoints > 0 && <span className="v100-deploy-shortage">指揮 あと{missingCommandPoints}</span>}
+                        <span className="v100-deploy-status">{cardReadinessLabel}</span>
+                        {cardReadinessDetail && <span className="v100-deploy-shortage">{cardReadinessDetail}</span>}
                       </span>
                     </> : <>
                     <span className="card-copy" aria-hidden="true"><b>{card.name}</b><small>{card.desc}</small></span><span className="cost"><i className="cost-mark" aria-hidden="true">指揮</i>{card.cost}</span>

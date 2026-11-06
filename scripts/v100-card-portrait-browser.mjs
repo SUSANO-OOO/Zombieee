@@ -94,14 +94,18 @@ async function probe(page, row, state, targets) {
     const expectedState = state === "returned-ready" ? "ready" : state;
     const card = page.locator(`button.unit-card[data-kind="${kind}"]`);
     assert.equal(await card.getAttribute("data-state"), expectedState, "expected native card state before pixel probe");
+    const expectedReadiness = state === "returned-ready" ? "再出撃可" : state === "ready" ? "出撃可" : "出撃不可";
+    assert.equal(await card.locator(".v100-deploy-status").innerText(), expectedReadiness);
+    assert.ok((await card.getAttribute("aria-label")).includes(expectedReadiness), "spoken and visible readiness agree");
     await card.scrollIntoViewIfNeeded();
     const img = page.locator(`button.unit-card[data-kind="${kind}"] .portrait > img`);
     const geometry = await img.evaluate(el => {
       const card = el.closest("button"), r = el.getBoundingClientRect(), c = card.getBoundingClientRect(), frame = el.closest(".portrait").getBoundingClientRect();
       const cost = card.querySelector(".v100-deploy-cost,.cost"), timer = card.querySelector(".v100-deploy-status,.cooldown-mask small");
-      const labels = [cost, timer].filter(Boolean).map(label => {
+      const reason = card.querySelector(".v100-deploy-shortage");
+      const labels = [cost, timer, reason].filter(Boolean).map(label => {
         const b = label.getBoundingClientRect();
-        return { kind: label === cost ? "cost" : "timer", text: label.textContent,
+        return { kind: label === cost ? "cost" : label === timer ? "timer" : "reason", text: label.textContent,
           scrollWidth: label.scrollWidth, clientWidth: label.clientWidth, scrollHeight: label.scrollHeight, clientHeight: label.clientHeight,
           rect: { x: b.x, y: b.y, width: b.width, height: b.height },
           fits: label.scrollWidth <= label.clientWidth + 1 && label.scrollHeight <= label.clientHeight + 1,
