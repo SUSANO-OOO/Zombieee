@@ -15,6 +15,8 @@ import { exportV100BrowserSave } from "../app/v100CampaignStorage.js";
 import { createV100BattleResult, recordV100PendingResult, finalizeV100PendingResult, purchaseV100Unit } from "../app/v100Transactions.js";
 import { V100_BOSSES, V100_STAGE_IDS, v100StageReward } from "../app/v100Registry.js";
 import { V100_STORY_EVENTS, V100_STORY_SCRIPT_VERSION } from "../app/v100StoryEvents.js";
+import { v100EventPresentationFor } from "../app/v100EventPresentation.js";
+import { isV100StoryBackdropReady } from "./v100-story-backdrop-ready.mjs";
 import { beginV100Survival, checkpointV100Survival } from "../app/v100SurvivalTransactions.js";
 import { beginSurvivalWave, completeSurvivalWave } from "../app/survival.js";
 import { selectSurvivalBossKind, survivalWaveReward, survivalUpgradePreview } from "../app/survivalBattleRuntime.js";
@@ -43,7 +45,7 @@ early = normalizeV100Save({ ...early, campaignStarted: true, flowState: { phase:
 const budgetBackup = exportV100BrowserSave(early);
 await writeFile(path.join(out, "two-stage-budget-fixture.json"), budgetBackup);
 const report = { status: "running", head, tree: git("rev-parse", "HEAD^{tree}"), build: await productionBuildIdentity(), physicalDevice: false,
-  audioOutput: "Forced silent output on hosted Linux/macOS. Local Windows game-browser QA is disabled after reported audible output.",
+  audioOutput: "Browser-output guard installed for UI capture. Physical speaker silence and audio acceptance are not verified.",
   audioScope: "BGM is disabled in these visual/UI fixtures, including the initial title and imported backup. SFX settings remain unchanged. Enabled native audio, title departure, recovery, R5 and staff-roll playback are verified by the separate unchanged CI audio lanes.",
   scope: "Phone rendering and native inputs. Two early victories, reward cases and result cases are developer-synthetic production receipts and reports; Nao purchased with the two one-star victories' CAPS. Subsequent upgrade/formation/battle inputs in early-budget-native are native. Reward/result cases prove presentation, save/resume and no duplicate payout, not real victories or measured combat. Visual late-stage/event fixtures do not prove unlocks or difficulty. No AI campaign-clear gate, physical iPhone, external-game play or speaker-listening claim.",
   budget: { caps: early.caps, levels: early.unitLevels, owned: early.ownedUnitIds, receipts: early.receipts, sha256: createHash("sha256").update(budgetBackup).digest("hex") }, cases: [] };
@@ -109,6 +111,23 @@ async function diagramWithin(locator) {
   assert.equal(diagram.pointerEvents, 'none', 'The mission diagram is static, not a touch control');
   assert.deepEqual(diagram.clippedTexts, []);
   return { ...bounds, ...diagram };
+}
+async function openCurrentQualityBriefing(page) {
+  const open = page.getByRole("button", { name: "作戦と戦い方", exact: true });
+  await within(open, 44); await open.tap();
+  const dialog = page.getByRole("dialog", { name: "作戦と戦い方", exact: true });
+  await dialog.waitFor({ state: "visible" });
+  const plan = dialog.getByRole("button", { name: "作戦", exact: true });
+  await within(plan, 44); await plan.tap();
+  return { dialog, popup: dialog.locator(".v100-briefing-page") };
+}
+async function waitForCurrentQualityBackdrop(page, eventId, nodeIndex) {
+  const node = V100_STORY_EVENTS[eventId].nodes[nodeIndex];
+  const presentation = v100EventPresentationFor({ eventId, phase: eventId.endsWith(":post") ? "post" : "event", node, nodeIndex });
+  assert.ok(presentation.backgroundPath, "The current story scene must have a bound background");
+  await page.waitForFunction(isV100StoryBackdropReady, {
+    selector: `[data-v100-event-id="${eventId}"]`, background: presentation.backgroundPath,
+  });
 }
 async function formationCardsWithin(page, viewport, row) {
   await page.evaluate(() => document.fonts.ready);
@@ -205,17 +224,18 @@ for (const engine of engines) {
         const fixture = normalizeV100Save({ ...early, availableStageIds: V100_STAGE_IDS, formationSlots: [...early.formationSlots.slice(0, 4), "unit-nao", "unit-hachi", "unit-paisen"], flowState: { phase: "formation", eventId: null, stageId, stageNumber: number, destination: "battle", nodeIndex: 0, firstClear: false, finalized: false } });
         await runCase(browser, engine, viewport, "briefing-s" + number, fixture, async (page, row) => {
           await page.locator('.v100-formation-panel').waitFor();
-          const summary = page.locator(".v100-briefing-details > summary");
-          await within(summary, 44); await summary.tap();
-          await page.locator(".v100-mission-diagram").waitFor();
-          row.mission = await page.locator(".v100-mission-diagram").getAttribute("data-v100-mission-mode");
-          row.diagram = await diagramWithin(page.locator(".v100-mission-diagram"));
-          const popup = page.locator(".v100-briefing-details > div");
+          const { dialog, popup } = await openCurrentQualityBriefing(page);
+          const diagram = dialog.locator(".v100-mission-diagram");
+          await diagram.waitFor();
+          row.mission = await diagram.getAttribute("data-v100-mission-mode");
+          row.diagram = await diagramWithin(diagram);
           await within(popup);
           row.briefing = await popup.innerText();
           await popup.evaluate(element => { element.scrollTop = element.scrollHeight; });
           await capture(page, row, "intel");
-          await summary.tap();
+          const close = dialog.getByRole("button", { name: "閉じる", exact: true });
+          await within(close, 44); await close.tap();
+          await dialog.waitFor({ state: "hidden" });
           await within(page.getByRole("button", { name: "戦闘へ", exact: true }), 44);
           await formationCardsWithin(page, viewport, row);
           await capture(page, row, "board");
@@ -243,7 +263,7 @@ for (const engine of engines) {
           if (eventId.includes("s23")) {
             const backdrop = page.locator('.v100-event-backdrop');
             assert.equal(await backdrop.getAttribute('data-v100-cinematic'), 'true');
-            await page.locator('img[src$="chiha-confession.webp"]').waitFor();
+            await waitForCurrentQualityBackdrop(page, eventId, index);
           }
           await within(page.locator(".v100-node-copy p"));
           await within(page.getByRole("button", { name: "次へ", exact: true }), 44);
@@ -410,7 +430,7 @@ for (const engine of engines) {
           const saved = await rawSave(page);
           await reload(); assert.deepEqual(await rawSave(page), saved);
           assert.deepEqual((won ? saved.pendingResult : saved.lastResult).battleReport, battleReport);
-          const next = page.getByRole('button', { name: won ? '次の場面へ' : '編成へ戻る', exact: true });
+          const next = page.getByRole('button', { name: won ? '次の場面へ' : '編成を見直す', exact: true });
           await within(next, 44); await next.tap(); await ready(page);
           if (won) await page.locator('[data-v100-event-id="v100:event:s03:post"]').waitFor();
           else { await page.locator('.v100-formation-panel').waitFor(); assert.equal((await rawSave(page)).caps, early.caps); }
@@ -443,7 +463,7 @@ for (const engine of engines) {
       assert.ok(row.growthBox.width >= Math.min(320, 0.6 * row.growthBox.viewportWidth));
       await page.locator('.v100-unit-growth-notes p').evaluate(element => { element.scrollTop = element.scrollHeight; });
       await capture(page, row, "growth"); await growth.tap();
-      await page.locator(".v100-personnel-focus .v100-primary").tap(); await ready(page);
+      await page.locator(".v100-personnel-focus").getByRole("button", { name: "Lv.2へ強化 / 30 CAPS", exact: true }).tap(); await ready(page);
       row.afterUpgrade = await rawSave(page);
       assert.equal(row.afterUpgrade.unitLevels["unit-hachi"], 2);
       assert.equal(row.afterUpgrade.caps, early.caps - 30);
@@ -484,8 +504,12 @@ for (const engine of engines) {
           row.finalResult = (await rawSave(page)).lastResult;
           assert.ok(row.finalResult.rewardBreakdown);
         } else {
-          await page.getByRole("button", { name: "編成へ戻る", exact: true }).tap();
-          assert.equal(await page.locator(".v100-mission-diagram").getAttribute("data-v100-mission-mode"), "advance");
+          await page.getByRole("button", { name: "編成を見直す", exact: true }).tap();
+          const { dialog } = await openCurrentQualityBriefing(page);
+          assert.equal(await dialog.locator(".v100-mission-diagram").getAttribute("data-v100-mission-mode"), "advance");
+          const close = dialog.getByRole("button", { name: "閉じる", exact: true });
+          await within(close, 44); await close.tap();
+          await dialog.waitFor({ state: "hidden" });
         }
       } else {
         row.nativeResult = false;
