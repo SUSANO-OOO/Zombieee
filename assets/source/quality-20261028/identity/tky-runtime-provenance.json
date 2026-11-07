@@ -47,8 +47,8 @@
     },
     {
       "path": "public/art/v100/portraits/tky-formation-card-quality-r1.webp",
-      "sha256": "1bfc2fe18b61b4a60eada92b9f818f42481a52eb87e88ab10a9fc1321396af83",
-      "bytes": 64546
+      "sha256": "42c7ce681e90d975684696687080c632db240dd41ff834331748d836e538ff61",
+      "bytes": 64952
     },
     {
       "path": "public/art/v100/portraits/tky-determined-quality-r1.webp",
@@ -67,8 +67,8 @@
     }
   ],
   "runtimeAssetCount": 5,
-  "logicalBytes": 438758,
-  "distinctBytes": 438758,
+  "logicalBytes": 439164,
+  "distinctBytes": 439164,
   "scope": "Dialogue expressions and formation/personnel cards. Battle and scene paintings require separate verification.",
   "acceptance": "Canonical identity reference restored; not a numeric likeness score or Producer acceptance."
 }

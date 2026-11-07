@@ -16,7 +16,7 @@ export function qualityCardOverlay(kind) {
     kumaverson: {color: '#efb751', mark: '<circle cx="419" cy="391" r="31"/><path d="m396 414-41 43"/>'},
     babayaga: {color: '#75a8ff', mark: '<path d="M350 368h94v22h-37l-8 53h-26l8-53h-31z"/>'},
     zakimiya: {color: '#e2a64b', mark: '<path d="M392 351h20v34l17 17v44h-54v-44l17-17z"/>'},
-    tky: {color: '#ff42c8', mark: '<path d="m354 449 104-104m-113 80 33 33"/>'},
+    tky: {color: '#ff42c8', mark: '<path d="m354 449 22-22" stroke="#b8c2ce" stroke-width="14"/><path d="m354 449 19-19" stroke="#171d26" stroke-width="7"/><path d="m375 428 78-78" stroke="#ff42c8" stroke-width="23" opacity=".25"/><path d="m375 428 78-78" stroke="#ff42c8" stroke-width="15"/><path d="m375 428 78-78" stroke="#fff0fc" stroke-width="5"/>'},
   };
   const {color, mark} = roles[kind];
   return Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512">

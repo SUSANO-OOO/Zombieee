@@ -1,9 +1,9 @@
 {
   "schema": "zombieee-joint-atlas/1",
   "kind": "tky",
-  "assetPath": "/art/v100/joints/tky-combat-r1.webp",
-  "bytes": 63758,
-  "sha256": "c141bacf2e115d23400051e33990e82a65a8d18b0e03542164ee79939a6ea513",
+  "assetPath": "/art/v100/joints/tky-combat-plasma-r1.webp",
+  "bytes": 67382,
+  "sha256": "a6be72a8e5531ec0d7658dad1a2116ecc5e5cb2f9f12e059ed69d64d2076b1ec",
   "atlasPacking": "height-descending-shelves",
   "generatedPartsStudySha256": "353e5a2d903228d96c2fb2dca9644290a9fe496454e2a23afaca4c3c12fbdda6",
   "identitySourceSha256": "d40b6e21c28bf97e2964ccb5bbea2ed8bb9b99de9ede253914ff9d57f34efb9b",
@@ -121,14 +121,14 @@
     },
     {
       "name": "weapon-and-hands",
-      "file": "weapon-and-hands.png",
-      "sha256": "fa77c92505790f5d9956900d77a771dbf88e31599bd1ce5873a89d2fdb30bac8",
+      "file": "../../../quality-20261107/tky-plasma-r1/weapon-and-hands-plasma-r1.png",
+      "sha256": "7eabdc9fdc1966ae6fcf79de977aad0df90367bc4798562c2a36f4ab6a27e919",
       "original": false
     }
   ],
-  "source": "Complete TKY body from approved artistic89 mask master with hidden-cloth underpainting; both hands share katana transform. Deterministic fixed-length 2D kinematics, not Blender execution. Motion and human acceptance pending.",
+  "source": "Approved artistic89 TKY body with the original pink luminous plasma weapon restored; body paint and fixed-length motion preserved. No steel katana. In-game motion and human acceptance remain separate.",
   "groundY": 438,
-  "decodedBytes": 339968,
+  "decodedBytes": 409600,
   "poses": 151,
   "scope": {
     "totalUnits": 48,

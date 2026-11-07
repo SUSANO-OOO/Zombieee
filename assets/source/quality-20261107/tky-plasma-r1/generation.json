@@ -1,0 +1,69 @@
+{
+  "schema": "project-image-edit-provenance/1",
+  "tool": "OpenAI built-in image_gen",
+  "mode": "edit",
+  "outputId": "exec-e0c68aae-8c09-4640-bb8c-d0ef9ecda6a7",
+  "creator": "OpenAI image generation directed for this project",
+  "license": "Project-generated derivative under applicable OpenAI terms",
+  "producerDirection": "TKY carries a pink lightsaber-like energy blade. Restore that intent and remove visual contradictions. A steel katana was never requested.",
+  "reason": "The 2026-11-02 body repaint commit 24b6f84b used an incorrect Japanese-katana prompt. This weapon-only correction restores the original plasma design.",
+  "baseMain": "e7f2cc958e7d3c3f0701fcec2136a91335121c3d",
+  "references": [
+    {
+      "role": "edit target",
+      "file": "assets/source/quality-20261028/rigs/tky-combat-r1/weapon-and-hands.png",
+      "sha256": "fa77c92505790f5d9956900d77a771dbf88e31599bd1ce5873a89d2fdb30bac8"
+    },
+    {
+      "role": "original weapon authority only",
+      "file": "assets/source/v090/characters/tky-identity-master-r1.png",
+      "sha256": "6897a7406bcb6fc36b3e376f0f6db8c9240c83641e71e013a6252458531917c8"
+    }
+  ],
+  "prompt": "Precise production game-sprite correction. Image 1 is the edit target: a transparent 480 x 448 PNG containing only a pair of black fingerless-gloved hands gripping a weapon pointing diagonally toward the upper right, with most of the canvas empty. Image 2 is the ORIGINAL APPROVED WEAPON design reference ONLY, not a face/body edit target. The intended weapon is a straight PINK luminous energy blade, like a lightsaber, with a cylindrical black/silver science-fiction emitter hilt. The metal Japanese katana in image 1 was a production error.\nEdit ONLY the weapon in image 1. Replace the dark curved steel katana blade and its Japanese tsuba with the original science-fiction energy weapon from image 2: a straight, constant-width luminous beam, rounded energy tip, a slim pale-pink/near-white hot core surrounded by strongly saturated bright PINK light, and a soft transparent pink bloom. The blade must read as PINK LIGHT throughout, not a dark metal sword with a pink outline. No steel blade, bevel, etched metal, pointed katana tip, sword guard, laser gun, extra weapon or blade. The hands continue to grip the same compact black/silver cylindrical hilt together; maintain their current grip axis and hand placement. Replace the guard with a small energy emitter at the same blade root.\nPreserve the SAME target canvas 480x448, camera, scale, diagonal upper-right direction and registration: hands approximately around x240,y210 and blade root around x280,y188, blade tip near x465,y28. Preserve the glove and finger anatomy, sleeve cuffs and all hand pixels as closely as possible. Do not move, scale, turn, add or remove a hand. Keep hands entirely below the emitter; never hold the light blade itself. No face, body, floor, shadow, label, border, backdrop or checkerboard; genuine transparent alpha, including the pink glow. Retain adequate empty transparent margins and the same overall weapon length so this replaces only the existing rigid weapon layer in a 2D skeletal rig. This is one precise corrective asset, not design exploration.",
+  "transparentBackground": true,
+  "files": [
+    {
+      "file": "weapon-plasma-edit-r1.png",
+      "bytes": 342467,
+      "sha256": "c820cc61d1cb0971b63f955fb4fdb47088c36beb45e0e402d7178c8b3be5fc44"
+    },
+    {
+      "file": "weapon-and-hands-plasma-r1.png",
+      "bytes": 53144,
+      "sha256": "7eabdc9fdc1966ae6fcf79de977aad0df90367bc4798562c2a36f4ab6a27e919"
+    }
+  ],
+  "preservedContract": {
+    "bodyParts": {
+      "far-upper-arm": "240dd556c897f2eb8850b3939f157f2ea66b0b1e85a216b8df92a3cc21669c7d",
+      "far-forearm": "a0619a11543792418d197cc12f80db1493231949458b77c485f343032978f747",
+      "coat-far": "f04326f587bbc488c4f1ab18a112a44e0107534f64ef34fe7986f1062bf7219e",
+      "coat-near": "f871726f68f589fac611e03e8bc6811f5e3574783ff7a4d3f7195adea1aa533d",
+      "far-thigh": "6e02aaac6cb415f39285767e4a3a59165756d79f1835426c44a6b91932e01d43",
+      "far-shin": "c217180029405c8374bfdcd6f8113ffa9430269a2b9deff9da980b13caf93901",
+      "far-boot": "5a4fb388ac88fc6a5426f659eefb77d88ef3baed8f5c46101e8fd3c2bfccdb14",
+      "near-thigh": "5d909724cdc3c9e0201a215bb9307f527ad6ca5f0d8ca60ef6a33c233d638ff4",
+      "near-shin": "dfe921798dd68dab0d77b87919956fa816bebfc5cea4b6a19874d34e78bbfdf1",
+      "near-boot": "85ad4eba47742c5f6fa2be2b7ff4a74f0546a6fc02a2330ffc02474e32b72a59",
+      "pelvis": "97f94bb1241bb7cd8fbba8fa9ad51932e9e166ef882d2f105b2a78eb3665c29b",
+      "torso": "d01215ba017e3a8d12d20e43418d912cbf1dc664e2cd035e15cfc66cd354af05",
+      "head": "b976cb2c7a823b7a020a51abc2ad7fe77c1dda64c6a7688669be4ee982073d60",
+      "near-upper-arm": "5c840239715e5be2d12cdc7d24edd9dc53d7cbadc40f862b3522c8a82dfed39d",
+      "near-forearm": "a4dc05e4f95f06958153c79bdd5343716a96e89f990351cf1f6c140217f8ec81"
+    },
+    "atlasFields": {
+      "poses": "5e43394cfbfa5dcefc36b8ace177d7385c6f03b1452b5cd0ecabb476861aad8f",
+      "pelvisOffsets": "d5aebe7064b4778864e9cc962d6d0b86c883aa262a2f83632abafdaec1379d09",
+      "frameCount": "624b60c58c9d8bfb6ff1886c2fd605d2adeb6ea4da576068201b6c6958ce93f4",
+      "cycleDistance": "1074d5e2f22d5d7dff8708d59136f1d31f2142bd29cd50171e8378a1cfc19832",
+      "armConstraints": "5aba4ff94005ab9e9235266772cdd78f54c2f52d6c15f39d8e705c0c560a05ff",
+      "legConstraints": "e328cabe96e1ae8f56efdc4169b001310412d206a9898f12a0814eba9aee39b2",
+      "referenceFrame": "e95ac44eafdbefc03244a482dedb0988693634b1380a5000dfc8041f86adb907",
+      "muzzle": "53f2fe81faa9e378ccab74cf7d644c4fc00bd4d3b15bfd95306f361b523c0af3",
+      "parentAttachments": "47ffcc35025a1d97495d3a6066850ed90ac09e45236e14a2c60711425076f42e",
+      "interpolationPivots": "64fdbb5a4ff0a4020c21512a718b25af473ce3062f919a3ddd5f3488b57a7e4c"
+    }
+  },
+  "scope": "Weapon layer replacement; body and approved 89 identity, limb motion, gameplay values and saves remain outside this edit. In-game verification and producer acceptance are separate."
+}

@@ -13,6 +13,12 @@ const model=await readFile(modelPath),under=await readFile(underPath);
 const {width:mw,height:mh}=await sharp(model).metadata();
 const underRegistered=await sharp(under).resize(mw,mh,{fit:'fill'}).png().toBuffer();
 const width=480,height=448,p=([x,y])=>[x*width/mw,y*height/mh];
+// The body study mistakenly specified steel. The approved weapon is pink light.
+// Keep every body/hand transform and use only the corrected weapon paint.
+const plasmaDir='assets/source/quality-20261107/tky-plasma-r1';
+const plasmaSource=await readFile(`${plasmaDir}/weapon-plasma-edit-r1.png`);
+const plasmaPaint=await sharp(plasmaSource).resize(width,height,{fit:'fill'}).png().toBuffer();
+const plasmaFile='../../../quality-20261107/tky-plasma-r1/weapon-and-hands-plasma-r1.png';
 const hash=b=>createHash('sha256').update(b).digest('hex');
 const emit=async(f,b)=>{b=Buffer.from(b);if(check)assert.deepEqual(await readFile(f),b,f);else await writeFile(f,b);};
 const mask=points=>Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${mw}" height="${mh}"><polygon fill="white" points="${points.map(p=>p.join(',')).join(' ')}"/></svg>`);
@@ -47,9 +53,11 @@ const parts=[],layers=[];
 for(const[name,bone,lower,source,polygon]of definitions){
  const registered=source==='registeredBoot'?{paint:registeredBoot,matrix:[1,0,0,1,-642,26]}:null;
  const bytes=registered?.paint??await clip(source==='under'?underRegistered:model,polygon);
- const clipped=await sharp(bytes).resize(width,height,{fit:'fill'}).png().toBuffer();
- await emit(`${dir}/${name}.png`,clipped);layers.push({input:clipped});
- parts.push({name,bone,file:`${name}.png`,sha256:hash(clipped),source,masterPolygon:polygon,lower,...(registered?{sourceTransform:registered.matrix}:{})});
+ const corrected=name==='weapon-and-hands';
+ const clipped=corrected?plasmaPaint:await sharp(bytes).resize(width,height,{fit:'fill'}).png().toBuffer();
+ const file=corrected?plasmaFile:`${name}.png`;
+ await emit(`${dir}/${file}`,clipped);layers.push({input:clipped});
+ parts.push({name,bone,file,sha256:hash(clipped),source:corrected?'plasma-correction':source,masterPolygon:corrected?null:polygon,lower,...(registered?{sourceTransform:registered.matrix}:{})});
 }
 await emit(`${dir}/identity-reference.png`,model);
 await emit(`${dir}/combat-ready-reconstruction.png`,await sharp({create:{width,height,channels:4,background:'#00000000'}}).composite(layers).png().toBuffer());
@@ -126,13 +134,13 @@ const descriptor={schema:'zombieee-authored-combat-parts/1',kind:'tky',status:'c
  rig:{root:[240,432],pelvis:[waist,[235,183]],spine:[waist,p([660,300])],head:[headRoot,p([699,125])],legs,arms,firearm:false,weapons:[{name:'weapon-0',a:arms[0].grip,b:[462.5,31.5],armIndex:0,supportArm:1}],attack},
  armConstraints:arms.map((a,i)=>({parentBone:'spine',upperBone:`arm-${i}-upper`,lowerBone:`arm-${i}-lower`,effectorBone:'weapon-0',...a})),
  legConstraints:legs.map((l,i)=>({parentBone:'pelvis',parentUpper:false,upperBone:`leg-${i}-upper`,lowerBone:`leg-${i}-lower`,effectorBone:`leg-${i}-foot`,hip:l.hip,knee:l.knee,ankle:l.ankle})),
- sourceOperation:{body:'Complete adopted-model repaint, not a head-only replacement',underpainting:underPath,underpaintingSha256:hash(under),hiddenBody:'Source-bound chest, belt and coat underpainting beneath moving arms and blade',weapon:'Both hands and complete katana share one transform',sourceToLogical:{source:[mw,mh],resized:[width,height]},acceptance:false},
+ sourceOperation:{body:'Complete adopted-model repaint, not a head-only replacement',underpainting:underPath,underpaintingSha256:hash(under),hiddenBody:'Source-bound chest, belt and coat underpainting beneath moving arms and blade',weapon:'Pink luminous plasma blade and both hands share the original weapon transform',weaponCorrection:{source:`${plasmaDir}/weapon-plasma-edit-r1.png`,sha256:hash(plasmaSource),producerDirection:'Restore the original pink lightsaber-like energy blade; no steel katana'},sourceToLogical:{source:[mw,mh],resized:[width,height]},acceptance:false},
 };
 const actions=['walk','settle-1','settle-2','settle-3'].map((name,i)=>({name,frames:Array.from({length:60},(_,n)=>evaluate(n/60,i/3))}));
 actions.push({name:'attack',frames:Array.from({length:61},(_,n)=>evaluate(n/60,1,true))});
 await emit(`${dir}/parts.json`,JSON.stringify(descriptor,null,2)+'\n');
 await emit(`${dir}/motion.json.gz`,gzipSync(JSON.stringify({kind:'tky',motion:descriptor.motion,rig:descriptor.rig,actions})));
 let atlas;
-const result=await buildRigidJointAtlas({sourceDirectory:dir,assetPath:'/art/v100/joints/tky-combat-r1.webp',captureAtlas:a=>atlas=a,generator:'scripts/build-quality-tky-combat-r1.mjs',description:'Complete TKY body from approved artistic89 mask master with hidden-cloth underpainting; both hands share katana transform. Deterministic fixed-length 2D kinematics, not Blender execution. Motion and human acceptance pending.',check});
+const result=await buildRigidJointAtlas({sourceDirectory:dir,assetPath:'/art/v100/joints/tky-combat-plasma-r1.webp',captureAtlas:a=>atlas=a,generator:'scripts/build-quality-tky-combat-r1.mjs',description:'Approved artistic89 TKY body with the original pink luminous plasma weapon restored; body paint and fixed-length motion preserved. No steel katana. In-game motion and human acceptance remain separate.',check});
 await emit('app/qualityTkyCombatJointData.js','// Generated complete TKY combat paint and deterministic 2D kinematics.\nexport const QUALITY_TKY_COMBAT_ATLAS = '+JSON.stringify(atlas)+';\n');
 console.log(JSON.stringify({check,...result}));

@@ -345,7 +345,7 @@ export const V177_AUTHORED_GAITS = {
     "sources": [
       {
         "file": "assets/source/quality-20261028/rigs/tky-combat-r1/parts.json",
-        "sha256": "1920d5b8def2d31ce3db9ded70aa6e42b320790e30441564dbf029014f847fa2",
+        "sha256": "03b4febe4abbe25a880672107f232741266949eb6b689803fca6691198bf0f88",
         "hashEncoding": "utf8-lf"
       }
     ]
