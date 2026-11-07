@@ -1,28 +1,31 @@
 # 西新世紀末物語 — 現在状態
 
-確認日：2026-11-07。これは確認時点の索引です。操作前にはGitHubと正式URLを再取得してください。
+確認日：2026-11-08。これは確認時点の索引です。操作前にはGitHubと正式URLを再取得してください。
 
 ## 配信とソース
 
 | 対象 | 確認結果 |
 |---|---|
 | 正式URL | https://susano-ooo.github.io/Zombieee/ |
-| 配信HTML | Version **1.0.6**、匿名HTTP 200、release SHA `4be9adea5d49111ab9396fa85755062dc97f1ad9` |
-| tag／Release | [v1.0.6](https://github.com/SUSANO-OOO/Zombieee/releases/tag/v1.0.6)、上記merge結果SHAへ固定 |
-| 配信 | [Pages 42350633706](https://github.com/SUSANO-OOO/Zombieee/actions/runs/42350633706) 成功。request `pwa-mobile-20261107-v106-4be9adea` |
-| 公開後技術確認 | [42355792546](https://github.com/SUSANO-OOO/Zombieee/actions/runs/42355792546) は配信アプリ4be9adea／検査tool b616f961で9条件成功。元の失敗run42351090478は保持 |
+| 配信HTML | Version **1.0.7**、匿名HTTP 200、release SHA `fa07601047b514163388e4ca478b470d973796d6` |
+| tag／Release | [v1.0.7 試遊版](https://github.com/SUSANO-OOO/Zombieee/releases/tag/v1.0.7)、PR #193の通常merge結果SHAへ固定 |
+| 配信 | [Pages 42390788705](https://github.com/SUSANO-OOO/Zombieee/actions/runs/42390788705) 成功。request `tky-plasma-v107-20261108-fa076010` |
+| 公開後技術確認 | 正式URLのWindows Chromium・スマホ相当幅で4ケース成功。825件198,908,308bytesを保存し、ブラウザー終了後の通信断起動・保存読込完了・タイトルから名前入力への通常操作を確認。[公開後点検42391296042](https://github.com/SUSANO-OOO/Zombieee/actions/runs/42391296042)も配信アプリ/検査tool fa076010で9 fixture成功。後者はSWを意図的に遮断したnetwork-origin検査で、前者の実cache/worker確認と分ける |
+| v1.0.6 | [Release](https://github.com/SUSANO-OOO/Zombieee/releases/tag/v1.0.6)／tag／元SHA4be9adeaを保持。[旧配信42350633706](https://github.com/SUSANO-OOO/Zombieee/actions/runs/42350633706)、[旧公開点検42355792546](https://github.com/SUSANO-OOO/Zombieee/actions/runs/42355792546)の9条件成功、元の失敗42351090478は当時の履歴 |
 | v1.0.5 | [Release](https://github.com/SUSANO-OOO/Zombieee/releases/tag/v1.0.5)／tag／元SHA ff5dba24を保持。旧[配信40222966999](https://github.com/SUSANO-OOO/Zombieee/actions/runs/40222966999)・[公開後点検40223310211](https://github.com/SUSANO-OOO/Zombieee/actions/runs/40223310211)・[旧profile更新40224749512](https://github.com/SUSANO-OOO/Zombieee/actions/runs/40224749512)の成功は当時の履歴 |
 | v1.0.4 | tag／Releaseは保持。[Pages 40064619979](https://github.com/SUSANO-OOO/Zombieee/actions/runs/40064619979) はsmoke中にcancel、deploy未開始。内容はPR #181の1.0.5へ引継ぎ |
-| main | 配信後の検査tool改修PR #190を通常統合済み。main HEAD自体を配信アプリSHAと混同しない |
+| main | TKY武器修正PR #193のmerge結果fa076010を配信。後続の文書・検査改修でmainが先行しても、HEAD自体を配信アプリSHAと混同しない |
 
-1.0.6はメール認証のないGitHub版です。URLを開き、ホーム画面へ追加したアイコンからゲームデータをダウンロードして遊びます。Producerは正式Mac速度6条件中2未達を明記した、この版だけの試遊公開を承認しました。基準や失敗記録は維持し、次版の公開許可には転用しません。変更と未確認は[Release notes](https://github.com/SUSANO-OOO/Zombieee/releases/tag/v1.0.6)に記載しています。
+1.0.7はメール認証のないGitHub版です。URLを開き、ホーム画面へ追加したアイコンからゲームデータをダウンロードして遊びます。TKYの武器とカードを元のピンクの光刃へ戻し、予備セーブの失敗警告が戦闘後に消える問題も修正しました。1.0.6のsave形式と進行は維持します。
 
-実iPhoneの1.0.6での全量保存・通信断後の起動・タッチ・音・発熱、動きと遊びの最終受入は未確認です。公開実URLでの自動保存・オフライン起動や9条件の成功を、実機やP01〜P07／全51観点の総合完了にはしません。
+Producerは、速度の別測定で6条件中2未達、実iPhone・動き・音の最終確認を残す1.0.7試遊版の反映を直接承認しました。正式Mac測定は同じ製品treeで6/6成功と別組4/6成功が混在し、速度問題は未解決です。基準と全失敗原本を維持し、次版の公開許可へ転用しません。変更と未確認は[Release notes](https://github.com/SUSANO-OOO/Zombieee/releases/tag/v1.0.7)に記載しています。
+
+実iPhoneの1.0.7での全量保存・通信断後の起動・タッチ・音・発熱、動きと遊びの最終受入は未確認です。上記Chromium 4ケースと公開点検9 fixtureの成功を、実機やP01〜P07／全51観点の総合完了にはしません。
 
 ## 作業と残件の入口
 
 - **製品の継続課題・証拠・未確認： [Issue #177](https://github.com/SUSANO-OOO/Zombieee/issues/177)**。公開済みの[PR #181](https://github.com/SUSANO-OOO/Zombieee/pull/181)と[PR #180](https://github.com/SUSANO-OOO/Zombieee/pull/180)の履歴を保持します。
-- **今回のゲーム本体の総合更新： [PR #188](https://github.com/SUSANO-OOO/Zombieee/pull/188)**をmain8a28c712へ通常統合し、追加のスマホ保存修正[PR #189](https://github.com/SUSANO-OOO/Zombieee/pull/189)のmerge結果4be9adeaを1.0.6として配信しました。[PR #190](https://github.com/SUSANO-OOO/Zombieee/pull/190)は検査だけの修正です。P01〜P07と全51監査の変更・根拠・残件は[今回の対応表](qa/quality-20261028.md)、[指定の実行コメント](https://github.com/SUSANO-OOO/Zombieee/issues/177#issuecomment-6537892594)、Issue #177本文へ集約します。運用整理のIssue #182とは区別します。
+- **今回のゲーム本体の総合更新： [PR #188](https://github.com/SUSANO-OOO/Zombieee/pull/188)**を8a28c712へ統合し、[PR #189](https://github.com/SUSANO-OOO/Zombieee/pull/189)のスマホ保存修正を1.0.6として配信した後、[PR #192](https://github.com/SUSANO-OOO/Zombieee/pull/192)の予備セーブ警告と[PR #193](https://github.com/SUSANO-OOO/Zombieee/pull/193)のTKY光刃修正を含むfa076010を1.0.7として配信しました。PR193の必須PR Verifyは全3,780検査/Lint/content/build/保存復旧・画面操作が成功し、合成mergeと実mergeのtreeも一致。独立reviewのHigh/Medium未解消0です。[PR #190](https://github.com/SUSANO-OOO/Zombieee/pull/190)は検査だけの修正です。P01〜P07と全51監査の変更・根拠・残件は[今回の対応表](qa/quality-20261028.md)、[指定の実行コメント](https://github.com/SUSANO-OOO/Zombieee/issues/177#issuecomment-6537892594)、Issue #177本文へ集約します。運用整理のIssue #182とは区別します。
 - **開発運用の整理： [Issue #182](https://github.com/SUSANO-OOO/Zombieee/issues/182)**。ゲーム仕様・人物・素材・saveの意味を変えず、公開版を維持する作業です。この作業のための新release／Pages配信はしません。
 - 依存更新PRは製品・build・検証runtimeの影響を分けて判断します。Playwright／WebKit固定とvinext補修を、一括更新で無条件に置き換えません。
 
