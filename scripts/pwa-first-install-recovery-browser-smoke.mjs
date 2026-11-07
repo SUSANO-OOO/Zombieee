@@ -46,6 +46,7 @@ try {
       await retry.waitFor({ state: "visible", timeout: remaining() });
       assert.equal(await page.locator(".v100-shell").count(), 0, "first install must not silently enter browser play");
       assert.equal(await page.getByText("ダウンロードする容量を確認しています…", { exact: true }).count(), 0);
+      await page.locator(".pwa-gate details summary").click();
       const detail = await page.locator(".pwa-gate details").innerText();
       assert.match(detail, mode === "html" ? /Webページ/ : mode === "pending" ? /10秒/ : /simulated metadata network failure/);
       if (!standalone) {
