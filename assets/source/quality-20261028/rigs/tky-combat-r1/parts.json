@@ -894,135 +894,10 @@
     {
       "name": "weapon-and-hands",
       "bone": "weapon-0",
-      "file": "weapon-and-hands.png",
-      "sha256": "fa77c92505790f5d9956900d77a771dbf88e31599bd1ce5873a89d2fdb30bac8",
-      "source": "model",
-      "masterPolygon": [
-        [
-          596,
-          493
-        ],
-        [
-          636,
-          495
-        ],
-        [
-          670,
-          513
-        ],
-        [
-          704,
-          535
-        ],
-        [
-          725,
-          517
-        ],
-        [
-          752,
-          521
-        ],
-        [
-          793,
-          503
-        ],
-        [
-          878,
-          444
-        ],
-        [
-          979,
-          363
-        ],
-        [
-          1075,
-          271
-        ],
-        [
-          1175,
-          164
-        ],
-        [
-          1255,
-          61
-        ],
-        [
-          1283,
-          82
-        ],
-        [
-          1271,
-          124
-        ],
-        [
-          1197,
-          219
-        ],
-        [
-          1101,
-          321
-        ],
-        [
-          1002,
-          409
-        ],
-        [
-          912,
-          480
-        ],
-        [
-          811,
-          549
-        ],
-        [
-          782,
-          570
-        ],
-        [
-          759,
-          590
-        ],
-        [
-          743,
-          619
-        ],
-        [
-          707,
-          629
-        ],
-        [
-          673,
-          613
-        ],
-        [
-          624,
-          614
-        ],
-        [
-          580,
-          627
-        ],
-        [
-          564,
-          609
-        ],
-        [
-          573,
-          586
-        ],
-        [
-          612,
-          572
-        ],
-        [
-          614,
-          549
-        ],
-        [
-          590,
-          527
-        ]
-      ]
+      "file": "../../../quality-20261107/tky-plasma-r1/weapon-and-hands-plasma-r1.png",
+      "sha256": "7eabdc9fdc1966ae6fcf79de977aad0df90367bc4798562c2a36f4ab6a27e919",
+      "source": "plasma-correction",
+      "masterPolygon": null
     }
   ],
   "order": [
@@ -1378,7 +1253,12 @@
     "underpainting": "assets/source/quality-20261028/rigs/tky-combat-r1/body-underpainting-r1.png",
     "underpaintingSha256": "353e5a2d903228d96c2fb2dca9644290a9fe496454e2a23afaca4c3c12fbdda6",
     "hiddenBody": "Source-bound chest, belt and coat underpainting beneath moving arms and blade",
-    "weapon": "Both hands and complete katana share one transform",
+    "weapon": "Pink luminous plasma blade and both hands share the original weapon transform",
+    "weaponCorrection": {
+      "source": "assets/source/quality-20261107/tky-plasma-r1/weapon-plasma-edit-r1.png",
+      "sha256": "c820cc61d1cb0971b63f955fb4fdb47088c36beb45e0e402d7178c8b3be5fc44",
+      "producerDirection": "Restore the original pink lightsaber-like energy blade; no steel katana"
+    },
     "sourceToLogical": {
       "source": [
         1298,

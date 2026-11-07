@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import {readFile,readdir} from 'node:fs/promises';
 import {gunzipSync} from 'node:zlib';
 import {V177_JOINT_ATLASES,v177JointPose,drawV177JointPose} from '../app/v177JointPresentation.js';
+import {QUALITY_TKY_COMBAT_ATLAS} from '../app/qualityTkyCombatJointData.js';
 
 const definitions=new Map();
 for(const dir of await readdir(new URL('../assets/source/v100/joints/',import.meta.url))){
@@ -25,7 +26,7 @@ if(V177_JOINT_ATLASES.brute.path==='/art/v100/joints/brute-combat-r1.webp')defin
 if(V177_JOINT_ATLASES.gunner.path==='/art/v100/joints/gunner-combat-r1.webp')definitions.set('gunner',JSON.parse(await readFile('assets/source/quality-20261028/rigs/gunner-combat-r1/parts.json')));
 if(V177_JOINT_ATLASES.guardian.path==='/art/v100/joints/guardian-combat-r1.webp')definitions.set('guardian',JSON.parse(await readFile('assets/source/quality-20261028/rigs/guardian-combat-r1/parts.json')));
 if(V177_JOINT_ATLASES.brawler.path==='/art/v100/joints/brawler-combat-r1.webp')definitions.set('brawler',JSON.parse(await readFile('assets/source/quality-20261028/rigs/brawler-combat-r1/parts.json')));
-if(V177_JOINT_ATLASES.tky.path==='/art/v100/joints/tky-combat-r1.webp')definitions.set('tky',JSON.parse(await readFile('assets/source/quality-20261028/rigs/tky-combat-r1/parts.json')));
+if(V177_JOINT_ATLASES.tky===QUALITY_TKY_COMBAT_ATLAS)definitions.set('tky',JSON.parse(await readFile('assets/source/quality-20261028/rigs/tky-combat-r1/parts.json')));
 const transform=(m,[x,y])=>[m[0]*x+m[2]*y+m[4],m[1]*x+m[3]*y+m[5]];
 definitions.set('crazy-king',JSON.parse(await readFile('assets/source/quality-20261028/rigs/crazy-king-combat-r1/parts.json')));
 const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);

@@ -1,6 +1,6 @@
 {
   "schema": "zombieee-asset-manifest/1",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "releaseSha": "__ZOMBIEEE_RELEASE_SHA__",
   "assets": [
     {
@@ -1807,9 +1807,9 @@
       "criticality": "critical"
     },
     {
-      "path": "/art/v100/joints/tky-combat-r1.webp",
-      "bytes": 63758,
-      "hash": "sha256-c141bacf2e115d23400051e33990e82a65a8d18b0e03542164ee79939a6ea513",
+      "path": "/art/v100/joints/tky-combat-plasma-r1.webp",
+      "bytes": 67382,
+      "hash": "sha256-a6be72a8e5531ec0d7658dad1a2116ecc5e5cb2f9f12e059ed69d64d2076b1ec",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"
@@ -2780,8 +2780,8 @@
     },
     {
       "path": "/art/v100/portraits/tky-formation-card-quality-r1.webp",
-      "bytes": 64546,
-      "hash": "sha256-1bfc2fe18b61b4a60eada92b9f818f42481a52eb87e88ab10a9fc1321396af83",
+      "bytes": 64952,
+      "hash": "sha256-42c7ce681e90d975684696687080c632db240dd41ff834331748d836e538ff61",
       "pack": "units",
       "category": "portrait",
       "criticality": "optional"
