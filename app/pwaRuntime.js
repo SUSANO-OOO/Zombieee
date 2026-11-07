@@ -309,12 +309,12 @@ export function describeInstallGuidance({ standalone = false, promptAvailable = 
     : [
       {
         icon: "share",
-        arrow: iPhone ? "down" : "up",
-        text: `${iPhone ? "画面下" : "画面上"}の「共有」ボタンを押す`,
+        arrow: null,
+        text: "「共有」ボタン（四角から上向き矢印）を押す",
         label: "共有",
       },
       { icon: "add", arrow: null, text: "「ホーム画面に追加」を押す", label: "ホーム画面に追加" },
-      { icon: "confirm", arrow: null, text: "右上の「追加」を押す", label: "追加" },
+      { icon: "confirm", arrow: null, text: "「ウェブアプリとして開く」があればオンにして「追加」を押す", label: "追加" },
     ];
 
   return {
@@ -393,6 +393,9 @@ export async function fetchPublishedManifest({ baseUrl, fetchImpl = fetch, signa
   const url = new URL("asset-manifest.json", baseUrl).toString();
   const response = await fetchImpl(url, { cache: "no-store", signal });
   if (!response.ok) throw new Error(`asset-manifest.json responded ${response.status}`);
+  if (/text\/html/i.test(response.headers?.get?.("content-type") ?? "")) {
+    throw new Error("ゲームデータの一覧ではなくWebページが返されました。共有リンクの認証が切れている場合は、URLを開き直して再度認証してください。");
+  }
   const manifest = await response.json();
   const { valid, errors } = validateAssetManifest(manifest);
   if (!valid) throw new Error(`Invalid published manifest: ${errors.join("; ")}`);

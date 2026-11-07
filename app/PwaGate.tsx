@@ -176,6 +176,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   const [saveEnvironment, setSaveEnvironment] = useState<Record<string, string> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [manifestUnreachable, setManifestUnreachable] = useState(false);
+  const [manifestError, setManifestError] = useState<string | null>(null);
   const [deferredPublishedManifest, setDeferredPublishedManifest] = useState<Manifest | null>(null);
   // The last failure, kept until the next success or an explicit dismissal, so
   // a player can still read it after they have looked away from the screen.
@@ -245,6 +246,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     const lookup = ++manifestLookupRef.current;
     setError(null);
     setManifestUnreachable(false);
+    setManifestError(null);
     setPublishedManifestState("loading");
     const watchdog = window.setTimeout(() => {
       if (manifestLookupRef.current !== lookup) return;
@@ -254,6 +256,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       // released active generation: a complete candidate could unmount battle.
       if (installedManifestRef.current) deferredManifestLookupRef.current = lookup;
       setManifestUnreachable(true);
+      setManifestError("配信データの応答を10秒待ちましたが、確認できませんでした。");
       setPublishedManifestState("unreachable");
       setPublishedChecked(true);
     }, PUBLISHED_MANIFEST_GATE_MS);
@@ -269,11 +272,13 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       }
       setPublishedManifest(published as Manifest);
       setManifestUnreachable(false);
+      setManifestError(null);
       setPublishedManifestState("ready");
       return true;
-    } catch {
+    } catch (cause) {
       if (manifestLookupRef.current !== lookup) return false;
       setManifestUnreachable(true);
+      setManifestError(String((cause as Error)?.message ?? cause));
       setPublishedManifestState("unreachable");
       return false;
     } finally {
@@ -894,6 +899,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
                     ? "配信データに接続できませんでした。通信環境を確認してください。"
                     : "配信データを確認しています。"}
                 </p>
+                {manifestUnreachable && manifestError && <details><summary>エラーの詳細</summary><p style={{ overflowWrap: "anywhere" }}>{manifestError}</p></details>}
                 <button type="button" className="pwa-primary" onClick={() => {
                   // Retries in place: no navigation, no reload.
                   void (async () => {
@@ -928,10 +934,15 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
               <>
                 <h2>{offerCopy?.headline ?? "西新世紀末物語をインストール"}</h2>
                 <p>{offerCopy?.body ?? "ホーム画面に追加すると、全画面で遊べます。"}</p>
-                <p className="pwa-hint">{offerCopy?.sizeLine ?? "ダウンロードする容量を確認しています…"}</p>
+                {offerCopy ? <p className="pwa-hint">{offerCopy.sizeLine}</p> : manifestUnreachable ? <>
+                  <p className="pwa-warning" role="alert">ダウンロードする容量を取得できませんでした。通信環境を確認して、もう一度お試しください。</p>
+                  {manifestError && <details><summary>エラーの詳細</summary><p style={{ overflowWrap: "anywhere" }}>{manifestError}</p></details>}
+                  <div className="pwa-actions"><button type="button" onClick={() => { void loadPublishedManifest(); }}>容量を再確認</button></div>
+                </> : <p className="pwa-hint" role="status">ダウンロードする容量を確認しています…</p>}
                 <p className="pwa-hint">データのダウンロードは、ホーム画面に追加したアイコンから最初に起動したときに行います。</p>
                 {guidance?.mode === "prompt" && !installPromptUsed && <button type="button" className="pwa-primary" onClick={acceptInstallPrompt}>ホーム画面に追加する</button>}
                 {guidance && <div className="pwa-install-guidance" data-install-platform={guidance.platform}><h3>ホーム画面に追加する手順</h3><InstallSteps steps={guidance.steps as Array<Record<string, unknown>>} /></div>}
+                {guidance?.platform === "iphone" && <p className="pwa-hint">アプリ内で開いていて「ホーム画面に追加」が見つからない場合は、SafariでこのURLを開いてください。</p>}
                 <div className="pwa-actions pwa-secondary-actions"><button type="button" onClick={beginBrowserPlay} disabled={browserPlayPending} aria-busy={browserPlayPending || undefined}>{browserPlayPending ? "起動しています…" : "ブラウザで遊ぶ"}</button></div>
                 <p className="pwa-hint">{offerCopy?.skipHint ?? "保存せずに試す場合は、通信が必要です。"}</p>
               </>

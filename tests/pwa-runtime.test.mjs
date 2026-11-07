@@ -142,20 +142,22 @@ test("install guidance adapts to the browser instead of requiring one", () => {
   assert.equal(iphone.steps.length, 3);
   assert.ok(iphone.steps.every((step) => /「.+」/.test(step.text)));
   assert.equal(iphone.steps[0].icon, "share");
-  // The share control is at the bottom on iPhone, so the arrow points down.
-  assert.equal(iphone.steps[0].arrow, "down");
-  assert.match(iphone.steps[0].text, /画面下/);
+  // Landscape and embedded Safari can put Share at the top instead of below.
+  assert.equal(iphone.steps[0].arrow, null);
+  assert.match(iphone.steps[0].text, /四角から上向き矢印/);
+  assert.doesNotMatch(iphone.steps[0].text, /画面下|画面上/);
   assert.match(iphone.steps[1].text, /ホーム画面に追加/);
   assert.match(iphone.steps[2].text, /追加/);
+  assert.match(iphone.steps[2].text, /ウェブアプリとして開く/);
 
-  // iPad puts the same control at the top, and says so.
+  // The same recognizable control is used on iPad without assuming its position.
   const ipad = describeInstallGuidance({
     promptAvailable: false,
     userAgent: "Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Safari/604.1",
   });
   assert.equal(ipad.platform, "ipad");
-  assert.equal(ipad.steps[0].arrow, "up");
-  assert.match(ipad.steps[0].text, /画面上/);
+  assert.equal(ipad.steps[0].arrow, null);
+  assert.equal(ipad.steps[0].text, iphone.steps[0].text);
 
   // Anything else still gets usable, browser-neutral wording.
   const other = describeInstallGuidance({ promptAvailable: false, userAgent: "Firefox" });
@@ -502,6 +504,19 @@ test("a published manifest is validated before it is trusted", async () => {
     }),
     /responded 503/,
   );
+});
+
+test("a successful HTML authentication response is not accepted as release metadata", async () => {
+  let parsed = false;
+  await assert.rejects(fetchPublishedManifest({
+    baseUrl: "https://example.test/Zombieee/",
+    fetchImpl: async () => ({
+      ok: true,
+      headers: new Headers({ "content-type": "text/html; charset=utf-8" }),
+      json: async () => { parsed = true; throw new SyntaxError("unexpected HTML"); },
+    }),
+  }), /ゲームデータの一覧ではなくWebページ/);
+  assert.equal(parsed, false);
 });
 
 test("the asset fetcher refuses an HTML soft 404 instead of storing a web page", async () => {
