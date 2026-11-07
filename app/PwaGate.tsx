@@ -18,6 +18,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { readPwaBootState } from "./pwaBoot.js";
+import { createPaintedBrowserEntry } from "./pwaBrowserEntry.js";
+import { readBrowserPlayChoice, rememberBrowserPlayChoice } from "./pwaBrowserChoice.js";
 import { useGameModalScope } from "./useGameModalScope";
 
 import {
@@ -37,6 +39,7 @@ import {
   describeFailureDiagnostics,
   describeInstall,
   describeInstallGuidance,
+  describeInstallOffer,
   describeProgress,
   formatFailureDiagnostics,
   fetchPublishedManifest,
@@ -150,6 +153,10 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   useGameModalScope();
   const [supported, setSupported] = useState(false);
   const [registrationFailed, setRegistrationFailed] = useState(false);
+  const [registrationError, setRegistrationError] = useState<string | null>(null);
+  const [registrationFailureAcknowledged, setRegistrationFailureAcknowledged] = useState(false);
+  const [offerDismissed, setOfferDismissed] = useState(() => readBrowserPlayChoice());
+  const [browserPlayPending, setBrowserPlayPending] = useState(false);
   const [standalone, setStandalone] = useState(false);
   const [installedManifest, setInstalledManifest] = useState<Manifest | null>(null);
   const [publishedManifest, setPublishedManifest] = useState<Manifest | null>(null);
@@ -169,6 +176,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   const [saveEnvironment, setSaveEnvironment] = useState<Record<string, string> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [manifestUnreachable, setManifestUnreachable] = useState(false);
+  const [manifestError, setManifestError] = useState<string | null>(null);
   const [deferredPublishedManifest, setDeferredPublishedManifest] = useState<Manifest | null>(null);
   // The last failure, kept until the next success or an explicit dismissal, so
   // a player can still read it after they have looked away from the screen.
@@ -206,6 +214,20 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   const installPlanRef = useRef<{ pendingCount: number; pendingBytes: number; satisfiedBytes?: number } | null>(null);
   const installedManifestRef = useRef<Manifest | null>(null);
   const storedHashesRef = useRef<Set<string>>(new Set());
+  const browserPlayTransitionRef = useRef<ReturnType<typeof createPaintedBrowserEntry> | null>(null);
+  useEffect(() => () => {
+    browserPlayTransitionRef.current?.dispose();
+    browserPlayTransitionRef.current = null;
+  }, []);
+  const beginBrowserPlay = useCallback(() => {
+    browserPlayTransitionRef.current ??= createPaintedBrowserEntry({
+      requestFrame: (callback: FrameRequestCallback) => window.requestAnimationFrame(callback),
+      cancelFrame: (frame: number) => window.cancelAnimationFrame(frame),
+      onPending: setBrowserPlayPending,
+      onEnter: () => { rememberBrowserPlayChoice(); setOfferDismissed(true); setRegistrationFailureAcknowledged(true); },
+    });
+    browserPlayTransitionRef.current.request();
+  }, []);
   const refreshStored = useCallback(async () => {
     const store = storeRef.current;
     if (!store) return new Set<string>();
@@ -224,6 +246,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     const lookup = ++manifestLookupRef.current;
     setError(null);
     setManifestUnreachable(false);
+    setManifestError(null);
     setPublishedManifestState("loading");
     const watchdog = window.setTimeout(() => {
       if (manifestLookupRef.current !== lookup) return;
@@ -233,6 +256,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       // released active generation: a complete candidate could unmount battle.
       if (installedManifestRef.current) deferredManifestLookupRef.current = lookup;
       setManifestUnreachable(true);
+      setManifestError("配信データの応答を10秒待ちましたが、確認できませんでした。");
       setPublishedManifestState("unreachable");
       setPublishedChecked(true);
     }, PUBLISHED_MANIFEST_GATE_MS);
@@ -248,11 +272,13 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       }
       setPublishedManifest(published as Manifest);
       setManifestUnreachable(false);
+      setManifestError(null);
       setPublishedManifestState("ready");
       return true;
-    } catch {
+    } catch (cause) {
       if (manifestLookupRef.current !== lookup) return false;
       setManifestUnreachable(true);
+      setManifestError(String((cause as Error)?.message ?? cause));
       setPublishedManifestState("unreachable");
       return false;
     } finally {
@@ -265,8 +291,11 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      setStandalone(isStandaloneDisplay(window));
       if (!isPwaSupported(window)) {
         setSupported(false);
+        setRegistrationFailed(true);
+        setRegistrationError("このブラウザーではゲームの保存機能を利用できません。");
         setPublishedManifestState("unsupported");
         return;
       }
@@ -277,7 +306,12 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       storeRef.current = store;
 
       const local = await readPwaBootState({
-        register: () => registerServiceWorker(window, { baseUrl }),
+        register: () => registerServiceWorker(window, {
+          baseUrl,
+          onError: (cause: Error) => {
+            if (!cancelled) setRegistrationError(`${cause?.name ?? "Error"}: ${cause?.message ?? cause}`);
+          },
+        }),
         readState: (registration: ServiceWorkerRegistration) => requestFromServiceWorker(registration, { type: "pwa:get-state" }),
         readHashes: () => store.storedHashes(),
       });
@@ -423,11 +457,12 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     installPlan,
     downloadState,
     updateEvaluation,
+    offerDismissed,
     commitRequired: commitRecovery.required,
     commitRecoveryBusy,
   });
 
-  const activation = evaluateActivationSafety({ ...safety, downloadActive: downloadState === "running" });
+  const activation = evaluateActivationSafety({ ...safety, downloadActive: downloadState === "running" || downloadState === "committing" });
 
   const runDownload = useCallback(async (
     assets: Array<Record<string, unknown>>,
@@ -465,7 +500,9 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
           lastCompleted = snapshot.completedCount;
           lastProgressAt = Date.now();
         }
-        setDownloadState(snapshot.state);
+        // Transport completion still needs shell warm, durable commit and
+        // read-back. Only finalize's onCommitted may announce success.
+        setDownloadState(snapshot.state === "complete" ? "committing" : snapshot.state);
         setProgress(describeProgress(snapshot, ASSET_CATEGORY_LABELS));
         setStalledSince(lastProgressAt);
       },
@@ -544,12 +581,16 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
         },
       });
       finalization = task;
-      const outcome = await task;
-      // A failed commit is intentionally retryable without downloading the
-      // already verified pack again. A successful completion stays sealed for
-      // this session; the next install/update creates a new closure above.
-      if (!outcome.committed) finalization = null;
-      return outcome;
+      try {
+        const outcome = await task;
+        // Keep successful completion sealed. Both returned failures and thrown
+        // storage failures must allow a later retry to check the cache again.
+        if (!outcome.committed) finalization = null;
+        return outcome;
+      } catch (cause) {
+        finalization = null;
+        throw cause;
+      }
     };
     finalizeSessionRef.current = finalize;
 
@@ -559,13 +600,24 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     } catch (cause) {
       // A rejection here used to escape into an unhandled promise and leave the
       // screen exactly as it was, which read as "nothing happened".
-      await refreshStored();
+      let failureMessage = String((cause as Error)?.message ?? cause);
+      try { await refreshStored(); } catch (refreshCause) {
+        // A secondary storage read failure must not hide the original failure
+        // or prevent the retry UI from appearing.
+        failureMessage += `\n保存内容の再確認にも失敗しました: ${String((refreshCause as Error)?.message ?? refreshCause)}`;
+      }
       recordDiagnostics([{ path: "(session)", reason: "unknown", status: 0, attempts: 1 }]);
-      setError(String((cause as Error)?.message ?? cause));
+      setError(failureMessage);
       setDownloadState("failed");
       return;
     }
-    await finalize(final);
+    try {
+      await finalize(final);
+    } catch (cause) {
+      recordDiagnostics([{ path: "(manifest)", reason: "manifest-commit", status: 0, attempts: 1 }]);
+      setError(String((cause as Error)?.message ?? cause));
+      setDownloadState("commit-failed");
+    }
   }, [baseUrl, refreshStored]);
 
   const startInstall = useCallback(() => {
@@ -686,6 +738,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       const session = sessionRef.current;
       const finalize = finalizeSessionRef.current;
       if (!session || !finalize) return;
+      setError(null);
       setDiagnostics(null);
       try {
         const final = await session.retryFailed();
@@ -706,7 +759,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     setStoredHashes(local.hashes);
   }, []);
   const clearAssets = useCallback(async () => {
-    if (!evaluateActivationSafety({ ...readSafetyFromDocument(), downloadActive: downloadState === "running" }).safe) return;
+    if (!evaluateActivationSafety({ ...readSafetyFromDocument(), downloadActive: downloadState === "running" || downloadState === "committing" }).safe) return;
     document.documentElement.dataset.pwaMaintenancePending = "true";
     setMaintenance("clearing");
     try {
@@ -755,6 +808,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   const playable = canPlayOffline({ phase, installPlan });
   const installCopy = describeInstall(installPlan, storage);
   const updateCopy = updateEvaluation ? describeUpdate(updateEvaluation, { formatBytes }) : null;
+  const offerCopy = describeInstallOffer(targetManifest, { promptAvailable: Boolean(installPrompt) });
   const guidance = describeInstallGuidance({
     standalone,
     promptAvailable: Boolean(installPrompt),
@@ -784,6 +838,8 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   // then enter directly; standalone downloads and interrupted updates still gate.
   const settling = !bootFailure && (!booted || (supported && standalone && !publishedChecked));
   const blocking = bootFailure || settling
+    || (registrationFailed && !registrationFailureAcknowledged)
+    || phase === "install-offer"
     || phase === "download-complete"
     || phase === "download-incomplete"
     || phase === "commit-required"
@@ -799,7 +855,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       const hasGameScreen = Boolean(document.documentElement.dataset.pwaScreen);
       const currentSafety = evaluateActivationSafety({
         ...readSafetyFromDocument(),
-        downloadActive: downloadState === "running",
+        downloadActive: downloadState === "running" || downloadState === "committing",
       });
       if (!blocking && (!hasGameScreen || !currentSafety.safe)) return;
       setPublishedManifest(deferredPublishedManifest);
@@ -861,6 +917,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
                     ? "配信データに接続できませんでした。通信環境を確認してください。"
                     : "配信データを確認しています。"}
                 </p>
+                {manifestUnreachable && manifestError && <details><summary>エラーの詳細</summary><p style={{ overflowWrap: "anywhere" }}>{manifestError}</p></details>}
                 <button type="button" className="pwa-primary" onClick={() => {
                   // Retries in place: no navigation, no reload.
                   void (async () => {
@@ -873,6 +930,39 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
 
             {settling && (
               <p className="pwa-hint" role="status">配信データを確認しています…</p>
+            )}
+
+            {!bootFailure && !settling && registrationFailed && !registrationFailureAcknowledged && (
+              <>
+                <h2>スマホに保存する準備ができませんでした</h2>
+                <p role="alert">ゲームデータはまだダウンロードできていません。</p>
+                <p>アプリ内で開いている場合は、iPhoneはChromeかSafari、AndroidはChromeでこのURLを開き直してください。</p>
+                <p className="pwa-hint" style={{ overflowWrap: "anywhere" }}>{baseUrl}</p>
+                {registrationError && <details><summary>エラーの詳細</summary><p style={{ overflowWrap: "anywhere" }}>{registrationError}</p></details>}
+                <div className="pwa-actions"><button type="button" className="pwa-primary" onClick={() => {
+                  setBooted(false); setBootFailure(false); setRegistrationFailed(false);
+                  setRegistrationError(null); setRegistrationFailureAcknowledged(false); setPublishedChecked(false);
+                  setBootAttempt(value => value + 1);
+                }}>保存の準備をやり直す</button></div>
+                <div className="pwa-actions pwa-secondary-actions"><button type="button" onClick={beginBrowserPlay} disabled={browserPlayPending} aria-busy={browserPlayPending || undefined}>保存せずに試す</button></div>
+              </>
+            )}
+
+            {!bootFailure && !settling && phase === "install-offer" && (
+              <>
+                <h2>{offerCopy?.headline ?? "西新世紀末物語をインストール"}</h2>
+                <p>{offerCopy?.body ?? "ホーム画面に追加すると、全画面で遊べます。"}</p>
+                {offerCopy ? <p className="pwa-hint">{offerCopy.sizeLine}</p> : manifestUnreachable ? <>
+                  <p className="pwa-warning" role="alert">ダウンロードする容量を取得できませんでした。通信環境を確認して、もう一度お試しください。</p>
+                  {manifestError && <details><summary>エラーの詳細</summary><p style={{ overflowWrap: "anywhere" }}>{manifestError}</p></details>}
+                  <div className="pwa-actions"><button type="button" onClick={() => { void loadPublishedManifest(); }}>容量を再確認</button></div>
+                </> : <p className="pwa-hint" role="status">ダウンロードする容量を確認しています…</p>}
+                {guidance?.mode === "prompt" && !installPromptUsed && <button type="button" className="pwa-primary" onClick={acceptInstallPrompt}>ホーム画面に追加する</button>}
+                {guidance && <div className="pwa-install-guidance" data-install-platform={guidance.platform}><h3>遊ぶまでの3ステップ</h3><InstallSteps steps={guidance.steps as Array<Record<string, unknown>>} /></div>}
+                {guidance?.platform === "iphone" && <details className="pwa-hint"><summary>追加がうまくいかないとき</summary><p>「ウェブアプリとして開く」が出たらオンにしてください。</p><p>「ホーム画面に追加」が見つからない場合は、ChromeかSafariでこのURLを開いてください。</p></details>}
+                <div className="pwa-actions pwa-secondary-actions"><button type="button" onClick={beginBrowserPlay} disabled={browserPlayPending} aria-busy={browserPlayPending || undefined}>{browserPlayPending ? "起動しています…" : "ブラウザで遊ぶ"}</button></div>
+                <p className="pwa-hint">{offerCopy?.skipHint ?? "保存せずに試す場合は、通信が必要です。"}</p>
+              </>
             )}
 
             {phase === "download-complete" && (
@@ -896,11 +986,10 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
               <>
                 <h2>保存済みデータを反映しています</h2>
                 <p className="pwa-progress-line">
-                  取得・サイズ確認・SHA-256確認済みの{publishedManifest?.assets?.length ?? storedHashes.size}件を、
-                  この端末のゲームVersionとして確定します。
+                  ダウンロードしたゲームデータを、この端末で使えるように保存しています。
                 </p>
                 <p className="pwa-hint">
-                  データ本体は再取得しません。反映が完了するまでゲームは開始しません。
+                  保存が終わるまで、この画面でお待ちください。
                 </p>
                 {phase === "commit-required" && (
                   <button type="button" className="pwa-primary" onClick={recoverCommittedPack}>

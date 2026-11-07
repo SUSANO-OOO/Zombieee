@@ -390,16 +390,38 @@ entryPage.on("request", (request) => {
   if (/\/(art|audio|icons)\//.test(pathname)) entryAssetRequests.push(pathname);
 });
 await routeSmallPack(entryContext);
+// This section isolates the page invitation. Real registration, pack storage
+// and offline startup are exercised above and in the native PWA lanes.
+await entryContext.addInitScript((scope) => {
+  Object.defineProperty(navigator.serviceWorker, "register", {
+    configurable: true,
+    value: async () => ({ scope, active: {
+      state: "activated",
+      postMessage(message, ports) {
+        ports[0].postMessage(message.type === "pwa:get-state"
+          ? { type: "pwa:state", active: null, previous: null }
+          : { type: "pwa:error", error: "UI fixture cannot commit a generation" });
+      },
+    } }),
+  });
+}, baseUrl);
 await entryPage.goto(legacyQaUrl(baseUrl), { waitUntil: "domcontentloaded" });
 
-// Browser visitors enter directly. Network gameplay assets are expected, but
-// optional installation must not populate the offline asset pack automatically.
+await entryPage.getByRole("button", { name: "ブラウザで遊ぶ", exact: true }).waitFor({ timeout: 30000 });
+await entryPage.getByText(/ダウンロード容量：\d/u).waitFor({ timeout: 30000 });
+const invitation = await entryPage.evaluate(() => ({
+  gateVisible: Boolean(document.querySelector(".pwa-gate")),
+  text: document.querySelector(".pwa-gate")?.textContent ?? "",
+}));
+record("first phone visit explains installation and size before browser play", invitation.gateVisible && /ホーム画面に追加/u.test(invitation.text) && /ダウンロード容量：\d/u.test(invitation.text) && /追加したアイコン/u.test(invitation.text), invitation);
+await entryPage.getByRole("button", { name: "ブラウザで遊ぶ", exact: true }).click();
+// Browser play remains an explicit choice, without downloading the offline pack.
 await entryPage.locator(".game-shell, .game-frame").first().waitFor({state:"visible",timeout:30000});
 const directEntry = await entryPage.evaluate(async () => {
  const names=await caches.keys();const cache=names.includes("zombieee-assets-v1")?await caches.open("zombieee-assets-v1"):null;
  return {gateVisible:Boolean(document.querySelector(".pwa-gate")),gameMounted:Boolean(document.querySelector(".game-shell, .game-frame")),stored:cache?(await cache.keys()).length:0};
 });
-record("fresh browser enters the game without an installation choice",!directEntry.gateVisible&&directEntry.gameMounted,directEntry);
+record("browser play starts after the explicit installation decision",!directEntry.gateVisible&&directEntry.gameMounted,directEntry);
 record("browser gameplay does not automatically store the offline pack",directEntry.stored===0,directEntry);
 
 // --- 12. データ管理 appears only where a player would look for it ------------

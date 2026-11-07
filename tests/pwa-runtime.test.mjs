@@ -35,8 +35,8 @@ test("an unsupported browser never enters an install flow", () => {
   assert.equal(derivePwaPhase({ supported: false, standalone: true }), "unsupported");
 });
 
-test("a fresh browser tab reaches the game without an installation decision", () => {
-  assert.equal(derivePwaPhase({ supported: true, standalone: false }), "browser");
+test("a fresh phone browser explains installation before mounting the game", () => {
+  assert.equal(derivePwaPhase({ supported: true, standalone: false }), "install-offer");
   // A retained pack does not add an installation decision either.
   assert.equal(
     derivePwaPhase({
@@ -106,14 +106,13 @@ test("the install invitation states the size without fetching anything", () => {
   assert.match(offer.headline, /西新世紀末物語をインストール/);
   assert.equal(offer.totalAssets, 3);
   assert.equal(offer.totalBytes, 3 * 1048576);
-  assert.match(offer.sizeLine, /3件/);
+  assert.match(offer.sizeLine, /ダウンロード容量/);
   assert.match(offer.sizeLine, /3\.0MB/);
-  // The size is a promise about later, not a description of now.
-  assert.match(offer.sizeLine, /最初に起動したとき/);
+  // Reading the capacity is not downloading the pack.
   assert.match(offer.noDownloadHint, /ダウンロードしません/);
   // Declining stays available and is described plainly.
   assert.ok(offer.skipLabel);
-  assert.match(offer.skipHint, /インストールせずに/);
+  assert.match(offer.skipHint, /保存せずに/);
 });
 
 test("the install invitation offers a real button only when the browser has one", () => {
@@ -142,20 +141,23 @@ test("install guidance adapts to the browser instead of requiring one", () => {
   assert.equal(iphone.steps.length, 3);
   assert.ok(iphone.steps.every((step) => /「.+」/.test(step.text)));
   assert.equal(iphone.steps[0].icon, "share");
-  // The share control is at the bottom on iPhone, so the arrow points down.
-  assert.equal(iphone.steps[0].arrow, "down");
-  assert.match(iphone.steps[0].text, /画面下/);
+  // Landscape and embedded Safari can put Share at the top instead of below.
+  assert.equal(iphone.steps[0].arrow, null);
+  assert.match(iphone.steps[0].text, /四角から上向き矢印/);
+  assert.doesNotMatch(iphone.steps[0].text, /画面下|画面上/);
   assert.match(iphone.steps[1].text, /ホーム画面に追加/);
-  assert.match(iphone.steps[2].text, /追加/);
+  assert.match(iphone.steps[1].text, /「追加」/);
+  assert.match(iphone.steps[2].text, /追加したアイコン/);
+  assert.match(iphone.steps[2].text, /ダウンロードを開始/);
 
-  // iPad puts the same control at the top, and says so.
+  // The same recognizable control is used on iPad without assuming its position.
   const ipad = describeInstallGuidance({
     promptAvailable: false,
     userAgent: "Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Safari/604.1",
   });
   assert.equal(ipad.platform, "ipad");
-  assert.equal(ipad.steps[0].arrow, "up");
-  assert.match(ipad.steps[0].text, /画面上/);
+  assert.equal(ipad.steps[0].arrow, null);
+  assert.equal(ipad.steps[0].text, iphone.steps[0].text);
 
   // Anything else still gets usable, browser-neutral wording.
   const other = describeInstallGuidance({ promptAvailable: false, userAgent: "Firefox" });
@@ -296,6 +298,16 @@ test("an active download outranks every other phase", () => {
       derivePwaPhase({ supported: true, standalone: true, downloadState }),
       "installing",
     );
+  }
+});
+
+test("verified transport remains blocked until the durable generation is committed", () => {
+  for (const commitRequired of [false, true]) {
+    const phase = derivePwaPhase({ supported: true, standalone: true,
+      downloadState: "committing", commitRequired, installPlan: { complete: true },
+    });
+    assert.equal(phase, "committing");
+    assert.equal(canPlayOffline({ phase, installPlan: { complete: true } }), false);
   }
 });
 
@@ -458,6 +470,27 @@ test("a failed registration returns null instead of breaking the app", async () 
   assert.equal(await registerServiceWorker(windowRef), null);
 });
 
+test("registration failures retain their actual reason for phone setup and a later retry can succeed", async () => {
+  const cause = new DOMException("worker response requires authentication", "SecurityError");
+  let blocked = true;
+  const expected = { scope: "https://example.test/Zombieee/" };
+  const windowRef = {
+    isSecureContext: true, caches: {}, location: { href: expected.scope },
+    navigator: { serviceWorker: { register: async () => {
+      if (blocked) throw cause;
+      return expected;
+    } } },
+  };
+  const errors = [];
+  assert.equal(await registerServiceWorker(windowRef, { onError: value => errors.push(value) }), null);
+  assert.deepEqual(errors, [cause]);
+  blocked = false;
+  assert.equal(await registerServiceWorker(windowRef, { onError: value => errors.push(value) }), expected);
+  assert.deepEqual(errors, [cause]);
+  blocked = true;
+  assert.equal(await registerServiceWorker(windowRef, { onError: () => { throw new Error("observer failure"); } }), null);
+});
+
 test("a published manifest is validated before it is trusted", async () => {
   const good = manifest([asset("/a.webp", 1)]);
   const fetched = await fetchPublishedManifest({
@@ -481,6 +514,19 @@ test("a published manifest is validated before it is trusted", async () => {
     }),
     /responded 503/,
   );
+});
+
+test("a successful HTML authentication response is not accepted as release metadata", async () => {
+  let parsed = false;
+  await assert.rejects(fetchPublishedManifest({
+    baseUrl: "https://example.test/Zombieee/",
+    fetchImpl: async () => ({
+      ok: true,
+      headers: new Headers({ "content-type": "text/html; charset=utf-8" }),
+      json: async () => { parsed = true; throw new SyntaxError("unexpected HTML"); },
+    }),
+  }), /ゲームデータの一覧ではなくWebページ/);
+  assert.equal(parsed, false);
 });
 
 test("the asset fetcher refuses an HTML soft 404 instead of storing a web page", async () => {

@@ -15,6 +15,7 @@ for(const input of inputs)test('installed '+input.oldVersion+' composes its froz
 test('unapproved paths, transport changes, aliases, missing content and altered historical sources fail closed',()=>{
  const valid=inputs.at(-1),run=changes=>assertQualityInstalledAssetTransition({...valid,...changes});
  const clone=value=>structuredClone(value);
+ const wrongVersion=clone(candidate);wrongVersion.version='9.9.9';assert.throws(()=>run({candidate:wrongVersion}));
  const missing=clone(candidate);missing.assets=missing.assets.filter(row=>row.path!==delta.added[0].path);assert.throws(()=>run({candidate:missing}));
  const badHash=clone(candidate);badHash.assets.find(row=>row.path===delta.added[0].path).hash='sha256-'+'0'.repeat(64);assert.throws(()=>run({candidate:badHash}));
  const duplicate=clone(candidate);duplicate.assets.push(clone(duplicate.assets[0]));assert.throws(()=>run({candidate:duplicate}));

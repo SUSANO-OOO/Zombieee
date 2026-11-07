@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {V177_INSTALLED_ASSET_CONTRACT,v177InstalledSourceReplacementsMatch} from './v177-installed-asset-contract.mjs';
 import {V100_RELEASE_ASSET_CONTRACT,V100_WEBKIT_CARD_REPLACEMENT} from './v100-release-asset-contract.mjs';
+import {RELEASE_VERSION} from '../app/releaseIdentity.js';
 
 const ordered=rows=>rows.slice().sort((a,b)=>a.path.localeCompare(b.path));
 const stable=value=>Array.isArray(value)?value.map(stable):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(key=>[key,stable(value[key])])):value;
@@ -44,7 +45,7 @@ export function assertQualityInstalledAssetTransition({oldManifest,baseline,cand
   assert.ok(row.next.bundleOffset+row.next.bundleBytes<=row.next.bundleLength);
   expected.set(row.path,row.next);
  }
- assert.equal(candidate.version,baseline.version);assert.equal(new Set(candidate.assets.map(row=>row.path)).size,candidate.assets.length,'duplicate candidate path');
+ assert.equal(candidate.version,RELEASE_VERSION);assert.equal(new Set(candidate.assets.map(row=>row.path)).size,candidate.assets.length,'duplicate candidate path');
  assert.deepEqual(ordered(candidate.assets),ordered([...expected.values()]),'candidate must equal the complete reviewed baseline plus delta');
  const byteCounts=new Map();for(const row of candidate.assets){if(byteCounts.has(row.hash))assert.equal(row.bytes,byteCounts.get(row.hash),'aliases must describe identical content');else byteCounts.set(row.hash,row.bytes);}
  return {oldAssets:oldManifest.assets.length,baselineAssets:baseline.assets.length,candidateAssets:candidate.assets.length,qualityAdded:delta.added.length,qualityRetired:delta.retired.length,retainedAudioRelocations:relocated.size,changedHashes:new Set(candidate.assets.filter(row=>!oldHashes.has(row.hash)).map(row=>row.hash)).size};

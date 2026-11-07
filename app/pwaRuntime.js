@@ -56,6 +56,7 @@ export function derivePwaPhase({
   installPlan = null,
   downloadState = null,
   updateEvaluation = null,
+  offerDismissed = false,
   commitRequired = false,
   commitRecoveryBusy = false,
 } = {}) {
@@ -64,6 +65,8 @@ export function derivePwaPhase({
   if (downloadState === "running" || downloadState === "paused") {
     return "installing";
   }
+
+  if (downloadState === "committing") return "committing";
 
   if (commitRequired && commitRecoveryBusy) return "committing";
 
@@ -89,9 +92,10 @@ export function derivePwaPhase({
   if (downloadState === "complete") return "download-complete";
 
   if (!standalone) {
-    // Browser play starts at the game. Installation is an explicit Data-screen
-    // action; interrupted transfers and generation recovery still take priority.
     if (installedManifest && updateEvaluation?.available) return "update-available";
+    // A first phone visit must explain installation and the verified pack size
+    // before entering the game. Keep the explicit browser choice on revisits.
+    if (!offerDismissed && !installedManifest) return "install-offer";
     return "browser";
   }
 
@@ -260,16 +264,16 @@ export function describeInstallOffer(manifest, { promptAvailable = false } = {})
 
   return {
     headline: "西新世紀末物語をインストール",
-    body: "ホーム画面に追加すると、アプリのように全画面で起動できます。",
+    body: "ホーム画面に追加して、ゲームをダウンロードしましょう。",
     sizeLine: totalAssets > 0
-      ? `ゲームデータ ${totalAssets}件・${formatBytes(totalBytes)} は、追加したあと最初に起動したときに保存します`
+      ? `ダウンロード容量：${formatBytes(totalBytes)}`
       : null,
     noDownloadHint: "この画面ではゲームデータをダウンロードしません。",
     actionLabel: promptAvailable ? "インストール" : null,
     totalAssets,
     totalBytes,
     skipLabel: "ブラウザで遊ぶ",
-    skipHint: "インストールせずに遊ぶこともできます。その場合は毎回通信が必要です。",
+    skipHint: "保存せずに遊ぶ場合は、通信が必要です。",
   };
 }
 
@@ -279,10 +283,9 @@ export function describeInstallOffer(manifest, { promptAvailable = false } = {})
  *
  * `beforeinstallprompt` is Chromium-only, so relying on it alone would make the
  * app feel broken on iOS, where the route is real but entirely manual. Each
- * manual step therefore carries the control's own label in brackets, the glyph
- * the player is looking for, and which edge of the screen to look at - a player
- * who has never installed a web app has no idea what "share" means here, and
- * "share" on iPhone is at the bottom while on iPad it is at the top.
+ * manual step therefore names the control and uses its recognizable glyph.
+ * Share can be at different edges of the screen. The last step completes the
+ * player's actual task: opening the added icon and downloading the game.
  *
  * The generic wording is deliberately not tied to any one browser: no engine is
  * required to play.
@@ -303,16 +306,17 @@ export function describeInstallGuidance({ standalone = false, promptAvailable = 
     ? [
       { icon: "menu", arrow: null, text: "ブラウザの「メニュー」を開く", label: "メニュー" },
       { icon: "add", arrow: null, text: "「インストール」または「ホーム画面に追加」を押す", label: "ホーム画面に追加" },
+      { icon: "confirm", arrow: null, text: "追加したアイコンを開き、「ダウンロードを開始」を押す", label: "ダウンロードを開始" },
     ]
     : [
       {
         icon: "share",
-        arrow: iPhone ? "down" : "up",
-        text: `${iPhone ? "画面下" : "画面上"}の「共有」ボタンを押す`,
+        arrow: null,
+        text: "「共有」ボタン（四角から上向き矢印）を押す",
         label: "共有",
       },
-      { icon: "add", arrow: null, text: "「ホーム画面に追加」を押す", label: "ホーム画面に追加" },
-      { icon: "confirm", arrow: null, text: "右上の「追加」を押す", label: "追加" },
+      { icon: "add", arrow: null, text: "「ホーム画面に追加」→「追加」を押す", label: "ホーム画面に追加" },
+      { icon: "confirm", arrow: null, text: "追加したアイコンを開き、「ダウンロードを開始」を押す", label: "ダウンロードを開始" },
     ];
 
   return {
@@ -368,7 +372,7 @@ export function isPwaSupported(windowRef) {
  * The script URL and scope are both derived from the document base, so the same
  * code registers `/sw.js` locally and `/Zombieee/sw.js` on Pages.
  */
-export async function registerServiceWorker(windowRef, { baseUrl } = {}) {
+export async function registerServiceWorker(windowRef, { baseUrl, onError } = {}) {
   if (!isPwaSupported(windowRef)) return null;
   const base = baseUrl ?? new URL("./", windowRef.location.href).toString();
   try {
@@ -376,7 +380,10 @@ export async function registerServiceWorker(windowRef, { baseUrl } = {}) {
       scope: base,
       updateViaCache: "none",
     });
-  } catch {
+  } catch (cause) {
+    // Preserve the actual failure for the setup screen, without turning an
+    // optional diagnostic observer into another boot failure.
+    try { onError?.(cause); } catch { /* registration remains unavailable */ }
     // A failed registration must never block play; the app falls back to
     // ordinary network loading.
     return null;
@@ -388,6 +395,9 @@ export async function fetchPublishedManifest({ baseUrl, fetchImpl = fetch, signa
   const url = new URL("asset-manifest.json", baseUrl).toString();
   const response = await fetchImpl(url, { cache: "no-store", signal });
   if (!response.ok) throw new Error(`asset-manifest.json responded ${response.status}`);
+  if (/text\/html/i.test(response.headers?.get?.("content-type") ?? "")) {
+    throw new Error("ゲームデータの一覧ではなくWebページが返されました。共有リンクの認証が切れている場合は、URLを開き直して再度認証してください。");
+  }
   const manifest = await response.json();
   const { valid, errors } = validateAssetManifest(manifest);
   if (!valid) throw new Error(`Invalid published manifest: ${errors.join("; ")}`);

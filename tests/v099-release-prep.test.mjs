@@ -16,7 +16,9 @@ import { readFileSync } from "node:fs";
 
 import test from "node:test";
 
-import { RELEASE_VERSION } from "../app/releaseIdentity.js";
+// This suite verifies the frozen ff5dba24 release below, not the current candidate.
+// Current player-facing identity is checked in release-identity.test.mjs.
+const RELEASE_VERSION = "1.0.5";
 import { RELEASE_SHA_PLACEHOLDER } from "../app/pwaAssetManifest.js";
 import { evaluateUpdate, verifyUpdatePayload } from "../app/pwaUpdatePlanner.js";
 import { V100_RELEASE_ASSET_CONTRACT as assetContract, V100_COMPLETION_ASSET_ADDITIONS, V100_TAKUYA_DEFEAT_CUT_REMOVAL } from "../scripts/v100-release-asset-contract.mjs";
