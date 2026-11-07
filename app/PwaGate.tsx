@@ -738,6 +738,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       const session = sessionRef.current;
       const finalize = finalizeSessionRef.current;
       if (!session || !finalize) return;
+      setError(null);
       setDiagnostics(null);
       try {
         const final = await session.retryFailed();

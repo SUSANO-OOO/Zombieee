@@ -34,11 +34,14 @@ try{
  const start=page.getByRole('button',{name:'ダウンロードを開始',exact:true});await start.waitFor({timeout:30000});
  await page.evaluate(()=>{window.__pwaCacheReadFailures=1;});await start.click();
  await page.getByRole('button',{name:/失敗した項目だけ再試行|保存済みデータを反映し直す/}).waitFor({timeout:15000});
+ await page.locator('.pwa-gate details summary').click();
  beforeRetry=await page.evaluate(()=>({gate:document.querySelector('.pwa-gate')?.innerText??null,fetches:window.__pwaAssetFetches,remainingFailures:window.__pwaCacheReadFailures,gameMounted:!!document.querySelector('.v100-shell')}));
  assert.match(beforeRetry.gate,/simulated final cache read failure/);assert.equal(beforeRetry.gameMounted,false);assert.equal(beforeRetry.remainingFailures,0);assert.ok(beforeRetry.fetches>0);
  if(out) await page.screenshot({path:path.join(out,'retry.png')});
  await page.getByRole('button',{name:/失敗した項目だけ再試行|保存済みデータを反映し直す/}).click();
  await page.getByRole('heading',{name:'ダウンロードが完了しました',exact:true}).waitFor({timeout:60000});
+ assert.equal(await page.locator('.pwa-gate .pwa-warning').count(),0,'a recovered success must not keep the old failure warning');
+ assert.equal(await page.locator('.pwa-gate details').count(),0,'a recovered success must not keep the old error details');
  result=await page.evaluate(async base=>{
   const registration=await navigator.serviceWorker.getRegistration(base),channel=new MessageChannel();
   const state=await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('state timeout')),10000);channel.port1.onmessage=event=>{clearTimeout(timer);resolve(event.data);};registration.active.postMessage({type:'pwa:get-state'},[channel.port2]);});
