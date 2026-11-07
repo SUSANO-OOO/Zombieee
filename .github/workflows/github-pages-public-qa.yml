@@ -1,6 +1,12 @@
 name: GitHub Pages Public QA
 
 on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: "Successful GitHub Pages Release run to recheck without deployment"
+        required: true
+        type: string
   workflow_run:
     workflows:
       - GitHub Pages Release
@@ -15,16 +21,18 @@ permissions:
 jobs:
   verify-public:
     if: >-
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.head_branch == 'main' &&
-      github.event.workflow_run.event == 'workflow_dispatch'
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'main' &&
+       github.event.workflow_run.event == 'workflow_dispatch')
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
       - name: Checkout public QA tooling
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ github.sha }}
           persist-credentials: false
 
       - name: Set up Node
@@ -33,6 +41,26 @@ jobs:
           node-version: 22.13.0
           cache: npm
 
+      - name: Resolve successful deployment source
+        id: source_run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN_ID: ${{ inputs.source_run_id || github.event.workflow_run.id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$SOURCE_RUN_ID" =~ ^[1-9][0-9]*$ ]] || { echo "Invalid source run ID"; exit 1; }
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID" > qa-source-run.json
+          QA_TOOL_SHA="$(git rev-parse HEAD)" node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import {validatePublicQaSourceRun} from './scripts/github-pages-public-qa-source.mjs';
+          const result=validatePublicQaSourceRun(JSON.parse(fs.readFileSync('qa-source-run.json')),{
+            requestedId:process.env.SOURCE_RUN_ID,repository:process.env.GITHUB_REPOSITORY,qaToolSha:process.env.QA_TOOL_SHA,
+          });
+          fs.writeFileSync('qa-source-run-validated.json',JSON.stringify(result,null,2)+'\n');
+          fs.appendFileSync(process.env.GITHUB_OUTPUT,`source_run_id=${result.id}\nsource_url=${result.url}\nqa_tool_sha=${result.qaToolSha}\n`);
+          NODE
+
       - name: Download source release contract
         uses: actions/download-artifact@v4
         with:
@@ -40,15 +68,22 @@ jobs:
           path: release-contract
           github-token: ${{ secrets.GITHUB_TOKEN }}
           repository: ${{ github.repository }}
-          run-id: ${{ github.event.workflow_run.id }}
+          run-id: ${{ steps.source_run.outputs.source_run_id }}
 
       - name: Validate source release identity
         id: release
+        env:
+          QA_EVENT_NAME: ${{ github.event_name }}
         shell: bash
         run: |
           node scripts/release-contract.mjs \
             --file release-contract/release-contract.json \
             --output release-contract/validated-release-contract.json
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import {validatePublicQaContractMode} from './scripts/github-pages-public-qa-source.mjs';
+          validatePublicQaContractMode(JSON.parse(fs.readFileSync('release-contract/validated-release-contract.json')),process.env.QA_EVENT_NAME);
+          NODE
           release_sha="$(jq -er '.release_sha' release-contract/validated-release-contract.json)"
           deploy="$(node scripts/release-contract.mjs --file release-contract/validated-release-contract.json --print-deploy)"
           {
@@ -82,6 +117,15 @@ jobs:
           RELEASE_SHA: ${{ steps.release.outputs.release_sha }}
         run: test "$(git rev-parse HEAD)" = "$RELEASE_SHA"
 
+      - name: Stage reviewed QA tools beside the immutable application
+        if: steps.release.outputs.deploy == 'true'
+        working-directory: release-source
+        shell: bash
+        run: |
+          cp "$GITHUB_WORKSPACE/scripts/github-pages-public-smoke.mjs" scripts/github-pages-public-smoke.mjs
+          cp "$GITHUB_WORKSPACE/scripts/github-pages-blocked-worker-entry.mjs" scripts/github-pages-blocked-worker-entry.mjs
+          git diff --exit-code -- app public package.json package-lock.json
+
       - name: Install locked application dependencies
         if: steps.release.outputs.deploy == 'true'
         working-directory: release-source
@@ -105,6 +149,7 @@ jobs:
           GITHUB_PAGES_EXPECTED_RELEASE_SHA: ${{ steps.release.outputs.release_sha }}
           GITHUB_PAGES_EXPECTED_REQUEST_ID: ${{ steps.release.outputs.request_id }}
           GITHUB_PAGES_EXPECTED_ISSUE_NUMBER: ${{ steps.release.outputs.issue_number }}
+          GITHUB_PAGES_QA_TOOL_SHA: ${{ steps.source_run.outputs.qa_tool_sha }}
           GITHUB_PAGES_EVIDENCE_DIR: ${{ github.workspace }}/pages-evidence-public
         shell: bash
         run: |
@@ -113,6 +158,7 @@ jobs:
           node "$GITHUB_WORKSPACE/release-source/scripts/github-pages-public-smoke.mjs" > "$GITHUB_PAGES_EVIDENCE_DIR/public-smoke.log" 2>&1
           status=$?
           set -e
+          cp "$GITHUB_WORKSPACE/qa-source-run-validated.json" "$GITHUB_PAGES_EVIDENCE_DIR/qa-source-run.json"
           cat "$GITHUB_PAGES_EVIDENCE_DIR/public-smoke.log"
           exit "$status"
 
@@ -133,7 +179,8 @@ jobs:
           RELEASE_SHA: ${{ steps.release.outputs.release_sha }}
           ISSUE_NUMBER: ${{ steps.release.outputs.issue_number }}
           REQUEST_ID: ${{ steps.release.outputs.request_id }}
-          SOURCE_RUN: ${{ github.event.workflow_run.html_url }}
+          SOURCE_RUN: ${{ steps.source_run.outputs.source_url }}
+          QA_TOOL_SHA: ${{ steps.source_run.outputs.qa_tool_sha }}
         shell: bash
         run: |
           {
@@ -141,6 +188,7 @@ jobs:
             echo
             echo "- 正式URL: https://susano-ooo.github.io/Zombieee/"
             echo "- release SHA: \`$RELEASE_SHA\`"
+            echo "- QA tooling SHA: \`$QA_TOOL_SHA\`"
             echo "- request ID: \`$REQUEST_ID\`"
             echo "- 1280×720: pass"
             echo "- 844×390: pass"
@@ -164,13 +212,15 @@ jobs:
           RELEASE_SHA: ${{ steps.release.outputs.release_sha }}
           ISSUE_NUMBER: ${{ steps.release.outputs.issue_number }}
           REQUEST_ID: ${{ steps.release.outputs.request_id }}
-          SOURCE_RUN: ${{ github.event.workflow_run.html_url }}
+          SOURCE_RUN: ${{ steps.source_run.outputs.source_url }}
+          QA_TOOL_SHA: ${{ steps.source_run.outputs.qa_tool_sha }}
         shell: bash
         run: |
           {
             echo "## Version $VERSION GitHub Pages公開後QA失敗"
             echo
             echo "- release SHA: \`$RELEASE_SHA\`"
+            echo "- QA tooling SHA: \`$QA_TOOL_SHA\`"
             echo "- request ID: \`$REQUEST_ID\`"
             echo "- deploy source run: $SOURCE_RUN"
             echo "- public QA run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"

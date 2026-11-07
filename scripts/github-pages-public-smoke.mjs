@@ -11,6 +11,7 @@ import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
 import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
 import { preparePublicEvidenceDirectory } from "./github-pages-evidence-directory.mjs";
 import { settlePublicMapNetwork } from "./github-pages-network-idle.mjs";
+import { acknowledgeBlockedWorkerEntry } from "./github-pages-blocked-worker-entry.mjs";
 
 const publicUrl = process.env.GITHUB_PAGES_PUBLIC_URL?.trim();
 const expectedVersion = process.env.GITHUB_PAGES_EXPECTED_VERSION?.trim();
@@ -44,16 +45,17 @@ const fixtures = [
   ...["idb-delay", "idb-blocked", "decode-hang", "slow-network", "critical-image-hold"].map(scenario => ({ profile: "v0.9.9.5", scenario, width: 844, height: 390 })),
 ];
 const report = { localRehearsal, url: publicUrl, expectedVersion, expectedReleaseSha, expectedRequestId, expectedIssueNumber,
-  scope: "Anonymous network-origin V1 root/save/Stage entry. Disclosed save and fault fixtures; service workers blocked. Not installed-PWA, natural campaign, native audio or physical-device acceptance.", sources: [], results: [], build: localRehearsal ? await productionBuildIdentity() : null };
-for (const file of ["scripts/github-pages-public-smoke.mjs", "scripts/github-pages-evidence-directory.mjs", "scripts/github-pages-network-idle.mjs", "scripts/v100-title-qa-entry.mjs", "app/campaign.js", "app/campaignStorage.js", "app/v100Save.js", "app/v100CampaignStorage.js", "app/AshfallGame.tsx", "app/globals.css"]) report.sources.push({ file, sha256: sha(await readFile(new URL(`../${file}`, import.meta.url))) });
+  scope: "Anonymous network-origin V1 root/save/Stage entry. Disclosed save and fault fixtures; service workers blocked. Not installed-PWA, natural campaign, native audio or physical-device acceptance.", qaToolSha: process.env.GITHUB_PAGES_QA_TOOL_SHA ?? null, sources: [], results: [], build: localRehearsal ? await productionBuildIdentity() : null };
+for (const file of ["scripts/github-pages-public-smoke.mjs", "scripts/github-pages-blocked-worker-entry.mjs", "scripts/github-pages-evidence-directory.mjs", "scripts/github-pages-network-idle.mjs", "scripts/v100-title-qa-entry.mjs", "app/campaign.js", "app/campaignStorage.js", "app/v100Save.js", "app/v100CampaignStorage.js", "app/AshfallGame.tsx", "app/globals.css"]) report.sources.push({ file, sha256: sha(await readFile(new URL(`../${file}`, import.meta.url))) });
 const browser = await chromium.launch({ headless: true, args: ["--mute-audio"], ...(process.env.PLAYWRIGHT_CHANNEL ? { channel: process.env.PLAYWRIGHT_CHANNEL } : {}) });
 const ready = page => page.waitForFunction(() => document.querySelector(".v100-shell") && document.documentElement.dataset.pwaSaveMutationPending === "false", null, { timeout: 30000 });
 const mirror = page => page.evaluate(key => JSON.parse(localStorage.getItem(key)), key);
 async function shot(page, record, label) { const file = path.join(evidenceDir, `${record.name}-${label}.png`), bytes = await page.screenshot({ path: file, animations: "disabled" }); record.images.push({ file, sha256: sha(bytes), width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) }); }
-async function boot(page, url, reload = false) {
+async function boot(page, url, { reload = false, record, phase } = {}) {
   const response = reload ? await page.reload({ waitUntil: "domcontentloaded", timeout: 120000 }) : await page.goto(url, { waitUntil: "domcontentloaded", timeout: 120000 });
   assert.ok(response?.ok(), `Document HTTP ${response?.status()}`);
   await page.waitForFunction(() => document.querySelector('.v100-shell, [role=dialog][aria-label="ゲームデータの準備"] button'), null, { timeout: 30000 });
+  await acknowledgeBlockedWorkerEntry(page, record, { phase });
   const offer = page.getByRole("button", { name: "ブラウザで遊ぶ", exact: true }); if (await offer.isVisible()) await offer.click();
 }
 async function closeBlockedWorkerNotice(page, record, phase) {
@@ -86,7 +88,7 @@ async function nativeSave(page) {
 try {
   for (const fixture of fixtures) {
     const { profile, scenario, width, height } = fixture, oldBytes = profile === "v0.9.0-schema13" ? historicalBytes : profile === "v0.9.9.5" ? legacyBytes : null;
-    const record = { name: `${profile}-${scenario}-${width}x${height}`, fixture, status: "running", images: [], diagnostics: { consoleErrors: [], pageErrors: [], requestFailures: [], httpErrors: [], warnings: [] }, teardownDiagnostics: [], legacyWrites: [], criticalRequests: 0 }; report.results.push(record);
+    const record = { name: `${profile}-${scenario}-${width}x${height}`, fixture, serviceWorkerPolicy: "block", status: "running", images: [], diagnostics: { consoleErrors: [], pageErrors: [], requestFailures: [], httpErrors: [], warnings: [] }, teardownDiagnostics: [], legacyWrites: [], criticalRequests: 0 }; report.results.push(record);
     const context = await browser.newContext({ viewport: { width, height }, hasTouch: width < 1000, serviceWorkers: "block" });
     await context.addInitScript(({ key, oldKey, oldBytes, currentBytes, profile, scenario, legacyKeys }) => {
       if (!sessionStorage.getItem("v1-public-fixture")) { if (oldBytes) localStorage.setItem(oldKey, oldBytes); if (profile === "v1-existing") localStorage.setItem(key, currentBytes); sessionStorage.setItem("v1-public-fixture", "yes"); }
@@ -112,7 +114,7 @@ try {
     if (scenario === "critical-image-hold") { const hold = new Promise(resolve => { releaseCritical = resolve; }); await page.route("**/tactical-drop-pod-v1.png", async route => { record.criticalRequests++; await hold; await route.continue(); }); }
     try {
       const target = new URL(publicUrl); target.searchParams.set("qa_release", expectedReleaseSha); target.searchParams.set("qa_request", expectedRequestId); target.searchParams.set("qa_scenario", scenario);
-      await boot(page, target.href);
+      await boot(page, target.href, { record, phase: "initial-entry" });
       const pageTitle = await page.title(); assert.ok(pageTitle.includes(expectedVersion)); assert.equal(pageTitle, releaseTitleForVersion(expectedVersion));
       record.metadata = {};
       for (const [name, expected] of Object.entries({ "github-pages-version": expectedVersion, "github-pages-release": expectedReleaseSha, "github-pages-request-id": expectedRequestId, "github-pages-issue": expectedIssueNumber })) { const value = await page.locator(`meta[name="${name}"]`).getAttribute("content"); assert.equal(value, expected); record.metadata[name] = value; }
@@ -131,7 +133,7 @@ try {
       if (profile !== "v1-existing") { await page.locator("#v100-player-name").fill("公開確認"); await page.getByRole("button", { name: "この名前でステージを始める", exact: true }).click(); }
       await advance(page, ".v100-map-layout", 220); await ready(page); record.beforeReload = await mirror(page); record.legacyWrites.push(...await page.evaluate(() => window.__PUBLIC_LEGACY_WRITES__));
       record.phase = "map-network-quiescence"; record.beforeReloadNetwork = await settlePublicMapNetwork(page, network);
-      record.phase = "intentional-map-reload"; await boot(page, target.href, true); record.phase = "after-map-reload"; await ready(page); record.afterReload = await mirror(page); assert.equal(record.afterReload.caps, record.beforeReload.caps); assert.equal(record.afterReload.playerName, record.beforeReload.playerName); assert.deepEqual(record.afterReload.completedStageIds, record.beforeReload.completedStageIds); assert.deepEqual(record.afterReload.receipts, record.beforeReload.receipts);
+      record.phase = "intentional-map-reload"; await boot(page, target.href, { reload: true, record, phase: "map-reload" }); record.phase = "after-map-reload"; await ready(page); record.afterReload = await mirror(page); assert.equal(record.afterReload.caps, record.beforeReload.caps); assert.equal(record.afterReload.playerName, record.beforeReload.playerName); assert.deepEqual(record.afterReload.completedStageIds, record.beforeReload.completedStageIds); assert.deepEqual(record.afterReload.receipts, record.beforeReload.receipts);
       assert.equal(await page.getByRole("dialog", { name: /^(?:新しい戦闘記録を開始しました|引き継ぎ特典を受け取った)$/u }).count(), 0);
       if (oldBytes) { assert.equal(record.afterReload.receipts.filter(id => id === V100_LEGACY_GIFT.entitlementReceipt).length, 1); assert.equal(record.afterReload.legacy.popupAcknowledged, true); }
       await closeBlockedWorkerNotice(page, record, "map-reload");
@@ -158,7 +160,7 @@ try {
         await page.waitForFunction(() => document.documentElement.dataset.assetLoadState === "error", null, { timeout: 150000 });
         const recovery = page.getByRole("region", { name: "戦闘データの準備", exact: true }); await recovery.waitFor();
         assert.equal(await page.locator("canvas.battlefield.active").count(), 0); record.failedImages = Number(await page.locator(".game-shell").getAttribute("data-asset-failed")); assert.ok(record.failedImages > 0);
-        await shot(page, record, "decode-blocked"); await page.evaluate(() => window.__PUBLIC_RESTORE_DECODE__()); await recovery.getByRole("button", { name: "失敗・待機中の画像を再読み込み", exact: true }).click();
+        await shot(page, record, "decode-blocked"); await page.evaluate(() => window.__PUBLIC_RESTORE_DECODE__()); await recovery.getByRole("button", { name: "画像をもう一度読み込む", exact: true }).click();
       }
       if (scenario === "critical-image-hold") {
         await page.waitForFunction(() => document.documentElement.dataset.assetLoadState === "loading");

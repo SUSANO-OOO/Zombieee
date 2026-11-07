@@ -158,7 +158,9 @@ test("release workflow is explicit, immutable, and deploy-gated", async () => {
   assert.doesNotMatch(publicTrigger, /^\s+push:/mu);
   assert.match(publicWorkflow, /github\.event\.workflow_run\.event == 'workflow_dispatch'/u);
   assert.match(publicWorkflow, /actions\/download-artifact@v4/u);
-  assert.match(publicWorkflow, /run-id: \$\{\{ github\.event\.workflow_run\.id \}\}/u);
+  assert.match(publicWorkflow, /SOURCE_RUN_ID: \$\{\{ inputs\.source_run_id \|\| github\.event\.workflow_run\.id \}\}/u);
+  assert.match(publicWorkflow, /validatePublicQaSourceRun/u);
+  assert.match(publicWorkflow, /run-id: \$\{\{ steps\.source_run\.outputs\.source_run_id \}\}/u);
   assert.match(publicWorkflow, /path: release-source/u);
   assert.match(publicWorkflow, /- name: Skip public QA for a validated dry-run\n\s+if: steps\.release\.outputs\.deploy != 'true'/u);
   assert.match(publicWorkflow, /- name: Checkout immutable deployed source\n\s+if: steps\.release\.outputs\.deploy == 'true'/u);

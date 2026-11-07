@@ -492,13 +492,17 @@ export function ciChangeScope(paths,{draft,wholePrPaths=null,sourceBlobs={},reus
     'scripts/check-development-docs.mjs','scripts/build-v104-combat-voices.py',
     'tests/ci-change-scope.test.mjs','tests/operating-model-docs.test.mjs',
     'docs/story/v10/README.md','docs/story/v10/CODEX_SOL_DESIGN_MISSION.md']);
-  const maintenance=file=>maintenanceFiles.has(file)
+  const publicQaTools=new Set(['.github/workflows/github-pages-public-qa.yml',
+    'scripts/github-pages-public-smoke.mjs','scripts/github-pages-blocked-worker-entry.mjs',
+    'scripts/github-pages-public-qa-source.mjs','tests/github-pages-blocked-worker-entry.test.mjs',
+    'tests/github-pages-public-qa-source.test.mjs','tests/release-contract.test.mjs']);
+  const maintenance=file=>maintenanceFiles.has(file)||publicQaTools.has(file)
     ||/^(?:README|AGENTS)\.md$/u.test(file)
     ||file.startsWith('docs/')&&file.endsWith('.md')&&!file.startsWith('docs/story/');
   const maintenanceOnly=Array.isArray(wholePrPaths)&&wholePrPaths.length>0
     &&wholePrPaths.every(maintenance)&&paths.every(maintenance);
   if(maintenanceOnly)return {full:false,verify_full:false,performance:false,phaseg:false,ranger:false,normal:false,
-    allunit:false,r9:false,combat:false,audio:false,scope:'documentation-and-preparation',wholeGameAccepted:false,
+    allunit:false,r9:false,combat:false,audio:false,scope:wholePrPaths.some(file=>publicQaTools.has(file))?'public-qa-tools':'documentation-and-preparation',wholeGameAccepted:false,
     finalIntegrationRequiresFullRegression:false};
   // A synchronize update containing only native QA, its tests and the status
   // ledger cannot change the shipped app. Keep the prior full product run and
@@ -621,6 +625,8 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1]
   if(process.env.GITHUB_STEP_SUMMARY)appendFileSync(process.env.GITHUB_STEP_SUMMARY,
     scope.scope==='documentation-and-preparation'
     ?'Validation: documentation-and-preparation. Node tests, lint, content validation and build run fresh. Product acceptance is outside this independent maintenance change; no previous product failure is resolved or reused as success.\n'
+    :scope.scope==='public-qa-tools'
+    ?'Validation: public-qa-tools. Node tests, lint, content validation and build run fresh. Public-site QA remains a separate check against the unchanged immutable deployment; no previous product failure is resolved or reused as success.\n'
     :`Validation: ${scope.scope}. Ready transitions and unknown product changes run full regression. Exact reviewed deltas retain only completed original gates with their source owners. ${abilityNameEvidence.formattingEvidence?.passed
       ?'Only the fixed test CRLF is corrected. The original failed whitespace check stays failed; the same whitespace check, tests, lint, content and build run fresh. Completed formal6 and PhaseG stay with their actual a12 owners; earlier45 jobs and19 product steps keep their separate original owners.'
       :abilityNameEvidence.formalTransferDelta
