@@ -264,16 +264,16 @@ export function describeInstallOffer(manifest, { promptAvailable = false } = {})
 
   return {
     headline: "西新世紀末物語をインストール",
-    body: "ホーム画面に追加すると、アプリのように全画面で起動できます。",
+    body: "ホーム画面に追加して、ゲームをダウンロードしましょう。",
     sizeLine: totalAssets > 0
-      ? `ゲームデータ ${totalAssets}件・${formatBytes(totalBytes)} は、追加したあと最初に起動したときに保存します`
+      ? `ダウンロード容量：${formatBytes(totalBytes)}`
       : null,
     noDownloadHint: "この画面ではゲームデータをダウンロードしません。",
     actionLabel: promptAvailable ? "インストール" : null,
     totalAssets,
     totalBytes,
     skipLabel: "ブラウザで遊ぶ",
-    skipHint: "インストールせずに遊ぶこともできます。その場合は毎回通信が必要です。",
+    skipHint: "保存せずに遊ぶ場合は、通信が必要です。",
   };
 }
 
@@ -283,10 +283,9 @@ export function describeInstallOffer(manifest, { promptAvailable = false } = {})
  *
  * `beforeinstallprompt` is Chromium-only, so relying on it alone would make the
  * app feel broken on iOS, where the route is real but entirely manual. Each
- * manual step therefore carries the control's own label in brackets, the glyph
- * the player is looking for, and which edge of the screen to look at - a player
- * who has never installed a web app has no idea what "share" means here, and
- * "share" on iPhone is at the bottom while on iPad it is at the top.
+ * manual step therefore names the control and uses its recognizable glyph.
+ * Share can be at different edges of the screen. The last step completes the
+ * player's actual task: opening the added icon and downloading the game.
  *
  * The generic wording is deliberately not tied to any one browser: no engine is
  * required to play.
@@ -307,6 +306,7 @@ export function describeInstallGuidance({ standalone = false, promptAvailable = 
     ? [
       { icon: "menu", arrow: null, text: "ブラウザの「メニュー」を開く", label: "メニュー" },
       { icon: "add", arrow: null, text: "「インストール」または「ホーム画面に追加」を押す", label: "ホーム画面に追加" },
+      { icon: "confirm", arrow: null, text: "追加したアイコンを開き、「ダウンロードを開始」を押す", label: "ダウンロードを開始" },
     ]
     : [
       {
@@ -315,8 +315,8 @@ export function describeInstallGuidance({ standalone = false, promptAvailable = 
         text: "「共有」ボタン（四角から上向き矢印）を押す",
         label: "共有",
       },
-      { icon: "add", arrow: null, text: "「ホーム画面に追加」を押す", label: "ホーム画面に追加" },
-      { icon: "confirm", arrow: null, text: "「ウェブアプリとして開く」があればオンにして「追加」を押す", label: "追加" },
+      { icon: "add", arrow: null, text: "「ホーム画面に追加」→「追加」を押す", label: "ホーム画面に追加" },
+      { icon: "confirm", arrow: null, text: "追加したアイコンを開き、「ダウンロードを開始」を押す", label: "ダウンロードを開始" },
     ];
 
   return {

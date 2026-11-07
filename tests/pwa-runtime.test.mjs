@@ -106,14 +106,13 @@ test("the install invitation states the size without fetching anything", () => {
   assert.match(offer.headline, /西新世紀末物語をインストール/);
   assert.equal(offer.totalAssets, 3);
   assert.equal(offer.totalBytes, 3 * 1048576);
-  assert.match(offer.sizeLine, /3件/);
+  assert.match(offer.sizeLine, /ダウンロード容量/);
   assert.match(offer.sizeLine, /3\.0MB/);
-  // The size is a promise about later, not a description of now.
-  assert.match(offer.sizeLine, /最初に起動したとき/);
+  // Reading the capacity is not downloading the pack.
   assert.match(offer.noDownloadHint, /ダウンロードしません/);
   // Declining stays available and is described plainly.
   assert.ok(offer.skipLabel);
-  assert.match(offer.skipHint, /インストールせずに/);
+  assert.match(offer.skipHint, /保存せずに/);
 });
 
 test("the install invitation offers a real button only when the browser has one", () => {
@@ -147,8 +146,9 @@ test("install guidance adapts to the browser instead of requiring one", () => {
   assert.match(iphone.steps[0].text, /四角から上向き矢印/);
   assert.doesNotMatch(iphone.steps[0].text, /画面下|画面上/);
   assert.match(iphone.steps[1].text, /ホーム画面に追加/);
-  assert.match(iphone.steps[2].text, /追加/);
-  assert.match(iphone.steps[2].text, /ウェブアプリとして開く/);
+  assert.match(iphone.steps[1].text, /「追加」/);
+  assert.match(iphone.steps[2].text, /追加したアイコン/);
+  assert.match(iphone.steps[2].text, /ダウンロードを開始/);
 
   // The same recognizable control is used on iPad without assuming its position.
   const ipad = describeInstallGuidance({

@@ -408,12 +408,12 @@ await entryContext.addInitScript((scope) => {
 await entryPage.goto(legacyQaUrl(baseUrl), { waitUntil: "domcontentloaded" });
 
 await entryPage.getByRole("button", { name: "ブラウザで遊ぶ", exact: true }).waitFor({ timeout: 30000 });
-await entryPage.getByText(/ゲームデータ \d+件/u).waitFor({ timeout: 30000 });
+await entryPage.getByText(/ダウンロード容量：\d/u).waitFor({ timeout: 30000 });
 const invitation = await entryPage.evaluate(() => ({
   gateVisible: Boolean(document.querySelector(".pwa-gate")),
   text: document.querySelector(".pwa-gate")?.textContent ?? "",
 }));
-record("first phone visit explains installation and size before browser play", invitation.gateVisible && /ホーム画面に追加/u.test(invitation.text) && /ゲームデータ/u.test(invitation.text), invitation);
+record("first phone visit explains installation and size before browser play", invitation.gateVisible && /ホーム画面に追加/u.test(invitation.text) && /ダウンロード容量：\d/u.test(invitation.text) && /追加したアイコン/u.test(invitation.text), invitation);
 await entryPage.getByRole("button", { name: "ブラウザで遊ぶ", exact: true }).click();
 // Browser play remains an explicit choice, without downloading the offline pack.
 await entryPage.locator(".game-shell, .game-frame").first().waitFor({state:"visible",timeout:30000});

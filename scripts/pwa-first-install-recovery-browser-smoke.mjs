@@ -47,14 +47,16 @@ try {
       await retry.waitFor({ state: "visible", timeout: remaining() });
       assert.equal(await page.locator(".v100-shell").count(), 0, "first install must not silently enter browser play");
       assert.equal(await page.getByText("ダウンロードする容量を確認しています…", { exact: true }).count(), 0);
-      await page.locator(".pwa-gate details summary").click();
-      const detail = await page.locator(".pwa-gate details").innerText();
+      const errorDetails = page.locator(".pwa-gate details").filter({ has: page.getByText("エラーの詳細", { exact: true }) });
+      await errorDetails.locator("summary").click();
+      const detail = await errorDetails.innerText();
       assert.match(detail, mode === "html" ? /Webページ/ : mode === "pending" ? /10秒/ : /simulated metadata network failure/);
       if (!standalone) {
         const steps = await page.locator(".pwa-install-steps li").allInnerTexts();
         assert.equal(steps.length, 3);
         assert.doesNotMatch(steps[0], /画面下|画面上/);
-        assert.match(steps[2], /ウェブアプリとして開く/);
+        assert.match(steps[2], /追加したアイコン/);
+        assert.match(steps[2], /ダウンロードを開始/);
       }
       if (output) await page.screenshot({ path: path.join(output, `${mode}-failed.png`), fullPage: true });
       await page.evaluate(() => { window.__pwaMetadataMode = "ready"; });
@@ -65,7 +67,7 @@ try {
         await page.getByRole("heading", { name: "ゲームデータをダウンロードします", exact: true }).waitFor({ timeout: remaining() });
         await page.getByRole("button", { name: "ダウンロードを開始", exact: true }).waitFor({ timeout: remaining() });
       } else {
-        assert.match(await page.locator(".pwa-gate").innerText(), /ゲームデータ \d+件/);
+        assert.match(await page.locator(".pwa-gate").innerText(), /ダウンロード容量：\d/);
         assert.equal(await page.locator(".v100-shell").count(), 0);
       }
       const layout = await page.locator(".pwa-gate").evaluate(node => ({ width: node.clientWidth, scrollWidth: node.scrollWidth }));

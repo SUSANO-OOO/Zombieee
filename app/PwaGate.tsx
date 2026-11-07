@@ -936,7 +936,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
               <>
                 <h2>スマホに保存する準備ができませんでした</h2>
                 <p role="alert">ゲームデータはまだダウンロードできていません。</p>
-                <p>アプリ内で開いている場合は、iPhoneはSafari、AndroidはChromeでこのURLを開き直してください。</p>
+                <p>アプリ内で開いている場合は、iPhoneはChromeかSafari、AndroidはChromeでこのURLを開き直してください。</p>
                 <p className="pwa-hint" style={{ overflowWrap: "anywhere" }}>{baseUrl}</p>
                 {registrationError && <details><summary>エラーの詳細</summary><p style={{ overflowWrap: "anywhere" }}>{registrationError}</p></details>}
                 <div className="pwa-actions"><button type="button" className="pwa-primary" onClick={() => {
@@ -957,10 +957,9 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
                   {manifestError && <details><summary>エラーの詳細</summary><p style={{ overflowWrap: "anywhere" }}>{manifestError}</p></details>}
                   <div className="pwa-actions"><button type="button" onClick={() => { void loadPublishedManifest(); }}>容量を再確認</button></div>
                 </> : <p className="pwa-hint" role="status">ダウンロードする容量を確認しています…</p>}
-                <p className="pwa-hint">データのダウンロードは、ホーム画面に追加したアイコンから最初に起動したときに行います。</p>
                 {guidance?.mode === "prompt" && !installPromptUsed && <button type="button" className="pwa-primary" onClick={acceptInstallPrompt}>ホーム画面に追加する</button>}
-                {guidance && <div className="pwa-install-guidance" data-install-platform={guidance.platform}><h3>ホーム画面に追加する手順</h3><InstallSteps steps={guidance.steps as Array<Record<string, unknown>>} /></div>}
-                {guidance?.platform === "iphone" && <p className="pwa-hint">アプリ内で開いていて「ホーム画面に追加」が見つからない場合は、SafariでこのURLを開いてください。</p>}
+                {guidance && <div className="pwa-install-guidance" data-install-platform={guidance.platform}><h3>遊ぶまでの3ステップ</h3><InstallSteps steps={guidance.steps as Array<Record<string, unknown>>} /></div>}
+                {guidance?.platform === "iphone" && <details className="pwa-hint"><summary>追加がうまくいかないとき</summary><p>「ウェブアプリとして開く」が出たらオンにしてください。</p><p>「ホーム画面に追加」が見つからない場合は、ChromeかSafariでこのURLを開いてください。</p></details>}
                 <div className="pwa-actions pwa-secondary-actions"><button type="button" onClick={beginBrowserPlay} disabled={browserPlayPending} aria-busy={browserPlayPending || undefined}>{browserPlayPending ? "起動しています…" : "ブラウザで遊ぶ"}</button></div>
                 <p className="pwa-hint">{offerCopy?.skipHint ?? "保存せずに試す場合は、通信が必要です。"}</p>
               </>
