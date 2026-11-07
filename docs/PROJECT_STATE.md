@@ -1,25 +1,28 @@
 # 西新世紀末物語 — 現在状態
 
-確認日：2026-10-26。これは確認時点の索引です。操作前にはGitHubと正式URLを再取得してください。
+確認日：2026-11-07。これは確認時点の索引です。操作前にはGitHubと正式URLを再取得してください。
 
 ## 配信とソース
 
 | 対象 | 確認結果 |
 |---|---|
 | 正式URL | https://susano-ooo.github.io/Zombieee/ |
-| 配信HTML | Version **1.0.5**、HTTP 200、release SHA `ff5dba24e88c810182cda1f044bd26dfc3e512c1` |
-| tag／Release | [v1.0.5](https://github.com/SUSANO-OOO/Zombieee/releases/tag/v1.0.5)、上記merge結果SHAへ固定 |
-| 配信 | [Pages 40222966999](https://github.com/SUSANO-OOO/Zombieee/actions/runs/40222966999) 成功 |
-| 公開後技術確認 | [40223310211](https://github.com/SUSANO-OOO/Zombieee/actions/runs/40223310211)、[旧1.0.3の実profile更新 40224749512](https://github.com/SUSANO-OOO/Zombieee/actions/runs/40224749512) 成功 |
+| 配信HTML | Version **1.0.6**、匿名HTTP 200、release SHA `4be9adea5d49111ab9396fa85755062dc97f1ad9` |
+| tag／Release | [v1.0.6](https://github.com/SUSANO-OOO/Zombieee/releases/tag/v1.0.6)、上記merge結果SHAへ固定 |
+| 配信 | [Pages 42350633706](https://github.com/SUSANO-OOO/Zombieee/actions/runs/42350633706) 成功。request `pwa-mobile-20261107-v106-4be9adea` |
+| 公開後技術確認 | [42355792546](https://github.com/SUSANO-OOO/Zombieee/actions/runs/42355792546) は配信アプリ4be9adea／検査tool b616f961で9条件成功。元の失敗run42351090478は保持 |
+| v1.0.5 | [Release](https://github.com/SUSANO-OOO/Zombieee/releases/tag/v1.0.5)／tag／元SHA ff5dba24を保持。旧[配信40222966999](https://github.com/SUSANO-OOO/Zombieee/actions/runs/40222966999)・[公開後点検40223310211](https://github.com/SUSANO-OOO/Zombieee/actions/runs/40223310211)・[旧profile更新40224749512](https://github.com/SUSANO-OOO/Zombieee/actions/runs/40224749512)の成功は当時の履歴 |
 | v1.0.4 | tag／Releaseは保持。[Pages 40064619979](https://github.com/SUSANO-OOO/Zombieee/actions/runs/40064619979) はsmoke中にcancel、deploy未開始。内容はPR #181の1.0.5へ引継ぎ |
-| main | 配信後の運用・文書改修を含められる。main HEAD自体を配信済みと判断しない |
+| main | 配信後の検査tool改修PR #190を通常統合済み。main HEAD自体を配信アプリSHAと混同しない |
 
-v1.0.5の公開は完了しています。これは全製品課題や実機受入の完了を意味しません。1.0.3から更新する利用者向けの累積変更は[Release notes](https://github.com/SUSANO-OOO/Zombieee/releases/tag/v1.0.5)で案内します。
+1.0.6はメール認証のないGitHub版です。URLを開き、ホーム画面へ追加したアイコンからゲームデータをダウンロードして遊びます。Producerは正式Mac速度6条件中2未達を明記した、この版だけの試遊公開を承認しました。基準や失敗記録は維持し、次版の公開許可には転用しません。変更と未確認は[Release notes](https://github.com/SUSANO-OOO/Zombieee/releases/tag/v1.0.6)に記載しています。
+
+実iPhoneの1.0.6での全量保存・通信断後の起動・タッチ・音・発熱、動きと遊びの最終受入は未確認です。公開実URLでの自動保存・オフライン起動や9条件の成功を、実機やP01〜P07／全51観点の総合完了にはしません。
 
 ## 作業と残件の入口
 
 - **製品の継続課題・証拠・未確認： [Issue #177](https://github.com/SUSANO-OOO/Zombieee/issues/177)**。公開済みの[PR #181](https://github.com/SUSANO-OOO/Zombieee/pull/181)と[PR #180](https://github.com/SUSANO-OOO/Zombieee/pull/180)の履歴を保持します。
-- **今回のゲーム本体の総合更新： [PR #188](https://github.com/SUSANO-OOO/Zombieee/pull/188)**（未統合・未配信）。P01〜P07と全51監査の変更・根拠・残件は[今回の対応表](qa/quality-20261028.md)とIssue #177へ集約します。運用整理のIssue #182とは区別します。
+- **今回のゲーム本体の総合更新： [PR #188](https://github.com/SUSANO-OOO/Zombieee/pull/188)**をmain8a28c712へ通常統合し、追加のスマホ保存修正[PR #189](https://github.com/SUSANO-OOO/Zombieee/pull/189)のmerge結果4be9adeaを1.0.6として配信しました。[PR #190](https://github.com/SUSANO-OOO/Zombieee/pull/190)は検査だけの修正です。P01〜P07と全51監査の変更・根拠・残件は[今回の対応表](qa/quality-20261028.md)、[指定の実行コメント](https://github.com/SUSANO-OOO/Zombieee/issues/177#issuecomment-6537892594)、Issue #177本文へ集約します。運用整理のIssue #182とは区別します。
 - **開発運用の整理： [Issue #182](https://github.com/SUSANO-OOO/Zombieee/issues/182)**。ゲーム仕様・人物・素材・saveの意味を変えず、公開版を維持する作業です。この作業のための新release／Pages配信はしません。
 - 依存更新PRは製品・build・検証runtimeの影響を分けて判断します。Playwright／WebKit固定とvinext補修を、一括更新で無条件に置き換えません。
 
