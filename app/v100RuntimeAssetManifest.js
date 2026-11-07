@@ -14,7 +14,7 @@ const portraits = freezeRecord({
   mutatedPresident: `${V100_ROOT}/portraits/mugarian-president-mutated-event-portrait-v1.webp`,
   takuyaOmega: `${V100_ROOT}/portraits/takuya-omega-event-portrait-v1.webp`,
   redPantherCommander: `${V100_ROOT}/portraits/red-panther-commander-event-portrait-v1.webp`,
-  minorHuman: `${V100_ROOT}/portraits/minor-human-shared-event-silhouette-event-portrait-v1.webp`,
+  minorHuman: `${V100_ROOT}/portraits/minor-human-neutral-stage-r1.webp`,
 });
 
 const storyCuts = freezeRecord({
