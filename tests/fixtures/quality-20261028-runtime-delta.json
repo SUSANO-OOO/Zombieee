@@ -1612,6 +1612,14 @@
       "bundleOffset": 7818661,
       "bundleBytes": 5222,
       "bundleLength": 35073508
+    },
+    {
+      "path": "/art/v100/portraits/minor-human-neutral-stage-r1.webp",
+      "bytes": 79946,
+      "hash": "sha256-5a7e5f6e70dfc5697f4ceb0da8f4e0b514a57f8f0ee37f05d7004998bef6f24b",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "critical"
     }
   ],
   "retired": [
@@ -2955,6 +2963,14 @@
       "bundleOffset": 19074345,
       "bundleBytes": 2697,
       "bundleLength": 34781770
+    },
+    {
+      "path": "/art/v100/portraits/minor-human-shared-event-silhouette-event-portrait-v1.webp",
+      "bytes": 34820,
+      "hash": "sha256-fabffb265dd5c3dfd4a0323e8e2454212e32e9a4cc2083b6966990cbeac6c07b",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "critical"
     }
   ],
   "revisions": [

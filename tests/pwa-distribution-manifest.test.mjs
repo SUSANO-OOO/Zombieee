@@ -113,6 +113,41 @@ test("every public runtime reference is in the game manifest or an explicit shel
   }
 });
 
+test("every campaign portrait selection is available in the verified offline pack", async () => {
+  const [
+    { V100_STORY_EVENTS },
+    { V100_EVENT_PORTRAIT_PROFILES, V100_EVENT_EXPRESSIONS, V100_SCENE_PORTRAITS, v100EventPortraitPath },
+    { v100StoryPortraitPath },
+  ] = await Promise.all([
+    import("../app/v100StoryEvents.js"),
+    import("../app/v100StoryDirection.js"),
+    import("../app/v100StoryPortraitPaths.js"),
+  ]);
+  const nodes = Object.values(V100_STORY_EVENTS).flatMap((event) => event.nodes);
+  const owners = new Set([
+    ...Object.keys(V100_EVENT_PORTRAIT_PROFILES),
+    ...nodes.map((node) => node.portraitOwner).filter(Boolean),
+  ]);
+  const selected = new Set();
+  for (const owner of owners) {
+    for (const expression of V100_EVENT_EXPRESSIONS) {
+      const portrait = v100EventPortraitPath(owner, expression) ?? v100StoryPortraitPath(owner);
+      if (portrait) selected.add(portrait);
+    }
+  }
+  for (const scene of V100_SCENE_PORTRAITS) {
+    for (const tag of scene.sceneTags) selected.add(v100EventPortraitPath(scene.owner, scene.expression, tag));
+  }
+  // The live conversation also resolves unnamed speakers through this path.
+  // Enumerating only named cast profiles previously missed their first offline appearance.
+  const minor = v100StoryPortraitPath("minor-human-shared-event-silhouette");
+  assert.ok(nodes.some((node) => node.portraitOwner === "minor-human-shared-event-silhouette"));
+  assert.ok(selected.has(minor));
+  const distributed = new Set(manifest.assets.map((asset) => asset.path));
+  const uncovered = [...selected].filter((portrait) => !distributed.has(portrait));
+  assert.deepEqual(uncovered, [], `conversation portraits outside verified cache: ${uncovered.join(", ")}`);
+});
+
 test("every shipped asset extension is exempt from end-of-line conversion", async () => {
   // A text-ish asset such as an SVG would otherwise be checked out with CRLF on
   // Windows and LF on Linux. The manifest hashes bytes, so the pack generated
