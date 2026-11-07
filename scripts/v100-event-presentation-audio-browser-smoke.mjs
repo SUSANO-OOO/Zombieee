@@ -15,6 +15,7 @@ import { v100EventPresentationFor } from "../app/v100EventPresentation.js";
 import { v100EventPortraitSnapshot } from "./v100-event-portrait-audit.mjs";
 import { v100EventAudioSnapshot } from "./v100-event-audio-audit.mjs";
 import { installRequestFailureAudit } from "./browser-request-failure-audit.mjs";
+import { installV100EventLoopProbe, observeV100EventLogAudio } from "./v100-event-log-audio-audit.mjs";
 
 // Producer authorized isolated PC browser QA. This does not replace native-device acceptance.
 
@@ -44,6 +45,7 @@ const eventCases = Object.freeze([
 ].map(eventCase=>({...eventCase,nodeIndex:v100StoryPageFor(eventCase.eventId,V100_STORY_EVENTS[eventCase.eventId].nodes,eventCase.nodeIndex??0).nodeIndex})));
 const results = [];
 const cleanupErrors = [];
+const logViewport = viewports.filter(viewport => viewport.width === 844).sort((a, b) => a.height - b.height)[0];
 const buildIdentity = await productionBuildIdentity();
 
 await mkdir(evidenceDir, { recursive: true });
@@ -178,7 +180,9 @@ async function portraitAuditFor(page, selector) {
 }
 
 async function writeEvidenceReport(cases) {
-  const report = { generatedAt: new Date().toISOString(), build: buildIdentity, baseUrl: String(baseUrl), cleanupErrors, evidenceKind: "Explicit valid cursor fixtures, native touch, silent hardware output; not earned campaign or physical speaker evidence.", cases };
+  const report = { generatedAt: new Date().toISOString(), build: buildIdentity, baseUrl: String(baseUrl), cleanupErrors, evidenceKind: "Explicit valid cursor fixtures, native touch, silent hardware output; not earned campaign or physical speaker evidence.",
+    logAudioScope: { viewport: logViewport ?? null, expectedCases: logViewport ? engines.length * 2 : 0,
+      observedCases: cases.filter(row => row.logAudioContinuity?.contract?.status === "passed").length }, cases };
   const reportPath = path.join(evidenceDir, "report.json");
   await writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`);
   return reportPath;
@@ -230,6 +234,9 @@ for (const engine of engines) {
       for (const eventCase of eventCases) {
         const name = `${engine}-${viewport.width}x${viewport.height}-${eventCase.id}`;
         const context = await browser.newContext({ viewport, hasTouch: viewport.safeArea, isMobile: viewport.safeArea });
+        const inspectLogAudio = logViewport && viewport.width === logViewport.width && viewport.height === logViewport.height
+          && ["prologue", "boss-reveal"].includes(eventCase.id);
+        if (inspectLogAudio) await context.addInitScript(installV100EventLoopProbe);
         const page = await context.newPage();
         const { diagnostics, requestAudit } = diagnosticsFor(page);
         const result = { name, engine, viewport, eventCase, status: "failed" };
@@ -286,6 +293,10 @@ for (const engine of engines) {
           const before = initialAudio.audio;
           invariant(before?.owner === "v100-event-runtime", `${name} QA audio owner missing`);
           invariant((before.receipts ?? []).some(({ action }) => action === "requested"), `${name} has no requested event audio`);
+          if (inspectLogAudio) {
+            result.logAudioContinuity = {};
+            await observeV100EventLogAudio(page, eventSelector, { timeout, clickControl: clickUsable, evidence: result.logAudioContinuity });
+          }
           const primary = page.locator(".v100-event-actions .v100-primary");
           if (eventCase.advance !== false && await primary.isVisible().catch(() => false)) {
             await clickUsable(primary, `${name} event action`);
@@ -351,6 +362,7 @@ for (const engine of engines) {
 }
 
 const reportPath = await writeEvidenceReport(results);
+invariant(results.filter(row => row.logAudioContinuity?.contract?.status === "passed").length === (logViewport ? engines.length * 2 : 0), "Expected both log-open/close observations at the smallest configured phone viewport");
 const failures = results.filter((result) => result.status !== "passed"
   || result.diagnostics.consoleErrors.length > 0
   || result.diagnostics.pageErrors.length > 0
