@@ -160,7 +160,7 @@ try {
         await page.waitForFunction(() => document.documentElement.dataset.assetLoadState === "error", null, { timeout: 150000 });
         const recovery = page.getByRole("region", { name: "戦闘データの準備", exact: true }); await recovery.waitFor();
         assert.equal(await page.locator("canvas.battlefield.active").count(), 0); record.failedImages = Number(await page.locator(".game-shell").getAttribute("data-asset-failed")); assert.ok(record.failedImages > 0);
-        await shot(page, record, "decode-blocked"); await page.evaluate(() => window.__PUBLIC_RESTORE_DECODE__()); await recovery.getByRole("button", { name: "失敗・待機中の画像を再読み込み", exact: true }).click();
+        await shot(page, record, "decode-blocked"); await page.evaluate(() => window.__PUBLIC_RESTORE_DECODE__()); await recovery.getByRole("button", { name: "画像をもう一度読み込む", exact: true }).click();
       }
       if (scenario === "critical-image-hold") {
         await page.waitForFunction(() => document.documentElement.dataset.assetLoadState === "loading");
