@@ -581,12 +581,16 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
         },
       });
       finalization = task;
-      const outcome = await task;
-      // A failed commit is intentionally retryable without downloading the
-      // already verified pack again. A successful completion stays sealed for
-      // this session; the next install/update creates a new closure above.
-      if (!outcome.committed) finalization = null;
-      return outcome;
+      try {
+        const outcome = await task;
+        // Keep successful completion sealed. Both returned failures and thrown
+        // storage failures must allow a later retry to check the cache again.
+        if (!outcome.committed) finalization = null;
+        return outcome;
+      } catch (cause) {
+        finalization = null;
+        throw cause;
+      }
     };
     finalizeSessionRef.current = finalize;
 
@@ -596,13 +600,24 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     } catch (cause) {
       // A rejection here used to escape into an unhandled promise and leave the
       // screen exactly as it was, which read as "nothing happened".
-      await refreshStored();
+      let failureMessage = String((cause as Error)?.message ?? cause);
+      try { await refreshStored(); } catch (refreshCause) {
+        // A secondary storage read failure must not hide the original failure
+        // or prevent the retry UI from appearing.
+        failureMessage += `\n保存内容の再確認にも失敗しました: ${String((refreshCause as Error)?.message ?? refreshCause)}`;
+      }
       recordDiagnostics([{ path: "(session)", reason: "unknown", status: 0, attempts: 1 }]);
-      setError(String((cause as Error)?.message ?? cause));
+      setError(failureMessage);
       setDownloadState("failed");
       return;
     }
-    await finalize(final);
+    try {
+      await finalize(final);
+    } catch (cause) {
+      recordDiagnostics([{ path: "(manifest)", reason: "manifest-commit", status: 0, attempts: 1 }]);
+      setError(String((cause as Error)?.message ?? cause));
+      setDownloadState("commit-failed");
+    }
   }, [baseUrl, refreshStored]);
 
   const startInstall = useCallback(() => {

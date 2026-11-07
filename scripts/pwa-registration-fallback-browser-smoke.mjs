@@ -73,3 +73,4 @@ try {
 // Retain the existing CI entry and deadlines, then cover the original phone
 // installation path and the boundary between transfer and durable commit.
 await import("./pwa-first-install-recovery-browser-smoke.mjs");
+await import("./pwa-finalize-rejection-browser-smoke.mjs");
