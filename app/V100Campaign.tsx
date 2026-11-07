@@ -612,7 +612,7 @@ export function V100Campaign() {
     return undefined;
   }, [audibleEventPresentation]);
 
-  const updateFlow = useCallback(async (next: Flow, { baseSave = save, nodeIndex = 0 }: { baseSave?: Save; nodeIndex?: number } = {}) => {
+  const updateFlow = useCallback(async (next: Flow, { baseSave = save, nodeIndex = 0, clearNoticeOnCommit = false }: { baseSave?: Save; nodeIndex?: number; clearNoticeOnCommit?: boolean } = {}) => {
     const checkpoint = v100StoryFlowCheckpoint(next, nodeIndex);
     const persisted = applyV100SaveMutation(baseSave, (draft: Save) => ({
       ...draft,
@@ -622,6 +622,8 @@ export function V100Campaign() {
     }));
     if (!persisted.applied) { setNotice(formatReason(persisted.reason)); return null; }
     return commitSave(persisted.save, (committed) => {
+      // Durable commit owns this clear; runStorage may publish a mirror warning next.
+      if (clearNoticeOnCommit) setNotice("");
       setFlow(next);
       if (next.phase === "battle") setFormationRequestedUnitId(null);
       setBattleRunId(next.phase === "battle" ? `v100:${next.stageId}:${committed.revision}` : null);
@@ -688,9 +690,8 @@ export function V100Campaign() {
       }
       nextSave = pending.save;
     }
-    if (await updateFlow(transition.state, { baseSave: nextSave })) {
+    if (await updateFlow(transition.state, { baseSave: nextSave, clearNoticeOnCommit: true })) {
       setUnsavedBattleResult(null);
-      setNotice("");
     } else {
       setUnsavedBattleResult(raw);
     }
@@ -700,8 +701,7 @@ export function V100Campaign() {
     if (unsavedBattleResult) return false;
     const transition = leaveV100Battle(flow, action);
     if (!transition.accepted) return false;
-    const accepted = Boolean(await updateFlow(transition.state));
-    if (accepted) setNotice("");
+    const accepted = Boolean(await updateFlow(transition.state, { clearNoticeOnCommit: true }));
     return accepted;
   }, [flow, unsavedBattleResult, updateFlow]);
 
