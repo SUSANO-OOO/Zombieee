@@ -310,6 +310,24 @@ test('independent documentation and preparation changes keep all Node checks wit
  }
 });
 
+test('public QA tooling-only PRs retain fresh Node checks without remeasuring unchanged game code',()=>{
+ const paths=['.github/workflows/github-pages-public-qa.yml','scripts/github-pages-public-smoke.mjs',
+  'scripts/github-pages-blocked-worker-entry.mjs','scripts/github-pages-public-qa-source.mjs',
+  'tests/github-pages-blocked-worker-entry.test.mjs','tests/github-pages-public-qa-source.test.mjs',
+  'tests/release-contract.test.mjs','scripts/ci-change-scope.mjs','tests/ci-change-scope.test.mjs'];
+ for(const draft of [false,true]){
+  const scope=ciChangeScope(paths,{draft,wholePrPaths:paths});assert.equal(scope.scope,'public-qa-tools');
+  for(const key of ['full','verify_full','performance','phaseg','ranger','normal','allunit','r9','combat','audio'])assert.equal(scope[key],false);
+  assert.equal(scope.wholeGameAccepted,false);
+ }
+ for(const extra of ['app/PwaGate.tsx','app/releaseIdentity.js','public/asset-manifest.json','package.json','package-lock.json',
+  '.github/workflows/github-pages-release.yml','.github/workflows/ci.yml','scripts/build-github-pages.mjs','scripts/unknown-public-qa.mjs']){
+  assert.equal(ciChangeScope([...paths,extra],{draft:false,wholePrPaths:[...paths,extra]}).full,true,extra);
+  assert.equal(ciChangeScope(paths,{draft:false,wholePrPaths:[...paths,extra]}).full,true,'Earlier product changes cannot be hidden: '+extra);
+ }
+ assert.equal(ciChangeScope(paths,{draft:false,wholePrPaths:null}).full,true,'The whole PR boundary must be known');
+});
+
 test('display-only continuation retains Quality only with its own two exact-head engine owners',async()=>{
  const b=ABILITY_NAME_BASELINE,displayEvidence={passed:true,head:b.head,base:b.base,prNumber:181,
   freshVerifyRequired:true,freshPerformanceRequired:true,freshPhaseGRequired:true};
