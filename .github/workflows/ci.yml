@@ -529,24 +529,16 @@ jobs:
         if: ${{ (needs.scope.outputs.full == 'true' || needs.scope.outputs.verify_full == 'true') }}
         run: node scripts/run-browser-qa-with-server.mjs scripts/pwa-registration-fallback-browser-smoke.mjs
 
-      - name: Verify first phone installation metadata failures and retry (Chromium)
-        if: ${{ (needs.scope.outputs.full == 'true' || needs.scope.outputs.verify_full == 'true') }}
-        env:
-          PWA_FIRST_INSTALL_OUTPUT_DIR: output/pwa-first-install-recovery
-        run: node scripts/run-browser-qa-with-server.mjs scripts/pwa-first-install-recovery-browser-smoke.mjs
-
       - name: Verify installed PWA launch when update metadata stalls (Chromium)
         if: ${{ (needs.scope.outputs.full == 'true' || needs.scope.outputs.verify_full == 'true') }}
         run: node scripts/run-browser-qa-with-server.mjs scripts/pwa-held-manifest-browser-smoke.mjs
 
-      - name: Upload PWA metadata recovery browser evidence
+      - name: Upload stalled PWA metadata browser evidence
         if: ${{ (needs.scope.outputs.full == 'true' || needs.scope.outputs.verify_full == 'true') && (always()) }}
         uses: actions/upload-artifact@v4
         with:
           name: v100-pwa-held-metadata
-          path: |
-            outputs/completion/v100-pwa-held-manifest
-            output/pwa-first-install-recovery
+          path: outputs/completion/v100-pwa-held-manifest
           if-no-files-found: warn
           retention-days: 14
 

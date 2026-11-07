@@ -301,6 +301,16 @@ test("an active download outranks every other phase", () => {
   }
 });
 
+test("verified transport remains blocked until the durable generation is committed", () => {
+  for (const commitRequired of [false, true]) {
+    const phase = derivePwaPhase({ supported: true, standalone: true,
+      downloadState: "committing", commitRequired, installPlan: { complete: true },
+    });
+    assert.equal(phase, "committing");
+    assert.equal(canPlayOffline({ phase, installPlan: { complete: true } }), false);
+  }
+});
+
 test("an available update is surfaced in both standalone and tab contexts", () => {
   const installed = manifest([asset("/a", 1)]);
   assert.equal(

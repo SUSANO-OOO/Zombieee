@@ -5,7 +5,7 @@ import path from "node:path";
 import { chromium } from "playwright";
 import { silenceBrowserOutput } from "./silent-browser-output.mjs";
 
-const base = process.env.PWA_FIRST_INSTALL_BASE_URL ?? process.env.V096_PWA_QA_BASE_URL;
+const base = process.env.PWA_FIRST_INSTALL_BASE_URL ?? process.env.V096_PWA_QA_BASE_URL ?? process.env.PWA_REGISTRATION_FALLBACK_BASE_URL;
 assert.ok(base, "PWA_FIRST_INSTALL_BASE_URL is required");
 const output = process.env.PWA_FIRST_INSTALL_OUTPUT_DIR;
 if (output) await fs.mkdir(output, { recursive: true });
@@ -13,7 +13,8 @@ const browser = await chromium.launch();
 const results = [];
 let failure;
 try {
-  for (const mode of ["network", "html", "pending", "standalone-network"]) {
+  const metadataCases = process.env.PWA_FIRST_INSTALL_CASE === "commit-only" ? [] : ["network", "html", "pending", "standalone-network"];
+  for (const mode of metadataCases) {
     const context = await browser.newContext({
       viewport: { width: 844, height: 340 }, hasTouch: true, isMobile: true,
       userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 26_0 like Mac OS X) AppleWebKit/605.1.15 Version/26.0 Mobile/15E148 Safari/604.1",
@@ -74,6 +75,59 @@ try {
       results.push({ mode, status: "passed", retryInPlace: true, gameDataDownloaded: false, physicalPhone: false, layout });
     } finally { await context.close(); }
   }
+  // Hold the final cache read after all transport work finishes. Download
+  // completion must remain behind durable generation commit, even across frames.
+  const context = await browser.newContext({ viewport: { width: 844, height: 340 }, hasTouch: true, isMobile: true });
+  const page = await context.newPage();
+  try {
+    await silenceBrowserOutput(page);
+    const shipped = await (await fetch(new URL("asset-manifest.json", base))).json();
+    const small = { ...shipped, assets: [...shipped.assets].sort((a, b) => a.bytes - b.bytes).slice(0, 3).map(asset => Object.fromEntries(Object.entries(asset).filter(([key]) => !key.startsWith("bundle")))) };
+    await page.addInitScript(({ small }) => {
+      Object.defineProperty(navigator, "standalone", { configurable: true, get: () => true });
+      const fetchOriginal = window.fetch.bind(window);
+      window.fetch = (...args) => {
+        const url = new URL(typeof args[0] === "string" ? args[0] : args[0].url, location.href);
+        return url.pathname.endsWith("/asset-manifest.json")
+          ? Promise.resolve(new Response(JSON.stringify(small), { headers: { "content-type": "application/json" } }))
+          : fetchOriginal(...args);
+      };
+      const keys = Cache.prototype.keys;
+      Cache.prototype.keys = function (...args) {
+        if (window.__pwaHoldFinalVerification) return new Promise(resolve => {
+          window.__pwaReleaseFinalVerification = () => { window.__pwaHoldFinalVerification = false; resolve(keys.apply(this, args)); };
+        });
+        return keys.apply(this, args);
+      };
+    }, { small });
+    await page.goto(base, { waitUntil: "domcontentloaded", timeout: 30000 });
+    const start = page.getByRole("button", { name: "ダウンロードを開始", exact: true });
+    await start.waitFor({ timeout: 30000 });
+    await page.evaluate(() => { window.__pwaHoldFinalVerification = true; });
+    await start.click();
+    await page.waitForFunction(() => typeof window.__pwaReleaseFinalVerification === "function", null, { timeout: 30000 });
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    const beforeCommit = await page.locator(".pwa-gate").innerText();
+    if (output) {
+      await page.screenshot({ path: path.join(output, "before-commit.png"), fullPage: true });
+      await fs.writeFile(path.join(output, "before-commit.json"), JSON.stringify({ beforeCommit, gameMounted: await page.locator(".v100-shell").count() > 0 }, null, 2) + "\n");
+    }
+    assert.doesNotMatch(beforeCommit, /ダウンロードが完了しました|ゲームを始める/);
+    assert.match(beforeCommit, /保存済みデータを反映しています/);
+    await page.evaluate(() => { window.__pwaReleaseFinalVerification(); });
+    await page.getByRole("heading", { name: "ダウンロードが完了しました", exact: true }).waitFor({ timeout: 60000 });
+    const active = await page.evaluate(async base => {
+      const registration = await navigator.serviceWorker.getRegistration(base), channel = new MessageChannel();
+      return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error("state timeout")), 10000);
+        channel.port1.onmessage = event => { clearTimeout(timer); resolve({ source: event.data.active?.releaseSha, assets: event.data.active?.assets?.length }); };
+        registration.active.postMessage({ type: "pwa:get-state" }, [channel.port2]);
+      });
+    }, base);
+    assert.equal(active.source, small.releaseSha);
+    assert.equal(active.assets, small.assets.length);
+    results.push({ mode: "download-commit-boundary", status: "passed", active, syntheticPack: true, physicalPhone: false });
+  } finally { await context.close(); }
 } catch (error) { failure = error; }
 finally {
   await browser.close();

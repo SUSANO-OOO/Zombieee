@@ -66,6 +66,8 @@ export function derivePwaPhase({
     return "installing";
   }
 
+  if (downloadState === "committing") return "committing";
+
   if (commitRequired && commitRecoveryBusy) return "committing";
 
   // A run that stopped short holds the screen until the player decides what to

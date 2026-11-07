@@ -462,7 +462,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     commitRecoveryBusy,
   });
 
-  const activation = evaluateActivationSafety({ ...safety, downloadActive: downloadState === "running" });
+  const activation = evaluateActivationSafety({ ...safety, downloadActive: downloadState === "running" || downloadState === "committing" });
 
   const runDownload = useCallback(async (
     assets: Array<Record<string, unknown>>,
@@ -500,7 +500,9 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
           lastCompleted = snapshot.completedCount;
           lastProgressAt = Date.now();
         }
-        setDownloadState(snapshot.state);
+        // Transport completion still needs shell warm, durable commit and
+        // read-back. Only finalize's onCommitted may announce success.
+        setDownloadState(snapshot.state === "complete" ? "committing" : snapshot.state);
         setProgress(describeProgress(snapshot, ASSET_CATEGORY_LABELS));
         setStalledSince(lastProgressAt);
       },
@@ -741,7 +743,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     setStoredHashes(local.hashes);
   }, []);
   const clearAssets = useCallback(async () => {
-    if (!evaluateActivationSafety({ ...readSafetyFromDocument(), downloadActive: downloadState === "running" }).safe) return;
+    if (!evaluateActivationSafety({ ...readSafetyFromDocument(), downloadActive: downloadState === "running" || downloadState === "committing" }).safe) return;
     document.documentElement.dataset.pwaMaintenancePending = "true";
     setMaintenance("clearing");
     try {
@@ -837,7 +839,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       const hasGameScreen = Boolean(document.documentElement.dataset.pwaScreen);
       const currentSafety = evaluateActivationSafety({
         ...readSafetyFromDocument(),
-        downloadActive: downloadState === "running",
+        downloadActive: downloadState === "running" || downloadState === "committing",
       });
       if (!blocking && (!hasGameScreen || !currentSafety.safe)) return;
       setPublishedManifest(deferredPublishedManifest);
@@ -969,11 +971,10 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
               <>
                 <h2>保存済みデータを反映しています</h2>
                 <p className="pwa-progress-line">
-                  取得・サイズ確認・SHA-256確認済みの{publishedManifest?.assets?.length ?? storedHashes.size}件を、
-                  この端末のゲームVersionとして確定します。
+                  ダウンロードしたゲームデータを、この端末で使えるように保存しています。
                 </p>
                 <p className="pwa-hint">
-                  データ本体は再取得しません。反映が完了するまでゲームは開始しません。
+                  保存が終わるまで、この画面でお待ちください。
                 </p>
                 {phase === "commit-required" && (
                   <button type="button" className="pwa-primary" onClick={recoverCommittedPack}>
