@@ -35,8 +35,8 @@ test("an unsupported browser never enters an install flow", () => {
   assert.equal(derivePwaPhase({ supported: false, standalone: true }), "unsupported");
 });
 
-test("a fresh browser tab reaches the game without an installation decision", () => {
-  assert.equal(derivePwaPhase({ supported: true, standalone: false }), "browser");
+test("a fresh phone browser explains installation before mounting the game", () => {
+  assert.equal(derivePwaPhase({ supported: true, standalone: false }), "install-offer");
   // A retained pack does not add an installation decision either.
   assert.equal(
     derivePwaPhase({
@@ -456,6 +456,27 @@ test("a failed registration returns null instead of breaking the app", async () 
     navigator: { serviceWorker: { register: async () => { throw new Error("blocked"); } } },
   };
   assert.equal(await registerServiceWorker(windowRef), null);
+});
+
+test("registration failures retain their actual reason for phone setup and a later retry can succeed", async () => {
+  const cause = new DOMException("worker response requires authentication", "SecurityError");
+  let blocked = true;
+  const expected = { scope: "https://example.test/Zombieee/" };
+  const windowRef = {
+    isSecureContext: true, caches: {}, location: { href: expected.scope },
+    navigator: { serviceWorker: { register: async () => {
+      if (blocked) throw cause;
+      return expected;
+    } } },
+  };
+  const errors = [];
+  assert.equal(await registerServiceWorker(windowRef, { onError: value => errors.push(value) }), null);
+  assert.deepEqual(errors, [cause]);
+  blocked = false;
+  assert.equal(await registerServiceWorker(windowRef, { onError: value => errors.push(value) }), expected);
+  assert.deepEqual(errors, [cause]);
+  blocked = true;
+  assert.equal(await registerServiceWorker(windowRef, { onError: () => { throw new Error("observer failure"); } }), null);
 });
 
 test("a published manifest is validated before it is trusted", async () => {

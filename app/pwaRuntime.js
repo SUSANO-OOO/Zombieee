@@ -56,6 +56,7 @@ export function derivePwaPhase({
   installPlan = null,
   downloadState = null,
   updateEvaluation = null,
+  offerDismissed = false,
   commitRequired = false,
   commitRecoveryBusy = false,
 } = {}) {
@@ -89,9 +90,10 @@ export function derivePwaPhase({
   if (downloadState === "complete") return "download-complete";
 
   if (!standalone) {
-    // Browser play starts at the game. Installation is an explicit Data-screen
-    // action; interrupted transfers and generation recovery still take priority.
     if (installedManifest && updateEvaluation?.available) return "update-available";
+    // A first phone visit must explain installation and the verified pack size
+    // before entering the game. Keep the explicit browser choice on revisits.
+    if (!offerDismissed && !installedManifest) return "install-offer";
     return "browser";
   }
 
@@ -368,7 +370,7 @@ export function isPwaSupported(windowRef) {
  * The script URL and scope are both derived from the document base, so the same
  * code registers `/sw.js` locally and `/Zombieee/sw.js` on Pages.
  */
-export async function registerServiceWorker(windowRef, { baseUrl } = {}) {
+export async function registerServiceWorker(windowRef, { baseUrl, onError } = {}) {
   if (!isPwaSupported(windowRef)) return null;
   const base = baseUrl ?? new URL("./", windowRef.location.href).toString();
   try {
@@ -376,7 +378,10 @@ export async function registerServiceWorker(windowRef, { baseUrl } = {}) {
       scope: base,
       updateViaCache: "none",
     });
-  } catch {
+  } catch (cause) {
+    // Preserve the actual failure for the setup screen, without turning an
+    // optional diagnostic observer into another boot failure.
+    try { onError?.(cause); } catch { /* registration remains unavailable */ }
     // A failed registration must never block play; the app falls back to
     // ordinary network loading.
     return null;

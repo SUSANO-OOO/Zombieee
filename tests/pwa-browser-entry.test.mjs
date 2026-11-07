@@ -35,12 +35,17 @@ test('disposal caused by pending feedback never mounts a stale game owner',()=>{
     entry.request();f.paint();f.paint();assert.equal(events.some(e=>e[0]==='enter'),false);assert.equal(f.size(),0);
   }
 });
-test('actual gate opens fresh browser play while retaining recovery and standalone boundaries',()=>{
+test('actual gate keeps first phone setup and failed registration ahead of play, preserving recovery',()=>{
  const source=fs.readFileSync('app/PwaGate.tsx','utf8'),tree=ts.createSourceFile('PwaGate.tsx',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX),expressions={};
  const visit=node=>{if(ts.isVariableDeclaration(node)&&['settling','blocking'].includes(node.name.getText(tree)))expressions[node.name.getText(tree)]=node.initializer.getText(tree);ts.forEachChild(node,visit);};visit(tree);
  assert.ok(expressions.settling);assert.ok(expressions.blocking);
  const rows=[
-  [{},false], [{offerDismissed:false},false], [{offerDismissed:true},false],
+  [{},true], [{offerDismissed:false},true], [{offerDismissed:true},false],
+  [{installedManifest:{version:'test'}},false],
+  [{registrationFailed:true,supported:false},true],
+  [{registrationFailed:true,supported:false,offerDismissed:true},true],
+  [{registrationFailed:true,supported:false,standalone:true,offerDismissed:true},true],
+  [{registrationFailed:true,supported:false,registrationFailureAcknowledged:true},false],
   [{booted:false},true], [{bootFailure:true},true],
   [{standalone:true},true], [{downloadState:'running'},true], [{downloadState:'paused'},true],
   [{downloadState:'failed'},true], [{downloadState:'cancelled'},true], [{downloadState:'complete'},true],
@@ -49,7 +54,7 @@ test('actual gate opens fresh browser play while retaining recovery and standalo
   [{standalone:true,installedManifest:{version:'test'},installPlan:{complete:true},publishedChecked:true},false],
  ];
  for(const [changes,expected] of rows){
-  const values={supported:true,standalone:false,booted:true,bootFailure:false,publishedChecked:true,...changes};
+  const values={supported:true,standalone:false,booted:true,bootFailure:false,publishedChecked:true,offerDismissed:false,registrationFailed:false,registrationFailureAcknowledged:false,...changes};
   values.phase=derivePwaPhase(values);values.playable=canPlayOffline({phase:values.phase,installPlan:values.installPlan});
   const result=vm.runInNewContext('const settling='+expressions.settling+';'+expressions.blocking,values);
   assert.equal(result,expected,JSON.stringify(changes));
