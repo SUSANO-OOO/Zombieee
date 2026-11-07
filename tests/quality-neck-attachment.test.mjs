@@ -7,6 +7,7 @@ import {V177_JOINT_ATLASES,v177JointPose,v177CaptureJointPose} from '../app/v177
 import {v177WeaponChoreography} from '../app/v177WeaponChoreography.js';
 import {QUALITY_BATTLE_HEAD_CALIBRATIONS} from '../app/qualityBattleHeadCalibrationData.js';
 import {QUALITY_CHARACTER_BASE_ATLASES} from '../app/qualityCharacterAtlases.js';
+import {QUALITY_TKY_COMBAT_ATLAS} from '../app/qualityTkyCombatJointData.js';
 const calibration=JSON.parse(await readFile('assets/source/quality-20261028/identity/battle-neck-calibration-r4.json'));
 const point=(m,p)=>[m[0]*p[0]+m[2]*p[1]+m[4],m[1]*p[0]+m[3]*p[1]+m[5]];
 
@@ -14,7 +15,8 @@ test('all calibrated human/helmet materials retain their own torso garment and a
  assert.equal(Object.keys(QUALITY_BATTLE_HEAD_CALIBRATIONS).length,13);
  for(const kind of Object.keys(QUALITY_BATTLE_HEAD_CALIBRATIONS)){
   const atlas=V177_JOINT_ATLASES[kind],rig=atlas.parts?atlas:atlas.upperRig;
-  assert.equal(atlas.path,['guardian','brawler','brute','gunner','miyamoto-musashi','mrs-chiha','zakimiya','tky','scout','medic','engineer','ranger'].includes(kind)?`/art/v100/joints/${kind}-combat-r1.webp`:QUALITY_BATTLE_HEAD_CALIBRATIONS[kind].path);
+  if(kind==='tky')assert.equal(atlas,QUALITY_TKY_COMBAT_ATLAS,'TKY neck and garment checks must inspect the preferred plasma combat body');
+  else assert.equal(atlas.path,['guardian','brawler','brute','gunner','miyamoto-musashi','mrs-chiha','zakimiya','scout','medic','engineer','ranger'].includes(kind)?`/art/v100/joints/${kind}-combat-r1.webp`:QUALITY_BATTLE_HEAD_CALIBRATIONS[kind].path);
   const original=QUALITY_CHARACTER_BASE_ATLASES[kind],originalRig=original.parts?original:original.upperRig;
   const expected=['guardian','brawler','brute','gunner','miyamoto-musashi','mrs-chiha','zakimiya','tky','scout','medic','engineer'].includes(kind)?JSON.parse(await readFile(`assets/source/quality-20261028/rigs/${kind}-combat-r1/parts.json`)).parentAttachments:originalRig.parentAttachments;
   assert.deepEqual(rig.parentAttachments,expected,'material registration must use its declared anatomical pivot');
