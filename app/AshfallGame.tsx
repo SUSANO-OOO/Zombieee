@@ -16159,6 +16159,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   }, [playBattleSemanticCue]);
 
   const resumeBattleAudioLoops = useCallback((g: Game) => {
+    if (g.paused || g.over) return;
     const productionMixer = productionMixerRef.current;
     const burningCorpses = g.corpses.filter((corpse) => corpse.state === "burning").slice(0, 3);
     const nextBurningIds = new Set(burningCorpses.map((corpse) => corpse.id));
@@ -24790,6 +24791,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             });
           }
         }
+        // This step began active, but a survival checkpoint can pause it before
+        // later one-shot cues are requested. Cancel once after all step audio;
+        // subsequent paused frames skip this block and keep menu sounds usable.
+        if (g.paused && !g.over) stopSfx();
       }
 
       if (g.over && !g.resultPresented && !g.survivalRun) {
