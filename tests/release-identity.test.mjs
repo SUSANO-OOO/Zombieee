@@ -10,17 +10,17 @@ import {
   RELEASE_VERSION,
 } from "../app/releaseIdentity.js";
 
-test("player-facing surfaces share one immutable Version 1.0.7 identity", async () => {
+test("player-facing surfaces share one immutable Version 1.0.8 identity", async () => {
   assert.deepEqual(RELEASE_IDENTITY, {
-    version: "1.0.7",
-    tag: "v1.0.7",
-    label: "Version 1.0.7",
-    title: "西新世紀末物語｜Version 1.0.7",
+    version: "1.0.8",
+    tag: "v1.0.8",
+    label: "Version 1.0.8",
+    title: "西新世紀末物語｜Version 1.0.8",
   });
-  assert.equal(RELEASE_VERSION, "1.0.7");
-  assert.equal(RELEASE_TAG, "v1.0.7");
-  assert.equal(RELEASE_LABEL, "Version 1.0.7");
-  assert.equal(RELEASE_TITLE, "西新世紀末物語｜Version 1.0.7");
+  assert.equal(RELEASE_VERSION, "1.0.8");
+  assert.equal(RELEASE_TAG, "v1.0.8");
+  assert.equal(RELEASE_LABEL, "Version 1.0.8");
+  assert.equal(RELEASE_TITLE, "西新世紀末物語｜Version 1.0.8");
 
   const [layout, screens, game] = await Promise.all([
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
