@@ -1,0 +1,30 @@
+{
+  "creator": "OpenAI built-in image generation",
+  "license": "Original project-generated output; OpenAI output terms",
+  "termsSource": "https://openai.com/policies/terms-of-use/",
+  "termsVerifiedAt": "2026-11-13",
+  "commercialUse": true,
+  "modificationAllowed": true,
+  "redistributionAllowed": true,
+  "producerApproval": "Authored boss VFX requested by the expanded goal; candidate requires actual runtime visual review.",
+  "prompt": "Use case: stylized-concept. One production-quality animated explosion sprite atlas for a richly hand-painted gritty Japanese post-apocalyptic smartphone combat game. Exactly SIX consecutive keyframes of the SAME dramatic ground-based explosion, laid out as a clean 3-column by 2-row sheet, equal square cells, full sheet 1536 by 1024. Transparent alpha background, no checkerboard. Fixed ground/contact anchor at local cell x256 y412 in all six frames. Frame1 a compact jagged white-hot ignition with gritty soil fragments. Frame2 violent sharp orange-red flame fingers and dark ruptured smoke, billowing irregularly upward and sideways. Frame3 the spectacular peak, richly layered curling flame tongues, incandescent torn edges, chunky dark debris and brown-grey pressure dust, strong crisp material detail. Frame4 fire breaks apart into rolling charcoal-black smoke with orange fire pockets and falling embers. Frame5 expanding turbulent dark-grey smoke with fine ash and just a few embers. Frame6 much thinner drifting smoke and settling ash, almost gone. A coherent believable explosion sequence, cinematic illustrated realism with high contrast edges and layered texture, not pixel art, not vector art. The strongest frame fills a 430px square but stays fully INSIDE its cell. Keep at least a 35 pixel truly transparent gutter on all four edges of EVERY cell: all paint, ash, soft light and faint smoke must fade to exact transparency before cell boundaries. Shape is asymmetric, torn, fiery and organic, never a round yellow fuzzy blob, mushroom icon, circle or ring. Avoid flat color, geometric rays, symbols, magic circles, text, numbers, dividers, borders, UI, characters, bodies, weapons, scenery, floor planes and cast-shadow rectangles. No blue sci-fi or pink light: real orange-red fire, charcoal smoke, grey-brown dust, white-hot small core. Each cell should show a different temporal stage of this one explosion, not six unrelated explosions. Preserve the same grounded anchor; smoke rises but nothing crosses a cell border.",
+  "editPrompt": "Edit this exact sprite sheet only to fix cell safety margins. Preserve its six temporal stages, painterly flame/smoke detail, palette and transparent alpha. It is a 1536x1024 grid of six 512x512 cells. Keep the common ground ignition anchor around local x96 y460. Some stray bright sparks/flame at the cell edges, especially the top-right cell, get cut by the grid. Remove or move those stray pieces inward; if needed slightly compress the large peak plume inside its own cell while keeping the ground anchor fixed. Every cell must have at least a 24-pixel border of completely transparent pixels on all four sides. No visible colored ember, glow, dust or smoke in that border. Do not add grid lines, background, checkerboard, labels or shapes. Do not change the explosion into a generic round fireball. Do not erase detailed interior flame or smoke, and do not add any new objects. Preserve genuine alpha transparency.",
+  "source": "C:/Users/okait/.codex/generated_images/01a1aafe-ec50-73a3-bdea-2bef9bc04c28/exec-0305615d-7b3d-49df-881a-7384e92c4cea.png",
+  "sourceReferenceSha256": "6810d09212cf09d4088d360068de7a1f22808dd7112bfc0ef4bfdda3cf9d6494",
+  "masterSha256": "ba683d23ee3a8d0692ff7f41f9f3eb02008bf771a402451357054579590e4607",
+  "outputSha256": "e6851cd119a82c40cd2da23aa3d5c1f25660f1b2a81c48cd8c0c9296eb8b518f",
+  "runtimePath": "/art/quality-20261113/vfx/boss-blast-six-r2.webp",
+  "runtimeAssetCount": 1,
+  "logicalBytes": 1112382,
+  "distinctBytes": 1112382,
+  "transform": "Lossless WebP conversion only, original pixels/alpha and before-edit master retained.",
+  "authoredAnchor": {
+    "x": 96,
+    "y": 460,
+    "space": "512x512 cell; actual observed anchor, not the initial requested centre"
+  },
+  "gutter": {
+    "max": 0.4470588235294118,
+    "mean": 0.01543763616557635
+  }
+}

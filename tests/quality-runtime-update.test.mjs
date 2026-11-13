@@ -22,11 +22,11 @@ function assertDelta(next){
   }
 }
 
-test('quality candidate contains exactly the reviewed art and firearm delta while retaining unrelated payloads',async()=>{
+test('quality candidate contains exactly the reviewed art, firearm and VFX delta while retaining unrelated payloads',async()=>{
   assertDelta(candidate);
-  assert.equal(contract.added.length,183);assert.equal(contract.retired.length,166);
+  assert.equal(contract.added.length,185);assert.equal(contract.retired.length,166);
   assert.equal(contract.transportChanges.length,345);
-  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),35275682); // Includes the current unnamed-speaker portrait in the verified offline pack.
+  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),37634610); // Includes the current unnamed-speaker portrait and the two original VFX sheets in the verified offline pack.
   for(const row of contract.added){
     const bytes=await readFile(new URL('../public'+(row.sourcePath??row.path),import.meta.url));
     assert.equal(bytes.length,row.bytes,row.path);

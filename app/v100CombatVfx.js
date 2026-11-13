@@ -1,7 +1,10 @@
+import {combatVariation,drawRasterPlume} from "./v100RasterAtmosphere.js";
 import { TAKUYA_GROUND_BLADE_SOCKET } from './v100TakuyaGroundSocket.js';
 import {queueV104GuardImpact} from './v104CombatAudio.js';
 
 export const V100_COMBAT_VFX_ART=Object.freeze({
+ 'quality-boss-blast':'/art/quality-20261113/vfx/boss-blast-six-r2.webp',
+ 'quality-medic-gauze':'/art/quality-20261113/vfx/medic-gauze-six-r1.webp',
  'v105-fist-wave':'/art/v105/combat-vfx/fist-wave-r1.webp',
  'v104-steel':'/art/v104/combat-vfx/steel-r1.webp',
  'v104-organic':'/art/v104/combat-vfx/organic-r1.webp',
@@ -31,24 +34,30 @@ export function drawV100GroundFire(ctx, objects, effect, time) {
     || ![effect.id, effect.x, effect.y, effect.radius, effect.remaining, time].every(Number.isFinite)) return false;
   const source = objects?.['v100-ground-fire'];
   if (!source?.complete || !source.naturalWidth || !source.naturalHeight) return false;
-  const cellWidth = source.naturalWidth / 6;
-  const cellHeight = source.naturalHeight / 5;
-  if (!(cellWidth > 0 && cellHeight > 0)) return false;
-  const fade = effect.remaining < .45 ? Math.max(0, effect.remaining / .45) : 1;
-  ctx.save();
-  ctx.translate(effect.x, effect.y);
-  for (let patch = 0; patch < 5; patch += 1) {
-    const frame = Math.floor((((time / 1.1 + effect.id * .037 + patch / 5) % 1 + 1) % 1) * 30) % 30;
-    const sx = frame % 6 * cellWidth;
-    const sy = Math.floor(frame / 6) * cellHeight;
-    const spread = (patch - 2) / 2;
-    const x = spread * effect.radius * .65 + Math.sin(time * 1.7 + effect.id + patch) * effect.radius * .025;
-    const width = Math.max(80, Math.min(160, effect.radius * 1.5));
-    const height = width * .75;
-    ctx.globalAlpha = fade * (.82 - (patch % 2) * .06);
-    ctx.drawImage(source, sx, sy, cellWidth, cellHeight, x - width / 2, -height * (110 / 128), width, height);
+  const cellWidth=source.naturalWidth/6,cellHeight=source.naturalHeight/5;
+  const count=[4,5,6,5][Math.abs(Math.trunc(effect.id))%4];
+  const fade=Math.min(1,effect.remaining/.45);
+  for(let patch=0;patch<count;patch++){
+    const r=combatVariation(effect.id,patch),shape=combatVariation(effect.id,patch+17);
+    const speed=.78+r*.55;
+    const phase=((time/speed+r+patch*.173)%1+1)%1;
+    const frame=Math.min(29,Math.floor(phase*30));
+    const sway=Math.sin(time*(1.2+r)+patch)*effect.radius*.018;
+    const offset=(patch/(count-1)-.5)*effect.radius*1.44+sway;
+    const width=Math.max(1,Math.min(105,effect.radius*(.48+shape*.35),2*(effect.radius-Math.abs(offset))));
+    const height=width*(1.08+r*1.12);
+    ctx.save();ctx.globalCompositeOperation='source-over';ctx.shadowBlur=0;ctx.globalAlpha=fade*(.84+shape*.12);
+    ctx.translate(effect.x+offset,effect.y+Math.sin(patch+effect.id)*3);
+    if(shape>.5)ctx.scale(-1,1);
+    ctx.drawImage(source,frame%6*cellWidth,Math.floor(frame/6)*cellHeight,cellWidth,cellHeight,-width/2,-height*(110/128),width,height);
+    ctx.restore();
   }
-  ctx.restore();
+  for(let plume=0;plume<2;plume++){
+    const smoke=objects?.[plume?'v100-smoke-a':'v100-smoke-b'];
+    const age=((time*.4+combatVariation(effect.id,plume+31))%1+1)%1;
+    drawRasterPlume(ctx,smoke,{x:effect.x+(plume?1:-1)*effect.radius*(.1+age*.2),y:effect.y-12-age*45,
+      width:effect.radius*(.7+age*.4),height:effect.radius*(.45+age*.5),alpha:fade*.16*Math.sin(age*Math.PI),flip:plume===0});
+  }
   return true;
 }
 // A muzzle belongs only to a firearm, never to a thrown grenade, bolt or

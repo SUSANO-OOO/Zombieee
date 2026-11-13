@@ -9,7 +9,7 @@ test('V1 effects have decoded stage and offline sources, preserving fractional a
  const manifest=JSON.parse(await readFile('public/asset-manifest.json'));
  for(const [id,path] of Object.entries(V100_COMBAT_VFX_ART)){
   const image=sharp('public'+path),m=await image.metadata(),s=await image.stats();
-  if(['v100-muzzle','v100-contact','v100-ground-impact','v100-metal-contact','v100-claw-contact','v100-lightblade','v100-countercut'].includes(id)){
+  if(['quality-boss-blast','quality-medic-gauze','v100-muzzle','v100-contact','v100-ground-impact','v100-metal-contact','v100-claw-contact','v100-lightblade','v100-countercut'].includes(id)){
    assert.equal(m.width,1536);assert.equal(m.height,1024);
    // Check visible light. The generator also supplied fractional alpha;
    // RGB beneath zero-alpha pixels is irrelevant and must stay unmodified.
@@ -85,10 +85,27 @@ test('explosion frames advance once and draw nothing after the effect lifetime',
   drawV100Explosion({}, {}, {elapsed:duration,duration});
  }
 });
-test('ground fire uses bounded atlas frames, fades at expiry, and restores alpha',()=>{
- const calls=[],alphas=[];let alpha=1;const ctx={save(){calls.push('save')},restore(){calls.push('restore');alpha=1},translate(){},drawImage(...args){calls.push(args)},set globalAlpha(value){alpha=value;alphas.push(value)},get globalAlpha(){return alpha}};
- const objects={'v100-ground-fire':{complete:true,naturalWidth:768,naturalHeight:640}};
+test('ground fire varies its painted clusters inside the danger radius, fades and restores state',()=>{
+ const source={complete:true,naturalWidth:768,naturalHeight:640},smoke={complete:true,naturalWidth:128,naturalHeight:128};
+ const objects={'v100-ground-fire':source,'v100-smoke-a':smoke,'v100-smoke-b':smoke};
  const effect={id:7,kind:'burn',phase:'active',x:300,y:200,radius:88,remaining:1};
- assert.equal(drawV100GroundFire(ctx,objects,effect,20),true);assert.equal(calls.filter((item)=>Array.isArray(item)).length,5);assert.ok(calls.filter((item)=>Array.isArray(item)).every((args)=>args[1]>=0&&args[1]<768&&args[2]>=0&&args[2]<640));assert.equal(alpha,1);
- const before=calls.length;effect.remaining=.2;assert.equal(drawV100GroundFire(ctx,objects,effect,20.4),true);assert.ok(alphas.at(-1)<alphas[0]);assert.equal(alpha,1);assert.equal(drawV100GroundFire(ctx,objects,{...effect,remaining:0},20.5),false);assert.equal(calls.length,before+7);
+ function render(e,t){
+  const calls=[],stack=[];let tx=0,ty=0;
+  const ctx={globalAlpha:.75,globalCompositeOperation:'screen',shadowBlur:3,
+   save(){stack.push([this.globalAlpha,this.globalCompositeOperation,this.shadowBlur,tx,ty]);},
+   restore(){[this.globalAlpha,this.globalCompositeOperation,this.shadowBlur,tx,ty]=stack.pop();},
+   translate(x,y){tx+=x;ty+=y;},scale(){},rotate(){},
+   drawImage(...args){calls.push({args,tx,ty,alpha:this.globalAlpha});}};
+  const result=drawV100GroundFire(ctx,objects,e,t);
+  assert.equal(ctx.globalAlpha,.75);assert.equal(ctx.globalCompositeOperation,'screen');assert.equal(ctx.shadowBlur,3);assert.equal(stack.length,0);
+  return {result,calls};
+ }
+ const first=render(effect,20),flames=first.calls.filter(c=>c.args[0]===source);
+ assert.equal(first.result,true);assert.ok(flames.length>=4&&flames.length<=6);
+ assert.ok(flames.every(c=>c.args[1]>=0&&c.args[1]<768&&c.args[2]>=0&&c.args[2]<640&&c.tx-c.args[7]/2>=effect.x-effect.radius-.01&&c.tx+c.args[7]/2<=effect.x+effect.radius+.01));
+ assert.deepEqual(first,render(effect,20));
+ assert.notDeepEqual(first,render({...effect,id:8},20));
+ assert.notDeepEqual(first,render(effect,20.2));
+ assert.ok(render({...effect,remaining:.1},20).calls.every(c=>c.alpha<.3));
+ for(const patch of [{remaining:0},{phase:'warning'},{x:NaN}]){const r=render({...effect,...patch},20);assert.equal(r.result,false);assert.equal(r.calls.length,0);}
 });

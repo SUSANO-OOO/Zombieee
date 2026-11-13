@@ -24,7 +24,7 @@ const save = normalizeV100Save({ ...createDefaultV100Save({ settings: { bgmEnabl
   availableStageIds: V100_STAGE_IDS, completedStageIds: V100_STAGE_IDS.slice(0, 22),
   flowState: { phase: 'formation', stageId: V100_STAGE_IDS[22], stageNumber: 23, eventId: null, destination: 'formation', nodeIndex: 0, firstClear: false, finalized: true } });
 const browser = await chromium.launch({ headless: true });
-const context = await browser.newContext({ viewport: { width: 844, height: 340 }, hasTouch: true, serviceWorkers: 'block' });
+const context = await browser.newContext({ viewport: { width: 844, height: 340 }, hasTouch: true });
 try {
   await context.addInitScript(seedV100BrowserSaveOnce, serializeV100Save(save));
   const page = await context.newPage(); page.setDefaultTimeout(25000);

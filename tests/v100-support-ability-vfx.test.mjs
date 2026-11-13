@@ -41,6 +41,7 @@ test("support VFX renderer uses raster draw calls only", () => {
     set globalAlpha(value) { alpha = value; },
   };
   const objects = {
+    "quality-medic-gauze": {complete:true,naturalWidth:1536,naturalHeight:1024},
     "v100-dust": { complete: true, naturalWidth: 128, naturalHeight: 128 },
     "v100-support-trap-sprung": { complete: true, naturalWidth: 145, naturalHeight: 28 },
   };
@@ -62,4 +63,17 @@ test("support VFX renderer uses raster draw calls only", () => {
   drawV100SupportAbilityEffects({ ...laterCtx, drawImage(...args) { expiredCalls.push(args); } }, objects, game);
   assert.equal(expiredCalls.length, 0);
   clearV100SupportAbilityEffects(game);
+});
+
+test("the dressing follows its living recipient without changing the stored impact or painting a lost target", () => {
+  const game = world(),target={id:77,side:"human",hp:40,x:120,y:228};
+  game.fighters=[target];
+  queueV100SupportAbilityEffect(game,{ownerId:4,activationId:2,eventType:"medic-impact",targetId:77,x:120,y:200});
+  game.time=10.2;
+  const before=getV100SupportAbilityEffectsSnapshot(game),objects={"quality-medic-gauze":{complete:true,naturalWidth:1536,naturalHeight:1024}};
+  const render=()=>{const calls=[];drawV100SupportAbilityEffects({save(){},restore(){},drawImage(...args){calls.push(args);}},objects,game);return calls;};
+  const first=render();target.x+=50;target.y-=10;const moved=render();
+  assert.ok(Math.abs(moved[0][5]-first[0][5]-50)<1e-10);assert.ok(Math.abs(moved[0][6]-first[0][6]+10)<1e-10);
+  assert.deepEqual(getV100SupportAbilityEffectsSnapshot(game),before);
+  target.hp=0;assert.equal(render().length,0);game.fighters=[];assert.equal(render().length,0);
 });
