@@ -1,5 +1,7 @@
 import {clearV100GuardActivations,drawV100GuardActivations,getV100GuardActivationsSnapshot} from './v100GuardActivationVfx.js';
 import { drawV100Explosion } from "./v100CombatVfx.js";
+import {drawV100ChihaFinalBurst,v100ChihaFinalPaintScale,V100_CHIHA_FINAL_BURST_DURATION} from "./v100ChihaFinalBurstVfx.js";
+export {V100_CHIHA_FINAL_BURST_DURATION};
 
 const MAX_ADVANCED_EFFECTS = 64;
 const TYPES = Object.freeze(["mrs-grenade-flight", "mrs-grenade-impact", "zakimiya-bottle", "zakimiya-impact", "tky-lightblade", "musashi-crosscut", "mayo-dust"]);
@@ -72,10 +74,19 @@ function drawCell(ctx, source, effect, width, height, center = false) {
   const elapsed = Math.max(0, effect.elapsed ?? 0); const frame = Math.min(5, Math.floor(Math.max(0, Math.min(1, elapsed / effect.duration)) * 6)); const sx = frame % 3 * 512; const sy = Math.floor(frame / 3) * 512; const pivot = effect.type === "tky-lightblade" ? [[105, 340], [65, 341], [58, 344], [83, 352], [79, 353], [90, 359]][frame] : [256, 256]; const left = center ? -width / 2 : effect.type === "tky-lightblade" ? -pivot[0] / 512 * width : -width / 2; const top = center ? -height / 2 : effect.type === "tky-lightblade" ? -pivot[1] / 512 * height : -height; ctx.save(); ctx.translate(effect.x, effect.y); if (effect.direction < 0) ctx.scale(-1, 1); ctx.drawImage(source, sx, sy, 512, 512, left, top, width, height); ctx.restore();
 }
 
+export function drawV100ChihaFinalBursts(ctx,objects,world,viewport={}) {
+  const paintScale=v100ChihaFinalPaintScale(viewport);
+  if(!paintScale)return;
+  for(const effect of active(world)){
+    if(effect.type!=="mrs-grenade-impact"||effect.finalRound!==true||effect.pendingOrigin)continue;
+    drawV100ChihaFinalBurst(ctx,objects,{...effect,elapsed:Math.max(0,world.time-effect.startedAt)},paintScale);
+  }
+}
+
 export function drawV100AdvancedAbilityEffects(ctx, objects, world) {
   drawV100GuardActivations(ctx,objects,world);
   for (const effect of active(world)) {
-    if (effect.pendingOrigin) continue;
+    if (effect.pendingOrigin || effect.type==="mrs-grenade-impact" && effect.finalRound===true) continue;
     const elapsed = Math.max(0, world.time - effect.startedAt); const progress = Math.max(0, Math.min(1, elapsed / effect.duration)); const renderEffect = { ...effect, elapsed };
     if (effect.type === "mrs-grenade-flight" || effect.type === "zakimiya-bottle") {
       const source = image(objects, effect.type === "mrs-grenade-flight" ? "v100-grenade-projectile" : "v100-fire-whisky-projectile"); if (!source) continue;
