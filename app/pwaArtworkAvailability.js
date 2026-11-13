@@ -10,3 +10,8 @@ export function canUseVerifiedPwaArtwork({artwork,installedManifest,storedHashes
     && installedManifest.assets.some(asset=>asset.path===path && asset.hash===artwork.hash)
     && typeof storedHashes?.has==='function' && storedHashes.has(artwork.hash);
 }
+
+export function verifiedPwaArtworkPaths({artworks={},...facts}={}){
+  return [...new Set(Object.values(artworks??{}).filter(artwork=>canUseVerifiedPwaArtwork({...facts,artwork}))
+    .map(artwork=>artwork.path))].sort().join('\n');
+}

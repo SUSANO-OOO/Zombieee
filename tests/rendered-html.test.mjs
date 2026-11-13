@@ -411,7 +411,11 @@ test("ships the three-route battlefield art with stage-aware objectives and the 
   assert.match(game, /const requiredPlan = requiredBattleAssetPlan\(\{[\s\S]*formationKinds: \[\.\.\.selectedFormationKinds, \.\.\.selectedVariantKinds\],[\s\S]*enemyKinds: stageEnemyKinds/);
   assert.match(game, /const requiredSpriteKinds = requiredPlan\.sprites\.map/);
   assert.match(game, /requiredPlan\.sprites\.map\(\(\{ kind, path, category \}\) => imageJob/);
-  assert.doesNotMatch(game, /optionalKinds|optionalJobs|degraded-ready/);
+  assert.doesNotMatch(game, /optionalKinds|degraded-ready/);
+  // Only an added painted finale with an existing painted fallback may be
+  // optional. Character, background and mission art remain in the closed plan.
+  assert.match(game, /stageObjectAssets\.filter\(object => !object\.optional\)\.map/);
+  assert.match(game, /const optionalJobs = optionalBattleArtworkJobs\(\{/);
   assert.match(assetPlan, /STAGE_OBJECT_MANIFEST\[stageId\]\?\.objects \?\? \[\]/);
   assert.match(game, /const retainedSpriteImages = new Set\([\s\S]*if \(!retainedSpriteImages\.has\(image\) && !releasedSpriteImages\.has\(image\)\)[\s\S]*releaseImage\(image\)/);
   assert.match(game, /delete backgroundCacheRef\.current\[stageId\];[\s\S]*const allCriticalJobs = \[/);

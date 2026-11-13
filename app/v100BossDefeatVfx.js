@@ -1,5 +1,6 @@
 import {V099_BOSS_DEFEAT_TIMELINE as TIMELINE} from './battlePresentationV099.js';
 import {combatVariation,drawRasterPlume} from './v100RasterAtmosphere.js';
+import {bossDefeatFinaleWasDrawn} from './v100BossDefeatFinaleVfx.js';
 
 // The semantic event still owns one defeat, the same audio beats and the same
 // result wait. Profiles only stage the painted collapse inside that lifetime.
@@ -35,10 +36,11 @@ function drawBossBlast(ctx,objects,effect,x,y,size){
  ctx.restore();
 }
 
-export function drawV100BossDefeat(ctx,objects,effect,density=1){
+export function drawV100BossDefeat(ctx,objects,effect,density=1,world=null){
  if(effect?.kind!=='boss-defeat'||![effect.x,effect.y,effect.elapsed,effect.duration,effect.seed,density].every(Number.isFinite)
   ||effect.duration<=0||effect.elapsed<0||effect.elapsed>=effect.duration||density<=0)return false;
  const p=PROFILES[effect.label]??PROFILES.takuya;
+ const dedicatedFinale=bossDefeatFinaleWasDrawn(ctx,world,effect);
  const seed=effect.seed,t=effect.elapsed;
  const small=TIMELINE.smallBursts;
  for(let i=0;i<small.length;i++){
@@ -50,7 +52,7 @@ export function drawV100BossDefeat(ctx,objects,effect,density=1){
  const medium=TIMELINE.mediumBurst,mediumAge=t-medium.at;
  if(mediumAge>=0&&mediumAge<1.05)drawBossBlast(ctx,objects,{elapsed:mediumAge,duration:1.05},effect.x+medium.dx*p.spread,effect.y+medium.dy,medium.scale*.65);
  const major=TIMELINE.majorBurst,majorAge=t-major.at;
- if(majorAge>=0)drawBossBlast(ctx,objects,{elapsed:majorAge,duration:effect.duration-major.at},effect.x,effect.y,p.major);
+ if(majorAge>=0&&!dedicatedFinale)drawBossBlast(ctx,objects,{elapsed:majorAge,duration:effect.duration-major.at},effect.x,effect.y,p.major);
  // Secondary tears travel sideways after the primary rupture; they are
  // aftermath, not additional semantic explosions, damage or audio requests.
  for(let i=0;i<Math.min(4,Math.max(2,Math.round(4*density)));i++){
@@ -62,7 +64,7 @@ export function drawV100BossDefeat(ctx,objects,effect,density=1){
    y:effect.y+8-progress*(12+r*18),width:(55+progress*80)*p.plume,height:24+progress*28,
    alpha:.42*(1-progress),rotation:(r-.5)*.2,flip:i%2===0});
  }
- if(t>=.65){
+ if(t>=.65&&!dedicatedFinale){
   const age=(t-.65)/(effect.duration-.65),fade=Math.sin(Math.min(1,age)*Math.PI);
   for(let i=0;i<3;i++){
    const r=combatVariation(seed,i+15),smoke=objects?.[i%2?'v100-smoke-a':'v100-smoke-b'];

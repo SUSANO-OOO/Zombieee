@@ -44,7 +44,8 @@ import { beginV102GoreStep, finishV102GoreStep, noteV102GoreImpact, noteV102Gore
 import { v100DamageTextPosition, resetV100DamageTextPaint, layoutV100DamageTextPaint } from "./v100DamageTextPlacement.js";
 import { V100_CANVAS_FONT } from "./v100Typography.js";
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import {PwaBattleArtworkPathsContext,selectBattleArtworkPolicy} from "./pwaBattleArtworkContext.js";
 import {
   RANDOM_BATTLE_BARK_TRIGGER_IDS,
   advanceBattleBarkRuntime,
@@ -460,7 +461,8 @@ import {
   REQUIRED_BATTLE_IMAGE_DECODE_TIMEOUT_MS,
   loadImageWithTimeout,
 } from "./boundedImageLoader.js";
-import { runAssetLoadSession, selectRetryAssetJobs } from "./assetLoadSession.js";
+import { runAssetLoadSession, selectRetryAssetJobs, OPTIONAL_ASSET_LOAD_DEADLINE_MS } from "./assetLoadSession.js";
+import { optionalBattleArtworkJobs } from "./optionalBattleArtwork.js";
 import {
   AIRSTRIKE_DEF,
   BARRICADE_MAX_HP,
@@ -604,6 +606,7 @@ import { drawV100AssaultObject, v100AssaultObjectProfile } from "./v100AssaultOb
 import { drawV100Explosion, drawV100FootDust, drawV100GroundFire, drawV100Muzzle, V100_CONTACT_WEAPONS, V100_CLAW_CONTACT_WEAPONS, queueV100Contact, queueV100ClawContact, queueV100TakuyaGroundContact, queueV100TataraGroundContact, getV100ClawContactSnapshot, getV100SkillContactSnapshot, queueV100GuardContact, getV100GuardContactSnapshot, drawV100ContactQueue, clearV100ContactQueue } from "./v100CombatVfx.js";
 import { drawV100BossAftermath } from "./v100BossAftermath.js";
 import { drawV100BossDefeat } from "./v100BossDefeatVfx.js";
+import {drawV100BossDefeatFinales} from "./v100BossDefeatFinaleVfx.js";
 import { TATARA_GROUND_ART, v100TataraGroundPose, v100TataraDisplaySize, v100RenderedTataraGroundSocket } from "./v100TataraPresentation.js";
 import { V100_MANUAL_FIREARM_KINDS, queueV100ManualMuzzle, queueV100ManualFirearmImpact, drawV100ManualMuzzles, getV100ManualMuzzleSnapshot, clearV100ManualFirearmVfx } from "./v100ManualFirearmVfx.js";
 import {v100BrawlerCanAct} from './v100BrawlerCombo.js';
@@ -8374,7 +8377,7 @@ function drawBattlePresentationEffects(ctx: CanvasRenderingContext2D, g: Game, e
       continue;
     }
     if (effect.kind === "boss-defeat") {
-      if (g.definition.missionConfig.v100StageNumber) { drawV100BossDefeat(ctx,stageObjects,effect,effectDensity); continue; }
+      if (g.definition.missionConfig.v100StageNumber) { drawV100BossDefeat(ctx,stageObjects,effect,effectDensity,g); continue; }
       const bossSnapshot = battlePresentationSnapshot(effect, effectDensity);
       for (const burst of V099_BOSS_DEFEAT_TIMELINE.smallBursts) {
         if (effect.elapsed < burst.at) continue;
@@ -8879,6 +8882,7 @@ function drawWorld(
   const activeStageObjects = activeStageObjectsForGame(g);
   drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["rear-scenery"], Boolean(g.definition.missionConfig.v100StageNumber));
   if(g.definition.missionConfig.v100StageNumber)drawV100ChihaFinalBursts(ctx,stageObjects,g,{viewportWidth:ctx.canvas.clientWidth,viewportHeight:ctx.canvas.clientHeight,worldScale:presentationLayout?.transform.scale??1});
+  if(g.definition.missionConfig.v100StageNumber)drawV100BossDefeatFinales(ctx,stageObjects,g,{viewportWidth:ctx.canvas.clientWidth,viewportHeight:ctx.canvas.clientHeight,worldScale:presentationLayout?.transform.scale??1,density:graphicsProfile.effectDensity});
 
   // Units reveal the three routes through movement; no lane-map overlay is drawn over the battlefield.
 
@@ -9424,6 +9428,10 @@ function drawWorld(
 }
 
 export function AshfallGame({ externalSession = null }: { externalSession?: AshfallExternalSession | null } = {}) {
+  const verifiedBattleArtworkPaths=useContext(PwaBattleArtworkPathsContext);
+  const verifiedBattleArtworkPathsRef=useRef(verifiedBattleArtworkPaths);
+  const battleArtworkPolicyRef=useRef<{key:string;paths:string}|null>(null);
+  useEffect(()=>{verifiedBattleArtworkPathsRef.current=verifiedBattleArtworkPaths;},[verifiedBattleArtworkPaths]);
   useEffect(() => () => v100HumanWalkRenderer.clear(), []);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const manualAbilityLayoutInputRef = useRef<Parameters<typeof layoutManualAbilityIcons>[0] | null>(null);
@@ -9521,6 +9529,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   const assetQaFaultClearedRef = useRef(false);
   const assetSessionControllerRef = useRef<AbortController | null>(null);
   const assetSessionHistoryRef = useRef<Array<Record<string, unknown>>>([]);
+  const optionalAssetSessionHistoryRef = useRef<Array<Record<string, unknown>>>([]);
   const assetSessionRestartCountRef = useRef(0);
   const pageHiddenRef = useRef(false);
   const fallbackAudioSuspendedRef = useRef(false);
@@ -15198,6 +15207,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     const generation = assetLoadGenerationRef.current + 1;
     assetLoadGenerationRef.current = generation;
     const controller = new AbortController();
+    const optionalController = new AbortController();
+    controller.signal.addEventListener("abort", () => optionalController.abort(), { once: true });
     assetSessionControllerRef.current?.abort();
     assetSessionControllerRef.current = controller;
     const current = () => !cancelled && assetLoadGenerationRef.current === generation;
@@ -15222,10 +15233,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         failureReason: "",
       });
     });
-    const loadImage = (src: string, onReady: (image: HTMLImageElement) => void) => (
+    const loadImage = (src: string, onReady: (image: HTMLImageElement) => void, signal = controller.signal) => (
       loadImageWithTimeout({
         src,
-        signal: controller.signal,
+        signal,
         requireDecode: true,
         decodeAttempts: REQUIRED_BATTLE_IMAGE_DECODE_ATTEMPTS,
         decodeTimeoutMs: REQUIRED_BATTLE_IMAGE_DECODE_TIMEOUT_MS,
@@ -15259,6 +15270,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       current: HTMLImageElement | null | undefined,
       src: string,
       onReady: (image: HTMLImageElement) => void,
+      signal = controller.signal,
     ) => {
       if (current?.naturalWidth && decodedBattleImagesRef.current.has(current)) {
         const parameters = new URLSearchParams(window.location.search);
@@ -15269,7 +15281,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           return Promise.resolve();
         }
       }
-      return loadImage(src, onReady);
+      return loadImage(src, onReady, signal);
     };
     const releaseImage = (image: HTMLImageElement | null | undefined) => {
       if (!image) return;
@@ -15338,12 +15350,16 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     // its formation, waves, mission objects, support actions and Crawler has
     // decoded. `turned` is included by the plan because any fallen ally can
     // become one, independent of the authored enemy roster.
+    const artworkSelectionKey=JSON.stringify({operation:activeOperationId,stage:assetStageId,
+      formation:[...selectedFormationKinds,...selectedVariantKinds],enemies:stageEnemyKinds,v100:!exhaustiveLocalQa,external:externalSessionActive});
+    battleArtworkPolicyRef.current=selectBattleArtworkPolicy(battleArtworkPolicyRef.current,artworkSelectionKey,verifiedBattleArtworkPathsRef.current);
     const requiredPlan = requiredBattleAssetPlan({
       stageId: assetStageId,
       useCharacterPortraitCards: externalSessionActive,
       basePresentationStageNumber: externalSessionActive ? V100_STAGE_BY_ID[assetStageId]?.number : null,
       formationKinds: [...selectedFormationKinds, ...selectedVariantKinds],
       enemyKinds: stageEnemyKinds,
+      verifiedBossDefeatPaths: battleArtworkPolicyRef.current.paths.split('\n').filter(Boolean),
       includeAllSprites: localQaRequested
         && !finiteEnemyRuntimeQa
         && !finiteVisualIntegrityQa
@@ -15429,13 +15445,19 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           spriteRefs.current[key],
           (image) => { spriteRefs.current[key] = image; },
         )),
-      ...stageObjectAssets.map((object) => imageJob(
+      ...stageObjectAssets.filter(object => !object.optional).map((object) => imageJob(
         object.path,
         object.category,
         stageObjectRefs.current[object.id],
         (image) => { stageObjectRefs.current[object.id] = image; },
       )),
     ];
+    const optionalJobs = optionalBattleArtworkJobs({
+      objects: stageObjectAssets,
+      load: (object, ready, signal) => ensureImageLoaded(stageObjectRefs.current[object.id], object.path, ready, signal),
+      isCurrent: current,
+      onReady: (object, image) => { stageObjectRefs.current[object.id] = image; },
+    });
     const criticalJobs = retryPaths
       ? selectRetryAssetJobs(allCriticalJobs, retryPaths)
       : allCriticalJobs;
@@ -15542,6 +15564,23 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         retrying: false,
         failureReason: "",
       });
+      // Existing required art is ready before optional work starts. A failed
+      // optional decode keeps the shipped painted finale and cannot disable
+      // deployment, enter required retry paths or alter critical history.
+      void runAssetLoadSession({
+        jobs: optionalJobs, generation, reason: sessionReason,
+        signal: optionalController.signal,
+        abort: () => optionalController.abort(),
+        deadlineMs: OPTIONAL_ASSET_LOAD_DEADLINE_MS,
+        concurrency: 1,
+      }).then(result => {
+        if (!current()) return;
+        optionalAssetSessionHistoryRef.current = [...optionalAssetSessionHistoryRef.current.slice(-11), {
+          generation, phase: "optional", status: result.status,
+          completed: result.completed, total: result.total, failures: result.failures,
+          elapsedMs: result.elapsedMs, deadlineReached: result.deadlineReached,
+        }];
+      });
     }).catch((error) => {
       if (!current()) return;
       window.clearTimeout(slowTimer);
@@ -15643,6 +15682,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     const bridge = {
       getState: () => ({ ...assetReadiness }),
       getHistory: () => assetSessionHistoryRef.current.map((entry) => ({ ...entry })),
+      getOptionalHistory: () => optionalAssetSessionHistoryRef.current.map((entry) => ({ ...entry })),
       getPendingPaths: () => [...assetPendingPathsRef.current],
       getFailedPaths: () => [...assetFailedPathsRef.current],
       startAssetFaultProof: () => {

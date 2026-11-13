@@ -17,6 +17,7 @@ import { TATARA_GROUND_ART } from "./v100TataraPresentation.js";
 import { v100BasePresentationFor } from "./v100BasePresentation.js";
 import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
 import { V177_JOINT_ATLASES } from "./v177JointPresentation.js";
+import { V100_BOSS_DEFEAT_ART } from "./v100BossDefeatArt.js";
 
 export const BATTLE_SUPPORT_ASSET_PATHS = Object.freeze({
   pod: "/tactical-drop-pod-v1.png",
@@ -53,6 +54,7 @@ export function requiredBattleAssetPlan({
   includeV100Sprites = true,
   basePresentationStageNumber = null,
   useCharacterPortraitCards = false,
+  verifiedBossDefeatPaths = [],
 } = {}) {
   const stage = CAMPAIGN_STAGE_BY_ID[stageId];
   const v100Stage = V100_STAGE_BY_ID[stageId] ?? null;
@@ -98,7 +100,12 @@ export function requiredBattleAssetPlan({
     ? Object.entries(V100_COMBAT_VFX_ART).map(([id,path])=>({id,path,runtimeUsage:"battle-overlay"})) : [];
   const tataraObjects = includeV100Sprites && v100Stage && requiredKinds.includes("brute")
     ? [{ id: TATARA_GROUND_ART.id, path: TATARA_GROUND_ART.path, runtimeUsage: "battle-overlay" }] : [];
-  const allStageObjects = [...manifestObjects, ...extraMissionObjects, ...v100MissionObjectEntries, ...v100VfxEntries, ...vehicleObjects, ...researchObjects, ...nodeObjects, ...assaultObjects, ...defenseObjects, ...combatVfx, ...tataraObjects];
+  // Optional new finales belong only to actual enemies in this prepared stage
+  // (or the existing bounded V1 survival segment), never the every-stage list.
+  const bossDefeatObjects = includeV100Sprites && v100Stage
+    ? Object.entries(V100_BOSS_DEFEAT_ART).filter(([kind,art])=>enemyKinds.includes(kind)&&verifiedBossDefeatPaths.includes(art.path))
+      .map(([,art])=>({id:art.id,path:art.path,runtimeUsage:"battle-overlay",optional:true})) : [];
+  const allStageObjects = [...manifestObjects, ...extraMissionObjects, ...v100MissionObjectEntries, ...v100VfxEntries, ...vehicleObjects, ...researchObjects, ...nodeObjects, ...assaultObjects, ...defenseObjects, ...combatVfx, ...tataraObjects, ...bossDefeatObjects];
   const stageObjects = unique(allStageObjects.map((entry) => entry.id))
     .map((id) => allStageObjects.find((entry) => entry.id === id))
     .map((entry) => frozenEntry({
@@ -106,6 +113,7 @@ export function requiredBattleAssetPlan({
       path: entry.path,
       category: entry.runtimeUsage === "mission-render-source" ? "mission" : "stage-object",
       runtimeUsage: entry.runtimeUsage ?? "battle-overlay",
+      ...(entry.optional ? { optional: true } : {}),
     }));
   const persistent = [
     ...Object.entries(includeV100Sprites && v100BasePresentationFor(basePresentationStageNumber).onFoot
@@ -144,9 +152,10 @@ export function requiredBattleAssetPlan({
       plan.background.path,
       plan.enemyBase.path,
       ...plan.sprites.map(({ path }) => path),
-      ...plan.stageObjects.map(({ path }) => path),
+      ...plan.stageObjects.filter(entry => !entry.optional).map(({ path }) => path),
       ...plan.persistent.map(({ path }) => path),
       ...plan.cards.map(({ path }) => path),
     ])),
+    optionalPaths: Object.freeze(unique(plan.stageObjects.filter(entry => entry.optional).map(({ path }) => path))),
   });
 }

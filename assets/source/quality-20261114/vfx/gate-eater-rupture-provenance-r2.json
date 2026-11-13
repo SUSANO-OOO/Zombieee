@@ -1,0 +1,47 @@
+{
+  "generator": "scripts/build-v100-boss-defeat-art.mjs",
+  "creator": "OpenAI built-in image_gen under Producer direction; deterministic WebP packaging by Codex",
+  "license": "Project-original generated artwork under the existing game asset policy; no third-party download",
+  "rights": {
+    "commercialUse": true,
+    "modification": true,
+    "redistribution": true,
+    "basis": "Original art created for this project, with the existing project-owned blast as style reference"
+  },
+  "producerApproval": "Current goal requests bespoke boss effects. This is an implementation candidate, not final visual/audio/device acceptance.",
+  "source": {
+    "path": "assets/source/quality-20261114/vfx/gate-eater-rupture-r2.png",
+    "bytes": 2211536,
+    "sha256": "cbce750c73d2ba5b1aa1065d93681ed00cb1a079581be851a2e45bc259da9d52"
+  },
+  "prompt": {
+    "path": "assets/source/quality-20261114/vfx/gate-eater-rupture-prompt-r2.txt",
+    "sha256": "05007bfad63f3ec094e9b65263fbc26d9286676c2fb7acc284bd8fdbb6e5dc91"
+  },
+  "generation": {
+    "mode": "built-in image_gen edit",
+    "model": "Selected by host; no model name asserted",
+    "reference": {
+      "path": "public/art/quality-20261113/vfx/boss-blast-six-r2.webp",
+      "sha256": "e6851cd119a82c40cd2da23aa3d5c1f25660f1b2a81c48cd8c0c9296eb8b518f"
+    },
+    "intermediateMasterSha256": "762749228cead4c537633bfce40e020bd7304862eeed900bca98a5545c5ae0e8",
+    "note": "R1 industrial rupture followed by one native layout correction. R1 and failed edge analysis remain local evidence."
+  },
+  "output": {
+    "path": "/art/quality-20261114/vfx/gate-eater-rupture-six-r2.webp",
+    "bytes": 432808,
+    "sha256": "16efa160c08d80e096231304aaf0ed13f8599c5be51339c97c474fb9c248ab2e",
+    "width": 1536,
+    "height": 1024,
+    "columns": 3,
+    "rows": 2,
+    "anchorX": 0.5,
+    "anchorY": 0.91796875
+  },
+  "runtimeAssetCount": 1,
+  "logicalBytes": 432808,
+  "distinctBytes": 432808,
+  "estimatedDecodedRgbaBytes": 6291456,
+  "scope": "Gate Eater visual finale only. Existing body, defeat receipt, result wait, damage, rewards, random sequence and audio are unchanged."
+}
