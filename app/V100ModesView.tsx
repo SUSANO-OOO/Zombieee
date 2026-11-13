@@ -10,7 +10,7 @@ import { beginV100Outbreak, dismissV100OutbreakResult, leaveV100Outbreak, settle
 import { V100SurvivalView } from "./V100SurvivalView";
 import { V100_UNITS, V100_SUPPORTS } from "./v100Registry.js";
 import { stageVisualFor } from "./productionVisuals.js";
-import { v100BossActionGuidanceFor } from "./bossFoundation.js";
+import { v100BossActionGuidanceFor, bossDefinitionForId } from "./bossFoundation.js";
 
 type Save = ReturnType<typeof normalizeV100Save>;
 type Encounter = { id: string; displayName: string; stageNumber: number; stageId: string; rewardCaps: number; rewardEquipment: { id: string; displayName: string } | null };
@@ -89,15 +89,64 @@ export function V100ModesView({ save, onBack, onLoadout, onSave, initialTab = "o
     </article>;
   })}
 </div>}
-    {tab === "records" && <div className="v100-mode-totals"><span>物語制圧 {save.completedStageIds.length} / 30</span><span>獲得した星 {Object.values(save.bestStars).reduce((sum: number, value) => sum + Number(value), 0)}</span><span>所持 {save.caps} CAPS</span></div>}
-    {tab !== "overview" && tab !== "survival" && bosses.length === 0 && <p>物語で初めて撃破した異常個体が、ここに記録されます。</p>}
-    {tab !== "overview" && tab !== "survival" && tab !== "outbreak" && <div className="v100-equipment-catalog">{bosses.map(boss => {
-      const clears = save.outbreak.clearCounts[boss.id] ?? 0;
-      return <article className="v100-equipment-card" key={boss.id} data-outbreak-boss-id={boss.id}>
-        <span className="v100-kicker">物語 ステージ {boss.stageNumber} / 撃破済み</span><h3>{boss.displayName}</h3>
-        <p>総撃破 {defeatCounts[boss.id] ?? 0}回 / 異常発生制圧 {clears}回 / サバイバル制圧 {save.survival.clearCounts[boss.id] ?? 0}回</p>
-        {tab === "compendium" && <p>物語での撃破後、異常発生に出現します。個別の撃破記録は全モードで共有します。</p>}
-      </article>;
-    })}</div>}
+    {tab === "outbreak" && bosses.length === 0 && <p>物語で初めて撃破した異常個体が、ここに記録されます。</p>}
+    {tab === "compendium" && <div className="v100-compendium-register">
+  <p className="v100-register-intro">物語で撃破した個体の特徴と対策を確認できます。個別の撃破記録は全モードで共有します。</p>
+  {bosses.length === 0 && <p>物語で初めて撃破した異常個体が、ここに記録されます。</p>}
+  {bosses.map(boss => {
+    const detail = bossDefinitionForId(boss.id === "boss-kurome" ? "boss-kurome-prototype" : boss.id);
+    // V1 twins cooperate; R9 leaves Omega's large blade deliberately unclassified.
+    const classification = boss.id === "boss-futago" ? "双体連携型異常発生個体"
+      : boss.id === "boss-takuya-omega" ? "終端防衛型異常発生個体" : detail?.classification;
+    const guidance = v100BossActionGuidanceFor(boss.id);
+    const total = defeatCounts[boss.id] ?? 0;
+    const outbreak = save.outbreak.clearCounts[boss.id] ?? 0;
+    const survival = save.survival.clearCounts[boss.id] ?? 0;
+    return <article className="v100-compendium-entry" key={boss.id} data-outbreak-boss-id={boss.id}>
+      <div className="v100-compendium-stage"><small>物語</small><strong>S{String(boss.stageNumber).padStart(2, "0")}</strong></div>
+      <div className="v100-compendium-body">
+        <h3>{boss.displayName}</h3>
+        {classification && <p className="v100-compendium-feature"><b>特徴</b><span>{classification}</span></p>}
+        {guidance && <p className="v100-compendium-counter"><b>対策</b><span>{guidance}</span></p>}
+        <dl className="v100-compendium-history" aria-label={boss.displayName + "の撃破履歴"}>
+          <div data-record-mode="total"><dt>総撃破</dt><dd>{total}<small>回</small></dd></div>
+          <div data-record-mode="outbreak"><dt>異常発生</dt><dd>{outbreak}<small>回</small></dd></div>
+          <div data-record-mode="survival"><dt>サバイバル</dt><dd>{survival}<small>回</small></dd></div>
+        </dl>
+      </div>
+    </article>;
+  })}
+</div>}
+
+{tab === "records" && <div className="v100-records-ledger">
+  <div className="v100-records-overview">
+    <section className="v100-records-story" aria-label="物語の記録">
+      <h3>物語制圧</h3><p className="v100-records-progress"><strong>{save.completedStageIds.length}</strong><span>/ 30</span></p>
+      <p className="v100-records-stars">獲得した星 <b>{Object.values(save.bestStars).reduce((sum: number, value) => sum + Number(value), 0)}</b></p>
+    </section>
+    <section className="v100-records-caps" aria-label="現在の所持CAPS"><h3>所持CAPS</h3><strong>{save.caps}</strong><span>CAPS</span></section>
+  </div>
+  <div className="v100-records-modes">
+    <section className="v100-records-outbreak" aria-label="異常発生の記録"><h3>異常発生</h3><dl><div><dt>再制圧済み</dt><dd>{bosses.filter(boss => (save.outbreak.clearCounts[boss.id] ?? 0) > 0).length}<small>体</small></dd></div></dl></section>
+    <section className="v100-records-survival" aria-label="サバイバルの記録"><h3>サバイバル</h3><dl>
+      <div><dt>最高制圧</dt><dd>{save.survival.highestCompletedWave}<small>波</small></dd></div>
+      <div><dt>最高到達</dt><dd>{save.survival.highestReachedWave}<small>波</small></dd></div>
+      <div><dt>プレイ回数</dt><dd>{save.survival.totalRuns}<small>回</small></dd></div>
+    </dl></section>
+  </div>
+  <section className="v100-records-boss-ledger" aria-label="個体別の撃破記録">
+    <h3>個体別の撃破記録</h3><p>総撃破は全モードの合計です。</p>
+    {bosses.length === 0 ? <p>物語で初めて撃破した異常個体が、ここに記録されます。</p> : <table>
+      <colgroup><col className="v100-record-name-col" /><col className="v100-record-total-col" /><col /><col /></colgroup>
+      <thead><tr><th scope="col">個体</th><th scope="col">総撃破</th><th scope="col">異常発生</th><th scope="col">サバイバル</th></tr></thead>
+      <tbody>{bosses.map(boss => <tr key={boss.id} data-outbreak-boss-id={boss.id}>
+        <th scope="row">{boss.displayName}</th>
+        <td data-record-mode="total">{defeatCounts[boss.id] ?? 0}<small>回</small></td>
+        <td data-record-mode="outbreak">{save.outbreak.clearCounts[boss.id] ?? 0}<small>回</small></td>
+        <td data-record-mode="survival">{save.survival.clearCounts[boss.id] ?? 0}<small>回</small></td>
+      </tr>)}</tbody>
+    </table>}
+  </section>
+</div>}
   </section>;
 }
