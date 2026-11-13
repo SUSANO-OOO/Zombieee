@@ -12,6 +12,7 @@ import { v100PortraitFraming } from "./v100PortraitFraming.js";
 import { v100BasePresentationFor } from "./v100BasePresentation.js";
 import { createV100HumanWalkRenderer, v100HumanWalkPhase, v100UsesHumanWalk, v100HumanWalkCycleDistance, v100HumanWalkFrame } from "./v100HumanWalk.js";
 import { V177_JOINT_ATLASES, v177JointCycleDistance, v177JointPose, v177RangerFootPlan, v105BipedFootPlan, drawV177JointPose, v177CaptureJointPose, v177RenderedJointWeaponSocket, v177RenderedWeightedLowerReceipt } from "./v177JointPresentation.js";
+import { v177ClearHeadHealthBarY } from "./v177HeadLabelPlacement.js";
 import {battleVoiceReady,queueV104HumanHurt,v104ContactIsHard,v104SupplementalEnemyVoice} from "./v104CombatAudio.js";
 import {createManualAbilityPointerHold} from "./manualAbilityUi.js";
 import {manualAbilityTacticalView} from "./manualAbilityTactics.js";
@@ -2399,7 +2400,7 @@ function scheduleMrsChihaLauncherAudio(
   g.pendingWeaponAudioCues = g.pendingWeaponAudioCues.slice(-16);
 }
 
-function fighterHealthBarWorldY(fighter: Pick<Fighter, "kind" | "y" | "summonSource">) {
+function fighterStatusAnchorWorldY(fighter: Pick<Fighter, "kind" | "y" | "summonSource">) {
   const compactScale = compactBattleViewport() ? 1.1 : 1;
   const depthScale = activeBattlefieldDepthScale(fighter.y);
   const bossDefinition = bossDefinitionForEnemyKind(fighter.kind);
@@ -2413,6 +2414,10 @@ function fighterHealthBarWorldY(fighter: Pick<Fighter, "kind" | "y" | "summonSou
         ? 94
         : 80) * compactScale;
   return fighter.y - height * depthScale * (isKuromeClone(fighter) ? V100_KUROME_CLONE_TUNING.bodyScale : 1) - (compactScale > 1 ? 2 : 0);
+}
+
+function fighterHealthBarWorldY(fighter: Pick<Fighter, "kind" | "y" | "summonSource">) {
+  return v177ClearHeadHealthBarY(fighterStatusAnchorWorldY(fighter), fighterPaintedHeadTops.get(fighter), compactBattleViewport() ? 6 : 4);
 }
 
 function manualAbilityObstacleRects(canvas: HTMLCanvasElement) {
@@ -4213,6 +4218,9 @@ type FighterRenderAudit = {
   renderWidth?: number | null;
   renderHeight?: number | null;
   healthBarVisible?: boolean;
+  healthBarY?: number;
+  healthBarHeight?: number;
+  paintedHeadTopY?: number;
   groundAnchor?: number | null;
   actualXDelta?: number;
   deploymentPlan?: ReturnType<typeof crawlerDeploymentRenderPlan>;
@@ -4294,6 +4302,7 @@ type FighterDrawOptions = {
 };
 
 const fighterRenderAudit = new WeakMap<Fighter, FighterRenderAudit>();
+const fighterPaintedHeadTops = new WeakMap<object, number>();
 const fighterWeaponSockets = new WeakMap<Fighter, {x:number;y:number}>();
 const fighterJointWeapons = new WeakMap<Fighter, {kind:string;channel:string;sequence?:number;striking:boolean;phase:number|null;held:boolean;tip:{x:number;y:number};grip:{x:number;y:number}}[]>();
 const fighterTakuyaGroundSockets = new WeakMap<Fighter, {x:number;y:number;sourceId:string;sourcePath?:string;kind:string;pixel:{x:number;y:number}}>();
@@ -4349,6 +4358,7 @@ function drawSpriteFighter(
   options: FighterDrawOptions = {},
 ) {
   fighterWeaponSockets.delete(f);
+  fighterPaintedHeadTops.delete(f);
   fighterJointWeapons.delete(f);
   fighterTakuyaGroundSockets.delete(f);
   fighterTataraGroundSockets.delete(f);
@@ -4786,10 +4796,19 @@ function drawSpriteFighter(
     w: frame.sourceRect.w,
     h: frame.sourceRect.h,
   }];
+  const headPaintReceipt = options.v100AuthoredPresentation && f.side === "human" ? {
+    headRoot: { y: f.y - bob + pose.offsetY * depthScale,
+      scaleX: pose.scaleX * (frame.flipX ? -1 : 1), scaleY: pose.scaleY,
+      sin: Math.sin(pose.rotationRadians * facingSign), cos: Math.cos(pose.rotationRadians * facingSign) },
+    headTopY: Infinity,
+  } : undefined;
   const drewArticulatedWalk = jointPose
-    ? drawV177JointPose(ctx,jointImage,renderKind,jointPose,-size.w*frame.anchorX,-size.h*frame.anchorY,size.w,size.h,{actor:f,world:options.world})
+    ? drawV177JointPose(ctx,jointImage,renderKind,jointPose,-size.w*frame.anchorX,-size.h*frame.anchorY,size.w,size.h,{actor:f,world:options.world,paintReceipt:headPaintReceipt})
     : articulatedWalk && v100HumanWalkRenderer.draw(ctx,sprite,renderKind,articulatedWalkPhase,
       -size.w*frame.anchorX,-size.h*frame.anchorY,size.w,size.h,{settle:f.animationPresentation?.locomotionSettle??1});
+  if (drewArticulatedWalk && headPaintReceipt && Number.isFinite(headPaintReceipt.headTopY)) {
+    fighterPaintedHeadTops.set(f, headPaintReceipt.headTopY);
+  }
   if(drewArticulatedWalk&&jointPose?.abilityPresentation==='fist-wave'&&weaponSocket&&options.world){
     resolveV105FistWavePaint(options.world,f,weaponSocket,{activationId:f.manualAbility?.activationId,
       sourceAtlas:jointAtlas.path,paintedAt:options.world.time});
@@ -8834,7 +8853,7 @@ function drawWorld(
   allowDiagnosticFallback = false,
   presentationLayout?: { obstacles: ReturnType<typeof manualAbilityObstacleRects>; transform: { scale: number; offsetX: number; offsetY: number } },
 ) {
-  const allyHealthBars: { fighter: Fighter; width: number; height: number; y: number }[] = [];
+  const allyHealthBars: { fighter: Fighter; width: number; height: number; y: number; maxY?: number }[] = [];
   const shakeAmplitude = cameraShakeAmplitude(g.shake);
   const sx = shakeAmplitude > 0 ? (Math.random() - .5) * shakeAmplitude : 0;
   const sy = shakeAmplitude > 0 ? (Math.random() - .5) * shakeAmplitude : 0;
@@ -9201,7 +9220,9 @@ function drawWorld(
     if (renderAudit) renderAudit.healthBarVisible = showHealthBar;
     if (showHealthBar) {
       if (f.side === "human" && g.definition.missionConfig.v100StageNumber) {
-        allyHealthBars.push({ fighter: f, width: barW, height: barHeight, y: barY });
+        const headTop = fighterPaintedHeadTops.get(f);
+        allyHealthBars.push({ fighter: f, width: barW, height: barHeight, y: barY,
+          maxY: Number.isFinite(headTop) ? headTop! - barHeight - 4 : undefined });
       } else drawFighterHealthBar(ctx, f, barW, barHeight, barY);
     }
     if (f.side === "zombie" && f.marked > 0) {
@@ -9355,7 +9376,11 @@ function drawWorld(
   const statusObstacles=presentationLayout?.obstacles.map(r=>({x:(r.x-offsetX)/scale-sx,y:(r.y-offsetY)/scale-sy,
     width:r.width/scale,height:r.height/scale}))??[];
   const healthLayout=layoutV100AllyHealthBars(allyHealthBars.map(bar=>({...bar,x:bar.fighter.x})),{bounds,obstacles:statusObstacles});
-  for(const bar of healthLayout)drawFighterHealthBar(ctx,bar.fighter,bar.width,bar.height,bar.y,bar.x);
+  for(const bar of healthLayout){
+    drawFighterHealthBar(ctx,bar.fighter,bar.width,bar.height,bar.y,bar.x);
+    const audit=fighterRenderAudit.get(bar.fighter);
+    if(audit){audit.healthBarY=bar.y;audit.healthBarHeight=bar.height;audit.paintedHeadTopY=fighterPaintedHeadTops.get(bar.fighter);}
+  }
   const abilityLayout=drawV105AbilityNames(ctx,g,{width:W,height:H,headY:f=>fighterHealthBarWorldY(f)-7,bounds,
     obstacles:[...statusObstacles,...healthLayout.map(bar=>({x:bar.x-bar.width/2-1,y:bar.y-1,width:bar.width+2,height:bar.height+2}))],
     get cssScale(){return Math.min(ctx.canvas.clientWidth/W||1,ctx.canvas.clientHeight/H||1);}});
@@ -24894,7 +24919,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 x: fighter.x,
                 y: fighter.y,
                 screenX: transform.offsetX + fighter.x * transform.scale,
-                screenY: transform.offsetY + (fighterHealthBarWorldY(fighter) - 10) * transform.scale,
+                screenY: transform.offsetY + (fighterStatusAnchorWorldY(fighter) - 10) * transform.scale,
               };
             })
           : [];

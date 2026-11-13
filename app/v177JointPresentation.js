@@ -1,5 +1,6 @@
 import { V177_PAISEN_PHOTO_JOINT_ATLASES as paisenPhotoAtlases } from './v177PaisenPhotoJointData.js';
 import { QUALITY_CHARACTER_ATLASES } from './qualityCharacterAtlases.js';
+import { recordV177PaintedHeadTop } from './v177HeadLabelPlacement.js';
 import { withQualityPantherBodyScale } from './qualityPantherBodyScale.js';
 import { V177_AUTHORED_GAITS } from './v177GaitSourceData.js';
 import { V177_JOINT_ATLASES as bakedAtlases } from './v177JointData.js';
@@ -748,6 +749,12 @@ export function drawV177JointPose(ctx, image, kind, plan, x, y, width, height, {
     if(reference){ctx.translate(-reference.tx/reference.scale,-reference.ty/reference.scale);ctx.scale(1/reference.scale,1/reference.scale);}
     const front=new Set(plan.frontBones??plan.choreography?.frontBones??[]);
     const parts=front.size?[...atlas.parts.filter(p=>!front.has(p.bone)),...atlas.parts.filter(p=>front.has(p.bone))]:atlas.parts;
+    const headPlacement=paintReceipt?.headRoot?{
+      x:x-(reference?.tx??0)/(reference?.scale??1)*width/(reference?.width??atlas.width),
+      y:y-(reference?.ty??0)/(reference?.scale??1)*height/(reference?.height??atlas.height),
+      scaleX:width/(reference?.width??atlas.width)/(reference?.scale??1),
+      scaleY:height/(reference?.height??atlas.height)/(reference?.scale??1),
+    }:null;
     for(const part of parts){
       if(part.bone==='jaw'){
         const edges=[];
@@ -770,6 +777,7 @@ export function drawV177JointPose(ctx, image, kind, plan, x, y, width, height, {
       }
       resolve(matrix,atlas,plan,part.bone,part.upper,scratch);
       drawRigidPart(ctx,image,part,matrix);
+      if(headPlacement&&part.bone==='head')recordV177PaintedHeadTop(paintReceipt,part.destination,matrix,headPlacement);
     }
     ctx.restore();rememberRenderedJointPose(actor,kind,plan);return true;
   }
@@ -792,6 +800,8 @@ export function drawV177JointPose(ctx, image, kind, plan, x, y, width, height, {
     const rig={...atlas.upperRig,poses:plan.upperRigPoses};
     const matrix=new Float64Array(6),scratch=[new Float64Array(6),new Float64Array(6)];
     ctx.save();ctx.translate(x,y);ctx.scale(width/atlas.width,height/atlas.height);ctx.translate(0,plan.upperOffsetY);
+    const headPlacement=paintReceipt?.headRoot?{x,y:y+plan.upperOffsetY/atlas.height*height,
+      scaleX:width/atlas.width,scaleY:height/atlas.height}:null;
     for(const part of rig.parts){
       const upper=plan.rangerManualUpperPose??plan.rangerStunUpperPose;
       if(upper)matrix.set(upper[part.bone]);
@@ -800,6 +810,7 @@ export function drawV177JointPose(ctx, image, kind, plan, x, y, width, height, {
       ctx.save();ctx.transform(...matrix);
       ctx.drawImage(image,source.x,source.y,source.w,source.h,destination.x,destination.y,destination.w,destination.h);
       ctx.restore();
+      if(headPlacement&&part.bone==='head')recordV177PaintedHeadTop(paintReceipt,destination,matrix,headPlacement);
     }
     ctx.restore();rememberRenderedJointPose(actor,kind,plan,lowerReceipt);return true;
   }
