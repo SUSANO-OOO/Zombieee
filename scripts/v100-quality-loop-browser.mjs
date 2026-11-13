@@ -44,7 +44,14 @@ for (const index of [0, 1]) {
 early = normalizeV100Save({ ...early, campaignStarted: true, flowState: { phase: "map", eventId: null, stageId: V100_STAGE_IDS[2], stageNumber: 3, destination: "map", nodeIndex: 0, firstClear: false, finalized: true } });
 const budgetBackup = exportV100BrowserSave(early);
 await writeFile(path.join(out, "two-stage-budget-fixture.json"), budgetBackup);
-const report = { status: "running", head, tree: git("rev-parse", "HEAD^{tree}"), build: await productionBuildIdentity(), physicalDevice: false,
+const localIdentityPath = process.env.V100_QUALITY_LOOP_LOCAL_BUILD_IDENTITY;
+const build = await productionBuildIdentity();
+const localExpected = localIdentityPath ? JSON.parse(await readFile(localIdentityPath,"utf8")) : null;
+if(localExpected) {
+  assert.match(localExpected.combinedSha256,/^[a-f0-9]{64}$/);
+  assert.equal(build.combinedSha256,localExpected.combinedSha256,"Local production build must match the supplied immutable receipt");
+}
+const report = { status: "running", head, tree: git("rev-parse", "HEAD^{tree}"), build, localIdentityPath, deliveryContract: localExpected ? "local-production-build-before-and-after-sha256" : "github-pages-head-metadata", physicalDevice: false,
   audioOutput: "Browser-output guard installed for UI capture. Physical speaker silence and audio acceptance are not verified.",
   audioScope: "BGM is disabled in these visual/UI fixtures, including the initial title and imported backup. SFX settings remain unchanged. Enabled native audio, title departure, recovery, R5 and staff-roll playback are verified by the separate unchanged CI audio lanes.",
   scope: "Phone rendering and native inputs. Two early victories, reward cases and result cases are developer-synthetic production receipts and reports; Nao purchased with the two one-star victories' CAPS. Subsequent upgrade/formation/battle inputs in early-budget-native are native. Reward/result cases prove presentation, save/resume and no duplicate payout, not real victories or measured combat. Visual late-stage/event fixtures do not prove unlocks or difficulty. No AI campaign-clear gate, physical iPhone, external-game play or speaker-listening claim.",
@@ -199,7 +206,9 @@ async function runCase(browser, engine, viewport, id, seed, work) {
   });
   try {
     await page.goto(new URL("v100", base).href, { waitUntil: "networkidle" });
+    if(!localExpected) {
     assert.equal(await page.locator('meta[name="github-pages-release"]').getAttribute("content"), head);
+    }
     await acknowledge(page, Boolean(seed));
     row.initialTitleMusicRequests = titleMusicRequests;
     assert.equal(titleMusicRequests, 0, 'Disabled title music must not start a media request');
@@ -519,6 +528,10 @@ for (const engine of engines) {
       assert.ok(row.native.inputs.length > 0);
     });
   } finally { await browser.close(); }
+}
+if(localExpected) {
+  report.afterBuild=await productionBuildIdentity();
+  assert.equal(report.afterBuild.combinedSha256,localExpected.combinedSha256,"Local production build remained unchanged during result/reward observation");
 }
 report.status = report.cases.every(row => row.status === "passed") ? "passed" : "failed";
 await writeFile(path.join(out, "report.json"), JSON.stringify(report, null, 2));

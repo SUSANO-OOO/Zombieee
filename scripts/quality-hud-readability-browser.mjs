@@ -40,6 +40,7 @@ try {
     const context=await browser.newContext({viewport,hasTouch:scenario.width<1000,...(process.env.QUALITY_HUD_VIDEO==='1'?{recordVideo:{dir:path.join(out,id+'-video'),size:viewport}}:{})});
     await context.addInitScript(seedV100BrowserSaveOnce,serializeV100Save(seed));
     const page=await context.newPage(); page.on('pageerror',e=>report.errors.push(String(e)));
+    page.on('console',message=>{if(message.type()==='error')report.errors.push('console: '+message.text());});
     try {
       const caseUrl=new URL(url);if(scenario.inset)caseUrl.searchParams.set('safe','iphone-landscape');
       await page.goto(caseUrl.href);
