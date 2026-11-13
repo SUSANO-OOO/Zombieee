@@ -26,7 +26,7 @@ export function v105CurrentAbilitySample(owner,base,{manualDefinition,anomaly,ku
       if(!['guardian','kumaverson'].includes(owner.kind)||owner.animationPresentation?.moving||owner.attack>0||owner.attackWindup>0)return null;
       return sample(base,'active',.2+.02*Math.sin((m.abilityElapsed??0)*5),'guard');
     }
-    const style=['guardian','kumaverson'].includes(owner.kind)?'guard':owner.kind==='brawler'?'fist-wave':owner.kind==='brute'?'ground-slam':'manual';
+    const style=['guardian','kumaverson'].includes(owner.kind)?'guard':owner.kind==='brawler'?'fist-wave':owner.kind==='brute'?'ground-slam':owner.kind==='miyamoto-musashi'&&m.phase==='windup'?'cross-guard':'manual';
     if(owner.kind==='gunner'&&m.phase==='windup'){
       const elapsed=m.abilityElapsed??manualDefinition.windupSeconds-m.windupRemaining;
       if(elapsed<manualDefinition.aimSeconds)return sample(base,'wind-up',elapsed/manualDefinition.aimSeconds,style);

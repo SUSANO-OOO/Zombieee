@@ -6,6 +6,7 @@ import { v177PaisenPhotoComboJointPose } from './v177PaisenPhotoCombo.js';
 import { campaignWaveReady, campaignWavePrompt, requestCampaignWave } from './wavePacing.js';
 import { queueV105FistWave, resolveV105FistWavePaint, advanceV105FistWaves, drawV105FistWaves, v105FistWaveSnapshot, clearV105FistWaves } from './v105PaisenFistWave.js';
 import { startV105AbilityName, drawV105AbilityNames, v105AbilityNameSnapshot, v105EnemyAbilityName, clearV105AbilityNames } from './v105AbilityNames.js';
+import {queueV100GuardActivation} from './v100GuardActivationVfx.js';
 import { v105CurrentAbilitySample, v105AbilityFacing } from './v105CurrentAbilityPose.js';
 import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
 import { v100PortraitFraming } from "./v100PortraitFraming.js";
@@ -19686,7 +19687,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 owner.comboWindow = MANUAL_ABILITY_REGISTRY["crazy-king"].activeSeconds;
                 owner.cooldown = 0;
                 owner.retargetIn = 0;
-                addParticles(g, owner.x, owner.y - 28, "#f06835", 24);
+                if (g.definition.missionConfig.v100StageNumber) queueV100GuardActivation(g,owner);
+                else addParticles(g, owner.x, owner.y - 28, "#f06835", 24);
               } else {
                 for (const enemy of g.fighters) {
                   if (enemy.side !== "zombie"
@@ -19702,7 +19704,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                   );
                 }
                 owner.cooldown = 0;
-                addParticles(
+                if (g.definition.missionConfig.v100StageNumber) queueV100GuardActivation(g,owner);
+                else addParticles(
                   g,
                   owner.x,
                   owner.y - 28,
@@ -19744,7 +19747,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               continue;
             }
             if (event.type === "guard-start" && event.kind === "miyamoto-musashi") {
-              addParticles(g, owner.x, owner.y - 38, "#9ec7db", 10);
+              if (g.definition.missionConfig.v100StageNumber) queueV100GuardActivation(g,owner);
+              else addParticles(g, owner.x, owner.y - 38, "#9ec7db", 10);
               continue;
             }
             if (event.type === "launch" && event.kind === "mrs-chiha") {
