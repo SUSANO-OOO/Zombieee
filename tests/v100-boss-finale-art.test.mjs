@@ -84,9 +84,13 @@ test('every registered finale retains its exact native master, six transparent p
       if(x>=4&&x<508&&y>=4&&y<508)continue;
       assert.ok(raw.data[((Math.floor(cell/3)*512+y)*1536+(cell%3)*512+x)*4+3]<=32,'No hard clipped cell edge: '+kind);
     }
-    if(provenance.generation.materialReference){const ref=provenance.generation.materialReference;
+    const references=provenance.generation.materialReferences??(provenance.generation.materialReference?[provenance.generation.materialReference]:[]);
+    for(const ref of references){
       assert.equal(createHash('sha256').update(fs.readFileSync(ref.path)).digest('hex'),ref.sha256);
     }
+    if(kind==='futago')assert.deepEqual(references.map(ref=>ref.path),[
+      'assets/source/v100/joints/futago-separated-a-r1/identity-reference.png',
+      'assets/source/v100/joints/futago-separated-b-r1/identity-reference.png']);
   }
 });
 

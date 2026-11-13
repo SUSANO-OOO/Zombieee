@@ -1,6 +1,6 @@
 {
   "base": "ff5dba24e88c810182cda1f044bd26dfc3e512c1",
-  "source": "061d14ad755af62d292d6b79d6f235cdf3f40a62 plus clinical room and post-battle location continuity plus 2026-11-13 authored medical and boss VFX plus current nine-boss dossier figures at e12033212ea15d0b5839b679fb8efeea99d7bade plus source-bound optional GateEater rupture r2 (66ab4e3c) plus source-bound Mother organic rupture r2 plus current Kurome, Ooguchi and Gairen rupture r1 atlases",
+  "source": "061d14ad755af62d292d6b79d6f235cdf3f40a62 plus clinical room and post-battle location continuity plus 2026-11-13 authored medical and boss VFX plus current nine-boss dossier figures at e12033212ea15d0b5839b679fb8efeea99d7bade plus source-bound optional GateEater rupture r2 (66ab4e3c) plus source-bound Mother organic rupture r2 plus current Kurome, Ooguchi and Gairen rupture r1 atlases plus current TAKUYA, Mutated President, separated Futago A/B and OMEGA r3 material-bound finales",
   "scope": "Local quality candidate transport contract; not likeness, rights, listening, release or physical-device approval.",
   "added": [
     {
@@ -100,6 +100,14 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/quality-20261114/vfx/futago-rupture-six-r1.webp",
+      "bytes": 351736,
+      "hash": "sha256-ce33d15b927547529fc090c896203f6310f64340a53a31a3864a10b52d9fe3fa",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/quality-20261114/vfx/gairen-rupture-six-r1.webp",
       "bytes": 472586,
       "hash": "sha256-c28280fbc04ae92f99bd1c4eedc081bd25c7aa72062e498a0dfbc08e1e22f99b",
@@ -132,9 +140,33 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/quality-20261114/vfx/mugarian-president-mutated-rupture-six-r1.webp",
+      "bytes": 364202,
+      "hash": "sha256-594543b03f9448eede9fff1473f7cf2c0cd9afb30bdf6039ba4b47ce56dc091a",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/quality-20261114/vfx/ooguchi-rupture-six-r1.webp",
       "bytes": 296620,
       "hash": "sha256-814c7fe264ea474613b90634a64f6f4b6d39b760c4c987dfdd4b540f0ad8ee36",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/takuya-omega-rupture-six-r2.webp",
+      "bytes": 409604,
+      "hash": "sha256-b1e7105aa20d3eb8b237277867c9ac62752d21792dca680a2609a532e64e5371",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/takuya-rupture-six-r1.webp",
+      "bytes": 364612,
+      "hash": "sha256-c765bb4a8e4d3ecb74e2abf0f35320756d37769f467a9ff6d71716b43b914050",
       "pack": "units",
       "category": "boss",
       "criticality": "critical"

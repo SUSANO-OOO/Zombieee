@@ -21,6 +21,28 @@ const recipes=[
   {"kind":"kurome","name":"Kurome","anchorY":0.87890625,"includesPrelude":true,"revision":1,"generationMode":"built-in image_gen generation with references","masterSha256":"2af1d8eb534fa0acdfa230f7ae67739c1d220e4c12d640096a3c54c7edd95436","materialReference":{"path":"assets/source/v100/joints/kurome-r1/identity-reference.png","sha256":"20232f95175309421f78e2e52220edd3846ecfb468195c739a74b441a520a5e5"},"note":"Single native reference-guided effect-only atlas; R1 selected after cell-edge inspection. Full body identity is unchanged."},
   {"kind":"ooguchi","name":"Ooguchi","anchorY":0.87890625,"includesPrelude":true,"revision":1,"generationMode":"built-in image_gen generation with references","masterSha256":"f7c603b87c9ef598f3d15faa0161310b05ca8ef53b6e6a609c85d4d7a396de8b","materialReference":{"path":"assets/source/v100/joints/ooguchi-r1/identity-reference.png","sha256":"31d8f4f332c5d647ff6115d0229cfe5fe884db3c5bbdd199c9660b1c2496b92d"},"note":"Single native reference-guided effect-only atlas; R1 selected after cell-edge inspection. Full body identity is unchanged."},
   {"kind":"gairen","name":"Gairen","anchorY":0.87890625,"includesPrelude":true,"revision":1,"generationMode":"built-in image_gen generation with references","masterSha256":"c408070ffa37a875560e32747a860bf0295490b8d99dd8d50c87bd839fd30f7b","materialReference":{"path":"assets/source/v100/joints/gairen-r1/identity-reference.png","sha256":"b8cb2167c3a57c3ecfd3add5e3c46748adf9d1dc24e62a3c1e27ff0797fa7ab6"},"note":"Single native reference-guided effect-only atlas; R1 selected after cell-edge inspection. Full body identity is unchanged."},
+  {kind:'takuya',name:'TAKUYA',anchorY:450/512,includesPrelude:true,revision:1,
+    generationMode:'built-in image_gen generation with references',
+    masterSha256:'b0904e15fed274631d672b31666a712056e2b9336492efb3518d431942fee681',
+    materialReference:{path:'assets/source/v100/joints/takuya-r1/identity-reference.png',sha256:'12b600124ad71c155fdb50f56df66a9a1e85085976194719f4d44bb7f42e221b'},
+    note:'Heavy ground-contact grit and friction sparks only; the human boss and steel weapon remain intact. This is not the playable TKY.'},
+  {kind:'mugarian-president-mutated',name:'Mutated President',anchorY:450/512,includesPrelude:true,revision:1,
+    generationMode:'built-in image_gen generation with references',
+    masterSha256:'94b70cbceb922e174e6b2fdd86aa3b6dbc7af12fa3e1d8328cb06aebf1ce5d37',
+    materialReference:{path:'assets/source/v100/joints/mugarian-president-mutated-r1/identity-reference.png',sha256:'7da97f17c9d7facfa318e2afa8ef17c4a030eb5128d60b1101c00628c3c8d351'},
+    note:'Existing olive pressure vent, small brass fittings and dust only. Human identity, body and gameplay effects are unchanged.'},
+  {kind:'futago',name:'Futago separated A/B',anchorY:450/512,includesPrelude:true,revision:1,
+    generationMode:'built-in image_gen generation with references',
+    masterSha256:'51af8039549f1bf84ae8fafeeef937f2c5307f7b6c9e44f0020d838f479489d7',
+    materialReferences:[
+      {path:'assets/source/v100/joints/futago-separated-a-r1/identity-reference.png',sha256:'08bc90fcf191b912d37e0efa431971241337ee9a865b24fdb3e2fb85b0469aef'},
+      {path:'assets/source/v100/joints/futago-separated-b-r1/identity-reference.png',sha256:'70959eb24119e652c7e42c34d86f9ae284181e15a23713a1a1609fb5d5f8513a'}],
+    note:'Asymmetric copper fissure release and charred bindings follow both current separated forms. The retired fused figure is not a reference.'},
+  {kind:'takuya-omega',name:'TAKUYA OMEGA',anchorY:450/512,includesPrelude:true,
+    masterSha256:'e88b0d492caaa1655397ed12ec86837eb7d284265c1a1e35ac2ae4ee4f010bc9',
+    intermediateMasterSha256:'49e9a3137cc12d6b0b07477550bc83634cb2ae196540368693132fdde3c2374e',
+    materialReference:{path:'assets/source/v100/joints/takuya-omega-r3/identity-reference.png',sha256:'5505512cd19684b6dadcc3b9c89b01a1a620c096675f3de35a63a237e75c0487'},
+    note:'R1 pressure rupture followed by a native cell-layout correction; R1 and failed edge analysis remain evidence. Only small hardware, smoke and sparks are depicted.'},
 ];
 async function emit(relative,data){
   const file=path.join(root,relative);
@@ -37,7 +59,8 @@ for(const recipe of recipes){
   const promptPath='assets/source/quality-20261114/vfx/'+recipe.kind+'-rupture-prompt-r'+revision+'.txt';
   const master=await readFile(path.join(root,sourcePath));
   assert.equal(sha(master),recipe.masterSha256,'Selected native master changed: '+recipe.kind);
-  if(recipe.materialReference)assert.equal(sha(await readFile(path.join(root,recipe.materialReference.path))),recipe.materialReference.sha256,'Current material identity changed');
+  for(const ref of recipe.materialReferences??(recipe.materialReference?[recipe.materialReference]:[]))
+    assert.equal(sha(await readFile(path.join(root,ref.path))),ref.sha256,'Current material identity changed');
   const metadata=await sharp(master).metadata();
   assert.deepEqual([metadata.width,metadata.height,metadata.hasAlpha],[1536,1024,true]);
   const raw=await sharp(master).ensureAlpha().raw().toBuffer();
@@ -58,7 +81,8 @@ for(const recipe of recipes){
     source:{path:sourcePath,bytes:master.length,sha256:sha(master)},prompt:{path:promptPath,sha256:sha(Buffer.from((await readFile(path.join(root,promptPath),'utf8')).replaceAll('\r\n','\n')))},
     generation:{mode:recipe.generationMode??'built-in image_gen edit',model:'Selected by host; no model name asserted',reference:{path:referencePath,sha256:sha(await readFile(path.join(root,referencePath)))},
       ...(recipe.intermediateMasterSha256?{intermediateMasterSha256:recipe.intermediateMasterSha256}:{}),note:recipe.note,
-      ...(recipe.materialReference?{materialReference:recipe.materialReference}:{})},
+      ...(recipe.materialReference?{materialReference:recipe.materialReference}:{}),
+      ...(recipe.materialReferences?{materialReferences:recipe.materialReferences}:{})},
     output:{path:assetPath,bytes:bytes.length,sha256:sha(bytes),width:1536,height:1024,columns:3,rows:2,anchorX:.5,anchorY:recipe.anchorY,
       ...(recipe.includesPrelude?{includesPrelude:true}:{})},
     runtimeAssetCount:1,logicalBytes:bytes.length,distinctBytes:bytes.length,estimatedDecodedRgbaBytes:1536*1024*4,

@@ -48,5 +48,45 @@ export const V100_BOSS_DEFEAT_ART = Object.freeze(Object.fromEntries(Object.entr
     "anchorX": 0.5,
     "anchorY": 0.87890625,
     "includesPrelude": true
+  },
+  "takuya": {
+    "id": "v100-boss-finale-takuya",
+    "path": "/art/quality-20261114/vfx/takuya-rupture-six-r1.webp",
+    "hash": "sha256-c765bb4a8e4d3ecb74e2abf0f35320756d37769f467a9ff6d71716b43b914050",
+    "columns": 3,
+    "rows": 2,
+    "anchorX": 0.5,
+    "anchorY": 0.87890625,
+    "includesPrelude": true
+  },
+  "mugarian-president-mutated": {
+    "id": "v100-boss-finale-mugarian-president-mutated",
+    "path": "/art/quality-20261114/vfx/mugarian-president-mutated-rupture-six-r1.webp",
+    "hash": "sha256-594543b03f9448eede9fff1473f7cf2c0cd9afb30bdf6039ba4b47ce56dc091a",
+    "columns": 3,
+    "rows": 2,
+    "anchorX": 0.5,
+    "anchorY": 0.87890625,
+    "includesPrelude": true
+  },
+  "futago": {
+    "id": "v100-boss-finale-futago",
+    "path": "/art/quality-20261114/vfx/futago-rupture-six-r1.webp",
+    "hash": "sha256-ce33d15b927547529fc090c896203f6310f64340a53a31a3864a10b52d9fe3fa",
+    "columns": 3,
+    "rows": 2,
+    "anchorX": 0.5,
+    "anchorY": 0.87890625,
+    "includesPrelude": true
+  },
+  "takuya-omega": {
+    "id": "v100-boss-finale-takuya-omega",
+    "path": "/art/quality-20261114/vfx/takuya-omega-rupture-six-r2.webp",
+    "hash": "sha256-b1e7105aa20d3eb8b237277867c9ac62752d21792dca680a2609a532e64e5371",
+    "columns": 3,
+    "rows": 2,
+    "anchorX": 0.5,
+    "anchorY": 0.87890625,
+    "includesPrelude": true
   }
 }).map(([kind,art])=>[kind,Object.freeze(art)])));
