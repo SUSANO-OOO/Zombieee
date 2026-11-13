@@ -13,7 +13,7 @@ const recipes=[
     masterSha256:'cbce750c73d2ba5b1aa1065d93681ed00cb1a079581be851a2e45bc259da9d52',
     intermediateMasterSha256:'762749228cead4c537633bfce40e020bd7304862eeed900bca98a5545c5ae0e8',
     note:'R1 industrial rupture followed by one native layout correction. R1 and failed edge analysis remain local evidence.'},
-  {kind:'mother',name:'Mother',anchorY:450/512,
+  {kind:'mother',name:'Mother',anchorY:450/512,includesPrelude:true,
     masterSha256:'9e213b45566f6c8edac59197f3e7d1e540ed58523add269ced72e225a7d84eef',
     intermediateMasterSha256:'ddd8bfcea0eee2185ed4ffe0b1fce9c23b668931849de7280ae0c96155c432f0',
     materialReference:{path:'assets/source/v100/joints/mother-r1/identity-reference.png',sha256:'c11c56474860367a0cb12e05b5164d31161fe45157c3ffd95a52a73613211765'},
@@ -45,6 +45,7 @@ for(const recipe of recipes){
   const bytes=await sharp(master).webp({quality:92,alphaQuality:100,effort:6}).toBuffer();
   const assetPath='/art/quality-20261114/vfx/'+recipe.kind+'-rupture-six-r2.webp';
   art[recipe.kind]={id:'v100-boss-finale-'+recipe.kind,path:assetPath,hash:'sha256-'+sha(bytes),columns:3,rows:2,anchorX:.5,anchorY:recipe.anchorY};
+  if(recipe.includesPrelude)art[recipe.kind].includesPrelude=true;
   await emit('public'+assetPath,bytes);
   const provenance={generator:'scripts/build-v100-boss-defeat-art.mjs',creator:'OpenAI built-in image_gen under Producer direction; deterministic WebP packaging by Codex',
     license:'Project-original generated artwork under the existing game asset policy; no third-party download',
@@ -54,7 +55,8 @@ for(const recipe of recipes){
     generation:{mode:'built-in image_gen edit',model:'Selected by host; no model name asserted',reference:{path:referencePath,sha256:sha(await readFile(path.join(root,referencePath)))},
       intermediateMasterSha256:recipe.intermediateMasterSha256,note:recipe.note,
       ...(recipe.materialReference?{materialReference:recipe.materialReference}:{})},
-    output:{path:assetPath,bytes:bytes.length,sha256:sha(bytes),width:1536,height:1024,columns:3,rows:2,anchorX:.5,anchorY:recipe.anchorY},
+    output:{path:assetPath,bytes:bytes.length,sha256:sha(bytes),width:1536,height:1024,columns:3,rows:2,anchorX:.5,anchorY:recipe.anchorY,
+      ...(recipe.includesPrelude?{includesPrelude:true}:{})},
     runtimeAssetCount:1,logicalBytes:bytes.length,distinctBytes:bytes.length,estimatedDecodedRgbaBytes:1536*1024*4,
     scope:recipe.name+' visual finale only. Existing body, defeat receipt, result wait, damage, rewards, random sequence and audio are unchanged.'};
   await emit('assets/source/quality-20261114/vfx/'+recipe.kind+'-rupture-provenance-r2.json',Buffer.from(JSON.stringify(provenance,null,2)+'\n'));

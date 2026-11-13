@@ -96,7 +96,8 @@ test('same-battle retry never expands artwork on a late grant; a new selection c
 });
 
 function world(elapsed=1.6,label='gate-eater'){
-  return {definition:{missionConfig:{v100StageNumber:6}},fighters:[{id:4,hp:0}],caps:87,
+  const stageNumber=V100_BOSSES.find(b=>b.id==='boss-'+label)?.stageNumber??1;
+  return {definition:{missionConfig:{v100StageNumber:stageNumber}},fighters:[{id:4,hp:0}],caps:87,
     battlePresentation:{effects:[{kind:'boss-defeat',label,x:640,y:280,elapsed,duration:timeline.durationSeconds,seed:73,ownerId:4,receiptId:'fighter:4'}]}};
 }
 function paint(width=844,height=340){
@@ -124,6 +125,36 @@ test('the actual early renderer advances all six painted cells, pauses on the ex
     assert.deepEqual(p.ctx,state);assert.equal(p.stack.length,0);
   }
   assert.deepEqual([...cells].sort(),[0,1,2,3,4,5]);
+});
+
+test('Mother uses her painted prelude through all six poses without orange duplicates or altered major-peak timing',()=>{
+  const mother=V100_BOSS_DEFEAT_ART.mother,cells=new Set();assert.equal(mother.includesPrelude,true);
+  const peak=timeline.majorBurst.at+(timeline.durationSeconds-timeline.majorBurst.at)*.16;
+  for(const elapsed of [.22,.5,.82,peak,1.7,2.2,2.59]){
+    const p=paint(),g=world(elapsed,'mother'),before=structuredClone(g);
+    p.objects[mother.id]={...p.objects[art.id],id:mother.id};
+    assert.equal(drawV100BossDefeatFinales(p.ctx,p.objects,g,p.options),1);
+    const count=p.calls.length;drawV100BossDefeat(p.ctx,p.objects,g.battlePresentation.effects[0],.7,g);
+    assert.equal(p.calls.length,count,'No generic orange burst or dust after a real dedicated draw');
+    for(const c of p.calls){assert.equal(c.id,mother.id);cells.add(c.args[0]/512+3*c.args[1]/512);}
+    if(elapsed===peak)assert.ok(p.calls.some(c=>c.args[0]===1024&&c.args[1]===0&&c.alpha>.99),'Same third-cell major peak as the original timeline');
+    assert.deepEqual(g,before);assert.equal(p.stack.length,0);
+    const repeat=structuredClone(p.calls);p.calls.length=0;
+    drawV100BossDefeatFinales(p.ctx,p.objects,g,p.options);assert.deepEqual(p.calls,repeat,'Paused dedicated prelude is stable');
+  }
+  assert.deepEqual([...cells].sort(),[0,1,2,3,4,5]);
+});
+
+test('Mother missing at her first burst keeps the complete existing fallback even if the optional image arrives mid-collapse',()=>{
+  const mother=V100_BOSS_DEFEAT_ART.mother,p=paint(),g=world(.23,'mother');
+  assert.equal(drawV100BossDefeatFinales(p.ctx,p.objects,g,p.options),0);
+  p.objects[mother.id]={...p.objects[art.id],id:mother.id};g.battlePresentation.effects[0].elapsed=.9;
+  assert.equal(drawV100BossDefeatFinales(p.ctx,p.objects,g,p.options),0);
+  drawV100BossDefeat(p.ctx,p.objects,g.battlePresentation.effects[0],.7,g);
+  assert.ok(p.calls.some(c=>c.id==='quality-boss-blast'));
+  p.calls.length=0;g.battlePresentation.effects=[{...g.battlePresentation.effects[0],ownerId:5,receiptId:'fighter:5'}];
+  assert.equal(drawV100BossDefeatFinales(p.ctx,p.objects,g,p.options),1);
+  const count=p.calls.length;drawV100BossDefeat(p.ctx,p.objects,g.battlePresentation.effects[0],.7,g);assert.equal(p.calls.length,count);
 });
 
 test('missing/failed art keeps the old painted finale, while ready art paints once behind bodies without a second late major or smoke tail',()=>{

@@ -35,13 +35,20 @@ export function drawV100BossDefeatFinales(ctx,objects,world,{viewportWidth,viewp
     ||viewportWidth<=0||viewportHeight<=0||worldScale<=0||density<=0)return 0;
   let drawn=0;
   for(const effect of effects){
+    const includesPrelude=V100_BOSS_DEFEAT_ART[effect.label]?.includesPrelude===true;
+    const startAt=includesPrelude?TIMELINE.smallBursts[0].at:TIMELINE.majorBurst.at;
     if(effect.kind!=='boss-defeat'||![effect.x,effect.y,effect.elapsed,effect.duration,effect.seed].every(Number.isFinite)
-      ||effect.duration<=TIMELINE.majorBurst.at||effect.elapsed<TIMELINE.majorBurst.at||effect.elapsed>=effect.duration)continue;
+      ||effect.duration<=TIMELINE.majorBurst.at||effect.elapsed<startAt||effect.elapsed>=effect.duration)continue;
     const key=effectKey(world,effect);
     if(!choices.has(key))choices.set(key,{source:bossDefeatFinaleSource(objects,effect.label),ctx:null,drawnElapsed:null});
     const choice=choices.get(key),source=choice.source;if(!source)continue;
-    const {art,image}=source,elapsed=effect.elapsed-TIMELINE.majorBurst.at,duration=effect.duration-TIMELINE.majorBurst.at;
-    const p=elapsed/duration,stops=[0,.06,.16,.42,.72,.94];
+    const {art,image}=source,elapsed=effect.elapsed-startAt,duration=effect.duration-startAt;
+    const majorDuration=effect.duration-TIMELINE.majorBurst.at;
+    // A full organic/energy collapse replaces the orange prelude too. Keep
+    // the authored medium beat and the exact original major peak/tail times.
+    const p=elapsed/duration,stops=includesPrelude
+      ? [startAt,TIMELINE.mediumBurst.at,...[.16,.42,.72,.94].map(at=>TIMELINE.majorBurst.at+majorDuration*at)].map(at=>(at-startAt)/duration)
+      : [0,.06,.16,.42,.72,.94];
     let first=0;while(first<5&&stops[first+1]<=p)first++;
     const next=Math.min(5,first+1),blend=first===next?0:(p-stops[first])/(stops[next]-stops[first]);
     // Preserve the square painted camera. Bound its rectangle to18% of the

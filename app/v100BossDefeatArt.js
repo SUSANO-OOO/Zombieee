@@ -16,6 +16,7 @@ export const V100_BOSS_DEFEAT_ART = Object.freeze(Object.fromEntries(Object.entr
     "columns": 3,
     "rows": 2,
     "anchorX": 0.5,
-    "anchorY": 0.87890625
+    "anchorY": 0.87890625,
+    "includesPrelude": true
   }
 }).map(([kind,art])=>[kind,Object.freeze(art)])));
