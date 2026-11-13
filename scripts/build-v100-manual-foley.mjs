@@ -32,6 +32,7 @@ for(const row of recipe.records){
       ...(ext==='mp3'?['-c:a','libmp3lame','-b:a','160k']:['-c:a','libvorbis','-q:a','5']),'-fflags','+bitexact',tmp],
     {windowsHide:true,maxBuffer:1024*1024});
     const bytes=await fs.readFile(tmp),relative='public/audio/quality-20261114/manual/'+profile.name+'.'+ext;
+    if(ext==='mp3')assert.equal('sha256-'+hash(bytes),profile.hash,'Runtime saved-source hash must match its canonical master');
     await emit(relative,bytes);encodings.push({path:relative,bytes:bytes.length,sha256:hash(bytes)});
     await fs.unlink(tmp);
   }

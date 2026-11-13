@@ -10,7 +10,8 @@ import {v100AudioDesignCandidate} from '../app/v100SoundDesign.js';
 import {withRecordedWeapons} from '../app/weaponRecordingRecipes.js';
 import {withChainsawRecordings} from '../app/chainsawRecordings.js';
 import {withMeleeFoley} from '../app/meleeFoleyRecipes.js';
-import {V100_MANUAL_ABILITY_FOLEY,withV100ManualAbilityFoley} from '../app/v100ManualAbilityFoley.js';
+import {V100_MANUAL_ABILITY_FOLEY,V100_MANUAL_FOLEY_FILES,withV100ManualAbilityFoley,selectV100ManualFoleyPlayback} from '../app/v100ManualAbilityFoley.js';
+import {verifiedPwaArtworkPaths} from '../app/pwaArtworkAvailability.js';
 import {V099_MANUAL_ABILITY_AUDIO_CONTRACTS} from '../app/battleAudioContracts.js';
 
 const ids=['ability-guardian-shieldwall-activate','ability-medic-emergency-activate'];
@@ -57,6 +58,40 @@ test('the complete offline pack owns both new MPEG cues while retaining each leg
     const old=GAMEPLAY_PRODUCTION_AUDIO_MANIFEST.assetById[id].sources[0].src;
     assert.ok(manifest.assets.some(a=>a.path===old),'An installed old generation still has its original cue');
   }
+});
+
+test('old committed packs, cached-but-uncommitted new bytes and an unconsented browser keep the original preparation sources',()=>{
+  const old=JSON.parse(execFileSync('git',['show','86a0a062ede5e73cc8c327fda9612120ac578c0a:public/asset-manifest.json'],{maxBuffer:4*1024*1024}));
+  const stored=new Set([...old.assets.map(a=>a.hash),...Object.values(V100_MANUAL_FOLEY_FILES).map(a=>a.hash)]);
+  for(const facts of [{},{installedManifest:old,storedHashes:stored,browserPlayAccepted:true},{browserPlayAccepted:true,gameBlocked:true}]){
+    const paths=verifiedPwaArtworkPaths({artworks:V100_MANUAL_FOLEY_FILES,gameBlocked:false,...facts});assert.equal(paths,'');
+    const selected=selectV100ManualFoleyPlayback(V100_AUDIO_MANIFEST,GAMEPLAY_PRODUCTION_AUDIO_MANIFEST,paths);
+    for(const id of ids)assert.deepEqual(selected.assetById[id].sources,GAMEPLAY_PRODUCTION_AUDIO_MANIFEST.assetById[id].sources);
+  }
+});
+
+test('exact saved MPEG or explicit browser play permits only that source with the original cue as decoder fallback',()=>{
+  const files=Object.values(V100_MANUAL_FOLEY_FILES),installed={assets:files.map(f=>({...f}))},stored=new Set(files.map(f=>f.hash));
+  for(const facts of [{installedManifest:installed,storedHashes:stored},{browserPlayAccepted:true}]){
+    const paths=verifiedPwaArtworkPaths({artworks:V100_MANUAL_FOLEY_FILES,gameBlocked:false,...facts});
+    const selected=selectV100ManualFoleyPlayback(V100_AUDIO_MANIFEST,GAMEPLAY_PRODUCTION_AUDIO_MANIFEST,paths);
+    for(const old of V100_AUDIO_MANIFEST.assets){
+      const next=selected.assetById[old.id];
+      if(ids.includes(old.id)){
+        assert.deepEqual(next.sources,[old.sources[0],...GAMEPLAY_PRODUCTION_AUDIO_MANIFEST.assetById[old.id].sources]);
+        assert.equal(next.sources.some(s=>s.src.endsWith('.ogg')),false,'An installed MPEG pack never requests an unaccepted Ogg');
+        const {sources:_old,...policy}=old,{sources:_next,...nextPolicy}=next;assert.deepEqual(nextPolicy,policy);
+      }else assert.deepEqual(next,old);
+    }
+  }
+  for(const bad of ['wrong-hash','missing-cache']){
+    const manifest=structuredClone(installed),hashes=new Set(stored),first=files[0];
+    if(bad==='wrong-hash')manifest.assets[0].hash='sha256-'+'0'.repeat(64);else hashes.delete(first.hash);
+    const paths=verifiedPwaArtworkPaths({artworks:V100_MANUAL_FOLEY_FILES,installedManifest:manifest,storedHashes:hashes,gameBlocked:false,baseUrl:'https://example.test/Zombieee/'});
+    const selected=selectV100ManualFoleyPlayback(V100_AUDIO_MANIFEST,GAMEPLAY_PRODUCTION_AUDIO_MANIFEST,paths);
+    const id=Object.keys(V100_MANUAL_FOLEY_FILES)[0];assert.deepEqual(selected.assetById[id].sources,GAMEPLAY_PRODUCTION_AUDIO_MANIFEST.assetById[id].sources);
+  }
+  for(const [id,file]of Object.entries(V100_MANUAL_FOLEY_FILES))assert.equal(file.hash,'sha256-'+fileHash('public'+V100_AUDIO_MANIFEST.assetById[id].sources[0].src));
 });
 
 test('both codec choices retain licensed masters, distinct audible signals, original duration bounds and quiet tails',()=>{
