@@ -1,0 +1,51 @@
+{
+  "generator": "scripts/build-v100-boss-defeat-art.mjs",
+  "creator": "OpenAI built-in image_gen under Producer direction; deterministic WebP packaging by Codex",
+  "license": "Project-original generated artwork under the existing game asset policy; no third-party download",
+  "rights": {
+    "commercialUse": true,
+    "modification": true,
+    "redistribution": true,
+    "basis": "Original art created for this project, with the existing project-owned blast as style reference"
+  },
+  "producerApproval": "Current goal requests bespoke boss effects. This is an implementation candidate, not final visual/audio/device acceptance.",
+  "source": {
+    "path": "assets/source/quality-20261114/vfx/mother-rupture-r2.png",
+    "bytes": 2219792,
+    "sha256": "9e213b45566f6c8edac59197f3e7d1e540ed58523add269ced72e225a7d84eef"
+  },
+  "prompt": {
+    "path": "assets/source/quality-20261114/vfx/mother-rupture-prompt-r2.txt",
+    "sha256": "9158d4ec8a4619d284bb1b5fc8dea4bd49f1e8ce79a8588e930e835ee04844e5"
+  },
+  "generation": {
+    "mode": "built-in image_gen edit",
+    "model": "Selected by host; no model name asserted",
+    "reference": {
+      "path": "public/art/quality-20261113/vfx/boss-blast-six-r2.webp",
+      "sha256": "e6851cd119a82c40cd2da23aa3d5c1f25660f1b2a81c48cd8c0c9296eb8b518f"
+    },
+    "intermediateMasterSha256": "ddd8bfcea0eee2185ed4ffe0b1fce9c23b668931849de7280ae0c96155c432f0",
+    "note": "R1 organic rupture followed by one native layout and alpha correction. R1 and failed edge analysis remain local evidence.",
+    "materialReference": {
+      "path": "assets/source/v100/joints/mother-r1/identity-reference.png",
+      "sha256": "c11c56474860367a0cb12e05b5164d31161fe45157c3ffd95a52a73613211765"
+    }
+  },
+  "output": {
+    "path": "/art/quality-20261114/vfx/mother-rupture-six-r2.webp",
+    "bytes": 450298,
+    "sha256": "c89e894cc31cfb756d34a79ed7148904bf1c48a62fec37e38e5c545fa3f30530",
+    "width": 1536,
+    "height": 1024,
+    "columns": 3,
+    "rows": 2,
+    "anchorX": 0.5,
+    "anchorY": 0.87890625
+  },
+  "runtimeAssetCount": 1,
+  "logicalBytes": 450298,
+  "distinctBytes": 450298,
+  "estimatedDecodedRgbaBytes": 6291456,
+  "scope": "Mother visual finale only. Existing body, defeat receipt, result wait, damage, rewards, random sequence and audio are unchanged."
+}

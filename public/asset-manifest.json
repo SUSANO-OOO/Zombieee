@@ -108,6 +108,14 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/quality-20261114/vfx/mother-rupture-six-r2.webp",
+      "bytes": 450298,
+      "hash": "sha256-c89e894cc31cfb756d34a79ed7148904bf1c48a62fec37e38e5c545fa3f30530",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v060/battle-nishijin-defense-line-v1.webp",
       "bytes": 172174,
       "hash": "sha256-4bd351304b064f86a3b8c651433e3aba6560564df315beeea9c8678967948a89",

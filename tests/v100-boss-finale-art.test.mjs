@@ -27,11 +27,53 @@ test('old, partial, wrong and unconsented generations create no new asset job; e
     {installedManifest,storedHashes,gameBlocked:true}];
   for(const facts of negative){const value=permitted(facts);assert.equal(value,'');assert.equal(plan(paths(value)).stageObjects.some(o=>o.id===art.id),false);assert.equal(plan(paths(value)).paths.includes(art.path),false);}
   for(const facts of [{installedManifest,storedHashes},{browserPlayAccepted:true}]){
-    const value=permitted(facts),result=plan(paths(value));assert.equal(value,art.path);
+    const value=permitted(facts),result=plan(paths(value));
+    const expected=facts.installedManifest?[art.path]:Object.values(V100_BOSS_DEFEAT_ART).map(a=>a.path).sort();
+    assert.deepEqual(paths(value),expected);
     assert.equal(result.stageObjects.filter(o=>o.id===art.id&&o.optional).length,1);
     assert.equal(result.paths.includes(art.path),false);assert.deepEqual(result.optionalPaths,[art.path]);
   }
   assert.equal(permitted({installedManifest,storedHashes,baseUrl:'https://example.test/Zombieee/'}),art.path);
+});
+
+test('Mother is decoded only for her actual stage and verified image; an older GateEater pack cannot fetch her new image',()=>{
+  const mother=V100_BOSS_DEFEAT_ART.mother;
+  const stageId=V100_STAGE_IDS[V100_BOSSES.find(b=>b.id==='boss-mother').stageNumber-1];
+  const options={stageId,formationKinds:['guardian'],enemyKinds:['mother']};
+  const baseline=requiredBattleAssetPlan(options);
+  const oldPermissions=paths(permitted({installedManifest:{assets:[{path:art.path,hash:art.hash}]},storedHashes:new Set([art.hash]),browserPlayAccepted:true}));
+  assert.deepEqual(oldPermissions,[art.path]);
+  assert.deepEqual(requiredBattleAssetPlan({...options,verifiedBossDefeatPaths:oldPermissions}).optionalPaths,[]);
+  const accepted=requiredBattleAssetPlan({...options,verifiedBossDefeatPaths:paths(permitted({browserPlayAccepted:true}))});
+  assert.deepEqual(accepted.paths,baseline.paths,'Required character/background/mission decode is unchanged');
+  assert.deepEqual(accepted.sprites,baseline.sprites);assert.deepEqual(accepted.cards,baseline.cards);
+  assert.deepEqual(accepted.optionalPaths,[mother.path]);
+  assert.equal(accepted.stageObjects.find(o=>o.id===mother.id).optional,true);
+  assert.equal(accepted.stageObjects.some(o=>o.id===art.id),false);
+  assert.equal(Object.values(V100_COMBAT_VFX_ART).includes(mother.path),false);
+});
+
+test('every registered finale retains its exact native master, six transparent painted cells, runtime hash and source-bound material',async()=>{
+  const manifest=JSON.parse(fs.readFileSync('public/asset-manifest.json','utf8'));
+  for(const [kind,entry] of Object.entries(V100_BOSS_DEFEAT_ART)){
+    const provenance=JSON.parse(fs.readFileSync('assets/source/quality-20261114/vfx/'+kind+'-rupture-provenance-r2.json','utf8'));
+    const master=fs.readFileSync(provenance.source.path),bytes=fs.readFileSync('public'+entry.path);
+    assert.equal(createHash('sha256').update(master).digest('hex'),provenance.source.sha256);
+    assert.equal('sha256-'+createHash('sha256').update(bytes).digest('hex'),entry.hash);
+    assert.equal(provenance.output.sha256,entry.hash.slice(7));assert.equal(provenance.output.bytes,bytes.length);
+    assert.equal(manifest.assets.find(a=>a.path===entry.path)?.hash,entry.hash);
+    assert.deepEqual([entry.columns,entry.rows,entry.anchorX],[3,2,.5]);
+    assert.equal(entry.anchorY,provenance.output.anchorY);
+    const raw=await sharp(master).ensureAlpha().raw().toBuffer({resolveWithObject:true});
+    assert.deepEqual([raw.info.width,raw.info.height],[1536,1024]);
+    for(let cell=0;cell<6;cell++)for(let y=0;y<512;y++)for(let x=0;x<512;x++){
+      if(x>=4&&x<508&&y>=4&&y<508)continue;
+      assert.ok(raw.data[((Math.floor(cell/3)*512+y)*1536+(cell%3)*512+x)*4+3]<=32,'No hard clipped cell edge: '+kind);
+    }
+    if(provenance.generation.materialReference){const ref=provenance.generation.materialReference;
+      assert.equal(createHash('sha256').update(fs.readFileSync(ref.path)).digest('hex'),ref.sha256);
+    }
+  }
 });
 
 test('the optional atlas belongs only to actual prepared enemies, not all-sprite QA, every stage or the common VFX list',()=>{

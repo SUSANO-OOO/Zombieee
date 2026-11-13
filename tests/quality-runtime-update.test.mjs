@@ -24,9 +24,9 @@ function assertDelta(next){
 
 test('quality candidate contains exactly the reviewed art, firearm and VFX delta while retaining unrelated payloads',async()=>{
   assertDelta(candidate);
-  assert.equal(contract.added.length,196);assert.equal(contract.retired.length,166);
+  assert.equal(contract.added.length,197);assert.equal(contract.retired.length,166);
   assert.equal(contract.transportChanges.length,345);
-  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),40289258); // Includes the current unnamed-speaker portrait the two original VFX sheets and the authored smartphone UI material atlas in the verified offline pack, plus the nine current source-bound boss dossier figures.
+  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),40739556); // Includes the current unnamed-speaker portrait the two original VFX sheets and the authored smartphone UI material atlas in the verified offline pack, plus the nine current source-bound boss dossier figures.
   for(const row of contract.added){
     const bytes=await readFile(new URL('../public'+(row.sourcePath??row.path),import.meta.url));
     assert.equal(bytes.length,row.bytes,row.path);
