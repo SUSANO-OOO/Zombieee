@@ -92,6 +92,10 @@ try {
       assert.equal(await sound.getAttribute('data-muted'),muted);
       row.operations.push('native SFX toggle and restore accepted; audibility not assessed');
       row.video=page.video()?await page.video().path():null;
+    } catch(error) {
+      report.observationFailure=await page.evaluate(()=>({body:document.body.innerText.slice(-6500),root:{...document.documentElement.dataset},battle:window.__ASHFALL_BATTLE_QA__?.getSnapshot?.(),assets:window.__ASHFALL_ASSET_QA__?.getSnapshot?.()})).catch(captureError=>({captureError:String(captureError)}));
+      await page.screenshot({path:path.join(out,id+'-failure.png')}).catch(()=>{});
+      throw error;
     } finally {await context.close();}
     await writeFile(path.join(out,'report.json'),JSON.stringify(report,null,2)+'\n');
   }
