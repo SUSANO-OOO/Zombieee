@@ -1,0 +1,51 @@
+{
+  "generator": "scripts/build-v100-boss-defeat-art.mjs",
+  "creator": "OpenAI built-in image_gen under Producer direction; deterministic WebP packaging by Codex",
+  "license": "Project-original generated artwork under the existing game asset policy; no third-party download",
+  "rights": {
+    "commercialUse": true,
+    "modification": true,
+    "redistribution": true,
+    "basis": "Original art created for this project, with the existing project-owned blast as style reference"
+  },
+  "producerApproval": "Current goal requests bespoke boss effects. This is an implementation candidate, not final visual/audio/device acceptance.",
+  "source": {
+    "path": "assets/source/quality-20261114/vfx/ooguchi-rupture-r1.png",
+    "bytes": 1749700,
+    "sha256": "f7c603b87c9ef598f3d15faa0161310b05ca8ef53b6e6a609c85d4d7a396de8b"
+  },
+  "prompt": {
+    "path": "assets/source/quality-20261114/vfx/ooguchi-rupture-prompt-r1.txt",
+    "sha256": "dbf5a554844446adf6ae4e1712c9fdaac7843020e4aefddec8d2289e8ce26228"
+  },
+  "generation": {
+    "mode": "built-in image_gen generation with references",
+    "model": "Selected by host; no model name asserted",
+    "reference": {
+      "path": "public/art/quality-20261113/vfx/boss-blast-six-r2.webp",
+      "sha256": "e6851cd119a82c40cd2da23aa3d5c1f25660f1b2a81c48cd8c0c9296eb8b518f"
+    },
+    "note": "Single native reference-guided effect-only atlas; R1 selected after cell-edge inspection. Full body identity is unchanged.",
+    "materialReference": {
+      "path": "assets/source/v100/joints/ooguchi-r1/identity-reference.png",
+      "sha256": "31d8f4f332c5d647ff6115d0229cfe5fe884db3c5bbdd199c9660b1c2496b92d"
+    }
+  },
+  "output": {
+    "path": "/art/quality-20261114/vfx/ooguchi-rupture-six-r1.webp",
+    "bytes": 296620,
+    "sha256": "814c7fe264ea474613b90634a64f6f4b6d39b760c4c987dfdd4b540f0ad8ee36",
+    "width": 1536,
+    "height": 1024,
+    "columns": 3,
+    "rows": 2,
+    "anchorX": 0.5,
+    "anchorY": 0.87890625,
+    "includesPrelude": true
+  },
+  "runtimeAssetCount": 1,
+  "logicalBytes": 296620,
+  "distinctBytes": 296620,
+  "estimatedDecodedRgbaBytes": 6291456,
+  "scope": "Ooguchi visual finale only. Existing body, defeat receipt, result wait, damage, rewards, random sequence and audio are unchanged."
+}

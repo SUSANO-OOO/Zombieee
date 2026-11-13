@@ -1,0 +1,51 @@
+{
+  "generator": "scripts/build-v100-boss-defeat-art.mjs",
+  "creator": "OpenAI built-in image_gen under Producer direction; deterministic WebP packaging by Codex",
+  "license": "Project-original generated artwork under the existing game asset policy; no third-party download",
+  "rights": {
+    "commercialUse": true,
+    "modification": true,
+    "redistribution": true,
+    "basis": "Original art created for this project, with the existing project-owned blast as style reference"
+  },
+  "producerApproval": "Current goal requests bespoke boss effects. This is an implementation candidate, not final visual/audio/device acceptance.",
+  "source": {
+    "path": "assets/source/quality-20261114/vfx/gairen-rupture-r1.png",
+    "bytes": 2291141,
+    "sha256": "c408070ffa37a875560e32747a860bf0295490b8d99dd8d50c87bd839fd30f7b"
+  },
+  "prompt": {
+    "path": "assets/source/quality-20261114/vfx/gairen-rupture-prompt-r1.txt",
+    "sha256": "4903e15aaf4947b54f21b8bb0d2f538643b91c98b77cf4c9fe4c26496b09a939"
+  },
+  "generation": {
+    "mode": "built-in image_gen generation with references",
+    "model": "Selected by host; no model name asserted",
+    "reference": {
+      "path": "public/art/quality-20261113/vfx/boss-blast-six-r2.webp",
+      "sha256": "e6851cd119a82c40cd2da23aa3d5c1f25660f1b2a81c48cd8c0c9296eb8b518f"
+    },
+    "note": "Single native reference-guided effect-only atlas; R1 selected after cell-edge inspection. Full body identity is unchanged.",
+    "materialReference": {
+      "path": "assets/source/v100/joints/gairen-r1/identity-reference.png",
+      "sha256": "b8cb2167c3a57c3ecfd3add5e3c46748adf9d1dc24e62a3c1e27ff0797fa7ab6"
+    }
+  },
+  "output": {
+    "path": "/art/quality-20261114/vfx/gairen-rupture-six-r1.webp",
+    "bytes": 472586,
+    "sha256": "c28280fbc04ae92f99bd1c4eedc081bd25c7aa72062e498a0dfbc08e1e22f99b",
+    "width": 1536,
+    "height": 1024,
+    "columns": 3,
+    "rows": 2,
+    "anchorX": 0.5,
+    "anchorY": 0.87890625,
+    "includesPrelude": true
+  },
+  "runtimeAssetCount": 1,
+  "logicalBytes": 472586,
+  "distinctBytes": 472586,
+  "estimatedDecodedRgbaBytes": 6291456,
+  "scope": "Gairen visual finale only. Existing body, defeat receipt, result wait, damage, rewards, random sequence and audio are unchanged."
+}

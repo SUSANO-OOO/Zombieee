@@ -57,6 +57,8 @@ import {V100_UI_MATERIAL_ART} from "./v100PreparationArt.js";
 import {V100_BOSS_DOSSIER_ART} from "./v100BossDossierArt.js";
 import {V100_BOSS_DEFEAT_ART} from "./v100BossDefeatArt.js";
 import {PwaBattleArtworkPathsContext} from "./pwaBattleArtworkContext.js";
+import {PwaManualFoleyPathsContext} from "./pwaAudioAvailabilityContext.js";
+import {PWA_MANUAL_FOLEY_FILES} from "./pwaManualFoleyFiles.js";
 
 type Manifest = { version: string; releaseSha: string; assets: Array<Record<string, unknown>> };
 
@@ -861,6 +863,10 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     artworks: V100_BOSS_DEFEAT_ART, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,
     browserPlayAccepted: offerDismissed && (!standalone || registrationFailureAcknowledged),
   });
+  const verifiedManualFoleyPaths = verifiedPwaArtworkPaths({
+    artworks: PWA_MANUAL_FOLEY_FILES, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,
+    browserPlayAccepted: offerDismissed && (!standalone || registrationFailureAcknowledged),
+  });
 
   // A newly published stylesheet must not fetch new art before update consent.
   useEffect(() => {
@@ -932,7 +938,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   </aside>;
   return (
     <>
-      {!blocking && <PwaBattleArtworkPathsContext.Provider value={verifiedBossDefeatPaths}>{children}</PwaBattleArtworkPathsContext.Provider>}
+      {!blocking && <PwaManualFoleyPathsContext.Provider value={verifiedManualFoleyPaths}><PwaBattleArtworkPathsContext.Provider value={verifiedBossDefeatPaths}>{children}</PwaBattleArtworkPathsContext.Provider></PwaManualFoleyPathsContext.Provider>}
       {maintenance && <div className="pwa-maintenance" onClickCapture={onPwaControlClick} role="alertdialog" aria-modal="true" aria-label="アプリデータの確認"><section><h2>{maintenance === "clearing" ? "アプリのデータを確認しています" : "削除の完了を確認できませんでした"}</h2><p>確認が終わるまで、この画面でお待ちください。セーブデータは保持しています。</p>{maintenance === "failed" && <button type="button" onClick={() => { void confirmMaintenance(); }}>保存内容を再確認</button>}</section></div>}
 
       {blocking && (

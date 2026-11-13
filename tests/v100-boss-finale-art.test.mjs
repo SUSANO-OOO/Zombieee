@@ -27,11 +27,71 @@ test('old, partial, wrong and unconsented generations create no new asset job; e
     {installedManifest,storedHashes,gameBlocked:true}];
   for(const facts of negative){const value=permitted(facts);assert.equal(value,'');assert.equal(plan(paths(value)).stageObjects.some(o=>o.id===art.id),false);assert.equal(plan(paths(value)).paths.includes(art.path),false);}
   for(const facts of [{installedManifest,storedHashes},{browserPlayAccepted:true}]){
-    const value=permitted(facts),result=plan(paths(value));assert.equal(value,art.path);
+    const value=permitted(facts),result=plan(paths(value));
+    const expected=facts.installedManifest?[art.path]:Object.values(V100_BOSS_DEFEAT_ART).map(a=>a.path).sort();
+    assert.deepEqual(paths(value),expected);
     assert.equal(result.stageObjects.filter(o=>o.id===art.id&&o.optional).length,1);
     assert.equal(result.paths.includes(art.path),false);assert.deepEqual(result.optionalPaths,[art.path]);
   }
   assert.equal(permitted({installedManifest,storedHashes,baseUrl:'https://example.test/Zombieee/'}),art.path);
+});
+
+test('Mother is decoded only for her actual stage and verified image; an older GateEater pack cannot fetch her new image',()=>{
+  const mother=V100_BOSS_DEFEAT_ART.mother;
+  const stageId=V100_STAGE_IDS[V100_BOSSES.find(b=>b.id==='boss-mother').stageNumber-1];
+  const options={stageId,formationKinds:['guardian'],enemyKinds:['mother']};
+  const baseline=requiredBattleAssetPlan(options);
+  const oldPermissions=paths(permitted({installedManifest:{assets:[{path:art.path,hash:art.hash}]},storedHashes:new Set([art.hash]),browserPlayAccepted:true}));
+  assert.deepEqual(oldPermissions,[art.path]);
+  assert.deepEqual(requiredBattleAssetPlan({...options,verifiedBossDefeatPaths:oldPermissions}).optionalPaths,[]);
+  const accepted=requiredBattleAssetPlan({...options,verifiedBossDefeatPaths:paths(permitted({browserPlayAccepted:true}))});
+  assert.deepEqual(accepted.paths,baseline.paths,'Required character/background/mission decode is unchanged');
+  assert.deepEqual(accepted.sprites,baseline.sprites);assert.deepEqual(accepted.cards,baseline.cards);
+  assert.deepEqual(accepted.optionalPaths,[mother.path]);
+  assert.equal(accepted.stageObjects.find(o=>o.id===mother.id).optional,true);
+  assert.equal(accepted.stageObjects.some(o=>o.id===art.id),false);
+  assert.equal(Object.values(V100_COMBAT_VFX_ART).includes(mother.path),false);
+});
+
+test('each registered boss uses only its own verified optional sheet and retains the original mandatory decode plan',()=>{
+  const allPaths=Object.values(V100_BOSS_DEFEAT_ART).map(a=>a.path);
+  for(const [kind,entry] of Object.entries(V100_BOSS_DEFEAT_ART)){
+    const boss=V100_BOSSES.find(b=>b.id==='boss-'+kind);assert.ok(boss,'Current real boss identity exists');
+    const options={stageId:V100_STAGE_IDS[boss.stageNumber-1],formationKinds:['guardian'],enemyKinds:[kind]};
+    const baseline=requiredBattleAssetPlan(options),enabled=requiredBattleAssetPlan({...options,verifiedBossDefeatPaths:allPaths});
+    assert.deepEqual(enabled.paths,baseline.paths,kind+' cannot weaken required character/background/mission loading');
+    assert.deepEqual(enabled.optionalPaths,[entry.path],kind+' cannot decode other boss finales');
+    assert.deepEqual(requiredBattleAssetPlan({...options,verifiedBossDefeatPaths:allPaths,enemyKinds:['walker']}).optionalPaths,[]);
+    assert.equal(Object.values(V100_COMBAT_VFX_ART).includes(entry.path),false);
+  }
+});
+
+test('every registered finale retains its exact native master, six transparent painted cells, runtime hash and source-bound material',async()=>{
+  const manifest=JSON.parse(fs.readFileSync('public/asset-manifest.json','utf8'));
+  for(const [kind,entry] of Object.entries(V100_BOSS_DEFEAT_ART)){
+    const provenanceFile=entry.path.split('/').at(-1).replace('-six-','-provenance-').replace('.webp','.json');
+    const provenance=JSON.parse(fs.readFileSync('assets/source/quality-20261114/vfx/'+provenanceFile,'utf8'));
+    const master=fs.readFileSync(provenance.source.path),bytes=fs.readFileSync('public'+entry.path);
+    assert.equal(createHash('sha256').update(master).digest('hex'),provenance.source.sha256);
+    assert.equal('sha256-'+createHash('sha256').update(bytes).digest('hex'),entry.hash);
+    assert.equal(provenance.output.sha256,entry.hash.slice(7));assert.equal(provenance.output.bytes,bytes.length);
+    assert.equal(manifest.assets.find(a=>a.path===entry.path)?.hash,entry.hash);
+    assert.deepEqual([entry.columns,entry.rows,entry.anchorX],[3,2,.5]);
+    assert.equal(entry.anchorY,provenance.output.anchorY);
+    const raw=await sharp(master).ensureAlpha().raw().toBuffer({resolveWithObject:true});
+    assert.deepEqual([raw.info.width,raw.info.height],[1536,1024]);
+    for(let cell=0;cell<6;cell++)for(let y=0;y<512;y++)for(let x=0;x<512;x++){
+      if(x>=4&&x<508&&y>=4&&y<508)continue;
+      assert.ok(raw.data[((Math.floor(cell/3)*512+y)*1536+(cell%3)*512+x)*4+3]<=32,'No hard clipped cell edge: '+kind);
+    }
+    const references=provenance.generation.materialReferences??(provenance.generation.materialReference?[provenance.generation.materialReference]:[]);
+    for(const ref of references){
+      assert.equal(createHash('sha256').update(fs.readFileSync(ref.path)).digest('hex'),ref.sha256);
+    }
+    if(kind==='futago')assert.deepEqual(references.map(ref=>ref.path),[
+      'assets/source/v100/joints/futago-separated-a-r1/identity-reference.png',
+      'assets/source/v100/joints/futago-separated-b-r1/identity-reference.png']);
+  }
 });
 
 test('the optional atlas belongs only to actual prepared enemies, not all-sprite QA, every stage or the common VFX list',()=>{
@@ -54,7 +114,8 @@ test('same-battle retry never expands artwork on a late grant; a new selection c
 });
 
 function world(elapsed=1.6,label='gate-eater'){
-  return {definition:{missionConfig:{v100StageNumber:6}},fighters:[{id:4,hp:0}],caps:87,
+  const stageNumber=V100_BOSSES.find(b=>b.id==='boss-'+label)?.stageNumber??1;
+  return {definition:{missionConfig:{v100StageNumber:stageNumber}},fighters:[{id:4,hp:0}],caps:87,
     battlePresentation:{effects:[{kind:'boss-defeat',label,x:640,y:280,elapsed,duration:timeline.durationSeconds,seed:73,ownerId:4,receiptId:'fighter:4'}]}};
 }
 function paint(width=844,height=340){
@@ -82,6 +143,36 @@ test('the actual early renderer advances all six painted cells, pauses on the ex
     assert.deepEqual(p.ctx,state);assert.equal(p.stack.length,0);
   }
   assert.deepEqual([...cells].sort(),[0,1,2,3,4,5]);
+});
+
+test('Mother uses her painted prelude through all six poses without orange duplicates or altered major-peak timing',()=>{
+  const mother=V100_BOSS_DEFEAT_ART.mother,cells=new Set();assert.equal(mother.includesPrelude,true);
+  const peak=timeline.majorBurst.at+(timeline.durationSeconds-timeline.majorBurst.at)*.16;
+  for(const elapsed of [.22,.5,.82,peak,1.7,2.2,2.59]){
+    const p=paint(),g=world(elapsed,'mother'),before=structuredClone(g);
+    p.objects[mother.id]={...p.objects[art.id],id:mother.id};
+    assert.equal(drawV100BossDefeatFinales(p.ctx,p.objects,g,p.options),1);
+    const count=p.calls.length;drawV100BossDefeat(p.ctx,p.objects,g.battlePresentation.effects[0],.7,g);
+    assert.equal(p.calls.length,count,'No generic orange burst or dust after a real dedicated draw');
+    for(const c of p.calls){assert.equal(c.id,mother.id);cells.add(c.args[0]/512+3*c.args[1]/512);}
+    if(elapsed===peak)assert.ok(p.calls.some(c=>c.args[0]===1024&&c.args[1]===0&&c.alpha>.99),'Same third-cell major peak as the original timeline');
+    assert.deepEqual(g,before);assert.equal(p.stack.length,0);
+    const repeat=structuredClone(p.calls);p.calls.length=0;
+    drawV100BossDefeatFinales(p.ctx,p.objects,g,p.options);assert.deepEqual(p.calls,repeat,'Paused dedicated prelude is stable');
+  }
+  assert.deepEqual([...cells].sort(),[0,1,2,3,4,5]);
+});
+
+test('Mother missing at her first burst keeps the complete existing fallback even if the optional image arrives mid-collapse',()=>{
+  const mother=V100_BOSS_DEFEAT_ART.mother,p=paint(),g=world(.23,'mother');
+  assert.equal(drawV100BossDefeatFinales(p.ctx,p.objects,g,p.options),0);
+  p.objects[mother.id]={...p.objects[art.id],id:mother.id};g.battlePresentation.effects[0].elapsed=.9;
+  assert.equal(drawV100BossDefeatFinales(p.ctx,p.objects,g,p.options),0);
+  drawV100BossDefeat(p.ctx,p.objects,g.battlePresentation.effects[0],.7,g);
+  assert.ok(p.calls.some(c=>c.id==='quality-boss-blast'));
+  p.calls.length=0;g.battlePresentation.effects=[{...g.battlePresentation.effects[0],ownerId:5,receiptId:'fighter:5'}];
+  assert.equal(drawV100BossDefeatFinales(p.ctx,p.objects,g,p.options),1);
+  const count=p.calls.length;drawV100BossDefeat(p.ctx,p.objects,g.battlePresentation.effects[0],.7,g);assert.equal(p.calls.length,count);
 });
 
 test('missing/failed art keeps the old painted finale, while ready art paints once behind bodies without a second late major or smoke tail',()=>{

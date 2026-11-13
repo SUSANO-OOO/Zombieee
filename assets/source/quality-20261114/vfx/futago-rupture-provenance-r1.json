@@ -1,0 +1,57 @@
+{
+  "generator": "scripts/build-v100-boss-defeat-art.mjs",
+  "creator": "OpenAI built-in image_gen under Producer direction; deterministic WebP packaging by Codex",
+  "license": "Project-original generated artwork under the existing game asset policy; no third-party download",
+  "rights": {
+    "commercialUse": true,
+    "modification": true,
+    "redistribution": true,
+    "basis": "Original art created for this project, with the existing project-owned blast as style reference"
+  },
+  "producerApproval": "Current goal requests bespoke boss effects. This is an implementation candidate, not final visual/audio/device acceptance.",
+  "source": {
+    "path": "assets/source/quality-20261114/vfx/futago-rupture-r1.png",
+    "bytes": 1854893,
+    "sha256": "51af8039549f1bf84ae8fafeeef937f2c5307f7b6c9e44f0020d838f479489d7"
+  },
+  "prompt": {
+    "path": "assets/source/quality-20261114/vfx/futago-rupture-prompt-r1.txt",
+    "sha256": "4f7e1a91b14ae7cdbe0cff6b26d460e778948344d4988701c5fbaef349efff32"
+  },
+  "generation": {
+    "mode": "built-in image_gen generation with references",
+    "model": "Selected by host; no model name asserted",
+    "reference": {
+      "path": "public/art/quality-20261113/vfx/boss-blast-six-r2.webp",
+      "sha256": "e6851cd119a82c40cd2da23aa3d5c1f25660f1b2a81c48cd8c0c9296eb8b518f"
+    },
+    "note": "Asymmetric copper fissure release and charred bindings follow both current separated forms. The retired fused figure is not a reference.",
+    "materialReferences": [
+      {
+        "path": "assets/source/v100/joints/futago-separated-a-r1/identity-reference.png",
+        "sha256": "08bc90fcf191b912d37e0efa431971241337ee9a865b24fdb3e2fb85b0469aef"
+      },
+      {
+        "path": "assets/source/v100/joints/futago-separated-b-r1/identity-reference.png",
+        "sha256": "70959eb24119e652c7e42c34d86f9ae284181e15a23713a1a1609fb5d5f8513a"
+      }
+    ]
+  },
+  "output": {
+    "path": "/art/quality-20261114/vfx/futago-rupture-six-r1.webp",
+    "bytes": 351736,
+    "sha256": "ce33d15b927547529fc090c896203f6310f64340a53a31a3864a10b52d9fe3fa",
+    "width": 1536,
+    "height": 1024,
+    "columns": 3,
+    "rows": 2,
+    "anchorX": 0.5,
+    "anchorY": 0.87890625,
+    "includesPrelude": true
+  },
+  "runtimeAssetCount": 1,
+  "logicalBytes": 351736,
+  "distinctBytes": 351736,
+  "estimatedDecodedRgbaBytes": 6291456,
+  "scope": "Futago separated A/B visual finale only. Existing body, defeat receipt, result wait, damage, rewards, random sequence and audio are unchanged."
+}

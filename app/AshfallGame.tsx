@@ -46,6 +46,8 @@ import { V100_CANVAS_FONT } from "./v100Typography.js";
 
 import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import {PwaBattleArtworkPathsContext,selectBattleArtworkPolicy} from "./pwaBattleArtworkContext.js";
+import {PwaManualFoleyPathsContext} from "./pwaAudioAvailabilityContext.js";
+import {selectV100ManualFoleyPlayback} from "./v100ManualAbilityFoley.js";
 import {
   RANDOM_BATTLE_BARK_TRIGGER_IDS,
   advanceBattleBarkRuntime,
@@ -9428,6 +9430,10 @@ function drawWorld(
 }
 
 export function AshfallGame({ externalSession = null }: { externalSession?: AshfallExternalSession | null } = {}) {
+  const verifiedManualFoleyPaths=useContext(PwaManualFoleyPathsContext);
+  // V1 mounts a new battle for each resultId. Download progress cannot restart
+  // the current mixer or replace an already-started preparation sound.
+  const [manualFoleyPathsAtEntry]=useState(()=>verifiedManualFoleyPaths);
   const verifiedBattleArtworkPaths=useContext(PwaBattleArtworkPathsContext);
   const verifiedBattleArtworkPathsRef=useRef(verifiedBattleArtworkPaths);
   const battleArtworkPolicyRef=useRef<{key:string;paths:string}|null>(null);
@@ -9779,7 +9785,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   const externalStageId = externalSession?.stageId ?? null;
   const externalSessionActive = Boolean(externalSession);
   const externalBattleMode = externalSession?.battleMode ?? null;
-  const playbackManifest = externalSessionActive ? V100_AUDIO_MANIFEST : GAMEPLAY_PRODUCTION_AUDIO_MANIFEST;
+  const playbackManifest = useMemo(()=>externalSessionActive
+    ? selectV100ManualFoleyPlayback(V100_AUDIO_MANIFEST,GAMEPLAY_PRODUCTION_AUDIO_MANIFEST,manualFoleyPathsAtEntry)
+    : GAMEPLAY_PRODUCTION_AUDIO_MANIFEST,[externalSessionActive,manualFoleyPathsAtEntry]);
   const formatBattleText = (value: string) => publicDisplayText(value, { crawlerLabel: externalSessionActive ? v100BasePresentationFor(gameRef.current.definition.missionConfig.v100StageNumber).label : "装甲車両" });
   useEffect(() => { externalSessionRef.current = externalSession; }, [externalSession]);
   const externalFormationKindsKey = externalSession?.formationKinds.join("|") ?? "";

@@ -1,0 +1,52 @@
+{
+  "generator": "scripts/build-v100-boss-defeat-art.mjs",
+  "creator": "OpenAI built-in image_gen under Producer direction; deterministic WebP packaging by Codex",
+  "license": "Project-original generated artwork under the existing game asset policy; no third-party download",
+  "rights": {
+    "commercialUse": true,
+    "modification": true,
+    "redistribution": true,
+    "basis": "Original art created for this project, with the existing project-owned blast as style reference"
+  },
+  "producerApproval": "Current goal requests bespoke boss effects. This is an implementation candidate, not final visual/audio/device acceptance.",
+  "source": {
+    "path": "assets/source/quality-20261114/vfx/takuya-omega-rupture-r2.png",
+    "bytes": 2051091,
+    "sha256": "e88b0d492caaa1655397ed12ec86837eb7d284265c1a1e35ac2ae4ee4f010bc9"
+  },
+  "prompt": {
+    "path": "assets/source/quality-20261114/vfx/takuya-omega-rupture-prompt-r2.txt",
+    "sha256": "7f0b8669be495b3eef4c76acb210b95eceb95df200a2518464e7496bde7caaa6"
+  },
+  "generation": {
+    "mode": "built-in image_gen edit",
+    "model": "Selected by host; no model name asserted",
+    "reference": {
+      "path": "public/art/quality-20261113/vfx/boss-blast-six-r2.webp",
+      "sha256": "e6851cd119a82c40cd2da23aa3d5c1f25660f1b2a81c48cd8c0c9296eb8b518f"
+    },
+    "intermediateMasterSha256": "49e9a3137cc12d6b0b07477550bc83634cb2ae196540368693132fdde3c2374e",
+    "note": "R1 pressure rupture followed by a native cell-layout correction; R1 and failed edge analysis remain evidence. Only small hardware, smoke and sparks are depicted.",
+    "materialReference": {
+      "path": "assets/source/v100/joints/takuya-omega-r3/identity-reference.png",
+      "sha256": "5505512cd19684b6dadcc3b9c89b01a1a620c096675f3de35a63a237e75c0487"
+    }
+  },
+  "output": {
+    "path": "/art/quality-20261114/vfx/takuya-omega-rupture-six-r2.webp",
+    "bytes": 409604,
+    "sha256": "b1e7105aa20d3eb8b237277867c9ac62752d21792dca680a2609a532e64e5371",
+    "width": 1536,
+    "height": 1024,
+    "columns": 3,
+    "rows": 2,
+    "anchorX": 0.5,
+    "anchorY": 0.87890625,
+    "includesPrelude": true
+  },
+  "runtimeAssetCount": 1,
+  "logicalBytes": 409604,
+  "distinctBytes": 409604,
+  "estimatedDecodedRgbaBytes": 6291456,
+  "scope": "TAKUYA OMEGA visual finale only. Existing body, defeat receipt, result wait, damage, rewards, random sequence and audio are unchanged."
+}

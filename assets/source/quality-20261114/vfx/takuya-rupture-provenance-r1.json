@@ -1,0 +1,51 @@
+{
+  "generator": "scripts/build-v100-boss-defeat-art.mjs",
+  "creator": "OpenAI built-in image_gen under Producer direction; deterministic WebP packaging by Codex",
+  "license": "Project-original generated artwork under the existing game asset policy; no third-party download",
+  "rights": {
+    "commercialUse": true,
+    "modification": true,
+    "redistribution": true,
+    "basis": "Original art created for this project, with the existing project-owned blast as style reference"
+  },
+  "producerApproval": "Current goal requests bespoke boss effects. This is an implementation candidate, not final visual/audio/device acceptance.",
+  "source": {
+    "path": "assets/source/quality-20261114/vfx/takuya-rupture-r1.png",
+    "bytes": 1915661,
+    "sha256": "b0904e15fed274631d672b31666a712056e2b9336492efb3518d431942fee681"
+  },
+  "prompt": {
+    "path": "assets/source/quality-20261114/vfx/takuya-rupture-prompt-r1.txt",
+    "sha256": "024743796d3054d88e20e593683e872c54ca2a94c3fd68dc2017e9ce6ed9bf00"
+  },
+  "generation": {
+    "mode": "built-in image_gen generation with references",
+    "model": "Selected by host; no model name asserted",
+    "reference": {
+      "path": "public/art/quality-20261113/vfx/boss-blast-six-r2.webp",
+      "sha256": "e6851cd119a82c40cd2da23aa3d5c1f25660f1b2a81c48cd8c0c9296eb8b518f"
+    },
+    "note": "Heavy ground-contact grit and friction sparks only; the human boss and steel weapon remain intact. This is not the playable TKY.",
+    "materialReference": {
+      "path": "assets/source/v100/joints/takuya-r1/identity-reference.png",
+      "sha256": "12b600124ad71c155fdb50f56df66a9a1e85085976194719f4d44bb7f42e221b"
+    }
+  },
+  "output": {
+    "path": "/art/quality-20261114/vfx/takuya-rupture-six-r1.webp",
+    "bytes": 364612,
+    "sha256": "c765bb4a8e4d3ecb74e2abf0f35320756d37769f467a9ff6d71716b43b914050",
+    "width": 1536,
+    "height": 1024,
+    "columns": 3,
+    "rows": 2,
+    "anchorX": 0.5,
+    "anchorY": 0.87890625,
+    "includesPrelude": true
+  },
+  "runtimeAssetCount": 1,
+  "logicalBytes": 364612,
+  "distinctBytes": 364612,
+  "estimatedDecodedRgbaBytes": 6291456,
+  "scope": "TAKUYA visual finale only. Existing body, defeat receipt, result wait, damage, rewards, random sequence and audio are unchanged."
+}
