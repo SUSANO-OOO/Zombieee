@@ -274,7 +274,7 @@ test("transport optimizations preserve every runtime asset contract", async () =
   }
 
   const bundled = manifest.assets.filter((asset) => asset.bundlePath);
-  assert.equal(bundled.length, 369, "367 retained files plus two recorded activation preparations");
+  assert.equal(bundled.length, 379, "367 retained files plus twelve source-bound preparation cues");
   assert.ok(bundled.every((asset) => asset.bundlePath === "/pwa-bundles/audio-v1.bin"));
   assert.ok(bundled.every((asset) => asset.bundleBytes === asset.bytes));
   const bundle = await readFile(new URL("../public/pwa-bundles/audio-v1.bin", import.meta.url));

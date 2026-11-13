@@ -136,6 +136,858 @@
         "peak": 0.850006103515625,
         "rms": 0.06913686052433024
       }
+    },
+    {
+      "id": "ability-scout-intercept-activate",
+      "activationRoot": "ability-scout-intercept-activate",
+      "kind": "scout",
+      "displayName": "ハチ",
+      "approvedWeapon": "バール",
+      "duration": 0.18,
+      "preparationEndsBefore": 0.24,
+      "firstAction": "intercept impact",
+      "meaning": "靴の蹴り出し→短いバールの空気切り。敵へ当たる金属衝突を先に入れない",
+      "master": {
+        "path": "assets/source/quality-20261114/audio/manual-foley-r1/scout-preparation-r1.wav",
+        "bytes": 17358,
+        "sha256": "c92ce685dd0b667599ab3ee9cb19593bb8052e18e097ec45b6d78678812049b0"
+      },
+      "layers": [
+        {
+          "path": "assets/source/v100/audio/kenney-impact/footstep_concrete_000.ogg",
+          "sha256": "d7267e183067757c92c169de2a379abea592cfca6b39bb2e8feea15221ad79fe",
+          "sourceStart": 0,
+          "clip": 0.09,
+          "at": 0,
+          "gain": 0.42,
+          "highpassHz": 110,
+          "lowpassHz": 4000,
+          "rate": 1,
+          "fadeIn": 0.004,
+          "fadeOut": 0.025,
+          "role": "本人の接地・蹴り出し"
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/knifeSlice2.ogg",
+          "sha256": "6c2064d0ef988d1ec3d56868e823ea8823a5cac00f2742560052633529407def",
+          "sourceStart": 0.025,
+          "clip": 0.115,
+          "at": 0.04,
+          "gain": 0.16,
+          "highpassHz": 500,
+          "lowpassHz": 5200,
+          "rate": 1,
+          "fadeIn": 0.004,
+          "fadeOut": 0.025,
+          "role": "既存bar swingにも使う録音の空気成分、打撃ではない"
+        }
+      ],
+      "dynamics": {
+        "threshold": 0.12,
+        "ratio": 2.5,
+        "makeup": 3,
+        "attack": 4,
+        "release": 85
+      },
+      "filterComplex": "[0:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.09,asetpts=PTS-STARTPTS,highpass=f=110,lowpass=f=4000,volume=0.42,afade=t=in:st=0:d=0.004,afade=t=out:st=0.065:d=0.025,adelay=0,apad=whole_len=8640,atrim=end=0.18[l0];[1:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.025:duration=0.115,asetpts=PTS-STARTPTS,highpass=f=500,lowpass=f=5200,volume=0.16,afade=t=in:st=0:d=0.004,afade=t=out:st=0.09:d=0.025,adelay=40,apad=whole_len=8640,atrim=end=0.18[l1];[l0][l1]amix=inputs=2:duration=longest,volume=2,apad=whole_len=8640,atrim=end=0.18,acompressor=threshold=.12:ratio=2.5:makeup=3:attack=4:release=85:knee=2.82843,alimiter=limit=.85:level=0,afade=t=out:st=0.16799999999999998:d=0.012[out]",
+      "reference": {
+        "path": "public/audio/v099/sfx/ability-scout-intercept-activate.mp3",
+        "bytes": 11746,
+        "sha256": "507688dc9929237e19db5ed0babee6666df2274904b782765dd5992fe1ddb672"
+      },
+      "decodedMaster": {
+        "file": "scout-preparation-r1.wav",
+        "seconds": 0.18,
+        "peak": 0.593902587890625,
+        "rms": 0.061298962189897006,
+        "firstAboveMinus60db": 0.005104166666666667,
+        "lastAboveMinus60db": 0.15910416666666666,
+        "first100msRms": 0.0821017282684604,
+        "last10msRms": 0,
+        "sha256": "dfb7a8296aff464213e30aded0f9d040cde4b63635376bb1508da3e9712d6b1f"
+      },
+      "proposalBinding": {
+        "sourceHead": "46b15ff0a5e817f16a5473019e1876374ca3675a",
+        "auditSha256": "458fb61adc91d8e42cd2d1aea066530da085aa341469c628ab6879bf2e122f52"
+      },
+      "derivedSources": []
+    },
+    {
+      "id": "ability-ranger-precision-activate",
+      "activationRoot": "ability-ranger-precision-activate",
+      "kind": "ranger",
+      "displayName": "ミズチ",
+      "approvedWeapon": "自動小銃",
+      "duration": 0.44,
+      "preparationEndsBefore": 0.5,
+      "firstAction": "precision shot + actual hit",
+      "meaning": "長い小銃を肩へ収めるスリング張力→服へ銃床が収まる乾いた小音。装填・発砲音なし",
+      "master": {
+        "path": "assets/source/quality-20261114/audio/manual-foley-r1/ranger-preparation-r1.wav",
+        "bytes": 42318,
+        "sha256": "66794c4ab9e63512922107f42f34a2ba4fb4cf34ccbe6ff8578958239215e296"
+      },
+      "layers": [
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/cloth4.ogg",
+          "sha256": "e7ab9a6c4466dea874196c61f59bf1da05cfe58748f42fadd695d441a154a99b",
+          "sourceStart": 0,
+          "clip": 0.28,
+          "at": 0,
+          "gain": 0.48,
+          "highpassHz": 160,
+          "lowpassHz": 6200,
+          "rate": 1,
+          "fadeIn": 0.004,
+          "fadeOut": 0.025,
+          "role": "銃を構える布/スリングの張力"
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/dropLeather.ogg",
+          "sha256": "097e1d3b74949b0145fda0519d40b7e0773ab82ec4858727f95be830927e1a45",
+          "sourceStart": 0.02,
+          "clip": 0.13,
+          "at": 0.23,
+          "gain": 0.2,
+          "highpassHz": 100,
+          "lowpassHz": 2800,
+          "rate": 1,
+          "fadeIn": 0.004,
+          "fadeOut": 0.025,
+          "role": "肩へ収まる柔らかい自己接触のfoley候補"
+        }
+      ],
+      "dynamics": {
+        "threshold": 0.12,
+        "ratio": 2.5,
+        "makeup": 3,
+        "attack": 4,
+        "release": 85
+      },
+      "filterComplex": "[0:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.28,asetpts=PTS-STARTPTS,highpass=f=160,lowpass=f=6200,volume=0.48,afade=t=in:st=0:d=0.004,afade=t=out:st=0.255:d=0.025,adelay=0,apad=whole_len=21120,atrim=end=0.44[l0];[1:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.02:duration=0.13,asetpts=PTS-STARTPTS,highpass=f=100,lowpass=f=2800,volume=0.2,afade=t=in:st=0:d=0.004,afade=t=out:st=0.10500000000000001:d=0.025,adelay=230,apad=whole_len=21120,atrim=end=0.44[l1];[l0][l1]amix=inputs=2:duration=longest,volume=2,apad=whole_len=21120,atrim=end=0.44,acompressor=threshold=.12:ratio=2.5:makeup=3:attack=4:release=85:knee=2.82843,alimiter=limit=.85:level=0,afade=t=out:st=0.428:d=0.012[out]",
+      "reference": {
+        "path": "public/audio/v099/sfx/ability-ranger-precision-activate.mp3",
+        "bytes": 13000,
+        "sha256": "3b4027fe75f77b351d79c5aa6b47b50887ee3bd24bfb9387f76e0d5a5d7c5964"
+      },
+      "decodedMaster": {
+        "file": "ranger-preparation-r1.wav",
+        "seconds": 0.44,
+        "peak": 0.29595947265625,
+        "rms": 0.0340159707292659,
+        "firstAboveMinus60db": 0.006520833333333333,
+        "lastAboveMinus60db": 0.3647916666666667,
+        "first100msRms": 0.031364226139848524,
+        "last10msRms": 0,
+        "sha256": "635509c415367a46ef089b805deb6ef1a69d4bef6f83b478a97b05a9b9a0f43b"
+      },
+      "proposalBinding": {
+        "sourceHead": "46b15ff0a5e817f16a5473019e1876374ca3675a",
+        "auditSha256": "458fb61adc91d8e42cd2d1aea066530da085aa341469c628ab6879bf2e122f52"
+      },
+      "derivedSources": []
+    },
+    {
+      "id": "ability-brute-groundbreak-activate",
+      "activationRoot": "ability-brute-groundbreak-activate",
+      "kind": "brute",
+      "displayName": "タタラ",
+      "approvedWeapon": "大型ハンマー",
+      "duration": 0.48,
+      "preparationEndsBefore": 0.55,
+      "firstAction": "groundbreak/structure impact",
+      "meaning": "重い靴の荷重→柄を握り直す張力→鈍い柄金具の余韻。地面を砕く音は.55のimpactに残す",
+      "master": {
+        "path": "assets/source/quality-20261114/audio/manual-foley-r1/brute-preparation-r1.wav",
+        "bytes": 46158,
+        "sha256": "29c47a49a27e7ccec71c00b2431e42968e920ebfc79cdfa4273b585f3b11a6a5"
+      },
+      "layers": [
+        {
+          "path": "assets/source/v100/audio/kenney-impact/footstep_concrete_000.ogg",
+          "sha256": "d7267e183067757c92c169de2a379abea592cfca6b39bb2e8feea15221ad79fe",
+          "sourceStart": 0.01,
+          "clip": 0.085,
+          "at": 0,
+          "gain": 0.3,
+          "highpassHz": 45,
+          "lowpassHz": 1800,
+          "rate": 1,
+          "fadeIn": 0.004,
+          "fadeOut": 0.025,
+          "role": "本人の重心移動、地砕ではない"
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/cloth1.ogg",
+          "sha256": "ddb93a3671233f95da0e0b10367f082f7eb42fa6caaddcf776410aa8833c747d",
+          "sourceStart": 0.01,
+          "clip": 0.25,
+          "at": 0.06,
+          "gain": 0.34,
+          "highpassHz": 110,
+          "lowpassHz": 3800,
+          "rate": 1,
+          "fadeIn": 0.004,
+          "fadeOut": 0.025,
+          "role": "振上げる身体/握りの張力"
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/metalPot2.ogg",
+          "sha256": "8e1f820d217d380fde10e969d109db34303e3f4d11c3951926eddef813d04ae2",
+          "sourceStart": 0.05,
+          "clip": 0.1,
+          "at": 0.3,
+          "gain": 0.1,
+          "highpassHz": 120,
+          "lowpassHz": 1400,
+          "rate": 1,
+          "fadeIn": 0.004,
+          "fadeOut": 0.025,
+          "role": "大ハンマー保持部の鈍い共鳴へ加工する候補"
+        }
+      ],
+      "dynamics": {
+        "threshold": 0.12,
+        "ratio": 2.5,
+        "makeup": 3,
+        "attack": 4,
+        "release": 85
+      },
+      "filterComplex": "[0:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.01:duration=0.085,asetpts=PTS-STARTPTS,highpass=f=45,lowpass=f=1800,volume=0.3,afade=t=in:st=0:d=0.004,afade=t=out:st=0.060000000000000005:d=0.025,adelay=0,apad=whole_len=23040,atrim=end=0.48[l0];[1:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.01:duration=0.25,asetpts=PTS-STARTPTS,highpass=f=110,lowpass=f=3800,volume=0.34,afade=t=in:st=0:d=0.004,afade=t=out:st=0.225:d=0.025,adelay=60,apad=whole_len=23040,atrim=end=0.48[l1];[2:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.05:duration=0.1,asetpts=PTS-STARTPTS,highpass=f=120,lowpass=f=1400,volume=0.1,afade=t=in:st=0:d=0.004,afade=t=out:st=0.07500000000000001:d=0.025,adelay=300,apad=whole_len=23040,atrim=end=0.48[l2];[l0][l1][l2]amix=inputs=3:duration=longest,volume=3,apad=whole_len=23040,atrim=end=0.48,acompressor=threshold=.12:ratio=2.5:makeup=3:attack=4:release=85:knee=2.82843,alimiter=limit=.85:level=0,afade=t=out:st=0.46799999999999997:d=0.012[out]",
+      "reference": {
+        "path": "public/audio/v099/sfx/ability-brute-groundbreak-activate.mp3",
+        "bytes": 15926,
+        "sha256": "ce2f495afc545a844a225eb0cf089780b9cde804df51c6f0ff2b11e091d08146"
+      },
+      "decodedMaster": {
+        "file": "brute-preparation-r1.wav",
+        "seconds": 0.48,
+        "peak": 0.58135986328125,
+        "rms": 0.04291487324350239,
+        "firstAboveMinus60db": 0.005125,
+        "lastAboveMinus60db": 0.4029583333333333,
+        "first100msRms": 0.01884573561121863,
+        "last10msRms": 0,
+        "sha256": "c3e340f59e03a02136cc49b520e7a5b491fdaa96216fb0cb370cbfad818c8c92"
+      },
+      "proposalBinding": {
+        "sourceHead": "46b15ff0a5e817f16a5473019e1876374ca3675a",
+        "auditSha256": "458fb61adc91d8e42cd2d1aea066530da085aa341469c628ab6879bf2e122f52"
+      },
+      "derivedSources": []
+    },
+    {
+      "id": "ability-kumaverson-iron-pan-activate",
+      "activationRoot": "ability-kumaverson-iron-pan-activate",
+      "kind": "kumaverson",
+      "displayName": "クマバーソン",
+      "approvedWeapon": "フライパン",
+      "duration": 0.3,
+      "preparationEndsBefore": 0.35,
+      "firstAction": "active-start / stance, active6s",
+      "meaning": "鍋を胸前へ持ち直す短い、手で抑えた金属共鳴。gongや敵の攻撃を受けたclangにしない",
+      "master": {
+        "path": "assets/source/quality-20261114/audio/manual-foley-r1/kumaverson-preparation-r1.wav",
+        "bytes": 28878,
+        "sha256": "65b59a71faf4128c9ca3f122a2d191ce4d88cd7733db6894686743507cadce2d"
+      },
+      "layers": [
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/metalPot1.ogg",
+          "sha256": "159def979e8e386c2c539f5e99cc30a080eb2dcb6c911fa2e4ccc0785b2522fd",
+          "sourceStart": 0.035,
+          "clip": 0.2,
+          "at": 0,
+          "gain": 0.16,
+          "highpassHz": 260,
+          "lowpassHz": 2300,
+          "rate": 1,
+          "fadeIn": 0.004,
+          "fadeOut": 0.025,
+          "role": "鍋の材質が分かるdamped resonance、元は調理器具録音"
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/cloth2.ogg",
+          "sha256": "8a7451193c38bc05483aec25dd193e163a15d44cf7fff04ac7912573231b0201",
+          "sourceStart": 0.01,
+          "clip": 0.15,
+          "at": 0.07,
+          "gain": 0.25,
+          "highpassHz": 200,
+          "lowpassHz": 4200,
+          "rate": 1,
+          "fadeIn": 0.004,
+          "fadeOut": 0.025,
+          "role": "袖/持ち手の握り直し"
+        }
+      ],
+      "dynamics": {
+        "threshold": 0.12,
+        "ratio": 2.5,
+        "makeup": 3,
+        "attack": 4,
+        "release": 85
+      },
+      "filterComplex": "[0:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.035:duration=0.2,asetpts=PTS-STARTPTS,highpass=f=260,lowpass=f=2300,volume=0.16,afade=t=in:st=0:d=0.004,afade=t=out:st=0.17500000000000002:d=0.025,adelay=0,apad=whole_len=14400,atrim=end=0.3[l0];[1:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.01:duration=0.15,asetpts=PTS-STARTPTS,highpass=f=200,lowpass=f=4200,volume=0.25,afade=t=in:st=0:d=0.004,afade=t=out:st=0.125:d=0.025,adelay=70,apad=whole_len=14400,atrim=end=0.3[l1];[l0][l1]amix=inputs=2:duration=longest,volume=2,apad=whole_len=14400,atrim=end=0.3,acompressor=threshold=.12:ratio=2.5:makeup=3:attack=4:release=85:knee=2.82843,alimiter=limit=.85:level=0,afade=t=out:st=0.288:d=0.012[out]",
+      "reference": {
+        "path": "public/audio/v099/sfx/ability-kumaverson-iron-pan-activate.mp3",
+        "bytes": 15926,
+        "sha256": "f3f08b262ba1a2fca74d80c9048edc173662d85cf24038095bb48cfcef174393"
+      },
+      "decodedMaster": {
+        "file": "kumaverson-preparation-r1.wav",
+        "seconds": 0.3,
+        "peak": 0.673583984375,
+        "rms": 0.12223892721690592,
+        "firstAboveMinus60db": 0.058791666666666666,
+        "lastAboveMinus60db": 0.22314583333333332,
+        "first100msRms": 0.12653805849613037,
+        "last10msRms": 0,
+        "sha256": "68e3d6d003768db8f1db95b4fad9a5f9aa6c792bd6d14bc52d7cc485da3b7fd6"
+      },
+      "proposalBinding": {
+        "sourceHead": "46b15ff0a5e817f16a5473019e1876374ca3675a",
+        "auditSha256": "458fb61adc91d8e42cd2d1aea066530da085aa341469c628ab6879bf2e122f52"
+      },
+      "derivedSources": []
+    },
+    {
+      "id": "ability-babayaga-appraise-activate",
+      "activationRoot": "ability-babayaga-appraise-activate",
+      "kind": "babayaga",
+      "displayName": "ババヤガ",
+      "approvedWeapon": "サプレッサー付き拳銃",
+      "duration": 0.34,
+      "preparationEndsBefore": 0.4,
+      "firstAction": "appraise shot/hit; mark+.045s",
+      "meaning": "非常に近く短い袖・グリップの据え直し。slide/再装填/サプレッサー発砲を前借りしない",
+      "master": {
+        "path": "assets/source/quality-20261114/audio/manual-foley-r1/babayaga-preparation-r1.wav",
+        "bytes": 32718,
+        "sha256": "70f6ccc7e0d6bc7813a9eec6f87ba2c2a1f5c5379559a5ec8515ca02ec43edb8"
+      },
+      "layers": [
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/cloth3.ogg",
+          "sha256": "a48632d17a4f1416541d261a32a31612e01267144c407fa3ecab3ff410f0085b",
+          "sourceStart": 0.02,
+          "clip": 0.2,
+          "at": 0,
+          "gain": 0.3,
+          "highpassHz": 230,
+          "lowpassHz": 4600,
+          "rate": 1,
+          "fadeIn": 0.004,
+          "fadeOut": 0.025,
+          "role": "拳銃を精密に構える小さな袖摩擦"
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/dropLeather.ogg",
+          "sha256": "097e1d3b74949b0145fda0519d40b7e0773ab82ec4858727f95be830927e1a45",
+          "sourceStart": 0.03,
+          "clip": 0.1,
+          "at": 0.12,
+          "gain": 0.12,
+          "highpassHz": 180,
+          "lowpassHz": 2200,
+          "rate": 1,
+          "fadeIn": 0.004,
+          "fadeOut": 0.025,
+          "role": "握りが静止する低い乾いた自己接触"
+        }
+      ],
+      "dynamics": {
+        "threshold": 0.12,
+        "ratio": 2.5,
+        "makeup": 3,
+        "attack": 4,
+        "release": 85
+      },
+      "filterComplex": "[0:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.02:duration=0.2,asetpts=PTS-STARTPTS,highpass=f=230,lowpass=f=4600,volume=0.3,afade=t=in:st=0:d=0.004,afade=t=out:st=0.17500000000000002:d=0.025,adelay=0,apad=whole_len=16320,atrim=end=0.34[l0];[1:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.03:duration=0.1,asetpts=PTS-STARTPTS,highpass=f=180,lowpass=f=2200,volume=0.12,afade=t=in:st=0:d=0.004,afade=t=out:st=0.07500000000000001:d=0.025,adelay=120,apad=whole_len=16320,atrim=end=0.34[l1];[l0][l1]amix=inputs=2:duration=longest,volume=2,apad=whole_len=16320,atrim=end=0.34,acompressor=threshold=.12:ratio=2.5:makeup=3:attack=4:release=85:knee=2.82843,alimiter=limit=.85:level=0,afade=t=out:st=0.328:d=0.012[out]",
+      "reference": {
+        "path": "public/audio/v099/sfx/ability-babayaga-appraise-activate.mp3",
+        "bytes": 13836,
+        "sha256": "108e6f6f8ade6bda6e611fed2efe34030fc29a535fe2cdbc358571e26ce51a82"
+      },
+      "decodedMaster": {
+        "file": "babayaga-preparation-r1.wav",
+        "seconds": 0.34,
+        "peak": 0.20782470703125,
+        "rms": 0.02582873639001788,
+        "firstAboveMinus60db": 0.0066875,
+        "lastAboveMinus60db": 0.22429166666666667,
+        "first100msRms": 0.03327061412915724,
+        "last10msRms": 0,
+        "sha256": "7d427ac3b980d7a6c24a7c35773095626da8c4ede306915285a3e28a10f2d637"
+      },
+      "proposalBinding": {
+        "sourceHead": "46b15ff0a5e817f16a5473019e1876374ca3675a",
+        "auditSha256": "458fb61adc91d8e42cd2d1aea066530da085aa341469c628ab6879bf2e122f52"
+      },
+      "derivedSources": []
+    },
+    {
+      "id": "ability-gunner-suppression-activate",
+      "activationRoot": "ability-gunner-suppression-activate",
+      "kind": "gunner",
+      "displayName": "レイダー",
+      "approvedWeapon": "軽機関銃",
+      "duration": 0.12,
+      "preparationEndsBefore": 0.18,
+      "firstAction": "first muzzle; first impact .235, not nominal windup .55",
+      "meaning": "短い金具のガタが一度だけ収束して初弾へ。feed coverを開く/新reloadをしたとは称さない",
+      "master": {
+        "path": "assets/source/quality-20261114/audio/manual-foley-r1/gunner-preparation-r1.wav",
+        "bytes": 11598,
+        "sha256": "599949a210a2508bc88f5759e94616e63c7925940c702870ada57d035e303051"
+      },
+      "layers": [
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/handleCoins2.ogg",
+          "sha256": "4b857968d64f9ac9336a10ffac6694d7547e1f01566ad6857b30bc8db3ee6c32",
+          "sourceStart": 0.015,
+          "clip": 0.055,
+          "at": 0,
+          "gain": 0.15,
+          "highpassHz": 450,
+          "lowpassHz": 4200,
+          "rate": 1,
+          "fadeIn": 0.004,
+          "fadeOut": 0.025,
+          "role": "制圧銃の小金具が据わる細かな金属成分の候補"
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
+          "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708",
+          "sourceStart": 0.01,
+          "clip": 0.06,
+          "at": 0.055,
+          "gain": 0.11,
+          "highpassHz": 900,
+          "lowpassHz": 5000,
+          "rate": 1,
+          "fadeIn": 0.004,
+          "fadeOut": 0.025,
+          "role": "一度の小さな保持金具音、銃撃/命中ではない"
+        }
+      ],
+      "dynamics": {
+        "threshold": 0.12,
+        "ratio": 2.5,
+        "makeup": 3,
+        "attack": 4,
+        "release": 85
+      },
+      "filterComplex": "[0:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.015:duration=0.055,asetpts=PTS-STARTPTS,highpass=f=450,lowpass=f=4200,volume=0.15,afade=t=in:st=0:d=0.004,afade=t=out:st=0.03:d=0.025,adelay=0,apad=whole_len=5760,atrim=end=0.12[l0];[1:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.01:duration=0.06,asetpts=PTS-STARTPTS,highpass=f=900,lowpass=f=5000,volume=0.11,afade=t=in:st=0:d=0.004,afade=t=out:st=0.034999999999999996:d=0.025,adelay=55,apad=whole_len=5760,atrim=end=0.12[l1];[l0][l1]amix=inputs=2:duration=longest,volume=2,apad=whole_len=5760,atrim=end=0.12,acompressor=threshold=.12:ratio=2.5:makeup=3:attack=4:release=85:knee=2.82843,alimiter=limit=.85:level=0,afade=t=out:st=0.108:d=0.012[out]",
+      "reference": {
+        "path": "public/audio/v099/sfx/ability-gunner-suppression-activate.mp3",
+        "bytes": 15090,
+        "sha256": "f9d63620f7cfbb5a68fd648565b94ae9deedf7666e275cf12bcc7732839e98c1"
+      },
+      "decodedMaster": {
+        "file": "gunner-preparation-r1.wav",
+        "seconds": 0.12,
+        "peak": 0.37054443359375,
+        "rms": 0.02994304608251749,
+        "firstAboveMinus60db": 0.010229166666666666,
+        "lastAboveMinus60db": 0.1169375,
+        "first100msRms": 0.03168371767481737,
+        "last10msRms": 0.0034576098403302402,
+        "sha256": "345e0190a3eb6d100882f90d64ee690bf1af21dbe68e04b0935242dbbe0c0481"
+      },
+      "proposalBinding": {
+        "sourceHead": "46b15ff0a5e817f16a5473019e1876374ca3675a",
+        "auditSha256": "458fb61adc91d8e42cd2d1aea066530da085aa341469c628ab6879bf2e122f52"
+      },
+      "derivedSources": []
+    },
+    {
+      "id": "ability-engineer-trap-arm-activate",
+      "activationRoot": "ability-engineer-trap-arm-activate",
+      "kind": "engineer",
+      "displayName": "モンキー",
+      "approvedWeapon": "二カム式コンパクトクロスボウ・罠装置",
+      "duration": 0.3,
+      "preparationEndsBefore": 0.35,
+      "firstAction": "trap-deploy; spring cue only on actual bind contact",
+      "meaning": "腿の罠を二段階で小さくarmし、hinge摩擦で止める。spring releaseは敵が掛かった別cueに残す",
+      "master": {
+        "path": "assets/source/quality-20261114/audio/manual-foley-r1/engineer-preparation-r1.wav",
+        "bytes": 28878,
+        "sha256": "f5e3722364ce50f79a6dc92a81c417f1a5c9dd8c12c023b3737d4f4079c2f2b1"
+      },
+      "layers": [
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
+          "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708",
+          "sourceStart": 0,
+          "clip": 0.065,
+          "at": 0,
+          "gain": 0.24,
+          "highpassHz": 550,
+          "lowpassHz": 4700,
+          "rate": 1,
+          "fadeIn": 0.004,
+          "fadeOut": 0.025,
+          "role": "罠の第1保持部"
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
+          "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708",
+          "sourceStart": 0.025,
+          "clip": 0.065,
+          "at": 0.09,
+          "gain": 0.2,
+          "highpassHz": 350,
+          "lowpassHz": 3300,
+          "rate": 1,
+          "fadeIn": 0.004,
+          "fadeOut": 0.025,
+          "role": "同じ装置の第2保持部、発動event追加ではない"
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/doorOpen_1.ogg",
+          "sha256": "4ab93bab96522d8eb109ff96dc57cb6765deb02448fe14c10472084be5bb2a0b",
+          "sourceStart": 0.02,
+          "clip": 0.09,
+          "at": 0.17,
+          "gain": 0.1,
+          "highpassHz": 650,
+          "lowpassHz": 3000,
+          "rate": 1,
+          "fadeIn": 0.004,
+          "fadeOut": 0.025,
+          "role": "小機構の擦れへ加工する候補。doorそのものの設定を足さない"
+        }
+      ],
+      "dynamics": {
+        "threshold": 0.12,
+        "ratio": 2.5,
+        "makeup": 3,
+        "attack": 4,
+        "release": 85
+      },
+      "filterComplex": "[0:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.065,asetpts=PTS-STARTPTS,highpass=f=550,lowpass=f=4700,volume=0.24,afade=t=in:st=0:d=0.004,afade=t=out:st=0.04:d=0.025,adelay=0,apad=whole_len=14400,atrim=end=0.3[l0];[1:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.025:duration=0.065,asetpts=PTS-STARTPTS,highpass=f=350,lowpass=f=3300,volume=0.2,afade=t=in:st=0:d=0.004,afade=t=out:st=0.04:d=0.025,adelay=90,apad=whole_len=14400,atrim=end=0.3[l1];[2:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.02:duration=0.09,asetpts=PTS-STARTPTS,highpass=f=650,lowpass=f=3000,volume=0.1,afade=t=in:st=0:d=0.004,afade=t=out:st=0.065:d=0.025,adelay=170,apad=whole_len=14400,atrim=end=0.3[l2];[l0][l1][l2]amix=inputs=3:duration=longest,volume=3,apad=whole_len=14400,atrim=end=0.3,acompressor=threshold=.12:ratio=2.5:makeup=3:attack=4:release=85:knee=2.82843,alimiter=limit=.85:level=0,afade=t=out:st=0.288:d=0.012[out]",
+      "reference": {
+        "path": "public/audio/v099/sfx/ability-engineer-trap-arm-activate.mp3",
+        "bytes": 14672,
+        "sha256": "f66430248bb5fcc881e5ff6de24911e8e5bda693b86e67a3bbeaaa36520c36a0"
+      },
+      "decodedMaster": {
+        "file": "engineer-preparation-r1.wav",
+        "seconds": 0.3,
+        "peak": 0.613372802734375,
+        "rms": 0.04104715137431655,
+        "firstAboveMinus60db": 0.0070416666666666666,
+        "lastAboveMinus60db": 0.262,
+        "first100msRms": 0.05358103565654298,
+        "last10msRms": 0,
+        "sha256": "79b40ea34b0bb681120b124de10a0da3ea0eb8e8c311c76733ce1a8c3f673da2"
+      },
+      "proposalBinding": {
+        "sourceHead": "46b15ff0a5e817f16a5473019e1876374ca3675a",
+        "auditSha256": "458fb61adc91d8e42cd2d1aea066530da085aa341469c628ab6879bf2e122f52"
+      },
+      "derivedSources": []
+    },
+    {
+      "id": "ability-zakimiya-molotov-activate",
+      "activationRoot": "ability-zakimiya-molotov-activate",
+      "kind": "zakimiya",
+      "displayName": "ザキミヤ",
+      "approvedWeapon": "ウイスキーボトル",
+      "duration": 0.34,
+      "preparationEndsBefore": 0.4,
+      "firstAction": "throw .4; impact .56; then existing burn",
+      "meaning": "ボトルを握る摩擦→既存R9の短い着火/燃え始め。ガラス破壊や爆発はimpactに残す",
+      "master": {
+        "path": "assets/source/quality-20261114/audio/manual-foley-r1/zakimiya-preparation-r1.wav",
+        "bytes": 32718,
+        "sha256": "14b5181495a60891a7b0e99c13418e08cc752ce7f3dc0c439155801fc3321961"
+      },
+      "layers": [
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/cloth1.ogg",
+          "sha256": "ddb93a3671233f95da0e0b10367f082f7eb42fa6caaddcf776410aa8833c747d",
+          "sourceStart": 0.015,
+          "clip": 0.12,
+          "at": 0,
+          "gain": 0.28,
+          "highpassHz": 250,
+          "lowpassHz": 5000,
+          "rate": 1,
+          "fadeIn": 0.004,
+          "fadeOut": 0.025,
+          "role": "握り/火酒の布の取回し"
+        },
+        {
+          "path": "public/audio/v100/r9/fire-catch.mp3",
+          "sha256": "e09a778cd09b5e1b25f1d13dca1263bd8bb0c62453d83cd73e0fccea8933ff19",
+          "sourceStart": 0.12,
+          "clip": 0.18,
+          "at": 0.15,
+          "gain": 0.35,
+          "highpassHz": 240,
+          "lowpassHz": 4200,
+          "rate": 1,
+          "fadeIn": 0.004,
+          "fadeOut": 0.025,
+          "role": "既存R9の着火空気成分。実聴で衝突混入があれば不採用"
+        }
+      ],
+      "dynamics": {
+        "threshold": 0.12,
+        "ratio": 2.5,
+        "makeup": 3,
+        "attack": 4,
+        "release": 85
+      },
+      "filterComplex": "[0:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.015:duration=0.12,asetpts=PTS-STARTPTS,highpass=f=250,lowpass=f=5000,volume=0.28,afade=t=in:st=0:d=0.004,afade=t=out:st=0.095:d=0.025,adelay=0,apad=whole_len=16320,atrim=end=0.34[l0];[1:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.12:duration=0.18,asetpts=PTS-STARTPTS,highpass=f=240,lowpass=f=4200,volume=0.35,afade=t=in:st=0:d=0.004,afade=t=out:st=0.155:d=0.025,adelay=150,apad=whole_len=16320,atrim=end=0.34[l1];[l0][l1]amix=inputs=2:duration=longest,volume=2,apad=whole_len=16320,atrim=end=0.34,acompressor=threshold=.12:ratio=2.5:makeup=3:attack=4:release=85:knee=2.82843,alimiter=limit=.85:level=0,afade=t=out:st=0.328:d=0.012[out]",
+      "reference": {
+        "path": "public/audio/v099/sfx/ability-zakimiya-molotov-activate.mp3",
+        "bytes": 15926,
+        "sha256": "67914c6bdf252de63d2bf04c7bd6094a8354e1f268e5df2bd776e41b20724971"
+      },
+      "decodedMaster": {
+        "file": "zakimiya-preparation-r1.wav",
+        "seconds": 0.34,
+        "peak": 0.336395263671875,
+        "rms": 0.027648582726953298,
+        "firstAboveMinus60db": 0.020083333333333335,
+        "lastAboveMinus60db": 0.33397916666666666,
+        "first100msRms": 0.009260170532915295,
+        "last10msRms": 0.0023258360743935035,
+        "sha256": "d9e5c38c82f290f51691e792f9a555ae4f7de59d196ff3b20ab415a42669d58b"
+      },
+      "proposalBinding": {
+        "sourceHead": "46b15ff0a5e817f16a5473019e1876374ca3675a",
+        "auditSha256": "458fb61adc91d8e42cd2d1aea066530da085aa341469c628ab6879bf2e122f52"
+      },
+      "derivedSources": [
+        {
+          "id": "v100-r9-fire-catch",
+          "file": "public/audio/v100/r9/fire-catch.mp3",
+          "bytes": 26476,
+          "sha256": "e09a778cd09b5e1b25f1d13dca1263bd8bb0c62453d83cd73e0fccea8933ff19",
+          "duration": 2.4,
+          "loop": false,
+          "sources": [
+            {
+              "file": "assets/source/v100/audio/kenney-rpg/bookFlip2.ogg",
+              "sha256": "3409042acbfaebc24c1a6327dc073e36f9250841712e96c5040da566a97df73c",
+              "license": "CC0-1.0"
+            }
+          ],
+          "recipe": {
+            "duration": 2.4,
+            "layers": [
+              {
+                "file": "kenney-rpg/bookFlip2.ogg",
+                "gain": 0.25,
+                "delay": 0,
+                "rate": 1.25
+              }
+            ],
+            "noise": {
+              "color": "pink",
+              "gain": 0.45,
+              "cutoff": 4500,
+              "start": 0.12,
+              "end": 0.45
+            }
+          },
+          "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+        }
+      ]
+    },
+    {
+      "id": "ability-mrs-chiha-salvo-ready",
+      "activationRoot": "ability-mrs-chiha-salvo-activate",
+      "kind": "mrs-chiha",
+      "displayName": "Mrs.チハ",
+      "approvedWeapon": "回転弾倉式グレネードランチャー",
+      "duration": 0.54,
+      "preparationEndsBefore": 1.05,
+      "firstAction": "4 launches1.05/1.27/1.49/1.71; impacts1.23/1.45/1.67/1.89",
+      "meaning": "背面から重い筒を取り出す保持音→肩へ据える低い短音。4回のcylinder/shotをrootへ重ねない",
+      "master": {
+        "path": "assets/source/quality-20261114/audio/manual-foley-r1/mrs-chiha-preparation-r1.wav",
+        "bytes": 51918,
+        "sha256": "fba2dc65a78b86b6c0a875827eba545becd678f41d105ad75eb37b01974c788a"
+      },
+      "layers": [
+        {
+          "path": "public/audio/v100/r9/weapon-handle.mp3",
+          "sha256": "6ad9c5a813ac92189b2e411536895eac3a66b70ee82aa686a10c90e2e8b91276",
+          "sourceStart": 0,
+          "clip": 0.38,
+          "at": 0,
+          "gain": 0.46,
+          "highpassHz": 90,
+          "lowpassHz": 4000,
+          "rate": 1,
+          "fadeIn": 0.004,
+          "fadeOut": 0.025,
+          "role": "既存R9の道具取回し：latchとclothのみ"
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/dropLeather.ogg",
+          "sha256": "097e1d3b74949b0145fda0519d40b7e0773ab82ec4858727f95be830927e1a45",
+          "sourceStart": 0.05,
+          "clip": 0.18,
+          "at": 0.25,
+          "gain": 0.18,
+          "highpassHz": 65,
+          "lowpassHz": 1700,
+          "rate": 1,
+          "fadeIn": 0.004,
+          "fadeOut": 0.025,
+          "role": "重いlauncherが自分の装備へ収まる低い自己接触"
+        }
+      ],
+      "dynamics": {
+        "threshold": 0.12,
+        "ratio": 2.5,
+        "makeup": 3,
+        "attack": 4,
+        "release": 85
+      },
+      "filterComplex": "[0:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.38,asetpts=PTS-STARTPTS,highpass=f=90,lowpass=f=4000,volume=0.46,afade=t=in:st=0:d=0.004,afade=t=out:st=0.355:d=0.025,adelay=0,apad=whole_len=25920,atrim=end=0.54[l0];[1:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.05:duration=0.18,asetpts=PTS-STARTPTS,highpass=f=65,lowpass=f=1700,volume=0.18,afade=t=in:st=0:d=0.004,afade=t=out:st=0.155:d=0.025,adelay=250,apad=whole_len=25920,atrim=end=0.54[l1];[l0][l1]amix=inputs=2:duration=longest,volume=2,apad=whole_len=25920,atrim=end=0.54,acompressor=threshold=.12:ratio=2.5:makeup=3:attack=4:release=85:knee=2.82843,alimiter=limit=.85:level=0,afade=t=out:st=0.528:d=0.012[out]",
+      "reference": {
+        "path": "public/audio/v090/sfx/ability-mrs-chiha-salvo-ready.mp3",
+        "bytes": 7880,
+        "sha256": "6234f7c9fada43eb74ad91f3cb53a1ddc4e6d0fadd39127ec1069f536e115278"
+      },
+      "decodedMaster": {
+        "file": "mrs-chiha-preparation-r1.wav",
+        "seconds": 0.54,
+        "peak": 0.443023681640625,
+        "rms": 0.03945753349210187,
+        "firstAboveMinus60db": 0.010458333333333333,
+        "lastAboveMinus60db": 0.43135416666666665,
+        "first100msRms": 0.044618645061134464,
+        "last10msRms": 0,
+        "sha256": "93d0ef0b86dc0cfba15469a6782e63fa99593911cc08aa7e3b066295ad8bfea0"
+      },
+      "proposalBinding": {
+        "sourceHead": "46b15ff0a5e817f16a5473019e1876374ca3675a",
+        "auditSha256": "458fb61adc91d8e42cd2d1aea066530da085aa341469c628ab6879bf2e122f52"
+      },
+      "derivedSources": [
+        {
+          "id": "v100-r9-weapon-handle",
+          "file": "public/audio/v100/r9/weapon-handle.mp3",
+          "bytes": 7707,
+          "sha256": "6ad9c5a813ac92189b2e411536895eac3a66b70ee82aa686a10c90e2e8b91276",
+          "duration": 0.8,
+          "loop": false,
+          "sources": [
+            {
+              "file": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
+              "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708",
+              "license": "CC0-1.0"
+            },
+            {
+              "file": "assets/source/v100/audio/kenney-rpg/cloth4.ogg",
+              "sha256": "e7ab9a6c4466dea874196c61f59bf1da05cfe58748f42fadd695d441a154a99b",
+              "license": "CC0-1.0"
+            }
+          ],
+          "recipe": {
+            "duration": 0.8,
+            "layers": [
+              {
+                "file": "kenney-rpg/metalLatch.ogg",
+                "gain": 0.36,
+                "delay": 0,
+                "rate": 1
+              },
+              {
+                "file": "kenney-rpg/cloth4.ogg",
+                "gain": 0.3,
+                "delay": 160,
+                "rate": 1
+              }
+            ]
+          },
+          "adaptation": "Recorded CC0 physical foley, deterministic filtered noise, delayed layers, fades and peak limiter. No UI acknowledgement or dialogue synthesis."
+        }
+      ]
+    },
+    {
+      "id": "ability-musashi-cross-guard",
+      "activationRoot": "ability-musashi-cross-guard",
+      "kind": "miyamoto-musashi",
+      "displayName": "宮本武蔵",
+      "approvedWeapon": "二刀",
+      "duration": 0.16,
+      "preparationEndsBefore": 0.22,
+      "firstAction": "guard begins .22; actual counter later or fallback3.42",
+      "meaning": "二本が別々の軌道で胸前の交差構えへ入る短い空気音。刀同士のclang/受流し成功は鳴らさない",
+      "master": {
+        "path": "assets/source/quality-20261114/audio/manual-foley-r1/miyamoto-musashi-preparation-r1.wav",
+        "bytes": 15438,
+        "sha256": "1697a698f31f551a6d8c5e9ae175ca21bc860d94bd57129ed9745dc85261ad34"
+      },
+      "layers": [
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/knifeSlice.ogg",
+          "sha256": "4cd96dc630bed9840c15f1dd2306da2cc56a4da26a5d3f1a03c5a7265ac5e54f",
+          "sourceStart": 0.015,
+          "clip": 0.09,
+          "at": 0,
+          "gain": 0.18,
+          "highpassHz": 800,
+          "lowpassHz": 6200,
+          "rate": 1,
+          "fadeIn": 0.004,
+          "fadeOut": 0.025,
+          "role": "第一の刃の移動空気"
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/knifeSlice2.ogg",
+          "sha256": "6c2064d0ef988d1ec3d56868e823ea8823a5cac00f2742560052633529407def",
+          "sourceStart": 0.02,
+          "clip": 0.1,
+          "at": 0.045,
+          "gain": 0.15,
+          "highpassHz": 650,
+          "lowpassHz": 5000,
+          "rate": 1,
+          "fadeIn": 0.004,
+          "fadeOut": 0.025,
+          "role": "第二の実刃の移動空気、異なる録音"
+        }
+      ],
+      "dynamics": {
+        "threshold": 0.12,
+        "ratio": 2.5,
+        "makeup": 3,
+        "attack": 4,
+        "release": 85
+      },
+      "filterComplex": "[0:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.015:duration=0.09,asetpts=PTS-STARTPTS,highpass=f=800,lowpass=f=6200,volume=0.18,afade=t=in:st=0:d=0.004,afade=t=out:st=0.065:d=0.025,adelay=0,apad=whole_len=7680,atrim=end=0.16[l0];[1:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.02:duration=0.1,asetpts=PTS-STARTPTS,highpass=f=650,lowpass=f=5000,volume=0.15,afade=t=in:st=0:d=0.004,afade=t=out:st=0.07500000000000001:d=0.025,adelay=45,apad=whole_len=7680,atrim=end=0.16[l1];[l0][l1]amix=inputs=2:duration=longest,volume=2,apad=whole_len=7680,atrim=end=0.16,acompressor=threshold=.12:ratio=2.5:makeup=3:attack=4:release=85:knee=2.82843,alimiter=limit=.85:level=0,afade=t=out:st=0.148:d=0.012[out]",
+      "reference": {
+        "path": "public/audio/v090/sfx/ability-musashi-cross-guard.mp3",
+        "bytes": 4432,
+        "sha256": "c2044abf8c01331a23b1868ef8352d3b3c1ef5ea5f4082d105ed99b56583c55a"
+      },
+      "decodedMaster": {
+        "file": "miyamoto-musashi-preparation-r1.wav",
+        "seconds": 0.16,
+        "peak": 0.312957763671875,
+        "rms": 0.036862040776381125,
+        "firstAboveMinus60db": 0.050020833333333334,
+        "lastAboveMinus60db": 0.1475625,
+        "first100msRms": 0.04642818832523234,
+        "last10msRms": 0,
+        "sha256": "c2051ed6d049872fd2cb9c60b6b2b005e2767202316bc104a44bc52dcd9b642f"
+      },
+      "proposalBinding": {
+        "sourceHead": "46b15ff0a5e817f16a5473019e1876374ca3675a",
+        "auditSha256": "458fb61adc91d8e42cd2d1aea066530da085aa341469c628ab6879bf2e122f52"
+      },
+      "derivedSources": []
     }
   ]
 }
