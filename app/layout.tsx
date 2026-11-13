@@ -1,8 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { V099_APP_ICON_IDENTITY } from "./appIconIdentity.js";
 import { RELEASE_TITLE, RELEASE_VERSION } from "./releaseIdentity.js";
-import { FictionNotice } from "./FictionNotice";
-import { LandscapeGate } from "./LandscapeGate";
 import "./globals.css";
 import "./campaign.css";
 import "./v100Typography.css";
@@ -67,7 +65,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="西新世紀末" />
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
-      <body><LandscapeGate><FictionNotice>{children}</FictionNotice></LandscapeGate></body>
+      <body>{children}</body>
     </html>
   );
 }

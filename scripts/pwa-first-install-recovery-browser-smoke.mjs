@@ -4,6 +4,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { chromium } from "playwright";
 import { silenceBrowserOutput } from "./silent-browser-output.mjs";
+import { assertPwaInstallCapacity } from "./pwa-install-capacity-qa.mjs";
 
 const base = process.env.PWA_FIRST_INSTALL_BASE_URL ?? process.env.V096_PWA_QA_BASE_URL ?? process.env.PWA_REGISTRATION_FALLBACK_BASE_URL;
 assert.ok(base, "PWA_FIRST_INSTALL_BASE_URL is required");
@@ -13,6 +14,8 @@ const browser = await chromium.launch();
 const results = [];
 let failure;
 try {
+  const shipped = await (await fetch(new URL("asset-manifest.json", base))).json();
+  const expectedCapacityBytes = shipped.assets.reduce((sum, asset) => sum + Number(asset.bytes), 0);
   const metadataCases = process.env.PWA_FIRST_INSTALL_CASE === "commit-only" ? [] : ["network", "html", "pending", "standalone-network"];
   for (const mode of metadataCases) {
     const context = await browser.newContext({
@@ -67,7 +70,9 @@ try {
         await page.getByRole("heading", { name: "ゲームデータをダウンロードします", exact: true }).waitFor({ timeout: remaining() });
         await page.getByRole("button", { name: "ダウンロードを開始", exact: true }).waitFor({ timeout: remaining() });
       } else {
-        assert.match(await page.locator(".pwa-gate").innerText(), /ダウンロード容量：\d/);
+        const capacity = page.locator(".pwa-gate .pwa-install-size");
+        await capacity.waitFor({ state: "visible", timeout: remaining() });
+        assertPwaInstallCapacity(await capacity.innerText(), expectedCapacityBytes);
         assert.equal(await page.locator(".v100-shell").count(), 0);
       }
       const layout = await page.locator(".pwa-gate").evaluate(node => ({ width: node.clientWidth, scrollWidth: node.scrollWidth }));
@@ -83,7 +88,6 @@ try {
   const page = await context.newPage();
   try {
     await silenceBrowserOutput(page);
-    const shipped = await (await fetch(new URL("asset-manifest.json", base))).json();
     const small = { ...shipped, assets: [...shipped.assets].sort((a, b) => a.bytes - b.bytes).slice(0, 3).map(asset => Object.fromEntries(Object.entries(asset).filter(([key]) => !key.startsWith("bundle")))) };
     await page.addInitScript(({ small }) => {
       Object.defineProperty(navigator, "standalone", { configurable: true, get: () => true });

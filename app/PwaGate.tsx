@@ -15,7 +15,9 @@
 // download is retried in place, which is the same rule Issue #113 established
 // for in-battle asset retry.
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
+import {emitV100PwaControlSound} from "./v100InterfaceAudio.js";
+import "./pwaPhoneFinish.css";
 import { createPortal } from "react-dom";
 import { readPwaBootState } from "./pwaBoot.js";
 import { createPaintedBrowserEntry } from "./pwaBrowserEntry.js";
@@ -221,6 +223,9 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     browserPlayTransitionRef.current?.dispose();
     browserPlayTransitionRef.current = null;
   }, []);
+  const onPwaControlClick = useCallback((event: MouseEvent<HTMLElement>) => {
+    emitV100PwaControlSound(event, window);
+  }, []);
   const beginBrowserPlay = useCallback(() => {
     browserPlayTransitionRef.current ??= createPaintedBrowserEntry({
       requestFrame: (callback: FrameRequestCallback) => window.requestAnimationFrame(callback),
@@ -350,10 +355,10 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       void import("./pwaAssetStore.js").then((m) => m.estimateStorage(window.navigator))
         .then(value => { if (!cancelled) setStorage(value); }).catch(() => {});
 
-      // Boot is complete once the local facts are known. The published manifest
-      // is a network round trip. A standalone launch briefly waits for it so a
-      // fully cached candidate can finish commit recovery, then the watchdog
-      // releases the last committed pack if the request never settles.
+      // Boot is complete once the local facts are known. A complete committed
+      // pack can start while published metadata is still on the network; a
+      // delayed candidate remains subject to the existing safe-screen deferral.
+      // First installs and incomplete local packs still wait for metadata.
       if (!cancelled) setBooted(true);
       if (!cancelled) await loadPublishedManifest();
     })().catch((cause) => {
@@ -836,9 +841,10 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     void Promise.resolve(prompt.prompt()).catch(() => {});
   }, [installPrompt]);
 
-  // Wait for device/generation ownership before mounting the game. Browser tabs
-  // then enter directly; standalone downloads and interrupted updates still gate.
-  const settling = !bootFailure && (!booted || (supported && standalone && !publishedChecked));
+  // Keep ownership and complete local content ahead of play. A verified
+  // committed generation need not wait for its optional update check.
+  // First installs, missing content and interrupted commits retain their gates.
+  const settling = !bootFailure && (!booted || (supported && standalone && !publishedChecked && !(installedManifest && installPlan?.complete)));
   const blocking = bootFailure || settling
     || (registrationFailed && !registrationFailureAcknowledged)
     || phase === "install-offer"
@@ -886,7 +892,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
           ? "取得済みのゲームデータへの切り替えを確認できませんでした。もう一度、反映をお試しください。"
           : "ゲームデータの取得・保存が完了しませんでした。通信環境と空き容量を確認し、取得をやり直してください。";
 
-  const storagePanel = <aside className={storageHost ? "pwa-storage pwa-storage-inline" : "pwa-notice pwa-storage"} role={storageHost ? "region" : "dialog"} aria-label={storageHost ? "アプリのデータ管理" : "データ管理"}>
+  const storagePanel = <aside onClickCapture={onPwaControlClick} className={storageHost ? "pwa-storage pwa-storage-inline" : "pwa-notice pwa-storage"} role={storageHost ? "region" : "dialog"} aria-label={storageHost ? "アプリのデータ管理" : "データ管理"}>
     <h3>アプリの容量・更新</h3>
     {!standalone && guidance && <details className="pwa-return-install-help"><summary>ホーム画面で遊ぶ</summary><div className="pwa-return-install-columns"><div>{guidance.mode === "prompt" && !installPromptUsed && <button type="button" className="pwa-primary" onClick={acceptInstallPrompt}>ホーム画面に追加する</button>}{installPromptUsed && <p>追加画面が出ないときは、下の手順を試してください。</p>}<InstallSteps steps={guidance.steps as Array<Record<string, unknown>>} /></div><p>続きから遊ぶには、先に下の「セーブを書き出す」でバックアップを。追加したアプリで復元してください。保存先が別になる場合があります。</p></div></details>}
     <dl>
@@ -906,19 +912,19 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     {diagnostics && <div className="pwa-failure-summary"><p className="pwa-warning">直近の失敗：{diagnostics.kind}／{diagnostics.failureCount}件{diagnostics.failures[0] ? `／${diagnostics.failures[0].reason}` : ""}</p><div className="pwa-actions"><button type="button" onClick={copyDiagnostics}>{copied ? "コピーしました" : "診断情報をコピー"}</button><button type="button" onClick={() => setDiagnostics(null)}>診断を消去</button></div></div>}
     {saveEnvironment && <aside className="save-environment-badge" data-save-environment={saveEnvironment.kind} data-save-origin={saveEnvironment.origin} aria-label="セーブ保存環境"><span><b>{saveEnvironment.label}</b><code>{saveEnvironment.origin}</code></span><small>{saveEnvironment.storageScope}　{saveEnvironment.isolationNotice}</small></aside>}
     {errorMessage && <p role="alert" className="pwa-warning">{errorMessage}</p>}
-    <p className="pwa-hint">アセットを削除すると、ゲームデータの再取得が必要です。セーブデータは保持されます。</p>
+    <p className="pwa-hint pwa-storage-save-safety">削除するのは、再ダウンロードできるゲーム本体です。セーブデータは保持されます。</p>
     {!activation.safe && <p className="pwa-hint">更新と削除は、会話・戦闘・保存を終えてから操作できます。</p>}
-    <div className="pwa-actions">{phase === "repair-required" && installPlan && <button type="button" disabled={!activation.safe} onClick={startInstall}>不足分だけ再取得</button>}<button type="button" disabled={!activation.safe} onClick={() => { void loadPublishedManifest(); }}>更新を確認</button><button type="button" disabled={!activation.safe} onClick={() => { void clearAssets(); }}>アセットを削除</button>{!storageHost && <button type="button" onClick={() => setShowStorage(false)}>閉じる</button>}</div>
+    <div className="pwa-actions">{phase === "repair-required" && installPlan && <button type="button" disabled={!activation.safe} onClick={startInstall}>不足分だけ再取得</button>}<button type="button" disabled={!activation.safe} onClick={() => { void loadPublishedManifest(); }}>更新を確認</button><button type="button" disabled={!activation.safe} onClick={() => { void clearAssets(); }}>アセットを削除</button>{!storageHost && <button type="button" data-ui-sound="cancel" onClick={() => setShowStorage(false)}>閉じる</button>}</div>
   </aside>;
   return (
     <>
       {!blocking && children}
-      {maintenance && <div className="pwa-maintenance" role="alertdialog" aria-modal="true" aria-label="アプリデータの確認"><section><h2>{maintenance === "clearing" ? "アプリのデータを確認しています" : "削除の完了を確認できませんでした"}</h2><p>確認が終わるまで、この画面でお待ちください。セーブデータは保持しています。</p>{maintenance === "failed" && <button type="button" onClick={() => { void confirmMaintenance(); }}>保存内容を再確認</button>}</section></div>}
+      {maintenance && <div className="pwa-maintenance" onClickCapture={onPwaControlClick} role="alertdialog" aria-modal="true" aria-label="アプリデータの確認"><section><h2>{maintenance === "clearing" ? "アプリのデータを確認しています" : "削除の完了を確認できませんでした"}</h2><p>確認が終わるまで、この画面でお待ちください。セーブデータは保持しています。</p>{maintenance === "failed" && <button type="button" onClick={() => { void confirmMaintenance(); }}>保存内容を再確認</button>}</section></div>}
 
       {blocking && (
-        <section className="pwa-gate" role="dialog" aria-label="ゲームデータの準備" aria-live="polite">
+        <section className="pwa-gate" data-pwa-stage={bootFailure ? "boot-failed" : settling ? "preparing" : registrationFailed && !registrationFailureAcknowledged ? "registration-failed" : phase} onClickCapture={onPwaControlClick} role="dialog" aria-label="ゲームデータの準備" aria-live="polite">
           <div className="pwa-gate-panel">
-            <h1>西新世紀末物語</h1>
+            <header className="pwa-edition-heading"><h1>西新世紀末物語</h1><span>スマホ版・ゲーム本体の保存</span></header>
             {bootFailure && <><h2>保存中のゲームデータを確認できませんでした</h2><p role="alert">データは削除していません。もう一度、保存内容を確認してください。</p><button type="button" className="pwa-primary" onClick={() => { setBooted(false); setBootFailure(false); setPublishedChecked(false); setError(null); setBootAttempt(value => value + 1); }}>保存内容を再確認</button></>}
 
             {!bootFailure && phase === "install-required" && !installCopy && (
@@ -962,18 +968,18 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
 
             {!bootFailure && !settling && phase === "install-offer" && (
               <>
-                <h2>{offerCopy?.headline ?? "西新世紀末物語をインストール"}</h2>
+                <div className="pwa-install-overview"><h2>{offerCopy?.headline ?? "西新世紀末物語をインストール"}</h2>
                 <p>{offerCopy?.body ?? "ホーム画面に追加すると、全画面で遊べます。"}</p>
-                {offerCopy ? <p className="pwa-hint">{offerCopy.sizeLine}</p> : manifestUnreachable ? <>
+                {offerCopy ? <p className="pwa-install-size" aria-label={offerCopy.sizeLine ?? undefined}><span>ダウンロード容量：</span><strong>{formatBytes(offerCopy.totalBytes)}</strong></p> : manifestUnreachable ? <>
                   <p className="pwa-warning" role="alert">ダウンロードする容量を取得できませんでした。通信環境を確認して、もう一度お試しください。</p>
                   {manifestError && <details><summary>エラーの詳細</summary><p style={{ overflowWrap: "anywhere" }}>{manifestError}</p></details>}
                   <div className="pwa-actions"><button type="button" onClick={() => { void loadPublishedManifest(); }}>容量を再確認</button></div>
                 </> : <p className="pwa-hint" role="status">ダウンロードする容量を確認しています…</p>}
                 {guidance?.mode === "prompt" && !installPromptUsed && <button type="button" className="pwa-primary" onClick={acceptInstallPrompt}>ホーム画面に追加する</button>}
-                {guidance && <div className="pwa-install-guidance" data-install-platform={guidance.platform}><h3>遊ぶまでの3ステップ</h3><InstallSteps steps={guidance.steps as Array<Record<string, unknown>>} /></div>}
-                {guidance?.platform === "iphone" && <details className="pwa-hint"><summary>追加がうまくいかないとき</summary><p>「ウェブアプリとして開く」が出たらオンにしてください。</p><p>「ホーム画面に追加」が見つからない場合は、ChromeかSafariでこのURLを開いてください。</p></details>}
+                </div><div className="pwa-install-guide">{guidance && <div className="pwa-install-guidance" data-install-platform={guidance.platform}><h3>遊ぶまでの3ステップ</h3><InstallSteps steps={guidance.steps as Array<Record<string, unknown>>} /></div>}
+                {guidance?.platform === "iphone" && <details className="pwa-hint"><summary>追加がうまくいかないとき</summary><p>「ウェブアプリとして開く」が出たらオンにしてください。</p><p>「ホーム画面に追加」が見つからない場合は、ChromeかSafariでこのURLを開いてください。</p></details>}</div>
                 <div className="pwa-actions pwa-secondary-actions"><button type="button" onClick={beginBrowserPlay} disabled={browserPlayPending} aria-busy={browserPlayPending || undefined}>{browserPlayPending ? "起動しています…" : "ブラウザで遊ぶ"}</button></div>
-                <p className="pwa-hint">{offerCopy?.skipHint ?? "保存せずに試す場合は、通信が必要です。"}</p>
+                <p className="pwa-hint pwa-install-offer-skip">{offerCopy?.skipHint ?? "保存せずに試す場合は、通信が必要です。"}</p>
               </>
             )}
 
@@ -1015,7 +1021,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
             {!bootFailure && phase === "install-required" && installCopy && (
               <>
                 <h2>{installCopy.headline}</h2>
-                <ul>{installCopy.lines.map((line) => <li key={line}>{line}</li>)}</ul>
+                <ul>{installCopy.lines.map((line, index) => <li key={line} className={index === 0 ? "pwa-plan-capacity" : undefined}>{index === 0 && installPlan ? <><small>{installPlan.pendingCount}件・</small><strong>{formatBytes(installPlan.pendingBytes)}</strong><span>をこの端末へ保存します</span></> : line}</li>)}</ul>
                 {installCopy.warning && <p className="pwa-warning" role="alert">{installCopy.warning}</p>}
                 <p className="pwa-hint">{installCopy.wifiHint}</p>
                 <button type="button" className="pwa-primary" onClick={startInstall}>
@@ -1027,7 +1033,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
             {phase === "installing" && progress && (
               <>
                 <h2>ゲームデータをダウンロード中</h2>
-                <p className="pwa-progress-line">{progress.countLine}・{progress.byteLine}</p>
+                <p className="pwa-progress-line"><small>{progress.countLine}・</small><strong>{progress.byteLine}</strong></p>
                 {progress.categoryLine && <p className="pwa-hint">{progress.categoryLine}</p>}
                 {progress.failedLine && <p className="pwa-warning">{progress.failedLine}</p>}
                 {/*
@@ -1108,28 +1114,28 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       {/* Keep pending notices until a safe screen, without covering active play. */}
       <div className="pwa-notice-stack">
       {!blocking && registrationFailed && activation.safe && (
-        <aside className="pwa-notice" role="status">
+        <aside className="pwa-notice" onClickCapture={onPwaControlClick} role="status">
           <p>オフライン用の設定に失敗しました。通信できる状態ではゲームを続けられます。</p>
-          <button type="button" onClick={() => setRegistrationFailed(false)}>閉じる</button>
+          <button type="button" data-ui-sound="cancel" onClick={() => setRegistrationFailed(false)}>閉じる</button>
         </aside>
       )}
       {!blocking && phase === "repair-required" && installPlan && activation.safe && !repairDismissed && (
-        <aside className="pwa-notice pwa-repair" role="status">
+        <aside className="pwa-notice pwa-repair" onClickCapture={onPwaControlClick} role="status">
           <p>保存済みデータのうち{installPlan.pendingCount}件・{formatBytes(installPlan.pendingBytes)}が不足しています</p>
-          <div className="pwa-actions"><button type="button" disabled={!activation.safe} onClick={startInstall}>不足分だけ再取得</button><button type="button" onClick={() => setRepairDismissed(true)}>今はしない</button></div>
+          <div className="pwa-actions"><button type="button" disabled={!activation.safe} onClick={startInstall}>不足分だけ再取得</button><button type="button" data-ui-sound="cancel" onClick={() => setRepairDismissed(true)}>今はしない</button></div>
         </aside>
       )}
 
       {!blocking && phase === "update-available" && updateCopy && !updateDismissed && activation.safe && (
-        <aside className="pwa-notice pwa-update" role="status">
+        <aside className="pwa-notice pwa-update" onClickCapture={onPwaControlClick} role="status">
           <p className="pwa-update-headline">{updateCopy.headline}</p>
-          <p>{updateCopy.downloadLine}</p>
+          <p className="pwa-update-size">{updateCopy.downloadLine}</p>
           <p className="pwa-hint">{updateCopy.fileLine}・{updateCopy.wifiHint}</p>
           <div className="pwa-actions">
             <button type="button" className="pwa-primary" disabled={!activation.safe} onClick={startUpdate}>
               更新をダウンロード
             </button>
-            <button type="button" onClick={() => setUpdateDismissed(true)}>今はしない</button>
+            <button type="button" data-ui-sound="cancel" onClick={() => setUpdateDismissed(true)}>今はしない</button>
           </div>
         </aside>
       )}
@@ -1139,7 +1145,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
 
       {!blocking && supported && storageHost && createPortal(storagePanel, storageHost)}
       {!blocking && supported && !storageHost && !campaignStorageMenu && (DATA_SCREENS.has(String(safety.screen ?? "title")) || showStorage) && <>
-        <button type="button" className="pwa-storage-toggle" onClick={() => setShowStorage(open => !open)}>データ管理</button>
+        <button type="button" className="pwa-storage-toggle" data-ui-sound={showStorage ? "cancel" : "navigate"} onClickCapture={onPwaControlClick} onClick={() => setShowStorage(open => !open)}>データ管理</button>
       </>}
     </>
   );

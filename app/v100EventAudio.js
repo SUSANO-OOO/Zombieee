@@ -7,6 +7,13 @@ function now() {
 
 export function createV100EventAudioOwner({ windowTarget = globalThis.window, onState = null } = {}) {
   const receipts = [];
+  const interfaceReceipts = [];
+  const localQa = windowTarget && ["localhost", "127.0.0.1"].includes(windowTarget.location?.hostname);
+  const traceInterface = (phase, role, cueId, handle = null) => {
+    if (!localQa) return;
+    interfaceReceipts.push({ at: now(), phase, role, cueId, voiceId: handle?.id ?? null });
+    if (interfaceReceipts.length > 80) interfaceReceipts.splice(0, interfaceReceipts.length - 80);
+  };
   const mixer = createAudioMixer({
     manifest: V100_AUDIO_MANIFEST,
     maxVoices: 12,
@@ -151,6 +158,8 @@ export function createV100EventAudioOwner({ windowTarget = globalThis.window, on
     getSnapshot: snapshot,
     getDiagnostics: () => mixer.getDiagnostics(),
     resetReceipts: () => { receipts.length = 0; return true; },
+    getInterfaceReceipts: () => interfaceReceipts.map(entry => ({ ...entry })),
+    resetInterfaceReceipts: () => { interfaceReceipts.length = 0; return true; },
   };
   if (windowTarget && (windowTarget.location?.hostname === "localhost" || windowTarget.location?.hostname === "127.0.0.1")) {
     windowTarget.__V100_EVENT_AUDIO_QA__ = qaBridge;
@@ -168,7 +177,11 @@ export function createV100EventAudioOwner({ windowTarget = globalThis.window, on
       // A disabled UI sound must not start a lazy asset fetch that can be
       // cancelled when this same operation moves the app to a new release.
       if (settings.muted || !settings.sfxEnabled || settings.masterVolume <= 0 || settings.sfxVolume <= 0) return false;
-      return mixer.play(`v100-ui-${role}`, { instanceKey: "v100-interface", dedupeKey: `v100-interface:${role}` });
+      const cueId = `v100-ui-${role}`;
+      traceInterface("requested", role, cueId);
+      const handle = await mixer.play(cueId, { instanceKey: "v100-interface", dedupeKey: `v100-interface:${role}` });
+      if (handle) traceInterface("handle-returned", role, cueId, handle);
+      return handle;
     },
     snapshot,
     dispose: async () => {
