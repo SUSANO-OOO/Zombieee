@@ -278,10 +278,12 @@ test('the actual runtime-facing selector keeps a late knocked birth facing its o
 
 test('the actual App draw receipt is published only after all15 joint parts paint successfully',()=>{
   const draw=find(n=>ts.isVariableDeclaration(n)&&n.name.getText(tree)==='drewArticulatedWalk');
+  const headReceipt=find(n=>ts.isVariableDeclaration(n)&&n.name.getText(tree)==='headPaintReceipt');
   const post=find(n=>ts.isIfStatement(n)&&n.expression.getText(tree)==='fighterRenderAuditEnabled&&recordAudit&&jointPose?.turnedGetup');
   const genericPost=find(n=>ts.isIfStatement(n)&&n.expression.getText(tree)==='fighterRenderAuditEnabled&&recordAudit'
     &&n.thenStatement.getText(tree).includes('jointDrawSucceeded=Boolean'));
   const compiled=ts.transpileModule('(ctx,jointImage,renderKind,jointPose,size,frame,f,options)=>{const articulatedWalk=false;'
+    +'const '+headReceipt.getText(tree)+';'
     +'const drewArticulatedWalk='+draw.initializer.getText(tree)+';'+genericPost.getText(tree)+post.getText(tree)+'return drewArticulatedWalk;}',
   {compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
   const history=new WeakMap();
