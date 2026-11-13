@@ -19917,7 +19917,14 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 g.barricadeHitY = baseTarget.y;
                 g.roleMetrics.tataraStructureDamage += structureDamage;
                 addDamageText(g, baseTarget.x, baseTarget.y - 18, String(Math.round(structureDamage)), .9, "#ffd06b");
-                addParticles(g, baseTarget.x, baseTarget.y, "#e78b45", 18);
+                if (g.definition.missionConfig.v100StageNumber) {
+                  // These former cosmetic particles share the gameplay RNG.
+                  // Retain its sequence while replacing only their rendering.
+                  const density = Math.max(.25, Math.min(1, g.graphicsEffectDensity || 1));
+                  const visualCount = Math.max(1, Math.round(18 * density));
+                  for (let draw = 0; draw < visualCount * 4; draw += 1) Math.random();
+                  if (measuredStructureDamage > 0) queueV100Contact(g, { x: baseTarget.x, y: baseTarget.y, size: 74, direction: Math.sign(baseTarget.x - owner.x) || 1 });
+                } else addParticles(g, baseTarget.x, baseTarget.y, "#e78b45", 18);
               }
               if(g.definition.missionConfig.v100StageNumber) queueV100TataraGroundContact(g,{owner});
               else addParticles(g, event.target.x, event.target.y, "#b88a58", 30);
