@@ -118,6 +118,7 @@ import "./v100DialogueStage.css";
 import "./v100SurvivorInterface.css";
 import "./v100BattleCommandFinish.css";
 import "./v100SupplyTitleFinish.css";
+import {subscribeV100InterfaceOperations} from "./v100InterfaceAudio.js";
 import { V100_CREW_INSIGNIA } from "./v100CrewInsignia.js";
 
 type Save = NonNullable<StorageOutcome["save"]> & { bestStars: Record<string, number> };
@@ -398,7 +399,9 @@ export function V100Campaign() {
       },
     });
     eventAudioOwnerRef.current = owner;
+    const detachPwaOperations = subscribeV100InterfaceOperations(window, (role: string) => owner.operation(role));
     return () => {
+      detachPwaOperations();
       eventAudioOwnerRef.current = null;
       void owner.dispose();
     };

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import vm from 'node:vm';
+import {emitV100InterfaceOperation,subscribeV100InterfaceOperations} from '../app/v100InterfaceAudio.js';
 import { readFile } from 'node:fs/promises';
 
 const source = await readFile(new URL('../app/v100EventAudio.js', import.meta.url), 'utf8');
@@ -9,12 +10,14 @@ const presentation = { eventId: 'v100:event:epilogue', nodeIndex: 0, sceneId: 's
 
 function fixture() {
   const calls = { scene: 0, unlock: 0, play: 0 };
+  const settings = { muted: false, sfxEnabled: true, masterVolume: .9, sfxVolume: .9 };
   let scene = { sceneId: null, bgmAssetId: null, ambienceAssetIds: [] };
   let diagnostics = { contextState: 'suspended', activeSceneVoices: 0, lifecycleHidden: false };
   const mixer = {
     unlocked: false,
     subscribeStatus: () => () => {}, attachUnlock: () => () => {},
-    getSettings: () => ({ muted: false, sfxEnabled: true, masterVolume: .9, sfxVolume: .9 }),
+    getSettings: () => ({ ...settings }),
+    setSettings: update => { Object.assign(settings, update); },
     getAudioStatus: () => ({ state: mixer.unlocked ? 'running' : 'locked' }),
     getSceneState: () => ({ ...scene }), getDiagnostics: () => ({ ...diagnostics }),
     setScene: async () => { calls.scene++; return null; },
@@ -101,4 +104,16 @@ test('disposal clears event ownership before its asynchronous scene stop settles
   finishStop();
   await disposal;
   assert.equal(f.owner.snapshot().active, null);
+});
+
+
+test('PWA feedback reuses the running owner and respects SFX off and lifecycle cleanup',async()=>{
+  const f=fixture(),window=Object.assign(new EventTarget(),{CustomEvent});f.playing();
+  f.mixer.play=async()=>{f.calls.play++;return {id:'interface-proof'};};
+  const detach=subscribeV100InterfaceOperations(window,role=>f.owner.operation(role));
+  emitV100InterfaceOperation(window,'cancel');await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(f.calls.play,1);assert.equal(f.calls.unlock,0,'the existing graph is reused');
+  f.owner.setSettings({sfxEnabled:false});emitV100InterfaceOperation(window,'navigate');await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(f.calls.play,1,'muted feedback never requests a lazy asset');
+  detach();await f.owner.dispose();emitV100InterfaceOperation(window,'cancel');await new Promise(resolve=>setImmediate(resolve));assert.equal(f.calls.play,1);
 });
