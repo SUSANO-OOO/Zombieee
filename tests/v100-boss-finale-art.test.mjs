@@ -53,10 +53,24 @@ test('Mother is decoded only for her actual stage and verified image; an older G
   assert.equal(Object.values(V100_COMBAT_VFX_ART).includes(mother.path),false);
 });
 
+test('each registered boss uses only its own verified optional sheet and retains the original mandatory decode plan',()=>{
+  const allPaths=Object.values(V100_BOSS_DEFEAT_ART).map(a=>a.path);
+  for(const [kind,entry] of Object.entries(V100_BOSS_DEFEAT_ART)){
+    const boss=V100_BOSSES.find(b=>b.id==='boss-'+kind);assert.ok(boss,'Current real boss identity exists');
+    const options={stageId:V100_STAGE_IDS[boss.stageNumber-1],formationKinds:['guardian'],enemyKinds:[kind]};
+    const baseline=requiredBattleAssetPlan(options),enabled=requiredBattleAssetPlan({...options,verifiedBossDefeatPaths:allPaths});
+    assert.deepEqual(enabled.paths,baseline.paths,kind+' cannot weaken required character/background/mission loading');
+    assert.deepEqual(enabled.optionalPaths,[entry.path],kind+' cannot decode other boss finales');
+    assert.deepEqual(requiredBattleAssetPlan({...options,verifiedBossDefeatPaths:allPaths,enemyKinds:['walker']}).optionalPaths,[]);
+    assert.equal(Object.values(V100_COMBAT_VFX_ART).includes(entry.path),false);
+  }
+});
+
 test('every registered finale retains its exact native master, six transparent painted cells, runtime hash and source-bound material',async()=>{
   const manifest=JSON.parse(fs.readFileSync('public/asset-manifest.json','utf8'));
   for(const [kind,entry] of Object.entries(V100_BOSS_DEFEAT_ART)){
-    const provenance=JSON.parse(fs.readFileSync('assets/source/quality-20261114/vfx/'+kind+'-rupture-provenance-r2.json','utf8'));
+    const provenanceFile=entry.path.split('/').at(-1).replace('-six-','-provenance-').replace('.webp','.json');
+    const provenance=JSON.parse(fs.readFileSync('assets/source/quality-20261114/vfx/'+provenanceFile,'utf8'));
     const master=fs.readFileSync(provenance.source.path),bytes=fs.readFileSync('public'+entry.path);
     assert.equal(createHash('sha256').update(master).digest('hex'),provenance.source.sha256);
     assert.equal('sha256-'+createHash('sha256').update(bytes).digest('hex'),entry.hash);

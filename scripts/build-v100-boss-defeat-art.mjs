@@ -18,6 +18,9 @@ const recipes=[
     intermediateMasterSha256:'ddd8bfcea0eee2185ed4ffe0b1fce9c23b668931849de7280ae0c96155c432f0',
     materialReference:{path:'assets/source/v100/joints/mother-r1/identity-reference.png',sha256:'c11c56474860367a0cb12e05b5164d31161fe45157c3ffd95a52a73613211765'},
     note:'R1 organic rupture followed by one native layout and alpha correction. R1 and failed edge analysis remain local evidence.'},
+  {"kind":"kurome","name":"Kurome","anchorY":0.87890625,"includesPrelude":true,"revision":1,"generationMode":"built-in image_gen generation with references","masterSha256":"2af1d8eb534fa0acdfa230f7ae67739c1d220e4c12d640096a3c54c7edd95436","materialReference":{"path":"assets/source/v100/joints/kurome-r1/identity-reference.png","sha256":"20232f95175309421f78e2e52220edd3846ecfb468195c739a74b441a520a5e5"},"note":"Single native reference-guided effect-only atlas; R1 selected after cell-edge inspection. Full body identity is unchanged."},
+  {"kind":"ooguchi","name":"Ooguchi","anchorY":0.87890625,"includesPrelude":true,"revision":1,"generationMode":"built-in image_gen generation with references","masterSha256":"f7c603b87c9ef598f3d15faa0161310b05ca8ef53b6e6a609c85d4d7a396de8b","materialReference":{"path":"assets/source/v100/joints/ooguchi-r1/identity-reference.png","sha256":"31d8f4f332c5d647ff6115d0229cfe5fe884db3c5bbdd199c9660b1c2496b92d"},"note":"Single native reference-guided effect-only atlas; R1 selected after cell-edge inspection. Full body identity is unchanged."},
+  {"kind":"gairen","name":"Gairen","anchorY":0.87890625,"includesPrelude":true,"revision":1,"generationMode":"built-in image_gen generation with references","masterSha256":"c408070ffa37a875560e32747a860bf0295490b8d99dd8d50c87bd839fd30f7b","materialReference":{"path":"assets/source/v100/joints/gairen-r1/identity-reference.png","sha256":"b8cb2167c3a57c3ecfd3add5e3c46748adf9d1dc24e62a3c1e27ff0797fa7ab6"},"note":"Single native reference-guided effect-only atlas; R1 selected after cell-edge inspection. Full body identity is unchanged."},
 ];
 async function emit(relative,data){
   const file=path.join(root,relative);
@@ -29,8 +32,9 @@ async function emit(relative,data){
 }
 const art={},outputs=[];
 for(const recipe of recipes){
-  const sourcePath='assets/source/quality-20261114/vfx/'+recipe.kind+'-rupture-r2.png';
-  const promptPath='assets/source/quality-20261114/vfx/'+recipe.kind+'-rupture-prompt-r2.txt';
+  const revision=recipe.revision??2;
+  const sourcePath='assets/source/quality-20261114/vfx/'+recipe.kind+'-rupture-r'+revision+'.png';
+  const promptPath='assets/source/quality-20261114/vfx/'+recipe.kind+'-rupture-prompt-r'+revision+'.txt';
   const master=await readFile(path.join(root,sourcePath));
   assert.equal(sha(master),recipe.masterSha256,'Selected native master changed: '+recipe.kind);
   if(recipe.materialReference)assert.equal(sha(await readFile(path.join(root,recipe.materialReference.path))),recipe.materialReference.sha256,'Current material identity changed');
@@ -43,7 +47,7 @@ for(const recipe of recipes){
     assert.ok(alpha<=32,'A painted cell must not end with a hard opaque clipped edge');
   }
   const bytes=await sharp(master).webp({quality:92,alphaQuality:100,effort:6}).toBuffer();
-  const assetPath='/art/quality-20261114/vfx/'+recipe.kind+'-rupture-six-r2.webp';
+  const assetPath='/art/quality-20261114/vfx/'+recipe.kind+'-rupture-six-r'+revision+'.webp';
   art[recipe.kind]={id:'v100-boss-finale-'+recipe.kind,path:assetPath,hash:'sha256-'+sha(bytes),columns:3,rows:2,anchorX:.5,anchorY:recipe.anchorY};
   if(recipe.includesPrelude)art[recipe.kind].includesPrelude=true;
   await emit('public'+assetPath,bytes);
@@ -52,14 +56,14 @@ for(const recipe of recipes){
     rights:{commercialUse:true,modification:true,redistribution:true,basis:'Original art created for this project, with the existing project-owned blast as style reference'},
     producerApproval:'Current goal requests bespoke boss effects. This is an implementation candidate, not final visual/audio/device acceptance.',
     source:{path:sourcePath,bytes:master.length,sha256:sha(master)},prompt:{path:promptPath,sha256:sha(Buffer.from((await readFile(path.join(root,promptPath),'utf8')).replaceAll('\r\n','\n')))},
-    generation:{mode:'built-in image_gen edit',model:'Selected by host; no model name asserted',reference:{path:referencePath,sha256:sha(await readFile(path.join(root,referencePath)))},
-      intermediateMasterSha256:recipe.intermediateMasterSha256,note:recipe.note,
+    generation:{mode:recipe.generationMode??'built-in image_gen edit',model:'Selected by host; no model name asserted',reference:{path:referencePath,sha256:sha(await readFile(path.join(root,referencePath)))},
+      ...(recipe.intermediateMasterSha256?{intermediateMasterSha256:recipe.intermediateMasterSha256}:{}),note:recipe.note,
       ...(recipe.materialReference?{materialReference:recipe.materialReference}:{})},
     output:{path:assetPath,bytes:bytes.length,sha256:sha(bytes),width:1536,height:1024,columns:3,rows:2,anchorX:.5,anchorY:recipe.anchorY,
       ...(recipe.includesPrelude?{includesPrelude:true}:{})},
     runtimeAssetCount:1,logicalBytes:bytes.length,distinctBytes:bytes.length,estimatedDecodedRgbaBytes:1536*1024*4,
     scope:recipe.name+' visual finale only. Existing body, defeat receipt, result wait, damage, rewards, random sequence and audio are unchanged.'};
-  await emit('assets/source/quality-20261114/vfx/'+recipe.kind+'-rupture-provenance-r2.json',Buffer.from(JSON.stringify(provenance,null,2)+'\n'));
+  await emit('assets/source/quality-20261114/vfx/'+recipe.kind+'-rupture-provenance-r'+revision+'.json',Buffer.from(JSON.stringify(provenance,null,2)+'\n'));
   outputs.push({kind:recipe.kind,bytes:bytes.length,hash:sha(bytes)});
 }
 await emit('app/v100BossDefeatArt.js',Buffer.from('// Generated from bespoke boss VFX masters. Do not add these to the common every-stage VFX list.\nexport const V100_BOSS_DEFEAT_ART = Object.freeze(Object.fromEntries(Object.entries('+JSON.stringify(art,null,2)+').map(([kind,art])=>[kind,Object.freeze(art)])));\n'));
