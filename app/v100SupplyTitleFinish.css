@@ -113,7 +113,8 @@
 }
 
 /* Six original painted materials, packed once for the offline smartphone build. */
-#v100-campaign { --v100-ui-materials: url('/art/quality-20261113/ui/materials-six-r1.webp'); }
+#v100-campaign { --v100-ui-materials: none; }
+html[data-pwa-ui-materials="ready"] #v100-campaign { --v100-ui-materials: url('/art/quality-20261113/ui/materials-six-r1.webp'); }
 #v100-campaign .v100-command-supply .v100-support-management-card {
   background-image: linear-gradient(125deg,#26382db8,#12291fbd),var(--v100-ui-materials);
   background-size: 100% 100%,300% 200%; background-position: center,50% 0;
