@@ -2,7 +2,8 @@
 /* Phone storage screens use a service board, a capacity slip and a save folio. */
 .pwa-gate {
   color:#eadfc0; font-family:var(--v100-reading-font,"BIZ UDPGothic",sans-serif);
-  background:linear-gradient(110deg,#0c1c18,#1b2b20 55%,#0b1816);
+  background-image:linear-gradient(100deg,#071c17d6,#182b20df 58%,#061613ed),url("/art/v060/title-key-visual-v1.webp");
+  background-size:cover; background-position:center;
 }
 .pwa-gate .pwa-gate-panel {
   width:min(700px,100%); max-height:calc(100dvh - 32px - var(--app-viewport-safe-top,0px) - var(--app-viewport-safe-bottom,0px));
@@ -68,6 +69,9 @@
 #v100-campaign .v100-data-scroll > article { padding:8px 0; border:0; border-top:1px solid #718764; background:none; }
 #v100-campaign .v100-data-scroll > article h3 { font-size:14px; color:#daca9d; }
 #v100-campaign .v100-data-scroll > article p { font-size:12px; line-height:1.5; color:#c2cfad; }
+#v100-campaign .v100-legacy-history-file { display:grid; gap:6px; color:#e1d4af; font-size:13px; }
+#v100-campaign .v100-legacy-history-file input[type="file"] { min-height:44px; max-width:100%; padding:0; color:#d7dec1; font-size:13px; }
+#v100-campaign .v100-legacy-history-file input[type="file"]::file-selector-button { min-height:44px; margin-right:8px; padding:6px 12px; border:1px solid #899b73; border-radius:0; color:#eadfc2; background:#284535; font:inherit; }
 #v100-campaign .v100-data-scroll :is(button,summary,.v100-file-button) { min-height:44px; font-size:13px; }
 #v100-campaign .v100-data-actions > * { min-height:44px; padding:7px 12px; border-radius:0; font-size:16px; font-weight:800; }
 #v100-campaign .v100-data-actions > .v100-primary { background:linear-gradient(110deg,#e4cc94,#ada170) !important; color:#253725 !important; border:1px solid #d8c592 !important; border-bottom:3px solid #8a784c !important; text-shadow:none; }

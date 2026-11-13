@@ -1511,7 +1511,7 @@ function DataManagementView({ save, notice, onBack, onBackup, onNewGameBackup, o
       {notice && <p className="v100-notice v100-data-feedback" role="status">{notice}</p>}
       <p>この端末のブラウザにセーブしている。別の場所にも残すなら「セーブを書き出す」を押そう。</p>
       <dl className="v100-data-summary"><div><dt>主人公</dt><dd>{save.playerName}</dd></div><div><dt>クリア済みステージ</dt><dd>{save.completedStageIds.length} / {V100_STAGES.length}</dd></div><div><dt>保存状態</dt><dd>保管済み</dd></div><div><dt>最終更新</dt><dd>{new Date(save.updatedAt).toLocaleString("ja-JP")}</dd></div></dl>
-      <article><h3>過去のプレイ履歴</h3><p>旧版の書き出しデータで引き継ぎ特典の対象か確認します。現在の進行・残高・設定は変更しません。</p><label>旧版のプレイ履歴を選ぶ<input type="file" accept="application/json,.json" onChange={event => onLegacyHistory(event.currentTarget.files?.[0])} /></label></article>
+      <article><h3>過去のプレイ履歴</h3><p>旧版の書き出しデータで引き継ぎ特典の対象か確認します。現在の進行・残高・設定は変更しません。</p><label className="v100-legacy-history-file">旧版のプレイ履歴を選ぶ<input type="file" accept="application/json,.json" onChange={event => onLegacyHistory(event.currentTarget.files?.[0])} /></label></article>
       <button type="button" onClick={() => void onNewGameBackup()}>「初めから」の直前のセーブを書き出す</button>
       <div data-v100-pwa-storage />
     </div>
