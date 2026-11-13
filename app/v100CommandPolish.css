@@ -471,11 +471,20 @@
 
 /* A phone header reserves one wallet and two real44px controls, without splitting tab labels. */
 @media (min-width:640px) and (max-height:460px) and (orientation:landscape) {
-  #v100-campaign:has(> .v100-command-tabs) .v100-save-meta .v100-caps-balance { flex:1 1 auto; min-width:0; margin:0; font-size:14px; line-height:1.2; letter-spacing:0; white-space:nowrap; overflow-x:auto; scrollbar-width:none; }
-  #v100-campaign .v100-command-map .v100-chapter-tabs button { display:grid; grid-template-columns:auto minmax(0,1fr); grid-template-rows:auto auto; align-content:center; gap:2px 4px; min-width:0; min-height:44px; padding:4px; }
+  #v100-campaign:has(> .v100-command-tabs) .v100-topbar .v100-save-meta .v100-caps-balance { flex:1 1 0; min-width:0; margin:0; padding:0 2px; font-size:14px; line-height:1.2; letter-spacing:-.025em; white-space:nowrap; overflow-x:auto; scrollbar-width:none; font-variant-numeric:tabular-nums; }
+  #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-chapter-tabs button { display:grid; grid-template-columns:minmax(0,1fr); grid-template-rows:16px 14px; align-content:center; gap:2px 4px; min-width:0; min-height:44px; padding:4px; }
   #v100-campaign .v100-command-map .v100-chapter-tabs button > strong { grid-column:1; grid-row:1; align-self:center; font-size:13px; line-height:16px; white-space:nowrap; }
-  #v100-campaign .v100-command-map .v100-chapter-tabs button > small { grid-column:2; grid-row:1; align-self:center; margin:0; font-size:12px; line-height:14px; white-space:normal; overflow-wrap:anywhere; }
+  #v100-campaign .v100-command-map .v100-chapter-tabs button > small { display:none; }
   #v100-campaign .v100-command-map .v100-chapter-counts { grid-column:1 / -1; grid-row:2; display:flex; justify-content:space-between; gap:3px; font-size:12px; line-height:14px; white-space:nowrap; }
+}
+@media (min-width:640px) and (max-height:460px) and (orientation:landscape) {
+  #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-map-briefing { gap:1px; }
+  #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-map-side-heading { min-height:14px; margin:0; padding:0; border:0; font-size:12px; line-height:14px; }
+  #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-map-side-heading > span { color:#29442f; font-weight:700; }
+  #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-map-briefing > h3 { flex:none; margin:0; font-size:16px; line-height:18px; }
+  #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-stage-intel { flex:none; margin:0; padding:0 0 0 5px; border:0; border-left:2px solid #a66638; }
+  #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-stage-intel strong { display:block; font-size:14px; line-height:16px; }
+  #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-stage-intel p { margin:0; font-size:13px; line-height:16px; }
 }
 @media (min-width:640px) and (max-width:699px) and (max-height:460px) and (orientation:landscape) {
   #v100-campaign:has(> .v100-command-tabs) .v100-command-tabs button { font-size:13px; }

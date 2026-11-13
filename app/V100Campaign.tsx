@@ -1285,7 +1285,7 @@ function MapView({ save, selectedStageId, onSelect, onStart, onRename, onBackup,
           </div>
           <details className="v100-map-detail"><summary>ステージ詳細・記録</summary>
             <div className="v100-map-detail-content">
-{discovered && <p className="v100-map-tactical-hint">{v100TacticalHintFor(stage)}</p>}
+              {discovered && <p className="v100-map-tactical-hint">{v100TacticalHintFor(stage)}</p>}
               {boss && <div className="v100-boss-callout"><strong className="v100-boss-name">{boss.displayName}</strong><small>脅威 HP {boss.hp.toLocaleString()} / 特殊：{BOSS_SPECIAL_LABELS[boss.special]}</small></div>}
               <dl><div><dt>脅威分類</dt><dd>{discovered ? enemyPackLabelFor(stage?.enemyPack, stage?.number) : "情報未取得"}</dd></div><div><dt>配置枠</dt><dd>{save.formationSlots.filter(Boolean).length} / 7</dd></div></dl>
               <StarCriteria vehicleMaxHp={save.vehicle.maxHp} />
