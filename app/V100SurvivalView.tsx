@@ -7,6 +7,7 @@ import { v100SurvivalBossPool, v100SurvivalSession } from "./v100Survival.js";
 import { beginV100Survival, checkpointV100Survival, selectV100SurvivalUpgrade, settleV100Survival, dismissV100SurvivalResult } from "./v100SurvivalTransactions.js";
 import { v100EquipmentFor } from "./v100Equipment.js";
 import { V100_UNITS } from "./v100Registry.js";
+import { PRODUCTION_VISUALS } from "./productionVisuals.js";
 
 type Save = ReturnType<typeof normalizeV100Save>;
 type Props = { save: Save; onLoadout?: () => void; onSave: (result: { applied: boolean; save: Save; reason?: string }) => Promise<boolean> };
@@ -44,17 +45,36 @@ export function V100SurvivalView({ save, onSave, onLoadout }: Props) {
     {onLoadout && <button type="button" onClick={() => { void onSave(dismissV100SurvivalResult(save)).then(accepted => { if (accepted) onLoadout(); }); }}>編成を見直す</button>}
   </section>;
   const highestStart = Math.floor(progress.highestCompletedWave / 10) * 10 + 1;
-  return <section aria-label="サバイバル" className="v100-equipment-card" data-v100-survival="hub">
-    <span className="v100-kicker">サバイバル</span><h3>サバイバル</h3>
-    <p>5波ごとにボスを迎撃し、報酬と中間記録を保存します。3つの強化から1つを選び、装甲車両を守り続けてください。</p>
-    <p>物語で撃破したボスだけが出現します。再読み込み時は最後の中間記録から再開します。途中の未制圧の波には報酬はありません。</p>
-    {v100SurvivalBossPool(save.receipts).includes("kurome") && <p>第16波から湾岸の異形も1体ずつ現れます。いつもの感染群に紛れた相手を見逃さないように。</p>}
-    {v100SurvivalBossPool(save.receipts).includes("futago") && <p>第21波からはRED PANTHER兵も1体ずつ参戦。盾役や射撃兵、離れて撃つ指揮官にも備えましょう。</p>}
-    <p>最高制圧 {progress.highestCompletedWave}波 / 最高到達 {progress.highestReachedWave}波 / プレイ回数 {progress.totalRuns}回</p>
-    {v100SurvivalBossPool(save.receipts).length === 0 ? <p>物語で初めてボスを撃破すると出撃できます。</p> : <>
-      <label>開始する波 <input type="number" min={1} max={highestStart} step={10} value={startWave} onChange={event => setStartWave(Number(event.target.value))} /></label>
-      <p>第1波から第{highestStart}波まで、10波刻みで開始できます。途中開始で飛ばした波の報酬はありません。</p>
-      <button type="button" onClick={() => void onSave(beginV100Survival(save, { runId: `v100-survival:${crypto.randomUUID()}`, startWave }))}>サバイバルへ出撃</button>
-    </>}
-  </section>;
+  return <section aria-label="サバイバル" className="v100-survival-preparation" data-v100-survival="hub">
+  <div className="v100-survival-watch">
+    <div className="v100-survival-place" aria-hidden="true">
+      <img className="v100-survival-place-photo" src={PRODUCTION_VISUALS.stages["stage-nishijin-shopping-street"]} alt="" />
+      <img className="v100-survival-vehicle" src="/art/v075/crawler/crawler-command-base-closed-v1.png" alt="" />
+    </div>
+    <h3>装甲車両を守り続ける</h3>
+    <dl className="v100-survival-records">
+      <div><dt>最高制圧</dt><dd>{progress.highestCompletedWave}<small>波</small></dd></div>
+      <div><dt>最高到達</dt><dd>{progress.highestReachedWave}<small>波</small></dd></div>
+      <div><dt>プレイ回数</dt><dd>{progress.totalRuns}<small>回</small></dd></div>
+    </dl>
+  </div>
+  <div className="v100-survival-plan">
+    {v100SurvivalBossPool(save.receipts).length === 0
+      ? <p className="v100-survival-locked">物語で初めてボスを撃破すると出撃できます。</p>
+      : <>
+        <div className="v100-survival-departure">
+          <label>開始する波 <input type="number" min={1} max={highestStart} step={10} value={startWave} onChange={event => setStartWave(Number(event.target.value))} /></label>
+          <button type="button" onClick={() => void onSave(beginV100Survival(save, { runId: `v100-survival:${crypto.randomUUID()}`, startWave }))}>サバイバルへ出撃</button>
+        </div>
+        <p className="v100-survival-start-note">第1波から第{highestStart}波まで、10波刻みで開始できます。途中開始で飛ばした波の報酬はありません。</p>
+      </>}
+    <ol className="v100-survival-cycle" aria-label="サバイバルの流れ">
+      <li><strong>5波ごとにボスを迎撃</strong><span>物語で撃破したボスだけが出現します。</span></li>
+      <li><strong>報酬と中間記録を保存</strong><span>再読み込み時は最後の中間記録から再開します。途中の未制圧の波には報酬はありません。</span></li>
+      <li><strong>3つの強化から1つを選ぶ</strong><span>装甲車両を守り続けてください。</span></li>
+    </ol>
+    {v100SurvivalBossPool(save.receipts).includes("kurome") && <p className="v100-survival-danger">第16波から湾岸の異形も1体ずつ現れます。いつもの感染群に紛れた相手を見逃さないように。</p>}
+    {v100SurvivalBossPool(save.receipts).includes("futago") && <p className="v100-survival-danger">第21波からはRED PANTHER兵も1体ずつ参戦。盾役や射撃兵、離れて撃つ指揮官にも備えましょう。</p>}
+  </div>
+</section>;
 }

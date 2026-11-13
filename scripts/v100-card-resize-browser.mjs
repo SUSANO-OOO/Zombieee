@@ -12,6 +12,7 @@ import {campaignUnitIdToCombatKind} from '../app/campaign.js';
 import {productionBuildIdentity} from './browser-qa-build-identity.mjs';
 import {enterV100FromTitle} from './v100-title-qa-entry.mjs';
 import {dismissInstallOffer} from './pwa-gate-qa.mjs';
+import {inspectApprovedBattleCardPortraits} from './approved-battle-card-portrait.mjs';
 
 const hash=b=>createHash('sha256').update(b).digest('hex');
 const git=(...args)=>execFileSync('git',args,{encoding:'utf8',windowsHide:true}).trim();
@@ -56,7 +57,11 @@ async function changedPixels(first,last,masks){
  return{compared,changed,fraction:changed/compared,minimumChannelDelta:12,maximumChangedFraction:.01};
 }
 async function imageGeometry(page,kind){
- return page.locator(`button.unit-card[data-kind="${kind}"] .portrait > img`).evaluate(async img=>{
+ const mobileCamera=await page.locator('[data-battle-hud-layout="mobile"]').count()===1;
+ const decoded=await page.locator(`button.unit-card[data-kind="${kind}"]`).evaluateAll(inspectApprovedBattleCardPortraits,{expectedByKind:{[kind]:CHARACTER_PORTRAIT_ART[kind]},baseUrl:base.href,mobileCamera});
+ assert.equal(decoded.length,1,"Exactly one approved portrait is required");
+ const selector=mobileCamera?".portrait > .v100-deploy-camera > img":".portrait > img";
+ return page.locator(`button.unit-card[data-kind="${kind}"] ${selector}`).evaluate(async img=>{
   await img.decode();const card=img.closest('button'),r=img.getBoundingClientRect(),c=card.getBoundingClientRect();
   // The enlarged source portrait is clipped by the production card. Compare
   // its visible native pixels, while cropPortrait still rejects offscreen cards.
@@ -65,7 +70,7 @@ async function imageGeometry(page,kind){
   return{kind:card.dataset.kind,state:card.dataset.state,src:img.getAttribute('src'),complete:img.complete,
    naturalWidth:img.naturalWidth,naturalHeight:img.naturalHeight,imageRendering:getComputedStyle(img).imageRendering,
    optimizeQualitySupported:CSS.supports('image-rendering','optimizeQuality'),
-   opacity:{image:getComputedStyle(img).opacity,portrait:getComputedStyle(img.parentElement).opacity,card:getComputedStyle(card).opacity},clip,
+   opacity:{image:getComputedStyle(img).opacity,portrait:getComputedStyle(img.closest(".portrait")).opacity,card:getComputedStyle(card).opacity},clip,
    unroundedRects:{image:{x:r.x,y:r.y,width:r.width,height:r.height},card:{x:c.x,y:c.y,width:c.width,height:c.height}},
    masks:[...card.querySelectorAll('.cost,.card-state,.cooldown-mask small')].map(e=>{const b=e.getBoundingClientRect();return{x:b.x-x,y:b.y-y,width:b.width,height:b.height};}).concat([{x:c.x-x,y:c.bottom-y-13,width:c.width,height:13}])};
  });

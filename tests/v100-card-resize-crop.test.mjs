@@ -4,6 +4,8 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import ts from 'typescript';
 import sharp from 'sharp';
+import { CHARACTER_PORTRAIT_ART } from '../app/spriteManifest.js';
+import { inspectApprovedBattleCardPortraits } from '../scripts/approved-battle-card-portrait.mjs';
 
 const source=fs.readFileSync('scripts/v100-card-resize-browser.mjs','utf8');
 const parsed=ts.createSourceFile('card-resize.mjs',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);
@@ -11,16 +13,26 @@ const statement=name=>parsed.statements.find(node=>ts.isFunctionDeclaration(node
  ||ts.isVariableStatement(node)&&node.declarationList.declarations.some(d=>d.name.getText(parsed)===name));
 const names=['imageGeometry','cropPortrait','changedPixels'];
 const functions=vm.runInNewContext(names.map(name=>{const node=statement(name);assert.ok(node,name);return node.getText(parsed);}).join('\n')+'\n({imageGeometry,cropPortrait,changedPixels})',{
- assert,sharp,Buffer,getComputedStyle:()=>({opacity:'1',imageRendering:'optimizeQuality'}),CSS:{supports:()=>true},
+ assert,sharp,Buffer,URL,CHARACTER_PORTRAIT_ART,inspectApprovedBattleCardPortraits,base:new URL('http://127.0.0.1/'),getComputedStyle:()=>({opacity:'1',imageRendering:'optimizeQuality'}),CSS:{supports:()=>true},
 });
 const rect=(x,y,width,height)=>({x,y,width,height,left:x,top:y,right:x+width,bottom:y+height});
 async function observedGeometry(){
  // Immutable CI13500764150: the full source portrait extends below the
  // 844x340 bitmap; its actual card is entirely visible at396,258,136,64.
- const card={dataset:{kind:'kumaverson',state:'ready'},getBoundingClientRect:()=>rect(396,258,136,64),querySelectorAll:()=>[]};
- const img={decode:async()=>{},closest:()=>card,parentElement:{},complete:true,naturalWidth:512,naturalHeight:640,
-  getAttribute:()=>'/portrait.webp',getBoundingClientRect:()=>rect(334.05419921875,279.140625,164.875,206.09375)};
- return functions.imageGeometry({locator:()=>({evaluate:callback=>callback(img)})},'kumaverson');
+ const classes=names=>({contains:name=>names.includes(name)}),source=CHARACTER_PORTRAIT_ART.kumaverson;
+ const frame={tagName:'SPAN',classList:classes(['portrait']),children:[]},camera={tagName:'SPAN',classList:classes(['v100-deploy-camera']),children:[]};
+ const card={tagName:'BUTTON',classList:classes(['unit-card','v100-deploy-card']),children:[frame],dataset:{kind:'kumaverson',portrait:'approved',state:'ready'},getBoundingClientRect:()=>rect(396,258,136,64),querySelectorAll:()=>[]};
+ class ImageElement{}
+ let decodeCalls=0,helperCalls=0;
+ const img=Object.assign(new ImageElement(),{decode:async()=>{decodeCalls++;},closest:selector=>selector==='button'?card:frame,parentElement:camera,complete:true,naturalWidth:512,naturalHeight:640,currentSrc:new URL(source,'http://127.0.0.1/').href,
+  getAttribute:()=>source,getBoundingClientRect:()=>rect(334.05419921875,279.140625,164.875,206.09375)});
+ camera.children=[img];frame.children=[{tagName:'I',classList:classes([])},camera];card.ownerDocument={defaultView:{HTMLImageElement:ImageElement}};
+ const page={locator(selector){
+  if(selector==='[data-battle-hud-layout="mobile"]')return {count:async()=>1};
+  if(selector==='button.unit-card[data-kind="kumaverson"]')return {evaluateAll:async(callback,args)=>{assert.equal(callback,inspectApprovedBattleCardPortraits);helperCalls++;return callback([card],args);}};
+  assert.equal(selector,'button.unit-card[data-kind="kumaverson"] .portrait > .v100-deploy-camera > img');return {evaluate:callback=>callback(img)};
+ }};
+ const geometry=await functions.imageGeometry(page,'kumaverson');assert.equal(helperCalls,1,'real strict inspector must run');assert.ok(decodeCalls>0,'actual portrait decode must have completed');return geometry;
 }
 const width=844,height=340;
 const raw=Buffer.alloc(width*height*4);

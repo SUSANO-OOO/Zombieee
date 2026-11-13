@@ -1,0 +1,61 @@
+/* Individual dossiers and the campaign record ledger. Existing campaign owns native safe insets
+   and vertical scrolling. No new images/fonts/material-atlas references. */
+#v100-campaign .v100-modes-screen:is([data-mode-tab="compendium"],[data-mode-tab="records"]) {
+  padding: 10px; gap: 8px; border: 0; border-top: 3px solid #a08d65; border-radius: 0;
+  background: #18231d; color: #eee4cc;
+}
+#v100-campaign .v100-modes-screen:is([data-mode-tab="compendium"],[data-mode-tab="records"]) .v100-panel-heading h2 { margin: 0; font: 800 22px/1.3 var(--v100-display-font); color: #f1dfb7; }
+#v100-campaign .v100-modes-screen:is([data-mode-tab="compendium"],[data-mode-tab="records"]) button { min-width: 44px; min-height: 44px; font-size: 13px; }
+
+#v100-campaign .v100-modes-screen[data-mode-tab="compendium"] .v100-compendium-register { min-width: 0; }
+#v100-campaign .v100-modes-screen[data-mode-tab="compendium"] .v100-register-intro { margin: 0 0 10px; color: #d8decb; font: 400 13px/1.5 var(--v100-reading-font); }
+#v100-campaign .v100-modes-screen[data-mode-tab="compendium"] .v100-compendium-entry {
+  display: grid; grid-template-columns: 52px minmax(0,1fr); gap: 10px; padding: 12px 10px; margin: 0;
+  background: #e8dfc8; border: 0; border-bottom: 2px solid #87917a; color: #26382d;
+}
+#v100-campaign .v100-modes-screen[data-mode-tab="compendium"] .v100-compendium-entry:nth-of-type(even) { background: #ded5bc; }
+#v100-campaign .v100-modes-screen[data-mode-tab="compendium"] .v100-compendium-stage { padding-right: 7px; border-right: 1px solid #9c997e; }
+#v100-campaign .v100-modes-screen[data-mode-tab="compendium"] .v100-compendium-stage small { display: block; color: #5c624e; font: 400 13px/1.3 var(--v100-reading-font); }
+#v100-campaign .v100-modes-screen[data-mode-tab="compendium"] .v100-compendium-stage strong { display: block; margin-top: 5px; color: #6e422c; font: 800 27px/1.1 var(--v100-numeric-font); }
+#v100-campaign .v100-modes-screen[data-mode-tab="compendium"] .v100-compendium-body { min-width: 0; }
+#v100-campaign .v100-modes-screen[data-mode-tab="compendium"] .v100-compendium-body h3 { margin: 0 0 6px; color: #25372a; font: 800 21px/1.3 var(--v100-display-font); overflow-wrap: anywhere; }
+#v100-campaign .v100-modes-screen[data-mode-tab="compendium"] :is(.v100-compendium-feature,.v100-compendium-counter) { display: grid; grid-template-columns: 30px minmax(0,1fr); gap: 7px; margin: 4px 0; color: #334b38; font: 400 13px/1.5 var(--v100-reading-font); }
+#v100-campaign .v100-modes-screen[data-mode-tab="compendium"] .v100-compendium-counter { padding: 5px 0; border-block: 1px solid #a5a183; }
+#v100-campaign .v100-modes-screen[data-mode-tab="compendium"] :is(.v100-compendium-feature,.v100-compendium-counter) b { color: #7a432b; font-weight: 700; }
+#v100-campaign .v100-modes-screen[data-mode-tab="compendium"] .v100-compendium-history { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; padding-top: 5px; margin: 4px 0 0; }
+#v100-campaign .v100-modes-screen[data-mode-tab="compendium"] .v100-compendium-history dt { color: #56624d; font: 400 13px/1.4 var(--v100-reading-font); }
+#v100-campaign .v100-modes-screen[data-mode-tab="compendium"] .v100-compendium-history dd { margin: 2px 0 0; color: #2d4732; font: 800 23px/1.2 var(--v100-numeric-font); overflow-wrap: anywhere; }
+#v100-campaign .v100-modes-screen[data-mode-tab="compendium"] .v100-compendium-history dd small { margin-left: 3px; font: 400 13px/1.3 var(--v100-reading-font); }
+
+#v100-campaign .v100-modes-screen[data-mode-tab="records"] .v100-records-ledger { display: grid; gap: 12px; min-width: 0; }
+#v100-campaign .v100-modes-screen[data-mode-tab="records"] .v100-records-overview { display: grid; grid-template-columns: minmax(0,1.3fr) minmax(0,1fr); gap: 0; border-top: 3px solid #a99d75; border-bottom: 1px solid #7e876e; background: #0c1912; }
+#v100-campaign .v100-modes-screen[data-mode-tab="records"] .v100-records-story { padding: 10px 14px; }
+#v100-campaign .v100-modes-screen[data-mode-tab="records"] .v100-records-overview h3 { margin: 0; color: #d5d9c1; font: 700 14px/1.4 var(--v100-reading-font); }
+#v100-campaign .v100-modes-screen[data-mode-tab="records"] .v100-records-progress { display: flex; align-items: baseline; gap: 7px; margin: 3px 0; color: #c4cdb9; }
+#v100-campaign .v100-modes-screen[data-mode-tab="records"] .v100-records-progress strong { color: #f1d79f; font: 800 38px/1 var(--v100-numeric-font); }
+#v100-campaign .v100-modes-screen[data-mode-tab="records"] .v100-records-progress span { font: 400 16px/1.3 var(--v100-reading-font); }
+#v100-campaign .v100-modes-screen[data-mode-tab="records"] .v100-records-stars { margin: 0; color: #cbd5bd; font: 400 13px/1.5 var(--v100-reading-font); }
+#v100-campaign .v100-modes-screen[data-mode-tab="records"] .v100-records-stars b { margin-left: 4px; color: #e7c889; font: 800 20px/1.2 var(--v100-numeric-font); }
+#v100-campaign .v100-modes-screen[data-mode-tab="records"] .v100-records-caps { display: flex; flex-direction: column; justify-content: center; min-width: 0; padding: 10px 14px; border-left: 1px solid #69765f; }
+#v100-campaign .v100-modes-screen[data-mode-tab="records"] .v100-records-caps strong { margin: 4px 0 0; color: #f4dfaf; font: 800 30px/1.15 var(--v100-numeric-font); overflow-wrap: anywhere; }
+#v100-campaign .v100-modes-screen[data-mode-tab="records"] .v100-records-caps > span { color: #bdc7b0; font: 400 13px/1.3 var(--v100-reading-font); }
+#v100-campaign .v100-modes-screen[data-mode-tab="records"] .v100-records-modes { display: grid; grid-template-columns: minmax(0,.9fr) minmax(0,2fr); gap: 14px; }
+#v100-campaign .v100-modes-screen[data-mode-tab="records"] .v100-records-modes h3 { margin: 0 0 5px; padding-bottom: 4px; color: #e0c794; border-bottom: 1px solid #768167; font: 700 15px/1.3 var(--v100-display-font); }
+#v100-campaign .v100-modes-screen[data-mode-tab="records"] .v100-records-modes dl { margin: 0; }
+#v100-campaign .v100-modes-screen[data-mode-tab="records"] .v100-records-survival dl { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; }
+#v100-campaign .v100-modes-screen[data-mode-tab="records"] .v100-records-modes dt { color: #c3cdb8; font: 400 13px/1.4 var(--v100-reading-font); }
+#v100-campaign .v100-modes-screen[data-mode-tab="records"] .v100-records-modes dd { margin: 3px 0 0; color: #e8d3a3; font: 800 25px/1.2 var(--v100-numeric-font); overflow-wrap: anywhere; }
+#v100-campaign .v100-modes-screen[data-mode-tab="records"] .v100-records-modes dd small { margin-left: 3px; font: 400 13px/1.3 var(--v100-reading-font); }
+#v100-campaign .v100-modes-screen[data-mode-tab="records"] .v100-records-boss-ledger { min-width: 0; padding: 10px; background: #e3dac1; color: #2a3c2e; }
+#v100-campaign .v100-modes-screen[data-mode-tab="records"] .v100-records-boss-ledger h3 { margin: 0; color: #2b422f; font: 800 17px/1.3 var(--v100-display-font); }
+#v100-campaign .v100-modes-screen[data-mode-tab="records"] .v100-records-boss-ledger p { margin: 5px 0 8px; color: #52614c; font: 400 13px/1.5 var(--v100-reading-font); }
+#v100-campaign .v100-modes-screen[data-mode-tab="records"] .v100-records-boss-ledger table { width: 100%; table-layout: fixed; border-collapse: collapse; }
+#v100-campaign .v100-modes-screen[data-mode-tab="records"] .v100-records-boss-ledger col { width: 22%; }
+#v100-campaign .v100-modes-screen[data-mode-tab="records"] .v100-records-boss-ledger col.v100-record-name-col { width: 40%; }
+#v100-campaign .v100-modes-screen[data-mode-tab="records"] .v100-records-boss-ledger col.v100-record-total-col { width: 16%; }
+#v100-campaign .v100-modes-screen[data-mode-tab="records"] .v100-records-boss-ledger :is(th,td) { padding: 9px 6px; border-bottom: 1px solid #a5a38a; color: #334c37; font: 400 13px/1.4 var(--v100-reading-font); text-align: right; vertical-align: top; overflow-wrap: anywhere; }
+#v100-campaign .v100-modes-screen[data-mode-tab="records"] .v100-records-boss-ledger th:first-child { text-align: left; }
+#v100-campaign .v100-modes-screen[data-mode-tab="records"] .v100-records-boss-ledger thead th { color: #5b644f; font-weight: 700; }
+#v100-campaign .v100-modes-screen[data-mode-tab="records"] .v100-records-boss-ledger tbody th { color: #253f2c; font-weight: 700; }
+#v100-campaign .v100-modes-screen[data-mode-tab="records"] .v100-records-boss-ledger td { font: 800 21px/1.3 var(--v100-numeric-font); }
+#v100-campaign .v100-modes-screen[data-mode-tab="records"] .v100-records-boss-ledger td small { margin-left: 2px; font: 400 13px/1.3 var(--v100-reading-font); }

@@ -623,7 +623,7 @@ import { v100SupportManualPose, V100_SUPPORT_MANUAL_STABLE_POSE } from "./v100Su
 import { v100AdvancedManualPose, V100_ADVANCED_MANUAL_POSE_STABLE } from "./v100AdvancedManualPose.js";
 import { v100ScoutApproachStep } from "./v100ScoutApproach.js";
 import { clearV100SupportAbilityEffects, drawV100SupportAbilityEffects, getV100SupportAbilityEffectsSnapshot, queueV100SupportAbilityEffect } from "./v100SupportAbilityVfx.js";
-import { clearV100AdvancedAbilityEffects, drawV100AdvancedAbilityEffects, getV100AdvancedAbilityEffectsSnapshot, queueV100AdvancedAbilityEffect, resolveV100AdvancedAbilityOrigin, resolveV105CurrentAbilityOrigin } from "./v100AdvancedAbilityVfx.js";
+import { clearV100AdvancedAbilityEffects, drawV100AdvancedAbilityEffects, drawV100ChihaFinalBursts, V100_CHIHA_FINAL_BURST_DURATION, getV100AdvancedAbilityEffectsSnapshot, queueV100AdvancedAbilityEffect, resolveV100AdvancedAbilityOrigin, resolveV105CurrentAbilityOrigin } from "./v100AdvancedAbilityVfx.js";
 import { v100AbilityOriginSourcePixel, v100RenderedAbilityOriginSocket } from "./v100AbilityOriginSockets.js";
 import { drawV100DefensePerimeter } from "./v100DefensePerimeter.js";
 import { v100DefenseStatus, v100DefenseResultSnapshot } from "./v100DefenseObjectives.js";
@@ -8878,6 +8878,7 @@ function drawWorld(
 
   const activeStageObjects = activeStageObjectsForGame(g);
   drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["rear-scenery"], Boolean(g.definition.missionConfig.v100StageNumber));
+  if(g.definition.missionConfig.v100StageNumber)drawV100ChihaFinalBursts(ctx,stageObjects,g,{viewportWidth:ctx.canvas.clientWidth,viewportHeight:ctx.canvas.clientHeight,worldScale:presentationLayout?.transform.scale??1});
 
   // Units reveal the three routes through movement; no lane-map overlay is drawn over the battlefield.
 
@@ -19917,7 +19918,14 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 g.barricadeHitY = baseTarget.y;
                 g.roleMetrics.tataraStructureDamage += structureDamage;
                 addDamageText(g, baseTarget.x, baseTarget.y - 18, String(Math.round(structureDamage)), .9, "#ffd06b");
-                addParticles(g, baseTarget.x, baseTarget.y, "#e78b45", 18);
+                if (g.definition.missionConfig.v100StageNumber) {
+                  // These former cosmetic particles share the gameplay RNG.
+                  // Retain its sequence while replacing only their rendering.
+                  const density = Math.max(.25, Math.min(1, g.graphicsEffectDensity || 1));
+                  const visualCount = Math.max(1, Math.round(18 * density));
+                  for (let draw = 0; draw < visualCount * 4; draw += 1) Math.random();
+                  if (measuredStructureDamage > 0) queueV100Contact(g, { x: baseTarget.x, y: baseTarget.y, size: 74, direction: Math.sign(baseTarget.x - owner.x) || 1 });
+                } else addParticles(g, baseTarget.x, baseTarget.y, "#e78b45", 18);
               }
               if(g.definition.missionConfig.v100StageNumber) queueV100TataraGroundContact(g,{owner});
               else addParticles(g, event.target.x, event.target.y, "#b88a58", 30);
@@ -20136,7 +20144,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 addDamageText(g, target.x, target.y - 48, String(Math.round(damage)), .78, finalRound ? "#ffd08a" : "#d9aa63");
               }
               if (!g.definition.missionConfig.v100StageNumber) addParticles(g, event.target.x, event.target.y - 14, finalRound ? "#ffd08a" : "#d48a42", finalRound ? 28 : 16);
-              else queueV100AdvancedAbilityEffect(g, { ownerId: owner.id, activationId: owner.manualAbility?.activationId ?? 0, type: "mrs-grenade-impact", shotIndex: event.salvoIndex, finalRound, targetId: event.target?.targetId, x: event.target.x, y: event.target.y, duration: .6 });
+              else queueV100AdvancedAbilityEffect(g, { ownerId: owner.id, activationId: owner.manualAbility?.activationId ?? 0, type: "mrs-grenade-impact", shotIndex: event.salvoIndex, finalRound, targetId: event.target?.targetId, x: event.target.x, y: event.target.y, duration: finalRound ? V100_CHIHA_FINAL_BURST_DURATION : .6 });
               g.flashOverlay = Math.max(g.flashOverlay, .18);
               g.shake = triggerCameraShake(g.shake, finalRound ? CAMERA_SHAKE_EVENTS.airstrikeImpact : CAMERA_SHAKE_EVENTS.weaponHeavy);
               playManualAbilityTimelineCue(owner, finalRound ? "final" : "impact", event.target.x, `${finalRound ? "final" : "impact"}:${event.salvoIndex}`, {

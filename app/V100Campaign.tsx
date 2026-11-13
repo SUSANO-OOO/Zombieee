@@ -118,6 +118,8 @@ import "./v100DialogueStage.css";
 import "./v100SurvivorInterface.css";
 import "./v100BattleCommandFinish.css";
 import "./v100SupplyTitleFinish.css";
+import "./v100ModeDepartureFinish.css";
+import "./v100CompendiumRecordsFinish.css";
 import {subscribeV100InterfaceOperations} from "./v100InterfaceAudio.js";
 import { V100_CREW_INSIGNIA } from "./v100CrewInsignia.js";
 

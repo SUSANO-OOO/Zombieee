@@ -14,6 +14,7 @@ import { enterV100FromTitle } from "./v100-title-qa-entry.mjs";
 import { dismissInstallOffer } from "./pwa-gate-qa.mjs";
 import { installEndingAudioGainObserver } from "./ending-audio-gain-observer.mjs";
 import { isOwnedTitleCloseCancellation } from "./owned-title-close-cancellation.mjs";
+import { inspectApprovedBattleCardPortraits } from "./approved-battle-card-portrait.mjs";
 
 const hash = bytes => createHash("sha256").update(bytes).digest("hex");
 const git = (...args) => execFileSync("git", args, { encoding: "utf8" }).trim();
@@ -67,16 +68,13 @@ async function persist(bytes, filename) {
   return { file: filename, bytes: bytes.length, sha256: hash(bytes) };
 }
 async function images(page) {
-  return page.locator("button.unit-card[data-portrait=approved]").evaluateAll(async cards => Promise.all(cards.map(async card => {
-    const img = card.querySelector(".portrait > img");
-    if (!(img instanceof HTMLImageElement)) throw new Error("approved card has no image element");
-    await img.decode();
-    const rect = img.getBoundingClientRect();
-    return { kind: card.dataset.kind, state: card.dataset.state, src: img.getAttribute("src"), currentSrc: img.currentSrc,
-      complete: img.complete, naturalWidth: img.naturalWidth, naturalHeight: img.naturalHeight,
-      width: rect.width, height: rect.height, decoded: true };
-  })));
+  const expectedByKind = Object.fromEntries(kinds.map(kind => [kind, CHARACTER_PORTRAIT_ART[kind]]));
+  const mobileCamera = await page.locator('[data-battle-hud-layout="mobile"]').count() === 1;
+  return page.locator("button.unit-card[data-portrait=approved]").evaluateAll(
+    inspectApprovedBattleCardPortraits, { expectedByKind, baseUrl: baseUrl.href, mobileCamera },
+  );
 }
+
 async function probe(page, row, state, targets) {
   const decoded = await images(page);
   const decodedPaths = await page.evaluate(() => window.__ASHFALL_ASSET_QA__?.getDecodedRequiredPaths?.());
@@ -98,7 +96,9 @@ async function probe(page, row, state, targets) {
     assert.equal(await card.locator(".v100-deploy-status").innerText(), expectedReadiness);
     assert.ok((await card.getAttribute("aria-label")).includes(expectedReadiness), "spoken and visible readiness agree");
     await card.scrollIntoViewIfNeeded();
-    const img = page.locator(`button.unit-card[data-kind="${kind}"] .portrait > img`);
+    const mobileCamera = await page.locator('[data-battle-hud-layout="mobile"]').count() === 1;
+    const selector = mobileCamera ? ".portrait > .v100-deploy-camera > img" : ".portrait > img";
+    const img = page.locator(`button.unit-card[data-kind="${kind}"] ${selector}`);
     const geometry = await img.evaluate(el => {
       const card = el.closest("button"), r = el.getBoundingClientRect(), c = card.getBoundingClientRect(), frame = el.closest(".portrait").getBoundingClientRect();
       const cost = card.querySelector(".v100-deploy-cost,.cost"), timer = card.querySelector(".v100-deploy-status,.cooldown-mask small");
