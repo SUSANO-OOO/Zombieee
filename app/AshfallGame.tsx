@@ -16031,6 +16031,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       volume?: number;
       playbackRate?: number;
       maxInstances?: number;
+      instanceKey?: string;
       duck?: { level: number; attackMs: number; holdMs: number; releaseMs: number };
       dedupeKey?: string;
     },
@@ -16044,7 +16045,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     eventKey: string,
     x: number = owner.x,
     suffix: string = eventKey,
-    options: { priority?: number; cooldownMs?: number; maxInstances?: number; volume?: number } = {},
+    options: { priority?: number; cooldownMs?: number; maxInstances?: number; instanceKey?: string; volume?: number } = {},
   ) => {
     const cueId = V099_MANUAL_ABILITY_AUDIO_CONTRACTS[owner.kind]?.timeline?.[eventKey];
     if (!cueId) return false;
@@ -19963,8 +19964,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               if (event.type === "muzzle") {
                 playManualAbilityTimelineCue(owner, "muzzle", owner.x, `muzzle:${salvoIndex ?? "legacy"}`, {
                   priority: 88,
-                  cooldownMs: 45,
-                  maxInstances: 3,
+                  cooldownMs: salvoIndex === null ? 45 : 0,
+                  maxInstances: salvoIndex === null ? 3 : definition.burstCount,
+                  instanceKey: salvoIndex === null ? undefined : `manual-ability:${owner.id}:${owner.manualAbility?.activationId ?? 0}:burst:muzzle`,
                 });
                 if(g.definition.missionConfig.v100StageNumber)queueV100ManualMuzzle(g,{owner,target:{x:event.target.x,y:event.target.y-30},shotIndex:salvoIndex??0});
                 else addParticles(g, owner.x + 26, owner.y - 38, "#f8c35f", 3);
@@ -20001,8 +20003,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               g.flashOverlay = Math.max(g.flashOverlay, event.finalRound ? .1 : .045);
               playManualAbilityTimelineCue(owner, "impact", event.target.x, `impact:${salvoIndex ?? "legacy"}`, {
                 priority: 82,
-                cooldownMs: 90,
-                maxInstances: 2,
+                cooldownMs: salvoIndex === null ? 90 : 0,
+                maxInstances: salvoIndex === null ? 2 : definition.burstCount,
+                instanceKey: salvoIndex === null ? undefined : `manual-ability:${owner.id}:${owner.manualAbility?.activationId ?? 0}:burst:impact`,
               });
               continue;
             }

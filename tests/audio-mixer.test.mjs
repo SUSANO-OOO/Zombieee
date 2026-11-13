@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {readFile} from "node:fs/promises";
-import {V100_AUDIO_MANIFEST} from "../app/productionAudio.js";
+import {V100_AUDIO_MANIFEST,V099_MANUAL_ABILITY_AUDIO_CONTRACTS} from "../app/productionAudio.js";
+import ts from "typescript";
+import vm from "node:vm";
+import {MANUAL_ABILITY_REGISTRY} from "../app/manualAbilities.js";
+import {UNIT_ROLE_TUNING} from "../app/unitRoleMechanics.js";
 
 import { createAudioManifest } from "../app/audioManifest.js";
 import { createAudioMixer } from "../app/audioMixer.js";
@@ -1280,4 +1284,77 @@ test('consecutive normal LMG bursts retain all nine starts with actual recording
   const result={accepted:handles.filter(Boolean).length,starts,afterDuplicate:context.sources.filter(s=>s.startAt!==null).length,sameLast:!!handles[8]&&duplicate?.id===handles[8].id,maxVoices:mixer.maxVoices};await mixer.dispose();return result;
  }
  const shared=await render(false),grouped=await render(true);assert.equal(shared.accepted,8);assert.equal(grouped.accepted,9);assert.equal(grouped.starts,9);assert.equal(grouped.afterDuplicate,9);assert.equal(grouped.sameLast,true);assert.equal(shared.maxVoices,24);assert.equal(grouped.maxVoices,24);
+});
+
+async function actualManualBurstHarness() {
+  const source = await readFile(new URL('../app/AshfallGame.tsx', import.meta.url), 'utf8');
+  const ast = ts.createSourceFile('AshfallGame.tsx', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const callbacks = new Map(), branches = [];
+  function visit(node) {
+    if (ts.isVariableDeclaration(node) && ['playManualAbilityTimelineCue','playBattleSemanticCue'].includes(node.name.getText(ast))) {
+      assert.ok(ts.isCallExpression(node.initializer));
+      callbacks.set(node.name.getText(ast), node.initializer.arguments[0].getText(ast));
+    }
+    if (ts.isIfStatement(node) && node.expression.getText(ast) === 'event.kind === "gunner"'
+      && node.thenStatement.getText(ast).includes('playManualAbilityTimelineCue')) branches.push(node.getText(ast));
+    ts.forEachChild(node, visit);
+  }
+  visit(ast); assert.equal(callbacks.size, 2); assert.equal(branches.length, 1);
+  const context = new FakeAudioContext(), network = makeFetcher();
+  const mixer = createAudioMixer({manifest:V100_AUDIO_MANIFEST, contextFactory:()=>context,
+    fetcher:network.fetcher, enableAcknowledgementTone:false});
+  await mixer.unlock();
+  const contract = V099_MANUAL_ABILITY_AUDIO_CONTRACTS.gunner;
+  await mixer.preloadAssets(Object.values(contract.timeline));
+  const requests = [], pending = [];
+  const scope = {V099_MANUAL_ABILITY_AUDIO_CONTRACTS, MANUAL_ABILITY_REGISTRY, UNIT_ROLE_TUNING,
+    owner:{id:7,kind:'gunner',x:200,y:280,manualAbility:{activationId:4}},
+    g:{fighters:[{id:9,side:'zombie',hp:10000,x:400,y:280,combatReady:true,suppressionStacks:0,suppressedRemaining:0,flash:0,knock:0}],
+      definition:{missionConfig:{v100StageNumber:23}},flashOverlay:0},
+    noteV102GoreImpact(){},recordUnitDamage(){},addDamageText(){},queueV100ManualMuzzle(){},queueV100ManualFirearmImpact(){},addParticles(){},
+    playProductionCue(cue,x,options){
+      requests.push({cue,x,options});
+      const promise=mixer.play(cue,options);pending.push(promise);return promise;
+    }};
+  const compile = text => ts.transpileModule(text,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText;
+  scope.playBattleSemanticCue=vm.runInNewContext(compile('('+callbacks.get('playBattleSemanticCue')+')'),scope);
+  scope.playManualAbilityTimelineCue=vm.runInNewContext(compile('('+callbacks.get('playManualAbilityTimelineCue')+')'),scope);
+  const dispatch=vm.runInNewContext(compile('(events=>{for(const event of events){'+branches[0]+'}})'),scope);
+  const event=(type,index)=>({kind:'gunner',type,salvoIndex:index,finalRound:index===4,target:{x:400,y:280,targetIds:[9]}});
+  return {context,mixer,contract,requests,scope,event,
+    async emit(events){dispatch(events);return Promise.all(pending.splice(0));},
+    async replay(type,index){const opts=requests.find(r=>r.cue===contract.timeline[type]).options;
+      scope.playManualAbilityTimelineCue(scope.owner,type,200,type+':'+index,opts);return Promise.all(pending.splice(0));}};
+}
+
+for (const batched of [false,true]) test('actual manual five-round handler starts every committed sound '+(batched?'in one late frame':'at 45Hz'), async()=>{
+  const h=await actualManualBurstHarness();
+  try {
+    const events=Array.from({length:MANUAL_ABILITY_REGISTRY.gunner.burstCount},(_,index)=>[
+      {at:index*.074,event:h.event('muzzle',index)},{at:index*.074+.045,event:h.event('impact',index)}
+    ]).flat().sort((a,b)=>a.at-b.at);
+    if(batched){h.context.currentTime=1.5;await h.emit(events.map(e=>e.event));}
+    else for(const {at,event} of events){h.context.currentTime=1+Math.ceil(at*45)/45;await h.emit([event]);}
+    const starts=()=>h.context.sources.filter(s=>s.startAt!==null).length;
+    assert.equal(starts(),10,'real Mixer source.start, not just cue requests');
+    for(const type of ['muzzle','impact'])assert.equal(h.requests.filter(r=>r.cue===h.contract.timeline[type]).length,5);
+    assert.equal(new Set(h.requests.map(r=>r.options.dedupeKey)).size,10);
+    await h.replay('muzzle',4);await h.replay('impact',4);assert.equal(starts(),10,'same shot cannot start twice');
+    assert.equal(h.scope.g.fighters[0].hp,10000-MANUAL_ABILITY_REGISTRY.gunner.impactDamage*5);
+    h.scope.owner.manualAbility.activationId++;
+    await h.emit(events.map(e=>e.event));assert.equal(starts(),20,'another activation owns separate bounded groups');
+    for(let id=6;id<12;id++){h.scope.owner.manualAbility.activationId=id;await h.emit([h.event('muzzle',0)]);}
+    assert.equal(h.mixer.maxVoices,24);assert.equal(h.mixer.getDiagnostics().activeVoices,24,'global phone voice budget is unchanged');
+  }finally{await h.mixer.dispose();}
+});
+
+test('legacy aggregate manual burst keeps its original throttle, polyphony and total damage',async()=>{
+  const h=await actualManualBurstHarness();
+  try{
+    await h.emit([h.event('muzzle',undefined),h.event('impact',undefined)]);
+    const muzzle=h.requests.find(r=>r.cue===h.contract.timeline.muzzle).options, impact=h.requests.find(r=>r.cue===h.contract.timeline.impact).options;
+    assert.equal(muzzle.cooldownMs,45);assert.equal(muzzle.maxInstances,3);assert.equal(muzzle.instanceKey,undefined);
+    assert.equal(impact.cooldownMs,90);assert.equal(impact.maxInstances,2);assert.equal(impact.instanceKey,undefined);
+    assert.equal(h.scope.g.fighters[0].hp,10000-MANUAL_ABILITY_REGISTRY.gunner.impactDamage*5);
+  }finally{await h.mixer.dispose();}
 });
