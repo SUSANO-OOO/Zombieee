@@ -80,3 +80,16 @@
   #v100-campaign .v100-modes-screen[data-mode-tab="survival"] .v100-survival-place { height: 110px; }
   #v100-campaign .v100-modes-screen[data-mode-tab="survival"] .v100-survival-records { gap: 5px; }
 }
+
+/* Phone landscape: give four-character tabs room inside native safe insets. */
+@media (min-width: 640px) and (max-height: 460px) and (orientation: landscape) {
+  #v100-campaign[data-v100-surface="modes"][data-v100-phase="map"] > .v100-command-tabs {
+    display: grid; grid-template-columns: minmax(60px, 1fr) minmax(60px, 1fr) repeat(3, minmax(44px, .7fr)); gap: 2px;
+  }
+  #v100-campaign[data-v100-surface="modes"][data-v100-phase="map"] > .v100-command-tabs button {
+    min-width: 44px; min-height: 44px; padding: 5px 2px; font-size: 13px; letter-spacing: 0; white-space: nowrap;
+  }
+  #v100-campaign[data-v100-surface="modes"][data-v100-phase="map"] > .v100-topbar .v100-save-meta button {
+    min-height: 44px; padding: 4px; font-size: 13px; white-space: nowrap;
+  }
+}
