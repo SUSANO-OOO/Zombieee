@@ -59,6 +59,7 @@ import { V100_RESEARCH_CORE_ART } from "../app/v100ResearchCore.js";
 import { V099_APP_ICON_PATHS } from "../app/appIconIdentity.js";
 import { V100_RUNTIME_ASSET_MANIFEST } from "../app/v100RuntimeAssetManifest.js";
 import { V100_PREPARATION_ART } from "../app/v100PreparationArt.js";
+import { V100_BOSS_DOSSIER_ART } from "../app/v100BossDossierArt.js";
 import { V100_COMBAT_VFX_ART } from "../app/v100CombatVfx.js";
 import { V100_KUMAVERSON_GUARD_ART } from "../app/v100KumaversonPresentation.js";
 import { V100_FONT_ASSETS } from "../app/v100Typography.js";
@@ -203,6 +204,7 @@ sweep(STORY_BACKGROUND_VISUALS, { pack: "campaign-core", category: "background",
 // through STAGE_OBJECT_MANIFEST. They are still real gameplay assets.
 sweep(PRODUCTION_VISUALS.missionObjects, { pack: "campaign-core", category: "object", criticality: "critical" });
 sweep(V100_PREPARATION_ART, { pack: "campaign-core", category: "object", criticality: "critical" });
+sweep(V100_BOSS_DOSSIER_ART, { pack: "units", category: "boss", criticality: "critical" });
 sweep(V100_COMBAT_VFX_ART, { pack: "campaign-core", category: "object", criticality: "critical" });
 sweep(STAGE_OBJECT_MANIFEST, { pack: "campaign-core", category: "object", criticality: "optional" });
 // These three supplies are direct renderer dependencies rather than entries in

@@ -1,6 +1,6 @@
 {
   "base": "ff5dba24e88c810182cda1f044bd26dfc3e512c1",
-  "source": "061d14ad755af62d292d6b79d6f235cdf3f40a62 plus clinical room and post-battle location continuity plus 2026-11-13 authored medical and boss VFX",
+  "source": "061d14ad755af62d292d6b79d6f235cdf3f40a62 plus clinical room and post-battle location continuity plus 2026-11-13 authored medical and boss VFX plus current nine-boss dossier figures at e12033212ea15d0b5839b679fb8efeea99d7bade",
   "scope": "Local quality candidate transport contract; not likeness, rights, listening, release or physical-device approval.",
   "added": [
     {
@@ -25,6 +25,78 @@
       "hash": "sha256-0605a0ed1337f122f627cea3bb9afee4cda3e04d5f1f290066047a4091e99ad1",
       "pack": "campaign-core",
       "category": "object",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/boss-dossiers/boss-futago.webp",
+      "bytes": 31154,
+      "hash": "sha256-c61ec546acc78cfb13934932f52dd911ef8e43a2988633a8e60764194c235670",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/boss-dossiers/boss-gairen.webp",
+      "bytes": 26968,
+      "hash": "sha256-4f06b4ce94015bce073a17ee0e36c117c6de317917632619851d56085d40b559",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/boss-dossiers/boss-gate-eater.webp",
+      "bytes": 26892,
+      "hash": "sha256-e94b404061daa87622e84d82272d5264bda3c1fc6823035e0b5292bccc2af55c",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/boss-dossiers/boss-kurome.webp",
+      "bytes": 30676,
+      "hash": "sha256-946de86515643c4143c52f7f872d7b432913b1a86b1ea8465dbc311ee3b0a537",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/boss-dossiers/boss-mother.webp",
+      "bytes": 32994,
+      "hash": "sha256-d26551dd50ad5ef69a31d9dfa2b1270b657aaf00aa2b9eb0bd9f348b25e5b18d",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/boss-dossiers/boss-mugarian-president-mutated.webp",
+      "bytes": 34372,
+      "hash": "sha256-610f3329cd324910d7642831aff87aca37a7c71786a0f9d015564d9113ffbfce",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/boss-dossiers/boss-ooguchi.webp",
+      "bytes": 15920,
+      "hash": "sha256-3b2025588dbe4ababa67c3b242d1127b6522f6c2581deb0acdf26e29966342c2",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/boss-dossiers/boss-takuya-omega.webp",
+      "bytes": 29042,
+      "hash": "sha256-dff13311b6d5e908f37b4ed1860092a2f2d0be1e3d7c82ae3e407d920e91a101",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/boss-dossiers/boss-takuya.webp",
+      "bytes": 25336,
+      "hash": "sha256-7eb06cac35656ed5745ae940b4c095d717c213395d561e6ebf85ef99be08954c",
+      "pack": "units",
+      "category": "boss",
       "criticality": "critical"
     },
     {

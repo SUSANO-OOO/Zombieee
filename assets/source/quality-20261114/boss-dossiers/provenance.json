@@ -1,0 +1,458 @@
+{
+  "generator": "scripts/build-v100-boss-dossier-art.mjs",
+  "creator": "Original project artists; deterministic source-preserving derivation by Codex",
+  "rights": {
+    "origin": "Existing source-bound game artwork; no new external material",
+    "license": "Inherits the project-original rights and restrictions of the referenced canonical assets",
+    "commercialUse": "Inherited without expansion",
+    "modification": "Only transparent crop, uniform resize, and current twin composition",
+    "redistribution": "Runtime derivatives follow the existing project asset policy"
+  },
+  "producerApproval": "Existing identities and current runtime forms retained; requested full UI finish. This derivation is not a claim of final visual acceptance.",
+  "dimensions": {
+    "width": 256,
+    "height": 288
+  },
+  "runtimeAssetCount": 9,
+  "logicalBytes": 253354,
+  "distinctBytes": 253354,
+  "estimatedDecodedRgbaBytes": 2654208,
+  "scope": "Smartphone compendium figures only. Battle, voice, save, rewards, hidden-boss unlocks and identity artwork remain unchanged.",
+  "entries": [
+    {
+      "id": "boss-takuya",
+      "assetPath": "/art/quality-20261114/boss-dossiers/boss-takuya.webp",
+      "sha256": "7eb06cac35656ed5745ae940b4c095d717c213395d561e6ebf85ef99be08954c",
+      "bytes": 25336,
+      "width": 256,
+      "height": 288,
+      "inputs": [
+        {
+          "kind": "takuya",
+          "source": "assets/source/v100/joints/takuya-r1/identity-reference.png",
+          "sourceSha256": "12b600124ad71c155fdb50f56df66a9a1e85085976194719f4d44bb7f42e221b",
+          "provenance": "assets/source/v100/joints/takuya-r1/provenance.json",
+          "currentTexture": {
+            "path": "/art/v100/joints/takuya-r1.webp",
+            "sha256": "e4ffc7c020cf80a06d1cf0ebc5cdc7f7bb82a684c1792c0b3ca1533b4e9352fc"
+          },
+          "canonical": {
+            "path": "/art/v100/bosses/takuya-battle-repaired-v1.png",
+            "sourceSha256": "7baf14827f63faadbf7c05cd17d78edd735012a9def65904b50dae363d633419",
+            "sourceRect": {
+              "x": 0,
+              "y": 0,
+              "w": 512,
+              "h": 757
+            },
+            "referenceTransform": {
+              "scale": 0.85,
+              "tx": 22,
+              "ty": -83,
+              "flipX": true
+            }
+          },
+          "crop": {
+            "left": 89,
+            "top": 37,
+            "width": 291,
+            "height": 394
+          }
+        }
+      ],
+      "composition": "Complete canonical figure; transparent contain, no repaint"
+    },
+    {
+      "id": "boss-gate-eater",
+      "assetPath": "/art/quality-20261114/boss-dossiers/boss-gate-eater.webp",
+      "sha256": "e94b404061daa87622e84d82272d5264bda3c1fc6823035e0b5292bccc2af55c",
+      "bytes": 26892,
+      "width": 256,
+      "height": 288,
+      "inputs": [
+        {
+          "kind": "gate-eater",
+          "source": "assets/source/v100/joints/gate-eater-r1/identity-reference.png",
+          "sourceSha256": "71b433aff6b1c590b2e1b81cc31b6482cf731cf9bc14ff6759a2b0a781be945f",
+          "provenance": "assets/source/v100/joints/gate-eater-r1/provenance.json",
+          "currentTexture": {
+            "path": "/art/v100/joints/gate-eater-r1.webp",
+            "sha256": "aa7b1598546bb8e89f3794fc214e84b23d6e5738e6d7c93361ca1ad78bb42bdc"
+          },
+          "canonical": {
+            "path": "/art/v070/characters/gate-eater-battle-v1.png",
+            "sourceSha256": "91b8de907ba276c390731ddbfee8e9e76fe4d870608168193a736af5f4c2d646",
+            "sourceRect": {
+              "x": 480,
+              "y": 0,
+              "w": 480,
+              "h": 448
+            },
+            "referenceTransform": {
+              "scale": 1,
+              "tx": 0,
+              "ty": 0,
+              "flipX": false
+            }
+          },
+          "crop": {
+            "left": 111,
+            "top": 16,
+            "width": 257,
+            "height": 416
+          }
+        }
+      ],
+      "composition": "Complete canonical figure; transparent contain, no repaint"
+    },
+    {
+      "id": "boss-kurome",
+      "assetPath": "/art/quality-20261114/boss-dossiers/boss-kurome.webp",
+      "sha256": "946de86515643c4143c52f7f872d7b432913b1a86b1ea8465dbc311ee3b0a537",
+      "bytes": 30676,
+      "width": 256,
+      "height": 288,
+      "inputs": [
+        {
+          "kind": "kurome",
+          "source": "assets/source/v100/joints/kurome-r1/identity-reference.png",
+          "sourceSha256": "20232f95175309421f78e2e52220edd3846ecfb468195c739a74b441a520a5e5",
+          "provenance": "assets/source/v100/joints/kurome-r1/provenance.json",
+          "currentTexture": {
+            "path": "/art/v100/joints/kurome-r1.webp",
+            "sha256": "5c542caaee18731de8d2306be8a0e35af7a96ceafbfba189363e2d1ac4ae4977"
+          },
+          "canonical": {
+            "path": "/art/v090-prototypes/bosses/kurome-battle-candidate-r1.png",
+            "sourceSha256": "db3501624aecc25b186e90e785569a5c3e29fa89ceaf331129f8486e588e4d99",
+            "sourceRect": {
+              "x": 480,
+              "y": 0,
+              "w": 480,
+              "h": 448
+            },
+            "referenceTransform": {
+              "scale": 1,
+              "tx": 0,
+              "ty": 0,
+              "flipX": false
+            }
+          },
+          "crop": {
+            "left": 84,
+            "top": 16,
+            "width": 313,
+            "height": 416
+          }
+        }
+      ],
+      "composition": "Complete canonical figure; transparent contain, no repaint"
+    },
+    {
+      "id": "boss-mother",
+      "assetPath": "/art/quality-20261114/boss-dossiers/boss-mother.webp",
+      "sha256": "d26551dd50ad5ef69a31d9dfa2b1270b657aaf00aa2b9eb0bd9f348b25e5b18d",
+      "bytes": 32994,
+      "width": 256,
+      "height": 288,
+      "inputs": [
+        {
+          "kind": "mother",
+          "source": "assets/source/v100/joints/mother-r1/identity-reference.png",
+          "sourceSha256": "c11c56474860367a0cb12e05b5164d31161fe45157c3ffd95a52a73613211765",
+          "provenance": "assets/source/v100/joints/mother-r1/provenance.json",
+          "currentTexture": {
+            "path": "/art/v100/joints/mother-r1.webp",
+            "sha256": "230991a43eff9f9331b68126ec3412f6fb0bc606ec2d46ce47973e16232231f1"
+          },
+          "canonical": {
+            "path": "/art/v090/bosses/mother-battle-r1.png",
+            "sourceSha256": "f3b1ba21300495058bdb3fbb445da90bd56fde4cb212eae69f12f4fefb826442",
+            "sourceRect": {
+              "x": 480,
+              "y": 0,
+              "w": 480,
+              "h": 448
+            },
+            "referenceTransform": {
+              "scale": 1,
+              "tx": 0,
+              "ty": 0,
+              "flipX": false
+            }
+          },
+          "crop": {
+            "left": 16,
+            "top": 83,
+            "width": 448,
+            "height": 349
+          }
+        }
+      ],
+      "composition": "Complete canonical figure; transparent contain, no repaint"
+    },
+    {
+      "id": "boss-ooguchi",
+      "assetPath": "/art/quality-20261114/boss-dossiers/boss-ooguchi.webp",
+      "sha256": "3b2025588dbe4ababa67c3b242d1127b6522f6c2581deb0acdf26e29966342c2",
+      "bytes": 15920,
+      "width": 256,
+      "height": 288,
+      "inputs": [
+        {
+          "kind": "ooguchi",
+          "source": "assets/source/v100/joints/ooguchi-r1/identity-reference.png",
+          "sourceSha256": "31d8f4f332c5d647ff6115d0229cfe5fe884db3c5bbdd199c9660b1c2496b92d",
+          "provenance": "assets/source/v100/joints/ooguchi-r1/provenance.json",
+          "currentTexture": {
+            "path": "/art/v100/joints/ooguchi-r1.webp",
+            "sha256": "850f41763000ff667ad013b94afd8f39be08aab3e60b23407fc48fe5199a710a"
+          },
+          "canonical": {
+            "path": "/art/v090/bosses/ooguchi-battle-r1.png",
+            "sourceSha256": "02549dd1d2e70eed5cd6efd9478ca8029b4055844781ff379c4e677ba41891e7",
+            "sourceRect": {
+              "x": 0,
+              "y": 0,
+              "w": 480,
+              "h": 448
+            },
+            "flipX": false
+          },
+          "crop": {
+            "left": 16,
+            "top": 245,
+            "width": 448,
+            "height": 187
+          }
+        }
+      ],
+      "composition": "Complete canonical figure; transparent contain, no repaint"
+    },
+    {
+      "id": "boss-gairen",
+      "assetPath": "/art/quality-20261114/boss-dossiers/boss-gairen.webp",
+      "sha256": "4f06b4ce94015bce073a17ee0e36c117c6de317917632619851d56085d40b559",
+      "bytes": 26968,
+      "width": 256,
+      "height": 288,
+      "inputs": [
+        {
+          "kind": "gairen",
+          "source": "assets/source/v100/joints/gairen-r1/identity-reference.png",
+          "sourceSha256": "b8cb2167c3a57c3ecfd3add5e3c46748adf9d1dc24e62a3c1e27ff0797fa7ab6",
+          "provenance": "assets/source/v100/joints/gairen-r1/provenance.json",
+          "currentTexture": {
+            "path": "/art/v100/joints/gairen-r1.webp",
+            "sha256": "cf95a6a076d58a2c0f67ef1a72197abbba8546c00502660e9fbccb6125deb5bf"
+          },
+          "canonical": {
+            "path": "/art/v090/bosses/gairen-battle-r1.png",
+            "sourceSha256": "05df1b3988a7775162ab91a21b71e867409371469af1d34ec1cee404a2fec179",
+            "sourceRect": {
+              "x": 0,
+              "y": 0,
+              "w": 480,
+              "h": 448
+            },
+            "flipX": true
+          },
+          "crop": {
+            "left": 16,
+            "top": 31,
+            "width": 448,
+            "height": 401
+          }
+        }
+      ],
+      "composition": "Complete canonical figure; transparent contain, no repaint"
+    },
+    {
+      "id": "boss-futago",
+      "assetPath": "/art/quality-20261114/boss-dossiers/boss-futago.webp",
+      "sha256": "c61ec546acc78cfb13934932f52dd911ef8e43a2988633a8e60764194c235670",
+      "bytes": 31154,
+      "width": 256,
+      "height": 288,
+      "inputs": [
+        {
+          "kind": "futago-separated-a",
+          "source": "assets/source/v100/joints/futago-separated-a-r1/identity-reference.png",
+          "sourceSha256": "08bc90fcf191b912d37e0efa431971241337ee9a865b24fdb3e2fb85b0469aef",
+          "provenance": "assets/source/v100/joints/futago-separated-a-r1/provenance.json",
+          "currentTexture": {
+            "path": "/art/v100/joints/futago-separated-a-r1.webp",
+            "sha256": "08955e85523c9c046a0d84e7d37269335b111d58c8afb92193c66780800bf63a"
+          },
+          "canonical": {
+            "path": "/art/v100/bosses/futago-separated-a-battle-v1.webp",
+            "sourceSha256": "9150a4c69f4c62cf5f9ae929db6b733abaf66e10f67a2169e2b7657daf060368",
+            "sourceRect": {
+              "x": 32,
+              "y": 441,
+              "w": 183,
+              "h": 320
+            },
+            "drawSlices": [
+              {
+                "x": 0,
+                "y": 0,
+                "w": 183,
+                "h": 320
+              }
+            ],
+            "flipX": false
+          },
+          "crop": {
+            "left": 164,
+            "top": 144,
+            "width": 151,
+            "height": 288
+          }
+        },
+        {
+          "kind": "futago-separated-b",
+          "source": "assets/source/v100/joints/futago-separated-b-r1/identity-reference.png",
+          "sourceSha256": "70959eb24119e652c7e42c34d86f9ae284181e15a23713a1a1609fb5d5f8513a",
+          "provenance": "assets/source/v100/joints/futago-separated-b-r1/provenance.json",
+          "currentTexture": {
+            "path": "/art/v100/joints/futago-separated-b-r1.webp",
+            "sha256": "4ffe7e41e67947722730a56d61883ed440482a391b0ef0596eca7d0e02280d68"
+          },
+          "canonical": {
+            "path": "/art/v100/bosses/futago-separated-b-battle-v1.webp",
+            "sourceSha256": "800b062ce9b8225d45fd82fba6e5310d8131b5ebc30fd1f53761d9bba02ed609",
+            "sourceRect": {
+              "x": 18,
+              "y": 436,
+              "w": 224,
+              "h": 343
+            },
+            "drawSlices": [
+              {
+                "x": 0,
+                "y": 0,
+                "w": 224,
+                "h": 171
+              },
+              {
+                "x": 0,
+                "y": 171,
+                "w": 112,
+                "h": 172
+              },
+              {
+                "x": 112,
+                "y": 171,
+                "w": 112,
+                "h": 86
+              },
+              {
+                "x": 112,
+                "y": 257,
+                "w": 56,
+                "h": 86
+              },
+              {
+                "x": 168,
+                "y": 300,
+                "w": 28,
+                "h": 43
+              },
+              {
+                "x": 196,
+                "y": 321,
+                "w": 28,
+                "h": 22
+              }
+            ],
+            "flipX": false
+          },
+          "crop": {
+            "left": 144,
+            "top": 121,
+            "width": 192,
+            "height": 311
+          }
+        }
+      ],
+      "composition": "Current separate A/B bodies; common scale and floor; no overlap"
+    },
+    {
+      "id": "boss-mugarian-president-mutated",
+      "assetPath": "/art/quality-20261114/boss-dossiers/boss-mugarian-president-mutated.webp",
+      "sha256": "610f3329cd324910d7642831aff87aca37a7c71786a0f9d015564d9113ffbfce",
+      "bytes": 34372,
+      "width": 256,
+      "height": 288,
+      "inputs": [
+        {
+          "kind": "mugarian-president-mutated",
+          "source": "assets/source/v100/joints/mugarian-president-mutated-r1/identity-reference.png",
+          "sourceSha256": "7da97f17c9d7facfa318e2afa8ef17c4a030eb5128d60b1101c00628c3c8d351",
+          "provenance": "assets/source/v100/joints/mugarian-president-mutated-r1/provenance.json",
+          "currentTexture": {
+            "path": "/art/v100/joints/mugarian-president-mutated-r1.webp",
+            "sha256": "2d7843e0e191c0bd602c818d8531c6a37df9f6d9e00dd6e193aa3ea2d3aa50f7"
+          },
+          "canonical": {
+            "path": "/art/v100/bosses/mugarian-president-mutated-battle-v2.png",
+            "sourceSha256": "4c2e37b4238bf46cac9d2dd831419fe550936aa9762fa1c6146eb9f96e3e613c",
+            "sourceRect": {
+              "x": 544,
+              "y": 0,
+              "w": 544,
+              "h": 512
+            },
+            "flipX": false
+          },
+          "crop": {
+            "left": 124,
+            "top": 50,
+            "width": 296,
+            "height": 446
+          }
+        }
+      ],
+      "composition": "Complete canonical figure; transparent contain, no repaint"
+    },
+    {
+      "id": "boss-takuya-omega",
+      "assetPath": "/art/quality-20261114/boss-dossiers/boss-takuya-omega.webp",
+      "sha256": "dff13311b6d5e908f37b4ed1860092a2f2d0be1e3d7c82ae3e407d920e91a101",
+      "bytes": 29042,
+      "width": 256,
+      "height": 288,
+      "inputs": [
+        {
+          "kind": "takuya-omega",
+          "source": "assets/source/v100/joints/takuya-omega-r3/identity-reference.png",
+          "sourceSha256": "5505512cd19684b6dadcc3b9c89b01a1a620c096675f3de35a63a237e75c0487",
+          "provenance": "assets/source/v100/joints/takuya-omega-r3/provenance.json",
+          "currentTexture": {
+            "path": "/art/v100/joints/takuya-omega-r3.webp",
+            "sha256": "dda2ec50aae471fc2327a2c2961470f723d3aa6a5d180c206b1d4309e183e351"
+          },
+          "canonical": {
+            "path": "/art/v100/bosses/takuya-omega-battle-v2.png",
+            "sourceSha256": "deaf3edcca3102bd1476460924f92ba4827565dec793c98dacaf03ae57fc424b",
+            "sourceRect": {
+              "x": 544,
+              "y": 0,
+              "w": 544,
+              "h": 512
+            },
+            "flipX": false
+          },
+          "crop": {
+            "left": 126,
+            "top": 28,
+            "width": 292,
+            "height": 468
+          }
+        }
+      ],
+      "composition": "Complete canonical figure; transparent contain, no repaint"
+    }
+  ]
+}

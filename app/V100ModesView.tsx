@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { AshfallGame, type AshfallBattleResult } from "./AshfallGame";
 import { applyV100SaveMutation, normalizeV100Save } from "./v100Save.js";
 import { v100OutbreakEncounters } from "./v100Outbreak.js";
@@ -11,6 +11,7 @@ import { V100SurvivalView } from "./V100SurvivalView";
 import { V100_UNITS, V100_SUPPORTS } from "./v100Registry.js";
 import { stageVisualFor } from "./productionVisuals.js";
 import { v100BossActionGuidanceFor, bossDefinitionForId } from "./bossFoundation.js";
+import { V100_BOSS_DOSSIER_ART } from "./v100BossDossierArt.js";
 
 type Save = ReturnType<typeof normalizeV100Save>;
 type Encounter = { id: string; displayName: string; stageNumber: number; stageId: string; rewardCaps: number; rewardEquipment: { id: string; displayName: string } | null };
@@ -102,8 +103,13 @@ export function V100ModesView({ save, onBack, onLoadout, onSave, initialTab = "o
     const total = defeatCounts[boss.id] ?? 0;
     const outbreak = save.outbreak.clearCounts[boss.id] ?? 0;
     const survival = save.survival.clearCounts[boss.id] ?? 0;
+    const portraitArt = V100_BOSS_DOSSIER_ART[boss.id];
     return <article className="v100-compendium-entry" key={boss.id} data-outbreak-boss-id={boss.id}>
-      <div className="v100-compendium-stage"><small>物語</small><strong>S{String(boss.stageNumber).padStart(2, "0")}</strong></div>
+      <div className="v100-compendium-stage">
+        <small>初遭遇</small><strong>S{String(boss.stageNumber).padStart(2, "0")}</strong>
+        <span className="v100-compendium-specimen" role="img" aria-label={boss.displayName + "の姿"}
+          style={portraitArt ? { "--v100-boss-dossier": `url("${portraitArt.path}")` } as CSSProperties : undefined} />
+      </div>
       <div className="v100-compendium-body">
         <h3>{boss.displayName}</h3>
         {classification && <p className="v100-compendium-feature"><b>特徴</b><span>{classification}</span></p>}
