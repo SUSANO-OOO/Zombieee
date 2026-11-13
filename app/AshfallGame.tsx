@@ -25187,6 +25187,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       <section
         className="game-frame"
         data-battle-hud-layout={battleHudLayout ? "mobile" : undefined}
+        data-base-kind={basePresentation.onFoot ? "on-foot" : "vehicle"}
         style={battleHudFrameStyle}
         aria-label="西新世紀末物語 ゲーム"
       >
@@ -25381,7 +25382,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                    : cardBlockCopy ?? "出撃可能";
                  return (
                    <button key={`${card.kind}-${slotIndex}`} className={`unit-card ${externalSessionActive ? "v100-deploy-card" : ""} ${cooldown > 0 ? "cooling" : ""} state-${cardState}`} data-kind={card.kind} data-slot-index={slotIndex} data-portrait={portraitArt ? "approved" : "diagnostic"} data-block-reason={cardBlockReason ?? "ready"} data-state={cardState} data-cooldown={cooldown} data-missing-command={missingCommandPoints} aria-label={`${card.name} / ${cardAccessibleState} / ${externalSessionActive ? "必要指揮" : "コスト"} ${card.cost}`} aria-disabled={Boolean(cardBlockReason)} onClick={() => deployHuman(card.kind)} style={portraitArt ? { "--unit-card-art": `url('${portraitArt}')`, ...(externalSessionActive ? v100PortraitFraming(combatKindToCampaignUnitId(card.kind)) : {}) } as CSSProperties : undefined}>
-                    <span className="portrait"><i />{portraitArt ? <img src={portraitArt} alt="" aria-hidden="true" draggable={false} decoding="async" /> : <b className="diagnostic-portrait" aria-hidden="true">{card.kind === "guardian" ? "盾" : "工"}</b>}</span>
+                    <span className="portrait"><i />{externalSessionActive && battleHudLayout ? <span className="v100-deploy-camera">{portraitImage}</span> : portraitImage}</span>
                     {externalSessionActive ? <>
                       <span className="v100-deploy-heading" aria-hidden="true">
                         <span className="v100-deploy-name">{card.name}</span>

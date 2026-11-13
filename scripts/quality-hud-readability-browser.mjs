@@ -16,18 +16,20 @@ const engine = process.env.QUALITY_HUD_ENGINE ?? 'chromium';
 assert.ok(['chromium','webkit'].includes(engine));
 const buildRoot = process.env.QUALITY_HUD_BUILD_ROOT;
 const build = await productionBuildIdentity(buildRoot);
-const snapshot = JSON.parse(await readFile(path.join(buildRoot,'snapshot.json'),'utf8'));
+const snapshot = JSON.parse(await readFile(process.env.QUALITY_HUD_SNAPSHOT ?? path.join(buildRoot,'snapshot.json'),'utf8'));
 assert.equal(build.combinedSha256,snapshot.combinedSha256);
 await mkdir(out,{recursive:false});
 const override = process.env.QUALITY_HUD_CSS ? await readFile(process.env.QUALITY_HUD_CSS,'utf8') : null;
-const seed = normalizeV100Save({...createDefaultV100Save({settings:{bgmEnabled:false}}),campaignStarted:true,playerName:'検証',
-  flowState:{phase:'formation',stageId:V100_STAGE_IDS[0],stageNumber:1,eventId:null,destination:'formation',nodeIndex:0,firstClear:false,finalized:true}});
+const stageNumber = Number(process.env.QUALITY_HUD_STAGE ?? 1);
+assert.ok([1,5,6].includes(stageNumber));
+const seed = normalizeV100Save({...createDefaultV100Save({settings:{bgmEnabled:false}}),campaignStarted:true,playerName:'検証',availableStageIds:V100_STAGE_IDS.slice(0,stageNumber),completedStageIds:V100_STAGE_IDS.slice(0,stageNumber-1),
+  flowState:{phase:'formation',stageId:V100_STAGE_IDS[stageNumber-1],stageNumber,eventId:null,destination:'formation',nodeIndex:0,firstClear:false,finalized:true}});
 const scenarios = [
   {width:844,height:390}, {width:844,height:340}, {width:667,height:375},
   {width:667,height:375,inset:44}, {width:1280,height:720}, {width:340,height:220,extraSmall:true},
-].filter(s => !process.env.QUALITY_HUD_ONLY || `${s.width}x${s.height}-inset${s.inset??0}` === process.env.QUALITY_HUD_ONLY);
+].filter(s => process.env.QUALITY_HUD_PHONE_ONLY !== '1' || s.width >= 640 && s.width <= 960).filter(s => !process.env.QUALITY_HUD_ONLY || `${s.width}x${s.height}-inset${s.inset??0}` === process.env.QUALITY_HUD_ONLY);
 assert.ok(scenarios.length);
-const report = {scope:'Actual S01 entry and HUD geometry in isolated profiles; no victory/clock/resource mutation. Insets are CSS emulation, not physical-device proof. Optional CSS override is a prototype, not built product.',engine,build,snapshot,
+const report = {scope:'Actual selected S01/S05/S06 entry and HUD geometry in isolated profiles; no victory/clock/resource mutation. Insets are CSS emulation, not physical-device proof. Optional CSS override is a prototype, not built product.',engine,stageNumber,build,snapshot,
   scriptSha256:createHash('sha256').update(await readFile(new URL(import.meta.url))).digest('hex'),
   overrideSha256:override ? createHash('sha256').update(override).digest('hex') : null,cases:[],errors:[]};
 const browser = await ({chromium,webkit}[engine]).launch({headless:true});
@@ -35,7 +37,7 @@ try {
   for (const scenario of scenarios) {
     const id=`${scenario.width}x${scenario.height}-inset${scenario.inset??0}`;
     const viewport={width:scenario.width,height:scenario.height};
-    const context=await browser.newContext({viewport,hasTouch:scenario.width<1000,serviceWorkers:'block',...(process.env.QUALITY_HUD_VIDEO==='1'?{recordVideo:{dir:path.join(out,id+'-video'),size:viewport}}:{})});
+    const context=await browser.newContext({viewport,hasTouch:scenario.width<1000,...(process.env.QUALITY_HUD_VIDEO==='1'?{recordVideo:{dir:path.join(out,id+'-video'),size:viewport}}:{})});
     await context.addInitScript(seedV100BrowserSaveOnce,serializeV100Save(seed));
     const page=await context.newPage(); page.on('pageerror',e=>report.errors.push(String(e)));
     try {
@@ -59,10 +61,14 @@ try {
         const overlap=(a,b)=>Math.min(a.right,b.right)-Math.max(a.left,b.left)>.5&&Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top)>.5;
         const collisions=items.flatMap((a,i)=>items.slice(i+1).filter(b=>overlap(a.box,b.box)).map(b=>[a.id,b.id]));
         const rootStyle=getComputedStyle(document.documentElement);
-        return {layout:document.querySelector('.game-frame').dataset.battleHudLayout,items,buttons,collisions,safeArea:{source:document.documentElement.dataset.safeAreaSource,left:parseFloat(rootStyle.getPropertyValue('--app-viewport-safe-left'))||0,right:parseFloat(rootStyle.getPropertyValue('--app-viewport-safe-right'))||0},viewport:{width:innerWidth,height:innerHeight},state:window.__ASHFALL_BATTLE_QA__.getV100ResourcePressureProof()};
+        return {portraits:[...document.querySelectorAll('.unit-card[data-portrait=approved] .portrait img')].map(image=>({decoded:image.complete&&image.naturalWidth>0,box:rect(image),owner:rect(image.closest('.portrait'))})),layout:document.querySelector('.game-frame').dataset.battleHudLayout,baseKind:document.querySelector('.game-frame').dataset.baseKind,items,buttons,collisions,safeArea:{source:document.documentElement.dataset.safeAreaSource,left:parseFloat(rootStyle.getPropertyValue('--app-viewport-safe-left'))||0,right:parseFloat(rootStyle.getPropertyValue('--app-viewport-safe-right'))||0},viewport:{width:innerWidth,height:innerHeight},state:window.__ASHFALL_BATTLE_QA__.getV100ResourcePressureProof()};
       });
       await page.screenshot({path:path.join(out,id+'.png')});
       const row={id,scenario,geometry,operations:[]};report.cases.push(row);
+      assert.equal(geometry.baseKind,stageNumber === 1 ? 'vehicle' : 'on-foot');
+      assert.ok(geometry.portraits.length>0,'At least one approved portrait must be present');
+      assert.ok(geometry.portraits.every(p=>p.decoded&&p.box.width>0&&p.owner.height>0),'Every actual nested portrait decoded');
+      if(stageNumber !== 1) assert.ok(geometry.items.find(i=>i.id==='health').text.includes('退路耐久'));
       assert.equal(geometry.safeArea.left,scenario.inset??0);
       assert.equal(geometry.safeArea.right,scenario.inset??0);
       if(scenario.inset)assert.equal(geometry.safeArea.source,'local-qa-iphone-landscape');
@@ -89,7 +95,10 @@ try {
     } finally {await context.close();}
     await writeFile(path.join(out,'report.json'),JSON.stringify(report,null,2)+'\n');
   }
-  assert.deepEqual(report.errors,[]);report.status='observed';
+  assert.deepEqual(report.errors,[]);
+  const afterBuild=await productionBuildIdentity(buildRoot);
+  assert.equal(afterBuild.combinedSha256,build.combinedSha256,'HUD observation build remained unchanged');
+  report.afterBuild=afterBuild;report.status='observed';
 } catch(error){report.status='failed';report.failure=String(error);throw error;}
 finally{await browser.close();await writeFile(path.join(out,'report.json'),JSON.stringify(report,null,2)+'\n');}
 console.log(JSON.stringify({out,cases:report.cases.map(c=>({id:c.id,collisions:c.geometry.collisions,unowned:c.geometry.items.filter(i=>!i.owned).map(i=>i.id),inkOverflow:c.geometry.items.filter(i=>!i.inkContained).map(i=>i.id)}))}));

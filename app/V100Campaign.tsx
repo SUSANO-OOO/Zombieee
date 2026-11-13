@@ -116,6 +116,7 @@ import "./v100RegionalMap.css";
 import "./v100MobileLayout.css";
 import "./v100DialogueStage.css";
 import "./v100SurvivorInterface.css";
+import "./v100BattleCommandFinish.css";
 import { V100_CREW_INSIGNIA } from "./v100CrewInsignia.js";
 
 type Save = NonNullable<StorageOutcome["save"]> & { bestStars: Record<string, number> };
@@ -1566,7 +1567,10 @@ function ResultView({ result, previousResult, previousBestStars, alreadyComplete
   const outcome = won ? "目標達成！"
     : escortResult?.outcome ?? (typeof result?.vehicleHp === "number" && result.vehicleHp <= 0 ? `${basePresentation.label}を守りきれませんでした。`
       : "目標を達成できなかった。編成と戦い方を見直して、もう一度挑もう。");
-  return <section className={`v100-panel v100-result-panel ${won ? "win" : "lose"}`} data-v100-surface={won ? "result-win" : "result-lose"} aria-label="戦闘結果">
+  const resultStageId = typeof result?.stageId === "string" ? result.stageId : null;
+  const resultStage = resultStageId ? V100_STAGE_BY_ID[resultStageId] : null;
+  return <section className={`v100-panel v100-result-panel ${won ? "win" : "lose"}`} data-v100-surface={won ? "result-win" : "result-lose"} aria-label="戦闘結果" style={{ "--v100-result-scene": `url(${resultStageId ? stageVisualFor(resultStageId) : PRODUCTION_VISUALS.command})` } as CSSProperties}>
+    <aside className="v100-result-field-record" aria-label="作戦地点"><span>西新 / 作戦記録</span><b>S{String(stageNumber).padStart(2, "0")}</b><h3>{resultStage?.displayName ?? "作戦地点の記録なし"}</h3><strong>{won ? "目標達成" : "目標未達"}</strong></aside>
     <div className="v100-result-scroll" role="region" aria-label="戦闘結果の詳細" tabIndex={0}>
       <span className="v100-kicker">戦闘結果 / {won ? "成功" : "失敗"}</span><h2>{won ? "ステージクリア" : "ステージ失敗"}</h2><p>{merits[0] ? <span className="v100-result-lead-merit" data-v100-merit={merits[0].id}><strong>{merits[0].title}</strong><small>{merits[0].detail}<span className="v100-merit-scroll-hint"> · 詳細は下へ</span></small></span> : outcome}<span className="v100-result-scroll-guide">結果の詳細は下へスクロール</span></p>
       {won ? <div className="v100-result-highlight has-earned-stars"><strong><V100StageStars stars={runStars} label="今回の評価" /></strong><span>{`今回 ${runStars}/3　記録 ${previousBestStars} → ${nextBestStars}/3`}</span></div>
