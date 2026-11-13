@@ -1,0 +1,181 @@
+{
+  "creator": "Kenney; layered and mastered by Codex under Producer direction",
+  "license": "CC0-1.0",
+  "commercialUse": true,
+  "modification": true,
+  "redistribution": true,
+  "notices": [
+    {
+      "path": "assets/source/v100/audio/kenney-rpg/License.txt",
+      "sha256": "7921b864e3bdaf005f8c7ee2e5dc4c0a18a1db38943ccf45962681e2e66f73d0",
+      "license": "CC0-1.0",
+      "creator": "Kenney"
+    },
+    {
+      "path": "assets/source/v100/audio/kenney-impact/License.txt",
+      "sha256": "043d5a52d1dc1dfd67437b55b714b7fd629031153ac579b9fdedc5396c037f99",
+      "license": "CC0-1.0",
+      "creator": "Kenney"
+    }
+  ],
+  "recipe": {
+    "path": "assets/source/quality-20261114/audio/manual-foley-r1/recipe.json",
+    "sha256": "181f8a6bf0fa30bb77b9adac5a779517fd85f0aa0b0166c3d33350dfd21df00e"
+  },
+  "authorization": "Current smartphone quality goal: replace inappropriate electronic preparation sounds with character-specific material foley.",
+  "adaptation": "Existing licensed recordings only; source masters, exact layer timing/filter/dynamics and hashes retained. No voice, new contact event or actor substitution.",
+  "subjectiveListening": "not performed; implementation candidate, not final sound or physical-speaker acceptance",
+  "formats": {
+    "preferred": "mp3",
+    "fallback": "ogg",
+    "sampleRate": 48000,
+    "channels": 1
+  },
+  "records": [
+    {
+      "id": "ability-medic-emergency-activate",
+      "kind": "medic",
+      "duration": 0.92,
+      "meaning": "Instrument preparation and gauze handling, without an early hit or new voice.",
+      "master": {
+        "path": "assets/source/quality-20261114/audio/manual-foley-r1/medic-preparation-r1.wav",
+        "bytes": 88398,
+        "sha256": "c908a745982c4f998db01e48808023a03ee488eafcd0937d735cad0ac0590624"
+      },
+      "layers": [
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/cloth2.ogg",
+          "sha256": "8a7451193c38bc05483aec25dd193e163a15d44cf7fff04ac7912573231b0201",
+          "at": 0,
+          "clip": 0.3,
+          "gain": 0.72,
+          "highpassHz": 120,
+          "lowpassHz": 6800
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
+          "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708",
+          "at": 0.09,
+          "clip": 0.2,
+          "gain": 0.2,
+          "highpassHz": 350,
+          "lowpassHz": 7000
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/cloth4.ogg",
+          "sha256": "e7ab9a6c4466dea874196c61f59bf1da05cfe58748f42fadd695d441a154a99b",
+          "at": 0.26,
+          "clip": 0.52,
+          "gain": 0.82,
+          "highpassHz": 140,
+          "lowpassHz": 6200
+        }
+      ],
+      "dynamics": {
+        "threshold": 0.12,
+        "ratio": 2.5,
+        "makeup": 3.2
+      },
+      "filterComplex": "[0:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:end=0.3,asetpts=PTS-STARTPTS,highpass=f=120,lowpass=f=6800,volume=0.72,afade=t=in:st=0:d=0.006,afade=t=out:st=0.26:d=0.04,adelay=0,apad=whole_len=44160,atrim=end=0.92[a0];[1:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:end=0.2,asetpts=PTS-STARTPTS,highpass=f=350,lowpass=f=7000,volume=0.2,afade=t=in:st=0:d=0.006,afade=t=out:st=0.16:d=0.04,adelay=90,apad=whole_len=44160,atrim=end=0.92[a1];[2:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:end=0.52,asetpts=PTS-STARTPTS,highpass=f=140,lowpass=f=6200,volume=0.82,afade=t=in:st=0:d=0.006,afade=t=out:st=0.48000000000000004:d=0.04,adelay=260,apad=whole_len=44160,atrim=end=0.92[a2];[a0][a1][a2]amix=inputs=3:duration=longest,volume=3,apad=whole_len=44160,atrim=end=0.92,acompressor=threshold=0.12:ratio=2.5:makeup=3.2:attack=4:release=85:knee=2.82843,alimiter=limit=0.85:level=0[out]",
+      "reference": {
+        "path": "public/audio/v099/sfx/ability-medic-emergency-activate.mp3",
+        "bytes": 16344,
+        "sha256": "c1f2e276243d7a9dc2d3f674440ef9c4bb372906d8b0b7ca33291eba2bbf07bf"
+      },
+      "decodedMaster": {
+        "durationSeconds": 0.92,
+        "peak": 0.8460693359375,
+        "rms": 0.0671252063420802
+      },
+      "encodings": [
+        {
+          "path": "public/audio/quality-20261114/manual/medic-preparation-r1.mp3",
+          "bytes": 19700,
+          "sha256": "19911c289406438cf037472bdfba5fba16bafc8bbedefc289e53be37afb61005"
+        },
+        {
+          "path": "public/audio/quality-20261114/manual/medic-preparation-r1.ogg",
+          "bytes": 10649,
+          "sha256": "531ca576f7df2def41d1856e73b7d950d897b182f02ecf1ba315ebf61affcf7f"
+        }
+      ]
+    },
+    {
+      "id": "ability-guardian-shieldwall-activate",
+      "kind": "guardian",
+      "duration": 0.98,
+      "meaning": "Raising and settling existing armour, then planting the stance; no enemy-contact hit and no new voice.",
+      "master": {
+        "path": "assets/source/quality-20261114/audio/manual-foley-r1/guardian-preparation-r1.wav",
+        "bytes": 94158,
+        "sha256": "26e44fc3fbf033b45753ad22285cb7b4f8cfd9bf31d34679839f525413f2211e"
+      },
+      "layers": [
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/cloth3.ogg",
+          "sha256": "a48632d17a4f1416541d261a32a31612e01267144c407fa3ecab3ff410f0085b",
+          "at": 0,
+          "clip": 0.34,
+          "gain": 0.45,
+          "highpassHz": 90,
+          "lowpassHz": 5000
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
+          "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708",
+          "at": 0.1,
+          "clip": 0.32,
+          "gain": 0.7,
+          "highpassHz": 100,
+          "lowpassHz": 4700
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactMetal_light_000.ogg",
+          "sha256": "33b5e6e37c6e9d54e07bf5a89b12c76e879f40c1ea83cdd82714df1d6f9fec6d",
+          "at": 0.26,
+          "clip": 0.35,
+          "gain": 0.42,
+          "highpassHz": 80,
+          "lowpassHz": 3600
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-impact/footstep_concrete_000.ogg",
+          "sha256": "d7267e183067757c92c169de2a379abea592cfca6b39bb2e8feea15221ad79fe",
+          "at": 0.36,
+          "clip": 0.44,
+          "gain": 0.55,
+          "highpassHz": 40,
+          "lowpassHz": 5000
+        }
+      ],
+      "dynamics": {
+        "threshold": 0.11,
+        "ratio": 3,
+        "makeup": 3
+      },
+      "filterComplex": "[0:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:end=0.34,asetpts=PTS-STARTPTS,highpass=f=90,lowpass=f=5000,volume=0.45,afade=t=in:st=0:d=0.006,afade=t=out:st=0.30000000000000004:d=0.04,adelay=0,apad=whole_len=47040,atrim=end=0.98[a0];[1:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:end=0.32,asetpts=PTS-STARTPTS,highpass=f=100,lowpass=f=4700,volume=0.7,afade=t=in:st=0:d=0.006,afade=t=out:st=0.28:d=0.04,adelay=100,apad=whole_len=47040,atrim=end=0.98[a1];[2:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:end=0.35,asetpts=PTS-STARTPTS,highpass=f=80,lowpass=f=3600,volume=0.42,afade=t=in:st=0:d=0.006,afade=t=out:st=0.31:d=0.04,adelay=260,apad=whole_len=47040,atrim=end=0.98[a2];[3:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:end=0.44,asetpts=PTS-STARTPTS,highpass=f=40,lowpass=f=5000,volume=0.55,afade=t=in:st=0:d=0.006,afade=t=out:st=0.4:d=0.04,adelay=360,apad=whole_len=47040,atrim=end=0.98[a3];[a0][a1][a2][a3]amix=inputs=4:duration=longest,volume=4,apad=whole_len=47040,atrim=end=0.98,acompressor=threshold=0.11:ratio=3:makeup=3:attack=4:release=85:knee=2.82843,alimiter=limit=0.85:level=0[out]",
+      "reference": {
+        "path": "public/audio/v099/sfx/ability-guardian-shieldwall-activate.mp3",
+        "bytes": 17598,
+        "sha256": "2904819a03e6ea2a227fb4d6a9590995e8f1fa114cfb3fe9a0a22ca59f667760"
+      },
+      "decodedMaster": {
+        "durationSeconds": 0.98,
+        "peak": 0.850006103515625,
+        "rms": 0.06913686052433024
+      },
+      "encodings": [
+        {
+          "path": "public/audio/quality-20261114/manual/guardian-preparation-r1.mp3",
+          "bytes": 20660,
+          "sha256": "b8f5af55fb5353e38869e3f4fe52ea5a6597649af405125aadb2d1ac861b9fea"
+        },
+        {
+          "path": "public/audio/quality-20261114/manual/guardian-preparation-r1.ogg",
+          "bytes": 9780,
+          "sha256": "9dfc84dc1103f003d518b84c8c0ccd24790fd28dedff7ba1d97aa66be4f8371b"
+        }
+      ]
+    }
+  ]
+}

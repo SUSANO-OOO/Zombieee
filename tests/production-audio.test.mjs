@@ -211,6 +211,12 @@ test("production manifest preserves prior audio and adds only audited v080/v090 
 });
 
 test("every referenced source is repository-local, nonempty, and has a complete supported audio container", () => {
+  const approvedSource = source => /^\/audio\/(?:v060\/(?:music|sfx)|v070\/(?:music|ambience|sfx)|v080\/sfx|v090\/sfx|v098\/music|v099\/(?:music|sfx)|v100\/(?:ui|foley|ambience|score|r9)|v104\/combat|v105|weapons\/(?:recorded|chainsaw|melee)|quality-20261028)\/[a-z0-9-]+\.(mp3|ogg|wav)$/.test(source)
+    || /^\/audio\/quality-20261114\/manual\/(?:medic|guardian)-preparation-r1\.(mp3|ogg)$/.test(source);
+  for (const kind of ["medic", "guardian"]) for (const ext of ["mp3", "ogg"])
+    assert.equal(approvedSource(`/audio/quality-20261114/manual/${kind}-preparation-r1.${ext}`), true);
+  for (const bad of ["/audio/quality-20261114/manual/unreviewed.mp3", "/audio/quality-20261114/manual/medic-preparation-r2.mp3", "https://example.invalid/medic-preparation-r1.mp3"])
+    assert.equal(approvedSource(bad), false);
   for (const asset of [...PRODUCTION_AUDIO_MANIFEST.assets, ...V100_AUDIO_MANIFEST.assets]) {
     const wavCue = asset.sources[0]?.type === "audio/wav";
     const v099Cue = asset.sources[0]?.src.startsWith("/audio/v099/");
@@ -221,7 +227,7 @@ test("every referenced source is repository-local, nonempty, and has a complete 
       asset.id,
     );
     for (const source of asset.sources) {
-      assert.match(source.src, /^\/audio\/(?:v060\/(?:music|sfx)|v070\/(?:music|ambience|sfx)|v080\/sfx|v090\/sfx|v098\/music|v099\/(?:music|sfx)|v100\/(?:ui|foley|ambience|score|r9)|v104\/combat|v105|weapons\/(?:recorded|chainsaw|melee)|quality-20261028)\/[a-z0-9-]+\.(mp3|ogg|wav)$/);
+      assert.ok(approvedSource(source.src), source.src);
       assert.doesNotMatch(source.src, /:\/\/|^\/\//);
       const filePath = publicFileFor(source.src);
       assert.equal(existsSync(filePath), true, `${asset.id}: ${source.src}`);

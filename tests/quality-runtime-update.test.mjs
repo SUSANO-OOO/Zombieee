@@ -24,9 +24,9 @@ function assertDelta(next){
 
 test('quality candidate contains exactly the reviewed art, firearm and VFX delta while retaining unrelated payloads',async()=>{
   assertDelta(candidate);
-  assert.equal(contract.added.length,204);assert.equal(contract.retired.length,166);
+  assert.equal(contract.added.length,206);assert.equal(contract.retired.length,166);
   assert.equal(contract.transportChanges.length,345);
-  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),43422654); // Includes the authored smartphone UI, portraits, and all nine source-bound boss finale sheets.
+  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),43463014); // Authored phone UI/portraits, nine boss sheets, and two recorded activation preparations.
   for(const row of contract.added){
     const bytes=await readFile(new URL('../public'+(row.sourcePath??row.path),import.meta.url));
     assert.equal(bytes.length,row.bytes,row.path);
@@ -43,7 +43,7 @@ test('every bundled audio range still contains its exact encoded content after t
   assert.ok(Number.isSafeInteger(row.bundleOffset)&&row.bundleOffset>=0&&row.bundleOffset+row.bundleBytes<=bytes.length);
   assert.equal('sha256-'+createHash('sha256').update(bytes.subarray(row.bundleOffset,row.bundleOffset+row.bundleBytes)).digest('hex'),row.hash,row.path);checked++;
  }
- assert.equal(checked,367);
+ assert.equal(checked,369);
  assert.deepEqual(candidate.assets.filter(row=>row.category==='audio'&&!row.bundlePath),baseline.assets.filter(row=>row.category==='audio'&&!row.bundlePath),'the four streamed tracks retain their original transport');
 });
 

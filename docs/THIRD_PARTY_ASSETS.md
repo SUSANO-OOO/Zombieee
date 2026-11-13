@@ -512,3 +512,8 @@ TKY、Mrs.チハ、宮本武蔵の武器とmanual ability用14 cueは、`scripts
 Audio: SRG774, nene, Emma_MA, Kenney, artisticdude, rubberduck, Tabasco, HaelDB, cicifyre, Galacti-Chron / Sky Rae, Ogrebane, xhunterko, AntumDeluge, Delta12 Studio. This historical list covers the CC0 sources recorded in the early-version tables only; it is not the license statement for all current audio.
 
 現行の音にはCC BY 4.0／CC BY 3.0やVOICEVOX各音声の条件も含まれる。上記の旧CC0一覧を全素材へ適用しない。本書冒頭の世代別記録、各source/provenance台帳、ゲーム内クレジットを照合し、必須帰属を保持する。
+
+
+### Smartphone manual-ability preparation foley (2026-11-14)
+
+The V1 Nao and Gantetsu activation preparations layer existing Kenney RPG Audio and Impact Sounds recordings under CC0-1.0. Source files and original license notices remain under `assets/source/v100/audio/kenney-rpg/` and `kenney-impact/`. The selected WAV masters, exact layer timing, filters, dynamics, source hashes and codec provenance are in `assets/source/quality-20261114/audio/manual-foley-r1/`. Runtime files are `public/audio/quality-20261114/manual/`; MPEG is the preferred offline format and Ogg is the existing browser fallback convention. The two cues retain their activation IDs and policies. No actor voice or contact cue is substituted. These are implementation candidates; subjective listening and physical-speaker acceptance remain unconfirmed.
