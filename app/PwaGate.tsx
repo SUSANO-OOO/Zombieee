@@ -50,6 +50,8 @@ import {
 } from "./pwaRuntime.js";
 import { describeUpdate, evaluateActivationSafety, evaluateUpdate } from "./pwaUpdatePlanner.js";
 import { resolvePwaBaseUrl } from "./pwaBasePath.js";
+import {canUseVerifiedPwaArtwork} from "./pwaArtworkAvailability.js";
+import {V100_UI_MATERIAL_ART} from "./v100PreparationArt.js";
 
 type Manifest = { version: string; releaseSha: string; assets: Array<Record<string, unknown>> };
 
@@ -845,6 +847,16 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     || phase === "commit-required"
     || phase === "committing"
     || (!playable && (phase === "install-required" || phase === "installing"));
+
+  // A newly published stylesheet must not fetch new art before update consent.
+  useEffect(() => {
+    const ready = canUseVerifiedPwaArtwork({
+      artwork: V100_UI_MATERIAL_ART, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,
+      browserPlayAccepted: offerDismissed && (!standalone || registrationFailureAcknowledged),
+    });
+    document.documentElement.dataset.pwaUiMaterials = ready ? "ready" : "deferred";
+    return () => { delete document.documentElement.dataset.pwaUiMaterials; };
+  }, [baseUrl, blocking, installedManifest, storedHashes, offerDismissed, standalone, registrationFailureAcknowledged]);
 
   // A delayed update check may finish after the committed generation started.
   // Keep its manifest pending during battle, story, or a save write. Applying it

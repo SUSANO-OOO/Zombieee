@@ -6,6 +6,7 @@ import { v177PaisenPhotoComboJointPose } from './v177PaisenPhotoCombo.js';
 import { campaignWaveReady, campaignWavePrompt, requestCampaignWave } from './wavePacing.js';
 import { queueV105FistWave, resolveV105FistWavePaint, advanceV105FistWaves, drawV105FistWaves, v105FistWaveSnapshot, clearV105FistWaves } from './v105PaisenFistWave.js';
 import { startV105AbilityName, drawV105AbilityNames, v105AbilityNameSnapshot, v105EnemyAbilityName, clearV105AbilityNames } from './v105AbilityNames.js';
+import {queueV100GuardActivation} from './v100GuardActivationVfx.js';
 import { v105CurrentAbilitySample, v105AbilityFacing } from './v105CurrentAbilityPose.js';
 import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
 import { v100PortraitFraming } from "./v100PortraitFraming.js";
@@ -16030,6 +16031,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       volume?: number;
       playbackRate?: number;
       maxInstances?: number;
+      instanceKey?: string;
       duck?: { level: number; attackMs: number; holdMs: number; releaseMs: number };
       dedupeKey?: string;
     },
@@ -16043,7 +16045,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     eventKey: string,
     x: number = owner.x,
     suffix: string = eventKey,
-    options: { priority?: number; cooldownMs?: number; maxInstances?: number; volume?: number } = {},
+    options: { priority?: number; cooldownMs?: number; maxInstances?: number; instanceKey?: string; volume?: number } = {},
   ) => {
     const cueId = V099_MANUAL_ABILITY_AUDIO_CONTRACTS[owner.kind]?.timeline?.[eventKey];
     if (!cueId) return false;
@@ -19686,7 +19688,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 owner.comboWindow = MANUAL_ABILITY_REGISTRY["crazy-king"].activeSeconds;
                 owner.cooldown = 0;
                 owner.retargetIn = 0;
-                addParticles(g, owner.x, owner.y - 28, "#f06835", 24);
+                if (g.definition.missionConfig.v100StageNumber) queueV100GuardActivation(g,owner);
+                else addParticles(g, owner.x, owner.y - 28, "#f06835", 24);
               } else {
                 for (const enemy of g.fighters) {
                   if (enemy.side !== "zombie"
@@ -19702,7 +19705,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                   );
                 }
                 owner.cooldown = 0;
-                addParticles(
+                if (g.definition.missionConfig.v100StageNumber) queueV100GuardActivation(g,owner);
+                else addParticles(
                   g,
                   owner.x,
                   owner.y - 28,
@@ -19744,7 +19748,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               continue;
             }
             if (event.type === "guard-start" && event.kind === "miyamoto-musashi") {
-              addParticles(g, owner.x, owner.y - 38, "#9ec7db", 10);
+              if (g.definition.missionConfig.v100StageNumber) queueV100GuardActivation(g,owner);
+              else addParticles(g, owner.x, owner.y - 38, "#9ec7db", 10);
               continue;
             }
             if (event.type === "launch" && event.kind === "mrs-chiha") {
@@ -19959,8 +19964,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               if (event.type === "muzzle") {
                 playManualAbilityTimelineCue(owner, "muzzle", owner.x, `muzzle:${salvoIndex ?? "legacy"}`, {
                   priority: 88,
-                  cooldownMs: 45,
-                  maxInstances: 3,
+                  cooldownMs: salvoIndex === null ? 45 : 0,
+                  maxInstances: salvoIndex === null ? 3 : definition.burstCount,
+                  instanceKey: salvoIndex === null ? undefined : `manual-ability:${owner.id}:${owner.manualAbility?.activationId ?? 0}:burst:muzzle`,
                 });
                 if(g.definition.missionConfig.v100StageNumber)queueV100ManualMuzzle(g,{owner,target:{x:event.target.x,y:event.target.y-30},shotIndex:salvoIndex??0});
                 else addParticles(g, owner.x + 26, owner.y - 38, "#f8c35f", 3);
@@ -19997,8 +20003,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               g.flashOverlay = Math.max(g.flashOverlay, event.finalRound ? .1 : .045);
               playManualAbilityTimelineCue(owner, "impact", event.target.x, `impact:${salvoIndex ?? "legacy"}`, {
                 priority: 82,
-                cooldownMs: 90,
-                maxInstances: 2,
+                cooldownMs: salvoIndex === null ? 90 : 0,
+                maxInstances: salvoIndex === null ? 2 : definition.burstCount,
+                instanceKey: salvoIndex === null ? undefined : `manual-ability:${owner.id}:${owner.manualAbility?.activationId ?? 0}:burst:impact`,
               });
               continue;
             }

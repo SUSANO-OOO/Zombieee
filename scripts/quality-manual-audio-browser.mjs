@@ -135,6 +135,13 @@ try {
       if (report.after) assert.ok(row.springOffset >= -1e-8 && row.springOffset <= .04, 'spring follows the actual trap trigger');
       else assert.ok(row.springOffset < -.1, 'baseline spring precedes the trap trigger');
     }
+    if(process.env.QUALITY_GUARD_MATERIAL_EXPECTED==='1'&&['kumaverson','guardian','crazy-king','miyamoto-musashi'].includes(kind)){
+      const materials=row.samples.flatMap(sample=>sample.advanced??[]).filter(effect=>effect.type==='guard-material'&&effect.ownerId===ownerId&&effect.kind===kind);
+      assert.ok(materials.length>0,kind+' actual button reaches authored guard material');
+      const receipts=[...new Set(materials.map(effect=>[effect.ownerId,effect.activationId,effect.startedAt].join(':')))];
+      assert.equal(receipts.length,1,kind+' one material beat per actual activation');
+      row.guardMaterial={receipt:receipts[0],samples:materials.length,first:materials[0]};
+    }
     assert.equal(row.error, null); assert.equal(row.diagnostics.cache.failed, 0);
     row.status = 'passed';
   }

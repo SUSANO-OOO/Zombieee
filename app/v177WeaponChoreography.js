@@ -221,6 +221,23 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
   // marks the forward face, not an axis to rotate upward like Kuma's pan.
   const aim=kind==='guardian'?restAngle:nearAngle(-Math.PI*.5-sourceDirection,restAngle);
   upper[atlas.weaponBone]=rigid(pivot,hand,restAngle+(aim-restAngle)*raised);
+ }else if(kind==='miyamoto-musashi'&&plan.abilityPresentation==='cross-guard'){
+  if(atlas.path!=='/art/v100/joints/miyamoto-musashi-combat-r1.webp')throw Error('Recalibrate Musashi guard for a changed source');
+  // Source-space hand goals form an X ahead of the chest. Both painted
+  // swords and their own wrists move together; the existing arm IK still
+  // enforces the original upper/forearm lengths and elbow bend sides.
+  const raised=keys(p,[[0,0],[.28,1],[.7,1],[1,0]])[0];
+  const placements={'weapon-0':{hand:[296,194],angle:-.41291226534},
+    'weapon-1':{hand:[294,158],angle:1.52930175009}};
+  for(const c of arms){
+   const placement=placements[c.effectorBone];if(!placement)continue;
+   const wrist=c.effectorWrist??c.wrist,parent=upper[c.parentBone],held=upper[c.effectorBone];
+   const home=point(held,wrist),goal=point(parent,placement.hand);
+   const homeAngle=Math.atan2(held[1],held[0]);
+   const guardAngle=nearAngle(Math.atan2(parent[1],parent[0])+placement.angle,homeAngle);
+   upper[c.effectorBone]=rigid(wrist,[home[0]+(goal[0]-home[0])*raised,home[1]+(goal[1]-home[1])*raised],
+    homeAngle+(guardAngle-homeAngle)*raised);
+  }
  }else if(kind==='brawler'&&plan.abilityPresentation==='fist-wave'){
   // Bring both fists from the waist to the same forward pressure plane.
   // Their original shoulders and elbows keep their own fixed bone lengths.

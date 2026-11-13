@@ -1,3 +1,4 @@
+import {clearV100GuardActivations,drawV100GuardActivations,getV100GuardActivationsSnapshot} from './v100GuardActivationVfx.js';
 import { drawV100Explosion } from "./v100CombatVfx.js";
 
 const MAX_ADVANCED_EFFECTS = 64;
@@ -13,7 +14,7 @@ function active(world) {
   queues.set(world, effects); return effects;
 }
 
-export function clearV100AdvancedAbilityEffects(world) { queues.delete(world); }
+export function clearV100AdvancedAbilityEffects(world) { queues.delete(world); clearV100GuardActivations(world); }
 
 export function queueV100AdvancedAbilityEffect(world, entry = {}) {
   const pendingOrigin = entry.pendingOrigin === true;
@@ -64,7 +65,7 @@ export function resolveV105CurrentAbilityOrigin(world, owner, socket, metadata =
   return resolved;
 }
 
-export function getV100AdvancedAbilityEffectsSnapshot(world) { return active(world).map(effect => ({ ...effect, elapsed: Math.max(0, world.time - effect.startedAt) })); }
+export function getV100AdvancedAbilityEffectsSnapshot(world) { return [...active(world).map(effect => ({ ...effect, elapsed: Math.max(0, world.time - effect.startedAt) })),...getV100GuardActivationsSnapshot(world)]; }
 
 function image(objects, id) { const value = objects[id]; return value?.complete && value.naturalWidth ? value : null; }
 function drawCell(ctx, source, effect, width, height, center = false) {
@@ -72,6 +73,7 @@ function drawCell(ctx, source, effect, width, height, center = false) {
 }
 
 export function drawV100AdvancedAbilityEffects(ctx, objects, world) {
+  drawV100GuardActivations(ctx,objects,world);
   for (const effect of active(world)) {
     if (effect.pendingOrigin) continue;
     const elapsed = Math.max(0, world.time - effect.startedAt); const progress = Math.max(0, Math.min(1, elapsed / effect.duration)); const renderEffect = { ...effect, elapsed };

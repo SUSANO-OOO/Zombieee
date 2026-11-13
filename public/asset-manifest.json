@@ -4,6 +4,14 @@
   "releaseSha": "__ZOMBIEEE_RELEASE_SHA__",
   "assets": [
     {
+      "path": "/art/quality-20261113/ui/materials-six-r1.webp",
+      "bytes": 1968486,
+      "hash": "sha256-8f5f4d49c654c460c77ea5083d8ba20b37d13c753c1c8b76c3f4030efedd9454",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/quality-20261113/vfx/boss-blast-six-r2.webp",
       "bytes": 1112382,
       "hash": "sha256-e6851cd119a82c40cd2da23aa3d5c1f25660f1b2a81c48cd8c0c9296eb8b518f",
