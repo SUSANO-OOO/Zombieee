@@ -17,6 +17,7 @@ const STORY_PORTRAIT_PATHS = Object.freeze({
   "unit-raider": V080_UNIT_VISUAL_PROFILES.gunner.eventPortrait.path,
   "unit-tatara": V080_UNIT_VISUAL_PROFILES.brute.eventPortrait.path,
   "unit-gantetsu": V080_UNIT_VISUAL_PROFILES.guardian.eventPortrait.path,
+  "unit-mayo-chan": V090_UNIT_VISUAL_PROFILES["mayo-chan"].eventPortrait.path,
   "unit-zakimiya": V090_UNIT_VISUAL_PROFILES.zakimiya.eventPortrait.path,
   "unit-tky": V090_UNIT_VISUAL_PROFILES.tky.eventPortrait.path,
   "unit-mrs-chiha": V090_UNIT_VISUAL_PROFILES["mrs-chiha"].eventPortrait.path,

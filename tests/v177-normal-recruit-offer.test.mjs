@@ -26,7 +26,7 @@ const buttonFor=handler=>{const found=nodes.filter(n=>n.openingElement.tagName.g
 const modal=nodes.find(n=>attr(n,'className')?.initializer?.text==='v100-modal v100-recruit-modal');assert.ok(modal);
 const offerFor=compile('(flow,surface,save)=>('+offers[0].getText(app)+');');
 const renderModal=compile('(save,recruitOffer,applySaveTransaction)=>('+modal.getText(app)+');',{
-  formationCardForUnit:()=>null,v100RoleLabelFor:()=>'',unitDescriptionFor:()=>'',saveBusy:false,
+  CrewPortrait:()=>null,formationCardForUnit:()=>null,v100RoleLabelFor:()=>'',unitDescriptionFor:()=>'',saveBusy:false,
 });
 const registerButton=compile('(save,info,selectedUnit,onPurchase)=>('+buttonFor('onPurchase(selectedUnit.id)')+');');
 const levelButton=compile('(save,info,selectedUnit,onLevel)=>('+buttonFor('onLevel(selectedUnit.id, info.level, info.nextLevel)')+');');

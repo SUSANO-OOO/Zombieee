@@ -1,0 +1,266 @@
+/* Survivor records, field board and supply counter share materials, not layouts.
+   The only layout target is a landscape phone; short screens scroll their lists. */
+#v100-campaign {
+  --survivor-ink: #1d2925;
+  --survivor-paper: #e3d7b9;
+  --survivor-gold: #edba62;
+  --survivor-line: #80765a;
+  --survivor-signal: #a94832;
+}
+#v100-campaign :is(button, summary, select, input) { touch-action: manipulation; }
+#v100-campaign :is(button, summary, select):focus-visible { outline: 3px solid #ffdc8b; outline-offset: -4px; }
+#v100-campaign .v100-command-tabs {
+  gap: 3px; padding: 0 0 5px; border-bottom: 1px solid #a38b5e;
+  background: linear-gradient(90deg,#101614,#283129 55%,#121816);
+}
+#v100-campaign .v100-command-tabs > button {
+  position: relative; min-height: 44px; border: 0; border-radius: 0;
+  border-top: 2px solid #596155; background: linear-gradient(100deg,#343b30,#202821);
+  box-shadow: inset 0 -5px #141b17; color: #d5cfb6; letter-spacing: .08em;
+}
+#v100-campaign .v100-command-tabs > button[aria-current="page"] {
+  border-top-color: #ffe2a0; color: #201d15;
+  background: linear-gradient(110deg,#f1d59c,#b5a274);
+  box-shadow: inset 0 -5px #a04d32, inset 1px 0 #f9e6b7;
+}
+#v100-campaign :is(.v100-formation-footer,.v100-unit-transaction,.v100-equipment-focus-actions,.v100-menu-footer) button {
+  border-radius: 2px; min-height: 44px; border: 1px solid #8c967d;
+  background: linear-gradient(110deg,#35463b,#22362b); color: #f3ead3;
+  box-shadow: inset 0 1px #78887566, 0 2px 0 #060d09;
+}
+#v100-campaign :is(.v100-formation-footer,.v100-unit-transaction,.v100-equipment-focus-actions,.v100-menu-footer) button.v100-primary {
+  border: 1px solid #f1c078; border-bottom: 3px solid #8f3824;
+  background: linear-gradient(105deg,#e1a85c,#bd7b38 70%,#a96e35); color: #211c13;
+  box-shadow: inset 0 1px #ffe6b3; text-shadow: none;
+}
+#v100-campaign button:active:not(:disabled) { filter: brightness(1.18); }
+#v100-campaign button:disabled { filter: saturate(.35); }
+#v100-campaign [data-crew-role] { --crew-accent: #bfa36d; }
+#v100-campaign [data-crew-role="support"] { --crew-accent: #8abcac; }
+#v100-campaign :is([data-crew-role="marksman"],[data-crew-role="suppression"]) { --crew-accent: #9cbbc9; }
+#v100-campaign [data-crew-role="heavy"] { --crew-accent: #d69968; }
+
+/* Source portraits use authored anatomy landmarks. An inner 4:5 camera makes
+   head height independent of the source bitmap and the outer card's width. */
+#v100-campaign .v100-crew-portrait {
+  display: block; position: relative; flex: 1; width: 100%; height: 100%;
+  min-width: 0; min-height: 0; overflow: hidden; isolation: isolate;
+}
+#v100-campaign .v100-crew-camera {
+  display: block; position: absolute; top: 0; left: 50%; height: 100%;
+  width: auto; aspect-ratio: 4 / 5; transform: translateX(-50%);
+}
+#v100-campaign .v100-crew-camera > img {
+  display: block !important; position: absolute !important; bottom: auto !important; right: auto !important;
+  left: 50% !important; top: calc(3.5% + 33% * var(--portrait-top-factor)) !important;
+  width: calc(41.25% * var(--portrait-width-factor)) !important; height: auto !important;
+  min-width: 0 !important; min-height: 0 !important; max-width: none !important; max-height: none !important;
+  object-fit: contain !important; object-position: center top !important; opacity: 1 !important;
+  transform: translateX(calc(-100% * var(--portrait-face-fraction))) !important;
+  filter: none !important; aspect-ratio: auto !important; margin: 0 !important;
+}
+#v100-campaign [data-portrait-mode="face"] .v100-crew-camera > img {
+  top: calc(8% + 65% * var(--portrait-top-factor)) !important;
+  width: calc(81.25% * var(--portrait-width-factor)) !important;
+}
+#v100-campaign [data-portrait-mode="whole"] .v100-crew-camera { width: 100%; aspect-ratio: auto; }
+#v100-campaign [data-portrait-mode="whole"] .v100-crew-camera > img {
+  inset: 0 !important; transform: none !important; width: 100% !important; height: 100% !important;
+}
+/* Mayo's ears, chest and medical harness occupy the equivalent portrait area. */
+#v100-campaign .v100-crew-portrait[data-portrait-owner="unit-mayo-chan"][data-portrait-mode="upper"] .v100-crew-camera > img { top: calc(4% + 56% * var(--portrait-top-factor)) !important; width: calc(70% * var(--portrait-width-factor)) !important; }
+
+/* Seven call-in cards stay together. Their content is an identity, a slot and
+   command cost; strategy lives in the focused briefing rather than tiny cards. */
+#v100-campaign[data-v100-phase] .v100-command-formation {
+  border: 1px solid #766a4e; border-top: 3px solid #aa8d58; border-radius: 0;
+  background: linear-gradient(90deg,#111a16ed,#15231add),var(--v100-stage-art) center / cover;
+}
+#v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-rail {
+  grid-template-columns: minmax(164px,.28fr) minmax(0,1fr); gap: 8px;
+}
+#v100-campaign .v100-field-map-pane { border: 0; border-right: 1px solid #a68c5e; background: #151d16ba; padding: 7px; }
+#v100-campaign .v100-field-map-title { border: 0; padding-bottom: 5px; border-bottom: 1px dashed #b9a373; color: #ffe4ac; }
+#v100-campaign .v100-field-map-intel { border-left: 3px solid #ae5136; background: #0a120b99; }
+#v100-campaign .v100-briefing-person > .v100-crew-portrait { flex: 0 0 64px; width: 64px; height: 106px; background: #87917826; }
+#v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-track {
+  grid-template-columns: repeat(7,minmax(0,1fr)); grid-template-rows: minmax(0,1fr);
+  gap: 5px; overflow: hidden;
+}
+#v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot {
+  display: grid; position: relative; padding: 0; gap: 0; min-height: 0; border: 1px solid #82795c;
+  border-radius: 0; border-top: 3px solid var(--crew-accent); grid-template-columns: 1fr;
+  grid-template-rows: minmax(40px,1fr) max-content; overflow: hidden;
+  background: linear-gradient(120deg,#5f6955,#1c2b22); box-shadow: 0 3px 0 #080e0a;
+}
+#v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot.selected {
+  border-color: #ffe2a0; border-top-color: #ffe2a0;
+  box-shadow: inset 0 0 0 2px #f2cd77; background: linear-gradient(100deg,#8b8c63,#30412d);
+}
+#v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-portrait {
+  position: relative; grid-column: 1; grid-row: 1; width: 100%; height: 100%; min-height: 40px;
+  background: radial-gradient(ellipse at 50% 40%,#d2c89530,transparent 75%);
+}
+#v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-meta {
+  display: flex; grid-column: 1; grid-row: 2; position: relative; min-height: 48px; gap: 2px;
+  padding: 4px 3px; text-align: left; background: #dfd4b5; color: #263325;
+  border-top: 1px solid #beb18c; justify-content: flex-start;
+}
+#v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-meta :is(strong,b) {
+  font-size: 12px; line-height: 1.25; color: #223424; white-space: normal; overflow-wrap: anywhere;
+}
+#v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-meta b { color: #6c4827; font-weight: 400; }
+#v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot.empty { border-style: dashed; background: #19261b66; }
+#v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot.empty .v100-slot-meta { background: #1c291f; }
+#v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot.empty .v100-slot-meta :is(strong,b) { color: #b7b8a0; }
+#v100-campaign .v100-sortie-status button { border: 0; border-left: 3px solid #b6a475; background: #1e2b22; }
+#v100-campaign .v100-callin-heading strong { letter-spacing: .04em; color: #f3e6bd; }
+
+/* Picking a person: a role, a concrete ability and the cost of calling them. */
+#v100-campaign[data-v100-phase] .v100-command-formation.picker-open .v100-roster-grid {
+  grid-template-columns: repeat(3,minmax(0,1fr)); grid-auto-rows: 152px; gap: 9px; padding: 4px 2px 10px;
+}
+#v100-campaign[data-v100-phase] .v100-command-formation.picker-open .v100-roster-card {
+  display: flex; position: relative; padding: 0; gap: 8px; height: 152px; min-height: 152px;
+  border: 1px solid #a99b74; border-left: 3px solid var(--crew-accent); border-radius: 0;
+  background: linear-gradient(110deg,#d8cbac,#f0e5c8 62%,#c9ba99); box-shadow: 0 3px 0 #060e08;
+}
+#v100-campaign[data-v100-phase] .v100-command-formation.picker-open .v100-roster-card.selected { border-color: #ffde8c; box-shadow: inset 0 0 0 2px #c68135; }
+#v100-campaign[data-v100-phase] .v100-command-formation.picker-open .v100-roster-card-art {
+  flex: 0 0 32%; width: 32%; height: 100%; border-right: 1px solid #958d70;
+  background: radial-gradient(ellipse at 45% 25%,#7a8564,#273a2b 90%);
+}
+#v100-campaign[data-v100-phase] .v100-command-formation.picker-open .v100-roster-card-copy {
+  display: flex; flex-direction: column; flex: 1; min-width: 0; gap: 5px; padding: 9px 8px 7px 0;
+  color: #27352a; text-align: left;
+}
+#v100-campaign[data-v100-phase] .v100-command-formation.picker-open .v100-roster-card-copy strong { font-size: 16px; line-height: 1.25; color: #172e21; }
+#v100-campaign[data-v100-phase] .v100-command-formation.picker-open .v100-roster-card-copy strong b { font: 700 14px var(--v100-numeric-font); }
+#v100-campaign[data-v100-phase] .v100-command-formation.picker-open .v100-roster-role { color: #78432b; font-size: 12px; border-bottom: 1px solid #a79c7a; padding-bottom: 3px; }
+#v100-campaign[data-v100-phase] .v100-command-formation.picker-open .v100-roster-advice { display: block; font-size: 12px; line-height: 1.4; white-space: normal; }
+#v100-campaign[data-v100-phase] .v100-command-formation.picker-open .v100-roster-callin { margin-top: auto; color: #314530; font-size: 12px; }
+
+/* Personnel index: numbered survivor dossiers with an actual photograph area. */
+#v100-campaign[data-v100-phase] .v100-command-personnel { border-radius: 0; border: 0; background: linear-gradient(125deg,#28372a,#101d15); padding: 8px; }
+#v100-campaign[data-v100-phase] .v100-command-personnel:not(.detail-open) .v100-personnel-grid {
+  grid-template-columns: repeat(3,minmax(0,1fr)); grid-auto-rows: 148px; gap: 9px; padding: 4px 2px 10px;
+}
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-personnel-card {
+  position: relative; display: grid; grid-template-columns: 36% minmax(0,1fr); align-items: stretch; padding: 0; gap: 0;
+  height: 148px; min-height: 148px; border: 1px solid #8f8666; border-left: 3px solid var(--crew-accent); border-radius: 0;
+  background: linear-gradient(110deg,#c8bc9a,#f2e8cc 65%,#d9cbaa); box-shadow: 0 3px 0 #060d09;
+}
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-personnel-card.selected { border-color: #f8d986; box-shadow: inset 0 -4px #a15032, 0 3px #060d09; }
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-personnel-art {
+  position: relative; width: 100%; height: 100%; min-width: 0; border: 0; border-right: 1px solid #857c5e;
+  background: radial-gradient(ellipse at 50% 25%,#849078,#2d4032 90%);
+}
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-personnel-copy { display: flex; flex-direction: column; gap: 7px; padding: 9px; text-align: left; }
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-personnel-copy .v100-crew-record-id { font: 400 11px var(--v100-reading-font); letter-spacing: .08em; color: #706044; border-bottom: 1px dashed #b5a783; padding-bottom: 4px; }
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-personnel-copy h3 { font-size: 18px; line-height: 1.25; color: #173023; margin: 0; }
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-personnel-copy .v100-crew-role { color: #79472f; font-size: 12px; }
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-personnel-copy .v100-crew-state { color: #284c3b; font-size: 12px; margin-top: auto; padding-top: 5px; border-top: 1px solid #b7a784; }
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-personnel-card.locked { background: #777b68; }
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-personnel-card.locked .v100-personnel-copy :is(h3,span,small) { color: #eeebd7; }
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-personnel-card.locked .v100-personnel-art { background: #26352b; }
+
+/* A dossier is a portrait and a reading column, not six equal button-like boxes. */
+#v100-campaign[data-v100-phase] .v100-command-personnel.detail-open .v100-personnel-focus {
+  grid-template-columns: minmax(148px,24%) minmax(0,1fr); grid-template-rows: minmax(0,1fr) 44px 44px;
+  border: 1px solid #aa9870; border-top: 3px solid #c3aa76; padding: 6px; gap: 5px 12px;
+  background: linear-gradient(100deg,#e3d5b3,#f0e6cd); color: #213829;
+}
+#v100-campaign[data-v100-phase] .v100-command-personnel.detail-open .v100-personnel-focus-art {
+  position: relative; border: 0; background: radial-gradient(ellipse at 50% 25%,#8e997c,#334a36 90%);
+}
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-unit-record-heading { border-bottom: 2px solid #786e50; padding-bottom: 5px; }
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-unit-record-heading h3 { font-size: 25px; letter-spacing: .05em; color: #1c3828; }
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-unit-level { font-family: var(--v100-numeric-font); font-size: 23px; color: #8a4a28; }
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-unit-record-meta { padding: 5px 0; font-size: 13px; }
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-unit-skill { background: #c4c9ac; border-left: 4px solid #55715a; padding: 7px 10px; }
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-personnel-stats { gap: 0 10px; grid-auto-rows: 55px; background: transparent; }
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-unit-stat {
+  border: 0; border-bottom: 1px solid #b8ab87; padding: 5px 0; background: transparent;
+}
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-unit-stat span { font-size: 12px; color: #5a6149; }
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-unit-stat strong { font-family: var(--v100-numeric-font); font-size: 25px; color: #23422d; }
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-unit-stat small { font-family: var(--v100-numeric-font); color: #9b512d; font-size: 20px; }
+#v100-campaign[data-v100-phase] .v100-unit-growth-notes { display: block; min-height: 44px; }
+#v100-campaign[data-v100-phase] .v100-portrait-views { display: grid; grid-template-columns: repeat(3,minmax(44px,1fr)); gap: 4px; }
+#v100-campaign[data-v100-phase] .v100-portrait-views button { width: auto; min-width: 44px; }
+#v100-campaign .v100-growth-record-notes { font-size: 12px; line-height: 1.5; }
+#v100-campaign .v100-growth-record-notes summary { min-height: 44px; padding: 12px 0; border-bottom: 1px dashed #a39673; cursor: pointer; }
+#v100-campaign .v100-growth-record-notes details p { margin: 4px 0; }
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-unit-transaction { margin-top: 6px; padding-top: 8px; border-top: 2px solid #7f7659; background: transparent; }
+
+/* Real objects on the supply counter; an inventory index and a separate quote. */
+#v100-campaign .v100-command-equipment { border: 0; border-radius: 0; background: #19251d; }
+#v100-campaign .v100-equipment-catalog { gap: 8px; padding: 4px; }
+#v100-campaign .v100-equipment-card { border-radius: 0; border: 0; border-bottom: 2px solid #78634b; background: linear-gradient(110deg,#594b39,#302c23); color: #f2e1ba; }
+#v100-campaign .v100-equipment-card.selected { outline: 2px solid #ebc476; outline-offset: -2px; background: #6f5334; }
+#v100-campaign .v100-equipment-focus { border: 0; border-top: 3px solid #9a7850; background: #e0d4b5; color: #243526; }
+#v100-campaign .v100-equipment-focus-heading { padding: 8px; border-bottom: 1px dashed #a5936d; }
+#v100-campaign .v100-equipment-focus-heading h3 { color: #253e2b; font-size: 23px; }
+#v100-campaign .v100-equipment-focus-actions { padding: 8px; background: #c6ba99; border-top: 1px solid #7c7356; }
+
+/* The map remains the illustrated world; the briefing reads as a mission sheet. */
+#v100-campaign .v100-map-side { background: linear-gradient(115deg,#e1d4b3,#cbbc97); border: 0; border-top: 3px solid #9c4a31; border-radius: 0; color: #24392b; }
+#v100-campaign .v100-map-side :is(h3,.v100-stage-intel strong) { color: #1d3c29; }
+#v100-campaign .v100-map-side :is(.v100-map-side-heading,.v100-stage-intel,.v100-map-tactical-hint) { color: #3e4c38; background: transparent; }
+#v100-campaign .v100-map-side-heading { border-bottom: 1px dashed #938261; padding-bottom: 6px; }
+#v100-campaign .v100-map-side.is-boss { border-top-color: #a93629; }
+#v100-campaign .v100-chapter-tabs button { border-radius: 0; border: 0; border-bottom: 2px solid #59634e; background: #263229; }
+#v100-campaign .v100-chapter-tabs button.selected { background: #c4b383; color: #243421; border-bottom-color: #ac5134; }
+
+/* Settings are a field instrument panel with readable switches and faders. */
+#v100-campaign .v100-player-menu { background: linear-gradient(125deg,#29382d,#101c15); border: 1px solid #918564; border-top: 4px solid #b69359; border-radius: 2px; }
+#v100-campaign .v100-player-menu .v100-panel-heading { border-bottom: 1px dashed #84795d; padding-bottom: 6px; }
+#v100-campaign .v100-menu-tabs button { border-radius: 0; background: #1d3025; border-color: #667a62; color: #e9dfbf; }
+#v100-campaign .v100-menu-tabs button[aria-pressed="true"] { background: #bda56f; color: #1e2e21; border-color: #dfc48a; }
+#v100-campaign .v100-menu-audio { background: #101d16; border: 0; border-left: 3px solid #7c987e; padding: 8px; }
+#v100-campaign .v100-menu-volume output { font-family: var(--v100-numeric-font); color: #f2ca7a; font-size: 22px; }
+#v100-campaign .v100-menu-options .v100-menu-option { background: #23362a; border: 0; border-top: 1px solid #62705a; }
+#v100-campaign .v100-menu-scroll input { accent-color: #d9b36b; }
+@media (prefers-reduced-motion: reduce) {
+  #v100-campaign button { transition: none; }
+}
+
+#v100-campaign .v100-personnel-copy .v100-crew-skill { color: #354d36; font-size: 12px; line-height: 1.3; }
+#v100-campaign .v100-reward-crew { display: block; width: 90px; height: 120px; background: #334a36; }
+#v100-campaign .v100-recruit-art { position: relative; min-height: 160px; }
+
+#v100-campaign[data-v100-phase] .v100-command-formation.picker-open .v100-roster-card-copy .v100-roster-advice { color: #263c2a; font-weight: 400; }
+#v100-campaign[data-v100-phase] .v100-command-personnel.detail-open .v100-personnel-focus-copy { grid-row: 1; padding-right: 4px; }
+#v100-campaign[data-v100-phase] .v100-command-personnel.detail-open .v100-unit-transaction { grid-column: 2; grid-row: 2 / 4; margin: 0; padding: 3px 0 0; display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); grid-template-rows: 40px 44px; gap: 4px 8px; background: #e0d2ae; }
+#v100-campaign .v100-command-personnel.detail-open .v100-unit-transaction > p { grid-column: 1; grid-row: 1; margin: 0; align-self: center; font-size: 12px; line-height: 1.3; }
+#v100-campaign .v100-command-personnel.detail-open .v100-unit-level-target { grid-column: 2; grid-row: 1; display: flex; align-items: center; justify-content: space-between; gap: 5px; margin: 0; font-size: 12px; }
+#v100-campaign .v100-command-personnel.detail-open .v100-unit-level-target select { min-height: 40px; max-width: 130px; padding: 4px; border-color: #978360; background: #f3e6c5; color: #213a29; }
+#v100-campaign .v100-command-personnel.detail-open .v100-unit-transaction > button { grid-column: 2; grid-row: 2; min-width: 0; padding: 4px 6px; font-size: 13px; }
+#v100-campaign .v100-command-personnel.detail-open .v100-unit-transaction > .v100-unit-prepare { grid-column: 1; grid-row: 2; }
+#v100-campaign .v100-command-personnel.detail-open .v100-unit-transaction:not(.has-prepare) > button { grid-column: 1 / -1; }
+#v100-campaign .v100-command-equipment .v100-equipment-card { border-radius: 0; border: 0; border-bottom: 2px solid #78634b; background: linear-gradient(110deg,#594b39,#302c23); color: #f2e1ba; }
+#v100-campaign .v100-command-equipment .v100-equipment-focus { border: 0; border-top: 3px solid #9a7850; background: #e0d4b5; color: #243526; }
+
+#v100-campaign .v100-crew-portrait[data-portrait-owner="unit-miyamoto-musashi"][data-portrait-mode="upper"] .v100-crew-camera > img { top: calc(10% + 33% * var(--portrait-top-factor)) !important; }
+#v100-campaign .v100-crew-insignia { display: block; position: absolute; right: 3px; bottom: 3px; width: 34px; height: 34px; padding: 3px; background: #111b19f2; border: 1px solid #b9ab7d; border-radius: 2px; box-shadow: 0 2px 3px #0008; }
+#v100-campaign .v100-crew-insignia svg { display: block; width: 100%; height: 100%; }
+#v100-campaign[data-v100-phase] .v100-command-personnel.detail-open .v100-personnel-stats { grid-auto-rows: 44px; gap: 0 10px; }
+#v100-campaign[data-v100-phase] .v100-command-personnel.detail-open .v100-unit-stat { grid-template-rows: 14px minmax(0,1fr); padding: 2px 0; }
+#v100-campaign[data-v100-phase] .v100-command-personnel.detail-open .v100-unit-stat strong { font-size: 22px; }
+@media (max-width: 780px) and (orientation: landscape) { #v100-campaign[data-v100-phase] .v100-command-formation.picker-open .v100-roster-grid, #v100-campaign[data-v100-phase] .v100-command-personnel:not(.detail-open) .v100-personnel-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+
+#v100-campaign .v100-command-formation.picker-open .v100-roster-card-art { position: relative; }
+
+#v100-campaign .v100-crew-portrait[data-portrait-owner="unit-mayo-chan"][data-portrait-mode="upper"] .v100-crew-camera > img { transform: translateX(-40.625%) !important; }
+
+#v100-campaign .v100-command-equipment .v100-equipment-focus-heading :is(p,small), #v100-campaign .v100-command-equipment .v100-equipment-focus-detail :is(p,small,strong) { color: #2e4631; }
+
+/* Mission information and item effects remain readable before the main action. */
+#v100-campaign .v100-command-map .v100-map-side :is(.v100-stage-intel p,.v100-map-tactical-hint,.v100-map-detail summary,.v100-kicker) { color: #30472e; text-shadow: none; }
+#v100-campaign .v100-command-map .v100-map-side h3 { text-shadow: none; }
+#v100-campaign .v100-command-map .v100-map-briefing { flex: 1; min-height: 0; overflow-y: auto; }
+#v100-campaign .v100-command-map .v100-stage-intel { height: auto; max-height: none; }
+#v100-campaign .v100-command-map .v100-chapter-tabs button.selected :is(strong,small,b,span) { color: #213923; text-shadow: none; }
+#v100-campaign .v100-command-equipment .v100-equipment-focus-heading { grid-template-columns: 60px minmax(0,1fr); padding: 4px; }
+#v100-campaign .v100-command-equipment .v100-equipment-focus-heading .v100-equipment-art { width: 60px; height: 60px; }
+#v100-campaign .v100-command-equipment .v100-equipment-focus-actions { padding: 4px; }
