@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import {createHash} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 import ffmpeg from '@ffmpeg-installer/ffmpeg';
+import ts from 'typescript';
 import {createAudioManifest} from '../app/audioManifest.js';
 import {PRODUCTION_AUDIO_MANIFEST,GAMEPLAY_PRODUCTION_AUDIO_MANIFEST,V100_AUDIO_MANIFEST,INSTALL_AUDIO_ASSETS} from '../app/productionAudio.js';
 import {v100AudioDesignCandidate} from '../app/v100SoundDesign.js';
@@ -12,6 +13,7 @@ import {withChainsawRecordings} from '../app/chainsawRecordings.js';
 import {withMeleeFoley} from '../app/meleeFoleyRecipes.js';
 import {V100_MANUAL_ABILITY_FOLEY,V100_MANUAL_FOLEY_FILES,withV100ManualAbilityFoley,selectV100ManualFoleyPlayback} from '../app/v100ManualAbilityFoley.js';
 import {verifiedPwaArtworkPaths} from '../app/pwaArtworkAvailability.js';
+import {PWA_MANUAL_FOLEY_FILES} from '../app/pwaManualFoleyFiles.js';
 import {V099_MANUAL_ABILITY_AUDIO_CONTRACTS} from '../app/battleAudioContracts.js';
 
 const ids=['ability-guardian-shieldwall-activate','ability-medic-emergency-activate'];
@@ -19,6 +21,15 @@ const previous=createAudioManifest(withMeleeFoley(withChainsawRecordings(withRec
 const provenance=JSON.parse(fs.readFileSync('assets/source/quality-20261114/audio/manual-foley-r1/provenance.json','utf8'));
 const sha=b=>createHash('sha256').update(b).digest('hex');
 const fileHash=p=>sha(fs.readFileSync(p));
+
+test('the PWA shell owns exact source metadata without importing the playback dependency graph',()=>{
+  assert.deepEqual(PWA_MANUAL_FOLEY_FILES,V100_MANUAL_FOLEY_FILES);
+  const leaf=ts.createSourceFile('pwaManualFoleyFiles.js',fs.readFileSync('app/pwaManualFoleyFiles.js','utf8'),ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);
+  assert.equal(leaf.statements.some(node=>ts.isImportDeclaration(node)||(ts.isExportDeclaration(node)&&node.moduleSpecifier)),false,'Saved-source metadata must remain a dependency-free leaf');
+  const gate=ts.createSourceFile('PwaGate.tsx',fs.readFileSync('app/PwaGate.tsx','utf8'),ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);
+  const imports=gate.statements.filter(ts.isImportDeclaration).map(node=>node.moduleSpecifier.text);
+  assert.ok(imports.includes('./pwaManualFoleyFiles.js'));assert.equal(imports.includes('./v100ManualAbilityFoley.js'),false,'The playback graph must not become an early PWA-shell dependency');
+});
 
 test('the final V1 composition replaces exactly two activation sources and retains every voice, contact cue and playback policy',()=>{
   assert.deepEqual(Object.keys(V100_MANUAL_ABILITY_FOLEY).sort(),ids);

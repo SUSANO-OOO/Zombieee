@@ -58,7 +58,7 @@ import {V100_BOSS_DOSSIER_ART} from "./v100BossDossierArt.js";
 import {V100_BOSS_DEFEAT_ART} from "./v100BossDefeatArt.js";
 import {PwaBattleArtworkPathsContext} from "./pwaBattleArtworkContext.js";
 import {PwaManualFoleyPathsContext} from "./pwaAudioAvailabilityContext.js";
-import {V100_MANUAL_FOLEY_FILES} from "./v100ManualAbilityFoley.js";
+import {PWA_MANUAL_FOLEY_FILES} from "./pwaManualFoleyFiles.js";
 
 type Manifest = { version: string; releaseSha: string; assets: Array<Record<string, unknown>> };
 
@@ -864,7 +864,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     browserPlayAccepted: offerDismissed && (!standalone || registrationFailureAcknowledged),
   });
   const verifiedManualFoleyPaths = verifiedPwaArtworkPaths({
-    artworks: V100_MANUAL_FOLEY_FILES, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,
+    artworks: PWA_MANUAL_FOLEY_FILES, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,
     browserPlayAccepted: offerDismissed && (!standalone || registrationFailureAcknowledged),
   });
 

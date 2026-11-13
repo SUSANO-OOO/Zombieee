@@ -13,7 +13,7 @@ const recipe=JSON.parse(await fs.readFile(path.join(root,sourceDir,'recipe.json'
 const hash=b=>createHash('sha256').update(b).digest('hex');
 async function emit(relative,bytes){
   const file=path.join(root,relative);
-  if(check){const actual=await fs.readFile(file);assert.deepEqual(relative.endsWith('.json')?Buffer.from(actual.toString('utf8').replaceAll('\r\n','\n')):actual,bytes,relative);}
+  if(check){const actual=await fs.readFile(file);assert.deepEqual(/\.(json|js)$/.test(relative)?Buffer.from(actual.toString('utf8').replaceAll('\r\n','\n')):actual,bytes,relative);}
   else{await fs.mkdir(path.dirname(file),{recursive:true});await fs.writeFile(file,bytes);}
 }
 assert.deepEqual(recipe.records.map(r=>r.id).sort(),Object.keys(V100_MANUAL_ABILITY_FOLEY).sort());
@@ -39,6 +39,13 @@ for(const row of recipe.records){
   records.push({...row,encodings});
 }
 await fs.rmdir(temporary);
+const savedFiles=Object.fromEntries(records.map(row=>{
+  const file=row.encodings.find(output=>output.path.endsWith('.mp3'));
+  return [row.id,{path:file.path.replace(/^public/,''),hash:'sha256-'+file.sha256}];
+}));
+// This leaf belongs only to the PWA shell. Playback modules must not import
+// or re-export it: doing so can pull the audio/campaign SCC into shell startup.
+await emit('app/pwaManualFoleyFiles.js',Buffer.from('// Generated saved-source metadata only; no playback dependencies.\nexport const PWA_MANUAL_FOLEY_FILES=Object.freeze(Object.fromEntries(Object.entries('+JSON.stringify(savedFiles,null,2)+').map(([id,file])=>[id,Object.freeze(file)])));\n'));
 await emit(sourceDir+'/provenance.json',Buffer.from(JSON.stringify({creator:'Kenney; layered and mastered by Codex under Producer direction',
   license:'CC0-1.0',commercialUse:true,modification:true,redistribution:true,notices:recipe.notices,
   recipe:{path:sourceDir+'/recipe.json',sha256:hash(Buffer.from((await fs.readFile(path.join(root,sourceDir,'recipe.json'),'utf8')).replaceAll('\r\n','\n')))},
