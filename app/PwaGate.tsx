@@ -355,10 +355,10 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       void import("./pwaAssetStore.js").then((m) => m.estimateStorage(window.navigator))
         .then(value => { if (!cancelled) setStorage(value); }).catch(() => {});
 
-      // Boot is complete once the local facts are known. The published manifest
-      // is a network round trip. A standalone launch briefly waits for it so a
-      // fully cached candidate can finish commit recovery, then the watchdog
-      // releases the last committed pack if the request never settles.
+      // Boot is complete once the local facts are known. A complete committed
+      // pack can start while published metadata is still on the network; a
+      // delayed candidate remains subject to the existing safe-screen deferral.
+      // First installs and incomplete local packs still wait for metadata.
       if (!cancelled) setBooted(true);
       if (!cancelled) await loadPublishedManifest();
     })().catch((cause) => {
@@ -841,9 +841,10 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     void Promise.resolve(prompt.prompt()).catch(() => {});
   }, [installPrompt]);
 
-  // Wait for device/generation ownership before mounting the game. Browser tabs
-  // then enter directly; standalone downloads and interrupted updates still gate.
-  const settling = !bootFailure && (!booted || (supported && standalone && !publishedChecked));
+  // Keep ownership and complete local content ahead of play. A verified
+  // committed generation need not wait for its optional update check.
+  // First installs, missing content and interrupted commits retain their gates.
+  const settling = !bootFailure && (!booted || (supported && standalone && !publishedChecked && !(installedManifest && installPlan?.complete)));
   const blocking = bootFailure || settling
     || (registrationFailed && !registrationFailureAcknowledged)
     || phase === "install-offer"
