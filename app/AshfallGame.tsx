@@ -44,7 +44,8 @@ import { beginV102GoreStep, finishV102GoreStep, noteV102GoreImpact, noteV102Gore
 import { v100DamageTextPosition, resetV100DamageTextPaint, layoutV100DamageTextPaint } from "./v100DamageTextPlacement.js";
 import { V100_CANVAS_FONT } from "./v100Typography.js";
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import {PwaBattleArtworkPathsContext,selectBattleArtworkPolicy} from "./pwaBattleArtworkContext.js";
 import {
   RANDOM_BATTLE_BARK_TRIGGER_IDS,
   advanceBattleBarkRuntime,
@@ -604,6 +605,7 @@ import { drawV100AssaultObject, v100AssaultObjectProfile } from "./v100AssaultOb
 import { drawV100Explosion, drawV100FootDust, drawV100GroundFire, drawV100Muzzle, V100_CONTACT_WEAPONS, V100_CLAW_CONTACT_WEAPONS, queueV100Contact, queueV100ClawContact, queueV100TakuyaGroundContact, queueV100TataraGroundContact, getV100ClawContactSnapshot, getV100SkillContactSnapshot, queueV100GuardContact, getV100GuardContactSnapshot, drawV100ContactQueue, clearV100ContactQueue } from "./v100CombatVfx.js";
 import { drawV100BossAftermath } from "./v100BossAftermath.js";
 import { drawV100BossDefeat } from "./v100BossDefeatVfx.js";
+import {drawV100BossDefeatFinales} from "./v100BossDefeatFinaleVfx.js";
 import { TATARA_GROUND_ART, v100TataraGroundPose, v100TataraDisplaySize, v100RenderedTataraGroundSocket } from "./v100TataraPresentation.js";
 import { V100_MANUAL_FIREARM_KINDS, queueV100ManualMuzzle, queueV100ManualFirearmImpact, drawV100ManualMuzzles, getV100ManualMuzzleSnapshot, clearV100ManualFirearmVfx } from "./v100ManualFirearmVfx.js";
 import {v100BrawlerCanAct} from './v100BrawlerCombo.js';
@@ -8879,6 +8881,7 @@ function drawWorld(
   const activeStageObjects = activeStageObjectsForGame(g);
   drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["rear-scenery"], Boolean(g.definition.missionConfig.v100StageNumber));
   if(g.definition.missionConfig.v100StageNumber)drawV100ChihaFinalBursts(ctx,stageObjects,g,{viewportWidth:ctx.canvas.clientWidth,viewportHeight:ctx.canvas.clientHeight,worldScale:presentationLayout?.transform.scale??1});
+  if(g.definition.missionConfig.v100StageNumber)drawV100BossDefeatFinales(ctx,stageObjects,g,{viewportWidth:ctx.canvas.clientWidth,viewportHeight:ctx.canvas.clientHeight,worldScale:presentationLayout?.transform.scale??1,density:graphicsProfile.effectDensity});
 
   // Units reveal the three routes through movement; no lane-map overlay is drawn over the battlefield.
 
@@ -9424,6 +9427,10 @@ function drawWorld(
 }
 
 export function AshfallGame({ externalSession = null }: { externalSession?: AshfallExternalSession | null } = {}) {
+  const verifiedBattleArtworkPaths=useContext(PwaBattleArtworkPathsContext);
+  const verifiedBattleArtworkPathsRef=useRef(verifiedBattleArtworkPaths);
+  const battleArtworkPolicyRef=useRef<{key:string;paths:string}|null>(null);
+  useEffect(()=>{verifiedBattleArtworkPathsRef.current=verifiedBattleArtworkPaths;},[verifiedBattleArtworkPaths]);
   useEffect(() => () => v100HumanWalkRenderer.clear(), []);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const manualAbilityLayoutInputRef = useRef<Parameters<typeof layoutManualAbilityIcons>[0] | null>(null);
@@ -15338,12 +15345,16 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     // its formation, waves, mission objects, support actions and Crawler has
     // decoded. `turned` is included by the plan because any fallen ally can
     // become one, independent of the authored enemy roster.
+    const artworkSelectionKey=JSON.stringify({operation:activeOperationId,stage:assetStageId,
+      formation:[...selectedFormationKinds,...selectedVariantKinds],enemies:stageEnemyKinds,v100:!exhaustiveLocalQa,external:externalSessionActive});
+    battleArtworkPolicyRef.current=selectBattleArtworkPolicy(battleArtworkPolicyRef.current,artworkSelectionKey,verifiedBattleArtworkPathsRef.current);
     const requiredPlan = requiredBattleAssetPlan({
       stageId: assetStageId,
       useCharacterPortraitCards: externalSessionActive,
       basePresentationStageNumber: externalSessionActive ? V100_STAGE_BY_ID[assetStageId]?.number : null,
       formationKinds: [...selectedFormationKinds, ...selectedVariantKinds],
       enemyKinds: stageEnemyKinds,
+      verifiedBossDefeatPaths: battleArtworkPolicyRef.current.paths.split('\n').filter(Boolean),
       includeAllSprites: localQaRequested
         && !finiteEnemyRuntimeQa
         && !finiteVisualIntegrityQa
