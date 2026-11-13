@@ -104,7 +104,7 @@ export function requiredBattleAssetPlan({
   // (or the existing bounded V1 survival segment), never the every-stage list.
   const bossDefeatObjects = includeV100Sprites && v100Stage
     ? Object.entries(V100_BOSS_DEFEAT_ART).filter(([kind,art])=>enemyKinds.includes(kind)&&verifiedBossDefeatPaths.includes(art.path))
-      .map(([,art])=>({id:art.id,path:art.path,runtimeUsage:"battle-overlay"})) : [];
+      .map(([,art])=>({id:art.id,path:art.path,runtimeUsage:"battle-overlay",optional:true})) : [];
   const allStageObjects = [...manifestObjects, ...extraMissionObjects, ...v100MissionObjectEntries, ...v100VfxEntries, ...vehicleObjects, ...researchObjects, ...nodeObjects, ...assaultObjects, ...defenseObjects, ...combatVfx, ...tataraObjects, ...bossDefeatObjects];
   const stageObjects = unique(allStageObjects.map((entry) => entry.id))
     .map((id) => allStageObjects.find((entry) => entry.id === id))
@@ -113,6 +113,7 @@ export function requiredBattleAssetPlan({
       path: entry.path,
       category: entry.runtimeUsage === "mission-render-source" ? "mission" : "stage-object",
       runtimeUsage: entry.runtimeUsage ?? "battle-overlay",
+      ...(entry.optional ? { optional: true } : {}),
     }));
   const persistent = [
     ...Object.entries(includeV100Sprites && v100BasePresentationFor(basePresentationStageNumber).onFoot
@@ -151,9 +152,10 @@ export function requiredBattleAssetPlan({
       plan.background.path,
       plan.enemyBase.path,
       ...plan.sprites.map(({ path }) => path),
-      ...plan.stageObjects.map(({ path }) => path),
+      ...plan.stageObjects.filter(entry => !entry.optional).map(({ path }) => path),
       ...plan.persistent.map(({ path }) => path),
       ...plan.cards.map(({ path }) => path),
     ])),
+    optionalPaths: Object.freeze(unique(plan.stageObjects.filter(entry => entry.optional).map(({ path }) => path))),
   });
 }

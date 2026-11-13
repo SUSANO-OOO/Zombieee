@@ -14,9 +14,9 @@ test("finite HUD evidence cannot change the production-host asset plan", () => {
 test("battle readiness uses one closed blocking plan without degraded-ready", () => {
   assert.match(ashfallSource, /const requiredPlan = requiredBattleAssetPlan\(/u);
   assert.match(ashfallSource, /\.\.\.requiredPlan\.sprites\.map/u);
-  assert.match(ashfallSource, /\.\.\.stageObjectAssets\.map/u);
+  assert.match(ashfallSource, /\.\.\.stageObjectAssets\.filter\(object => !object\.optional\)\.map/u);
   assert.match(ashfallSource, /requiredPlan\.persistent\.find/u);
-  assert.doesNotMatch(ashfallSource, /const optionalJobs\s*=/u);
+  assert.match(ashfallSource, /const optionalJobs = optionalBattleArtworkJobs\(/u);
   assert.doesNotMatch(ashfallSource, /state:\s*["']degraded-ready["']/u);
   assert.match(ashfallSource, /requireDecode:\s*true/u);
   assert.match(ashfallSource, /decodeAttempts:\s*REQUIRED_BATTLE_IMAGE_DECODE_ATTEMPTS/u);

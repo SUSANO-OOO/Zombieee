@@ -1,6 +1,17 @@
 import {V099_BOSS_DEFEAT_TIMELINE as TIMELINE} from './battlePresentationV099.js';
 import {V100_BOSS_DEFEAT_ART} from './v100BossDefeatArt.js';
 
+// Presentation-only state stays outside the simulation and its receipts. Once
+// a major burst starts, a late optional decode cannot replace it mid-collapse.
+const finaleChoices=new WeakMap();
+const effectKey=(world,effect)=>JSON.stringify([world.battlePresentation?.generation??0,effect.generation??0,
+  effect.id??effect.receiptId??effect.ownerId,effect.label,effect.seed]);
+export function bossDefeatFinaleWasDrawn(ctx,world,effect){
+  if(!world||typeof world!=='object')return false;
+  const choice=finaleChoices.get(world)?.get(effectKey(world,effect));
+  return Boolean(choice?.source&&choice.ctx===ctx&&choice.drawnElapsed===effect.elapsed);
+}
+
 export function bossDefeatFinaleSource(objects,kind){
   const art=V100_BOSS_DEFEAT_ART[kind],image=art&&objects?.[art.id];
   if(!art||!image?.complete||!Number.isFinite(image.naturalWidth)||!Number.isFinite(image.naturalHeight)||image.naturalWidth<=0||image.naturalHeight<=0
@@ -12,14 +23,23 @@ export function bossDefeatFinaleSource(objects,kind){
 // This pass runs before bodies, health labels, telegraphs and touch UI. The
 // semantic event's existing elapsed clock owns the entire animation and pause.
 export function drawV100BossDefeatFinales(ctx,objects,world,{viewportWidth,viewportHeight,worldScale,density=1}={}){
+  if(!world||typeof world!=='object')return 0;
+  let choices=finaleChoices.get(world);
+  if(!choices){choices=new Map();finaleChoices.set(world,choices);}
+  for(const choice of choices.values()){choice.ctx=null;choice.drawnElapsed=null;}
+  const effects=world.battlePresentation?.effects??[];
+  const activeKeys=new Set(effects.filter(effect=>effect.kind==='boss-defeat').map(effect=>effectKey(world,effect)));
+  for(const key of choices.keys())if(!activeKeys.has(key))choices.delete(key);
   if(!world?.definition?.missionConfig?.v100StageNumber
     ||![viewportWidth,viewportHeight,worldScale,density].every(Number.isFinite)
     ||viewportWidth<=0||viewportHeight<=0||worldScale<=0||density<=0)return 0;
   let drawn=0;
-  for(const effect of world.battlePresentation?.effects??[]){
+  for(const effect of effects){
     if(effect.kind!=='boss-defeat'||![effect.x,effect.y,effect.elapsed,effect.duration,effect.seed].every(Number.isFinite)
       ||effect.duration<=TIMELINE.majorBurst.at||effect.elapsed<TIMELINE.majorBurst.at||effect.elapsed>=effect.duration)continue;
-    const source=bossDefeatFinaleSource(objects,effect.label);if(!source)continue;
+    const key=effectKey(world,effect);
+    if(!choices.has(key))choices.set(key,{source:bossDefeatFinaleSource(objects,effect.label),ctx:null,drawnElapsed:null});
+    const choice=choices.get(key),source=choice.source;if(!source)continue;
     const {art,image}=source,elapsed=effect.elapsed-TIMELINE.majorBurst.at,duration=effect.duration-TIMELINE.majorBurst.at;
     const p=elapsed/duration,stops=[0,.06,.16,.42,.72,.94];
     let first=0;while(first<5&&stops[first+1]<=p)first++;
@@ -35,7 +55,7 @@ export function drawV100BossDefeatFinales(ctx,objects,world,{viewportWidth,viewp
       ctx.drawImage(image,frame%art.columns*cellWidth,Math.floor(frame/art.columns)*cellHeight,cellWidth,cellHeight,
         -art.anchorX*size,-art.anchorY*size,size,size);
     }
-    ctx.restore();drawn++;
+    ctx.restore();choice.ctx=ctx;choice.drawnElapsed=effect.elapsed;drawn++;
   }
   return drawn;
 }

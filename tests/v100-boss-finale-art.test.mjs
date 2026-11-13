@@ -28,7 +28,8 @@ test('old, partial, wrong and unconsented generations create no new asset job; e
   for(const facts of negative){const value=permitted(facts);assert.equal(value,'');assert.equal(plan(paths(value)).stageObjects.some(o=>o.id===art.id),false);assert.equal(plan(paths(value)).paths.includes(art.path),false);}
   for(const facts of [{installedManifest,storedHashes},{browserPlayAccepted:true}]){
     const value=permitted(facts),result=plan(paths(value));assert.equal(value,art.path);
-    assert.equal(result.stageObjects.filter(o=>o.id===art.id).length,1);assert.equal(result.paths.filter(p=>p===art.path).length,1);
+    assert.equal(result.stageObjects.filter(o=>o.id===art.id&&o.optional).length,1);
+    assert.equal(result.paths.includes(art.path),false);assert.deepEqual(result.optionalPaths,[art.path]);
   }
   assert.equal(permitted({installedManifest,storedHashes,baseUrl:'https://example.test/Zombieee/'}),art.path);
 });
@@ -36,19 +37,19 @@ test('old, partial, wrong and unconsented generations create no new asset job; e
 test('the optional atlas belongs only to actual prepared enemies, not all-sprite QA, every stage or the common VFX list',()=>{
   assert.equal(Object.values(V100_COMBAT_VFX_ART).includes(art.path),false);
   const enabled=plan([art.path]),baseline=plan();
-  assert.equal(enabled.paths.length,baseline.paths.length+1);
+  assert.deepEqual(enabled.paths,baseline.paths);assert.deepEqual(enabled.optionalPaths,[art.path]);
   assert.deepEqual(enabled.sprites,baseline.sprites);assert.deepEqual(enabled.cards,baseline.cards);assert.deepEqual(enabled.persistent,baseline.persistent);
-  for(const extra of [{},{includeAllSprites:true},{includeV100Sprites:false}])assert.equal(plan([art.path],['walker'],extra).paths.includes(art.path),false);
-  assert.equal(plan([art.path],['gate-eater'],{includeV100Sprites:false}).paths.includes(art.path),false);
-  const other=plan([art.path],['mother'],{stageId:V100_STAGE_IDS[10]});assert.equal(other.paths.includes(art.path),false);
+  for(const extra of [{},{includeAllSprites:true},{includeV100Sprites:false}])assert.equal(plan([art.path],['walker'],extra).optionalPaths.includes(art.path),false);
+  assert.equal(plan([art.path],['gate-eater'],{includeV100Sprites:false}).optionalPaths.includes(art.path),false);
+  const other=plan([art.path],['mother'],{stageId:V100_STAGE_IDS[10]});assert.equal(other.optionalPaths.includes(art.path),false);
 });
 
 test('same-battle retry never expands artwork on a late grant; a new selection can use it and revoked permission removes it',()=>{
   const original=selectBattleArtworkPolicy(null,'battle-a','');
   const retry=selectBattleArtworkPolicy(original,'battle-a',art.path);assert.equal(retry,original);
   assert.equal(plan(paths(retry.paths)).paths.includes(art.path),false);
-  const next=selectBattleArtworkPolicy(retry,'battle-b',art.path);assert.equal(plan(paths(next.paths)).paths.includes(art.path),true);
-  const revoked=selectBattleArtworkPolicy(next,'battle-b','');assert.equal(revoked.paths,'');assert.equal(plan(paths(revoked.paths)).paths.includes(art.path),false);
+  const next=selectBattleArtworkPolicy(retry,'battle-b',art.path);assert.equal(plan(paths(next.paths)).optionalPaths.includes(art.path),true);
+  const revoked=selectBattleArtworkPolicy(next,'battle-b','');assert.equal(revoked.paths,'');assert.equal(plan(paths(revoked.paths)).optionalPaths.includes(art.path),false);
   assert.equal(next.paths,art.path,'Earlier policy was not mutated');assert.equal(selectBattleArtworkPolicy(revoked,'battle-b',art.path).paths,'');
 });
 
@@ -84,15 +85,36 @@ test('the actual early renderer advances all six painted cells, pauses on the ex
 });
 
 test('missing/failed art keeps the old painted finale, while ready art paints once behind bodies without a second late major or smoke tail',()=>{
-  const g=world(2),e=g.battlePresentation.effects[0];
   for(const mode of ['absent','failed','bad-grid']){
+    const g=world(2),e=g.battlePresentation.effects[0];
     const p=paint();if(mode==='absent')delete p.objects[art.id];else if(mode==='failed')p.objects[art.id].complete=false;else p.objects[art.id].naturalWidth=1535;
     assert.equal(bossDefeatFinaleSource(p.objects,'gate-eater'),null);assert.equal(drawV100BossDefeatFinales(p.ctx,p.objects,g,p.options),0);
-    drawV100BossDefeat(p.ctx,p.objects,e,.7);assert.ok(p.calls.some(c=>c.id==='quality-boss-blast'));
+    drawV100BossDefeat(p.ctx,p.objects,e,.7,g);assert.ok(p.calls.some(c=>c.id==='quality-boss-blast'));
   }
+  const g=world(2),e=g.battlePresentation.effects[0];
   const p=paint();drawV100BossDefeatFinales(p.ctx,p.objects,g,p.options);assert.ok(p.calls.some(c=>c.id===art.id));const count=p.calls.length;
-  drawV100BossDefeat(p.ctx,p.objects,e,.7);assert.equal(p.calls.length,count,'No duplicate late major or old smoke tail');
+  drawV100BossDefeat(p.ctx,p.objects,e,.7,g);assert.equal(p.calls.length,count,'No duplicate late major or old smoke tail');
   const a=paint(),b=paint();delete b.objects[art.id];drawV100BossDefeat(a.ctx,a.objects,{...e,label:'mother'},.7);drawV100BossDefeat(b.ctx,b.objects,{...e,label:'mother'},.7);assert.deepEqual(a.calls,b.calls,'Unrelated boss remains unchanged');
+});
+
+test('a late decode never replaces a collapse in progress; the next semantic defeat may use it',()=>{
+  const p=paint(),g=world(1.04),effect=g.battlePresentation.effects[0],image=p.objects[art.id];
+  delete p.objects[art.id];assert.equal(drawV100BossDefeatFinales(p.ctx,p.objects,g,p.options),0);
+  p.objects[art.id]=image;effect.elapsed=1.7;
+  assert.equal(drawV100BossDefeatFinales(p.ctx,p.objects,g,p.options),0);
+  drawV100BossDefeat(p.ctx,p.objects,effect,.7,g);assert.ok(p.calls.some(c=>c.id==='quality-boss-blast'));
+  p.calls.length=0;g.battlePresentation.effects=[{...effect,receiptId:'fighter:5',ownerId:5,elapsed:2}];
+  assert.equal(drawV100BossDefeatFinales(p.ctx,p.objects,g,p.options),1);
+  const count=p.calls.length;drawV100BossDefeat(p.ctx,p.objects,g.battlePresentation.effects[0],.7,g);
+  assert.equal(p.calls.length,count,'The next defeat paints only its early dedicated finale');
+});
+
+test('a ready atlas alone cannot suppress the shipped fallback without a successful early draw in this context',()=>{
+  const p=paint(),g=world(2),effect=g.battlePresentation.effects[0];
+  drawV100BossDefeat(p.ctx,p.objects,effect,.7,g);assert.ok(p.calls.some(c=>c.id==='quality-boss-blast'));
+  p.calls.length=0;assert.equal(drawV100BossDefeatFinales(p.ctx,p.objects,g,p.options),1);
+  assert.equal(drawV100BossDefeatFinales(p.ctx,p.objects,g,{...p.options,viewportWidth:0}),0);
+  p.calls.length=0;drawV100BossDefeat(p.ctx,p.objects,effect,.7,g);assert.ok(p.calls.some(c=>c.id==='quality-boss-blast'));
 });
 
 test('the actual transformed image rectangle stays within18% for phone viewports, mirrors and two separate bosses',()=>{

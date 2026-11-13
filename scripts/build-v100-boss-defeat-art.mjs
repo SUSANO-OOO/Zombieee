@@ -24,7 +24,11 @@ const assetPath='/art/quality-20261114/vfx/gate-eater-rupture-six-r2.webp';
 const art={'gate-eater':{id:'v100-boss-finale-gate-eater',path:assetPath,hash:'sha256-'+sha(bytes),columns:3,rows:2,anchorX:.5,anchorY:470/512}};
 async function emit(relative,data){
   const file=path.join(root,relative);
-  if(check)assert.deepEqual(await readFile(file),data,relative+' differs from its source');
+  if(check){
+    const actual=await readFile(file);
+    const comparable=/\.(js|json)$/.test(relative)?Buffer.from(actual.toString('utf8').replaceAll('\r\n','\n')):actual;
+    assert.deepEqual(comparable,data,relative+' differs from its source');
+  }
   else{await mkdir(path.dirname(file),{recursive:true});await writeFile(file,data);}
 }
 await emit('public'+assetPath,bytes);
@@ -34,7 +38,7 @@ const provenance={generator:'scripts/build-v100-boss-defeat-art.mjs',creator:'Op
   license:'Project-original generated artwork under the existing game asset policy; no third-party download',
   rights:{commercialUse:true,modification:true,redistribution:true,basis:'Original art created for this project, with the existing project-owned blast as style reference'},
   producerApproval:'Current goal requests bespoke boss effects. This is an implementation candidate, not final visual/audio/device acceptance.',
-  source:{path:sourcePath,bytes:master.length,sha256:sha(master)},prompt:{path:promptPath,sha256:sha(await readFile(path.join(root,promptPath)))},
+  source:{path:sourcePath,bytes:master.length,sha256:sha(master)},prompt:{path:promptPath,sha256:sha(Buffer.from((await readFile(path.join(root,promptPath),'utf8')).replaceAll('\r\n','\n')))},
   generation:{mode:'built-in image_gen edit',model:'Selected by host; no model name asserted',reference:{path:referencePath,sha256:sha(await readFile(path.join(root,referencePath)))},
     intermediateMasterSha256:'762749228cead4c537633bfce40e020bd7304862eeed900bca98a5545c5ae0e8',note:'R1 industrial rupture followed by one native layout correction. R1 and failed edge analysis remain local evidence.'},
   output:{path:assetPath,bytes:bytes.length,sha256:sha(bytes),width:1536,height:1024,columns:3,rows:2,anchorX:.5,anchorY:470/512},

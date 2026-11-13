@@ -1,6 +1,6 @@
 import {V099_BOSS_DEFEAT_TIMELINE as TIMELINE} from './battlePresentationV099.js';
 import {combatVariation,drawRasterPlume} from './v100RasterAtmosphere.js';
-import {bossDefeatFinaleSource} from './v100BossDefeatFinaleVfx.js';
+import {bossDefeatFinaleWasDrawn} from './v100BossDefeatFinaleVfx.js';
 
 // The semantic event still owns one defeat, the same audio beats and the same
 // result wait. Profiles only stage the painted collapse inside that lifetime.
@@ -36,11 +36,11 @@ function drawBossBlast(ctx,objects,effect,x,y,size){
  ctx.restore();
 }
 
-export function drawV100BossDefeat(ctx,objects,effect,density=1){
+export function drawV100BossDefeat(ctx,objects,effect,density=1,world=null){
  if(effect?.kind!=='boss-defeat'||![effect.x,effect.y,effect.elapsed,effect.duration,effect.seed,density].every(Number.isFinite)
   ||effect.duration<=0||effect.elapsed<0||effect.elapsed>=effect.duration||density<=0)return false;
  const p=PROFILES[effect.label]??PROFILES.takuya;
- const dedicatedFinale=Boolean(bossDefeatFinaleSource(objects,effect.label));
+ const dedicatedFinale=bossDefeatFinaleWasDrawn(ctx,world,effect);
  const seed=effect.seed,t=effect.elapsed;
  const small=TIMELINE.smallBursts;
  for(let i=0;i<small.length;i++){
