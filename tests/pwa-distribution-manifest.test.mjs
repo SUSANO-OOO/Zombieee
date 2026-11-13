@@ -13,6 +13,7 @@ import {
   validateAssetManifest,
 } from "../app/pwaAssetManifest.js";
 import { V099_APP_ICON_IDENTITY, V099_APP_ICON_PATHS } from "../app/appIconIdentity.js";
+import { V100_PREPARATION_ART } from "../app/v100PreparationArt.js";
 
 const manifest = JSON.parse(await readFile(new URL("../public/asset-manifest.json", import.meta.url), "utf8"));
 const webAppManifest = JSON.parse(await readFile(new URL("../public/manifest.webmanifest", import.meta.url), "utf8"));
@@ -79,6 +80,8 @@ test("every public runtime reference is in the game manifest or an explicit shel
   const globalsCss = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
   const runtimePaths = new Set([
     ...cssRuntimeAssetPaths(globalsCss),
+    ...cssRuntimeAssetPaths(await readFile(new URL("../app/v100SupplyTitleFinish.css", import.meta.url), "utf8")),
+    ...collectRuntimeAssetPaths(V100_PREPARATION_ART),
     ...collectRuntimeAssetPaths(PRODUCTION_VISUALS),
     ...collectRuntimeAssetPaths(STORY_BACKGROUND_VISUALS),
     ...collectRuntimeAssetPaths(STAGE_OBJECT_MANIFEST),

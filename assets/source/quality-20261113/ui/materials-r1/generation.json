@@ -1,0 +1,31 @@
+{
+  "creator": "OpenAI built-in image generation",
+  "license": "Original project-generated output; OpenAI output terms",
+  "termsSource": "https://openai.com/policies/terms-of-use/",
+  "producerApproval": "Expanded goal requests original tactile, world-specific design across smartphone screens. Candidate is not a release or full visual acceptance.",
+  "prompt": "Use case: texture asset. Create one production UI MATERIAL ATLAS for an original gritty hand-painted Japanese post-apocalyptic smartphone game set in ruined Nishijin. This is material art for surfaces beneath live readable UI text, NOT a mockup and NOT a complete interface. Exact landscape sheet 1536x1024, a clean 3-column by 2-row grid of SIX square 512x512 opaque material swatches, touching with exact cell boundaries, no gaps, no border lines, no shadows crossing cells. Cell order left to right top to bottom: (1) dark olive military canvas, worn woven fibers and subtle stitching near edges, quiet broad dark-green center; (2) dark weathered gunmetal workbench, rubbed steel, fine scratches, smoke deposits and a little muted rust, subdued charcoal olive center; (3) light warm khaki field-report paper, irregular natural fibers, old fold marks, slight edge stains, large clean LIGHT center approximately RGB 222 211 180 for dark writing; (4) dark reddish-brown painted steel for incendiary supplies, chipped red oxide paint revealing old iron, subtle oily smudges, no hazard symbols; (5) dark forest-green portable-radio casing, fine bakelite and painted metal grain with worn raised edges, quiet very dark center; (6) warm muted khaki canvas inventory tag, canvas-backed aged card stock, subtle grain and edge wear, mid-light beige center. Richly authored tactile illustrated realism that belongs beside painterly survivors, rusted armored vehicles and abandoned industrial streets. Detailed materials at the edges, restrained fine texture in the center, no high-contrast busy noise beneath text. Keep all light/dark variation of each center within a narrow range so live text is legible. All SIX cells must be individually distinct physical surfaces but share the same worn urban survival art direction. Flat front-facing orthographic surfaces, no perspective, no objects, no characters, no weapons, no buttons, no card frames, no empty UI panels, no icons, no circles, no symbols, no logos, no letters, no numbers, no text, no dividers, no checkerboard, no transparency. These are full continuous material samples from edge to edge, not six framed rectangles laid on a background.",
+  "source": "C:/Users/okait/.codex/generated_images/01a1aafe-ec50-73a3-bdea-2bef9bc04c28/exec-ecf6b66d-19ee-4436-99aa-0f648aad9a42.png",
+  "masterSha256": "256d7bff3fdc06e4d855d6d581ef6168857925f7d84fed405fcf13a6c2bd87a5",
+  "outputSha256": "8f5f4d49c654c460c77ea5083d8ba20b37d13c753c1c8b76c3f4030efedd9454",
+  "runtimePath": "/art/quality-20261113/ui/materials-six-r1.webp",
+  "runtimeAssetCount": 1,
+  "logicalBytes": 1968486,
+  "dimensions": {
+    "width": 1536,
+    "height": 1024,
+    "cellWidth": 512,
+    "cellHeight": 512,
+    "columns": 3,
+    "rows": 2
+  },
+  "cells": [
+    "olive military canvas",
+    "weathered dark steel",
+    "khaki field paper",
+    "chipped reddish steel",
+    "dark green radio casing",
+    "khaki inventory canvas"
+  ],
+  "transform": "Lossless WebP conversion only; opaque source pixels preserved; original master retained.",
+  "scope": "Material surfaces only. No person, costume, weapon, character identity, lore, save data or interaction changes."
+}

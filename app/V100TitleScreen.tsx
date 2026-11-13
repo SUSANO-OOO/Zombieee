@@ -156,7 +156,7 @@ export function V100TitleScreen({ canContinue, canOpenModes, busy, reducedMotion
       </header>
       {phase === "waiting" ? <button type="button" className="v100-start-tap" onClick={begin}>タップして開始</button> : <nav className="v100-start-menu" aria-label="スタートメニュー" inert={phase !== "complete"}>
         <button type="button" className="v100-start-primary" disabled={busy || !canContinue} onClick={onContinue}>続きから</button>
-        <button type="button" disabled={busy} onClick={onNew}>初めから</button>
+        <button type="button" className="v100-start-new" disabled={busy} onClick={onNew}>初めから</button>
         <div className="v100-start-secondary">
           <button type="button" disabled={busy} onClick={onSettings}>設定</button>
           <button type="button" disabled={busy} onClick={onCredits}>クレジット</button>

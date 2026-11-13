@@ -117,6 +117,7 @@ import "./v100MobileLayout.css";
 import "./v100DialogueStage.css";
 import "./v100SurvivorInterface.css";
 import "./v100BattleCommandFinish.css";
+import "./v100SupplyTitleFinish.css";
 import { V100_CREW_INSIGNIA } from "./v100CrewInsignia.js";
 
 type Save = NonNullable<StorageOutcome["save"]> & { bestStars: Record<string, number> };
@@ -1475,27 +1476,26 @@ function SupportVehicleView({ save, vehicleOnly, returnLabel, onBack, onPurchase
   if (vehicleOnly) return <section className="v100-panel v100-vehicle-upgrade-screen v100-command-garage" data-v100-surface="vehicle-upgrade" aria-label="装甲車両強化">
     <div className="v100-panel-heading v100-management-heading"><h2>車両整備</h2><button type="button" onClick={onOpenSupport}>支援を選ぶ</button></div>
     <div className="v100-vehicle-upgrade-hero v100-support-grid vehicle-grid">
-      <div className="v100-vehicle-upgrade-art"><img src={V099_CRAWLER_RUNTIME_PROFILE.equipmentHost.closed.path} alt="装甲車両" /><span className="v100-garage-vehicle-label">全ステージ共通 / 装甲車両</span></div>
+      <div className="v100-vehicle-upgrade-art"><img src={V099_CRAWLER_RUNTIME_PROFILE.equipmentHost.closed.path} alt="装甲車両" /><span className="v100-garage-vehicle-label">整備対象 / 装甲車両</span><div className="v100-vehicle-abilities">{V100_VEHICLE.abilities.map(ability => <div key={ability.id}><strong>{ability.displayName}</strong><small>支援 {ability.battleCost} / 再使用 {ability.cooldownSeconds}秒</small></div>)}</div></div>
       <div className="v100-vehicle-upgrade-copy">
         <span className="v100-kicker">車体強化 / Lv.{vehicleLevel}</span><h3>防衛線を支える装甲</h3>
         <dl><div><dt>現在耐久</dt><dd>{save.vehicle.maxHp}</dd></div><div><dt>強化後</dt><dd>{vehicleLevel >= V100_VEHICLE.maxUpgradeLevel ? "上限" : nextHp}</dd></div><div><dt>所持CAPS</dt><dd>{save.caps}</dd></div></dl>
         <div key={vehicleLevel} className="v100-vehicle-strength-meter" role="img" aria-label={"現在耐久" + save.vehicle.maxHp + "、強化後" + nextHp}><i style={{ width: (save.vehicle.maxHp / maximumHp * 100) + "%" }} /><b style={{ left: (save.vehicle.maxHp / maximumHp * 100) + "%", width: ((nextHp - save.vehicle.maxHp) / maximumHp * 100) + "%" }} /></div>
         <p className="v100-vehicle-quote">{vehicleLevel < V100_VEHICLE.maxUpgradeLevel ? "耐久 +" + V100_VEHICLE.hpPerUpgrade + " / 必要 " + nextCost + " CAPS" : "車体の強化上限に到達"}{nextCost > save.caps && <strong> / あと {nextCost - save.caps} CAPS</strong>}</p>
         <button className="v100-primary" type="button" data-ui-sound="transaction" onClick={onUpgradeVehicle} disabled={vehicleLevel >= V100_VEHICLE.maxUpgradeLevel || save.caps < nextCost}>{vehicleLevel >= V100_VEHICLE.maxUpgradeLevel ? "強化上限" : "耐久を強化 / " + nextCost + " CAPS"}</button>
-        <div className="v100-vehicle-abilities">{V100_VEHICLE.abilities.map(ability => <div key={ability.id}><strong>{ability.displayName}</strong><small>支援 {ability.battleCost} / 再使用 {ability.cooldownSeconds}秒</small></div>)}</div>
       </div>
     </div>
   </section>;
   return <section className="v100-panel v100-management-panel v100-loadout-screen v100-command-supply" data-v100-surface="support-vehicle" aria-label="出撃装備">
-    <div className="v100-panel-heading v100-management-heading"><div><h2>戦術支援</h2><p>支援を1つ選んで装備しよう。戦闘中は「物資」で設置できる。物資は敵を倒すと増える。</p></div><button type="button" onClick={onBack}>{returnLabel}</button></div>
+    <div className="v100-panel-heading v100-management-heading"><div><h2>戦術支援</h2><p>支援は1つ装備。戦闘中は物資で設置できる。</p></div><button type="button" data-ui-sound="cancel" onClick={onBack}>{returnLabel}</button></div>
     <div className="v100-support-management-list">{V100_SUPPORTS.map(support => {
       const owned = save.ownedSupportIds.includes(support.id), unlocked = save.supportPurchaseUnlockedIds.includes(support.id), selected = save.equippedSupportId === support.id;
-      return <article className={"v100-support-management-card game-loadout-card " + (selected ? "selected " : "") + (!unlocked ? "locked " : "") + (support.id === "support-incendiary-drum" ? "is-incendiary" : support.id === "support-healing" ? "is-medical" : "is-barrier")} key={support.id}>
+      return <article className={"v100-support-management-card game-loadout-card " + (selected ? "selected " : "") + (!unlocked ? "locked " : "") + (support.id === "support-incendiary-drum" ? "is-incendiary" : support.id === "support-healing" ? "is-medical" : "is-barrier")} key={support.id} data-support-id={support.id} data-stock-state={selected ? "equipped" : owned ? "owned" : !unlocked ? "locked" : save.caps < support.unlockCostCaps ? "unaffordable" : "for-sale"}>
         <span className="v100-support-art v100-support-illustration" aria-hidden="true"><img src={support.id === "support-healing" ? V100_PREPARATION_ART.medical : support.id === "support-incendiary-drum" ? V100_PREPARATION_ART.incendiary : V100_PREPARATION_ART.explosive} alt="" />{!unlocked && <V100LockChain />}</span>
-        <div className="v100-loadout-card-copy"><h3>{support.displayName}</h3><p className="v100-support-purpose">{v100SupportPurposeFor(support.id)}</p><p>物資 {support.battleCost} / 再使用 {support.cooldownSeconds}秒</p>{!unlocked && <p className="v100-unlock-condition">S{String(support.unlockStageNumber).padStart(2, "0")}クリアで解放</p>}{unlocked && !owned && save.caps < support.unlockCostCaps && <p className="v100-price-shortage">あと {support.unlockCostCaps - save.caps} CAPS</p>}</div>
-        {owned ? <button type="button" className={selected ? "selected" : ""} data-ui-sound="transaction" onClick={() => onEquipSupport(selected ? null : support.id)}>{selected ? "装備中" : "装備"}</button>
+        <div className="v100-loadout-card-copy"><h3>{support.displayName}</h3><p className="v100-support-purpose">{v100SupportPurposeFor(support.id)}</p><dl className="v100-support-use"><div><dt>使用物資</dt><dd>{support.battleCost}</dd></div><div><dt>再使用</dt><dd>{support.cooldownSeconds}<small>秒</small></dd></div></dl>{!unlocked && <p className="v100-unlock-condition">S{String(support.unlockStageNumber).padStart(2, "0")}クリアで解放</p>}{unlocked && !owned && save.caps < support.unlockCostCaps && <p className="v100-price-shortage">あと {support.unlockCostCaps - save.caps} CAPS</p>}</div>
+        <div className="v100-support-card-footer"><span className="v100-support-stock">{selected ? "装備中" : owned ? "所持" : unlocked ? "未購入" : "未解放"}</span>{owned ? <button type="button" className={selected ? "selected" : ""} data-ui-sound="transaction" onClick={() => onEquipSupport(selected ? null : support.id)}>{selected ? "外す" : "装備"}</button>
           : unlocked ? <button type="button" data-ui-sound="transaction" onClick={() => onPurchaseSupport(support.id)} disabled={save.caps < support.unlockCostCaps}>{support.unlockCostCaps} CAPSで購入</button>
-            : <span className="v100-state-badge locked">未解放</span>}
+            : <span className="v100-support-sealed">保管中</span>}</div>
       </article>;
     })}</div>
   </section>;
