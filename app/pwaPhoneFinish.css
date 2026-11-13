@@ -102,7 +102,7 @@
   .pwa-gate .pwa-install-guidance { padding:7px 9px; }
   .pwa-gate .pwa-install-steps { gap:5px; }
   .pwa-gate .pwa-install-steps li { font-size:13px; line-height:1.4; }
-  #v100-campaign .v100-data-modal { height:calc(100dvh - max(12px,var(--app-viewport-safe-top,0px)) - max(12px,var(--app-viewport-safe-bottom,0px))); max-height:calc(100dvh - max(12px,var(--app-viewport-safe-top,0px)) - max(12px,var(--app-viewport-safe-bottom,0px))); gap:5px; padding:8px 12px; }
+  #v100-campaign [data-v100-surface="data"] .v100-data-modal { height:calc(100dvh - max(12px,var(--app-viewport-safe-top,0px)) - max(12px,var(--app-viewport-safe-bottom,0px))); max-height:calc(100dvh - max(12px,var(--app-viewport-safe-top,0px)) - max(12px,var(--app-viewport-safe-bottom,0px))); gap:5px; padding:8px 12px; }
   #v100-campaign .v100-data-note { font-size:11px; line-height:1.4; }
 }
 @media (prefers-reduced-motion:reduce) { .pwa-progress-fill { transition:none; } }
