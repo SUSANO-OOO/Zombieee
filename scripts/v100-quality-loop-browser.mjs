@@ -44,7 +44,14 @@ for (const index of [0, 1]) {
 early = normalizeV100Save({ ...early, campaignStarted: true, flowState: { phase: "map", eventId: null, stageId: V100_STAGE_IDS[2], stageNumber: 3, destination: "map", nodeIndex: 0, firstClear: false, finalized: true } });
 const budgetBackup = exportV100BrowserSave(early);
 await writeFile(path.join(out, "two-stage-budget-fixture.json"), budgetBackup);
-const report = { status: "running", head, tree: git("rev-parse", "HEAD^{tree}"), build: await productionBuildIdentity(), physicalDevice: false,
+const localIdentityPath = process.env.V100_QUALITY_LOOP_LOCAL_BUILD_IDENTITY;
+const build = await productionBuildIdentity();
+const localExpected = localIdentityPath ? JSON.parse(await readFile(localIdentityPath,"utf8")) : null;
+if(localExpected) {
+  assert.match(localExpected.combinedSha256,/^[a-f0-9]{64}$/);
+  assert.equal(build.combinedSha256,localExpected.combinedSha256,"Local production build must match the supplied immutable receipt");
+}
+const report = { status: "running", head, tree: git("rev-parse", "HEAD^{tree}"), build, localIdentityPath, deliveryContract: localExpected ? "local-production-build-before-and-after-sha256" : "github-pages-head-metadata", physicalDevice: false,
   audioOutput: "Browser-output guard installed for UI capture. Physical speaker silence and audio acceptance are not verified.",
   audioScope: "BGM is disabled in these visual/UI fixtures, including the initial title and imported backup. SFX settings remain unchanged. Enabled native audio, title departure, recovery, R5 and staff-roll playback are verified by the separate unchanged CI audio lanes.",
   scope: "Phone rendering and native inputs. Two early victories, reward cases and result cases are developer-synthetic production receipts and reports; Nao purchased with the two one-star victories' CAPS. Subsequent upgrade/formation/battle inputs in early-budget-native are native. Reward/result cases prove presentation, save/resume and no duplicate payout, not real victories or measured combat. Visual late-stage/event fixtures do not prove unlocks or difficulty. No AI campaign-clear gate, physical iPhone, external-game play or speaker-listening claim.",
@@ -52,7 +59,7 @@ const report = { status: "running", head, tree: git("rev-parse", "HEAD^{tree}"),
 const engines = (process.env.V100_QUALITY_LOOP_ENGINES ?? "chromium,webkit").split(",");
 const sizes = (process.env.V100_QUALITY_LOOP_SIZES ?? "844x340,844x390").split(",").map(value => { const [width, height] = value.split("x").map(Number); return { width, height }; });
 const sections = (process.env.V100_QUALITY_LOOP_SECTIONS ?? 'presentation,rewards,results,survival,native').split(',');
-assert.ok(sections.length && sections.every(value => ['presentation', 'rewards', 'results', 'survival', 'native'].includes(value)));
+assert.ok(sections.length && sections.every(value => ['presentation', 'rewards', 'results', 'read-replay', 'survival', 'native'].includes(value)));
 report.sections = sections;
 const ready = page => page.waitForFunction(() => document.querySelector(".v100-shell") && !document.querySelector('.v100-shell[aria-busy="true"]') && document.documentElement.dataset.pwaSaveMutationPending === "false");
 const rawSave = page => page.evaluate(key => JSON.parse(localStorage.getItem(key)), V100_PRIMARY_STORAGE_KEY);
@@ -199,7 +206,9 @@ async function runCase(browser, engine, viewport, id, seed, work) {
   });
   try {
     await page.goto(new URL("v100", base).href, { waitUntil: "networkidle" });
+    if(!localExpected) {
     assert.equal(await page.locator('meta[name="github-pages-release"]').getAttribute("content"), head);
+    }
     await acknowledge(page, Boolean(seed));
     row.initialTitleMusicRequests = titleMusicRequests;
     assert.equal(titleMusicRequests, 0, 'Disabled title music must not start a media request');
@@ -415,7 +424,12 @@ for (const engine of engines) {
         const fixture = normalizeV100Save({ ...(won ? pending.save : { ...early, lastResult: value }), flowState: { phase: 'result', eventId: null, stageId, stageNumber: 3, destination: 'result', nodeIndex: 0, firstClear: won, finalized: false } });
         await runCase(browser, engine, viewport, 'result-' + (won ? 'win' : 'lose'), fixture, async (page, row, reload) => {
           await page.locator('.v100-result-panel').waitFor();
+          row.initialResultReadout=await page.locator('.v100-result-scroll').evaluate((scroll,won)=>{const r=scroll.getBoundingClientRect();const nodes=[scroll.querySelector(won?'.v100-result-highlight':'.v100-defeat-progress strong'),...(won?[scroll.querySelector('.v100-result-pending-reward')]:[])];return nodes.map(node=>{if(!node)return {present:false};const b=node.getBoundingClientRect();return {present:true,text:node.textContent,visible:b.top>=r.top-.5&&b.bottom<=r.bottom+.5&&b.left>=r.left-.5&&b.right<=r.right+.5};});},won);
+          assert.ok(row.initialResultReadout.length>0&&row.initialResultReadout.every(item=>item.present&&item.visible),'Stars/planned payout or defeat progress must be visible without scrolling');
           await capture(page, row, 'result');
+          row.paperInk=await page.locator('.v100-result-scroll').evaluate(scroll=>{const linear=c=>{const s=c/255;return s<=.04045?s/12.92:((s+.055)/1.055)**2.4;};const lum=rgb=>rgb.reduce((s,c,i)=>s+linear(c)*[.2126,.7152,.0722][i],0);const paper=lum([216,203,167]);return [...scroll.querySelectorAll('.v100-result-records dt,.v100-result-records dd,.v100-result-pending-reward')].map(node=>{const ink=getComputedStyle(node).color.match(/[\d.]+/g).slice(0,3).map(Number);const l=lum(ink);return {text:node.textContent,color:ink,contrast:(Math.max(l,paper)+.05)/(Math.min(l,paper)+.05)};});});
+          assert.ok(row.paperInk.length>0&&row.paperInk.every(item=>item.contrast>=4.5),'Result paper labels/numbers meet4.5:1 against the darkest paper color');
+          await page.locator('.v100-result-scroll').evaluate(scroll=>{scroll.scrollTop=scroll.scrollHeight;});await capture(page,row,'result-details');await page.locator('.v100-result-scroll').evaluate(scroll=>{scroll.scrollTop=0;});
           const summary = page.locator('.v100-battle-report summary');
           await within(summary, 44); await summary.tap();
           const body = page.locator('.v100-battle-report > div');
@@ -518,7 +532,32 @@ for (const engine of engines) {
       }
       assert.ok(row.native.inputs.length > 0);
     });
+    if(sections.includes('read-replay')) {
+      const earnedFixture=JSON.parse(await readFile(new URL('../tests/fixtures/quality-earned-replay-result-s01-e412.json',import.meta.url),'utf8'));
+      const replaySeed=normalizeV100Save(earnedFixture.save);
+      const settled=finalizeV100PendingResult(replaySeed);
+      assert.equal(settled.applied,true);
+      await runCase(browser,engine,{width:740,height:360},'read-replay-collect',replaySeed,async(page,row,reload)=>{
+        row.scope='Retained actual S01 pending replay save; native UI collect/reload only, not a newly earned victory.';
+        const button=page.getByRole('button',{name:/^報酬を受け取る/u});
+        await within(button,44);
+        const delta=settled.save.caps-replaySeed.caps;
+        assert.ok((await button.innerText()).includes('+'+delta+' CAPS'));
+        row.amountColors=await button.evaluate(button=>({button:getComputedStyle(button).color,amount:getComputedStyle(button.querySelector('.v100-collect-reward-amount')).color}));
+        assert.equal(row.amountColors.amount,row.amountColors.button,'Reward amount inherits the readable primary text color');
+        await capture(page,row,'before-collect');
+        await button.tap();await ready(page);await page.locator('.v100-map-layout').waitFor();
+        const saved=await rawSave(page);assert.equal(saved.caps,replaySeed.caps+delta);assert.equal(saved.pendingResult,null);
+        assert.equal(new Set(saved.receipts).size,saved.receipts.length);
+        await reload();const restored=await rawSave(page);assert.equal(restored.caps,saved.caps);assert.deepEqual(restored.receipts,saved.receipts);
+        row.confirmation={rewardCaps:delta,caps:saved.caps,resumed:true,noDuplicatePayout:true};
+      });
+    }
   } finally { await browser.close(); }
+}
+if(localExpected) {
+  report.afterBuild=await productionBuildIdentity();
+  assert.equal(report.afterBuild.combinedSha256,localExpected.combinedSha256,"Local production build remained unchanged during result/reward observation");
 }
 report.status = report.cases.every(row => row.status === "passed") ? "passed" : "failed";
 await writeFile(path.join(out, "report.json"), JSON.stringify(report, null, 2));

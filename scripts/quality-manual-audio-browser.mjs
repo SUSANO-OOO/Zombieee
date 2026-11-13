@@ -28,7 +28,7 @@ const save = normalizeV100Save({ ...createDefaultV100Save({ settings: { bgmEnabl
   campaignStarted: true, availableStageIds: V100_STAGE_IDS, completedStageIds: V100_STAGE_IDS.slice(0, 22),
   flowState: { phase: 'formation', stageId: V100_STAGE_IDS[22], stageNumber: 23, eventId: null, destination: 'formation', nodeIndex: 0, firstClear: false, finalized: true } });
 const browser = await chromium.launch({ headless: true });
-const context = await browser.newContext({ viewport: { width: 844, height: 340 }, hasTouch: true, serviceWorkers: 'block' });
+const context = await browser.newContext({ viewport: { width: 844, height: 340 }, hasTouch: true });
 try {
   await context.addInitScript(seedV100BrowserSaveOnce, serializeV100Save(save));
   const page = await context.newPage(); page.setDefaultTimeout(25000);
@@ -139,6 +139,6 @@ try {
     row.status = 'passed';
   }
   assert.deepEqual(report.errors, []); report.status = 'passed';
-} catch (e) { report.status = 'failed'; report.failure = String(e); throw e; }
+} catch (e) { report.status = 'failed'; report.failure = String(e); const failedPage=context.pages()[0]; if(failedPage&&!failedPage.isClosed()){await failedPage.screenshot({path:path.join(out,'failure.png')}).catch(()=>{});report.failureScreenText=await failedPage.locator('body').innerText().catch(()=>null);} throw e; }
 finally { await context.close(); await browser.close(); await writeFile(path.join(out, 'report.json'), JSON.stringify(report, null, 2)); }
 console.log(JSON.stringify({ status: report.status, cases: report.cases.map(r => ({ kind: r.kind, counts: r.counts, springOffset: r.springOffset, salvoGaps: r.salvoGaps })) }));

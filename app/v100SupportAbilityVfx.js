@@ -52,12 +52,16 @@ function drawDustPuff(ctx, image, x, y, size, alpha, age, offset = 0) {
 }
 
 function drawMedicMist(ctx, objects, effect) {
-  const image = ready(objects, "v100-dust");
-  const progress = Math.min(1, effect.elapsed / effect.duration);
-  for (let index = 0; index < 3; index += 1) {
-    const phase = (index - 1) * .22;
-    drawDustPuff(ctx, image, effect.x, effect.y, 14 + progress * 10, .22, Math.max(0, progress + phase), (index - 1) * 8);
-  }
+  const image=ready(objects,"quality-medic-gauze");
+  const progress=Math.max(0,Math.min(1,effect.elapsed/effect.duration));
+  const frame=Math.min(5,Math.floor(progress*6));
+  const cellWidth=image.naturalWidth/3,cellHeight=image.naturalHeight/2;
+  const width=104+Math.sin(progress*Math.PI)*10,height=width*.76;
+  ctx.save();ctx.globalCompositeOperation="source-over";ctx.shadowBlur=0;
+  ctx.globalAlpha=progress>.8?(1-progress)/.2:1;
+  ctx.drawImage(image,frame%3*cellWidth,Math.floor(frame/3)*cellHeight,cellWidth,cellHeight,
+    effect.x-width/2,effect.y-height*.8,width,height);
+  ctx.restore();
 }
 
 function drawTrapDust(ctx, objects, effect) {
@@ -70,11 +74,11 @@ function drawTrapDust(ctx, objects, effect) {
 function drawSprungTrap(ctx, objects, effect) {
   const image = ready(objects, "v100-support-trap-sprung");
   const progress = Math.min(1, effect.elapsed / effect.duration);
-  const width = 82;
+  const width = 82 * (1 + Math.sin(progress*Math.PI)*.09);
   const height = width * image.naturalHeight / image.naturalWidth;
   ctx.save();
   ctx.globalAlpha = Math.max(0, 1 - progress);
-  ctx.drawImage(image, effect.x - width / 2, effect.y - height, width, height);
+  ctx.drawImage(image, effect.x - width / 2, effect.y - height - Math.sin(progress*Math.PI)*6, width, height);
   ctx.restore();
   drawTrapDust(ctx, objects, effect);
 }
@@ -82,7 +86,17 @@ function drawSprungTrap(ctx, objects, effect) {
 export function drawV100SupportAbilityEffects(ctx, objects, world) {
   for (const effect of activeEffects(world)) {
     const renderEffect = { ...effect, elapsed: Math.max(0, world.time - effect.startedAt) };
-    if (renderEffect.eventType === "medic-impact") drawMedicMist(ctx, objects, renderEffect);
+    if (renderEffect.eventType === "medic-impact") {
+      // Treatment follows the actual recipient through the short aftermath;
+      // never leave a dressing on the floor after a moving ally or a corpse.
+      if (Array.isArray(world.fighters)) {
+        const target = world.fighters.find(fighter => fighter.id === renderEffect.targetId && fighter.side === "human" && fighter.hp > 0);
+        if (!target || !finitePoint(target.x, target.y)) continue;
+        renderEffect.x = target.x;
+        renderEffect.y = target.y - 28;
+      }
+      drawMedicMist(ctx, objects, renderEffect);
+    }
     else if (renderEffect.eventType === "trap-sprung") drawSprungTrap(ctx, objects, renderEffect);
     else if (renderEffect.eventType === "trap-deploy") drawTrapDust(ctx, objects, renderEffect);
   }

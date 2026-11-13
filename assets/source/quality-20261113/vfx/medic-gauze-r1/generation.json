@@ -1,0 +1,26 @@
+{
+  "creator": "OpenAI built-in image generation",
+  "source": "C:/Users/okait/.codex/generated_images/01a1aafe-ec50-73a3-bdea-2bef9bc04c28/exec-ac73f10e-ca9c-4188-8e4b-464edec5f8ff.png",
+  "sourceType": "Original project-generated raster art",
+  "rights": "Original output generated for this project; no third-party reference images or copyrighted characters used. Distribution follows OpenAI output terms.",
+  "producerApproval": "The expanded 2026-11-13 goal authorizes authored manual-ability effects; this generated candidate is not final visual acceptance.",
+  "prompt": "Use case: stylized-concept. Production asset for a gritty hand-painted Japanese post-apocalyptic smartphone side-view combat game. Create ONE polished transparent 3 by 2 sprite sheet, exactly six equal square frames in reading order, full sheet landscape aspect 3:2, preferably 1536x1024. Each cell is an animation frame of the SAME emergency medical treatment effect, centred on a fixed invisible torso position. No person, body part, character, syringe or medical kit. A short strip of textured ivory gauze and torn surgical dressing whips out, curls organically through a compact lateral swoosh, settles, then breaks into very fine pale teal atomized medication mist with soft white fabric fibres. Six consecutive phases: first gauze unfurls; second it sweeps across; third the largest expressive treatment burst with believable cloth folds; fourth cloth settles and the mist billows; fifth a few fading fibres and dissipating mist; sixth only sparse fading mist. Strong clear silhouette readable at 80 game pixels yet rich painterly cloth fibres, irregular layered spray and soft hand-painted edges. This must feel like a grounded cinematic field-medic treatment, not fantasy magic. The movement should flow smoothly with distinct changing cloth shape and a coherent anchored centre. Ivory cloth with restrained cool teal mist, no neon green light. All visible paint stays at least 40 pixels inside EACH square cell, no overlap between cells. True alpha transparency everywhere outside the painted effect, including all gutters. No background, checkerboard, floor, cast shadow, frame lines, borders, numbers or text. No geometric rings, arcs, circles, icons, crosses, stars, diamonds, crystals or UI symbols. No fire or explosion. Do not make six unrelated effects; make one coherent six-frame animated effect.",
+  "transparentBackgroundRequested": true,
+  "masterSha256": "f9bf30a710cfb0dd55e6866f50aba3bde847449c8c5427cc5a0bd5cb552d4a47",
+  "outputSha256": "0605a0ed1337f122f627cea3bb9afee4cda3e04d5f1f290066047a4091e99ad1",
+  "runtimePath": "/art/quality-20261113/vfx/medic-gauze-six-r1.webp",
+  "runtimeAssetCount": 1,
+  "logicalBytes": 1246546,
+  "distinctBytes": 1246546,
+  "transform": "PNG to lossless WebP; original dimensions and fractional alpha retained. No mask or repaint.",
+  "gutterMetrics": {
+    "max": 2.3411764705882354,
+    "mean": 0.19155585511984183
+  },
+  "license": "Original project-generated output; OpenAI output terms",
+  "termsVerifiedAt": "2026-11-13",
+  "termsSource": "https://openai.com/policies/terms-of-use/",
+  "commercialUse": true,
+  "modificationAllowed": true,
+  "redistributionAllowed": true
+}

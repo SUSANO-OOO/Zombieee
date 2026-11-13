@@ -5,6 +5,7 @@ import vm from 'node:vm';
 import ts from 'typescript';
 import * as React from 'react';
 import {V100_UNITS} from '../app/v100Registry.js';
+import {v100UnitPresentation} from '../app/v100UnitPresentation.js';
 
 // Offline component-state checks execute the actual production controls and
 // driver call sites. The failed native screenshots establish the hidden roster;
@@ -24,7 +25,7 @@ const card=controls.find(n=>n.getText(parsed).includes('v100-personnel-card'));
 const back=controls.find(n=>n.openingElement.attributes.properties.some(a=>a.initializer?.text==='v100-personnel-detail-back'));
 assert.ok(card&&back);
 const compile=(text,bindings)=>vm.runInNewContext(ts.transpileModule(text,{compilerOptions:{target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.React}}).outputText,{React,...bindings});
-const renderCard=compile(`(unit,selectedUnit,save,setSelectedUnitId,setDetailOpen)=>{const owned=true,registered=true,known=true,art=null;return (${card.getText(parsed)});};`,{v100RoleLabelFor:role=>role,V100LockChain:()=>null});
+const renderCard=compile(`(unit,selectedUnit,save,setSelectedUnitId,setDetailOpen)=>{const owned=true,registered=true,known=true,art=null;return (${card.getText(parsed)});};`,{V100_UNITS,v100UnitPresentation,v100RoleLabelFor:role=>role,V100LockChain:()=>null});
 const renderBack=compile(`(setDetailOpen)=>{const focusedUnitId=null,onBack=()=>{throw new Error('Unexpected surface exit');};return (${back.getText(parsed)});};`,{});
 const polish=fs.readFileSync(new URL('../app/v100CommandPolish.css',import.meta.url),'utf8');
 assert.match(polish,/\.detail-open \.v100-personnel-roster\s*\{\s*display:\s*none/u);

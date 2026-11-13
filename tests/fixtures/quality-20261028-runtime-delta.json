@@ -1,8 +1,24 @@
 {
   "base": "ff5dba24e88c810182cda1f044bd26dfc3e512c1",
-  "source": "061d14ad755af62d292d6b79d6f235cdf3f40a62 plus clinical room and post-battle location continuity",
+  "source": "061d14ad755af62d292d6b79d6f235cdf3f40a62 plus clinical room and post-battle location continuity plus 2026-11-13 authored medical and boss VFX",
   "scope": "Local quality candidate transport contract; not likeness, rights, listening, release or physical-device approval.",
   "added": [
+    {
+      "path": "/art/quality-20261113/vfx/boss-blast-six-r2.webp",
+      "bytes": 1112382,
+      "hash": "sha256-e6851cd119a82c40cd2da23aa3d5c1f25660f1b2a81c48cd8c0c9296eb8b518f",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261113/vfx/medic-gauze-six-r1.webp",
+      "bytes": 1246546,
+      "hash": "sha256-0605a0ed1337f122f627cea3bb9afee4cda3e04d5f1f290066047a4091e99ad1",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
+    },
     {
       "path": "/art/v100/joints/babayaga-quality-neck-r4.webp",
       "bytes": 36184,
@@ -431,6 +447,14 @@
       "path": "/art/v100/portraits/mayo-warm-quality-r1.webp",
       "bytes": 101040,
       "hash": "sha256-690a5c67c975bd6d5de5ca84853301e66277874ac8cdca8814d7ed159d07fa54",
+      "pack": "units",
+      "category": "portrait",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/portraits/minor-human-neutral-stage-r1.webp",
+      "bytes": 79946,
+      "hash": "sha256-5a7e5f6e70dfc5697f4ceb0da8f4e0b514a57f8f0ee37f05d7004998bef6f24b",
       "pack": "units",
       "category": "portrait",
       "criticality": "critical"
@@ -1612,14 +1636,6 @@
       "bundleOffset": 7818661,
       "bundleBytes": 5222,
       "bundleLength": 35073508
-    },
-    {
-      "path": "/art/v100/portraits/minor-human-neutral-stage-r1.webp",
-      "bytes": 79946,
-      "hash": "sha256-5a7e5f6e70dfc5697f4ceb0da8f4e0b514a57f8f0ee37f05d7004998bef6f24b",
-      "pack": "units",
-      "category": "portrait",
-      "criticality": "critical"
     }
   ],
   "retired": [
@@ -14515,6 +14531,17 @@
         "bundleBytes": 5895,
         "bundleLength": 35073508
       }
+    }
+  ],
+  "followups": [
+    {
+      "date": "2026-11-13",
+      "scope": "Two original authored VFX sheets, not a release or whole-quality approval",
+      "paths": [
+        "/art/quality-20261113/vfx/boss-blast-six-r2.webp",
+        "/art/quality-20261113/vfx/medic-gauze-six-r1.webp"
+      ],
+      "logicalBytes": 2358928
     }
   ]
 }

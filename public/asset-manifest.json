@@ -4,6 +4,22 @@
   "releaseSha": "__ZOMBIEEE_RELEASE_SHA__",
   "assets": [
     {
+      "path": "/art/quality-20261113/vfx/boss-blast-six-r2.webp",
+      "bytes": 1112382,
+      "hash": "sha256-e6851cd119a82c40cd2da23aa3d5c1f25660f1b2a81c48cd8c0c9296eb8b518f",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261113/vfx/medic-gauze-six-r1.webp",
+      "bytes": 1246546,
+      "hash": "sha256-0605a0ed1337f122f627cea3bb9afee4cda3e04d5f1f290066047a4091e99ad1",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v060/battle-nishijin-defense-line-v1.webp",
       "bytes": 172174,
       "hash": "sha256-4bd351304b064f86a3b8c651433e3aba6560564df315beeea9c8678967948a89",

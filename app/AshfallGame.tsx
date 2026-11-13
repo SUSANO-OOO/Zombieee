@@ -602,6 +602,7 @@ import { drawV100CorporateControl, v100CorporateControlLabel } from "./v100Corpo
 import { drawV100AssaultObject, v100AssaultObjectProfile } from "./v100AssaultObjects.js";
 import { drawV100Explosion, drawV100FootDust, drawV100GroundFire, drawV100Muzzle, V100_CONTACT_WEAPONS, V100_CLAW_CONTACT_WEAPONS, queueV100Contact, queueV100ClawContact, queueV100TakuyaGroundContact, queueV100TataraGroundContact, getV100ClawContactSnapshot, getV100SkillContactSnapshot, queueV100GuardContact, getV100GuardContactSnapshot, drawV100ContactQueue, clearV100ContactQueue } from "./v100CombatVfx.js";
 import { drawV100BossAftermath } from "./v100BossAftermath.js";
+import { drawV100BossDefeat } from "./v100BossDefeatVfx.js";
 import { TATARA_GROUND_ART, v100TataraGroundPose, v100TataraDisplaySize, v100RenderedTataraGroundSocket } from "./v100TataraPresentation.js";
 import { V100_MANUAL_FIREARM_KINDS, queueV100ManualMuzzle, queueV100ManualFirearmImpact, drawV100ManualMuzzles, getV100ManualMuzzleSnapshot, clearV100ManualFirearmVfx } from "./v100ManualFirearmVfx.js";
 import {v100BrawlerCanAct} from './v100BrawlerCombo.js';
@@ -6682,7 +6683,7 @@ function drawMotherCombatVfx(ctx: CanvasRenderingContext2D, f: Fighter, g: Game,
     ? tuning.activeSeconds - f.stationAbility.remainingSeconds
     : tuning.recoverySeconds - f.stationAbility.remainingSeconds;
   if(g.definition.missionConfig.v100StageNumber){
-    drawV100BossAftermath(ctx,stageObjects,{kind:'mother',x:f.x,y:f.y,elapsed,duration:active?tuning.activeSeconds:tuning.recoverySeconds,phase:f.stationAbility.phase});
+    drawV100BossAftermath(ctx,stageObjects,{kind:'mother',x:f.x,y:f.y,seed:f.id,direction:Number(f.stationAbility.targetX)>f.x?1:-1,elapsed,duration:active?tuning.activeSeconds:tuning.recoverySeconds,phase:f.stationAbility.phase});
     const socket=fighterWeaponSockets.get(f);
     if(active&&socket)drawV104InfectedWake(ctx,stageObjects,{...socket,ux:0,uy:-1,trail:'glob',progress:elapsed/tuning.activeSeconds});
     return;
@@ -6730,7 +6731,7 @@ function drawAnomalyBossCombatVfx(ctx: CanvasRenderingContext2D, f: Fighter, g: 
     ? tuning.activeSeconds - f.stationAbility.remainingSeconds
     : tuning.recoverySeconds - f.stationAbility.remainingSeconds;
   if (g.definition.missionConfig.v100StageNumber) {
-    drawV100BossAftermath(ctx, stageObjects, { kind: f.kind, x: f.x, y: f.y, elapsed,
+    drawV100BossAftermath(ctx, stageObjects, { kind: f.kind, x: f.x, y: f.y, seed: f.id, direction: f.kind === "ooguchi" ? -1 : (Number(f.stationAbility.targetX) > f.x ? 1 : -1), elapsed,
       duration: active ? tuning.activeSeconds : tuning.recoverySeconds, phase: f.stationAbility.phase });
     return;
   }
@@ -8372,6 +8373,7 @@ function drawBattlePresentationEffects(ctx: CanvasRenderingContext2D, g: Game, e
       continue;
     }
     if (effect.kind === "boss-defeat") {
+      if (g.definition.missionConfig.v100StageNumber) { drawV100BossDefeat(ctx,stageObjects,effect,effectDensity); continue; }
       const bossSnapshot = battlePresentationSnapshot(effect, effectDensity);
       for (const burst of V099_BOSS_DEFEAT_TIMELINE.smallBursts) {
         if (effect.elapsed < burst.at) continue;
@@ -25185,6 +25187,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       <section
         className="game-frame"
         data-battle-hud-layout={battleHudLayout ? "mobile" : undefined}
+        data-base-kind={basePresentation.onFoot ? "on-foot" : "vehicle"}
         style={battleHudFrameStyle}
         aria-label="西新世紀末物語 ゲーム"
       >
@@ -25377,9 +25380,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                  const cardAccessibleState = externalSessionActive
                    ? `${cardReadinessLabel}${cardAccessibleDetail ? ` / ${cardAccessibleDetail}` : ""}`
                    : cardBlockCopy ?? "出撃可能";
+                 const portraitImage = portraitArt ? <img src={portraitArt} alt="" aria-hidden="true" draggable={false} decoding="async" /> : <b className="diagnostic-portrait" aria-hidden="true">{card.kind === "guardian" ? "盾" : "工"}</b>;
                  return (
                    <button key={`${card.kind}-${slotIndex}`} className={`unit-card ${externalSessionActive ? "v100-deploy-card" : ""} ${cooldown > 0 ? "cooling" : ""} state-${cardState}`} data-kind={card.kind} data-slot-index={slotIndex} data-portrait={portraitArt ? "approved" : "diagnostic"} data-block-reason={cardBlockReason ?? "ready"} data-state={cardState} data-cooldown={cooldown} data-missing-command={missingCommandPoints} aria-label={`${card.name} / ${cardAccessibleState} / ${externalSessionActive ? "必要指揮" : "コスト"} ${card.cost}`} aria-disabled={Boolean(cardBlockReason)} onClick={() => deployHuman(card.kind)} style={portraitArt ? { "--unit-card-art": `url('${portraitArt}')`, ...(externalSessionActive ? v100PortraitFraming(combatKindToCampaignUnitId(card.kind)) : {}) } as CSSProperties : undefined}>
-                    <span className="portrait"><i />{portraitArt ? <img src={portraitArt} alt="" aria-hidden="true" draggable={false} decoding="async" /> : <b className="diagnostic-portrait" aria-hidden="true">{card.kind === "guardian" ? "盾" : "工"}</b>}</span>
+                    <span className="portrait"><i />{externalSessionActive && battleHudLayout ? <span className="v100-deploy-camera">{portraitImage}</span> : portraitImage}</span>
                     {externalSessionActive ? <>
                       <span className="v100-deploy-heading" aria-hidden="true">
                         <span className="v100-deploy-name">{card.name}</span>
