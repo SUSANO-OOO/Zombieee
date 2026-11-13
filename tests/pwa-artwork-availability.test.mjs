@@ -47,3 +47,12 @@ test('the art fingerprint matches the pack and CSS keeps its URL behind the read
   const declarations=[...css.matchAll(/([^{}]+)\{[^{}]*--v100-ui-materials:\s*url\([^)]*\)[^{}]*\}/gu)];
   assert.equal(declarations.length,1);assert.match(declarations[0][1],/html\[data-pwa-ui-materials="ready"\]/u);
 });
+
+test('Pages runtime URLs and app-root manifest paths identify the same verified artwork',()=>{
+  const deployed={...artwork,path:'/Zombieee'+artwork.path};
+  const options={artwork:deployed,installedManifest:active(entry),storedHashes:new Set([artwork.hash]),baseUrl:'https://example.test/Zombieee/'};
+  assert.equal(allows(options),true);
+  assert.equal(allows({...options,baseUrl:'https://example.test/'}),false);
+  assert.equal(allows({...options,artwork:{...deployed,path:'/different'+artwork.path}}),false);
+  assert.equal(allows({...options,installedManifest:active({...entry,hash:'old-content'})}),false);
+});
