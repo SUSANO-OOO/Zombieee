@@ -383,7 +383,7 @@
 @media (max-height: 460px) and (orientation: landscape) {
   #v100-campaign[data-v100-phase="map"] .v100-map-layout { display: grid; grid-template-rows: 44px minmax(22px, auto) minmax(0, 1fr); gap: 3px; padding: 4px; overflow: hidden; }
   #v100-campaign[data-v100-phase="map"] .v100-regional-map-banner { display: none; }
-  #v100-campaign[data-v100-phase="map"] .v100-chapter-tabs { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); height: 44px; min-height: 44px; margin: 0; gap: 3px; }
+  #v100-campaign[data-v100-phase="map"] .v100-chapter-tabs { display: grid; grid-template-columns: repeat(6,minmax(0,1fr)); height: 44px; min-height: 44px; margin: 0; gap: 3px; }
   #v100-campaign[data-v100-phase="map"] .v100-chapter-tabs button { min-width: 0; min-height: 44px; height: 44px; padding: 4px; }
   #v100-campaign[data-v100-phase="map"] .v100-chapter-tabs button small { display: none; }
   #v100-campaign[data-v100-phase="map"] .v100-chapter-counts { gap: 3px; font-size: 12px; }
@@ -410,6 +410,8 @@
   #v100-campaign[data-v100-phase="map"] .v100-map-side .v100-map-tools,
   #v100-campaign[data-v100-phase="map"] .v100-map-side .v100-replay-list { display: none; }
   #v100-campaign[data-v100-phase="map"] .v100-regional-pin { width: 52px; min-height: 56px; }
+}
+@media (max-height: 420px) and (orientation: landscape) {
   #v100-campaign[data-v100-phase="formation"] .v100-command-formation:not(.picker-open) .v100-slot-rail { grid-template-columns: minmax(0, .48fr) minmax(0, 1.52fr); gap: 5px; }
   #v100-campaign[data-v100-phase="formation"] .v100-command-formation:not(.picker-open) .v100-slot { grid-template-rows: minmax(50px, 1fr) auto; min-height: 0; }
   #v100-campaign[data-v100-phase="formation"] .v100-command-formation:not(.picker-open) .v100-slot-portrait { min-height: 50px; }
