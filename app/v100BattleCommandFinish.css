@@ -203,3 +203,8 @@
 #v100-campaign[data-v100-phase="result"] .v100-result-footer .v100-battle-report[open] > summary { background: #e3d4b0; color: #233b2c; }
 #v100-campaign[data-v100-phase="result"] .v100-result-footer .v100-result-actions button.v100-primary { background: linear-gradient(110deg,#e1bd77,#b79760); color: #211f14; border-color: #ead094; border-bottom-color: #825330; text-shadow: none; }
 #v100-campaign .v100-result-footer .v100-primary .v100-collect-reward-amount { color: inherit; }
+
+#v100-campaign[data-v100-phase="result"] .v100-result-scroll > .v100-result-records > div { background: transparent; border-left-color: #9d8d65; }
+#v100-campaign[data-v100-phase="result"] .v100-result-scroll > .v100-result-records dt { color: #405136; font-size: 12px; }
+#v100-campaign[data-v100-phase="result"] .v100-result-scroll > p > .v100-result-scroll-guide { display: none; }
+#v100-campaign[data-v100-phase="result"] .v100-result-footer .v100-result-actions button.v100-primary { background: linear-gradient(110deg,#e1bd77,#b79760) !important; color: #211f14 !important; border-color: #ead094 !important; }
