@@ -92,6 +92,7 @@ export function V100ModesView({ save, onBack, onLoadout, onSave, initialTab = "o
     {tab === "records" && <div className="v100-mode-totals"><span>物語制圧 {save.completedStageIds.length} / 30</span><span>獲得した星 {Object.values(save.bestStars).reduce((sum: number, value) => sum + Number(value), 0)}</span><span>所持 {save.caps} CAPS</span></div>}
     {tab !== "overview" && tab !== "survival" && bosses.length === 0 && <p>物語で初めて撃破した異常個体が、ここに記録されます。</p>}
     {tab !== "overview" && tab !== "survival" && tab !== "outbreak" && <div className="v100-equipment-catalog">{bosses.map(boss => {
+      const clears = save.outbreak.clearCounts[boss.id] ?? 0;
       return <article className="v100-equipment-card" key={boss.id} data-outbreak-boss-id={boss.id}>
         <span className="v100-kicker">物語 ステージ {boss.stageNumber} / 撃破済み</span><h3>{boss.displayName}</h3>
         <p>総撃破 {defeatCounts[boss.id] ?? 0}回 / 異常発生制圧 {clears}回 / サバイバル制圧 {save.survival.clearCounts[boss.id] ?? 0}回</p>
