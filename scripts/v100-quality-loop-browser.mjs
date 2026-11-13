@@ -424,6 +424,8 @@ for (const engine of engines) {
         const fixture = normalizeV100Save({ ...(won ? pending.save : { ...early, lastResult: value }), flowState: { phase: 'result', eventId: null, stageId, stageNumber: 3, destination: 'result', nodeIndex: 0, firstClear: won, finalized: false } });
         await runCase(browser, engine, viewport, 'result-' + (won ? 'win' : 'lose'), fixture, async (page, row, reload) => {
           await page.locator('.v100-result-panel').waitFor();
+          row.initialResultReadout=await page.locator('.v100-result-scroll').evaluate((scroll,won)=>{const r=scroll.getBoundingClientRect();const nodes=[scroll.querySelector(won?'.v100-result-highlight':'.v100-defeat-progress strong'),...(won?[scroll.querySelector('.v100-result-pending-reward')]:[])];return nodes.map(node=>{if(!node)return {present:false};const b=node.getBoundingClientRect();return {present:true,text:node.textContent,visible:b.top>=r.top-.5&&b.bottom<=r.bottom+.5&&b.left>=r.left-.5&&b.right<=r.right+.5};});},won);
+          assert.ok(row.initialResultReadout.length>0&&row.initialResultReadout.every(item=>item.present&&item.visible),'Stars/planned payout or defeat progress must be visible without scrolling');
           await capture(page, row, 'result');
           const summary = page.locator('.v100-battle-report summary');
           await within(summary, 44); await summary.tap();

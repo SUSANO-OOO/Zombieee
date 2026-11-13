@@ -1572,8 +1572,8 @@ function ResultView({ result, previousResult, previousBestStars, alreadyComplete
   return <section className={`v100-panel v100-result-panel ${won ? "win" : "lose"}`} data-v100-surface={won ? "result-win" : "result-lose"} aria-label="戦闘結果" style={{ "--v100-result-scene": `url(${resultStageId ? stageVisualFor(resultStageId) : PRODUCTION_VISUALS.command})` } as CSSProperties}>
     <aside className="v100-result-field-record" aria-label="作戦地点"><span>西新 / 作戦記録</span><b>S{String(stageNumber).padStart(2, "0")}</b><h3>{resultStage?.displayName ?? "作戦地点の記録なし"}</h3><strong>{won ? "目標達成" : "目標未達"}</strong></aside>
     <div className="v100-result-scroll" role="region" aria-label="戦闘結果の詳細" tabIndex={0}>
-      <span className="v100-kicker">戦闘結果 / {won ? "成功" : "失敗"}</span><h2>{won ? "ステージクリア" : "ステージ失敗"}</h2><p>{merits[0] ? <span className="v100-result-lead-merit" data-v100-merit={merits[0].id}><strong>{merits[0].title}</strong><small>{merits[0].detail}<span className="v100-merit-scroll-hint"> · 詳細は下へ</span></small></span> : outcome}<span className="v100-result-scroll-guide">結果の詳細は下へスクロール</span></p>
-      {won ? <div className="v100-result-highlight has-earned-stars"><strong><V100StageStars stars={runStars} label="今回の評価" /></strong><span>{`今回 ${runStars}/3　記録 ${previousBestStars} → ${nextBestStars}/3`}</span></div>
+      <span className="v100-kicker">戦闘結果 / {won ? "成功" : "失敗"}</span><h2>{won ? "ステージクリア" : "ステージ失敗"}</h2>
+      {won ? <div className="v100-result-highlight has-earned-stars"><strong><V100StageStars stars={runStars} label="今回の評価" /></strong><span><b>{`今回 ${runStars}/3　記録 ${previousBestStars} → ${nextBestStars}/3`}</b><small className="v100-result-pending-reward">受取予定 +{rewardCaps + bonusStar2 + bonusStar3} CAPS</small></span></div>
         : <div className="v100-defeat-progress" aria-label="今回どこまで進めたか">
           <strong>{escortResult?.progress ?? defenseResult?.progress ?? deviceResult?.progress ?? (boss ? boss.state === "not-encountered" ? `${boss.displayName}の出現前に終了` : boss.state === "defeated" ? `${boss.displayName}は撃破` : `${boss.displayName}に到達` : report ? report.wave > 0 ? `第${report.wave}波まで到達` : "開始直後に終了" : "到達地点の記録なし")}</strong>
           {defenseResult && <span>{defenseResult.detail}</span>}
@@ -1582,6 +1582,7 @@ function ResultView({ result, previousResult, previousBestStars, alreadyComplete
           <small>{report ? `第${report.wave}波・${report.kills}体撃破` : "波数・撃破数の記録なし"}{recordedDeaths !== null && ` / 戦闘不能 ${recordedDeaths}回`}</small>
           {escortResult?.advice && <small>{escortResult.advice}</small>}
         </div>}
+      <p>{merits[0] ? <span className="v100-result-lead-merit" data-v100-merit={merits[0].id}><strong>{merits[0].title}</strong><small>{merits[0].detail}<span className="v100-merit-scroll-hint"> · 詳細は下へ</span></small></span> : outcome}<span className="v100-result-scroll-guide">結果の詳細は下へスクロール</span></p>
       <dl className="v100-result-records"><div><dt>{basePresentation.healthLabel}</dt><dd>{vehicleHp} / {maxHp}（{Math.floor(hpPercent)}%）</dd></div><div><dt>クリア目標</dt><dd>{result?.objectiveComplete === true ? stageNumber === 22 ? "収容室43室の開放完了" : "達成" : "未達"}</dd></div></dl>
       {merits.length > 1 && <div className="v100-result-other-merits" role="list" aria-label="この一戦の成果">{merits.slice(1).map(merit => <span key={merit.id} role="listitem" data-v100-merit={merit.id}><strong>{merit.title}</strong><small>{merit.detail}</small></span>)}</div>}
       <div className="v100-result-feedback">

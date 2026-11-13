@@ -189,3 +189,17 @@
 #v100-campaign .v100-result-scroll .v100-result-last-hit { background: #cdbb96; border-left: 3px solid #a15e3c; }
 #v100-campaign[data-v100-phase="result"] .v100-result-scroll > .v100-defeat-progress { background: #d2c3a0; }
 #v100-campaign .v100-result-scroll .v100-result-caps-preview > span { background: #c4c5a4; color: #30452f; border-color: #929b70; }
+
+/* Keep the earned stars/progress and planned payout in the first view. */
+#v100-campaign[data-v100-phase="result"] .v100-result-footer { position: relative; display: grid; grid-template-columns: minmax(140px,.75fr) minmax(0,2fr); align-items: stretch; gap: 8px; }
+#v100-campaign[data-v100-phase="result"] .v100-result-footer .v100-battle-report { position: static; grid-column: 1; grid-row: 1; margin: 0; }
+#v100-campaign[data-v100-phase="result"] .v100-result-footer .v100-battle-report > div { left: 0; right: 0; bottom: calc(100% + 5px); }
+#v100-campaign[data-v100-phase="result"] .v100-result-footer .v100-result-actions { grid-column: 2; grid-row: 1; margin: 0; gap: 6px; }
+#v100-campaign[data-v100-phase="result"] .v100-result-footer:not(:has(.v100-battle-report)) .v100-result-actions { grid-column: 1 / -1; }
+#v100-campaign[data-v100-phase="result"] .v100-result-footer .v100-result-actions button { padding: 4px 6px; font-size: 14px; white-space: normal; line-height: 1.25; }
+#v100-campaign[data-v100-phase="result"] .v100-result-scroll > div.v100-result-highlight { margin: 6px 0; }
+#v100-campaign .v100-result-highlight > span > b { display: block; font-size: 13px; font-weight: 500; }
+#v100-campaign .v100-result-highlight .v100-result-pending-reward { display: block; margin-top: 3px; color: #294329; font-size: 14px; font-weight: 700; }
+#v100-campaign[data-v100-phase="result"] .v100-result-footer .v100-battle-report[open] > summary { background: #e3d4b0; color: #233b2c; }
+#v100-campaign[data-v100-phase="result"] .v100-result-footer .v100-result-actions button.v100-primary { background: linear-gradient(110deg,#e1bd77,#b79760); color: #211f14; border-color: #ead094; border-bottom-color: #825330; text-shadow: none; }
+#v100-campaign .v100-result-footer .v100-primary .v100-collect-reward-amount { color: inherit; }
