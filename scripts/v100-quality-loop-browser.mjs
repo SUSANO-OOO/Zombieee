@@ -59,7 +59,7 @@ const report = { status: "running", head, tree: git("rev-parse", "HEAD^{tree}"),
 const engines = (process.env.V100_QUALITY_LOOP_ENGINES ?? "chromium,webkit").split(",");
 const sizes = (process.env.V100_QUALITY_LOOP_SIZES ?? "844x340,844x390").split(",").map(value => { const [width, height] = value.split("x").map(Number); return { width, height }; });
 const sections = (process.env.V100_QUALITY_LOOP_SECTIONS ?? 'presentation,rewards,results,survival,native').split(',');
-assert.ok(sections.length && sections.every(value => ['presentation', 'rewards', 'results', 'survival', 'native'].includes(value)));
+assert.ok(sections.length && sections.every(value => ['presentation', 'rewards', 'results', 'read-replay', 'survival', 'native'].includes(value)));
 report.sections = sections;
 const ready = page => page.waitForFunction(() => document.querySelector(".v100-shell") && !document.querySelector('.v100-shell[aria-busy="true"]') && document.documentElement.dataset.pwaSaveMutationPending === "false");
 const rawSave = page => page.evaluate(key => JSON.parse(localStorage.getItem(key)), V100_PRIMARY_STORAGE_KEY);
@@ -529,6 +529,27 @@ for (const engine of engines) {
       }
       assert.ok(row.native.inputs.length > 0);
     });
+    if(sections.includes('read-replay')) {
+      const earnedFixture=JSON.parse(await readFile(new URL('../tests/fixtures/quality-earned-replay-result-s01-e412.json',import.meta.url),'utf8'));
+      const replaySeed=normalizeV100Save(earnedFixture.save);
+      const settled=finalizeV100PendingResult(replaySeed);
+      assert.equal(settled.applied,true);
+      await runCase(browser,engine,{width:740,height:360},'read-replay-collect',replaySeed,async(page,row,reload)=>{
+        row.scope='Retained actual S01 pending replay save; native UI collect/reload only, not a newly earned victory.';
+        const button=page.getByRole('button',{name:/^報酬を受け取る/u});
+        await within(button,44);
+        const delta=settled.save.caps-replaySeed.caps;
+        assert.ok((await button.innerText()).includes('+'+delta+' CAPS'));
+        row.amountColors=await button.evaluate(button=>({button:getComputedStyle(button).color,amount:getComputedStyle(button.querySelector('.v100-collect-reward-amount')).color}));
+        assert.equal(row.amountColors.amount,row.amountColors.button,'Reward amount inherits the readable primary text color');
+        await capture(page,row,'before-collect');
+        await button.tap();await ready(page);await page.locator('.v100-map-layout').waitFor();
+        const saved=await rawSave(page);assert.equal(saved.caps,replaySeed.caps+delta);assert.equal(saved.pendingResult,null);
+        assert.equal(new Set(saved.receipts).size,saved.receipts.length);
+        await reload();const restored=await rawSave(page);assert.equal(restored.caps,saved.caps);assert.deepEqual(restored.receipts,saved.receipts);
+        row.confirmation={rewardCaps:delta,caps:saved.caps,resumed:true,noDuplicatePayout:true};
+      });
+    }
   } finally { await browser.close(); }
 }
 if(localExpected) {
