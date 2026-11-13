@@ -1,10 +1,12 @@
+import { LandscapeGate } from "./LandscapeGate";
+import { FictionNotice } from "./FictionNotice";
 import { GameEntry } from "./GameEntry";
 import { PwaGate } from "./PwaGate";
 
 export default function Home() {
   return (
     <PwaGate>
-      <GameEntry />
+      <LandscapeGate><FictionNotice><GameEntry /></FictionNotice></LandscapeGate>
     </PwaGate>
   );
 }

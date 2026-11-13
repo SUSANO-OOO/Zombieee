@@ -131,9 +131,9 @@ function assertClose(actual, expected, tolerance = 1e-10) {
   assert.ok(Math.abs(actual - expected) <= tolerance, `${actual} was not close to ${expected}`);
 }
 
-test("server-renders the landscape gate before the fiction notice and PWA gate", async () => {
-  // The server cannot know orientation. Mount the fiction notice only after
-  // native landscape confirmation, then installation and game entry.
+test("server-renders phone preparation before requiring landscape for the game", async () => {
+  // Phone installation must be reachable in portrait. The game and its
+  // fiction notice still wait for preparation and native landscape entry.
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
@@ -155,14 +155,14 @@ test("server-renders the landscape gate before the fiction notice and PWA gate",
   await access(new URL("../public/icons/v099/infected-face-a2-48.png", import.meta.url));
   assert.match(html, /<link rel="manifest" href="\/manifest\.webmanifest"/);
 
-  assert.match(html, /class="landscape-gate" data-landscape-ready="false"/);
-  assert.match(html, /class="landscape-gate-content" inert="" aria-hidden="true"><\/div>/);
-  assert.match(html, /画面を横向きにしてください/u);
+  assert.match(html, /class="pwa-gate"[^>]*data-pwa-stage="preparing"/u);
+  assert.match(html, /配信データを確認しています…/u);
+  assert.doesNotMatch(html, /class="landscape-gate"/u);
   assert.doesNotMatch(html, /class="fiction-notice"/);
   const fictionNotice = await readFile(new URL("../app/FictionNotice.tsx", import.meta.url), "utf8");
   assert.match(fictionNotice, /本作品はフィクションです。/u);
   assert.match(fictionNotice, /実在するものとは関係ありません。/u);
-  assert.doesNotMatch(html, /class="pwa-gate"/);
+  assert.doesNotMatch(html, /class="v100-shell"/u);
   assert.doesNotMatch(html, /<main class="game-shell"/);
 
   assert.doesNotMatch(html, /百道浜|新たな世界の始まり/);

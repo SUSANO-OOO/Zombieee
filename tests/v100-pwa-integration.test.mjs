@@ -15,7 +15,7 @@ test("V1 gameplay route is behind the durable PWA gate", async () => {
     readFile(path.join(root, "app/v100/page.tsx"), "utf8"),
     readFile(path.join(root, "app/V100Campaign.tsx"), "utf8"),
   ]);
-  assert.match(page, /<PwaGate>\s*<V100Campaign \/>\s*<\/PwaGate>/u);
+  assert.match(page, /<PwaGate>\s*<LandscapeGate>\s*<FictionNotice>\s*<V100Campaign \/>\s*<\/FictionNotice>\s*<\/LandscapeGate>\s*<\/PwaGate>/u);
   assert.match(campaign, /data\.pwaScreen|dataset\.pwaScreen/u);
   assert.match(campaign, /pwaBattleActive = String\(battleActive\)/u);
   assert.match(campaign, /pwaResultSaving = String\(resultSaving\)/u);
