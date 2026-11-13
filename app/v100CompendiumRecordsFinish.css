@@ -1,5 +1,5 @@
 /* Individual dossiers and the campaign record ledger. Existing campaign owns native safe insets
-   and vertical scrolling. No new images/fonts/material-atlas references. */
+   and vertical scrolling. Compact current-body figures are gated by the verified installed pack. */
 #v100-campaign .v100-modes-screen:is([data-mode-tab="compendium"],[data-mode-tab="records"]) {
   padding: 10px; gap: 8px; border: 0; border-top: 3px solid #a08d65; border-radius: 0;
   background: #18231d; color: #eee4cc;
@@ -17,6 +17,22 @@
 #v100-campaign .v100-modes-screen[data-mode-tab="compendium"] .v100-compendium-stage { padding-right: 7px; border-right: 1px solid #9c997e; }
 #v100-campaign .v100-modes-screen[data-mode-tab="compendium"] .v100-compendium-stage small { display: block; color: #5c624e; font: 400 13px/1.3 var(--v100-reading-font); }
 #v100-campaign .v100-modes-screen[data-mode-tab="compendium"] .v100-compendium-stage strong { display: block; margin-top: 5px; color: #6e422c; font: 800 27px/1.1 var(--v100-numeric-font); }
+#v100-campaign .v100-modes-screen[data-mode-tab="compendium"] .v100-compendium-specimen { display: none; }
+/* A URL stored in a custom property is not consumed until PwaGate verifies every
+   current dossier hash, or the player explicitly chooses online browser play. */
+html[data-pwa-boss-dossiers="ready"] #v100-campaign .v100-modes-screen[data-mode-tab="compendium"] .v100-compendium-entry {
+  grid-template-columns: 120px minmax(0,1fr); gap: 12px;
+}
+html[data-pwa-boss-dossiers="ready"] #v100-campaign .v100-modes-screen[data-mode-tab="compendium"] .v100-compendium-stage {
+  display: flex; flex-direction: column; min-width: 0; padding: 8px 6px 0;
+  border: 0; border-top: 3px solid #b99b65; background: linear-gradient(150deg,#324a37,#10261c 65%);
+}
+html[data-pwa-boss-dossiers="ready"] #v100-campaign .v100-modes-screen[data-mode-tab="compendium"] .v100-compendium-stage small { color: #c4cdb4; }
+html[data-pwa-boss-dossiers="ready"] #v100-campaign .v100-modes-screen[data-mode-tab="compendium"] .v100-compendium-stage strong { color: #e9ca8f; font-size: 23px; }
+html[data-pwa-boss-dossiers="ready"] #v100-campaign .v100-modes-screen[data-mode-tab="compendium"] .v100-compendium-specimen {
+  display: block; flex: 0 0 156px; width: 100%; height: 156px; margin-top: auto;
+  background-image: var(--v100-boss-dossier); background-repeat: no-repeat; background-size: contain; background-position: center bottom;
+}
 #v100-campaign .v100-modes-screen[data-mode-tab="compendium"] .v100-compendium-body { min-width: 0; }
 #v100-campaign .v100-modes-screen[data-mode-tab="compendium"] .v100-compendium-body h3 { margin: 0 0 6px; color: #25372a; font: 800 21px/1.3 var(--v100-display-font); overflow-wrap: anywhere; }
 #v100-campaign .v100-modes-screen[data-mode-tab="compendium"] :is(.v100-compendium-feature,.v100-compendium-counter) { display: grid; grid-template-columns: 30px minmax(0,1fr); gap: 7px; margin: 4px 0; color: #334b38; font: 400 13px/1.5 var(--v100-reading-font); }

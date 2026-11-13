@@ -54,6 +54,7 @@ import { describeUpdate, evaluateActivationSafety, evaluateUpdate } from "./pwaU
 import { resolvePwaBaseUrl } from "./pwaBasePath.js";
 import {canUseVerifiedPwaArtwork} from "./pwaArtworkAvailability.js";
 import {V100_UI_MATERIAL_ART} from "./v100PreparationArt.js";
+import {V100_BOSS_DOSSIER_ART} from "./v100BossDossierArt.js";
 
 type Manifest = { version: string; releaseSha: string; assets: Array<Record<string, unknown>> };
 
@@ -856,12 +857,18 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
 
   // A newly published stylesheet must not fetch new art before update consent.
   useEffect(() => {
-    const ready = canUseVerifiedPwaArtwork({
-      artwork: V100_UI_MATERIAL_ART, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,
+    const availability = {
+      installedManifest, storedHashes, gameBlocked: blocking, baseUrl,
       browserPlayAccepted: offerDismissed && (!standalone || registrationFailureAcknowledged),
-    });
+    };
+    const ready = canUseVerifiedPwaArtwork({...availability,artwork:V100_UI_MATERIAL_ART});
+    const dossiersReady = Object.values(V100_BOSS_DOSSIER_ART).every(artwork => canUseVerifiedPwaArtwork({...availability,artwork}));
     document.documentElement.dataset.pwaUiMaterials = ready ? "ready" : "deferred";
-    return () => { delete document.documentElement.dataset.pwaUiMaterials; };
+    document.documentElement.dataset.pwaBossDossiers = dossiersReady ? "ready" : "deferred";
+    return () => {
+      delete document.documentElement.dataset.pwaUiMaterials;
+      delete document.documentElement.dataset.pwaBossDossiers;
+    };
   }, [baseUrl, blocking, installedManifest, storedHashes, offerDismissed, standalone, registrationFailureAcknowledged]);
 
   // A delayed update check may finish after the committed generation started.
