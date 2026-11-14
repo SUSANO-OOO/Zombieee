@@ -47,7 +47,7 @@ test('operation-photo cameras are bound to the exact nine images and keep upper 
     const {data,info}=await sharp(bytes).ensureAlpha().raw().toBuffer({resolveWithObject:true});
     let top=info.height,bottom=-1;
     for(let y=0;y<info.height;y++)for(let x=0;x<info.width;x++)if(data[(y*info.width+x)*4+3]>32){top=Math.min(top,y);bottom=Math.max(bottom,y);}
-    for(const [w,h]of [[100,44],[134,120]]){
+    for(const [w,h]of [[69,44],[100,44],[134,120]]){
       const renderedWidth=Math.min((w-8)*frame.widthFit,h*frame.heightFit),scale=renderedWidth/info.width;
       const origin={x:w/2-renderedWidth*frame.centerX,y:3-renderedWidth*info.height/info.width*frame.top};
       assert.ok(Number.isFinite(scale)&&scale>0);

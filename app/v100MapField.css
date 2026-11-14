@@ -280,7 +280,7 @@ html[data-pwa-boss-dossiers="ready"] #v100-campaign[data-v100-phase="map"] .v100
   #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-recon .v100-stage-intel > strong,
   #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-recon .v100-stage-intel > p { display: inline; margin: 0; font-size: 12px; line-height: 17px; }
   #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-recon .v100-stage-intel > strong::after { content: " ／ "; color: #826543; }
-  #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-photo { width: 36%; --v100-operation-photo-height: 44px; }
+  #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-photo { width: 25%; --v100-operation-photo-height: 44px; }
   #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-photo > span { display: none; }
   #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-map-side-heading > span:last-child { padding: 0 4px; line-height: 1.2; }
 }
