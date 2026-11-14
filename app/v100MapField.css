@@ -157,7 +157,7 @@
   position: relative;
   float: right;
   width: 41%;
-  --v100-operation-photo-height: clamp(48px, calc(100dvh - 310px), 140px);
+  --v100-operation-photo-height: clamp(48px, calc(100dvh - 310px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)), 140px);
   height: var(--v100-operation-photo-height);
   min-width: 0;
   margin: 0 0 3px 6px;
@@ -274,7 +274,7 @@ html[data-pwa-boss-dossiers="ready"] #v100-campaign[data-v100-phase="map"] .v100
   from { opacity: .45; transform: translateY(3px); }
   to { opacity: 1; transform: none; }
 }
-@media (max-height: 380px) and (orientation: landscape) {
+@media (max-height: 420px) and (orientation: landscape) {
   #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-recon .v100-stage-intel > span { display: none; }
   #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-recon .v100-stage-intel { padding: 4px 5px; font-size: 12px; line-height: 17px; }
   #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-recon .v100-stage-intel > strong,
