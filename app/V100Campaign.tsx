@@ -1003,7 +1003,7 @@ export function V100Campaign() {
     <main id="v100-campaign" onClickCapture={onInterfaceClick} onSubmitCapture={blockPendingInput} onKeyDownCapture={blockPendingInput} onPointerDownCapture={blockPendingInput} aria-busy={saveBusy} className={`v100-shell v100-surface-${surface}`} data-v100-reduced-motion={save.settings.reducedMotion?"true":undefined} data-v100-phase={save.outbreak.view === "battle" || save.survival.view === "battle" ? "battle" : flow.phase} data-v100-stage={save.survival.active ? "survival" : save.outbreak.active?.bossId ?? flow.stageNumber ?? "map"} data-v100-surface={surface} style={{ "--v100-command-art": `url(${PRODUCTION_VISUALS.command})` } as CSSProperties}>
       {!immersiveFlow && <header className="v100-topbar v100-compact-topbar">
         <div className="v100-topbar-title"><div><span className="v100-kicker">現場指揮</span><h1>{flow.phase === "map" || flow.phase === "formation" ? `西新 / ${screenLabel}` : screenLabel}</h1></div></div>
-        <div className="v100-save-meta"><span>{RELEASE_LABEL}</span><span className="v100-caps-balance">{save.caps} CAPS</span>{flow.phase === "map" && <button className="v100-modes-launch" type="button" onClick={() => { setModeTab("overview"); openSurface("modes"); }}>モード選択</button>}<button className="v100-menu-launch" type="button" onClick={() => setMenuOpen(true)}>メニュー</button></div>
+        <div className="v100-save-meta"><span>{RELEASE_LABEL}</span><span className="v100-caps-balance">{save.caps} CAPS</span>{flow.phase === "map" && <button className="v100-modes-launch" type="button" aria-label="モード選択" onClick={() => { setModeTab("overview"); openSurface("modes"); }}>モード</button>}<button className="v100-menu-launch" type="button" onClick={() => setMenuOpen(true)}>メニュー</button></div>
       </header>}
       {immersiveFlow && !battleAudioActive && !replayEventId && <button className="v100-menu-launch" type="button" onClick={() => setMenuOpen(true)}>メニュー</button>}
 
@@ -1213,6 +1213,7 @@ function MapView({ save, selectedStageId, onSelect, onStart, onRename, onBackup,
   const chapterStages = V100_STAGES.filter((entry) => entry.number >= chapter.start && entry.number <= chapter.end);
   const regionalMap = v100RegionalMapForChapter(chapter.id);
   const mapDisclosure = v100RegionalMapDisclosure(regionalMap, chapterStages.map((entry) => entry.id), save);
+  const deploymentLabel = !stage || !save.availableStageIds.includes(stage.id) ? "出撃不可" : save.completedStageIds.includes(stage.id) ? "再出撃可" : "出撃可";
   const chapterPoints = v100RegionalMapPoints(chapter.id, chapterStages.length);
   const chapterPinPoints = v100RegionalMapPinPoints(chapter.id, chapterStages.length);
   const chapterComplete = chapterStages.filter((entry) => save.completedStageIds.includes(entry.id)).length;
@@ -1243,7 +1244,7 @@ function MapView({ save, selectedStageId, onSelect, onStart, onRename, onBackup,
   return (
     <section className={`v100-map-layout v100-command-map ${discovered && stage?.missionType === "boss" ? "v100-map-boss-focus" : ""} ${stage && !save.availableStageIds.includes(stage.id) ? "v100-map-locked-focus" : ""}`} aria-label="ステージ選択" data-v100-surface="map" style={regionStyle}>
       <div className="v100-map-hero v100-regional-map-banner">
-        <div className="v100-map-hero-copy"><span className="v100-kicker">ステージ選択 / {mapDisclosure.regionLabel} / {save.postGameAvailable ? "全ステージ解放" : `次の目的地 ${v100MapStageName(nextStage, save)}`}</span><h2>{v100MapStageName(stage, save)}</h2><p>{discovered ? objectiveLabelFor(stage) : "現地情報は到達後に確認"} / ステージ {stage ? `S${String(stage.number).padStart(2, "0")}` : "準備中"}</p><div className="v100-map-hero-meta"><span>{chapter.label} / {mapDisclosure.subregionLabel}</span><strong>{stage && save.availableStageIds.includes(stage.id) ? "出撃可能" : "前のステージクリアで解放"}</strong><span>S{chapter.range}</span></div></div>
+        <div className="v100-map-hero-copy"><span className="v100-kicker">ステージ選択 / {mapDisclosure.regionLabel} / {save.postGameAvailable ? "全ステージ解放" : `次の目的地 ${v100MapStageName(nextStage, save)}`}</span><h2>{v100MapStageName(stage, save)}</h2><p>{discovered ? objectiveLabelFor(stage) : "現地情報は到達後に確認"} / ステージ {stage ? `S${String(stage.number).padStart(2, "0")}` : "準備中"}</p><div className="v100-map-hero-meta"><span>{chapter.label} / {mapDisclosure.subregionLabel}</span><strong>{deploymentLabel}</strong><span>S{chapter.range}</span></div></div>
       </div>
       <nav className="v100-chapter-tabs" aria-label="エリアを選ぶ">{V100_CHAPTERS.map((entry, index) => {
         const entries = V100_STAGES.filter((candidate) => candidate.number >= entry.start && candidate.number <= entry.end);
@@ -1251,7 +1252,7 @@ function MapView({ save, selectedStageId, onSelect, onStart, onRename, onBackup,
         const stars = entries.reduce((sum, candidate) => sum + Math.max(0, Math.min(3, Number(save.bestStars[candidate.id]) || 0)), 0);
         const region = v100RegionalMapForChapter(entry.id);
         const disclosure = v100RegionalMapDisclosure(region, entries.map((candidate) => candidate.id), save);
-        return <button type="button" key={entry.id} className={index === chapterIndex ? "selected" : ""} onClick={() => selectChapter(index)} aria-pressed={index === chapterIndex} aria-label={`${entry.label} ${disclosure.regionLabel}、ステージ ${complete}/${entries.length}、記録星 ${stars}/${entries.length * 3}`}><strong>{entry.label}</strong><small>{disclosure.regionLabel}</small><span className="v100-chapter-counts"><b>{complete}/{entries.length}ステージ</b><b>★{stars}/{entries.length * 3}</b></span></button>;
+        return <button type="button" key={entry.id} className={index === chapterIndex ? "selected" : ""} onClick={() => selectChapter(index)} aria-pressed={index === chapterIndex} aria-label={`${entry.label} ${disclosure.regionLabel}、ステージ ${complete}/${entries.length}、記録星 ${stars}/${entries.length * 3}`}><strong>{entry.label}</strong><small>{disclosure.regionLabel}</small><span className="v100-chapter-counts"><b>{complete}/{entries.length}</b><b>★{stars}/{entries.length * 3}</b></span></button>;
       })}</nav>
       <div className="v100-regional-progress" data-story-complete={storyComplete} aria-label={`全ステージの記録 ${save.completedStageIds.length} / ${V100_STAGES.length} ステージ、星 ${campaignStars} / ${V100_STAGES.length * 3}`}>{storyComplete ? <><strong>物語クリア</strong><span>ここからは、自由に再戦・星集め。</span></> : <><strong>{mapDisclosure.regionLabel}</strong><span>{chapterComplete}/{chapterStages.length} ステージ完了</span><span>記録星 {chapterStars}/{chapterStages.length * 3}</span></>}<span>全体 {save.completedStageIds.length}/{V100_STAGES.length} / ★ {campaignStars}/{V100_STAGES.length * 3}</span></div>
       <div className="v100-route-label" aria-label={`${mapDisclosure.regionLabel} ステージ経路`}><span>{mapDisclosure.regionLabel}</span><i />{chapterStages.map((entry) => <b key={`route-${entry.id}`} className={`${entry.number === completedNumber + 1 ? "current" : ""} ${save.completedStageIds.includes(entry.id) ? "clear" : ""}`} aria-hidden="true" />)}<span>次の区域</span></div>
@@ -1277,14 +1278,14 @@ function MapView({ save, selectedStageId, onSelect, onStart, onRename, onBackup,
         </div>
         <aside className={`v100-map-side ${discovered && stage?.missionType === "boss" ? "is-boss" : ""} ${stage && !save.availableStageIds.includes(stage.id) ? "is-locked" : ""}`}>
           <div className="v100-map-briefing">
-            <div className="v100-map-side-heading"><span className="v100-kicker">{stage ? `ステージ S${String(stage.number).padStart(2, "0")}` : "ステージ選択"}</span><span>{stage && save.availableStageIds.includes(stage.id) ? "出撃可能" : "封鎖中"}</span></div>
+            <div className="v100-map-side-heading"><span className="v100-kicker">{stage ? `ステージ S${String(stage.number).padStart(2, "0")}` : "ステージ選択"}</span><span>{deploymentLabel}</span></div>
             <h3>{v100MapStageName(stage, save)}</h3>
             {stage && !save.availableStageIds.includes(stage.id) && <div className="v100-lock-banner"><strong>ステージ封鎖中</strong><span>前のステージクリアで解放</span></div>}
             <div className="v100-stage-intel"><span>クリア目標</span><strong>{discovered ? missionLabelFor(stage) : "情報未取得"}</strong><p>{discovered ? objectiveLabelFor(stage) : "前のステージをクリアして、この区域を調査します。"}</p></div>
-            {discovered && <p className="v100-map-tactical-hint">{v100TacticalHintFor(stage)}</p>}
           </div>
           <details className="v100-map-detail"><summary>ステージ詳細・記録</summary>
             <div className="v100-map-detail-content">
+              {discovered && <p className="v100-map-tactical-hint">{v100TacticalHintFor(stage)}</p>}
               {boss && <div className="v100-boss-callout"><strong className="v100-boss-name">{boss.displayName}</strong><small>脅威 HP {boss.hp.toLocaleString()} / 特殊：{BOSS_SPECIAL_LABELS[boss.special]}</small></div>}
               <dl><div><dt>脅威分類</dt><dd>{discovered ? enemyPackLabelFor(stage?.enemyPack, stage?.number) : "情報未取得"}</dd></div><div><dt>配置枠</dt><dd>{save.formationSlots.filter(Boolean).length} / 7</dd></div></dl>
               <StarCriteria vehicleMaxHp={save.vehicle.maxHp} />
