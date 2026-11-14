@@ -42,10 +42,12 @@ export function particleMaterialCell(p){
  const seed=p.vx*7+p.size*31,r=combatVariation(seed,0);
  const rgb=/^#([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i.exec(p.color??'');
  if(rgb){const [red,green,blue]=rgb.slice(1).map(v=>parseInt(v,16));
-  if(red>green*1.1&&green>blue*1.35)return r<.55?2:1;
-  if(red>green*1.4)return r<.65?5:3;
+  // Pale gold also marks injury/retreat dust. Only saturated hot orange is an ember.
+  if(red>green*1.6&&green>blue*1.35)return r<.55?2:1;
+  if(red>green*1.4&&blue<red*.65)return r<.65?5:3;
+  if((blue>red*1.1&&blue>=green*.9)||blue>green*1.4)return r<.6?1:4;
  }
- return [0,1,3,4,5][Math.min(4,Math.floor(r*5))];
+ return [0,3,4][Math.min(2,Math.floor(r*3))];
 }
 export function drawV100MaterialParticle(ctx,objects,p,{world,createRasterSurface=createSurface}={}){
  if(!p||![p.x,p.y,p.vx,p.life,p.size].every(Number.isFinite)||p.life<=0||p.size<=0)return false;

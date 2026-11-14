@@ -46,7 +46,7 @@ test('a late optional image cannot change a live fragment; a reused pool entry o
 test('gravity, movement, fading and collection compaction cannot change a born particle material',()=>{
  const p=particle(),cell=particleMaterialCell(p);
  assert.equal(particleMaterialCell({...p,x:12,y:290,vy:99,life:.1}),cell);
- const variants=new Set();for(let i=0;i<200;i++)for(const color of ['#f06835','#b72d52','#c7e4ef'])variants.add(particleMaterialCell({...p,size:2+i/50,vx:i-100,color}));
+ const variants=new Set();for(let i=0;i<200;i++)for(const color of ['#f06835','#b72d52','#c7e4ef','#9aa58d'])variants.add(particleMaterialCell({...p,size:2+i/50,vx:i-100,color}));
  assert.deepEqual([...variants].sort(),[0,1,2,3,4,5]);
 });
 test('the same tint is reused and phone tint surfaces stay bounded at24 tiny atlases',()=>{
@@ -57,6 +57,12 @@ test('the same tint is reused and phone tint surfaces stay bounded at24 tiny atl
  const alive=f.surfaces.filter(s=>s.width&&s.height);assert.equal(alive.length,24);
  assert.ok(alive.reduce((n,s)=>n+s.width*s.height*4,0)<=24*144*96*4);
  assert.ok(f.surfaces.some(s=>s.width===0&&s.height===0));
+});
+test('pale gold injury/retreat and green recovery never become hot embers or steel fragments',()=>{
+ for(let i=0;i<100;i++)for(const color of ['#e6c97a','#72dca0'])assert.ok([0,3,4].includes(particleMaterialCell({...particle(),vx:i-50,color})));
+});
+test('pink lightblade and cyan energy keep a cold glint instead of wet organic spatter',()=>{
+ for(let i=0;i<100;i++)for(const color of ['#ff42c8','#62e8ef'])assert.ok([1,4].includes(particleMaterialCell({...particle(),vx:i-50,color})));
 });
 test('unavailable canvas tinting is tried once and uses the already required natural dust texture',()=>{
  const f=fixture(),image=atlas(),dust={complete:true,naturalWidth:64,naturalHeight:64};let attempts=0;
