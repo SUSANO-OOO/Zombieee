@@ -2698,7 +2698,7 @@ function applyIncomingHumanDamage(
         counterTarget.flash = Math.max(counterTarget.flash, .3);
         counterTarget.knock = Math.max(counterTarget.knock, isBossFighter(counterTarget) ? 5 : 14);
         addDamageText(g, counterTarget.x, counterTarget.y - 58, String(Math.round(applied)), .92, "#d7efff");
-        if (!g.definition.missionConfig.v100StageNumber) addParticles(g, counterTarget.x, counterTarget.y - 30, "#c7e4ef", 18);
+        addParticles(g, counterTarget.x, counterTarget.y - 30, "#c7e4ef", 18);
       }
       return Object.freeze({
         targetDamage: 0,

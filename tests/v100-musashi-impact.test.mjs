@@ -100,22 +100,22 @@ test('the actual PWA manual-art gate exposes only each saved exact image and can
  const leaf=await readFile('app/v100ManualImpactArt.js','utf8');assert.doesNotMatch(leaf,/^\s*import(?:\s|\{)/mu);
 });
 
-test('actual counter and fallback producers preserve damage-owned target positions and both facing directions; V1 avoids duplicate generic particles',async()=>{
- const source=await readFile('app/AshfallGame.tsx','utf8'),file=ts.createSourceFile('AshfallGame.tsx',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX),calls=[],counterBlocks=[];
- function visit(n){if(ts.isCallExpression(n)&&n.expression.getText(file)==='queueV100AdvancedAbilityEffect'&&n.arguments[1]?.getText(file).includes('"musashi-crosscut"'))calls.push(n.getText(file));
-  if(ts.isIfStatement(n)&&n.expression.getText(file)==='counterTarget'&&n.thenStatement.getText(file).includes('queueV100AdvancedAbilityEffect'))counterBlocks.push(n.getText(file));ts.forEachChild(n,visit);}visit(file);assert.equal(calls.length,2);assert.equal(counterBlocks.length,1);
+test('actual counter and fallback producers preserve damage-owned target positions and both facing directions, existing material sparks and random consumption',async()=>{
+ const source=await readFile('app/AshfallGame.tsx','utf8'),file=ts.createSourceFile('AshfallGame.tsx',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX),calls=[],counterBlocks=[];let particleFunction;
+ function visit(n){if(ts.isFunctionDeclaration(n)&&n.name?.text==='addParticles')particleFunction=n.getText(file);if(ts.isCallExpression(n)&&n.expression.getText(file)==='queueV100AdvancedAbilityEffect'&&n.arguments[1]?.getText(file).includes('"musashi-crosscut"'))calls.push(n.getText(file));
+  if(ts.isIfStatement(n)&&n.expression.getText(file)==='counterTarget'&&n.thenStatement.getText(file).includes('queueV100AdvancedAbilityEffect'))counterBlocks.push(n.getText(file));ts.forEachChild(n,visit);}visit(file);assert.equal(calls.length,2);assert.equal(counterBlocks.length,1);assert.ok(particleFunction);
  const execute=text=>ts.transpileModule(text,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText;
  for(const x of [260,300,370])for(const call of calls){
   const {world,owner}=fixture(),victim={id:9,kind:'walker',side:'zombie',hp:200,x,y:250,stunned:0,flash:0,knock:0};
   const counterProducer=call.includes('counterTarget');runInNewContext(execute(call),{g:world,owner,target:counterProducer?owner:victim,counterTarget:victim,counter:{event:{activationId:2}},queueV100AdvancedAbilityEffect});
   const contact=getV100AdvancedAbilityEffectsSnapshot(world)[0];assert.equal(contact.targetId,9);assert.equal(contact.ownerId,7);assert.equal(contact.x,x);assert.equal(contact.y,220);assert.equal(contact.duration,.22);assert.equal(contact.direction,x>=300?1:-1);
  }
- for(const v1 of [true,false])for(const boss of [true,false]){
+ for(const v1 of [true,false])for(const boss of [true,false])for(const density of [.25,.6,1]){
   const {world,owner}=fixture();world.definition.missionConfig=v1?{v100StageNumber:1}:{};
-  const victim={id:9,kind:boss?'takuya':'walker',side:'zombie',boss,hp:200,x:370,y:250,stunned:0,flash:0,knock:0};let particles=0,recorded=0;
-  runInNewContext(execute(counterBlocks[0]),{g:world,target:owner,counterTarget:victim,counter:{event:{activationId:2}},MANUAL_ABILITY_REGISTRY,
-   isBossFighter:f=>f.boss,noteV102GoreImpact(){},recordUnitDamage:(_g,_kind,n)=>{recorded+=n;},queueV100AdvancedAbilityEffect,addDamageText(){},addParticles(){particles++;}});
-  const expected=88*(boss?1.65:1);assert.ok(Math.abs(victim.hp-(200-expected))<1e-9);assert.equal(recorded,expected);assert.equal(victim.stunned,.9);assert.equal(owner.x,300);assert.equal(particles,v1?0:1);
+  const victim={id:9,kind:boss?'takuya':'walker',side:'zombie',boss,hp:200,x:370,y:250,stunned:0,flash:0,knock:0};let randomDraws=0,recorded=0;const math=Object.create(Math);math.random=()=>((++randomDraws*37)%997)/997;world.graphicsEffectDensity=density;world.particles=[];world.renderObjectPools={particles:[]};
+  runInNewContext(execute(particleFunction+"\n"+counterBlocks[0]),{g:world,Math:math,PARTICLE_POOL_KEYS:[],RENDER_ARRAY_LIMITS:{particles:512},acquireRenderObject:()=>({}),capRenderObjectsInPlace(){},target:owner,counterTarget:victim,counter:{event:{activationId:2}},MANUAL_ABILITY_REGISTRY,
+   isBossFighter:f=>f.boss,noteV102GoreImpact(){},recordUnitDamage:(_g,_kind,n)=>{recorded+=n;},queueV100AdvancedAbilityEffect,addDamageText(){}});
+  const expected=88*(boss?1.65:1);assert.ok(Math.abs(victim.hp-(200-expected))<1e-9);assert.equal(recorded,expected);assert.equal(victim.stunned,.9);assert.equal(owner.x,300);const count=Math.max(1,Math.round(18*density));assert.equal(world.particles.length,count);assert.equal(randomDraws,count*4);assert.equal(math.random(),(((count*4+1)*37)%997)/997);
   assert.equal(getV100AdvancedAbilityEffectsSnapshot(world).length,v1?1:0);
  }
 });
