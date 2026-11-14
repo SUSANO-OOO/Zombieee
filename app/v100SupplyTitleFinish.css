@@ -159,3 +159,39 @@ html[data-pwa-ui-materials="ready"] #v100-campaign { --v100-ui-materials: url('/
   html:has(.pwa-notice-stack:not(:empty)) #v100-campaign .v100-start-screen .v100-start-modes { flex-direction: column; justify-content: center; gap: 1px; line-height: 1.2; padding-top: 4px; padding-bottom: 4px; }
   html:has(.pwa-notice-stack:not(:empty)) #v100-campaign .v100-start-screen .v100-start-modes small { line-height: 1.15; white-space: nowrap; }
 }
+
+/* The illustrated route uses a field order sheet; character growth uses a personal record. */
+#v100-campaign .v100-command-map .v100-map-side {
+  background-image:linear-gradient(115deg,#e9dec5e6,#d3c3a6e0),var(--v100-ui-materials);
+  background-size:100% 100%,300% 200%; background-position:center,100% 0;
+}
+#v100-campaign .v100-command-map .v100-map-detail-content > .v100-map-tactical-hint { margin:4px 0 9px; padding:6px 8px; border-left:3px solid #8d4d33; background:#b5b28a55; color:#28402d; font-size:13px; line-height:1.45; }
+#v100-campaign .v100-command-personnel.detail-open .v100-personnel-focus {
+  background-image:linear-gradient(100deg,#eadfc6e6,#f0e6cde0),var(--v100-ui-materials);
+  background-size:100% 100%,300% 200%; background-position:center,100% 0;
+}
+
+/* A survivor record pairs a worn paper register with a metal-backed portrait.
+   The existing verified material variable stays none until download consent. */
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-personnel-card:not(.locked) {
+  background-image:linear-gradient(110deg,#d8cba7a8,#f1e7cbb8),var(--v100-ui-materials);
+  background-size:100% 100%,300% 200%; background-position:center,100% 0;
+}
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-personnel-card:not(.locked) .v100-personnel-art {
+  background-image:linear-gradient(110deg,#1c2b2350,#324a3970),var(--v100-ui-materials);
+  background-size:100% 100%,300% 200%; background-position:center,50% 0;
+  box-shadow:inset 0 0 0 3px #d2be9140;
+}
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-personnel-card:not(.locked) .v100-personnel-copy {
+  background:linear-gradient(90deg,#f0e3c335,transparent 60%);
+}
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-personnel-copy .v100-crew-role {
+  align-self:flex-start; padding-left:5px; border-left:3px solid var(--crew-accent); color:#354c37;
+}
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-personnel-card.selected .v100-personnel-copy {
+  box-shadow:inset 0 -4px #a15032;
+}
+#v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot.empty {
+  background-image:linear-gradient(115deg,#172a1d70,#0b1a1480),var(--v100-ui-materials);
+  background-size:100% 100%,300% 200%; background-position:center,0 0;
+}
