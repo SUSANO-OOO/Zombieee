@@ -1,0 +1,43 @@
+{
+  "generator": "scripts/build-v100-boss-attack-art.mjs",
+  "creator": "OpenAI built-in image_gen under Producer direction; deterministic WebP packaging by Codex",
+  "license": "Project-original generated artwork under the existing game asset policy; no third-party download",
+  "rights": {
+    "commercialUse": true,
+    "modification": true,
+    "redistribution": true,
+    "basis": "Original effect artwork created for this project"
+  },
+  "producerApproval": "Current smartphone goal requests bespoke animated boss attacks; candidate, not final visual/audio/device acceptance",
+  "source": {
+    "path": "assets/source/quality-20261114/boss-attacks-r1/gairen-r1-master.png",
+    "bytes": 1944614,
+    "sha256": "17582dcb16167ef2c4df39801996bcd14df7f1711e4de840d452023bcdfcda44"
+  },
+  "prompt": {
+    "path": "assets/source/quality-20261114/boss-attacks-r1/first-three-prompts.json",
+    "sha256": "09fe2a272a9141014b6133b46f343e53843391764cbe4ae157ed9bd4882c87e5"
+  },
+  "generation": {
+    "mode": "built-in image_gen generation",
+    "model": "Selected by host; no model name asserted",
+    "characterReferences": [],
+    "note": "Effect-only physical matter for the existing gairen attack; no character, body, equipment or damage change. First decoded release selection remains fixed for this real boss owner. Original generated master retained; source4px border may contain only alpha<=32 as in the accepted existing raster family."
+  },
+  "output": {
+    "path": "/art/quality-20261114/vfx/gairen-attack-six-r1.webp",
+    "bytes": 402642,
+    "sha256": "34d3ffdb384584651828e43842856d05208e2da08c455f80f07c1e14ecd42222",
+    "width": 1536,
+    "height": 1024,
+    "columns": 3,
+    "rows": 2,
+    "anchorX": 0.5,
+    "anchorY": 0.87890625
+  },
+  "runtimeAssetCount": 1,
+  "logicalBytes": 402642,
+  "distinctBytes": 402642,
+  "estimatedDecodedRgbaBytes": 6291456,
+  "scope": "Optional visual aftermath for gairen only; body, warnings, damage, timing, audio, rewards and save are unchanged"
+}

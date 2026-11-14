@@ -100,9 +100,25 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/quality-20261114/vfx/futago-attack-six-r1.webp",
+      "bytes": 298854,
+      "hash": "sha256-7c1d32dee46c574ef4f4f94a4907b823058306d115d7f385b480e2c70b1862e6",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/quality-20261114/vfx/futago-rupture-six-r1.webp",
       "bytes": 351736,
       "hash": "sha256-ce33d15b927547529fc090c896203f6310f64340a53a31a3864a10b52d9fe3fa",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/gairen-attack-six-r1.webp",
+      "bytes": 402642,
+      "hash": "sha256-34d3ffdb384584651828e43842856d05208e2da08c455f80f07c1e14ecd42222",
       "pack": "units",
       "category": "boss",
       "criticality": "critical"
@@ -132,9 +148,25 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/quality-20261114/vfx/mother-attack-six-r1.webp",
+      "bytes": 513616,
+      "hash": "sha256-eddc94285bc85fe207de17158386121c59c4e64aaa955a84a6f40993054a09ab",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/quality-20261114/vfx/mother-rupture-six-r2.webp",
       "bytes": 450298,
       "hash": "sha256-c89e894cc31cfb756d34a79ed7148904bf1c48a62fec37e38e5c545fa3f30530",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/mugarian-president-mutated-attack-six-r1.webp",
+      "bytes": 417756,
+      "hash": "sha256-f05265fe96e4c8b4aa3567398ae3213bf56fa636d6e98f7e5bec02ea815a6658",
       "pack": "units",
       "category": "boss",
       "criticality": "critical"
@@ -148,9 +180,25 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/quality-20261114/vfx/ooguchi-attack-six-r1.webp",
+      "bytes": 309100,
+      "hash": "sha256-97918df7b487ca0a65be8929bc7621730941823d3f99b6096601f1bdcecaccba",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/quality-20261114/vfx/ooguchi-rupture-six-r1.webp",
       "bytes": 296620,
       "hash": "sha256-814c7fe264ea474613b90634a64f6f4b6d39b760c4c987dfdd4b540f0ad8ee36",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/takuya-omega-attack-six-r2.webp",
+      "bytes": 429024,
+      "hash": "sha256-c86084b9339836f86cf857da8c95bd07107b755250c6e239ffbad9aae4f38437",
       "pack": "units",
       "category": "boss",
       "criticality": "critical"

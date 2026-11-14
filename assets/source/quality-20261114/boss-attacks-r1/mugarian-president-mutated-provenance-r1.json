@@ -1,0 +1,43 @@
+{
+  "generator": "scripts/build-v100-boss-attack-art.mjs",
+  "creator": "OpenAI built-in image_gen under Producer direction; deterministic WebP packaging by Codex",
+  "license": "Project-original generated artwork under the existing game asset policy; no third-party download",
+  "rights": {
+    "commercialUse": true,
+    "modification": true,
+    "redistribution": true,
+    "basis": "Original effect artwork created for this project"
+  },
+  "producerApproval": "Current smartphone goal requests bespoke animated boss attacks; candidate, not final visual/audio/device acceptance",
+  "source": {
+    "path": "assets/source/quality-20261114/boss-attacks-r1/mugarian-president-mutated-r1-master.png",
+    "bytes": 2147169,
+    "sha256": "6064c816ff2a962962f689f4ea8f665d723b04314bb9f97e84cd627aaa57319a"
+  },
+  "prompt": {
+    "path": "assets/source/quality-20261114/boss-attacks-r1/next-three-prompts.json",
+    "sha256": "233b7b7050fc1432d76cc3efbd57094e4436a8d9cce3f702ab154b93986ab10d"
+  },
+  "generation": {
+    "mode": "built-in image_gen generation",
+    "model": "Selected by host; no model name asserted",
+    "characterReferences": [],
+    "note": "Effect-only physical matter for the existing mugarian-president-mutated attack; no character, body, equipment or damage change. First decoded release selection remains fixed for this real boss owner. Original generated master retained; source4px border may contain only alpha<=32 as in the accepted existing raster family."
+  },
+  "output": {
+    "path": "/art/quality-20261114/vfx/mugarian-president-mutated-attack-six-r1.webp",
+    "bytes": 417756,
+    "sha256": "f05265fe96e4c8b4aa3567398ae3213bf56fa636d6e98f7e5bec02ea815a6658",
+    "width": 1536,
+    "height": 1024,
+    "columns": 3,
+    "rows": 2,
+    "anchorX": 0.5,
+    "anchorY": 0.87890625
+  },
+  "runtimeAssetCount": 1,
+  "logicalBytes": 417756,
+  "distinctBytes": 417756,
+  "estimatedDecodedRgbaBytes": 6291456,
+  "scope": "Optional visual aftermath for mugarian-president-mutated only; body, warnings, damage, timing, audio, rewards and save are unchanged"
+}

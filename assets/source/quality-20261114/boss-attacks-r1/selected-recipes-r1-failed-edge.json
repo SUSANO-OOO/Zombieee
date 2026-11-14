@@ -1,0 +1,56 @@
+[
+  {
+    "kind": "mother",
+    "masterSha256": "217113f2362cf3f1104a4e6374bcab0b8c429a731cd6a88f4beaa4eb52a52d0a",
+    "masterBytes": 2307305,
+    "promptPath": "assets/source/quality-20261114/boss-attacks-r1/first-three-prompts.json",
+    "anchorX": 0.5,
+    "anchorY": 0.87890625,
+    "note": "Effect-only physical matter for the existing mother attack; no character, body, equipment or damage change. First decoded release selection remains fixed for this real boss owner. Original generated master retained; source4px border may contain only alpha<=32 as in the accepted existing raster family."
+  },
+  {
+    "kind": "ooguchi",
+    "masterSha256": "517aabc4a1ebc7b04d01341cec0b551790f5cb9d309c9b7f24817d134c06a62f",
+    "masterBytes": 1792297,
+    "promptPath": "assets/source/quality-20261114/boss-attacks-r1/first-three-prompts.json",
+    "anchorX": 0.5,
+    "anchorY": 0.87890625,
+    "note": "Effect-only physical matter for the existing ooguchi attack; no character, body, equipment or damage change. First decoded release selection remains fixed for this real boss owner. Original generated master retained; source4px border may contain only alpha<=32 as in the accepted existing raster family."
+  },
+  {
+    "kind": "gairen",
+    "masterSha256": "17582dcb16167ef2c4df39801996bcd14df7f1711e4de840d452023bcdfcda44",
+    "masterBytes": 1944614,
+    "promptPath": "assets/source/quality-20261114/boss-attacks-r1/first-three-prompts.json",
+    "anchorX": 0.5,
+    "anchorY": 0.87890625,
+    "note": "Effect-only physical matter for the existing gairen attack; no character, body, equipment or damage change. First decoded release selection remains fixed for this real boss owner. Original generated master retained; source4px border may contain only alpha<=32 as in the accepted existing raster family."
+  },
+  {
+    "kind": "futago",
+    "masterSha256": "09b76d412244bb1bc703eff06d51ae668ca4c9f169935228b151c084d798463d",
+    "masterBytes": 1675110,
+    "promptPath": "assets/source/quality-20261114/boss-attacks-r1/next-three-prompts.json",
+    "anchorX": 0.5,
+    "anchorY": 0.87890625,
+    "note": "Effect-only physical matter for the existing futago attack; no character, body, equipment or damage change. First decoded release selection remains fixed for this real boss owner. Original generated master retained; source4px border may contain only alpha<=32 as in the accepted existing raster family."
+  },
+  {
+    "kind": "mugarian-president-mutated",
+    "masterSha256": "6064c816ff2a962962f689f4ea8f665d723b04314bb9f97e84cd627aaa57319a",
+    "masterBytes": 2147169,
+    "promptPath": "assets/source/quality-20261114/boss-attacks-r1/next-three-prompts.json",
+    "anchorX": 0.5,
+    "anchorY": 0.87890625,
+    "note": "Effect-only physical matter for the existing mugarian-president-mutated attack; no character, body, equipment or damage change. First decoded release selection remains fixed for this real boss owner. Original generated master retained; source4px border may contain only alpha<=32 as in the accepted existing raster family."
+  },
+  {
+    "kind": "takuya-omega",
+    "masterSha256": "777e444484afa8d8e39e3a4b52d4fdb83c38a288755b7c1ac876e145716a55da",
+    "masterBytes": 2150866,
+    "promptPath": "assets/source/quality-20261114/boss-attacks-r1/next-three-prompts.json",
+    "anchorX": 0.5,
+    "anchorY": 0.87890625,
+    "note": "Effect-only physical matter for the existing takuya-omega attack; no character, body, equipment or damage change. First decoded release selection remains fixed for this real boss owner. Original generated master retained; source4px border may contain only alpha<=32 as in the accepted existing raster family."
+  }
+]

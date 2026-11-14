@@ -1,4 +1,23 @@
 import {combatVariation,drawRasterPlume} from './v100RasterAtmosphere.js';
+import {V100_BOSS_ATTACK_ART} from './v100BossAttackArt.js';
+
+// A boss keeps the choice made for its first visible release. A late optional
+// decode can improve a later battle without replacing a running effect.
+const releaseChoices=new WeakMap();
+export function bossAttackReleaseSource(objects,kind,owner){
+ const fallback={art:null,image:objects?.['v100-ground-impact']};
+ if(!owner||typeof owner!=='object')return fallback;
+ let choices=releaseChoices.get(owner);
+ if(!choices){choices=new Map();releaseChoices.set(owner,choices);}
+ if(!choices.has(kind)){
+  const art=V100_BOSS_ATTACK_ART[kind],image=art&&objects?.[art.id];
+  const valid=art&&image?.complete&&Number.isFinite(image.naturalWidth)&&Number.isFinite(image.naturalHeight)
+   &&image.naturalWidth>0&&image.naturalHeight>0&&image.naturalWidth%art.columns===0
+   &&image.naturalHeight%art.rows===0&&image.naturalWidth/art.columns===image.naturalHeight/art.rows;
+  choices.set(kind,valid?{art,image}:fallback);
+ }
+ return choices.get(kind);
+}
 
 // These are disturbances from the real body motion, not independent damage or
 // contact effects. Keep Mother’s socket-owned emission and all hit queues.
@@ -19,9 +38,11 @@ const RELEASES=Object.freeze({
  'mugarian-president-mutated':{width:160,height:102,beats:[[0,-62],[.04,-20],[.08,20],[.12,62]]},
  'takuya-omega':{width:380,height:238,beats:[[0,0]]},
 });
-function drawRelease(ctx,objects,{kind,x,y,elapsed,direction}){
- const p=RELEASES[kind],source=objects?.['v100-ground-impact'];
- if(!p||!source?.complete||!source.naturalWidth||!source.naturalHeight)return;
+function drawRelease(ctx,objects,{kind,x,y,elapsed,direction,owner}){
+ const p=RELEASES[kind];
+ if(!p||!p.beats.some(([delay])=>elapsed>=delay&&elapsed-delay<.54))return;
+ const {art,image:source}=bossAttackReleaseSource(objects,kind,owner);
+ if(!source?.complete||!source.naturalWidth||!source.naturalHeight)return;
  const cw=source.naturalWidth/3,ch=source.naturalHeight/2;
  for(const [delay,offset] of p.beats){
   const age=elapsed-delay;if(age<0||age>=.54)continue;
@@ -29,12 +50,19 @@ function drawRelease(ctx,objects,{kind,x,y,elapsed,direction}){
   ctx.save();ctx.globalCompositeOperation='source-over';ctx.globalAlpha=progress>.8?(1-progress)/.2:1;ctx.shadowBlur=0;
   ctx.translate(x+(kind==='ooguchi'?-direction:1)*offset,y+4);
   if(kind==='futago'&&offset<0)ctx.scale(-1,1);
-  ctx.drawImage(source,frame%3*cw,Math.floor(frame/3)*ch,cw,ch,-p.width/2,-p.height*360/512,p.width,p.height);
+  if(art){
+   const position=progress*5,first=Math.floor(position),next=Math.min(5,first+1),blend=position-first;
+   const fade=ctx.globalAlpha;
+   for(const [cell,weight]of [[first,1-blend],[next,blend]]){
+    if(weight<=0)continue;ctx.globalAlpha=fade*weight;
+    ctx.drawImage(source,cell%3*cw,Math.floor(cell/3)*ch,cw,ch,-p.width*art.anchorX,-p.height*art.anchorY,p.width,p.height);
+   }
+  }else ctx.drawImage(source,frame%3*cw,Math.floor(frame/3)*ch,cw,ch,-p.width/2,-p.height*360/512,p.width,p.height);
   ctx.restore();
  }
 }
 
-export function drawV100BossAftermath(ctx,objects,{kind,x,y,elapsed,duration,phase,direction=-1,seed=0}={}) {
+export function drawV100BossAftermath(ctx,objects,{kind,x,y,elapsed,duration,phase,direction=-1,seed=0,owner}={}) {
  const p=PROFILES[kind];
  if(!p||![x,y,elapsed,duration,direction,seed].every(Number.isFinite)||duration<=0||elapsed<0||elapsed>=duration||!['active','recovery'].includes(phase))return false;
  const dust=objects?.['v100-dust'];
@@ -53,7 +81,7 @@ export function drawV100BossAftermath(ctx,objects,{kind,x,y,elapsed,duration,pha
   drawRasterPlume(ctx,dust,{x:x+paired+trailing,y:y+4-local*p.lift*(.3+r),
    width:w,height:h,alpha:release*(.32-r*.1),rotation:(r-.5)*.22,flip:i%2===0});
  }
- if(!recovery)drawRelease(ctx,objects,{kind,x,y,elapsed,direction});
+ if(!recovery)drawRelease(ctx,objects,{kind,x,y,elapsed,direction,owner});
  const smoke=objects?.[kind==='gairen'?'v100-smoke-b':'v100-smoke-a'];
  if(smoke?.complete&&smoke.naturalWidth&&smoke.naturalHeight){
   for(let i=0;i<2;i++){

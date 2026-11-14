@@ -1,0 +1,43 @@
+{
+  "generator": "scripts/build-v100-boss-attack-art.mjs",
+  "creator": "OpenAI built-in image_gen under Producer direction; deterministic WebP packaging by Codex",
+  "license": "Project-original generated artwork under the existing game asset policy; no third-party download",
+  "rights": {
+    "commercialUse": true,
+    "modification": true,
+    "redistribution": true,
+    "basis": "Original effect artwork created for this project"
+  },
+  "producerApproval": "Current smartphone goal requests bespoke animated boss attacks; candidate, not final visual/audio/device acceptance",
+  "source": {
+    "path": "assets/source/quality-20261114/boss-attacks-r1/mother-r1-master.png",
+    "bytes": 2307305,
+    "sha256": "217113f2362cf3f1104a4e6374bcab0b8c429a731cd6a88f4beaa4eb52a52d0a"
+  },
+  "prompt": {
+    "path": "assets/source/quality-20261114/boss-attacks-r1/first-three-prompts.json",
+    "sha256": "09fe2a272a9141014b6133b46f343e53843391764cbe4ae157ed9bd4882c87e5"
+  },
+  "generation": {
+    "mode": "built-in image_gen generation",
+    "model": "Selected by host; no model name asserted",
+    "characterReferences": [],
+    "note": "Effect-only physical matter for the existing mother attack; no character, body, equipment or damage change. First decoded release selection remains fixed for this real boss owner. Original generated master retained; source4px border may contain only alpha<=32 as in the accepted existing raster family."
+  },
+  "output": {
+    "path": "/art/quality-20261114/vfx/mother-attack-six-r1.webp",
+    "bytes": 513616,
+    "sha256": "eddc94285bc85fe207de17158386121c59c4e64aaa955a84a6f40993054a09ab",
+    "width": 1536,
+    "height": 1024,
+    "columns": 3,
+    "rows": 2,
+    "anchorX": 0.5,
+    "anchorY": 0.87890625
+  },
+  "runtimeAssetCount": 1,
+  "logicalBytes": 513616,
+  "distinctBytes": 513616,
+  "estimatedDecodedRgbaBytes": 6291456,
+  "scope": "Optional visual aftermath for mother only; body, warnings, damage, timing, audio, rewards and save are unchanged"
+}
