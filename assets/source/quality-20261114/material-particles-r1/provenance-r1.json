@@ -1,0 +1,44 @@
+{
+  "generator": "scripts/build-v100-particle-material-art.mjs",
+  "creator": "OpenAI built-in image_gen under Producer direction",
+  "license": "Project-original generated artwork under existing game asset policy",
+  "rights": {
+    "commercialUse": true,
+    "modification": true,
+    "redistribution": true,
+    "basis": "Original effect artwork created for this project"
+  },
+  "generation": {
+    "mode": "built-in image_gen generation",
+    "model": "Selected by host; no model name asserted",
+    "characterReferences": []
+  },
+  "source": {
+    "path": "assets/source/quality-20261114/material-particles-r1/master-r1.png",
+    "bytes": 1758487,
+    "sha256": "bf02fddb4ad5c7924d216192091960ab770f9572508aebac6b2faa21706f94e9"
+  },
+  "prompt": {
+    "path": "assets/source/quality-20261114/material-particles-r1/prompt-r1.txt",
+    "sha256": "c777aedce2f063fb40d1c8e8e4514e9ac4fe44d93e9e4b96414b2af50e2e2e3f"
+  },
+  "output": {
+    "path": "/art/quality-20261114/vfx/particle-materials-six-r1.webp",
+    "bytes": 80528,
+    "sha256": "77a99e6eed2b3839efe5cc8850b4f3c0a6bf9e1edecaf1999c4bc76057365ce3",
+    "width": 768,
+    "height": 512,
+    "columns": 3,
+    "rows": 2
+  },
+  "materials": [
+    "concrete",
+    "oxidized-steel",
+    "charcoal-ember",
+    "burnt-fabric",
+    "ash",
+    "organic-spatter"
+  ],
+  "estimatedDecodedRgbaBytes": 1572864,
+  "scope": "Phone V1 shared micro-particle paint only. Existing random calls, emitters, positions, speeds, lifetimes, counts, pool, damage and saves remain unchanged. Candidate, not final motion/listening/device acceptance."
+}

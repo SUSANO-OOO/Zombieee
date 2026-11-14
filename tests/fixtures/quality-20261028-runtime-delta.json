@@ -2048,6 +2048,22 @@
       "pack": "units",
       "category": "boss",
       "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/particle-materials-six-r1.webp",
+      "bytes": 80528,
+      "hash": "sha256-77a99e6eed2b3839efe5cc8850b4f3c0a6bf9e1edecaf1999c4bc76057365ce3",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/king-exhaust-six-r2.webp",
+      "bytes": 83570,
+      "hash": "sha256-dd9eb1093647176c6ddc8083435630ce2561376fdff0d27decf5ccb913a4b67c",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
     }
   ],
   "retired": [
@@ -14962,6 +14978,22 @@
         "/art/quality-20261113/ui/materials-six-r1.webp"
       ],
       "logicalBytes": 1968486
+    },
+    {
+      "date": "2026-11-14",
+      "scope": "One six-material smartphone micro-particle atlas; painter-only change, not a release or whole-quality approval",
+      "paths": [
+        "/art/quality-20261114/vfx/particle-materials-six-r1.webp"
+      ],
+      "logicalBytes": 80528
+    },
+    {
+      "date": "2026-11-14",
+      "scope": "One material-only smartphone King engine-exhaust packet atlas. Current saw housing socket and actual manual clock; not a release, listening, whole-quality or device approval.",
+      "paths": [
+        "/art/quality-20261114/vfx/king-exhaust-six-r2.webp"
+      ],
+      "logicalBytes": 83570
     }
   ]
 }

@@ -7,6 +7,8 @@ import { campaignWaveReady, campaignWavePrompt, requestCampaignWave } from './wa
 import { queueV105FistWave, resolveV105FistWavePaint, advanceV105FistWaves, drawV105FistWaves, v105FistWaveSnapshot, clearV105FistWaves } from './v105PaisenFistWave.js';
 import { startV105AbilityName, drawV105AbilityNames, v105AbilityNameSnapshot, v105EnemyAbilityName, clearV105AbilityNames } from './v105AbilityNames.js';
 import {queueV100GuardActivation} from './v100GuardActivationVfx.js';
+import {drawV100KingExhaust} from './v100KingExhaustVfx.js';
+import {V100_KING_EXHAUST_SOCKET} from './v100KingExhaustArt.js';
 import { v105CurrentAbilitySample, v105AbilityFacing } from './v105CurrentAbilityPose.js';
 import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
 import { v100PortraitFraming } from "./v100PortraitFraming.js";
@@ -608,6 +610,7 @@ import { drawV100AssaultObject, v100AssaultObjectProfile } from "./v100AssaultOb
 import { drawV100Explosion, drawV100FootDust, drawV100GroundFire, drawV100Muzzle, V100_CONTACT_WEAPONS, V100_CLAW_CONTACT_WEAPONS, queueV100Contact, queueV100ClawContact, queueV100TakuyaGroundContact, queueV100TataraGroundContact, getV100ClawContactSnapshot, getV100SkillContactSnapshot, queueV100GuardContact, getV100GuardContactSnapshot, drawV100ContactQueue, clearV100ContactQueue } from "./v100CombatVfx.js";
 import { drawV100BossAftermath } from "./v100BossAftermath.js";
 import {drawV100GateChargeTrail,drawV100KuromeRay} from './v100BossAttackVfx.js';
+import {drawV100MaterialParticle} from './v100MaterialParticles.js';
 import { drawV100BossDefeat } from "./v100BossDefeatVfx.js";
 import {drawV100BossDefeatFinales} from "./v100BossDefeatFinaleVfx.js";
 import { TATARA_GROUND_ART, v100TataraGroundPose, v100TataraDisplaySize, v100RenderedTataraGroundSocket } from "./v100TataraPresentation.js";
@@ -628,7 +631,7 @@ import { V100_STATION_POSE_KINDS, v100StationAbilityPose, v100GateEaterAuthoredS
 import { v100SupportManualPose, V100_SUPPORT_MANUAL_STABLE_POSE } from "./v100SupportManualPose.js";
 import { v100AdvancedManualPose, V100_ADVANCED_MANUAL_POSE_STABLE } from "./v100AdvancedManualPose.js";
 import { v100ScoutApproachStep } from "./v100ScoutApproach.js";
-import { clearV100SupportAbilityEffects, drawV100SupportAbilityEffects, getV100SupportAbilityEffectsSnapshot, queueV100SupportAbilityEffect } from "./v100SupportAbilityVfx.js";
+import { clearV100SupportAbilityEffects, drawV100SupportAbilityEffects, drawV100DeployedWireTrap, getV100SupportAbilityEffectsSnapshot, queueV100SupportAbilityEffect } from "./v100SupportAbilityVfx.js";
 import { clearV100AdvancedAbilityEffects, drawV100AdvancedAbilityEffects, drawV100ChihaFinalBursts, V100_CHIHA_FINAL_BURST_DURATION, getV100AdvancedAbilityEffectsSnapshot, queueV100AdvancedAbilityEffect, resolveV100AdvancedAbilityOrigin, resolveV105CurrentAbilityOrigin } from "./v100AdvancedAbilityVfx.js";
 import { v100AbilityOriginSourcePixel, v100RenderedAbilityOriginSocket } from "./v100AbilityOriginSockets.js";
 import { drawV100DefensePerimeter } from "./v100DefensePerimeter.js";
@@ -4179,11 +4182,12 @@ function drawDiagnosticStationEnemy(ctx: CanvasRenderingContext2D, f: Fighter) {
   ctx.restore();
 }
 
-function drawMonkeyTrap(ctx: CanvasRenderingContext2D, fighter: Fighter, stageObjects: SpriteMap, authoredV100 = false) {
+function drawMonkeyTrap(ctx: CanvasRenderingContext2D, fighter: Fighter, stageObjects: SpriteMap, authoredV100 = false, world?: Game) {
   if (fighter.kind !== "engineer" || !fighter.engineerTrapReady || fighter.engineerTrapLane === null) return;
   const x = fighter.engineerTrapX;
   const y = activeLaneCenters[fighter.engineerTrapLane] + 5;
   if (authoredV100) {
+    if(drawV100DeployedWireTrap(ctx,stageObjects,world,fighter,x,y))return;
     const image = stageObjects["v100-support-trap-intact"];
     if (!image?.complete || !image.naturalWidth) return;
     const width = 82;
@@ -4315,6 +4319,7 @@ const fighterWeaponSockets = new WeakMap<Fighter, {x:number;y:number}>();
 const fighterJointWeapons = new WeakMap<Fighter, {kind:string;channel:string;sequence?:number;striking:boolean;phase:number|null;held:boolean;tip:{x:number;y:number};grip:{x:number;y:number}}[]>();
 const fighterTakuyaGroundSockets = new WeakMap<Fighter, {x:number;y:number;sourceId:string;sourcePath?:string;kind:string;pixel:{x:number;y:number}}>();
 const fighterTataraGroundSockets = new WeakMap<Fighter, {x:number;y:number;sourcePath:string;sourcePixel:{x:number;y:number};kind:string;ownerId:number;activationId:number}>();
+const fighterKingExhaustSockets = new WeakMap<Fighter, {x:number;y:number;axisX:number;axisY:number;sourcePath:string;sourceBone:string;paintedAt:number}>();
 const fighterShieldSockets = new WeakMap<Fighter, {x:number;y:number}>();
 const shotRenderOrigins = new WeakMap<Shot, {x:number;y:number}>();
 const fighterRenderAuditHistory = new Map<number, FighterRenderAudit[]>();
@@ -4370,6 +4375,7 @@ function drawSpriteFighter(
   fighterJointWeapons.delete(f);
   fighterTakuyaGroundSockets.delete(f);
   fighterTataraGroundSockets.delete(f);
+  fighterKingExhaustSockets.delete(f);
   fighterShieldSockets.delete(f);
   const {
     forceOpaque = false,
@@ -4820,6 +4826,15 @@ function drawSpriteFighter(
   if(drewArticulatedWalk&&jointPose?.abilityPresentation==='fist-wave'&&weaponSocket&&options.world){
     resolveV105FistWavePaint(options.world,f,weaponSocket,{activationId:f.manualAbility?.activationId,
       sourceAtlas:jointAtlas.path,paintedAt:options.world.time});
+  }
+  if(drewArticulatedWalk&&jointPose&&renderKind==='crazy-king'&&options.world
+    &&jointAtlas.path===V100_KING_EXHAUST_SOCKET.bodyPath){
+    const exhaustOptions={kind:renderKind,plan:jointPose,direction,frame,size,pose,x:f.x,y:f.y,bob,depthScale,
+      sourceBone:V100_KING_EXHAUST_SOCKET.sourceBone,allowIdle:true};
+    const exhaust=v177RenderedJointWeaponSocket({...exhaustOptions,sourcePoint:V100_KING_EXHAUST_SOCKET.sourcePoint});
+    const axis=v177RenderedJointWeaponSocket({...exhaustOptions,sourcePoint:V100_KING_EXHAUST_SOCKET.axisPoint});
+    if(exhaust&&axis)fighterKingExhaustSockets.set(f,{...exhaust,axisX:axis.x,axisY:axis.y,
+      sourcePath:jointAtlas.path,sourceBone:V100_KING_EXHAUST_SOCKET.sourceBone,paintedAt:options.world.time});
   }
   if(drewArticulatedWalk&&jointPose&&weaponSocket&&options.world){
     if(['tky','mrs-chiha','zakimiya'].includes(f.kind)){
@@ -9143,7 +9158,7 @@ function drawWorld(
     }
   }
 
-  for (const fighter of g.fighters) drawMonkeyTrap(ctx, fighter, stageObjects, Boolean(g.definition.missionConfig.v100StageNumber));
+  for (const fighter of g.fighters) drawMonkeyTrap(ctx, fighter, stageObjects, Boolean(g.definition.missionConfig.v100StageNumber),g);
   const interiorDeploymentFighterIds = new Set(
     g.fighters
       .filter((fighter) => crawlerDeploymentPlanForFighter(fighter).unitPass === "before-foreground-mask")
@@ -9281,6 +9296,10 @@ function drawWorld(
 
   drawCrawlerBarrage(ctx, g, graphicsProfile);
   if(g.definition.missionConfig.v100StageNumber){
+    drawV100KingExhaust(ctx,stageObjects,g,(ownerId:number)=>{
+      const owner=g.fighters.find(f=>f.id===ownerId&&f.kind==='crazy-king'&&f.hp>0);
+      return owner?fighterKingExhaustSockets.get(owner):null;
+    });
     drawV100ContactQueue(ctx,stageObjects,g,(ownerId:number)=>{
       const owner=g.fighters.find(f=>f.id===ownerId&&['guardian','kumaverson'].includes(f.kind)&&f.hp>0);
       return owner?fighterShieldSockets.get(owner):null;
@@ -9375,6 +9394,7 @@ function drawWorld(
   drawBattlePresentationEffects(ctx, g, graphicsProfile.effectDensity, stageObjects);
   for (const p of g.particles) {
     if (!visibleRenderPoint(p.x, p.y, graphicsProfile.cullingMargin)) continue;
+    if(g.definition.missionConfig.v100StageNumber){drawV100MaterialParticle(ctx,stageObjects,p,{world:g});continue;}
     ctx.globalAlpha = Math.max(0, p.life * 1.6); ctx.fillStyle = p.color;
     ctx.beginPath(); ctx.ellipse(p.x + p.size * .5, p.y + p.size * .5, Math.max(1, p.size * .62), Math.max(1, p.size * .34), 0, 0, Math.PI * 2); ctx.fill();
   }
@@ -15372,6 +15392,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       verifiedBossDefeatPaths: battleArtworkPolicyRef.current.paths.split('\n').filter(Boolean),
       verifiedBossAttackPaths: battleArtworkPolicyRef.current.paths.split('\n').filter(Boolean),
       verifiedManualImpactPaths: battleArtworkPolicyRef.current.paths.split('\n').filter(Boolean),
+      verifiedParticleMaterialPaths: battleArtworkPolicyRef.current.paths.split('\n').filter(Boolean),
+      verifiedKingExhaustPaths: battleArtworkPolicyRef.current.paths.split('\n').filter(Boolean),
       includeAllSprites: localQaRequested
         && !finiteEnemyRuntimeQa
         && !finiteVisualIntegrityQa

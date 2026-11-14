@@ -148,6 +148,14 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/quality-20261114/vfx/king-exhaust-six-r2.webp",
+      "bytes": 83570,
+      "hash": "sha256-dd9eb1093647176c6ddc8083435630ce2561376fdff0d27decf5ccb913a4b67c",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/quality-20261114/vfx/kurome-attack-six-r2.webp",
       "bytes": 309028,
       "hash": "sha256-c67f0b6951e74973201d5e96da1dc9d776527681f21b1911294c63e9589b6994",
@@ -209,6 +217,14 @@
       "hash": "sha256-814c7fe264ea474613b90634a64f6f4b6d39b760c4c987dfdd4b540f0ad8ee36",
       "pack": "units",
       "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/particle-materials-six-r1.webp",
+      "bytes": 80528,
+      "hash": "sha256-77a99e6eed2b3839efe5cc8850b4f3c0a6bf9e1edecaf1999c4bc76057365ce3",
+      "pack": "campaign-core",
+      "category": "object",
       "criticality": "critical"
     },
     {

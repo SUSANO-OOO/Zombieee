@@ -1,3 +1,5 @@
+import {drawV100WireTrapMotion} from './v100WireTrapMotion.js';
+
 const supportEffectQueues = new WeakMap();
 const MAX_SUPPORT_EFFECTS = 32;
 const SUPPORT_EFFECT_TYPES = Object.freeze(["medic-impact", "trap-deploy", "trap-sprung"]);
@@ -27,7 +29,12 @@ export function queueV100SupportAbilityEffect(world, { ownerId, activationId, ev
     || duration <= 0) return false;
   const effects = activeEffects(world);
   if (effects.some((effect) => effect.ownerId === ownerId && effect.activationId === activationId && effect.eventType === eventType && effect.startedAt === startedAt)) return false;
-  effects.push({ ownerId, activationId, eventType, targetId, x, y, startedAt, duration });
+  const deployment = eventType === 'trap-sprung' ? effects.find(effect=>effect.eventType==='trap-deploy'
+    &&effect.ownerId===ownerId&&effect.activationId===activationId&&effect.x===x&&effect.y===y
+    &&effect.startedAt<=startedAt) : null;
+  const deploymentProgress = deployment ? Math.max(0,Math.min(1,(startedAt-deployment.startedAt)/deployment.duration)) : 1;
+  effects.push({ ownerId, activationId, eventType, targetId, x, y, startedAt, duration,
+    ...(eventType==='trap-sprung'?{deploymentProgress}:{}) });
   supportEffectQueues.set(world, effects.slice(-MAX_SUPPORT_EFFECTS));
   return true;
 }
@@ -74,6 +81,9 @@ function drawTrapDust(ctx, objects, effect) {
 function drawSprungTrap(ctx, objects, effect) {
   const image = ready(objects, "v100-support-trap-sprung");
   const progress = Math.min(1, effect.elapsed / effect.duration);
+  if(drawV100WireTrapMotion(ctx,objects,{x:effect.x,y:effect.y+5,progress,phase:'spring',alpha:Math.max(0,1-progress),deploymentProgress:effect.deploymentProgress??1})){
+    drawTrapDust(ctx,objects,effect);return;
+  }
   const width = 82 * (1 + Math.sin(progress*Math.PI)*.09);
   const height = width * image.naturalHeight / image.naturalWidth;
   ctx.save();
@@ -81,6 +91,18 @@ function drawSprungTrap(ctx, objects, effect) {
   ctx.drawImage(image, effect.x - width / 2, effect.y - height - Math.sin(progress*Math.PI)*6, width, height);
   ctx.restore();
   drawTrapDust(ctx, objects, effect);
+}
+
+export function drawV100DeployedWireTrap(ctx,objects,world,owner,x,y){
+ const effects=world?activeEffects(world):[];
+ let deployment;
+ for(let index=effects.length-1;index>=0;index--){
+  const e=effects[index];
+  if(e.eventType==='trap-deploy'&&e.ownerId===owner.id&&e.activationId===owner.manualAbility?.activationId
+    &&e.x===x&&e.y+5===y){deployment=e;break;}
+ }
+ const progress=deployment?Math.max(0,(world.time-deployment.startedAt)/deployment.duration):1;
+ return drawV100WireTrapMotion(ctx,objects,{x,y,progress});
 }
 
 export function drawV100SupportAbilityEffects(ctx, objects, world) {
