@@ -8,11 +8,12 @@ import ts from 'typescript';
 import {V100_BALLISTIC_MATERIAL_ART} from '../app/v100BallisticMaterialArt.js';
 import {drawV100BallisticShot} from '../app/v100BallisticVfx.js';
 import {clearV100ContactQueue} from '../app/v100CombatVfx.js';
-import {weaponProfileForUnit} from '../app/combatPresentation.js';
+import {weaponProfileForUnit,ENEMY_FIREARM_WEAPON_PROFILE} from '../app/combatPresentation.js';
 import {enemyProjectilePresentationFor} from '../app/enemyVfxPresentation.js';
 import {requiredBattleAssetPlan} from '../app/battleAssetPlan.js';
 import {V100_STAGE_IDS} from '../app/v100Registry.js';
 import {verifiedPwaArtworkPaths} from '../app/pwaArtworkAvailability.js';
+import {combatVariation} from '../app/v100RasterAtmosphere.js';
 
 const art=V100_BALLISTIC_MATERIAL_ART.materials,image={complete:true,naturalWidth:768,naturalHeight:512};
 const shot=(weapon='ranger')=>({weapon,style:'projectile',side:'human',x:320,y:240,tx:480,ty:260,life:.15,sourceId:1,targetId:2,shotIndex:2,casing:true});
@@ -80,6 +81,41 @@ test('medical support, crossbow, thrown weapons, blades and infected projectiles
   const v=canvas();assert.equal(drawV100BallisticShot(v.c,{[art.id]:image},shot(kind),params(kind),{}),false);assert.equal(v.calls.length,0);
  }
  const v=canvas();assert.equal(drawV100BallisticShot(v.c,{[art.id]:image},{...shot(),style:'melee'},params(),{}),false);
+});
+
+test('the actual immediate enemy-shot emitter paints its committed target at once without delaying damage or adding a case',async()=>{
+ const text=await readFile('app/AshfallGame.tsx','utf8'),file=ts.createSourceFile('AshfallGame.tsx',text,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);
+ const node=file.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text==='addEnemyFirearmShot');assert.ok(node);
+ const executable=ts.transpileModule(node.getText(file)+'\nthis.emit=addEnemyFirearmShot;',{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText;
+ for(const kind of Object.keys(ENEMY_FIREARM_WEAPON_PROFILE)){
+  const world={definition:{missionConfig:{v100StageNumber:2}},targetHp:91},before=JSON.stringify(world),emitted=[];
+  const scope={ENEMY_FIREARM_WEAPON_PROFILE,weaponAnchorForTarget:()=>({x:500,y:220}),
+   addShot:(_g,x,y,tx,ty,life,side,duration,style,weapon,effect,sourceId,targetId,damageTargetId,emphasized,shotIndex,recoil,casing,hitStopSeconds,impactDelaySeconds)=>emitted.push({x,y,tx,ty,life,side,duration,style,weapon,effect,sourceId,targetId,damageTargetId,emphasized,shotIndex,recoil,casing,hitStopSeconds,impactDelaySeconds})};
+  runInNewContext(executable,scope);scope.emit(world,{kind,side:'zombie',id:7},{x:400,y:260,id:8});
+  assert.equal(emitted.length,1);assert.equal(JSON.stringify(world),before);
+  const e=emitted[0];assert.equal(e.impactDelaySeconds,0);assert.equal(e.casing,false);assert.equal(e.damageTargetId,undefined);
+  const first=canvas();drawV100BallisticShot(first.c,{[art.id]:image},e,params(kind,{x:e.x,y:e.y,p:0,elapsed:0,ux:-1,distance:100}),world);
+  assert.equal(first.calls.length,1);assert.equal(first.calls[0].x,e.tx);assert.equal(first.calls[0].y,e.ty);assert.equal(first.calls[0].rotation,Math.PI);
+  const later=canvas();drawV100BallisticShot(later.c,{[art.id]:image},{...e,life:.025},params(kind,{x:e.tx,y:e.ty,p:1,elapsed:.135,ux:-1,distance:100}),world);
+  assert.equal(later.calls.length,1);assert.ok(later.calls[0].alpha<first.calls[0].alpha);
+  const ended=canvas();drawV100BallisticShot(ended.c,{[art.id]:image},{...e,life:0},params(kind,{p:1,elapsed:.16}),world);assert.equal(ended.calls.length,0);
+ }
+});
+
+test('the immediate enemy fix retains the previously observed ally paint exactly through flight, casing release and impact',()=>{
+ const previous=execFileSync('git',['show','ac20bfa9c276be2b6f9f8bf175b78fcdd23921b1:app/v100BallisticVfx.js'],{encoding:'utf8'});
+ const executable=ts.transpileModule(previous,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS}}).outputText;
+ const scope={exports:{},require(name){
+  if(name==='./v100BallisticMaterialArt.js')return {V100_BALLISTIC_MATERIAL_ART};
+  if(name==='./v100RasterAtmosphere.js')return {combatVariation};throw Error('Unexpected dependency '+name);
+ }};
+ runInNewContext(executable,scope);
+ for(const kind of ['babayaga','ranger','gunner'])for(const direction of [-1,1])for(const p of [0,.01,.1,.25,.519,.52,.99,1]){
+  const before=canvas(),after=canvas(),e=shot(kind),input=params(kind,{p,ux:direction}),objects={[art.id]:image},world={};
+  assert.equal(scope.exports.drawV100BallisticShot(before.c,objects,e,input,world),drawV100BallisticShot(after.c,objects,e,input,world));
+  assert.equal(JSON.stringify(before.calls),JSON.stringify(after.calls),kind+' phase '+p+' direction '+direction);
+  before.assertRestored();after.assertRestored();
+ }
 });
 
 test('the actual ordinary-shot consumer selects materials before legacy geometry and retains the live muzzle contract',async()=>{

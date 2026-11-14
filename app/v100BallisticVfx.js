@@ -34,21 +34,27 @@ export function drawV100BallisticShot(ctx,objects,shot,{x,y,ux,uy,p,elapsed,dist
  const image=artworkFor(objects,world),art=V100_BALLISTIC_MATERIAL_ART.materials;
  const inherited=Number.isFinite(ctx.globalAlpha)?ctx.globalAlpha:1;
  const angle=Math.atan2(uy,ux),seed=(shot.sourceId??0)*17+(shot.targetId??0)*7+(shot.shotIndex??0)*31;
- if(p<1){
+ // Red Panther hits are already resolved when their visual shot is emitted.
+ // Show and fade that committed trace immediately, without inventing travel.
+ const instantHit=shot.side==='zombie'&&(weapon==='red-panther-smg'||weapon==='red-panther-commander')&&shot.impactDelaySeconds===0;
+ if(instantHit&&![shot.tx,shot.ty].every(Number.isFinite))return true;
+ const instantFade=instantHit?Math.min(1,shot.life/(Number.isFinite(shot.duration)&&shot.duration>0?shot.duration:.16)):1;
+ const flightProgress=instantHit?1:p;
+ if(p<1||instantHit){
   const tail=(weapon==='crawler'?46:weaponProfile?.trail==='high-velocity'?38:weaponProfile?.trail==='burst-tracer'?30:24)
    *Math.max(.78,Math.min(1.24,distance/240));
-  ctx.save();ctx.translate(x,y);ctx.rotate(angle);ctx.shadowBlur=0;ctx.globalCompositeOperation='source-over';
+  ctx.save();ctx.translate(instantHit?shot.tx:x,instantHit?shot.ty:y);ctx.rotate(angle);ctx.shadowBlur=0;ctx.globalCompositeOperation='source-over';
   if(image){
-   const frame=art.frames[profile.glint],width=Math.min(tail/Math.max(.25,frame.anchorX-.13),distance*p/frame.anchorX);
+   const frame=art.frames[profile.glint],width=Math.min(tail/Math.max(.25,frame.anchorX-.13),distance*flightProgress/frame.anchorX);
    const height=(profile.glint===2?12:profile.glint===0?14:18)*(1+combatVariation(seed,81)*.08);
-   if(width>0)paintCell(ctx,image,frame,width,height,inherited*(profile.glint===2?.84:.94));
+   if(width>0)paintCell(ctx,image,frame,width,height,inherited*(profile.glint===2?.84:.94)*instantFade);
   }else{
    // The older pack has the existing painted steel-motion texture. It supplies
    // a short flight glint, never the former lozenge or vector beam. Optional
    // spent-case detail waits for the new verified material.
-   const fallback=objects?.['v104-steel'],width=Math.min(tail,distance*p);
+   const fallback=objects?.['v104-steel'],width=Math.min(tail,distance*flightProgress);
    if(fallback?.complete&&fallback.naturalWidth&&fallback.naturalHeight&&width>0){
-    ctx.globalAlpha=inherited*.68;ctx.drawImage(fallback,-width,-1.6,width,3.2);
+    ctx.globalAlpha=inherited*.68*instantFade;ctx.drawImage(fallback,-width,-1.6,width,3.2);
    }
   }
   ctx.restore();
