@@ -138,10 +138,10 @@ test("legacy exhaustive QA can exclude V1 atlases without changing V1 production
     "/art/v100/combat-vfx/grenade-projectile-r1.webp",
     "/art/v100/combat-vfx/fire-whisky-projectile-r1.webp",
     "/art/v100/combat-vfx/lightblade-six-frames-r1.webp",
-    "/art/v100/combat-vfx/countercut-six-frames-r1.webp",
     "/art/v100/combat-vfx/ground-fire-smoke-r1.webp",
     "/art/v100/characters/tatara-ground-strike-r1.webp",
   ]);
+  assert.ok(!full.stageObjects.some(entry=>entry.id==='v100-countercut'),'the archived X glyph is not a current V1 battle decode');
   assert.ok(legacy.stageObjects.every(old=>full.stageObjects.some(entry=>entry.id===old.id&&entry.path===old.path)));
   assert.equal(full.persistent.length, legacy.persistent.length+45);
   assert.deepEqual(full.persistent.filter(p=>!legacy.persistent.some(old=>old.key===p.key)).map(p=>p.key).sort(),['joint-brawler','joint-scout','joint-ranger','joint-medic','joint-guardian','joint-brute','joint-gunner','joint-engineer','joint-mayo-chan','joint-walker','joint-grappler','joint-sprinter','joint-crusher','joint-red-panther-knife','joint-red-panther-shield','joint-red-panther-smg','joint-red-panther-commander','joint-crazy-king','joint-kumaverson','joint-zakimiya','joint-tky','joint-mrs-chiha','joint-miyamoto-musashi','joint-shade','joint-spitter','joint-mayo-chan-feral','joint-ooze','joint-gate-eater','joint-kurome','joint-mother','joint-takuya','joint-ooguchi','joint-gairen','joint-futago','joint-futago-separated-a','joint-futago-separated-b','joint-resonator','joint-cagewalker','joint-choir-knot','joint-spindle','joint-pall-manta','joint-babayaga','joint-mugarian-president-mutated','joint-takuya-omega','joint-anchor-bloom'].sort());
