@@ -164,7 +164,8 @@ test('the real install gate withholds old, partial or blocked packs and exposes 
     {installedManifest:{assets:artworks.map(a=>({path:a.path,hash:'old'}))},storedHashes},{installedManifest:manifest,storedHashes,blocking:true}])assert.equal(evaluate(facts),'');
   assert.equal(evaluate({installedManifest:manifest,storedHashes}),artworks.map(a=>a.path).sort().join('\n'));
   assert.equal(evaluate({installedManifest:manifest,storedHashes:new Set([artworks[0].hash])}),artworks[0].path);
-  const joined=runInNewContext(declarations.get('verifiedBattleArtworkPaths'),{verifiedBossDefeatPaths:'',verifiedBossAttackPaths:'',verifiedManualImpactPaths:'',verifiedParticleMaterialPaths:'',verifiedKingExhaustPaths:'',verifiedGuardImpactPaths:'guard-path'});
+  const unrelatedPaths=Object.fromEntries([...declarations.keys()].filter(name=>/^verified[A-Z]\w*Paths$/.test(name)&&name!=='verifiedBattleArtworkPaths').map(name=>[name,'']));
+  const joined=runInNewContext(declarations.get('verifiedBattleArtworkPaths'),{...unrelatedPaths,verifiedGuardImpactPaths:'guard-path'});
   assert.equal(joined,'guard-path');
   const metadata=await readFile('app/v100GuardImpactArt.js','utf8');assert.doesNotMatch(metadata,/^\s*import(?:\s|\{)/mu);
 });
