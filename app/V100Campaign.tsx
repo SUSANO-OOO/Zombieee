@@ -76,7 +76,7 @@ import { v100MissionBriefingFor, v100MissionThreatsFor } from "./v100MissionBrie
 import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
 import { v100RewardPresentationFor } from "./v100RewardPresentation.js";
 import { v100MapStageName, v100StageDiscovered } from "./v100MapDisclosure.js";
-import { V100_BOSS_DOSSIER_ART } from "./v100BossDossierArt.js";
+import { V100_BOSS_DOSSIER_ART, V100_BOSS_DOSSIER_FRAMING } from "./v100BossDossierArt.js";
 import { v100StoryPageFor } from "./v100StoryPages.js";
 import { formatV100Number, v100SupportPurposeFor, v100TacticalHintFor, v100UnitPresentation } from "./v100UnitPresentation.js";
 import { v100RoleLabelFor } from "./v100Terminology.js";
@@ -1221,9 +1221,14 @@ function MapView({ save, selectedStageId, onSelect, onStart, onRename, onBackup,
   const chapterStars = chapterStages.reduce((sum, entry) => sum + Math.max(0, Math.min(3, Number(save.bestStars[entry.id]) || 0)), 0);
   const campaignStars = V100_STAGES.reduce((sum, entry) => sum + Math.max(0, Math.min(3, Number(save.bestStars[entry.id]) || 0)), 0);
   const boss = discovered && stage?.missionType === "boss" ? V100_BOSSES.find((entry) => entry.stageNumber === stage.number) : null;
+  const photoFrame = boss ? V100_BOSS_DOSSIER_FRAMING[boss.id] : null;
   const operationArt = {
     "--v100-operation-scene": discovered && stage ? `url("${stageVisualFor(stage.id)}")` : undefined,
     "--v100-operation-enemy": boss && V100_BOSS_DOSSIER_ART[boss.id] ? `url("${V100_BOSS_DOSSIER_ART[boss.id].path}")` : undefined,
+    "--v100-operation-center-x": photoFrame?.centerX,
+    "--v100-operation-top": photoFrame?.top,
+    "--v100-operation-width-fit": photoFrame?.widthFit,
+    "--v100-operation-height-fit": photoFrame?.heightFit,
   } as CSSProperties;
   const nextStage = V100_STAGES.find((entry) => entry.number === completedNumber + 1);
   const selectStage = (stageId: string) => {

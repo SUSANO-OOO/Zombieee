@@ -6,7 +6,7 @@ import vm from 'node:vm';
 import ts from 'typescript';
 import sharp from 'sharp';
 import {V100_BOSSES} from '../app/v100Registry.js';
-import {V100_BOSS_DOSSIER_ART} from '../app/v100BossDossierArt.js';
+import {V100_BOSS_DOSSIER_ART,V100_BOSS_DOSSIER_FRAMING} from '../app/v100BossDossierArt.js';
 import {V100_UI_MATERIAL_ART} from '../app/v100PreparationArt.js';
 import {canUseVerifiedPwaArtwork} from '../app/pwaArtworkAvailability.js';
 
@@ -37,6 +37,28 @@ test('all nine current boss dossiers are registered, source-bound and compact; F
   const twins=provenance.entries.find(e=>e.id==='boss-futago');
   assert.deepEqual(twins.inputs.map(i=>i.kind),['futago-separated-a','futago-separated-b']);
   assert.ok(twins.inputs.every(i=>!i.currentTexture.path.endsWith('/futago-r1.webp')),'The legacy fused body is not a current V1 dossier');
+});
+
+test('operation-photo cameras are bound to the exact nine images and keep upper paint inside short and taller phone photos',async()=>{
+  assert.deepEqual(Object.keys(V100_BOSS_DOSSIER_FRAMING).sort(),V100_BOSSES.map(b=>b.id).sort());
+  for(const [id,art]of Object.entries(V100_BOSS_DOSSIER_ART)){
+    const frame=V100_BOSS_DOSSIER_FRAMING[id],bytes=await read('public'+art.path);
+    assert.equal(frame.hash,'sha256-'+sha(bytes));
+    const {data,info}=await sharp(bytes).ensureAlpha().raw().toBuffer({resolveWithObject:true});
+    let top=info.height,bottom=-1;
+    for(let y=0;y<info.height;y++)for(let x=0;x<info.width;x++)if(data[(y*info.width+x)*4+3]>32){top=Math.min(top,y);bottom=Math.max(bottom,y);}
+    for(const [w,h]of [[100,44],[134,120]]){
+      const renderedWidth=Math.min((w-8)*frame.widthFit,h*frame.heightFit),scale=renderedWidth/info.width;
+      const origin={x:w/2-renderedWidth*frame.centerX,y:3-renderedWidth*info.height/info.width*frame.top};
+      assert.ok(Number.isFinite(scale)&&scale>0);
+      assert.ok(Math.abs(origin.y+top*scale-3)<1e-8,'Transparent padding must not push the figure below the photo');
+      for(let y=top;y<top+Math.ceil((bottom-top+1)*.4);y++)for(let x=0;x<info.width;x++)if(data[(y*info.width+x)*4+3]>32){
+        const px=origin.x+x*scale,py=origin.y+y*scale;
+        assert.ok(px>=3&&px<=w-3,id+' upper paint must fit horizontally, including both current twins');
+        assert.ok(py>=2.99&&py<=h,id+' upper paint must remain vertically visible');
+      }
+    }
+  }
 });
 
 const gateSource=await readFile(new URL('../app/PwaGate.tsx',import.meta.url),'utf8');

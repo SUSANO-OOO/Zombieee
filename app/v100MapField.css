@@ -157,7 +157,8 @@
   position: relative;
   float: right;
   width: 41%;
-  height: clamp(48px, calc(100dvh - 310px), 140px);
+  --v100-operation-photo-height: clamp(48px, calc(100dvh - 310px), 140px);
+  height: var(--v100-operation-photo-height);
   min-width: 0;
   margin: 0 0 3px 6px;
   overflow: hidden;
@@ -199,12 +200,17 @@
 #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-specimen { display: none; }
 html[data-pwa-boss-dossiers="ready"] #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-specimen {
   position: absolute;
-  inset: 5px 0 0;
+  top: 3px;
+  left: 50%;
+  width: min(calc((100% - 8px) * var(--v100-operation-width-fit, 1)), calc(var(--v100-operation-photo-height) * var(--v100-operation-height-fit, 1)));
+  height: auto;
+  aspect-ratio: 8 / 9;
   display: block;
   background-image: var(--v100-operation-enemy);
   background-repeat: no-repeat;
-  background-position: center 2px;
-  background-size: 100% auto;
+  background-position: center;
+  background-size: 100% 100%;
+  transform: translate(calc(-100% * var(--v100-operation-center-x, .5)), calc(-100% * var(--v100-operation-top, 0)));
   filter: drop-shadow(4px 3px 3px #060b08b3);
 }
 #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-recon .v100-stage-intel {
@@ -274,8 +280,9 @@ html[data-pwa-boss-dossiers="ready"] #v100-campaign[data-v100-phase="map"] .v100
   #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-recon .v100-stage-intel > strong,
   #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-recon .v100-stage-intel > p { display: inline; margin: 0; font-size: 12px; line-height: 17px; }
   #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-recon .v100-stage-intel > strong::after { content: " ／ "; color: #826543; }
-  #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-photo { width: 36%; height: 44px; }
-  #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-photo > span { bottom: 5px; left: 6px; padding: 1px 3px; font-size: 11px; }
+  #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-photo { width: 36%; --v100-operation-photo-height: 44px; }
+  #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-map-briefing h3 { font-size: 15px; line-height: 18px; }
+  #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-photo > span { display: none; }
   #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-map-side-heading > span:last-child { padding: 0 4px; line-height: 1.2; }
 }
 @media (prefers-reduced-motion: reduce) {
