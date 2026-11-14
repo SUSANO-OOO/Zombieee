@@ -24,9 +24,9 @@ function assertDelta(next){
 
 test('quality candidate contains exactly the reviewed art, firearm and VFX delta while retaining unrelated payloads',async()=>{
   assertDelta(candidate);
-  assert.equal(contract.added.length,226);assert.equal(contract.retired.length,166);
+  assert.equal(contract.added.length,227);assert.equal(contract.retired.length,166);
   assert.equal(contract.transportChanges.length,345);
-  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),47050022); // Authored phone UI/portraits, nine boss finales, twelve preparation cues nine dedicated boss attack sheets and Tatara manual impact.
+  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),47130550); // Authored phone UI/portraits, nine boss finales, twelve preparation cues nine dedicated boss attack sheets and Tatara manual impact plus physical micro-particle material.
   for(const row of contract.added){
     const bytes=await readFile(new URL('../public'+(row.sourcePath??row.path),import.meta.url));
     assert.equal(bytes.length,row.bytes,row.path);

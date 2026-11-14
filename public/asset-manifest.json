@@ -212,6 +212,14 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/quality-20261114/vfx/particle-materials-six-r1.webp",
+      "bytes": 80528,
+      "hash": "sha256-77a99e6eed2b3839efe5cc8850b4f3c0a6bf9e1edecaf1999c4bc76057365ce3",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/quality-20261114/vfx/takuya-attack-six-r1.webp",
       "bytes": 320952,
       "hash": "sha256-3ecacd831cb32e66992e505db9ecf2090e7f85a142286cca9d0becedb5f31bd1",

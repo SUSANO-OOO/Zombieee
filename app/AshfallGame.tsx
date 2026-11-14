@@ -608,6 +608,7 @@ import { drawV100AssaultObject, v100AssaultObjectProfile } from "./v100AssaultOb
 import { drawV100Explosion, drawV100FootDust, drawV100GroundFire, drawV100Muzzle, V100_CONTACT_WEAPONS, V100_CLAW_CONTACT_WEAPONS, queueV100Contact, queueV100ClawContact, queueV100TakuyaGroundContact, queueV100TataraGroundContact, getV100ClawContactSnapshot, getV100SkillContactSnapshot, queueV100GuardContact, getV100GuardContactSnapshot, drawV100ContactQueue, clearV100ContactQueue } from "./v100CombatVfx.js";
 import { drawV100BossAftermath } from "./v100BossAftermath.js";
 import {drawV100GateChargeTrail,drawV100KuromeRay} from './v100BossAttackVfx.js';
+import {drawV100MaterialParticle} from './v100MaterialParticles.js';
 import { drawV100BossDefeat } from "./v100BossDefeatVfx.js";
 import {drawV100BossDefeatFinales} from "./v100BossDefeatFinaleVfx.js";
 import { TATARA_GROUND_ART, v100TataraGroundPose, v100TataraDisplaySize, v100RenderedTataraGroundSocket } from "./v100TataraPresentation.js";
@@ -9375,6 +9376,7 @@ function drawWorld(
   drawBattlePresentationEffects(ctx, g, graphicsProfile.effectDensity, stageObjects);
   for (const p of g.particles) {
     if (!visibleRenderPoint(p.x, p.y, graphicsProfile.cullingMargin)) continue;
+    if(g.definition.missionConfig.v100StageNumber){drawV100MaterialParticle(ctx,stageObjects,p);continue;}
     ctx.globalAlpha = Math.max(0, p.life * 1.6); ctx.fillStyle = p.color;
     ctx.beginPath(); ctx.ellipse(p.x + p.size * .5, p.y + p.size * .5, Math.max(1, p.size * .62), Math.max(1, p.size * .34), 0, 0, Math.PI * 2); ctx.fill();
   }
@@ -15372,6 +15374,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       verifiedBossDefeatPaths: battleArtworkPolicyRef.current.paths.split('\n').filter(Boolean),
       verifiedBossAttackPaths: battleArtworkPolicyRef.current.paths.split('\n').filter(Boolean),
       verifiedManualImpactPaths: battleArtworkPolicyRef.current.paths.split('\n').filter(Boolean),
+      verifiedParticleMaterialPaths: battleArtworkPolicyRef.current.paths.split('\n').filter(Boolean),
       includeAllSprites: localQaRequested
         && !finiteEnemyRuntimeQa
         && !finiteVisualIntegrityQa

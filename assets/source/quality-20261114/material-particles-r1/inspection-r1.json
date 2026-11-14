@@ -1,0 +1,56 @@
+{
+  "master": "master-r1.png",
+  "bytes": 1758487,
+  "sha256": "bf02fddb4ad5c7924d216192091960ab770f9572508aebac6b2faa21706f94e9",
+  "metadata": {
+    "width": 1536,
+    "height": 1024,
+    "hasAlpha": true
+  },
+  "cells": [
+    {
+      "cell": 0,
+      "borderMax": 1,
+      "borderAbove32": 0,
+      "alphaNonzero": 64368,
+      "alphaAbove128": 49384
+    },
+    {
+      "cell": 1,
+      "borderMax": 1,
+      "borderAbove32": 0,
+      "alphaNonzero": 37627,
+      "alphaAbove128": 24910
+    },
+    {
+      "cell": 2,
+      "borderMax": 1,
+      "borderAbove32": 0,
+      "alphaNonzero": 64208,
+      "alphaAbove128": 35756
+    },
+    {
+      "cell": 3,
+      "borderMax": 1,
+      "borderAbove32": 0,
+      "alphaNonzero": 68246,
+      "alphaAbove128": 30239
+    },
+    {
+      "cell": 4,
+      "borderMax": 1,
+      "borderAbove32": 0,
+      "alphaNonzero": 55598,
+      "alphaAbove128": 39679
+    },
+    {
+      "cell": 5,
+      "borderMax": 1,
+      "borderAbove32": 0,
+      "alphaNonzero": 51146,
+      "alphaAbove128": 29746
+    }
+  ],
+  "selected": true,
+  "scope": "Inspect unmodified generated alpha; no alpha threshold, crop, colour key or pixel editing."
+}
