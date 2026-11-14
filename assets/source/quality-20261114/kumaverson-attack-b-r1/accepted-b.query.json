@@ -1,0 +1,44 @@
+{
+  "accent_phrases": [
+    {
+      "moras": [
+        {
+          "text": "セ",
+          "vowel": "e",
+          "vowel_length": 0.115,
+          "pitch": 5.4334807777404786,
+          "consonant": "s",
+          "consonant_length": 0.055
+        },
+        {
+          "text": "イ",
+          "vowel": "i",
+          "vowel_length": 0.075,
+          "pitch": 5.4953626441955565,
+          "consonant": null,
+          "consonant_length": null
+        },
+        {
+          "text": "ッ",
+          "vowel": "cl",
+          "vowel_length": 0.035,
+          "pitch": 0,
+          "consonant": null,
+          "consonant_length": null
+        }
+      ],
+      "accent": 1,
+      "pause_mora": null,
+      "is_interrogative": false
+    }
+  ],
+  "speedScale": 1.07,
+  "pitchScale": 0,
+  "intonationScale": 1.04,
+  "volumeScale": 1,
+  "prePhonemeLength": 0.02,
+  "postPhonemeLength": 0.065,
+  "outputSamplingRate": 48000,
+  "outputStereo": false,
+  "kana": "セ'イッ"
+}
