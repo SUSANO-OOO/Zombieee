@@ -1,0 +1,36 @@
+{
+  "schema": "producer-voice-selection/1",
+  "cueId": "voice-kumaverson-attack",
+  "kind": "kumaverson",
+  "event": "attack",
+  "text": "せいっ！",
+  "speakerName": "麒ヶ島宗麟",
+  "speakerUuid": "7d1e7ba7-f957-40e5-a3fc-da49f769ab65",
+  "styleId": 53,
+  "engineVersion": "0.25.2",
+  "selectedCandidate": "compact-fall-b",
+  "producerPreferenceAccepted": true,
+  "recordedAt": "2026-11-14T15:03:12.435Z",
+  "sourceWave": {
+    "file": "accepted-b.wav",
+    "bytes": 33836,
+    "sha256": "2ce38aef00ef715053a768536a676d5ada111dc94e3ed713e16c362f25038584",
+    "sampleRate": 48000,
+    "channels": 1,
+    "seconds": 0.352
+  },
+  "queryFile": "accepted-b.query.json",
+  "previousCast": {
+    "kind": "kumaverson",
+    "event": "attack",
+    "text": "せいっ！",
+    "styleId": 53,
+    "credit": "VOICEVOX:麒ヶ島宗麟",
+    "source": "assets/source/v104/combat-audio/voice-kumaverson-attack.wav",
+    "sha256": "7e1eedfa1f38d86c39ca25791857a6d0fecbaff003037b220f36c3e1b730d81e",
+    "synthetic": true
+  },
+  "scope": "Preference for this attack bark only. Not all voice, final MP3 listening, physical-speaker or full-game acceptance.",
+  "existingCreditRetained": "VOICEVOX:麒ヶ島宗麟",
+  "newSynthesisCalls": 0
+}

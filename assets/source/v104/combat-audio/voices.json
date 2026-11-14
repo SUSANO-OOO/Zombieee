@@ -57,9 +57,12 @@
       "text": "せいっ！",
       "styleId": 53,
       "credit": "VOICEVOX:麒ヶ島宗麟",
-      "source": "assets/source/v104/combat-audio/voice-kumaverson-attack.wav",
-      "sha256": "7e1eedfa1f38d86c39ca25791857a6d0fecbaff003037b220f36c3e1b730d81e",
-      "synthetic": true
+      "source": "assets/source/quality-20261114/kumaverson-attack-b-r1/accepted-b.wav",
+      "sha256": "2ce38aef00ef715053a768536a676d5ada111dc94e3ed713e16c362f25038584",
+      "synthetic": true,
+      "sourceQuery": "assets/source/quality-20261114/kumaverson-attack-b-r1/accepted-b.query.json",
+      "engineVersion": "0.25.2",
+      "producerSelection": "assets/source/quality-20261114/kumaverson-attack-b-r1/selection.json"
     },
     {
       "kind": "kumaverson",

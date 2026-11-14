@@ -1,0 +1,63 @@
+{
+  "status": "PASS_B_RENDER_IDENTITY_NOT_ALL_VOICE_ACCEPTANCE",
+  "selected": "B",
+  "speaker": 53,
+  "sourceWaveSha256": "2ce38aef00ef715053a768536a676d5ada111dc94e3ed713e16c362f25038584",
+  "sameExistingRenderFilter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
+  "reference": {
+    "samples": 13658,
+    "seconds": 0.30970521541950113,
+    "peak": 0.290362149477005,
+    "clips": 0,
+    "rms": 0.05906650482146383,
+    "first200msRms": 0.07336354552484053,
+    "onset": 0.006439909297052154
+  },
+  "mp3": {
+    "samples": 13658,
+    "seconds": 0.30970521541950113,
+    "peak": 0.28447961807250977,
+    "clips": 0,
+    "rms": 0.05922469312888766,
+    "first200msRms": 0.07355847672476683,
+    "onset": 0.006439909297052154
+  },
+  "ogg": {
+    "samples": 14272,
+    "seconds": 0.3236281179138322,
+    "peak": 0.2890899181365967,
+    "clips": 0,
+    "rms": 0.058100774337303575,
+    "first200msRms": 0.07376973437690883,
+    "onset": 0.006439909297052154
+  },
+  "previous": {
+    "samples": 24369,
+    "seconds": 0.5525850340136055,
+    "peak": 0.37503087520599365,
+    "clips": 0,
+    "rms": 0.08034791508414434,
+    "first200msRms": 0.11464767635445522,
+    "onset": 0.017528344671201814
+  },
+  "correlation": 0.9992089159140947,
+  "rmsDeltaDbFromFilteredB": 0.02304830626670045,
+  "levelDeltaDbFromPrevious": -3.8546505973591128,
+  "newSynthesisCalls": 0,
+  "scope": "Encoded output matches the selected B through the existing project filter; pitch and timing transforms were not added. Objective codec checks supplement the producer preference and do not prove full naturalness, real speakers or whole audio acceptance.",
+  "encodedFiles": [
+    {
+      "file": "public/audio/v104/combat/voice-kumaverson-attack.mp3",
+      "bytes": 3221,
+      "sha256": "e250e4cd98abbf5a73360127f21d1e3238804ad4aae4f74361f4c479015a2472"
+    },
+    {
+      "file": "public/audio/v104/combat/voice-kumaverson-attack.ogg",
+      "bytes": 6042,
+      "sha256": "ad19f71552cba6e0523c1a03a525bd48b59b6ebb8f2f3b94e805785d5baaf7bb"
+    }
+  ],
+  "cueGainUnchanged": 0.76,
+  "fullVoiceAccepted": false,
+  "physicalSpeakerAccepted": false
+}

@@ -1,10 +1,12 @@
 # 西新世紀末物語 — GitHub Pages公開・復元手順
 
-更新日：2026-10-26
+更新日：2026-11-14
 
 ## 1. 正式公開経路
 
 唯一の正式公開先はGitHub Pages。
+
+製品対象はスマートフォンだけです。PC用の表示・操作の品質は公開の受入対象へ追加しません。PC上で行うスマホ相当のブラウザー検査は検査手段であり、物理スマホの確認を代用しません。スマホ対象の性能・保存・操作の基準は緩めず、過去のPCを含む検査原本も履歴として保持します。
 
 - 正式URL：`https://susano-ooo.github.io/Zombieee/`
 - source：承認済みPRのmerge result SHA
@@ -63,10 +65,10 @@ release requestは次の7 fieldだけを持つ。unknown field、欠落field、�
 
 - 対象機能を実ゲームで確認
 - fresh save、既存save、migration、破損復旧成功
-- 1280×720、844×390、844×340、WebKit受入
+- スマホ横画面844×390／844×340、縦持ち時の導入・案内、画面端の切欠きへの対応、WebKit／Chromium受入
 - BGM、SE、戦闘ボイス、復帰後二重再生なし
 - console error、page error、request failure、主要asset 404が0
-- build、全test、Lint、`git diff --check`、CI成功
+- build、全test、Lint、`git diff --check`、スマホ対象のCI成功
 - 実装担当の確認と、対象指示が要求する独立read-only reviewでHigh／Medium未解消0。固定モデル名や旧Sol／Luna間の往復はゲートにしない
 - 自分の変更の確認を独立reviewとは呼ばない。未確認の物理端末項目は対象Issueへ残し、既存の公開条件に従う
 - 対象画像の確認ゲート完了

@@ -12,7 +12,7 @@ const record=asset=>({...asset});
 const ordered=rows=>rows.map(record).sort((a,b)=>a.path.localeCompare(b.path));
 function assertDelta(next){
   const before=new Map(baseline.assets.map(a=>[a.path,a])),after=new Map(next.assets.map(a=>[a.path,a]));
-  const relocations=new Map(contract.transportChanges.map(row=>[row.path,row]));
+  const relocations=new Map([...contract.transportChanges,...contract.contentReplacements].map(row=>[row.path,row]));
   assert.equal(after.size,next.assets.length,'no duplicate paths');
   assert.deepEqual(ordered(next.assets.filter(a=>!before.has(a.path))),ordered(contract.added));
   assert.deepEqual(ordered(baseline.assets.filter(a=>!after.has(a.path))),ordered(contract.retired));
@@ -25,7 +25,7 @@ function assertDelta(next){
 test('quality candidate contains exactly the reviewed art, firearm and VFX delta while retaining unrelated payloads',async()=>{
   assertDelta(candidate);
   assert.equal(contract.added.length,231);assert.equal(contract.retired.length,166);
-  assert.equal(contract.transportChanges.length,345);
+  assert.equal(contract.transportChanges.length,344);assert.equal(contract.contentReplacements.length,1);
   assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),47387986); // Authored phone UI/portraits, boss finales/attacks, preparation cues, Tatara contact, micro-particles King housing exhaust distinct guard contacts and physical dual-sword contact.
   for(const row of contract.added){
     const bytes=await readFile(new URL('../public'+(row.sourcePath??row.path),import.meta.url));
@@ -62,11 +62,23 @@ test('installed v105 reuses retained hashes and cannot activate a partial qualit
   const storedHashes=new Set(baseline.assets.map(a=>a.hash));
   const update=evaluateUpdate({installedManifest:installed,publishedManifest:next,storedHashes});
   assert.equal(update.available,true);
-  assert.deepEqual(ordered(update.diff.downloadable),ordered(contract.added));
+  const downloads=[...contract.added,...contract.contentReplacements.map(row=>row.next)];
+  assert.deepEqual(ordered(update.diff.downloadable),ordered(downloads));assert.equal(downloads.length,232);
   const verify=hashes=>verifyUpdatePayload({manifest:next,storedHashes:hashes,expectedVersion:next.version,expectedReleaseSha:next.releaseSha});
   assert.equal(verify(storedHashes).verified,false);
-  const complete=new Set([...storedHashes,...contract.added.map(a=>a.hash)]);
+  const complete=new Set([...storedHashes,...downloads.map(a=>a.hash)]);
   assert.equal(verify(complete).verified,true);
-  for(const row of contract.added){const partial=new Set(complete);partial.delete(row.hash);assert.equal(verify(partial).verified,false,row.path);}
+  for(const row of downloads){const partial=new Set(complete);partial.delete(row.hash);assert.equal(verify(partial).verified,false,row.path);}
   assert.equal(verifyUpdatePayload({manifest:next,storedHashes:complete,expectedReleaseSha:contract.base}).verified,false);
+});
+
+test('only the producer-selected Kuma retained payload changes; every other retained encoded payload stays exact',()=>{
+ const before=new Map(baseline.assets.map(r=>[r.path,r])),path='/audio/v104/combat/voice-kumaverson-attack.mp3';
+ const changes=candidate.assets.filter(r=>before.has(r.path)&&(r.hash!==before.get(r.path).hash||r.bytes!==before.get(r.path).bytes));
+ assert.deepEqual(changes.map(r=>r.path),[path]);
+ assert.equal(before.get(path).hash,'sha256-7a52a049f2dd6acc27a2df86d11037ac9152c4f26364e4f06b568a25db7a0f33');
+ assert.equal(changes[0].hash,'sha256-e250e4cd98abbf5a73360127f21d1e3238804ad4aae4f74361f4c479015a2472');assert.equal(changes[0].bytes,3221);
+ assert.deepEqual(contract.contentReplacements.map(r=>r.path),[path]);
+ for(const row of contract.transportChanges){assert.equal(row.next.hash,row.previous.hash,row.path);assert.equal(row.next.bytes,row.previous.bytes,row.path);}
+ const wrong=structuredClone(candidate);wrong.assets.find(r=>r.path===path).hash=before.get(path).hash;assert.throws(()=>assertDelta(wrong));
 });

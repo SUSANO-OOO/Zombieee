@@ -1,95 +1,131 @@
-/* Phone command instruments: the existing HUD owns every rectangle and hit box. */
+/* Smartphone command deck. The existing layout/controller owns all hit boxes.
+   The six painted surfaces are already in the verified offline pack. */
 .v100-shell .game-frame[data-battle-hud-layout="mobile"] {
   --field-brass: #c6a36b;
   --field-ink: #101914;
   --field-paper: #eee1bf;
 }
 .v100-shell .game-frame[data-battle-hud-layout="mobile"] .top-hud {
-  background: linear-gradient(180deg,#101713f2,#182119e0 80%,#070e0a00);
+  background: linear-gradient(180deg,#07100b70,#07100b00);
   border: 0;
   box-shadow: none;
 }
 .v100-shell .game-frame[data-battle-hud-layout="mobile"] .battle-brand-zone {
-  background: linear-gradient(90deg,#101713e8,#101713c9),url('/art/v075/crawler/crawler-command-base-closed-v1.png') right 58% / 65% auto no-repeat;
+  background-color: #19211a;
+  background-image: linear-gradient(105deg,#0d171d66,#0d171d26),var(--v100-ui-materials,none);
+  background-size: 100% 100%,300% 200%;
+  background-position: center,50% 0;
   border: 0;
   border-left: 3px solid var(--field-brass);
-  box-shadow: inset 0 1px #bbb28a66, inset 0 -2px #060b08;
+  box-shadow: inset 0 1px #d8c79780,inset 0 -2px #060b08,inset -1px 0 #b9ad7259;
 }
 .v100-shell .game-frame[data-battle-hud-layout="mobile"][data-base-kind="on-foot"] .battle-brand-zone {
-  background: repeating-linear-gradient(90deg,#26382c 0 3px,#203026 3px 5px);
+  background-image: linear-gradient(105deg,#101d1273,#101d1233),var(--v100-ui-materials,none);
+  background-position: center,0 0;
   border-left-color: #a6b59b;
 }
 .v100-shell .game-frame[data-battle-hud-layout="mobile"] .brand-block b {
-  color: #f0e4c6;
+  color: #f4e8c9;
   font-family: var(--v100-reading-font);
-  text-shadow: 0 1px #000;
+  text-shadow: 0 1px 2px #000;
 }
 .v100-shell .game-frame[data-battle-hud-layout="mobile"] .crawler-health {
   border: 0;
   border-bottom: 2px solid #b59d6c;
   border-radius: 1px;
-  background: #070e0cf5;
-  box-shadow: inset 0 1px 3px #000;
+  background: #070e0cf2;
+  box-shadow: inset 0 1px 3px #000,inset 1px 0 #69735d80;
 }
 .v100-shell .game-frame[data-battle-hud-layout="mobile"] .crawler-health i {
   background: repeating-linear-gradient(90deg,#182c21 0 8px,#020805 8px 10px);
   border-radius: 0;
 }
 .v100-shell .game-frame[data-battle-hud-layout="mobile"] .crawler-health i em {
-  background: repeating-linear-gradient(90deg,#b4c79b 0 8px,#57714b 8px 10px);
+  background: repeating-linear-gradient(90deg,#c8d0a2 0 8px,#718457 8px 10px);
 }
 .v100-shell .game-frame[data-battle-hud-layout="mobile"] .crawler-health.critical i em { background: #ee6c41; }
 .v100-shell .game-frame[data-battle-hud-layout="mobile"] .battle-message-stack {
-  background: #101c15ed;
-  box-shadow: inset 0 2px #4d614b, inset 0 -2px #050b07;
+  background-color: #17231a;
+  background-image: linear-gradient(110deg,#0b1913a8,#0b191375),var(--v100-ui-materials,none);
+  background-size: 100% 100%,300% 200%;
+  background-position: center,50% 0;
+  box-shadow: inset 0 1px #ad9a6380,inset 0 -2px #050b07;
   border-radius: 0;
+}
+.v100-shell .game-frame[data-battle-hud-layout="mobile"] .battle-message-stack:empty {
+  background: none;
+  box-shadow: none;
 }
 .v100-shell .game-frame[data-battle-hud-layout="mobile"] .battle-barks { border: 0; background: none; }
 .v100-shell .game-frame[data-battle-hud-layout="mobile"] .battle-barks b { color: #edbd73; }
 .v100-shell .game-frame[data-battle-hud-layout="mobile"] .battle-banner {
   border: 0; border-left: 3px solid #b6c39c; border-radius: 0;
-  background: #203027; color: #f2e9d4;
+  background: #14211cbb; color: #f5ead1;
 }
 .v100-shell .game-frame[data-battle-hud-layout="mobile"] .battle-controls-zone .phase-block {
-  border-radius: 0; border: 0; border-left: 2px solid #9b8051;
-  background: #111c17f5;
+  border-radius: 0; border: 0; border-left: 2px solid #b29862;
+  background-color: #152016;
+  background-image: linear-gradient(110deg,#1020188c,#10201854),var(--v100-ui-materials,none);
+  background-size: 100% 100%,300% 200%;
+  background-position: center,0 0;
+  box-shadow: inset 0 1px #b8a87966,inset 0 -2px #080e09;
 }
 .v100-shell .game-frame[data-battle-hud-layout="mobile"] .battle-controls-zone .icon-btn {
-  border-radius: 3px; border: 1px solid #a39978; border-bottom: 3px solid #080e09;
-  background: linear-gradient(135deg,#4d5948,#233529 80%);
-  box-shadow: inset 0 1px #d4cc9966;
-  color: #f4e7c9;
+  border-radius: 3px; border: 1px solid #b4a878; border-bottom: 3px solid #080e09;
+  background-color: #344333;
+  background-image: linear-gradient(150deg,#59664c4d,#0c1c1573),var(--v100-ui-materials,none);
+  background-size: 100% 100%,300% 200%;
+  background-position: center,50% 100%;
+  box-shadow: inset 0 1px #e1d5a285,inset 1px 0 #d4cc9952;
+  color: #fff0d1;
 }
 .v100-shell .game-frame[data-battle-hud-layout="mobile"] .bottom-hud {
-  border-top: 2px solid #9b865c;
-  background: linear-gradient(#2b3629f5,#0e1912fa);
-  box-shadow: 0 -3px 8px #0006;
+  border-top: 2px solid #aa9263;
+  background-color: #1a211b;
+  background-image: linear-gradient(#17231b4d,#07120dc4),var(--v100-ui-materials,none);
+  background-size: 100% 100%,300% 200%;
+  background-position: center,50% 0;
+  box-shadow: 0 -3px 8px #0006,inset 0 1px #e1c88366;
 }
 .v100-shell .game-frame[data-battle-hud-layout="mobile"] .resource-stack .resource {
-  background: #080f0b;
-  border: 0; border-left: 2px solid #b49b66; border-radius: 0;
-  box-shadow: inset 0 -1px #53603f;
+  background: #070e0ce8;
+  border: 0; border-left: 2px solid #d2b97e; border-radius: 0;
+  box-shadow: inset 0 -1px #7e805080,inset 0 1px #060b09;
 }
-.v100-shell .game-frame[data-battle-hud-layout="mobile"] .resource-stack .resource.support {
-  border-left-color: #b96945;
+.v100-shell .game-frame[data-battle-hud-layout="mobile"] .resource-stack .resource.rage {
+  border-left-color: #d08559;
 }
+.v100-shell .game-frame[data-battle-hud-layout="mobile"] .unit-cards { counter-reset: command-slot; }
+.v100-shell .game-frame[data-battle-hud-layout="mobile"] .unit-cards > .unit-card { counter-increment: command-slot; }
 .v100-shell .game-frame[data-battle-hud-layout="mobile"] .unit-card.v100-deploy-card {
   border-radius: 0;
-  border: 0; border-top: 2px solid #a1ac8a; border-bottom: 2px solid #080f0a;
-  background: #243629;
-  box-shadow: inset 1px 0 #b8ae8766;
+  border: 0; border-top: 2px solid #c1b67e; border-bottom: 2px solid #080f0a;
+  background-color: #243629;
+  background-image: linear-gradient(115deg,#192a1d3d,#192a1d80),var(--v100-ui-materials,none);
+  background-size: 100% 100%,300% 200%;
+  background-position: center,50% 100%;
+  box-shadow: inset 1px 0 #d8cb9a80,inset -1px 0 #070e0ca8;
 }
 .v100-shell .game-frame[data-battle-hud-layout="mobile"] .v100-deploy-heading {
-  background: #d4c7a3; color: #1c3023;
-  box-shadow: inset 0 -1px #8a805e;
+  background-color: #ddd0ae;
+  background-image: linear-gradient(105deg,#eee4c8b8,#e5d5b5a8),var(--v100-ui-materials,none);
+  background-size: 100% 100%,300% 200%;
+  background-position: center,100% 0;
+  color: #1c3023;
+  box-shadow: inset 0 -1px #8a805e,inset 0 1px #fff4d6b3;
 }
 .v100-shell .game-frame[data-battle-hud-layout="mobile"] .v100-deploy-name,
 .v100-shell .game-frame[data-battle-hud-layout="mobile"] .v100-deploy-cost { color: #172e20; text-shadow: none; }
 .v100-shell .game-frame[data-battle-hud-layout="mobile"] .v100-deploy-readout {
-  background: #14291ded;
-  border-left: 1px solid #6b7c5b;
+  background: #102319e0;
+  border-left: 1px solid #88916b;
 }
-.v100-shell .game-frame[data-battle-hud-layout="mobile"] .v100-deploy-card .portrait { background: #344739; }
+.v100-shell .game-frame[data-battle-hud-layout="mobile"] .v100-deploy-card .portrait {
+  background-color: #2c3b2d;
+  background-image: linear-gradient(120deg,#1a291a3d,#0f1c1559),var(--v100-ui-materials,none);
+  background-size: 100% 100%,300% 200%;
+  background-position: center,0 0;
+}
 .v100-shell .game-frame[data-battle-hud-layout="mobile"] .v100-deploy-camera {
   display: block; position: absolute; left: 50%; top: 0; height: 100%;
   aspect-ratio: 4 / 5; transform: translateX(-50%);
@@ -105,17 +141,46 @@
   top: calc(4% + 56% * var(--portrait-top-factor)); width: calc(70% * var(--portrait-width-factor)); transform: translateX(-40.625%);
 }
 .v100-shell .game-frame[data-battle-hud-layout="mobile"] .unit-card-placeholder {
-  border: 0; border-left: 1px dashed #849079; border-radius: 0;
-  background: repeating-linear-gradient(135deg,#263b2b 0 2px,#1f3225 2px 7px);
-  color: #bdc9ab;
+  position: relative;
+  border: 0; border-left: 1px solid #938b6470; border-radius: 0;
+  background-color: #222b1e;
+  background-image: linear-gradient(110deg,#1b261847,#0b1a1273),var(--v100-ui-materials,none);
+  background-size: 100% 100%,300% 200%;
+  background-position: center,0 0;
+  box-shadow: inset 2px 2px 3px #0009,inset -1px -1px #a4935c59;
+  color: #d3d0af;
+}
+.v100-shell .game-frame[data-battle-hud-layout="mobile"] .unit-card-placeholder::after {
+  content: counter(command-slot,decimal-leading-zero);
+  position: absolute; inset: 3px auto auto 5px; z-index: 2;
+  transform: none; transition: none; background: none;
+  padding: 0 3px; border-bottom: 1px solid #baaa7773;
+  color: #cec4a3;
+  font: 700 10px/12px var(--v100-numeric-font);
+  text-shadow: 0 1px #09110b;
+  pointer-events: none;
+}
+.v100-shell .game-frame[data-battle-hud-layout="mobile"] .unit-card-placeholder small {
+  color: #c3c5ac; font-size: 9px;
 }
 .v100-shell .game-frame[data-battle-hud-layout="mobile"] .support-btn {
-  border-radius: 2px; border: 0; border-top: 2px solid #8ca78d; border-bottom: 3px solid #070e09;
-  background: linear-gradient(110deg,#3c5141,#203628);
-  box-shadow: inset 1px 0 #d7d4a94d;
+  border-radius: 2px; border: 0; border-top: 2px solid #a4ba95; border-bottom: 3px solid #070e09;
+  background-color: #2b4431;
+  background-image: linear-gradient(115deg,#3f5b3d59,#142c1f75),var(--v100-ui-materials,none);
+  background-size: 100% 100%,300% 200%;
+  background-position: center,50% 100%;
+  box-shadow: inset 1px 0 #e1d2a975,inset -1px 0 #09170c99,inset 0 1px #ebe1b552;
 }
-.v100-shell .game-frame[data-battle-hud-layout="mobile"] .support-btn.airstrike { border-top-color: #93b0ba; background: linear-gradient(110deg,#354e56,#21353b); }
-.v100-shell .game-frame[data-battle-hud-layout="mobile"] .support-btn.barrage { border-top-color: #c6a065; background: linear-gradient(110deg,#5a4430,#322d21); }
+.v100-shell .game-frame[data-battle-hud-layout="mobile"] .support-btn.airstrike {
+  border-top-color: #a1c3cb; background-color: #2a4148;
+  background-image: linear-gradient(115deg,#345e6c73,#172f398c),var(--v100-ui-materials,none);
+  background-position: center,50% 0;
+}
+.v100-shell .game-frame[data-battle-hud-layout="mobile"] .support-btn.barrage {
+  border-top-color: #d4b17c; background-color: #523c27;
+  background-image: linear-gradient(115deg,#6b4d2d66,#3229188c),var(--v100-ui-materials,none);
+  background-position: center,0 100%;
+}
 .v100-shell .game-frame[data-battle-hud-layout="mobile"] .support-btn[data-state="selected"] { border-top-color: #ffe29c; box-shadow: inset 0 0 0 2px #e8bd68; }
 .v100-shell .game-frame[data-battle-hud-layout="mobile"] .support-btn:active:not(:disabled),
 .v100-shell .game-frame[data-battle-hud-layout="mobile"] .unit-card:active { box-shadow: inset 0 2px 5px #000b; }

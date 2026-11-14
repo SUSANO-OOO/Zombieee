@@ -74,9 +74,12 @@
           "text": "せいっ！",
           "styleId": 53,
           "credit": "VOICEVOX:麒ヶ島宗麟",
-          "source": "assets/source/v104/combat-audio/voice-kumaverson-attack.wav",
-          "sha256": "7e1eedfa1f38d86c39ca25791857a6d0fecbaff003037b220f36c3e1b730d81e",
-          "synthetic": true
+          "source": "assets/source/quality-20261114/kumaverson-attack-b-r1/accepted-b.wav",
+          "sha256": "2ce38aef00ef715053a768536a676d5ada111dc94e3ed713e16c362f25038584",
+          "synthetic": true,
+          "sourceQuery": "assets/source/quality-20261114/kumaverson-attack-b-r1/accepted-b.query.json",
+          "engineVersion": "0.25.2",
+          "producerSelection": "assets/source/quality-20261114/kumaverson-attack-b-r1/selection.json"
         },
         {
           "kind": "kumaverson",
@@ -596,38 +599,6 @@
       "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
       "credit": "VOICEVOX:麒ヶ島宗麟",
       "text": "任せておけ。",
-      "synthetic": true,
-      "styleId": 53
-    },
-    {
-      "file": "public/audio/v104/combat/voice-kumaverson-attack.ogg",
-      "bytes": 8311,
-      "sha256": "3257bf4f7505ba2d7520b4a6cc0765d4015e2151a6487c38ec5b18195f0455ae",
-      "inputs": [
-        {
-          "file": "assets/source/v104/combat-audio/voice-kumaverson-attack.wav",
-          "sha256": "7e1eedfa1f38d86c39ca25791857a6d0fecbaff003037b220f36c3e1b730d81e"
-        }
-      ],
-      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
-      "credit": "VOICEVOX:麒ヶ島宗麟",
-      "text": "せいっ！",
-      "synthetic": true,
-      "styleId": 53
-    },
-    {
-      "file": "public/audio/v104/combat/voice-kumaverson-attack.mp3",
-      "bytes": 5414,
-      "sha256": "7a52a049f2dd6acc27a2df86d11037ac9152c4f26364e4f06b568a25db7a0f33",
-      "inputs": [
-        {
-          "file": "assets/source/v104/combat-audio/voice-kumaverson-attack.wav",
-          "sha256": "7e1eedfa1f38d86c39ca25791857a6d0fecbaff003037b220f36c3e1b730d81e"
-        }
-      ],
-      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
-      "credit": "VOICEVOX:麒ヶ島宗麟",
-      "text": "せいっ！",
       "synthetic": true,
       "styleId": 53
     },
@@ -1352,6 +1323,38 @@
       "text": "ここまでか……。",
       "synthetic": true,
       "styleId": 52
+    },
+    {
+      "file": "public/audio/v104/combat/voice-kumaverson-attack.ogg",
+      "bytes": 6042,
+      "sha256": "ad19f71552cba6e0523c1a03a525bd48b59b6ebb8f2f3b94e805785d5baaf7bb",
+      "inputs": [
+        {
+          "file": "assets/source/quality-20261114/kumaverson-attack-b-r1/accepted-b.wav",
+          "sha256": "2ce38aef00ef715053a768536a676d5ada111dc94e3ed713e16c362f25038584"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
+      "credit": "VOICEVOX:麒ヶ島宗麟",
+      "text": "せいっ！",
+      "synthetic": true,
+      "styleId": 53
+    },
+    {
+      "file": "public/audio/v104/combat/voice-kumaverson-attack.mp3",
+      "bytes": 3221,
+      "sha256": "e250e4cd98abbf5a73360127f21d1e3238804ad4aae4f74361f4c479015a2472",
+      "inputs": [
+        {
+          "file": "assets/source/quality-20261114/kumaverson-attack-b-r1/accepted-b.wav",
+          "sha256": "2ce38aef00ef715053a768536a676d5ada111dc94e3ed713e16c362f25038584"
+        }
+      ],
+      "filter": "[0:a]highpass=f=85,lowpass=f=9000,silenceremove=start_periods=1:start_threshold=-46dB:start_silence=0.01,volume=0.9[mix];[mix]alimiter=limit=0.85:level=false[out]",
+      "credit": "VOICEVOX:麒ヶ島宗麟",
+      "text": "せいっ！",
+      "synthetic": true,
+      "styleId": 53
     }
   ]
 }
