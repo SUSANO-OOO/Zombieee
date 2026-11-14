@@ -2,6 +2,7 @@ import {combatVariation,drawRasterPlume} from "./v100RasterAtmosphere.js";
 import { TAKUYA_GROUND_BLADE_SOCKET } from './v100TakuyaGroundSocket.js';
 import {queueV104GuardImpact} from './v104CombatAudio.js';
 import {drawV100TataraImpact} from './v100ManualImpactVfx.js';
+import {drawV100TakuyaGroundRelease} from './v100BossAttackVfx.js';
 
 export const V100_COMBAT_VFX_ART=Object.freeze({
  'quality-boss-blast':'/art/quality-20261113/vfx/boss-blast-six-r2.webp',
@@ -142,7 +143,7 @@ export function getV100ClawContactSnapshot(world){
 }
 export function getV100SkillContactSnapshot(world){
  return (contactQueues.get(world)??[]).filter(e=>(e.skillContact||e.takuyaGroundContact||e.tataraGroundContact)&&world.time>=e.startedAt&&world.time-e.startedAt<e.duration)
-  .map(e=>({...e.skillContact??e.takuyaGroundContact??e.tataraGroundContact,x:e.x,y:e.y,direction:e.direction,startedAt:e.startedAt,duration:e.duration,resolvedSocket:(e.takuyaGroundContact?.resolvedSocketPoint??e.tataraGroundContact?.resolvedSocketPoint??null),sourcePath:e.tataraGroundContact?.sourcePath??null,effectSourcePath:e.tataraGroundContact?.effectSourcePath??null,bodySourcePath:e.tataraGroundContact?.bodySourcePath??null,sourcePixel:e.tataraGroundContact?.sourcePixel??null}));
+  .map(e=>({...e.skillContact??e.takuyaGroundContact??e.tataraGroundContact,x:e.x,y:e.y,direction:e.direction,startedAt:e.startedAt,duration:e.duration,resolvedSocket:(e.takuyaGroundContact?.resolvedSocketPoint??e.tataraGroundContact?.resolvedSocketPoint??null),sourcePath:e.tataraGroundContact?.sourcePath??null,effectSourcePath:e.tataraGroundContact?.effectSourcePath??e.takuyaGroundContact?.effectSourcePath??null,bodySourcePath:e.tataraGroundContact?.bodySourcePath??null,sourcePixel:e.tataraGroundContact?.sourcePixel??null}));
 }
 // Guard contact is owned by an actual incoming hit. Activation, an expired
 // guard and ownerless environmental damage must never emit a metal spark.
@@ -213,6 +214,7 @@ export function drawV100ContactQueue(ctx,objects,world,shieldSocketForOwner,taku
   }
   if(e.tataraGroundContact&&!e.tataraGroundContact.resolvedSocket||e.takuyaGroundContact&&!e.takuyaGroundContact.resolvedSocket)continue;
   if(e.tataraGroundContact&&drawV100TataraImpact(ctx,objects,e,world.time-e.startedAt))continue;
+  if(e.takuyaGroundContact&&drawV100TakuyaGroundRelease(ctx,objects,e,world.time-e.startedAt))continue;
   drawV100Contact(ctx,objects,{...e,elapsed:world.time-e.startedAt});
  }
 }
