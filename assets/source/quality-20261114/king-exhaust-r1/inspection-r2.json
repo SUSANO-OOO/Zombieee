@@ -1,0 +1,52 @@
+{
+  "master": "master-r2.png",
+  "parentMaster": "master-r1.png",
+  "bytes": 1459969,
+  "sha256": "d78285677836d15eea8ac2a8cbcb5dd5a50ae45328ac834b0b789cd8848462d9",
+  "dimensions": [
+    1536,
+    1024
+  ],
+  "cells": [
+    {
+      "cell": 0,
+      "borderMax": 1,
+      "borderAbove32": 0,
+      "alphaAbove32": 6306
+    },
+    {
+      "cell": 1,
+      "borderMax": 2,
+      "borderAbove32": 0,
+      "alphaAbove32": 25219
+    },
+    {
+      "cell": 2,
+      "borderMax": 2,
+      "borderAbove32": 0,
+      "alphaAbove32": 43980
+    },
+    {
+      "cell": 3,
+      "borderMax": 2,
+      "borderAbove32": 0,
+      "alphaAbove32": 47953
+    },
+    {
+      "cell": 4,
+      "borderMax": 3,
+      "borderAbove32": 0,
+      "alphaAbove32": 39266
+    },
+    {
+      "cell": 5,
+      "borderMax": 2,
+      "borderAbove32": 0,
+      "alphaAbove32": 22706
+    }
+  ],
+  "alphaGatePassed": true,
+  "runtimeConnected": false,
+  "visualAccepted": false,
+  "scope": "Built-in edit for natural edge dissipation/final residue. Original alpha preserved. Source4px alpha<=32 gate unchanged; no alpha threshold/crop/colour key. Preview of transparent source may render black in view_image; actual RGBA verified with neutral-slate composite only."
+}

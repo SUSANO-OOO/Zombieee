@@ -1,0 +1,31 @@
+{
+  "bodySource": "public/art/v100/joints/crazy-king-combat-r1.webp",
+  "bodySha256": "eecb23b4fed48d0a995054748b780fce6e5f0a57f3b81fda915212f1687c9186",
+  "weaponBone": "weapon-0",
+  "packedSourcePoint": [
+    187,
+    28
+  ],
+  "assembledCandidatePoint": [
+    269.6015037593985,
+    223
+  ],
+  "sourcePart": {
+    "name": "weapon-and-hands",
+    "bone": "weapon-0",
+    "source": {
+      "x": 134,
+      "y": 2,
+      "w": 133,
+      "h": 57
+    },
+    "destination": {
+      "x": 164,
+      "y": 171,
+      "w": 265,
+      "h": 114
+    },
+    "upper": true
+  },
+  "scope": "Candidate visual calibration measured on the existing weapon-and-hands texture. No new character, model, weapon or identity generated/edited. Must resolve through the real current joint paint before runtime use; not yet connected or motion-accepted."
+}

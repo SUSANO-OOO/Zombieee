@@ -148,6 +148,14 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/quality-20261114/vfx/king-exhaust-six-r2.webp",
+      "bytes": 83570,
+      "hash": "sha256-dd9eb1093647176c6ddc8083435630ce2561376fdff0d27decf5ccb913a4b67c",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/quality-20261114/vfx/kurome-attack-six-r2.webp",
       "bytes": 309028,
       "hash": "sha256-c67f0b6951e74973201d5e96da1dc9d776527681f21b1911294c63e9589b6994",

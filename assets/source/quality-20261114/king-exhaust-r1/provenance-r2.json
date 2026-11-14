@@ -1,0 +1,59 @@
+{
+  "generator": "scripts/build-v100-king-exhaust-art.mjs",
+  "creator": "OpenAI built-in image_gen under Producer direction; deterministic phone-sized WebP packaging by Codex",
+  "license": "Project-original generated effect artwork under existing game asset policy; no third-party download",
+  "rights": {
+    "commercialUse": true,
+    "modification": true,
+    "redistribution": true,
+    "basis": "Original material-only exhaust created for this project"
+  },
+  "producerApproval": "Current smartphone goal requests bespoke manual ability animation; candidate, not final motion/audio/device acceptance",
+  "generation": {
+    "mode": "built-in image_gen generation followed by built-in alpha-preserving edit",
+    "model": "Selected by host; no model name asserted",
+    "characterReferences": []
+  },
+  "source": {
+    "path": "assets/source/quality-20261114/king-exhaust-r1/master-r2.png",
+    "bytes": 1459969,
+    "sha256": "d78285677836d15eea8ac2a8cbcb5dd5a50ae45328ac834b0b789cd8848462d9"
+  },
+  "prompts": [
+    {
+      "path": "assets/source/quality-20261114/king-exhaust-r1/prompt-r1.txt",
+      "sha256": "121249725a20089abd95ebd6639245e091287ca3c28fde5cb8756ca4f794dc8e"
+    },
+    {
+      "path": "assets/source/quality-20261114/king-exhaust-r1/edit-prompt-r2.txt",
+      "sha256": "37b7f975dde0c1ad101c00b4d16484b4d3337a5f6edd1eb52ddcd73e51a433f6"
+    }
+  ],
+  "rejectedSource": {
+    "path": "assets/source/quality-20261114/king-exhaust-r1/master-r1.png",
+    "reason": "Four border pixels exceeded unchanged alpha<=32 gate; retained, not packaged"
+  },
+  "bodyBinding": {
+    "path": "assets/source/quality-20261114/king-exhaust-r1/body-source-binding-r1.json",
+    "bodySha256": "eecb23b4fed48d0a995054748b780fce6e5f0a57f3b81fda915212f1687c9186",
+    "sourcePoint": [
+      269.6015037593985,
+      223
+    ],
+    "sourceBone": "weapon-0"
+  },
+  "output": {
+    "path": "/art/quality-20261114/vfx/king-exhaust-six-r2.webp",
+    "bytes": 83570,
+    "sha256": "dd9eb1093647176c6ddc8083435630ce2561376fdff0d27decf5ccb913a4b67c",
+    "width": 768,
+    "height": 512,
+    "columns": 3,
+    "rows": 2
+  },
+  "runtimeAssetCount": 1,
+  "logicalBytes": 83570,
+  "distinctBytes": 83570,
+  "estimatedDecodedRgbaBytes": 1572864,
+  "scope": "Optional real crazy-king formation only, existing weapon-0 joint vent and world clock. Grey exhaust packets, not fire or a new weapon. Body, damage, timing, AI, audio, saves and rewards remain unchanged. Old pack or decode failure retains existing presentation."
+}

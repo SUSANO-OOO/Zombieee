@@ -1,0 +1,88 @@
+{
+  "master": "master-r1.png",
+  "bytes": 1575605,
+  "sha256": "69c150fd8d4e29784e3adf0b34f38946a43c9725d25f74301366646ab89d98e7",
+  "dimensions": [
+    1536,
+    1024
+  ],
+  "hasAlpha": true,
+  "cells": [
+    {
+      "cell": 0,
+      "borderMax": 1,
+      "borderAbove32": 0,
+      "alphaAbove32": 8638,
+      "boundsAbove32": {
+        "left": 69,
+        "right": 229,
+        "top": 344,
+        "bottom": 415
+      }
+    },
+    {
+      "cell": 1,
+      "borderMax": 1,
+      "borderAbove32": 0,
+      "alphaAbove32": 32386,
+      "boundsAbove32": {
+        "left": 66,
+        "right": 393,
+        "top": 290,
+        "bottom": 430
+      }
+    },
+    {
+      "cell": 2,
+      "borderMax": 16,
+      "borderAbove32": 0,
+      "alphaAbove32": 57004,
+      "boundsAbove32": {
+        "left": 65,
+        "right": 495,
+        "top": 244,
+        "bottom": 436
+      }
+    },
+    {
+      "cell": 3,
+      "borderMax": 34,
+      "borderAbove32": 4,
+      "alphaAbove32": 62721,
+      "boundsAbove32": {
+        "left": 64,
+        "right": 508,
+        "top": 224,
+        "bottom": 435
+      }
+    },
+    {
+      "cell": 4,
+      "borderMax": 21,
+      "borderAbove32": 0,
+      "alphaAbove32": 55123,
+      "boundsAbove32": {
+        "left": 66,
+        "right": 500,
+        "top": 235,
+        "bottom": 430
+      }
+    },
+    {
+      "cell": 5,
+      "borderMax": 11,
+      "borderAbove32": 0,
+      "alphaAbove32": 40986,
+      "boundsAbove32": {
+        "left": 63,
+        "right": 477,
+        "top": 255,
+        "bottom": 422
+      }
+    }
+  ],
+  "alphaGatePassed": false,
+  "runtimeConnected": false,
+  "visualAccepted": false,
+  "scope": "Built-in image_gen source copied and read back. Unmodified alpha; no threshold/crop/colour key. Material-only engine exhaust; no body/weapon replacement. Packaging, runtime socket calibration, source/phase latching, phone native rendering and acceptance remain."
+}
