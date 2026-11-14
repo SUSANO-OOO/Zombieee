@@ -220,6 +220,14 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/quality-20261114/vfx/tatara-ground-six-r1.webp",
+      "bytes": 278284,
+      "hash": "sha256-39fff2d40df64ae92800f98312db40c35aeec72da208b719ac8da462ad5d1c32",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v060/battle-nishijin-defense-line-v1.webp",
       "bytes": 172174,
       "hash": "sha256-4bd351304b064f86a3b8c651433e3aba6560564df315beeea9c8678967948a89",

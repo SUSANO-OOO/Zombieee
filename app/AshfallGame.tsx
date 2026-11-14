@@ -15369,6 +15369,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       enemyKinds: stageEnemyKinds,
       verifiedBossDefeatPaths: battleArtworkPolicyRef.current.paths.split('\n').filter(Boolean),
       verifiedBossAttackPaths: battleArtworkPolicyRef.current.paths.split('\n').filter(Boolean),
+      verifiedManualImpactPaths: battleArtworkPolicyRef.current.paths.split('\n').filter(Boolean),
       includeAllSprites: localQaRequested
         && !finiteEnemyRuntimeQa
         && !finiteVisualIntegrityQa

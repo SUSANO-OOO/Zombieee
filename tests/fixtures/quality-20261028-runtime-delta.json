@@ -1,6 +1,6 @@
 {
   "base": "ff5dba24e88c810182cda1f044bd26dfc3e512c1",
-  "source": "3ee41db80ea71e257bd35d9d4a95a9974b40ab85 plus six boss-specific optional attack aftermath sheets; body, timing, damage, audio and save retained",
+  "source": "2278ebce68bb6d9d7fa135ede786609b263cff71 plus optional Tatara-specific manual ground impact; existing hammer socket, body, timing, damage, audio and save retained",
   "scope": "Local quality candidate transport contract; not likeness, rights, listening, release or physical-device approval.",
   "added": [
     {
@@ -2015,6 +2015,14 @@
       "hash": "sha256-c86084b9339836f86cf857da8c95bd07107b755250c6e239ffbad9aae4f38437",
       "pack": "units",
       "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/tatara-ground-six-r1.webp",
+      "bytes": 278284,
+      "hash": "sha256-39fff2d40df64ae92800f98312db40c35aeec72da208b719ac8da462ad5d1c32",
+      "pack": "units",
+      "category": "unit",
       "criticality": "critical"
     }
   ],

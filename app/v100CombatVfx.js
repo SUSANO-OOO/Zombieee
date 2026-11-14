@@ -1,6 +1,7 @@
 import {combatVariation,drawRasterPlume} from "./v100RasterAtmosphere.js";
 import { TAKUYA_GROUND_BLADE_SOCKET } from './v100TakuyaGroundSocket.js';
 import {queueV104GuardImpact} from './v104CombatAudio.js';
+import {drawV100TataraImpact} from './v100ManualImpactVfx.js';
 
 export const V100_COMBAT_VFX_ART=Object.freeze({
  'quality-boss-blast':'/art/quality-20261113/vfx/boss-blast-six-r2.webp',
@@ -211,6 +212,7 @@ export function drawV100ContactQueue(ctx,objects,world,shieldSocketForOwner,taku
    e.tataraGroundContact.sourcePixel=point.sourcePixel??null;
   }
   if(e.tataraGroundContact&&!e.tataraGroundContact.resolvedSocket||e.takuyaGroundContact&&!e.takuyaGroundContact.resolvedSocket)continue;
+  if(e.tataraGroundContact&&drawV100TataraImpact(ctx,objects,e,world.time-e.startedAt))continue;
   drawV100Contact(ctx,objects,{...e,elapsed:world.time-e.startedAt});
  }
 }
