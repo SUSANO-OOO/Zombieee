@@ -152,3 +152,13 @@ test('a Gate Eater first seen after charging shows only the settling tail, and a
  assert.equal(drawV100GateChargeTrail(ctx,objects,{world,ownerId:7,x:495,y:240,runtime:{phase:'charging',remainingSeconds:.88,direction:-1}}),true);
  assert.ok(calls.some(c=>c.args[1]===0&&c.args[2]===0));
 });
+
+test('settling Gate Eater floor debris stays at its stop point when a later hit moves the exposed body',()=>{
+ const owner={id:7,kind:'gate-eater',hp:3200,x:460,y:240},world=battle(owner),{ctx,transforms}=canvas();
+ const objects={[ART['gate-eater'].id]:image('gate')},runtime={phase:'exposed',remainingSeconds:1.55,direction:-1};
+ assert.equal(drawV100GateChargeTrail(ctx,objects,{world,ownerId:7,x:460,y:240,runtime}),true);
+ world.time+=.1;owner.x=475;
+ assert.equal(drawV100GateChargeTrail(ctx,objects,{world,ownerId:7,x:475,y:240,runtime:{...runtime,remainingSeconds:1.45}}),true);
+ assert.deepEqual(transforms.filter(t=>t[0]==='translate'),[['translate',460,240],['translate',460,240]],'floor fragments must not slide after the exposed actor');
+ assert.equal(owner.x,475,'rendering must preserve the real knock displacement');
+});

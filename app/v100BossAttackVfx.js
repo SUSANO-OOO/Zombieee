@@ -48,7 +48,7 @@ export function drawV100GateChargeTrail(ctx,objects,{world,ownerId,x,y,runtime}=
  if(!['charging','exposed'].includes(runtime.phase)){owners.delete(ownerId);return false;}
  const tuning=STATION_ENEMY_TUNING.ticketGateEater;
  const settling=.4,normalDuration=tuning.chargeSeconds+settling;
- let progress;
+ let progress,paintX=x,paintY=y;
  if(runtime.phase==='charging'){
   const elapsed=tuning.chargeSeconds-runtime.remainingSeconds;if(elapsed<0)return false;
   // Phase clocks measure actual charging even if an incoming hit moves the
@@ -64,16 +64,17 @@ export function drawV100GateChargeTrail(ctx,objects,{world,ownerId,x,y,runtime}=
    const actualCharge=previous?.phase==='charging'?exposedAt-previous.startedAt:NaN;
    const baseProgress=Number.isFinite(actualCharge)&&actualCharge>=0&&actualCharge<=tuning.chargeSeconds+1e-5
     ?Math.min(tuning.chargeSeconds,actualCharge)/normalDuration:tuning.chargeSeconds/normalDuration;
-   record={phase:'exposed',exposedAt,baseProgress};owners.set(ownerId,record);
+   record={phase:'exposed',exposedAt,baseProgress,x,y};owners.set(ownerId,record);
   }
   // Continue from the actual final charge frame. First seeing an already
   // exposed owner shows its settling tail instead of replaying the impact.
   progress=record.baseProgress+(1-record.baseProgress)*age/settling;
+  paintX=record.x;paintY=record.y;
  }
  const chosen=bossAttackReleaseSource(objects,'gate-eater',world,ownerId);
  if(!chosen.art||chosen.image?.naturalWidth!==1536||chosen.image.naturalHeight!==1024)return false;
  const {art,image}=chosen;
- ctx.save();ctx.translate(x,y);if(runtime.direction>0)ctx.scale(-1,1);
+ ctx.save();ctx.translate(paintX,paintY);if(runtime.direction>0)ctx.scale(-1,1);
  ctx.globalCompositeOperation='source-over';ctx.shadowBlur=0;
  cells(ctx,image,progress,[-art.renderWidth*art.anchorX,-art.renderHeight*art.anchorY,art.renderWidth,art.renderHeight],progress>.7?(1-progress)/.3:1);
  ctx.restore();return true;
