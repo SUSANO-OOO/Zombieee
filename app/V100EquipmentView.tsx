@@ -67,7 +67,7 @@ export function V100EquipmentView({ save, onBack, onPurchase, onUpgrade, onEquip
         <EquipmentArt item={entry} locked={locked}/><span><strong>{entry.displayName}</strong><small>{locked?`S${String(entry.unlockStageNumber).padStart(2,"0")}クリアで解放`:tab==="shop"?`${entry.purchaseCaps} CAPS`:`所持 ${owned}`}</small></span>
       </button>;})}
     </div></div><aside className="v100-equipment-focus" aria-label="選択中の装備">{item ? <>
-      <div className="v100-equipment-focus-body"><div className="v100-equipment-focus-heading"><EquipmentArt item={item} locked={tab==="shop"&&!unlocked}/><div><small>{item.slotType==="personal"?"個人装備":"部隊装備"} / 所持 {quantity}</small><h3>{item.displayName}{level>0?` ＋${level}`:""}</h3><p>{equipmentEffectSummary(item.id,level)}</p></div></div>
+      <div className="v100-equipment-focus-body"><div className="v100-equipment-focus-heading"><div className="v100-equipment-specimen" aria-hidden="true"><EquipmentArt item={item} locked={tab==="shop"&&!unlocked}/></div><div><small>{item.slotType==="personal"?"個人装備":"部隊装備"} / 所持 {quantity}</small><h3>{item.displayName}{level>0?` ＋${level}`:""}</h3><p>{equipmentEffectSummary(item.id,level)}</p></div></div>
       {fittingOpen && comparison && createPortal(<div className="v100-fitting-backdrop"><section className="v100-equipment-fitting" role="dialog" aria-modal="true" aria-labelledby="v100-fitting-title">
         <header><h2 id="v100-fitting-title">{item.displayName}を装備すると</h2><button type="button" onClick={()=>setFittingOpen(false)}>閉じる</button></header>
         <div className="v100-fitting-body" tabIndex={0} aria-label="装備を替えたときの変化"><div className="v100-fitting-person">
