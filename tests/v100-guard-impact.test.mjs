@@ -10,7 +10,7 @@ import {drawV100GuardImpact} from '../app/v100GuardImpactVfx.js';
 import {drawV100ContactQueue,queueV100GuardContact,getV100GuardContactSnapshot} from '../app/v100CombatVfx.js';
 import {requiredBattleAssetPlan} from '../app/battleAssetPlan.js';
 import {verifiedPwaArtworkPaths} from '../app/pwaArtworkAvailability.js';
-import {V177_JOINT_ATLASES} from '../app/v177JointPresentation.js';
+import {V177_JOINT_ATLASES,v177JointPose,v177RenderedJointWeaponSocket} from '../app/v177JointPresentation.js';
 import {V100_STAGE_IDS} from '../app/v100Registry.js';
 
 const image=(width=768,height=512)=>({complete:true,naturalWidth:width,naturalHeight:height});
@@ -115,6 +115,27 @@ test('the real queue waits for successfully painted weapon contact and retains o
     drawV100ContactQueue(c.ctx,objects,world,()=>({x:430,y:260}));assert.equal(c.images().length,1);
     delete objects[art.id];world.time+=.04;drawV100ContactQueue(c.ctx,objects,world);assert.equal(c.images()[1].args[0],source);
     world.time+=.16;drawV100ContactQueue(c.ctx,objects,world);assert.equal(c.images().length,2);assert.deepEqual(getV100GuardContactSnapshot(world),[]);
+  }
+});
+
+test('the actual paint consumer resolves active guard contact during walking and recoil, only after a successful living owner draw',async()=>{
+  const source=await readFile('app/AshfallGame.tsx','utf8'),file=ts.createSourceFile('AshfallGame.tsx',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);
+  const branches=[];function visit(node){if(ts.isIfStatement(node)&&node.thenStatement.getText(file).includes('const guardSocket=v177RenderedJointWeaponSocket'))branches.push(node.getText(file));ts.forEachChild(node,visit);}visit(file);
+  assert.equal(branches.length,1);const executable=ts.transpileModule(branches[0],{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText;
+  for(const kind of Object.keys(ART))for(const state of ['idle','move','recoil'])for(const direction of ['left','right']){
+    const original=v177JointPose(kind,{requestedState:state==='recoil'?'move':state,clipProgress:.35},{locomotionPhase:.35,locomotionSettle:state==='idle'?1:0});assert.ok(original);
+    const plan=state==='recoil'?{...original,reactionHeld:true}:original;
+    const f={kind,side:'human',hp:100,x:400,y:280,manualAbility:{phase:'active'}};
+    const facts={drewArticulatedWalk:true,jointPose:plan,options:{world:{time:10}},f,renderKind:kind,direction,
+      frame:{anchorX:.5,anchorY:1,flipX:direction==='left'},size:{w:120,h:112},pose:{offsetX:2,offsetY:1,rotationRadians:.03,scaleX:1,scaleY:1},bob:2,depthScale:1,
+      v177RenderedJointWeaponSocket,fighterShieldSockets:new WeakMap()};
+    runInNewContext(executable,facts);const socket=facts.fighterShieldSockets.get(f);assert.ok(socket&&Object.values(socket).every(Number.isFinite));
+    const expected=v177RenderedJointWeaponSocket({kind,plan,direction,frame:facts.frame,size:facts.size,pose:facts.pose,x:f.x,y:f.y,bob:2,depthScale:1,allowIdle:true});assert.deepEqual(socket,expected);
+    if(state==='recoil'||state==='idle')assert.equal(plan.attackPhase,null,'regression covers the real non-attack guard pose');
+    for(const patch of [{drewArticulatedWalk:false},{jointPose:null},{options:{}},{renderKind:'brute'},
+      ...[{hp:0},{side:'zombie'},{manualAbility:{phase:'windup'}},{manualAbility:{phase:'cooldown'}}].map(p=>({f:{...f,...p}}))]){
+      const invalid={...facts,...patch,fighterShieldSockets:new WeakMap()};runInNewContext(executable,invalid);assert.equal(invalid.fighterShieldSockets.has(invalid.f),false);
+    }
   }
 });
 

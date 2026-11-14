@@ -4238,6 +4238,7 @@ type FighterRenderAudit = {
   deploymentPlan?: ReturnType<typeof crawlerDeploymentRenderPlan>;
   spritePath?: string | null;
   renderedPanSocket?: { x: number; y: number } | null;
+  renderedGuardSocket?: { x: number; y: number } | null;
   poseScaleX?: number;
   poseScaleY?: number;
   bodyScale?: number;
@@ -4850,7 +4851,15 @@ function drawSpriteFighter(
       ...groundSocket,sourceId:jointAtlas.key,sourcePath:jointAtlas.path,kind:'takuya-ground-blade',pixel:{x:groundPixel[0],y:groundPixel[1]}});
     if(renderKind==='brute'&&manualAbilityActive&&groundSocket)fighterTataraGroundSockets.set(f,{
       ...groundSocket,sourcePath:jointAtlas.path,sourcePixel:{x:groundPixel[0],y:groundPixel[1]},kind:'brute-ground-hammer',ownerId:f.id,activationId:f.manualAbility.activationId});
-    if(['guardian','kumaverson'].includes(renderKind)&&jointPose.abilityPresentation==='guard')fighterShieldSockets.set(f,weaponSocket);
+  }
+  // Incoming damage can hold the last walking or recoil pose while the guard
+  // is active. Resolve the weapon actually painted above, including those
+  // non-attack poses; requiring the optional brace pose drops the real hit.
+  if(drewArticulatedWalk&&jointPose&&options.world&&f.side==='human'&&f.hp>0
+    &&['guardian','kumaverson'].includes(renderKind)&&f.manualAbility?.phase==='active'){
+    const guardSocket=v177RenderedJointWeaponSocket({kind:renderKind,plan:jointPose,direction,frame,size,pose,
+      x:f.x,y:f.y,bob,depthScale,allowIdle:true});
+    if(guardSocket)fighterShieldSockets.set(f,guardSocket);
   }
   if(drewArticulatedWalk&&jointPose&&weaponSocket&&gripSocket){
     const wakes=[{kind:renderKind,channel:jointAtlas.weaponBone,sequence:jointPose.choreography?.sequence,
@@ -4876,6 +4885,7 @@ function drawSpriteFighter(
     const audit=fighterRenderAudit.get(f);
     if(audit) {
       audit.jointDrawSucceeded=Boolean(jointPose&&drewArticulatedWalk);
+      audit.renderedGuardSocket=fighterShieldSockets.get(f)??null;
       if(audit.jointDrawSucceeded)audit.jointPaintedAt=options.world?.time;
       if(audit.jointDrawSucceeded&&jointPose?.paintLocomotion){
         audit.jointLocomotion={phase:f.animationPresentation.locomotionPhase,runtimeSettle:f.animationPresentation.locomotionSettle,
