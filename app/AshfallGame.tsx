@@ -11282,6 +11282,21 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         setScreen("battle");
         return proof;
       },
+      prepareV100NaoTreatmentProof: () => {
+        const g=gameRef.current;
+        if(!["localhost","127.0.0.1"].includes(window.location.hostname)
+          ||new URLSearchParams(window.location.search).get("qaNaoTreatment")!=="1"
+          ||!externalSessionActive||!g.definition.missionConfig.v100StageNumber)return null;
+        const prepared=bridge.prepareManualAbilityProof("medic");
+        const healer=g.fighters.find(f=>f.id===prepared.ownerIds[0]&&f.kind==="medic");
+        if(!healer)throw new Error("Normal treatment proof requires the prepared Nao");
+        // Initial conditions only. The unchanged normal healing AI owns every
+        // subsequent target, cooldown, HP change and completed treatment.
+        healer.supportCooldown=0;
+        return {...prepared,healerId:healer.id,patients:g.fighters.filter(f=>f.side==="human"&&f.id!==healer.id)
+          .map(f=>({id:f.id,kind:f.kind,hp:f.hp,maxHp:f.maxHp,x:f.x,y:f.y})),
+          scope:"Prepared normal healing fixture, then unmodified AI and world clock. No manual ability activation or later HP/time/cooldown setters."};
+      },
       prepareManualAbilityTargetChoiceProof: (kind: UnitKind, gunman: "red-panther-smg" | "red-panther-commander" = "red-panther-smg") => {
         if (!["ranger", "babayaga", "scout", "engineer"].includes(kind)
           || !["red-panther-smg", "red-panther-commander"].includes(gunman)) {
