@@ -3,6 +3,7 @@ import {bossAttackReleaseSource} from './v100BossAftermath.js';
 import {STATION_ENEMY_TUNING} from './stationEnemyMechanics.js';
 
 const groundChoices=new WeakMap();
+const gateClocks=new WeakMap();
 const finite=(...values)=>values.every(Number.isFinite);
 function cells(ctx,image,progress,rect,baseAlpha=1){
  const position=progress*5,first=Math.floor(position),next=Math.min(5,first+1),blend=position-first;
@@ -30,23 +31,48 @@ export function drawV100TakuyaGroundRelease(ctx,objects,entry,elapsed){
  ctx.restore();return true;
 }
 
+function gateOwners(world,ownerId){
+ if(!world||typeof world!=='object'||!Array.isArray(world.fighters)||!Number.isSafeInteger(ownerId))return null;
+ const raw=world.battlePresentation?.generation,generation=Number.isFinite(raw)?raw:0;
+ let state=gateClocks.get(world);
+ if(!state||state.generation!==generation){state={generation,owners:new Map()};gateClocks.set(world,state);}
+ const alive=new Set(world.fighters.filter(f=>f.kind==='gate-eater'&&f.hp>0).map(f=>f.id));
+ for(const id of state.owners.keys())if(!alive.has(id))state.owners.delete(id);
+ return alive.has(ownerId)?state.owners:null;
+}
+
 export function drawV100GateChargeTrail(ctx,objects,{world,ownerId,x,y,runtime}={}){
- if(!runtime||!['charging','exposed'].includes(runtime.phase)
-  ||!finite(x,y,runtime.originX,runtime.targetX,runtime.remainingSeconds,runtime.direction)
+ if(!runtime||!finite(x,y,world?.time,runtime.remainingSeconds,runtime.direction)
   ||runtime.remainingSeconds<0||Math.abs(runtime.direction)!==1)return false;
+ const owners=gateOwners(world,ownerId);if(!owners)return false;
+ if(!['charging','exposed'].includes(runtime.phase)){owners.delete(ownerId);return false;}
  const tuning=STATION_ENEMY_TUNING.ticketGateEater;
- // The simulation can reach the target before its nominal .9s timer expires.
- // Its preserved origin/target determine that same duration, without a new
- // simulation clock or discontinuity when the real exposure phase begins.
- const chargeLength=Math.min(tuning.chargeSeconds,Math.abs(runtime.targetX-runtime.originX)/tuning.chargeSpeed);
- if(!(chargeLength>0))return false;
- const elapsed=runtime.phase==='charging'?tuning.chargeSeconds-runtime.remainingSeconds
-  :chargeLength+tuning.flankExposureSeconds-runtime.remainingSeconds;
- const duration=chargeLength+.4;
- if(elapsed<0||elapsed>=duration)return false;
+ const settling=.4,normalDuration=tuning.chargeSeconds+settling;
+ let progress;
+ if(runtime.phase==='charging'){
+  const elapsed=tuning.chargeSeconds-runtime.remainingSeconds;if(elapsed<0)return false;
+  // Phase clocks measure actual charging even if an incoming hit moves the
+  // body away from its original committed position. Fighters may be cloned.
+  owners.set(ownerId,{phase:'charging',startedAt:world.time-elapsed});
+  progress=elapsed/normalDuration;
+ }else{
+  const age=tuning.flankExposureSeconds-runtime.remainingSeconds;
+  if(age<0||age>=settling){owners.delete(ownerId);return false;}
+  const exposedAt=world.time-age,previous=owners.get(ownerId);
+  let record=previous;
+  if(record?.phase!=='exposed'||Math.abs(record.exposedAt-exposedAt)>1e-5){
+   const actualCharge=previous?.phase==='charging'?exposedAt-previous.startedAt:NaN;
+   const baseProgress=Number.isFinite(actualCharge)&&actualCharge>=0&&actualCharge<=tuning.chargeSeconds+1e-5
+    ?Math.min(tuning.chargeSeconds,actualCharge)/normalDuration:tuning.chargeSeconds/normalDuration;
+   record={phase:'exposed',exposedAt,baseProgress};owners.set(ownerId,record);
+  }
+  // Continue from the actual final charge frame. First seeing an already
+  // exposed owner shows its settling tail instead of replaying the impact.
+  progress=record.baseProgress+(1-record.baseProgress)*age/settling;
+ }
  const chosen=bossAttackReleaseSource(objects,'gate-eater',world,ownerId);
  if(!chosen.art||chosen.image?.naturalWidth!==1536||chosen.image.naturalHeight!==1024)return false;
- const {art,image}=chosen,progress=elapsed/duration;
+ const {art,image}=chosen;
  ctx.save();ctx.translate(x,y);if(runtime.direction>0)ctx.scale(-1,1);
  ctx.globalCompositeOperation='source-over';ctx.shadowBlur=0;
  cells(ctx,image,progress,[-art.renderWidth*art.anchorX,-art.renderHeight*art.anchorY,art.renderWidth,art.renderHeight],progress>.7?(1-progress)/.3:1);

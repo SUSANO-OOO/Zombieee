@@ -116,3 +116,39 @@ test('validly decoded but wrong-size optional images still fall back instead of 
  assert.equal(drawV100GateChargeTrail(ctx,{[ART['gate-eater'].id]:image('wrong',3072,2048)},{world:battle({id:7,kind:'gate-eater',hp:3200}),ownerId:7,x:315,y:240,runtime:{phase:'charging',remainingSeconds:.8,originX:300,targetX:420,direction:1}}),false);
  assert.equal(calls.length,0);
 });
+
+for(const displacement of ['windup-back','charging-forward'])test('Gate Eater material does not rewind or skip cells after actual '+displacement+' displacement',()=>{
+ let owner={id:7,kind:'gate-eater',side:'zombie',hp:3200,x:500,y:240,lane:1,combatReady:true};
+ let runtime={...beginTicketGateEaterCharge({boss:owner,targetX:460}).runtime,originX:500};
+ const world=battle(owner),{ctx,calls}=canvas(),objects={[ART['gate-eater'].id]:image('gate')};
+ let displaced=false,previous=null,transitions=0,lastPhase='windup';
+ for(let tick=0;tick<180;tick++){
+  // The real battle can move the boss through knock before advancing this
+  // same production charge runtime. Its committed origin intentionally stays.
+  if(!displaced&&(displacement==='windup-back'||runtime.phase==='charging'&&runtime.remainingSeconds<.8)){
+   owner={...owner,x:owner.x+(displacement==='windup-back'?15:-20)};displaced=true;
+  }
+  const result=advanceTicketGateEaterCharge({runtime,boss:owner,elapsedSeconds:1/60});
+  owner=result.boss;runtime={...result.runtime,originX:500};world.fighters=[owner];world.time+=1/60;
+  const start=calls.length;
+  if(drawV100GateChargeTrail(ctx,objects,{world,ownerId:7,x:owner.x,y:owner.y,runtime})){
+   const frameCalls=calls.slice(start),weight=frameCalls.reduce((sum,c)=>sum+c.alpha,0);
+   const position=frameCalls.reduce((sum,c)=>sum+(c.args[1]/512+c.args[2]/512*3)*c.alpha,0)/weight;
+   if(previous!==null){assert.ok(position>=previous-1e-8,'no backward animation');assert.ok(position-previous<=.22,'no phase-boundary frame skip');}
+   if(lastPhase==='charging'&&runtime.phase==='exposed')transitions++;
+   previous=position;
+  }
+  lastPhase=runtime.phase;
+ }
+ assert.equal(displaced,true);assert.equal(transitions,1);assert.ok(previous>4.7);assert.equal(owner.hp,3200);
+});
+
+test('a Gate Eater first seen after charging shows only the settling tail, and a new battle generation starts fresh',()=>{
+ const owner={id:7,kind:'gate-eater',hp:3200},world=battle(owner),{ctx,calls}=canvas(),objects={[ART['gate-eater'].id]:image('gate')};
+ const runtime={phase:'exposed',remainingSeconds:1.55,direction:-1};
+ assert.equal(drawV100GateChargeTrail(ctx,objects,{world,ownerId:7,x:460,y:240,runtime}),true);
+ assert.ok(calls.every(c=>c.args[1]/512+c.args[2]/512*3>=3),'do not replay an unseen impact');
+ world.battlePresentation.generation++;calls.length=0;
+ assert.equal(drawV100GateChargeTrail(ctx,objects,{world,ownerId:7,x:495,y:240,runtime:{phase:'charging',remainingSeconds:.88,direction:-1}}),true);
+ assert.ok(calls.some(c=>c.args[1]===0&&c.args[2]===0));
+});
