@@ -6,6 +6,8 @@ import {drawV100TakuyaGroundRelease} from './v100BossAttackVfx.js';
 import {drawV100GuardImpact} from './v100GuardImpactVfx.js';
 import {V100_GROUND_FIRE_BED_ART} from './v100GroundFireArt.js';
 import {drawV100GroundFireBed,clearV100GroundFireBed} from './v100GroundFireBedVfx.js';
+import {V100_BALLISTIC_MATERIAL_ART} from './v100BallisticMaterialArt.js';
+import {clearV100BallisticArtwork} from './v100BallisticVfx.js';
 
 export const V100_COMBAT_VFX_ART=Object.freeze({
  'quality-boss-blast':'/art/quality-20261113/vfx/boss-blast-six-r2.webp',
@@ -33,6 +35,7 @@ export const V100_COMBAT_VFX_ART=Object.freeze({
  'v100-countercut':'/art/v100/combat-vfx/countercut-six-frames-r1.webp',
  'v100-ground-fire':'/art/v100/combat-vfx/ground-fire-smoke-r1.webp',
  [V100_GROUND_FIRE_BED_ART.burn.id]:V100_GROUND_FIRE_BED_ART.burn.path,
+ [V100_BALLISTIC_MATERIAL_ART.materials.id]:V100_BALLISTIC_MATERIAL_ART.materials.path,
 });
 
 export function drawV100GroundFire(ctx, objects, effect, time, world) {
@@ -101,7 +104,7 @@ const ready=(objects,id)=>{
 export const V100_CONTACT_WEAPONS=Object.freeze(['scout','brawler','kumaverson','brute','guardian','crazy-king','zakimiya','tky','miyamoto-musashi','walker','runner','crusher','abomination','takuya','takuya-omega','gairen','futago','mugarian-president-mutated','ooguchi','grappler','sprinter','gate-eater','cagewalker','red-panther-knife']);
 export const V100_CLAW_CONTACT_WEAPONS=Object.freeze(['walker','runner','turned','grappler','sprinter','futago']);
 const contactQueues=new WeakMap();
-export function clearV100ContactQueue(world){contactQueues.delete(world);clearV100GroundFireBed(world);}
+export function clearV100ContactQueue(world){contactQueues.delete(world);clearV100GroundFireBed(world);clearV100BallisticArtwork(world);}
 export function queueV100Contact(world,{x,y,ground=false,metal=false,claw=false,size=58,direction=1,delay=0,guardContact=null,clawContact=null,skillContact=null,meleeContact=null}){
  if(!world.definition?.missionConfig?.v100StageNumber)return;
  const entries=(contactQueues.get(world)??[]).filter(e=>world.time-e.startedAt<e.duration);

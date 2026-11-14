@@ -2096,6 +2096,14 @@
       "pack": "campaign-core",
       "category": "object",
       "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261115/vfx/ballistic-materials-six-r1.webp",
+      "bytes": 56496,
+      "hash": "sha256-f4590e51f2f0a6ace26a38b6a542ed40682cdb4103335647a4f1e325f279b1a0",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
     }
   ],
   "retired": [
@@ -15031,6 +15039,14 @@
         "/art/quality-20261115/vfx/ground-fire-bed-six-r1.webp"
       ],
       "logicalBytes": 141770
+    },
+    {
+      "date": "2026-11-15",
+      "scope": "Original six-role ordinary firearm material atlas for distinct flight glints and actual empty cases. Existing bodies, weapon identity, crossbow/medical/other profiles, live muzzle, actual shot trajectory, damage-owned wounds, clock, RNG, audio and saves retained. Optional verified pack policy and whole-battle source choice; missing artwork keeps painted flight fallback without diagrammatic core or fake casing.",
+      "paths": [
+        "/art/quality-20261115/vfx/ballistic-materials-six-r1.webp"
+      ],
+      "logicalBytes": 56496
     }
   ],
   "contentReplacements": [

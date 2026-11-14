@@ -292,6 +292,14 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/quality-20261115/vfx/ballistic-materials-six-r1.webp",
+      "bytes": 56496,
+      "hash": "sha256-f4590e51f2f0a6ace26a38b6a542ed40682cdb4103335647a4f1e325f279b1a0",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/quality-20261115/vfx/ground-fire-bed-six-r1.webp",
       "bytes": 141770,
       "hash": "sha256-f6a331504bc2522e2fb1d8b3a14b58ce877dd44f6b825421e446014ef8e913a7",

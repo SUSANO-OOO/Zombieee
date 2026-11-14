@@ -48,6 +48,7 @@ import { V100_CANVAS_FONT } from "./v100Typography.js";
 
 import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import {PwaBattleArtworkPathsContext,selectBattleArtworkPolicy} from "./pwaBattleArtworkContext.js";
+import {drawV100BallisticShot} from './v100BallisticVfx.js';
 import {PwaManualFoleyPathsContext} from "./pwaAudioAvailabilityContext.js";
 import {selectV100ManualFoleyPlayback} from "./v100ManualAbilityFoley.js";
 import {
@@ -8574,6 +8575,7 @@ function drawAuthoredShotVfx(
     color,
     v100StageObjects,
     muzzleOrigin,
+    world,
   }: {
     x: number;
     y: number;
@@ -8590,6 +8592,7 @@ function drawAuthoredShotVfx(
     color: string;
     v100StageObjects?: SpriteMap;
     muzzleOrigin?: {x:number;y:number} | null;
+    world?: object;
   },
 ): boolean {
   const dx = shot.tx - shot.x;
@@ -8615,6 +8618,10 @@ function drawAuthoredShotVfx(
   }
   if(v100StageObjects&&enemyProjectile){
     drawV104InfectedWake(ctx,v100StageObjects,{x,y,ux,uy,trail:enemyProjectile.trail,progress:Math.max(0,impactProgress),impact:impactProgress>=0});
+    return true;
+  }
+  if(v100StageObjects&&drawV100BallisticShot(ctx,v100StageObjects,shot,{x,y,ux,uy,p,elapsed,distance,weapon,weaponProfile},world)){
+    if(muzzleOrigin!==null)drawV100Muzzle(ctx,v100StageObjects,{weapon,elapsed,x:muzzleOrigin?.x??shot.x,y:muzzleOrigin?.y??shot.y,tx:shot.tx,ty:shot.ty});
     return true;
   }
   const direction = dx >= 0 ? 1 : -1;
@@ -9392,6 +9399,7 @@ function drawWorld(
       color,
       v100StageObjects: g.definition.missionConfig.v100StageNumber ? stageObjects : undefined,
       muzzleOrigin: V100_WEAPON_SOCKETS[weapon] ? liveSocket??null : undefined,
+      world:g,
     });
     ctx.restore();
     }
@@ -15406,6 +15414,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       verifiedKingExhaustPaths: battleArtworkPolicyRef.current.paths.split('\n').filter(Boolean),
       verifiedGuardImpactPaths: battleArtworkPolicyRef.current.paths.split('\n').filter(Boolean),
       verifiedGroundFirePaths: battleArtworkPolicyRef.current.paths.split('\n').filter(Boolean),
+      verifiedBallisticMaterialPaths: battleArtworkPolicyRef.current.paths.split('\n').filter(Boolean),
       includeAllSprites: localQaRequested
         && !finiteEnemyRuntimeQa
         && !finiteVisualIntegrityQa
