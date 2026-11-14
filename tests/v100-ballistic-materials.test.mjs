@@ -7,6 +7,7 @@ import {runInNewContext} from 'node:vm';
 import ts from 'typescript';
 import {V100_BALLISTIC_MATERIAL_ART} from '../app/v100BallisticMaterialArt.js';
 import {drawV100BallisticShot} from '../app/v100BallisticVfx.js';
+import {drawV100NaoTreatmentShot} from '../app/v100NaoShotVfx.js';
 import {clearV100ContactQueue} from '../app/v100CombatVfx.js';
 import {weaponProfileForUnit,ENEMY_FIREARM_WEAPON_PROFILE} from '../app/combatPresentation.js';
 import {enemyProjectilePresentationFor} from '../app/enemyVfxPresentation.js';
@@ -28,7 +29,7 @@ function canvas(){
 }
 
 test('current rifle, suppressed pistol, SMG and handgun identities select the proper real materials',()=>{
- const kinds={ranger:[1,4,6.8],babayaga:[2,3,5.6],gunner:[1,4,6.8],
+ const kinds={ranger:[1,4,6.8],medic:[1,4,6.2],babayaga:[2,3,5.6],gunner:[1,4,6.8],
   'red-panther-smg':[0,3,6],'red-panther-commander':[0,3,6],crawler:[1,5,8.8]};
  for(const [kind,[glint,caseFrame,bodyWidth]]of Object.entries(kinds)){
   const e=shot(kind),p=params(kind),world={marker:'unchanged'},before=JSON.stringify({e,p,world}),v=canvas();
@@ -77,10 +78,12 @@ test('a missing or late atlas retains painted flight fallback for the battle, an
 });
 
 test('medical support, crossbow, thrown weapons, blades and infected projectiles cannot acquire firearm material',()=>{
- for(const kind of ['medic','engineer','zakimiya','mrs-chiha','tky','spitter','kurome','guardian']){
+ for(const kind of ['engineer','zakimiya','mrs-chiha','tky','spitter','kurome','guardian']){
   const v=canvas();assert.equal(drawV100BallisticShot(v.c,{[art.id]:image},shot(kind),params(kind),{}),false);assert.equal(v.calls.length,0);
  }
  const v=canvas();assert.equal(drawV100BallisticShot(v.c,{[art.id]:image},{...shot(),style:'melee'},params(),{}),false);
+ const heal=canvas();assert.equal(drawV100BallisticShot(heal.c,{[art.id]:image},{...shot('medic'),weapon:undefined,style:undefined,effect:'medic',casing:false},params('medic'),{}),false);assert.equal(heal.calls.length,0);
+ for(const patch of [{side:'zombie'},{style:undefined},{weapon:undefined}]){const invalid=canvas();assert.equal(drawV100BallisticShot(invalid.c,{[art.id]:image},{...shot('medic'),...patch},params('medic'),{}),false);assert.equal(invalid.calls.length,0);}
 });
 
 test('the actual immediate enemy-shot emitter paints its committed target at once without delaying damage or adding a case',async()=>{
@@ -122,9 +125,9 @@ test('the actual ordinary-shot consumer selects materials before legacy geometry
  const text=await readFile('app/AshfallGame.tsx','utf8'),file=ts.createSourceFile('AshfallGame.tsx',text,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);
  const node=file.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text==='drawAuthoredShotVfx');assert.ok(node);
  const executable=ts.transpileModule(node.getText(file)+'\nthis.paint=drawAuthoredShotVfx;',{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText;
- for(const kind of ['ranger','babayaga','gunner','red-panther-smg','red-panther-commander','crawler'])for(const muzzleOrigin of [{x:334,y:219},null]){
+ for(const kind of ['ranger','medic','babayaga','gunner','red-panther-smg','red-panther-commander','crawler'])for(const muzzleOrigin of [{x:334,y:219},null]){
   const muzzles=[],v=canvas(),world={},objects={[art.id]:image},e=shot(kind);
-  const scope={drawV100BallisticShot,V100_CONTACT_WEAPONS:[],drawV100Muzzle:(_c,_o,data)=>muzzles.push(data),
+  const scope={drawV100BallisticShot,drawV100NaoTreatmentShot,V100_CONTACT_WEAPONS:[],drawV100Muzzle:(_c,_o,data)=>muzzles.push(data),
    drawCombatRibbon:()=>{throw Error('legacy beam reached')},drawCombatSplinters:()=>{throw Error('legacy hit glyph reached')}};
   runInNewContext(executable,scope);
   assert.equal(scope.paint(v.c,e,{...params(kind),duration:.2,impactProgress:-1,enemyProjectile:enemyProjectilePresentationFor(kind),color:'#b7efff',v100StageObjects:objects,muzzleOrigin,world}),true);
@@ -132,6 +135,15 @@ test('the actual ordinary-shot consumer selects materials before legacy geometry
   if(muzzleOrigin){assert.equal(muzzles[0].x,334);assert.equal(muzzles[0].y,219);assert.equal(muzzles[0].weapon,kind);}
   v.assertRestored();
  }
+ // The same resolved medic profile also represents automatic treatment.
+ // Exercise the real consumer with an explicit muzzle position: it must
+ // still return through recipient dressing before any firearm flash.
+ const healCanvas=canvas(),gauze={complete:true,naturalWidth:1536,naturalHeight:1024};
+ const healShot={side:'human',effect:'medic',sourceId:1,targetId:2,life:.28,duration:.32,x:300,y:200,tx:360,ty:200};
+ const healWorld={fighters:[{id:1,side:'human',kind:'medic',hp:68},{id:2,side:'human',hp:42,x:360,y:230}]};
+ const healScope={drawV100BallisticShot,drawV100NaoTreatmentShot,V100_CONTACT_WEAPONS:[],drawV100Muzzle:()=>{throw Error('treatment acquired a muzzle flash')},drawCombatRibbon:()=>{throw Error('legacy treatment geometry reached')}};
+ runInNewContext(executable,healScope);assert.equal(healScope.paint(healCanvas.c,healShot,{...params('medic'),elapsed:.04,duration:.32,impactProgress:-1,enemyProjectile:null,color:'#79efac',v100StageObjects:{'quality-medic-gauze':gauze},muzzleOrigin:{x:334,y:219},world:healWorld}),true);
+ assert.equal(healCanvas.calls.length,1);assert.equal(healCanvas.calls[0].args[0],gauze);healCanvas.assertRestored();
  assert.ok(text.includes('      world:g,'),'the actual world owns visual source choice');
 });
 

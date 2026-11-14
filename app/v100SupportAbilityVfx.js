@@ -62,12 +62,12 @@ function drawDustPuff(ctx, image, x, y, size, alpha, age, offset = 0) {
   ctx.restore();
 }
 
-function drawMedicMist(ctx, objects, effect) {
+export function drawV100MedicMist(ctx, objects, effect) {
   const image=ready(objects,"quality-medic-gauze");
   const progress=Math.max(0,Math.min(1,effect.elapsed/effect.duration));
   const frame=Math.min(5,Math.floor(progress*6));
   const cellWidth=image.naturalWidth/3,cellHeight=image.naturalHeight/2;
-  const width=104+Math.sin(progress*Math.PI)*10,height=width*.76;
+  const width=(104+Math.sin(progress*Math.PI)*10)*(effect.scale??1),height=width*.76;
   ctx.save();ctx.globalCompositeOperation="source-over";ctx.shadowBlur=0;
   ctx.globalAlpha=progress>.8?(1-progress)/.2:1;
   ctx.drawImage(image,frame%3*cellWidth,Math.floor(frame/3)*cellHeight,cellWidth,cellHeight,
@@ -133,7 +133,7 @@ export function drawV100SupportAbilityEffects(ctx, objects, world) {
         renderEffect.x = target.x;
         renderEffect.y = target.y - 28;
       }
-      drawMedicMist(ctx, objects, renderEffect);
+      drawV100MedicMist(ctx, objects, renderEffect);
     }
     else if (renderEffect.eventType === "trap-sprung") {
       if(renderEffect.targetIds)drawBoundTrap(ctx,objects,world,renderEffect);

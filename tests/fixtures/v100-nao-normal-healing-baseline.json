@@ -1,0 +1,21 @@
+{
+  "source": "18d754bdcacba388027c76483116502407d8de93",
+  "blockSha256": "c682aadd4d1bd8ecf4d31502856bef30e8ae7e67c1aceaca49158a964b157d9d",
+  "automaticHealingBlock": "if (f.kind === \"medic\" && f.supportCooldown <= 0) {\r\n            const wounded = selectNaoHealTarget({\r\n              healer: f,\r\n              allies: g.fighters.filter((other) => other.side === \"human\" && other.id !== f.id),\r\n              maxRange: UNIT_ROLE_TUNING.nao.healRange,\r\n              distanceBetween: fighterDistance,\r\n            }) as Fighter | null;\r\n            if (wounded) {\r\n              const concurrentHealers = g.fighters.filter((other) => other.side === \"human\"\r\n                && other.kind === \"medic\"\r\n                && other.id !== f.id\r\n                && other.healFocusTargetId === wounded.id\r\n                && other.healFocusRemaining > 0).length;\r\n              const healing = resolveNaoHealing({\r\n                target: wounded,\r\n                baseHealing: (g.definition.missionConfig?.v100StageNumber\r\n                  ? v100UnitStatAtLevel(UNIT_ROLE_TUNING.nao.baseHealing, f.progressionLevel ?? 1, \"healing\")\r\n                  : UNIT_ROLE_TUNING.nao.baseHealing) * f.healingMultiplier,\r\n                healerNumber: concurrentHealers + 1,\r\n                existingProtectionSeconds: wounded.damageReductionRemaining,\r\n              });\r\n              const healed = healing.amount;\r\n              const roleEffect = roleEffectForAction({ unitKind: f.kind, action: \"heal\", targetKind: wounded.kind }) as RoleEffect | null;\r\n              wounded.hp = healing.hp;\r\n              recordUnitHealing(g, f.kind, healed);\r\n              wounded.damageReductionRemaining = healing.protectionSeconds;\r\n              wounded.damageReductionMultiplier = 1 - healing.damageReduction;\r\n              f.healFocusTargetId = wounded.id;\r\n              f.healFocusRemaining = 1.55;\r\n              f.supportCooldown = 1.55;\r\n              g.roleMetrics.naoHealing += healed;\r\n              addDamageText(g, wounded.x, wounded.y - 70, `+${Math.ceil(healed)}`, .8, \"#83e0a2\");\r\n              addShot(g, f.x + 8, f.y - 34, wounded.x, wounded.y - 28, .32, \"human\", .32, undefined, undefined, roleEffect ?? undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined);\r\n              addParticles(g, wounded.x, wounded.y - 30, \"#69d993\", 7);\r\n              if (roleEffect) playCue(\"role-medic\");\r\n              emitBattleBark(g, \"role-cue\", f.kind, f.id);\r\n            }\r\n          }",
+  "normalDamageEvents": [
+    {
+      "shotIndex": 0,
+      "offsetSeconds": 0,
+      "hitOffsetSeconds": 0.12,
+      "travelSeconds": 0.12,
+      "damage": 7.84,
+      "muzzle": true,
+      "projectile": "support-pulse",
+      "casing": false,
+      "impact": "healing-wave",
+      "hitReaction": true,
+      "hitStopSeconds": 0,
+      "recoil": 0
+    }
+  ]
+}

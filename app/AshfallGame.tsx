@@ -49,6 +49,7 @@ import { V100_CANVAS_FONT } from "./v100Typography.js";
 import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import {PwaBattleArtworkPathsContext,selectBattleArtworkPolicy} from "./pwaBattleArtworkContext.js";
 import {drawV100BallisticShot} from './v100BallisticVfx.js';
+import {drawV100NaoTreatmentShot} from './v100NaoShotVfx.js';
 import {PwaManualFoleyPathsContext} from "./pwaAudioAvailabilityContext.js";
 import {selectV100ManualFoleyPlayback} from "./v100ManualAbilityFoley.js";
 import {
@@ -8622,6 +8623,7 @@ function drawAuthoredShotVfx(
     drawV104InfectedWake(ctx,v100StageObjects,{x,y,ux,uy,trail:enemyProjectile.trail,progress:Math.max(0,impactProgress),impact:impactProgress>=0});
     return true;
   }
+  if(v100StageObjects&&drawV100NaoTreatmentShot(ctx,v100StageObjects,shot,{elapsed,duration},world))return true;
   if(v100StageObjects&&drawV100BallisticShot(ctx,v100StageObjects,shot,{x,y,ux,uy,p,elapsed,distance,weapon,weaponProfile},world)){
     if(muzzleOrigin!==null)drawV100Muzzle(ctx,v100StageObjects,{weapon,elapsed,x:muzzleOrigin?.x??shot.x,y:muzzleOrigin?.y??shot.y,tx:shot.tx,ty:shot.ty});
     return true;
@@ -9400,7 +9402,7 @@ function drawWorld(
       enemyProjectile,
       color,
       v100StageObjects: g.definition.missionConfig.v100StageNumber ? stageObjects : undefined,
-      muzzleOrigin: V100_WEAPON_SOCKETS[weapon] ? liveSocket??null : undefined,
+      muzzleOrigin: (V100_WEAPON_SOCKETS[weapon]||weapon==='medic') ? liveSocket??null : undefined,
       world:g,
     });
     ctx.restore();
@@ -11281,6 +11283,21 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         setEnd(null);
         setScreen("battle");
         return proof;
+      },
+      prepareV100NaoTreatmentProof: () => {
+        const g=gameRef.current;
+        if(!["localhost","127.0.0.1"].includes(window.location.hostname)
+          ||new URLSearchParams(window.location.search).get("qaNaoTreatment")!=="1"
+          ||!externalSessionActive||!g.definition.missionConfig.v100StageNumber)return null;
+        const prepared=bridge.prepareManualAbilityProof("medic");
+        const healer=g.fighters.find(f=>f.id===prepared.ownerIds[0]&&f.kind==="medic");
+        if(!healer)throw new Error("Normal treatment proof requires the prepared Nao");
+        // Initial conditions only. The unchanged normal healing AI owns every
+        // subsequent target, cooldown, HP change and completed treatment.
+        healer.supportCooldown=0;
+        return {...prepared,healerId:healer.id,patients:g.fighters.filter(f=>f.side==="human"&&f.id!==healer.id)
+          .map(f=>({id:f.id,kind:f.kind,hp:f.hp,maxHp:f.maxHp,x:f.x,y:f.y})),
+          scope:"Prepared normal healing fixture, then unmodified AI and world clock. No manual ability activation or later HP/time/cooldown setters."};
       },
       prepareManualAbilityTargetChoiceProof: (kind: UnitKind, gunman: "red-panther-smg" | "red-panther-commander" = "red-panther-smg") => {
         if (!["ranger", "babayaga", "scout", "engineer"].includes(kind)
@@ -22622,7 +22639,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               f.supportCooldown = 1.55;
               g.roleMetrics.naoHealing += healed;
               addDamageText(g, wounded.x, wounded.y - 70, `+${Math.ceil(healed)}`, .8, "#83e0a2");
-              addShot(g, f.x + 8, f.y - 34, wounded.x, wounded.y - 28, .32, "human", .32, undefined, undefined, roleEffect ?? undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined);
+              addShot(g, f.x + 8, f.y - 34, wounded.x, wounded.y - 28, .32, "human", .32, undefined, undefined, roleEffect ?? undefined, f.id, wounded.id, undefined, undefined, undefined, undefined, undefined, undefined, undefined);
               addParticles(g, wounded.x, wounded.y - 30, "#69d993", 7);
               if (roleEffect) playCue("role-medic");
               emitBattleBark(g, "role-cue", f.kind, f.id);

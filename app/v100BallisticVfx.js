@@ -3,6 +3,7 @@ import {combatVariation} from './v100RasterAtmosphere.js';
 
 const profiles=Object.freeze({
  ranger:{glint:1,casing:4,caseWidth:6.8},
+ medic:{glint:1,casing:4,caseWidth:6.2},
  babayaga:{glint:2,casing:3,caseWidth:5.6},gunner:{glint:1,casing:4,caseWidth:6.8},
  'red-panther-smg':{glint:0,casing:3,caseWidth:6},
  'red-panther-commander':{glint:0,casing:3,caseWidth:6},
@@ -29,6 +30,9 @@ function paintCell(ctx,image,frame,width,height,alpha){
 export function drawV100BallisticShot(ctx,objects,shot,{x,y,ux,uy,p,elapsed,distance,weapon,weaponProfile},world){
  const profile=profiles[weapon];
  if(!profile||shot?.style==='melee')return false;
+ // Healing pulses resolve to the medic presentation too. Only the real
+ // carbine packet may select firearm artwork.
+ if(weapon==='medic'&&(shot.weapon!=='medic'||shot.style!=='projectile'||shot.side!=='human'))return false;
  if(!objects||typeof objects!=='object'||!(shot?.life>0)||!(distance>0)||p<0||p>1||elapsed<0
   ||![x,y,ux,uy,p,elapsed,distance,shot.x,shot.y,shot.life].every(Number.isFinite)||Math.hypot(ux,uy)<.001)return true;
  const image=artworkFor(objects,world),art=V100_BALLISTIC_MATERIAL_ART.materials;
