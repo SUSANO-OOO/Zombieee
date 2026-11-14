@@ -1,0 +1,19 @@
+{
+  "masterPath": "assets/source/quality-20261115/vfx/ballistic-materials-r1/master-r1.png",
+  "masterSha256": "94d1a68a76f76f12b9ef36db2abf00be1e7cf5aa08e86c51412154160152f0b6",
+  "promptPath": "assets/source/quality-20261115/vfx/ballistic-materials-r1/prompt-r1.txt",
+  "layout": {
+    "columns": 3,
+    "rows": 2,
+    "cell": 512
+  },
+  "roles": [
+    "pistol",
+    "rifle",
+    "suppressed",
+    "pistol-case",
+    "rifle-case",
+    "shell-case"
+  ],
+  "calibration": "Top-row anchors follow the alpha-weighted bright leading tip in a 7px window. Cases use the centre and span of alpha>=200 body paint. Retain fractional glow and material alpha; no generated art is repainted or masked."
+}

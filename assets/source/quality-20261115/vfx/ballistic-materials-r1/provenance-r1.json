@@ -1,0 +1,141 @@
+{
+  "generator": "scripts/build-v100-ballistic-materials.mjs",
+  "creator": "OpenAI built-in image_gen under Producer direction; deterministic smartphone packaging by Codex",
+  "license": "Project-original generated material artwork under existing game asset policy; no third-party download",
+  "rights": {
+    "commercialUse": true,
+    "modification": true,
+    "redistribution": true,
+    "basis": "Original material-only glints and empty cases for this project"
+  },
+  "producerApproval": "Smartphone goal requests authored ordinary weapon effects without placeholder shapes. Candidate, not final animation, listening or physical acceptance.",
+  "source": {
+    "path": "assets/source/quality-20261115/vfx/ballistic-materials-r1/master-r1.png",
+    "bytes": 1450083,
+    "sha256": "94d1a68a76f76f12b9ef36db2abf00be1e7cf5aa08e86c51412154160152f0b6"
+  },
+  "prompt": {
+    "path": "assets/source/quality-20261115/vfx/ballistic-materials-r1/prompt-r1.txt",
+    "sha256": "071868ef285bfbc97659df06ed5cd90fb0b45cf5156a47263fb4afc777d04759"
+  },
+  "generation": {
+    "mode": "built-in image_gen generation",
+    "model": "Selected by host; no model name asserted",
+    "characterReferences": []
+  },
+  "calibration": "Top-row anchors follow the alpha-weighted bright leading tip in a 7px window. Cases use the centre and span of alpha>=200 body paint. Retain fractional glow and material alpha; no generated art is repainted or masked.",
+  "frames": [
+    {
+      "role": "pistol",
+      "frame": 0,
+      "anchorX": 0.8142855986189159,
+      "anchorY": 0.5175976947240928,
+      "maxMarginAlpha": 1,
+      "visiblePixels": 17785
+    },
+    {
+      "role": "rifle",
+      "frame": 1,
+      "anchorX": 0.9119264373303336,
+      "anchorY": 0.5152507413643417,
+      "maxMarginAlpha": 5,
+      "visiblePixels": 18776
+    },
+    {
+      "role": "suppressed",
+      "frame": 2,
+      "anchorX": 0.8222779156197388,
+      "anchorY": 0.5201997227362635,
+      "maxMarginAlpha": 2,
+      "visiblePixels": 6442
+    },
+    {
+      "role": "pistol-case",
+      "frame": 3,
+      "anchorX": 0.5009765625,
+      "anchorY": 0.5009765625,
+      "bodyWidthFraction": 0.533203125,
+      "bodyHeightFraction": 0.259765625,
+      "maxMarginAlpha": 1,
+      "visiblePixels": 34580
+    },
+    {
+      "role": "rifle-case",
+      "frame": 4,
+      "anchorX": 0.4970703125,
+      "anchorY": 0.49609375,
+      "bodyWidthFraction": 0.822265625,
+      "bodyHeightFraction": 0.2109375,
+      "maxMarginAlpha": 1,
+      "visiblePixels": 40057
+    },
+    {
+      "role": "shell-case",
+      "frame": 5,
+      "anchorX": 0.4970703125,
+      "anchorY": 0.49609375,
+      "bodyWidthFraction": 0.732421875,
+      "bodyHeightFraction": 0.3203125,
+      "maxMarginAlpha": 1,
+      "visiblePixels": 57563
+    }
+  ],
+  "output": {
+    "id": "v100-ballistic-materials",
+    "path": "/art/quality-20261115/vfx/ballistic-materials-six-r1.webp",
+    "hash": "sha256-f4590e51f2f0a6ace26a38b6a542ed40682cdb4103335647a4f1e325f279b1a0",
+    "width": 768,
+    "height": 512,
+    "columns": 3,
+    "rows": 2,
+    "frames": [
+      {
+        "role": "pistol",
+        "frame": 0,
+        "anchorX": 0.8142855986189159,
+        "anchorY": 0.5175976947240928
+      },
+      {
+        "role": "rifle",
+        "frame": 1,
+        "anchorX": 0.9119264373303336,
+        "anchorY": 0.5152507413643417
+      },
+      {
+        "role": "suppressed",
+        "frame": 2,
+        "anchorX": 0.8222779156197388,
+        "anchorY": 0.5201997227362635
+      },
+      {
+        "role": "pistol-case",
+        "frame": 3,
+        "anchorX": 0.5009765625,
+        "anchorY": 0.5009765625,
+        "bodyWidthFraction": 0.533203125,
+        "bodyHeightFraction": 0.259765625
+      },
+      {
+        "role": "rifle-case",
+        "frame": 4,
+        "anchorX": 0.4970703125,
+        "anchorY": 0.49609375,
+        "bodyWidthFraction": 0.822265625,
+        "bodyHeightFraction": 0.2109375
+      },
+      {
+        "role": "shell-case",
+        "frame": 5,
+        "anchorX": 0.4970703125,
+        "anchorY": 0.49609375,
+        "bodyWidthFraction": 0.732421875,
+        "bodyHeightFraction": 0.3203125
+      }
+    ],
+    "bytes": 56496
+  },
+  "runtimeAssetCount": 1,
+  "logicalBytes": 56496,
+  "estimatedDecodedRgbaBytes": 1572864,
+  "scope": "Ordinary firearm flight glints and spent cases only; no body, weapon identity, shot trajectory, damage, clock, RNG, audio, rewards or save change."
+}
