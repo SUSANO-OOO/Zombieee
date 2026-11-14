@@ -1,0 +1,423 @@
+{
+  "source": "18d754bdcacba388027c76483116502407d8de93",
+  "blob": "7458a01cd6d7c8baf7fc8b385bdd4f8444112ee9",
+  "scope": "Actual existing manual-support output captured before exporting its paint helper. Default-size moving-recipient calls and canvas restoration must remain byte-value equal; not a subjective visual test.",
+  "cases": [
+    {
+      "elapsed": 0,
+      "target": {
+        "id": 77,
+        "side": "human",
+        "hp": 40,
+        "x": 345,
+        "y": 240
+      },
+      "calls": [
+        {
+          "args": [
+            0,
+            0,
+            512,
+            512,
+            293,
+            148.768,
+            104,
+            79.04
+          ],
+          "alpha": 1,
+          "composite": "source-over",
+          "shadow": 0
+        }
+      ],
+      "finalState": [
+        0.37,
+        "multiply",
+        17
+      ]
+    },
+    {
+      "elapsed": 0.03,
+      "target": {
+        "id": 77,
+        "side": "human",
+        "hp": 40,
+        "x": 345.6,
+        "y": 239.76
+      },
+      "calls": [
+        {
+          "args": [
+            0,
+            0,
+            512,
+            512,
+            292.56044154591126,
+            147.26389691982803,
+            106.07911690817755,
+            80.62012885021494
+          ],
+          "alpha": 1,
+          "composite": "source-over",
+          "shadow": 0
+        }
+      ],
+      "finalState": [
+        0.37,
+        "multiply",
+        17
+      ]
+    },
+    {
+      "elapsed": 0.074,
+      "target": {
+        "id": 77,
+        "side": "human",
+        "hp": 40,
+        "x": 346.48,
+        "y": 239.408
+      },
+      "calls": [
+        {
+          "args": [
+            0,
+            0,
+            512,
+            512,
+            292.0102906670789,
+            145.1728334511679,
+            108.9394186658423,
+            82.79395818604014
+          ],
+          "alpha": 1,
+          "composite": "source-over",
+          "shadow": 0
+        }
+      ],
+      "finalState": [
+        0.37,
+        "multiply",
+        17
+      ]
+    },
+    {
+      "elapsed": 0.075,
+      "target": {
+        "id": 77,
+        "side": "human",
+        "hp": 40,
+        "x": 346.5,
+        "y": 239.4
+      },
+      "calls": [
+        {
+          "args": [
+            0,
+            0,
+            512,
+            512,
+            292,
+            145.12800000000004,
+            108.99999999999996,
+            82.83999999999997
+          ],
+          "alpha": 1,
+          "composite": "source-over",
+          "shadow": 0
+        }
+      ],
+      "finalState": [
+        0.37,
+        "multiply",
+        17
+      ]
+    },
+    {
+      "elapsed": 0.14,
+      "target": {
+        "id": 77,
+        "side": "human",
+        "hp": 40,
+        "x": 347.8,
+        "y": 238.88
+      },
+      "calls": [
+        {
+          "args": [
+            512,
+            0,
+            512,
+            512,
+            291.6548121372248,
+            142.6074515588653,
+            112.29037572555043,
+            85.34068555141833
+          ],
+          "alpha": 1,
+          "composite": "source-over",
+          "shadow": 0
+        }
+      ],
+      "finalState": [
+        0.37,
+        "multiply",
+        17
+      ]
+    },
+    {
+      "elapsed": 0.15,
+      "target": {
+        "id": 77,
+        "side": "human",
+        "hp": 40,
+        "x": 348,
+        "y": 238.8
+      },
+      "calls": [
+        {
+          "args": [
+            1024,
+            0,
+            512,
+            512,
+            291.6698729810778,
+            142.3025655449906,
+            112.6602540378444,
+            85.62179306876175
+          ],
+          "alpha": 1,
+          "composite": "source-over",
+          "shadow": 0
+        }
+      ],
+      "finalState": [
+        0.37,
+        "multiply",
+        17
+      ]
+    },
+    {
+      "elapsed": 0.22,
+      "target": {
+        "id": 77,
+        "side": "human",
+        "hp": 40,
+        "x": 349.4,
+        "y": 238.24
+      },
+      "calls": [
+        {
+          "args": [
+            1024,
+            0,
+            512,
+            512,
+            292.40304586490447,
+            140.9317037717239,
+            113.99390827019096,
+            86.63537028534513
+          ],
+          "alpha": 1,
+          "composite": "source-over",
+          "shadow": 0
+        }
+      ],
+      "finalState": [
+        0.37,
+        "multiply",
+        17
+      ]
+    },
+    {
+      "elapsed": 0.225,
+      "target": {
+        "id": 77,
+        "side": "human",
+        "hp": 40,
+        "x": 349.5,
+        "y": 238.2
+      },
+      "calls": [
+        {
+          "args": [
+            1024,
+            0,
+            512,
+            512,
+            292.5,
+            140.88799999999998,
+            114,
+            86.64
+          ],
+          "alpha": 1,
+          "composite": "source-over",
+          "shadow": 0
+        }
+      ],
+      "finalState": [
+        0.37,
+        "multiply",
+        17
+      ]
+    },
+    {
+      "elapsed": 0.3,
+      "target": {
+        "id": 77,
+        "side": "human",
+        "hp": 40,
+        "x": 351,
+        "y": 237.6
+      },
+      "calls": [
+        {
+          "args": [
+            512,
+            512,
+            512,
+            512,
+            294.6698729810778,
+            141.10256554499063,
+            112.66025403784437,
+            85.62179306876172
+          ],
+          "alpha": 1,
+          "composite": "source-over",
+          "shadow": 0
+        }
+      ],
+      "finalState": [
+        0.37,
+        "multiply",
+        17
+      ]
+    },
+    {
+      "elapsed": 0.359,
+      "target": {
+        "id": 77,
+        "side": "human",
+        "hp": 40,
+        "x": 352.18,
+        "y": 237.128
+      },
+      "calls": [
+        {
+          "args": [
+            512,
+            512,
+            512,
+            512,
+            297.2129055669815,
+            142.28801316944947,
+            109.93418886603702,
+            83.54998353818813
+          ],
+          "alpha": 1,
+          "composite": "source-over",
+          "shadow": 0
+        }
+      ],
+      "finalState": [
+        0.37,
+        "multiply",
+        17
+      ]
+    },
+    {
+      "elapsed": 0.36,
+      "target": {
+        "id": 77,
+        "side": "human",
+        "hp": 40,
+        "x": 352.2,
+        "y": 237.12
+      },
+      "calls": [
+        {
+          "args": [
+            512,
+            512,
+            512,
+            512,
+            297.2610737385376,
+            142.31426566606174,
+            109.87785252292477,
+            83.50716791742282
+          ],
+          "alpha": 1,
+          "composite": "source-over",
+          "shadow": 0
+        }
+      ],
+      "finalState": [
+        0.37,
+        "multiply",
+        17
+      ]
+    },
+    {
+      "elapsed": 0.42,
+      "target": {
+        "id": 77,
+        "side": "human",
+        "hp": 40,
+        "x": 353.4,
+        "y": 236.64
+      },
+      "calls": [
+        {
+          "args": [
+            1024,
+            512,
+            512,
+            512,
+            300.36044154591116,
+            144.14389691982802,
+            106.0791169081776,
+            80.62012885021497
+          ],
+          "alpha": 0.33333333333333437,
+          "composite": "source-over",
+          "shadow": 0
+        }
+      ],
+      "finalState": [
+        0.37,
+        "multiply",
+        17
+      ]
+    },
+    {
+      "elapsed": 0.449,
+      "target": {
+        "id": 77,
+        "side": "human",
+        "hp": 40,
+        "x": 353.98,
+        "y": 236.408
+      },
+      "calls": [
+        {
+          "args": [
+            1024,
+            512,
+            512,
+            512,
+            301.9450936985102,
+            145.13355393738837,
+            104.06981260297962,
+            79.09305757826452
+          ],
+          "alpha": 0.011111111111112848,
+          "composite": "source-over",
+          "shadow": 0
+        }
+      ],
+      "finalState": [
+        0.37,
+        "multiply",
+        17
+      ]
+    }
+  ]
+}

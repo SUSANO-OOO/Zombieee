@@ -49,6 +49,7 @@ import { V100_CANVAS_FONT } from "./v100Typography.js";
 import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import {PwaBattleArtworkPathsContext,selectBattleArtworkPolicy} from "./pwaBattleArtworkContext.js";
 import {drawV100BallisticShot} from './v100BallisticVfx.js';
+import {drawV100NaoTreatmentShot} from './v100NaoShotVfx.js';
 import {PwaManualFoleyPathsContext} from "./pwaAudioAvailabilityContext.js";
 import {selectV100ManualFoleyPlayback} from "./v100ManualAbilityFoley.js";
 import {
@@ -8622,6 +8623,7 @@ function drawAuthoredShotVfx(
     drawV104InfectedWake(ctx,v100StageObjects,{x,y,ux,uy,trail:enemyProjectile.trail,progress:Math.max(0,impactProgress),impact:impactProgress>=0});
     return true;
   }
+  if(v100StageObjects&&drawV100NaoTreatmentShot(ctx,v100StageObjects,shot,{elapsed,duration},world))return true;
   if(v100StageObjects&&drawV100BallisticShot(ctx,v100StageObjects,shot,{x,y,ux,uy,p,elapsed,distance,weapon,weaponProfile},world)){
     if(muzzleOrigin!==null)drawV100Muzzle(ctx,v100StageObjects,{weapon,elapsed,x:muzzleOrigin?.x??shot.x,y:muzzleOrigin?.y??shot.y,tx:shot.tx,ty:shot.ty});
     return true;
@@ -9400,7 +9402,7 @@ function drawWorld(
       enemyProjectile,
       color,
       v100StageObjects: g.definition.missionConfig.v100StageNumber ? stageObjects : undefined,
-      muzzleOrigin: V100_WEAPON_SOCKETS[weapon] ? liveSocket??null : undefined,
+      muzzleOrigin: (V100_WEAPON_SOCKETS[weapon]||weapon==='medic') ? liveSocket??null : undefined,
       world:g,
     });
     ctx.restore();
@@ -22637,7 +22639,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               f.supportCooldown = 1.55;
               g.roleMetrics.naoHealing += healed;
               addDamageText(g, wounded.x, wounded.y - 70, `+${Math.ceil(healed)}`, .8, "#83e0a2");
-              addShot(g, f.x + 8, f.y - 34, wounded.x, wounded.y - 28, .32, "human", .32, undefined, undefined, roleEffect ?? undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined);
+              addShot(g, f.x + 8, f.y - 34, wounded.x, wounded.y - 28, .32, "human", .32, undefined, undefined, roleEffect ?? undefined, f.id, wounded.id, undefined, undefined, undefined, undefined, undefined, undefined, undefined);
               addParticles(g, wounded.x, wounded.y - 30, "#69d993", 7);
               if (roleEffect) playCue("role-medic");
               emitBattleBark(g, "role-cue", f.kind, f.id);

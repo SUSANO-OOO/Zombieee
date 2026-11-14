@@ -74,6 +74,7 @@ export function drawV100GroundFire(ctx, objects, effect, time, world) {
 // infected mouth. Each actual burst shot owns one short, non-looping flash.
 const MUZZLE_PROFILES=Object.freeze({
  ranger:{duration:.1,size:48},
+ medic:{duration:.075,size:32},
  babayaga:{duration:.055,size:18},
  gunner:{duration:.085,size:48},
  'red-panther-smg':{duration:.085,size:44},
