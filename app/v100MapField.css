@@ -270,7 +270,7 @@ html[data-pwa-boss-dossiers="ready"] #v100-campaign[data-v100-phase="map"] .v100
 }
 @media (max-height: 380px) and (orientation: landscape) {
   #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-recon .v100-stage-intel > span { display: none; }
-  #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-recon .v100-stage-intel { padding: 4px 5px; }
+  #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-recon .v100-stage-intel { padding: 4px 5px; font-size: 12px; line-height: 17px; }
   #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-recon .v100-stage-intel > strong,
   #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-recon .v100-stage-intel > p { display: inline; margin: 0; font-size: 12px; line-height: 17px; }
   #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-recon .v100-stage-intel > strong::after { content: " ／ "; color: #826543; }

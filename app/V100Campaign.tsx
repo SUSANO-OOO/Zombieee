@@ -1285,7 +1285,6 @@ function MapView({ save, selectedStageId, onSelect, onStart, onRename, onBackup,
           <div className="v100-map-briefing">
             <div className="v100-map-side-heading"><span className="v100-kicker">{stage ? `ステージ S${String(stage.number).padStart(2, "0")}` : "ステージ選択"}</span><span>{deploymentLabel}</span></div>
             <h3>{v100MapStageName(stage, save)}</h3>
-            {stage && !save.availableStageIds.includes(stage.id) && <div className="v100-lock-banner"><strong>ステージ封鎖中</strong><span>前のステージクリアで解放</span></div>}
             <div key={stage?.id ?? "no-stage"} className={`v100-operation-recon ${discovered ? "is-discovered" : "is-sealed"}`} style={operationArt}>
               <div className="v100-operation-photo" aria-hidden="true">
                 <i className="v100-operation-scene" />
@@ -1293,7 +1292,7 @@ function MapView({ save, selectedStageId, onSelect, onStart, onRename, onBackup,
                 {!discovered && <V100LockChain />}
                 <span>{!discovered ? "情報未取得" : boss ? "脅威記録" : "現地記録"}</span>
               </div>
-              <div className="v100-stage-intel"><span>クリア目標</span><strong>{discovered ? missionLabelFor(stage) : "情報未取得"}</strong><p>{discovered ? objectiveLabelFor(stage) : "前のステージをクリアして、この区域を調査します。"}</p></div>
+              <div className="v100-stage-intel"><span>クリア目標</span><strong>{discovered ? missionLabelFor(stage) : "ステージ封鎖中"}</strong><p>{discovered ? objectiveLabelFor(stage) : "前のステージクリアで解放"}</p></div>
             </div>
           </div>
           <details className="v100-map-detail"><summary>ステージ詳細・記録</summary>
