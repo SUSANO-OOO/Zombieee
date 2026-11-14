@@ -1,0 +1,61 @@
+{
+  "generator": "scripts/build-v100-boss-attack-art.mjs",
+  "creator": "OpenAI built-in image_gen under Producer direction; deterministic WebP packaging by Codex",
+  "license": "Project-original generated artwork under the existing game asset policy; no third-party download",
+  "rights": {
+    "commercialUse": true,
+    "modification": true,
+    "redistribution": true,
+    "basis": "Original effect artwork created for this project"
+  },
+  "producerApproval": "Current smartphone goal requests bespoke animated boss attacks; candidate, not final visual/audio/device acceptance",
+  "source": {
+    "path": "assets/source/quality-20261114/boss-attacks-r1/kurome-r2-master.png",
+    "bytes": 1690354,
+    "sha256": "065457d59c7402b7c6be2608c192c90efe6d0fbc50cac5ddc32c2b2f8070dedd"
+  },
+  "prompt": {
+    "path": "assets/source/quality-20261114/boss-attacks-r1/kurome-r2-edit-prompt.txt",
+    "sha256": "f6306247316df958ab3eacae6708c084069863b9641403418427620755d9390e"
+  },
+  "generation": {
+    "mode": "built-in image_gen transparency edit",
+    "model": "Selected by host; no model name asserted",
+    "characterReferences": [],
+    "note": "R1 has7 border pixels alpha33 and fails existing alpha32 gate. R2 removes exterior haze; all six border maxima1. No mask, colour key or threshold change. R1 retained.",
+    "editTarget": {
+      "path": "assets/source/quality-20261114/boss-attacks-r1/kurome-r1-master.png",
+      "sha256": "a3ff2bfa3cd3cd8bd68021760c417f8cfa036953182c81a24b466d009f61f09c",
+      "originalPrompt": "assets/source/quality-20261114/boss-attacks-r1/last-three-prompts-r1.json"
+    }
+  },
+  "calibration": {
+    "emitter": {
+      "x": 80,
+      "y": 280
+    },
+    "termination": {
+      "x": 456,
+      "y": 280
+    },
+    "note": "Six painted cores are279..281px high; axis280. Map the actual saved eye origin and real target to the calibrated painted endpoints; existing beam halfWidth and .18s timing unchanged.",
+    "significantLightSpanPixels": 226,
+    "heightNote": "Compensate transparent cell padding so the peak painted light spans the existing halfWidth*2.4 envelope. Pixel data and hit width are unchanged."
+  },
+  "output": {
+    "path": "/art/quality-20261114/vfx/kurome-attack-six-r2.webp",
+    "bytes": 309028,
+    "sha256": "c67f0b6951e74973201d5e96da1dc9d776527681f21b1911294c63e9589b6994",
+    "width": 1536,
+    "height": 1024,
+    "columns": 3,
+    "rows": 2,
+    "anchorX": 0.15625,
+    "anchorY": 0.546875
+  },
+  "runtimeAssetCount": 1,
+  "logicalBytes": 309028,
+  "distinctBytes": 309028,
+  "estimatedDecodedRgbaBytes": 6291456,
+  "scope": "Optional animated active Kurome ray only. Existing warning/charge, normal shots, body, eye origin/target, beam hit width, damage, sound and save unchanged."
+}

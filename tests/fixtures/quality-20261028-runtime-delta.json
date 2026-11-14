@@ -1,6 +1,6 @@
 {
   "base": "ff5dba24e88c810182cda1f044bd26dfc3e512c1",
-  "source": "2278ebce68bb6d9d7fa135ede786609b263cff71 plus optional Tatara-specific manual ground impact; existing hammer socket, body, timing, damage, audio and save retained",
+  "source": "91bacc9d71e72a6422fb1ee6e14dd615cfeed34d plus dedicated optional TAKUYA sword contact, Gate Eater charge trail and Kurome animated ray; actual attack mechanics, warnings, audio and save retained",
   "scope": "Local quality candidate transport contract; not likeness, rights, listening, release or physical-device approval.",
   "added": [
     {
@@ -2023,6 +2023,30 @@
       "hash": "sha256-39fff2d40df64ae92800f98312db40c35aeec72da208b719ac8da462ad5d1c32",
       "pack": "units",
       "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/gate-eater-attack-six-r1.webp",
+      "bytes": 231712,
+      "hash": "sha256-44fd6c6d61a74862e1bdc04e1b68141bb63cc3b98cf2c91fd82d08fd2e1f29e9",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/kurome-attack-six-r2.webp",
+      "bytes": 309028,
+      "hash": "sha256-c67f0b6951e74973201d5e96da1dc9d776527681f21b1911294c63e9589b6994",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/takuya-attack-six-r1.webp",
+      "bytes": 320952,
+      "hash": "sha256-3ecacd831cb32e66992e505db9ecf2090e7f85a142286cca9d0becedb5f31bd1",
+      "pack": "units",
+      "category": "boss",
       "criticality": "critical"
     }
   ],

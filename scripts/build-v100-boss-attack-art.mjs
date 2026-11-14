@@ -8,7 +8,7 @@ const root=process.cwd(),check=process.argv.includes('--check');
 const folder='assets/source/quality-20261114/boss-attacks-r1';
 const sha=b=>createHash('sha256').update(b).digest('hex');
 const recipes=JSON.parse(await readFile(path.join(root,folder,'selected-recipes.json'),'utf8'));
-const kinds=['mother','ooguchi','gairen','futago','mugarian-president-mutated','takuya-omega'];
+const kinds=['mother','ooguchi','gairen','futago','mugarian-president-mutated','takuya-omega','takuya','gate-eater','kurome'];
 assert.deepEqual(recipes.map(r=>r.kind),kinds);
 async function emit(relative,bytes){
  const file=path.join(root,relative);
@@ -36,10 +36,15 @@ for(const recipe of recipes){
    'Painted cell must not have a hard clipped edge: '+recipe.kind);
  }
  assert.ok([recipe.anchorX,recipe.anchorY].every(n=>Number.isFinite(n)&&n>=0&&n<=1));
+ if(recipe.renderWidth!==undefined)assert.ok([recipe.renderWidth,recipe.renderHeight].every(n=>Number.isFinite(n)&&n>0&&n<=512));
+ if(recipe.beamStartX!==undefined)assert.ok([recipe.beamStartX,recipe.beamEndX,recipe.beamAxisY,recipe.beamSpanY].every(Number.isFinite)
+  &&recipe.beamStartX>=0&&recipe.beamEndX>recipe.beamStartX&&recipe.beamEndX<=1&&recipe.beamAxisY>=0&&recipe.beamAxisY<=1&&recipe.beamSpanY>0&&recipe.beamSpanY<=1);
  const bytes=await sharp(master).webp({quality:92,alphaQuality:100,effort:6}).toBuffer();
  const assetPath='/art/quality-20261114/vfx/'+recipe.kind+'-attack-six-r'+revision+'.webp';
  art[recipe.kind]={id:'v100-boss-attack-'+recipe.kind,path:assetPath,hash:'sha256-'+sha(bytes),
-  columns:3,rows:2,anchorX:recipe.anchorX,anchorY:recipe.anchorY};
+  columns:3,rows:2,anchorX:recipe.anchorX,anchorY:recipe.anchorY,
+  ...(recipe.renderWidth!==undefined?{renderWidth:recipe.renderWidth,renderHeight:recipe.renderHeight}:{}),
+  ...(recipe.beamStartX!==undefined?{beamStartX:recipe.beamStartX,beamEndX:recipe.beamEndX,beamAxisY:recipe.beamAxisY,beamSpanY:recipe.beamSpanY}:{})};
  await emit('public'+assetPath,bytes);
  const provenance={generator:'scripts/build-v100-boss-attack-art.mjs',
   creator:'OpenAI built-in image_gen under Producer direction; deterministic WebP packaging by Codex',
@@ -48,10 +53,12 @@ for(const recipe of recipes){
   producerApproval:'Current smartphone goal requests bespoke animated boss attacks; candidate, not final visual/audio/device acceptance',
   source:{path:sourcePath,bytes:master.length,sha256:sha(master)},
   prompt:{path:recipe.promptPath,sha256:sha(Buffer.from((await readFile(path.join(root,recipe.promptPath),'utf8')).replaceAll('\r\n','\n')))},
-  generation:{mode:recipe.generationMode??'built-in image_gen generation',model:'Selected by host; no model name asserted',characterReferences:[],note:recipe.note},
+  generation:{mode:recipe.generationMode??'built-in image_gen generation',model:'Selected by host; no model name asserted',characterReferences:[],note:recipe.note,
+   ...(recipe.editTarget?{editTarget:recipe.editTarget}:{})},
+  ...(recipe.calibration?{calibration:recipe.calibration}:{}),
   output:{path:assetPath,bytes:bytes.length,sha256:sha(bytes),width:1536,height:1024,columns:3,rows:2,anchorX:recipe.anchorX,anchorY:recipe.anchorY},
   runtimeAssetCount:1,logicalBytes:bytes.length,distinctBytes:bytes.length,estimatedDecodedRgbaBytes:1536*1024*4,
-  scope:'Optional visual aftermath for '+recipe.kind+' only; body, warnings, damage, timing, audio, rewards and save are unchanged'};
+  scope:recipe.scope??'Optional visual aftermath for '+recipe.kind+' only; body, warnings, damage, timing, audio, rewards and save are unchanged'};
  await emit(folder+'/'+recipe.kind+'-provenance-r'+revision+'.json',Buffer.from(JSON.stringify(provenance,null,2)+'\n'));
  outputs.push({kind:recipe.kind,bytes:bytes.length,sha256:sha(bytes)});
 }

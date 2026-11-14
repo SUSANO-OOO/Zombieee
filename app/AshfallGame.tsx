@@ -607,6 +607,7 @@ import { drawV100CorporateControl, v100CorporateControlLabel } from "./v100Corpo
 import { drawV100AssaultObject, v100AssaultObjectProfile } from "./v100AssaultObjects.js";
 import { drawV100Explosion, drawV100FootDust, drawV100GroundFire, drawV100Muzzle, V100_CONTACT_WEAPONS, V100_CLAW_CONTACT_WEAPONS, queueV100Contact, queueV100ClawContact, queueV100TakuyaGroundContact, queueV100TataraGroundContact, getV100ClawContactSnapshot, getV100SkillContactSnapshot, queueV100GuardContact, getV100GuardContactSnapshot, drawV100ContactQueue, clearV100ContactQueue } from "./v100CombatVfx.js";
 import { drawV100BossAftermath } from "./v100BossAftermath.js";
+import {drawV100GateChargeTrail,drawV100KuromeRay} from './v100BossAttackVfx.js';
 import { drawV100BossDefeat } from "./v100BossDefeatVfx.js";
 import {drawV100BossDefeatFinales} from "./v100BossDefeatFinaleVfx.js";
 import { TATARA_GROUND_ART, v100TataraGroundPose, v100TataraDisplaySize, v100RenderedTataraGroundSocket } from "./v100TataraPresentation.js";
@@ -6872,8 +6873,8 @@ function drawKuromeCombatVfx(ctx: CanvasRenderingContext2D, f: Fighter, g: Game,
   if(g.definition.missionConfig.v100StageNumber){
     const origin=Number.isFinite(f.stationAbility.originX)&&Number.isFinite(f.stationAbility.originY)
       ?{x:f.stationAbility.originX,y:f.stationAbility.originY}:fighterWeaponSockets.get(f);
-    drawV104EyeBeam(ctx,stageObjects,{origin,target:{x:targetX,y:targetY-38},halfWidth,
-      progress:1-f.stationAbility.remainingSeconds/KUROME_PROTOTYPE_TUNING.fireSeconds});
+    const ray={origin,target:{x:targetX,y:targetY-38},halfWidth,progress:1-f.stationAbility.remainingSeconds/KUROME_PROTOTYPE_TUNING.fireSeconds};
+    if(!drawV100KuromeRay(ctx,stageObjects,{...ray,world:g,ownerId:f.id}))drawV104EyeBeam(ctx,stageObjects,ray);
     return;
   }
   ctx.save();
@@ -9203,6 +9204,7 @@ function drawWorld(
     }
     if (f.combatReady) drawMotherCombatVfx(ctx, f, g, stageObjects);
     if (f.combatReady) drawAnomalyBossCombatVfx(ctx, f, g, stageObjects);
+    if(f.combatReady&&f.kind==='gate-eater'&&g.definition.missionConfig.v100StageNumber)drawV100GateChargeTrail(ctx,stageObjects,{world:g,ownerId:f.id,x:f.x,y:f.y,runtime:f.stationAbility});
     if (f.combatReady) drawKuromeCombatVfx(ctx, f, g, stageObjects);
     drawEnemyCombatReadabilityVfx(ctx, f, g, graphicsProfile.effectDensity, stageObjects);
     drawKuromeVisionInterference(ctx, f, g);

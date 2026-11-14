@@ -53,5 +53,40 @@ export const V100_BOSS_ATTACK_ART=Object.freeze({
     "rows": 2,
     "anchorX": 0.5,
     "anchorY": 0.87890625
+  },
+  "takuya": {
+    "id": "v100-boss-attack-takuya",
+    "path": "/art/quality-20261114/vfx/takuya-attack-six-r1.webp",
+    "hash": "sha256-3ecacd831cb32e66992e505db9ecf2090e7f85a142286cca9d0becedb5f31bd1",
+    "columns": 3,
+    "rows": 2,
+    "anchorX": 0.5,
+    "anchorY": 0.90625,
+    "renderWidth": 220,
+    "renderHeight": 170
+  },
+  "gate-eater": {
+    "id": "v100-boss-attack-gate-eater",
+    "path": "/art/quality-20261114/vfx/gate-eater-attack-six-r1.webp",
+    "hash": "sha256-44fd6c6d61a74862e1bdc04e1b68141bb63cc3b98cf2c91fd82d08fd2e1f29e9",
+    "columns": 3,
+    "rows": 2,
+    "anchorX": 0.1640625,
+    "anchorY": 0.849609375,
+    "renderWidth": 180,
+    "renderHeight": 120
+  },
+  "kurome": {
+    "id": "v100-boss-attack-kurome",
+    "path": "/art/quality-20261114/vfx/kurome-attack-six-r2.webp",
+    "hash": "sha256-c67f0b6951e74973201d5e96da1dc9d776527681f21b1911294c63e9589b6994",
+    "columns": 3,
+    "rows": 2,
+    "anchorX": 0.15625,
+    "anchorY": 0.546875,
+    "beamStartX": 0.15625,
+    "beamEndX": 0.890625,
+    "beamAxisY": 0.546875,
+    "beamSpanY": 0.44140625
   }
 });

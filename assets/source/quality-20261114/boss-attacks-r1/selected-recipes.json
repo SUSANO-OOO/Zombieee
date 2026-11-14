@@ -54,5 +54,75 @@
     "note": "R1 failed unchanged4px alpha<=32 edge gate at lower-left cell104 pixels. Built-in image_gen R2 makes only cell-containment correction; R1 retained. Body, actual sword and gameplay unchanged.",
     "revision": 2,
     "generationMode": "built-in image_gen edit"
+  },
+  {
+    "kind": "takuya",
+    "masterSha256": "e1dfb403d76a83f27405092b7e55a595c2e4861788c69ab242401e0b60aa721f",
+    "promptPath": "assets/source/quality-20261114/boss-attacks-r1/last-three-prompts-r1.json",
+    "anchorX": 0.5,
+    "anchorY": 0.90625,
+    "renderWidth": 220,
+    "renderHeight": 170,
+    "calibration": {
+      "paintedContact": {
+        "x": 256,
+        "y": 464
+      },
+      "note": "Selected painted contact calibrated without moving pixels. New visible width220 is smaller than the normal warning diameter236; that width comparison does not assert all harmless flying debris stays inside the damage footprint. Original136 fallback, real sword socket and .60-second lifetime retained."
+    },
+    "note": "Original effect only; no body or sword rendered. Fixed parent91ba candidate remains unchanged.",
+    "scope": "Optional TAKUYA ground impact. Dedicated visual220x170; existing socket, fallback136px, .60s lifetime, hit timing/footprint, sound and save unchanged."
+  },
+  {
+    "kind": "gate-eater",
+    "masterSha256": "743399f0c3645a36528d606fcf934e113d27a498927c0ec6ec838962962508e1",
+    "promptPath": "assets/source/quality-20261114/boss-attacks-r1/last-three-prompts-r1.json",
+    "anchorX": 0.1640625,
+    "anchorY": 0.849609375,
+    "renderWidth": 180,
+    "renderHeight": 120,
+    "calibration": {
+      "paintedScrape": {
+        "x": 84,
+        "y": 435
+      },
+      "nominalDirection": "left",
+      "note": "Scrape starts at the real moving body; follows actual nominal .9s charging or earlier target arrival and settles .4s into existing exposure, no new damage/contact."
+    },
+    "note": "Only station floor material and tiny scrape flecks, not creature/body parts.",
+    "scope": "Optional charging scrape and short settling trail for Gate Eater. Actual phase, target/origin, movement/damage, warnings, audio and save retained."
+  },
+  {
+    "kind": "kurome",
+    "revision": 2,
+    "masterSha256": "065457d59c7402b7c6be2608c192c90efe6d0fbc50cac5ddc32c2b2f8070dedd",
+    "promptPath": "assets/source/quality-20261114/boss-attacks-r1/kurome-r2-edit-prompt.txt",
+    "anchorX": 0.15625,
+    "anchorY": 0.546875,
+    "beamStartX": 0.15625,
+    "beamEndX": 0.890625,
+    "beamAxisY": 0.546875,
+    "editTarget": {
+      "path": "assets/source/quality-20261114/boss-attacks-r1/kurome-r1-master.png",
+      "sha256": "a3ff2bfa3cd3cd8bd68021760c417f8cfa036953182c81a24b466d009f61f09c",
+      "originalPrompt": "assets/source/quality-20261114/boss-attacks-r1/last-three-prompts-r1.json"
+    },
+    "generationMode": "built-in image_gen transparency edit",
+    "calibration": {
+      "emitter": {
+        "x": 80,
+        "y": 280
+      },
+      "termination": {
+        "x": 456,
+        "y": 280
+      },
+      "note": "Six painted cores are279..281px high; axis280. Map the actual saved eye origin and real target to the calibrated painted endpoints; existing beam halfWidth and .18s timing unchanged.",
+      "significantLightSpanPixels": 226,
+      "heightNote": "Compensate transparent cell padding so the peak painted light spans the existing halfWidth*2.4 envelope. Pixel data and hit width are unchanged."
+    },
+    "note": "R1 has7 border pixels alpha33 and fails existing alpha32 gate. R2 removes exterior haze; all six border maxima1. No mask, colour key or threshold change. R1 retained.",
+    "scope": "Optional animated active Kurome ray only. Existing warning/charge, normal shots, body, eye origin/target, beam hit width, damage, sound and save unchanged.",
+    "beamSpanY": 0.44140625
   }
 ]

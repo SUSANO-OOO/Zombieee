@@ -1,0 +1,51 @@
+{
+  "generator": "scripts/build-v100-boss-attack-art.mjs",
+  "creator": "OpenAI built-in image_gen under Producer direction; deterministic WebP packaging by Codex",
+  "license": "Project-original generated artwork under the existing game asset policy; no third-party download",
+  "rights": {
+    "commercialUse": true,
+    "modification": true,
+    "redistribution": true,
+    "basis": "Original effect artwork created for this project"
+  },
+  "producerApproval": "Current smartphone goal requests bespoke animated boss attacks; candidate, not final visual/audio/device acceptance",
+  "source": {
+    "path": "assets/source/quality-20261114/boss-attacks-r1/gate-eater-r1-master.png",
+    "bytes": 1471394,
+    "sha256": "743399f0c3645a36528d606fcf934e113d27a498927c0ec6ec838962962508e1"
+  },
+  "prompt": {
+    "path": "assets/source/quality-20261114/boss-attacks-r1/last-three-prompts-r1.json",
+    "sha256": "3d68ebc6933939883f4a22cce059c6ad85108d755da6a0edd22b773ff0ae2e6b"
+  },
+  "generation": {
+    "mode": "built-in image_gen generation",
+    "model": "Selected by host; no model name asserted",
+    "characterReferences": [],
+    "note": "Only station floor material and tiny scrape flecks, not creature/body parts."
+  },
+  "calibration": {
+    "paintedScrape": {
+      "x": 84,
+      "y": 435
+    },
+    "nominalDirection": "left",
+    "note": "Scrape starts at the real moving body; follows actual nominal .9s charging or earlier target arrival and settles .4s into existing exposure, no new damage/contact."
+  },
+  "output": {
+    "path": "/art/quality-20261114/vfx/gate-eater-attack-six-r1.webp",
+    "bytes": 231712,
+    "sha256": "44fd6c6d61a74862e1bdc04e1b68141bb63cc3b98cf2c91fd82d08fd2e1f29e9",
+    "width": 1536,
+    "height": 1024,
+    "columns": 3,
+    "rows": 2,
+    "anchorX": 0.1640625,
+    "anchorY": 0.849609375
+  },
+  "runtimeAssetCount": 1,
+  "logicalBytes": 231712,
+  "distinctBytes": 231712,
+  "estimatedDecodedRgbaBytes": 6291456,
+  "scope": "Optional charging scrape and short settling trail for Gate Eater. Actual phase, target/origin, movement/damage, warnings, audio and save retained."
+}

@@ -1,0 +1,50 @@
+{
+  "generator": "scripts/build-v100-boss-attack-art.mjs",
+  "creator": "OpenAI built-in image_gen under Producer direction; deterministic WebP packaging by Codex",
+  "license": "Project-original generated artwork under the existing game asset policy; no third-party download",
+  "rights": {
+    "commercialUse": true,
+    "modification": true,
+    "redistribution": true,
+    "basis": "Original effect artwork created for this project"
+  },
+  "producerApproval": "Current smartphone goal requests bespoke animated boss attacks; candidate, not final visual/audio/device acceptance",
+  "source": {
+    "path": "assets/source/quality-20261114/boss-attacks-r1/takuya-r1-master.png",
+    "bytes": 1778807,
+    "sha256": "e1dfb403d76a83f27405092b7e55a595c2e4861788c69ab242401e0b60aa721f"
+  },
+  "prompt": {
+    "path": "assets/source/quality-20261114/boss-attacks-r1/last-three-prompts-r1.json",
+    "sha256": "3d68ebc6933939883f4a22cce059c6ad85108d755da6a0edd22b773ff0ae2e6b"
+  },
+  "generation": {
+    "mode": "built-in image_gen generation",
+    "model": "Selected by host; no model name asserted",
+    "characterReferences": [],
+    "note": "Original effect only; no body or sword rendered. Fixed parent91ba candidate remains unchanged."
+  },
+  "calibration": {
+    "paintedContact": {
+      "x": 256,
+      "y": 464
+    },
+    "note": "Selected painted contact calibrated without moving pixels. New visible width220 is smaller than the normal warning diameter236; that width comparison does not assert all harmless flying debris stays inside the damage footprint. Original136 fallback, real sword socket and .60-second lifetime retained."
+  },
+  "output": {
+    "path": "/art/quality-20261114/vfx/takuya-attack-six-r1.webp",
+    "bytes": 320952,
+    "sha256": "3ecacd831cb32e66992e505db9ecf2090e7f85a142286cca9d0becedb5f31bd1",
+    "width": 1536,
+    "height": 1024,
+    "columns": 3,
+    "rows": 2,
+    "anchorX": 0.5,
+    "anchorY": 0.90625
+  },
+  "runtimeAssetCount": 1,
+  "logicalBytes": 320952,
+  "distinctBytes": 320952,
+  "estimatedDecodedRgbaBytes": 6291456,
+  "scope": "Optional TAKUYA ground impact. Dedicated visual220x170; existing socket, fallback136px, .60s lifetime, hit timing/footprint, sound and save unchanged."
+}
