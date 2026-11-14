@@ -1,22 +1,27 @@
 import {combatVariation,drawRasterPlume} from './v100RasterAtmosphere.js';
 import {V100_BOSS_ATTACK_ART} from './v100BossAttackArt.js';
 
-// A boss keeps the choice made for its first visible release. A late optional
-// decode can improve a later battle without replacing a running effect.
+// Simulation ticks clone fighters. The stable battle, generation and fighter
+// id own the visual choice, so a late decode cannot replace a running effect.
 const releaseChoices=new WeakMap();
-export function bossAttackReleaseSource(objects,kind,owner){
+export function bossAttackReleaseSource(objects,kind,world,ownerId){
  const fallback={art:null,image:objects?.['v100-ground-impact']};
- if(!owner||typeof owner!=='object')return fallback;
- let choices=releaseChoices.get(owner);
- if(!choices){choices=new Map();releaseChoices.set(owner,choices);}
- if(!choices.has(kind)){
+ if(!world||typeof world!=='object'||!Array.isArray(world.fighters)||!Number.isSafeInteger(ownerId)||ownerId<0)return fallback;
+ const rawGeneration=world.battlePresentation?.generation,generation=Number.isFinite(rawGeneration)?rawGeneration:0;
+ let state=releaseChoices.get(world);
+ if(!state||state.generation!==generation){state={generation,choices:new Map()};releaseChoices.set(world,state);}
+ const liveIds=new Set(world.fighters.filter(f=>f.hp>0).map(f=>f.id));
+ for(const [key,choice]of state.choices)if(!liveIds.has(choice.ownerId))state.choices.delete(key);
+ if(!liveIds.has(ownerId))return fallback;
+ const key=JSON.stringify([ownerId,kind]);
+ if(!state.choices.has(key)){
   const art=V100_BOSS_ATTACK_ART[kind],image=art&&objects?.[art.id];
   const valid=art&&image?.complete&&Number.isFinite(image.naturalWidth)&&Number.isFinite(image.naturalHeight)
    &&image.naturalWidth>0&&image.naturalHeight>0&&image.naturalWidth%art.columns===0
    &&image.naturalHeight%art.rows===0&&image.naturalWidth/art.columns===image.naturalHeight/art.rows;
-  choices.set(kind,valid?{art,image}:fallback);
+  state.choices.set(key,{ownerId,source:valid?{art,image}:fallback});
  }
- return choices.get(kind);
+ return state.choices.get(key).source;
 }
 
 // These are disturbances from the real body motion, not independent damage or
@@ -38,10 +43,10 @@ const RELEASES=Object.freeze({
  'mugarian-president-mutated':{width:160,height:102,beats:[[0,-62],[.04,-20],[.08,20],[.12,62]]},
  'takuya-omega':{width:380,height:238,beats:[[0,0]]},
 });
-function drawRelease(ctx,objects,{kind,x,y,elapsed,direction,owner}){
+function drawRelease(ctx,objects,{kind,x,y,elapsed,direction,world,ownerId}){
  const p=RELEASES[kind];
  if(!p||!p.beats.some(([delay])=>elapsed>=delay&&elapsed-delay<.54))return;
- const {art,image:source}=bossAttackReleaseSource(objects,kind,owner);
+ const {art,image:source}=bossAttackReleaseSource(objects,kind,world,ownerId);
  if(!source?.complete||!source.naturalWidth||!source.naturalHeight)return;
  const cw=source.naturalWidth/3,ch=source.naturalHeight/2;
  for(const [delay,offset] of p.beats){
@@ -62,7 +67,7 @@ function drawRelease(ctx,objects,{kind,x,y,elapsed,direction,owner}){
  }
 }
 
-export function drawV100BossAftermath(ctx,objects,{kind,x,y,elapsed,duration,phase,direction=-1,seed=0,owner}={}) {
+export function drawV100BossAftermath(ctx,objects,{kind,x,y,elapsed,duration,phase,direction=-1,seed=0,world,ownerId}={}) {
  const p=PROFILES[kind];
  if(!p||![x,y,elapsed,duration,direction,seed].every(Number.isFinite)||duration<=0||elapsed<0||elapsed>=duration||!['active','recovery'].includes(phase))return false;
  const dust=objects?.['v100-dust'];
@@ -81,7 +86,7 @@ export function drawV100BossAftermath(ctx,objects,{kind,x,y,elapsed,duration,pha
   drawRasterPlume(ctx,dust,{x:x+paired+trailing,y:y+4-local*p.lift*(.3+r),
    width:w,height:h,alpha:release*(.32-r*.1),rotation:(r-.5)*.22,flip:i%2===0});
  }
- if(!recovery)drawRelease(ctx,objects,{kind,x,y,elapsed,direction,owner});
+ if(!recovery)drawRelease(ctx,objects,{kind,x,y,elapsed,direction,world,ownerId});
  const smoke=objects?.[kind==='gairen'?'v100-smoke-b':'v100-smoke-a'];
  if(smoke?.complete&&smoke.naturalWidth&&smoke.naturalHeight){
   for(let i=0;i<2;i++){

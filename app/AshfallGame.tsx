@@ -6689,7 +6689,7 @@ function drawMotherCombatVfx(ctx: CanvasRenderingContext2D, f: Fighter, g: Game,
     ? tuning.activeSeconds - f.stationAbility.remainingSeconds
     : tuning.recoverySeconds - f.stationAbility.remainingSeconds;
   if(g.definition.missionConfig.v100StageNumber){
-    drawV100BossAftermath(ctx,stageObjects,{kind:'mother',x:f.x,y:f.y,seed:f.id,owner:f,direction:Number(f.stationAbility.targetX)>f.x?1:-1,elapsed,duration:active?tuning.activeSeconds:tuning.recoverySeconds,phase:f.stationAbility.phase});
+    drawV100BossAftermath(ctx,stageObjects,{kind:'mother',x:f.x,y:f.y,seed:f.id,world:g,ownerId:f.id,direction:Number(f.stationAbility.targetX)>f.x?1:-1,elapsed,duration:active?tuning.activeSeconds:tuning.recoverySeconds,phase:f.stationAbility.phase});
     const socket=fighterWeaponSockets.get(f);
     if(active&&socket)drawV104InfectedWake(ctx,stageObjects,{...socket,ux:0,uy:-1,trail:'glob',progress:elapsed/tuning.activeSeconds});
     return;
@@ -6737,7 +6737,7 @@ function drawAnomalyBossCombatVfx(ctx: CanvasRenderingContext2D, f: Fighter, g: 
     ? tuning.activeSeconds - f.stationAbility.remainingSeconds
     : tuning.recoverySeconds - f.stationAbility.remainingSeconds;
   if (g.definition.missionConfig.v100StageNumber) {
-    drawV100BossAftermath(ctx, stageObjects, { kind: f.kind, x: f.x, y: f.y, seed: f.id, owner:f, direction: f.kind === "ooguchi" ? -1 : (Number(f.stationAbility.targetX) > f.x ? 1 : -1), elapsed,
+    drawV100BossAftermath(ctx, stageObjects, { kind: f.kind, x: f.x, y: f.y, seed: f.id, world:g, ownerId:f.id, direction: f.kind === "ooguchi" ? -1 : (Number(f.stationAbility.targetX) > f.x ? 1 : -1), elapsed,
       duration: active ? tuning.activeSeconds : tuning.recoverySeconds, phase: f.stationAbility.phase });
     return;
   }
