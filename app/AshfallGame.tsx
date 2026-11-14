@@ -22542,6 +22542,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                     && candidate.hp > 0
                   ));
                 if (trappedTargets.length > 0) {
+                  const manualBindingTargets = f.engineerTrapManual ? trappedTargets.map((target) => target.id) : null;
                   for (const trapped of trappedTargets) {
                   trapped.stunned = Math.max(trapped.stunned, trigger.stopSeconds);
                   if (f.engineerTrapManual) {
@@ -22569,7 +22570,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                     eventType: "trap-sprung",
                     x: trap.x,
                     y: activeLaneCenters[trap.lane],
-                    duration: .3,
+                    duration: manualBindingTargets ? trigger.stopSeconds : .3,
+                    ...(manualBindingTargets ? { targetIds: manualBindingTargets, springSeconds: .3 } : {}),
                   });
                 }
               }
