@@ -32,6 +32,17 @@ test('drawing does not consume simulation randomness, including first-time tint 
  const f=fixture(),original=Math.random;Math.random=()=>{throw new Error('Simulation randomness consumed');};
  try{assert.equal(drawV100MaterialParticle(f.ctx,{'v100-particle-materials':atlas()},particle(),f),true);}finally{Math.random=original;}
 });
+test('a late optional image cannot change a live fragment; a reused pool entry or a new battle can select it',()=>{
+ const f=fixture(),p=particle(),dust={complete:true,naturalWidth:64,naturalHeight:64},world={time:1,battlePresentation:{generation:0}};
+ const objects={'v100-dust':dust},options={...f,world};
+ drawV100MaterialParticle(f.ctx,objects,p,options);assert.equal(f.draws.at(-1).args[0],dust);
+ objects['v100-particle-materials']=atlas();world.time+=.1;p.life-=.1;p.x+=4;p.vy+=18;
+ drawV100MaterialParticle(f.ctx,objects,p,options);assert.equal(f.draws.at(-1).args[0],dust);
+ world.time+=1;p.life=.8;drawV100MaterialParticle(f.ctx,objects,p,options);
+ assert.equal(f.draws.at(-1).args[0],f.surfaces[0]);
+ world.battlePresentation.generation++;delete objects['v100-particle-materials'];
+ drawV100MaterialParticle(f.ctx,objects,p,options);assert.equal(f.draws.at(-1).args[0],dust);
+});
 test('gravity, movement, fading and collection compaction cannot change a born particle material',()=>{
  const p=particle(),cell=particleMaterialCell(p);
  assert.equal(particleMaterialCell({...p,x:12,y:290,vy:99,life:.1}),cell);

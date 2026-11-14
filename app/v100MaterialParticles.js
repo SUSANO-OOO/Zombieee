@@ -1,7 +1,24 @@
 import {combatVariation} from './v100RasterAtmosphere.js';
 
 const tintCaches=new WeakMap(),failedSurfaces=new WeakSet();
+const particleSources=new WeakMap();
 const CELL=48,MAX_TINTS=24;
+function sourceForParticle(objects,p,world){
+ const image=objects?.['v100-particle-materials'];
+ const ready=image?.complete&&image.naturalWidth===768&&image.naturalHeight===512?image:null;
+ if(!world||!Number.isFinite(world.time))return ready;
+ const generation=world.battlePresentation?.generation??0;
+ let state=particleSources.get(world);
+ if(!state||state.generation!==generation){state={generation,particles:new WeakMap()};particleSources.set(world,state);}
+ // Both values advance by the same simulation dt. Their sum identifies the
+ // current pooled-particle lifetime without adding a simulation field or RNG.
+ const expiresAt=world.time+p.life;
+ let record=state.particles.get(p);
+ if(!record||Math.abs(record.expiresAt-expiresAt)>1e-5||record.vx!==p.vx||record.size!==p.size||record.color!==p.color){
+  record={expiresAt,vx:p.vx,size:p.size,color:p.color,image:ready};state.particles.set(p,record);
+ }
+ return record.image;
+}
 function createSurface(width,height){
  if(typeof OffscreenCanvas==='function')return new OffscreenCanvas(width,height);
  if(typeof document==='undefined')return null;
@@ -30,11 +47,10 @@ export function particleMaterialCell(p){
  }
  return [0,1,3,4,5][Math.min(4,Math.floor(r*5))];
 }
-export function drawV100MaterialParticle(ctx,objects,p,{createRasterSurface=createSurface}={}){
+export function drawV100MaterialParticle(ctx,objects,p,{world,createRasterSurface=createSurface}={}){
  if(!p||![p.x,p.y,p.vx,p.life,p.size].every(Number.isFinite)||p.life<=0||p.size<=0)return false;
- const authored=objects?.['v100-particle-materials'];
- const ready=authored?.complete&&authored.naturalWidth===768&&authored.naturalHeight===512;
- const material=ready?tint(authored,p.color,createRasterSurface):null;
+ const authored=sourceForParticle(objects,p,world);
+ const material=authored?tint(authored,p.color,createRasterSurface):null;
  const fallback=objects?.['v100-dust'];
  if(!material&&(!fallback?.complete||!fallback.naturalWidth||!fallback.naturalHeight))return false;
  // vx and size are fixed at birth, so compaction, gravity and changing x/y cannot swap material.

@@ -9376,7 +9376,7 @@ function drawWorld(
   drawBattlePresentationEffects(ctx, g, graphicsProfile.effectDensity, stageObjects);
   for (const p of g.particles) {
     if (!visibleRenderPoint(p.x, p.y, graphicsProfile.cullingMargin)) continue;
-    if(g.definition.missionConfig.v100StageNumber){drawV100MaterialParticle(ctx,stageObjects,p);continue;}
+    if(g.definition.missionConfig.v100StageNumber){drawV100MaterialParticle(ctx,stageObjects,p,{world:g});continue;}
     ctx.globalAlpha = Math.max(0, p.life * 1.6); ctx.fillStyle = p.color;
     ctx.beginPath(); ctx.ellipse(p.x + p.size * .5, p.y + p.size * .5, Math.max(1, p.size * .62), Math.max(1, p.size * .34), 0, 0, Math.PI * 2); ctx.fill();
   }
