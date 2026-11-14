@@ -76,6 +76,7 @@ import { v100MissionBriefingFor, v100MissionThreatsFor } from "./v100MissionBrie
 import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
 import { v100RewardPresentationFor } from "./v100RewardPresentation.js";
 import { v100MapStageName, v100StageDiscovered } from "./v100MapDisclosure.js";
+import { V100_BOSS_DOSSIER_ART } from "./v100BossDossierArt.js";
 import { v100StoryPageFor } from "./v100StoryPages.js";
 import { formatV100Number, v100SupportPurposeFor, v100TacticalHintFor, v100UnitPresentation } from "./v100UnitPresentation.js";
 import { v100RoleLabelFor } from "./v100Terminology.js";
@@ -1220,6 +1221,10 @@ function MapView({ save, selectedStageId, onSelect, onStart, onRename, onBackup,
   const chapterStars = chapterStages.reduce((sum, entry) => sum + Math.max(0, Math.min(3, Number(save.bestStars[entry.id]) || 0)), 0);
   const campaignStars = V100_STAGES.reduce((sum, entry) => sum + Math.max(0, Math.min(3, Number(save.bestStars[entry.id]) || 0)), 0);
   const boss = discovered && stage?.missionType === "boss" ? V100_BOSSES.find((entry) => entry.stageNumber === stage.number) : null;
+  const operationArt = {
+    "--v100-operation-scene": discovered && stage ? `url("${stageVisualFor(stage.id)}")` : undefined,
+    "--v100-operation-enemy": boss && V100_BOSS_DOSSIER_ART[boss.id] ? `url("${V100_BOSS_DOSSIER_ART[boss.id].path}")` : undefined,
+  } as CSSProperties;
   const nextStage = V100_STAGES.find((entry) => entry.number === completedNumber + 1);
   const selectStage = (stageId: string) => {
     const next = V100_STAGE_BY_ID[stageId];
@@ -1276,12 +1281,20 @@ function MapView({ save, selectedStageId, onSelect, onStart, onRename, onBackup,
           </nav>
           <div className="v100-map-canvas-legend"><span><i className="is-current" />選択地点</span><span><i className="is-clear" />制圧済み</span><span><i className="is-locked" />封鎖</span></div>
         </div>
-        <aside className={`v100-map-side ${discovered && stage?.missionType === "boss" ? "is-boss" : ""} ${stage && !save.availableStageIds.includes(stage.id) ? "is-locked" : ""}`}>
+        <aside className={`v100-map-side ${discovered && stage?.missionType === "boss" ? "is-boss" : ""} ${stage && !save.availableStageIds.includes(stage.id) ? "is-locked" : ""}`} data-operation-mission={discovered ? stage?.missionType : "unknown"}>
           <div className="v100-map-briefing">
             <div className="v100-map-side-heading"><span className="v100-kicker">{stage ? `ステージ S${String(stage.number).padStart(2, "0")}` : "ステージ選択"}</span><span>{deploymentLabel}</span></div>
             <h3>{v100MapStageName(stage, save)}</h3>
             {stage && !save.availableStageIds.includes(stage.id) && <div className="v100-lock-banner"><strong>ステージ封鎖中</strong><span>前のステージクリアで解放</span></div>}
-            <div className="v100-stage-intel"><span>クリア目標</span><strong>{discovered ? missionLabelFor(stage) : "情報未取得"}</strong><p>{discovered ? objectiveLabelFor(stage) : "前のステージをクリアして、この区域を調査します。"}</p></div>
+            <div key={stage?.id ?? "no-stage"} className={`v100-operation-recon ${discovered ? "is-discovered" : "is-sealed"}`} style={operationArt}>
+              <div className="v100-operation-photo" aria-hidden="true">
+                <i className="v100-operation-scene" />
+                {boss && <i className="v100-operation-specimen" />}
+                {!discovered && <V100LockChain />}
+                <span>{!discovered ? "情報未取得" : boss ? "脅威記録" : "現地記録"}</span>
+              </div>
+              <div className="v100-stage-intel"><span>クリア目標</span><strong>{discovered ? missionLabelFor(stage) : "情報未取得"}</strong><p>{discovered ? objectiveLabelFor(stage) : "前のステージをクリアして、この区域を調査します。"}</p></div>
+            </div>
           </div>
           <details className="v100-map-detail"><summary>ステージ詳細・記録</summary>
             <div className="v100-map-detail-content">

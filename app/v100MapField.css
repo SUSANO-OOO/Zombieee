@@ -138,3 +138,144 @@
     color: #21120b;
   }
 }
+
+/* A field order carries a location photograph and, when known, the current
+   threat specimen. The picture changes the reading hierarchy, not the mission.
+   Existing committed dossier availability is shared with the boss records. */
+#v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-recon {
+  display: flow-root;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 4px 0 0;
+  border-top: 1px solid #8c8061;
+  border-bottom: 1px solid #8c8061;
+  background: #d5c7a7;
+  isolation: isolate;
+  animation: v100-operation-unfold 180ms ease-out;
+}
+#v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-photo {
+  position: relative;
+  float: right;
+  width: 41%;
+  height: clamp(48px, calc(100dvh - 310px), 140px);
+  min-width: 0;
+  margin: 0 0 3px 6px;
+  overflow: hidden;
+  border-left: 3px solid #877758;
+  background: #1e2a25;
+  box-shadow: inset 0 0 0 3px #b4a380;
+}
+#v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-scene {
+  position: absolute;
+  inset: 3px;
+  background-image: linear-gradient(180deg,#09151116,#14251f7a 75%,#07120fe6),var(--v100-operation-scene);
+  background-position: center;
+  background-size: cover;
+  filter: saturate(.68);
+}
+#v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-photo::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  pointer-events: none;
+  background: linear-gradient(105deg,#eee5ca16,transparent 40%,#07130c33),repeating-linear-gradient(0deg,transparent 0 32px,#f2dba918 32px 33px);
+  box-shadow: inset 0 0 18px #04110b99;
+}
+#v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-photo > span {
+  position: absolute;
+  z-index: 2;
+  bottom: 8px;
+  left: 9px;
+  padding: 2px 5px;
+  border: 1px solid #d1c294;
+  background: #10231deb;
+  color: #f3dfb0;
+  font-family: var(--v100-display-font);
+  font-size: 12px;
+  line-height: 1.35;
+  letter-spacing: .1em;
+  transform: rotate(-3deg);
+}
+#v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-specimen { display: none; }
+html[data-pwa-boss-dossiers="ready"] #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-specimen {
+  position: absolute;
+  inset: 5px 0 0;
+  display: block;
+  background-image: var(--v100-operation-enemy);
+  background-repeat: no-repeat;
+  background-position: center 2px;
+  background-size: 100% auto;
+  filter: drop-shadow(4px 3px 3px #060b08b3);
+}
+#v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-recon .v100-stage-intel {
+  display: block;
+  min-width: 0;
+  margin: 0;
+  padding: 6px 7px;
+  overflow: visible;
+  border: 0;
+  background: linear-gradient(110deg,#eee4cdec,#d6c8a9c9);
+  color: #263b2c;
+}
+#v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-recon .v100-stage-intel > span {
+  display: block;
+  padding: 0 0 3px;
+  border-bottom: 1px solid #a78c5c;
+  color: #715633;
+  font-size: 12px;
+  line-height: 1.25;
+  letter-spacing: .08em;
+}
+#v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-recon .v100-stage-intel > strong {
+  display: block;
+  margin: 4px 0;
+  color: #213d2c;
+  font-size: 16px;
+  line-height: 1.2;
+}
+#v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-recon .v100-stage-intel > p {
+  margin: 0;
+  color: #30472e;
+  font-size: 12px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+#v100-campaign[data-v100-phase="map"] .v100-command-map [data-operation-mission="boss"] .v100-operation-photo {
+  border-left-color: #a7533d;
+  background: #2c2722;
+}
+#v100-campaign[data-v100-phase="map"] .v100-command-map [data-operation-mission="boss"] .v100-operation-photo > span { background: #612c21ed; border-color: #dda685; }
+#v100-campaign[data-v100-phase="map"] .v100-command-map [data-operation-mission="escort"] .v100-operation-photo { border-left-color: #5d8479; }
+#v100-campaign[data-v100-phase="map"] .v100-command-map [data-operation-mission="timed-defense"] .v100-operation-photo { border-left-color: #7b874b; }
+#v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-recon.is-sealed .v100-operation-photo {
+  display: grid;
+  place-items: center;
+  background: repeating-linear-gradient(135deg,#6a604b18 0 6px,transparent 6px 12px),#b7ad90;
+}
+#v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-recon.is-sealed .v100-operation-scene { display: none; }
+#v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-recon.is-sealed .v100-lock-chain { width: 48px; height: 48px; color: #605e4b; opacity: .6; }
+#v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-recon.is-sealed .v100-operation-photo > span { background: #58523de3; }
+#v100-campaign[data-v100-phase="map"] .v100-command-map .v100-map-side-heading > span:last-child {
+  padding: 2px 5px;
+  border: 1px solid #61775a;
+  color: #24462e;
+  background: #e9e1bd;
+  font-family: var(--v100-display-font);
+  letter-spacing: .03em;
+}
+#v100-campaign[data-v100-phase="map"] .v100-command-map .is-locked .v100-map-side-heading > span:last-child { border-color: #9a785f; color: #67402e; }
+@keyframes v100-operation-unfold {
+  from { opacity: .45; transform: translateY(3px); }
+  to { opacity: 1; transform: none; }
+}
+@media (max-height: 380px) and (orientation: landscape) {
+  #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-recon .v100-stage-intel > span { display: none; }
+  #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-recon .v100-stage-intel { padding: 4px 5px; }
+  #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-recon .v100-stage-intel > strong { margin: 0 0 3px; font-size: 14px; }
+  #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-operation-photo > span { bottom: 5px; left: 6px; padding: 1px 3px; font-size: 11px; }
+  #v100-campaign[data-v100-phase="map"] .v100-command-map .v100-map-side-heading > span:last-child { padding: 0 4px; line-height: 1.2; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #v100-campaign .v100-operation-recon { animation: none; }
+}
+#v100-campaign[data-v100-reduced-motion="true"] .v100-operation-recon { animation: none; }
