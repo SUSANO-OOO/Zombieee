@@ -148,6 +148,22 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/quality-20261114/vfx/guard-pan-impact-six-r1.webp",
+      "bytes": 36388,
+      "hash": "sha256-942c1e16236d6cd4139d22d4767f855dbc986501587827b8be6c4a2434cbb0e1",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/guard-shield-impact-six-r1.webp",
+      "bytes": 84908,
+      "hash": "sha256-f86c4ca4a23ba866663005b21f864bc299f30283600e5b5f20053ddfbca82952",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/quality-20261114/vfx/king-exhaust-six-r2.webp",
       "bytes": 83570,
       "hash": "sha256-dd9eb1093647176c6ddc8083435630ce2561376fdff0d27decf5ccb913a4b67c",

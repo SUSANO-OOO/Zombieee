@@ -15394,6 +15394,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       verifiedManualImpactPaths: battleArtworkPolicyRef.current.paths.split('\n').filter(Boolean),
       verifiedParticleMaterialPaths: battleArtworkPolicyRef.current.paths.split('\n').filter(Boolean),
       verifiedKingExhaustPaths: battleArtworkPolicyRef.current.paths.split('\n').filter(Boolean),
+      verifiedGuardImpactPaths: battleArtworkPolicyRef.current.paths.split('\n').filter(Boolean),
       includeAllSprites: localQaRequested
         && !finiteEnemyRuntimeQa
         && !finiteVisualIntegrityQa
