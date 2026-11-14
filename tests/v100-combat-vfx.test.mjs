@@ -34,7 +34,7 @@ test('V1 effects have decoded stage and offline sources, preserving fractional a
   assert.ok(manifest.assets.some(a=>a.path===path&&a.criticality==='critical'));
   for(const stageId of V100_STAGE_IDS){
    const loaded=requiredBattleAssetPlan({stageId}).stageObjects.some(a=>a.id===id&&a.path===path);
-   assert.equal(loaded,id!=='v100-countercut',stageId+' '+id+' archived glyph must not decode in current battles');
+   assert.equal(loaded,!['v100-countercut','v100-ground-fire-bed'].includes(id),stageId+' '+id+' archived or unverified optional art must not decode in current battles');
   }
  }
 });

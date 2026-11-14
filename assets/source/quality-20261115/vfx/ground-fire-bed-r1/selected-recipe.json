@@ -1,0 +1,8 @@
+{
+  "masterPath": "assets/source/quality-20261115/vfx/ground-fire-bed-r1/master-r1.png",
+  "masterSha256": "1e463c3a126e541967c6f28c637c1d66097f5f4e8fbdf09a8729248d44bdece2",
+  "promptPath": "assets/source/quality-20261115/vfx/ground-fire-bed-r1/prompt.txt",
+  "anchorX": 0.5,
+  "anchorY": 0.830078125,
+  "calibration": "Six 512px cells in three columns and two rows. The shared painted fuel baseline is at y=425/512. Retain fractional alpha, smoke and ember paint; deterministic resize to 256px cells without masking, repainting or changing the burn footprint."
+}

@@ -1,0 +1,76 @@
+{
+  "generator": "scripts/build-v100-ground-fire-art.mjs",
+  "creator": "OpenAI built-in image_gen under Producer direction; deterministic smartphone WebP packaging by Codex",
+  "license": "Project-original generated material artwork under existing game asset policy; no third-party download",
+  "rights": {
+    "commercialUse": true,
+    "modification": true,
+    "redistribution": true,
+    "basis": "Original material-only fire created for this project"
+  },
+  "producerApproval": "Current smartphone goal requests varied fire, smoke and embers without geometric markers; candidate, not final motion/audio/device acceptance",
+  "source": {
+    "path": "assets/source/quality-20261115/vfx/ground-fire-bed-r1/master-r1.png",
+    "bytes": 1980779,
+    "sha256": "1e463c3a126e541967c6f28c637c1d66097f5f4e8fbdf09a8729248d44bdece2"
+  },
+  "prompt": {
+    "path": "assets/source/quality-20261115/vfx/ground-fire-bed-r1/prompt.txt",
+    "sha256": "7d6f1b3fc5db7484fcfe8181b0cb4875b522ed8d08b221252a9a0815138319c5"
+  },
+  "generation": {
+    "mode": "built-in image_gen generation",
+    "model": "Selected by host; no model name asserted",
+    "characterReferences": []
+  },
+  "calibration": "Six 512px cells in three columns and two rows. The shared painted fuel baseline is at y=425/512. Retain fractional alpha, smoke and ember paint; deterministic resize to 256px cells without masking, repainting or changing the burn footprint.",
+  "cells": [
+    {
+      "frame": 0,
+      "maxMarginAlpha": 2,
+      "visiblePixels": 59683
+    },
+    {
+      "frame": 1,
+      "maxMarginAlpha": 2,
+      "visiblePixels": 67437
+    },
+    {
+      "frame": 2,
+      "maxMarginAlpha": 2,
+      "visiblePixels": 72140
+    },
+    {
+      "frame": 3,
+      "maxMarginAlpha": 1,
+      "visiblePixels": 75345
+    },
+    {
+      "frame": 4,
+      "maxMarginAlpha": 1,
+      "visiblePixels": 67631
+    },
+    {
+      "frame": 5,
+      "maxMarginAlpha": 1,
+      "visiblePixels": 62352
+    }
+  ],
+  "output": {
+    "id": "v100-ground-fire-bed",
+    "path": "/art/quality-20261115/vfx/ground-fire-bed-six-r1.webp",
+    "hash": "sha256-f6a331504bc2522e2fb1d8b3a14b58ce877dd44f6b825421e446014ef8e913a7",
+    "width": 768,
+    "height": 512,
+    "columns": 3,
+    "rows": 2,
+    "anchorX": 0.5,
+    "anchorY": 0.830078125,
+    "bytes": 141770
+  },
+  "runtimeAssetCount": 1,
+  "logicalBytes": 141770,
+  "distinctBytes": 141770,
+  "estimatedDecodedRgbaBytes": 1572864,
+  "scope": "Optional connected fire bed behind actors. Existing burn area, expiry, damage, slow, audio, rewards and saves retained. Source choice is latched for each real burn; old installed packs and late or unavailable art retain the existing thirty-frame fire throughout that burn."
+}
