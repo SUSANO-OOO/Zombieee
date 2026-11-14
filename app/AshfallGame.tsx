@@ -629,7 +629,7 @@ import { V100_STATION_POSE_KINDS, v100StationAbilityPose, v100GateEaterAuthoredS
 import { v100SupportManualPose, V100_SUPPORT_MANUAL_STABLE_POSE } from "./v100SupportManualPose.js";
 import { v100AdvancedManualPose, V100_ADVANCED_MANUAL_POSE_STABLE } from "./v100AdvancedManualPose.js";
 import { v100ScoutApproachStep } from "./v100ScoutApproach.js";
-import { clearV100SupportAbilityEffects, drawV100SupportAbilityEffects, getV100SupportAbilityEffectsSnapshot, queueV100SupportAbilityEffect } from "./v100SupportAbilityVfx.js";
+import { clearV100SupportAbilityEffects, drawV100SupportAbilityEffects, drawV100DeployedWireTrap, getV100SupportAbilityEffectsSnapshot, queueV100SupportAbilityEffect } from "./v100SupportAbilityVfx.js";
 import { clearV100AdvancedAbilityEffects, drawV100AdvancedAbilityEffects, drawV100ChihaFinalBursts, V100_CHIHA_FINAL_BURST_DURATION, getV100AdvancedAbilityEffectsSnapshot, queueV100AdvancedAbilityEffect, resolveV100AdvancedAbilityOrigin, resolveV105CurrentAbilityOrigin } from "./v100AdvancedAbilityVfx.js";
 import { v100AbilityOriginSourcePixel, v100RenderedAbilityOriginSocket } from "./v100AbilityOriginSockets.js";
 import { drawV100DefensePerimeter } from "./v100DefensePerimeter.js";
@@ -4180,11 +4180,12 @@ function drawDiagnosticStationEnemy(ctx: CanvasRenderingContext2D, f: Fighter) {
   ctx.restore();
 }
 
-function drawMonkeyTrap(ctx: CanvasRenderingContext2D, fighter: Fighter, stageObjects: SpriteMap, authoredV100 = false) {
+function drawMonkeyTrap(ctx: CanvasRenderingContext2D, fighter: Fighter, stageObjects: SpriteMap, authoredV100 = false, world?: Game) {
   if (fighter.kind !== "engineer" || !fighter.engineerTrapReady || fighter.engineerTrapLane === null) return;
   const x = fighter.engineerTrapX;
   const y = activeLaneCenters[fighter.engineerTrapLane] + 5;
   if (authoredV100) {
+    if(drawV100DeployedWireTrap(ctx,stageObjects,world,fighter,x,y))return;
     const image = stageObjects["v100-support-trap-intact"];
     if (!image?.complete || !image.naturalWidth) return;
     const width = 82;
@@ -9144,7 +9145,7 @@ function drawWorld(
     }
   }
 
-  for (const fighter of g.fighters) drawMonkeyTrap(ctx, fighter, stageObjects, Boolean(g.definition.missionConfig.v100StageNumber));
+  for (const fighter of g.fighters) drawMonkeyTrap(ctx, fighter, stageObjects, Boolean(g.definition.missionConfig.v100StageNumber),g);
   const interiorDeploymentFighterIds = new Set(
     g.fighters
       .filter((fighter) => crawlerDeploymentPlanForFighter(fighter).unitPass === "before-foreground-mask")
