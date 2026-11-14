@@ -107,7 +107,10 @@ export function requiredBattleAssetPlan({
   const assaultObjects=assaultProfile?[{id:`v100-assault-${assaultProfile}`,path:V100_ASSAULT_OBJECT_ART[assaultProfile],runtimeUsage:"mission-render-source"}]:[];
   const defenseObjects=includeV100Sprites&&v100Stage?.missionType==="timed-defense"?[{id:"v100-defense-perimeter",path:V100_DEFENSE_PERIMETER_ART,runtimeUsage:"mission-render-source"}]:[];
   const combatVfx = includeV100Sprites && v100Stage
-    ? Object.entries(V100_COMBAT_VFX_ART).map(([id,path])=>({id,path,runtimeUsage:"battle-overlay"})) : [];
+    // Retain the archived file for old generations without decoding the unused
+    // 1536x1024 glyph for every current smartphone battle.
+    ? Object.entries(V100_COMBAT_VFX_ART).filter(([id])=>id!=='v100-countercut')
+      .map(([id,path])=>({id,path,runtimeUsage:"battle-overlay"})) : [];
   const tataraObjects = includeV100Sprites && v100Stage && requiredKinds.includes("brute")
     ? [{ id: TATARA_GROUND_ART.id, path: TATARA_GROUND_ART.path, runtimeUsage: "battle-overlay" }] : [];
   // Optional new finales belong only to actual enemies in this prepared stage

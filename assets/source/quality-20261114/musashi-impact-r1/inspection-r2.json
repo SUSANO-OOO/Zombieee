@@ -1,0 +1,84 @@
+{
+  "path": "master-r2.png",
+  "bytes": 1250507,
+  "sha256": "82e37592494fdbfd50e8a6ab33f2a7dc664519c3dbb1e0cf559e0a4b36f13a25",
+  "width": 1536,
+  "height": 1024,
+  "hasAlpha": true,
+  "cells": [
+    {
+      "cell": 0,
+      "max32pxMarginAlpha": 1,
+      "visiblePixels": 2749,
+      "transparentPixels": 251677,
+      "box": {
+        "left": 205,
+        "top": 258,
+        "right": 305,
+        "bottom": 348
+      }
+    },
+    {
+      "cell": 1,
+      "max32pxMarginAlpha": 1,
+      "visiblePixels": 8864,
+      "transparentPixels": 235038,
+      "box": {
+        "left": 168,
+        "top": 186,
+        "right": 369,
+        "bottom": 369
+      }
+    },
+    {
+      "cell": 2,
+      "max32pxMarginAlpha": 1,
+      "visiblePixels": 20087,
+      "transparentPixels": 203038,
+      "box": {
+        "left": 140,
+        "top": 123,
+        "right": 441,
+        "bottom": 395
+      }
+    },
+    {
+      "cell": 3,
+      "max32pxMarginAlpha": 1,
+      "visiblePixels": 11852,
+      "transparentPixels": 212151,
+      "box": {
+        "left": 162,
+        "top": 110,
+        "right": 430,
+        "bottom": 377
+      }
+    },
+    {
+      "cell": 4,
+      "max32pxMarginAlpha": 1,
+      "visiblePixels": 1801,
+      "transparentPixels": 225796,
+      "box": {
+        "left": 139,
+        "top": 121,
+        "right": 418,
+        "bottom": 371
+      }
+    },
+    {
+      "cell": 5,
+      "max32pxMarginAlpha": 1,
+      "visiblePixels": 144,
+      "transparentPixels": 256019,
+      "box": {
+        "left": 157,
+        "top": 175,
+        "right": 410,
+        "bottom": 333
+      }
+    }
+  ],
+  "status": "PASS_SOURCE_ALPHA_PADDING",
+  "hostOriginalRetained": "C:/Users/okait/.codex/generated_images/01a1aafe-ec50-73a3-bdea-2bef9bc04c28/exec-b447b51c-b706-43cf-be27-efe5483b6c30.png"
+}

@@ -56,12 +56,12 @@ test("advanced draw paths keep every effect finite", () => {
   const image = (w = 512, h = 512) => ({ complete: true, naturalWidth: w, naturalHeight: h });
   const objects = {
     "v100-grenade-projectile": image(128, 57), "v100-fire-whisky-projectile": image(128, 64),
-    "v100-lightblade": image(1536, 1024), "v100-countercut": image(1536, 1024),
+    "v100-lightblade": image(1536, 1024), "v100-contact": image(1536, 1024),
     "v100-dust": image(), "v100-explosion": image(), "v100-smoke-a": image(), "v100-smoke-b": image(),
   };
   const calls = [];
   const ctx = { save() {}, restore() {}, translate() {}, rotate() {}, scale() {}, drawImage(...args) { calls.push(args); },
-    set globalAlpha(value) { assert.ok(Number.isFinite(value)); }, set globalCompositeOperation(_) {}, set shadowBlur(_) {} };
+    get globalAlpha() { return 1; }, set globalAlpha(value) { assert.ok(Number.isFinite(value)); }, set globalCompositeOperation(_) {}, set shadowBlur(_) {} };
   const entries = [
     { ownerId: 1, activationId: 1, type: "mrs-grenade-flight", x: 90, y: 190, targetX: 180, targetY: 200, originX: 90, originY: 190, duration: .18 },
     { ownerId: 2, activationId: 1, type: "zakimiya-bottle", x: 90, y: 190, targetX: 180, targetY: 200, originX: 90, originY: 190, duration: .16 },

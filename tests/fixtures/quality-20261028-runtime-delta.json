@@ -2080,6 +2080,14 @@
       "pack": "units",
       "category": "unit",
       "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/musashi-contact-six-r2.webp",
+      "bytes": 52570,
+      "hash": "sha256-9abf2cfb54113a376e7b78c96dcfdcb61e5cf3010469b43a8ab75ac10ee29aab",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
     }
   ],
   "retired": [
@@ -15019,6 +15027,14 @@
         "/art/quality-20261114/vfx/guard-shield-impact-six-r1.webp"
       ],
       "logicalBytes": 121296
+    },
+    {
+      "date": "2026-11-14",
+      "scope": "One original material-only dual-sword contact for smartphone counter and fallback. Actual damage receipt and timing retained; current V1 does not draw or decode the old X glyph, including missing-image fallback. Not a release, listening, original-speed or device approval.",
+      "paths": [
+        "/art/quality-20261114/vfx/musashi-contact-six-r2.webp"
+      ],
+      "logicalBytes": 52570
     }
   ]
 }

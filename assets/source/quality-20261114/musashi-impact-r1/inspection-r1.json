@@ -1,0 +1,78 @@
+{
+  "path": "master-r1.png",
+  "bytes": 1272356,
+  "sha256": "a4b247ea95553e48722e8c2112be8a4e16620ef03ed28d4664248f284c3e13d3",
+  "width": 1536,
+  "height": 1024,
+  "hasAlpha": true,
+  "cells": [
+    {
+      "cell": 0,
+      "max32pxMarginAlpha": 1,
+      "visiblePixels": 2733,
+      "transparentPixels": 252510,
+      "brightest": {
+        "value": 249.99999999999997,
+        "x": 229,
+        "y": 320
+      }
+    },
+    {
+      "cell": 1,
+      "max32pxMarginAlpha": 1,
+      "visiblePixels": 9964,
+      "transparentPixels": 237223,
+      "brightest": {
+        "value": 249.8064211764706,
+        "x": 191,
+        "y": 332
+      }
+    },
+    {
+      "cell": 2,
+      "max32pxMarginAlpha": 1,
+      "visiblePixels": 27381,
+      "transparentPixels": 199808,
+      "brightest": {
+        "value": 249.99999999999997,
+        "x": 181,
+        "y": 315
+      }
+    },
+    {
+      "cell": 3,
+      "max32pxMarginAlpha": 190,
+      "visiblePixels": 17478,
+      "transparentPixels": 205658,
+      "brightest": {
+        "value": 231.72127999999998,
+        "x": 287,
+        "y": 233
+      }
+    },
+    {
+      "cell": 4,
+      "max32pxMarginAlpha": 1,
+      "visiblePixels": 1654,
+      "transparentPixels": 231065,
+      "brightest": {
+        "value": 164.94467294117646,
+        "x": 216,
+        "y": 173
+      }
+    },
+    {
+      "cell": 5,
+      "max32pxMarginAlpha": 1,
+      "visiblePixels": 115,
+      "transparentPixels": 252935,
+      "brightest": {
+        "value": 121.46917490196081,
+        "x": 348,
+        "y": 174
+      }
+    }
+  ],
+  "status": "REJECT_SOURCE_ALPHA_PADDING",
+  "hostOriginalRetained": "C:/Users/okait/.codex/generated_images/01a1aafe-ec50-73a3-bdea-2bef9bc04c28/exec-8a1e46f4-d67a-4bca-919b-fc16851fe5e6.png"
+}
