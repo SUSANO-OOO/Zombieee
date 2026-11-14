@@ -21,7 +21,7 @@ const kinds=['takuya','gate-eater','kurome','mother','ooguchi','gairen','futago'
 assert.deepEqual(kinds.map(kind=>'boss-'+kind).sort(),V100_BOSSES.map(boss=>boss.id).sort(),'Every current boss has exactly one dossier');
 const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
 const relative=file=>path.relative(root,file).replaceAll('\\','/');
-const entries=[],art={};
+const entries=[],art={},framing={};
 async function emit(file,bytes){
   if(check)assert.deepEqual(await readFile(file),bytes,relative(file)+' differs from its source');
   else{await mkdir(path.dirname(file),{recursive:true});await writeFile(file,bytes);}
@@ -72,8 +72,19 @@ for(const kind of kinds){
   const bytes=await sharp(png).webp({quality:92,alphaQuality:100,effort:6}).toBuffer();
   const id='boss-'+kind,assetPath='/art/quality-20261114/boss-dossiers/'+id+'.webp';
   art[id]={path:assetPath,hash:'sha256-'+sha(bytes)};
+  // Camera metadata only: keep upper-body paint inside a small operation photo
+  // without treating the transparent top margin as the top of the figure.
+  const pixels=await sharp(bytes).ensureAlpha().raw().toBuffer();
+  let top=height,bottom=-1,left=width,right=-1;
+  for(let y=0;y<height;y++)for(let x=0;x<width;x++)if(pixels[(y*width+x)*4+3]>32){top=Math.min(top,y);bottom=Math.max(bottom,y);}
+  assert.ok(bottom>=top);
+  const upperEnd=top+Math.ceil((bottom-top+1)*.58);
+  for(let y=top;y<upperEnd;y++)for(let x=0;x<width;x++)if(pixels[(y*width+x)*4+3]>32){left=Math.min(left,x);right=Math.max(right,x);}
+  framing[id]={hash:art[id].hash,centerX:(left+right+1)/2/width,top:top/height,
+    widthFit:width/(right-left+1),heightFit:1.9*width/(bottom-top+1)};
   await emit(preview?path.join(previewRoot,id+'.webp'):path.join(root,'public',assetPath.slice(1)),bytes);
   entries.push({id,assetPath,sha256:sha(bytes),bytes:bytes.length,width,height,inputs:sources.map(s=>s.receipt),
+    operationPhoto:{alphaThreshold:32,upperPaintBounds:{left,top,right,bottom:upperEnd-1},framing:framing[id]},
     composition:kind==='futago'?'Current separate A/B bodies; common scale and floor; no overlap':'Complete canonical figure; transparent contain, no repaint'});
 }
 const provenance={generator:'scripts/build-v100-boss-dossier-art.mjs',
@@ -84,10 +95,10 @@ const provenance={generator:'scripts/build-v100-boss-dossier-art.mjs',
   dimensions:{width,height},runtimeAssetCount:entries.length,logicalBytes:entries.reduce((sum,e)=>sum+e.bytes,0),
   distinctBytes:[...new Map(entries.map(e=>[e.sha256,e.bytes])).values()].reduce((sum,n)=>sum+n,0),
   estimatedDecodedRgbaBytes:width*height*4*entries.length,
-  scope:'Smartphone compendium figures only. Battle, voice, save, rewards, hidden-boss unlocks and identity artwork remain unchanged.',entries};
+  scope:'Smartphone compendium figures and operation-photo camera metadata only. Runtime image bytes, battle, voice, save, rewards, hidden-boss unlocks and identity artwork remain unchanged.',entries};
 if(preview)await emit(path.join(previewRoot,'provenance.json'),Buffer.from(JSON.stringify(provenance,null,2)+'\n'));
 else{
   await emit(path.join(root,'assets/source/quality-20261114/boss-dossiers/provenance.json'),Buffer.from(JSON.stringify(provenance,null,2)+'\n'));
-  await emit(path.join(root,'app/v100BossDossierArt.js'),Buffer.from('// Generated from the current battle identities; see the source-bound dossier provenance.\nexport const V100_BOSS_DOSSIER_ART = Object.freeze('+JSON.stringify(art,null,2)+');\n'));
+  await emit(path.join(root,'app/v100BossDossierArt.js'),Buffer.from('// Generated from the current battle identities; see the source-bound dossier provenance.\nexport const V100_BOSS_DOSSIER_ART = Object.freeze('+JSON.stringify(art,null,2)+');\nexport const V100_BOSS_DOSSIER_FRAMING = Object.freeze('+JSON.stringify(framing,null,2)+');\n'));
 }
 console.log(JSON.stringify({mode:preview?'preview':check?'check':'write',assets:entries.length,bytes:provenance.logicalBytes,estimatedDecodedRgbaBytes:provenance.estimatedDecodedRgbaBytes}));
