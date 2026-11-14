@@ -23,6 +23,7 @@ import { V100_MANUAL_IMPACT_ART } from "./v100ManualImpactArt.js";
 import { V100_PARTICLE_MATERIAL_ART } from "./v100ParticleMaterialArt.js";
 import { V100_KING_EXHAUST_ART } from "./v100KingExhaustArt.js";
 import { V100_GUARD_IMPACT_ART } from "./v100GuardImpactArt.js";
+import { V100_GROUND_FIRE_BED_ART } from "./v100GroundFireArt.js";
 
 export const BATTLE_SUPPORT_ASSET_PATHS = Object.freeze({
   pod: "/tactical-drop-pod-v1.png",
@@ -65,6 +66,7 @@ export function requiredBattleAssetPlan({
   verifiedParticleMaterialPaths = [],
   verifiedKingExhaustPaths = [],
   verifiedGuardImpactPaths = [],
+  verifiedGroundFirePaths = [],
 } = {}) {
   const stage = CAMPAIGN_STAGE_BY_ID[stageId];
   const v100Stage = V100_STAGE_BY_ID[stageId] ?? null;
@@ -109,7 +111,7 @@ export function requiredBattleAssetPlan({
   const combatVfx = includeV100Sprites && v100Stage
     // Retain the archived file for old generations without decoding the unused
     // 1536x1024 glyph for every current smartphone battle.
-    ? Object.entries(V100_COMBAT_VFX_ART).filter(([id])=>id!=='v100-countercut')
+    ? Object.entries(V100_COMBAT_VFX_ART).filter(([id])=>id!=='v100-countercut'&&id!==V100_GROUND_FIRE_BED_ART.burn.id)
       .map(([id,path])=>({id,path,runtimeUsage:"battle-overlay"})) : [];
   const tataraObjects = includeV100Sprites && v100Stage && requiredKinds.includes("brute")
     ? [{ id: TATARA_GROUND_ART.id, path: TATARA_GROUND_ART.path, runtimeUsage: "battle-overlay" }] : [];
@@ -133,7 +135,10 @@ export function requiredBattleAssetPlan({
   const guardImpactObjects = includeV100Sprites && v100Stage
     ? Object.entries(V100_GUARD_IMPACT_ART).filter(([kind,art])=>formationKinds.includes(kind)&&verifiedGuardImpactPaths.includes(art.path))
       .map(([,art])=>({id:art.id,path:art.path,runtimeUsage:"battle-overlay",optional:true})) : [];
-  const allStageObjects = [...manifestObjects, ...extraMissionObjects, ...v100MissionObjectEntries, ...v100VfxEntries, ...vehicleObjects, ...researchObjects, ...nodeObjects, ...assaultObjects, ...defenseObjects, ...combatVfx, ...tataraObjects, ...bossDefeatObjects, ...bossAttackObjects, ...manualImpactObjects, ...particleMaterialObjects, ...kingExhaustObjects, ...guardImpactObjects];
+  const groundFireObjects = includeV100Sprites && v100Stage
+    ? Object.values(V100_GROUND_FIRE_BED_ART).filter(art=>verifiedGroundFirePaths.includes(art.path))
+      .map(art=>({id:art.id,path:art.path,runtimeUsage:"battle-overlay",optional:true})) : [];
+  const allStageObjects = [...manifestObjects, ...extraMissionObjects, ...v100MissionObjectEntries, ...v100VfxEntries, ...vehicleObjects, ...researchObjects, ...nodeObjects, ...assaultObjects, ...defenseObjects, ...combatVfx, ...tataraObjects, ...bossDefeatObjects, ...bossAttackObjects, ...manualImpactObjects, ...particleMaterialObjects, ...kingExhaustObjects, ...guardImpactObjects, ...groundFireObjects];
   const stageObjects = unique(allStageObjects.map((entry) => entry.id))
     .map((id) => allStageObjects.find((entry) => entry.id === id))
     .map((entry) => frozenEntry({

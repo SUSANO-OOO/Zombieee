@@ -1,4 +1,4 @@
-import {drawV100WireTrapMotion} from './v100WireTrapMotion.js';
+import {drawV100WireTrapMotion,drawV100BoundWireTethers} from './v100WireTrapMotion.js';
 
 const supportEffectQueues = new WeakMap();
 const MAX_SUPPORT_EFFECTS = 32;
@@ -18,7 +18,7 @@ export function clearV100SupportAbilityEffects(world) {
   supportEffectQueues.delete(world);
 }
 
-export function queueV100SupportAbilityEffect(world, { ownerId, activationId, eventType, targetId = null, x, y, startedAt = world.time, duration = .45 } = {}) {
+export function queueV100SupportAbilityEffect(world, { ownerId, activationId, eventType, targetId = null, targetIds = null, springSeconds = .3, x, y, startedAt = world.time, duration = .45 } = {}) {
   if (!world?.definition?.missionConfig?.v100StageNumber
     || !Number.isFinite(ownerId)
     || !Number.isFinite(activationId)
@@ -27,6 +27,9 @@ export function queueV100SupportAbilityEffect(world, { ownerId, activationId, ev
     || !Number.isFinite(startedAt)
     || !Number.isFinite(duration)
     || duration <= 0) return false;
+  if(targetIds!==null&&(eventType!=='trap-sprung'||!Array.isArray(targetIds)||!targetIds.length
+    ||targetIds.some(id=>!Number.isFinite(id))||new Set(targetIds).size!==targetIds.length
+    ||!Number.isFinite(springSeconds)||springSeconds<=0))return false;
   const effects = activeEffects(world);
   if (effects.some((effect) => effect.ownerId === ownerId && effect.activationId === activationId && effect.eventType === eventType && effect.startedAt === startedAt)) return false;
   const deployment = eventType === 'trap-sprung' ? effects.find(effect=>effect.eventType==='trap-deploy'
@@ -34,13 +37,14 @@ export function queueV100SupportAbilityEffect(world, { ownerId, activationId, ev
     &&effect.startedAt<=startedAt) : null;
   const deploymentProgress = deployment ? Math.max(0,Math.min(1,(startedAt-deployment.startedAt)/deployment.duration)) : 1;
   effects.push({ ownerId, activationId, eventType, targetId, x, y, startedAt, duration,
-    ...(eventType==='trap-sprung'?{deploymentProgress}:{}) });
+    ...(eventType==='trap-sprung'?{deploymentProgress}:{}),
+    ...(targetIds?{targetIds:[...targetIds],springSeconds:Math.min(springSeconds,duration)}:{}) });
   supportEffectQueues.set(world, effects.slice(-MAX_SUPPORT_EFFECTS));
   return true;
 }
 
 export function getV100SupportAbilityEffectsSnapshot(world) {
-  return activeEffects(world).map((effect) => ({ ...effect, elapsed: Math.max(0, world.time - effect.startedAt) }));
+  return activeEffects(world).map((effect) => ({ ...effect, ...(effect.targetIds?{targetIds:[...effect.targetIds]}:{}), elapsed: Math.max(0, world.time - effect.startedAt) }));
 }
 
 function ready(objects, id) {
@@ -93,6 +97,18 @@ function drawSprungTrap(ctx, objects, effect) {
   drawTrapDust(ctx, objects, effect);
 }
 
+function drawBoundTrap(ctx,objects,world,effect){
+  const ids=new Set(effect.targetIds);
+  const targets=(world.fighters??[]).filter(f=>ids.has(f.id)&&f.side==='zombie'&&f.hp>0
+    &&Number.isFinite(f.stunned)&&f.stunned>0&&finitePoint(f.x,f.y));
+  if(!targets.length)return;
+  const remaining=Math.min(effect.duration-effect.elapsed,Math.max(...targets.map(f=>f.stunned)));
+  const alpha=Math.max(0,Math.min(1,remaining/.18)),progress=Math.max(0,Math.min(1,effect.elapsed/effect.springSeconds));
+  if(!drawV100WireTrapMotion(ctx,objects,{x:effect.x,y:effect.y+5,progress,phase:'spring',alpha,deploymentProgress:effect.deploymentProgress??1}))return;
+  if(progress<1)drawTrapDust(ctx,objects,{...effect,duration:effect.springSeconds});
+  else drawV100BoundWireTethers(ctx,objects,{x:effect.x,y:effect.y+5,targets,alpha:alpha*Math.min(1,(effect.elapsed-effect.springSeconds)/.06),release:1-alpha});
+}
+
 export function drawV100DeployedWireTrap(ctx,objects,world,owner,x,y){
  const effects=world?activeEffects(world):[];
  let deployment;
@@ -119,7 +135,10 @@ export function drawV100SupportAbilityEffects(ctx, objects, world) {
       }
       drawMedicMist(ctx, objects, renderEffect);
     }
-    else if (renderEffect.eventType === "trap-sprung") drawSprungTrap(ctx, objects, renderEffect);
+    else if (renderEffect.eventType === "trap-sprung") {
+      if(renderEffect.targetIds)drawBoundTrap(ctx,objects,world,renderEffect);
+      else drawSprungTrap(ctx, objects, renderEffect);
+    }
     else if (renderEffect.eventType === "trap-deploy") drawTrapDust(ctx, objects, renderEffect);
   }
 }

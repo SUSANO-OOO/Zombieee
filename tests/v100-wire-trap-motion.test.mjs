@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
-import {drawV100WireTrapMotion,wireTrapRigPose} from '../app/v100WireTrapMotion.js';
+import {drawV100WireTrapMotion,wireTrapRigPose,V100_SPENT_TRAP_COIL} from '../app/v100WireTrapMotion.js';
 import {drawV100DeployedWireTrap,drawV100SupportAbilityEffects,queueV100SupportAbilityEffect,getV100SupportAbilityEffectsSnapshot} from '../app/v100SupportAbilityVfx.js';
 
 const images=()=>({'v100-support-trap-intact':{id:'intact',complete:true,naturalWidth:386,naturalHeight:242},
@@ -73,6 +73,46 @@ test('real trigger effects keep the deployed ground anchor and retain the same s
  try{drawV100SupportAbilityEffects(f.ctx,images(),world);}finally{Math.random=oldRandom;}
  assert.ok(f.calls.some(c=>c.image.id==='intact'));assert.deepEqual(getV100SupportAbilityEffectsSnapshot(world),before);
  world.time=20.301;const ended=canvas();drawV100SupportAbilityEffects(ended.ctx,images(),world);assert.equal(ended.calls.length,0);
+});
+
+test('a manual trap retains its original spent material and continuous wire while its actual targets remain held',()=>{
+ const world={time:10,definition:{missionConfig:{v100StageNumber:2}},fighters:[
+  {id:2,side:'zombie',hp:100,x:390,y:205,stunned:1.35},{id:3,side:'zombie',hp:100,x:440,y:205,stunned:1.35}]};
+ const targetIds=[2,3];assert.equal(queueV100SupportAbilityEffect(world,{ownerId:5,activationId:7,eventType:'trap-sprung',targetIds,x:400,y:200,duration:1.35,springSeconds:.3}),true);
+ targetIds.push(999);const exposed=getV100SupportAbilityEffectsSnapshot(world);exposed[0].targetIds.push(998);assert.deepEqual(getV100SupportAbilityEffectsSnapshot(world)[0].targetIds,[2,3]);
+ world.time=10.6;for(const f of world.fighters)f.stunned=.75;
+ const before=JSON.stringify(world),f=canvas(),oldRandom=Math.random;Math.random=()=>{throw new Error('Binding paint changed simulation randomness');};
+ try{drawV100SupportAbilityEffects(f.ctx,images(),world);}finally{Math.random=oldRandom;}
+ assert.equal(JSON.stringify(world),before);assert.equal(f.calls[0].image.id,'sprung');
+ const wires=f.calls.slice(1);assert.ok(wires.length>0&&wires.length<=18);assert.ok(wires.every(c=>c.image.id==='intact'&&c.args.slice(0,4).join(',')==='220,58,28,14'));
+ const start=c=>point(c.matrix,220,65),end=c=>point(c.matrix,248,64),coil=V100_SPENT_TRAP_COIL;
+ const anchor=[400+(coil.x/coil.width-.5)*82,205+(coil.y-coil.height)/coil.width*82];
+ assert.ok(Math.hypot(...start(wires[0]).map((v,i)=>v-anchor[i]))<1e-7);
+ for(let i=1;i<wires.length;i++)assert.ok(Math.hypot(...start(wires[i]).map((v,k)=>v-end(wires[i-1])[k]))<1e-7,'barbed wire has a disconnected join');
+ assert.ok(Math.hypot(...end(wires.at(-1)).map((v,i)=>v-[449,201][i]))<1e-7);assert.equal(f.stack.length,0);
+ assert.deepEqual([f.ctx.globalAlpha,f.ctx.globalCompositeOperation,f.ctx.shadowBlur],[.7,'lighter',8]);
+});
+
+test('manual wire follows only the living held targets and falls slack before its exact control window ends',()=>{
+ const world={time:20,definition:{missionConfig:{v100StageNumber:2}},fighters:[
+  {id:2,side:'zombie',hp:100,x:390,y:205,stunned:1.35},{id:3,side:'zombie',hp:100,x:440,y:205,stunned:1.35},
+  {id:4,side:'human',hp:100,x:420,y:205,stunned:1.35}]};
+ queueV100SupportAbilityEffect(world,{ownerId:5,activationId:7,eventType:'trap-sprung',targetIds:[2,3],x:400,y:200,duration:1.35,springSeconds:.3});
+ world.time=21.2;world.fighters[0].hp=0;Object.assign(world.fighters[1],{x:450,y:210,stunned:.15});
+ const fading=canvas();drawV100SupportAbilityEffects(fading.ctx,images(),world);assert.ok(fading.calls.length>1);assert.ok(fading.calls.every(c=>c.alpha>0&&c.alpha<1));
+ const last=fading.calls.at(-1),lastPoint=point(last.matrix,248,64);assert.ok(Math.abs(lastPoint[0]-459)<1e-7);assert.ok(lastPoint[1]>206&&lastPoint[1]<210);
+ world.fighters[1].stunned=0;const released=canvas();drawV100SupportAbilityEffects(released.ctx,images(),world);assert.equal(released.calls.length,0,'wire must not hold an actor that can move');
+ world.time=21.351;world.fighters[1].stunned=10;const expired=canvas();drawV100SupportAbilityEffects(expired.ctx,images(),world);assert.equal(expired.calls.length,0,'another later stun cannot extend this trap');
+ assert.deepEqual(getV100SupportAbilityEffectsSnapshot(world),[]);
+});
+
+test('binding metadata rejects invented targets and keeps a short real binding within its original duration',()=>{
+ const world={time:30,definition:{missionConfig:{v100StageNumber:2}},fighters:[]};
+ const base={ownerId:5,activationId:7,eventType:'trap-sprung',x:400,y:200,duration:.1};
+ for(const patch of [{targetIds:[]},{targetIds:[2,2]},{targetIds:[NaN]},{targetIds:[2],springSeconds:0},{targetIds:[2],eventType:'medic-impact'}])assert.equal(queueV100SupportAbilityEffect(world,{...base,...patch}),false);
+ assert.deepEqual(getV100SupportAbilityEffectsSnapshot(world),[]);
+ assert.equal(queueV100SupportAbilityEffect(world,{...base,targetIds:[2],springSeconds:.3}),true);assert.equal(getV100SupportAbilityEffectsSnapshot(world)[0].springSeconds,.1);
+ const missing=canvas();drawV100SupportAbilityEffects(missing.ctx,images(),world);assert.equal(missing.calls.length,0);
 });
 test('a trap triggered during deployment starts from that actual pose and retains it after the deployment record expires',()=>{
  const world={time:30,definition:{missionConfig:{v100StageNumber:2}}};

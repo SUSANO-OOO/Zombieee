@@ -4,6 +4,8 @@ import {queueV104GuardImpact} from './v104CombatAudio.js';
 import {drawV100TataraImpact} from './v100ManualImpactVfx.js';
 import {drawV100TakuyaGroundRelease} from './v100BossAttackVfx.js';
 import {drawV100GuardImpact} from './v100GuardImpactVfx.js';
+import {V100_GROUND_FIRE_BED_ART} from './v100GroundFireArt.js';
+import {drawV100GroundFireBed,clearV100GroundFireBed} from './v100GroundFireBedVfx.js';
 
 export const V100_COMBAT_VFX_ART=Object.freeze({
  'quality-boss-blast':'/art/quality-20261113/vfx/boss-blast-six-r2.webp',
@@ -30,11 +32,13 @@ export const V100_COMBAT_VFX_ART=Object.freeze({
  'v100-lightblade':'/art/v100/combat-vfx/lightblade-six-frames-r1.webp',
  'v100-countercut':'/art/v100/combat-vfx/countercut-six-frames-r1.webp',
  'v100-ground-fire':'/art/v100/combat-vfx/ground-fire-smoke-r1.webp',
+ [V100_GROUND_FIRE_BED_ART.burn.id]:V100_GROUND_FIRE_BED_ART.burn.path,
 });
 
-export function drawV100GroundFire(ctx, objects, effect, time) {
+export function drawV100GroundFire(ctx, objects, effect, time, world) {
   if (!effect || effect.kind !== 'burn' || effect.phase !== 'active' || !(effect.remaining > 0) || !(effect.radius > 0)
     || ![effect.id, effect.x, effect.y, effect.radius, effect.remaining, time].every(Number.isFinite)) return false;
+  if(drawV100GroundFireBed(ctx,objects,effect,time,world))return true;
   const source = objects?.['v100-ground-fire'];
   if (!source?.complete || !source.naturalWidth || !source.naturalHeight) return false;
   const cellWidth=source.naturalWidth/6,cellHeight=source.naturalHeight/5;
@@ -97,7 +101,7 @@ const ready=(objects,id)=>{
 export const V100_CONTACT_WEAPONS=Object.freeze(['scout','brawler','kumaverson','brute','guardian','crazy-king','zakimiya','tky','miyamoto-musashi','walker','runner','crusher','abomination','takuya','takuya-omega','gairen','futago','mugarian-president-mutated','ooguchi','grappler','sprinter','gate-eater','cagewalker','red-panther-knife']);
 export const V100_CLAW_CONTACT_WEAPONS=Object.freeze(['walker','runner','turned','grappler','sprinter','futago']);
 const contactQueues=new WeakMap();
-export function clearV100ContactQueue(world){contactQueues.delete(world);}
+export function clearV100ContactQueue(world){contactQueues.delete(world);clearV100GroundFireBed(world);}
 export function queueV100Contact(world,{x,y,ground=false,metal=false,claw=false,size=58,direction=1,delay=0,guardContact=null,clawContact=null,skillContact=null,meleeContact=null}){
  if(!world.definition?.missionConfig?.v100StageNumber)return;
  const entries=(contactQueues.get(world)??[]).filter(e=>world.time-e.startedAt<e.duration);

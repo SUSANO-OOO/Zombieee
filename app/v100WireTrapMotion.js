@@ -57,3 +57,32 @@ export function drawV100WireTrapMotion(ctx,objects,{x,y,width=82,progress=1,phas
  if(blend>0){ctx.globalAlpha*=blend;ctx.drawImage(sprung,x-width/2,y-width*193/404,width,width*193/404);}
  ctx.restore();return true;
 }
+
+// The existing spent-trap coil is the anchor. Reuse actual barbed-wire pixels,
+// rather than a status ring or diagram line, to show the targets it still holds.
+export const V100_SPENT_TRAP_COIL=Object.freeze({x:218,y:116,width:404,height:193});
+function bindingCable(ctx,image,a,b){
+ const dx=b.x-a.x,dy=b.y-a.y,distance=Math.hypot(dx,dy);if(distance<.01)return;
+ const pieces=Math.min(6,Math.max(1,Math.ceil(distance/28))),length=Math.hypot(28,-1);
+ for(let index=0;index<pieces;index++){
+  ctx.save();ctx.translate(a.x+dx*index/pieces,a.y+dy*index/pieces);
+  ctx.rotate(Math.atan2(dy,dx));ctx.scale(distance/pieces/length,.65);
+  ctx.rotate(-Math.atan2(-1,28));ctx.translate(-220,-65);
+  ctx.drawImage(image,220,58,28,14,220,58,28,14);ctx.restore();
+ }
+}
+export function drawV100BoundWireTethers(ctx,objects,{x,y,width=82,targets,alpha=1,release=0}={}){
+ if(![x,y,width,alpha,release].every(Number.isFinite)||width<=0||alpha<=0
+   ||!Array.isArray(targets)||!targets.length||targets.some(t=>![t?.x,t?.y].every(Number.isFinite)))return false;
+ const image=objects?.['v100-support-trap-intact'];
+ if(!image?.complete||image.naturalWidth!==W||image.naturalHeight!==H)return false;
+ let left=targets[0],right=targets[0];
+ for(const target of targets){if(target.x<left.x)left=target;if(target.x>right.x)right=target;}
+ const slack=clamp(release),coil=V100_SPENT_TRAP_COIL;
+ const anchor={x:x+(coil.x/coil.width-.5)*width,y:y+(coil.y-coil.height)/coil.width*width};
+ const first={x:left.x-9,y:left.y-4+slack*4},last={x:right.x+9,y:right.y-4+slack*4};
+ const bend={x:(anchor.x+first.x)*.5,y:Math.max(anchor.y,first.y)+3+slack*5};
+ ctx.save();ctx.globalCompositeOperation='source-over';ctx.shadowBlur=0;ctx.globalAlpha=Math.min(1,alpha);
+ bindingCable(ctx,image,anchor,bend);bindingCable(ctx,image,bend,first);bindingCable(ctx,image,first,last);
+ ctx.restore();return true;
+}

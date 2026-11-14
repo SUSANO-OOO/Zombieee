@@ -2088,6 +2088,14 @@
       "pack": "units",
       "category": "unit",
       "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261115/vfx/ground-fire-bed-six-r1.webp",
+      "bytes": 141770,
+      "hash": "sha256-f6a331504bc2522e2fb1d8b3a14b58ce877dd44f6b825421e446014ef8e913a7",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
     }
   ],
   "retired": [
@@ -15015,6 +15023,14 @@
         "styleId": 53,
         "sourceWaveSha256": "2ce38aef00ef715053a768536a676d5ada111dc94e3ed713e16c362f25038584"
       }
+    },
+    {
+      "date": "2026-11-15",
+      "scope": "Optional six-cell connected fire bed behind actors, deterministic motion variation and same-burn raster choice. Existing active footprint, damage, expiry, audio and save unchanged. Old or partial installed packs do not request new artwork and retain original fire. Not a release, original-speed listening or physical-device acceptance.",
+      "paths": [
+        "/art/quality-20261115/vfx/ground-fire-bed-six-r1.webp"
+      ],
+      "logicalBytes": 141770
     }
   ],
   "contentReplacements": [

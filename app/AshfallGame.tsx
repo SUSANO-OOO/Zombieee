@@ -5593,9 +5593,9 @@ function drawEnemyCombatReadabilityVfx(
   ctx.restore();
 }
 
-function drawAreaEffect(ctx: CanvasRenderingContext2D, effect: AreaEffect, time: number, objects?: Record<string, HTMLImageElement>, authoredV1 = false) {
+function drawAreaEffect(ctx: CanvasRenderingContext2D, effect: AreaEffect, time: number, objects?: Record<string, HTMLImageElement>, authoredV1 = false, world?: object) {
   if (effect.phase === "expired") return;
-  if (authoredV1 && effect.kind === "burn") { drawV100GroundFire(ctx, objects, effect, time); return; }
+  if (authoredV1 && effect.kind === "burn") { drawV100GroundFire(ctx, objects, effect, time, world); return; }
   ctx.save();
   ctx.translate(effect.x, effect.y);
   if (effect.kind === "healing") {
@@ -8923,7 +8923,7 @@ function drawWorld(
   }
   drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["objective"], Boolean(g.definition.missionConfig.v100StageNumber));
 
-  for (const effect of selectAreaEffectsForRender(g.areaEffects) as AreaEffect[]) drawAreaEffect(ctx, effect, g.time, stageObjects, Boolean(g.definition.missionConfig.v100StageNumber));
+  for (const effect of selectAreaEffectsForRender(g.areaEffects) as AreaEffect[]) drawAreaEffect(ctx, effect, g.time, stageObjects, Boolean(g.definition.missionConfig.v100StageNumber), g);
   for (const effect of g.manualAbilityVfx) drawManualAbilityVfx(ctx, effect,Boolean(g.definition.missionConfig.v100StageNumber));
   if (!g.definition.missionConfig.v100StageNumber) for (const fighter of g.fighters) drawCrazyKingAbilityIndicator(ctx, fighter, g.time);
   for (const hazard of g.stationHazards) drawStationHazard(ctx, hazard, g.time);
@@ -15405,6 +15405,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       verifiedParticleMaterialPaths: battleArtworkPolicyRef.current.paths.split('\n').filter(Boolean),
       verifiedKingExhaustPaths: battleArtworkPolicyRef.current.paths.split('\n').filter(Boolean),
       verifiedGuardImpactPaths: battleArtworkPolicyRef.current.paths.split('\n').filter(Boolean),
+      verifiedGroundFirePaths: battleArtworkPolicyRef.current.paths.split('\n').filter(Boolean),
       includeAllSprites: localQaRequested
         && !finiteEnemyRuntimeQa
         && !finiteVisualIntegrityQa
@@ -22542,6 +22543,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                     && candidate.hp > 0
                   ));
                 if (trappedTargets.length > 0) {
+                  const manualBindingTargets = f.engineerTrapManual ? trappedTargets.map((target) => target.id) : null;
                   for (const trapped of trappedTargets) {
                   trapped.stunned = Math.max(trapped.stunned, trigger.stopSeconds);
                   if (f.engineerTrapManual) {
@@ -22569,7 +22571,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                     eventType: "trap-sprung",
                     x: trap.x,
                     y: activeLaneCenters[trap.lane],
-                    duration: .3,
+                    duration: manualBindingTargets ? trigger.stopSeconds : .3,
+                    ...(manualBindingTargets ? { targetIds: manualBindingTargets, springSeconds: .3 } : {}),
                   });
                 }
               }
