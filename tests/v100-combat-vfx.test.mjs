@@ -52,16 +52,16 @@ test('contact effects are finite, bounded, tied to battle time, and cleared with
  const legacy={time:0,definition:{missionConfig:{}}};queueV100Contact(legacy,{x:1,y:2});drawV100ContactQueue(ctx,objects,legacy);assert.equal(draws.length,0);
 });
 test('firearms emit once at their muzzle and all other weapons stay free of muzzle flame',()=>{
- for(const weapon of ['ranger','babayaga','gunner','red-panther-smg','red-panther-commander','crawler']){
+ for(const weapon of ['ranger','medic','babayaga','gunner','red-panther-smg','red-panther-commander','crawler']){
   assert.equal(v100MuzzleFrame(weapon,0).frame,0);
-  const duration=weapon==='babayaga'?.055:weapon==='crawler'?.14:['gunner','red-panther-smg'].includes(weapon)?.085:.1;
+  const duration=weapon==='medic'?.075:weapon==='babayaga'?.055:weapon==='crawler'?.14:['gunner','red-panther-smg'].includes(weapon)?.085:.1;
   assert.equal(v100MuzzleFrame(weapon,duration*.999).frame,5);
   for(const elapsed of [-.01,duration,1,Infinity,NaN]){
    assert.equal(v100MuzzleFrame(weapon,elapsed),null);
    assert.equal(drawV100Muzzle({}, {}, {weapon,elapsed}),false);
   }
  }
- for(const weapon of ['engineer','mrs-chiha','brawler','kumaverson','medic','spitter','ooze','resonator','red-panther-knife']){
+ for(const weapon of ['engineer','mrs-chiha','brawler','kumaverson','spitter','ooze','resonator','red-panther-knife']){
   assert.equal(drawV100Muzzle({}, {}, {weapon,elapsed:0}),false,weapon);
  }
  const calls=[],ctx={

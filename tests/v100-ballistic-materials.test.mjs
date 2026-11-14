@@ -135,6 +135,15 @@ test('the actual ordinary-shot consumer selects materials before legacy geometry
   if(muzzleOrigin){assert.equal(muzzles[0].x,334);assert.equal(muzzles[0].y,219);assert.equal(muzzles[0].weapon,kind);}
   v.assertRestored();
  }
+ // The same resolved medic profile also represents automatic treatment.
+ // Exercise the real consumer with an explicit muzzle position: it must
+ // still return through recipient dressing before any firearm flash.
+ const healCanvas=canvas(),gauze={complete:true,naturalWidth:1536,naturalHeight:1024};
+ const healShot={side:'human',effect:'medic',sourceId:1,targetId:2,life:.28,duration:.32,x:300,y:200,tx:360,ty:200};
+ const healWorld={fighters:[{id:1,side:'human',kind:'medic',hp:68},{id:2,side:'human',hp:42,x:360,y:230}]};
+ const healScope={drawV100BallisticShot,drawV100NaoTreatmentShot,V100_CONTACT_WEAPONS:[],drawV100Muzzle:()=>{throw Error('treatment acquired a muzzle flash')},drawCombatRibbon:()=>{throw Error('legacy treatment geometry reached')}};
+ runInNewContext(executable,healScope);assert.equal(healScope.paint(healCanvas.c,healShot,{...params('medic'),elapsed:.04,duration:.32,impactProgress:-1,enemyProjectile:null,color:'#79efac',v100StageObjects:{'quality-medic-gauze':gauze},muzzleOrigin:{x:334,y:219},world:healWorld}),true);
+ assert.equal(healCanvas.calls.length,1);assert.equal(healCanvas.calls[0].args[0],gauze);healCanvas.assertRestored();
  assert.ok(text.includes('      world:g,'),'the actual world owns visual source choice');
 });
 
