@@ -633,6 +633,7 @@ import { v100SupportManualPose, V100_SUPPORT_MANUAL_STABLE_POSE } from "./v100Su
 import { v100AdvancedManualPose, V100_ADVANCED_MANUAL_POSE_STABLE } from "./v100AdvancedManualPose.js";
 import { v100ScoutApproachStep } from "./v100ScoutApproach.js";
 import { clearV100SupportAbilityEffects, drawV100SupportAbilityEffects, drawV100DeployedWireTrap, getV100SupportAbilityEffectsSnapshot, queueV100SupportAbilityEffect } from "./v100SupportAbilityVfx.js";
+import {drawV100MedicalArea,drawV100MedicalRecipients} from "./v100MedicalFieldVfx.js";
 import { clearV100AdvancedAbilityEffects, drawV100AdvancedAbilityEffects, drawV100ChihaFinalBursts, V100_CHIHA_FINAL_BURST_DURATION, getV100AdvancedAbilityEffectsSnapshot, queueV100AdvancedAbilityEffect, resolveV100AdvancedAbilityOrigin, resolveV105CurrentAbilityOrigin } from "./v100AdvancedAbilityVfx.js";
 import { v100AbilityOriginSourcePixel, v100RenderedAbilityOriginSocket } from "./v100AbilityOriginSockets.js";
 import { drawV100DefensePerimeter } from "./v100DefensePerimeter.js";
@@ -5597,6 +5598,7 @@ function drawEnemyCombatReadabilityVfx(
 function drawAreaEffect(ctx: CanvasRenderingContext2D, effect: AreaEffect, time: number, objects?: Record<string, HTMLImageElement>, authoredV1 = false, world?: object) {
   if (effect.phase === "expired") return;
   if (authoredV1 && effect.kind === "burn") { drawV100GroundFire(ctx, objects, effect, time, world); return; }
+  if (authoredV1 && effect.kind === "healing") { drawV100MedicalArea(ctx, objects, effect, time, world); return; }
   ctx.save();
   ctx.translate(effect.x, effect.y);
   if (effect.kind === "healing") {
@@ -9309,7 +9311,7 @@ function drawWorld(
   // the near edge. Drawing them last prevents fighters from appearing on top
   // of wire, rubble, fallen signs, or supply crates.
   drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["foreground-prop"], Boolean(g.definition.missionConfig.v100StageNumber));
-  if (g.definition.missionConfig.v100StageNumber) { drawV100SupportAbilityEffects(ctx, stageObjects, g); drawV100AdvancedAbilityEffects(ctx, stageObjects, g); }
+  if (g.definition.missionConfig.v100StageNumber) { drawV100MedicalRecipients(ctx,stageObjects,g); drawV100SupportAbilityEffects(ctx, stageObjects, g); drawV100AdvancedAbilityEffects(ctx, stageObjects, g); }
 
   drawCrawlerBarrage(ctx, g, graphicsProfile);
   if(g.definition.missionConfig.v100StageNumber){
