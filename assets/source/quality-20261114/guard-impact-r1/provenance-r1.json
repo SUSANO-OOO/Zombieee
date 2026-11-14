@@ -1,0 +1,327 @@
+{
+  "generator": "scripts/build-v100-guard-impact-art.mjs",
+  "creator": "OpenAI built-in image_gen under Producer direction; deterministic phone-sized WebP packaging by Codex",
+  "license": "Project-original generated effect artwork under existing game asset policy; no third-party download",
+  "rights": {
+    "commercialUse": true,
+    "modification": true,
+    "redistribution": true,
+    "basis": "Original material-only contact effects created for this project"
+  },
+  "producerApproval": "Current smartphone goal requests character-specific manual ability VFX; candidate,not final motion/audio/device acceptance",
+  "generation": {
+    "mode": "built-in image_gen generation",
+    "model": "Selected by host; no model name asserted",
+    "characterReferences": []
+  },
+  "anchorMethod": "Dense11x11 alpha-weighted luminance maximum in the measured contact window,then local centroid;normalized pixel centers",
+  "runtimeAssetCount": 2,
+  "logicalBytes": 121296,
+  "distinctBytes": 121296,
+  "estimatedDecodedRgbaBytes": 3145728,
+  "scope": "Optional cast-iron pan and steel shield contact paint at the existing real guard-hit socket. Original body,weapon,damage,guard radius,hit receipts,duration,audio,save and old mandatory fallback remain unchanged.",
+  "entries": [
+    {
+      "kind": "kumaverson",
+      "material": "pan",
+      "source": {
+        "path": "assets/source/quality-20261114/guard-impact-r1/pan-master-r1.png",
+        "bytes": 1151105,
+        "sha256": "35fde60994cb1206ce42606333591dcb663bf42b0b1da1dd2d9dda844abd19d8"
+      },
+      "prompt": {
+        "path": "assets/source/quality-20261114/guard-impact-r1/pan-prompt-r1.txt",
+        "sha256": "731928200681ded26a49f82445d355fc10a72b00b8f5a92c4f61b80ea1ee0e74"
+      },
+      "currentBody": {
+        "path": "/art/v100/joints/kumaverson-combat-r4.webp",
+        "sha256": "7ac77ff8defbc423f5b3c3ad8e87c14e62288741215a7d1ac5ca026e8e381064",
+        "weaponBone": "weapon-0",
+        "muzzle": [
+          219.91833590138674,
+          265.0858085808581
+        ]
+      },
+      "cells": [
+        {
+          "frame": 0,
+          "maxMarginAlpha": 1,
+          "visiblePixels": 1621,
+          "anchor": [
+            0.3408100787517856,
+            0.50486230381753
+          ],
+          "coreBox": [
+            169,
+            253,
+            11,
+            11
+          ]
+        },
+        {
+          "frame": 1,
+          "maxMarginAlpha": 1,
+          "visiblePixels": 7538,
+          "anchor": [
+            0.3251887482208185,
+            0.5029461866507479
+          ],
+          "coreBox": [
+            161,
+            252,
+            11,
+            11
+          ]
+        },
+        {
+          "frame": 2,
+          "maxMarginAlpha": 1,
+          "visiblePixels": 26894,
+          "anchor": [
+            0.3505878082459217,
+            0.50097992855919
+          ],
+          "coreBox": [
+            174,
+            251,
+            11,
+            11
+          ]
+        },
+        {
+          "frame": 3,
+          "maxMarginAlpha": 2,
+          "visiblePixels": 16545,
+          "anchor": [
+            0.34068665466687253,
+            0.5049138220356855
+          ],
+          "coreBox": [
+            169,
+            253,
+            11,
+            11
+          ]
+        },
+        {
+          "frame": 4,
+          "maxMarginAlpha": 1,
+          "visiblePixels": 662,
+          "anchor": [
+            0.3204888416744757,
+            0.5073296733941645
+          ],
+          "coreBox": [
+            159,
+            255,
+            11,
+            11
+          ]
+        },
+        {
+          "frame": 5,
+          "maxMarginAlpha": 1,
+          "visiblePixels": 48,
+          "anchor": [
+            0.31785959097876154,
+            0.5066328494038809
+          ],
+          "coreBox": [
+            158,
+            254,
+            11,
+            11
+          ]
+        }
+      ],
+      "output": {
+        "id": "v100-guard-pan-impact",
+        "path": "/art/quality-20261114/vfx/guard-pan-impact-six-r1.webp",
+        "hash": "sha256-942c1e16236d6cd4139d22d4767f855dbc986501587827b8be6c4a2434cbb0e1",
+        "width": 768,
+        "height": 512,
+        "columns": 3,
+        "rows": 2,
+        "worldSize": 70,
+        "anchors": [
+          [
+            0.3408100787517856,
+            0.50486230381753
+          ],
+          [
+            0.3251887482208185,
+            0.5029461866507479
+          ],
+          [
+            0.3505878082459217,
+            0.50097992855919
+          ],
+          [
+            0.34068665466687253,
+            0.5049138220356855
+          ],
+          [
+            0.3204888416744757,
+            0.5073296733941645
+          ],
+          [
+            0.31785959097876154,
+            0.5066328494038809
+          ]
+        ],
+        "bytes": 36388
+      }
+    },
+    {
+      "kind": "guardian",
+      "material": "shield",
+      "source": {
+        "path": "assets/source/quality-20261114/guard-impact-r1/shield-master-r1.png",
+        "bytes": 1545992,
+        "sha256": "a287c84fb5d2b288494c4078041d2cdf7ab138774cfeb214ff523f64272330fa"
+      },
+      "prompt": {
+        "path": "assets/source/quality-20261114/guard-impact-r1/shield-prompt-r1.txt",
+        "sha256": "abdf27645823133bfea8a49fc1ad613dd75939fe57e51f81b00821ae1fea0cb6"
+      },
+      "currentBody": {
+        "path": "/art/v100/joints/guardian-combat-r1.webp",
+        "sha256": "1906e56f9bb7e77334de879c0a80cde61f578f4ef5c5c7fefbefbfa2a41f0bdb",
+        "weaponBone": "weapon-0",
+        "muzzle": [
+          349.66666666666663,
+          198.33333333333334
+        ]
+      },
+      "cells": [
+        {
+          "frame": 0,
+          "maxMarginAlpha": 1,
+          "visiblePixels": 4991,
+          "anchor": [
+            0.36230956830770716,
+            0.541984620108379
+          ],
+          "coreBox": [
+            180,
+            272,
+            11,
+            11
+          ]
+        },
+        {
+          "frame": 1,
+          "maxMarginAlpha": 1,
+          "visiblePixels": 15630,
+          "anchor": [
+            0.35058138320619064,
+            0.5419815794243242
+          ],
+          "coreBox": [
+            174,
+            272,
+            11,
+            11
+          ]
+        },
+        {
+          "frame": 2,
+          "maxMarginAlpha": 6,
+          "visiblePixels": 50178,
+          "anchor": [
+            0.33886636447461266,
+            0.5400394126404362
+          ],
+          "coreBox": [
+            168,
+            271,
+            11,
+            11
+          ]
+        },
+        {
+          "frame": 3,
+          "maxMarginAlpha": 5,
+          "visiblePixels": 53699,
+          "anchor": [
+            0.35253572931174715,
+            0.5380966670776935
+          ],
+          "coreBox": [
+            175,
+            270,
+            11,
+            11
+          ]
+        },
+        {
+          "frame": 4,
+          "maxMarginAlpha": 2,
+          "visiblePixels": 34541,
+          "anchor": [
+            0.3466767364709903,
+            0.5419673647901196
+          ],
+          "coreBox": [
+            172,
+            272,
+            11,
+            11
+          ]
+        },
+        {
+          "frame": 5,
+          "maxMarginAlpha": 2,
+          "visiblePixels": 5006,
+          "anchor": [
+            0.33487276644254926,
+            0.5419870665453491
+          ],
+          "coreBox": [
+            166,
+            272,
+            11,
+            11
+          ]
+        }
+      ],
+      "output": {
+        "id": "v100-guard-shield-impact",
+        "path": "/art/quality-20261114/vfx/guard-shield-impact-six-r1.webp",
+        "hash": "sha256-f86c4ca4a23ba866663005b21f864bc299f30283600e5b5f20053ddfbca82952",
+        "width": 768,
+        "height": 512,
+        "columns": 3,
+        "rows": 2,
+        "worldSize": 82,
+        "anchors": [
+          [
+            0.36230956830770716,
+            0.541984620108379
+          ],
+          [
+            0.35058138320619064,
+            0.5419815794243242
+          ],
+          [
+            0.33886636447461266,
+            0.5400394126404362
+          ],
+          [
+            0.35253572931174715,
+            0.5380966670776935
+          ],
+          [
+            0.3466767364709903,
+            0.5419673647901196
+          ],
+          [
+            0.33487276644254926,
+            0.5419870665453491
+          ]
+        ],
+        "bytes": 84908
+      }
+    }
+  ]
+}

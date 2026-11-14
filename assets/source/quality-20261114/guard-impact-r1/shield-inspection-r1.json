@@ -1,0 +1,84 @@
+{
+  "kind": "shield",
+  "path": "assets/source/quality-20261114/guard-impact-r1/shield-master-r1.png",
+  "bytes": 1545992,
+  "sha256": "a287c84fb5d2b288494c4078041d2cdf7ab138774cfeb214ff523f64272330fa",
+  "width": 1536,
+  "height": 1024,
+  "hasAlpha": true,
+  "cells": [
+    {
+      "frame": 0,
+      "maxEdgeAlpha": 1,
+      "max32pxMarginAlpha": 1,
+      "visiblePixels": 4991,
+      "nonzeroPixels": 50432,
+      "rootPeak": 252,
+      "measuredRoot": [
+        189.24521181756572,
+        276.9644265687985
+      ]
+    },
+    {
+      "frame": 1,
+      "maxEdgeAlpha": 1,
+      "max32pxMarginAlpha": 1,
+      "visiblePixels": 15630,
+      "nonzeroPixels": 70416,
+      "rootPeak": 253,
+      "measuredRoot": [
+        198.20027519335255,
+        270.81538572429986
+      ]
+    },
+    {
+      "frame": 2,
+      "maxEdgeAlpha": 1,
+      "max32pxMarginAlpha": 6,
+      "visiblePixels": 50178,
+      "nonzeroPixels": 130081,
+      "rootPeak": 253,
+      "measuredRoot": [
+        197.83424170695164,
+        269.2200201728959
+      ]
+    },
+    {
+      "frame": 3,
+      "maxEdgeAlpha": 1,
+      "max32pxMarginAlpha": 5,
+      "visiblePixels": 53699,
+      "nonzeroPixels": 155111,
+      "rootPeak": 252,
+      "measuredRoot": [
+        196.78809569513538,
+        272.8151397960591
+      ]
+    },
+    {
+      "frame": 4,
+      "maxEdgeAlpha": 1,
+      "max32pxMarginAlpha": 2,
+      "visiblePixels": 34541,
+      "nonzeroPixels": 138043,
+      "rootPeak": 248,
+      "measuredRoot": [
+        191.63074482718142,
+        270.37887780080484
+      ]
+    },
+    {
+      "frame": 5,
+      "maxEdgeAlpha": 2,
+      "max32pxMarginAlpha": 2,
+      "visiblePixels": 5006,
+      "nonzeroPixels": 114575,
+      "rootPeak": 247.02745098039216,
+      "measuredRoot": [
+        173.2675952430586,
+        276.3569309944509
+      ]
+    }
+  ],
+  "accepted": true
+}

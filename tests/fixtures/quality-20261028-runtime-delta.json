@@ -2064,6 +2064,22 @@
       "pack": "units",
       "category": "unit",
       "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/guard-pan-impact-six-r1.webp",
+      "bytes": 36388,
+      "hash": "sha256-942c1e16236d6cd4139d22d4767f855dbc986501587827b8be6c4a2434cbb0e1",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/guard-shield-impact-six-r1.webp",
+      "bytes": 84908,
+      "hash": "sha256-f86c4ca4a23ba866663005b21f864bc299f30283600e5b5f20053ddfbca82952",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
     }
   ],
   "retired": [
@@ -14994,6 +15010,15 @@
         "/art/quality-20261114/vfx/king-exhaust-six-r2.webp"
       ],
       "logicalBytes": 83570
+    },
+    {
+      "date": "2026-11-14",
+      "scope": "Two material-only smartphone guard contact atlases, pan and shield. Actual incoming hit and current painted weapon socket; original mandatory fallback, mechanics, audio and save retained. Not a release, listening, whole-quality or device approval.",
+      "paths": [
+        "/art/quality-20261114/vfx/guard-pan-impact-six-r1.webp",
+        "/art/quality-20261114/vfx/guard-shield-impact-six-r1.webp"
+      ],
+      "logicalBytes": 121296
     }
   ]
 }

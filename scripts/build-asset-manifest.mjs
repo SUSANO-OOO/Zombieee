@@ -65,6 +65,7 @@ import { V100_BOSS_ATTACK_ART } from "../app/v100BossAttackArt.js";
 import { V100_MANUAL_IMPACT_ART } from "../app/v100ManualImpactArt.js";
 import { V100_PARTICLE_MATERIAL_ART } from "../app/v100ParticleMaterialArt.js";
 import { V100_KING_EXHAUST_ART } from "../app/v100KingExhaustArt.js";
+import { V100_GUARD_IMPACT_ART } from "../app/v100GuardImpactArt.js";
 import { V100_COMBAT_VFX_ART } from "../app/v100CombatVfx.js";
 import { V100_KUMAVERSON_GUARD_ART } from "../app/v100KumaversonPresentation.js";
 import { V100_FONT_ASSETS } from "../app/v100Typography.js";
@@ -215,6 +216,7 @@ sweep(V100_BOSS_ATTACK_ART, { pack: "units", category: "boss", criticality: "cri
 sweep(V100_MANUAL_IMPACT_ART, { pack: "units", category: "unit", criticality: "critical" });
 sweep(V100_PARTICLE_MATERIAL_ART, { pack: "campaign-core", category: "object", criticality: "critical" });
 sweep(V100_KING_EXHAUST_ART, { pack: "units", category: "unit", criticality: "critical" });
+sweep(V100_GUARD_IMPACT_ART, { pack: "units", category: "unit", criticality: "critical" });
 sweep(V100_COMBAT_VFX_ART, { pack: "campaign-core", category: "object", criticality: "critical" });
 sweep(STAGE_OBJECT_MANIFEST, { pack: "campaign-core", category: "object", criticality: "optional" });
 // These three supplies are direct renderer dependencies rather than entries in

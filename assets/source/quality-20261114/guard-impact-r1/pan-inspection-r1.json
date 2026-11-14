@@ -1,0 +1,84 @@
+{
+  "kind": "pan",
+  "path": "assets/source/quality-20261114/guard-impact-r1/pan-master-r1.png",
+  "bytes": 1151105,
+  "sha256": "35fde60994cb1206ce42606333591dcb663bf42b0b1da1dd2d9dda844abd19d8",
+  "width": 1536,
+  "height": 1024,
+  "hasAlpha": true,
+  "cells": [
+    {
+      "frame": 0,
+      "maxEdgeAlpha": 0,
+      "max32pxMarginAlpha": 1,
+      "visiblePixels": 1621,
+      "nonzeroPixels": 5891,
+      "rootPeak": 248.67450980392158,
+      "measuredRoot": [
+        177.55069380907943,
+        256.9786747113855
+      ]
+    },
+    {
+      "frame": 1,
+      "maxEdgeAlpha": 1,
+      "max32pxMarginAlpha": 1,
+      "visiblePixels": 7538,
+      "nonzeroPixels": 20840,
+      "rootPeak": 251.01176470588234,
+      "measuredRoot": [
+        179.11140929358197,
+        253.77593682761687
+      ]
+    },
+    {
+      "frame": 2,
+      "maxEdgeAlpha": 1,
+      "max32pxMarginAlpha": 1,
+      "visiblePixels": 26894,
+      "nonzeroPixels": 57178,
+      "rootPeak": 252,
+      "measuredRoot": [
+        192.1806494425248,
+        251.66229010234812
+      ]
+    },
+    {
+      "frame": 3,
+      "maxEdgeAlpha": 1,
+      "max32pxMarginAlpha": 2,
+      "visiblePixels": 16545,
+      "nonzeroPixels": 49016,
+      "rootPeak": 244.0705882352941,
+      "measuredRoot": [
+        182.69997440596714,
+        255.98466770273632
+      ]
+    },
+    {
+      "frame": 4,
+      "maxEdgeAlpha": 0,
+      "max32pxMarginAlpha": 1,
+      "visiblePixels": 662,
+      "nonzeroPixels": 22186,
+      "rootPeak": 217.98692810457516,
+      "measuredRoot": [
+        162.94078350809008,
+        258.3875309814542
+      ]
+    },
+    {
+      "frame": 5,
+      "maxEdgeAlpha": 1,
+      "max32pxMarginAlpha": 1,
+      "visiblePixels": 48,
+      "nonzeroPixels": 12621,
+      "rootPeak": 87.17647058823529,
+      "measuredRoot": [
+        182.43498972771866,
+        254.22937480199624
+      ]
+    }
+  ],
+  "accepted": true
+}

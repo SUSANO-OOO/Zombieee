@@ -287,8 +287,8 @@ test('the actual App draw receipt is published only after all15 joint parts pain
     +'const drewArticulatedWalk='+draw.initializer.getText(tree)+';'+genericPost.getText(tree)+post.getText(tree)+'return drewArticulatedWalk;}',
   {compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
   const history=new WeakMap();
-  const paint=new Function('drawV177JointPose','v177CaptureJointPose','fighterRenderAuditEnabled','recordAudit','fighterRenderAudit',
-    'return '+compiled)(drawV177JointPose,v177CaptureJointPose,true,true,history);
+  const paint=new Function('drawV177JointPose','v177CaptureJointPose','fighterRenderAuditEnabled','recordAudit','fighterRenderAudit','fighterShieldSockets',
+    'return '+compiled)(drawV177JointPose,v177CaptureJointPose,true,true,history,new WeakMap());
   for(const imageReady of [true,false]) {
     const {world,actor}=fixture(),plan=v177TurnedGetupPose(world,actor),r=contexts()[0],drawn=[];
     const receipt={jointGetupProgress:plan.getupProgress,jointGetupDrawSucceeded:false};history.set(actor,receipt);
@@ -296,6 +296,7 @@ test('the actual App draw receipt is published only after all15 joint parts pain
     assert.equal(paint(ctx,{naturalWidth:imageReady?512:0},'turned',plan,{w:r.width,h:r.height},r.frame,actor,{world}),imageReady);
     assert.equal(receipt.jointGetupDrawSucceeded,imageReady);
     assert.equal(receipt.jointDrawSucceeded,imageReady);
+    assert.equal(receipt.renderedGuardSocket,null,'the turned actor cannot acquire an allied guard socket');
     if(imageReady) {
       assert.equal(drawn.length,15);assert.equal(receipt.jointGetupPaintedAt,world.time);
       assert.equal(receipt.jointPaintedAt,world.time);
