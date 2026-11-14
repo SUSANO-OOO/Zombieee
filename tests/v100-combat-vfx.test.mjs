@@ -32,7 +32,10 @@ test('V1 effects have decoded stage and offline sources, preserving fractional a
    assert.ok(s.channels[3].mean>1&&s.channels[3].mean<230,path);
   }
   assert.ok(manifest.assets.some(a=>a.path===path&&a.criticality==='critical'));
-  for(const stageId of V100_STAGE_IDS)assert.ok(requiredBattleAssetPlan({stageId}).stageObjects.some(a=>a.id===id&&a.path===path),stageId);
+  for(const stageId of V100_STAGE_IDS){
+   const loaded=requiredBattleAssetPlan({stageId}).stageObjects.some(a=>a.id===id&&a.path===path);
+   assert.equal(loaded,id!=='v100-countercut',stageId+' '+id+' archived glyph must not decode in current battles');
+  }
  }
 });
 test('contact effects are finite, bounded, tied to battle time, and cleared with transient state',()=>{

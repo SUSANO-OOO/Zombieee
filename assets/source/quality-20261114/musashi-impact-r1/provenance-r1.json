@@ -1,0 +1,141 @@
+{
+  "generator": "scripts/build-v100-manual-impact-art.mjs",
+  "creator": "OpenAI built-in image_gen under Producer direction; deterministic smartphone WebP packaging by Codex",
+  "license": "Project-original generated material artwork under existing game asset policy; no third-party download",
+  "rights": {
+    "commercialUse": true,
+    "modification": true,
+    "redistribution": true,
+    "basis": "Original material-only contact created for this project"
+  },
+  "producerApproval": "Current smartphone goal requests bespoke manual ability VFX without geometric markers; candidate, not final motion/audio/device acceptance",
+  "source": {
+    "path": "assets/source/quality-20261114/musashi-impact-r1/master-r2.png",
+    "bytes": 1250507,
+    "sha256": "82e37592494fdbfd50e8a6ab33f2a7dc664519c3dbb1e0cf559e0a4b36f13a25"
+  },
+  "prompt": {
+    "path": "assets/source/quality-20261114/musashi-impact-r1/prompt-r2.txt",
+    "sha256": "b6a6804f478207b8dc624ed30e1f38ac588981192904f9be188760595179b9c3"
+  },
+  "generation": {
+    "mode": "built-in image_gen generation and referenced edit",
+    "model": "Selected by host; no model name asserted",
+    "characterReferences": []
+  },
+  "currentBody": {
+    "path": "/art/v100/joints/miyamoto-musashi-combat-r1.webp",
+    "sha256": "07a49d405b0396f31ac43fad5aa7ff44d26ff1589d8162d49f5a483399b97972",
+    "weaponBone": "weapon-0"
+  },
+  "calibration": {
+    "method": "For the first three contact-core frames, dense11x11 alpha-weighted luma maximum withinx100..300/y240..380, then local weighted centroid. The last three released-fragment frames retain the last ignition origin rather than pinning a traveling glint.",
+    "coreFrames": 3,
+    "sourceWindow": [
+      100,
+      240,
+      300,
+      380
+    ],
+    "safetyMargin": 32,
+    "maxMarginAlpha": 32
+  },
+  "cells": [
+    {
+      "frame": 0,
+      "maxMarginAlpha": 1,
+      "visiblePixels": 2749,
+      "anchor": [
+        0.4364410811558214,
+        0.6395923216776804
+      ]
+    },
+    {
+      "frame": 1,
+      "maxMarginAlpha": 1,
+      "visiblePixels": 8864,
+      "anchor": [
+        0.366181810689848,
+        0.6396365431623193
+      ]
+    },
+    {
+      "frame": 2,
+      "maxMarginAlpha": 1,
+      "visiblePixels": 20087,
+      "anchor": [
+        0.3095862470635818,
+        0.6415671413295014
+      ]
+    },
+    {
+      "frame": 3,
+      "maxMarginAlpha": 1,
+      "visiblePixels": 11852,
+      "anchor": [
+        0.3095862470635818,
+        0.6415671413295014
+      ]
+    },
+    {
+      "frame": 4,
+      "maxMarginAlpha": 1,
+      "visiblePixels": 1801,
+      "anchor": [
+        0.3095862470635818,
+        0.6415671413295014
+      ]
+    },
+    {
+      "frame": 5,
+      "maxMarginAlpha": 1,
+      "visiblePixels": 144,
+      "anchor": [
+        0.3095862470635818,
+        0.6415671413295014
+      ]
+    }
+  ],
+  "output": {
+    "id": "v100-musashi-manual-impact",
+    "path": "/art/quality-20261114/vfx/musashi-contact-six-r2.webp",
+    "hash": "sha256-9abf2cfb54113a376e7b78c96dcfdcb61e5cf3010469b43a8ab75ac10ee29aab",
+    "width": 768,
+    "height": 512,
+    "columns": 3,
+    "rows": 2,
+    "worldSize": 128,
+    "anchors": [
+      [
+        0.4364410811558214,
+        0.6395923216776804
+      ],
+      [
+        0.366181810689848,
+        0.6396365431623193
+      ],
+      [
+        0.3095862470635818,
+        0.6415671413295014
+      ],
+      [
+        0.3095862470635818,
+        0.6415671413295014
+      ],
+      [
+        0.3095862470635818,
+        0.6415671413295014
+      ],
+      [
+        0.3095862470635818,
+        0.6415671413295014
+      ]
+    ],
+    "bytes": 52570
+  },
+  "runtimeAssetCount": 1,
+  "logicalBytes": 52570,
+  "distinctBytes": 52570,
+  "estimatedDecodedRgbaBytes": 1572864,
+  "scope": "Material-only contact at the existing actual counter or fallback damage target. Existing dual blades, body, contact point, damage, range, clock, audio, rewards and save retained. Missing or late optional art uses the existing physical contact raster, never the former X glyph. Old glyph file remains retained but is not decoded for current V1 battles."
+}

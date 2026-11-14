@@ -1,6 +1,7 @@
 import {clearV100GuardActivations,drawV100GuardActivations,getV100GuardActivationsSnapshot} from './v100GuardActivationVfx.js';
 import { drawV100Explosion } from "./v100CombatVfx.js";
 import {drawV100ChihaFinalBurst,v100ChihaFinalPaintScale,V100_CHIHA_FINAL_BURST_DURATION} from "./v100ChihaFinalBurstVfx.js";
+import {drawV100MusashiImpact} from './v100ManualImpactVfx.js';
 export {V100_CHIHA_FINAL_BURST_DURATION};
 
 const MAX_ADVANCED_EFFECTS = 64;
@@ -88,11 +89,16 @@ export function drawV100AdvancedAbilityEffects(ctx, objects, world) {
   for (const effect of active(world)) {
     if (effect.pendingOrigin || effect.type==="mrs-grenade-impact" && effect.finalRound===true) continue;
     const elapsed = Math.max(0, world.time - effect.startedAt); const progress = Math.max(0, Math.min(1, elapsed / effect.duration)); const renderEffect = { ...effect, elapsed };
+    if(effect.type==='musashi-crosscut'){
+      // This actual damage-owned entry chooses once, including the physical
+      // contact fallback. Never return to the former X marker on a late decode.
+      drawV100MusashiImpact(ctx,objects,effect,elapsed);continue;
+    }
     if (effect.type === "mrs-grenade-flight" || effect.type === "zakimiya-bottle") {
       const source = image(objects, effect.type === "mrs-grenade-flight" ? "v100-grenade-projectile" : "v100-fire-whisky-projectile"); if (!source) continue;
       const x = effect.originX + (effect.targetX - effect.originX) * progress; const y = effect.originY + (effect.targetY - effect.originY) * progress - Math.sin(progress * Math.PI) * 30; const height = effect.type === "zakimiya-bottle" ? 30 : 18 * source.naturalHeight / source.naturalWidth; const width = effect.type === "zakimiya-bottle" ? 30 * source.naturalWidth / source.naturalHeight : 18; ctx.save(); ctx.translate(x, y); ctx.rotate(Math.atan2(effect.targetY - effect.originY, effect.targetX - effect.originX)); ctx.drawImage(source, -width / 2, -height, width, height); ctx.restore(); continue;
     }
-    const id = effect.type === "tky-lightblade" ? "v100-lightblade" : effect.type === "musashi-crosscut" ? "v100-countercut" : effect.type === "mayo-dust" ? "v100-dust" : "v100-explosion"; const source = image(objects, id); if (!source) continue;
-    const size = effect.type === "tky-lightblade" ? 180 : effect.type === "musashi-crosscut" ? 90 : effect.type === "mayo-dust" ? 36 : effect.size ?? 64; if (effect.type === "tky-lightblade" || effect.type === "musashi-crosscut") drawCell(ctx, source, renderEffect, size, size, effect.type === "musashi-crosscut"); else if (effect.type === "zakimiya-impact" || effect.type === "mrs-grenade-impact") drawV100Explosion(ctx, objects, { ...renderEffect, scale: effect.finalRound ? "medium" : "small" }, effect.x, effect.y, .6, 1); else if (effect.type === "mayo-dust") { const progress = Math.max(0, Math.min(1, elapsed / effect.duration)); const width = 36 * (.7 + .6 * progress); const height = 12 * (1 + .5 * progress); ctx.save(); ctx.globalAlpha = .28 * (1 - progress) ** 2; ctx.drawImage(source, effect.x - width / 2, effect.y - height * .55, width, height); ctx.restore(); } else ctx.drawImage(source, effect.x - size / 2, effect.y - size, size, size);
+    const id = effect.type === "tky-lightblade" ? "v100-lightblade" : effect.type === "mayo-dust" ? "v100-dust" : "v100-explosion"; const source = image(objects, id); if (!source) continue;
+    const size = effect.type === "tky-lightblade" ? 180 : effect.type === "mayo-dust" ? 36 : effect.size ?? 64; if (effect.type === "tky-lightblade") drawCell(ctx, source, renderEffect, size, size); else if (effect.type === "zakimiya-impact" || effect.type === "mrs-grenade-impact") drawV100Explosion(ctx, objects, { ...renderEffect, scale: effect.finalRound ? "medium" : "small" }, effect.x, effect.y, .6, 1); else if (effect.type === "mayo-dust") { const progress = Math.max(0, Math.min(1, elapsed / effect.duration)); const width = 36 * (.7 + .6 * progress); const height = 12 * (1 + .5 * progress); ctx.save(); ctx.globalAlpha = .28 * (1 - progress) ** 2; ctx.drawImage(source, effect.x - width / 2, effect.y - height * .55, width, height); ctx.restore(); } else ctx.drawImage(source, effect.x - size / 2, effect.y - size, size, size);
   }
 }

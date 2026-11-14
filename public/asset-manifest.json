@@ -220,6 +220,14 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/quality-20261114/vfx/musashi-contact-six-r2.webp",
+      "bytes": 52570,
+      "hash": "sha256-9abf2cfb54113a376e7b78c96dcfdcb61e5cf3010469b43a8ab75ac10ee29aab",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/quality-20261114/vfx/ooguchi-attack-six-r1.webp",
       "bytes": 309100,
       "hash": "sha256-97918df7b487ca0a65be8929bc7621730941823d3f99b6096601f1bdcecaccba",

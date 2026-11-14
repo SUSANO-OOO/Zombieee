@@ -1,0 +1,30 @@
+{
+  "masterPath": "assets/source/quality-20261114/musashi-impact-r1/master-r2.png",
+  "masterSha256": "82e37592494fdbfd50e8a6ab33f2a7dc664519c3dbb1e0cf559e0a4b36f13a25",
+  "promptPath": "assets/source/quality-20261114/musashi-impact-r1/prompt-r2.txt",
+  "originalPromptPath": "assets/source/quality-20261114/musashi-impact-r1/prompt-r1.txt",
+  "runtimeWidth": 768,
+  "runtimeHeight": 512,
+  "worldSize": 128,
+  "calibration": {
+    "method": "For the first three contact-core frames, dense11x11 alpha-weighted luma maximum withinx100..300/y240..380, then local weighted centroid. The last three released-fragment frames retain the last ignition origin rather than pinning a traveling glint.",
+    "coreFrames": 3,
+    "sourceWindow": [
+      100,
+      240,
+      300,
+      380
+    ],
+    "safetyMargin": 32,
+    "maxMarginAlpha": 32
+  },
+  "selectedInspection": "assets/source/quality-20261114/musashi-impact-r1/inspection-r2.json",
+  "rejectedSources": [
+    {
+      "path": "assets/source/quality-20261114/musashi-impact-r1/master-r1.png",
+      "inspection": "assets/source/quality-20261114/musashi-impact-r1/inspection-r1.json",
+      "reason": "Frame4 margin alpha190 exceeds existing32; no threshold relaxation or alpha clipping."
+    }
+  ],
+  "scope": "Original material-only dual-sword contact, no new person or weapon. Existing counter/fallback receipts, target point, damage, timing, audio and save retained."
+}

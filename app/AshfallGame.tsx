@@ -2693,12 +2693,12 @@ function applyIncomingHumanDamage(
         counterTarget.hp = Math.max(0, counterTarget.hp - strikeDamage);
         noteV102GoreImpact(g,counterTarget,{weapon:target.kind,originX:target.x,originY:target.y,damage:applied});
         recordUnitDamage(g, target.kind, applied);
-        if (g.definition.missionConfig.v100StageNumber) queueV100AdvancedAbilityEffect(g, { ownerId: target.id, activationId: counter.event?.activationId ?? target.manualAbility.activationId, type: "musashi-crosscut", targetId: counterTarget.id, x: counterTarget.x, y: counterTarget.y - 30, duration: .22 });
+        if (g.definition.missionConfig.v100StageNumber) queueV100AdvancedAbilityEffect(g, { ownerId: target.id, activationId: counter.event?.activationId ?? target.manualAbility.activationId, type: "musashi-crosscut", targetId: counterTarget.id, x: counterTarget.x, y: counterTarget.y - 30, duration: .22, direction: counterTarget.x>=target.x?1:-1 });
         counterTarget.stunned = Math.max(counterTarget.stunned, definition.counterStunSeconds);
         counterTarget.flash = Math.max(counterTarget.flash, .3);
         counterTarget.knock = Math.max(counterTarget.knock, isBossFighter(counterTarget) ? 5 : 14);
         addDamageText(g, counterTarget.x, counterTarget.y - 58, String(Math.round(applied)), .92, "#d7efff");
-        addParticles(g, counterTarget.x, counterTarget.y - 30, "#c7e4ef", 18);
+        if (!g.definition.missionConfig.v100StageNumber) addParticles(g, counterTarget.x, counterTarget.y - 30, "#c7e4ef", 18);
       }
       return Object.freeze({
         targetDamage: 0,
@@ -20279,7 +20279,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               owner.x += Math.sign(target.x - owner.x) * Math.min(26, Math.max(0, Math.abs(target.x - owner.x) - owner.range));
               addDamageText(g, target.x, target.y - 54, String(Math.round(damage)), .9, "#d7efff");
               if (!g.definition.missionConfig.v100StageNumber) addParticles(g, target.x, target.y - 34, "#c7e4ef", 18);
-              else queueV100AdvancedAbilityEffect(g, { ownerId: owner.id, activationId: owner.manualAbility?.activationId ?? 0, type: "musashi-crosscut", targetId: target.id, x: target.x, y: target.y - 30, duration: .22 });
+              else queueV100AdvancedAbilityEffect(g, { ownerId: owner.id, activationId: owner.manualAbility?.activationId ?? 0, type: "musashi-crosscut", targetId: target.id, x: target.x, y: target.y - 30, duration: .22, direction: target.x>=owner.x?1:-1 });
               playManualAbilityTimelineCue(owner, event.mode === "fallback" ? "fallbackCross" : "counter", target.x, event.mode === "fallback" ? "fallback-cross" : "counter", {
                 priority: 88,
                 cooldownMs: 180,
