@@ -18,6 +18,8 @@ import { v100BasePresentationFor } from "./v100BasePresentation.js";
 import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
 import { V177_JOINT_ATLASES } from "./v177JointPresentation.js";
 import { V100_BOSS_DEFEAT_ART } from "./v100BossDefeatArt.js";
+import { V100_BOSS_ATTACK_ART } from "./v100BossAttackArt.js";
+import { V100_MANUAL_IMPACT_ART } from "./v100ManualImpactArt.js";
 
 export const BATTLE_SUPPORT_ASSET_PATHS = Object.freeze({
   pod: "/tactical-drop-pod-v1.png",
@@ -55,6 +57,8 @@ export function requiredBattleAssetPlan({
   basePresentationStageNumber = null,
   useCharacterPortraitCards = false,
   verifiedBossDefeatPaths = [],
+  verifiedBossAttackPaths = [],
+  verifiedManualImpactPaths = [],
 } = {}) {
   const stage = CAMPAIGN_STAGE_BY_ID[stageId];
   const v100Stage = V100_STAGE_BY_ID[stageId] ?? null;
@@ -105,7 +109,13 @@ export function requiredBattleAssetPlan({
   const bossDefeatObjects = includeV100Sprites && v100Stage
     ? Object.entries(V100_BOSS_DEFEAT_ART).filter(([kind,art])=>enemyKinds.includes(kind)&&verifiedBossDefeatPaths.includes(art.path))
       .map(([,art])=>({id:art.id,path:art.path,runtimeUsage:"battle-overlay",optional:true})) : [];
-  const allStageObjects = [...manifestObjects, ...extraMissionObjects, ...v100MissionObjectEntries, ...v100VfxEntries, ...vehicleObjects, ...researchObjects, ...nodeObjects, ...assaultObjects, ...defenseObjects, ...combatVfx, ...tataraObjects, ...bossDefeatObjects];
+  const bossAttackObjects = includeV100Sprites && v100Stage
+    ? Object.entries(V100_BOSS_ATTACK_ART).filter(([kind,art])=>enemyKinds.includes(kind)&&verifiedBossAttackPaths.includes(art.path))
+      .map(([,art])=>({id:art.id,path:art.path,runtimeUsage:"battle-overlay",optional:true})) : [];
+  const manualImpactObjects = includeV100Sprites && v100Stage
+    ? Object.entries(V100_MANUAL_IMPACT_ART).filter(([kind,art])=>formationKinds.includes(kind)&&verifiedManualImpactPaths.includes(art.path))
+      .map(([,art])=>({id:art.id,path:art.path,runtimeUsage:"battle-overlay",optional:true})) : [];
+  const allStageObjects = [...manifestObjects, ...extraMissionObjects, ...v100MissionObjectEntries, ...v100VfxEntries, ...vehicleObjects, ...researchObjects, ...nodeObjects, ...assaultObjects, ...defenseObjects, ...combatVfx, ...tataraObjects, ...bossDefeatObjects, ...bossAttackObjects, ...manualImpactObjects];
   const stageObjects = unique(allStageObjects.map((entry) => entry.id))
     .map((id) => allStageObjects.find((entry) => entry.id === id))
     .map((entry) => frozenEntry({

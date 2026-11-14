@@ -1,0 +1,22 @@
+{
+  "masterSha256": "438a5c9c09be37e93e05032e8d09a4ddf7b5795992970c69d808026b59cf61ad",
+  "promptPath": "assets/source/quality-20261114/tatara-impact-r1/generation-prompt-r1.txt",
+  "anchorX": 0.5,
+  "anchorY": 0.8515625,
+  "calibration": {
+    "contactOrigin": {
+      "x": 256,
+      "y": 436
+    },
+    "note": "Generated contact baseline is lower than prompt request. Anchor calibrated to selected painted contact baseline; no pixels moved, cropped or alpha-thresholded. Existing measured hammer socket and 180px placement remain the runtime origin.",
+    "cellBorderAlphaMax": [
+      1,
+      1,
+      1,
+      3,
+      1,
+      1
+    ],
+    "selection": "Candidate for original-speed smartphone observation, not yet visual acceptance"
+  }
+}

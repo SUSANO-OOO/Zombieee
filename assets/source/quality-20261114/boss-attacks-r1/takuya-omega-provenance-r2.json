@@ -1,0 +1,43 @@
+{
+  "generator": "scripts/build-v100-boss-attack-art.mjs",
+  "creator": "OpenAI built-in image_gen under Producer direction; deterministic WebP packaging by Codex",
+  "license": "Project-original generated artwork under the existing game asset policy; no third-party download",
+  "rights": {
+    "commercialUse": true,
+    "modification": true,
+    "redistribution": true,
+    "basis": "Original effect artwork created for this project"
+  },
+  "producerApproval": "Current smartphone goal requests bespoke animated boss attacks; candidate, not final visual/audio/device acceptance",
+  "source": {
+    "path": "assets/source/quality-20261114/boss-attacks-r1/takuya-omega-r2-master.png",
+    "bytes": 2174564,
+    "sha256": "940eb6501dca8580db0818c25f4348bd12f80571ca34fc828052f6b0722f3dfd"
+  },
+  "prompt": {
+    "path": "assets/source/quality-20261114/boss-attacks-r1/takuya-omega-r2-edit-prompt.txt",
+    "sha256": "f2448614c548c25402d9e06a2460d86f48dc51a590efe4ad6d1ffde5189e610c"
+  },
+  "generation": {
+    "mode": "built-in image_gen edit",
+    "model": "Selected by host; no model name asserted",
+    "characterReferences": [],
+    "note": "R1 failed unchanged4px alpha<=32 edge gate at lower-left cell104 pixels. Built-in image_gen R2 makes only cell-containment correction; R1 retained. Body, actual sword and gameplay unchanged."
+  },
+  "output": {
+    "path": "/art/quality-20261114/vfx/takuya-omega-attack-six-r2.webp",
+    "bytes": 429024,
+    "sha256": "c86084b9339836f86cf857da8c95bd07107b755250c6e239ffbad9aae4f38437",
+    "width": 1536,
+    "height": 1024,
+    "columns": 3,
+    "rows": 2,
+    "anchorX": 0.5,
+    "anchorY": 0.87890625
+  },
+  "runtimeAssetCount": 1,
+  "logicalBytes": 429024,
+  "distinctBytes": 429024,
+  "estimatedDecodedRgbaBytes": 6291456,
+  "scope": "Optional visual aftermath for takuya-omega only; body, warnings, damage, timing, audio, rewards and save are unchanged"
+}
