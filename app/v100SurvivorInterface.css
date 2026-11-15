@@ -81,7 +81,13 @@
 }
 #v100-campaign .v100-field-map-pane { border: 0; border-right: 1px solid #a68c5e; background: #151d16ba; padding: 7px; }
 #v100-campaign .v100-field-map-title { border: 0; padding-bottom: 5px; border-bottom: 1px dashed #b9a373; color: #ffe4ac; }
+#v100-campaign .v100-command-formation:not(.picker-open) .v100-field-map-title { flex-shrink: 0; }
 #v100-campaign .v100-field-map-intel { border-left: 3px solid #ae5136; background: #0a120b99; }
+#v100-campaign .v100-command-formation:not(.picker-open) .v100-briefing-empty {
+  flex: 0 0 auto; min-height: 0; padding: 4px 0; gap: 4px; place-content: start;
+}
+#v100-campaign .v100-command-formation:not(.picker-open) .v100-briefing-empty strong { font-size: 14px; line-height: 1.35; }
+#v100-campaign .v100-command-formation:not(.picker-open) .v100-briefing-empty span { font-size: 12px; line-height: 1.4; }
 #v100-campaign .v100-briefing-person > .v100-crew-portrait { flex: 0 0 64px; width: 64px; height: 106px; background: #87917826; }
 #v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-track {
   counter-reset: callin-slot;
@@ -154,6 +160,7 @@
 #v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot.empty .v100-slot-meta b {
   display: block; padding: 1px; border-bottom: 2px solid #806433;
   background: #cfb67b; color: #243023; font-weight: 700; line-height: 1.15;
+  word-break: keep-all; overflow-wrap: normal;
 }
 #v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot.empty.selected {
   border-color: #ffe2a0; border-top-color: #ffe2a0; box-shadow: inset 0 0 0 2px #f2cd77;
