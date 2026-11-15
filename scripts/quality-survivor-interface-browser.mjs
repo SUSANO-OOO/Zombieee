@@ -95,6 +95,11 @@ try{
        row.equipmentEffect=await page.locator('.v100-equipment-focus-heading p').evaluate(n=>{const r=n.getBoundingClientRect(),b=n.closest('.v100-equipment-focus-body').getBoundingClientRect();return {text:n.textContent,visible:r.width>0&&r.height>0&&r.top>=b.top&&r.bottom<=b.bottom+1};});
        assert.ok(row.equipmentEffect.text&&row.equipmentEffect.visible,JSON.stringify(row.equipmentEffect));
      }
+     if(tab==='車両'){
+       await page.waitForFunction(()=>document.querySelector('.v100-vehicle-upgrade-art img')?.complete);
+       row.vehicleImage=await page.locator('.v100-vehicle-upgrade-art img').evaluate(image=>{const r=image.getBoundingClientRect();return {complete:image.complete,naturalWidth:image.naturalWidth,width:r.width,height:r.height};});
+       assert.ok(row.vehicleImage.naturalWidth>0&&row.vehicleImage.width>0&&row.vehicleImage.height>0,'Vehicle art must load and occupy visible space before capture');
+     }
      await page.screenshot({path:path.join(out,label+'-'+surface+'.png')});
    }
    await page.getByRole('button',{name:'メニュー',exact:true}).click();

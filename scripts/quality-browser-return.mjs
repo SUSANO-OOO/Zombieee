@@ -49,6 +49,7 @@ try{
    await finishV100TitleIntro(page);assert.equal(await page.getByRole('button',{name:'ブラウザで遊ぶ',exact:true}).count(),0);await page.screenshot({path:path.join(out,`${profile}-return-title.png`)});
    if(!before){
     await page.getByRole('button',{name:'データ管理',exact:true}).click();
+    await page.getByRole('button',{name:'オフライン用データ',exact:true}).click();
     await page.getByText('ホーム画面で遊ぶ',{exact:true}).click();await page.getByText(iphone?'右上の「追加」を押す':'「インストール」または「ホーム画面に追加」を押す',{exact:true}).waitFor();
     await page.locator('.pwa-return-install-help').scrollIntoViewIfNeeded();
     const help=await page.locator('.pwa-return-install-help').evaluate(el=>{const r=el.getBoundingClientRect(),frame=el.closest('.v100-data-scroll').getBoundingClientRect();return {top:r.top,bottom:r.bottom,height:r.height,frameTop:frame.top,frameBottom:frame.bottom};});

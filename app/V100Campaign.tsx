@@ -1525,20 +1525,26 @@ function SupportVehicleView({ save, vehicleOnly, returnLabel, onBack, onPurchase
 }
 
 function DataManagementView({ save, notice, onBack, onBackup, onNewGameBackup, onImport, onLegacyHistory }: { save: Save; notice: string; onBack: () => void; onBackup: () => void; onNewGameBackup: () => Promise<void>; onImport: (file: File | undefined) => void; onLegacyHistory: (file: File | undefined) => void }) {
-  return <div className="v100-modal-backdrop" data-v100-surface="data" role="presentation"><section className="v100-modal v100-data-modal" role="dialog" aria-modal="true" aria-labelledby="v100-data-title">
+  const [view, setView] = useState<"save" | "offline" | "legacy">("save");
+  const sections = [{ id: "save", label: "進行の保存" }, { id: "offline", label: "オフライン用データ" }, { id: "legacy", label: "旧版の引継ぎ" }] as const;
+  return <div className="v100-modal-backdrop" data-v100-surface="data" role="presentation"><section className="v100-modal v100-data-modal" data-data-view={view} role="dialog" aria-modal="true" aria-labelledby="v100-data-title">
     <div className="v100-panel-heading"><div><span className="v100-kicker">戦闘記録</span><h2 id="v100-data-title">データ管理</h2></div><button type="button" onClick={onBack}>閉じる</button></div>
-    <div className="v100-data-scroll" tabIndex={0} aria-label="保存内容と過去のプレイ履歴">
-      {notice && <p className="v100-notice v100-data-feedback" role="status">{notice}</p>}
-      <p>この端末のブラウザにセーブしている。別の場所にも残すなら「セーブを書き出す」を押そう。</p>
-      <dl className="v100-data-summary"><div><dt>主人公</dt><dd>{save.playerName}</dd></div><div><dt>クリア済みステージ</dt><dd>{save.completedStageIds.length} / {V100_STAGES.length}</dd></div><div><dt>保存状態</dt><dd>保管済み</dd></div><div><dt>最終更新</dt><dd>{new Date(save.updatedAt).toLocaleString("ja-JP")}</dd></div></dl>
-      <article><h3>過去のプレイ履歴</h3><p>旧版の書き出しデータで引き継ぎ特典の対象か確認します。現在の進行・残高・設定は変更しません。</p><label className="v100-legacy-history-file">旧版のプレイ履歴を選ぶ<input type="file" accept="application/json,.json" onChange={event => onLegacyHistory(event.currentTarget.files?.[0])} /></label></article>
-      <button type="button" onClick={() => void onNewGameBackup()}>「初めから」の直前のセーブを書き出す</button>
-      <div data-v100-pwa-storage />
+    <nav className="v100-data-tabs" aria-label="データ管理の内容">{sections.map(section => <button type="button" key={section.id} aria-pressed={view === section.id} onClick={() => setView(section.id)}>{section.label}</button>)}</nav>
+    {notice && <p className="v100-notice v100-data-feedback" role="status">{notice}</p>}
+    <div className="v100-data-scroll" tabIndex={0} aria-label={sections.find(section => section.id === view)?.label}>
+      <section className="v100-data-panel" hidden={view !== "save"} aria-label="進行の保存">
+        <dl className="v100-data-summary"><div><dt>主人公</dt><dd>{save.playerName}</dd></div><div><dt>クリア済みステージ</dt><dd>{save.completedStageIds.length} / {V100_STAGES.length}</dd></div><div><dt>保存状態</dt><dd>保管済み</dd></div><div><dt>最終更新</dt><dd>{new Date(save.updatedAt).toLocaleString("ja-JP")}</dd></div></dl>
+        <p>この端末のブラウザにセーブしている。別の場所にも残すなら「セーブを書き出す」を押そう。</p>
+        <button type="button" onClick={() => void onNewGameBackup()}>「初めから」の直前のセーブを書き出す</button>
+      </section>
+      <section className="v100-data-panel" hidden={view !== "offline"} aria-label="オフライン用データ"><div data-v100-pwa-storage /></section>
+      <section className="v100-data-panel" hidden={view !== "legacy"} aria-label="旧版の引継ぎ"><article><h3>過去のプレイ履歴</h3><p>旧版の書き出しデータで引き継ぎ特典の対象か確認します。現在の進行・残高・設定は変更しません。</p><label className="v100-legacy-history-file">旧版のプレイ履歴を選ぶ<input type="file" accept="application/json,.json" onChange={event => onLegacyHistory(event.currentTarget.files?.[0])} /></label></article></section>
     </div>
-    <div className="v100-data-actions"><button className="v100-primary" type="button" onClick={onBackup}>セーブを書き出す</button><label className="v100-file-button">セーブを復元<input type="file" accept="application/json" onChange={(event) => onImport(event.currentTarget.files?.[0])} /></label></div>
-    <small className="v100-data-note">復元すると、進行・育成・装備・CAPS・設定が、選んだファイルの状態に戻る。引き継ぎ特典の受取済み記録は残り、重ねては受け取れない。復元に失敗したときは、現在のセーブを変更しない。</small>
+    {view === "save" && <><div className="v100-data-actions"><button className="v100-primary" type="button" onClick={onBackup}>セーブを書き出す</button><label className="v100-file-button">セーブを復元<input type="file" accept="application/json" onChange={(event) => onImport(event.currentTarget.files?.[0])} /></label></div>
+    <small className="v100-data-note">復元すると、進行・育成・装備・CAPS・設定が、選んだファイルの状態に戻る。引き継ぎ特典の受取済み記録は残り、重ねては受け取れない。復元に失敗したときは、現在のセーブを変更しない。</small></>}
   </section></div>;
 }
+
 
 function RewardSummaryView({ result }: { result: Record<string, unknown> | null }) {
   const summary = v100RewardPresentationFor(result);
