@@ -160,7 +160,7 @@
 
 /* Title feedback remains visible after a successful save restore. */
 #v100-campaign > .v100-title-feedback {
-  position: absolute; z-index: 6; left: clamp(12px,2vw,24px);
+  position: absolute; z-index: 6; top: auto; transform: none; left: clamp(12px,2vw,24px);
   bottom: calc(70px + env(safe-area-inset-bottom,0px));
   box-sizing: border-box; width: min(40vw,380px); max-height: 82px;
   overflow-y: auto; margin: 0; padding: 8px 11px;
