@@ -16,14 +16,21 @@
       "sha256": "043d5a52d1dc1dfd67437b55b714b7fd629031153ac579b9fdedc5396c037f99",
       "license": "CC0-1.0",
       "creator": "Kenney"
+    },
+    {
+      "path": "assets/source/quality-20261116/audio/kenney-sci-fi/License.txt",
+      "sha256": "a9767b25c3533f69d03af136480efad08efba19a9f0d89616992b34c79fd6186",
+      "license": "CC0-1.0",
+      "creator": "Kenney",
+      "page": "https://kenney.nl/assets/sci-fi-sounds"
     }
   ],
   "recipe": {
     "path": "assets/source/quality-20261114/audio/manual-foley-r1/recipe.json",
-    "sha256": "dfffa5de84847d1107e97d075560dc6192d56cacb84f83f744014167ac583895"
+    "sha256": "1a6eb3ec72741d075e42569d620ce85ad06c7bae99537040567f234f16eba478"
   },
   "authorization": "Current smartphone quality goal: replace inappropriate electronic preparation sounds with character-specific material foley.",
-  "adaptation": "Existing licensed recordings only; source masters, exact layer timing/filter/dynamics and hashes retained. No voice, new contact event or actor substitution.",
+  "adaptation": "Licensed Kenney material and sci-fi sound samples; source masters, exact layer timing/filter/dynamics and hashes retained. No voice, new contact event or actor substitution.",
   "subjectiveListening": "not performed; implementation candidate, not final sound or physical-speaker acceptance",
   "formats": {
     "preferred": "mp3",
@@ -1146,6 +1153,218 @@
           "path": "public/audio/quality-20261114/manual/miyamoto-musashi-preparation-r1.ogg",
           "bytes": 5384,
           "sha256": "e2075f6c925ac5f9ea36e56cd424a4eeaf33a919f08bddff4ede11b2d3db96e2"
+        }
+      ]
+    },
+    {
+      "id": "v105-fist-wave-charge",
+      "activationRoot": "v105-fist-wave-charge",
+      "kind": "brawler",
+      "displayName": "パイセン",
+      "approvedWeapon": "素手の拳波",
+      "duration": 0.22,
+      "preparationEndsBefore": 0.26,
+      "firstAction": "Existing action begins after 0.26 seconds; no timing edit.",
+      "meaning": "拳を構える衣擦れから圧縮空気が立ち上がる。拳波の発射・命中・声は既存の合図を維持する。",
+      "master": {
+        "path": "assets/source/quality-20261114/audio/manual-foley-r1/brawler-pressure-preparation-r1.wav",
+        "bytes": 21164,
+        "sha256": "1cb4f1cee6145922332da2bfceac70c0dd9263fa2448614291b43e628f2adf73"
+      },
+      "layers": [
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/cloth2.ogg",
+          "sourceStart": 0.015,
+          "clip": 0.09,
+          "at": 0,
+          "gain": 0.25,
+          "highpassHz": 180,
+          "lowpassHz": 4200,
+          "fadeIn": 0.003,
+          "fadeOut": 0.025,
+          "role": "拳を構える動作",
+          "sha256": "8a7451193c38bc05483aec25dd193e163a15d44cf7fff04ac7912573231b0201",
+          "rate": 1
+        },
+        {
+          "path": "assets/source/quality-20261116/audio/kenney-sci-fi/thrusterFire_000.ogg",
+          "sourceStart": 0.6,
+          "clip": 0.2,
+          "at": 0.012,
+          "gain": 0.8,
+          "highpassHz": 180,
+          "lowpassHz": 4800,
+          "fadeIn": 0.04,
+          "fadeOut": 0.045,
+          "role": "圧縮空気の立ち上がり",
+          "sha256": "0fdc474d93f209debf1fc4ea77765a669dcb7676db31b4d8a0a509685bccf374",
+          "rate": 1
+        },
+        {
+          "path": "assets/source/quality-20261116/audio/kenney-sci-fi/spaceEngineLow_003.ogg",
+          "sourceStart": 1.05,
+          "clip": 0.18,
+          "at": 0.012,
+          "gain": 0.16,
+          "highpassHz": 60,
+          "lowpassHz": 780,
+          "fadeIn": 0.025,
+          "fadeOut": 0.035,
+          "role": "低い圧力の厚み",
+          "sha256": "e8f7ce4dbc20b5aeead35b94f1c8927b0baa416edaa5b39f1699703031111488",
+          "rate": 1
+        }
+      ],
+      "dynamics": {
+        "threshold": 0.12,
+        "ratio": 2.5,
+        "makeup": 2,
+        "attack": 4,
+        "release": 55,
+        "peakLimit": 0.85,
+        "masterScale": 0.8733897621019245,
+        "targetRms": 0.08071062
+      },
+      "filterComplex": "[0:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.015:duration=0.09,asetpts=PTS-STARTPTS,highpass=f=180,lowpass=f=4200,volume=0.25,afade=t=in:st=0:d=0.003,afade=t=out:st=0.065:d=0.025,adelay=0,apad=whole_len=10560,atrim=end=0.22[l0];[1:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.6:duration=0.2,asetpts=PTS-STARTPTS,highpass=f=180,lowpass=f=4800,volume=0.8,afade=t=in:st=0:d=0.04,afade=t=out:st=0.155:d=0.045,adelay=12,apad=whole_len=10560,atrim=end=0.22[l1];[2:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=1.05:duration=0.18,asetpts=PTS-STARTPTS,highpass=f=60,lowpass=f=780,volume=0.16,afade=t=in:st=0:d=0.025,afade=t=out:st=0.145:d=0.035,adelay=12,apad=whole_len=10560,atrim=end=0.22[l2];[l0][l1][l2]amix=inputs=3:duration=longest,volume=3,apad=whole_len=10560,atrim=end=0.22,acompressor=threshold=0.12:ratio=2.5:makeup=2:attack=4:release=55:knee=2.82843,alimiter=limit=0.85:level=0,volume=0.87338976,afade=t=out:st=0.202:d=0.018[out]",
+      "reference": {
+        "path": "public/audio/v105/fist-wave-charge.mp3",
+        "bytes": 5059,
+        "sha256": "366f1fd9b6d96129b39423f5f0a95fe500d006cf296ede64758b4a593453d2e0"
+      },
+      "decodedMaster": {
+        "seconds": 0.22,
+        "peak": 0.25811767578125,
+        "rms": 0.080710692712233,
+        "firstAboveMinus60db": 0.017375,
+        "lastAboveMinus60db": 0.21372916666666666,
+        "first100msRms": 0.07153049922954932,
+        "last10msRms": 0.002265862957335225,
+        "sha256": "0bf4f54b4a4e7e18fe390179fa10f4c7a1781426dc0f1b62133dd3bb75737b80"
+      },
+      "subjectiveListening": "not performed; production candidate only",
+      "encodings": [
+        {
+          "path": "public/audio/quality-20261114/manual/brawler-pressure-preparation-r1.mp3",
+          "bytes": 5780,
+          "sha256": "098f5e996ce18975c5234971b36c12783c8b8638db2c710012239730d1cad0b2"
+        },
+        {
+          "path": "public/audio/quality-20261114/manual/brawler-pressure-preparation-r1.ogg",
+          "bytes": 6319,
+          "sha256": "b835b5e7e983dee80bd122e8d399e585b2a3586dc14f8bc6b91246ee2002d385"
+        }
+      ]
+    },
+    {
+      "id": "ability-tky-light-blade-charge",
+      "activationRoot": "ability-tky-light-blade-charge",
+      "kind": "tky",
+      "displayName": "TKY",
+      "approvedWeapon": "ピンク色のライトセイバーのような光刃",
+      "duration": 0.56,
+      "preparationEndsBefore": 0.62,
+      "firstAction": "Existing action begins after 0.62 seconds; no timing edit.",
+      "meaning": "低い駆動から二層のエネルギーが立ち上がり、小さな電気の接点で収束する。実刃の抜刀・金属音へ置き換えない。放出・命中・声は既存の合図を維持する。",
+      "master": {
+        "path": "assets/source/quality-20261114/audio/manual-foley-r1/tky-energy-preparation-r1.wav",
+        "bytes": 53804,
+        "sha256": "cf83777babe3c55395e133aa59ec0e83fd466a7e38f30b7cc840d4f829018ef8"
+      },
+      "layers": [
+        {
+          "path": "assets/source/quality-20261116/audio/kenney-sci-fi/engineCircular_003.ogg",
+          "sourceStart": 0.75,
+          "clip": 0.5,
+          "at": 0,
+          "gain": 0.28,
+          "highpassHz": 65,
+          "lowpassHz": 1250,
+          "fadeIn": 0.025,
+          "fadeOut": 0.08,
+          "role": "光刃の駆動基音",
+          "sha256": "f592ec53043887cf5aeec60d545372da3b4459fba3f634265ee9d5251a4edf4e",
+          "rate": 1
+        },
+        {
+          "path": "assets/source/quality-20261116/audio/kenney-sci-fi/forceField_000.ogg",
+          "sourceStart": 0.06,
+          "clip": 0.46,
+          "at": 0.025,
+          "gain": 0.5,
+          "highpassHz": 190,
+          "lowpassHz": 5800,
+          "fadeIn": 0.012,
+          "fadeOut": 0.045,
+          "role": "主エネルギー層",
+          "sha256": "c2916f2a062c8ddd1aca2826d134fe90847037db31342726ffb0f9097afe339c",
+          "rate": 1
+        },
+        {
+          "path": "assets/source/quality-20261116/audio/kenney-sci-fi/forceField_004.ogg",
+          "sourceStart": 0.18,
+          "clip": 0.42,
+          "at": 0.07,
+          "gain": 0.18,
+          "highpassHz": 700,
+          "lowpassHz": 9000,
+          "fadeIn": 0.035,
+          "fadeOut": 0.06,
+          "role": "異なるエネルギーの揺らぎ",
+          "sha256": "05609bb296cbc287ae95ac8924c89809d69c89d7bb357cc6a117ec1b1ef65e09",
+          "rate": 1
+        },
+        {
+          "path": "assets/source/quality-20261116/audio/kenney-sci-fi/laserSmall_001.ogg",
+          "sourceStart": 0.025,
+          "clip": 0.105,
+          "at": 0.385,
+          "gain": 0.1,
+          "highpassHz": 1600,
+          "lowpassHz": 9500,
+          "fadeIn": 0.003,
+          "fadeOut": 0.03,
+          "role": "発射前の電気的な収束",
+          "sha256": "ab87913aba9790a0c5fa173d086267ba521ad522fcad2252271db49988313cf5",
+          "rate": 1
+        }
+      ],
+      "dynamics": {
+        "threshold": 0.12,
+        "ratio": 2.5,
+        "makeup": 2,
+        "attack": 4,
+        "release": 55,
+        "peakLimit": 0.85,
+        "masterScale": 1.58010151063326,
+        "targetRms": 0.3
+      },
+      "filterComplex": "[0:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.75:duration=0.5,asetpts=PTS-STARTPTS,highpass=f=65,lowpass=f=1250,volume=0.28,afade=t=in:st=0:d=0.025,afade=t=out:st=0.42:d=0.08,adelay=0,apad=whole_len=26880,atrim=end=0.56[l0];[1:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.06:duration=0.46,asetpts=PTS-STARTPTS,highpass=f=190,lowpass=f=5800,volume=0.5,afade=t=in:st=0:d=0.012,afade=t=out:st=0.415:d=0.045,adelay=25,apad=whole_len=26880,atrim=end=0.56[l1];[2:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.18:duration=0.42,asetpts=PTS-STARTPTS,highpass=f=700,lowpass=f=9000,volume=0.18,afade=t=in:st=0:d=0.035,afade=t=out:st=0.36:d=0.06,adelay=70,apad=whole_len=26880,atrim=end=0.56[l2];[3:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.025:duration=0.105,asetpts=PTS-STARTPTS,highpass=f=1600,lowpass=f=9500,volume=0.1,afade=t=in:st=0:d=0.003,afade=t=out:st=0.075:d=0.03,adelay=385,apad=whole_len=26880,atrim=end=0.56[l3];[l0][l1][l2][l3]amix=inputs=4:duration=longest,volume=4,apad=whole_len=26880,atrim=end=0.56,acompressor=threshold=0.12:ratio=2.5:makeup=2:attack=4:release=55:knee=2.82843,alimiter=limit=0.85:level=0,volume=1.58010151,afade=t=out:st=0.542:d=0.018[out]",
+      "reference": {
+        "path": "public/audio/v090/sfx/ability-tky-light-blade-charge.mp3",
+        "bytes": 7880,
+        "sha256": "354388f06b4676aec33966ec757e9def78c8c0838abd040995d976fff2978bc2"
+      },
+      "decodedMaster": {
+        "seconds": 0.56,
+        "peak": 0.779998779296875,
+        "rms": 0.25107677657574345,
+        "firstAboveMinus60db": 0.005208333333333333,
+        "lastAboveMinus60db": 0.5042291666666666,
+        "first100msRms": 0.29788403181573847,
+        "last10msRms": 0,
+        "sha256": "487188218294c31f4a280358e0d06ac4b94e72828216c4f7749f4018479e9937"
+      },
+      "subjectiveListening": "not performed; production candidate only",
+      "encodings": [
+        {
+          "path": "public/audio/quality-20261114/manual/tky-energy-preparation-r1.mp3",
+          "bytes": 12500,
+          "sha256": "8124faf186de5827cae5ce359f61d994491f6190478ae1940e4f388183d5259d"
+        },
+        {
+          "path": "public/audio/quality-20261114/manual/tky-energy-preparation-r1.ogg",
+          "bytes": 8376,
+          "sha256": "f8c6a2a8c6faf5a079ef14a713278e06fe1d0f6d55af79d5f44a8a6f154504f1"
         }
       ]
     }

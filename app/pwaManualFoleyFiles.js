@@ -47,5 +47,13 @@ export const PWA_MANUAL_FOLEY_FILES=Object.freeze(Object.fromEntries(Object.entr
   "ability-musashi-cross-guard": {
     "path": "/audio/quality-20261114/manual/miyamoto-musashi-preparation-r1.mp3",
     "hash": "sha256-061dc1d8031b1a87156254e9691d3e3bd670e96964acde86888710f09353799c"
+  },
+  "v105-fist-wave-charge": {
+    "path": "/audio/quality-20261114/manual/brawler-pressure-preparation-r1.mp3",
+    "hash": "sha256-098f5e996ce18975c5234971b36c12783c8b8638db2c710012239730d1cad0b2"
+  },
+  "ability-tky-light-blade-charge": {
+    "path": "/audio/quality-20261114/manual/tky-energy-preparation-r1.mp3",
+    "hash": "sha256-8124faf186de5827cae5ce359f61d994491f6190478ae1940e4f388183d5259d"
   }
 }).map(([id,file])=>[id,Object.freeze(file)])));

@@ -14,10 +14,11 @@ const hash=b=>createHash('sha256').update(b).digest('hex');
 async function emit(relative,bytes){
   const file=path.join(root,relative);
   if(check){const actual=await fs.readFile(file);assert.deepEqual(/\.(json|js)$/.test(relative)?Buffer.from(actual.toString('utf8').replaceAll('\r\n','\n')):actual,bytes,relative);}
-  else{await fs.mkdir(path.dirname(file),{recursive:true});await fs.writeFile(file,bytes);}
+  else{let actual;try{actual=await fs.readFile(file);}catch(e){if(e.code!=='ENOENT')throw e;}if(actual?.equals(bytes))return;await fs.mkdir(path.dirname(file),{recursive:true});await fs.writeFile(file,bytes);}
 }
 assert.deepEqual(recipe.records.map(r=>r.id).sort(),Object.keys(V100_MANUAL_ABILITY_FOLEY).sort());
 for(const notice of recipe.notices)assert.equal(hash(await fs.readFile(path.join(root,notice.path))),notice.sha256);
+await fs.mkdir(path.join(root,'output'),{recursive:true});
 const temporary=await fs.mkdtemp(path.join(root,'output/.manual-foley-build-'));
 assert.ok(path.resolve(temporary).startsWith(path.resolve(root,'output')+path.sep));
 const records=[];
@@ -50,7 +51,7 @@ await emit(sourceDir+'/provenance.json',Buffer.from(JSON.stringify({creator:'Ken
   license:'CC0-1.0',commercialUse:true,modification:true,redistribution:true,notices:recipe.notices,
   recipe:{path:sourceDir+'/recipe.json',sha256:hash(Buffer.from((await fs.readFile(path.join(root,sourceDir,'recipe.json'),'utf8')).replaceAll('\r\n','\n')))},
   authorization:'Current smartphone quality goal: replace inappropriate electronic preparation sounds with character-specific material foley.',
-  adaptation:'Existing licensed recordings only; source masters, exact layer timing/filter/dynamics and hashes retained. No voice, new contact event or actor substitution.',
+  adaptation:'Licensed Kenney material and sci-fi sound samples; source masters, exact layer timing/filter/dynamics and hashes retained. No voice, new contact event or actor substitution.',
   subjectiveListening:'not performed; implementation candidate, not final sound or physical-speaker acceptance',
   formats:{preferred:'mp3',fallback:'ogg',sampleRate:48000,channels:1},records},null,2)+'\n'));
 console.log(JSON.stringify({check,cues:records.length,files:records.reduce((n,r)=>n+r.encodings.length,0),bytes:records.flatMap(r=>r.encodings).reduce((n,r)=>n+r.bytes,0)}));

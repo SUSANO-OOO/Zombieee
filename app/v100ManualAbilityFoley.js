@@ -15,6 +15,8 @@ export const V100_MANUAL_ABILITY_FOLEY = Object.freeze({
   "ability-zakimiya-molotov-activate": Object.freeze({"name":"zakimiya-preparation-r1","duration":0.34,"hash":"sha256-6f995b23392d9f897ade216695c1ca49bc32433828795ed0838883f6895953c3"}),
   "ability-mrs-chiha-salvo-ready": Object.freeze({"name":"mrs-chiha-preparation-r1","duration":0.54,"hash":"sha256-d3118b23420eb79316c23456c4bc7de1817fe36ee214079559d8d84dc7d6e223"}),
   "ability-musashi-cross-guard": Object.freeze({"name":"miyamoto-musashi-preparation-r1","duration":0.16,"hash":"sha256-061dc1d8031b1a87156254e9691d3e3bd670e96964acde86888710f09353799c"}),
+  "v105-fist-wave-charge": Object.freeze({"name":"brawler-pressure-preparation-r1","duration":0.22,"hash":"sha256-098f5e996ce18975c5234971b36c12783c8b8638db2c710012239730d1cad0b2"}),
+  "ability-tky-light-blade-charge": Object.freeze({"name":"tky-energy-preparation-r1","duration":0.56,"hash":"sha256-8124faf186de5827cae5ce359f61d994491f6190478ae1940e4f388183d5259d"}),
 });
 
 export const V100_MANUAL_FOLEY_FILES=Object.freeze(Object.fromEntries(Object.entries(V100_MANUAL_ABILITY_FOLEY)
