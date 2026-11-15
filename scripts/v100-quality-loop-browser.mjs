@@ -480,6 +480,8 @@ for (const engine of engines) {
       assert.ok((await growthText.innerText()).trim().length > 0, "Growth information cannot be empty");
       await growthText.scrollIntoViewIfNeeded(); row.growthBox = await within(growthText);
       assert.ok(row.growthBox.width >= Math.min(320, 0.6 * row.growthBox.viewportWidth));
+      row.growthInk = await growthText.evaluate(node => { const linear = c => { const s = c / 255; return s <= .04045 ? s / 12.92 : ((s + .055) / 1.055) ** 2.4; }; const lum = rgb => rgb.reduce((s, c, i) => s + linear(c) * [.2126, .7152, .0722][i], 0); const ink = getComputedStyle(node).color.match(/[\d.]+/g).slice(0, 3).map(Number), light = lum(ink), paper = lum([216, 203, 167]); return { color: ink, contrast: (Math.max(light, paper) + .05) / (Math.min(light, paper) + .05) }; });
+      assert.ok(row.growthInk.contrast >= 4.5, "Growth text meets the existing paper readability threshold");
       await growthText.evaluate(element => { element.scrollTop = element.scrollHeight; });
       await capture(page, row, "growth"); await growth.scrollIntoViewIfNeeded(); await growth.tap();
       assert.equal(await growthNotes.getAttribute("open"), null, "The growth disclosure closes through native input");

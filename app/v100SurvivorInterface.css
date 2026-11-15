@@ -242,7 +242,7 @@
 #v100-campaign[data-v100-phase] .v100-portrait-views button { width: auto; min-width: 44px; }
 #v100-campaign .v100-growth-record-notes { font-size: 12px; line-height: 1.5; }
 #v100-campaign .v100-growth-record-notes summary { min-height: 44px; padding: 12px 0; border-bottom: 1px dashed #a39673; cursor: pointer; }
-#v100-campaign .v100-growth-record-notes details p { margin: 4px 0; }
+#v100-campaign .v100-growth-record-notes details p { margin: 4px 0; color: #2e4631; }
 #v100-campaign[data-v100-phase] .v100-command-personnel .v100-unit-transaction { margin-top: 6px; padding-top: 8px; border-top: 2px solid #7f7659; background: transparent; }
 
 /* Real objects on the supply counter; an inventory index and a separate quote. */
