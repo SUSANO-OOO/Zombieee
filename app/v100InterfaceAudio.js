@@ -8,6 +8,7 @@ export function v100InterfaceControlFor(event) {
   const control=event?.target?.closest?.('button,input,select,summary,a[href]');
   if(!control||control.disabled||control.matches?.(':disabled')||control.type==='hidden'
     ||control.getAttribute?.('aria-disabled')==='true')return null;
+  if(event.type==='click'&&(control.type==='range'||control.tagName==='SELECT'))return null;
   const role=control.dataset?.uiSound??(control.tagName==='SUMMARY'&&control.parentElement?.open
     ?'cancel':control.closest?.('.v100-event-actions')?'advance':'navigate');
   return {control,role};

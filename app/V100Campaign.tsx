@@ -964,6 +964,20 @@ export function V100Campaign() {
     void eventAudioOwnerRef.current?.operation(role);
   };
 
+  const onInterfacePointerDown = (event: FormEvent<HTMLElement>) => {
+    const control = (event.target as HTMLElement).closest?.("input[type=range],select");
+    if (control) onInterfaceClick(event);
+    else blockPendingInput(event);
+  };
+  const onInterfaceKeyDown = (event: FormEvent<HTMLElement> & { key?: string; repeat?: boolean }) => {
+    const control = (event.target as HTMLElement).closest?.("input[type=range],select");
+    const keys = control?.tagName === "SELECT"
+      ? ["ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown", "Enter", " "]
+      : ["ArrowLeft", "ArrowRight", "Home", "End", "PageUp", "PageDown"];
+    if (control && !event.repeat && keys.includes(event.key ?? "")) onInterfaceClick(event);
+    else blockPendingInput(event);
+  };
+
   if (!hydrated) return <main className="v100-shell" aria-busy={saveBusy}>
     {!loadFailure ? <p className="v100-loading">セーブデータを検証しています…</p> : <section className="v100-panel" aria-label="セーブの復旧">
       <h1>セーブを確認できませんでした</h1><p>新しいセーブで上書きせず、元の記録を保持しています。</p>
@@ -975,7 +989,7 @@ export function V100Campaign() {
     </section>}
   </main>;
 
-  if (entryOpen) return <main id="v100-campaign" className="v100-shell v100-entry-shell" data-v100-phase="title" aria-busy={saveBusy} onClickCapture={onInterfaceClick}>
+  if (entryOpen) return <main id="v100-campaign" className="v100-shell v100-entry-shell" data-v100-phase="title" aria-busy={saveBusy} onClickCapture={onInterfaceClick} onPointerDownCapture={onInterfacePointerDown} onKeyDownCapture={onInterfaceKeyDown}>
     {titleRollOpen ? <><V100StaffRoll nodes={v100StoryEventView("v100:event:credits", save.playerName)?.nodes ?? []} playerName={save.playerName} settings={save.settings} onComplete={() => { setTitleRollOpen(false); return true; }} /><button type="button" className="v100-title-credits-close" onClick={() => setTitleRollOpen(false)}>タイトルへ</button></> : <V100TitleScreen
       canContinue={save.campaignStarted} canOpenModes={save.campaignStarted && flow.phase === "map" && save.outbreak.view === "hub" && save.survival.view === "hub"}
       busy={saveBusy} reducedMotion={save.settings.reducedMotion} settings={save.settings}
@@ -1003,7 +1017,7 @@ export function V100Campaign() {
   const screenLabel = surface === "personnel" ? "ユニット" : surface === "vehicle" ? "装甲車両" : surface === "support-vehicle" ? "戦術支援" : surface === "equipment" ? "装備" : surface === "data" ? "セーブ" : surface === "rename" ? "名前の変更" : flow.phase === "formation" ? "出撃編成" : flow.phase === "result" || modeResult ? "戦果" : "ステージ選択";
 
   return (
-    <main id="v100-campaign" onClickCapture={onInterfaceClick} onSubmitCapture={blockPendingInput} onKeyDownCapture={blockPendingInput} onPointerDownCapture={blockPendingInput} aria-busy={saveBusy} className={`v100-shell v100-surface-${surface}`} data-v100-reduced-motion={save.settings.reducedMotion?"true":undefined} data-v100-phase={save.outbreak.view === "battle" || save.survival.view === "battle" ? "battle" : flow.phase} data-v100-stage={save.survival.active ? "survival" : save.outbreak.active?.bossId ?? flow.stageNumber ?? "map"} data-v100-surface={surface} style={{ "--v100-command-art": `url(${PRODUCTION_VISUALS.command})` } as CSSProperties}>
+    <main id="v100-campaign" onClickCapture={onInterfaceClick} onSubmitCapture={blockPendingInput} onKeyDownCapture={onInterfaceKeyDown} onPointerDownCapture={onInterfacePointerDown} aria-busy={saveBusy} className={`v100-shell v100-surface-${surface}`} data-v100-reduced-motion={save.settings.reducedMotion?"true":undefined} data-v100-phase={save.outbreak.view === "battle" || save.survival.view === "battle" ? "battle" : flow.phase} data-v100-stage={save.survival.active ? "survival" : save.outbreak.active?.bossId ?? flow.stageNumber ?? "map"} data-v100-surface={surface} style={{ "--v100-command-art": `url(${PRODUCTION_VISUALS.command})` } as CSSProperties}>
       {!immersiveFlow && <header className="v100-topbar v100-compact-topbar">
         <div className="v100-topbar-title"><div><span className="v100-kicker">現場指揮</span><h1>{flow.phase === "map" || flow.phase === "formation" ? `西新 / ${screenLabel}` : screenLabel}</h1></div></div>
         <div className="v100-save-meta"><span>{RELEASE_LABEL}</span><span className="v100-caps-balance">{save.caps} CAPS</span>{flow.phase === "map" && <button className="v100-modes-launch" type="button" aria-label="モード選択" onClick={() => { setModeTab("overview"); openSurface("modes"); }}>モード</button>}<button className="v100-menu-launch" type="button" onClick={() => setMenuOpen(true)}>メニュー</button></div>

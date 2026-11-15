@@ -51,6 +51,8 @@ export async function readSaveEnvironment(page, { timeout = 30_000 } = {}) {
   const toggle = page.getByRole("button", { name: "データ管理" });
   await toggle.waitFor({ state: "visible", timeout });
   await toggle.click();
+  const offlineTab = page.getByRole("button", { name: "オフライン用データ", exact: true });
+  if (await offlineTab.count()) await offlineTab.click();
   const badge = page.locator('.pwa-storage .save-environment-badge:not([data-save-environment="checking"])');
   await badge.waitFor({ state: "visible", timeout });
   const environment = await badge.evaluate((element) => ({

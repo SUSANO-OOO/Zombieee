@@ -232,6 +232,8 @@ try {
     assert.equal(await repair.count(), 0);
     await button('メニュー').tap();
     await page.getByRole('dialog', { name: 'メニュー', exact: true }).getByRole('button', { name: 'データ管理', exact: true }).tap();
+    const offlineTab = page.getByRole('button', { name: 'オフライン用データ', exact: true });
+    if (await offlineTab.count()) await offlineTab.tap();
     await page.getByRole('region', { name: 'アプリのデータ管理', exact: true }).waitFor();
     await repair.tap();
     await button("ゲームを始める").waitFor({ state: "visible", timeout: 60000 });

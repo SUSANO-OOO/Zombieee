@@ -441,6 +441,8 @@ record("データ管理 is offered on the title screen", (
 // The save environment moved off the title and into this panel, which is the
 // only place it is now reachable.
 await entryPage.getByRole("button", { name: "データ管理" }).click();
+const offlineTab = entryPage.getByRole("button", { name: "オフライン用データ", exact: true });
+if (await offlineTab.count()) await offlineTab.click();
 const panelCase = await entryPage.evaluate(() => {
   const badge = document.querySelector(".pwa-storage .save-environment-badge");
   return {

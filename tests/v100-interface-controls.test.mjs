@@ -27,3 +27,12 @@ test('a label touch is resolved once through its dispatched input click',()=>{
  const labelEvent={target:{closest:()=>null}},inputEvent=event(control('INPUT',{type:'checkbox'}));
  assert.deepEqual([labelEvent,inputEvent].map(v100InterfaceControlFor).filter(Boolean).map(value=>value.role),['navigate']);
 });
+
+test('touch-native range and select controls use pointer feedback without a later click duplicate',()=>{
+ for(const field of [control('INPUT',{type:'range',value:'40'}),control('SELECT',{value:'high'})]){
+  assert.equal(v100InterfaceControlFor({...event(field),type:'pointerdown'}).role,'navigate');
+  assert.equal(v100InterfaceControlFor({...event(field),type:'keydown'}).role,'navigate');
+  assert.equal(v100InterfaceControlFor({...event(field),type:'click'}),null);
+ }
+ assert.equal(v100InterfaceControlFor({...event(control('INPUT',{type:'checkbox'})),type:'click'}).role,'navigate');
+});
