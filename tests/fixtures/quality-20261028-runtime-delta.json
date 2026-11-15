@@ -2114,17 +2114,17 @@
       "criticality": "critical"
     },
     {
-      "path": "/art/quality-20261115/vfx/guardian-guard-six-r2.webp",
-      "bytes": 133902,
-      "hash": "sha256-e4bdd1f17c52cc19db47fecb5518d8790b394d36feb3140a3ca6db6f64d28b11",
+      "path": "/art/quality-20261115/vfx/guardian-guard-six-r3.webp",
+      "bytes": 130190,
+      "hash": "sha256-07d6fbbbfa73715395b73e73133b26d42c7e6532b8f78522e6940a8bc9bfc627",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"
     },
     {
-      "path": "/art/quality-20261115/vfx/kumaverson-guard-six-r1.webp",
-      "bytes": 258774,
-      "hash": "sha256-d4ea4cec36888cc2ff9586a7e56998e7ab33bdd399020b13def9b3f62e7fe788",
+      "path": "/art/quality-20261115/vfx/kumaverson-guard-six-r4.webp",
+      "bytes": 174274,
+      "hash": "sha256-7af68752f47eb961b819cd0ecb5e373671f324892b5203f1a4e232c72d5a54ce",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"
@@ -15081,6 +15081,20 @@
       ],
       "logicalBytes": 392676,
       "source": "assets/source/quality-20261115/guard-activation-r1/provenance-r1.json"
+    },
+    {
+      "date": "2026-11-15",
+      "scope": "Native final-canvas inspection rejected the first connected steam rim and symmetrical low shield scuff before publication. Replaced only those two candidate rows with disconnected upright steam and forward directional grit. All other 234 added rows, old 876 candidate payloads, gameplay, audio and save semantics retained. Original masters, intermediate gutter failures and initial compiled build are preserved. Native/device/aesthetic acceptance remains separate.",
+      "paths": [
+        "/art/quality-20261115/vfx/kumaverson-guard-six-r4.webp",
+        "/art/quality-20261115/vfx/guardian-guard-six-r3.webp"
+      ],
+      "logicalBytes": 304464,
+      "source": "assets/source/quality-20261115/guard-activation-r1/provenance-r2.json",
+      "supersedesUnpublished": [
+        "/art/quality-20261115/vfx/kumaverson-guard-six-r1.webp",
+        "/art/quality-20261115/vfx/guardian-guard-six-r2.webp"
+      ]
     }
   ],
   "contentReplacements": [

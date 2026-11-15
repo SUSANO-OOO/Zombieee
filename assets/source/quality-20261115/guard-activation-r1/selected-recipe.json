@@ -1,7 +1,7 @@
 {
   "family": "guard-activation-r1",
   "generation": {
-    "mode": "OpenAI built-in image_gen generation and referenced edit",
+    "mode": "OpenAI built-in image_gen creation, native-screen-directed edits and generated alpha cleanup",
     "model": "Chosen by host; no model name asserted",
     "referenceImages": [
       {
@@ -15,11 +15,41 @@
         "role": "diagnostic contrast view only",
         "path": "assets/source/quality-20261115/guard-activation-r1/guardian-on-dark-r1.png",
         "sha256": "dffed83eeb178615e92da9cb9dcb2fb576dc1506794a1583510fa0e57ce8c3ee"
+      },
+      {
+        "path": "assets/source/quality-20261115/guard-activation-r1/kumaverson-generated-r1.png",
+        "role": "steam edit target",
+        "sha256": "8721988c24238cc30a4c0b0abe8b260c68a004cf72535f657502996a725ec1c4"
+      },
+      {
+        "path": "assets/source/quality-20261115/guard-activation-r1/kumaverson-generated-r2.png",
+        "role": "steam framing edit target",
+        "sha256": "5daa00c7273e5dde7baaa7dc8e0a5337c72f1eb85749f7a555057e2f04740235"
+      },
+      {
+        "path": "assets/source/quality-20261115/guard-activation-r1/kumaverson-generated-r3.png",
+        "role": "steam alpha-cleanup target",
+        "sha256": "b00675675de67502c4b90d7d335be51ae46d6baf279d06867de2ce761e782602"
+      },
+      {
+        "path": "assets/source/quality-20261115/guard-activation-r1/guardian-generated-r2.png",
+        "role": "directional grit edit target",
+        "sha256": "8beb3e17319bf0056842515a40aa95d4829e6c92ef366db98dfc26aa7b4bf0dc"
+      },
+      {
+        "path": "assets/source/quality-20261115/guard-activation-r1/kumaverson-active.png",
+        "role": "native final-canvas diagnostic only",
+        "sha256": "0c8369bad58b6682f1a8aa634ad276af00718371f604f817052b7a7cc9448df9"
+      },
+      {
+        "path": "assets/source/quality-20261115/guard-activation-r1/guardian-active.png",
+        "role": "native final-canvas diagnostic only",
+        "sha256": "04788447173d03652159072bb605916da84885a1a1fa0aad6d866ebf08f377f5"
       }
     ],
     "thirdPartyDownload": false,
     "paidCliOrExternalService": false,
-    "calls": 3
+    "calls": 7
   },
   "authorization": "Active smartphone-quality goal requests bespoke animated manual abilities. Candidate production is authorized; final appearance, sound and physical-device acceptance are not claimed.",
   "providerTerms": {
@@ -31,26 +61,36 @@
   "rows": [
     {
       "kind": "kumaverson",
-      "masterPath": "assets/source/quality-20261115/guard-activation-r1/kumaverson-generated-r1.png",
-      "masterSha256": "8721988c24238cc30a4c0b0abe8b260c68a004cf72535f657502996a725ec1c4",
-      "promptPath": "assets/source/quality-20261115/guard-activation-r1/kumaverson-prompt-r1.txt",
+      "masterPath": "assets/source/quality-20261115/guard-activation-r1/kumaverson-generated-r4.png",
+      "masterSha256": "b207c837fdd482a7ef8a28a8a284d1406943a4d6db6807b4ec9cf6fcd0b54c3f",
+      "promptPath": "assets/source/quality-20261115/guard-activation-r1/kumaverson-prompt-r4.txt",
       "id": "v100-kumaverson-guard-activation",
-      "runtimePath": "/art/quality-20261115/vfx/kumaverson-guard-six-r1.webp",
+      "runtimePath": "/art/quality-20261115/vfx/kumaverson-guard-six-r4.webp",
       "worldWidth": 192,
       "worldHeight": 94,
-      "description": "iron-pan bracing steam and iron scuffs"
+      "description": "asymmetric upright cooking steam with disconnected iron scuffs",
+      "creationPromptPath": "assets/source/quality-20261115/guard-activation-r1/kumaverson-prompt-r1.txt",
+      "revisionPromptPaths": [
+        "assets/source/quality-20261115/guard-activation-r1/kumaverson-prompt-r2.txt",
+        "assets/source/quality-20261115/guard-activation-r1/kumaverson-prompt-r3.txt",
+        "assets/source/quality-20261115/guard-activation-r1/kumaverson-prompt-r4.txt"
+      ]
     },
     {
       "kind": "guardian",
-      "masterPath": "assets/source/quality-20261115/guard-activation-r1/guardian-generated-r2.png",
-      "masterSha256": "8beb3e17319bf0056842515a40aa95d4829e6c92ef366db98dfc26aa7b4bf0dc",
-      "promptPath": "assets/source/quality-20261115/guard-activation-r1/guardian-prompt-r2.txt",
+      "masterPath": "assets/source/quality-20261115/guard-activation-r1/guardian-generated-r3.png",
+      "masterSha256": "6da4e565630c59f7582383c96f5a7bb7b741b7b33db6d2dd739a8165888f366d",
+      "promptPath": "assets/source/quality-20261115/guard-activation-r1/guardian-prompt-r3.txt",
       "id": "v100-guardian-guard-activation",
-      "runtimePath": "/art/quality-20261115/vfx/guardian-guard-six-r2.webp",
+      "runtimePath": "/art/quality-20261115/vfx/guardian-guard-six-r3.webp",
       "worldWidth": 224,
       "worldHeight": 104,
-      "description": "steel-shield bracing grit and iron fragments",
-      "creationPromptPath": "assets/source/quality-20261115/guard-activation-r1/guardian-prompt-r1.txt"
+      "description": "forward directional steel fragments and dense bracing grit",
+      "creationPromptPath": "assets/source/quality-20261115/guard-activation-r1/guardian-prompt-r1.txt",
+      "revisionPromptPaths": [
+        "assets/source/quality-20261115/guard-activation-r1/guardian-prompt-r2.txt",
+        "assets/source/quality-20261115/guard-activation-r1/guardian-prompt-r3.txt"
+      ]
     }
   ],
   "rejected": [
@@ -59,6 +99,36 @@
       "path": "assets/source/quality-20261115/guard-activation-r1/guardian-generated-r1.png",
       "sha256": "a9ffd6d77e11e5fb1f8f1b296d07056132142c043816a80d323b70c8c93b4035",
       "reason": "First sheet has alpha 21/31/34 at the outer four pixels of three cells; fails transparent sampling gutter. Original retained; framing corrected with image_gen, no alpha painting or threshold relaxation."
+    },
+    {
+      "kind": "kumaverson",
+      "path": "assets/source/quality-20261115/guard-activation-r1/kumaverson-generated-r1.png",
+      "reason": "Native final-canvas inspection at 844x340 showed a connected white ground rim; visually inconsistent with the no-ring direction. Original retained."
+    },
+    {
+      "kind": "guardian",
+      "path": "assets/source/quality-20261115/guard-activation-r1/guardian-generated-r2.png",
+      "reason": "Native final-canvas inspection showed a low symmetrical scuff with insufficient forward shield impact. Replaced with asymmetric directional grit; original retained."
+    },
+    {
+      "kind": "kumaverson",
+      "path": "assets/source/quality-20261115/guard-activation-r1/kumaverson-generated-r2.png",
+      "reason": "Visible material touches cell boundaries: maximum outer-four-pixel alpha194/234 in frames1/2. Not selected."
+    },
+    {
+      "kind": "kumaverson",
+      "path": "assets/source/quality-20261115/guard-activation-r1/kumaverson-generated-r3.png",
+      "reason": "Diffuse matte has outer-four-pixel alpha20 in final cell, exceeding unchanged <=16 gate. Generated alpha cleanup, no manual threshold or alpha painting."
     }
-  ]
+  ],
+  "supersedes": {
+    "source": "36c6ba3b50ff5d2d7f04262c0522c69f37100e0c",
+    "recipeSha256": "086d46c93d82b1a1b63b4ab34e43dcc9eb23ac5203069fd9dec0c647f701e237",
+    "provenanceSha256": "48ed69b4631c17dc010b72ead1e5a13b7a75f14566a6bd0fb08e3d21723a407e",
+    "nativeReferencePaths": [
+      "assets/source/quality-20261115/guard-activation-r1/kumaverson-active.png",
+      "assets/source/quality-20261115/guard-activation-r1/guardian-active.png"
+    ],
+    "acceptance": "First-sample functional checks passed but the appearance was rejected. No release or final aesthetic acceptance."
+  }
 }

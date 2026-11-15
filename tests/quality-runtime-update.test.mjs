@@ -26,7 +26,7 @@ test('quality candidate contains exactly the reviewed art, firearm and VFX delta
   assertDelta(candidate);
   assert.equal(contract.added.length,236);assert.equal(contract.retired.length,166);
   assert.equal(contract.transportChanges.length,344);assert.equal(contract.contentReplacements.length,1);
-  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),48139254); // Authored phone UI/portraits, boss finales/attacks, preparation cues, Tatara contact, micro-particles, King exhaust, guard contacts, dual-sword contact, Paisen pressure flight/contact and two authored guard activations.
+  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),48051042); // Authored phone UI/portraits, boss finales/attacks, preparation cues, Tatara contact, micro-particles, King exhaust, guard contacts, dual-sword contact, Paisen pressure flight/contact and two authored guard activations.
   for(const row of contract.added){
     const bytes=await readFile(new URL('../public'+(row.sourcePath??row.path),import.meta.url));
     assert.equal(bytes.length,row.bytes,row.path);
