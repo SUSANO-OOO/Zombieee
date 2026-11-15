@@ -123,6 +123,7 @@ import "./v100ModeDepartureFinish.css";
 import "./v100CompendiumRecordsFinish.css";
 import "./v100SystemFieldFinish.css";
 import "./v100PhonePauseFinish.css";
+import "./v100PhoneSurvivalFinish.css";
 import {subscribeV100InterfaceOperations,v100InterfaceControlFor} from "./v100InterfaceAudio.js";
 import { V100_CREW_INSIGNIA } from "./v100CrewInsignia.js";
 

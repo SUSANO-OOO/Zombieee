@@ -1,0 +1,78 @@
+/* V1 temporary upgrades: accepted field equipment on cloth, steel and paper.
+   All effects, choice order, save boundaries and values belong to survival.js. */
+#v100-campaign .survival-upgrade-screen.v100-phone-upgrade {
+  box-sizing:border-box; padding:max(7px,var(--app-viewport-safe-top,0px)) max(8px,var(--app-viewport-safe-right,0px)) max(7px,var(--app-viewport-safe-bottom,0px)) max(8px,var(--app-viewport-safe-left,0px));
+  background:#07120de8;
+}
+#v100-campaign .v100-phone-upgrade > section {
+  box-sizing:border-box; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:4px 12px; width:100%; max-width:900px; max-height:100%; overflow-y:auto;
+  overscroll-behavior:contain; touch-action:pan-y; padding:10px; margin:0;
+  border:1px solid #939578; border-top:3px solid #c1a970; border-left:5px solid #915a36;
+  border-radius:2px; color:#f0e5c6; background-color:#1c2d22;
+  background-image:linear-gradient(115deg,#243c29bd,#101f16df),var(--v100-ui-materials,none);
+  background-size:100% 100%,300% 200%; background-position:center,0 0;
+  box-shadow:0 12px 46px #000b,inset 0 0 0 1px #f3d9a62e;
+}
+#v100-campaign .v100-phone-upgrade > section > small { grid-column:1; grid-row:1; color:#e4bd79; font:700 12px/1.3 var(--v100-reading-font); letter-spacing:.04em; }
+#v100-campaign .v100-phone-upgrade h2 { grid-column:1; grid-row:2; margin:0; color:#f6e7c2; font:800 22px/1.2 var(--v100-display-font); letter-spacing:.03em; }
+#v100-campaign .v100-phone-upgrade > section > p:not([role="alert"]) { grid-column:1; grid-row:3; margin:0; color:#d8dfc9; font:500 13px/1.4 var(--v100-reading-font); letter-spacing:normal; }
+#v100-campaign .v100-phone-upgrade .v100-checkpoint-reward {
+  grid-column:2; grid-row:1/4; display:grid; align-content:center; gap:3px; margin:0; padding:7px 11px;
+  border:1px solid #6d8669; border-left:3px solid #d5bc75; border-radius:1px;
+  background-color:#24432d; background-image:linear-gradient(110deg,#2a4d33b8,#183321e3),var(--v100-ui-materials,none);
+  background-size:100% 100%,300% 200%; background-position:center,50% 100%;
+  color:#f3eacb; font:700 13px/1.4 var(--v100-reading-font);
+}
+#v100-campaign .v100-phone-upgrade .v100-checkpoint-reward small { color:#c6d5bb; font-size:12px; }
+#v100-campaign .v100-phone-upgrade .survival-next-wave-preview {
+  grid-column:1/-1; display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:3px 10px;
+  margin:1px 0; padding:6px 9px; border:1px solid #7b896f; border-left:3px solid #bca165;
+  background:#10261ee3; color:#e6dfbf; font:700 13px/1.3 var(--v100-reading-font);
+}
+#v100-campaign .v100-phone-upgrade .survival-next-wave-preview span { color:#c1d2c0; }
+#v100-campaign .v100-phone-upgrade .survival-upgrade-choices { grid-column:1/-1; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; }
+#v100-campaign .v100-phone-upgrade .survival-upgrade-choices button {
+  position:relative; box-sizing:border-box; display:grid; grid-template-columns:minmax(0,1fr) 76px;
+  align-content:center; align-items:center; justify-items:start; gap:3px 5px;
+  min-height:136px; min-width:44px; margin:0; padding:8px; overflow:hidden;
+  border:1px solid #a3a17f; border-left:4px solid #b58a50; border-bottom:3px solid #090e0a; border-radius:2px;
+  color:#f0e4c4; text-align:left; cursor:pointer;
+  background-color:#29392b;
+  background-image:linear-gradient(110deg,#1b3023b3,#132218ce),var(--v100-ui-materials,none);
+  background-size:100% 100%,300% 200%; background-position:center,0 0;
+  box-shadow:inset 0 1px #e8d9ae70,0 3px 5px #0007;
+  font-family:var(--v100-reading-font); transition:filter .1s,transform .1s;
+}
+#v100-campaign .v100-phone-upgrade .survival-upgrade-choices button > * { grid-column:1; position:relative; z-index:1; }
+#v100-campaign .v100-phone-upgrade .survival-upgrade-choices button::after {
+  content:""; grid-column:2; grid-row:1/5; display:block; align-self:center; justify-self:center;
+  width:76px; height:76px; pointer-events:none;
+  background-image:var(--v100-upgrade-art,none); background-size:500% 400%;
+  background-position:var(--v100-upgrade-art-position,0% 0%); background-repeat:no-repeat;
+  filter:drop-shadow(0 3px 2px #0008);
+}
+#v100-campaign .v100-phone-upgrade .survival-upgrade-choices small { color:#dbc38a; font:700 12px/1.25 var(--v100-reading-font); letter-spacing:.02em; }
+#v100-campaign .v100-phone-upgrade .survival-upgrade-choices b { color:inherit; font:800 15px/1.25 var(--v100-display-font); letter-spacing:normal; overflow-wrap:anywhere; }
+#v100-campaign .v100-phone-upgrade .survival-upgrade-choices span { color:#d3ddc9; font:500 13px/1.3 var(--v100-reading-font); }
+#v100-campaign .v100-phone-upgrade .survival-upgrade-choices strong { color:#fff0c0; font:800 20px/1.15 var(--v100-numeric-font); font-variant-numeric:tabular-nums; letter-spacing:normal; }
+#v100-campaign .v100-phone-upgrade .survival-upgrade-choices em { grid-column:1/-1; align-self:end; margin-top:2px; padding-top:4px; width:100%; border-top:1px solid #b9b18b66; color:#bbd1be; font:500 12px/1.3 var(--v100-reading-font); font-style:normal; }
+#v100-campaign .v100-phone-upgrade .survival-upgrade-choices :is([data-v100-upgrade-id="assault-drill"],[data-v100-upgrade-id="boss-breaker"]) { border-left-color:#d68b52; background-color:#3b2c22; background-image:linear-gradient(110deg,#5e36299c,#211a16de),var(--v100-ui-materials,none); background-position:center,0 100%; }
+#v100-campaign .v100-phone-upgrade .survival-upgrade-choices [data-v100-upgrade-id="layered-armor"] { border-left-color:#9db6a2; background-color:#303d38; background-image:linear-gradient(110deg,#3a4d44b5,#15251ee3),var(--v100-ui-materials,none); background-position:center,50% 0; }
+#v100-campaign .v100-phone-upgrade .survival-upgrade-choices :is([data-v100-upgrade-id="field-triage"],[data-v100-upgrade-id="crawler-field-repair"]) { color:#283b2c; border-left-color:#8b623b; border-top-color:#dfcda5; background-color:#e6d4a8; background-image:linear-gradient(110deg,#ecdfbec7,#c9b38cc7),var(--v100-ui-materials,none); background-position:center,100% 0; }
+#v100-campaign .v100-phone-upgrade .survival-upgrade-choices :is([data-v100-upgrade-id="field-triage"],[data-v100-upgrade-id="crawler-field-repair"]) :is(small,span,em) { color:#4a583e; border-top-color:#9f906a; }
+#v100-campaign .v100-phone-upgrade .survival-upgrade-choices :is([data-v100-upgrade-id="field-triage"],[data-v100-upgrade-id="crawler-field-repair"]) strong { color:#334b2d; }
+#v100-campaign .v100-phone-upgrade .survival-upgrade-choices [data-v100-upgrade-id="range-calibration"] { border-left-color:#bcb779; }
+#v100-campaign .v100-phone-upgrade .survival-upgrade-choices [data-v100-upgrade-id="rapid-redeployment"] { border-left-color:#9dbbb2; background-color:#1b3a34; background-image:linear-gradient(110deg,#234b43b5,#122c25dc),var(--v100-ui-materials,none); background-position:center,50% 100%; }
+#v100-campaign .v100-phone-upgrade .survival-upgrade-choices button:not(:disabled):active { transform:translateY(1px); filter:brightness(1.12); }
+#v100-campaign .v100-phone-upgrade .survival-upgrade-choices button:focus-visible { outline:2px solid #f5d281; outline-offset:2px; }
+#v100-campaign .v100-phone-upgrade .survival-upgrade-choices button:disabled { opacity:.55; cursor:wait; }
+#v100-campaign .v100-phone-upgrade .survival-save-retry { grid-column:1/-1; padding:7px 10px; color:#f2d3b1; font:600 13px/1.4 var(--v100-reading-font); }
+#v100-campaign .v100-phone-upgrade .survival-save-retry button { min-height:44px; padding:7px 11px; color:#ffedd0; font-size:14px; }
+@media (max-width:720px) { #v100-campaign .v100-phone-upgrade .survival-upgrade-choices button { grid-template-columns:minmax(0,1fr) 64px; padding:7px; gap:3px 4px; } #v100-campaign .v100-phone-upgrade .survival-upgrade-choices button::after { width:64px; height:64px; } }
+
+#v100-campaign .v100-phone-upgrade > section > p[role="alert"] { grid-column:1; grid-row:3; box-sizing:border-box; margin:0; padding:5px 8px; border-left:3px solid #dc8964; background:#522d22; color:#ffe3bc; font:600 13px/1.4 var(--v100-reading-font); }
+
+#v100-campaign .v100-phone-upgrade > section:has(> p[role="alert"],> .survival-save-retry) > p:not([role]) { display:none; }
+#v100-campaign .v100-phone-upgrade .survival-save-retry { grid-column:1; grid-row:3; display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:7px; margin:0; padding:5px 8px; background:#522d22; border:1px solid #ad7658; border-left:3px solid #dc8964; }
+#v100-campaign .v100-phone-upgrade > section:not(:has(> .v100-checkpoint-reward)) > :is(small,h2,p,.survival-save-retry) { grid-column:1/-1; }
