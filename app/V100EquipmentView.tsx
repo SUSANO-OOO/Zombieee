@@ -71,7 +71,7 @@ export function V100EquipmentView({ save, onBack, onPurchase, onUpgrade, onEquip
       {comparison && selectedPresentation && <section className="v100-equipment-quote" aria-label="装備した場合の能力" data-equipment-quote-unit={selectedUnit} data-equipment-quote-slot={previewSlot}>
         <header><strong>{item.slotType === "tactical" ? "部隊全員に効果" : "装備した場合"}</strong><span>数値：{selectedPresentation.displayName} / 枠{previewSlot + 1}</span></header>
         <dl className="v100-equipment-quote-changes">{comparison.changes.map(change => <div key={change.key} data-stat={change.key} data-improved={change.improved}><dt>{change.label}</dt><dd><span>{change.beforeLabel}</span><span aria-hidden="true">→</span><strong>{change.afterLabel}</strong></dd></div>)}</dl>
-        {comparison.changes.length === 0 && <p className="v100-equipment-quote-neutral">{comparison.reason && quantity > 0 ? comparison.reason : "この仲間の戦闘能力は変わりません。"}</p>}
+        {comparison.changes.length === 0 && (!comparison.reason || quantity === 0) && <p className="v100-equipment-quote-neutral">この仲間の戦闘能力は変わりません。</p>}
         <p className="v100-equipment-quote-guide">{quantity === 0 ? "購入後は「装備を比べる」で装備先を選ぼう。" : comparison.reason ?? "「装備を比べる」で仲間と装備枠を選べます。"}<small>固有技は比較に含みません。</small></p>
       </section>}
       {fittingOpen && comparison && createPortal(<div className="v100-fitting-backdrop"><section className="v100-equipment-fitting" role="dialog" aria-modal="true" aria-labelledby="v100-fitting-title">
