@@ -1,6 +1,6 @@
 {
   "base": "ff5dba24e88c810182cda1f044bd26dfc3e512c1",
-  "source": "91bacc9d71e72a6422fb1ee6e14dd615cfeed34d plus dedicated optional TAKUYA sword contact, Gate Eater charge trail and Kurome animated ray; actual attack mechanics, warnings, audio and save retained",
+  "source": "96f6f399e13fedf5489b55e51bce9344e3b93fea adds dedicated Paisen pressure flight and impact to the previously reviewed quality delta; attack mechanics, optional verified loading, audio and save retained",
   "scope": "Local quality candidate transport contract; not likeness, rights, listening, release or physical-device approval.",
   "added": [
     {
@@ -2103,6 +2103,14 @@
       "hash": "sha256-f4590e51f2f0a6ace26a38b6a542ed40682cdb4103335647a4f1e325f279b1a0",
       "pack": "campaign-core",
       "category": "object",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261115/vfx/paisen-pressure-six-r3.webp",
+      "bytes": 160326,
+      "hash": "sha256-d7eafdde8dfe530a925830db2885b14b754a396703f458957b801c250bfa442f",
+      "pack": "units",
+      "category": "unit",
       "criticality": "critical"
     }
   ],
