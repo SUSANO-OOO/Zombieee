@@ -1,6 +1,18 @@
 const eventName='nishijin:v100-interface-operation';
 const roles=new Set(['advance','navigate','cancel','confirm','reject']);
 
+// Labels dispatch a second click to their input. Resolve only the input itself,
+// so one touch never plays both a label sound and a control sound.
+export function v100InterfaceControlFor(event) {
+  if(event?.defaultPrevented)return null;
+  const control=event?.target?.closest?.('button,input,select,summary,a[href]');
+  if(!control||control.disabled||control.matches?.(':disabled')||control.type==='hidden'
+    ||control.getAttribute?.('aria-disabled')==='true')return null;
+  const role=control.dataset?.uiSound??(control.tagName==='SUMMARY'&&control.parentElement?.open
+    ?'cancel':control.closest?.('.v100-event-actions')?'advance':'navigate');
+  return {control,role};
+}
+
 // A PWA-owned portal cannot bubble through the campaign's React capture.
 // Dispatch synchronously inside the gesture; only an existing owner listens.
 export function emitV100InterfaceOperation(target,role) {

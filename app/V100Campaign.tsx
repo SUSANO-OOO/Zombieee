@@ -121,7 +121,7 @@ import "./v100BattleCommandFinish.css";
 import "./v100SupplyTitleFinish.css";
 import "./v100ModeDepartureFinish.css";
 import "./v100CompendiumRecordsFinish.css";
-import {subscribeV100InterfaceOperations} from "./v100InterfaceAudio.js";
+import {subscribeV100InterfaceOperations,v100InterfaceControlFor} from "./v100InterfaceAudio.js";
 import { V100_CREW_INSIGNIA } from "./v100CrewInsignia.js";
 
 type Save = NonNullable<StorageOutcome["save"]> & { bestStars: Record<string, number> };
@@ -951,10 +951,12 @@ export function V100Campaign() {
   };
   const onInterfaceClick = (event: FormEvent<HTMLElement>) => {
     blockPendingInput(event);
-    if (event.defaultPrevented || (!entryOpen && (flow.phase === "battle" || save.outbreak.view === "battle" || save.survival.view === "battle"))) return;
-    const button = (event.target as HTMLElement).closest<HTMLButtonElement>("button");
-    if (!button || button.disabled || button.getAttribute("aria-disabled") === "true") return;
-    const role = button.dataset.uiSound ?? (button.closest(".v100-event-actions") ? "advance" : "navigate");
+    const inBattle = !entryOpen && (flow.phase === "battle" || save.outbreak.view === "battle" || save.survival.view === "battle");
+    const shellMenu = (event.target as HTMLElement).closest?.(".v100-player-menu,.v100-data-modal");
+    if (event.defaultPrevented || (inBattle && !shellMenu)) return;
+    const gesture = v100InterfaceControlFor(event);
+    if (!gesture) return;
+    const { role } = gesture;
     if (role === "transaction") {
       void eventAudioOwnerRef.current?.activate(null);
       return;
