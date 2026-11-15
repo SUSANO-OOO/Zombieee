@@ -1,0 +1,64 @@
+{
+  "family": "guard-activation-r1",
+  "generation": {
+    "mode": "OpenAI built-in image_gen generation and referenced edit",
+    "model": "Chosen by host; no model name asserted",
+    "referenceImages": [
+      {
+        "kind": "guardian",
+        "role": "edit target",
+        "path": "assets/source/quality-20261115/guard-activation-r1/guardian-generated-r1.png",
+        "sha256": "a9ffd6d77e11e5fb1f8f1b296d07056132142c043816a80d323b70c8c93b4035"
+      },
+      {
+        "kind": "guardian",
+        "role": "diagnostic contrast view only",
+        "path": "assets/source/quality-20261115/guard-activation-r1/guardian-on-dark-r1.png",
+        "sha256": "dffed83eeb178615e92da9cb9dcb2fb576dc1506794a1583510fa0e57ce8c3ee"
+      }
+    ],
+    "thirdPartyDownload": false,
+    "paidCliOrExternalService": false,
+    "calls": 3
+  },
+  "authorization": "Active smartphone-quality goal requests bespoke animated manual abilities. Candidate production is authorized; final appearance, sound and physical-device acceptance are not claimed.",
+  "providerTerms": {
+    "url": "https://openai.com/policies/row-terms-of-use/",
+    "effective": "2026-01-01",
+    "verifiedAt": "2026-11-15",
+    "basis": "Provider output ownership is assigned to the user, subject to the terms and applicable law."
+  },
+  "rows": [
+    {
+      "kind": "kumaverson",
+      "masterPath": "assets/source/quality-20261115/guard-activation-r1/kumaverson-generated-r1.png",
+      "masterSha256": "8721988c24238cc30a4c0b0abe8b260c68a004cf72535f657502996a725ec1c4",
+      "promptPath": "assets/source/quality-20261115/guard-activation-r1/kumaverson-prompt-r1.txt",
+      "id": "v100-kumaverson-guard-activation",
+      "runtimePath": "/art/quality-20261115/vfx/kumaverson-guard-six-r1.webp",
+      "worldWidth": 192,
+      "worldHeight": 94,
+      "description": "iron-pan bracing steam and iron scuffs"
+    },
+    {
+      "kind": "guardian",
+      "masterPath": "assets/source/quality-20261115/guard-activation-r1/guardian-generated-r2.png",
+      "masterSha256": "8beb3e17319bf0056842515a40aa95d4829e6c92ef366db98dfc26aa7b4bf0dc",
+      "promptPath": "assets/source/quality-20261115/guard-activation-r1/guardian-prompt-r2.txt",
+      "id": "v100-guardian-guard-activation",
+      "runtimePath": "/art/quality-20261115/vfx/guardian-guard-six-r2.webp",
+      "worldWidth": 224,
+      "worldHeight": 104,
+      "description": "steel-shield bracing grit and iron fragments",
+      "creationPromptPath": "assets/source/quality-20261115/guard-activation-r1/guardian-prompt-r1.txt"
+    }
+  ],
+  "rejected": [
+    {
+      "kind": "guardian",
+      "path": "assets/source/quality-20261115/guard-activation-r1/guardian-generated-r1.png",
+      "sha256": "a9ffd6d77e11e5fb1f8f1b296d07056132142c043816a80d323b70c8c93b4035",
+      "reason": "First sheet has alpha 21/31/34 at the outer four pixels of three cells; fails transparent sampling gutter. Original retained; framing corrected with image_gen, no alpha painting or threshold relaxation."
+    }
+  ]
+}

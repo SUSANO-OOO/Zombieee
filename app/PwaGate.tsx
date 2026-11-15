@@ -61,6 +61,7 @@ import {V100_MANUAL_IMPACT_ART} from "./v100ManualImpactArt.js";
 import {V100_PARTICLE_MATERIAL_ART} from "./v100ParticleMaterialArt.js";
 import {V100_KING_EXHAUST_ART} from "./v100KingExhaustArt.js";
 import {V100_GUARD_IMPACT_ART} from "./v100GuardImpactArt.js";
+import {V100_GUARD_ACTIVATION_ART} from "./v100GuardActivationArt.js";
 import {V100_GROUND_FIRE_BED_ART} from "./v100GroundFireArt.js";
 import {V100_BALLISTIC_MATERIAL_ART} from "./v100BallisticMaterialArt.js";
 import {PwaBattleArtworkPathsContext} from "./pwaBattleArtworkContext.js";
@@ -890,6 +891,10 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     artworks: V100_GUARD_IMPACT_ART, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,
     browserPlayAccepted: offerDismissed && (!standalone || registrationFailureAcknowledged),
   });
+  const verifiedGuardActivationPaths = verifiedPwaArtworkPaths({
+    artworks: V100_GUARD_ACTIVATION_ART, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,
+    browserPlayAccepted: offerDismissed && (!standalone || registrationFailureAcknowledged),
+  });
   const verifiedGroundFirePaths = verifiedPwaArtworkPaths({
     artworks: V100_GROUND_FIRE_BED_ART, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,
     browserPlayAccepted: offerDismissed && (!standalone || registrationFailureAcknowledged),
@@ -898,7 +903,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     artworks: V100_BALLISTIC_MATERIAL_ART, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,
     browserPlayAccepted: offerDismissed && (!standalone || registrationFailureAcknowledged),
   });
-  const verifiedBattleArtworkPaths = [verifiedBossDefeatPaths,verifiedBossAttackPaths,verifiedManualImpactPaths,verifiedParticleMaterialPaths,verifiedKingExhaustPaths,verifiedGuardImpactPaths,verifiedGroundFirePaths,verifiedBallisticMaterialPaths].filter(Boolean).join('\n');
+  const verifiedBattleArtworkPaths = [verifiedBossDefeatPaths,verifiedBossAttackPaths,verifiedManualImpactPaths,verifiedParticleMaterialPaths,verifiedKingExhaustPaths,verifiedGuardImpactPaths,verifiedGroundFirePaths,verifiedBallisticMaterialPaths,verifiedGuardActivationPaths].filter(Boolean).join('\n');
   const verifiedManualFoleyPaths = verifiedPwaArtworkPaths({
     artworks: PWA_MANUAL_FOLEY_FILES, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,
     browserPlayAccepted: offerDismissed && (!standalone || registrationFailureAcknowledged),

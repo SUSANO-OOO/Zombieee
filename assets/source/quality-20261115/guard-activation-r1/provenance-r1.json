@@ -1,0 +1,287 @@
+{
+  "recipe": {
+    "path": "assets/source/quality-20261115/guard-activation-r1/selected-recipe.json",
+    "sha256": "086d46c93d82b1a1b63b4ab34e43dcc9eb23ac5203069fd9dec0c647f701e237"
+  },
+  "generator": "scripts/build-v100-guard-activation-art.mjs",
+  "creator": "OpenAI built-in image_gen under user production direction; deterministic smartphone packaging by Codex",
+  "license": "Project-original generated material; user output ownership under the checked provider terms and applicable law",
+  "rights": {
+    "commercialUse": true,
+    "modification": true,
+    "redistribution": true,
+    "basis": {
+      "url": "https://openai.com/policies/row-terms-of-use/",
+      "effective": "2026-01-01",
+      "verifiedAt": "2026-11-15",
+      "basis": "Provider output ownership is assigned to the user, subject to the terms and applicable law."
+    }
+  },
+  "producerApproval": "Active smartphone-quality goal requests bespoke animated manual abilities. Candidate production is authorized; final appearance, sound and physical-device acceptance are not claimed.",
+  "generation": {
+    "mode": "OpenAI built-in image_gen generation and referenced edit",
+    "model": "Chosen by host; no model name asserted",
+    "referenceImages": [
+      {
+        "kind": "guardian",
+        "role": "edit target",
+        "path": "assets/source/quality-20261115/guard-activation-r1/guardian-generated-r1.png",
+        "sha256": "a9ffd6d77e11e5fb1f8f1b296d07056132142c043816a80d323b70c8c93b4035"
+      },
+      {
+        "kind": "guardian",
+        "role": "diagnostic contrast view only",
+        "path": "assets/source/quality-20261115/guard-activation-r1/guardian-on-dark-r1.png",
+        "sha256": "dffed83eeb178615e92da9cb9dcb2fb576dc1506794a1583510fa0e57ce8c3ee"
+      }
+    ],
+    "thirdPartyDownload": false,
+    "paidCliOrExternalService": false,
+    "calls": 3
+  },
+  "runtimeAssetCount": 2,
+  "logicalBytes": 392676,
+  "distinctBytes": 392676,
+  "estimatedDecodedRgbaBytes": 3145728,
+  "rows": [
+    {
+      "kind": "kumaverson",
+      "description": "iron-pan bracing steam and iron scuffs",
+      "master": {
+        "path": "assets/source/quality-20261115/guard-activation-r1/kumaverson-generated-r1.png",
+        "bytes": 1964763,
+        "sha256": "8721988c24238cc30a4c0b0abe8b260c68a004cf72535f657502996a725ec1c4"
+      },
+      "prompt": {
+        "path": "assets/source/quality-20261115/guard-activation-r1/kumaverson-prompt-r1.txt",
+        "sha256": "6899521c10f55a47bf57360021903506989d0d684a5a77551f6217367152be52"
+      },
+      "cells": [
+        {
+          "frame": 0,
+          "gutterAlpha": 2,
+          "visiblePixels": 24552,
+          "upperActorWindowMeanAlpha": 0.029166666666666667,
+          "floorPeak": 460,
+          "anchor": [
+            0.5,
+            0.8994140625
+          ]
+        },
+        {
+          "frame": 1,
+          "gutterAlpha": 3,
+          "visiblePixels": 58008,
+          "upperActorWindowMeanAlpha": 0.08888888888888889,
+          "floorPeak": 456,
+          "anchor": [
+            0.5,
+            0.8916015625
+          ]
+        },
+        {
+          "frame": 2,
+          "gutterAlpha": 5,
+          "visiblePixels": 104127,
+          "upperActorWindowMeanAlpha": 0.31234567901234567,
+          "floorPeak": 452,
+          "anchor": [
+            0.5,
+            0.8837890625
+          ]
+        },
+        {
+          "frame": 3,
+          "gutterAlpha": 12,
+          "visiblePixels": 109784,
+          "upperActorWindowMeanAlpha": 0.4152777777777778,
+          "floorPeak": 456,
+          "anchor": [
+            0.5,
+            0.8916015625
+          ]
+        },
+        {
+          "frame": 4,
+          "gutterAlpha": 4,
+          "visiblePixels": 62369,
+          "upperActorWindowMeanAlpha": 0.07685185185185185,
+          "floorPeak": 458,
+          "anchor": [
+            0.5,
+            0.8955078125
+          ]
+        },
+        {
+          "frame": 5,
+          "gutterAlpha": 2,
+          "visiblePixels": 25951,
+          "upperActorWindowMeanAlpha": 0.22415123456790123,
+          "floorPeak": 465,
+          "anchor": [
+            0.5,
+            0.9091796875
+          ]
+        }
+      ],
+      "output": {
+        "id": "v100-kumaverson-guard-activation",
+        "path": "/art/quality-20261115/vfx/kumaverson-guard-six-r1.webp",
+        "hash": "sha256-d4ea4cec36888cc2ff9586a7e56998e7ab33bdd399020b13def9b3f62e7fe788",
+        "width": 768,
+        "height": 512,
+        "columns": 3,
+        "rows": 2,
+        "anchors": [
+          [
+            0.5,
+            0.8994140625
+          ],
+          [
+            0.5,
+            0.8916015625
+          ],
+          [
+            0.5,
+            0.8837890625
+          ],
+          [
+            0.5,
+            0.8916015625
+          ],
+          [
+            0.5,
+            0.8955078125
+          ],
+          [
+            0.5,
+            0.9091796875
+          ]
+        ],
+        "worldWidth": 192,
+        "worldHeight": 94,
+        "bytes": 258774
+      }
+    },
+    {
+      "kind": "guardian",
+      "description": "steel-shield bracing grit and iron fragments",
+      "master": {
+        "path": "assets/source/quality-20261115/guard-activation-r1/guardian-generated-r2.png",
+        "bytes": 1398029,
+        "sha256": "8beb3e17319bf0056842515a40aa95d4829e6c92ef366db98dfc26aa7b4bf0dc"
+      },
+      "prompt": {
+        "path": "assets/source/quality-20261115/guard-activation-r1/guardian-prompt-r2.txt",
+        "sha256": "0c82ba698e6fd6a7858519ae3d3bdad141205655edf4003dd02acbc1f4d47edb"
+      },
+      "cells": [
+        {
+          "frame": 0,
+          "gutterAlpha": 1,
+          "visiblePixels": 10254,
+          "upperActorWindowMeanAlpha": 0.00038580246913580245,
+          "floorPeak": 450,
+          "anchor": [
+            0.5,
+            0.8798828125
+          ]
+        },
+        {
+          "frame": 1,
+          "gutterAlpha": 1,
+          "visiblePixels": 29274,
+          "upperActorWindowMeanAlpha": 0.00038580246913580245,
+          "floorPeak": 444,
+          "anchor": [
+            0.5,
+            0.8681640625
+          ]
+        },
+        {
+          "frame": 2,
+          "gutterAlpha": 1,
+          "visiblePixels": 49833,
+          "upperActorWindowMeanAlpha": 0.001851851851851852,
+          "floorPeak": 452,
+          "anchor": [
+            0.5,
+            0.8837890625
+          ]
+        },
+        {
+          "frame": 3,
+          "gutterAlpha": 1,
+          "visiblePixels": 41791,
+          "upperActorWindowMeanAlpha": 0.062114197530864196,
+          "floorPeak": 440,
+          "anchor": [
+            0.5,
+            0.8603515625
+          ]
+        },
+        {
+          "frame": 4,
+          "gutterAlpha": 1,
+          "visiblePixels": 23925,
+          "upperActorWindowMeanAlpha": 0.05594135802469136,
+          "floorPeak": 440,
+          "anchor": [
+            0.5,
+            0.8603515625
+          ]
+        },
+        {
+          "frame": 5,
+          "gutterAlpha": 1,
+          "visiblePixels": 11766,
+          "upperActorWindowMeanAlpha": 0.008719135802469136,
+          "floorPeak": 440,
+          "anchor": [
+            0.5,
+            0.8603515625
+          ]
+        }
+      ],
+      "output": {
+        "id": "v100-guardian-guard-activation",
+        "path": "/art/quality-20261115/vfx/guardian-guard-six-r2.webp",
+        "hash": "sha256-e4bdd1f17c52cc19db47fecb5518d8790b394d36feb3140a3ca6db6f64d28b11",
+        "width": 768,
+        "height": 512,
+        "columns": 3,
+        "rows": 2,
+        "anchors": [
+          [
+            0.5,
+            0.8798828125
+          ],
+          [
+            0.5,
+            0.8681640625
+          ],
+          [
+            0.5,
+            0.8837890625
+          ],
+          [
+            0.5,
+            0.8603515625
+          ],
+          [
+            0.5,
+            0.8603515625
+          ],
+          [
+            0.5,
+            0.8603515625
+          ]
+        ],
+        "worldWidth": 224,
+        "worldHeight": 104,
+        "bytes": 133902
+      }
+    }
+  ],
+  "scope": "Only optional grounded activation paint for two existing guards. Current queue timing, deduplication, guard/heal mechanics, actor identity, weapon, audio, simulation and save are unchanged. Pure resampling/encoding preserves generated alpha; no background removal or painted substitute."
+}

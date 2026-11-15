@@ -1,0 +1,6 @@
+Use case: precise-object-edit.
+Image 1 is the transparent six-frame shield-bracing VFX sheet to edit. Image 2 is ONLY a diagnostic view of the same effect on a dark background, to show its colours and details clearly; do not copy that background.
+
+Preserve the realistic steel glints, grit, stone fragments, phase order, palette and fixed side-on camera. Correct only framing and transparent gutters: every one of the six 512 x 512 cells in the existing 3 x 2 layout must have at least 24 pixels of completely transparent alpha=0 margin on all four sides. In particular, the large lower-left fourth frame must not touch or get cut by the left cell boundary. Scale the contents of each cell down just enough to fit, preserving the effect and its proportions. Keep the ground contact for all six cells at approximately x=256,y=460 inside the cell; coherent grounded motion is essential. The upper centre must remain clear for the actor. Preserve the progression from small preparation, through the largest material burst, to sparse settling dust.
+
+Output a 1536 x 1024 PNG with actual transparency, no backdrop, no lines or labels. No character, shield object, fire, magic, rings, halos, beams or geometric effects. Do not recolour or replace the materials.

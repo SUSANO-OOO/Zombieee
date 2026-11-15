@@ -1,0 +1,11 @@
+Use case: stylized-concept.
+Asset type: a production defensive VFX sprite sheet for a realistic side-view Japanese post-apocalyptic smartphone game.
+Create ONE 1536 x 1024 landscape image, exactly six separate 512 x 512 animation cells in a 3-column by 2-row grid. True transparent background. No labels or divider lines.
+
+Subject: a heavy steel-shield stance being planted against a ruined street. Effects only. A violent low spray of gritty stone chips, scraped iron flakes, bright short silver friction sparks, compressed dirty dust and a few tumbling blunt fragments. No shield, weapon or person is drawn: those already exist in the game. This must communicate mass and defensive bracing, not a damaging attack or a magical barrier. It should be unmistakably sharper, heavier and more abrupt than soft rolling cooking steam.
+
+Fixed side-on camera, fixed ground contact at (256, 420) in each cell. Keep upper centre transparent for the existing actor. Material spreads low along the ground and to the sides; put the most dramatic sharp glints and rubble at the lower flanks so the actor's face, shield and health bar remain clear. Detailed irregular photorealistic material, cinematic highlights, visible even when a whole cell is rendered about 190 x 80 game pixels on a dark wet street. Keep transparent safety margins inside every cell.
+
+Reading-order animation phases: 1 compact contact scuffs and a few hard silver sparks; 2 an abrupt heavy outward grit-and-metal burst; 3 the widest and most powerful low impact with suspended stone chips and broken dust turbulence; 4 fragments fall while the pressure dust rolls away; 5 settling grit and thinning dust; 6 sparse residual dust and a few resting specks, mostly transparent. Preserve coherent ground location, material and lighting across all six phases.
+
+Avoid: people, character silhouettes, shield or weapon objects, fire, orange flames, fireballs, visible ground/background rectangles, text, numbers, UI, logos, circles, rings, halos, beams, glowing geometric barriers, magical energy, flat vector art. Actual transparent alpha with translucent smoke; no black/white/grey/checkerboard backdrop.
