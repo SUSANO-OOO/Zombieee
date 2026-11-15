@@ -1,0 +1,115 @@
+/* V1 phone battle menu: existing controls on the verified field materials.
+   The CSS variable is set only by the installed-pack/browser-consent gate. */
+.pause-screen.v100-phone-pause { box-sizing:border-box; padding:max(6px,var(--app-viewport-safe-top,0px)) max(8px,var(--app-viewport-safe-right,0px)) max(6px,var(--app-viewport-safe-bottom,0px)) max(8px,var(--app-viewport-safe-left,0px)); background:#07100bd9; backdrop-filter:blur(3px); }
+.pause-screen.v100-phone-pause > .pause-panel {
+  box-sizing:border-box; display:flex; flex-direction:column; gap:4px;
+  width:100%; max-width:860px; max-height:100%;
+  overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; scroll-padding-top:60px; touch-action:pan-y;
+  margin:0; padding:6px 8px; border:1px solid #8f9470;
+  border-top:3px solid #c0a56c; border-left:5px solid #8c5435; border-radius:2px;
+  background-color:#1a281e;
+  background-image:linear-gradient(115deg,#1d3020bd,#101e16cf),var(--v100-ui-materials,none);
+  background-size:100% 100%,300% 200%; background-position:center,0 0;
+  box-shadow:0 14px 46px #000b,inset 0 0 0 1px #d7c18433;
+  color:#eee5c7; font-family:var(--v100-reading-font,"BIZ UDPGothic",sans-serif);
+}
+.v100-phone-pause .pause-panel > * { flex:0 0 auto; }
+.v100-phone-pause .pause-panel > small { display:none; }
+.v100-phone-pause .pause-panel > h2 {
+  margin:0; color:#f6e8c2; font:800 24px/1.1 var(--v100-display-font,"Zen Kaku Gothic New",sans-serif);
+  letter-spacing:.06em; text-shadow:0 1px #000;
+}
+.v100-phone-pause .pause-actions {
+  display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:5px;
+  position:sticky; top:0; z-index:3; margin:0; padding:0; background:#14271d;
+}
+.v100-phone-pause :is(.pause-actions button,.pause-volume button,.pause-graphics button,.pause-confirm button) {
+  box-sizing:border-box; min-height:44px; margin:0; padding:5px 7px;
+  border:1px solid #798475; border-bottom:2px solid #08100c; border-left:3px solid #a28b5c;
+  border-radius:2px; clip-path:none; color:#f5e9cd;
+  background-color:#293b2e;
+  background-image:linear-gradient(110deg,#263d30a6,#15291fe3),var(--v100-ui-materials,none);
+  background-size:100% 100%,300% 200%; background-position:center,50% 0;
+  box-shadow:inset 0 1px #c7c19c40,0 2px 3px #0005;
+  font:700 14px/1.2 var(--v100-display-font,"Zen Kaku Gothic New",sans-serif);
+  letter-spacing:.01em; white-space:normal; overflow-wrap:anywhere; text-align:center;
+}
+.v100-phone-pause .pause-actions .primary {
+  color:#fff4d5; border-left-color:#edc671; border-top-color:#d9bb78;
+  background-image:linear-gradient(110deg,#2b5535a1,#173521ad),var(--v100-ui-materials,none);
+  background-position:center,50% 100%; box-shadow:inset 0 1px #f0d99366,0 2px 4px #0006;
+}
+.v100-phone-pause :is(.pause-actions button.danger,.pause-confirm button.danger) {
+  color:#ffe4ce; border-left-color:#df8858;
+  background-image:linear-gradient(100deg,#7f382c99,#3c201ad4),var(--v100-ui-materials,none);
+  background-position:center,0 100%;
+}
+.v100-phone-pause :is(button,input,summary):focus-visible { outline:2px solid #f1c46e; outline-offset:2px; }
+.v100-phone-pause .pause-actions button:disabled,
+.v100-phone-pause .pause-volume button:disabled,
+.v100-phone-pause .pause-graphics button:disabled { opacity:.6; }
+.v100-phone-pause .manual-tactics {
+  margin:0; border:1px solid #78866e; border-left:3px solid #b59a61;
+  background:#17291fea; color:#e9e2c7;
+}
+.v100-phone-pause .manual-tactics > summary { box-sizing:border-box; min-height:44px; padding:6px 10px; font-size:14px; line-height:1.35; }
+.v100-phone-pause .manual-tactics > summary > span,
+.v100-phone-pause .manual-tactics :is(p,header > b,h3 > span,.manual-tactics-use strong) { font-size:13px; line-height:1.5; letter-spacing:normal; }
+.v100-phone-pause .manual-tactics article {
+  border:1px solid #a1946d; border-left:3px solid #815f34; color:#263529;
+  background-color:#e8d8ae;
+  background-image:linear-gradient(110deg,#eadbbab8,#cebd97b8),var(--v100-ui-materials,none);
+  background-size:100% 100%,300% 200%; background-position:center,100% 0;
+}
+.v100-phone-pause .manual-tactics h3 { color:#21392b; font-size:15px; }
+.v100-phone-pause .manual-tactics h3 > span { color:#655637; }
+.v100-phone-pause .manual-tactics :is(.manual-tactics-target,.manual-tactics-use strong) { color:#69502b; }
+.v100-phone-pause .manual-tactics .manual-tactics-use { color:#283d30; border-top-color:#94845b; }
+.v100-phone-pause .pause-panel:has(.manual-tactics[open]) { scroll-padding-top:60px; }
+.v100-phone-pause .pause-panel:has(.manual-tactics[open]) .pause-actions { background:#14271d; padding-bottom:4px; }
+.v100-phone-pause .pause-volume {
+  display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px 10px;
+  margin:0; padding:4px 7px; border:1px solid #a49770; border-left:3px solid #6b734b;
+  background-color:#dfd1ac;
+  background-image:linear-gradient(110deg,#eee2c3c4,#d0c09bc2),var(--v100-ui-materials,none);
+  background-size:100% 100%,300% 200%; background-position:center,100% 0;
+  box-shadow:inset 0 1px #fff0c5;
+}
+.v100-phone-pause .pause-volume h3 { display:none; }
+.v100-phone-pause .pause-volume label {
+  display:grid; grid-template-columns:minmax(0,1fr); grid-template-rows:16px 44px;
+  align-items:center; gap:0; min-height:60px; color:#293b2c;
+  font:700 13px/16px var(--v100-reading-font,"BIZ UDPGothic",sans-serif); letter-spacing:normal;
+}
+.v100-phone-pause .pause-volume label span { display:flex; align-items:center; justify-content:space-between; gap:6px; }
+.v100-phone-pause .pause-volume label b { font-family:var(--v100-numeric-font,"BIZ UDPGothic",sans-serif); font-size:16px; color:#253d2a; }
+.v100-phone-pause .pause-volume input { box-sizing:border-box; display:block; width:100%; height:44px; min-height:44px; margin:0; padding:0; accent-color:#735a2e; cursor:pointer; }
+.v100-phone-pause .pause-volume > div { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); grid-column:1/-1; gap:5px; margin:0; }
+.v100-phone-pause .pause-volume .audio-test-tone {
+  border-left-color:#8daf90;
+  background-image:linear-gradient(100deg,#224b43ba,#142c26d9),var(--v100-ui-materials,none);
+  background-position:center,50% 100%;
+}
+.v100-phone-pause .pause-volume .audio-troubleshooting { grid-column:1/-1; margin:0; color:#48513d; font:400 12px/1.35 var(--v100-reading-font,"BIZ UDPGothic",sans-serif); letter-spacing:normal; }
+.v100-phone-pause .pause-graphics {
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+  min-height:44px; box-sizing:border-box; margin:0; padding:0 5px 0 9px;
+  border:1px solid #738266; border-left:3px solid #ac9a61; background:#14251de0;
+}
+.v100-phone-pause .pause-graphics > span b { color:#dfd4ac; font:700 13px/1.35 var(--v100-reading-font,"BIZ UDPGothic",sans-serif); }
+.v100-phone-pause .pause-graphics > span small { display:none; }
+.v100-phone-pause .pause-graphics button { min-width:166px; margin:-1px -6px -1px 0; }
+.v100-phone-pause .pause-graphics button small { margin-top:1px; display:block; color:#d1dcc4; font:400 12px/1.2 var(--v100-reading-font,"BIZ UDPGothic",sans-serif); letter-spacing:normal; }
+.v100-phone-pause .pause-panel > p { margin:0; padding:5px; color:#ffdfb1; font-size:13px; line-height:1.45; }
+.v100-phone-pause .pause-panel > p button { font-size:14px; min-height:44px; }
+.v100-phone-pause .pause-confirm { position:fixed; inset:0; z-index:8; box-sizing:border-box; padding:max(10px,var(--app-viewport-safe-top,0px)) max(10px,var(--app-viewport-safe-right,0px)) max(10px,var(--app-viewport-safe-bottom,0px)) max(10px,var(--app-viewport-safe-left,0px)); background:#07100bdd; }
+.v100-phone-pause .pause-confirm > div {
+  box-sizing:border-box; width:min(640px,100%); max-height:100%; overflow:auto; padding:14px;
+  border:1px solid #a28e61; border-left:5px solid #9c5536; color:#25372a;
+  background-color:#e5d6af;
+  background-image:linear-gradient(110deg,#ecdfbfc7,#d1be97c9),var(--v100-ui-materials,none);
+  background-size:100% 100%,300% 200%; background-position:center,100% 0;
+}
+.v100-phone-pause .pause-confirm h3 { margin:0 0 8px; color:#26392a; font:700 19px/1.35 var(--v100-display-font,"Zen Kaku Gothic New",sans-serif); }
+.v100-phone-pause .pause-confirm p { margin:0 0 10px; color:#3f4b37; font:400 13px/1.55 var(--v100-reading-font,"BIZ UDPGothic",sans-serif); letter-spacing:normal; }
+.v100-phone-pause .pause-confirm span { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }

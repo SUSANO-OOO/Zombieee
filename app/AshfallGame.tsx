@@ -25677,11 +25677,11 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             <div><button disabled={survivalSavePending} onClick={retrySurvivalWaveEntitlementSave}>{survivalSavePending ? "保存中" : "保存を再試行"}</button></div>
           </section>
         </div>}
-        {paused && started && !end && !survivalUpgradeOpen && !pendingSurvivalSettlement && !pendingSurvivalWaveEntitlement && <div className="pause-screen" role="dialog" aria-modal="true" aria-label="一時停止メニュー"><div className="pause-panel">
+        {paused && started && !end && !survivalUpgradeOpen && !pendingSurvivalSettlement && !pendingSurvivalWaveEntitlement && <div className={externalSessionActive ? "pause-screen v100-phone-pause" : "pause-screen"} role="dialog" aria-modal="true" aria-label="一時停止メニュー"><div className="pause-panel">
           <small>ステージ一時停止</small><h2>一時停止</h2>
           <div className="pause-actions">
             <button className="primary" onClick={togglePause}>戦闘を再開</button>
-            {!isSurvivalBattle && <button onClick={() => requestPauseAction("restart")}>ステージを最初からやり直す</button>}
+            {!isSurvivalBattle && <button onClick={() => requestPauseAction("restart")}>{externalSessionActive ? "最初からやり直す" : "ステージを最初からやり直す"}</button>}
             {!isSurvivalBattle && <button onClick={() => requestPauseAction("loadout")}>編成画面へ戻る</button>}
             <button className="danger" onClick={() => requestPauseAction("withdraw")}>{externalSessionActive ? "ステージ選択へ撤退" : "エリアマップへ撤退"}</button>
           </div>
@@ -25695,10 +25695,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             <label><span>BGM <b>{Math.round(campaignSave.settings.bgmVolume * 100)}%</b></span><input type="range" min="0" max="1" step="0.05" value={campaignSave.settings.bgmVolume} data-volume-kind="bgm" data-audio-unlock-control="true" aria-label="BGM音量" aria-valuetext={`${Math.round(campaignSave.settings.bgmVolume * 100)}%${campaignSave.settings.bgmVolume <= 0 ? " ミュート" : ""}`} disabled={Boolean(end || pendingResultCommit || externalSettingsPending)} onChange={(event) => updateVolume("bgm", Number(event.currentTarget.value))} /></label>
             <label><span>SE・戦闘ボイス <b>{Math.round(campaignSave.settings.sfxVolume * 100)}%</b></span><input type="range" min="0" max="1" step="0.05" value={campaignSave.settings.sfxVolume} data-volume-kind="sfx" data-audio-unlock-control="true" aria-label="SE・戦闘ボイス音量" aria-valuetext={`${Math.round(campaignSave.settings.sfxVolume * 100)}%${campaignSave.settings.sfxVolume <= 0 ? " ミュート" : ""}`} disabled={Boolean(end || pendingResultCommit || externalSettingsPending)} onChange={(event) => updateVolume("sfx", Number(event.currentTarget.value))} /></label>
             <div><button disabled={Boolean(end || pendingResultCommit || externalSettingsPending)} onClick={toggleBgm}>{bgmMuted ? "BGMを有効にする" : "BGMをミュート"}</button><button disabled={Boolean(end || pendingResultCommit || externalSettingsPending)} onClick={toggleSfx}>{sfxMuted ? "効果音を有効にする" : "効果音をミュート"}</button><button className="audio-test-tone" data-audio-unlock-control="true" onClick={playAudioTestTone} disabled={Boolean(end || pendingResultCommit || externalSettingsPending)}>テスト音を鳴らす</button></div>
-            <p className="audio-troubleshooting">成功表示でも聞こえない場合は、端末音量とブラウザのタブミュートを確認してください。</p>
+            <p className="audio-troubleshooting">{externalSessionActive ? "聞こえないときは、端末の音量も確認してください。" : "成功表示でも聞こえない場合は、端末音量とブラウザのタブミュートを確認してください。"}</p>
           </section>
           <section className="pause-graphics" aria-label="描画品質設定">
-            <span><b>描画品質</b><small>戦闘結果は変えず、描画負荷だけを調整</small></span>
+            <span><b>{externalSessionActive ? "画面のきれいさ" : "描画品質"}</b><small>戦闘結果は変えず、描画負荷だけを調整</small></span>
             <button
               disabled={externalSettingsPending}
               data-graphics-quality-control="true"
@@ -25706,12 +25706,18 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               onClick={cycleGraphicsQuality}
             >
               {campaignSave.settings.graphicsQuality === "high"
-                ? "High"
+                ? (externalSessionActive ? "最高" : "High")
                 : campaignSave.settings.graphicsQuality === "power-save"
                   ? "省電力"
-                  : "Auto"}
+                  : (externalSessionActive ? "自動" : "Auto")}
               <small>
-                {graphicsProfileView.renderHz}fps上限 / DPR {graphicsProfileView.dprCap}
+                {externalSessionActive
+                  ? campaignSave.settings.graphicsQuality === "high"
+                    ? "細部をくっきり表示"
+                    : campaignSave.settings.graphicsQuality === "power-save"
+                      ? "動作を軽くする表示"
+                      : "端末に合わせた表示"
+                  : <>{graphicsProfileView.renderHz}fps上限 / DPR {graphicsProfileView.dprCap}</>}
               </small>
             </button>
           </section>
