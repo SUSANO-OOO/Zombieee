@@ -1,0 +1,98 @@
+{
+  "app/AshfallGame.tsx": [
+    [
+      "\"use client\";\n",
+      "\"use client\";\nimport {selectV100BossSkillPlayback,v100BossSkillCue,v100BossSkillCues} from \"./v100BossSkillAudio.js\";\n"
+    ],
+    [
+      "import {PwaManualFoleyPathsContext,PwaBossCollapsePathsContext} from \"./pwaAudioAvailabilityContext.js\";",
+      "import {PwaManualFoleyPathsContext,PwaBossCollapsePathsContext,PwaBossSkillPathsContext} from \"./pwaAudioAvailabilityContext.js\";"
+    ],
+    [
+      "  const [bossCollapsePathsAtEntry]=useState(()=>verifiedBossCollapsePaths);",
+      "  const [bossCollapsePathsAtEntry]=useState(()=>verifiedBossCollapsePaths);\n  const verifiedBossSkillPaths=useContext(PwaBossSkillPathsContext);\n  const [bossSkillPathsAtEntry]=useState(()=>verifiedBossSkillPaths);"
+    ],
+    [
+      "? selectV100BossCollapsePlayback(selectV100ManualFoleyPlayback(V100_AUDIO_MANIFEST,GAMEPLAY_PRODUCTION_AUDIO_MANIFEST,manualFoleyPathsAtEntry),bossCollapsePathsAtEntry)",
+      "? selectV100BossSkillPlayback(selectV100BossCollapsePlayback(selectV100ManualFoleyPlayback(V100_AUDIO_MANIFEST,GAMEPLAY_PRODUCTION_AUDIO_MANIFEST,manualFoleyPathsAtEntry),bossCollapsePathsAtEntry),bossSkillPathsAtEntry)"
+    ],
+    [
+      "[externalSessionActive,manualFoleyPathsAtEntry,bossCollapsePathsAtEntry]);",
+      "[externalSessionActive,manualFoleyPathsAtEntry,bossCollapsePathsAtEntry,bossSkillPathsAtEntry]);"
+    ],
+    [
+      "    if (collapseCue) void productionMixerRef.current?.preloadAssets([collapseCue], { priority: \"background\" });",
+      "    if (collapseCue) void productionMixerRef.current?.preloadAssets([collapseCue], { priority: \"background\" });\n    const skillCues = v100BossSkillCues(kind, g.definition.missionConfig.v100StageNumber, Boolean(externalSessionRef.current));\n    if (skillCues.length) void productionMixerRef.current?.preloadAssets(skillCues, { priority: \"background\" });"
+    ],
+    [
+      "playBattleSemanticCue(\"boss-mother-brood-eruption\", f.x, {",
+      "playBattleSemanticCue(v100BossSkillCue(f.kind, \"impact\", g.definition.missionConfig.v100StageNumber, Boolean(externalSessionRef.current)) ?? \"boss-mother-brood-eruption\", f.x, {"
+    ],
+    [
+      "playBattleSemanticCue(\"boss-mother-brood-warning\", f.x, {",
+      "playBattleSemanticCue(v100BossSkillCue(f.kind, \"warning\", g.definition.missionConfig.v100StageNumber, Boolean(externalSessionRef.current)) ?? \"boss-mother-brood-warning\", f.x, {"
+    ],
+    [
+      "playBattleSemanticCue(\"boss-ooguchi-charge-impact\", f.x, {",
+      "playBattleSemanticCue(v100BossSkillCue(f.kind, \"impact\", g.definition.missionConfig.v100StageNumber, Boolean(externalSessionRef.current)) ?? \"boss-ooguchi-charge-impact\", f.x, {"
+    ],
+    [
+      "playBattleSemanticCue(\"v104-eye-fire\", f.x, {",
+      "playBattleSemanticCue(v100BossSkillCue(f.kind, \"impact\", g.definition.missionConfig.v100StageNumber, Boolean(externalSessionRef.current)) ?? \"v104-eye-fire\", f.x, {"
+    ],
+    [
+      "playBattleSemanticCue(\"v104-eye-warning\", f.x, {",
+      "playBattleSemanticCue(v100BossSkillCue(f.kind, \"warning\", g.definition.missionConfig.v100StageNumber, Boolean(externalSessionRef.current)) ?? \"v104-eye-warning\", f.x, {"
+    ],
+    [
+      "                    anomalyKind === \"gairen\"\n                      ? \"boss-gairen-shell-sweep\"\n                      : \"boss-futago-cross-impact\",",
+      "                    v100BossSkillCue(f.kind, \"impact\", g.definition.missionConfig.v100StageNumber, Boolean(externalSessionRef.current)) ?? (\n                    anomalyKind === \"gairen\"\n                      ? \"boss-gairen-shell-sweep\"\n                      : \"boss-futago-cross-impact\"\n                    ),"
+    ],
+    [
+      "                    anomalyKind === \"ooguchi\"\n                      ? \"boss-ooguchi-charge-warning\"\n                      : anomalyKind === \"gairen\"\n                        ? \"boss-gairen-shell-warning\"\n                        : anomalyKind === \"futago\"\n                          ? \"boss-futago-cross-warning\"\n                          : anomalyKind === \"mugarian-president-mutated\"\n                            ? enemyCombatCueFor(f.kind, \"phase\")\n                            : \"enemy-takuya-attack\",",
+      "                    anomalyKind === \"takuya-omega\" ? \"enemy-takuya-attack\" : (\n                      v100BossSkillCue(f.kind, \"warning\", g.definition.missionConfig.v100StageNumber, Boolean(externalSessionRef.current)) ?? (\n                    anomalyKind === \"ooguchi\"\n                      ? \"boss-ooguchi-charge-warning\"\n                      : anomalyKind === \"gairen\"\n                        ? \"boss-gairen-shell-warning\"\n                        : anomalyKind === \"futago\"\n                          ? \"boss-futago-cross-warning\"\n                          : anomalyKind === \"mugarian-president-mutated\"\n                            ? enemyCombatCueFor(f.kind, \"phase\")\n                            : \"enemy-takuya-attack\"\n                      )\n                    ),"
+    ],
+    [
+      "                    dedupeKey: `boss:${f.id}:${f.attackSequence}:${anomalyKind}-warning`,\n                  },\n                );",
+      "                    dedupeKey: `boss:${f.id}:${f.attackSequence}:${anomalyKind}-warning`,\n                  },\n                );\n                // Omega keeps the original warning voice beside non-vocal material.\n                if (anomalyKind === \"takuya-omega\") {\n                  const skillMaterialWarning = v100BossSkillCue(f.kind, \"warning\", g.definition.missionConfig.v100StageNumber, Boolean(externalSessionRef.current));\n                  if (skillMaterialWarning) playBattleSemanticCue(skillMaterialWarning, f.x, {\n                    semantic: \"boss-skill-material-warning\",\n                    receiptId: \"boss-skill-warning:\" + f.id + \":\" + g.time.toFixed(3),\n                    ownerId: f.id, priority: 90, cooldownMs: 0, volume: .62, maxInstances: 2,\n                    dedupeKey: \"boss-skill-warning:\" + f.id + \":\" + g.time.toFixed(3),\n                  });\n                }"
+    ],
+    [
+      "                  bossDefinitionForEnemyKind(\"gate-eater\")?.attackTelegraph.warningSeconds ?? 0,\n                );",
+      "                  bossDefinitionForEnemyKind(\"gate-eater\")?.attackTelegraph.warningSeconds ?? 0,\n                );\n                const skillMaterialWarning = v100BossSkillCue(f.kind, \"warning\", g.definition.missionConfig.v100StageNumber, Boolean(externalSessionRef.current));\n                if (skillMaterialWarning) playBattleSemanticCue(skillMaterialWarning, f.x, {\n                  semantic: \"boss-skill-material-warning\",\n                  receiptId: \"boss-skill-warning:\" + f.id + \":\" + g.time.toFixed(3),\n                  ownerId: f.id, priority: 90, cooldownMs: 0, volume: .62, maxInstances: 2,\n                  dedupeKey: \"boss-skill-warning:\" + f.id + \":\" + g.time.toFixed(3),\n                });"
+    ],
+    [
+      "              if (charge.chargeStarted) {\n                g.stationMetrics.gateEaterCharges += 1;",
+      "              if (charge.chargeStarted) {\n                const skillMaterialRelease = v100BossSkillCue(f.kind, \"release\", g.definition.missionConfig.v100StageNumber, Boolean(externalSessionRef.current));\n                if (skillMaterialRelease) playBattleSemanticCue(skillMaterialRelease, f.x, {\n                  semantic: \"boss-skill-material-release\",\n                  receiptId: \"boss-skill-release:\" + f.id + \":\" + g.time.toFixed(3),\n                  ownerId: f.id, priority: 99, cooldownMs: 0, volume: .64, maxInstances: 2,\n                  dedupeKey: \"boss-skill-release:\" + f.id + \":\" + g.time.toFixed(3),\n                });\n                g.stationMetrics.gateEaterCharges += 1;"
+    ],
+    [
+      "              if (charge.chargeEnded) {\n                for (const victim of g.fighters) {",
+      "              if (charge.chargeEnded) {\n                const skillMaterialImpact = v100BossSkillCue(f.kind, \"impact\", g.definition.missionConfig.v100StageNumber, Boolean(externalSessionRef.current));\n                if (skillMaterialImpact) playBattleSemanticCue(skillMaterialImpact, f.x, {\n                  semantic: \"boss-skill-material-impact\",\n                  receiptId: \"boss-skill-impact:\" + f.id + \":\" + g.time.toFixed(3),\n                  ownerId: f.id, priority: 99, cooldownMs: 0, volume: .8, maxInstances: 2,\n                  dedupeKey: \"boss-skill-impact:\" + f.id + \":\" + g.time.toFixed(3),\n                });\n                for (const victim of g.fighters) {"
+    ],
+    [
+      "                playCue(\"takuya-slam\");",
+      "                playCue(\"takuya-slam\");\n                const skillMaterialImpact = v100BossSkillCue(f.kind, \"impact\", g.definition.missionConfig.v100StageNumber, Boolean(externalSessionRef.current));\n                if (skillMaterialImpact) playBattleSemanticCue(skillMaterialImpact, f.x, {\n                  semantic: \"boss-skill-material-impact\",\n                  receiptId: \"boss-skill-impact:\" + f.id + \":\" + g.time.toFixed(3),\n                  ownerId: f.id, priority: 99, cooldownMs: 0, volume: .8, maxInstances: 2,\n                  dedupeKey: \"boss-skill-impact:\" + f.id + \":\" + g.time.toFixed(3),\n                });"
+    ],
+    [
+      "              g.banner = \"TAKUYA // 鉄槌強襲予告\";\n              g.bannerTime = f.abilityWindup + .05;",
+      "              g.banner = \"TAKUYA // 鉄槌強襲予告\";\n              g.bannerTime = f.abilityWindup + .05;\n              if (f.abilityWindup > 0) {\n                const skillMaterialWarning = v100BossSkillCue(f.kind, \"warning\", g.definition.missionConfig.v100StageNumber, Boolean(externalSessionRef.current));\n                if (skillMaterialWarning) playBattleSemanticCue(skillMaterialWarning, f.x, {\n                  semantic: \"boss-skill-material-warning\",\n                  receiptId: \"boss-skill-warning:\" + f.id + \":\" + g.time.toFixed(3),\n                  ownerId: f.id, priority: 90, cooldownMs: 0, volume: .62, maxInstances: 2,\n                  dedupeKey: \"boss-skill-warning:\" + f.id + \":\" + g.time.toFixed(3),\n                });\n              }"
+    ]
+  ],
+  "app/PwaGate.tsx": [
+    [
+      "import {PwaManualFoleyPathsContext,PwaBossCollapsePathsContext} from \"./pwaAudioAvailabilityContext.js\";",
+      "import {PwaManualFoleyPathsContext,PwaBossCollapsePathsContext,PwaBossSkillPathsContext} from \"./pwaAudioAvailabilityContext.js\";"
+    ],
+    [
+      "import {PWA_BOSS_COLLAPSE_FILES} from \"./pwaBossCollapseFiles.js\";",
+      "import {PWA_BOSS_COLLAPSE_FILES} from \"./pwaBossCollapseFiles.js\";\nimport {PWA_BOSS_SKILL_FILES} from \"./pwaBossSkillFiles.js\";"
+    ],
+    [
+      "  const verifiedBossCollapsePaths = verifiedPwaArtworkPaths({\n    artworks: PWA_BOSS_COLLAPSE_FILES, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,\n    browserPlayAccepted: offerDismissed && (!standalone || registrationFailureAcknowledged),\n  });",
+      "  const verifiedBossCollapsePaths = verifiedPwaArtworkPaths({\n    artworks: PWA_BOSS_COLLAPSE_FILES, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,\n    browserPlayAccepted: offerDismissed && (!standalone || registrationFailureAcknowledged),\n  });\n  const verifiedBossSkillPaths = verifiedPwaArtworkPaths({\n    artworks: PWA_BOSS_SKILL_FILES, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,\n    browserPlayAccepted: offerDismissed && (!standalone || registrationFailureAcknowledged),\n  });"
+    ],
+    [
+      "      {!blocking && <PwaBossCollapsePathsContext.Provider value={verifiedBossCollapsePaths}><PwaManualFoleyPathsContext.Provider value={verifiedManualFoleyPaths}><PwaBattleArtworkPathsContext.Provider value={verifiedBattleArtworkPaths}>{children}</PwaBattleArtworkPathsContext.Provider></PwaManualFoleyPathsContext.Provider></PwaBossCollapsePathsContext.Provider>}",
+      "      {!blocking && <PwaBossSkillPathsContext.Provider value={verifiedBossSkillPaths}><PwaBossCollapsePathsContext.Provider value={verifiedBossCollapsePaths}><PwaManualFoleyPathsContext.Provider value={verifiedManualFoleyPaths}><PwaBattleArtworkPathsContext.Provider value={verifiedBattleArtworkPaths}>{children}</PwaBattleArtworkPathsContext.Provider></PwaManualFoleyPathsContext.Provider></PwaBossCollapsePathsContext.Provider></PwaBossSkillPathsContext.Provider>}"
+    ]
+  ]
+}

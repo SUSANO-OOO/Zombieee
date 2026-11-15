@@ -6,3 +6,4 @@ import {createContext} from 'react';
 export const PwaManualFoleyPathsContext=createContext('');
 
 export const PwaBossCollapsePathsContext=createContext('');
+export const PwaBossSkillPathsContext=createContext('');
