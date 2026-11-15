@@ -18,25 +18,80 @@
 #v100-campaign .v100-read-story-setting { display: flex; align-items: center; gap: 10px; min-height: 44px; margin: 8px 0 12px; padding: 8px; border: 1px solid #7f8f79; color: #efe4c7; font-size: 14px; cursor: pointer; }
 #v100-campaign .v100-read-story-setting input { flex: none; width: 20px; height: 20px; accent-color: #d7b875; }
 #v100-campaign .v100-read-story-setting small { display: block; margin-top: 4px; font-size: 12px; color: #b9c7b8; }
-#v100-campaign .v100-reward-summary { inset: 40px 8% 56px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: max-content; align-content: start; gap: 8px; overflow-y: auto; touch-action: pan-y; overscroll-behavior: contain; }
-#v100-campaign .v100-reward-summary h2 { font: 700 22px/1.2 var(--v100-reading-font); }
-#v100-campaign .v100-reward-summary > h2,
-#v100-campaign .v100-reward-summary > p { grid-column: 1 / -1; }
-#v100-campaign .v100-reward-summary .v100-result-rewards { grid-column: 1; grid-row: 2; grid-template-columns: 1fr; align-content: start; margin: 0; }
-#v100-campaign .v100-reward-summary .v100-result-rewards strong { font-size: 22px; line-height: 1.3; }
-#v100-campaign .v100-reward-summary .v100-result-rewards span { font-size: 14px; }
-#v100-campaign .v100-reward-summary .v100-result-rewards article { padding: 8px; }
-#v100-campaign .v100-reward-breakdown { grid-column: 2; grid-row: 2; position: static; align-self: start; margin: 0; text-align: left; }
+/* The settled reward pairs a CAPS voucher with a separate equipment/crew record.
+   Existing finalized-result data and the verified paper material remain the owners. */
+#v100-campaign .v100-reward-summary {
+  inset: 40px 4% 56px; display: grid; grid-template-columns: minmax(0,1fr);
+  grid-auto-rows: max-content; align-content: start; gap: 8px;
+  overflow-y: auto; touch-action: pan-y; overscroll-behavior: contain;
+  text-align: left; scrollbar-gutter: stable;
+}
+#v100-campaign .v100-reward-summary h2 {
+  display: flex; align-items: center; gap: 12px; margin: 0; color: #f1dfb4;
+  font: 800 23px/1.2 var(--v100-display-font); letter-spacing: .06em;
+}
+#v100-campaign .v100-reward-stage {
+  padding-right: 12px; border-right: 1px solid #b39765;
+  color: #edc780; font: 800 32px/1 var(--v100-numeric-font); letter-spacing: 0;
+}
+#v100-campaign .v100-reward-ledger {
+  display: grid; grid-template-columns: minmax(164px,.7fr) minmax(0,2fr);
+  align-items: stretch; gap: 12px; min-width: 0;
+}
+#v100-campaign .v100-reward-caps-sheet {
+  min-width: 0; padding: 10px 12px; border-top: 3px solid #cfaa65; border-bottom: 1px solid #8e815f;
+  background: linear-gradient(125deg,#27382deb,#101f18f2); box-shadow: inset 3px 0 #bea46c33;
+}
+#v100-campaign .v100-reward-caps-label { color: #cbd2b9; font: 600 14px/1.3 var(--v100-reading-font); }
+#v100-campaign .v100-reward-caps-value {
+  display: flex; align-items: baseline; gap: 6px; margin: 5px 0 8px; color: #f4d392;
+  font: 800 48px/1 var(--v100-numeric-font); overflow-wrap: anywhere;
+}
+#v100-campaign .v100-reward-caps-value small { font: 600 13px/1.2 var(--v100-reading-font); color: #c9cdb2; }
+#v100-campaign .v100-reward-breakdown { position: static; margin: 0; text-align: left; }
+#v100-campaign .v100-reward-breakdown summary { min-height: 44px; padding: 5px 0; border: 0; border-top: 1px dashed #8a9274; background: transparent; color: #e9dfc0; font-size: 13px; }
 #v100-campaign .v100-reward-breakdown summary::after { content: "+"; margin-left: auto; padding-left: 6px; font-size: 20px; }
 #v100-campaign .v100-reward-breakdown[open] summary::after { content: "−"; }
-#v100-campaign .v100-reward-breakdown > p { position: static; margin: 0; padding: 6px 8px; border: 1px solid #a6af84; border-top: 0; background: #102018; color: #efebd4; font-size: 14px; line-height: 1.5; }
-#v100-campaign .v100-reward-summary:has(.v100-result-rewards article:nth-child(2)) { grid-template-columns: minmax(112px, .55fr) repeat(2, minmax(0, 1fr)); }
-#v100-campaign .v100-reward-summary:has(.v100-result-rewards article:nth-child(2)) .v100-result-rewards { display: contents; }
-#v100-campaign .v100-reward-summary:has(.v100-result-rewards article:nth-child(2)) .v100-result-rewards article { grid-column: 1; grid-row: 2; }
-#v100-campaign .v100-reward-summary:has(.v100-result-rewards article:nth-child(2)) .v100-result-rewards article:nth-child(2) { grid-column: 2; }
-#v100-campaign .v100-reward-summary .v100-result-rewards article:nth-child(2) strong { font-size: 16px; line-height: 1.35; }
-#v100-campaign .v100-reward-summary:has(.v100-result-rewards article:nth-child(2)) .v100-reward-breakdown { grid-column: 3; grid-row: 2; }
-#v100-campaign .v100-reward-summary:has(.v100-result-rewards article:nth-child(2)) > p { grid-column: 1 / -1; grid-row: 3; font-size: 14px; line-height: 1.5; }
+#v100-campaign .v100-reward-breakdown dl { margin: 0; padding: 0; }
+#v100-campaign .v100-reward-breakdown dl > div { display: flex; justify-content: space-between; gap: 8px; padding: 4px 0; border-top: 1px solid #a8ae7d33; color: #e0e2c9; font: 400 13px/1.35 var(--v100-reading-font); }
+#v100-campaign .v100-reward-breakdown dd { flex: none; margin: 0; color: #f0d08c; font-family: var(--v100-numeric-font); font-weight: 800; }
+#v100-campaign .v100-reward-unlocks {
+  min-width: 0; padding: 9px 12px; border-top: 3px solid #a84c31; border-bottom: 2px solid #8a8164;
+  background-image: linear-gradient(110deg,#eee3c7e8,#d7cbace8),var(--v100-ui-materials);
+  background-size: 100% 100%,300% 200%; background-position: center,100% 0;
+  color: #253b2b;
+}
+#v100-campaign .v100-reward-unlocks h3 { margin: 0 0 7px; padding-bottom: 5px; border-bottom: 1px solid #a59b7c; color: #60432d; font: 800 14px/1.3 var(--v100-reading-font); }
+#v100-campaign .v100-reward-unlock-body { display: flex; align-items: center; gap: 14px; min-width: 0; }
+#v100-campaign .v100-reward-crew-list { display: flex; flex: none; gap: 6px; }
+#v100-campaign .v100-reward-unlocks .v100-reward-crew {
+  position: relative; flex: 0 0 112px; width: 112px; height: 128px; margin: 0;
+  overflow: hidden; background: linear-gradient(160deg,#586550,#273e2d); border-bottom: 3px solid #ad8e56;
+}
+#v100-campaign .v100-reward-crew > .v100-crew-portrait { width: 100%; height: 100%; }
+#v100-campaign .v100-reward-crew figcaption { position: absolute; inset: auto 0 0; padding: 4px 2px; color: #f6e7bf; background: #172b23e8; font: 700 12px/1.2 var(--v100-reading-font); text-align: center; white-space: nowrap; }
+#v100-campaign .v100-reward-unlock-body ul { flex: 1; min-width: 0; margin: 0; padding: 0; list-style: none; }
+#v100-campaign .v100-reward-unlock-body li { padding: 7px 0; border-bottom: 1px dashed #a59b7c; color: #263e2c; font: 700 15px/1.4 var(--v100-reading-font); overflow-wrap: anywhere; }
+#v100-campaign .v100-reward-unlock-body li:last-child { border-bottom: 0; }
+#v100-campaign .v100-reward-next-step { display: flex; flex-wrap: wrap; align-items: baseline; gap: 3px 16px; }
+#v100-campaign .v100-reward-next-step p { margin: 0; color: #eee8d3; font: 400 14px/1.4 var(--v100-reading-font); }
+#v100-campaign .v100-reward-next-step .v100-reward-saved { display: block; margin-top: 0; color: #b9cbb9; font: 400 12px/1.3 var(--v100-reading-font); }
+#v100-campaign .v100-reward-summary[data-has-unlocks="false"] .v100-reward-ledger { grid-template-columns: minmax(0,1fr); }
+#v100-campaign .v100-reward-summary[data-has-unlocks="false"] .v100-reward-caps-sheet { display: grid; grid-template-columns: minmax(144px,.65fr) minmax(0,1.35fr); column-gap: 16px; }
+#v100-campaign .v100-reward-summary[data-has-unlocks="false"] .v100-reward-caps-label { grid-column: 1; grid-row: 1; align-self: end; }
+#v100-campaign .v100-reward-summary[data-has-unlocks="false"] .v100-reward-caps-value { grid-column: 1; grid-row: 2; align-self: start; }
+#v100-campaign .v100-reward-summary[data-has-unlocks="false"] .v100-reward-breakdown { grid-column: 2; grid-row: 1 / 3; border-left: 1px dashed #8a9274; padding-left: 16px; }
+@media (max-height: 360px) {
+  #v100-campaign .v100-reward-summary { inset: 38px 4% 54px; gap: 6px; }
+  #v100-campaign .v100-reward-stage { font-size: 28px; }
+  #v100-campaign .v100-reward-summary h2 { font-size: 21px; }
+  #v100-campaign .v100-reward-caps-sheet { padding: 7px 10px; }
+  #v100-campaign .v100-reward-caps-value { font-size: 42px; margin: 4px 0; }
+  #v100-campaign .v100-reward-unlocks { padding: 7px 10px; }
+  #v100-campaign .v100-reward-unlocks .v100-reward-crew { flex-basis: 104px; width: 104px; height: 112px; }
+  #v100-campaign .v100-reward-unlock-body li { padding: 5px 0; font-size: 14px; }
+}
+
 #v100-campaign .v100-command-tabs,
 #v100-campaign .v100-command-formation,
 #v100-campaign .v100-command-personnel,
@@ -362,16 +417,13 @@
 #v100-campaign .v100-node-copy .v100-story-prose { grid-column: 1; grid-row: 2; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
 #v100-campaign .v100-node-copy:not(:has(.v100-node-kind)) .v100-story-prose { grid-row: 1 / 3; }
 #v100-campaign .v100-node-copy .v100-story-prose p { margin: 0; }
-#v100-campaign .v100-result-rewards .v100-reward-unlocks { display: flex; align-items: center; gap: 12px; overflow: hidden; }
-#v100-campaign .v100-reward-unlocks img { flex: 0 0 72px; width: 72px; height: 88px; object-fit: contain; filter: drop-shadow(0 2px 5px #000); }
-#v100-campaign .v100-reward-unlocks > div { display: grid; gap: 7px; min-width: 0; }
 #v100-campaign .v100-reward-saved { color: #a7b6a8; font-size: 12px; }
 #v100-campaign .v100-data-modal { display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; height: min(560px, calc(100dvh - 28px)); max-height: calc(100dvh - 28px); overflow: hidden; gap: 10px; }
 #v100-campaign .v100-data-scroll { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding-right: 6px; }
 #v100-campaign .v100-data-actions { margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 #v100-campaign .v100-data-actions > * { min-height: 44px; display: flex; align-items: center; justify-content: center; }
 #v100-campaign .v100-data-note { margin: 0; font-size: 12px; }
-@media (max-height: 400px) { #v100-campaign .v100-data-modal { gap: 6px; padding: 10px; } #v100-campaign .v100-reward-unlocks img { flex-basis: 54px; width: 54px; height: 65px; } }
+@media (max-height: 400px) { #v100-campaign .v100-data-modal { gap: 6px; padding: 10px; } }
 
 @media (max-height: 420px) and (min-width: 640px) and (orientation: landscape) {
   #v100-campaign[data-v100-phase="result"] { padding: 4px max(6px, env(safe-area-inset-right)) 4px max(6px, env(safe-area-inset-left)); gap: 4px; }

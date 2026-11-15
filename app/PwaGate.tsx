@@ -950,7 +950,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
 
   const storagePanel = <aside onClickCapture={onPwaControlClick} className={storageHost ? "pwa-storage pwa-storage-inline" : "pwa-notice pwa-storage"} role={storageHost ? "region" : "dialog"} aria-label={storageHost ? "アプリのデータ管理" : "データ管理"}>
     <h3>アプリの容量・更新</h3>
-    {!standalone && guidance && <details className="pwa-return-install-help"><summary>ホーム画面で遊ぶ</summary><div className="pwa-return-install-columns"><div>{guidance.mode === "prompt" && !installPromptUsed && <button type="button" className="pwa-primary" onClick={acceptInstallPrompt}>ホーム画面に追加する</button>}{installPromptUsed && <p>追加画面が出ないときは、下の手順を試してください。</p>}<InstallSteps steps={guidance.steps as Array<Record<string, unknown>>} /></div><p>続きから遊ぶには、先に下の「セーブを書き出す」でバックアップを。追加したアプリで復元してください。保存先が別になる場合があります。</p></div></details>}
+    {!standalone && guidance && <details className="pwa-return-install-help"><summary>ホーム画面で遊ぶ</summary><div className="pwa-return-install-columns"><div>{guidance.mode === "prompt" && !installPromptUsed && <button type="button" className="pwa-primary" onClick={acceptInstallPrompt}>ホーム画面に追加する</button>}{installPromptUsed && <p>追加画面が出ないときは、下の手順を試してください。</p>}<InstallSteps steps={guidance.steps as Array<Record<string, unknown>>} /></div><p>{storageHost ? "続きから遊ぶには、「進行の保存」で先にセーブを書き出してください。" : "続きから遊ぶには、先に下の「セーブを書き出す」でバックアップを。"}追加したアプリで復元してください。保存先が別になる場合があります。</p></div></details>}
     <dl>
       <div><dt>保存中のバージョン</dt><dd>{installedManifest?.version ?? "ブラウザでプレイ中"}</dd></div>
       <div><dt>ひとつ前のバージョン</dt><dd>{previousManifest?.version ?? "なし"}</dd></div>
