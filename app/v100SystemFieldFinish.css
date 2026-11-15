@@ -157,3 +157,14 @@
 #v100-campaign .v100-data-modal[data-data-view] .v100-legacy-history-file { color: #314832; }
 #v100-campaign .v100-data-modal[data-data-view] .v100-legacy-history-file input[type="file"] { color: #314832; }
 #v100-campaign .v100-data-modal[data-data-view] .v100-legacy-history-file input[type="file"]::file-selector-button { min-height: 44px; color: #eee5c6; background: #183c2b; border: 1px solid #82916b; padding: 8px 12px; margin-right: 9px; }
+
+/* Title feedback remains visible after a successful save restore. */
+#v100-campaign > .v100-title-feedback {
+  position: absolute; z-index: 6; left: clamp(12px,2vw,24px);
+  bottom: calc(70px + env(safe-area-inset-bottom,0px));
+  box-sizing: border-box; width: min(40vw,380px); max-height: 82px;
+  overflow-y: auto; margin: 0; padding: 8px 11px;
+  border: 1px solid #8e916a; border-left: 3px solid #c4ad70;
+  background: #142a20f0; color: #eee4c3;
+  font: 600 14px/1.45 var(--v100-reading-font);
+}
