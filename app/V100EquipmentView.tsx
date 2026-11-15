@@ -69,8 +69,7 @@ export function V100EquipmentView({ save, onBack, onPurchase, onUpgrade, onEquip
     </div></div><aside className="v100-equipment-focus" aria-label="選択中の装備">{item ? <>
       <div className="v100-equipment-focus-body"><div className="v100-equipment-focus-heading"><div className="v100-equipment-specimen" aria-hidden="true"><EquipmentArt item={item} locked={tab==="shop"&&!unlocked}/></div><div><small>{item.slotType==="personal"?"個人装備":"部隊装備"} / 所持 {quantity}</small><h3>{item.displayName}{level>0?` ＋${level}`:""}</h3><p>{equipmentEffectSummary(item.id,level)}</p></div></div>
       {comparison && selectedPresentation && <section className="v100-equipment-quote" aria-label="装備した場合の能力" data-equipment-quote-unit={selectedUnit} data-equipment-quote-slot={previewSlot}>
-        <header><strong>装備した場合</strong><span>{selectedPresentation.displayName} / 枠{previewSlot + 1}</span></header>
-        {item.slotType === "tactical" && <p className="v100-equipment-quote-scope">部隊全員に効果。数値は{selectedPresentation.displayName}の変化です。</p>}
+        <header><strong>{item.slotType === "tactical" ? "部隊全員に効果" : "装備した場合"}</strong><span>数値：{selectedPresentation.displayName} / 枠{previewSlot + 1}</span></header>
         <dl className="v100-equipment-quote-changes">{comparison.changes.map(change => <div key={change.key} data-stat={change.key} data-improved={change.improved}><dt>{change.label}</dt><dd><span>{change.beforeLabel}</span><span aria-hidden="true">→</span><strong>{change.afterLabel}</strong></dd></div>)}</dl>
         {comparison.changes.length === 0 && <p className="v100-equipment-quote-neutral">{comparison.reason && quantity > 0 ? comparison.reason : "この仲間の戦闘能力は変わりません。"}</p>}
         <p className="v100-equipment-quote-guide">{quantity === 0 ? "購入後は「装備を比べる」で装備先を選ぼう。" : comparison.reason ?? "「装備を比べる」で仲間と装備枠を選べます。"}<small>固有技は比較に含みません。</small></p>
