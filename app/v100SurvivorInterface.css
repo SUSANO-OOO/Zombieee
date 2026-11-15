@@ -81,13 +81,21 @@
 }
 #v100-campaign .v100-field-map-pane { border: 0; border-right: 1px solid #a68c5e; background: #151d16ba; padding: 7px; }
 #v100-campaign .v100-field-map-title { border: 0; padding-bottom: 5px; border-bottom: 1px dashed #b9a373; color: #ffe4ac; }
+#v100-campaign .v100-command-formation:not(.picker-open) .v100-field-map-title { flex-shrink: 0; }
 #v100-campaign .v100-field-map-intel { border-left: 3px solid #ae5136; background: #0a120b99; }
+#v100-campaign .v100-command-formation:not(.picker-open) .v100-briefing-empty {
+  flex: 0 0 auto; min-height: 0; padding: 4px 0; gap: 4px; place-content: start;
+}
+#v100-campaign .v100-command-formation:not(.picker-open) .v100-briefing-empty strong { font-size: 14px; line-height: 1.35; }
+#v100-campaign .v100-command-formation:not(.picker-open) .v100-briefing-empty span { font-size: 12px; line-height: 1.4; }
 #v100-campaign .v100-briefing-person > .v100-crew-portrait { flex: 0 0 64px; width: 64px; height: 106px; background: #87917826; }
 #v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-track {
+  counter-reset: callin-slot;
   grid-template-columns: repeat(7,minmax(0,1fr)); grid-template-rows: minmax(0,1fr);
   gap: 5px; overflow: hidden;
 }
 #v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot {
+  counter-increment: callin-slot;
   display: grid; position: relative; padding: 0; gap: 0; min-height: 0; border: 1px solid #82795c;
   border-radius: 0; border-top: 3px solid var(--crew-accent); grid-template-columns: 1fr;
   grid-template-rows: minmax(40px,1fr) max-content; overflow: hidden;
@@ -110,9 +118,53 @@
   font-size: 12px; line-height: 1.25; color: #223424; white-space: normal; overflow-wrap: anywhere;
 }
 #v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-meta b { color: #6c4827; font-weight: 400; }
-#v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot.empty { border-style: dashed; background: #19261b66; }
-#v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot.empty .v100-slot-meta { background: #1c291f; }
-#v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot.empty .v100-slot-meta :is(strong,b) { color: #b7b8a0; }
+/* An unused call-in position is a clipped field ticket, not a disabled photo.
+   The existing painted atlas supplies paper/canvas; live text stays readable
+   when the offline material is unavailable. Counters include occupied slots. */
+#v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot.empty {
+  --vacancy-tilt: -1.1deg;
+  border-style: solid; background: #182a20; border-color: #8a7955;
+}
+#v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot.empty:nth-child(3n+2) { --vacancy-tilt: .8deg; }
+#v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot.empty:nth-child(3n) { --vacancy-tilt: -.4deg; }
+#v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot.empty::before {
+  content: ""; position: absolute; z-index: 2; top: 0; left: 35%; width: 30%; height: 7px;
+  border-top: 1px solid #b9b49d; border-bottom: 2px solid #263329;
+  background: linear-gradient(#9b9b82,#4c5949); box-shadow: 0 2px 2px #070d0b99;
+  pointer-events: none;
+}
+#v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot.empty .v100-slot-portrait {
+  margin: 6px 5px 1px; width: auto; height: auto; min-height: 36px;
+  background-color: #d8c49a;
+  background-image: linear-gradient(110deg,#e9dab329,#bea37120),var(--v100-ui-materials,none);
+  background-size: 100% 100%,300% 200%; background-position: center,100% 0;
+  transform: rotate(var(--vacancy-tilt)); box-shadow: 1px 2px 2px #050c0999;
+}
+#v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot.empty:nth-child(3n+2) .v100-slot-portrait { background-position: center,100% 100%; }
+#v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot.empty .v100-slot-portrait > i { display: none; }
+#v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot.empty .v100-slot-portrait::before {
+  content: counter(callin-slot,decimal-leading-zero); position: absolute; inset: 0 0 auto;
+  font: 700 clamp(20px,5.8vh,28px)/1 var(--v100-numeric-font); letter-spacing: .04em;
+  color: #5a4b32; text-shadow: 0 1px #f6e7be; text-align: center; pointer-events: none;
+}
+#v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot.empty .v100-slot-portrait::after {
+  content: "未配置"; position: absolute; left: 50%; bottom: 1px; padding: 0 3px;
+  border: 1px solid #985438; color: #82442e; white-space: nowrap;
+  font-size: 10px; font-weight: 700; line-height: 1.25; letter-spacing: .06em;
+  transform: translateX(-50%) rotate(-7deg); pointer-events: none;
+}
+#v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot.empty .v100-slot-meta {
+  background: transparent; border-top: 0; padding: 3px; gap: 1px; text-align: center;
+}
+#v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot.empty .v100-slot-meta strong { color: #e5d8b8; font-size: 12px; line-height: 1.25; }
+#v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot.empty .v100-slot-meta b {
+  display: block; padding: 1px; border-bottom: 2px solid #806433;
+  background: #cfb67b; color: #243023; font-weight: 700; line-height: 1.15;
+  word-break: keep-all; overflow-wrap: normal;
+}
+#v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot.empty.selected {
+  border-color: #ffe2a0; border-top-color: #ffe2a0; box-shadow: inset 0 0 0 2px #f2cd77;
+}
 #v100-campaign .v100-sortie-status button { border: 0; border-left: 3px solid #b6a475; background: #1e2b22; }
 #v100-campaign .v100-callin-heading strong { letter-spacing: .04em; color: #f3e6bd; }
 
@@ -190,7 +242,7 @@
 #v100-campaign[data-v100-phase] .v100-portrait-views button { width: auto; min-width: 44px; }
 #v100-campaign .v100-growth-record-notes { font-size: 12px; line-height: 1.5; }
 #v100-campaign .v100-growth-record-notes summary { min-height: 44px; padding: 12px 0; border-bottom: 1px dashed #a39673; cursor: pointer; }
-#v100-campaign .v100-growth-record-notes details p { margin: 4px 0; }
+#v100-campaign .v100-growth-record-notes details p { margin: 4px 0; color: #2e4631; }
 #v100-campaign[data-v100-phase] .v100-command-personnel .v100-unit-transaction { margin-top: 6px; padding-top: 8px; border-top: 2px solid #7f7659; background: transparent; }
 
 /* Real objects on the supply counter; an inventory index and a separate quote. */
