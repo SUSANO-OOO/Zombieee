@@ -577,4 +577,10 @@ test('Linux browser hosts remain explicit and supported by the locked Playwright
  }
  requireSupported('ubuntu-24.04');
  for(const bad of ['ubuntu-latest','ubuntu-26.04'])assert.throws(()=>requireSupported(bad),/Unsupported locked-browser host/);
+ const {assertAndRestorePinnedLinuxHostsForLegacyComparison:restore}=await import('./helpers/linux-host-legacy-workflow.mjs');
+ const fixture={jobs:{linux:{'runs-on':'ubuntu-24.04',steps:[{run:'echo ubuntu-24.04',timeout:42}]},matrix:{'runs-on':'${{ matrix.os }}',strategy:{matrix:{include:[{os:'ubuntu-24.04',engine:'chromium'},{os:'macos-15-intel',engine:'webkit'}]}}}}};
+ const expected=structuredClone(fixture);expected.jobs.linux['runs-on']='ubuntu-latest';expected.jobs.matrix.strategy.matrix.include[0].os='ubuntu-latest';
+ const normalized=structuredClone(fixture);assert.equal(restore(normalized),2);assert.deepEqual(normalized,expected);
+ for(const bad of ['ubuntu-latest','ubuntu-26.04']){const invalid=structuredClone(fixture);invalid.jobs.linux['runs-on']=bad;assert.throws(()=>restore(invalid),/Current Linux browser host/);}
+
 });
