@@ -106,6 +106,37 @@ async function within(locator, minimum = 0, requireHit = true) {
   assert.equal(clipped, null, 'Clipped by ancestor: ' + clipped);
   return state;
 }
+async function inspectRewardCrew(page) {
+  const frames = await page.locator('.v100-reward-unlocks .v100-reward-crew').evaluateAll(items => items.map(item => {
+    const rect=item.getBoundingClientRect(), portrait=item.querySelector('[data-portrait-owner]');
+    return {width:rect.width,height:rect.height,owner:portrait?.getAttribute('data-portrait-owner'),mode:portrait?.getAttribute('data-portrait-mode')};
+  }));
+  for (const frame of frames) {
+    assert.ok(frame.width >= 80 && frame.width / frame.height >= .75, 'Reward portrait is clipped into a thin strip');
+    assert.equal(frame.mode,'upper');
+  }
+  for (const caption of await page.locator('.v100-reward-crew figcaption').all()) {
+    await within(caption);
+    assert.equal(await caption.evaluate(node=>node.scrollWidth<=node.clientWidth),true,'Full character name fits the portrait label');
+  }
+  return frames;
+}
+async function checkRewardCrewOracleControls(page) {
+  const frame=page.locator('.v100-reward-unlocks .v100-reward-crew').first(), caption=frame.locator('figcaption');
+  const originalFrame=await frame.getAttribute('style'), originalCaption=await caption.getAttribute('style');
+  const restore=async(locator,value)=>locator.evaluate((node,style)=>style===null?node.removeAttribute('style'):node.setAttribute('style',style),value);
+  try {
+    await frame.evaluate(node=>{node.style.setProperty('width','18px','important');node.style.setProperty('flex-basis','18px','important');});
+    await assert.rejects(()=>inspectRewardCrew(page),/thin strip/u);
+  } finally { await restore(frame,originalFrame); }
+  try {
+    await caption.evaluate(node=>node.style.setProperty('width','10px','important'));
+    await assert.rejects(()=>inspectRewardCrew(page),/Full character name/u);
+  } finally { await restore(caption,originalCaption); }
+  await inspectRewardCrew(page);
+  return {thinStripRejected:true,truncatedNameRejected:true,originalStylesRestored:true};
+}
+
 async function diagramWithin(locator) {
   const bounds = await within(locator, 0, false);
   const diagram = await locator.evaluate(svg => {
@@ -318,6 +349,7 @@ for (const engine of engines) {
         await within(page.locator('.v100-reward-summary .v100-reward-caps-value').first());
         await page.locator('.v100-reward-next-step > p').scrollIntoViewIfNeeded();
         await within(page.locator('.v100-reward-next-step > p'));
+        await within(page.locator('.v100-reward-saved'));
         await within(page.locator('.v100-event-actions .v100-primary'), 44);
         row.breakdown = await page.locator('.v100-reward-breakdown > dl').innerText();
         assert.ok(row.breakdown.includes('再挑戦報酬'));
@@ -356,11 +388,12 @@ for (const engine of engines) {
         assert.ok(await unlockRows.count() > 0);
         row.unlockReadout = await unlockRows.allTextContents();
         for (const item of await unlockRows.all()) { await item.scrollIntoViewIfNeeded(); await within(item); }
-        row.crewFrames = await page.locator('.v100-reward-unlocks .v100-reward-crew').evaluateAll(items => items.map(item => { const r=item.getBoundingClientRect();const portrait=item.querySelector('[data-portrait-owner]');return {width:r.width,height:r.height,owner:portrait?.getAttribute('data-portrait-owner'),mode:portrait?.getAttribute('data-portrait-mode')}; }));
-        for (const frame of row.crewFrames) { assert.ok(frame.width >= 80 && frame.width/frame.height >= .75, 'A reward portrait must retain a waist-up camera rather than a thin clipped strip');assert.equal(frame.mode,'upper'); }
+        row.crewFrames = await inspectRewardCrew(page);
+        if (firstNumber === 5 && viewport.height === 340) row.portraitOracleControls = await checkRewardCrewOracleControls(page);
         await capture(page, row, 'settlement');
         await page.locator('.v100-reward-next-step > p').scrollIntoViewIfNeeded();
         await within(page.locator('.v100-reward-next-step > p'));
+        await within(page.locator('.v100-reward-saved'));
         await within(page.locator('.v100-event-actions .v100-primary'), 44);
         await capture(page, row, 'investment-note');
         const saved = await rawSave(page);

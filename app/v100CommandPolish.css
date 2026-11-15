@@ -65,17 +65,22 @@
 #v100-campaign .v100-reward-unlock-body { display: flex; align-items: center; gap: 14px; min-width: 0; }
 #v100-campaign .v100-reward-crew-list { display: flex; flex: none; gap: 6px; }
 #v100-campaign .v100-reward-unlocks .v100-reward-crew {
-  position: relative; flex: 0 0 102px; width: 102px; height: 128px; margin: 0;
+  position: relative; flex: 0 0 112px; width: 112px; height: 128px; margin: 0;
   overflow: hidden; background: linear-gradient(160deg,#586550,#273e2d); border-bottom: 3px solid #ad8e56;
 }
 #v100-campaign .v100-reward-crew > .v100-crew-portrait { width: 100%; height: 100%; }
-#v100-campaign .v100-reward-crew figcaption { position: absolute; inset: auto 0 0; padding: 4px 2px; color: #f6e7bf; background: #172b23e8; font: 700 12px/1.2 var(--v100-reading-font); text-align: center; overflow-wrap: anywhere; }
+#v100-campaign .v100-reward-crew figcaption { position: absolute; inset: auto 0 0; padding: 4px 2px; color: #f6e7bf; background: #172b23e8; font: 700 12px/1.2 var(--v100-reading-font); text-align: center; white-space: nowrap; }
 #v100-campaign .v100-reward-unlock-body ul { flex: 1; min-width: 0; margin: 0; padding: 0; list-style: none; }
 #v100-campaign .v100-reward-unlock-body li { padding: 7px 0; border-bottom: 1px dashed #a59b7c; color: #263e2c; font: 700 15px/1.4 var(--v100-reading-font); overflow-wrap: anywhere; }
 #v100-campaign .v100-reward-unlock-body li:last-child { border-bottom: 0; }
+#v100-campaign .v100-reward-next-step { display: flex; flex-wrap: wrap; align-items: baseline; gap: 3px 16px; }
 #v100-campaign .v100-reward-next-step p { margin: 0; color: #eee8d3; font: 400 14px/1.4 var(--v100-reading-font); }
-#v100-campaign .v100-reward-next-step .v100-reward-saved { display: block; margin-top: 3px; color: #b9cbb9; font: 400 12px/1.3 var(--v100-reading-font); }
-#v100-campaign .v100-reward-summary[data-has-unlocks="false"] .v100-reward-ledger { grid-template-columns: minmax(0,1fr); max-width: 380px; }
+#v100-campaign .v100-reward-next-step .v100-reward-saved { display: block; margin-top: 0; color: #b9cbb9; font: 400 12px/1.3 var(--v100-reading-font); }
+#v100-campaign .v100-reward-summary[data-has-unlocks="false"] .v100-reward-ledger { grid-template-columns: minmax(0,1fr); }
+#v100-campaign .v100-reward-summary[data-has-unlocks="false"] .v100-reward-caps-sheet { display: grid; grid-template-columns: minmax(144px,.65fr) minmax(0,1.35fr); column-gap: 16px; }
+#v100-campaign .v100-reward-summary[data-has-unlocks="false"] .v100-reward-caps-label { grid-column: 1; grid-row: 1; align-self: end; }
+#v100-campaign .v100-reward-summary[data-has-unlocks="false"] .v100-reward-caps-value { grid-column: 1; grid-row: 2; align-self: start; }
+#v100-campaign .v100-reward-summary[data-has-unlocks="false"] .v100-reward-breakdown { grid-column: 2; grid-row: 1 / 3; border-left: 1px dashed #8a9274; padding-left: 16px; }
 @media (max-height: 360px) {
   #v100-campaign .v100-reward-summary { inset: 38px 4% 54px; gap: 6px; }
   #v100-campaign .v100-reward-stage { font-size: 28px; }
@@ -83,7 +88,7 @@
   #v100-campaign .v100-reward-caps-sheet { padding: 7px 10px; }
   #v100-campaign .v100-reward-caps-value { font-size: 42px; margin: 4px 0; }
   #v100-campaign .v100-reward-unlocks { padding: 7px 10px; }
-  #v100-campaign .v100-reward-unlocks .v100-reward-crew { flex-basis: 90px; width: 90px; height: 112px; }
+  #v100-campaign .v100-reward-unlocks .v100-reward-crew { flex-basis: 104px; width: 104px; height: 112px; }
   #v100-campaign .v100-reward-unlock-body li { padding: 5px 0; font-size: 14px; }
 }
 
