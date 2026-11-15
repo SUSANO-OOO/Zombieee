@@ -19,7 +19,7 @@
     },
     {
       "path": "assets/source/quality-20261116/audio/kenney-sci-fi/License.txt",
-      "sha256": "a9767b25c3533f69d03af136480efad08efba19a9f0d89616992b34c79fd6186",
+      "sha256": "a7dae3d72f5c1aaff0897a935d7a30fc51e7755e893fe7e0905926c3ebf8c7e2",
       "license": "CC0-1.0",
       "creator": "Kenney",
       "page": "https://kenney.nl/assets/sci-fi-sounds"
@@ -27,7 +27,7 @@
   ],
   "recipe": {
     "path": "assets/source/quality-20261114/audio/manual-foley-r1/recipe.json",
-    "sha256": "1a6eb3ec72741d075e42569d620ce85ad06c7bae99537040567f234f16eba478"
+    "sha256": "c62b25a37b5e36ec47f4ecbba00a5abbbedb8953219bf0b884992c5162df4acf"
   },
   "authorization": "Current smartphone quality goal: replace inappropriate electronic preparation sounds with character-specific material foley.",
   "adaptation": "Licensed Kenney material and sci-fi sound samples; source masters, exact layer timing/filter/dynamics and hashes retained. No voice, new contact event or actor substitution.",

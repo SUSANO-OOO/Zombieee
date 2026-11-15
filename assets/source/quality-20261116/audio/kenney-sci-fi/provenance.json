@@ -37,8 +37,8 @@
     },
     {
       "path": "assets/source/quality-20261116/audio/kenney-sci-fi/License.txt",
-      "bytes": 571,
-      "sha256": "a9767b25c3533f69d03af136480efad08efba19a9f0d89616992b34c79fd6186"
+      "bytes": 549,
+      "sha256": "a7dae3d72f5c1aaff0897a935d7a30fc51e7755e893fe7e0905926c3ebf8c7e2"
     },
     {
       "path": "assets/source/quality-20261116/audio/kenney-sci-fi/spaceEngineLow_003.ogg",
@@ -52,5 +52,18 @@
     }
   ],
   "adaptation": "Only the two preparation cues are layered; no actor or voice substitution.",
-  "subjectiveListening": "not performed; implementation candidate only"
+  "subjectiveListening": "not performed; implementation candidate only",
+  "licenseTextNormalization": {
+    "scope": "Only line endings and trailing whitespace; every non-whitespace character identical.",
+    "original": {
+      "path": "assets/source/quality-20261116/audio/kenney-sci-fi/License.txt",
+      "bytes": 571,
+      "sha256": "a9767b25c3533f69d03af136480efad08efba19a9f0d89616992b34c79fd6186"
+    },
+    "originalRetainedIn": {
+      "archive": "sci-fi_sounds-original.zip / License.txt",
+      "sourceCommit": "a27b5edd47eab4cd3e6d888fca1ae4e77cc9e465:assets/source/quality-20261116/audio/kenney-sci-fi/License.txt"
+    },
+    "canonicalSha256": "a7dae3d72f5c1aaff0897a935d7a30fc51e7755e893fe7e0905926c3ebf8c7e2"
+  }
 }
