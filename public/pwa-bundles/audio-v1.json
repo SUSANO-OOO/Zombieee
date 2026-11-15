@@ -1,7 +1,7 @@
 {
   "schema": "zombieee-pwa-audio-bundle/1",
   "bundlePath": "/pwa-bundles/audio-v1.bin",
-  "bytes": 35205995,
+  "bytes": 35668415,
   "assets": {
     "/audio/v105/fist-wave-charge.mp3": {
       "id": "v105-fist-wave-charge",
@@ -2288,6 +2288,60 @@
       "offset": 34993124,
       "bytes": 212871,
       "hash": "sha256-8d547ef536e701b79c913b5e41aebebfc761ce76db4de56b7e62e4d5dc920510"
+    },
+    "/audio/quality-20261116/boss-finales/gate-eater-collapse-r1.mp3": {
+      "id": "install-quality-20261116-boss-finales-gate-eater-collapse-r1",
+      "offset": 35205995,
+      "bytes": 51380,
+      "hash": "sha256-fef4ada76d530273e6a2dbd5bf6008a0bf28a73676547e909f02d8104d40f1c8"
+    },
+    "/audio/quality-20261116/boss-finales/mother-collapse-r1.mp3": {
+      "id": "install-quality-20261116-boss-finales-mother-collapse-r1",
+      "offset": 35257375,
+      "bytes": 51380,
+      "hash": "sha256-7ac46292c9b9be361d96897a104de155a5f9d64e7d392b85f201ef2e5ca65403"
+    },
+    "/audio/quality-20261116/boss-finales/kurome-collapse-r1.mp3": {
+      "id": "install-quality-20261116-boss-finales-kurome-collapse-r1",
+      "offset": 35308755,
+      "bytes": 51380,
+      "hash": "sha256-68e34cb1cd7042140ff1545130bf7aafd65fa21951ffc599d88721a646ef98e2"
+    },
+    "/audio/quality-20261116/boss-finales/ooguchi-collapse-r1.mp3": {
+      "id": "install-quality-20261116-boss-finales-ooguchi-collapse-r1",
+      "offset": 35360135,
+      "bytes": 51380,
+      "hash": "sha256-1ffe938011b0688806feccb1764813fff24f47de8c5381b79ec194f1aee82faa"
+    },
+    "/audio/quality-20261116/boss-finales/gairen-collapse-r1.mp3": {
+      "id": "install-quality-20261116-boss-finales-gairen-collapse-r1",
+      "offset": 35411515,
+      "bytes": 51380,
+      "hash": "sha256-1c1814f5e1f748578d6dee7cf0e7fb1e711983c1a4d49665eccd9ff9ec79f7b5"
+    },
+    "/audio/quality-20261116/boss-finales/takuya-collapse-r1.mp3": {
+      "id": "install-quality-20261116-boss-finales-takuya-collapse-r1",
+      "offset": 35462895,
+      "bytes": 51380,
+      "hash": "sha256-a4aaad08a68cd2fa92cb32104bf8ef3bb43a81f48ea64bf845ea04263fae74a0"
+    },
+    "/audio/quality-20261116/boss-finales/mugarian-president-mutated-collapse-r1.mp3": {
+      "id": "install-quality-20261116-boss-finales-mugarian-president-mutated-collapse-r1",
+      "offset": 35514275,
+      "bytes": 51380,
+      "hash": "sha256-79886883e2db12f0d5fa0193949ee8129f4db3606618c5c4cfd8bd9ec5a2c2b3"
+    },
+    "/audio/quality-20261116/boss-finales/futago-collapse-r1.mp3": {
+      "id": "install-quality-20261116-boss-finales-futago-collapse-r1",
+      "offset": 35565655,
+      "bytes": 51380,
+      "hash": "sha256-ba0c747b3558f57b0540bb029c87590f4854a6e78896e3cd27fabcb1b0b24a64"
+    },
+    "/audio/quality-20261116/boss-finales/takuya-omega-collapse-r1.mp3": {
+      "id": "install-quality-20261116-boss-finales-takuya-omega-collapse-r1",
+      "offset": 35617035,
+      "bytes": 51380,
+      "hash": "sha256-a77fddfe5867da317cf0070dfdec3781452d04aa3465f2b2c356f3aa36d1b3ef"
     }
   }
 }

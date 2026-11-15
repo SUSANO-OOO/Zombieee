@@ -1,3 +1,4 @@
+import {withV100BossCollapseAudio} from '../app/v100BossCollapseAudio.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -17,7 +18,7 @@ import {PWA_MANUAL_FOLEY_FILES} from '../app/pwaManualFoleyFiles.js';
 import {V099_MANUAL_ABILITY_AUDIO_CONTRACTS} from '../app/battleAudioContracts.js';
 
 const ids=["ability-babayaga-appraise-activate","ability-brute-groundbreak-activate","ability-engineer-trap-arm-activate","ability-guardian-shieldwall-activate","ability-gunner-suppression-activate","ability-kumaverson-iron-pan-activate","ability-medic-emergency-activate","ability-mrs-chiha-salvo-ready","ability-musashi-cross-guard","ability-ranger-precision-activate","ability-scout-intercept-activate","ability-tky-light-blade-charge","ability-zakimiya-molotov-activate","v105-fist-wave-charge"];
-const previous=createAudioManifest(withMeleeFoley(withChainsawRecordings(withRecordedWeapons(v100AudioDesignCandidate(PRODUCTION_AUDIO_MANIFEST)))));
+const previous=createAudioManifest(withV100BossCollapseAudio(withMeleeFoley(withChainsawRecordings(withRecordedWeapons(v100AudioDesignCandidate(PRODUCTION_AUDIO_MANIFEST))))));
 const provenance=JSON.parse(fs.readFileSync('assets/source/quality-20261114/audio/manual-foley-r1/provenance.json','utf8'));
 const sha=b=>createHash('sha256').update(b).digest('hex');
 const fileHash=p=>sha(fs.readFileSync(p));

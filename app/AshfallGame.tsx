@@ -1,4 +1,5 @@
 "use client";
+import {selectV100BossCollapsePlayback,v100BossCollapseCue} from "./v100BossCollapseAudio.js";
 import {GAMEPLAY_PRODUCTION_AUDIO_MANIFEST} from './productionAudio.js';
 import { createCommandRecoveryRuntime, armCommandRecovery, advanceCommandRecovery, commandDeploymentWait, commandRecoveryWorldActionPending } from './commandRecovery.js';
 
@@ -50,7 +51,7 @@ import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, u
 import {PwaBattleArtworkPathsContext,selectBattleArtworkPolicy} from "./pwaBattleArtworkContext.js";
 import {drawV100BallisticShot} from './v100BallisticVfx.js';
 import {drawV100NaoTreatmentShot} from './v100NaoShotVfx.js';
-import {PwaManualFoleyPathsContext} from "./pwaAudioAvailabilityContext.js";
+import {PwaManualFoleyPathsContext,PwaBossCollapsePathsContext} from "./pwaAudioAvailabilityContext.js";
 import {selectV100ManualFoleyPlayback} from "./v100ManualAbilityFoley.js";
 import {
   RANDOM_BATTLE_BARK_TRIGGER_IDS,
@@ -9478,6 +9479,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   // V1 mounts a new battle for each resultId. Download progress cannot restart
   // the current mixer or replace an already-started preparation sound.
   const [manualFoleyPathsAtEntry]=useState(()=>verifiedManualFoleyPaths);
+  const verifiedBossCollapsePaths=useContext(PwaBossCollapsePathsContext);
+  const [bossCollapsePathsAtEntry]=useState(()=>verifiedBossCollapsePaths);
   const verifiedBattleArtworkPaths=useContext(PwaBattleArtworkPathsContext);
   const verifiedBattleArtworkPathsRef=useRef(verifiedBattleArtworkPaths);
   const battleArtworkPolicyRef=useRef<{key:string;paths:string}|null>(null);
@@ -9830,8 +9833,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   const externalSessionActive = Boolean(externalSession);
   const externalBattleMode = externalSession?.battleMode ?? null;
   const playbackManifest = useMemo(()=>externalSessionActive
-    ? selectV100ManualFoleyPlayback(V100_AUDIO_MANIFEST,GAMEPLAY_PRODUCTION_AUDIO_MANIFEST,manualFoleyPathsAtEntry)
-    : GAMEPLAY_PRODUCTION_AUDIO_MANIFEST,[externalSessionActive,manualFoleyPathsAtEntry]);
+    ? selectV100BossCollapsePlayback(selectV100ManualFoleyPlayback(V100_AUDIO_MANIFEST,GAMEPLAY_PRODUCTION_AUDIO_MANIFEST,manualFoleyPathsAtEntry),bossCollapsePathsAtEntry)
+    : GAMEPLAY_PRODUCTION_AUDIO_MANIFEST,[externalSessionActive,manualFoleyPathsAtEntry,bossCollapsePathsAtEntry]);
   const formatBattleText = (value: string) => publicDisplayText(value, { crawlerLabel: externalSessionActive ? v100BasePresentationFor(gameRef.current.definition.missionConfig.v100StageNumber).label : "装甲車両" });
   useEffect(() => { externalSessionRef.current = externalSession; }, [externalSession]);
   const externalFormationKindsKey = externalSession?.formationKinds.join("|") ?? "";
@@ -16257,6 +16260,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     const receiptId = `boss-entrance:${kind}:wave-${g.wave}`;
     if (g.signalIds.includes(receiptId)) return false;
     g.signalIds.push(receiptId);
+    const collapseCue = v100BossCollapseCue(kind, g.definition.missionConfig.v100StageNumber, Boolean(externalSessionRef.current));
+    if (collapseCue) void productionMixerRef.current?.preloadAssets([collapseCue], { priority: "background" });
     g.banner = definition.entrance.warningLabel;
     g.bannerTime = 3.2;
     g.flashOverlay = Math.max(g.flashOverlay, .18);
@@ -24524,6 +24529,17 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               x: fighter.x,
               y: fighter.y,
               label: fighter.kind,
+            });
+            const collapseCue = v100BossCollapseCue(fighter.kind, g.definition.missionConfig.v100StageNumber, Boolean(externalSessionRef.current));
+            if (collapseCue) playBattleSemanticCue(collapseCue, fighter.x, {
+              semantic: "boss-collapse-material",
+              receiptId: "fighter:" + fighter.id + ":collapse-material",
+              ownerId: fighter.id,
+              priority: 96,
+              cooldownMs: 0,
+              volume: .9,
+              maxInstances: 2,
+              dedupeKey: "boss-collapse-material:" + fighter.id,
             });
           }
           const defeatCue = fighter.side === "human"
