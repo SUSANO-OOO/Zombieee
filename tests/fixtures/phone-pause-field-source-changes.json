@@ -1,0 +1,24 @@
+{
+  "app/AshfallGame.tsx": [
+    [
+      "<div className=\"pause-screen\" role=\"dialog\" aria-modal=\"true\" aria-label=\"一時停止メニュー\">",
+      "<div className={externalSessionActive ? \"pause-screen v100-phone-pause\" : \"pause-screen\"} role=\"dialog\" aria-modal=\"true\" aria-label=\"一時停止メニュー\">"
+    ],
+    [
+      "<span><b>描画品質</b><small>戦闘結果は変えず、描画負荷だけを調整</small></span>",
+      "<span><b>{externalSessionActive ? \"画面のきれいさ\" : \"描画品質\"}</b><small>戦闘結果は変えず、描画負荷だけを調整</small></span>"
+    ],
+    [
+      "              {campaignSave.settings.graphicsQuality === \"high\"\n                ? \"High\"\n                : campaignSave.settings.graphicsQuality === \"power-save\"\n                  ? \"省電力\"\n                  : \"Auto\"}\n              <small>\n                {graphicsProfileView.renderHz}fps上限 / DPR {graphicsProfileView.dprCap}\n              </small>",
+      "              {campaignSave.settings.graphicsQuality === \"high\"\n                ? (externalSessionActive ? \"最高\" : \"High\")\n                : campaignSave.settings.graphicsQuality === \"power-save\"\n                  ? \"省電力\"\n                  : (externalSessionActive ? \"自動\" : \"Auto\")}\n              <small>\n                {externalSessionActive\n                  ? campaignSave.settings.graphicsQuality === \"high\"\n                    ? \"細部をくっきり表示\"\n                    : campaignSave.settings.graphicsQuality === \"power-save\"\n                      ? \"動作を軽くする表示\"\n                      : \"端末に合わせた表示\"\n                  : <>{graphicsProfileView.renderHz}fps上限 / DPR {graphicsProfileView.dprCap}</>}\n              </small>"
+    ],
+    [
+      "<p className=\"audio-troubleshooting\">成功表示でも聞こえない場合は、端末音量とブラウザのタブミュートを確認してください。</p>",
+      "<p className=\"audio-troubleshooting\">{externalSessionActive ? \"聞こえないときは、端末の音量も確認してください。\" : \"成功表示でも聞こえない場合は、端末音量とブラウザのタブミュートを確認してください。\"}</p>"
+    ],
+    [
+      "<button onClick={() => requestPauseAction(\"restart\")}>ステージを最初からやり直す</button>",
+      "<button onClick={() => requestPauseAction(\"restart\")}>{externalSessionActive ? \"最初からやり直す\" : \"ステージを最初からやり直す\"}</button>"
+    ]
+  ]
+}
