@@ -15,7 +15,7 @@ export function V100PlayerMenu({ settings, busy, onApply, onClose, onData, onLog
   const apply = async () => { const accepted = await onApply(draft); setSaved(accepted); setFailed(!accepted); };
   return <div className="v100-modal-backdrop" role="presentation"><section className="v100-modal v100-player-menu" data-menu-view={tab} role="dialog" aria-modal="true" aria-labelledby="v100-menu-title">
     <div className="v100-panel-heading"><div className="v100-system-title"><span className="v100-kicker">音・画面・記録</span><h2 id="v100-menu-title">メニュー</h2></div><button type="button" disabled={busy} onClick={onClose}>{returnLabel}</button></div>
-    <nav className="v100-menu-tabs" aria-label="メニューの種類"><button type="button" aria-pressed={tab === "settings"} onClick={() => setTab("settings")}>設定</button><button type="button" aria-pressed={tab === "credits"} onClick={() => setTab("credits")}>権利・クレジット</button><button type="button" disabled={busy} onClick={onData}>データ管理</button>{showLog && <button type="button" disabled={busy} onClick={onLog}>会話記録</button>}</nav>
+    <nav className="v100-menu-tabs" aria-label="メニューの種類"><button type="button" aria-pressed={tab === "settings"} onClick={() => setTab("settings")}>設定</button><button type="button" aria-label="権利・クレジット" aria-pressed={tab === "credits"} onClick={() => setTab("credits")}>権利・<wbr />クレジット</button><button type="button" disabled={busy} onClick={onData}>データ管理</button>{showLog && <button type="button" disabled={busy} onClick={onLog}>会話記録</button>}</nav>
     <div className="v100-menu-scroll">
       {tab === "credits" ? <V100AssetCredits expanded /> : <fieldset disabled={busy}>
         <legend>音・画面・会話</legend>
