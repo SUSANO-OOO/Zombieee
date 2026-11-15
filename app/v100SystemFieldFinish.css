@@ -144,3 +144,13 @@
 }
 
 #v100-campaign .v100-player-menu .v100-menu-tabs > button { word-break: keep-all; overflow-wrap: normal; }
+
+/* Offline status is rendered into the same paper body through a portal. */
+#v100-campaign .v100-data-modal[data-data-view] .pwa-storage-inline { color: #293f2e; }
+#v100-campaign .v100-data-modal[data-data-view] .pwa-storage-inline > h3 { color: #293f2e; }
+#v100-campaign .v100-data-modal[data-data-view] .pwa-storage-inline dt { color: #435840; font-size: 13px; }
+#v100-campaign .v100-data-modal[data-data-view] .pwa-storage-inline dd { color: #263c2a; }
+#v100-campaign .v100-data-modal[data-data-view] .pwa-storage-inline > details:not(.pwa-return-install-help) > summary { color: #293f2e; }
+#v100-campaign .v100-data-modal[data-data-view] .pwa-storage-inline > .pwa-hint:not(.pwa-storage-save-safety) { color: #435840; }
+#v100-campaign .v100-data-modal[data-data-view] .pwa-storage-inline > .pwa-warning,
+#v100-campaign .v100-data-modal[data-data-view] .pwa-storage-inline > .pwa-failure-summary .pwa-warning { color: #843522; }
