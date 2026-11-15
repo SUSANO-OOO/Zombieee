@@ -85,3 +85,6 @@ app/v177RangerUpperMotion.js text eol=lf
 app/v177RangerLowerMotion.js text eol=lf
 app/v177RangerLowerPaint.js text eol=lf
 app/v177RangerFootPlacement.js text eol=lf
+
+# Canonical readable notice; the upstream raw bytes remain in the source archive.
+assets/source/quality-20261116/audio/kenney-sci-fi/License.txt text eol=lf

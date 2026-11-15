@@ -16,7 +16,7 @@ import {verifiedPwaArtworkPaths} from '../app/pwaArtworkAvailability.js';
 import {PWA_MANUAL_FOLEY_FILES} from '../app/pwaManualFoleyFiles.js';
 import {V099_MANUAL_ABILITY_AUDIO_CONTRACTS} from '../app/battleAudioContracts.js';
 
-const ids=["ability-babayaga-appraise-activate","ability-brute-groundbreak-activate","ability-engineer-trap-arm-activate","ability-guardian-shieldwall-activate","ability-gunner-suppression-activate","ability-kumaverson-iron-pan-activate","ability-medic-emergency-activate","ability-mrs-chiha-salvo-ready","ability-musashi-cross-guard","ability-ranger-precision-activate","ability-scout-intercept-activate","ability-zakimiya-molotov-activate"];
+const ids=["ability-babayaga-appraise-activate","ability-brute-groundbreak-activate","ability-engineer-trap-arm-activate","ability-guardian-shieldwall-activate","ability-gunner-suppression-activate","ability-kumaverson-iron-pan-activate","ability-medic-emergency-activate","ability-mrs-chiha-salvo-ready","ability-musashi-cross-guard","ability-ranger-precision-activate","ability-scout-intercept-activate","ability-tky-light-blade-charge","ability-zakimiya-molotov-activate","v105-fist-wave-charge"];
 const previous=createAudioManifest(withMeleeFoley(withChainsawRecordings(withRecordedWeapons(v100AudioDesignCandidate(PRODUCTION_AUDIO_MANIFEST)))));
 const provenance=JSON.parse(fs.readFileSync('assets/source/quality-20261114/audio/manual-foley-r1/provenance.json','utf8'));
 const sha=b=>createHash('sha256').update(b).digest('hex');
@@ -31,7 +31,7 @@ test('the PWA shell owns exact source metadata without importing the playback de
   assert.ok(imports.includes('./pwaManualFoleyFiles.js'));assert.equal(imports.includes('./v100ManualAbilityFoley.js'),false,'The playback graph must not become an early PWA-shell dependency');
 });
 
-test('the final V1 composition replaces exactly twelve preparation sources and retains every voice, contact cue and playback policy',()=>{
+test('the final V1 composition replaces exactly fourteen preparation sources and retains every voice, contact cue and playback policy',()=>{
   assert.deepEqual(Object.keys(V100_MANUAL_ABILITY_FOLEY).sort(),ids);
   const changed=[];
   for(const before of previous.assets){
@@ -61,7 +61,7 @@ test('the source override does not mutate inputs, change scene policy, or match 
   assert.equal(withV100ManualAbilityFoley({assets:[unrelated]}).assets[0],unrelated);
 });
 
-test('the complete offline pack owns all twelve new MPEG cues while retaining each legacy recording',()=>{
+test('the complete offline pack owns all fourteen new MPEG cues while retaining each legacy recording',()=>{
   const manifest=JSON.parse(fs.readFileSync('public/asset-manifest.json','utf8'));
   for(const id of ids){
     const source=V100_AUDIO_MANIFEST.assetById[id].sources[0];
@@ -109,14 +109,14 @@ test('exact saved MPEG or explicit browser play permits only that source with th
 });
 
 test('both codec choices retain licensed masters, distinct audible signals, original duration bounds and quiet tails',()=>{
-  assert.equal(provenance.license,'CC0-1.0');assert.equal(provenance.records.length,12);
+  assert.equal(provenance.license,'CC0-1.0');assert.equal(provenance.records.length,14);
   for(const notice of provenance.notices)assert.equal(fileHash(notice.path),notice.sha256);
   const decodedHashes=new Set();
   for(const row of provenance.records){
     assert.equal(fileHash(row.master.path),row.master.sha256);
     assert.equal(fileHash(row.reference.path),row.reference.sha256);
     for(const layer of row.layers)assert.equal(fileHash(layer.path),layer.sha256);
-    const actionBoundaries={scout:.24,ranger:.5,brute:.55,kumaverson:.35,babayaga:.4,gunner:.18,engineer:.35,zakimiya:.4,'mrs-chiha':1.05,'miyamoto-musashi':.22};
+    const actionBoundaries={brawler:.26,tky:.62,scout:.24,ranger:.5,brute:.55,kumaverson:.35,babayaga:.4,gunner:.18,engineer:.35,zakimiya:.4,'mrs-chiha':1.05,'miyamoto-musashi':.22};
     if(Object.hasOwn(actionBoundaries,row.kind)){assert.equal(row.preparationEndsBefore,actionBoundaries[row.kind]);assert.ok(row.duration<row.preparationEndsBefore);}else assert.ok(row.duration<=(row.kind==='medic'?.96:1.02),'Preparation cannot overrun the existing root');
     for(const output of row.encodings){
       assert.equal(fileHash(output.path),output.sha256);assert.equal(fs.statSync(output.path).size,output.bytes);
@@ -130,5 +130,5 @@ test('both codec choices retain licensed masters, distinct audible signals, orig
       if(row.preparationEndsBefore)assert.ok(lastSignal<row.preparationEndsBefore,'Preparation cannot announce an attack or continue into the first real action: '+row.kind);decodedHashes.add(sha(pcm));
     }
   }
-  assert.equal(decodedHashes.size,24,'Characters and codec renditions remain distinct');
+  assert.equal(decodedHashes.size,28,'Characters and codec renditions remain distinct');
 });
