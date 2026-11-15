@@ -19,7 +19,7 @@ concurrency:
 jobs:
   scope:
     if: ${{ !github.event.pull_request.draft }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
       contents: read
@@ -50,7 +50,7 @@ jobs:
     needs: scope
     if: ${{ !github.event.pull_request.draft && needs.scope.outputs.reuse_quality != 'true' }}
     name: V1 Quality UI and Play (${{ matrix.engine }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     strategy:
       fail-fast: false

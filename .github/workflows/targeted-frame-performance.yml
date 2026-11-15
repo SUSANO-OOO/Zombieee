@@ -17,7 +17,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   scope:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       run: ${{ steps.changed.outputs.run }}
       runtimes: ${{ steps.changed.outputs.runtimes }}
