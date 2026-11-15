@@ -1,6 +1,6 @@
 {
   "schema": "zombieee-asset-manifest/1",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "releaseSha": "__ZOMBIEEE_RELEASE_SHA__",
   "assets": [
     {
@@ -305,6 +305,14 @@
       "hash": "sha256-f6a331504bc2522e2fb1d8b3a14b58ce877dd44f6b825421e446014ef8e913a7",
       "pack": "campaign-core",
       "category": "object",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261115/vfx/paisen-pressure-six-r3.webp",
+      "bytes": 160326,
+      "hash": "sha256-d7eafdde8dfe530a925830db2885b14b754a396703f458957b801c250bfa442f",
+      "pack": "units",
+      "category": "unit",
       "criticality": "critical"
     },
     {

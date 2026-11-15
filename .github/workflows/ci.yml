@@ -1062,6 +1062,36 @@ jobs:
           PWA_PARTIAL_UPDATE_EVIDENCE_DIR: outputs/v100-native-pwa/partial
         run: node scripts/pwa-partial-failed-update-browser-smoke.mjs
 
+      - name: Build the installed 1.0.8 baseline for native WebKit update recovery
+        id: build_v108_partial_pwa_site
+        if: ${{ !cancelled() && steps.build_native_pwa_sites.outcome == 'success' }}
+        run: |
+          set -euo pipefail
+          old_sha=9868f75a280c445fb908abf53effaea3834ad1f1
+          old_source="$RUNNER_TEMP/v108-installed-source"
+          git worktree add --detach "$old_source" "$old_sha"
+          cmp package.json "$old_source/package.json"
+          cmp package-lock.json "$old_source/package-lock.json"
+          ln -s "$GITHUB_WORKSPACE/node_modules" "$old_source/node_modules"
+          (
+            cd "$old_source"
+            npm run build
+            GITHUB_PAGES_RELEASE_VERSION=1.0.8 GITHUB_PAGES_RELEASE_SHA="$old_sha" \
+              GITHUB_PAGES_REQUEST_ID=v108-installed-update-baseline GITHUB_PAGES_ISSUE_NUMBER=177 \
+              node scripts/build-github-pages.mjs
+          )
+
+      - name: Verify native WebKit partial-download recovery from installed 1.0.8
+        if: ${{ !cancelled() && steps.build_v108_partial_pwa_site.outcome == 'success' }}
+        env:
+          PWA_PARTIAL_UPDATE_OLD_ROOT: ${{ runner.temp }}/v108-installed-source/_site
+          PWA_PARTIAL_UPDATE_OLD_VERSION: 1.0.8
+          PWA_PARTIAL_UPDATE_CANDIDATE_ROOT: ${{ github.workspace }}/_site
+          PWA_PARTIAL_UPDATE_EXPECTED_CANDIDATE_SHA: ${{ github.event.pull_request.head.sha }}
+          PWA_PARTIAL_UPDATE_BROWSER: webkit
+          PWA_PARTIAL_UPDATE_EVIDENCE_DIR: outputs/v100-native-pwa/partial-v108
+        run: node scripts/pwa-partial-failed-update-browser-smoke.mjs
+
       - name: Preserve active play when an installed asset needs repair
         if: ${{ !cancelled() && steps.build_native_pwa_sites.outcome == 'success' }}
         env:

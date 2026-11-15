@@ -81,6 +81,8 @@ test('Quality reuse requires both original engine jobs to pass on the same exact
 
 test('workflow preserves every command/deadline and current script drift rejects reuse and requires full validation',async()=>{
   const current=readFileSync('.github/workflows/ci.yml','utf8'),before=load(execFileSync('git',['show',old.head+':.github/workflows/ci.yml'],{encoding:'utf8',windowsHide:true}));
+  const {assertAndRemoveV108StepsForLegacyComparison}=await import('./helpers/installed-v108-pwa-workflow.mjs');
+  const currentWorkflow=load(current);assertAndRemoveV108StepsForLegacyComparison(currentWorkflow);
   before.jobs.scope.outputs.combat='${{ steps.scope.outputs.combat }}';
   before.jobs['v102-combat'].if="${{ needs.scope.outputs.full == 'true' || needs.scope.outputs.combat == 'true' }}";
   before.jobs['v102-combat-webkit-summary'].if="${{ (needs.scope.outputs.full == 'true' || needs.scope.outputs.combat == 'true') && (always()) }}";
@@ -101,7 +103,7 @@ test('workflow preserves every command/deadline and current script drift rejects
   for(const step of formal){assert.equal(step.env.V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC,'1');step.env.V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC='0';}
   const currentFormal=load(current).jobs['v100-webkit-frame-control'].steps.filter(step=>step.run===command);
   assert.equal(currentFormal.length,4);for(const step of currentFormal)assert.equal(step.env.V100_DEVICE_RUNTIME_CALLBACK_DIAGNOSTIC,'0');
-  assert.deepEqual(load(current),before);
+  assert.deepEqual(currentWorkflow,before);
   const workflowBlob=execFileSync('git',['hash-object','.github/workflows/ci.yml'],{encoding:'utf8',windowsHide:true}).trim();
   if(workflowBlob!==COMBAT_QA_WORKFLOW_BLOB)assert.equal(reviewedCombatQaPaths(paths,{...sourceBlobs,'.github/workflows/ci.yml':workflowBlob}),false,
     'Changed workflow must not inherit the old exact-workflow QA owner');

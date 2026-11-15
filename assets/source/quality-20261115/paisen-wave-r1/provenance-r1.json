@@ -1,0 +1,156 @@
+{
+  "generator": "scripts/build-v100-paisen-wave-art.mjs",
+  "creator": "OpenAI built-in image_gen under Producer direction; deterministic smartphone WebP packaging by Codex",
+  "license": "Project-original generated material under existing asset policy; no third-party download",
+  "rights": {
+    "commercialUse": true,
+    "modification": true,
+    "redistribution": true,
+    "basis": "Original material-only effect created for this project"
+  },
+  "producerApproval": "Active smartphone goal requests bespoke animated manual abilities; candidate, not final motion/audio/device acceptance",
+  "source": {
+    "path": "assets/source/quality-20261115/paisen-wave-r1/generated-r3.png",
+    "bytes": 1587908,
+    "sha256": "533f7418047de08168979a337a657e92cc7906f24fd7a96ee946c4fef2127421"
+  },
+  "prompt": {
+    "path": "assets/source/quality-20261115/paisen-wave-r1/prompt-r3.txt",
+    "sha256": "a58f2f05179c1bb7d906783d523d9d96171f0a3ead51698149e6c785a4539fcd"
+  },
+  "generation": {
+    "mode": "built-in image_gen generation and referenced transparent edits",
+    "model": "Selected by host; no model name asserted",
+    "characterReferences": [],
+    "reference": {
+      "path": "public/art/v105/combat-vfx/fist-wave-r1.webp",
+      "sha256": "2471d4b8a4e15328cde86fc0e06cc0738be2c5d26ceaf3543cf7c3ba77fd7963"
+    }
+  },
+  "rejected": [
+    {
+      "path": "generated-r1.png",
+      "reason": "32px border alpha252/253 at two flight tips"
+    },
+    {
+      "path": "generated-r2.png",
+      "reason": "32px border alpha up to128 due broad haze"
+    }
+  ],
+  "calibration": "First three cells use the bright leading front at the actual swept collision center; first two impact cells use their most luminous local pressure origin, final smoke keeps the second impact origin. Runtime camera, fist socket, aim, damage, radius, speed and TTL remain unchanged.",
+  "cells": [
+    {
+      "frame": 0,
+      "borderAlpha": 1,
+      "visiblePixels": 15070,
+      "anchor": [
+        0.7255859375,
+        0.5016902144081299
+      ]
+    },
+    {
+      "frame": 1,
+      "borderAlpha": 1,
+      "visiblePixels": 19706,
+      "anchor": [
+        0.7294921875,
+        0.5009590351676904
+      ]
+    },
+    {
+      "frame": 2,
+      "borderAlpha": 1,
+      "visiblePixels": 22376,
+      "anchor": [
+        0.7236328125,
+        0.5041201116686272
+      ]
+    },
+    {
+      "frame": 3,
+      "borderAlpha": 1,
+      "visiblePixels": 16098,
+      "anchor": [
+        0.44045049235445877,
+        0.5068345366784887
+      ]
+    },
+    {
+      "frame": 4,
+      "borderAlpha": 1,
+      "visiblePixels": 38473,
+      "anchor": [
+        0.2998049062040308,
+        0.4833949104965933
+      ]
+    },
+    {
+      "frame": 5,
+      "borderAlpha": 2,
+      "visiblePixels": 27152,
+      "anchor": [
+        0.2998049062040308,
+        0.4833949104965933
+      ]
+    }
+  ],
+  "currentBody": {
+    "path": "/art/v100/joints/brawler-combat-r1.webp",
+    "sha256": "d444e32ddc317662f05890460bb82659c2c29350cb96f784501705fed29ba949"
+  },
+  "output": {
+    "id": "v100-paisen-pressure-wave",
+    "path": "/art/quality-20261115/vfx/paisen-pressure-six-r3.webp",
+    "hash": "sha256-d7eafdde8dfe530a925830db2885b14b754a396703f458957b801c250bfa442f",
+    "width": 768,
+    "height": 512,
+    "columns": 3,
+    "rows": 2,
+    "flightFrames": [
+      0,
+      1,
+      2
+    ],
+    "impactFrames": [
+      3,
+      4,
+      5
+    ],
+    "anchors": [
+      [
+        0.7255859375,
+        0.5016902144081299
+      ],
+      [
+        0.7294921875,
+        0.5009590351676904
+      ],
+      [
+        0.7236328125,
+        0.5041201116686272
+      ],
+      [
+        0.44045049235445877,
+        0.5068345366784887
+      ],
+      [
+        0.2998049062040308,
+        0.4833949104965933
+      ],
+      [
+        0.2998049062040308,
+        0.4833949104965933
+      ]
+    ],
+    "flightWorldSize": 176,
+    "impactWorldSize": 184,
+    "flightCycleSeconds": 0.15,
+    "impactSeconds": 0.3,
+    "bytes": 160326
+  },
+  "runtimeAssetCount": 1,
+  "logicalBytes": 160326,
+  "distinctBytes": 160326,
+  "estimatedDecodedRgbaBytes": 1572864,
+  "scope": "Optional Paisen flight/impact material only. Existing fist socket, aim, swept collision, damage, range, speed, knockback, .30s impact lifetime, audio, RNG and save retained. One choice is latched per activation through impact; missing or late optional material keeps the original wave and dust for that burst."
+}

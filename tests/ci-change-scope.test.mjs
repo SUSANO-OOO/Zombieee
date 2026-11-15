@@ -719,8 +719,10 @@ test('reviewed lifecycle bindings select motion/normal while unchanged story and
  assert.equal(ciChangeScope(paths,{draft:false,sourceBlobs}).full,true);
  assert.equal(ciChangeScope([...paths,'app/v100Save.js'],{draft:true,sourceBlobs}).full,true);
 });
-test('new source heads do not wait behind a previous head and all original full gates remain intact',()=>{
+test('new source heads do not wait behind a previous head and all original full gates remain intact',async()=>{
  const current=load(readFileSync('.github/workflows/ci.yml','utf8'));
+ const {assertAndRemoveV108StepsForLegacyComparison}=await import('./helpers/installed-v108-pwa-workflow.mjs');
+ assertAndRemoveV108StepsForLegacyComparison(current);
  const original=load(execFileSync('git',['show','0d4bf897a2839c147be1767b829cfb2a30181348:.github/workflows/ci.yml'],{encoding:'utf8',windowsHide:true}));
  assert.equal(current.concurrency.group,'${{ github.workflow }}-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}');
  assert.equal(current.concurrency['cancel-in-progress'],false);

@@ -4,6 +4,7 @@ import {mkdir,readFile,writeFile} from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
 import {V177_JOINT_ATLASES} from '../app/v177JointPresentation.js';
+import {V100_PAISEN_WAVE_ART} from '../app/v100PaisenWaveArt.js';
 
 const root=process.cwd(),check=process.argv.includes('--check');
 const folder='assets/source/quality-20261114/tatara-impact-r1';
@@ -95,6 +96,7 @@ await emit(musashiFolder+'/provenance-r1.json',Buffer.from(JSON.stringify({
  runtimeAssetCount:1,logicalBytes:musashiBytes.length,distinctBytes:musashiBytes.length,estimatedDecodedRgbaBytes:768*512*4,
  scope:'Material-only contact at the existing actual counter or fallback damage target. Existing dual blades, body, contact point, damage, range, clock, audio, rewards and save retained. Missing or late optional art uses the existing physical contact raster, never the former X glyph. Old glyph file remains retained but is not decoded for current V1 battles.'
 },null,2)+'\n'));
+art.brawler=V100_PAISEN_WAVE_ART;
 await emit('app/v100ManualImpactArt.js',Buffer.from('// Generated data only. PwaGate must not import the battle renderer.\nexport const V100_MANUAL_IMPACT_ART=Object.freeze('+JSON.stringify(art,null,2)+');\n'));
 const provenance={generator:'scripts/build-v100-manual-impact-art.mjs',
  creator:'OpenAI built-in image_gen under Producer direction; deterministic WebP packaging by Codex',
@@ -110,4 +112,5 @@ const provenance={generator:'scripts/build-v100-manual-impact-art.mjs',
  runtimeAssetCount:1,logicalBytes:bytes.length,distinctBytes:bytes.length,estimatedDecodedRgbaBytes:1536*1024*4,
  scope:'Optional Tatara ground contact only. Same physical hammer socket, 180px size and .60s contact lifetime. Body, weapon, damage, timing, audio, rewards and save remain unchanged.'};
 await emit(folder+'/provenance-r1.json',Buffer.from(JSON.stringify(provenance,null,2)+'\n'));
-console.log(JSON.stringify({check,assets:2,bytes:bytes.length+musashiBytes.length,tataraSha256:sha(bytes),musashiSha256:sha(musashiBytes)},null,2));
+const paisenBytes=await readFile(path.join(root,'public'+V100_PAISEN_WAVE_ART.path));
+console.log(JSON.stringify({check,assets:3,bytes:bytes.length+musashiBytes.length+paisenBytes.length,tataraSha256:sha(bytes),musashiSha256:sha(musashiBytes),paisenSha256:sha(paisenBytes)},null,2));

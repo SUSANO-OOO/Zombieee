@@ -1,0 +1,23 @@
+{
+  "masterPath": "assets/source/quality-20261115/paisen-wave-r1/generated-r3.png",
+  "masterSha256": "533f7418047de08168979a337a657e92cc7906f24fd7a96ee946c4fef2127421",
+  "promptPath": "assets/source/quality-20261115/paisen-wave-r1/prompt-r3.txt",
+  "referencePath": "public/art/v105/combat-vfx/fist-wave-r1.webp",
+  "referenceSha256": "2471d4b8a4e15328cde86fc0e06cc0738be2c5d26ceaf3543cf7c3ba77fd7963",
+  "flightWorldSize": 176,
+  "impactWorldSize": 184,
+  "flightCycleSeconds": 0.15,
+  "impactSeconds": 0.3,
+  "selection": "R3 keeps all six 32px borders at alpha <=2; R1 and R2 retained and not selected",
+  "rejected": [
+    {
+      "path": "generated-r1.png",
+      "reason": "32px border alpha252/253 at two flight tips"
+    },
+    {
+      "path": "generated-r2.png",
+      "reason": "32px border alpha up to128 due broad haze"
+    }
+  ],
+  "calibration": "First three cells use the bright leading front at the actual swept collision center; first two impact cells use their most luminous local pressure origin, final smoke keeps the second impact origin. Runtime camera, fist socket, aim, damage, radius, speed and TTL remain unchanged."
+}

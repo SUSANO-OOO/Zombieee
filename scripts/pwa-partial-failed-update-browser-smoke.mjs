@@ -11,8 +11,7 @@ import { legacyQaUrl } from "./legacy-qa-url.mjs";
 
 import { createHash } from "node:crypto";
 import { createServer } from "node:http";
-import { mkdir, mkdtemp, readFile, stat, writeFile } from "node:fs/promises";
-import os from "node:os";
+import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { CAMPAIGN_STAGES, createDefaultCampaignSave, serializeCampaignSave } from "../app/campaign.js";
@@ -28,6 +27,7 @@ import { disconnectPwaOrigin } from "./pwa-offline-origin.mjs";
 import { isExpectedPartialBundleAbort, isCausalPwaIncidentRetry, markPartialBundleCancelIntent } from "./pwa-expected-abort.mjs";
 import { verifyEntryNativePreload } from "./pwa-entry-native-preload.mjs";
 import { partitionPwaUpdateTransportPaths, inspectPwaContentTransportCoverage } from "./pwa-update-request-ownership.mjs";
+import { createPartialPwaProfileDirectory } from "./pwa-partial-profile-directory.mjs";
 
 const oldRootInput = process.env.PWA_PARTIAL_UPDATE_OLD_ROOT;
 const candidateRootInput = process.env.PWA_PARTIAL_UPDATE_CANDIDATE_ROOT;
@@ -746,7 +746,7 @@ let context = null;
 let page = null;
 // WebKit appends 197 characters for a disk-cache response. A 68-character
 // Windows profile path reproduces a native write failure; keep it short.
-const userDataDir = await mkdtemp(path.join(os.tmpdir(), "z-pwa-"));
+const userDataDir = await createPartialPwaProfileDirectory(process.env.PWA_PARTIAL_UPDATE_PROFILE_DIR);
 
 try {
   ({ context, page } = await openPersistent(userDataDir));
