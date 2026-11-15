@@ -7,6 +7,7 @@ import {pathToFileURL} from 'node:url';
 
 const mirrorFile='/etc/apt/apt-mirrors.txt';
 const azure='http://azure.archive.ubuntu.com/ubuntu/';
+const ec2='http://us-east-2.ec2.archive.ubuntu.com/ubuntu/';
 const archive='https://archive.ubuntu.com/ubuntu/';
 const security='https://security.ubuntu.com/ubuntu/';
 
@@ -17,7 +18,9 @@ export function assertQualityMirrorHost(env,platform){
   assert.equal(env.GITHUB_REPOSITORY?.toLowerCase(),'susano-ooo/zombieee');
 }
 
-// Exact template from actions/runner-images ubuntu24/20261012.334,
+// Azure template from actions/runner-images ubuntu24/20261012.334;
+// the EC2 first URI is also pinned to the retained 2026-11-15 GitHub-hosted runner receipt.
+// Only this explicit first-URI allowlist changes; priorities and other rows stay exact.
 // images/ubuntu/scripts/build/configure-apt-sources.sh. Keep priorities and signatures.
 export function qualityMirrorText(before){
   assert.equal(typeof before,'string');
@@ -27,10 +30,10 @@ export function qualityMirrorText(before){
     const match=/^[ \t]*(\S+)[ \t]+priority:([123])[ \t]*$/u.exec(line);
     assert.ok(match,'Unexpected runner mirror row');return{uri:match[1],priority:match[2]};
   });
-  assert.ok([azure,archive].includes(entries[0].uri),'Unexpected first mirror');
+  assert.ok([azure,ec2,archive].includes(entries[0].uri),'Unexpected first mirror');
   assert.deepEqual(entries.map(entry=>entry.priority),['1','2','3']);
   assert.deepEqual(entries.slice(1).map(entry=>entry.uri),[archive,security]);
-  return entries[0].uri===archive?before:before.replace(/^([ \t]*)http:\/\/azure\.archive\.ubuntu\.com\/ubuntu\/(?=[ \t]+priority:1[ \t]*\r?$)/mu,'$1'+archive);
+  return entries[0].uri===archive?before:before.replace(/^([ \t]*)(\S+)([ \t]+priority:1[ \t]*\r?)$/mu,(_row,indent,_uri,suffix)=>indent+archive+suffix);
 }
 
 export function prepareQualityMirror(){

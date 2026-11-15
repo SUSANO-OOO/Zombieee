@@ -98,3 +98,16 @@ for (const missingUpgrade of [false, true]) test(`native growth picks upgrade am
   if (missingUpgrade) { await assert.rejects(run(), /upgrade absent/); assert.deepEqual(taps, []); }
   else { await run(); assert.deepEqual(taps, ["upgrade"]); }
 });
+
+
+test('smartphone presentation keeps both requested sizes and adds no implicit PC case',()=>{
+  const sizes=[{width:844,height:390},{width:844,height:340}];
+  for(const id of ['formation-long-name','formation-empty-slots']){
+    const call=runCases.find(x=>x.arguments[3].getText(parsed).includes(id));assert.ok(call);
+    let loop=call.parent;while(loop&&!ts.isForOfStatement(loop))loop=loop.parent;assert.ok(loop);
+    for(const [sections,expected] of [[['presentation'],sizes],[[],[]]]){
+      const actual=vm.runInNewContext(loop.expression.getText(parsed),{sections,sizes});
+      assert.deepEqual(JSON.parse(JSON.stringify(actual)),expected);
+    }
+  }
+});

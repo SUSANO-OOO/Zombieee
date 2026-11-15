@@ -128,6 +128,11 @@ test('workflow preserves every command/deadline and current script drift rejects
   }
   const qualityFile='.github/workflows/v1-quality-acceptance.yml',quality=load(readFileSync(qualityFile,'utf8'));
   const oldQuality=load(execFileSync('git',['show',old.head+':'+qualityFile],{encoding:'utf8',windowsHide:true}));
+  const currentPhoneStep=quality.jobs['quality-ui-play'].steps.find(s=>s.name==='Check smartphone viewports, rewards, recovery and native inputs');
+  assert.ok(currentPhoneStep);assert.equal(currentPhoneStep.env.V100_QUALITY_LOOP_SIZES,'844x390,844x340');
+  const legacyPhoneStep=oldQuality.jobs['quality-ui-play'].steps.find(s=>s.name==='Check three viewports, rewards, recovery and native inputs');
+  assert.ok(legacyPhoneStep);assert.equal(legacyPhoneStep.env.V100_QUALITY_LOOP_SIZES,'1280x720,844x390,844x340');
+  legacyPhoneStep.name=currentPhoneStep.name;legacyPhoneStep.env.V100_QUALITY_LOOP_SIZES=currentPhoneStep.env.V100_QUALITY_LOOP_SIZES;
   oldQuality.concurrency={group:'${{ github.workflow }}-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}','cancel-in-progress':false};
   oldQuality.jobs['quality-ui-play'].needs='scope';oldQuality.jobs['quality-ui-play'].if="${{ !github.event.pull_request.draft && needs.scope.outputs.reuse_quality != 'true' }}";
   assertAndRestorePinnedLinuxHostsForLegacyComparison(quality);
