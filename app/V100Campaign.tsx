@@ -1544,13 +1544,28 @@ function RewardSummaryView({ result }: { result: Record<string, unknown> | null 
   const summary = v100RewardPresentationFor(result);
   if (!summary) return null;
   const rewardLabels = { firstClear: "初回達成", replay: "再挑戦報酬", star2: "★2 初達成", star3: "★3 初達成" };
-  return <div className="v100-reward-summary" aria-label="確定したクリア報酬"><h2>ステージ S{String(summary.stageNumber).padStart(2, "0")} 達成</h2>
-    <div className="v100-result-rewards"><article><span>獲得CAPS</span><strong>+{summary.rewardCaps}</strong></article>{summary.unlocks.length > 0 && <article className="v100-reward-unlocks">
-      {summary.unlockedUnitIds.map(id => <span className="v100-reward-crew" key={id}><CrewPortrait unitId={id} label={`${UNIT_BY_ID.get(id)?.displayName ?? "ユニット"}が出撃候補に加わりました`} /></span>)}
-      <div><span>新たに使えるもの</span><strong>{summary.unlocks.join(" / ")}</strong></div></article>}</div>
-    {summary.breakdown && <details className="v100-reward-breakdown"><summary>CAPSの内訳</summary><p>{Object.entries(summary.breakdown).filter(([, value]) => value > 0).map(([key, value]) => rewardLabels[key as keyof typeof rewardLabels] + " +" + value).join(" / ") || "支給なし"}</p></details>}
-    <p>獲得したCAPSで、仲間の出撃の支度や強化をしよう。</p><small className="v100-reward-saved">報酬とステージ進行は保存済み</small></div>;
+  const breakdown = summary.breakdown ? Object.entries(summary.breakdown).filter(([, value]) => value > 0) : [];
+  return <div className="v100-reward-summary" aria-label="確定したクリア報酬" data-has-unlocks={summary.unlocks.length > 0 ? "true" : "false"}>
+    <h2><span className="v100-reward-stage">S{String(summary.stageNumber).padStart(2, "0")}</span><span>ステージ達成</span></h2>
+    <div className="v100-reward-ledger">
+      <article className="v100-reward-caps-sheet" aria-label="獲得CAPS">
+        <span className="v100-reward-caps-label">獲得CAPS</span><strong className="v100-reward-caps-value">+{summary.rewardCaps}<small>CAPS</small></strong>
+        {summary.breakdown && <details className="v100-reward-breakdown"><summary>CAPSの内訳</summary><dl>{breakdown.length ? breakdown.map(([key, value]) => <div key={key}><dt>{rewardLabels[key as keyof typeof rewardLabels]}</dt><dd>+{value}</dd></div>) : <div><dt>支給なし</dt><dd>0</dd></div>}</dl></details>}
+      </article>
+      {summary.unlocks.length > 0 && <article className="v100-reward-unlocks">
+        <h3>新たに使えるもの</h3>
+        <div className="v100-reward-unlock-body">
+          {summary.unlockedUnitIds.length > 0 && <div className="v100-reward-crew-list">{summary.unlockedUnitIds.map(id => <figure className="v100-reward-crew" key={id}>
+            <CrewPortrait unitId={id} /><figcaption>{UNIT_BY_ID.get(id)?.displayName ?? "ユニット"}</figcaption>
+          </figure>)}</div>}
+          <ul>{summary.unlocks.map(unlock => <li key={unlock}>{unlock}</li>)}</ul>
+        </div>
+      </article>}
+    </div>
+    <div className="v100-reward-next-step"><p>獲得したCAPSで、仲間の出撃の支度や強化をしよう。</p><small className="v100-reward-saved">報酬とステージ進行は保存済み</small></div>
+  </div>;
 }
+
 
 function StarCriteria({ vehicleMaxHp }: { vehicleMaxHp: number }) {
   const targets = v100StarTargetsForVehicle(vehicleMaxHp);

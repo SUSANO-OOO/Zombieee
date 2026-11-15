@@ -313,12 +313,13 @@ for (const engine of engines) {
         assert.equal(settled.save.lastResult.rewardBreakdown.firstClear, 0);
         const summary = page.locator('.v100-reward-breakdown summary');
         await within(summary, 44); await summary.tap();
-        await within(page.locator('.v100-reward-breakdown > p'));
-        row.totalBox = await within(page.locator('.v100-reward-summary .v100-result-rewards article').first());
-        await within(page.locator('.v100-reward-summary .v100-result-rewards strong').first());
-        await within(page.locator('.v100-reward-summary > p'));
+        await within(page.locator('.v100-reward-breakdown > dl'));
+        row.totalBox = await within(page.locator('.v100-reward-summary .v100-reward-caps-sheet').first());
+        await within(page.locator('.v100-reward-summary .v100-reward-caps-value').first());
+        await page.locator('.v100-reward-next-step > p').scrollIntoViewIfNeeded();
+        await within(page.locator('.v100-reward-next-step > p'));
         await within(page.locator('.v100-event-actions .v100-primary'), 44);
-        row.breakdown = await page.locator('.v100-reward-breakdown > p').innerText();
+        row.breakdown = await page.locator('.v100-reward-breakdown > dl').innerText();
         assert.ok(row.breakdown.includes('再挑戦報酬'));
         await capture(page, row, 'settlement');
         const saved = await rawSave(page);
@@ -349,12 +350,17 @@ for (const engine of engines) {
         await page.locator('.v100-reward-summary').waitFor();
         const summary = page.locator('.v100-reward-breakdown summary');
         await within(summary, 44); await summary.tap();
-        await within(page.locator('.v100-reward-breakdown > p'));
-        row.totalBox = await within(page.locator('.v100-reward-summary .v100-result-rewards strong').first());
-        await within(page.locator('.v100-reward-summary .v100-result-rewards article').nth(1).locator('strong'));
+        await within(page.locator('.v100-reward-breakdown > dl'));
+        row.totalBox = await within(page.locator('.v100-reward-summary .v100-reward-caps-value').first());
+        const unlockRows = page.locator('.v100-reward-unlock-body li');
+        assert.ok(await unlockRows.count() > 0);
+        row.unlockReadout = await unlockRows.allTextContents();
+        for (const item of await unlockRows.all()) { await item.scrollIntoViewIfNeeded(); await within(item); }
+        row.crewFrames = await page.locator('.v100-reward-unlocks .v100-reward-crew').evaluateAll(items => items.map(item => { const r=item.getBoundingClientRect();const portrait=item.querySelector('[data-portrait-owner]');return {width:r.width,height:r.height,owner:portrait?.getAttribute('data-portrait-owner'),mode:portrait?.getAttribute('data-portrait-mode')}; }));
+        for (const frame of row.crewFrames) { assert.ok(frame.width >= 80 && frame.width/frame.height >= .75, 'A reward portrait must retain a waist-up camera rather than a thin clipped strip');assert.equal(frame.mode,'upper'); }
         await capture(page, row, 'settlement');
-        await page.locator('.v100-reward-summary > p').scrollIntoViewIfNeeded();
-        await within(page.locator('.v100-reward-summary > p'));
+        await page.locator('.v100-reward-next-step > p').scrollIntoViewIfNeeded();
+        await within(page.locator('.v100-reward-next-step > p'));
         await within(page.locator('.v100-event-actions .v100-primary'), 44);
         await capture(page, row, 'investment-note');
         const saved = await rawSave(page);
