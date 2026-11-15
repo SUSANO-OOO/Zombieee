@@ -1,4 +1,5 @@
 "use client";
+import {selectV100BossSkillPlayback,v100BossSkillCue,v100BossSkillCues} from "./v100BossSkillAudio.js";
 import {selectV100BossCollapsePlayback,v100BossCollapseCue} from "./v100BossCollapseAudio.js";
 import {GAMEPLAY_PRODUCTION_AUDIO_MANIFEST} from './productionAudio.js';
 import { createCommandRecoveryRuntime, armCommandRecovery, advanceCommandRecovery, commandDeploymentWait, commandRecoveryWorldActionPending } from './commandRecovery.js';
@@ -51,7 +52,7 @@ import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, u
 import {PwaBattleArtworkPathsContext,selectBattleArtworkPolicy} from "./pwaBattleArtworkContext.js";
 import {drawV100BallisticShot} from './v100BallisticVfx.js';
 import {drawV100NaoTreatmentShot} from './v100NaoShotVfx.js';
-import {PwaManualFoleyPathsContext,PwaBossCollapsePathsContext} from "./pwaAudioAvailabilityContext.js";
+import {PwaManualFoleyPathsContext,PwaBossCollapsePathsContext,PwaBossSkillPathsContext} from "./pwaAudioAvailabilityContext.js";
 import {selectV100ManualFoleyPlayback} from "./v100ManualAbilityFoley.js";
 import {
   RANDOM_BATTLE_BARK_TRIGGER_IDS,
@@ -9481,6 +9482,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   const [manualFoleyPathsAtEntry]=useState(()=>verifiedManualFoleyPaths);
   const verifiedBossCollapsePaths=useContext(PwaBossCollapsePathsContext);
   const [bossCollapsePathsAtEntry]=useState(()=>verifiedBossCollapsePaths);
+  const verifiedBossSkillPaths=useContext(PwaBossSkillPathsContext);
+  const [bossSkillPathsAtEntry]=useState(()=>verifiedBossSkillPaths);
   const verifiedBattleArtworkPaths=useContext(PwaBattleArtworkPathsContext);
   const verifiedBattleArtworkPathsRef=useRef(verifiedBattleArtworkPaths);
   const battleArtworkPolicyRef=useRef<{key:string;paths:string}|null>(null);
@@ -9833,8 +9836,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   const externalSessionActive = Boolean(externalSession);
   const externalBattleMode = externalSession?.battleMode ?? null;
   const playbackManifest = useMemo(()=>externalSessionActive
-    ? selectV100BossCollapsePlayback(selectV100ManualFoleyPlayback(V100_AUDIO_MANIFEST,GAMEPLAY_PRODUCTION_AUDIO_MANIFEST,manualFoleyPathsAtEntry),bossCollapsePathsAtEntry)
-    : GAMEPLAY_PRODUCTION_AUDIO_MANIFEST,[externalSessionActive,manualFoleyPathsAtEntry,bossCollapsePathsAtEntry]);
+    ? selectV100BossSkillPlayback(selectV100BossCollapsePlayback(selectV100ManualFoleyPlayback(V100_AUDIO_MANIFEST,GAMEPLAY_PRODUCTION_AUDIO_MANIFEST,manualFoleyPathsAtEntry),bossCollapsePathsAtEntry),bossSkillPathsAtEntry)
+    : GAMEPLAY_PRODUCTION_AUDIO_MANIFEST,[externalSessionActive,manualFoleyPathsAtEntry,bossCollapsePathsAtEntry,bossSkillPathsAtEntry]);
   const formatBattleText = (value: string) => publicDisplayText(value, { crawlerLabel: externalSessionActive ? v100BasePresentationFor(gameRef.current.definition.missionConfig.v100StageNumber).label : "装甲車両" });
   useEffect(() => { externalSessionRef.current = externalSession; }, [externalSession]);
   const externalFormationKindsKey = externalSession?.formationKinds.join("|") ?? "";
@@ -16262,6 +16265,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     g.signalIds.push(receiptId);
     const collapseCue = v100BossCollapseCue(kind, g.definition.missionConfig.v100StageNumber, Boolean(externalSessionRef.current));
     if (collapseCue) void productionMixerRef.current?.preloadAssets([collapseCue], { priority: "background" });
+    const skillCues = v100BossSkillCues(kind, g.definition.missionConfig.v100StageNumber, Boolean(externalSessionRef.current));
+    if (skillCues.length) void productionMixerRef.current?.preloadAssets(skillCues, { priority: "background" });
     g.banner = definition.entrance.warningLabel;
     g.bannerTime = 3.2;
     g.flashOverlay = Math.max(g.flashOverlay, .18);
@@ -22092,7 +22097,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaHeavy);
                 g.banner = "マザー // 増殖室離床";
                 g.bannerTime = .8;
-                playBattleSemanticCue("boss-mother-brood-eruption", f.x, {
+                playBattleSemanticCue(v100BossSkillCue(f.kind, "impact", g.definition.missionConfig.v100StageNumber, Boolean(externalSessionRef.current)) ?? "boss-mother-brood-eruption", f.x, {
                   semantic: "boss-phase-impact",
                   receiptId: `${f.id}:${f.attackSequence}:mother-brood-eruption`,
                   ownerId: f.id,
@@ -22120,7 +22125,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 abilityFrame = true;
                 g.banner = "マザー // 増殖兆候";
                 g.bannerTime = .72;
-                playBattleSemanticCue("boss-mother-brood-warning", f.x, {
+                playBattleSemanticCue(v100BossSkillCue(f.kind, "warning", g.definition.missionConfig.v100StageNumber, Boolean(externalSessionRef.current)) ?? "boss-mother-brood-warning", f.x, {
                   semantic: "boss-phase-warning",
                   receiptId: `${f.id}:${f.attackSequence}:mother-brood-warning`,
                   ownerId: f.id,
@@ -22192,7 +22197,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                   g.banner = "オオグチ // 捕食突進";
                   addDamageText(g, f.x, Math.max(110, f.y - 96), "捕食突進", .92, "#e5a06d");
                   addParticles(g, f.x - 38, f.y - 18, "#c4784e", 18);
-                  playBattleSemanticCue("boss-ooguchi-charge-impact", f.x, {
+                  playBattleSemanticCue(v100BossSkillCue(f.kind, "impact", g.definition.missionConfig.v100StageNumber, Boolean(externalSessionRef.current)) ?? "boss-ooguchi-charge-impact", f.x, {
                     semantic: "boss-phase-impact",
                     receiptId: `${f.id}:${f.attackSequence}:ooguchi-charge-impact`,
                     ownerId: f.id,
@@ -22263,9 +22268,11 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                         ? "変異ムガリアン社長 // 四腕制圧"
                         : "TAKUYA-Ω // Ω大剣薙ぎ払い";
                   playBattleSemanticCue(
+                    v100BossSkillCue(f.kind, "impact", g.definition.missionConfig.v100StageNumber, Boolean(externalSessionRef.current)) ?? (
                     anomalyKind === "gairen"
                       ? "boss-gairen-shell-sweep"
-                      : "boss-futago-cross-impact",
+                      : "boss-futago-cross-impact"
+                    ),
                     f.x,
                     {
                       semantic: "boss-phase-impact",
@@ -22312,6 +22319,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                         : "TAKUYA-Ω // Ω大剣薙ぎ払い予告";
                 g.bannerTime = .68;
                 playBattleSemanticCue(
+                    anomalyKind === "takuya-omega" ? "enemy-takuya-attack" : (
+                      v100BossSkillCue(f.kind, "warning", g.definition.missionConfig.v100StageNumber, Boolean(externalSessionRef.current)) ?? (
                     anomalyKind === "ooguchi"
                       ? "boss-ooguchi-charge-warning"
                       : anomalyKind === "gairen"
@@ -22320,7 +22329,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                           ? "boss-futago-cross-warning"
                           : anomalyKind === "mugarian-president-mutated"
                             ? enemyCombatCueFor(f.kind, "phase")
-                            : "enemy-takuya-attack",
+                            : "enemy-takuya-attack"
+                      )
+                    ),
                   f.x,
                   {
                     semantic: "boss-phase-warning",
@@ -22332,6 +22343,16 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                     dedupeKey: `boss:${f.id}:${f.attackSequence}:${anomalyKind}-warning`,
                   },
                 );
+                // Omega keeps the original warning voice beside non-vocal material.
+                if (anomalyKind === "takuya-omega") {
+                  const skillMaterialWarning = v100BossSkillCue(f.kind, "warning", g.definition.missionConfig.v100StageNumber, Boolean(externalSessionRef.current));
+                  if (skillMaterialWarning) playBattleSemanticCue(skillMaterialWarning, f.x, {
+                    semantic: "boss-skill-material-warning",
+                    receiptId: "boss-skill-warning:" + f.id + ":" + g.time.toFixed(3),
+                    ownerId: f.id, priority: 90, cooldownMs: 0, volume: .62, maxInstances: 2,
+                    dedupeKey: "boss-skill-warning:" + f.id + ":" + g.time.toFixed(3),
+                  });
+                }
               }
             }
             if (abilityFrame || f.stationAbility.phase !== "idle") continue;
@@ -22390,7 +22411,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                   ? "クロメ // 追跡眼・過励起"
                   : "クロメ // 追跡眼";
                 g.bannerTime = .82;
-                playBattleSemanticCue("v104-eye-fire", f.x, {
+                playBattleSemanticCue(v100BossSkillCue(f.kind, "impact", g.definition.missionConfig.v100StageNumber, Boolean(externalSessionRef.current)) ?? "v104-eye-fire", f.x, {
                   semantic: "boss-phase-impact",
                   receiptId: `${f.id}:${g.time.toFixed(3)}:kurome-beam`,
                   ownerId: f.id,
@@ -22424,7 +22445,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 // The ray itself owns the full warning window. Keep the global
                 // banner brief so compact screens do not cover this tall boss.
                 g.bannerTime = .68;
-                playBattleSemanticCue("v104-eye-warning", f.x, {
+                playBattleSemanticCue(v100BossSkillCue(f.kind, "warning", g.definition.missionConfig.v100StageNumber, Boolean(externalSessionRef.current)) ?? "v104-eye-warning", f.x, {
                   semantic: "boss-phase-warning",
                   receiptId: `${f.id}:${g.time.toFixed(3)}:kurome-warning`,
                   ownerId: f.id,
@@ -22454,6 +22475,13 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                   g.bannerTime,
                   bossDefinitionForEnemyKind("gate-eater")?.attackTelegraph.warningSeconds ?? 0,
                 );
+                const skillMaterialWarning = v100BossSkillCue(f.kind, "warning", g.definition.missionConfig.v100StageNumber, Boolean(externalSessionRef.current));
+                if (skillMaterialWarning) playBattleSemanticCue(skillMaterialWarning, f.x, {
+                  semantic: "boss-skill-material-warning",
+                  receiptId: "boss-skill-warning:" + f.id + ":" + g.time.toFixed(3),
+                  ownerId: f.id, priority: 90, cooldownMs: 0, volume: .62, maxInstances: 2,
+                  dedupeKey: "boss-skill-warning:" + f.id + ":" + g.time.toFixed(3),
+                });
               }
             }
             if (f.stationAbility.phase !== "idle") {
@@ -22469,6 +22497,13 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               f.anchorLane = f.lane;
               f.y = activeLaneCenters[f.lane];
               if (charge.chargeStarted) {
+                const skillMaterialRelease = v100BossSkillCue(f.kind, "release", g.definition.missionConfig.v100StageNumber, Boolean(externalSessionRef.current));
+                if (skillMaterialRelease) playBattleSemanticCue(skillMaterialRelease, f.x, {
+                  semantic: "boss-skill-material-release",
+                  receiptId: "boss-skill-release:" + f.id + ":" + g.time.toFixed(3),
+                  ownerId: f.id, priority: 99, cooldownMs: 0, volume: .64, maxInstances: 2,
+                  dedupeKey: "boss-skill-release:" + f.id + ":" + g.time.toFixed(3),
+                });
                 g.stationMetrics.gateEaterCharges += 1;
                 if (!g.signalIds.includes(STORY_BATTLE_TRIGGER_IDS.GATE_EATER_CHARGE)) {
                   g.signalIds.push(STORY_BATTLE_TRIGGER_IDS.GATE_EATER_CHARGE);
@@ -22478,6 +22513,13 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 g.signalIds.push(STORY_BATTLE_TRIGGER_IDS.GATE_EATER_FLANK);
               }
               if (charge.chargeEnded) {
+                const skillMaterialImpact = v100BossSkillCue(f.kind, "impact", g.definition.missionConfig.v100StageNumber, Boolean(externalSessionRef.current));
+                if (skillMaterialImpact) playBattleSemanticCue(skillMaterialImpact, f.x, {
+                  semantic: "boss-skill-material-impact",
+                  receiptId: "boss-skill-impact:" + f.id + ":" + g.time.toFixed(3),
+                  ownerId: f.id, priority: 99, cooldownMs: 0, volume: .8, maxInstances: 2,
+                  dedupeKey: "boss-skill-impact:" + f.id + ":" + g.time.toFixed(3),
+                });
                 for (const victim of g.fighters) {
                   if (victim.side !== "human" || victim.hp <= 0 || fighterDistance(victim, f) > 92) continue;
                   const damage = applyIncomingHumanDamage(g, victim, 34, { attackKind: "melee", attacker: f, contactOrigin:chargeContactOrigin }).targetDamage;
@@ -22515,6 +22557,13 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 }
                 g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.takuyaHeavy); g.flashOverlay = Math.max(g.flashOverlay, .22);
                 playCue("takuya-slam");
+                const skillMaterialImpact = v100BossSkillCue(f.kind, "impact", g.definition.missionConfig.v100StageNumber, Boolean(externalSessionRef.current));
+                if (skillMaterialImpact) playBattleSemanticCue(skillMaterialImpact, f.x, {
+                  semantic: "boss-skill-material-impact",
+                  receiptId: "boss-skill-impact:" + f.id + ":" + g.time.toFixed(3),
+                  ownerId: f.id, priority: 99, cooldownMs: 0, volume: .8, maxInstances: 2,
+                  dedupeKey: "boss-skill-impact:" + f.id + ":" + g.time.toFixed(3),
+                });
               }
             } else if (f.abilityCooldown <= 0 && g.fighters.some((human) => human.side === "human" && human.hp > 0 && fighterDistance(human, f) <= 150)) {
               abilityFrame = true;
@@ -22523,6 +22572,15 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               if(f.abilityWindup>0)startV105AbilityName(g,f,{name:currentEnemyAbilityName(f.kind),source:'enemy'});
               g.banner = "TAKUYA // 鉄槌強襲予告";
               g.bannerTime = f.abilityWindup + .05;
+              if (f.abilityWindup > 0) {
+                const skillMaterialWarning = v100BossSkillCue(f.kind, "warning", g.definition.missionConfig.v100StageNumber, Boolean(externalSessionRef.current));
+                if (skillMaterialWarning) playBattleSemanticCue(skillMaterialWarning, f.x, {
+                  semantic: "boss-skill-material-warning",
+                  receiptId: "boss-skill-warning:" + f.id + ":" + g.time.toFixed(3),
+                  ownerId: f.id, priority: 90, cooldownMs: 0, volume: .62, maxInstances: 2,
+                  dedupeKey: "boss-skill-warning:" + f.id + ":" + g.time.toFixed(3),
+                });
+              }
             }
             if (abilityFrame) continue;
           }

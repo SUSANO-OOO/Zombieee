@@ -1,0 +1,2276 @@
+{
+  "creators": [
+    "Kenney",
+    "Joth"
+  ],
+  "license": "CC0-1.0",
+  "commercialUse": true,
+  "modification": true,
+  "redistribution": true,
+  "authorization": "Active Producer goal: all nine bosses need distinctive, dramatic skills with matching warning and impact sound.",
+  "notices": [
+    {
+      "path": "assets/source/v100/audio/kenney-impact/License.txt",
+      "sha256": "043d5a52d1dc1dfd67437b55b714b7fd629031153ac579b9fdedc5396c037f99",
+      "license": "CC0-1.0",
+      "creator": "Kenney"
+    },
+    {
+      "path": "assets/source/v100/audio/kenney-rpg/License.txt",
+      "sha256": "7921b864e3bdaf005f8c7ee2e5dc4c0a18a1db38943ccf45962681e2e66f73d0",
+      "license": "CC0-1.0",
+      "creator": "Kenney"
+    },
+    {
+      "path": "assets/source/quality-20261116/audio/kenney-sci-fi/License.txt",
+      "sha256": "a7dae3d72f5c1aaff0897a935d7a30fc51e7755e893fe7e0905926c3ebf8c7e2",
+      "license": "CC0-1.0",
+      "creator": "Kenney"
+    }
+  ],
+  "rights": [
+    {
+      "creator": "Kenney",
+      "license": "CC0-1.0",
+      "pages": [
+        "https://kenney.nl/assets/impact-sounds",
+        "https://kenney.nl/assets/rpg-audio",
+        "https://kenney.nl/assets/sci-fi-sounds"
+      ],
+      "notices": "Existing hash-bound source notices above; no new download or paid service."
+    },
+    {
+      "creator": "Joth",
+      "work": "Chunky Explosion",
+      "license": "CC0-1.0",
+      "page": "https://opengameart.org/content/chunky-explosion",
+      "previousProvenance": "assets/source/v100/audio/sound-design-provenance.json",
+      "verifiedOn": "2026-11-16",
+      "note": "Designed explosion sample, not claimed as a real explosion field recording."
+    }
+  ],
+  "recipe": {
+    "path": "assets/source/quality-20261116/audio/boss-skills-r1/recipe.json",
+    "sha256": "daaaff2b52a0081fb9026567f839e2c148059fddef096f1bb99981d8615ba592"
+  },
+  "adaptation": "Licensed material and designed sci-fi samples, layered for the existing skill event timings. No new voice or actor substitution.",
+  "subjectiveListening": "not performed; production candidate, not final listening or physical-phone acceptance",
+  "formats": {
+    "preferred": "mp3",
+    "fallback": "ogg",
+    "reason": "MPEG is the saved phone source; Ogg is retained for decoder compatibility, never fetched as a new uncommitted offline source.",
+    "channels": 1,
+    "sampleRate": 48000
+  },
+  "runtime": {
+    "count": 38,
+    "logicalBytes": 530989
+  },
+  "records": [
+    {
+      "kind": "takuya",
+      "key": "takuya-warning",
+      "phase": "warning",
+      "displayName": "TAKUYA",
+      "material": "大剣を持ち上げる擦れと重い地面打撃",
+      "id": "v100-boss-skill-takuya-warning",
+      "name": "takuya-warning-r1",
+      "duration": 0.66,
+      "warningWindow": 0.85,
+      "fallbackId": "boss-ooguchi-charge-warning",
+      "targetRms": 0.085,
+      "layers": [
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/cloth1.ogg",
+          "sha256": "ddb93a3671233f95da0e0b10367f082f7eb42fa6caaddcf776410aa8833c747d",
+          "sourceStart": 0.027791666666666666,
+          "clip": 0.54,
+          "at": 0,
+          "gain": 0.28,
+          "rate": 0.8,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/metalPot2.ogg",
+          "sha256": "8e1f820d217d380fde10e969d109db34303e3f4d11c3951926eddef813d04ae2",
+          "sourceStart": 0.08633333333333333,
+          "clip": 0.48,
+          "at": 0.08,
+          "gain": 0.17,
+          "rate": 0.72,
+          "highpassHz": 90,
+          "lowpassHz": 2600,
+          "fadeIn": 0.16,
+          "fadeOut": 0.04,
+          "reverse": true,
+          "actualFadeIn": 0.16,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactWood_light_000.ogg",
+          "sha256": "eb45e35b4bed784d3f120de4afec4b0d6ac09d9e143cce8cfcb7d739e1b1f3c3",
+          "sourceStart": 0,
+          "clip": 0.26,
+          "at": 0.22,
+          "gain": 0.13,
+          "rate": 0.8,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        }
+      ],
+      "subjectiveListening": "not performed; material candidate",
+      "master": {
+        "path": "assets/source/quality-20261116/audio/boss-skills-r1/takuya-warning-r1.wav",
+        "bytes": 63404,
+        "sha256": "8b65223e0043542d0b368ec33f5a030efaa3d500be97e32f4f4e08012d024d08"
+      },
+      "filterComplex": "[0:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.02779167:duration=0.432,asetpts=PTS-STARTPTS,asetrate=38400,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.28,afade=t=in:st=0:d=0.004,afade=t=out:st=0.5:d=0.04,adelay=0,apad=whole_len=31680,atrim=end=0.66[l0];[1:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.08633333:duration=0.3456,asetpts=PTS-STARTPTS,areverse,asetrate=34560,aresample=48000,highpass=f=90,lowpass=f=2600,volume=0.17,afade=t=in:st=0:d=0.16,afade=t=out:st=0.44:d=0.04,adelay=80,apad=whole_len=31680,atrim=end=0.66[l1];[2:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.208,asetpts=PTS-STARTPTS,asetrate=38400,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.13,afade=t=in:st=0:d=0.004,afade=t=out:st=0.22:d=0.04,adelay=220,apad=whole_len=31680,atrim=end=0.66[l2];[l0][l1][l2]amix=inputs=3:duration=longest,volume=3,apad=whole_len=31680,atrim=end=0.66,highpass=f=65,acompressor=threshold=0.13:ratio=1.7:makeup=1.4:attack=3:release=70:knee=2.82843,alimiter=limit=0.8:level=0,volume=2.13163023,afade=t=in:st=0:d=0.002,afade=t=out:st=0.58:d=0.06[out]",
+      "dynamics": {
+        "threshold": 0.13,
+        "ratio": 1.7,
+        "makeup": 1.4,
+        "attack": 3,
+        "release": 70,
+        "peakLimit": 0.8,
+        "masterScale": 2.131630230803992
+      },
+      "decodedMaster": {
+        "seconds": 0.66,
+        "peak": 0.600006103515625,
+        "rms": 0.0759386048388149,
+        "firstAboveMinus60db": 0.007875,
+        "lastAboveMinus60db": 0.5435416666666667,
+        "last10msRms": 0,
+        "pcmSha256": "741f1a8a85a50ff98c252875af89a12e7a2ebf0863c8b11cce7a331ee402ddf5"
+      },
+      "encodings": [
+        {
+          "path": "public/audio/quality-20261116/boss-skills/takuya-warning-r1.mp3",
+          "bytes": 14420,
+          "sha256": "f250093ad2b73bd87339ecd02ad978ce99da0b879c1120517862a182f17c2795"
+        },
+        {
+          "path": "public/audio/quality-20261116/boss-skills/takuya-warning-r1.ogg",
+          "bytes": 9383,
+          "sha256": "a83a48748ae06564058656722d67e5fadf56a026559661c58b98c2acbc178351"
+        }
+      ]
+    },
+    {
+      "kind": "takuya",
+      "key": "takuya-impact",
+      "phase": "impact",
+      "displayName": "TAKUYA",
+      "material": "大剣を持ち上げる擦れと重い地面打撃",
+      "id": "v100-boss-skill-takuya-impact",
+      "name": "takuya-impact-r1",
+      "duration": 0.82,
+      "warningWindow": 0.85,
+      "fallbackId": "weapon-hammer-01",
+      "targetRms": 0.12,
+      "layers": [
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactWood_heavy_000.ogg",
+          "sha256": "15ff82332f342c30e469215539e1cc57e11b221aa2cf7e11e811d313a9927f3d",
+          "sourceStart": 0,
+          "clip": 0.44,
+          "at": 0,
+          "gain": 0.48,
+          "rate": 0.7,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactMetal_heavy_000.ogg",
+          "sha256": "e07045693e4a2b3d165c424e3dab4c781d9ff8880a386880ac89a51315d7f831",
+          "sourceStart": 0,
+          "clip": 0.25,
+          "at": 0.018,
+          "gain": 0.26,
+          "rate": 0.7,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/opengameart/chunky-explosion.mp3",
+          "sha256": "4de53bffac187e59d3f5b43096df2f8fcb4160076b65b71a67074947950e025f",
+          "sourceStart": 0.018354166666666668,
+          "clip": 0.62,
+          "at": 0.025,
+          "gain": 0.22,
+          "rate": 0.92,
+          "highpassHz": 90,
+          "lowpassHz": 1300,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactGeneric_light_000.ogg",
+          "sha256": "f0e982611e97512fee5f777986b67e8b435434b601f94992ec044f7e89fb5acb",
+          "sourceStart": 0,
+          "clip": 0.14,
+          "at": 0.14,
+          "gain": 0.16,
+          "rate": 0.95,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactWood_light_000.ogg",
+          "sha256": "eb45e35b4bed784d3f120de4afec4b0d6ac09d9e143cce8cfcb7d739e1b1f3c3",
+          "sourceStart": 0,
+          "clip": 0.28,
+          "at": 0.32,
+          "gain": 0.12,
+          "rate": 0.86,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        }
+      ],
+      "subjectiveListening": "not performed; material candidate",
+      "master": {
+        "path": "assets/source/quality-20261116/audio/boss-skills-r1/takuya-impact-r1.wav",
+        "bytes": 78764,
+        "sha256": "95468b3d514dc5b4c84b83f5cca25eb0b39001989c6e8d96bce449409cae7af9"
+      },
+      "filterComplex": "[0:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.308,asetpts=PTS-STARTPTS,asetrate=33600,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.48,afade=t=in:st=0:d=0.004,afade=t=out:st=0.4:d=0.04,adelay=0,apad=whole_len=39360,atrim=end=0.82[l0];[1:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.175,asetpts=PTS-STARTPTS,asetrate=33600,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.26,afade=t=in:st=0:d=0.004,afade=t=out:st=0.21:d=0.04,adelay=18,apad=whole_len=39360,atrim=end=0.82[l1];[2:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.01835417:duration=0.5704,asetpts=PTS-STARTPTS,asetrate=44160,aresample=48000,highpass=f=90,lowpass=f=1300,volume=0.22,afade=t=in:st=0:d=0.004,afade=t=out:st=0.58:d=0.04,adelay=25,apad=whole_len=39360,atrim=end=0.82[l2];[3:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.133,asetpts=PTS-STARTPTS,asetrate=45600,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.16,afade=t=in:st=0:d=0.004,afade=t=out:st=0.1:d=0.04,adelay=140,apad=whole_len=39360,atrim=end=0.82[l3];[4:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.2408,asetpts=PTS-STARTPTS,asetrate=41280,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.12,afade=t=in:st=0:d=0.004,afade=t=out:st=0.24:d=0.04,adelay=320,apad=whole_len=39360,atrim=end=0.82[l4];[l0][l1][l2][l3][l4]amix=inputs=5:duration=longest,volume=5,apad=whole_len=39360,atrim=end=0.82,highpass=f=65,acompressor=threshold=0.13:ratio=1.7:makeup=1.4:attack=3:release=70:knee=2.82843,alimiter=limit=0.8:level=0,volume=2.19344236,afade=t=in:st=0:d=0.002,afade=t=out:st=0.74:d=0.06[out]",
+      "dynamics": {
+        "threshold": 0.13,
+        "ratio": 1.7,
+        "makeup": 1.4,
+        "attack": 3,
+        "release": 70,
+        "peakLimit": 0.8,
+        "masterScale": 2.1934423643052647
+      },
+      "decodedMaster": {
+        "seconds": 0.82,
+        "peak": 0.594024658203125,
+        "rms": 0.11999996281570846,
+        "firstAboveMinus60db": 0.005083333333333333,
+        "lastAboveMinus60db": 0.6541041666666667,
+        "last10msRms": 0,
+        "pcmSha256": "e6794f9bcc4b4ca4d6c4619df08aae867124b2a46ad6d94224fe2dfead226782"
+      },
+      "encodings": [
+        {
+          "path": "public/audio/quality-20261116/boss-skills/takuya-impact-r1.mp3",
+          "bytes": 17780,
+          "sha256": "b17e96ac6d5c4e1c24194c36986166200f5efd674169ded368c2bd2441e090aa"
+        },
+        {
+          "path": "public/audio/quality-20261116/boss-skills/takuya-impact-r1.ogg",
+          "bytes": 9977,
+          "sha256": "8b591ab763c6488fe9de417fc94ed499014a768ab4e156395d37e2919dd713ec"
+        }
+      ]
+    },
+    {
+      "kind": "gate-eater",
+      "key": "gate-eater-warning",
+      "phase": "warning",
+      "displayName": "改札喰い",
+      "material": "改札金属の噛み合わせ、突進の擦過と停止の衝突",
+      "id": "v100-boss-skill-gate-eater-warning",
+      "name": "gate-eater-warning-r1",
+      "duration": 0.7,
+      "warningWindow": 1.15,
+      "fallbackId": "boss-ooguchi-charge-warning",
+      "targetRms": 0.085,
+      "layers": [
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/metalPot2.ogg",
+          "sha256": "8e1f820d217d380fde10e969d109db34303e3f4d11c3951926eddef813d04ae2",
+          "sourceStart": 0.08633333333333333,
+          "clip": 0.52,
+          "at": 0,
+          "gain": 0.24,
+          "rate": 0.9,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.13,
+          "fadeOut": 0.04,
+          "reverse": true,
+          "actualFadeIn": 0.13,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/doorClose_1.ogg",
+          "sha256": "834d29c60a8a8bfb50b158cdb6b7dfa8f02812a408a1ee9703d038dfab0b1aeb",
+          "sourceStart": 0,
+          "clip": 0.42,
+          "at": 0.07,
+          "gain": 0.24,
+          "rate": 1.1,
+          "highpassHz": 90,
+          "lowpassHz": 3500,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactMetal_light_000.ogg",
+          "sha256": "33b5e6e37c6e9d54e07bf5a89b12c76e879f40c1ea83cdd82714df1d6f9fec6d",
+          "sourceStart": 0,
+          "clip": 0.23,
+          "at": 0.37,
+          "gain": 0.25,
+          "rate": 1.25,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        }
+      ],
+      "subjectiveListening": "not performed; material candidate",
+      "master": {
+        "path": "assets/source/quality-20261116/audio/boss-skills-r1/gate-eater-warning-r1.wav",
+        "bytes": 67244,
+        "sha256": "45fa3a8831956cc979b1bdf31f6708a8ad91e223de307a16c6f9fe8f5a0753db"
+      },
+      "filterComplex": "[0:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.08633333:duration=0.468,asetpts=PTS-STARTPTS,areverse,asetrate=43200,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.24,afade=t=in:st=0:d=0.13,afade=t=out:st=0.48:d=0.04,adelay=0,apad=whole_len=33600,atrim=end=0.7[l0];[1:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.462,asetpts=PTS-STARTPTS,asetrate=52800,aresample=48000,highpass=f=90,lowpass=f=3500,volume=0.24,afade=t=in:st=0:d=0.004,afade=t=out:st=0.38:d=0.04,adelay=70,apad=whole_len=33600,atrim=end=0.7[l1];[2:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.2875,asetpts=PTS-STARTPTS,asetrate=60000,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.25,afade=t=in:st=0:d=0.004,afade=t=out:st=0.19:d=0.04,adelay=370,apad=whole_len=33600,atrim=end=0.7[l2];[l0][l1][l2]amix=inputs=3:duration=longest,volume=3,apad=whole_len=33600,atrim=end=0.7,highpass=f=65,acompressor=threshold=0.13:ratio=1.7:makeup=1.4:attack=3:release=70:knee=2.82843,alimiter=limit=0.8:level=0,volume=1.14884041,afade=t=in:st=0:d=0.002,afade=t=out:st=0.62:d=0.06[out]",
+      "dynamics": {
+        "threshold": 0.13,
+        "ratio": 1.7,
+        "makeup": 1.4,
+        "attack": 3,
+        "release": 70,
+        "peakLimit": 0.8,
+        "masterScale": 1.1488404139218065
+      },
+      "decodedMaster": {
+        "seconds": 0.7,
+        "peak": 0.517059326171875,
+        "rms": 0.08499996455425977,
+        "firstAboveMinus60db": 0.007354166666666667,
+        "lastAboveMinus60db": 0.5668958333333334,
+        "last10msRms": 0,
+        "pcmSha256": "18d83fa3c3700630050d2b80327655e5d339396b9ea252d4652f462d6997b76f"
+      },
+      "encodings": [
+        {
+          "path": "public/audio/quality-20261116/boss-skills/gate-eater-warning-r1.mp3",
+          "bytes": 15380,
+          "sha256": "7bbd33bc212569eda66ef3d09b343d791d897ce6f37abf948460490e3cfeb0bf"
+        },
+        {
+          "path": "public/audio/quality-20261116/boss-skills/gate-eater-warning-r1.ogg",
+          "bytes": 9773,
+          "sha256": "21e84d7b54a651986b0aaa574af047eaf1f3dede6ee70a80290956e1ddfc1e00"
+        }
+      ]
+    },
+    {
+      "kind": "gate-eater",
+      "key": "gate-eater-impact",
+      "phase": "impact",
+      "displayName": "改札喰い",
+      "material": "改札金属の噛み合わせ、突進の擦過と停止の衝突",
+      "id": "v100-boss-skill-gate-eater-impact",
+      "name": "gate-eater-impact-r1",
+      "duration": 0.56,
+      "warningWindow": 1.15,
+      "fallbackId": "weapon-melee-impact-01",
+      "targetRms": 0.12,
+      "layers": [
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactMetal_heavy_000.ogg",
+          "sha256": "e07045693e4a2b3d165c424e3dab4c781d9ff8880a386880ac89a51315d7f831",
+          "sourceStart": 0,
+          "clip": 0.2559895833333333,
+          "at": 0,
+          "gain": 0.55,
+          "rate": 0.72,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/doorClose_1.ogg",
+          "sha256": "834d29c60a8a8bfb50b158cdb6b7dfa8f02812a408a1ee9703d038dfab0b1aeb",
+          "sourceStart": 0,
+          "clip": 0.43,
+          "at": 0.016,
+          "gain": 0.36,
+          "rate": 0.88,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactGlass_heavy_000.ogg",
+          "sha256": "b44b39a940e8948e74b9bd3776bff980df43cf220abdaf0d467dc4c43c0244a5",
+          "sourceStart": 0,
+          "clip": 0.23634920634920634,
+          "at": 0.075,
+          "gain": 0.18,
+          "rate": 1.05,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactMetal_light_000.ogg",
+          "sha256": "33b5e6e37c6e9d54e07bf5a89b12c76e879f40c1ea83cdd82714df1d6f9fec6d",
+          "sourceStart": 0,
+          "clip": 0.2,
+          "at": 0.24,
+          "gain": 0.14,
+          "rate": 1.2,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        }
+      ],
+      "subjectiveListening": "not performed; material candidate",
+      "master": {
+        "path": "assets/source/quality-20261116/audio/boss-skills-r1/gate-eater-impact-r1.wav",
+        "bytes": 53804,
+        "sha256": "918efe561e2fffa8063f9c77d7aa833b22bbd4f4993c39da7502591d626fe498"
+      },
+      "filterComplex": "[0:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.1843125,asetpts=PTS-STARTPTS,asetrate=34560,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.55,afade=t=in:st=0:d=0.004,afade=t=out:st=0.21598958:d=0.04,adelay=0,apad=whole_len=26880,atrim=end=0.56[l0];[1:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.3784,asetpts=PTS-STARTPTS,asetrate=42240,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.36,afade=t=in:st=0:d=0.004,afade=t=out:st=0.39:d=0.04,adelay=16,apad=whole_len=26880,atrim=end=0.56[l1];[2:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.24816667,asetpts=PTS-STARTPTS,asetrate=50400,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.18,afade=t=in:st=0:d=0.004,afade=t=out:st=0.19634921:d=0.04,adelay=75,apad=whole_len=26880,atrim=end=0.56[l2];[3:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.24,asetpts=PTS-STARTPTS,asetrate=57600,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.14,afade=t=in:st=0:d=0.004,afade=t=out:st=0.16:d=0.04,adelay=240,apad=whole_len=26880,atrim=end=0.56[l3];[l0][l1][l2][l3]amix=inputs=4:duration=longest,volume=4,apad=whole_len=26880,atrim=end=0.56,highpass=f=65,acompressor=threshold=0.13:ratio=1.7:makeup=1.4:attack=3:release=70:knee=2.82843,alimiter=limit=0.8:level=0,volume=1.00809975,afade=t=in:st=0:d=0.002,afade=t=out:st=0.48:d=0.06[out]",
+      "dynamics": {
+        "threshold": 0.13,
+        "ratio": 1.7,
+        "makeup": 1.4,
+        "attack": 3,
+        "release": 70,
+        "peakLimit": 0.8,
+        "masterScale": 1.008099745129163
+      },
+      "decodedMaster": {
+        "seconds": 0.56,
+        "peak": 0.600006103515625,
+        "rms": 0.07752989627750896,
+        "firstAboveMinus60db": 0.0050625,
+        "lastAboveMinus60db": 0.4491875,
+        "last10msRms": 0,
+        "pcmSha256": "b8f32bd088c5bedbe69a1e6984737119b5e6c892ebf72cc17faad6b575316c43"
+      },
+      "encodings": [
+        {
+          "path": "public/audio/quality-20261116/boss-skills/gate-eater-impact-r1.mp3",
+          "bytes": 12500,
+          "sha256": "4fe5b98dd4a31342acd2583a38183eb67958dedfd3aca04f5abde195ef52ba0d"
+        },
+        {
+          "path": "public/audio/quality-20261116/boss-skills/gate-eater-impact-r1.ogg",
+          "bytes": 8386,
+          "sha256": "513ad9bbc0e88e4bbcb8da1f3a07e7e94c6fb4bf6946d9769e7e1edc1565f61d"
+        }
+      ]
+    },
+    {
+      "kind": "mother",
+      "key": "mother-warning",
+      "phase": "warning",
+      "displayName": "MOTHER",
+      "material": "膜の張り、内圧、湿った裂けと増殖体の落下",
+      "id": "v100-boss-skill-mother-warning",
+      "name": "mother-warning-r1",
+      "duration": 0.82,
+      "warningWindow": 1.1,
+      "fallbackId": "boss-mother-brood-warning",
+      "targetRms": 0.085,
+      "layers": [
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/cloth3.ogg",
+          "sha256": "a48632d17a4f1416541d261a32a31612e01267144c407fa3ecab3ff410f0085b",
+          "sourceStart": 0.011354166666666665,
+          "clip": 0.64,
+          "at": 0,
+          "gain": 0.3,
+          "rate": 0.72,
+          "highpassHz": 90,
+          "lowpassHz": 2200,
+          "fadeIn": 0.12,
+          "fadeOut": 0.04,
+          "reverse": true,
+          "actualFadeIn": 0.12,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactSoft_heavy_000.ogg",
+          "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1",
+          "sourceStart": 0,
+          "clip": 0.56,
+          "at": 0.12,
+          "gain": 0.27,
+          "rate": 0.74,
+          "highpassHz": 90,
+          "lowpassHz": 1800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "reverse": true,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/cloth4.ogg",
+          "sha256": "e7ab9a6c4466dea874196c61f59bf1da05cfe58748f42fadd695d441a154a99b",
+          "sourceStart": 0,
+          "clip": 0.3,
+          "at": 0.4,
+          "gain": 0.18,
+          "rate": 0.9,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        }
+      ],
+      "subjectiveListening": "not performed; material candidate",
+      "master": {
+        "path": "assets/source/quality-20261116/audio/boss-skills-r1/mother-warning-r1.wav",
+        "bytes": 78764,
+        "sha256": "0ad7f41e9f36db5963e5dfc222ed7cc9ca62accad89fcc1b58c7cba942162c1f"
+      },
+      "filterComplex": "[0:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.01135417:duration=0.4608,asetpts=PTS-STARTPTS,areverse,asetrate=34560,aresample=48000,highpass=f=90,lowpass=f=2200,volume=0.3,afade=t=in:st=0:d=0.12,afade=t=out:st=0.6:d=0.04,adelay=0,apad=whole_len=39360,atrim=end=0.82[l0];[1:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.4144,asetpts=PTS-STARTPTS,areverse,asetrate=35520,aresample=48000,highpass=f=90,lowpass=f=1800,volume=0.27,afade=t=in:st=0:d=0.004,afade=t=out:st=0.52:d=0.04,adelay=120,apad=whole_len=39360,atrim=end=0.82[l1];[2:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.27,asetpts=PTS-STARTPTS,asetrate=43200,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.18,afade=t=in:st=0:d=0.004,afade=t=out:st=0.26:d=0.04,adelay=400,apad=whole_len=39360,atrim=end=0.82[l2];[l0][l1][l2]amix=inputs=3:duration=longest,volume=3,apad=whole_len=39360,atrim=end=0.82,highpass=f=65,acompressor=threshold=0.13:ratio=1.7:makeup=1.4:attack=3:release=70:knee=2.82843,alimiter=limit=0.8:level=0,volume=3.57640749,afade=t=in:st=0:d=0.002,afade=t=out:st=0.74:d=0.06[out]",
+      "dynamics": {
+        "threshold": 0.13,
+        "ratio": 1.7,
+        "makeup": 1.4,
+        "attack": 3,
+        "release": 70,
+        "peakLimit": 0.8,
+        "masterScale": 3.5764074947848856
+      },
+      "decodedMaster": {
+        "seconds": 0.82,
+        "peak": 0.481292724609375,
+        "rms": 0.08500002166866559,
+        "firstAboveMinus60db": 0.1061875,
+        "lastAboveMinus60db": 0.7027083333333334,
+        "last10msRms": 0,
+        "pcmSha256": "b661e7ddc5c50eec863d443768ace9e09c53469a7409d4de2712c5d7e1767a80"
+      },
+      "encodings": [
+        {
+          "path": "public/audio/quality-20261116/boss-skills/mother-warning-r1.mp3",
+          "bytes": 17780,
+          "sha256": "41d7f2978336c51dc66dbdb054bbed1831ca2c403ed4ccb5b57f913fdc9fdd9a"
+        },
+        {
+          "path": "public/audio/quality-20261116/boss-skills/mother-warning-r1.ogg",
+          "bytes": 10365,
+          "sha256": "54cb94ff205a4816c6bccd67b940c1d2b6d6ff57f2186e20f22486d084771b42"
+        }
+      ]
+    },
+    {
+      "kind": "mother",
+      "key": "mother-impact",
+      "phase": "impact",
+      "displayName": "MOTHER",
+      "material": "膜の張り、内圧、湿った裂けと増殖体の落下",
+      "id": "v100-boss-skill-mother-impact",
+      "name": "mother-impact-r1",
+      "duration": 0.94,
+      "warningWindow": 1.1,
+      "fallbackId": "boss-mother-brood-eruption",
+      "targetRms": 0.12,
+      "layers": [
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/cloth3.ogg",
+          "sha256": "a48632d17a4f1416541d261a32a31612e01267144c407fa3ecab3ff410f0085b",
+          "sourceStart": 0.011354166666666665,
+          "clip": 0.58,
+          "at": 0,
+          "gain": 0.45,
+          "rate": 0.8,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactSoft_heavy_000.ogg",
+          "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1",
+          "sourceStart": 0,
+          "clip": 0.64,
+          "at": 0.01,
+          "gain": 0.52,
+          "rate": 0.72,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactSoft_heavy_000.ogg",
+          "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1",
+          "sourceStart": 0,
+          "clip": 0.48,
+          "at": 0.17,
+          "gain": 0.24,
+          "rate": 0.94,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/cloth4.ogg",
+          "sha256": "e7ab9a6c4466dea874196c61f59bf1da05cfe58748f42fadd695d441a154a99b",
+          "sourceStart": 0,
+          "clip": 0.43,
+          "at": 0.3,
+          "gain": 0.24,
+          "rate": 0.8,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactGeneric_light_000.ogg",
+          "sha256": "f0e982611e97512fee5f777986b67e8b435434b601f94992ec044f7e89fb5acb",
+          "sourceStart": 0,
+          "clip": 0.21,
+          "at": 0.48,
+          "gain": 0.16,
+          "rate": 0.75,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/cloth1.ogg",
+          "sha256": "ddb93a3671233f95da0e0b10367f082f7eb42fa6caaddcf776410aa8833c747d",
+          "sourceStart": 0.027791666666666666,
+          "clip": 0.3,
+          "at": 0.52,
+          "gain": 0.12,
+          "rate": 1.1,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        }
+      ],
+      "subjectiveListening": "not performed; material candidate",
+      "master": {
+        "path": "assets/source/quality-20261116/audio/boss-skills-r1/mother-impact-r1.wav",
+        "bytes": 90284,
+        "sha256": "051fcd9e98a4a836a93247227f989d8200e3ac73681edd2a5f9dac3f9a691658"
+      },
+      "filterComplex": "[0:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.01135417:duration=0.464,asetpts=PTS-STARTPTS,asetrate=38400,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.45,afade=t=in:st=0:d=0.004,afade=t=out:st=0.54:d=0.04,adelay=0,apad=whole_len=45120,atrim=end=0.94[l0];[1:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.4608,asetpts=PTS-STARTPTS,asetrate=34560,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.52,afade=t=in:st=0:d=0.004,afade=t=out:st=0.6:d=0.04,adelay=10,apad=whole_len=45120,atrim=end=0.94[l1];[2:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.4512,asetpts=PTS-STARTPTS,asetrate=45120,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.24,afade=t=in:st=0:d=0.004,afade=t=out:st=0.44:d=0.04,adelay=170,apad=whole_len=45120,atrim=end=0.94[l2];[3:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.344,asetpts=PTS-STARTPTS,asetrate=38400,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.24,afade=t=in:st=0:d=0.004,afade=t=out:st=0.39:d=0.04,adelay=300,apad=whole_len=45120,atrim=end=0.94[l3];[4:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.1575,asetpts=PTS-STARTPTS,asetrate=36000,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.16,afade=t=in:st=0:d=0.004,afade=t=out:st=0.17:d=0.04,adelay=480,apad=whole_len=45120,atrim=end=0.94[l4];[5:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.02779167:duration=0.33,asetpts=PTS-STARTPTS,asetrate=52800,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.12,afade=t=in:st=0:d=0.004,afade=t=out:st=0.26:d=0.04,adelay=520,apad=whole_len=45120,atrim=end=0.94[l5];[l0][l1][l2][l3][l4][l5]amix=inputs=6:duration=longest,volume=6,apad=whole_len=45120,atrim=end=0.94,highpass=f=65,acompressor=threshold=0.13:ratio=1.7:makeup=1.4:attack=3:release=70:knee=2.82843,alimiter=limit=0.8:level=0,volume=2.32232218,afade=t=in:st=0:d=0.002,afade=t=out:st=0.86:d=0.06[out]",
+      "dynamics": {
+        "threshold": 0.13,
+        "ratio": 1.7,
+        "makeup": 1.4,
+        "attack": 3,
+        "release": 70,
+        "peakLimit": 0.8,
+        "masterScale": 2.322322181545618
+      },
+      "decodedMaster": {
+        "seconds": 0.94,
+        "peak": 0.600006103515625,
+        "rms": 0.11990093384356217,
+        "firstAboveMinus60db": 0.007208333333333333,
+        "lastAboveMinus60db": 0.8198333333333333,
+        "last10msRms": 0,
+        "pcmSha256": "21d983bd2edbbf38b7c600d64de96404c73071781027f5724b3a41899bc06e61"
+      },
+      "encodings": [
+        {
+          "path": "public/audio/quality-20261116/boss-skills/mother-impact-r1.mp3",
+          "bytes": 20180,
+          "sha256": "ccd67d08c2c7c56ff360bfc77ff06afda11706551d8bac044847db710e289654"
+        },
+        {
+          "path": "public/audio/quality-20261116/boss-skills/mother-impact-r1.ogg",
+          "bytes": 11567,
+          "sha256": "1eca3ee28e35b3ba93998f9686c677bcb769643772c8550160ca8c00af049920"
+        }
+      ]
+    },
+    {
+      "kind": "kurome",
+      "key": "kurome-warning",
+      "phase": "warning",
+      "displayName": "クロメ",
+      "material": "追跡眼の蓄積、鋭い放射と冷たい短い残響",
+      "id": "v100-boss-skill-kurome-warning",
+      "name": "kurome-warning-r1",
+      "duration": 1.02,
+      "warningWindow": 1.25,
+      "fallbackId": "v104-eye-warning",
+      "targetRms": 0.085,
+      "layers": [
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactGlass_heavy_000.ogg",
+          "sha256": "b44b39a940e8948e74b9bd3776bff980df43cf220abdaf0d467dc4c43c0244a5",
+          "sourceStart": 0,
+          "clip": 0.1,
+          "at": 0,
+          "gain": 0.09,
+          "rate": 1.35,
+          "highpassHz": 1600,
+          "lowpassHz": 5800,
+          "fadeIn": 0.003,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.003,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/quality-20261116/audio/kenney-sci-fi/forceField_004.ogg",
+          "sha256": "05609bb296cbc287ae95ac8924c89809d69c89d7bb357cc6a117ec1b1ef65e09",
+          "sourceStart": 0,
+          "clip": 0.84,
+          "at": 0,
+          "gain": 0.28,
+          "rate": 1.06,
+          "highpassHz": 240,
+          "lowpassHz": 5800,
+          "fadeIn": 0.12,
+          "fadeOut": 0.04,
+          "reverse": true,
+          "actualFadeIn": 0.12,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactGlass_heavy_000.ogg",
+          "sha256": "b44b39a940e8948e74b9bd3776bff980df43cf220abdaf0d467dc4c43c0244a5",
+          "sourceStart": 0,
+          "clip": 0.22,
+          "at": 0.48,
+          "gain": 0.1,
+          "rate": 1.1,
+          "highpassHz": 1500,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "reverse": true,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/quality-20261116/audio/kenney-sci-fi/forceField_000.ogg",
+          "sha256": "c2916f2a062c8ddd1aca2826d134fe90847037db31342726ffb0f9097afe339c",
+          "sourceStart": 0,
+          "clip": 0.24,
+          "at": 0.67,
+          "gain": 0.12,
+          "rate": 1.45,
+          "highpassHz": 700,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        }
+      ],
+      "subjectiveListening": "not performed; material candidate",
+      "master": {
+        "path": "assets/source/quality-20261116/audio/boss-skills-r1/kurome-warning-r1.wav",
+        "bytes": 97964,
+        "sha256": "168c49b0bdab63dfd81bc15d90268a4571ce73e6d3bf94181b1eb076354fbdf4"
+      },
+      "filterComplex": "[0:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.135,asetpts=PTS-STARTPTS,asetrate=64800,aresample=48000,highpass=f=1600,lowpass=f=5800,volume=0.09,afade=t=in:st=0:d=0.003,afade=t=out:st=0.06:d=0.04,adelay=0,apad=whole_len=48960,atrim=end=1.02[l0];[1:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.8904,asetpts=PTS-STARTPTS,areverse,asetrate=50880,aresample=48000,highpass=f=240,lowpass=f=5800,volume=0.28,afade=t=in:st=0:d=0.12,afade=t=out:st=0.8:d=0.04,adelay=0,apad=whole_len=48960,atrim=end=1.02[l1];[2:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.242,asetpts=PTS-STARTPTS,areverse,asetrate=52800,aresample=48000,highpass=f=1500,lowpass=f=5800,volume=0.1,afade=t=in:st=0:d=0.004,afade=t=out:st=0.18:d=0.04,adelay=480,apad=whole_len=48960,atrim=end=1.02[l2];[3:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.348,asetpts=PTS-STARTPTS,asetrate=69600,aresample=48000,highpass=f=700,lowpass=f=5800,volume=0.12,afade=t=in:st=0:d=0.004,afade=t=out:st=0.2:d=0.04,adelay=670,apad=whole_len=48960,atrim=end=1.02[l3];[l0][l1][l2][l3]amix=inputs=4:duration=longest,volume=4,apad=whole_len=48960,atrim=end=1.02,highpass=f=65,acompressor=threshold=0.13:ratio=1.7:makeup=1.4:attack=3:release=70:knee=2.82843,alimiter=limit=0.8:level=0,volume=1.73067188,afade=t=in:st=0:d=0.002,afade=t=out:st=0.94:d=0.06[out]",
+      "dynamics": {
+        "threshold": 0.13,
+        "ratio": 1.7,
+        "makeup": 1.4,
+        "attack": 3,
+        "release": 70,
+        "peakLimit": 0.8,
+        "masterScale": 1.73067188111234
+      },
+      "decodedMaster": {
+        "seconds": 1.02,
+        "peak": 0.39532470703125,
+        "rms": 0.08499998760838433,
+        "firstAboveMinus60db": 0.005125,
+        "lastAboveMinus60db": 0.9131041666666667,
+        "last10msRms": 0,
+        "pcmSha256": "e47d87ac8ba0cf9a7dee79095a65e0903380f3afba4b66a3b4be1d6cfe971b6b"
+      },
+      "encodings": [
+        {
+          "path": "public/audio/quality-20261116/boss-skills/kurome-warning-r1.mp3",
+          "bytes": 21620,
+          "sha256": "26fcedc1779b438148ced0fc9a9876e76e3f1ddb004110bd8aefe2199b80ff82"
+        },
+        {
+          "path": "public/audio/quality-20261116/boss-skills/kurome-warning-r1.ogg",
+          "bytes": 12988,
+          "sha256": "121e42bdbf8536cf6f96ea80aa4682601e3f9938fd5a08197a7815d9e30afd70"
+        }
+      ]
+    },
+    {
+      "kind": "kurome",
+      "key": "kurome-impact",
+      "phase": "impact",
+      "displayName": "クロメ",
+      "material": "追跡眼の蓄積、鋭い放射と冷たい短い残響",
+      "id": "v100-boss-skill-kurome-impact",
+      "name": "kurome-impact-r1",
+      "duration": 0.46,
+      "warningWindow": 1.25,
+      "fallbackId": "v104-eye-fire",
+      "targetRms": 0.12,
+      "layers": [
+        {
+          "path": "assets/source/quality-20261116/audio/kenney-sci-fi/forceField_000.ogg",
+          "sha256": "c2916f2a062c8ddd1aca2826d134fe90847037db31342726ffb0f9097afe339c",
+          "sourceStart": 0,
+          "clip": 0.4,
+          "at": 0,
+          "gain": 0.5,
+          "rate": 1.65,
+          "highpassHz": 260,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactGlass_heavy_000.ogg",
+          "sha256": "b44b39a940e8948e74b9bd3776bff980df43cf220abdaf0d467dc4c43c0244a5",
+          "sourceStart": 0,
+          "clip": 0.21,
+          "at": 0.006,
+          "gain": 0.18,
+          "rate": 1.18,
+          "highpassHz": 1100,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/quality-20261116/audio/kenney-sci-fi/thrusterFire_000.ogg",
+          "sha256": "0fdc474d93f209debf1fc4ea77765a669dcb7676db31b4d8a0a509685bccf374",
+          "sourceStart": 2,
+          "clip": 0.28,
+          "at": 0.012,
+          "gain": 0.13,
+          "rate": 1.6,
+          "highpassHz": 950,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        }
+      ],
+      "subjectiveListening": "not performed; material candidate",
+      "master": {
+        "path": "assets/source/quality-20261116/audio/boss-skills-r1/kurome-impact-r1.wav",
+        "bytes": 44204,
+        "sha256": "aea9908afde4637aeb631706106efc6f177498955cb24cae0400550702a5d201"
+      },
+      "filterComplex": "[0:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.66,asetpts=PTS-STARTPTS,asetrate=79200,aresample=48000,highpass=f=260,lowpass=f=5800,volume=0.5,afade=t=in:st=0:d=0.004,afade=t=out:st=0.36:d=0.04,adelay=0,apad=whole_len=22080,atrim=end=0.46[l0];[1:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.2478,asetpts=PTS-STARTPTS,asetrate=56640,aresample=48000,highpass=f=1100,lowpass=f=5800,volume=0.18,afade=t=in:st=0:d=0.004,afade=t=out:st=0.17:d=0.04,adelay=6,apad=whole_len=22080,atrim=end=0.46[l1];[2:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=2:duration=0.448,asetpts=PTS-STARTPTS,asetrate=76800,aresample=48000,highpass=f=950,lowpass=f=5800,volume=0.13,afade=t=in:st=0:d=0.004,afade=t=out:st=0.24:d=0.04,adelay=12,apad=whole_len=22080,atrim=end=0.46[l2];[l0][l1][l2]amix=inputs=3:duration=longest,volume=3,apad=whole_len=22080,atrim=end=0.46,highpass=f=65,acompressor=threshold=0.13:ratio=1.7:makeup=1.4:attack=3:release=70:knee=2.82843,alimiter=limit=0.8:level=0,volume=0.99190093,afade=t=in:st=0:d=0.002,afade=t=out:st=0.38:d=0.06[out]",
+      "dynamics": {
+        "threshold": 0.13,
+        "ratio": 1.7,
+        "makeup": 1.4,
+        "attack": 3,
+        "release": 70,
+        "peakLimit": 0.8,
+        "masterScale": 0.9919009277956705
+      },
+      "decodedMaster": {
+        "seconds": 0.46,
+        "peak": 0.4185791015625,
+        "rms": 0.12000003242081073,
+        "firstAboveMinus60db": 0.006104166666666667,
+        "lastAboveMinus60db": 0.397875,
+        "last10msRms": 0,
+        "pcmSha256": "7c41fe7ebd8801a846b4a790fa814decd39d9d0c120be2980b747c21a35ecfaa"
+      },
+      "encodings": [
+        {
+          "path": "public/audio/quality-20261116/boss-skills/kurome-impact-r1.mp3",
+          "bytes": 10580,
+          "sha256": "4fc4c9c08d07baa1671d583050f210fec6bb72f66d577126f70858b3ff85f809"
+        },
+        {
+          "path": "public/audio/quality-20261116/boss-skills/kurome-impact-r1.ogg",
+          "bytes": 7896,
+          "sha256": "12d49abc6e41ca514cdd5ed0ed80793ac8665241d8d1a3ef5445b1cf5770937e"
+        }
+      ]
+    },
+    {
+      "kind": "ooguchi",
+      "key": "ooguchi-warning",
+      "phase": "warning",
+      "displayName": "オオグチ",
+      "material": "巨体の踏ん張り、空気の突進と重い肉体の衝突",
+      "id": "v100-boss-skill-ooguchi-warning",
+      "name": "ooguchi-warning-r1",
+      "duration": 0.79,
+      "warningWindow": 1.05,
+      "fallbackId": "boss-ooguchi-charge-warning",
+      "targetRms": 0.085,
+      "layers": [
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactSoft_heavy_000.ogg",
+          "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1",
+          "sourceStart": 0,
+          "clip": 0.53,
+          "at": 0,
+          "gain": 0.3,
+          "rate": 0.78,
+          "highpassHz": 90,
+          "lowpassHz": 1900,
+          "fadeIn": 0.1,
+          "fadeOut": 0.04,
+          "reverse": true,
+          "actualFadeIn": 0.1,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/cloth1.ogg",
+          "sha256": "ddb93a3671233f95da0e0b10367f082f7eb42fa6caaddcf776410aa8833c747d",
+          "sourceStart": 0.027791666666666666,
+          "clip": 0.53,
+          "at": 0.11,
+          "gain": 0.22,
+          "rate": 0.86,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.16,
+          "fadeOut": 0.04,
+          "reverse": true,
+          "actualFadeIn": 0.16,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactWood_heavy_000.ogg",
+          "sha256": "15ff82332f342c30e469215539e1cc57e11b221aa2cf7e11e811d313a9927f3d",
+          "sourceStart": 0,
+          "clip": 0.25,
+          "at": 0.42,
+          "gain": 0.18,
+          "rate": 0.76,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        }
+      ],
+      "subjectiveListening": "not performed; material candidate",
+      "master": {
+        "path": "assets/source/quality-20261116/audio/boss-skills-r1/ooguchi-warning-r1.wav",
+        "bytes": 75884,
+        "sha256": "5ff4de5cf18f7624a309f2b39e91628d6cdef5c0961fce72d16c40b093b36d4b"
+      },
+      "filterComplex": "[0:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.4134,asetpts=PTS-STARTPTS,areverse,asetrate=37440,aresample=48000,highpass=f=90,lowpass=f=1900,volume=0.3,afade=t=in:st=0:d=0.1,afade=t=out:st=0.49:d=0.04,adelay=0,apad=whole_len=37920,atrim=end=0.79[l0];[1:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.02779167:duration=0.4558,asetpts=PTS-STARTPTS,areverse,asetrate=41280,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.22,afade=t=in:st=0:d=0.16,afade=t=out:st=0.49:d=0.04,adelay=110,apad=whole_len=37920,atrim=end=0.79[l1];[2:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.19,asetpts=PTS-STARTPTS,asetrate=36480,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.18,afade=t=in:st=0:d=0.004,afade=t=out:st=0.21:d=0.04,adelay=420,apad=whole_len=37920,atrim=end=0.79[l2];[l0][l1][l2]amix=inputs=3:duration=longest,volume=3,apad=whole_len=37920,atrim=end=0.79,highpass=f=65,acompressor=threshold=0.13:ratio=1.7:makeup=1.4:attack=3:release=70:knee=2.82843,alimiter=limit=0.8:level=0,volume=2.97226472,afade=t=in:st=0:d=0.002,afade=t=out:st=0.71:d=0.06[out]",
+      "dynamics": {
+        "threshold": 0.13,
+        "ratio": 1.7,
+        "makeup": 1.4,
+        "attack": 3,
+        "release": 70,
+        "peakLimit": 0.8,
+        "masterScale": 2.9722647241024047
+      },
+      "decodedMaster": {
+        "seconds": 0.79,
+        "peak": 0.585723876953125,
+        "rms": 0.08499998952407552,
+        "firstAboveMinus60db": 0.05508333333333333,
+        "lastAboveMinus60db": 0.6482083333333334,
+        "last10msRms": 0,
+        "pcmSha256": "d5c17719d35ecc191b5d1c690956dc6c8f6b60f40b920ea42334720ab9ded542"
+      },
+      "encodings": [
+        {
+          "path": "public/audio/quality-20261116/boss-skills/ooguchi-warning-r1.mp3",
+          "bytes": 16820,
+          "sha256": "878b43cf6188ff4578378d89c2fd61d628c149f77ed90e58c83c41312b2f916e"
+        },
+        {
+          "path": "public/audio/quality-20261116/boss-skills/ooguchi-warning-r1.ogg",
+          "bytes": 10125,
+          "sha256": "6c89560e62584dd1a2069050e5cb35aa8bf6319c046347f19c9343736ba80fe0"
+        }
+      ]
+    },
+    {
+      "kind": "ooguchi",
+      "key": "ooguchi-impact",
+      "phase": "impact",
+      "displayName": "オオグチ",
+      "material": "巨体の踏ん張り、空気の突進と重い肉体の衝突",
+      "id": "v100-boss-skill-ooguchi-impact",
+      "name": "ooguchi-impact-r1",
+      "duration": 0.78,
+      "warningWindow": 1.05,
+      "fallbackId": "boss-ooguchi-charge-impact",
+      "targetRms": 0.12,
+      "layers": [
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/cloth1.ogg",
+          "sha256": "ddb93a3671233f95da0e0b10367f082f7eb42fa6caaddcf776410aa8833c747d",
+          "sourceStart": 0.027791666666666666,
+          "clip": 0.52,
+          "at": 0,
+          "gain": 0.36,
+          "rate": 0.8,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactSoft_heavy_000.ogg",
+          "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1",
+          "sourceStart": 0,
+          "clip": 0.65,
+          "at": 0.02,
+          "gain": 0.62,
+          "rate": 0.76,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactWood_heavy_000.ogg",
+          "sha256": "15ff82332f342c30e469215539e1cc57e11b221aa2cf7e11e811d313a9927f3d",
+          "sourceStart": 0,
+          "clip": 0.4,
+          "at": 0.035,
+          "gain": 0.32,
+          "rate": 0.75,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactWood_light_000.ogg",
+          "sha256": "eb45e35b4bed784d3f120de4afec4b0d6ac09d9e143cce8cfcb7d739e1b1f3c3",
+          "sourceStart": 0,
+          "clip": 0.26,
+          "at": 0.31,
+          "gain": 0.15,
+          "rate": 0.9,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactGeneric_light_000.ogg",
+          "sha256": "f0e982611e97512fee5f777986b67e8b435434b601f94992ec044f7e89fb5acb",
+          "sourceStart": 0,
+          "clip": 0.19,
+          "at": 0.48,
+          "gain": 0.12,
+          "rate": 0.78,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        }
+      ],
+      "subjectiveListening": "not performed; material candidate",
+      "master": {
+        "path": "assets/source/quality-20261116/audio/boss-skills-r1/ooguchi-impact-r1.wav",
+        "bytes": 74924,
+        "sha256": "d2f5441901e29d168a428be7c17c600ad3a70cc2c621c49535d5537a9c28934c"
+      },
+      "filterComplex": "[0:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.02779167:duration=0.416,asetpts=PTS-STARTPTS,asetrate=38400,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.36,afade=t=in:st=0:d=0.004,afade=t=out:st=0.48:d=0.04,adelay=0,apad=whole_len=37440,atrim=end=0.78[l0];[1:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.494,asetpts=PTS-STARTPTS,asetrate=36480,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.62,afade=t=in:st=0:d=0.004,afade=t=out:st=0.61:d=0.04,adelay=20,apad=whole_len=37440,atrim=end=0.78[l1];[2:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.3,asetpts=PTS-STARTPTS,asetrate=36000,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.32,afade=t=in:st=0:d=0.004,afade=t=out:st=0.36:d=0.04,adelay=35,apad=whole_len=37440,atrim=end=0.78[l2];[3:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.234,asetpts=PTS-STARTPTS,asetrate=43200,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.15,afade=t=in:st=0:d=0.004,afade=t=out:st=0.22:d=0.04,adelay=310,apad=whole_len=37440,atrim=end=0.78[l3];[4:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.1482,asetpts=PTS-STARTPTS,asetrate=37440,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.12,afade=t=in:st=0:d=0.004,afade=t=out:st=0.15:d=0.04,adelay=480,apad=whole_len=37440,atrim=end=0.78[l4];[l0][l1][l2][l3][l4]amix=inputs=5:duration=longest,volume=5,apad=whole_len=37440,atrim=end=0.78,highpass=f=65,acompressor=threshold=0.13:ratio=1.7:makeup=1.4:attack=3:release=70:knee=2.82843,alimiter=limit=0.8:level=0,volume=1.62060213,afade=t=in:st=0:d=0.002,afade=t=out:st=0.7:d=0.06[out]",
+      "dynamics": {
+        "threshold": 0.13,
+        "ratio": 1.7,
+        "makeup": 1.4,
+        "attack": 3,
+        "release": 70,
+        "peakLimit": 0.8,
+        "masterScale": 1.6206021275139961
+      },
+      "decodedMaster": {
+        "seconds": 0.78,
+        "peak": 0.600006103515625,
+        "rms": 0.09710331807039906,
+        "firstAboveMinus60db": 0.007875,
+        "lastAboveMinus60db": 0.6390416666666666,
+        "last10msRms": 0,
+        "pcmSha256": "41995d6502965525d50232744cd4ca0e8b53d3db1f20f534b26d023cce40145f"
+      },
+      "encodings": [
+        {
+          "path": "public/audio/quality-20261116/boss-skills/ooguchi-impact-r1.mp3",
+          "bytes": 16820,
+          "sha256": "87ce4bfb80f7c87982f719310d059f9791d4787aafd07fc6f5beb3bfed3b97c3"
+        },
+        {
+          "path": "public/audio/quality-20261116/boss-skills/ooguchi-impact-r1.ogg",
+          "bytes": 10165,
+          "sha256": "a3b2f46a0dbf3cffd2ff993fe807403976ce67b73b82fd23e314c1a354ed1c2f"
+        }
+      ]
+    },
+    {
+      "kind": "gairen",
+      "key": "gairen-warning",
+      "phase": "warning",
+      "displayName": "ガイレン",
+      "material": "外殻のロックが外れ、重い殻が擦れながら掃討する",
+      "id": "v100-boss-skill-gairen-warning",
+      "name": "gairen-warning-r1",
+      "duration": 0.88,
+      "warningWindow": 1.15,
+      "fallbackId": "boss-gairen-shell-warning",
+      "targetRms": 0.085,
+      "layers": [
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactWood_light_000.ogg",
+          "sha256": "eb45e35b4bed784d3f120de4afec4b0d6ac09d9e143cce8cfcb7d739e1b1f3c3",
+          "sourceStart": 0,
+          "clip": 0.29,
+          "at": 0,
+          "gain": 0.23,
+          "rate": 0.8,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/metalPot2.ogg",
+          "sha256": "8e1f820d217d380fde10e969d109db34303e3f4d11c3951926eddef813d04ae2",
+          "sourceStart": 0.08633333333333333,
+          "clip": 0.57,
+          "at": 0.1,
+          "gain": 0.2,
+          "rate": 0.83,
+          "highpassHz": 90,
+          "lowpassHz": 2300,
+          "fadeIn": 0.1,
+          "fadeOut": 0.04,
+          "reverse": true,
+          "actualFadeIn": 0.1,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactWood_heavy_000.ogg",
+          "sha256": "15ff82332f342c30e469215539e1cc57e11b221aa2cf7e11e811d313a9927f3d",
+          "sourceStart": 0,
+          "clip": 0.4,
+          "at": 0.33,
+          "gain": 0.24,
+          "rate": 0.69,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.12,
+          "fadeOut": 0.04,
+          "reverse": true,
+          "actualFadeIn": 0.12,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactMetal_light_000.ogg",
+          "sha256": "33b5e6e37c6e9d54e07bf5a89b12c76e879f40c1ea83cdd82714df1d6f9fec6d",
+          "sourceStart": 0,
+          "clip": 0.23,
+          "at": 0.57,
+          "gain": 0.16,
+          "rate": 0.91,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        }
+      ],
+      "subjectiveListening": "not performed; material candidate",
+      "master": {
+        "path": "assets/source/quality-20261116/audio/boss-skills-r1/gairen-warning-r1.wav",
+        "bytes": 84524,
+        "sha256": "6da4983c04e928efaba6c8895d84ea10c9d603681cc7ec9c3fd814019f6d6b13"
+      },
+      "filterComplex": "[0:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.232,asetpts=PTS-STARTPTS,asetrate=38400,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.23,afade=t=in:st=0:d=0.004,afade=t=out:st=0.25:d=0.04,adelay=0,apad=whole_len=42240,atrim=end=0.88[l0];[1:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.08633333:duration=0.4731,asetpts=PTS-STARTPTS,areverse,asetrate=39840,aresample=48000,highpass=f=90,lowpass=f=2300,volume=0.2,afade=t=in:st=0:d=0.1,afade=t=out:st=0.53:d=0.04,adelay=100,apad=whole_len=42240,atrim=end=0.88[l1];[2:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.276,asetpts=PTS-STARTPTS,areverse,asetrate=33120,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.24,afade=t=in:st=0:d=0.12,afade=t=out:st=0.36:d=0.04,adelay=330,apad=whole_len=42240,atrim=end=0.88[l2];[3:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.2093,asetpts=PTS-STARTPTS,asetrate=43680,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.16,afade=t=in:st=0:d=0.004,afade=t=out:st=0.19:d=0.04,adelay=570,apad=whole_len=42240,atrim=end=0.88[l3];[l0][l1][l2][l3]amix=inputs=4:duration=longest,volume=4,apad=whole_len=42240,atrim=end=0.88,highpass=f=65,acompressor=threshold=0.13:ratio=1.7:makeup=1.4:attack=3:release=70:knee=2.82843,alimiter=limit=0.8:level=0,volume=1.47210143,afade=t=in:st=0:d=0.002,afade=t=out:st=0.8:d=0.06[out]",
+      "dynamics": {
+        "threshold": 0.13,
+        "ratio": 1.7,
+        "makeup": 1.4,
+        "attack": 3,
+        "release": 70,
+        "peakLimit": 0.8,
+        "masterScale": 1.4721014342670409
+      },
+      "decodedMaster": {
+        "seconds": 0.88,
+        "peak": 0.527313232421875,
+        "rms": 0.08500001418894415,
+        "firstAboveMinus60db": 0.0050625,
+        "lastAboveMinus60db": 0.7896458333333334,
+        "last10msRms": 0,
+        "pcmSha256": "2cb76f7df9e5f39b6a26cf8e48e28ece8363a27e3b76501c9611251c976b59ae"
+      },
+      "encodings": [
+        {
+          "path": "public/audio/quality-20261116/boss-skills/gairen-warning-r1.mp3",
+          "bytes": 18740,
+          "sha256": "b7b8fd8a45648264fff5f6fc9ea81d5c72e29ba6e98954cf20dc9e2bdb92b007"
+        },
+        {
+          "path": "public/audio/quality-20261116/boss-skills/gairen-warning-r1.ogg",
+          "bytes": 11432,
+          "sha256": "8ca6bb7970e12e59cab11dbec2e125f01c9ece17c0806f94a1f66c8717930e1b"
+        }
+      ]
+    },
+    {
+      "kind": "gairen",
+      "key": "gairen-impact",
+      "phase": "impact",
+      "displayName": "ガイレン",
+      "material": "外殻のロックが外れ、重い殻が擦れながら掃討する",
+      "id": "v100-boss-skill-gairen-impact",
+      "name": "gairen-impact-r1",
+      "duration": 1,
+      "warningWindow": 1.15,
+      "fallbackId": "boss-gairen-shell-sweep",
+      "targetRms": 0.12,
+      "layers": [
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactWood_heavy_000.ogg",
+          "sha256": "15ff82332f342c30e469215539e1cc57e11b221aa2cf7e11e811d313a9927f3d",
+          "sourceStart": 0,
+          "clip": 0.44,
+          "at": 0,
+          "gain": 0.44,
+          "rate": 0.68,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactMetal_heavy_000.ogg",
+          "sha256": "e07045693e4a2b3d165c424e3dab4c781d9ff8880a386880ac89a51315d7f831",
+          "sourceStart": 0,
+          "clip": 0.28,
+          "at": 0.025,
+          "gain": 0.32,
+          "rate": 0.65,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/metalPot2.ogg",
+          "sha256": "8e1f820d217d380fde10e969d109db34303e3f4d11c3951926eddef813d04ae2",
+          "sourceStart": 0.08633333333333333,
+          "clip": 0.61,
+          "at": 0.07,
+          "gain": 0.28,
+          "rate": 0.75,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/cloth1.ogg",
+          "sha256": "ddb93a3671233f95da0e0b10367f082f7eb42fa6caaddcf776410aa8833c747d",
+          "sourceStart": 0.027791666666666666,
+          "clip": 0.62,
+          "at": 0.06,
+          "gain": 0.32,
+          "rate": 0.86,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactWood_light_000.ogg",
+          "sha256": "eb45e35b4bed784d3f120de4afec4b0d6ac09d9e143cce8cfcb7d739e1b1f3c3",
+          "sourceStart": 0,
+          "clip": 0.31,
+          "at": 0.4,
+          "gain": 0.18,
+          "rate": 0.78,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactMetal_light_000.ogg",
+          "sha256": "33b5e6e37c6e9d54e07bf5a89b12c76e879f40c1ea83cdd82714df1d6f9fec6d",
+          "sourceStart": 0,
+          "clip": 0.24,
+          "at": 0.62,
+          "gain": 0.1,
+          "rate": 1.1,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        }
+      ],
+      "subjectiveListening": "not performed; material candidate",
+      "master": {
+        "path": "assets/source/quality-20261116/audio/boss-skills-r1/gairen-impact-r1.wav",
+        "bytes": 96044,
+        "sha256": "24ffede7113d771a2454308fd6b5381aaf1fe83ead144b34f111aca0cf3a5d84"
+      },
+      "filterComplex": "[0:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.2992,asetpts=PTS-STARTPTS,asetrate=32640,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.44,afade=t=in:st=0:d=0.004,afade=t=out:st=0.4:d=0.04,adelay=0,apad=whole_len=48000,atrim=end=1[l0];[1:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.182,asetpts=PTS-STARTPTS,asetrate=31200,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.32,afade=t=in:st=0:d=0.004,afade=t=out:st=0.24:d=0.04,adelay=25,apad=whole_len=48000,atrim=end=1[l1];[2:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.08633333:duration=0.4575,asetpts=PTS-STARTPTS,asetrate=36000,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.28,afade=t=in:st=0:d=0.004,afade=t=out:st=0.57:d=0.04,adelay=70,apad=whole_len=48000,atrim=end=1[l2];[3:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.02779167:duration=0.5332,asetpts=PTS-STARTPTS,asetrate=41280,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.32,afade=t=in:st=0:d=0.004,afade=t=out:st=0.58:d=0.04,adelay=60,apad=whole_len=48000,atrim=end=1[l3];[4:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.2418,asetpts=PTS-STARTPTS,asetrate=37440,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.18,afade=t=in:st=0:d=0.004,afade=t=out:st=0.27:d=0.04,adelay=400,apad=whole_len=48000,atrim=end=1[l4];[5:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.264,asetpts=PTS-STARTPTS,asetrate=52800,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.1,afade=t=in:st=0:d=0.004,afade=t=out:st=0.2:d=0.04,adelay=620,apad=whole_len=48000,atrim=end=1[l5];[l0][l1][l2][l3][l4][l5]amix=inputs=6:duration=longest,volume=6,apad=whole_len=48000,atrim=end=1,highpass=f=65,acompressor=threshold=0.13:ratio=1.7:makeup=1.4:attack=3:release=70:knee=2.82843,alimiter=limit=0.8:level=0,volume=1.13368645,afade=t=in:st=0:d=0.002,afade=t=out:st=0.92:d=0.06[out]",
+      "dynamics": {
+        "threshold": 0.13,
+        "ratio": 1.7,
+        "makeup": 1.4,
+        "attack": 3,
+        "release": 70,
+        "peakLimit": 0.8,
+        "masterScale": 1.1336864471918866
+      },
+      "decodedMaster": {
+        "seconds": 1,
+        "peak": 0.600006103515625,
+        "rms": 0.09835985563378766,
+        "firstAboveMinus60db": 0.005125,
+        "lastAboveMinus60db": 0.813625,
+        "last10msRms": 0,
+        "pcmSha256": "51861608df4e7e8edaa439b74c27a6f128c972804f556ef9717d2ecae6bc41aa"
+      },
+      "encodings": [
+        {
+          "path": "public/audio/quality-20261116/boss-skills/gairen-impact-r1.mp3",
+          "bytes": 21140,
+          "sha256": "1bd01ec6556fb1d437a4d07bae8a118b549e6b3b51bd02e086d2484bbc6c1814"
+        },
+        {
+          "path": "public/audio/quality-20261116/boss-skills/gairen-impact-r1.ogg",
+          "bytes": 11935,
+          "sha256": "3b1ba1ce02b6a1f979f19c820f2f207279f39659d4015dee5859b0c4bdf3a379"
+        }
+      ]
+    },
+    {
+      "kind": "futago",
+      "key": "futago-warning",
+      "phase": "warning",
+      "displayName": "フタゴ",
+      "material": "二つの引き絞りと交差する左右の斬撃、柔らかい衝撃",
+      "id": "v100-boss-skill-futago-warning",
+      "name": "futago-warning-r1",
+      "duration": 0.88,
+      "warningWindow": 1.2,
+      "fallbackId": "boss-futago-cross-warning",
+      "targetRms": 0.085,
+      "layers": [
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/cloth4.ogg",
+          "sha256": "e7ab9a6c4466dea874196c61f59bf1da05cfe58748f42fadd695d441a154a99b",
+          "sourceStart": 0,
+          "clip": 0.45,
+          "at": 0,
+          "gain": 0.28,
+          "rate": 0.78,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.12,
+          "fadeOut": 0.04,
+          "reverse": true,
+          "actualFadeIn": 0.12,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/cloth3.ogg",
+          "sha256": "a48632d17a4f1416541d261a32a31612e01267144c407fa3ecab3ff410f0085b",
+          "sourceStart": 0.011354166666666665,
+          "clip": 0.53,
+          "at": 0.18,
+          "gain": 0.28,
+          "rate": 0.84,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.13,
+          "fadeOut": 0.04,
+          "reverse": true,
+          "actualFadeIn": 0.13,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactSoft_heavy_000.ogg",
+          "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1",
+          "sourceStart": 0,
+          "clip": 0.3,
+          "at": 0.44,
+          "gain": 0.16,
+          "rate": 1.05,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "reverse": true,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        }
+      ],
+      "subjectiveListening": "not performed; material candidate",
+      "master": {
+        "path": "assets/source/quality-20261116/audio/boss-skills-r1/futago-warning-r1.wav",
+        "bytes": 84524,
+        "sha256": "e0a4c3bc1cd455f9f9a312afa08c6a1c5af4ab2c3380bd0ff4e2b6eda33abf97"
+      },
+      "filterComplex": "[0:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.351,asetpts=PTS-STARTPTS,areverse,asetrate=37440,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.28,afade=t=in:st=0:d=0.12,afade=t=out:st=0.41:d=0.04,adelay=0,apad=whole_len=42240,atrim=end=0.88[l0];[1:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.01135417:duration=0.4452,asetpts=PTS-STARTPTS,areverse,asetrate=40320,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.28,afade=t=in:st=0:d=0.13,afade=t=out:st=0.49:d=0.04,adelay=180,apad=whole_len=42240,atrim=end=0.88[l1];[2:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.315,asetpts=PTS-STARTPTS,areverse,asetrate=50400,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.16,afade=t=in:st=0:d=0.004,afade=t=out:st=0.26:d=0.04,adelay=440,apad=whole_len=42240,atrim=end=0.88[l2];[l0][l1][l2]amix=inputs=3:duration=longest,volume=3,apad=whole_len=42240,atrim=end=0.88,highpass=f=65,acompressor=threshold=0.13:ratio=1.7:makeup=1.4:attack=3:release=70:knee=2.82843,alimiter=limit=0.8:level=0,volume=3.95116493,afade=t=in:st=0:d=0.002,afade=t=out:st=0.8:d=0.06[out]",
+      "dynamics": {
+        "threshold": 0.13,
+        "ratio": 1.7,
+        "makeup": 1.4,
+        "attack": 3,
+        "release": 70,
+        "peakLimit": 0.8,
+        "masterScale": 3.951164927997161
+      },
+      "decodedMaster": {
+        "seconds": 0.88,
+        "peak": 0.54974365234375,
+        "rms": 0.08500003969019478,
+        "firstAboveMinus60db": 0.0213125,
+        "lastAboveMinus60db": 0.7575416666666667,
+        "last10msRms": 0,
+        "pcmSha256": "4067f95feb25238e91620883eb01d58e346c8786800f09065c78b826567c56f9"
+      },
+      "encodings": [
+        {
+          "path": "public/audio/quality-20261116/boss-skills/futago-warning-r1.mp3",
+          "bytes": 18740,
+          "sha256": "950e25f845800fca0d3319010af450cadbf5937d7015b4239e2342fd3b2569eb"
+        },
+        {
+          "path": "public/audio/quality-20261116/boss-skills/futago-warning-r1.ogg",
+          "bytes": 10798,
+          "sha256": "ca1d22898b76cd7d3c50fc901d55295939df94e5108c6573b17a1930161b0632"
+        }
+      ]
+    },
+    {
+      "kind": "futago",
+      "key": "futago-impact",
+      "phase": "impact",
+      "displayName": "フタゴ",
+      "material": "二つの引き絞りと交差する左右の斬撃、柔らかい衝撃",
+      "id": "v100-boss-skill-futago-impact",
+      "name": "futago-impact-r1",
+      "duration": 0.78,
+      "warningWindow": 1.2,
+      "fallbackId": "boss-futago-cross-impact",
+      "targetRms": 0.12,
+      "layers": [
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/cloth4.ogg",
+          "sha256": "e7ab9a6c4466dea874196c61f59bf1da05cfe58748f42fadd695d441a154a99b",
+          "sourceStart": 0,
+          "clip": 0.42,
+          "at": 0,
+          "gain": 0.46,
+          "rate": 0.84,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactSoft_heavy_000.ogg",
+          "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1",
+          "sourceStart": 0,
+          "clip": 0.54,
+          "at": 0.025,
+          "gain": 0.34,
+          "rate": 0.9,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/cloth3.ogg",
+          "sha256": "a48632d17a4f1416541d261a32a31612e01267144c407fa3ecab3ff410f0085b",
+          "sourceStart": 0.011354166666666665,
+          "clip": 0.48,
+          "at": 0.095,
+          "gain": 0.4,
+          "rate": 1,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactGeneric_light_000.ogg",
+          "sha256": "f0e982611e97512fee5f777986b67e8b435434b601f94992ec044f7e89fb5acb",
+          "sourceStart": 0,
+          "clip": 0.16781684027777777,
+          "at": 0.11,
+          "gain": 0.25,
+          "rate": 0.96,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/cloth4.ogg",
+          "sha256": "e7ab9a6c4466dea874196c61f59bf1da05cfe58748f42fadd695d441a154a99b",
+          "sourceStart": 0,
+          "clip": 0.28,
+          "at": 0.32,
+          "gain": 0.13,
+          "rate": 1.1,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        }
+      ],
+      "subjectiveListening": "not performed; material candidate",
+      "master": {
+        "path": "assets/source/quality-20261116/audio/boss-skills-r1/futago-impact-r1.wav",
+        "bytes": 74924,
+        "sha256": "7e47230043d22eafaf46dd016d2484e6a214f7445df959dd07766e3c766bf666"
+      },
+      "filterComplex": "[0:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.3528,asetpts=PTS-STARTPTS,asetrate=40320,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.46,afade=t=in:st=0:d=0.004,afade=t=out:st=0.38:d=0.04,adelay=0,apad=whole_len=37440,atrim=end=0.78[l0];[1:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.486,asetpts=PTS-STARTPTS,asetrate=43200,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.34,afade=t=in:st=0:d=0.004,afade=t=out:st=0.5:d=0.04,adelay=25,apad=whole_len=37440,atrim=end=0.78[l1];[2:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.01135417:duration=0.48,asetpts=PTS-STARTPTS,asetrate=48000,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.4,afade=t=in:st=0:d=0.004,afade=t=out:st=0.44:d=0.04,adelay=95,apad=whole_len=37440,atrim=end=0.78[l2];[3:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.16110417,asetpts=PTS-STARTPTS,asetrate=46080,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.25,afade=t=in:st=0:d=0.004,afade=t=out:st=0.12781684:d=0.04,adelay=110,apad=whole_len=37440,atrim=end=0.78[l3];[4:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.308,asetpts=PTS-STARTPTS,asetrate=52800,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.13,afade=t=in:st=0:d=0.004,afade=t=out:st=0.24:d=0.04,adelay=320,apad=whole_len=37440,atrim=end=0.78[l4];[l0][l1][l2][l3][l4]amix=inputs=5:duration=longest,volume=5,apad=whole_len=37440,atrim=end=0.78,highpass=f=65,acompressor=threshold=0.13:ratio=1.7:makeup=1.4:attack=3:release=70:knee=2.82843,alimiter=limit=0.8:level=0,volume=2.34196736,afade=t=in:st=0:d=0.002,afade=t=out:st=0.7:d=0.06[out]",
+      "dynamics": {
+        "threshold": 0.13,
+        "ratio": 1.7,
+        "makeup": 1.4,
+        "attack": 3,
+        "release": 70,
+        "peakLimit": 0.8,
+        "masterScale": 2.3419673626614075
+      },
+      "decodedMaster": {
+        "seconds": 0.78,
+        "peak": 0.600006103515625,
+        "rms": 0.10453492859444198,
+        "firstAboveMinus60db": 0.006520833333333333,
+        "lastAboveMinus60db": 0.5965,
+        "last10msRms": 0,
+        "pcmSha256": "9c76f0460c6accd293956b6d7ee82638eb676c50cd84f801d0361a71b62491f2"
+      },
+      "encodings": [
+        {
+          "path": "public/audio/quality-20261116/boss-skills/futago-impact-r1.mp3",
+          "bytes": 16820,
+          "sha256": "6e68ea3eb8dea8429f32740b5b3869845d898cc6fedf37d9324939792820bfbe"
+        },
+        {
+          "path": "public/audio/quality-20261116/boss-skills/futago-impact-r1.ogg",
+          "bytes": 9491,
+          "sha256": "0975c9fdc27bc21cb800cc738891f710d0da63564468299611eb8f96b43e6c3c"
+        }
+      ]
+    },
+    {
+      "kind": "mugarian-president-mutated",
+      "key": "mugarian-president-mutated-warning",
+      "phase": "warning",
+      "displayName": "変異ムガリアン社長",
+      "material": "四腕の関節と膜の圧、四拍の重量打撃",
+      "id": "v100-boss-skill-mugarian-president-mutated-warning",
+      "name": "mugarian-president-mutated-warning-r1",
+      "duration": 0.78,
+      "warningWindow": 1.05,
+      "fallbackId": "boss-mother-brood-warning",
+      "targetRms": 0.085,
+      "layers": [
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/cloth3.ogg",
+          "sha256": "a48632d17a4f1416541d261a32a31612e01267144c407fa3ecab3ff410f0085b",
+          "sourceStart": 0.011354166666666665,
+          "clip": 0.57,
+          "at": 0,
+          "gain": 0.25,
+          "rate": 0.8,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.13,
+          "fadeOut": 0.04,
+          "reverse": true,
+          "actualFadeIn": 0.13,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactSoft_heavy_000.ogg",
+          "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1",
+          "sourceStart": 0,
+          "clip": 0.5,
+          "at": 0.12,
+          "gain": 0.24,
+          "rate": 0.82,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.16,
+          "fadeOut": 0.04,
+          "reverse": true,
+          "actualFadeIn": 0.16,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactWood_light_000.ogg",
+          "sha256": "eb45e35b4bed784d3f120de4afec4b0d6ac09d9e143cce8cfcb7d739e1b1f3c3",
+          "sourceStart": 0,
+          "clip": 0.28,
+          "at": 0.33,
+          "gain": 0.13,
+          "rate": 0.85,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/cloth4.ogg",
+          "sha256": "e7ab9a6c4466dea874196c61f59bf1da05cfe58748f42fadd695d441a154a99b",
+          "sourceStart": 0,
+          "clip": 0.23,
+          "at": 0.43,
+          "gain": 0.15,
+          "rate": 1,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        }
+      ],
+      "subjectiveListening": "not performed; material candidate",
+      "master": {
+        "path": "assets/source/quality-20261116/audio/boss-skills-r1/mugarian-president-mutated-warning-r1.wav",
+        "bytes": 74924,
+        "sha256": "fa9ba7f46d54aa5b6951e9a5e7940ead2420ebb50a97818bf9ba2bf72797755a"
+      },
+      "filterComplex": "[0:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.01135417:duration=0.456,asetpts=PTS-STARTPTS,areverse,asetrate=38400,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.25,afade=t=in:st=0:d=0.13,afade=t=out:st=0.53:d=0.04,adelay=0,apad=whole_len=37440,atrim=end=0.78[l0];[1:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.41,asetpts=PTS-STARTPTS,areverse,asetrate=39360,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.24,afade=t=in:st=0:d=0.16,afade=t=out:st=0.46:d=0.04,adelay=120,apad=whole_len=37440,atrim=end=0.78[l1];[2:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.238,asetpts=PTS-STARTPTS,asetrate=40800,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.13,afade=t=in:st=0:d=0.004,afade=t=out:st=0.24:d=0.04,adelay=330,apad=whole_len=37440,atrim=end=0.78[l2];[3:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.23,asetpts=PTS-STARTPTS,asetrate=48000,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.15,afade=t=in:st=0:d=0.004,afade=t=out:st=0.19:d=0.04,adelay=430,apad=whole_len=37440,atrim=end=0.78[l3];[l0][l1][l2][l3]amix=inputs=4:duration=longest,volume=4,apad=whole_len=37440,atrim=end=0.78,highpass=f=65,acompressor=threshold=0.13:ratio=1.7:makeup=1.4:attack=3:release=70:knee=2.82843,alimiter=limit=0.8:level=0,volume=3.00823171,afade=t=in:st=0:d=0.002,afade=t=out:st=0.7:d=0.06[out]",
+      "dynamics": {
+        "threshold": 0.13,
+        "ratio": 1.7,
+        "makeup": 1.4,
+        "attack": 3,
+        "release": 70,
+        "peakLimit": 0.8,
+        "masterScale": 3.008231712575079
+      },
+      "decodedMaster": {
+        "seconds": 0.78,
+        "peak": 0.59503173828125,
+        "rms": 0.08499995874713263,
+        "firstAboveMinus60db": 0.09441666666666666,
+        "lastAboveMinus60db": 0.6596458333333334,
+        "last10msRms": 0,
+        "pcmSha256": "49456ec233f1d88aacaad1f12605e687df949064304d812b5309d9aac24f1eec"
+      },
+      "encodings": [
+        {
+          "path": "public/audio/quality-20261116/boss-skills/mugarian-president-mutated-warning-r1.mp3",
+          "bytes": 16820,
+          "sha256": "cad2e515e0175f16b2b8eee4f68d652b4589da4bc3ab8c2f03fcc293ada783ad"
+        },
+        {
+          "path": "public/audio/quality-20261116/boss-skills/mugarian-president-mutated-warning-r1.ogg",
+          "bytes": 9872,
+          "sha256": "a1a4fae3ea8652861cbd3c178e877299a1fd97a19c2bafe6c80e46b5cfb1f5b2"
+        }
+      ]
+    },
+    {
+      "kind": "mugarian-president-mutated",
+      "key": "mugarian-president-mutated-impact",
+      "phase": "impact",
+      "displayName": "変異ムガリアン社長",
+      "material": "四腕の関節と膜の圧、四拍の重量打撃",
+      "id": "v100-boss-skill-mugarian-president-mutated-impact",
+      "name": "mugarian-president-mutated-impact-r1",
+      "duration": 0.84,
+      "warningWindow": 1.05,
+      "fallbackId": "boss-futago-cross-impact",
+      "targetRms": 0.12,
+      "layers": [
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactSoft_heavy_000.ogg",
+          "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1",
+          "sourceStart": 0,
+          "clip": 0.6,
+          "at": 0,
+          "gain": 0.5,
+          "rate": 0.8,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactWood_heavy_000.ogg",
+          "sha256": "15ff82332f342c30e469215539e1cc57e11b221aa2cf7e11e811d313a9927f3d",
+          "sourceStart": 0,
+          "clip": 0.37,
+          "at": 0.064,
+          "gain": 0.27,
+          "rate": 0.84,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactSoft_heavy_000.ogg",
+          "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1",
+          "sourceStart": 0,
+          "clip": 0.47,
+          "at": 0.145,
+          "gain": 0.26,
+          "rate": 0.96,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactGeneric_light_000.ogg",
+          "sha256": "f0e982611e97512fee5f777986b67e8b435434b601f94992ec044f7e89fb5acb",
+          "sourceStart": 0,
+          "clip": 0.1895343137254902,
+          "at": 0.225,
+          "gain": 0.24,
+          "rate": 0.85,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/cloth3.ogg",
+          "sha256": "a48632d17a4f1416541d261a32a31612e01267144c407fa3ecab3ff410f0085b",
+          "sourceStart": 0.011354166666666665,
+          "clip": 0.52,
+          "at": 0.02,
+          "gain": 0.22,
+          "rate": 0.9,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/cloth4.ogg",
+          "sha256": "e7ab9a6c4466dea874196c61f59bf1da05cfe58748f42fadd695d441a154a99b",
+          "sourceStart": 0,
+          "clip": 0.26,
+          "at": 0.43,
+          "gain": 0.13,
+          "rate": 1,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        }
+      ],
+      "subjectiveListening": "not performed; material candidate",
+      "master": {
+        "path": "assets/source/quality-20261116/audio/boss-skills-r1/mugarian-president-mutated-impact-r1.wav",
+        "bytes": 80684,
+        "sha256": "59295b92e059ee0c99b125b2094138c97a7360bb6749f72f2b14cbee7a0cf5b7"
+      },
+      "filterComplex": "[0:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.48,asetpts=PTS-STARTPTS,asetrate=38400,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.5,afade=t=in:st=0:d=0.004,afade=t=out:st=0.56:d=0.04,adelay=0,apad=whole_len=40320,atrim=end=0.84[l0];[1:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.3108,asetpts=PTS-STARTPTS,asetrate=40320,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.27,afade=t=in:st=0:d=0.004,afade=t=out:st=0.33:d=0.04,adelay=64,apad=whole_len=40320,atrim=end=0.84[l1];[2:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.4512,asetpts=PTS-STARTPTS,asetrate=46080,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.26,afade=t=in:st=0:d=0.004,afade=t=out:st=0.43:d=0.04,adelay=145,apad=whole_len=40320,atrim=end=0.84[l2];[3:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.16110417,asetpts=PTS-STARTPTS,asetrate=40800,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.24,afade=t=in:st=0:d=0.004,afade=t=out:st=0.14953431:d=0.04,adelay=225,apad=whole_len=40320,atrim=end=0.84[l3];[4:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.01135417:duration=0.468,asetpts=PTS-STARTPTS,asetrate=43200,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.22,afade=t=in:st=0:d=0.004,afade=t=out:st=0.48:d=0.04,adelay=20,apad=whole_len=40320,atrim=end=0.84[l4];[5:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.26,asetpts=PTS-STARTPTS,asetrate=48000,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.13,afade=t=in:st=0:d=0.004,afade=t=out:st=0.22:d=0.04,adelay=430,apad=whole_len=40320,atrim=end=0.84[l5];[l0][l1][l2][l3][l4][l5]amix=inputs=6:duration=longest,volume=6,apad=whole_len=40320,atrim=end=0.84,highpass=f=65,acompressor=threshold=0.13:ratio=1.7:makeup=1.4:attack=3:release=70:knee=2.82843,alimiter=limit=0.8:level=0,volume=1.99988767,afade=t=in:st=0:d=0.002,afade=t=out:st=0.76:d=0.06[out]",
+      "dynamics": {
+        "threshold": 0.13,
+        "ratio": 1.7,
+        "makeup": 1.4,
+        "attack": 3,
+        "release": 70,
+        "peakLimit": 0.8,
+        "masterScale": 1.9998876725611738
+      },
+      "decodedMaster": {
+        "seconds": 0.84,
+        "peak": 0.528106689453125,
+        "rms": 0.12000001471822269,
+        "firstAboveMinus60db": 0.0051875,
+        "lastAboveMinus60db": 0.6859166666666666,
+        "last10msRms": 0,
+        "pcmSha256": "cdb8fa1b0bbf6c7bb79b45d83dcdeac0ca4947137d2ed367c1513e1ba2679300"
+      },
+      "encodings": [
+        {
+          "path": "public/audio/quality-20261116/boss-skills/mugarian-president-mutated-impact-r1.mp3",
+          "bytes": 17780,
+          "sha256": "3fc11bede1dd5f7a5e110601119165dbdf6ee09862074eb1e756166f28b3b624"
+        },
+        {
+          "path": "public/audio/quality-20261116/boss-skills/mugarian-president-mutated-impact-r1.ogg",
+          "bytes": 9855,
+          "sha256": "2b42ebbb2d142d67eb9447ee1874c0fdc480492f95ee2632f3551bd87149a6a4"
+        }
+      ]
+    },
+    {
+      "kind": "takuya-omega",
+      "key": "takuya-omega-warning",
+      "phase": "warning",
+      "displayName": "TAKUYA-Ω",
+      "material": "巨大剣の駆動と持ち上げ、空気を割る重い薙ぎ払いと火圧",
+      "id": "v100-boss-skill-takuya-omega-warning",
+      "name": "takuya-omega-warning-r1",
+      "duration": 0.9,
+      "warningWindow": 1.18,
+      "fallbackId": "boss-ooguchi-charge-warning",
+      "targetRms": 0.085,
+      "layers": [
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/metalPot2.ogg",
+          "sha256": "8e1f820d217d380fde10e969d109db34303e3f4d11c3951926eddef813d04ae2",
+          "sourceStart": 0.08633333333333333,
+          "clip": 0.61,
+          "at": 0,
+          "gain": 0.23,
+          "rate": 0.7,
+          "highpassHz": 90,
+          "lowpassHz": 2700,
+          "fadeIn": 0.15,
+          "fadeOut": 0.04,
+          "reverse": true,
+          "actualFadeIn": 0.15,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/cloth1.ogg",
+          "sha256": "ddb93a3671233f95da0e0b10367f082f7eb42fa6caaddcf776410aa8833c747d",
+          "sourceStart": 0.027791666666666666,
+          "clip": 0.69,
+          "at": 0.04,
+          "gain": 0.27,
+          "rate": 0.72,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.14,
+          "fadeOut": 0.04,
+          "reverse": true,
+          "actualFadeIn": 0.14,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/quality-20261116/audio/kenney-sci-fi/spaceEngineLow_003.ogg",
+          "sha256": "e8f7ce4dbc20b5aeead35b94f1c8927b0baa416edaa5b39f1699703031111488",
+          "sourceStart": 1.1,
+          "clip": 0.67,
+          "at": 0.08,
+          "gain": 0.075,
+          "rate": 0.9,
+          "highpassHz": 90,
+          "lowpassHz": 1600,
+          "fadeIn": 0.22,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.22,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactMetal_light_000.ogg",
+          "sha256": "33b5e6e37c6e9d54e07bf5a89b12c76e879f40c1ea83cdd82714df1d6f9fec6d",
+          "sourceStart": 0,
+          "clip": 0.27,
+          "at": 0.51,
+          "gain": 0.15,
+          "rate": 0.83,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        }
+      ],
+      "subjectiveListening": "not performed; material candidate",
+      "master": {
+        "path": "assets/source/quality-20261116/audio/boss-skills-r1/takuya-omega-warning-r1.wav",
+        "bytes": 86444,
+        "sha256": "b836b56c90e2bb409380261cc44f10cf47e3de91de438c542ac7518f4d386dd6"
+      },
+      "filterComplex": "[0:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.08633333:duration=0.427,asetpts=PTS-STARTPTS,areverse,asetrate=33600,aresample=48000,highpass=f=90,lowpass=f=2700,volume=0.23,afade=t=in:st=0:d=0.15,afade=t=out:st=0.57:d=0.04,adelay=0,apad=whole_len=43200,atrim=end=0.9[l0];[1:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.02779167:duration=0.4968,asetpts=PTS-STARTPTS,areverse,asetrate=34560,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.27,afade=t=in:st=0:d=0.14,afade=t=out:st=0.65:d=0.04,adelay=40,apad=whole_len=43200,atrim=end=0.9[l1];[2:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=1.1:duration=0.603,asetpts=PTS-STARTPTS,asetrate=43200,aresample=48000,highpass=f=90,lowpass=f=1600,volume=0.075,afade=t=in:st=0:d=0.22,afade=t=out:st=0.63:d=0.04,adelay=80,apad=whole_len=43200,atrim=end=0.9[l2];[3:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.2241,asetpts=PTS-STARTPTS,asetrate=39840,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.15,afade=t=in:st=0:d=0.004,afade=t=out:st=0.23:d=0.04,adelay=510,apad=whole_len=43200,atrim=end=0.9[l3];[l0][l1][l2][l3]amix=inputs=4:duration=longest,volume=4,apad=whole_len=43200,atrim=end=0.9,highpass=f=65,acompressor=threshold=0.13:ratio=1.7:makeup=1.4:attack=3:release=70:knee=2.82843,alimiter=limit=0.8:level=0,volume=1.42817112,afade=t=in:st=0:d=0.002,afade=t=out:st=0.82:d=0.06[out]",
+      "dynamics": {
+        "threshold": 0.13,
+        "ratio": 1.7,
+        "makeup": 1.4,
+        "attack": 3,
+        "release": 70,
+        "peakLimit": 0.8,
+        "masterScale": 1.4281711200409097
+      },
+      "decodedMaster": {
+        "seconds": 0.9,
+        "peak": 0.568450927734375,
+        "rms": 0.08499993891263831,
+        "firstAboveMinus60db": 0.007604166666666667,
+        "lastAboveMinus60db": 0.7649791666666667,
+        "last10msRms": 0,
+        "pcmSha256": "28367cefdf0f11e89116f8ed154c70c45f1faf9900ce18b32cc608c95ad1a419"
+      },
+      "encodings": [
+        {
+          "path": "public/audio/quality-20261116/boss-skills/takuya-omega-warning-r1.mp3",
+          "bytes": 19220,
+          "sha256": "b688c3850e00b21ea6fdaa21cba50de2190f7f5cd84bd5dc8eab08e2b7199f19"
+        },
+        {
+          "path": "public/audio/quality-20261116/boss-skills/takuya-omega-warning-r1.ogg",
+          "bytes": 11355,
+          "sha256": "a1596679852d4fb23d6a16741aa0995833013dcbb51e86132714c1ce1fa7ca4a"
+        }
+      ]
+    },
+    {
+      "kind": "takuya-omega",
+      "key": "takuya-omega-impact",
+      "phase": "impact",
+      "displayName": "TAKUYA-Ω",
+      "material": "巨大剣の駆動と持ち上げ、空気を割る重い薙ぎ払いと火圧",
+      "id": "v100-boss-skill-takuya-omega-impact",
+      "name": "takuya-omega-impact-r1",
+      "duration": 1.12,
+      "warningWindow": 1.18,
+      "fallbackId": "boss-futago-cross-impact",
+      "targetRms": 0.12,
+      "layers": [
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/cloth1.ogg",
+          "sha256": "ddb93a3671233f95da0e0b10367f082f7eb42fa6caaddcf776410aa8833c747d",
+          "sourceStart": 0.027791666666666666,
+          "clip": 0.69,
+          "at": 0,
+          "gain": 0.46,
+          "rate": 0.7,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactMetal_heavy_000.ogg",
+          "sha256": "e07045693e4a2b3d165c424e3dab4c781d9ff8880a386880ac89a51315d7f831",
+          "sourceStart": 0,
+          "clip": 0.3071875,
+          "at": 0.015,
+          "gain": 0.4,
+          "rate": 0.6,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactWood_heavy_000.ogg",
+          "sha256": "15ff82332f342c30e469215539e1cc57e11b221aa2cf7e11e811d313a9927f3d",
+          "sourceStart": 0,
+          "clip": 0.43,
+          "at": 0.02,
+          "gain": 0.32,
+          "rate": 0.66,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/opengameart/chunky-explosion.mp3",
+          "sha256": "4de53bffac187e59d3f5b43096df2f8fcb4160076b65b71a67074947950e025f",
+          "sourceStart": 0.018354166666666668,
+          "clip": 0.8,
+          "at": 0.045,
+          "gain": 0.29,
+          "rate": 0.84,
+          "highpassHz": 90,
+          "lowpassHz": 2400,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/quality-20261116/audio/kenney-sci-fi/thrusterFire_000.ogg",
+          "sha256": "0fdc474d93f209debf1fc4ea77765a669dcb7676db31b4d8a0a509685bccf374",
+          "sourceStart": 1.6,
+          "clip": 0.86,
+          "at": 0.07,
+          "gain": 0.14,
+          "rate": 1,
+          "highpassHz": 90,
+          "lowpassHz": 2600,
+          "fadeIn": 0.004,
+          "fadeOut": 0.18,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.18
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactMetal_light_000.ogg",
+          "sha256": "33b5e6e37c6e9d54e07bf5a89b12c76e879f40c1ea83cdd82714df1d6f9fec6d",
+          "sourceStart": 0,
+          "clip": 0.32,
+          "at": 0.52,
+          "gain": 0.12,
+          "rate": 0.86,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        }
+      ],
+      "subjectiveListening": "not performed; material candidate",
+      "master": {
+        "path": "assets/source/quality-20261116/audio/boss-skills-r1/takuya-omega-impact-r1.wav",
+        "bytes": 107564,
+        "sha256": "3632f61e11858f88c0ae5c5f6a2d18a8c9d6ed3a9d93e189050d8c888c958998"
+      },
+      "filterComplex": "[0:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.02779167:duration=0.483,asetpts=PTS-STARTPTS,asetrate=33600,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.46,afade=t=in:st=0:d=0.004,afade=t=out:st=0.65:d=0.04,adelay=0,apad=whole_len=53760,atrim=end=1.12[l0];[1:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.1843125,asetpts=PTS-STARTPTS,asetrate=28800,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.4,afade=t=in:st=0:d=0.004,afade=t=out:st=0.2671875:d=0.04,adelay=15,apad=whole_len=53760,atrim=end=1.12[l1];[2:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.2838,asetpts=PTS-STARTPTS,asetrate=31680,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.32,afade=t=in:st=0:d=0.004,afade=t=out:st=0.39:d=0.04,adelay=20,apad=whole_len=53760,atrim=end=1.12[l2];[3:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.01835417:duration=0.672,asetpts=PTS-STARTPTS,asetrate=40320,aresample=48000,highpass=f=90,lowpass=f=2400,volume=0.29,afade=t=in:st=0:d=0.004,afade=t=out:st=0.76:d=0.04,adelay=45,apad=whole_len=53760,atrim=end=1.12[l3];[4:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=1.6:duration=0.86,asetpts=PTS-STARTPTS,asetrate=48000,aresample=48000,highpass=f=90,lowpass=f=2600,volume=0.14,afade=t=in:st=0:d=0.004,afade=t=out:st=0.68:d=0.18,adelay=70,apad=whole_len=53760,atrim=end=1.12[l4];[5:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.2752,asetpts=PTS-STARTPTS,asetrate=41280,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.12,afade=t=in:st=0:d=0.004,afade=t=out:st=0.28:d=0.04,adelay=520,apad=whole_len=53760,atrim=end=1.12[l5];[l0][l1][l2][l3][l4][l5]amix=inputs=6:duration=longest,volume=6,apad=whole_len=53760,atrim=end=1.12,highpass=f=65,acompressor=threshold=0.13:ratio=1.7:makeup=1.4:attack=3:release=70:knee=2.82843,alimiter=limit=0.8:level=0,volume=1.5473273,afade=t=in:st=0:d=0.002,afade=t=out:st=1.04:d=0.06[out]",
+      "dynamics": {
+        "threshold": 0.13,
+        "ratio": 1.7,
+        "makeup": 1.4,
+        "attack": 3,
+        "release": 70,
+        "peakLimit": 0.8,
+        "masterScale": 1.5473272971201533
+      },
+      "decodedMaster": {
+        "seconds": 1.12,
+        "peak": 0.600006103515625,
+        "rms": 0.10177156008847724,
+        "firstAboveMinus60db": 0.00825,
+        "lastAboveMinus60db": 0.9254166666666667,
+        "last10msRms": 0,
+        "pcmSha256": "e3767a145ef2a521d7cc23b30a62402654cbb23851236bf09d63ffc861d2a077"
+      },
+      "encodings": [
+        {
+          "path": "public/audio/quality-20261116/boss-skills/takuya-omega-impact-r1.mp3",
+          "bytes": 23540,
+          "sha256": "19641780df5641b57f398f443efcb6075eba3aa1c033b740797ab4da47c535bb"
+        },
+        {
+          "path": "public/audio/quality-20261116/boss-skills/takuya-omega-impact-r1.ogg",
+          "bytes": 13250,
+          "sha256": "ad5a7ae67514b65e2993d4e67abe40653add008c33eee0e3abf77c8f57f1e8cc"
+        }
+      ]
+    },
+    {
+      "kind": "gate-eater",
+      "key": "gate-eater-release",
+      "phase": "release",
+      "displayName": "改札喰い",
+      "material": "突進開始の金属擦過と風圧、停止音とは分ける",
+      "id": "v100-boss-skill-gate-eater-release",
+      "name": "gate-eater-release-r1",
+      "duration": 0.7,
+      "warningWindow": 1.15,
+      "fallbackId": "weapon-melee-impact-01",
+      "targetRms": 0.085,
+      "layers": [
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/metalPot2.ogg",
+          "sha256": "8e1f820d217d380fde10e969d109db34303e3f4d11c3951926eddef813d04ae2",
+          "sourceStart": 0.08633333333333333,
+          "clip": 0.56,
+          "at": 0,
+          "gain": 0.26,
+          "rate": 1.2,
+          "highpassHz": 220,
+          "lowpassHz": 4800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-rpg/cloth1.ogg",
+          "sha256": "ddb93a3671233f95da0e0b10367f082f7eb42fa6caaddcf776410aa8833c747d",
+          "sourceStart": 0.027791666666666666,
+          "clip": 0.6,
+          "at": 0.012,
+          "gain": 0.4,
+          "rate": 0.9,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        },
+        {
+          "path": "assets/source/v100/audio/kenney-impact/impactMetal_light_000.ogg",
+          "sha256": "33b5e6e37c6e9d54e07bf5a89b12c76e879f40c1ea83cdd82714df1d6f9fec6d",
+          "sourceStart": 0,
+          "clip": 0.24,
+          "at": 0.04,
+          "gain": 0.16,
+          "rate": 1.1,
+          "highpassHz": 90,
+          "lowpassHz": 5800,
+          "fadeIn": 0.004,
+          "fadeOut": 0.04,
+          "actualFadeIn": 0.004,
+          "actualFadeOut": 0.04
+        }
+      ],
+      "subjectiveListening": "not performed; material candidate",
+      "master": {
+        "path": "assets/source/quality-20261116/audio/boss-skills-r1/gate-eater-release-r1.wav",
+        "bytes": 67244,
+        "sha256": "914b576c3bf65c8d130363d4dfc553fc482352a173885dbb62e25c56e534bce3"
+      },
+      "filterComplex": "[0:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.08633333:duration=0.672,asetpts=PTS-STARTPTS,asetrate=57600,aresample=48000,highpass=f=220,lowpass=f=4800,volume=0.26,afade=t=in:st=0:d=0.004,afade=t=out:st=0.52:d=0.04,adelay=0,apad=whole_len=33600,atrim=end=0.7[l0];[1:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0.02779167:duration=0.54,asetpts=PTS-STARTPTS,asetrate=43200,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.4,afade=t=in:st=0:d=0.004,afade=t=out:st=0.56:d=0.04,adelay=12,apad=whole_len=33600,atrim=end=0.7[l1];[2:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=mono,atrim=start=0:duration=0.264,asetpts=PTS-STARTPTS,asetrate=52800,aresample=48000,highpass=f=90,lowpass=f=5800,volume=0.16,afade=t=in:st=0:d=0.004,afade=t=out:st=0.2:d=0.04,adelay=40,apad=whole_len=33600,atrim=end=0.7[l2];[l0][l1][l2]amix=inputs=3:duration=longest,volume=3,apad=whole_len=33600,atrim=end=0.7,highpass=f=65,acompressor=threshold=0.13:ratio=1.7:makeup=1.4:attack=3:release=70:knee=2.82843,alimiter=limit=0.8:level=0,volume=1.0554708,afade=t=in:st=0:d=0.002,afade=t=out:st=0.62:d=0.06[out]",
+      "dynamics": {
+        "threshold": 0.13,
+        "ratio": 1.7,
+        "makeup": 1.4,
+        "attack": 3,
+        "release": 70,
+        "peakLimit": 0.8,
+        "masterScale": 1.0554708025693607
+      },
+      "decodedMaster": {
+        "seconds": 0.7,
+        "peak": 0.5816650390625,
+        "rms": 0.08499994999483708,
+        "firstAboveMinus60db": 0.007541666666666667,
+        "lastAboveMinus60db": 0.6027083333333333,
+        "last10msRms": 0,
+        "pcmSha256": "6101f5daa305e985c74500db2135e4455004a6be96f098d5174b971308e4a517"
+      },
+      "encodings": [
+        {
+          "path": "public/audio/quality-20261116/boss-skills/gate-eater-release-r1.mp3",
+          "bytes": 15380,
+          "sha256": "66d7b3dea73575e2bc1a5952a5fff5d3fddb1eb983b3f6ad4eeb468e62f1a43a"
+        },
+        {
+          "path": "public/audio/quality-20261116/boss-skills/gate-eater-release-r1.ogg",
+          "bytes": 10316,
+          "sha256": "a6cd5a6740e907b9f21cbc9440c08e803044dea5a6a58fba1669338ba24deb37"
+        }
+      ]
+    }
+  ]
+}

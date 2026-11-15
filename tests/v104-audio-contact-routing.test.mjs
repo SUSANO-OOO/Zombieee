@@ -1,3 +1,4 @@
+import {v100BossSkillCue} from '../app/v100BossSkillAudio.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -13,7 +14,7 @@ function visit(n){nodes.push(n);ts.forEachChild(n,visit);}visit(tree);
 const one=predicate=>{const found=nodes.filter(predicate);assert.equal(found.length,1);return found[0];};
 const run=(node,bindings)=>vm.runInNewContext(ts.transpile(node.getText(tree),{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}),bindings);
 const isCue=(node,name)=>ts.isCallExpression(node)&&node.expression.getText(tree)===name;
-const globals={enemyVoiceCue,enemyCombatCueFor,unitAudioCueFor,weaponCueForUnit,v104ContactIsHard};
+const globals={enemyVoiceCue,enemyCombatCueFor,unitAudioCueFor,weaponCueForUnit,v104ContactIsHard,v100BossSkillCue};
 const imported=new Set(nodes.filter(ts.isImportSpecifier).map(n=>n.name.text));
 for(const name of Object.keys(globals))assert.ok(imported.has(name),`The actual game must import ${name}; a VM binding cannot repair a missing production binding`);
 
@@ -68,9 +69,17 @@ test('six real infected impact cue expressions and the president warning resolve
   assert.ok(V100_AUDIO_MANIFEST.assetById[cue]||V100_AUDIO_MANIFEST.poolById[cue]);
  }
  const warning=one(n=>isCue(n,'playBattleSemanticCue')&&n.arguments[2]?.getText(tree).includes('semantic: "boss-phase-warning"')&&n.arguments[0].getText(tree).includes('mugarian-president-mutated'));
- const cue=run(warning.arguments[0],{...globals,anomalyKind:'mugarian-president-mutated',f:{kind:'mugarian-president-mutated'}});
- assert.equal(cue,enemyCombatCueFor('mugarian-president-mutated','phase'));
- assert.equal(V100_AUDIO_MANIFEST.aliasById[cue].targetId,'boss-mother-brood-warning');
+ const base={...globals,g:{definition:{missionConfig:{v100StageNumber:25}}},anomalyKind:'mugarian-president-mutated',f:{kind:'mugarian-president-mutated'}};
+ const legacy=run(warning.arguments[0],{...base,externalSessionRef:{current:null}});
+ assert.equal(legacy,enemyCombatCueFor('mugarian-president-mutated','phase'));
+ assert.equal(V100_AUDIO_MANIFEST.aliasById[legacy].targetId,'boss-mother-brood-warning');
+ for(const kind of ['ooguchi','gairen','futago','mugarian-president-mutated']){
+  const cue=run(warning.arguments[0],{...base,anomalyKind:kind,f:{kind},externalSessionRef:{current:{stageId:'stage-25'}}});
+  assert.equal(cue,v100BossSkillCue(kind,'warning',25,true));
+  assert.ok(V100_AUDIO_MANIFEST.assetById[cue].sources[0].src.includes('/boss-skills/'+kind+'-warning-r1.mp3'));
+ }
+ const omega=run(warning.arguments[0],{...base,anomalyKind:'takuya-omega',f:{kind:'takuya-omega'},externalSessionRef:{current:{stageId:'stage-30'}}});
+ assert.equal(omega,'enemy-takuya-attack','Omega keeps its original warning voice; material is a separate request');
 });
 
 test('crossbow sources are reproducibly bound to a non-voice string/latch release with local license notices',()=>{
