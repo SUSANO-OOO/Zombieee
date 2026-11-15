@@ -1,7 +1,9 @@
+import {clearV100PaisenWavePaint,drawV100PaisenWavePaint} from './v100PaisenWaveVfx.js';
+
 // A battle-owned projectile. Release is requested by gameplay; only a
 // successfully painted current-model fist can supply its launch position.
 const battles = new WeakMap();
-export function clearV105FistWaves(world) { battles.delete(world); }
+export function clearV105FistWaves(world) { battles.delete(world); clearV100PaisenWavePaint(world); }
 const stateFor = world => {
   let state = battles.get(world);
   if (!state) { state = { pending: [], waves: [], impacts: [], receipts: [] }; battles.set(world, state); }
@@ -103,19 +105,5 @@ export function v105FistWaveSnapshot(world) {
 
 export function drawV105FistWaves(ctx, objects, world) {
   const state = battles.get(world); if (!state || world.ended || world.over) return;
-  const image = objects?.['v105-fist-wave'],dust=objects?.['v100-dust']; if (!image?.naturalWidth) return;
-  for (const wave of state.waves) {
-    ctx.save(); ctx.translate(wave.x, wave.y); ctx.rotate(Math.atan2(wave.uy, wave.ux));
-    ctx.globalCompositeOperation = 'source-over'; ctx.shadowBlur = 0;ctx.globalAlpha=.94;
-    const age=Math.max(0,world.time-wave.startedAt),width=64*Math.min(1,.55+age*8),height=width*image.naturalHeight/image.naturalWidth;
-    // The hot leading core, not the center of the long painted wake, owns
-    // the launch point and the swept collision center.
-    ctx.drawImage(image,-width*.9,-height*.5,width,height);
-    ctx.restore();
-  }
-  for (const hit of dust?.naturalWidth?state.impacts:[]) {
-    const p = Math.min(1, (world.time - hit.at) / .3), size = 28 + p * 44;
-    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = (1 - p) * .85;
-    ctx.drawImage(dust, hit.x - size / 2, hit.y - size / 2, size, size); ctx.restore();
-  }
+  drawV100PaisenWavePaint(ctx,objects,world,state);
 }
