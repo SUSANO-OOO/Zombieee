@@ -65,8 +65,9 @@ import {V100_GUARD_ACTIVATION_ART} from "./v100GuardActivationArt.js";
 import {V100_GROUND_FIRE_BED_ART} from "./v100GroundFireArt.js";
 import {V100_BALLISTIC_MATERIAL_ART} from "./v100BallisticMaterialArt.js";
 import {PwaBattleArtworkPathsContext} from "./pwaBattleArtworkContext.js";
-import {PwaManualFoleyPathsContext} from "./pwaAudioAvailabilityContext.js";
+import {PwaManualFoleyPathsContext,PwaBossCollapsePathsContext} from "./pwaAudioAvailabilityContext.js";
 import {PWA_MANUAL_FOLEY_FILES} from "./pwaManualFoleyFiles.js";
+import {PWA_BOSS_COLLAPSE_FILES} from "./pwaBossCollapseFiles.js";
 
 type Manifest = { version: string; releaseSha: string; assets: Array<Record<string, unknown>> };
 
@@ -908,6 +909,10 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     artworks: PWA_MANUAL_FOLEY_FILES, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,
     browserPlayAccepted: offerDismissed && (!standalone || registrationFailureAcknowledged),
   });
+  const verifiedBossCollapsePaths = verifiedPwaArtworkPaths({
+    artworks: PWA_BOSS_COLLAPSE_FILES, installedManifest, storedHashes, gameBlocked: blocking, baseUrl,
+    browserPlayAccepted: offerDismissed && (!standalone || registrationFailureAcknowledged),
+  });
 
   // A newly published stylesheet must not fetch new art before update consent.
   useEffect(() => {
@@ -979,7 +984,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   </aside>;
   return (
     <>
-      {!blocking && <PwaManualFoleyPathsContext.Provider value={verifiedManualFoleyPaths}><PwaBattleArtworkPathsContext.Provider value={verifiedBattleArtworkPaths}>{children}</PwaBattleArtworkPathsContext.Provider></PwaManualFoleyPathsContext.Provider>}
+      {!blocking && <PwaBossCollapsePathsContext.Provider value={verifiedBossCollapsePaths}><PwaManualFoleyPathsContext.Provider value={verifiedManualFoleyPaths}><PwaBattleArtworkPathsContext.Provider value={verifiedBattleArtworkPaths}>{children}</PwaBattleArtworkPathsContext.Provider></PwaManualFoleyPathsContext.Provider></PwaBossCollapsePathsContext.Provider>}
       {maintenance && <div className="pwa-maintenance" onClickCapture={onPwaControlClick} role="alertdialog" aria-modal="true" aria-label="アプリデータの確認"><section><h2>{maintenance === "clearing" ? "アプリのデータを確認しています" : "削除の完了を確認できませんでした"}</h2><p>確認が終わるまで、この画面でお待ちください。セーブデータは保持しています。</p>{maintenance === "failed" && <button type="button" onClick={() => { void confirmMaintenance(); }}>保存内容を再確認</button>}</section></div>}
 
       {blocking && (

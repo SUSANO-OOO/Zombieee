@@ -1,3 +1,4 @@
+import {withV100BossCollapseAudio} from './v100BossCollapseAudio.js';
 import {withV104CombatAudio} from './v104CombatAudio.js';
 import { createAudioManifest } from "./audioManifest.js";
 import { withRecordedWeapons, recordedWeaponSources } from "./weaponRecordingRecipes.js";
@@ -768,7 +769,7 @@ export const PRODUCTION_AUDIO_MANIFEST = createAudioManifest({
 });
 
 export const GAMEPLAY_PRODUCTION_AUDIO_MANIFEST=createAudioManifest(withMeleeFoley(withChainsawRecordings(withRecordedWeapons(withV104CombatAudio(PRODUCTION_AUDIO_MANIFEST)))));
-export const V100_AUDIO_MANIFEST = createAudioManifest(withV100ManualAbilityFoley(withMeleeFoley(withChainsawRecordings(withRecordedWeapons(v100AudioDesignCandidate(PRODUCTION_AUDIO_MANIFEST))))));
+export const V100_AUDIO_MANIFEST = createAudioManifest(withV100BossCollapseAudio(withV100ManualAbilityFoley(withMeleeFoley(withChainsawRecordings(withRecordedWeapons(v100AudioDesignCandidate(PRODUCTION_AUDIO_MANIFEST)))))));
 // Installation inventories physical files, whereas playback addresses cues.
 // A V1 replacement must not steal a legacy cue's metadata or offline entry.
 const installAudioBySource = new Map(PRODUCTION_AUDIO_MANIFEST.assets.map(asset => [
