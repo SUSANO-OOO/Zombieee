@@ -121,6 +121,7 @@ import "./v100BattleCommandFinish.css";
 import "./v100SupplyTitleFinish.css";
 import "./v100ModeDepartureFinish.css";
 import "./v100CompendiumRecordsFinish.css";
+import "./v100SystemFieldFinish.css";
 import {subscribeV100InterfaceOperations,v100InterfaceControlFor} from "./v100InterfaceAudio.js";
 import { V100_CREW_INSIGNIA } from "./v100CrewInsignia.js";
 
@@ -1534,7 +1535,7 @@ function SupportVehicleView({ save, vehicleOnly, returnLabel, onBack, onPurchase
         <div className="v100-loadout-card-copy"><h3>{support.displayName}</h3><p className="v100-support-purpose">{v100SupportPurposeFor(support.id)}</p><dl className="v100-support-use"><div><dt>使用物資</dt><dd>{support.battleCost}</dd></div><div><dt>再使用</dt><dd>{support.cooldownSeconds}<small>秒</small></dd></div></dl>{!unlocked && <p className="v100-unlock-condition">S{String(support.unlockStageNumber).padStart(2, "0")}クリアで解放</p>}{unlocked && !owned && save.caps < support.unlockCostCaps && <p className="v100-price-shortage">あと {support.unlockCostCaps - save.caps} CAPS</p>}</div>
         <div className="v100-support-card-footer"><span className="v100-support-stock">{selected ? "装備中" : owned ? "所持" : unlocked ? "未購入" : "未解放"}</span>{owned ? <button type="button" className={selected ? "selected" : ""} data-ui-sound="transaction" onClick={() => onEquipSupport(selected ? null : support.id)}>{selected ? "外す" : "装備"}</button>
           : unlocked ? <button type="button" data-ui-sound="transaction" onClick={() => onPurchaseSupport(support.id)} disabled={save.caps < support.unlockCostCaps}>{support.unlockCostCaps} CAPSで購入</button>
-            : <span className="v100-support-sealed">保管中</span>}</div>
+            : <span className="v100-support-sealed">解放後に購入可</span>}</div>
       </article>;
     })}</div>
   </section>;
@@ -1544,7 +1545,7 @@ function DataManagementView({ save, notice, onBack, onBackup, onNewGameBackup, o
   const [view, setView] = useState<"save" | "offline" | "legacy">("save");
   const sections = [{ id: "save", label: "進行の保存" }, { id: "offline", label: "オフライン用データ" }, { id: "legacy", label: "旧版の引継ぎ" }] as const;
   return <div className="v100-modal-backdrop" data-v100-surface="data" role="presentation"><section className="v100-modal v100-data-modal" data-data-view={view} role="dialog" aria-modal="true" aria-labelledby="v100-data-title">
-    <div className="v100-panel-heading"><div><span className="v100-kicker">戦闘記録</span><h2 id="v100-data-title">データ管理</h2></div><button type="button" onClick={onBack}>閉じる</button></div>
+    <div className="v100-panel-heading"><div><span className="v100-kicker">セーブと端末</span><h2 id="v100-data-title">データ管理</h2></div><button type="button" onClick={onBack}>閉じる</button></div>
     <nav className="v100-data-tabs" aria-label="データ管理の内容">{sections.map(section => <button type="button" key={section.id} aria-pressed={view === section.id} onClick={() => setView(section.id)}>{section.label}</button>)}</nav>
     {notice && <p className="v100-notice v100-data-feedback" role="status">{notice}</p>}
     <div className="v100-data-scroll" tabIndex={0} aria-label={sections.find(section => section.id === view)?.label}>

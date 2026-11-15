@@ -83,10 +83,10 @@ test('split native combat, audio and ordinary contacts remain mandatory in both 
       assert.equal(job['timeout-minutes'], 30);assert.equal(job['continue-on-error'], undefined);
       assert.ok(job.if.includes("needs.scope.outputs.full == 'true'"));assert.equal(job.strategy['fail-fast'], false);
       assert.deepEqual(job.strategy.matrix.include, id === 'v102-combat' ? [
-        {engine:'chromium',os:'ubuntu-latest',viewportGroup:'all',checkLabel:'chromium'},
+        {engine:'chromium',os:'ubuntu-24.04',viewportGroup:'all',checkLabel:'chromium'},
         {engine:'webkit',os:'macos-15-intel',viewportGroup:'desktop-phone',checkLabel:'webkit desktop-phone'},
         {engine:'webkit',os:'macos-15-intel',viewportGroup:'phone-short',checkLabel:'webkit phone-short'},
-      ] : [{engine:'chromium',os:'ubuntu-latest'},{engine:'webkit',os:'macos-15-intel'}]);
+      ] : [{engine:'chromium',os:'ubuntu-24.04'},{engine:'webkit',os:'macos-15-intel'}]);
       const commands = job.steps.filter(step => step.run?.startsWith('node scripts/run-browser-qa-with-server.mjs'));
       const expected = 'node scripts/run-browser-qa-with-server.mjs scripts/' + script;
       const required = commands.filter(step => step.run === expected);
@@ -326,11 +326,11 @@ test("parsed required CI graph retains every WebKit lane, dependency and viewpor
     "webkit-enemy-runtime-shard": undefined, "webkit-viewport": ["webkit-deployment-viewport", "webkit-hosted"],
     "webkit-deployment-viewport": "webkit-stage3-audio", "webkit-stage3-audio": "webkit-hosted",
   };
-  assert.equal(jobs.verify["runs-on"], "ubuntu-latest");
+  assert.equal(jobs.verify["runs-on"], "ubuntu-24.04");
   const story = jobs['r9-story'];
   assert.deepEqual(story.strategy.matrix.include.filter(row=>row.phase!=='full-story'), [
-    {engine:'chromium',os:'ubuntu-latest',phase:'composition'},
-    {engine:'chromium',os:'ubuntu-latest',phase:'bookends'},
+    {engine:'chromium',os:'ubuntu-24.04',phase:'composition'},
+    {engine:'chromium',os:'ubuntu-24.04',phase:'bookends'},
     {engine:'webkit',os:'macos-15-intel',phase:'composition'},
     {engine:'webkit',os:'macos-15-intel',phase:'bookends'},
   ]);
@@ -355,7 +355,7 @@ test("parsed required CI graph retains every WebKit lane, dependency and viewpor
   assert.equal(storyUpload.with.path,'outputs/r9-story');
   assert.equal(storyUpload.with['if-no-files-found'],'error');
   assert.deepEqual(jobs['v102-combat'].strategy.matrix.include,[
-    {engine:'chromium',os:'ubuntu-latest',viewportGroup:'all',checkLabel:'chromium'},
+    {engine:'chromium',os:'ubuntu-24.04',viewportGroup:'all',checkLabel:'chromium'},
     {engine:'webkit',os:'macos-15-intel',viewportGroup:'desktop-phone',checkLabel:'webkit desktop-phone'},
     {engine:'webkit',os:'macos-15-intel',viewportGroup:'phone-short',checkLabel:'webkit phone-short'},
   ]);
@@ -363,7 +363,7 @@ test("parsed required CI graph retains every WebKit lane, dependency and viewpor
   assert.ok(jobs['v102-combat'].steps.some(step=>step.run==='node scripts/run-browser-qa-with-server.mjs scripts/v102-combat-browser.mjs'));
   const normal=jobs['v177-normal-campaign'];
   assert.deepEqual(normal.needs,['scope'],'normal observation starts without waiting for unrelated acceptance lanes');
-  assert.deepEqual(normal.strategy.matrix.include,[{engine:'chromium',os:'ubuntu-latest'},{engine:'webkit',os:'macos-15-intel'}]);
+  assert.deepEqual(normal.strategy.matrix.include,[{engine:'chromium',os:'ubuntu-24.04'},{engine:'webkit',os:'macos-15-intel'}]);
   assert.equal(normal.strategy['fail-fast'],false);assert.equal(normal['continue-on-error'],undefined);
   assert.equal(normal.steps[0].with.ref,'${{ github.event.pull_request.head.sha }}');
   const normalRun=normal.steps.find(step=>step.run==='node scripts/run-browser-qa-with-server.mjs scripts/v177-representative-normal-play.mjs');
@@ -561,4 +561,26 @@ test("the release Phase G lane covers and validates all production captures", as
     assert.equal(step.env[`PWA_${kind}_UPDATE_BROWSER`],"webkit");
     assert.equal(step.env[`PWA_${kind}_UPDATE_EXPECTED_CANDIDATE_SHA`],"${{ github.event.pull_request.head.sha }}");
   }
+});
+
+
+test('Linux browser hosts remain explicit and supported by the locked Playwright downloader',async()=>{
+ const registry=await readFile('node_modules/playwright-core/lib/server/registry/index.js','utf8');
+ const supported=host=>/^ubuntu-\d+\.\d+$/.test(host)&&registry.includes(host.replace('ubuntu-','ubuntu')+'-x64');
+ const requireSupported=host=>assert.ok(supported(host),'Unsupported locked-browser host: '+host);
+ for(const file of ['ci.yml','github-pages-release.yml','github-pages-public-qa.yml','native-allunit-capture.yml','targeted-frame-performance.yml','v1-quality-acceptance.yml','native-aac-probe.yml','normal-campaign-observation.yml']){
+  const workflow=loadYaml(await readFile('.github/workflows/'+file,'utf8'));let hosts=0;
+  for(const job of Object.values(workflow.jobs)){
+   for(const host of [job['runs-on'],...(Array.isArray(job.strategy?.matrix?.include)?job.strategy.matrix.include:[]).map(row=>row.os),...(Array.isArray(job.strategy?.matrix?.os)?job.strategy.matrix.os:[])])if(typeof host==='string'&&host.startsWith('ubuntu')){requireSupported(host);hosts++;}
+  }
+  assert.ok(hosts>0,file+' must retain its Linux execution');
+ }
+ requireSupported('ubuntu-24.04');
+ for(const bad of ['ubuntu-latest','ubuntu-26.04'])assert.throws(()=>requireSupported(bad),/Unsupported locked-browser host/);
+ const {assertAndRestorePinnedLinuxHostsForLegacyComparison:restore}=await import('./helpers/linux-host-legacy-workflow.mjs');
+ const fixture={jobs:{linux:{'runs-on':'ubuntu-24.04',steps:[{run:'echo ubuntu-24.04',timeout:42}]},matrix:{'runs-on':'${{ matrix.os }}',strategy:{matrix:{include:[{os:'ubuntu-24.04',engine:'chromium'},{os:'macos-15-intel',engine:'webkit'}]}}}}};
+ const expected=structuredClone(fixture);expected.jobs.linux['runs-on']='ubuntu-latest';expected.jobs.matrix.strategy.matrix.include[0].os='ubuntu-latest';
+ const normalized=structuredClone(fixture);assert.equal(restore(normalized),2);assert.deepEqual(normalized,expected);
+ for(const bad of ['ubuntu-latest','ubuntu-26.04']){const invalid=structuredClone(fixture);invalid.jobs.linux['runs-on']=bad;assert.throws(()=>restore(invalid),/Current Linux browser host/);}
+
 });

@@ -1,4 +1,5 @@
 import {combatVariation,drawRasterPlume} from './v100RasterAtmosphere.js';
+import {V100_GUARD_ACTIVATION_ART} from './v100GuardActivationArt.js';
 
 // One physical preparation beat per real activation. These are not contacts,
 // projectiles, damage, or additional audio events.
@@ -39,6 +40,31 @@ function ready(objects,id){
   return source;
 }
 
+
+// A real activation keeps its first resolved source through the whole burst.
+// A late optional image can improve the next activation, never pop into this one.
+const paintChoices=new WeakMap();
+function drawAuthoredGuardActivation(ctx,objects,entry,progress){
+ const art=V100_GUARD_ACTIVATION_ART[entry.kind];if(!art)return false;
+ if(!paintChoices.has(entry)){
+  const image=objects?.[art.id];
+  paintChoices.set(entry,image?.complete===true&&image.naturalWidth===art.width&&image.naturalHeight===art.height?{art,image}:null);
+ }
+ const chosen=paintChoices.get(entry);if(!chosen)return false;
+ const position=Math.min(5,Math.max(0,progress)*5),first=Math.floor(position),blend=position-first;
+ const fade=progress>.78?(1-progress)/.22:1;
+ ctx.save();
+ try{
+  ctx.globalCompositeOperation='source-over';ctx.shadowBlur=0;ctx.translate(entry.x,entry.y+2);
+  for(const [frame,weight]of [[first,1-blend],[Math.min(5,first+1),blend]]){
+   if(weight<=0)continue;const [ax,ay]=chosen.art.anchors[frame];ctx.globalAlpha=.96*weight*fade;
+   ctx.drawImage(chosen.image,frame%3*256,Math.floor(frame/3)*256,256,256,
+    -ax*chosen.art.worldWidth,-ay*chosen.art.worldHeight,chosen.art.worldWidth,chosen.art.worldHeight);
+  }
+ }finally{ctx.restore();}
+ return true;
+}
+
 export function drawV100GuardActivations(ctx,objects,world){
   const rows=active(world);if(!rows.length)return;
   const ground=ready(objects,'v100-ground-impact'),dust=ready(objects,'v100-dust');
@@ -46,6 +72,7 @@ export function drawV100GuardActivations(ctx,objects,world){
   for(const e of rows){
     const p=profiles[e.kind],elapsed=world.time-e.startedAt;
     if(!p||elapsed<0)continue;
+    if(drawAuthoredGuardActivation(ctx,objects,e,elapsed/p.duration))continue;
     // The debris stays at the real planted position, rather than sliding after
     // the unit as it resumes walking. Each boot leaves a different scuff.
     for(const [index,[dx,delay]] of p.feet.entries()){

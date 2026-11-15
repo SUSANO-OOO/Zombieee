@@ -1,0 +1,11 @@
+Use case: stylized-concept.
+Asset type: a production VFX sprite sheet for the smartphone side-view Japanese post-apocalyptic game 西新世紀末物語.
+Create ONE landscape 1536 x 1024 image containing exactly six 512 x 512 animation cells, a 3-column by 2-row grid. True transparent background, not a black/white/checkerboard backdrop. No dividers, no labels.
+
+Subject: the physical preparation burst of an iron-pan defensive stance. Effects only: silvery iron scuffs and glints, tiny blunt metallic flakes, rolling white cooking steam and dusty shoe-level pressure. No person, no pan or weapon object: the game already draws the actor and his real iron pan. This must feel heavy, tactile, exhilarating and cinematic, rather than magical or explosive.
+
+Every cell uses the SAME side-on camera and a fixed ground anchor at (256, 420) within its 512-square cell. Keep a clear transparent vertical space at the upper centre for the existing actor. Most material must stay low and to either side of that space. Bright detailed material should remain readable when the entire cell is reduced to about 180 x 90 game pixels against a dark rainy street. Crisp irregular steam edges, soft translucent vapour interiors, realistic gritty material, broad dramatic motion rather than thin decorative lines.
+
+Six successive phases in reading order: 1 a tight bright planted-foot scuff and initial steam puffs; 2 a powerful low sideways release of white steam and iron dust; 3 the largest, fully developed asymmetric rolling steam at both sides of the actor space with a low metallic glint burst; 4 the same steam continuing outward and upward, fragments falling; 5 thin trailing wisps and settling grit; 6 the last delicate residual wisps, mostly transparent. Maintain coherent motion and the same ground position throughout. Leave transparent safety margin inside every cell; never let one frame cross into another.
+
+Avoid completely: fire, orange flames, guns, explosions, skulls, anatomy, character silhouettes, text, UI, shields, circles, rings, halos, radial lines, glowing geometric barriers, energy magic, flat vector shapes, hard rectangular smoke patches, opaque background. Preserve real semi-transparent alpha.

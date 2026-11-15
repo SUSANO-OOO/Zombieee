@@ -6,15 +6,16 @@ import {assertQualityMirrorHost,qualityMirrorText} from '../scripts/v177-quality
 
 const azure='http://azure.archive.ubuntu.com/ubuntu/';
 const archive='https://archive.ubuntu.com/ubuntu/';
+const ec2='http://us-east-2.ec2.archive.ubuntu.com/ubuntu/';
 const fixture='# runner mirror priorities\n# '+azure+'\n'+azure+'\tpriority:1\n'+archive+'\tpriority:2\nhttps://security.ubuntu.com/ubuntu/\tpriority:3\n';
-test('only the known Azure URI changes; priority, comments, security and line endings stay exact',()=>{
-  for(const before of [fixture,fixture.replaceAll('\n','\r\n')]){
-    const after=qualityMirrorText(before);assert.equal(after,before.replace(azure+'\tpriority:1',archive+'\tpriority:1'));
+test('only an observed Ubuntu runner first URI changes; priorities, comments, security and line endings stay exact',()=>{
+  for(const uri of [azure,ec2]) for(const before of [fixture.replace(azure+'\tpriority:1',uri+'\tpriority:1'),fixture.replace(azure+'\tpriority:1',uri+'\tpriority:1').replaceAll('\n','\r\n')]){
+    const after=qualityMirrorText(before);assert.equal(after,before.replace(uri+'\tpriority:1',archive+'\tpriority:1'));
     assert.equal(qualityMirrorText(after),after,'already-selected official archive is idempotent');
   }
 });
 test('unknown mirror configurations fail before any privileged operation',()=>{
-  for(const bad of [fixture.replace(azure+'\tpriority:1','https://unknown.invalid/ubuntu/\tpriority:1'),fixture.replace('priority:1','priority:9'),
+  for(const bad of [fixture.replace(azure+'\tpriority:1','http://us-east-2.ec2.archive.ubuntu.com.invalid/ubuntu/\tpriority:1'),fixture.replace(azure+'\tpriority:1','http://us-east-1.ec2.archive.ubuntu.com/ubuntu/\tpriority:1'),fixture.replace(azure+'\tpriority:1','https://unknown.invalid/ubuntu/\tpriority:1'),fixture.replace('priority:1','priority:9'),
     fixture.replace('priority:2','priority:1'),fixture.replace('https://security.ubuntu.com/ubuntu/','http://other.invalid/'),
     fixture+'https://extra.invalid/\tpriority:4\n',fixture.split('\n').slice(0,-2).join('\n')])
     assert.throws(()=>qualityMirrorText(bad));
@@ -37,8 +38,8 @@ test('mirror preparation is WebKit-only and retains the original runtime, checks
   assert.equal(job.steps[index+1].name,'Install dependencies and browser');
   assert.equal(job['timeout-minutes'],45);assert.deepEqual(job.strategy.matrix.engine,['chromium','webkit']);
   assert.match(job.steps[index+1].run,/node scripts\/pwa-native-runtime\/node_modules\/playwright\/cli\.js install --with-deps webkit/u);
-  const verify=job.steps.find(item=>item.name==='Check three viewports, rewards, recovery and native inputs');
-  assert.equal(verify.env.V100_QUALITY_LOOP_SIZES,'1280x720,844x390,844x340');
+  const verify=job.steps.find(item=>item.name==='Check smartphone viewports, rewards, recovery and native inputs');
+  assert.equal(verify.env.V100_QUALITY_LOOP_SIZES,'844x390,844x340');
   assert.match(verify.run,/timeout --signal=TERM --kill-after=30s 35m node scripts\/v100-quality-loop-browser\.mjs/u);
   assert.equal(JSON.parse(readFileSync('scripts/pwa-native-runtime/package.json')).dependencies.playwright,'1.63.0');
 });

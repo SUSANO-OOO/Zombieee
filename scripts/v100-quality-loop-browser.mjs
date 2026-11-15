@@ -311,7 +311,7 @@ for (const engine of engines) {
         });
       }
     }
-    for (const viewport of sections.includes('presentation') ? [...sizes, { width: 760, height: 500 }] : []) {
+    for (const viewport of sections.includes('presentation') ? sizes : []) {
       const fixture = normalizeV100Save({ ...early, ownedUnitIds: [...early.ownedUnitIds, 'unit-crazy-king'],
         unitLevels: { ...early.unitLevels, 'unit-crazy-king': 1 },
         formationSlots: ['unit-crazy-king', ...early.formationSlots.slice(0, 4), 'unit-nao', 'unit-paisen'],

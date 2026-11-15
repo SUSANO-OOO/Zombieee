@@ -18,7 +18,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {engine: chromium, os: ubuntu-latest}
+          - {engine: chromium, os: ubuntu-24.04}
           - {engine: webkit, os: macos-15-intel}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 150

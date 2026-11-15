@@ -83,6 +83,8 @@ test('workflow preserves every command/deadline and current script drift rejects
   const current=readFileSync('.github/workflows/ci.yml','utf8'),before=load(execFileSync('git',['show',old.head+':.github/workflows/ci.yml'],{encoding:'utf8',windowsHide:true}));
   const {assertAndRemoveV108StepsForLegacyComparison}=await import('./helpers/installed-v108-pwa-workflow.mjs');
   const currentWorkflow=load(current);assertAndRemoveV108StepsForLegacyComparison(currentWorkflow);
+  const {assertAndRestorePinnedLinuxHostsForLegacyComparison}=await import('./helpers/linux-host-legacy-workflow.mjs');
+  assertAndRestorePinnedLinuxHostsForLegacyComparison(currentWorkflow);
   before.jobs.scope.outputs.combat='${{ steps.scope.outputs.combat }}';
   before.jobs['v102-combat'].if="${{ needs.scope.outputs.full == 'true' || needs.scope.outputs.combat == 'true' }}";
   before.jobs['v102-combat-webkit-summary'].if="${{ (needs.scope.outputs.full == 'true' || needs.scope.outputs.combat == 'true') && (always()) }}";
@@ -126,8 +128,14 @@ test('workflow preserves every command/deadline and current script drift rejects
   }
   const qualityFile='.github/workflows/v1-quality-acceptance.yml',quality=load(readFileSync(qualityFile,'utf8'));
   const oldQuality=load(execFileSync('git',['show',old.head+':'+qualityFile],{encoding:'utf8',windowsHide:true}));
+  const currentPhoneStep=quality.jobs['quality-ui-play'].steps.find(s=>s.name==='Check smartphone viewports, rewards, recovery and native inputs');
+  assert.ok(currentPhoneStep);assert.equal(currentPhoneStep.env.V100_QUALITY_LOOP_SIZES,'844x390,844x340');
+  const legacyPhoneStep=oldQuality.jobs['quality-ui-play'].steps.find(s=>s.name==='Check three viewports, rewards, recovery and native inputs');
+  assert.ok(legacyPhoneStep);assert.equal(legacyPhoneStep.env.V100_QUALITY_LOOP_SIZES,'1280x720,844x390,844x340');
+  legacyPhoneStep.name=currentPhoneStep.name;legacyPhoneStep.env.V100_QUALITY_LOOP_SIZES=currentPhoneStep.env.V100_QUALITY_LOOP_SIZES;
   oldQuality.concurrency={group:'${{ github.workflow }}-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}','cancel-in-progress':false};
   oldQuality.jobs['quality-ui-play'].needs='scope';oldQuality.jobs['quality-ui-play'].if="${{ !github.event.pull_request.draft && needs.scope.outputs.reuse_quality != 'true' }}";
+  assertAndRestorePinnedLinuxHostsForLegacyComparison(quality);
   const scope=quality.jobs.scope;delete quality.jobs.scope;assert.deepEqual(quality,oldQuality);
   assert.equal(scope['timeout-minutes'],5);assert.deepEqual(scope.permissions,{contents:'read',actions:'read'});
   assert.deepEqual(scope.steps.find(s=>s.id==='scope').env,before.jobs.scope.steps.find(s=>s.id==='scope').env);

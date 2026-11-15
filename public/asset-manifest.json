@@ -308,6 +308,22 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/quality-20261115/vfx/guardian-guard-six-r3.webp",
+      "bytes": 130190,
+      "hash": "sha256-07d6fbbbfa73715395b73e73133b26d42c7e6532b8f78522e6940a8bc9bfc627",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261115/vfx/kumaverson-guard-six-r4.webp",
+      "bytes": 174274,
+      "hash": "sha256-7af68752f47eb961b819cd0ecb5e373671f324892b5203f1a4e232c72d5a54ce",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/quality-20261115/vfx/paisen-pressure-six-r3.webp",
       "bytes": 160326,
       "hash": "sha256-d7eafdde8dfe530a925830db2885b14b754a396703f458957b801c250bfa442f",

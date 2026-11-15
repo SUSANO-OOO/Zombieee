@@ -723,6 +723,8 @@ test('new source heads do not wait behind a previous head and all original full 
  const current=load(readFileSync('.github/workflows/ci.yml','utf8'));
  const {assertAndRemoveV108StepsForLegacyComparison}=await import('./helpers/installed-v108-pwa-workflow.mjs');
  assertAndRemoveV108StepsForLegacyComparison(current);
+ const {assertAndRestorePinnedLinuxHostsForLegacyComparison}=await import('./helpers/linux-host-legacy-workflow.mjs');
+ assertAndRestorePinnedLinuxHostsForLegacyComparison(current);
  const original=load(execFileSync('git',['show','0d4bf897a2839c147be1767b829cfb2a30181348:.github/workflows/ci.yml'],{encoding:'utf8',windowsHide:true}));
  assert.equal(current.concurrency.group,'${{ github.workflow }}-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}');
  assert.equal(current.concurrency['cancel-in-progress'],false);
