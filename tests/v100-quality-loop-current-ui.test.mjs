@@ -111,3 +111,55 @@ test('smartphone presentation keeps both requested sizes and adds no implicit PC
     }
   }
 });
+
+for (const mode of ['readable', 'hidden', 'horizontal-only', 'tail-clipped', 'controls-moved', 'save-changed']) {
+  test('formation detail guard rejects inaccessible reading or side effects: ' + mode, async () => {
+    const hooks = calls.filter(call => call.expression.getText(parsed) === 'formationDetailsReachable');
+    assert.equal(hooks.length, 2);
+    assert.ok(hooks.every(call => ts.isAwaitExpression(call.parent)), 'Both real formation cases await the guard');
+    let top = 0, controlReads = 0, saveReads = 0;
+    const captures = [], leaf = {};
+    const copy = { lastElementChild: leaf };
+    const element = {
+      scrollHeight: 373, clientHeight: 168,
+      get scrollTop() { return top; },
+      set scrollTop(value) { top = Math.max(0, Math.min(205, value)); },
+      getBoundingClientRect: () => ({ top: 66, bottom: 234, width: 177, height: 168 }),
+      querySelector: () => copy,
+    };
+    const pane = { evaluate: async (callback, argument) => callback(element, argument) };
+    const names = ['戦闘へ', 'ユニットの育成', '枠を空ける', 'ステージ選択へ'];
+    const page = {
+      locator(selector) { assert.equal(selector, '.v100-field-map-pane'); return pane; },
+      getByRole(role, options) { assert.equal(role, 'button'); assert.ok(names.includes(options.name)); assert.equal(options.exact, true); return options.name; },
+    };
+    const run = vm.runInNewContext(declaration('formationDetailsReachable') + '\nformationDetailsReachable', {
+      assert,
+      getComputedStyle: () => ({ overflowY: mode === 'hidden' ? 'hidden' : 'auto', touchAction: mode === 'horizontal-only' ? 'pan-x' : 'pan-y' }),
+      document: { createRange: () => ({
+        selectNodeContents(node) { assert.equal(node, leaf); },
+        getClientRects: () => [{ top: 418.78 - top, bottom: mode === 'tail-clipped' ? 242 : 430.78 - top, width: 75, height: 12 }],
+      }) },
+      within: async (locator, minimum) => {
+        assert.equal(minimum, 44);
+        if (locator === pane) return { x: 13, y: 66, width: 177, height: 168 };
+        const moved = mode === 'controls-moved' && controlReads >= 4;
+        controlReads++;
+        return { x: 13 + (moved ? 7 : 0), y: 288, width: 220, height: 44, reachable: true };
+      },
+      rawSave: async () => ({ caps: mode === 'save-changed' && saveReads++ > 0 ? 4999 : 5000, receipts: ['retained'] }),
+      capture: async (_page, _row, name) => { captures.push(name); },
+    });
+    const row = {};
+    if (mode === 'readable') {
+      await run(page, { width: 844, height: 340 }, row);
+      assert.equal(row.formationDetailScroll.after.readable, true);
+      assert.equal(top, 0, 'Reading observation restores its initial scroll position');
+      assert.deepEqual(captures, ['details-end']);
+    } else {
+      const messages = { hidden: /user-scrollable area/, 'horizontal-only': /Vertical touch/, 'tail-clipped': /final line/, 'controls-moved': /actions remain fixed/, 'save-changed': /does not change the save/ };
+      await assert.rejects(run(page, { width: 844, height: 340 }, row), messages[mode]);
+      assert.deepEqual(captures, []);
+    }
+  });
+}

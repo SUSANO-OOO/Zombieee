@@ -361,3 +361,21 @@
   #v100-campaign[data-v100-phase] .v100-command-personnel.detail-open .v100-unit-stat > strong { font-size:16px; }
   #v100-campaign[data-v100-phase] .v100-command-personnel.detail-open .v100-unit-stat > small { font-size:12px; }
 }
+
+
+/* Mission notes and crew details share one phone scroll area; the action dock stays fixed. */
+@media (orientation: landscape) and (max-width: 1020px) and (max-height: 460px) {
+  #v100-campaign .v100-command-formation:not(.picker-open) .v100-field-map-pane {
+    overflow-y: auto;
+    touch-action: pan-y;
+    overscroll-behavior-y: contain;
+    scrollbar-gutter: stable;
+  }
+  #v100-campaign .v100-command-formation:not(.picker-open) .v100-briefing-person {
+    flex: 0 0 auto;
+  }
+  #v100-campaign .v100-command-formation:not(.picker-open) .v100-briefing-person > div:not(.v100-crew-portrait) {
+    max-height: none;
+    overflow: visible;
+  }
+}
