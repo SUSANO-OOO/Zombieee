@@ -5,6 +5,7 @@ import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { pwaBrowserType } from "./pwa-browser-runtime.mjs";
 import { productionBuildIdentity } from "./browser-qa-build-identity.mjs";
+import { recordQualityFailureScreenshot } from "./v100-quality-failure-screenshot.mjs";
 import { normalTacticalInput } from "./v100-normal-tactical-input.mjs";
 import { observePlayerAbilityText } from "./player-ability-text-audit.mjs";
 import { inspectFormationPortraits } from "./formation-portrait-readiness.mjs";
@@ -251,7 +252,7 @@ async function runCase(browser, engine, viewport, id, seed, work) {
     if (row.silentOutput?.blockNativePlayback) assert.equal(row.silentOutput.nativePlayCalls, 0);
     assert.deepEqual(row.errors, []);
     row.status = "passed";
-  } catch (error) { row.status = "failed"; row.error = String(error); await page.screenshot({ path: path.join(out, row.id + "-failure.png") }).catch(() => {}); }
+  } catch (error) { row.status = "failed"; row.error = String(error); await recordQualityFailureScreenshot(row, page, path.join(out, row.id + "-failure.png")); }
   finally { navigating = true; await context.close(); await writeFile(path.join(out, "report.json"), JSON.stringify(report, null, 2)); }
 }
 for (const engine of engines) {
