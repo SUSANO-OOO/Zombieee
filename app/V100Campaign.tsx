@@ -1480,7 +1480,7 @@ function PersonnelView({ save, initialUnitId, returnLabel, onBack, onPrepare, on
           <div className="v100-personnel-focus-art" data-portrait-view={portraitView}><CrewPortrait unitId={selectedUnit.id} mode={portraitView} label={selectedUnit.displayName + (portraitView === "whole" ? "の立ち絵全体" : portraitView === "face" ? "の顔" : "の上半身")} /></div>
           <div className="v100-unit-growth-notes"><div className="v100-portrait-views" role="group" aria-label="立ち絵の見方">{(["upper", "face", "whole"] as const).map(view => <button key={view} type="button" aria-pressed={portraitView === view} onClick={() => setPortraitView(view)}>{view === "upper" ? "腰上" : view === "face" ? "顔" : "全体"}</button>)}</div></div>
           <button type="button" className="v100-personnel-detail-back" onClick={() => focusedUnitId ? onBack() : setDetailOpen(false)}>{focusedUnitId ? returnLabel : "ユニット一覧へ"}</button>
-          <div className="v100-personnel-focus-copy">
+          <div className="v100-personnel-focus-copy" key={selectedUnit.id}>
             <div className="v100-unit-record-heading"><span className="v100-unit-record-index" aria-hidden="true">{String(V100_UNITS.indexOf(selectedUnit) + 1).padStart(2, "0")}</span><h3>{selectedUnit.displayName}</h3><span className="v100-unit-level">Lv.{info.level}{info.nextLevel !== null && <> → {info.nextLevel}</>} <small>/ 上限 {info.levelCap}</small></span><small className="v100-unit-registration">{info.status}</small></div>
 
             <div key={selectedUnit.id + ":" + info.level} className={"v100-personnel-stats v100-stat-reveal " + (currentStats.healing > 0 ? "is-healer" : "")} aria-label="装備込みの戦闘能力と強化後の値">{[
