@@ -1,12 +1,21 @@
 {
   "recipe": {
     "path": "assets/source/quality-20261117/guard-spectacle-r1/selected-recipe.json",
-    "sha256": "c317af35fccb02580d0fdbbcbef506f893b999f93ff5b86dfff27836ce526484"
+    "sha256": "ad8047f3d11095eb031e015f3deb8006a1bdff501b306de0d71f929b46c4a3f5"
   },
   "generator": "scripts/build-v100-guard-activation-art.mjs",
   "processing": {
-    "frameInsetPixels": 32,
-    "method": "Each entire original cell is uniformly resampled and given transparent atlas gutters. Generated alpha is retained; no background removal, thresholding or clipped material. Ground anchor is transformed from the original bound source peak."
+    "perKindInsets": [
+      {
+        "kind": "kumaverson",
+        "pixels": 0
+      },
+      {
+        "kind": "guardian",
+        "pixels": 32
+      }
+    ],
+    "method": "Selected existing encoded art is reused byte-for-byte. New whole frames are uniformly resampled into transparent atlas gutters; generated alpha is retained without removal, thresholding or clipped material. Ground anchors transform from the original source peak."
   },
   "creator": "OpenAI built-in image_gen under user production direction; deterministic smartphone packaging by Codex",
   "license": "Project-original generated material; user output ownership under the checked provider terms and applicable law",
@@ -23,108 +32,115 @@
   },
   "producerApproval": "Active smartphone-quality goal requests bespoke animated manual abilities. Candidate production is authorized; final appearance, sound and physical-device acceptance are not claimed.",
   "generation": {
-    "mode": "OpenAI built-in image_gen creation; deterministic whole-frame resampling and transparent atlas padding",
+    "mode": "Reuse the selected no-ring steam master unchanged for Kuma; select new generated directional shield fragments; retain the rejected new loop-shaped Kuma candidate",
     "model": "Chosen by host; no model name asserted",
-    "referenceImages": [],
+    "referenceImages": [
+      {
+        "kind": "kumaverson",
+        "role": "Reused prior selected project-original source master, unchanged",
+        "path": "assets/source/quality-20261115/guard-activation-r1/kumaverson-generated-r4.png",
+        "sha256": "b207c837fdd482a7ef8a28a8a284d1406943a4d6db6807b4ec9cf6fcd0b54c3f"
+      }
+    ],
     "thirdPartyDownload": false,
     "paidCliOrExternalService": false,
     "calls": 2
   },
   "runtimeAssetCount": 2,
-  "logicalBytes": 475208,
-  "distinctBytes": 475208,
+  "logicalBytes": 464450,
+  "distinctBytes": 464450,
   "estimatedDecodedRgbaBytes": 3145728,
   "rows": [
     {
       "kind": "kumaverson",
-      "description": "Two offset cast-iron bracing impacts, body-height off-white dust and warm metal sparks; a clear central actor corridor",
+      "description": "Reused disconnected upright cooking steam, presented at body height instead of a small foot puff; encoded source unchanged",
       "master": {
-        "path": "assets/source/quality-20261117/guard-spectacle-r1/kumaverson-guard-six-r5-master.png",
-        "bytes": 1865085,
-        "sha256": "fc72a8255334e25f226ccc698a351400d7fbe7f4a3d7acfc2a018ea3e5915ff8"
+        "path": "assets/source/quality-20261115/guard-activation-r1/kumaverson-generated-r4.png",
+        "bytes": 1707823,
+        "sha256": "b207c837fdd482a7ef8a28a8a284d1406943a4d6db6807b4ec9cf6fcd0b54c3f"
       },
       "prompt": {
-        "path": "assets/source/quality-20261117/guard-spectacle-r1/kumaverson-prompt-r1.txt",
-        "sha256": "bb32c819d4dd42847498ac9ac15e72a029b5bb21f5fe85ab4756d84d6a59e7c1"
+        "path": "assets/source/quality-20261115/guard-activation-r1/kumaverson-prompt-r4.txt",
+        "sha256": "5547f6c83a50daaed388a746306ea79e402a8cae5055e5eab59057c4ccb2206d"
       },
       "cells": [
         {
           "frame": 0,
-          "gutterAlpha": 0,
-          "visiblePixels": 13560,
-          "upperActorWindowMeanAlpha": 0.11342592592592593,
+          "gutterAlpha": 1,
+          "visiblePixels": 9327,
+          "upperActorWindowMeanAlpha": 0.0183641975308642,
           "sourceFloorPeak": 440,
-          "floorPeak": 417.4375,
+          "floorPeak": 440.5,
           "anchor": [
             0.5,
-            0.8153076171875
+            0.8603515625
           ]
         },
         {
           "frame": 1,
-          "gutterAlpha": 0,
-          "visiblePixels": 25473,
-          "upperActorWindowMeanAlpha": 0.14930555555555555,
+          "gutterAlpha": 2,
+          "visiblePixels": 29288,
+          "upperActorWindowMeanAlpha": 0.22337962962962962,
           "sourceFloorPeak": 440,
-          "floorPeak": 417.4375,
+          "floorPeak": 440.5,
           "anchor": [
             0.5,
-            0.8153076171875
+            0.8603515625
           ]
         },
         {
           "frame": 2,
-          "gutterAlpha": 0,
-          "visiblePixels": 62154,
-          "upperActorWindowMeanAlpha": 0.31003086419753084,
+          "gutterAlpha": 2,
+          "visiblePixels": 42625,
+          "upperActorWindowMeanAlpha": 0.3317901234567901,
           "sourceFloorPeak": 440,
-          "floorPeak": 417.4375,
+          "floorPeak": 440.5,
           "anchor": [
             0.5,
-            0.8153076171875
+            0.8603515625
           ]
         },
         {
           "frame": 3,
-          "gutterAlpha": 0,
-          "visiblePixels": 51530,
-          "upperActorWindowMeanAlpha": 0.20455246913580247,
-          "sourceFloorPeak": 445,
-          "floorPeak": 421.8125,
+          "gutterAlpha": 2,
+          "visiblePixels": 50563,
+          "upperActorWindowMeanAlpha": 0.6347222222222222,
+          "sourceFloorPeak": 440,
+          "floorPeak": 440.5,
           "anchor": [
             0.5,
-            0.8238525390625
+            0.8603515625
           ]
         },
         {
           "frame": 4,
-          "gutterAlpha": 0,
-          "visiblePixels": 28460,
-          "upperActorWindowMeanAlpha": 0.12121913580246914,
-          "sourceFloorPeak": 441,
-          "floorPeak": 418.3125,
+          "gutterAlpha": 1,
+          "visiblePixels": 34279,
+          "upperActorWindowMeanAlpha": 0.4081018518518518,
+          "sourceFloorPeak": 440,
+          "floorPeak": 440.5,
           "anchor": [
             0.5,
-            0.8170166015625
+            0.8603515625
           ]
         },
         {
           "frame": 5,
-          "gutterAlpha": 0,
-          "visiblePixels": 6667,
-          "upperActorWindowMeanAlpha": 0.20555555555555555,
-          "sourceFloorPeak": 448,
-          "floorPeak": 424.4375,
+          "gutterAlpha": 2,
+          "visiblePixels": 15694,
+          "upperActorWindowMeanAlpha": 0.3368055555555556,
+          "sourceFloorPeak": 440,
+          "floorPeak": 440.5,
           "anchor": [
             0.5,
-            0.8289794921875
+            0.8603515625
           ]
         }
       ],
       "output": {
         "id": "v100-kumaverson-guard-activation",
-        "path": "/art/quality-20261117/vfx/kumaverson-guard-six-r5.webp",
-        "hash": "sha256-dcb34b4860f60b6c214a14a306e608228df8eac4be51d0430eb3f20f03cea071",
+        "path": "/art/quality-20261115/vfx/kumaverson-guard-six-r4.webp",
+        "hash": "sha256-7af68752f47eb961b819cd0ecb5e373671f324892b5203f1a4e232c72d5a54ce",
         "width": 768,
         "height": 512,
         "columns": 3,
@@ -132,32 +148,33 @@
         "anchors": [
           [
             0.5,
-            0.8153076171875
+            0.8603515625
           ],
           [
             0.5,
-            0.8153076171875
+            0.8603515625
           ],
           [
             0.5,
-            0.8153076171875
+            0.8603515625
           ],
           [
             0.5,
-            0.8238525390625
+            0.8603515625
           ],
           [
             0.5,
-            0.8170166015625
+            0.8603515625
           ],
           [
             0.5,
-            0.8289794921875
+            0.8603515625
           ]
         ],
-        "worldWidth": 304,
-        "worldHeight": 160,
-        "bytes": 185032
+        "worldWidth": 224,
+        "worldHeight": 168,
+        "bytes": 174274,
+        "reused": true
       }
     },
     {
@@ -282,7 +299,8 @@
         ],
         "worldWidth": 320,
         "worldHeight": 160,
-        "bytes": 290176
+        "bytes": 290176,
+        "reused": false
       }
     }
   ],

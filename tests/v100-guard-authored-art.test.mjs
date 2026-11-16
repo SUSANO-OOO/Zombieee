@@ -89,3 +89,15 @@ test('new art loads only for selected current-version guards whose exact artwork
  }
  assert.deepEqual(authored(requiredBattleAssetPlan({stageId,formationKinds:['medic'],verifiedGuardImpactPaths:paths})),[]);
 });
+
+test('authored guard paint follows the committed activation direction and cannot flip midway with a later target',()=>{
+ for(const kind of Object.keys(ART))for(const direction of [-1,1]){
+  const owner={id:7,kind,side:'human',hp:120,x:200,y:280,manualAbility:{activationId:4,phase:'active',target:{direction}}};
+  const world={time:3,definition:{missionConfig:{v100StageNumber:5}},fighters:[owner]};
+  assert.equal(queueV100GuardActivation(world,owner),true);
+  owner.manualAbility.target.direction=-direction;world.time+=.2;const before=structuredClone(world),c=canvas();
+  drawV100GuardActivations(c,{...previous,[ART[kind].id]:image()},world);
+  assert.deepEqual(c.rows.filter(row=>row[0]==='scale'),direction===-1?[['scale',-1,1]]:[]);
+  assert.ok(c.rows.some(row=>row[0]==='raster'));assertRestored(c);assert.deepEqual(world,before);
+ }
+});
