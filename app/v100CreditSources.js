@@ -1,5 +1,6 @@
 // Public credits match the adopted material ledger; no private identity sources are distributed.
 export const V100_SOUND_CREDITS = Object.freeze([
+  {role:"マヨちゃんの実録反応音",author:"AustinXYZ",works:["Chihuahua Puppy Bark","Chihuahua Puppy Whine"],page:"https://freesound.org/people/AustinXYZ/",license:"CC0 1.0"},
   {role:"チェーンソーのエンジン音",author:"Joseph SARDIN / BigSoundBank",works:["Chainsaw #2"],page:"https://bigsoundbank.com/chainsaw-2-s0707.html",license:"CC0 1.0"},
   {role:"ライフル・機関銃・SMG・拳銃の実録SE",author:"Ben Jaszczak / Brian Nelson / Kevin Heras / Matthew Nanney",works:["The Free Firearm Sound Library"],page:"https://opengameart.org/content/the-free-firearm-sound-library",license:"CC0 1.0"},
   { role: "男性の笑い声", author: "adiantheman", works: ["Evil Laugh"], page: "https://freesound.org/people/adiantheman/sounds/829881/", license: "CC0" },

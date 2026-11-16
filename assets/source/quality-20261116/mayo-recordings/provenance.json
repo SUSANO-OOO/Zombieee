@@ -1,0 +1,174 @@
+{
+  "createdAt": "2026-11-16T11:32:32.031Z",
+  "creator": "AustinXYZ",
+  "collection": "Robin",
+  "license": "CC0-1.0",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "producerApproval": {
+    "implementationBasis": "Free wordless reaction recordings and the existing Chihuahua character; requested quality work",
+    "subjectiveAcceptance": false,
+    "physicalDeviceAcceptance": false
+  },
+  "sourceRepresentation": "Public HQ MP3 previews linked by the two creator pages; original 24-bit WAVE downloads were not obtained.",
+  "recipe": "Decode the public MP3 once to mono float PCM, attenuate linearly to peak .707, store losslessly as PCM16 WAVE; keep full original duration.",
+  "decoder": {
+    "sha256": "c8abc49e7be62dde8e12972af373959e0076a7b8dc8040eb45978e0608f8781e",
+    "version": "N-92722-gf22fcd4483"
+  },
+  "runtimeAssets": {
+    "paths": 2,
+    "logicalBytes": 150712,
+    "distinctHashes": 2,
+    "distinctBytes": 150712,
+    "cueBindings": 4
+  },
+  "rows": [
+    {
+      "name": "bark",
+      "creator": "AustinXYZ",
+      "collection": "Robin",
+      "sourcePage": "https://freesound.org/people/AustinXYZ/sounds/350591/",
+      "license": "CC0-1.0",
+      "commercialUse": true,
+      "adaptation": true,
+      "redistribution": true,
+      "sourceKind": "public HQ MP3 preview linked in creator page",
+      "originalWavRetrieved": false,
+      "sourceBytes": 11790,
+      "sourceSha256": "d868ea0c990a20c91b347ca9cc765fe8aaba2c4d655a29e1c57ea343c2d170f1",
+      "output": "public/audio/quality-20261116/mayo/recorded-bark.wav",
+      "outputBytes": 56098,
+      "outputSha256": "fd7edc9d5e4754141bb61b55982810b27c2008d7c9a746d85676f4aa9658930e",
+      "sampleRate": 44100,
+      "samples": 28027,
+      "seconds": 0.6355328798185941,
+      "sourceDecodedPeak": 1.3762357234954834,
+      "linearGain": 0.5137201337895079,
+      "finalPeak": 0.70697021484375,
+      "clippedSamples": 0,
+      "channels": 1,
+      "bitsPerSample": 16,
+      "trim": false,
+      "pitchShift": false,
+      "timeStretch": false,
+      "source": "assets/source/quality-20261116/mayo-recordings/bark-public-preview.mp3"
+    },
+    {
+      "name": "whine",
+      "creator": "AustinXYZ",
+      "collection": "Robin",
+      "sourcePage": "https://freesound.org/people/AustinXYZ/sounds/350593/",
+      "license": "CC0-1.0",
+      "commercialUse": true,
+      "adaptation": true,
+      "redistribution": true,
+      "sourceKind": "public HQ MP3 preview linked in creator page",
+      "originalWavRetrieved": false,
+      "sourceBytes": 21809,
+      "sourceSha256": "842e3ccb9a8517a3b479c7e510e47898c11ada58a9b93c50a91ca83e3e22188b",
+      "output": "public/audio/quality-20261116/mayo/recorded-whine.wav",
+      "outputBytes": 94614,
+      "outputSha256": "f4330592f541dab7aef1ba353f1ece852ffc31f0a552e4fd26b70452521acdba",
+      "sampleRate": 44100,
+      "samples": 47285,
+      "seconds": 1.0722222222222222,
+      "sourceDecodedPeak": 1.372848629951477,
+      "linearGain": 0.5149875846290415,
+      "finalPeak": 0.70697021484375,
+      "clippedSamples": 0,
+      "channels": 1,
+      "bitsPerSample": 16,
+      "trim": false,
+      "pitchShift": false,
+      "timeStretch": false,
+      "source": "assets/source/quality-20261116/mayo-recordings/whine-public-preview.mp3"
+    }
+  ],
+  "previousSourceRevision": "1ebd1923f84bce8df7a2cdaf941c369109a20c6f",
+  "previousCueSettings": {
+    "gameplay": [
+      {
+        "id": "voice-mayo-deploy",
+        "category": "humanVoices",
+        "gain": 0.58,
+        "priority": 70,
+        "cooldownMs": 500,
+        "maxInstances": 2,
+        "loop": false,
+        "preload": "lazy"
+      },
+      {
+        "id": "voice-mayo-attack",
+        "category": "humanVoices",
+        "gain": 0.56,
+        "priority": 68,
+        "cooldownMs": 220,
+        "maxInstances": 2,
+        "loop": false,
+        "preload": "lazy"
+      },
+      {
+        "id": "voice-mayo-hurt",
+        "category": "humanVoices",
+        "gain": 0.62,
+        "priority": 76,
+        "cooldownMs": 300,
+        "maxInstances": 2,
+        "loop": false,
+        "preload": "lazy"
+      },
+      {
+        "id": "voice-mayo-retreat",
+        "category": "humanVoices",
+        "gain": 0.6,
+        "priority": 88,
+        "cooldownMs": 1000,
+        "maxInstances": 2,
+        "loop": false,
+        "preload": "lazy"
+      }
+    ],
+    "v100": [
+      {
+        "id": "voice-mayo-deploy",
+        "category": "humanVoices",
+        "gain": 0.58,
+        "priority": 70,
+        "cooldownMs": 500,
+        "maxInstances": 2,
+        "loop": false,
+        "preload": "lazy"
+      },
+      {
+        "id": "voice-mayo-attack",
+        "category": "humanVoices",
+        "gain": 0.56,
+        "priority": 68,
+        "cooldownMs": 220,
+        "maxInstances": 2,
+        "loop": false,
+        "preload": "lazy"
+      },
+      {
+        "id": "voice-mayo-hurt",
+        "category": "humanVoices",
+        "gain": 0.62,
+        "priority": 76,
+        "cooldownMs": 300,
+        "maxInstances": 2,
+        "loop": false,
+        "preload": "lazy"
+      },
+      {
+        "id": "voice-mayo-retreat",
+        "category": "humanVoices",
+        "gain": 0.6,
+        "priority": 88,
+        "cooldownMs": 1000,
+        "maxInstances": 2,
+        "loop": false,
+        "preload": "lazy"
+      }
+    ]
+  }
+}

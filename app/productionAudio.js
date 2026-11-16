@@ -777,12 +777,14 @@ const installAudioBySource = new Map(PRODUCTION_AUDIO_MANIFEST.assets.map(asset 
   asset.sources.map(source => source.src).join('|'), asset,
 ]));
 // Preserve the original physical inventory and ordering for installed updates
-// and rollback. Playback uses the CC0 reactions already in that inventory.
-const legacyHumanInstallAssets = V100_AUDIO_MANIFEST.assets.map(asset =>
+// and rollback. New recorded sources follow the legacy physical inventory.
+const legacyVoiceInstallAssets = V100_AUDIO_MANIFEST.assets.map(asset =>
   /^voice-(?:crazy-king|kumaverson|babayaga|red-panther-(?:knife|shield|smg|commander))-(?:deploy|attack|hurt|death)$/.test(asset.id)
     ? {...asset,sources:['mp3','ogg'].map(ext=>({src:`/audio/v104/combat/${asset.id}.${ext}`,type:ext==='mp3'?'audio/mpeg':'audio/ogg'}))}
-    : asset);
-for (const asset of [...legacyHumanInstallAssets, ...V100_AUDIO_MANIFEST.assets]) {
+    : /^voice-mayo-(?:deploy|attack|hurt|retreat)$/.test(asset.id)
+      ? {...asset,sources:[{src:`/audio/v090/sfx/${asset.id}.wav`,type:'audio/wav'}]}
+      : asset);
+for (const asset of [...legacyVoiceInstallAssets, ...V100_AUDIO_MANIFEST.assets]) {
   const key = asset.sources.map(source => source.src).join('|');
   if (!installAudioBySource.has(key)) {
     const pathId = asset.sources[0].src.replace(/^\/audio\//, '').replace(/\.[^.]+$/, '').replaceAll('/', '-');
