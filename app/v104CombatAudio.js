@@ -1,4 +1,10 @@
 import {v177JointActorKey} from './v177JointActorHistory.js';
+const recordedMayoVoices=Object.freeze({
+ 'voice-mayo-deploy':'recorded-bark',
+ 'voice-mayo-attack':'recorded-bark',
+ 'voice-mayo-hurt':'recorded-whine',
+ 'voice-mayo-retreat':'recorded-whine',
+});
 // Original CC0 human performances already shipped with the game. Keep each
 // character's reaction family consistent; no speech synthesis or pitch shift.
 const recordedHumanVoices=Object.freeze({
@@ -12,12 +18,14 @@ const recordedHumanVoices=Object.freeze({
 });
 const sources=name=>['mp3','ogg'].map(ext=>({src:`/audio/v104/combat/${name}.${ext}`,type:ext==='mp3'?'audio/mpeg':'audio/ogg'}));
 const recordedSources=name=>{
+ if(recordedMayoVoices[name])return[{src:`/audio/quality-20261116/mayo/${recordedMayoVoices[name]}.wav`,type:'audio/wav'}];
  const match=/^voice-(.+)-(attack|hurt|death)$/.exec(name);
  const actor=match&&recordedHumanVoices[match[1]];
  const root=actor?`/audio/v060/sfx/human-${actor.profile}-${match[2]}-${actor.take}`:`/audio/v104/combat/${name}`;
  return ['mp3','ogg'].map(ext=>({src:`${root}.${ext}`,type:ext==='mp3'?'audio/mpeg':'audio/ogg'}));
 };
 const replacements={
+ ...Object.fromEntries(Object.keys(recordedMayoVoices).map(id=>[id,id])),
  'weapon-pan-hit':'pan-hit','weapon-pan-heavy-hit':'pan-heavy','weapon-pan-stun':'pan-heavy',
  'weapon-suppressed-pistol':'suppressed-pistol',
  ...Object.fromEntries(['crazy-king','kumaverson','babayaga'].flatMap(kind=>['deploy','attack','hurt','death'].map(event=>{
