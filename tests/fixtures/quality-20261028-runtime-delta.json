@@ -1,6 +1,6 @@
 {
   "base": "ff5dba24e88c810182cda1f044bd26dfc3e512c1",
-  "source": "96f6f399e13fedf5489b55e51bce9344e3b93fea adds dedicated Paisen pressure flight and impact to the previously reviewed quality delta; attack mechanics, optional verified loading, audio and save retained; preparation-only Paisen pressure and TKY energy additions from 2f019a7645b7c7c1db2ea74aaea70e8caea54eca, all previous content and voice/policy retained; nine non-vocal boss collapse materials with original voices, mechanics and retained payloads from05b69ccf unchanged; nineteen non-vocal boss warning/release/impact materials, existing timing, separate voices, all889 previous payloads and saved fallback sources retained from fddd2e7e; recorded Chihuahua reactions from 79447e00 and offline packaging e4d9c9b2: two CC0 Mayo files appended; original 409 payloads and every prior asset role, path and content retained",
+  "source": "96f6f399e13fedf5489b55e51bce9344e3b93fea adds dedicated Paisen pressure flight and impact to the previously reviewed quality delta; attack mechanics, optional verified loading, audio and save retained; preparation-only Paisen pressure and TKY energy additions from 2f019a7645b7c7c1db2ea74aaea70e8caea54eca, all previous content and voice/policy retained; nine non-vocal boss collapse materials with original voices, mechanics and retained payloads from05b69ccf unchanged; nineteen non-vocal boss warning/release/impact materials, existing timing, separate voices, all889 previous payloads and saved fallback sources retained from fddd2e7e; recorded Chihuahua reactions from 79447e00 and offline packaging e4d9c9b2: two CC0 Mayo files appended; original 409 payloads and every prior asset role, path and content retained; fc59797433aa722ad39cb598f8907557ab346ebd adds eight authored single-shot candidates, preserves the complete old 411-source pack and every original logical payload; listening and physical acceptance remain false.",
   "scope": "Local quality candidate transport contract; not likeness, rights, listening, release or physical-device approval.",
   "added": [
     {
@@ -100,9 +100,25 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/quality-20261114/vfx/futago-attack-six-r1.webp",
+      "bytes": 298854,
+      "hash": "sha256-7c1d32dee46c574ef4f4f94a4907b823058306d115d7f385b480e2c70b1862e6",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/quality-20261114/vfx/futago-rupture-six-r1.webp",
       "bytes": 351736,
       "hash": "sha256-ce33d15b927547529fc090c896203f6310f64340a53a31a3864a10b52d9fe3fa",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/gairen-attack-six-r1.webp",
+      "bytes": 402642,
+      "hash": "sha256-34d3ffdb384584651828e43842856d05208e2da08c455f80f07c1e14ecd42222",
       "pack": "units",
       "category": "boss",
       "criticality": "critical"
@@ -116,9 +132,49 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/quality-20261114/vfx/gate-eater-attack-six-r1.webp",
+      "bytes": 231712,
+      "hash": "sha256-44fd6c6d61a74862e1bdc04e1b68141bb63cc3b98cf2c91fd82d08fd2e1f29e9",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/quality-20261114/vfx/gate-eater-rupture-six-r2.webp",
       "bytes": 432808,
       "hash": "sha256-16efa160c08d80e096231304aaf0ed13f8599c5be51339c97c474fb9c248ab2e",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/guard-pan-impact-six-r1.webp",
+      "bytes": 36388,
+      "hash": "sha256-942c1e16236d6cd4139d22d4767f855dbc986501587827b8be6c4a2434cbb0e1",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/guard-shield-impact-six-r1.webp",
+      "bytes": 84908,
+      "hash": "sha256-f86c4ca4a23ba866663005b21f864bc299f30283600e5b5f20053ddfbca82952",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/king-exhaust-six-r2.webp",
+      "bytes": 83570,
+      "hash": "sha256-dd9eb1093647176c6ddc8083435630ce2561376fdff0d27decf5ccb913a4b67c",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/kurome-attack-six-r2.webp",
+      "bytes": 309028,
+      "hash": "sha256-c67f0b6951e74973201d5e96da1dc9d776527681f21b1911294c63e9589b6994",
       "pack": "units",
       "category": "boss",
       "criticality": "critical"
@@ -132,9 +188,25 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/quality-20261114/vfx/mother-attack-six-r1.webp",
+      "bytes": 513616,
+      "hash": "sha256-eddc94285bc85fe207de17158386121c59c4e64aaa955a84a6f40993054a09ab",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/quality-20261114/vfx/mother-rupture-six-r2.webp",
       "bytes": 450298,
       "hash": "sha256-c89e894cc31cfb756d34a79ed7148904bf1c48a62fec37e38e5c545fa3f30530",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/mugarian-president-mutated-attack-six-r1.webp",
+      "bytes": 417756,
+      "hash": "sha256-f05265fe96e4c8b4aa3567398ae3213bf56fa636d6e98f7e5bec02ea815a6658",
       "pack": "units",
       "category": "boss",
       "criticality": "critical"
@@ -148,9 +220,49 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/quality-20261114/vfx/musashi-contact-six-r2.webp",
+      "bytes": 52570,
+      "hash": "sha256-9abf2cfb54113a376e7b78c96dcfdcb61e5cf3010469b43a8ab75ac10ee29aab",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/ooguchi-attack-six-r1.webp",
+      "bytes": 309100,
+      "hash": "sha256-97918df7b487ca0a65be8929bc7621730941823d3f99b6096601f1bdcecaccba",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/quality-20261114/vfx/ooguchi-rupture-six-r1.webp",
       "bytes": 296620,
       "hash": "sha256-814c7fe264ea474613b90634a64f6f4b6d39b760c4c987dfdd4b540f0ad8ee36",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/particle-materials-six-r1.webp",
+      "bytes": 80528,
+      "hash": "sha256-77a99e6eed2b3839efe5cc8850b4f3c0a6bf9e1edecaf1999c4bc76057365ce3",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/takuya-attack-six-r1.webp",
+      "bytes": 320952,
+      "hash": "sha256-3ecacd831cb32e66992e505db9ecf2090e7f85a142286cca9d0becedb5f31bd1",
+      "pack": "units",
+      "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/takuya-omega-attack-six-r2.webp",
+      "bytes": 429024,
+      "hash": "sha256-c86084b9339836f86cf857da8c95bd07107b755250c6e239ffbad9aae4f38437",
       "pack": "units",
       "category": "boss",
       "criticality": "critical"
@@ -169,6 +281,54 @@
       "hash": "sha256-c765bb4a8e4d3ecb74e2abf0f35320756d37769f467a9ff6d71716b43b914050",
       "pack": "units",
       "category": "boss",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261114/vfx/tatara-ground-six-r1.webp",
+      "bytes": 278284,
+      "hash": "sha256-39fff2d40df64ae92800f98312db40c35aeec72da208b719ac8da462ad5d1c32",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261115/vfx/ballistic-materials-six-r1.webp",
+      "bytes": 56496,
+      "hash": "sha256-f4590e51f2f0a6ace26a38b6a542ed40682cdb4103335647a4f1e325f279b1a0",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261115/vfx/ground-fire-bed-six-r1.webp",
+      "bytes": 141770,
+      "hash": "sha256-f6a331504bc2522e2fb1d8b3a14b58ce877dd44f6b825421e446014ef8e913a7",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261115/vfx/guardian-guard-six-r3.webp",
+      "bytes": 130190,
+      "hash": "sha256-07d6fbbbfa73715395b73e73133b26d42c7e6532b8f78522e6940a8bc9bfc627",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261115/vfx/kumaverson-guard-six-r4.webp",
+      "bytes": 174274,
+      "hash": "sha256-7af68752f47eb961b819cd0ecb5e373671f324892b5203f1a4e232c72d5a54ce",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261115/vfx/paisen-pressure-six-r3.webp",
+      "bytes": 160326,
+      "hash": "sha256-d7eafdde8dfe530a925830db2885b14b754a396703f458957b801c250bfa442f",
+      "pack": "units",
+      "category": "unit",
       "criticality": "critical"
     },
     {
@@ -1472,7 +1632,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 19351905,
       "bundleBytes": 4878,
-      "bundleLength": 36151187
+      "bundleLength": 36185363
     },
     {
       "path": "/audio/quality-20261114/manual/babayaga-preparation-r1.mp3",
@@ -1487,647 +1647,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 20152500,
       "bundleBytes": 8180,
-      "bundleLength": 36151187
-    },
-    {
-      "path": "/audio/quality-20261114/manual/brute-preparation-r1.mp3",
-      "bytes": 10580,
-      "hash": "sha256-9aaaa252aa28f761b297ecd3b108b3cf43674190012d981207d72c1422e09676",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-quality-20261114-manual-brute-preparation-r1",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 20125317,
-      "bundleBytes": 10580,
-      "bundleLength": 36151187
-    },
-    {
-      "path": "/audio/quality-20261114/manual/engineer-preparation-r1.mp3",
-      "bytes": 7220,
-      "hash": "sha256-15671925af7621dbeac6554b172999321e1ba097ef48fb087d634291a5d6b57d",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-quality-20261114-manual-engineer-preparation-r1",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 20184720,
-      "bundleBytes": 7220,
-      "bundleLength": 36151187
-    },
-    {
-      "path": "/audio/quality-20261114/manual/guardian-preparation-r1.mp3",
-      "bytes": 20660,
-      "hash": "sha256-b8f5af55fb5353e38869e3f4fe52ea5a6597649af405125aadb2d1ac861b9fea",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-quality-20261114-manual-guardian-preparation-r1",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 20164060,
-      "bundleBytes": 20660,
-      "bundleLength": 36151187
-    },
-    {
-      "path": "/audio/quality-20261114/manual/gunner-preparation-r1.mp3",
-      "bytes": 3380,
-      "hash": "sha256-7afabb3abc70694fd86e076de50b9fc423627b3b060eb743e337e8b638f6fa33",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-quality-20261114-manual-gunner-preparation-r1",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 20160680,
-      "bundleBytes": 3380,
-      "bundleLength": 36151187
-    },
-    {
-      "path": "/audio/quality-20261114/manual/kumaverson-preparation-r1.mp3",
-      "bytes": 7220,
-      "hash": "sha256-76a25f389994c099571792c70ad90c4666d3806e4a1ce5c0d3570a85dc429fa2",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-quality-20261114-manual-kumaverson-preparation-r1",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 20145280,
-      "bundleBytes": 7220,
-      "bundleLength": 36151187
-    },
-    {
-      "path": "/audio/quality-20261114/manual/medic-preparation-r1.mp3",
-      "bytes": 19700,
-      "hash": "sha256-19911c289406438cf037472bdfba5fba16bafc8bbedefc289e53be37afb61005",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-quality-20261114-manual-medic-preparation-r1",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 20105617,
-      "bundleBytes": 19700,
-      "bundleLength": 36151187
-    },
-    {
-      "path": "/audio/quality-20261114/manual/miyamoto-musashi-preparation-r1.mp3",
-      "bytes": 4340,
-      "hash": "sha256-061dc1d8031b1a87156254e9691d3e3bd670e96964acde86888710f09353799c",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-quality-20261114-manual-miyamoto-musashi-preparation-r1",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 20086357,
-      "bundleBytes": 4340,
-      "bundleLength": 36151187
-    },
-    {
-      "path": "/audio/quality-20261114/manual/mrs-chiha-preparation-r1.mp3",
-      "bytes": 12020,
-      "hash": "sha256-d3118b23420eb79316c23456c4bc7de1817fe36ee214079559d8d84dc7d6e223",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-quality-20261114-manual-mrs-chiha-preparation-r1",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 20074337,
-      "bundleBytes": 12020,
-      "bundleLength": 36151187
-    },
-    {
-      "path": "/audio/quality-20261114/manual/ranger-preparation-r1.mp3",
-      "bytes": 10100,
-      "hash": "sha256-5dcd6eb079ab388286cf8f43f357f6da3da142ba5371dbdd60a6dbf18a1ac33d",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-quality-20261114-manual-ranger-preparation-r1",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 20095517,
-      "bundleBytes": 10100,
-      "bundleLength": 36151187
-    },
-    {
-      "path": "/audio/quality-20261114/manual/scout-preparation-r1.mp3",
-      "bytes": 4820,
-      "hash": "sha256-6abf856837022310f9cdc1df8298fabad05b37f933f49998ac571d6f385ee344",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-quality-20261114-manual-scout-preparation-r1",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 20090697,
-      "bundleBytes": 4820,
-      "bundleLength": 36151187
-    },
-    {
-      "path": "/audio/quality-20261114/manual/zakimiya-preparation-r1.mp3",
-      "bytes": 8180,
-      "hash": "sha256-6f995b23392d9f897ade216695c1ca49bc32433828795ed0838883f6895953c3",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-quality-20261114-manual-zakimiya-preparation-r1",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 20191940,
-      "bundleBytes": 8180,
-      "bundleLength": 36151187
-    },
-    {
-      "path": "/audio/weapons/chainsaw/attack.mp3",
-      "bytes": 5864,
-      "hash": "sha256-ae441b8868f76dc2ff4f99c0944c77bd836ff12f7a596b4ec4f906101f90d638",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-weapons-chainsaw-attack",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19310036,
-      "bundleBytes": 5864,
-      "bundleLength": 36151187
-    },
-    {
-      "path": "/audio/weapons/chainsaw/flesh-hit.mp3",
-      "bytes": 4585,
-      "hash": "sha256-d83c7422bf77ddeb45313bd9a372df69ffce8de35a40198713da2fefdec82d92",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-weapons-chainsaw-flesh-hit",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19315900,
-      "bundleBytes": 4585,
-      "bundleLength": 36151187
-    },
-    {
-      "path": "/audio/weapons/chainsaw/hard-hit.mp3",
-      "bytes": 6099,
-      "hash": "sha256-5333370ba2a55767dea6174ac332c91dab013ad969778edde2fb0ef4fa0152b3",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-weapons-chainsaw-hard-hit",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19320485,
-      "bundleBytes": 6099,
-      "bundleLength": 36151187
-    },
-    {
-      "path": "/audio/weapons/chainsaw/idle-loop.wav",
-      "bytes": 176444,
-      "hash": "sha256-a7e7d42c5544e4e8c2272780aeaf85ac7fff47b8991c498af26b5fc42c041ac6",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-weapons-chainsaw-idle-loop",
-      "audioType": "audio/wav",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19133592,
-      "bundleBytes": 176444,
-      "bundleLength": 36151187
-    },
-    {
-      "path": "/audio/weapons/chainsaw/overdrive-activate.mp3",
-      "bytes": 9383,
-      "hash": "sha256-2193f0c40174818ebd28fab85c239995c3362f34e2ac61fb9281a906c17402f7",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-weapons-chainsaw-overdrive-activate",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 20135897,
-      "bundleBytes": 9383,
-      "bundleLength": 36151187
-    },
-    {
-      "path": "/audio/weapons/chainsaw/overdrive-active.mp3",
-      "bytes": 8394,
-      "hash": "sha256-edaa744e3f83f5ca4b5c33b23e9e9efa35157f0c0ec3fd67365252de5cacaf65",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-weapons-chainsaw-overdrive-active",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 20200120,
-      "bundleBytes": 8394,
-      "bundleLength": 36151187
-    },
-    {
-      "path": "/audio/weapons/chainsaw/start.mp3",
-      "bytes": 13608,
-      "hash": "sha256-afe9cb54838de7132f59b629b89cbffc8569d238e0a9a18cdf3fdcf32206ceeb",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-weapons-chainsaw-start",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19119984,
-      "bundleBytes": 13608,
-      "bundleLength": 36151187
-    },
-    {
-      "path": "/audio/weapons/chainsaw/stop.mp3",
-      "bytes": 9126,
-      "hash": "sha256-2152b7e20dbf1dd588c746648586af9d15f6e6ad25f5384928cbd717fd5062ea",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-weapons-chainsaw-stop",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19326584,
-      "bundleBytes": 9126,
-      "bundleLength": 36151187
-    },
-    {
-      "path": "/audio/weapons/melee/weapon-crowbar-01.mp3",
-      "bytes": 8231,
-      "hash": "sha256-6864624c6ba828ea57b48e4ef42dcfba4485772dd2bc6908ef76abb43ecf5876",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-weapons-melee-weapon-crowbar-01",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19057861,
-      "bundleBytes": 8231,
-      "bundleLength": 36151187
-    },
-    {
-      "path": "/audio/weapons/melee/weapon-crowbar-02.mp3",
-      "bytes": 7735,
-      "hash": "sha256-32451e631062797de5861b0a117d03f6bf0e2226da4563048ab8d38a729d3c12",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-weapons-melee-weapon-crowbar-02",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19066092,
-      "bundleBytes": 7735,
-      "bundleLength": 36151187
-    },
-    {
-      "path": "/audio/weapons/melee/weapon-hammer-01.mp3",
-      "bytes": 3195,
-      "hash": "sha256-a7617083b83fe4b039a7b2430b3f98e77adb5ac1dd03146b003405c23e742379",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-weapons-melee-weapon-hammer-01",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19086113,
-      "bundleBytes": 3195,
-      "bundleLength": 36151187
-    },
-    {
-      "path": "/audio/weapons/melee/weapon-hammer-02.mp3",
-      "bytes": 3143,
-      "hash": "sha256-30f14aabbf5cddb9ad32e9f34d87c86025fb6f86d1456ffffb717b54d3a58c5b",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-weapons-melee-weapon-hammer-02",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19089308,
-      "bundleBytes": 3143,
-      "bundleLength": 36151187
-    },
-    {
-      "path": "/audio/weapons/melee/weapon-unarmed-01.mp3",
-      "bytes": 2388,
-      "hash": "sha256-46c3435e3acddb2bce8342ea7e9afb6cafd17fd42c6a479c3910fda7b75c2d0f",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-weapons-melee-weapon-unarmed-01",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19113588,
-      "bundleBytes": 2388,
-      "bundleLength": 36151187
-    },
-    {
-      "path": "/audio/weapons/melee/weapon-unarmed-02.mp3",
-      "bytes": 4008,
-      "hash": "sha256-9867beaab172526ea4b79788f26da5f26180ae62069300d9eaa1cab02e34cd97",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-weapons-melee-weapon-unarmed-02",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19115976,
-      "bundleBytes": 4008,
-      "bundleLength": 36151187
-    },
-    {
-      "path": "/audio/weapons/recorded/v104-handgun.mp3",
-      "bytes": 5666,
-      "hash": "sha256-f8a06b9910bb19253354b533ce9ed1cf41988ca8226679a43e32d9e52cb4d541",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-weapons-recorded-v104-handgun",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19018678,
-      "bundleBytes": 5666,
-      "bundleLength": 36151187
-    },
-    {
-      "path": "/audio/weapons/recorded/weapon-gunner-01.mp3",
-      "bytes": 6234,
-      "hash": "sha256-f2d84bff20bf4010fe9a24849598dbaa113eeb6e58692a16ddeeb8fe6a0deaa2",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-weapons-recorded-weapon-gunner-01",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19073827,
-      "bundleBytes": 6234,
-      "bundleLength": 36151187
-    },
-    {
-      "path": "/audio/weapons/recorded/weapon-gunner-02.mp3",
-      "bytes": 6052,
-      "hash": "sha256-eee63b13a259c476640d589a50791bbfee0fd9234f320a39f2a1792f29813d53",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-weapons-recorded-weapon-gunner-02",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19080061,
-      "bundleBytes": 6052,
-      "bundleLength": 36151187
-    },
-    {
-      "path": "/audio/weapons/recorded/weapon-rifle-01.mp3",
-      "bytes": 6771,
-      "hash": "sha256-a16abba2aa984f94943f73c97714638611ce76960e78b06bbbf190b852eb24fd",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-weapons-recorded-weapon-rifle-01",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19100020,
-      "bundleBytes": 6771,
-      "bundleLength": 36151187
-    },
-    {
-      "path": "/audio/weapons/recorded/weapon-rifle-02.mp3",
-      "bytes": 6797,
-      "hash": "sha256-b62c3ffd7a9ddb76308ef945dfc6728c01bfdd9d1195feaf4eaf4401317f4c39",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "install-weapons-recorded-weapon-rifle-02",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 19106791,
-      "bundleBytes": 6797,
-      "bundleLength": 36151187
-    },
-    {
-      "path": "/audio/weapons/recorded/weapon-smg-01.mp3",
-      "bytes": 5354,
-      "hash": "sha256-8509f2b80e625cd37562829c280474be88dcbc0a13e93ec67f51176232b0e358",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "weapon-smg-01",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 7813307,
-      "bundleBytes": 5354,
-      "bundleLength": 36151187
-    },
-    {
-      "path": "/audio/weapons/recorded/weapon-smg-02.mp3",
-      "bytes": 5222,
-      "hash": "sha256-46aee2cd8c892d749fa617344b2a8537f586fc36416a2d5bff40f6e604c3befd",
-      "pack": "audio",
-      "category": "audio",
-      "criticality": "optional",
-      "audioChannel": "se",
-      "audioId": "weapon-smg-02",
-      "audioType": "audio/mpeg",
-      "bundlePath": "/pwa-bundles/audio-v1.bin",
-      "bundleOffset": 7818661,
-      "bundleBytes": 5222,
-      "bundleLength": 36151187
-    },
-    {
-      "path": "/art/quality-20261114/vfx/futago-attack-six-r1.webp",
-      "bytes": 298854,
-      "hash": "sha256-7c1d32dee46c574ef4f4f94a4907b823058306d115d7f385b480e2c70b1862e6",
-      "pack": "units",
-      "category": "boss",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/quality-20261114/vfx/gairen-attack-six-r1.webp",
-      "bytes": 402642,
-      "hash": "sha256-34d3ffdb384584651828e43842856d05208e2da08c455f80f07c1e14ecd42222",
-      "pack": "units",
-      "category": "boss",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/quality-20261114/vfx/mother-attack-six-r1.webp",
-      "bytes": 513616,
-      "hash": "sha256-eddc94285bc85fe207de17158386121c59c4e64aaa955a84a6f40993054a09ab",
-      "pack": "units",
-      "category": "boss",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/quality-20261114/vfx/mugarian-president-mutated-attack-six-r1.webp",
-      "bytes": 417756,
-      "hash": "sha256-f05265fe96e4c8b4aa3567398ae3213bf56fa636d6e98f7e5bec02ea815a6658",
-      "pack": "units",
-      "category": "boss",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/quality-20261114/vfx/ooguchi-attack-six-r1.webp",
-      "bytes": 309100,
-      "hash": "sha256-97918df7b487ca0a65be8929bc7621730941823d3f99b6096601f1bdcecaccba",
-      "pack": "units",
-      "category": "boss",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/quality-20261114/vfx/takuya-omega-attack-six-r2.webp",
-      "bytes": 429024,
-      "hash": "sha256-c86084b9339836f86cf857da8c95bd07107b755250c6e239ffbad9aae4f38437",
-      "pack": "units",
-      "category": "boss",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/quality-20261114/vfx/tatara-ground-six-r1.webp",
-      "bytes": 278284,
-      "hash": "sha256-39fff2d40df64ae92800f98312db40c35aeec72da208b719ac8da462ad5d1c32",
-      "pack": "units",
-      "category": "unit",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/quality-20261114/vfx/gate-eater-attack-six-r1.webp",
-      "bytes": 231712,
-      "hash": "sha256-44fd6c6d61a74862e1bdc04e1b68141bb63cc3b98cf2c91fd82d08fd2e1f29e9",
-      "pack": "units",
-      "category": "boss",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/quality-20261114/vfx/kurome-attack-six-r2.webp",
-      "bytes": 309028,
-      "hash": "sha256-c67f0b6951e74973201d5e96da1dc9d776527681f21b1911294c63e9589b6994",
-      "pack": "units",
-      "category": "boss",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/quality-20261114/vfx/takuya-attack-six-r1.webp",
-      "bytes": 320952,
-      "hash": "sha256-3ecacd831cb32e66992e505db9ecf2090e7f85a142286cca9d0becedb5f31bd1",
-      "pack": "units",
-      "category": "boss",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/quality-20261114/vfx/particle-materials-six-r1.webp",
-      "bytes": 80528,
-      "hash": "sha256-77a99e6eed2b3839efe5cc8850b4f3c0a6bf9e1edecaf1999c4bc76057365ce3",
-      "pack": "campaign-core",
-      "category": "object",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/quality-20261114/vfx/king-exhaust-six-r2.webp",
-      "bytes": 83570,
-      "hash": "sha256-dd9eb1093647176c6ddc8083435630ce2561376fdff0d27decf5ccb913a4b67c",
-      "pack": "units",
-      "category": "unit",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/quality-20261114/vfx/guard-pan-impact-six-r1.webp",
-      "bytes": 36388,
-      "hash": "sha256-942c1e16236d6cd4139d22d4767f855dbc986501587827b8be6c4a2434cbb0e1",
-      "pack": "units",
-      "category": "unit",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/quality-20261114/vfx/guard-shield-impact-six-r1.webp",
-      "bytes": 84908,
-      "hash": "sha256-f86c4ca4a23ba866663005b21f864bc299f30283600e5b5f20053ddfbca82952",
-      "pack": "units",
-      "category": "unit",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/quality-20261114/vfx/musashi-contact-six-r2.webp",
-      "bytes": 52570,
-      "hash": "sha256-9abf2cfb54113a376e7b78c96dcfdcb61e5cf3010469b43a8ab75ac10ee29aab",
-      "pack": "units",
-      "category": "unit",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/quality-20261115/vfx/ground-fire-bed-six-r1.webp",
-      "bytes": 141770,
-      "hash": "sha256-f6a331504bc2522e2fb1d8b3a14b58ce877dd44f6b825421e446014ef8e913a7",
-      "pack": "campaign-core",
-      "category": "object",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/quality-20261115/vfx/ballistic-materials-six-r1.webp",
-      "bytes": 56496,
-      "hash": "sha256-f4590e51f2f0a6ace26a38b6a542ed40682cdb4103335647a4f1e325f279b1a0",
-      "pack": "campaign-core",
-      "category": "object",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/quality-20261115/vfx/paisen-pressure-six-r3.webp",
-      "bytes": 160326,
-      "hash": "sha256-d7eafdde8dfe530a925830db2885b14b754a396703f458957b801c250bfa442f",
-      "pack": "units",
-      "category": "unit",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/quality-20261115/vfx/guardian-guard-six-r3.webp",
-      "bytes": 130190,
-      "hash": "sha256-07d6fbbbfa73715395b73e73133b26d42c7e6532b8f78522e6940a8bc9bfc627",
-      "pack": "units",
-      "category": "unit",
-      "criticality": "critical"
-    },
-    {
-      "path": "/art/quality-20261115/vfx/kumaverson-guard-six-r4.webp",
-      "bytes": 174274,
-      "hash": "sha256-7af68752f47eb961b819cd0ecb5e373671f324892b5203f1a4e232c72d5a54ce",
-      "pack": "units",
-      "category": "unit",
-      "criticality": "critical"
+      "bundleLength": 36185363
     },
     {
       "path": "/audio/quality-20261114/manual/brawler-pressure-preparation-r1.mp3",
@@ -2142,7 +1662,157 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 19012898,
       "bundleBytes": 5780,
-      "bundleLength": 36151187
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/quality-20261114/manual/brute-preparation-r1.mp3",
+      "bytes": 10580,
+      "hash": "sha256-9aaaa252aa28f761b297ecd3b108b3cf43674190012d981207d72c1422e09676",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-quality-20261114-manual-brute-preparation-r1",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 20125317,
+      "bundleBytes": 10580,
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/quality-20261114/manual/engineer-preparation-r1.mp3",
+      "bytes": 7220,
+      "hash": "sha256-15671925af7621dbeac6554b172999321e1ba097ef48fb087d634291a5d6b57d",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-quality-20261114-manual-engineer-preparation-r1",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 20184720,
+      "bundleBytes": 7220,
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/quality-20261114/manual/guardian-preparation-r1.mp3",
+      "bytes": 20660,
+      "hash": "sha256-b8f5af55fb5353e38869e3f4fe52ea5a6597649af405125aadb2d1ac861b9fea",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-quality-20261114-manual-guardian-preparation-r1",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 20164060,
+      "bundleBytes": 20660,
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/quality-20261114/manual/gunner-preparation-r1.mp3",
+      "bytes": 3380,
+      "hash": "sha256-7afabb3abc70694fd86e076de50b9fc423627b3b060eb743e337e8b638f6fa33",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-quality-20261114-manual-gunner-preparation-r1",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 20160680,
+      "bundleBytes": 3380,
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/quality-20261114/manual/kumaverson-preparation-r1.mp3",
+      "bytes": 7220,
+      "hash": "sha256-76a25f389994c099571792c70ad90c4666d3806e4a1ce5c0d3570a85dc429fa2",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-quality-20261114-manual-kumaverson-preparation-r1",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 20145280,
+      "bundleBytes": 7220,
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/quality-20261114/manual/medic-preparation-r1.mp3",
+      "bytes": 19700,
+      "hash": "sha256-19911c289406438cf037472bdfba5fba16bafc8bbedefc289e53be37afb61005",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-quality-20261114-manual-medic-preparation-r1",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 20105617,
+      "bundleBytes": 19700,
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/quality-20261114/manual/miyamoto-musashi-preparation-r1.mp3",
+      "bytes": 4340,
+      "hash": "sha256-061dc1d8031b1a87156254e9691d3e3bd670e96964acde86888710f09353799c",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-quality-20261114-manual-miyamoto-musashi-preparation-r1",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 20086357,
+      "bundleBytes": 4340,
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/quality-20261114/manual/mrs-chiha-preparation-r1.mp3",
+      "bytes": 12020,
+      "hash": "sha256-d3118b23420eb79316c23456c4bc7de1817fe36ee214079559d8d84dc7d6e223",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-quality-20261114-manual-mrs-chiha-preparation-r1",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 20074337,
+      "bundleBytes": 12020,
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/quality-20261114/manual/ranger-preparation-r1.mp3",
+      "bytes": 10100,
+      "hash": "sha256-5dcd6eb079ab388286cf8f43f357f6da3da142ba5371dbdd60a6dbf18a1ac33d",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-quality-20261114-manual-ranger-preparation-r1",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 20095517,
+      "bundleBytes": 10100,
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/quality-20261114/manual/scout-preparation-r1.mp3",
+      "bytes": 4820,
+      "hash": "sha256-6abf856837022310f9cdc1df8298fabad05b37f933f49998ac571d6f385ee344",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-quality-20261114-manual-scout-preparation-r1",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 20090697,
+      "bundleBytes": 4820,
+      "bundleLength": 36185363
     },
     {
       "path": "/audio/quality-20261114/manual/tky-energy-preparation-r1.mp3",
@@ -2157,7 +1827,22 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 20061837,
       "bundleBytes": 12500,
-      "bundleLength": 36151187
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/quality-20261114/manual/zakimiya-preparation-r1.mp3",
+      "bytes": 8180,
+      "hash": "sha256-6f995b23392d9f897ade216695c1ca49bc32433828795ed0838883f6895953c3",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-quality-20261114-manual-zakimiya-preparation-r1",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 20191940,
+      "bundleBytes": 8180,
+      "bundleLength": 36185363
     },
     {
       "path": "/audio/quality-20261116/boss-finales/futago-collapse-r1.mp3",
@@ -2172,7 +1857,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 35565655,
       "bundleBytes": 51380,
-      "bundleLength": 36151187
+      "bundleLength": 36185363
     },
     {
       "path": "/audio/quality-20261116/boss-finales/gairen-collapse-r1.mp3",
@@ -2187,7 +1872,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 35411515,
       "bundleBytes": 51380,
-      "bundleLength": 36151187
+      "bundleLength": 36185363
     },
     {
       "path": "/audio/quality-20261116/boss-finales/gate-eater-collapse-r1.mp3",
@@ -2202,7 +1887,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 35205995,
       "bundleBytes": 51380,
-      "bundleLength": 36151187
+      "bundleLength": 36185363
     },
     {
       "path": "/audio/quality-20261116/boss-finales/kurome-collapse-r1.mp3",
@@ -2217,7 +1902,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 35308755,
       "bundleBytes": 51380,
-      "bundleLength": 36151187
+      "bundleLength": 36185363
     },
     {
       "path": "/audio/quality-20261116/boss-finales/mother-collapse-r1.mp3",
@@ -2232,7 +1917,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 35257375,
       "bundleBytes": 51380,
-      "bundleLength": 36151187
+      "bundleLength": 36185363
     },
     {
       "path": "/audio/quality-20261116/boss-finales/mugarian-president-mutated-collapse-r1.mp3",
@@ -2247,7 +1932,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 35514275,
       "bundleBytes": 51380,
-      "bundleLength": 36151187
+      "bundleLength": 36185363
     },
     {
       "path": "/audio/quality-20261116/boss-finales/ooguchi-collapse-r1.mp3",
@@ -2262,7 +1947,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 35360135,
       "bundleBytes": 51380,
-      "bundleLength": 36151187
+      "bundleLength": 36185363
     },
     {
       "path": "/audio/quality-20261116/boss-finales/takuya-collapse-r1.mp3",
@@ -2277,7 +1962,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 35462895,
       "bundleBytes": 51380,
-      "bundleLength": 36151187
+      "bundleLength": 36185363
     },
     {
       "path": "/audio/quality-20261116/boss-finales/takuya-omega-collapse-r1.mp3",
@@ -2292,7 +1977,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 35617035,
       "bundleBytes": 51380,
-      "bundleLength": 36151187
+      "bundleLength": 36185363
     },
     {
       "path": "/audio/quality-20261116/boss-skills/futago-impact-r1.mp3",
@@ -2307,7 +1992,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 35890915,
       "bundleBytes": 16820,
-      "bundleLength": 36151187
+      "bundleLength": 36185363
     },
     {
       "path": "/audio/quality-20261116/boss-skills/futago-warning-r1.mp3",
@@ -2322,7 +2007,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 35872175,
       "bundleBytes": 18740,
-      "bundleLength": 36151187
+      "bundleLength": 36185363
     },
     {
       "path": "/audio/quality-20261116/boss-skills/gairen-impact-r1.mp3",
@@ -2337,7 +2022,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 35851035,
       "bundleBytes": 21140,
-      "bundleLength": 36151187
+      "bundleLength": 36185363
     },
     {
       "path": "/audio/quality-20261116/boss-skills/gairen-warning-r1.mp3",
@@ -2352,7 +2037,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 35832295,
       "bundleBytes": 18740,
-      "bundleLength": 36151187
+      "bundleLength": 36185363
     },
     {
       "path": "/audio/quality-20261116/boss-skills/gate-eater-impact-r1.mp3",
@@ -2367,7 +2052,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 35715995,
       "bundleBytes": 12500,
-      "bundleLength": 36151187
+      "bundleLength": 36185363
     },
     {
       "path": "/audio/quality-20261116/boss-skills/gate-eater-release-r1.mp3",
@@ -2382,7 +2067,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 35985095,
       "bundleBytes": 15380,
-      "bundleLength": 36151187
+      "bundleLength": 36185363
     },
     {
       "path": "/audio/quality-20261116/boss-skills/gate-eater-warning-r1.mp3",
@@ -2397,7 +2082,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 35700615,
       "bundleBytes": 15380,
-      "bundleLength": 36151187
+      "bundleLength": 36185363
     },
     {
       "path": "/audio/quality-20261116/boss-skills/kurome-impact-r1.mp3",
@@ -2412,7 +2097,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 35788075,
       "bundleBytes": 10580,
-      "bundleLength": 36151187
+      "bundleLength": 36185363
     },
     {
       "path": "/audio/quality-20261116/boss-skills/kurome-warning-r1.mp3",
@@ -2427,7 +2112,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 35766455,
       "bundleBytes": 21620,
-      "bundleLength": 36151187
+      "bundleLength": 36185363
     },
     {
       "path": "/audio/quality-20261116/boss-skills/mother-impact-r1.mp3",
@@ -2442,7 +2127,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 35746275,
       "bundleBytes": 20180,
-      "bundleLength": 36151187
+      "bundleLength": 36185363
     },
     {
       "path": "/audio/quality-20261116/boss-skills/mother-warning-r1.mp3",
@@ -2457,7 +2142,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 35728495,
       "bundleBytes": 17780,
-      "bundleLength": 36151187
+      "bundleLength": 36185363
     },
     {
       "path": "/audio/quality-20261116/boss-skills/mugarian-president-mutated-impact-r1.mp3",
@@ -2472,7 +2157,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 35924555,
       "bundleBytes": 17780,
-      "bundleLength": 36151187
+      "bundleLength": 36185363
     },
     {
       "path": "/audio/quality-20261116/boss-skills/mugarian-president-mutated-warning-r1.mp3",
@@ -2487,7 +2172,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 35907735,
       "bundleBytes": 16820,
-      "bundleLength": 36151187
+      "bundleLength": 36185363
     },
     {
       "path": "/audio/quality-20261116/boss-skills/ooguchi-impact-r1.mp3",
@@ -2502,7 +2187,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 35815475,
       "bundleBytes": 16820,
-      "bundleLength": 36151187
+      "bundleLength": 36185363
     },
     {
       "path": "/audio/quality-20261116/boss-skills/ooguchi-warning-r1.mp3",
@@ -2517,7 +2202,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 35798655,
       "bundleBytes": 16820,
-      "bundleLength": 36151187
+      "bundleLength": 36185363
     },
     {
       "path": "/audio/quality-20261116/boss-skills/takuya-impact-r1.mp3",
@@ -2532,7 +2217,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 35682835,
       "bundleBytes": 17780,
-      "bundleLength": 36151187
+      "bundleLength": 36185363
     },
     {
       "path": "/audio/quality-20261116/boss-skills/takuya-omega-impact-r1.mp3",
@@ -2547,7 +2232,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 35961555,
       "bundleBytes": 23540,
-      "bundleLength": 36151187
+      "bundleLength": 36185363
     },
     {
       "path": "/audio/quality-20261116/boss-skills/takuya-omega-warning-r1.mp3",
@@ -2562,7 +2247,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 35942335,
       "bundleBytes": 19220,
-      "bundleLength": 36151187
+      "bundleLength": 36185363
     },
     {
       "path": "/audio/quality-20261116/boss-skills/takuya-warning-r1.mp3",
@@ -2577,7 +2262,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 35668415,
       "bundleBytes": 14420,
-      "bundleLength": 36151187
+      "bundleLength": 36185363
     },
     {
       "path": "/audio/quality-20261116/mayo/recorded-bark.wav",
@@ -2592,7 +2277,7 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 36000475,
       "bundleBytes": 56098,
-      "bundleLength": 36151187
+      "bundleLength": 36185363
     },
     {
       "path": "/audio/quality-20261116/mayo/recorded-whine.wav",
@@ -2607,7 +2292,442 @@
       "bundlePath": "/pwa-bundles/audio-v1.bin",
       "bundleOffset": 36056573,
       "bundleBytes": 94614,
-      "bundleLength": 36151187
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/quality-20261117/firearms/v104-handgun.mp3",
+      "bytes": 4058,
+      "hash": "sha256-61751a01f3a59e9ef3b013a7715ff8a8601c1548d7b1fcf58e406d78e304940a",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-quality-20261117-firearms-v104-handgun",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 36151187,
+      "bundleBytes": 4058,
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/quality-20261117/firearms/weapon-gunner-01.mp3",
+      "bytes": 4265,
+      "hash": "sha256-0655e61befc823f1b4cce64dbf600cf0932e401c1821cd741462420536780095",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-quality-20261117-firearms-weapon-gunner-01",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 36155245,
+      "bundleBytes": 4265,
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/quality-20261117/firearms/weapon-gunner-02.mp3",
+      "bytes": 4265,
+      "hash": "sha256-788eea49785ed1a1dc03a46059c10def9e7d04c24c09a5d8e81dd53b0abe8a0a",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-quality-20261117-firearms-weapon-gunner-02",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 36159510,
+      "bundleBytes": 4265,
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/quality-20261117/firearms/weapon-rifle-01.mp3",
+      "bytes": 5099,
+      "hash": "sha256-918ce43593901c38c9d03c8d6025523e7ce34cb4d931a4548af8ec901ba1c35d",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-quality-20261117-firearms-weapon-rifle-01",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 36171734,
+      "bundleBytes": 5099,
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/quality-20261117/firearms/weapon-rifle-02.mp3",
+      "bytes": 5334,
+      "hash": "sha256-3abdae53baef7a41173257b66d55bf408d71cb37483a9dbea1712c1240bc1d45",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-quality-20261117-firearms-weapon-rifle-02",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 36176833,
+      "bundleBytes": 5334,
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/quality-20261117/firearms/weapon-smg-01.mp3",
+      "bytes": 4006,
+      "hash": "sha256-bbc95a98205621becefc1f97db36ebe9684df53ffedebe6ee82c5d6c6f217f05",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-quality-20261117-firearms-weapon-smg-01",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 36163775,
+      "bundleBytes": 4006,
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/quality-20261117/firearms/weapon-smg-02.mp3",
+      "bytes": 3953,
+      "hash": "sha256-17abffbb3aae224b8e7513b4bfee78ad20cf0029dce7a811d02674416040b62a",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-quality-20261117-firearms-weapon-smg-02",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 36167781,
+      "bundleBytes": 3953,
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/quality-20261117/firearms/weapon-suppressed-pistol.mp3",
+      "bytes": 3196,
+      "hash": "sha256-215238294f30eb0e3891c10cadfd91ac5b2e242bfe41c69eb836597d1f40c429",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-quality-20261117-firearms-weapon-suppressed-pistol",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 36182167,
+      "bundleBytes": 3196,
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/weapons/chainsaw/attack.mp3",
+      "bytes": 5864,
+      "hash": "sha256-ae441b8868f76dc2ff4f99c0944c77bd836ff12f7a596b4ec4f906101f90d638",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-chainsaw-attack",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19310036,
+      "bundleBytes": 5864,
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/weapons/chainsaw/flesh-hit.mp3",
+      "bytes": 4585,
+      "hash": "sha256-d83c7422bf77ddeb45313bd9a372df69ffce8de35a40198713da2fefdec82d92",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-chainsaw-flesh-hit",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19315900,
+      "bundleBytes": 4585,
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/weapons/chainsaw/hard-hit.mp3",
+      "bytes": 6099,
+      "hash": "sha256-5333370ba2a55767dea6174ac332c91dab013ad969778edde2fb0ef4fa0152b3",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-chainsaw-hard-hit",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19320485,
+      "bundleBytes": 6099,
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/weapons/chainsaw/idle-loop.wav",
+      "bytes": 176444,
+      "hash": "sha256-a7e7d42c5544e4e8c2272780aeaf85ac7fff47b8991c498af26b5fc42c041ac6",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-chainsaw-idle-loop",
+      "audioType": "audio/wav",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19133592,
+      "bundleBytes": 176444,
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/weapons/chainsaw/overdrive-activate.mp3",
+      "bytes": 9383,
+      "hash": "sha256-2193f0c40174818ebd28fab85c239995c3362f34e2ac61fb9281a906c17402f7",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-chainsaw-overdrive-activate",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 20135897,
+      "bundleBytes": 9383,
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/weapons/chainsaw/overdrive-active.mp3",
+      "bytes": 8394,
+      "hash": "sha256-edaa744e3f83f5ca4b5c33b23e9e9efa35157f0c0ec3fd67365252de5cacaf65",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-chainsaw-overdrive-active",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 20200120,
+      "bundleBytes": 8394,
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/weapons/chainsaw/start.mp3",
+      "bytes": 13608,
+      "hash": "sha256-afe9cb54838de7132f59b629b89cbffc8569d238e0a9a18cdf3fdcf32206ceeb",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-chainsaw-start",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19119984,
+      "bundleBytes": 13608,
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/weapons/chainsaw/stop.mp3",
+      "bytes": 9126,
+      "hash": "sha256-2152b7e20dbf1dd588c746648586af9d15f6e6ad25f5384928cbd717fd5062ea",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-chainsaw-stop",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19326584,
+      "bundleBytes": 9126,
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/weapons/melee/weapon-crowbar-01.mp3",
+      "bytes": 8231,
+      "hash": "sha256-6864624c6ba828ea57b48e4ef42dcfba4485772dd2bc6908ef76abb43ecf5876",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-melee-weapon-crowbar-01",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19057861,
+      "bundleBytes": 8231,
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/weapons/melee/weapon-crowbar-02.mp3",
+      "bytes": 7735,
+      "hash": "sha256-32451e631062797de5861b0a117d03f6bf0e2226da4563048ab8d38a729d3c12",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-melee-weapon-crowbar-02",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19066092,
+      "bundleBytes": 7735,
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/weapons/melee/weapon-hammer-01.mp3",
+      "bytes": 3195,
+      "hash": "sha256-a7617083b83fe4b039a7b2430b3f98e77adb5ac1dd03146b003405c23e742379",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-melee-weapon-hammer-01",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19086113,
+      "bundleBytes": 3195,
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/weapons/melee/weapon-hammer-02.mp3",
+      "bytes": 3143,
+      "hash": "sha256-30f14aabbf5cddb9ad32e9f34d87c86025fb6f86d1456ffffb717b54d3a58c5b",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-melee-weapon-hammer-02",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19089308,
+      "bundleBytes": 3143,
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/weapons/melee/weapon-unarmed-01.mp3",
+      "bytes": 2388,
+      "hash": "sha256-46c3435e3acddb2bce8342ea7e9afb6cafd17fd42c6a479c3910fda7b75c2d0f",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-melee-weapon-unarmed-01",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19113588,
+      "bundleBytes": 2388,
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/weapons/melee/weapon-unarmed-02.mp3",
+      "bytes": 4008,
+      "hash": "sha256-9867beaab172526ea4b79788f26da5f26180ae62069300d9eaa1cab02e34cd97",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-melee-weapon-unarmed-02",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19115976,
+      "bundleBytes": 4008,
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/weapons/recorded/v104-handgun.mp3",
+      "bytes": 5666,
+      "hash": "sha256-f8a06b9910bb19253354b533ce9ed1cf41988ca8226679a43e32d9e52cb4d541",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-recorded-v104-handgun",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19018678,
+      "bundleBytes": 5666,
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/weapons/recorded/weapon-gunner-01.mp3",
+      "bytes": 6234,
+      "hash": "sha256-f2d84bff20bf4010fe9a24849598dbaa113eeb6e58692a16ddeeb8fe6a0deaa2",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-recorded-weapon-gunner-01",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19073827,
+      "bundleBytes": 6234,
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/weapons/recorded/weapon-gunner-02.mp3",
+      "bytes": 6052,
+      "hash": "sha256-eee63b13a259c476640d589a50791bbfee0fd9234f320a39f2a1792f29813d53",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-recorded-weapon-gunner-02",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19080061,
+      "bundleBytes": 6052,
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/weapons/recorded/weapon-rifle-01.mp3",
+      "bytes": 6771,
+      "hash": "sha256-a16abba2aa984f94943f73c97714638611ce76960e78b06bbbf190b852eb24fd",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-recorded-weapon-rifle-01",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19100020,
+      "bundleBytes": 6771,
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/weapons/recorded/weapon-rifle-02.mp3",
+      "bytes": 6797,
+      "hash": "sha256-b62c3ffd7a9ddb76308ef945dfc6728c01bfdd9d1195feaf4eaf4401317f4c39",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "install-weapons-recorded-weapon-rifle-02",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 19106791,
+      "bundleBytes": 6797,
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/weapons/recorded/weapon-smg-01.mp3",
+      "bytes": 5354,
+      "hash": "sha256-8509f2b80e625cd37562829c280474be88dcbc0a13e93ec67f51176232b0e358",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "weapon-smg-01",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 7813307,
+      "bundleBytes": 5354,
+      "bundleLength": 36185363
+    },
+    {
+      "path": "/audio/weapons/recorded/weapon-smg-02.mp3",
+      "bytes": 5222,
+      "hash": "sha256-46aee2cd8c892d749fa617344b2a8537f586fc36416a2d5bff40f6e604c3befd",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "weapon-smg-02",
+      "audioType": "audio/mpeg",
+      "bundlePath": "/pwa-bundles/audio-v1.bin",
+      "bundleOffset": 7818661,
+      "bundleBytes": 5222,
+      "bundleLength": 36185363
     }
   ],
   "retired": [
@@ -4149,7 +4269,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 3567623,
         "bundleBytes": 925037,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -4182,7 +4302,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 4492660,
         "bundleBytes": 617862,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -4215,7 +4335,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 5110522,
         "bundleBytes": 941189,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -4248,7 +4368,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 6051711,
         "bundleBytes": 968316,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -4281,7 +4401,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7116751,
         "bundleBytes": 317185,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -4314,7 +4434,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 1236298,
         "bundleBytes": 1129998,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -4347,7 +4467,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 2366296,
         "bundleBytes": 1201327,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -4380,7 +4500,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 120806,
         "bundleBytes": 1115492,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -4413,7 +4533,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7020027,
         "bundleBytes": 96724,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -4446,7 +4566,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7737797,
         "bundleBytes": 28647,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -4479,7 +4599,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7732678,
         "bundleBytes": 5119,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -4512,7 +4632,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8254450,
         "bundleBytes": 4319,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -4545,7 +4665,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8258769,
         "bundleBytes": 7952,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -4578,7 +4698,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8279208,
         "bundleBytes": 10698,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -4611,7 +4731,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8289906,
         "bundleBytes": 5905,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -4644,7 +4764,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8266721,
         "bundleBytes": 6499,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -4677,7 +4797,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8273220,
         "bundleBytes": 5988,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -4710,7 +4830,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8172879,
         "bundleBytes": 4790,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -4743,7 +4863,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8177669,
         "bundleBytes": 6902,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -4776,7 +4896,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8198298,
         "bundleBytes": 4006,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -4809,7 +4929,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8202304,
         "bundleBytes": 9415,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -4842,7 +4962,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8184571,
         "bundleBytes": 6668,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -4875,7 +4995,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8191239,
         "bundleBytes": 7059,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -4908,7 +5028,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8103270,
         "bundleBytes": 6901,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -4941,7 +5061,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8110171,
         "bundleBytes": 5416,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -4974,7 +5094,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8125141,
         "bundleBytes": 8600,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -5007,7 +5127,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8133741,
         "bundleBytes": 10265,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -5040,7 +5160,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8115587,
         "bundleBytes": 4294,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -5073,7 +5193,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8119881,
         "bundleBytes": 5260,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -5106,7 +5226,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8211719,
         "bundleBytes": 5756,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -5139,7 +5259,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8217475,
         "bundleBytes": 5675,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -5172,7 +5292,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8242371,
         "bundleBytes": 5753,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -5205,7 +5325,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8248124,
         "bundleBytes": 6326,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -5238,7 +5358,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8223150,
         "bundleBytes": 9505,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -5271,7 +5391,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8232655,
         "bundleBytes": 9716,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -5304,7 +5424,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8144006,
         "bundleBytes": 5598,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -5337,7 +5457,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8149604,
         "bundleBytes": 6928,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -5370,7 +5490,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8163165,
         "bundleBytes": 5679,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -5403,7 +5523,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8168844,
         "bundleBytes": 4035,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -5436,7 +5556,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8156532,
         "bundleBytes": 2756,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -5469,7 +5589,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8159288,
         "bundleBytes": 3877,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -5502,7 +5622,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8375714,
         "bundleBytes": 9268,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -5535,7 +5655,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8384982,
         "bundleBytes": 10070,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -5568,7 +5688,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8410428,
         "bundleBytes": 9707,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -5601,7 +5721,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8420135,
         "bundleBytes": 9392,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -5634,7 +5754,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8395052,
         "bundleBytes": 7572,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -5667,7 +5787,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8402624,
         "bundleBytes": 7804,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -5700,7 +5820,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8295811,
         "bundleBytes": 6459,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -5733,7 +5853,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8302270,
         "bundleBytes": 12561,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -5766,7 +5886,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8338891,
         "bundleBytes": 16652,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -5799,7 +5919,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8355543,
         "bundleBytes": 20171,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -5832,7 +5952,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8314831,
         "bundleBytes": 9095,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -5865,7 +5985,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8323926,
         "bundleBytes": 14965,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -5898,7 +6018,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8066690,
         "bundleBytes": 4346,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -5931,7 +6051,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8071036,
         "bundleBytes": 4424,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -5964,7 +6084,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8091083,
         "bundleBytes": 8023,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -5997,7 +6117,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8099106,
         "bundleBytes": 4164,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -6030,7 +6150,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8075460,
         "bundleBytes": 6351,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -6063,7 +6183,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8081811,
         "bundleBytes": 9272,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -6096,7 +6216,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7866339,
         "bundleBytes": 3669,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -6129,7 +6249,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7870008,
         "bundleBytes": 4192,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -6162,7 +6282,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7883467,
         "bundleBytes": 17690,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -6195,7 +6315,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7901157,
         "bundleBytes": 7114,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -6228,7 +6348,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7874200,
         "bundleBytes": 4973,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -6261,7 +6381,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7879173,
         "bundleBytes": 4294,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -6294,7 +6414,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7908271,
         "bundleBytes": 6018,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -6327,7 +6447,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7914289,
         "bundleBytes": 3747,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -6360,7 +6480,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7938575,
         "bundleBytes": 45354,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -6393,7 +6513,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7983929,
         "bundleBytes": 33956,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -6426,7 +6546,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7918036,
         "bundleBytes": 9930,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -6459,7 +6579,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7927966,
         "bundleBytes": 10609,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -6492,7 +6612,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8017885,
         "bundleBytes": 8207,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -6525,7 +6645,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8026092,
         "bundleBytes": 8836,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -6558,7 +6678,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8049545,
         "bundleBytes": 10137,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -6591,7 +6711,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8059682,
         "bundleBytes": 7008,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -6624,7 +6744,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8034928,
         "bundleBytes": 7297,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -6657,7 +6777,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8042225,
         "bundleBytes": 7320,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -6690,7 +6810,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7722653,
         "bundleBytes": 3956,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -6723,7 +6843,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7726609,
         "bundleBytes": 6069,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -6756,7 +6876,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7514604,
         "bundleBytes": 4506,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -6789,7 +6909,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7454553,
         "bundleBytes": 60051,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -6822,7 +6942,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7519110,
         "bundleBytes": 44534,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -6855,7 +6975,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7563644,
         "bundleBytes": 39180,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -6888,7 +7008,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7602824,
         "bundleBytes": 6765,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -6921,7 +7041,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7609589,
         "bundleBytes": 3479,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -6954,7 +7074,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7613068,
         "bundleBytes": 23326,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -6987,7 +7107,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7636394,
         "bundleBytes": 68772,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -7020,7 +7140,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7705166,
         "bundleBytes": 17487,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -7053,7 +7173,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7433936,
         "bundleBytes": 1922,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -7086,7 +7206,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7435858,
         "bundleBytes": 3897,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -7119,7 +7239,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7439755,
         "bundleBytes": 4714,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -7152,7 +7272,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7444469,
         "bundleBytes": 6677,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -7185,7 +7305,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7451146,
         "bundleBytes": 3407,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -7218,7 +7338,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8596041,
         "bundleBytes": 4432,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -7251,7 +7371,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8605532,
         "bundleBytes": 10702,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -7284,7 +7404,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8590042,
         "bundleBytes": 5999,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -7317,7 +7437,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8600473,
         "bundleBytes": 5059,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -7350,7 +7470,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8543657,
         "bundleBytes": 4432,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -7383,7 +7503,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8553148,
         "bundleBytes": 10702,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -7416,7 +7536,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8537658,
         "bundleBytes": 5999,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -7449,7 +7569,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8548089,
         "bundleBytes": 5059,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -7482,7 +7602,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8569849,
         "bundleBytes": 4432,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -7515,7 +7635,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8579340,
         "bundleBytes": 10702,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -7548,7 +7668,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8563850,
         "bundleBytes": 5999,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -7581,7 +7701,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8574281,
         "bundleBytes": 5059,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -7614,7 +7734,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7766444,
         "bundleBytes": 12605,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -7647,7 +7767,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7779049,
         "bundleBytes": 8230,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -7680,7 +7800,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8453438,
         "bundleBytes": 6313,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -7713,7 +7833,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8459751,
         "bundleBytes": 5059,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -7746,7 +7866,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8464810,
         "bundleBytes": 6626,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -7779,7 +7899,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8443050,
         "bundleBytes": 10388,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -7812,7 +7932,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8429527,
         "bundleBytes": 13523,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -7845,7 +7965,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8471436,
         "bundleBytes": 10075,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -7878,7 +7998,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7787279,
         "bundleBytes": 3409,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -7911,7 +8031,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7790688,
         "bundleBytes": 2934,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -7944,7 +8064,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7793622,
         "bundleBytes": 9895,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -7977,7 +8097,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7803517,
         "bundleBytes": 9790,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -8010,7 +8130,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7823883,
         "bundleBytes": 2313,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -8043,7 +8163,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7826196,
         "bundleBytes": 1841,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -8076,7 +8196,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7828037,
         "bundleBytes": 2179,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -8109,7 +8229,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7830216,
         "bundleBytes": 1997,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -8142,7 +8262,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7832213,
         "bundleBytes": 2339,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -8175,7 +8295,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7834552,
         "bundleBytes": 2184,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -8208,7 +8328,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8493510,
         "bundleBytes": 9448,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -8241,7 +8361,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8485630,
         "bundleBytes": 7880,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -8274,7 +8394,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8502958,
         "bundleBytes": 11015,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -8307,7 +8427,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8481511,
         "bundleBytes": 4119,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -8340,7 +8460,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7836736,
         "bundleBytes": 11276,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -8373,7 +8493,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7848012,
         "bundleBytes": 11222,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -8406,7 +8526,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8529151,
         "bundleBytes": 8507,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -8439,7 +8559,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8517152,
         "bundleBytes": 3805,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -8472,7 +8592,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8513973,
         "bundleBytes": 3179,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -8505,7 +8625,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8520957,
         "bundleBytes": 8194,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -8538,7 +8658,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7859234,
         "bundleBytes": 3618,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -8571,7 +8691,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 7862852,
         "bundleBytes": 3487,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -8604,7 +8724,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 10703379,
         "bundleBytes": 112660,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -8637,7 +8757,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 10928699,
         "bundleBytes": 112660,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -8670,7 +8790,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 10816039,
         "bundleBytes": 112660,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -8703,7 +8823,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 10140079,
         "bundleBytes": 112660,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -8736,7 +8856,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 10027419,
         "bundleBytes": 112660,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -8769,7 +8889,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 10478059,
         "bundleBytes": 112660,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -8802,7 +8922,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 11041359,
         "bundleBytes": 84500,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -8835,7 +8955,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 10252739,
         "bundleBytes": 112660,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -8868,7 +8988,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 10365399,
         "bundleBytes": 112660,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -8901,7 +9021,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 10590719,
         "bundleBytes": 112660,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -8934,7 +9054,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 11125859,
         "bundleBytes": 112660,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -8967,7 +9087,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 11238519,
         "bundleBytes": 112660,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -9000,7 +9120,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 11463839,
         "bundleBytes": 84500,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -9033,7 +9153,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 11351179,
         "bundleBytes": 112660,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -9066,7 +9186,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 9066874,
         "bundleBytes": 112660,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -9099,7 +9219,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 9292194,
         "bundleBytes": 112660,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -9132,7 +9252,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8728894,
         "bundleBytes": 112660,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -9165,7 +9285,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 9179534,
         "bundleBytes": 112660,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -9198,7 +9318,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 9914759,
         "bundleBytes": 112660,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -9231,7 +9351,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8616234,
         "bundleBytes": 112660,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -9264,7 +9384,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 9742834,
         "bundleBytes": 59265,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -9297,7 +9417,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 9802099,
         "bundleBytes": 112660,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -9330,7 +9450,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8841554,
         "bundleBytes": 112660,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -9363,7 +9483,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 8954214,
         "bundleBytes": 112660,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -9396,7 +9516,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 9404854,
         "bundleBytes": 112660,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -9429,7 +9549,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 9517514,
         "bundleBytes": 112660,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -9462,7 +9582,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 9630174,
         "bundleBytes": 112660,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -9495,7 +9615,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 11627027,
         "bundleBytes": 16111,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -9528,7 +9648,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 11667661,
         "bundleBytes": 20865,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -9561,7 +9681,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 11614573,
         "bundleBytes": 12454,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -9594,7 +9714,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 11688526,
         "bundleBytes": 13917,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -9627,7 +9747,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 11702443,
         "bundleBytes": 10625,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -9660,7 +9780,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 11643138,
         "bundleBytes": 24523,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -9693,7 +9813,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 11596633,
         "bundleBytes": 17940,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -9726,7 +9846,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 11548339,
         "bundleBytes": 48294,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -9759,7 +9879,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 11713068,
         "bundleBytes": 7700,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -9792,7 +9912,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 11833453,
         "bundleBytes": 5060,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -9825,7 +9945,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 11838513,
         "bundleBytes": 5060,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -9858,7 +9978,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 12108319,
         "bundleBytes": 37088,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -9891,7 +10011,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 12081815,
         "bundleBytes": 26504,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -9924,7 +10044,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 12055311,
         "bundleBytes": 26504,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -9957,7 +10077,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 11979828,
         "bundleBytes": 17684,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -9990,7 +10110,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 12007317,
         "bundleBytes": 6313,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -10023,7 +10143,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 12001944,
         "bundleBytes": 5373,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -10056,7 +10176,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 11971948,
         "bundleBytes": 7880,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -10089,7 +10209,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 11997512,
         "bundleBytes": 4432,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -10122,7 +10242,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 12022494,
         "bundleBytes": 6313,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -10155,7 +10275,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 12018062,
         "bundleBytes": 4432,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -10188,7 +10308,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 11848005,
         "bundleBytes": 7880,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -10221,7 +10341,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 11862198,
         "bundleBytes": 5373,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -10254,7 +10374,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 11855885,
         "bundleBytes": 6313,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -10287,7 +10407,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 12982203,
         "bundleBytes": 63548,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -10320,7 +10440,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 12925711,
         "bundleBytes": 56492,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -10353,7 +10473,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 12849815,
         "bundleBytes": 75896,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -10386,7 +10506,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 12653879,
         "bundleBytes": 75896,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -10419,7 +10539,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 12786267,
         "bundleBytes": 63548,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -10452,7 +10572,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 12729775,
         "bundleBytes": 56492,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -10485,7 +10605,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 12394395,
         "bundleBytes": 63548,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -10518,7 +10638,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 12337903,
         "bundleBytes": 56492,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -10551,7 +10671,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 12262007,
         "bundleBytes": 75896,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -10584,7 +10704,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 12590331,
         "bundleBytes": 63548,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -10617,7 +10737,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 12533839,
         "bundleBytes": 56492,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -10650,7 +10770,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 12457943,
         "bundleBytes": 75896,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -10683,7 +10803,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 12171911,
         "bundleBytes": 26504,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -10716,7 +10836,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 12145407,
         "bundleBytes": 26504,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -10749,7 +10869,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 12198415,
         "bundleBytes": 26504,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -10782,7 +10902,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 12224919,
         "bundleBytes": 37088,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -10815,7 +10935,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 12028807,
         "bundleBytes": 26504,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -10848,7 +10968,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 11920704,
         "bundleBytes": 30032,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -10881,7 +11001,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 11872003,
         "bundleBytes": 5373,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -10914,7 +11034,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 11867571,
         "bundleBytes": 4432,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -10947,7 +11067,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 11903020,
         "bundleBytes": 17684,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -10980,7 +11100,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 11877376,
         "bundleBytes": 4432,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -11013,7 +11133,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 11881808,
         "bundleBytes": 21212,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -11046,7 +11166,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 11950736,
         "bundleBytes": 21212,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -11079,7 +11199,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 12013630,
         "bundleBytes": 4432,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -11112,7 +11232,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 11843573,
         "bundleBytes": 4432,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -11145,7 +11265,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 11720768,
         "bundleBytes": 112685,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -11178,7 +11298,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 17227043,
         "bundleBytes": 1413269,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -11211,7 +11331,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 13045751,
         "bundleBytes": 1355277,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -11244,7 +11364,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 15807505,
         "bundleBytes": 1419538,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -11277,7 +11397,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 14401028,
         "bundleBytes": 1406477,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -11310,7 +11430,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 18745942,
         "bundleBytes": 13836,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -11343,7 +11463,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 18904958,
         "bundleBytes": 10911,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -11376,7 +11496,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 18899063,
         "bundleBytes": 5895,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -11409,7 +11529,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 18640312,
         "bundleBytes": 14254,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -11442,7 +11562,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 18823064,
         "bundleBytes": 8403,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -11475,7 +11595,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 18695656,
         "bundleBytes": 15926,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -11508,7 +11628,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 18865078,
         "bundleBytes": 11328,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -11541,7 +11661,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 18711582,
         "bundleBytes": 18434,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -11574,7 +11694,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 18876406,
         "bundleBytes": 10493,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -11607,7 +11727,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 18792466,
         "bundleBytes": 14672,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -11640,7 +11760,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 18941077,
         "bundleBytes": 7985,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -11673,7 +11793,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 18774868,
         "bundleBytes": 17598,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -11706,7 +11826,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 18927659,
         "bundleBytes": 13418,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -11739,7 +11859,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 18759778,
         "bundleBytes": 15090,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -11772,7 +11892,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 18920928,
         "bundleBytes": 6731,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -11805,7 +11925,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 18915869,
         "bundleBytes": 5059,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -11838,7 +11958,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 18730016,
         "bundleBytes": 15926,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -11871,7 +11991,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 18886899,
         "bundleBytes": 12164,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -11904,7 +12024,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 18679312,
         "bundleBytes": 16344,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -11937,7 +12057,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 18852496,
         "bundleBytes": 12582,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -11970,7 +12090,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 18982212,
         "bundleBytes": 10075,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -12003,7 +12123,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 18666312,
         "bundleBytes": 13000,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -12036,7 +12156,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 18844929,
         "bundleBytes": 7567,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -12069,7 +12189,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 18838616,
         "bundleBytes": 6313,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -12102,7 +12222,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 18992287,
         "bundleBytes": 5895,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -12135,7 +12255,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 18998182,
         "bundleBytes": 6731,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -12168,7 +12288,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 19004913,
         "bundleBytes": 7985,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -12201,7 +12321,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 18654566,
         "bundleBytes": 11746,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -12234,7 +12354,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 18831467,
         "bundleBytes": 7149,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -12267,7 +12387,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 18807138,
         "bundleBytes": 15926,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -12300,7 +12420,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 18967958,
         "bundleBytes": 14254,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -12333,7 +12453,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 18957883,
         "bundleBytes": 10075,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -12366,7 +12486,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 18949062,
         "bundleBytes": 8821,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -12399,7 +12519,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 19416855,
         "bundleBytes": 166098,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -12432,7 +12552,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 19731100,
         "bundleBytes": 149782,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -12465,7 +12585,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 19880882,
         "bundleBytes": 180955,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -12498,7 +12618,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 19582953,
         "bundleBytes": 148147,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -12531,7 +12651,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 19092451,
         "bundleBytes": 2466,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -12564,7 +12684,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 19024344,
         "bundleBytes": 24929,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -12597,7 +12717,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 106568,
         "bundleBytes": 2336,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -12630,7 +12750,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 19053906,
         "bundleBytes": 3955,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -12663,7 +12783,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 19356783,
         "bundleBytes": 2493,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -12696,7 +12816,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 20208514,
         "bundleBytes": 7264,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -12729,7 +12849,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 20226144,
         "bundleBytes": 7732,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -12762,7 +12882,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 20215778,
         "bundleBytes": 10366,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -12795,7 +12915,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 20239657,
         "bundleBytes": 4890,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -12828,7 +12948,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 20257280,
         "bundleBytes": 1634,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -12861,7 +12981,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 93050,
         "bundleBytes": 2859,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -12894,7 +13014,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 20253482,
         "bundleBytes": 3798,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -12927,7 +13047,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 20244547,
         "bundleBytes": 8935,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -12960,7 +13080,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 20233876,
         "bundleBytes": 5781,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -12993,7 +13113,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 19094917,
         "bundleBytes": 5103,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -13026,7 +13146,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 19049273,
         "bundleBytes": 4633,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -13059,7 +13179,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 34238137,
         "bundleBytes": 16338,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -13092,7 +13212,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 34588454,
         "bundleBytes": 227306,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -13125,7 +13245,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 34152157,
         "bundleBytes": 6586,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -13158,7 +13278,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 34311295,
         "bundleBytes": 14161,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -13191,7 +13311,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 34101041,
         "bundleBytes": 10152,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -13224,7 +13344,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 34343283,
         "bundleBytes": 10834,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -13257,7 +13377,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 34164955,
         "bundleBytes": 20107,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -13290,7 +13410,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 34061194,
         "bundleBytes": 11230,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -13323,7 +13443,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 34229134,
         "bundleBytes": 9003,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -13356,7 +13476,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 34301331,
         "bundleBytes": 9964,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -13389,7 +13509,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 34254475,
         "bundleBytes": 31551,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -13422,7 +13542,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 34072424,
         "bundleBytes": 28617,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -13455,7 +13575,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 34354117,
         "bundleBytes": 26476,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -13488,7 +13608,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 34380593,
         "bundleBytes": 19326,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -13521,7 +13641,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 34158743,
         "bundleBytes": 6212,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -13554,7 +13674,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 34993124,
         "bundleBytes": 212871,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -13587,7 +13707,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 34415191,
         "bundleBytes": 173263,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -13620,7 +13740,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 34185062,
         "bundleBytes": 25745,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -13653,7 +13773,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 34399919,
         "bundleBytes": 15272,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -13686,7 +13806,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 34210807,
         "bundleBytes": 18327,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -13719,7 +13839,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 34333163,
         "bundleBytes": 10120,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -13752,7 +13872,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 34136700,
         "bundleBytes": 15457,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -13785,7 +13905,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 34111193,
         "bundleBytes": 25507,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -13818,7 +13938,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 34286026,
         "bundleBytes": 15305,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -13851,7 +13971,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 34815760,
         "bundleBytes": 177364,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -13884,7 +14004,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 34325456,
         "bundleBytes": 7707,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -13917,7 +14037,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 24454100,
         "bundleBytes": 1536879,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -13950,7 +14070,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 32524315,
         "bundleBytes": 1536879,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -13983,7 +14103,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 28553155,
         "bundleBytes": 1536879,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -14016,7 +14136,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 31371122,
         "bundleBytes": 1153193,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -14049,7 +14169,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 21636133,
         "bundleBytes": 1536879,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -14082,7 +14202,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 20258914,
         "bundleBytes": 1377219,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -14115,7 +14235,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 25990979,
         "bundleBytes": 1281088,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -14148,7 +14268,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 23173012,
         "bundleBytes": 1281088,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -14181,7 +14301,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 30090034,
         "bundleBytes": 1281088,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -14214,7 +14334,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 27272067,
         "bundleBytes": 1281088,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -14247,7 +14367,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 108904,
         "bundleBytes": 3044,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -14280,7 +14400,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 113478,
         "bundleBytes": 2704,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -14313,7 +14433,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 116182,
         "bundleBytes": 2939,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -14346,7 +14466,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 111948,
         "bundleBytes": 1530,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -14379,7 +14499,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 119121,
         "bundleBytes": 1685,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -14412,7 +14532,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 17685,
         "bundleBytes": 2414,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -14445,7 +14565,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 23343,
         "bundleBytes": 3198,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -14478,7 +14598,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 101728,
         "bundleBytes": 4840,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -14511,7 +14631,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 95909,
         "bundleBytes": 5819,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -14544,7 +14664,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 20099,
         "bundleBytes": 3244,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -14577,7 +14697,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 19343340,
         "bundleBytes": 8565,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -14610,7 +14730,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 19335710,
         "bundleBytes": 7630,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -14643,7 +14763,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 19407574,
         "bundleBytes": 2885,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -14676,7 +14796,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 19412823,
         "bundleBytes": 4032,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -14709,7 +14829,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 19402342,
         "bundleBytes": 5232,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -14742,7 +14862,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 19410459,
         "bundleBytes": 2364,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -14775,7 +14895,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 19364743,
         "bundleBytes": 6196,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -14808,7 +14928,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 19374736,
         "bundleBytes": 4501,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -14841,7 +14961,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 19359276,
         "bundleBytes": 5467,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -14874,7 +14994,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 19370939,
         "bundleBytes": 3797,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -14907,7 +15027,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 19395785,
         "bundleBytes": 6557,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -14940,7 +15060,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 19379237,
         "bundleBytes": 8645,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -14973,7 +15093,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 19391103,
         "bundleBytes": 4682,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -15006,7 +15126,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 72853,
         "bundleBytes": 8385,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -15039,7 +15159,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 85347,
         "bundleBytes": 7703,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -15072,7 +15192,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 81238,
         "bundleBytes": 4109,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -15105,7 +15225,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 26541,
         "bundleBytes": 6484,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -15138,7 +15258,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 36742,
         "bundleBytes": 5931,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -15171,7 +15291,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 33025,
         "bundleBytes": 3717,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -15204,7 +15324,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 42673,
         "bundleBytes": 6667,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -15237,7 +15357,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 53971,
         "bundleBytes": 5021,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -15270,7 +15390,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 49340,
         "bundleBytes": 4631,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -15303,7 +15423,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 58992,
         "bundleBytes": 4994,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -15336,7 +15456,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 67312,
         "bundleBytes": 5541,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -15369,7 +15489,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 63986,
         "bundleBytes": 3326,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -15402,7 +15522,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 0,
         "bundleBytes": 5059,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -15435,7 +15555,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 10954,
         "bundleBytes": 6731,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     },
     {
@@ -15468,7 +15588,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 5059,
         "bundleBytes": 5895,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     }
   ],
@@ -15602,6 +15722,23 @@
       ],
       "logicalBytes": 332060,
       "source": "assets/source/quality-20261116/audio/boss-skills-r1/provenance.json"
+    },
+    {
+      "source": "fc59797433aa722ad39cb598f8907557ab346ebd",
+      "scope": "Technical transport declaration for eight gun candidates; not listening/likeness/release approval.",
+      "addedPaths": [
+        "/audio/quality-20261117/firearms/v104-handgun.mp3",
+        "/audio/quality-20261117/firearms/weapon-rifle-01.mp3",
+        "/audio/quality-20261117/firearms/weapon-rifle-02.mp3",
+        "/audio/quality-20261117/firearms/weapon-gunner-01.mp3",
+        "/audio/quality-20261117/firearms/weapon-gunner-02.mp3",
+        "/audio/quality-20261117/firearms/weapon-smg-01.mp3",
+        "/audio/quality-20261117/firearms/weapon-smg-02.mp3",
+        "/audio/quality-20261117/firearms/weapon-suppressed-pistol.mp3"
+      ],
+      "runtimeBytes": 34176,
+      "retainedAudioPrefixBytes": 36151187,
+      "retainedAudioPrefixSha256": "701142bdb09c8e409ad63c30bd4c29397df90dc9ed0ad92b36a1cce9fbe3130b"
     }
   ],
   "contentReplacements": [
@@ -15635,7 +15772,7 @@
         "bundlePath": "/pwa-bundles/audio-v1.bin",
         "bundleOffset": 19387882,
         "bundleBytes": 3221,
-        "bundleLength": 36151187
+        "bundleLength": 36185363
       }
     }
   ]
