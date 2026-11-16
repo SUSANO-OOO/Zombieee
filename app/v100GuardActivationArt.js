@@ -2,8 +2,8 @@
 export const V100_GUARD_ACTIVATION_ART=Object.freeze({
   "kumaverson": {
     "id": "v100-kumaverson-guard-activation",
-    "path": "/art/quality-20261115/vfx/kumaverson-guard-six-r4.webp",
-    "hash": "sha256-7af68752f47eb961b819cd0ecb5e373671f324892b5203f1a4e232c72d5a54ce",
+    "path": "/art/quality-20261117/vfx/kumaverson-guard-six-r5.webp",
+    "hash": "sha256-dcb34b4860f60b6c214a14a306e608228df8eac4be51d0430eb3f20f03cea071",
     "width": 768,
     "height": 512,
     "columns": 3,
@@ -11,36 +11,36 @@ export const V100_GUARD_ACTIVATION_ART=Object.freeze({
     "anchors": [
       [
         0.5,
-        0.8603515625
+        0.8153076171875
       ],
       [
         0.5,
-        0.8603515625
+        0.8153076171875
       ],
       [
         0.5,
-        0.8603515625
+        0.8153076171875
       ],
       [
         0.5,
-        0.8603515625
+        0.8238525390625
       ],
       [
         0.5,
-        0.8603515625
+        0.8170166015625
       ],
       [
         0.5,
-        0.8603515625
+        0.8289794921875
       ]
     ],
-    "worldWidth": 192,
-    "worldHeight": 94
+    "worldWidth": 304,
+    "worldHeight": 160
   },
   "guardian": {
     "id": "v100-guardian-guard-activation",
-    "path": "/art/quality-20261115/vfx/guardian-guard-six-r3.webp",
-    "hash": "sha256-07d6fbbbfa73715395b73e73133b26d42c7e6532b8f78522e6940a8bc9bfc627",
+    "path": "/art/quality-20261117/vfx/guardian-guard-six-r4.webp",
+    "hash": "sha256-03931eda8067e35ff1c2e41c232cc888a4d5f7c6c1c41035331eda6435b49e18",
     "width": 768,
     "height": 512,
     "columns": 3,
@@ -48,30 +48,30 @@ export const V100_GUARD_ACTIVATION_ART=Object.freeze({
     "anchors": [
       [
         0.5,
-        0.8994140625
+        0.8153076171875
       ],
       [
         0.5,
-        0.8837890625
+        0.8289794921875
       ],
       [
         0.5,
-        0.8837890625
+        0.8255615234375
       ],
       [
         0.5,
-        0.8603515625
+        0.8289794921875
       ],
       [
         0.5,
-        0.8603515625
+        0.8289794921875
       ],
       [
         0.5,
-        0.8603515625
+        0.8306884765625
       ]
     ],
-    "worldWidth": 224,
-    "worldHeight": 104
+    "worldWidth": 320,
+    "worldHeight": 160
   }
 });

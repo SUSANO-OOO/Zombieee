@@ -1,0 +1,49 @@
+{
+  "family": "guard-spectacle-20261117-r1",
+  "generation": {
+    "mode": "OpenAI built-in image_gen creation; deterministic whole-frame resampling and transparent atlas padding",
+    "model": "Chosen by host; no model name asserted",
+    "referenceImages": [],
+    "thirdPartyDownload": false,
+    "paidCliOrExternalService": false,
+    "calls": 2
+  },
+  "authorization": "Active smartphone-quality goal requests bespoke animated manual abilities. Candidate production is authorized; final appearance, sound and physical-device acceptance are not claimed.",
+  "providerTerms": {
+    "url": "https://openai.com/policies/row-terms-of-use/",
+    "effective": "2026-01-01",
+    "verifiedAt": "2026-11-15",
+    "basis": "Provider output ownership is assigned to the user, subject to the terms and applicable law."
+  },
+  "frameInsetPixels": 32,
+  "rows": [
+    {
+      "kind": "kumaverson",
+      "masterPath": "assets/source/quality-20261117/guard-spectacle-r1/kumaverson-guard-six-r5-master.png",
+      "masterSha256": "fc72a8255334e25f226ccc698a351400d7fbe7f4a3d7acfc2a018ea3e5915ff8",
+      "promptPath": "assets/source/quality-20261117/guard-spectacle-r1/kumaverson-prompt-r1.txt",
+      "id": "v100-kumaverson-guard-activation",
+      "runtimePath": "/art/quality-20261117/vfx/kumaverson-guard-six-r5.webp",
+      "worldWidth": 304,
+      "worldHeight": 160,
+      "description": "Two offset cast-iron bracing impacts, body-height off-white dust and warm metal sparks; a clear central actor corridor"
+    },
+    {
+      "kind": "guardian",
+      "masterPath": "assets/source/quality-20261117/guard-spectacle-r1/guardian-guard-six-r4-master.png",
+      "masterSha256": "35d8d65f498f342e2b999ac69caf72b9ea92b86935655e481fdd2e66530877de",
+      "promptPath": "assets/source/quality-20261117/guard-spectacle-r1/guardian-prompt-r1.txt",
+      "id": "v100-guardian-guard-activation",
+      "runtimePath": "/art/quality-20261117/vfx/guardian-guard-six-r4.webp",
+      "worldWidth": 320,
+      "worldHeight": 160,
+      "description": "A tall forward-facing shower of scratched steel fragments, hard ricochet sparks and bracing grit; no conjured shield or duplicate weapon"
+    }
+  ],
+  "supersedes": {
+    "source": "8d056f979d33f5c2111e7bdeffaf8680a446736f",
+    "recipe": "assets/source/quality-20261115/guard-activation-r1/selected-recipe.json",
+    "reason": "Existing exact current-guard native footage shows small foot-level bursts, insufficient for the requested body-height manual-ability spectacle; all previous masters/runtime files retained.",
+    "acceptance": "New candidate only; no final visual/audio/physical-device or publication acceptance"
+  }
+}
