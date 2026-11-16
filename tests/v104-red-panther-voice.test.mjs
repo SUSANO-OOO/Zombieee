@@ -5,7 +5,7 @@ import vm from 'node:vm';
 import ts from 'typescript';
 import {createHash} from 'node:crypto';
 import {createAudioRequestGate,runGuardedAudioRequest} from '../app/audioMixer.js';
-import {V100_AUDIO_MANIFEST,enemyVoiceCue} from '../app/productionAudio.js';
+import {V100_AUDIO_MANIFEST,GAMEPLAY_PRODUCTION_AUDIO_MANIFEST,INSTALL_AUDIO_ASSETS,enemyVoiceCue,humanVoiceCueForUnit,unitAudioCueFor} from '../app/productionAudio.js';
 import {v104SupplementalEnemyVoice} from '../app/v104CombatAudio.js';
 const kinds=['red-panther-knife','red-panther-shield','red-panther-smg','red-panther-commander'];
 const events=['attack','hurt','death'];
@@ -28,7 +28,7 @@ function actualPlayer({muted=false,consume=true,cancelAfterMaterial=false}={}){
   runGuardedAudioRequest,v104SupplementalEnemyVoice};
  return {requests,stops,play:vm.runInNewContext(ts.transpile('('+body+')',{target:ts.ScriptTarget.ES2022}),bindings)};
 }
-test('four RED PANTHER roles retain twelve utterances alongside their current weapon recordings',()=>{
+test('four RED PANTHER roles use recorded wordless reactions and preserve their legacy source masters',()=>{
  const rows=JSON.parse(fs.readFileSync('assets/source/v104/combat-audio/voices.json')).cast.filter(row=>kinds.includes(row.kind));
  assert.equal(rows.length,12);assert.equal(new Set(rows.map(row=>row.source)).size,12);assert.equal(new Set(rows.map(row=>row.sha256)).size,12);
  const materials={
@@ -43,9 +43,25 @@ test('four RED PANTHER roles retain twelve utterances alongside their current we
   assert.equal(voice.asset.id,`voice-${kind}-${event}`);assert.equal(V100_AUDIO_MANIFEST.assetById[voice.asset.id].category,'humanVoices');
   const row=rows.find(row=>row.kind===kind&&row.event===event);assert.equal(row.styleId,52);assert.equal(row.credit,'VOICEVOX:雀松朱司');
   assert.equal(createHash('sha256').update(fs.readFileSync(row.source)).digest('hex'),row.sha256);
-  for(const s of voice.asset.sources)assert.ok(fs.existsSync('public'+s.src));
+  for(const s of voice.asset.sources){assert.match(s.src,/^\/audio\/v060\/sfx\/human-male-(?:heavy|light)-(?:attack|hurt|death)-0[12]\.(?:mp3|ogg)$/);assert.ok(fs.existsSync('public'+s.src));}
  }
  for(const cue of ['enemy-takuya-attack','weapon-pan-hit','voice-babayaga-hurt',null])assert.equal(v104SupplementalEnemyVoice(cue),null);
+});
+test('all formerly spoken human reactions are recorded performances and retain old offline recovery files',()=>{
+ const named=['crazy-king','kumaverson','babayaga',...kinds];
+ const installed=new Set(INSTALL_AUDIO_ASSETS.flatMap(a=>a.sources.map(s=>s.src)));
+ for(const kind of named)for(const event of events){
+  const id=`voice-${kind}-${event}`;
+  for(const manifest of [GAMEPLAY_PRODUCTION_AUDIO_MANIFEST,V100_AUDIO_MANIFEST]){
+   const asset=manifest.assetById[id];assert.equal(asset.category,'humanVoices');
+   assert.deepEqual(asset.sources.map(s=>s.type),['audio/mpeg','audio/ogg']);
+   for(const s of asset.sources){assert.match(s.src,/^\/audio\/v060\/sfx\/human-male-(?:heavy|light)-(?:attack|hurt|death)-0[12]\.(?:mp3|ogg)$/);assert.ok(installed.has(s.src),'current recorded reaction is cached');}
+   assert.equal(asset.sources[0].src.replace(/\.mp3$/, ''),asset.sources[1].src.replace(/\.ogg$/, ''),'codecs use the same performance');
+  }
+  for(const ext of ['mp3','ogg'])assert.ok(installed.has(`/audio/v104/combat/${id}.${ext}`),'old installed speech remains available for recovery');
+ }
+ for(const kind of named.slice(0,3)){assert.equal(humanVoiceCueForUnit(kind,'deploy'),null);assert.equal(unitAudioCueFor(kind,'voice','deploy'),null);}
+ assert.equal(humanVoiceCueForUnit('mayo-chan','deploy'),'voice-mayo-deploy','dog performance is separate from spoken human lines');
 });
 test('the actual game keeps the weapon request unchanged and adds one independently controlled actor voice',async()=>{
  for(const kind of kinds)for(const event of events){

@@ -98,7 +98,7 @@ test('first battle calls are audible candidates, cooldowns are per actor, and ar
  const a={hp:100},b={hp:100};assert.equal(battleVoiceReady(a,'attack',0),true);assert.equal(battleVoiceReady(a,'attack',.5),false);assert.equal(battleVoiceReady(b,'attack',.5),true);assert.equal(battleVoiceReady(a,'attack',2.1),true);assert.equal(battleVoiceReady(a,'hurt',2.1),true);
  const assets=V100_AUDIO_MANIFEST.assets,armor=assets.find(a=>a.id==='v104-armor-hit'),pan=assets.find(a=>a.id==='weapon-pan-hit');
  assert.ok(armor.sources.every(s=>s.src.includes('/armor-hit.')));assert.ok(pan.sources.every(s=>s.src.includes('/pan-hit.')));
- for(const kind of['crazy-king','kumaverson','babayaga'])for(const event of['deploy','attack','hurt','death'])assert.ok(assets.find(a=>a.id===`voice-${kind}-${event}`).sources.every(s=>s.src.includes('/v104/')));
+ for(const kind of['crazy-king','kumaverson','babayaga'])for(const event of['deploy','attack','hurt','death'])assert.ok(assets.find(a=>a.id===`voice-${kind}-${event}`).sources.every(s=>s.src.includes(event==='deploy'?'/v104/':'/v060/sfx/human-')));
 });
 
 test('voice intervals survive real fighter copies; boss damage and interception queue only real surviving HP loss',()=>{

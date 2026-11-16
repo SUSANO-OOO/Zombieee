@@ -735,7 +735,7 @@ test("all weapon-mapped units retain production weapons and all sixteen units re
       );
     }
     const deployCue = humanVoiceCueForUnit(kind, "deploy");
-    const expectedDeployCue = expectedVoicePrefix.startsWith("voice-")
+    const expectedDeployCue = kind === "mayo-chan"
       ? `${expectedVoicePrefix}-deploy`
       : null;
     assert.equal(deployCue, expectedDeployCue);
@@ -758,7 +758,7 @@ test("Baba Yaga's suppressed pistol keeps the accepted relative mix gain", () =>
 });
 
 test("deployment never falls back to a generic attack or hurt voice", () => {
-  const dedicatedDeployKinds = new Set(Object.keys(UNIT_AUDIO_CUE_CONTRACTS));
+  const dedicatedDeployKinds = new Set(Object.entries(UNIT_AUDIO_CUE_CONTRACTS).filter(([,contract]) => contract.voiceEvents.deploy).map(([kind]) => kind));
   for (const kind of [
     "scout", "ranger", "brute", "brawler", "gunner", "medic",
     "crazy-king", "kumaverson", "babayaga", "guardian", "engineer",
@@ -781,9 +781,9 @@ test("new-unit contracts resolve to dedicated original production assets and exp
   assert.equal(Object.keys(UNIT_AUDIO_CUE_CONTRACTS).length, 4);
   const dedicatedCueIds = Object.values(UNIT_AUDIO_CUE_CONTRACTS).flatMap((contract) => [
     ...Object.values(contract.weaponEvents),
-    ...Object.values(contract.voiceEvents),
+    ...Object.values(contract.voiceEvents).filter(Boolean),
   ]);
-  assert.equal(new Set(dedicatedCueIds).size, 34);
+  assert.equal(new Set(dedicatedCueIds).size, 31);
   for (const cueId of dedicatedCueIds) {
     const asset = PRODUCTION_AUDIO_MANIFEST.assetById[cueId];
     assert.ok(asset, cueId);
@@ -797,7 +797,7 @@ test("new-unit contracts resolve to dedicated original production assets and exp
   assert.equal(unitAudioCueFor("crazy-king", "weapon", "idleLoop"), "weapon-chainsaw-idle-loop");
   assert.equal(unitAudioCueFor("kumaverson", "weapon", "stun"), "weapon-pan-stun");
   assert.equal(unitAudioCueFor("babayaga", "weapon", "reload"), "weapon-suppressed-reload");
-  assert.equal(unitAudioCueFor("babayaga", "voice", "deploy"), "voice-babayaga-deploy");
+  assert.equal(unitAudioCueFor("babayaga", "voice", "deploy"), null);
   assert.equal(unitAudioCueFor("unknown", "weapon", "attack"), null);
   assert.equal(PRODUCTION_AUDIO_MANIFEST.assetById["weapon-chainsaw-idle-loop"].loop, true);
   assert.deepEqual(BATTLE_AUDIO_LOOP_CONTRACTS.crazyKingChainsaw, {
