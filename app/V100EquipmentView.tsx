@@ -8,6 +8,7 @@ import { equipmentEffectSummary, equipmentEnhancementCost, EQUIPMENT_MAX_ENHANCE
 import { formatV100Number, v100UnitPresentation } from "./v100UnitPresentation.js";
 import { V100LockChain } from "./V100LockChain";
 import { V100_PREPARATION_ART } from "./v100PreparationArt.js";
+import { v100EquipmentArtworkImgStyle } from "./v100EquipmentArt.js";
 import { v100EquipmentComparison } from "./v100EquipmentComparison.js";
 import "./v100EquipmentComparison.css";
 
@@ -24,7 +25,7 @@ type Props = {
 };
 
 function EquipmentArt({ item, locked = false }: { item: Item; locked?: boolean }) {
-  return <span className="v100-equipment-art" aria-hidden="true"><img src={V100_PREPARATION_ART.equipment} alt="" style={{ left: `${-(item.artCell % 5) * 100}%`, top: `${-Math.floor(item.artCell / 5) * 100}%` }} />{locked && <V100LockChain />}</span>;
+  return <span className="v100-equipment-art" aria-hidden="true"><img src={V100_PREPARATION_ART.equipment} alt="" style={v100EquipmentArtworkImgStyle(item)} />{locked && <V100LockChain />}</span>;
 }
 
 export function V100EquipmentView({ save, onBack, onPurchase, onUpgrade, onEquip }: Props) {
