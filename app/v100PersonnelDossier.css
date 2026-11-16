@@ -25,7 +25,7 @@
 #v100-campaign[data-v100-phase] .v100-command-personnel.detail-open > .v100-personnel-workspace .v100-personnel-detail-back { grid-row: 4; }
 #v100-campaign[data-v100-phase] .v100-command-personnel.detail-open .v100-personnel-focus-copy {
   grid-row: 1;
-  gap: 5px;
+  gap: 3px;
   padding: 0 5px 4px 0;
   scroll-padding-top: 48px;
   scrollbar-color: #82724f #d6c6a0;
@@ -37,8 +37,8 @@
   grid-template-columns: 29px minmax(0,1fr) auto auto;
   align-items: center;
   gap: 5px;
-  min-height: 38px;
-  padding: 4px 6px;
+  min-height: 34px;
+  padding: 3px 6px;
   border: 0;
   border-bottom: 2px solid #af8f56;
   color: #f3e7c7;
@@ -59,27 +59,32 @@
 }
 #v100-campaign[data-v100-phase] .v100-command-personnel .v100-unit-record-heading h3 {
   color: #f3e7c7;
-  font-size: clamp(18px,2.7vw,23px);
+  font-size: clamp(18px,2.7vw,22px);
   letter-spacing: .025em;
-  line-height: 1.2;
+  line-height: 1.1;
 }
 #v100-campaign[data-v100-phase] .v100-command-personnel .v100-unit-level { color: #efd296; font-size: 18px; }
 #v100-campaign[data-v100-phase] .v100-command-personnel .v100-unit-registration { padding: 2px 4px; border: 1px solid #9eaa8266; color: #d2d9bf; font-size: 11px; }
 #v100-campaign[data-v100-phase] .v100-command-personnel .v100-unit-record-meta { padding: 0 4px 4px; border-bottom: 1px solid #92816080; }
 #v100-campaign[data-v100-phase] .v100-command-personnel.detail-open .v100-personnel-stats {
-  grid-auto-rows: 49px;
+  grid-template-rows: 38px 26px;
+  grid-auto-rows: auto;
   gap: 1px 8px;
+  margin: 0;
   padding: 0 4px;
   background: #fff4d23b;
 }
 #v100-campaign[data-v100-phase] .v100-command-personnel .v100-unit-stat {
-  padding: 4px 2px;
+  padding: 2px;
   border-bottom: 1px solid #a3936d;
   background: transparent;
 }
 #v100-campaign[data-v100-phase] .v100-command-personnel .v100-unit-stat span { font-size: 12px; color: #46513b; }
-#v100-campaign[data-v100-phase] .v100-command-personnel .v100-unit-stat strong { color: #203c2b; font-size: 23px; }
-#v100-campaign[data-v100-phase] .v100-command-personnel .v100-unit-stat small { color: #8a4226; font-size: 18px; }
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-unit-stat strong { color: #203c2b; font-size: 19px; line-height: 1; }
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-unit-stat small { color: #8a4226; font-size: 16px; line-height: 1; }
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-unit-stat:nth-child(n+4) { grid-template-rows: 1fr; }
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-unit-stat:nth-child(n+4) span { grid-column: 1; grid-row: 1; font-size: 11px; }
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-unit-stat:nth-child(n+4) strong { grid-column: 2; grid-row: 1; font-size: 15px; }
 #v100-campaign[data-v100-phase] .v100-command-personnel.detail-open .v100-personnel-focus-copy > .v100-unit-skill {
   margin: 3px 4px;
   padding: 7px 10px;
