@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { FormEvent, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { RELEASE_LABEL } from "./releaseIdentity.js";
 import { V100LockChain } from "./V100LockChain";
 import { V100AssetCredits } from "./V100AssetCredits";
@@ -68,6 +68,7 @@ import { V100_STORY_POST_CREDITS_FILM, v100StoryEventFor, v100StoryEventView, v1
 import { v100MissionObjectiveFor, v100ProductionSessionFor } from "./v100BattleAdapter.js";
 import { v100AvailableFormation, v100StageAbsenceReason } from "./v100StageParticipation.js";
 import { createV100EventAudioOwner } from "./v100EventAudio.js";
+import {PwaGunFinishPathsContext} from "./pwaAudioAvailabilityContext.js";
 import { v100EventPresentationFor } from "./v100EventPresentation.js";
 import { v100SurfaceScore } from "./v100Music.js";
 import { v100ActionPortraitSubjects, v100DialogueSlots, v100PortraitFraming } from "./v100DialogueComposition.js";
@@ -394,12 +395,15 @@ export function V100Campaign() {
   const [surface, setSurface] = useState<CampaignSurface>("campaign");
   const [personnelSelection, setPersonnelSelection] = useState<string | null>(null);
   const [formationRequestedUnitId, setFormationRequestedUnitId] = useState<string | null>(null);
+  const verifiedGunFinishPaths=useContext(PwaGunFinishPathsContext);
+  const [gunFinishPathsAtEntry]=useState(()=>verifiedGunFinishPaths);
   const eventAudioOwnerRef = useRef<ReturnType<typeof createV100EventAudioOwner> | null>(null);
   const [eventAudioRevision, setEventAudioRevision] = useState(0);
   const [eventAudioSnapshot, setEventAudioSnapshot] = useState<ReturnType<ReturnType<typeof createV100EventAudioOwner>["snapshot"]> | null>(null);
 
   useEffect(() => {
     const owner = createV100EventAudioOwner({
+      verifiedGunPaths: gunFinishPathsAtEntry,
       onState: (_state, snapshot) => {
         setEventAudioSnapshot(snapshot);
         setEventAudioRevision((revision) => revision + 1);
@@ -412,7 +416,7 @@ export function V100Campaign() {
       eventAudioOwnerRef.current = null;
       void owner.dispose();
     };
-  }, []);
+  }, [gunFinishPathsAtEntry]);
 
   useEffect(() => { eventAudioOwnerRef.current?.setSettings(save.settings); }, [save.settings]);
 

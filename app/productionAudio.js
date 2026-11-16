@@ -3,6 +3,7 @@ import {withV100BossSkillAudio} from './v100BossSkillAudio.js';
 import {withV104CombatAudio} from './v104CombatAudio.js';
 import { createAudioManifest } from "./audioManifest.js";
 import { withRecordedWeapons, recordedWeaponSources } from "./weaponRecordingRecipes.js";
+import {v100GunFinishInstallAssets} from "./v100GunFinishAudio.js";
 import { withChainsawRecordings } from "./chainsawRecordings.js";
 import { withMeleeFoley } from "./meleeFoleyRecipes.js";
 import { withV100ManualAbilityFoley } from "./v100ManualAbilityFoley.js";
@@ -784,7 +785,7 @@ const legacyVoiceInstallAssets = V100_AUDIO_MANIFEST.assets.map(asset =>
     : /^voice-mayo-(?:deploy|attack|hurt|retreat)$/.test(asset.id)
       ? {...asset,sources:[{src:`/audio/v090/sfx/${asset.id}.wav`,type:'audio/wav'}]}
       : asset);
-for (const asset of [...legacyVoiceInstallAssets, ...V100_AUDIO_MANIFEST.assets]) {
+for (const asset of [...legacyVoiceInstallAssets, ...V100_AUDIO_MANIFEST.assets, ...v100GunFinishInstallAssets(V100_AUDIO_MANIFEST)]) {
   const key = asset.sources.map(source => source.src).join('|');
   if (!installAudioBySource.has(key)) {
     const pathId = asset.sources[0].src.replace(/^\/audio\//, '').replace(/\.[^.]+$/, '').replaceAll('/', '-');

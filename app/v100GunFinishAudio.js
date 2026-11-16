@@ -1,0 +1,32 @@
+import {createAudioManifest} from './audioManifest.js';
+import {PWA_GUN_FINISH_FILES} from './pwaGunFinishFiles.js';
+
+const sharedShots=Object.freeze({
+  'ability-ranger-precision-shot':'weapon-rifle-01',
+  'ability-gunner-suppression-muzzle':'weapon-gunner-01',
+  'ability-babayaga-appraise-shot':'weapon-suppressed-pistol',
+});
+function rewrite(manifest,allowed){
+  return {...manifest,assets:manifest.assets.map(asset=>{
+    const key=Object.hasOwn(sharedShots,asset.id)?sharedShots[asset.id]:asset.id;
+    const file=Object.hasOwn(PWA_GUN_FINISH_FILES,key)?PWA_GUN_FINISH_FILES[key]:null;
+    if(!file)return asset;
+    const fallback=asset.sources.filter(source=>source.src!==file.path);
+    if(!fallback.length)throw new Error('Missing original gun source: '+asset.id);
+    if(allowed&&!allowed.has(file.path))return fallback.length===asset.sources.length?asset:{...asset,sources:fallback};
+    return {...asset,sources:[{src:file.path,type:'audio/mpeg'},...fallback]};
+  })};
+}
+// Playback retains the recorded fallback sources in their existing order.
+export function withV100GunFinish(manifest){return rewrite(manifest,null);}
+// Physical inventory owns one MPEG, independent of fallback source sorting.
+export function v100GunFinishInstallAssets(manifest){
+  const paths=new Set(Object.values(PWA_GUN_FINISH_FILES).map(file=>file.path));
+  return withV100GunFinish(manifest).assets.filter(asset=>paths.has(asset.sources[0].src))
+    .map(asset=>({...asset,sources:asset.sources.slice(0,1)}));
+}
+// A battle/conversation snapshots this whitelist at entry. Old committed packs,
+// uncommitted bytes and unwrapped callers retain the original recorded cues.
+export function selectV100GunFinishPlayback(manifest,verifiedPaths=''){
+  return createAudioManifest(rewrite(manifest,new Set(verifiedPaths.split('\n').filter(Boolean))));
+}

@@ -53,8 +53,9 @@ import { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, u
 import {PwaBattleArtworkPathsContext,selectBattleArtworkPolicy} from "./pwaBattleArtworkContext.js";
 import {drawV100BallisticShot} from './v100BallisticVfx.js';
 import {drawV100NaoTreatmentShot} from './v100NaoShotVfx.js';
-import {PwaManualFoleyPathsContext,PwaBossCollapsePathsContext,PwaBossSkillPathsContext} from "./pwaAudioAvailabilityContext.js";
+import {PwaManualFoleyPathsContext,PwaBossCollapsePathsContext,PwaBossSkillPathsContext,PwaGunFinishPathsContext} from "./pwaAudioAvailabilityContext.js";
 import {selectV100ManualFoleyPlayback} from "./v100ManualAbilityFoley.js";
+import {selectV100GunFinishPlayback} from "./v100GunFinishAudio.js";
 import {
   RANDOM_BATTLE_BARK_TRIGGER_IDS,
   advanceBattleBarkRuntime,
@@ -9485,6 +9486,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   const [bossCollapsePathsAtEntry]=useState(()=>verifiedBossCollapsePaths);
   const verifiedBossSkillPaths=useContext(PwaBossSkillPathsContext);
   const [bossSkillPathsAtEntry]=useState(()=>verifiedBossSkillPaths);
+  const verifiedGunFinishPaths=useContext(PwaGunFinishPathsContext);
+  const [gunFinishPathsAtEntry]=useState(()=>verifiedGunFinishPaths);
   const verifiedBattleArtworkPaths=useContext(PwaBattleArtworkPathsContext);
   const verifiedBattleArtworkPathsRef=useRef(verifiedBattleArtworkPaths);
   const battleArtworkPolicyRef=useRef<{key:string;paths:string}|null>(null);
@@ -9837,8 +9840,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   const externalSessionActive = Boolean(externalSession);
   const externalBattleMode = externalSession?.battleMode ?? null;
   const playbackManifest = useMemo(()=>externalSessionActive
-    ? selectV100BossSkillPlayback(selectV100BossCollapsePlayback(selectV100ManualFoleyPlayback(V100_AUDIO_MANIFEST,GAMEPLAY_PRODUCTION_AUDIO_MANIFEST,manualFoleyPathsAtEntry),bossCollapsePathsAtEntry),bossSkillPathsAtEntry)
-    : GAMEPLAY_PRODUCTION_AUDIO_MANIFEST,[externalSessionActive,manualFoleyPathsAtEntry,bossCollapsePathsAtEntry,bossSkillPathsAtEntry]);
+    ? selectV100GunFinishPlayback(selectV100BossSkillPlayback(selectV100BossCollapsePlayback(selectV100ManualFoleyPlayback(V100_AUDIO_MANIFEST,GAMEPLAY_PRODUCTION_AUDIO_MANIFEST,manualFoleyPathsAtEntry),bossCollapsePathsAtEntry),bossSkillPathsAtEntry),gunFinishPathsAtEntry)
+    : GAMEPLAY_PRODUCTION_AUDIO_MANIFEST,[externalSessionActive,manualFoleyPathsAtEntry,bossCollapsePathsAtEntry,bossSkillPathsAtEntry,gunFinishPathsAtEntry]);
   const formatBattleText = (value: string) => publicDisplayText(value, { crawlerLabel: externalSessionActive ? v100BasePresentationFor(gameRef.current.definition.missionConfig.v100StageNumber).label : "装甲車両" });
   useEffect(() => { externalSessionRef.current = externalSession; }, [externalSession]);
   const externalFormationKindsKey = externalSession?.formationKinds.join("|") ?? "";

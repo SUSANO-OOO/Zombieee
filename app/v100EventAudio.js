@@ -1,11 +1,12 @@
 import { createAudioMixer } from "./audioMixer.js";
 import { V100_AUDIO_MANIFEST } from "./productionAudio.js";
+import {selectV100GunFinishPlayback} from "./v100GunFinishAudio.js";
 
 function now() {
   return new Date().toISOString();
 }
 
-export function createV100EventAudioOwner({ windowTarget = globalThis.window, onState = null } = {}) {
+export function createV100EventAudioOwner({ windowTarget = globalThis.window, onState = null, verifiedGunPaths = "" } = {}) {
   const receipts = [];
   const interfaceReceipts = [];
   const localQa = windowTarget && ["localhost", "127.0.0.1"].includes(windowTarget.location?.hostname);
@@ -15,7 +16,7 @@ export function createV100EventAudioOwner({ windowTarget = globalThis.window, on
     if (interfaceReceipts.length > 80) interfaceReceipts.splice(0, interfaceReceipts.length - 80);
   };
   const mixer = createAudioMixer({
-    manifest: V100_AUDIO_MANIFEST,
+    manifest: selectV100GunFinishPlayback(V100_AUDIO_MANIFEST, verifiedGunPaths),
     maxVoices: 12,
     enableAcknowledgementTone: false,
     maxWarningsTotal: 4,

@@ -274,7 +274,7 @@ test("transport optimizations preserve every runtime asset contract", async () =
   }
 
   const bundled = manifest.assets.filter((asset) => asset.bundlePath);
-  assert.equal(bundled.length, 411, "409 retained files plus two recorded Mayo reactions");
+  assert.equal(bundled.length, 419, "411 retained files plus eight authored gun takes");
   const recordedMayo = bundled.filter((asset) => asset.path.startsWith("/audio/quality-20261116/mayo/"));
   assert.deepEqual(recordedMayo.map(asset => asset.path).sort(), [
     "/audio/quality-20261116/mayo/recorded-bark.wav",

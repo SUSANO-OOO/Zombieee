@@ -27,7 +27,7 @@ function fixture() {
     stopScene: async () => { scene = { sceneId: null }; diagnostics.activeSceneVoices = 0; },
     dispose: async () => {},
   };
-  const create = vm.runInNewContext(`(${ownerSource})`, { createAudioMixer: () => mixer, V100_AUDIO_MANIFEST: {}, now: () => 'fixture' });
+  const create = vm.runInNewContext(`(${ownerSource})`, { createAudioMixer: () => mixer, V100_AUDIO_MANIFEST: {}, selectV100GunFinishPlayback: (manifest) => manifest, now: () => 'fixture' });
   const target = { location: { hostname: 'localhost' }, addEventListener() {}, removeEventListener() {},
     document: { visibilityState: 'visible', addEventListener() {}, removeEventListener() {} } };
   return { owner: create({ windowTarget: target }), calls, mixer,
