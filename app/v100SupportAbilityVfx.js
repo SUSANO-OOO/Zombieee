@@ -106,7 +106,7 @@ function drawBoundTrap(ctx,objects,world,effect){
   const alpha=Math.max(0,Math.min(1,remaining/.18)),progress=Math.max(0,Math.min(1,effect.elapsed/effect.springSeconds));
   if(!drawV100WireTrapMotion(ctx,objects,{x:effect.x,y:effect.y+5,progress,phase:'spring',alpha,deploymentProgress:effect.deploymentProgress??1}))return;
   if(progress<1)drawTrapDust(ctx,objects,{...effect,duration:effect.springSeconds});
-  else drawV100BoundWireTethers(ctx,objects,{x:effect.x,y:effect.y+5,targets,alpha:alpha*Math.min(1,(effect.elapsed-effect.springSeconds)/.06),release:1-alpha});
+  else drawV100BoundWireTethers(ctx,objects,{x:effect.x,y:effect.y+5,targets,alpha:alpha*Math.min(1,(effect.elapsed-effect.springSeconds)/.06),release:1-alpha,elapsed:Math.max(0,effect.elapsed-effect.springSeconds)});
 }
 
 export function drawV100DeployedWireTrap(ctx,objects,world,owner,x,y){

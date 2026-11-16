@@ -123,3 +123,19 @@ test('a trap triggered during deployment starts from that actual pose and retain
  for(const key of ['leftEnd','rightEnd','coilLeft','coilRight'])assert.ok(Math.hypot(a[key].x-b[key].x,a[key].y-b[key].y)<1e-7);
  world.time=30.31;const still=getV100SupportAbilityEffectsSnapshot(world);assert.equal(still.length,1);assert.equal(still[0].deploymentProgress,captured.deploymentProgress);
 });
+
+
+test('held wire visibly wraps both outside ankles, settles without randomness and keeps crowd paint bounded',()=>{
+ const objects=images(),world={time:10,definition:{missionConfig:{v100StageNumber:2}},fighters:[
+  {id:2,side:'zombie',hp:100,x:390,y:205,stunned:1.35},{id:3,side:'zombie',hp:100,x:440,y:205,stunned:1.35}]};
+ queueV100SupportAbilityEffect(world,{ownerId:5,activationId:7,eventType:'trap-sprung',targetIds:[2,3],x:400,y:200,duration:1.35,springSeconds:.3});
+ world.time=10.35;const before=JSON.stringify(world),early=canvas();drawV100SupportAbilityEffects(early.ctx,objects,world);assert.equal(JSON.stringify(world),before);
+ const wires=early.calls.filter(c=>c.image.id==='intact');
+ for(const target of world.fighters){
+  assert.ok(wires.some(c=>{const a=point(c.matrix,220,65),b=point(c.matrix,248,64);return [a,b].every(p=>Math.abs(p[0]-target.x)<=10)&&Math.min(a[1],b[1])<target.y-7;}),'the actual wire must rise across each outside ankle, not remain a floor line');
+ }
+ world.time=10.8;const settled=canvas();drawV100SupportAbilityEffects(settled.ctx,objects,world);assert.notDeepEqual(early.calls.map(c=>c.matrix),settled.calls.map(c=>c.matrix),'the wire must settle instead of freezing after its spring');
+ const crowd={time:20,definition:{missionConfig:{v100StageNumber:2}},fighters:Array.from({length:16},(_,i)=>({id:i+10,side:'zombie',hp:100,x:390+50*i/15,y:205,stunned:1.35}))};
+ queueV100SupportAbilityEffect(crowd,{ownerId:5,activationId:8,eventType:'trap-sprung',targetIds:crowd.fighters.map(f=>f.id),x:400,y:200,duration:1.35,springSeconds:.3});
+ crowd.time=20.35;const dense=canvas();drawV100SupportAbilityEffects(dense.ctx,objects,crowd);assert.equal(dense.calls.length,early.calls.length,'overlapping enemies must not multiply the same wire strands');
+});
