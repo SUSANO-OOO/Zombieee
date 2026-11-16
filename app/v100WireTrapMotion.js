@@ -66,13 +66,13 @@ function bindingCable(ctx,image,a,b){
  const pieces=Math.min(6,Math.max(1,Math.ceil(distance/28))),length=Math.hypot(28,-1);
  for(let index=0;index<pieces;index++){
   ctx.save();ctx.translate(a.x+dx*index/pieces,a.y+dy*index/pieces);
-  ctx.rotate(Math.atan2(dy,dx));ctx.scale(distance/pieces/length,.65);
+  ctx.rotate(Math.atan2(dy,dx));ctx.scale(distance/pieces/length,1.05);
   ctx.rotate(-Math.atan2(-1,28));ctx.translate(-220,-65);
   ctx.drawImage(image,220,58,28,14,220,58,28,14);ctx.restore();
  }
 }
-export function drawV100BoundWireTethers(ctx,objects,{x,y,width=82,targets,alpha=1,release=0}={}){
- if(![x,y,width,alpha,release].every(Number.isFinite)||width<=0||alpha<=0
+export function drawV100BoundWireTethers(ctx,objects,{x,y,width=82,targets,alpha=1,release=0,elapsed=0}={}){
+ if(![x,y,width,alpha,release,elapsed].every(Number.isFinite)||width<=0||alpha<=0||elapsed<0
    ||!Array.isArray(targets)||!targets.length||targets.some(t=>![t?.x,t?.y].every(Number.isFinite)))return false;
  const image=objects?.['v100-support-trap-intact'];
  if(!image?.complete||image.naturalWidth!==W||image.naturalHeight!==H)return false;
@@ -80,9 +80,22 @@ export function drawV100BoundWireTethers(ctx,objects,{x,y,width=82,targets,alpha
  for(const target of targets){if(target.x<left.x)left=target;if(target.x>right.x)right=target;}
  const slack=clamp(release),coil=V100_SPENT_TRAP_COIL;
  const anchor={x:x+(coil.x/coil.width-.5)*width,y:y+(coil.y-coil.height)/coil.width*width};
- const first={x:left.x-9,y:left.y-4+slack*4},last={x:right.x+9,y:right.y-4+slack*4};
+ const first={x:left.x-9,y:left.y-4+slack*4};
  const bend={x:(anchor.x+first.x)*.5,y:Math.max(anchor.y,first.y)+3+slack*5};
- ctx.save();ctx.globalCompositeOperation='source-over';ctx.shadowBlur=0;ctx.globalAlpha=Math.min(1,alpha);
- bindingCable(ctx,image,anchor,bend);bindingCable(ctx,image,bend,first);bindingCable(ctx,image,first,last);
+ // One continuous length of the original barbed wire rises around the held
+ // ankles, then settles under tension. Only the two outside targets add bends;
+ // a dense group does not multiply bitmap work or grow a status-marker ring.
+ const recoil=Math.sin(elapsed*35)*Math.exp(-elapsed*5)*2.8;
+ const rise=Math.max(2,9*(1-slack)+recoil);
+ const wrap=target=>[
+  {x:target.x-9,y:target.y-4+slack*4},
+  {x:target.x-6,y:target.y-4-rise},
+  {x:target.x+4,y:target.y-3-rise*.8},
+  {x:target.x+9,y:target.y-4+slack*4},
+ ];
+ const route=[anchor,bend,...wrap(left),...(right===left?[]:wrap(right))];
+ // Metal catches light on the wet ground using its real pixels only.
+ ctx.save();ctx.globalCompositeOperation='screen';ctx.shadowBlur=0;ctx.globalAlpha=Math.min(1,alpha);
+ for(let index=1;index<route.length;index++)bindingCable(ctx,image,route[index-1],route[index]);
  ctx.restore();return true;
 }
