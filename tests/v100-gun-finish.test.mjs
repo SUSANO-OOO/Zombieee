@@ -74,3 +74,11 @@ test('saved gun metadata remains a leaf and does not bring playback code into th
  const leaf=ts.createSourceFile('pwaGunFinishFiles.js',fs.readFileSync('app/pwaGunFinishFiles.js','utf8'),ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);assert.equal(leaf.statements.some(n=>ts.isImportDeclaration(n)||(ts.isExportDeclaration(n)&&n.moduleSpecifier)),false);
  const gate=ts.createSourceFile('PwaGate.tsx',fs.readFileSync('app/PwaGate.tsx','utf8'),ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);const imports=gate.statements.filter(ts.isImportDeclaration).map(n=>n.moduleSpecifier.text);assert.ok(imports.includes('./pwaGunFinishFiles.js'));assert.equal(imports.includes('./v100GunFinishAudio.js'),false);
 });
+
+test('the built install metadata stays outside the audio runtime chunk',()=>{
+ const root=new URL('../dist/server/ssr/assets/',import.meta.url);
+ const chunks=fs.readdirSync(root).filter(name=>name.endsWith('.js')).map(name=>({name,source:fs.readFileSync(new URL(name,root),'utf8')}));
+ const metadata=chunks.filter(chunk=>chunk.source.includes('//#region app/pwaGunFinishFiles.js'));
+ assert.ok(metadata.length>0,'Built saved-file metadata must be present');
+ for(const chunk of metadata){assert.equal(chunk.source.includes('//#region app/productionAudio.js'),false,'Install metadata cannot be bundled with productionAudio: '+chunk.name);assert.equal(chunk.source.includes('//#region app/audioMixer.js'),false,'Install metadata cannot eagerly import the mixer: '+chunk.name);}
+});
