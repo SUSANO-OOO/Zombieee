@@ -1,0 +1,150 @@
+/* A personal field record: portrait on metal, capabilities on paper,
+   and a fixed growth order that stays visible while the record scrolls. */
+#v100-campaign[data-v100-phase] .v100-command-personnel.detail-open .v100-personnel-focus {
+  grid-template-rows: minmax(0,1fr) 40px 44px 44px;
+  gap: 4px 10px;
+  padding: 7px;
+  border: 1px solid #9d895d;
+  border-left: 5px solid #715534;
+  background-color: #c6b48d;
+  background-image: linear-gradient(105deg,#e5d6b9b0,#f1e6c9bd),var(--v100-ui-materials,none);
+  background-size: 100% 100%,300% 200%;
+  background-position: center,100% 0;
+  box-shadow: inset 0 0 0 2px #f8edce55,0 3px 8px #080d0a66;
+}
+#v100-campaign[data-v100-phase] .v100-command-personnel.detail-open .v100-personnel-focus-art {
+  grid-row: 1 / 3;
+  border: 1px solid #716950;
+  background-color: #354236;
+  background-image: radial-gradient(ellipse at 50% 25%,#6d806442,#1a2b2370),var(--v100-ui-materials,none);
+  background-size: 100% 100%,300% 200%;
+  background-position: center,50% 0;
+  box-shadow: inset 0 0 0 4px #d5c29326;
+}
+#v100-campaign[data-v100-phase] .v100-command-personnel.detail-open .v100-unit-growth-notes { grid-row: 3; }
+#v100-campaign[data-v100-phase] .v100-command-personnel.detail-open > .v100-personnel-workspace .v100-personnel-detail-back { grid-row: 4; }
+#v100-campaign[data-v100-phase] .v100-command-personnel.detail-open .v100-personnel-focus-copy {
+  grid-row: 1;
+  gap: 5px;
+  padding: 0 5px 4px 0;
+  scroll-padding-top: 48px;
+  scrollbar-color: #82724f #d6c6a0;
+}
+#v100-campaign[data-v100-phase] .v100-command-personnel.detail-open .v100-unit-record-heading {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  grid-template-columns: 29px minmax(0,1fr) auto auto;
+  align-items: center;
+  gap: 5px;
+  min-height: 38px;
+  padding: 4px 6px;
+  border: 0;
+  border-bottom: 2px solid #af8f56;
+  color: #f3e7c7;
+  background-color: #243c2f;
+  background-image: linear-gradient(105deg,#1f372ce8,#21392ee0),var(--v100-ui-materials,none);
+  background-size: 100% 100%,300% 200%;
+  background-position: center,50% 100%;
+  box-shadow: 0 2px 3px #4d3d2855;
+}
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-unit-record-index {
+  align-self: stretch;
+  display: grid;
+  place-items: center;
+  border-right: 1px solid #d6bd7b66;
+  color: #d8bc79;
+  font-family: var(--v100-numeric-font);
+  font-size: 17px;
+}
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-unit-record-heading h3 {
+  color: #f3e7c7;
+  font-size: clamp(18px,2.7vw,23px);
+  letter-spacing: .025em;
+  line-height: 1.2;
+}
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-unit-level { color: #efd296; font-size: 18px; }
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-unit-registration { color: #d2d9bf; font-size: 11px; }
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-unit-record-meta { padding: 0 4px 4px; border-bottom: 1px solid #92816080; }
+#v100-campaign[data-v100-phase] .v100-command-personnel.detail-open .v100-personnel-stats {
+  grid-auto-rows: 49px;
+  gap: 1px 8px;
+  padding: 0 4px;
+  background: #fff4d23b;
+}
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-unit-stat {
+  padding: 4px 2px;
+  border-bottom: 1px solid #a3936d;
+  background: transparent;
+}
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-unit-stat span { font-size: 12px; color: #46513b; }
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-unit-stat strong { color: #203c2b; font-size: 23px; }
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-unit-stat small { color: #8a4226; font-size: 18px; }
+#v100-campaign[data-v100-phase] .v100-command-personnel.detail-open .v100-personnel-focus-copy > .v100-unit-skill {
+  margin: 3px 4px;
+  padding: 7px 10px;
+  border-left: 4px solid #576c4d;
+  background: #adb68c40;
+  box-shadow: inset 0 1px #fff3d06b,inset 0 -1px #7d775850;
+}
+#v100-campaign .v100-unit-skill-label { display: block; margin-bottom: 3px; color: #5a654b; font-size: 11px; font-weight: 700; letter-spacing: .12em; }
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-growth-record-notes summary { padding: 12px 6px; color: #304a34; border-bottom-color: #998364; }
+#v100-campaign[data-v100-phase] .v100-command-personnel.detail-open .v100-unit-transaction {
+  grid-row: 2 / 5;
+  grid-template-rows: 40px 44px 44px;
+  gap: 4px 8px;
+  padding: 0;
+  background: #d9c79e;
+  border: 0;
+  box-shadow: 0 -3px 0 #8d7950;
+}
+#v100-campaign[data-v100-phase] .v100-command-personnel.detail-open .v100-unit-transaction > .v100-upgrade-preview {
+  display: flex;
+  grid-column: 1 / -1;
+  grid-row: 1;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 4px 9px;
+  color: #f3e8c8;
+  background: #304b36;
+  border-left: 4px solid #b28c4b;
+  line-height: 1.3;
+}
+#v100-campaign .v100-unit-transaction > .v100-upgrade-preview > span { flex: none; color: #e4c17b; font-size: 12px; font-weight: 700; }
+#v100-campaign .v100-unit-transaction > .v100-upgrade-preview > strong { font-size: 13px; font-weight: 600; }
+#v100-campaign[data-v100-phase] .v100-command-personnel.detail-open .v100-unit-transaction > .v100-unit-balance {
+  grid-row: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  gap: 0 8px;
+  padding-left: 6px;
+  color: #59492e;
+  font-size: 12px;
+}
+#v100-campaign .v100-unit-balance strong { color: #46351e; font-family: var(--v100-numeric-font); font-size: 17px; }
+#v100-campaign[data-v100-phase] .v100-command-personnel.detail-open .v100-unit-level-target { grid-row: 2; padding-right: 3px; color: #3c4c35; }
+#v100-campaign[data-v100-phase] .v100-command-personnel.detail-open .v100-unit-level-target select { border: 1px solid #806d46; border-bottom-width: 3px; background: #f2e7c9; font-weight: 700; }
+#v100-campaign[data-v100-phase] .v100-command-personnel.detail-open .v100-unit-transaction > button {
+  grid-row: 3;
+  border: 1px solid #844a28;
+  border-bottom: 3px solid #512b17;
+  background: linear-gradient(100deg,#96512b,#ad6938 55%,#8d4828);
+  box-shadow: inset 0 1px #edbe7d99;
+  font-weight: 700;
+}
+#v100-campaign[data-v100-phase] .v100-command-personnel.detail-open .v100-unit-transaction > .v100-unit-prepare {
+  grid-row: 3;
+  border-color: #6f7964;
+  border-bottom-color: #1a3022;
+  background: linear-gradient(110deg,#3e5640,#294633);
+  box-shadow: inset 0 1px #a6b59877;
+}
+#v100-campaign[data-v100-phase] .v100-command-personnel.detail-open :is(.v100-portrait-views button,.v100-personnel-detail-back) {
+  border-bottom-width: 3px;
+  background-image: linear-gradient(100deg,#243b2fba,#21372dde),var(--v100-ui-materials,none);
+  background-size: 100% 100%,300% 200%;
+  background-position: center,0 0;
+}
+#v100-campaign[data-v100-phase] .v100-command-personnel.detail-open .v100-portrait-views button[aria-pressed="true"] { background: linear-gradient(105deg,#ead29a,#c5a263); color: #2f291a; border-color: #947039; }
