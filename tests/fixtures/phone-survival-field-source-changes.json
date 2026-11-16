@@ -12,5 +12,15 @@
       "return <button key={upgradeId} disabled={Boolean(pendingSurvivalCheckpoint || survivalSavePending)} onClick={() => selectSurvivalUpgrade(upgradeId)}>",
       "return <button key={upgradeId} disabled={Boolean(pendingSurvivalCheckpoint || survivalSavePending)} onClick={() => selectSurvivalUpgrade(upgradeId)} data-v100-upgrade-id={externalSessionActive ? upgradeId : undefined} style={externalSessionActive ? v100SurvivalUpgradeArtworkStyle(upgradeId) as CSSProperties : undefined}>"
     ]
+  ],
+  "app/V100Campaign.tsx": [
+    [
+      "import \"./v100PhonePauseFinish.css\";",
+      "import \"./v100PhonePauseFinish.css\";\nimport \"./v100PhoneSurvivalFinish.css\";"
+    ],
+    [
+      "<div className=\"v100-notice v100-command-notice\" role=\"status\">",
+      "<div className=\"v100-notice v100-command-notice\" role=\"status\" data-v100-notice-kind={notice === storageFailureMessage(undefined) ? \"save-unverified\" : \"general\"}>"
+    ]
   ]
 }
