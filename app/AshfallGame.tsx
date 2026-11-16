@@ -638,6 +638,7 @@ import { v100AdvancedManualPose, V100_ADVANCED_MANUAL_POSE_STABLE } from "./v100
 import { v100ScoutApproachStep } from "./v100ScoutApproach.js";
 import { clearV100SupportAbilityEffects, drawV100SupportAbilityEffects, drawV100DeployedWireTrap, getV100SupportAbilityEffectsSnapshot, queueV100SupportAbilityEffect } from "./v100SupportAbilityVfx.js";
 import {drawV100MedicalArea,drawV100MedicalRecipients} from "./v100MedicalFieldVfx.js";
+import {drawV100GuardActivations} from "./v100GuardActivationVfx.js";
 import { clearV100AdvancedAbilityEffects, drawV100AdvancedAbilityEffects, drawV100ChihaFinalBursts, V100_CHIHA_FINAL_BURST_DURATION, getV100AdvancedAbilityEffectsSnapshot, queueV100AdvancedAbilityEffect, resolveV100AdvancedAbilityOrigin, resolveV105CurrentAbilityOrigin } from "./v100AdvancedAbilityVfx.js";
 import { v100AbilityOriginSourcePixel, v100RenderedAbilityOriginSocket } from "./v100AbilityOriginSockets.js";
 import { drawV100DefensePerimeter } from "./v100DefensePerimeter.js";
@@ -8938,6 +8939,8 @@ function drawWorld(
   drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["objective"], Boolean(g.definition.missionConfig.v100StageNumber));
 
   for (const effect of selectAreaEffectsForRender(g.areaEffects) as AreaEffect[]) drawAreaEffect(ctx, effect, g.time, stageObjects, Boolean(g.definition.missionConfig.v100StageNumber), g);
+  // Guard preparation paint stays behind actors, hazards and their health readouts.
+  if (g.definition.missionConfig.v100StageNumber) drawV100GuardActivations(ctx, stageObjects, g);
   for (const effect of g.manualAbilityVfx) drawManualAbilityVfx(ctx, effect,Boolean(g.definition.missionConfig.v100StageNumber));
   if (!g.definition.missionConfig.v100StageNumber) for (const fighter of g.fighters) drawCrazyKingAbilityIndicator(ctx, fighter, g.time);
   for (const hazard of g.stationHazards) drawStationHazard(ctx, hazard, g.time);
@@ -9316,7 +9319,7 @@ function drawWorld(
   // the near edge. Drawing them last prevents fighters from appearing on top
   // of wire, rubble, fallen signs, or supply crates.
   drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["foreground-prop"], Boolean(g.definition.missionConfig.v100StageNumber));
-  if (g.definition.missionConfig.v100StageNumber) { drawV100MedicalRecipients(ctx,stageObjects,g); drawV100SupportAbilityEffects(ctx, stageObjects, g); drawV100AdvancedAbilityEffects(ctx, stageObjects, g); }
+  if (g.definition.missionConfig.v100StageNumber) { drawV100MedicalRecipients(ctx,stageObjects,g); drawV100SupportAbilityEffects(ctx, stageObjects, g); drawV100AdvancedAbilityEffects(ctx, stageObjects, g, {includeGuardActivations:false}); }
 
   drawCrawlerBarrage(ctx, g, graphicsProfile);
   if(g.definition.missionConfig.v100StageNumber){

@@ -84,8 +84,8 @@ export function drawV100ChihaFinalBursts(ctx,objects,world,viewport={}) {
   }
 }
 
-export function drawV100AdvancedAbilityEffects(ctx, objects, world) {
-  drawV100GuardActivations(ctx,objects,world);
+export function drawV100AdvancedAbilityEffects(ctx, objects, world, {includeGuardActivations=true}={}) {
+  if(includeGuardActivations)drawV100GuardActivations(ctx,objects,world);
   for (const effect of active(world)) {
     if (effect.pendingOrigin || effect.type==="mrs-grenade-impact" && effect.finalRound===true) continue;
     const elapsed = Math.max(0, world.time - effect.startedAt); const progress = Math.max(0, Math.min(1, elapsed / effect.duration)); const renderEffect = { ...effect, elapsed };

@@ -34,13 +34,13 @@ export const V100_GUARD_ACTIVATION_ART=Object.freeze({
         0.8603515625
       ]
     ],
-    "worldWidth": 192,
-    "worldHeight": 94
+    "worldWidth": 224,
+    "worldHeight": 168
   },
   "guardian": {
     "id": "v100-guardian-guard-activation",
-    "path": "/art/quality-20261115/vfx/guardian-guard-six-r3.webp",
-    "hash": "sha256-07d6fbbbfa73715395b73e73133b26d42c7e6532b8f78522e6940a8bc9bfc627",
+    "path": "/art/quality-20261117/vfx/guardian-guard-six-r4.webp",
+    "hash": "sha256-03931eda8067e35ff1c2e41c232cc888a4d5f7c6c1c41035331eda6435b49e18",
     "width": 768,
     "height": 512,
     "columns": 3,
@@ -48,30 +48,30 @@ export const V100_GUARD_ACTIVATION_ART=Object.freeze({
     "anchors": [
       [
         0.5,
-        0.8994140625
+        0.8153076171875
       ],
       [
         0.5,
-        0.8837890625
+        0.8289794921875
       ],
       [
         0.5,
-        0.8837890625
+        0.8255615234375
       ],
       [
         0.5,
-        0.8603515625
+        0.8289794921875
       ],
       [
         0.5,
-        0.8603515625
+        0.8289794921875
       ],
       [
         0.5,
-        0.8603515625
+        0.8306884765625
       ]
     ],
-    "worldWidth": 224,
-    "worldHeight": 104
+    "worldWidth": 320,
+    "worldHeight": 160
   }
 });

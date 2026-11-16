@@ -25,9 +25,10 @@ export function queueV100GuardActivation(world,owner){
   if((seen.get(owner)??-1)>=id)return false;
   seen.set(owner,id);
   activations.set(world,seen);
+  const direction=Number(owner.manualAbility?.target?.direction)===-1?-1:1;
   const rows=active(world).filter(e=>e.ownerId!==owner.id);
   rows.push({type:'guard-material',kind:owner.kind,ownerId:owner.id,activationId:id,
-    startedAt:world.time,duration:p.duration,x:owner.x,y:owner.y,seed:owner.id*37+id*101});
+    startedAt:world.time,duration:p.duration,x:owner.x,y:owner.y,direction,seed:owner.id*37+id*101});
   effects.set(world,rows.slice(-32));return true;
 }
 export function clearV100GuardActivations(world){effects.delete(world);activations.delete(world);}
@@ -56,6 +57,7 @@ function drawAuthoredGuardActivation(ctx,objects,entry,progress){
  ctx.save();
  try{
   ctx.globalCompositeOperation='source-over';ctx.shadowBlur=0;ctx.translate(entry.x,entry.y+2);
+  if(entry.direction===-1)ctx.scale(-1,1);
   for(const [frame,weight]of [[first,1-blend],[Math.min(5,first+1),blend]]){
    if(weight<=0)continue;const [ax,ay]=chosen.art.anchors[frame];ctx.globalAlpha=.96*weight*fade;
    ctx.drawImage(chosen.image,frame%3*256,Math.floor(frame/3)*256,256,256,

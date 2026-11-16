@@ -2114,9 +2114,9 @@
       "criticality": "critical"
     },
     {
-      "path": "/art/quality-20261115/vfx/guardian-guard-six-r3.webp",
-      "bytes": 130190,
-      "hash": "sha256-07d6fbbbfa73715395b73e73133b26d42c7e6532b8f78522e6940a8bc9bfc627",
+      "path": "/art/quality-20261117/vfx/guardian-guard-six-r4.webp",
+      "bytes": 290176,
+      "hash": "sha256-03931eda8067e35ff1c2e41c232cc888a4d5f7c6c1c41035331eda6435b49e18",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"
@@ -15602,6 +15602,19 @@
       ],
       "logicalBytes": 332060,
       "source": "assets/source/quality-20261116/audio/boss-skills-r1/provenance.json"
+    },
+    {
+      "date": "2026-11-17",
+      "scope": "Use the existing encoded no-ring steam at body height for Kuma, and replace only the shield activation bitmap with a tall directional steel-fragment burst. Locked activation direction mirrors the art with the real guard facing. All old encoded files, original sources, other payloads, ability/AI/audio/save semantics retained. Candidate only; physical-device, listening and whole-game acceptance remain open.",
+      "paths": [
+        "/art/quality-20261115/vfx/kumaverson-guard-six-r4.webp",
+        "/art/quality-20261117/vfx/guardian-guard-six-r4.webp"
+      ],
+      "logicalBytes": 464450,
+      "source": "assets/source/quality-20261117/guard-spectacle-r1/provenance-r2.json",
+      "supersedesUnpublished": [
+        "/art/quality-20261115/vfx/guardian-guard-six-r3.webp"
+      ]
     }
   ],
   "contentReplacements": [
