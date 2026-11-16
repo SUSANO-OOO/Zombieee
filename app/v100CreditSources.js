@@ -2,10 +2,6 @@
 export const V100_SOUND_CREDITS = Object.freeze([
   {role:"チェーンソーのエンジン音",author:"Joseph SARDIN / BigSoundBank",works:["Chainsaw #2"],page:"https://bigsoundbank.com/chainsaw-2-s0707.html",license:"CC0 1.0"},
   {role:"ライフル・機関銃・SMG・拳銃の実録SE",author:"Ben Jaszczak / Brian Nelson / Kevin Heras / Matthew Nanney",works:["The Free Firearm Sound Library"],page:"https://opengameart.org/content/the-free-firearm-sound-library",license:"CC0 1.0"},
-  {role:"RED PANTHER四兵種の合成戦闘音声",author:"VOICEVOX:雀松朱司",works:["VOICEVOX"],page:"https://www.virvoxproject.com/voicevoxの利用規約",license:"音声ライブラリ利用規約"},
-  {role:"クレイジーキングの合成戦闘音声",author:"VOICEVOX:剣崎雌雄",works:["VOICEVOX"],page:"https://frontier.creatia.cc/fanclubs/413/posts/4507",license:"音声ライブラリ利用規約"},
-  {role:"クマバーソンの合成戦闘音声",author:"VOICEVOX:麒ヶ島宗麟",works:["VOICEVOX"],page:"https://www.virvoxproject.com/voicevoxの利用規約",license:"音声ライブラリ利用規約"},
-  {role:"ババヤガの合成戦闘音声",author:"VOICEVOX:玄野武宏",works:["VOICEVOX"],page:"https://www.virvoxproject.com/voicevoxの利用規約",license:"音声ライブラリ利用規約"},
   { role: "男性の笑い声", author: "adiantheman", works: ["Evil Laugh"], page: "https://freesound.org/people/adiantheman/sounds/829881/", license: "CC0" },
   { role: "波音", author: "transitking", works: ["Water Waves"], page: "https://opengameart.org/content/water-waves", license: "CC0" },
   {
@@ -27,7 +23,7 @@ export const V100_SOUND_CREDITS = Object.freeze([
     "license": "CC0"
   },
   {
-    "role": "男性戦闘ボイス・感染者の声",
+    "role": "味方・敵兵の実録反応音・感染者の声",
     "author": "HaelDB",
     "works": [
       "Male Grunt/Yelling sounds"
@@ -114,6 +110,10 @@ export const V100_SOUND_CREDITS = Object.freeze([
   }
 ].map(credit => Object.freeze({ ...credit, works: Object.freeze(credit.works) })));
 export const V100_BUNDLED_LEGACY_CREDITS = Object.freeze([
+  {author:"VOICEVOX:雀松朱司",work:"同梱の旧RED PANTHER戦闘声素材",page:"https://www.virvoxproject.com/voicevoxの利用規約"},
+  {author:"VOICEVOX:剣崎雌雄",work:"同梱の旧クレイジーキング戦闘声素材",page:"https://frontier.creatia.cc/fanclubs/413/posts/4507"},
+  {author:"VOICEVOX:麒ヶ島宗麟",work:"同梱の旧クマバーソン戦闘声素材",page:"https://www.virvoxproject.com/voicevoxの利用規約"},
+  {author:"VOICEVOX:玄野武宏",work:"同梱の旧ババヤガ戦闘声素材",page:"https://www.virvoxproject.com/voicevoxの利用規約"},
   {
     "author": "SRG774",
     "work": "Dark Sci-Fi Audio Pack",

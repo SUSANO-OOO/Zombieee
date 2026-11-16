@@ -814,6 +814,7 @@ test("P5 final-cut keeps simulation and audio live while bounding WebKit present
 });
 
 test("P5 preserves battle voices while authored story dialogue has no voiceover or TTS contract", async () => {
+  const wordlessHumanDeploymentKinds = new Set(["crazy-king", "kumaverson", "babayaga"]);
   for (const event of Object.values(story.STORY_EVENTS)) {
     assert.equal(event.presentation.characterVoice, false, `${event.id} disables story dialogue voiceover`);
   }
@@ -858,7 +859,7 @@ test("P5 preserves battle voices while authored story dialogue has no voiceover 
       assert.equal(cue?.category, "humanVoices", `${kind}/${event} resolves a battle voice asset or pool`);
     }
     const deployCue = productionAudio.humanVoiceCueForUnit(kind, "deploy");
-    if (productionAudio.UNIT_AUDIO_CUE_CONTRACTS[kind]) {
+    if (productionAudio.UNIT_AUDIO_CUE_CONTRACTS[kind] && !wordlessHumanDeploymentKinds.has(kind)) {
       assert.equal(deployCue, productionAudio.unitAudioCueFor(kind, "voice", "deploy"));
       assert.equal(productionAudio.PRODUCTION_AUDIO_MANIFEST.assetById[deployCue]?.category, "humanVoices");
     } else {
@@ -872,7 +873,11 @@ test("P5 preserves battle voices while authored story dialogue has no voiceover 
     for (const event of ["deploy", "attack", "hurt", "death"]) {
       const cueId = productionAudio.unitAudioCueFor(kind, "voice", event);
       assert.equal(cueId, productionAudio.humanVoiceCueForUnit(kind, event), `${kind}/${event} dedicated voice API agrees`);
-      assert.equal(productionAudio.PRODUCTION_AUDIO_MANIFEST.assetById[cueId]?.category, "humanVoices");
+      if (event === "deploy" && wordlessHumanDeploymentKinds.has(kind)) {
+        assert.equal(cueId, null, `${kind} deploys with the vehicle launch sound and no spoken line`);
+      } else {
+        assert.equal(productionAudio.PRODUCTION_AUDIO_MANIFEST.assetById[cueId]?.category, "humanVoices");
+      }
     }
   }
 

@@ -1,14 +1,34 @@
 import {v177JointActorKey} from './v177JointActorHistory.js';
+// Original CC0 human performances already shipped with the game. Keep each
+// character's reaction family consistent; no speech synthesis or pitch shift.
+const recordedHumanVoices=Object.freeze({
+ 'crazy-king':{profile:'male-heavy',take:'02'},
+ kumaverson:{profile:'male-heavy',take:'01'},
+ babayaga:{profile:'male-light',take:'02'},
+ 'red-panther-knife':{profile:'male-light',take:'01'},
+ 'red-panther-shield':{profile:'male-heavy',take:'02'},
+ 'red-panther-smg':{profile:'male-light',take:'02'},
+ 'red-panther-commander':{profile:'male-heavy',take:'01'},
+});
 const sources=name=>['mp3','ogg'].map(ext=>({src:`/audio/v104/combat/${name}.${ext}`,type:ext==='mp3'?'audio/mpeg':'audio/ogg'}));
+const recordedSources=name=>{
+ const match=/^voice-(.+)-(attack|hurt|death)$/.exec(name);
+ const actor=match&&recordedHumanVoices[match[1]];
+ const root=actor?`/audio/v060/sfx/human-${actor.profile}-${match[2]}-${actor.take}`:`/audio/v104/combat/${name}`;
+ return ['mp3','ogg'].map(ext=>({src:`${root}.${ext}`,type:ext==='mp3'?'audio/mpeg':'audio/ogg'}));
+};
 const replacements={
  'weapon-pan-hit':'pan-hit','weapon-pan-heavy-hit':'pan-heavy','weapon-pan-stun':'pan-heavy',
  'weapon-suppressed-pistol':'suppressed-pistol',
  ...Object.fromEntries(['crazy-king','kumaverson','babayaga'].flatMap(kind=>['deploy','attack','hurt','death'].map(event=>{
   const id=`voice-${kind}-${event}`;return[id,id];
  }))),
+ ...Object.fromEntries(Object.keys(recordedHumanVoices).filter(kind=>kind.startsWith('red-panther-')).flatMap(kind=>['attack','hurt','death'].map(event=>{
+  const id=`voice-${kind}-${event}`;return[id,id];
+ }))),
 };
 export function withV104CombatAudio(base){
- return{...base,assets:base.assets.map(asset=>replacements[asset.id]?{...asset,sources:sources(replacements[asset.id])}:asset)};
+ return{...base,assets:base.assets.map(asset=>replacements[asset.id]?{...asset,sources:recordedSources(replacements[asset.id])}:asset)};
 }
 export const V104_ARMOR_AUDIO={id:'v104-armor-hit',category:'melee',sources:sources('armor-hit'),gain:.68,priority:78,cooldownMs:140,maxInstances:2};
 export const V104_HANDGUN_AUDIO={id:'v104-handgun',category:'weapons',sources:sources('handgun'),gain:.72,priority:72,cooldownMs:100,maxInstances:4};
@@ -19,7 +39,8 @@ const rpVoices=['red-panther-knife','red-panther-shield','red-panther-smg','red-
   asset:Object.freeze({id:`voice-${kind}-${event}`,category:'humanVoices',sources:sources(`voice-${kind}-${event}`),
    preload:'lazy',loop:false,maxInstances:1,...settings})})));
 export const V104_RED_PANTHER_VOICES=Object.freeze(rpVoices.map(row=>row.asset));
-const rpMaterialVoices=new Map(rpVoices.map(row=>[`enemy-${row.kind}-${row.event}`,row]));
+const rpMaterialVoices=new Map(rpVoices.map(row=>[`enemy-${row.kind}-${row.event}`,Object.freeze({...row,
+ asset:Object.freeze({...row.asset,sources:recordedSources(row.asset.id)})})]));
 // Keep the original weapon/material cue; the dedicated human bark accompanies it.
 export function v104SupplementalEnemyVoice(cueId){return rpMaterialVoices.get(cueId)??null;}
 // Contact material is separate from mass: a large fleshy enemy is still flesh.

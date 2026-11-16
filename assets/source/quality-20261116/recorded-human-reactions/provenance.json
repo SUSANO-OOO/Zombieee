@@ -1,0 +1,445 @@
+{
+  "createdAt": "2026-11-16T10:15:00.638Z",
+  "base": "10429ddc446f9a867fade521f43b7fcc44a891a7",
+  "creator": "HaelDB",
+  "sourceTitle": "Male Grunt/Yelling sounds",
+  "sourcePage": "https://opengameart.org/content/male-gruntyelling-sounds",
+  "license": "CC0-1.0",
+  "commercialUse": true,
+  "modification": true,
+  "redistribution": true,
+  "originalSourceLedger": "docs/THIRD_PARTY_ASSETS.md",
+  "sourcePolicy": "Use the original recorded performances already included in this repository. No pitch/time/effect processing or new synthesis; MP3/OGG byte identities are retained.",
+  "producerDirection": "2026-11-16: combat dialogue unnecessary; use free recorded damage reactions for allies and enemies. This supersedes the earlier fixed synthetic-cast selection.",
+  "producerListeningAcceptance": false,
+  "changes": {
+    "playedReactionCueCount": 21,
+    "physicalAudioFilesAdded": 0,
+    "physicalAudioFilesModified": 0,
+    "deploySpeechTriggersRemoved": 3,
+    "physicalInstallInventoryAndOrderUnchanged": true,
+    "paidGenerationCalls": 0
+  },
+  "rows": [
+    {
+      "kind": "crazy-king",
+      "event": "attack",
+      "cueId": "voice-crazy-king-attack",
+      "performance": "recorded nonverbal human reaction",
+      "sources": [
+        {
+          "src": "/audio/v060/sfx/human-male-heavy-attack-02.mp3",
+          "type": "audio/mpeg",
+          "bytes": 3747,
+          "sha256": "07b532ac1747f670bcc5270f995642489a317ee1b2ee3473a3fd816d8298da36"
+        },
+        {
+          "src": "/audio/v060/sfx/human-male-heavy-attack-02.ogg",
+          "type": "audio/ogg",
+          "bytes": 6372,
+          "sha256": "f1b5ab104452edf5bfb0406e6666d835f682578d5cbae919b77107777f6bf94e"
+        }
+      ]
+    },
+    {
+      "kind": "crazy-king",
+      "event": "hurt",
+      "cueId": "voice-crazy-king-hurt",
+      "performance": "recorded nonverbal human reaction",
+      "sources": [
+        {
+          "src": "/audio/v060/sfx/human-male-heavy-hurt-02.mp3",
+          "type": "audio/mpeg",
+          "bytes": 10609,
+          "sha256": "3ff23b2e20a1302751625676b9a61a1a178e2439eab475233a677d5e06f0127a"
+        },
+        {
+          "src": "/audio/v060/sfx/human-male-heavy-hurt-02.ogg",
+          "type": "audio/ogg",
+          "bytes": 12838,
+          "sha256": "a665591d633f8e35bc4e6313abcb6fe00ced070f36a7ca1d8a26658fd03d5158"
+        }
+      ]
+    },
+    {
+      "kind": "crazy-king",
+      "event": "death",
+      "cueId": "voice-crazy-king-death",
+      "performance": "recorded nonverbal human reaction",
+      "sources": [
+        {
+          "src": "/audio/v060/sfx/human-male-heavy-death-02.mp3",
+          "type": "audio/mpeg",
+          "bytes": 33956,
+          "sha256": "08ed92f32abf5090ef1d9cdeb20a1a4db04f94e20b015704d88e3f3abc5fea69"
+        },
+        {
+          "src": "/audio/v060/sfx/human-male-heavy-death-02.ogg",
+          "type": "audio/ogg",
+          "bytes": 32970,
+          "sha256": "515170c91c6d0186e6bd746ef58d901b0f2def81c086557953e59d1dbc228d83"
+        }
+      ]
+    },
+    {
+      "kind": "kumaverson",
+      "event": "attack",
+      "cueId": "voice-kumaverson-attack",
+      "performance": "recorded nonverbal human reaction",
+      "sources": [
+        {
+          "src": "/audio/v060/sfx/human-male-heavy-attack-01.mp3",
+          "type": "audio/mpeg",
+          "bytes": 6018,
+          "sha256": "de4430c9b511f3f126645809642fdaf630e0ae5fd6e426e81151868bbff48184"
+        },
+        {
+          "src": "/audio/v060/sfx/human-male-heavy-attack-01.ogg",
+          "type": "audio/ogg",
+          "bytes": 8678,
+          "sha256": "c5238e7b9506614443da17f58543e15f0f86b7ebcd5deb24c9fab69f5b8c3a15"
+        }
+      ]
+    },
+    {
+      "kind": "kumaverson",
+      "event": "hurt",
+      "cueId": "voice-kumaverson-hurt",
+      "performance": "recorded nonverbal human reaction",
+      "sources": [
+        {
+          "src": "/audio/v060/sfx/human-male-heavy-hurt-01.mp3",
+          "type": "audio/mpeg",
+          "bytes": 9930,
+          "sha256": "efa7706e80bed2f1ee1de17f5c1474e259c7e0ee4a6dec8ed23de85999188477"
+        },
+        {
+          "src": "/audio/v060/sfx/human-male-heavy-hurt-01.ogg",
+          "type": "audio/ogg",
+          "bytes": 12441,
+          "sha256": "16c0ec9c115a7f1576f0b4fa41336839f620e89d8a3a2b19da017fdf72951ed8"
+        }
+      ]
+    },
+    {
+      "kind": "kumaverson",
+      "event": "death",
+      "cueId": "voice-kumaverson-death",
+      "performance": "recorded nonverbal human reaction",
+      "sources": [
+        {
+          "src": "/audio/v060/sfx/human-male-heavy-death-01.mp3",
+          "type": "audio/mpeg",
+          "bytes": 45354,
+          "sha256": "6d4cce9f3f6469dfea409455fbbe9bc99a39a221127431678066870f0239b3a7"
+        },
+        {
+          "src": "/audio/v060/sfx/human-male-heavy-death-01.ogg",
+          "type": "audio/ogg",
+          "bytes": 44697,
+          "sha256": "24cb5e4338c068959858382726bd74981eee3225411fdc9f79bdabe43f65d5a9"
+        }
+      ]
+    },
+    {
+      "kind": "babayaga",
+      "event": "attack",
+      "cueId": "voice-babayaga-attack",
+      "performance": "recorded nonverbal human reaction",
+      "sources": [
+        {
+          "src": "/audio/v060/sfx/human-male-light-attack-02.mp3",
+          "type": "audio/mpeg",
+          "bytes": 8836,
+          "sha256": "8eb8aa6c8481028c415372fcb765d1a8983d9f68c0626fe84ee53d474bc8220b"
+        },
+        {
+          "src": "/audio/v060/sfx/human-male-light-attack-02.ogg",
+          "type": "audio/ogg",
+          "bytes": 10933,
+          "sha256": "e04c33a5dee6adfd82a209ec69da0e91d80bfcf8a1d1292fc9d3bf047f78e600"
+        }
+      ]
+    },
+    {
+      "kind": "babayaga",
+      "event": "hurt",
+      "cueId": "voice-babayaga-hurt",
+      "performance": "recorded nonverbal human reaction",
+      "sources": [
+        {
+          "src": "/audio/v060/sfx/human-male-light-hurt-02.mp3",
+          "type": "audio/mpeg",
+          "bytes": 7320,
+          "sha256": "262566e6b0445b2cd6a65a782fae8be2dd2f15dcb9ca617e18c18cc8198cfc5a"
+        },
+        {
+          "src": "/audio/v060/sfx/human-male-light-hurt-02.ogg",
+          "type": "audio/ogg",
+          "bytes": 9804,
+          "sha256": "48ab420165e32411f6e7f5eb7be17e44fd4d8d7c6876562a488f29b61896d047"
+        }
+      ]
+    },
+    {
+      "kind": "babayaga",
+      "event": "death",
+      "cueId": "voice-babayaga-death",
+      "performance": "recorded nonverbal human reaction",
+      "sources": [
+        {
+          "src": "/audio/v060/sfx/human-male-light-death-02.mp3",
+          "type": "audio/mpeg",
+          "bytes": 7008,
+          "sha256": "ad802388c2b3634fcaacdecbd6e0e2bab347c3103ea35175d40902ed9076a6dd"
+        },
+        {
+          "src": "/audio/v060/sfx/human-male-light-death-02.ogg",
+          "type": "audio/ogg",
+          "bytes": 9653,
+          "sha256": "068f277af9e94e0067e4aa8a48d96fb30f474e613c8b052eeaa17f48408f57c8"
+        }
+      ]
+    },
+    {
+      "kind": "red-panther-knife",
+      "event": "attack",
+      "cueId": "voice-red-panther-knife-attack",
+      "performance": "recorded nonverbal human reaction",
+      "sources": [
+        {
+          "src": "/audio/v060/sfx/human-male-light-attack-01.mp3",
+          "type": "audio/mpeg",
+          "bytes": 8207,
+          "sha256": "d178611e74229147baa4e8d8ce08c721c8eef8eccb5ca7462b6dcb3eabba58dc"
+        },
+        {
+          "src": "/audio/v060/sfx/human-male-light-attack-01.ogg",
+          "type": "audio/ogg",
+          "bytes": 9454,
+          "sha256": "75963c8af435ea4eb2ebae521a4dfaf95682b145d85d1e22b18a922c888bd265"
+        }
+      ]
+    },
+    {
+      "kind": "red-panther-knife",
+      "event": "hurt",
+      "cueId": "voice-red-panther-knife-hurt",
+      "performance": "recorded nonverbal human reaction",
+      "sources": [
+        {
+          "src": "/audio/v060/sfx/human-male-light-hurt-01.mp3",
+          "type": "audio/mpeg",
+          "bytes": 7297,
+          "sha256": "01d42cfda670717d2c5b612ed5a5ee7d572a893dbf622d7da0549e6fcf37a6f7"
+        },
+        {
+          "src": "/audio/v060/sfx/human-male-light-hurt-01.ogg",
+          "type": "audio/ogg",
+          "bytes": 9676,
+          "sha256": "b6bc600e565214935bbe14c48c3bf3235cb4301ffe79be7f09f22d49970b84b2"
+        }
+      ]
+    },
+    {
+      "kind": "red-panther-knife",
+      "event": "death",
+      "cueId": "voice-red-panther-knife-death",
+      "performance": "recorded nonverbal human reaction",
+      "sources": [
+        {
+          "src": "/audio/v060/sfx/human-male-light-death-01.mp3",
+          "type": "audio/mpeg",
+          "bytes": 10137,
+          "sha256": "4614f491789a03a5e572c68c0c728d72afaea52cc67038444441642c1af1133b"
+        },
+        {
+          "src": "/audio/v060/sfx/human-male-light-death-01.ogg",
+          "type": "audio/ogg",
+          "bytes": 12441,
+          "sha256": "f82ec12ecc9c6d0dcd8460193bce87e7f364eac47481c0f194b921a7c719e9a8"
+        }
+      ]
+    },
+    {
+      "kind": "red-panther-shield",
+      "event": "attack",
+      "cueId": "voice-red-panther-shield-attack",
+      "performance": "recorded nonverbal human reaction",
+      "sources": [
+        {
+          "src": "/audio/v060/sfx/human-male-heavy-attack-02.mp3",
+          "type": "audio/mpeg",
+          "bytes": 3747,
+          "sha256": "07b532ac1747f670bcc5270f995642489a317ee1b2ee3473a3fd816d8298da36"
+        },
+        {
+          "src": "/audio/v060/sfx/human-male-heavy-attack-02.ogg",
+          "type": "audio/ogg",
+          "bytes": 6372,
+          "sha256": "f1b5ab104452edf5bfb0406e6666d835f682578d5cbae919b77107777f6bf94e"
+        }
+      ]
+    },
+    {
+      "kind": "red-panther-shield",
+      "event": "hurt",
+      "cueId": "voice-red-panther-shield-hurt",
+      "performance": "recorded nonverbal human reaction",
+      "sources": [
+        {
+          "src": "/audio/v060/sfx/human-male-heavy-hurt-02.mp3",
+          "type": "audio/mpeg",
+          "bytes": 10609,
+          "sha256": "3ff23b2e20a1302751625676b9a61a1a178e2439eab475233a677d5e06f0127a"
+        },
+        {
+          "src": "/audio/v060/sfx/human-male-heavy-hurt-02.ogg",
+          "type": "audio/ogg",
+          "bytes": 12838,
+          "sha256": "a665591d633f8e35bc4e6313abcb6fe00ced070f36a7ca1d8a26658fd03d5158"
+        }
+      ]
+    },
+    {
+      "kind": "red-panther-shield",
+      "event": "death",
+      "cueId": "voice-red-panther-shield-death",
+      "performance": "recorded nonverbal human reaction",
+      "sources": [
+        {
+          "src": "/audio/v060/sfx/human-male-heavy-death-02.mp3",
+          "type": "audio/mpeg",
+          "bytes": 33956,
+          "sha256": "08ed92f32abf5090ef1d9cdeb20a1a4db04f94e20b015704d88e3f3abc5fea69"
+        },
+        {
+          "src": "/audio/v060/sfx/human-male-heavy-death-02.ogg",
+          "type": "audio/ogg",
+          "bytes": 32970,
+          "sha256": "515170c91c6d0186e6bd746ef58d901b0f2def81c086557953e59d1dbc228d83"
+        }
+      ]
+    },
+    {
+      "kind": "red-panther-smg",
+      "event": "attack",
+      "cueId": "voice-red-panther-smg-attack",
+      "performance": "recorded nonverbal human reaction",
+      "sources": [
+        {
+          "src": "/audio/v060/sfx/human-male-light-attack-02.mp3",
+          "type": "audio/mpeg",
+          "bytes": 8836,
+          "sha256": "8eb8aa6c8481028c415372fcb765d1a8983d9f68c0626fe84ee53d474bc8220b"
+        },
+        {
+          "src": "/audio/v060/sfx/human-male-light-attack-02.ogg",
+          "type": "audio/ogg",
+          "bytes": 10933,
+          "sha256": "e04c33a5dee6adfd82a209ec69da0e91d80bfcf8a1d1292fc9d3bf047f78e600"
+        }
+      ]
+    },
+    {
+      "kind": "red-panther-smg",
+      "event": "hurt",
+      "cueId": "voice-red-panther-smg-hurt",
+      "performance": "recorded nonverbal human reaction",
+      "sources": [
+        {
+          "src": "/audio/v060/sfx/human-male-light-hurt-02.mp3",
+          "type": "audio/mpeg",
+          "bytes": 7320,
+          "sha256": "262566e6b0445b2cd6a65a782fae8be2dd2f15dcb9ca617e18c18cc8198cfc5a"
+        },
+        {
+          "src": "/audio/v060/sfx/human-male-light-hurt-02.ogg",
+          "type": "audio/ogg",
+          "bytes": 9804,
+          "sha256": "48ab420165e32411f6e7f5eb7be17e44fd4d8d7c6876562a488f29b61896d047"
+        }
+      ]
+    },
+    {
+      "kind": "red-panther-smg",
+      "event": "death",
+      "cueId": "voice-red-panther-smg-death",
+      "performance": "recorded nonverbal human reaction",
+      "sources": [
+        {
+          "src": "/audio/v060/sfx/human-male-light-death-02.mp3",
+          "type": "audio/mpeg",
+          "bytes": 7008,
+          "sha256": "ad802388c2b3634fcaacdecbd6e0e2bab347c3103ea35175d40902ed9076a6dd"
+        },
+        {
+          "src": "/audio/v060/sfx/human-male-light-death-02.ogg",
+          "type": "audio/ogg",
+          "bytes": 9653,
+          "sha256": "068f277af9e94e0067e4aa8a48d96fb30f474e613c8b052eeaa17f48408f57c8"
+        }
+      ]
+    },
+    {
+      "kind": "red-panther-commander",
+      "event": "attack",
+      "cueId": "voice-red-panther-commander-attack",
+      "performance": "recorded nonverbal human reaction",
+      "sources": [
+        {
+          "src": "/audio/v060/sfx/human-male-heavy-attack-01.mp3",
+          "type": "audio/mpeg",
+          "bytes": 6018,
+          "sha256": "de4430c9b511f3f126645809642fdaf630e0ae5fd6e426e81151868bbff48184"
+        },
+        {
+          "src": "/audio/v060/sfx/human-male-heavy-attack-01.ogg",
+          "type": "audio/ogg",
+          "bytes": 8678,
+          "sha256": "c5238e7b9506614443da17f58543e15f0f86b7ebcd5deb24c9fab69f5b8c3a15"
+        }
+      ]
+    },
+    {
+      "kind": "red-panther-commander",
+      "event": "hurt",
+      "cueId": "voice-red-panther-commander-hurt",
+      "performance": "recorded nonverbal human reaction",
+      "sources": [
+        {
+          "src": "/audio/v060/sfx/human-male-heavy-hurt-01.mp3",
+          "type": "audio/mpeg",
+          "bytes": 9930,
+          "sha256": "efa7706e80bed2f1ee1de17f5c1474e259c7e0ee4a6dec8ed23de85999188477"
+        },
+        {
+          "src": "/audio/v060/sfx/human-male-heavy-hurt-01.ogg",
+          "type": "audio/ogg",
+          "bytes": 12441,
+          "sha256": "16c0ec9c115a7f1576f0b4fa41336839f620e89d8a3a2b19da017fdf72951ed8"
+        }
+      ]
+    },
+    {
+      "kind": "red-panther-commander",
+      "event": "death",
+      "cueId": "voice-red-panther-commander-death",
+      "performance": "recorded nonverbal human reaction",
+      "sources": [
+        {
+          "src": "/audio/v060/sfx/human-male-heavy-death-01.mp3",
+          "type": "audio/mpeg",
+          "bytes": 45354,
+          "sha256": "6d4cce9f3f6469dfea409455fbbe9bc99a39a221127431678066870f0239b3a7"
+        },
+        {
+          "src": "/audio/v060/sfx/human-male-heavy-death-01.ogg",
+          "type": "audio/ogg",
+          "bytes": 44697,
+          "sha256": "24cb5e4338c068959858382726bd74981eee3225411fdc9f79bdabe43f65d5a9"
+        }
+      ]
+    }
+  ]
+}

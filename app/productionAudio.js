@@ -776,7 +776,13 @@ export const V100_AUDIO_MANIFEST = createAudioManifest(withV100BossSkillAudio(wi
 const installAudioBySource = new Map(PRODUCTION_AUDIO_MANIFEST.assets.map(asset => [
   asset.sources.map(source => source.src).join('|'), asset,
 ]));
-for (const asset of V100_AUDIO_MANIFEST.assets) {
+// Preserve the original physical inventory and ordering for installed updates
+// and rollback. Playback uses the CC0 reactions already in that inventory.
+const legacyHumanInstallAssets = V100_AUDIO_MANIFEST.assets.map(asset =>
+  /^voice-(?:crazy-king|kumaverson|babayaga|red-panther-(?:knife|shield|smg|commander))-(?:deploy|attack|hurt|death)$/.test(asset.id)
+    ? {...asset,sources:['mp3','ogg'].map(ext=>({src:`/audio/v104/combat/${asset.id}.${ext}`,type:ext==='mp3'?'audio/mpeg':'audio/ogg'}))}
+    : asset);
+for (const asset of [...legacyHumanInstallAssets, ...V100_AUDIO_MANIFEST.assets]) {
   const key = asset.sources.map(source => source.src).join('|');
   if (!installAudioBySource.has(key)) {
     const pathId = asset.sources[0].src.replace(/^\/audio\//, '').replace(/\.[^.]+$/, '').replaceAll('/', '-');
@@ -937,7 +943,8 @@ const newUnitContract = ({ weapon, voiceProfile, weaponEvents, voicePrefix }) =>
   voiceProfile,
   weaponEvents: Object.freeze({ ...weaponEvents }),
   voiceEvents: Object.freeze({
-    deploy: `voice-${voicePrefix}-deploy`,
+    // No spoken deployment line: the CRAWLER's existing launch cue owns it.
+    deploy: null,
     attack: `voice-${voicePrefix}-attack`,
     hurt: `voice-${voicePrefix}-hurt`,
     death: `voice-${voicePrefix}-death`,
