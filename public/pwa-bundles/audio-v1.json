@@ -1,7 +1,7 @@
 {
   "schema": "zombieee-pwa-audio-bundle/1",
   "bundlePath": "/pwa-bundles/audio-v1.bin",
-  "bytes": 36000475,
+  "bytes": 36151187,
   "assets": {
     "/audio/v105/fist-wave-charge.mp3": {
       "id": "v105-fist-wave-charge",
@@ -2456,6 +2456,18 @@
       "offset": 35985095,
       "bytes": 15380,
       "hash": "sha256-66d7b3dea73575e2bc1a5952a5fff5d3fddb1eb983b3f6ad4eeb468e62f1a43a"
+    },
+    "/audio/quality-20261116/mayo/recorded-bark.wav": {
+      "id": "install-quality-20261116-mayo-recorded-bark",
+      "offset": 36000475,
+      "bytes": 56098,
+      "hash": "sha256-fd7edc9d5e4754141bb61b55982810b27c2008d7c9a746d85676f4aa9658930e"
+    },
+    "/audio/quality-20261116/mayo/recorded-whine.wav": {
+      "id": "install-quality-20261116-mayo-recorded-whine",
+      "offset": 36056573,
+      "bytes": 94614,
+      "hash": "sha256-f4330592f541dab7aef1ba353f1ece852ffc31f0a552e4fd26b70452521acdba"
     }
   }
 }
