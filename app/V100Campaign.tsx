@@ -119,6 +119,7 @@ import "./v100DialogueStage.css";
 import "./v100SurvivorInterface.css";
 import "./v100BattleCommandFinish.css";
 import "./v100SupplyTitleFinish.css";
+import "./v100PersonnelDossier.css";
 import "./v100ModeDepartureFinish.css";
 import "./v100CompendiumRecordsFinish.css";
 import "./v100SystemFieldFinish.css";
@@ -1479,9 +1480,8 @@ function PersonnelView({ save, initialUnitId, returnLabel, onBack, onPrepare, on
           <div className="v100-personnel-focus-art" data-portrait-view={portraitView}><CrewPortrait unitId={selectedUnit.id} mode={portraitView} label={selectedUnit.displayName + (portraitView === "whole" ? "の立ち絵全体" : portraitView === "face" ? "の顔" : "の上半身")} /></div>
           <div className="v100-unit-growth-notes"><div className="v100-portrait-views" role="group" aria-label="立ち絵の見方">{(["upper", "face", "whole"] as const).map(view => <button key={view} type="button" aria-pressed={portraitView === view} onClick={() => setPortraitView(view)}>{view === "upper" ? "腰上" : view === "face" ? "顔" : "全体"}</button>)}</div></div>
           <button type="button" className="v100-personnel-detail-back" onClick={() => focusedUnitId ? onBack() : setDetailOpen(false)}>{focusedUnitId ? returnLabel : "ユニット一覧へ"}</button>
-          <div className="v100-personnel-focus-copy">
-            <div className="v100-unit-record-heading"><h3>{selectedUnit.displayName}</h3><span className="v100-unit-level">Lv.{info.level}{info.nextLevel !== null && <> → {info.nextLevel}</>} <small>/ 上限 {info.levelCap}</small></span><small className="v100-unit-registration">{info.status}</small></div>
-            <p className="v100-unit-record-meta">{info.roleLabel} / 指揮 {info.commandCost} / 再出撃 {formatV100Number(info.redeploySeconds)}秒</p>
+          <div className="v100-personnel-focus-copy" key={selectedUnit.id}>
+            <div className="v100-unit-record-heading"><span className="v100-unit-record-index" aria-hidden="true">{String(V100_UNITS.indexOf(selectedUnit) + 1).padStart(2, "0")}</span><h3>{selectedUnit.displayName}</h3><span className="v100-unit-level">Lv.{info.level}{info.nextLevel !== null && <> → {info.nextLevel}</>} <small>/ 上限 {info.levelCap}</small></span><small className="v100-unit-registration">{info.status}</small></div>
 
             <div key={selectedUnit.id + ":" + info.level} className={"v100-personnel-stats v100-stat-reveal " + (currentStats.healing > 0 ? "is-healer" : "")} aria-label="装備込みの戦闘能力と強化後の値">{[
               showStat("HP", currentStats.hp, nextStats?.hp ?? null),
@@ -1495,11 +1495,15 @@ function PersonnelView({ save, initialUnitId, returnLabel, onBack, onPrepare, on
                 ? showStat("治療後の守り", Math.round(info.treatmentProtection.reduction * 100) + "% / " + info.treatmentProtection.seconds + "秒")
                 : showStat("攻撃間隔", formatV100Number(currentStats.attackEvery) + "秒"),
             ]}</div>
-            {info.skill && <p className="v100-unit-skill"><strong>{info.skill.name}</strong><span>再使用 {info.skill.cooldownSeconds}秒</span><br />{info.skill.summary}<small className="v100-unit-level-effect">{info.skill.levelEffect}</small></p>}
+            <p className="v100-unit-record-meta">{info.roleLabel} / 指揮 {info.commandCost} / 再出撃 {formatV100Number(info.redeploySeconds)}秒</p>
+            {info.skill && <p className="v100-unit-skill"><small className="v100-unit-skill-label">手動アビリティ</small><strong>{info.skill.name}</strong><span>再使用 {info.skill.cooldownSeconds}秒</span><br />{info.skill.summary}<small className="v100-unit-level-effect">{info.skill.levelEffect}</small></p>}
             <div className="v100-growth-record-notes"><details><summary>育成</summary><p>{nextStats ? "今回：" + (nextGrowth || "数値変化なし") : "現在の育成上限"}{info.nextOutputGrowth && <><br />{info.nextOutputGrowth.stat === "healing" ? "治療" : info.attackType === "ranged" ? "射撃ダメージ" : "近接ダメージ"}はLv.{info.nextOutputGrowth.level}で{formatV100Number(info.nextOutputGrowth.value)}。{!info.nextOutputGrowth.withinCap && "上限解禁後に育成できます。"}</>}<br />{info.equipmentNames.length ? info.equipmentNames.join(" / ") : "装備なし"}<br />防御力は受けるダメージの軽減率です。{info.skill && <><br />{info.skill.name}：{info.skill.detail}</>}{info.treatmentProtection && <><br />通常治療後は {Math.round(info.treatmentProtection.reduction * 100)}%の被害軽減が{info.treatmentProtection.seconds}秒間続きます。</>}</p></details></div>
-            {nextStats && <p className="v100-upgrade-preview">今回の強化：{nextGrowth || "数値変化なし"}</p>}</div>
-            <div className={"v100-unit-transaction" + (info.owned ? " has-prepare" : "")}>{info.owned && <button type="button" className="v100-primary v100-unit-prepare" onClick={() => onPrepare(selectedUnit.id)}>{save.formationSlots.includes(selectedUnit.id) ? "編成中の枠を見る" : "この仲間を編成"}<small>{save.formationSlots.includes(selectedUnit.id) ? "この仲間は編成中" : "出撃させる枠を選ぶ"}</small></button>}<p>所持 {save.caps} CAPS{price > 0 && <> / 必要 {price}{save.caps < price && <> / あと {price - save.caps}</>}</>}</p>
-              {info.owned && info.nextLevel !== null && <label className="v100-unit-level-target">育成先<select aria-label="育成するレベル" value={info.nextLevel} onChange={event => setLevelTarget({unitId:selectedUnit.id,fromLevel:info.level,target:Number(event.target.value)})}>{Array.from({length:info.levelCap-info.level},(_,index)=>info.level+index+1).map(level=><option key={level} value={level}>Lv.{level}まで</option>)}</select></label>}
+          </div>
+            <div className={"v100-unit-transaction" + (info.owned ? " has-prepare" : "")}>
+              <div className="v100-upgrade-preview" aria-live="polite"><span>{info.owned ? nextStats ? "今回の強化" : "育成記録" : "出撃の支度"}</span><strong>{info.owned ? nextStats ? nextGrowth || "数値変化なし" : "現在の育成上限" : "支度を整えると、編成に加えられます。"}</strong></div>
+              {info.owned && <button type="button" className="v100-unit-prepare" onClick={() => onPrepare(selectedUnit.id)}>{save.formationSlots.includes(selectedUnit.id) ? "編成中の枠を見る" : "この仲間を編成"}<small>{save.formationSlots.includes(selectedUnit.id) ? "この仲間は編成中" : "出撃させる枠を選ぶ"}</small></button>}
+              <p className="v100-unit-balance"><span>所持 <strong>{save.caps}</strong> CAPS</span>{price > 0 && <span>必要 <strong>{price}</strong> CAPS{save.caps < price && <> / あと {price - save.caps}</>}</span>}</p>
+              {info.owned && info.nextLevel !== null && <label className="v100-unit-level-target"><span className="v100-unit-level-caption">育成先</span><select aria-label="育成するレベル" value={info.nextLevel} onChange={event => setLevelTarget({unitId:selectedUnit.id,fromLevel:info.level,target:Number(event.target.value)})}>{Array.from({length:info.levelCap-info.level},(_,index)=>info.level+index+1).map(level=><option key={level} value={level}>Lv.{level}まで</option>)}</select></label>}
               {info.owned ? <button type="button" className="v100-primary" data-ui-sound="transaction" onClick={() => info.nextLevel !== null && onLevel(selectedUnit.id, info.level, info.nextLevel)} disabled={info.upgradeCost <= 0 || save.caps < info.upgradeCost}>{info.upgradeCost <= 0 ? "強化上限" : save.caps < info.upgradeCost ? "あと " + (info.upgradeCost - save.caps) + " CAPS必要" : "Lv." + info.nextLevel + "へ強化 / " + info.upgradeCost + " CAPS"}</button>
                 : info.registered ? <button type="button" className="v100-primary" data-ui-sound="transaction" onClick={() => onPurchase(selectedUnit.id)} disabled={save.caps < info.registrationCost}>{save.caps < info.registrationCost ? "あと " + (info.registrationCost - save.caps) + " CAPS必要" : "支度を整える / " + info.registrationCost + " CAPS"}</button>
                   : <p className="v100-focus-lock">第{selectedUnit.availabilityStageNumber}作戦クリアで出撃の支度ができる。</p>}
