@@ -64,7 +64,7 @@
   line-height: 1.2;
 }
 #v100-campaign[data-v100-phase] .v100-command-personnel .v100-unit-level { color: #efd296; font-size: 18px; }
-#v100-campaign[data-v100-phase] .v100-command-personnel .v100-unit-registration { color: #d2d9bf; font-size: 11px; }
+#v100-campaign[data-v100-phase] .v100-command-personnel .v100-unit-registration { padding: 2px 4px; border: 1px solid #9eaa8266; color: #d2d9bf; font-size: 11px; }
 #v100-campaign[data-v100-phase] .v100-command-personnel .v100-unit-record-meta { padding: 0 4px 4px; border-bottom: 1px solid #92816080; }
 #v100-campaign[data-v100-phase] .v100-command-personnel.detail-open .v100-personnel-stats {
   grid-auto-rows: 49px;
@@ -140,6 +140,12 @@
   border-bottom-color: #1a3022;
   background: linear-gradient(110deg,#3e5640,#294633);
   box-shadow: inset 0 1px #a6b59877;
+}
+#v100-campaign[data-v100-phase] .v100-command-personnel.detail-open .v100-unit-transaction > .v100-primary:not(:disabled) {
+  border-color: #995b32 !important;
+  background: linear-gradient(105deg,#98552bc9,#ad6938d4),var(--v100-ui-materials,none) !important;
+  background-size: 100% 100%,300% 200% !important;
+  background-position: center,0 100% !important;
 }
 #v100-campaign[data-v100-phase] .v100-command-personnel.detail-open :is(.v100-portrait-views button,.v100-personnel-detail-back) {
   border-bottom-width: 3px;
