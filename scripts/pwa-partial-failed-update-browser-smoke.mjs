@@ -1497,6 +1497,7 @@ try {
   await mkdir(evidenceDir, { recursive: true });
   const sourceFiles = [
     "scripts/pwa-partial-failed-update-browser-smoke.mjs",
+    "scripts/pwa-partial-progress-window.mjs",
     "scripts/pwa-browser-runtime.mjs",
     "scripts/pwa-native-runtime/package-lock.json",
     "scripts/pwa-offline-origin.mjs",
