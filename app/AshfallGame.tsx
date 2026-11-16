@@ -14,6 +14,7 @@ import {V100_KING_EXHAUST_SOCKET} from './v100KingExhaustArt.js';
 import { v105CurrentAbilitySample, v105AbilityFacing } from './v105CurrentAbilityPose.js';
 import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
 import { v100PortraitFraming } from "./v100PortraitFraming.js";
+import {v100SurvivalUpgradeArtworkStyle} from "./v100SurvivalUpgradeArt.js";
 import { v100BasePresentationFor } from "./v100BasePresentation.js";
 import { createV100HumanWalkRenderer, v100HumanWalkPhase, v100UsesHumanWalk, v100HumanWalkCycleDistance, v100HumanWalkFrame } from "./v100HumanWalk.js";
 import { V177_JOINT_ATLASES, v177JointCycleDistance, v177JointPose, v177RangerFootPlan, v105BipedFootPlan, drawV177JointPose, v177CaptureJointPose, v177RenderedJointWeaponSocket, v177RenderedWeightedLowerReceipt } from "./v177JointPresentation.js";
@@ -25644,7 +25645,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             <div className="battle-objective objective">{isSurvivalBattle ? "防衛前線を維持" : `目標：${formatBattleText(hud.objective)}`}</div>
           </div>
         </div>
-        {survivalUpgradeOpen && <div className="survival-upgrade-screen" role="dialog" aria-modal="true" aria-label="ボス撃破強化選択"><section>
+        {survivalUpgradeOpen && <div className={externalSessionActive ? "survival-upgrade-screen v100-phone-upgrade" : "survival-upgrade-screen"} role="dialog" aria-modal="true" aria-label="ボス撃破強化選択"><section>
           <small>第{survivalHud.lastCompletedWave}波を制圧</small>
           <h2>強化を1つ選択</h2>
           {externalSessionActive && externalSession?.survivalCheckpointReward && !pendingSurvivalCheckpoint && !survivalSavePending && <div className="v100-checkpoint-reward" role="status"><strong>第{survivalHud.lastCompletedWave}波を制圧 / +{externalSession.survivalCheckpointReward.caps} CAPS</strong><span>装備：{externalSession.survivalCheckpointReward.equipmentText}</span><small>報酬と中間記録を保存済み</small></div>}
@@ -25656,7 +25657,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               if (!upgrade) return null;
               const stack = survivalHud.upgradeStacks[upgradeId] ?? 0;
               const preview = survivalHud.upgradePreviews[upgradeId];
-              return <button key={upgradeId} disabled={Boolean(pendingSurvivalCheckpoint || survivalSavePending)} onClick={() => selectSurvivalUpgrade(upgradeId)}>
+              return <button key={upgradeId} disabled={Boolean(pendingSurvivalCheckpoint || survivalSavePending)} onClick={() => selectSurvivalUpgrade(upgradeId)} data-v100-upgrade-id={externalSessionActive ? upgradeId : undefined} style={externalSessionActive ? v100SurvivalUpgradeArtworkStyle(upgradeId) as CSSProperties : undefined}>
                 <small>{externalSessionActive ? V100_SURVIVAL_UPGRADE_CATEGORIES[upgrade.category] ?? "ステージ強化" : upgrade.category.toUpperCase()}</small>
                 <b>{externalSessionActive ? upgrade.displayName.replaceAll("装甲車両", "装甲車両") : upgrade.displayName}</b>
                 {preview ? <><span>{preview.label}</span><strong>{preview.before} → {preview.after}{preview.suffix}</strong><em>{preview.note}</em></>

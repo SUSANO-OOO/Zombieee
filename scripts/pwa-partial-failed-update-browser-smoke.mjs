@@ -27,6 +27,7 @@ import { disconnectPwaOrigin } from "./pwa-offline-origin.mjs";
 import { isExpectedPartialBundleAbort, isCausalPwaIncidentRetry, markPartialBundleCancelIntent } from "./pwa-expected-abort.mjs";
 import { verifyEntryNativePreload } from "./pwa-entry-native-preload.mjs";
 import { partitionPwaUpdateTransportPaths, inspectPwaContentTransportCoverage } from "./pwa-update-request-ownership.mjs";
+import { candidateDownloadProgressWindow, matchesCandidateDownloadProgress } from "./pwa-partial-progress-window.mjs";
 import { createPartialPwaProfileDirectory } from "./pwa-partial-profile-directory.mjs";
 
 const oldRootInput = process.env.PWA_PARTIAL_UPDATE_OLD_ROOT;
@@ -819,8 +820,7 @@ try {
   // candidate-aware without turning that scheduling race into a release-size
   // literal: the UI may start with the observed pending window, but it must
   // never exceed the candidate-derived download plan.
-  const candidateProgressTotalMin = candidatePendingDownloadableAssets.length;
-  const candidateProgressTotalMax = candidateDownloadableAssets.length;
+  const candidateEntryPendingDownloadableCount = candidatePendingDownloadableAssets.length;
   record(`the same profile sees ${RELEASE_VERSION} without uninstall, storage clear, or profile replacement`, (
     candidateManifestFromPage.version === candidateManifest.version
     && candidateManifestFromPage.releaseSha === candidateManifest.releaseSha
@@ -912,6 +912,11 @@ try {
     && await gift.count() === 0
     && (await v100State(page)).raw === beforeUpdateV100.raw
   ));
+  // Observe immediately before the real update action, after all entry waits.
+  const candidateHashesAtRepairStart = new Set(await cacheHashes(page));
+  const candidateProgressWindow = candidateDownloadProgressWindow(candidateDownloadableAssets, candidateHashesAtRepairStart);
+  const candidateProgressTotalMin = candidateProgressWindow.minimum;
+  const candidateProgressTotalMax = candidateProgressWindow.maximum;
   const incidentTransportStart = candidateTransportRequests.length;
   const incidentBrowserTransportStart = candidateBrowserTransportRequests.length;
   await page.evaluate(()=>{
@@ -969,8 +974,7 @@ try {
     && new Set(incidentRepairRequests.filter((pathname) => pathname !== bundlePathname)).size
       === incidentRepairRequests.filter((pathname) => pathname !== bundlePathname).length
     && incidentProgressCompleted !== null
-    && incidentProgressTotal >= candidateProgressTotalMin
-    && incidentProgressTotal <= candidateProgressTotalMax
+    && matchesCandidateDownloadProgress(incidentProgressTotal, candidateProgressWindow)
     && incidentProgressCompleted >= candidatePendingReleaseDeltaTransportPaths.size
     && incidentProgressCompleted <= incidentProgressTotal
     && incidentCategory === 1
@@ -1001,7 +1005,9 @@ try {
     incidentProgressCompleted,
     incidentProgressTotal,
     expectedReleaseDeltaCount: candidatePendingReleaseDeltaTransportPaths.size,
-    expectedDownloadableCount: candidatePendingDownloadableAssets.length,
+    expectedDownloadableCount: candidateProgressTotalMin,
+    entryPendingDownloadableCount: candidateEntryPendingDownloadableCount,
+    newlyCachedBeforeAction: candidatePendingDownloadableAssets.filter((asset) => candidateHashesAtRepairStart.has(asset.hash)).map(({path,hash}) => ({path,hash})),
     candidateProgressTotalMin,
     candidateProgressTotalMax,
     candidateDownloadableCount: candidateDownloadableAssets.length,
@@ -1491,6 +1497,7 @@ try {
   await mkdir(evidenceDir, { recursive: true });
   const sourceFiles = [
     "scripts/pwa-partial-failed-update-browser-smoke.mjs",
+    "scripts/pwa-partial-progress-window.mjs",
     "scripts/pwa-browser-runtime.mjs",
     "scripts/pwa-native-runtime/package-lock.json",
     "scripts/pwa-offline-origin.mjs",

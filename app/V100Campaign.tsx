@@ -123,6 +123,7 @@ import "./v100ModeDepartureFinish.css";
 import "./v100CompendiumRecordsFinish.css";
 import "./v100SystemFieldFinish.css";
 import "./v100PhonePauseFinish.css";
+import "./v100PhoneSurvivalFinish.css";
 import {subscribeV100InterfaceOperations,v100InterfaceControlFor} from "./v100InterfaceAudio.js";
 import { V100_CREW_INSIGNIA } from "./v100CrewInsignia.js";
 
@@ -1030,7 +1031,7 @@ export function V100Campaign() {
         ["campaign", flow.phase === "formation" ? "編成" : "ステージ"], ["personnel", "ユニット"], ["support-vehicle", "支援"], ["equipment", "装備"], ["vehicle", "車両"],
       ] as const).map(([id,label]) => <button type="button" key={id} aria-current={surface === id ? "page" : undefined} onClick={() => openSurface(id)}>{label}</button>)}</nav>}
 
-      {notice && surface !== "data" && <div className="v100-notice v100-command-notice" role="status"><span className="v100-notice-message" tabIndex={0}>{notice}</span><button type="button" aria-label="通知を閉じる" onClick={() => setNotice("")}>閉じる</button></div>}
+      {notice && surface !== "data" && <div className="v100-notice v100-command-notice" role="status" data-v100-notice-kind={notice === storageFailureMessage(undefined) ? "save-unverified" : "general"}><span className="v100-notice-message" tabIndex={0}>{notice}</span><button type="button" aria-label="通知を閉じる" onClick={() => setNotice("")}>閉じる</button></div>}
       {unsavedBattleResult && <div className="v100-save-retry" role="alertdialog" aria-modal="true" aria-label="戦闘結果の保存"><div><h2>戦闘結果を保存できませんでした</h2><p>結果はこの画面で保持しています。保存を再試行してください。</p><button type="button" className="v100-primary" onClick={() => handleProductionBattleResult(unsavedBattleResult)}>結果の保存を再試行</button></div></div>}
 
       {flow.phase === "name" && surface === "campaign" && (

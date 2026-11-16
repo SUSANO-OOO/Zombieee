@@ -1,0 +1,26 @@
+{
+  "app/AshfallGame.tsx": [
+    [
+      "import { v100PortraitFraming } from \"./v100PortraitFraming.js\";",
+      "import { v100PortraitFraming } from \"./v100PortraitFraming.js\";\nimport {v100SurvivalUpgradeArtworkStyle} from \"./v100SurvivalUpgradeArt.js\";"
+    ],
+    [
+      "<div className=\"survival-upgrade-screen\" role=\"dialog\" aria-modal=\"true\" aria-label=\"ボス撃破強化選択\">",
+      "<div className={externalSessionActive ? \"survival-upgrade-screen v100-phone-upgrade\" : \"survival-upgrade-screen\"} role=\"dialog\" aria-modal=\"true\" aria-label=\"ボス撃破強化選択\">"
+    ],
+    [
+      "return <button key={upgradeId} disabled={Boolean(pendingSurvivalCheckpoint || survivalSavePending)} onClick={() => selectSurvivalUpgrade(upgradeId)}>",
+      "return <button key={upgradeId} disabled={Boolean(pendingSurvivalCheckpoint || survivalSavePending)} onClick={() => selectSurvivalUpgrade(upgradeId)} data-v100-upgrade-id={externalSessionActive ? upgradeId : undefined} style={externalSessionActive ? v100SurvivalUpgradeArtworkStyle(upgradeId) as CSSProperties : undefined}>"
+    ]
+  ],
+  "app/V100Campaign.tsx": [
+    [
+      "import \"./v100PhonePauseFinish.css\";",
+      "import \"./v100PhonePauseFinish.css\";\nimport \"./v100PhoneSurvivalFinish.css\";"
+    ],
+    [
+      "<div className=\"v100-notice v100-command-notice\" role=\"status\">",
+      "<div className=\"v100-notice v100-command-notice\" role=\"status\" data-v100-notice-kind={notice === storageFailureMessage(undefined) ? \"save-unverified\" : \"general\"}>"
+    ]
+  ]
+}
