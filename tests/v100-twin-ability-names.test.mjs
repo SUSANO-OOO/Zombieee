@@ -29,4 +29,3 @@ test('declared twin presentation edits reverse to the entire prior app, definiti
   assert.equal(restorePreTwinWordingSource(file,source)===before,true,file+' has undeclared non-presentation changes');
  }
 });
-
