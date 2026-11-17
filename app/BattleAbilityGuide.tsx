@@ -8,7 +8,7 @@ function TacticsPortrait({kind}:{kind:string}) {
  const unitId=MANUAL_ABILITY_REGISTRY[kind as keyof typeof MANUAL_ABILITY_REGISTRY]?.unitId;
  const art=unitId&&v100StoryPortraitPath(unitId);
  if(!art)return null;
- return <span className="v100-crew-portrait manual-tactics-portrait" data-portrait-mode="upper" data-portrait-owner={unitId} style={v100PortraitFraming(unitId) as CSSProperties} aria-hidden="true"><span className="v100-crew-camera"><img src={art} alt="" onLoad={event=>{
+ return <span className="v100-crew-portrait manual-tactics-portrait" data-portrait-mode="upper" data-portrait-owner={unitId} style={v100PortraitFraming(unitId) as CSSProperties} aria-hidden="true"><span className="v100-crew-camera"><img src={art} alt="" loading="lazy" decoding="async" onLoad={event=>{
   const image=event.currentTarget;
   const decoded=typeof image.decode==='function'?image.decode().catch(()=>{}):Promise.resolve();
   void decoded.then(()=>requestAnimationFrame(()=>{if(image.isConnected&&image.naturalWidth>0)image.dataset.loaded='true';}));
