@@ -1,0 +1,8 @@
+{
+  "app/AshfallGame.tsx": [
+    [
+      ": v100CorporateControlLabel(g.definition)\n                ? `${defeatedBossName}撃破 — ${v100CorporateControlLabel(g.definition)}の防護を解除`\n                : g.definition.missionConfig.v100StageNumber === 30",
+      ": v100CorporateControlLabel(g.definition)\n                ? `${defeatedBossName}撃破・防護解除`\n                : g.definition.missionConfig.v100StageNumber === 30"
+    ]
+  ]
+}
