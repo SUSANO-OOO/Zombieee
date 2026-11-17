@@ -1,32 +1,61 @@
-.v100-briefing-backdrop { position: fixed; inset: 0; z-index: 300; display: grid; place-items: center; padding: max(10px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left)); background: #050a09dc; }
-.v100-battle-briefing { width: min(1024px,100%); height: auto; max-height: min(620px,100%); min-height: 0; display: flex; flex-direction: column; gap: 12px; padding: 12px; border: 1px solid #aa926a; background: #15201b; color: #f1e5c9; box-shadow: 0 12px 40px #000b; font-family: var(--v100-reading-font,"BIZ UDPGothic",sans-serif); }
-.v100-battle-briefing > header { display: flex; align-items: center; gap: 12px; flex: none; }
-.v100-battle-briefing h2 { margin: 0 auto 0 0; font-size: 20px; line-height: 1.3; }
-.v100-battle-briefing nav { display: flex; gap: 6px; }
-.v100-battle-briefing button { min-width: 80px; min-height: 44px; padding: 8px 14px; border: 1px solid #8b987f; border-radius: 2px; color: #e7ddc7; background: #243129; font: 700 15px/1.3 var(--v100-reading-font,"BIZ UDPGothic",sans-serif); cursor: pointer; }
-.v100-battle-briefing button[aria-pressed="true"] { background: #d9c69f; color: #1c2d22; border-color: #e6d4ad; }
-.v100-battle-briefing button:focus-visible { outline: 2px solid #ffe8b0; outline-offset: 2px; }
-.v100-briefing-page { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 2px 6px 4px; font-size: 15px; line-height: 1.6; }
-.v100-battle-instructions { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; list-style: none; margin: 0; padding: 0; }
-.v100-battle-instructions li { padding: 12px; border-top: 3px solid #b68c50; background: #253127; }
-.v100-battle-instructions li > span { float: right; color: #a18b63; font: 700 22px/1 monospace; }
-.v100-battle-instructions h3 { font-size: 18px; margin: 0 0 12px; }
-.v100-battle-instructions p { margin: 0; }
-.v100-battle-instructions-note { margin: 12px 0 0; color: #d8c6a4; }
-.v100-briefing-plan { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 12px 24px; }
-.v100-briefing-plan h3 { font-size: 18px; margin: 0 0 6px; }
-.v100-briefing-plan p { margin: 6px 0; }
-.v100-briefing-plan ul { margin: 6px 0; padding-left: 20px; }
-.v100-briefing-plan .v100-mission-diagram { display: block; position: static; inset: auto; transform: none; flex: none; width: 100%; height: 100px; margin: 6px 0; opacity: 1; color: #dfc590; pointer-events: none; }
-.v100-briefing-plan .v100-briefing-streets { fill: none; stroke: #485744; }
-.v100-briefing-plan .v100-briefing-route { fill: none; stroke: #dfc590; stroke-width: 2; }
-.v100-briefing-plan .v100-briefing-node { fill: #273a29; stroke: #bca06c; }
-.v100-briefing-plan .v100-briefing-label, .v100-briefing-plan .v100-briefing-step { fill: #eadfc5; font-size: 14px; }
-.v100-briefing-plan .v100-briefing-advice { grid-column: 1 / -1; padding-top: 8px; border-top: 1px solid #53634d; }
-@media (max-height: 400px) { .v100-battle-briefing { gap: 6px; padding: 8px 12px; } .v100-battle-instructions li { padding: 8px 10px; } .v100-battle-instructions h3 { margin-bottom: 6px; font-size: 17px; } .v100-battle-instructions-note { margin-top: 8px; } }
-@media (max-width: 640px) { .v100-battle-briefing h2 { font-size: 17px; } .v100-battle-briefing button { min-width: 64px; padding: 8px; } .v100-battle-instructions, .v100-briefing-plan { grid-template-columns: 1fr; } }
-
-.v100-battle-briefing .v100-star-criteria { display: flex; flex-direction: column; gap: 5px; font-size: 14px; }
-.v100-battle-briefing .v100-stage-stars { display: inline-flex; gap: 2px; vertical-align: middle; }
-.v100-battle-briefing .v100-stage-stars svg { width: 16px; height: 16px; fill: #455044; }
-.v100-battle-briefing .v100-stage-stars svg.earned { fill: #e5bc69; }
+/* A field folder: fixed index tabs, a drawn mission map, and separate orders.
+   This modal is portalled to body, outside the campaign's material variables. */
+.v100-briefing-backdrop { position:fixed; inset:0; z-index:300; display:grid; place-items:center; padding:max(10px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left)); background:#050a09e6; }
+.v100-battle-briefing { --v100-briefing-material:none; box-sizing:border-box; width:min(1024px,100%); max-height:100%; min-height:0; display:flex; flex-direction:column; gap:10px; padding:10px; border:1px solid #aa926a; border-top:4px solid #b89757; color:#293c2d; background-color:#cabd9e; background-image:linear-gradient(105deg,#dfd4b6d6,#c6b58dcc),var(--v100-briefing-material); background-size:100% 100%,300% 200%; background-position:center,100% 0; box-shadow:0 12px 40px #000b,inset 0 0 0 3px #4e4c363b; font-family:var(--v100-reading-font,"BIZ UDPGothic",sans-serif); }
+html[data-pwa-ui-materials="ready"] .v100-battle-briefing { --v100-briefing-material:url('/art/quality-20261113/ui/materials-six-r1.webp'); }
+.v100-battle-briefing > header { display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:center; gap:10px; flex:none; min-height:48px; padding:3px 3px 7px; border-bottom:2px solid #69704e; }
+.v100-briefing-heading { min-width:0; display:flex; flex-direction:column; gap:2px; }
+.v100-briefing-heading > small { color:#58634a; font-size:10px; line-height:1.2; font-weight:700; letter-spacing:.15em; }
+.v100-battle-briefing h2 { margin:0; color:#243e2e; font-size:20px; line-height:1.25; letter-spacing:.035em; }
+.v100-battle-briefing nav { display:flex; align-self:stretch; align-items:end; gap:4px; }
+.v100-battle-briefing button { min-width:80px; min-height:44px; padding:8px 14px; border:1px solid #67735a; border-radius:2px; color:#f2e8cd; background-color:#304735; background-image:linear-gradient(110deg,#233c2dc2,#1a3025dc),var(--v100-briefing-material); background-size:100% 100%,300% 200%; background-position:center,50% 100%; box-shadow:inset 0 1px #e9e2bd25,0 2px 2px #4e45362b; font:700 15px/1.3 var(--v100-reading-font,"BIZ UDPGothic",sans-serif); cursor:pointer; touch-action:manipulation; }
+.v100-battle-briefing nav button { border-bottom:3px solid #344b35; }
+.v100-battle-briefing button[aria-pressed="true"] { color:#263d2b; background-color:#eee1bc; background-image:linear-gradient(105deg,#f2e6c3bb,#d9c697c9),var(--v100-briefing-material); background-position:center,100% 0; border-color:#8c794c; border-bottom-color:#b46736; }
+.v100-battle-briefing > header > button { min-width:72px; border-color:#8c7652; color:#5b3625; background:#eadbbbc9; box-shadow:none; }
+.v100-battle-briefing button:active { transform:translateY(1px); filter:brightness(1.12); }
+.v100-battle-briefing button:focus-visible { outline:2px solid #ad522d; outline-offset:2px; }
+.v100-briefing-page { flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; padding:0 3px 3px; scrollbar-color:#69734f #c9ba97; font-size:15px; line-height:1.55; }
+.v100-briefing-page:focus-visible { outline:2px solid #637447; outline-offset:-2px; }
+.v100-battle-instructions { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; list-style:none; margin:0; padding:0; }
+.v100-battle-instructions li { position:relative; min-width:0; padding:10px 12px 12px; border:1px solid #82785880; border-top:4px solid #6d7c53; background:#f3e7c75e; box-shadow:inset 0 1px #fff7dd80; }
+.v100-battle-instructions li:nth-child(2) { border-top-color:#ac683c; }
+.v100-battle-instructions li:nth-child(3) { border-top-color:#637a78; }
+.v100-battle-instructions li > span { display:block; width:34px; margin-bottom:6px; padding-bottom:4px; border-bottom:1px solid #7b7d5c88; color:#6b7650; font:700 24px/1.05 var(--v100-numeric-font,"BIZ UDPGothic",sans-serif); letter-spacing:-.05em; }
+.v100-battle-instructions li:nth-child(2) > span { color:#a15c34; }
+.v100-battle-instructions li:nth-child(3) > span { color:#506f70; }
+.v100-battle-instructions h3 { margin:0 0 7px; color:#243f2c; font-size:18px; line-height:1.25; }
+.v100-battle-instructions p { margin:0; }
+.v100-battle-instructions-note { margin:9px 0 0; padding:7px 10px; border-left:4px solid #b28d4e; color:#eee2c3; background:#2d4436; font-size:14px; line-height:1.45; }
+.v100-briefing-plan { display:grid; grid-template-columns:minmax(0,1.08fr) minmax(0,1fr); gap:10px; }
+.v100-briefing-plan > section { min-width:0; padding:9px 12px; border:1px solid #8a805f7a; background:#f3e8c768; }
+.v100-briefing-plan > section:first-child { border-top:3px solid #65774d; }
+.v100-briefing-plan > section:nth-child(2) { border-top:3px solid #a3653e; }
+.v100-briefing-plan h3 { margin:0 0 7px; padding-bottom:6px; border-bottom:1px solid #8d8d6880; color:#263e2b; font-size:18px; line-height:1.35; }
+.v100-briefing-plan > section:first-child > strong { display:block; padding:3px 7px; border-left:3px solid #7d8c58; color:#f3e6c5; background:#304d38; font-size:15px; }
+.v100-briefing-plan p { margin:6px 0; }
+.v100-briefing-plan ul { display:grid; gap:6px; margin:0 0 10px; padding:0; list-style:none; }
+.v100-briefing-plan li { padding:5px 7px; border-left:3px solid #a76f43; background:#b9ac8055; }
+.v100-briefing-plan .v100-mission-diagram { display:block; box-sizing:border-box; position:static; inset:auto; transform:none; flex:none; width:100%; height:100px; margin:7px 0; padding:2px; border:1px solid #58674f; background-color:#213c30; background-image:linear-gradient(#1c372dba,#1a3128cc),var(--v100-briefing-material); background-size:100% 100%,300% 200%; background-position:center,50% 0; opacity:1; color:#dfc590; pointer-events:none; }
+.v100-briefing-plan .v100-briefing-streets { fill:none; stroke:#8a9a7755; }
+.v100-briefing-plan .v100-briefing-route { fill:none; stroke:#e6c786; stroke-width:2; }
+.v100-briefing-plan .v100-briefing-node { fill:#344d38; stroke:#dfc48b; }
+.v100-briefing-plan .v100-briefing-label,.v100-briefing-plan .v100-briefing-step { fill:#f5e4bd; font-size:14px; }
+.v100-briefing-plan .v100-briefing-advice { grid-column:1/-1; margin:0; padding:8px 11px 8px 13px; border-left:4px solid #b68d4c; color:#f2e5c5; background:#2b4334; }
+.v100-battle-briefing .v100-star-criteria { display:flex; flex-direction:column; gap:5px; padding-top:5px; border-top:1px solid #8a89675c; font-size:14px; }
+.v100-battle-briefing .v100-stage-stars { display:inline-flex; gap:2px; vertical-align:middle; }
+.v100-battle-briefing .v100-stage-stars svg { width:16px; height:16px; fill:#9d9e7c; }
+.v100-battle-briefing .v100-stage-stars svg.earned { fill:#8a6032; }
+@media (max-height:400px) {
+ .v100-battle-briefing { gap:7px; padding:7px 9px; }
+ .v100-battle-briefing > header { padding-bottom:5px; }
+ .v100-battle-instructions { gap:8px; }
+ .v100-battle-instructions li { padding:7px 10px 9px; }
+ .v100-battle-instructions li > span { float:right; width:auto; margin:0 0 3px 6px; padding:0; border:0; font-size:22px; }
+ .v100-battle-instructions h3 { margin-bottom:6px; font-size:17px; }
+ .v100-battle-instructions-note { margin-top:7px; padding:5px 9px; }
+ .v100-briefing-plan > section { padding:7px 10px; }
+ .v100-briefing-plan h3 { font-size:17px; }
+ .v100-briefing-plan .v100-mission-diagram { height:92px; }
+}
+@media (max-width:700px) { .v100-battle-briefing h2 { font-size:18px; } .v100-battle-briefing > header { gap:7px; } .v100-battle-briefing button { min-width:68px; padding:8px; } .v100-briefing-plan { gap:8px; } }
+@media (max-width:640px) { .v100-battle-briefing > header { grid-template-columns:minmax(0,1fr) auto; } .v100-battle-briefing nav { grid-row:2; grid-column:1/-1; } .v100-battle-briefing nav button { flex:1; } .v100-battle-briefing > header > button { grid-column:2; grid-row:1; } .v100-battle-instructions,.v100-briefing-plan { grid-template-columns:1fr; } }
