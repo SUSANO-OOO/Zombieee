@@ -13,7 +13,7 @@ import {verifiedPwaArtworkPaths} from '../app/pwaArtworkAvailability.js';
 const ids=['v104-handgun','weapon-rifle-01','weapon-rifle-02','weapon-gunner-01','weapon-gunner-02','weapon-smg-01','weapon-smg-02','weapon-suppressed-pistol'];
 const aliases={'ability-ranger-precision-shot':'weapon-rifle-01','ability-gunner-suppression-muzzle':'weapon-gunner-01','ability-babayaga-appraise-shot':'weapon-suppressed-pistol'};
 const sha=b=>createHash('sha256').update(b).digest('hex');
-const baseRef='11de45bc6c803ac05cc3d9006089dd169c604e48';
+const baseRef='4d33c0a11c155994aaa0353b88e0019b1eeed997';
 const oldJson=p=>JSON.parse(execFileSync('git',['show',baseRef+':'+p],{maxBuffer:8*1024*1024,encoding:'utf8'}));
 const allPaths=Object.values(files).map(f=>f.path).join(String.fromCharCode(10));
 
@@ -66,8 +66,8 @@ test('the complete old 411-file audio pack and every old logical asset remain in
 function pcm(path){const b=execFileSync(ffmpeg.path,['-nostdin','-hide_banner','-loglevel','error','-threads','1','-i',path,'-ar','44100','-ac','1','-f','f32le','pipe:1'],{windowsHide:true,maxBuffer:2*1024*1024});const values=[];for(let i=0;i<b.length;i+=4)values.push(b.readFloatLE(i));return values;}
 function measures(a){const peak=a.reduce((m,v)=>Math.max(m,Math.abs(v)),0),rms=x=>Math.sqrt(x.reduce((n,v)=>n+v*v,0)/Math.max(1,x.length));return{samples:a.length,peak,onset:a.findIndex(v=>Math.abs(v)>=Math.max(.001,peak*.04))/44100,active:rms(a.slice(0,8820)),tail:rms(a.slice(-1764)),clipped:a.filter(v=>Math.abs(v)>=.999).length};}
 
-test('the actual eight MPEG files preserve single-shot duration, onset and active level without clipping',()=>{
- for(const id of ids){const before=measures(pcm('public'+V100_AUDIO_MANIFEST.assetById[id].sources[0].src)),after=measures(pcm('public'+files[id].path));assert.equal(after.samples,before.samples,id+' duration');assert.ok(Math.abs(after.onset-before.onset)<=.01,id+' onset');assert.ok(after.peak<=.95,id+' headroom');assert.equal(after.clipped,0,id+' clipping');assert.ok(Math.abs(20*Math.log10(after.active/before.active))<.5,id+' active level');assert.ok(after.tail<=Math.max(.001,after.active*.12),id+' tail');}
+test('the actual eight MPEG files raise the requested active level while preserving single-shot timing and headroom',()=>{
+ for(const id of ids){const before=measures(pcm('public'+V100_AUDIO_MANIFEST.assetById[id].sources[0].src)),after=measures(pcm('public'+files[id].path));assert.equal(after.samples,before.samples,id+' duration');assert.ok(Math.abs(after.onset-before.onset)<=.01,id+' onset');assert.ok(after.peak<=.95,id+' headroom');assert.equal(after.clipped,0,id+' clipping');const levelDb=20*Math.log10(after.active/before.active);assert.ok(levelDb>=3.0&&levelDb<=3.5,id+' user-requested active level increase');assert.ok(after.tail<=Math.max(.001,after.active*.12),id+' tail');}
 });
 
 test('saved gun metadata remains a leaf and does not bring playback code into the install screen',()=>{

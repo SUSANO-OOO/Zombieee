@@ -28,6 +28,21 @@ function EquipmentArt({ item, locked = false }: { item: Item; locked?: boolean }
   return <span className="v100-equipment-art" aria-hidden="true"><img src={V100_PREPARATION_ART.equipment} alt="" style={v100EquipmentArtworkImgStyle(item)} />{locked && <V100LockChain />}</span>;
 }
 
+function EmptyEquipmentRack({ tab, save, onBrowse }: { tab: "personal" | "tactical" | "shop"; save: Props["save"]; onBrowse: (id?: string) => void }) {
+  const kind = tab === "tactical" ? "部隊装備" : "個人装備";
+  const examples = ITEMS.filter(entry => entry.slotType === tab && entry.source === "supply-shop").slice(0, 2);
+  return <div className="v100-equipment-empty-rack">
+    <header><strong>{kind}は未所持</strong><span>補給品から選ぶ</span></header>
+    <div className="v100-equipment-empty-examples" aria-label={kind + "の補給品"}>{examples.map(entry => {
+      const unlocked = v100EquipmentPurchaseUnlocked(save, entry.id);
+      return <button type="button" key={entry.id} aria-label={entry.displayName + "を補給所で見る"} onClick={() => onBrowse(entry.id)}>
+        <EquipmentArt item={entry} locked={!unlocked} /><span><strong>{entry.displayName}</strong><small>{unlocked ? entry.purchaseCaps + " CAPS" : "S" + String(entry.unlockStageNumber).padStart(2, "0") + "クリアで解放"}</small></span>
+      </button>;
+    })}</div>
+    <button type="button" className="v100-equipment-open-supply" onClick={() => onBrowse()}>補給所で装備を探す</button>
+  </div>;
+}
+
 export function V100EquipmentView({ save, onBack, onPurchase, onUpgrade, onEquip }: Props) {
   const [tab, setTab] = useState<"personal" | "tactical" | "shop">(Object.keys(save.equipment.inventory).length ? "personal" : "shop");
   const [unitId, setUnitId] = useState(save.ownedUnitIds[0]);
@@ -62,8 +77,8 @@ export function V100EquipmentView({ save, onBack, onPurchase, onUpgrade, onEquip
         <option value="">装備なし</option>{items.map(entry => <option key={entry.id} value={entry.id}>{entry.displayName}</option>)}
       </select></label>)}
     </div>}
-    <div className="v100-equipment-workspace"><div className="v100-supply-index"><div className="v100-supply-heading"><strong>{tab === "shop" ? "補給品一覧" : tab === "personal" ? "個人の装備品" : "部隊の装備品"}</strong><span>所持 {save.caps} CAPS</span></div><div className="v100-equipment-catalog" aria-label="装備一覧">
-      {items.length === 0 && <div className="v100-equipment-empty"><strong>まだ装備を持っていません</strong><p>補給所で効果を比べて、次の出撃に備えよう。</p><button type="button" onClick={()=>setTab('shop')}>補給所で装備を探す</button></div>}
+    <div className="v100-equipment-workspace"><div className="v100-supply-index"><div className="v100-supply-heading"><strong>{tab === "shop" ? "補給品一覧" : tab === "personal" ? "個人の装備品" : "部隊の装備品"}</strong><span>所持 {save.caps} CAPS</span></div><div className="v100-equipment-catalog" aria-label="装備一覧" data-empty={items.length === 0}>
+      {items.length === 0 && <EmptyEquipmentRack tab={tab} save={save} onBrowse={id => { if (id) setSelectedId(id); setTab("shop"); }} />}
       {items.map(entry => {const owned=equipment.inventory[entry.id]??0,locked=tab==="shop"&&!v100EquipmentPurchaseUnlocked(save,entry.id);return <button type="button" className={`v100-equipment-card ${entry.id===item?.id?"selected":""}`} key={entry.id} data-equipment-id={entry.id} aria-pressed={entry.id===item?.id} onClick={()=>setSelectedId(entry.id)}>
         <EquipmentArt item={entry} locked={locked}/><span><strong>{entry.displayName}</strong><small>{locked?`S${String(entry.unlockStageNumber).padStart(2,"0")}クリアで解放`:tab==="shop"?`${entry.purchaseCaps} CAPS`:`所持 ${owned}`}</small></span>
       </button>;})}
@@ -76,7 +91,7 @@ export function V100EquipmentView({ save, onBack, onPurchase, onUpgrade, onEquip
         <p className="v100-equipment-quote-guide">{quantity === 0 ? "購入後は「装備を比べる」で装備先を選ぼう。" : comparison.reason ?? "「装備を比べる」で仲間と装備枠を選べます。"}<small>固有技は比較に含みません。</small></p>
       </section>}
       {fittingOpen && comparison && createPortal(<div className="v100-fitting-backdrop"><section className="v100-equipment-fitting" role="dialog" aria-modal="true" aria-labelledby="v100-fitting-title">
-        <header><h2 id="v100-fitting-title">{item.displayName}を装備すると</h2><button type="button" onClick={()=>setFittingOpen(false)}>閉じる</button></header>
+        <header><div className="v100-fitting-heading"><EquipmentArt item={item} /><div><small>装備比較 / {item.slotType === "personal" ? "個人装備" : "部隊装備"}</small><h2 id="v100-fitting-title">{item.displayName}を装備すると</h2></div></div><button type="button" onClick={()=>setFittingOpen(false)}>閉じる</button></header>
         <div className="v100-fitting-body" tabIndex={0} aria-label="装備を替えたときの変化"><div className="v100-fitting-person">
         <label>効果を比べる仲間<select aria-label="効果を比べる仲間" value={selectedUnit} onChange={event=>setUnitId(event.target.value)}>{UNITS.filter(unit=>save.ownedUnitIds.includes(unit.id)).map(unit=><option key={unit.id} value={unit.id}>{unit.displayName}</option>)}</select></label>
         <div className="v100-fitting-slots" aria-label="比較する装備枠">{[0,1].map(slot=><button type="button" key={slot} aria-pressed={previewSlot===slot} onClick={()=>setPreviewSlot(slot)}>枠{slot+1}と比較</button>)}</div>
@@ -94,6 +109,6 @@ export function V100EquipmentView({ save, onBack, onPurchase, onUpgrade, onEquip
         {quantity>0&&<button type="button" disabled={cost===null||save.caps<cost} data-ui-sound="transaction" onClick={()=>onUpgrade(item.id,level)}>{cost===null?"強化上限":<>{cost} CAPSで強化{save.caps<cost&&<small>あと {cost-save.caps} CAPS必要</small>}</>}</button>}
         {comparison&&<button type="button" className="v100-open-fitting" onClick={event=>{event.currentTarget.focus();setFittingOpen(true);}}>装備を比べる</button>}
       </div>
-    </>:<div className="v100-equipment-empty"><h3>次の出撃に備えよう</h3><p>補給所で装備を選ぶと、仲間の能力がどう変わるか確認できます。</p><button type="button" onClick={()=>setTab('shop')}>補給所へ</button></div>}</aside></div>
+    </>:<div className="v100-equipment-empty-brief" data-kind={tab}><small>{tab === "personal" ? "個人装備支給票" : "部隊装備支給票"}</small><h3>{tab === "personal" ? (selectedPresentation?.displayName ?? "仲間") + "の装備を整える" : "部隊全員を支える装備"}</h3><div className="v100-equipment-unfilled-slots" aria-label="未装備の2枠">{[0, 1].map(slot => <div key={slot}><strong>0{slot + 1}</strong><span>未装備</span></div>)}</div><p>{tab === "personal" ? "仲間ごとに2枠。入手した装備を割り当てられます。" : "部隊共通の2枠。装備すると全員に効果が加わります。"}</p></div>}</aside></div>
   </section>;
 }

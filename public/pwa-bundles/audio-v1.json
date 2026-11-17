@@ -1,7 +1,7 @@
 {
   "schema": "zombieee-pwa-audio-bundle/1",
   "bundlePath": "/pwa-bundles/audio-v1.bin",
-  "bytes": 36185363,
+  "bytes": 36220919,
   "assets": {
     "/audio/v105/fist-wave-charge.mp3": {
       "id": "v105-fist-wave-charge",
@@ -2472,50 +2472,50 @@
     "/audio/quality-20261117/firearms/v104-handgun.mp3": {
       "id": "install-quality-20261117-firearms-v104-handgun",
       "offset": 36151187,
-      "bytes": 4058,
-      "hash": "sha256-61751a01f3a59e9ef3b013a7715ff8a8601c1548d7b1fcf58e406d78e304940a"
+      "bytes": 7985,
+      "hash": "sha256-e9aa6aaad7346051c0015c5423224f5bfa58a4b733b330d4d082e243ac3ebd2a"
     },
     "/audio/quality-20261117/firearms/weapon-gunner-01.mp3": {
       "id": "install-quality-20261117-firearms-weapon-gunner-01",
-      "offset": 36155245,
-      "bytes": 4265,
-      "hash": "sha256-0655e61befc823f1b4cce64dbf600cf0932e401c1821cd741462420536780095"
+      "offset": 36159172,
+      "bytes": 9239,
+      "hash": "sha256-fe739fe7e5fcd264f92490e8e7457b188e9a3ba6564fcefdb378a414cf208e00"
     },
     "/audio/quality-20261117/firearms/weapon-gunner-02.mp3": {
       "id": "install-quality-20261117-firearms-weapon-gunner-02",
-      "offset": 36159510,
-      "bytes": 4265,
-      "hash": "sha256-788eea49785ed1a1dc03a46059c10def9e7d04c24c09a5d8e81dd53b0abe8a0a"
+      "offset": 36168411,
+      "bytes": 9239,
+      "hash": "sha256-1773734d3b4a1588e31611ae5f03e29c4f91bae543f19b36792eed88f3ae3b9c"
     },
     "/audio/quality-20261117/firearms/weapon-smg-01.mp3": {
       "id": "install-quality-20261117-firearms-weapon-smg-01",
-      "offset": 36163775,
-      "bytes": 4006,
-      "hash": "sha256-bbc95a98205621becefc1f97db36ebe9684df53ffedebe6ee82c5d6c6f217f05"
+      "offset": 36177650,
+      "bytes": 7567,
+      "hash": "sha256-5d7ec98c782ae57396396de81f4b6bb79fb7661823f74a91a3a0d31d45b7ceb3"
     },
     "/audio/quality-20261117/firearms/weapon-smg-02.mp3": {
       "id": "install-quality-20261117-firearms-weapon-smg-02",
-      "offset": 36167781,
-      "bytes": 3953,
-      "hash": "sha256-17abffbb3aae224b8e7513b4bfee78ad20cf0029dce7a811d02674416040b62a"
+      "offset": 36185217,
+      "bytes": 7567,
+      "hash": "sha256-ff9a6d6add44f91734b3a49b776bff5e3a69b05d4d876832856eaa1c288ad961"
     },
     "/audio/quality-20261117/firearms/weapon-rifle-01.mp3": {
       "id": "install-quality-20261117-firearms-weapon-rifle-01",
-      "offset": 36171734,
-      "bytes": 5099,
-      "hash": "sha256-918ce43593901c38c9d03c8d6025523e7ce34cb4d931a4548af8ec901ba1c35d"
+      "offset": 36192784,
+      "bytes": 10075,
+      "hash": "sha256-5be850a6011413484e944b411bec84d797b9253851786b191ba3114b7a73aa23"
     },
     "/audio/quality-20261117/firearms/weapon-rifle-02.mp3": {
       "id": "install-quality-20261117-firearms-weapon-rifle-02",
-      "offset": 36176833,
-      "bytes": 5334,
-      "hash": "sha256-3abdae53baef7a41173257b66d55bf408d71cb37483a9dbea1712c1240bc1d45"
+      "offset": 36202859,
+      "bytes": 10075,
+      "hash": "sha256-2ae4b3236bf6916d622a4bb5761fb1a0c20aef057868af013c270b311be78813"
     },
     "/audio/quality-20261117/firearms/weapon-suppressed-pistol.mp3": {
       "id": "install-quality-20261117-firearms-weapon-suppressed-pistol",
-      "offset": 36182167,
-      "bytes": 3196,
-      "hash": "sha256-215238294f30eb0e3891c10cadfd91ac5b2e242bfe41c69eb836597d1f40c429"
+      "offset": 36212934,
+      "bytes": 7985,
+      "hash": "sha256-457dce3d60705285fdcaf05364b4276c31f670fefeea1d497235241f6cd2662d"
     }
   }
 }

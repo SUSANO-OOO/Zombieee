@@ -281,7 +281,7 @@ test("transport optimizations preserve every runtime asset contract", async () =
     "/audio/quality-20261116/mayo/recorded-whine.wav",
   ]);
   const authoredGuns=bundled.filter(asset=>asset.path.startsWith("/audio/quality-20261117/firearms/"));
-  assert.equal(authoredGuns.length,8);assert.equal(authoredGuns.reduce((sum,asset)=>sum+asset.bytes,0),34176);
+  assert.equal(authoredGuns.length,8);assert.equal(authoredGuns.reduce((sum,asset)=>sum+asset.bytes,0),69732);
   assert.ok(authoredGuns.every(asset=>asset.bundleOffset>=36151187));
   assert.ok(bundled.every((asset) => asset.bundlePath === "/pwa-bundles/audio-v1.bin"));
   assert.ok(bundled.every((asset) => asset.bundleBytes === asset.bytes));

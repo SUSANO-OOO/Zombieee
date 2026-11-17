@@ -1,0 +1,69 @@
+{
+  "family": "guard-spectacle-20261117-r1",
+  "generation": {
+    "mode": "Reuse the selected no-ring steam master unchanged for Kuma; select new generated directional shield fragments; retain the rejected new loop-shaped Kuma candidate",
+    "model": "Chosen by host; no model name asserted",
+    "referenceImages": [
+      {
+        "kind": "kumaverson",
+        "role": "Reused prior selected project-original source master, unchanged",
+        "path": "assets/source/quality-20261115/guard-activation-r1/kumaverson-generated-r4.png",
+        "sha256": "b207c837fdd482a7ef8a28a8a284d1406943a4d6db6807b4ec9cf6fcd0b54c3f"
+      }
+    ],
+    "thirdPartyDownload": false,
+    "paidCliOrExternalService": false,
+    "calls": 2
+  },
+  "authorization": "Active smartphone-quality goal requests bespoke animated manual abilities. Candidate production is authorized; final appearance, sound and physical-device acceptance are not claimed.",
+  "providerTerms": {
+    "url": "https://openai.com/policies/row-terms-of-use/",
+    "effective": "2026-01-01",
+    "verifiedAt": "2026-11-15",
+    "basis": "Provider output ownership is assigned to the user, subject to the terms and applicable law."
+  },
+  "frameInsetPixels": 32,
+  "rows": [
+    {
+      "kind": "kumaverson",
+      "masterPath": "assets/source/quality-20261115/guard-activation-r1/kumaverson-generated-r4.png",
+      "masterSha256": "b207c837fdd482a7ef8a28a8a284d1406943a4d6db6807b4ec9cf6fcd0b54c3f",
+      "promptPath": "assets/source/quality-20261115/guard-activation-r1/kumaverson-prompt-r4.txt",
+      "id": "v100-kumaverson-guard-activation",
+      "runtimePath": "/art/quality-20261115/vfx/kumaverson-guard-six-r4.webp",
+      "worldWidth": 224,
+      "worldHeight": 168,
+      "description": "Reused disconnected upright cooking steam, presented at body height instead of a small foot puff; encoded source unchanged",
+      "reuseRuntimeSha256": "7af68752f47eb961b819cd0ecb5e373671f324892b5203f1a4e232c72d5a54ce",
+      "frameInsetPixels": 0
+    },
+    {
+      "kind": "guardian",
+      "masterPath": "assets/source/quality-20261117/guard-spectacle-r1/guardian-guard-six-r4-master.png",
+      "masterSha256": "35d8d65f498f342e2b999ac69caf72b9ea92b86935655e481fdd2e66530877de",
+      "promptPath": "assets/source/quality-20261117/guard-spectacle-r1/guardian-prompt-r1.txt",
+      "id": "v100-guardian-guard-activation",
+      "runtimePath": "/art/quality-20261117/vfx/guardian-guard-six-r4.webp",
+      "worldWidth": 320,
+      "worldHeight": 160,
+      "description": "A tall forward-facing shower of scratched steel fragments, hard ricochet sparks and bracing grit; no conjured shield or duplicate weapon"
+    }
+  ],
+  "supersedes": {
+    "source": "8d056f979d33f5c2111e7bdeffaf8680a446736f",
+    "recipe": "assets/source/quality-20261115/guard-activation-r1/selected-recipe.json",
+    "reason": "Existing exact current-guard native footage shows small foot-level bursts, insufficient for the requested body-height manual-ability spectacle; all previous masters/runtime files retained.",
+    "acceptance": "New candidate only; no final visual/audio/physical-device or publication acceptance"
+  },
+  "rejected": [
+    {
+      "kind": "kumaverson",
+      "masterPath": "assets/source/quality-20261117/guard-spectacle-r1/kumaverson-guard-six-r5-master.png",
+      "masterSha256": "fc72a8255334e25f226ccc698a351400d7fbe7f4a3d7acfc2a018ea3e5915ff8",
+      "encodedVariantPath": "assets/source/quality-20261117/guard-spectacle-r1/rejected-kumaverson-guard-six-r5.webp",
+      "encodedVariantSha256": "dcb34b4860f60b6c214a14a306e608228df8eac4be51d0430eb3f20f03cea071",
+      "observedSource": "db1829fff0038506b92dbbedb487ac60fc5fe634",
+      "reason": "Actual 844x340 phase images show the new sweep connecting into a white ring around the body. Rejected under the no-ring direction; original master, runtime variant and exact compiled/native evidence retained."
+    }
+  ]
+}

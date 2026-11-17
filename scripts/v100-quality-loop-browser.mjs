@@ -198,6 +198,46 @@ async function formationCardsWithin(page, viewport, row) {
   }
   return cards;
 }
+async function formationDetailsReachable(page, viewport, row) {
+  if (viewport.height > 460 || viewport.width > 1020) return;
+  const pane = page.locator('.v100-field-map-pane');
+  await within(pane, 44);
+  const saveBefore = await rawSave(page);
+  const controls = async () => {
+    const values = [];
+    for (const name of ['戦闘へ', 'ユニットの育成', '枠を空ける', 'ステージ選択へ']) {
+      values.push({ name, ...(await within(page.getByRole('button', { name, exact: true }), 44)) });
+    }
+    return values;
+  };
+  const controlsBefore = await controls();
+  const before = await pane.evaluate(element => ({
+    scrollTop: element.scrollTop, scrollHeight: element.scrollHeight, clientHeight: element.clientHeight,
+    overflowY: getComputedStyle(element).overflowY, touchAction: getComputedStyle(element).touchAction,
+  }));
+  assert.match(before.overflowY, /^(auto|scroll)$/, 'The mission and crew information has a user-scrollable area');
+  assert.ok(/auto|pan-y|manipulation/.test(before.touchAction), 'Vertical touch scrolling is allowed');
+  await pane.evaluate(element => { element.scrollTop = element.scrollHeight; });
+  const after = await pane.evaluate(element => {
+    const copy = element.querySelector('.v100-briefing-person > div[aria-label$="の役割・固有技"]');
+    const box = element.getBoundingClientRect();
+    if (!copy?.lastElementChild) return { readable: false, reason: 'Missing selected crew information' };
+    const range = document.createRange(); range.selectNodeContents(copy.lastElementChild);
+    const lines = [...range.getClientRects()].filter(line => line.width > 0 && line.height > 0);
+    const tail = lines.at(-1);
+    return { scrollTop: element.scrollTop, scrollHeight: element.scrollHeight, clientHeight: element.clientHeight,
+      readable: !!tail && box.width > 0 && box.height > 0 && tail.top >= box.top && tail.bottom <= box.bottom,
+      tail: tail ? { top: tail.top, bottom: tail.bottom } : null, pane: { top: box.top, bottom: box.bottom } };
+  });
+  row.formationDetailScroll = { before, after, input: 'Scroll extent observer; native touch is separate evidence' };
+  assert.equal(after.readable, true, 'The final line of the selected crew ability is reachable');
+  if (before.scrollHeight > before.clientHeight) assert.ok(after.scrollTop > 0, 'Overflowing information can move');
+  assert.deepEqual(await controls(), controlsBefore, 'Formation actions remain fixed while information scrolls');
+  assert.deepEqual(await rawSave(page), saveBefore, 'Reading formation information does not change the save');
+  await capture(page, row, 'details-end');
+  await pane.evaluate((element, top) => { element.scrollTop = top; }, before.scrollTop);
+}
+
 async function capture(page, row, name) {
   await page.waitForFunction(() => [...document.images].every(image => image.complete && image.naturalWidth > 0));
   await page.waitForFunction(() => [...document.querySelectorAll('.v100-portrait-frame img')]
@@ -322,6 +362,7 @@ for (const engine of engines) {
         await formationCardsWithin(page, viewport, row);
         assert.ok(row.formationCards[0].text.some(item => item.value === 'クレイジーキング'));
         await capture(page, row, 'board');
+        await formationDetailsReachable(page, viewport, row);
       });
       const emptySlots = normalizeV100Save({ ...fixture, formationSlots: [...early.formationSlots.slice(0, 4), null, null, null] });
       await runCase(browser, engine, viewport, 'formation-empty-slots', emptySlots, async (page, row) => {
@@ -329,6 +370,7 @@ for (const engine of engines) {
         await formationCardsWithin(page, viewport, row);
         assert.equal(await page.locator('.v100-slot.empty').count(), 3);
         await capture(page, row, 'board');
+        await formationDetailsReachable(page, viewport, row);
       });
     }
     for (const viewport of sections.includes('rewards') ? sizes : []) {

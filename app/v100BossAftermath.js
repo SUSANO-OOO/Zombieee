@@ -1,5 +1,6 @@
 import {combatVariation,drawRasterPlume} from './v100RasterAtmosphere.js';
 import {V100_BOSS_ATTACK_ART} from './v100BossAttackArt.js';
+import {BOSS_ANOMALY_TUNING} from './bossAnomalies.js';
 
 // Simulation ticks clone fighters. The stable battle, generation and fighter
 // id own the visual choice, so a late decode cannot replace a running effect.
@@ -36,19 +37,29 @@ const PROFILES=Object.freeze({
 });
 
 const RELEASES=Object.freeze({
- mother:{width:132,height:90,beats:[[0,-42],[.08,0],[.16,42]]},
- ooguchi:{width:190,height:100,beats:[[0,18]]},
- gairen:{width:200,height:100,beats:[[0,-24],[.1,24]]},
- futago:{width:178,height:108,beats:[[0,-30],[.12,30]]},
- 'mugarian-president-mutated':{width:160,height:102,beats:[[0,-62],[.04,-20],[.08,20],[.12,62]]},
- 'takuya-omega':{width:380,height:238,beats:[[0,0]]},
+ mother:{size:192,beats:[[0,-42],[.08,0],[.16,42]]},
+ ooguchi:{size:220,beats:[[0,18]]},
+ gairen:{size:230,beats:[[0,-24],[.1,24]]},
+ futago:{size:214,beats:[[0,-30],[.12,30]]},
+ 'mugarian-president-mutated':{size:208,beats:[[0,-62],[.04,-20],[.08,20],[.12,62]]},
+ 'takuya-omega':{size:312,beats:[[0,0]]},
 });
-function drawRelease(ctx,objects,{kind,x,y,elapsed,direction,world,ownerId}){
+function drawRelease(ctx,objects,{kind,x,y,elapsed,direction,world,ownerId,viewport}){
  const p=RELEASES[kind];
- if(!p||!p.beats.some(([delay])=>elapsed>=delay&&elapsed-delay<.54))return;
+ if(!p||!p.beats.some(([delay])=>elapsed>=delay&&elapsed-delay<.54))return false;
  const {art,image:source}=bossAttackReleaseSource(objects,kind,world,ownerId);
- if(!source?.complete||!source.naturalWidth||!source.naturalHeight)return;
+ if(!source?.complete||!source.naturalWidth||!source.naturalHeight)return false;
  const cw=source.naturalWidth/3,ch=source.naturalHeight/2;
+ // The sheet is a square painted camera. Keep its height and the authored
+ // ground anchor instead of flattening every burst into a shallow ellipse.
+ // Bound the union of staggered beats, not each individual image.
+ let size=p.size;
+ if(viewport){
+  const {viewportWidth,viewportHeight,worldScale}=viewport;
+  const offsets=p.beats.map(([,offset])=>offset),spread=Math.max(...offsets)-Math.min(...offsets);
+  const budget=viewportWidth*viewportHeight*.18/(worldScale*worldScale);
+  size=Math.min(size,(Math.sqrt(spread*spread+4*budget)-spread)/2);
+ }
  for(const [delay,offset] of p.beats){
   const age=elapsed-delay;if(age<0||age>=.54)continue;
   const progress=age/.54,frame=Math.min(5,Math.floor(progress*6));
@@ -60,14 +71,34 @@ function drawRelease(ctx,objects,{kind,x,y,elapsed,direction,world,ownerId}){
    const fade=ctx.globalAlpha;
    for(const [cell,weight]of [[first,1-blend],[next,blend]]){
     if(weight<=0)continue;ctx.globalAlpha=fade*weight;
-    ctx.drawImage(source,cell%3*cw,Math.floor(cell/3)*ch,cw,ch,-p.width*art.anchorX,-p.height*art.anchorY,p.width,p.height);
+    ctx.drawImage(source,cell%3*cw,Math.floor(cell/3)*ch,cw,ch,-size*art.anchorX,-size*art.anchorY,size,size);
    }
-  }else ctx.drawImage(source,frame%3*cw,Math.floor(frame/3)*ch,cw,ch,-p.width/2,-p.height*360/512,p.width,p.height);
+  }else ctx.drawImage(source,frame%3*cw,Math.floor(frame/3)*ch,cw,ch,-size/2,-size*360/512,size,size);
   ctx.restore();
  }
+ return true;
 }
 
-export function drawV100BossAftermath(ctx,objects,{kind,x,y,elapsed,duration,phase,direction=-1,seed=0,world,ownerId}={}) {
+// Ground releases are painted before actors, hazard warnings and health.
+// Their clocks are read from the real active phase; no new event or hit is made.
+export function drawV100BossReleaseFields(ctx,objects,world,viewport={}){
+ if(!world?.definition?.missionConfig?.v100StageNumber||!Array.isArray(world.fighters))return 0;
+ const {viewportWidth,viewportHeight,worldScale}=viewport;
+ if(![viewportWidth,viewportHeight,worldScale].every(Number.isFinite)
+  ||viewportWidth<=0||viewportHeight<=0||worldScale<=0)return 0;
+ let drawn=0;
+ for(const f of world.fighters){
+  const tuning=BOSS_ANOMALY_TUNING[f.kind];
+  if(!RELEASES[f.kind]||!tuning||!f.combatReady||!(f.hp>0)||f.stationAbility?.phase!=='active')continue;
+  const elapsed=tuning.activeSeconds-f.stationAbility.remainingSeconds;
+  if(![f.x,f.y,elapsed].every(Number.isFinite)||elapsed<0)continue;
+  if(drawRelease(ctx,objects,{kind:f.kind,x:f.x,y:f.y,elapsed,world,ownerId:f.id,viewport,
+   direction:f.kind==='ooguchi'?-1:Number(f.stationAbility.targetX)>f.x?1:-1}))drawn++;
+ }
+ return drawn;
+}
+
+export function drawV100BossAftermath(ctx,objects,{kind,x,y,elapsed,duration,phase,direction=-1,seed=0,world,ownerId,includeRelease=true}={}) {
  const p=PROFILES[kind];
  if(!p||![x,y,elapsed,duration,direction,seed].every(Number.isFinite)||duration<=0||elapsed<0||elapsed>=duration||!['active','recovery'].includes(phase))return false;
  const dust=objects?.['v100-dust'];
@@ -86,7 +117,7 @@ export function drawV100BossAftermath(ctx,objects,{kind,x,y,elapsed,duration,pha
   drawRasterPlume(ctx,dust,{x:x+paired+trailing,y:y+4-local*p.lift*(.3+r),
    width:w,height:h,alpha:release*(.32-r*.1),rotation:(r-.5)*.22,flip:i%2===0});
  }
- if(!recovery)drawRelease(ctx,objects,{kind,x,y,elapsed,direction,world,ownerId});
+ if(!recovery&&includeRelease)drawRelease(ctx,objects,{kind,x,y,elapsed,direction,world,ownerId});
  const smoke=objects?.[kind==='gairen'?'v100-smoke-b':'v100-smoke-a'];
  if(smoke?.complete&&smoke.naturalWidth&&smoke.naturalHeight){
   for(let i=0;i<2;i++){

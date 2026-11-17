@@ -1,7 +1,7 @@
 {
   "createdAt": "2026-11-16T17:03:46.974Z",
-  "status": "integrated-candidate-not-listening-accepted",
-  "sourceBase": "11de45bc6c803ac05cc3d9006089dd169c604e48",
+  "status": "level-revised-candidate-not-listening-accepted",
+  "sourceBase": "4d33c0a11c155994aaa0353b88e0019b1eeed997",
   "creator": "Ben Jaszczak; Brian Nelson; Kevin Heras; Matthew Nanney; Kenney",
   "license": "CC0-1.0",
   "commercialUse": true,
@@ -14,8 +14,8 @@
   ],
   "producerApproval": "Issue #177 P03 and direct instruction to improve all ranged weapon sounds using existing/free materials. Subjective quality and production publication are not approved by this record.",
   "runtimeAssetCount": 8,
-  "logicalBytes": 34176,
-  "distinctBytes": 34176,
+  "logicalBytes": 69732,
+  "distinctBytes": 69732,
   "voicesChanged": false,
   "pitchShift": false,
   "extraDischargesPerCue": false,
@@ -30,9 +30,9 @@
       "origin": "reused-r3",
       "runtime": {
         "path": "/audio/quality-20261117/firearms/v104-handgun.mp3",
-        "hash": "sha256-61751a01f3a59e9ef3b013a7715ff8a8601c1548d7b1fcf58e406d78e304940a"
+        "hash": "sha256-e9aa6aaad7346051c0015c5423224f5bfa58a4b733b330d4d082e243ac3ebd2a"
       },
-      "runtimeBytes": 4058,
+      "runtimeBytes": 7985,
       "sourceMaster": "assets/source/weapon-recordings/X_39P.wav",
       "sourceSha256": "d679a3cd87eae2898d984159f83544392932e6b77526045b672e3aaa9c2dda9f",
       "mechanism": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
@@ -79,8 +79,8 @@
       },
       "filterComplex": "[0:a]aformat=sample_rates=44100:channel_layouts=mono,asplit=3[ai][bi][ti];[ai]atrim=0:0.16,highpass=f=150,lowpass=f=9000,afade=t=out:st=0.115:d=0.045,volume=0.9,apad,atrim=end_sample=19130[a];[bi]atrim=0:0.2,highpass=f=70,lowpass=f=620,afade=t=out:st=0.12000000000000001:d=0.08,volume=0.28,apad,atrim=end_sample=19130[b];[ti]atrim=start=0.07:end=0.32,asetpts=PTS-STARTPTS,highpass=f=900,lowpass=f=4600,afade=t=in:d=0.008,afade=t=out:st=0.13:d=0.12,volume=0.22,adelay=70,apad,atrim=end_sample=19130[t];[1:a]aformat=sample_rates=44100:channel_layouts=mono,atrim=0:0.052,asetpts=PTS-STARTPTS,highpass=f=1700,lowpass=f=6800,afade=t=out:st=0.026999999999999996:d=0.025,volume=0.024,adelay=20,apad,atrim=end_sample=19130[m];[a][b][t][m]amix=inputs=4:duration=longest:dropout_transition=0,volume=4,afade=t=in:d=0.001,afade=t=out:st=0.35378684807256233:d=0.05[mix]",
       "gain": 1.005795948917936,
-      "master": "assets/source/quality-20261117/firearms/v104-handgun-mix.wav",
-      "masterSha256": "e3320a0ae18a1269dcba42d09cb6458c5df56a9e0e4f516030e68c815b0d8d13",
+      "master": "assets/source/quality-20261117/firearms/loudness-r2/v104-handgun.wav",
+      "masterSha256": "ddc32bdfdbab2786200510ff849e013e7a9d64b447a59cd20a42b9927e14d046",
       "selected": "assets/source/quality-20261117/firearms/v104-handgun-selected.wav",
       "selectedSha256": "be7604aef67bac3b7d8709defd64aedc194557600046fd09455e3d426f7c07ba",
       "baselinePath": "/audio/weapons/recorded/v104-handgun.mp3",
@@ -95,25 +95,7 @@
           "tail40msRms": 0.00014479587391343578,
           "onsetSeconds": 0.009002267573696146
         },
-        "layers": {
-          "samples": 19130,
-          "seconds": 0.43378684807256235,
-          "peak": 0.7097705006599426,
-          "clipSamples": 0,
-          "active200msRms": 0.06928258805963945,
-          "tail40msRms": 0,
-          "onsetSeconds": 0.00399092970521542
-        },
-        "afterWAV": {
-          "samples": 19130,
-          "seconds": 0.43378684807256235,
-          "peak": 0.713897705078125,
-          "clipSamples": 0,
-          "active200msRms": 0.06968401208191217,
-          "tail40msRms": 0,
-          "onsetSeconds": 0.00399092970521542
-        },
-        "afterMP3": {
+        "previousCandidate": {
           "samples": 19130,
           "seconds": 0.43378684807256235,
           "peak": 0.7099336981773376,
@@ -122,17 +104,57 @@
           "tail40msRms": 0,
           "onsetSeconds": 0.004013605442176871
         },
-        "gain": 1.005795948917936,
-        "activeRmsDeltaDb": -0.000016742421307401292,
-        "onsetDeltaSeconds": 0.005011337868480726
+        "afterWAV": {
+          "samples": 19130,
+          "seconds": 0.43378684807256235,
+          "peak": 0.960052490234375,
+          "clipSamples": 0,
+          "active200msRms": 0.1067874438498356,
+          "tail40msRms": 0,
+          "onsetSeconds": 0.00399092970521542
+        },
+        "afterMP3": {
+          "samples": 19130,
+          "seconds": 0.43378684807256235,
+          "peak": 0.9377188086509705,
+          "clipSamples": 0,
+          "active200msRms": 0.10144388510603469,
+          "tail40msRms": 0,
+          "onsetSeconds": 0.0024489795918367346
+        },
+        "activeRmsDeltaDb": 3.2618377800079577,
+        "onsetDeltaSeconds": -0.006553287981859411
       },
       "checks": {
         "sameDecodedSampleCount": true,
         "peakHeadroom": true,
         "noClipping": true,
         "tailDecayed": true,
-        "onsetWithin10ms": true
-      }
+        "onsetWithin10ms": true,
+        "activeLevelIncreased": true
+      },
+      "loudnessRevision": {
+        "userFeedback": "The isolated eight-gun preview sounds too quiet.",
+        "originalCandidate": "e8efbe07a679d1ac0d98f5395a69665ccf6f5e7b",
+        "previousRuntime": {
+          "path": "/audio/quality-20261117/firearms/v104-handgun.mp3",
+          "hash": "sha256-61751a01f3a59e9ef3b013a7715ff8a8601c1548d7b1fcf58e406d78e304940a",
+          "bytes": 4058
+        },
+        "previousMaster": {
+          "path": "assets/source/quality-20261117/firearms/v104-handgun-mix.wav",
+          "sha256": "e3320a0ae18a1269dcba42d09cb6458c5df56a9e0e4f516030e68c815b0d8d13"
+        },
+        "filter": "volume=1.6,acompressor=threshold=0.72:ratio=4:attack=0.01:release=18:makeup=1:knee=1.2:detection=peak,volume=1.1881119184443922",
+        "targetActiveGainDb": 3.25,
+        "measuredActiveGainDb": 3.263268914596784,
+        "peak": 0.9377188086509705,
+        "encoding": "128k MPEG from original lossless layer master",
+        "sourcePitchSpeedCadenceUnchanged": true,
+        "chain": "Original selection/layer filter and its gain produce previousMaster; this explicit revision filter produces the new master.",
+        "listeningAccepted": false
+      },
+      "gainStage": "Original layer render only; final dynamics and encoded level are recorded under loudnessRevision."
     },
     {
       "cue": "weapon-rifle-01",
@@ -140,9 +162,9 @@
       "origin": "reused-r3",
       "runtime": {
         "path": "/audio/quality-20261117/firearms/weapon-rifle-01.mp3",
-        "hash": "sha256-918ce43593901c38c9d03c8d6025523e7ce34cb4d931a4548af8ec901ba1c35d"
+        "hash": "sha256-5be850a6011413484e944b411bec84d797b9253851786b191ba3114b7a73aa23"
       },
-      "runtimeBytes": 5099,
+      "runtimeBytes": 10075,
       "sourceMaster": "assets/source/weapon-recordings/D_32P.wav",
       "sourceSha256": "acee9d2106b68fe5956225a19d7aedf943d97793817f9bda9d486a2b74b0a812",
       "mechanism": "assets/source/v100/audio/kenney-impact/impactMetal_light_000.ogg",
@@ -189,8 +211,8 @@
       },
       "filterComplex": "[0:a]asplit=3[ai][bi][ti];[ai]atrim=0:0.2,highpass=f=120,lowpass=f=9700,afade=t=out:st=0.15500000000000003:d=0.045,volume=0.88,apad,atrim=end_sample=24863[a];[bi]atrim=0:0.27,highpass=f=65,lowpass=f=540,afade=t=out:st=0.19:d=0.08,volume=0.35,apad,atrim=end_sample=24863[b];[ti]atrim=start=0.085:end=0.5,asetpts=PTS-STARTPTS,highpass=f=650,lowpass=f=4200,afade=t=in:d=0.008,afade=t=out:st=0.295:d=0.12,volume=0.3,adelay=85,apad,atrim=end_sample=24863[t];[1:a]atrim=0:0.07,asetpts=PTS-STARTPTS,highpass=f=1900,lowpass=f=6900,afade=t=out:st=0.045000000000000005:d=0.025,volume=0.022,adelay=28,apad,atrim=end_sample=24863[m];[a][b][t][m]amix=inputs=4:duration=longest:dropout_transition=0,volume=4,afade=t=in:d=0.001,afade=t=out:st=0.4837868480725624:d=0.05[mix]",
       "gain": 0.6803748543594988,
-      "master": "assets/source/quality-20261117/firearms/weapon-rifle-01-mix.wav",
-      "masterSha256": "aee138105268517b4c4f273a484e622e0f62bb4f8007c89267b98fd216d8eb09",
+      "master": "assets/source/quality-20261117/firearms/loudness-r2/weapon-rifle-01.wav",
+      "masterSha256": "6cc871940410f4e1f648dcb738c6923b793744fa29a794cb034353d07480998e",
       "selected": "assets/source/quality-20261117/firearms/weapon-rifle-01-selected.wav",
       "selectedSha256": "b57d5e61187f99bcb8fea7b582ea0418e6fac0baedd5899bc157f1c9be1d129d",
       "baselinePath": "/audio/weapons/recorded/weapon-rifle-01.mp3",
@@ -205,25 +227,7 @@
           "tail40msRms": 0.00010339316758681964,
           "onsetSeconds": 0.009002267573696146
         },
-        "layers": {
-          "samples": 24863,
-          "seconds": 0.5637868480725624,
-          "peak": 0.938369870185852,
-          "clipSamples": 0,
-          "active200msRms": 0.0965323943937879,
-          "tail40msRms": 0,
-          "onsetSeconds": 0.00399092970521542
-        },
-        "afterWAV": {
-          "samples": 24863,
-          "seconds": 0.5637868480725624,
-          "peak": 0.638458251953125,
-          "clipSamples": 0,
-          "active200msRms": 0.06567824740449824,
-          "tail40msRms": 0,
-          "onsetSeconds": 0.00399092970521542
-        },
-        "afterMP3": {
+        "previousCandidate": {
           "samples": 24863,
           "seconds": 0.5637868480725624,
           "peak": 0.6430292725563049,
@@ -232,17 +236,57 @@
           "tail40msRms": 0,
           "onsetSeconds": 0.00399092970521542
         },
-        "gain": 0.6803748543594988,
-        "activeRmsDeltaDb": 0.0000044472544508703275,
-        "onsetDeltaSeconds": 0.005011337868480726
+        "afterWAV": {
+          "samples": 24863,
+          "seconds": 0.5637868480725624,
+          "peak": 0.796661376953125,
+          "clipSamples": 0,
+          "active200msRms": 0.10050952150865305,
+          "tail40msRms": 0,
+          "onsetSeconds": 0.00399092970521542
+        },
+        "afterMP3": {
+          "samples": 24863,
+          "seconds": 0.5637868480725624,
+          "peak": 0.7619503736495972,
+          "clipSamples": 0,
+          "active200msRms": 0.0958445103105753,
+          "tail40msRms": 0,
+          "onsetSeconds": 0.0025170068027210884
+        },
+        "activeRmsDeltaDb": 3.2829181976454374,
+        "onsetDeltaSeconds": -0.006485260770975058
       },
       "checks": {
         "sameDecodedSampleCount": true,
         "peakHeadroom": true,
         "noClipping": true,
         "tailDecayed": true,
-        "onsetWithin10ms": true
-      }
+        "onsetWithin10ms": true,
+        "activeLevelIncreased": true
+      },
+      "loudnessRevision": {
+        "userFeedback": "The isolated eight-gun preview sounds too quiet.",
+        "originalCandidate": "e8efbe07a679d1ac0d98f5395a69665ccf6f5e7b",
+        "previousRuntime": {
+          "path": "/audio/quality-20261117/firearms/weapon-rifle-01.mp3",
+          "hash": "sha256-918ce43593901c38c9d03c8d6025523e7ce34cb4d931a4548af8ec901ba1c35d",
+          "bytes": 5099
+        },
+        "previousMaster": {
+          "path": "assets/source/quality-20261117/firearms/weapon-rifle-01-mix.wav",
+          "sha256": "aee138105268517b4c4f273a484e622e0f62bb4f8007c89267b98fd216d8eb09"
+        },
+        "filter": "volume=1.6,acompressor=threshold=0.72:ratio=4:attack=0.01:release=18:makeup=1:knee=1.2:detection=peak,volume=1.0138124823764896",
+        "targetActiveGainDb": 3.25,
+        "measuredActiveGainDb": 3.2855491708236713,
+        "peak": 0.7619503736495972,
+        "encoding": "128k MPEG from original lossless layer master",
+        "sourcePitchSpeedCadenceUnchanged": true,
+        "chain": "Original selection/layer filter and its gain produce previousMaster; this explicit revision filter produces the new master.",
+        "listeningAccepted": false
+      },
+      "gainStage": "Original layer render only; final dynamics and encoded level are recorded under loudnessRevision."
     },
     {
       "cue": "weapon-rifle-02",
@@ -250,9 +294,9 @@
       "origin": "new-second-take",
       "runtime": {
         "path": "/audio/quality-20261117/firearms/weapon-rifle-02.mp3",
-        "hash": "sha256-3abdae53baef7a41173257b66d55bf408d71cb37483a9dbea1712c1240bc1d45"
+        "hash": "sha256-2ae4b3236bf6916d622a4bb5761fb1a0c20aef057868af013c270b311be78813"
       },
-      "runtimeBytes": 5334,
+      "runtimeBytes": 10075,
       "sourceMaster": "assets/source/weapon-recordings/D_32P.wav",
       "sourceSha256": "acee9d2106b68fe5956225a19d7aedf943d97793817f9bda9d486a2b74b0a812",
       "mechanism": "assets/source/v100/audio/kenney-impact/impactMetal_light_000.ogg",
@@ -300,8 +344,8 @@
       },
       "filterComplex": "[0:a]aformat=sample_rates=44100:channel_layouts=mono,asplit=3[ai][bi][ti];[ai]atrim=0:0.2,highpass=f=120,lowpass=f=9700,afade=t=out:st=0.15500000000000003:d=0.045,volume=0.88,apad,atrim=end_sample=24863[a];[bi]atrim=0:0.27,highpass=f=65,lowpass=f=540,afade=t=out:st=0.19:d=0.08,volume=0.35,apad,atrim=end_sample=24863[b];[ti]atrim=start=0.085:end=0.5,asetpts=PTS-STARTPTS,highpass=f=650,lowpass=f=4200,afade=t=in:d=0.008,afade=t=out:st=0.295:d=0.12,volume=0.3,adelay=85,apad,atrim=end_sample=24863[t];[1:a]aformat=sample_rates=44100:channel_layouts=mono,atrim=0:0.07,asetpts=PTS-STARTPTS,highpass=f=1900,lowpass=f=6900,afade=t=out:st=0.045000000000000005:d=0.025,volume=0.022,adelay=28,apad,atrim=end_sample=24863[m];[a][b][t][m]amix=inputs=4:duration=longest:dropout_transition=0,volume=4,afade=t=in:d=0.001,afade=t=out:st=0.4837868480725624:d=0.05[mix]",
       "gain": 0.6371724334191279,
-      "master": "assets/source/quality-20261117/firearms/weapon-rifle-02-mix.wav",
-      "masterSha256": "9f08f3f6644b898ffa6b6e09a60fd258ecdaa0db54b6470ad0835017f0472bc6",
+      "master": "assets/source/quality-20261117/firearms/loudness-r2/weapon-rifle-02.wav",
+      "masterSha256": "36008c4129f379a3d7179c2bdc15fd3f44807ad71d6a79f7a911043ef3d615b0",
       "selected": "assets/source/quality-20261117/firearms/weapon-rifle-02-selected.wav",
       "selectedSha256": "ba5c2ce16b8ffdfd6f5ea0902ce4becd07e8ec5e0cd142395d564b731f4e3b30",
       "baselinePath": "/audio/weapons/recorded/weapon-rifle-02.mp3",
@@ -316,25 +360,7 @@
           "tail40msRms": 0.00010223003928525035,
           "onsetSeconds": 0.009002267573696146
         },
-        "layers": {
-          "samples": 24863,
-          "seconds": 0.5637868480725624,
-          "peak": 0.9424490332603455,
-          "clipSamples": 0,
-          "active200msRms": 0.09576244692136969,
-          "tail40msRms": 0,
-          "onsetSeconds": 0.004013605442176871
-        },
-        "afterWAV": {
-          "samples": 24863,
-          "seconds": 0.5637868480725624,
-          "peak": 0.600494384765625,
-          "clipSamples": 0,
-          "active200msRms": 0.06101726732781068,
-          "tail40msRms": 0,
-          "onsetSeconds": 0.004013605442176871
-        },
-        "afterMP3": {
+        "previousCandidate": {
           "samples": 24863,
           "seconds": 0.5637868480725624,
           "peak": 0.597857654094696,
@@ -343,17 +369,57 @@
           "tail40msRms": 0,
           "onsetSeconds": 0.004013605442176871
         },
-        "gain": 0.6371724334191279,
-        "activeRmsDeltaDb": 0.000010817676579871347,
-        "onsetDeltaSeconds": 0.004988662131519275
+        "afterWAV": {
+          "samples": 24863,
+          "seconds": 0.5637868480725624,
+          "peak": 0.7734375,
+          "clipSamples": 0,
+          "active200msRms": 0.09339650025073179,
+          "tail40msRms": 0,
+          "onsetSeconds": 0.004013605442176871
+        },
+        "afterMP3": {
+          "samples": 24863,
+          "seconds": 0.5637868480725624,
+          "peak": 0.7335906028747559,
+          "clipSamples": 0,
+          "active200msRms": 0.08874387773782809,
+          "tail40msRms": 0,
+          "onsetSeconds": 0.004013605442176871
+        },
+        "activeRmsDeltaDb": 3.25372377548296,
+        "onsetDeltaSeconds": -0.004988662131519275
       },
       "checks": {
         "sameDecodedSampleCount": true,
         "peakHeadroom": true,
         "noClipping": true,
         "tailDecayed": true,
-        "onsetWithin10ms": true
-      }
+        "onsetWithin10ms": true,
+        "activeLevelIncreased": true
+      },
+      "loudnessRevision": {
+        "userFeedback": "The isolated eight-gun preview sounds too quiet.",
+        "originalCandidate": "e8efbe07a679d1ac0d98f5395a69665ccf6f5e7b",
+        "previousRuntime": {
+          "path": "/audio/quality-20261117/firearms/weapon-rifle-02.mp3",
+          "hash": "sha256-3abdae53baef7a41173257b66d55bf408d71cb37483a9dbea1712c1240bc1d45",
+          "bytes": 5334
+        },
+        "previousMaster": {
+          "path": "assets/source/quality-20261117/firearms/weapon-rifle-02-mix.wav",
+          "sha256": "9f08f3f6644b898ffa6b6e09a60fd258ecdaa0db54b6470ad0835017f0472bc6"
+        },
+        "filter": "volume=1.6,acompressor=threshold=0.72:ratio=4:attack=0.01:release=18:makeup=1:knee=1.2:detection=peak,volume=0.9994643131055133",
+        "targetActiveGainDb": 3.25,
+        "measuredActiveGainDb": 3.237954720929179,
+        "peak": 0.7335906028747559,
+        "encoding": "128k MPEG from original lossless layer master",
+        "sourcePitchSpeedCadenceUnchanged": true,
+        "chain": "Original selection/layer filter and its gain produce previousMaster; this explicit revision filter produces the new master.",
+        "listeningAccepted": false
+      },
+      "gainStage": "Original layer render only; final dynamics and encoded level are recorded under loudnessRevision."
     },
     {
       "cue": "weapon-gunner-01",
@@ -361,9 +427,9 @@
       "origin": "reused-r3",
       "runtime": {
         "path": "/audio/quality-20261117/firearms/weapon-gunner-01.mp3",
-        "hash": "sha256-0655e61befc823f1b4cce64dbf600cf0932e401c1821cd741462420536780095"
+        "hash": "sha256-fe739fe7e5fcd264f92490e8e7457b188e9a3ba6564fcefdb378a414cf208e00"
       },
-      "runtimeBytes": 4265,
+      "runtimeBytes": 9239,
       "sourceMaster": "assets/source/weapon-recordings/C_28P.wav",
       "sourceSha256": "e0934c1d79192d2216db62fdf6ab57bf9d5d585267af367a1cfb21f0972a537d",
       "mechanism": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
@@ -410,8 +476,8 @@
       },
       "filterComplex": "[0:a]aformat=sample_rates=44100:channel_layouts=mono,asplit=3[ai][bi][ti];[ai]atrim=0:0.125,highpass=f=100,lowpass=f=7600,afade=t=out:st=0.08:d=0.045,volume=0.92,apad,atrim=end_sample=22658[a];[bi]atrim=0:0.2,highpass=f=65,lowpass=f=720,afade=t=out:st=0.12000000000000001:d=0.08,volume=0.4,apad,atrim=end_sample=22658[b];[ti]atrim=start=0.06:end=0.32,asetpts=PTS-STARTPTS,highpass=f=1100,lowpass=f=3900,afade=t=in:d=0.008,afade=t=out:st=0.14:d=0.12,volume=0.2,adelay=60,apad,atrim=end_sample=22658[t];[1:a]aformat=sample_rates=44100:channel_layouts=mono,atrim=0:0.038,asetpts=PTS-STARTPTS,highpass=f=1450,lowpass=f=5100,afade=t=out:st=0.012999999999999998:d=0.025,volume=0.027,adelay=24,apad,atrim=end_sample=22658[m];[a][b][t][m]amix=inputs=4:duration=longest:dropout_transition=0,volume=4,afade=t=in:d=0.001,afade=t=out:st=0.43378684807256235:d=0.05[mix]",
       "gain": 0.58565349323676,
-      "master": "assets/source/quality-20261117/firearms/weapon-gunner-01-mix.wav",
-      "masterSha256": "7a2ee294e180efa130ea61866adccaf7cf2458f10c030624c4f98670b121ca12",
+      "master": "assets/source/quality-20261117/firearms/loudness-r2/weapon-gunner-01.wav",
+      "masterSha256": "cb78b72cb77fb442eda237da8b38c1a281c11227dc64413b22cb0941275a0e85",
       "selected": "assets/source/quality-20261117/firearms/weapon-gunner-01-selected.wav",
       "selectedSha256": "b293739a2c0bb9ccd61fcd2bcb3e387920239aae84a3cbb42f5f5911ba2b2b86",
       "baselinePath": "/audio/weapons/recorded/weapon-gunner-01.mp3",
@@ -426,25 +492,7 @@
           "tail40msRms": 0.00009384514632798107,
           "onsetSeconds": 0.009002267573696146
         },
-        "layers": {
-          "samples": 22658,
-          "seconds": 0.5137868480725624,
-          "peak": 1.0787005424499512,
-          "clipSamples": 14,
-          "active200msRms": 0.12095427283775566,
-          "tail40msRms": 0,
-          "onsetSeconds": 0.004013605442176871
-        },
-        "afterWAV": {
-          "samples": 22658,
-          "seconds": 0.5137868480725624,
-          "peak": 0.631744384765625,
-          "clipSamples": 0,
-          "active200msRms": 0.07083731515410405,
-          "tail40msRms": 0,
-          "onsetSeconds": 0.004013605442176871
-        },
-        "afterMP3": {
+        "previousCandidate": {
           "samples": 22658,
           "seconds": 0.5137868480725624,
           "peak": 0.641782283782959,
@@ -453,17 +501,57 @@
           "tail40msRms": 0,
           "onsetSeconds": 0.004013605442176871
         },
-        "gain": 0.58565349323676,
-        "activeRmsDeltaDb": 0.0000027889045359208173,
-        "onsetDeltaSeconds": 0.004988662131519275
+        "afterWAV": {
+          "samples": 22658,
+          "seconds": 0.5137868480725624,
+          "peak": 0.81365966796875,
+          "clipSamples": 0,
+          "active200msRms": 0.10861926395733329,
+          "tail40msRms": 0,
+          "onsetSeconds": 0.00399092970521542
+        },
+        "afterMP3": {
+          "samples": 22658,
+          "seconds": 0.5137868480725624,
+          "peak": 0.7770206332206726,
+          "clipSamples": 0,
+          "active200msRms": 0.10358552167208085,
+          "tail40msRms": 0,
+          "onsetSeconds": 0.004013605442176871
+        },
+        "activeRmsDeltaDb": 3.3007420923828197,
+        "onsetDeltaSeconds": -0.004988662131519275
       },
       "checks": {
         "sameDecodedSampleCount": true,
         "peakHeadroom": true,
         "noClipping": true,
         "tailDecayed": true,
-        "onsetWithin10ms": true
-      }
+        "onsetWithin10ms": true,
+        "activeLevelIncreased": true
+      },
+      "loudnessRevision": {
+        "userFeedback": "The isolated eight-gun preview sounds too quiet.",
+        "originalCandidate": "e8efbe07a679d1ac0d98f5395a69665ccf6f5e7b",
+        "previousRuntime": {
+          "path": "/audio/quality-20261117/firearms/weapon-gunner-01.mp3",
+          "hash": "sha256-0655e61befc823f1b4cce64dbf600cf0932e401c1821cd741462420536780095",
+          "bytes": 4265
+        },
+        "previousMaster": {
+          "path": "assets/source/quality-20261117/firearms/weapon-gunner-01-mix.wav",
+          "sha256": "7a2ee294e180efa130ea61866adccaf7cf2458f10c030624c4f98670b121ca12"
+        },
+        "filter": "volume=1.6,acompressor=threshold=0.72:ratio=4:attack=0.01:release=18:makeup=1:knee=1.2:detection=peak,volume=1.0381805562606685",
+        "targetActiveGainDb": 3.25,
+        "measuredActiveGainDb": 3.2833630353791374,
+        "peak": 0.7770206332206726,
+        "encoding": "128k MPEG from original lossless layer master",
+        "sourcePitchSpeedCadenceUnchanged": true,
+        "chain": "Original selection/layer filter and its gain produce previousMaster; this explicit revision filter produces the new master.",
+        "listeningAccepted": false
+      },
+      "gainStage": "Original layer render only; final dynamics and encoded level are recorded under loudnessRevision."
     },
     {
       "cue": "weapon-gunner-02",
@@ -471,9 +559,9 @@
       "origin": "new-second-take",
       "runtime": {
         "path": "/audio/quality-20261117/firearms/weapon-gunner-02.mp3",
-        "hash": "sha256-788eea49785ed1a1dc03a46059c10def9e7d04c24c09a5d8e81dd53b0abe8a0a"
+        "hash": "sha256-1773734d3b4a1588e31611ae5f03e29c4f91bae543f19b36792eed88f3ae3b9c"
       },
-      "runtimeBytes": 4265,
+      "runtimeBytes": 9239,
       "sourceMaster": "assets/source/weapon-recordings/C_28P.wav",
       "sourceSha256": "e0934c1d79192d2216db62fdf6ab57bf9d5d585267af367a1cfb21f0972a537d",
       "mechanism": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
@@ -521,8 +609,8 @@
       },
       "filterComplex": "[0:a]aformat=sample_rates=44100:channel_layouts=mono,asplit=3[ai][bi][ti];[ai]atrim=0:0.125,highpass=f=100,lowpass=f=7600,afade=t=out:st=0.08:d=0.045,volume=0.92,apad,atrim=end_sample=22658[a];[bi]atrim=0:0.2,highpass=f=65,lowpass=f=720,afade=t=out:st=0.12000000000000001:d=0.08,volume=0.4,apad,atrim=end_sample=22658[b];[ti]atrim=start=0.06:end=0.32,asetpts=PTS-STARTPTS,highpass=f=1100,lowpass=f=3900,afade=t=in:d=0.008,afade=t=out:st=0.14:d=0.12,volume=0.2,adelay=60,apad,atrim=end_sample=22658[t];[1:a]aformat=sample_rates=44100:channel_layouts=mono,atrim=0:0.038,asetpts=PTS-STARTPTS,highpass=f=1450,lowpass=f=5100,afade=t=out:st=0.012999999999999998:d=0.025,volume=0.027,adelay=24,apad,atrim=end_sample=22658[m];[a][b][t][m]amix=inputs=4:duration=longest:dropout_transition=0,volume=4,afade=t=in:d=0.001,afade=t=out:st=0.43378684807256235:d=0.05[mix]",
       "gain": 0.5981427676314798,
-      "master": "assets/source/quality-20261117/firearms/weapon-gunner-02-mix.wav",
-      "masterSha256": "94ab8e5f15126b9d632c4bbf5813da67699e0c98bb4099bed1f3525b2307ada1",
+      "master": "assets/source/quality-20261117/firearms/loudness-r2/weapon-gunner-02.wav",
+      "masterSha256": "2c9bc40536487bb87f6c25d064aa8ef8f0317991e48aa74390ca1ba93a07724a",
       "selected": "assets/source/quality-20261117/firearms/weapon-gunner-02-selected.wav",
       "selectedSha256": "26296c6ff4332b51b244633c71a1527fd0d029a62e2a09af2cc33710d2820eef",
       "baselinePath": "/audio/weapons/recorded/weapon-gunner-02.mp3",
@@ -537,25 +625,7 @@
           "tail40msRms": 0.0001036558104974651,
           "onsetSeconds": 0.009002267573696146
         },
-        "layers": {
-          "samples": 22658,
-          "seconds": 0.5137868480725624,
-          "peak": 1.1615264415740967,
-          "clipSamples": 12,
-          "active200msRms": 0.11605467760784859,
-          "tail40msRms": 0,
-          "onsetSeconds": 0.004013605442176871
-        },
-        "afterWAV": {
-          "samples": 22658,
-          "seconds": 0.5137868480725624,
-          "peak": 0.69476318359375,
-          "clipSamples": 0,
-          "active200msRms": 0.06941728078463624,
-          "tail40msRms": 0,
-          "onsetSeconds": 0.004013605442176871
-        },
-        "afterMP3": {
+        "previousCandidate": {
           "samples": 22658,
           "seconds": 0.5137868480725624,
           "peak": 0.6976606845855713,
@@ -564,17 +634,57 @@
           "tail40msRms": 0,
           "onsetSeconds": 0.00399092970521542
         },
-        "gain": 0.5981427676314798,
-        "activeRmsDeltaDb": 0.0000018423140888108905,
-        "onsetDeltaSeconds": 0.004988662131519275
+        "afterWAV": {
+          "samples": 22658,
+          "seconds": 0.5137868480725624,
+          "peak": 0.823760986328125,
+          "clipSamples": 0,
+          "active200msRms": 0.10594454177418489,
+          "tail40msRms": 0,
+          "onsetSeconds": 0.00399092970521542
+        },
+        "afterMP3": {
+          "samples": 22658,
+          "seconds": 0.5137868480725624,
+          "peak": 0.8060941100120544,
+          "clipSamples": 0,
+          "active200msRms": 0.10104126754432187,
+          "tail40msRms": 0,
+          "onsetSeconds": 0.00399092970521542
+        },
+        "activeRmsDeltaDb": 3.260625607351087,
+        "onsetDeltaSeconds": -0.005011337868480726
       },
       "checks": {
         "sameDecodedSampleCount": true,
         "peakHeadroom": true,
         "noClipping": true,
         "tailDecayed": true,
-        "onsetWithin10ms": true
-      }
+        "onsetWithin10ms": true,
+        "activeLevelIncreased": true
+      },
+      "loudnessRevision": {
+        "userFeedback": "The isolated eight-gun preview sounds too quiet.",
+        "originalCandidate": "e8efbe07a679d1ac0d98f5395a69665ccf6f5e7b",
+        "previousRuntime": {
+          "path": "/audio/quality-20261117/firearms/weapon-gunner-02.mp3",
+          "hash": "sha256-788eea49785ed1a1dc03a46059c10def9e7d04c24c09a5d8e81dd53b0abe8a0a",
+          "bytes": 4265
+        },
+        "previousMaster": {
+          "path": "assets/source/quality-20261117/firearms/weapon-gunner-02-mix.wav",
+          "sha256": "94ab8e5f15126b9d632c4bbf5813da67699e0c98bb4099bed1f3525b2307ada1"
+        },
+        "filter": "volume=1.6,acompressor=threshold=0.72:ratio=4:attack=0.01:release=18:makeup=1:knee=1.2:detection=peak,volume=1.026393754671572",
+        "targetActiveGainDb": 3.25,
+        "measuredActiveGainDb": 3.2729625486825995,
+        "peak": 0.8060941100120544,
+        "encoding": "128k MPEG from original lossless layer master",
+        "sourcePitchSpeedCadenceUnchanged": true,
+        "chain": "Original selection/layer filter and its gain produce previousMaster; this explicit revision filter produces the new master.",
+        "listeningAccepted": false
+      },
+      "gainStage": "Original layer render only; final dynamics and encoded level are recorded under loudnessRevision."
     },
     {
       "cue": "weapon-smg-01",
@@ -582,9 +692,9 @@
       "origin": "new-family",
       "runtime": {
         "path": "/audio/quality-20261117/firearms/weapon-smg-01.mp3",
-        "hash": "sha256-bbc95a98205621becefc1f97db36ebe9684df53ffedebe6ee82c5d6c6f217f05"
+        "hash": "sha256-5d7ec98c782ae57396396de81f4b6bb79fb7661823f74a91a3a0d31d45b7ceb3"
       },
-      "runtimeBytes": 4006,
+      "runtimeBytes": 7567,
       "sourceMaster": "assets/source/weapon-recordings/G_31P.wav",
       "sourceSha256": "5982c6c2fa44545b750ba6217ed57797a6a15c02f5c9943ac0e99e5f3ab2b158",
       "mechanism": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
@@ -632,8 +742,8 @@
       },
       "filterComplex": "[0:a]aformat=sample_rates=44100:channel_layouts=mono,asplit=3[ai][bi][ti];[ai]atrim=0:0.105,highpass=f=140,lowpass=f=7800,afade=t=out:st=0.06:d=0.045,volume=0.9,apad,atrim=end_sample=17366[a];[bi]atrim=0:0.17,highpass=f=100,lowpass=f=900,afade=t=out:st=0.09000000000000001:d=0.08,volume=0.35,apad,atrim=end_sample=17366[b];[ti]atrim=start=0.045:end=0.3,asetpts=PTS-STARTPTS,highpass=f=950,lowpass=f=4300,afade=t=in:d=0.008,afade=t=out:st=0.135:d=0.12,volume=0.2,adelay=45,apad,atrim=end_sample=17366[t];[1:a]aformat=sample_rates=44100:channel_layouts=mono,atrim=0:0.04,asetpts=PTS-STARTPTS,highpass=f=1800,lowpass=f=6200,afade=t=out:st=0.015:d=0.025,volume=0.025,adelay=16,apad,atrim=end_sample=17366[m];[a][b][t][m]amix=inputs=4:duration=longest:dropout_transition=0,volume=4,afade=t=in:d=0.001,afade=t=out:st=0.31378684807256235:d=0.05[mix]",
       "gain": 0.8535383095156998,
-      "master": "assets/source/quality-20261117/firearms/weapon-smg-01-mix.wav",
-      "masterSha256": "0021fdfd90c20d998b3d228034c877089c89bea92b3300b056b5bbec29ef6797",
+      "master": "assets/source/quality-20261117/firearms/loudness-r2/weapon-smg-01.wav",
+      "masterSha256": "a85fe14cc962f4c015694134e80ec3187cc702f44bbe0ec6507ad4904f8eea6d",
       "selected": "assets/source/quality-20261117/firearms/weapon-smg-01-selected.wav",
       "selectedSha256": "e809631ef9b977651f7c8b378dff22c779b050d4f12aca891bb185b1b19d26e0",
       "baselinePath": "/audio/weapons/recorded/weapon-smg-01.mp3",
@@ -648,25 +758,7 @@
           "tail40msRms": 0.00021088316400124385,
           "onsetSeconds": 0.009002267573696146
         },
-        "layers": {
-          "samples": 17366,
-          "seconds": 0.39378684807256237,
-          "peak": 0.8780069947242737,
-          "clipSamples": 0,
-          "active200msRms": 0.08141577188385585,
-          "tail40msRms": 0,
-          "onsetSeconds": 0.004013605442176871
-        },
-        "afterWAV": {
-          "samples": 17366,
-          "seconds": 0.39378684807256237,
-          "peak": 0.749420166015625,
-          "clipSamples": 0,
-          "active200msRms": 0.06949157725009174,
-          "tail40msRms": 0,
-          "onsetSeconds": 0.004013605442176871
-        },
-        "afterMP3": {
+        "previousCandidate": {
           "samples": 17366,
           "seconds": 0.39378684807256237,
           "peak": 0.7574210166931152,
@@ -675,17 +767,57 @@
           "tail40msRms": 0,
           "onsetSeconds": 0.004013605442176871
         },
-        "gain": 0.8535383095156998,
-        "activeRmsDeltaDb": 0.00001211778434956365,
-        "onsetDeltaSeconds": 0.004988662131519275
+        "afterWAV": {
+          "samples": 17366,
+          "seconds": 0.39378684807256237,
+          "peak": 0.976776123046875,
+          "clipSamples": 0,
+          "active200msRms": 0.1064160103266842,
+          "tail40msRms": 0,
+          "onsetSeconds": 0.00399092970521542
+        },
+        "afterMP3": {
+          "samples": 17366,
+          "seconds": 0.39378684807256237,
+          "peak": 0.9400771260261536,
+          "clipSamples": 0,
+          "active200msRms": 0.1011766479488907,
+          "tail40msRms": 0,
+          "onsetSeconds": 0.004013605442176871
+        },
+        "activeRmsDeltaDb": 3.2629744751414935,
+        "onsetDeltaSeconds": -0.004988662131519275
       },
       "checks": {
         "sameDecodedSampleCount": true,
         "peakHeadroom": true,
         "noClipping": true,
         "tailDecayed": true,
-        "onsetWithin10ms": true
-      }
+        "onsetWithin10ms": true,
+        "activeLevelIncreased": true
+      },
+      "loudnessRevision": {
+        "userFeedback": "The isolated eight-gun preview sounds too quiet.",
+        "originalCandidate": "e8efbe07a679d1ac0d98f5395a69665ccf6f5e7b",
+        "previousRuntime": {
+          "path": "/audio/quality-20261117/firearms/weapon-smg-01.mp3",
+          "hash": "sha256-bbc95a98205621becefc1f97db36ebe9684df53ffedebe6ee82c5d6c6f217f05",
+          "bytes": 4006
+        },
+        "previousMaster": {
+          "path": "assets/source/quality-20261117/firearms/weapon-smg-01-mix.wav",
+          "sha256": "0021fdfd90c20d998b3d228034c877089c89bea92b3300b056b5bbec29ef6797"
+        },
+        "filter": "volume=1.6,acompressor=threshold=0.72:ratio=4:attack=0.01:release=18:makeup=1:knee=1.2:detection=peak,volume=1.1942026833728447",
+        "targetActiveGainDb": 3.25,
+        "measuredActiveGainDb": 3.2652017849685064,
+        "peak": 0.9400771260261536,
+        "encoding": "128k MPEG from original lossless layer master",
+        "sourcePitchSpeedCadenceUnchanged": true,
+        "chain": "Original selection/layer filter and its gain produce previousMaster; this explicit revision filter produces the new master.",
+        "listeningAccepted": false
+      },
+      "gainStage": "Original layer render only; final dynamics and encoded level are recorded under loudnessRevision."
     },
     {
       "cue": "weapon-smg-02",
@@ -693,9 +825,9 @@
       "origin": "new-second-take",
       "runtime": {
         "path": "/audio/quality-20261117/firearms/weapon-smg-02.mp3",
-        "hash": "sha256-17abffbb3aae224b8e7513b4bfee78ad20cf0029dce7a811d02674416040b62a"
+        "hash": "sha256-ff9a6d6add44f91734b3a49b776bff5e3a69b05d4d876832856eaa1c288ad961"
       },
-      "runtimeBytes": 3953,
+      "runtimeBytes": 7567,
       "sourceMaster": "assets/source/weapon-recordings/G_31P.wav",
       "sourceSha256": "5982c6c2fa44545b750ba6217ed57797a6a15c02f5c9943ac0e99e5f3ab2b158",
       "mechanism": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
@@ -743,8 +875,8 @@
       },
       "filterComplex": "[0:a]aformat=sample_rates=44100:channel_layouts=mono,asplit=3[ai][bi][ti];[ai]atrim=0:0.105,highpass=f=140,lowpass=f=7800,afade=t=out:st=0.06:d=0.045,volume=0.9,apad,atrim=end_sample=17366[a];[bi]atrim=0:0.17,highpass=f=100,lowpass=f=900,afade=t=out:st=0.09000000000000001:d=0.08,volume=0.35,apad,atrim=end_sample=17366[b];[ti]atrim=start=0.045:end=0.3,asetpts=PTS-STARTPTS,highpass=f=950,lowpass=f=4300,afade=t=in:d=0.008,afade=t=out:st=0.135:d=0.12,volume=0.2,adelay=45,apad,atrim=end_sample=17366[t];[1:a]aformat=sample_rates=44100:channel_layouts=mono,atrim=0:0.04,asetpts=PTS-STARTPTS,highpass=f=1800,lowpass=f=6200,afade=t=out:st=0.015:d=0.025,volume=0.025,adelay=16,apad,atrim=end_sample=17366[m];[a][b][t][m]amix=inputs=4:duration=longest:dropout_transition=0,volume=4,afade=t=in:d=0.001,afade=t=out:st=0.31378684807256235:d=0.05[mix]",
       "gain": 0.8111446528588062,
-      "master": "assets/source/quality-20261117/firearms/weapon-smg-02-mix.wav",
-      "masterSha256": "c672a623c3d9bf9ac55ce7f653c8033f44b293486d25e06862fbcd992b875148",
+      "master": "assets/source/quality-20261117/firearms/loudness-r2/weapon-smg-02.wav",
+      "masterSha256": "792c5debb91500524d5eb2cf3a70de1010950d9c3a60cdb2b4c9c6a26199c722",
       "selected": "assets/source/quality-20261117/firearms/weapon-smg-02-selected.wav",
       "selectedSha256": "2c0f3dbffce10b2123791d883c5f36c42124029ccdb86bee8ead41edb697c36e",
       "baselinePath": "/audio/weapons/recorded/weapon-smg-02.mp3",
@@ -759,25 +891,7 @@
           "tail40msRms": 0.00022088435653064663,
           "onsetSeconds": 0.009002267573696146
         },
-        "layers": {
-          "samples": 17366,
-          "seconds": 0.39378684807256237,
-          "peak": 0.9169568419456482,
-          "clipSamples": 0,
-          "active200msRms": 0.07890880201717251,
-          "tail40msRms": 0,
-          "onsetSeconds": 0.004013605442176871
-        },
-        "afterWAV": {
-          "samples": 17366,
-          "seconds": 0.39378684807256237,
-          "peak": 0.7437744140625,
-          "clipSamples": 0,
-          "active200msRms": 0.06400636349030271,
-          "tail40msRms": 0,
-          "onsetSeconds": 0.004013605442176871
-        },
-        "afterMP3": {
+        "previousCandidate": {
           "samples": 17366,
           "seconds": 0.39378684807256237,
           "peak": 0.7411964535713196,
@@ -786,17 +900,57 @@
           "tail40msRms": 0,
           "onsetSeconds": 0.004013605442176871
         },
-        "gain": 0.8111446528588062,
-        "activeRmsDeltaDb": -0.00001212230953487457,
-        "onsetDeltaSeconds": 0.004988662131519275
+        "afterWAV": {
+          "samples": 17366,
+          "seconds": 0.39378684807256237,
+          "peak": 0.952880859375,
+          "clipSamples": 0,
+          "active200msRms": 0.09761203995412218,
+          "tail40msRms": 0,
+          "onsetSeconds": 0.004013605442176871
+        },
+        "afterMP3": {
+          "samples": 17366,
+          "seconds": 0.39378684807256237,
+          "peak": 0.9137140512466431,
+          "clipSamples": 0,
+          "active200msRms": 0.0929062832717261,
+          "tail40msRms": 0,
+          "onsetSeconds": 0.004013605442176871
+        },
+        "activeRmsDeltaDb": 3.236426535272905,
+        "onsetDeltaSeconds": -0.004988662131519275
       },
       "checks": {
         "sameDecodedSampleCount": true,
         "peakHeadroom": true,
         "noClipping": true,
         "tailDecayed": true,
-        "onsetWithin10ms": true
-      }
+        "onsetWithin10ms": true,
+        "activeLevelIncreased": true
+      },
+      "loudnessRevision": {
+        "userFeedback": "The isolated eight-gun preview sounds too quiet.",
+        "originalCandidate": "e8efbe07a679d1ac0d98f5395a69665ccf6f5e7b",
+        "previousRuntime": {
+          "path": "/audio/quality-20261117/firearms/weapon-smg-02.mp3",
+          "hash": "sha256-17abffbb3aae224b8e7513b4bfee78ad20cf0029dce7a811d02674416040b62a",
+          "bytes": 3953
+        },
+        "previousMaster": {
+          "path": "assets/source/quality-20261117/firearms/weapon-smg-02-mix.wav",
+          "sha256": "c672a623c3d9bf9ac55ce7f653c8033f44b293486d25e06862fbcd992b875148"
+        },
+        "filter": "volume=1.6,acompressor=threshold=0.72:ratio=4:attack=0.01:release=18:makeup=1:knee=1.2:detection=peak,volume=1.167226409451318",
+        "targetActiveGainDb": 3.25,
+        "measuredActiveGainDb": 3.2489374343715163,
+        "peak": 0.9137140512466431,
+        "encoding": "128k MPEG from original lossless layer master",
+        "sourcePitchSpeedCadenceUnchanged": true,
+        "chain": "Original selection/layer filter and its gain produce previousMaster; this explicit revision filter produces the new master.",
+        "listeningAccepted": false
+      },
+      "gainStage": "Original layer render only; final dynamics and encoded level are recorded under loudnessRevision."
     },
     {
       "cue": "weapon-suppressed-pistol",
@@ -804,9 +958,9 @@
       "origin": "new-family",
       "runtime": {
         "path": "/audio/quality-20261117/firearms/weapon-suppressed-pistol.mp3",
-        "hash": "sha256-215238294f30eb0e3891c10cadfd91ac5b2e242bfe41c69eb836597d1f40c429"
+        "hash": "sha256-457dce3d60705285fdcaf05364b4276c31f670fefeea1d497235241f6cd2662d"
       },
-      "runtimeBytes": 3196,
+      "runtimeBytes": 7985,
       "sourceMaster": "assets/source/weapon-recordings/X_39P.wav",
       "sourceSha256": "d679a3cd87eae2898d984159f83544392932e6b77526045b672e3aaa9c2dda9f",
       "mechanism": "assets/source/v100/audio/kenney-rpg/metalLatch.ogg",
@@ -854,8 +1008,8 @@
       },
       "filterComplex": "[0:a]aformat=sample_rates=44100:channel_layouts=mono,asplit=3[ai][bi][ti];[ai]atrim=0:0.1,highpass=f=120,lowpass=f=2600,afade=t=out:st=0.05500000000000001:d=0.045,volume=0.8,apad,atrim=end_sample=19130[a];[bi]atrim=0:0.18,highpass=f=80,lowpass=f=440,afade=t=out:st=0.09999999999999999:d=0.08,volume=0.28,apad,atrim=end_sample=19130[b];[ti]atrim=start=0.055:end=0.3,asetpts=PTS-STARTPTS,highpass=f=500,lowpass=f=1700,afade=t=in:d=0.008,afade=t=out:st=0.125:d=0.12,volume=0.13,adelay=55,apad,atrim=end_sample=19130[t];[1:a]aformat=sample_rates=44100:channel_layouts=mono,atrim=0:0.045,asetpts=PTS-STARTPTS,highpass=f=1500,lowpass=f=5100,afade=t=out:st=0.019999999999999997:d=0.025,volume=0.07,adelay=18,apad,atrim=end_sample=19130[m];[a][b][t][m]amix=inputs=4:duration=longest:dropout_transition=0,volume=4,afade=t=in:d=0.001,afade=t=out:st=0.35378684807256233:d=0.05[mix]",
       "gain": 0.872121955286996,
-      "master": "assets/source/quality-20261117/firearms/weapon-suppressed-pistol-mix.wav",
-      "masterSha256": "001e2ae7b00fdcb328cee92465ed851dae3d07f1e9a24d64eae6e63b9ffecc03",
+      "master": "assets/source/quality-20261117/firearms/loudness-r2/weapon-suppressed-pistol.wav",
+      "masterSha256": "58bff7ed9c38fdf8e072bf8b6889136276ed07335ebdee58a77af668505ed5ce",
       "selected": "assets/source/quality-20261117/firearms/weapon-suppressed-pistol-selected.wav",
       "selectedSha256": "be7604aef67bac3b7d8709defd64aedc194557600046fd09455e3d426f7c07ba",
       "baselinePath": "/audio/quality-20261028/babayaga-suppressed-r2.mp3",
@@ -870,25 +1024,7 @@
           "tail40msRms": 0.00014449474591218394,
           "onsetSeconds": 0.009002267573696146
         },
-        "layers": {
-          "samples": 19130,
-          "seconds": 0.43378684807256235,
-          "peak": 0.6282222270965576,
-          "clipSamples": 0,
-          "active200msRms": 0.058035746963055246,
-          "tail40msRms": 0,
-          "onsetSeconds": 0.004013605442176871
-        },
-        "afterWAV": {
-          "samples": 19130,
-          "seconds": 0.43378684807256235,
-          "peak": 0.547882080078125,
-          "clipSamples": 0,
-          "active200msRms": 0.05061420155331456,
-          "tail40msRms": 0,
-          "onsetSeconds": 0.004013605442176871
-        },
-        "afterMP3": {
+        "previousCandidate": {
           "samples": 19130,
           "seconds": 0.43378684807256235,
           "peak": 0.5509366989135742,
@@ -897,17 +1033,65 @@
           "tail40msRms": 0,
           "onsetSeconds": 0.004013605442176871
         },
-        "gain": 0.872121955286996,
-        "activeRmsDeltaDb": -0.000008162552476389289,
-        "onsetDeltaSeconds": 0.004988662131519275
+        "afterWAV": {
+          "samples": 19130,
+          "seconds": 0.43378684807256235,
+          "peak": 0.761444091796875,
+          "clipSamples": 0,
+          "active200msRms": 0.07739456637230188,
+          "tail40msRms": 0,
+          "onsetSeconds": 0.004013605442176871
+        },
+        "afterMP3": {
+          "samples": 19130,
+          "seconds": 0.43378684807256235,
+          "peak": 0.7238569855690002,
+          "clipSamples": 0,
+          "active200msRms": 0.07344675608391346,
+          "tail40msRms": 0,
+          "onsetSeconds": 0.004013605442176871
+        },
+        "activeRmsDeltaDb": 3.233996416011322,
+        "onsetDeltaSeconds": -0.004988662131519275
       },
       "checks": {
         "sameDecodedSampleCount": true,
         "peakHeadroom": true,
         "noClipping": true,
         "tailDecayed": true,
-        "onsetWithin10ms": true
-      }
+        "onsetWithin10ms": true,
+        "activeLevelIncreased": true
+      },
+      "loudnessRevision": {
+        "userFeedback": "The isolated eight-gun preview sounds too quiet.",
+        "originalCandidate": "e8efbe07a679d1ac0d98f5395a69665ccf6f5e7b",
+        "previousRuntime": {
+          "path": "/audio/quality-20261117/firearms/weapon-suppressed-pistol.mp3",
+          "hash": "sha256-215238294f30eb0e3891c10cadfd91ac5b2e242bfe41c69eb836597d1f40c429",
+          "bytes": 3196
+        },
+        "previousMaster": {
+          "path": "assets/source/quality-20261117/firearms/weapon-suppressed-pistol-mix.wav",
+          "sha256": "001e2ae7b00fdcb328cee92465ed851dae3d07f1e9a24d64eae6e63b9ffecc03"
+        },
+        "filter": "volume=1.6,acompressor=threshold=0.72:ratio=4:attack=0.01:release=18:makeup=1:knee=1.2:detection=peak,volume=1.0067936069849086",
+        "targetActiveGainDb": 3.25,
+        "measuredActiveGainDb": 3.225163344304555,
+        "peak": 0.7238569855690002,
+        "encoding": "128k MPEG from original lossless layer master",
+        "sourcePitchSpeedCadenceUnchanged": true,
+        "chain": "Original selection/layer filter and its gain produce previousMaster; this explicit revision filter produces the new master.",
+        "listeningAccepted": false
+      },
+      "gainStage": "Original layer render only; final dynamics and encoded level are recorded under loudnessRevision."
     }
-  ]
+  ],
+  "previousSourceBase": "11de45bc6c803ac05cc3d9006089dd169c604e48",
+  "levelFeedback": {
+    "reason": "User heard the actual isolated comparison and found it too quiet.",
+    "targetGainDb": 3.25,
+    "relativeTo": "Previous e8 encoded candidate at the same asset gain",
+    "safeguards": "Same shot length, onset within10ms, decoded peak<=.95, zero clipped samples. Voice/alert/bus/settings/cadence unchanged.",
+    "recordedAt": "2026-11-17T04:16:42.143Z"
+  }
 }

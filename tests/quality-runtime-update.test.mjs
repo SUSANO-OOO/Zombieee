@@ -26,7 +26,7 @@ test('quality candidate contains exactly the reviewed art, firearm and VFX delta
   assertDelta(candidate);
   assert.equal(contract.added.length,276);assert.equal(contract.retired.length,166);
   assert.equal(contract.transportChanges.length,344);assert.equal(contract.contentReplacements.length,1);
-  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),49048690); // Declared quality assets, two recorded Mayo reactions and eight gun candidates.
+  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),49244232); // Reviewed payloads with only the shield image replaced; encoded Kuma steam is reused.
   for(const row of contract.added){
     const bytes=await readFile(new URL('../public'+(row.sourcePath??row.path),import.meta.url));
     assert.equal(bytes.length,row.bytes,row.path);

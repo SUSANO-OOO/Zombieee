@@ -1,0 +1,16 @@
+{
+  "app/AshfallGame.tsx": [
+    [
+      "import {drawV100MedicalArea,drawV100MedicalRecipients} from \"./v100MedicalFieldVfx.js\";",
+      "import {drawV100MedicalArea,drawV100MedicalRecipients} from \"./v100MedicalFieldVfx.js\";\nimport {drawV100GuardActivations} from \"./v100GuardActivationVfx.js\";"
+    ],
+    [
+      "  for (const effect of g.manualAbilityVfx) drawManualAbilityVfx(ctx, effect,Boolean(g.definition.missionConfig.v100StageNumber));",
+      "  // Guard preparation paint stays behind actors, hazards and their health readouts.\n  if (g.definition.missionConfig.v100StageNumber) drawV100GuardActivations(ctx, stageObjects, g);\n  for (const effect of g.manualAbilityVfx) drawManualAbilityVfx(ctx, effect,Boolean(g.definition.missionConfig.v100StageNumber));"
+    ],
+    [
+      "drawV100AdvancedAbilityEffects(ctx, stageObjects, g);",
+      "drawV100AdvancedAbilityEffects(ctx, stageObjects, g, {includeGuardActivations:false});"
+    ]
+  ]
+}

@@ -293,3 +293,35 @@ test('current rig samples advance the affected manual and station windup/release
     assert.ok(next.clipProgress<1e-6);
   }
 });
+
+test('HUD-constrained skill names leave the casting face and raised gun clear',()=>{
+  const overlaps=(a,b)=>a.x+a.width/2>b.x&&a.x-a.width/2<b.x+b.width&&a.y+a.height/2>b.y&&a.y-a.height/2<b.y+b.height;
+  for(const width of [740,844]){
+    const headX=Math.round(width*.38),faceAndGrip={x:headX-18,y:155,width:58,height:46};
+    const rows=[{name:'精密排除',ownerId:1,headX,headY:138,owner:{y:240}}];
+    const [placed]=layoutV105AbilityNames(rows,{width,height:340,fontSize:22,measure:text=>text.length*22,
+      bounds:{left:0,top:142,right:width,bottom:330},obstacles:[{x:0,y:0,width,height:142}]});
+    assert.equal(overlaps(placed,faceAndGrip),false,'The skill text must not cover the casting face or grip');
+    assert.ok(placed.x-placed.width/2>=0&&placed.x+placed.width/2<=width);
+    assert.ok(placed.y-placed.height/2>=142&&placed.y+placed.height/2<=330);
+  }
+});
+
+test('with headroom a skill name stays above its own actor instead of moving aside',()=>{
+  const headX=300,headY=138;
+  const [placed]=layoutV105AbilityNames([{name:'精密排除',ownerId:1,headX,headY,owner:{y:240}}],
+    {width:844,height:340,fontSize:22,measure:text=>text.length*22});
+  assert.equal(placed.x,headX);
+  assert.ok(placed.y+placed.height/2<headY+7);
+});
+
+test('edge casters keep their skill names on screen while leaving the face clear',()=>{
+  const overlap=(a,b)=>a.x+a.width/2>b.x&&a.x-a.width/2<b.x+b.width&&a.y+a.height/2>b.y&&a.y-a.height/2<b.y+b.height;
+  for(const headX of [24,716]){
+    const [placed]=layoutV105AbilityNames([{name:'制圧掃射',ownerId:1,headX,headY:138,owner:{y:240}}],
+      {width:740,height:340,fontSize:22,measure:text=>text.length*22,
+        bounds:{left:0,top:142,right:740,bottom:330},obstacles:[{x:0,y:0,width:740,height:142}]});
+    assert.ok(placed.x-placed.width/2>=0&&placed.x+placed.width/2<=740);
+    assert.equal(overlap(placed,{x:headX-18,y:155,width:58,height:46}),false);
+  }
+});

@@ -614,7 +614,7 @@ import { drawV100ClinicalControl } from "./v100ClinicalControl.js";
 import { drawV100CorporateControl, v100CorporateControlLabel } from "./v100CorporateControl.js";
 import { drawV100AssaultObject, v100AssaultObjectProfile } from "./v100AssaultObjects.js";
 import { drawV100Explosion, drawV100FootDust, drawV100GroundFire, drawV100Muzzle, V100_CONTACT_WEAPONS, V100_CLAW_CONTACT_WEAPONS, queueV100Contact, queueV100ClawContact, queueV100TakuyaGroundContact, queueV100TataraGroundContact, getV100ClawContactSnapshot, getV100SkillContactSnapshot, queueV100GuardContact, getV100GuardContactSnapshot, drawV100ContactQueue, clearV100ContactQueue } from "./v100CombatVfx.js";
-import { drawV100BossAftermath } from "./v100BossAftermath.js";
+import { drawV100BossAftermath, drawV100BossReleaseFields } from "./v100BossAftermath.js";
 import {drawV100GateChargeTrail,drawV100KuromeRay} from './v100BossAttackVfx.js';
 import {drawV100MaterialParticle} from './v100MaterialParticles.js';
 import { drawV100BossDefeat } from "./v100BossDefeatVfx.js";
@@ -639,6 +639,7 @@ import { v100AdvancedManualPose, V100_ADVANCED_MANUAL_POSE_STABLE } from "./v100
 import { v100ScoutApproachStep } from "./v100ScoutApproach.js";
 import { clearV100SupportAbilityEffects, drawV100SupportAbilityEffects, drawV100DeployedWireTrap, getV100SupportAbilityEffectsSnapshot, queueV100SupportAbilityEffect } from "./v100SupportAbilityVfx.js";
 import {drawV100MedicalArea,drawV100MedicalRecipients} from "./v100MedicalFieldVfx.js";
+import {drawV100GuardActivations} from "./v100GuardActivationVfx.js";
 import { clearV100AdvancedAbilityEffects, drawV100AdvancedAbilityEffects, drawV100ChihaFinalBursts, V100_CHIHA_FINAL_BURST_DURATION, getV100AdvancedAbilityEffectsSnapshot, queueV100AdvancedAbilityEffect, resolveV100AdvancedAbilityOrigin, resolveV105CurrentAbilityOrigin } from "./v100AdvancedAbilityVfx.js";
 import { v100AbilityOriginSourcePixel, v100RenderedAbilityOriginSocket } from "./v100AbilityOriginSockets.js";
 import { drawV100DefensePerimeter } from "./v100DefensePerimeter.js";
@@ -6723,7 +6724,7 @@ function drawMotherCombatVfx(ctx: CanvasRenderingContext2D, f: Fighter, g: Game,
     ? tuning.activeSeconds - f.stationAbility.remainingSeconds
     : tuning.recoverySeconds - f.stationAbility.remainingSeconds;
   if(g.definition.missionConfig.v100StageNumber){
-    drawV100BossAftermath(ctx,stageObjects,{kind:'mother',x:f.x,y:f.y,seed:f.id,world:g,ownerId:f.id,direction:Number(f.stationAbility.targetX)>f.x?1:-1,elapsed,duration:active?tuning.activeSeconds:tuning.recoverySeconds,phase:f.stationAbility.phase});
+    drawV100BossAftermath(ctx,stageObjects,{includeRelease:false,kind:'mother',x:f.x,y:f.y,seed:f.id,world:g,ownerId:f.id,direction:Number(f.stationAbility.targetX)>f.x?1:-1,elapsed,duration:active?tuning.activeSeconds:tuning.recoverySeconds,phase:f.stationAbility.phase});
     const socket=fighterWeaponSockets.get(f);
     if(active&&socket)drawV104InfectedWake(ctx,stageObjects,{...socket,ux:0,uy:-1,trail:'glob',progress:elapsed/tuning.activeSeconds});
     return;
@@ -6771,7 +6772,7 @@ function drawAnomalyBossCombatVfx(ctx: CanvasRenderingContext2D, f: Fighter, g: 
     ? tuning.activeSeconds - f.stationAbility.remainingSeconds
     : tuning.recoverySeconds - f.stationAbility.remainingSeconds;
   if (g.definition.missionConfig.v100StageNumber) {
-    drawV100BossAftermath(ctx, stageObjects, { kind: f.kind, x: f.x, y: f.y, seed: f.id, world:g, ownerId:f.id, direction: f.kind === "ooguchi" ? -1 : (Number(f.stationAbility.targetX) > f.x ? 1 : -1), elapsed,
+    drawV100BossAftermath(ctx, stageObjects, { includeRelease:false, kind: f.kind, x: f.x, y: f.y, seed: f.id, world:g, ownerId:f.id, direction: f.kind === "ooguchi" ? -1 : (Number(f.stationAbility.targetX) > f.x ? 1 : -1), elapsed,
       duration: active ? tuning.activeSeconds : tuning.recoverySeconds, phase: f.stationAbility.phase });
     return;
   }
@@ -8926,6 +8927,7 @@ function drawWorld(
   drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["rear-scenery"], Boolean(g.definition.missionConfig.v100StageNumber));
   if(g.definition.missionConfig.v100StageNumber)drawV100ChihaFinalBursts(ctx,stageObjects,g,{viewportWidth:ctx.canvas.clientWidth,viewportHeight:ctx.canvas.clientHeight,worldScale:presentationLayout?.transform.scale??1});
   if(g.definition.missionConfig.v100StageNumber)drawV100BossDefeatFinales(ctx,stageObjects,g,{viewportWidth:ctx.canvas.clientWidth,viewportHeight:ctx.canvas.clientHeight,worldScale:presentationLayout?.transform.scale??1,density:graphicsProfile.effectDensity});
+  if(g.definition.missionConfig.v100StageNumber)drawV100BossReleaseFields(ctx,stageObjects,g,{viewportWidth:ctx.canvas.clientWidth,viewportHeight:ctx.canvas.clientHeight,worldScale:presentationLayout?.transform.scale??1});
 
   // Units reveal the three routes through movement; no lane-map overlay is drawn over the battlefield.
 
@@ -8939,6 +8941,8 @@ function drawWorld(
   drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["objective"], Boolean(g.definition.missionConfig.v100StageNumber));
 
   for (const effect of selectAreaEffectsForRender(g.areaEffects) as AreaEffect[]) drawAreaEffect(ctx, effect, g.time, stageObjects, Boolean(g.definition.missionConfig.v100StageNumber), g);
+  // Guard preparation paint stays behind actors, hazards and their health readouts.
+  if (g.definition.missionConfig.v100StageNumber) drawV100GuardActivations(ctx, stageObjects, g);
   for (const effect of g.manualAbilityVfx) drawManualAbilityVfx(ctx, effect,Boolean(g.definition.missionConfig.v100StageNumber));
   if (!g.definition.missionConfig.v100StageNumber) for (const fighter of g.fighters) drawCrazyKingAbilityIndicator(ctx, fighter, g.time);
   for (const hazard of g.stationHazards) drawStationHazard(ctx, hazard, g.time);
@@ -9317,7 +9321,7 @@ function drawWorld(
   // the near edge. Drawing them last prevents fighters from appearing on top
   // of wire, rubble, fallen signs, or supply crates.
   drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["foreground-prop"], Boolean(g.definition.missionConfig.v100StageNumber));
-  if (g.definition.missionConfig.v100StageNumber) { drawV100MedicalRecipients(ctx,stageObjects,g); drawV100SupportAbilityEffects(ctx, stageObjects, g); drawV100AdvancedAbilityEffects(ctx, stageObjects, g); }
+  if (g.definition.missionConfig.v100StageNumber) { drawV100MedicalRecipients(ctx,stageObjects,g); drawV100SupportAbilityEffects(ctx, stageObjects, g); drawV100AdvancedAbilityEffects(ctx, stageObjects, g, {includeGuardActivations:false}); }
 
   drawCrawlerBarrage(ctx, g, graphicsProfile);
   if(g.definition.missionConfig.v100StageNumber){

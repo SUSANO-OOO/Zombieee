@@ -1,0 +1,20 @@
+{
+  "app/AshfallGame.tsx": [
+    [
+      "import { drawV100BossAftermath } from \"./v100BossAftermath.js\";",
+      "import { drawV100BossAftermath, drawV100BossReleaseFields } from \"./v100BossAftermath.js\";"
+    ],
+    [
+      "drawV100BossAftermath(ctx,stageObjects,{kind:'mother',x:f.x",
+      "drawV100BossAftermath(ctx,stageObjects,{includeRelease:false,kind:'mother',x:f.x"
+    ],
+    [
+      "drawV100BossAftermath(ctx, stageObjects, { kind: f.kind,",
+      "drawV100BossAftermath(ctx, stageObjects, { includeRelease:false, kind: f.kind,"
+    ],
+    [
+      "  if(g.definition.missionConfig.v100StageNumber)drawV100BossDefeatFinales(ctx,stageObjects,g,{viewportWidth:ctx.canvas.clientWidth,viewportHeight:ctx.canvas.clientHeight,worldScale:presentationLayout?.transform.scale??1,density:graphicsProfile.effectDensity});",
+      "  if(g.definition.missionConfig.v100StageNumber)drawV100BossDefeatFinales(ctx,stageObjects,g,{viewportWidth:ctx.canvas.clientWidth,viewportHeight:ctx.canvas.clientHeight,worldScale:presentationLayout?.transform.scale??1,density:graphicsProfile.effectDensity});\n  if(g.definition.missionConfig.v100StageNumber)drawV100BossReleaseFields(ctx,stageObjects,g,{viewportWidth:ctx.canvas.clientWidth,viewportHeight:ctx.canvas.clientHeight,worldScale:presentationLayout?.transform.scale??1});"
+    ]
+  ]
+}

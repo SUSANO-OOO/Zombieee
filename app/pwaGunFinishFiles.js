@@ -2,34 +2,34 @@
 export const PWA_GUN_FINISH_FILES=Object.freeze(Object.fromEntries(Object.entries({
   "v104-handgun": {
     "path": "/audio/quality-20261117/firearms/v104-handgun.mp3",
-    "hash": "sha256-61751a01f3a59e9ef3b013a7715ff8a8601c1548d7b1fcf58e406d78e304940a"
+    "hash": "sha256-e9aa6aaad7346051c0015c5423224f5bfa58a4b733b330d4d082e243ac3ebd2a"
   },
   "weapon-rifle-01": {
     "path": "/audio/quality-20261117/firearms/weapon-rifle-01.mp3",
-    "hash": "sha256-918ce43593901c38c9d03c8d6025523e7ce34cb4d931a4548af8ec901ba1c35d"
+    "hash": "sha256-5be850a6011413484e944b411bec84d797b9253851786b191ba3114b7a73aa23"
   },
   "weapon-rifle-02": {
     "path": "/audio/quality-20261117/firearms/weapon-rifle-02.mp3",
-    "hash": "sha256-3abdae53baef7a41173257b66d55bf408d71cb37483a9dbea1712c1240bc1d45"
+    "hash": "sha256-2ae4b3236bf6916d622a4bb5761fb1a0c20aef057868af013c270b311be78813"
   },
   "weapon-gunner-01": {
     "path": "/audio/quality-20261117/firearms/weapon-gunner-01.mp3",
-    "hash": "sha256-0655e61befc823f1b4cce64dbf600cf0932e401c1821cd741462420536780095"
+    "hash": "sha256-fe739fe7e5fcd264f92490e8e7457b188e9a3ba6564fcefdb378a414cf208e00"
   },
   "weapon-gunner-02": {
     "path": "/audio/quality-20261117/firearms/weapon-gunner-02.mp3",
-    "hash": "sha256-788eea49785ed1a1dc03a46059c10def9e7d04c24c09a5d8e81dd53b0abe8a0a"
+    "hash": "sha256-1773734d3b4a1588e31611ae5f03e29c4f91bae543f19b36792eed88f3ae3b9c"
   },
   "weapon-smg-01": {
     "path": "/audio/quality-20261117/firearms/weapon-smg-01.mp3",
-    "hash": "sha256-bbc95a98205621becefc1f97db36ebe9684df53ffedebe6ee82c5d6c6f217f05"
+    "hash": "sha256-5d7ec98c782ae57396396de81f4b6bb79fb7661823f74a91a3a0d31d45b7ceb3"
   },
   "weapon-smg-02": {
     "path": "/audio/quality-20261117/firearms/weapon-smg-02.mp3",
-    "hash": "sha256-17abffbb3aae224b8e7513b4bfee78ad20cf0029dce7a811d02674416040b62a"
+    "hash": "sha256-ff9a6d6add44f91734b3a49b776bff5e3a69b05d4d876832856eaa1c288ad961"
   },
   "weapon-suppressed-pistol": {
     "path": "/audio/quality-20261117/firearms/weapon-suppressed-pistol.mp3",
-    "hash": "sha256-215238294f30eb0e3891c10cadfd91ac5b2e242bfe41c69eb836597d1f40c429"
+    "hash": "sha256-457dce3d60705285fdcaf05364b4276c31f670fefeea1d497235241f6cd2662d"
   }
 }).map(([id,file])=>[id,Object.freeze(file)])));

@@ -1,0 +1,435 @@
+{
+  "originalHead": "e8efbe07a679d1ac0d98f5395a69665ccf6f5e7b",
+  "status": "ALL_EIGHT_LEVEL_CANDIDATES_PASS_SIGNAL_CHECKS",
+  "targetDb": 3.25,
+  "producerFeedback": "The existing gun audition sounds too quiet; do not assume its level is sufficient.",
+  "firstPilot": "R1 retained:3 takes below target. R2 retained:WAV reached target but encoded MP3 was0.42-0.48dB lower. R3 normalizes against measured encoded MP3 level; no threshold is relaxed.",
+  "scope": "New128k MP3 from original lossless masters with controlled peaks. No pitch/speed/cadence/voice/settings change. Not listening or actual combat-mix acceptance.",
+  "rows": [
+    {
+      "cue": "v104-handgun",
+      "label": "ピストル",
+      "sourceMaster": "assets/source/quality-20261117/firearms/v104-handgun-mix.wav",
+      "sourceMasterSha256": "e3320a0ae18a1269dcba42d09cb6458c5df56a9e0e4f516030e68c815b0d8d13",
+      "filter": "volume=1.6,acompressor=threshold=0.72:ratio=4:attack=0.01:release=18:makeup=1:knee=1.2:detection=peak,volume=1.1881119184443922",
+      "normalization": 1.1881119184443922,
+      "targetDb": 3.25,
+      "before": {
+        "samples": 19130,
+        "peak": 0.7099336981773376,
+        "active": 0.06967266580643124,
+        "tail": 0,
+        "clipped": 0,
+        "onset": 0.004013605442176871
+      },
+      "afterWav": {
+        "samples": 19130,
+        "peak": 0.960052490234375,
+        "active": 0.1067874438498356,
+        "tail": 0,
+        "clipped": 0,
+        "onset": 0.00399092970521542
+      },
+      "after": {
+        "samples": 19130,
+        "peak": 0.9377188086509705,
+        "active": 0.10144388510603469,
+        "tail": 0,
+        "clipped": 0,
+        "onset": 0.0024489795918367346
+      },
+      "gainDb": 3.263268914596784,
+      "onsetMs": -1.564625850340136,
+      "checks": {
+        "duration": true,
+        "onset": true,
+        "headroom": true,
+        "noClipping": true,
+        "louder": true,
+        "tail": true
+      },
+      "wav": {
+        "path": "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-card-readiness-b689e3c4\\output\\playwright\\gun-level-20261117-r1\\level-pilot-r3\\v104-handgun.wav",
+        "bytes": 38338,
+        "sha256": "ddc32bdfdbab2786200510ff849e013e7a9d64b447a59cd20a42b9927e14d046"
+      },
+      "mp3": {
+        "path": "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-card-readiness-b689e3c4\\output\\playwright\\gun-level-20261117-r1\\level-pilot-r3\\v104-handgun.mp3",
+        "bytes": 7985,
+        "sha256": "e9aa6aaad7346051c0015c5423224f5bfa58a4b733b330d4d082e243ac3ebd2a"
+      }
+    },
+    {
+      "cue": "weapon-rifle-01",
+      "label": "ライフル・1",
+      "sourceMaster": "assets/source/quality-20261117/firearms/weapon-rifle-01-mix.wav",
+      "sourceMasterSha256": "aee138105268517b4c4f273a484e622e0f62bb4f8007c89267b98fd216d8eb09",
+      "filter": "volume=1.6,acompressor=threshold=0.72:ratio=4:attack=0.01:release=18:makeup=1:knee=1.2:detection=peak,volume=1.0138124823764896",
+      "normalization": 1.0138124823764896,
+      "targetDb": 3.25,
+      "before": {
+        "samples": 24863,
+        "peak": 0.6430292725563049,
+        "active": 0.06565832272825585,
+        "tail": 0,
+        "clipped": 0,
+        "onset": 0.00399092970521542
+      },
+      "afterWav": {
+        "samples": 24863,
+        "peak": 0.796661376953125,
+        "active": 0.10050952150865305,
+        "tail": 0,
+        "clipped": 0,
+        "onset": 0.00399092970521542
+      },
+      "after": {
+        "samples": 24863,
+        "peak": 0.7619503736495972,
+        "active": 0.0958445103105753,
+        "tail": 0,
+        "clipped": 0,
+        "onset": 0.0025170068027210884
+      },
+      "gainDb": 3.2855491708236713,
+      "onsetMs": -1.4739229024943314,
+      "checks": {
+        "duration": true,
+        "onset": true,
+        "headroom": true,
+        "noClipping": true,
+        "louder": true,
+        "tail": true
+      },
+      "wav": {
+        "path": "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-card-readiness-b689e3c4\\output\\playwright\\gun-level-20261117-r1\\level-pilot-r3\\weapon-rifle-01.wav",
+        "bytes": 49804,
+        "sha256": "6cc871940410f4e1f648dcb738c6923b793744fa29a794cb034353d07480998e"
+      },
+      "mp3": {
+        "path": "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-card-readiness-b689e3c4\\output\\playwright\\gun-level-20261117-r1\\level-pilot-r3\\weapon-rifle-01.mp3",
+        "bytes": 10075,
+        "sha256": "5be850a6011413484e944b411bec84d797b9253851786b191ba3114b7a73aa23"
+      }
+    },
+    {
+      "cue": "weapon-rifle-02",
+      "label": "ライフル・2",
+      "sourceMaster": "assets/source/quality-20261117/firearms/weapon-rifle-02-mix.wav",
+      "sourceMasterSha256": "9f08f3f6644b898ffa6b6e09a60fd258ecdaa0db54b6470ad0835017f0472bc6",
+      "filter": "volume=1.6,acompressor=threshold=0.72:ratio=4:attack=0.01:release=18:makeup=1:knee=1.2:detection=peak,volume=0.9994643131055133",
+      "normalization": 0.9994643131055133,
+      "targetDb": 3.25,
+      "before": {
+        "samples": 24863,
+        "peak": 0.597857654094696,
+        "active": 0.061128067411079005,
+        "tail": 0,
+        "clipped": 0,
+        "onset": 0.004013605442176871
+      },
+      "afterWav": {
+        "samples": 24863,
+        "peak": 0.7734375,
+        "active": 0.09339650025073179,
+        "tail": 0,
+        "clipped": 0,
+        "onset": 0.004013605442176871
+      },
+      "after": {
+        "samples": 24863,
+        "peak": 0.7335906028747559,
+        "active": 0.08874387773782809,
+        "tail": 0,
+        "clipped": 0,
+        "onset": 0.004013605442176871
+      },
+      "gainDb": 3.237954720929179,
+      "onsetMs": 0,
+      "checks": {
+        "duration": true,
+        "onset": true,
+        "headroom": true,
+        "noClipping": true,
+        "louder": true,
+        "tail": true
+      },
+      "wav": {
+        "path": "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-card-readiness-b689e3c4\\output\\playwright\\gun-level-20261117-r1\\level-pilot-r3\\weapon-rifle-02.wav",
+        "bytes": 49804,
+        "sha256": "36008c4129f379a3d7179c2bdc15fd3f44807ad71d6a79f7a911043ef3d615b0"
+      },
+      "mp3": {
+        "path": "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-card-readiness-b689e3c4\\output\\playwright\\gun-level-20261117-r1\\level-pilot-r3\\weapon-rifle-02.mp3",
+        "bytes": 10075,
+        "sha256": "2ae4b3236bf6916d622a4bb5761fb1a0c20aef057868af013c270b311be78813"
+      }
+    },
+    {
+      "cue": "weapon-gunner-01",
+      "label": "重い連射銃・1",
+      "sourceMaster": "assets/source/quality-20261117/firearms/weapon-gunner-01-mix.wav",
+      "sourceMasterSha256": "7a2ee294e180efa130ea61866adccaf7cf2458f10c030624c4f98670b121ca12",
+      "filter": "volume=1.6,acompressor=threshold=0.72:ratio=4:attack=0.01:release=18:makeup=1:knee=1.2:detection=peak,volume=1.0381805562606685",
+      "normalization": 1.0381805562606685,
+      "targetDb": 3.25,
+      "before": {
+        "samples": 22658,
+        "peak": 0.641782283782959,
+        "active": 0.07097916823519855,
+        "tail": 0,
+        "clipped": 0,
+        "onset": 0.004013605442176871
+      },
+      "afterWav": {
+        "samples": 22658,
+        "peak": 0.81365966796875,
+        "active": 0.10861926395733329,
+        "tail": 0,
+        "clipped": 0,
+        "onset": 0.00399092970521542
+      },
+      "after": {
+        "samples": 22658,
+        "peak": 0.7770206332206726,
+        "active": 0.10358552167208085,
+        "tail": 0,
+        "clipped": 0,
+        "onset": 0.004013605442176871
+      },
+      "gainDb": 3.2833630353791374,
+      "onsetMs": 0,
+      "checks": {
+        "duration": true,
+        "onset": true,
+        "headroom": true,
+        "noClipping": true,
+        "louder": true,
+        "tail": true
+      },
+      "wav": {
+        "path": "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-card-readiness-b689e3c4\\output\\playwright\\gun-level-20261117-r1\\level-pilot-r3\\weapon-gunner-01.wav",
+        "bytes": 45394,
+        "sha256": "cb78b72cb77fb442eda237da8b38c1a281c11227dc64413b22cb0941275a0e85"
+      },
+      "mp3": {
+        "path": "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-card-readiness-b689e3c4\\output\\playwright\\gun-level-20261117-r1\\level-pilot-r3\\weapon-gunner-01.mp3",
+        "bytes": 9239,
+        "sha256": "fe739fe7e5fcd264f92490e8e7457b188e9a3ba6564fcefdb378a414cf208e00"
+      }
+    },
+    {
+      "cue": "weapon-gunner-02",
+      "label": "重い連射銃・2",
+      "sourceMaster": "assets/source/quality-20261117/firearms/weapon-gunner-02-mix.wav",
+      "sourceMasterSha256": "94ab8e5f15126b9d632c4bbf5813da67699e0c98bb4099bed1f3525b2307ada1",
+      "filter": "volume=1.6,acompressor=threshold=0.72:ratio=4:attack=0.01:release=18:makeup=1:knee=1.2:detection=peak,volume=1.026393754671572",
+      "normalization": 1.026393754671572,
+      "targetDb": 3.25,
+      "before": {
+        "samples": 22658,
+        "peak": 0.6976606845855713,
+        "active": 0.06931873972986574,
+        "tail": 0,
+        "clipped": 0,
+        "onset": 0.00399092970521542
+      },
+      "afterWav": {
+        "samples": 22658,
+        "peak": 0.823760986328125,
+        "active": 0.10594454177418489,
+        "tail": 0,
+        "clipped": 0,
+        "onset": 0.00399092970521542
+      },
+      "after": {
+        "samples": 22658,
+        "peak": 0.8060941100120544,
+        "active": 0.10104126754432187,
+        "tail": 0,
+        "clipped": 0,
+        "onset": 0.00399092970521542
+      },
+      "gainDb": 3.2729625486825995,
+      "onsetMs": 0,
+      "checks": {
+        "duration": true,
+        "onset": true,
+        "headroom": true,
+        "noClipping": true,
+        "louder": true,
+        "tail": true
+      },
+      "wav": {
+        "path": "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-card-readiness-b689e3c4\\output\\playwright\\gun-level-20261117-r1\\level-pilot-r3\\weapon-gunner-02.wav",
+        "bytes": 45394,
+        "sha256": "2c9bc40536487bb87f6c25d064aa8ef8f0317991e48aa74390ca1ba93a07724a"
+      },
+      "mp3": {
+        "path": "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-card-readiness-b689e3c4\\output\\playwright\\gun-level-20261117-r1\\level-pilot-r3\\weapon-gunner-02.mp3",
+        "bytes": 9239,
+        "sha256": "1773734d3b4a1588e31611ae5f03e29c4f91bae543f19b36792eed88f3ae3b9c"
+      }
+    },
+    {
+      "cue": "weapon-smg-01",
+      "label": "小型連射銃・1",
+      "sourceMaster": "assets/source/quality-20261117/firearms/weapon-smg-01-mix.wav",
+      "sourceMasterSha256": "0021fdfd90c20d998b3d228034c877089c89bea92b3300b056b5bbec29ef6797",
+      "filter": "volume=1.6,acompressor=threshold=0.72:ratio=4:attack=0.01:release=18:makeup=1:knee=1.2:detection=peak,volume=1.1942026833728447",
+      "normalization": 1.1942026833728447,
+      "targetDb": 3.25,
+      "before": {
+        "samples": 17366,
+        "peak": 0.7574210166931152,
+        "active": 0.0694736629887291,
+        "tail": 0,
+        "clipped": 0,
+        "onset": 0.004013605442176871
+      },
+      "afterWav": {
+        "samples": 17366,
+        "peak": 0.976776123046875,
+        "active": 0.1064160103266842,
+        "tail": 0,
+        "clipped": 0,
+        "onset": 0.00399092970521542
+      },
+      "after": {
+        "samples": 17366,
+        "peak": 0.9400771260261536,
+        "active": 0.1011766479488907,
+        "tail": 0,
+        "clipped": 0,
+        "onset": 0.004013605442176871
+      },
+      "gainDb": 3.2652017849685064,
+      "onsetMs": 0,
+      "checks": {
+        "duration": true,
+        "onset": true,
+        "headroom": true,
+        "noClipping": true,
+        "louder": true,
+        "tail": true
+      },
+      "wav": {
+        "path": "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-card-readiness-b689e3c4\\output\\playwright\\gun-level-20261117-r1\\level-pilot-r3\\weapon-smg-01.wav",
+        "bytes": 34810,
+        "sha256": "a85fe14cc962f4c015694134e80ec3187cc702f44bbe0ec6507ad4904f8eea6d"
+      },
+      "mp3": {
+        "path": "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-card-readiness-b689e3c4\\output\\playwright\\gun-level-20261117-r1\\level-pilot-r3\\weapon-smg-01.mp3",
+        "bytes": 7567,
+        "sha256": "5d7ec98c782ae57396396de81f4b6bb79fb7661823f74a91a3a0d31d45b7ceb3"
+      }
+    },
+    {
+      "cue": "weapon-smg-02",
+      "label": "小型連射銃・2",
+      "sourceMaster": "assets/source/quality-20261117/firearms/weapon-smg-02-mix.wav",
+      "sourceMasterSha256": "c672a623c3d9bf9ac55ce7f653c8033f44b293486d25e06862fbcd992b875148",
+      "filter": "volume=1.6,acompressor=threshold=0.72:ratio=4:attack=0.01:release=18:makeup=1:knee=1.2:detection=peak,volume=1.167226409451318",
+      "normalization": 1.167226409451318,
+      "targetDb": 3.25,
+      "before": {
+        "samples": 17366,
+        "peak": 0.7411964535713196,
+        "active": 0.06391432617820193,
+        "tail": 0,
+        "clipped": 0,
+        "onset": 0.004013605442176871
+      },
+      "afterWav": {
+        "samples": 17366,
+        "peak": 0.952880859375,
+        "active": 0.09761203995412218,
+        "tail": 0,
+        "clipped": 0,
+        "onset": 0.004013605442176871
+      },
+      "after": {
+        "samples": 17366,
+        "peak": 0.9137140512466431,
+        "active": 0.0929062832717261,
+        "tail": 0,
+        "clipped": 0,
+        "onset": 0.004013605442176871
+      },
+      "gainDb": 3.2489374343715163,
+      "onsetMs": 0,
+      "checks": {
+        "duration": true,
+        "onset": true,
+        "headroom": true,
+        "noClipping": true,
+        "louder": true,
+        "tail": true
+      },
+      "wav": {
+        "path": "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-card-readiness-b689e3c4\\output\\playwright\\gun-level-20261117-r1\\level-pilot-r3\\weapon-smg-02.wav",
+        "bytes": 34810,
+        "sha256": "792c5debb91500524d5eb2cf3a70de1010950d9c3a60cdb2b4c9c6a26199c722"
+      },
+      "mp3": {
+        "path": "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-card-readiness-b689e3c4\\output\\playwright\\gun-level-20261117-r1\\level-pilot-r3\\weapon-smg-02.mp3",
+        "bytes": 7567,
+        "sha256": "ff9a6d6add44f91734b3a49b776bff5e3a69b05d4d876832856eaa1c288ad961"
+      }
+    },
+    {
+      "cue": "weapon-suppressed-pistol",
+      "label": "消音銃",
+      "sourceMaster": "assets/source/quality-20261117/firearms/weapon-suppressed-pistol-mix.wav",
+      "sourceMasterSha256": "001e2ae7b00fdcb328cee92465ed851dae3d07f1e9a24d64eae6e63b9ffecc03",
+      "filter": "volume=1.6,acompressor=threshold=0.72:ratio=4:attack=0.01:release=18:makeup=1:knee=1.2:detection=peak,volume=1.0067936069849086",
+      "normalization": 1.0067936069849086,
+      "targetDb": 3.25,
+      "before": {
+        "samples": 19130,
+        "peak": 0.5509366989135742,
+        "active": 0.05066574720452196,
+        "tail": 0,
+        "clipped": 0,
+        "onset": 0.004013605442176871
+      },
+      "afterWav": {
+        "samples": 19130,
+        "peak": 0.761444091796875,
+        "active": 0.07739456637230188,
+        "tail": 0,
+        "clipped": 0,
+        "onset": 0.004013605442176871
+      },
+      "after": {
+        "samples": 19130,
+        "peak": 0.7238569855690002,
+        "active": 0.07344675608391346,
+        "tail": 0,
+        "clipped": 0,
+        "onset": 0.004013605442176871
+      },
+      "gainDb": 3.225163344304555,
+      "onsetMs": 0,
+      "checks": {
+        "duration": true,
+        "onset": true,
+        "headroom": true,
+        "noClipping": true,
+        "louder": true,
+        "tail": true
+      },
+      "wav": {
+        "path": "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-card-readiness-b689e3c4\\output\\playwright\\gun-level-20261117-r1\\level-pilot-r3\\weapon-suppressed-pistol.wav",
+        "bytes": 38338,
+        "sha256": "58bff7ed9c38fdf8e072bf8b6889136276ed07335ebdee58a77af668505ed5ce"
+      },
+      "mp3": {
+        "path": "C:\\Users\\okait\\Documents\\Codex\\2026-07-11\\new-chat\\_isolated\\quality-card-readiness-b689e3c4\\output\\playwright\\gun-level-20261117-r1\\level-pilot-r3\\weapon-suppressed-pistol.mp3",
+        "bytes": 7985,
+        "sha256": "457dce3d60705285fdcaf05364b4276c31f670fefeea1d497235241f6cd2662d"
+      }
+    }
+  ],
+  "createdAt": "2026-11-17T04:12:52.134Z"
+}
