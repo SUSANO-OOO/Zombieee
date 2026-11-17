@@ -64,9 +64,9 @@ export const V104_BEAM_AUDIO=['warning','fire'].map(event=>({id:`v104-eye-${even
 // actor and game clock, rather than a random roll that can silence a character
 // for an entire encounter. The existing mixer still owns overlap and priority.
 const voiceClocks=new WeakMap();
-// The old generic attack grunts are not character dialogue. Do not layer
-// these synthetic imitations over each weapon discharge/contact.
-const weaponOnlyAttackKinds=new Set(['scout','ranger','brute','brawler','gunner','medic','guardian','engineer','zakimiya','tky','mrs-chiha','miyamoto-musashi','babayaga']);
+// Close-contact effort uses the existing recorded nonverbal voice family.
+// Steady ranged fire keeps the weapon cue; hurt and death stay separate.
+const weaponOnlyAttackKinds=new Set(['ranger','gunner','medic','engineer','mrs-chiha','babayaga']);
 export function battleVoiceReady(actor,event,time,world){
  if(event==='attack'&&weaponOnlyAttackKinds.has(actor?.kind))return false;
  if(!actor||!(actor.hp>0)||!Number.isFinite(time))return false;

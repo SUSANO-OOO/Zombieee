@@ -387,6 +387,8 @@ import {
   enemyProjectilePresentationFor,
 } from "./enemyVfxPresentation.js";
 import { allyCorpseVisualCue } from "./corpseVisuals.js";
+import { drawV100CorpseAtmosphere } from "./v100CorpseAtmosphere.js";
+import { bindV100BattleCardPanGuard } from "./v100BattleCardPanGuard.js";
 import { resolveLocalQaMode, resolveLocalQaSafeArea, resolveLocalQaScenario } from "./localQa.js";
 import { mobileBattleHudLayout, mobileBattleHudUnitSlots } from "./battleHudLayout.js";
 import { PRODUCTION_VISUALS, stageVisualFor } from "./productionVisuals.js";
@@ -8941,6 +8943,8 @@ function drawWorld(
   drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["objective"], Boolean(g.definition.missionConfig.v100StageNumber));
 
   for (const effect of selectAreaEffectsForRender(g.areaEffects) as AreaEffect[]) drawAreaEffect(ctx, effect, g.time, stageObjects, Boolean(g.definition.missionConfig.v100StageNumber), g);
+  // Painted corpse fire and ash stay behind hazards, bodies and health readouts.
+  if (g.definition.missionConfig.v100StageNumber) drawV100CorpseAtmosphere(ctx, stageObjects, g, { enemyTimings: ENEMY_DEATH_CONFIG.timings, density: graphicsProfile.effectDensity });
   // Guard preparation paint stays behind actors, hazards and their health readouts.
   if (g.definition.missionConfig.v100StageNumber) drawV100GuardActivations(ctx, stageObjects, g);
   // The manual blade fragments stay behind fighters, telegraphs and health.
@@ -9134,12 +9138,12 @@ function drawWorld(
       ctx.beginPath(); ctx.ellipse(0, 0, corpse.kind === "abomination" || corpse.kind === "takuya" || corpse.kind === "gate-eater" ? 25 : 15, 7, 0, 0, Math.PI * 2); ctx.fill();
     }
     ctx.restore();
-    if (corpse.side === "zombie" && corpse.state === "dying" && corpse.kind === "takuya") {
+    if (!g.definition.missionConfig.v100StageNumber && corpse.side === "zombie" && corpse.state === "dying" && corpse.kind === "takuya") {
       const pulse = 24 + corpse.phaseElapsed * 34;
       ctx.strokeStyle = `rgba(221,86,49,${Math.max(.12, .7 - corpse.phaseElapsed * .42)})`;
       ctx.lineWidth = 4; ctx.beginPath(); ctx.ellipse(corpse.x, corpse.y - 30, pulse, pulse * .36, 0, 0, Math.PI * 2); ctx.stroke();
     }
-    if (corpse.side === "zombie" && corpse.state === "ashing") {
+    if (!g.definition.missionConfig.v100StageNumber && corpse.side === "zombie" && corpse.state === "ashing") {
       const timing = ENEMY_DEATH_CONFIG.timings[corpse.deathClass ?? "normal"];
       const ashProgress = Math.min(1, corpse.phaseElapsed / timing.ashingSeconds);
       for (let index = 0; index < (corpse.deathClass === "boss" ? 12 : corpse.deathClass === "heavy" ? 8 : 5); index++) {
@@ -9159,6 +9163,7 @@ function drawWorld(
         ctx.beginPath(); ctx.ellipse(headX, corpse.y - 10, 2.2, 1.2, 0, 0, Math.PI * 2); ctx.fill();
         ctx.restore();
       }
+      if (!g.definition.missionConfig.v100StageNumber) {
       for (let index = 0; index < allyCue.smokePuffs; index++) {
         const drift = Math.sin(g.time * (1.7 + index * .24) + corpse.id + index * 2.1);
         const rise = (g.time * (9 + index * 2) + corpse.id * 3) % 22;
@@ -9184,6 +9189,7 @@ function drawWorld(
           ctx.fillStyle = index % 2 === 0 ? "#858177" : "#4d4c48";
           ctx.fillRect(corpse.x + drift * (12 + index * 2), corpse.y - 4 - index * 4, 2 + index % 2, 2);
         }
+      }
       }
       ctx.globalAlpha = 1;
     }
@@ -10746,6 +10752,22 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       return qaPresentationQuiescenceSnapshot();
     };
     const bridge = {
+      ...(['localhost','127.0.0.1','[::1]'].includes(window.location.hostname) ? {
+        getCorpsePaintProofReadiness: () => Object.fromEntries(['v100-ground-fire-bed','v100-smoke-a','v100-smoke-b','v100-dust','v100-assault-stronghold'].map(id => {
+          const image=stageObjectRefs.current[id];return [id,{ready:Boolean(image?.complete&&image.naturalWidth&&image.naturalHeight),width:image?.naturalWidth??0,height:image?.naturalHeight??0}];
+        })),
+        prepareV100CorpsePaintProof: () => {
+          const g=gameRef.current;
+          if(g.definition.missionConfig.v100StageNumber!==1||g.survivalRun||!g.running||!g.paused||g.over)throw new Error("Corpse paint proof requires the paused original V1 S01");
+          for(const id of ['v100-ground-fire-bed','v100-smoke-a','v100-smoke-b','v100-dust','v100-assault-stronghold']){
+            const image=stageObjectRefs.current[id];if(!image?.complete||!image.naturalWidth||!image.naturalHeight)throw new Error("Corpse paint proof asset not ready: "+id);
+          }
+          g.pendingWeaponHits=[];g.fighters=[];g.corpses=[];g.areaEffects=[];g.deployQueue=[];
+          g.enemySpawn=createEnemySpawnRuntime() as EnemySpawnRuntime;clearTransientRenderObjects(g);
+          prepareLifecycleQa(g);g.eventIndex=g.definition.timeline.length;
+          return g.corpses.map(c=>({id:c.id,kind:c.kind,side:c.side,state:c.state}));
+        },
+      } : {}),
       getQaPresentationQuiescence: qaPresentationQuiescenceSnapshot,
       setQaPresentationQuiesced,
       setSaveBoundaryPending: (pending: boolean) => {
@@ -25556,7 +25578,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             </div>
           </div>
 
-          <div className="unit-cards" aria-label="生存者ユニット">
+          <div className="unit-cards" ref={bindV100BattleCardPanGuard} aria-label="生存者ユニット">
               {battleHudSlots.map((card, slotIndex) => {
                  if (!card) {
                    return <div
@@ -25695,7 +25717,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             {!isSurvivalBattle && <button onClick={() => requestPauseAction("loadout")}>編成画面へ戻る</button>}
             <button className="danger" onClick={() => requestPauseAction("withdraw")}>{externalSessionActive ? "ステージ選択へ撤退" : "エリアマップへ撤退"}</button>
           </div>
-          <ManualAbilityTactics entries={gameRef.current.fighters
+          <ManualAbilityTactics campaignPortraits={externalSessionActive} onToggle={externalSessionActive ? (open) => { playUiOperationCue(open ? "selection" : "back", `manual-tactics:${open ? "open" : "close"}`); } : undefined} entries={gameRef.current.fighters
             .filter(fighter=>fighter.side==='human' && fighter.hp>0 && fighter.manualAbility)
             .map(owner=>manualAbilityTacticalView({owner,fighters:manualAbilityTargetCandidates(gameRef.current,owner),actionSelected:Boolean(selectedAction)}))
             .filter((entry): entry is NonNullable<typeof entry> => entry!==null)} />
