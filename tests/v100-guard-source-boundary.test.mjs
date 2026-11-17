@@ -18,3 +18,7 @@ test('the full-source boundary still rejects a change to effect timing outside t
 test('a second guard paint call is rejected rather than removed as an allowed edit',()=>{
  assert.throws(()=>restorePreGuardSpectacleSource(file,current+'\n'+String.fromCharCode(32,32)+'// Guard preparation paint stays behind actors, hazards and their health readouts.'+'\n'+String.fromCharCode(32,32)+'if (g.definition.missionConfig.v100StageNumber) drawV100GuardActivations(ctx, stageObjects, g);'+'\n'+String.fromCharCode(32,32)+'for (const effect of g.manualAbilityVfx) drawManualAbilityVfx(ctx, effect,Boolean(g.definition.missionConfig.v100StageNumber));'),/guard paint edit must occur exactly once/);
 });
+
+ test('an additional manual blade pass outside the declared integration is rejected',()=>{
+ assert.throws(()=>assertOnlyDeclaredPaintChanges(current+'\n  if (g.definition.missionConfig.v100StageNumber) drawV100MusashiImpacts(ctx, stageObjects, g);\n'),/Unlisted source change/);
+});

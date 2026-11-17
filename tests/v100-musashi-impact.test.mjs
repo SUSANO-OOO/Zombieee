@@ -7,7 +7,7 @@ import ts from 'typescript';
 import sharp from 'sharp';
 import {V100_MANUAL_IMPACT_ART as ART} from '../app/v100ManualImpactArt.js';
 import {drawV100MusashiImpact} from '../app/v100ManualImpactVfx.js';
-import {queueV100AdvancedAbilityEffect,drawV100AdvancedAbilityEffects,getV100AdvancedAbilityEffectsSnapshot,clearV100AdvancedAbilityEffects} from '../app/v100AdvancedAbilityVfx.js';
+import {queueV100AdvancedAbilityEffect,drawV100AdvancedAbilityEffects,drawV100MusashiImpacts,getV100AdvancedAbilityEffectsSnapshot,clearV100AdvancedAbilityEffects} from '../app/v100AdvancedAbilityVfx.js';
 import {requiredBattleAssetPlan} from '../app/battleAssetPlan.js';
 import {verifiedPwaArtworkPaths} from '../app/pwaArtworkAvailability.js';
 import {V177_JOINT_ATLASES} from '../app/v177JointPresentation.js';
@@ -25,7 +25,7 @@ function canvas(){const calls=[],transforms=[],stack=[];const ctx={globalAlpha:.
 
 test('the six smartphone contact phases have exact source, alpha gutters, drifting remnants and the same approved dual-blade body',async()=>{
  const bytes=await readFile('public'+art.path),meta=await sharp(bytes).metadata();
- assert.equal(bytes.length,52570);assert.equal('sha256-'+createHash('sha256').update(bytes).digest('hex'),art.hash);
+ assert.equal(bytes.length,90324);assert.equal('sha256-'+createHash('sha256').update(bytes).digest('hex'),art.hash);
  assert.deepEqual([meta.width,meta.height,meta.hasAlpha],[768,512,true]);
  const {data,info}=await sharp(bytes).ensureAlpha().raw().toBuffer({resolveWithObject:true});
  for(let cell=0;cell<6;cell++){
@@ -34,8 +34,8 @@ test('the six smartphone contact phases have exact source, alpha gutters, drifti
   assert.ok(edge<=32&&paint>0&&transparent>0,'frame '+cell);assert.ok(art.anchors[cell].every(n=>Number.isFinite(n)&&n>0&&n<1));
  }
  for(const anchor of art.anchors.slice(3))assert.deepEqual(anchor,art.anchors[2],'released fragments keep their last ignition origin');
- const provenance=JSON.parse(await readFile('assets/source/quality-20261114/musashi-impact-r1/provenance-r1.json'));
- assert.equal(provenance.logicalBytes,52570);assert.equal(provenance.runtimeAssetCount,1);assert.equal(provenance.estimatedDecodedRgbaBytes,1572864);
+ const provenance=JSON.parse(await readFile('assets/source/quality-20261117/musashi-impact-r2/provenance-r1.json'));
+ assert.equal(provenance.logicalBytes,90324);assert.equal(provenance.runtimeAssetCount,1);assert.equal(provenance.estimatedDecodedRgbaBytes,1572864);
  const body=V177_JOINT_ATLASES['miyamoto-musashi'],bodyBytes=await readFile('public'+body.path);
  assert.equal(body.path,provenance.currentBody.path);assert.equal(body.weaponBone,provenance.currentBody.weaponBone);
  assert.equal(createHash('sha256').update(bodyBytes).digest('hex'),provenance.currentBody.sha256);
@@ -47,8 +47,8 @@ test('two-frame blending aligns contact cores in both directions, restores state
   const e={...entry(),direction},before=structuredClone(e),source=image(),c=canvas();const random=Math.random;Math.random=()=>{throw Error('Render consumed simulation RNG');};
   try{for(const progress of [.02,.21,.41,.61,.81,.98])assert.equal(drawV100MusashiImpact(c.ctx,{[art.id]:source},e,progress*.22),true);}finally{Math.random=random;}
   assert.deepEqual(e,before);const cells=new Set();
-  for(const draw of c.calls){const a=draw.args,cell=a[1]/256+a[2]/256*3;cells.add(cell);assert.equal(a[0],source);assert.deepEqual(a.slice(3,5),[256,256]);assert.deepEqual(a.slice(7),[128,128]);
-   assert.ok(Math.abs(a[5]+art.anchors[cell][0]*128)<1e-9&&Math.abs(a[6]+art.anchors[cell][1]*128)<1e-9);assert.ok(draw.alpha>0&&draw.alpha<=.73);}
+  for(const draw of c.calls){const a=draw.args,cell=a[1]/256+a[2]/256*3;cells.add(cell);assert.equal(a[0],source);assert.deepEqual(a.slice(3,5),[256,256]);assert.deepEqual(a.slice(7),[192,192]);
+   assert.ok(Math.abs(a[5]+art.anchors[cell][0]*192)<1e-9&&Math.abs(a[6]+art.anchors[cell][1]*192)<1e-9);assert.ok(draw.alpha>0&&draw.alpha<=.73);}
   assert.equal(cells.size,6);assert.ok(c.calls.at(-1).alpha<c.calls[0].alpha);
   assert.equal(c.transforms.filter(t=>t[0]==='scale').length,direction<0?6:0);
   assert.equal(c.ctx.globalAlpha,.73);assert.equal(c.ctx.globalCompositeOperation,'screen');assert.equal(c.ctx.shadowBlur,3);assert.equal(c.stack.length,0);
@@ -118,4 +118,22 @@ test('actual counter and fallback producers preserve damage-owned target positio
   const expected=88*(boss?1.65:1);assert.ok(Math.abs(victim.hp-(200-expected))<1e-9);assert.equal(recorded,expected);assert.equal(victim.stunned,.9);assert.equal(owner.x,300);const count=Math.max(1,Math.round(18*density));assert.equal(world.particles.length,count);assert.equal(randomDraws,count*4);assert.equal(math.random(),(((count*4+1)*37)%997)/997);
   assert.equal(getV100AdvancedAbilityEffectsSnapshot(world).length,v1?1:0);
  }
+});
+
+test('the early manual impact pass paints once while the later pass preserves other effects and original expiry',()=>{
+ const {world}=fixture(),source=image(),dust=image(512,512),c=canvas();
+ assert.equal(queueV100AdvancedAbilityEffect(world,entry()),true);
+ assert.equal(queueV100AdvancedAbilityEffect(world,{ownerId:8,activationId:1,type:'mayo-dust',x:100,y:200,duration:.25}),true);
+ world.time=10.09;const before=getV100AdvancedAbilityEffectsSnapshot(world),state=structuredClone(world);
+ const objects={[art.id]:source,'v100-dust':dust};
+ drawV100MusashiImpacts(c.ctx,objects,world);
+ const count=c.calls.filter(call=>call.args[0]===source).length;
+ assert.equal(count,2,'only the two blended cells of the one real impact');
+ assert.equal(c.calls.filter(call=>call.args[0]===dust).length,0,'the early pass is limited to Musashi');
+ drawV100AdvancedAbilityEffects(c.ctx,objects,world,{includeMusashiImpacts:false});
+ assert.equal(c.calls.filter(call=>call.args[0]===source).length,count,'no second foreground paint');
+ assert.equal(c.calls.filter(call=>call.args[0]===dust).length,1,'other existing effects stay in their pass');
+ assert.deepEqual(getV100AdvancedAbilityEffectsSnapshot(world),before);assert.deepEqual(world,state);
+ assert.equal(c.ctx.globalAlpha,.73);assert.equal(c.ctx.globalCompositeOperation,'screen');assert.equal(c.ctx.shadowBlur,3);assert.equal(c.stack.length,0);
+ world.time=10.220001;c.calls.length=0;drawV100MusashiImpacts(c.ctx,objects,world);assert.equal(c.calls.length,0,'the original .22-second impact still ends on time');
 });

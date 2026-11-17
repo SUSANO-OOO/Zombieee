@@ -2082,14 +2082,6 @@
       "criticality": "critical"
     },
     {
-      "path": "/art/quality-20261114/vfx/musashi-contact-six-r2.webp",
-      "bytes": 52570,
-      "hash": "sha256-9abf2cfb54113a376e7b78c96dcfdcb61e5cf3010469b43a8ab75ac10ee29aab",
-      "pack": "units",
-      "category": "unit",
-      "criticality": "critical"
-    },
-    {
       "path": "/art/quality-20261115/vfx/ground-fire-bed-six-r1.webp",
       "bytes": 141770,
       "hash": "sha256-f6a331504bc2522e2fb1d8b3a14b58ce877dd44f6b825421e446014ef8e913a7",
@@ -2608,6 +2600,14 @@
       "bundleOffset": 36056573,
       "bundleBytes": 94614,
       "bundleLength": 36151187
+    },
+    {
+      "path": "/art/quality-20261117/vfx/musashi-contact-six-r3.webp",
+      "bytes": 90324,
+      "hash": "sha256-3eaae5c4b10eedf34c6d8adcb735e1511271396bc8f31e09402054fdfc206ae2",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
     }
   ],
   "retired": [
@@ -15615,6 +15615,26 @@
       "supersedesUnpublished": [
         "/art/quality-20261115/vfx/guardian-guard-six-r3.webp"
       ]
+    },
+    {
+      "kind": "musashi-painted-contact-r3",
+      "sourceBase": "8614b072461bb5bb5109bd4910e0d9f90e041087",
+      "path": "/art/quality-20261117/vfx/musashi-contact-six-r3.webp",
+      "hash": "sha256-3eaae5c4b10eedf34c6d8adcb735e1511271396bc8f31e09402054fdfc206ae2",
+      "bytes": 90324,
+      "previous": {
+        "path": "/art/quality-20261114/vfx/musashi-contact-six-r2.webp",
+        "bytes": 52570,
+        "hash": "sha256-9abf2cfb54113a376e7b78c96dcfdcb61e5cf3010469b43a8ab75ac10ee29aab",
+        "pack": "units",
+        "category": "unit",
+        "criticality": "critical"
+      },
+      "previousStillDistributed": false,
+      "originalPreservedInRepository": true,
+      "generatedSource": "assets/source/quality-20261117/musashi-impact-r2/generated-r1.png",
+      "provenance": "assets/source/quality-20261117/musashi-impact-r2/provenance-r1.json",
+      "scope": "Newly painted six-frame physical contact, same approved dual-blade body,192-world-unit rectangle, existing .22s, no gameplay/audio/save change. Not human final acceptance."
     }
   ],
   "contentReplacements": [
