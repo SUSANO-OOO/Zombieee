@@ -55,3 +55,34 @@
 @media(max-height:360px) {
  #v100-campaign .v100-command-equipment .v100-equipment-quote { margin-top:0; padding-top:0; }
 }
+
+/* Unissued equipment is a small supply rack, with real items and a distinct assignment sheet. */
+#v100-campaign .v100-command-equipment .v100-equipment-catalog[data-empty="true"] { display:block; padding:0; }
+#v100-campaign .v100-equipment-empty-rack { box-sizing:border-box; display:flex; flex-direction:column; gap:5px; min-height:100%; padding:4px 5px; background:linear-gradient(#1c2b21cf,#142019e8),url("/art/quality-20261113/ui/materials-six-r1.webp"); background-size:100% 100%,300% 200%; background-position:0 0,0 0; }
+#v100-campaign .v100-equipment-empty-rack > header { display:flex; justify-content:space-between; align-items:center; gap:6px; min-height:20px; flex:none; color:#f1dfac; font-size:13px; line-height:1.3; }
+#v100-campaign .v100-equipment-empty-rack > header > span { color:#c4c3a3; font-size:12px; }
+#v100-campaign .v100-equipment-empty-examples { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:5px; flex:1; align-content:center; min-height:58px; }
+#v100-campaign .v100-equipment-empty-examples > button { display:flex; align-items:center; gap:5px; min-width:0; min-height:58px; padding:5px; text-align:left; border:1px solid #9a8a61; border-bottom:3px solid #625139; border-radius:0; background:linear-gradient(120deg,#514a36,#2b3025); color:#f3dfb0; }
+#v100-campaign .v100-equipment-empty-examples .v100-equipment-art { flex:0 0 44px; width:44px; height:44px; }
+#v100-campaign .v100-equipment-empty-examples > button > span:last-child { display:block; min-width:0; }
+#v100-campaign .v100-equipment-empty-examples strong { display:block; color:#f4dfaa; font-size:13px; line-height:1.2; overflow-wrap:anywhere; }
+#v100-campaign .v100-equipment-empty-examples small { display:block; margin-top:3px; color:#ddd2ae; font-size:12px; line-height:1.2; }
+#v100-campaign .v100-equipment-empty-rack .v100-equipment-open-supply { flex:none; min-height:44px; padding:5px; border:1px solid #b19b63; border-radius:0; background:#a28b55; color:#15291e; font-size:14px; font-weight:700; }
+#v100-campaign .v100-equipment-empty-examples button:focus-visible,#v100-campaign .v100-equipment-open-supply:focus-visible { outline:3px solid #f4cc71; outline-offset:-4px; }
+#v100-campaign .v100-equipment-empty-brief { box-sizing:border-box; display:flex; flex-direction:column; justify-content:center; gap:6px; min-height:0; flex:1; padding:8px 10px; overflow-y:auto; color:#293e29; background:linear-gradient(#dfd3b5bd,#d7c9a9d9),url("/art/quality-20261113/ui/materials-six-r1.webp"); background-size:100% 100%,300% 200%; background-position:0 0,100% 0; }
+#v100-campaign .v100-equipment-empty-brief > small { font-size:12px; line-height:1.25; color:#6d5434; letter-spacing:.08em; }
+#v100-campaign .v100-equipment-empty-brief > h3 { margin:0; color:#253c27; font-size:18px; line-height:1.25; }
+#v100-campaign .v100-equipment-empty-brief > p { margin:0; color:#3c4930; font-size:13px; line-height:1.4; }
+#v100-campaign .v100-equipment-unfilled-slots { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; flex:none; }
+#v100-campaign .v100-equipment-unfilled-slots > div { display:flex; align-items:center; gap:10px; min-height:38px; padding:2px 8px; border:1px dashed #8d7c56; border-left:4px solid #796846; background:#bdb18b45; box-shadow:inset 0 0 0 2px #e7ddbc75; }
+#v100-campaign .v100-equipment-unfilled-slots strong { color:#8a744b; font:700 24px/1 ui-monospace,monospace; }
+#v100-campaign .v100-equipment-unfilled-slots span { color:#625a3e; font-size:13px; }
+#v100-campaign .v100-equipment-empty-brief[data-kind="tactical"] .v100-equipment-unfilled-slots > div { border-left-color:#46604a; }
+
+/* A fitting sheet carries the same actual specimen as the supply rack. */
+.v100-equipment-fitting { background-image:linear-gradient(#e2d9bfc9,#d2c5a7e8),url("/art/quality-20261113/ui/materials-six-r1.webp"); background-size:100% 100%,300% 200%; background-position:0 0,100% 0; }
+.v100-fitting-heading { display:flex; align-items:center; gap:9px; min-width:0; }
+.v100-fitting-heading > div { min-width:0; }
+.v100-equipment-fitting .v100-fitting-heading > .v100-equipment-art { flex:0 0 48px; width:48px; height:48px; border-bottom:2px solid #9e8350; background:#6c705438; }
+.v100-equipment-fitting .v100-fitting-heading small { margin-bottom:2px; font-size:12px; letter-spacing:.04em; color:#695638; }
+.v100-equipment-fitting .v100-fitting-heading h2 { line-height:1.2; overflow-wrap:anywhere; }
