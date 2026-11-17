@@ -159,10 +159,3 @@
 @media (max-width: 640px) and (orientation: portrait) {
   #v100-campaign .v100-mode-catalog { grid-template-columns: 1fr; }
 }
-
-/* Keep an outward deployment swipe inside the running phone battle.
-   The card strip retains its own native horizontal scrolling. */
-html:has(.v100-shell .game-frame[data-battle-hud-layout="mobile"]),
-html:has(.v100-shell .game-frame[data-battle-hud-layout="mobile"]) body {
-  overscroll-behavior-x: none;
-}
