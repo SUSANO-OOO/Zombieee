@@ -14,7 +14,7 @@ export function V100BattleBriefing({children,initiallyShowControls=false,allowCo
   if(typeof document==="undefined")return null;
   return createPortal(<div className="v100-briefing-backdrop">
     <section className="v100-battle-briefing" role="dialog" aria-modal="true" aria-labelledby="v100-battle-briefing-title">
-      <header><div className="v100-briefing-heading"><small aria-hidden="true">西新 生存者部隊 / 作戦資料</small><h2 id="v100-battle-briefing-title">{allowControls?"作戦と戦い方":"編成の確認"}</h2></div>{allowControls && <nav aria-label="説明の切り替え"><button type="button" aria-pressed={!controls} onClick={()=>setControls(false)}>作戦</button><button type="button" aria-pressed={controls} onClick={()=>setControls(true)}>戦い方</button></nav>}<button type="button" onClick={onClose}>閉じる</button></header>
+      <header><div className="v100-briefing-heading"><small aria-hidden="true">西新 生存者部隊 / 作戦資料</small><h2 id="v100-battle-briefing-title">{allowControls?"作戦と戦い方":"編成の確認"}</h2></div>{allowControls && <nav aria-label="説明の切り替え"><button type="button" aria-pressed={!controls} onClick={()=>setControls(false)}>作戦</button><button type="button" aria-pressed={controls} onClick={()=>setControls(true)}>戦い方</button></nav>}<button type="button" data-ui-sound="cancel" onClick={onClose}>閉じる</button></header>
       <div className="v100-briefing-page" tabIndex={0} aria-label={controls?"戦闘の操作":"今回の作戦"}>
         {controls?<>
           <ol className="v100-battle-instructions">
