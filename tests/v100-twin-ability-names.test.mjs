@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import {execFileSync} from 'node:child_process';
 import {v100TwinAttackName,bossDefinitionForEnemyKind,bossTelegraphSnapshot} from '../app/bossFoundation.js';
 import {v105EnemyAbilityName} from '../app/v105AbilityNames.js';
-import {restorePreTwinWordingSource,restoreGunFinishSource} from './helpers/guard-spectacle-source.mjs';
+import {restorePreTwinWordingSource} from './helpers/guard-spectacle-source.mjs';
 const twin=(part='a',enraged=false)=>({id:part==='a'?1:2,kind:'futago',side:'zombie',v100BossId:'boss-futago',v100TwinPart:part,v100TwinEnraged:enraged,x:610,y:180,hp:3000,maxHp:3000,stationAbility:{kind:'futago',phase:'warning',remainingSeconds:.9,targetX:570,targetY:180}});
 test('both registered twin bodies show one consistent skill name in the body tag and warning hint',()=>{
  for(const part of ['a','b'])for(const enraged of [false,true]){
@@ -26,6 +26,6 @@ test('legacy fused and unrelated owners do not acquire the registered pair name'
 test('declared twin presentation edits reverse to the entire prior app, definition and name modules',()=>{
  for(const file of ['app/AshfallGame.tsx','app/bossFoundation.js','app/v105AbilityNames.js']){
   const source=fs.readFileSync(file,'utf8'),before=execFileSync('git',['show','329fa37d1af807b467753ffb44fb8c5ac7e68309:'+file],{maxBuffer:4e6}).toString('utf8').replaceAll('\r\n','\n');
-  assert.equal(restorePreTwinWordingSource(file,restoreGunFinishSource(file,source))===before,true,file+' has undeclared non-presentation changes');
+  assert.equal(restorePreTwinWordingSource(file,source)===before,true,file+' has undeclared non-presentation changes');
  }
 });
