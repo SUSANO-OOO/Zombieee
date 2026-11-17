@@ -3103,7 +3103,7 @@ function beginMayoRetreat(g: Game, fighter: Fighter, reason: "ability" | "injury
   g.deployCooldowns["mayo-chan"] = Math.max(g.deployCooldowns["mayo-chan"] ?? 0, redeploy);
   g.banner = reason === "injury" ? "マヨちゃん // 負傷退避" : "マヨちゃん // 退避";
   g.bannerTime = 1.35;
-  if (!g.definition.missionConfig.v100StageNumber) addParticles(g, fighter.x, fighter.y - 10, reason === "injury" ? "#e6c97a" : "#b05268", 9);
+  if (!g.definition?.missionConfig?.v100StageNumber) addParticles(g, fighter.x, fighter.y - 10, reason === "injury" ? "#e6c97a" : "#b05268", 9);
   return true;
 }
 
@@ -8943,11 +8943,11 @@ function drawWorld(
   }
   drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["objective"], Boolean(g.definition.missionConfig.v100StageNumber));
 
+  // Feral Mayo kicks ground material behind actors, warnings and health.
+  if (g.definition.missionConfig.v100StageNumber) drawV100MayoFeralVfx(ctx, stageObjects, g);
   for (const effect of selectAreaEffectsForRender(g.areaEffects) as AreaEffect[]) drawAreaEffect(ctx, effect, g.time, stageObjects, Boolean(g.definition.missionConfig.v100StageNumber), g);
   // Painted corpse fire and ash stay behind hazards, bodies and health readouts.
   if (g.definition.missionConfig.v100StageNumber) drawV100CorpseAtmosphere(ctx, stageObjects, g, { enemyTimings: ENEMY_DEATH_CONFIG.timings, density: graphicsProfile.effectDensity });
-  // Feral Mayo kicks ground material behind actors, warnings and health.
-  if (g.definition.missionConfig.v100StageNumber) drawV100MayoFeralVfx(ctx, stageObjects, g);
   // Guard preparation paint stays behind actors, hazards and their health readouts.
   if (g.definition.missionConfig.v100StageNumber) drawV100GuardActivations(ctx, stageObjects, g);
   // The manual blade fragments stay behind fighters, telegraphs and health.

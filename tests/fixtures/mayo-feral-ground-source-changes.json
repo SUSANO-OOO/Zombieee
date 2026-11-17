@@ -9,12 +9,12 @@
       "  clearV100AdvancedAbilityEffects(g);\n  clearV100MayoFeralVfx(g);"
     ],
     [
-      "  // Guard preparation paint stays behind actors, hazards and their health readouts.",
-      "  // Feral Mayo kicks ground material behind actors, warnings and health.\n  if (g.definition.missionConfig.v100StageNumber) drawV100MayoFeralVfx(ctx, stageObjects, g);\n  // Guard preparation paint stays behind actors, hazards and their health readouts."
+      "  for (const effect of selectAreaEffectsForRender(g.areaEffects) as AreaEffect[]) drawAreaEffect(ctx, effect, g.time, stageObjects, Boolean(g.definition.missionConfig.v100StageNumber), g);",
+      "  // Feral Mayo kicks ground material behind actors, warnings and health.\n  if (g.definition.missionConfig.v100StageNumber) drawV100MayoFeralVfx(ctx, stageObjects, g);\n  for (const effect of selectAreaEffectsForRender(g.areaEffects) as AreaEffect[]) drawAreaEffect(ctx, effect, g.time, stageObjects, Boolean(g.definition.missionConfig.v100StageNumber), g);"
     ],
     [
       "  addParticles(g, fighter.x, fighter.y - 10, reason === \"injury\" ? \"#e6c97a\" : \"#b05268\", 9);",
-      "  if (!g.definition.missionConfig.v100StageNumber) addParticles(g, fighter.x, fighter.y - 10, reason === \"injury\" ? \"#e6c97a\" : \"#b05268\", 9);"
+      "  if (!g.definition?.missionConfig?.v100StageNumber) addParticles(g, fighter.x, fighter.y - 10, reason === \"injury\" ? \"#e6c97a\" : \"#b05268\", 9);"
     ]
   ]
 }

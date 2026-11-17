@@ -12,7 +12,7 @@ const mayoFeralChanges=JSON.parse(fs.readFileSync('tests/fixtures/mayo-feral-gro
 export function restorePreMayoFeralSource(file,source){
  let restored=source.replaceAll('\r\n','\n');
  for(const [before,after]of [...(mayoFeralChanges[file]??[])].reverse()){
-  assert.equal(restored.split(after).length,2,file+' Mayo ground edit must occur exactly once');
+  assert.equal(restored.split(after).length,2,file+' Unlisted source change: Mayo ground edit must occur exactly once');
   restored=restored.replace(after,before);
  }
  return restored;

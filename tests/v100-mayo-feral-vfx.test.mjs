@@ -2,6 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {execFileSync} from 'node:child_process';
+import vm from 'node:vm';
+import ts from 'typescript';
+import {mayoBattleRenderKind,createMayoRetreatRuntime} from '../app/mayoLifecycle.js';
 import {drawV100MayoFeralVfx,clearV100MayoFeralVfx} from '../app/v100MayoFeralVfx.js';
 import {restorePreMayoFeralSource} from './helpers/guard-spectacle-source.mjs';
 function fixture(){
@@ -55,6 +58,18 @@ test('a genuinely injured retreat uses ground material without a false skill act
  const f=fixture();f.owner.manualAbility={activationId:0,phase:'retreat'};f.owner.combatReady=false;f.owner.mayoRetreat={reason:'injury',phase:'fall',phaseElapsed:.1};f.world.manualAbilityReceipts=[];
  const before=structuredClone(f.world);assert.equal(drawV100MayoFeralVfx(f.ctx,f.objects,f.world),1);assert.equal(f.calls.length,2);assert.deepEqual(f.world,before);intact(f);
 });
+test('the actual retreat producer uses textures in V1 and retains the legacy particle contract without requiring a staged definition',()=>{
+ const source=fs.readFileSync('app/AshfallGame.tsx','utf8'),tree=ts.createSourceFile('game.tsx',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);
+ let declaration;const visit=node=>{if(ts.isFunctionDeclaration(node)&&node.name?.text==='beginMayoRetreat')declaration=node;else ts.forEachChild(node,visit);};visit(tree);assert.ok(declaration);
+ for(const stage of [4,0,null])for(const reason of ['injury','ability']){
+  const particles=[],begin=vm.runInNewContext(ts.transpileModule(declaration.getText(tree),{compilerOptions:{target:ts.ScriptTarget.ESNext}}).outputText+'\nbeginMayoRetreat',
+   {mayoBattleRenderKind,createMayoRetreatRuntime,cards:[{kind:'mayo-chan',deployCooldown:24}],addParticles:(...args)=>particles.push(args)});
+  const actor={id:11,kind:'mayo-chan',side:'human',hp:20.6,x:330,y:230,manualAbility:{kind:'mayo-chan',phase:'feral',activationId:1}};
+  const world={manualAbilityVfx:[],deployCooldowns:{},...(stage===null?{}:{definition:{missionConfig:{v100StageNumber:stage}}})};
+  assert.equal(begin(world,actor,reason),true);assert.equal(particles.length,stage===4?0:1);assert.equal(actor.hp,20.6);assert.equal(actor.manualAbility.phase,'retreat');assert.equal(actor.combatReady,false);
+  assert.deepEqual({...actor.mayoRetreat},{phase:'fall',phaseElapsed:0,reason,renderKind:'mayo-chan-feral',complete:false});
+ }
+});
 test('only the four declared App integrations differ from the accepted base, including negative controls',()=>{
  const file='app/AshfallGame.tsx',current=fs.readFileSync(file,'utf8').replaceAll('\r\n','\n');
  const before=execFileSync('git',['show','3598a02b5ce7ece0e0edec85058e253d11b0cdab:'+file],{maxBuffer:4e6}).toString().replaceAll('\r\n','\n');
@@ -63,4 +78,5 @@ test('only the four declared App integrations differ from the accepted base, inc
  assert.throws(()=>assert.equal(restorePreMayoFeralSource(file,current+'\n  clearV100MayoFeralVfx(g);\n'),before));
  assert.throws(()=>assert.equal(restorePreMayoFeralSource(file,current.replace('drawAreaEffect(ctx, effect, g.time, stageObjects','drawAreaEffect(ctx, effect, g.time + .1, stageObjects')),before));
  assert.ok(current.indexOf('drawV100MayoFeralVfx(ctx, stageObjects, g)')<current.indexOf('  const renderables = ['),'ground pass precedes actors and health');
+ assert.ok(current.indexOf('drawV100MayoFeralVfx(ctx, stageObjects, g)')<current.indexOf('  for (const effect of selectAreaEffectsForRender(g.areaEffects)'),'ground pass also precedes area warnings');
 });
