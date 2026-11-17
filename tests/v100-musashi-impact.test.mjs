@@ -25,7 +25,7 @@ function canvas(){const calls=[],transforms=[],stack=[];const ctx={globalAlpha:.
 
 test('the six smartphone contact phases have exact source, alpha gutters, drifting remnants and the same approved dual-blade body',async()=>{
  const bytes=await readFile('public'+art.path),meta=await sharp(bytes).metadata();
- assert.equal(bytes.length,52570);assert.equal('sha256-'+createHash('sha256').update(bytes).digest('hex'),art.hash);
+ assert.equal(bytes.length,90324);assert.equal('sha256-'+createHash('sha256').update(bytes).digest('hex'),art.hash);
  assert.deepEqual([meta.width,meta.height,meta.hasAlpha],[768,512,true]);
  const {data,info}=await sharp(bytes).ensureAlpha().raw().toBuffer({resolveWithObject:true});
  for(let cell=0;cell<6;cell++){
@@ -34,8 +34,8 @@ test('the six smartphone contact phases have exact source, alpha gutters, drifti
   assert.ok(edge<=32&&paint>0&&transparent>0,'frame '+cell);assert.ok(art.anchors[cell].every(n=>Number.isFinite(n)&&n>0&&n<1));
  }
  for(const anchor of art.anchors.slice(3))assert.deepEqual(anchor,art.anchors[2],'released fragments keep their last ignition origin');
- const provenance=JSON.parse(await readFile('assets/source/quality-20261114/musashi-impact-r1/provenance-r1.json'));
- assert.equal(provenance.logicalBytes,52570);assert.equal(provenance.runtimeAssetCount,1);assert.equal(provenance.estimatedDecodedRgbaBytes,1572864);
+ const provenance=JSON.parse(await readFile('assets/source/quality-20261117/musashi-impact-r2/provenance-r1.json'));
+ assert.equal(provenance.logicalBytes,90324);assert.equal(provenance.runtimeAssetCount,1);assert.equal(provenance.estimatedDecodedRgbaBytes,1572864);
  const body=V177_JOINT_ATLASES['miyamoto-musashi'],bodyBytes=await readFile('public'+body.path);
  assert.equal(body.path,provenance.currentBody.path);assert.equal(body.weaponBone,provenance.currentBody.weaponBone);
  assert.equal(createHash('sha256').update(bodyBytes).digest('hex'),provenance.currentBody.sha256);

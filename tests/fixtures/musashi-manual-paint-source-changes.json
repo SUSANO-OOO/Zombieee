@@ -27,6 +27,10 @@
     [
       "\"worldSize\": 128",
       "\"worldSize\": 192"
+    ],
+    [
+      "  \"miyamoto-musashi\": {\n    \"id\": \"v100-musashi-manual-impact\",\n    \"path\": \"/art/quality-20261114/vfx/musashi-contact-six-r2.webp\",\n    \"hash\": \"sha256-9abf2cfb54113a376e7b78c96dcfdcb61e5cf3010469b43a8ab75ac10ee29aab\",\n    \"width\": 768,\n    \"height\": 512,\n    \"columns\": 3,\n    \"rows\": 2,\n    \"worldSize\": 192,\n    \"anchors\": [\n      [\n        0.4364410811558214,\n        0.6395923216776804\n      ],\n      [\n        0.366181810689848,\n        0.6396365431623193\n      ],\n      [\n        0.3095862470635818,\n        0.6415671413295014\n      ],\n      [\n        0.3095862470635818,\n        0.6415671413295014\n      ],\n      [\n        0.3095862470635818,\n        0.6415671413295014\n      ],\n      [\n        0.3095862470635818,\n        0.6415671413295014\n      ]\n    ]\n  },\n",
+      "  \"miyamoto-musashi\": {\n    \"id\": \"v100-musashi-manual-impact\",\n    \"path\": \"/art/quality-20261117/vfx/musashi-contact-six-r3.webp\",\n    \"hash\": \"sha256-3eaae5c4b10eedf34c6d8adcb735e1511271396bc8f31e09402054fdfc206ae2\",\n    \"width\": 768,\n    \"height\": 512,\n    \"columns\": 3,\n    \"rows\": 2,\n    \"worldSize\": 192,\n    \"anchors\": [\n      [\n        0.4113533933,\n        0.5708821308\n      ],\n      [\n        0.3329477955,\n        0.5675238844\n      ],\n      [\n        0.2702173414,\n        0.5716287707\n      ],\n      [\n        0.2702173414,\n        0.5716287707\n      ],\n      [\n        0.2702173414,\n        0.5716287707\n      ],\n      [\n        0.2702173414,\n        0.5716287707\n      ]\n    ]\n  },\n"
     ]
   ]
 }
