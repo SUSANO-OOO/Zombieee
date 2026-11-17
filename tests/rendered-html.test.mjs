@@ -4,6 +4,7 @@ import test from "node:test";
 import vm from "node:vm";
 import { RELEASE_TITLE, RELEASE_VERSION } from "../app/releaseIdentity.js";
 import { restorePreBattleCardPanSource } from "./helpers/guard-spectacle-source.mjs";
+import { v100ObjectiveDamageLabel } from "../app/v100CorporateControl.js";
 
 import {
   AIRSTRIKE_DEF,
@@ -386,8 +387,11 @@ test("ships the three-route battlefield art with stage-aware objectives and the 
   assert.match(game, /if \(!deferredStructureImpact\) recordUnitDamage\(g, f\.kind, applyEnemyBaseDamage\(g, structureDamage, enemyBaseTarget\.researchTargetId\)\)/);
   assert.match(game, /const outcome = g\.paused \? null : battleOutcomeFor\(g\.definition, \{[\s\S]*wavesResolved: stationResolution\.wavesResolved/);
   assert.match(game, /TAKUYA撃破 — 感染拠点が露出/);
-  assert.match(game, /感染拠点 \/\/ 損傷/);
-  assert.match(game, /感染拠点 \/\/ 大破/);
+  for(const state of ["損傷","大破"]){
+    assert.equal(game.split('g.banner = v100ObjectiveDamageLabel(g, "'+state+'")').length,3,"both actual projectile and melee branches use the objective name");
+    assert.equal(v100ObjectiveDamageLabel({definition:{missionConfig:{}}},state),"感染拠点 // "+state);
+  }
+
   assert.match(game, /const isStationPlatformAssault = activeBattlefieldStageId === CAMPAIGN_STAGE_IDS\.NISHIJIN_STATION_PLATFORM/);
   assert.match(game, /isStationPlatformAssault[\s\S]*hud\.phase === 1 \? "確保" : hud\.phase === 2 \? "制圧" : "総攻撃"/);
   assert.match(game, /const enemyBaseLabel = v100CorporateControlLabel\(gameRef\.current\.definition\) \?\? \(gameRef\.current\.researchCoreTargets \? "目標耐久" : activeBattlefieldStageId === CAMPAIGN_STAGE_IDS\.NISHIJIN_STATION_GATE \? "感染中継点" : "感染拠点"\)/);
