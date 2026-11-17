@@ -72,6 +72,9 @@ test('the release pass precedes all actors and health while only four declared r
  assert.equal(restore(source),baseline);
  const clearRule=JSON.parse(fs.readFileSync('tests/fixtures/phone-boss-clear-banner-source-changes.json','utf8'))[file][0][1];
  assert.throws(()=>restore(source.replace(clearRule,clearRule.replace('v100CorporateControlLabel(g.definition)','false'))),/phone boss clear banner edit must occur exactly once/);
+ for(const [,after]of JSON.parse(fs.readFileSync('tests/fixtures/phone-boss-clear-banner-source-changes.json','utf8'))[file].filter(([,after])=>after.includes('g.banner = v100ObjectiveDamageLabel(g,'))){
+  assert.throws(()=>restore(source.replace(after,after.replace('v100ObjectiveDamageLabel(g,','v100ObjectiveDamageLabel({},'))),/phone boss clear banner edit must occur exactly once/);
+ }
  const paint='drawV100BossReleaseFields(ctx,stageObjects,g,';assert.equal(source.split(paint).length,2);assert.ok(source.indexOf(paint)<source.indexOf('  const renderables = ['));
  assert.throws(()=>restore(source+'\n'+rules.at(-1)[1]),/boss paint edit must occur exactly once/);
  assert.throws(()=>assert.equal(restore(source.replace('drawAreaEffect(ctx, effect, g.time, stageObjects','drawAreaEffect(ctx, effect, g.time + 0.1, stageObjects')),baseline));

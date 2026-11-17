@@ -14,6 +14,11 @@ export function v100CorporateControlState(game){
 export function v100CorporateControlLabel(definition){
   return definition.missionConfig?.v100StageNumber?V100_CORPORATE_CONTROLS[definition.stageId]??null:null;
 }
+// Damage announcements name the same target as the existing objective HUD.
+export function v100ObjectiveDamageLabel(game, damageState) {
+  const target = game.researchCoreTargets ? "研究中枢の破壊目標" : v100CorporateControlLabel(game.definition) ?? "感染拠点";
+  return `${target} // ${damageState}`;
+}
 // Whole authored silhouettes with transparent gaps. The largest destruction
 // frame remains within the battlefield and uses the same physical baseline.
 const columns=[0,530,1030,1530,2172],anchors=[290,790,1300,1850];

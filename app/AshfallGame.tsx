@@ -612,7 +612,7 @@ import { drawV100MissionVehicles, drawV100MissionVehicleBody, v100MissionVehicle
 import { v100VehicleSprite, v100EscortDestinationState } from "./v100MissionVehicleSprites.js";
 import { drawV100MissionNode, V100_NODE_PROFILES } from "./v100MissionNodes.js";
 import { drawV100ClinicalControl } from "./v100ClinicalControl.js";
-import { drawV100CorporateControl, v100CorporateControlLabel } from "./v100CorporateControl.js";
+import { drawV100CorporateControl, v100CorporateControlLabel, v100ObjectiveDamageLabel } from "./v100CorporateControl.js";
 import { drawV100AssaultObject, v100AssaultObjectProfile } from "./v100AssaultObjects.js";
 import { drawV100Explosion, drawV100FootDust, drawV100GroundFire, drawV100Muzzle, V100_CONTACT_WEAPONS, V100_CLAW_CONTACT_WEAPONS, queueV100Contact, queueV100ClawContact, queueV100TakuyaGroundContact, queueV100TataraGroundContact, getV100ClawContactSnapshot, getV100SkillContactSnapshot, queueV100GuardContact, getV100GuardContactSnapshot, drawV100ContactQueue, clearV100ContactQueue } from "./v100CombatVfx.js";
 import { drawV100BossAftermath, drawV100BossReleaseFields } from "./v100BossAftermath.js";
@@ -20565,7 +20565,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               && beforeHit > g.barricadeMaxHp * .7
               && g.barricadeHp <= g.barricadeMaxHp * .7) {
               g.barricadeBucklingAnnounced = true;
-              g.banner = g.researchCoreTargets ? "研究中枢の破壊目標 // 損傷" : "感染拠点 // 損傷";
+              g.banner = v100ObjectiveDamageLabel(g, "損傷");
               g.bannerTime = 1.5;
               playCue("base-damaged");
             }
@@ -20573,7 +20573,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               && beforeHit > g.barricadeMaxHp * .35
               && g.barricadeHp <= g.barricadeMaxHp * .35) {
               g.barricadeCriticalAnnounced = true;
-              g.banner = g.researchCoreTargets ? "研究中枢の破壊目標 // 大破" : "感染拠点 // 大破";
+              g.banner = v100ObjectiveDamageLabel(g, "大破");
               g.bannerTime = 1.7;
               g.flashOverlay = Math.max(g.flashOverlay, .12);
               playCue("base-critical");
@@ -24190,10 +24190,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                   playCue("role-gunner");
                 }
                 if (!deferredStructureImpact && !g.barricadeBucklingAnnounced && beforeHit > g.barricadeMaxHp * .7 && g.barricadeHp <= g.barricadeMaxHp * .7) {
-                  g.barricadeBucklingAnnounced = true; g.banner = g.researchCoreTargets ? "研究中枢の破壊目標 // 損傷" : "感染拠点 // 損傷"; g.bannerTime = 1.5; playCue("base-damaged");
+                  g.barricadeBucklingAnnounced = true; g.banner = v100ObjectiveDamageLabel(g, "損傷"); g.bannerTime = 1.5; playCue("base-damaged");
                 }
                 if (!deferredStructureImpact && !g.barricadeCriticalAnnounced && beforeHit > g.barricadeMaxHp * .35 && g.barricadeHp <= g.barricadeMaxHp * .35) {
-                  g.barricadeCriticalAnnounced = true; g.banner = g.researchCoreTargets ? "研究中枢の破壊目標 // 大破" : "感染拠点 // 大破"; g.bannerTime = 1.7; g.flashOverlay = Math.max(g.flashOverlay, .12); playCue("base-critical");
+                  g.barricadeCriticalAnnounced = true; g.banner = v100ObjectiveDamageLabel(g, "大破"); g.bannerTime = 1.7; g.flashOverlay = Math.max(g.flashOverlay, .12); playCue("base-critical");
                 }
                 if (!deferredStructureImpact && !productionMixerRef.current && f.kind !== "mrs-chiha") {
                   playCue(f.kind === "brute" ? "structure-heavy" : "structure-light");

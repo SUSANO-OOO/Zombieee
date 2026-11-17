@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {drawV100CorporateControl,V100_CORPORATE_CONTROLS,V100_CORPORATE_CONTROL_ART,V100_LURE_CONTROL_ART} from "../app/v100CorporateControl.js";
+import {drawV100CorporateControl,v100ObjectiveDamageLabel,V100_CORPORATE_CONTROLS,V100_CORPORATE_CONTROL_ART,V100_LURE_CONTROL_ART} from "../app/v100CorporateControl.js";
 import {applyEnemyBaseDamage} from "../app/v100ResearchCore.js";
 import {requiredBattleAssetPlan} from "../app/battleAssetPlan.js";
 import {objectiveForBattle,battleOutcomeFor} from "../app/battleDefinitions.js";
@@ -37,4 +37,17 @@ test("authored corporate damage states follow actual protected and applied base 
     assert.deepEqual(frames,lure?[0,530,1060,1560]:[0,530,1030,1530]);
     assert.throws(()=>drawV100CorporateControl(context,game,{}, {attackX:875},[212,282,352]),/decoded/);
   }
+});
+
+test("projectile and melee damage announcements name all five corporate targets and preserve legacy/research fallback",()=>{
+  for(const [stageId,label]of Object.entries(V100_CORPORATE_CONTROLS)){
+    const game={definition:v100BattleDefinitionFor(stageId),researchCoreTargets:null,barricadeHp:700,barricadeVulnerable:true};
+    const before=structuredClone(game);
+    for(const state of ["損傷","大破"])assert.equal(v100ObjectiveDamageLabel(game,state),label+" // "+state);
+    assert.deepEqual(game,before);
+    const legacy={...game,definition:{stageId,missionConfig:{}}};
+    assert.equal(v100ObjectiveDamageLabel(legacy,"損傷"),"感染拠点 // 損傷");
+    assert.equal(v100ObjectiveDamageLabel({...game,researchCoreTargets:[{hp:700}]},"大破"),"研究中枢の破壊目標 // 大破");
+  }
+  assert.equal(v100ObjectiveDamageLabel({definition:{missionConfig:{}}},"大破"),"感染拠点 // 大破");
 });
