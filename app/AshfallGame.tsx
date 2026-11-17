@@ -613,7 +613,7 @@ import { drawV100ClinicalControl } from "./v100ClinicalControl.js";
 import { drawV100CorporateControl, v100CorporateControlLabel } from "./v100CorporateControl.js";
 import { drawV100AssaultObject, v100AssaultObjectProfile } from "./v100AssaultObjects.js";
 import { drawV100Explosion, drawV100FootDust, drawV100GroundFire, drawV100Muzzle, V100_CONTACT_WEAPONS, V100_CLAW_CONTACT_WEAPONS, queueV100Contact, queueV100ClawContact, queueV100TakuyaGroundContact, queueV100TataraGroundContact, getV100ClawContactSnapshot, getV100SkillContactSnapshot, queueV100GuardContact, getV100GuardContactSnapshot, drawV100ContactQueue, clearV100ContactQueue } from "./v100CombatVfx.js";
-import { drawV100BossAftermath } from "./v100BossAftermath.js";
+import { drawV100BossAftermath, drawV100BossReleaseFields } from "./v100BossAftermath.js";
 import {drawV100GateChargeTrail,drawV100KuromeRay} from './v100BossAttackVfx.js';
 import {drawV100MaterialParticle} from './v100MaterialParticles.js';
 import { drawV100BossDefeat } from "./v100BossDefeatVfx.js";
@@ -6723,7 +6723,7 @@ function drawMotherCombatVfx(ctx: CanvasRenderingContext2D, f: Fighter, g: Game,
     ? tuning.activeSeconds - f.stationAbility.remainingSeconds
     : tuning.recoverySeconds - f.stationAbility.remainingSeconds;
   if(g.definition.missionConfig.v100StageNumber){
-    drawV100BossAftermath(ctx,stageObjects,{kind:'mother',x:f.x,y:f.y,seed:f.id,world:g,ownerId:f.id,direction:Number(f.stationAbility.targetX)>f.x?1:-1,elapsed,duration:active?tuning.activeSeconds:tuning.recoverySeconds,phase:f.stationAbility.phase});
+    drawV100BossAftermath(ctx,stageObjects,{includeRelease:false,kind:'mother',x:f.x,y:f.y,seed:f.id,world:g,ownerId:f.id,direction:Number(f.stationAbility.targetX)>f.x?1:-1,elapsed,duration:active?tuning.activeSeconds:tuning.recoverySeconds,phase:f.stationAbility.phase});
     const socket=fighterWeaponSockets.get(f);
     if(active&&socket)drawV104InfectedWake(ctx,stageObjects,{...socket,ux:0,uy:-1,trail:'glob',progress:elapsed/tuning.activeSeconds});
     return;
@@ -6771,7 +6771,7 @@ function drawAnomalyBossCombatVfx(ctx: CanvasRenderingContext2D, f: Fighter, g: 
     ? tuning.activeSeconds - f.stationAbility.remainingSeconds
     : tuning.recoverySeconds - f.stationAbility.remainingSeconds;
   if (g.definition.missionConfig.v100StageNumber) {
-    drawV100BossAftermath(ctx, stageObjects, { kind: f.kind, x: f.x, y: f.y, seed: f.id, world:g, ownerId:f.id, direction: f.kind === "ooguchi" ? -1 : (Number(f.stationAbility.targetX) > f.x ? 1 : -1), elapsed,
+    drawV100BossAftermath(ctx, stageObjects, { includeRelease:false, kind: f.kind, x: f.x, y: f.y, seed: f.id, world:g, ownerId:f.id, direction: f.kind === "ooguchi" ? -1 : (Number(f.stationAbility.targetX) > f.x ? 1 : -1), elapsed,
       duration: active ? tuning.activeSeconds : tuning.recoverySeconds, phase: f.stationAbility.phase });
     return;
   }
@@ -8926,6 +8926,7 @@ function drawWorld(
   drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["rear-scenery"], Boolean(g.definition.missionConfig.v100StageNumber));
   if(g.definition.missionConfig.v100StageNumber)drawV100ChihaFinalBursts(ctx,stageObjects,g,{viewportWidth:ctx.canvas.clientWidth,viewportHeight:ctx.canvas.clientHeight,worldScale:presentationLayout?.transform.scale??1});
   if(g.definition.missionConfig.v100StageNumber)drawV100BossDefeatFinales(ctx,stageObjects,g,{viewportWidth:ctx.canvas.clientWidth,viewportHeight:ctx.canvas.clientHeight,worldScale:presentationLayout?.transform.scale??1,density:graphicsProfile.effectDensity});
+  if(g.definition.missionConfig.v100StageNumber)drawV100BossReleaseFields(ctx,stageObjects,g,{viewportWidth:ctx.canvas.clientWidth,viewportHeight:ctx.canvas.clientHeight,worldScale:presentationLayout?.transform.scale??1});
 
   // Units reveal the three routes through movement; no lane-map overlay is drawn over the battlefield.
 
