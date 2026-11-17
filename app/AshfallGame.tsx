@@ -386,6 +386,7 @@ import {
   enemyProjectilePresentationFor,
 } from "./enemyVfxPresentation.js";
 import { allyCorpseVisualCue } from "./corpseVisuals.js";
+import { drawV100CorpseAtmosphere } from "./v100CorpseAtmosphere.js";
 import { resolveLocalQaMode, resolveLocalQaSafeArea, resolveLocalQaScenario } from "./localQa.js";
 import { mobileBattleHudLayout, mobileBattleHudUnitSlots } from "./battleHudLayout.js";
 import { PRODUCTION_VISUALS, stageVisualFor } from "./productionVisuals.js";
@@ -8940,6 +8941,8 @@ function drawWorld(
   drawStageObjectOverlays(ctx, activeStageObjects, stageObjects, ["objective"], Boolean(g.definition.missionConfig.v100StageNumber));
 
   for (const effect of selectAreaEffectsForRender(g.areaEffects) as AreaEffect[]) drawAreaEffect(ctx, effect, g.time, stageObjects, Boolean(g.definition.missionConfig.v100StageNumber), g);
+  // Painted corpse fire and ash stay behind hazards, bodies and health readouts.
+  if (g.definition.missionConfig.v100StageNumber) drawV100CorpseAtmosphere(ctx, stageObjects, g, { enemyTimings: ENEMY_DEATH_CONFIG.timings, density: graphicsProfile.effectDensity });
   // Guard preparation paint stays behind actors, hazards and their health readouts.
   if (g.definition.missionConfig.v100StageNumber) drawV100GuardActivations(ctx, stageObjects, g);
   // The manual blade fragments stay behind fighters, telegraphs and health.
@@ -9133,12 +9136,12 @@ function drawWorld(
       ctx.beginPath(); ctx.ellipse(0, 0, corpse.kind === "abomination" || corpse.kind === "takuya" || corpse.kind === "gate-eater" ? 25 : 15, 7, 0, 0, Math.PI * 2); ctx.fill();
     }
     ctx.restore();
-    if (corpse.side === "zombie" && corpse.state === "dying" && corpse.kind === "takuya") {
+    if (!g.definition.missionConfig.v100StageNumber && corpse.side === "zombie" && corpse.state === "dying" && corpse.kind === "takuya") {
       const pulse = 24 + corpse.phaseElapsed * 34;
       ctx.strokeStyle = `rgba(221,86,49,${Math.max(.12, .7 - corpse.phaseElapsed * .42)})`;
       ctx.lineWidth = 4; ctx.beginPath(); ctx.ellipse(corpse.x, corpse.y - 30, pulse, pulse * .36, 0, 0, Math.PI * 2); ctx.stroke();
     }
-    if (corpse.side === "zombie" && corpse.state === "ashing") {
+    if (!g.definition.missionConfig.v100StageNumber && corpse.side === "zombie" && corpse.state === "ashing") {
       const timing = ENEMY_DEATH_CONFIG.timings[corpse.deathClass ?? "normal"];
       const ashProgress = Math.min(1, corpse.phaseElapsed / timing.ashingSeconds);
       for (let index = 0; index < (corpse.deathClass === "boss" ? 12 : corpse.deathClass === "heavy" ? 8 : 5); index++) {
@@ -9158,6 +9161,7 @@ function drawWorld(
         ctx.beginPath(); ctx.ellipse(headX, corpse.y - 10, 2.2, 1.2, 0, 0, Math.PI * 2); ctx.fill();
         ctx.restore();
       }
+      if (!g.definition.missionConfig.v100StageNumber) {
       for (let index = 0; index < allyCue.smokePuffs; index++) {
         const drift = Math.sin(g.time * (1.7 + index * .24) + corpse.id + index * 2.1);
         const rise = (g.time * (9 + index * 2) + corpse.id * 3) % 22;
@@ -9183,6 +9187,7 @@ function drawWorld(
           ctx.fillStyle = index % 2 === 0 ? "#858177" : "#4d4c48";
           ctx.fillRect(corpse.x + drift * (12 + index * 2), corpse.y - 4 - index * 4, 2 + index % 2, 2);
         }
+      }
       }
       ctx.globalAlpha = 1;
     }

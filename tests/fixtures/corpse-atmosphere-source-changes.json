@@ -1,0 +1,28 @@
+{
+  "app/AshfallGame.tsx": [
+    [
+      "import { allyCorpseVisualCue } from \"./corpseVisuals.js\";",
+      "import { allyCorpseVisualCue } from \"./corpseVisuals.js\";\nimport { drawV100CorpseAtmosphere } from \"./v100CorpseAtmosphere.js\";"
+    ],
+    [
+      "  // Guard preparation paint stays behind actors, hazards and their health readouts.\n",
+      "  // Painted corpse fire and ash stay behind hazards, bodies and health readouts.\n  if (g.definition.missionConfig.v100StageNumber) drawV100CorpseAtmosphere(ctx, stageObjects, g, { enemyTimings: ENEMY_DEATH_CONFIG.timings, density: graphicsProfile.effectDensity });\n  // Guard preparation paint stays behind actors, hazards and their health readouts.\n"
+    ],
+    [
+      "    if (corpse.side === \"zombie\" && corpse.state === \"dying\" && corpse.kind === \"takuya\") {",
+      "    if (!g.definition.missionConfig.v100StageNumber && corpse.side === \"zombie\" && corpse.state === \"dying\" && corpse.kind === \"takuya\") {"
+    ],
+    [
+      "    if (corpse.side === \"zombie\" && corpse.state === \"ashing\") {",
+      "    if (!g.definition.missionConfig.v100StageNumber && corpse.side === \"zombie\" && corpse.state === \"ashing\") {"
+    ],
+    [
+      "      for (let index = 0; index < allyCue.smokePuffs; index++) {",
+      "      if (!g.definition.missionConfig.v100StageNumber) {\n      for (let index = 0; index < allyCue.smokePuffs; index++) {"
+    ],
+    [
+      "      ctx.globalAlpha = 1;\n    }\n  }\n\n  for (const fighter of g.fighters) drawMonkeyTrap(ctx, fighter, stageObjects, Boolean(g.definition.missionConfig.v100StageNumber),g);",
+      "      }\n      ctx.globalAlpha = 1;\n    }\n  }\n\n  for (const fighter of g.fighters) drawMonkeyTrap(ctx, fighter, stageObjects, Boolean(g.definition.missionConfig.v100StageNumber),g);"
+    ]
+  ]
+}
