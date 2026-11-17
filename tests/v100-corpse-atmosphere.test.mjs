@@ -50,3 +50,14 @@ test('declared corpse paint edits alone restore the whole original app and prese
  assert(source.indexOf('drawV100CorpseAtmosphere(ctx, stageObjects, g,')<source.indexOf('for (const hazard of g.stationHazards) drawStationHazard'));
  assert(source.includes('if (allyCue.eyeGlint) {'));
 });
+
+test('the actual corpse preparation hook is absent on the public host and guards local preparation',()=>{
+ const changes=JSON.parse(fs.readFileSync('tests/fixtures/corpse-atmosphere-source-changes.json','utf8'))['app/AshfallGame.tsx'],entry=changes.find(([,after])=>after.includes('prepareV100CorpsePaintProof'));
+ assert(entry);const hook=entry[1].slice(0,entry[1].length-entry[0].length).replace(' as EnemySpawnRuntime','');
+ const make=new Function('window','gameRef','stageObjectRefs','createEnemySpawnRuntime','clearTransientRenderObjects','prepareLifecycleQa','return ({'+hook+'});');
+ const g={definition:{missionConfig:{v100StageNumber:1},timeline:[]},running:true,paused:true,over:false,corpses:[]},refs={current:Object.fromEntries(['v100-ground-fire-bed','v100-smoke-a','v100-smoke-b','v100-dust','v100-assault-stronghold'].map(k=>[k,img(k)]))};
+ let prepared=0;const build=host=>make({location:{hostname:host}},{current:g},refs,()=>({}),()=>{},x=>{prepared++;x.corpses=[corpse()];});
+ assert.equal(Object.hasOwn(build('susano-ooo.github.io'),'prepareV100CorpsePaintProof'),false);assert.equal(prepared,0);
+ const local=build('127.0.0.1');g.paused=false;assert.throws(()=>local.prepareV100CorpsePaintProof(),/paused original/);assert.equal(prepared,0);
+ g.paused=true;assert.equal(local.prepareV100CorpsePaintProof().length,1);assert.equal(prepared,1);
+});

@@ -10748,6 +10748,22 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       return qaPresentationQuiescenceSnapshot();
     };
     const bridge = {
+      ...(['localhost','127.0.0.1','[::1]'].includes(window.location.hostname) ? {
+        getCorpsePaintProofReadiness: () => Object.fromEntries(['v100-ground-fire-bed','v100-smoke-a','v100-smoke-b','v100-dust','v100-assault-stronghold'].map(id => {
+          const image=stageObjectRefs.current[id];return [id,{ready:Boolean(image?.complete&&image.naturalWidth&&image.naturalHeight),width:image?.naturalWidth??0,height:image?.naturalHeight??0}];
+        })),
+        prepareV100CorpsePaintProof: () => {
+          const g=gameRef.current;
+          if(g.definition.missionConfig.v100StageNumber!==1||g.survivalRun||!g.running||!g.paused||g.over)throw new Error("Corpse paint proof requires the paused original V1 S01");
+          for(const id of ['v100-ground-fire-bed','v100-smoke-a','v100-smoke-b','v100-dust','v100-assault-stronghold']){
+            const image=stageObjectRefs.current[id];if(!image?.complete||!image.naturalWidth||!image.naturalHeight)throw new Error("Corpse paint proof asset not ready: "+id);
+          }
+          g.pendingWeaponHits=[];g.fighters=[];g.corpses=[];g.areaEffects=[];g.deployQueue=[];
+          g.enemySpawn=createEnemySpawnRuntime() as EnemySpawnRuntime;clearTransientRenderObjects(g);
+          prepareLifecycleQa(g);g.eventIndex=g.definition.timeline.length;
+          return g.corpses.map(c=>({id:c.id,kind:c.kind,side:c.side,state:c.state}));
+        },
+      } : {}),
       getQaPresentationQuiescence: qaPresentationQuiescenceSnapshot,
       setQaPresentationQuiesced,
       setSaveBoundaryPending: (pending: boolean) => {

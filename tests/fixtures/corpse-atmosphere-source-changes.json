@@ -23,6 +23,10 @@
     [
       "      ctx.globalAlpha = 1;\n    }\n  }\n\n  for (const fighter of g.fighters) drawMonkeyTrap(ctx, fighter, stageObjects, Boolean(g.definition.missionConfig.v100StageNumber),g);",
       "      }\n      ctx.globalAlpha = 1;\n    }\n  }\n\n  for (const fighter of g.fighters) drawMonkeyTrap(ctx, fighter, stageObjects, Boolean(g.definition.missionConfig.v100StageNumber),g);"
+    ],
+    [
+      "      getQaPresentationQuiescence: qaPresentationQuiescenceSnapshot,",
+      "      ...(['localhost','127.0.0.1','[::1]'].includes(window.location.hostname) ? {\n        getCorpsePaintProofReadiness: () => Object.fromEntries(['v100-ground-fire-bed','v100-smoke-a','v100-smoke-b','v100-dust','v100-assault-stronghold'].map(id => {\n          const image=stageObjectRefs.current[id];return [id,{ready:Boolean(image?.complete&&image.naturalWidth&&image.naturalHeight),width:image?.naturalWidth??0,height:image?.naturalHeight??0}];\n        })),\n        prepareV100CorpsePaintProof: () => {\n          const g=gameRef.current;\n          if(g.definition.missionConfig.v100StageNumber!==1||g.survivalRun||!g.running||!g.paused||g.over)throw new Error(\"Corpse paint proof requires the paused original V1 S01\");\n          for(const id of ['v100-ground-fire-bed','v100-smoke-a','v100-smoke-b','v100-dust','v100-assault-stronghold']){\n            const image=stageObjectRefs.current[id];if(!image?.complete||!image.naturalWidth||!image.naturalHeight)throw new Error(\"Corpse paint proof asset not ready: \"+id);\n          }\n          g.pendingWeaponHits=[];g.fighters=[];g.corpses=[];g.areaEffects=[];g.deployQueue=[];\n          g.enemySpawn=createEnemySpawnRuntime() as EnemySpawnRuntime;clearTransientRenderObjects(g);\n          prepareLifecycleQa(g);g.eventIndex=g.definition.timeline.length;\n          return g.corpses.map(c=>({id:c.id,kind:c.kind,side:c.side,state:c.state}));\n        },\n      } : {}),\n      getQaPresentationQuiescence: qaPresentationQuiescenceSnapshot,"
     ]
   ]
 }
