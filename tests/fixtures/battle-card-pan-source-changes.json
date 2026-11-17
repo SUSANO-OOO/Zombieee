@@ -1,0 +1,12 @@
+{
+  "app/AshfallGame.tsx": [
+    [
+      "import { drawV100CorpseAtmosphere } from \"./v100CorpseAtmosphere.js\";",
+      "import { drawV100CorpseAtmosphere } from \"./v100CorpseAtmosphere.js\";\nimport { bindV100BattleCardPanGuard } from \"./v100BattleCardPanGuard.js\";"
+    ],
+    [
+      "<div className=\"unit-cards\" aria-label=\"生存者ユニット\">",
+      "<div className=\"unit-cards\" ref={bindV100BattleCardPanGuard} aria-label=\"生存者ユニット\">"
+    ]
+  ]
+}

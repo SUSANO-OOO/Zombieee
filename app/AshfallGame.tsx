@@ -387,6 +387,7 @@ import {
 } from "./enemyVfxPresentation.js";
 import { allyCorpseVisualCue } from "./corpseVisuals.js";
 import { drawV100CorpseAtmosphere } from "./v100CorpseAtmosphere.js";
+import { bindV100BattleCardPanGuard } from "./v100BattleCardPanGuard.js";
 import { resolveLocalQaMode, resolveLocalQaSafeArea, resolveLocalQaScenario } from "./localQa.js";
 import { mobileBattleHudLayout, mobileBattleHudUnitSlots } from "./battleHudLayout.js";
 import { PRODUCTION_VISUALS, stageVisualFor } from "./productionVisuals.js";
@@ -25574,7 +25575,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             </div>
           </div>
 
-          <div className="unit-cards" aria-label="生存者ユニット">
+          <div className="unit-cards" ref={bindV100BattleCardPanGuard} aria-label="生存者ユニット">
               {battleHudSlots.map((card, slotIndex) => {
                  if (!card) {
                    return <div
