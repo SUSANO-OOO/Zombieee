@@ -220,14 +220,6 @@
       "criticality": "critical"
     },
     {
-      "path": "/art/quality-20261114/vfx/musashi-contact-six-r2.webp",
-      "bytes": 52570,
-      "hash": "sha256-9abf2cfb54113a376e7b78c96dcfdcb61e5cf3010469b43a8ab75ac10ee29aab",
-      "pack": "units",
-      "category": "unit",
-      "criticality": "critical"
-    },
-    {
       "path": "/art/quality-20261114/vfx/ooguchi-attack-six-r1.webp",
       "bytes": 309100,
       "hash": "sha256-97918df7b487ca0a65be8929bc7621730941823d3f99b6096601f1bdcecaccba",
@@ -327,6 +319,14 @@
       "path": "/art/quality-20261117/vfx/guardian-guard-six-r4.webp",
       "bytes": 290176,
       "hash": "sha256-03931eda8067e35ff1c2e41c232cc888a4d5f7c6c1c41035331eda6435b49e18",
+      "pack": "units",
+      "category": "unit",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/quality-20261117/vfx/musashi-contact-six-r3.webp",
+      "bytes": 90324,
+      "hash": "sha256-3eaae5c4b10eedf34c6d8adcb735e1511271396bc8f31e09402054fdfc206ae2",
       "pack": "units",
       "category": "unit",
       "criticality": "critical"

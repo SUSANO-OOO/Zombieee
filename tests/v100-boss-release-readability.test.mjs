@@ -3,6 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {execFileSync} from 'node:child_process';
+import {restorePreMusashiManualSource} from './helpers/guard-spectacle-source.mjs';
 import {drawV100BossAftermath,drawV100BossReleaseFields} from '../app/v100BossAftermath.js';
 import {V100_BOSS_ATTACK_ART as ART} from '../app/v100BossAttackArt.js';
 import {BOSS_ANOMALY_TUNING} from '../app/bossAnomalies.js';
@@ -67,7 +68,7 @@ test('invalid viewports and non-V1 worlds draw nothing',()=>{
 test('the release pass precedes all actors and health while only four declared renderer edits are allowed',()=>{
  const file='app/AshfallGame.tsx',source=restoreGunFinishSource(file,fs.readFileSync(file,'utf8'));
  const rules=JSON.parse(fs.readFileSync('tests/fixtures/boss-release-paint-source-changes.json','utf8'))[file];
- const restore=value=>{for(const [before,after]of [...rules].reverse()){assert.equal(value.split(after).length,2,'boss paint edit must occur exactly once');value=value.replace(after,before);}return value;};
+ const restore=value=>{value=restorePreMusashiManualSource(file,value);for(const [before,after]of [...rules].reverse()){assert.equal(value.split(after).length,2,'boss paint edit must occur exactly once');value=value.replace(after,before);}return value;};
  const baseline=execFileSync('git',['show','740071c0bb1137648f108495fa42d03a3a5e82f4:'+file],{maxBuffer:4*1024*1024}).toString('utf8').replaceAll('\r\n','\n');
  assert.equal(restore(source),baseline);
  const paint='drawV100BossReleaseFields(ctx,stageObjects,g,';assert.equal(source.split(paint).length,2);assert.ok(source.indexOf(paint)<source.indexOf('  const renderables = ['));

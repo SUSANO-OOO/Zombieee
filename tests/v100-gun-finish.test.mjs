@@ -13,7 +13,7 @@ import {verifiedPwaArtworkPaths} from '../app/pwaArtworkAvailability.js';
 const ids=['v104-handgun','weapon-rifle-01','weapon-rifle-02','weapon-gunner-01','weapon-gunner-02','weapon-smg-01','weapon-smg-02','weapon-suppressed-pistol'];
 const aliases={'ability-ranger-precision-shot':'weapon-rifle-01','ability-gunner-suppression-muzzle':'weapon-gunner-01','ability-babayaga-appraise-shot':'weapon-suppressed-pistol'};
 const sha=b=>createHash('sha256').update(b).digest('hex');
-const baseRef='4d33c0a11c155994aaa0353b88e0019b1eeed997';
+const baseRef='b228ee4a6ae944af4cec62524a4b2dd5b1205946';
 const oldJson=p=>JSON.parse(execFileSync('git',['show',baseRef+':'+p],{maxBuffer:8*1024*1024,encoding:'utf8'}));
 const allPaths=Object.values(files).map(f=>f.path).join(String.fromCharCode(10));
 

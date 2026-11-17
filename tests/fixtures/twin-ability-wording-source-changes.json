@@ -1,0 +1,36 @@
+{
+  "app/AshfallGame.tsx": [
+    [
+      "function currentEnemyAbilityName(kind: EnemyKind) {\n  return v105EnemyAbilityName(kind,{boss:bossDefinitionForEnemyKind(kind),infected:v090InfectedDefinition(kind),station:STATION_ENEMY_TUNING});\n}",
+      "function currentEnemyAbilityName(kind: EnemyKind, owner?: Fighter) {\n  return v105EnemyAbilityName(kind,{boss:bossDefinitionForEnemyKind(kind),infected:v090InfectedDefinition(kind),station:STATION_ENEMY_TUNING,owner});\n}"
+    ],
+    [
+      "startV105AbilityName(g,f,{name:currentEnemyAbilityName(f.kind),source:'enemy'});\n                abilityFrame = true;\n                g.banner = anomalyKind === \"ooguchi\"",
+      "startV105AbilityName(g,f,{name:currentEnemyAbilityName(f.kind,f),source:'enemy'});\n                abilityFrame = true;\n                g.banner = anomalyKind === \"ooguchi\""
+    ],
+    [
+      "? \"フタゴ // 融合交差撃予告\"",
+      "? `フタゴ // ${currentEnemyAbilityName(f.kind,f)}予告`"
+    ]
+  ],
+  "app/bossFoundation.js": [
+    [
+      "export function bossPhaseForHp(hp, maxHp, enemyKind = null, fighter = null) {",
+      "// Presentation names follow the two registered V1 bodies. Legacy fused proof art keeps its original definition.\nexport function v100TwinAttackName(fighter) {\n  if (fighter?.kind !== 'futago' || fighter.side !== 'zombie' || fighter.v100BossId !== 'boss-futago'\n    || !['a','b'].includes(fighter.v100TwinPart)) return null;\n  return fighter.v100TwinEnraged ? '激昂斬撃' : '双体交差撃';\n}\n\nexport function bossPhaseForHp(hp, maxHp, enemyKind = null, fighter = null) {"
+    ],
+    [
+      "  if ([\"mother\", \"ooguchi\", \"gairen\", \"futago\", \"mugarian-president-mutated\", \"takuya-omega\"].includes(definition.enemyKind)\n    && fighter.stationAbility?.phase === \"warning\") {\n    return deepFreeze({\n      bossId: definition.id,\n      attackId: definition.attackTelegraph.attackId,\n      displayName: definition.attackTelegraph.displayName,\n      kind: definition.attackTelegraph.kind,\n      remainingSeconds: Math.max(0, Number(fighter.stationAbility.remainingSeconds) || 0),\n      originX: Number(fighter.x) || 0,\n      originY: Number(fighter.y) || 0,\n      targetX: Number.isFinite(Number(fighter.stationAbility.targetX))\n        ? Number(fighter.stationAbility.targetX)\n        : Number(fallbackTargetX) || 0,\n      targetY: Number.isFinite(Number(fighter.stationAbility.targetY))\n        ? Number(fighter.stationAbility.targetY)\n        : Number(fighter.y) || 0,\n      radius: Number(definition.attackTelegraph.radius) || 0,\n      laneHalfHeight: Number(definition.attackTelegraph.laneHalfHeight) || 0,\n      color: definition.attackTelegraph.color,\n      counterplay: definition.attackTelegraph.counterplay,\n    });\n  }",
+      "  if ([\"mother\", \"ooguchi\", \"gairen\", \"futago\", \"mugarian-president-mutated\", \"takuya-omega\"].includes(definition.enemyKind)\n    && fighter.stationAbility?.phase === \"warning\") {\n    return deepFreeze({\n      bossId: definition.id,\n      attackId: definition.attackTelegraph.attackId,\n      displayName: v100TwinAttackName(fighter) ?? definition.attackTelegraph.displayName,\n      kind: definition.attackTelegraph.kind,\n      remainingSeconds: Math.max(0, Number(fighter.stationAbility.remainingSeconds) || 0),\n      originX: Number(fighter.x) || 0,\n      originY: Number(fighter.y) || 0,\n      targetX: Number.isFinite(Number(fighter.stationAbility.targetX))\n        ? Number(fighter.stationAbility.targetX)\n        : Number(fallbackTargetX) || 0,\n      targetY: Number.isFinite(Number(fighter.stationAbility.targetY))\n        ? Number(fighter.stationAbility.targetY)\n        : Number(fighter.y) || 0,\n      radius: Number(definition.attackTelegraph.radius) || 0,\n      laneHalfHeight: Number(definition.attackTelegraph.laneHalfHeight) || 0,\n      color: definition.attackTelegraph.color,\n      counterplay: v100TwinAttackName(fighter) ? '片側を先に倒し、残る一体の激昂に備える' : definition.attackTelegraph.counterplay,\n    });\n  }"
+    ]
+  ],
+  "app/v105AbilityNames.js": [
+    [
+      "// Ephemeral battle presentation, created only at a successful gameplay start.",
+      "import {v100TwinAttackName} from './bossFoundation.js';\n// Ephemeral battle presentation, created only at a successful gameplay start."
+    ],
+    [
+      "export function v105EnemyAbilityName(kind,{boss,infected,station}={}){\n  return boss?.attackTelegraph?.displayName",
+      "export function v105EnemyAbilityName(kind,{boss,infected,station,owner}={}){\n  return v100TwinAttackName(owner) ?? boss?.attackTelegraph?.displayName"
+    ]
+  ]
+}

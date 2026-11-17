@@ -1,0 +1,133 @@
+{
+  "creator": "OpenAI built-in image_gen under Producer direction; deterministic smartphone WebP packaging by Codex",
+  "license": "Project-original generated material artwork under existing game asset policy; no third-party download",
+  "rights": {
+    "commercialUse": true,
+    "modification": true,
+    "redistribution": true,
+    "basis": "Project-original material-only output; the project owns output as between the user and OpenAI to the extent allowed by applicable law. Input reference is the existing project-original sheet."
+  },
+  "producerApproval": "The active smartphone goal authorizes bespoke manual ability VFX without geometric markers. This is a source candidate; final motion/audio/device acceptance and 1.0.9 publication remain unapproved.",
+  "terms": {
+    "url": "https://openai.com/policies/terms-of-use/",
+    "effective": "2026-01-01",
+    "checkedOn": "2026-11-17",
+    "section": "Content / Ownership of content"
+  },
+  "referenceProvenance": "assets/source/quality-20261114/musashi-impact-r1/provenance-r1.json",
+  "source": {
+    "path": "assets/source/quality-20261117/musashi-impact-r2/generated-r1.png",
+    "bytes": 1765003,
+    "sha256": "a2b27e807200d9ad1f03d3c6ea5d708deeaa6679853c0cbc6f89496460a8e7ea",
+    "width": 1536,
+    "height": 1024,
+    "hasAlpha": true
+  },
+  "generation": {
+    "mode": "built-in",
+    "tool": "image_gen.imagegen",
+    "model": "not exposed by the built-in tool",
+    "reference": "public/art/quality-20261114/vfx/musashi-contact-six-r2.webp",
+    "prompt": "assets/source/quality-20261117/musashi-impact-r2/prompt.txt"
+  },
+  "processing": {
+    "script": "scripts/build-musashi-impact-material.mjs",
+    "cellSourceSize": 512,
+    "cellInnerSize": 224,
+    "transparentGutter": 16,
+    "sharpVersion": "0.35.3",
+    "webp": {
+      "quality": 94,
+      "alphaQuality": 100,
+      "effort": 6
+    },
+    "anchorRule": "Alpha>=220, RGB minimum>=230, left half/lower55 percent. Weighted core within8 source pixels of fifth-percentile left bright contact; not the spreading plume centroid. First three frames measured; released remnants retain peak origin."
+  },
+  "currentBody": {
+    "path": "/art/v100/joints/miyamoto-musashi-combat-r1.webp",
+    "sha256": "07a49d405b0396f31ac43fad5aa7ff44d26ff1589d8162d49f5a483399b97972",
+    "weaponBone": "weapon-0"
+  },
+  "logicalPath": "/art/quality-20261117/vfx/musashi-contact-six-r3.webp",
+  "logicalBytes": 90324,
+  "distinctBytes": 90324,
+  "logicalSha256": "3eaae5c4b10eedf34c6d8adcb735e1511271396bc8f31e09402054fdfc206ae2",
+  "runtimeAssetCount": 1,
+  "estimatedDecodedRgbaBytes": 1572864,
+  "material": {
+    "id": "v100-musashi-manual-impact",
+    "path": "/art/quality-20261117/vfx/musashi-contact-six-r3.webp",
+    "hash": "sha256-3eaae5c4b10eedf34c6d8adcb735e1511271396bc8f31e09402054fdfc206ae2",
+    "width": 768,
+    "height": 512,
+    "columns": 3,
+    "rows": 2,
+    "worldSize": 192,
+    "anchors": [
+      [
+        0.4113533933,
+        0.5708821308
+      ],
+      [
+        0.3329477955,
+        0.5675238844
+      ],
+      [
+        0.2702173414,
+        0.5716287707
+      ],
+      [
+        0.2702173414,
+        0.5716287707
+      ],
+      [
+        0.2702173414,
+        0.5716287707
+      ],
+      [
+        0.2702173414,
+        0.5716287707
+      ]
+    ]
+  },
+  "observations": [
+    {
+      "cell": 0,
+      "gutterMax": 0,
+      "visibleAlphaOver32": 1445,
+      "fullyTransparent": 56290
+    },
+    {
+      "cell": 1,
+      "gutterMax": 0,
+      "visibleAlphaOver32": 5044,
+      "fullyTransparent": 43561
+    },
+    {
+      "cell": 2,
+      "gutterMax": 0,
+      "visibleAlphaOver32": 12817,
+      "fullyTransparent": 26248
+    },
+    {
+      "cell": 3,
+      "gutterMax": 0,
+      "visibleAlphaOver32": 10537,
+      "fullyTransparent": 36658
+    },
+    {
+      "cell": 4,
+      "gutterMax": 0,
+      "visibleAlphaOver32": 4335,
+      "fullyTransparent": 44584
+    },
+    {
+      "cell": 5,
+      "gutterMax": 0,
+      "visibleAlphaOver32": 387,
+      "fullyTransparent": 60309
+    }
+  ],
+  "humanAccepted": false,
+  "scope": "Effect artwork only; approved body, weapons, .22-second visual clock, hit timing and damage remain separate and unchanged."
+}

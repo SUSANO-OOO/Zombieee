@@ -545,6 +545,13 @@ export function bossCampaignEntry(enemyKind, overrides = {}) {
   });
 }
 
+// Presentation names follow the two registered V1 bodies. Legacy fused proof art keeps its original definition.
+export function v100TwinAttackName(fighter) {
+  if (fighter?.kind !== 'futago' || fighter.side !== 'zombie' || fighter.v100BossId !== 'boss-futago'
+    || !['a','b'].includes(fighter.v100TwinPart)) return null;
+  return fighter.v100TwinEnraged ? '激昂斬撃' : '双体交差撃';
+}
+
 export function bossPhaseForHp(hp, maxHp, enemyKind = null, fighter = null) {
   const ratio = Math.max(0, Number(hp) || 0) / Math.max(1, Number(maxHp) || 1);
   const contract = V100_BOSS_BY_ID[fighter?.v100BossId];
@@ -776,7 +783,7 @@ export function bossTelegraphSnapshot(fighter, { fallbackTargetX = 0 } = {}) {
     return deepFreeze({
       bossId: definition.id,
       attackId: definition.attackTelegraph.attackId,
-      displayName: definition.attackTelegraph.displayName,
+      displayName: v100TwinAttackName(fighter) ?? definition.attackTelegraph.displayName,
       kind: definition.attackTelegraph.kind,
       remainingSeconds: Math.max(0, Number(fighter.stationAbility.remainingSeconds) || 0),
       originX: Number(fighter.x) || 0,
@@ -790,7 +797,7 @@ export function bossTelegraphSnapshot(fighter, { fallbackTargetX = 0 } = {}) {
       radius: Number(definition.attackTelegraph.radius) || 0,
       laneHalfHeight: Number(definition.attackTelegraph.laneHalfHeight) || 0,
       color: definition.attackTelegraph.color,
-      counterplay: definition.attackTelegraph.counterplay,
+      counterplay: v100TwinAttackName(fighter) ? '片側を先に倒し、残る一体の激昂に備える' : definition.attackTelegraph.counterplay,
     });
   }
   return null;
