@@ -25714,7 +25714,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             {!isSurvivalBattle && <button onClick={() => requestPauseAction("loadout")}>編成画面へ戻る</button>}
             <button className="danger" onClick={() => requestPauseAction("withdraw")}>{externalSessionActive ? "ステージ選択へ撤退" : "エリアマップへ撤退"}</button>
           </div>
-          <ManualAbilityTactics entries={gameRef.current.fighters
+          <ManualAbilityTactics campaignPortraits={externalSessionActive} onToggle={externalSessionActive ? (open) => { playUiOperationCue(open ? "selection" : "back", `manual-tactics:${open ? "open" : "close"}`); } : undefined} entries={gameRef.current.fighters
             .filter(fighter=>fighter.side==='human' && fighter.hp>0 && fighter.manualAbility)
             .map(owner=>manualAbilityTacticalView({owner,fighters:manualAbilityTargetCandidates(gameRef.current,owner),actionSelected:Boolean(selectedAction)}))
             .filter((entry): entry is NonNullable<typeof entry> => entry!==null)} />

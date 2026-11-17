@@ -1,0 +1,8 @@
+{
+  "app/AshfallGame.tsx": [
+    [
+      "<ManualAbilityTactics entries={",
+      "<ManualAbilityTactics campaignPortraits={externalSessionActive} onToggle={externalSessionActive ? (open) => { playUiOperationCue(open ? \"selection\" : \"back\", `manual-tactics:${open ? \"open\" : \"close\"}`); } : undefined} entries={"
+    ]
+  ]
+}
