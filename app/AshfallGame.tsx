@@ -612,7 +612,7 @@ import { drawV100MissionVehicles, drawV100MissionVehicleBody, v100MissionVehicle
 import { v100VehicleSprite, v100EscortDestinationState } from "./v100MissionVehicleSprites.js";
 import { drawV100MissionNode, V100_NODE_PROFILES } from "./v100MissionNodes.js";
 import { drawV100ClinicalControl } from "./v100ClinicalControl.js";
-import { drawV100CorporateControl, v100CorporateControlLabel, v100ObjectiveDamageLabel } from "./v100CorporateControl.js";
+import { drawV100CorporateControl, v100CorporateControlLabel, v100ObjectiveDamageLabel, v100CorporateControlCondition } from "./v100CorporateControl.js";
 import { drawV100AssaultObject, v100AssaultObjectProfile } from "./v100AssaultObjects.js";
 import { drawV100Explosion, drawV100FootDust, drawV100GroundFire, drawV100Muzzle, V100_CONTACT_WEAPONS, V100_CLAW_CONTACT_WEAPONS, queueV100Contact, queueV100ClawContact, queueV100TakuyaGroundContact, queueV100TataraGroundContact, getV100ClawContactSnapshot, getV100SkillContactSnapshot, queueV100GuardContact, getV100GuardContactSnapshot, drawV100ContactQueue, clearV100ContactQueue } from "./v100CombatVfx.js";
 import { drawV100BossAftermath, drawV100BossReleaseFields } from "./v100BossAftermath.js";
@@ -25278,7 +25278,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
 
   const healthPct = Math.max(0, hud.baseHp / hud.baseMaxHp * 100);
   const barricadePct = Math.max(0, hud.barricadeHp / hud.barricadeMaxHp * 100);
-  const barricadeCondition = barricadeState(hud.barricadeHp) === "BREACHED" ? "破壊" : barricadeState(hud.barricadeHp) === "BREACH IMMINENT" ? "大破" : barricadeState(hud.barricadeHp) === "BUCKLING" ? "損傷" : "健全";
+  const barricadeCondition = v100CorporateControlLabel(gameRef.current.definition) ? v100CorporateControlCondition(hud) : barricadeState(hud.barricadeHp) === "BREACHED" ? "破壊" : barricadeState(hud.barricadeHp) === "BREACH IMMINENT" ? "大破" : barricadeState(hud.barricadeHp) === "BUCKLING" ? "損傷" : "健全";
   const bossPct = hud.bossMax ? Math.max(0, hud.bossHp / hud.bossMax * 100) : 0;
   const bossPhase = hud.bossPhase ?? bossPhaseForHp(hud.bossHp, hud.bossMax, hud.bossKind);
   const isStationPlatformAssault = activeBattlefieldStageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_PLATFORM && hud.missionType === "assault";

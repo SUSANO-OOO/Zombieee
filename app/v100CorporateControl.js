@@ -14,6 +14,9 @@ export function v100CorporateControlState(game){
 export function v100CorporateControlLabel(definition){
   return definition.missionConfig?.v100StageNumber?V100_CORPORATE_CONTROLS[definition.stageId]??null:null;
 }
+export function v100CorporateControlCondition(game) {
+  return ["健全","損傷","大破","破壊"][v100CorporateControlState(game)];
+}
 // Damage announcements name the same target as the existing objective HUD.
 export function v100ObjectiveDamageLabel(game, damageState) {
   const target = game.researchCoreTargets ? "研究中枢の破壊目標" : v100CorporateControlLabel(game.definition) ?? "感染拠点";

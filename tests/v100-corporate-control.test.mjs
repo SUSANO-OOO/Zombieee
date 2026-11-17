@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {drawV100CorporateControl,v100ObjectiveDamageLabel,V100_CORPORATE_CONTROLS,V100_CORPORATE_CONTROL_ART,V100_LURE_CONTROL_ART} from "../app/v100CorporateControl.js";
+import {drawV100CorporateControl,v100ObjectiveDamageLabel,v100CorporateControlCondition,V100_CORPORATE_CONTROLS,V100_CORPORATE_CONTROL_ART,V100_LURE_CONTROL_ART} from "../app/v100CorporateControl.js";
 import {applyEnemyBaseDamage} from "../app/v100ResearchCore.js";
 import {requiredBattleAssetPlan} from "../app/battleAssetPlan.js";
 import {objectiveForBattle,battleOutcomeFor} from "../app/battleDefinitions.js";
@@ -50,4 +50,13 @@ test("projectile and melee damage announcements name all five corporate targets 
     assert.equal(v100ObjectiveDamageLabel({...game,researchCoreTargets:[{hp:700}]},"大破"),"研究中枢の破壊目標 // 大破");
   }
   assert.equal(v100ObjectiveDamageLabel({definition:{missionConfig:{}}},"大破"),"感染拠点 // 大破");
+});
+
+test("corporate condition text follows the authored70/35percent art states at any target capacity",()=>{
+  for(const max of [350,1000,1600]){
+    for(const [ratio,label]of [[1,"健全"],[.70001,"健全"],[.7,"損傷"],[.35001,"損傷"],[.35,"大破"],[0,"破壊"],[-.1,"破壊"]]){
+      const game=Object.freeze({barricadeHp:max*ratio,barricadeMaxHp:max});
+      assert.equal(v100CorporateControlCondition(game),label);
+    }
+  }
 });
