@@ -3,6 +3,7 @@ import { access, readFile } from "node:fs/promises";
 import test from "node:test";
 import vm from "node:vm";
 import { RELEASE_TITLE, RELEASE_VERSION } from "../app/releaseIdentity.js";
+import { restorePreBattleCardPanSource } from "./helpers/guard-spectacle-source.mjs";
 
 import {
   AIRSTRIKE_DEF,
@@ -1760,7 +1761,7 @@ test("exposes localhost-only QA routes and wires deterministic battle and lifecy
   assert.match(css, /\.pause-screen button,\.end-screen button \{ min-height:44px; \}/);
   assert.match(css, /\.unit-cards \{ gap:2px; scrollbar-width:none; \}\.unit-cards::-webkit-scrollbar \{ display:none; \}\.unit-card \{[^}]*flex-basis:78px; min-width:78px; height:100%; min-height:44px; \}/);
   assert.match(css, /\.bottom-hud \{[^}]*grid-template-columns:minmax\(0,14fr\) minmax\(0,50fr\) minmax\(0,36fr\)/);
-  assert.match(game, /<div className="unit-cards" aria-label="生存者ユニット">/);
+  assert.match(restorePreBattleCardPanSource("app/AshfallGame.tsx", game), /<div className="unit-cards" aria-label="生存者ユニット">/);
   assert.match(game, /<div className="support-zone">[\s\S]*<div className="battle-objective objective">/);
   assert.doesNotMatch(css, /\.placement-(?:hint|copy|cancel)\b/);
   assert.match(css, /\.crawler-alert \{ position:absolute; z-index:17;/);

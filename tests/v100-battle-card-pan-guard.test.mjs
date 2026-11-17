@@ -18,4 +18,6 @@ test('scope and callback cleanup preserve other screens and remove all gesture i
 });
 test('declared ref and leaf import alone restore the complete accepted application source',()=>{
  const file='app/AshfallGame.tsx',source=fs.readFileSync(file,'utf8').replaceAll('\r\n','\n'),base=execFileSync('git',['show','bdd4ffa8d6ff082f8d86a857d7c0833165a57574:'+file],{maxBuffer:4e6}).toString().replaceAll('\r\n','\n');assert.equal(restorePreBattleCardPanSource(file,source),base);
+ assert.throws(()=>restorePreBattleCardPanSource(file,source.replace('aria-label="生存者ユニット"','aria-label="別の欄"')),/battle card pan edit must occur exactly once/);
+ assert.throws(()=>restorePreBattleCardPanSource(file,source.replace('ref={bindV100BattleCardPanGuard}','ref={undefined}')),/battle card pan edit must occur exactly once/);
 });
