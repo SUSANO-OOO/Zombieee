@@ -17,7 +17,7 @@ export const V100_MANUAL_IMPACT_ART=Object.freeze({
     "height": 512,
     "columns": 3,
     "rows": 2,
-    "worldSize": 128,
+    "worldSize": 192,
     "anchors": [
       [
         0.4364410811558214,

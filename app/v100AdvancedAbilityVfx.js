@@ -84,7 +84,15 @@ export function drawV100ChihaFinalBursts(ctx,objects,world,viewport={}) {
   }
 }
 
-export function drawV100AdvancedAbilityEffects(ctx, objects, world, {includeGuardActivations=true}={}) {
+// Read the same impact queue before actors. This pass owns no clock, hit or sound.
+export function drawV100MusashiImpacts(ctx,objects,world) {
+  for(const effect of active(world)){
+    if(effect.type==='musashi-crosscut'&&!effect.pendingOrigin)
+      drawV100MusashiImpact(ctx,objects,effect,Math.max(0,world.time-effect.startedAt));
+  }
+}
+
+export function drawV100AdvancedAbilityEffects(ctx, objects, world, {includeGuardActivations=true,includeMusashiImpacts=true}={}) {
   if(includeGuardActivations)drawV100GuardActivations(ctx,objects,world);
   for (const effect of active(world)) {
     if (effect.pendingOrigin || effect.type==="mrs-grenade-impact" && effect.finalRound===true) continue;
@@ -92,7 +100,7 @@ export function drawV100AdvancedAbilityEffects(ctx, objects, world, {includeGuar
     if(effect.type==='musashi-crosscut'){
       // This actual damage-owned entry chooses once, including the physical
       // contact fallback. Never return to the former X marker on a late decode.
-      drawV100MusashiImpact(ctx,objects,effect,elapsed);continue;
+      if(includeMusashiImpacts)drawV100MusashiImpact(ctx,objects,effect,elapsed);continue;
     }
     if (effect.type === "mrs-grenade-flight" || effect.type === "zakimiya-bottle") {
       const source = image(objects, effect.type === "mrs-grenade-flight" ? "v100-grenade-projectile" : "v100-fire-whisky-projectile"); if (!source) continue;

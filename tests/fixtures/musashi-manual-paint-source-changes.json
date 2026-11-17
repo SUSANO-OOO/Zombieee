@@ -1,0 +1,32 @@
+{
+  "app/AshfallGame.tsx": [
+    [
+      "import { clearV100AdvancedAbilityEffects, drawV100AdvancedAbilityEffects, drawV100ChihaFinalBursts, V100_CHIHA_FINAL_BURST_DURATION, getV100AdvancedAbilityEffectsSnapshot, queueV100AdvancedAbilityEffect, resolveV100AdvancedAbilityOrigin, resolveV105CurrentAbilityOrigin } from \"./v100AdvancedAbilityVfx.js\";",
+      "import { clearV100AdvancedAbilityEffects, drawV100AdvancedAbilityEffects, drawV100MusashiImpacts, drawV100ChihaFinalBursts, V100_CHIHA_FINAL_BURST_DURATION, getV100AdvancedAbilityEffectsSnapshot, queueV100AdvancedAbilityEffect, resolveV100AdvancedAbilityOrigin, resolveV105CurrentAbilityOrigin } from \"./v100AdvancedAbilityVfx.js\";"
+    ],
+    [
+      "  if (g.definition.missionConfig.v100StageNumber) drawV100GuardActivations(ctx, stageObjects, g);",
+      "  if (g.definition.missionConfig.v100StageNumber) drawV100GuardActivations(ctx, stageObjects, g);\n  // The manual blade fragments stay behind fighters, telegraphs and health.\n  if (g.definition.missionConfig.v100StageNumber) drawV100MusashiImpacts(ctx, stageObjects, g);"
+    ],
+    [
+      "drawV100AdvancedAbilityEffects(ctx, stageObjects, g, {includeGuardActivations:false});",
+      "drawV100AdvancedAbilityEffects(ctx, stageObjects, g, {includeGuardActivations:false,includeMusashiImpacts:false});"
+    ]
+  ],
+  "app/v100AdvancedAbilityVfx.js": [
+    [
+      "export function drawV100AdvancedAbilityEffects(ctx, objects, world, {includeGuardActivations=true}={}) {",
+      "// Read the same impact queue before actors. This pass owns no clock, hit or sound.\nexport function drawV100MusashiImpacts(ctx,objects,world) {\n  for(const effect of active(world)){\n    if(effect.type==='musashi-crosscut'&&!effect.pendingOrigin)\n      drawV100MusashiImpact(ctx,objects,effect,Math.max(0,world.time-effect.startedAt));\n  }\n}\n\nexport function drawV100AdvancedAbilityEffects(ctx, objects, world, {includeGuardActivations=true,includeMusashiImpacts=true}={}) {"
+    ],
+    [
+      "      drawV100MusashiImpact(ctx,objects,effect,elapsed);continue;",
+      "      if(includeMusashiImpacts)drawV100MusashiImpact(ctx,objects,effect,elapsed);continue;"
+    ]
+  ],
+  "app/v100ManualImpactArt.js": [
+    [
+      "\"worldSize\": 128",
+      "\"worldSize\": 192"
+    ]
+  ]
+}
