@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 const changes=JSON.parse(fs.readFileSync('tests/fixtures/guard-spectacle-source-changes.json','utf8'));
 const corpseAtmosphereChanges=JSON.parse(fs.readFileSync('tests/fixtures/corpse-atmosphere-source-changes.json','utf8'));
+const battleCardPanChanges=JSON.parse(fs.readFileSync('tests/fixtures/battle-card-pan-source-changes.json','utf8'));
 const bossReleases=JSON.parse(fs.readFileSync('tests/fixtures/boss-release-paint-source-changes.json','utf8'));
 const twinWording=JSON.parse(fs.readFileSync('tests/fixtures/twin-ability-wording-source-changes.json','utf8'));
 const musashiPaint=JSON.parse(fs.readFileSync('tests/fixtures/musashi-manual-paint-source-changes.json','utf8'));
@@ -37,9 +38,18 @@ export function restorePreTwinWordingSource(file,source){
 }
 
 export function restorePreCorpseAtmosphereSource(file,source){
- let restored=source.replaceAll('\r\n','\n');
+ let restored=restorePreBattleCardPanSource(file,source);
  for(const [before,after]of [...(corpseAtmosphereChanges[file]??[])].reverse()){
   assert.equal(restored.split(after).length,2,file+' corpse paint edit must occur exactly once');
+  restored=restored.replace(after,before);
+ }
+ return restored;
+}
+
+export function restorePreBattleCardPanSource(file,source){
+ let restored=source.replaceAll('\r\n','\n');
+ for(const [before,after]of [...(battleCardPanChanges[file]??[])].reverse()){
+  assert.equal(restored.split(after).length,2,file+' battle card pan edit must occur exactly once');
   restored=restored.replace(after,before);
  }
  return restored;
