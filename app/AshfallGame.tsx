@@ -2194,8 +2194,8 @@ function addShot(
   );
 }
 
-function currentEnemyAbilityName(kind: EnemyKind) {
-  return v105EnemyAbilityName(kind,{boss:bossDefinitionForEnemyKind(kind),infected:v090InfectedDefinition(kind),station:STATION_ENEMY_TUNING});
+function currentEnemyAbilityName(kind: EnemyKind, owner?: Fighter) {
+  return v105EnemyAbilityName(kind,{boss:bossDefinitionForEnemyKind(kind),infected:v090InfectedDefinition(kind),station:STATION_ENEMY_TUNING,owner});
 }
 function clearTransientRenderObjects(g: Game) {
   v100ImageSampler.clear();
@@ -22313,14 +22313,14 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               });
               if (started.ok) {
                 f.stationAbility = started.runtime as StationAbilityRuntime;
-                startV105AbilityName(g,f,{name:currentEnemyAbilityName(f.kind),source:'enemy'});
+                startV105AbilityName(g,f,{name:currentEnemyAbilityName(f.kind,f),source:'enemy'});
                 abilityFrame = true;
                 g.banner = anomalyKind === "ooguchi"
                   ? "オオグチ // 捕食突進予告"
                   : anomalyKind === "gairen"
                     ? "ガイレン // 外殻掃討予告"
                     : anomalyKind === "futago"
-                      ? "フタゴ // 融合交差撃予告"
+                      ? `フタゴ // ${currentEnemyAbilityName(f.kind,f)}予告`
                       : anomalyKind === "mugarian-president-mutated"
                         ? "変異ムガリアン社長 // 四腕制圧予告"
                         : "TAKUYA-Ω // Ω大剣薙ぎ払い予告";
