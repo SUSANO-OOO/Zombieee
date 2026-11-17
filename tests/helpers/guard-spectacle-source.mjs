@@ -26,7 +26,7 @@ export function restorePreMusashiManualSource(file,source){
 }
 // Reverse only the declared boss-release and guard paint edits; callers compare the whole source.
 export function restorePreGuardSpectacleSource(file,source){
- let restored=restorePreMusashiManualSource(file,restoreGunFinishSource(file,source));
+ let restored=restorePreMusashiManualSource(file,source);
  for(const [before,after]of [...(bossReleases[file]??[])].reverse()){
   assert.equal(restored.split(after).length,2,file+' boss release paint edit must occur exactly once');
   restored=restored.replace(after,before);
@@ -57,7 +57,7 @@ export function restorePreCorpseAtmosphereSource(file,source){
 }
 
 export function restorePreBattleCardPanSource(file,source){
- let restored=source.replaceAll('\r\n','\n');
+ let restored=restoreGunFinishSource(file,source);
  for(const [before,after]of [...(tacticsUiChanges[file]??[])].reverse()){
   assert.equal(restored.split(after).length,2,file+' manual tactics UI edit must occur exactly once');
   restored=restored.replace(after,before);
