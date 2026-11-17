@@ -1,0 +1,20 @@
+{
+  "app/AshfallGame.tsx": [
+    [
+      "import {drawV100GuardActivations} from \"./v100GuardActivationVfx.js\";",
+      "import {drawV100GuardActivations} from \"./v100GuardActivationVfx.js\";\nimport {clearV100MayoFeralVfx,drawV100MayoFeralVfx} from './v100MayoFeralVfx.js';"
+    ],
+    [
+      "  clearV100AdvancedAbilityEffects(g);",
+      "  clearV100AdvancedAbilityEffects(g);\n  clearV100MayoFeralVfx(g);"
+    ],
+    [
+      "  // Guard preparation paint stays behind actors, hazards and their health readouts.",
+      "  // Feral Mayo kicks ground material behind actors, warnings and health.\n  if (g.definition.missionConfig.v100StageNumber) drawV100MayoFeralVfx(ctx, stageObjects, g);\n  // Guard preparation paint stays behind actors, hazards and their health readouts."
+    ],
+    [
+      "  addParticles(g, fighter.x, fighter.y - 10, reason === \"injury\" ? \"#e6c97a\" : \"#b05268\", 9);",
+      "  if (!g.definition.missionConfig.v100StageNumber) addParticles(g, fighter.x, fighter.y - 10, reason === \"injury\" ? \"#e6c97a\" : \"#b05268\", 9);"
+    ]
+  ]
+}
