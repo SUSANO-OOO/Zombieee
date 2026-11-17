@@ -24698,7 +24698,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               g.banner = g.definition.operationCategory === "outbreak"
                 ? `${defeatedBossName}撃破 — 残存感染体を掃討`
                 : v100CorporateControlLabel(g.definition)
-                ? `${defeatedBossName}撃破 — ${v100CorporateControlLabel(g.definition)}の防護を解除`
+                ? `${defeatedBossName}撃破・防護解除`
                 : g.definition.missionConfig.v100StageNumber === 30
                 ? `${defeatedBossName}撃破 — 残敵を掃討`
                 : g.definition.missionConfig.v100StageNumber === 3

@@ -70,6 +70,8 @@ test('the release pass precedes all actors and health while only four declared r
  const restore=value=>{value=restorePreMusashiManualSource(file,value);for(const [before,after]of [...rules].reverse()){assert.equal(value.split(after).length,2,'boss paint edit must occur exactly once');value=value.replace(after,before);}return value;};
  const baseline=execFileSync('git',['show','740071c0bb1137648f108495fa42d03a3a5e82f4:'+file],{maxBuffer:4*1024*1024}).toString('utf8').replaceAll('\r\n','\n');
  assert.equal(restore(source),baseline);
+ const clearRule=JSON.parse(fs.readFileSync('tests/fixtures/phone-boss-clear-banner-source-changes.json','utf8'))[file][0][1];
+ assert.throws(()=>restore(source.replace(clearRule,clearRule.replace('v100CorporateControlLabel(g.definition)','false'))),/phone boss clear banner edit must occur exactly once/);
  const paint='drawV100BossReleaseFields(ctx,stageObjects,g,';assert.equal(source.split(paint).length,2);assert.ok(source.indexOf(paint)<source.indexOf('  const renderables = ['));
  assert.throws(()=>restore(source+'\n'+rules.at(-1)[1]),/boss paint edit must occur exactly once/);
  assert.throws(()=>assert.equal(restore(source.replace('drawAreaEffect(ctx, effect, g.time, stageObjects','drawAreaEffect(ctx, effect, g.time + 0.1, stageObjects')),baseline));
