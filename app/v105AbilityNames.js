@@ -1,10 +1,11 @@
+import {v100TwinAttackName} from './bossFoundation.js';
 // Ephemeral battle presentation, created only at a successful gameplay start.
 // Nothing here is serialized into saves/checkpoints or resurrected on reload.
 const battles=new WeakMap();
 export function clearV105AbilityNames(world){battles.delete(world);}
 const liveOwner=(world,row)=>world.fighters?.find(f=>f.id===row.ownerId&&f.kind===row.ownerKind);
-export function v105EnemyAbilityName(kind,{boss,infected,station}={}){
-  return boss?.attackTelegraph?.displayName
+export function v105EnemyAbilityName(kind,{boss,infected,station,owner}={}){
+  return v100TwinAttackName(owner) ?? boss?.attackTelegraph?.displayName
     ??infected?.abilityDisplayName
     ??({grappler:station?.karamite,ooze:station?.leakMud,sprinter:station?.souki}[kind]?.displayName);
 }
