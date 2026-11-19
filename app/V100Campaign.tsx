@@ -1553,7 +1553,7 @@ function DataManagementView({ save, notice, onBack, onBackup, onNewGameBackup, o
   const sections = [{ id: "save", label: "進行の保存" }, { id: "offline", label: "オフライン用データ" }, { id: "legacy", label: "旧版の引継ぎ" }] as const;
   return <div className="v100-modal-backdrop" data-v100-surface="data" role="presentation"><section className="v100-modal v100-data-modal" data-data-view={view} role="dialog" aria-modal="true" aria-labelledby="v100-data-title">
     <div className="v100-panel-heading"><div><span className="v100-kicker">セーブと端末</span><h2 id="v100-data-title">データ管理</h2></div><button type="button" onClick={onBack}>閉じる</button></div>
-    <nav className="v100-data-tabs" aria-label="データ管理の内容">{sections.map(section => <button type="button" key={section.id} aria-pressed={view === section.id} onClick={() => setView(section.id)}>{section.label}</button>)}</nav>
+    <nav className="v100-data-tabs" aria-label="データ管理の内容">{sections.map(section => <button type="button" key={section.id} aria-pressed={view === section.id} onClick={() => setView(section.id)} aria-label={section.label}>{section.id === "legacy" ? <><span className="v100-legacy-tab-word">旧版の</span><wbr /><span className="v100-legacy-tab-word">引継ぎ</span></> : section.label}</button>)}</nav>
     {notice && <p className="v100-notice v100-data-feedback" role="status">{notice}</p>}
     <div className="v100-data-scroll" tabIndex={0} aria-label={sections.find(section => section.id === view)?.label}>
       <section className="v100-data-panel" hidden={view !== "save"} aria-label="進行の保存">

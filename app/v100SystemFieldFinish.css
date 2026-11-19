@@ -228,3 +228,5 @@
   #v100-campaign .v100-data-modal[data-data-view] .v100-legacy-record { gap: 10px; padding: 12px; }
   #v100-campaign .v100-data-modal[data-data-view] .v100-legacy-record-picker { grid-template-columns: minmax(0,1fr); gap: 8px; }
 }
+
+#v100-campaign .v100-data-modal[data-data-view] .v100-legacy-tab-word { white-space: nowrap; }
