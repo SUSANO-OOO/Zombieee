@@ -2,9 +2,12 @@ import {createV177HumanCorpsePaint,sampleV177HumanCorpsePaint,drawV177HumanCorps
 
 // These bosses have current living rigs but no matching legacy death cell.
 // TAKUYA, the president and Omega retain their existing articulated corpses.
-export const V177_CONTINUOUS_BOSS_CORPSE_KINDS=Object.freeze([
-  'gate-eater','mother','ooguchi','kurome','gairen','futago-separated-a','futago-separated-b',
-]);
+// Upright bodies fall onto their side. The low crawling bodies overturn onto
+// their back; a quarter turn left those broad creatures standing on their heads.
+const restQuarterTurns=Object.freeze({
+  'gate-eater':1,mother:2,ooguchi:2,kurome:1,gairen:2,'futago-separated-a':2,'futago-separated-b':2,
+});
+export const V177_CONTINUOUS_BOSS_CORPSE_KINDS=Object.freeze(Object.keys(restQuarterTurns));
 const kinds=new Set(V177_CONTINUOUS_BOSS_CORPSE_KINDS),worlds=new WeakMap();
 function cacheFor(world){let cache=worlds.get(world);if(!cache){cache={live:new Map(),dead:new Map()};worlds.set(world,cache);}return cache;}
 
@@ -31,7 +34,7 @@ export function v177BossCorpsePresentation(world,corpse,kind,options={}){
     const fallback=last?null:options.fallbackPaint?.();
     const source=last??(fallback?{...fallback,kind,paintedAt:null,corpseSource:'source-rest'}:null);
     if(!source)return null;
-    cache.dead.set(corpse.id,createV177HumanCorpsePaint({...source,fallDirection:options.fallDirection??-1}));
+    cache.dead.set(corpse.id,createV177HumanCorpsePaint({...source,fallDirection:(options.fallDirection??-1)*restQuarterTurns[kind]}));
   }
   const original=cache.dead.get(corpse.id);if(!original||original.kind!==kind)return null;
   const ashX=Number.isFinite(options.ashScaleX)?Math.max(.01,Math.min(1,options.ashScaleX)):1;

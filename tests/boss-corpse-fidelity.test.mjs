@@ -92,3 +92,11 @@ test('all seven actual current articulated boss plans can be frozen and repainte
   assert.notEqual(s.paint.plan,f.paint.plan);assert.equal(s.paint.kind,kind);assert.equal(s.paint.image.name,kind);assert.equal(f.probe.reads,1);
  }
 });
+
+test('the broad crawling bosses overturn flat while upright bosses retain their existing side fall',()=>{
+ for(const kind of kinds)for(const direction of [-1,1]){
+  const f=fixture(kind);rememberV177BossCorpsePaint(f.world,f.actor,kind,f.paint);
+  const r=sample(f,1,{fallDirection:direction}),quarters=['gate-eater','kurome'].includes(kind)?1:2;
+  assert.equal(r.root.angle,direction*quarters*Math.PI/2);assert.ok(Math.abs(r.groundError)<1e-9);assert.equal(r.paint.image,f.paint.image);
+ }
+});
