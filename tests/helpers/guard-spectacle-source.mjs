@@ -1,5 +1,14 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+const gunEdits=JSON.parse(fs.readFileSync('tests/fixtures/gun-finish-source-changes.json','utf8'));
+export function restoreGunFinishSource(file,source){
+ let restored=source.replaceAll('\r\n','\n');
+ for(const [before,after]of [...(gunEdits[file]??[])].reverse()){
+  assert.equal(restored.split(after).length,2,file+' gun source edit must occur exactly once');
+  restored=restored.replace(after,before);
+ }
+ return restored;
+}
 const changes=JSON.parse(fs.readFileSync('tests/fixtures/guard-spectacle-source-changes.json','utf8'));
 const clearBannerChanges=JSON.parse(fs.readFileSync('tests/fixtures/phone-boss-clear-banner-source-changes.json','utf8'));
 const tacticsUiChanges=JSON.parse(fs.readFileSync('tests/fixtures/manual-tactics-ui-source-changes.json','utf8'));
@@ -10,8 +19,17 @@ const twinWording=JSON.parse(fs.readFileSync('tests/fixtures/twin-ability-wordin
 const musashiPaint=JSON.parse(fs.readFileSync('tests/fixtures/musashi-manual-paint-source-changes.json','utf8'));
 const mayoFeralChanges=JSON.parse(fs.readFileSync('tests/fixtures/mayo-feral-ground-source-changes.json','utf8'));
 const lateBossScaleChanges=JSON.parse(fs.readFileSync('tests/fixtures/phone-late-boss-scale-source-changes.json','utf8'));
+const bossCorpseChanges=JSON.parse(fs.readFileSync('tests/fixtures/boss-corpse-fidelity-source-changes.json','utf8'));
+export function restorePreBossCorpseFidelitySource(file,source){
+ let restored=restoreGunFinishSource(file,source);
+ for(const [before,after]of [...(bossCorpseChanges[file]??[])].reverse()){
+  assert.equal(restored.split(after).length,2,file+' Unlisted source change: original boss corpse edit must occur exactly once');
+  restored=restored.replace(after,before);
+ }
+ return restored;
+}
 export function restorePreLateBossScaleSource(file,source){
- let restored=source.replaceAll('\r\n','\n');
+ let restored=restorePreBossCorpseFidelitySource(file,source);
  for(const [before,after]of [...(lateBossScaleChanges[file]??[])].reverse()){
   assert.equal(restored.split(after).length,2,file+' Unlisted source change: phone boss scale edit must occur exactly once');
   restored=restored.replace(after,before);

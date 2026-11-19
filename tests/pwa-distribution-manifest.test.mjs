@@ -274,18 +274,21 @@ test("transport optimizations preserve every runtime asset contract", async () =
   }
 
   const bundled = manifest.assets.filter((asset) => asset.bundlePath);
-  assert.equal(bundled.length, 411, "409 retained files plus two recorded Mayo reactions");
+  assert.equal(bundled.length, 419, "411 retained files plus eight authored gun takes");
   const recordedMayo = bundled.filter((asset) => asset.path.startsWith("/audio/quality-20261116/mayo/"));
   assert.deepEqual(recordedMayo.map(asset => asset.path).sort(), [
     "/audio/quality-20261116/mayo/recorded-bark.wav",
     "/audio/quality-20261116/mayo/recorded-whine.wav",
   ]);
+  const authoredGuns=bundled.filter(asset=>asset.path.startsWith("/audio/quality-20261117/firearms/"));
+  assert.equal(authoredGuns.length,8);assert.equal(authoredGuns.reduce((sum,asset)=>sum+asset.bytes,0),69732);
+  assert.ok(authoredGuns.every(asset=>asset.bundleOffset>=36151187));
   assert.ok(bundled.every((asset) => asset.bundlePath === "/pwa-bundles/audio-v1.bin"));
   assert.ok(bundled.every((asset) => asset.bundleBytes === asset.bytes));
   const bundle = await readFile(new URL("../public/pwa-bundles/audio-v1.bin", import.meta.url));
   const retainedBytes = 36000475;
   assert.equal(createHash('sha256').update(bundle.subarray(0, retainedBytes)).digest('hex'), 'ec1b32c476dae7b23c13b827aa29f43081395f4d29966b67375c35a3e540891f', 'the original 409 payloads are byte-identical');
-  assert.equal(bundle.length, retainedBytes + recordedMayo.reduce((sum, asset) => sum + asset.bytes, 0));
+  assert.equal(bundle.length, retainedBytes + recordedMayo.reduce((sum, asset) => sum + asset.bytes, 0) + authoredGuns.reduce((sum,asset)=>sum+asset.bytes,0));
   assert.ok(recordedMayo.every(asset => asset.bundleOffset >= retainedBytes));
   for (const asset of bundled) {
     const payload = bundle.subarray(asset.bundleOffset, asset.bundleOffset + asset.bundleBytes);
