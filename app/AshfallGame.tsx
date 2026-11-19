@@ -30,6 +30,7 @@ import { combatApproachSpeed } from "./combatApproach.js";
 import { v177LivingStunState, v177LivingStunSample, v177RangerLivingStunSample } from "./v177LivingStun.js";
 import { rememberV177CorpseJointPose, pruneV177CorpseJointPoses, v177LiveJointGroundLift, v177CorpseJointPresentation, drawV177CorpseJointPresentation } from "./v177CorpseJointPresentation.js";
 import { rememberV177HumanCorpsePaint, pruneV177HumanCorpsePaints, v177HumanCorpsePresentation, drawV177HumanCorpsePaint, V177_CONTINUOUS_HUMAN_CORPSE_KINDS } from "./v177HumanCorpsePresentation.js";
+import {rememberV177BossCorpsePaint,pruneV177BossCorpsePaints,v177BossCorpsePresentation,drawV177BossCorpsePaint,V177_CONTINUOUS_BOSS_CORPSE_KINDS} from "./v177BossCorpsePresentation.js";
 import { pruneV177JointActorHistory, v177JointActorKey, recordV177JointBodyCorrection, recordV177JointBodyShift } from "./v177JointActorHistory.js";
 import { rememberV177HitStrength, v177HitReactionStrength, v177HitReactionState } from "./v177HitReaction.js";
 import { rememberV177TurnedCorpsePaint, rememberV177TurnedBirth, v177TurnedGetupDirection,
@@ -4994,6 +4995,17 @@ function drawSpriteFighter(
     });
     if(fighterRenderAuditEnabled){const audit=fighterRenderAudit.get(f);if(audit){audit.bodyPaintedAt=options.world.time;audit.bodyPaintRoot=bodyPaintRoot;}}
   }
+  if(options.v100AuthoredPresentation&&options.world&&recordAudit&&!forceOpaque
+    &&f.side==='zombie'&&V177_CONTINUOUS_BOSS_CORPSE_KINDS.includes(renderKind)){
+    const transform=ctx.getTransform();
+    rememberV177BossCorpsePaint(options.world,f,renderKind,{
+      image:jointPose&&drewArticulatedWalk?jointImage:sprite,plan:jointPose&&drewArticulatedWalk?jointPose:null,
+      frame,width:size.w,height:size.h,pixelScale:Math.max(Math.hypot(transform.a,transform.b)/Math.abs(pose.scaleX),
+        Math.hypot(transform.c,transform.d)/Math.abs(pose.scaleY)),
+      root:{x:f.x+pose.offsetX*depthScale*facingSign,y:f.y-bob+pose.offsetY*depthScale,
+        angle:pose.rotationRadians*facingSign,scaleX:pose.scaleX,scaleY:pose.scaleY,flipX:frame.flipX},
+    });
+  }
   if(options.v100AuthoredPresentation&&options.world)drawV102GoreWound(ctx,options.world,f,frame,size,options.v100StageObjects);
   ctx.restore();
   return {
@@ -8961,7 +8973,7 @@ function drawWorld(
   drawEmergencySupport(ctx, g, stageObjects);
   drawPlacementIndicator(ctx, g.placementIndicator);
 
-  if(g.definition.missionConfig.v100StageNumber){drawV102GoreGround(ctx,g);pruneV177CorpseJointPoses(g);pruneV177HumanCorpsePaints(g);pruneV177JointActorHistory(g);pruneV177TurnedCorpsePaints(g);}
+  if(g.definition.missionConfig.v100StageNumber){drawV102GoreGround(ctx,g);pruneV177CorpseJointPoses(g);pruneV177HumanCorpsePaints(g);pruneV177BossCorpsePaints(g);pruneV177JointActorHistory(g);pruneV177TurnedCorpsePaints(g);}
   for (const corpse of g.corpses) {
     const allyCue = corpse.side === "human" ? allyCorpseVisualCue(corpse, g.time) : null;
     const fallDirection = corpse.variant % 2 === 0 ? -1 : 1;
@@ -8986,6 +8998,21 @@ function drawWorld(
     const humanCorpse=g.definition.missionConfig.v100StageNumber
       ?v177HumanCorpsePresentation(g,corpse,corpseRenderKind,{progress:humanFallProgress,fallDirection,
         tremorX:allyCue?.tremorX??0,tremorY:allyCue?.tremorY??0,scaleY:allyCue?.bodyScaleY??1,jitter:allyCue?.postureJitter??0}):null;
+    const bossCorpse=g.definition.missionConfig.v100StageNumber?v177BossCorpsePresentation(g,corpse,corpseRenderKind,{
+      progress:jointFallProgress,fallDirection,ashScaleX:1-jointAshProgress*.18,ashScaleY:1-jointAshProgress*.48,
+      fallbackPaint:()=>{
+        const atlas=V177_JOINT_ATLASES[corpseRenderKind],image=atlas?sprites[atlas.key]:null;
+        if(!image?.complete||!image.naturalWidth)return null;
+        const frame=v100HumanWalkFrame(spriteFrameFor(corpseRenderKind,'walk-a','right'),'left');
+        const fit=v102BattleDisplaySize(corpseRenderKind,frame,spriteDisplaySize(corpseRenderKind));
+        const scale=compactSpriteScale(corpseRenderKind)*activeBattlefieldDepthScale(corpse.y)*v102BattleBodyScale(corpseRenderKind);
+        const transform=ctx.getTransform();
+        return {image,frame,plan:v177JointPose(corpseRenderKind,{requestedState:'idle'},
+          {locomotionPhase:0,locomotionSettle:1},{grounded:true}),width:fit.w*scale,height:fit.h*scale,
+          pixelScale:Math.hypot(transform.a,transform.b),
+          root:{x:corpse.x,y:corpse.y,angle:0,scaleX:1,scaleY:1,flipX:frame.flipX}};
+      },
+    }):null;
     if(drewJointCorpse&&jointCorpse&&jointCorpseImage){
       if(fighterRenderAuditEnabled){
         const state=jointCorpse.state,reference=state.atlas.referenceFrame;
@@ -9036,6 +9063,31 @@ function drawWorld(
         angle:humanCorpse.root.angle,scaleY:humanCorpse.root.scaleY,flipX:paint.root.flipX,
         sourceBound:true,supportY:humanCorpse.support});
       ctx.filter='none';
+    } else if(bossCorpse){
+      ctx.globalAlpha=corpse.state==='ashing'?Math.max(.08,.82*(1-jointAshProgress)):corpse.state==='dying'?.96:.82;
+      if(corpse.state==='ashing')ctx.filter=`grayscale(${Math.round(jointAshProgress*100)}%) sepia(${Math.round(jointAshProgress*70)}%) brightness(${1-jointAshProgress*.35})`;
+      const drawn=drawV177BossCorpsePaint(ctx,bossCorpse),paint=bossCorpse.paint;
+      if(drawn&&fighterRenderAuditEnabled)recordCorpseRenderAudit(corpse.id,{
+        drawCount:(corpseRenderAuditHistory.get(corpse.id)?.at(-1)?.drawCount??0)+1,renderSequence:++fighterRenderSequence,
+        assetReady:true,x:corpse.x,y:corpse.y,renderKind:corpseRenderKind,
+        spritePath:paint.plan?V177_JOINT_ATLASES[corpseRenderKind].path:paint.frame.path,
+        spriteState:'death',requestedState:v177FallState(jointFallProgress),resolvedState:'original-boss-death',lifecycleOwner:'boss-death',
+        poseOpacity:ctx.globalAlpha,effectiveOpacity:ctx.globalAlpha,clipRect:null,direction:paint.root.flipX?'left':'right',
+        sourceRow:paint.frame.sourceRect.y,sourceRect:{...paint.frame.sourceRect},frameFlipX:paint.root.flipX,
+        renderWidth:paint.width,renderHeight:paint.height,fallProgress:jointFallProgress,rotationRadians:bossCorpse.root.angle,
+        corpsePaintContinuous:paint.corpseSource==='last-painted',corpsePaintedAt:paint.paintedAt??undefined,
+        corpsePaintMode:paint.plan?'rigid':'sprite',
+        corpsePaintSourceRoot:{...paint.root},corpsePaintMatrix:[...bossCorpse.matrix],corpsePaintOutline:paint.outline.map(p=>[...p]),
+        corpseGroundOffsetY:bossCorpse.root.y-(corpse.y+5),corpseGroundSupportY:bossCorpse.support,groundAnchor:1,actualXDelta:0,
+      });
+      ctx.filter='none';
+    } else if(g.definition.missionConfig.v100StageNumber&&V177_CONTINUOUS_BOSS_CORPSE_KINDS.includes(corpseRenderKind)){
+      // The required current model failed to paint. Never substitute the known
+      // unrelated legacy monster or a geometric body and call it a successful corpse.
+      if(fighterRenderAuditEnabled)recordCorpseRenderAudit(corpse.id,{drawCount:0,renderSequence:++fighterRenderSequence,assetReady:false,x:corpse.x,y:corpse.y,
+        renderKind:corpseRenderKind,spriteState:'death',requestedState:'death',resolvedState:'boss-source-unavailable',
+        poseOpacity:0,effectiveOpacity:0,clipRect:null,sourceRow:0,sourceRect:{x:0,y:0,w:0,h:0},frameFlipX:false,
+        renderWidth:0,renderHeight:0,groundAnchor:1,actualXDelta:0});
     } else if (sprite?.complete && sprite.naturalWidth) {
       const frame = spriteFrameFor(corpseRenderKind, "death", corpse.side === "human" ? "right" : "left");
       const authoredSize = g.definition.missionConfig.v100StageNumber

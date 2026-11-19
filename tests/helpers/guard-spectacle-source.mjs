@@ -19,8 +19,17 @@ const twinWording=JSON.parse(fs.readFileSync('tests/fixtures/twin-ability-wordin
 const musashiPaint=JSON.parse(fs.readFileSync('tests/fixtures/musashi-manual-paint-source-changes.json','utf8'));
 const mayoFeralChanges=JSON.parse(fs.readFileSync('tests/fixtures/mayo-feral-ground-source-changes.json','utf8'));
 const lateBossScaleChanges=JSON.parse(fs.readFileSync('tests/fixtures/phone-late-boss-scale-source-changes.json','utf8'));
-export function restorePreLateBossScaleSource(file,source){
+const bossCorpseChanges=JSON.parse(fs.readFileSync('tests/fixtures/boss-corpse-fidelity-source-changes.json','utf8'));
+export function restorePreBossCorpseFidelitySource(file,source){
  let restored=restoreGunFinishSource(file,source);
+ for(const [before,after]of [...(bossCorpseChanges[file]??[])].reverse()){
+  assert.equal(restored.split(after).length,2,file+' Unlisted source change: original boss corpse edit must occur exactly once');
+  restored=restored.replace(after,before);
+ }
+ return restored;
+}
+export function restorePreLateBossScaleSource(file,source){
+ let restored=restorePreBossCorpseFidelitySource(file,source);
  for(const [before,after]of [...(lateBossScaleChanges[file]??[])].reverse()){
   assert.equal(restored.split(after).length,2,file+' Unlisted source change: phone boss scale edit must occur exactly once');
   restored=restored.replace(after,before);
