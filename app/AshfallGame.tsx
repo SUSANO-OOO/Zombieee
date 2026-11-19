@@ -4093,7 +4093,7 @@ function compactSpriteScale(kind: string) {
   // reduction in the shortest landscape. The ground and combat reach stay fixed.
   if (kind === "takuya-omega") {
     if (!compactBattleViewport()) return .8;
-    return activeStageViewportId === STAGE_VIEWPORT_IDS.MOBILE_844_340 ? .8 : .9;
+    return activeStageViewportId === STAGE_VIEWPORT_IDS.MOBILE_844_340 ? .68 : .9;
   }
   if (kind === "mugarian-president-mutated") {
     return mugarianPresidentCompactScale({
@@ -15963,6 +15963,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       const offsetY = (rect.height - H * scale) / 2 + phoneLateBossCameraOffsetY({
         stageNumber: screen === "battle" ? gameRef.current.definition.missionConfig.v100StageNumber : 0,
         compact: compactBattleViewport(), scale,
+        shortViewport: activeStageViewportId === STAGE_VIEWPORT_IDS.MOBILE_844_340,
       });
       canvasTransformRef.current = { scale, offsetX, offsetY };
       canvas.dataset.worldScale = scale.toFixed(6);
