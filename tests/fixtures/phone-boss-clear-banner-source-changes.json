@@ -1,0 +1,36 @@
+{
+  "app/AshfallGame.tsx": [
+    [
+      ": v100CorporateControlLabel(g.definition)\n                ? `${defeatedBossName}撃破 — ${v100CorporateControlLabel(g.definition)}の防護を解除`\n                : g.definition.missionConfig.v100StageNumber === 30",
+      ": v100CorporateControlLabel(g.definition)\n                ? `${defeatedBossName}撃破・防護解除`\n                : g.definition.missionConfig.v100StageNumber === 30"
+    ],
+    [
+      "import { drawV100CorporateControl, v100CorporateControlLabel } from \"./v100CorporateControl.js\";",
+      "import { drawV100CorporateControl, v100CorporateControlLabel, v100ObjectiveDamageLabel } from \"./v100CorporateControl.js\";"
+    ],
+    [
+      "g.banner = g.researchCoreTargets ? \"研究中枢の破壊目標 // 損傷\" : \"感染拠点 // 損傷\";\n              g.bannerTime = 1.5;",
+      "g.banner = v100ObjectiveDamageLabel(g, \"損傷\");\n              g.bannerTime = 1.5;"
+    ],
+    [
+      "g.barricadeBucklingAnnounced = true; g.banner = g.researchCoreTargets ? \"研究中枢の破壊目標 // 損傷\" : \"感染拠点 // 損傷\"; g.bannerTime = 1.5; playCue(\"base-damaged\");",
+      "g.barricadeBucklingAnnounced = true; g.banner = v100ObjectiveDamageLabel(g, \"損傷\"); g.bannerTime = 1.5; playCue(\"base-damaged\");"
+    ],
+    [
+      "g.banner = g.researchCoreTargets ? \"研究中枢の破壊目標 // 大破\" : \"感染拠点 // 大破\";\n              g.bannerTime = 1.7;",
+      "g.banner = v100ObjectiveDamageLabel(g, \"大破\");\n              g.bannerTime = 1.7;"
+    ],
+    [
+      "g.barricadeCriticalAnnounced = true; g.banner = g.researchCoreTargets ? \"研究中枢の破壊目標 // 大破\" : \"感染拠点 // 大破\"; g.bannerTime = 1.7; g.flashOverlay = Math.max(g.flashOverlay, .12); playCue(\"base-critical\");",
+      "g.barricadeCriticalAnnounced = true; g.banner = v100ObjectiveDamageLabel(g, \"大破\"); g.bannerTime = 1.7; g.flashOverlay = Math.max(g.flashOverlay, .12); playCue(\"base-critical\");"
+    ],
+    [
+      "import { drawV100CorporateControl, v100CorporateControlLabel, v100ObjectiveDamageLabel } from \"./v100CorporateControl.js\";",
+      "import { drawV100CorporateControl, v100CorporateControlLabel, v100ObjectiveDamageLabel, v100CorporateControlCondition } from \"./v100CorporateControl.js\";"
+    ],
+    [
+      "  const barricadeCondition = barricadeState(hud.barricadeHp) === \"BREACHED\" ? \"破壊\" : barricadeState(hud.barricadeHp) === \"BREACH IMMINENT\" ? \"大破\" : barricadeState(hud.barricadeHp) === \"BUCKLING\" ? \"損傷\" : \"健全\";",
+      "  const barricadeCondition = v100CorporateControlLabel(gameRef.current.definition) ? v100CorporateControlCondition(hud) : barricadeState(hud.barricadeHp) === \"BREACHED\" ? \"破壊\" : barricadeState(hud.barricadeHp) === \"BREACH IMMINENT\" ? \"大破\" : barricadeState(hud.barricadeHp) === \"BUCKLING\" ? \"損傷\" : \"健全\";"
+    ]
+  ]
+}
