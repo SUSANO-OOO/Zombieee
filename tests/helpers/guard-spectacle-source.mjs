@@ -9,8 +9,17 @@ const bossReleases=JSON.parse(fs.readFileSync('tests/fixtures/boss-release-paint
 const twinWording=JSON.parse(fs.readFileSync('tests/fixtures/twin-ability-wording-source-changes.json','utf8'));
 const musashiPaint=JSON.parse(fs.readFileSync('tests/fixtures/musashi-manual-paint-source-changes.json','utf8'));
 const mayoFeralChanges=JSON.parse(fs.readFileSync('tests/fixtures/mayo-feral-ground-source-changes.json','utf8'));
-export function restorePreMayoFeralSource(file,source){
+const lateBossScaleChanges=JSON.parse(fs.readFileSync('tests/fixtures/phone-late-boss-scale-source-changes.json','utf8'));
+export function restorePreLateBossScaleSource(file,source){
  let restored=source.replaceAll('\r\n','\n');
+ for(const [before,after]of [...(lateBossScaleChanges[file]??[])].reverse()){
+  assert.equal(restored.split(after).length,2,file+' Unlisted source change: phone boss scale edit must occur exactly once');
+  restored=restored.replace(after,before);
+ }
+ return restored;
+}
+export function restorePreMayoFeralSource(file,source){
+ let restored=restorePreLateBossScaleSource(file,source);
  for(const [before,after]of [...(mayoFeralChanges[file]??[])].reverse()){
   assert.equal(restored.split(after).length,2,file+' Unlisted source change: Mayo ground edit must occur exactly once');
   restored=restored.replace(after,before);

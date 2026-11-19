@@ -1,0 +1,8 @@
+{
+  "app/AshfallGame.tsx": [
+    [
+      "function compactSpriteScale(kind: string) {\n  // The cover crop removes sky on short landscapes. Keep Omega's tallest\n  // authored pose clear of command HUDs at the same combat ground anchor.\n  if (kind === \"takuya-omega\") {\n    if (!compactBattleViewport()) return .8;\n    return activeStageViewportId === STAGE_VIEWPORT_IDS.MOBILE_844_340 ? .52 : .6;\n  }\n  if (kind === \"mugarian-president-mutated\") {\n    return mugarianPresidentCompactScale({\n      compact: compactBattleViewport(),\n      shortViewport: activeStageViewportId === STAGE_VIEWPORT_IDS.MOBILE_844_340,\n    });\n  }\n  if (!compactBattleViewport()) return 1;\n  return kind === \"mother\" ? 1.06 : COMPACT_BATTLE_SPRITE_SCALE;\n}\n\n",
+      "function compactSpriteScale(kind: string) {\n  // The approved late-boss envelopes already account for their complete bodies.\n  // Keep their hierarchy on phones; only Omega's raised weapon needs a small\n  // reduction in the shortest landscape. The ground and combat reach stay fixed.\n  if (kind === \"takuya-omega\") {\n    if (!compactBattleViewport()) return .8;\n    return activeStageViewportId === STAGE_VIEWPORT_IDS.MOBILE_844_340 ? .9 : 1;\n  }\n  if (kind === \"mugarian-president-mutated\") {\n    return mugarianPresidentCompactScale({\n      compact: compactBattleViewport(),\n      shortViewport: activeStageViewportId === STAGE_VIEWPORT_IDS.MOBILE_844_340,\n    });\n  }\n  if (!compactBattleViewport()) return 1;\n  return kind === \"mother\" ? 1.06 : COMPACT_BATTLE_SPRITE_SCALE;\n}\n\n"
+    ]
+  ]
+}

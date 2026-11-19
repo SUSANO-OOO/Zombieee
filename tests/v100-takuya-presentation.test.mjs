@@ -42,8 +42,8 @@ test("slam pose stays readable over flash, expires, and stays V1-only", async ()
   assert.doesNotMatch(source, /manualAbility.*takuyaSlamPresentation/u);
 });
 
-test("president keeps standard scale and follows Omega short-viewport scale", () => {
+test("president retains its authored giant body at both phone heights", () => {
   assert.equal(mugarianPresidentCompactScale({ compact: false, shortViewport: false }), 1);
-  assert.equal(mugarianPresidentCompactScale({ compact: true, shortViewport: false }), .6);
-  assert.equal(mugarianPresidentCompactScale({ compact: true, shortViewport: true }), .52);
+  assert.equal(mugarianPresidentCompactScale({ compact: true, shortViewport: false }), 1);
+  assert.equal(mugarianPresidentCompactScale({ compact: true, shortViewport: true }), 1);
 });

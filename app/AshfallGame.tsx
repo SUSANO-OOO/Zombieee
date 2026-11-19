@@ -4088,11 +4088,12 @@ function v102GoreBodyHeight(fighter: Fighter) {
 }
 
 function compactSpriteScale(kind: string) {
-  // The cover crop removes sky on short landscapes. Keep Omega's tallest
-  // authored pose clear of command HUDs at the same combat ground anchor.
+  // The approved late-boss envelopes already account for their complete bodies.
+  // Keep their hierarchy on phones; only Omega's raised weapon needs a small
+  // reduction in the shortest landscape. The ground and combat reach stay fixed.
   if (kind === "takuya-omega") {
     if (!compactBattleViewport()) return .8;
-    return activeStageViewportId === STAGE_VIEWPORT_IDS.MOBILE_844_340 ? .52 : .6;
+    return activeStageViewportId === STAGE_VIEWPORT_IDS.MOBILE_844_340 ? .9 : 1;
   }
   if (kind === "mugarian-president-mutated") {
     return mugarianPresidentCompactScale({
