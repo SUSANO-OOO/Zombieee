@@ -208,3 +208,23 @@
 #v100-campaign .v100-player-menu .v100-menu-quality select { grid-column:2; grid-row:1; }
 #v100-campaign .v100-player-menu .v100-menu-quality small { grid-column:3; grid-row:1; }
 #v100-campaign .v100-player-menu .v100-menu-scroll { scrollbar-width:thin; scrollbar-color:#a39a71 #0b1b14; }
+
+/* Legacy history is a local record dossier; its real file input remains focusable. */
+#v100-campaign .v100-data-modal[data-data-view] .v100-legacy-record { display: grid; gap: 12px; padding: 14px 16px; border: 1px solid #ad9c73; border-left: 5px solid #9b7843; background: linear-gradient(112deg,#f4e9ccbd,#ded0ad75); box-shadow: inset 0 0 0 1px #fff6; }
+#v100-campaign .v100-data-modal[data-data-view] .v100-legacy-record-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 8px; border-bottom: 1px solid #ab9e7b; }
+#v100-campaign .v100-data-modal[data-data-view] .v100-legacy-record-heading .v100-kicker { display: block; margin-bottom: 3px; color: #596b48; font-size: 11px; }
+#v100-campaign .v100-data-modal[data-data-view] .v100-legacy-record-heading h3 { margin: 0; color: #293f2e; font-size: 19px; line-height: 1.2; }
+#v100-campaign .v100-data-modal[data-data-view] .v100-legacy-record-stamp { flex: none; padding: 5px 9px; border: 2px solid #77633f; color: #665335; font-size: 13px; font-weight: 800; transform: rotate(-4deg); }
+#v100-campaign .v100-data-modal[data-data-view] .v100-legacy-record > p { margin: 0; }
+#v100-campaign .v100-data-modal[data-data-view] .v100-legacy-record-picker { display: grid; grid-template-columns: minmax(170px,.75fr) minmax(0,1fr); align-items: stretch; gap: 12px; min-width: 0; }
+#v100-campaign .v100-data-modal[data-data-view] .v100-legacy-history-file { position: relative; display: grid; place-items: center; min-width: 0; min-height: 54px; margin: 0; padding: 10px 14px; border: 1px solid #8c9a70; border-bottom: 3px solid #9c7948; color: #f8eac5; background: linear-gradient(145deg,#294b37,#153729); font-size: 16px; font-weight: 800; line-height: 1.35; text-align: center; cursor: pointer; }
+#v100-campaign .v100-data-modal[data-data-view] .v100-legacy-history-file:focus-within { outline: 3px solid #b76838; outline-offset: 2px; }
+#v100-campaign .v100-data-modal[data-data-view] .v100-legacy-history-file:hover { background: #36553d; }
+#v100-campaign .v100-data-modal[data-data-view] .v100-legacy-history-file input[type="file"] { position: absolute; inset: 0; display: block; width: 100%; height: 100%; margin: 0; padding: 0; opacity: 0; cursor: pointer; }
+#v100-campaign .v100-data-modal[data-data-view] .v100-legacy-record-filename { display: grid; align-content: center; gap: 3px; min-width: 0; padding: 7px 11px; border-bottom: 1px dashed #958563; background: #fff8e850; color: #2c412e; }
+#v100-campaign .v100-data-modal[data-data-view] .v100-legacy-record-filename > span { color: #5a694a; font-size: 12px; line-height: 1.2; }
+#v100-campaign .v100-data-modal[data-data-view] .v100-legacy-record-filename output { display: block; min-width: 0; max-width: 100%; font-size: 14px; font-weight: 700; line-height: 1.4; overflow-wrap: anywhere; }
+@media (max-width: 760px) {
+  #v100-campaign .v100-data-modal[data-data-view] .v100-legacy-record { gap: 10px; padding: 12px; }
+  #v100-campaign .v100-data-modal[data-data-view] .v100-legacy-record-picker { grid-template-columns: minmax(0,1fr); gap: 8px; }
+}
