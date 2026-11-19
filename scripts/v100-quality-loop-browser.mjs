@@ -120,6 +120,11 @@ async function inspectRewardCrew(page) {
     await within(caption);
     assert.equal(await caption.evaluate(node=>node.scrollWidth<=node.clientWidth),true,'Full character name fits the portrait label');
   }
+  const captionOverlaps = await page.locator('.v100-reward-unlocks .v100-reward-crew').evaluateAll(items => items.map(item => {
+    const portrait=item.querySelector('[data-portrait-owner]')?.getBoundingClientRect(), caption=item.querySelector('figcaption')?.getBoundingClientRect();
+    return {owner:item.querySelector('[data-portrait-owner]')?.getAttribute('data-portrait-owner'),portraitBottom:portrait?.bottom,captionTop:caption?.top};
+  }));
+  for(const item of captionOverlaps) assert.ok(Number.isFinite(item.portraitBottom)&&Number.isFinite(item.captionTop)&&item.portraitBottom<=item.captionTop+1,'Name label overlaps the portrait: '+item.owner);
   return frames;
 }
 async function checkRewardCrewOracleControls(page) {
@@ -134,8 +139,12 @@ async function checkRewardCrewOracleControls(page) {
     await caption.evaluate(node=>node.style.setProperty('width','10px','important'));
     await assert.rejects(()=>inspectRewardCrew(page),/Full character name/u);
   } finally { await restore(caption,originalCaption); }
+  try {
+    await caption.evaluate(node=>{node.style.setProperty('position','absolute','important');node.style.setProperty('inset','auto 0 0','important');});
+    await assert.rejects(()=>inspectRewardCrew(page),/Name label overlaps the portrait/u);
+  } finally { await restore(caption,originalCaption); }
   await inspectRewardCrew(page);
-  return {thinStripRejected:true,truncatedNameRejected:true,originalStylesRestored:true};
+  return {thinStripRejected:true,truncatedNameRejected:true,portraitOverlapRejected:true,originalStylesRestored:true};
 }
 
 async function diagramWithin(locator) {
