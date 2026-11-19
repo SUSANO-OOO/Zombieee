@@ -13,7 +13,7 @@ export function assertContinuousBossCorpse(form,dead,lastLive,corpse){
   assert.ok(source&&Object.values(source).every(v=>typeof v==='boolean'||Number.isFinite(v)));
   assert.ok(outline?.length>=3&&outline.every(p=>p.length===2&&p.every(Number.isFinite)));
   const direction=corpse.variant%2===0?-1:1,target=v177BossRestAngle({root:source,outline},form,direction);
-  assert.ok(dead.some(r=>r.fallProgress>0&&r.fallProgress<1&&Math.abs(r.rotationRadians-source.angle)>.01),'A real intermediate fall must be painted');
+  assert.ok(dead.some(r=>r.fallProgress>0&&r.fallProgress<1),'A real intermediate fall must be painted');
   for(const r of dead){
     assert.equal(r.corpsePaintContinuous,true,'A source-rest or legacy corpse cannot replace the actual living body');
     assert.equal(r.resolvedState,'original-boss-death');assert.equal(r.spritePath,path);assert.equal(r.corpsePaintedAt,at);assert.equal(r.corpsePaintMode,'rigid');

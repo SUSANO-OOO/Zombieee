@@ -10,7 +10,7 @@ import {V177_CORPSE_JOINT_DATA} from '../app/v177CorpseJointData.js';
 import {jointCorpseRenderFixture} from './helpers/v177-corpse-joint-render.mjs';
 import {V177_CONTINUOUS_HUMAN_CORPSE_KINDS,sampleV177HumanCorpsePaint} from '../app/v177HumanCorpsePresentation.js';
 import {V177_CONTINUOUS_BOSS_CORPSE_KINDS,v177BossRestAngle} from '../app/v177BossCorpsePresentation.js';
-const fixture=(form,{style=null}={})=>{
+const fixture=(form,{style=null,earlyProgress=.2}={})=>{
   const identity=v177ProofFormIdentity(form,{knownForms:spriteKinds,playableKinds:PLAYABLE_COMBAT_KINDS});
   const protectedBody=identity.kind==='mayo-chan',direction=identity.side==='human'?'right':'left';
   const humanOwner=V177_CONTINUOUS_HUMAN_CORPSE_KINDS.includes(form),bossOwner=V177_CONTINUOUS_BOSS_CORPSE_KINDS.includes(form),continuousOwner=humanOwner||bossOwner,root={x:500,y:285,angle:0,scaleX:1,scaleY:1,flipX:false};
@@ -19,7 +19,7 @@ const fixture=(form,{style=null}={})=>{
   const paint=(state,sequence)=>{
     if(state==='death'&&jointFixture)return jointFixture.render(sequence>=20?1:.2,sequence).receipt;
     if(state==='death'&&continuousOwner){
-      const progress=sequence>=20?1:.2,live=paint('idle',1);
+      const progress=sequence>=20?1:earlyProgress,live=paint('idle',1);
       const target=bossOwner?v177BossRestAngle({root,outline},form,-1):-Math.PI/2;
       const sample=sampleV177HumanCorpsePaint({root,outline,fallDirection:target/(Math.PI/2)},{progress,x:500,y:285});
       return {...live,renderSequence:sequence,requestedState:'death',resolvedState:bossOwner?'original-boss-death':'continuous-human-death',
@@ -171,4 +171,14 @@ test('a boss-shaped image alone cannot hide a frozen fall or an unrelated curren
   e=>{for(const r of e.after.body.corpseRenderHistory)r.rotationRadians=0;},
   e=>{e.late.body.corpseRenderHistory.at(-1).corpsePaintMatrix[1]+=.1;},
  ]){const e=fixture(form);mutate(e);assert.throws(()=>assertV177ReactionRender(e),form);}
+});
+
+test('the actual slow onset is accepted before one degree, while a frozen onset is rejected',()=>{
+ for(const form of V177_CONTINUOUS_BOSS_CORPSE_KINDS){
+  const e=fixture(form,{earlyProgress:.01});
+  assert.ok(e.after.body.corpseRenderHistory.every(r=>Math.abs(r.rotationRadians)>.00001&&Math.abs(r.rotationRadians)<.01));
+  assert.equal(assertV177ReactionRender(e).form,form);
+  for(const r of e.after.body.corpseRenderHistory)r.rotationRadians=r.corpsePaintSourceRoot.angle;
+  assert.throws(()=>assertV177ReactionRender(e),form+' must still reject a frozen onset');
+ }
 });
