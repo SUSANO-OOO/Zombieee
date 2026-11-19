@@ -95,8 +95,20 @@ test('all seven actual current articulated boss plans can be frozen and repainte
 
 test('the broad crawling bosses overturn flat while upright bosses retain their existing side fall',()=>{
  for(const kind of kinds)for(const direction of [-1,1]){
-  const f=fixture(kind);rememberV177BossCorpsePaint(f.world,f.actor,kind,f.paint);
-  const r=sample(f,1,{fallDirection:direction}),quarters=['gate-eater','kurome'].includes(kind)?1:2;
+  const f=fixture(kind),quarters=['gate-eater','kurome'].includes(kind)?1:2;
+  if(quarters===2){f.paint.width=180;f.paint.height=80;f.paint.frame.sourceRect={x:11,y:7,w:180,h:80};}
+  rememberV177BossCorpsePaint(f.world,f.actor,kind,f.paint);
+  const r=sample(f,1,{fallDirection:direction});
   assert.equal(r.root.angle,direction*quarters*Math.PI/2);assert.ok(Math.abs(r.groundError)<1e-9);assert.equal(r.paint.image,f.paint.image);
  }
+});
+
+test('a tilted heavy shell settles along an opaque edge instead of standing on a corner',async()=>{
+ const {v177BossRestAngle}=await import('../app/v177BossCorpsePresentation.js');
+ const tilt=.4,outline=[[-90,-40],[90,-40],[90,40],[-90,40]].map(([x,y])=>[Math.cos(tilt)*x-Math.sin(tilt)*y,Math.sin(tilt)*x+Math.cos(tilt)*y]);
+ const p={outline,root:{scaleX:1,scaleY:1,flipX:false}},angle=v177BossRestAngle(p,'gairen',1);
+ assert.ok(Math.abs(angle-(Math.PI-tilt))<1e-9);
+ const ys=outline.map(([x,y])=>Math.sin(angle)*x+Math.cos(angle)*y),bottom=Math.max(...ys);
+ assert.ok(Math.abs(bottom-Math.min(...ys)-80)<1e-9);assert.equal(ys.filter(y=>Math.abs(y-bottom)<1e-9).length,2,'An actual silhouette edge bears the body');
+ const old=outline.map(([x,y])=>Math.sin(Math.PI)*x+Math.cos(Math.PI)*y);assert.ok(Math.max(...old)-Math.min(...old)>130,'The previous fixed half-turn leaves this shell too tall');
 });
