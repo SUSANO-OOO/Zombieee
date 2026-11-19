@@ -8,6 +8,8 @@ import {v102CorpseFallingPose,v102HasFallingDeathFrame} from '../app/v102CorpseP
 import {V177_CORPSE_JOINT_DATA} from '../app/v177CorpseJointData.js';
 import {V177_CONTINUOUS_HUMAN_CORPSE_KINDS} from '../app/v177HumanCorpsePresentation.js';
 import {assertContinuousHumanCorpse} from './v177-human-corpse-contract.mjs';
+import {V177_CONTINUOUS_BOSS_CORPSE_KINDS} from '../app/v177BossCorpsePresentation.js';
+import {assertContinuousBossCorpse} from './v177-boss-corpse-contract.mjs';
 
 const transform=(m,[x,y])=>[m[0]*x+m[2]*y+m[4],m[1]*x+m[3]*y+m[5]];
 export function assertJointCorpsePaint(form,receipt,corpse,wound,settled=false){
@@ -126,11 +128,12 @@ export function assertV177ReactionRender({form,proof,before,after,late}){
     const lastLive=body.renderHistory.at(-1)??paint;
     const jointOwner=Boolean(V177_CORPSE_JOINT_DATA[form]&&lastLive.jointAtlasPath===V177_JOINT_ATLASES[form].path);
     const humanOwner=V177_CONTINUOUS_HUMAN_CORPSE_KINDS.includes(form);
+    const bossOwner=V177_CONTINUOUS_BOSS_CORPSE_KINDS.includes(form);
     for(const r of body.corpseRenderHistory){
       assert.equal(r.renderKind,form,'actual corpse drawing must retain the original body');
       assert.equal(Boolean(r.corpseJointPose),jointOwner,'the last actually painted rig must own the corpse handoff');
       if(jointOwner)assertJointCorpsePaint(form,r,body.corpse,wounds[0]);
-      else if(!humanOwner){assert.equal(r.spritePath,frame.path);assert.deepEqual(r.sourceRect,frame.sourceRect);}
+      else if(!humanOwner&&!bossOwner){assert.equal(r.spritePath,frame.path);assert.deepEqual(r.sourceRect,frame.sourceRect);}
       assert.ok(r.assetReady);
       assert.ok(r.renderSequence>paint.renderSequence);
       assert.ok(Math.abs(renderedSourcePixelScale(r)-pixelScale)<1e-8,'defeat keeps the same source-pixel scale');
@@ -140,7 +143,7 @@ export function assertV177ReactionRender({form,proof,before,after,late}){
     if(identity.side==='human'&&frame.derivedFrom==='hit')assert.ok(body.corpseRenderHistory.some(r=>r.fallProgress>0&&r.fallProgress<1),'a fallback ally body must actually paint the intermediate fall');
     // Continuous rig corpses retain the last real paint, not the retired
     // raster boss-fall key. Their matrix/outline handoff is checked above.
-    if(!jointOwner&&!humanOwner&&v102HasFallingDeathFrame(form,frame)){
+    if(!jointOwner&&!humanOwner&&!bossOwner&&v102HasFallingDeathFrame(form,frame)){
       assert.ok(body.corpseRenderHistory.some(r=>r.corpsePoseProgress>0&&r.corpsePoseProgress<1),'a falling boss key must paint its intermediate collapse');
       for(const r of body.corpseRenderHistory)assert.equal(r.corpsePoseSourceBound,true,'the falling pose must use its exact original source outline');
     }
@@ -152,12 +155,12 @@ export function assertV177ReactionRender({form,proof,before,after,late}){
     for(const r of settled){
       assert.equal(r.renderKind,form);assert.equal(Boolean(r.corpseJointPose),jointOwner);
       if(jointOwner)assertJointCorpsePaint(form,r,late.body.corpse,wounds[0],true);
-      else if(!humanOwner){assert.equal(r.spritePath,frame.path);assert.deepEqual(r.sourceRect,frame.sourceRect);}
+      else if(!humanOwner&&!bossOwner){assert.equal(r.spritePath,frame.path);assert.deepEqual(r.sourceRect,frame.sourceRect);}
       assert.ok(r.assetReady);
       assert.equal(r.fallProgress,1);assert.ok(Number.isFinite(r.rotationRadians));
       assert.ok(r.renderSequence>body.corpseRenderHistory.at(-1).renderSequence,'settled body must be painted again after the early outcome');
       assert.ok(Math.abs(renderedSourcePixelScale(r)-pixelScale)<1e-8);
-      if(!jointOwner&&!humanOwner&&v102HasFallingDeathFrame(form,frame)){
+      if(!jointOwner&&!humanOwner&&!bossOwner&&v102HasFallingDeathFrame(form,frame)){
         const direction=late.body.corpse.variant%2===0?-1:1;
         const expected=v102CorpseFallingPose(form,frame,r.renderWidth,r.renderHeight,direction,1);
         assert.equal(r.corpsePoseSourceBound,true);assert.equal(r.corpsePoseSourceSha256,expected.sourceSha256);
@@ -168,6 +171,7 @@ export function assertV177ReactionRender({form,proof,before,after,late}){
       }
     }
     if(humanOwner)assertContinuousHumanCorpse(form,[...body.corpseRenderHistory,...settled],lastLive,late.body.corpse);
+    if(bossOwner)assertContinuousBossCorpse(form,[...body.corpseRenderHistory,...settled],lastLive,late.body.corpse);
   }
   return {form,outcome:proof.outcome,nativeSeconds:(after.at-before.at)/1000,
     simulationSeconds:after.simulationTime-before.simulationTime,lateNativeSeconds:(late.at-after.at)/1000,

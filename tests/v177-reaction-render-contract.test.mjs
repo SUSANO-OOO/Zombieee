@@ -9,18 +9,20 @@ import {v102CorpseFallingPose} from '../app/v102CorpsePose.js';
 import {V177_CORPSE_JOINT_DATA} from '../app/v177CorpseJointData.js';
 import {jointCorpseRenderFixture} from './helpers/v177-corpse-joint-render.mjs';
 import {V177_CONTINUOUS_HUMAN_CORPSE_KINDS,sampleV177HumanCorpsePaint} from '../app/v177HumanCorpsePresentation.js';
+import {V177_CONTINUOUS_BOSS_CORPSE_KINDS,v177BossRestAngle} from '../app/v177BossCorpsePresentation.js';
 const fixture=(form,{style=null}={})=>{
   const identity=v177ProofFormIdentity(form,{knownForms:spriteKinds,playableKinds:PLAYABLE_COMBAT_KINDS});
   const protectedBody=identity.kind==='mayo-chan',direction=identity.side==='human'?'right':'left';
-  const humanOwner=V177_CONTINUOUS_HUMAN_CORPSE_KINDS.includes(form),root={x:500,y:285,angle:0,scaleX:1,scaleY:1,flipX:false};
+  const humanOwner=V177_CONTINUOUS_HUMAN_CORPSE_KINDS.includes(form),bossOwner=V177_CONTINUOUS_BOSS_CORPSE_KINDS.includes(form),continuousOwner=humanOwner||bossOwner,root={x:500,y:285,angle:0,scaleX:1,scaleY:1,flipX:false};
   const outline=[[-10,-80],[10,-80],[10,0],[-10,0]];
   const jointFixture=V177_CORPSE_JOINT_DATA[form]?jointCorpseRenderFixture(form,{kind:identity.kind,style}):null;
   const paint=(state,sequence)=>{
     if(state==='death'&&jointFixture)return jointFixture.render(sequence>=20?1:.2,sequence).receipt;
-    if(state==='death'&&humanOwner){
+    if(state==='death'&&continuousOwner){
       const progress=sequence>=20?1:.2,live=paint('idle',1);
-      const sample=sampleV177HumanCorpsePaint({root,outline,fallDirection:-1},{progress,x:500,y:285});
-      return {...live,renderSequence:sequence,requestedState:'death',resolvedState:'continuous-human-death',
+      const target=bossOwner?v177BossRestAngle({root,outline},form,-1):-Math.PI/2;
+      const sample=sampleV177HumanCorpsePaint({root,outline,fallDirection:target/(Math.PI/2)},{progress,x:500,y:285});
+      return {...live,renderSequence:sequence,requestedState:'death',resolvedState:bossOwner?'original-boss-death':'continuous-human-death',
         fallProgress:progress,rotationRadians:sample.root.angle,corpsePaintContinuous:true,corpsePaintedAt:4,
         corpsePaintMode:form==='ranger'?'weighted':'rigid',corpsePaintSourceRoot:{...root},
         corpsePaintMatrix:sample.matrix,corpsePaintOutline:outline.map(p=>[...p]),
@@ -30,8 +32,8 @@ const fixture=(form,{style=null}={})=>{
     const frame=spriteFrameFor(form,state==='retreat'?'walk-a':state,direction);
     const fallProgress=state==='death'?(sequence>=20?1:.2):undefined;
     const pose=state==='death'?v102CorpseFallingPose(form,frame,frame.sourceRect.w*.2,frame.sourceRect.h*.2,-1,fallProgress):null;
-    return {renderKind:form,spritePath:humanOwner?V177_JOINT_ATLASES[form].path:frame.path,assetReady:true,renderSequence:sequence,requestedState:state,
-      ...(humanOwner?{jointDrawSucceeded:true,bodyPaintedAt:4,bodyPaintRoot:{...root},frameFlipX:false}:{}),
+    return {renderKind:form,spritePath:continuousOwner?V177_JOINT_ATLASES[form].path:frame.path,assetReady:true,renderSequence:sequence,requestedState:state,
+      ...(continuousOwner?{jointDrawSucceeded:true,jointPaintedAt:4,bodyPaintedAt:4,bodyPaintRoot:{...root},frameFlipX:false}:{}),
       sourceRect:{...frame.sourceRect},sourceRow:frame.sourceRect.y,renderWidth:frame.sourceRect.w*.2,renderHeight:frame.sourceRect.h*.2,
       jointAtlasPath:V177_JOINT_ATLASES[form].path,jointLowerFrame:sequence,poseScaleX:1,poseScaleY:1,
       x:500,y:285,fallProgress,rotationRadians:pose?.rotationRadians??(state==='death'&&frame.derivedFrom==='hit'?.2:0),
@@ -147,4 +149,26 @@ test('wrong joint sources, duplicate or absent parts, detached intact joints and
   ]){
     const evidence=fixture('takuya',{style:'cut'});mutate(evidence);assert.throws(()=>assertV177ReactionRender(evidence));
   }
+});
+
+test('each original boss corpse rejects the retired legacy monster, stale source, changed facing and a false settled matrix',()=>{
+ for(const form of V177_CONTINUOUS_BOSS_CORPSE_KINDS)for(const mutate of [
+  e=>{e.after.body.corpseRenderHistory[0].spritePath=spriteFrameFor(form,'death','left').path;},
+  e=>{e.after.body.corpseRenderHistory[0].corpsePaintContinuous=false;},
+  e=>{e.after.body.corpseRenderHistory[0].corpsePaintedAt--;},
+  e=>{e.after.body.corpseRenderHistory[0].frameFlipX=true;},
+  e=>{e.after.body.corpseRenderHistory[0].renderWidth*=1.2;},
+  e=>{e.after.body.corpseRenderHistory[0].corpsePaintSourceRoot.x++;},
+  e=>{e.late.body.corpseRenderHistory.at(-1).corpsePaintOutline[0][0]++;},
+  e=>{e.late.body.corpseRenderHistory.at(-1).corpsePaintMatrix[5]--;},
+ ]){const e=fixture(form);mutate(e);assert.throws(()=>assertV177ReactionRender(e),form);}
+});
+
+test('a boss-shaped image alone cannot hide a frozen fall or an unrelated current atlas owner',()=>{
+ for(const form of V177_CONTINUOUS_BOSS_CORPSE_KINDS)for(const mutate of [
+  e=>{e.after.body.renderHistory.at(-1).jointAtlasPath=V177_JOINT_ATLASES.walker.path;},
+  e=>{e.after.body.renderHistory.at(-1).jointPaintedAt--;},
+  e=>{for(const r of e.after.body.corpseRenderHistory)r.rotationRadians=0;},
+  e=>{e.late.body.corpseRenderHistory.at(-1).corpsePaintMatrix[1]+=.1;},
+ ]){const e=fixture(form);mutate(e);assert.throws(()=>assertV177ReactionRender(e),form);}
 });
