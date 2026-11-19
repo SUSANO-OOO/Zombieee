@@ -278,7 +278,7 @@ import {
 import { v100BossCounterplayHint, v100BossCounterplayTapObstacles, V100_BOSS_COUNTERPLAY_FALLBACK } from "./v100BossCounterplay.js";
 import { layoutV100AllyHealthBars } from './v100BattleStatusLayout.js';
 import { TAKUYA_SLAM_PRESENTATION, TAKUYA_STABLE_POSE, takuyaSlamPresentationPose } from "./v100TakuyaPresentation.js";
-import { mugarianPresidentCompactScale } from "./v100BossPresentation.js";
+import { mugarianPresidentCompactScale, phoneLateBossCameraOffsetY } from "./v100BossPresentation.js";
 import {
   BOSS_ANOMALY_TUNING,
   advanceBossAnomalyAbility,
@@ -4093,7 +4093,7 @@ function compactSpriteScale(kind: string) {
   // reduction in the shortest landscape. The ground and combat reach stay fixed.
   if (kind === "takuya-omega") {
     if (!compactBattleViewport()) return .8;
-    return activeStageViewportId === STAGE_VIEWPORT_IDS.MOBILE_844_340 ? .9 : 1;
+    return activeStageViewportId === STAGE_VIEWPORT_IDS.MOBILE_844_340 ? .8 : .9;
   }
   if (kind === "mugarian-president-mutated") {
     return mugarianPresidentCompactScale({
@@ -15960,7 +15960,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       canvas.dataset.renderHz = String(graphicsProfile.renderHz);
       const scale = Math.max(rect.width / W, rect.height / H);
       const offsetX = (rect.width - W * scale) / 2;
-      const offsetY = (rect.height - H * scale) / 2;
+      const offsetY = (rect.height - H * scale) / 2 + phoneLateBossCameraOffsetY({
+        stageNumber: screen === "battle" ? gameRef.current.definition.missionConfig.v100StageNumber : 0,
+        compact: compactBattleViewport(), scale,
+      });
       canvasTransformRef.current = { scale, offsetX, offsetY };
       canvas.dataset.worldScale = scale.toFixed(6);
       canvas.dataset.worldOffsetX = offsetX.toFixed(2);

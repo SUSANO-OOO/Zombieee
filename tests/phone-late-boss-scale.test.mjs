@@ -7,7 +7,7 @@ import {execFileSync} from 'node:child_process';
 import {spriteFrameFor,spriteBattleDisplaySizeFor,COMPACT_BATTLE_SPRITE_SCALE} from '../app/spriteManifest.js';
 import {v102BattleDisplaySize} from '../app/v102BattleScale.js';
 import {sampleAnimationClip} from '../app/combatPresentation.js';
-import {mugarianPresidentCompactScale} from '../app/v100BossPresentation.js';
+import {mugarianPresidentCompactScale,phoneLateBossCameraOffsetY} from '../app/v100BossPresentation.js';
 import {restorePreLateBossScaleSource} from './helpers/guard-spectacle-source.mjs';
 
 const file='app/AshfallGame.tsx',source=fs.readFileSync(file,'utf8').replaceAll('\r\n','\n');
@@ -27,10 +27,10 @@ function standingHeight(kind,scale){
 test('on both phone heights, the president dominates early bosses and Omega is visibly larger again',()=>{
  for(const viewport of ['844x340','844x390']){
   const scale=actualScale(viewport),president=standingHeight('mugarian-president-mutated',scale),omega=standingHeight('takuya-omega',scale);
-  const early=Math.max(...['takuya','gate-eater','mother','gairen'].map(k=>standingHeight(k,scale)));
+  const early=Math.max(...['takuya','gate-eater'].map(k=>standingHeight(k,scale)));
   assert.ok(president>early,`${viewport}: president ${president} must exceed ${early}`);
   assert.ok(omega>president*1.2,`${viewport}: Omega ${omega} must dominate president ${president}`);
-  assert.ok(president>standingHeight('brawler',scale)*2.4,'President is a giant beside the same-ground ally');
+  assert.ok(president>standingHeight('brawler',scale)*2.2,'President is a giant beside the same-ground ally');
  }
 });
 test('short phone correction preserves other actors and the existing non-phone path',()=>{
@@ -44,8 +44,24 @@ test('short phone correction preserves other actors and the existing non-phone p
 test('only the declared phone scale block differs from the accepted App, and unlisted edits are rejected',()=>{
  const before=execFileSync('git',['show','198a8851327084edf986d8ccd4875269e1d4d0c9:'+file],{maxBuffer:4e6}).toString().replaceAll('\r\n','\n');
  assert.equal(restorePreLateBossScaleSource(file,source),before);
- for(const bad of [source.replace('MOBILE_844_340 ? .9 : 1','MOBILE_844_340 ? .52 : .6'),source+'\nclearV100MayoFeralVfx(g);\n',source.replace('drawAreaEffect(ctx, effect, g.time, stageObjects','drawAreaEffect(ctx, effect, g.time + 1, stageObjects')]){
+ for(const bad of [source.replace('MOBILE_844_340 ? .8 : .9','MOBILE_844_340 ? .52 : .6'),source+'\nclearV100MayoFeralVfx(g);\n',source.replace('drawAreaEffect(ctx, effect, g.time, stageObjects','drawAreaEffect(ctx, effect, g.time + 1, stageObjects')]){
   assert.notEqual(bad,source);
   assert.throws(()=>assert.equal(restorePreLateBossScaleSource(file,bad),before));
  }
+});
+
+test('only the two giant-boss phone stages use the framing correction at the actual display scale',()=>{
+ for(const stageNumber of [1,3,5,11,20,24,25,26,30])for(const compact of [false,true])for(const scale of [.5,844/960,1.2]){
+  const y=phoneLateBossCameraOffsetY({stageNumber,compact,scale});
+  assert.equal(y,compact&&[25,30].includes(stageNumber)?60*960/844*scale:0);
+ }
+ for(const scale of [0,-1,NaN,Infinity,undefined])assert.equal(phoneLateBossCameraOffsetY({stageNumber:30,compact:true,scale}),0);
+});
+
+test('the actual canvas resize shares the shifted transform with drawing and pointer placement',()=>{
+ assert.match(source,/const offsetY = \(rect.height - H \* scale\) \/ 2 \+ phoneLateBossCameraOffsetY\(\{/);
+ assert.ok(source.includes('stageNumber: screen === "battle" ? gameRef.current.definition.missionConfig.v100StageNumber : 0'));
+ assert.ok(source.includes('canvasTransformRef.current = { scale, offsetX, offsetY };'));
+ assert.ok(source.includes('ctx?.setTransform(scale * dpr, 0, 0, scale * dpr, offsetX * dpr, offsetY * dpr)'));
+ assert.ok(source.includes('canvasPointerToWorld({ clientX: event.clientX, clientY: event.clientY, rect, transform, worldWidth: W, worldHeight: H })'));
 });

@@ -45,5 +45,5 @@ test("slam pose stays readable over flash, expires, and stays V1-only", async ()
 test("president retains its authored giant body at both phone heights", () => {
   assert.equal(mugarianPresidentCompactScale({ compact: false, shortViewport: false }), 1);
   assert.equal(mugarianPresidentCompactScale({ compact: true, shortViewport: false }), 1);
-  assert.equal(mugarianPresidentCompactScale({ compact: true, shortViewport: true }), 1);
+  assert.equal(mugarianPresidentCompactScale({ compact: true, shortViewport: true }), .9);
 });
