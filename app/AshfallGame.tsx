@@ -628,6 +628,8 @@ import { advanceEstuaryFloodgate, beginEstuaryFloodgateClosure, drawEstuaryFlood
 import { hasRescueControl, rescueControlReadout, V100_RESCUE_CONTROL } from "./v100RescueControl.js";
 import { centralSealCanReinforce, centralSealGateX, centralSealIngressPoint, centralSealReadout, drawV100CentralSealGates, hasCentralSeal } from "./v100CentralSeal.js";
 import { drawV100ClinicalControl } from "./v100ClinicalControl.js";
+import { advanceClinicalRescue, clinicalRescueReadout, createClinicalRescueRuntime, drawClinicalEvacuees,
+  hasClinicalRescue, stopClinicalDisposal, CLINICAL_CONTROL_X, CLINICAL_RESCUE_COUNT } from "./v100ClinicalRescue.js";
 import { drawV100CorporateControl, hasV100LureControl, v100CorporateControlLabel, v100ObjectiveDamageLabel,
   v100CorporateControlCondition, v100LureControlAim, v100LureControlReadout, v100LureWaveBlocked } from "./v100CorporateControl.js";
 import { drawV100AssaultObject, v100AssaultObjectProfile } from "./v100AssaultObjects.js";
@@ -1124,6 +1126,7 @@ type StageMissionRuntime = {
   gateTimedOut?: boolean;
   floodgateElapsed?: number | null;
   floodgateOpenAfterDefeat?: number;
+  clinical?: ReturnType<typeof createClinicalRescueRuntime>["clinical"];
   archiveReady?: boolean;
   archiveStopped?: boolean;
   archiveDistances?: readonly number[];
@@ -6324,7 +6327,7 @@ let stationMissionDiagnosticFallbackDrawCount = 0;
 
 function drawStationMission(ctx: CanvasRenderingContext2D, g: Game, stageObjects: SpriteMap, allowDiagnosticFallback = false, deferVehicles = false) {
   drawV100DefensePerimeter(ctx, g, stageObjects, 340, activeLaneCenters[2] + 30);
-  if (drawV100ClinicalControl(ctx, g, stageObjects, 650, activeLaneCenters[0] + 30)) return;
+  if (drawV100ClinicalControl(ctx, g, stageObjects, CLINICAL_CONTROL_X, activeLaneCenters[0] + 30)) return;
   if (hasRailEvacuation(g.definition.missionType, g.definition.missionConfig)) {
     drawV100RailEvacuation(ctx, g.stageMission, stageObjects, activeYForContentY, activeLaneCenters[0] - 26);
   }
@@ -9073,6 +9076,7 @@ function drawWorld(
   if (hasArchiveExtraction(g.definition.missionType, g.definition.missionConfig)) {
     drawArchiveExtraction(ctx, g.stageMission, stageObjects, activeYForContentY(ARCHIVE_ROUTE_Y));
   }
+  if (g.stageMission.clinical) drawClinicalEvacuees(ctx, g.stageMission, stageObjects, activeLaneCenters[0] + 30);
   drawEmergencySupport(ctx, g, stageObjects);
   drawPlacementIndicator(ctx, g.placementIndicator);
 
@@ -17142,6 +17146,18 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     playProductionCue(STATION_AUDIO_CUE_IDS.TERMINAL_CONFIRM, ARCHIVE_TERMINAL_X, { priority: 85, maxInstances: 1 });
   }, [playProductionCue, rejectBattleSaveBoundary]);
 
+  const stopClinicalCabinet = useCallback(() => {
+    const g = gameRef.current;
+    if (!g.running || g.paused || g.over || !g.stageMission.clinical || g.baseHp <= 0 || g.time < g.definition.prepSeconds) return;
+    if (rejectBattleSaveBoundary("clinical-control:save-pending")) return;
+    const next = stopClinicalDisposal(g.stageMission, g.fighters, activeLaneCenters[0] + 30);
+    if (next === g.stageMission) return;
+    g.stageMission = next;
+    g.banner = "処分停止　救出路を守れ";
+    g.bannerTime = 1.8;
+    playProductionCue(STATION_AUDIO_CUE_IDS.POWER_SWITCH, CLINICAL_CONTROL_X, { priority: 89, maxInstances: 1 });
+  }, [playProductionCue, rejectBattleSaveBoundary]);
+
   const releaseBridgeBarrier = useCallback(() => {
     const g = gameRef.current;
     if (!g.running || g.paused || g.over || g.time < g.definition.prepSeconds
@@ -21076,6 +21092,17 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             g.banner = g.stageMission.completed ? "紙台帳の搬出完了" : `紙台帳を搬出 ${g.stageMission.archiveDelivered}/${ARCHIVE_BOX_COUNT}`;
             g.bannerTime = 1.2;
             playProductionCue(STATION_AUDIO_CUE_IDS.RESCUE_CONFIRM, BASE_X, { priority: 81, maxInstances: 1 });
+          }
+        }
+        if (g.stageMission.clinical && !g.stageMission.completed && g.baseHp > 0 && g.time >= g.definition.prepSeconds) {
+          const previous = g.stageMission.clinical;
+          g.stageMission = advanceClinicalRescue({ runtime: g.stageMission, fighters: g.fighters, dt, routeY: activeLaneCenters[0] + 30 });
+          const rescue = g.stageMission.clinical;
+          if (rescue && rescue.groupsArrived > previous.groupsArrived) {
+            g.banner = rescue.arrived === CLINICAL_RESCUE_COUNT
+              ? "全員救出　車両を守れ" : `${rescue.arrived}人が車両に到着`;
+            g.bannerTime = 1.3;
+            playProductionCue(STATION_AUDIO_CUE_IDS.RESCUE_CONFIRM, BASE_X, { priority: 84, maxInstances: 1 });
           }
         }
         if (hasEstuaryFloodgate(g.definition.missionType, g.definition.missionConfig) && !g.stageMission.completed
@@ -25687,6 +25714,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   const bayHud = hasBayEvacuation(gameRef.current.definition.missionType, gameRef.current.definition.missionConfig)
     ? bayEvacuationReadout(gameRef.current.stageMission) : null;
   const archiveGame = gameRef.current;
+  const clinicalHud = hasClinicalRescue(archiveGame.definition.missionType, archiveGame.definition.missionConfig)
+    ? clinicalRescueReadout(archiveGame.stageMission) : null;
   const lureControlHud = hasV100LureControl(archiveGame.definition) ? v100LureControlReadout(archiveGame) : null;
   const archiveHud = hasArchiveExtraction(archiveGame.definition.missionType, archiveGame.definition.missionConfig)
     ? archiveExtractionReadout(archiveGame.stageMission, Math.max(0, Math.ceil((archiveGame.definition.defenseEndAt ?? archiveGame.time) - archiveGame.time))) : null;
@@ -25695,6 +25724,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     ? floodgateReadout(archiveGame.stageMission, archiveGame.bossDefeated && !archiveGame.bossDefeatPending) : null;
   const phaseName = floodgateHud ? floodgateHud.label
     : bridgeHud ? bridgeHud.label
+    : clinicalHud ? clinicalHud.label
     : archiveHud ? archiveHud.phaseLabel
     : bayHud ? bayHud.phaseLabel
     : railHud ? railHud.phaseLabel
@@ -25977,6 +26007,14 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               && <button type="button" className="bridge-barrier-action" onClick={releaseBridgeBarrier}
                 disabled={bridgeHud.phase !== "ready" || paused || Boolean(battleSaveBoundaryRef.current)}>遮断機を開ける</button>}
             {bridgeHud.phase === "open" && <i><em style={{ width: `${(bridgeHud.remaining ?? 0) / BRIDGE_GATE_SECONDS * 100}%` }} /></i>}
+          </section>) : clinicalHud ? (!end && <section className="health-hud barrier-health archive-objective clinical-rescue-objective"
+            data-clinical-phase={clinicalHud.phase} data-clinical-arrived={clinicalHud.count} aria-label="収容者の救出">
+            <div><span>救出</span><b>{clinicalHud.count}/{clinicalHud.total} 人</b></div>
+            <i aria-hidden="true"><em style={{ width: `${clinicalHud.count / clinicalHud.total * 100}%` }} /></i>
+            {clinicalHud.phase === "secured" || clinicalHud.phase === "ready"
+              ? <button type="button" className="archive-terminal-action" onClick={stopClinicalCabinet}
+                disabled={clinicalHud.phase !== "ready" || paused || Boolean(battleSaveBoundaryRef.current)}>処分を止める</button>
+              : <small>{clinicalHud.label}</small>}
           </section>) : archiveHud ? (!end && <section className="health-hud barrier-health archive-objective"
             data-archive-phase={archiveHud.phase} data-archive-delivered={archiveHud.count} aria-label="紙台帳の搬出">
             <div><span>紙台帳</span><b>{archiveHud.count}/{ARCHIVE_BOX_COUNT} 箱</b></div>

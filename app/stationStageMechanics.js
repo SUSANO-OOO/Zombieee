@@ -1,5 +1,6 @@
 import { hasRailEvacuation } from "./v100RailEvacuation.js";
 import { createBayEvacuationRuntime, hasBayEvacuation } from "./v100BayEvacuation.js";
+import { createClinicalRescueRuntime, hasClinicalRescue } from "./v100ClinicalRescue.js";
 import { createArchiveExtractionRuntime, hasArchiveExtraction } from "./v100ArchiveExtraction.js";
 import { advanceBridgeEscort, bridgeEscortReadout, createBridgeEscortState, hasBridgeEscort } from "./v100BridgeEscort.js";
 import { hasRescueControl } from "./v100RescueControl.js";
@@ -135,6 +136,7 @@ function initialPowerOperation() {
 export function createStationMissionRuntime(missionType, config = {}) {
   if (hasBayEvacuation(missionType, config)) return createBayEvacuationRuntime();
   if (hasArchiveExtraction(missionType, config)) return createArchiveExtractionRuntime();
+  if (hasClinicalRescue(missionType, config)) return createClinicalRescueRuntime();
   if (hasEstuaryFloodgate(missionType, config)) return createEstuaryFloodgateRuntime();
   if (missionType === STATION_MISSION_TYPES.ESCORT) {
     const resolved = escortConfig(config);

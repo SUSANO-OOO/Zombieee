@@ -12,6 +12,7 @@ import { researchCoreComplete, researchCoreObjective } from "./v100ResearchCore.
 import { hasRailEvacuation } from "./v100RailEvacuation.js";
 import { bayEvacuationObjective, hasBayEvacuation } from "./v100BayEvacuation.js";
 import { archiveExtractionReadout, hasArchiveExtraction } from "./v100ArchiveExtraction.js";
+import { clinicalRescueReadout, hasClinicalRescue } from "./v100ClinicalRescue.js";
 import { floodgateReadout, hasEstuaryFloodgate } from "./v100EstuaryFloodgate.js";
 import { v100DefenseStatus } from "./v100DefenseObjectives.js";
 import { hasV100LureControl, v100CorporateControlLabel, V100_LURE_CONTROL_OBJECTIVE } from "./v100CorporateControl.js";
@@ -173,6 +174,7 @@ export function objectiveForBattle(definition, state) {
     const remaining = Math.max(0, Math.ceil(definition.defenseEndAt - state.time));
     return archiveExtractionReadout(state.stageMission, remaining).objective;
   }
+  if (hasClinicalRescue(definition.missionType, definition.missionConfig)) return clinicalRescueReadout(state.stageMission).objective;
   const defense = v100DefenseStatus(definition, state);
   if (defense) return defense.objective;
   if (definition.operationCategory === "outbreak") {
@@ -271,7 +273,8 @@ export function battleOutcomeFor(definition, state) {
   }
   if (definition.missionType === "timed-defense") {
     if (state.time < definition.defenseEndAt) return null;
-    if (hasArchiveExtraction(definition.missionType, definition.missionConfig) && !state.stageMission?.completed) return null;
+    if ((hasArchiveExtraction(definition.missionType, definition.missionConfig)
+      || hasClinicalRescue(definition.missionType, definition.missionConfig)) && !state.stageMission?.completed) return null;
     return hasClearHp ? "won" : "lost";
   }
   if (definition.bossUnlocksEnemyBase

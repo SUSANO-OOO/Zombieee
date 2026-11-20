@@ -42,6 +42,21 @@ test('S22 shows the actual 34 of 43 rooms and 19 seconds remaining, excluding pr
  assert.deepEqual(v100DefenseResultText(result(late)),{progress:'収容室 43/43室を開放',detail:'防衛時間は経過・作戦目標は未達'});
 });
 
+test('the clinical result preserves the people at the vehicle through save and reload',()=>{
+ const id='stage-mugarian-clinical-trial-wing',definition=v100BattleDefinitionFor(id);
+ const raw=measured(id,74.67);
+ raw.defenseProgress=v100DefenseResultSnapshot(definition,{time:74.67,stageMission:{clinical:{arrived:17,disposalStopped:true}}});
+ const value=result(raw),save={...createDefaultV100Save(),lastResult:value};
+ const loaded=deserializeV100Save(serializeV100Save(save));
+ assert.equal(loaded.ok,true);
+ assert.deepEqual(loaded.save.lastResult.battleReport.defenseProgress,raw.defenseProgress);
+ assert.deepEqual(v100DefenseResultText(loaded.save.lastResult),{progress:'救出 17/43人',detail:'残る26人の救出路を守ろう'});
+ const broken={...raw.defenseProgress,disposalStopped:false};
+ assert.equal(normalizeV100BattleReport({...value.battleReport,defenseProgress:broken}).defenseProgress,undefined);
+ const completed={...raw.defenseProgress,rescuedCount:43};
+ assert.equal(v100DefenseResultText({...value,won:true,battleReport:{...value.battleReport,defenseProgress:completed}}).progress,'43人全員を救出しました。');
+});
+
 test('legacy, malformed and other-stage reports never invent timed-defense progress',()=>{
  const id='stage-mugarian-clinical-trial-wing',raw=measured(id,75),report=v100BattleReportFor(raw),base=result(raw);
  for(const patch of [null,{...raw.defenseProgress,stageId:'toString'},{...raw.defenseProgress,elapsedSeconds:-1},

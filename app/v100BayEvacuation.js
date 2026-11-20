@@ -78,6 +78,15 @@ export function bayEvacuationObjective(runtime, bossDefeated) {
 const cellWidth = 122;
 const cellHeight = 148;
 
+export function drawV100Evacuee(context, image, { identity, pose, x, y, height }) {
+  const width = height * cellWidth / cellHeight;
+  context.fillStyle = "rgba(0,0,0,.30)";
+  context.beginPath();
+  context.ellipse(x, y + 1, 10, 2.4, 0, 0, Math.PI * 2);
+  context.fill();
+  context.drawImage(image, identity * cellWidth, pose * cellHeight, cellWidth, cellHeight, x - width / 2, y - height, width, height);
+}
+
 export function drawV100BayEvacuees(context, runtime, stageObjects, laneY) {
   const image = stageObjects[V100_BAY_EVACUATION_ART.id];
   if (!image?.complete || !image.naturalWidth) throw new Error("Bay Tower evacuees must be decoded before battle");
@@ -94,11 +103,7 @@ export function drawV100BayEvacuees(context, runtime, stageObjects, laneY) {
       if (x <= shelterX) continue;
       const identity = (person + index) % peoplePerGroup;
       const y = groundY + (person % 2) * 9;
-      const height = 59 + (identity % 3) * 3;
-      const width = height * cellWidth / cellHeight;
-      context.fillStyle = "rgba(0,0,0,.30)";
-      context.beginPath(); context.ellipse(x,y+1,10,2.4,0,0,Math.PI*2); context.fill();
-      context.drawImage(image, identity * cellWidth, step * cellHeight, cellWidth, cellHeight, x - width / 2,y-height,width,height);
+      drawV100Evacuee(context, image, { identity, pose: step, x, y, height: 59 + (identity % 3) * 3 });
     }
   }
   context.restore();

@@ -10,6 +10,7 @@ import { V100_BRIDGE_STAGE } from "./v100BridgeEscort.js";
 import { V100_FLOODGATE_STAGE } from "./v100EstuaryFloodgate.js";
 import { V100_MISSION_VEHICLES } from "./v100MissionVehicles.js";
 import { V100_DEFENSE_OBJECTIVES } from "./v100DefenseObjectives.js";
+import { CLINICAL_RESCUE_COUNT, V100_CLINICAL_STAGE } from "./v100ClinicalRescue.js";
 import { V100_CORPORATE_CONTROLS, V100_LURE_CONTROL_NAME, V100_LURE_CONTROL_STAGE } from "./v100CorporateControl.js";
 import { v100BattleDefinitionFor } from "./v100BattleAdapter.js";
 import { ENEMY_CONTENT } from "./content/enemyCatalog.js";
@@ -47,6 +48,9 @@ export function v100MissionBriefingFor(stageId) {
   }
   if (stageId === V100_FLOODGATE_STAGE) {
     return { mode: "advance", origin: "ガイレンを撃破", target: "防潮門", verb: "閉鎖盤で閉める" };
+  }
+  if (stageId === V100_CLINICAL_STAGE) {
+    return { mode: "escort", origin: `収容者${CLINICAL_RESCUE_COUNT}人`, target: "車両", verb: "処分を止め、救出路を守る" };
   }
   if (stageId === V100_LURE_CONTROL_STAGE) {
     return { mode: "advance", origin: "物流本部の門", target: V100_LURE_CONTROL_NAME, verb: "航空支援でも直接狙える" };

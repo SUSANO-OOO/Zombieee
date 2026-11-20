@@ -11,6 +11,7 @@ import { V100_BRIDGE_ESCORT, V100_BRIDGE_STAGE } from "./v100BridgeEscort.js";
 import { V100_FLOODGATE, V100_FLOODGATE_STAGE } from "./v100EstuaryFloodgate.js";
 import { V100_CORPORATE_CONTROLS, V100_LURE_CONTROL_OBJECTIVE, V100_LURE_CONTROL_STAGE } from "./v100CorporateControl.js";
 import { V100_DEFENSE_OBJECTIVES } from "./v100DefenseObjectives.js";
+import { CLINICAL_RESCUE_COUNT, V100_CLINICAL_RESCUE, V100_CLINICAL_STAGE } from "./v100ClinicalRescue.js";
 import { researchCoreObjective } from "./v100ResearchCore.js";
 import { v100IncreaseWaveDensity } from "./v100CombatTuning.js";
 import { withClearDrivenAssaultWaves } from "./wavePacing.js";
@@ -96,6 +97,7 @@ export function v100MissionObjectiveFor(stageId) {
     const bossName = V100_BOSS_BY_ID[bossId]?.displayName;
     return bossName ? `${bossName}を倒し、${control}を破壊` : `${control}を破壊`;
   }
+  if (stageId === V100_CLINICAL_STAGE) return `処分を止め、${CLINICAL_RESCUE_COUNT}人を救出`;
   const defense = V100_DEFENSE_OBJECTIVES[stageId];
   if (defense) return defense.recordCount ? `${defense.goal}（全${defense.recordCount}室）` : defense.goal;
   if (stage.number === 29) return researchCoreObjective(null);
@@ -133,6 +135,22 @@ function missionDurationSeconds(stage, missionType) {
 function stageTimeline(stage, missionType, bossKind) {
   const pack = packFor(stage);
   const bossLabel = V100_BOSS_BY_ID[stage.firstClearPayload.find(value => value.startsWith("boss-"))]?.displayName ?? bossKind;
+  if (stage.id === V100_CLINICAL_STAGE) {
+    // Each group threatens the corridor in turn. A second detachment cannot
+    // enter while the previous one still occupies the evacuation route.
+    return freeze([
+      freeze({ at: PREP_SECONDS, wave: 1, label: "収容区画の警備隊",
+        units: freeze(["red-panther-shield", "spindle", "red-panther-smg"]) }),
+      freeze({ at: PREP_SECONDS + 17, wave: 2, label: "通路に感染者が侵入", waitForPriorWaveClear: true,
+        units: freeze(["spindle", "cagewalker", "resonator"]) }),
+      freeze({ at: PREP_SECONDS + 34, wave: 3, label: "非常口の警備隊", waitForPriorWaveClear: true,
+        units: freeze(["red-panther-shield", "spindle", "pall-manta"]) }),
+      freeze({ at: PREP_SECONDS + 52, wave: 4, label: "救出路への増援", waitForPriorWaveClear: true,
+        units: freeze(["pall-manta", "red-panther-smg", "cagewalker", "spindle"]) }),
+      freeze({ at: PREP_SECONDS + 72, wave: 5, label: "撤収前の最後の敵", waitForPriorWaveClear: true,
+        units: freeze(["anchor-bloom", "choir-knot", "red-panther-smg", "spindle"]) }),
+    ]);
+  }
   if (missionType === "escort" || missionType === "timed-defense") {
     // Contacts follow distance travelled: a stalled cart cannot exhaust
     // every wave and spend its final half crossing an empty battlefield.
@@ -416,10 +434,11 @@ export function v100BattleDefinitionFor(stageId) {
   const objective = v100MissionObjectiveFor(stageId);
   const phase = phaseScheduleFor(stage, missionType, objective);
   const lureControl = stageId === V100_LURE_CONTROL_STAGE;
+  const clinicalRescue = stageId === V100_CLINICAL_STAGE;
   const authoredTimeline = stageTimeline(stage, missionType, bossKind);
-  // Extra opening guards would reach the vehicle from multiple lanes before
-  // the player could act on the loudspeaker briefing.
-  const timeline = lureControl ? authoredTimeline : withClearDrivenAssaultWaves(
+  // These two corridor missions have authored patrol size and separation.
+  // Their opening must leave time to act on the device or shield evacuees.
+  const timeline = lureControl || clinicalRescue ? authoredTimeline : withClearDrivenAssaultWaves(
     v100IncreaseWaveDensity(authoredTimeline, Object.values(BOSS_KIND_BY_V100_ID), { preserveEscalation: missionType === "escort" }),
     missionType);
   const baseMaxHp = V100_VEHICLE.baseHp;
@@ -458,6 +477,7 @@ export function v100BattleDefinitionFor(stageId) {
       ...(railEvacuation ? V100_RAIL_EVACUATION : {}),
       ...(bayEvacuation ? V100_BAY_EVACUATION : {}),
       ...(stageId === V100_ARCHIVE_STAGE ? V100_ARCHIVE_EXTRACTION : {}),
+      ...(clinicalRescue ? V100_CLINICAL_RESCUE : {}),
       ...(stageId === V100_BRIDGE_STAGE ? V100_BRIDGE_ESCORT : {}),
       ...(estuaryFloodgate ? V100_FLOODGATE : {}),
       ...(stageId === V100_RESCUE_CONTROL_STAGE ? V100_RESCUE_CONTROL : {}),

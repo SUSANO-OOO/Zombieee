@@ -12,6 +12,7 @@ import { V100_NODE_ART, v100MissionNodeProfile } from "./v100MissionNodes.js";
 import { V100_RAIL_EVACUATION_ART, V100_RAIL_EVACUATION_STAGE } from "./v100RailEvacuation.js";
 import { V100_CENTRAL_SEAL_ART, V100_CENTRAL_SEAL_STAGE } from "./v100CentralSeal.js";
 import { V100_BAY_EVACUATION_ART, V100_BAY_EVACUATION_STAGE } from "./v100BayEvacuation.js";
+import { V100_CLINICAL_STAGE } from "./v100ClinicalRescue.js";
 import { V100_ARCHIVE_ART, V100_ARCHIVE_STAGE } from "./v100ArchiveExtraction.js";
 import { V100_BRIDGE_ART, V100_BRIDGE_STAGE } from "./v100BridgeEscort.js";
 import { V100_ASSAULT_OBJECT_ART, v100AssaultObjectProfile } from "./v100AssaultObjects.js";
@@ -119,7 +120,7 @@ export function requiredBattleAssetPlan({
     ? [{ ...V100_RAIL_EVACUATION_ART, runtimeUsage: "mission-render-source" }] : [];
   const centralGateObjects = includeV100Sprites && stageId === V100_CENTRAL_SEAL_STAGE
     ? [{ ...V100_CENTRAL_SEAL_ART, runtimeUsage: "mission-render-source" }] : [];
-  const evacuees = includeV100Sprites && operationId === V100_BAY_EVACUATION_STAGE
+  const evacuees = includeV100Sprites && (operationId === V100_BAY_EVACUATION_STAGE || operationId === V100_CLINICAL_STAGE)
     ? [{ ...V100_BAY_EVACUATION_ART, runtimeUsage: "mission-render-source" }] : [];
   const archiveObjects = includeV100Sprites && operationId === V100_ARCHIVE_STAGE
     ? [{ ...V100_ARCHIVE_ART, runtimeUsage: "mission-render-source" }] : [];

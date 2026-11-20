@@ -1680,7 +1680,7 @@ function ResultView({ result, previousResult, previousBestStars, alreadyComplete
   const escortResult = v100EscortResultText(result);
   const defenseResult = v100DefenseResultText(result);
   const deviceResult = v100DeviceResultText(result);
-  const outcome = won ? "目標達成！"
+  const outcome = won ? defenseResult?.progress ?? "目標達成！"
     : escortResult?.outcome ?? (typeof result?.vehicleHp === "number" && result.vehicleHp <= 0 ? `${basePresentation.label}を守りきれませんでした。`
       : "目標を達成できなかった。編成と戦い方を見直して、もう一度挑もう。");
   const resultStageId = typeof result?.stageId === "string" ? result.stageId : null;
