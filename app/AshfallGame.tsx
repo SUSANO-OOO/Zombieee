@@ -20,7 +20,7 @@ import { v100BasePresentationFor } from "./v100BasePresentation.js";
 import { createV100HumanWalkRenderer, v100HumanWalkPhase, v100UsesHumanWalk, v100HumanWalkCycleDistance, v100HumanWalkFrame } from "./v100HumanWalk.js";
 import { V177_JOINT_ATLASES, v177JointCycleDistance, v177JointPose, v177RangerFootPlan, v105BipedFootPlan, drawV177JointPose, v177CaptureJointPose, v177RenderedJointWeaponSocket, v177RenderedWeightedLowerReceipt } from "./v177JointPresentation.js";
 import { v177ClearHeadHealthBarY } from "./v177HeadLabelPlacement.js";
-import {battleVoiceReady,queueV104HumanHurt,v104ContactIsHard,v104SupplementalEnemyVoice} from "./v104CombatAudio.js";
+import {battleVoiceReady,queueV104HumanHurt,v104ContactIsHard,v104SupplementalEnemyVoice,v104EnemyContactAudio} from "./v104CombatAudio.js";
 import {createManualAbilityPointerHold} from "./manualAbilityUi.js";
 import {manualAbilityTacticalView} from "./manualAbilityTactics.js";
 import {ManualAbilityTactics} from "./BattleAbilityGuide";
@@ -16233,6 +16233,18 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     return true;
   }, []);
 
+  const playEnemyContactCue = useCallback((world: Game, target: Fighter, damage: number) => {
+    const cueId = enemyVoiceCue(target.kind, "hurt");
+    const reaction = v104EnemyContactAudio(world, target, damage, cueId);
+    if (!reaction) return;
+    playProductionCue(cueId, target.x, {
+      ...reaction,
+      priority: target.kind === "takuya" || target.kind === "gate-eater" ? 88 : 62,
+      cooldownMs: 210,
+      maxInstances: 3,
+    });
+  }, [playProductionCue]);
+
   const playBattleSemanticCue = useCallback((
     cueId: string | null,
     x: number,
@@ -20701,6 +20713,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               x: impactPoint.x,
               y: impactPoint.y - 12,
             });
+            let reactionTarget: Fighter | null = null;
+            let reactionDamage = 0;
             for (const splashTarget of g.fighters) {
               if (splashTarget.side !== "zombie"
                 || splashTarget.hp <= 0
@@ -20745,6 +20759,13 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               }
               noteV102GoreImpact(g,splashTarget,{weapon:hit.weapon,originX:hit.originX,originY:hit.originY,damage:appliedSplash});
               recordUnitDamage(g, hit.weapon as UnitKind, appliedSplash);
+              // One survivor reacts at the explosion. Prefer the intended
+              // target, otherwise the survivor that actually took most damage.
+              if (appliedSplash > 0 && splashTarget.hp > 0 && (primaryTarget || !reactionTarget
+                || reactionTarget.id !== hit.targetId && appliedSplash > reactionDamage)) {
+                reactionTarget = splashTarget;
+                reactionDamage = appliedSplash;
+              }
               splashTarget.flash = Math.max(splashTarget.flash, .16);
               splashTarget.knock = Math.max(splashTarget.knock, primaryTarget ? 6 : 4);
               addDamageText(g, splashTarget.x, splashTarget.y - 43, String(Math.round(appliedSplash)), .66, "#e4b46c");
@@ -20765,6 +20786,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               maxInstances: 3,
               fallbackCue: "drum-blast",
             });
+            if (reactionTarget) playEnemyContactCue(g, reactionTarget, reactionDamage);
             playProductionCue(unitAudioCueFor("mrs-chiha", "weapon", "stow"), hit.originX, {
               priority: 64,
               cooldownMs: 90,
@@ -20854,15 +20876,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             target.hp <= 0 ? "defeated" : "hit",
             productionCueQaLogRef.current,
           );
-          if (hit.shotIndex === 0 && battleVoiceReady(target,"hurt",g.time,g)) {
-            playProductionCue(enemyVoiceCue(target.kind, "hurt"), target.x, {
-              ownerId: target.id,
-              voiceAllowed: appliedDamage > 0,
-              priority: target.kind === "takuya" || target.kind === "gate-eater" ? 88 : 62,
-              cooldownMs: 210,
-              maxInstances: 3,
-            });
-          }
+          if (hit.shotIndex === 0) playEnemyContactCue(g, target, appliedDamage);
         }
         if (g.definition.stageId === CAMPAIGN_STAGE_IDS.SAWARA_WARD_OFFICE && g.time >= g.definition.prepSeconds) {
           const convoy = advanceConvoyEvacuation({
@@ -23891,16 +23905,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                     });
                   }
                 }
-                if (!splitMachineGunBurst
-                  && !deferredHumanProjectile
-                  && target.side === "zombie"
-                  && battleVoiceReady(target,"hurt",g.time,g)) playProductionCue(enemyVoiceCue(target.kind, "hurt"), target.x, {
-                  ownerId: target.id,
-                  voiceAllowed: targetHpBeforeMetric > target.hp,
-                  priority: target.kind === "takuya" || target.kind === "gate-eater" ? 88 : 62,
-                  cooldownMs: 210,
-                  maxInstances: 3,
-                });
+                const delayedGrenade = f.kind === "mrs-chiha" && !mrsLauncherBash && weaponDamageEvents;
+                if (!splitMachineGunBurst && !deferredHumanProjectile && !delayedGrenade && target.side === "zombie") {
+                  playEnemyContactCue(g, target, Math.max(0, targetHpBeforeMetric - target.hp));
+                }
               } else {
                 playProductionCue(attackAudioCueId, f.x, {
                   ownerId: f.id,
@@ -25344,7 +25352,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       window.removeEventListener("pageshow", onPageShow);
       rotation.removeEventListener("change", onVisibilityChange);
     };
-  }, [announceBossEntrance, assetError, assetsReady, chooseAction, dispatchBattleStoryEvents, externalBattleMode, graphicsProfileView.renderHz, playBattleSemanticCue, playCue, playEndJingle, playManualAbilityTimelineCue, playProductionCue, qaMode, qaScenario, queueManualAbilityTimelineCue, resumeBattleAudioLoops, screen, stopMusic, stopSfx, syncMusicMode]);
+  }, [announceBossEntrance, assetError, assetsReady, chooseAction, dispatchBattleStoryEvents, externalBattleMode, graphicsProfileView.renderHz, playBattleSemanticCue, playCue, playEnemyContactCue, playEndJingle, playManualAbilityTimelineCue, playProductionCue, qaMode, qaScenario, queueManualAbilityTimelineCue, resumeBattleAudioLoops, screen, stopMusic, stopSfx, syncMusicMode]);
 
   const healthPct = Math.max(0, hud.baseHp / hud.baseMaxHp * 100);
   const barricadePct = Math.max(0, hud.barricadeHp / hud.barricadeMaxHp * 100);
