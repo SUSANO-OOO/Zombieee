@@ -117,12 +117,27 @@ test("the actual consumer establishes combat before Omega, then emits both A rei
   assert.deepEqual(queued.flatMap(event=>event.units),definition.timeline[0].units);
   assert.deepEqual(announced,[]);
   const entrance=definition.timeline.findIndex(event=>event.units.includes("takuya-omega"));
+  for (let index = 1; index < entrance; index++) {
+    g.time = definition.timeline[index].at;
+    runConsumer({ ...fixture, campaignWaveReady });
+    assert.equal(queued.length,index,"Pending enemies keep the next wave out");
+    g.enemySpawn.pending=[];
+    runConsumer({ ...fixture, campaignWaveReady });
+    assert.equal(queued.length,index+1);
+  }
   g.time=definition.timeline[entrance].at-0.01;runConsumer({ ...fixture, campaignWaveReady });assert.deepEqual(announced,[]);
   g.time=definition.timeline[entrance].at;runConsumer({ ...fixture, campaignWaveReady });assert.deepEqual(announced,[],"Prelude guards must clear first");
   g.enemySpawn.pending=[];runConsumer({ ...fixture, campaignWaveReady });assert.deepEqual(announced,["takuya-omega"]);
-  g.fighters.push({kind:"takuya-omega",hp:9200});
+  const omega={kind:"takuya-omega",hp:9200,maxHp:9200};
+  g.fighters.push(omega);
   g.enemySpawn.pending=[];
   g.time=definition.timeline.at(-1).at;
+  runConsumer({ ...fixture, campaignWaveReady });
+  assert.equal(queued.length,6,"Elapsed time alone cannot pile reinforcements onto a fresh boss");
+  omega.hp=Math.floor(omega.maxHp*definition.timeline[entrance+1].bossHpRatio);
+  runConsumer({ ...fixture, campaignWaveReady });
+  assert.equal(queued.length,7);
+  omega.hp=Math.floor(omega.maxHp*definition.timeline[entrance+2].bossHpRatio);
   runConsumer({ ...fixture, campaignWaveReady });
   assert.deepEqual(queued.map(event=>event.wave),[1,2,3,4,5,6,7,8]);
   assert.deepEqual(queued.slice(entrance+1).flatMap(event=>event.units),["walker","runner","crusher","spitter","runner","walker","crusher","spitter","walker","spitter","crusher","walker","runner","spitter","crusher","runner","crusher","spitter","crusher"]);
@@ -318,8 +333,10 @@ test("all campaign bosses have ordinary combat before their entrance",()=>{
 
 test("Futago retains both bodies and its final group cannot overlap surviving prior guards", () => {
   const definition=createBattleDefinition(V100_STAGES[23].id,{v100:true});
-  assert.deepEqual(definition.timeline.map(e=>e.units.filter(kind=>kind!=="futago").length),[2,3,3,4]);
-  assert.deepEqual(definition.timeline.map(e=>e.at),[5,29,53,77]);
+  assert.deepEqual(definition.timeline.map(e=>e.units.filter(kind=>kind!=="futago").length),[2,2,2,0]);
+  assert.deepEqual(definition.timeline.map(e=>e.at),[5,24,44,64]);
+  assert.equal(definition.timeline.flatMap(e=>e.units).filter(kind=>kind==="red-panther-commander").length,1);
+  assert.deepEqual(definition.timeline.map(e=>e.waitForPriorWaveClear===true),[false,true,true,true]);
   assert.ok(definition.timeline.slice(0,3).flatMap(e=>e.units).every(kind=>["red-panther-shield","red-panther-commander"].includes(kind)));
   assert.deepEqual(definition.timeline[3].units.slice(-2),["futago","futago"]);
   assert.equal(definition.timeline[3].waitForPriorWaveClear,true);
@@ -340,11 +357,12 @@ test("Futago retains both bodies and its final group cannot overlap surviving pr
 
 test("the president uses the same prior-guard clearance boundary without removing Panther guards or changing the boss",()=>{
   const definition=createBattleDefinition(V100_STAGES[24].id,{v100:true});
-  assert.deepEqual(definition.timeline.map(e=>e.at),[5,29,53,77]);
-  assert.deepEqual(definition.timeline.map(e=>e.units.filter(kind=>kind!=="mugarian-president-mutated").length),[2,3,3,4]);
+  assert.deepEqual(definition.timeline.map(e=>e.at),[5,24,44,64]);
+  assert.deepEqual(definition.timeline.map(e=>e.units.filter(kind=>kind!=="mugarian-president-mutated").length),[2,2,2,0]);
+  assert.equal(definition.timeline.flatMap(e=>e.units).filter(kind=>kind==="red-panther-commander").length,1);
   assert.ok(definition.timeline.slice(0,3).flatMap(e=>e.units).every(kind=>kind.startsWith("red-panther-")));
   assert.equal(definition.timeline.at(-1).units.filter(kind=>kind==="mugarian-president-mutated").length,1);
-  assert.deepEqual(definition.timeline.map(e=>e.waitForPriorWaveClear===true),[false,false,false,true]);
+  assert.deepEqual(definition.timeline.map(e=>e.waitForPriorWaveClear===true),[false,true,true,true]);
   for(const number of [3,5,11,14,17,20,30]){
     const d=createBattleDefinition(V100_STAGES[number-1].id,{v100:true});
     assert.equal(d.timeline.find(e=>e.units.includes(d.bossEnemyKind)).waitForPriorWaveClear,true);

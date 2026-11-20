@@ -64,7 +64,6 @@ export const V100_CORPORATE_CONTROLS=Object.freeze({
   [V100_LURE_CONTROL_STAGE]:V100_LURE_CONTROL_NAME,
   [V100_ARMORY_STAGE]:V100_ARMORY_VEHICLE_NAME,
   "stage-mugarian-tech-tower":"中央制御盤",
-  "stage-mugarian-executive-lab":"研究室制御盤",
   "stage-segawa-private-lab":"研究室封鎖装置",
 });
 export function v100CorporateControlState(game){

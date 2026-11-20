@@ -92,6 +92,8 @@ export function v100MissionObjectiveFor(stageId) {
   if (stage.number === 30) return "TAKUYA-Ωを撃破し、西新を守る";
   if (stageId === V100_LURE_CONTROL_STAGE) return V100_LURE_CONTROL_OBJECTIVE;
   if (stageId === V100_ARMORY_STAGE) return V100_ARMORY_OBJECTIVE;
+  if (stage.number === 24) return "中央制御盤を止め、フタゴを撃破";
+  if (stage.number === 25) return "医療物資を守り、変異ムガリアン社長を止める";
   const control = V100_CORPORATE_CONTROLS[stageId];
   if (control) {
     const bossId = stage.firstClearPayload.find(value => value.startsWith("boss-"));
@@ -315,24 +317,35 @@ function stageTimeline(stage, missionType, bossKind) {
   }
   if (stage.number === 30) {
     // Establish the defense before revealing Omega. His two later A-only
-    // reinforcements remain; the prelude contains no Panther units.
+    // reinforcements follow Omega’s actual injuries, even if the earlier waves take longer.
+    const [firstReinforcement, secondReinforcement] = V100_BOSS_BY_ID["boss-takuya-omega"].phaseThresholds;
     return freeze([
       freeze({ at: PREP_SECONDS, wave: 1, label: "最終防衛 // 先行感染群", units: freeze(["walker", "runner", "spitter", "walker", "runner"]) }),
-      freeze({ at: PREP_SECONDS + 19, wave: 2, label: "最終防衛 // 左翼接敵", units: freeze(["spitter", "crusher", "walker", "runner", "spitter", "runner", "crusher"]) }),
-      freeze({ at: PREP_SECONDS + 38, wave: 3, label: "最終防衛 // 防衛線を確保", units: freeze(["crusher", "runner", "spitter", "walker", "runner", "crusher", "spitter", "runner"]) }),
-      freeze({ at: PREP_SECONDS + 57, wave: 4, label: "最終防衛 // 突破を阻止", units: freeze(["crusher", "spitter", "walker", "runner", "spitter", "walker", "runner", "crusher", "spitter"]) }),
-      freeze({ at: PREP_SECONDS + 78, wave: 5, label: "最終防衛 // 目前の群れ", units: freeze(["runner", "walker", "crusher", "spitter", "runner", "walker", "spitter", "crusher", "runner", "crusher"]) }),
+      freeze({ at: PREP_SECONDS + 19, advanceOnClearAfter: PREP_SECONDS + 14, wave: 2, label: "最終防衛 // 左翼接敵", waitForPriorWaveClear: true, units: freeze(["spitter", "crusher", "walker", "runner", "spitter", "runner", "crusher"]) }),
+      freeze({ at: PREP_SECONDS + 38, advanceOnClearAfter: PREP_SECONDS + 31, wave: 3, label: "最終防衛 // 防衛線を確保", waitForPriorWaveClear: true, units: freeze(["crusher", "runner", "spitter", "walker", "runner", "crusher", "spitter", "runner"]) }),
+      freeze({ at: PREP_SECONDS + 57, advanceOnClearAfter: PREP_SECONDS + 49, wave: 4, label: "最終防衛 // 突破を阻止", waitForPriorWaveClear: true, units: freeze(["crusher", "spitter", "walker", "runner", "spitter", "walker", "runner", "crusher", "spitter"]) }),
+      freeze({ at: PREP_SECONDS + 78, advanceOnClearAfter: PREP_SECONDS + 69, wave: 5, label: "最終防衛 // 目前の群れ", waitForPriorWaveClear: true, units: freeze(["runner", "walker", "crusher", "spitter", "runner", "walker", "spitter", "crusher", "runner", "crusher"]) }),
       freeze({ at: PREP_SECONDS + 90, wave: 6, label: `警告 // ${bossLabel}`, units: freeze([bossKind]), waitForPriorWaveClear: true }),
-      freeze({ at: PREP_SECONDS + 116, wave: 7, label: "最終防衛 // 増援1/2", units: freeze(["walker", "runner", "crusher", "spitter", "runner", "walker", "crusher", "spitter"]), addWave: true }),
-      freeze({ at: PREP_SECONDS + 140, wave: 8, label: "最終防衛 // 増援2/2", units: freeze(["spitter", "crusher", "walker", "runner", "spitter", "crusher", "runner", "crusher"]), addWave: true }),
+      freeze({ at: PREP_SECONDS + 116, wave: 7, label: "最終防衛 // 増援1/2", bossHpRatio: firstReinforcement, units: freeze(["walker", "runner", "crusher", "spitter", "runner", "walker", "crusher", "spitter"]), addWave: true }),
+      freeze({ at: PREP_SECONDS + 140, wave: 8, label: "最終防衛 // 増援2/2", bossHpRatio: secondReinforcement, units: freeze(["spitter", "crusher", "walker", "runner", "spitter", "crusher", "runner", "crusher"]), addWave: true }),
     ]);
   }
-  // Panther commanders can create extra threats while the shield line holds.
-  // Their two boss routes keep the four-wave pressure proven in normal play;
-  // six dense waves leave a summoned backlog that prevents boss entry.
-  const corporateBossRoute = stage.number === 24 || stage.number === 25;
-  const counts = corporateBossRoute ? [2, 2, 3, 3]
-    : stage.number === 23 ? [2, 4, 5, 6, 6, 7]
+  if (stage.number === 24 || stage.number === 25) {
+    const [knife, shield, smg, commander] = P;
+    const twinRoute = stage.number === 24;
+    // Each path has one commander and his own escort. Advancing requires
+    // finishing that detachment before the next one commits to the fight.
+    const groups = twinRoute
+      ? [[shield, shield], [shield, shield], [shield, commander], [bossKind, bossKind]]
+      : [[knife, shield], [smg, knife], [shield, commander], [bossKind]];
+    const labels = ["先行の警備隊", "第二警備隊", "指揮官の護衛", `警告 // ${bossLabel}`];
+    const offsets = [0, 19, 39, 59];
+    return freeze(groups.map((units, index) => freeze({
+      wave: index + 1, at: PREP_SECONDS + offsets[index], label: labels[index], units: freeze(units),
+      ...(index > 0 ? { waitForPriorWaveClear: true, advanceOnClearAfter: PREP_SECONDS + offsets[index] - 5 } : {}),
+    })));
+  }
+  const counts = stage.number === 23 ? [2, 4, 5, 6, 6, 7]
     : stage.number === 1 ? [3, 3, 4, 4, 4]
     : stage.number <= 4 ? [3, 4, 4, 5, 5]
     : stage.number <= 10 ? [4, 4, 5, 5, 6]
@@ -346,7 +359,7 @@ function stageTimeline(stage, missionType, bossKind) {
     const bossArrives = bossKind && wave === counts.length;
     if (bossArrives) units.push(...(bossKind === "futago" ? [bossKind, bossKind] : [bossKind]));
     return freeze({
-      at: PREP_SECONDS + index * (corporateBossRoute ? 24 : stage.number <= 10 ? 20 : 21),
+      at: PREP_SECONDS + index * (stage.number <= 10 ? 20 : 21),
       wave,
       label: bossArrives ? `警告 // ${bossLabel}` : stage.number === 29 ? `特級研究中枢 // 精鋭第${wave}/6波` : `${stage.displayName} // 第${wave}波`,
       units: freeze(units),
@@ -451,11 +464,13 @@ export function v100BattleDefinitionFor(stageId) {
   const lureControl = stageId === V100_LURE_CONTROL_STAGE;
   const clinicalRescue = stageId === V100_CLINICAL_STAGE;
   const armoryKey = stageId === V100_ARMORY_STAGE;
+  const corporateBossRoute = stage.number === 24 || stage.number === 25;
+  const medicalDefense = stage.number === 25;
   const authoredTimeline = stageTimeline(stage, missionType, bossKind);
   // These two corridor missions have authored patrol size and separation.
   // Their opening must leave time to act on the device or shield evacuees.
   const timeline = lureControl || clinicalRescue ? authoredTimeline : withClearDrivenAssaultWaves(
-    armoryKey ? authoredTimeline : v100IncreaseWaveDensity(authoredTimeline, Object.values(BOSS_KIND_BY_V100_ID), { preserveEscalation: missionType === "escort" }),
+    armoryKey || corporateBossRoute ? authoredTimeline : v100IncreaseWaveDensity(authoredTimeline, Object.values(BOSS_KIND_BY_V100_ID), { preserveEscalation: missionType === "escort" }),
     missionType);
   const baseMaxHp = V100_VEHICLE.baseHp;
   const station = missionType === "escort"
@@ -478,9 +493,9 @@ export function v100BattleDefinitionFor(stageId) {
     starThresholds: { 1: 0.01, 2: 0.7, 3: 0.9 },
     // Once a boss falls, breaching its gate is a short finishing action.
     enemyBaseMaxHp: bossKind ? 350 : 1000,
-    enemyBaseMode: !railEvacuation && !bayEvacuation && !estuaryFloodgate
+    enemyBaseMode: !medicalDefense && !railEvacuation && !bayEvacuation && !estuaryFloodgate
       && (missionType === "assault" || missionType === "boss-assault") ? "target" : "scenery",
-    startsEnemyBaseVulnerable: lureControl,
+    startsEnemyBaseVulnerable: lureControl || stage.number === 24,
     bossUnlocksEnemyBase: !railEvacuation && !bayEvacuation && !estuaryFloodgate && Boolean(bossKind),
     bossEnemyKind: bossKind,
     timeline,
@@ -495,6 +510,8 @@ export function v100BattleDefinitionFor(stageId) {
       ...(stageId === V100_ARCHIVE_STAGE ? V100_ARCHIVE_EXTRACTION : {}),
       ...(clinicalRescue ? V100_CLINICAL_RESCUE : {}),
       ...(armoryKey ? { armoryKey: true } : {}),
+      ...(medicalDefense ? { medicalDefense: true } : {}),
+      ...(stage.number === 24 ? { twinControl: true } : {}),
       ...(stageId === V100_BRIDGE_STAGE ? V100_BRIDGE_ESCORT : {}),
       ...(estuaryFloodgate ? V100_FLOODGATE : {}),
       ...(stageId === V100_RESCUE_CONTROL_STAGE ? V100_RESCUE_CONTROL : {}),

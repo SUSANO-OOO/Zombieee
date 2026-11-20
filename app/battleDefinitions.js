@@ -155,6 +155,13 @@ export function objectiveForBattle(definition, state) {
     const status = v100ArmoryKeyStatus(definition, state);
     return status === "protected" ? V100_ARMORY_OBJECTIVE : V100_ARMORY_STATUS_LABELS[status];
   }
+  if (definition.missionConfig?.twinControl) {
+    if (state.barricadeHp > 0) return definition.objective;
+    return state.bossDefeated ? "昇降路を確保" : "連携解除・フタゴを撃破";
+  }
+  if (definition.missionConfig?.medicalDefense) {
+    return state.bossDefeated ? "医療物資を確保" : definition.objective;
+  }
   if (hasV100LureControl(definition)) {
     return state.barricadeHp <= 0 ? "残る敵を倒して試験棟への道を開く" : V100_LURE_CONTROL_OBJECTIVE;
   }
@@ -238,7 +245,8 @@ export function battleOutcomeFor(definition, state) {
   if (definition.missionConfig?.v100StageNumber === 29) {
     return researchCoreComplete(state.researchCoreTargets) && state.wavesResolved === true ? "won" : null;
   }
-  if ([3, 5, 30].includes(definition.missionConfig?.v100StageNumber) && state.wavesResolved !== true) return null;
+  if (([3, 5, 30].includes(definition.missionConfig?.v100StageNumber) || definition.missionConfig?.medicalDefense
+       || definition.missionConfig?.twinControl) && state.wavesResolved !== true) return null;
   if (definition.operationCategory === "outbreak") {
     if (state.bossDefeated !== true) return null;
     const livingEnemies = Array.isArray(state.fighters)
@@ -274,6 +282,11 @@ export function battleOutcomeFor(definition, state) {
   }
   if ([3, 30].includes(definition.missionConfig?.v100StageNumber)) {
     if (state.bossDefeated !== true || state.bossDefeatPending === true || state.barricadeVulnerable !== true) return null;
+    return hasClearHp ? "won" : "lost";
+  }
+  if (definition.missionConfig?.medicalDefense || definition.missionConfig?.twinControl) {
+    if (state.bossDefeated !== true || state.bossDefeatPending === true) return null;
+    if (definition.missionConfig?.twinControl && state.barricadeHp > 0) return null;
     return hasClearHp ? "won" : "lost";
   }
   if (definition.missionType === "timed-defense") {

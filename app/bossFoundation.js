@@ -625,6 +625,12 @@ export function resolveV100TwinDefeat(game, fighter) {
   return { complete, enragedIds };
 }
 
+export function v100TwinCanStartStrike(fighter, group, linkCut) {
+  return !linkCut || !fighter.v100TwinPart || !group.some(other =>
+    other.id !== fighter.id && other.v100TwinPart && other.v100TwinPair === fighter.v100TwinPair
+    && other.hp > 0 && ["warning", "active", "recovery"].includes(other.stationAbility?.phase));
+}
+
 export function futagoEnraged(fighter, legacyThreshold = .62) {
   return fighter?.v100BossId === "boss-futago" ? Boolean(fighter.v100TwinEnraged)
     : Number(fighter?.hp) / Math.max(1, Number(fighter?.maxHp) || 1) <= legacyThreshold;

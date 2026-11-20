@@ -44,6 +44,7 @@ const redPanther = freezeRecord({
 const missionObjects = freezeRecord({
   corporateControlStates: V100_CORPORATE_CONTROL_ART,
   [V100_BRIDGE_ART.id]: V100_BRIDGE_ART.path,
+  medicalSupplies: `${V100_ROOT}/support/medical-station-r1.webp`,
   lureControlStates: V100_LURE_CONTROL_ART,
   clinicalControlStates: V100_CLINICAL_CONTROL_ART,
   clinicalTrialWing: `${V100_ROOT}/mission-objects/clinical-trial-wing-v1.png`,
@@ -72,7 +73,7 @@ const stages = freezeRecord({
   "stage-mugarian-clinical-trial-wing": freezeRecord({ background: `${V100_ROOT}/stages/s22-clinical-clean-v1.webp`, missionObjects: [missionObjects.clinicalControlStates], vfx: [] }),
   "stage-mugarian-special-operations-armory": freezeRecord({ background: `${V100_ROOT}/stages/s23-armory-clean-v1.webp`, missionObjects: [V100_BRIDGE_ART.path], vfx: [vfx.armoryRedLensAlert] }),
   "stage-mugarian-tech-tower": freezeRecord({ background: `${V100_ROOT}/stages/s24-tech-tower-background-v1.webp`, missionObjects: [missionObjects.corporateControlStates, missionObjects.twinReactorLandmark], vfx: [] }),
-  "stage-mugarian-executive-lab": freezeRecord({ background: `${V100_ROOT}/stages/s25-executive-lab-clean-v1.webp`, missionObjects: [missionObjects.corporateControlStates], vfx: [] }),
+  "stage-mugarian-executive-lab": freezeRecord({ background: `${V100_ROOT}/stages/s25-executive-lab-clean-v1.webp`, missionObjects: [missionObjects.medicalSupplies], vfx: [] }),
   "stage-bay-evacuation-yard": freezeRecord({ background: `${V100_ROOT}/stages/s26-bay-evacuation-yard-r2-background-v1.webp`, missionObjects: [missionObjects.escortCartIntact, missionObjects.escortCartDamaged], vfx: [] }),
   "stage-segawa-private-lab": freezeRecord({ background: `${V100_ROOT}/stages/s27-private-lab-clean-v1.webp`, missionObjects: [missionObjects.corporateControlStates], vfx: [] }),
   "stage-national-dispersal-network": freezeRecord({ background: `${V100_ROOT}/stages/s28-national-dispersal-network-clean-background-v1.webp`, missionObjects: [missionObjects.nationalDispersalNode1, missionObjects.nationalDispersalNode2, missionObjects.nationalDispersalNode3, missionObjects.nationalDispersalNode4], vfx: [vfx.dispersalNodeActive] }),

@@ -534,11 +534,11 @@
     ],
     [
       "                : v100CorporateControlLabel(g.definition)\n                ? `${defeatedBossName}撃破・防護解除`",
-      "                : isFloodgateBoss\n                ? \"ガイレン撃破 // 防潮門を閉める\"\n                : v100CorporateControlLabel(g.definition)\n                ? `${defeatedBossName}撃破・防護解除`"
+      "                : isFloodgateBoss\n                ? \"ガイレン撃破 // 防潮門を閉める\"\n                : g.definition.missionConfig.medicalDefense\n                ? \"変異ムガリアン社長撃破 — 医療物資を確保\"\n                : g.definition.missionConfig.twinControl\n                ? g.barricadeHp > 0 ? \"フタゴ撃破 — 中央制御盤を停止\" : \"フタゴ撃破 — 昇降路を確保\"\n                : v100CorporateControlLabel(g.definition)\n                ? `${defeatedBossName}撃破・防護解除`"
     ],
     [
       "              } else if (!isRailBoss && !isBayBoss) {\n                emitBattleBark(g, \"base-exposed\", \"crawler\", \"tactical\");",
-      "              } else if (!isRailBoss && !isBayBoss && !isFloodgateBoss) {\n                emitBattleBark(g, \"base-exposed\", \"crawler\", \"tactical\");"
+      "              } else if (!isRailBoss && !isBayBoss && !isFloodgateBoss\n                && !g.definition.missionConfig.medicalDefense && !g.definition.missionConfig.twinControl) {\n                emitBattleBark(g, \"base-exposed\", \"crawler\", \"tactical\");"
     ],
     [
       "  const phaseName = bridgeHud ? bridgeHud.label",
@@ -574,7 +574,7 @@
     ],
     [
       "        dispatchSituationalBattleBarks(g);\n        if (!g.survivalRun) dispatchBattleStoryEvents(g);",
-      "        if (lureControl && g.barricadeHp <= 0) {\n          if (g.enemyBaseCollapse === 0) {\n            const ownerId = `lure-control:${g.resultId}`;\n            const receiptId = `${ownerId}:break`;\n            const x = WORLD_GEOMETRY.enemyBase.attackX + 10;\n            g.banner = \"音響誘導装置 停止\";\n            g.bannerTime = 2.4;\n            g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.enemyBaseCollapse);\n            addSemanticBattlePresentation(g, {\n              semantic: \"explosion-result\", receiptId, ownerId, kind: \"explosion\",\n              scale: \"large\", x, y: activeLaneCenters[2] + 4,\n            });\n            playBattleSemanticCue(\"support-explosion\", x, {\n              semantic: \"explosion-result\", receiptId, ownerId, priority: 100,\n              cooldownMs: 0, maxInstances: 1, dedupeKey: receiptId,\n            });\n          }\n          g.enemyBaseCollapse = advanceEnemyBaseCollapse({\n            barricadeHp: g.barricadeHp, elapsed: g.enemyBaseCollapse, seconds: dt,\n          }).elapsed;\n        }\n        dispatchSituationalBattleBarks(g);\n        if (!g.survivalRun) dispatchBattleStoryEvents(g);"
+      "        if (g.definition.missionConfig.twinControl && g.barricadeHp <= 0 && g.enemyBaseCollapse === 0) {\n          g.enemyBaseCollapse = dt;\n          g.banner = \"中央制御盤 停止 — フタゴの連携解除\";\n          g.bannerTime = 2.5;\n          playProductionCue(STATION_AUDIO_CUE_IDS.POWER_SWITCH, BARRICADE_X, { priority: 88, maxInstances: 1 });\n        }\n        if (lureControl && g.barricadeHp <= 0) {\n          if (g.enemyBaseCollapse === 0) {\n            const ownerId = `lure-control:${g.resultId}`;\n            const receiptId = `${ownerId}:break`;\n            const x = WORLD_GEOMETRY.enemyBase.attackX + 10;\n            g.banner = \"音響誘導装置 停止\";\n            g.bannerTime = 2.4;\n            g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.enemyBaseCollapse);\n            addSemanticBattlePresentation(g, {\n              semantic: \"explosion-result\", receiptId, ownerId, kind: \"explosion\",\n              scale: \"large\", x, y: activeLaneCenters[2] + 4,\n            });\n            playBattleSemanticCue(\"support-explosion\", x, {\n              semantic: \"explosion-result\", receiptId, ownerId, priority: 100,\n              cooldownMs: 0, maxInstances: 1, dedupeKey: receiptId,\n            });\n          }\n          g.enemyBaseCollapse = advanceEnemyBaseCollapse({\n            barricadeHp: g.barricadeHp, elapsed: g.enemyBaseCollapse, seconds: dt,\n          }).elapsed;\n        }\n        dispatchSituationalBattleBarks(g);\n        if (!g.survivalRun) dispatchBattleStoryEvents(g);"
     ],
     [
       "          g.shake = enemyBaseDestroyed ? triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.enemyBaseCollapse) : createCameraShakeRuntime();\n          g.enemyBaseCollapse = 0;",
@@ -698,7 +698,7 @@
     ],
     [
       "          if (enemyBaseDestroyed && !lureControl) {",
-      "          if (enemyBaseDestroyed && !lureControl && !g.definition.missionConfig.armoryKey) {"
+      "          if (enemyBaseDestroyed && !lureControl && !g.definition.missionConfig.armoryKey && !g.definition.missionConfig.twinControl) {"
     ],
     [
       "  const archiveHud = hasArchiveExtraction(archiveGame.definition.missionType, archiveGame.definition.missionConfig)",
@@ -711,6 +711,18 @@
     [
       "        {screen === \"battle\" && hud.manualAbilityIcons.map((icon) => {",
       "        {armoryKeyStatus !== \"ready\" && armoryKeyStatus !== \"secured\" && screen === \"battle\" && hud.manualAbilityIcons.map((icon) => {"
+    ],
+    [
+      "  drawCrawler(ctx, g, sprites, graphicsProfile, allowDiagnosticFallback);\n\n  // A single shared-HP",
+      "  drawCrawler(ctx, g, sprites, graphicsProfile, allowDiagnosticFallback);\n  if (g.definition.missionConfig.medicalDefense) {\n    const supplies = stageObjects.medicalSupplies;\n    if (supplies?.complete && supplies.naturalWidth) {\n      ctx.drawImage(supplies, BASE_X + 21, activeLaneCenters[0] - 66, 64, 64);\n    }\n  }\n\n  // A single shared-HP"
+    ],
+    [
+      "  futagoEnraged,\n",
+      "  futagoEnraged,\n  v100TwinCanStartStrike,\n"
+    ],
+    [
+      "            if (f.stationAbility.phase === \"idle\" && f.abilityCooldown <= 0) {\n              const started = beginBossAnomalyAbility({",
+      "            const linkCut = anomalyKind === \"futago\" && Boolean(g.definition.missionConfig.twinControl) && g.barricadeHp <= 0;\n            if (f.stationAbility.phase === \"idle\" && f.abilityCooldown <= 0 && v100TwinCanStartStrike(f, g.fighters, linkCut)) {\n              const started = beginBossAnomalyAbility({"
     ]
   ],
   "app/manualAbilities.js": [

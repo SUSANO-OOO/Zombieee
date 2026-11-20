@@ -270,6 +270,7 @@ import {
   resolveV100TwinDefeat,
   v100TwinSeparationSteps,
   futagoEnraged,
+  v100TwinCanStartStrike,
   bossRenderKind,
   bossBattleHudSnapshot,
   bossBattleResultSnapshot,
@@ -9048,6 +9049,12 @@ function drawWorld(
 
   // The Crawler stays behind combatants; only its doorway masks a unit during deployment.
   drawCrawler(ctx, g, sprites, graphicsProfile, allowDiagnosticFallback);
+  if (g.definition.missionConfig.medicalDefense) {
+    const supplies = stageObjects.medicalSupplies;
+    if (supplies?.complete && supplies.naturalWidth) {
+      ctx.drawImage(supplies, BASE_X + 21, activeLaneCenters[0] - 66, 64, 64);
+    }
+  }
 
   // A single shared-HP infected checkpoint closes all three routes.
   if (g.definition.enemyBaseMode !== "scenery") {
@@ -22724,7 +22731,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 f.abilityCooldown = tuning.cooldownSeconds / splitSpeed;
               }
             }
-            if (f.stationAbility.phase === "idle" && f.abilityCooldown <= 0) {
+            const linkCut = anomalyKind === "futago" && Boolean(g.definition.missionConfig.twinControl) && g.barricadeHp <= 0;
+            if (f.stationAbility.phase === "idle" && f.abilityCooldown <= 0 && v100TwinCanStartStrike(f, g.fighters, linkCut)) {
               const started = beginBossAnomalyAbility({
                 boss: f,
                 candidates: g.fighters,
@@ -25100,6 +25108,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 ? g.stageMission.completed ? "クロメ撃破 // 残る敵を倒す" : "クロメ撃破 // 避難路を守る"
                 : isFloodgateBoss
                 ? "ガイレン撃破 // 防潮門を閉める"
+                : g.definition.missionConfig.medicalDefense
+                ? "変異ムガリアン社長撃破 — 医療物資を確保"
+                : g.definition.missionConfig.twinControl
+                ? g.barricadeHp > 0 ? "フタゴ撃破 — 中央制御盤を停止" : "フタゴ撃破 — 昇降路を確保"
                 : v100CorporateControlLabel(g.definition)
                 ? `${defeatedBossName}撃破・防護解除`
                 : g.definition.missionConfig.v100StageNumber === 30
@@ -25122,7 +25134,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 emitBattleBark(g, "takuya-down", "crawler", "tactical");
               } else if (fighter.kind === "takuya") {
                 if (!emitBattleBark(g, "base-exposed", "crawler", "tactical")) emitBattleBark(g, "takuya-down", "crawler", "tactical");
-              } else if (!isRailBoss && !isBayBoss && !isFloodgateBoss) {
+              } else if (!isRailBoss && !isBayBoss && !isFloodgateBoss
+                && !g.definition.missionConfig.medicalDefense && !g.definition.missionConfig.twinControl) {
                 emitBattleBark(g, "base-exposed", "crawler", "tactical");
               }
             } else if (fighter.kind === "gate-eater"
@@ -25351,6 +25364,12 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           RENDER_ARRAY_LIMITS.damageTexts,
         );
 
+        if (g.definition.missionConfig.twinControl && g.barricadeHp <= 0 && g.enemyBaseCollapse === 0) {
+          g.enemyBaseCollapse = dt;
+          g.banner = "中央制御盤 停止 — フタゴの連携解除";
+          g.bannerTime = 2.5;
+          playProductionCue(STATION_AUDIO_CUE_IDS.POWER_SWITCH, BARRICADE_X, { priority: 88, maxInstances: 1 });
+        }
         if (lureControl && g.barricadeHp <= 0) {
           if (g.enemyBaseCollapse === 0) {
             const ownerId = `lure-control:${g.resultId}`;
@@ -25462,7 +25481,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           }
           chooseAction(null);
           stopMusic();
-          if (enemyBaseDestroyed && !lureControl && !g.definition.missionConfig.armoryKey) {
+          if (enemyBaseDestroyed && !lureControl && !g.definition.missionConfig.armoryKey && !g.definition.missionConfig.twinControl) {
             addSemanticBattlePresentation(g, {
               semantic: "explosion-result",
               receiptId: `enemy-base:${g.resultId}:collapse`,

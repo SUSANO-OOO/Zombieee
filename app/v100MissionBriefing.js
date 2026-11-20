@@ -70,6 +70,8 @@ export function v100MissionBriefingFor(stageId) {
   if (node) return { mode: "sequence", count: stage.objectiveId.includes("four") ? 4 : 3, label: node.label, verb: node.verb };
   const vehicle = V100_MISSION_VEHICLES[stageId];
   if (vehicle) return { mode: "escort", origin: vehicle.count === 3 ? "冷蔵車3台" : vehicle.targetLabel, target: vehicle.destinationLabel ?? "目的地", verb: vehicle.count === 3 ? "追込み・確保" : "護送" };
+  if (stage.number === 24) return { mode: "advance", origin: "中央制御盤", target: "フタゴ", verb: "制御を止めて二体を撃破" };
+  if (stage.number === 25) return { mode: "hold", origin: "医療物資", target: "変異ムガリアン社長", verb: "医療物資を守って撃破" };
   if (stage.number === 29) return { mode: "dual-target", targets: ["国外起動回線", "感染源原株"], verb: "両方を破壊" };
   if (stage.missionType === "timed-defense") return { mode: "hold", origin: V100_DEFENSE_OBJECTIVES[stageId]?.label ?? "防衛線", target: "敵侵入", verb: "維持" };
   const control = V100_CORPORATE_CONTROLS[stageId];
