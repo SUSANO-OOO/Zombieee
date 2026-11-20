@@ -1549,10 +1549,11 @@ function SupportVehicleView({ save, vehicleOnly, returnLabel, onBack, onPurchase
 
 function DataManagementView({ save, notice, onBack, onBackup, onNewGameBackup, onImport, onLegacyHistory }: { save: Save; notice: string; onBack: () => void; onBackup: () => void; onNewGameBackup: () => Promise<void>; onImport: (file: File | undefined) => void; onLegacyHistory: (file: File | undefined) => void }) {
   const [view, setView] = useState<"save" | "offline" | "legacy">("save");
+  const [legacyHistoryFilename, setLegacyHistoryFilename] = useState("");
   const sections = [{ id: "save", label: "進行の保存" }, { id: "offline", label: "オフライン用データ" }, { id: "legacy", label: "旧版の引継ぎ" }] as const;
   return <div className="v100-modal-backdrop" data-v100-surface="data" role="presentation"><section className="v100-modal v100-data-modal" data-data-view={view} role="dialog" aria-modal="true" aria-labelledby="v100-data-title">
     <div className="v100-panel-heading"><div><span className="v100-kicker">セーブと端末</span><h2 id="v100-data-title">データ管理</h2></div><button type="button" onClick={onBack}>閉じる</button></div>
-    <nav className="v100-data-tabs" aria-label="データ管理の内容">{sections.map(section => <button type="button" key={section.id} aria-pressed={view === section.id} onClick={() => setView(section.id)}>{section.label}</button>)}</nav>
+    <nav className="v100-data-tabs" aria-label="データ管理の内容">{sections.map(section => <button type="button" key={section.id} aria-pressed={view === section.id} onClick={() => setView(section.id)} aria-label={section.label}>{section.id === "legacy" ? <><span className="v100-legacy-tab-word">旧版の</span><wbr /><span className="v100-legacy-tab-word">引継ぎ</span></> : section.label}</button>)}</nav>
     {notice && <p className="v100-notice v100-data-feedback" role="status">{notice}</p>}
     <div className="v100-data-scroll" tabIndex={0} aria-label={sections.find(section => section.id === view)?.label}>
       <section className="v100-data-panel" hidden={view !== "save"} aria-label="進行の保存">
@@ -1561,7 +1562,16 @@ function DataManagementView({ save, notice, onBack, onBackup, onNewGameBackup, o
         <button type="button" onClick={() => void onNewGameBackup()}>「初めから」の直前のセーブを書き出す</button>
       </section>
       <section className="v100-data-panel" hidden={view !== "offline"} aria-label="オフライン用データ"><div data-v100-pwa-storage /></section>
-      <section className="v100-data-panel" hidden={view !== "legacy"} aria-label="旧版の引継ぎ"><article><h3>過去のプレイ履歴</h3><p>旧版の書き出しデータで引き継ぎ特典の対象か確認します。現在の進行・残高・設定は変更しません。</p><label className="v100-legacy-history-file">旧版のプレイ履歴を選ぶ<input type="file" accept="application/json,.json" onChange={event => onLegacyHistory(event.currentTarget.files?.[0])} /></label></article></section>
+      <section className="v100-data-panel" hidden={view !== "legacy"} aria-label="旧版の引継ぎ">
+        <article className="v100-legacy-record">
+          <header className="v100-legacy-record-heading"><div><span className="v100-kicker">記録の照会</span><h3>過去のプレイ履歴</h3></div><span className="v100-legacy-record-stamp" aria-hidden="true">旧版</span></header>
+          <p>旧版の書き出しデータで引き継ぎ特典の対象か確認します。現在の進行・残高・設定は変更しません。</p>
+          <div className="v100-legacy-record-picker">
+            <label className="v100-legacy-history-file"><span aria-hidden="true">旧版の記録を選ぶ</span><input type="file" aria-label="旧版のプレイ履歴を選ぶ" accept="application/json,.json" onChange={event => { const file = event.currentTarget.files?.[0]; setLegacyHistoryFilename(file?.name ?? ""); onLegacyHistory(file); }} /></label>
+            <div className="v100-legacy-record-filename"><span>選択したファイル</span><output aria-label="選択した旧版のファイル" title={legacyHistoryFilename || undefined}>{legacyHistoryFilename || "まだ選択していません"}</output></div>
+          </div>
+        </article>
+      </section>
     </div>
     {view === "save" && <><div className="v100-data-actions"><button className="v100-primary" type="button" onClick={onBackup}>セーブを書き出す</button><label className="v100-file-button">セーブを復元<input type="file" accept="application/json" onChange={(event) => onImport(event.currentTarget.files?.[0])} /></label></div>
     <small className="v100-data-note">復元すると、進行・育成・装備・CAPS・設定が、選んだファイルの状態に戻る。引き継ぎ特典の受取済み記録は残り、重ねては受け取れない。復元に失敗したときは、現在のセーブを変更しない。</small></>}
