@@ -20609,11 +20609,11 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               g.crawlerHitSfxCooldown = .28;
               playCue("crawler-hit");
               addParticles(g, hit.targetX, hit.targetY, "#d76a45", 5);
-              addDamageText(g, hit.targetX + 4, hit.targetY - 18, formatBattleText(`装甲車両 -${Math.round(Math.min(beforeHit, hit.damage))}`), .7, "#ff7658");
+              addDamageText(g, hit.targetX + 4, hit.targetY - 18, formatBattleText(`移動拠点 -${Math.round(Math.min(beforeHit, hit.damage))}`), .7, "#ff7658");
             }
             if (!g.criticalAnnounced && beforeHit > 130 && g.baseHp <= 130 && g.baseHp > 0) {
               g.criticalAnnounced = true;
-              g.banner = "装甲車両 危険状態";
+              g.banner = "移動拠点 危険状態";
               g.bannerTime = 1.6;
               g.flashOverlay = Math.max(g.flashOverlay, .12);
               g.crawlerHitSfxCooldown = Math.max(g.crawlerHitSfxCooldown, .5);
@@ -24346,10 +24346,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                     g.crawlerHitSfxCooldown = .28;
                     playCue("crawler-hit");
                     addParticles(g, BASE_X + 5, f.y - 10, "#d76a45", 5);
-                    addDamageText(g, BASE_X + 12, f.y - 36, formatBattleText(`装甲車両 -${siegeDamage}`), .7, "#ff7658");
+                    addDamageText(g, BASE_X + 12, f.y - 36, formatBattleText(`移動拠点 -${siegeDamage}`), .7, "#ff7658");
                   }
                   if (!g.criticalAnnounced && beforeHit > 130 && g.baseHp <= 130 && g.baseHp > 0) {
-                    g.criticalAnnounced = true; g.banner = "装甲車両 危険状態"; g.bannerTime = 1.6; g.flashOverlay = Math.max(g.flashOverlay, .12);
+                    g.criticalAnnounced = true; g.banner = "移動拠点 危険状態"; g.bannerTime = 1.6; g.flashOverlay = Math.max(g.flashOverlay, .12);
                     g.crawlerHitSfxCooldown = Math.max(g.crawlerHitSfxCooldown, .5); playCue("crawler-critical");
                     emitBattleBark(g, "crawler-critical", "crawler", "crawler");
                   }

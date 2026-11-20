@@ -74,6 +74,7 @@ export function v100MissionObjectiveFor(stageId) {
   const stage = V100_STAGE_BY_ID[stageId];
   if (!stage) return "ステージの目標を達成";
   if (stage.number === 3) return "大型変異感染者TAKUYAを撃破";
+  if (stage.number === 5) return "改札喰いを倒し、感染核を破壊";
   if (stage.number === 30) return "TAKUYA-Ωを撃破し、西新を守る";
   const control = V100_CORPORATE_CONTROLS[stageId];
   if (control) {

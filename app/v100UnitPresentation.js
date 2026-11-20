@@ -105,7 +105,7 @@ export function v100TacticalHintFor(stage) {
   if (!stage) return "前衛が敵を引き受け、後ろから射撃で援護しよう。";
   if (Number(stage.number) === 1) return "クマバーソンが敵を引き受け、ババヤガが射撃で援護。「鉄鍋仁王立ち」を使うと、クマバーソンは自分のHPを少しずつ回復できる。敵が増えたら前衛を追加で出撃させよう。";
   if (Number(stage.number) === 2) return "射撃役を早めに出そう。車両に迫る前に、集まった敵を航空支援で狙おう。着弾まで少しかかる。";
-  if (Number(stage.number) === 5) return "改札喰いが止まる場所は、地面がオレンジ色に光る。近くに仲間を出すなら、突進が終わるのを待とう。";
+  if (Number(stage.number) === 5) return "床がオレンジに光ったら突進が来る。クマバーソンの「鉄鍋仁王立ち」で前線を守ろう。";
   if (v100BossForStage(stage.number)?.id === "boss-kurome") return "クロメの照準が付いたユニットをタップで回避。";
   if (stage.missionType === "boss") return "大技の予告を見逃さず、守備役の固有技を敵の攻撃に合わせて使おう。";
   if (stage.missionType === "escort") return "前衛と足止め役で、護衛対象へ近づく敵を止める。";

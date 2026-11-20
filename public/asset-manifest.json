@@ -8821,6 +8821,17 @@
       "bundleLength": 36220919
     },
     {
+      "path": "/audio/v100/foley/treatment.ogg",
+      "bytes": 6792,
+      "hash": "sha256-4efcffe4936cd1e70f8fae904a1542d225ceacd82a2e8057c01b31caa9b63369",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-treatment-fallback",
+      "audioType": "audio/ogg"
+    },
+    {
       "path": "/audio/v100/r9/barrier-raise.mp3",
       "bytes": 16338,
       "hash": "sha256-772ba76c71801dfeae8b455cd4809d1b778696eb6d85680fc4438c868f2d1d82",
@@ -9460,6 +9471,17 @@
       "bundleOffset": 17685,
       "bundleBytes": 2414,
       "bundleLength": 36220919
+    },
+    {
+      "path": "/audio/v104/combat/armor-hit.ogg",
+      "bytes": 4965,
+      "hash": "sha256-06a6145784d8c2d7c4e24cc94c8a300491047aa175916e72a5d90bd61bc96c1d",
+      "pack": "audio",
+      "category": "audio",
+      "criticality": "optional",
+      "audioChannel": "se",
+      "audioId": "offline-armor-hit-fallback",
+      "audioType": "audio/ogg"
     },
     {
       "path": "/audio/v104/combat/crossbow-release.mp3",

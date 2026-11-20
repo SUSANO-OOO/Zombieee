@@ -333,6 +333,16 @@ record(V100_POST_CREDITS_AUDIO.laugh, { pack: "audio", category: "audio", critic
 record(V100_POST_CREDITS_AUDIO.waves, { pack: "audio", category: "audio", criticality: "optional",
   audioChannel: "se", audioId: "ambience-v100-meinohama-waves", audioType: "audio/mpeg" });
 
+// These two short effects needed their alternate sources during offline play.
+// Save the original alternatives directly alongside the preferred bundled MP3s.
+for (const [path, audioId] of [
+  ["/audio/v100/foley/treatment.ogg", "offline-treatment-fallback"],
+  ["/audio/v104/combat/armor-hit.ogg", "offline-armor-hit-fallback"],
+]) {
+  record(path, { pack: "audio", category: "audio", criticality: "optional",
+    audioChannel: "se", audioId, audioType: "audio/ogg" });
+}
+
 for (const asset of INSTALL_AUDIO_ASSETS) {
   const audioChannel = audioChannelFor(asset.category);
   const source = selectPreferredAudioSource(asset.sources);

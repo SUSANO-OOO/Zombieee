@@ -1226,6 +1226,7 @@ function StoryNodeView({ node, eventId = null, phase = "event", nodeIndex = 0, p
 
 function MapView({ save, selectedStageId, onSelect, onStart, onRename, onBackup, onImport, onReplay, onOpenPersonnel, onOpenSupportVehicle, onOpenData }: { save: Save; selectedStageId: string; onSelect: (id: string) => void; onStart: (id: string) => void; onRename: () => void; onBackup: () => void; onImport: (file: File | undefined) => void; onReplay: (eventId: string) => void; onOpenPersonnel: () => void; onOpenSupportVehicle: () => void; onOpenData: () => void }) {
   const stage = V100_STAGE_BY_ID[selectedStageId];
+  const basePresentation = v100BasePresentationFor(stage?.number);
   const discovered = v100StageDiscovered(save, selectedStageId);
   const completedNumber = Math.max(0, ...save.completedStageIds.map(stageNumberFor));
   const storyComplete = save.postGameAvailable && V100_STAGE_IDS.every(id => save.completedStageIds.includes(id)) && save.readStoryEventIds.includes(v100StoryEventFor("v100:event:epilogue")?.nodes.length ? "v100:event:epilogue" : "v100:event:credits");
@@ -1325,9 +1326,9 @@ function MapView({ save, selectedStageId, onSelect, onStart, onRename, onBackup,
               {discovered && <p className="v100-map-tactical-hint">{v100TacticalHintFor(stage)}</p>}
               {boss && <div className="v100-boss-callout"><strong className="v100-boss-name">{boss.displayName}</strong><small>脅威 HP {boss.hp.toLocaleString()} / 特殊：{BOSS_SPECIAL_LABELS[boss.special]}</small></div>}
               <dl><div><dt>脅威分類</dt><dd>{discovered ? enemyPackLabelFor(stage?.enemyPack, stage?.number) : "情報未取得"}</dd></div><div><dt>配置枠</dt><dd>{save.formationSlots.filter(Boolean).length} / 7</dd></div></dl>
-              <StarCriteria vehicleMaxHp={save.vehicle.maxHp} />
+              <StarCriteria maxHp={save.vehicle.maxHp} stageNumber={stage?.number} />
               <div className="v100-map-actions" aria-label="出撃準備"><button type="button" aria-label="ユニットを編成" onClick={onOpenPersonnel}>ユニット</button><button type="button" aria-label="出撃装備を選ぶ" onClick={onOpenSupportVehicle}>戦術支援</button></div>
-              <div className="v100-map-briefs"><article><span>ユニット</span><strong>{save.ownedUnitIds.length}名</strong><small>出撃編成</small></article><article><span>装甲車両</span><strong>装甲車両</strong><small>耐久 {save.vehicle.maxHp}</small></article><article><span>戦術支援</span><strong>{save.equippedSupportId ? "装備中" : "未選択"}</strong><small>出撃装備</small></article></div>
+              <div className="v100-map-briefs"><article><span>ユニット</span><strong>{save.ownedUnitIds.length}名</strong><small>出撃編成</small></article><article><span>{basePresentation.healthLabel}</span><strong>{basePresentation.label}</strong><small>耐久 {save.vehicle.maxHp}</small></article><article><span>戦術支援</span><strong>{save.equippedSupportId ? "装備中" : "未選択"}</strong><small>出撃装備</small></article></div>
               <div className="v100-map-tools"><button type="button" onClick={onRename}>表示名を変更</button><button type="button" onClick={onBackup}>簡易バックアップ</button><label className="v100-file-button">復元<input type="file" accept="application/json" onChange={(event) => onImport(event.currentTarget.files?.[0])} /></label><button className="v100-utility-button" type="button" onClick={onOpenData}>データ管理</button></div>
               <div className="v100-replay-list"><span className="v100-kicker">会話記録</span>{save.readStoryEventIds.filter(eventId => v100StoryEventFor(eventId)?.nodes.length).slice(-6).map((eventId) => <button type="button" key={eventId} onClick={() => onReplay(eventId)}>{eventDisplayLabel(eventId)}</button>)}</div>
               <V100AssetCredits />
@@ -1380,6 +1381,7 @@ function FormationView({ save, stageId, requestedUnitId = null, onCancelRequeste
   const threats = v100MissionThreatsFor(stageId);
   const tacticalAdvice = briefingOpen && stage ? <p className="v100-briefing-advice">{v100TacticalHintFor(stage)}</p> : null;
   const showSupportAdviceFirst = stage?.number === 2;
+  const showAdviceAfterDiagram = stage?.number === 5;
   const ownedUnits = save.ownedUnitIds.map((unitId) => UNIT_BY_ID.get(unitId)).filter(Boolean) as Array<(typeof V100_UNITS)[number]>;
   const availableSlots = v100AvailableFormation(stageId, save.formationSlots);
   const absence = v100StageAbsenceReason(stageId, "unit-paisen");
@@ -1409,6 +1411,7 @@ function FormationView({ save, stageId, requestedUnitId = null, onCancelRequeste
           {briefingOpen && (
             <V100BattleBriefing
               allowControls={!modePreparation}
+              stageNumber={stage?.number}
               initiallyShowControls={stage?.number === 1 && !modePreparation}
               onClose={() => setBriefingOpen(false)}
             >
@@ -1421,7 +1424,8 @@ function FormationView({ save, stageId, requestedUnitId = null, onCancelRequeste
                     <MissionBriefingDiagram stageId={stageId} />
                     <p>{missionLabelFor(stage)} / {enemyPackLabelFor(stage.enemyPack, stage.number)}</p>
                   </>}
-                  {!modePreparation && <StarCriteria vehicleMaxHp={save.vehicle.maxHp} />}
+                  {showAdviceAfterDiagram && tacticalAdvice}
+                  {!modePreparation && <StarCriteria maxHp={save.vehicle.maxHp} stageNumber={stage?.number} />}
                 </section>
                 <section>
                   <h3>敵の動き</h3>
@@ -1432,7 +1436,7 @@ function FormationView({ save, stageId, requestedUnitId = null, onCancelRequeste
                   ) : <p>ステージを選ぶと、出現する敵を確認できます。</p>}
                   <p>同時に出せる仲間は7体まで。同じ仲間を複数枠に入れても、出撃の待ち時間は共通です。</p>
                 </section>
-                {!showSupportAdviceFirst && tacticalAdvice}
+                {!showSupportAdviceFirst && !showAdviceAfterDiagram && tacticalAdvice}
               </div>
             </V100BattleBriefing>
           )}
@@ -1637,10 +1641,11 @@ function RewardSummaryView({ result }: { result: Record<string, unknown> | null 
 }
 
 
-function StarCriteria({ vehicleMaxHp }: { vehicleMaxHp: number }) {
-  const targets = v100StarTargetsForVehicle(vehicleMaxHp);
-  return <div className="v100-star-criteria" aria-label={`ステージ達成と車両生存で星1。星2は耐久70%以上で${targets[2]}、星3は90%以上で${targets[3]}`}>
-    <span><V100StageStars stars={1} label="条件" /> ステージ達成・車両生存</span>
+function StarCriteria({ maxHp, stageNumber }: { maxHp: number; stageNumber?: number }) {
+  const targets = v100StarTargetsForVehicle(maxHp);
+  const protection = v100BasePresentationFor(stageNumber).onFoot ? "退路確保" : "車両生存";
+  return <div className="v100-star-criteria" aria-label={`ステージ達成と${protection}で星1。星2は耐久70%以上で${targets[2]}、星3は90%以上で${targets[3]}`}>
+    <span><V100StageStars stars={1} label="条件" /> ステージ達成・{protection}</span>
     <span><V100StageStars stars={2} label="条件" /> 耐久70%以上 / {targets[2]}</span>
     <span><V100StageStars stars={3} label="条件" /> 耐久90%以上 / {targets[3]}</span>
   </div>;
