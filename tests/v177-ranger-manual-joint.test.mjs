@@ -26,6 +26,42 @@ test('original .5 impact/.18 recovery own recoil clock and return to ordinary po
  const impact=at(f,.5);assert(impact.events.some(e=>e.type==='impact'));assert.equal(plan(f).rangerManualJoint.presentationPhase,'recoil');at(f,.60);assert.equal(plan(f).rangerManualJoint.presentationPhase,'return');at(f,.6799999999);const end=paint(f,plan(f));at(f,.68);assert.equal(f.actor.manualAbility.phase,'cooldown');const normal=paint(f,v177JointPose('ranger',{requestedState:'idle'},f.runtime,{actor:f.actor,world:f.world}));for(let i=1;i<8;i++)for(let j=0;j<6;j++)assert(Math.abs(end.calls[i].matrix[j]-normal.calls[i].matrix[j])<1e-7);
 });
 
+test('precision winds into a planted crouch and carries it through recoil, hit and stun',()=>{
+ const f=fixture({state:'idle'});
+ const resolve=q=>v177RangerFootPlan('ranger',q,{actor:f.actor,world:f.world,width:96});
+ const entered=resolve(plan(f));
+ paint(f,entered);
+ assert.equal(entered.rangerBraceY,0);
+ at(f,.4);
+ const aiming=resolve(plan(f));
+ const rig=atlas.lowerRig,feet=aiming.lowerFootTargets;
+ const standing=v177RangerLowerPose(rig,aiming.phase,aiming.lowerSettle,undefined,feet);
+ const crouched=v177RangerLowerPose(rig,aiming.phase,aiming.lowerSettle,undefined,feet,aiming.rangerBraceY);
+ assert.equal(crouched.bob-standing.bob,aiming.rangerBraceY);
+ assert.ok(aiming.rangerBraceY>=30);
+ assert.deepEqual(crouched.joints.map(joint=>[joint[4],joint[5]]),standing.joints.map(joint=>[joint[4],joint[5]]));
+ for(let i=0;i<rig.legs.length;i++){
+  const j=crouched.joints[i],leg=rig.legs[i];
+  assert.ok(Math.abs(Math.hypot(j[2]-j[0],j[3]-j[1])-leg.upperLength)<1e-9);
+  assert.ok(Math.abs(Math.hypot(j[4]-j[2],j[5]-j[3])-leg.lowerLength)<1e-9);
+ }
+ assert.equal(paint(f,aiming).receipt.degenerate,0);
+ at(f,.55);
+ const recoil=resolve(plan(f));
+ assert.equal(recoil.rangerBraceY,aiming.rangerBraceY);
+ paint(f,recoil);
+ const decide=(requestedState,stunRemaining)=>v177JointPose('ranger',{requestedState},f.runtime,{actor:f.actor,world:f.world,stunRemaining});
+ const hit=decide('hit-light');
+ assert.equal(hit.rangerBraceY,recoil.rangerBraceY);
+ paint(f,hit);
+ const stunned=decide('incapacitated',.42);
+ assert.equal(stunned.rangerBraceY,recoil.rangerBraceY);
+ assert.equal(stunned.upperOffsetY,recoil.upperOffsetY);
+ const leaving=decide('incapacitated',.36);
+ assert.ok(leaving.rangerBraceY>0 && leaving.rangerBraceY<stunned.rangerBraceY);
+ assert.equal(paint(f,leaving).receipt.mode,'continuous-weighted-mesh');
+});
+
 test('the actual sparse native shot paints a real recoil before return without extending the gameplay recovery',()=>{
  const f=fixture({state:'idle'});let elapsed=0,impacts=0;const phases=[];
  // Original d552 desktop paints around the missing recoil, not invented FPS.

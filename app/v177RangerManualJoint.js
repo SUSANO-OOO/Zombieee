@@ -2,6 +2,7 @@ const finite = Number.isFinite;
 const clamp = t => Math.max(0,Math.min(1,t));
 const smooth = t => {t=clamp(t);return t*t*(3-2*t);};
 const cycle = t => ((t%1)+1)%1;
+const precisionBraceDepth = 34;
 const copyUpper = pose => Object.fromEntries(Object.entries(pose).map(([bone,m])=>[bone,[...m]]));
 const finiteUpper = pose => pose && Object.values(pose).every(m=>m?.length===6&&m.every(finite));
 
@@ -39,7 +40,8 @@ export function createV177RangerManualJoint({normalPlan,captureUpper,blendUpper}
       if(!finite(phase)||!finite(settle)||!finite(previous.plan.upperOffsetY))return null;
       const current=cycle(runtime.locomotionPhase),delta=((current-phase+.5)%1+1)%1-.5;
       entry={elapsed,upper,phase,rawPhase:runtime.locomotionPhase-delta,settle,
-        upperOffsetY:previous.plan.upperOffsetY,lowerIndex:previous.plan.lowerIndex};
+        upperOffsetY:previous.plan.upperOffsetY,lowerIndex:previous.plan.lowerIndex,
+        braceY:previous.plan.rangerBraceY??0};
     }
     if(elapsed+1e-9<entry.elapsed)return null;
     const aimP=smooth((elapsed-entry.elapsed)/(windup-entry.elapsed));
@@ -48,13 +50,14 @@ export function createV177RangerManualJoint({normalPlan,captureUpper,blendUpper}
     const gait={...runtime,locomotionPhase:phase,locomotionSettle:settle};
     const neutral=normalPlan({requestedState:'idle'},gait);
     if(!neutral?.upperRigPlan)return null;
-    let upper,presentationPhase,attackPhase;
+    let upper,presentationPhase,attackPhase,braceY=precisionBraceDepth;
     if(m.phase==='windup') {
       const aiming=normalPlan({requestedState:'wind-up',clipProgress:1},gait);
-      // Shoulder the rifle before the shot and hold the sight line briefly.
-      // The original lower-body settle continues on its own clock.
+      // Sink into a precision stance as the rifle comes up. The weighted legs
+      // keep their planted ankles while the torso and both grips drop together.
       const shoulderAim=smooth((elapsed-entry.elapsed)/((windup-entry.elapsed)*.72));
       upper=shoulderAim===0?copyUpper(entry.upper):blendUpper(atlas,entry.upper,captureUpper(atlas,aiming),shoulderAim);
+      braceY=entry.braceY+(precisionBraceDepth-entry.braceY)*shoulderAim;
       attackPhase=aiming.attackPhase*shoulderAim;presentationPhase='aim';
     }else {
       // Keep the original .18s recovery. Give the actual recoil half of it:
@@ -66,13 +69,15 @@ export function createV177RangerManualJoint({normalPlan,captureUpper,blendUpper}
       }else {
         const released=normalPlan({requestedState:'active',clipProgress:1},gait),p=smooth((afterShot-recoilSeconds)/(recovery-recoilSeconds));
         upper=blendUpper(atlas,captureUpper(atlas,released),captureUpper(atlas,neutral),p);
+        braceY=precisionBraceDepth*(1-p);
         attackPhase=released.attackPhase+(1-released.attackPhase)*p;presentationPhase='return';
       }
     }
     if(!finiteUpper(upper))return null;
     return {...neutral,phase,lowerSettle:settle,
       lowerIndex:elapsed===entry.elapsed?entry.lowerIndex:neutral.lowerIndex,
-      upperOffsetY:elapsed===entry.elapsed?entry.upperOffsetY:neutral.upperOffsetY,
+      upperOffsetY:elapsed===entry.elapsed?entry.upperOffsetY:braceY===0?neutral.upperOffsetY:neutral.upperOffsetY+braceY,
+      rangerBraceY:braceY,
       attackPhase,rangerManualUpperPose:upper,
       rangerManualJoint:{activationId:m.activationId,entry,clockElapsed:elapsed,presentationPhase}};
   }
