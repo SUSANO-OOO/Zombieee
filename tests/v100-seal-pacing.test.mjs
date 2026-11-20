@@ -4,7 +4,12 @@ import {V100_STAGES} from '../app/v100Registry.js';
 import {v100BattleDefinitionFor} from '../app/v100BattleAdapter.js';
 import {STATION_MISSION_TYPES,createStationMissionRuntime,advanceStationMissionRuntime,stationPowerNodes,stationHumanMoveSpeed,stationMissionOutcome} from '../app/stationStageMechanics.js';
 
-const missions=V100_STAGES.map(s=>v100BattleDefinitionFor(s.id)).filter(d=>d.missionType===STATION_MISSION_TYPES.SEQUENTIAL_SEAL);
+import {hasRescueControl} from '../app/v100RescueControl.js';
+import {hasCentralSeal} from '../app/v100CentralSeal.js';
+
+const returnMissions=V100_STAGES.map(s=>v100BattleDefinitionFor(s.id))
+ .filter(d=>d.missionType===STATION_MISSION_TYPES.SEQUENTIAL_SEAL
+  &&!hasRescueControl(d.missionType,d.missionConfig)&&!hasCentralSeal(d.missionType,d.missionConfig));
 function progress(definition,runtime,values={}){
  return advanceStationMissionRuntime({runtime,config:definition.missionConfig,seconds:6,battleElapsedSeconds:6,humanCount:2,powerOperatorCount:1,powerLaneThreats:0,activeUnitIds:[11,12],returnedUnitIds:[],wavesResolved:false,...values});
 }
@@ -16,8 +21,8 @@ function armedReturn(definition){
 }
 
 test('V1 sequential nodes advance by physical operation and threat clearance without an absolute-clock wait',()=>{
- assert.ok(missions.length>=2);
- for(const definition of missions){
+ assert.deepEqual(returnMissions.map(definition=>definition.stageId),['stage-hospital-evacuation-route','stage-national-dispersal-network']);
+ for(const definition of returnMissions){
   const initial=createStationMissionRuntime(definition.missionType,definition.missionConfig);
   assert.ok(stationPowerNodes(definition.missionConfig).every(n=>n.readyAtSeconds===0));
   assert.equal(progress(definition,initial,{powerOperatorCount:0}).powerHold,0,'remote actors cannot operate');
@@ -30,7 +35,7 @@ test('V1 sequential nodes advance by physical operation and threat clearance wit
 });
 
 test('faster return preserves the original required identities, threat check and failure deadline',()=>{
- for(const definition of missions){
+ for(const definition of returnMissions){
   const sealed=armedReturn(definition);
   assert.deepEqual(sealed.returnTargetIds,['11','12']);
   const substitute=progress(definition,sealed,{seconds:2,wavesResolved:true,activeUnitIds:[11,12,13],returnedUnitIds:[11,13],returnedCount:2});
@@ -46,7 +51,7 @@ test('faster return preserves the original required identities, threat check and
 });
 
 test('return sprint is isolated to the sealed V1 return and still honors slowing effects',()=>{
- const definition=missions[0],config=definition.missionConfig,initial=createStationMissionRuntime(definition.missionType,config),sealed=armedReturn(definition);
+ const definition=returnMissions[0],config=definition.missionConfig,initial=createStationMissionRuntime(definition.missionType,config),sealed=armedReturn(definition);
  assert.equal(stationHumanMoveSpeed({baseSpeed:20,runtime:initial,config}),20);
  assert.equal(stationHumanMoveSpeed({baseSpeed:20,runtime:sealed,config}),64);
  assert.equal(stationHumanMoveSpeed({baseSpeed:20,slowMultiplier:.5,runtime:sealed,config}),32);

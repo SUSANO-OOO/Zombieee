@@ -1,4 +1,7 @@
 import { STATION_MISSION_TYPES, currentPowerNode, escortCartX, hasSupplyValve } from "./stationStageMechanics.js";
+import { hasRailEvacuation } from "./v100RailEvacuation.js";
+import { hasRescueControl } from "./v100RescueControl.js";
+import { centralSealGateEngaged, hasCentralSeal } from "./v100CentralSeal.js";
 
 const DEFAULT_LANE_CENTERS = Object.freeze([286, 366, 446]);
 const CONTENT_ROUTE_Y = Object.freeze([212, 282, 352]);
@@ -247,12 +250,15 @@ export function stationSpatialSnapshot({
     });
   }
 
-  const supplyValve = hasSupplyValve(missionType, config);
-  if (supplyValve || missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL) {
+  const centralSeal = hasCentralSeal(missionType, config);
+  const guardedDevice = hasSupplyValve(missionType, config) || hasRailEvacuation(missionType, config)
+    || hasRescueControl(missionType, config) || centralSeal;
+  if (guardedDevice || missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL) {
     const node = currentPowerNode(missionRuntime, config);
     const nodeY = node ? projectedContentY(node.y, lanes) : null;
-    const powerOperatorCount = node
-      ? humans.filter((human) => (!supplyValve || (!human.gateEntering && !(human.stunned > 0))) && pointInEllipse(
+    const gateCanOperate = !centralSeal || (centralSealGateEngaged(missionRuntime, eventIndex) && pendingSpawnCount === 0);
+    const powerOperatorCount = node && gateCanOperate
+      ? humans.filter((human) => (!guardedDevice || (!human.gateEntering && !(human.stunned > 0))) && pointInEllipse(
         human,
         node.x,
         nodeY,
@@ -269,7 +275,7 @@ export function stationSpatialSnapshot({
         node.radiusY,
       )).length
       : 0;
-    if (supplyValve) return frozen({ ...base, powerOperatorCount, powerLaneThreats });
+    if (guardedDevice) return frozen({ ...base, powerOperatorCount, powerLaneThreats });
     const returnedHumans = humans.filter((human) => inSharedLaneReturnZone(human, config, lanes));
     const returnedUnitIds = returnedHumans.map(entityId).filter((id) => id !== null);
     const escapeRouteThreats = enemies.filter((enemy) => inSharedLaneReturnZone(enemy, config, lanes)).length;

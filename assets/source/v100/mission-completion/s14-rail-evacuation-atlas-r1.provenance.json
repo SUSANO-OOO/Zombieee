@@ -1,0 +1,70 @@
+{
+  "method": "Built-in ImageGen, transparent atlas; exact crops and Lanczos resize through sharp",
+  "prompt": "Original video game sprite atlas for a dark cinematic 2.5D Japanese freight yard at dusk. Genuine transparent background, landscape canvas. Exactly three cleanly separated isolated pieces with wide empty gutters, no overlaps. Across the TOP HALF only: one complete Japanese civilian evacuation railway passenger car, perfectly side-on and parallel to the canvas, all wheels visible, battered desaturated blue-silver side with a narrow muted blue stripe and dim amber interior windows, subtle rusty wheel assemblies, a few very indistinct seated silhouettes seen only through windows. True horizontal car body, no track, no ground or shadow, no locomotive nose, no brand or writing. In the BOTTOM LEFT quadrant only: a single empty low blackened-metal industrial railway emergency coupler release housing, chunky foot and clearly exposed circular pivot where a removable handle would attach, gritty steel. In the BOTTOM RIGHT quadrant only: a single detached, strongly red-painted chunky metal lever arm with recognizable red grip and visible round drilled hinge end at its bottom-left, rising diagonally up-right. Make the lever broad and clear at small smartphone game scale. Each piece fully within its region with ample transparent margins. Grounded realistic hand-painted game textures, warm edge lighting from camera upper right, readable silhouettes at game size, same visual style across the objects. No characters outside the opaque train windows, no extra parts or duplicated objects, no background, captions, texture cards or arrangement frames.",
+  "master": {
+    "path": "assets/source/v100/mission-completion/s14-rail-evacuation-atlas-master-r1.png",
+    "sha256": "9b5e847b17ad7c074cbbfc62a1d2f78f1fb309c79fa65bc5fe45e3bdb8088125",
+    "size": [
+      1774,
+      887
+    ]
+  },
+  "runtime": {
+    "path": "public/art/v100/mission-objects/s14-rail-evacuation-atlas-r1.webp",
+    "sha256": "77a4890564c54a3bd235adf01835ea2f81b73dbbb4742281863e8b71761a2c98",
+    "size": [
+      680,
+      288
+    ],
+    "quality": 86,
+    "alphaQuality": 100
+  },
+  "pieces": [
+    {
+      "name": "civilian-car",
+      "crop": {
+        "left": 41,
+        "top": 31,
+        "width": 1693,
+        "height": 386
+      },
+      "atlas": [
+        4,
+        4,
+        672,
+        153
+      ]
+    },
+    {
+      "name": "lever-housing",
+      "crop": {
+        "left": 110,
+        "top": 498,
+        "width": 592,
+        "height": 368
+      },
+      "atlas": [
+        4,
+        161,
+        172,
+        107
+      ]
+    },
+    {
+      "name": "lever-handle",
+      "crop": {
+        "left": 950,
+        "top": 440,
+        "width": 777,
+        "height": 427
+      },
+      "atlas": [
+        184,
+        161,
+        224,
+        123
+      ]
+    }
+  ],
+  "usage": "Stage 14 only. No likeness source or unrelated stage assets changed."
+}

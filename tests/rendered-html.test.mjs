@@ -1959,7 +1959,7 @@ test("integrates the enemy gate queue without changing direct QA or turned place
   assert.match(game, /other\.hp <= 0 \|\| !other\.combatReady/);
   assert.match(game, /kind !== "turned" && gateEntry !== null/);
   assert.match(game, /combatReady: true, gateEntering: false/);
-  assert.match(game, /f\.spawnEntryMode === "right-edge"[\s\S]*f\.spawnEntryMode === "right-edge-outside"[\s\S]*\? W[\s\S]*: ENEMY_GATE_SPAWN\.revealX;[\s\S]*ctx\.rect\(0, 0, Math\.min\(revealRight, options\.enemyGateOcclusionX \?\? W\), H\);[\s\S]*ctx\.clip\(\)/);
+  assert.match(game, /const revealRight = f\.spawnRevealX \?\? \(f\.spawnEntryMode === "right-edge"[\s\S]*f\.spawnEntryMode === "right-edge-outside"[\s\S]*\? W[\s\S]*: ENEMY_GATE_SPAWN\.revealX\);[\s\S]*ctx\.rect\(0, 0, Math\.min\(revealRight, options\.enemyGateOcclusionX \?\? W\), H\);[\s\S]*ctx\.clip\(\)/);
   assert.match(game, /const incomingBossKind = mission\.units\.find\(\(kind\) => isBossEnemyKind\(kind\)\) \?\? null;[\s\S]*announceBossEntrance\(g, incomingBossKind,[\s\S]*activateTakuyaScene: incomingBossKind === "takuya"/);
   assert.match(game, /const announceBossEntrance = useCallback[\s\S]*definition\.entrance\.warningLabel[\s\S]*CAMERA_SHAKE_EVENTS\.takuyaEntrance[\s\S]*playBattleSemanticCue\(definition\.entrance\.cueId[\s\S]*semantic: "boss-entrance"[\s\S]*receiptId/);
   assert.match(game, /bossActiveOrIncoming[\s\S]*isBossEnemyKind\(entry\.kind\)[\s\S]*syncMusicMode\(bossActiveOrIncoming \? "boss"/);

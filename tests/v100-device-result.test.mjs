@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { V100_NODE_PROFILES } from '../app/v100MissionNodes.js';
 import { V100_STAGE_IDS } from '../app/v100Registry.js';
+import { V100_RESCUE_CONTROL_STAGE } from '../app/v100RescueControl.js';
+import { V100_CENTRAL_SEAL_STAGE } from '../app/v100CentralSeal.js';
 import { v100BattleDefinitionFor } from '../app/v100BattleAdapter.js';
 import { v100BattleReportFor, normalizeV100BattleReport, v100DeviceResultText } from '../app/v100BattleReport.js';
 import { createV100BattleResult } from '../app/v100Transactions.js';
@@ -31,8 +33,18 @@ test('all four device objectives retain measured counts through result/save with
       assert.deepEqual(parsed.save.lastResult.battleReport, battleReport);
       for (const key of ['caps', 'receipts', 'bestStars', 'completedStageIds', 'formationSlots', 'equipment', 'unitLevels']) assert.deepEqual(parsed.save[key], seed[key]);
       const text = v100DeviceResultText(parsed.save.lastResult);
-      assert.equal(text.progress, `${profile.label} ${count}/${total}基を${profile.verb}`);
-      assert.equal(text.detail, count === total ? '装置の操作後も、敵の掃討と全員帰還が必要' : `残り${total - count}基の${profile.label}を${profile.verb}`);
+      if (stageId === V100_CENTRAL_SEAL_STAGE) {
+        assert.equal(text.progress, `ゲート ${count}/${total} 閉鎖`);
+        assert.equal(text.detail, count === total ? '流入停止後、残る感染者を倒す'
+          : '次の閉鎖盤へ仲間を送り、周囲の敵を倒す');
+      } else if (stageId === V100_RESCUE_CONTROL_STAGE) {
+        assert.equal(text.progress, `救難回線 ${count}/${total} 復旧`);
+        assert.equal(text.detail, count === total ? '回線を復旧したら、残る敵から制御区を守る'
+          : '仲間を次の制御盤へ送り、周囲の敵を倒す');
+      } else {
+        assert.equal(text.progress, `${profile.label} ${count}/${total}基を${profile.verb}`);
+        assert.equal(text.detail, count === total ? '装置の操作後も、敵の掃討と全員帰還が必要' : `残り${total - count}基の${profile.label}を${profile.verb}`);
+      }
       assert.equal(parsed.save.lastResult.won, false);
       assert.equal(parsed.save.lastResult.objectiveComplete, false);
     }

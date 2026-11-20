@@ -167,6 +167,166 @@
     [
       "\n            missionRuntime: g.definition.missionType === \"escort\" || g.definition.missionType === \"sequential-seal\"\n",
       "\n            missionRuntime: g.definition.missionType === \"escort\" || g.definition.missionType === \"sequential-seal\"\n              || hasSupplyValve(g.definition.missionType, g.definition.missionConfig)\n"
+    ],
+    [
+      "import { drawV100MissionNode, V100_NODE_PROFILES, V100_SUPPLY_VALVE } from \"./v100MissionNodes.js\";",
+      "import { drawV100MissionNode, V100_NODE_PROFILES, V100_SUPPLY_VALVE } from \"./v100MissionNodes.js\";\nimport { drawV100RailEvacuation, hasRailEvacuation } from \"./v100RailEvacuation.js\";"
+    ],
+    [
+      "  if (hasSupplyValve(g.definition.missionType, g.definition.missionConfig)) {\n    if ((g.stageMission.powerActivated ?? 0) >= 1) return null;\n    const node = currentPowerNode",
+      "  if (hasSupplyValve(g.definition.missionType, g.definition.missionConfig)\n    || hasRailEvacuation(g.definition.missionType, g.definition.missionConfig)) {\n    const node = currentPowerNode"
+    ],
+    [
+      "  supplyValveBlocked?: boolean;",
+      "  supplyValveBlocked?: boolean;\n  couplersBlocked?: boolean;\n  evacuationProgress?: number;"
+    ],
+    [
+      "  if (drawV100ClinicalControl(ctx, g, stageObjects, 650, activeLaneCenters[0] + 30)) return;\n  if (hasSupplyValve",
+      "  if (drawV100ClinicalControl(ctx, g, stageObjects, 650, activeLaneCenters[0] + 30)) return;\n  if (hasRailEvacuation(g.definition.missionType, g.definition.missionConfig)) {\n    drawV100RailEvacuation(ctx, g.stageMission, stageObjects, activeYForContentY, activeLaneCenters[0] - 26);\n  }\n  if (hasSupplyValve"
+    ],
+    [
+      "        if ((g.definition.missionType === STATION_MISSION_TYPES.ESCORT\n          || g.definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL || supplyValvePending)",
+      "        const railEvacuation = hasRailEvacuation(g.definition.missionType, g.definition.missionConfig);\n        if ((g.definition.missionType === STATION_MISSION_TYPES.ESCORT\n          || g.definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL || supplyValvePending\n          || (railEvacuation && !g.stageMission.completed))"
+    ],
+    [
+      "              g.banner = supplyValvePending ? \"復旧完了　待機室に空気が届いた\"\n                : `${g.definition.missionConfig.powerLabel ?? \"電源\"} ${nextMission.powerActivated ?? 0}/${stationPowerNodes(g.definition.missionConfig).length} ${g.definition.missionConfig.powerVerb ?? \"起動\"}`;\n              g.bannerTime = 1.4;\n              playProductionCue(STATION_AUDIO_CUE_IDS.POWER_SWITCH, supplyValvePending ? V100_SUPPLY_VALVE.powerXs[0] : W * .68,\n                { priority: 84, maxInstances: 2 });",
+      "              const nodes = stationPowerNodes(g.definition.missionConfig);\n              const count = nextMission.powerActivated ?? 0;\n              g.banner = supplyValvePending ? \"復旧完了　待機室に空気が届いた\"\n                : railEvacuation && count === nodes.length ? \"民間車両が退避を開始\"\n                  : `${g.definition.missionConfig.powerLabel ?? \"電源\"} ${count}/${nodes.length} ${g.definition.missionConfig.powerVerb ?? \"起動\"}`;\n              g.bannerTime = 1.4;\n              const cueX = railEvacuation ? nodes[count - 1]?.x ?? W * .68\n                : supplyValvePending ? V100_SUPPLY_VALVE.powerXs[0] : W * .68;\n              playProductionCue(STATION_AUDIO_CUE_IDS.POWER_SWITCH, cueX, { priority: 84, maxInstances: 2 });\n            } else if (transition === \"civilian-car-evacuated\") {\n              g.banner = \"民間車両の退避完了\";\n              g.bannerTime = 1.8;\n              playProductionCue(STATION_AUDIO_CUE_IDS.RESCUE_CONFIRM, W * .22, { priority: 82, maxInstances: 1 });"
+    ],
+    [
+      "                || hasSupplyValve(g.definition.missionType, g.definition.missionConfig)\n                ? { ...g.stageMission }",
+      "                || hasSupplyValve(g.definition.missionType, g.definition.missionConfig)\n                || hasRailEvacuation(g.definition.missionType, g.definition.missionConfig)\n                ? { ...g.stageMission }"
+    ],
+    [
+      "              || hasSupplyValve(g.definition.missionType, g.definition.missionConfig)\n              ? { ...g.stageMission }",
+      "              || hasSupplyValve(g.definition.missionType, g.definition.missionConfig)\n              || hasRailEvacuation(g.definition.missionType, g.definition.missionConfig)\n              ? { ...g.stageMission }"
+    ],
+    [
+      "            if (twinDefeat.complete && (isOutbreakBoss\n              || (fighter.kind === g.definition.bossEnemyKind && g.definition.bossUnlocksEnemyBase))) {\n              g.bossDefeatPending = true;\n              if (!isOutbreakBoss) g.barricadeVulnerable = true;",
+      "            const isRailBoss = fighter.kind === g.definition.bossEnemyKind\n              && hasRailEvacuation(g.definition.missionType, g.definition.missionConfig);\n            if (twinDefeat.complete && (isOutbreakBoss || isRailBoss\n              || (fighter.kind === g.definition.bossEnemyKind && g.definition.bossUnlocksEnemyBase))) {\n              g.bossDefeatPending = true;\n              if (!isOutbreakBoss && !isRailBoss) g.barricadeVulnerable = true;"
+    ],
+    [
+      "                ? `${defeatedBossName}撃破 — 残存感染体を掃討`\n",
+      "                ? `${defeatedBossName}撃破 — 残存感染体を掃討`\n                : isRailBoss\n                ? g.stageMission.completed ? \"オオグチ撃破 // 残る敵を倒す\" : \"オオグチ撃破 // 民間車両を逃がす\"\n"
+    ],
+    [
+      "              } else {\n                emitBattleBark(g, \"base-exposed\", \"crawler\", \"tactical\");\n              }\n            } else if (fighter.kind === \"gate-eater\"",
+      "              } else if (!isRailBoss) {\n                emitBattleBark(g, \"base-exposed\", \"crawler\", \"tactical\");\n              }\n            } else if (fighter.kind === \"gate-eater\""
+    ],
+    [
+      "import { drawV100RailEvacuation, hasRailEvacuation } from \"./v100RailEvacuation.js\";",
+      "import { drawV100RailEvacuation, hasRailEvacuation, railEvacuationReadout } from \"./v100RailEvacuation.js\";"
+    ],
+    [
+      "  const phaseName = isFinalDefense && gameRef.current.bossDefeated ? \"残敵を掃討\"\n    : defenseObjective",
+      "  const railHud = hasRailEvacuation(gameRef.current.definition.missionType, gameRef.current.definition.missionConfig)\n    ? railEvacuationReadout(gameRef.current.stageMission) : null;\n  const phaseName = railHud ? railHud.phaseLabel\n    : isFinalDefense && gameRef.current.bossDefeated ? \"残敵を掃討\"\n    : defenseObjective"
+    ],
+    [
+      "          {externalSessionActive && bossHealthPanel ? null : defenseObjective",
+      "          {externalSessionActive && bossHealthPanel ? null : railHud\n            ? <div className=\"health-hud barrier-health rail-evacuation-objective\" data-rail-state={railHud.phase} aria-label={`${railHud.label} ${railHud.status}`}>\n              <div><span>{railHud.label}</span><b>{railHud.status}</b></div>\n              <i><em style={{ width: `${railHud.progress * 100}%` }} /></i>\n            </div>\n            : defenseObjective"
+    ],
+    [
+      "import { drawV100RailEvacuation, hasRailEvacuation, railEvacuationReadout } from \"./v100RailEvacuation.js\";",
+      "import { drawV100RailEvacuation, hasRailEvacuation, railEvacuationReadout } from \"./v100RailEvacuation.js\";\nimport { hasRescueControl, rescueControlReadout, V100_RESCUE_CONTROL } from \"./v100RescueControl.js\";"
+    ],
+    [
+      "advanceOnClearAfter?: number; clearDelaySeconds?: number; units: string[] };",
+      "advanceOnClearAfter?: number; clearDelaySeconds?: number; requiredPowerCount?: number; units: string[] };"
+    ],
+    [
+      "  couplersBlocked?: boolean;",
+      "  couplersBlocked?: boolean;\n  rescueControlBlocked?: boolean;"
+    ],
+    [
+      "    if (g.researchContainer?.exposed) {\n      const container = g.researchContainer;",
+      "    if (hasRescueControl(g.definition.missionType, g.definition.missionConfig)) {\n      const security = V100_RESCUE_CONTROL;\n      drawV100MissionNode(ctx, g, stageObjects, security.powerCount, security.securityX, activeYForContentY(security.securityY) - 8);\n      return;\n    }\n    if (g.researchContainer?.exposed) {\n      const container = g.researchContainer;"
+    ],
+    [
+      "              const count = nextMission.powerActivated ?? 0;\n              g.banner = supplyValvePending",
+      "              const count = nextMission.powerActivated ?? 0;\n              const rescueControl = hasRescueControl(g.definition.missionType, g.definition.missionConfig);\n              const lineRestored = rescueControl && count === nodes.length;\n              g.banner = lineRestored ? \"救難回線 開通　制御区を守る\" : supplyValvePending"
+    ],
+    [
+      "              const cueX = railEvacuation ? nodes[count - 1]?.x ?? W * .68",
+      "              const cueX = railEvacuation || rescueControl ? nodes[count - 1]?.x ?? W * .68"
+    ],
+    [
+      "              playProductionCue(STATION_AUDIO_CUE_IDS.POWER_SWITCH, cueX, { priority: 84, maxInstances: 2 });\n            } else if (transition === \"civilian-car-evacuated\") {",
+      "              playProductionCue(STATION_AUDIO_CUE_IDS.POWER_SWITCH, cueX, { priority: 84, maxInstances: 2 });\n              if (lineRestored) playProductionCue(\"radio-open\", cueX, { priority: 87, maxInstances: 1 });\n            } else if (transition === \"rescue-control-secured\") {\n              g.banner = \"救難回線復旧・防衛完了\";\n              g.bannerTime = 1.8;\n              playProductionCue(STATION_AUDIO_CUE_IDS.RESCUE_CONFIRM, BASE_X, { priority: 82, maxInstances: 1 });\n            } else if (transition === \"civilian-car-evacuated\") {"
+    ],
+    [
+      "            if (clearDriven && !campaignWaveReady(g, mission)) break;",
+      "            if (!campaignWaveReady(g, mission)) break;"
+    ],
+    [
+      "  const phaseName = railHud ? railHud.phaseLabel\n    : isFinalDefense",
+      "  const rescueControlHud = hasRescueControl(gameRef.current.definition.missionType, gameRef.current.definition.missionConfig)\n    ? rescueControlReadout(gameRef.current.stageMission) : null;\n  const phaseName = railHud ? railHud.phaseLabel\n    : rescueControlHud ? rescueControlHud.phaseLabel\n    : isFinalDefense"
+    ],
+    [
+      "            : defenseObjective\n            ? <div className=\"health-hud barrier-health defense-objective\"",
+      "            : rescueControlHud\n            ? <div className=\"health-hud barrier-health rescue-control-objective\" data-rescue-control-state={rescueControlHud.phase} aria-label={`${rescueControlHud.label} ${rescueControlHud.status}`}>\n              <div><span>{rescueControlHud.label}</span><b>{rescueControlHud.status}</b></div>\n              <i><em style={{ width: `${rescueControlHud.progress * 100}%` }} /></i>\n            </div>\n            : defenseObjective\n            ? <div className=\"health-hud barrier-health defense-objective\""
+    ],
+    [
+      "import { hasRescueControl, rescueControlReadout, V100_RESCUE_CONTROL } from \"./v100RescueControl.js\";",
+      "import { hasRescueControl, rescueControlReadout, V100_RESCUE_CONTROL } from \"./v100RescueControl.js\";\nimport { centralSealCanReinforce, centralSealGateX, centralSealIngressPoint, centralSealReadout, drawV100CentralSealGates, hasCentralSeal } from \"./v100CentralSeal.js\";"
+    ],
+    [
+      "  portalId?: string; routeId?: string; entryMode?: EnemyEntryMode;",
+      "  portalId?: string; routeId?: string; entryMode?: EnemyEntryMode; revealX?: number;"
+    ],
+    [
+      "  spawnEntryMode?: EnemyEntryMode;",
+      "  spawnEntryMode?: EnemyEntryMode;\n  spawnRevealX?: number;"
+    ],
+    [
+      "  rescueControlBlocked?: boolean;",
+      "  rescueControlBlocked?: boolean;\n  centralSealBlocked?: boolean;"
+    ],
+    [
+      "  enemySpawn: EnemySpawnRuntime;\n  baseHp: number;",
+      "  enemySpawn: EnemySpawnRuntime;\n  centralSealLastIngressAt?: number;\n  baseHp: number;"
+    ],
+    [
+      "function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0, gateEntry: EnemySpawnEntry | null = null) {",
+      "function enqueueCentralSealIngress(g: Game, units: string[], wave: number) {\n  const gate = (g.stageMission.powerActivated ?? 0) as Lane;\n  const firstEntry = g.enemySpawn.nextEntryId;\n  g.enemySpawn = enqueueEnemyWave(g.enemySpawn, { units, wave }) as EnemySpawnRuntime;\n  g.enemySpawn.pending = g.enemySpawn.pending.map(entry => {\n    if (entry.entryId < firstEntry) return entry;\n    const portal = enemySpawnPortalPoint({ stageId: g.definition.stageId, viewport: activeStageViewportId,\n      entryId: entry.entryId, kind: entry.kind, missionType: g.definition.missionType });\n    const portalPoint = centralSealIngressPoint(gate, activeLaneCenters, portal.visualHalfWidth);\n    return { ...entry, ...portal, ...portalPoint, lane: gate, entryMode: \"base-interior\" };\n  });\n  g.centralSealLastIngressAt = g.time;\n}\n\nfunction spawnEnemy(g: Game, kind: string, lane: Lane, order = 0, gateEntry: EnemySpawnEntry | null = null) {"
+    ],
+    [
+      "    spawnEntryMode: gateEntry?.entryMode,\n    entryStepDistance: 0,",
+      "    spawnEntryMode: gateEntry?.entryMode,\n    spawnRevealX: gateEntry?.revealX,\n    entryStepDistance: 0,"
+    ],
+    [
+      "    const revealRight = f.spawnEntryMode === \"right-edge\"\n      || f.spawnEntryMode === \"right-edge-outside\"\n      ? W\n      : ENEMY_GATE_SPAWN.revealX;",
+      "    const revealRight = f.spawnRevealX ?? (f.spawnEntryMode === \"right-edge\"\n      || f.spawnEntryMode === \"right-edge-outside\"\n      ? W\n      : ENEMY_GATE_SPAWN.revealX);"
+    ],
+    [
+      "  if (g.definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL) {\n    const activated = g.stageMission.powerActivated ?? 0;",
+      "  if (g.definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL) {\n    const centralSeal = hasCentralSeal(g.definition.missionType, g.definition.missionConfig);\n    if (centralSeal) drawV100CentralSealGates(ctx, g.stageMission, stageObjects, activeYForContentY);\n    const activated = g.stageMission.powerActivated ?? 0;"
+    ],
+    [
+      "    if (g.researchContainer?.exposed) {\n      const container = g.researchContainer;",
+      "    if (centralSeal) return;\n    if (g.researchContainer?.exposed) {\n      const container = g.researchContainer;"
+    ],
+    [
+      "        const supplyValvePending = hasSupplyValve(g.definition.missionType, g.definition.missionConfig)\n          && (g.stageMission.powerActivated ?? 0) < 1;",
+      "        const supplyValvePending = hasSupplyValve(g.definition.missionType, g.definition.missionConfig)\n          && (g.stageMission.powerActivated ?? 0) < 1;\n        const centralSeal = hasCentralSeal(g.definition.missionType, g.definition.missionConfig);"
+    ],
+    [
+      "              g.banner = lineRestored ? \"救難回線 開通　制御区を守る\" : supplyValvePending ? \"復旧完了　待機室に空気が届いた\"\n                : railEvacuation && count === nodes.length ? \"民間車両が退避を開始\"\n                  : `${g.definition.missionConfig.powerLabel ?? \"電源\"} ${count}/${nodes.length} ${g.definition.missionConfig.powerVerb ?? \"起動\"}`;\n              g.bannerTime = 1.4;\n              const cueX = railEvacuation || rescueControl ? nodes[count - 1]?.x ?? W * .68\n                : supplyValvePending ? V100_SUPPLY_VALVE.powerXs[0] : W * .68;\n              playProductionCue(STATION_AUDIO_CUE_IDS.POWER_SWITCH, cueX, { priority: 84, maxInstances: 2 });\n              if (lineRestored) playProductionCue(\"radio-open\", cueX, { priority: 87, maxInstances: 1 });",
+      "              g.bannerTime = 1.4;\n              if (centralSeal) {\n                const gateX = centralSealGateX(count - 1);\n                g.banner = count === nodes.length ? \"全ゲート閉鎖 // 感染者の流入停止\" : `ゲート${count}閉鎖 // この地下道の流入停止`;\n                playProductionCue(STATION_AUDIO_CUE_IDS.SEAL_ENGAGE, gateX, { priority: 98, maxInstances: 1 });\n                if (count === nodes.length) playProductionCue(STATION_AUDIO_CUE_IDS.MACHINE_STOP, gateX, { priority: 90, maxInstances: 1 });\n              } else {\n                g.banner = lineRestored ? \"救難回線 開通　制御区を守る\" : supplyValvePending ? \"復旧完了　待機室に空気が届いた\"\n                  : railEvacuation && count === nodes.length ? \"民間車両が退避を開始\"\n                    : `${g.definition.missionConfig.powerLabel ?? \"電源\"} ${count}/${nodes.length} ${g.definition.missionConfig.powerVerb ?? \"起動\"}`;\n                const cueX = railEvacuation || rescueControl ? nodes[count - 1]?.x ?? W * .68\n                  : supplyValvePending ? V100_SUPPLY_VALVE.powerXs[0] : W * .68;\n                playProductionCue(STATION_AUDIO_CUE_IDS.POWER_SWITCH, cueX, { priority: 84, maxInstances: 2 });\n                if (lineRestored) playProductionCue(\"radio-open\", cueX, { priority: 87, maxInstances: 1 });\n              }\n            } else if (transition === \"central-seal-secured\") {\n              g.stationMetrics.sealCompletions += 1;\n              g.banner = \"全ゲート閉鎖 // 感染者の流入停止\";\n              g.bannerTime = 1.8;"
+    ],
+    [
+      "            const firstNewEntryId = g.enemySpawn.nextEntryId;\n            g.enemySpawn = (enqueueEnemyWave as unknown as (runtime: EnemySpawnRuntime, input: { units: string[]; wave: number }) => EnemySpawnRuntime)(g.enemySpawn, { units: mission.units, wave: mission.wave });\n            g.enemySpawn.pending = g.enemySpawn.pending.map((entry) => {\n              if (entry.entryId < firstNewEntryId) return entry;\n              const portal = enemySpawnPortalPoint({\n                stageId: g.definition.stageId,\n                viewport: activeStageViewportId,\n                entryId: entry.entryId,\n                kind: entry.kind,\n                missionType: g.definition.missionType,\n                v100InfectedGate: Boolean(g.definition.missionConfig.v100StageNumber && v100AssaultObjectProfile(g.definition.stageId)),\n              });\n              return {\n                ...entry,\n                ...portal,\n                lane: portal.legacyLane as Lane,\n              };\n            });",
+      "            if (centralSeal) enqueueCentralSealIngress(g, mission.units, mission.wave);\n            else {\n              const firstNewEntryId = g.enemySpawn.nextEntryId;\n              g.enemySpawn = (enqueueEnemyWave as unknown as (runtime: EnemySpawnRuntime, input: { units: string[]; wave: number }) => EnemySpawnRuntime)(g.enemySpawn, { units: mission.units, wave: mission.wave });\n              g.enemySpawn.pending = g.enemySpawn.pending.map((entry) => {\n                if (entry.entryId < firstNewEntryId) return entry;\n                const portal = enemySpawnPortalPoint({\n                  stageId: g.definition.stageId,\n                  viewport: activeStageViewportId,\n                  entryId: entry.entryId,\n                  kind: entry.kind,\n                  missionType: g.definition.missionType,\n                  v100InfectedGate: Boolean(g.definition.missionConfig.v100StageNumber && v100AssaultObjectProfile(g.definition.stageId)),\n                });\n                return {\n                  ...entry,\n                  ...portal,\n                  lane: portal.legacyLane as Lane,\n                };\n              });\n            }"
+    ],
+    [
+      "        const enemySpawnStep = advanceEnemySpawnRuntime(g.enemySpawn, dt, g.paused);",
+      "        if (centralSeal && centralSealCanReinforce(g)) enqueueCentralSealIngress(g, [\"runner\"], g.wave);\n        const enemySpawnStep = advanceEnemySpawnRuntime(g.enemySpawn, dt, g.paused);"
+    ],
+    [
+      "  const phaseName = railHud ? railHud.phaseLabel\n    : rescueControlHud ? rescueControlHud.phaseLabel",
+      "  const centralSealHud = hasCentralSeal(gameRef.current.definition.missionType, gameRef.current.definition.missionConfig)\n    ? centralSealReadout(gameRef.current.stageMission) : null;\n  const phaseName = railHud ? railHud.phaseLabel\n    : centralSealHud ? centralSealHud.phaseLabel\n    : rescueControlHud ? rescueControlHud.phaseLabel"
+    ],
+    [
+      "            : defenseObjective\n            ? <div className=\"health-hud barrier-health defense-objective\"",
+      "            : centralSealHud\n            ? <div className=\"health-hud barrier-health central-seal-objective\" data-central-seal-count={centralSealHud.closed}\n              aria-label={`ゲート閉鎖 ${centralSealHud.closed}/${centralSealHud.total}`}>\n              <div><span>ゲート閉鎖</span><b>{centralSealHud.closed}/{centralSealHud.total}</b></div>\n              <ol>{Array.from({length:centralSealHud.total},(_,index) => {\n                const closed = index < centralSealHud.closed;\n                return <li key={index} data-closed={closed} aria-label={`ゲート${index + 1} ${closed ? \"閉鎖済み\" : \"開放中\"}`}>{index + 1} {closed ? \"閉鎖\" : \"開放\"}</li>;\n              })}</ol>\n            </div>\n            : defenseObjective\n            ? <div className=\"health-hud barrier-health defense-objective\""
     ]
   ],
   "app/manualAbilities.js": [

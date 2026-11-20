@@ -1,0 +1,66 @@
+{
+  "method": "Built-in ImageGen, original alpha sheet; fixed crops and Lanczos resize through sharp",
+  "creator": "OpenAI built-in image generation, directed for the Zombieee project",
+  "licensing": {
+    "source": "Original project-generated raster, no third-party reference input",
+    "use": "Project distribution and derivative packaging under the applicable content terms"
+  },
+  "producerApproval": "Development candidate under Issue #177; final art acceptance pending",
+  "prompt": "A photorealistic hand-painted raster game prop sprite sheet with two separate pieces, transparent alpha canvas, landscape composition, for a Japanese post-apocalyptic tactical smartphone game. The in-game setting is the clean dark gunmetal interior of an underground quarantine facility, concrete floor with deep charcoal shadows, dark silver high-tech machinery, restrained dull violet highlights, and a few tarnished yellow-black safety stripes. One coherent industrial shutter for freight-size underground tunnels, shown almost straight on, with a slight 2.5D side view for depth that matches a side scrolling battlefield, a grounded bottom sill, mechanical wear and dents. Left half: assembled heavy open portal frame, dark recessed tunnel cavity visible through the open doorway, metal posts, bolt plates, tiny amber work lights, and a heavy overhead motor housing; no slab in the opening, empty dark opening with a faint magenta reflection only. Right half: matching separate descending ribbed steel blast shutter slab, shown face-on in precisely the same perspective as the frame opening, broad horizontal metal ribs and an understated yellow-black bottom rail, four steel lock tabs, physically substantial. The two pieces must not touch. Keep a generous full-height gap of actual alpha at the center between the pieces. Each piece has clear transparent margins on all sides. No background scene or floor outside the two props, no large bloom, no colored outlines, no glyphs, no numbers, no lettering, no cartoon effects. Small-screen readable shapes, authentic steel material and carefully painted surface detail. The slab is a standalone moving component that will be animated from top to bottom over the opening in the runtime.",
+  "master": {
+    "path": "assets/source/v100/mission-completion/s16-tunnel-gates-master-r1.png",
+    "sha256": "05c54eca6ec38ac7888bedb87f70b4ff269268f63da1400e306bbb3e47c147a6",
+    "size": [
+      2172,
+      724
+    ]
+  },
+  "runtime": {
+    "path": "public/art/v100/mission-objects/s16-tunnel-gates-r1.webp",
+    "sha256": "65851b0fbc092c4014c44f305a0874607f5ae856ee2b4fff7d24c4397804bcdc",
+    "size": [
+      812,
+      320
+    ],
+    "quality": 88,
+    "alphaQuality": 100
+  },
+  "distribution": {
+    "assetCount": 1,
+    "logicalBytes": 62848,
+    "distinctBytes": 62848
+  },
+  "pieces": [
+    {
+      "name": "portal-frame",
+      "crop": {
+        "left": 22,
+        "top": 17,
+        "width": 996,
+        "height": 690
+      },
+      "atlas": [
+        0,
+        0,
+        460,
+        319
+      ]
+    },
+    {
+      "name": "descending-steel-shutter",
+      "crop": {
+        "left": 1363,
+        "top": 134,
+        "width": 759,
+        "height": 567
+      },
+      "atlas": [
+        476,
+        0,
+        336,
+        251
+      ]
+    }
+  ],
+  "usage": "Stage 16 tunnel entrances and their separately animated descending shutters"
+}

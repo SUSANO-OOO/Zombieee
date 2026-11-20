@@ -1,6 +1,9 @@
 import { V100_STAGE_BY_ID } from "./v100Registry.js";
 import { v100BasePresentationFor } from "./v100BasePresentation.js";
 import { V100_NODE_PROFILES, V100_SUPPLY_VALVE_STAGE } from "./v100MissionNodes.js";
+import { V100_RAIL_EVACUATION_STAGE } from "./v100RailEvacuation.js";
+import { V100_RESCUE_CONTROL, V100_RESCUE_CONTROL_STAGE } from "./v100RescueControl.js";
+import { V100_CENTRAL_SEAL, V100_CENTRAL_SEAL_STAGE } from "./v100CentralSeal.js";
 import { V100_MISSION_VEHICLES } from "./v100MissionVehicles.js";
 import { V100_DEFENSE_OBJECTIVES } from "./v100DefenseObjectives.js";
 import { V100_CORPORATE_CONTROLS } from "./v100CorporateControl.js";
@@ -25,6 +28,17 @@ export function v100MissionBriefingFor(stageId) {
   if (!stage) return null;
   if (stageId === V100_SUPPLY_VALVE_STAGE) {
     return { mode: "advance", origin: "供給弁", target: "待機室", verb: "供給管を復旧" };
+  }
+  if (stageId === V100_RAIL_EVACUATION_STAGE) {
+    return { mode: "sequence", count: 3, countUnit: "本", label: "赤いレバー", verb: "引いて民間車両を逃がす" };
+  }
+  if (stageId === V100_CENTRAL_SEAL_STAGE) {
+    return { mode: "sequence", count: V100_CENTRAL_SEAL.powerCount, countUnit: "基",
+      label: "地下道のゲート", verb: "閉じて感染者の流入を止める" };
+  }
+  if (stageId === V100_RESCUE_CONTROL_STAGE) {
+    return { mode: "sequence", count: V100_RESCUE_CONTROL.powerCount, countUnit: "台",
+      label: "救難回線の制御盤", verb: "復旧して制御区を守る" };
   }
   const node = V100_NODE_PROFILES[stageId];
   if (node) return { mode: "sequence", count: stage.objectiveId.includes("four") ? 4 : 3, label: node.label, verb: node.verb };

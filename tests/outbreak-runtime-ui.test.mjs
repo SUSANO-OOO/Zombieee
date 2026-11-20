@@ -89,7 +89,7 @@ test("player-facing outbreak route commits one atomic campaign save before publi
   assert.match(game, /const requestBattle[\s\S]*selectedOutbreakMissionId[\s\S]*createBattleResultId\(selectedOutbreakMissionId\)/);
   assert.match(game, /storyFlowState: definitionOptions\.v100[\s\S]*createBattleStoryFlowState\(definition\.stageId\)/);
   assert.ok((game.match(/stageId: g\.definition\.operationId/g)?.length ?? 0) >= 2);
-  assert.match(game, /const isOutbreakBoss = g\.definition\.operationCategory === "outbreak"[\s\S]*if \(!isOutbreakBoss\) g\.barricadeVulnerable = true/);
+  assert.match(game, /const isOutbreakBoss = g\.definition\.operationCategory === "outbreak"[\s\S]*if \(!isOutbreakBoss && !isRailBoss\) g\.barricadeVulnerable = true/);
   assert.match(game, /persistOutbreakCampaignSettlement\([\s\S]*persist: async \(candidate: CampaignSave\) => \{[\s\S]*outbreakSettlementPersistenceQaRef\.current\.attempts \+= 1[\s\S]*return persistCampaignSave\(candidate\)/);
   assert.match(game, /if \(!settlement\.committed\)[\s\S]*setPendingOutbreakSettlement\(pending\)[\s\S]*setSavePersistence\("unavailable"\)/);
   assert.match(game, /setCampaignSave\(nextSave\)[\s\S]*setOutbreakResult\([\s\S]*setScreen\("outbreak-result"\)/);
