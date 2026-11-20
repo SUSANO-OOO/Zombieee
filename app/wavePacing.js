@@ -9,7 +9,13 @@ const enemyPending = game => game.enemySpawn.pending.length > 0
 const deployed = game => !(game.deployQueue?.length)
   && game.fighters.filter(fighter => fighter.side === 'human' && fighter.hp > 0 && fighter.combatReady).length >= 3;
 
+function objectiveReady(game, mission) {
+  return !Number.isFinite(mission?.requiredPowerCount)
+    || (game.stageMission?.powerActivated ?? 0) >= mission.requiredPowerCount;
+}
+
 export function campaignWaveReady(game, mission) {
+  if (!objectiveReady(game, mission)) return false;
   if (!Number.isFinite(mission.clearDelaySeconds)) return true;
   const delay = Math.max(0, mission.clearDelaySeconds);
   const previous = clearWindows.get(game);
@@ -29,7 +35,7 @@ export function campaignWaveReady(game, mission) {
 
 export function campaignWavePrompt(game) {
   const mission = game.definition.timeline?.[game.eventIndex];
-  if (!Number.isFinite(mission?.clearDelaySeconds) || enemyPending(game)) return null;
+  if (!Number.isFinite(mission?.clearDelaySeconds) || !objectiveReady(game, mission) || enemyPending(game)) return null;
   if (infectionPending(game)) return { label: '感染源を処理', canAdvance: false };
   const state = clearWindows.get(game);
   if (!state || state.index !== game.eventIndex || state.definition !== game.definition

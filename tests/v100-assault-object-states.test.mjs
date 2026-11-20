@@ -8,7 +8,7 @@ import {drawV100AssaultObject,v100AssaultObjectProfile,V100_ASSAULT_OBJECT_ART} 
 import {v100VehicleSprite,v100EscortDestinationState} from '../app/v100MissionVehicleSprites.js';
 
 test('authored assault states consume applied damage and preserve protected bases, special objectives and legacy rendering',()=>{
-  assert.deepEqual(V100_STAGES.filter(s=>v100AssaultObjectProfile(s.id)).map(s=>s.number),[1,3,4,5,8,10,11,13,14,17,20,30]);
+  assert.deepEqual(V100_STAGES.filter(s=>v100AssaultObjectProfile(s.id)).map(s=>s.number),[1,3,4,5,8,10,11,13,17,20,30]);
   assert.equal(v100AssaultObjectProfile(V100_STAGES[3].id),'relay');
   assert.equal(v100AssaultObjectProfile(V100_STAGES[4].id),'relay');
   for(const stage of V100_STAGES){

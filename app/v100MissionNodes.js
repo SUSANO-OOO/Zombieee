@@ -1,8 +1,11 @@
+import { V100_RESCUE_CONTROL, V100_RESCUE_CONTROL_STAGE } from "./v100RescueControl.js";
+import { V100_CENTRAL_SEAL_STAGE } from "./v100CentralSeal.js";
+
 export const V100_NODE_ART = "/art/v100/mission-objects/node-states-v1.webp";
 export const V100_NODE_PROFILES = Object.freeze({
   "stage-hospital-evacuation-route": Object.freeze({ label: "電源", verb: "起動", shape: "cabinet" }),
-  "stage-t-plan-outer-core": Object.freeze({ label: "電源", verb: "起動", shape: "cabinet" }),
-  "stage-t-plan-central-seal": Object.freeze({ label: "封鎖装置", verb: "作動", shape: "cabinet" }),
+  [V100_RESCUE_CONTROL_STAGE]: Object.freeze({ label: "制御盤", verb: "復旧", shape: "cabinet" }),
+  [V100_CENTRAL_SEAL_STAGE]: Object.freeze({ label: "閉鎖盤", verb: "操作", shape: "cabinet" }),
   "stage-national-dispersal-network": Object.freeze({ label: "散布装置", verb: "停止", shape: "trailer", shutdown: true }),
 });
 export const V100_SUPPLY_VALVE_STAGE = "stage-research-containment";
@@ -62,7 +65,10 @@ export function drawV100MissionNode(context, game, stageObjects, index, x, y) {
   if (!image?.complete || !image.naturalWidth) throw new Error("Mission node states must be decoded before battle starts");
   // Mission timestamps exclude preparation, exactly as advanceStationMissionRuntime does.
   const elapsed = Math.max(0, game.time - (game.definition.prepSeconds ?? 0));
-  const state = v100NodeState(game.stageMission, index, elapsed, profile);
+  const rescueControl = game.definition.stageId === V100_RESCUE_CONTROL_STAGE;
+  const centralSeal = game.definition.stageId === V100_CENTRAL_SEAL_STAGE;
+  const security = rescueControl && index === V100_RESCUE_CONTROL.powerCount;
+  const state = security ? "on" : v100NodeState(game.stageMission, index, elapsed, profile);
   const frame = v100NodeFrame(profile.shape, state);
   context.save();
   context.imageSmoothingEnabled = true;
@@ -74,14 +80,17 @@ export function drawV100MissionNode(context, game, stageObjects, index, x, y) {
     y + (frame.y - frame.anchorY) * frame.scale,
     frame.w * frame.scale, frame.h * frame.scale);
   const complete = index < (game.stageMission.powerActivated ?? 0);
-  context.font = "bold 10px sans-serif";
+  context.font = rescueControl || centralSeal ? "bold 14px sans-serif" : "bold 10px sans-serif";
   context.textAlign = "center";
   context.lineWidth = 3;
   context.strokeStyle = "rgba(0,0,0,.9)";
-  context.fillStyle = complete ? "#b8df83" : "#f2dbae";
-  const label = game.definition.missionConfig.supplyValve === true
-    ? complete ? "供給弁 復旧済み" : "供給弁"
-    : `${index + 1}${complete ? ` ${profile.verb}済` : ""}`;
+  context.fillStyle = security ? "#f1a585" : complete ? "#b8df83" : "#f2dbae";
+  const label = security ? "警備用・操作不可"
+    : rescueControl ? complete ? `制御盤${index + 1} 復旧済` : `制御盤${index + 1}`
+    : centralSeal ? complete ? `ゲート${index + 1} 閉鎖` : `閉鎖盤${index + 1}`
+    : game.definition.missionConfig.supplyValve === true
+      ? complete ? "供給弁 復旧済み" : "供給弁"
+      : `${index + 1}${complete ? ` ${profile.verb}済` : ""}`;
   context.strokeText(label, x, y + 15);
   context.fillText(label, x, y + 15);
   context.restore();

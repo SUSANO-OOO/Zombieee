@@ -615,6 +615,9 @@ import {
 import { drawV100MissionVehicles, drawV100MissionVehicleBody, v100MissionVehiclePlacements, V100_MISSION_VEHICLES, V100_MISSION_VEHICLE_ART } from "./v100MissionVehicles.js";
 import { v100VehicleSprite, v100EscortDestinationState } from "./v100MissionVehicleSprites.js";
 import { drawV100MissionNode, V100_NODE_PROFILES, V100_SUPPLY_VALVE } from "./v100MissionNodes.js";
+import { drawV100RailEvacuation, hasRailEvacuation, railEvacuationReadout } from "./v100RailEvacuation.js";
+import { hasRescueControl, rescueControlReadout, V100_RESCUE_CONTROL } from "./v100RescueControl.js";
+import { centralSealCanReinforce, centralSealGateX, centralSealIngressPoint, centralSealReadout, drawV100CentralSealGates, hasCentralSeal } from "./v100CentralSeal.js";
 import { drawV100ClinicalControl } from "./v100ClinicalControl.js";
 import { drawV100CorporateControl, v100CorporateControlLabel, v100ObjectiveDamageLabel, v100CorporateControlCondition } from "./v100CorporateControl.js";
 import { drawV100AssaultObject, v100AssaultObjectProfile } from "./v100AssaultObjects.js";
@@ -773,8 +776,8 @@ function stationObjectiveDestination(g: Game, fighter: Fighter) {
       laneCount: activeLaneCenters.length,
     }) as { x: number; lane: Lane; duty: string };
   }
-  if (hasSupplyValve(g.definition.missionType, g.definition.missionConfig)) {
-    if ((g.stageMission.powerActivated ?? 0) >= 1) return null;
+  if (hasSupplyValve(g.definition.missionType, g.definition.missionConfig)
+    || hasRailEvacuation(g.definition.missionType, g.definition.missionConfig)) {
     const node = currentPowerNode(g.stageMission, g.definition.missionConfig);
     return node ? deviceObjectiveDestination({
       unit: fighter, humans: g.fighters, node, maxX: BARRICADE_X, nodeY: activeYForContentY(node.y),
@@ -834,7 +837,7 @@ type UnitCard = {
   trapDurationMultiplier?: number;
 };
 
-type MissionEvent = { at: number; wave: number; label: string; bossOnly?: boolean; bossHpRatio?: number; escortProgress?: number; waitForPriorWaveClear?: boolean; advanceOnClearAfter?: number; clearDelaySeconds?: number; units: string[] };
+type MissionEvent = { at: number; wave: number; label: string; bossOnly?: boolean; bossHpRatio?: number; escortProgress?: number; waitForPriorWaveClear?: boolean; advanceOnClearAfter?: number; clearDelaySeconds?: number; requiredPowerCount?: number; units: string[] };
 type BattleDefinition = {
   stageId: string;
   operationId: string;
@@ -871,7 +874,7 @@ type EnemyEntryMode = "base-interior" | "right-edge" | "right-edge-outside";
 type EnemySpawnEntry = {
   entryId: number; kind: string; lane: Lane; wave: number; order: number; delay: number;
   x: number; y: number; combatReadyX: number; combatReadyY?: number; entrySpeed: number; slot: number;
-  portalId?: string; routeId?: string; entryMode?: EnemyEntryMode;
+  portalId?: string; routeId?: string; entryMode?: EnemyEntryMode; revealX?: number;
 };
 type EnemySpawnRuntime = { pending: EnemySpawnEntry[]; cooldown: number; nextEntryId: number };
 
@@ -968,6 +971,7 @@ type Fighter = {
   entryDirection?: -1 | 1;
   spawnPortalId?: string | null;
   spawnEntryMode?: EnemyEntryMode;
+  spawnRevealX?: number;
   entryStepDistance?: number;
   gateEntrySpeed: number;
   combatReadyX: number;
@@ -1097,6 +1101,10 @@ type StageMissionRuntime = {
   powerActivated?: number;
   powerHold?: number;
   supplyValveBlocked?: boolean;
+  couplersBlocked?: boolean;
+  rescueControlBlocked?: boolean;
+  centralSealBlocked?: boolean;
+  evacuationProgress?: number;
   powerOperating?: boolean;
   powerOperationStartedAt?: number | null;
   powerInterruptedAt?: number | null;
@@ -1393,6 +1401,7 @@ type Game = {
   convoyProgress: number;
   civiliansEvacuated: number;
   enemySpawn: EnemySpawnRuntime;
+  centralSealLastIngressAt?: number;
   baseHp: number;
   baseMaxHp: number;
   barricadeHp: number;
@@ -2898,6 +2907,20 @@ function fullCompendiumStyle(path: string): CSSProperties {
   };
 }
 
+function enqueueCentralSealIngress(g: Game, units: string[], wave: number) {
+  const gate = (g.stageMission.powerActivated ?? 0) as Lane;
+  const firstEntry = g.enemySpawn.nextEntryId;
+  g.enemySpawn = enqueueEnemyWave(g.enemySpawn, { units, wave }) as EnemySpawnRuntime;
+  g.enemySpawn.pending = g.enemySpawn.pending.map(entry => {
+    if (entry.entryId < firstEntry) return entry;
+    const portal = enemySpawnPortalPoint({ stageId: g.definition.stageId, viewport: activeStageViewportId,
+      entryId: entry.entryId, kind: entry.kind, missionType: g.definition.missionType });
+    const portalPoint = centralSealIngressPoint(gate, activeLaneCenters, portal.visualHalfWidth);
+    return { ...entry, ...portal, ...portalPoint, lane: gate, entryMode: "base-interior" };
+  });
+  g.centralSealLastIngressAt = g.time;
+}
+
 function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0, gateEntry: EnemySpawnEntry | null = null) {
   const data = enemyStatsForWave(kind, g.wave, {
     v100: Boolean(g.definition.missionConfig?.v100StageNumber),
@@ -2946,6 +2969,7 @@ function spawnEnemy(g: Game, kind: string, lane: Lane, order = 0, gateEntry: Ene
     entryDirection: -1,
     spawnPortalId: gateEntry?.portalId ?? null,
     spawnEntryMode: gateEntry?.entryMode,
+    spawnRevealX: gateEntry?.revealX,
     entryStepDistance: 0,
     gateEntrySpeed: gateEntry?.entrySpeed ?? 0,
     combatReadyX: gateEntry?.combatReadyX ?? 0,
@@ -4696,10 +4720,10 @@ function drawSpriteFighter(
   const deploymentPlan = crawlerDeploymentPlanForFighter(f);
   ctx.save();
   if (f.side === "zombie" && f.gateEntering) {
-    const revealRight = f.spawnEntryMode === "right-edge"
+    const revealRight = f.spawnRevealX ?? (f.spawnEntryMode === "right-edge"
       || f.spawnEntryMode === "right-edge-outside"
       ? W
-      : ENEMY_GATE_SPAWN.revealX;
+      : ENEMY_GATE_SPAWN.revealX);
     ctx.beginPath();
     ctx.rect(0, 0, Math.min(revealRight, options.enemyGateOcclusionX ?? W), H);
     ctx.clip();
@@ -6275,6 +6299,9 @@ let stationMissionDiagnosticFallbackDrawCount = 0;
 function drawStationMission(ctx: CanvasRenderingContext2D, g: Game, stageObjects: SpriteMap, allowDiagnosticFallback = false, deferVehicles = false) {
   drawV100DefensePerimeter(ctx, g, stageObjects, 340, activeLaneCenters[2] + 30);
   if (drawV100ClinicalControl(ctx, g, stageObjects, 650, activeLaneCenters[0] + 30)) return;
+  if (hasRailEvacuation(g.definition.missionType, g.definition.missionConfig)) {
+    drawV100RailEvacuation(ctx, g.stageMission, stageObjects, activeYForContentY, activeLaneCenters[0] - 26);
+  }
   if (hasSupplyValve(g.definition.missionType, g.definition.missionConfig)) {
     drawV100MissionNode(ctx, g, stageObjects, 0, V100_SUPPLY_VALVE.powerXs[0], activeYForContentY(V100_SUPPLY_VALVE.powerYs[0]));
   }
@@ -6315,6 +6342,8 @@ function drawStationMission(ctx: CanvasRenderingContext2D, g: Game, stageObjects
     ctx.restore();
   }
   if (g.definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL) {
+    const centralSeal = hasCentralSeal(g.definition.missionType, g.definition.missionConfig);
+    if (centralSeal) drawV100CentralSealGates(ctx, g.stageMission, stageObjects, activeYForContentY);
     const activated = g.stageMission.powerActivated ?? 0;
     const panels = stationPowerNodes(g.definition.missionConfig);
     for (let index = 0; index < panels.length; index++) {
@@ -6355,6 +6384,12 @@ function drawStationMission(ctx: CanvasRenderingContext2D, g: Game, stageObjects
       }
       ctx.restore();
     }
+    if (hasRescueControl(g.definition.missionType, g.definition.missionConfig)) {
+      const security = V100_RESCUE_CONTROL;
+      drawV100MissionNode(ctx, g, stageObjects, security.powerCount, security.securityX, activeYForContentY(security.securityY) - 8);
+      return;
+    }
+    if (centralSeal) return;
     if (g.researchContainer?.exposed) {
       const container = g.researchContainer;
       const y = activeLaneCenters[container.lane] + 8;
@@ -20926,8 +20961,11 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         }
         const supplyValvePending = hasSupplyValve(g.definition.missionType, g.definition.missionConfig)
           && (g.stageMission.powerActivated ?? 0) < 1;
+        const centralSeal = hasCentralSeal(g.definition.missionType, g.definition.missionConfig);
+        const railEvacuation = hasRailEvacuation(g.definition.missionType, g.definition.missionConfig);
         if ((g.definition.missionType === STATION_MISSION_TYPES.ESCORT
-          || g.definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL || supplyValvePending)
+          || g.definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL || supplyValvePending
+          || (railEvacuation && !g.stageMission.completed))
           && g.time >= g.definition.prepSeconds) {
           const spatial = stationSpatialSnapshot({
             missionType: g.definition.missionType,
@@ -20976,11 +21014,37 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             }
             if (transition.startsWith("power-")) {
               g.stationMetrics.powerActivations += 1;
-              g.banner = supplyValvePending ? "復旧完了　待機室に空気が届いた"
-                : `${g.definition.missionConfig.powerLabel ?? "電源"} ${nextMission.powerActivated ?? 0}/${stationPowerNodes(g.definition.missionConfig).length} ${g.definition.missionConfig.powerVerb ?? "起動"}`;
+              const nodes = stationPowerNodes(g.definition.missionConfig);
+              const count = nextMission.powerActivated ?? 0;
+              const rescueControl = hasRescueControl(g.definition.missionType, g.definition.missionConfig);
+              const lineRestored = rescueControl && count === nodes.length;
               g.bannerTime = 1.4;
-              playProductionCue(STATION_AUDIO_CUE_IDS.POWER_SWITCH, supplyValvePending ? V100_SUPPLY_VALVE.powerXs[0] : W * .68,
-                { priority: 84, maxInstances: 2 });
+              if (centralSeal) {
+                const gateX = centralSealGateX(count - 1);
+                g.banner = count === nodes.length ? "全ゲート閉鎖 // 感染者の流入停止" : `ゲート${count}閉鎖 // この地下道の流入停止`;
+                playProductionCue(STATION_AUDIO_CUE_IDS.SEAL_ENGAGE, gateX, { priority: 98, maxInstances: 1 });
+                if (count === nodes.length) playProductionCue(STATION_AUDIO_CUE_IDS.MACHINE_STOP, gateX, { priority: 90, maxInstances: 1 });
+              } else {
+                g.banner = lineRestored ? "救難回線 開通　制御区を守る" : supplyValvePending ? "復旧完了　待機室に空気が届いた"
+                  : railEvacuation && count === nodes.length ? "民間車両が退避を開始"
+                    : `${g.definition.missionConfig.powerLabel ?? "電源"} ${count}/${nodes.length} ${g.definition.missionConfig.powerVerb ?? "起動"}`;
+                const cueX = railEvacuation || rescueControl ? nodes[count - 1]?.x ?? W * .68
+                  : supplyValvePending ? V100_SUPPLY_VALVE.powerXs[0] : W * .68;
+                playProductionCue(STATION_AUDIO_CUE_IDS.POWER_SWITCH, cueX, { priority: 84, maxInstances: 2 });
+                if (lineRestored) playProductionCue("radio-open", cueX, { priority: 87, maxInstances: 1 });
+              }
+            } else if (transition === "central-seal-secured") {
+              g.stationMetrics.sealCompletions += 1;
+              g.banner = "全ゲート閉鎖 // 感染者の流入停止";
+              g.bannerTime = 1.8;
+            } else if (transition === "rescue-control-secured") {
+              g.banner = "救難回線復旧・防衛完了";
+              g.bannerTime = 1.8;
+              playProductionCue(STATION_AUDIO_CUE_IDS.RESCUE_CONFIRM, BASE_X, { priority: 82, maxInstances: 1 });
+            } else if (transition === "civilian-car-evacuated") {
+              g.banner = "民間車両の退避完了";
+              g.bannerTime = 1.8;
+              playProductionCue(STATION_AUDIO_CUE_IDS.RESCUE_CONFIRM, W * .22, { priority: 82, maxInstances: 1 });
             } else if (transition === "escort-contaminated") {
               playProductionCue(STATION_AUDIO_CUE_IDS.CART_STALL, Number(spatial.cartX ?? W / 2), { priority: 82, maxInstances: 1 });
             } else if (transition === "escort-complete") {
@@ -21250,7 +21314,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           while (g.eventIndex < g.definition.timeline.length) {
             const mission = g.definition.timeline[g.eventIndex] as MissionEvent;
             const clearDriven = Number.isFinite(mission.clearDelaySeconds);
-            if (clearDriven && !campaignWaveReady(g, mission)) break;
+            if (!campaignWaveReady(g, mission)) break;
             const scheduled = g.time >= mission.at;
             const earlyCandidate = !scheduled && Number.isFinite(mission.advanceOnClearAfter)
               && g.time >= Number(mission.advanceOnClearAfter);
@@ -21278,24 +21342,27 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               g.flashOverlay = Math.max(g.flashOverlay, .15);
             }
             if (mission.label.includes("警告")) g.flashOverlay = .12;
-            const firstNewEntryId = g.enemySpawn.nextEntryId;
-            g.enemySpawn = (enqueueEnemyWave as unknown as (runtime: EnemySpawnRuntime, input: { units: string[]; wave: number }) => EnemySpawnRuntime)(g.enemySpawn, { units: mission.units, wave: mission.wave });
-            g.enemySpawn.pending = g.enemySpawn.pending.map((entry) => {
-              if (entry.entryId < firstNewEntryId) return entry;
-              const portal = enemySpawnPortalPoint({
-                stageId: g.definition.stageId,
-                viewport: activeStageViewportId,
-                entryId: entry.entryId,
-                kind: entry.kind,
-                missionType: g.definition.missionType,
-                v100InfectedGate: Boolean(g.definition.missionConfig.v100StageNumber && v100AssaultObjectProfile(g.definition.stageId)),
+            if (centralSeal) enqueueCentralSealIngress(g, mission.units, mission.wave);
+            else {
+              const firstNewEntryId = g.enemySpawn.nextEntryId;
+              g.enemySpawn = (enqueueEnemyWave as unknown as (runtime: EnemySpawnRuntime, input: { units: string[]; wave: number }) => EnemySpawnRuntime)(g.enemySpawn, { units: mission.units, wave: mission.wave });
+              g.enemySpawn.pending = g.enemySpawn.pending.map((entry) => {
+                if (entry.entryId < firstNewEntryId) return entry;
+                const portal = enemySpawnPortalPoint({
+                  stageId: g.definition.stageId,
+                  viewport: activeStageViewportId,
+                  entryId: entry.entryId,
+                  kind: entry.kind,
+                  missionType: g.definition.missionType,
+                  v100InfectedGate: Boolean(g.definition.missionConfig.v100StageNumber && v100AssaultObjectProfile(g.definition.stageId)),
+                });
+                return {
+                  ...entry,
+                  ...portal,
+                  lane: portal.legacyLane as Lane,
+                };
               });
-              return {
-                ...entry,
-                ...portal,
-                lane: portal.legacyLane as Lane,
-              };
-            });
+            }
             if (mission.units.length) {
               const incomingBossKind = mission.units.find((kind) => isBossEnemyKind(kind)) ?? null;
               if (incomingBossKind) {
@@ -21310,6 +21377,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           }
         }
 
+        if (centralSeal && centralSealCanReinforce(g)) enqueueCentralSealIngress(g, ["runner"], g.wave);
         const enemySpawnStep = advanceEnemySpawnRuntime(g.enemySpawn, dt, g.paused);
         g.enemySpawn = enemySpawnStep.runtime as EnemySpawnRuntime;
         for (const entry of enemySpawnStep.spawned as EnemySpawnEntry[]) spawnEnemy(g, entry.kind, entry.lane, entry.order, entry);
@@ -24804,15 +24872,19 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               g.bannerTime = 3.4;
               g.flashOverlay = Math.max(g.flashOverlay, .16);
             }
-            if (twinDefeat.complete && (isOutbreakBoss
+            const isRailBoss = fighter.kind === g.definition.bossEnemyKind
+              && hasRailEvacuation(g.definition.missionType, g.definition.missionConfig);
+            if (twinDefeat.complete && (isOutbreakBoss || isRailBoss
               || (fighter.kind === g.definition.bossEnemyKind && g.definition.bossUnlocksEnemyBase))) {
               g.bossDefeatPending = true;
-              if (!isOutbreakBoss) g.barricadeVulnerable = true;
+              if (!isOutbreakBoss && !isRailBoss) g.barricadeVulnerable = true;
               const defeatedBossName = bossDefinitionForEnemyKind(fighter.kind)?.displayName
                 ?? enemyContentFor(fighter.kind)?.displayName
                 ?? "大型感染体";
               g.banner = g.definition.operationCategory === "outbreak"
                 ? `${defeatedBossName}撃破 — 残存感染体を掃討`
+                : isRailBoss
+                ? g.stageMission.completed ? "オオグチ撃破 // 残る敵を倒す" : "オオグチ撃破 // 民間車両を逃がす"
                 : v100CorporateControlLabel(g.definition)
                 ? `${defeatedBossName}撃破・防護解除`
                 : g.definition.missionConfig.v100StageNumber === 30
@@ -24835,7 +24907,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 emitBattleBark(g, "takuya-down", "crawler", "tactical");
               } else if (fighter.kind === "takuya") {
                 if (!emitBattleBark(g, "base-exposed", "crawler", "tactical")) emitBattleBark(g, "takuya-down", "crawler", "tactical");
-              } else {
+              } else if (!isRailBoss) {
                 emitBattleBark(g, "base-exposed", "crawler", "tactical");
               }
             } else if (fighter.kind === "gate-eater"
@@ -25138,6 +25210,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               },
               missionRuntime: g.definition.missionType === "escort" || g.definition.missionType === "sequential-seal"
                 || hasSupplyValve(g.definition.missionType, g.definition.missionConfig)
+                || hasRailEvacuation(g.definition.missionType, g.definition.missionConfig)
                 ? { ...g.stageMission }
                 : undefined,
               researchCoreTargets: g.researchCoreTargets?.map(target => ({...target})),
@@ -25210,6 +25283,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             },
             missionRuntime: g.definition.missionType === "escort" || g.definition.missionType === "sequential-seal"
               || hasSupplyValve(g.definition.missionType, g.definition.missionConfig)
+              || hasRailEvacuation(g.definition.missionType, g.definition.missionConfig)
               ? { ...g.stageMission }
               : undefined,
             researchCoreTargets: g.researchCoreTargets?.map(target => ({...target})),
@@ -25401,7 +25475,16 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   const currentNodeProfile = externalSession ? V100_NODE_PROFILES[activeBattlefieldStageId] : null;
   const defenseObjective = v100DefenseStatus(gameRef.current.definition, gameRef.current);
   const isFinalDefense = gameRef.current.definition.missionConfig.v100StageNumber === 30;
-  const phaseName = isFinalDefense && gameRef.current.bossDefeated ? "残敵を掃討"
+  const railHud = hasRailEvacuation(gameRef.current.definition.missionType, gameRef.current.definition.missionConfig)
+    ? railEvacuationReadout(gameRef.current.stageMission) : null;
+  const rescueControlHud = hasRescueControl(gameRef.current.definition.missionType, gameRef.current.definition.missionConfig)
+    ? rescueControlReadout(gameRef.current.stageMission) : null;
+  const centralSealHud = hasCentralSeal(gameRef.current.definition.missionType, gameRef.current.definition.missionConfig)
+    ? centralSealReadout(gameRef.current.stageMission) : null;
+  const phaseName = railHud ? railHud.phaseLabel
+    : centralSealHud ? centralSealHud.phaseLabel
+    : rescueControlHud ? rescueControlHud.phaseLabel
+    : isFinalDefense && gameRef.current.bossDefeated ? "残敵を掃討"
     : defenseObjective ? phaseBannerForBattle(gameRef.current.definition, hud.phase) : hud.missionType === "escort"
     ? gameRef.current.definition.missionConfig.convoyInterception === true
       ? hud.phase === 1 ? "追跡" : hud.phase === 2 ? "包囲" : "確保"
@@ -25656,7 +25739,26 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           </div>
           {hud.bossTelegraphWarning && !end && <div className="v100-boss-telegraph-warning" role="alert" data-boss-telegraph-warning="true">{formatBattleText(hud.bossTelegraphWarning)}</div>}
 
-          {externalSessionActive && bossHealthPanel ? null : defenseObjective
+          {externalSessionActive && bossHealthPanel ? null : railHud
+            ? <div className="health-hud barrier-health rail-evacuation-objective" data-rail-state={railHud.phase} aria-label={`${railHud.label} ${railHud.status}`}>
+              <div><span>{railHud.label}</span><b>{railHud.status}</b></div>
+              <i><em style={{ width: `${railHud.progress * 100}%` }} /></i>
+            </div>
+            : rescueControlHud
+            ? <div className="health-hud barrier-health rescue-control-objective" data-rescue-control-state={rescueControlHud.phase} aria-label={`${rescueControlHud.label} ${rescueControlHud.status}`}>
+              <div><span>{rescueControlHud.label}</span><b>{rescueControlHud.status}</b></div>
+              <i><em style={{ width: `${rescueControlHud.progress * 100}%` }} /></i>
+            </div>
+            : centralSealHud
+            ? <div className="health-hud barrier-health central-seal-objective" data-central-seal-count={centralSealHud.closed}
+              aria-label={`ゲート閉鎖 ${centralSealHud.closed}/${centralSealHud.total}`}>
+              <div><span>ゲート閉鎖</span><b>{centralSealHud.closed}/{centralSealHud.total}</b></div>
+              <ol>{Array.from({length:centralSealHud.total},(_,index) => {
+                const closed = index < centralSealHud.closed;
+                return <li key={index} data-closed={closed} aria-label={`ゲート${index + 1} ${closed ? "閉鎖済み" : "開放中"}`}>{index + 1} {closed ? "閉鎖" : "開放"}</li>;
+              })}</ol>
+            </div>
+            : defenseObjective
             ? <div className="health-hud barrier-health defense-objective" data-defense-state={defenseObjective.phase} aria-label={`${defenseObjective.label} ${defenseObjective.statusLabel}`}>
               <div><span>{defenseObjective.label}</span><b>{defenseObjective.recordCount ? `${defenseObjective.openedRecords}/${defenseObjective.recordCount}` : `残り${defenseObjective.remaining}秒`}</b></div>
               <i><em style={{ width: `${defenseObjective.progress * 100}%` }} /></i>

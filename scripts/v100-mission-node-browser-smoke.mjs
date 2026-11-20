@@ -43,15 +43,16 @@ try {
       await page.goto(origin.href); await page.getByRole("button", { name: "ブラウザで遊ぶ", exact: true }).click();
       await page.waitForFunction(() => document.querySelector('.v100-shell[aria-busy="false"][data-v100-phase="formation"]'));
       await page.getByRole("button", { name: "戦闘へ", exact: true }).click();
-      const count = number === 28 ? 4 : 3;
+      const count = number === 15 || number === 28 ? 4 : 3;
       await page.waitForFunction(count => window.__ASHFALL_BATTLE_QA__?.getSnapshot?.().running && window.__NODE_FRAME__?.length === count, count);
       item.observed = await page.evaluate(() => ({ draws: window.__NODE_FRAME__, background: window.__NODE_BACKGROUND__, mission: window.__ASHFALL_BATTLE_QA__.getSnapshot().stageMission }));
       assert.equal(item.observed.draws.length, count);
       assert.equal(item.observed.mission.powerActivated, 0);
       const profile = V100_NODE_PROFILES[stageId], frame = v100NodeFrame(profile.shape, profile.shutdown ? "on" : "off");
-      for (const draw of item.observed.draws) {
+      for (const [index, draw] of item.observed.draws.entries()) {
         assert.ok(draw.url.endsWith(V100_NODE_ART));
-        assert.deepEqual(draw.args.slice(0, 4), [frame.x, frame.y, frame.w, frame.h]);
+        const expected = number === 15 && index === 3 ? v100NodeFrame(profile.shape, "on") : frame;
+        assert.deepEqual(draw.args.slice(0, 4), [expected.x, expected.y, expected.w, expected.h]);
       }
       item.hud = await page.locator(".game-shell").innerText();
       if (number === 28) { assert.match(item.hud, /停止/u); assert.doesNotMatch(item.hud, /起動/u); }

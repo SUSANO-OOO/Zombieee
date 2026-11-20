@@ -270,6 +270,7 @@ const ENEMY_PACK_LABELS: Record<string, string> = {
 };
 
 function missionLabelFor(stage: (typeof V100_STAGES)[number] | undefined) {
+  if (stage?.number === 16) return "地下道のゲート閉鎖";
   if (stage?.number === 26) return "車列停止・確保";
   if (stage?.number === 28) return "散布装置停止";
   return OPERATION_LABELS[stage?.missionType ?? ""] ?? "キャンペーンステージ";
@@ -1349,7 +1350,7 @@ function MissionBriefingDiagram({ stageId }: { stageId: string | null }) {
     <defs><marker id="v100-briefing-arrow" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0 0L6 3L0 6" fill="none" stroke="currentColor" strokeWidth="1.5" /></marker></defs>
     <path className="v100-briefing-streets" d="M15 30H304M15 59H304M90 25V66M230 25V66" />
     {briefing.mode === "sequence" ? <>
-      <text className="v100-briefing-label" x="160" y="17" textAnchor="middle">{briefing.label} / {briefing.count}基</text>
+      <text className="v100-briefing-label" x="160" y="17" textAnchor="middle">{briefing.label} / {briefing.count}{briefing.countUnit ?? "基"}</text>
       <path className="v100-briefing-route" d="M44 43H274" markerEnd="url(#v100-briefing-arrow)" />
       {Array.from({ length: briefing.count }, (_, index) => <g key={index}><circle className="v100-briefing-node" cx={44 + index * 232 / (briefing.count - 1)} cy="43" r="12" /><text className="v100-briefing-step" x={44 + index * 232 / (briefing.count - 1)} y="49" textAnchor="middle">{index + 1}</text></g>)}
       <text className="v100-briefing-label" x="160" y="77" textAnchor="middle">順番に{briefing.verb}</text>

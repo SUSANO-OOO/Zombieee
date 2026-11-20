@@ -1,3 +1,7 @@
+import { hasRailEvacuation } from "./v100RailEvacuation.js";
+import { hasRescueControl } from "./v100RescueControl.js";
+import { centralSealFinalGateSettled, hasCentralSeal } from "./v100CentralSeal.js";
+
 const freeze = (value) => Object.freeze(value);
 const INTERNAL_ROUTE_Y = freeze([212, 282, 352]);
 
@@ -135,6 +139,28 @@ export function createStationMissionRuntime(missionType, config = {}) {
       repairRemaining: 0,
       contaminated: false,
       stalled: false,
+      completed: false,
+      failed: false,
+      transitions: freeze([]),
+    });
+  }
+  if (hasRailEvacuation(missionType, config)) {
+    return freeze({
+      missionType,
+      ...initialPowerOperation(),
+      couplersBlocked: false,
+      evacuationProgress: 0,
+      completed: false,
+      failed: false,
+      transitions: freeze([]),
+    });
+  }
+  const centralSeal = hasCentralSeal(missionType, config);
+  if (centralSeal || hasRescueControl(missionType, config)) {
+    return freeze({
+      missionType,
+      ...initialPowerOperation(),
+      [centralSeal ? "centralSealBlocked" : "rescueControlBlocked"]: false,
       completed: false,
       failed: false,
       transitions: freeze([]),
@@ -343,6 +369,28 @@ export function advanceStationMissionRuntime({
     });
   }
 
+  if (hasRailEvacuation(missionType, config)) {
+    if (current.failed || crawlerDestroyed) return freeze({ ...current, failed: true, powerOperating: false });
+    if (current.completed) return current;
+    const resolved = sealConfig(config);
+    const { power, transition } = advancePowerOperation(
+      current, resolved, dt, battleElapsedSeconds, powerOperatorCount, powerLaneThreats,
+    );
+    const departing = current.powerActivated >= resolved.powerCount;
+    const evacuationProgress = departing
+      ? clamp01(current.evacuationProgress + dt / config.evacuationSeconds)
+      : 0;
+    const completed = evacuationProgress >= 1 - 1e-9;
+    return freeze({
+      ...current,
+      ...power,
+      couplersBlocked: power.powerActivated < resolved.powerCount && powerLaneThreats > 0,
+      evacuationProgress: completed ? 1 : evacuationProgress,
+      completed,
+      transitions: appendTransition(current, completed ? "civilian-car-evacuated" : transition),
+    });
+  }
+
   if (hasSupplyValve(missionType, config)) {
     if (current.failed || crawlerDestroyed) return freeze({ ...current, failed: true, powerOperating: false });
     const { power, transition } = advancePowerOperation(
@@ -353,6 +401,27 @@ export function advanceStationMissionRuntime({
       ...power,
       supplyValveBlocked: power.powerActivated < 1 && powerLaneThreats > 0,
       transitions: appendTransition(current, transition),
+    });
+  }
+
+  const centralSeal = hasCentralSeal(missionType, config);
+  if (centralSeal || hasRescueControl(missionType, config)) {
+    if (current.failed || crawlerDestroyed) return freeze({ ...current, failed: true, completed: false, powerOperating: false });
+    if (current.completed) return current;
+    const resolved = sealConfig(config);
+    const { power, transition } = advancePowerOperation(
+      current, resolved, dt, battleElapsedSeconds, powerOperatorCount, powerLaneThreats,
+    );
+    const ready = centralSeal ? centralSealFinalGateSettled(power, battleElapsedSeconds) : power.powerActivated >= resolved.powerCount;
+    const complete = ready && wavesResolved === true;
+    const transitions = appendTransition(current, transition);
+    const secured = centralSeal ? "central-seal-secured" : "rescue-control-secured";
+    return freeze({
+      ...current,
+      ...power,
+      [centralSeal ? "centralSealBlocked" : "rescueControlBlocked"]: power.powerActivated < resolved.powerCount && powerLaneThreats > 0,
+      completed: complete,
+      transitions: complete ? appendTransition({ transitions }, secured) : transitions,
     });
   }
 
@@ -483,6 +552,29 @@ export function stationMissionObjective(runtime, config = {}) {
     if (runtime.repairRemaining > 0) return `${targetLabel}を復旧中 ${Math.ceil(runtime.repairRemaining)}秒`;
     if (runtime.stalled) return `${targetLabel}の周囲を確保`;
     return `${targetLabel}を護衛 ${Math.floor(clamp01(runtime.progress) * 100)}%`;
+  }
+  if (hasRailEvacuation(runtime?.missionType, config)) {
+    if (runtime.completed) return "民間車両 退避完了";
+    if (runtime.powerActivated >= config.powerCount) return "民間車両が退避中";
+    const next = (runtime.powerActivated ?? 0) + 1;
+    if (runtime.couplersBlocked) return `レバー${next}の周囲の敵を倒す`;
+    return runtime.powerOperating ? `レバー${next}を操作中` : `レバー${next}まで味方を送る`;
+  }
+  if (hasCentralSeal(runtime?.missionType, config)) {
+    if (runtime.failed) return "ゲート閉鎖に失敗";
+    if (runtime.completed) return "全ゲート閉鎖・流入停止";
+    if (runtime.powerActivated >= config.powerCount) return "流入停止。残る感染者を倒す";
+    const next = (runtime.powerActivated ?? 0) + 1;
+    if (runtime.centralSealBlocked) return `閉鎖盤${next}の周囲の敵を倒す`;
+    return runtime.powerOperating ? `ゲート${next}の閉鎖盤を操作中` : `閉鎖盤${next}へ味方を送る`;
+  }
+  if (hasRescueControl(runtime?.missionType, config)) {
+    if (runtime.failed) return "制御区の防衛に失敗";
+    if (runtime.completed) return "救難回線復旧・防衛完了";
+    if (runtime.powerActivated >= config.powerCount) return "回線復旧済み。制御区を守る";
+    const next = (runtime.powerActivated ?? 0) + 1;
+    if (runtime.rescueControlBlocked) return `制御盤${next}の周囲の敵を倒す`;
+    return runtime.powerOperating ? `制御盤${next}を復旧中` : `制御盤${next}へ味方を送る`;
   }
   if (hasSupplyValve(runtime?.missionType, config)) {
     if (runtime.supplyValveBlocked) return "供給弁に迫る敵を倒す";
