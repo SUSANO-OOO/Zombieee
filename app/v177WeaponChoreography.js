@@ -45,6 +45,25 @@ function sampleLightbladeRelease(progress){
  const [bodyX,bodyY,lean,hiltX,hiltY,pitch]=keys(progress,lightbladeReleaseFrames);
  return {bodyX,bodyY,lean,hiltX,hiltY,pitch};
 }
+// Body weight pulls back before the free hand throws; the bottle in the other
+// hand is the same painted weapon used for ordinary melee.
+// Keys: phase, torso shift x/y, torso lean, free hand shift x/y, bottle tilt.
+const fireWhiskyThrowFrames=[
+ [0,0,0,0,0,0,-.14],
+ [.065,-6,8,-.09,-15,3,-.25],
+ [.145,-13,10,-.18,-71,-61,-.47],
+ [.221,-20,12,-.23,-105,-120,-.63],
+ [.251,-13,13,-.18,-75,-126,-.29],
+ [.28,16,12,.31,39,-114,.49],
+ [.385,24,19,.41,48,-57,.89],
+ [.527,19,16,.29,28,-22,1.08],
+ [.772,5,7,.10,1,4,.35],
+ [1,0,0,0,0,0,0],
+];
+function sampleFireWhiskyThrow(progress){
+ const [bodyX,bodyY,lean,handX,handY,bottleAngle]=keys(progress,fireWhiskyThrowFrames);
+ return {bodyX,bodyY,lean,handX,handY,bottleAngle};
+}
 const carryPlans=new WeakMap();
 const carryMotion={
  // Paisen's far fist shares the leg-0 side. Counter-swing it against that
@@ -255,7 +274,8 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
  const rev=kind==='crazy-king'&&plan.abilityPresentation==='chainsaw-rev'
   ?sampleChainsawRev(p/atlas.attackBoundaries[0]):null;
  const lightblade=kind==='tky'&&plan.abilityPresentation==='lightblade-release'?sampleLightbladeRelease(p):null;
- const authoredBody=lightblade??rev;
+ const fireWhisky=kind==='zakimiya'&&plan.abilityPresentation==='fire-whisky-throw'?sampleFireWhiskyThrow(p):null;
+ const authoredBody=lightblade??rev??fireWhisky;
  const assessment=assessing?keys(p,[[0,0],[.085,1],[.18,1],[.27,.18],[.43,0],[1,0]])[0]:0;
  const heavy=['brute','guardian','gate-eater','red-panther-shield','crazy-king','kumaverson','takuya','takuya-omega','crusher','abomination','gairen'].includes(kind);
  // Kuma raises the bowl over his crown, then folds forward into the slam.
@@ -286,13 +306,19 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
   }else handPose(upper,free,home,bodyAngle);
  }
  const weaponOwners=[...arms];
- const strikeBones=contactKinds.has(kind)?[]:kind==='miyamoto-musashi'?['weapon-0','weapon-1']:[atlas.weaponBone];
+ const strikeBones=fireWhisky||contactKinds.has(kind)?[]:kind==='miyamoto-musashi'?['weapon-0','weapon-1']:[atlas.weaponBone];
  const primary=arms.find(c=>c.effectorBone===atlas.weaponBone),pivot=primary.effectorWrist??primary.wrist;
  const rest=point(base[atlas.weaponBone],pivot),restAngle=Math.atan2(base[atlas.weaponBone][1],base[atlas.weaponBone][0]);
  let angle=restAngle,target=[...rest];
  if(lightblade){
   const releaseHilt=[rest[0]+lightblade.hiltX,rest[1]+lightblade.hiltY];
   upper[atlas.weaponBone]=multiply(torso,rigid(pivot,releaseHilt,restAngle+lightblade.pitch));
+ }else if(fireWhisky){
+  const hand=arms.find(arm=>arm.effectorBone==='arm-1-hand');
+  const neutral=base[hand.effectorBone];
+  const home=point(neutral,hand.wrist);
+  const goal=point(torso,[home[0]+fireWhisky.handX,home[1]+fireWhisky.handY]);
+  handPose(upper,hand,goal,Math.atan2(neutral[1],neutral[0])+bodyAngle+fireWhisky.bottleAngle,2*envelope);
  }else if(['guardian','kumaverson'].includes(kind)&&plan.abilityPresentation==='guard'){
   const raised=keys(p,[[0,0],[.28,1],[.7,1],[1,0]])[0];
   const sourceDirection=Math.atan2(atlas.muzzle[1]-pivot[1],atlas.muzzle[0]-pivot[0]);
@@ -435,9 +461,10 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
  // The indicating hand crosses the jacket in the wide phone view. Bring
  // that original arm in front only while the appraisal gesture is visible.
  if(kind==='babayaga'&&assessment<.12){const far=new Set([arms[1].upperBone,arms[1].lowerBone,arms[1].effectorBone]);for(let i=frontBones.length-1;i>=0;i--)if(far.has(frontBones[i]))frontBones.splice(i,1);}
- const bodyWeight=lightblade?lightblade.bodyX/38:rev?rev.bodyX/26:weight;
- const stepDistance=lightblade?36:attacking&&!stationaryAbility?attackSteps[kind]??0:0;
+ const bodyWeight=lightblade?lightblade.bodyX/38:rev?rev.bodyX/26:fireWhisky?fireWhisky.bodyX/27:weight;
+ const stepDistance=lightblade?36:fireWhisky?26:attacking&&!stationaryAbility?attackSteps[kind]??0:0;
  const choreography={kind,variant,sequence,upper,arms,frontBones,strikeBones,bodyWeight,stepDistance,
+  ...(fireWhisky?{heldBottleAngle:fireWhisky.bottleAngle}:{}),
   ...(kind==='mugarian-president-mutated'?{strikePoints:{'arm-1-hand':[228,326]}}:{})};if(!attacking)carryPlans.set(atlas,choreography);
  return{...plan,choreography:walkingCarry(kind,atlas,plan,choreography,attacking?1-envelope:1),upperOffsetY:0};
 }

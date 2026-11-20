@@ -645,7 +645,7 @@ import { clearV100SupportAbilityEffects, drawV100SupportAbilityEffects, drawV100
 import {drawV100MedicalArea,drawV100MedicalRecipients} from "./v100MedicalFieldVfx.js";
 import {drawV100GuardActivations} from "./v100GuardActivationVfx.js";
 import {clearV100MayoFeralVfx,drawV100MayoFeralVfx} from './v100MayoFeralVfx.js';
-import { clearV100AdvancedAbilityEffects, drawV100AdvancedAbilityEffects, drawV100MusashiImpacts, drawV100ChihaFinalBursts, V100_CHIHA_FINAL_BURST_DURATION, getV100AdvancedAbilityEffectsSnapshot, queueV100AdvancedAbilityEffect, resolveV100AdvancedAbilityOrigin, resolveV105CurrentAbilityOrigin } from "./v100AdvancedAbilityVfx.js";
+import { clearV100AdvancedAbilityEffects, drawV100AdvancedAbilityEffects, drawV100FireWhiskyBottle, drawV100MusashiImpacts, drawV100ChihaFinalBursts, V100_CHIHA_FINAL_BURST_DURATION, getV100AdvancedAbilityEffectsSnapshot, queueV100AdvancedAbilityEffect, resolveV100AdvancedAbilityOrigin, resolveV105CurrentAbilityOrigin } from "./v100AdvancedAbilityVfx.js";
 import { v100AbilityOriginSourcePixel, v100RenderedAbilityOriginSocket } from "./v100AbilityOriginSockets.js";
 import { drawV100DefensePerimeter } from "./v100DefensePerimeter.js";
 import { v100DefenseStatus, v100DefenseResultSnapshot } from "./v100DefenseObjectives.js";
@@ -4732,6 +4732,13 @@ function drawSpriteFighter(
     ? v177RenderedJointWeaponSocket({kind:renderKind,plan:jointPose,direction,frame,size,pose,x:f.x,y:f.y,bob,depthScale,allowIdle:renderKind==='kurome'})
     : v100RenderedWeaponSocket({kind:renderKind,state,direction,frame,size,pose,x:f.x,y:f.y,bob,depthScale});
   if (weaponSocket) fighterWeaponSockets.set(f,weaponSocket);
+  const fireWhiskyHand = jointPose?.abilityPresentation === "fire-whisky-throw" && !jointPose.reactionHeld && !jointPose.liveStun
+    ? jointAtlas.armConstraints?.find((arm) => arm.effectorBone === "arm-1-hand") : null;
+  const fireWhiskySocket = fireWhiskyHand ? v177RenderedJointWeaponSocket({
+    kind:renderKind,plan:jointPose,direction,frame,size,pose,x:f.x,y:f.y,bob,depthScale,
+    sourceBone:fireWhiskyHand.effectorBone,sourcePoint:fireWhiskyHand.grip,
+  }) : null;
+  const fireWhiskyAngle = (jointPose?.choreography?.heldBottleAngle ?? 0) * facingSign;
   const weaponArm=jointPose&&v104WeaponWakeCandidate(renderKind,jointPose.attackPhase,Boolean(jointPose.reactionHeld||jointPose.liveStun))
     ?jointAtlas?.armConstraints?.find(c=>c.effectorBone===jointAtlas.weaponBone):null;
   const gripSocket=jointPose&&weaponArm?v177RenderedJointWeaponSocket({kind:renderKind,plan:jointPose,direction,frame,size,pose,x:f.x,y:f.y,bob,depthScale,
@@ -4853,11 +4860,15 @@ function drawSpriteFighter(
       sourcePath:jointAtlas.path,sourceBone:V100_KING_EXHAUST_SOCKET.sourceBone,paintedAt:options.world.time});
   }
   if(drewArticulatedWalk&&jointPose&&weaponSocket&&options.world){
-    if(['tky','mrs-chiha','zakimiya'].includes(f.kind)){
-      const sourcePixel={x:jointAtlas.muzzle[0],y:jointAtlas.muzzle[1]};
-      resolveV105CurrentAbilityOrigin(options.world,f,weaponSocket,{
+    const abilityOrigin = f.kind === "zakimiya" ? fireWhiskySocket : weaponSocket;
+    if (abilityOrigin && ['tky','mrs-chiha','zakimiya'].includes(f.kind)) {
+      const point = fireWhiskyHand?.grip ?? jointAtlas.muzzle;
+      resolveV105CurrentAbilityOrigin(options.world,f,abilityOrigin,{
         activationId:f.manualAbility?.activationId,path:jointAtlas.path,phase:animationSample.requestedState,
-        paintedAt:options.world.time,sourceBone:jointAtlas.weaponBone,direction,sourcePixel});
+        paintedAt:options.world.time,sourceBone:fireWhiskyHand?.effectorBone ?? jointAtlas.weaponBone,
+        direction,sourcePixel:{x:point[0],y:point[1]},
+        bottleAngle:fireWhiskySocket ? fireWhiskyAngle : undefined,
+      });
     }
     const groundPixel=jointPose.groundStrike?.contactReady?jointPose.groundStrike.sourcePoint:null;
     const groundSocket=groundPixel?v177RenderedJointWeaponSocket({kind:renderKind,plan:jointPose,direction,frame,size,pose,
@@ -5009,6 +5020,9 @@ function drawSpriteFighter(
   }
   if(options.v100AuthoredPresentation&&options.world)drawV102GoreWound(ctx,options.world,f,frame,size,options.v100StageObjects);
   ctx.restore();
+  if (drewArticulatedWalk && fireWhiskySocket && animationSample.requestedState === "wind-up") {
+    drawV100FireWhiskyBottle(ctx,options.v100StageObjects,fireWhiskySocket.x,fireWhiskySocket.y,fireWhiskyAngle,effectivePoseOpacity);
+  }
   return {
     clipRect: null,
     deploymentPlan,
@@ -19875,16 +19889,17 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           const previousAbilityTarget = owner.manualAbility.target;
           const abilityStep = advanceManualAbility(owner.manualAbility, dt);
           owner.manualAbility = abilityStep.runtime as ManualAbilityRuntime;
+          const throwRelease = MANUAL_ABILITY_REGISTRY.zakimiya.throwReleaseSeconds;
           if (owner.kind === "zakimiya"
             && previousAbilityPhase === "windup"
             && Number.isFinite(previousRuntimeElapsed)
             && Number.isFinite(owner.manualAbility.abilityElapsed)
-            && previousRuntimeElapsed < .4
-            && owner.manualAbility.abilityElapsed >= .4) {
+            && previousRuntimeElapsed < throwRelease
+            && owner.manualAbility.abilityElapsed >= throwRelease) {
             const target = previousAbilityTarget;
             const targetX = Number(target?.x);
             const targetY = Number(target?.y);
-            const startedAt = g.time - (owner.manualAbility.abilityElapsed - .4);
+            const startedAt = g.time - (owner.manualAbility.abilityElapsed - throwRelease);
             if (Number.isFinite(targetX) && Number.isFinite(targetY) && Number.isFinite(startedAt)) {
               playManualAbilityTimelineCue(owner, "throw", owner.x, "molotov-throw", {
                 priority: 80,
