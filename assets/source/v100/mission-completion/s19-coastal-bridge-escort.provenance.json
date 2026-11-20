@@ -1,0 +1,26 @@
+{
+  "source": "Original coastal bridge prop sheet generated for the game",
+  "creator": "OpenAI integrated image generation",
+  "license": "OpenAI generated output, project-specific original without third-party trademarks, source images or actors",
+  "rights": {
+    "commercialUse": true,
+    "modification": true,
+    "redistribution": true
+  },
+  "producerApproval": "Existing campaign script and overall completion direction. New support prop visuals have not received individual producer acceptance.",
+  "prompt": "Pixel-dense game prop sprite sheet on TRUE TRANSPARENT background. This is for the Japanese near-future survival game 西新世紀末物語, a grim quarantine at the rain-soaked Sea Link Bridge. Painterly, realistic material detail with cool blue-gray overcast lighting from upper left, muted brown-black, used weathering, readable broad silhouettes at 100px, side-on 2.5D stage viewed slightly down from the side. No ground plate, scenery, text, titles, decals with lettering or cast clouds. Three NONCONTACTING detached props, fully visible in the following strict layout relative to image width/height, big transparent gutters:\n(1) Upper row between 5–86% of WIDTH and 7–43% of HEIGHT: one massive dark corporate armored six-wheeled patrol vehicle with muted charcoal blue plates, broad low profile, front and compact visible-gameplay turret facing LEFT; restrained dim amber light and a single short barrel. Three big side wheels clearly visible; flat horizontal wheel baseline. View from side with a sliver of front. This is rugged hard-surface production game art, highly readable during combat. Headlights very subdued.\n(2) Lower left cell between 5–28% WIDTH and 61–93% HEIGHT: the heavy roadside opening mechanism body/pivot bollard of a single striped access barrier, weathered industrial orange-yellow with black panels, small round amber lamp on top and a round hinged mount visible on the side near the top, compact concrete foot. The lever arm is detached, so there is NO visible crossing bar on this prop.\n(3) Lower right cell between 41–94% WIDTH and 65–83% HEIGHT: just one straight gate arm as a slim almost perfectly horizontal physical steel beam, attachment pivot at LEFT, continues toward RIGHT, alternating dirty warm cream-yellow and charcoal diagonal stripes with tiny bolt caps, flat side view with visible bevel. No ground, standalone piece. This arm will be rotated in-engine around its left tip.\nNo shadows crossing cells. Exact isolated silhouettes on transparent canvas. No fourth prop. Cohesive bespoke game art, away from plastic toy, clean edges, no cartoon contour strokes.",
+  "master": {
+    "path": "assets/source/v100/mission-completion/s19-coastal-bridge-escort-master-r1.png",
+    "sha256": "f8d6130caf06fe58f7415600c121b58217f5cf700ee2d074bf2cd34473618d51",
+    "bytes": 2188967
+  },
+  "runtime": {
+    "path": "public/art/v100/mission-objects/s19-coastal-bridge-escort-r1.webp",
+    "sha256": "baa3285f649710d74829a824ac42dcde697201f7fb41636657f652de54cac29f",
+    "bytes": 271754,
+    "encoding": "RGBA WebP q89 alpha q93; authored original retained",
+    "assets": 1,
+    "logicalBytes": 271754,
+    "distinctBytes": 271754
+  }
+}

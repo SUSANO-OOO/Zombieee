@@ -14,6 +14,7 @@ import { drawV100MissionNode, V100_NODE_PROFILES, v100NodeState, v100NodeFrame }
 import { drawV100DefensePerimeter } from '../app/v100DefensePerimeter.js';
 import { drawV100ClinicalControl } from "../app/v100ClinicalControl.js";
 import { hasRailEvacuation } from "../app/v100RailEvacuation.js";
+import { openBridgeGate } from "../app/v100BridgeEscort.js";
 import { hasRescueControl, V100_RESCUE_CONTROL_STAGE } from "../app/v100RescueControl.js";
 import { drawV100CentralSealGates, hasCentralSeal, V100_CENTRAL_SEAL_STAGE } from "../app/v100CentralSeal.js";
 
@@ -77,7 +78,8 @@ test("V1 escort profiles retain every wave and finish an unobstructed supported 
     let runtime = createStationMissionRuntime(definition.missionType, config), elapsed = 17;
     while (!runtime.completed && elapsed < 180) {
       runtime = advanceStationMission({ missionType: definition.missionType, runtime, config,
-        seconds: 1, battleElapsedSeconds: elapsed, humanCount: 7, escortCount: 2, baseHp: 680 });
+        seconds: 1, battleElapsedSeconds: elapsed, humanCount: 7, escortCount: 2, bridgeCovered: true, bridgeApproachSecured: true, baseHp: 680 });
+      if (runtime.bridge?.gateReady) runtime = openBridgeGate(runtime);
       elapsed += 1;
     }
     assert.equal(runtime.completed, true);
@@ -133,8 +135,10 @@ test("the actual escort renderer uses decoded story vehicles while retaining the
     const authored=draws.filter(args=>args[0]===images[`v100-mission-vehicle-${key}`]);
     assert.equal(authored.length,count,`Stage ${number} vehicle count`);
     if(count) {
-      assert.equal(draws.length,count+1,"one destination plus the exact authored vehicle count, without a second legacy cart");
-      for(const state of [key,"destinationStates"]) assert.ok(plan.paths.includes(V100_MISSION_VEHICLE_ART[state]),"decode all authored states and the destination before entry");
+      assert.equal(draws.length, count + (number === 19 ? 0 : 1), "Stage 19 uses its own barrier in the world renderer");
+      for (const state of number === 19 ? [key] : [key,"destinationStates"]) {
+        assert.ok(plan.paths.includes(V100_MISSION_VEHICLE_ART[state]), "decode the authored assets before entry");
+      }
       delete images[`v100-mission-vehicle-${key}`];
       assert.throws(()=>draw(context,{definition,stageMission:runtime,time:0},images),/decoded before battle/);
       const legacyPlan=requiredBattleAssetPlan({stageId:definition.stageId,includeV100Sprites:false});

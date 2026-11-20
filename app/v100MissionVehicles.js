@@ -8,7 +8,7 @@ export const V100_MISSION_VEHICLE_ART = Object.freeze({
 export const V100_MISSION_VEHICLES = Object.freeze({
   "stage-nishijin-station-tunnel-seal": Object.freeze({targetLabel:"保守台車",count:1}),
   "stage-research-freight-passage": Object.freeze({ targetLabel:"密閉搬送車", count:1 }),
-  "stage-coastal-link-bridge": Object.freeze({ targetLabel:"証拠搬送車", count:1 }),
+  "stage-coastal-link-bridge": Object.freeze({ targetLabel:"証拠搬送車", count:1, destinationLabel:"対岸" }),
   "stage-bay-evacuation-yard": Object.freeze({ targetLabel:"冷蔵車列", count:3, destinationLabel:"封鎖地点" }),
 });
 
@@ -58,12 +58,17 @@ export function drawV100MissionVehicles(context, game, stageObjects, x, y, {defe
   const ratio = Math.max(0,game.stageMission.integrity ?? 0) / Math.max(1,game.stageMission.maxIntegrity ?? 1);
   const sprite=v100VehicleSprite(game.definition.stageId,game.stageMission);
   const image=stageObjects[`v100-mission-vehicle-${sprite.assetKey}`],destination=stageObjects["v100-mission-vehicle-destinationStates"];
-  if (!image?.complete||!image.naturalWidth||!destination?.complete||!destination.naturalWidth) throw new Error("The mission vehicle and destination must be decoded before battle starts");
+  if (!image?.complete || !image.naturalWidth || (!game.definition.missionConfig.bridgeEscort
+    && (!destination?.complete || !destination.naturalWidth))) {
+    throw new Error("The mission vehicle and destination must be decoded before battle starts");
+  }
   const width=sprite.width,height=game.definition.missionConfig.v100StageNumber===6?44:94;
   context.save();
   context.imageSmoothingEnabled=true;context.imageSmoothingQuality="high";
   const frontOffset=(profile.count-1)*75;
-  drawV100EscortDestination(context,game,destination,game.definition.missionConfig.endX+frontOffset+width/2+8,y+(profile.count===3?32:0)+18);
+  if (!game.definition.missionConfig.bridgeEscort) {
+    drawV100EscortDestination(context,game,destination,game.definition.missionConfig.endX+frontOffset+width/2+8,y+(profile.count===3?32:0)+18);
+  }
   for(let index=0;index<profile.count;index++) {
     const offset=index-(profile.count-1)/2,px=x+offset*150,py=y+offset*32;
     context.fillStyle="rgba(0,0,0,.4)";context.beginPath();context.ellipse(px,py+3,width*.46,7,0,0,Math.PI*2);context.fill();

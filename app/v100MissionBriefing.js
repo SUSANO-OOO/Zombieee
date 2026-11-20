@@ -6,9 +6,11 @@ import { V100_RESCUE_CONTROL, V100_RESCUE_CONTROL_STAGE } from "./v100RescueCont
 import { V100_CENTRAL_SEAL, V100_CENTRAL_SEAL_STAGE } from "./v100CentralSeal.js";
 import { V100_BAY_EVACUATION_STAGE } from "./v100BayEvacuation.js";
 import { V100_ARCHIVE_STAGE } from "./v100ArchiveExtraction.js";
+import { V100_BRIDGE_STAGE } from "./v100BridgeEscort.js";
+import { V100_FLOODGATE_STAGE } from "./v100EstuaryFloodgate.js";
 import { V100_MISSION_VEHICLES } from "./v100MissionVehicles.js";
 import { V100_DEFENSE_OBJECTIVES } from "./v100DefenseObjectives.js";
-import { V100_CORPORATE_CONTROLS } from "./v100CorporateControl.js";
+import { V100_CORPORATE_CONTROLS, V100_LURE_CONTROL_NAME, V100_LURE_CONTROL_STAGE } from "./v100CorporateControl.js";
 import { v100BattleDefinitionFor } from "./v100BattleAdapter.js";
 import { ENEMY_CONTENT } from "./content/enemyCatalog.js";
 
@@ -39,6 +41,15 @@ export function v100MissionBriefingFor(stageId) {
   }
   if (stageId === V100_ARCHIVE_STAGE) {
     return { mode: "escort", origin: "紙台帳3箱", target: "車両", verb: "遠隔消去を止め、搬出を援護" };
+  }
+  if (stageId === V100_BRIDGE_STAGE) {
+    return { mode: "escort", origin: "証拠搬送車", target: "対岸", verb: "敵車両を抑え、遮断機を7秒だけ開ける" };
+  }
+  if (stageId === V100_FLOODGATE_STAGE) {
+    return { mode: "advance", origin: "ガイレンを撃破", target: "防潮門", verb: "閉鎖盤で閉める" };
+  }
+  if (stageId === V100_LURE_CONTROL_STAGE) {
+    return { mode: "advance", origin: "物流本部の門", target: V100_LURE_CONTROL_NAME, verb: "航空支援でも直接狙える" };
   }
   if (stageId === V100_CENTRAL_SEAL_STAGE) {
     return { mode: "sequence", count: V100_CENTRAL_SEAL.powerCount, countUnit: "基",

@@ -1,7 +1,37 @@
 export const V100_CORPORATE_CONTROL_ART="/art/v100/mission-objects/corporate-control-states-v1.webp";
 export const V100_LURE_CONTROL_ART="/art/v100/mission-objects/lure-control-states-v1.webp";
+export const V100_LURE_CONTROL_STAGE = "stage-mugarian-logistics-hq";
+export const V100_LURE_CONTROL_NAME = "音響誘導装置";
+export const V100_LURE_CONTROL_OBJECTIVE = `${V100_LURE_CONTROL_NAME}を先に破壊`;
+
+export function hasV100LureControl(definition) {
+  return definition.stageId === V100_LURE_CONTROL_STAGE
+    && definition.missionConfig?.v100StageNumber === 21;
+}
+
+export function v100LureControlReadout(game) {
+  if (game.barricadeHp <= 0) return { stopped: true, status: "増援停止" };
+  const signal = game.definition.timeline.find((event, index) =>
+    index >= game.eventIndex && event.requiresActiveLure);
+  if (!signal) return { stopped: false, status: "増援到着" };
+  const seconds = Math.ceil(signal.at - game.time);
+  return { stopped: false, status: seconds <= 0 ? "増援接近中" : `増援まで${seconds}秒` };
+}
+
+export function v100LureWaveBlocked(event, barricadeHp) {
+  return event.requiresActiveLure === true && barricadeHp <= 0;
+}
+
+export function v100LureControlAim(game, requested, barrier, laneCenters) {
+  if (!hasV100LureControl(game.definition) || game.barricadeHp <= 0) return null;
+  // The painted base uses the lowest lane and the speaker stands above it.
+  const center = { x: barrier.attackX + 10, y: laneCenters[2] };
+  return Math.abs(requested.x - center.x) <= 44
+    && requested.y >= center.y - 85 && requested.y <= center.y + 47 ? center : null;
+}
+
 export const V100_CORPORATE_CONTROLS=Object.freeze({
-  "stage-mugarian-logistics-hq":"誘引制御装置",
+  [V100_LURE_CONTROL_STAGE]:V100_LURE_CONTROL_NAME,
   "stage-mugarian-special-operations-armory":"認証鍵制御盤",
   "stage-mugarian-tech-tower":"中央制御盤",
   "stage-mugarian-executive-lab":"研究室制御盤",
@@ -27,7 +57,7 @@ export function v100ObjectiveDamageLabel(game, damageState) {
 const columns=[0,530,1030,1530,2172],anchors=[290,790,1300,1850];
 export function drawV100CorporateControl(context,game,stageObjects,barrier,laneCenters){
   const label=V100_CORPORATE_CONTROLS[game.definition.stageId];if(!label)return false;
-  const lure=game.definition.stageId==="stage-mugarian-logistics-hq";
+  const lure=game.definition.stageId===V100_LURE_CONTROL_STAGE;
   const image=lure?stageObjects.lureControlStates:stageObjects.corporateControlStates;
   if(!image?.complete||!image.naturalWidth)throw new Error("Corporate control states must be decoded before battle starts");
   const frames=lure?[0,530,1060,1560,2172]:columns,origins=lure?[270,800,1310,1870]:anchors;

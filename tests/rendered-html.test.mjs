@@ -318,8 +318,10 @@ test("draws three unmistakably different stage environments", async () => {
   );
   assert.match(
     backgroundDraw,
-    /CAMPAIGN_STAGE_IDS\.ESTUARY_FLOODGATE_SEAL[\s\S]*naturalHeight \* \.18/,
+    /CAMPAIGN_STAGE_IDS\.ESTUARY_FLOODGATE_SEAL[\s\S]*naturalHeight \* ESTUARY_CROP_TOP/,
   );
+  const { ESTUARY_CROP_TOP } = await import("../app/v100EstuaryFloodgate.js");
+  assert.equal(ESTUARY_CROP_TOP, .18);
 
   const worldDraw = game.slice(game.indexOf("function drawWorld"), game.indexOf("export function AshfallGame"));
   const drawOrder = [

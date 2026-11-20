@@ -1,6 +1,7 @@
 import { STATION_MISSION_TYPES, currentPowerNode, escortCartX, hasSupplyValve } from "./stationStageMechanics.js";
 import { hasRailEvacuation } from "./v100RailEvacuation.js";
 import { hasRescueControl } from "./v100RescueControl.js";
+import { bridgeArmorCovered, hasBridgeEscort } from "./v100BridgeEscort.js";
 import { centralSealGateEngaged, hasCentralSeal } from "./v100CentralSeal.js";
 
 const DEFAULT_LANE_CENTERS = Object.freeze([286, 366, 446]);
@@ -224,6 +225,12 @@ export function stationSpatialSnapshot({
     return frozen({
       ...base,
       cartX,
+      ...(hasBridgeEscort(missionType, config) ? {
+        bridgeCovered: bridgeArmorCovered(humans, cartX, cartY),
+        // The final pursuit starts across the bridge, after the truck has passed.
+        bridgeApproachSecured: integer(timelineLength) > 1 && integer(eventIndex) >= integer(timelineLength) - 1
+          && integer(pendingSpawnCount) === 0 && enemies.length === 0,
+      } : {}),
       escortCount: humans.filter((human) => pointInEllipse(
         human,
         cartX,

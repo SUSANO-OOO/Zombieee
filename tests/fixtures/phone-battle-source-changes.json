@@ -463,6 +463,178 @@
     [
       "[activeBattlefieldStageId, assetError, assetReadiness,",
       "[activeBattlefieldStageId, activeBattlefieldVisualId, assetError, assetReadiness,"
+    ],
+    [
+      "import { advanceBayEvacuationRuntime, bayEvacuationReadout, drawV100BayEvacuees, hasBayEvacuation, V100_BAY_REFUGEE_COUNT, V100_BAY_ROUTE_Y } from \"./v100BayEvacuation.js\";\nimport { advanceArchiveExtraction, archiveExtractionReadout, drawArchiveExtraction, hasArchiveExtraction,\n  stopArchiveErase, ARCHIVE_BOX_COUNT, ARCHIVE_ROUTE_Y, ARCHIVE_TERMINAL_X } from \"./v100ArchiveExtraction.js\";\nimport { hasRescueControl, rescueControlReadout, V100_RESCUE_CONTROL } from \"./v100RescueControl.js\";\nimport { centralSealCanReinforce, centralSealGateX, centralSealIngressPoint, centralSealReadout, drawV100CentralSealGates, hasCentralSeal } from \"./v100CentralSeal.js\";\nimport { drawV100ClinicalControl } from \"./v100ClinicalControl.js\";",
+      "import { advanceBayEvacuationRuntime, bayEvacuationReadout, drawV100BayEvacuees, hasBayEvacuation, V100_BAY_REFUGEE_COUNT, V100_BAY_ROUTE_Y } from \"./v100BayEvacuation.js\";\nimport { advanceArchiveExtraction, archiveExtractionReadout, drawArchiveExtraction, hasArchiveExtraction,\n  stopArchiveErase, ARCHIVE_BOX_COUNT, ARCHIVE_ROUTE_Y, ARCHIVE_TERMINAL_X } from \"./v100ArchiveExtraction.js\";\nimport { bridgeEscortReadout, createBridgeEscortState, hasBridgeEscort,\n  openBridgeGate, BRIDGE_GATE_SECONDS, BRIDGE_GATE_X, BRIDGE_SHOT_FLASH } from \"./v100BridgeEscort.js\";\nimport { drawBridgeEscort } from \"./v100BridgeEscortRender.js\";\nimport { hasRescueControl, rescueControlReadout, V100_RESCUE_CONTROL } from \"./v100RescueControl.js\";\nimport { centralSealCanReinforce, centralSealGateX, centralSealIngressPoint, centralSealReadout, drawV100CentralSealGates, hasCentralSeal } from \"./v100CentralSeal.js\";\nimport { drawV100ClinicalControl } from \"./v100ClinicalControl.js\";"
+    ],
+    [
+      "  evacuatedCount?: number;\n  evacuationBlocked?: boolean;\n  evacuationSettling?: number;\n  archiveReady?: boolean;\n  archiveStopped?: boolean;\n  archiveDistances?: readonly number[];",
+      "  evacuatedCount?: number;\n  evacuationBlocked?: boolean;\n  evacuationSettling?: number;\n  bridge?: Omit<ReturnType<typeof createBridgeEscortState>, \"gateElapsed\"> & { gateElapsed: number | null };\n  gateTimedOut?: boolean;\n  archiveReady?: boolean;\n  archiveStopped?: boolean;\n  archiveDistances?: readonly number[];"
+    ],
+    [
+      "  for (const effect of g.manualAbilityVfx) drawManualAbilityVfx(ctx, effect,Boolean(g.definition.missionConfig.v100StageNumber));\n  if (!g.definition.missionConfig.v100StageNumber) for (const fighter of g.fighters) drawCrazyKingAbilityIndicator(ctx, fighter, g.time);\n  for (const hazard of g.stationHazards) drawStationHazard(ctx, hazard, g.time);\n  drawStationMission(ctx, g, stageObjects, allowDiagnosticFallback, true);\n  if (hasBayEvacuation(g.definition.missionType, g.definition.missionConfig)) {\n    drawV100BayEvacuees(ctx, g.stageMission, stageObjects, activeYForContentY(V100_BAY_ROUTE_Y));",
+      "  for (const effect of g.manualAbilityVfx) drawManualAbilityVfx(ctx, effect,Boolean(g.definition.missionConfig.v100StageNumber));\n  if (!g.definition.missionConfig.v100StageNumber) for (const fighter of g.fighters) drawCrazyKingAbilityIndicator(ctx, fighter, g.time);\n  for (const hazard of g.stationHazards) drawStationHazard(ctx, hazard, g.time);\n  if (g.stageMission.bridge) {\n    drawBridgeEscort(ctx, stageObjects, g.stageMission, escortCartX(g.stageMission, g.definition.missionConfig),\n      activeLaneCenters[1], activeLaneCenters[0] - 9);\n  }\n  drawStationMission(ctx, g, stageObjects, allowDiagnosticFallback, true);\n  if (hasBayEvacuation(g.definition.missionType, g.definition.missionConfig)) {\n    drawV100BayEvacuees(ctx, g.stageMission, stageObjects, activeYForContentY(V100_BAY_ROUTE_Y));"
+    ],
+    [
+      "    playProductionCue(STATION_AUDIO_CUE_IDS.TERMINAL_CONFIRM, ARCHIVE_TERMINAL_X, { priority: 85, maxInstances: 1 });\n  }, [playProductionCue, rejectBattleSaveBoundary]);\n\n  const triggerDrumAt = useCallback((x: number, y: number) => {\n    const g = gameRef.current;\n    if (!g.running || g.paused || g.over) {",
+      "    playProductionCue(STATION_AUDIO_CUE_IDS.TERMINAL_CONFIRM, ARCHIVE_TERMINAL_X, { priority: 85, maxInstances: 1 });\n  }, [playProductionCue, rejectBattleSaveBoundary]);\n\n  const releaseBridgeBarrier = useCallback(() => {\n    const g = gameRef.current;\n    if (!g.running || g.paused || g.over || g.time < g.definition.prepSeconds\n      || !hasBridgeEscort(g.definition.missionType, g.definition.missionConfig)) return;\n    if (rejectBattleSaveBoundary(\"bridge-barrier:save-pending\")) return;\n    const updated = openBridgeGate(g.stageMission);\n    if (updated === g.stageMission) return;\n    g.stageMission = updated;\n    g.banner = \"遮断機を開放　保守車線へ\";\n    g.bannerTime = 1.4;\n    playProductionCue(STATION_AUDIO_CUE_IDS.POWER_SWITCH, BRIDGE_GATE_X, { priority: 87, maxInstances: 1 });\n    playProductionCue(\"radio-open\", BRIDGE_GATE_X, { priority: 89, maxInstances: 1 });\n  }, [playProductionCue, rejectBattleSaveBoundary]);\n\n  const triggerDrumAt = useCallback((x: number, y: number) => {\n    const g = gameRef.current;\n    if (!g.running || g.paused || g.over) {"
+    ],
+    [
+      "            baseHp: g.baseHp,\n            escortCount: spatial.escortCount,\n            nearbyThreats: spatial.nearbyThreats,\n            contaminated: spatial.contaminated,\n            powerOperatorCount: spatial.powerOperatorCount,\n            powerLaneThreats: spatial.powerLaneThreats,",
+      "            baseHp: g.baseHp,\n            escortCount: spatial.escortCount,\n            nearbyThreats: spatial.nearbyThreats,\n            bridgeCovered: spatial.bridgeCovered,\n            bridgeApproachSecured: spatial.bridgeApproachSecured,\n            contaminated: spatial.contaminated,\n            powerOperatorCount: spatial.powerOperatorCount,\n            powerLaneThreats: spatial.powerLaneThreats,"
+    ],
+    [
+      "              playProductionCue(STATION_AUDIO_CUE_IDS.MACHINE_STOP, sealDoorX, { priority: 90, maxInstances: 1 });\n            }\n          }\n          g.stageMission = nextMission;\n          if (g.definition.missionType === STATION_MISSION_TYPES.ESCORT) {\n            g.convoyProgress = nextMission.progress ?? 0;",
+      "              playProductionCue(STATION_AUDIO_CUE_IDS.MACHINE_STOP, sealDoorX, { priority: 90, maxInstances: 1 });\n            }\n          }\n          if (nextMission.bridge) {\n            const previous = g.stageMission.bridge;\n            const cartX = Number(spatial.cartX ?? BRIDGE_GATE_X);\n            if (nextMission.bridge.shotFlash === BRIDGE_SHOT_FLASH && previous?.shotFlash !== BRIDGE_SHOT_FLASH) {\n              playProductionCue(\"weapon-barrage\", BRIDGE_GATE_X, { priority: 89, maxInstances: 1 });\n              playProductionCue(\"v104-armor-hit\", cartX, { priority: 83, maxInstances: 1 });\n              queueV100Contact(g, { x: cartX + 38, y: activeLaneCenters[1] - 41, metal: true, size: 73, direction: -1 });\n              g.shake = Math.max(g.shake, 3);\n            }\n            if (nextMission.bridge.gateElapsed === BRIDGE_GATE_SECONDS\n              && previous?.gateElapsed !== BRIDGE_GATE_SECONDS) {\n              playProductionCue(STATION_AUDIO_CUE_IDS.SEAL_ENGAGE, BRIDGE_GATE_X, { priority: 86, maxInstances: 1 });\n            }\n          }\n          g.stageMission = nextMission;\n          if (g.definition.missionType === STATION_MISSION_TYPES.ESCORT) {\n            g.convoyProgress = nextMission.progress ?? 0;"
+    ],
+    [
+      "  const archiveGame = gameRef.current;\n  const archiveHud = hasArchiveExtraction(archiveGame.definition.missionType, archiveGame.definition.missionConfig)\n    ? archiveExtractionReadout(archiveGame.stageMission, Math.max(0, Math.ceil((archiveGame.definition.defenseEndAt ?? archiveGame.time) - archiveGame.time))) : null;\n  const phaseName = archiveHud ? archiveHud.phaseLabel\n    : bayHud ? bayHud.phaseLabel\n    : railHud ? railHud.phaseLabel\n    : centralSealHud ? centralSealHud.phaseLabel",
+      "  const archiveGame = gameRef.current;\n  const archiveHud = hasArchiveExtraction(archiveGame.definition.missionType, archiveGame.definition.missionConfig)\n    ? archiveExtractionReadout(archiveGame.stageMission, Math.max(0, Math.ceil((archiveGame.definition.defenseEndAt ?? archiveGame.time) - archiveGame.time))) : null;\n  const bridgeHud = archiveGame.stageMission.bridge ? bridgeEscortReadout(archiveGame.stageMission) : null;\n  const phaseName = bridgeHud ? bridgeHud.label\n    : archiveHud ? archiveHud.phaseLabel\n    : bayHud ? bayHud.phaseLabel\n    : railHud ? railHud.phaseLabel\n    : centralSealHud ? centralSealHud.phaseLabel"
+    ],
+    [
+      "          </div>\n          {hud.bossTelegraphWarning && !end && <div className=\"v100-boss-telegraph-warning\" role=\"alert\" data-boss-telegraph-warning=\"true\">{formatBattleText(hud.bossTelegraphWarning)}</div>}\n\n          {archiveHud ? (!end && <section className=\"health-hud barrier-health archive-objective\"\n            data-archive-phase={archiveHud.phase} data-archive-delivered={archiveHud.count} aria-label=\"紙台帳の搬出\">\n            <div><span>紙台帳</span><b>{archiveHud.count}/{ARCHIVE_BOX_COUNT} 箱</b></div>\n            {archiveHud.phase === \"erasing\" || archiveHud.phase === \"ready\"",
+      "          </div>\n          {hud.bossTelegraphWarning && !end && <div className=\"v100-boss-telegraph-warning\" role=\"alert\" data-boss-telegraph-warning=\"true\">{formatBattleText(hud.bossTelegraphWarning)}</div>}\n\n          {bridgeHud ? (!end && <section className=\"health-hud barrier-health bridge-objective\"\n            data-bridge-phase={bridgeHud.phase} aria-label=\"海浜連絡橋の遮断機\">\n            <div><span>遮断機</span><b>{bridgeHud.status}</b></div>\n            <div className=\"bridge-convoy-integrity\"><span>搬送車</span>\n              <b>{Math.ceil(archiveGame.stageMission.integrity ?? 0)} / {archiveGame.stageMission.maxIntegrity}</b></div>\n            {(bridgeHud.phase === \"hold\" || bridgeHud.phase === \"aim\" || bridgeHud.phase === \"ready\")\n              && <button type=\"button\" className=\"bridge-barrier-action\" onClick={releaseBridgeBarrier}\n                disabled={bridgeHud.phase !== \"ready\" || paused || Boolean(battleSaveBoundaryRef.current)}>遮断機を開ける</button>}\n            {bridgeHud.phase === \"open\" && <i><em style={{ width: `${(bridgeHud.remaining ?? 0) / BRIDGE_GATE_SECONDS * 100}%` }} /></i>}\n          </section>) : archiveHud ? (!end && <section className=\"health-hud barrier-health archive-objective\"\n            data-archive-phase={archiveHud.phase} data-archive-delivered={archiveHud.count} aria-label=\"紙台帳の搬出\">\n            <div><span>紙台帳</span><b>{archiveHud.count}/{ARCHIVE_BOX_COUNT} 箱</b></div>\n            {archiveHud.phase === \"erasing\" || archiveHud.phase === \"ready\""
+    ],
+    [
+      "import { drawBridgeEscort } from \"./v100BridgeEscortRender.js\";",
+      "import { drawBridgeEscort } from \"./v100BridgeEscortRender.js\";\nimport { advanceEstuaryFloodgate, beginEstuaryFloodgateClosure, drawEstuaryFloodgate,\n  floodgateClosureProgress, floodgateIngressDisposition, floodgateReadout, hasEstuaryFloodgate,\n  ESTUARY_CROP_TOP, ESTUARY_GATE_SILL_X } from \"./v100EstuaryFloodgate.js\";"
+    ],
+    [
+      "clearDelaySeconds?: number; requiredPowerCount?: number; units: string[] };",
+      "clearDelaySeconds?: number; requiredPowerCount?: number; requiresOpenFloodgate?: boolean; units: string[] };"
+    ],
+    [
+      "  gateTimedOut?: boolean;\n  archiveReady?: boolean;",
+      "  gateTimedOut?: boolean;\n  floodgateElapsed?: number | null;\n  floodgateOpenAfterDefeat?: number;\n  archiveReady?: boolean;"
+    ],
+    [
+      "  } else if (g.definition.stageId === CAMPAIGN_STAGE_IDS.ESTUARY_FLOODGATE_SEAL) {\n    const cropTop = Math.round(background.naturalHeight * .18);",
+      "  } else if (g.definition.stageId === CAMPAIGN_STAGE_IDS.ESTUARY_FLOODGATE_SEAL) {\n    const cropTop = Math.round(background.naturalHeight * ESTUARY_CROP_TOP);"
+    ],
+    [
+      "    drawCachedStageBackground(ctx, g, background, staticBackgroundCache, graphicsProfile);\n  } else if",
+      "    drawCachedStageBackground(ctx, g, background, staticBackgroundCache, graphicsProfile);\n    if (g.stageMission.floodgateElapsed != null) {\n      drawEstuaryFloodgate(ctx, background, floodgateClosureProgress(g.stageMission), W, H);\n    }\n  } else if"
+    ],
+    [
+      "  const triggerDrumAt = useCallback((x: number, y: number) => {",
+      "  const closeEstuaryGate = useCallback(() => {\n    const g = gameRef.current;\n    if (!g.running || g.paused || g.over || g.baseHp <= 0\n      || !hasEstuaryFloodgate(g.definition.missionType, g.definition.missionConfig)) return;\n    if (rejectBattleSaveBoundary(\"estuary-gate:save-pending\")) return;\n    const next = beginEstuaryFloodgateClosure(g.stageMission, g.bossDefeated && !g.bossDefeatPending);\n    if (next === g.stageMission) return;\n    g.stageMission = next;\n    g.banner = \"防潮門を閉鎖中\";\n    g.bannerTime = 1.6;\n    playProductionCue(STATION_AUDIO_CUE_IDS.POWER_SWITCH, ESTUARY_GATE_SILL_X, { priority: 87, maxInstances: 1 });\n  }, [playProductionCue, rejectBattleSaveBoundary]);\n\n  const triggerDrumAt = useCallback((x: number, y: number) => {"
+    ],
+    [
+      "        const supplyValvePending = hasSupplyValve(g.definition.missionType, g.definition.missionConfig)",
+      "        if (hasEstuaryFloodgate(g.definition.missionType, g.definition.missionConfig) && !g.stageMission.completed\n          && g.baseHp > 0 && g.bossDefeated && !g.bossDefeatPending) {\n          const previous = g.stageMission;\n          g.stageMission = advanceEstuaryFloodgate(previous, dt, true);\n          if (floodgateClosureProgress(previous) < 1 && floodgateClosureProgress(g.stageMission) >= 1) {\n            g.banner = \"防潮門 閉鎖完了\";\n            g.bannerTime = 2.2;\n            g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.enemyBaseCollapse);\n            playProductionCue(STATION_AUDIO_CUE_IDS.SEAL_ENGAGE, ESTUARY_GATE_SILL_X, { priority: 93, maxInstances: 1 });\n          }\n        }\n        const supplyValvePending = hasSupplyValve(g.definition.missionType, g.definition.missionConfig)"
+    ],
+    [
+      "            const mission = g.definition.timeline[g.eventIndex] as MissionEvent;\n            const clearDriven",
+      "            const mission = g.definition.timeline[g.eventIndex] as MissionEvent;\n            if (mission.requiresOpenFloodgate) {\n              const ingress = floodgateIngressDisposition(g.stageMission);\n              if (ingress === \"hold\") break;\n              if (ingress === \"blocked\") {\n                g.eventIndex += 1;\n                continue;\n              }\n            }\n            const clearDriven"
+    ],
+    [
+      "            if (twinDefeat.complete && (isOutbreakBoss || isRailBoss || isBayBoss\n              || (fighter.kind === g.definition.bossEnemyKind && g.definition.bossUnlocksEnemyBase))) {\n              g.bossDefeatPending = true;\n              if (!isOutbreakBoss && !isRailBoss && !isBayBoss) g.barricadeVulnerable = true;",
+      "            const isFloodgateBoss = fighter.kind === g.definition.bossEnemyKind\n              && hasEstuaryFloodgate(g.definition.missionType, g.definition.missionConfig);\n            if (twinDefeat.complete && (isOutbreakBoss || isRailBoss || isBayBoss || isFloodgateBoss\n              || (fighter.kind === g.definition.bossEnemyKind && g.definition.bossUnlocksEnemyBase))) {\n              g.bossDefeatPending = true;\n              if (!isOutbreakBoss && !isRailBoss && !isBayBoss && !isFloodgateBoss) g.barricadeVulnerable = true;"
+    ],
+    [
+      "                : v100CorporateControlLabel(g.definition)\n                ? `${defeatedBossName}撃破・防護解除`",
+      "                : isFloodgateBoss\n                ? \"ガイレン撃破 // 防潮門を閉める\"\n                : v100CorporateControlLabel(g.definition)\n                ? `${defeatedBossName}撃破・防護解除`"
+    ],
+    [
+      "              } else if (!isRailBoss && !isBayBoss) {\n                emitBattleBark(g, \"base-exposed\", \"crawler\", \"tactical\");",
+      "              } else if (!isRailBoss && !isBayBoss && !isFloodgateBoss) {\n                emitBattleBark(g, \"base-exposed\", \"crawler\", \"tactical\");"
+    ],
+    [
+      "  const phaseName = bridgeHud ? bridgeHud.label",
+      "  const floodgateHud = hasEstuaryFloodgate(archiveGame.definition.missionType, archiveGame.definition.missionConfig)\n    ? floodgateReadout(archiveGame.stageMission, archiveGame.bossDefeated && !archiveGame.bossDefeatPending) : null;\n  const phaseName = floodgateHud ? floodgateHud.label\n    : bridgeHud ? bridgeHud.label"
+    ],
+    [
+      "          {bridgeHud ? (!end && <section className=\"health-hud barrier-health bridge-objective\"",
+      "          {floodgateHud ? (!end && <section className=\"health-hud barrier-health floodgate-objective\"\n            data-floodgate-phase={floodgateHud.phase} aria-label=\"防潮門の閉鎖盤\">\n            <div><span>防潮門</span><b>{floodgateHud.label}</b></div>\n            {(floodgateHud.phase === \"blocked\" || floodgateHud.phase === \"ready\") &&\n              <button type=\"button\" className=\"floodgate-action\" onClick={closeEstuaryGate}\n                disabled={floodgateHud.phase !== \"ready\" || paused || Boolean(battleSaveBoundaryRef.current)}>防潮門を閉める</button>}\n            {(floodgateHud.phase === \"closing\" || floodgateHud.phase === \"sealed\") &&\n              <i aria-hidden=\"true\"><em style={{ width: `${floodgateHud.progress * 100}%` }} /></i>}\n          </section>) : bridgeHud ? (!end && <section className=\"health-hud barrier-health bridge-objective\""
+    ],
+    [
+      "import { drawV100CorporateControl, v100CorporateControlLabel, v100ObjectiveDamageLabel, v100CorporateControlCondition } from \"./v100CorporateControl.js\";",
+      "import { drawV100CorporateControl, hasV100LureControl, v100CorporateControlLabel, v100ObjectiveDamageLabel,\n  v100CorporateControlCondition, v100LureControlReadout, v100LureWaveBlocked } from \"./v100CorporateControl.js\";"
+    ],
+    [
+      "requiredPowerCount?: number; requiresOpenFloodgate?: boolean; units: string[] };",
+      "requiredPowerCount?: number; requiresOpenFloodgate?: boolean; requiresActiveLure?: boolean; units: string[] };"
+    ],
+    [
+      "      if (!ctx) { requestFrame(); return; }\n      const performanceCounters = runtimePerformanceRef.current;",
+      "      if (!ctx) { requestFrame(); return; }\n      const lureControl = hasV100LureControl(g.definition);\n      const performanceCounters = runtimePerformanceRef.current;"
+    ],
+    [
+      "            const mission = g.definition.timeline[g.eventIndex] as MissionEvent;\n            if (mission.requiresOpenFloodgate) {",
+      "            const mission = g.definition.timeline[g.eventIndex] as MissionEvent;\n            if (v100LureWaveBlocked(mission, g.barricadeHp)) {\n              g.eventIndex += 1;\n              continue;\n            }\n            if (mission.requiresOpenFloodgate) {"
+    ],
+    [
+      "            if (g.definition.missionConfig?.v100StageNumber && g.definition.missionType === \"assault\"\n              && !g.definition.bossEnemyKind && g.eventIndex === g.definition.timeline.length) {",
+      "            if (!lureControl && g.definition.missionConfig?.v100StageNumber && g.definition.missionType === \"assault\"\n              && !g.definition.bossEnemyKind && g.eventIndex === g.definition.timeline.length) {"
+    ],
+    [
+      "                  activateTakuyaScene: incomingBossKind === \"takuya\",\n                });\n              } else {\n                playCue(\"wave-contact\");",
+      "                  activateTakuyaScene: incomingBossKind === \"takuya\",\n                });\n              } else if (mission.requiresActiveLure) {\n                playProductionCue(STATION_AUDIO_CUE_IDS.WARNING, WORLD_GEOMETRY.enemyBase.attackX + 10, {\n                  priority: 96, maxInstances: 1, dedupeKey: `lure-control:${g.resultId}:signal:${mission.wave}`,\n                });\n              } else {\n                playCue(\"wave-contact\");"
+    ],
+    [
+      "        dispatchSituationalBattleBarks(g);\n        if (!g.survivalRun) dispatchBattleStoryEvents(g);",
+      "        if (lureControl && g.barricadeHp <= 0) {\n          if (g.enemyBaseCollapse === 0) {\n            const ownerId = `lure-control:${g.resultId}`;\n            const receiptId = `${ownerId}:break`;\n            const x = WORLD_GEOMETRY.enemyBase.attackX + 10;\n            g.banner = \"音響誘導装置 停止\";\n            g.bannerTime = 2.4;\n            g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.enemyBaseCollapse);\n            addSemanticBattlePresentation(g, {\n              semantic: \"explosion-result\", receiptId, ownerId, kind: \"explosion\",\n              scale: \"large\", x, y: activeLaneCenters[2] + 4,\n            });\n            playBattleSemanticCue(\"support-explosion\", x, {\n              semantic: \"explosion-result\", receiptId, ownerId, priority: 100,\n              cooldownMs: 0, maxInstances: 1, dedupeKey: receiptId,\n            });\n          }\n          g.enemyBaseCollapse = advanceEnemyBaseCollapse({\n            barricadeHp: g.barricadeHp, elapsed: g.enemyBaseCollapse, seconds: dt,\n          }).elapsed;\n        }\n        dispatchSituationalBattleBarks(g);\n        if (!g.survivalRun) dispatchBattleStoryEvents(g);"
+    ],
+    [
+      "          g.shake = enemyBaseDestroyed ? triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.enemyBaseCollapse) : createCameraShakeRuntime();\n          g.enemyBaseCollapse = 0;",
+      "          if (!lureControl) {\n            g.shake = enemyBaseDestroyed ? triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.enemyBaseCollapse) : createCameraShakeRuntime();\n            g.enemyBaseCollapse = 0;\n          }"
+    ],
+    [
+      "            enemyBaseCollapsePending: enemyBaseDestroyed,",
+      "            enemyBaseCollapsePending: enemyBaseDestroyed && g.enemyBaseCollapse < ENEMY_BASE_COLLAPSE_SECONDS,"
+    ],
+    [
+      "          if (enemyBaseDestroyed) {\n            addSemanticBattlePresentation(g, {",
+      "          if (enemyBaseDestroyed && !lureControl) {\n            addSemanticBattlePresentation(g, {"
+    ],
+    [
+      "  const archiveGame = gameRef.current;\n  const archiveHud",
+      "  const archiveGame = gameRef.current;\n  const lureControlHud = hasV100LureControl(archiveGame.definition) ? v100LureControlReadout(archiveGame) : null;\n  const archiveHud"
+    ],
+    [
+      "          {floodgateHud ? (!end && <section className=\"health-hud barrier-health floodgate-objective\"",
+      "          {lureControlHud ? (!end && <section className=\"health-hud barrier-health v100-control-health lure-control-health\"\n            data-lure-state={lureControlHud.stopped ? \"stopped\" : \"active\"} aria-label={`${enemyBaseLabel} ${lureControlHud.status}`}>\n            <div><span>{enemyBaseLabel}</span><b>{lureControlHud.stopped ? \"停止\" : `${Math.ceil(hud.barricadeHp)} / ${hud.barricadeMaxHp}`}</b></div>\n            <i aria-hidden=\"true\"><em style={{ width: `${barricadePct}%` }} /></i>\n            <small>{lureControlHud.status}</small>\n          </section>) : floodgateHud ? (!end && <section className=\"health-hud barrier-health floodgate-objective\""
+    ],
+    [
+      "  v100CorporateControlCondition, v100LureControlReadout, v100LureWaveBlocked }",
+      "  v100CorporateControlCondition, v100LureControlAim, v100LureControlReadout, v100LureWaveBlocked }"
+    ],
+    [
+      "type AirstrikeRuntime = ReturnType<typeof createEmergencySupportRuntime> & {",
+      "type AirstrikeRuntime = ReturnType<typeof createEmergencySupportRuntime> & {\n  lureControlTarget?: boolean;"
+    ],
+    [
+      "    if (rejectBattleSaveBoundary(\"airstrike:save-pending\")) return false;\n    const placement = correctedBattlefieldTargetForGame(g, { x: requestedX, y: requestedY }, null);",
+      "    if (rejectBattleSaveBoundary(\"airstrike:save-pending\")) return false;\n    const requested = { x: requestedX, y: requestedY };\n    const lureTarget = v100LureControlAim(g, requested, WORLD_GEOMETRY.enemyBase, activeLaneCenters);\n    const placement = lureTarget\n      ? { ok: true, position: lureTarget, requested, legacyLane: 2, adjusted: false, reason: \"音響誘導装置\" }\n      : correctedBattlefieldTargetForGame(g, requested, null);"
+    ],
+    [
+      "      lane, x: target.x, y: target.y, laneCenters: activeLaneCenters, runtime: g.airstrike,\n    });",
+      "      lane, x: target.x, y: target.y, laneCenters: activeLaneCenters, runtime: g.airstrike,\n      authoredTargetX: lureTarget?.x,\n    });"
+    ],
+    [
+      "      receiptId: `airstrike:${g.battleAudioGeneration}:${g.time.toFixed(3)}`,\n    } as AirstrikeRuntime;\n    g.banner = placement.adjusted ? \"航空支援：近くの攻撃可能な場所を狙います\" : \"航空支援要請 // 指定地点\";",
+      "      lureControlTarget: Boolean(lureTarget),\n      receiptId: locusReceipt,\n    } as AirstrikeRuntime;\n    g.banner = lureTarget ? \"航空支援：音響誘導装置\" : placement.adjusted\n      ? \"航空支援：近くの攻撃可能な場所を狙います\" : \"航空支援要請 // 指定地点\";"
+    ],
+    [
+      "    g.supportGauge = result.supportGauge;\n    g.airstrike = {\n      ...result.runtime,\n      lureControlTarget:",
+      "    g.supportGauge = result.supportGauge;\n    const locusReceipt = lureTarget\n      ? `lure-control:${g.resultId}:airstrike:${g.time.toFixed(3)}`\n      : `airstrike:${g.battleAudioGeneration}:${g.time.toFixed(3)}`;\n    g.airstrike = {\n      ...result.runtime,\n      lureControlTarget:"
+    ],
+    [
+      "        const airstrikeStep = advanceEmergencySupportRuntime(g.airstrike, dt);",
+      "        let lureHitByAirstrike = false;\n        const airstrikeStep = advanceEmergencySupportRuntime(g.airstrike, dt);"
+    ],
+    [
+      "          g.fighters = impact.fighters as Fighter[];\n          for (const hit of impact.hits) {",
+      "          g.fighters = impact.fighters as Fighter[];\n          if (lureControl && g.airstrike.lureControlTarget && impact.triggered) {\n            lureHitByAirstrike = applyEnemyBaseDamage(g, g.barricadeHp) > 0;\n          }\n          for (const hit of impact.hits) {"
+    ],
+    [
+      "            addSemanticBattlePresentation(g, {\n              semantic: \"explosion-result\", receiptId, ownerId, kind: \"explosion\",\n              scale: \"large\", x, y: activeLaneCenters[2] + 4,\n            });\n            playBattleSemanticCue(\"support-explosion\", x, {\n              semantic: \"explosion-result\", receiptId, ownerId, priority: 100,\n              cooldownMs: 0, maxInstances: 1, dedupeKey: receiptId,\n            });",
+      "            if (!lureHitByAirstrike) {\n              addSemanticBattlePresentation(g, {\n                semantic: \"explosion-result\", receiptId, ownerId, kind: \"explosion\",\n                scale: \"large\", x, y: activeLaneCenters[2] + 4,\n              });\n              playBattleSemanticCue(\"support-explosion\", x, {\n                semantic: \"explosion-result\", receiptId, ownerId, priority: 100,\n                cooldownMs: 0, maxInstances: 1, dedupeKey: receiptId,\n              });\n            }"
+    ],
+    [
+      "<div className=\"v100-targeting-guide\" role=\"status\">戦場をタップして航空支援<span>航空支援をもう一度押すと取り消し</span></div>",
+      "<div className=\"v100-targeting-guide\" role=\"status\">{lureControlHud && !lureControlHud.stopped ? \"装置か敵をタップして航空支援\" : \"戦場をタップして航空支援\"}<span>航空支援をもう一度押すと取り消し</span></div>"
     ]
   ],
   "app/manualAbilities.js": [
@@ -529,6 +701,20 @@
     [
       "      readState: (registration: ServiceWorkerRegistration) => registrationRef.current ? requestFromServiceWorker(registration, { type: \"pwa:get-state\" }) : Promise.resolve({ type: \"pwa:state\" }),",
       "      readState: (registration: ServiceWorkerRegistration, options: { timeoutMs: number; signal: AbortSignal }) => registrationRef.current ? requestFromServiceWorker(registration, { type: \"pwa:get-state\" }, options) : Promise.resolve({ type: \"pwa:state\" }),"
+    ]
+  ],
+  "app/globals.css": [
+    [
+      ".archive-objective div { color:#f5e6cc; }\n.archive-objective > small { color:#cbdaab; font-size:clamp(9px,1.35vw,12px); letter-spacing:0; white-space:nowrap; }\n.archive-objective[data-archive-phase=\"secured\"] { border-color:#a3b481; }\n.archive-terminal-action {\n  display:block; width:100%; margin-top:4px; min-height:44px; padding:4px 3px;\n  border:1px solid #d3a469; border-radius:2px; color:#fff0c8;",
+      ".archive-objective div { color:#f5e6cc; }\n.archive-objective > small { color:#cbdaab; font-size:clamp(9px,1.35vw,12px); letter-spacing:0; white-space:nowrap; }\n.archive-objective[data-archive-phase=\"secured\"] { border-color:#a3b481; }\n.bridge-objective {\n  left:calc(2% + var(--app-viewport-safe-left)); right:auto;\n  padding:4px 6px; border:1px solid #927652; background:rgba(14,20,19,.95);\n}\n.bridge-objective[data-bridge-phase=\"open\"], .bridge-objective[data-bridge-phase=\"secured\"] { border-color:#a8ba83; }\n.bridge-objective[data-bridge-phase=\"aim\"] { border-color:#d47e5d; }\n.bridge-objective i > em { background:linear-gradient(90deg,#8b9c62,#d4e0a7); }\n.bridge-objective .bridge-convoy-integrity { margin-top:3px; padding-top:3px; border-top:1px solid #57513a; }\n.bridge-barrier-action { width:100%; min-height:30px; margin-top:3px; padding:3px 4px;\n  border:1px solid #a1aa72; background:linear-gradient(#40482e,#252c22); color:#f4eccb;\n  font:inherit; font-size:clamp(10px,1.6vw,13px); white-space:nowrap; }\n.bridge-barrier-action:disabled { border-color:#665743; color:#bcac85; background:#25261f; }\n.bridge-barrier-action:active:enabled { background:#596644; }\n.archive-terminal-action {\n  display:block; width:100%; margin-top:4px; min-height:44px; padding:4px 3px;\n  border:1px solid #d3a469; border-radius:2px; color:#fff0c8;"
+    ],
+    [
+      ".bridge-barrier-action:active:enabled { background:#596644; }",
+      ".bridge-barrier-action:active:enabled { background:#596644; }\n.floodgate-objective {\n  left:calc(2% + var(--app-viewport-safe-left)); right:auto;\n  border:1px solid #8d7852; background:rgba(14,19,18,.95); padding:4px 6px;\n}\n.floodgate-objective[data-floodgate-phase=\"closing\"] i > em { background:#dca757; }\n.floodgate-objective[data-floodgate-phase=\"sealed\"] { border-color:#9eaf83; }\n.floodgate-objective[data-floodgate-phase=\"sealed\"] i > em { background:#a9c381; }\n.floodgate-action {\n  width:100%; min-height:38px; margin-top:3px; padding:3px 4px;\n  border:1px solid #b7995d; color:#faf0d8; background:linear-gradient(#554627,#302d24);\n  font:inherit; font-size:clamp(11px,1.8vw,14px); white-space:nowrap;\n}\n.floodgate-action:disabled { color:#b8ad94; border-color:#665a43; background:#25271f; }\n.floodgate-action:active:enabled { background:#746137; }"
+    ],
+    [
+      ".barrier-health.v100-control-health { width:min(28%,236px); }",
+      ".barrier-health.v100-control-health { width:min(28%,236px); }\n.barrier-health.lure-control-health { background:rgba(20,20,15,.95); border-color:#ac8a59; }\n.lure-control-health div span { color:#f2e4c3; }\n.lure-control-health > small { color:#f4ca83; font-size:clamp(9px,1.5vw,12px); letter-spacing:0; }\n.lure-control-health[data-lure-state=\"stopped\"] { border-color:#829167; }\n.lure-control-health[data-lure-state=\"stopped\"] :is(b,small) { color:#c0d2a4; }"
     ]
   ]
 }

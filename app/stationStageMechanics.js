@@ -1,8 +1,10 @@
 import { hasRailEvacuation } from "./v100RailEvacuation.js";
 import { createBayEvacuationRuntime, hasBayEvacuation } from "./v100BayEvacuation.js";
 import { createArchiveExtractionRuntime, hasArchiveExtraction } from "./v100ArchiveExtraction.js";
+import { advanceBridgeEscort, bridgeEscortReadout, createBridgeEscortState, hasBridgeEscort } from "./v100BridgeEscort.js";
 import { hasRescueControl } from "./v100RescueControl.js";
 import { centralSealFinalGateSettled, hasCentralSeal } from "./v100CentralSeal.js";
+import { createEstuaryFloodgateRuntime, hasEstuaryFloodgate } from "./v100EstuaryFloodgate.js";
 
 const freeze = (value) => Object.freeze(value);
 const INTERNAL_ROUTE_Y = freeze([212, 282, 352]);
@@ -133,10 +135,12 @@ function initialPowerOperation() {
 export function createStationMissionRuntime(missionType, config = {}) {
   if (hasBayEvacuation(missionType, config)) return createBayEvacuationRuntime();
   if (hasArchiveExtraction(missionType, config)) return createArchiveExtractionRuntime();
+  if (hasEstuaryFloodgate(missionType, config)) return createEstuaryFloodgateRuntime();
   if (missionType === STATION_MISSION_TYPES.ESCORT) {
     const resolved = escortConfig(config);
     return freeze({
       missionType,
+      ...(hasBridgeEscort(missionType, config) ? { bridge: Object.freeze(createBridgeEscortState()) } : {}),
       progress: 0,
       integrity: resolved.maxIntegrity,
       maxIntegrity: resolved.maxIntegrity,
@@ -301,6 +305,8 @@ export function advanceStationMissionRuntime({
   baseHp = 1,
   escortCount = 0,
   nearbyThreats = 0,
+  bridgeCovered = false,
+  bridgeApproachSecured = false,
   contaminated = false,
   powerOperatorCount = 0,
   powerLaneThreats = 0,
@@ -336,37 +342,43 @@ export function advanceStationMissionRuntime({
     } else if (!contaminationActive) {
       repairRemaining = Math.max(0, repairRemaining - dt);
     }
-    const stalled = escorts === 0 || threats > 0 || contaminationActive || repairRemaining > 0;
+    const routeBlocked = threats > 0 || contaminationActive || repairRemaining > 0;
+    const stalled = escorts === 0 || routeBlocked;
     const escortReadiness = Math.min(1, Math.max(resolved.minimumEscortReadiness, .58 + Math.min(3, escorts) * .14));
-    const progress = current.completed
+    const nextProgress = current.completed
       ? 1
       : Math.min(1, clamp01(current.progress) + (stalled ? 0 : dt * escortReadiness / resolved.durationSeconds));
     const damage = dt * (
       threats * resolved.threatDamagePerSecond
       + (contaminationActive ? resolved.contaminationDamagePerSecond : 0)
     );
-    const integrity = Math.max(0, Math.min(resolved.maxIntegrity, finiteNonNegative(current.integrity, resolved.maxIntegrity) - damage));
-    const completed = progress >= 1 && integrity > 0 && !crawlerDestroyed;
+    const nextIntegrity = Math.max(0, Math.min(resolved.maxIntegrity, finiteNonNegative(current.integrity, resolved.maxIntegrity) - damage));
+    const bridge = hasBridgeEscort(missionType, config)
+      ? advanceBridgeEscort({ runtime: current, nextProgress, integrity: nextIntegrity, stalled, routeBlocked,
+        covered: bridgeCovered && escorts > 0, approachSecured: bridgeApproachSecured, seconds: dt })
+      : null;
+    const { progress, integrity } = bridge ?? { progress: nextProgress, integrity: nextIntegrity };
+    const completed = (bridge ? bridge.gateSecured : progress >= 1) && integrity > 0 && !crawlerDestroyed;
     // A temporarily empty field is not defeat: formation cards can redeploy
     // after a unit is incapacitated. The escort simply remains stalled until
     // another eligible unit reaches it.
-    const failed = current.failed === true || integrity <= 0 || crawlerDestroyed;
+    const failed = current.failed === true || integrity <= 0 || crawlerDestroyed || bridge?.gateTimedOut === true;
     if (completed && current.completed !== true) transition = "escort-complete";
     else if (failed && current.failed !== true) {
       transition = integrity <= 0
         ? "escort-destroyed"
-        : crawlerDestroyed
-          ? "crawler-destroyed"
-          : "squad-eliminated";
+        : crawlerDestroyed ? "crawler-destroyed"
+          : bridge?.gateTimedOut ? "bridge-gate-timeout" : "squad-eliminated";
     }
     return freeze({
       missionType,
+      ...(bridge ? { bridge: bridge.bridge, gateTimedOut: bridge.gateTimedOut } : {}),
       progress,
       integrity,
       maxIntegrity: resolved.maxIntegrity,
       repairRemaining,
       contaminated: contaminationActive,
-      stalled,
+      stalled: bridge && bridge.bridge.gateElapsed !== null ? routeBlocked : stalled,
       completed,
       failed,
       transitions: appendTransition(current, transition),
@@ -538,6 +550,7 @@ export function stationMissionOutcome({ runtime, baseHp = 1 } = {}) {
 }
 
 export function stationMissionObjective(runtime, config = {}) {
+  if (hasBridgeEscort(runtime?.missionType, config)) return bridgeEscortReadout(runtime).objective;
   if (runtime?.missionType === STATION_MISSION_TYPES.ESCORT) {
     const targetLabel = typeof config.targetLabel === "string" && config.targetLabel.trim()
       ? config.targetLabel.trim()

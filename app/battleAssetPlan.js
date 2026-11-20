@@ -13,6 +13,7 @@ import { V100_RAIL_EVACUATION_ART, V100_RAIL_EVACUATION_STAGE } from "./v100Rail
 import { V100_CENTRAL_SEAL_ART, V100_CENTRAL_SEAL_STAGE } from "./v100CentralSeal.js";
 import { V100_BAY_EVACUATION_ART, V100_BAY_EVACUATION_STAGE } from "./v100BayEvacuation.js";
 import { V100_ARCHIVE_ART, V100_ARCHIVE_STAGE } from "./v100ArchiveExtraction.js";
+import { V100_BRIDGE_ART, V100_BRIDGE_STAGE } from "./v100BridgeEscort.js";
 import { V100_ASSAULT_OBJECT_ART, v100AssaultObjectProfile } from "./v100AssaultObjects.js";
 import { V100_COMBAT_VFX_ART } from "./v100CombatVfx.js";
 import { V100_DEFENSE_PERIMETER_ART } from "./v100DefensePerimeter.js";
@@ -107,8 +108,9 @@ export function requiredBattleAssetPlan({
     ? [{ id: "maintenance-cart", path: PRODUCTION_VISUALS.missionObjects["maintenance-cart"], runtimeUsage: "mission-render-source" }]
     : [];
   const vehicleObjects = includeV100Sprites && V100_MISSION_VEHICLES[stageId]
-    ? [stageId===CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL?"maintenanceStates":"transportStates","destinationStates"]
-      .map(state=>({id:`v100-mission-vehicle-${state}`,path:V100_MISSION_VEHICLE_ART[state],runtimeUsage:"mission-render-source"})) : [];
+    ? [stageId === CAMPAIGN_STAGE_IDS.NISHIJIN_STATION_TUNNEL ? "maintenanceStates" : "transportStates",
+        ...(operationId === V100_BRIDGE_STAGE ? [] : ["destinationStates"])]
+      .map(state => ({ id: `v100-mission-vehicle-${state}`, path: V100_MISSION_VEHICLE_ART[state], runtimeUsage: "mission-render-source" })) : [];
   const researchObjects = includeV100Sprites && stageId===V100_RESEARCH_CORE_STAGE
     ? [{id:"v100-research-core-targets",path:V100_RESEARCH_CORE_ART,runtimeUsage:"mission-render-source"}] : [];
   const nodeObjects = includeV100Sprites && v100MissionNodeProfile(stageId)
@@ -121,6 +123,8 @@ export function requiredBattleAssetPlan({
     ? [{ ...V100_BAY_EVACUATION_ART, runtimeUsage: "mission-render-source" }] : [];
   const archiveObjects = includeV100Sprites && operationId === V100_ARCHIVE_STAGE
     ? [{ ...V100_ARCHIVE_ART, runtimeUsage: "mission-render-source" }] : [];
+  const bridgeObjects = includeV100Sprites && operationId === V100_BRIDGE_STAGE
+    ? [{ ...V100_BRIDGE_ART, runtimeUsage: "mission-render-source" }] : [];
   const assaultProfile=includeV100Sprites?v100AssaultObjectProfile(stageId):null;
   const assaultObjects=assaultProfile?[{id:`v100-assault-${assaultProfile}`,path:V100_ASSAULT_OBJECT_ART[assaultProfile],runtimeUsage:"mission-render-source"}]:[];
   const defenseObjects=includeV100Sprites&&v100Stage?.missionType==="timed-defense"?[{id:"v100-defense-perimeter",path:V100_DEFENSE_PERIMETER_ART,runtimeUsage:"mission-render-source"}]:[];
@@ -161,7 +165,7 @@ export function requiredBattleAssetPlan({
   const guardActivationObjects = includeV100Sprites && v100Stage
     ? Object.entries(V100_GUARD_ACTIVATION_ART).filter(([kind,art])=>formationKinds.includes(kind)&&verifiedGuardImpactPaths.includes(art.path))
       .map(([,art])=>({id:art.id,path:art.path,runtimeUsage:"battle-overlay",optional:true})) : [];
-  const allStageObjects = [...manifestObjects, ...extraMissionObjects, ...v100MissionObjectEntries, ...v100VfxEntries, ...vehicleObjects, ...researchObjects, ...nodeObjects, ...railObjects, ...centralGateObjects, ...evacuees, ...archiveObjects, ...assaultObjects, ...defenseObjects, ...combatVfx, ...tataraObjects, ...bossDefeatObjects, ...bossAttackObjects, ...manualImpactObjects, ...particleMaterialObjects, ...kingExhaustObjects, ...guardImpactObjects, ...groundFireObjects, ...ballisticMaterialObjects, ...guardActivationObjects];
+  const allStageObjects = [...manifestObjects, ...extraMissionObjects, ...v100MissionObjectEntries, ...v100VfxEntries, ...vehicleObjects, ...researchObjects, ...nodeObjects, ...railObjects, ...centralGateObjects, ...evacuees, ...archiveObjects, ...bridgeObjects, ...assaultObjects, ...defenseObjects, ...combatVfx, ...tataraObjects, ...bossDefeatObjects, ...bossAttackObjects, ...manualImpactObjects, ...particleMaterialObjects, ...kingExhaustObjects, ...guardImpactObjects, ...groundFireObjects, ...ballisticMaterialObjects, ...guardActivationObjects];
   const stageObjects = unique(allStageObjects.map((entry) => entry.id))
     .map((id) => allStageObjects.find((entry) => entry.id === id))
     .map((entry) => frozenEntry({

@@ -1,16 +1,22 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {drawV100CorporateControl,v100ObjectiveDamageLabel,v100CorporateControlCondition,V100_CORPORATE_CONTROLS,V100_CORPORATE_CONTROL_ART,V100_LURE_CONTROL_ART} from "../app/v100CorporateControl.js";
+import {
+  drawV100CorporateControl, hasV100LureControl, v100ObjectiveDamageLabel, v100CorporateControlCondition,
+  v100LureControlAim, v100LureControlReadout, v100LureWaveBlocked, V100_CORPORATE_CONTROLS, V100_CORPORATE_CONTROL_ART,
+  V100_LURE_CONTROL_ART, V100_LURE_CONTROL_OBJECTIVE, V100_LURE_CONTROL_STAGE,
+} from "../app/v100CorporateControl.js";
 import {applyEnemyBaseDamage} from "../app/v100ResearchCore.js";
+import {createEmergencySupportRuntime, requestAirstrike, WORLD_GEOMETRY} from "../app/gameRules.js";
 import {requiredBattleAssetPlan} from "../app/battleAssetPlan.js";
 import {objectiveForBattle,battleOutcomeFor} from "../app/battleDefinitions.js";
 import {v100BattleDefinitionFor} from "../app/v100BattleAdapter.js";
 test("corporate objectives explain actual protection and destruction while legacy objectives remain intact",()=>{
   for(const [stageId,label] of Object.entries(V100_CORPORATE_CONTROLS)){
     const definition=v100BattleDefinitionFor(stageId);
+    if (hasV100LureControl(definition)) continue;
     assert.equal(objectiveForBattle(definition,{barricadeHp:1000,barricadeVulnerable:true}),`${label}を破壊`);
     const protectedObjective=objectiveForBattle(definition,{barricadeHp:1000,barricadeVulnerable:false});
-    if ([21,23,27].includes(definition.missionConfig.v100StageNumber)) {
+    if ([23,27].includes(definition.missionConfig.v100StageNumber)) {
       assert.equal(definition.bossEnemyKind,null);
       assert.equal(definition.bossUnlocksEnemyBase,false);
       assert.equal(protectedObjective,"警備部隊を迎撃（最終ウェーブで防護解除）");
@@ -25,6 +31,62 @@ test("corporate objectives explain actual protection and destruction while legac
   }
   assert.equal(objectiveForBattle({stageId:"stage-mugarian-logistics-hq",missionType:"assault",missionConfig:{target:"infected-relay"}},{barricadeHp:1000,barricadeVulnerable:true}),"感染中継点を破壊");
 });
+test("the logistics loudspeaker can be destroyed at the start, blocks later signals and requires clearing existing enemies", () => {
+  const definition = v100BattleDefinitionFor(V100_LURE_CONTROL_STAGE);
+  assert.equal(definition.startsEnemyBaseVulnerable, true);
+  assert.equal(definition.bossEnemyKind, null);
+  assert.equal(definition.objective, V100_LURE_CONTROL_OBJECTIVE);
+
+  const opening = definition.timeline.filter(event => !event.requiresActiveLure);
+  const signals = definition.timeline.filter(event => event.requiresActiveLure);
+  assert.deepEqual(opening.map(event => event.units.length), [3, 2]);
+  assert.ok(opening.every(event => event.units.every(kind => kind.startsWith("red-panther-"))));
+  assert.ok(opening[0].at < opening[1].advanceOnClearAfter && opening[1].advanceOnClearAfter < opening[1].at);
+  assert.equal(signals.length, 3);
+  assert.ok(signals.every(event => event.clearDelaySeconds === undefined));
+  assert.ok(opening.at(-1).at < signals[0].at);
+  assert.equal(signals[0].waitForPriorWaveClear, undefined);
+  assert.ok(signals.slice(1).every(event => event.waitForPriorWaveClear === true));
+
+  const playing = { definition, eventIndex: 0, time: signals[0].at - 12.3, barricadeHp: 1, baseHp: 200 };
+  assert.equal(objectiveForBattle(definition, playing), V100_LURE_CONTROL_OBJECTIVE);
+  assert.deepEqual(v100LureControlReadout(playing), { stopped: false, status: "増援まで13秒" });
+  assert.equal(v100LureWaveBlocked(signals[0], playing.barricadeHp), false);
+  assert.equal(battleOutcomeFor(definition, { ...playing, wavesResolved: true }), null);
+
+  const stopped = { ...playing, barricadeHp: 0 };
+  assert.deepEqual(v100LureControlReadout(stopped), { stopped: true, status: "増援停止" });
+  assert.equal(objectiveForBattle(definition, stopped), "残る敵を倒して試験棟への道を開く");
+  assert.ok(signals.every(event => v100LureWaveBlocked(event, stopped.barricadeHp)));
+  assert.ok(opening.every(event => !v100LureWaveBlocked(event, stopped.barricadeHp)));
+  assert.equal(battleOutcomeFor(definition, { ...stopped, wavesResolved: false }), null);
+  assert.equal(battleOutcomeFor(definition, { ...stopped, wavesResolved: true }), "won");
+  assert.equal(battleOutcomeFor(definition, { ...stopped, wavesResolved: true, baseHp: 0 }), "lost");
+});
+
+test("only an active logistics tower accepts the direct airstrike beyond the regular floor targeting range", () => {
+  const definition = v100BattleDefinitionFor(V100_LURE_CONTROL_STAGE);
+  const battlefield = WORLD_GEOMETRY.enemyBase;
+  const lanes = [232, 280, 328];
+  const g = { definition, barricadeHp: 1000 };
+  const aim = v100LureControlAim(g, { x: 889, y: 266 }, battlefield, lanes);
+  assert.deepEqual(aim, { x: 885, y: 328 });
+  assert.equal(v100LureControlAim(g, { x: 780, y: 266 }, battlefield, lanes), null);
+  assert.equal(v100LureControlAim(g, { x: 889, y: 179 }, battlefield, lanes), null);
+  assert.equal(v100LureControlAim({ ...g, barricadeHp: 0 }, aim, battlefield, lanes), null);
+  assert.equal(v100LureControlAim({ ...g, definition: v100BattleDefinitionFor("stage-mugarian-special-operations-armory") },
+    aim, battlefield, lanes), null);
+
+  const strike = { running: true, paused: false, over: false, supportGauge: 100, lane: 2, ...aim,
+    laneCenters: lanes, runtime: createEmergencySupportRuntime(true) };
+  assert.equal(requestAirstrike(strike).ok, false);
+  assert.equal(requestAirstrike({ ...strike, authoredTargetX: aim.x, supportGauge: 0 }).ok, false);
+  const accepted = requestAirstrike({ ...strike, authoredTargetX: aim.x });
+  assert.equal(accepted.ok, true);
+  assert.equal(accepted.runtime.targetX, aim.x);
+  assert.ok(accepted.supportGauge < strike.supportGauge);
+});
+
 test("authored corporate damage states follow actual protected and applied base damage without owning results",()=>{
   for(const stageId of Object.keys(V100_CORPORATE_CONTROLS)){
     const lure=stageId==="stage-mugarian-logistics-hq";

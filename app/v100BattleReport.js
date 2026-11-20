@@ -9,6 +9,7 @@ import { V100_RESCUE_CONTROL, V100_RESCUE_CONTROL_STAGE } from "./v100RescueCont
 import { V100_CENTRAL_SEAL, V100_CENTRAL_SEAL_STAGE } from "./v100CentralSeal.js";
 import { V100_BAY_EVACUATION_STAGE, V100_BAY_REFUGEE_COUNT } from "./v100BayEvacuation.js";
 import { ARCHIVE_BOX_COUNT, V100_ARCHIVE_STAGE } from "./v100ArchiveExtraction.js";
+import { V100_BRIDGE_STAGE } from "./v100BridgeEscort.js";
 
 const amount = value => typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= Number.MAX_SAFE_INTEGER;
 const counter = value => amount(value) && Number.isInteger(value);
@@ -117,8 +118,11 @@ function normalizeEscortProgress(value) {
     || !amount(value.integrity) || !amount(value.maxIntegrity) || value.maxIntegrity <= 0 || value.integrity > value.maxIntegrity
     || typeof value.failed !== "boolean" || typeof value.completed !== "boolean"
     || (value.failed && value.completed)) return null;
+  const gateTimedOut = value.stageId === V100_BRIDGE_STAGE && value.gateTimedOut === true
+    && value.failed && value.integrity > 0 && value.progress < 1;
   return Object.freeze({ stageId: value.stageId, progress: value.progress, integrity: value.integrity,
-    maxIntegrity: value.maxIntegrity, failed: value.failed, completed: value.completed });
+    maxIntegrity: value.maxIntegrity, failed: value.failed, completed: value.completed,
+    ...(gateTimedOut ? { gateTimedOut: true } : {}) });
 }
 
 export function v100EscortResultText(result) {
@@ -126,9 +130,13 @@ export function v100EscortResultText(result) {
   if (result?.won !== false || !escort || escort.stageId !== result.stageId) return null;
   const vehicle = V100_MISSION_VEHICLES[escort.stageId];
   const destroyed = escort.failed && escort.integrity === 0;
+  if (escort.gateTimedOut) {
+    return { outcome: "遮断機が閉じ、搬送車が取り残された。",
+      progress: "遮断機まで到着", advice: "搬送車の周囲と前方に味方をそろえてから、遮断機を開けよう。" };
+  }
   return {
     outcome: destroyed ? `${vehicle.targetLabel}が破壊された。${vehicle.count === 3 ? "確保" : "護送"}は失敗だ。` : null,
-    progress: escort.progress >= 1 ? `${vehicle.targetLabel}は${vehicle.count === 3 ? "封鎖地点" : "目的地"}に到着`
+    progress: escort.progress >= 1 ? `${vehicle.targetLabel}は${vehicle.destinationLabel ?? "目的地"}に到着`
       : `${vehicle.count === 3 ? "冷蔵車列の確保" : "護送"} ${Math.floor(escort.progress * 100)}%まで到達`,
     advice: destroyed ? vehicle.count === 3 ? "車列を守る味方に加え、攻撃役も早めに出して周囲の敵を倒そう。"
       : "護送役だけに任せず、攻撃役も早めに出して車を守ろう。" : null,

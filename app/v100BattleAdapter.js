@@ -7,7 +7,9 @@ import { V100_RESCUE_CONTROL, V100_RESCUE_CONTROL_STAGE } from "./v100RescueCont
 import { V100_CENTRAL_SEAL, V100_CENTRAL_SEAL_STAGE } from "./v100CentralSeal.js";
 import { V100_BAY_EVACUATION, V100_BAY_EVACUATION_STAGE } from "./v100BayEvacuation.js";
 import { V100_ARCHIVE_EXTRACTION, V100_ARCHIVE_STAGE } from "./v100ArchiveExtraction.js";
-import { V100_CORPORATE_CONTROLS } from "./v100CorporateControl.js";
+import { V100_BRIDGE_ESCORT, V100_BRIDGE_STAGE } from "./v100BridgeEscort.js";
+import { V100_FLOODGATE, V100_FLOODGATE_STAGE } from "./v100EstuaryFloodgate.js";
+import { V100_CORPORATE_CONTROLS, V100_LURE_CONTROL_OBJECTIVE, V100_LURE_CONTROL_STAGE } from "./v100CorporateControl.js";
 import { V100_DEFENSE_OBJECTIVES } from "./v100DefenseObjectives.js";
 import { researchCoreObjective } from "./v100ResearchCore.js";
 import { v100IncreaseWaveDensity } from "./v100CombatTuning.js";
@@ -87,6 +89,7 @@ export function v100MissionObjectiveFor(stageId) {
   if (stageId === V100_BAY_EVACUATION_STAGE) return "クロメを退け、十二人を避難させる";
   if (stageId === V100_ARCHIVE_STAGE) return "遠隔消去を止め、紙台帳を搬出する";
   if (stage.number === 30) return "TAKUYA-Ωを撃破し、西新を守る";
+  if (stageId === V100_LURE_CONTROL_STAGE) return V100_LURE_CONTROL_OBJECTIVE;
   const control = V100_CORPORATE_CONTROLS[stageId];
   if (control) {
     const bossId = stage.firstClearPayload.find(value => value.startsWith("boss-"));
@@ -100,6 +103,8 @@ export function v100MissionObjectiveFor(stageId) {
   if (node?.shutdown) return `国内${node.label}4基を順番に物理${node.verb}`;
   if (node) return `${stage.objectiveId.includes("four") ? 4 : 3}基の${node.label}を順番に${node.verb}`;
   const vehicle = V100_MISSION_VEHICLES[stageId];
+  if (stageId === V100_BRIDGE_STAGE) return "証拠搬送車を護衛し、遮断機を開けて対岸へ";
+  if (stageId === V100_FLOODGATE_STAGE) return "ガイレンを倒し、防潮門を閉める";
   if (vehicle?.count === 3) return "冷蔵車3台を封鎖地点へ追い込み、停止・確保";
   if (vehicle) return `${vehicle.targetLabel}を目的地へ護送`;
   return MISSION_LABELS[stage.missionType] ?? "ステージの目標を達成";
@@ -137,11 +142,16 @@ function stageTimeline(stage, missionType, bossKind) {
       : stage.number <= 10 ? [4, 4, 5, 5, 5, 6]
         : stage.number <= 20 ? [4, 5, 5, 6, 6, 7]
           : [5, 5, 6, 6, 7, 8];
+    const bridgeEscort = stage.id === V100_BRIDGE_STAGE;
+    const escortMilestones = bridgeEscort ? [.20, .42, .57, 1] : [.2, .45, .7, .88];
     return freeze(counts.map((count, index) => freeze({
       at: PREP_SECONDS + (missionType === "escort" ? index * 12 : Math.round(index * (duration - 15) / 5)),
       wave: index + 1,
       label: missionType === "escort" && index >= 2 ? "護送経路 // 迎撃部隊接近" : `${stage.displayName} // 第${index + 1}波`,
-      ...(missionType === "escort" && index >= 2 ? { escortProgress: [.2, .45, .7, .88][index - 2] } : {}),
+      ...(missionType === "escort" && index >= 2 ? { escortProgress: escortMilestones[index - 2] } : {}),
+      // The five approaches and the crossing pursue the truck in sequence;
+      // a new detachment cannot mass on top of the one still blocking it.
+      ...(bridgeEscort && index >= 2 ? { waitForPriorWaveClear: true } : {}),
       units: freeze(Array.from({ length: count }, () => pack[cursor++ % pack.length])),
     })));
   }
@@ -234,6 +244,40 @@ function stageTimeline(stage, missionType, bossKind) {
         units: freeze(["anchor-bloom", "pall-manta", "choir-knot", "resonator", "cagewalker"]) }),
       freeze({ at: PREP_SECONDS + 52, wave: 4, label: "警告 // クロメ", clearDelaySeconds: 2.5, waitForPriorWaveClear: true,
         units: freeze([bossKind]) }),
+    ]);
+  }
+  if (stage.id === V100_FLOODGATE_STAGE) {
+    const thresholds = V100_BOSS_BY_ID["boss-gairen"].phaseThresholds;
+    return freeze([
+      freeze({ at: PREP_SECONDS, wave: 1, label: "防潮門 // 生活道路を守る", units: freeze(["resonator", "cagewalker", "spindle", "resonator"]) }),
+      freeze({ at: PREP_SECONDS + 18, wave: 2, label: "防潮門 // 侵入を迎撃", clearDelaySeconds: 2,
+        units: freeze(["choir-knot", "pall-manta", "cagewalker", "spindle"]) }),
+      freeze({ at: PREP_SECONDS + 36, wave: 3, label: "閉鎖盤前 // 重量級接近", clearDelaySeconds: 2,
+        units: freeze(["anchor-bloom", "pall-manta", "choir-knot", "resonator", "cagewalker"]) }),
+      freeze({ at: PREP_SECONDS + 53, wave: 4, label: "警告 // ガイレン", clearDelaySeconds: 2, waitForPriorWaveClear: true,
+        units: freeze([bossKind]) }),
+      freeze({ at: PREP_SECONDS + 54, wave: 5, label: "防潮門 // 脇から流入", bossOnly: true, bossHpRatio: thresholds[0], addWave: true,
+        units: freeze(["spindle", "resonator"]) }),
+      freeze({ at: PREP_SECONDS + 55, wave: 6, label: "防潮門 // 水路から流入", bossOnly: true, bossHpRatio: thresholds[1], addWave: true,
+        units: freeze(["cagewalker", "pall-manta"]) }),
+      freeze({ at: PREP_SECONDS, wave: 7, label: "防潮門 // 開口から新手", requiresOpenFloodgate: true, addWave: true,
+        units: freeze(["spindle", "resonator"]) }),
+    ]);
+  }
+  if (stage.id === V100_LURE_CONTROL_STAGE) {
+    // The red-lens guards are already at the gate. The loudspeaker brings
+    // infection from outside only while it can still send a signal.
+    return freeze([
+      freeze({ at: PREP_SECONDS, wave: 1, label: "物流本部の警備隊",
+        units: freeze(["red-panther-knife", "red-panther-smg", "red-panther-knife"]) }),
+      freeze({ at: PREP_SECONDS + 25, wave: 2, label: "門前に回収班", advanceOnClearAfter: PREP_SECONDS + 17,
+        units: freeze(["red-panther-smg", "red-panther-knife"]) }),
+      freeze({ at: PREP_SECONDS + 33, wave: 3, label: "音響信号・感染者接近", requiresActiveLure: true,
+        units: freeze(["resonator", "spindle", "cagewalker", "resonator"]) }),
+      freeze({ at: PREP_SECONDS + 48, wave: 4, label: "音響信号・感染者増援", requiresActiveLure: true, waitForPriorWaveClear: true,
+        units: freeze(["pall-manta", "choir-knot", "anchor-bloom", "cagewalker"]) }),
+      freeze({ at: PREP_SECONDS + 70, wave: 5, label: "音響信号・最後の増援", requiresActiveLure: true, waitForPriorWaveClear: true,
+        units: freeze(["resonator", "spindle", "pall-manta", "anchor-bloom", "choir-knot"]) }),
     ]);
   }
   if (stage.number === 30) {
@@ -368,9 +412,16 @@ export function v100BattleDefinitionFor(stageId) {
   const missionNode = V100_NODE_PROFILES[stageId];
   const railEvacuation = stageId === V100_RAIL_EVACUATION_STAGE;
   const bayEvacuation = stageId === V100_BAY_EVACUATION_STAGE;
+  const estuaryFloodgate = stageId === V100_FLOODGATE_STAGE;
   const objective = v100MissionObjectiveFor(stageId);
   const phase = phaseScheduleFor(stage, missionType, objective);
-  const timeline = withClearDrivenAssaultWaves(v100IncreaseWaveDensity(stageTimeline(stage, missionType, bossKind), Object.values(BOSS_KIND_BY_V100_ID), { preserveEscalation: missionType === 'escort' }), missionType);
+  const lureControl = stageId === V100_LURE_CONTROL_STAGE;
+  const authoredTimeline = stageTimeline(stage, missionType, bossKind);
+  // Extra opening guards would reach the vehicle from multiple lanes before
+  // the player could act on the loudspeaker briefing.
+  const timeline = lureControl ? authoredTimeline : withClearDrivenAssaultWaves(
+    v100IncreaseWaveDensity(authoredTimeline, Object.values(BOSS_KIND_BY_V100_ID), { preserveEscalation: missionType === "escort" }),
+    missionType);
   const baseMaxHp = V100_VEHICLE.baseHp;
   const station = missionType === "escort"
     ? { durationSeconds: phase.durationSeconds, maxIntegrity: 500, repairSeconds: 5, minimumEscortReadiness: 1, startX: missionVehicle?.count === 3 ? 450 : 258, endX: missionVehicle?.count === 3 ? 650 : 720 }
@@ -392,9 +443,10 @@ export function v100BattleDefinitionFor(stageId) {
     starThresholds: { 1: 0.01, 2: 0.7, 3: 0.9 },
     // Once a boss falls, breaching its gate is a short finishing action.
     enemyBaseMaxHp: bossKind ? 350 : 1000,
-    enemyBaseMode: !railEvacuation && !bayEvacuation && (missionType === "assault" || missionType === "boss-assault") ? "target" : "scenery",
-    startsEnemyBaseVulnerable: false,
-    bossUnlocksEnemyBase: !railEvacuation && !bayEvacuation && Boolean(bossKind),
+    enemyBaseMode: !railEvacuation && !bayEvacuation && !estuaryFloodgate
+      && (missionType === "assault" || missionType === "boss-assault") ? "target" : "scenery",
+    startsEnemyBaseVulnerable: lureControl,
+    bossUnlocksEnemyBase: !railEvacuation && !bayEvacuation && !estuaryFloodgate && Boolean(bossKind),
     bossEnemyKind: bossKind,
     timeline,
     defenseEndAt: missionType === "timed-defense" ? PREP_SECONDS + phase.durationSeconds : null,
@@ -406,6 +458,8 @@ export function v100BattleDefinitionFor(stageId) {
       ...(railEvacuation ? V100_RAIL_EVACUATION : {}),
       ...(bayEvacuation ? V100_BAY_EVACUATION : {}),
       ...(stageId === V100_ARCHIVE_STAGE ? V100_ARCHIVE_EXTRACTION : {}),
+      ...(stageId === V100_BRIDGE_STAGE ? V100_BRIDGE_ESCORT : {}),
+      ...(estuaryFloodgate ? V100_FLOODGATE : {}),
       ...(stageId === V100_RESCUE_CONTROL_STAGE ? V100_RESCUE_CONTROL : {}),
       ...(stageId === V100_CENTRAL_SEAL_STAGE ? V100_CENTRAL_SEAL : {}),
       ...(missionVehicle ? {targetLabel:missionVehicle.targetLabel,vehicleCount:missionVehicle.count,convoyInterception:missionVehicle.count===3} : {}),
