@@ -6,6 +6,8 @@ import {V177_JOINT_ATLASES as atlases,v177JointPose,v177CaptureJointPose,
 import {animationClipFor,sampleAttackPresentation,weaponDamageEventsFor,
   advancePendingWeaponHits,cancelPendingWeaponTransaction} from '../app/combatPresentation.js';
 import {spriteFrameFor,spriteKinds} from '../app/spriteManifest.js';
+import {v105CurrentAbilitySample} from '../app/v105CurrentAbilityPose.js';
+import {MANUAL_ABILITY_REGISTRY,beginManualAbility,createManualAbilityRuntime,advanceManualAbility} from '../app/manualAbilities.js';
 
 const kinds=['medic','engineer'],states=['wind-up','active','recovery'];
 const point=(m,p)=>[m[0]*p[0]+m[2]*p[1]+m[4],m[1]*p[0]+m[3]*p[1]+m[5]];
@@ -41,6 +43,35 @@ function joins(kind,pose){
     assert.ok(Math.abs(distance(point(lower,arm.elbow),point(lower,arm.wrist))-distance(arm.elbow,arm.wrist))<1e-9);
   }
 }
+
+test('Raider braces for the five-round manual skill with the original feet, two grips and muzzle',()=>{
+  const kind='gunner',atlas=atlases[kind],definition=MANUAL_ABILITY_REGISTRY[kind];
+  const target={targetId:7,x:370,y:280};
+  const start=beginManualAbility(createManualAbilityRuntime(kind),target).runtime;
+  const [aimAt,lowerAt]=atlas.attackBoundaries;
+  const aim=atlas.poses[atlas.lowerCount+Math.round((aimAt+lowerAt)*atlas.frameCount/2)][atlas.weaponBone];
+  const aimAngle=Math.atan2(aim[1],aim[0]);
+  for(let tick=1;tick<84;tick++){
+    const time=tick/120,manualAbility=advanceManualAbility(start,time).runtime;
+    const actor={id:1,kind,side:'human',hp:80,combatReady:true,manualAbility};
+    const sample=v105CurrentAbilitySample(actor,{}, {manualDefinition:definition});
+    const options={actor,world:{time,shots:[]}};
+    const plan=v177JointPose(kind,sample,runtime,options);
+    const ordinary=v177JointPose(kind,{...sample,abilityPresentation:undefined},runtime,options);
+    assert.equal(plan.choreography?.kind,kind);
+    assert.equal(plan.choreography?.stepDistance,0);
+    assert.equal(ordinary.choreography,undefined);
+    assert.equal(plan.firearmUpperTransform,undefined);
+    const pose=v177CaptureJointPose(kind,plan),normal=v177CaptureJointPose(kind,ordinary);
+    assert.deepEqual(pose.lower,normal.lower);joins(kind,pose);
+    if(sample.requestedState==='active'){
+      const head=atlas.interpolationPivots.head;
+      assert.ok(point(pose.upper.head,head)[0]-point(normal.upper.head,head)[0]>21);
+      const muzzle=pose.upper[atlas.weaponBone];
+      assert.ok(Math.abs(Math.atan2(muzzle[1],muzzle[0])-aimAngle)<.03);
+    }
+  }
+});
 
 test('actual Nao/Monkey draw plans lean into ready, recoil visibly, and recover on the original shot clock',()=>{
   for(const kind of kinds){

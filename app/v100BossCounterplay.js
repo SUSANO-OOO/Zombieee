@@ -55,6 +55,10 @@ export function v100BossCounterplayHint({ boss, telegraph, readyAbilities = [], 
   // Defend before impact only when the skill can actually finish its wind-up.
   // The .1s margin covers the existing HUD sampling interval, not human reaction.
   for (const [kind, hint] of defense) if (enoughTime(kind)) return hint;
+  if (boss.kind === 'gairen' && enoughTime('brute') && ready.some(row => row.kind === 'brute'
+    && row.targetIds?.some(id => String(id) === String(boss.id)))) {
+    return 'タタラの技で阻止を狙おう';
+  }
   if (enoughTime('medic')) return 'ナオの技で傷ついた仲間を回復';
   if (boss.kind === 'mother' && ready.some(row => areaKinds.has(row.kind))) return '増える敵へ範囲技を残しておこう';
   if (ready.some(row => attackKinds.has(row.kind))) {

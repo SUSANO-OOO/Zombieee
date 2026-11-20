@@ -64,6 +64,18 @@ test('healing needs an available native target; ready attack skills produce timi
  assert.match(hint(boss,[gunner],[{id:1,kind:'babayaga',available:true}]),/外殻が開いたら/u);
  assert.match(hint(warning('mother'),[ally('zakimiya')],[{id:1,kind:'zakimiya',available:true}]),/増える敵.*範囲技/u);
 });
+test('Gairen interruption advice requires Tatara to cover that boss before the warning ends',()=>{
+ const boss=warning('gairen'),tatara=ally('brute'),guard=ally('guardian',{id:2});
+ const row={id:tatara.id,kind:tatara.kind,available:true,targetIds:['9','20']};
+ assert.equal(hint(boss,[tatara],[row]),'タタラの技で阻止を狙おう');
+ assert.match(hint(boss,[tatara],[{...row,targetIds:[20]}]),/外殻が開いたら/u);
+ assert.equal(hint(boss,[tatara],[{...row,available:false}]),V100_BOSS_COUNTERPLAY_FALLBACK);
+ assert.match(hint(boss,[tatara,guard],[row,{id:guard.id,kind:guard.kind,available:true}]),/ガンテツ/u);
+ assert.doesNotMatch(hint(warning('futago'),[tatara],[row]),/阻止/u);
+ boss.stationAbility.remainingSeconds=MANUAL_ABILITY_REGISTRY.brute.windupSeconds+.1;
+ assert.match(hint(boss,[tatara],[row]),/外殻が開いたら/u);
+});
+
 test('each defensive suggestion uses its own real wind-up and returns to neutral after activation',()=>{
  for(const kind of ['guardian','kumaverson','miyamoto-musashi']){
   const boss=warning('takuya'),owner=ally(kind),ready=[{id:1,kind,available:true}];

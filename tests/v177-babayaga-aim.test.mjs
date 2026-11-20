@@ -1,6 +1,39 @@
 import {withV177PaintPartIdentity} from './helpers/v177-render-trace.mjs';
 import fs from 'node:fs';import assert from 'node:assert/strict';import sharp from 'sharp';import test from 'node:test';
 import {V177_JOINT_ATLASES,v177JointPose,drawV177JointPose,v177CaptureJointPose} from '../app/v177JointPresentation.js';
+import {v105CurrentAbilitySample} from '../app/v105CurrentAbilityPose.js';
+import {MANUAL_ABILITY_REGISTRY,beginManualAbility,createManualAbilityRuntime,advanceManualAbility} from '../app/manualAbilities.js';
+
+test('weak-point assessment extends a free hand, then fires the original one-handed pistol',()=>{
+  const kind='babayaga',atlas=V177_JOINT_ATLASES[kind],definition=MANUAL_ABILITY_REGISTRY[kind];
+  const runtime={locomotionPhase:.31,locomotionSettle:1};
+  const start=beginManualAbility(createManualAbilityRuntime(kind),{targetId:7,x:370,y:280}).runtime;
+  const point=(m,[x,y])=>[m[0]*x+m[2]*y+m[4],m[1]*x+m[3]*y+m[5]];
+  for(let tick=1;tick<64;tick++){
+    const elapsed=tick/120,manualAbility=advanceManualAbility(start,elapsed).runtime;
+    const actor={id:1,kind,side:'human',hp:80,combatReady:true,manualAbility};
+    const sample=v105CurrentAbilitySample(actor,{}, {manualDefinition:definition});
+    const plan=v177JointPose(kind,sample,runtime,{actor});
+    const ordinary=v177JointPose(kind,{...sample,abilityPresentation:undefined},runtime,{actor});
+    const {upper}=v177CaptureJointPose(kind,plan),normal=v177CaptureJointPose(kind,ordinary).upper;
+    const [shooting,free]=plan.choreography.arms;
+    assert.equal(shooting.effectorBone,atlas.weaponBone);
+    assert.equal(free.effectorBone,'arm-1-hand');
+    for(const chain of [shooting,free]){
+      const a=point(upper[chain.lowerBone],chain.wrist),b=point(upper[chain.effectorBone],chain.effectorWrist??chain.wrist);
+      assert.ok(Math.hypot(a[0]-b[0],a[1]-b[1])<1e-8);
+    }
+    if(elapsed>.14&&elapsed<.21){
+      assert.ok(point(upper[free.effectorBone],free.wrist)[0]-point(normal[free.effectorBone],free.wrist)[0]>40);
+      assert.ok(point(upper[free.effectorBone],free.wrist)[1]<point(upper[free.parentBone],free.shoulder)[1]-20);
+      assert.ok(plan.choreography.frontBones.includes(free.effectorBone));
+      assert.ok(!ordinary.choreography.frontBones.includes(free.effectorBone));
+      assert.ok(upper[atlas.weaponBone][1]>.94,'Pistol waits low while the other hand indicates the target');
+    }
+    if(sample.requestedState==='active')assert.ok(Math.abs(upper[atlas.weaponBone][1])<1e-9);
+  }
+});
+
 test('Babayaga lowers the original silencer for carry, raises a horizontal one-hand aim and keeps the free arm joined',async()=>{
 const kind='babayaga',atlas=V177_JOINT_ATLASES[kind],d=JSON.parse(fs.readFileSync('assets/source/v100/joints/babayaga-r1/parts.json'));
 const point=(m,[x,y])=>[m[0]*x+m[2]*y+m[4],m[1]*x+m[3]*y+m[5]],dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
