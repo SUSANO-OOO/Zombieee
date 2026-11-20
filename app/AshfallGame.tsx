@@ -8,6 +8,7 @@ import { v177PaisenPhotoComboJointPose } from './v177PaisenPhotoCombo.js';
 import { campaignWaveReady, campaignWavePrompt, requestCampaignWave } from './wavePacing.js';
 import { queueV105FistWave, resolveV105FistWavePaint, advanceV105FistWaves, drawV105FistWaves, v105FistWaveSnapshot, clearV105FistWaves } from './v105PaisenFistWave.js';
 import { startV105AbilityName, drawV105AbilityNames, v105AbilityNameSnapshot, v105EnemyAbilityName, clearV105AbilityNames } from './v105AbilityNames.js';
+import { drawV100StationMud } from "./v100StationMudVfx.js";
 import {queueV100GuardActivation} from './v100GuardActivationVfx.js';
 import {drawV100KingExhaust} from './v100KingExhaustVfx.js';
 import {V100_KING_EXHAUST_SOCKET} from './v100KingExhaustArt.js';
@@ -7063,6 +7064,7 @@ function drawKuromeVisionInterference(ctx: CanvasRenderingContext2D, f: Fighter,
 
 function drawStationEnemyTelegraph(ctx: CanvasRenderingContext2D, f: Fighter, g: Game, stageObjects: SpriteMap) {
   if (f.stationAbility.phase === "idle") return;
+  if (g.definition.missionConfig.v100StageNumber && f.kind === "ooze") return;
   if (g.definition.missionConfig.v100StageNumber && f.kind === "sprinter" && f.stationAbility.phase === "telegraph") {
     drawV100FootDust(ctx,stageObjects,{x:f.x,y:f.y,time:g.time,seed:f.id,direction:-1,windup:true});
     return;
@@ -9075,7 +9077,22 @@ function drawWorld(
   if (g.definition.missionConfig.v100StageNumber) drawV100MusashiImpacts(ctx, stageObjects, g);
   for (const effect of g.manualAbilityVfx) drawManualAbilityVfx(ctx, effect,Boolean(g.definition.missionConfig.v100StageNumber));
   if (!g.definition.missionConfig.v100StageNumber) for (const fighter of g.fighters) drawCrazyKingAbilityIndicator(ctx, fighter, g.time);
-  for (const hazard of g.stationHazards) drawStationHazard(ctx, hazard, g.time);
+  if (g.definition.missionConfig.v100StageNumber) {
+    for (const hazard of g.stationHazards) {
+      if (hazard.active) drawV100StationMud(ctx, hazard, g.time);
+    }
+    for (const fighter of g.fighters) {
+      const ability = fighter.stationAbility;
+      if (fighter.kind !== "ooze" || !fighter.combatReady || fighter.hp <= 0 || ability.phase !== "windup") continue;
+      drawV100StationMud(ctx, {
+        centerX: ability.centerX ?? fighter.x, centerY: ability.centerY ?? fighter.y,
+        radiusX: STATION_ENEMY_TUNING.leakMud.radiusX, radiusY: STATION_ENEMY_TUNING.leakMud.radiusY,
+        remainingSeconds: ability.remainingSeconds, ownerId: fighter.id,
+      }, g.time, true);
+    }
+  } else {
+    for (const hazard of g.stationHazards) drawStationHazard(ctx, hazard, g.time);
+  }
   if (g.stageMission.bridge) {
     drawBridgeEscort(ctx, stageObjects, g.stageMission, escortCartX(g.stageMission, g.definition.missionConfig),
       activeLaneCenters[1], activeLaneCenters[0] - 9);

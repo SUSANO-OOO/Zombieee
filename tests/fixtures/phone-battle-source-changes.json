@@ -775,6 +775,18 @@
     [
       "  const abilityLayout=drawV105AbilityNames(ctx,g,{width:W,height:H,headY:f=>fighterHealthBarWorldY(f)-7,bounds,\n    obstacles:[...statusObstacles,...healthLayout.map(bar=>({x:bar.x-bar.width/2-1,y:bar.y-1,width:bar.width+2,height:bar.height+2}))],\n    get cssScale(){return Math.min(ctx.canvas.clientWidth/W||1,ctx.canvas.clientHeight/H||1);}});\n  ctx.font = V100_CANVAS_FONT.numeric(14); ctx.textAlign = \"center\"; ctx.textBaseline = \"alphabetic\";",
       "  const abilityLayout=drawV105AbilityNames(ctx,g,{width:W,height:H,headY:f=>fighterHealthBarWorldY(f)-7,bounds,\n    obstacles:[...statusObstacles,...healthLayout.map(bar=>({x:bar.x-bar.width/2-1,y:bar.y-1,width:bar.width+2,height:bar.height+2}))],\n    occupied:enemyHealthBars,\n    get cssScale(){return Math.min(ctx.canvas.clientWidth/W||1,ctx.canvas.clientHeight/H||1);}});\n  ctx.font = V100_CANVAS_FONT.numeric(14); ctx.textAlign = \"center\"; ctx.textBaseline = \"alphabetic\";"
+    ],
+    [
+      "import { startV105AbilityName, drawV105AbilityNames, v105AbilityNameSnapshot, v105EnemyAbilityName, clearV105AbilityNames } from './v105AbilityNames.js';",
+      "import { startV105AbilityName, drawV105AbilityNames, v105AbilityNameSnapshot, v105EnemyAbilityName, clearV105AbilityNames } from './v105AbilityNames.js';\nimport { drawV100StationMud } from \"./v100StationMudVfx.js\";"
+    ],
+    [
+      "  if (f.stationAbility.phase === \"idle\") return;\n  if (g.definition.missionConfig.v100StageNumber && f.kind === \"sprinter\"",
+      "  if (f.stationAbility.phase === \"idle\") return;\n  if (g.definition.missionConfig.v100StageNumber && f.kind === \"ooze\") return;\n  if (g.definition.missionConfig.v100StageNumber && f.kind === \"sprinter\""
+    ],
+    [
+      "  for (const hazard of g.stationHazards) drawStationHazard(ctx, hazard, g.time);",
+      "  if (g.definition.missionConfig.v100StageNumber) {\n    for (const hazard of g.stationHazards) {\n      if (hazard.active) drawV100StationMud(ctx, hazard, g.time);\n    }\n    for (const fighter of g.fighters) {\n      const ability = fighter.stationAbility;\n      if (fighter.kind !== \"ooze\" || !fighter.combatReady || fighter.hp <= 0 || ability.phase !== \"windup\") continue;\n      drawV100StationMud(ctx, {\n        centerX: ability.centerX ?? fighter.x, centerY: ability.centerY ?? fighter.y,\n        radiusX: STATION_ENEMY_TUNING.leakMud.radiusX, radiusY: STATION_ENEMY_TUNING.leakMud.radiusY,\n        remainingSeconds: ability.remainingSeconds, ownerId: fighter.id,\n      }, g.time, true);\n    }\n  } else {\n    for (const hazard of g.stationHazards) drawStationHazard(ctx, hazard, g.time);\n  }"
     ]
   ],
   "app/manualAbilities.js": [
