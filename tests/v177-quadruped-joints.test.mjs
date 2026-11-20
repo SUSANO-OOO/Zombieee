@@ -5,6 +5,8 @@ import {createHash} from 'node:crypto';
 import {gunzipSync} from 'node:zlib';
 import sharp from 'sharp';
 import {V177_JOINT_ATLASES,v177JointPose,drawV177JointPose,v177JointCycleDistance,v177RenderedJointWeaponSocket} from '../app/v177JointPresentation.js';
+import {v105CurrentAbilitySample} from '../app/v105CurrentAbilityPose.js';
+import {MANUAL_ABILITY_REGISTRY} from '../app/manualAbilities.js';
 import {spriteFrameFor} from '../app/spriteManifest.js';
 import {requiredBattleAssetPlan} from '../app/battleAssetPlan.js';
 import {CAMPAIGN_STAGE_IDS} from '../app/campaign.js';
@@ -115,4 +117,46 @@ test('opaque head and jaw preserve original paint; conditional atlas bytes and m
  const stageId=CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE;
  assert.equal(requiredBattleAssetPlan({stageId,formationKinds:['mayo-chan','mayo-chan']}).paths.filter(p=>p===atlas.path).length,1);
  assert.ok(!requiredBattleAssetPlan({stageId,formationKinds:['scout']}).paths.includes(atlas.path));
+});
+
+test('Mayo plants all four paws, crouches and raises her head before changing form',()=>{
+ const kind='mayo-chan',manualDefinition=MANUAL_ABILITY_REGISTRY[kind];
+ const activeActor={kind,side:'human',hp:80,combatReady:true,stunned:0};
+ const matrixByBone=(sample,runtime)=>Object.fromEntries(
+  render(v177JointPose(kind,sample,runtime,{grounded:true})).map((matrix,i)=>[atlas.parts[i].bone,matrix]));
+ const angle=m=>Math.atan2(m[1],m[0]);
+ const phaseSample=(phase,progress)=>{
+  const duration=phase==='windup'?manualDefinition.windupSeconds:manualDefinition.recoverySeconds;
+  return v105CurrentAbilitySample({...activeActor,manualAbility:{phase,windupRemaining:duration*(1-progress)}},
+   {requestedState:'idle'},{manualDefinition});
+ };
+ const jaw=definition.rig.extras.find(part=>part.name==='jaw').a;
+ const normal={locomotionPhase:.1371,locomotionSettle:1};
+ const neutral=matrixByBone({requestedState:'idle'},normal);
+ const bite=matrixByBone({requestedState:'wind-up',clipProgress:.6},normal);
+ const crouch=matrixByBone(phaseSample('windup',.6),normal);
+ const raised=matrixByBone(phaseSample('windup',1),normal);
+ assert.ok(crouch.spine[5]-neutral.spine[5]>25,'The body visibly lowers before transformation');
+ assert.ok(angle(crouch.head)-angle(bite.head)>.15,'The head ducks instead of using its biting motion');
+ assert.ok(angle(raised.head)-angle(neutral.head)<-.26,'The dog raises its head before changing form');
+ assert.deepEqual(raised,matrixByBone(phaseSample('recovery',0),normal),'No jump between the two movement phases');
+ assert.deepEqual(neutral,matrixByBone(phaseSample('recovery',1),normal),'The new form starts without a body offset');
+
+ for(const locomotionPhase of [.02,.23,.47,.71,.94])for(const locomotionSettle of [0,.5,1]){
+  const runtime={locomotionPhase,locomotionSettle};
+  const rest=matrixByBone({requestedState:'idle'},runtime);
+  for(const phase of ['windup','recovery'])for(const progress of [.1,.3,.6,.85,1]){
+   const pose=matrixByBone(phaseSample(phase,progress),runtime);
+   for(const leg of atlas.legConstraints){
+    assert.deepEqual(pose[leg.effectorBone],rest[leg.effectorBone]);
+    assert.ok(distance(transform(pose[leg.upperBone],leg.hip),transform(pose.spine,leg.hip))<.001);
+    assert.ok(distance(transform(pose[leg.upperBone],leg.knee),transform(pose[leg.lowerBone],leg.knee))<.001);
+    assert.ok(distance(transform(pose[leg.lowerBone],leg.ankle),transform(pose[leg.effectorBone],leg.ankle))<.001);
+   }
+   assert.ok(distance(transform(pose.jaw,jaw),transform(pose.head,jaw))<.001);
+  }
+ }
+ for(const phase of ['ready','feral','retreat'])
+  assert.equal(v105CurrentAbilitySample({...activeActor,manualAbility:{phase}},
+   {requestedState:'active'},{manualDefinition}),null);
 });

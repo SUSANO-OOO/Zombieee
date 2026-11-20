@@ -7,7 +7,7 @@ const manualPresentation = {
   brawler: 'fist-wave', brute: 'ground-slam', 'crazy-king': 'chainsaw-rev',
   medic: 'support-manual', engineer: 'support-manual', 'mrs-chiha': 'launcher-salvo',
   babayaga: 'weak-point-assessment', gunner: 'suppression-burst', tky: 'lightblade-release',
-  zakimiya: 'fire-whisky-throw',
+  zakimiya: 'fire-whisky-throw', 'mayo-chan': 'mayo-transform',
 };
 
 export function v105AbilityFacing(owner){
@@ -60,7 +60,7 @@ export function v105CurrentAbilitySample(owner,base,{manualDefinition,anomaly,ku
     }
     const elapsed=manualDefinition.recoverySeconds-m.windupRemaining;
     if(owner.kind==='miyamoto-musashi')return sample(base,'recovery',elapsed/manualDefinition.recoverySeconds,'cross-counter');
-    if(['gunner','zakimiya','mrs-chiha'].includes(owner.kind))
+    if(['gunner','zakimiya','mrs-chiha','mayo-chan'].includes(owner.kind))
       return sample(base,'recovery',elapsed/manualDefinition.recoverySeconds,style);
     const release=Math.min(.065,manualDefinition.recoverySeconds*.4);
     return elapsed<release?sample(base,'active',elapsed/release,style)
