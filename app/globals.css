@@ -230,6 +230,11 @@ button[aria-disabled="true"]:focus-visible {
 .archive-objective div { color:#f5e6cc; }
 .archive-objective > small { color:#cbdaab; font-size:clamp(9px,1.35vw,12px); letter-spacing:0; white-space:nowrap; }
 .archive-objective[data-archive-phase="secured"] { border-color:#a3b481; }
+.clinical-rescue-objective { border-color:#a4926c; }
+.clinical-rescue-objective i > em { background:linear-gradient(90deg,#718877,#cfdda7); }
+.clinical-rescue-objective[data-clinical-phase="ready"] { border-color:#e6be74; }
+.clinical-rescue-objective[data-clinical-phase="rescued"] { border-color:#adc18a; }
+.clinical-rescue-objective[data-clinical-phase="sheltering"] small { color:#efc985; }
 .bridge-objective {
   left:calc(2% + var(--app-viewport-safe-left)); right:auto;
   padding:4px 6px; border:1px solid #927652; background:rgba(14,20,19,.95);

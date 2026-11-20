@@ -3,6 +3,9 @@ import test from "node:test";
 import { V100_DEFENSE_OBJECTIVES, v100DefenseStatus } from "../app/v100DefenseObjectives.js";
 import { v100BattleDefinitionFor } from "../app/v100BattleAdapter.js";
 import { hasArchiveExtraction } from "../app/v100ArchiveExtraction.js";
+import { createStationMissionRuntime } from "../app/stationStageMechanics.js";
+import { advanceClinicalRescue, clinicalRescueReadout, stopClinicalDisposal, V100_CLINICAL_STAGE } from "../app/v100ClinicalRescue.js";
+import { V100_BAY_EVACUATION_ART } from "../app/v100BayEvacuation.js";
 import { objectiveForBattle, battleOutcomeFor } from "../app/battleDefinitions.js";
 import { v100ClinicalControlState, drawV100ClinicalControl, V100_CLINICAL_CONTROL_ART } from "../app/v100ClinicalControl.js";
 import { requiredBattleAssetPlan } from "../app/battleAssetPlan.js";
@@ -18,7 +21,7 @@ test("all authored defense phases follow real threats, crawler impact and the un
     const draw=()=>{const before=JSON.stringify(game);assert.equal(drawV100DefensePerimeter(context,game,{'v100-defense-perimeter':image},340,382),true);assert.equal(JSON.stringify(game),before);};
     draw();game.fighters=[{side:'zombie',hp:100,x:400,combatReady:true,gateEntering:false}];draw();game.crawlerHitFlash=.1;draw();
     game.time=definition.defenseEndAt;draw();
-    if (hasArchiveExtraction(definition.missionType,definition.missionConfig)) {
+    if (hasArchiveExtraction(definition.missionType,definition.missionConfig) || stageId===V100_CLINICAL_STAGE) {
       assert.equal(battleOutcomeFor(definition,game),null);
       game.stageMission={completed:true};
     }
@@ -30,30 +33,44 @@ test("all authored defense phases follow real threats, crawler impact and the un
   }
 });
 
-test("the real 88-second clinical operation opens exactly 43 records and shares the production completion boundary", () => {
-  const definition = v100BattleDefinitionFor("stage-mugarian-clinical-trial-wing");
-  const duration = definition.defenseEndAt - definition.prepSeconds;
-  assert.equal(duration, 88);
-  const state = {time:0,baseHp:920,baseMaxHp:920,fighters:[]};
-  assert.equal(v100DefenseStatus(definition,state).openedRecords,0);
-  for(let record=1;record<=43;record++) {
-    state.time=definition.prepSeconds+duration*record/43;
-    const before=JSON.stringify(state),view=v100DefenseStatus(definition,state);
-    assert.equal(view.openedRecords,record);
-    assert.equal(view.completed,record===43);
-    assert.equal(battleOutcomeFor(definition,state),record===43?"won":null);
-    assert.ok(objectiveForBattle(definition,state).includes(`${record}/43`));
-    assert.equal(JSON.stringify(state),before,"presentation never changes combat or save state");
+test("the clinical rescue counts actual arrivals after the control is used and keeps the defense boundary", () => {
+  const definition = v100BattleDefinitionFor(V100_CLINICAL_STAGE);
+  assert.equal(definition.defenseEndAt - definition.prepSeconds, 88);
+  assert.equal(definition.timeline[0].units.length, 3);
+  assert.ok(definition.timeline.slice(1).every(event => event.waitForPriorWaveClear));
+  const start = createStationMissionRuntime(definition.missionType, definition.missionConfig);
+  const routeY = 270;
+  const escort = {side:"human",hp:100,x:615,y:270,combatReady:true};
+  const enemy = {side:"zombie",hp:100,x:600,y:270,combatReady:true};
+  const late = {time:definition.defenseEndAt,baseHp:840,baseMaxHp:840};
+  assert.equal(battleOutcomeFor(definition, {...late, stageMission:start}), null);
+  assert.equal(stopClinicalDisposal(start, [], routeY), start);
+  assert.equal(stopClinicalDisposal(start, [escort, enemy], routeY), start);
+  const advance = (runtime, fighters, dt = .2) => advanceClinicalRescue({ runtime, fighters, dt, routeY });
+  const ready = advance(start, [escort]);
+  assert.equal(clinicalRescueReadout(ready).phase, "ready");
+  const opened = stopClinicalDisposal(ready, [escort], routeY);
+  assert.equal(stopClinicalDisposal(opened, [escort], routeY), opened);
+  const delayed = advance(opened, [escort, enemy], 15);
+  assert.equal(clinicalRescueReadout(delayed).phase, "sheltering");
+  assert.equal(delayed.clinical.arrived, 0);
+  assert.equal(battleOutcomeFor(definition, {...late, stageMission:delayed}), null);
+  let runtime = delayed;
+  const counted = new Set();
+  for (let step = 0; step < 600 && !runtime.completed; step += 1) {
+    const previous = runtime.clinical.arrived;
+    runtime = advance(runtime, [escort]);
+    assert.ok(runtime.clinical.arrived >= previous);
+    counted.add(runtime.clinical.arrived);
   }
-  state.time=definition.defenseEndAt-.001;
-  assert.equal(v100DefenseStatus(definition,state).openedRecords,42);
-  state.time=definition.defenseEndAt;
-  for(const hp of [0,1]) {
-    state.baseHp=hp;
-    assert.equal(v100DefenseStatus(definition,state).completed,false);
-    assert.equal(v100DefenseStatus(definition,state).phase,"failed");
-    assert.equal(battleOutcomeFor(definition,state),"lost");
-  }
+  assert.ok(counted.has(7));
+  assert.ok(counted.has(43));
+  assert.equal(runtime.clinical.groupsArrived, 6);
+  assert.equal(clinicalRescueReadout(runtime).phase, "rescued");
+  assert.equal(battleOutcomeFor(definition, {...late, time:definition.defenseEndAt - .1, stageMission:runtime}), null);
+  assert.equal(battleOutcomeFor(definition, {...late, stageMission:runtime}), "won");
+  assert.equal(battleOutcomeFor(definition, {...late, baseHp:0, stageMission:runtime}), "lost");
+  assert.match(objectiveForBattle(definition,{...late, stageMission:runtime}), /全員救出/u);
 });
 
 test("V1 defense objectives reflect live contact and damage, use the shortened four durations and exclude legacy operations", () => {
@@ -79,17 +96,21 @@ test("the clinical cabinet draws four distinct complete frames from real prepara
   const definition = v100BattleDefinitionFor("stage-mugarian-clinical-trial-wing");
   const plan = requiredBattleAssetPlan({stageId:definition.stageId});
   assert.ok(plan.paths.includes(V100_CLINICAL_CONTROL_ART));
+  assert.ok(plan.paths.includes(V100_BAY_EVACUATION_ART.path));
   assert.equal(plan.background.path,"/art/v100/stages/s22-clinical-clean-v1.webp");
   assert.ok(!plan.paths.includes("/art/v100/mission-objects/clinical-trial-wing-v1.png"));
   const frames=[];
-  for(const [time,hp,expected,outcome] of [
-    [0,920,"sealed",null], [definition.prepSeconds,920,"sealed",null],
-    [definition.prepSeconds+.1,920,"releasing",null],
-    [definition.defenseEndAt,920,"complete","won"],
-    [definition.prepSeconds+10,0,"failed","lost"],
-    [definition.defenseEndAt,1,"failed","lost"],
+  const sealed = createStationMissionRuntime(definition.missionType, definition.missionConfig);
+  const releasing = stopClinicalDisposal(sealed, [{side:"human", hp:1, x:600, y:240, combatReady:true}], 240);
+  const complete = { ...releasing, completed: true, clinical: { ...releasing.clinical, arrived: 43 }};
+  for(const [time,hp,expected,outcome,stageMission] of [
+    [0,920,"sealed",null,sealed], [definition.prepSeconds,920,"sealed",null,sealed],
+    [definition.prepSeconds+.1,920,"releasing",null,releasing],
+    [definition.defenseEndAt,920,"complete","won",complete],
+    [definition.prepSeconds+10,0,"failed","lost",releasing],
+    [definition.defenseEndAt,1,"failed","lost",complete],
   ]) {
-    const game={definition,time,baseHp:hp,baseMaxHp:920,fighters:[]};
+    const game={definition,time,baseHp:hp,baseMaxHp:920,fighters:[],stageMission,over:outcome!==null,won:outcome==="won"};
     const before=JSON.stringify(game);
     assert.equal(v100ClinicalControlState(definition,game),expected);
     assert.equal(battleOutcomeFor(definition,game),outcome);

@@ -1,3 +1,4 @@
+import { CLINICAL_RESCUE_COUNT, V100_CLINICAL_STAGE } from "./v100ClinicalRescue.js";
 import { campaignUnitIdToCombatKind } from "./campaign.js";
 import { V100_BOSS_BY_ID, V100_STAGE_BY_ID, V100_STAGE_IDS, V100_UNITS } from "./v100Registry.js";
 import { ENEMY_CONTENT } from "./content/enemyCatalog.js";
@@ -95,13 +96,29 @@ function normalizeDefenseProgress(value) {
   if (!record(value) || !Object.hasOwn(V100_DEFENSE_OBJECTIVES, value.stageId)
     || !amount(value.elapsedSeconds) || !amount(value.durationSeconds) || value.durationSeconds <= 0
     || value.elapsedSeconds > value.durationSeconds) return null;
-  return Object.freeze({ stageId: value.stageId, elapsedSeconds: value.elapsedSeconds, durationSeconds: value.durationSeconds });
+  const rescue = Object.hasOwn(value, "rescuedCount") || Object.hasOwn(value, "disposalStopped");
+  if (rescue && (value.stageId !== V100_CLINICAL_STAGE || !Number.isInteger(value.rescuedCount)
+    || value.rescuedCount < 0 || value.rescuedCount > CLINICAL_RESCUE_COUNT
+    || typeof value.disposalStopped !== "boolean" || (!value.disposalStopped && value.rescuedCount > 0))) return null;
+  return Object.freeze({ stageId: value.stageId, elapsedSeconds: value.elapsedSeconds, durationSeconds: value.durationSeconds,
+    ...(rescue ? { rescuedCount: value.rescuedCount, disposalStopped: value.disposalStopped } : {}) });
 }
 
 export function v100DefenseResultText(result) {
   if (result?.stageId === V100_ARCHIVE_STAGE && normalizeArchiveExtraction(result.battleReport?.archiveExtraction)) return null;
   const defense = normalizeDefenseProgress(result?.battleReport?.defenseProgress);
-  if (result?.won !== false || !defense || defense.stageId !== result.stageId) return null;
+  if (!defense || defense.stageId !== result.stageId) return null;
+  if (defense.rescuedCount !== undefined) {
+    if (result.won && defense.rescuedCount === CLINICAL_RESCUE_COUNT) {
+      return { progress: `${CLINICAL_RESCUE_COUNT}人全員を救出しました。`, detail: "" };
+    }
+    if (result.won !== false) return null;
+    const waiting = CLINICAL_RESCUE_COUNT - defense.rescuedCount;
+    return { progress: `救出 ${defense.rescuedCount}/${CLINICAL_RESCUE_COUNT}人`,
+      detail: !defense.disposalStopped ? "制御盤で処分を止めよう"
+        : waiting > 0 ? `残る${waiting}人の救出路を守ろう` : "全員救出後も車両を守ろう" };
+  }
+  if (result.won !== false) return null;
   const profile = V100_DEFENSE_OBJECTIVES[defense.stageId];
   const remaining = Math.ceil(defense.durationSeconds - defense.elapsedSeconds);
   const opened = Math.min(profile.recordCount ?? 0, Math.floor(defense.elapsedSeconds / defense.durationSeconds * (profile.recordCount ?? 0) + 1e-9));

@@ -270,6 +270,8 @@ import {
   resolveV100TwinDefeat,
   v100TwinSeparationSteps,
   futagoEnraged,
+  v100TwinCanStartStrike,
+  v100TwinLinkIsCut,
   bossRenderKind,
   bossBattleHudSnapshot,
   bossBattleResultSnapshot,
@@ -628,8 +630,11 @@ import { advanceEstuaryFloodgate, beginEstuaryFloodgateClosure, drawEstuaryFlood
 import { hasRescueControl, rescueControlReadout, V100_RESCUE_CONTROL } from "./v100RescueControl.js";
 import { centralSealCanReinforce, centralSealGateX, centralSealIngressPoint, centralSealReadout, drawV100CentralSealGates, hasCentralSeal } from "./v100CentralSeal.js";
 import { drawV100ClinicalControl } from "./v100ClinicalControl.js";
+import { advanceClinicalRescue, clinicalRescueReadout, createClinicalRescueRuntime, drawClinicalEvacuees,
+  hasClinicalRescue, stopClinicalDisposal, CLINICAL_CONTROL_X, CLINICAL_RESCUE_COUNT } from "./v100ClinicalRescue.js";
 import { drawV100CorporateControl, hasV100LureControl, v100CorporateControlLabel, v100ObjectiveDamageLabel,
-  v100CorporateControlCondition, v100LureControlAim, v100LureControlReadout, v100LureWaveBlocked } from "./v100CorporateControl.js";
+  recoverV100ArmoryKey, v100ArmoryKeyStatus, V100_ARMORY_STATUS_LABELS, v100CorporateControlCondition, v100LureControlAim,
+  v100LureControlReadout, v100LureWaveBlocked } from "./v100CorporateControl.js";
 import { drawV100AssaultObject, v100AssaultObjectProfile } from "./v100AssaultObjects.js";
 import { drawV100Explosion, drawV100FootDust, drawV100GroundFire, drawV100Muzzle, V100_CONTACT_WEAPONS, V100_CLAW_CONTACT_WEAPONS, queueV100Contact, queueV100ScoutIntercept, queueV100ClawContact, queueV100TakuyaGroundContact, queueV100TataraGroundContact, getV100ClawContactSnapshot, getV100SkillContactSnapshot, queueV100GuardContact, getV100GuardContactSnapshot, drawV100ContactQueue, clearV100ContactQueue } from "./v100CombatVfx.js";
 import { drawV100BossAftermath, drawV100BossReleaseFields } from "./v100BossAftermath.js";
@@ -847,7 +852,7 @@ type UnitCard = {
   trapDurationMultiplier?: number;
 };
 
-type MissionEvent = { at: number; wave: number; label: string; bossOnly?: boolean; bossHpRatio?: number; escortProgress?: number; waitForPriorWaveClear?: boolean; advanceOnClearAfter?: number; clearDelaySeconds?: number; requiredPowerCount?: number; requiresOpenFloodgate?: boolean; requiresActiveLure?: boolean; units: string[] };
+type MissionEvent = { at: number; wave: number; label: string; bossOnly?: boolean; bossHpRatio?: number; escortProgress?: number; waitForPriorWaveClear?: boolean; advanceOnClearAfter?: number; clearDelaySeconds?: number; requiredPowerCount?: number; requiredResearchTarget?: string; requiresOpenFloodgate?: boolean; requiresActiveLure?: boolean; units: string[] };
 type BattleDefinition = {
   stageId: string;
   operationId: string;
@@ -1124,6 +1129,8 @@ type StageMissionRuntime = {
   gateTimedOut?: boolean;
   floodgateElapsed?: number | null;
   floodgateOpenAfterDefeat?: number;
+  clinical?: ReturnType<typeof createClinicalRescueRuntime>["clinical"];
+  armoryKeyRecovered?: boolean;
   archiveReady?: boolean;
   archiveStopped?: boolean;
   archiveDistances?: readonly number[];
@@ -2244,8 +2251,8 @@ function addShot(
   );
 }
 
-function currentEnemyAbilityName(kind: EnemyKind, owner?: Fighter) {
-  return v105EnemyAbilityName(kind,{boss:bossDefinitionForEnemyKind(kind),infected:v090InfectedDefinition(kind),station:STATION_ENEMY_TUNING,owner});
+function currentEnemyAbilityName(kind: EnemyKind, owner?: Fighter, twinLinkCut = false) {
+  return v105EnemyAbilityName(kind,{boss:bossDefinitionForEnemyKind(kind),infected:v090InfectedDefinition(kind),station:STATION_ENEMY_TUNING,owner,twinLinkCut});
 }
 function clearTransientRenderObjects(g: Game) {
   v100ImageSampler.clear();
@@ -6324,7 +6331,7 @@ let stationMissionDiagnosticFallbackDrawCount = 0;
 
 function drawStationMission(ctx: CanvasRenderingContext2D, g: Game, stageObjects: SpriteMap, allowDiagnosticFallback = false, deferVehicles = false) {
   drawV100DefensePerimeter(ctx, g, stageObjects, 340, activeLaneCenters[2] + 30);
-  if (drawV100ClinicalControl(ctx, g, stageObjects, 650, activeLaneCenters[0] + 30)) return;
+  if (drawV100ClinicalControl(ctx, g, stageObjects, CLINICAL_CONTROL_X, activeLaneCenters[0] + 30)) return;
   if (hasRailEvacuation(g.definition.missionType, g.definition.missionConfig)) {
     drawV100RailEvacuation(ctx, g.stageMission, stageObjects, activeYForContentY, activeLaneCenters[0] - 26);
   }
@@ -9009,6 +9016,7 @@ function drawWorld(
   presentationLayout?: { obstacles: ReturnType<typeof manualAbilityObstacleRects>; transform: { scale: number; offsetX: number; offsetY: number } },
 ) {
   const allyHealthBars: { fighter: Fighter; width: number; height: number; y: number; maxY?: number }[] = [];
+  const enemyHealthBars: { x: number; y: number; width: number; height: number }[] = [];
   const shakeAmplitude = cameraShakeAmplitude(g.shake);
   const sx = shakeAmplitude > 0 ? (Math.random() - .5) * shakeAmplitude : 0;
   const sy = shakeAmplitude > 0 ? (Math.random() - .5) * shakeAmplitude : 0;
@@ -9043,6 +9051,12 @@ function drawWorld(
 
   // The Crawler stays behind combatants; only its doorway masks a unit during deployment.
   drawCrawler(ctx, g, sprites, graphicsProfile, allowDiagnosticFallback);
+  if (g.definition.missionConfig.medicalDefense) {
+    const supplies = stageObjects.medicalSupplies;
+    if (supplies?.complete && supplies.naturalWidth) {
+      ctx.drawImage(supplies, BASE_X + 21, activeLaneCenters[0] - 66, 64, 64);
+    }
+  }
 
   // A single shared-HP infected checkpoint closes all three routes.
   if (g.definition.enemyBaseMode !== "scenery") {
@@ -9073,6 +9087,7 @@ function drawWorld(
   if (hasArchiveExtraction(g.definition.missionType, g.definition.missionConfig)) {
     drawArchiveExtraction(ctx, g.stageMission, stageObjects, activeYForContentY(ARCHIVE_ROUTE_Y));
   }
+  if (g.stageMission.clinical) drawClinicalEvacuees(ctx, g.stageMission, stageObjects, activeLaneCenters[0] + 30);
   drawEmergencySupport(ctx, g, stageObjects);
   drawPlacementIndicator(ctx, g.placementIndicator);
 
@@ -9448,7 +9463,12 @@ function drawWorld(
         const headTop = fighterPaintedHeadTops.get(f);
         allyHealthBars.push({ fighter: f, width: barW, height: barHeight, y: barY,
           maxY: Number.isFinite(headTop) ? headTop! - barHeight - 4 : undefined });
-      } else drawFighterHealthBar(ctx, f, barW, barHeight, barY);
+      } else {
+        drawFighterHealthBar(ctx, f, barW, barHeight, barY);
+        if (f.side === "zombie" && g.definition.missionConfig.v100StageNumber) {
+          enemyHealthBars.push({ x: f.x - barW / 2 - 1, y: barY - 1, width: barW + 2, height: barHeight + 2 });
+        }
+      }
     }
     if (f.side === "zombie" && f.marked > 0) {
       ctx.save();
@@ -9614,6 +9634,7 @@ function drawWorld(
   }
   const abilityLayout=drawV105AbilityNames(ctx,g,{width:W,height:H,headY:f=>fighterHealthBarWorldY(f)-7,bounds,
     obstacles:[...statusObstacles,...healthLayout.map(bar=>({x:bar.x-bar.width/2-1,y:bar.y-1,width:bar.width+2,height:bar.height+2}))],
+    occupied:enemyHealthBars,
     get cssScale(){return Math.min(ctx.canvas.clientWidth/W||1,ctx.canvas.clientHeight/H||1);}});
   ctx.font = V100_CANVAS_FONT.numeric(14); ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
   const damageLayout=layoutV100DamageTextPaint(g.damageTexts.filter(d=>visibleRenderPoint(d.x,d.y,graphicsProfile.cullingMargin)),{
@@ -17142,6 +17163,29 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     playProductionCue(STATION_AUDIO_CUE_IDS.TERMINAL_CONFIRM, ARCHIVE_TERMINAL_X, { priority: 85, maxInstances: 1 });
   }, [playProductionCue, rejectBattleSaveBoundary]);
 
+  const stopClinicalCabinet = useCallback(() => {
+    const g = gameRef.current;
+    if (!g.running || g.paused || g.over || !g.stageMission.clinical || g.baseHp <= 0 || g.time < g.definition.prepSeconds) return;
+    if (rejectBattleSaveBoundary("clinical-control:save-pending")) return;
+    const next = stopClinicalDisposal(g.stageMission, g.fighters, activeLaneCenters[0] + 30);
+    if (next === g.stageMission) return;
+    g.stageMission = next;
+    g.banner = "処分停止　救出路を守れ";
+    g.bannerTime = 1.8;
+    playProductionCue(STATION_AUDIO_CUE_IDS.POWER_SWITCH, CLINICAL_CONTROL_X, { priority: 89, maxInstances: 1 });
+  }, [playProductionCue, rejectBattleSaveBoundary]);
+
+  const recoverArmoryKey = useCallback(() => {
+    const g = gameRef.current;
+    if (!g.running || g.paused || g.over || g.baseHp <= 0 || !g.definition.missionConfig.armoryKey) return;
+    const recovered = recoverV100ArmoryKey(g.definition, g);
+    if (recovered === g.stageMission || rejectBattleSaveBoundary("armory-key:save-pending")) return;
+    g.stageMission = recovered;
+    g.banner = V100_ARMORY_STATUS_LABELS.secured;
+    g.bannerTime = 1.5;
+    playProductionCue(STATION_AUDIO_CUE_IDS.TERMINAL_CONFIRM, BARRICADE_X, { priority: 85, maxInstances: 1 });
+  }, [playProductionCue, rejectBattleSaveBoundary]);
+
   const releaseBridgeBarrier = useCallback(() => {
     const g = gameRef.current;
     if (!g.running || g.paused || g.over || g.time < g.definition.prepSeconds
@@ -21078,6 +21122,17 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             playProductionCue(STATION_AUDIO_CUE_IDS.RESCUE_CONFIRM, BASE_X, { priority: 81, maxInstances: 1 });
           }
         }
+        if (g.stageMission.clinical && !g.stageMission.completed && g.baseHp > 0 && g.time >= g.definition.prepSeconds) {
+          const previous = g.stageMission.clinical;
+          g.stageMission = advanceClinicalRescue({ runtime: g.stageMission, fighters: g.fighters, dt, routeY: activeLaneCenters[0] + 30 });
+          const rescue = g.stageMission.clinical;
+          if (rescue && rescue.groupsArrived > previous.groupsArrived) {
+            g.banner = rescue.arrived === CLINICAL_RESCUE_COUNT
+              ? "全員救出　車両を守れ" : `${rescue.arrived}人が車両に到着`;
+            g.bannerTime = 1.3;
+            playProductionCue(STATION_AUDIO_CUE_IDS.RESCUE_CONFIRM, BASE_X, { priority: 84, maxInstances: 1 });
+          }
+        }
         if (hasEstuaryFloodgate(g.definition.missionType, g.definition.missionConfig) && !g.stageMission.completed
           && g.baseHp > 0 && g.bossDefeated && !g.bossDefeatPending) {
           const previous = g.stageMission;
@@ -21493,9 +21548,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             if (mission.bossOnly && !bossAlive) continue;
             g.wave = mission.wave; g.banner = mission.label; g.bannerTime = mission.label.includes("TAKUYA") ? 3.2 : 2.1;
             if (!lureControl && g.definition.missionConfig?.v100StageNumber && g.definition.missionType === "assault"
-              && !g.definition.bossEnemyKind && g.eventIndex === g.definition.timeline.length) {
+              && !g.definition.bossEnemyKind && !g.researchCoreTargets && g.eventIndex === g.definition.timeline.length) {
               g.barricadeVulnerable = true;
-              g.banner = `${mission.label} // 拠点防護解除`;
+              const opening = g.definition.missionConfig.armoryKey ? "指揮車を止める" : "拠点防護解除";
+              g.banner = `${mission.label} // ${opening}`;
               g.bannerTime = 2.8;
               g.flashOverlay = Math.max(g.flashOverlay, .15);
             }
@@ -22526,6 +22582,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           if (["ooguchi", "gairen", "futago", "mugarian-president-mutated", "takuya-omega"].includes(f.kind)) {
             const anomalyKind = f.kind as "ooguchi" | "gairen" | "futago" | "mugarian-president-mutated" | "takuya-omega";
             const tuning = BOSS_ANOMALY_TUNING[anomalyKind];
+            const linkCut = anomalyKind === "futago" && v100TwinLinkIsCut(g);
             let abilityFrame = f.stationAbility.phase !== "idle";
             if (f.stationAbility.phase !== "idle") {
               const previousX = f.x;
@@ -22646,7 +22703,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                     ? "ガイレン // 外殻掃討・中枢露出"
                     : anomalyKind === "futago"
                       ? f.v100TwinPart
-                        ? f.stationAbility.split ? "フタゴ // 残存個体・激昂斬撃" : "フタゴ // 双体・交差斬撃"
+                        ? f.stationAbility.split ? "フタゴ // 残存個体・激昂斬撃" : linkCut ? "フタゴ // 単体斬撃" : "フタゴ // 双体・交差斬撃"
                         : f.stationAbility.split ? "フタゴ // 裂開・融合交差撃" : "フタゴ // 融合交差撃"
                       : anomalyKind === "mugarian-president-mutated"
                         ? "変異ムガリアン社長 // 四腕制圧"
@@ -22683,21 +22740,21 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 f.abilityCooldown = tuning.cooldownSeconds / splitSpeed;
               }
             }
-            if (f.stationAbility.phase === "idle" && f.abilityCooldown <= 0) {
+            if (f.stationAbility.phase === "idle" && f.abilityCooldown <= 0 && v100TwinCanStartStrike(f, g.fighters, linkCut)) {
               const started = beginBossAnomalyAbility({
                 boss: f,
                 candidates: g.fighters,
               });
               if (started.ok) {
                 f.stationAbility = started.runtime as StationAbilityRuntime;
-                startV105AbilityName(g,f,{name:currentEnemyAbilityName(f.kind,f),source:'enemy'});
+                startV105AbilityName(g,f,{name:currentEnemyAbilityName(f.kind,f,linkCut),source:'enemy'});
                 abilityFrame = true;
                 g.banner = anomalyKind === "ooguchi"
                   ? "オオグチ // 捕食突進予告"
                   : anomalyKind === "gairen"
                     ? "ガイレン // 外殻掃討予告"
                     : anomalyKind === "futago"
-                      ? `フタゴ // ${currentEnemyAbilityName(f.kind,f)}予告`
+                      ? `フタゴ // ${currentEnemyAbilityName(f.kind,f,linkCut)}予告`
                       : anomalyKind === "mugarian-president-mutated"
                         ? "変異ムガリアン社長 // 四腕制圧予告"
                         : "TAKUYA-Ω // Ω大剣薙ぎ払い予告";
@@ -25059,6 +25116,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 ? g.stageMission.completed ? "クロメ撃破 // 残る敵を倒す" : "クロメ撃破 // 避難路を守る"
                 : isFloodgateBoss
                 ? "ガイレン撃破 // 防潮門を閉める"
+                : g.definition.missionConfig.medicalDefense
+                ? "変異ムガリアン社長撃破 — 医療物資を確保"
+                : g.definition.missionConfig.twinControl
+                ? g.barricadeHp > 0 ? "フタゴ撃破 — 中央制御盤を停止" : "フタゴ撃破 — 昇降路を確保"
                 : v100CorporateControlLabel(g.definition)
                 ? `${defeatedBossName}撃破・防護解除`
                 : g.definition.missionConfig.v100StageNumber === 30
@@ -25081,7 +25142,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 emitBattleBark(g, "takuya-down", "crawler", "tactical");
               } else if (fighter.kind === "takuya") {
                 if (!emitBattleBark(g, "base-exposed", "crawler", "tactical")) emitBattleBark(g, "takuya-down", "crawler", "tactical");
-              } else if (!isRailBoss && !isBayBoss && !isFloodgateBoss) {
+              } else if (!isRailBoss && !isBayBoss && !isFloodgateBoss
+                && !g.definition.missionConfig.medicalDefense && !g.definition.missionConfig.twinControl) {
                 emitBattleBark(g, "base-exposed", "crawler", "tactical");
               }
             } else if (fighter.kind === "gate-eater"
@@ -25310,6 +25372,12 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           RENDER_ARRAY_LIMITS.damageTexts,
         );
 
+        if (g.definition.missionConfig.twinControl && g.barricadeHp <= 0 && g.enemyBaseCollapse === 0) {
+          g.enemyBaseCollapse = dt;
+          g.banner = "中央制御盤 停止 — フタゴの連携解除";
+          g.bannerTime = 2.5;
+          playProductionCue(STATION_AUDIO_CUE_IDS.POWER_SWITCH, BARRICADE_X, { priority: 88, maxInstances: 1 });
+        }
         if (lureControl && g.barricadeHp <= 0) {
           if (g.enemyBaseCollapse === 0) {
             const ownerId = `lure-control:${g.resultId}`;
@@ -25421,7 +25489,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           }
           chooseAction(null);
           stopMusic();
-          if (enemyBaseDestroyed && !lureControl) {
+          if (enemyBaseDestroyed && !lureControl && !g.definition.missionConfig.armoryKey && !g.definition.missionConfig.twinControl) {
             addSemanticBattlePresentation(g, {
               semantic: "explosion-result",
               receiptId: `enemy-base:${g.resultId}:collapse`,
@@ -25554,7 +25622,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           : [];
         if (g.definition.missionConfig.v100StageNumber && g.running && !g.over) {
           for (const fighter of g.fighters) {
-            const telegraph = bossTelegraphSnapshot(fighter, { fallbackTargetX: BASE_X + 48 });
+            const telegraph = bossTelegraphSnapshot(fighter, { fallbackTargetX: BASE_X + 48, twinLinkCut: v100TwinLinkIsCut(g) });
             if (!telegraph) continue;
             const hint = v100BossCounterplayHint({ boss: fighter, telegraph, readyAbilities: readyAbilityFighters,
               fighters: g.fighters, laneCenters: activeLaneCenters, beamOrigin: fighterWeaponSockets.get(fighter) });
@@ -25687,7 +25755,11 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   const bayHud = hasBayEvacuation(gameRef.current.definition.missionType, gameRef.current.definition.missionConfig)
     ? bayEvacuationReadout(gameRef.current.stageMission) : null;
   const archiveGame = gameRef.current;
+  const clinicalHud = hasClinicalRescue(archiveGame.definition.missionType, archiveGame.definition.missionConfig)
+    ? clinicalRescueReadout(archiveGame.stageMission) : null;
   const lureControlHud = hasV100LureControl(archiveGame.definition) ? v100LureControlReadout(archiveGame) : null;
+  const armoryKeyStatus = archiveGame.definition.missionConfig.armoryKey
+    ? v100ArmoryKeyStatus(archiveGame.definition, archiveGame) : null;
   const archiveHud = hasArchiveExtraction(archiveGame.definition.missionType, archiveGame.definition.missionConfig)
     ? archiveExtractionReadout(archiveGame.stageMission, Math.max(0, Math.ceil((archiveGame.definition.defenseEndAt ?? archiveGame.time) - archiveGame.time))) : null;
   const bridgeHud = archiveGame.stageMission.bridge ? bridgeEscortReadout(archiveGame.stageMission) : null;
@@ -25695,6 +25767,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     ? floodgateReadout(archiveGame.stageMission, archiveGame.bossDefeated && !archiveGame.bossDefeatPending) : null;
   const phaseName = floodgateHud ? floodgateHud.label
     : bridgeHud ? bridgeHud.label
+    : clinicalHud ? clinicalHud.label
     : archiveHud ? archiveHud.phaseLabel
     : bayHud ? bayHud.phaseLabel
     : railHud ? railHud.phaseLabel
@@ -25846,7 +25919,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           session={externalSession} progress={assetReadiness} assetError={assetError}
           background={backgroundCacheRef.current[activeBattlefieldVisualId]}
           images={spriteRefs.current} onRetry={retryAssets} />}
-        {screen === "battle" && hud.manualAbilityIcons.map((icon) => {
+        {armoryKeyStatus !== "ready" && armoryKeyStatus !== "secured" && screen === "battle" && hud.manualAbilityIcons.map((icon) => {
           const ability = MANUAL_ABILITY_REGISTRY[icon.kind];
           if (!ability) return null;
           const abilityDisabled = !icon.available || paused || Boolean(selectedAction) || combatLocked || battleSaveBoundaryRef.current;
@@ -25933,7 +26006,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           <div className="top-hud">
             <div className="battle-brand-zone">
               <div className="brand-block"><div><b>{compactBattleStageName(selectedOperationView.displayName)}</b></div></div>
-              <div className={`health-hud crawler-health ${healthPct <= 25 ? "critical" : ""} ${hud.crawlerHitFlash > 0 ? "hit" : ""}`}><div><span>{basePresentation.onFoot ? basePresentation.healthLabel : "耐久"}</span><b>{Math.ceil(hud.baseHp)} / {hud.baseMaxHp}</b></div><i><em style={{ width: `${healthPct}%` }} /></i></div>
+              <div className={`health-hud crawler-health ${healthPct <= 25 ? "critical" : ""} ${hud.crawlerHitFlash > 0 ? "hit" : ""}`}><div><span>{basePresentation.onFoot || archiveGame.definition.missionConfig.medicalDefense ? basePresentation.healthLabel : "耐久"}</span><b>{Math.ceil(hud.baseHp)} / {hud.baseMaxHp}</b></div><i><em style={{ width: `${healthPct}%` }} /></i></div>
             </div>
             <div className="battle-message-stack" aria-live="polite">
               {externalSessionActive && bossHealthPanel ? bossHealthPanel : <>
@@ -25955,7 +26028,16 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           </div>
           {hud.bossTelegraphWarning && !end && <div className="v100-boss-telegraph-warning" role="alert" data-boss-telegraph-warning="true">{formatBattleText(hud.bossTelegraphWarning)}</div>}
 
-          {lureControlHud ? (!end && <section className="health-hud barrier-health v100-control-health lure-control-health"
+          {armoryKeyStatus ? (!end && <section className="health-hud barrier-health v100-control-health archive-objective"
+            data-armory-key-status={armoryKeyStatus} aria-label={enemyBaseLabel}>
+            <div><span>{enemyBaseLabel}</span><b>{hud.barricadeHp <= 0 ? "停止"
+              : hud.barricadeVulnerable ? `${Math.ceil(hud.barricadeHp)} / ${hud.barricadeMaxHp}` : "護衛中"}</b></div>
+            {hud.barricadeHp > 0 && <i aria-hidden="true"><em style={{ width: `${barricadePct}%` }} /></i>}
+            {armoryKeyStatus === "ready"
+              ? <button type="button" className="archive-terminal-action" onClick={recoverArmoryKey}
+                disabled={paused || Boolean(battleSaveBoundaryRef.current)}>{V100_ARMORY_STATUS_LABELS.ready}</button>
+              : <small>{V100_ARMORY_STATUS_LABELS[armoryKeyStatus]}</small>}
+          </section>) : lureControlHud ? (!end && <section className="health-hud barrier-health v100-control-health lure-control-health"
             data-lure-state={lureControlHud.stopped ? "stopped" : "active"} aria-label={`${enemyBaseLabel} ${lureControlHud.status}`}>
             <div><span>{enemyBaseLabel}</span><b>{lureControlHud.stopped ? "停止" : `${Math.ceil(hud.barricadeHp)} / ${hud.barricadeMaxHp}`}</b></div>
             <i aria-hidden="true"><em style={{ width: `${barricadePct}%` }} /></i>
@@ -25977,6 +26059,14 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               && <button type="button" className="bridge-barrier-action" onClick={releaseBridgeBarrier}
                 disabled={bridgeHud.phase !== "ready" || paused || Boolean(battleSaveBoundaryRef.current)}>遮断機を開ける</button>}
             {bridgeHud.phase === "open" && <i><em style={{ width: `${(bridgeHud.remaining ?? 0) / BRIDGE_GATE_SECONDS * 100}%` }} /></i>}
+          </section>) : clinicalHud ? (!end && <section className="health-hud barrier-health archive-objective clinical-rescue-objective"
+            data-clinical-phase={clinicalHud.phase} data-clinical-arrived={clinicalHud.count} aria-label="収容者の救出">
+            <div><span>救出</span><b>{clinicalHud.count}/{clinicalHud.total} 人</b></div>
+            <i aria-hidden="true"><em style={{ width: `${clinicalHud.count / clinicalHud.total * 100}%` }} /></i>
+            {clinicalHud.phase === "secured" || clinicalHud.phase === "ready"
+              ? <button type="button" className="archive-terminal-action" onClick={stopClinicalCabinet}
+                disabled={clinicalHud.phase !== "ready" || paused || Boolean(battleSaveBoundaryRef.current)}>処分を止める</button>
+              : <small>{clinicalHud.label}</small>}
           </section>) : archiveHud ? (!end && <section className="health-hud barrier-health archive-objective"
             data-archive-phase={archiveHud.phase} data-archive-delivered={archiveHud.count} aria-label="紙台帳の搬出">
             <div><span>紙台帳</span><b>{archiveHud.count}/{ARCHIVE_BOX_COUNT} 箱</b></div>
@@ -25984,7 +26074,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               ? <button type="button" className="archive-terminal-action" onClick={stopArchiveTerminal}
                 disabled={archiveHud.phase !== "ready" || paused || Boolean(battleSaveBoundaryRef.current)}>消去を止める</button>
               : <small>{archiveHud.phase === "secured" ? "搬出完了" : "消去停止済み"}{archiveHud.remaining > 0 && `・残り${archiveHud.remaining}秒`}</small>}
-          </section>) : (bayHud || (externalSessionActive && bossHealthPanel)) ? null : railHud
+          </section>) : (bayHud || (externalSessionActive && bossHealthPanel
+            && !(archiveGame.definition.missionConfig.twinControl && hud.barricadeHp > 0))) ? null : railHud
             ? <div className="health-hud barrier-health rail-evacuation-objective" data-rail-state={railHud.phase} aria-label={`${railHud.label} ${railHud.status}`}>
               <div><span>{railHud.label}</span><b>{railHud.status}</b></div>
               <i><em style={{ width: `${railHud.progress * 100}%` }} /></i>
@@ -26010,7 +26101,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               {defenseObjective.recordCount && <div className="defense-room-records" aria-label="収容室の開放記録">{Array.from({length:defenseObjective.recordCount},(_,index)=><span key={index} data-opened={index < defenseObjective.openedRecords} aria-label={`収容室${index+1}・${index < defenseObjective.openedRecords ? "開放済" : "開放待ち"}`} />)}</div>}
               <small>{defenseObjective.statusLabel}</small>
             </div>
-            : stationMissionHud || selectedOutbreakMissionId || isTakuyaInterception || isFinalDefense
+            : stationMissionHud || selectedOutbreakMissionId || isTakuyaInterception || isFinalDefense || archiveGame.definition.missionConfig.medicalDefense
             ? externalSessionActive ? null : <div className="health-hud barrier-health mission-health"><div><span>クリア目標</span><b>{formatBattleText(hud.objective)}</b></div></div>
             : <div className={`health-hud barrier-health ${omegaProtectedObjective && bossHudSide === "boss-hud-left" ? "omega-objective-left" : ""} ${v100CorporateControlLabel(gameRef.current.definition) || gameRef.current.researchCoreTargets ? "v100-control-health" : ""} ${hud.barricadeVulnerable ? "vulnerable" : "reinforced"} ${hud.barricadeHitFlash > 0 ? "hit" : ""}`}><div><span>{hud.missionType === "timed-defense" ? "救援区域" : enemyBaseLabel}</span><b>{hud.missionType === "timed-defense" ? "防衛対象外" : hud.barricadeVulnerable ? `${Math.ceil(hud.barricadeHp)} / ${hud.barricadeMaxHp}` : "防護中"}</b></div><i><em style={{ width: `${barricadePct}%` }} /></i>{hud.barricadeVulnerable && <small>{barricadeCondition}</small>}</div>}
           {!externalSessionActive && started && !end && hud.threat > .55 && <div className={`crawler-alert ${hud.threat > .82 ? "imminent" : ""} ${hud.bossMax > 0 && bossHudSide === "boss-hud-left" ? "crawler-alert-right" : ""}`}><b>{battleStageLabel} 警戒</b><span>{hud.threat > .82 ? "接触寸前" : "接近中"}</span></div>}

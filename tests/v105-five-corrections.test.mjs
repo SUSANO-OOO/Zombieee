@@ -325,3 +325,24 @@ test('edge casters keep their skill names on screen while leaving the face clear
     assert.equal(overlap(placed,{x:headX-18,y:155,width:58,height:46}),false);
   }
 });
+
+test("a live skill name avoids the enemy health bar beneath it on a phone", () => {
+  const owner = caster();
+  const world = { time: 1, fighters: [owner] };
+  const paint = [];
+  const ctx = { save() {}, restore() {}, measureText: text => ({ width: text.length * 22 }),
+    fillText(text, x, y) { paint.push({ text, x, y }); } };
+  const enemyBar = { x: owner.x - 16, y: 158, width: 32, height: 6 };
+  const options = { width: 844, height: 390, headY: () => 175, cssScale: 1 };
+  startV105AbilityName(world, owner, { name: definition.displayName, activationId: 1 });
+  world.time = 1.1;
+
+  const [unprotected] = drawV105AbilityNames(ctx, world, options);
+  assert.equal(unprotected.y, 160);
+  const [actual] = drawV105AbilityNames(ctx, world, { ...options, occupied: [enemyBar] });
+  assert.ok(actual.y + actual.height / 2 <= enemyBar.y ||
+    actual.y - actual.height / 2 >= enemyBar.y + enemyBar.height ||
+    actual.x + actual.width / 2 <= enemyBar.x ||
+    actual.x - actual.width / 2 >= enemyBar.x + enemyBar.width);
+  assert.equal(paint.at(-1).text, definition.displayName);
+});

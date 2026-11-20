@@ -37,6 +37,11 @@ test("Panther operations introduce the knife role and Stage 27 actually fields a
 test("Stage 29 owns six elite waves and Stage 30 has two A-only add waves after a delayed Omega", () => {
   const core=definitionFor(29), finale=definitionFor(30);
   assert.equal(core.timeline.length,6);
+  assert.deepEqual(core.timeline.map(event=>event.requiredResearchTarget??null),
+    [null,null,null,...Array(3).fill("overseas-activation-line")]);
+  assert.equal(core.startsEnemyBaseVulnerable,true);
+  assert.equal(definitionFor(27).timeline.length,4);
+  assert.deepEqual(definitionFor(28).timeline.map(event=>event.requiredPowerCount??0),[0,1,2,3]);
   assert.ok(core.timeline.flatMap(event=>event.units).every(kind=>P.includes(kind)));
   assert.equal(core.bossEnemyKind,null);
   assert.equal(finale.timeline.length,8);

@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 import { createBattleDefinition,battleOutcomeFor,objectiveForBattle } from "../app/battleDefinitions.js";
 import { createResearchCoreTargets,applyEnemyBaseDamage,researchCoreAttackTarget,drawResearchCoreTargets,V100_RESEARCH_CORE_STAGE,V100_RESEARCH_CORE_ART } from "../app/v100ResearchCore.js";
 import { requiredBattleAssetPlan } from "../app/battleAssetPlan.js";
+import { campaignWaveReady } from "../app/wavePacing.js";
 import { createV100BattleResult,recordV100PendingResult } from "../app/v100Transactions.js";
 import { createDefaultV100Save,serializeV100Save } from "../app/v100Save.js";
 const definition=createBattleDefinition(V100_RESEARCH_CORE_STAGE,{v100:true});
@@ -14,6 +15,8 @@ test("both real research targets and all six enemy waves must resolve; aggregate
  assert.match(objectiveForBattle(definition,game),/0\/2/);
  const first=researchCoreAttackTarget(game,{x:875,y:250});
  assert.equal(first.researchTargetId,"overseas-activation-line");
+ assert.equal(applyEnemyBaseDamage(game,200,"source-stock"),0);
+ assert.equal(game.researchCoreTargets[1].hp,500,"The strain is protected until the line is disabled");
  assert.equal(applyEnemyBaseDamage(game,900,first.researchTargetId),500);
  assert.equal(game.barricadeHp,500);assert.equal(game.researchCoreTargets[1].hp,500);
  assert.match(objectiveForBattle(definition,game),/1\/2.*感染源原株/);
@@ -25,6 +28,18 @@ test("both real research targets and all six enemy waves must resolve; aggregate
  game.wavesResolved=true;assert.equal(battleOutcomeFor(definition,game),"won");
  game.baseHp=0;assert.equal(battleOutcomeFor(definition,game),"lost");
  assert.equal(battleOutcomeFor(definition,{...fresh(),barricadeHp:0,wavesResolved:true}),null,"aggregate HP alone must never win");
+});
+
+test("the core detachment responds to the real shutdown",()=>{
+  const mission=definition.timeline[3];
+  const game={...fresh(),eventIndex:3,time:100,enemySpawn:{pending:[]},fighters:[]};
+  assert.equal(campaignWaveReady(game,mission),false);
+  applyEnemyBaseDamage(game,500,"overseas-activation-line");
+  assert.equal(campaignWaveReady(game,mission),false);
+  game.time+=2.5;
+  assert.equal(campaignWaveReady(game,mission),true);
+  game.fighters.push({side:"zombie",hp:1});
+  assert.equal(campaignWaveReady(game,mission),false);
 });
 
 test("source damage preserves legacy base behavior and does not cross a shield",()=>{

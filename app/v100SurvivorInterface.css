@@ -79,7 +79,42 @@
 #v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-rail {
   grid-template-columns: minmax(164px,.28fr) minmax(0,1fr); gap: 8px;
 }
-#v100-campaign .v100-field-map-pane { border: 0; border-right: 1px solid #a68c5e; background: #151d16ba; padding: 7px; }
+#v100-campaign .v100-field-map-card {
+  display: grid;
+  grid-template-rows: minmax(0,1fr) auto;
+  min-width: 0;
+  min-height: 0;
+  border-right: 1px solid #a68c5e;
+  background: linear-gradient(135deg,#141e17f5,#212c20df),var(--v100-stage-art) center / cover;
+}
+#v100-campaign .v100-field-map-pane { border: 0; background: transparent; padding: 7px; }
+#v100-campaign .v100-field-map-pane:focus-visible { outline: 2px solid #f0cd86; outline-offset: -3px; }
+#v100-campaign .v100-briefing-callin {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 1px;
+  margin: 0 6px 6px;
+  border: 1px solid #827253;
+  background: #827253;
+}
+#v100-campaign .v100-briefing-callin > div {
+  min-width: 0;
+  padding: 4px 6px;
+  background: #1a2620;
+}
+#v100-campaign .v100-briefing-callin dt {
+  color: #dacfad;
+  font-size: 11px;
+  line-height: 1.15;
+}
+#v100-campaign .v100-briefing-callin dd {
+  margin: 1px 0 0;
+  color: #ffe4a7;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
 #v100-campaign .v100-field-map-title { border: 0; padding-bottom: 5px; border-bottom: 1px dashed #b9a373; color: #ffe4ac; }
 #v100-campaign .v100-command-formation:not(.picker-open) .v100-field-map-title { flex-shrink: 0; }
 #v100-campaign .v100-field-map-intel { border-left: 3px solid #ae5136; background: #0a120b99; }
@@ -370,12 +405,33 @@
     touch-action: pan-y;
     overscroll-behavior-y: contain;
     scrollbar-gutter: stable;
+    scrollbar-width: thin;
   }
   #v100-campaign .v100-command-formation:not(.picker-open) .v100-briefing-person {
     flex: 0 0 auto;
+    grid-template-columns: minmax(0,1fr);
+    gap: 0;
+    margin: 5px 0 0;
+    background: none;
+  }
+  #v100-campaign .v100-command-formation:not(.picker-open) .v100-briefing-person > .v100-crew-portrait {
+    display: none;
   }
   #v100-campaign .v100-command-formation:not(.picker-open) .v100-briefing-person > div:not(.v100-crew-portrait) {
+    align-self: start;
     max-height: none;
     overflow: visible;
+    padding: 0 2px 2px 0;
+  }
+  #v100-campaign .v100-command-formation:not(.picker-open) .v100-briefing-person h3 {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 5px;
+    font-size: 16px;
+    line-height: 1.25;
+  }
+  #v100-campaign .v100-command-formation:not(.picker-open) .v100-briefing-person h3 small {
+    white-space: nowrap;
   }
 }

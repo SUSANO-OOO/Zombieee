@@ -359,7 +359,7 @@ test('pair owner consumes raw lookup and rejects duplicated or substituted forma
   const baseline=pairOwnerRow();assert.doesNotThrow(()=>assertFutagoPairDamageAndOwner(baseline));
   for(const mutate of [
     e=>e.spawnOrdinals[1]=structuredClone(e.spawnOrdinals[0]),
-    e=>{e.formalWave.allWaveKinds=['futago','futago'];e.spawnOrdinals.forEach((r,i)=>r.sourceOrder=i);},
+    e=>{e.formalWave.allWaveKinds=['futago','red-panther-shield'];e.spawnOrdinals.forEach((r,i)=>r.sourceOrder=i);},
     e=>e.formalWave.at++,
   ]){
     const r=structuredClone(baseline);mutate(r.proof.ownerEvidence);

@@ -1399,15 +1399,25 @@ function FormationView({ save, stageId, requestedUnitId = null, onCancelRequeste
     <div className="v100-panel-heading v100-sortie-heading"><h2>出撃編成</h2><strong className="v100-sortie-count">{availableSlots.length}<small>/ 7 呼び出し枠</small></strong></div>
     <div className="v100-formation-board">
       <div className="v100-slot-rail" aria-label="7枠の編成">
-        <div className="v100-field-map-pane">
-          <span className="v100-field-map-title"><strong>{stage ? "S" + String(stage.number).padStart(2, "0") + " / " + stageDisplayNameFor(stage) : "異常発生・サバイバル / 出撃準備"}</strong></span>
-          <div className="v100-field-map-intel"><strong>{modePreparation ? "仲間を選び、次の迎撃に備える" : objectiveLabelFor(stage)}</strong></div>
-          {absence && <p className="v100-stage-absence" role="note">{absence}</p>}
-          {activeUnit && activePresentation ? <div className="v100-briefing-person" data-v100-focused-unit={activeUnit.id}>
-            <CrewPortrait unitId={activeUnit.id} label={activeUnit.displayName} />
-            <div tabIndex={0} aria-label={`${activeUnit.displayName}の役割・固有技`}><h3>{activeUnit.displayName} <small>Lv.{activePresentation.level}</small></h3><strong className="v100-briefing-role-description">{activePresentation.description.split("・").map((part, index, parts) => <span key={`${index}-${part}`}>{part}{index < parts.length - 1 ? "・" : ""}</span>)}</strong><span className="v100-briefing-callin">指揮 {activePresentation.commandCost} / 再出撃 {formatV100Number(activePresentation.redeploySeconds)}秒</span>{activePresentation.skill && <p>{activePresentation.skill.name}：{activePresentation.skill.summary}</p>}</div>
-          </div> : <div className="v100-briefing-empty"><strong>仲間を選んで配置</strong><span>空き枠をタップ</span></div>}
-        </div>
+        <aside className="v100-field-map-card" aria-label="作戦と選択中の仲間">
+          <div className="v100-field-map-pane" tabIndex={0}>
+            <span className="v100-field-map-title"><strong>{stage ? "S" + String(stage.number).padStart(2, "0") + " / " + stageDisplayNameFor(stage) : "異常発生・サバイバル / 出撃準備"}</strong></span>
+            <div className="v100-field-map-intel"><strong>{modePreparation ? "仲間を選び、次の迎撃に備える" : objectiveLabelFor(stage)}</strong></div>
+            {absence && <p className="v100-stage-absence" role="note">{absence}</p>}
+            {activeUnit && activePresentation ? <div className="v100-briefing-person" data-v100-focused-unit={activeUnit.id}>
+              <CrewPortrait unitId={activeUnit.id} label={activeUnit.displayName} />
+              <div aria-label={activeUnit.displayName + "の役割・固有技"}>
+                <h3>{activeUnit.displayName} <small>Lv.{activePresentation.level}</small></h3>
+                <strong className="v100-briefing-role-description">{activePresentation.description.split("・").map((part, index, parts) => <span key={index + "-" + part}>{part}{index < parts.length - 1 ? "・" : ""}</span>)}</strong>
+                {activePresentation.skill && <p>{activePresentation.skill.name}：{activePresentation.skill.summary}</p>}
+              </div>
+            </div> : <div className="v100-briefing-empty"><strong>仲間を選んで配置</strong><span>空き枠をタップ</span></div>}
+          </div>
+          {activePresentation && <dl className="v100-briefing-callin">
+            <div><dt>必要指揮</dt><dd>{activePresentation.commandCost}</dd></div>
+            <div><dt>再出撃</dt><dd>{formatV100Number(activePresentation.redeploySeconds)}秒</dd></div>
+          </dl>}
+        </aside>
         <div className="v100-callin-roster">
           <div className="v100-callin-heading"><strong>{requestedUnit ? requestedAbsence ?? requestedUnit.displayName + "を入れる枠を選ぶ" : modePreparation ? "次の迎撃に備えて仲間を選ぶ" : "カードで出撃・頭上で固有技"}</strong><button type="button" className="v100-open-briefing" onClick={(event) => { event.currentTarget.focus(); if (requestedUnit) onCancelRequested(); else setBriefingOpen(true); }}>{requestedUnit ? "あとで選ぶ" : modePreparation ? "編成の確認" : "作戦と戦い方"}</button><small>{placingUnit ? "空き枠なら追加、埋まった枠なら入れ替え。" : requestedUnit ? "この仲間は、別の作戦で試そう。" : modePreparation ? "編成が決まったら、異常発生かサバイバルを選ぶ。" : "移動・通常攻撃は自動。同じ仲間も繰り返し呼べる。"}</small></div>
           {briefingOpen && (
@@ -1680,7 +1690,7 @@ function ResultView({ result, previousResult, previousBestStars, alreadyComplete
   const escortResult = v100EscortResultText(result);
   const defenseResult = v100DefenseResultText(result);
   const deviceResult = v100DeviceResultText(result);
-  const outcome = won ? "目標達成！"
+  const outcome = won ? defenseResult?.progress ?? "目標達成！"
     : escortResult?.outcome ?? (typeof result?.vehicleHp === "number" && result.vehicleHp <= 0 ? `${basePresentation.label}を守りきれませんでした。`
       : "目標を達成できなかった。編成と戦い方を見直して、もう一度挑もう。");
   const resultStageId = typeof result?.stageId === "string" ? result.stageId : null;

@@ -12,9 +12,11 @@ import { researchCoreComplete, researchCoreObjective } from "./v100ResearchCore.
 import { hasRailEvacuation } from "./v100RailEvacuation.js";
 import { bayEvacuationObjective, hasBayEvacuation } from "./v100BayEvacuation.js";
 import { archiveExtractionReadout, hasArchiveExtraction } from "./v100ArchiveExtraction.js";
+import { clinicalRescueReadout, hasClinicalRescue } from "./v100ClinicalRescue.js";
 import { floodgateReadout, hasEstuaryFloodgate } from "./v100EstuaryFloodgate.js";
 import { v100DefenseStatus } from "./v100DefenseObjectives.js";
-import { hasV100LureControl, v100CorporateControlLabel, V100_LURE_CONTROL_OBJECTIVE } from "./v100CorporateControl.js";
+import { hasV100LureControl, v100ArmoryKeyStatus, v100CorporateControlLabel,
+  V100_ARMORY_OBJECTIVE, V100_ARMORY_STATUS_LABELS, V100_LURE_CONTROL_OBJECTIVE } from "./v100CorporateControl.js";
 
 const PHASE_SCHEDULES = Object.freeze({
   assault: Object.freeze([
@@ -149,6 +151,17 @@ export function phaseBannerForBattle(definition, phase) {
 }
 
 export function objectiveForBattle(definition, state) {
+  if (definition.missionConfig?.armoryKey) {
+    const status = v100ArmoryKeyStatus(definition, state);
+    return status === "protected" ? V100_ARMORY_OBJECTIVE : V100_ARMORY_STATUS_LABELS[status];
+  }
+  if (definition.missionConfig?.twinControl) {
+    if (state.barricadeHp > 0) return definition.objective;
+    return state.bossDefeated ? "昇降路を確保" : "連携解除・フタゴを撃破";
+  }
+  if (definition.missionConfig?.medicalDefense) {
+    return state.bossDefeated ? "医療物資を確保" : definition.objective;
+  }
   if (hasV100LureControl(definition)) {
     return state.barricadeHp <= 0 ? "残る敵を倒して試験棟への道を開く" : V100_LURE_CONTROL_OBJECTIVE;
   }
@@ -173,6 +186,7 @@ export function objectiveForBattle(definition, state) {
     const remaining = Math.max(0, Math.ceil(definition.defenseEndAt - state.time));
     return archiveExtractionReadout(state.stageMission, remaining).objective;
   }
+  if (hasClinicalRescue(definition.missionType, definition.missionConfig)) return clinicalRescueReadout(state.stageMission).objective;
   const defense = v100DefenseStatus(definition, state);
   if (defense) return defense.objective;
   if (definition.operationCategory === "outbreak") {
@@ -231,7 +245,8 @@ export function battleOutcomeFor(definition, state) {
   if (definition.missionConfig?.v100StageNumber === 29) {
     return researchCoreComplete(state.researchCoreTargets) && state.wavesResolved === true ? "won" : null;
   }
-  if ([3, 5, 30].includes(definition.missionConfig?.v100StageNumber) && state.wavesResolved !== true) return null;
+  if (([3, 5, 30].includes(definition.missionConfig?.v100StageNumber) || definition.missionConfig?.medicalDefense
+       || definition.missionConfig?.twinControl) && state.wavesResolved !== true) return null;
   if (definition.operationCategory === "outbreak") {
     if (state.bossDefeated !== true) return null;
     const livingEnemies = Array.isArray(state.fighters)
@@ -269,9 +284,15 @@ export function battleOutcomeFor(definition, state) {
     if (state.bossDefeated !== true || state.bossDefeatPending === true || state.barricadeVulnerable !== true) return null;
     return hasClearHp ? "won" : "lost";
   }
+  if (definition.missionConfig?.medicalDefense || definition.missionConfig?.twinControl) {
+    if (state.bossDefeated !== true || state.bossDefeatPending === true) return null;
+    if (definition.missionConfig?.twinControl && state.barricadeHp > 0) return null;
+    return hasClearHp ? "won" : "lost";
+  }
   if (definition.missionType === "timed-defense") {
     if (state.time < definition.defenseEndAt) return null;
-    if (hasArchiveExtraction(definition.missionType, definition.missionConfig) && !state.stageMission?.completed) return null;
+    if ((hasArchiveExtraction(definition.missionType, definition.missionConfig)
+      || hasClinicalRescue(definition.missionType, definition.missionConfig)) && !state.stageMission?.completed) return null;
     return hasClearHp ? "won" : "lost";
   }
   if (definition.bossUnlocksEnemyBase
@@ -280,6 +301,8 @@ export function battleOutcomeFor(definition, state) {
   if (hasSupplyValve(definition.missionType, definition.missionConfig)
     && !(state.stageMission?.powerActivated >= 1)) return null;
   if (hasV100LureControl(definition) && state.wavesResolved !== true) return null;
+  if (definition.missionConfig?.armoryKey
+    && (state.wavesResolved !== true || !state.stageMission?.armoryKeyRecovered)) return null;
   const assaultOutcome = battleOutcome(state.baseHp, state.barricadeHp);
   return assaultOutcome === "won" && !hasClearHp ? "lost" : assaultOutcome;
 }

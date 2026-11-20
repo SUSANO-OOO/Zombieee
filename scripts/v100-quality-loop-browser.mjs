@@ -219,6 +219,15 @@ async function formationDetailsReachable(page, viewport, row) {
     }
     return values;
   };
+  const counters = page.locator('.v100-briefing-callin');
+  const counterReadout = async () => ({
+    box: await within(counters, 30, false),
+    values: await counters.locator('dd').allTextContents(),
+  });
+  const controlBefore = await counterReadout();
+  assert.equal(controlBefore.values.length, 2, 'The selected crew command and redeployment times both appear');
+  assert.match(controlBefore.values[0], /^\d+$/);
+  assert.match(controlBefore.values[1], /^\d+(?:\.\d+)?秒$/u);
   const controlsBefore = await controls();
   const before = await pane.evaluate(element => ({
     scrollTop: element.scrollTop, scrollHeight: element.scrollHeight, clientHeight: element.clientHeight,
@@ -242,6 +251,7 @@ async function formationDetailsReachable(page, viewport, row) {
   assert.equal(after.readable, true, 'The final line of the selected crew ability is reachable');
   if (before.scrollHeight > before.clientHeight) assert.ok(after.scrollTop > 0, 'Overflowing information can move');
   assert.deepEqual(await controls(), controlsBefore, 'Formation actions remain fixed while information scrolls');
+  assert.deepEqual(await counterReadout(), controlBefore, 'The selected crew requirements remain fixed while information scrolls');
   assert.deepEqual(await rawSave(page), saveBefore, 'Reading formation information does not change the save');
   await capture(page, row, 'details-end');
   await pane.evaluate((element, top) => { element.scrollTop = top; }, before.scrollTop);

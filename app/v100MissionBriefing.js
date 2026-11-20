@@ -10,7 +10,8 @@ import { V100_BRIDGE_STAGE } from "./v100BridgeEscort.js";
 import { V100_FLOODGATE_STAGE } from "./v100EstuaryFloodgate.js";
 import { V100_MISSION_VEHICLES } from "./v100MissionVehicles.js";
 import { V100_DEFENSE_OBJECTIVES } from "./v100DefenseObjectives.js";
-import { V100_CORPORATE_CONTROLS, V100_LURE_CONTROL_NAME, V100_LURE_CONTROL_STAGE } from "./v100CorporateControl.js";
+import { CLINICAL_RESCUE_COUNT, V100_CLINICAL_STAGE } from "./v100ClinicalRescue.js";
+import { V100_ARMORY_STAGE, V100_ARMORY_VEHICLE_NAME, V100_CORPORATE_CONTROLS, V100_LURE_CONTROL_NAME, V100_LURE_CONTROL_STAGE } from "./v100CorporateControl.js";
 import { v100BattleDefinitionFor } from "./v100BattleAdapter.js";
 import { ENEMY_CONTENT } from "./content/enemyCatalog.js";
 
@@ -48,8 +49,14 @@ export function v100MissionBriefingFor(stageId) {
   if (stageId === V100_FLOODGATE_STAGE) {
     return { mode: "advance", origin: "ガイレンを撃破", target: "防潮門", verb: "閉鎖盤で閉める" };
   }
+  if (stageId === V100_CLINICAL_STAGE) {
+    return { mode: "escort", origin: `収容者${CLINICAL_RESCUE_COUNT}人`, target: "車両", verb: "処分を止め、救出路を守る" };
+  }
   if (stageId === V100_LURE_CONTROL_STAGE) {
     return { mode: "advance", origin: "物流本部の門", target: V100_LURE_CONTROL_NAME, verb: "航空支援でも直接狙える" };
+  }
+  if (stageId === V100_ARMORY_STAGE) {
+    return { mode: "advance", origin: "追撃を退ける", target: V100_ARMORY_VEHICLE_NAME, verb: "止めて認証キーを回収" };
   }
   if (stageId === V100_CENTRAL_SEAL_STAGE) {
     return { mode: "sequence", count: V100_CENTRAL_SEAL.powerCount, countUnit: "基",
@@ -63,6 +70,8 @@ export function v100MissionBriefingFor(stageId) {
   if (node) return { mode: "sequence", count: stage.objectiveId.includes("four") ? 4 : 3, label: node.label, verb: node.verb };
   const vehicle = V100_MISSION_VEHICLES[stageId];
   if (vehicle) return { mode: "escort", origin: vehicle.count === 3 ? "冷蔵車3台" : vehicle.targetLabel, target: vehicle.destinationLabel ?? "目的地", verb: vehicle.count === 3 ? "追込み・確保" : "護送" };
+  if (stage.number === 24) return { mode: "advance", origin: "中央制御盤", target: "フタゴ", verb: "制御を止めて二体を撃破" };
+  if (stage.number === 25) return { mode: "hold", origin: "医療物資", target: "変異ムガリアン社長", verb: "医療物資を守って撃破" };
   if (stage.number === 29) return { mode: "dual-target", targets: ["国外起動回線", "感染源原株"], verb: "両方を破壊" };
   if (stage.missionType === "timed-defense") return { mode: "hold", origin: V100_DEFENSE_OBJECTIVES[stageId]?.label ?? "防衛線", target: "敵侵入", verb: "維持" };
   const control = V100_CORPORATE_CONTROLS[stageId];

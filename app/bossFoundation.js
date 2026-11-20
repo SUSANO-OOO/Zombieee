@@ -546,10 +546,10 @@ export function bossCampaignEntry(enemyKind, overrides = {}) {
 }
 
 // Presentation names follow the two registered V1 bodies. Legacy fused proof art keeps its original definition.
-export function v100TwinAttackName(fighter) {
+export function v100TwinAttackName(fighter, linkCut = false) {
   if (fighter?.kind !== 'futago' || fighter.side !== 'zombie' || fighter.v100BossId !== 'boss-futago'
     || !['a','b'].includes(fighter.v100TwinPart)) return null;
-  return fighter.v100TwinEnraged ? '激昂斬撃' : '双体交差撃';
+  return fighter.v100TwinEnraged ? '激昂斬撃' : linkCut ? '単体斬撃' : '双体交差撃';
 }
 
 export function bossPhaseForHp(hp, maxHp, enemyKind = null, fighter = null) {
@@ -625,6 +625,16 @@ export function resolveV100TwinDefeat(game, fighter) {
   return { complete, enragedIds };
 }
 
+export function v100TwinLinkIsCut(game) {
+  return game.definition?.missionConfig?.twinControl === true && game.barricadeHp <= 0;
+}
+
+export function v100TwinCanStartStrike(fighter, group, linkCut) {
+  return !linkCut || !fighter.v100TwinPart || !group.some(other =>
+    other.id !== fighter.id && other.v100TwinPart && other.v100TwinPair === fighter.v100TwinPair
+    && other.hp > 0 && ["warning", "active", "recovery"].includes(other.stationAbility?.phase));
+}
+
 export function futagoEnraged(fighter, legacyThreshold = .62) {
   return fighter?.v100BossId === "boss-futago" ? Boolean(fighter.v100TwinEnraged)
     : Number(fighter?.hp) / Math.max(1, Number(fighter?.maxHp) || 1) <= legacyThreshold;
@@ -668,7 +678,8 @@ export function bossBattleHudSnapshot(game) {
     return { part, hp: actor ? Math.max(0, actor.hp) : arriving ? 3000 : 0, maxHp: 3000, arriving };
   });
   const hp = members.reduce((sum, member) => sum + member.hp, 0);
-  return deepFreeze({ ...hud, hp, maxHp: 6000, hpRatio: hp / 6000, twins: members });
+  const phase = v100TwinLinkIsCut(game) && !first.v100TwinEnraged ? { ...hud.phase, label: "連携解除" } : hud.phase;
+  return deepFreeze({ ...hud, hp, maxHp: 6000, hpRatio: hp / 6000, twins: members, phase });
 }
 
 // Result measurements also include a boss still entering the gate when the
@@ -717,7 +728,7 @@ export function bossHudSnapshot(fighter) {
   });
 }
 
-export function bossTelegraphSnapshot(fighter, { fallbackTargetX = 0 } = {}) {
+export function bossTelegraphSnapshot(fighter, { fallbackTargetX = 0, twinLinkCut = false } = {}) {
   const definition = bossDefinitionForEnemyKind(fighter?.kind);
   if (!definition
     || fighter?.side !== "zombie"
@@ -783,7 +794,7 @@ export function bossTelegraphSnapshot(fighter, { fallbackTargetX = 0 } = {}) {
     return deepFreeze({
       bossId: definition.id,
       attackId: definition.attackTelegraph.attackId,
-      displayName: v100TwinAttackName(fighter) ?? definition.attackTelegraph.displayName,
+      displayName: v100TwinAttackName(fighter, twinLinkCut) ?? definition.attackTelegraph.displayName,
       kind: definition.attackTelegraph.kind,
       remainingSeconds: Math.max(0, Number(fighter.stationAbility.remainingSeconds) || 0),
       originX: Number(fighter.x) || 0,

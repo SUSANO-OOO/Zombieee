@@ -1,3 +1,6 @@
+import { V100_BRIDGE_ART } from "./v100BridgeEscort.js";
+import { drawArmoredVehicle } from "./v100BridgeEscortRender.js";
+
 export const V100_CORPORATE_CONTROL_ART="/art/v100/mission-objects/corporate-control-states-v1.webp";
 export const V100_LURE_CONTROL_ART="/art/v100/mission-objects/lure-control-states-v1.webp";
 export const V100_LURE_CONTROL_STAGE = "stage-mugarian-logistics-hq";
@@ -30,11 +33,37 @@ export function v100LureControlAim(game, requested, barrier, laneCenters) {
     && requested.y >= center.y - 85 && requested.y <= center.y + 47 ? center : null;
 }
 
+export const V100_ARMORY_STAGE = "stage-mugarian-special-operations-armory";
+export const V100_ARMORY_VEHICLE_NAME = "装甲指揮車";
+export const V100_ARMORY_OBJECTIVE = "追撃を退け、指揮車から認証キーを回収";
+
+export function v100ArmoryKeyStatus(definition, state) {
+  if (state.stageMission?.armoryKeyRecovered) return "secured";
+  if (!state.barricadeVulnerable) return "protected";
+  if (state.barricadeHp > 0) return "mobile";
+  const troopsRemain = state.eventIndex < definition.timeline.length
+    || state.enemySpawn?.pending.length > 0
+    || state.fighters?.some(fighter => fighter.side === "zombie" && fighter.hp > 0 && !fighter.contained);
+  return troopsRemain ? "contested" : "ready";
+}
+
+export function recoverV100ArmoryKey(definition, state) {
+  if (v100ArmoryKeyStatus(definition, state) !== "ready") return state.stageMission;
+  return Object.freeze({ ...state.stageMission, armoryKeyRecovered: true });
+}
+
+export const V100_ARMORY_STATUS_LABELS = Object.freeze({
+  protected: "警備隊を迎撃",
+  mobile: "指揮車を止める",
+  contested: "残る警備隊を退ける",
+  ready: "認証キーを回収",
+  secured: "認証キー回収済",
+});
+
 export const V100_CORPORATE_CONTROLS=Object.freeze({
   [V100_LURE_CONTROL_STAGE]:V100_LURE_CONTROL_NAME,
-  "stage-mugarian-special-operations-armory":"認証鍵制御盤",
+  [V100_ARMORY_STAGE]:V100_ARMORY_VEHICLE_NAME,
   "stage-mugarian-tech-tower":"中央制御盤",
-  "stage-mugarian-executive-lab":"研究室制御盤",
   "stage-segawa-private-lab":"研究室封鎖装置",
 });
 export function v100CorporateControlState(game){
@@ -57,6 +86,22 @@ export function v100ObjectiveDamageLabel(game, damageState) {
 const columns=[0,530,1030,1530,2172],anchors=[290,790,1300,1850];
 export function drawV100CorporateControl(context,game,stageObjects,barrier,laneCenters){
   const label=V100_CORPORATE_CONTROLS[game.definition.stageId];if(!label)return false;
+  if (game.definition.missionConfig?.armoryKey) {
+    const image = stageObjects[V100_BRIDGE_ART.id];
+    if (!image?.complete || !image.naturalWidth) throw new Error("Armored command vehicle must be decoded before battle");
+    const entry = Math.max(0, Math.min(1, (game.time - game.definition.prepSeconds) / 2.4));
+    const offset = 165 * (1 - entry) ** 2;
+    context.save();
+    context.translate(barrier.attackX + 10 + offset, laneCenters[2] + 24);
+    if (game.barricadeHp <= 0) context.rotate(-.08);
+    else if (game.barricadeHitFlash > 0) {
+      context.shadowColor = "#ffd087";
+      context.shadowBlur = 12;
+    }
+    drawArmoredVehicle(context, image, 0, 0);
+    context.restore();
+    return true;
+  }
   const lure=game.definition.stageId===V100_LURE_CONTROL_STAGE;
   const image=lure?stageObjects.lureControlStates:stageObjects.corporateControlStates;
   if(!image?.complete||!image.naturalWidth)throw new Error("Corporate control states must be decoded before battle starts");

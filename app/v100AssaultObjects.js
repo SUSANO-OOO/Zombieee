@@ -9,7 +9,7 @@ export const V100_ASSAULT_OBJECT_ART=Object.freeze({
 });
 export function v100AssaultObjectProfile(stageId){
   const stage=V100_STAGE_BY_ID[stageId];
-  if(!stage||!["assault","boss"].includes(stage.missionType)||V100_CORPORATE_CONTROLS[stageId]||stage.number===29||[V100_RAIL_EVACUATION_STAGE,V100_BAY_EVACUATION_STAGE].includes(stageId))return null;
+  if(!stage||!["assault","boss"].includes(stage.missionType)||V100_CORPORATE_CONTROLS[stageId]||[25,29].includes(stage.number)||[V100_RAIL_EVACUATION_STAGE,V100_BAY_EVACUATION_STAGE].includes(stageId))return null;
   return stage.number===4||stage.number===5?"relay":"stronghold";
 }
 export function v100AssaultObjectState(game){

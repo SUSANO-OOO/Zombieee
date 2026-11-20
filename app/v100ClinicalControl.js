@@ -1,6 +1,6 @@
-import { v100DefenseStatus } from "./v100DefenseObjectives.js";
+import { hasClinicalRescue, V100_CLINICAL_STAGE } from "./v100ClinicalRescue.js";
 
-export const V100_CLINICAL_STAGE = "stage-mugarian-clinical-trial-wing";
+export { V100_CLINICAL_STAGE };
 export const V100_CLINICAL_CONTROL_ART = "/art/v100/mission-objects/clinical-control-states-v1.webp";
 export const V100_CLINICAL_CONTROL_STATES = Object.freeze(["sealed", "releasing", "complete", "failed"]);
 // Blank columns isolate complete authored silhouettes, including the lever and
@@ -9,10 +9,10 @@ const columns = [0, 530, 1030, 1535, 2010];
 const anchors = [275, 780, 1280, 1785];
 export function v100ClinicalControlState(definition, game) {
   if (definition.stageId !== V100_CLINICAL_STAGE) return null;
-  const defense = v100DefenseStatus(definition, game);
-  if (!defense) return null;
-  return defense.phase === "failed" ? "failed" : defense.completed ? "complete"
-    : game.time <= definition.prepSeconds ? "sealed" : "releasing";
+  if (!hasClinicalRescue(definition.missionType, definition.missionConfig)) return null;
+  if (game.baseHp <= 0 || (game.over && !game.won)) return "failed";
+  if (game.stageMission?.completed) return "complete";
+  return game.stageMission?.clinical?.disposalStopped ? "releasing" : "sealed";
 }
 
 export function drawV100ClinicalControl(context, game, stageObjects, x, y) {

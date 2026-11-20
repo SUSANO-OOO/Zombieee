@@ -1,3 +1,5 @@
+import { hasClinicalRescue } from "./v100ClinicalRescue.js";
+
 export const V100_DEFENSE_OBJECTIVES = Object.freeze({
   "stage-sawara-ward-office": Object.freeze({ label: "避難誘導", goal: "避難誘導を守る" }),
   "stage-university-hospital-approach": Object.freeze({ label: "医薬品搬出", goal: "医薬品の搬出を守る" }),
@@ -12,13 +14,18 @@ export function v100DefenseResultSnapshot(definition, state) {
     || !Object.hasOwn(V100_DEFENSE_OBJECTIVES, definition.stageId)) return null;
   const durationSeconds = definition.defenseEndAt - definition.prepSeconds;
   if (!Number.isFinite(durationSeconds) || durationSeconds <= 0 || !Number.isFinite(state.time)) return null;
+  const rescue = hasClinicalRescue(definition.missionType, definition.missionConfig) ? state.stageMission?.clinical : null;
   return { stageId: definition.stageId, durationSeconds,
-    elapsedSeconds: Math.max(0, Math.min(durationSeconds, state.time - definition.prepSeconds)) };
+    elapsedSeconds: Math.max(0, Math.min(durationSeconds, state.time - definition.prepSeconds)),
+    ...(rescue ? { rescuedCount: rescue.arrived, disposalStopped: rescue.disposalStopped } : {}) };
 }
 
 // The operation's real defense clock owns progress. Preparation, pausing and
 // failed runs cannot advance a separate UI timer or manufacture a completion.
 export function v100DefenseStatus(definition, state) {
+  // The legacy clock still describes old battle records. Live clinical
+  // rescue uses the arrivals at the vehicle instead of the clock.
+  if (state.stageMission?.clinical && hasClinicalRescue(definition.missionType, definition.missionConfig)) return null;
   const profile = definition.missionConfig?.v100StageNumber
     && definition.missionType === "timed-defense" && V100_DEFENSE_OBJECTIVES[definition.stageId];
   if (!profile) return null;

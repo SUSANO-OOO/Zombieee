@@ -72,7 +72,7 @@ test("map briefings describe the authored task rather than number words in objec
     [19, "証拠搬送車を護衛し、遮断機を開けて対岸へ"],
     [26, "冷蔵車3台を封鎖地点へ追い込み、停止・確保"],
     [28, "国内散布装置4基を順番に物理停止"],
-    [29, "国外起動回線と感染源原株を破壊"],
+    [29, "国外起動回線を止め、続いて感染源原株を破壊"],
     [30, "TAKUYA-Ωを撃破し、西新を守る"],
   ]);
   for (const [number, goal] of expected) {

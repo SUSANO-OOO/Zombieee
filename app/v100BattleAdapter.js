@@ -9,9 +9,10 @@ import { V100_BAY_EVACUATION, V100_BAY_EVACUATION_STAGE } from "./v100BayEvacuat
 import { V100_ARCHIVE_EXTRACTION, V100_ARCHIVE_STAGE } from "./v100ArchiveExtraction.js";
 import { V100_BRIDGE_ESCORT, V100_BRIDGE_STAGE } from "./v100BridgeEscort.js";
 import { V100_FLOODGATE, V100_FLOODGATE_STAGE } from "./v100EstuaryFloodgate.js";
-import { V100_CORPORATE_CONTROLS, V100_LURE_CONTROL_OBJECTIVE, V100_LURE_CONTROL_STAGE } from "./v100CorporateControl.js";
+import { V100_ARMORY_OBJECTIVE, V100_ARMORY_STAGE, V100_CORPORATE_CONTROLS, V100_LURE_CONTROL_OBJECTIVE, V100_LURE_CONTROL_STAGE } from "./v100CorporateControl.js";
 import { V100_DEFENSE_OBJECTIVES } from "./v100DefenseObjectives.js";
-import { researchCoreObjective } from "./v100ResearchCore.js";
+import { CLINICAL_RESCUE_COUNT, V100_CLINICAL_RESCUE, V100_CLINICAL_STAGE } from "./v100ClinicalRescue.js";
+import { researchCoreObjective, V100_RESEARCH_CORE_STAGE, V100_RESEARCH_TARGETS } from "./v100ResearchCore.js";
 import { v100IncreaseWaveDensity } from "./v100CombatTuning.js";
 import { withClearDrivenAssaultWaves } from "./wavePacing.js";
 import { v100AvailableFormation, v100StageAbsenceReason } from "./v100StageParticipation.js";
@@ -90,12 +91,16 @@ export function v100MissionObjectiveFor(stageId) {
   if (stageId === V100_ARCHIVE_STAGE) return "遠隔消去を止め、紙台帳を搬出する";
   if (stage.number === 30) return "TAKUYA-Ωを撃破し、西新を守る";
   if (stageId === V100_LURE_CONTROL_STAGE) return V100_LURE_CONTROL_OBJECTIVE;
+  if (stageId === V100_ARMORY_STAGE) return V100_ARMORY_OBJECTIVE;
+  if (stage.number === 24) return "中央制御盤を止め、フタゴを撃破";
+  if (stage.number === 25) return "医療物資を守り、変異ムガリアン社長を止める";
   const control = V100_CORPORATE_CONTROLS[stageId];
   if (control) {
     const bossId = stage.firstClearPayload.find(value => value.startsWith("boss-"));
     const bossName = V100_BOSS_BY_ID[bossId]?.displayName;
     return bossName ? `${bossName}を倒し、${control}を破壊` : `${control}を破壊`;
   }
+  if (stageId === V100_CLINICAL_STAGE) return `処分を止め、${CLINICAL_RESCUE_COUNT}人を救出`;
   const defense = V100_DEFENSE_OBJECTIVES[stageId];
   if (defense) return defense.recordCount ? `${defense.goal}（全${defense.recordCount}室）` : defense.goal;
   if (stage.number === 29) return researchCoreObjective(null);
@@ -133,6 +138,36 @@ function missionDurationSeconds(stage, missionType) {
 function stageTimeline(stage, missionType, bossKind) {
   const pack = packFor(stage);
   const bossLabel = V100_BOSS_BY_ID[stage.firstClearPayload.find(value => value.startsWith("boss-"))]?.displayName ?? bossKind;
+  if (stage.id === V100_ARMORY_STAGE) {
+    // The commander leads the last pursuit instead of calling fresh
+    // infected into each patrol and stretching the same encounter.
+    return freeze([
+      freeze({ at: PREP_SECONDS, wave: 1, label: "作戦庫の警備隊",
+        units: freeze(["red-panther-knife", "red-panther-shield"]) }),
+      freeze({ at: PREP_SECONDS + 19, wave: 2, label: "後方から追撃",
+        units: freeze(["red-panther-smg", "red-panther-knife", "red-panther-shield"]) }),
+      freeze({ at: PREP_SECONDS + 38, wave: 3, label: "指揮車への増援",
+        units: freeze(["red-panther-shield", "red-panther-smg", "red-panther-knife", "red-panther-smg"]) }),
+      freeze({ at: PREP_SECONDS + 61, wave: 4, label: "指揮官と最後の護衛",
+        units: freeze(["red-panther-shield", "red-panther-commander", "red-panther-smg", "red-panther-knife"]) }),
+    ]);
+  }
+  if (stage.id === V100_CLINICAL_STAGE) {
+    // Each group threatens the corridor in turn. A second detachment cannot
+    // enter while the previous one still occupies the evacuation route.
+    return freeze([
+      freeze({ at: PREP_SECONDS, wave: 1, label: "収容区画の警備隊",
+        units: freeze(["red-panther-shield", "spindle", "red-panther-smg"]) }),
+      freeze({ at: PREP_SECONDS + 17, wave: 2, label: "通路に感染者が侵入", waitForPriorWaveClear: true,
+        units: freeze(["spindle", "cagewalker", "resonator"]) }),
+      freeze({ at: PREP_SECONDS + 34, wave: 3, label: "非常口の警備隊", waitForPriorWaveClear: true,
+        units: freeze(["red-panther-shield", "spindle", "pall-manta"]) }),
+      freeze({ at: PREP_SECONDS + 52, wave: 4, label: "救出路への増援", waitForPriorWaveClear: true,
+        units: freeze(["pall-manta", "red-panther-smg", "cagewalker", "spindle"]) }),
+      freeze({ at: PREP_SECONDS + 72, wave: 5, label: "撤収前の最後の敵", waitForPriorWaveClear: true,
+        units: freeze(["anchor-bloom", "choir-knot", "red-panther-smg", "spindle"]) }),
+    ]);
+  }
   if (missionType === "escort" || missionType === "timed-defense") {
     // Contacts follow distance travelled: a stalled cart cannot exhaust
     // every wave and spend its final half crossing an empty battlefield.
@@ -143,15 +178,16 @@ function stageTimeline(stage, missionType, bossKind) {
         : stage.number <= 20 ? [4, 5, 5, 6, 6, 7]
           : [5, 5, 6, 6, 7, 8];
     const bridgeEscort = stage.id === V100_BRIDGE_STAGE;
+    const convoyInterception = stage.number === 26;
     const escortMilestones = bridgeEscort ? [.20, .42, .57, 1] : [.2, .45, .7, .88];
     return freeze(counts.map((count, index) => freeze({
       at: PREP_SECONDS + (missionType === "escort" ? index * 12 : Math.round(index * (duration - 15) / 5)),
       wave: index + 1,
       label: missionType === "escort" && index >= 2 ? "護送経路 // 迎撃部隊接近" : `${stage.displayName} // 第${index + 1}波`,
       ...(missionType === "escort" && index >= 2 ? { escortProgress: escortMilestones[index - 2] } : {}),
-      // The five approaches and the crossing pursue the truck in sequence;
-      // a new detachment cannot mass on top of the one still blocking it.
-      ...(bridgeEscort && index >= 2 ? { waitForPriorWaveClear: true } : {}),
+      // Clear the previous detachment before fresh guards reach the convoy.
+      ...((bridgeEscort && index >= 2) || (convoyInterception && index >= 1)
+        ? { waitForPriorWaveClear: true } : {}),
       units: freeze(Array.from({ length: count }, () => pack[cursor++ % pack.length])),
     })));
   }
@@ -280,26 +316,66 @@ function stageTimeline(stage, missionType, bossKind) {
         units: freeze(["resonator", "spindle", "pall-manta", "anchor-bloom", "choir-knot"]) }),
     ]);
   }
+  if (stage.number >= 27 && stage.number <= 29) {
+    const [knife, shield, smg, commander] = P;
+    const distribution = stage.number === 28;
+    const core = stage.id === V100_RESEARCH_CORE_STAGE;
+    const patrols = distribution ? [
+      ["管制網 // 第1装置への進路", ["resonator", "spindle", "cagewalker"]],
+      ["管制網 // 第2装置の警備", ["choir-knot", "pall-manta", shield]],
+      ["管制網 // 第3装置の警備", ["anchor-bloom", smg, "spindle", "resonator"]],
+      ["管制網 // 最終装置の防衛", [commander, "anchor-bloom", shield, "pall-manta"]],
+    ] : core ? [
+      ["研究中枢 // 国外回線の警備", [knife, shield, smg]],
+      ["研究中枢 // 回線室の増援", [knife, knife, smg]],
+      ["研究中枢 // 回線室の指揮官", [shield, commander, shield, knife]],
+      ["研究中枢 // 原株区画の警報", [knife, smg, shield, smg]],
+      ["研究中枢 // 原株容器の警備", [smg, shield, knife, knife]],
+      ["研究中枢 // 原株区画の最終防衛", [commander, shield, smg, knife, shield]],
+    ] : [
+      ["研究区画 // 正門の隊長が迎撃", [commander, shield, knife]],
+      ["研究区画 // 射撃班が接近", [shield, smg, knife, knife]],
+      ["研究区画 // 搬入口の警備", [smg, smg, knife, shield]],
+      ["研究区画 // 封鎖装置の最終防衛", [commander, shield, smg, knife, shield]],
+    ];
+    return freeze(patrols.map(([label, units], index) => freeze({
+      at: PREP_SECONDS + index * (distribution ? 12 : 18),
+      wave: index + 1, label, units: freeze(units),
+      ...(distribution && index > 0 ? { waitForPriorWaveClear: true, requiredPowerCount: index } : {}),
+      ...(core && index >= 3 ? { requiredResearchTarget: V100_RESEARCH_TARGETS[0].id } : {}),
+    })));
+  }
   if (stage.number === 30) {
     // Establish the defense before revealing Omega. His two later A-only
-    // reinforcements remain; the prelude contains no Panther units.
+    // reinforcements follow Omega’s actual injuries, even if the earlier waves take longer.
+    const [firstReinforcement, secondReinforcement] = V100_BOSS_BY_ID["boss-takuya-omega"].phaseThresholds;
     return freeze([
-      freeze({ at: PREP_SECONDS, wave: 1, label: "最終防衛 // 先行感染群", units: freeze(["walker", "runner", "spitter", "walker", "runner"]) }),
-      freeze({ at: PREP_SECONDS + 19, wave: 2, label: "最終防衛 // 左翼接敵", units: freeze(["spitter", "crusher", "walker", "runner", "spitter", "runner", "crusher"]) }),
-      freeze({ at: PREP_SECONDS + 38, wave: 3, label: "最終防衛 // 防衛線を確保", units: freeze(["crusher", "runner", "spitter", "walker", "runner", "crusher", "spitter", "runner"]) }),
-      freeze({ at: PREP_SECONDS + 57, wave: 4, label: "最終防衛 // 突破を阻止", units: freeze(["crusher", "spitter", "walker", "runner", "spitter", "walker", "runner", "crusher", "spitter"]) }),
-      freeze({ at: PREP_SECONDS + 78, wave: 5, label: "最終防衛 // 目前の群れ", units: freeze(["runner", "walker", "crusher", "spitter", "runner", "walker", "spitter", "crusher", "runner", "crusher"]) }),
+      freeze({ at: PREP_SECONDS, wave: 1, label: "最終防衛 // 先行感染群", units: freeze(["walker", "runner", "spitter", "walker"]) }),
+      freeze({ at: PREP_SECONDS + 19, advanceOnClearAfter: PREP_SECONDS + 14, wave: 2, label: "最終防衛 // 左翼接敵", waitForPriorWaveClear: true, units: freeze(["spitter", "crusher", "walker", "runner"]) }),
+      freeze({ at: PREP_SECONDS + 38, advanceOnClearAfter: PREP_SECONDS + 31, wave: 3, label: "最終防衛 // 防衛線を確保", waitForPriorWaveClear: true, units: freeze(["crusher", "runner", "spitter", "walker", "runner"]) }),
+      freeze({ at: PREP_SECONDS + 57, advanceOnClearAfter: PREP_SECONDS + 49, wave: 4, label: "最終防衛 // 突破を阻止", waitForPriorWaveClear: true, units: freeze(["crusher", "spitter", "walker", "runner", "spitter"]) }),
+      freeze({ at: PREP_SECONDS + 78, advanceOnClearAfter: PREP_SECONDS + 69, wave: 5, label: "最終防衛 // 目前の群れ", waitForPriorWaveClear: true, units: freeze(["runner", "walker", "crusher", "spitter", "runner", "walker"]) }),
       freeze({ at: PREP_SECONDS + 90, wave: 6, label: `警告 // ${bossLabel}`, units: freeze([bossKind]), waitForPriorWaveClear: true }),
-      freeze({ at: PREP_SECONDS + 116, wave: 7, label: "最終防衛 // 増援1/2", units: freeze(["walker", "runner", "crusher", "spitter", "runner", "walker", "crusher", "spitter"]), addWave: true }),
-      freeze({ at: PREP_SECONDS + 140, wave: 8, label: "最終防衛 // 増援2/2", units: freeze(["spitter", "crusher", "walker", "runner", "spitter", "crusher", "runner", "crusher"]), addWave: true }),
+      freeze({ at: PREP_SECONDS + 116, wave: 7, label: "最終防衛 // 増援1/2", bossHpRatio: firstReinforcement, units: freeze(["walker", "runner", "crusher", "spitter", "runner", "walker", "crusher", "spitter", "walker"]), addWave: true }),
+      freeze({ at: PREP_SECONDS + 140, wave: 8, label: "最終防衛 // 増援2/2", bossHpRatio: secondReinforcement, waitForReinforcementsClear: true, units: freeze(["spitter", "crusher", "walker", "runner", "spitter", "crusher", "runner", "crusher", "spitter", "crusher"]), addWave: true }),
     ]);
   }
-  // Panther commanders can create extra threats while the shield line holds.
-  // Their two boss routes keep the four-wave pressure proven in normal play;
-  // six dense waves leave a summoned backlog that prevents boss entry.
-  const corporateBossRoute = stage.number === 24 || stage.number === 25;
-  const counts = corporateBossRoute ? [2, 2, 3, 3]
-    : stage.number === 23 ? [2, 4, 5, 6, 6, 7]
+  if (stage.number === 24 || stage.number === 25) {
+    const [knife, shield, smg, commander] = P;
+    const twinRoute = stage.number === 24;
+    // Each path has one commander and his own escort. Advancing requires
+    // finishing that detachment before the next one commits to the fight.
+    const groups = twinRoute
+      ? [[shield, shield], [shield, shield], [shield, commander], [bossKind, bossKind]]
+      : [[knife, shield], [smg, knife], [shield, commander], [bossKind]];
+    const labels = ["先行の警備隊", "第二警備隊", "指揮官の護衛", `警告 // ${bossLabel}`];
+    const offsets = [0, 19, 39, 59];
+    return freeze(groups.map((units, index) => freeze({
+      wave: index + 1, at: PREP_SECONDS + offsets[index], label: labels[index], units: freeze(units),
+      ...(index > 0 ? { waitForPriorWaveClear: true, advanceOnClearAfter: PREP_SECONDS + offsets[index] - 5 } : {}),
+    })));
+  }
+  const counts = stage.number === 23 ? [2, 4, 5, 6, 6, 7]
     : stage.number === 1 ? [3, 3, 4, 4, 4]
     : stage.number <= 4 ? [3, 4, 4, 5, 5]
     : stage.number <= 10 ? [4, 4, 5, 5, 6]
@@ -313,9 +389,9 @@ function stageTimeline(stage, missionType, bossKind) {
     const bossArrives = bossKind && wave === counts.length;
     if (bossArrives) units.push(...(bossKind === "futago" ? [bossKind, bossKind] : [bossKind]));
     return freeze({
-      at: PREP_SECONDS + index * (corporateBossRoute ? 24 : stage.number <= 10 ? 20 : 21),
+      at: PREP_SECONDS + index * (stage.number <= 10 ? 20 : 21),
       wave,
-      label: bossArrives ? `警告 // ${bossLabel}` : stage.number === 29 ? `特級研究中枢 // 精鋭第${wave}/6波` : `${stage.displayName} // 第${wave}波`,
+      label: bossArrives ? `警告 // ${bossLabel}` : `${stage.displayName} // 第${wave}波`,
       units: freeze(units),
       ...(bossArrives ? { waitForPriorWaveClear: true } : {}),
       ...(bossArrives ? { bossOnly: false } : {}),
@@ -416,11 +492,15 @@ export function v100BattleDefinitionFor(stageId) {
   const objective = v100MissionObjectiveFor(stageId);
   const phase = phaseScheduleFor(stage, missionType, objective);
   const lureControl = stageId === V100_LURE_CONTROL_STAGE;
+  const clinicalRescue = stageId === V100_CLINICAL_STAGE;
+  const armoryKey = stageId === V100_ARMORY_STAGE;
+  const authoredWaveDensity = [24, 25, 27, 28, 29, 30].includes(stage.number);
+  const medicalDefense = stage.number === 25;
   const authoredTimeline = stageTimeline(stage, missionType, bossKind);
-  // Extra opening guards would reach the vehicle from multiple lanes before
-  // the player could act on the loudspeaker briefing.
-  const timeline = lureControl ? authoredTimeline : withClearDrivenAssaultWaves(
-    v100IncreaseWaveDensity(authoredTimeline, Object.values(BOSS_KIND_BY_V100_ID), { preserveEscalation: missionType === "escort" }),
+  // These two corridor missions have authored patrol size and separation.
+  // Their opening must leave time to act on the device or shield evacuees.
+  const timeline = lureControl || clinicalRescue ? authoredTimeline : withClearDrivenAssaultWaves(
+    armoryKey || authoredWaveDensity ? authoredTimeline : v100IncreaseWaveDensity(authoredTimeline, Object.values(BOSS_KIND_BY_V100_ID), { preserveEscalation: missionType === "escort" }),
     missionType);
   const baseMaxHp = V100_VEHICLE.baseHp;
   const station = missionType === "escort"
@@ -443,9 +523,9 @@ export function v100BattleDefinitionFor(stageId) {
     starThresholds: { 1: 0.01, 2: 0.7, 3: 0.9 },
     // Once a boss falls, breaching its gate is a short finishing action.
     enemyBaseMaxHp: bossKind ? 350 : 1000,
-    enemyBaseMode: !railEvacuation && !bayEvacuation && !estuaryFloodgate
+    enemyBaseMode: !medicalDefense && !railEvacuation && !bayEvacuation && !estuaryFloodgate
       && (missionType === "assault" || missionType === "boss-assault") ? "target" : "scenery",
-    startsEnemyBaseVulnerable: lureControl,
+    startsEnemyBaseVulnerable: lureControl || stage.number === 24 || stageId === V100_RESEARCH_CORE_STAGE,
     bossUnlocksEnemyBase: !railEvacuation && !bayEvacuation && !estuaryFloodgate && Boolean(bossKind),
     bossEnemyKind: bossKind,
     timeline,
@@ -458,6 +538,10 @@ export function v100BattleDefinitionFor(stageId) {
       ...(railEvacuation ? V100_RAIL_EVACUATION : {}),
       ...(bayEvacuation ? V100_BAY_EVACUATION : {}),
       ...(stageId === V100_ARCHIVE_STAGE ? V100_ARCHIVE_EXTRACTION : {}),
+      ...(clinicalRescue ? V100_CLINICAL_RESCUE : {}),
+      ...(armoryKey ? { armoryKey: true } : {}),
+      ...(medicalDefense ? { medicalDefense: true } : {}),
+      ...(stage.number === 24 ? { twinControl: true } : {}),
       ...(stageId === V100_BRIDGE_STAGE ? V100_BRIDGE_ESCORT : {}),
       ...(estuaryFloodgate ? V100_FLOODGATE : {}),
       ...(stageId === V100_RESCUE_CONTROL_STAGE ? V100_RESCUE_CONTROL : {}),

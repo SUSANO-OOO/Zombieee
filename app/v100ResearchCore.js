@@ -26,8 +26,8 @@ export function applyEnemyBaseDamage(game, amount, targetId) {
     game.barricadeHp=Math.max(0,game.barricadeHp-applied);
     return applied;
   }
-  const target=targetId ? game.researchCoreTargets.find(target=>target.id===targetId) : game.researchCoreTargets.find(target=>target.hp>0);
-  if (!target) return 0;
+  const target=game.researchCoreTargets.find(target=>target.hp>0);
+  if (!target || (targetId && target.id!==targetId)) return 0;
   const applied=Math.min(target.hp,damage);
   target.hp=Math.max(0,target.hp-applied);
   game.barricadeHp=game.researchCoreTargets.reduce((sum,target)=>sum+target.hp,0);
@@ -40,9 +40,10 @@ export function researchCoreComplete(targets) {
 }
 
 export function researchCoreObjective(targets) {
-  if (!targets) return "国外起動回線と感染源原株を破壊";
-  const destroyed=targets.filter(target=>target.hp<=0).length;
-  return destroyed===2 ? "二目標破壊完了・残る精鋭部隊を掃討" : `二目標を破壊 ${destroyed}/2：${targets.filter(target=>target.hp>0).map(target=>target.label).join("・")}`;
+  if (!targets) return "国外起動回線を止め、続いて感染源原株を破壊";
+  if (targets[0]?.hp>0) return "0/2 先に国外起動回線を停止";
+  if (targets[1]?.hp>0) return "1/2 回線停止。感染源原株を破壊";
+  return "二目標破壊完了・残る精鋭部隊を掃討";
 }
 
 export function researchCoreVisualState(target) {
@@ -57,12 +58,15 @@ export function drawResearchCoreTargets(context,game,stageObjects,barrier,laneCe
   const cellWidth=sprite.naturalWidth/4,cellHeight=sprite.naturalHeight/2;
   const width=102,height=width*cellHeight/cellWidth,y=laneCenters[2]+18;
   context.save();
+  const active=game.researchCoreTargets.find(target=>target.hp>0);
   for (const target of game.researchCoreTargets) {
     const x=barrier.attackX+target.offsetX;
+    const waiting=target.hp>0 && target!==active;
     context.drawImage(sprite,researchCoreVisualState(target)*cellWidth,target.artRow*cellHeight,cellWidth,cellHeight,x-18,y-height,width,height);
     context.fillStyle="rgba(0,0,0,.82)";context.fillRect(x-13,y-height-21,100,18);
-    context.font="bold 10px sans-serif";context.fillStyle=target.hp<=0?"#b0a58d":"#ead294";
-    context.fillText(target.hp<=0?`${target.label} 破壊済`:target.label,x-9,y-height-8);
+    context.font="bold 10px sans-serif";context.fillStyle=target.hp<=0||waiting?"#b0a58d":"#ead294";
+    const label=target.hp<=0?`${target.label} 破壊済`:waiting?`${target.label} 保護中`:target.label;
+    context.fillText(label,x-9,y-height-8);
     context.fillStyle="#302b25";context.fillRect(x-12,y-height,96,4);
     context.fillStyle=target.hp/target.maxHp<=.3?"#dd704d":"#d9bd64";context.fillRect(x-12,y-height,96*Math.max(0,target.hp)/target.maxHp,3);
   }
