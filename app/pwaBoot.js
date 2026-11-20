@@ -9,7 +9,12 @@ export async function readPwaBootState({ register, readState, readHashes, timeou
         if (!registration) return { registration: null };
         const state = await readState(registration);
         if (!state || state.type === "pwa:error") throw new Error("worker-state-unavailable");
-        const hashes = await readHashes();
+        // The worker reports the same Cache Storage inventory with its manifest.
+        // Read it from the page only for older or incomplete worker responses.
+        const workerHashes = state.type === "pwa:state" && Array.isArray(state.storedHashes)
+          && state.storedHashes.every(hash => typeof hash === "string" && /^sha256-[0-9a-f]{64}$/u.test(hash))
+          ? state.storedHashes : null;
+        const hashes = workerHashes ? new Set(workerHashes) : await readHashes();
         return { registration, state, hashes };
       })(),
       new Promise((_, reject) => { timer = setTimeout(() => reject(new Error("pwa-boot-timeout")), timeoutMs); }),

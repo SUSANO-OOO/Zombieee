@@ -34,3 +34,26 @@ test('a response arriving after timeout cannot publish a late cache state', asyn
   release(new Set(['late'])); await new Promise(resolve => setTimeout(resolve, 5));
   assert.equal(published, false);
 });
+
+test('worker inventory lets an installed pack start with one cache read', async () => {
+  const hash = 'sha256-' + 'a'.repeat(64);
+  const state = { type: 'pwa:state', active: { assets: [{ hash }] }, storedHashes: [hash] };
+  const result = await readPwaBootState({
+    register: async () => ({ scope: '/Zombieee/' }),
+    readState: async () => state,
+    readHashes: () => { throw new Error('duplicate cache read'); },
+  });
+  assert.equal(result.state, state);
+  assert.deepEqual(result.hashes, new Set([hash]));
+});
+
+test('an empty inventory is honored and a malformed one uses the local read', async () => {
+  const hash = 'sha256-' + 'b'.repeat(64);
+  const boot = storedHashes => readPwaBootState({
+    register: async () => ({}),
+    readState: async () => ({ type: 'pwa:state', storedHashes }),
+    readHashes: async () => new Set([hash]),
+  });
+  assert.deepEqual((await boot([])).hashes, new Set());
+  assert.deepEqual((await boot([hash, null])).hashes, new Set([hash]));
+});
