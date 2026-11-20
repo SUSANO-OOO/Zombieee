@@ -707,6 +707,10 @@
     [
       "          {lureControlHud ? (!end && <section className=\"health-hud barrier-health v100-control-health lure-control-health\"",
       "          {armoryKeyStatus ? (!end && <section className=\"health-hud barrier-health v100-control-health archive-objective\"\n            data-armory-key-status={armoryKeyStatus} aria-label={enemyBaseLabel}>\n            <div><span>{enemyBaseLabel}</span><b>{hud.barricadeHp <= 0 ? \"停止\"\n              : hud.barricadeVulnerable ? `${Math.ceil(hud.barricadeHp)} / ${hud.barricadeMaxHp}` : \"護衛中\"}</b></div>\n            {hud.barricadeHp > 0 && <i aria-hidden=\"true\"><em style={{ width: `${barricadePct}%` }} /></i>}\n            {armoryKeyStatus === \"ready\"\n              ? <button type=\"button\" className=\"archive-terminal-action\" onClick={recoverArmoryKey}\n                disabled={paused || Boolean(battleSaveBoundaryRef.current)}>{V100_ARMORY_STATUS_LABELS.ready}</button>\n              : <small>{V100_ARMORY_STATUS_LABELS[armoryKeyStatus]}</small>}\n          </section>) : lureControlHud ? (!end && <section className=\"health-hud barrier-health v100-control-health lure-control-health\""
+    ],
+    [
+      "        {screen === \"battle\" && hud.manualAbilityIcons.map((icon) => {",
+      "        {armoryKeyStatus !== \"ready\" && armoryKeyStatus !== \"secured\" && screen === \"battle\" && hud.manualAbilityIcons.map((icon) => {"
     ]
   ],
   "app/manualAbilities.js": [

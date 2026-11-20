@@ -25892,7 +25892,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           session={externalSession} progress={assetReadiness} assetError={assetError}
           background={backgroundCacheRef.current[activeBattlefieldVisualId]}
           images={spriteRefs.current} onRetry={retryAssets} />}
-        {screen === "battle" && hud.manualAbilityIcons.map((icon) => {
+        {armoryKeyStatus !== "ready" && armoryKeyStatus !== "secured" && screen === "battle" && hud.manualAbilityIcons.map((icon) => {
           const ability = MANUAL_ABILITY_REGISTRY[icon.kind];
           if (!ability) return null;
           const abilityDisabled = !icon.available || paused || Boolean(selectedAction) || combatLocked || battleSaveBoundaryRef.current;
