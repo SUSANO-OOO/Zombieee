@@ -1,5 +1,6 @@
 import { V075_VISUAL_PROFILES } from "./visualProfiles.js";
 import { V100_BAY_BACKGROUND, V100_BAY_EVACUATION_STAGE } from "./v100BayEvacuation.js";
+import { V100_ARCHIVE_BACKGROUND, V100_ARCHIVE_STAGE } from "./v100ArchiveExtraction.js";
 
 export const PRODUCTION_VISUALS = Object.freeze({
   title: "/art/v060/title-key-visual-v1.webp",
@@ -82,6 +83,7 @@ export const V100_STAGE_BACKGROUND_OVERRIDES = Object.freeze({
 
 export function stageVisualFor(stageId) {
   if (stageId === V100_BAY_EVACUATION_STAGE) return V100_BAY_BACKGROUND;
+  if (stageId === V100_ARCHIVE_STAGE) return V100_ARCHIVE_BACKGROUND;
   const battlefieldId = OPERATION_BATTLEFIELD_IDS[stageId] ?? stageId;
   return V100_STAGE_BACKGROUND_OVERRIDES[battlefieldId] ?? PRODUCTION_VISUALS.stages[battlefieldId] ?? "/battlefield-v4.png";
 }

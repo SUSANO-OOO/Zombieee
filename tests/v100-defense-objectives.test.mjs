@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { V100_DEFENSE_OBJECTIVES, v100DefenseStatus } from "../app/v100DefenseObjectives.js";
 import { v100BattleDefinitionFor } from "../app/v100BattleAdapter.js";
+import { hasArchiveExtraction } from "../app/v100ArchiveExtraction.js";
 import { objectiveForBattle, battleOutcomeFor } from "../app/battleDefinitions.js";
 import { v100ClinicalControlState, drawV100ClinicalControl, V100_CLINICAL_CONTROL_ART } from "../app/v100ClinicalControl.js";
 import { requiredBattleAssetPlan } from "../app/battleAssetPlan.js";
@@ -16,7 +17,12 @@ test("all authored defense phases follow real threats, crawler impact and the un
     const game={definition,time:definition.prepSeconds+10,baseHp:920,baseMaxHp:920,fighters:[]};
     const draw=()=>{const before=JSON.stringify(game);assert.equal(drawV100DefensePerimeter(context,game,{'v100-defense-perimeter':image},340,382),true);assert.equal(JSON.stringify(game),before);};
     draw();game.fighters=[{side:'zombie',hp:100,x:400,combatReady:true,gateEntering:false}];draw();game.crawlerHitFlash=.1;draw();
-    game.time=definition.defenseEndAt;draw();assert.equal(battleOutcomeFor(definition,game),'won');
+    game.time=definition.defenseEndAt;draw();
+    if (hasArchiveExtraction(definition.missionType,definition.missionConfig)) {
+      assert.equal(battleOutcomeFor(definition,game),null);
+      game.stageMission={completed:true};
+    }
+    assert.equal(battleOutcomeFor(definition,game),'won');
     game.baseHp=0;draw();assert.equal(battleOutcomeFor(definition,game),'lost');
     assert.deepEqual(frames,[0,392,770,1158,1535]);
     assert.throws(()=>drawV100DefensePerimeter(context,game,{},340,382),/decoded/);

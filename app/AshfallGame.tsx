@@ -617,6 +617,8 @@ import { v100VehicleSprite, v100EscortDestinationState } from "./v100MissionVehi
 import { drawV100MissionNode, V100_NODE_PROFILES, V100_SUPPLY_VALVE } from "./v100MissionNodes.js";
 import { drawV100RailEvacuation, hasRailEvacuation, railEvacuationReadout } from "./v100RailEvacuation.js";
 import { advanceBayEvacuationRuntime, bayEvacuationReadout, drawV100BayEvacuees, hasBayEvacuation, V100_BAY_REFUGEE_COUNT, V100_BAY_ROUTE_Y } from "./v100BayEvacuation.js";
+import { advanceArchiveExtraction, archiveExtractionReadout, drawArchiveExtraction, hasArchiveExtraction,
+  stopArchiveErase, ARCHIVE_BOX_COUNT, ARCHIVE_ROUTE_Y, ARCHIVE_TERMINAL_X } from "./v100ArchiveExtraction.js";
 import { hasRescueControl, rescueControlReadout, V100_RESCUE_CONTROL } from "./v100RescueControl.js";
 import { centralSealCanReinforce, centralSealGateX, centralSealIngressPoint, centralSealReadout, drawV100CentralSealGates, hasCentralSeal } from "./v100CentralSeal.js";
 import { drawV100ClinicalControl } from "./v100ClinicalControl.js";
@@ -1111,6 +1113,12 @@ type StageMissionRuntime = {
   evacuatedCount?: number;
   evacuationBlocked?: boolean;
   evacuationSettling?: number;
+  archiveReady?: boolean;
+  archiveStopped?: boolean;
+  archiveDistances?: readonly number[];
+  archiveMoving?: readonly boolean[];
+  archiveDelivered?: number;
+  archiveBlocked?: boolean;
   powerOperating?: boolean;
   powerOperationStartedAt?: number | null;
   powerInterruptedAt?: number | null;
@@ -9043,6 +9051,9 @@ function drawWorld(
   if (hasBayEvacuation(g.definition.missionType, g.definition.missionConfig)) {
     drawV100BayEvacuees(ctx, g.stageMission, stageObjects, activeYForContentY(V100_BAY_ROUTE_Y));
   }
+  if (hasArchiveExtraction(g.definition.missionType, g.definition.missionConfig)) {
+    drawArchiveExtraction(ctx, g.stageMission, stageObjects, activeYForContentY(ARCHIVE_ROUTE_Y));
+  }
   drawEmergencySupport(ctx, g, stageObjects);
   drawPlacementIndicator(ctx, g.placementIndicator);
 
@@ -9958,6 +9969,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   const activeBattlefieldStageId = externalSession?.stageId ?? (selectedOutbreakMissionId
     ? OUTBREAK_MISSION_BY_ID[selectedOutbreakMissionId]?.prerequisiteStageId ?? selectedStageId
     : selectedStageId);
+  const activeBattlefieldVisualId = !externalSession && selectedOutbreakMissionId
+    ? selectedOutbreakMissionId : activeBattlefieldStageId;
   const [campaignSave, setCampaignSave] = useState<CampaignSave>(() => {
     const clean = createDefaultCampaignSave() as CampaignSave;
     return externalSession ? {
@@ -15545,6 +15558,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     // stage and cancel a second large decode plan.
     const assetStageId = requestedLocalQaScenario?.stageId
       ?? (requestedLegacyQaMode ? CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE : activeBattlefieldStageId);
+    const assetOperationId = requestedLocalQaScenario || requestedLegacyQaMode ? assetStageId : activeBattlefieldVisualId;
     const activeOutbreakEnemyKinds = selectedOutbreakMissionId
       ? OUTBREAK_MISSION_BY_ID[selectedOutbreakMissionId]?.enemyKinds ?? []
       : [];
@@ -15591,6 +15605,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     battleArtworkPolicyRef.current=selectBattleArtworkPolicy(battleArtworkPolicyRef.current,artworkSelectionKey,verifiedBattleArtworkPathsRef.current);
     const requiredPlan = requiredBattleAssetPlan({
       stageId: assetStageId,
+      operationId: assetOperationId,
       useCharacterPortraitCards: externalSessionActive,
       basePresentationStageNumber: externalSessionActive ? V100_STAGE_BY_ID[assetStageId]?.number : null,
       formationKinds: [...selectedFormationKinds, ...selectedVariantKinds],
@@ -15641,13 +15656,13 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       releaseImage(image);
       delete stageObjectRefs.current[id];
     }
-    for (const [stageId, image] of Object.entries(backgroundCacheRef.current)) {
-      if (stageId === assetStageId) continue;
+    for (const [operationId, image] of Object.entries(backgroundCacheRef.current)) {
+      if (operationId === assetOperationId) continue;
       releaseImage(image);
-      delete backgroundCacheRef.current[stageId];
+      delete backgroundCacheRef.current[operationId];
     }
-    if (!backgroundCacheRef.current[assetStageId]) backgroundRef.current = null;
-    const currentBackground = backgroundCacheRef.current[assetStageId];
+    if (!backgroundCacheRef.current[assetOperationId]) backgroundRef.current = null;
+    const currentBackground = backgroundCacheRef.current[assetOperationId];
     const loadedImageByPath = new Map<string, HTMLImageElement>();
     const imageJob = (
       path: string,
@@ -15664,7 +15679,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     });
     const allCriticalJobs = [
       imageJob(requiredPlan.background.path, requiredPlan.background.category, currentBackground, (image) => {
-        backgroundCacheRef.current[assetStageId] = image;
+        backgroundCacheRef.current[assetOperationId] = image;
         backgroundRef.current = image;
       }),
       imageJob(requiredPlan.enemyBase.path, requiredPlan.enemyBase.category, enemyBaseSpriteRef.current, (image) => { enemyBaseSpriteRef.current = image; }),
@@ -15859,7 +15874,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       window.clearTimeout(slowTimer);
       controller.abort();
     };
-  }, [activeBattlefieldStageId, activeOperationId, assetRetryNonce, externalEnemyKindsKey, externalFormationKindsKey, externalSessionActive, formationKindKey, qaMode, qaScenario, selectedOutbreakMissionId, survivalAssetBossKindKey, survivalAssetMode]);
+  }, [activeBattlefieldStageId, activeBattlefieldVisualId, activeOperationId, assetRetryNonce, externalEnemyKindsKey, externalFormationKindsKey, externalSessionActive, formationKindKey, qaMode, qaScenario, selectedOutbreakMissionId, survivalAssetBossKindKey, survivalAssetMode]);
 
   const retryAssets = useCallback(() => {
     const retryPaths = new Set([
@@ -15962,6 +15977,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         const requiredStageId = requestedScenario?.stageId
           ?? (requestedMode ? CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE : activeBattlefieldStageId);
         const activeRequiredPlan = requiredBattleAssetPlan({ stageId: requiredStageId,
+          operationId: requestedScenario || requestedMode ? requiredStageId : activeBattlefieldVisualId,
           useCharacterPortraitCards: externalSessionActive,
           basePresentationStageNumber: externalSessionActive ? V100_STAGE_BY_ID[requiredStageId]?.number : null,
           formationKinds: formationKindKey.split("|").filter(Boolean) });
@@ -16008,6 +16024,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         const exhaustive = localRequested && !finiteEnemy && !finiteVisual && !finiteHud;
         return requiredBattleAssetPlan({
           stageId: requestedStageId,
+          operationId: requestedScenario || requestedMode ? requestedStageId : activeBattlefieldVisualId,
           useCharacterPortraitCards: externalSessionActive,
           basePresentationStageNumber: externalSessionActive ? V100_STAGE_BY_ID[requestedStageId]?.number : null,
           formationKinds: formationKindKey.split("|").filter(Boolean),
@@ -16031,7 +16048,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     return () => {
       if (qaWindow.__ASHFALL_ASSET_QA__ === bridge) delete qaWindow.__ASHFALL_ASSET_QA__;
     };
-  }, [activeBattlefieldStageId, assetError, assetReadiness, assetsReady, formationKindKey, qaMode, qaScenario, retryAssets, screen, selectedOutbreakMissionId]);
+  }, [activeBattlefieldStageId, activeBattlefieldVisualId, assetError, assetReadiness, assetsReady, formationKindKey, qaMode, qaScenario, retryAssets, screen, selectedOutbreakMissionId]);
 
   useEffect(() => {
     const configureCanvas = () => {
@@ -17082,6 +17099,19 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     emitBattleBark(g, "crawler-barrage", "guide", "crawler-barrage");
     return true;
   }, [playCue, playUiOperationCue, rejectBattleSaveBoundary]);
+
+  const stopArchiveTerminal = useCallback(() => {
+    const g = gameRef.current;
+    if (!g.running || g.paused || g.over || g.time < g.definition.prepSeconds
+      || !hasArchiveExtraction(g.definition.missionType, g.definition.missionConfig)) return;
+    if (rejectBattleSaveBoundary("archive-terminal:save-pending")) return;
+    const updated = stopArchiveErase(g.stageMission, g.fighters, activeYForContentY(ARCHIVE_ROUTE_Y));
+    if (updated === g.stageMission) return;
+    g.stageMission = updated;
+    g.banner = "遠隔消去を停止";
+    g.bannerTime = 1.5;
+    playProductionCue(STATION_AUDIO_CUE_IDS.TERMINAL_CONFIRM, ARCHIVE_TERMINAL_X, { priority: 85, maxInstances: 1 });
+  }, [playProductionCue, rejectBattleSaveBoundary]);
 
   const triggerDrumAt = useCallback((x: number, y: number) => {
     const g = gameRef.current;
@@ -20978,6 +21008,17 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             g.banner = "十二人全員の避難完了";
             g.bannerTime = 2;
             playProductionCue(STATION_AUDIO_CUE_IDS.RESCUE_CONFIRM, BASE_X, { priority: 87, maxInstances: 1 });
+          }
+        }
+        if (hasArchiveExtraction(g.definition.missionType, g.definition.missionConfig) && !g.stageMission.completed
+          && g.baseHp > 0 && g.time >= g.definition.prepSeconds) {
+          const previous = g.stageMission;
+          g.stageMission = advanceArchiveExtraction({ runtime: previous, fighters: g.fighters, dt,
+            eventIndex: g.eventIndex, routeY: activeYForContentY(ARCHIVE_ROUTE_Y) });
+          if ((g.stageMission.archiveDelivered ?? 0) > (previous.archiveDelivered ?? 0)) {
+            g.banner = g.stageMission.completed ? "紙台帳の搬出完了" : `紙台帳を搬出 ${g.stageMission.archiveDelivered}/${ARCHIVE_BOX_COUNT}`;
+            g.bannerTime = 1.2;
+            playProductionCue(STATION_AUDIO_CUE_IDS.RESCUE_CONFIRM, BASE_X, { priority: 81, maxInstances: 1 });
           }
         }
         const supplyValvePending = hasSupplyValve(g.definition.missionType, g.definition.missionConfig)
@@ -25237,6 +25278,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 || hasSupplyValve(g.definition.missionType, g.definition.missionConfig)
                 || hasRailEvacuation(g.definition.missionType, g.definition.missionConfig)
                 || hasBayEvacuation(g.definition.missionType, g.definition.missionConfig)
+                || hasArchiveExtraction(g.definition.missionType, g.definition.missionConfig)
                 ? { ...g.stageMission }
                 : undefined,
               researchCoreTargets: g.researchCoreTargets?.map(target => ({...target})),
@@ -25311,6 +25353,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               || hasSupplyValve(g.definition.missionType, g.definition.missionConfig)
               || hasRailEvacuation(g.definition.missionType, g.definition.missionConfig)
               || hasBayEvacuation(g.definition.missionType, g.definition.missionConfig)
+              || hasArchiveExtraction(g.definition.missionType, g.definition.missionConfig)
               ? { ...g.stageMission }
               : undefined,
             researchCoreTargets: g.researchCoreTargets?.map(target => ({...target})),
@@ -25510,7 +25553,11 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     ? centralSealReadout(gameRef.current.stageMission) : null;
   const bayHud = hasBayEvacuation(gameRef.current.definition.missionType, gameRef.current.definition.missionConfig)
     ? bayEvacuationReadout(gameRef.current.stageMission) : null;
-  const phaseName = bayHud ? bayHud.phaseLabel
+  const archiveGame = gameRef.current;
+  const archiveHud = hasArchiveExtraction(archiveGame.definition.missionType, archiveGame.definition.missionConfig)
+    ? archiveExtractionReadout(archiveGame.stageMission, Math.max(0, Math.ceil((archiveGame.definition.defenseEndAt ?? archiveGame.time) - archiveGame.time))) : null;
+  const phaseName = archiveHud ? archiveHud.phaseLabel
+    : bayHud ? bayHud.phaseLabel
     : railHud ? railHud.phaseLabel
     : centralSealHud ? centralSealHud.phaseLabel
     : rescueControlHud ? rescueControlHud.phaseLabel
@@ -25606,7 +25653,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   ] as const).map(([label, state]) => `${label}:${state === "ready" ? "OK" : state === "failed" ? "不可" : state === "retrying" ? "再試行中" : "待機"}`).join(" / ");
   const battleHudFrameStyle = {
     ...(screen === "battle" && assetsReady
-      ? { backgroundImage: `url('${stageVisualFor(activeBattlefieldStageId)}')` }
+      ? { backgroundImage: `url('${stageVisualFor(activeBattlefieldVisualId)}')` }
       : {}),
     ...(battleHudLayout
       ? {
@@ -25658,7 +25705,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         {externalSessionActive && screen === "battle" && selectedAction === "airstrike" && !paused && !end && <div className="v100-targeting-guide" role="status">戦場をタップして航空支援<span>航空支援をもう一度押すと取り消し</span></div>}
         {externalSession && (!assetsReady || assetError) && <V100BattleDeparture
           session={externalSession} progress={assetReadiness} assetError={assetError}
-          background={backgroundCacheRef.current[activeBattlefieldStageId]}
+          background={backgroundCacheRef.current[activeBattlefieldVisualId]}
           images={spriteRefs.current} onRetry={retryAssets} />}
         {screen === "battle" && hud.manualAbilityIcons.map((icon) => {
           const ability = MANUAL_ABILITY_REGISTRY[icon.kind];
@@ -25769,7 +25816,14 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           </div>
           {hud.bossTelegraphWarning && !end && <div className="v100-boss-telegraph-warning" role="alert" data-boss-telegraph-warning="true">{formatBattleText(hud.bossTelegraphWarning)}</div>}
 
-          {(bayHud || (externalSessionActive && bossHealthPanel)) ? null : railHud
+          {archiveHud ? (!end && <section className="health-hud barrier-health archive-objective"
+            data-archive-phase={archiveHud.phase} data-archive-delivered={archiveHud.count} aria-label="紙台帳の搬出">
+            <div><span>紙台帳</span><b>{archiveHud.count}/{ARCHIVE_BOX_COUNT} 箱</b></div>
+            {archiveHud.phase === "erasing" || archiveHud.phase === "ready"
+              ? <button type="button" className="archive-terminal-action" onClick={stopArchiveTerminal}
+                disabled={archiveHud.phase !== "ready" || paused || Boolean(battleSaveBoundaryRef.current)}>消去を止める</button>
+              : <small>{archiveHud.phase === "secured" ? "搬出完了" : "消去停止済み"}{archiveHud.remaining > 0 && `・残り${archiveHud.remaining}秒`}</small>}
+          </section>) : (bayHud || (externalSessionActive && bossHealthPanel)) ? null : railHud
             ? <div className="health-hud barrier-health rail-evacuation-objective" data-rail-state={railHud.phase} aria-label={`${railHud.label} ${railHud.status}`}>
               <div><span>{railHud.label}</span><b>{railHud.status}</b></div>
               <i><em style={{ width: `${railHud.progress * 100}%` }} /></i>

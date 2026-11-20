@@ -41,7 +41,10 @@ test("all five outbreak operations build real boss-assault definitions on their 
     assert.equal(definition.missionConfig.spawnProfile, "right-edge-outside-boss");
     assert.equal(definition.timeline.length, mission.waves.length);
     assert.equal(definition.timeline.at(-1).units.includes(mission.boss.enemyKind), true);
-    if (mission.prerequisiteStageId === "stage-bay-tower-service") {
+    if (mission.prerequisiteStageId === "stage-civic-archive-route") {
+      assert.equal(stageVisualFor(mission.id), "/art/v090/stages/civic-archive-route-background-v1.webp");
+      assert.notEqual(stageVisualFor(mission.id), stageVisualFor(mission.prerequisiteStageId));
+    } else if (mission.prerequisiteStageId === "stage-bay-tower-service") {
       assert.equal(stageVisualFor(mission.id), "/art/v090/stages/bay-tower-service-background-v1.webp");
       assert.notEqual(stageVisualFor(mission.id), stageVisualFor(mission.prerequisiteStageId));
     } else {

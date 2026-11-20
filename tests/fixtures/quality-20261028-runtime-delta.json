@@ -2782,6 +2782,22 @@
       "pack": "campaign-core",
       "category": "background",
       "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/mission-objects/s18-archive-extraction-r1.webp",
+      "bytes": 27898,
+      "hash": "sha256-e7b191fd540946076f1a144b51728d1228991060063a5ca9a5ae885e20c2443f",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/stages/s18-civic-archive-basement-r1.webp",
+      "bytes": 177150,
+      "hash": "sha256-e6d325d77d1a6c7239732fe18bd264b79f46add82f92ce83c19be876b2295762",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
     }
   ],
   "retired": [

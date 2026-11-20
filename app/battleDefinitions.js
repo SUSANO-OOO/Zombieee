@@ -11,6 +11,7 @@ import { v100BattleDefinitionFor } from "./v100BattleAdapter.js";
 import { researchCoreComplete, researchCoreObjective } from "./v100ResearchCore.js";
 import { hasRailEvacuation } from "./v100RailEvacuation.js";
 import { bayEvacuationObjective, hasBayEvacuation } from "./v100BayEvacuation.js";
+import { archiveExtractionReadout, hasArchiveExtraction } from "./v100ArchiveExtraction.js";
 import { v100DefenseStatus } from "./v100DefenseObjectives.js";
 import { v100CorporateControlLabel } from "./v100CorporateControl.js";
 
@@ -161,6 +162,10 @@ export function objectiveForBattle(definition, state) {
   if ([3, 30].includes(definition.missionConfig?.v100StageNumber)) {
     return state.bossDefeated ? "残存感染体を掃討" : definition.objective;
   }
+  if (hasArchiveExtraction(definition.missionType, definition.missionConfig)) {
+    const remaining = Math.max(0, Math.ceil(definition.defenseEndAt - state.time));
+    return archiveExtractionReadout(state.stageMission, remaining).objective;
+  }
   const defense = v100DefenseStatus(definition, state);
   if (defense) return defense.objective;
   if (definition.operationCategory === "outbreak") {
@@ -254,6 +259,7 @@ export function battleOutcomeFor(definition, state) {
   }
   if (definition.missionType === "timed-defense") {
     if (state.time < definition.defenseEndAt) return null;
+    if (hasArchiveExtraction(definition.missionType, definition.missionConfig) && !state.stageMission?.completed) return null;
     return hasClearHp ? "won" : "lost";
   }
   if (definition.bossUnlocksEnemyBase

@@ -33,6 +33,9 @@ test("the corridor retains the story boss and all six enemies, with a decoded ci
   assert.notEqual(stageVisualFor("outbreak-mother-brood-vault"),V100_BAY_BACKGROUND);
   const plan=requiredBattleAssetPlan({stageId,basePresentationStageNumber:17});
   assert.ok(plan.paths.includes(V100_BAY_EVACUATION_ART.path)&&plan.paths.includes(V100_BAY_BACKGROUND));
+  const outbreak = requiredBattleAssetPlan({stageId,operationId:"outbreak-mother-brood-vault"});
+  assert.ok(!outbreak.paths.includes(V100_BAY_EVACUATION_ART.path));
+  assert.equal(outbreak.background.path, stageVisualFor("outbreak-mother-brood-vault"));
 });
 
 test("the group shelters when a living enemy or an aimed beam threatens its crossing",()=>{

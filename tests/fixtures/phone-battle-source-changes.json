@@ -375,6 +375,94 @@
     [
       "<div className=\"battle-objective objective\">{isSurvivalBattle ? \"防衛前線を維持\" : `目標：${formatBattleText(hud.objective)}`}</div>",
       "<div className=\"battle-objective objective\">\n              {bayHud && <span className=\"bay-evacuation-objective\" data-bay-evacuation={bayHud.phase}\n                data-evacuated-count={bayHud.count} aria-label={`${bayHud.label} ${bayHud.status}`}>避難 {bayHud.count}/{bayHud.total}</span>}\n              {isSurvivalBattle ? \"防衛前線を維持\" : `目標：${formatBattleText(hud.objective)}`}\n            </div>"
+    ],
+    [
+      "import { advanceBayEvacuationRuntime, bayEvacuationReadout, drawV100BayEvacuees, hasBayEvacuation, V100_BAY_REFUGEE_COUNT, V100_BAY_ROUTE_Y } from \"./v100BayEvacuation.js\";",
+      "import { advanceBayEvacuationRuntime, bayEvacuationReadout, drawV100BayEvacuees, hasBayEvacuation, V100_BAY_REFUGEE_COUNT, V100_BAY_ROUTE_Y } from \"./v100BayEvacuation.js\";\nimport { advanceArchiveExtraction, archiveExtractionReadout, drawArchiveExtraction, hasArchiveExtraction,\n  stopArchiveErase, ARCHIVE_BOX_COUNT, ARCHIVE_ROUTE_Y, ARCHIVE_TERMINAL_X } from \"./v100ArchiveExtraction.js\";"
+    ],
+    [
+      "  evacuationSettling?: number;",
+      "  evacuationSettling?: number;\n  archiveReady?: boolean;\n  archiveStopped?: boolean;\n  archiveDistances?: readonly number[];\n  archiveMoving?: readonly boolean[];\n  archiveDelivered?: number;\n  archiveBlocked?: boolean;"
+    ],
+    [
+      "  if (hasBayEvacuation(g.definition.missionType, g.definition.missionConfig)) {\n    drawV100BayEvacuees(ctx, g.stageMission, stageObjects, activeYForContentY(V100_BAY_ROUTE_Y));\n  }",
+      "  if (hasBayEvacuation(g.definition.missionType, g.definition.missionConfig)) {\n    drawV100BayEvacuees(ctx, g.stageMission, stageObjects, activeYForContentY(V100_BAY_ROUTE_Y));\n  }\n  if (hasArchiveExtraction(g.definition.missionType, g.definition.missionConfig)) {\n    drawArchiveExtraction(ctx, g.stageMission, stageObjects, activeYForContentY(ARCHIVE_ROUTE_Y));\n  }"
+    ],
+    [
+      "  const triggerDrumAt = useCallback((x: number, y: number) => {",
+      "  const stopArchiveTerminal = useCallback(() => {\n    const g = gameRef.current;\n    if (!g.running || g.paused || g.over || g.time < g.definition.prepSeconds\n      || !hasArchiveExtraction(g.definition.missionType, g.definition.missionConfig)) return;\n    if (rejectBattleSaveBoundary(\"archive-terminal:save-pending\")) return;\n    const updated = stopArchiveErase(g.stageMission, g.fighters, activeYForContentY(ARCHIVE_ROUTE_Y));\n    if (updated === g.stageMission) return;\n    g.stageMission = updated;\n    g.banner = \"遠隔消去を停止\";\n    g.bannerTime = 1.5;\n    playProductionCue(STATION_AUDIO_CUE_IDS.TERMINAL_CONFIRM, ARCHIVE_TERMINAL_X, { priority: 85, maxInstances: 1 });\n  }, [playProductionCue, rejectBattleSaveBoundary]);\n\n  const triggerDrumAt = useCallback((x: number, y: number) => {"
+    ],
+    [
+      "        const supplyValvePending = hasSupplyValve(g.definition.missionType, g.definition.missionConfig)\n          && (g.stageMission.powerActivated ?? 0) < 1;",
+      "        if (hasArchiveExtraction(g.definition.missionType, g.definition.missionConfig) && !g.stageMission.completed\n          && g.baseHp > 0 && g.time >= g.definition.prepSeconds) {\n          const previous = g.stageMission;\n          g.stageMission = advanceArchiveExtraction({ runtime: previous, fighters: g.fighters, dt,\n            eventIndex: g.eventIndex, routeY: activeYForContentY(ARCHIVE_ROUTE_Y) });\n          if ((g.stageMission.archiveDelivered ?? 0) > (previous.archiveDelivered ?? 0)) {\n            g.banner = g.stageMission.completed ? \"紙台帳の搬出完了\" : `紙台帳を搬出 ${g.stageMission.archiveDelivered}/${ARCHIVE_BOX_COUNT}`;\n            g.bannerTime = 1.2;\n            playProductionCue(STATION_AUDIO_CUE_IDS.RESCUE_CONFIRM, BASE_X, { priority: 81, maxInstances: 1 });\n          }\n        }\n        const supplyValvePending = hasSupplyValve(g.definition.missionType, g.definition.missionConfig)\n          && (g.stageMission.powerActivated ?? 0) < 1;"
+    ],
+    [
+      "                || hasBayEvacuation(g.definition.missionType, g.definition.missionConfig)\n                ? { ...g.stageMission }",
+      "                || hasBayEvacuation(g.definition.missionType, g.definition.missionConfig)\n                || hasArchiveExtraction(g.definition.missionType, g.definition.missionConfig)\n                ? { ...g.stageMission }"
+    ],
+    [
+      "              || hasBayEvacuation(g.definition.missionType, g.definition.missionConfig)\n              ? { ...g.stageMission }",
+      "              || hasBayEvacuation(g.definition.missionType, g.definition.missionConfig)\n              || hasArchiveExtraction(g.definition.missionType, g.definition.missionConfig)\n              ? { ...g.stageMission }"
+    ],
+    [
+      "  const phaseName = bayHud ? bayHud.phaseLabel",
+      "  const archiveGame = gameRef.current;\n  const archiveHud = hasArchiveExtraction(archiveGame.definition.missionType, archiveGame.definition.missionConfig)\n    ? archiveExtractionReadout(archiveGame.stageMission, Math.max(0, Math.ceil(archiveGame.definition.defenseEndAt - archiveGame.time))) : null;\n  const phaseName = archiveHud ? archiveHud.phaseLabel\n    : bayHud ? bayHud.phaseLabel"
+    ],
+    [
+      "          {(bayHud || (externalSessionActive && bossHealthPanel)) ? null : railHud",
+      "          {archiveHud ? (!end && <section className=\"health-hud barrier-health archive-objective\"\n            data-archive-phase={archiveHud.phase} data-archive-delivered={archiveHud.count} aria-label=\"紙台帳の搬出\">\n            <div><span>紙台帳</span><b>{archiveHud.count}/{ARCHIVE_BOX_COUNT} 箱</b></div>\n            {archiveHud.phase === \"erasing\" || archiveHud.phase === \"ready\"\n              ? <button type=\"button\" className=\"archive-terminal-action\" onClick={stopArchiveTerminal}\n                disabled={archiveHud.phase !== \"ready\" || paused || Boolean(battleSaveBoundaryRef.current)}>消去を止める</button>\n              : <small>{archiveHud.phase === \"secured\" ? \"搬出完了\" : \"遠隔消去 停止済み\"}{archiveHud.remaining > 0 && `・防衛 あと${archiveHud.remaining}秒`}</small>}\n          </section>) : (bayHud || (externalSessionActive && bossHealthPanel)) ? null : railHud"
+    ],
+    [
+      "  const activeBattlefieldStageId = externalSession?.stageId ?? (selectedOutbreakMissionId\n    ? OUTBREAK_MISSION_BY_ID[selectedOutbreakMissionId]?.prerequisiteStageId ?? selectedStageId\n    : selectedStageId);",
+      "  const activeBattlefieldStageId = externalSession?.stageId ?? (selectedOutbreakMissionId\n    ? OUTBREAK_MISSION_BY_ID[selectedOutbreakMissionId]?.prerequisiteStageId ?? selectedStageId\n    : selectedStageId);\n  const activeBattlefieldVisualId = !externalSession && selectedOutbreakMissionId\n    ? selectedOutbreakMissionId : activeBattlefieldStageId;"
+    ],
+    [
+      "    const assetStageId = requestedLocalQaScenario?.stageId\n      ?? (requestedLegacyQaMode ? CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE : activeBattlefieldStageId);",
+      "    const assetStageId = requestedLocalQaScenario?.stageId\n      ?? (requestedLegacyQaMode ? CAMPAIGN_STAGE_IDS.NISHIJIN_DEFENSE_LINE : activeBattlefieldStageId);\n    const assetOperationId = requestedLocalQaScenario || requestedLegacyQaMode ? assetStageId : activeBattlefieldVisualId;"
+    ],
+    [
+      "    const requiredPlan = requiredBattleAssetPlan({\n      stageId: assetStageId,",
+      "    const requiredPlan = requiredBattleAssetPlan({\n      stageId: assetStageId,\n      operationId: assetOperationId,"
+    ],
+    [
+      "    for (const [stageId, image] of Object.entries(backgroundCacheRef.current)) {\n      if (stageId === assetStageId) continue;\n      releaseImage(image);\n      delete backgroundCacheRef.current[stageId];\n    }\n    if (!backgroundCacheRef.current[assetStageId]) backgroundRef.current = null;\n    const currentBackground = backgroundCacheRef.current[assetStageId];",
+      "    for (const [operationId, image] of Object.entries(backgroundCacheRef.current)) {\n      if (operationId === assetOperationId) continue;\n      releaseImage(image);\n      delete backgroundCacheRef.current[operationId];\n    }\n    if (!backgroundCacheRef.current[assetOperationId]) backgroundRef.current = null;\n    const currentBackground = backgroundCacheRef.current[assetOperationId];"
+    ],
+    [
+      "backgroundCacheRef.current[assetStageId] = image;",
+      "backgroundCacheRef.current[assetOperationId] = image;"
+    ],
+    [
+      "const activeRequiredPlan = requiredBattleAssetPlan({ stageId: requiredStageId,",
+      "const activeRequiredPlan = requiredBattleAssetPlan({ stageId: requiredStageId,\n          operationId: requestedScenario || requestedMode ? requiredStageId : activeBattlefieldVisualId,"
+    ],
+    [
+      "        return requiredBattleAssetPlan({\n          stageId: requestedStageId,",
+      "        return requiredBattleAssetPlan({\n          stageId: requestedStageId,\n          operationId: requestedScenario || requestedMode ? requestedStageId : activeBattlefieldVisualId,"
+    ],
+    [
+      "stageVisualFor(activeBattlefieldStageId)",
+      "stageVisualFor(activeBattlefieldVisualId)"
+    ],
+    [
+      "background={backgroundCacheRef.current[activeBattlefieldStageId]}",
+      "background={backgroundCacheRef.current[activeBattlefieldVisualId]}"
+    ],
+    [
+      "[activeBattlefieldStageId, activeOperationId, assetRetryNonce,",
+      "[activeBattlefieldStageId, activeBattlefieldVisualId, activeOperationId, assetRetryNonce,"
+    ],
+    [
+      "archiveGame.definition.defenseEndAt - archiveGame.time",
+      "(archiveGame.definition.defenseEndAt ?? archiveGame.time) - archiveGame.time"
+    ],
+    [
+      "? \"搬出完了\" : \"遠隔消去 停止済み\"}{archiveHud.remaining > 0 && `・防衛 あと${archiveHud.remaining}秒`",
+      "? \"搬出完了\" : \"消去停止済み\"}{archiveHud.remaining > 0 && `・残り${archiveHud.remaining}秒`"
+    ],
+    [
+      "[activeBattlefieldStageId, assetError, assetReadiness,",
+      "[activeBattlefieldStageId, activeBattlefieldVisualId, assetError, assetReadiness,"
     ]
   ],
   "app/manualAbilities.js": [

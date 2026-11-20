@@ -423,7 +423,7 @@ test("ships the three-route battlefield art with stage-aware objectives and the 
   assert.match(game, /const optionalJobs = optionalBattleArtworkJobs\(\{/);
   assert.match(assetPlan, /STAGE_OBJECT_MANIFEST\[stageId\]\?\.objects \?\? \[\]/);
   assert.match(game, /const retainedSpriteImages = new Set\([\s\S]*if \(!retainedSpriteImages\.has\(image\) && !releasedSpriteImages\.has\(image\)\)[\s\S]*releaseImage\(image\)/);
-  assert.match(game, /delete backgroundCacheRef\.current\[stageId\];[\s\S]*const allCriticalJobs = \[/);
+  assert.match(game, /delete backgroundCacheRef\.current\[operationId\];[\s\S]*const allCriticalJobs = \[/);
   assert.match(game, /root\.dataset\.assetResidentScope = finiteEnemyRuntimeQa[\s\S]*"finite-enemy-runtime-qa"[\s\S]*finiteVisualIntegrityQa[\s\S]*"finite-visual-integrity-qa"[\s\S]*qaMode \|\| qaScenario \? "all-local-qa" : "stage-and-formation"/);
   assert.match(game, /root\.dataset\.assetResidentBackgrounds = String\(Object\.keys\(backgroundCacheRef\.current\)\.length\)/);
   assert.doesNotMatch(game, /const cached = backgroundCacheRef\.current\[selectedStageId\]/);
@@ -557,7 +557,7 @@ test("keeps the battlefield centered in the visual viewport while routing across
   assert.match(game, /hud\.banner && <p className="battle-banner" data-message-kind="banner">\{formatBattleText\(hud\.banner\)\}<\/p>/);
   for (const label of ["投下ポッド", "爆薬ドラム", "救護所", "航空支援", "一斉掃射"]) assert.match(game, new RegExp(label));
   assert.doesNotMatch(css, /battle-nishijin-shopping-street-v1\.webp/);
-  assert.match(game, /const battleHudFrameStyle = \{[\s\S]*backgroundImage: `url\('\$\{stageVisualFor\(activeBattlefieldStageId\)\}'\)`/);
+  assert.match(game, /const battleHudFrameStyle = \{[\s\S]*backgroundImage: `url\('\$\{stageVisualFor\(activeBattlefieldVisualId\)\}'\)`/);
   assert.match(game, /data-battle-hud-layout=\{battleHudLayout \? "mobile" : undefined\}/);
   assert.match(game, /style=\{battleHudFrameStyle\}/);
   for (const edge of ["top", "right", "bottom", "left"]) {

@@ -2345,6 +2345,14 @@
       "criticality": "critical"
     },
     {
+      "path": "/art/v100/mission-objects/s18-archive-extraction-r1.webp",
+      "bytes": 27898,
+      "hash": "sha256-e7b191fd540946076f1a144b51728d1228991060063a5ca9a5ae885e20c2443f",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
+    },
+    {
       "path": "/art/v100/mission-objects/sealed-transport-damaged-v1.webp",
       "bytes": 1342174,
       "hash": "sha256-f5dde41efd128d5ac735835ed5fefe26ac449b8b82b01c7a02c4826a1dcd12f5",
@@ -3598,6 +3606,14 @@
       "path": "/art/v100/stages/s17-bay-emergency-gallery-r1.webp",
       "bytes": 216910,
       "hash": "sha256-02d445b47552ea77f15fa979ae127006a93ec561d5161c0bb9f0f266a6f49f4d",
+      "pack": "campaign-core",
+      "category": "background",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/stages/s18-civic-archive-basement-r1.webp",
+      "bytes": 177150,
+      "hash": "sha256-e6d325d77d1a6c7239732fe18bd264b79f46add82f92ce83c19be876b2295762",
       "pack": "campaign-core",
       "category": "background",
       "criticality": "critical"
