@@ -97,6 +97,86 @@
 }
 .v100-shell .game-frame[data-battle-hud-layout="mobile"] .unit-cards { counter-reset: command-slot; }
 .v100-shell .game-frame[data-battle-hud-layout="mobile"] .unit-cards > .unit-card { counter-increment: command-slot; }
+/* Keep every fitted card complete and leave room for two lines of the
+   longest names. On narrower landscape screens the deck stays pannable. */
+.v100-shell .game-frame[data-battle-hud-layout="mobile"] .bottom-hud {
+  container: command-deck / inline-size;
+}
+.v100-shell .game-frame[data-battle-hud-layout="mobile"] .unit-cards {
+  --command-card-width: calc((100% - 3px) / 2);
+}
+.v100-shell .game-frame[data-battle-hud-layout="mobile"] .unit-cards > .unit-card {
+  flex: 0 0 var(--command-card-width);
+  width: auto;
+  min-width: 0;
+  max-width: none;
+  min-height: 44px;
+}
+.v100-shell .game-frame[data-battle-hud-layout="mobile"] .unit-cards > .v100-deploy-card {
+  grid-template-columns: clamp(20px,24%,34px) minmax(0,1fr);
+  grid-template-rows: 28px minmax(0,1fr);
+}
+.v100-shell .game-frame[data-battle-hud-layout="mobile"] .v100-deploy-heading {
+  min-width: 0;
+  padding: 0 2px;
+}
+.v100-shell .game-frame[data-battle-hud-layout="mobile"] .v100-deploy-card .v100-deploy-name {
+  min-width: 0;
+  line-height: 14px;
+  white-space: normal;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+.v100-shell .game-frame[data-battle-hud-layout="mobile"] .v100-deploy-cost {
+  display: grid;
+  justify-items: end;
+  gap: 0;
+}
+.v100-shell .game-frame[data-battle-hud-layout="mobile"] .v100-deploy-cost small {
+  font-size: 10px;
+  line-height: 10px;
+}
+.v100-shell .game-frame[data-battle-hud-layout="mobile"] .v100-deploy-cost b {
+  font-size: 14px;
+  line-height: 14px;
+}
+.v100-shell .game-frame[data-battle-hud-layout="mobile"] .v100-deploy-readout {
+  gap: 0;
+  padding: 0 2px;
+}
+.v100-shell .game-frame[data-battle-hud-layout="mobile"] .v100-deploy-status,
+.v100-shell .game-frame[data-battle-hud-layout="mobile"] .v100-deploy-shortage {
+  font-size: 12px;
+  line-height: 14px;
+  letter-spacing: -.025em;
+}
+.v100-shell .game-frame[data-battle-hud-layout="mobile"] .v100-deploy-shortage {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.v100-shell .game-frame[data-battle-hud-layout="mobile"] .battle-objective::before {
+  flex: none;
+  margin-right: auto;
+  padding-right: 8px;
+  color: #e4c890;
+  font: 700 12px/1 var(--v100-reading-font);
+}
+@container command-deck (width >= 812px) {
+  .v100-shell .game-frame[data-battle-hud-layout="mobile"] .v100-deploy-name { line-break: strict; }
+}
+@container command-deck (width >= 578px) {
+  .v100-shell .game-frame[data-battle-hud-layout="mobile"] .unit-cards { --command-card-width: calc((100% - 6px) / 3); }
+}
+@container command-deck (width >= 738px) {
+  .v100-shell .game-frame[data-battle-hud-layout="mobile"] .unit-cards { --command-card-width: calc((100% - 9px) / 4); }
+  .bottom-hud:has(.unit-cards > .v100-deploy-card:nth-child(n+5)) .battle-objective::before { content: "カードを横にスライド"; }
+}
+@container command-deck (578px <= width < 738px) {
+  .bottom-hud:has(.unit-cards > .v100-deploy-card:nth-child(n+4)) .battle-objective::before { content: "カードを横にスライド"; }
+}
+@container command-deck (width < 578px) {
+  .bottom-hud:has(.unit-cards > .v100-deploy-card:nth-child(n+3)) .battle-objective::before { content: "カードを横にスライド"; }
+}
 .v100-shell .game-frame[data-battle-hud-layout="mobile"] .unit-card.v100-deploy-card {
   border-radius: 0;
   border: 0; border-top: 2px solid #c1b67e; border-bottom: 2px solid #080f0a;

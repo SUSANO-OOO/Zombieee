@@ -320,6 +320,11 @@ for (const engine of engines) {
           row.mission = await diagram.getAttribute("data-v100-mission-mode");
           row.diagram = await diagramWithin(diagram);
           await within(popup);
+          if (number === 2) {
+            const advice = popup.locator(".v100-briefing-advice");
+            row.earlySupportAdvice = await within(advice);
+            assert.ok(row.earlySupportAdvice.bottom <= row.diagram.y, "Show the Stage 2 support tip before the mission diagram");
+          }
           row.briefing = await popup.innerText();
           await popup.evaluate(element => { element.scrollTop = element.scrollHeight; });
           await capture(page, row, "intel");

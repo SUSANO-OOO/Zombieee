@@ -10,6 +10,22 @@ const contactKinds=new Set(['brawler','shade','walker','runner','turned','sprint
  'gairen','mugarian-president-mutated','futago','futago-separated-a','futago-separated-b']);
 const swingKinds=new Set(['scout','brute','guardian','gate-eater','red-panther-shield','red-panther-knife','tky','miyamoto-musashi','crazy-king','kumaverson','takuya','takuya-omega','zakimiya']);
 const kinds=new Set(['babayaga',...swingKinds,...contactKinds]);
+// Overdrive draws the running saw in at the waist, braces through the first
+// kick and then sends the saw forward before normal attacks can begin.
+// Source-space keys: progress, body x/y/lean, saw x/y/pitch.
+const chainsawRevFrames=[
+ [0,0,0,0,0,0,.15],
+ [.22,-9,10,.19,-18,10,.44],
+ [.43,-14,16,.23,-26,13,.58],
+ [.56,1,10,.11,14,2,.13],
+ [.68,-7,11,.18,-9,9,.44],
+ [.84,10,4,-.07,28,-7,-.10],
+ [1,0,0,0,0,0,.15],
+];
+function sampleChainsawRev(progress){
+ const [bodyX,bodyY,lean,sawX,sawY,pitch]=keys(progress,chainsawRevFrames);
+ return {bodyX,bodyY,lean,sawX,sawY,pitch};
+}
 const carryPlans=new WeakMap();
 const carryMotion={
  // Paisen's far fist shares the leg-0 side. Counter-swing it against that
@@ -217,6 +233,8 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
  const weight=attacking?keys(p,[[0,0],[.18,-1],[.23,-1],[.28,.8],[.48,1],[.64,.8],[1,0]])[0]:0;
  const intercept=kind==='scout'&&plan.abilityPresentation==='scout-intercept';
  const assessing=kind==='babayaga'&&plan.abilityPresentation==='weak-point-assessment';
+ const rev=kind==='crazy-king'&&plan.abilityPresentation==='chainsaw-rev'
+  ?sampleChainsawRev(p/atlas.attackBoundaries[0]):null;
  const assessment=assessing?keys(p,[[0,0],[.085,1],[.18,1],[.27,.18],[.43,0],[1,0]])[0]:0;
  const heavy=['brute','guardian','gate-eater','red-panther-shield','crazy-king','kumaverson','takuya','takuya-omega','crusher','abomination','gairen'].includes(kind);
  // Kuma raises the bowl over his crown, then folds forward into the slam.
@@ -225,8 +243,10 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
  // then rises out of the follow-through on the existing ability clock.
  const [drive,crouch,lean]=intercept?keys(p,[[0,0,0,0],[.22,-9,16,.34],[.28,0,14,.39],
   [.40,18,9,.47],[.57,10,6,.30],[1,0,0,0]]):[0,0,0];
- const bodyAngle=intercept?lean:kind==='kumaverson'?keys(p,[[0,0],[.18,.10],[.23,.10],[.28,.27],[.48,.42],[.64,.35],[1,0]])[0]:kind==='babayaga'?.18*assessment:(kind==='brute'?.70:kind==='mugarian-president-mutated'?.50:heavy?.21:.17)*weight;
- const torso=rigid(waist,[waist[0]+(intercept?drive:weight*(heavy?13:9)),waist[1]+(intercept?crouch:Math.abs(weight)*(kind==='mugarian-president-mutated'?30:heavy?5:3))],bodyAngle);
+ const bodyAngle=rev?.lean??(intercept?lean:kind==='kumaverson'?keys(p,[[0,0],[.18,.10],[.23,.10],[.28,.27],[.48,.42],[.64,.35],[1,0]])[0]:kind==='babayaga'?.18*assessment:(kind==='brute'?.70:kind==='mugarian-president-mutated'?.50:heavy?.21:.17)*weight);
+ const torsoX=rev?.bodyX??(intercept?drive:weight*(heavy?13:9));
+ const torsoY=rev?.bodyY??(intercept?crouch:Math.abs(weight)*(kind==='mugarian-president-mutated'?30:heavy?5:3));
+ const torso=rigid(waist,[waist[0]+torsoX,waist[1]+torsoY],bodyAngle);
  for(const [bone,m]of Object.entries(base)){
   const pivot=atlas.interpolationPivots?.[bone]??[0,0];
   upper[bone]=multiply(torso,rigid(pivot,point(m,pivot),Math.atan2(m[1],m[0])));
@@ -312,8 +332,10 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
   // Both grips belong to the motor housing. Sweep its long bar across the
   // front of the body; never rotate the bar behind the hips at impact.
   const sourceDirection=Math.atan2(atlas.muzzle[1]-pivot[1],atlas.muzzle[0]-pivot[0]);
-  const carry=atlas.weaponCarryPosition??[227,205],local=attacking?shoulderTarget(primary,p,carry,[[.18,44,-11],[.23,44,-11],[.28,59,37],[.48,44,50],[.64,44,50]]):carry;
-  angle=(attacking?swingAngle(p,.15,-2.15,-.05,.8):.15)-sourceDirection;
+  const carry=atlas.weaponCarryPosition??[227,205];
+  const local=rev?[carry[0]+rev.sawX,carry[1]+rev.sawY]
+   :attacking?shoulderTarget(primary,p,carry,[[.18,44,-11],[.23,44,-11],[.28,59,37],[.48,44,50],[.64,44,50]]):carry;
+  angle=(rev?.pitch??(attacking?swingAngle(p,.15,-2.15,-.05,.8):.15))-sourceDirection;
   upper['weapon-0']=multiply(torso,rigid(pivot,local,angle));
   // Older paint has a separate support hand. Complete combat paint already
   // binds both hands to this weapon and supplies their own source positions.
@@ -385,11 +407,11 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
   upper['arm-1-hand']=rigid(arms[1].wrist,hand,Math.atan2(m[1],m[0]));
  }
  const frontBones=(!attacking||['crazy-king','babayaga','kumaverson','takuya-omega'].includes(kind)||p>.06&&p<.94)?arms.flatMap(c=>[c.upperBone,c.lowerBone,c.effectorBone]):[];
- const stationaryAbility=['guard','fist-wave','cross-guard','ground-slam','slam'].includes(plan.abilityPresentation);
+ const stationaryAbility=rev!==null||['guard','fist-wave','cross-guard','ground-slam','slam'].includes(plan.abilityPresentation);
  // The indicating hand crosses the jacket in the wide phone view. Bring
  // that original arm in front only while the appraisal gesture is visible.
  if(kind==='babayaga'&&assessment<.12){const far=new Set([arms[1].upperBone,arms[1].lowerBone,arms[1].effectorBone]);for(let i=frontBones.length-1;i>=0;i--)if(far.has(frontBones[i]))frontBones.splice(i,1);}
- const choreography={kind,variant,sequence,upper,arms,frontBones,strikeBones,bodyWeight:weight,stepDistance:attacking&&!stationaryAbility?attackSteps[kind]??0:0,
+ const choreography={kind,variant,sequence,upper,arms,frontBones,strikeBones,bodyWeight:rev?rev.bodyX/26:weight,stepDistance:attacking&&!stationaryAbility?attackSteps[kind]??0:0,
   ...(kind==='mugarian-president-mutated'?{strikePoints:{'arm-1-hand':[228,326]}}:{})};if(!attacking)carryPlans.set(atlas,choreography);
  return{...plan,choreography:walkingCarry(kind,atlas,plan,choreography,attacking?1-envelope:1),upperOffsetY:0};
 }

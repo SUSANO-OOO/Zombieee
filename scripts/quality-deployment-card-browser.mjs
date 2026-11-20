@@ -22,7 +22,12 @@ try{
  const context=await browser.newContext({viewport:{width:844,height:340},hasTouch:true,serviceWorkers:'block',recordVideo:{dir:path.join(out,'video'),size:{width:844,height:390}}});
  try{
   await context.addInitScript(seedV100BrowserSaveOnce,serializeV100Save(seed));const page=await context.newPage();page.setDefaultTimeout(20000);page.on('pageerror',e=>report.errors.push(String(e)));
-  await page.goto(process.env.V100_CAMPAIGN_QA_BASE_URL);await dismissInstallOffer(page,{timeout:20000,readySelector:'.v100-start-screen',waitForFictionDismissal:true});await enterV100FromTitle(page);
+  await page.goto(process.env.V100_CAMPAIGN_QA_BASE_URL);
+  const browserPreview=page.getByRole('button',{name:'保存せずに試す',exact:true});
+  await browserPreview.or(page.getByRole('button',{name:'ブラウザで遊ぶ',exact:true})).or(page.locator('.fiction-notice')).or(page.locator('.v100-start-screen')).first().waitFor();
+  if(await browserPreview.isVisible())await browserPreview.tap();
+  await dismissInstallOffer(page,{timeout:20000,readySelector:'.v100-start-screen',waitForFictionDismissal:true});
+  await enterV100FromTitle(page);
   const offline=page.getByText('オフライン用の設定に失敗しました。通信できる状態ではゲームを続けられます。',{exact:true});if(await offline.isVisible())await offline.locator('..').getByRole('button',{name:'閉じる',exact:true}).click();
   await page.getByRole('button',{name:'戦闘へ',exact:true}).click();
   await page.waitForFunction(()=>{const state=window.__ASHFALL_BATTLE_QA__?.getSnapshot?.();return state?.running&&state.time>=.5&&document.documentElement.dataset.assetLoadState==='ready';});
@@ -33,8 +38,9 @@ try{
     const pieces=[...el.querySelectorAll('.v100-deploy-name,.v100-deploy-cost,.v100-deploy-status,.v100-deploy-shortage')].map(piece=>{
      const b=piece.getBoundingClientRect(),style=getComputedStyle(piece),range=document.createRange();range.selectNodeContents(piece);const ink=range.getBoundingClientRect();return{text:piece.textContent,left:b.left-r.left,top:b.top-r.top,right:b.right-r.left,bottom:b.bottom-r.top,width:b.width,height:b.height,clipped:piece.scrollWidth>piece.clientWidth+1,font:style.font,lineHeight:style.lineHeight,flexShrink:style.flexShrink,textRange:{top:ink.top-r.top,bottom:ink.bottom-r.top,left:ink.left-r.left,right:ink.right-r.left}};
     });
-    const image=el.querySelector('img');
-    return{kind:el.dataset.kind,state:el.dataset.state,label:el.getAttribute('aria-label'),width:r.width,height:r.height,text:el.innerText,pieces,imageLoaded:!!image?.complete&&image.naturalWidth>0};
+    const image=el.querySelector('img'),rail=el.closest('.unit-cards').getBoundingClientRect();
+    const fullyVisible=r.left>=rail.left-.8&&r.right<=rail.right+.8;
+    return{kind:el.dataset.kind,state:el.dataset.state,label:el.getAttribute('aria-label'),width:r.width,height:r.height,text:el.innerText,pieces,fullyVisible,imageLoaded:!!image?.complete&&image.naturalWidth>0};
    }));
   const checkLayout=cards=>{
    for(const card of cards){
@@ -51,6 +57,7 @@ try{
    const field=await page.locator('canvas').evaluateAll(nodes=>nodes.map(el=>{const r=el.getBoundingClientRect();return{x:r.x,y:r.y,width:r.width,height:r.height};}).filter(r=>r.width>0&&r.height>0).sort((a,b)=>b.width*b.height-a.width*a.height)[0]);
    const png=await page.screenshot({path:path.join(out,`g${group}-${label}.png`)});report.cases.push({group,label,cards,field});
    if(label==='844x340-ready'){
+    if(!before)assert.ok(cards.slice(0,4).every(card=>card.fullyVisible),'The first four deployment cards must be complete before any scroll');
     const r=await page.locator('button.unit-card').first().boundingBox();
     const stats=await sharp(png).extract({left:Math.ceil(r.x)+2,top:Math.ceil(r.y)+2,width:Math.floor(r.width)-4,height:Math.floor(r.height)-4}).stats();
     assert.ok(stats.channels.slice(0,3).some(c=>c.stdev>1),'Initial screenshot did not paint the card; DOM readiness alone is insufficient');
