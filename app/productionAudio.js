@@ -776,7 +776,7 @@ const stationMudFoley = [
   { id: "floor-mud-impact-r1", gain: .79, priority: 78 },
 ].map(cue => ({
   ...cue, category: "melee", preload: "lazy", loop: false, cooldownMs: 130, maxInstances: 2,
-  sources: [{ src: `/audio/quality-20261121/station-mud/${cue.id}.mp3`, type: "audio/mpeg" }],
+  sources: sourceFor("/audio/quality-20261121", "station-mud", cue.id),
 }));
 const v100BattleAudio = withV100BossSkillAudio(withV100BossCollapseAudio(withV100ManualAbilityFoley(withMeleeFoley(withChainsawRecordings(withRecordedWeapons(v100AudioDesignCandidate(PRODUCTION_AUDIO_MANIFEST)))))));
 export const V100_AUDIO_MANIFEST = createAudioManifest({ ...v100BattleAudio, assets: [...v100BattleAudio.assets, ...stationMudFoley] });

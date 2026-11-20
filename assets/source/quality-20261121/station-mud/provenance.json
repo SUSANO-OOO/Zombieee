@@ -26,7 +26,7 @@
       "sha256": "1d03d72347019be889280efc6de5ca5ea439d0b24b235e6db87e5bf7583ecb2b"
     }
   },
-  "runtimeFormat": "MP3 mono 44100 Hz 112 kbps",
+  "runtimeFormat": "MP3 mono 44100 Hz 112 kbps (offline and preferred); Ogg Vorbis mono 44100 Hz quality 5 (alternate)",
   "runtimeAssetCount": 2,
   "logicalBytes": 14717,
   "distinctBytes": 14717,
@@ -44,6 +44,16 @@
         "peak": 0.6650692820549011,
         "rms": 0.1290426150198779,
         "seconds": 0.31333333333333335
+      },
+      "alternative": {
+        "path": "/audio/quality-20261121/station-mud/floor-mud-warning-r1.ogg",
+        "bytes": 6059,
+        "sha256": "9b2d6c4a74d3f93139198b452840484e9c2857477dbe854e16662bdb702741b6",
+        "decoded": {
+          "peak": 0.6965159177780151,
+          "rms": 0.13534853098223554,
+          "seconds": 0.31492063492063493
+        }
       }
     },
     {
@@ -60,6 +70,16 @@
         "peak": 0.7499101758003235,
         "rms": 0.06245156790565119,
         "seconds": 0.6039909297052154
+      },
+      "alternative": {
+        "path": "/audio/quality-20261121/station-mud/floor-mud-impact-r1.ogg",
+        "bytes": 10594,
+        "sha256": "4beb2716f4a16630e970790d153a5a0188bea3ed3720668ceefd0b0f0209704d",
+        "decoded": {
+          "peak": 0.7249056100845337,
+          "rms": 0.0637588840202851,
+          "seconds": 0.6225850340136054
+        }
       }
     }
   ]

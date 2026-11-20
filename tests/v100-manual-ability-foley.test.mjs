@@ -46,7 +46,9 @@ test('the final V1 composition replaces exactly fourteen preparation sources and
       assert.match(newSources[0].src,/^\/audio\/quality-20261114\/manual\//u);
     }else assert.deepEqual(after,before,before.id+' cannot borrow a preparation sound');
   }
-  assert.deepEqual(changed.sort(),ids);assert.equal(V100_AUDIO_MANIFEST.assets.length,previous.assets.length);
+  assert.deepEqual(changed.sort(),ids);
+  const extraAssets=V100_AUDIO_MANIFEST.assets.filter(asset=>!previous.assetById[asset.id]);
+  assert.deepEqual(extraAssets.map(asset=>asset.id).sort(),['floor-mud-impact-r1','floor-mud-warning-r1']);
   for(const key of ['pools','aliases','scenes'])assert.deepEqual(V100_AUDIO_MANIFEST[key],previous[key]);
   assert.equal(V099_MANUAL_ABILITY_AUDIO_CONTRACTS.medic.activationRoot,'ability-medic-emergency-activate');
   assert.equal(V099_MANUAL_ABILITY_AUDIO_CONTRACTS.guardian.activationRoot,'ability-guardian-shieldwall-activate');
