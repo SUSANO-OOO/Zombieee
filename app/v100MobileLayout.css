@@ -34,7 +34,6 @@
 #v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-meta strong { font-size: 15px; color: #f2dfb1; }
 #v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-meta em { font-size: 12px; color: #c5d3c8; }
 #v100-campaign[data-v100-phase] .v100-command-formation:not(.picker-open) .v100-slot-meta b { font-size: 12px; color: #d9c58f; font-weight: 500; }
-#v100-campaign .v100-briefing-callin { display: block; color: #d9c58f; font-size: 12px; line-height: 1.35; }
 /* Selection cards keep the decision text and real call-in cost together.
  * Only the roster scrolls; individual cards never clip or hide their timings. */
 #v100-campaign[data-v100-phase] .v100-command-formation.picker-open .v100-roster-grid {
