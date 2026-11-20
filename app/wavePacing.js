@@ -12,6 +12,9 @@ const deployed = game => !(game.deployQueue?.length)
 function objectiveReady(game, mission) {
   if (Number.isFinite(mission?.requiredPowerCount)
     && (game.stageMission?.powerActivated ?? 0) < mission.requiredPowerCount) return false;
+  if (mission?.waitForReinforcementsClear && (game.enemySpawn.pending.length > 0
+    || game.fighters.some(fighter => fighter.side === 'zombie' && fighter.hp > 0
+      && fighter.kind !== game.definition.bossEnemyKind))) return false;
   const targetId = mission?.requiredResearchTarget;
   return !targetId || game.researchCoreTargets?.some(target => target.id === targetId && target.hp <= 0) === true;
 }

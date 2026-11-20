@@ -357,7 +357,7 @@ function stageTimeline(stage, missionType, bossKind) {
       freeze({ at: PREP_SECONDS + 78, advanceOnClearAfter: PREP_SECONDS + 69, wave: 5, label: "最終防衛 // 目前の群れ", waitForPriorWaveClear: true, units: freeze(["runner", "walker", "crusher", "spitter", "runner", "walker"]) }),
       freeze({ at: PREP_SECONDS + 90, wave: 6, label: `警告 // ${bossLabel}`, units: freeze([bossKind]), waitForPriorWaveClear: true }),
       freeze({ at: PREP_SECONDS + 116, wave: 7, label: "最終防衛 // 増援1/2", bossHpRatio: firstReinforcement, units: freeze(["walker", "runner", "crusher", "spitter", "runner", "walker", "crusher", "spitter", "walker"]), addWave: true }),
-      freeze({ at: PREP_SECONDS + 140, wave: 8, label: "最終防衛 // 増援2/2", bossHpRatio: secondReinforcement, units: freeze(["spitter", "crusher", "walker", "runner", "spitter", "crusher", "runner", "crusher", "spitter", "crusher"]), addWave: true }),
+      freeze({ at: PREP_SECONDS + 140, wave: 8, label: "最終防衛 // 増援2/2", bossHpRatio: secondReinforcement, waitForReinforcementsClear: true, units: freeze(["spitter", "crusher", "walker", "runner", "spitter", "crusher", "runner", "crusher", "spitter", "crusher"]), addWave: true }),
     ]);
   }
   if (stage.number === 24 || stage.number === 25) {

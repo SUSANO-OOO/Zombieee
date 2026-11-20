@@ -129,7 +129,7 @@ test("the actual consumer establishes combat before Omega, then emits both A rei
   g.time=definition.timeline[entrance].at-0.01;runConsumer({ ...fixture, campaignWaveReady });assert.deepEqual(announced,[]);
   g.time=definition.timeline[entrance].at;runConsumer({ ...fixture, campaignWaveReady });assert.deepEqual(announced,[],"Prelude guards must clear first");
   g.enemySpawn.pending=[];runConsumer({ ...fixture, campaignWaveReady });assert.deepEqual(announced,["takuya-omega"]);
-  const omega={kind:"takuya-omega",hp:9200,maxHp:9200};
+  const omega={kind:"takuya-omega",side:"zombie",hp:9200,maxHp:9200};
   g.fighters.push(omega);
   g.enemySpawn.pending=[];
   g.time=definition.timeline.at(-1).at;
@@ -140,7 +140,15 @@ test("the actual consumer establishes combat before Omega, then emits both A rei
   assert.equal(queued.length,7);
   omega.hp=Math.floor(omega.maxHp*definition.timeline[entrance+2].bossHpRatio);
   runConsumer({ ...fixture, campaignWaveReady });
-  assert.deepEqual(queued.map(event=>event.wave),[1,2,3,4,5,6,7,8]);
+  assert.equal(queued.length,7,"Queued reinforcements hold the last wave");
+  g.enemySpawn.pending=[];
+  const runner={kind:"runner",side:"zombie",hp:1};
+  g.fighters.push(runner);
+  runConsumer({ ...fixture, campaignWaveReady });
+  assert.equal(queued.length,7,"A remaining escort holds the last wave even below the HP threshold");
+  runner.hp=0;
+  runConsumer({ ...fixture, campaignWaveReady });
+  assert.deepEqual(queued.map(event=>event.wave),[1,2,3,4,5,6,7,8],"The last wave can arrive with Omega still alive");
   assert.deepEqual(queued.slice(entrance+1).flatMap(event=>event.units),["walker","runner","crusher","spitter","runner","walker","crusher","spitter","walker","spitter","crusher","walker","runner","spitter","crusher","runner","crusher","spitter","crusher"]);
   runConsumer({ ...fixture, campaignWaveReady });
   assert.equal(queued.length,8,"Every real event is consumed once");
