@@ -616,6 +616,7 @@ import { drawV100MissionVehicles, drawV100MissionVehicleBody, v100MissionVehicle
 import { v100VehicleSprite, v100EscortDestinationState } from "./v100MissionVehicleSprites.js";
 import { drawV100MissionNode, V100_NODE_PROFILES, V100_SUPPLY_VALVE } from "./v100MissionNodes.js";
 import { drawV100RailEvacuation, hasRailEvacuation, railEvacuationReadout } from "./v100RailEvacuation.js";
+import { advanceBayEvacuationRuntime, bayEvacuationReadout, drawV100BayEvacuees, hasBayEvacuation, V100_BAY_REFUGEE_COUNT, V100_BAY_ROUTE_Y } from "./v100BayEvacuation.js";
 import { hasRescueControl, rescueControlReadout, V100_RESCUE_CONTROL } from "./v100RescueControl.js";
 import { centralSealCanReinforce, centralSealGateX, centralSealIngressPoint, centralSealReadout, drawV100CentralSealGates, hasCentralSeal } from "./v100CentralSeal.js";
 import { drawV100ClinicalControl } from "./v100ClinicalControl.js";
@@ -1105,6 +1106,11 @@ type StageMissionRuntime = {
   rescueControlBlocked?: boolean;
   centralSealBlocked?: boolean;
   evacuationProgress?: number;
+  evacuationDistances?: readonly number[];
+  evacuationMoving?: readonly boolean[];
+  evacuatedCount?: number;
+  evacuationBlocked?: boolean;
+  evacuationSettling?: number;
   powerOperating?: boolean;
   powerOperationStartedAt?: number | null;
   powerInterruptedAt?: number | null;
@@ -9034,6 +9040,9 @@ function drawWorld(
   if (!g.definition.missionConfig.v100StageNumber) for (const fighter of g.fighters) drawCrazyKingAbilityIndicator(ctx, fighter, g.time);
   for (const hazard of g.stationHazards) drawStationHazard(ctx, hazard, g.time);
   drawStationMission(ctx, g, stageObjects, allowDiagnosticFallback, true);
+  if (hasBayEvacuation(g.definition.missionType, g.definition.missionConfig)) {
+    drawV100BayEvacuees(ctx, g.stageMission, stageObjects, activeYForContentY(V100_BAY_ROUTE_Y));
+  }
   drawEmergencySupport(ctx, g, stageObjects);
   drawPlacementIndicator(ctx, g.placementIndicator);
 
@@ -20959,6 +20968,18 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           g.convoyProgress = convoy.progress;
           g.civiliansEvacuated = convoy.civiliansEvacuated;
         }
+        if (hasBayEvacuation(g.definition.missionType, g.definition.missionConfig) && !g.stageMission.completed
+          && g.time >= g.definition.prepSeconds) {
+          const previous = g.stageMission;
+          g.stageMission = advanceBayEvacuationRuntime({ runtime: previous, fighters: g.fighters, dt, eventIndex: g.eventIndex,
+            baseHp: g.baseHp, bossDefeated: g.bossDefeated, bossDefeatPending: g.bossDefeatPending,
+            routeY: activeYForContentY(V100_BAY_ROUTE_Y) });
+          if ((previous.evacuatedCount ?? 0) < V100_BAY_REFUGEE_COUNT && g.stageMission.evacuatedCount === V100_BAY_REFUGEE_COUNT) {
+            g.banner = "十二人全員の避難完了";
+            g.bannerTime = 2;
+            playProductionCue(STATION_AUDIO_CUE_IDS.RESCUE_CONFIRM, BASE_X, { priority: 87, maxInstances: 1 });
+          }
+        }
         const supplyValvePending = hasSupplyValve(g.definition.missionType, g.definition.missionConfig)
           && (g.stageMission.powerActivated ?? 0) < 1;
         const centralSeal = hasCentralSeal(g.definition.missionType, g.definition.missionConfig);
@@ -24874,10 +24895,12 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             }
             const isRailBoss = fighter.kind === g.definition.bossEnemyKind
               && hasRailEvacuation(g.definition.missionType, g.definition.missionConfig);
-            if (twinDefeat.complete && (isOutbreakBoss || isRailBoss
+            const isBayBoss = fighter.kind === g.definition.bossEnemyKind
+              && hasBayEvacuation(g.definition.missionType, g.definition.missionConfig);
+            if (twinDefeat.complete && (isOutbreakBoss || isRailBoss || isBayBoss
               || (fighter.kind === g.definition.bossEnemyKind && g.definition.bossUnlocksEnemyBase))) {
               g.bossDefeatPending = true;
-              if (!isOutbreakBoss && !isRailBoss) g.barricadeVulnerable = true;
+              if (!isOutbreakBoss && !isRailBoss && !isBayBoss) g.barricadeVulnerable = true;
               const defeatedBossName = bossDefinitionForEnemyKind(fighter.kind)?.displayName
                 ?? enemyContentFor(fighter.kind)?.displayName
                 ?? "大型感染体";
@@ -24885,6 +24908,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 ? `${defeatedBossName}撃破 — 残存感染体を掃討`
                 : isRailBoss
                 ? g.stageMission.completed ? "オオグチ撃破 // 残る敵を倒す" : "オオグチ撃破 // 民間車両を逃がす"
+                : isBayBoss
+                ? g.stageMission.completed ? "クロメ撃破 // 残る敵を倒す" : "クロメ撃破 // 避難路を守る"
                 : v100CorporateControlLabel(g.definition)
                 ? `${defeatedBossName}撃破・防護解除`
                 : g.definition.missionConfig.v100StageNumber === 30
@@ -24907,7 +24932,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 emitBattleBark(g, "takuya-down", "crawler", "tactical");
               } else if (fighter.kind === "takuya") {
                 if (!emitBattleBark(g, "base-exposed", "crawler", "tactical")) emitBattleBark(g, "takuya-down", "crawler", "tactical");
-              } else if (!isRailBoss) {
+              } else if (!isRailBoss && !isBayBoss) {
                 emitBattleBark(g, "base-exposed", "crawler", "tactical");
               }
             } else if (fighter.kind === "gate-eater"
@@ -25211,6 +25236,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               missionRuntime: g.definition.missionType === "escort" || g.definition.missionType === "sequential-seal"
                 || hasSupplyValve(g.definition.missionType, g.definition.missionConfig)
                 || hasRailEvacuation(g.definition.missionType, g.definition.missionConfig)
+                || hasBayEvacuation(g.definition.missionType, g.definition.missionConfig)
                 ? { ...g.stageMission }
                 : undefined,
               researchCoreTargets: g.researchCoreTargets?.map(target => ({...target})),
@@ -25284,6 +25310,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             missionRuntime: g.definition.missionType === "escort" || g.definition.missionType === "sequential-seal"
               || hasSupplyValve(g.definition.missionType, g.definition.missionConfig)
               || hasRailEvacuation(g.definition.missionType, g.definition.missionConfig)
+              || hasBayEvacuation(g.definition.missionType, g.definition.missionConfig)
               ? { ...g.stageMission }
               : undefined,
             researchCoreTargets: g.researchCoreTargets?.map(target => ({...target})),
@@ -25481,7 +25508,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     ? rescueControlReadout(gameRef.current.stageMission) : null;
   const centralSealHud = hasCentralSeal(gameRef.current.definition.missionType, gameRef.current.definition.missionConfig)
     ? centralSealReadout(gameRef.current.stageMission) : null;
-  const phaseName = railHud ? railHud.phaseLabel
+  const bayHud = hasBayEvacuation(gameRef.current.definition.missionType, gameRef.current.definition.missionConfig)
+    ? bayEvacuationReadout(gameRef.current.stageMission) : null;
+  const phaseName = bayHud ? bayHud.phaseLabel
+    : railHud ? railHud.phaseLabel
     : centralSealHud ? centralSealHud.phaseLabel
     : rescueControlHud ? rescueControlHud.phaseLabel
     : isFinalDefense && gameRef.current.bossDefeated ? "残敵を掃討"
@@ -25739,7 +25769,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           </div>
           {hud.bossTelegraphWarning && !end && <div className="v100-boss-telegraph-warning" role="alert" data-boss-telegraph-warning="true">{formatBattleText(hud.bossTelegraphWarning)}</div>}
 
-          {externalSessionActive && bossHealthPanel ? null : railHud
+          {(bayHud || (externalSessionActive && bossHealthPanel)) ? null : railHud
             ? <div className="health-hud barrier-health rail-evacuation-objective" data-rail-state={railHud.phase} aria-label={`${railHud.label} ${railHud.status}`}>
               <div><span>{railHud.label}</span><b>{railHud.status}</b></div>
               <i><em style={{ width: `${railHud.progress * 100}%` }} /></i>
@@ -25885,7 +25915,11 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                  <span className="support-key">G</span><b>{externalSessionActive ? basePresentation.barrageLabel : hud.crawlerPhase === "ready" ? "車両一斉砲撃" : `装填 ${Math.round(hud.crawlerCharge * 100)}%`}</b><small>{externalSessionActive ? <span className="v100-support-status">{hud.crawlerPhase !== "ready" ? `装填 ${Math.round(hud.crawlerCharge*100)}%` : `支援 ${barrageCost}`}</span> : <><span className="support-detail-full">{crawlerBlockReason ?? `${vehicleDisplayLabel}の固定火器`}</span><span className="support-detail-compact">{crawlerCompactDetail}</span></>}</small><em>{barrageCost > 0 ? `必要 ${barrageCost}支援` : basePresentation.onFoot ? "援護" : "車両"}</em>
                </button>
             </div>
-            <div className="battle-objective objective">{isSurvivalBattle ? "防衛前線を維持" : `目標：${formatBattleText(hud.objective)}`}</div>
+            <div className="battle-objective objective">
+              {bayHud && <span className="bay-evacuation-objective" data-bay-evacuation={bayHud.phase}
+                data-evacuated-count={bayHud.count} aria-label={`${bayHud.label} ${bayHud.status}`}>避難 {bayHud.count}/{bayHud.total}</span>}
+              {isSurvivalBattle ? "防衛前線を維持" : `目標：${formatBattleText(hud.objective)}`}
+            </div>
           </div>
         </div>
         {survivalUpgradeOpen && <div className={externalSessionActive ? "survival-upgrade-screen v100-phone-upgrade" : "survival-upgrade-screen"} role="dialog" aria-modal="true" aria-label="ボス撃破強化選択"><section>

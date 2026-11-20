@@ -41,7 +41,12 @@ test("all five outbreak operations build real boss-assault definitions on their 
     assert.equal(definition.missionConfig.spawnProfile, "right-edge-outside-boss");
     assert.equal(definition.timeline.length, mission.waves.length);
     assert.equal(definition.timeline.at(-1).units.includes(mission.boss.enemyKind), true);
-    assert.equal(stageVisualFor(mission.id), stageVisualFor(mission.prerequisiteStageId));
+    if (mission.prerequisiteStageId === "stage-bay-tower-service") {
+      assert.equal(stageVisualFor(mission.id), "/art/v090/stages/bay-tower-service-background-v1.webp");
+      assert.notEqual(stageVisualFor(mission.id), stageVisualFor(mission.prerequisiteStageId));
+    } else {
+      assert.equal(stageVisualFor(mission.id), stageVisualFor(mission.prerequisiteStageId));
+    }
   }
 });
 
@@ -89,7 +94,7 @@ test("player-facing outbreak route commits one atomic campaign save before publi
   assert.match(game, /const requestBattle[\s\S]*selectedOutbreakMissionId[\s\S]*createBattleResultId\(selectedOutbreakMissionId\)/);
   assert.match(game, /storyFlowState: definitionOptions\.v100[\s\S]*createBattleStoryFlowState\(definition\.stageId\)/);
   assert.ok((game.match(/stageId: g\.definition\.operationId/g)?.length ?? 0) >= 2);
-  assert.match(game, /const isOutbreakBoss = g\.definition\.operationCategory === "outbreak"[\s\S]*if \(!isOutbreakBoss && !isRailBoss\) g\.barricadeVulnerable = true/);
+  assert.match(game, /const isOutbreakBoss = g\.definition\.operationCategory === "outbreak"[\s\S]*if \(!isOutbreakBoss && !isRailBoss && !isBayBoss\) g\.barricadeVulnerable = true/);
   assert.match(game, /persistOutbreakCampaignSettlement\([\s\S]*persist: async \(candidate: CampaignSave\) => \{[\s\S]*outbreakSettlementPersistenceQaRef\.current\.attempts \+= 1[\s\S]*return persistCampaignSave\(candidate\)/);
   assert.match(game, /if \(!settlement\.committed\)[\s\S]*setPendingOutbreakSettlement\(pending\)[\s\S]*setSavePersistence\("unavailable"\)/);
   assert.match(game, /setCampaignSave\(nextSave\)[\s\S]*setOutbreakResult\([\s\S]*setScreen\("outbreak-result"\)/);

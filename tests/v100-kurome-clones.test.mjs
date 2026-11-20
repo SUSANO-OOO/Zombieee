@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { hasRailEvacuation } from "../app/v100RailEvacuation.js";
+import { hasBayEvacuation } from "../app/v100BayEvacuation.js";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
 import vm from "node:vm";
@@ -98,7 +99,7 @@ test("actual defeat consumer records a clone without boss progress, scrap or sup
   boss.hp = 2870; const clone = runtime.spawnKuromePhaseClones(g, boss, lanes, geometry)[0];
   Object.assign(g, { kills: 0, combo: 0, maxCombo: 0, scrap: 0, supportGauge: 20, combatMetrics: { enemyDefeatsByKind: {} }, bossDefeatPending: false, barricadeVulnerable: false });
   clone.hp = 0;
-  vm.runInNewContext(compile(consumer), { g, fighter: clone, isKuromeClone, resolveV100TwinDefeat, hasRailEvacuation,
+  vm.runInNewContext(compile(consumer), { g, fighter: clone, isKuromeClone, resolveV100TwinDefeat, hasRailEvacuation, hasBayEvacuation,
     SUPPORT_GAUGE_MAX: 100, STATION_MISSION_TYPES: { SEQUENTIAL_SEAL: "sequential-seal" },
     addCombatMetric: (record, key, amount) => { record[key] = (record[key] ?? 0) + amount; },
     scrapReward: () => { throw new Error("clone paid boss scrap"); }, supportGaugeReward: () => { throw new Error("clone paid boss support"); },

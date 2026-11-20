@@ -5,6 +5,7 @@ import { V100_NODE_PROFILES, V100_SUPPLY_VALVE, V100_SUPPLY_VALVE_STAGE } from "
 import { V100_RAIL_EVACUATION, V100_RAIL_EVACUATION_STAGE } from "./v100RailEvacuation.js";
 import { V100_RESCUE_CONTROL, V100_RESCUE_CONTROL_STAGE } from "./v100RescueControl.js";
 import { V100_CENTRAL_SEAL, V100_CENTRAL_SEAL_STAGE } from "./v100CentralSeal.js";
+import { V100_BAY_EVACUATION, V100_BAY_EVACUATION_STAGE } from "./v100BayEvacuation.js";
 import { V100_CORPORATE_CONTROLS } from "./v100CorporateControl.js";
 import { V100_DEFENSE_OBJECTIVES } from "./v100DefenseObjectives.js";
 import { researchCoreObjective } from "./v100ResearchCore.js";
@@ -82,6 +83,7 @@ export function v100MissionObjectiveFor(stageId) {
   if (stageId === V100_RAIL_EVACUATION_STAGE) return "レバーを3つ引いて民間車両を逃がし、オオグチを倒す";
   if (stageId === V100_RESCUE_CONTROL_STAGE) return "救難回線を3か所復旧し、制御区を守る";
   if (stageId === V100_CENTRAL_SEAL_STAGE) return "三基のゲートを閉じ、感染者の流入を止める";
+  if (stageId === V100_BAY_EVACUATION_STAGE) return "クロメを退け、十二人を避難させる";
   if (stage.number === 30) return "TAKUYA-Ωを撃破し、西新を守る";
   const control = V100_CORPORATE_CONTROLS[stageId];
   if (control) {
@@ -220,6 +222,18 @@ function stageTimeline(stage, missionType, bossKind) {
         units: freeze(["crusher", "abomination", "sprinter", "walker", "runner"]) }),
     ]);
   }
+  if (stage.id === V100_BAY_EVACUATION_STAGE) {
+    return freeze([
+      freeze({ at: PREP_SECONDS, wave: 1, label: "非常回廊 // 避難路を確保",
+        units: freeze(["resonator", "cagewalker", "spindle", "resonator"]) }),
+      freeze({ at: PREP_SECONDS + 17, wave: 2, label: "回廊 // 避難者を守る", clearDelaySeconds: 2,
+        units: freeze(["choir-knot", "pall-manta", "cagewalker", "spindle"]) }),
+      freeze({ at: PREP_SECONDS + 34, wave: 3, label: "非常口手前 // 侵入を阻止", clearDelaySeconds: 2.5,
+        units: freeze(["anchor-bloom", "pall-manta", "choir-knot", "resonator", "cagewalker"]) }),
+      freeze({ at: PREP_SECONDS + 52, wave: 4, label: "警告 // クロメ", clearDelaySeconds: 2.5, waitForPriorWaveClear: true,
+        units: freeze([bossKind]) }),
+    ]);
+  }
   if (stage.number === 30) {
     // Establish the defense before revealing Omega. His two later A-only
     // reinforcements remain; the prelude contains no Panther units.
@@ -264,6 +278,13 @@ function stageTimeline(stage, missionType, bossKind) {
 }
 
 function phaseScheduleFor(stage, missionType, objective) {
+  if (stage.id === V100_BAY_EVACUATION_STAGE) {
+    return { phases: freeze([
+      freeze({ at: PREP_SECONDS, phase: 1, label: "非常口への道を開く", objective }),
+      freeze({ at: PREP_SECONDS + 30, phase: 2, label: "避難者を守る", objective }),
+      freeze({ at: PREP_SECONDS + 52, phase: 3, label: "クロメを退ける", objective }),
+    ]) };
+  }
   if (stage.id === V100_CENTRAL_SEAL_STAGE) {
     return { phases: freeze([
       freeze({ at: PREP_SECONDS, phase: 1, label: "第一地下道を封鎖", objective }),
@@ -344,6 +365,7 @@ export function v100BattleDefinitionFor(stageId) {
   const missionVehicle = V100_MISSION_VEHICLES[stageId];
   const missionNode = V100_NODE_PROFILES[stageId];
   const railEvacuation = stageId === V100_RAIL_EVACUATION_STAGE;
+  const bayEvacuation = stageId === V100_BAY_EVACUATION_STAGE;
   const objective = v100MissionObjectiveFor(stageId);
   const phase = phaseScheduleFor(stage, missionType, objective);
   const timeline = withClearDrivenAssaultWaves(v100IncreaseWaveDensity(stageTimeline(stage, missionType, bossKind), Object.values(BOSS_KIND_BY_V100_ID), { preserveEscalation: missionType === 'escort' }), missionType);
@@ -368,9 +390,9 @@ export function v100BattleDefinitionFor(stageId) {
     starThresholds: { 1: 0.01, 2: 0.7, 3: 0.9 },
     // Once a boss falls, breaching its gate is a short finishing action.
     enemyBaseMaxHp: bossKind ? 350 : 1000,
-    enemyBaseMode: !railEvacuation && (missionType === "assault" || missionType === "boss-assault") ? "target" : "scenery",
+    enemyBaseMode: !railEvacuation && !bayEvacuation && (missionType === "assault" || missionType === "boss-assault") ? "target" : "scenery",
     startsEnemyBaseVulnerable: false,
-    bossUnlocksEnemyBase: !railEvacuation && Boolean(bossKind),
+    bossUnlocksEnemyBase: !railEvacuation && !bayEvacuation && Boolean(bossKind),
     bossEnemyKind: bossKind,
     timeline,
     defenseEndAt: missionType === "timed-defense" ? PREP_SECONDS + phase.durationSeconds : null,
@@ -380,6 +402,7 @@ export function v100BattleDefinitionFor(stageId) {
       ...station,
       ...(stageId === V100_SUPPLY_VALVE_STAGE ? V100_SUPPLY_VALVE : {}),
       ...(railEvacuation ? V100_RAIL_EVACUATION : {}),
+      ...(bayEvacuation ? V100_BAY_EVACUATION : {}),
       ...(stageId === V100_RESCUE_CONTROL_STAGE ? V100_RESCUE_CONTROL : {}),
       ...(stageId === V100_CENTRAL_SEAL_STAGE ? V100_CENTRAL_SEAL : {}),
       ...(missionVehicle ? {targetLabel:missionVehicle.targetLabel,vehicleCount:missionVehicle.count,convoyInterception:missionVehicle.count===3} : {}),

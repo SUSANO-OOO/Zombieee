@@ -271,6 +271,7 @@ const ENEMY_PACK_LABELS: Record<string, string> = {
 
 function missionLabelFor(stage: (typeof V100_STAGES)[number] | undefined) {
   if (stage?.number === 16) return "地下道のゲート閉鎖";
+  if (stage?.number === 17) return "避難路確保";
   if (stage?.number === 26) return "車列停止・確保";
   if (stage?.number === 28) return "散布装置停止";
   return OPERATION_LABELS[stage?.missionType ?? ""] ?? "キャンペーンステージ";
@@ -1702,7 +1703,7 @@ function ResultView({ result, previousResult, previousBestStars, alreadyComplete
           {escortResult?.advice && <small>{escortResult.advice}</small>}
         </div>}
       <p>{merits[0] ? <span className="v100-result-lead-merit" data-v100-merit={merits[0].id}><strong>{merits[0].title}</strong><small>{merits[0].detail}<span className="v100-merit-scroll-hint"> · 詳細は下へ</span></small></span> : outcome}<span className="v100-result-scroll-guide">結果の詳細は下へスクロール</span></p>
-      <dl className="v100-result-records"><div><dt>{basePresentation.healthLabel}</dt><dd>{vehicleHp} / {maxHp}（{Math.floor(hpPercent)}%）</dd></div><div><dt>クリア目標</dt><dd>{result?.objectiveComplete === true ? stageNumber === 22 ? "収容室43室の開放完了" : "達成" : "未達"}</dd></div></dl>
+      <dl className="v100-result-records"><div><dt>{basePresentation.healthLabel}</dt><dd>{vehicleHp} / {maxHp}（{Math.floor(hpPercent)}%）</dd></div><div><dt>クリア目標</dt><dd>{result?.objectiveComplete === true ? stageNumber === 22 ? "収容室43室の開放完了" : report?.bayEvacuation?.evacuatedCount === 12 ? "十二人全員が避難" : "達成" : "未達"}</dd></div></dl>
       {merits.length > 1 && <div className="v100-result-other-merits" role="list" aria-label="この一戦の成果">{merits.slice(1).map(merit => <span key={merit.id} role="listitem" data-v100-merit={merit.id}><strong>{merit.title}</strong><small>{merit.detail}</small></span>)}</div>}
       <div className="v100-result-feedback">
         <dl className="v100-result-extra-records"><div><dt>経過時間</dt><dd>{recordedSeconds === null ? "記録なし" : `${recordedSeconds}秒`}</dd></div><div><dt>戦闘不能</dt><dd>{recordedDeaths === null ? "記録なし" : `${recordedDeaths}回`}</dd></div></dl>
