@@ -20,8 +20,17 @@ const musashiPaint=JSON.parse(fs.readFileSync('tests/fixtures/musashi-manual-pai
 const mayoFeralChanges=JSON.parse(fs.readFileSync('tests/fixtures/mayo-feral-ground-source-changes.json','utf8'));
 const lateBossScaleChanges=JSON.parse(fs.readFileSync('tests/fixtures/phone-late-boss-scale-source-changes.json','utf8'));
 const bossCorpseChanges=JSON.parse(fs.readFileSync('tests/fixtures/boss-corpse-fidelity-source-changes.json','utf8'));
+const phoneBattleChanges=JSON.parse(fs.readFileSync("tests/fixtures/phone-battle-source-changes.json","utf8"));
+function restorePhoneBattleSource(file, source) {
+  let restored = source.replaceAll("\r\n", "\n");
+  for (const [before, after] of [...(phoneBattleChanges[file] ?? [])].reverse()) {
+    assert.equal(restored.split(after).length, 2, file + " phone battle edit must occur exactly once");
+    restored = restored.replace(after, () => before);
+  }
+  return restored;
+}
 export function restorePreBossCorpseFidelitySource(file,source){
- let restored=restoreGunFinishSource(file,source);
+ let restored=restoreGunFinishSource(file,restorePhoneBattleSource(file,source));
  for(const [before,after]of [...(bossCorpseChanges[file]??[])].reverse()){
   assert.equal(restored.split(after).length,2,file+' Unlisted source change: original boss corpse edit must occur exactly once');
   restored=restored.replace(after,before);

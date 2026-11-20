@@ -74,6 +74,15 @@ export function battleVoiceReady(actor,event,time,world){
  if(Number.isFinite(last)&&time>=last&&time-last<gap)return false;
  clocks[event]=time;voiceClocks.set(key,clocks);return true;
 }
+// A metal contact can sound without a pain voice. Keep its clock separate
+// so armor feedback never consumes the next confirmed injury reaction.
+export function v104EnemyContactAudio(world,actor,damage,cueId){
+ if(actor?.side!=='zombie'||!cueId||!Number.isFinite(damage)||damage<0)return null;
+ const voiceAllowed=damage>0;
+ if(!voiceAllowed&&v104SupplementalEnemyVoice(cueId)?.event!=='hurt')return null;
+ if(!battleVoiceReady(actor,voiceAllowed?'hurt':'armor-contact',world?.time,world))return null;
+ return {ownerId:actor.id,voiceAllowed};
+}
 export function queueV104HumanHurt(world,actor,hpBefore,cueId){
  if(!(hpBefore>actor.hp)||!cueId||!battleVoiceReady(actor,'hurt',world.time,world))return false;
  const receiptId=`hurt:${actor.id}:${world.time.toFixed(6)}:${actor.hp}`;

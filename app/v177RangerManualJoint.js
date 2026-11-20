@@ -51,8 +51,11 @@ export function createV177RangerManualJoint({normalPlan,captureUpper,blendUpper}
     let upper,presentationPhase,attackPhase;
     if(m.phase==='windup') {
       const aiming=normalPlan({requestedState:'wind-up',clipProgress:1},gait);
-      upper=aimP===0?copyUpper(entry.upper):blendUpper(atlas,entry.upper,captureUpper(atlas,aiming),aimP);
-      attackPhase=aiming.attackPhase*aimP;presentationPhase='aim';
+      // Shoulder the rifle before the shot and hold the sight line briefly.
+      // The original lower-body settle continues on its own clock.
+      const shoulderAim=smooth((elapsed-entry.elapsed)/((windup-entry.elapsed)*.72));
+      upper=shoulderAim===0?copyUpper(entry.upper):blendUpper(atlas,entry.upper,captureUpper(atlas,aiming),shoulderAim);
+      attackPhase=aiming.attackPhase*shoulderAim;presentationPhase='aim';
     }else {
       // Keep the original .18s recovery. Give the actual recoil half of it:
       // a real 66.7ms paint interval otherwise skipped the whole impulse.

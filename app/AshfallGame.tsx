@@ -12,6 +12,7 @@ import {queueV100GuardActivation} from './v100GuardActivationVfx.js';
 import {drawV100KingExhaust} from './v100KingExhaustVfx.js';
 import {V100_KING_EXHAUST_SOCKET} from './v100KingExhaustArt.js';
 import { v105CurrentAbilitySample, v105AbilityFacing } from './v105CurrentAbilityPose.js';
+import { V100BattleDeparture } from "./V100BattleDeparture";
 import { v100StoryPortraitPath } from "./v100StoryPortraitPaths.js";
 import { v100PortraitFraming } from "./v100PortraitFraming.js";
 import {v100SurvivalUpgradeArtworkStyle} from "./v100SurvivalUpgradeArt.js";
@@ -19,7 +20,7 @@ import { v100BasePresentationFor } from "./v100BasePresentation.js";
 import { createV100HumanWalkRenderer, v100HumanWalkPhase, v100UsesHumanWalk, v100HumanWalkCycleDistance, v100HumanWalkFrame } from "./v100HumanWalk.js";
 import { V177_JOINT_ATLASES, v177JointCycleDistance, v177JointPose, v177RangerFootPlan, v105BipedFootPlan, drawV177JointPose, v177CaptureJointPose, v177RenderedJointWeaponSocket, v177RenderedWeightedLowerReceipt } from "./v177JointPresentation.js";
 import { v177ClearHeadHealthBarY } from "./v177HeadLabelPlacement.js";
-import {battleVoiceReady,queueV104HumanHurt,v104ContactIsHard,v104SupplementalEnemyVoice} from "./v104CombatAudio.js";
+import {battleVoiceReady,queueV104HumanHurt,v104ContactIsHard,v104SupplementalEnemyVoice,v104EnemyContactAudio} from "./v104CombatAudio.js";
 import {createManualAbilityPointerHold} from "./manualAbilityUi.js";
 import {manualAbilityTacticalView} from "./manualAbilityTactics.js";
 import {ManualAbilityTactics} from "./BattleAbilityGuide";
@@ -616,7 +617,7 @@ import { drawV100MissionNode, V100_NODE_PROFILES } from "./v100MissionNodes.js";
 import { drawV100ClinicalControl } from "./v100ClinicalControl.js";
 import { drawV100CorporateControl, v100CorporateControlLabel, v100ObjectiveDamageLabel, v100CorporateControlCondition } from "./v100CorporateControl.js";
 import { drawV100AssaultObject, v100AssaultObjectProfile } from "./v100AssaultObjects.js";
-import { drawV100Explosion, drawV100FootDust, drawV100GroundFire, drawV100Muzzle, V100_CONTACT_WEAPONS, V100_CLAW_CONTACT_WEAPONS, queueV100Contact, queueV100ClawContact, queueV100TakuyaGroundContact, queueV100TataraGroundContact, getV100ClawContactSnapshot, getV100SkillContactSnapshot, queueV100GuardContact, getV100GuardContactSnapshot, drawV100ContactQueue, clearV100ContactQueue } from "./v100CombatVfx.js";
+import { drawV100Explosion, drawV100FootDust, drawV100GroundFire, drawV100Muzzle, V100_CONTACT_WEAPONS, V100_CLAW_CONTACT_WEAPONS, queueV100Contact, queueV100ScoutIntercept, queueV100ClawContact, queueV100TakuyaGroundContact, queueV100TataraGroundContact, getV100ClawContactSnapshot, getV100SkillContactSnapshot, queueV100GuardContact, getV100GuardContactSnapshot, drawV100ContactQueue, clearV100ContactQueue } from "./v100CombatVfx.js";
 import { drawV100BossAftermath, drawV100BossReleaseFields } from "./v100BossAftermath.js";
 import {drawV100GateChargeTrail,drawV100KuromeRay} from './v100BossAttackVfx.js';
 import {drawV100MaterialParticle} from './v100MaterialParticles.js';
@@ -16232,6 +16233,18 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     return true;
   }, []);
 
+  const playEnemyContactCue = useCallback((world: Game, target: Fighter, damage: number) => {
+    const cueId = enemyVoiceCue(target.kind, "hurt");
+    const reaction = v104EnemyContactAudio(world, target, damage, cueId);
+    if (!reaction) return;
+    playProductionCue(cueId, target.x, {
+      ...reaction,
+      priority: target.kind === "takuya" || target.kind === "gate-eater" ? 88 : 62,
+      cooldownMs: 210,
+      maxInstances: 3,
+    });
+  }, [playProductionCue]);
+
   const playBattleSemanticCue = useCallback((
     cueId: string | null,
     x: number,
@@ -20007,6 +20020,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               ));
               if (!target) continue;
               const direction = Math.sign(target.x - owner.x) || 1;
+              const from = { x: owner.x, y: owner.y };
               owner.x = target.x - direction * (target.bodyRadius + definition.stopDistance);
               owner.y = target.y;
               owner.lane = target.lane;
@@ -20018,7 +20032,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               target.knock = Math.max(target.knock, 11);
               recordUnitDamage(g, owner.kind, damage);
               addDamageText(g, target.x, target.y - 52, String(Math.round(damage)), .86, "#7ee7e4");
-              if(g.definition.missionConfig.v100StageNumber)queueV100Contact(g,{x:target.x,y:target.y-30,direction,size:66});
+              if(g.definition.missionConfig.v100StageNumber)queueV100ScoutIntercept(g,{from,owner,target,direction});
               else addParticles(g, target.x, target.y - 30, "#73d8d5", 18);
               playManualAbilityTimelineCue(owner, "impact", target.x, "intercept-impact", {
                 priority: 84, cooldownMs: 80, maxInstances: 1,
@@ -20029,6 +20043,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               const definition = MANUAL_ABILITY_REGISTRY.ranger;
               const targetIds = event.target.targetIds ?? [event.target.targetId];
               let appliedCount = 0;
+              let firstHit: { x: number; y: number } | null = null;
+              let lastHit: { x: number; y: number } | null = null;
               for (const targetId of targetIds) {
                 const target = g.fighters.find((candidate) => (
                   String(candidate.id) === String(targetId)
@@ -20046,12 +20062,14 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 recordUnitDamage(g, owner.kind, damage);
                 addDamageText(g, target.x, target.y - 50, String(Math.round(damage)), .82, "#d8f2ff");
                 if(g.definition.missionConfig.v100StageNumber){
-                  if(appliedCount===0)queueV100ManualMuzzle(g,{owner,target:{x:target.x,y:target.y-30}});
+                  lastHit = { x: target.x, y: target.y - 30 };
+                  firstHit ??= lastHit;
                   queueV100ManualFirearmImpact(g,{owner,target,hpBefore});
                 }else addParticles(g, target.x, target.y - 30, "#b9e5f2", appliedCount === 0 ? 15 : 8);
                 appliedCount += 1;
               }
               if (appliedCount > 0) {
+                if (firstHit && lastHit) queueV100ManualMuzzle(g, { owner, target: firstHit, precisionEnd: lastHit });
                 g.flashOverlay = Math.max(g.flashOverlay, .08);
                 playManualAbilityTimelineCue(owner, "shot", owner.x, "precision-shot", {
                   priority: 86, cooldownMs: 100, maxInstances: 1,
@@ -20695,6 +20713,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               x: impactPoint.x,
               y: impactPoint.y - 12,
             });
+            let reactionTarget: Fighter | null = null;
+            let reactionDamage = 0;
             for (const splashTarget of g.fighters) {
               if (splashTarget.side !== "zombie"
                 || splashTarget.hp <= 0
@@ -20739,6 +20759,13 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               }
               noteV102GoreImpact(g,splashTarget,{weapon:hit.weapon,originX:hit.originX,originY:hit.originY,damage:appliedSplash});
               recordUnitDamage(g, hit.weapon as UnitKind, appliedSplash);
+              // One survivor reacts at the explosion. Prefer the intended
+              // target, otherwise the survivor that actually took most damage.
+              if (appliedSplash > 0 && splashTarget.hp > 0 && (primaryTarget || !reactionTarget
+                || reactionTarget.id !== hit.targetId && appliedSplash > reactionDamage)) {
+                reactionTarget = splashTarget;
+                reactionDamage = appliedSplash;
+              }
               splashTarget.flash = Math.max(splashTarget.flash, .16);
               splashTarget.knock = Math.max(splashTarget.knock, primaryTarget ? 6 : 4);
               addDamageText(g, splashTarget.x, splashTarget.y - 43, String(Math.round(appliedSplash)), .66, "#e4b46c");
@@ -20759,6 +20786,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               maxInstances: 3,
               fallbackCue: "drum-blast",
             });
+            if (reactionTarget) playEnemyContactCue(g, reactionTarget, reactionDamage);
             playProductionCue(unitAudioCueFor("mrs-chiha", "weapon", "stow"), hit.originX, {
               priority: 64,
               cooldownMs: 90,
@@ -20848,15 +20876,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             target.hp <= 0 ? "defeated" : "hit",
             productionCueQaLogRef.current,
           );
-          if (hit.shotIndex === 0 && battleVoiceReady(target,"hurt",g.time,g)) {
-            playProductionCue(enemyVoiceCue(target.kind, "hurt"), target.x, {
-              ownerId: target.id,
-              voiceAllowed: appliedDamage > 0,
-              priority: target.kind === "takuya" || target.kind === "gate-eater" ? 88 : 62,
-              cooldownMs: 210,
-              maxInstances: 3,
-            });
-          }
+          if (hit.shotIndex === 0) playEnemyContactCue(g, target, appliedDamage);
         }
         if (g.definition.stageId === CAMPAIGN_STAGE_IDS.SAWARA_WARD_OFFICE && g.time >= g.definition.prepSeconds) {
           const convoy = advanceConvoyEvacuation({
@@ -23885,16 +23905,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                     });
                   }
                 }
-                if (!splitMachineGunBurst
-                  && !deferredHumanProjectile
-                  && target.side === "zombie"
-                  && battleVoiceReady(target,"hurt",g.time,g)) playProductionCue(enemyVoiceCue(target.kind, "hurt"), target.x, {
-                  ownerId: target.id,
-                  voiceAllowed: targetHpBeforeMetric > target.hp,
-                  priority: target.kind === "takuya" || target.kind === "gate-eater" ? 88 : 62,
-                  cooldownMs: 210,
-                  maxInstances: 3,
-                });
+                const delayedGrenade = f.kind === "mrs-chiha" && !mrsLauncherBash && weaponDamageEvents;
+                if (!splitMachineGunBurst && !deferredHumanProjectile && !delayedGrenade && target.side === "zombie") {
+                  playEnemyContactCue(g, target, Math.max(0, targetHpBeforeMetric - target.hp));
+                }
               } else {
                 playProductionCue(attackAudioCueId, f.x, {
                   ownerId: f.id,
@@ -25338,7 +25352,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       window.removeEventListener("pageshow", onPageShow);
       rotation.removeEventListener("change", onVisibilityChange);
     };
-  }, [announceBossEntrance, assetError, assetsReady, chooseAction, dispatchBattleStoryEvents, externalBattleMode, graphicsProfileView.renderHz, playBattleSemanticCue, playCue, playEndJingle, playManualAbilityTimelineCue, playProductionCue, qaMode, qaScenario, queueManualAbilityTimelineCue, resumeBattleAudioLoops, screen, stopMusic, stopSfx, syncMusicMode]);
+  }, [announceBossEntrance, assetError, assetsReady, chooseAction, dispatchBattleStoryEvents, externalBattleMode, graphicsProfileView.renderHz, playBattleSemanticCue, playCue, playEnemyContactCue, playEndJingle, playManualAbilityTimelineCue, playProductionCue, qaMode, qaScenario, queueManualAbilityTimelineCue, resumeBattleAudioLoops, screen, stopMusic, stopSfx, syncMusicMode]);
 
   const healthPct = Math.max(0, hud.baseHp / hud.baseMaxHp * 100);
   const barricadePct = Math.max(0, hud.barricadeHp / hud.barricadeMaxHp * 100);
@@ -25491,13 +25505,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       >
         <canvas ref={canvasRef} width={W} height={H} className={`battlefield ${selectedAction ? "targeting" : ""} ${screen === "battle" && assetsReady && !assetError ? "active" : "inactive"}`} aria-label="連続座標の戦場" aria-hidden={screen !== "battle" || !assetsReady || assetError} onPointerMove={handleBattlefieldPointerMove} onPointerDown={handleBattlefieldPointerDown} onPointerUp={handleBattlefieldPointerUp} onPointerCancel={handleBattlefieldPointerCancel} onLostPointerCapture={handleBattlefieldLostPointerCapture} />
         {externalSessionActive && screen === "battle" && selectedAction === "airstrike" && !paused && !end && <div className="v100-targeting-guide" role="status">戦場をタップして航空支援<span>航空支援をもう一度押すと取り消し</span></div>}
-        {externalSessionActive && (!assetsReady || assetError) && <section className="v100-battle-asset-status" aria-label="戦闘データの準備">
-          <div><h2>{assetError ? "戦闘データを準備できませんでした" : "戦闘データを準備しています"}</h2>
-            <p role={assetError ? "alert" : "status"}>{assetError ? "戦闘に必要な画像を読み込めませんでした。接続を確認して、もう一度お試しください。" : "必要な画像がそろうまで戦闘は始まりません。"}</p>
-            <p>読み込み完了 {assetReadiness.completed} / {assetReadiness.total}{assetReadiness.pending > 0 ? `・読み込み待ち ${assetReadiness.pending}` : ""}{assetReadiness.failed > 0 ? `・読み込めなかった画像 ${assetReadiness.failed}` : ""}</p>
-            {(assetReadiness.retryAvailable || assetError || assetReadiness.retrying) && <button type="button" disabled={assetReadiness.retrying} onClick={retryAssets}>{assetReadiness.retrying ? "画像を再読み込みしています…" : "画像をもう一度読み込む"}</button>}
-          </div>
-        </section>}
+        {externalSession && (!assetsReady || assetError) && <V100BattleDeparture
+          session={externalSession} progress={assetReadiness} assetError={assetError}
+          background={backgroundCacheRef.current[activeBattlefieldStageId]}
+          images={spriteRefs.current} onRetry={retryAssets} />}
         {screen === "battle" && hud.manualAbilityIcons.map((icon) => {
           const ability = MANUAL_ABILITY_REGISTRY[icon.kind];
           if (!ability) return null;

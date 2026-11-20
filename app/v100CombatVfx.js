@@ -1,7 +1,7 @@
 import {combatVariation,drawRasterPlume} from "./v100RasterAtmosphere.js";
 import { TAKUYA_GROUND_BLADE_SOCKET } from './v100TakuyaGroundSocket.js';
 import {queueV104GuardImpact} from './v104CombatAudio.js';
-import {drawV100TataraImpact} from './v100ManualImpactVfx.js';
+import {drawV100ScoutInterceptDust,drawV100TataraImpact} from './v100ManualImpactVfx.js';
 import {drawV100TakuyaGroundRelease} from './v100BossAttackVfx.js';
 import {drawV100GuardImpact} from './v100GuardImpactVfx.js';
 import {V100_GROUND_FIRE_BED_ART} from './v100GroundFireArt.js';
@@ -106,11 +106,18 @@ export const V100_CONTACT_WEAPONS=Object.freeze(['scout','brawler','kumaverson',
 export const V100_CLAW_CONTACT_WEAPONS=Object.freeze(['walker','runner','turned','grappler','sprinter','futago']);
 const contactQueues=new WeakMap();
 export function clearV100ContactQueue(world){contactQueues.delete(world);clearV100GroundFireBed(world);clearV100BallisticArtwork(world);}
-export function queueV100Contact(world,{x,y,ground=false,metal=false,claw=false,size=58,direction=1,delay=0,guardContact=null,clawContact=null,skillContact=null,meleeContact=null}){
+export function queueV100Contact(world,{x,y,ground=false,metal=false,claw=false,size=58,direction=1,delay=0,guardContact=null,clawContact=null,skillContact=null,meleeContact=null,scoutIntercept=null}){
  if(!world.definition?.missionConfig?.v100StageNumber)return;
  const entries=(contactQueues.get(world)??[]).filter(e=>world.time-e.startedAt<e.duration);
- entries.push({x,y,ground,metal,claw,size,direction,guardContact,clawContact,skillContact,meleeContact,startedAt:world.time+delay,duration:metal?.16:ground?.6:.2});
+ entries.push({x,y,ground,metal,claw,size,direction,guardContact,clawContact,skillContact,meleeContact,scoutIntercept,startedAt:world.time+delay,duration:scoutIntercept?.46:metal?.16:ground?.6:.2});
  contactQueues.set(world,entries.slice(-48));
+}
+export function queueV100ScoutIntercept(world,{from,owner,target,direction}){
+ if(!world?.definition?.missionConfig?.v100StageNumber||owner?.kind!=='scout'||owner.side!=='human'
+  ||target?.side!=='zombie'||![from?.x,from?.y,owner.x,owner.y,target.x,target.y,direction].every(Number.isFinite))return false;
+ queueV100Contact(world,{x:target.x,y:target.y-30,direction,size:88,
+  scoutIntercept:{fromX:from.x,fromY:from.y,toX:owner.x,toY:owner.y}});
+ return true;
 }
 export function queueV100TakuyaGroundContact(world,{owner}={}){
  if(!world.definition?.missionConfig?.v100StageNumber||owner?.kind!=='takuya'||owner?.side!=='zombie'||!(owner.hp>0)||!owner.id)return false;
@@ -225,7 +232,11 @@ export function drawV100ContactQueue(ctx,objects,world,shieldSocketForOwner,taku
   if(e.guardContact&&drawV100GuardImpact(ctx,objects,e,world.time-e.startedAt))continue;
   if(e.tataraGroundContact&&drawV100TataraImpact(ctx,objects,e,world.time-e.startedAt))continue;
   if(e.takuyaGroundContact&&drawV100TakuyaGroundRelease(ctx,objects,e,world.time-e.startedAt))continue;
-  drawV100Contact(ctx,objects,{...e,elapsed:world.time-e.startedAt});
+  const elapsed=world.time-e.startedAt;
+  if(e.scoutIntercept){
+   drawV100ScoutInterceptDust(ctx,objects,e,elapsed);
+   drawV100Contact(ctx,objects,{...e,elapsed,duration:.2});
+  }else drawV100Contact(ctx,objects,{...e,elapsed});
  }
 }
 export function v100ExplosionFrame(effect){

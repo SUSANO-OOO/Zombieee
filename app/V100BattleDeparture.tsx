@@ -1,0 +1,92 @@
+import { useMemo, type CSSProperties } from "react";
+import { combatKindToCampaignUnitId } from "./campaign.js";
+import { MANUAL_ABILITY_REGISTRY } from "./manualAbilities.js";
+import { v100MissionObjectiveFor } from "./v100BattleAdapter.js";
+import { v100MissionThreatsFor } from "./v100MissionBriefing.js";
+import { v100PortraitFraming } from "./v100PortraitFraming.js";
+import { V100_STAGE_BY_ID, V100_UNIT_BY_ID } from "./v100Registry.js";
+import { v100RoleLabelFor } from "./v100Terminology.js";
+
+type DepartureSession = {
+  stageId: string;
+  displayName?: string;
+  battleMode?: "campaign" | "outbreak" | null;
+  survivalRun?: unknown;
+  formationKinds: readonly string[];
+  enemyKinds: readonly string[];
+};
+
+type DepartureProgress = {
+  completed: number;
+  total: number;
+  failed: number;
+  retryAvailable: boolean;
+  retrying: boolean;
+};
+
+type BattleDepartureProps = {
+  session: DepartureSession;
+  progress: DepartureProgress;
+  assetError: boolean;
+  background?: HTMLImageElement | null;
+  images: Readonly<Record<string, HTMLImageElement | undefined>>;
+  onRetry: () => void;
+};
+
+function decodedSource(image?: HTMLImageElement | null) {
+  return image?.complete && image.naturalWidth > 0 ? image.currentSrc || image.src : undefined;
+}
+
+export function V100BattleDeparture({ session, progress, assetError, background, images, onRetry }: BattleDepartureProps) {
+  const stage = session.survivalRun || session.battleMode === "outbreak" ? null : V100_STAGE_BY_ID[session.stageId];
+  const threats = useMemo(() => stage ? v100MissionThreatsFor(stage.id) : [], [stage]);
+  const threat = threats.find((candidate) => session.enemyKinds.includes(candidate.id));
+  const stageNumber = stage?.number ?? 1;
+  const crewKind = session.formationKinds[(stageNumber - 1) % Math.max(1, session.formationKinds.length)];
+  const crewId = crewKind ? combatKindToCampaignUnitId(crewKind) : null;
+  const crew = crewId ? V100_UNIT_BY_ID[crewId] : null;
+  const ability = crewKind ? MANUAL_ABILITY_REGISTRY[crewKind] : null;
+  const portrait = crew ? decodedSource(images["card-" + crewKind]) : undefined;
+  const backdrop = decodedSource(background);
+  const style = backdrop ? { "--departure-backdrop": "url('" + backdrop + "')" } as CSSProperties : undefined;
+  const stageTitle = stage
+    ? stage.number < 27 ? stage.displayName.replace(/RED PANTHER/gu, "赤レンズ部隊") : stage.displayName
+    : session.survivalRun ? "サバイバル" : session.displayName || "迎撃任務";
+  const briefing = stage ? v100MissionObjectiveFor(stage.id) : null;
+  const progressValue = Math.max(0, Math.min(progress.total, progress.completed));
+
+  return <section className="v100-battle-asset-status" aria-label="戦闘データの準備" style={style}>
+    <div className="v100-departure-layout" data-has-crew={Boolean(crew)}>
+      <article className="v100-departure-briefing">
+        <div className="v100-departure-stage"><span>出撃準備</span>{stage && <b>S{String(stageNumber).padStart(2, "0")}</b>}</div>
+        <h2>{stageTitle}</h2>
+        {briefing && <p className="v100-departure-objective">{briefing}</p>}
+        {threat && !assetError && <div className="v100-departure-threat">
+          <strong>{threat.name}</strong><span>{threat.purpose}</span>
+        </div>}
+        <div className="v100-departure-progress">
+          <p role={assetError ? "alert" : "status"}>
+            {assetError ? "戦闘に必要な画像を読み込めませんでした。" : progress.retrying ? "画像を読み込み直しています" : "戦場を準備しています"}
+          </p>
+          {!assetError && <progress aria-label="画像の読み込み" max={Math.max(1, progress.total)}
+            value={progress.total > 0 ? progressValue : undefined} />}
+          {assetError && progress.failed > 0 && <small>読み込めなかった画像 {progress.failed}件</small>}
+          {(progress.retryAvailable || assetError || progress.retrying) &&
+            <button type="button" disabled={progress.retrying} onClick={onRetry}>
+              {progress.retrying ? "画像を再読み込みしています…" : "画像をもう一度読み込む"}
+            </button>}
+        </div>
+      </article>
+      {crew && crewId && <figure className="v100-departure-crew" style={v100PortraitFraming(crewId) as CSSProperties}>
+        <div className="v100-departure-portrait" aria-hidden="true">
+          {portrait && <img src={portrait} alt="" draggable={false} />}
+        </div>
+        <figcaption>
+          <span>{v100RoleLabelFor(crew.role)}</span>
+          <strong>{crew.displayName}</strong>
+          {ability && <small>{ability.displayName}</small>}
+        </figcaption>
+      </figure>}
+    </div>
+  </section>;
+}
