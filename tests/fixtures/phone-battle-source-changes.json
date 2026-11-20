@@ -369,8 +369,12 @@
       "  const bayHud = hasBayEvacuation(gameRef.current.definition.missionType, gameRef.current.definition.missionConfig)\n    ? bayEvacuationReadout(gameRef.current.stageMission) : null;\n  const phaseName = bayHud ? bayHud.phaseLabel\n    : railHud ? railHud.phaseLabel"
     ],
     [
-      "            : rescueControlHud\n            ? <div className=\"health-hud barrier-health rescue-control-objective\"",
-      "            : bayHud\n            ? <div className=\"health-hud barrier-health bay-evacuation-objective\" data-bay-evacuation={bayHud.phase}\n              data-evacuated-count={bayHud.count} aria-label={`${bayHud.label} ${bayHud.status}`}>\n              <div><span>{bayHud.label}</span><b>{bayHud.status}</b></div>\n              <i><em style={{ width: `${bayHud.count / bayHud.total * 100}%` }} /></i>\n            </div>\n            : rescueControlHud\n            ? <div className=\"health-hud barrier-health rescue-control-objective\""
+      "{externalSessionActive && bossHealthPanel ? null : railHud",
+      "{(bayHud || (externalSessionActive && bossHealthPanel)) ? null : railHud"
+    ],
+    [
+      "<div className=\"battle-objective objective\">{isSurvivalBattle ? \"防衛前線を維持\" : `目標：${formatBattleText(hud.objective)}`}</div>",
+      "<div className=\"battle-objective objective\">\n              {bayHud && <span className=\"bay-evacuation-objective\" data-bay-evacuation={bayHud.phase}\n                data-evacuated-count={bayHud.count} aria-label={`${bayHud.label} ${bayHud.status}`}>避難 {bayHud.count}/{bayHud.total}</span>}\n              {isSurvivalBattle ? \"防衛前線を維持\" : `目標：${formatBattleText(hud.objective)}`}\n            </div>"
     ]
   ],
   "app/manualAbilities.js": [
