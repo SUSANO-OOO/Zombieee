@@ -591,10 +591,12 @@ function rangerLivingStunJointPose(kind,atlas,runtime,actor,remaining) {
     transform=[c,s,-s,c,px-c*px+s*py,py-s*px-c*py];
     for(const bone of Object.keys(upper))upper[bone]=multiplyMatrix(transform,upper[bone]);
   }
-  // Keep the last painted lower at entry, then use the same continuous source
-  // pose as neutral. No mutable painter buffer enters this actor history.
+  // Preserve the painted crouch at stun entry, then release it with the
+  // existing stun blend so the hips and shoulders rise together.
   const lower=elapsed===0?entry.plan:neutral;
-  return {...neutral,lowerIndex:lower.lowerIndex,lowerSettle:lower.lowerSettle,upperOffsetY:lower.upperOffsetY,phase:lower.phase,settleIndex:lower.settleIndex,
+  const rangerBraceY=(entry.plan.rangerBraceY??0)*(1-progress);
+  const upperOffsetY=elapsed===0||rangerBraceY===0?lower.upperOffsetY:lower.upperOffsetY+rangerBraceY;
+  return {...neutral,lowerIndex:lower.lowerIndex,lowerSettle:lower.lowerSettle,upperOffsetY,rangerBraceY,phase:lower.phase,settleIndex:lower.settleIndex,
     liveStun:true,rangerStunUpperPose:upper,rangerStunUpperTransform:transform,stunElapsed:elapsed,stunRemaining:remaining};
 }
 

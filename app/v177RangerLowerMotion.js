@@ -16,8 +16,10 @@ function rigid(out,ax,ay,bx,by,cx,cy,dx,dy) {
   const scale=Math.hypot(dx-cx,dy-cy)/Math.hypot(bx-ax,by-ay),c=Math.cos(angle)*scale,s=Math.sin(angle)*scale;
   out[0]=c;out[1]=s;out[2]=-s;out[3]=c;out[4]=cx-c*ax+s*ay;out[5]=cy-s*ax-c*ay;
 }
-export function v177RangerLowerPose(rig,phase,settle,out=createV177RangerLowerPose(rig),feet=null) {
-  phase=cycle(phase);settle=clamp(settle);out.phase=phase;out.settle=settle;out.bob=v177RangerLowerBob(phase,settle);
+export function v177RangerLowerPose(rig,phase,settle,out=createV177RangerLowerPose(rig),feet=null,braceY=0) {
+  phase=cycle(phase);settle=clamp(settle);out.phase=phase;out.settle=settle;
+  const gaitBob=v177RangerLowerBob(phase,settle);
+  out.bob=braceY===0?gaitBob:gaitBob+braceY;
   const pelvis=out.matrices.pelvis;pelvis[0]=1;pelvis[1]=0;pelvis[2]=0;pelvis[3]=1;pelvis[4]=0;pelvis[5]=out.bob;
   for(let i=0;i<rig.legs.length;i++){
     const leg=rig.legs[i],q=cycle(phase+leg.offset),t=(q-rig.stanceFraction)/(1-rig.stanceFraction),swing=q>rig.stanceFraction;

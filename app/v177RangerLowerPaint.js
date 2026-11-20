@@ -185,12 +185,12 @@ function rasterPart(p,g,w,h,ox,oy,stats) {
   }
 }
 
-export function paintV177RangerLower(p,ctx,phase,settle,x,y,width,height,feet=null) {
+export function paintV177RangerLower(p,ctx,phase,settle,x,y,width,height,feet=null,braceY=0) {
   const diagnostic=globalThis.__V100_RAF_CALLBACK_DIAG__;
   const trace=diagnostic?.rangerPaintActive===true&&typeof diagnostic.rangerPaint==='function'
     ?{startedAt:performance.now()}:null;
   let pose;
-  try{pose=v177RangerLowerPose(p.rig,phase,settle,p.pose,feet);}catch(error){invalidateRasters(p);throw error;}
+  try{pose=v177RangerLowerPose(p.rig,phase,settle,p.pose,feet,braceY);}catch(error){invalidateRasters(p);throw error;}
   if(trace)trace.poseFinishedAt=performance.now();
   const m=ctx.getTransform();
   if(trace){trace.phase=pose.phase;trace.settle=pose.settle;trace.transform=[m.a,m.b,m.c,m.d,m.e,m.f];}
@@ -290,5 +290,5 @@ export function drawV177RangerLower(ctx,image,rig,plan,x,y,width,height) {
   let painter=painters.get(image);
   if(painter===undefined){try{painter=createV177RangerLowerPainter(image,rig);}catch{painter=null;}painters.set(image,painter);}
   if(!painter)return {mode:'legacy-cell-fallback',reason:'source-readback-unavailable'};
-  return paintV177RangerLower(painter,ctx,plan.phase,plan.lowerSettle,x,y,width,height,plan.lowerFootTargets);
+  return paintV177RangerLower(painter,ctx,plan.phase,plan.lowerSettle,x,y,width,height,plan.lowerFootTargets,plan.rangerBraceY);
 }

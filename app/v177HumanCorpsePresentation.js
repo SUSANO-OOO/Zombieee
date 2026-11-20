@@ -33,7 +33,7 @@ export function pruneV177HumanCorpsePaints(world) {
 function localBounds(paint) {
   const {kind,plan,frame,width,height}=paint,atlas=V177_JOINT_ATLASES[kind];let points=[];
   if(plan&&kind==='ranger') {
-    const pose=v177RangerLowerPose(atlas.lowerRig,plan.phase,plan.lowerSettle,undefined,plan.lowerFootTargets);
+    const pose=v177RangerLowerPose(atlas.lowerRig,plan.phase,plan.lowerSettle,undefined,plan.lowerFootTargets,plan.rangerBraceY);
     for(const part of atlas.lowerRig.parts) {
       const mesh=pose.meshes[part.name],d=part.destination;
       points.push(...(mesh?Array.from({length:mesh.length/2},(_,i)=>[mesh[i*2],mesh[i*2+1]])
