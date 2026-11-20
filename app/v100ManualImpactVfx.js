@@ -1,3 +1,4 @@
+import {drawRasterPlume} from './v100RasterAtmosphere.js';
 import {V100_MANUAL_IMPACT_ART} from './v100ManualImpactArt.js';
 
 // Contact queue entries survive fighter cloning and expire after the actual
@@ -25,6 +26,22 @@ export function drawV100TataraImpact(ctx,objects,entry,elapsed){
    -entry.size*art.anchorX,-entry.size*art.anchorY,entry.size,entry.size);
  }
  ctx.restore();return true;
+}
+
+// Only the executed dash leaves this ground-level wake. A short intercept
+// makes a single skid, while a long one leaves dust along the real route.
+export function drawV100ScoutInterceptDust(ctx,objects,entry,elapsed){
+ const {fromX,fromY,toX,toY}=entry.scoutIntercept;
+ if(elapsed<0||elapsed>=entry.duration)return;
+ const dx=toX-fromX,dy=toY-fromY,distance=Math.hypot(dx,dy);
+ const marks=distance>=52?[.16,.52,.92]:[.92];
+ for(const mark of marks){
+  const age=Math.min(1,(elapsed+(1-mark)*.075)/entry.duration);
+  const width=28+mark*22+age*31;
+  drawRasterPlume(ctx,objects?.['v100-dust'],{x:fromX+dx*mark-entry.direction*age*16,
+   y:fromY+dy*mark+4-age*6,width,height:9+mark*9+age*12,
+   alpha:(.34+mark*.29)*(1-age)**1.55,rotation:entry.direction*(mark-.55)*.17,flip:entry.direction<0});
+ }
 }
 
 const musashiChoices=new WeakMap();

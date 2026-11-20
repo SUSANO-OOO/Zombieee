@@ -188,11 +188,16 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
  const legs=atlas.legConstraints??[];
  const waist=atlas.interpolationPivots?.spine??(legs.length?[legs.reduce((s,c)=>s+c.hip[0],0)/legs.length,legs.reduce((s,c)=>s+c.hip[1],0)/legs.length]:[240,250]);
  const weight=attacking?keys(p,[[0,0],[.18,-1],[.23,-1],[.28,.8],[.48,1],[.64,.8],[1,0]])[0]:0;
+ const intercept=kind==='scout'&&plan.abilityPresentation==='scout-intercept';
  const heavy=['brute','guardian','gate-eater','red-panther-shield','crazy-king','kumaverson','takuya','takuya-omega','crusher','abomination','gairen'].includes(kind);
  // Kuma raises the bowl over his crown, then folds forward into the slam.
  // The planted legs and original arm lengths still own the whole movement.
- const bodyAngle=kind==='kumaverson'?keys(p,[[0,0],[.18,.10],[.23,.10],[.28,.27],[.48,.42],[.64,.35],[1,0]])[0]:kind==='babayaga'?0:(kind==='brute'?.70:kind==='mugarian-president-mutated'?.50:heavy?.21:.17)*weight;
- const torso=rigid(waist,[waist[0]+weight*(heavy?13:9),waist[1]+Math.abs(weight)*(kind==='mugarian-president-mutated'?30:heavy?5:3)],bodyAngle);
+ // Hachi folds forward into the charge, drives the crowbar past his shoulder,
+ // then rises out of the follow-through on the existing ability clock.
+ const [drive,crouch,lean]=intercept?keys(p,[[0,0,0,0],[.22,-9,16,.34],[.28,0,14,.39],
+  [.40,18,9,.47],[.57,10,6,.30],[1,0,0,0]]):[0,0,0];
+ const bodyAngle=intercept?lean:kind==='kumaverson'?keys(p,[[0,0],[.18,.10],[.23,.10],[.28,.27],[.48,.42],[.64,.35],[1,0]])[0]:kind==='babayaga'?0:(kind==='brute'?.70:kind==='mugarian-president-mutated'?.50:heavy?.21:.17)*weight;
+ const torso=rigid(waist,[waist[0]+(intercept?drive:weight*(heavy?13:9)),waist[1]+(intercept?crouch:Math.abs(weight)*(kind==='mugarian-president-mutated'?30:heavy?5:3))],bodyAngle);
  for(const [bone,m]of Object.entries(base)){
   const pivot=atlas.interpolationPivots?.[bone]??[0,0];
   upper[bone]=multiply(torso,rigid(pivot,point(m,pivot),Math.atan2(m[1],m[0])));
@@ -301,7 +306,11 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
     [wind,hit,follow]=[1.65,-.35,-1.75];
     rows=[[.18,reach*.45,reach*.70],[.23,reach*.45,reach*.70],[.28,reach*.88,reach*.06],[.48,reach*.35,-reach*.70],[.64,reach*.35,-reach*.70]];
    }
-   if(kind==='brute'){[wind,hit,follow]=[-2.25,-.65,-.3];rows=[[.18,23,-26],[.23,23,-26],[.28,38,13],[.48,35,28],[.64,35,28]];}
+   if(intercept){
+    [wind,hit,follow]=[-1.82,-.08,.72];
+    rows=[[.18,-reach*.34,-reach*.32],[.23,-reach*.34,-reach*.32],
+     [.28,reach*.82,reach*.22],[.48,reach*.63,reach*.56],[.64,reach*.38,reach*.53]];
+   }else if(kind==='brute'){[wind,hit,follow]=[-2.25,-.65,-.3];rows=[[.18,23,-26],[.23,23,-26],[.28,38,13],[.48,35,28],[.64,35,28]];}
    else if(['guardian','gate-eater','red-panther-shield'].includes(kind)){[wind,hit,follow]=[restDirection-.25,restDirection,restDirection+(kind==='guardian'?0:.10)];rows=[[.18,23,38],[.23,23,38],[.28,66,16],[.48,62,24],[.64,62,24]];}
    else if(kind==='kumaverson'){[wind,hit,follow]=[-1.7,-.08,.85];rows=[[.18,9,-reach*.95],[.23,9,-reach*.95],[.28,reach*.96,0],[.48,reach*.77,reach*.52],[.64,reach*.77,reach*.52]];}
    else if(kind==='takuya-omega'){[wind,hit,follow]=[-2.75,.25,.9];rows=[[.08,0,150],[.18,45,140],[.23,45,140],[.25,0,165],[.28,reach*.55,reach*.83],[.48,reach*.62,reach*.5],[.64,reach*.62,reach*.5]];}

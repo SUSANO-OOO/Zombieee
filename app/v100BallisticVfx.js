@@ -1,5 +1,5 @@
 import {V100_BALLISTIC_MATERIAL_ART} from './v100BallisticMaterialArt.js';
-import {combatVariation} from './v100RasterAtmosphere.js';
+import {combatVariation,drawRasterPlume} from './v100RasterAtmosphere.js';
 
 const profiles=Object.freeze({
  ranger:{glint:1,casing:4,caseWidth:6.8},
@@ -27,6 +27,33 @@ function paintCell(ctx,image,frame,width,height,alpha){
  ctx.drawImage(image,frame.frame%3*256,Math.floor(frame.frame/3)*256,256,256,
   -frame.anchorX*width,-frame.anchorY*height,width,height);
 }
+export const V100_PRECISION_RIFLE_TAIL_SECONDS=.34;
+
+// The precision hit is already committed. Briefly reveal the actual
+// muzzle-to-contact path, followed by smoke from the same painted origin.
+export function drawV100PrecisionRifleRelease(ctx,objects,world,{origin,end},elapsed){
+ const dx=end.x-origin.x,dy=end.y-origin.y,distance=Math.hypot(dx,dy);
+ if(!(distance>1)||elapsed<0||elapsed>=V100_PRECISION_RIFLE_TAIL_SECONDS)return;
+ const angle=Math.atan2(dy,dx);
+ if(elapsed<.12){
+  const image=artworkFor(objects,world);
+  const fade=(1-elapsed/.12)**1.55;
+  const frame=V100_BALLISTIC_MATERIAL_ART.materials.frames[profiles.ranger.glint];
+  ctx.save();ctx.translate(end.x,end.y);ctx.rotate(angle);
+  ctx.shadowBlur=0;ctx.globalCompositeOperation='lighter';
+  if(image){
+   paintCell(ctx,image,frame,distance/(frame.anchorX-.08),26,.94*fade);
+  }else{
+   const steel=objects?.['v104-steel'];
+   if(steel?.complete&&steel.naturalWidth){ctx.globalAlpha=.54*fade;ctx.drawImage(steel,-distance,-2.8,distance,5.6);}
+  }
+  ctx.restore();
+ }
+ const age=elapsed/V100_PRECISION_RIFLE_TAIL_SECONDS;
+ drawRasterPlume(ctx,objects?.['v100-dust'],{x:origin.x+dx/distance*age*14,y:origin.y-1-age*9,
+  width:17+age*31,height:8+age*12,alpha:.42*(1-age)**1.4,rotation:angle});
+}
+
 export function drawV100BallisticShot(ctx,objects,shot,{x,y,ux,uy,p,elapsed,distance,weapon,weaponProfile},world){
  const profile=profiles[weapon];
  if(!profile||shot?.style==='melee')return false;
