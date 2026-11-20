@@ -47,6 +47,11 @@ export function v100ArmoryKeyStatus(definition, state) {
   return troopsRemain ? "contested" : "ready";
 }
 
+export function recoverV100ArmoryKey(definition, state) {
+  if (v100ArmoryKeyStatus(definition, state) !== "ready") return state.stageMission;
+  return Object.freeze({ ...state.stageMission, armoryKeyRecovered: true });
+}
+
 export const V100_ARMORY_STATUS_LABELS = Object.freeze({
   protected: "警備隊を迎撃",
   mobile: "指揮車を止める",

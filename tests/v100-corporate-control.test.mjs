@@ -4,7 +4,7 @@ import {
   drawV100CorporateControl, hasV100LureControl, v100ObjectiveDamageLabel, v100CorporateControlCondition,
   v100LureControlAim, v100LureControlReadout, v100LureWaveBlocked, V100_CORPORATE_CONTROLS, V100_CORPORATE_CONTROL_ART,
   V100_LURE_CONTROL_ART, V100_LURE_CONTROL_OBJECTIVE, V100_LURE_CONTROL_STAGE,
-  v100ArmoryKeyStatus, V100_ARMORY_OBJECTIVE, V100_ARMORY_STAGE,
+  recoverV100ArmoryKey, v100ArmoryKeyStatus, V100_ARMORY_OBJECTIVE, V100_ARMORY_STAGE,
 } from "../app/v100CorporateControl.js";
 import {applyEnemyBaseDamage} from "../app/v100ResearchCore.js";
 import {createEmergencySupportRuntime, requestAirstrike, WORLD_GEOMETRY} from "../app/gameRules.js";
@@ -12,6 +12,7 @@ import {requiredBattleAssetPlan} from "../app/battleAssetPlan.js";
 import {objectiveForBattle,battleOutcomeFor} from "../app/battleDefinitions.js";
 import {v100BattleDefinitionFor} from "../app/v100BattleAdapter.js";
 import { V100_BRIDGE_ART } from "../app/v100BridgeEscort.js";
+import { createStationMissionRuntime } from "../app/stationStageMechanics.js";
 test("corporate objectives explain actual protection and destruction while legacy objectives remain intact",()=>{
   for(const [stageId,label] of Object.entries(V100_CORPORATE_CONTROLS)){
     const definition=v100BattleDefinitionFor(stageId);
@@ -124,7 +125,8 @@ test("the armory is cleared only after the actual command vehicle is stopped and
   assert.equal(definition.timeline.flatMap(event => event.units).filter(kind => kind === "red-panther-commander").length, 1);
   assert.ok(definition.timeline.at(-1).units.includes("red-panther-commander"));
   const base = { baseHp: 680, barricadeHp: 1000, barricadeVulnerable: false,
-    stageMission: {}, eventIndex: definition.timeline.length, enemySpawn: { pending: [] }, fighters: [] };
+    stageMission: createStationMissionRuntime(definition.missionType, definition.missionConfig),
+    eventIndex: definition.timeline.length, enemySpawn: { pending: [] }, fighters: [] };
   assert.equal(objectiveForBattle(definition, base), V100_ARMORY_OBJECTIVE);
   const stopped = { ...base, barricadeHp: 0, barricadeVulnerable: true };
   assert.equal(v100ArmoryKeyStatus(definition, { ...stopped, eventIndex: 1 }), "contested");
@@ -132,7 +134,13 @@ test("the armory is cleared only after the actual command vehicle is stopped and
   assert.equal(v100ArmoryKeyStatus(definition, { ...stopped, fighters: [{ side: "zombie", hp: 1 }] }), "contested");
   assert.equal(v100ArmoryKeyStatus(definition, { ...stopped, fighters: [{ side: "human", hp: 0 }] }), "ready");
   assert.equal(battleOutcomeFor(definition, { ...stopped, wavesResolved: true }), null);
-  const collected = { ...stopped, stageMission: { armoryKeyRecovered: true }, wavesResolved: true };
+  assert.ok(Object.isFrozen(base.stageMission));
+  assert.equal(recoverV100ArmoryKey(definition, base), base.stageMission);
+  const recovered = recoverV100ArmoryKey(definition, stopped);
+  assert.equal(recovered.armoryKeyRecovered, true);
+  assert.equal(base.stageMission.armoryKeyRecovered, undefined);
+  const collected = { ...stopped, stageMission: recovered, wavesResolved: true };
+  assert.equal(recoverV100ArmoryKey(definition, collected), recovered);
   assert.equal(battleOutcomeFor(definition, collected), "won");
   assert.equal(battleOutcomeFor(definition, { ...collected, wavesResolved: false }), null);
   assert.equal(battleOutcomeFor(definition, { ...collected, baseHp: 0 }), "lost");

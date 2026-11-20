@@ -631,7 +631,7 @@ import { drawV100ClinicalControl } from "./v100ClinicalControl.js";
 import { advanceClinicalRescue, clinicalRescueReadout, createClinicalRescueRuntime, drawClinicalEvacuees,
   hasClinicalRescue, stopClinicalDisposal, CLINICAL_CONTROL_X, CLINICAL_RESCUE_COUNT } from "./v100ClinicalRescue.js";
 import { drawV100CorporateControl, hasV100LureControl, v100CorporateControlLabel, v100ObjectiveDamageLabel,
-  v100ArmoryKeyStatus, V100_ARMORY_STATUS_LABELS, v100CorporateControlCondition, v100LureControlAim,
+  recoverV100ArmoryKey, v100ArmoryKeyStatus, V100_ARMORY_STATUS_LABELS, v100CorporateControlCondition, v100LureControlAim,
   v100LureControlReadout, v100LureWaveBlocked } from "./v100CorporateControl.js";
 import { drawV100AssaultObject, v100AssaultObjectProfile } from "./v100AssaultObjects.js";
 import { drawV100Explosion, drawV100FootDust, drawV100GroundFire, drawV100Muzzle, V100_CONTACT_WEAPONS, V100_CLAW_CONTACT_WEAPONS, queueV100Contact, queueV100ScoutIntercept, queueV100ClawContact, queueV100TakuyaGroundContact, queueV100TataraGroundContact, getV100ClawContactSnapshot, getV100SkillContactSnapshot, queueV100GuardContact, getV100GuardContactSnapshot, drawV100ContactQueue, clearV100ContactQueue } from "./v100CombatVfx.js";
@@ -17162,10 +17162,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
 
   const recoverArmoryKey = useCallback(() => {
     const g = gameRef.current;
-    if (!g.running || g.paused || g.over || g.baseHp <= 0 || !g.definition.missionConfig.armoryKey
-        || v100ArmoryKeyStatus(g.definition, g) !== "ready") return;
-    if (rejectBattleSaveBoundary("armory-key:save-pending")) return;
-    g.stageMission.armoryKeyRecovered = true;
+    if (!g.running || g.paused || g.over || g.baseHp <= 0 || !g.definition.missionConfig.armoryKey) return;
+    const recovered = recoverV100ArmoryKey(g.definition, g);
+    if (recovered === g.stageMission || rejectBattleSaveBoundary("armory-key:save-pending")) return;
+    g.stageMission = recovered;
     g.banner = V100_ARMORY_STATUS_LABELS.secured;
     g.bannerTime = 1.5;
     playProductionCue(STATION_AUDIO_CUE_IDS.TERMINAL_CONFIRM, BARRICADE_X, { priority: 85, maxInstances: 1 });

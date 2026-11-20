@@ -682,7 +682,7 @@
     ],
     [
       "  v100CorporateControlCondition, v100LureControlAim, v100LureControlReadout, v100LureWaveBlocked } from \"./v100CorporateControl.js\";",
-      "  v100ArmoryKeyStatus, V100_ARMORY_STATUS_LABELS, v100CorporateControlCondition, v100LureControlAim,\n  v100LureControlReadout, v100LureWaveBlocked } from \"./v100CorporateControl.js\";"
+      "  recoverV100ArmoryKey, v100ArmoryKeyStatus, V100_ARMORY_STATUS_LABELS, v100CorporateControlCondition, v100LureControlAim,\n  v100LureControlReadout, v100LureWaveBlocked } from \"./v100CorporateControl.js\";"
     ],
     [
       "  archiveReady?: boolean;",
@@ -690,7 +690,7 @@
     ],
     [
       "  const releaseBridgeBarrier = useCallback(() => {",
-      "  const recoverArmoryKey = useCallback(() => {\n    const g = gameRef.current;\n    if (!g.running || g.paused || g.over || g.baseHp <= 0 || !g.definition.missionConfig.armoryKey\n        || v100ArmoryKeyStatus(g.definition, g) !== \"ready\") return;\n    if (rejectBattleSaveBoundary(\"armory-key:save-pending\")) return;\n    g.stageMission.armoryKeyRecovered = true;\n    g.banner = V100_ARMORY_STATUS_LABELS.secured;\n    g.bannerTime = 1.5;\n    playProductionCue(STATION_AUDIO_CUE_IDS.TERMINAL_CONFIRM, BARRICADE_X, { priority: 85, maxInstances: 1 });\n  }, [playProductionCue, rejectBattleSaveBoundary]);\n\n  const releaseBridgeBarrier = useCallback(() => {"
+      "  const recoverArmoryKey = useCallback(() => {\n    const g = gameRef.current;\n    if (!g.running || g.paused || g.over || g.baseHp <= 0 || !g.definition.missionConfig.armoryKey) return;\n    const recovered = recoverV100ArmoryKey(g.definition, g);\n    if (recovered === g.stageMission || rejectBattleSaveBoundary(\"armory-key:save-pending\")) return;\n    g.stageMission = recovered;\n    g.banner = V100_ARMORY_STATUS_LABELS.secured;\n    g.bannerTime = 1.5;\n    playProductionCue(STATION_AUDIO_CUE_IDS.TERMINAL_CONFIRM, BARRICADE_X, { priority: 85, maxInstances: 1 });\n  }, [playProductionCue, rejectBattleSaveBoundary]);\n\n  const releaseBridgeBarrier = useCallback(() => {"
     ],
     [
       "              g.banner = `${mission.label} // 拠点防護解除`;",
