@@ -10,6 +10,10 @@ import { isBossFighter } from "../app/bossFoundation.js";
 import { v100AssaultObjectProfile } from "../app/v100AssaultObjects.js";
 import { campaignWaveReady } from "../app/wavePacing.js";
 import { hasCentralSeal } from "../app/v100CentralSeal.js";
+import { createEstuaryFloodgateRuntime, floodgateIngressDisposition } from "../app/v100EstuaryFloodgate.js";
+import { hasV100LureControl, v100LureWaveBlocked } from "../app/v100CorporateControl.js";
+import { WORLD_GEOMETRY } from "../app/gameRules.js";
+import { STATION_AUDIO_CUE_IDS } from "../app/productionAudio.js";
 
 const source=await readFile("app/AshfallGame.tsx","utf8");
 const ast=ts.createSourceFile("AshfallGame.tsx",source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);
@@ -23,13 +27,15 @@ const code=ts.transpileModule(consumer,{compilerOptions:{target:ts.ScriptTarget.
 
 const runConsumer = context => {
   const { missionType, missionConfig } = context.g.definition;
-  vm.runInNewContext(code, { ...context, centralSeal: hasCentralSeal(missionType, missionConfig) });
+  vm.runInNewContext(code, { ...context, centralSeal: hasCentralSeal(missionType, missionConfig),
+    lureControl: hasV100LureControl(context.g.definition), v100LureWaveBlocked, floodgateIngressDisposition,
+    WORLD_GEOMETRY, STATION_AUDIO_CUE_IDS });
 };
 
 test('all ordinary assault consumers advance once after clearance and never pile up overdue waves',()=>{
   for(const stage of V100_STAGES){
     const definition=createBattleDefinition(stage.id,{v100:true});
-    if(definition.missionType!=='assault')continue;
+    if(definition.missionType!=='assault'||hasV100LureControl(definition))continue;
     const g={definition,eventIndex:1,time:10,bannerTime:0,fighters:Array.from({length:3},()=>({side:'human',hp:100,combatReady:true})),enemySpawn:{nextEntryId:1,pending:[]}};
     const queued=[];
     const context={g,campaignWaveReady,isBossFighter,v100AssaultObjectProfile,isBossEnemyKind:()=>false,activeStageViewportId:'844x340',
@@ -47,6 +53,56 @@ test('all ordinary assault consumers advance once after clearance and never pile
     g.time=1002.5;runConsumer(context);
     assert.deepEqual(queued.map(event=>event.wave),[2,3],'only one event after a new recovery window');
   }
+});
+
+function runMissionEvent(g, queued, signals = []) {
+  runConsumer({ g, campaignWaveReady, isBossFighter, v100AssaultObjectProfile,
+    isBossEnemyKind:()=>false, activeStageViewportId:"844x340",
+    enqueueEnemyWave:(runtime,event)=>{
+      queued.push(event.wave);
+      return {...runtime,nextEntryId:runtime.nextEntryId+event.units.length,
+        pending:event.units.map((kind,index)=>({kind,entryId:runtime.nextEntryId+index}))};
+    },
+    enemySpawnPortalPoint:()=>({legacyLane:1}), announceBossEntrance:()=>{}, playCue:()=>{}, emitBattleBark:()=>{},
+    playProductionCue:cue=>signals.push(cue),
+  });
+}
+
+test("the logistics loudspeaker calls infected while active and skips them after destruction", () => {
+  const definition=createBattleDefinition(V100_STAGES[20].id,{v100:true});
+  const g={definition,eventIndex:0,time:definition.timeline[0].at,barricadeHp:1000,fighters:[],enemySpawn:{nextEntryId:1,pending:[]}};
+  const arrivals=[], cues=[];
+  runMissionEvent(g, arrivals, cues);
+  assert.deepEqual(arrivals, [1]);
+  g.time=definition.timeline[2].at;
+  runMissionEvent(g, arrivals, cues);
+  assert.deepEqual(arrivals, [1,2,3]);
+  assert.deepEqual(cues, [STATION_AUDIO_CUE_IDS.WARNING]);
+  const pending = g.enemySpawn.pending.slice();
+  g.barricadeHp = 0;
+  g.time=definition.timeline.at(-1).at;
+  runMissionEvent(g, arrivals, cues);
+  assert.deepEqual(arrivals, [1,2,3]);
+  assert.deepEqual(g.enemySpawn.pending, pending);
+  assert.equal(g.eventIndex, definition.timeline.length);
+});
+
+test("the open floodgate holds, admits or rejects the same scheduled ingress by gate state", () => {
+  const definition=createBattleDefinition(V100_STAGES[19].id,{v100:true});
+  const g={definition,eventIndex:definition.timeline.length-1,time:200,barricadeHp:1000,
+    fighters:[],enemySpawn:{nextEntryId:1,pending:[]},stageMission:createEstuaryFloodgateRuntime()};
+  const queued=[];
+  runMissionEvent(g, queued);
+  assert.deepEqual(queued, []);
+  assert.equal(g.eventIndex, definition.timeline.length-1);
+  const blocked={...g,stageMission:{...g.stageMission,floodgateElapsed:0}};
+  runMissionEvent(blocked, queued);
+  assert.deepEqual(queued, []);
+  assert.equal(blocked.eventIndex, definition.timeline.length);
+  g.stageMission={...g.stageMission,floodgateOpenAfterDefeat: Number.MAX_SAFE_INTEGER};
+  runMissionEvent(g, queued);
+  assert.deepEqual(queued, [7]);
+  assert.equal(g.eventIndex, definition.timeline.length);
 });
 
 test("the actual consumer establishes combat before Omega, then emits both A reinforcements",()=>{
