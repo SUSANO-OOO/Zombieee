@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { V177_JOINT_ATLASES, v177JointPose, drawV177JointPose, v177CaptureJointPose } from '../app/v177JointPresentation.js';
 import { v177LivingStunState, v177LivingStunSample } from '../app/v177LivingStun.js';
-import { createManualAbilityRuntime, advanceManualAbility } from '../app/manualAbilities.js';
+import { createManualAbilityRuntime, advanceManualAbility, MANUAL_ABILITY_REGISTRY } from '../app/manualAbilities.js';
 import { v105CurrentAbilitySample } from '../app/v105CurrentAbilityPose.js';
 
 const kinds=Object.keys(V177_JOINT_ATLASES).filter(k=>V177_JOINT_ATLASES[k].type==='rigid-parts');
@@ -169,6 +169,28 @@ test('short and interrupted stuns retain fixed arm reach and foot attachment acr
         paint(kind,plan,actor);
       }
     }
+});
+
+test('a stun during a held-tool skill returns from its painted carry pose',()=>{
+  for(const kind of ['medic','engineer','mrs-chiha']){
+    const atlas=V177_JOINT_ATLASES[kind],manualDefinition=MANUAL_ABILITY_REGISTRY[kind];
+    const actor={kind,side:'human',hp:80,combatReady:true,
+      manualAbility:{phase:'windup',windupRemaining:manualDefinition.windupSeconds*.27}};
+    const r={...runtime,locomotionPhase:.16,locomotionSettle:.35};
+    const cast=v105CurrentAbilitySample(actor,{}, {manualDefinition});
+    const started=v177JointPose(kind,cast,r,{actor,grounded:true});
+    assert.ok(started.upperIndex<atlas.lowerCount);
+    paint(kind,started,actor);
+    actor.stunned=.45;
+    const interrupted=v105CurrentAbilitySample(actor,{}, {manualDefinition});
+    const entry=v177JointPose(kind,interrupted,r,{actor,grounded:true,stunRemaining:.45});
+    sameJoints(v177CaptureJointPose(kind,entry),v177CaptureJointPose(kind,started),kind+'/entry');
+    for(const elapsed of [.031,.079,.12]){
+      const plan=v177JointPose(kind,interrupted,{...r,elapsedSeconds:elapsed},{actor,grounded:true,stunRemaining:.45-elapsed});
+      assert.equal(plan.stunReturnPlan,null);
+      attached(atlas,v177CaptureJointPose(kind,plan),kind+'/return');
+    }
+  }
 });
 
 test('missing history, actor mismatch, owned actions and missing images cannot borrow a status body',()=>{

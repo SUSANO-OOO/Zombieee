@@ -5,7 +5,7 @@ const sample=(base,state,p,style)=>({...base,requestedState:state,clipProgress:c
 const manualPresentation = {
   scout: 'scout-intercept', guardian: 'guard', kumaverson: 'guard',
   brawler: 'fist-wave', brute: 'ground-slam',
-  medic: 'support-manual', engineer: 'support-manual',
+  medic: 'support-manual', engineer: 'support-manual', 'mrs-chiha': 'launcher-salvo',
 };
 
 export function v105AbilityFacing(owner){
@@ -50,10 +50,14 @@ export function v105CurrentAbilitySample(owner,base,{manualDefinition,anomaly,ku
     if(m.phase==='guard')return sample(base,'active',.25,'cross-guard');
     if(m.phase==='salvo'){
       const interval=manualDefinition.salvoIntervalSeconds??.12,elapsed=(m.abilityElapsed??0)-manualDefinition.windupSeconds;
+      if(style==='launcher-salvo'){
+        const lastLaunch=Math.max(0,(m.salvoIndex??1)-1)*interval;
+        return sample(base,'active',(elapsed-lastLaunch)/interval,style);
+      }
       return sample(base,'active',.12+.4*clamp((elapsed%interval)/Math.min(.08,interval)),style);
     }
     const elapsed=manualDefinition.recoverySeconds-m.windupRemaining;
-    if(['gunner','zakimiya'].includes(owner.kind))
+    if(['gunner','zakimiya','mrs-chiha'].includes(owner.kind))
       return sample(base,'recovery',elapsed/manualDefinition.recoverySeconds,style);
     const release=Math.min(.065,manualDefinition.recoverySeconds*.4);
     return elapsed<release?sample(base,'active',elapsed/release,style)

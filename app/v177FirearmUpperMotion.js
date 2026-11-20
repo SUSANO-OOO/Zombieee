@@ -44,11 +44,29 @@ function gunnerUpperAngle(sample,actor,world) {
   return base-.08*gunnerShotPulse(actor,world);
 }
 
+// The manual volley visibly raises the launcher, sets the shoulders, and
+// kicks once per real launch. The final impact has only a recovery pose.
+function launcherSalvoAngle(state,p){
+  const braced=.13;
+  switch(state){
+    case 'wind-up':
+      if(p===0)return null;
+      return p<.6?mix(0,-.42,p/.6):mix(-.42,braced,(p-.6)/.4);
+    case 'active':
+      return p<.12?mix(braced,-.25,p/.12):mix(-.25,braced,Math.min(1,(p-.12)/.58));
+    case 'recovery':return p===1?null:mix(braced,0,p);
+    default:return null;
+  }
+}
+
 export function v177FirearmUpperMotion(kind,sample,spine,{actor,world,waist=waists[kind]}={}) {
-  if(kind!=='medic'&&kind!=='engineer'&&kind!=='gunner')return null;
+  const salvo=kind==='mrs-chiha'&&sample?.abilityPresentation==='launcher-salvo';
+  if(!salvo&&kind!=='medic'&&kind!=='engineer'&&kind!=='gunner')return null;
   const p=Math.max(0,Math.min(1,Number(sample?.clipProgress)||0));
   let angle;
-  if(kind==='gunner'){
+  if(salvo){
+    angle=launcherSalvoAngle(sample.requestedState,p);if(angle===null||!waist)return null;
+  }else if(kind==='gunner'){
     angle=gunnerUpperAngle(sample,actor,world);if(angle===null)return null;
   }else{
     const { ready, peak, release } = (v177UsesSupportManualUpper(kind,sample) ? supportManual : ordinaryShot)[kind];

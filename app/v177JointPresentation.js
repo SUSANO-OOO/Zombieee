@@ -252,14 +252,15 @@ export function v177JointPose(kind, sample, runtime, { grounded=false,ownedPose=
     const nextSettle=Math.min(atlas.settleLevels-1,settleIndex+1),settleBlend=settleFrame-settleIndex;
     const offset=atlas.pelvisOffsets[settleIndex][phaseIndex]*(1-blend)+atlas.pelvisOffsets[settleIndex][nextPhase]*blend;
     const nextOffset=atlas.pelvisOffsets[nextSettle][phaseIndex]*(1-blend)+atlas.pelvisOffsets[nextSettle][nextPhase]*blend;
-    const useAttackUpper=attackPhase!==null&&!v177UsesSupportManualUpper(kind,sample);
+    const launcherSalvo=kind==='mrs-chiha'&&sample?.abilityPresentation==='launcher-salvo';
+    const useAttackUpper=attackPhase!==null&&!launcherSalvo&&!v177UsesSupportManualUpper(kind,sample);
     const plan={abilityPresentation:sample?.abilityPresentation,paintLocomotion,lowerIndex,lowerNextIndex:settleIndex*atlas.frameCount+nextPhase,lowerBlend:blend,
       upperIndex:useAttackUpper?attackBase+attackIndex:lowerIndex,
       upperNextIndex:useAttackUpper?attackBase+Math.min(atlas.frameCount,attackIndex+1):settleIndex*atlas.frameCount+nextPhase,
       upperBlend:useAttackUpper?attackFrame-attackIndex:blend,phase,settleIndex,attackPhase,
       settleFrameOffset:(nextSettle-settleIndex)*atlas.frameCount,settleBlend,
       upperOffsetY:offset+(nextOffset-offset)*settleBlend};
-    if((kind==='medic'||kind==='engineer'||kind==='gunner')&&attackStates.has(state)){
+    if((launcherSalvo||kind==='medic'||kind==='engineer'||kind==='gunner')&&attackStates.has(state)){
       const spine=jointMatrix(new Float64Array(6),atlas,plan,'spine',true);
       const follow=v177FirearmUpperMotion(kind,sample,spine,{actor:actualActor,world,waist:atlas.interpolationPivots?.spine});
       if(follow)plan.firearmUpperTransform=follow;
@@ -456,7 +457,10 @@ function returnSteppedFeet(atlas,entry,pose,progress,footProgress){
 }
 
 function returnPaintedJoints(atlas,entry,neutral,progress,footProgress=progress) {
+  // Manual upper transforms can use the carry rows during an attack clock.
+  // Only rows actually sampled from the authored attack can follow its return.
   const authoredReturn=Number.isFinite(entry.sourcePlan.attackPhase)
+    && entry.sourcePlan.upperIndex>=atlas.lowerCount
     && entry.sourcePlan.mrsNormalWeaponCycle!==true&&!entry.sourcePlan.futagoAbilityJoint;
   const target=captureStatusJoints(atlas,neutral);
   if(progress<=0)return {...copyCapturedJoints(entry.pose),upperTransform:entry.upperTransform,
