@@ -36,6 +36,7 @@ export const STATION_ENEMY_TUNING = Object.freeze({
     windupSeconds: bossDefinitionForEnemyKind("gate-eater").attackTelegraph.warningSeconds,
     chargeSeconds: 0.9,
     chargeSpeed: 150,
+    chargeImpactRadius: 92,
     flankExposureSeconds: 1.6,
     flankDamageMultiplier: 1.5,
     requiredPowerCount: 3,

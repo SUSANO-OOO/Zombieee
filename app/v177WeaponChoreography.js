@@ -26,6 +26,44 @@ function sampleChainsawRev(progress){
  const [bodyX,bodyY,lean,sawX,sawY,pitch]=keys(progress,chainsawRevFrames);
  return {bodyX,bodyY,lean,sawX,sawY,pitch};
 }
+// Both hands already own the approved plasma-blade hilt. Keep them on it
+// while TKY lowers the blade across his waist and takes a long, low sweep.
+// Source-space keys: phase, body x/y/lean, hilt x/y, blade pitch from rest.
+const lightbladeReleaseFrames=[
+ [0,0,0,0,0,0,0],
+ [.055,-7,11,-.08,-17,15,.42],
+ [.156,-14,21,-.16,-33,20,.77],
+ [.233,-12,20,-.14,-24,19,.70],
+ [.28,15,12,.25,36,4,.34],
+ [.36,26,11,.33,43,18,.74],
+ [.48,19,14,.29,28,27,1.09],
+ [.58,10,12,.19,14,23,1.02],
+ [.73,5,7,.10,-6,9,.69],
+ [1,0,0,0,0,0,0],
+];
+function sampleLightbladeRelease(progress){
+ const [bodyX,bodyY,lean,hiltX,hiltY,pitch]=keys(progress,lightbladeReleaseFrames);
+ return {bodyX,bodyY,lean,hiltX,hiltY,pitch};
+}
+// Body weight pulls back before the free hand throws; the bottle in the other
+// hand is the same painted weapon used for ordinary melee.
+// Keys: phase, torso shift x/y, torso lean, free hand shift x/y, bottle tilt.
+const fireWhiskyThrowFrames=[
+ [0,0,0,0,0,0,-.14],
+ [.065,-6,8,-.09,-15,3,-.25],
+ [.145,-13,10,-.18,-71,-61,-.47],
+ [.221,-20,12,-.23,-105,-120,-.63],
+ [.251,-13,13,-.18,-75,-126,-.29],
+ [.28,16,12,.31,39,-114,.49],
+ [.385,24,19,.41,48,-57,.89],
+ [.527,19,16,.29,28,-22,1.08],
+ [.772,5,7,.10,1,4,.35],
+ [1,0,0,0,0,0,0],
+];
+function sampleFireWhiskyThrow(progress){
+ const [bodyX,bodyY,lean,handX,handY,bottleAngle]=keys(progress,fireWhiskyThrowFrames);
+ return {bodyX,bodyY,lean,handX,handY,bottleAngle};
+}
 const carryPlans=new WeakMap();
 const carryMotion={
  // Paisen's far fist shares the leg-0 side. Counter-swing it against that
@@ -235,6 +273,9 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
  const assessing=kind==='babayaga'&&plan.abilityPresentation==='weak-point-assessment';
  const rev=kind==='crazy-king'&&plan.abilityPresentation==='chainsaw-rev'
   ?sampleChainsawRev(p/atlas.attackBoundaries[0]):null;
+ const lightblade=kind==='tky'&&plan.abilityPresentation==='lightblade-release'?sampleLightbladeRelease(p):null;
+ const fireWhisky=kind==='zakimiya'&&plan.abilityPresentation==='fire-whisky-throw'?sampleFireWhiskyThrow(p):null;
+ const authoredBody=lightblade??rev??fireWhisky;
  const assessment=assessing?keys(p,[[0,0],[.085,1],[.18,1],[.27,.18],[.43,0],[1,0]])[0]:0;
  const heavy=['brute','guardian','gate-eater','red-panther-shield','crazy-king','kumaverson','takuya','takuya-omega','crusher','abomination','gairen'].includes(kind);
  // Kuma raises the bowl over his crown, then folds forward into the slam.
@@ -243,9 +284,9 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
  // then rises out of the follow-through on the existing ability clock.
  const [drive,crouch,lean]=intercept?keys(p,[[0,0,0,0],[.22,-9,16,.34],[.28,0,14,.39],
   [.40,18,9,.47],[.57,10,6,.30],[1,0,0,0]]):[0,0,0];
- const bodyAngle=rev?.lean??(intercept?lean:kind==='kumaverson'?keys(p,[[0,0],[.18,.10],[.23,.10],[.28,.27],[.48,.42],[.64,.35],[1,0]])[0]:kind==='babayaga'?.18*assessment:(kind==='brute'?.70:kind==='mugarian-president-mutated'?.50:heavy?.21:.17)*weight);
- const torsoX=rev?.bodyX??(intercept?drive:weight*(heavy?13:9));
- const torsoY=rev?.bodyY??(intercept?crouch:Math.abs(weight)*(kind==='mugarian-president-mutated'?30:heavy?5:3));
+ const bodyAngle=authoredBody?.lean??(intercept?lean:kind==='kumaverson'?keys(p,[[0,0],[.18,.10],[.23,.10],[.28,.27],[.48,.42],[.64,.35],[1,0]])[0]:kind==='babayaga'?.18*assessment:(kind==='brute'?.70:kind==='mugarian-president-mutated'?.50:heavy?.21:.17)*weight);
+ const torsoX=authoredBody?.bodyX??(intercept?drive:weight*(heavy?13:9));
+ const torsoY=authoredBody?.bodyY??(intercept?crouch:Math.abs(weight)*(kind==='mugarian-president-mutated'?30:heavy?5:3));
  const torso=rigid(waist,[waist[0]+torsoX,waist[1]+torsoY],bodyAngle);
  for(const [bone,m]of Object.entries(base)){
   const pivot=atlas.interpolationPivots?.[bone]??[0,0];
@@ -265,11 +306,20 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
   }else handPose(upper,free,home,bodyAngle);
  }
  const weaponOwners=[...arms];
- const strikeBones=contactKinds.has(kind)?[]:kind==='miyamoto-musashi'?['weapon-0','weapon-1']:[atlas.weaponBone];
+ const strikeBones=fireWhisky||contactKinds.has(kind)?[]:kind==='miyamoto-musashi'?['weapon-0','weapon-1']:[atlas.weaponBone];
  const primary=arms.find(c=>c.effectorBone===atlas.weaponBone),pivot=primary.effectorWrist??primary.wrist;
  const rest=point(base[atlas.weaponBone],pivot),restAngle=Math.atan2(base[atlas.weaponBone][1],base[atlas.weaponBone][0]);
  let angle=restAngle,target=[...rest];
- if(['guardian','kumaverson'].includes(kind)&&plan.abilityPresentation==='guard'){
+ if(lightblade){
+  const releaseHilt=[rest[0]+lightblade.hiltX,rest[1]+lightblade.hiltY];
+  upper[atlas.weaponBone]=multiply(torso,rigid(pivot,releaseHilt,restAngle+lightblade.pitch));
+ }else if(fireWhisky){
+  const hand=arms.find(arm=>arm.effectorBone==='arm-1-hand');
+  const neutral=base[hand.effectorBone];
+  const home=point(neutral,hand.wrist);
+  const goal=point(torso,[home[0]+fireWhisky.handX,home[1]+fireWhisky.handY]);
+  handPose(upper,hand,goal,Math.atan2(neutral[1],neutral[0])+bodyAngle+fireWhisky.bottleAngle,2*envelope);
+ }else if(['guardian','kumaverson'].includes(kind)&&plan.abilityPresentation==='guard'){
   const raised=keys(p,[[0,0],[.28,1],[.7,1],[1,0]])[0];
   const sourceDirection=Math.atan2(atlas.muzzle[1]-pivot[1],atlas.muzzle[0]-pivot[0]);
   const reach=armReach(primary).max,home=point(torso,rest);
@@ -411,7 +461,10 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
  // The indicating hand crosses the jacket in the wide phone view. Bring
  // that original arm in front only while the appraisal gesture is visible.
  if(kind==='babayaga'&&assessment<.12){const far=new Set([arms[1].upperBone,arms[1].lowerBone,arms[1].effectorBone]);for(let i=frontBones.length-1;i>=0;i--)if(far.has(frontBones[i]))frontBones.splice(i,1);}
- const choreography={kind,variant,sequence,upper,arms,frontBones,strikeBones,bodyWeight:rev?rev.bodyX/26:weight,stepDistance:attacking&&!stationaryAbility?attackSteps[kind]??0:0,
+ const bodyWeight=lightblade?lightblade.bodyX/38:rev?rev.bodyX/26:fireWhisky?fireWhisky.bodyX/27:weight;
+ const stepDistance=lightblade?36:fireWhisky?26:attacking&&!stationaryAbility?attackSteps[kind]??0:0;
+ const choreography={kind,variant,sequence,upper,arms,frontBones,strikeBones,bodyWeight,stepDistance,
+  ...(fireWhisky?{heldBottleAngle:fireWhisky.bottleAngle}:{}),
   ...(kind==='mugarian-president-mutated'?{strikePoints:{'arm-1-hand':[228,326]}}:{})};if(!attacking)carryPlans.set(atlas,choreography);
  return{...plan,choreography:walkingCarry(kind,atlas,plan,choreography,attacking?1-envelope:1),upperOffsetY:0};
 }

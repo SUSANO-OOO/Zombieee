@@ -177,6 +177,7 @@ export const MANUAL_ABILITY_REGISTRY = deepFreeze({
     runtimeStatus: "integrated",
     cooldownSeconds: 14,
     windupSeconds: .56,
+    throwReleaseSeconds: .4,
     recoverySeconds: .2,
     throwRange: 270,
     effectRadius: 82,

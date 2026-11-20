@@ -6,7 +6,8 @@ const manualPresentation = {
   scout: 'scout-intercept', guardian: 'guard', kumaverson: 'guard',
   brawler: 'fist-wave', brute: 'ground-slam', 'crazy-king': 'chainsaw-rev',
   medic: 'support-manual', engineer: 'support-manual', 'mrs-chiha': 'launcher-salvo',
-  babayaga: 'weak-point-assessment', gunner: 'suppression-burst',
+  babayaga: 'weak-point-assessment', gunner: 'suppression-burst', tky: 'lightblade-release',
+  zakimiya: 'fire-whisky-throw',
 };
 
 export function v105AbilityFacing(owner){
@@ -43,7 +44,7 @@ export function v105CurrentAbilitySample(owner,base,{manualDefinition,anomaly,ku
       return sample(base,'active',since/manualDefinition.burstIntervalSeconds,style);
     }
     if(owner.kind==='zakimiya'&&m.phase==='windup'){
-      const elapsed=manualDefinition.windupSeconds-m.windupRemaining,releaseAt=.4;
+      const elapsed=m.abilityElapsed??manualDefinition.windupSeconds-m.windupRemaining,releaseAt=manualDefinition.throwReleaseSeconds;
       return elapsed<releaseAt?sample(base,'wind-up',elapsed/releaseAt,style)
         :sample(base,'active',(elapsed-releaseAt)/(manualDefinition.windupSeconds-releaseAt),style);
     }

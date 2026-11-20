@@ -15,7 +15,9 @@ const one = predicate => {
   assert.equal(matches.length, 1);
   return matches[0];
 };
-const release = one(n => ts.isIfStatement(n) && n.expression.getText(tree).includes('previousRuntimeElapsed < .4'));
+const release = one(n => ts.isIfStatement(n)
+  && n.expression.getText(tree).startsWith('owner.kind === "zakimiya"')
+  && n.thenStatement.getText(tree).includes('queueAdvancedAbilityPendingOrigin'));
 const impact = one(n => ts.isIfStatement(n) && n.expression.getText(tree) === 'event.kind === "zakimiya"');
 const advance = one(n => ts.isVariableDeclaration(n) && n.name.getText(tree) === 'previousRuntimeElapsed').parent.parent;
 const statements = advance.parent.statements;

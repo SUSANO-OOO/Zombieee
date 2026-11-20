@@ -8,13 +8,15 @@ test('current-rig advanced releases resolve only the live activation actual pain
   for(const [type,kind]of [['tky-lightblade','tky'],['mrs-grenade-flight','mrs-chiha'],['zakimiya-bottle','zakimiya']]){
     const game=world(),owner={id:4,kind,hp:100,manualAbility:{activationId:2}};game.fighters=[owner];
     queueV100AdvancedAbilityEffect(game,{ownerId:4,activationId:2,type,pendingOrigin:true,targetX:220,targetY:180,duration:.18});
-    const meta={activationId:2,path:`/art/v100/joints/${kind}-r1.webp`,sourcePixel:{x:311,y:125},sourceBone:'weapon-0',phase:'active',paintedAt:10,direction:'left'};
+    const meta={activationId:2,path:`/art/v100/joints/${kind}-r1.webp`,sourcePixel:{x:311,y:125},sourceBone:kind==='zakimiya'?'arm-1-hand':'weapon-0',bottleAngle:.42,phase:'active',paintedAt:10,direction:'left'};
     const resolve=(m=meta,o=owner)=>resolveV105CurrentAbilityOrigin(game,o,{x:300,y:220},m);
     assert.equal(resolve({...meta,phase:'wind-up'}),0);assert.equal(resolve({...meta,paintedAt:9.99}),0);
     assert.equal(resolve({...meta,activationId:1}),0);assert.equal(resolve({...meta,sourcePixel:{x:NaN,y:1}}),0);
+    if(kind==='zakimiya')assert.equal(resolve({...meta,sourceBone:'weapon-0'}),0);
     assert.equal(resolve(meta,{...owner,kind:'brute'}),0);assert.equal(resolve(),1);
     const effect=getV100AdvancedAbilityEffectsSnapshot(game)[0];
     assert.equal(effect.sourceModel,'current-joint');assert.equal(effect.sourceState,'active');assert.deepEqual(effect.resolvedSocketPoint,{x:300,y:220});
+    assert.equal(effect.bottleAngle,kind==='zakimiya'?.42:undefined);
     assert.equal(resolve(),0,'one event has one origin');
     game.time=10.180001;assert.equal(getV100AdvancedAbilityEffectsSnapshot(game).length,0,'original expiry unchanged');
   }

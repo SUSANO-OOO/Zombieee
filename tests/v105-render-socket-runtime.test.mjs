@@ -11,17 +11,36 @@ const source=readFileSync(new URL('../app/AshfallGame.tsx',import.meta.url),'utf
 const start=source.indexOf('  if(drewArticulatedWalk&&jointPose&&weaponSocket&&options.world){');
 const end=source.indexOf('  if(drewArticulatedWalk&&jointPose&&weaponSocket&&gripSocket){',start);
 assert.ok(start>0&&end>start);
-const paint=new vm.Script(source.slice(start,end),{filename:'actual-post-joint-paint.tsx'});
+const socketStart=source.indexOf('  const fireWhiskyHand = ');
+const socketEnd=source.indexOf('  const weaponArm=',socketStart);
+assert.ok(socketStart>0&&socketEnd>socketStart);
+const paint=new vm.Script(source.slice(socketStart,socketEnd)+source.slice(start,end),{filename:'actual-post-joint-paint.tsx'});
 
 test('actual post-paint socket handling works for the weighted Ranger and each current atlas',()=>{
   for(const [kind,jointAtlas]of Object.entries(atlases)){
     const calls=[],owner={id:7,kind,manualAbility:{activationId:3}};
-    paint.runInNewContext({drewArticulatedWalk:true,jointPose:{},weaponSocket:{x:300,y:200},
-      options:{world:{time:2}},jointAtlas,f:owner,renderKind:kind,manualAbilityActive:false,
+    const weaponSocket={x:300,y:200},freeHandSocket={x:350,y:185};
+    const jointPose=kind==='zakimiya' ? {abilityPresentation:'fire-whisky-throw',choreography:{heldBottleAngle:.49}} : {};
+    const context={drewArticulatedWalk:true,jointPose,weaponSocket,frame:{},size:{},pose:{},bob:0,depthScale:1,
+      facingSign:1,options:{world:{time:2}},jointAtlas,f:owner,renderKind:kind,manualAbilityActive:false,
       animationSample:{requestedState:'active'},direction:'right',
-      resolveV105CurrentAbilityOrigin:(...args)=>calls.push(args)});
+      v177RenderedJointWeaponSocket(socket){
+        assert.equal(socket.sourceBone,'arm-1-hand');
+        assert.deepEqual(socket.sourcePoint,jointAtlas.armConstraints.find(arm=>arm.effectorBone==='arm-1-hand').grip);
+        return freeHandSocket;
+      },
+      resolveV105CurrentAbilityOrigin:(...args)=>calls.push(args)};
+    paint.runInNewContext(context);
     assert.equal(calls.length,['tky','mrs-chiha','zakimiya'].includes(kind)?1:0,kind);
-    if(calls.length){
+    if(kind==='zakimiya'){
+      assert.equal(calls[0][2],freeHandSocket);
+      assert.equal(calls[0][3].sourceBone,'arm-1-hand');
+      assert.equal(calls[0][3].bottleAngle,.49);
+      calls.length=0;
+      paint.runInNewContext({...context,jointPose:{...jointPose,reactionHeld:true}});
+      assert.equal(calls.length,0,'A reaction-held pose cannot emit from a stale hand or melee weapon');
+    }else if(calls.length){
+      assert.equal(calls[0][2],weaponSocket);
       assert.deepEqual({...calls[0][3].sourcePixel},{x:jointAtlas.muzzle[0],y:jointAtlas.muzzle[1]});
       assert.equal(calls[0][3].sourceBone,jointAtlas.weaponBone);
     }
