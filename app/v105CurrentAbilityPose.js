@@ -4,7 +4,7 @@ const sample=(base,state,p,style)=>({...base,requestedState:state,clipProgress:c
 
 const manualPresentation = {
   scout: 'scout-intercept', guardian: 'guard', kumaverson: 'guard',
-  brawler: 'fist-wave', brute: 'ground-slam',
+  brawler: 'fist-wave', brute: 'ground-slam', 'crazy-king': 'chainsaw-rev',
   medic: 'support-manual', engineer: 'support-manual', 'mrs-chiha': 'launcher-salvo',
   babayaga: 'weak-point-assessment', gunner: 'suppression-burst',
 };
