@@ -1378,6 +1378,8 @@ function FormationView({ save, stageId, requestedUnitId = null, onCancelRequeste
   const stage = stageId ? V100_STAGE_BY_ID[stageId] : null;
   const basePresentation = v100BasePresentationFor(stage?.number);
   const threats = v100MissionThreatsFor(stageId);
+  const tacticalAdvice = briefingOpen && stage ? <p className="v100-briefing-advice">{v100TacticalHintFor(stage)}</p> : null;
+  const showSupportAdviceFirst = stage?.number === 2;
   const ownedUnits = save.ownedUnitIds.map((unitId) => UNIT_BY_ID.get(unitId)).filter(Boolean) as Array<(typeof V100_UNITS)[number]>;
   const availableSlots = v100AvailableFormation(stageId, save.formationSlots);
   const absence = v100StageAbsenceReason(stageId, "unit-paisen");
@@ -1404,7 +1406,36 @@ function FormationView({ save, stageId, requestedUnitId = null, onCancelRequeste
         </div>
         <div className="v100-callin-roster">
           <div className="v100-callin-heading"><strong>{requestedUnit ? requestedAbsence ?? requestedUnit.displayName + "を入れる枠を選ぶ" : modePreparation ? "次の迎撃に備えて仲間を選ぶ" : "カードで出撃・頭上で固有技"}</strong><button type="button" className="v100-open-briefing" onClick={(event) => { event.currentTarget.focus(); if (requestedUnit) onCancelRequested(); else setBriefingOpen(true); }}>{requestedUnit ? "あとで選ぶ" : modePreparation ? "編成の確認" : "作戦と戦い方"}</button><small>{placingUnit ? "空き枠なら追加、埋まった枠なら入れ替え。" : requestedUnit ? "この仲間は、別の作戦で試そう。" : modePreparation ? "編成が決まったら、異常発生かサバイバルを選ぶ。" : "移動・通常攻撃は自動。同じ仲間も繰り返し呼べる。"}</small></div>
-          {briefingOpen && <V100BattleBriefing allowControls={!modePreparation} initiallyShowControls={stage?.number === 1 && !modePreparation} onClose={() => setBriefingOpen(false)}><div className="v100-briefing-plan">{stage && <p className="v100-briefing-advice">{v100TacticalHintFor(stage)}</p>}<section><h3>{stage ? stageDisplayNameFor(stage) : "次の迎撃に備える"}</h3><strong>{modePreparation ? "各ステージの条件は出撃前に確認できます" : objectiveLabelFor(stage)}</strong>{stage && <><MissionBriefingDiagram stageId={stageId} /><p>{missionLabelFor(stage)} / {enemyPackLabelFor(stage?.enemyPack, stage?.number)}</p></>}{!modePreparation && <StarCriteria vehicleMaxHp={save.vehicle.maxHp} />}</section><section><h3>敵の動き</h3>{threats.length > 0 ? <ul aria-label="出現候補の行動">{threats.map(threat => <li key={threat.id}>{threat.name}：{threat.purpose}</li>)}</ul> : <p>ステージを選ぶと、出現する敵を確認できます。</p>}<p>同時に出せる仲間は7体まで。同じ仲間を複数枠に入れても、出撃の待ち時間は共通です。</p></section></div></V100BattleBriefing>}
+          {briefingOpen && (
+            <V100BattleBriefing
+              allowControls={!modePreparation}
+              initiallyShowControls={stage?.number === 1 && !modePreparation}
+              onClose={() => setBriefingOpen(false)}
+            >
+              <div className="v100-briefing-plan">
+                {showSupportAdviceFirst && tacticalAdvice}
+                <section>
+                  <h3>{stage ? stageDisplayNameFor(stage) : "次の迎撃に備える"}</h3>
+                  <strong>{modePreparation ? "各ステージの条件は出撃前に確認できます" : objectiveLabelFor(stage)}</strong>
+                  {stage && <>
+                    <MissionBriefingDiagram stageId={stageId} />
+                    <p>{missionLabelFor(stage)} / {enemyPackLabelFor(stage.enemyPack, stage.number)}</p>
+                  </>}
+                  {!modePreparation && <StarCriteria vehicleMaxHp={save.vehicle.maxHp} />}
+                </section>
+                <section>
+                  <h3>敵の動き</h3>
+                  {threats.length > 0 ? (
+                    <ul aria-label="出現候補の行動">
+                      {threats.map(threat => <li key={threat.id}>{threat.name}：{threat.purpose}</li>)}
+                    </ul>
+                  ) : <p>ステージを選ぶと、出現する敵を確認できます。</p>}
+                  <p>同時に出せる仲間は7体まで。同じ仲間を複数枠に入れても、出撃の待ち時間は共通です。</p>
+                </section>
+                {!showSupportAdviceFirst && tacticalAdvice}
+              </div>
+            </V100BattleBriefing>
+          )}
           <div className="v100-slot-track">{save.formationSlots.map((unitId, index) => {
             const art = unitId ? v100StoryPortraitPath(unitId) ?? formationCardForUnit(unitId) : null;
             const unit = unitId ? UNIT_BY_ID.get(unitId) : null;
