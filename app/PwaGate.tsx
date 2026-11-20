@@ -335,7 +335,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
             if (!cancelled) setRegistrationError(`${cause?.name ?? "Error"}: ${cause?.message ?? cause}`);
           },
         }),
-        readState: (registration: ServiceWorkerRegistration) => requestFromServiceWorker(registration, { type: "pwa:get-state" }),
+        readState: (registration: ServiceWorkerRegistration, options: { timeoutMs: number; signal: AbortSignal }) => requestFromServiceWorker(registration, { type: "pwa:get-state" }, options),
         readHashes: () => store.storedHashes(),
       });
       if (cancelled) return;
@@ -776,7 +776,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
   const readMaintenancePack = useCallback(async () => {
     const local = await readPwaBootState({
       register: async () => registrationRef.current ?? {},
-      readState: (registration: ServiceWorkerRegistration) => registrationRef.current ? requestFromServiceWorker(registration, { type: "pwa:get-state" }) : Promise.resolve({ type: "pwa:state" }),
+      readState: (registration: ServiceWorkerRegistration, options: { timeoutMs: number; signal: AbortSignal }) => registrationRef.current ? requestFromServiceWorker(registration, { type: "pwa:get-state" }, options) : Promise.resolve({ type: "pwa:state" }),
       readHashes: () => storeRef.current!.storedHashes(),
     });
     setStoredHashes(local.hashes);

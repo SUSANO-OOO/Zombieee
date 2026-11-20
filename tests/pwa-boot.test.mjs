@@ -92,3 +92,48 @@ test('the local state check gives an active worker one recheck within the existi
   await new Promise(resolve => setTimeout(resolve, 5));
   assert.equal(calls, 1);
 });
+
+test('a late first reply can finish startup after the recheck has started', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const hash = 'sha256-' + 'c'.repeat(64);
+  const restored = { type: 'pwa:state', active: { assets: [{ hash }] }, storedHashes: [hash] };
+  const requests = [];
+  let releaseFirst;
+  const first = new Promise(resolve => { releaseFirst = resolve; });
+  const result = readPwaBootState({
+    register: async () => ({ active: {} }),
+    readState: (_, options) => {
+      requests.push(options);
+      return requests.length === 1 ? first : new Promise(() => {});
+    },
+    readHashes: () => { throw Error('must use the worker inventory'); },
+  });
+  await Promise.resolve();
+  t.mock.timers.tick(5000);
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(requests.length, 2);
+  t.mock.timers.tick(1500);
+  releaseFirst(restored);
+  assert.equal((await result).state, restored);
+  assert.equal(requests[0].timeoutMs, 12000);
+  assert.equal(requests[0].signal, requests[1].signal);
+  assert.equal(requests[0].signal.aborted, true);
+});
+
+test('startup ignores a state reply from a worker that has just been replaced', async () => {
+  const registration = { active: {} };
+  const first = { type: 'pwa:state', active: { version: 'old' } };
+  const second = { type: 'pwa:state', active: { version: 'current' } };
+  let attempts = 0;
+  const result = await readPwaBootState({
+    register: async () => registration,
+    readState: async () => {
+      if (++attempts !== 1) return second;
+      registration.active = {};
+      return first;
+    },
+    readHashes: async () => new Set(),
+  });
+  assert.equal(attempts, 2);
+  assert.equal(result.state, second);
+});

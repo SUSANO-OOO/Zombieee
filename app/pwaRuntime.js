@@ -850,21 +850,26 @@ export async function activateWaitingWorker(registration, { windowRef, timeoutMs
 }
 
 /** Sends one message to the active worker and waits for its reply. */
-export function requestFromServiceWorker(registration, message, { timeoutMs = 5000 } = {}) {
+export function requestFromServiceWorker(registration, message, { timeoutMs = 5000, signal } = {}) {
   const worker = registration?.active ?? registration?.waiting ?? registration?.installing;
-  if (!worker) return Promise.resolve(null);
+  if (!worker || signal?.aborted) return Promise.resolve(null);
   return new Promise((resolve) => {
     const channel = new MessageChannel();
-    const timer = setTimeout(() => resolve(null), timeoutMs);
-    channel.port1.onmessage = (event) => {
+    const timer = setTimeout(cancel, timeoutMs);
+    function finish(value) {
       clearTimeout(timer);
-      resolve(event.data ?? null);
-    };
+      signal?.removeEventListener("abort", cancel);
+      channel.port1.close();
+      resolve(value);
+    }
+    function cancel() { finish(null); }
+    signal?.addEventListener("abort", cancel, { once: true });
+    channel.port1.onmessage = (event) => finish(event.data ?? null);
     try {
       worker.postMessage(message, [channel.port2]);
     } catch {
-      clearTimeout(timer);
-      resolve(null);
+      channel.port2.close();
+      cancel();
     }
   });
 }
