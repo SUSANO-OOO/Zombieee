@@ -109,6 +109,21 @@ function sealConfig(config = {}) {
   });
 }
 
+export function hasSupplyValve(missionType, config) {
+  return missionType === "boss-assault" && config?.supplyValve === true;
+}
+
+function initialPowerOperation() {
+  return {
+    powerActivated: 0,
+    powerHold: 0,
+    powerOperating: false,
+    powerOperationStartedAt: null,
+    powerInterruptedAt: null,
+    powerCompletedAt: freeze([]),
+  };
+}
+
 export function createStationMissionRuntime(missionType, config = {}) {
   if (missionType === STATION_MISSION_TYPES.ESCORT) {
     const resolved = escortConfig(config);
@@ -125,15 +140,20 @@ export function createStationMissionRuntime(missionType, config = {}) {
       transitions: freeze([]),
     });
   }
+  if (hasSupplyValve(missionType, config)) {
+    return freeze({
+      missionType,
+      ...initialPowerOperation(),
+      supplyValveBlocked: false,
+      completed: false,
+      failed: false,
+      transitions: freeze([]),
+    });
+  }
   if (missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL) {
     return freeze({
       missionType,
-      powerActivated: 0,
-      powerHold: 0,
-      powerOperating: false,
-      powerOperationStartedAt: null,
-      powerInterruptedAt: null,
-      powerCompletedAt: freeze([]),
+      ...initialPowerOperation(),
       gateEaterSeen: false,
       gateEaterDefeated: false,
       gateEaterContained: false,
@@ -204,6 +224,41 @@ export function stationHumanMoveSpeed({
 function appendTransition(runtime, transition) {
   if (!transition) return runtime.transitions ?? freeze([]);
   return freeze([...(runtime.transitions ?? []), transition]);
+}
+
+function advancePowerOperation(current, resolved, dt, battleElapsedSeconds, powerOperatorCount, powerLaneThreats) {
+  const operators = Math.max(0, Math.trunc(Number(powerOperatorCount) || 0));
+  let powerActivated = Math.max(0, Math.min(resolved.powerCount, Math.trunc(Number(current.powerActivated) || 0)));
+  let powerHold = finiteNonNegative(current.powerHold);
+  let transition = null;
+  const node = currentPowerNode({ powerActivated }, resolved);
+  const canHold = node
+    && finiteNonNegative(battleElapsedSeconds) >= node.readyAtSeconds
+    && operators > 0
+    && Math.max(0, Math.trunc(Number(powerLaneThreats) || 0)) === 0;
+  const elapsed = finiteNonNegative(battleElapsedSeconds);
+  const powerCompletedAt = [...(current.powerCompletedAt ?? [])];
+  const powerOperationStartedAt = canHold && !current.powerOperating ? elapsed : current.powerOperationStartedAt;
+  const powerInterruptedAt = !canHold && current.powerOperating ? elapsed : current.powerInterruptedAt;
+  powerHold = canHold ? powerHold + dt : Math.max(0, powerHold - dt * .5);
+  if (node && powerHold >= resolved.powerHoldSeconds) {
+    powerCompletedAt[powerActivated] = elapsed;
+    powerActivated += 1;
+    powerHold = 0;
+    transition = `power-${powerActivated}-activated`;
+  }
+  return {
+    transition,
+    canHold,
+    power: {
+      powerActivated,
+      powerHold,
+      powerOperating: Boolean(canHold && transition === null),
+      powerOperationStartedAt,
+      powerInterruptedAt,
+      powerCompletedAt: freeze(powerCompletedAt),
+    },
+  };
 }
 
 export function advanceStationMissionRuntime({
@@ -288,6 +343,19 @@ export function advanceStationMissionRuntime({
     });
   }
 
+  if (hasSupplyValve(missionType, config)) {
+    if (current.failed || crawlerDestroyed) return freeze({ ...current, failed: true, powerOperating: false });
+    const { power, transition } = advancePowerOperation(
+      current, sealConfig(config), dt, battleElapsedSeconds, powerOperatorCount, powerLaneThreats,
+    );
+    return freeze({
+      ...current,
+      ...power,
+      supplyValveBlocked: power.powerActivated < 1 && powerLaneThreats > 0,
+      transitions: appendTransition(current, transition),
+    });
+  }
+
   if (missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL) {
     const resolved = sealConfig(config);
     const defeated = current.gateEaterDefeated === true || gateEaterDefeated === true;
@@ -303,26 +371,11 @@ export function advanceStationMissionRuntime({
       || researchContainerContained === true;
     const researchContained = current.researchContainerContained === true
       || researchContainerContained === true;
-    const operators = Math.max(0, Math.trunc(Number(powerOperatorCount) || 0));
-    let powerActivated = Math.max(0, Math.min(resolved.powerCount, Math.trunc(Number(current.powerActivated) || 0)));
-    let powerHold = finiteNonNegative(current.powerHold);
-    let transition = null;
-    const node = currentPowerNode({ powerActivated }, resolved);
-    const canHold = node
-      && finiteNonNegative(battleElapsedSeconds) >= node.readyAtSeconds
-      && operators > 0
-      && Math.max(0, Math.trunc(Number(powerLaneThreats) || 0)) === 0;
-    const elapsed = finiteNonNegative(battleElapsedSeconds);
-    const powerCompletedAt = [...(current.powerCompletedAt ?? [])];
-    const powerOperationStartedAt = canHold && !current.powerOperating ? elapsed : current.powerOperationStartedAt;
-    const powerInterruptedAt = !canHold && current.powerOperating ? elapsed : current.powerInterruptedAt;
-    powerHold = canHold ? powerHold + dt : Math.max(0, powerHold - dt * .5);
-    if (node && powerHold >= resolved.powerHoldSeconds) {
-      powerCompletedAt[powerActivated] = elapsed;
-      powerActivated += 1;
-      powerHold = 0;
-      transition = `power-${powerActivated}-activated`;
-    }
+    const { power, canHold, transition: powerTransition } = advancePowerOperation(
+      current, resolved, dt, battleElapsedSeconds, powerOperatorCount, powerLaneThreats,
+    );
+    const { powerActivated } = power;
+    let transition = powerTransition;
 
     const containmentReady = powerActivated >= resolved.powerCount
       && (!resolved.requiresContainment || (defeated && researchContained));
@@ -380,12 +433,8 @@ export function advanceStationMissionRuntime({
     }
     return freeze({
       missionType,
-      powerActivated,
-      powerHold,
+      ...power,
       powerOperating: Boolean(canHold && transition === null),
-      powerOperationStartedAt,
-      powerInterruptedAt,
-      powerCompletedAt: freeze(powerCompletedAt),
       gateEaterSeen: seen,
       gateEaterDefeated: defeated,
       gateEaterContained: gateContained,
@@ -434,6 +483,12 @@ export function stationMissionObjective(runtime, config = {}) {
     if (runtime.repairRemaining > 0) return `${targetLabel}を復旧中 ${Math.ceil(runtime.repairRemaining)}秒`;
     if (runtime.stalled) return `${targetLabel}の周囲を確保`;
     return `${targetLabel}を護衛 ${Math.floor(clamp01(runtime.progress) * 100)}%`;
+  }
+  if (hasSupplyValve(runtime?.missionType, config)) {
+    if (runtime.supplyValveBlocked) return "供給弁に迫る敵を倒す";
+    if (runtime.powerActivated >= 1) return "供給管 復旧済み";
+    const percent = Math.min(99, Math.floor(finiteNonNegative(runtime.powerHold) / config.powerHoldSeconds * 100));
+    return runtime.powerOperating ? `供給管を復旧中 ${percent}%` : "供給弁まで味方を送る";
   }
   if (runtime?.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL) {
     const resolved = sealConfig(config);

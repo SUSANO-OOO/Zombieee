@@ -3,6 +3,7 @@ import { BARRICADE_MAX_HP, PREP_SECONDS, battleOutcome, objectiveFor, phaseAt } 
 import { OUTBREAK_MISSION_BY_ID } from "./outbreakMissions.js";
 import {
   STATION_MISSION_TYPES,
+  hasSupplyValve,
   stationMissionObjective,
   stationMissionOutcome,
 } from "./stationStageMechanics.js";
@@ -190,6 +191,12 @@ export function objectiveForBattle(definition, state) {
       : "感染拠点を破壊";
   }
   if (definition.missionType === "boss-assault") {
+    if (hasSupplyValve(definition.missionType, definition.missionConfig)) {
+      if (!(state.stageMission?.powerActivated >= 1)) {
+        return stationMissionObjective(state.stageMission, definition.missionConfig) || definition.objective;
+      }
+      if (!state.barricadeVulnerable) return "待機室を守り、MOTHERを倒す";
+    }
     if (definition.missionConfig?.v100StageNumber === 5) {
       if (state.barricadeHp <= 0) return "残る敵を倒して退路を守る";
       if (!state.barricadeVulnerable) return "改札喰いを撃破";
@@ -240,6 +247,8 @@ export function battleOutcomeFor(definition, state) {
   if (definition.bossUnlocksEnemyBase
     && Number(state.barricadeHp) <= 0
     && (state.bossDefeated !== true || state.barricadeVulnerable !== true)) return null;
+  if (hasSupplyValve(definition.missionType, definition.missionConfig)
+    && !(state.stageMission?.powerActivated >= 1)) return null;
   const assaultOutcome = battleOutcome(state.baseHp, state.barricadeHp);
   return assaultOutcome === "won" && !hasClearHp ? "lost" : assaultOutcome;
 }

@@ -1,7 +1,7 @@
 import { CAMPAIGN_UNITS, campaignUnitIdToCombatKind } from "./campaign.js";
 import { PREP_SECONDS } from "./gameRules.js";
 import { V100_MISSION_VEHICLES } from "./v100MissionVehicles.js";
-import { V100_NODE_PROFILES } from "./v100MissionNodes.js";
+import { V100_NODE_PROFILES, V100_SUPPLY_VALVE, V100_SUPPLY_VALVE_STAGE } from "./v100MissionNodes.js";
 import { V100_CORPORATE_CONTROLS } from "./v100CorporateControl.js";
 import { V100_DEFENSE_OBJECTIVES } from "./v100DefenseObjectives.js";
 import { researchCoreObjective } from "./v100ResearchCore.js";
@@ -75,6 +75,7 @@ export function v100MissionObjectiveFor(stageId) {
   if (!stage) return "ステージの目標を達成";
   if (stage.number === 3) return "大型変異感染者TAKUYAを撃破";
   if (stage.number === 5) return "改札喰いを倒し、感染核を破壊";
+  if (stageId === V100_SUPPLY_VALVE_STAGE) return "供給管を復旧し、MOTHERを倒す";
   if (stage.number === 30) return "TAKUYA-Ωを撃破し、西新を守る";
   const control = V100_CORPORATE_CONTROLS[stageId];
   if (control) {
@@ -296,6 +297,7 @@ export function v100BattleDefinitionFor(stageId) {
     objective,
     missionConfig: {
       ...station,
+      ...(stageId === V100_SUPPLY_VALVE_STAGE ? V100_SUPPLY_VALVE : {}),
       ...(missionVehicle ? {targetLabel:missionVehicle.targetLabel,vehicleCount:missionVehicle.count,convoyInterception:missionVehicle.count===3} : {}),
       v100StageNumber: stage.number,
       v100ObjectiveId: stage.objectiveId,

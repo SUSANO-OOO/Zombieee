@@ -131,6 +131,42 @@
     [
       "g.banner = \"装甲車両 危険状態\"; g.bannerTime",
       "g.banner = \"移動拠点 危険状態\"; g.bannerTime"
+    ],
+    [
+      "  currentPowerNode,\n  stationPowerNodes,",
+      "  currentPowerNode,\n  hasSupplyValve,\n  stationPowerNodes,"
+    ],
+    [
+      "import { drawV100MissionNode, V100_NODE_PROFILES }",
+      "import { drawV100MissionNode, V100_NODE_PROFILES, V100_SUPPLY_VALVE }"
+    ],
+    [
+      "  if (g.definition.missionType !== STATION_MISSION_TYPES.SEQUENTIAL_SEAL) return null;\n  if (g.stageMission.sealed) {",
+      "  if (hasSupplyValve(g.definition.missionType, g.definition.missionConfig)) {\n    if ((g.stageMission.powerActivated ?? 0) >= 1) return null;\n    const node = currentPowerNode(g.stageMission, g.definition.missionConfig);\n    return node ? deviceObjectiveDestination({\n      unit: fighter, humans: g.fighters, node, maxX: BARRICADE_X, nodeY: activeYForContentY(node.y),\n    }) : null;\n  }\n  if (g.definition.missionType !== STATION_MISSION_TYPES.SEQUENTIAL_SEAL) return null;\n  if (g.stageMission.sealed) {"
+    ],
+    [
+      "  powerHold?: number;\n  powerOperating?",
+      "  powerHold?: number;\n  supplyValveBlocked?: boolean;\n  powerOperating?"
+    ],
+    [
+      "  if (drawV100ClinicalControl(ctx, g, stageObjects, 650, activeLaneCenters[0] + 30)) return;",
+      "  if (drawV100ClinicalControl(ctx, g, stageObjects, 650, activeLaneCenters[0] + 30)) return;\n  if (hasSupplyValve(g.definition.missionType, g.definition.missionConfig)) {\n    drawV100MissionNode(ctx, g, stageObjects, 0, V100_SUPPLY_VALVE.powerXs[0], activeYForContentY(V100_SUPPLY_VALVE.powerYs[0]));\n  }"
+    ],
+    [
+      "        if ((g.definition.missionType === STATION_MISSION_TYPES.ESCORT\n          || g.definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL)",
+      "        const supplyValvePending = hasSupplyValve(g.definition.missionType, g.definition.missionConfig)\n          && (g.stageMission.powerActivated ?? 0) < 1;\n        if ((g.definition.missionType === STATION_MISSION_TYPES.ESCORT\n          || g.definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL || supplyValvePending)"
+    ],
+    [
+      "              g.banner = `${g.definition.missionConfig.powerLabel ?? \"電源\"} ${nextMission.powerActivated ?? 0}/${stationPowerNodes(g.definition.missionConfig).length} ${g.definition.missionConfig.powerVerb ?? \"起動\"}`;\n              g.bannerTime = 1.4;\n              playProductionCue(STATION_AUDIO_CUE_IDS.POWER_SWITCH, W * .68, { priority: 84, maxInstances: 2 });",
+      "              g.banner = supplyValvePending ? \"復旧完了　待機室に空気が届いた\"\n                : `${g.definition.missionConfig.powerLabel ?? \"電源\"} ${nextMission.powerActivated ?? 0}/${stationPowerNodes(g.definition.missionConfig).length} ${g.definition.missionConfig.powerVerb ?? \"起動\"}`;\n              g.bannerTime = 1.4;\n              playProductionCue(STATION_AUDIO_CUE_IDS.POWER_SWITCH, supplyValvePending ? V100_SUPPLY_VALVE.powerXs[0] : W * .68,\n                { priority: 84, maxInstances: 2 });"
+    ],
+    [
+      "\n              missionRuntime: g.definition.missionType === \"escort\" || g.definition.missionType === \"sequential-seal\"\n",
+      "\n              missionRuntime: g.definition.missionType === \"escort\" || g.definition.missionType === \"sequential-seal\"\n                || hasSupplyValve(g.definition.missionType, g.definition.missionConfig)\n"
+    ],
+    [
+      "\n            missionRuntime: g.definition.missionType === \"escort\" || g.definition.missionType === \"sequential-seal\"\n",
+      "\n            missionRuntime: g.definition.missionType === \"escort\" || g.definition.missionType === \"sequential-seal\"\n              || hasSupplyValve(g.definition.missionType, g.definition.missionConfig)\n"
     ]
   ],
   "app/manualAbilities.js": [
