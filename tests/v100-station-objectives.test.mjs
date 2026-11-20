@@ -5,7 +5,7 @@ import { readFile } from "node:fs/promises";
 import ts from "typescript";
 import { V100_STAGES } from "../app/v100Registry.js";
 import { v100BattleDefinitionFor } from "../app/v100BattleAdapter.js";
-import { advanceStationMissionRuntime as advanceStationMission, createStationMissionRuntime, currentPowerNode, escortCartX, stationMissionObjective, stationMissionOutcome, stationPowerNodes, STATION_MISSION_TYPES } from "../app/stationStageMechanics.js";
+import { advanceStationMissionRuntime as advanceStationMission, createStationMissionRuntime, currentPowerNode, escortCartX, hasSupplyValve, stationMissionObjective, stationMissionOutcome, stationPowerNodes, STATION_MISSION_TYPES } from "../app/stationStageMechanics.js";
 import { CAMPAIGN_STAGE_IDS } from "../app/campaign.js";
 import { stationSpatialSnapshot } from "../app/stationSpatialMechanics.js";
 import { requiredBattleAssetPlan } from "../app/battleAssetPlan.js";
@@ -86,7 +86,7 @@ test("the actual mission renderer draws all four authored panels at their runtim
   const declaration = ast.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === "drawStationMission");
   assert.ok(declaration);
   const code = ts.transpileModule(declaration.getText(ast) + "\ndrawStationMission;", { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
-  const draw = vm.runInNewContext(code, { drawV100DefensePerimeter, STATION_MISSION_TYPES, stationPowerNodes, drawV100MissionNode, drawV100ClinicalControl, activeYForContentY: y => y, activeLaneCenters: [212, 282, 352] });
+  const draw = vm.runInNewContext(code, { hasSupplyValve, drawV100DefensePerimeter, STATION_MISSION_TYPES, stationPowerNodes, drawV100MissionNode, drawV100ClinicalControl, activeYForContentY: y => y, activeLaneCenters: [212, 282, 352] });
   for (const number of [9, 28]) {
     const definition = v100BattleDefinitionFor(V100_STAGES[number - 1].id), panels = stationPowerNodes(definition.missionConfig);
     const draws = [], positions = [];
@@ -115,7 +115,7 @@ test("the actual escort renderer uses decoded story vehicles while retaining the
   const ast = ts.createSourceFile("AshfallGame.tsx", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
   const declaration = ast.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === "drawStationMission");
   const code = ts.transpileModule(declaration.getText(ast) + "\ndrawStationMission;", { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
-  const draw = vm.runInNewContext(code, { drawV100DefensePerimeter, drawV100MissionVehicles, drawV100ClinicalControl, STATION_MISSION_TYPES, escortCartX, CAMPAIGN_STAGE_IDS, activeYForContentY:y=>y, activeLaneCenters:[212,282,352] });
+  const draw = vm.runInNewContext(code, { hasSupplyValve, drawV100DefensePerimeter, drawV100MissionVehicles, drawV100ClinicalControl, STATION_MISSION_TYPES, escortCartX, CAMPAIGN_STAGE_IDS, activeYForContentY:y=>y, activeLaneCenters:[212,282,352] });
   for (const [number,count,label] of [[6,1,"保守台車"],[12,1,"密閉搬送車"],[19,1,"証拠搬送車"],[26,3,"冷蔵車"]]) {
     const definition=v100BattleDefinitionFor(V100_STAGES[number-1].id);
     const runtime=createStationMissionRuntime(definition.missionType,definition.missionConfig);

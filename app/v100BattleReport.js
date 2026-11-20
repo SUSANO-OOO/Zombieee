@@ -3,7 +3,7 @@ import { V100_BOSS_BY_ID, V100_STAGE_BY_ID, V100_STAGE_IDS, V100_UNITS } from ".
 import { ENEMY_CONTENT } from "./content/enemyCatalog.js";
 import { V100_MISSION_VEHICLES } from "./v100MissionVehicles.js";
 import { V100_DEFENSE_OBJECTIVES } from "./v100DefenseObjectives.js";
-import { V100_NODE_PROFILES } from "./v100MissionNodes.js";
+import { V100_NODE_PROFILES, V100_SUPPLY_VALVE_STAGE } from "./v100MissionNodes.js";
 
 const amount = value => typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= Number.MAX_SAFE_INTEGER;
 const counter = value => amount(value) && Number.isInteger(value);
@@ -11,8 +11,10 @@ const record = value => value !== null && typeof value === "object" && !Array.is
 const enemies = new Map(ENEMY_CONTENT.map(enemy => [enemy.id, enemy]));
 
 function normalizeDeviceProgress(value) {
-  if (!record(value) || !Object.hasOwn(V100_NODE_PROFILES, value.stageId)) return null;
-  const powerCount = V100_STAGE_BY_ID[value.stageId].objectiveId.includes("four") ? 4 : 3;
+  if (!record(value)) return null;
+  const supplyValve = value.stageId === V100_SUPPLY_VALVE_STAGE;
+  if (!supplyValve && !Object.hasOwn(V100_NODE_PROFILES, value.stageId)) return null;
+  const powerCount = supplyValve ? 1 : V100_STAGE_BY_ID[value.stageId].objectiveId.includes("four") ? 4 : 3;
   if (!counter(value.powerActivated) || value.powerActivated > powerCount) return null;
   return Object.freeze({ stageId: value.stageId, powerActivated: value.powerActivated });
 }
@@ -20,6 +22,11 @@ function normalizeDeviceProgress(value) {
 export function v100DeviceResultText(result) {
   const device = normalizeDeviceProgress(result?.battleReport?.deviceProgress);
   if (result?.won !== false || !device || device.stageId !== result.stageId) return null;
+  if (device.stageId === V100_SUPPLY_VALVE_STAGE) {
+    return device.powerActivated === 1
+      ? { progress: "供給管 復旧済み", detail: "待機室を守り、MOTHERを倒す" }
+      : { progress: "供給管 未復旧", detail: "供給弁まで仲間を送り、周囲の敵を倒す" };
+  }
   const profile = V100_NODE_PROFILES[device.stageId];
   const total = V100_STAGE_BY_ID[device.stageId].objectiveId.includes("four") ? 4 : 3;
   return {
@@ -130,7 +137,9 @@ export function v100BattleReportFor(raw) {
   });
   const escortProgress = normalizeEscortProgress({ ...raw.missionRuntime, stageId: raw.stageId });
   const defenseProgress = raw.defenseProgress?.stageId === raw.stageId ? normalizeDefenseProgress(raw.defenseProgress) : null;
-  const deviceProgress = raw.missionRuntime?.missionType === "sequential-seal"
+  const supplyValve = raw.stageId === V100_SUPPLY_VALVE_STAGE;
+  const deviceMissionType = supplyValve ? "boss-assault" : "sequential-seal";
+  const deviceProgress = raw.missionRuntime?.missionType === deviceMissionType
     ? normalizeDeviceProgress({ stageId: raw.stageId, powerActivated: raw.missionRuntime.powerActivated }) : null;
   return normalizeV100BattleReport({ wave: raw.wave, kills: raw.kills, units, bossProgress: raw.bossProgress, lastVehicleHit: raw.lastVehicleHit, escortProgress, defenseProgress, deviceProgress });
 }

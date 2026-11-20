@@ -1,6 +1,6 @@
 import { V100_STAGE_BY_ID } from "./v100Registry.js";
 import { v100BasePresentationFor } from "./v100BasePresentation.js";
-import { V100_NODE_PROFILES } from "./v100MissionNodes.js";
+import { V100_NODE_PROFILES, V100_SUPPLY_VALVE_STAGE } from "./v100MissionNodes.js";
 import { V100_MISSION_VEHICLES } from "./v100MissionVehicles.js";
 import { V100_DEFENSE_OBJECTIVES } from "./v100DefenseObjectives.js";
 import { V100_CORPORATE_CONTROLS } from "./v100CorporateControl.js";
@@ -23,6 +23,9 @@ export function v100MissionThreatsFor(stageId) {
 export function v100MissionBriefingFor(stageId) {
   const stage = V100_STAGE_BY_ID[stageId];
   if (!stage) return null;
+  if (stageId === V100_SUPPLY_VALVE_STAGE) {
+    return { mode: "advance", origin: "供給弁", target: "待機室", verb: "供給管を復旧" };
+  }
   const node = V100_NODE_PROFILES[stageId];
   if (node) return { mode: "sequence", count: stage.objectiveId.includes("four") ? 4 : 3, label: node.label, verb: node.verb };
   const vehicle = V100_MISSION_VEHICLES[stageId];

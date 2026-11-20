@@ -5,6 +5,21 @@ export const V100_NODE_PROFILES = Object.freeze({
   "stage-t-plan-central-seal": Object.freeze({ label: "封鎖装置", verb: "作動", shape: "cabinet" }),
   "stage-national-dispersal-network": Object.freeze({ label: "散布装置", verb: "停止", shape: "trailer", shutdown: true }),
 });
+export const V100_SUPPLY_VALVE_STAGE = "stage-research-containment";
+export const V100_SUPPLY_VALVE = Object.freeze({
+  supplyValve: true,
+  powerCount: 1,
+  powerHoldSeconds: 3,
+  powerXs: Object.freeze([308]),
+  powerYs: Object.freeze([282]),
+  powerReadyAtSeconds: Object.freeze([0]),
+});
+const SUPPLY_VALVE_PROFILE = Object.freeze({ label: "供給弁", verb: "復旧", shape: "cabinet" });
+
+export function v100MissionNodeProfile(stageId) {
+  return stageId === V100_SUPPLY_VALVE_STAGE ? SUPPLY_VALVE_PROFILE : V100_NODE_PROFILES[stageId];
+}
+
 export const V100_NODE_STATES = Object.freeze(["off", "engaged", "on", "connection", "disconnection"]);
 const TRANSITION_SECONDS = .65;
 
@@ -41,7 +56,7 @@ export function v100NodeFrame(shape, state) {
 }
 
 export function drawV100MissionNode(context, game, stageObjects, index, x, y) {
-  const profile = game.definition.missionConfig.v100StageNumber && V100_NODE_PROFILES[game.definition.stageId];
+  const profile = game.definition.missionConfig.v100StageNumber && v100MissionNodeProfile(game.definition.stageId);
   if (!profile) return false;
   const image = stageObjects["v100-mission-node-states"];
   if (!image?.complete || !image.naturalWidth) throw new Error("Mission node states must be decoded before battle starts");
@@ -64,7 +79,9 @@ export function drawV100MissionNode(context, game, stageObjects, index, x, y) {
   context.lineWidth = 3;
   context.strokeStyle = "rgba(0,0,0,.9)";
   context.fillStyle = complete ? "#b8df83" : "#f2dbae";
-  const label = `${index + 1}${complete ? ` ${profile.verb}済` : ""}`;
+  const label = game.definition.missionConfig.supplyValve === true
+    ? complete ? "供給弁 復旧済み" : "供給弁"
+    : `${index + 1}${complete ? ` ${profile.verb}済` : ""}`;
   context.strokeText(label, x, y + 15);
   context.fillText(label, x, y + 15);
   context.restore();

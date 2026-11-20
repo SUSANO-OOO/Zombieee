@@ -607,13 +607,14 @@ import {
   advanceStationMissionRuntime,
   createStationMissionRuntime,
   currentPowerNode,
+  hasSupplyValve,
   stationPowerNodes,
   escortCartX,
   stationHumanMoveSpeed,
 } from "./stationStageMechanics.js";
 import { drawV100MissionVehicles, drawV100MissionVehicleBody, v100MissionVehiclePlacements, V100_MISSION_VEHICLES, V100_MISSION_VEHICLE_ART } from "./v100MissionVehicles.js";
 import { v100VehicleSprite, v100EscortDestinationState } from "./v100MissionVehicleSprites.js";
-import { drawV100MissionNode, V100_NODE_PROFILES } from "./v100MissionNodes.js";
+import { drawV100MissionNode, V100_NODE_PROFILES, V100_SUPPLY_VALVE } from "./v100MissionNodes.js";
 import { drawV100ClinicalControl } from "./v100ClinicalControl.js";
 import { drawV100CorporateControl, v100CorporateControlLabel, v100ObjectiveDamageLabel, v100CorporateControlCondition } from "./v100CorporateControl.js";
 import { drawV100AssaultObject, v100AssaultObjectProfile } from "./v100AssaultObjects.js";
@@ -771,6 +772,13 @@ function stationObjectiveDestination(g: Game, fighter: Fighter) {
       cartLane: lane,
       laneCount: activeLaneCenters.length,
     }) as { x: number; lane: Lane; duty: string };
+  }
+  if (hasSupplyValve(g.definition.missionType, g.definition.missionConfig)) {
+    if ((g.stageMission.powerActivated ?? 0) >= 1) return null;
+    const node = currentPowerNode(g.stageMission, g.definition.missionConfig);
+    return node ? deviceObjectiveDestination({
+      unit: fighter, humans: g.fighters, node, maxX: BARRICADE_X, nodeY: activeYForContentY(node.y),
+    }) : null;
   }
   if (g.definition.missionType !== STATION_MISSION_TYPES.SEQUENTIAL_SEAL) return null;
   if (g.stageMission.sealed) {
@@ -1088,6 +1096,7 @@ type StageMissionRuntime = {
   stalled?: boolean;
   powerActivated?: number;
   powerHold?: number;
+  supplyValveBlocked?: boolean;
   powerOperating?: boolean;
   powerOperationStartedAt?: number | null;
   powerInterruptedAt?: number | null;
@@ -6266,6 +6275,9 @@ let stationMissionDiagnosticFallbackDrawCount = 0;
 function drawStationMission(ctx: CanvasRenderingContext2D, g: Game, stageObjects: SpriteMap, allowDiagnosticFallback = false, deferVehicles = false) {
   drawV100DefensePerimeter(ctx, g, stageObjects, 340, activeLaneCenters[2] + 30);
   if (drawV100ClinicalControl(ctx, g, stageObjects, 650, activeLaneCenters[0] + 30)) return;
+  if (hasSupplyValve(g.definition.missionType, g.definition.missionConfig)) {
+    drawV100MissionNode(ctx, g, stageObjects, 0, V100_SUPPLY_VALVE.powerXs[0], activeYForContentY(V100_SUPPLY_VALVE.powerYs[0]));
+  }
   if (g.definition.missionType === STATION_MISSION_TYPES.ESCORT) {
     const x = escortCartX(g.stageMission, g.definition.missionConfig);
     const y = activeLaneCenters[1] + (g.definition.missionConfig.v100StageNumber ? 0 : 13);
@@ -20912,8 +20924,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           g.convoyProgress = convoy.progress;
           g.civiliansEvacuated = convoy.civiliansEvacuated;
         }
+        const supplyValvePending = hasSupplyValve(g.definition.missionType, g.definition.missionConfig)
+          && (g.stageMission.powerActivated ?? 0) < 1;
         if ((g.definition.missionType === STATION_MISSION_TYPES.ESCORT
-          || g.definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL)
+          || g.definition.missionType === STATION_MISSION_TYPES.SEQUENTIAL_SEAL || supplyValvePending)
           && g.time >= g.definition.prepSeconds) {
           const spatial = stationSpatialSnapshot({
             missionType: g.definition.missionType,
@@ -20962,9 +20976,11 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             }
             if (transition.startsWith("power-")) {
               g.stationMetrics.powerActivations += 1;
-              g.banner = `${g.definition.missionConfig.powerLabel ?? "電源"} ${nextMission.powerActivated ?? 0}/${stationPowerNodes(g.definition.missionConfig).length} ${g.definition.missionConfig.powerVerb ?? "起動"}`;
+              g.banner = supplyValvePending ? "復旧完了　待機室に空気が届いた"
+                : `${g.definition.missionConfig.powerLabel ?? "電源"} ${nextMission.powerActivated ?? 0}/${stationPowerNodes(g.definition.missionConfig).length} ${g.definition.missionConfig.powerVerb ?? "起動"}`;
               g.bannerTime = 1.4;
-              playProductionCue(STATION_AUDIO_CUE_IDS.POWER_SWITCH, W * .68, { priority: 84, maxInstances: 2 });
+              playProductionCue(STATION_AUDIO_CUE_IDS.POWER_SWITCH, supplyValvePending ? V100_SUPPLY_VALVE.powerXs[0] : W * .68,
+                { priority: 84, maxInstances: 2 });
             } else if (transition === "escort-contaminated") {
               playProductionCue(STATION_AUDIO_CUE_IDS.CART_STALL, Number(spatial.cartX ?? W / 2), { priority: 82, maxInstances: 1 });
             } else if (transition === "escort-complete") {
@@ -25121,6 +25137,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 healingByUnit: { ...g.combatMetrics.healingByUnit },
               },
               missionRuntime: g.definition.missionType === "escort" || g.definition.missionType === "sequential-seal"
+                || hasSupplyValve(g.definition.missionType, g.definition.missionConfig)
                 ? { ...g.stageMission }
                 : undefined,
               researchCoreTargets: g.researchCoreTargets?.map(target => ({...target})),
@@ -25192,6 +25209,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               healingByUnit: { ...g.combatMetrics.healingByUnit },
             },
             missionRuntime: g.definition.missionType === "escort" || g.definition.missionType === "sequential-seal"
+              || hasSupplyValve(g.definition.missionType, g.definition.missionConfig)
               ? { ...g.stageMission }
               : undefined,
             researchCoreTargets: g.researchCoreTargets?.map(target => ({...target})),
