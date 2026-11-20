@@ -4,7 +4,7 @@ import { requiredBattleAssetPlan } from "../app/battleAssetPlan.js";
 import { battleOutcomeFor, objectiveForBattle } from "../app/battleDefinitions.js";
 import { advanceStationMissionRuntime, createStationMissionRuntime, currentPowerNode } from "../app/stationStageMechanics.js";
 import { stationSpatialSnapshot } from "../app/stationSpatialMechanics.js";
-import { v100BattleDefinitionFor } from "../app/v100BattleAdapter.js";
+import { v100BattleDefinitionFor, V100_ENEMY_PACKS } from "../app/v100BattleAdapter.js";
 import { v100BattleReportFor, v100DeviceResultText } from "../app/v100BattleReport.js";
 import { v100MissionBriefingFor } from "../app/v100MissionBriefing.js";
 import { V100_NODE_ART, V100_SUPPLY_VALVE_STAGE } from "../app/v100MissionNodes.js";
@@ -76,14 +76,16 @@ test("the defeat readout reports only the supply progress measured in the curren
   assert.equal(readout({ ...createRuntime(), powerActivated: 1 }).progress, "供給管 復旧済み");
 });
 
-test("MOTHER approach groups wait for the last enemy and still retain the original boss entrance", () => {
-  const opening = definition.timeline[0];
-  const boss = definition.timeline.at(-1);
+test("three distinct MOTHER approach groups retain every pack C threat and the boss enters on her own", () => {
+  const [opening, remoteThreats, heavies, boss] = definition.timeline;
+  assert.equal(definition.timeline.length, 4);
   assert.equal(opening.clearDelaySeconds, undefined);
-  assert.ok(definition.timeline.slice(1, -1).every(group => group.clearDelaySeconds === 2.5));
+  assert.ok([remoteThreats, heavies, boss].every(group => group.clearDelaySeconds === 2.5));
+  assert.deepEqual(new Set(definition.timeline.slice(0, 3).flatMap(group => group.units)), new Set(V100_ENEMY_PACKS.C));
+  assert.ok(remoteThreats.units.includes("spitter") && remoteThreats.units.includes("ooze"));
+  assert.ok(heavies.units.includes("abomination") && heavies.units.includes("crusher"));
   assert.equal(boss.waitForPriorWaveClear, true);
-  assert.equal(boss.clearDelaySeconds, undefined);
-  assert.ok(boss.units.includes("mother"));
+  assert.deepEqual(boss.units, ["mother"]);
   const game = {
     definition, time: definition.timeline[1].at, eventIndex: 1,
     enemySpawn: { pending: [] }, fighters: [{ side: "zombie", hp: 1 }],

@@ -165,6 +165,20 @@ function stageTimeline(stage, missionType, bossKind) {
       freeze({ at: PREP_SECONDS + 145, wave: 11, label: "改札前 // 増援3/3", units: freeze(["sprinter", "ooze", "walker"]), bossHpRatio: 0.2, addWave: true }),
     ]);
   }
+  if (stage.id === V100_SUPPLY_VALVE_STAGE) {
+    // Establish three distinct threats before the boss. Once MOTHER enters,
+    // her own brood ability supplies the reinforcements.
+    return freeze([
+      freeze({ at: PREP_SECONDS, wave: 1, label: "供給弁へ // 先行感染群",
+        units: freeze(["walker", "runner", "walker", "runner"]) }),
+      freeze({ at: PREP_SECONDS + 18, wave: 2, label: "待機室前 // 射撃と汚染", clearDelaySeconds: 2.5,
+        units: freeze(["spitter", "ooze", "shade", "runner", "walker"]) }),
+      freeze({ at: PREP_SECONDS + 36, wave: 3, label: "隔離槽前 // 重量級接近", clearDelaySeconds: 2.5,
+        units: freeze(["crusher", "sprinter", "grappler", "abomination", "runner"]) }),
+      freeze({ at: PREP_SECONDS + 55, wave: 4, label: "警告 // " + bossLabel, clearDelaySeconds: 2.5,
+        units: freeze([bossKind]), waitForPriorWaveClear: true }),
+    ]);
+  }
   if (stage.number === 30) {
     // Establish the defense before revealing Omega. His two later A-only
     // reinforcements remain; the prelude contains no Panther units.
@@ -202,9 +216,6 @@ function stageTimeline(stage, missionType, bossKind) {
       wave,
       label: bossArrives ? `警告 // ${bossLabel}` : stage.number === 29 ? `特級研究中枢 // 精鋭第${wave}/6波` : `${stage.displayName} // 第${wave}波`,
       units: freeze(units),
-      // Let the player finish each approach group and rebuild the defensive
-      // line before MOTHER, using the same clear window as assault routes.
-      ...(stage.id === V100_SUPPLY_VALVE_STAGE && index > 0 && !bossArrives ? { clearDelaySeconds: 2.5 } : {}),
       ...(bossArrives ? { waitForPriorWaveClear: true } : {}),
       ...(bossArrives ? { bossOnly: false } : {}),
     });
