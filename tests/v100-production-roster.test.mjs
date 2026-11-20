@@ -20,7 +20,10 @@ test("all thirty production timelines use the frozen operation's enemies and bos
     const definition = definitionFor(stage.number);
     const allowed = [...rows[stage.number-1], definition.bossEnemyKind].filter(Boolean);
     for (const event of definition.timeline) for (const kind of event.units) assert.ok(allowed.includes(kind), `Stage ${stage.number} wave ${event.wave}: unauthorized ${kind}`);
-    assert.ok(definition.timeline.every((event,index) => index===0 || event.at > definition.timeline[index-1].at));
+    const dueByTime = definition.timeline.filter(event=>!event.requiresOpenFloodgate);
+    assert.ok(dueByTime.every((event,index) => index===0 || event.at > dueByTime[index-1].at));
+    assert.equal(definition.timeline.length-dueByTime.length,stage.number===20?1:0);
+    if(stage.number===20)assert.equal(definition.timeline.at(-1).requiresOpenFloodgate,true);
     if (definition.bossEnemyKind) assert.equal(definition.timeline.flatMap(event=>event.units).filter(kind=>kind===definition.bossEnemyKind).length, stage.number === 24 ? 2 : 1);
   }
 });
