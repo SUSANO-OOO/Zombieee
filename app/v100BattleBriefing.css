@@ -28,10 +28,10 @@ html[data-pwa-ui-materials="ready"] .v100-battle-briefing { --v100-briefing-mate
 .v100-battle-instructions-note { margin:9px 0 0; padding:7px 10px; border-left:4px solid #b28d4e; color:#eee2c3; background:#2d4436; font-size:14px; line-height:1.45; }
 .v100-briefing-plan { display:grid; grid-template-columns:minmax(0,1.08fr) minmax(0,1fr); gap:10px; }
 .v100-briefing-plan > section { min-width:0; padding:9px 12px; border:1px solid #8a805f7a; background:#f3e8c768; }
-.v100-briefing-plan > section:first-child { border-top:3px solid #65774d; }
-.v100-briefing-plan > section:nth-child(2) { border-top:3px solid #a3653e; }
+.v100-briefing-plan > section:first-of-type { border-top:3px solid #65774d; }
+.v100-briefing-plan > section:nth-of-type(2) { border-top:3px solid #a3653e; }
 .v100-briefing-plan h3 { margin:0 0 7px; padding-bottom:6px; border-bottom:1px solid #8d8d6880; color:#263e2b; font-size:18px; line-height:1.35; }
-.v100-briefing-plan > section:first-child > strong { display:block; padding:3px 7px; border-left:3px solid #7d8c58; color:#f3e6c5; background:#304d38; font-size:15px; }
+.v100-briefing-plan > section:first-of-type > strong { display:block; padding:3px 7px; border-left:3px solid #7d8c58; color:#f3e6c5; background:#304d38; font-size:15px; }
 .v100-briefing-plan p { margin:6px 0; }
 .v100-briefing-plan ul { display:grid; gap:6px; margin:0 0 10px; padding:0; list-style:none; }
 .v100-briefing-plan li { padding:5px 7px; border-left:3px solid #a76f43; background:#b9ac8055; }
