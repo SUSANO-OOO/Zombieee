@@ -1674,6 +1674,7 @@ function ResultView({ result, previousResult, previousBestStars, alreadyComplete
   const bossHpPercentText = bossHpPercent > 0 && bossHpPercent < 1 ? "1%未満" : `${Math.round(bossHpPercent)}%`;
   const bossRemainingHpText = boss ? `残りHP ${Math.ceil(boss.hp ?? 0)} / ${boss.maxHp}（${bossHpPercentText}）` : "";
   const lastVehicleHit = v100LastVehicleHitText(result);
+  const hasDefeatIntegrity = Number.isFinite(maxHp) && maxHp > 0 && typeof result?.vehicleHp === "number" && Number.isFinite(result.vehicleHp);
   const escortResult = v100EscortResultText(result);
   const defenseResult = v100DefenseResultText(result);
   const deviceResult = v100DeviceResultText(result);
@@ -1692,7 +1693,11 @@ function ResultView({ result, previousResult, previousBestStars, alreadyComplete
           {defenseResult && <span>{defenseResult.detail}</span>}
           {deviceResult && <span>{deviceResult.detail}</span>}
           {boss?.state === "active" && <span>{bossRemainingHpText}</span>}
-          <small>{report ? `第${report.wave}波・${report.kills}体撃破` : "波数・撃破数の記録なし"}{recordedDeaths !== null && ` / 戦闘不能 ${recordedDeaths}回`}</small>
+          <small className="v100-defeat-facts">
+            {hasDefeatIntegrity && <span>{basePresentation.healthLabel} <b>{Math.ceil(vehicleHp)} / {Math.ceil(maxHp)}</b></span>}
+            <span>{report ? `第${report.wave}波・${report.kills}体撃破` : "波数・撃破数の記録なし"}{recordedDeaths !== null && ` / 戦闘不能 ${recordedDeaths}回`}</span>
+          </small>
+          {lastVehicleHit && <small className="v100-result-last-hit"><b>直前の被害</b> {lastVehicleHit}</small>}
           {escortResult?.advice && <small>{escortResult.advice}</small>}
         </div>}
       <p>{merits[0] ? <span className="v100-result-lead-merit" data-v100-merit={merits[0].id}><strong>{merits[0].title}</strong><small>{merits[0].detail}<span className="v100-merit-scroll-hint"> · 詳細は下へ</span></small></span> : outcome}<span className="v100-result-scroll-guide">結果の詳細は下へスクロール</span></p>
@@ -1700,7 +1705,6 @@ function ResultView({ result, previousResult, previousBestStars, alreadyComplete
       {merits.length > 1 && <div className="v100-result-other-merits" role="list" aria-label="この一戦の成果">{merits.slice(1).map(merit => <span key={merit.id} role="listitem" data-v100-merit={merit.id}><strong>{merit.title}</strong><small>{merit.detail}</small></span>)}</div>}
       <div className="v100-result-feedback">
         <dl className="v100-result-extra-records"><div><dt>経過時間</dt><dd>{recordedSeconds === null ? "記録なし" : `${recordedSeconds}秒`}</dd></div><div><dt>戦闘不能</dt><dd>{recordedDeaths === null ? "記録なし" : `${recordedDeaths}回`}</dd></div></dl>
-        {lastVehicleHit && <p className="v100-result-last-hit"><strong>直前の被害</strong> {lastVehicleHit}</p>}
         {won && <><div className="v100-vehicle-hp-meter" role="meter" aria-label={basePresentation.healthLabel} aria-valuemin={0} aria-valuemax={maxHp} aria-valuenow={vehicleHp} aria-valuetext={`${vehicleHp} / ${maxHp}、${Math.floor(hpPercent)}%`}>
           <i style={{ width: `${hpPercent}%` }} /><b className="threshold-70" style={{ left: `${maxHp ? starTargets[2] / maxHp * 100 : 70}%` }} /><b className="threshold-90" style={{ left: `${maxHp ? starTargets[3] / maxHp * 100 : 90}%` }} />
         </div>

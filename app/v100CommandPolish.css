@@ -14,7 +14,7 @@
 #v100-campaign .v100-result-feedback { grid-column: 1 / -1; grid-row: 4; text-align: left; }
 #v100-campaign .v100-result-feedback p, #v100-campaign .v100-star-criteria { margin: 2px 0; font-size: 12px; line-height: 1.4; color: #d7dfc5; }
 #v100-campaign .v100-result-feedback .v100-result-boss { color: #f2dab3; }
-#v100-campaign .v100-result-feedback .v100-result-last-hit { margin: 4px 0 8px; padding: 8px 10px; border-left: 3px solid #cd9564; background: #211b16; color: #f2dcc3; font-size: 14px; }
+#v100-campaign .v100-defeat-progress .v100-result-last-hit { overflow-wrap:anywhere; padding-inline-start:5px; }
 #v100-campaign .v100-read-story-setting { display: flex; align-items: center; gap: 10px; min-height: 44px; margin: 8px 0 12px; padding: 8px; border: 1px solid #7f8f79; color: #efe4c7; font-size: 14px; cursor: pointer; }
 #v100-campaign .v100-read-story-setting input { flex: none; width: 20px; height: 20px; accent-color: #d7b875; }
 #v100-campaign .v100-read-story-setting small { display: block; margin-top: 4px; font-size: 12px; color: #b9c7b8; }
@@ -501,6 +501,8 @@
 #v100-campaign .v100-defeat-progress strong { color:#f3d28e; font-size:18px; line-height:1.25; }
 #v100-campaign .v100-defeat-progress > span { color:#f4e4c4; font-size:16px; }
 #v100-campaign .v100-defeat-progress small { grid-column:1/-1; color:#c9d3c4; font-size:13px; line-height:1.3; }
+#v100-campaign .v100-defeat-facts { display:flex; flex-wrap:wrap; gap:2px 12px; align-items:baseline; }
+#v100-campaign .v100-defeat-facts b { white-space:nowrap; font-variant-numeric:tabular-nums; }
 #v100-campaign[data-v100-phase="result"] .lose .v100-result-scroll > .v100-result-records { grid-column:1/-1; grid-row:4; }
 #v100-campaign[data-v100-phase="result"] .lose .v100-result-scroll > .v100-result-feedback { grid-row:5; }
 @media (max-width:639px) { #v100-campaign .v100-defeat-progress > span { grid-column:1/-1; } }
