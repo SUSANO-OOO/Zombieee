@@ -327,6 +327,50 @@
     [
       "            : defenseObjective\n            ? <div className=\"health-hud barrier-health defense-objective\"",
       "            : centralSealHud\n            ? <div className=\"health-hud barrier-health central-seal-objective\" data-central-seal-count={centralSealHud.closed}\n              aria-label={`ゲート閉鎖 ${centralSealHud.closed}/${centralSealHud.total}`}>\n              <div><span>ゲート閉鎖</span><b>{centralSealHud.closed}/{centralSealHud.total}</b></div>\n              <ol>{Array.from({length:centralSealHud.total},(_,index) => {\n                const closed = index < centralSealHud.closed;\n                return <li key={index} data-closed={closed} aria-label={`ゲート${index + 1} ${closed ? \"閉鎖済み\" : \"開放中\"}`}>{index + 1} {closed ? \"閉鎖\" : \"開放\"}</li>;\n              })}</ol>\n            </div>\n            : defenseObjective\n            ? <div className=\"health-hud barrier-health defense-objective\""
+    ],
+    [
+      "import { drawV100RailEvacuation, hasRailEvacuation, railEvacuationReadout } from \"./v100RailEvacuation.js\";",
+      "import { drawV100RailEvacuation, hasRailEvacuation, railEvacuationReadout } from \"./v100RailEvacuation.js\";\nimport { advanceBayEvacuationRuntime, bayEvacuationReadout, drawV100BayEvacuees, hasBayEvacuation, V100_BAY_REFUGEE_COUNT, V100_BAY_ROUTE_Y } from \"./v100BayEvacuation.js\";"
+    ],
+    [
+      "  evacuationProgress?: number;",
+      "  evacuationProgress?: number;\n  evacuationDistances?: readonly number[];\n  evacuationMoving?: readonly boolean[];\n  evacuatedCount?: number;\n  evacuationBlocked?: boolean;\n  evacuationSettling?: number;"
+    ],
+    [
+      "  drawStationMission(ctx, g, stageObjects, allowDiagnosticFallback, true);",
+      "  drawStationMission(ctx, g, stageObjects, allowDiagnosticFallback, true);\n  if (hasBayEvacuation(g.definition.missionType, g.definition.missionConfig)) {\n    drawV100BayEvacuees(ctx, g.stageMission, stageObjects, activeYForContentY(V100_BAY_ROUTE_Y));\n  }"
+    ],
+    [
+      "        const supplyValvePending = hasSupplyValve(g.definition.missionType, g.definition.missionConfig)",
+      "        if (hasBayEvacuation(g.definition.missionType, g.definition.missionConfig) && !g.stageMission.completed\n          && g.time >= g.definition.prepSeconds) {\n          const previous = g.stageMission;\n          g.stageMission = advanceBayEvacuationRuntime({ runtime: previous, fighters: g.fighters, dt, eventIndex: g.eventIndex,\n            baseHp: g.baseHp, bossDefeated: g.bossDefeated, bossDefeatPending: g.bossDefeatPending,\n            routeY: activeYForContentY(V100_BAY_ROUTE_Y) });\n          if ((previous.evacuatedCount ?? 0) < V100_BAY_REFUGEE_COUNT && g.stageMission.evacuatedCount === V100_BAY_REFUGEE_COUNT) {\n            g.banner = \"十二人全員の避難完了\";\n            g.bannerTime = 2;\n            playProductionCue(STATION_AUDIO_CUE_IDS.RESCUE_CONFIRM, BASE_X, { priority: 87, maxInstances: 1 });\n          }\n        }\n        const supplyValvePending = hasSupplyValve(g.definition.missionType, g.definition.missionConfig)"
+    ],
+    [
+      "            if (twinDefeat.complete && (isOutbreakBoss || isRailBoss\n              || (fighter.kind === g.definition.bossEnemyKind && g.definition.bossUnlocksEnemyBase))) {\n              g.bossDefeatPending = true;\n              if (!isOutbreakBoss && !isRailBoss) g.barricadeVulnerable = true;",
+      "            const isBayBoss = fighter.kind === g.definition.bossEnemyKind\n              && hasBayEvacuation(g.definition.missionType, g.definition.missionConfig);\n            if (twinDefeat.complete && (isOutbreakBoss || isRailBoss || isBayBoss\n              || (fighter.kind === g.definition.bossEnemyKind && g.definition.bossUnlocksEnemyBase))) {\n              g.bossDefeatPending = true;\n              if (!isOutbreakBoss && !isRailBoss && !isBayBoss) g.barricadeVulnerable = true;"
+    ],
+    [
+      "                : isRailBoss\n                ? g.stageMission.completed ? \"オオグチ撃破 // 残る敵を倒す\" : \"オオグチ撃破 // 民間車両を逃がす\"",
+      "                : isRailBoss\n                ? g.stageMission.completed ? \"オオグチ撃破 // 残る敵を倒す\" : \"オオグチ撃破 // 民間車両を逃がす\"\n                : isBayBoss\n                ? g.stageMission.completed ? \"クロメ撃破 // 残る敵を倒す\" : \"クロメ撃破 // 避難路を守る\""
+    ],
+    [
+      "              } else if (!isRailBoss) {",
+      "              } else if (!isRailBoss && !isBayBoss) {"
+    ],
+    [
+      "              || hasRailEvacuation(g.definition.missionType, g.definition.missionConfig)\n              ? { ...g.stageMission }",
+      "              || hasRailEvacuation(g.definition.missionType, g.definition.missionConfig)\n              || hasBayEvacuation(g.definition.missionType, g.definition.missionConfig)\n              ? { ...g.stageMission }"
+    ],
+    [
+      "                || hasRailEvacuation(g.definition.missionType, g.definition.missionConfig)\n                ? { ...g.stageMission }",
+      "                || hasRailEvacuation(g.definition.missionType, g.definition.missionConfig)\n                || hasBayEvacuation(g.definition.missionType, g.definition.missionConfig)\n                ? { ...g.stageMission }"
+    ],
+    [
+      "  const phaseName = railHud ? railHud.phaseLabel",
+      "  const bayHud = hasBayEvacuation(gameRef.current.definition.missionType, gameRef.current.definition.missionConfig)\n    ? bayEvacuationReadout(gameRef.current.stageMission) : null;\n  const phaseName = bayHud ? bayHud.phaseLabel\n    : railHud ? railHud.phaseLabel"
+    ],
+    [
+      "            : rescueControlHud\n            ? <div className=\"health-hud barrier-health rescue-control-objective\"",
+      "            : bayHud\n            ? <div className=\"health-hud barrier-health bay-evacuation-objective\" data-bay-evacuation={bayHud.phase}\n              data-evacuated-count={bayHud.count} aria-label={`${bayHud.label} ${bayHud.status}`}>\n              <div><span>{bayHud.label}</span><b>{bayHud.status}</b></div>\n              <i><em style={{ width: `${bayHud.count / bayHud.total * 100}%` }} /></i>\n            </div>\n            : rescueControlHud\n            ? <div className=\"health-hud barrier-health rescue-control-objective\""
     ]
   ],
   "app/manualAbilities.js": [

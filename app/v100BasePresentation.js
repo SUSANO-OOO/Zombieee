@@ -9,6 +9,10 @@ export function v100BasePresentationFor(stageNumber) {
     return Object.freeze({ onFoot: true, label: "制御区", healthLabel: "制御区耐久",
       barrageLabel: "援護射撃", assetPath: V100_RETREAT_DOOR_ART });
   }
+  if (stageNumber === 17) {
+    return Object.freeze({ onFoot: true, label: "避難口", healthLabel: "避難口耐久",
+      barrageLabel: "援護射撃", assetPath: V100_RETREAT_DOOR_ART });
+  }
   const onFoot = stageNumber === 5 || stageNumber === 6;
   return Object.freeze({ onFoot, label: onFoot ? "退路" : "装甲車両",
     healthLabel: onFoot ? "退路耐久" : "車両耐久",

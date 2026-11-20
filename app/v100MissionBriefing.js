@@ -4,6 +4,7 @@ import { V100_NODE_PROFILES, V100_SUPPLY_VALVE_STAGE } from "./v100MissionNodes.
 import { V100_RAIL_EVACUATION_STAGE } from "./v100RailEvacuation.js";
 import { V100_RESCUE_CONTROL, V100_RESCUE_CONTROL_STAGE } from "./v100RescueControl.js";
 import { V100_CENTRAL_SEAL, V100_CENTRAL_SEAL_STAGE } from "./v100CentralSeal.js";
+import { V100_BAY_EVACUATION_STAGE } from "./v100BayEvacuation.js";
 import { V100_MISSION_VEHICLES } from "./v100MissionVehicles.js";
 import { V100_DEFENSE_OBJECTIVES } from "./v100DefenseObjectives.js";
 import { V100_CORPORATE_CONTROLS } from "./v100CorporateControl.js";
@@ -31,6 +32,9 @@ export function v100MissionBriefingFor(stageId) {
   }
   if (stageId === V100_RAIL_EVACUATION_STAGE) {
     return { mode: "sequence", count: 3, countUnit: "本", label: "赤いレバー", verb: "引いて民間車両を逃がす" };
+  }
+  if (stageId === V100_BAY_EVACUATION_STAGE) {
+    return { mode: "escort", origin: "避難者十二人", target: "非常口", verb: "クロメを退け、避難路を守る" };
   }
   if (stageId === V100_CENTRAL_SEAL_STAGE) {
     return { mode: "sequence", count: V100_CENTRAL_SEAL.powerCount, countUnit: "基",

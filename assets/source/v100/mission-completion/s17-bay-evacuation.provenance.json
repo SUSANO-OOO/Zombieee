@@ -1,0 +1,248 @@
+{
+  "creator": "Built-in ImageGen directed for the Zombieee project",
+  "licensing": {
+    "source": "Original project-generated rasters without third-party inputs",
+    "use": "Project distribution and derivative packaging under applicable content terms"
+  },
+  "producerApproval": "Development candidate under Issue #177; physical and art acceptance pending",
+  "evacuees": {
+    "prompt": "Transparent alpha sprite atlas, strictly aligned 4 columns by 3 rows, one complete full-body person in each cell, designed for a small-screen 2.5D side-on Japanese post-apocalyptic evacuation game. Orthographic side view, all people face and travel towards the LEFT. Photorealistic hand-painted survival game art with realistic anatomy, restrained warm lamp lighting, dim slate and olive fabric, no ground or shadows. Identical character and scale within each column. Column 1: adult woman in muted mustard weatherproof jacket and trim dark trousers; column 2: adult man in slate-blue workwear with a messenger strap; column 3: older woman with charcoal coat, olive scarf and short greying hair; column 4: adult man with a white bandage on his forehead, plain muted red-brown jacket and dark trousers. Noncombatants with no weapons. Top row: urgent cautious running with near foot extended forward to the left and far foot planted back, arms counter-swing. Middle row: matching alternate running stride with opposite feet and arms, the same side-on orientation, clothes and person. Bottom row: sheltering with body visibly lowered, arms folded protectively while holding in place, facing left. Each row and column evenly spaced with clear generous alpha gutters. Feet near the bottom of each cell at the same baseline, no sprites touching, no duplicate within one cell, keep full outlines and legs unobstructed. No numbers, borders, writing, logos, floor, scenery, fill colors, silhouette circles or UI.",
+    "master": {
+      "path": "assets/source/v100/mission-completion/s17-bay-evacuees-master-r1.png",
+      "sha256": "5d4bf820ea5f4189444afda4795cb91aeb6873969ba8697c117a678122fc7990",
+      "size": [
+        1448,
+        1086
+      ]
+    },
+    "runtime": {
+      "path": "public/art/v100/mission-objects/s17-bay-evacuees-r1.webp",
+      "sha256": "c47dc384bd3495af8631389b49457eae3af2a980835321a0bf4e615230b10331",
+      "bytes": 66594,
+      "size": [
+        488,
+        444
+      ]
+    },
+    "tiles": [
+      {
+        "row": 0,
+        "col": 0,
+        "crop": {
+          "left": 19,
+          "top": 11,
+          "width": 319,
+          "height": 354
+        },
+        "atlas": [
+          5,
+          22,
+          112,
+          124
+        ]
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "crop": {
+          "left": 384,
+          "top": 4,
+          "width": 311,
+          "height": 361
+        },
+        "atlas": [
+          127,
+          16,
+          112,
+          130
+        ]
+      },
+      {
+        "row": 0,
+        "col": 2,
+        "crop": {
+          "left": 746,
+          "top": 17,
+          "width": 311,
+          "height": 349
+        },
+        "atlas": [
+          249,
+          20,
+          112,
+          126
+        ]
+      },
+      {
+        "row": 0,
+        "col": 3,
+        "crop": {
+          "left": 1107,
+          "top": 4,
+          "width": 324,
+          "height": 361
+        },
+        "atlas": [
+          371,
+          21,
+          112,
+          125
+        ]
+      },
+      {
+        "row": 1,
+        "col": 0,
+        "crop": {
+          "left": 47,
+          "top": 371,
+          "width": 267,
+          "height": 360
+        },
+        "atlas": [
+          14,
+          168,
+          94,
+          126
+        ]
+      },
+      {
+        "row": 1,
+        "col": 1,
+        "crop": {
+          "left": 399,
+          "top": 365,
+          "width": 266,
+          "height": 367
+        },
+        "atlas": [
+          135,
+          162,
+          96,
+          132
+        ]
+      },
+      {
+        "row": 1,
+        "col": 2,
+        "crop": {
+          "left": 767,
+          "top": 378,
+          "width": 276,
+          "height": 354
+        },
+        "atlas": [
+          255,
+          167,
+          99,
+          127
+        ]
+      },
+      {
+        "row": 1,
+        "col": 3,
+        "crop": {
+          "left": 1121,
+          "top": 369,
+          "width": 272,
+          "height": 363
+        },
+        "atlas": [
+          380,
+          169,
+          94,
+          125
+        ]
+      },
+      {
+        "row": 2,
+        "col": 0,
+        "crop": {
+          "left": 58,
+          "top": 756,
+          "width": 211,
+          "height": 327
+        },
+        "atlas": [
+          28,
+          341,
+          65,
+          101
+        ]
+      },
+      {
+        "row": 2,
+        "col": 1,
+        "crop": {
+          "left": 408,
+          "top": 755,
+          "width": 259,
+          "height": 327
+        },
+        "atlas": [
+          142,
+          338,
+          82,
+          104
+        ]
+      },
+      {
+        "row": 2,
+        "col": 2,
+        "crop": {
+          "left": 786,
+          "top": 767,
+          "width": 234,
+          "height": 314
+        },
+        "atlas": [
+          268,
+          342,
+          74,
+          100
+        ]
+      },
+      {
+        "row": 2,
+        "col": 3,
+        "crop": {
+          "left": 1136,
+          "top": 760,
+          "width": 245,
+          "height": 324
+        },
+        "atlas": [
+          389,
+          343,
+          75,
+          99
+        ]
+      }
+    ]
+  },
+  "gallery": {
+    "prompt": "Wide 16:9 hand-painted photorealistic 2.5D video game battlefield background for \"Bay Tower — Emergency Gallery\", a ruined coastal Japanese tower in a grounded post-apocalyptic setting. Fixed side-on horizontal game camera, very slight downward perspective. This is INSIDE a high-ceiling concrete emergency passage and raised walkway of the tower, with dark industrial steel beams and broken glass. The far wall has large rectangular openings through which a pale stormy sea horizon, dark supporting tower ribs, and very distant coastal industrial lights are visible. Warm shallow lamps on the interior left lead toward a recessed emergency shelter door; the right wall opens into a dark access corridor. Old yellow safety stripe, scraped concrete texture, faint damp reflections, no neon. A broad continuous plain open walkable concrete floor extends from x=0 to x=100%, from the middle of the image down to the bottom, with no debris or objects that visually obstruct walking. Detail concentrated in the upper wall and frame edges. The floor and lower mid tones need enough contrast to read dozens of small silhouettes on a phone. Achieve architectural realism, restrained atmosphere, clear sightline, a sense of genuinely being inside a tall coastal tower. No people, monsters, vehicles, weapons, flags, banners, marks, writing, stylized graphic shapes, bright center, or HUD.",
+    "master": {
+      "path": "assets/source/v100/mission-completion/s17-bay-emergency-gallery-master-r1.png",
+      "sha256": "5d47a0bfdc64e755eaa552aa77cca2c0dbf4d371f6f1b0c1873dfc48009d37e7",
+      "size": [
+        1672,
+        941
+      ]
+    },
+    "runtime": {
+      "path": "public/art/v100/stages/s17-bay-emergency-gallery-r1.webp",
+      "sha256": "02d445b47552ea77f15fa979ae127006a93ec561d5161c0bb9f0f266a6f49f4d",
+      "bytes": 216910,
+      "size": [
+        1672,
+        941
+      ]
+    }
+  },
+  "distribution": {
+    "assetCount": 2,
+    "logicalBytes": 283504,
+    "distinctBytes": 283504
+  },
+  "usage": "Stage 17 only; side-on running and sheltering civilian actors, plus the elevated tower gallery and emergency door"
+}

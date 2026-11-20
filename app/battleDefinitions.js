@@ -10,6 +10,7 @@ import {
 import { v100BattleDefinitionFor } from "./v100BattleAdapter.js";
 import { researchCoreComplete, researchCoreObjective } from "./v100ResearchCore.js";
 import { hasRailEvacuation } from "./v100RailEvacuation.js";
+import { bayEvacuationObjective, hasBayEvacuation } from "./v100BayEvacuation.js";
 import { v100DefenseStatus } from "./v100DefenseObjectives.js";
 import { v100CorporateControlLabel } from "./v100CorporateControl.js";
 
@@ -192,6 +193,7 @@ export function objectiveForBattle(definition, state) {
       : "感染拠点を破壊";
   }
   if (definition.missionType === "boss-assault") {
+    if (hasBayEvacuation(definition.missionType, definition.missionConfig)) return bayEvacuationObjective(state.stageMission, state.bossDefeated);
     if (hasRailEvacuation(definition.missionType, definition.missionConfig)) {
       if (!state.stageMission?.completed) return stationMissionObjective(state.stageMission, definition.missionConfig) || definition.objective;
       return state.bossDefeated ? "民間車両は退避済み。残る敵を倒す" : "民間車両は退避済み。オオグチを倒す";
@@ -241,7 +243,7 @@ export function battleOutcomeFor(definition, state) {
     : definition.baseMaxHp;
   const clearRatio = definition.starThresholds?.[1] ?? 0;
   const hasClearHp = Number(state.baseHp) / baseMaxHp >= clearRatio;
-  if (hasRailEvacuation(definition.missionType, definition.missionConfig)) {
+  if (hasRailEvacuation(definition.missionType, definition.missionConfig) || hasBayEvacuation(definition.missionType, definition.missionConfig)) {
     if (state.stageMission?.failed) return "lost";
     if (!state.stageMission?.completed || state.bossDefeated !== true || state.bossDefeatPending === true || state.wavesResolved !== true) return null;
     return hasClearHp ? "won" : "lost";

@@ -1,6 +1,6 @@
 {
   "base": "ff5dba24e88c810182cda1f044bd26dfc3e512c1",
-  "source": "96f6f399e13fedf5489b55e51bce9344e3b93fea adds dedicated Paisen pressure flight and impact to the previously reviewed quality delta; attack mechanics, optional verified loading, audio and save retained; preparation-only Paisen pressure and TKY energy additions from 2f019a7645b7c7c1db2ea74aaea70e8caea54eca, all previous content and voice/policy retained; nine non-vocal boss collapse materials with original voices, mechanics and retained payloads from05b69ccf unchanged; nineteen non-vocal boss warning/release/impact materials, existing timing, separate voices, all889 previous payloads and saved fallback sources retained from fddd2e7e; recorded Chihuahua reactions from 79447e00 and offline packaging e4d9c9b2: two CC0 Mayo files appended; original 409 payloads and every prior asset role, path and content retained; Stage 14 freight-yard evacuation adds one runtime atlas, with all 920 previous rows retained. Stage 16 adds the exact 62,848-byte tunnel gate atlas, retaining the 921 previous paths",
+  "source": "96f6f399e13fedf5489b55e51bce9344e3b93fea adds dedicated Paisen pressure flight and impact to the previously reviewed quality delta; attack mechanics, optional verified loading, audio and save retained; preparation-only Paisen pressure and TKY energy additions from 2f019a7645b7c7c1db2ea74aaea70e8caea54eca, all previous content and voice/policy retained; nine non-vocal boss collapse materials with original voices, mechanics and retained payloads from05b69ccf unchanged; nineteen non-vocal boss warning/release/impact materials, existing timing, separate voices, all889 previous payloads and saved fallback sources retained from fddd2e7e; recorded Chihuahua reactions from 79447e00 and offline packaging e4d9c9b2: two CC0 Mayo files appended; original 409 payloads and every prior asset role, path and content retained; Stage 14 freight-yard evacuation adds one runtime atlas, with all 920 previous rows retained. Stage 16 adds the exact 62,848-byte tunnel gate atlas, retaining the 921 previous paths. Stage 17 adds only its interior and evacuee atlas",
   "scope": "Local quality candidate transport contract; not likeness, rights, listening, release or physical-device approval.",
   "added": [
     {
@@ -2765,6 +2765,22 @@
       "hash": "sha256-65851b0fbc092c4014c44f305a0874607f5ae856ee2b4fff7d24c4397804bcdc",
       "pack": "campaign-core",
       "category": "object",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/mission-objects/s17-bay-evacuees-r1.webp",
+      "bytes": 66594,
+      "hash": "sha256-c47dc384bd3495af8631389b49457eae3af2a980835321a0bf4e615230b10331",
+      "pack": "campaign-core",
+      "category": "object",
+      "criticality": "critical"
+    },
+    {
+      "path": "/art/v100/stages/s17-bay-emergency-gallery-r1.webp",
+      "bytes": 216910,
+      "hash": "sha256-02d445b47552ea77f15fa979ae127006a93ec561d5161c0bb9f0f266a6f49f4d",
+      "pack": "campaign-core",
+      "category": "background",
       "criticality": "critical"
     }
   ],
