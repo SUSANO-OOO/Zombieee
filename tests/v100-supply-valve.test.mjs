@@ -9,6 +9,7 @@ import { v100BattleReportFor, v100DeviceResultText } from "../app/v100BattleRepo
 import { v100MissionBriefingFor } from "../app/v100MissionBriefing.js";
 import { V100_NODE_ART, V100_SUPPLY_VALVE_STAGE } from "../app/v100MissionNodes.js";
 import { V100_STAGE_IDS } from "../app/v100Registry.js";
+import { campaignWaveReady } from "../app/wavePacing.js";
 
 const stageId = V100_SUPPLY_VALVE_STAGE;
 const definition = v100BattleDefinitionFor(stageId);
@@ -73,4 +74,29 @@ test("the defeat readout reports only the supply progress measured in the curren
   assert.equal(readout({ missionType, powerActivated: 2 }), null);
   assert.equal(readout(createRuntime()).progress, "供給管 未復旧");
   assert.equal(readout({ ...createRuntime(), powerActivated: 1 }).progress, "供給管 復旧済み");
+});
+
+test("MOTHER approach groups wait for the last enemy and still retain the original boss entrance", () => {
+  const opening = definition.timeline[0];
+  const boss = definition.timeline.at(-1);
+  assert.equal(opening.clearDelaySeconds, undefined);
+  assert.ok(definition.timeline.slice(1, -1).every(group => group.clearDelaySeconds === 2.5));
+  assert.equal(boss.waitForPriorWaveClear, true);
+  assert.equal(boss.clearDelaySeconds, undefined);
+  assert.ok(boss.units.includes("mother"));
+  const game = {
+    definition, time: definition.timeline[1].at, eventIndex: 1,
+    enemySpawn: { pending: [] }, fighters: [{ side: "zombie", hp: 1 }],
+  };
+  const next = definition.timeline[1];
+  assert.equal(campaignWaveReady(game, next), false, "the due group waits for a living enemy");
+  game.fighters = [];
+  game.enemySpawn.pending.push({ kind: "turned" });
+  game.time += 1;
+  assert.equal(campaignWaveReady(game, next), false, "the due group waits for a queued enemy");
+  game.enemySpawn.pending.length = 0;
+  game.time += 1;
+  assert.equal(campaignWaveReady(game, next), false);
+  game.time += 2.5;
+  assert.equal(campaignWaveReady(game, next), true);
 });

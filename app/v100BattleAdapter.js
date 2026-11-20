@@ -202,6 +202,9 @@ function stageTimeline(stage, missionType, bossKind) {
       wave,
       label: bossArrives ? `警告 // ${bossLabel}` : stage.number === 29 ? `特級研究中枢 // 精鋭第${wave}/6波` : `${stage.displayName} // 第${wave}波`,
       units: freeze(units),
+      // Let the player finish each approach group and rebuild the defensive
+      // line before MOTHER, using the same clear window as assault routes.
+      ...(stage.id === V100_SUPPLY_VALVE_STAGE && index > 0 && !bossArrives ? { clearDelaySeconds: 2.5 } : {}),
       ...(bossArrives ? { waitForPriorWaveClear: true } : {}),
       ...(bossArrives ? { bossOnly: false } : {}),
     });
