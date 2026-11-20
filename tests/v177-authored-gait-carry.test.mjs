@@ -5,6 +5,8 @@ import { gaitSourceHash } from '../scripts/gait-source-hash.mjs';
 import { V177_AUTHORED_GAITS } from '../app/v177GaitSourceData.js';
 import { V177_JOINT_ATLASES as atlases, v177JointPose, v105BipedFootPlan, v177CaptureJointPose, drawV177JointPose } from '../app/v177JointPresentation.js';
 import { v177WeaponChoreography } from '../app/v177WeaponChoreography.js';
+import { v105CurrentAbilitySample } from '../app/v105CurrentAbilityPose.js';
+import { MANUAL_ABILITY_REGISTRY } from '../app/manualAbilities.js';
 
 test('every runtime biped uses phase and stance metadata from its matching source anatomy',async()=>{
   for(const [kind,atlas] of Object.entries(atlases)){
@@ -19,6 +21,29 @@ test('every runtime biped uses phase and stance metadata from its matching sourc
       for(const [index,leg]of atlas.legConstraints.entries())assert.equal(gait.offsets[leg.effectorBone],d.rig.legs[index].offset,kind);
     }
   }
+});
+
+test('treatment and trap casts use their own body keys and keep the ordinary shot and feet', () => {
+  const runtime = { locomotionPhase: .35, locomotionSettle: 1, direction: 'right' };
+  const angle = plan => Math.atan2(plan.firearmUpperTransform[1], plan.firearmUpperTransform[0]);
+  const lean = {};
+  for (const kind of ['medic', 'engineer']) {
+    const manualDefinition = MANUAL_ABILITY_REGISTRY[kind];
+    const owner = { kind, side: 'human', combatReady: true, hp: 70, stunned: 0,
+      manualAbility: { phase: 'windup', windupRemaining: manualDefinition.windupSeconds / 4 } };
+    const sample = v105CurrentAbilitySample(owner, {}, { manualDefinition });
+    assert.equal(sample.abilityPresentation, 'support-manual');
+    const manual = v177JointPose(kind, sample, runtime);
+    const normal = v177JointPose(kind, { requestedState: 'wind-up', clipProgress: sample.clipProgress }, runtime);
+    assert.equal(manual.lowerIndex, normal.lowerIndex);
+    assert.equal(manual.lowerNextIndex, normal.lowerNextIndex);
+    assert.equal(manual.upperIndex, manual.lowerIndex);
+    assert.notEqual(normal.upperIndex, normal.lowerIndex);
+    assert.ok(Math.abs(angle(manual) - angle(normal)) > .12);
+    assert.ok(Math.abs(angle(normal)) < .02);
+    lean[kind] = angle(manual);
+  }
+  assert.ok(lean.medic < 0 && lean.engineer > .2);
 });
 
 const point=(m,p)=>[m[0]*p[0]+m[2]*p[1]+m[4],m[1]*p[0]+m[3]*p[1]+m[5]];

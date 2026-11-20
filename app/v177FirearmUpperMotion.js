@@ -1,7 +1,21 @@
-// Follow the existing normal-shot phases. The waist stays on its source pelvis;
+// The waist stays on its source pelvis during both shots and support skills;
 // shoulders, both hands and the weapon receive one common rigid transform.
 const waists={medic:[240,193],engineer:[235,203],gunner:[205,200]};
 const smooth=t=>t*t*(3-2*t),mix=(a,b,t)=>a+(b-a)*smooth(t);
+
+// Nao draws the treatment tool in, then presses forward. Monkey bends
+// towards the ground to set the trap. Both use the real ability clock.
+const supportManual = {
+  medic: { ready: -.18, peak: .30, release: .12 },
+  engineer: { ready: .32, peak: .54, release: .24 },
+};
+const ordinaryShot = {
+  medic: { ready: .014, peak: -.055, release: -.02 },
+  engineer: { ready: .018, peak: -.065, release: -.025 },
+};
+export function v177UsesSupportManualUpper(kind, sample) {
+  return sample?.abilityPresentation === 'support-manual' && Object.hasOwn(supportManual, kind);
+}
 
 // Pure response to the existing released Shot lifetime; no renderer timer/state.
 function gunnerShotPulse(actor,world) {
@@ -30,19 +44,38 @@ function gunnerUpperAngle(sample,actor,world) {
   return base-.08*gunnerShotPulse(actor,world);
 }
 
-export function v177FirearmUpperMotion(kind,sample,spine,{actor,world,waist=waists[kind]}={}) {
-  if(kind!=='medic'&&kind!=='engineer'&&kind!=='gunner')return null;
-  const p=Math.max(0,Math.min(1,Number(sample?.clipProgress)||0));
-  const support=kind==='medic',ready=support ? .014 : .018,
-    kick=support?-.055:-.065,release=support?-.02:-.025;
-  let angle;
-  if(kind==='gunner'){
-    angle=gunnerUpperAngle(sample,actor,world);if(angle===null)return null;
-  }else switch(sample?.requestedState){
-    case 'wind-up':if(p===0)return null;angle=mix(0,ready,p);break;
-    case 'active':angle=p<.3?mix(ready,kick,p/.3):mix(kick,release,(p-.3)/.7);break;
-    case 'recovery':if(p===1)return null;angle=mix(release,0,p);break;
+// The manual volley visibly raises the launcher, sets the shoulders, and
+// kicks once per real launch. The final impact has only a recovery pose.
+function launcherSalvoAngle(state,p){
+  const braced=.13;
+  switch(state){
+    case 'wind-up':
+      if(p===0)return null;
+      return p<.6?mix(0,-.42,p/.6):mix(-.42,braced,(p-.6)/.4);
+    case 'active':
+      return p<.12?mix(braced,-.25,p/.12):mix(-.25,braced,Math.min(1,(p-.12)/.58));
+    case 'recovery':return p===1?null:mix(braced,0,p);
     default:return null;
+  }
+}
+
+export function v177FirearmUpperMotion(kind,sample,spine,{actor,world,waist=waists[kind]}={}) {
+  const salvo=kind==='mrs-chiha'&&sample?.abilityPresentation==='launcher-salvo';
+  if(!salvo&&kind!=='medic'&&kind!=='engineer'&&kind!=='gunner')return null;
+  const p=Math.max(0,Math.min(1,Number(sample?.clipProgress)||0));
+  let angle;
+  if(salvo){
+    angle=launcherSalvoAngle(sample.requestedState,p);if(angle===null||!waist)return null;
+  }else if(kind==='gunner'){
+    angle=gunnerUpperAngle(sample,actor,world);if(angle===null)return null;
+  }else{
+    const { ready, peak, release } = (v177UsesSupportManualUpper(kind,sample) ? supportManual : ordinaryShot)[kind];
+    switch(sample?.requestedState){
+      case 'wind-up':if(p===0)return null;angle=mix(0,ready,p);break;
+      case 'active':angle=p<.3?mix(ready,peak,p/.3):mix(peak,release,(p-.3)/.7);break;
+      case 'recovery':if(p===1)return null;angle=mix(release,0,p);break;
+      default:return null;
+    }
   }
   const [wx,wy]=waist,x=spine[0]*wx+spine[2]*wy+spine[4],
     y=spine[1]*wx+spine[3]*wy+spine[5],c=Math.cos(angle),s=Math.sin(angle);
@@ -53,7 +86,7 @@ export function v177FirearmUpperMotion(kind,sample,spine,{actor,world,waist=wais
 // weapon before arm IK lets both elbows yield while their original grips stay.
 export function v177FirearmWeaponPullback(kind,sample) {
   const distance=kind==='medic'?12:kind==='engineer'?16:0;
-  if(!distance)return 0;
+  if(!distance||v177UsesSupportManualUpper(kind,sample))return 0;
   const p=Math.max(0,Math.min(1,Number(sample?.clipProgress)||0));
   if(sample?.requestedState==='active')return distance*(p<.3?mix(0,1,p/.3):mix(1,.25,(p-.3)/.7));
   if(sample?.requestedState==='recovery')return distance*mix(.25,0,p);

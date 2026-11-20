@@ -7,6 +7,8 @@ import { v102CombatMotionSample } from '../app/v102CombatMotion.js';
 import { V177_JOINT_ATLASES, v177JointPose, v177CaptureJointPose, drawV177JointPose,
   v177RenderedJointWeaponSocket } from '../app/v177JointPresentation.js';
 import { v177LivingStunSample } from '../app/v177LivingStun.js';
+import { v105CurrentAbilitySample } from '../app/v105CurrentAbilityPose.js';
+import { beginManualAbility, createManualAbilityRuntime, advanceManualAbility, MANUAL_ABILITY_REGISTRY } from '../app/manualAbilities.js';
 
 const kind='mrs-chiha',atlas=V177_JOINT_ATLASES[kind];
 const active=animationClipFor(kind,'active').durationSeconds;
@@ -46,6 +48,37 @@ function attached(pose) {
 }
 const maxJointDifference=(a,b)=>Math.max(...['lower','upper'].flatMap(owner=>
   Object.keys(a[owner]).flatMap(bone=>a[owner][bone].map((v,i)=>Math.abs(v-b[owner][bone][i])))));
+
+test('a manual volley braces, kicks at the four real launches and settles after the last impact',()=>{
+  const manualDefinition=MANUAL_ABILITY_REGISTRY[kind];
+  const points=Array.from({length:manualDefinition.salvoCount},(_,i)=>({targetId:i+1,x:410+i*16,y:280}));
+  const initial=beginManualAbility(createManualAbilityRuntime(kind),{points}).runtime;
+  const at=time=>{
+    const {runtime:manualAbility,events}=advanceManualAbility(initial,time);
+    const actor={...actorAt(.5),attack:0,manualAbility};
+    const sample=v105CurrentAbilitySample(actor,{}, {manualDefinition});
+    const plan=v177JointPose(kind,sample,runtime,{actor});
+    assert.equal(plan.abilityPresentation,'launcher-salvo');
+    assert.equal(plan.upperIndex,plan.lowerIndex);
+    assert.notEqual(plan.mrsNormalWeaponCycle,true);
+    attached(v177CaptureJointPose(kind,plan));
+    const angle=Math.atan2(plan.firearmUpperTransform[1],plan.firearmUpperTransform[0]);
+    return {sample,angle,events};
+  };
+  assert.ok(at(.6*manualDefinition.windupSeconds).angle<-.38);
+  for(let i=0;i<manualDefinition.salvoCount;i++){
+    const start=manualDefinition.windupSeconds+i*manualDefinition.salvoIntervalSeconds;
+    const recoil=at(start+.026),steady=at(start+.17);
+    assert.equal(recoil.sample.requestedState,'active');
+    assert.equal(recoil.events.filter(e=>e.type==='launch').at(-1).salvoIndex,i);
+    assert.ok(recoil.angle<-.22&&steady.angle>.12);
+  }
+  const lastImpact=manualDefinition.windupSeconds+(manualDefinition.salvoCount-1)*manualDefinition.salvoIntervalSeconds+manualDefinition.projectileTravelSeconds;
+  const recovery=at(lastImpact+.07);
+  assert.equal(recovery.sample.requestedState,'recovery');
+  assert.ok(recovery.angle>0&&recovery.angle<.13);
+  assert.equal(recovery.events.filter(e=>e.type==='impact').length,manualDefinition.salvoCount);
+});
 
 test('the actual renderer derives handling from the raw normal actor clock through stable keys and copies',()=>{
   assert.equal(active,.38);assert.ok(Math.abs(recovery-.22)<1e-12);assert.ok(Math.abs(duration-.6)<1e-12);
