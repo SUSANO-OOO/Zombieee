@@ -65,6 +65,7 @@ test("title recall cannot resume an automatic finale or an active side-mode batt
 test("map briefings describe the authored task rather than number words in objective IDs", () => {
   const expected = new Map([
     [3, "大型変異感染者TAKUYAを撃破"],
+    [5, "改札喰いを倒し、感染核を破壊"],
     [7, "医薬品の搬出を守る"],
     [14, "ボスを撃破"],
     [16, "3基の封鎖装置を順番に作動"],
@@ -78,6 +79,10 @@ test("map briefings describe the authored task rather than number words in objec
     assert.equal(v100MissionObjectiveFor(id), goal);
     assert.equal(v100BattleDefinitionFor(id).objective, goal);
   }
+  const platform = v100BattleDefinitionFor(V100_STAGE_IDS[4]);
+  assert.equal(objectiveForBattle(platform, { barricadeHp: 350 }), "改札喰いを撃破");
+  assert.equal(objectiveForBattle(platform, { barricadeVulnerable: true, barricadeHp: 350 }), "感染核を破壊");
+  assert.equal(objectiveForBattle(platform, { barricadeVulnerable: true, barricadeHp: 0 }), "残る敵を倒して退路を守る");
   for (const number of [1, 4, 8, 10, 13]) {
     const definition = v100BattleDefinitionFor(V100_STAGE_IDS[number - 1]);
     assert.equal(objectiveForBattle(definition, {}), number === 4 ? "感染中継点を破壊" : "感染拠点を破壊");

@@ -24,9 +24,9 @@ function assertDelta(next){
 
 test('quality candidate contains exactly the reviewed art, firearm and VFX delta while retaining unrelated payloads',async()=>{
   assertDelta(candidate);
-  assert.equal(contract.added.length,276);assert.equal(contract.retired.length,166);
+  assert.equal(contract.added.length,278);assert.equal(contract.retired.length,166);
   assert.equal(contract.transportChanges.length,344);assert.equal(contract.contentReplacements.length,1);
-  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),49281986); // Reviewed gun files plus the current physical Musashi contact; unrelated payloads remain exact.
+  assert.equal(contract.added.reduce((sum,a)=>sum+a.bytes,0),49293743); // Includes 11,757 bytes for the two original offline audio alternatives.
   for(const row of contract.added){
     const bytes=await readFile(new URL('../public'+(row.sourcePath??row.path),import.meta.url));
     assert.equal(bytes.length,row.bytes,row.path);
@@ -44,7 +44,10 @@ test('every bundled audio range still contains its exact encoded content after t
   assert.equal('sha256-'+createHash('sha256').update(bytes.subarray(row.bundleOffset,row.bundleOffset+row.bundleBytes)).digest('hex'),row.hash,row.path);checked++;
  }
  assert.equal(checked,419);
- assert.deepEqual(candidate.assets.filter(row=>row.category==='audio'&&!row.bundlePath),baseline.assets.filter(row=>row.category==='audio'&&!row.bundlePath),'the four streamed tracks retain their original transport');
+ const directAudio=manifest=>manifest.assets.filter(row=>row.category==='audio'&&!row.bundlePath);
+ const alternateFiles=contract.added.filter(row=>row.category==='audio'&&!row.bundlePath);
+ assert.deepEqual(alternateFiles.map(row=>row.path),['/audio/v100/foley/treatment.ogg','/audio/v104/combat/armor-hit.ogg']);
+ assert.deepEqual(ordered(directAudio(candidate)),ordered([...directAudio(baseline),...alternateFiles]));
 });
 
 test('missing or changed new art, stale portraits and unreviewed unrelated replacements fail closed',()=>{
@@ -63,7 +66,7 @@ test('installed v105 reuses retained hashes and cannot activate a partial qualit
   const update=evaluateUpdate({installedManifest:installed,publishedManifest:next,storedHashes});
   assert.equal(update.available,true);
   const downloads=[...contract.added,...contract.contentReplacements.map(row=>row.next)];
-  assert.deepEqual(ordered(update.diff.downloadable),ordered(downloads));assert.equal(downloads.length,277);
+  assert.deepEqual(ordered(update.diff.downloadable),ordered(downloads));assert.equal(downloads.length,279);
   const verify=hashes=>verifyUpdatePayload({manifest:next,storedHashes:hashes,expectedVersion:next.version,expectedReleaseSha:next.releaseSha});
   assert.equal(verify(storedHashes).verified,false);
   const complete=new Set([...storedHashes,...downloads.map(a=>a.hash)]);

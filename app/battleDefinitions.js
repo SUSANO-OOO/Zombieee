@@ -190,6 +190,10 @@ export function objectiveForBattle(definition, state) {
       : "感染拠点を破壊";
   }
   if (definition.missionType === "boss-assault") {
+    if (definition.missionConfig?.v100StageNumber === 5) {
+      if (state.barricadeHp <= 0) return "残る敵を倒して退路を守る";
+      if (!state.barricadeVulnerable) return "改札喰いを撃破";
+    }
     return state.barricadeVulnerable ? "感染核を破壊" : definition.objective;
   }
   return objectiveFor(state.phase, state.barricadeVulnerable);

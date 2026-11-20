@@ -115,6 +115,22 @@
     [
       "            const startedAt = g.time - (owner.manualAbility.abilityElapsed - .4);",
       "            const startedAt = g.time - (owner.manualAbility.abilityElapsed - throwRelease);"
+    ],
+    [
+      "formatBattleText(`装甲車両 -${Math.round(Math.min(beforeHit, hit.damage))}`)",
+      "formatBattleText(`移動拠点 -${Math.round(Math.min(beforeHit, hit.damage))}`)"
+    ],
+    [
+      "formatBattleText(`装甲車両 -${siegeDamage}`)",
+      "formatBattleText(`移動拠点 -${siegeDamage}`)"
+    ],
+    [
+      "g.banner = \"装甲車両 危険状態\";\n              g.bannerTime",
+      "g.banner = \"移動拠点 危険状態\";\n              g.bannerTime"
+    ],
+    [
+      "g.banner = \"装甲車両 危険状態\"; g.bannerTime",
+      "g.banner = \"移動拠点 危険状態\"; g.bannerTime"
     ]
   ],
   "app/manualAbilities.js": [

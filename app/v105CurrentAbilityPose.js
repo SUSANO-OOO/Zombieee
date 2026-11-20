@@ -59,6 +59,7 @@ export function v105CurrentAbilitySample(owner,base,{manualDefinition,anomaly,ku
       return sample(base,'active',.12+.4*clamp((elapsed%interval)/Math.min(.08,interval)),style);
     }
     const elapsed=manualDefinition.recoverySeconds-m.windupRemaining;
+    if(owner.kind==='miyamoto-musashi')return sample(base,'recovery',elapsed/manualDefinition.recoverySeconds,'cross-counter');
     if(['gunner','zakimiya','mrs-chiha'].includes(owner.kind))
       return sample(base,'recovery',elapsed/manualDefinition.recoverySeconds,style);
     const release=Math.min(.065,manualDefinition.recoverySeconds*.4);
