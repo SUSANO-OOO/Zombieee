@@ -64,6 +64,23 @@ function sampleFireWhiskyThrow(progress){
  const [bodyX,bodyY,lean,handX,handY,bottleAngle]=keys(progress,fireWhiskyThrowFrames);
  return {bodyX,bodyY,lean,handX,handY,bottleAngle};
 }
+// Source-space blade poses use the two original wrists. From the crossed
+// guard, the near blade cuts downward while the far blade opens upward.
+const musashiCrossBlades = {
+ 'weapon-0': {guard:[296,194],guardAngle:-.41291226534,sweep:[328,189],sweepAngle:.84},
+ 'weapon-1': {guard:[294,158],guardAngle:1.52930175009,sweep:[304,124],sweepAngle:-.24},
+};
+function sampleMusashiCounter(atlas,attackPhase){
+ const releaseStart=atlas.attackBoundaries[1];
+ const progress=clamp((attackPhase-releaseStart)/(1-releaseStart));
+ const [guard,sweep,bodyX,bodyY,lean]=keys(progress,[
+  [0,1,0,7.68,2.56,.145],
+  [.30,0,1,19,9,.33],
+  [.50,0,1,17,10,.28],
+  [1,0,0,0,0,0],
+ ]);
+ return {guard,sweep,bodyX,bodyY,lean};
+}
 const carryPlans=new WeakMap();
 const carryMotion={
  // Paisen's far fist shares the leg-0 side. Counter-swing it against that
@@ -275,7 +292,9 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
   ?sampleChainsawRev(p/atlas.attackBoundaries[0]):null;
  const lightblade=kind==='tky'&&plan.abilityPresentation==='lightblade-release'?sampleLightbladeRelease(p):null;
  const fireWhisky=kind==='zakimiya'&&plan.abilityPresentation==='fire-whisky-throw'?sampleFireWhiskyThrow(p):null;
- const authoredBody=lightblade??rev??fireWhisky;
+ const crossCounter=kind==='miyamoto-musashi'&&plan.abilityPresentation==='cross-counter'
+  ?sampleMusashiCounter(atlas,p):null;
+ const authoredBody=lightblade??rev??fireWhisky??crossCounter;
  const assessment=assessing?keys(p,[[0,0],[.085,1],[.18,1],[.27,.18],[.43,0],[1,0]])[0]:0;
  const heavy=['brute','guardian','gate-eater','red-panther-shield','crazy-king','kumaverson','takuya','takuya-omega','crusher','abomination','gairen'].includes(kind);
  // Kuma raises the bowl over his crown, then folds forward into the slam.
@@ -330,22 +349,19 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
   // marks the forward face, not an axis to rotate upward like Kuma's pan.
   const aim=kind==='guardian'?restAngle:nearAngle(-Math.PI*.5-sourceDirection,restAngle);
   upper[atlas.weaponBone]=rigid(pivot,hand,restAngle+(aim-restAngle)*raised);
- }else if(kind==='miyamoto-musashi'&&plan.abilityPresentation==='cross-guard'){
-  if(atlas.path!=='/art/v100/joints/miyamoto-musashi-combat-r1.webp')throw Error('Recalibrate Musashi guard for a changed source');
-  // Source-space hand goals form an X ahead of the chest. Both painted
-  // swords and their own wrists move together; the existing arm IK still
-  // enforces the original upper/forearm lengths and elbow bend sides.
-  const raised=keys(p,[[0,0],[.28,1],[.7,1],[1,0]])[0];
-  const placements={'weapon-0':{hand:[296,194],angle:-.41291226534},
-    'weapon-1':{hand:[294,158],angle:1.52930175009}};
+ }else if(kind==='miyamoto-musashi'&&(plan.abilityPresentation==='cross-guard'||crossCounter)){
+  if(atlas.path!=='/art/v100/joints/miyamoto-musashi-combat-r1.webp')throw Error('Recalibrate Musashi blades for a changed source');
+  const raised=crossCounter?.guard??keys(p,[[0,0],[.28,1],[.7,1],[1,0]])[0];
+  const sweeping=crossCounter?.sweep??0;
   for(const c of arms){
-   const placement=placements[c.effectorBone];if(!placement)continue;
+   const placement=musashiCrossBlades[c.effectorBone];if(!placement)continue;
    const wrist=c.effectorWrist??c.wrist,parent=upper[c.parentBone],held=upper[c.effectorBone];
-   const home=point(held,wrist),goal=point(parent,placement.hand);
-   const homeAngle=Math.atan2(held[1],held[0]);
-   const guardAngle=nearAngle(Math.atan2(parent[1],parent[0])+placement.angle,homeAngle);
-   upper[c.effectorBone]=rigid(wrist,[home[0]+(goal[0]-home[0])*raised,home[1]+(goal[1]-home[1])*raised],
-    homeAngle+(guardAngle-homeAngle)*raised);
+   const home=point(held,wrist),guard=point(parent,placement.guard),sweep=point(parent,placement.sweep);
+   const homeAngle=Math.atan2(held[1],held[0]),parentAngle=Math.atan2(parent[1],parent[0]);
+   const guardAngle=nearAngle(parentAngle+placement.guardAngle,homeAngle);
+   const sweepAngle=nearAngle(parentAngle+placement.sweepAngle,homeAngle);
+   const hand=home.map((position,index)=>position+(guard[index]-position)*raised+(sweep[index]-position)*sweeping);
+   upper[c.effectorBone]=rigid(wrist,hand,homeAngle+(guardAngle-homeAngle)*raised+(sweepAngle-homeAngle)*sweeping);
   }
  }else if(kind==='brawler'&&plan.abilityPresentation==='fist-wave'){
   // Bring both fists from the waist to the same forward pressure plane.
@@ -457,7 +473,7 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
   upper['arm-1-hand']=rigid(arms[1].wrist,hand,Math.atan2(m[1],m[0]));
  }
  const frontBones=(!attacking||['crazy-king','babayaga','kumaverson','takuya-omega'].includes(kind)||p>.06&&p<.94)?arms.flatMap(c=>[c.upperBone,c.lowerBone,c.effectorBone]):[];
- const stationaryAbility=rev!==null||['guard','fist-wave','cross-guard','ground-slam','slam'].includes(plan.abilityPresentation);
+ const stationaryAbility=rev!==null||['guard','fist-wave','cross-guard','cross-counter','ground-slam','slam'].includes(plan.abilityPresentation);
  // The indicating hand crosses the jacket in the wide phone view. Bring
  // that original arm in front only while the appraisal gesture is visible.
  if(kind==='babayaga'&&assessment<.12){const far=new Set([arms[1].upperBone,arms[1].lowerBone,arms[1].effectorBone]);for(let i=frontBones.length-1;i>=0;i--)if(far.has(frontBones[i]))frontBones.splice(i,1);}
