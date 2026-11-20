@@ -409,9 +409,29 @@
   }
   #v100-campaign .v100-command-formation:not(.picker-open) .v100-briefing-person {
     flex: 0 0 auto;
+    grid-template-columns: minmax(0,1fr);
+    gap: 0;
+    margin: 5px 0 0;
+    background: none;
+  }
+  #v100-campaign .v100-command-formation:not(.picker-open) .v100-briefing-person > .v100-crew-portrait {
+    display: none;
   }
   #v100-campaign .v100-command-formation:not(.picker-open) .v100-briefing-person > div:not(.v100-crew-portrait) {
+    align-self: start;
     max-height: none;
     overflow: visible;
+    padding: 0 2px 2px 0;
+  }
+  #v100-campaign .v100-command-formation:not(.picker-open) .v100-briefing-person h3 {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 5px;
+    font-size: 16px;
+    line-height: 1.25;
+  }
+  #v100-campaign .v100-command-formation:not(.picker-open) .v100-briefing-person h3 small {
+    white-space: nowrap;
   }
 }

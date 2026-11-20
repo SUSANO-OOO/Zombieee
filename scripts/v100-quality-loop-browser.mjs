@@ -221,7 +221,7 @@ async function formationDetailsReachable(page, viewport, row) {
   };
   const counters = page.locator('.v100-briefing-callin');
   const counterReadout = async () => ({
-    box: await within(counters, 0, false),
+    box: await within(counters, 30, false),
     values: await counters.locator('dd').allTextContents(),
   });
   const controlBefore = await counterReadout();

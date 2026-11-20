@@ -1408,7 +1408,7 @@ function FormationView({ save, stageId, requestedUnitId = null, onCancelRequeste
               <CrewPortrait unitId={activeUnit.id} label={activeUnit.displayName} />
               <div aria-label={activeUnit.displayName + "の役割・固有技"}>
                 <h3>{activeUnit.displayName} <small>Lv.{activePresentation.level}</small></h3>
-                <strong className="v100-briefing-role-description">{activePresentation.description.split("・").map((part, index, parts) => <span key={index}>{part}{index < parts.length - 1 ? "・" : ""}</span>)}</strong>
+                <strong className="v100-briefing-role-description">{activePresentation.description.split("・").map((part, index, parts) => <span key={index + "-" + part}>{part}{index < parts.length - 1 ? "・" : ""}</span>)}</strong>
                 {activePresentation.skill && <p>{activePresentation.skill.name}：{activePresentation.skill.summary}</p>}
               </div>
             </div> : <div className="v100-briefing-empty"><strong>仲間を選んで配置</strong><span>空き枠をタップ</span></div>}
