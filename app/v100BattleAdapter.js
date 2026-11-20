@@ -136,6 +136,20 @@ function missionDurationSeconds(stage, missionType) {
 function stageTimeline(stage, missionType, bossKind) {
   const pack = packFor(stage);
   const bossLabel = V100_BOSS_BY_ID[stage.firstClearPayload.find(value => value.startsWith("boss-"))]?.displayName ?? bossKind;
+  if (stage.id === V100_ARMORY_STAGE) {
+    // The commander leads the last pursuit instead of calling fresh
+    // infected into each patrol and stretching the same encounter.
+    return freeze([
+      freeze({ at: PREP_SECONDS, wave: 1, label: "作戦庫の警備隊",
+        units: freeze(["red-panther-knife", "red-panther-shield"]) }),
+      freeze({ at: PREP_SECONDS + 19, wave: 2, label: "後方から追撃",
+        units: freeze(["red-panther-smg", "red-panther-knife", "red-panther-shield"]) }),
+      freeze({ at: PREP_SECONDS + 38, wave: 3, label: "指揮車への増援",
+        units: freeze(["red-panther-shield", "red-panther-smg", "red-panther-knife", "red-panther-smg"]) }),
+      freeze({ at: PREP_SECONDS + 61, wave: 4, label: "指揮官と最後の護衛",
+        units: freeze(["red-panther-shield", "red-panther-commander", "red-panther-smg", "red-panther-knife"]) }),
+    ]);
+  }
   if (stage.id === V100_CLINICAL_STAGE) {
     // Each group threatens the corridor in turn. A second detachment cannot
     // enter while the previous one still occupies the evacuation route.
@@ -436,11 +450,12 @@ export function v100BattleDefinitionFor(stageId) {
   const phase = phaseScheduleFor(stage, missionType, objective);
   const lureControl = stageId === V100_LURE_CONTROL_STAGE;
   const clinicalRescue = stageId === V100_CLINICAL_STAGE;
+  const armoryKey = stageId === V100_ARMORY_STAGE;
   const authoredTimeline = stageTimeline(stage, missionType, bossKind);
   // These two corridor missions have authored patrol size and separation.
   // Their opening must leave time to act on the device or shield evacuees.
   const timeline = lureControl || clinicalRescue ? authoredTimeline : withClearDrivenAssaultWaves(
-    v100IncreaseWaveDensity(authoredTimeline, Object.values(BOSS_KIND_BY_V100_ID), { preserveEscalation: missionType === "escort" }),
+    armoryKey ? authoredTimeline : v100IncreaseWaveDensity(authoredTimeline, Object.values(BOSS_KIND_BY_V100_ID), { preserveEscalation: missionType === "escort" }),
     missionType);
   const baseMaxHp = V100_VEHICLE.baseHp;
   const station = missionType === "escort"
@@ -479,7 +494,7 @@ export function v100BattleDefinitionFor(stageId) {
       ...(bayEvacuation ? V100_BAY_EVACUATION : {}),
       ...(stageId === V100_ARCHIVE_STAGE ? V100_ARCHIVE_EXTRACTION : {}),
       ...(clinicalRescue ? V100_CLINICAL_RESCUE : {}),
-      ...(stageId === V100_ARMORY_STAGE ? { armoryKey: true } : {}),
+      ...(armoryKey ? { armoryKey: true } : {}),
       ...(stageId === V100_BRIDGE_STAGE ? V100_BRIDGE_ESCORT : {}),
       ...(estuaryFloodgate ? V100_FLOODGATE : {}),
       ...(stageId === V100_RESCUE_CONTROL_STAGE ? V100_RESCUE_CONTROL : {}),

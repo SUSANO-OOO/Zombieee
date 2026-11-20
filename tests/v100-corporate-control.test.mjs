@@ -120,6 +120,9 @@ test("projectile and melee damage announcements name all five corporate targets 
 test("the armory is cleared only after the actual command vehicle is stopped and the key recovered", () => {
   const definition = v100BattleDefinitionFor(V100_ARMORY_STAGE);
   assert.equal(definition.objective, V100_ARMORY_OBJECTIVE);
+  assert.deepEqual(definition.timeline.map(event => event.units.length), [2, 3, 4, 4]);
+  assert.equal(definition.timeline.flatMap(event => event.units).filter(kind => kind === "red-panther-commander").length, 1);
+  assert.ok(definition.timeline.at(-1).units.includes("red-panther-commander"));
   const base = { baseHp: 680, barricadeHp: 1000, barricadeVulnerable: false,
     stageMission: {}, eventIndex: definition.timeline.length, enemySpawn: { pending: [] }, fighters: [] };
   assert.equal(objectiveForBattle(definition, base), V100_ARMORY_OBJECTIVE);
