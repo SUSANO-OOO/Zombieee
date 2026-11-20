@@ -25774,12 +25774,6 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               <div><span>{railHud.label}</span><b>{railHud.status}</b></div>
               <i><em style={{ width: `${railHud.progress * 100}%` }} /></i>
             </div>
-            : bayHud
-            ? <div className="health-hud barrier-health bay-evacuation-objective" data-bay-evacuation={bayHud.phase}
-              data-evacuated-count={bayHud.count} aria-label={`${bayHud.label} ${bayHud.status}`}>
-              <div><span>{bayHud.label}</span><b>{bayHud.status}</b></div>
-              <i><em style={{ width: `${bayHud.count / bayHud.total * 100}%` }} /></i>
-            </div>
             : rescueControlHud
             ? <div className="health-hud barrier-health rescue-control-objective" data-rescue-control-state={rescueControlHud.phase} aria-label={`${rescueControlHud.label} ${rescueControlHud.status}`}>
               <div><span>{rescueControlHud.label}</span><b>{rescueControlHud.status}</b></div>
@@ -25921,7 +25915,11 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                  <span className="support-key">G</span><b>{externalSessionActive ? basePresentation.barrageLabel : hud.crawlerPhase === "ready" ? "車両一斉砲撃" : `装填 ${Math.round(hud.crawlerCharge * 100)}%`}</b><small>{externalSessionActive ? <span className="v100-support-status">{hud.crawlerPhase !== "ready" ? `装填 ${Math.round(hud.crawlerCharge*100)}%` : `支援 ${barrageCost}`}</span> : <><span className="support-detail-full">{crawlerBlockReason ?? `${vehicleDisplayLabel}の固定火器`}</span><span className="support-detail-compact">{crawlerCompactDetail}</span></>}</small><em>{barrageCost > 0 ? `必要 ${barrageCost}支援` : basePresentation.onFoot ? "援護" : "車両"}</em>
                </button>
             </div>
-            <div className="battle-objective objective">{isSurvivalBattle ? "防衛前線を維持" : `目標：${formatBattleText(hud.objective)}`}</div>
+            <div className="battle-objective objective">
+              {bayHud && <span className="bay-evacuation-objective" data-bay-evacuation={bayHud.phase}
+                data-evacuated-count={bayHud.count} aria-label={`${bayHud.label} ${bayHud.status}`}>避難 {bayHud.count}/{bayHud.total}</span>}
+              {isSurvivalBattle ? "防衛前線を維持" : `目標：${formatBattleText(hud.objective)}`}
+            </div>
           </div>
         </div>
         {survivalUpgradeOpen && <div className={externalSessionActive ? "survival-upgrade-screen v100-phone-upgrade" : "survival-upgrade-screen"} role="dialog" aria-modal="true" aria-label="ボス撃破強化選択"><section>

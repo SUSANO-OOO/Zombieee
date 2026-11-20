@@ -217,9 +217,9 @@ button[aria-disabled="true"]:focus-visible {
 .rescue-control-objective i > em { background:linear-gradient(90deg,#8d659d,#ceacd8); }
 .rescue-control-objective[data-rescue-control-state="defending"] i > em,
 .rescue-control-objective[data-rescue-control-state="secured"] i > em { background:#aac38a; }
-.bay-evacuation-objective i > em { background:linear-gradient(90deg,#8b6643,#e1bc79); }
-.bay-evacuation-objective[data-bay-evacuation="sheltering"] b { color:#fac89e; }
-.bay-evacuation-objective[data-bay-evacuation="safe"] i > em { background:#aac38a; }
+.bay-evacuation-objective { flex:none; margin-right:8px; padding-right:8px; border-right:1px solid #93836a; color:#edcb8f; }
+.bay-evacuation-objective[data-bay-evacuation="sheltering"] { color:#fac89e; }
+.bay-evacuation-objective[data-bay-evacuation="safe"] { color:#c5dfa6; }
 .central-seal-objective ol { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:3px; padding:0; margin:4px 0 0; list-style:none; }
 .central-seal-objective li { min-width:0; padding:2px 1px; border:1px solid #97735c; color:#f1ccaa; background:#38271f; text-align:center; white-space:nowrap; font-size:clamp(7px,1.3vw,11px); }
 .central-seal-objective li[data-closed="true"] { border-color:#8da573; color:#d2e8b6; background:#253120; }
