@@ -188,5 +188,15 @@
       "    if (effect.type === \"mrs-grenade-flight\" || effect.type === \"zakimiya-bottle\") {\n      const source = image(objects, effect.type === \"mrs-grenade-flight\" ? \"v100-grenade-projectile\" : \"v100-fire-whisky-projectile\"); if (!source) continue;\n      const x = effect.originX + (effect.targetX - effect.originX) * progress; const y = effect.originY + (effect.targetY - effect.originY) * progress - Math.sin(progress * Math.PI) * 30; const height = effect.type === \"zakimiya-bottle\" ? 30 : 18 * source.naturalHeight / source.naturalWidth; const width = effect.type === \"zakimiya-bottle\" ? 30 * source.naturalWidth / source.naturalHeight : 18; ctx.save(); ctx.translate(x, y); ctx.rotate(Math.atan2(effect.targetY - effect.originY, effect.targetX - effect.originX)); ctx.drawImage(source, -width / 2, -height, width, height); ctx.restore(); continue;\n    }",
       "    if (effect.type === \"mrs-grenade-flight\" || effect.type === \"zakimiya-bottle\") {\n      const dx = effect.targetX - effect.originX;\n      const dy = effect.targetY - effect.originY;\n      const x = effect.originX + dx * progress;\n      const y = effect.originY + dy * progress - Math.sin(progress * Math.PI) * 30;\n      const travelAngle = Math.atan2(dy, dx);\n      if (effect.type === \"zakimiya-bottle\") {\n        const angle = Number.isFinite(effect.bottleAngle) ? effect.bottleAngle + effect.direction * 2.6 * progress : travelAngle;\n        drawV100FireWhiskyBottle(ctx, objects, x, y, angle);\n      } else {\n        const source = image(objects, \"v100-grenade-projectile\");\n        if (!source) continue;\n        const height = 18 * source.naturalHeight / source.naturalWidth;\n        ctx.save();\n        ctx.translate(x, y);\n        ctx.rotate(travelAngle);\n        ctx.drawImage(source, -9, -height, 18, height);\n        ctx.restore();\n      }\n      continue;\n    }"
     ]
+  ],
+  "app/PwaGate.tsx": [
+    [
+      "        readState: (registration: ServiceWorkerRegistration) => requestFromServiceWorker(registration, { type: \"pwa:get-state\" }),",
+      "        readState: (registration: ServiceWorkerRegistration, options: { timeoutMs: number; signal: AbortSignal }) => requestFromServiceWorker(registration, { type: \"pwa:get-state\" }, options),"
+    ],
+    [
+      "      readState: (registration: ServiceWorkerRegistration) => registrationRef.current ? requestFromServiceWorker(registration, { type: \"pwa:get-state\" }) : Promise.resolve({ type: \"pwa:state\" }),",
+      "      readState: (registration: ServiceWorkerRegistration, options: { timeoutMs: number; signal: AbortSignal }) => registrationRef.current ? requestFromServiceWorker(registration, { type: \"pwa:get-state\" }, options) : Promise.resolve({ type: \"pwa:state\" }),"
+    ]
   ]
 }
