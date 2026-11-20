@@ -1,0 +1,68 @@
+{
+  "app/AshfallGame.tsx": [
+    [
+      "import { v105CurrentAbilitySample, v105AbilityFacing } from './v105CurrentAbilityPose.js';\nimport { v100StoryPortraitPath } from \"./v100StoryPortraitPaths.js\";\n",
+      "import { v105CurrentAbilitySample, v105AbilityFacing } from './v105CurrentAbilityPose.js';\nimport { V100BattleDeparture } from \"./V100BattleDeparture\";\nimport { v100StoryPortraitPath } from \"./v100StoryPortraitPaths.js\";\n"
+    ],
+    [
+      "import { v177ClearHeadHealthBarY } from \"./v177HeadLabelPlacement.js\";\nimport {battleVoiceReady,queueV104HumanHurt,v104ContactIsHard,v104SupplementalEnemyVoice} from \"./v104CombatAudio.js\";\nimport {createManualAbilityPointerHold} from \"./manualAbilityUi.js\";\n",
+      "import { v177ClearHeadHealthBarY } from \"./v177HeadLabelPlacement.js\";\nimport {battleVoiceReady,queueV104HumanHurt,v104ContactIsHard,v104SupplementalEnemyVoice,v104EnemyContactAudio} from \"./v104CombatAudio.js\";\nimport {createManualAbilityPointerHold} from \"./manualAbilityUi.js\";\n"
+    ],
+    [
+      "import { drawV100AssaultObject, v100AssaultObjectProfile } from \"./v100AssaultObjects.js\";\nimport { drawV100Explosion, drawV100FootDust, drawV100GroundFire, drawV100Muzzle, V100_CONTACT_WEAPONS, V100_CLAW_CONTACT_WEAPONS, queueV100Contact, queueV100ClawContact, queueV100TakuyaGroundContact, queueV100TataraGroundContact, getV100ClawContactSnapshot, getV100SkillContactSnapshot, queueV100GuardContact, getV100GuardContactSnapshot, drawV100ContactQueue, clearV100ContactQueue } from \"./v100CombatVfx.js\";\nimport { drawV100BossAftermath, drawV100BossReleaseFields } from \"./v100BossAftermath.js\";\n",
+      "import { drawV100AssaultObject, v100AssaultObjectProfile } from \"./v100AssaultObjects.js\";\nimport { drawV100Explosion, drawV100FootDust, drawV100GroundFire, drawV100Muzzle, V100_CONTACT_WEAPONS, V100_CLAW_CONTACT_WEAPONS, queueV100Contact, queueV100ScoutIntercept, queueV100ClawContact, queueV100TakuyaGroundContact, queueV100TataraGroundContact, getV100ClawContactSnapshot, getV100SkillContactSnapshot, queueV100GuardContact, getV100GuardContactSnapshot, drawV100ContactQueue, clearV100ContactQueue } from \"./v100CombatVfx.js\";\nimport { drawV100BossAftermath, drawV100BossReleaseFields } from \"./v100BossAftermath.js\";\n"
+    ],
+    [
+      "\n  const playBattleSemanticCue = useCallback((\n",
+      "\n  const playEnemyContactCue = useCallback((world: Game, target: Fighter, damage: number) => {\n    const cueId = enemyVoiceCue(target.kind, \"hurt\");\n    const reaction = v104EnemyContactAudio(world, target, damage, cueId);\n    if (!reaction) return;\n    playProductionCue(cueId, target.x, {\n      ...reaction,\n      priority: target.kind === \"takuya\" || target.kind === \"gate-eater\" ? 88 : 62,\n      cooldownMs: 210,\n      maxInstances: 3,\n    });\n  }, [playProductionCue]);\n\n  const playBattleSemanticCue = useCallback((\n"
+    ],
+    [
+      "              const direction = Math.sign(target.x - owner.x) || 1;\n              owner.x = target.x - direction * (target.bodyRadius + definition.stopDistance);\n",
+      "              const direction = Math.sign(target.x - owner.x) || 1;\n              const from = { x: owner.x, y: owner.y };\n              owner.x = target.x - direction * (target.bodyRadius + definition.stopDistance);\n"
+    ],
+    [
+      "              addDamageText(g, target.x, target.y - 52, String(Math.round(damage)), .86, \"#7ee7e4\");\n              if(g.definition.missionConfig.v100StageNumber)queueV100Contact(g,{x:target.x,y:target.y-30,direction,size:66});\n              else addParticles(g, target.x, target.y - 30, \"#73d8d5\", 18);\n",
+      "              addDamageText(g, target.x, target.y - 52, String(Math.round(damage)), .86, \"#7ee7e4\");\n              if(g.definition.missionConfig.v100StageNumber)queueV100ScoutIntercept(g,{from,owner,target,direction});\n              else addParticles(g, target.x, target.y - 30, \"#73d8d5\", 18);\n"
+    ],
+    [
+      "              let appliedCount = 0;\n              for (const targetId of targetIds) {\n",
+      "              let appliedCount = 0;\n              let firstHit: { x: number; y: number } | null = null;\n              let lastHit: { x: number; y: number } | null = null;\n              for (const targetId of targetIds) {\n"
+    ],
+    [
+      "                if(g.definition.missionConfig.v100StageNumber){\n                  if(appliedCount===0)queueV100ManualMuzzle(g,{owner,target:{x:target.x,y:target.y-30}});\n                  queueV100ManualFirearmImpact(g,{owner,target,hpBefore});\n",
+      "                if(g.definition.missionConfig.v100StageNumber){\n                  lastHit = { x: target.x, y: target.y - 30 };\n                  firstHit ??= lastHit;\n                  queueV100ManualFirearmImpact(g,{owner,target,hpBefore});\n"
+    ],
+    [
+      "              if (appliedCount > 0) {\n                g.flashOverlay = Math.max(g.flashOverlay, .08);\n",
+      "              if (appliedCount > 0) {\n                if (firstHit && lastHit) queueV100ManualMuzzle(g, { owner, target: firstHit, precisionEnd: lastHit });\n                g.flashOverlay = Math.max(g.flashOverlay, .08);\n"
+    ],
+    [
+      "            });\n            for (const splashTarget of g.fighters) {\n",
+      "            });\n            let reactionTarget: Fighter | null = null;\n            let reactionDamage = 0;\n            for (const splashTarget of g.fighters) {\n"
+    ],
+    [
+      "              recordUnitDamage(g, hit.weapon as UnitKind, appliedSplash);\n              splashTarget.flash = Math.max(splashTarget.flash, .16);\n",
+      "              recordUnitDamage(g, hit.weapon as UnitKind, appliedSplash);\n              // One survivor reacts at the explosion. Prefer the intended\n              // target, otherwise the survivor that actually took most damage.\n              if (appliedSplash > 0 && splashTarget.hp > 0 && (primaryTarget || !reactionTarget\n                || reactionTarget.id !== hit.targetId && appliedSplash > reactionDamage)) {\n                reactionTarget = splashTarget;\n                reactionDamage = appliedSplash;\n              }\n              splashTarget.flash = Math.max(splashTarget.flash, .16);\n"
+    ],
+    [
+      "            });\n            playProductionCue(unitAudioCueFor(\"mrs-chiha\", \"weapon\", \"stow\"), hit.originX, {\n",
+      "            });\n            if (reactionTarget) playEnemyContactCue(g, reactionTarget, reactionDamage);\n            playProductionCue(unitAudioCueFor(\"mrs-chiha\", \"weapon\", \"stow\"), hit.originX, {\n"
+    ],
+    [
+      "          );\n          if (hit.shotIndex === 0 && battleVoiceReady(target,\"hurt\",g.time,g)) {\n            playProductionCue(enemyVoiceCue(target.kind, \"hurt\"), target.x, {\n              ownerId: target.id,\n              voiceAllowed: appliedDamage > 0,\n              priority: target.kind === \"takuya\" || target.kind === \"gate-eater\" ? 88 : 62,\n              cooldownMs: 210,\n              maxInstances: 3,\n            });\n          }\n        }\n",
+      "          );\n          if (hit.shotIndex === 0) playEnemyContactCue(g, target, appliedDamage);\n        }\n"
+    ],
+    [
+      "                }\n                if (!splitMachineGunBurst\n                  && !deferredHumanProjectile\n                  && target.side === \"zombie\"\n                  && battleVoiceReady(target,\"hurt\",g.time,g)) playProductionCue(enemyVoiceCue(target.kind, \"hurt\"), target.x, {\n                  ownerId: target.id,\n                  voiceAllowed: targetHpBeforeMetric > target.hp,\n                  priority: target.kind === \"takuya\" || target.kind === \"gate-eater\" ? 88 : 62,\n                  cooldownMs: 210,\n                  maxInstances: 3,\n                });\n              } else {\n",
+      "                }\n                const delayedGrenade = f.kind === \"mrs-chiha\" && !mrsLauncherBash && weaponDamageEvents;\n                if (!splitMachineGunBurst && !deferredHumanProjectile && !delayedGrenade && target.side === \"zombie\") {\n                  playEnemyContactCue(g, target, Math.max(0, targetHpBeforeMetric - target.hp));\n                }\n              } else {\n"
+    ],
+    [
+      "    };\n  }, [announceBossEntrance, assetError, assetsReady, chooseAction, dispatchBattleStoryEvents, externalBattleMode, graphicsProfileView.renderHz, playBattleSemanticCue, playCue, playEndJingle, playManualAbilityTimelineCue, playProductionCue, qaMode, qaScenario, queueManualAbilityTimelineCue, resumeBattleAudioLoops, screen, stopMusic, stopSfx, syncMusicMode]);\n",
+      "    };\n  }, [announceBossEntrance, assetError, assetsReady, chooseAction, dispatchBattleStoryEvents, externalBattleMode, graphicsProfileView.renderHz, playBattleSemanticCue, playCue, playEnemyContactCue, playEndJingle, playManualAbilityTimelineCue, playProductionCue, qaMode, qaScenario, queueManualAbilityTimelineCue, resumeBattleAudioLoops, screen, stopMusic, stopSfx, syncMusicMode]);\n"
+    ],
+    [
+      "        {externalSessionActive && screen === \"battle\" && selectedAction === \"airstrike\" && !paused && !end && <div className=\"v100-targeting-guide\" role=\"status\">戦場をタップして航空支援<span>航空支援をもう一度押すと取り消し</span></div>}\n        {externalSessionActive && (!assetsReady || assetError) && <section className=\"v100-battle-asset-status\" aria-label=\"戦闘データの準備\">\n          <div><h2>{assetError ? \"戦闘データを準備できませんでした\" : \"戦闘データを準備しています\"}</h2>\n            <p role={assetError ? \"alert\" : \"status\"}>{assetError ? \"戦闘に必要な画像を読み込めませんでした。接続を確認して、もう一度お試しください。\" : \"必要な画像がそろうまで戦闘は始まりません。\"}</p>\n            <p>読み込み完了 {assetReadiness.completed} / {assetReadiness.total}{assetReadiness.pending > 0 ? `・読み込み待ち ${assetReadiness.pending}` : \"\"}{assetReadiness.failed > 0 ? `・読み込めなかった画像 ${assetReadiness.failed}` : \"\"}</p>\n            {(assetReadiness.retryAvailable || assetError || assetReadiness.retrying) && <button type=\"button\" disabled={assetReadiness.retrying} onClick={retryAssets}>{assetReadiness.retrying ? \"画像を再読み込みしています…\" : \"画像をもう一度読み込む\"}</button>}\n          </div>\n        </section>}\n        {screen === \"battle\" && hud.manualAbilityIcons.map((icon) => {\n",
+      "        {externalSessionActive && screen === \"battle\" && selectedAction === \"airstrike\" && !paused && !end && <div className=\"v100-targeting-guide\" role=\"status\">戦場をタップして航空支援<span>航空支援をもう一度押すと取り消し</span></div>}\n        {externalSession && (!assetsReady || assetError) && <V100BattleDeparture\n          session={externalSession} progress={assetReadiness} assetError={assetError}\n          background={backgroundCacheRef.current[activeBattlefieldStageId]}\n          images={spriteRefs.current} onRetry={retryAssets} />}\n        {screen === \"battle\" && hud.manualAbilityIcons.map((icon) => {\n"
+    ]
+  ]
+}

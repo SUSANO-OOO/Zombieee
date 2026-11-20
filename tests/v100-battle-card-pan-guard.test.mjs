@@ -25,5 +25,13 @@ test('declared ref and leaf import alone restore the complete accepted applicati
  const declaredGun=JSON.parse(fs.readFileSync('tests/fixtures/gun-finish-source-changes.json','utf8'))[file][0][1];
  assert(source.includes(declaredGun));
  assert.throws(()=>restorePreBattleCardPanSource(file,source.replace(declaredGun,declaredGun.replace('PwaGunFinishPathsContext','PwaGunFinishPathsContextUnexpected'))),/gun source edit must occur exactly once/);
+ for (const [before, after] of [
+  ["background={backgroundCacheRef.current[activeBattlefieldStageId]}", "background={null}"],
+  ["precisionEnd: lastHit", "precisionEnd: firstHit"],
+  ["playEnemyContactCue(g, reactionTarget, reactionDamage)", "playEnemyContactCue(g, reactionTarget, 0)"],
+ ]) {
+  assert.ok(source.includes(before));
+  assert.throws(() => restorePreBattleCardPanSource(file, source.replace(before, after)), /phone battle edit must occur exactly once/);
+ }
  assert.notEqual(restorePreBattleCardPanSource(file,source.replace('"use client";','"changed runtime contract";')),base,'an unrelated source edit must not be hidden by declared UI/audio restoration');
 });
