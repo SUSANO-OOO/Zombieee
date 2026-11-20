@@ -2,6 +2,12 @@ const clamp=p=>Math.max(0,Math.min(1,Number(p)||0));
 const sample=(base,state,p,style)=>({...base,requestedState:state,clipProgress:clamp(p),
   movement:false,abilityPresentation:style});
 
+const manualPresentation = {
+  scout: 'scout-intercept', guardian: 'guard', kumaverson: 'guard',
+  brawler: 'fist-wave', brute: 'ground-slam',
+  medic: 'support-manual', engineer: 'support-manual',
+};
+
 export function v105AbilityFacing(owner){
   const ability=owner?.stationAbility;
   if(!ability||ability.phase==='idle')return null;
@@ -26,7 +32,8 @@ export function v105CurrentAbilitySample(owner,base,{manualDefinition,anomaly,ku
       if(!['guardian','kumaverson'].includes(owner.kind)||owner.animationPresentation?.moving||owner.attack>0||owner.attackWindup>0)return null;
       return sample(base,'active',.2+.02*Math.sin((m.abilityElapsed??0)*5),'guard');
     }
-    const style=owner.kind==='scout'?'scout-intercept':['guardian','kumaverson'].includes(owner.kind)?'guard':owner.kind==='brawler'?'fist-wave':owner.kind==='brute'?'ground-slam':owner.kind==='miyamoto-musashi'&&m.phase==='windup'?'cross-guard':'manual';
+    const style=owner.kind==='miyamoto-musashi'&&m.phase==='windup'
+      ? 'cross-guard' : manualPresentation[owner.kind] ?? 'manual';
     if(owner.kind==='gunner'&&m.phase==='windup'){
       const elapsed=m.abilityElapsed??manualDefinition.windupSeconds-m.windupRemaining;
       if(elapsed<manualDefinition.aimSeconds)return sample(base,'wind-up',elapsed/manualDefinition.aimSeconds,style);

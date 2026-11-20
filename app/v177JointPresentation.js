@@ -35,7 +35,7 @@ import { createV177MrsNormalWeaponCycle } from './v177MrsNormalWeaponCycle.js';
 import { createV177RangerManualJoint } from './v177RangerManualJoint.js';
 import { createV177FutagoAbilityJoint } from './v177FutagoAbilityJoint.js';
 import { v177FirearmUpperMotion, applyV177FirearmUpperMotion,
-  v177FirearmWeaponPullback, applyV177FirearmWeaponPullback } from './v177FirearmUpperMotion.js';
+  v177FirearmWeaponPullback, applyV177FirearmWeaponPullback, v177UsesSupportManualUpper } from './v177FirearmUpperMotion.js';
 
 const locomotionStates = new Set(['idle','deploy','move','start-move','stop-move','turn','retreat']);
 const attackStates = new Set(['wind-up','active','recovery']);
@@ -252,10 +252,11 @@ export function v177JointPose(kind, sample, runtime, { grounded=false,ownedPose=
     const nextSettle=Math.min(atlas.settleLevels-1,settleIndex+1),settleBlend=settleFrame-settleIndex;
     const offset=atlas.pelvisOffsets[settleIndex][phaseIndex]*(1-blend)+atlas.pelvisOffsets[settleIndex][nextPhase]*blend;
     const nextOffset=atlas.pelvisOffsets[nextSettle][phaseIndex]*(1-blend)+atlas.pelvisOffsets[nextSettle][nextPhase]*blend;
+    const useAttackUpper=attackPhase!==null&&!v177UsesSupportManualUpper(kind,sample);
     const plan={abilityPresentation:sample?.abilityPresentation,paintLocomotion,lowerIndex,lowerNextIndex:settleIndex*atlas.frameCount+nextPhase,lowerBlend:blend,
-      upperIndex:attackPhase===null?lowerIndex:attackBase+attackIndex,
-      upperNextIndex:attackPhase===null?settleIndex*atlas.frameCount+nextPhase:attackBase+Math.min(atlas.frameCount,attackIndex+1),
-      upperBlend:attackPhase===null?blend:attackFrame-attackIndex,phase,settleIndex,attackPhase,
+      upperIndex:useAttackUpper?attackBase+attackIndex:lowerIndex,
+      upperNextIndex:useAttackUpper?attackBase+Math.min(atlas.frameCount,attackIndex+1):settleIndex*atlas.frameCount+nextPhase,
+      upperBlend:useAttackUpper?attackFrame-attackIndex:blend,phase,settleIndex,attackPhase,
       settleFrameOffset:(nextSettle-settleIndex)*atlas.frameCount,settleBlend,
       upperOffsetY:offset+(nextOffset-offset)*settleBlend};
     if((kind==='medic'||kind==='engineer'||kind==='gunner')&&attackStates.has(state)){
