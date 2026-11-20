@@ -26,7 +26,7 @@ test('declared ref and leaf import alone restore the complete accepted applicati
  assert(source.includes(declaredGun));
  assert.throws(()=>restorePreBattleCardPanSource(file,source.replace(declaredGun,declaredGun.replace('PwaGunFinishPathsContext','PwaGunFinishPathsContextUnexpected'))),/gun source edit must occur exactly once/);
  for (const [before, after] of [
-  ["background={backgroundCacheRef.current[activeBattlefieldStageId]}", "background={null}"],
+  ["background={backgroundCacheRef.current[activeBattlefieldVisualId]}", "background={null}"],
   ["precisionEnd: lastHit", "precisionEnd: firstHit"],
   ["playEnemyContactCue(g, reactionTarget, reactionDamage)", "playEnemyContactCue(g, reactionTarget, 0)"],
  ]) {
