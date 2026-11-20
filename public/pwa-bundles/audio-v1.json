@@ -1,7 +1,7 @@
 {
   "schema": "zombieee-pwa-audio-bundle/1",
   "bundlePath": "/pwa-bundles/audio-v1.bin",
-  "bytes": 36220919,
+  "bytes": 36235636,
   "assets": {
     "/audio/v105/fist-wave-charge.mp3": {
       "id": "v105-fist-wave-charge",
@@ -2516,6 +2516,18 @@
       "offset": 36212934,
       "bytes": 7985,
       "hash": "sha256-457dce3d60705285fdcaf05364b4276c31f670fefeea1d497235241f6cd2662d"
+    },
+    "/audio/quality-20261121/station-mud/floor-mud-warning-r1.mp3": {
+      "id": "install-quality-20261121-station-mud-floor-mud-warning-r1",
+      "offset": 36220919,
+      "bytes": 5164,
+      "hash": "sha256-dcd127e5441cf7b5280912dec3015003fd3977dbe6ac0d62683015f56b92f1b1"
+    },
+    "/audio/quality-20261121/station-mud/floor-mud-impact-r1.mp3": {
+      "id": "install-quality-20261121-station-mud-floor-mud-impact-r1",
+      "offset": 36226083,
+      "bytes": 9553,
+      "hash": "sha256-d769f4904c51907ca1a0c334a93bb308fb5c27e5b51667bf4968cab9e13f36ad"
     }
   }
 }

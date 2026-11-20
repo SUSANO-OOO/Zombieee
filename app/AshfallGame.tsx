@@ -22291,6 +22291,11 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               if (resolved.created && resolved.zone) {
                 g.stationHazards.push(resolved.zone as StationHazard);
                 g.stationMetrics.leakMudZones += 1;
+                if (g.definition.missionConfig.v100StageNumber) {
+                  playProductionCue("floor-mud-impact-r1", resolved.zone.centerX, {
+                    playbackRate: .97 + f.id % 4 * .02,
+                  });
+                }
                 f.abilityCooldown = 7.5;
                 addDamageText(g, resolved.zone.centerX, resolved.zone.centerY - 18, "床汚染", .9, "#a9bf70");
               }
@@ -22313,6 +22318,11 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                   f.stationAbility = windup.runtime as StationAbilityRuntime;
                   startV105AbilityName(g,f,{name:currentEnemyAbilityName(f.kind),source:'enemy'});
                   abilityFrame = true;
+                  if (g.definition.missionConfig.v100StageNumber) {
+                    playProductionCue("floor-mud-warning-r1", windup.runtime.centerX, {
+                      playbackRate: .97 + f.id % 4 * .02,
+                    });
+                  }
                   g.banner = "漏泥 // 床汚染予告";
                   g.bannerTime = Math.max(g.bannerTime, .8);
                 }

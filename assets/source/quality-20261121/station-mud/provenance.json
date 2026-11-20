@@ -1,0 +1,66 @@
+{
+  "source": "https://opengameart.org/content/40-cc0-water-splash-slime-sfx",
+  "creator": "rubberduck",
+  "license": "CC0-1.0",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "archiveUrl": "https://opengameart.org/sites/default/files/water-splash-slime-sfx.zip",
+  "archiveSha256": "7cd39abb49d4362a37ba18dc0e454c7dc1d08029d4e5b683149046bc237b2eba",
+  "permissions": {
+    "commercial": true,
+    "modification": true,
+    "embedding": true,
+    "redistribution": true
+  },
+  "approvalScope": "自然な効果音の制作とフリー素材の使用を求める指示。個別の実機聴感は未確認。",
+  "originalMembers": {
+    "bubble_02.ogg": {
+      "bytes": 16017,
+      "sha256": "7992a1a4637ea727b177b3edbc086ec280167d67a8fad010bb8fb58893b2e2f2"
+    },
+    "slime_03.ogg": {
+      "bytes": 32308,
+      "sha256": "e78e0702ac671ae098537266cb6f9106d2402ed99b6554b1429327ec603c3dae"
+    },
+    "bubble_01.ogg": {
+      "bytes": 30671,
+      "sha256": "1d03d72347019be889280efc6de5ca5ea439d0b24b235e6db87e5bf7583ecb2b"
+    }
+  },
+  "runtimeFormat": "MP3 mono 44100 Hz 112 kbps",
+  "runtimeAssetCount": 2,
+  "logicalBytes": 14717,
+  "distinctBytes": 14717,
+  "output": [
+    {
+      "id": "floor-mud-warning-r1",
+      "path": "/audio/quality-20261121/station-mud/floor-mud-warning-r1.mp3",
+      "inputs": [
+        "bubble_02.ogg"
+      ],
+      "filter": "[0:a]atrim=start=0.03:end=0.34,asetpts=PTS-STARTPTS,highpass=f=95,lowpass=f=3600,areverse,afade=t=in:st=0:d=0.018,afade=t=out:st=0.276:d=0.034[prepared];[prepared]volume=1.10085[final]",
+      "bytes": 5164,
+      "sha256": "dcd127e5441cf7b5280912dec3015003fd3977dbe6ac0d62683015f56b92f1b1",
+      "decoded": {
+        "peak": 0.6650692820549011,
+        "rms": 0.1290426150198779,
+        "seconds": 0.31333333333333335
+      }
+    },
+    {
+      "id": "floor-mud-impact-r1",
+      "path": "/audio/quality-20261121/station-mud/floor-mud-impact-r1.mp3",
+      "inputs": [
+        "slime_03.ogg",
+        "bubble_01.ogg"
+      ],
+      "filter": "[0:a]atrim=start=0.049:end=0.57,asetpts=PTS-STARTPTS,aformat=channel_layouts=mono,highpass=f=72,lowpass=f=4100,afade=t=in:st=0:d=0.009,afade=t=out:st=0.421:d=0.10[a];[1:a]atrim=start=0:end=0.53,asetpts=PTS-STARTPTS,aformat=channel_layouts=mono,highpass=f=110,lowpass=f=4600,volume=0.33,adelay=74,afade=t=out:st=0.504:d=0.1[b];[a][b]amix=inputs=2:duration=longest:dropout_transition=0[prepared];[prepared]volume=2.25234[final]",
+      "bytes": 9553,
+      "sha256": "d769f4904c51907ca1a0c334a93bb308fb5c27e5b51667bf4968cab9e13f36ad",
+      "decoded": {
+        "peak": 0.7499101758003235,
+        "rms": 0.06245156790565119,
+        "seconds": 0.6039909297052154
+      }
+    }
+  ]
+}

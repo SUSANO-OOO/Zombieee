@@ -53,9 +53,9 @@ test('saved hashes and manifest ownership gate new gun files; cached bytes alone
  assert.deepEqual(new Set(verifiedPwaArtworkPaths({...policy,installedManifest:null,browserPlayAccepted:true}).split(String.fromCharCode(10))),new Set(Object.values(files).map(f=>f.path)));
 });
 
-test('the complete old 411-file audio pack and every old logical asset remain intact before eight new files',()=>{
+test('the old 411-file audio pack stays intact before the gun takes and station foley',()=>{
  const old=oldJson('public/pwa-bundles/audio-v1.json'),index=JSON.parse(fs.readFileSync('public/pwa-bundles/audio-v1.json','utf8'));
- assert.equal(Object.keys(old.assets).length,411);assert.equal(INSTALL_AUDIO_ASSETS.length,419);assert.equal(Object.keys(index.assets).length,419);
+ assert.equal(Object.keys(old.assets).length,411);assert.equal(INSTALL_AUDIO_ASSETS.length,421);assert.equal(Object.keys(index.assets).length,421);
  assert.deepEqual(Object.keys(index.assets).slice(0,411),Object.keys(old.assets));for(const[path,row]of Object.entries(old.assets))assert.deepEqual(index.assets[path],row,path);
  const body=fs.readFileSync('public/pwa-bundles/audio-v1.bin');assert.equal(sha(body.subarray(0,36151187)),'701142bdb09c8e409ad63c30bd4c29397df90dc9ed0ad92b36a1cce9fbe3130b');
  const manifest=JSON.parse(fs.readFileSync('public/asset-manifest.json','utf8')),previous=oldJson('public/asset-manifest.json');

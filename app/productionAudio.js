@@ -771,7 +771,15 @@ export const PRODUCTION_AUDIO_MANIFEST = createAudioManifest({
 });
 
 export const GAMEPLAY_PRODUCTION_AUDIO_MANIFEST=createAudioManifest(withMeleeFoley(withChainsawRecordings(withRecordedWeapons(withV104CombatAudio(PRODUCTION_AUDIO_MANIFEST)))));
-export const V100_AUDIO_MANIFEST = createAudioManifest(withV100BossSkillAudio(withV100BossCollapseAudio(withV100ManualAbilityFoley(withMeleeFoley(withChainsawRecordings(withRecordedWeapons(v100AudioDesignCandidate(PRODUCTION_AUDIO_MANIFEST))))))));
+const stationMudFoley = [
+  { id: "floor-mud-warning-r1", gain: .58, priority: 74 },
+  { id: "floor-mud-impact-r1", gain: .79, priority: 78 },
+].map(cue => ({
+  ...cue, category: "melee", preload: "lazy", loop: false, cooldownMs: 130, maxInstances: 2,
+  sources: [{ src: `/audio/quality-20261121/station-mud/${cue.id}.mp3`, type: "audio/mpeg" }],
+}));
+const v100BattleAudio = withV100BossSkillAudio(withV100BossCollapseAudio(withV100ManualAbilityFoley(withMeleeFoley(withChainsawRecordings(withRecordedWeapons(v100AudioDesignCandidate(PRODUCTION_AUDIO_MANIFEST)))))));
+export const V100_AUDIO_MANIFEST = createAudioManifest({ ...v100BattleAudio, assets: [...v100BattleAudio.assets, ...stationMudFoley] });
 // Installation inventories physical files, whereas playback addresses cues.
 // A V1 replacement must not steal a legacy cue's metadata or offline entry.
 const installAudioBySource = new Map(PRODUCTION_AUDIO_MANIFEST.assets.map(asset => [
@@ -779,13 +787,14 @@ const installAudioBySource = new Map(PRODUCTION_AUDIO_MANIFEST.assets.map(asset 
 ]));
 // Preserve the original physical inventory and ordering for installed updates
 // and rollback. New recorded sources follow the legacy physical inventory.
-const legacyVoiceInstallAssets = V100_AUDIO_MANIFEST.assets.map(asset =>
+const existingV100InstallAssets = V100_AUDIO_MANIFEST.assets.slice(0, v100BattleAudio.assets.length);
+const legacyVoiceInstallAssets = existingV100InstallAssets.map(asset =>
   /^voice-(?:crazy-king|kumaverson|babayaga|red-panther-(?:knife|shield|smg|commander))-(?:deploy|attack|hurt|death)$/.test(asset.id)
     ? {...asset,sources:['mp3','ogg'].map(ext=>({src:`/audio/v104/combat/${asset.id}.${ext}`,type:ext==='mp3'?'audio/mpeg':'audio/ogg'}))}
     : /^voice-mayo-(?:deploy|attack|hurt|retreat)$/.test(asset.id)
       ? {...asset,sources:[{src:`/audio/v090/sfx/${asset.id}.wav`,type:'audio/wav'}]}
       : asset);
-for (const asset of [...legacyVoiceInstallAssets, ...V100_AUDIO_MANIFEST.assets, ...v100GunFinishInstallAssets(V100_AUDIO_MANIFEST)]) {
+for (const asset of [...legacyVoiceInstallAssets, ...existingV100InstallAssets, ...v100GunFinishInstallAssets(V100_AUDIO_MANIFEST), ...stationMudFoley]) {
   const key = asset.sources.map(source => source.src).join('|');
   if (!installAudioBySource.has(key)) {
     const pathId = asset.sources[0].src.replace(/^\/audio\//, '').replace(/\.[^.]+$/, '').replaceAll('/', '-');

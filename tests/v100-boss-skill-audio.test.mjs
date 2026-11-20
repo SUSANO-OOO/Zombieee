@@ -30,8 +30,10 @@ const policy=a=>Object.fromEntries(Object.entries(a).filter(([key])=>key!=='sour
 
 test('nineteen non-vocal skill materials cover all nine bosses without replacing a voice, original source, alias, pool or scene',()=>{
  assert.equal(profiles.length,19);assert.deepEqual([...new Set(profiles.map(p=>p.kind))],kinds);
- assert.deepEqual(createAudioManifest(withV100BossSkillAudio(before)),V100_AUDIO_MANIFEST);
- assert.equal(V100_AUDIO_MANIFEST.assets.length,before.assets.length+19);
+ const bossAudio=withV100BossSkillAudio(before);
+ const mudAudio=['floor-mud-warning-r1','floor-mud-impact-r1'].map(id=>V100_AUDIO_MANIFEST.assetById[id]);
+ assert.deepEqual(createAudioManifest({...bossAudio,assets:[...bossAudio.assets,...mudAudio]}),V100_AUDIO_MANIFEST);
+ assert.equal(V100_AUDIO_MANIFEST.assets.length,before.assets.length+19+2);
  for(const asset of before.assets)assert.deepEqual(V100_AUDIO_MANIFEST.assetById[asset.id],asset,asset.id);
  for(const key of ['pools','aliases','scenes'])assert.deepEqual(V100_AUDIO_MANIFEST[key],before[key]);
  for(const p of profiles){const a=V100_AUDIO_MANIFEST.assetById[p.id];assert.equal(a.category,'weapons');assert.equal(a.preload,'lazy');assert.equal(a.loop,false);assert.equal(a.maxInstances,2);assert.ok(before.assetById[p.fallbackId]);assert.ok(V100_AUDIO_MANIFEST.scenes.every(s=>!s.preload.includes(p.id)));}

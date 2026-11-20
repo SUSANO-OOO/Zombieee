@@ -281,7 +281,7 @@ test("transport optimizations preserve every runtime asset contract", async () =
   }
 
   const bundled = manifest.assets.filter((asset) => asset.bundlePath);
-  assert.equal(bundled.length, 419, "411 retained files plus eight authored gun takes");
+  assert.equal(bundled.length, 421, "411 retained files, eight authored gun takes and two station effects");
   const recordedMayo = bundled.filter((asset) => asset.path.startsWith("/audio/quality-20261116/mayo/"));
   assert.deepEqual(recordedMayo.map(asset => asset.path).sort(), [
     "/audio/quality-20261116/mayo/recorded-bark.wav",
@@ -295,7 +295,14 @@ test("transport optimizations preserve every runtime asset contract", async () =
   const bundle = await readFile(new URL("../public/pwa-bundles/audio-v1.bin", import.meta.url));
   const retainedBytes = 36000475;
   assert.equal(createHash('sha256').update(bundle.subarray(0, retainedBytes)).digest('hex'), 'ec1b32c476dae7b23c13b827aa29f43081395f4d29966b67375c35a3e540891f', 'the original 409 payloads are byte-identical');
-  assert.equal(bundle.length, retainedBytes + recordedMayo.reduce((sum, asset) => sum + asset.bytes, 0) + authoredGuns.reduce((sum,asset)=>sum+asset.bytes,0));
+  const stationFoley = bundled.filter(asset=>asset.path.startsWith("/audio/quality-20261121/station-mud/"));
+  assert.deepEqual(stationFoley.map(asset=>asset.path).sort(),[
+    "/audio/quality-20261121/station-mud/floor-mud-impact-r1.mp3",
+    "/audio/quality-20261121/station-mud/floor-mud-warning-r1.mp3",
+  ]);
+  assert.equal(stationFoley.reduce((sum,asset)=>sum+asset.bytes,0),14717);
+  assert.ok(stationFoley.every(asset=>asset.bundleOffset>=36220919));
+  assert.equal(bundle.length, retainedBytes + [...recordedMayo,...authoredGuns,...stationFoley].reduce((sum,asset)=>sum+asset.bytes,0));
   assert.ok(recordedMayo.every(asset => asset.bundleOffset >= retainedBytes));
   for (const asset of bundled) {
     const payload = bundle.subarray(asset.bundleOffset, asset.bundleOffset + asset.bundleBytes);

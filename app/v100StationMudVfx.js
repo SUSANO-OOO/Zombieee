@@ -34,8 +34,8 @@ function mottling(x, y, seed) {
 }
 
 function makeTextures(ctx, variant) {
-  const document = ctx.canvas.ownerDocument ?? globalThis.document;
-  const sheet = document?.createElement("canvas") ??
+  const ownerDocument = ctx.canvas.ownerDocument ?? globalThis.document;
+  const sheet = ownerDocument?.createElement("canvas") ??
     (typeof OffscreenCanvas === "function" ? new OffscreenCanvas(WIDTH * 3, HEIGHT) : null);
   if (!sheet) return null;
 
@@ -69,14 +69,14 @@ function makeTextures(ctx, variant) {
       const reflected = smooth((oil - .49) * 2.8) * smooth((.71 - silt) * 1.7);
       const gloss = clamp(wetRim * .47 + reflected * .51 + clumps * .17);
       const fizz = smooth((grain - .86) * 7) * smooth((clumps - .47) * 2) * (1 - .58 * dark);
-      const fracture = smooth(1 - Math.abs(silt * .64 + clumps * .36 - .493) * 24);
+      const fracture = smooth(1 - Math.abs(silt * .64 + clumps * .36 - .493) * 15);
 
       const start = (y * sheet.width + x) * 4;
       const data = pixels.data;
-      data[start] = 79 + 76 * fracture + 15 * grain;
-      data[start + 1] = 84 + 78 * fracture + 11 * grain;
-      data[start + 2] = 42 + 27 * fracture + 16 * grain;
-      data[start + 3] = 225 * coverage * clamp(.19 + .65 * fracture + .27 * fizz + .14 * wetRim);
+      data[start] = 117 + 88 * fracture + 14 * grain;
+      data[start + 1] = 117 + 80 * fracture + 13 * grain;
+      data[start + 2] = 51 + 42 * fracture + 14 * grain;
+      data[start + 3] = 239 * coverage * clamp(.33 + .64 * fracture + .26 * fizz + .20 * wetRim);
 
       const mud = start + WIDTH * 4;
       data[mud] = 32 + 85 * gloss + 24 * dark + 15 * grain;
@@ -114,7 +114,7 @@ export function drawV100StationMud(ctx, field, time, warning = false) {
 
   const progress = warning ? 1 - clamp(remainingSeconds / windupSeconds) :
     clamp((durationSeconds - remainingSeconds) / .28);
-  const slick = warning ? .65 + .35 * smooth(progress) : .69 + .31 * smooth(remainingSeconds / .55);
+  const slick = warning ? .88 + .12 * smooth(progress) : .69 + .31 * smooth(remainingSeconds / .55);
   const pulse = .68 + .22 * Math.sin(time * 5 + variant * 1.6);
   const alpha = ctx.globalAlpha;
   const left = centerX - radiusX;
@@ -124,7 +124,8 @@ export function drawV100StationMud(ctx, field, time, warning = false) {
   ctx.globalAlpha = alpha * slick;
   ctx.drawImage(sheet, WIDTH * (warning ? WARNING : MUD), 0, WIDTH, HEIGHT,
     left, top, radiusX * 2, radiusY * 2);
-  ctx.globalAlpha = alpha * slick * pulse * (warning ? .48 + progress * .34 : .69 + .31 * progress);
+  const foamLight = warning ? .51 + progress * .35 : .60 + .40 * (1 - smooth(progress));
+  ctx.globalAlpha = alpha * slick * pulse * foamLight;
   ctx.drawImage(sheet, WIDTH * FOAM, 0, WIDTH, HEIGHT,
     left + Math.sin(time * 2.9 + variant) * radiusX * .028,
     top + Math.cos(time * 2.2 - variant) * radiusY * .043, radiusX * 2, radiusY * 2);
