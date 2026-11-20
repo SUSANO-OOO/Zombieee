@@ -1381,7 +1381,7 @@ function FormationView({ save, stageId, requestedUnitId = null, onCancelRequeste
   const threats = v100MissionThreatsFor(stageId);
   const tacticalAdvice = briefingOpen && stage ? <p className="v100-briefing-advice">{v100TacticalHintFor(stage)}</p> : null;
   const showSupportAdviceFirst = stage?.number === 2;
-  const showAdviceAfterDiagram = stage?.number === 5;
+  const showChargeAdvice = stage?.number === 5;
   const ownedUnits = save.ownedUnitIds.map((unitId) => UNIT_BY_ID.get(unitId)).filter(Boolean) as Array<(typeof V100_UNITS)[number]>;
   const availableSlots = v100AvailableFormation(stageId, save.formationSlots);
   const absence = v100StageAbsenceReason(stageId, "unit-paisen");
@@ -1424,11 +1424,11 @@ function FormationView({ save, stageId, requestedUnitId = null, onCancelRequeste
                     <MissionBriefingDiagram stageId={stageId} />
                     <p>{missionLabelFor(stage)} / {enemyPackLabelFor(stage.enemyPack, stage.number)}</p>
                   </>}
-                  {showAdviceAfterDiagram && tacticalAdvice}
                   {!modePreparation && <StarCriteria maxHp={save.vehicle.maxHp} stageNumber={stage?.number} />}
                 </section>
                 <section>
                   <h3>敵の動き</h3>
+                  {showChargeAdvice && tacticalAdvice}
                   {threats.length > 0 ? (
                     <ul aria-label="出現候補の行動">
                       {threats.map(threat => <li key={threat.id}>{threat.name}：{threat.purpose}</li>)}
@@ -1436,7 +1436,7 @@ function FormationView({ save, stageId, requestedUnitId = null, onCancelRequeste
                   ) : <p>ステージを選ぶと、出現する敵を確認できます。</p>}
                   <p>同時に出せる仲間は7体まで。同じ仲間を複数枠に入れても、出撃の待ち時間は共通です。</p>
                 </section>
-                {!showSupportAdviceFirst && !showAdviceAfterDiagram && tacticalAdvice}
+                {!showSupportAdviceFirst && !showChargeAdvice && tacticalAdvice}
               </div>
             </V100BattleBriefing>
           )}

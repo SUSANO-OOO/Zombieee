@@ -1,4 +1,5 @@
 import { V100_STAGE_BY_ID } from "./v100Registry.js";
+import { v100BasePresentationFor } from "./v100BasePresentation.js";
 import { V100_NODE_PROFILES } from "./v100MissionNodes.js";
 import { V100_MISSION_VEHICLES } from "./v100MissionVehicles.js";
 import { V100_DEFENSE_OBJECTIVES } from "./v100DefenseObjectives.js";
@@ -10,7 +11,8 @@ export function v100MissionThreatsFor(stageId) {
   const stage = V100_STAGE_BY_ID[stageId];
   if (!stage) return [];
   const pack = new Set(v100BattleDefinitionFor(stageId)?.timeline.flatMap(wave => wave.units) ?? []);
-  const purposes = { charge: "突進して前線を抜ける。予告に守備の固有技を合わせる", contamination: "汚染する範囲を残す。射撃で近づく前に倒す", backline: "後衛を狙う", "crawler-priority": "装甲車両を狙う", ranged: "離れた位置から攻撃", "support-object": "支援物を狙う" };
+  const protectedSite = v100BasePresentationFor(stage.number).label;
+  const purposes = { charge: "突進して前線を抜ける。予告に守備の固有技を合わせる", contamination: "汚染する範囲を残す。射撃で近づく前に倒す", backline: "後衛を狙う", "crawler-priority": `${protectedSite}を狙う`, ranged: "離れた位置から攻撃", "support-object": "支援物を狙う" };
   return Object.keys(purposes).flatMap(profile => ENEMY_CONTENT
     .filter(enemy => pack.has(enemy.id) && enemy.aiProfile === profile)
     .map(enemy => ({ id: enemy.id, name: stage.number < 27 ? enemy.displayName.replace("RED PANTHER", "赤レンズ部隊") : enemy.displayName, purpose: purposes[profile] }))).slice(0, 4);
