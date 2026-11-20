@@ -9016,6 +9016,7 @@ function drawWorld(
   presentationLayout?: { obstacles: ReturnType<typeof manualAbilityObstacleRects>; transform: { scale: number; offsetX: number; offsetY: number } },
 ) {
   const allyHealthBars: { fighter: Fighter; width: number; height: number; y: number; maxY?: number }[] = [];
+  const enemyHealthBars: { x: number; y: number; width: number; height: number }[] = [];
   const shakeAmplitude = cameraShakeAmplitude(g.shake);
   const sx = shakeAmplitude > 0 ? (Math.random() - .5) * shakeAmplitude : 0;
   const sy = shakeAmplitude > 0 ? (Math.random() - .5) * shakeAmplitude : 0;
@@ -9462,7 +9463,12 @@ function drawWorld(
         const headTop = fighterPaintedHeadTops.get(f);
         allyHealthBars.push({ fighter: f, width: barW, height: barHeight, y: barY,
           maxY: Number.isFinite(headTop) ? headTop! - barHeight - 4 : undefined });
-      } else drawFighterHealthBar(ctx, f, barW, barHeight, barY);
+      } else {
+        drawFighterHealthBar(ctx, f, barW, barHeight, barY);
+        if (f.side === "zombie" && g.definition.missionConfig.v100StageNumber) {
+          enemyHealthBars.push({ x: f.x - barW / 2 - 1, y: barY - 1, width: barW + 2, height: barHeight + 2 });
+        }
+      }
     }
     if (f.side === "zombie" && f.marked > 0) {
       ctx.save();
@@ -9628,6 +9634,7 @@ function drawWorld(
   }
   const abilityLayout=drawV105AbilityNames(ctx,g,{width:W,height:H,headY:f=>fighterHealthBarWorldY(f)-7,bounds,
     obstacles:[...statusObstacles,...healthLayout.map(bar=>({x:bar.x-bar.width/2-1,y:bar.y-1,width:bar.width+2,height:bar.height+2}))],
+    occupied:enemyHealthBars,
     get cssScale(){return Math.min(ctx.canvas.clientWidth/W||1,ctx.canvas.clientHeight/H||1);}});
   ctx.font = V100_CANVAS_FONT.numeric(14); ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
   const damageLayout=layoutV100DamageTextPaint(g.damageTexts.filter(d=>visibleRenderPoint(d.x,d.y,graphicsProfile.cullingMargin)),{
