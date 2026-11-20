@@ -8,6 +8,7 @@ import { V100_RAIL_EVACUATION, V100_RAIL_EVACUATION_STAGE } from "./v100RailEvac
 import { V100_RESCUE_CONTROL, V100_RESCUE_CONTROL_STAGE } from "./v100RescueControl.js";
 import { V100_CENTRAL_SEAL, V100_CENTRAL_SEAL_STAGE } from "./v100CentralSeal.js";
 import { V100_BAY_EVACUATION_STAGE, V100_BAY_REFUGEE_COUNT } from "./v100BayEvacuation.js";
+import { ARCHIVE_BOX_COUNT, V100_ARCHIVE_STAGE } from "./v100ArchiveExtraction.js";
 
 const amount = value => typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= Number.MAX_SAFE_INTEGER;
 const counter = value => amount(value) && Number.isInteger(value);
@@ -34,7 +35,20 @@ function normalizeBayEvacuation(value) {
   return Object.freeze({ stageId: value.stageId, evacuatedCount: value.evacuatedCount });
 }
 
+function normalizeArchiveExtraction(value) {
+  if (!record(value) || value.stageId !== V100_ARCHIVE_STAGE || typeof value.stopped !== "boolean"
+    || !counter(value.delivered) || value.delivered > ARCHIVE_BOX_COUNT
+    || (!value.stopped && value.delivered !== 0)) return null;
+  return Object.freeze({ stageId: value.stageId, stopped: value.stopped, delivered: value.delivered });
+}
+
 export function v100DeviceResultText(result) {
+  const archive = normalizeArchiveExtraction(result?.battleReport?.archiveExtraction);
+  if (result?.won === false && archive && archive.stageId === result.stageId) {
+    const detail = !archive.stopped ? "味方を端末まで進め、遠隔消去を止める"
+      : archive.delivered < ARCHIVE_BOX_COUNT ? "紙台帳を運ぶ仲間を援護する" : "搬出後も車両を守る";
+    return { progress: `紙台帳 ${archive.delivered}/${ARCHIVE_BOX_COUNT} 箱を搬出`, detail };
+  }
   const bayEvacuation = normalizeBayEvacuation(result?.battleReport?.bayEvacuation);
   if (result?.won === false && bayEvacuation && bayEvacuation.stageId === result.stageId) {
     const count = bayEvacuation.evacuatedCount;
@@ -84,6 +98,7 @@ function normalizeDefenseProgress(value) {
 }
 
 export function v100DefenseResultText(result) {
+  if (result?.stageId === V100_ARCHIVE_STAGE && normalizeArchiveExtraction(result.battleReport?.archiveExtraction)) return null;
   const defense = normalizeDefenseProgress(result?.battleReport?.defenseProgress);
   if (result?.won !== false || !defense || defense.stageId !== result.stageId) return null;
   const profile = V100_DEFENSE_OBJECTIVES[defense.stageId];
@@ -163,7 +178,8 @@ export function normalizeV100BattleReport(report) {
   const defenseProgress = normalizeDefenseProgress(report.defenseProgress);
   const deviceProgress = normalizeDeviceProgress(report.deviceProgress);
   const bayEvacuation = normalizeBayEvacuation(report.bayEvacuation);
-  return Object.freeze({ wave: report.wave, kills: report.kills, units: Object.freeze(units), ...(bossProgress ? { bossProgress } : {}), ...(lastVehicleHit ? { lastVehicleHit } : {}), ...(escortProgress ? { escortProgress } : {}), ...(defenseProgress ? { defenseProgress } : {}), ...(deviceProgress ? { deviceProgress } : {}), ...(bayEvacuation ? { bayEvacuation } : {}) });
+  const archiveExtraction = normalizeArchiveExtraction(report.archiveExtraction);
+  return Object.freeze({ wave: report.wave, kills: report.kills, units: Object.freeze(units), ...(bossProgress ? { bossProgress } : {}), ...(lastVehicleHit ? { lastVehicleHit } : {}), ...(escortProgress ? { escortProgress } : {}), ...(defenseProgress ? { defenseProgress } : {}), ...(deviceProgress ? { deviceProgress } : {}), ...(bayEvacuation ? { bayEvacuation } : {}), ...(archiveExtraction ? { archiveExtraction } : {}) });
 }
 
 export function v100BattleReportFor(raw) {
@@ -189,8 +205,11 @@ export function v100BattleReportFor(raw) {
     }) : null;
   const bayEvacuation = raw.missionRuntime?.missionType === "boss-assault"
     ? normalizeBayEvacuation({ stageId: raw.stageId, evacuatedCount: raw.missionRuntime.evacuatedCount }) : null;
+  const archiveExtraction = raw.missionRuntime?.missionType === "timed-defense"
+    ? normalizeArchiveExtraction({ stageId: raw.stageId, stopped: raw.missionRuntime.archiveStopped,
+      delivered: raw.missionRuntime.archiveDelivered }) : null;
   return normalizeV100BattleReport({ wave: raw.wave, kills: raw.kills, units, bossProgress: raw.bossProgress,
-    lastVehicleHit: raw.lastVehicleHit, escortProgress, defenseProgress, deviceProgress, bayEvacuation });
+    lastVehicleHit: raw.lastVehicleHit, escortProgress, defenseProgress, deviceProgress, bayEvacuation, archiveExtraction });
 }
 
 // A run's measured contribution, not a new grade, currency or permanent record.

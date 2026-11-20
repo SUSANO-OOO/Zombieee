@@ -1,5 +1,6 @@
 import { hasRailEvacuation } from "./v100RailEvacuation.js";
 import { createBayEvacuationRuntime, hasBayEvacuation } from "./v100BayEvacuation.js";
+import { createArchiveExtractionRuntime, hasArchiveExtraction } from "./v100ArchiveExtraction.js";
 import { hasRescueControl } from "./v100RescueControl.js";
 import { centralSealFinalGateSettled, hasCentralSeal } from "./v100CentralSeal.js";
 
@@ -131,6 +132,7 @@ function initialPowerOperation() {
 
 export function createStationMissionRuntime(missionType, config = {}) {
   if (hasBayEvacuation(missionType, config)) return createBayEvacuationRuntime();
+  if (hasArchiveExtraction(missionType, config)) return createArchiveExtractionRuntime();
   if (missionType === STATION_MISSION_TYPES.ESCORT) {
     const resolved = escortConfig(config);
     return freeze({

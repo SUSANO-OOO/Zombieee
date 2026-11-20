@@ -12,6 +12,7 @@ import { V100_NODE_ART, v100MissionNodeProfile } from "./v100MissionNodes.js";
 import { V100_RAIL_EVACUATION_ART, V100_RAIL_EVACUATION_STAGE } from "./v100RailEvacuation.js";
 import { V100_CENTRAL_SEAL_ART, V100_CENTRAL_SEAL_STAGE } from "./v100CentralSeal.js";
 import { V100_BAY_EVACUATION_ART, V100_BAY_EVACUATION_STAGE } from "./v100BayEvacuation.js";
+import { V100_ARCHIVE_ART, V100_ARCHIVE_STAGE } from "./v100ArchiveExtraction.js";
 import { V100_ASSAULT_OBJECT_ART, v100AssaultObjectProfile } from "./v100AssaultObjects.js";
 import { V100_COMBAT_VFX_ART } from "./v100CombatVfx.js";
 import { V100_DEFENSE_PERIMETER_ART } from "./v100DefensePerimeter.js";
@@ -59,6 +60,7 @@ function frozenEntry(entry) {
  */
 export function requiredBattleAssetPlan({
   stageId,
+  operationId = stageId,
   formationKinds = [],
   enemyKinds = [],
   includeAllSprites = false,
@@ -115,8 +117,10 @@ export function requiredBattleAssetPlan({
     ? [{ ...V100_RAIL_EVACUATION_ART, runtimeUsage: "mission-render-source" }] : [];
   const centralGateObjects = includeV100Sprites && stageId === V100_CENTRAL_SEAL_STAGE
     ? [{ ...V100_CENTRAL_SEAL_ART, runtimeUsage: "mission-render-source" }] : [];
-  const evacuees = includeV100Sprites && stageId === V100_BAY_EVACUATION_STAGE
+  const evacuees = includeV100Sprites && operationId === V100_BAY_EVACUATION_STAGE
     ? [{ ...V100_BAY_EVACUATION_ART, runtimeUsage: "mission-render-source" }] : [];
+  const archiveObjects = includeV100Sprites && operationId === V100_ARCHIVE_STAGE
+    ? [{ ...V100_ARCHIVE_ART, runtimeUsage: "mission-render-source" }] : [];
   const assaultProfile=includeV100Sprites?v100AssaultObjectProfile(stageId):null;
   const assaultObjects=assaultProfile?[{id:`v100-assault-${assaultProfile}`,path:V100_ASSAULT_OBJECT_ART[assaultProfile],runtimeUsage:"mission-render-source"}]:[];
   const defenseObjects=includeV100Sprites&&v100Stage?.missionType==="timed-defense"?[{id:"v100-defense-perimeter",path:V100_DEFENSE_PERIMETER_ART,runtimeUsage:"mission-render-source"}]:[];
@@ -157,7 +161,7 @@ export function requiredBattleAssetPlan({
   const guardActivationObjects = includeV100Sprites && v100Stage
     ? Object.entries(V100_GUARD_ACTIVATION_ART).filter(([kind,art])=>formationKinds.includes(kind)&&verifiedGuardImpactPaths.includes(art.path))
       .map(([,art])=>({id:art.id,path:art.path,runtimeUsage:"battle-overlay",optional:true})) : [];
-  const allStageObjects = [...manifestObjects, ...extraMissionObjects, ...v100MissionObjectEntries, ...v100VfxEntries, ...vehicleObjects, ...researchObjects, ...nodeObjects, ...railObjects, ...centralGateObjects, ...evacuees, ...assaultObjects, ...defenseObjects, ...combatVfx, ...tataraObjects, ...bossDefeatObjects, ...bossAttackObjects, ...manualImpactObjects, ...particleMaterialObjects, ...kingExhaustObjects, ...guardImpactObjects, ...groundFireObjects, ...ballisticMaterialObjects, ...guardActivationObjects];
+  const allStageObjects = [...manifestObjects, ...extraMissionObjects, ...v100MissionObjectEntries, ...v100VfxEntries, ...vehicleObjects, ...researchObjects, ...nodeObjects, ...railObjects, ...centralGateObjects, ...evacuees, ...archiveObjects, ...assaultObjects, ...defenseObjects, ...combatVfx, ...tataraObjects, ...bossDefeatObjects, ...bossAttackObjects, ...manualImpactObjects, ...particleMaterialObjects, ...kingExhaustObjects, ...guardImpactObjects, ...groundFireObjects, ...ballisticMaterialObjects, ...guardActivationObjects];
   const stageObjects = unique(allStageObjects.map((entry) => entry.id))
     .map((id) => allStageObjects.find((entry) => entry.id === id))
     .map((entry) => frozenEntry({
@@ -186,7 +190,7 @@ export function requiredBattleAssetPlan({
     : FORMATION_CARD_ART;
   const plan = {
     stageId,
-    background: frozenEntry({ path: stageVisualFor(stageId), category: "background" }),
+    background: frozenEntry({ path: stageVisualFor(operationId), category: "background" }),
     enemyBase: frozenEntry({ path: V075_VISUAL_PROFILES.enemyBase.intact.path, category: "base" }),
     sprites: [...requiredKinds.map((kind) => frozenEntry({
       kind,

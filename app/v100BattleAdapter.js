@@ -6,6 +6,7 @@ import { V100_RAIL_EVACUATION, V100_RAIL_EVACUATION_STAGE } from "./v100RailEvac
 import { V100_RESCUE_CONTROL, V100_RESCUE_CONTROL_STAGE } from "./v100RescueControl.js";
 import { V100_CENTRAL_SEAL, V100_CENTRAL_SEAL_STAGE } from "./v100CentralSeal.js";
 import { V100_BAY_EVACUATION, V100_BAY_EVACUATION_STAGE } from "./v100BayEvacuation.js";
+import { V100_ARCHIVE_EXTRACTION, V100_ARCHIVE_STAGE } from "./v100ArchiveExtraction.js";
 import { V100_CORPORATE_CONTROLS } from "./v100CorporateControl.js";
 import { V100_DEFENSE_OBJECTIVES } from "./v100DefenseObjectives.js";
 import { researchCoreObjective } from "./v100ResearchCore.js";
@@ -84,6 +85,7 @@ export function v100MissionObjectiveFor(stageId) {
   if (stageId === V100_RESCUE_CONTROL_STAGE) return "救難回線を3か所復旧し、制御区を守る";
   if (stageId === V100_CENTRAL_SEAL_STAGE) return "三基のゲートを閉じ、感染者の流入を止める";
   if (stageId === V100_BAY_EVACUATION_STAGE) return "クロメを退け、十二人を避難させる";
+  if (stageId === V100_ARCHIVE_STAGE) return "遠隔消去を止め、紙台帳を搬出する";
   if (stage.number === 30) return "TAKUYA-Ωを撃破し、西新を守る";
   const control = V100_CORPORATE_CONTROLS[stageId];
   if (control) {
@@ -403,6 +405,7 @@ export function v100BattleDefinitionFor(stageId) {
       ...(stageId === V100_SUPPLY_VALVE_STAGE ? V100_SUPPLY_VALVE : {}),
       ...(railEvacuation ? V100_RAIL_EVACUATION : {}),
       ...(bayEvacuation ? V100_BAY_EVACUATION : {}),
+      ...(stageId === V100_ARCHIVE_STAGE ? V100_ARCHIVE_EXTRACTION : {}),
       ...(stageId === V100_RESCUE_CONTROL_STAGE ? V100_RESCUE_CONTROL : {}),
       ...(stageId === V100_CENTRAL_SEAL_STAGE ? V100_CENTRAL_SEAL : {}),
       ...(missionVehicle ? {targetLabel:missionVehicle.targetLabel,vehicleCount:missionVehicle.count,convoyInterception:missionVehicle.count===3} : {}),

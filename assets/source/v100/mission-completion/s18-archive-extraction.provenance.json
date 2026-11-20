@@ -1,0 +1,98 @@
+{
+  "creator": "OpenAI built-in ImageGen, project-owned candidate artwork",
+  "license": "Generated for the project; no added third-party material.",
+  "rights": {
+    "commercialUse": true,
+    "modification": true,
+    "redistribution": true
+  },
+  "approvedScope": "Working candidate. Original map used as a visual reference. The courier is a background helper in the story operation; existing characters and their artwork are retained.",
+  "sources": [
+    {
+      "master": {
+        "path": "assets/source/v100/mission-completion/s18-civic-archive-basement-master-r1.png",
+        "sha256": "ef8be151b4de68faa1de3f75eb299c8fbc86dc6614e35f2b53d3ed97f2d0ef9b",
+        "bytes": 2661527
+      },
+      "reference": "public/art/v090/stages/civic-archive-route-background-v1.webp",
+      "prompt": "Create one original environment backplate for the Japanese post-apocalyptic mobile side-view action game 西新世紀末物語. The attached existing dark municipal archive is an art-direction reference. New location: inside its subterranean Japanese municipal records depot, an austere late-1990s public building still lit by working emergency lamps. Wide 16:9 framing, very low oblique side-view arcade camera looking straight across one continuous floor so the characters fight from left to right. The rear wall meets the flat concrete fighting floor roughly 38% down the picture. The lower 62% has a gently reflective flat concrete floor under sparse directional lights, with only subtle wear and realistic seams, clear readable ground. The left side has a broad emergency loading-bay aperture into a darker service tunnel, room in front for a vehicle sprite to be overlaid by our game. Center and right hold tall Japanese municipal steel compact shelves full of pale paper binders, frosted desk windows, an old equipment rack, a dim utility alcove at about 62% across for a separate interactive CRT console prop, and a recessed records shelving alcove farther right. No prepainted standalone console in the player lane. No people, enemies, vehicles, weapons, flames, HUD, text, graffiti, brands, icons, drawn geometry, light beams, stairs, or raised steps through the playable floor. Cinematic realistic high-density textures, dusty warm task lamps versus cool fluorescents, legible value separation, somber grounded Japanese setting. The floor runs uninterrupted all the way across. Output a polished production bitmap, full bleed."
+    },
+    {
+      "master": {
+        "path": "assets/source/v100/mission-completion/s18-archive-extraction-master-r1.png",
+        "sha256": "76299ce31acdba02dcf2872d31650c1363040717737dacb42bf8aaab7108b663",
+        "bytes": 2154954
+      },
+      "prompt": "Create a production transparent PNG sprite sheet for the subterranean Japanese municipal archives in the original post-apocalyptic mobile game 西新世紀末物語. Exactly 3 equal columns by 2 equal rows, 6 isolated objects with clean generous transparent margins around every cell. Top row left: three-quarter SIDE VIEW compact waist-height scratched dusty dark olive municipal terminal with integrated CRT showing faint RED disappearing record rows, readable metallic chassis, cables contained. Top row middle: that exact same terminal and exact same silhouette/camera, CRT instead shows muted GREEN stable rows. Top row right: compact stack of three buff archival cartons with off-white paper label slots, one cardboard lid up just enough to see dense bound document spines. Bottom row: the exact same anonymous civil-defense records courier in all 3 panels, fully clothed, dull blue-gray municipal utility coat with faded orange armband, plain hood and scarf over any facial details, gloves, faded dark trousers and heavy boots, holding the exact same medium closed buff paper carton securely against their chest with both bent arms, unarmed; they are a generic background helper. All three face LEFT in readable profile; first running frame left boot forward right back planted, second complementary running step right boot forward and left back, third lowered crouch protecting the box with both boots planted. Realistic polished videogame sprites matching painterly photographic battle art, dark dusty amber utility lighting, strong readable silhouette at 65 pixels tall. Keep inside their own cells, feet and box fully visible. Consistent head size, posture scale, carton grip and clothing across all three. No static ground or floor, no cast-shadow slabs, no text, symbols, weapons, dividing lines, halos or interface. TRUE transparent background everywhere outside the 6 sprites.",
+      "regions": [
+        {
+          "name": "terminal-erasing",
+          "left": 94,
+          "top": 13,
+          "width": 323,
+          "height": 454,
+          "pixelsHigh": 118
+        },
+        {
+          "name": "terminal-stopped",
+          "left": 593,
+          "top": 13,
+          "width": 324,
+          "height": 454,
+          "pixelsHigh": 118
+        },
+        {
+          "name": "records-cartons",
+          "left": 1083,
+          "top": 13,
+          "width": 359,
+          "height": 454,
+          "pixelsHigh": 74
+        },
+        {
+          "name": "courier-step-forward",
+          "left": 45,
+          "top": 489,
+          "width": 444,
+          "height": 521,
+          "pixelsHigh": 116
+        },
+        {
+          "name": "courier-step-back",
+          "left": 627,
+          "top": 493,
+          "width": 347,
+          "height": 520,
+          "pixelsHigh": 116
+        },
+        {
+          "name": "courier-taking-cover",
+          "left": 1135,
+          "top": 538,
+          "width": 303,
+          "height": 472,
+          "pixelsHigh": 105
+        }
+      ],
+      "cellWidth": 104,
+      "cellHeight": 132
+    }
+  ],
+  "assets": [
+    {
+      "path": "public/art/v100/stages/s18-civic-archive-basement-r1.webp",
+      "sha256": "e6d325d77d1a6c7239732fe18bd264b79f46add82f92ce83c19be876b2295762",
+      "bytes": 177150
+    },
+    {
+      "path": "public/art/v100/mission-objects/s18-archive-extraction-r1.webp",
+      "sha256": "e7b191fd540946076f1a144b51728d1228991060063a5ca9a5ae885e20c2443f",
+      "bytes": 27898
+    }
+  ],
+  "distribution": {
+    "count": 2,
+    "logicalBytes": 205048,
+    "distinctBytes": 205048
+  }
+}

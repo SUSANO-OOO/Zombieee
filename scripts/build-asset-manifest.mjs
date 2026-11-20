@@ -58,6 +58,7 @@ import { V100_NODE_ART } from "../app/v100MissionNodes.js";
 import { V100_RAIL_EVACUATION_ART } from "../app/v100RailEvacuation.js";
 import { V100_CENTRAL_SEAL_ART } from "../app/v100CentralSeal.js";
 import { V100_BAY_BACKGROUND, V100_BAY_EVACUATION_ART } from "../app/v100BayEvacuation.js";
+import { V100_ARCHIVE_BACKGROUND, V100_ARCHIVE_ART } from "../app/v100ArchiveExtraction.js";
 import { V100_RESEARCH_CORE_ART } from "../app/v100ResearchCore.js";
 import { V099_APP_ICON_PATHS } from "../app/appIconIdentity.js";
 import { V100_RUNTIME_ASSET_MANIFEST } from "../app/v100RuntimeAssetManifest.js";
@@ -208,7 +209,7 @@ for (const icon of V099_APP_ICON_PATHS) {
 // --- Campaign core --------------------------------------------------------
 
 sweep(PRODUCTION_VISUALS.stages, { pack: "campaign-core", category: "background", criticality: "critical" });
-sweep({ ...V100_STAGE_BACKGROUND_OVERRIDES, bayEvacuation: V100_BAY_BACKGROUND }, { pack: "campaign-core", category: "background", criticality: "critical" });
+sweep({ ...V100_STAGE_BACKGROUND_OVERRIDES, bayEvacuation: V100_BAY_BACKGROUND, archive: V100_ARCHIVE_BACKGROUND }, { pack: "campaign-core", category: "background", criticality: "critical" });
 sweep(STORY_BACKGROUND_VISUALS, { pack: "campaign-core", category: "background", criticality: "optional" });
 // Some campaign missions render these overlays directly instead of looking
 // through STAGE_OBJECT_MANIFEST. They are still real gameplay assets.
@@ -308,7 +309,7 @@ for (const assetPath of Object.values(V100_RUNTIME_ASSET_MANIFEST.missionObjects
 }
 record(V100_KUMAVERSON_GUARD_ART.path, { pack: "units", category: "unit", criticality: "critical" });
 record("/art/v100/characters/tatara-ground-strike-r1.webp", { pack: "units", category: "unit", criticality: "critical" });
-for (const assetPath of [...Object.values(V100_MISSION_VEHICLE_ART), ...Object.values(V100_ASSAULT_OBJECT_ART), V100_RESEARCH_CORE_ART, V100_NODE_ART, V100_DEFENSE_PERIMETER_ART, V100_RAIL_EVACUATION_ART.path, V100_CENTRAL_SEAL_ART.path, V100_BAY_EVACUATION_ART.path]) {
+for (const assetPath of [...Object.values(V100_MISSION_VEHICLE_ART), ...Object.values(V100_ASSAULT_OBJECT_ART), V100_RESEARCH_CORE_ART, V100_NODE_ART, V100_DEFENSE_PERIMETER_ART, V100_RAIL_EVACUATION_ART.path, V100_CENTRAL_SEAL_ART.path, V100_BAY_EVACUATION_ART.path, V100_ARCHIVE_ART.path]) {
   record(assetPath, { pack: "campaign-core", category: "object", criticality: "critical" });
 }
 for (const assetPath of Object.values(V100_RUNTIME_ASSET_MANIFEST.vfx)) {
