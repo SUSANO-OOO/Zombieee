@@ -679,6 +679,34 @@
     [
       "            g.banner = rescue.arrived === clinicalRescueReadout(g.stageMission).total",
       "            g.banner = rescue.arrived === CLINICAL_RESCUE_COUNT"
+    ],
+    [
+      "  v100CorporateControlCondition, v100LureControlAim, v100LureControlReadout, v100LureWaveBlocked } from \"./v100CorporateControl.js\";",
+      "  v100ArmoryKeyStatus, V100_ARMORY_STATUS_LABELS, v100CorporateControlCondition, v100LureControlAim,\n  v100LureControlReadout, v100LureWaveBlocked } from \"./v100CorporateControl.js\";"
+    ],
+    [
+      "  archiveReady?: boolean;",
+      "  armoryKeyRecovered?: boolean;\n  archiveReady?: boolean;"
+    ],
+    [
+      "  const releaseBridgeBarrier = useCallback(() => {",
+      "  const recoverArmoryKey = useCallback(() => {\n    const g = gameRef.current;\n    if (!g.running || g.paused || g.over || g.baseHp <= 0 || !g.definition.missionConfig.armoryKey\n        || v100ArmoryKeyStatus(g.definition, g) !== \"ready\") return;\n    if (rejectBattleSaveBoundary(\"armory-key:save-pending\")) return;\n    g.stageMission.armoryKeyRecovered = true;\n    g.banner = V100_ARMORY_STATUS_LABELS.secured;\n    g.bannerTime = 1.5;\n    playProductionCue(STATION_AUDIO_CUE_IDS.TERMINAL_CONFIRM, BARRICADE_X, { priority: 85, maxInstances: 1 });\n  }, [playProductionCue, rejectBattleSaveBoundary]);\n\n  const releaseBridgeBarrier = useCallback(() => {"
+    ],
+    [
+      "              g.banner = `${mission.label} // 拠点防護解除`;",
+      "              const opening = g.definition.missionConfig.armoryKey ? \"指揮車を止める\" : \"拠点防護解除\";\n              g.banner = `${mission.label} // ${opening}`;"
+    ],
+    [
+      "          if (enemyBaseDestroyed && !lureControl) {",
+      "          if (enemyBaseDestroyed && !lureControl && !g.definition.missionConfig.armoryKey) {"
+    ],
+    [
+      "  const archiveHud = hasArchiveExtraction(archiveGame.definition.missionType, archiveGame.definition.missionConfig)",
+      "  const armoryKeyStatus = archiveGame.definition.missionConfig.armoryKey\n    ? v100ArmoryKeyStatus(archiveGame.definition, archiveGame) : null;\n  const archiveHud = hasArchiveExtraction(archiveGame.definition.missionType, archiveGame.definition.missionConfig)"
+    ],
+    [
+      "          {lureControlHud ? (!end && <section className=\"health-hud barrier-health v100-control-health lure-control-health\"",
+      "          {armoryKeyStatus ? (!end && <section className=\"health-hud barrier-health v100-control-health archive-objective\"\n            data-armory-key-status={armoryKeyStatus} aria-label={enemyBaseLabel}>\n            <div><span>{enemyBaseLabel}</span><b>{hud.barricadeHp <= 0 ? \"停止\"\n              : hud.barricadeVulnerable ? `${Math.ceil(hud.barricadeHp)} / ${hud.barricadeMaxHp}` : \"護衛中\"}</b></div>\n            {hud.barricadeHp > 0 && <i aria-hidden=\"true\"><em style={{ width: `${barricadePct}%` }} /></i>}\n            {armoryKeyStatus === \"ready\"\n              ? <button type=\"button\" className=\"archive-terminal-action\" onClick={recoverArmoryKey}\n                disabled={paused || Boolean(battleSaveBoundaryRef.current)}>{V100_ARMORY_STATUS_LABELS.ready}</button>\n              : <small>{V100_ARMORY_STATUS_LABELS[armoryKeyStatus]}</small>}\n          </section>) : lureControlHud ? (!end && <section className=\"health-hud barrier-health v100-control-health lure-control-health\""
     ]
   ],
   "app/manualAbilities.js": [

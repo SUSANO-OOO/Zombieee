@@ -9,7 +9,7 @@ import { V100_BAY_EVACUATION, V100_BAY_EVACUATION_STAGE } from "./v100BayEvacuat
 import { V100_ARCHIVE_EXTRACTION, V100_ARCHIVE_STAGE } from "./v100ArchiveExtraction.js";
 import { V100_BRIDGE_ESCORT, V100_BRIDGE_STAGE } from "./v100BridgeEscort.js";
 import { V100_FLOODGATE, V100_FLOODGATE_STAGE } from "./v100EstuaryFloodgate.js";
-import { V100_CORPORATE_CONTROLS, V100_LURE_CONTROL_OBJECTIVE, V100_LURE_CONTROL_STAGE } from "./v100CorporateControl.js";
+import { V100_ARMORY_OBJECTIVE, V100_ARMORY_STAGE, V100_CORPORATE_CONTROLS, V100_LURE_CONTROL_OBJECTIVE, V100_LURE_CONTROL_STAGE } from "./v100CorporateControl.js";
 import { V100_DEFENSE_OBJECTIVES } from "./v100DefenseObjectives.js";
 import { CLINICAL_RESCUE_COUNT, V100_CLINICAL_RESCUE, V100_CLINICAL_STAGE } from "./v100ClinicalRescue.js";
 import { researchCoreObjective } from "./v100ResearchCore.js";
@@ -91,6 +91,7 @@ export function v100MissionObjectiveFor(stageId) {
   if (stageId === V100_ARCHIVE_STAGE) return "遠隔消去を止め、紙台帳を搬出する";
   if (stage.number === 30) return "TAKUYA-Ωを撃破し、西新を守る";
   if (stageId === V100_LURE_CONTROL_STAGE) return V100_LURE_CONTROL_OBJECTIVE;
+  if (stageId === V100_ARMORY_STAGE) return V100_ARMORY_OBJECTIVE;
   const control = V100_CORPORATE_CONTROLS[stageId];
   if (control) {
     const bossId = stage.firstClearPayload.find(value => value.startsWith("boss-"));
@@ -478,6 +479,7 @@ export function v100BattleDefinitionFor(stageId) {
       ...(bayEvacuation ? V100_BAY_EVACUATION : {}),
       ...(stageId === V100_ARCHIVE_STAGE ? V100_ARCHIVE_EXTRACTION : {}),
       ...(clinicalRescue ? V100_CLINICAL_RESCUE : {}),
+      ...(stageId === V100_ARMORY_STAGE ? { armoryKey: true } : {}),
       ...(stageId === V100_BRIDGE_STAGE ? V100_BRIDGE_ESCORT : {}),
       ...(estuaryFloodgate ? V100_FLOODGATE : {}),
       ...(stageId === V100_RESCUE_CONTROL_STAGE ? V100_RESCUE_CONTROL : {}),

@@ -631,7 +631,8 @@ import { drawV100ClinicalControl } from "./v100ClinicalControl.js";
 import { advanceClinicalRescue, clinicalRescueReadout, createClinicalRescueRuntime, drawClinicalEvacuees,
   hasClinicalRescue, stopClinicalDisposal, CLINICAL_CONTROL_X, CLINICAL_RESCUE_COUNT } from "./v100ClinicalRescue.js";
 import { drawV100CorporateControl, hasV100LureControl, v100CorporateControlLabel, v100ObjectiveDamageLabel,
-  v100CorporateControlCondition, v100LureControlAim, v100LureControlReadout, v100LureWaveBlocked } from "./v100CorporateControl.js";
+  v100ArmoryKeyStatus, V100_ARMORY_STATUS_LABELS, v100CorporateControlCondition, v100LureControlAim,
+  v100LureControlReadout, v100LureWaveBlocked } from "./v100CorporateControl.js";
 import { drawV100AssaultObject, v100AssaultObjectProfile } from "./v100AssaultObjects.js";
 import { drawV100Explosion, drawV100FootDust, drawV100GroundFire, drawV100Muzzle, V100_CONTACT_WEAPONS, V100_CLAW_CONTACT_WEAPONS, queueV100Contact, queueV100ScoutIntercept, queueV100ClawContact, queueV100TakuyaGroundContact, queueV100TataraGroundContact, getV100ClawContactSnapshot, getV100SkillContactSnapshot, queueV100GuardContact, getV100GuardContactSnapshot, drawV100ContactQueue, clearV100ContactQueue } from "./v100CombatVfx.js";
 import { drawV100BossAftermath, drawV100BossReleaseFields } from "./v100BossAftermath.js";
@@ -1127,6 +1128,7 @@ type StageMissionRuntime = {
   floodgateElapsed?: number | null;
   floodgateOpenAfterDefeat?: number;
   clinical?: ReturnType<typeof createClinicalRescueRuntime>["clinical"];
+  armoryKeyRecovered?: boolean;
   archiveReady?: boolean;
   archiveStopped?: boolean;
   archiveDistances?: readonly number[];
@@ -17158,6 +17160,17 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     playProductionCue(STATION_AUDIO_CUE_IDS.POWER_SWITCH, CLINICAL_CONTROL_X, { priority: 89, maxInstances: 1 });
   }, [playProductionCue, rejectBattleSaveBoundary]);
 
+  const recoverArmoryKey = useCallback(() => {
+    const g = gameRef.current;
+    if (!g.running || g.paused || g.over || g.baseHp <= 0 || !g.definition.missionConfig.armoryKey
+        || v100ArmoryKeyStatus(g.definition, g) !== "ready") return;
+    if (rejectBattleSaveBoundary("armory-key:save-pending")) return;
+    g.stageMission.armoryKeyRecovered = true;
+    g.banner = V100_ARMORY_STATUS_LABELS.secured;
+    g.bannerTime = 1.5;
+    playProductionCue(STATION_AUDIO_CUE_IDS.TERMINAL_CONFIRM, BARRICADE_X, { priority: 85, maxInstances: 1 });
+  }, [playProductionCue, rejectBattleSaveBoundary]);
+
   const releaseBridgeBarrier = useCallback(() => {
     const g = gameRef.current;
     if (!g.running || g.paused || g.over || g.time < g.definition.prepSeconds
@@ -21522,7 +21535,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             if (!lureControl && g.definition.missionConfig?.v100StageNumber && g.definition.missionType === "assault"
               && !g.definition.bossEnemyKind && g.eventIndex === g.definition.timeline.length) {
               g.barricadeVulnerable = true;
-              g.banner = `${mission.label} // 拠点防護解除`;
+              const opening = g.definition.missionConfig.armoryKey ? "指揮車を止める" : "拠点防護解除";
+              g.banner = `${mission.label} // ${opening}`;
               g.bannerTime = 2.8;
               g.flashOverlay = Math.max(g.flashOverlay, .15);
             }
@@ -25448,7 +25462,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           }
           chooseAction(null);
           stopMusic();
-          if (enemyBaseDestroyed && !lureControl) {
+          if (enemyBaseDestroyed && !lureControl && !g.definition.missionConfig.armoryKey) {
             addSemanticBattlePresentation(g, {
               semantic: "explosion-result",
               receiptId: `enemy-base:${g.resultId}:collapse`,
@@ -25717,6 +25731,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   const clinicalHud = hasClinicalRescue(archiveGame.definition.missionType, archiveGame.definition.missionConfig)
     ? clinicalRescueReadout(archiveGame.stageMission) : null;
   const lureControlHud = hasV100LureControl(archiveGame.definition) ? v100LureControlReadout(archiveGame) : null;
+  const armoryKeyStatus = archiveGame.definition.missionConfig.armoryKey
+    ? v100ArmoryKeyStatus(archiveGame.definition, archiveGame) : null;
   const archiveHud = hasArchiveExtraction(archiveGame.definition.missionType, archiveGame.definition.missionConfig)
     ? archiveExtractionReadout(archiveGame.stageMission, Math.max(0, Math.ceil((archiveGame.definition.defenseEndAt ?? archiveGame.time) - archiveGame.time))) : null;
   const bridgeHud = archiveGame.stageMission.bridge ? bridgeEscortReadout(archiveGame.stageMission) : null;
@@ -25985,7 +26001,16 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           </div>
           {hud.bossTelegraphWarning && !end && <div className="v100-boss-telegraph-warning" role="alert" data-boss-telegraph-warning="true">{formatBattleText(hud.bossTelegraphWarning)}</div>}
 
-          {lureControlHud ? (!end && <section className="health-hud barrier-health v100-control-health lure-control-health"
+          {armoryKeyStatus ? (!end && <section className="health-hud barrier-health v100-control-health archive-objective"
+            data-armory-key-status={armoryKeyStatus} aria-label={enemyBaseLabel}>
+            <div><span>{enemyBaseLabel}</span><b>{hud.barricadeHp <= 0 ? "停止"
+              : hud.barricadeVulnerable ? `${Math.ceil(hud.barricadeHp)} / ${hud.barricadeMaxHp}` : "護衛中"}</b></div>
+            {hud.barricadeHp > 0 && <i aria-hidden="true"><em style={{ width: `${barricadePct}%` }} /></i>}
+            {armoryKeyStatus === "ready"
+              ? <button type="button" className="archive-terminal-action" onClick={recoverArmoryKey}
+                disabled={paused || Boolean(battleSaveBoundaryRef.current)}>{V100_ARMORY_STATUS_LABELS.ready}</button>
+              : <small>{V100_ARMORY_STATUS_LABELS[armoryKeyStatus]}</small>}
+          </section>) : lureControlHud ? (!end && <section className="health-hud barrier-health v100-control-health lure-control-health"
             data-lure-state={lureControlHud.stopped ? "stopped" : "active"} aria-label={`${enemyBaseLabel} ${lureControlHud.status}`}>
             <div><span>{enemyBaseLabel}</span><b>{lureControlHud.stopped ? "停止" : `${Math.ceil(hud.barricadeHp)} / ${hud.barricadeMaxHp}`}</b></div>
             <i aria-hidden="true"><em style={{ width: `${barricadePct}%` }} /></i>

@@ -1,6 +1,7 @@
 const V100_ROOT = "/art/v100";
 import { V100_CLINICAL_CONTROL_ART } from "./v100ClinicalControl.js";
 import { V100_CORPORATE_CONTROL_ART, V100_LURE_CONTROL_ART } from "./v100CorporateControl.js";
+import { V100_BRIDGE_ART } from "./v100BridgeEscort.js";
 
 function freezeRecord(record) {
   return Object.freeze(record);
@@ -42,6 +43,7 @@ const redPanther = freezeRecord({
 
 const missionObjects = freezeRecord({
   corporateControlStates: V100_CORPORATE_CONTROL_ART,
+  [V100_BRIDGE_ART.id]: V100_BRIDGE_ART.path,
   lureControlStates: V100_LURE_CONTROL_ART,
   clinicalControlStates: V100_CLINICAL_CONTROL_ART,
   clinicalTrialWing: `${V100_ROOT}/mission-objects/clinical-trial-wing-v1.png`,
@@ -68,7 +70,7 @@ const vfx = freezeRecord({
 const stages = freezeRecord({
   "stage-mugarian-logistics-hq": freezeRecord({ background: `${V100_ROOT}/stages/s21-mugarian-hq-gate-r4-background-v1.webp`, missionObjects: [missionObjects.lureControlStates], vfx: [vfx.hqSecurityWarning] }),
   "stage-mugarian-clinical-trial-wing": freezeRecord({ background: `${V100_ROOT}/stages/s22-clinical-clean-v1.webp`, missionObjects: [missionObjects.clinicalControlStates], vfx: [] }),
-  "stage-mugarian-special-operations-armory": freezeRecord({ background: `${V100_ROOT}/stages/s23-armory-clean-v1.webp`, missionObjects: [missionObjects.corporateControlStates], vfx: [vfx.armoryRedLensAlert] }),
+  "stage-mugarian-special-operations-armory": freezeRecord({ background: `${V100_ROOT}/stages/s23-armory-clean-v1.webp`, missionObjects: [V100_BRIDGE_ART.path], vfx: [vfx.armoryRedLensAlert] }),
   "stage-mugarian-tech-tower": freezeRecord({ background: `${V100_ROOT}/stages/s24-tech-tower-background-v1.webp`, missionObjects: [missionObjects.corporateControlStates, missionObjects.twinReactorLandmark], vfx: [] }),
   "stage-mugarian-executive-lab": freezeRecord({ background: `${V100_ROOT}/stages/s25-executive-lab-clean-v1.webp`, missionObjects: [missionObjects.corporateControlStates], vfx: [] }),
   "stage-bay-evacuation-yard": freezeRecord({ background: `${V100_ROOT}/stages/s26-bay-evacuation-yard-r2-background-v1.webp`, missionObjects: [missionObjects.escortCartIntact, missionObjects.escortCartDamaged], vfx: [] }),

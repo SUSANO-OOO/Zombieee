@@ -15,7 +15,8 @@ import { archiveExtractionReadout, hasArchiveExtraction } from "./v100ArchiveExt
 import { clinicalRescueReadout, hasClinicalRescue } from "./v100ClinicalRescue.js";
 import { floodgateReadout, hasEstuaryFloodgate } from "./v100EstuaryFloodgate.js";
 import { v100DefenseStatus } from "./v100DefenseObjectives.js";
-import { hasV100LureControl, v100CorporateControlLabel, V100_LURE_CONTROL_OBJECTIVE } from "./v100CorporateControl.js";
+import { hasV100LureControl, v100ArmoryKeyStatus, v100CorporateControlLabel,
+  V100_ARMORY_OBJECTIVE, V100_ARMORY_STATUS_LABELS, V100_LURE_CONTROL_OBJECTIVE } from "./v100CorporateControl.js";
 
 const PHASE_SCHEDULES = Object.freeze({
   assault: Object.freeze([
@@ -150,6 +151,10 @@ export function phaseBannerForBattle(definition, phase) {
 }
 
 export function objectiveForBattle(definition, state) {
+  if (definition.missionConfig?.armoryKey) {
+    const status = v100ArmoryKeyStatus(definition, state);
+    return status === "protected" ? V100_ARMORY_OBJECTIVE : V100_ARMORY_STATUS_LABELS[status];
+  }
   if (hasV100LureControl(definition)) {
     return state.barricadeHp <= 0 ? "残る敵を倒して試験棟への道を開く" : V100_LURE_CONTROL_OBJECTIVE;
   }
@@ -283,6 +288,8 @@ export function battleOutcomeFor(definition, state) {
   if (hasSupplyValve(definition.missionType, definition.missionConfig)
     && !(state.stageMission?.powerActivated >= 1)) return null;
   if (hasV100LureControl(definition) && state.wavesResolved !== true) return null;
+  if (definition.missionConfig?.armoryKey
+    && (state.wavesResolved !== true || !state.stageMission?.armoryKeyRecovered)) return null;
   const assaultOutcome = battleOutcome(state.baseHp, state.barricadeHp);
   return assaultOutcome === "won" && !hasClearHp ? "lost" : assaultOutcome;
 }

@@ -11,7 +11,7 @@ import { V100_FLOODGATE_STAGE } from "./v100EstuaryFloodgate.js";
 import { V100_MISSION_VEHICLES } from "./v100MissionVehicles.js";
 import { V100_DEFENSE_OBJECTIVES } from "./v100DefenseObjectives.js";
 import { CLINICAL_RESCUE_COUNT, V100_CLINICAL_STAGE } from "./v100ClinicalRescue.js";
-import { V100_CORPORATE_CONTROLS, V100_LURE_CONTROL_NAME, V100_LURE_CONTROL_STAGE } from "./v100CorporateControl.js";
+import { V100_ARMORY_STAGE, V100_ARMORY_VEHICLE_NAME, V100_CORPORATE_CONTROLS, V100_LURE_CONTROL_NAME, V100_LURE_CONTROL_STAGE } from "./v100CorporateControl.js";
 import { v100BattleDefinitionFor } from "./v100BattleAdapter.js";
 import { ENEMY_CONTENT } from "./content/enemyCatalog.js";
 
@@ -54,6 +54,9 @@ export function v100MissionBriefingFor(stageId) {
   }
   if (stageId === V100_LURE_CONTROL_STAGE) {
     return { mode: "advance", origin: "物流本部の門", target: V100_LURE_CONTROL_NAME, verb: "航空支援でも直接狙える" };
+  }
+  if (stageId === V100_ARMORY_STAGE) {
+    return { mode: "advance", origin: "追撃を退ける", target: V100_ARMORY_VEHICLE_NAME, verb: "止めて認証キーを回収" };
   }
   if (stageId === V100_CENTRAL_SEAL_STAGE) {
     return { mode: "sequence", count: V100_CENTRAL_SEAL.powerCount, countUnit: "基",

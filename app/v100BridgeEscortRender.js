@@ -11,6 +11,10 @@ function bridgeVehicleX(runtime) {
   return 894 - approach * 74 - lunge * 59 + retreat * 142 + recoil;
 }
 
+export function drawArmoredVehicle(ctx, image, x, y) {
+  ctx.drawImage(image, 64, 10, 1410, 527, x - 97, y - 77, 194, 78);
+}
+
 export function drawBridgeEscort(ctx, stageObjects, runtime, cartX, cartY, armorY) {
   const image = stageObjects[V100_BRIDGE_ART.id];
   if (!image?.complete || !image.naturalWidth) throw new Error("Coastal bridge props must be decoded before battle");
@@ -20,7 +24,7 @@ export function drawBridgeEscort(ctx, stageObjects, runtime, cartX, cartY, armor
   const lift = elapsed === null ? 0 : Math.min(1, elapsed / .48, (BRIDGE_GATE_SECONDS - elapsed) / .44);
 
   ctx.save();
-  ctx.drawImage(image, 64, 10, 1410, 527, armorX - 97, armorY - 77, 194, 78);
+  drawArmoredVehicle(ctx, image, armorX, armorY);
   if (bridge.shotFlash > 0) {
     drawV100Muzzle(ctx, stageObjects, { weapon: "crawler", elapsed: BRIDGE_SHOT_FLASH - bridge.shotFlash,
       x: armorX - 35, y: armorY - 70, tx: cartX, ty: cartY - 34 });
