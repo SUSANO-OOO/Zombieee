@@ -242,6 +242,8 @@ export function v177JointPose(kind, sample, runtime, { grounded=false,ownedPose=
   // to its ready baseline, rather than swapping to a legacy static frame.
   else if(recoveryStates.has(state))attackPhase=activeEnd+(1-activeEnd)*clamp(sample.clipProgress);
   if(atlas.type==='rigid-parts'){
+    const mayoTransform=kind==='mayo-chan'&&sample?.abilityPresentation==='mayo-transform';
+    if(mayoTransform)attackPhase=null;
     const attackBase=variant?.startIndex??atlas.lowerCount;
     const attackFrame=(attackPhase??0)*atlas.frameCount,attackIndex=Math.floor(attackFrame);
     const nextPhase=(phaseIndex+1)%atlas.frameCount,blend=phase*atlas.frameCount-phaseIndex;
@@ -275,6 +277,7 @@ export function v177JointPose(kind, sample, runtime, { grounded=false,ownedPose=
       &&Number.isFinite(previous.attackPhase)&&previous.attackPhase<=choreographed.attackPhase)
       choreographed={...choreographed,stepLeadBone:previous.stepLeadBone};
     const painted=grounded?v177GroundedJointPose(kind,choreographed,sample,runtime):choreographed;
+    if(mayoTransform)return mayoTransformJointPose(atlas,painted,sample);
     return kind==='mrs-chiha'&&sample?.mrsNormalWeaponCycle
       ? mrsNormalWeaponCycle.plan(kind,sample,painted,atlas) : painted;
   }
@@ -346,6 +349,41 @@ function blendCapturedJoints(atlas,initial,neutral,p) {
   for(const bone of Object.keys(atlas.poses[0]))for(const upper of [false,true])
     result[upper?'upper':'lower'][bone]=[...jointMatrix(matrix,rig,plan,bone,upper,scratch)];
   return result;
+}
+
+// Sink into the paws before raising the muzzle. The original form switch
+// happens after this pose has returned to the stance on those same paws.
+function mayoTransformJointPose(atlas,plan,sample) {
+  const progress=sample.clipProgress;
+  const windingUp=sample.requestedState==='wind-up';
+  const coil=windingUp?smooth(progress/.66):1-smooth(progress);
+  const release=windingUp?smooth((progress-.62)/.38):1;
+  let drop=34*coil*(1-.5*release);
+  const headAngle=coil*(.25-.57*release);
+  if(!drop)return plan;
+
+  const pose=captureStatusJoints(atlas,plan);
+  // Keep each paw on its existing target. Short legs can limit the depth
+  // while the actor is finishing its last step.
+  for(const leg of atlas.legConstraints){
+    const [hipX,hipY]=matrixPoint(pose.upper[leg.parentBone],leg.hip);
+    const [pawX,pawY]=matrixPoint(pose.lower[leg.effectorBone],leg.ankle);
+    const upperLength=Math.hypot(leg.knee[0]-leg.hip[0],leg.knee[1]-leg.hip[1]);
+    const lowerLength=Math.hypot(leg.ankle[0]-leg.knee[0],leg.ankle[1]-leg.knee[1]);
+    const minReach=Math.abs(upperLength-lowerLength)+.001;
+    const minHeight=Math.sqrt(Math.max(0,minReach**2-(pawX-hipX)**2));
+    drop=Math.min(drop,Math.max(0,pawY-hipY-minHeight));
+  }
+  transformUpperJoints(pose,[1,0,0,1,0,drop]);
+  // The original Mayo rig hinges the neck at [332, 280]. Move the jaw
+  // with the same rotation so it stays attached to the painted head.
+  const [neckX,neckY]=matrixPoint(pose.upper.spine,[332,280]);
+  const c=Math.cos(headAngle),s=Math.sin(headAngle);
+  const turn=[c,s,-s,c,neckX-c*neckX+s*neckY,neckY-s*neckX-c*neckY];
+  pose.upper.head=multiplyMatrix(turn,pose.upper.head);
+  pose.upper.jaw=multiplyMatrix(turn,pose.upper.jaw);
+  resolveUpperOwnedLegs(atlas,pose,true);
+  return {...plan,resolvedJointPose:pose};
 }
 
 // Protected withdrawal is a living fall/rise, not a corpse or a legacy sheet.
