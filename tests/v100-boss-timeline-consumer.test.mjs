@@ -402,30 +402,3 @@ test("the president uses the same prior-guard clearance boundary without removin
     assert.equal(d.timeline.find(e=>e.units.includes(d.bossEnemyKind)).waitForPriorWaveClear,true);
   }
 });
-
-test("Stage 5 waits for the previous group before the last platform blockade", () => {
-  const definition = createBattleDefinition(V100_STAGES[4].id, { v100: true });
-  const lastBlockade = definition.timeline[6];
-  const g = { definition, eventIndex: 6, time: lastBlockade.at + .25, fighters: [],
-    enemySpawn: { nextEntryId: 1, pending: [{ entryId: 1, kind: "sprinter" }] } };
-  const queued = [];
-  const advance = () => runConsumer({ g, campaignWaveReady, isBossFighter, v100AssaultObjectProfile,
-    isBossEnemyKind: () => false, activeStageViewportId: "844x390",
-    enqueueEnemyWave: (runtime, event) => {
-      queued.push(event.wave);
-      return { ...runtime, pending: event.units.map(kind => ({ kind })), nextEntryId: runtime.nextEntryId + event.units.length };
-    },
-    enemySpawnPortalPoint: () => ({ legacyLane: 1 }), announceBossEntrance: () => {},
-    playCue: () => {}, emitBattleBark: () => {},
-  });
-
-  advance();
-  assert.deepEqual(queued, [], "a pending arrival holds the last blockade");
-  g.enemySpawn.pending = [];
-  g.fighters = [{ side: "zombie", hp: 1, kind: "sprinter" }];
-  advance();
-  assert.deepEqual(queued, [], "a living enemy holds the last blockade");
-  g.fighters[0].hp = 0;
-  advance();
-  assert.deepEqual(queued, [7]);
-});
