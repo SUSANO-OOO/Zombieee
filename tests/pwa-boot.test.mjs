@@ -34,3 +34,61 @@ test('a response arriving after timeout cannot publish a late cache state', asyn
   release(new Set(['late'])); await new Promise(resolve => setTimeout(resolve, 5));
   assert.equal(published, false);
 });
+
+test('worker inventory lets an installed pack start with one cache read', async () => {
+  const hash = 'sha256-' + 'a'.repeat(64);
+  const state = { type: 'pwa:state', active: { assets: [{ hash }] }, storedHashes: [hash] };
+  const result = await readPwaBootState({
+    register: async () => ({ scope: '/Zombieee/' }),
+    readState: async () => state,
+    readHashes: () => { throw new Error('duplicate cache read'); },
+  });
+  assert.equal(result.state, state);
+  assert.deepEqual(result.hashes, new Set([hash]));
+});
+
+test('an empty inventory is honored and a malformed one uses the local read', async () => {
+  const hash = 'sha256-' + 'b'.repeat(64);
+  const boot = storedHashes => readPwaBootState({
+    register: async () => ({}),
+    readState: async () => ({ type: 'pwa:state', storedHashes }),
+    readHashes: async () => new Set([hash]),
+  });
+  assert.deepEqual((await boot([])).hashes, new Set());
+  assert.deepEqual((await boot([hash, null])).hashes, new Set([hash]));
+});
+
+test('an installed worker can recover from its first missing state reply', async () => {
+  let calls = 0;
+  const active = { assets: [{ hash: 'present' }] };
+  const result = await readPwaBootState({
+    register: async () => ({ active: {} }),
+    readState: async () => ++calls === 1 ? null : { type: 'pwa:state', active },
+    readHashes: async () => new Set(['present']),
+  });
+  assert.equal(calls, 2);
+  assert.equal(result.state.active, active);
+  assert.deepEqual(result.hashes, new Set(['present']));
+});
+
+test('the local state check gives an active worker one recheck within the existing deadline', async () => {
+  let calls = 0;
+  await assert.rejects(readPwaBootState({
+    register: async () => ({ active: {} }),
+    readState: async () => { calls++; return { type: 'pwa:error' }; },
+    readHashes: () => { throw new Error('inventory must not read after failure'); },
+  }), /worker-state-unavailable/u);
+  assert.equal(calls, 2);
+  calls = 0;
+  let settle;
+  const late = new Promise(resolve => { settle = resolve; });
+  await assert.rejects(readPwaBootState({
+    register: async () => ({ active: {} }),
+    readState: async () => { calls++; return late; },
+    readHashes: () => { throw new Error('late inventory'); },
+    timeoutMs: 15,
+  }), /pwa-boot-timeout/u);
+  settle(null);
+  await new Promise(resolve => setTimeout(resolve, 5));
+  assert.equal(calls, 1);
+});

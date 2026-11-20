@@ -321,7 +321,8 @@
 #v100-campaign[data-v100-phase="result"] .v100-result-footer { grid-column: 1 / -1; grid-row: 2; padding-top: 5px; border-top: 1px solid #8d805c; }
 #v100-campaign .v100-result-footer button { min-height: 44px; border-radius: 2px; border: 1px solid #82906f; border-bottom: 3px solid #070e09; background: linear-gradient(110deg,#3c503b,#263a2a); color: #f2e8c9; }
 #v100-campaign .v100-result-footer button.v100-primary { color: #211f14; background: linear-gradient(110deg,#e1bd77,#b79760); border-color: #ead094; border-bottom-color: #825330; text-shadow: none; }
-#v100-campaign .v100-result-footer .v100-battle-report > summary { min-height: 44px; display: flex; align-items: center; color: #e2d3ac; }
+#v100-campaign .v100-result-footer .v100-battle-report > summary { min-height: 44px; display: flex; flex-wrap: wrap; gap: 0 6px; align-items: center; align-content: center; color: #e2d3ac; }
+#v100-campaign .v100-result-footer .v100-battle-report > summary > span { white-space: nowrap; }
 @media (max-height: 360px) and (orientation: landscape) {
   #v100-campaign[data-v100-phase="result"] section.v100-result-panel { padding: 7px 9px; gap: 5px 9px; }
   #v100-campaign[data-v100-phase="result"] .v100-result-scroll { padding: 6px 10px; }

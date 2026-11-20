@@ -86,7 +86,9 @@ export function v100LastVehicleHitText(result) {
   const hit = normalizeVehicleHit(result?.battleReport?.lastVehicleHit);
   const elapsed = result?.elapsedSeconds;
   if (result?.won !== false || !hit || !amount(elapsed) || hit.time > elapsed || elapsed - hit.time > 5) return null;
-  return `${enemies.get(hit.enemyKind).displayName}の攻撃で耐久を${Math.ceil(hit.damage)}失いました（終了${Math.round(elapsed - hit.time)}秒前）。`;
+  const secondsBeforeEnd = Math.round(elapsed - hit.time);
+  const timing = secondsBeforeEnd > 0 ? `（終了${secondsBeforeEnd}秒前）` : "";
+  return `${enemies.get(hit.enemyKind).displayName}の攻撃で耐久を${Math.ceil(hit.damage)}失いました${timing}。`;
 }
 
 function normalizeBossProgress(value) {

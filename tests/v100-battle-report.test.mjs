@@ -44,6 +44,8 @@ test("last vehicle damage records only actual HP loss and survives settlement wi
   assert.deepEqual(saved.receipts, control.receipts);
   assert.equal(saved.caps, control.caps);
   assert.match(v100LastVehicleHitText({ won: false, elapsedSeconds: 25, battleReport: report }), /走行感染者.*9.*1秒前/u);
+  assert.equal(v100LastVehicleHitText({ won: false, elapsedSeconds: hit.time, battleReport: report }),
+    "走行感染者の攻撃で耐久を9失いました。");
   for (const input of [
     { won: true, elapsedSeconds: 25, battleReport: report },
     { won: false, elapsedSeconds: 24, battleReport: report },
