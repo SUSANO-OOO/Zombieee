@@ -16,6 +16,13 @@ test('both registered twin bodies show one consistent skill name in the body tag
   assert.match(hint.counterplay,/片側.*激昂/);assert.equal(JSON.stringify(actor),before);
  }
 });
+test('cutting the control changes both the ability name and warning without overriding rage',()=>{
+ const actor=twin();
+ assert.equal(v100TwinAttackName(actor,true),'単体斬撃');
+ assert.equal(v105EnemyAbilityName('futago',{owner:actor,twinLinkCut:true}),'単体斬撃');
+ assert.equal(bossTelegraphSnapshot(actor,{twinLinkCut:true}).displayName,'単体斬撃');
+ assert.equal(v100TwinAttackName(twin('b',true),true),'激昂斬撃');
+});
 test('legacy fused and unrelated owners do not acquire the registered pair name',()=>{
  for(const bad of [{...twin(),v100BossId:undefined},{...twin(),v100TwinPart:undefined},{...twin(),v100BossId:'boss-takuya'},{...twin(),kind:'takuya'},{...twin(),side:'human'}]){
   assert.equal(v100TwinAttackName(bad),null);

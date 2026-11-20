@@ -271,6 +271,7 @@ import {
   v100TwinSeparationSteps,
   futagoEnraged,
   v100TwinCanStartStrike,
+  v100TwinLinkIsCut,
   bossRenderKind,
   bossBattleHudSnapshot,
   bossBattleResultSnapshot,
@@ -2250,8 +2251,8 @@ function addShot(
   );
 }
 
-function currentEnemyAbilityName(kind: EnemyKind, owner?: Fighter) {
-  return v105EnemyAbilityName(kind,{boss:bossDefinitionForEnemyKind(kind),infected:v090InfectedDefinition(kind),station:STATION_ENEMY_TUNING,owner});
+function currentEnemyAbilityName(kind: EnemyKind, owner?: Fighter, twinLinkCut = false) {
+  return v105EnemyAbilityName(kind,{boss:bossDefinitionForEnemyKind(kind),infected:v090InfectedDefinition(kind),station:STATION_ENEMY_TUNING,owner,twinLinkCut});
 }
 function clearTransientRenderObjects(g: Game) {
   v100ImageSampler.clear();
@@ -22574,6 +22575,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           if (["ooguchi", "gairen", "futago", "mugarian-president-mutated", "takuya-omega"].includes(f.kind)) {
             const anomalyKind = f.kind as "ooguchi" | "gairen" | "futago" | "mugarian-president-mutated" | "takuya-omega";
             const tuning = BOSS_ANOMALY_TUNING[anomalyKind];
+            const linkCut = anomalyKind === "futago" && v100TwinLinkIsCut(g);
             let abilityFrame = f.stationAbility.phase !== "idle";
             if (f.stationAbility.phase !== "idle") {
               const previousX = f.x;
@@ -22694,7 +22696,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                     ? "ガイレン // 外殻掃討・中枢露出"
                     : anomalyKind === "futago"
                       ? f.v100TwinPart
-                        ? f.stationAbility.split ? "フタゴ // 残存個体・激昂斬撃" : "フタゴ // 双体・交差斬撃"
+                        ? f.stationAbility.split ? "フタゴ // 残存個体・激昂斬撃" : linkCut ? "フタゴ // 単体斬撃" : "フタゴ // 双体・交差斬撃"
                         : f.stationAbility.split ? "フタゴ // 裂開・融合交差撃" : "フタゴ // 融合交差撃"
                       : anomalyKind === "mugarian-president-mutated"
                         ? "変異ムガリアン社長 // 四腕制圧"
@@ -22731,7 +22733,6 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 f.abilityCooldown = tuning.cooldownSeconds / splitSpeed;
               }
             }
-            const linkCut = anomalyKind === "futago" && Boolean(g.definition.missionConfig.twinControl) && g.barricadeHp <= 0;
             if (f.stationAbility.phase === "idle" && f.abilityCooldown <= 0 && v100TwinCanStartStrike(f, g.fighters, linkCut)) {
               const started = beginBossAnomalyAbility({
                 boss: f,
@@ -22739,14 +22740,14 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               });
               if (started.ok) {
                 f.stationAbility = started.runtime as StationAbilityRuntime;
-                startV105AbilityName(g,f,{name:currentEnemyAbilityName(f.kind,f),source:'enemy'});
+                startV105AbilityName(g,f,{name:currentEnemyAbilityName(f.kind,f,linkCut),source:'enemy'});
                 abilityFrame = true;
                 g.banner = anomalyKind === "ooguchi"
                   ? "オオグチ // 捕食突進予告"
                   : anomalyKind === "gairen"
                     ? "ガイレン // 外殻掃討予告"
                     : anomalyKind === "futago"
-                      ? `フタゴ // ${currentEnemyAbilityName(f.kind,f)}予告`
+                      ? `フタゴ // ${currentEnemyAbilityName(f.kind,f,linkCut)}予告`
                       : anomalyKind === "mugarian-president-mutated"
                         ? "変異ムガリアン社長 // 四腕制圧予告"
                         : "TAKUYA-Ω // Ω大剣薙ぎ払い予告";
@@ -25614,7 +25615,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           : [];
         if (g.definition.missionConfig.v100StageNumber && g.running && !g.over) {
           for (const fighter of g.fighters) {
-            const telegraph = bossTelegraphSnapshot(fighter, { fallbackTargetX: BASE_X + 48 });
+            const telegraph = bossTelegraphSnapshot(fighter, { fallbackTargetX: BASE_X + 48, twinLinkCut: v100TwinLinkIsCut(g) });
             if (!telegraph) continue;
             const hint = v100BossCounterplayHint({ boss: fighter, telegraph, readyAbilities: readyAbilityFighters,
               fighters: g.fighters, laneCenters: activeLaneCenters, beamOrigin: fighterWeaponSockets.get(fighter) });
@@ -25998,7 +25999,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           <div className="top-hud">
             <div className="battle-brand-zone">
               <div className="brand-block"><div><b>{compactBattleStageName(selectedOperationView.displayName)}</b></div></div>
-              <div className={`health-hud crawler-health ${healthPct <= 25 ? "critical" : ""} ${hud.crawlerHitFlash > 0 ? "hit" : ""}`}><div><span>{basePresentation.onFoot ? basePresentation.healthLabel : "耐久"}</span><b>{Math.ceil(hud.baseHp)} / {hud.baseMaxHp}</b></div><i><em style={{ width: `${healthPct}%` }} /></i></div>
+              <div className={`health-hud crawler-health ${healthPct <= 25 ? "critical" : ""} ${hud.crawlerHitFlash > 0 ? "hit" : ""}`}><div><span>{basePresentation.onFoot || archiveGame.definition.missionConfig.medicalDefense ? basePresentation.healthLabel : "耐久"}</span><b>{Math.ceil(hud.baseHp)} / {hud.baseMaxHp}</b></div><i><em style={{ width: `${healthPct}%` }} /></i></div>
             </div>
             <div className="battle-message-stack" aria-live="polite">
               {externalSessionActive && bossHealthPanel ? bossHealthPanel : <>
@@ -26066,7 +26067,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               ? <button type="button" className="archive-terminal-action" onClick={stopArchiveTerminal}
                 disabled={archiveHud.phase !== "ready" || paused || Boolean(battleSaveBoundaryRef.current)}>消去を止める</button>
               : <small>{archiveHud.phase === "secured" ? "搬出完了" : "消去停止済み"}{archiveHud.remaining > 0 && `・残り${archiveHud.remaining}秒`}</small>}
-          </section>) : (bayHud || (externalSessionActive && bossHealthPanel)) ? null : railHud
+          </section>) : (bayHud || (externalSessionActive && bossHealthPanel
+            && !(archiveGame.definition.missionConfig.twinControl && hud.barricadeHp > 0))) ? null : railHud
             ? <div className="health-hud barrier-health rail-evacuation-objective" data-rail-state={railHud.phase} aria-label={`${railHud.label} ${railHud.status}`}>
               <div><span>{railHud.label}</span><b>{railHud.status}</b></div>
               <i><em style={{ width: `${railHud.progress * 100}%` }} /></i>
@@ -26092,7 +26094,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               {defenseObjective.recordCount && <div className="defense-room-records" aria-label="収容室の開放記録">{Array.from({length:defenseObjective.recordCount},(_,index)=><span key={index} data-opened={index < defenseObjective.openedRecords} aria-label={`収容室${index+1}・${index < defenseObjective.openedRecords ? "開放済" : "開放待ち"}`} />)}</div>}
               <small>{defenseObjective.statusLabel}</small>
             </div>
-            : stationMissionHud || selectedOutbreakMissionId || isTakuyaInterception || isFinalDefense
+            : stationMissionHud || selectedOutbreakMissionId || isTakuyaInterception || isFinalDefense || archiveGame.definition.missionConfig.medicalDefense
             ? externalSessionActive ? null : <div className="health-hud barrier-health mission-health"><div><span>クリア目標</span><b>{formatBattleText(hud.objective)}</b></div></div>
             : <div className={`health-hud barrier-health ${omegaProtectedObjective && bossHudSide === "boss-hud-left" ? "omega-objective-left" : ""} ${v100CorporateControlLabel(gameRef.current.definition) || gameRef.current.researchCoreTargets ? "v100-control-health" : ""} ${hud.barricadeVulnerable ? "vulnerable" : "reinforced"} ${hud.barricadeHitFlash > 0 ? "hit" : ""}`}><div><span>{hud.missionType === "timed-defense" ? "救援区域" : enemyBaseLabel}</span><b>{hud.missionType === "timed-defense" ? "防衛対象外" : hud.barricadeVulnerable ? `${Math.ceil(hud.barricadeHp)} / ${hud.barricadeMaxHp}` : "防護中"}</b></div><i><em style={{ width: `${barricadePct}%` }} /></i>{hud.barricadeVulnerable && <small>{barricadeCondition}</small>}</div>}
           {!externalSessionActive && started && !end && hud.threat > .55 && <div className={`crawler-alert ${hud.threat > .82 ? "imminent" : ""} ${hud.bossMax > 0 && bossHudSide === "boss-hud-left" ? "crawler-alert-right" : ""}`}><b>{battleStageLabel} 警戒</b><span>{hud.threat > .82 ? "接触寸前" : "接近中"}</span></div>}

@@ -14,7 +14,7 @@ export function v100BasePresentationFor(stageNumber) {
       barrageLabel: "援護射撃", assetPath: V100_RETREAT_DOOR_ART });
   }
   if (stageNumber === 25) {
-    return Object.freeze({ onFoot: false, label: "医療物資", healthLabel: "医療物資の保全",
+    return Object.freeze({ onFoot: false, label: "医療物資", healthLabel: "医療物資耐久",
       barrageLabel: "車両砲撃", assetPath: null });
   }
   const onFoot = stageNumber === 5 || stageNumber === 6;

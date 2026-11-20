@@ -410,7 +410,7 @@
     ],
     [
       "          {(bayHud || (externalSessionActive && bossHealthPanel)) ? null : railHud",
-      "          {archiveHud ? (!end && <section className=\"health-hud barrier-health archive-objective\"\n            data-archive-phase={archiveHud.phase} data-archive-delivered={archiveHud.count} aria-label=\"紙台帳の搬出\">\n            <div><span>紙台帳</span><b>{archiveHud.count}/{ARCHIVE_BOX_COUNT} 箱</b></div>\n            {archiveHud.phase === \"erasing\" || archiveHud.phase === \"ready\"\n              ? <button type=\"button\" className=\"archive-terminal-action\" onClick={stopArchiveTerminal}\n                disabled={archiveHud.phase !== \"ready\" || paused || Boolean(battleSaveBoundaryRef.current)}>消去を止める</button>\n              : <small>{archiveHud.phase === \"secured\" ? \"搬出完了\" : \"遠隔消去 停止済み\"}{archiveHud.remaining > 0 && `・防衛 あと${archiveHud.remaining}秒`}</small>}\n          </section>) : (bayHud || (externalSessionActive && bossHealthPanel)) ? null : railHud"
+      "          {archiveHud ? (!end && <section className=\"health-hud barrier-health archive-objective\"\n            data-archive-phase={archiveHud.phase} data-archive-delivered={archiveHud.count} aria-label=\"紙台帳の搬出\">\n            <div><span>紙台帳</span><b>{archiveHud.count}/{ARCHIVE_BOX_COUNT} 箱</b></div>\n            {archiveHud.phase === \"erasing\" || archiveHud.phase === \"ready\"\n              ? <button type=\"button\" className=\"archive-terminal-action\" onClick={stopArchiveTerminal}\n                disabled={archiveHud.phase !== \"ready\" || paused || Boolean(battleSaveBoundaryRef.current)}>消去を止める</button>\n              : <small>{archiveHud.phase === \"secured\" ? \"搬出完了\" : \"遠隔消去 停止済み\"}{archiveHud.remaining > 0 && `・防衛 あと${archiveHud.remaining}秒`}</small>}\n          </section>) : (bayHud || (externalSessionActive && bossHealthPanel\n            && !(archiveGame.definition.missionConfig.twinControl && hud.barricadeHp > 0))) ? null : railHud"
     ],
     [
       "  const activeBattlefieldStageId = externalSession?.stageId ?? (selectedOutbreakMissionId\n    ? OUTBREAK_MISSION_BY_ID[selectedOutbreakMissionId]?.prerequisiteStageId ?? selectedStageId\n    : selectedStageId);",
@@ -718,11 +718,43 @@
     ],
     [
       "  futagoEnraged,\n",
-      "  futagoEnraged,\n  v100TwinCanStartStrike,\n"
+      "  futagoEnraged,\n  v100TwinCanStartStrike,\n  v100TwinLinkIsCut,\n"
     ],
     [
       "            if (f.stationAbility.phase === \"idle\" && f.abilityCooldown <= 0) {\n              const started = beginBossAnomalyAbility({",
-      "            const linkCut = anomalyKind === \"futago\" && Boolean(g.definition.missionConfig.twinControl) && g.barricadeHp <= 0;\n            if (f.stationAbility.phase === \"idle\" && f.abilityCooldown <= 0 && v100TwinCanStartStrike(f, g.fighters, linkCut)) {\n              const started = beginBossAnomalyAbility({"
+      "            if (f.stationAbility.phase === \"idle\" && f.abilityCooldown <= 0 && v100TwinCanStartStrike(f, g.fighters, linkCut)) {\n              const started = beginBossAnomalyAbility({"
+    ],
+    [
+      "            : stationMissionHud || selectedOutbreakMissionId || isTakuyaInterception || isFinalDefense",
+      "            : stationMissionHud || selectedOutbreakMissionId || isTakuyaInterception || isFinalDefense || archiveGame.definition.missionConfig.medicalDefense"
+    ],
+    [
+      "{basePresentation.onFoot ? basePresentation.healthLabel : \"耐久\"}",
+      "{basePresentation.onFoot || archiveGame.definition.missionConfig.medicalDefense ? basePresentation.healthLabel : \"耐久\"}"
+    ],
+    [
+      "function currentEnemyAbilityName(kind: EnemyKind, owner?: Fighter) {\n  return v105EnemyAbilityName(kind,{boss:bossDefinitionForEnemyKind(kind),infected:v090InfectedDefinition(kind),station:STATION_ENEMY_TUNING,owner});",
+      "function currentEnemyAbilityName(kind: EnemyKind, owner?: Fighter, twinLinkCut = false) {\n  return v105EnemyAbilityName(kind,{boss:bossDefinitionForEnemyKind(kind),infected:v090InfectedDefinition(kind),station:STATION_ENEMY_TUNING,owner,twinLinkCut});"
+    ],
+    [
+      "            const tuning = BOSS_ANOMALY_TUNING[anomalyKind];\n            let abilityFrame",
+      "            const tuning = BOSS_ANOMALY_TUNING[anomalyKind];\n            const linkCut = anomalyKind === \"futago\" && v100TwinLinkIsCut(g);\n            let abilityFrame"
+    ],
+    [
+      "startV105AbilityName(g,f,{name:currentEnemyAbilityName(f.kind,f),source:'enemy'});",
+      "startV105AbilityName(g,f,{name:currentEnemyAbilityName(f.kind,f,linkCut),source:'enemy'});"
+    ],
+    [
+      "? f.stationAbility.split ? \"フタゴ // 残存個体・激昂斬撃\" : \"フタゴ // 双体・交差斬撃\"",
+      "? f.stationAbility.split ? \"フタゴ // 残存個体・激昂斬撃\" : linkCut ? \"フタゴ // 単体斬撃\" : \"フタゴ // 双体・交差斬撃\""
+    ],
+    [
+      "? `フタゴ // ${currentEnemyAbilityName(f.kind,f)}予告`",
+      "? `フタゴ // ${currentEnemyAbilityName(f.kind,f,linkCut)}予告`"
+    ],
+    [
+      "            const telegraph = bossTelegraphSnapshot(fighter, { fallbackTargetX: BASE_X + 48 });",
+      "            const telegraph = bossTelegraphSnapshot(fighter, { fallbackTargetX: BASE_X + 48, twinLinkCut: v100TwinLinkIsCut(g) });"
     ]
   ],
   "app/manualAbilities.js": [
@@ -807,6 +839,38 @@
     [
       ".archive-objective[data-archive-phase=\"secured\"] { border-color:#a3b481; }",
       ".archive-objective[data-archive-phase=\"secured\"] { border-color:#a3b481; }\n.clinical-rescue-objective { border-color:#a4926c; }\n.clinical-rescue-objective i > em { background:linear-gradient(90deg,#718877,#cfdda7); }\n.clinical-rescue-objective[data-clinical-phase=\"ready\"] { border-color:#e6be74; }\n.clinical-rescue-objective[data-clinical-phase=\"rescued\"] { border-color:#adc18a; }\n.clinical-rescue-objective[data-clinical-phase=\"sheltering\"] small { color:#efc985; }"
+    ]
+  ],
+  "app/bossFoundation.js": [
+    [
+      "export function futagoEnraged",
+      "export function v100TwinLinkIsCut(game) {\n  return game.definition?.missionConfig?.twinControl === true && game.barricadeHp <= 0;\n}\n\nexport function v100TwinCanStartStrike(fighter, group, linkCut) {\n  return !linkCut || !fighter.v100TwinPart || !group.some(other =>\n    other.id !== fighter.id && other.v100TwinPart && other.v100TwinPair === fighter.v100TwinPair\n    && other.hp > 0 && [\"warning\", \"active\", \"recovery\"].includes(other.stationAbility?.phase));\n}\n\nexport function futagoEnraged"
+    ],
+    [
+      "export function v100TwinAttackName(fighter) {",
+      "export function v100TwinAttackName(fighter, linkCut = false) {"
+    ],
+    [
+      "return fighter.v100TwinEnraged ? '激昂斬撃' : '双体交差撃';",
+      "return fighter.v100TwinEnraged ? '激昂斬撃' : linkCut ? '単体斬撃' : '双体交差撃';"
+    ],
+    [
+      "  return deepFreeze({ ...hud, hp, maxHp: 6000, hpRatio: hp / 6000, twins: members });",
+      "  const phase = v100TwinLinkIsCut(game) && !first.v100TwinEnraged ? { ...hud.phase, label: \"連携解除\" } : hud.phase;\n  return deepFreeze({ ...hud, hp, maxHp: 6000, hpRatio: hp / 6000, twins: members, phase });"
+    ],
+    [
+      "export function bossTelegraphSnapshot(fighter, { fallbackTargetX = 0 } = {}) {",
+      "export function bossTelegraphSnapshot(fighter, { fallbackTargetX = 0, twinLinkCut = false } = {}) {"
+    ],
+    [
+      "      displayName: v100TwinAttackName(fighter) ?? definition.attackTelegraph.displayName,",
+      "      displayName: v100TwinAttackName(fighter, twinLinkCut) ?? definition.attackTelegraph.displayName,"
+    ]
+  ],
+  "app/v105AbilityNames.js": [
+    [
+      "export function v105EnemyAbilityName(kind,{boss,infected,station,owner}={}){\n  return v100TwinAttackName(owner) ??",
+      "export function v105EnemyAbilityName(kind,{boss,infected,station,owner,twinLinkCut=false}={}){\n  return v100TwinAttackName(owner,twinLinkCut) ??"
     ]
   ]
 }

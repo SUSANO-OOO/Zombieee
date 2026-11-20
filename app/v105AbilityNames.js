@@ -4,8 +4,8 @@ import {v100TwinAttackName} from './bossFoundation.js';
 const battles=new WeakMap();
 export function clearV105AbilityNames(world){battles.delete(world);}
 const liveOwner=(world,row)=>world.fighters?.find(f=>f.id===row.ownerId&&f.kind===row.ownerKind);
-export function v105EnemyAbilityName(kind,{boss,infected,station,owner}={}){
-  return v100TwinAttackName(owner) ?? boss?.attackTelegraph?.displayName
+export function v105EnemyAbilityName(kind,{boss,infected,station,owner,twinLinkCut=false}={}){
+  return v100TwinAttackName(owner,twinLinkCut) ?? boss?.attackTelegraph?.displayName
     ??infected?.abilityDisplayName
     ??({grappler:station?.karamite,ooze:station?.leakMud,sprinter:station?.souki}[kind]?.displayName);
 }

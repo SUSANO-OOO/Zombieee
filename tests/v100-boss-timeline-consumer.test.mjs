@@ -117,6 +117,7 @@ test("the actual consumer establishes combat before Omega, then emits both A rei
   assert.deepEqual(queued.flatMap(event=>event.units),definition.timeline[0].units);
   assert.deepEqual(announced,[]);
   const entrance=definition.timeline.findIndex(event=>event.units.includes("takuya-omega"));
+  assert.deepEqual(definition.timeline.slice(0,entrance).map(wave=>wave.units.length),[4,4,5,5,6]);
   for (let index = 1; index < entrance; index++) {
     g.time = definition.timeline[index].at;
     runConsumer({ ...fixture, campaignWaveReady });

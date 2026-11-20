@@ -320,14 +320,14 @@ function stageTimeline(stage, missionType, bossKind) {
     // reinforcements follow Omega’s actual injuries, even if the earlier waves take longer.
     const [firstReinforcement, secondReinforcement] = V100_BOSS_BY_ID["boss-takuya-omega"].phaseThresholds;
     return freeze([
-      freeze({ at: PREP_SECONDS, wave: 1, label: "最終防衛 // 先行感染群", units: freeze(["walker", "runner", "spitter", "walker", "runner"]) }),
-      freeze({ at: PREP_SECONDS + 19, advanceOnClearAfter: PREP_SECONDS + 14, wave: 2, label: "最終防衛 // 左翼接敵", waitForPriorWaveClear: true, units: freeze(["spitter", "crusher", "walker", "runner", "spitter", "runner", "crusher"]) }),
-      freeze({ at: PREP_SECONDS + 38, advanceOnClearAfter: PREP_SECONDS + 31, wave: 3, label: "最終防衛 // 防衛線を確保", waitForPriorWaveClear: true, units: freeze(["crusher", "runner", "spitter", "walker", "runner", "crusher", "spitter", "runner"]) }),
-      freeze({ at: PREP_SECONDS + 57, advanceOnClearAfter: PREP_SECONDS + 49, wave: 4, label: "最終防衛 // 突破を阻止", waitForPriorWaveClear: true, units: freeze(["crusher", "spitter", "walker", "runner", "spitter", "walker", "runner", "crusher", "spitter"]) }),
-      freeze({ at: PREP_SECONDS + 78, advanceOnClearAfter: PREP_SECONDS + 69, wave: 5, label: "最終防衛 // 目前の群れ", waitForPriorWaveClear: true, units: freeze(["runner", "walker", "crusher", "spitter", "runner", "walker", "spitter", "crusher", "runner", "crusher"]) }),
+      freeze({ at: PREP_SECONDS, wave: 1, label: "最終防衛 // 先行感染群", units: freeze(["walker", "runner", "spitter", "walker"]) }),
+      freeze({ at: PREP_SECONDS + 19, advanceOnClearAfter: PREP_SECONDS + 14, wave: 2, label: "最終防衛 // 左翼接敵", waitForPriorWaveClear: true, units: freeze(["spitter", "crusher", "walker", "runner"]) }),
+      freeze({ at: PREP_SECONDS + 38, advanceOnClearAfter: PREP_SECONDS + 31, wave: 3, label: "最終防衛 // 防衛線を確保", waitForPriorWaveClear: true, units: freeze(["crusher", "runner", "spitter", "walker", "runner"]) }),
+      freeze({ at: PREP_SECONDS + 57, advanceOnClearAfter: PREP_SECONDS + 49, wave: 4, label: "最終防衛 // 突破を阻止", waitForPriorWaveClear: true, units: freeze(["crusher", "spitter", "walker", "runner", "spitter"]) }),
+      freeze({ at: PREP_SECONDS + 78, advanceOnClearAfter: PREP_SECONDS + 69, wave: 5, label: "最終防衛 // 目前の群れ", waitForPriorWaveClear: true, units: freeze(["runner", "walker", "crusher", "spitter", "runner", "walker"]) }),
       freeze({ at: PREP_SECONDS + 90, wave: 6, label: `警告 // ${bossLabel}`, units: freeze([bossKind]), waitForPriorWaveClear: true }),
-      freeze({ at: PREP_SECONDS + 116, wave: 7, label: "最終防衛 // 増援1/2", bossHpRatio: firstReinforcement, units: freeze(["walker", "runner", "crusher", "spitter", "runner", "walker", "crusher", "spitter"]), addWave: true }),
-      freeze({ at: PREP_SECONDS + 140, wave: 8, label: "最終防衛 // 増援2/2", bossHpRatio: secondReinforcement, units: freeze(["spitter", "crusher", "walker", "runner", "spitter", "crusher", "runner", "crusher"]), addWave: true }),
+      freeze({ at: PREP_SECONDS + 116, wave: 7, label: "最終防衛 // 増援1/2", bossHpRatio: firstReinforcement, units: freeze(["walker", "runner", "crusher", "spitter", "runner", "walker", "crusher", "spitter", "walker"]), addWave: true }),
+      freeze({ at: PREP_SECONDS + 140, wave: 8, label: "最終防衛 // 増援2/2", bossHpRatio: secondReinforcement, units: freeze(["spitter", "crusher", "walker", "runner", "spitter", "crusher", "runner", "crusher", "spitter", "crusher"]), addWave: true }),
     ]);
   }
   if (stage.number === 24 || stage.number === 25) {
@@ -464,13 +464,13 @@ export function v100BattleDefinitionFor(stageId) {
   const lureControl = stageId === V100_LURE_CONTROL_STAGE;
   const clinicalRescue = stageId === V100_CLINICAL_STAGE;
   const armoryKey = stageId === V100_ARMORY_STAGE;
-  const corporateBossRoute = stage.number === 24 || stage.number === 25;
+  const authoredBossDensity = [24, 25, 30].includes(stage.number);
   const medicalDefense = stage.number === 25;
   const authoredTimeline = stageTimeline(stage, missionType, bossKind);
   // These two corridor missions have authored patrol size and separation.
   // Their opening must leave time to act on the device or shield evacuees.
   const timeline = lureControl || clinicalRescue ? authoredTimeline : withClearDrivenAssaultWaves(
-    armoryKey || corporateBossRoute ? authoredTimeline : v100IncreaseWaveDensity(authoredTimeline, Object.values(BOSS_KIND_BY_V100_ID), { preserveEscalation: missionType === "escort" }),
+    armoryKey || authoredBossDensity ? authoredTimeline : v100IncreaseWaveDensity(authoredTimeline, Object.values(BOSS_KIND_BY_V100_ID), { preserveEscalation: missionType === "escort" }),
     missionType);
   const baseMaxHp = V100_VEHICLE.baseHp;
   const station = missionType === "escort"
