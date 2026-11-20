@@ -173,8 +173,35 @@ function constrainHeldWeapon(upper,weapon,owners,margin=2){
  if(nearest){m[4]+=nearest[0];m[5]+=nearest[1];}
 }
 
+// The LMG stays in its real aim pose through the five-round burst while
+// Raider leans on the stock. His shoulders and weapon keep two real grips.
+function suppressionChoreography(atlas,plan){
+ const p=plan.attackPhase,[aimAt,lowerAt]=atlas.attackBoundaries;
+ const stance=ease(p/aimAt)*ease((1-p)/(1-lowerAt));
+ const round=(p-aimAt)/(lowerAt-aimAt);
+ const recoil=ease(round/.18)*(1-ease((round-.18)/.7));
+ const waist=atlas.interpolationPivots.spine;
+ const brace=rigid(waist,[waist[0]+21*stance-6*recoil,waist[1]+24*stance],.33*stance-.07*recoil);
+ const {frameCount,lowerCount,weaponBone,armConstraints:arms}=atlas;
+ const base=atlas.poses[lowerCount-frameCount];
+ const aimed=atlas.poses[lowerCount+Math.round((aimAt+lowerAt)*frameCount/2)][weaponBone];
+ const upper=Object.fromEntries(Object.entries(base).map(([bone,m])=>[bone,multiply(brace,m)]));
+ const wrist=arms[0].effectorWrist??arms[0].wrist;
+ const rest=point(base[weaponBone],wrist),aim=point(aimed,wrist);
+ const hand=[rest[0]+(aim[0]-rest[0])*stance+11*stance-6*recoil,rest[1]+(aim[1]-rest[1])*stance+20*stance];
+ const restAngle=Math.atan2(base[weaponBone][1],base[weaponBone][0]);
+ const aimAngle=nearAngle(Math.atan2(aimed[1],aimed[0]),restAngle);
+ upper[weaponBone]=rigid(wrist,hand,restAngle+(aimAngle-restAngle)*stance-.025*recoil);
+ constrainHeldWeapon(upper,weaponBone,arms);
+ return {...plan,upperOffsetY:0,choreography:{kind:'gunner',upper,arms,frontBones:[],
+  strikeBones:[weaponBone],bodyWeight:stance,stepDistance:0}};
+}
+
 export function v177WeaponChoreography(kind,atlas,plan,actor={}){
- if(!kinds.has(kind)||plan.resolvedJointPose||plan.liveStun||plan.turnedGetup)return plan;
+ if(plan.resolvedJointPose||plan.liveStun||plan.turnedGetup)return plan;
+ if(kind==='gunner'&&plan.abilityPresentation==='suppression-burst'&&Number.isFinite(plan.attackPhase))
+  return suppressionChoreography(atlas,plan);
+ if(!kinds.has(kind))return plan;
  const attacking=Number.isFinite(plan.attackPhase),p=attacking?plan.attackPhase:0;
  const envelope=attacking?Math.min(ease(p/.08),ease((1-p)/.16)):0;
  if(!attacking&&!carryMotion[kind])return plan;
@@ -189,6 +216,8 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
  const waist=atlas.interpolationPivots?.spine??(legs.length?[legs.reduce((s,c)=>s+c.hip[0],0)/legs.length,legs.reduce((s,c)=>s+c.hip[1],0)/legs.length]:[240,250]);
  const weight=attacking?keys(p,[[0,0],[.18,-1],[.23,-1],[.28,.8],[.48,1],[.64,.8],[1,0]])[0]:0;
  const intercept=kind==='scout'&&plan.abilityPresentation==='scout-intercept';
+ const assessing=kind==='babayaga'&&plan.abilityPresentation==='weak-point-assessment';
+ const assessment=assessing?keys(p,[[0,0],[.085,1],[.16,1],[.27,.18],[.43,0],[1,0]])[0]:0;
  const heavy=['brute','guardian','gate-eater','red-panther-shield','crazy-king','kumaverson','takuya','takuya-omega','crusher','abomination','gairen'].includes(kind);
  // Kuma raises the bowl over his crown, then folds forward into the slam.
  // The planted legs and original arm lengths still own the whole movement.
@@ -196,7 +225,7 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
  // then rises out of the follow-through on the existing ability clock.
  const [drive,crouch,lean]=intercept?keys(p,[[0,0,0,0],[.22,-9,16,.34],[.28,0,14,.39],
   [.40,18,9,.47],[.57,10,6,.30],[1,0,0,0]]):[0,0,0];
- const bodyAngle=intercept?lean:kind==='kumaverson'?keys(p,[[0,0],[.18,.10],[.23,.10],[.28,.27],[.48,.42],[.64,.35],[1,0]])[0]:kind==='babayaga'?0:(kind==='brute'?.70:kind==='mugarian-president-mutated'?.50:heavy?.21:.17)*weight;
+ const bodyAngle=intercept?lean:kind==='kumaverson'?keys(p,[[0,0],[.18,.10],[.23,.10],[.28,.27],[.48,.42],[.64,.35],[1,0]])[0]:kind==='babayaga'?.18*assessment:(kind==='brute'?.70:kind==='mugarian-president-mutated'?.50:heavy?.21:.17)*weight;
  const torso=rigid(waist,[waist[0]+(intercept?drive:weight*(heavy?13:9)),waist[1]+(intercept?crouch:Math.abs(weight)*(kind==='mugarian-president-mutated'?30:heavy?5:3))],bodyAngle);
  for(const [bone,m]of Object.entries(base)){
   const pivot=atlas.interpolationPivots?.[bone]??[0,0];
@@ -208,7 +237,12 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
   // own wrist; forcing both elbows onto that one hand folds the support arm.
   const free=arms[1];free.effectorBone='arm-1-hand';
   free.effectorWrist=free.wrist;free.grip=free.wrist;free.bendSign=1;
-  handPose(upper,free,point(upper[free.parentBone],free.wrist),bodyAngle);
+  const parent=upper[free.parentBone],home=point(parent,free.wrist);
+  if(assessment>0){
+   const shoulder=point(parent,free.shoulder),reach=armReach(free).max;
+   const target=[shoulder[0]+reach*.84,shoulder[1]+reach*.26];
+   handPose(upper,free,[home[0]+(target[0]-home[0])*assessment,home[1]+(target[1]-home[1])*assessment],bodyAngle-.8*assessment);
+  }else handPose(upper,free,home,bodyAngle);
  }
  const weaponOwners=[...arms];
  const strikeBones=contactKinds.has(kind)?[]:kind==='miyamoto-musashi'?['weapon-0','weapon-1']:[atlas.weaponBone];
@@ -291,7 +325,8 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
  }else{
   if(kind==='babayaga'){
    const [aimAt,lowerAt]=atlas.attackBoundaries;
-   const raise=attacking?keys(p,[[0,0],[aimAt,1],[lowerAt,1],[1,0]])[0]:0;
+   const raise=assessing?keys(p,[[0,0],[aimAt*.60,0],[aimAt,1],[lowerAt,1],[1,0]])[0]
+     :attacking?keys(p,[[0,0],[aimAt,1],[lowerAt,1],[1,0]])[0]:0;
    const recoil=attacking?keys(p,[[0,0],[.28,0],[.32,-6],[.42,0],[.7,0],[1,0]])[0]:0;
    // Lower the pistol beside the body while travelling. Raise it only for
    // the actual shot; the free arm continues to belong to its own shoulder.

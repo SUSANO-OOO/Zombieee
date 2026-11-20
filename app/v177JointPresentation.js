@@ -260,7 +260,8 @@ export function v177JointPose(kind, sample, runtime, { grounded=false,ownedPose=
       upperBlend:useAttackUpper?attackFrame-attackIndex:blend,phase,settleIndex,attackPhase,
       settleFrameOffset:(nextSettle-settleIndex)*atlas.frameCount,settleBlend,
       upperOffsetY:offset+(nextOffset-offset)*settleBlend};
-    if((launcherSalvo||kind==='medic'||kind==='engineer'||kind==='gunner')&&attackStates.has(state)){
+    const normalGunner=kind==='gunner'&&sample?.abilityPresentation!=='suppression-burst';
+    if((launcherSalvo||kind==='medic'||kind==='engineer'||normalGunner)&&attackStates.has(state)){
       const spine=jointMatrix(new Float64Array(6),atlas,plan,'spine',true);
       const follow=v177FirearmUpperMotion(kind,sample,spine,{actor:actualActor,world,waist:atlas.interpolationPivots?.spine});
       if(follow)plan.firearmUpperTransform=follow;
