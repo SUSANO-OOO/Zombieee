@@ -25769,7 +25769,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           </div>
           {hud.bossTelegraphWarning && !end && <div className="v100-boss-telegraph-warning" role="alert" data-boss-telegraph-warning="true">{formatBattleText(hud.bossTelegraphWarning)}</div>}
 
-          {externalSessionActive && bossHealthPanel ? null : railHud
+          {(bayHud || (externalSessionActive && bossHealthPanel)) ? null : railHud
             ? <div className="health-hud barrier-health rail-evacuation-objective" data-rail-state={railHud.phase} aria-label={`${railHud.label} ${railHud.status}`}>
               <div><span>{railHud.label}</span><b>{railHud.status}</b></div>
               <i><em style={{ width: `${railHud.progress * 100}%` }} /></i>

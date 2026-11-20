@@ -13,7 +13,7 @@ const shelterX = 146;
 const spread = (peoplePerGroup - 1) * spacing;
 const speeds = Object.freeze([76, 72, 63]);
 export const V100_BAY_REFUGEE_COUNT = groups.length * peoplePerGroup;
-export const V100_BAY_ROUTE_Y = 248;
+export const V100_BAY_ROUTE_Y = 267;
 
 export function hasBayEvacuation(missionType, config) {
   return missionType === "boss-assault" && config?.bayEvacuation === true;
