@@ -25,6 +25,9 @@ test('weak-point assessment extends a free hand, then fires the original one-han
     }
     if(elapsed>.14&&elapsed<.21){
       assert.ok(point(upper[free.effectorBone],free.wrist)[0]-point(normal[free.effectorBone],free.wrist)[0]>40);
+      assert.ok(point(upper[free.effectorBone],free.wrist)[1]<point(upper[free.parentBone],free.shoulder)[1]-20);
+      assert.ok(plan.choreography.frontBones.includes(free.effectorBone));
+      assert.ok(!ordinary.choreography.frontBones.includes(free.effectorBone));
       assert.ok(upper[atlas.weaponBone][1]>.94,'Pistol waits low while the other hand indicates the target');
     }
     if(sample.requestedState==='active')assert.ok(Math.abs(upper[atlas.weaponBone][1])<1e-9);

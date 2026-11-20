@@ -217,7 +217,7 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
  const weight=attacking?keys(p,[[0,0],[.18,-1],[.23,-1],[.28,.8],[.48,1],[.64,.8],[1,0]])[0]:0;
  const intercept=kind==='scout'&&plan.abilityPresentation==='scout-intercept';
  const assessing=kind==='babayaga'&&plan.abilityPresentation==='weak-point-assessment';
- const assessment=assessing?keys(p,[[0,0],[.085,1],[.16,1],[.27,.18],[.43,0],[1,0]])[0]:0;
+ const assessment=assessing?keys(p,[[0,0],[.085,1],[.18,1],[.27,.18],[.43,0],[1,0]])[0]:0;
  const heavy=['brute','guardian','gate-eater','red-panther-shield','crazy-king','kumaverson','takuya','takuya-omega','crusher','abomination','gairen'].includes(kind);
  // Kuma raises the bowl over his crown, then folds forward into the slam.
  // The planted legs and original arm lengths still own the whole movement.
@@ -240,7 +240,7 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
   const parent=upper[free.parentBone],home=point(parent,free.wrist);
   if(assessment>0){
    const shoulder=point(parent,free.shoulder),reach=armReach(free).max;
-   const target=[shoulder[0]+reach*.84,shoulder[1]+reach*.26];
+   const target=[shoulder[0]+reach*.85,shoulder[1]-reach*.39];
    handPose(upper,free,[home[0]+(target[0]-home[0])*assessment,home[1]+(target[1]-home[1])*assessment],bodyAngle-.8*assessment);
   }else handPose(upper,free,home,bodyAngle);
  }
@@ -325,7 +325,7 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
  }else{
   if(kind==='babayaga'){
    const [aimAt,lowerAt]=atlas.attackBoundaries;
-   const raise=assessing?keys(p,[[0,0],[aimAt*.60,0],[aimAt,1],[lowerAt,1],[1,0]])[0]
+   const raise=assessing?keys(p,[[0,0],[aimAt*.69,0],[aimAt,1],[lowerAt,1],[1,0]])[0]
      :attacking?keys(p,[[0,0],[aimAt,1],[lowerAt,1],[1,0]])[0]:0;
    const recoil=attacking?keys(p,[[0,0],[.28,0],[.32,-6],[.42,0],[.7,0],[1,0]])[0]:0;
    // Lower the pistol beside the body while travelling. Raise it only for
@@ -386,7 +386,9 @@ export function v177WeaponChoreography(kind,atlas,plan,actor={}){
  }
  const frontBones=(!attacking||['crazy-king','babayaga','kumaverson','takuya-omega'].includes(kind)||p>.06&&p<.94)?arms.flatMap(c=>[c.upperBone,c.lowerBone,c.effectorBone]):[];
  const stationaryAbility=['guard','fist-wave','cross-guard','ground-slam','slam'].includes(plan.abilityPresentation);
- if(kind==='babayaga'){const far=new Set([arms[1].upperBone,arms[1].lowerBone,arms[1].effectorBone]);for(let i=frontBones.length-1;i>=0;i--)if(far.has(frontBones[i]))frontBones.splice(i,1);}
+ // The indicating hand crosses the jacket in the wide phone view. Bring
+ // that original arm in front only while the appraisal gesture is visible.
+ if(kind==='babayaga'&&assessment<.12){const far=new Set([arms[1].upperBone,arms[1].lowerBone,arms[1].effectorBone]);for(let i=frontBones.length-1;i>=0;i--)if(far.has(frontBones[i]))frontBones.splice(i,1);}
  const choreography={kind,variant,sequence,upper,arms,frontBones,strikeBones,bodyWeight:weight,stepDistance:attacking&&!stationaryAbility?attackSteps[kind]??0:0,
   ...(kind==='mugarian-president-mutated'?{strikePoints:{'arm-1-hand':[228,326]}}:{})};if(!attacking)carryPlans.set(atlas,choreography);
  return{...plan,choreography:walkingCarry(kind,atlas,plan,choreography,attacking?1-envelope:1),upperOffsetY:0};
