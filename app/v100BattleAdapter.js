@@ -12,7 +12,7 @@ import { V100_FLOODGATE, V100_FLOODGATE_STAGE } from "./v100EstuaryFloodgate.js"
 import { V100_ARMORY_OBJECTIVE, V100_ARMORY_STAGE, V100_CORPORATE_CONTROLS, V100_LURE_CONTROL_OBJECTIVE, V100_LURE_CONTROL_STAGE } from "./v100CorporateControl.js";
 import { V100_DEFENSE_OBJECTIVES } from "./v100DefenseObjectives.js";
 import { CLINICAL_RESCUE_COUNT, V100_CLINICAL_RESCUE, V100_CLINICAL_STAGE } from "./v100ClinicalRescue.js";
-import { researchCoreObjective } from "./v100ResearchCore.js";
+import { researchCoreObjective, V100_RESEARCH_CORE_STAGE, V100_RESEARCH_TARGETS } from "./v100ResearchCore.js";
 import { v100IncreaseWaveDensity } from "./v100CombatTuning.js";
 import { withClearDrivenAssaultWaves } from "./wavePacing.js";
 import { v100AvailableFormation, v100StageAbsenceReason } from "./v100StageParticipation.js";
@@ -316,6 +316,35 @@ function stageTimeline(stage, missionType, bossKind) {
         units: freeze(["resonator", "spindle", "pall-manta", "anchor-bloom", "choir-knot"]) }),
     ]);
   }
+  if (stage.number >= 27 && stage.number <= 29) {
+    const [knife, shield, smg, commander] = P;
+    const distribution = stage.number === 28;
+    const core = stage.id === V100_RESEARCH_CORE_STAGE;
+    const patrols = distribution ? [
+      ["管制網 // 第1装置への進路", ["resonator", "spindle", "cagewalker"]],
+      ["管制網 // 第2装置の警備", ["choir-knot", "pall-manta", shield]],
+      ["管制網 // 第3装置の警備", ["anchor-bloom", smg, "spindle", "resonator"]],
+      ["管制網 // 最終装置の防衛", [commander, "anchor-bloom", shield, "pall-manta"]],
+    ] : core ? [
+      ["研究中枢 // 国外回線の警備", [knife, shield, smg]],
+      ["研究中枢 // 回線室の増援", [knife, knife, smg]],
+      ["研究中枢 // 回線室の指揮官", [shield, commander, shield, knife]],
+      ["研究中枢 // 原株区画の警報", [knife, smg, shield, smg]],
+      ["研究中枢 // 原株容器の警備", [smg, shield, knife, knife]],
+      ["研究中枢 // 原株区画の最終防衛", [commander, shield, smg, knife, shield]],
+    ] : [
+      ["研究区画 // 正門の隊長が迎撃", [commander, shield, knife]],
+      ["研究区画 // 射撃班が接近", [shield, smg, knife, knife]],
+      ["研究区画 // 搬入口の警備", [smg, smg, knife, shield]],
+      ["研究区画 // 封鎖装置の最終防衛", [commander, shield, smg, knife, shield]],
+    ];
+    return freeze(patrols.map(([label, units], index) => freeze({
+      at: PREP_SECONDS + index * (distribution ? 12 : 18),
+      wave: index + 1, label, units: freeze(units),
+      ...(distribution && index > 0 ? { waitForPriorWaveClear: true, requiredPowerCount: index } : {}),
+      ...(core && index >= 3 ? { requiredResearchTarget: V100_RESEARCH_TARGETS[0].id } : {}),
+    })));
+  }
   if (stage.number === 30) {
     // Establish the defense before revealing Omega. His two later A-only
     // reinforcements follow Omega’s actual injuries, even if the earlier waves take longer.
@@ -362,7 +391,7 @@ function stageTimeline(stage, missionType, bossKind) {
     return freeze({
       at: PREP_SECONDS + index * (stage.number <= 10 ? 20 : 21),
       wave,
-      label: bossArrives ? `警告 // ${bossLabel}` : stage.number === 29 ? `特級研究中枢 // 精鋭第${wave}/6波` : `${stage.displayName} // 第${wave}波`,
+      label: bossArrives ? `警告 // ${bossLabel}` : `${stage.displayName} // 第${wave}波`,
       units: freeze(units),
       ...(bossArrives ? { waitForPriorWaveClear: true } : {}),
       ...(bossArrives ? { bossOnly: false } : {}),
@@ -465,13 +494,13 @@ export function v100BattleDefinitionFor(stageId) {
   const lureControl = stageId === V100_LURE_CONTROL_STAGE;
   const clinicalRescue = stageId === V100_CLINICAL_STAGE;
   const armoryKey = stageId === V100_ARMORY_STAGE;
-  const authoredBossDensity = [24, 25, 30].includes(stage.number);
+  const authoredWaveDensity = [24, 25, 27, 28, 29, 30].includes(stage.number);
   const medicalDefense = stage.number === 25;
   const authoredTimeline = stageTimeline(stage, missionType, bossKind);
   // These two corridor missions have authored patrol size and separation.
   // Their opening must leave time to act on the device or shield evacuees.
   const timeline = lureControl || clinicalRescue ? authoredTimeline : withClearDrivenAssaultWaves(
-    armoryKey || authoredBossDensity ? authoredTimeline : v100IncreaseWaveDensity(authoredTimeline, Object.values(BOSS_KIND_BY_V100_ID), { preserveEscalation: missionType === "escort" }),
+    armoryKey || authoredWaveDensity ? authoredTimeline : v100IncreaseWaveDensity(authoredTimeline, Object.values(BOSS_KIND_BY_V100_ID), { preserveEscalation: missionType === "escort" }),
     missionType);
   const baseMaxHp = V100_VEHICLE.baseHp;
   const station = missionType === "escort"
@@ -496,7 +525,7 @@ export function v100BattleDefinitionFor(stageId) {
     enemyBaseMaxHp: bossKind ? 350 : 1000,
     enemyBaseMode: !medicalDefense && !railEvacuation && !bayEvacuation && !estuaryFloodgate
       && (missionType === "assault" || missionType === "boss-assault") ? "target" : "scenery",
-    startsEnemyBaseVulnerable: lureControl || stage.number === 24,
+    startsEnemyBaseVulnerable: lureControl || stage.number === 24 || stageId === V100_RESEARCH_CORE_STAGE,
     bossUnlocksEnemyBase: !railEvacuation && !bayEvacuation && !estuaryFloodgate && Boolean(bossKind),
     bossEnemyKind: bossKind,
     timeline,

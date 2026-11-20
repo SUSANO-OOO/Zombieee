@@ -852,7 +852,7 @@ type UnitCard = {
   trapDurationMultiplier?: number;
 };
 
-type MissionEvent = { at: number; wave: number; label: string; bossOnly?: boolean; bossHpRatio?: number; escortProgress?: number; waitForPriorWaveClear?: boolean; advanceOnClearAfter?: number; clearDelaySeconds?: number; requiredPowerCount?: number; requiresOpenFloodgate?: boolean; requiresActiveLure?: boolean; units: string[] };
+type MissionEvent = { at: number; wave: number; label: string; bossOnly?: boolean; bossHpRatio?: number; escortProgress?: number; waitForPriorWaveClear?: boolean; advanceOnClearAfter?: number; clearDelaySeconds?: number; requiredPowerCount?: number; requiredResearchTarget?: string; requiresOpenFloodgate?: boolean; requiresActiveLure?: boolean; units: string[] };
 type BattleDefinition = {
   stageId: string;
   operationId: string;
@@ -21541,7 +21541,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             if (mission.bossOnly && !bossAlive) continue;
             g.wave = mission.wave; g.banner = mission.label; g.bannerTime = mission.label.includes("TAKUYA") ? 3.2 : 2.1;
             if (!lureControl && g.definition.missionConfig?.v100StageNumber && g.definition.missionType === "assault"
-              && !g.definition.bossEnemyKind && g.eventIndex === g.definition.timeline.length) {
+              && !g.definition.bossEnemyKind && !g.researchCoreTargets && g.eventIndex === g.definition.timeline.length) {
               g.barricadeVulnerable = true;
               const opening = g.definition.missionConfig.armoryKey ? "指揮車を止める" : "拠点防護解除";
               g.banner = `${mission.label} // ${opening}`;

@@ -10,8 +10,10 @@ const deployed = game => !(game.deployQueue?.length)
   && game.fighters.filter(fighter => fighter.side === 'human' && fighter.hp > 0 && fighter.combatReady).length >= 3;
 
 function objectiveReady(game, mission) {
-  return !Number.isFinite(mission?.requiredPowerCount)
-    || (game.stageMission?.powerActivated ?? 0) >= mission.requiredPowerCount;
+  if (Number.isFinite(mission?.requiredPowerCount)
+    && (game.stageMission?.powerActivated ?? 0) < mission.requiredPowerCount) return false;
+  const targetId = mission?.requiredResearchTarget;
+  return !targetId || game.researchCoreTargets?.some(target => target.id === targetId && target.hp <= 0) === true;
 }
 
 export function campaignWaveReady(game, mission) {

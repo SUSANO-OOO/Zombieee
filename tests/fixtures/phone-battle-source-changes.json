@@ -755,6 +755,14 @@
     [
       "            const telegraph = bossTelegraphSnapshot(fighter, { fallbackTargetX: BASE_X + 48 });",
       "            const telegraph = bossTelegraphSnapshot(fighter, { fallbackTargetX: BASE_X + 48, twinLinkCut: v100TwinLinkIsCut(g) });"
+    ],
+    [
+      "requiredPowerCount?: number; requiresOpenFloodgate?: boolean;",
+      "requiredPowerCount?: number; requiredResearchTarget?: string; requiresOpenFloodgate?: boolean;"
+    ],
+    [
+      "&& !g.definition.bossEnemyKind && g.eventIndex === g.definition.timeline.length) {",
+      "&& !g.definition.bossEnemyKind && !g.researchCoreTargets && g.eventIndex === g.definition.timeline.length) {"
     ]
   ],
   "app/manualAbilities.js": [
