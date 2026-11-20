@@ -178,15 +178,16 @@ function stageTimeline(stage, missionType, bossKind) {
         : stage.number <= 20 ? [4, 5, 5, 6, 6, 7]
           : [5, 5, 6, 6, 7, 8];
     const bridgeEscort = stage.id === V100_BRIDGE_STAGE;
+    const convoyInterception = stage.number === 26;
     const escortMilestones = bridgeEscort ? [.20, .42, .57, 1] : [.2, .45, .7, .88];
     return freeze(counts.map((count, index) => freeze({
       at: PREP_SECONDS + (missionType === "escort" ? index * 12 : Math.round(index * (duration - 15) / 5)),
       wave: index + 1,
       label: missionType === "escort" && index >= 2 ? "護送経路 // 迎撃部隊接近" : `${stage.displayName} // 第${index + 1}波`,
       ...(missionType === "escort" && index >= 2 ? { escortProgress: escortMilestones[index - 2] } : {}),
-      // The five approaches and the crossing pursue the truck in sequence;
-      // a new detachment cannot mass on top of the one still blocking it.
-      ...(bridgeEscort && index >= 2 ? { waitForPriorWaveClear: true } : {}),
+      // Clear the previous detachment before fresh guards reach the convoy.
+      ...((bridgeEscort && index >= 2) || (convoyInterception && index >= 1)
+        ? { waitForPriorWaveClear: true } : {}),
       units: freeze(Array.from({ length: count }, () => pack[cursor++ % pack.length])),
     })));
   }

@@ -170,6 +170,31 @@ test("escort waves wait for travelled distance even after a long stall, then fin
   assert.ok(definition.missionConfig.durationSeconds<105);
 });
 
+test("Stage 26 waits for the previous guards and the convoy milestone", () => {
+  const definition = createBattleDefinition(V100_STAGES[25].id, { v100: true });
+  const g = {
+    definition, eventIndex: 0, time: 1000, stageMission: { progress: .19 },
+    fighters: [], enemySpawn: { nextEntryId: 1, pending: [] },
+  };
+  const queued = [];
+  const advance = () => runMissionEvent(g, queued);
+  advance();
+  assert.deepEqual(queued, [1], "A queued guard holds the second wave");
+  g.enemySpawn.pending = [];
+  g.fighters.push({ kind: "spindle", side: "zombie", hp: 1 });
+  advance();
+  assert.deepEqual(queued, [1], "A live guard still holds the second wave");
+  g.fighters[0].hp = 0;
+  advance();
+  assert.deepEqual(queued, [1, 2]);
+  g.enemySpawn.pending = [];
+  advance();
+  assert.deepEqual(queued, [1, 2], "Clearing the road still requires the convoy to reach 20 percent");
+  g.stageMission.progress = .2;
+  advance();
+  assert.deepEqual(queued, [1, 2, 3]);
+});
+
 test("TAKUYA's two actual reinforcement waves follow HP phases, including a burst defeat", () => {
   for (const burstDefeat of [false, true]) {
     const definition = createBattleDefinition(V100_STAGES[2].id, { v100: true });
