@@ -71,6 +71,22 @@
     [
       "              const available = canActivateManualAbility({\n                fighter,\n                fighters: manualAbilityTargetCandidates(g, fighter),\n              });\n              return {\n                id: fighter.id,\n                kind: fighter.kind,\n                available,",
       "              const target = selectManualAbilityTarget({ owner: fighter, fighters: manualAbilityTargetCandidates(g, fighter) });\n              return {\n                id: fighter.id,\n                kind: fighter.kind,\n                available: target !== null,\n                ...(fighter.kind === \"brute\" && target ? { targetIds: target.targetIds } : {}),"
+    ],
+    [
+      "import {drawV100GateChargeTrail,drawV100KuromeRay} from './v100BossAttackVfx.js';",
+      "import {drawV100GateChargeTrail,drawV100GateChargeWarning,drawV100KuromeRay} from './v100BossAttackVfx.js';"
+    ],
+    [
+      "  // Units reveal the three routes through movement; no lane-map overlay is drawn over the battlefield.",
+      "  if (g.definition.missionConfig.v100StageNumber) drawV100GateChargeWarning(ctx, g, activeLaneCenters, BASE_X + 48);\n\n  // Units reveal the three routes through movement; no lane-map overlay is drawn over the battlefield."
+    ],
+    [
+      "    if (f.combatReady && f.kind !== \"kurome\") drawBossTelegraph(ctx, f, g);",
+      "    if (f.combatReady && f.kind !== \"kurome\"\n      && !(f.kind === \"gate-eater\" && g.definition.missionConfig.v100StageNumber)) drawBossTelegraph(ctx, f, g);"
+    ],
+    [
+      "                  if (victim.side !== \"human\" || victim.hp <= 0 || fighterDistance(victim, f) > 92) continue;\n                  const damage = applyIncomingHumanDamage(g, victim, 34, { attackKind: \"melee\", attacker: f, contactOrigin:chargeContactOrigin }).targetDamage;",
+      "                  if (victim.side !== \"human\" || victim.hp <= 0\n                    || fighterDistance(victim, f) > STATION_ENEMY_TUNING.ticketGateEater.chargeImpactRadius) continue;\n                  const damage = applyIncomingHumanDamage(g, victim, 34, { attackKind: \"melee\", attacker: f, contactOrigin:chargeContactOrigin }).targetDamage;"
     ]
   ]
 }

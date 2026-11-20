@@ -619,7 +619,7 @@ import { drawV100CorporateControl, v100CorporateControlLabel, v100ObjectiveDamag
 import { drawV100AssaultObject, v100AssaultObjectProfile } from "./v100AssaultObjects.js";
 import { drawV100Explosion, drawV100FootDust, drawV100GroundFire, drawV100Muzzle, V100_CONTACT_WEAPONS, V100_CLAW_CONTACT_WEAPONS, queueV100Contact, queueV100ScoutIntercept, queueV100ClawContact, queueV100TakuyaGroundContact, queueV100TataraGroundContact, getV100ClawContactSnapshot, getV100SkillContactSnapshot, queueV100GuardContact, getV100GuardContactSnapshot, drawV100ContactQueue, clearV100ContactQueue } from "./v100CombatVfx.js";
 import { drawV100BossAftermath, drawV100BossReleaseFields } from "./v100BossAftermath.js";
-import {drawV100GateChargeTrail,drawV100KuromeRay} from './v100BossAttackVfx.js';
+import {drawV100GateChargeTrail,drawV100GateChargeWarning,drawV100KuromeRay} from './v100BossAttackVfx.js';
 import {drawV100MaterialParticle} from './v100MaterialParticles.js';
 import { drawV100BossDefeat } from "./v100BossDefeatVfx.js";
 import {drawV100BossDefeatFinales} from "./v100BossDefeatFinaleVfx.js";
@@ -8947,6 +8947,8 @@ function drawWorld(
   if(g.definition.missionConfig.v100StageNumber)drawV100BossDefeatFinales(ctx,stageObjects,g,{viewportWidth:ctx.canvas.clientWidth,viewportHeight:ctx.canvas.clientHeight,worldScale:presentationLayout?.transform.scale??1,density:graphicsProfile.effectDensity});
   if(g.definition.missionConfig.v100StageNumber)drawV100BossReleaseFields(ctx,stageObjects,g,{viewportWidth:ctx.canvas.clientWidth,viewportHeight:ctx.canvas.clientHeight,worldScale:presentationLayout?.transform.scale??1});
 
+  if (g.definition.missionConfig.v100StageNumber) drawV100GateChargeWarning(ctx, g, activeLaneCenters, BASE_X + 48);
+
   // Units reveal the three routes through movement; no lane-map overlay is drawn over the battlefield.
 
   // The Crawler stays behind combatants; only its doorway masks a unit during deployment.
@@ -9296,7 +9298,8 @@ function drawWorld(
     }
     if (renderable.type === "object") { drawBattlefieldSupply(ctx, renderable.object, sprites, allowDiagnosticFallback); continue; }
     const f = renderable.fighter;
-    if (f.combatReady && f.kind !== "kurome") drawBossTelegraph(ctx, f, g);
+    if (f.combatReady && f.kind !== "kurome"
+      && !(f.kind === "gate-eater" && g.definition.missionConfig.v100StageNumber)) drawBossTelegraph(ctx, f, g);
     if (f.combatReady) drawStationEnemyTelegraph(ctx, f, g, stageObjects);
     drawSpriteFighter(ctx, f, sprites, { world: g, v100StageObjects: stageObjects, allowDiagnosticFallback,
       smoothMinification: Boolean(g.definition.missionConfig.v100StageNumber),
@@ -22637,7 +22640,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                   dedupeKey: "boss-skill-impact:" + f.id + ":" + g.time.toFixed(3),
                 });
                 for (const victim of g.fighters) {
-                  if (victim.side !== "human" || victim.hp <= 0 || fighterDistance(victim, f) > 92) continue;
+                  if (victim.side !== "human" || victim.hp <= 0
+                    || fighterDistance(victim, f) > STATION_ENEMY_TUNING.ticketGateEater.chargeImpactRadius) continue;
                   const damage = applyIncomingHumanDamage(g, victim, 34, { attackKind: "melee", attacker: f, contactOrigin:chargeContactOrigin }).targetDamage;
                   victim.flash = Math.max(victim.flash, .18);
                   victim.knock = Math.max(victim.knock, 14);

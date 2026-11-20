@@ -31,6 +31,40 @@ export function drawV100TakuyaGroundRelease(ctx,objects,entry,elapsed){
  ctx.restore();return true;
 }
 
+// The charge stops at its target or when its movement budget runs out.
+// The warning uses the same locked lane, speed, floor and impact radius.
+export function ticketGateEaterImpactPreview(boss,laneCenters,minimumX){
+ const charge=boss?.stationAbility;
+ if(boss?.kind!=='gate-eater'||boss.hp<=0||!boss.combatReady||boss.contained===true
+  ||!['windup','charging'].includes(charge?.phase)||Math.abs(charge.direction)!==1)return null;
+ const {chargeSeconds,chargeSpeed,chargeImpactRadius}=STATION_ENEMY_TUNING.ticketGateEater;
+ const y=laneCenters?.[charge.lockedLane??boss.lane];
+ if(!finite(boss.x,charge.targetX,charge.remainingSeconds,y,minimumX)||charge.remainingSeconds<0)return null;
+ const travelSeconds=charge.phase==='charging'?charge.remainingSeconds:chargeSeconds;
+ const targetDistance=Math.max(0,(charge.targetX-boss.x)*charge.direction);
+ const travel=Math.min(targetDistance,travelSeconds*chargeSpeed);
+ return {x:Math.max(minimumX,boss.x+travel*charge.direction),y,radius:chargeImpactRadius};
+}
+
+export function drawV100GateChargeWarning(ctx,world,laneCenters,minimumX){
+ for(const boss of world.fighters){
+  const impact=ticketGateEaterImpactPreview(boss,laneCenters,minimumX);
+  if(!impact)continue;
+  const {x,y,radius}=impact;
+  const light=ctx.createRadialGradient(x,y,14,x,y,radius);
+  light.addColorStop(0,'rgba(255,163,72,.94)');
+  light.addColorStop(.58,'rgba(243,113,47,.66)');
+  light.addColorStop(.88,'rgba(220,73,30,.40)');
+  light.addColorStop(1,'rgba(220,73,30,0)');
+  ctx.save();
+  ctx.globalCompositeOperation='source-over';
+  ctx.globalAlpha=.46+.08*Math.sin(world.time*14);
+  ctx.fillStyle=light;
+  ctx.fillRect(x-radius,y-radius,radius*2,radius*2);
+  ctx.restore();
+ }
+}
+
 function gateOwners(world,ownerId){
  if(!world||typeof world!=='object'||!Array.isArray(world.fighters)||!Number.isSafeInteger(ownerId))return null;
  const raw=world.battlePresentation?.generation,generation=Number.isFinite(raw)?raw:0;
