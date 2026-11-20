@@ -21869,6 +21869,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               || isBossAnomalyKind(f.kind)
               || isV090InfectedKind(f.kind))
               && f.stationAbility.phase !== "idle") {
+              if (g.definition.missionConfig.v100StageNumber && (bossTelegraphSnapshot(f)?.remainingSeconds ?? 0) > 0) {
+                addDamageText(g, f.x, f.y - 75, "大技を阻止", 1.25, "#ffe4a4");
+              }
               f.stationAbility = createStationAbilityRuntime(f.kind);
               f.abilityCooldown = Math.max(f.abilityCooldown, 1.8);
             }
@@ -25222,14 +25225,12 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         const readyAbilityFighters = g.running && !g.over
           ? g.fighters.filter((fighter) => isManualAbilityReady(fighter))
             .map((fighter) => {
-              const available = canActivateManualAbility({
-                fighter,
-                fighters: manualAbilityTargetCandidates(g, fighter),
-              });
+              const target = selectManualAbilityTarget({ owner: fighter, fighters: manualAbilityTargetCandidates(g, fighter) });
               return {
                 id: fighter.id,
                 kind: fighter.kind,
-                available,
+                available: target !== null,
+                ...(fighter.kind === "brute" && target ? { targetIds: target.targetIds } : {}),
                 x: fighter.x,
                 y: fighter.y,
                 screenX: transform.offsetX + fighter.x * transform.scale,
