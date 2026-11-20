@@ -52,6 +52,9 @@ export default defineConfig(async () => {
         output: {
           // Distribute vendored and dependency copyright/permission notices.
           comments: { legal: true },
+          // A size split can turn the campaign and battle groups into a
+          // cycle. Preserve module initialization order across those chunks.
+          strictExecutionOrder: true,
           codeSplitting: {
             minSize: 40_000,
             maxSize: 450_000,

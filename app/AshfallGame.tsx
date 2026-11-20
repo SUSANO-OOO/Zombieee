@@ -619,10 +619,17 @@ import { drawV100RailEvacuation, hasRailEvacuation, railEvacuationReadout } from
 import { advanceBayEvacuationRuntime, bayEvacuationReadout, drawV100BayEvacuees, hasBayEvacuation, V100_BAY_REFUGEE_COUNT, V100_BAY_ROUTE_Y } from "./v100BayEvacuation.js";
 import { advanceArchiveExtraction, archiveExtractionReadout, drawArchiveExtraction, hasArchiveExtraction,
   stopArchiveErase, ARCHIVE_BOX_COUNT, ARCHIVE_ROUTE_Y, ARCHIVE_TERMINAL_X } from "./v100ArchiveExtraction.js";
+import { bridgeEscortReadout, createBridgeEscortState, hasBridgeEscort,
+  openBridgeGate, BRIDGE_GATE_SECONDS, BRIDGE_GATE_X, BRIDGE_SHOT_FLASH } from "./v100BridgeEscort.js";
+import { drawBridgeEscort } from "./v100BridgeEscortRender.js";
+import { advanceEstuaryFloodgate, beginEstuaryFloodgateClosure, drawEstuaryFloodgate,
+  floodgateClosureProgress, floodgateIngressDisposition, floodgateReadout, hasEstuaryFloodgate,
+  ESTUARY_CROP_TOP, ESTUARY_GATE_SILL_X } from "./v100EstuaryFloodgate.js";
 import { hasRescueControl, rescueControlReadout, V100_RESCUE_CONTROL } from "./v100RescueControl.js";
 import { centralSealCanReinforce, centralSealGateX, centralSealIngressPoint, centralSealReadout, drawV100CentralSealGates, hasCentralSeal } from "./v100CentralSeal.js";
 import { drawV100ClinicalControl } from "./v100ClinicalControl.js";
-import { drawV100CorporateControl, v100CorporateControlLabel, v100ObjectiveDamageLabel, v100CorporateControlCondition } from "./v100CorporateControl.js";
+import { drawV100CorporateControl, hasV100LureControl, v100CorporateControlLabel, v100ObjectiveDamageLabel,
+  v100CorporateControlCondition, v100LureControlAim, v100LureControlReadout, v100LureWaveBlocked } from "./v100CorporateControl.js";
 import { drawV100AssaultObject, v100AssaultObjectProfile } from "./v100AssaultObjects.js";
 import { drawV100Explosion, drawV100FootDust, drawV100GroundFire, drawV100Muzzle, V100_CONTACT_WEAPONS, V100_CLAW_CONTACT_WEAPONS, queueV100Contact, queueV100ScoutIntercept, queueV100ClawContact, queueV100TakuyaGroundContact, queueV100TataraGroundContact, getV100ClawContactSnapshot, getV100SkillContactSnapshot, queueV100GuardContact, getV100GuardContactSnapshot, drawV100ContactQueue, clearV100ContactQueue } from "./v100CombatVfx.js";
 import { drawV100BossAftermath, drawV100BossReleaseFields } from "./v100BossAftermath.js";
@@ -840,7 +847,7 @@ type UnitCard = {
   trapDurationMultiplier?: number;
 };
 
-type MissionEvent = { at: number; wave: number; label: string; bossOnly?: boolean; bossHpRatio?: number; escortProgress?: number; waitForPriorWaveClear?: boolean; advanceOnClearAfter?: number; clearDelaySeconds?: number; requiredPowerCount?: number; units: string[] };
+type MissionEvent = { at: number; wave: number; label: string; bossOnly?: boolean; bossHpRatio?: number; escortProgress?: number; waitForPriorWaveClear?: boolean; advanceOnClearAfter?: number; clearDelaySeconds?: number; requiredPowerCount?: number; requiresOpenFloodgate?: boolean; requiresActiveLure?: boolean; units: string[] };
 type BattleDefinition = {
   stageId: string;
   operationId: string;
@@ -1113,6 +1120,10 @@ type StageMissionRuntime = {
   evacuatedCount?: number;
   evacuationBlocked?: boolean;
   evacuationSettling?: number;
+  bridge?: Omit<ReturnType<typeof createBridgeEscortState>, "gateElapsed"> & { gateElapsed: number | null };
+  gateTimedOut?: boolean;
+  floodgateElapsed?: number | null;
+  floodgateOpenAfterDefeat?: number;
   archiveReady?: boolean;
   archiveStopped?: boolean;
   archiveDistances?: readonly number[];
@@ -1344,6 +1355,7 @@ type AreaEffect = {
   slowMultiplier?: number;
 };
 type AirstrikeRuntime = ReturnType<typeof createEmergencySupportRuntime> & {
+  lureControlTarget?: boolean;
   targetLane: Lane | null;
   targetY?: number | null;
   receiptId?: string;
@@ -8150,7 +8162,7 @@ function drawStageBackground(ctx: CanvasRenderingContext2D, g: Game, background:
     const cropTop = Math.round(background.naturalHeight * .12);
     drawBackground(background, 0, cropTop, background.naturalWidth, background.naturalHeight - cropTop, 0, 0, W, H);
   } else if (g.definition.stageId === CAMPAIGN_STAGE_IDS.ESTUARY_FLOODGATE_SEAL) {
-    const cropTop = Math.round(background.naturalHeight * .18);
+    const cropTop = Math.round(background.naturalHeight * ESTUARY_CROP_TOP);
     drawBackground(background, 0, cropTop, background.naturalWidth, background.naturalHeight - cropTop, 0, 0, W, H);
   } else {
     drawBackground(background, 0, 0, W, H);
@@ -9011,6 +9023,9 @@ function drawWorld(
   }
   if (hasOpaqueStagePlate && background) {
     drawCachedStageBackground(ctx, g, background, staticBackgroundCache, graphicsProfile);
+    if (g.stageMission.floodgateElapsed != null) {
+      drawEstuaryFloodgate(ctx, background, floodgateClosureProgress(g.stageMission), W, H);
+    }
   } else if (allowDiagnosticFallback) drawDiagnosticStationBackground(ctx, g);
   ctx.save();
   ctx.translate(sx, sy);
@@ -9047,6 +9062,10 @@ function drawWorld(
   for (const effect of g.manualAbilityVfx) drawManualAbilityVfx(ctx, effect,Boolean(g.definition.missionConfig.v100StageNumber));
   if (!g.definition.missionConfig.v100StageNumber) for (const fighter of g.fighters) drawCrazyKingAbilityIndicator(ctx, fighter, g.time);
   for (const hazard of g.stationHazards) drawStationHazard(ctx, hazard, g.time);
+  if (g.stageMission.bridge) {
+    drawBridgeEscort(ctx, stageObjects, g.stageMission, escortCartX(g.stageMission, g.definition.missionConfig),
+      activeLaneCenters[1], activeLaneCenters[0] - 9);
+  }
   drawStationMission(ctx, g, stageObjects, allowDiagnosticFallback, true);
   if (hasBayEvacuation(g.definition.missionType, g.definition.missionConfig)) {
     drawV100BayEvacuees(ctx, g.stageMission, stageObjects, activeYForContentY(V100_BAY_ROUTE_Y));
@@ -17058,7 +17077,11 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       return false;
     }
     if (rejectBattleSaveBoundary("airstrike:save-pending")) return false;
-    const placement = correctedBattlefieldTargetForGame(g, { x: requestedX, y: requestedY }, null);
+    const requested = { x: requestedX, y: requestedY };
+    const lureTarget = v100LureControlAim(g, requested, WORLD_GEOMETRY.enemyBase, activeLaneCenters);
+    const placement = lureTarget
+      ? { ok: true, position: lureTarget, requested, legacyLane: 2, adjusted: false, reason: "音響誘導装置" }
+      : correctedBattlefieldTargetForGame(g, requested, null);
     const target = placement.position ?? placement.requested;
     const lane = placement.legacyLane as Lane | null;
     if (!placement.ok || lane === null) {
@@ -17069,16 +17092,22 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     const result = requestAirstrike({
       running: g.running, paused: g.paused, over: g.over, supportGauge: g.supportGauge,
       lane, x: target.x, y: target.y, laneCenters: activeLaneCenters, runtime: g.airstrike,
+      authoredTargetX: lureTarget?.x,
     });
     if (!result.ok) {
       g.banner = placementReasonLabel(result.reason); g.bannerTime = .75; playUiOperationCue("reject", `airstrike:${result.reason}`); return false;
     }
     g.supportGauge = result.supportGauge;
+    const locusReceipt = lureTarget
+      ? `lure-control:${g.resultId}:airstrike:${g.time.toFixed(3)}`
+      : `airstrike:${g.battleAudioGeneration}:${g.time.toFixed(3)}`;
     g.airstrike = {
       ...result.runtime,
-      receiptId: `airstrike:${g.battleAudioGeneration}:${g.time.toFixed(3)}`,
+      lureControlTarget: Boolean(lureTarget),
+      receiptId: locusReceipt,
     } as AirstrikeRuntime;
-    g.banner = placement.adjusted ? "航空支援：近くの攻撃可能な場所を狙います" : "航空支援要請 // 指定地点";
+    g.banner = lureTarget ? "航空支援：音響誘導装置" : placement.adjusted
+      ? "航空支援：近くの攻撃可能な場所を狙います" : "航空支援要請 // 指定地点";
     g.bannerTime = 1; playCue("airstrike-request");
     emitBattleBark(g, "airstrike-request", "guide", "airstrike");
     return true;
@@ -17111,6 +17140,33 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
     g.banner = "遠隔消去を停止";
     g.bannerTime = 1.5;
     playProductionCue(STATION_AUDIO_CUE_IDS.TERMINAL_CONFIRM, ARCHIVE_TERMINAL_X, { priority: 85, maxInstances: 1 });
+  }, [playProductionCue, rejectBattleSaveBoundary]);
+
+  const releaseBridgeBarrier = useCallback(() => {
+    const g = gameRef.current;
+    if (!g.running || g.paused || g.over || g.time < g.definition.prepSeconds
+      || !hasBridgeEscort(g.definition.missionType, g.definition.missionConfig)) return;
+    if (rejectBattleSaveBoundary("bridge-barrier:save-pending")) return;
+    const updated = openBridgeGate(g.stageMission);
+    if (updated === g.stageMission) return;
+    g.stageMission = updated;
+    g.banner = "遮断機を開放　保守車線へ";
+    g.bannerTime = 1.4;
+    playProductionCue(STATION_AUDIO_CUE_IDS.POWER_SWITCH, BRIDGE_GATE_X, { priority: 87, maxInstances: 1 });
+    playProductionCue("radio-open", BRIDGE_GATE_X, { priority: 89, maxInstances: 1 });
+  }, [playProductionCue, rejectBattleSaveBoundary]);
+
+  const closeEstuaryGate = useCallback(() => {
+    const g = gameRef.current;
+    if (!g.running || g.paused || g.over || g.baseHp <= 0
+      || !hasEstuaryFloodgate(g.definition.missionType, g.definition.missionConfig)) return;
+    if (rejectBattleSaveBoundary("estuary-gate:save-pending")) return;
+    const next = beginEstuaryFloodgateClosure(g.stageMission, g.bossDefeated && !g.bossDefeatPending);
+    if (next === g.stageMission) return;
+    g.stageMission = next;
+    g.banner = "防潮門を閉鎖中";
+    g.bannerTime = 1.6;
+    playProductionCue(STATION_AUDIO_CUE_IDS.POWER_SWITCH, ESTUARY_GATE_SILL_X, { priority: 87, maxInstances: 1 });
   }, [playProductionCue, rejectBattleSaveBoundary]);
 
   const triggerDrumAt = useCallback((x: number, y: number) => {
@@ -19798,6 +19854,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       const ctx = canvas?.getContext("2d", BATTLE_CANVAS_CONTEXT_OPTIONS);
       const g = gameRef.current;
       if (!ctx) { requestFrame(); return; }
+      const lureControl = hasV100LureControl(g.definition);
       const performanceCounters = runtimePerformanceRef.current;
       const recordFrameCpu = (simulationFinishedAt: number | null, drawFinishedAt: number | null) => {
         if(cpuEntryAt===null)return;
@@ -21021,6 +21078,17 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             playProductionCue(STATION_AUDIO_CUE_IDS.RESCUE_CONFIRM, BASE_X, { priority: 81, maxInstances: 1 });
           }
         }
+        if (hasEstuaryFloodgate(g.definition.missionType, g.definition.missionConfig) && !g.stageMission.completed
+          && g.baseHp > 0 && g.bossDefeated && !g.bossDefeatPending) {
+          const previous = g.stageMission;
+          g.stageMission = advanceEstuaryFloodgate(previous, dt, true);
+          if (floodgateClosureProgress(previous) < 1 && floodgateClosureProgress(g.stageMission) >= 1) {
+            g.banner = "防潮門 閉鎖完了";
+            g.bannerTime = 2.2;
+            g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.enemyBaseCollapse);
+            playProductionCue(STATION_AUDIO_CUE_IDS.SEAL_ENGAGE, ESTUARY_GATE_SILL_X, { priority: 93, maxInstances: 1 });
+          }
+        }
         const supplyValvePending = hasSupplyValve(g.definition.missionType, g.definition.missionConfig)
           && (g.stageMission.powerActivated ?? 0) < 1;
         const centralSeal = hasCentralSeal(g.definition.missionType, g.definition.missionConfig);
@@ -21052,6 +21120,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             baseHp: g.baseHp,
             escortCount: spatial.escortCount,
             nearbyThreats: spatial.nearbyThreats,
+            bridgeCovered: spatial.bridgeCovered,
+            bridgeApproachSecured: spatial.bridgeApproachSecured,
             contaminated: spatial.contaminated,
             powerOperatorCount: spatial.powerOperatorCount,
             powerLaneThreats: spatial.powerLaneThreats,
@@ -21123,6 +21193,20 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               const sealDoorX = Number(g.definition.missionConfig.sealDoorX ?? W * .9);
               playProductionCue(STATION_AUDIO_CUE_IDS.SEAL_ENGAGE, sealDoorX, { priority: 98, maxInstances: 1 });
               playProductionCue(STATION_AUDIO_CUE_IDS.MACHINE_STOP, sealDoorX, { priority: 90, maxInstances: 1 });
+            }
+          }
+          if (nextMission.bridge) {
+            const previous = g.stageMission.bridge;
+            const cartX = Number(spatial.cartX ?? BRIDGE_GATE_X);
+            if (nextMission.bridge.shotFlash === BRIDGE_SHOT_FLASH && previous?.shotFlash !== BRIDGE_SHOT_FLASH) {
+              playProductionCue("weapon-barrage", BRIDGE_GATE_X, { priority: 89, maxInstances: 1 });
+              playProductionCue("v104-armor-hit", cartX, { priority: 83, maxInstances: 1 });
+              queueV100Contact(g, { x: cartX + 38, y: activeLaneCenters[1] - 41, metal: true, size: 73, direction: -1 });
+              g.shake = Math.max(g.shake, 3);
+            }
+            if (nextMission.bridge.gateElapsed === BRIDGE_GATE_SECONDS
+              && previous?.gateElapsed !== BRIDGE_GATE_SECONDS) {
+              playProductionCue(STATION_AUDIO_CUE_IDS.SEAL_ENGAGE, BRIDGE_GATE_X, { priority: 86, maxInstances: 1 });
             }
           }
           g.stageMission = nextMission;
@@ -21375,6 +21459,18 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         } else {
           while (g.eventIndex < g.definition.timeline.length) {
             const mission = g.definition.timeline[g.eventIndex] as MissionEvent;
+            if (v100LureWaveBlocked(mission, g.barricadeHp)) {
+              g.eventIndex += 1;
+              continue;
+            }
+            if (mission.requiresOpenFloodgate) {
+              const ingress = floodgateIngressDisposition(g.stageMission);
+              if (ingress === "hold") break;
+              if (ingress === "blocked") {
+                g.eventIndex += 1;
+                continue;
+              }
+            }
             const clearDriven = Number.isFinite(mission.clearDelaySeconds);
             if (!campaignWaveReady(g, mission)) break;
             const scheduled = g.time >= mission.at;
@@ -21396,7 +21492,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             const bossAlive = g.fighters.some((fighter) => isBossFighter(fighter) && fighter.hp > 0);
             if (mission.bossOnly && !bossAlive) continue;
             g.wave = mission.wave; g.banner = mission.label; g.bannerTime = mission.label.includes("TAKUYA") ? 3.2 : 2.1;
-            if (g.definition.missionConfig?.v100StageNumber && g.definition.missionType === "assault"
+            if (!lureControl && g.definition.missionConfig?.v100StageNumber && g.definition.missionType === "assault"
               && !g.definition.bossEnemyKind && g.eventIndex === g.definition.timeline.length) {
               g.barricadeVulnerable = true;
               g.banner = `${mission.label} // 拠点防護解除`;
@@ -21431,6 +21527,10 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 announceBossEntrance(g, incomingBossKind, {
                   activateTakuyaScene: incomingBossKind === "takuya",
                 });
+              } else if (mission.requiresActiveLure) {
+                playProductionCue(STATION_AUDIO_CUE_IDS.WARNING, WORLD_GEOMETRY.enemyBase.attackX + 10, {
+                  priority: 96, maxInstances: 1, dedupeKey: `lure-control:${g.resultId}:signal:${mission.wave}`,
+                });
               } else {
                 playCue("wave-contact");
                 emitBattleBark(g, "wave-contact", "guide", `wave-${mission.wave}`);
@@ -21444,6 +21544,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         g.enemySpawn = enemySpawnStep.runtime as EnemySpawnRuntime;
         for (const entry of enemySpawnStep.spawned as EnemySpawnEntry[]) spawnEnemy(g, entry.kind, entry.lane, entry.order, entry);
 
+        let lureHitByAirstrike = false;
         const airstrikeStep = advanceEmergencySupportRuntime(g.airstrike, dt);
         g.airstrike = airstrikeStep.runtime as AirstrikeRuntime;
         if (airstrikeStep.events.includes("targeting")) playCue("airstrike-targeting");
@@ -21452,6 +21553,9 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           const impact = resolveAirstrikeImpact({ runtime: g.airstrike, fighters: g.fighters, laneCenters: activeLaneCenters });
           g.airstrike = impact.runtime as AirstrikeRuntime;
           g.fighters = impact.fighters as Fighter[];
+          if (lureControl && g.airstrike.lureControlTarget && impact.triggered) {
+            lureHitByAirstrike = applyEnemyBaseDamage(g, g.barricadeHp) > 0;
+          }
           for (const hit of impact.hits) {
             const fighter = g.fighters.find((candidate) => candidate.id === hit.id);
             if (fighter) noteV102GoreImpact(g,fighter,{weapon:"aircraft",originX:g.airstrike.targetX??W/2,damage:hit.damage});
@@ -24938,10 +25042,12 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
               && hasRailEvacuation(g.definition.missionType, g.definition.missionConfig);
             const isBayBoss = fighter.kind === g.definition.bossEnemyKind
               && hasBayEvacuation(g.definition.missionType, g.definition.missionConfig);
-            if (twinDefeat.complete && (isOutbreakBoss || isRailBoss || isBayBoss
+            const isFloodgateBoss = fighter.kind === g.definition.bossEnemyKind
+              && hasEstuaryFloodgate(g.definition.missionType, g.definition.missionConfig);
+            if (twinDefeat.complete && (isOutbreakBoss || isRailBoss || isBayBoss || isFloodgateBoss
               || (fighter.kind === g.definition.bossEnemyKind && g.definition.bossUnlocksEnemyBase))) {
               g.bossDefeatPending = true;
-              if (!isOutbreakBoss && !isRailBoss && !isBayBoss) g.barricadeVulnerable = true;
+              if (!isOutbreakBoss && !isRailBoss && !isBayBoss && !isFloodgateBoss) g.barricadeVulnerable = true;
               const defeatedBossName = bossDefinitionForEnemyKind(fighter.kind)?.displayName
                 ?? enemyContentFor(fighter.kind)?.displayName
                 ?? "大型感染体";
@@ -24951,6 +25057,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 ? g.stageMission.completed ? "オオグチ撃破 // 残る敵を倒す" : "オオグチ撃破 // 民間車両を逃がす"
                 : isBayBoss
                 ? g.stageMission.completed ? "クロメ撃破 // 残る敵を倒す" : "クロメ撃破 // 避難路を守る"
+                : isFloodgateBoss
+                ? "ガイレン撃破 // 防潮門を閉める"
                 : v100CorporateControlLabel(g.definition)
                 ? `${defeatedBossName}撃破・防護解除`
                 : g.definition.missionConfig.v100StageNumber === 30
@@ -24973,7 +25081,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                 emitBattleBark(g, "takuya-down", "crawler", "tactical");
               } else if (fighter.kind === "takuya") {
                 if (!emitBattleBark(g, "base-exposed", "crawler", "tactical")) emitBattleBark(g, "takuya-down", "crawler", "tactical");
-              } else if (!isRailBoss && !isBayBoss) {
+              } else if (!isRailBoss && !isBayBoss && !isFloodgateBoss) {
                 emitBattleBark(g, "base-exposed", "crawler", "tactical");
               }
             } else if (fighter.kind === "gate-eater"
@@ -25202,6 +25310,29 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           RENDER_ARRAY_LIMITS.damageTexts,
         );
 
+        if (lureControl && g.barricadeHp <= 0) {
+          if (g.enemyBaseCollapse === 0) {
+            const ownerId = `lure-control:${g.resultId}`;
+            const receiptId = `${ownerId}:break`;
+            const x = WORLD_GEOMETRY.enemyBase.attackX + 10;
+            g.banner = "音響誘導装置 停止";
+            g.bannerTime = 2.4;
+            g.shake = triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.enemyBaseCollapse);
+            if (!lureHitByAirstrike) {
+              addSemanticBattlePresentation(g, {
+                semantic: "explosion-result", receiptId, ownerId, kind: "explosion",
+                scale: "large", x, y: activeLaneCenters[2] + 4,
+              });
+              playBattleSemanticCue("support-explosion", x, {
+                semantic: "explosion-result", receiptId, ownerId, priority: 100,
+                cooldownMs: 0, maxInstances: 1, dedupeKey: receiptId,
+              });
+            }
+          }
+          g.enemyBaseCollapse = advanceEnemyBaseCollapse({
+            barricadeHp: g.barricadeHp, elapsed: g.enemyBaseCollapse, seconds: dt,
+          }).elapsed;
+        }
         dispatchSituationalBattleBarks(g);
         if (!g.survivalRun) dispatchBattleStoryEvents(g);
         const bossActiveOrIncoming = g.fighters.some((fighter) => isBossFighter(fighter)
@@ -25240,12 +25371,14 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           // A simultaneous collapse is a loss: protecting the crawler always remains mandatory.
           g.won = outcome === "won";
           const enemyBaseDestroyed = g.barricadeHp <= 0;
-          g.shake = enemyBaseDestroyed ? triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.enemyBaseCollapse) : createCameraShakeRuntime();
-          g.enemyBaseCollapse = 0;
+          if (!lureControl) {
+            g.shake = enemyBaseDestroyed ? triggerCameraShake(g.shake, CAMERA_SHAKE_EVENTS.enemyBaseCollapse) : createCameraShakeRuntime();
+            g.enemyBaseCollapse = 0;
+          }
           emitBattleBark(g, g.won ? "victory" : "defeat", "guide", "tactical");
           g.over = true;
           const resultPresentationPending = battleResultPresentationPending(g.battlePresentation, {
-            enemyBaseCollapsePending: enemyBaseDestroyed,
+            enemyBaseCollapsePending: enemyBaseDestroyed && g.enemyBaseCollapse < ENEMY_BASE_COLLAPSE_SECONDS,
           });
           g.resultPresented = !resultPresentationPending;
           if (!resultPresentationPending) {
@@ -25288,7 +25421,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           }
           chooseAction(null);
           stopMusic();
-          if (enemyBaseDestroyed) {
+          if (enemyBaseDestroyed && !lureControl) {
             addSemanticBattlePresentation(g, {
               semantic: "explosion-result",
               receiptId: `enemy-base:${g.resultId}:collapse`,
@@ -25554,9 +25687,15 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
   const bayHud = hasBayEvacuation(gameRef.current.definition.missionType, gameRef.current.definition.missionConfig)
     ? bayEvacuationReadout(gameRef.current.stageMission) : null;
   const archiveGame = gameRef.current;
+  const lureControlHud = hasV100LureControl(archiveGame.definition) ? v100LureControlReadout(archiveGame) : null;
   const archiveHud = hasArchiveExtraction(archiveGame.definition.missionType, archiveGame.definition.missionConfig)
     ? archiveExtractionReadout(archiveGame.stageMission, Math.max(0, Math.ceil((archiveGame.definition.defenseEndAt ?? archiveGame.time) - archiveGame.time))) : null;
-  const phaseName = archiveHud ? archiveHud.phaseLabel
+  const bridgeHud = archiveGame.stageMission.bridge ? bridgeEscortReadout(archiveGame.stageMission) : null;
+  const floodgateHud = hasEstuaryFloodgate(archiveGame.definition.missionType, archiveGame.definition.missionConfig)
+    ? floodgateReadout(archiveGame.stageMission, archiveGame.bossDefeated && !archiveGame.bossDefeatPending) : null;
+  const phaseName = floodgateHud ? floodgateHud.label
+    : bridgeHud ? bridgeHud.label
+    : archiveHud ? archiveHud.phaseLabel
     : bayHud ? bayHud.phaseLabel
     : railHud ? railHud.phaseLabel
     : centralSealHud ? centralSealHud.phaseLabel
@@ -25702,7 +25841,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
         aria-label="西新世紀末物語 ゲーム"
       >
         <canvas ref={canvasRef} width={W} height={H} className={`battlefield ${selectedAction ? "targeting" : ""} ${screen === "battle" && assetsReady && !assetError ? "active" : "inactive"}`} aria-label="連続座標の戦場" aria-hidden={screen !== "battle" || !assetsReady || assetError} onPointerMove={handleBattlefieldPointerMove} onPointerDown={handleBattlefieldPointerDown} onPointerUp={handleBattlefieldPointerUp} onPointerCancel={handleBattlefieldPointerCancel} onLostPointerCapture={handleBattlefieldLostPointerCapture} />
-        {externalSessionActive && screen === "battle" && selectedAction === "airstrike" && !paused && !end && <div className="v100-targeting-guide" role="status">戦場をタップして航空支援<span>航空支援をもう一度押すと取り消し</span></div>}
+        {externalSessionActive && screen === "battle" && selectedAction === "airstrike" && !paused && !end && <div className="v100-targeting-guide" role="status">{lureControlHud && !lureControlHud.stopped ? "装置か敵をタップして航空支援" : "戦場をタップして航空支援"}<span>航空支援をもう一度押すと取り消し</span></div>}
         {externalSession && (!assetsReady || assetError) && <V100BattleDeparture
           session={externalSession} progress={assetReadiness} assetError={assetError}
           background={backgroundCacheRef.current[activeBattlefieldVisualId]}
@@ -25816,7 +25955,29 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           </div>
           {hud.bossTelegraphWarning && !end && <div className="v100-boss-telegraph-warning" role="alert" data-boss-telegraph-warning="true">{formatBattleText(hud.bossTelegraphWarning)}</div>}
 
-          {archiveHud ? (!end && <section className="health-hud barrier-health archive-objective"
+          {lureControlHud ? (!end && <section className="health-hud barrier-health v100-control-health lure-control-health"
+            data-lure-state={lureControlHud.stopped ? "stopped" : "active"} aria-label={`${enemyBaseLabel} ${lureControlHud.status}`}>
+            <div><span>{enemyBaseLabel}</span><b>{lureControlHud.stopped ? "停止" : `${Math.ceil(hud.barricadeHp)} / ${hud.barricadeMaxHp}`}</b></div>
+            <i aria-hidden="true"><em style={{ width: `${barricadePct}%` }} /></i>
+            <small>{lureControlHud.status}</small>
+          </section>) : floodgateHud ? (!end && <section className="health-hud barrier-health floodgate-objective"
+            data-floodgate-phase={floodgateHud.phase} aria-label="防潮門の閉鎖盤">
+            <div><span>防潮門</span><b>{floodgateHud.label}</b></div>
+            {(floodgateHud.phase === "blocked" || floodgateHud.phase === "ready") &&
+              <button type="button" className="floodgate-action" onClick={closeEstuaryGate}
+                disabled={floodgateHud.phase !== "ready" || paused || Boolean(battleSaveBoundaryRef.current)}>防潮門を閉める</button>}
+            {(floodgateHud.phase === "closing" || floodgateHud.phase === "sealed") &&
+              <i aria-hidden="true"><em style={{ width: `${floodgateHud.progress * 100}%` }} /></i>}
+          </section>) : bridgeHud ? (!end && <section className="health-hud barrier-health bridge-objective"
+            data-bridge-phase={bridgeHud.phase} aria-label="海浜連絡橋の遮断機">
+            <div><span>遮断機</span><b>{bridgeHud.status}</b></div>
+            <div className="bridge-convoy-integrity"><span>搬送車</span>
+              <b>{Math.ceil(archiveGame.stageMission.integrity ?? 0)} / {archiveGame.stageMission.maxIntegrity}</b></div>
+            {(bridgeHud.phase === "hold" || bridgeHud.phase === "aim" || bridgeHud.phase === "ready")
+              && <button type="button" className="bridge-barrier-action" onClick={releaseBridgeBarrier}
+                disabled={bridgeHud.phase !== "ready" || paused || Boolean(battleSaveBoundaryRef.current)}>遮断機を開ける</button>}
+            {bridgeHud.phase === "open" && <i><em style={{ width: `${(bridgeHud.remaining ?? 0) / BRIDGE_GATE_SECONDS * 100}%` }} /></i>}
+          </section>) : archiveHud ? (!end && <section className="health-hud barrier-health archive-objective"
             data-archive-phase={archiveHud.phase} data-archive-delivered={archiveHud.count} aria-label="紙台帳の搬出">
             <div><span>紙台帳</span><b>{archiveHud.count}/{ARCHIVE_BOX_COUNT} 箱</b></div>
             {archiveHud.phase === "erasing" || archiveHud.phase === "ready"

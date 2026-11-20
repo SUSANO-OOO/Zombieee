@@ -12,8 +12,9 @@ import { researchCoreComplete, researchCoreObjective } from "./v100ResearchCore.
 import { hasRailEvacuation } from "./v100RailEvacuation.js";
 import { bayEvacuationObjective, hasBayEvacuation } from "./v100BayEvacuation.js";
 import { archiveExtractionReadout, hasArchiveExtraction } from "./v100ArchiveExtraction.js";
+import { floodgateReadout, hasEstuaryFloodgate } from "./v100EstuaryFloodgate.js";
 import { v100DefenseStatus } from "./v100DefenseObjectives.js";
-import { v100CorporateControlLabel } from "./v100CorporateControl.js";
+import { hasV100LureControl, v100CorporateControlLabel, V100_LURE_CONTROL_OBJECTIVE } from "./v100CorporateControl.js";
 
 const PHASE_SCHEDULES = Object.freeze({
   assault: Object.freeze([
@@ -148,6 +149,9 @@ export function phaseBannerForBattle(definition, phase) {
 }
 
 export function objectiveForBattle(definition, state) {
+  if (hasV100LureControl(definition)) {
+    return state.barricadeHp <= 0 ? "残る敵を倒して試験棟への道を開く" : V100_LURE_CONTROL_OBJECTIVE;
+  }
   const control = v100CorporateControlLabel(definition);
   if (control) {
     if (state.barricadeHp <= 0) return `${control}を破壊した`;
@@ -161,6 +165,9 @@ export function objectiveForBattle(definition, state) {
   if (definition.missionConfig?.v100StageNumber === 29) return researchCoreObjective(state.researchCoreTargets);
   if ([3, 30].includes(definition.missionConfig?.v100StageNumber)) {
     return state.bossDefeated ? "残存感染体を掃討" : definition.objective;
+  }
+  if (hasEstuaryFloodgate(definition.missionType, definition.missionConfig)) {
+    return floodgateReadout(state.stageMission, state.bossDefeated === true && state.bossDefeatPending !== true).objective;
   }
   if (hasArchiveExtraction(definition.missionType, definition.missionConfig)) {
     const remaining = Math.max(0, Math.ceil(definition.defenseEndAt - state.time));
@@ -187,6 +194,7 @@ export function objectiveForBattle(definition, state) {
       if (definition.missionConfig?.convoyInterception === true) {
         return "冷蔵車3台を確保。敵を倒して守れ";
       }
+      if (definition.missionConfig?.bridgeEscort === true) return "搬送車は対岸に到着。残る敵を倒して守れ";
       const target = definition.missionConfig?.targetLabel || "保守台車";
       return `${target}は到着。残る敵を倒して守れ`;
     }
@@ -248,6 +256,10 @@ export function battleOutcomeFor(definition, state) {
     : definition.baseMaxHp;
   const clearRatio = definition.starThresholds?.[1] ?? 0;
   const hasClearHp = Number(state.baseHp) / baseMaxHp >= clearRatio;
+  if (hasEstuaryFloodgate(definition.missionType, definition.missionConfig)) {
+    if (!state.stageMission?.completed || state.bossDefeated !== true || state.bossDefeatPending === true || state.wavesResolved !== true) return null;
+    return hasClearHp ? "won" : "lost";
+  }
   if (hasRailEvacuation(definition.missionType, definition.missionConfig) || hasBayEvacuation(definition.missionType, definition.missionConfig)) {
     if (state.stageMission?.failed) return "lost";
     if (!state.stageMission?.completed || state.bossDefeated !== true || state.bossDefeatPending === true || state.wavesResolved !== true) return null;
@@ -267,6 +279,7 @@ export function battleOutcomeFor(definition, state) {
     && (state.bossDefeated !== true || state.barricadeVulnerable !== true)) return null;
   if (hasSupplyValve(definition.missionType, definition.missionConfig)
     && !(state.stageMission?.powerActivated >= 1)) return null;
+  if (hasV100LureControl(definition) && state.wavesResolved !== true) return null;
   const assaultOutcome = battleOutcome(state.baseHp, state.barricadeHp);
   return assaultOutcome === "won" && !hasClearHp ? "lost" : assaultOutcome;
 }

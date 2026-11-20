@@ -32,11 +32,19 @@ test('fractional reinforcements increase a whole timeline moderately without dup
  assert.equal(next[2],timeline[2]);assert.equal(next[3],timeline[3]);
 });
 
-test('every production stage uses the denser timeline while single and paired boss identities remain fixed',()=>{
+test('production keeps ordered time rules and boss identities with an authored conditional floodgate ingress',()=>{
  for(const stage of V100_STAGES){
   const definition=v100BattleDefinitionFor(stage.id),timeline=definition.timeline;
   assert.ok(timeline.length>0);
-  assert.ok(timeline.every((event,index)=>index===0||event.at>timeline[index-1].at));
+  const timed = timeline.filter(event=>!event.requiresOpenFloodgate);
+  assert.ok(timed.every((event,index)=>index===0||event.at>timed[index-1].at));
+  assert.equal(timeline.length-timed.length,stage.number===20?1:0);
+  if(stage.number===20){
+    const ingress=timeline.at(-1);
+    assert.equal(ingress.requiresOpenFloodgate,true);
+    assert.equal(ingress.at,definition.prepSeconds);
+  }
+  if(stage.number===21)assert.deepEqual(timeline.map(event=>event.units.length),[3,2,4,4,5]);
   if(definition.bossEnemyKind)assert.equal(timeline.flatMap(w=>w.units).filter(k=>k===definition.bossEnemyKind).length,stage.number===24?2:1,stage.displayName);
  }
  const before=v100BattleDefinitionFor(V100_STAGES[0].id).timeline;

@@ -918,7 +918,8 @@ export function createEmergencySupportRuntime(v100 = false) {
     ...(v100 ? { v100: true, cooldownRemaining: 0 } : {}) };
 }
 
-export function airstrikePlacementCheck({ running, paused, over, supportGauge, lane, x, y, laneCenters = LANE_Y, runtime = createEmergencySupportRuntime() }) {
+export function airstrikePlacementCheck({ running, paused, over, supportGauge, lane, x, y,
+  laneCenters = LANE_Y, runtime = createEmergencySupportRuntime(), authoredTargetX = undefined }) {
   if (runtime.v100 && !Number.isFinite(supportGauge)) return { ok: false, reason: "支援ゲージが無効です" };
   if (!running) return { ok: false, reason: "戦闘開始後に要請できます" };
   if (paused) return { ok: false, reason: "一時停止中は要請できません" };
@@ -931,14 +932,15 @@ export function airstrikePlacementCheck({ running, paused, over, supportGauge, l
   if (internalLane === null || !Number.isFinite(targetY) || !Number.isFinite(x)) {
     return { ok: false, reason: "目標地点が無効です" };
   }
-  if (x < AIRSTRIKE_DEF.minX || x > AIRSTRIKE_DEF.maxX) {
+  if (x < AIRSTRIKE_DEF.minX || (x > AIRSTRIKE_DEF.maxX && x !== authoredTargetX)) {
     return { ok: false, reason: "航空支援の有効範囲外です" };
   }
   return { ok: true, reason: "航空支援目標", targetX: x, targetY, internalLane };
 }
 
-export function requestAirstrike({ running, paused, over, supportGauge, lane, x, y, laneCenters = LANE_Y, runtime = createEmergencySupportRuntime() }) {
-  const check = airstrikePlacementCheck({ running, paused, over, supportGauge, lane, x, y, laneCenters, runtime });
+export function requestAirstrike({ running, paused, over, supportGauge, lane, x, y,
+  laneCenters = LANE_Y, runtime = createEmergencySupportRuntime(), authoredTargetX = undefined }) {
+  const check = airstrikePlacementCheck({ running, paused, over, supportGauge, lane, x, y, laneCenters, runtime, authoredTargetX });
   if (!check.ok) return { ...check, supportGauge, runtime };
   return {
     ok: true,

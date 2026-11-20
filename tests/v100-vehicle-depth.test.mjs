@@ -21,11 +21,12 @@ test('deferred ground pass paints markers and shadows but no duplicate vehicle b
  for(const stage of [6,12,19,26]){
   const g=game(stage),ctx=context();
   assert.equal(drawV100MissionVehicles(ctx,g,objects,500,285,{deferBodies:true}),true);
-  assert.equal(ctx.calls.filter(c=>c[0]==='image').length,1,'only the destination marker in ground pass');
+  const markers=stage===19?0:1; // The bridge paints its separate gate and far shore.
+  assert.equal(ctx.calls.filter(c=>c[0]==='image').length,markers,'ground pass contains no vehicle bodies');
   const placements=v100MissionVehiclePlacements(g,500,285);
   assert.equal(ctx.calls.filter(c=>c[0]==='shadow').length,placements.length);
   for(const p of placements)drawV100MissionVehicleBody(ctx,p,objects);
-  assert.equal(ctx.calls.filter(c=>c[0]==='image').length,1+placements.length);
+  assert.equal(ctx.calls.filter(c=>c[0]==='image').length,markers+placements.length);
   const full=context();drawV100MissionVehicles(full,g,objects,500,285);
   assert.deepEqual(ctx.calls.filter(c=>c[0]==='image'),full.calls.filter(c=>c[0]==='image'),'standalone audits keep identical authored body frames');
  }

@@ -10,7 +10,7 @@ test('all four escort destinations keep the remaining defence visible until the 
   const stageMission={...createStationMissionRuntime('escort',definition.missionConfig),progress:1,completed:true,integrity:300};
   const state={stageMission,baseHp:680,wavesResolved:false,over:false};
   assert.equal(battleOutcomeFor(definition,state),null);
-  assert.match(objectiveForBattle(definition,state),number===26 ? /^冷蔵車3台を確保。敵を倒して守れ$/ : /は到着。残る敵を倒して守れ$/);
+  assert.match(objectiveForBattle(definition,state),number===26 ? /^冷蔵車3台を確保。敵を倒して守れ$/ : /は(?:対岸に)?到着。残る敵を倒して守れ$/);
   assert.equal(battleOutcomeFor(definition,{...state,wavesResolved:true}),'won');
   assert.doesNotMatch(objectiveForBattle(definition,{...state,wavesResolved:true,over:true}),/倒して守れ/);
   assert.doesNotMatch(objectiveForBattle(definition,{...state,stageMission:{...stageMission,failed:true,completed:false,integrity:0}}),/倒して守れ/);
