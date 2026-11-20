@@ -5,7 +5,7 @@ import vm from "node:vm";
 import ts from "typescript";
 import {beginV102GoreStep,finishV102GoreStep,noteV102GoreImpact,noteV102GorePeriodicDamage,getV102GoreSnapshot} from '../app/v102CombatGore.js';
 import {advanceAreaEffects} from '../app/gameRules.js';
-import {battleVoiceReady} from '../app/v104CombatAudio.js';
+import {battleVoiceReady,v104EnemyContactAudio} from '../app/v104CombatAudio.js';
 import {weaponCueForUnit,LEGACY_SFX_CUE_MAP} from '../app/productionAudio.js';
 import {
   advancePendingWeaponHits,
@@ -18,6 +18,13 @@ const source = await readFile(process.env.QUALITY_BURST_AUDIO_SOURCE ?? new URL(
 const tree = ts.createSourceFile("AshfallGame.tsx", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
 const found = [];
 function walk(node) {
+  if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.name.text === "playEnemyContactCue") {
+    assert.ok(ts.isCallExpression(node.initializer));
+    assert.equal(node.initializer.expression.getText(tree), "useCallback");
+    const [callback] = node.initializer.arguments;
+    assert.ok(ts.isArrowFunction(callback));
+    found.push(["enemy-contact-cue", callback]);
+  }
   if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.name.text === 'committedAttackSequence') found.push(['committed-sequence',node]);
   if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.name.text === 'sharedEvent'
     && ts.isObjectLiteralExpression(node.initializer)
@@ -59,7 +66,10 @@ const direct = textFor("direct");
 const compile = (body) => ts.transpileModule(`${helper}\n${body}`, {
   compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext },
 }).outputText;
-const dispatchCode = compile(dispatch);
+// Some comparison fixtures predate the shared contact cue.
+const dispatchCode = compile(dispatch.includes("playEnemyContactCue(")
+  ? "const playEnemyContactCue = " + textFor("enemy-contact-cue") + ";\n" + dispatch
+  : dispatch);
 const directCode = compile(direct);
 
 const observation = (mode) => ({
@@ -115,6 +125,7 @@ function runContact(mode, options = {}) {
   const record = (kind) => (...args) => { effects.push([kind, ...args]); };
   const context = {
     battleVoiceReady,
+    v104EnemyContactAudio,
     noteV102GoreImpact,
     g, pendingWeaponStep: { due: hits }, canceledWeaponTransactions: new Set(),
     createCompletedAttackImpactReceipt, cancelPendingWeaponTransaction,
