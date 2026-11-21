@@ -143,7 +143,7 @@ test("sortie threats describe enemies that actually enter the stage, including t
     }
   }
   const fifth = v100MissionThreatsFor(V100_STAGES[4].id);
-  assert.ok(fifth.some(threat => threat.id === "sprinter" && threat.purpose.includes("固有技")));
+  assert.ok(fifth.some(threat => threat.id === "sprinter" && threat.purpose.includes("手動アビリティ")));
 });
 
 test("the ending song is the official original and one optional offline asset with attribution", async () => {
