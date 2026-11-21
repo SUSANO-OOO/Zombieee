@@ -31,6 +31,9 @@ export function v105CurrentAbilitySample(owner,base,{manualDefinition,anomaly,ku
     // Defensive/buff active time permits normal walking and attacks. Only an
     // actual stationary guard gets a braced pose; its limbs remain animated.
     if(['active','feral'].includes(m.phase)){
+      if(owner.kind==='crazy-king'&&m.phase==='active'&&['wind-up','active','recovery'].includes(base.requestedState)){
+        return {...base,abilityPresentation:'chainsaw-overdrive'};
+      }
       if(!['guardian','kumaverson'].includes(owner.kind)||owner.animationPresentation?.moving||owner.attack>0||owner.attackWindup>0)return null;
       return sample(base,'active',.2+.02*Math.sin((m.abilityElapsed??0)*5),'guard');
     }

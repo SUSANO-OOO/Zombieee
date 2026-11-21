@@ -16,16 +16,17 @@ const rest = { requestedState: 'idle', clipProgress: 0 };
 const locomotion = { locomotionPhase: .2, locomotionSettle: 1 };
 const started = beginManualAbility(createManualAbilityRuntime(kind), { x: 100, y: 0 });
 
-function sample(manualAbility) {
+function sample(manualAbility, base = rest) {
   return v105CurrentAbilitySample(
     { kind, side: 'human', hp: 100, combatReady: true, manualAbility },
-    rest,
+    base,
     { manualDefinition: definition },
   );
 }
 
-function paintedPose(motion) {
-  const plan = v177JointPose(kind, motion, locomotion, { grounded: true });
+function paintedPose(motion, manualAbility) {
+  const actor = manualAbility ? { kind, manualAbility } : undefined;
+  const plan = v177JointPose(kind, motion, locomotion, { grounded: true, actor });
   return v177CaptureJointPose(kind, plan).upper;
 }
 
@@ -51,7 +52,32 @@ test('King prepares Overdrive low with both hands, then returns control to comba
 
   const activated = advanceManualAbility(started.runtime, definition.windupSeconds + .001);
   assert.deepEqual(activated.events.map(event => event.type), ['active-start']);
-  assert.equal(sample(activated.runtime), null, 'The active buff allows regular attack and movement poses');
+  assert.equal(sample(activated.runtime), null, 'The active buff allows regular movement and idle poses');
+});
+
+test('Overdrive powers a low attack without changing the attack clock or releasing either grip', () => {
+  const active = advanceManualAbility(started.runtime, definition.windupSeconds + .1).runtime;
+  const base = { requestedState: 'wind-up', clipProgress: .72, movement: false };
+  const cutting = sample(active, base);
+  assert.deepEqual(cutting, { ...base, abilityPresentation: 'chainsaw-overdrive' });
+  assert.equal(sample(active, { requestedState: 'move', clipProgress: .4 }), null);
+  const ordinary = paintedPose(base);
+  const powered = paintedPose(cutting, active);
+  const bladeTip = pose => point(pose[rig.weaponBone], rig.muzzle);
+  assert.ok(bladeTip(powered)[1] > bladeTip(ordinary)[1] + 80, 'the powered cut loads at waist height');
+
+  for (const state of ['wind-up', 'active', 'recovery']) {
+    for (let frame = 0; frame < 12; frame += 1) {
+      const pose = paintedPose(sample(active, { requestedState: state, clipProgress: frame / 12 }), active);
+      for (const arm of rig.armConstraints) {
+        const wrist = point(pose[arm.lowerBone], arm.wrist);
+        const heldWrist = point(pose[arm.effectorBone], arm.effectorWrist ?? arm.wrist);
+        assert.ok(Math.hypot(wrist[0] - heldWrist[0], wrist[1] - heldWrist[1]) < 1e-7);
+      }
+    }
+  }
+  const ended = paintedPose(cutting, { ...active, activeRemaining: 0 });
+  assert.deepEqual(ended, ordinary);
 });
 
 test('The saw remains attached to both wrists throughout the rev and rejoins the ready pose', () => {
