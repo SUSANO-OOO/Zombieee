@@ -587,14 +587,37 @@ async function storedHashes() {
   return hashes;
 }
 
-/**
- * Bytes held for the retained generations.
- *
- * Derived from the manifests rather than by reading every cache entry: the pack
- * is over 500 files, and this runs at boot, so opening each stored response
- * just to read its content-length made startup pay hundreds of cache reads.
- * Each hash is counted once, which matches how the download is sized.
- */
+async function storedManifestHashes(state, candidateHashes) {
+  const hashes = new Set();
+  for (const manifest of [state.active, state.previous]) {
+    if (!Array.isArray(manifest?.assets)) continue;
+    for (const asset of manifest.assets) {
+      if (typeof asset?.hash === "string") hashes.add(asset.hash);
+    }
+  }
+  if (Array.isArray(candidateHashes)) {
+    for (const hash of candidateHashes) {
+      if (typeof hash === "string" && /^sha256-[0-9a-f]{64}$/u.test(hash)) hashes.add(hash);
+    }
+  }
+
+  // A cold Cache.keys() can stall even while reads by exact key work. Check
+  // only the known manifests at startup, without reading asset bodies or
+  // treating the committed manifest itself as proof that bytes still exist.
+  const cache = await caches.open(ASSET_CACHE);
+  const possible = [...hashes];
+  const present = new Set();
+  for (let offset = 0; offset < possible.length; offset += 16) {
+    const group = possible.slice(offset, offset + 16);
+    const responses = await Promise.all(group.map(hash => cache.match(assetCacheKey(hash))));
+    for (const [index, response] of responses.entries()) {
+      if (response?.ok) present.add(group[index]);
+    }
+  }
+  return present;
+}
+
+/** Bytes held for the retained generations, with each stored hash counted once. */
 function usageBytesFor(state, present) {
   const counted = new Set();
   let bytes = 0;
@@ -638,7 +661,9 @@ self.addEventListener("message", (event) => {
         // shell warm merely because the page is confirming its local pack.
         await stateMutationTail;
         const state = await readState();
-        const present = await storedHashes();
+        const present = message.checkManifestAssets === true && Array.isArray(state.active?.assets) && state.active.assets.length > 0
+          ? await storedManifestHashes(state, message.candidateHashes)
+          : await storedHashes();
         // The whole manifest, assets included. The page needs the installed
         // asset list to plan a repair and to diff an update; summarising it to
         // version and SHA would make every update look like a full reinstall.

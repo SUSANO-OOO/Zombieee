@@ -286,6 +286,27 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
     try {
       const published = await fetchPublishedManifest({ baseUrl });
       if (manifestLookupRef.current !== lookup) return false;
+
+      // Startup knows which committed assets exist. Check a different
+      // published manifest as well, so previously downloaded update bytes
+      // still count towards the next download and its storage estimate.
+      const registration = registrationRef.current;
+      const installed = installedManifestRef.current;
+      if (registration && installed && installed.releaseSha !== published.releaseSha) {
+        const inventory = await requestFromServiceWorker(registration, {
+          type: "pwa:get-state",
+          checkManifestAssets: true,
+          candidateHashes: published.assets.map((asset: { hash: string }) => asset.hash),
+        });
+        if (manifestLookupRef.current !== lookup) return false;
+        if (inventory?.type === "pwa:state"
+          && inventory.active?.releaseSha === installed.releaseSha
+          && installedManifestRef.current?.releaseSha === installed.releaseSha
+          && Array.isArray(inventory.storedHashes)) {
+          setStoredHashes(new Set<string>(inventory.storedHashes));
+        }
+      }
+
       const gameMounted = Boolean(document.documentElement.dataset.pwaScreen);
       if (deferredManifestLookupRef.current === lookup || (gameMounted && !evaluateActivationSafety(readSafetyFromDocument()).safe)) {
         setManifestUnreachable(false);
@@ -335,7 +356,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
             if (!cancelled) setRegistrationError(`${cause?.name ?? "Error"}: ${cause?.message ?? cause}`);
           },
         }),
-        readState: (registration: ServiceWorkerRegistration, options: { timeoutMs: number; signal: AbortSignal }) => requestFromServiceWorker(registration, { type: "pwa:get-state" }, options),
+        readState: (registration: ServiceWorkerRegistration, options: { timeoutMs: number; signal: AbortSignal }) => requestFromServiceWorker(registration, { type: "pwa:get-state", checkManifestAssets: true }, options),
         readHashes: () => store.storedHashes(),
       });
       if (cancelled) return;
@@ -358,7 +379,8 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
       // plans repairs and update diffs from it, and a summary would both crash
       // the plan and make an update look like a full reinstall.
       if (Array.isArray(state?.active?.assets) && state.active.assets.length > 0) {
-        setInstalledManifest(state.active as Manifest);
+        installedManifestRef.current = state.active as Manifest;
+        setInstalledManifest(installedManifestRef.current);
       }
       if (Array.isArray(state?.previous?.assets) && state.previous.assets.length > 0) {
         setPreviousManifest(state.previous as Manifest);
@@ -1003,7 +1025,7 @@ export function PwaGate({ children }: { children: React.ReactNode }) {
             <header className="pwa-edition-heading"><h1>西新世紀末物語</h1><span>スマホ版・ゲーム本体の保存</span></header>
             {bootFailure && <><h2>保存中のゲームデータを確認できませんでした</h2><p role="alert">データは削除していません。もう一度、保存内容を確認してください。</p><button type="button" className="pwa-primary" onClick={() => { setBooted(false); setBootFailure(false); setPublishedChecked(false); setError(null); setBootAttempt(value => value + 1); }}>保存内容を再確認</button></>}
 
-            {!bootFailure && phase === "install-required" && !installCopy && (
+            {!bootFailure && !settling && phase === "install-required" && !installCopy && (
               <>
                 <h2>ゲームデータを準備できません</h2>
                 <p className="pwa-warning" role="alert">
