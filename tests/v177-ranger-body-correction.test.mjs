@@ -5,7 +5,7 @@ import ts from 'typescript';
 import {enforceBossBodyBarrier} from '../app/bossFoundation.js';
 import {V177_JOINT_ATLASES} from '../app/v177JointData.js';
 import {v177RangerFootPlacement} from '../app/v177RangerFootPlacement.js';
-import {v177RangerLowerPose} from '../app/v177RangerLowerMotion.js';
+import {v177RangerLowerPose,v177RangerStanceDrop} from '../app/v177RangerLowerMotion.js';
 import {recordV177JointBodyCorrection,v177JointBodyCorrection,pruneV177JointActorHistory,recordV177JointBodyShift,v177JointBodyShiftX} from '../app/v177JointActorHistory.js';
 
 const rig=V177_JOINT_ATLASES.ranger.lowerRig,cycle=rig.spanPx/rig.stanceFraction;
@@ -237,4 +237,31 @@ test('a simultaneous hard correction retains its original rigid priority over th
     assert.equal(actual.state.feet[i].flight?.endAt,reference.state.feet[i].flight?.endAt);
   }
   assert.equal(actual.state.bodyCorrection,1);assert.equal(actual.state.bodyShiftX,-.1);
+});
+
+test('an interrupted turn and a frozen step retain both boots with the original leg lengths', () => {
+  const frames = [
+    {phase:.870756547922598,settle:.8611111111111112,
+      feet:[[215.34698049199326,396.55870627132833,0],[292.98306727430054,398.5,0]]},
+    {phase:.7833535625571924,settle:.13194444444444442,
+      feet:[[259.69452064560255,397.5,0],[220.7349329917841,386.58799237048675,0]]},
+  ];
+  for(const {phase,settle,feet} of frames){
+    assert.throws(()=>v177RangerLowerPose(rig,phase,settle,undefined,feet),/Original Ranger ankle target is unreachable/);
+    const drop=v177RangerStanceDrop(rig,phase,settle,feet);
+    assert.ok(drop>0&&drop<2);
+    const pose=v177RangerLowerPose(rig,phase,settle,undefined,feet,drop);
+    for(let i=0;i<2;i++){
+      const [hx,hy,kx,ky,ax,ay]=pose.joints[i],leg=rig.legs[i];
+      assert.deepEqual([ax,ay],feet[i].slice(0,2));
+      assert.ok(Math.abs(Math.hypot(kx-hx,ky-hy)-leg.upperLength)<1e-9);
+      assert.ok(Math.abs(Math.hypot(ax-kx,ay-ky)-leg.lowerLength)<1e-9);
+    }
+    // A precision stance already deep enough must use the existing pose.
+    assert.equal(v177RangerStanceDrop(rig,phase,settle,feet,34),0);
+  }
+  const idle=v177RangerFootPlacement(rig,null,{time:0,root:330,scale:.18,phase:0,settle:1,moving:false});
+  assert.equal(v177RangerStanceDrop(rig,0,1,idle.targets),0);
+  const unsupported=[[500,397.5,0],idle.targets[1]];
+  assert.equal(v177RangerStanceDrop(rig,0,1,unsupported),null);
 });
