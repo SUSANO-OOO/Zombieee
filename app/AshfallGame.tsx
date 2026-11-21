@@ -21,7 +21,7 @@ import { v100BasePresentationFor } from "./v100BasePresentation.js";
 import { createV100HumanWalkRenderer, v100HumanWalkPhase, v100UsesHumanWalk, v100HumanWalkCycleDistance, v100HumanWalkFrame } from "./v100HumanWalk.js";
 import { V177_JOINT_ATLASES, v177JointCycleDistance, v177JointPose, v177RangerFootPlan, v105BipedFootPlan, drawV177JointPose, v177CaptureJointPose, v177RenderedJointWeaponSocket, v177RenderedWeightedLowerReceipt } from "./v177JointPresentation.js";
 import { v177ClearHeadHealthBarY } from "./v177HeadLabelPlacement.js";
-import {battleVoiceReady,queueV104HumanHurt,v104ContactIsHard,v104SupplementalEnemyVoice,v104EnemyContactAudio} from "./v104CombatAudio.js";
+import {battleVoiceReady,playV104FighterVoice,queueV104HumanHurt,v104ContactIsHard,v104SupplementalEnemyVoice,v104EnemyContactAudio} from "./v104CombatAudio.js";
 import {createManualAbilityPointerHold} from "./manualAbilityUi.js";
 import {manualAbilityTacticalView} from "./manualAbilityTactics.js";
 import {ManualAbilityTactics} from "./BattleAbilityGuide";
@@ -1276,6 +1276,7 @@ type PendingWeaponAudioCue = {
   volume?: number;
   maxInstances?: number;
 };
+type FighterVoiceEvent = "attack" | "exit";
 type PendingBattleAudioCue = {
   cueId: string;
   x: number;
@@ -16297,6 +16298,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       receiptId?: string;
       semanticReceiptConsumed?: boolean;
       voiceAllowed?: boolean;
+      fighterVoiceEvent?: FighterVoiceEvent;
     } = {},
   ) => {
     if (!cueId) return false;
@@ -16320,6 +16322,11 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       });
     } : null;
     const pan = Math.max(-.85, Math.min(.85, x / W * 2 - 1));
+    const fighterVoiceEvent = options.ownerId === undefined ? undefined
+      : options.fighterVoiceEvent ?? (options.semantic === "battle-hurt" ? "hurt" : undefined);
+    const instanceKey = fighterVoiceEvent
+      ? `fighter-voice:${options.battleGeneration ?? gameRef.current.battleAudioGeneration}:${options.ownerId}`
+      : options.instanceKey;
     if (typeof window !== "undefined"
       && ["127.0.0.1", "localhost"].includes(window.location.hostname)) {
       productionCueQaLogRef.current = [
@@ -16329,7 +16336,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
           at: performance.now(),
           x,
           dedupeKey: options.dedupeKey ?? null,
-          instanceKey: options.instanceKey,
+          instanceKey,
           semantic: options.semantic,
           receiptId: options.receiptId,
           ownerId: options.ownerId,
@@ -16343,19 +16350,22 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       isMuted: () => sfxMutedRef.current,
       fallback,
       play: (guardedFallback) => {
-        const primary = productionMixer.play(cueId, {
-        pan,
-        priority: options.priority,
-        cooldownMs: options.cooldownMs,
-        volume: options.volume,
-        playbackRate: options.playbackRate,
-        instanceKey: options.instanceKey,
-        maxInstances: options.maxInstances,
-        durationSeconds: options.durationSeconds,
-        duck: options.duck,
-        dedupeKey: options.dedupeKey,
-        onLoadFailure: fallback ? guardedFallback : undefined,
-        });
+        const playback = {
+          pan,
+          priority: options.priority,
+          cooldownMs: options.cooldownMs,
+          volume: options.volume,
+          playbackRate: options.playbackRate,
+          instanceKey,
+          maxInstances: options.maxInstances,
+          durationSeconds: options.durationSeconds,
+          duck: options.duck,
+          dedupeKey: options.dedupeKey,
+          onLoadFailure: fallback ? guardedFallback : undefined,
+        };
+        const primary = fighterVoiceEvent
+          ? playV104FighterVoice(productionMixer, cueId, fighterVoiceEvent, playback)
+          : productionMixer.play(cueId, playback);
         const voice = v104SupplementalEnemyVoice(cueId);
         if (voice && options.ownerId !== undefined && options.voiceAllowed !== false) {
           const instanceKey = `rp-voice:${options.ownerId}`;
@@ -16408,6 +16418,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
       instanceKey?: string;
       duck?: { level: number; attackMs: number; holdMs: number; releaseMs: number };
       dedupeKey?: string;
+      fighterVoiceEvent?: FighterVoiceEvent;
     },
   ) => playProductionCue(cueId, x, {
     ...options,
@@ -24254,6 +24265,8 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
                     });
                   } else {
                     playProductionCue(attackVoice, f.x, {
+                      ownerId: f.id,
+                      fighterVoiceEvent: "attack",
                       priority: 67,
                       cooldownMs: 320,
                       volume: f.kind === "brute" || f.kind === "brawler" || f.kind === "crazy-king" || f.kind === "kumaverson" ? .92 : .78,
@@ -25018,19 +25031,11 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             if (beginMayoRetreat(g, fighter, "injury")) {
               g.unitsLost++;
               emitBattleBark(g, "ally-down", "medic", `mayo-retreat-${fighter.id}`);
-              playBattleSemanticCue(unitAudioCueFor("mayo-chan", "voice", "hurt"), fighter.x, {
-                semantic: "fighter-retreat-hurt",
-                receiptId: `fighter:${fighter.id}:retreat-hurt`,
-                ownerId: fighter.id,
-                priority: 88,
-                cooldownMs: 300,
-                maxInstances: 1,
-                dedupeKey: `fighter-retreat:${fighter.id}:hurt`,
-              });
               playBattleSemanticCue(unitAudioCueFor("mayo-chan", "voice", "retreat"), fighter.x, {
                 semantic: "fighter-retreat",
                 receiptId: `fighter:${fighter.id}:retreat`,
                 ownerId: fighter.id,
+                fighterVoiceEvent: "exit",
                 priority: 86,
                 cooldownMs: 1000,
                 maxInstances: 1,
@@ -25070,6 +25075,7 @@ export function AshfallGame({ externalSession = null }: { externalSession?: Ashf
             semantic: isBossFighter(fighter) ? "boss-defeat" : "fighter-defeat",
             receiptId: `fighter:${fighter.id}`,
             ownerId: fighter.id,
+            fighterVoiceEvent: fighter.side === "human" ? "exit" : undefined,
             priority: fighter.side === "human"
               ? 88
               : fighter.kind === "takuya" || fighter.kind === "gate-eater" ? 98 : 82,

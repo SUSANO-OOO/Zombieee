@@ -83,6 +83,12 @@ export function v104EnemyContactAudio(world,actor,damage,cueId){
  if(!battleVoiceReady(actor,voiceAllowed?'hurt':'armor-contact',world?.time,world))return null;
  return {ownerId:actor.id,voiceAllowed};
 }
+// Keep the original takes. An injury or exit replaces the same fighter's
+// held voice and invalidates an earlier take that is still loading.
+export function playV104FighterVoice(mixer,cueId,event,options){
+ if(event!=='attack')mixer.stopInstance(options.instanceKey,{fadeMs:45});
+ return mixer.play(cueId,{...options,maxInstances:1});
+}
 export function queueV104HumanHurt(world,actor,hpBefore,cueId){
  if(!(hpBefore>actor.hp)||!cueId||!battleVoiceReady(actor,'hurt',world.time,world))return false;
  const receiptId=`hurt:${actor.id}:${world.time.toFixed(6)}:${actor.hp}`;
