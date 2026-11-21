@@ -5,7 +5,7 @@ import{v177RangerLowerPose}from'../app/v177RangerLowerMotion.js';
 import{v177ChoreographedAbilitySample}from'../app/v177WeaponChoreography.js';
 import{combatFacingFromMotion}from'../app/enemyFacingContract.js';
 import{BOSS_ANOMALY_TUNING}from'../app/bossAnomalies.js';import{KUROME_PROTOTYPE_TUNING}from'../app/kuromeBoss.js';
-import{battleVoiceReady,queueV104HumanHurt}from'../app/v104CombatAudio.js';import{V100_AUDIO_MANIFEST}from'../app/productionAudio.js';
+import{battleVoiceReady,playV104FighterVoice,queueV104HumanHurt}from'../app/v104CombatAudio.js';import{V100_AUDIO_MANIFEST}from'../app/productionAudio.js';
 import{queueV100GuardContact}from'../app/v100CombatVfx.js';
 import{drawV104WeaponWake,v104WeaponWakeCandidate}from'../app/v104CombatVfx.js';
 import{advanceAreaEffects}from'../app/gameRules.js';
@@ -113,6 +113,26 @@ test('voice intervals survive real fighter copies; boss damage and interception 
  assert.equal(battleVoiceReady({...actor,kind:'kumaverson'},'attack',0,world),true);
  assert.equal(battleVoiceReady({...actor,kind:'kumaverson'},'attack',.1,world),false);
  assert.equal(battleVoiceReady({...actor,kind:'kumaverson'},'attack',.1,{}),true,'new battle retires the old interval');
+});
+
+test('a fighter injury and exit both release the earlier voice, preserving other fighters and the recorded cue',async()=>{
+ const calls=[];
+ const mixer={
+  stopInstance:(key,options)=>calls.push(['stop',key,options]),
+  play:async(id,options)=>{calls.push(['play',id,options]);return id;},
+ };
+ const first={instanceKey:'fighter-voice:2:17',volume:.8,priority:72};
+ const second={instanceKey:'fighter-voice:2:18',volume:.8,priority:67};
+ assert.equal(await playV104FighterVoice(mixer,'other-attack','attack',second),'other-attack');
+ assert.equal(await playV104FighterVoice(mixer,'own-hurt','hurt',first),'own-hurt');
+ assert.equal(await playV104FighterVoice(mixer,'own-defeat','exit',{...first,priority:88}),'own-defeat');
+ assert.deepEqual(calls,[
+  ['play','other-attack',{...second,maxInstances:1}],
+  ['stop',first.instanceKey,{fadeMs:45}],
+  ['play','own-hurt',{...first,maxInstances:1}],
+  ['stop',first.instanceKey,{fadeMs:45}],
+  ['play','own-defeat',{...first,priority:88,maxInstances:1}],
+ ]);
 });
 
 test('actual front guard contact emits the matching shield or pan sound once; miss/back/expired contact emits none',()=>{

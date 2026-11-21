@@ -5,6 +5,29 @@ const clamp=p=>Math.max(0,Math.min(1,Number(p)||0));
 const smooth=p=>{const t=clamp(p);return t*t*(3-2*t);};
 export const v177RangerLowerBob=(phase,settle)=>1.2*Math.cos(cycle(phase)*4*Math.PI)*(1-clamp(settle));
 
+// Choose the smallest pelvis drop that keeps both planned boots and the
+// authored bone lengths. A lane change or interrupted step can briefly put
+// a world-space boot just beyond its leg even when the preceding pose was valid.
+export function v177RangerStanceDrop(rig, phase, settle, feet, braceY = 0) {
+  const bob = v177RangerLowerBob(phase, settle) + braceY;
+  let minDrop = 0;
+  let maxDrop = Infinity;
+  for (let i = 0; i < rig.legs.length; i++) {
+    const leg = rig.legs[i];
+    const horizontal = Math.abs(feet[i][0] - leg.hip[0]);
+    const vertical = feet[i][1] - (leg.hip[1] + bob);
+    const extension = leg.upperLength + leg.lowerLength;
+    const fold = Math.abs(leg.upperLength - leg.lowerLength) + .001;
+    const reach = extension - .001;
+    if (horizontal >= reach) return null;
+    const maxVertical = Math.sqrt(reach * reach - horizontal * horizontal);
+    const minVertical = Math.sqrt(Math.max(0, fold * fold - horizontal * horizontal));
+    minDrop = Math.max(minDrop, vertical - maxVertical);
+    maxDrop = Math.min(maxDrop, vertical - minVertical);
+  }
+  return minDrop <= maxDrop ? minDrop : null;
+}
+
 export function createV177RangerLowerPose(rig) {
   const matrices={pelvis:new Float64Array(6)},meshes={};
   for(const leg of rig.legs){for(const bone of [leg.upperBone,leg.lowerBone,leg.footBone])matrices[bone]=new Float64Array(6);

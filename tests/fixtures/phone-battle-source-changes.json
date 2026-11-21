@@ -795,6 +795,46 @@
     [
       "                  abilityFrame = true;\n                  g.banner = \"漏泥 // 床汚染予告\";",
       "                  abilityFrame = true;\n                  if (g.definition.missionConfig.v100StageNumber) {\n                    playProductionCue(\"floor-mud-warning-r1\", windup.runtime.centerX, {\n                      playbackRate: .97 + f.id % 4 * .02,\n                    });\n                  }\n                  g.banner = \"漏泥 // 床汚染予告\";"
+    ],
+    [
+      "import {battleVoiceReady,queueV104HumanHurt,v104ContactIsHard,v104SupplementalEnemyVoice,v104EnemyContactAudio} from \"./v104CombatAudio.js\";",
+      "import {battleVoiceReady,playV104FighterVoice,queueV104HumanHurt,v104ContactIsHard,v104SupplementalEnemyVoice,v104EnemyContactAudio} from \"./v104CombatAudio.js\";"
+    ],
+    [
+      "type PendingBattleAudioCue = {",
+      "type FighterVoiceEvent = \"attack\" | \"exit\";\ntype PendingBattleAudioCue = {"
+    ],
+    [
+      "      semanticReceiptConsumed?: boolean;\n      voiceAllowed?: boolean;\n    } = {},",
+      "      semanticReceiptConsumed?: boolean;\n      voiceAllowed?: boolean;\n      fighterVoiceEvent?: FighterVoiceEvent;\n    } = {},"
+    ],
+    [
+      "    const pan = Math.max(-.85, Math.min(.85, x / W * 2 - 1));\n    if (typeof window !== \"undefined\"",
+      "    const pan = Math.max(-.85, Math.min(.85, x / W * 2 - 1));\n    const fighterVoiceEvent = options.ownerId === undefined ? undefined\n      : options.fighterVoiceEvent ?? (options.semantic === \"battle-hurt\" ? \"hurt\" : undefined);\n    const instanceKey = fighterVoiceEvent\n      ? `fighter-voice:${options.battleGeneration ?? gameRef.current.battleAudioGeneration}:${options.ownerId}`\n      : options.instanceKey;\n    if (typeof window !== \"undefined\""
+    ],
+    [
+      "          instanceKey: options.instanceKey,\n          semantic: options.semantic,",
+      "          instanceKey,\n          semantic: options.semantic,"
+    ],
+    [
+      "        const primary = productionMixer.play(cueId, {\n        pan,\n        priority: options.priority,\n        cooldownMs: options.cooldownMs,\n        volume: options.volume,\n        playbackRate: options.playbackRate,\n        instanceKey: options.instanceKey,\n        maxInstances: options.maxInstances,\n        durationSeconds: options.durationSeconds,\n        duck: options.duck,\n        dedupeKey: options.dedupeKey,\n        onLoadFailure: fallback ? guardedFallback : undefined,\n        });\n        const voice = v104SupplementalEnemyVoice(cueId);",
+      "        const playback = {\n          pan,\n          priority: options.priority,\n          cooldownMs: options.cooldownMs,\n          volume: options.volume,\n          playbackRate: options.playbackRate,\n          instanceKey,\n          maxInstances: options.maxInstances,\n          durationSeconds: options.durationSeconds,\n          duck: options.duck,\n          dedupeKey: options.dedupeKey,\n          onLoadFailure: fallback ? guardedFallback : undefined,\n        };\n        const primary = fighterVoiceEvent\n          ? playV104FighterVoice(productionMixer, cueId, fighterVoiceEvent, playback)\n          : productionMixer.play(cueId, playback);\n        const voice = v104SupplementalEnemyVoice(cueId);"
+    ],
+    [
+      "      dedupeKey?: string;\n    },\n  ) => playProductionCue(cueId, x, {",
+      "      dedupeKey?: string;\n      fighterVoiceEvent?: FighterVoiceEvent;\n    },\n  ) => playProductionCue(cueId, x, {"
+    ],
+    [
+      "                    playProductionCue(attackVoice, f.x, {\n                      priority: 67,",
+      "                    playProductionCue(attackVoice, f.x, {\n                      ownerId: f.id,\n                      fighterVoiceEvent: \"attack\",\n                      priority: 67,"
+    ],
+    [
+      "              playBattleSemanticCue(unitAudioCueFor(\"mayo-chan\", \"voice\", \"hurt\"), fighter.x, {\n                semantic: \"fighter-retreat-hurt\",\n                receiptId: `fighter:${fighter.id}:retreat-hurt`,\n                ownerId: fighter.id,\n                priority: 88,\n                cooldownMs: 300,\n                maxInstances: 1,\n                dedupeKey: `fighter-retreat:${fighter.id}:hurt`,\n              });\n              playBattleSemanticCue(unitAudioCueFor(\"mayo-chan\", \"voice\", \"retreat\"), fighter.x, {\n                semantic: \"fighter-retreat\",\n                receiptId: `fighter:${fighter.id}:retreat`,\n                ownerId: fighter.id,",
+      "              playBattleSemanticCue(unitAudioCueFor(\"mayo-chan\", \"voice\", \"retreat\"), fighter.x, {\n                semantic: \"fighter-retreat\",\n                receiptId: `fighter:${fighter.id}:retreat`,\n                ownerId: fighter.id,\n                fighterVoiceEvent: \"exit\","
+    ],
+    [
+      "            semantic: isBossFighter(fighter) ? \"boss-defeat\" : \"fighter-defeat\",\n            receiptId: `fighter:${fighter.id}`,\n            ownerId: fighter.id,",
+      "            semantic: isBossFighter(fighter) ? \"boss-defeat\" : \"fighter-defeat\",\n            receiptId: `fighter:${fighter.id}`,\n            ownerId: fighter.id,\n            fighterVoiceEvent: fighter.side === \"human\" ? \"exit\" : undefined,"
     ]
   ],
   "app/manualAbilities.js": [

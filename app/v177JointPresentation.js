@@ -19,7 +19,7 @@ import { V104_OMEGA_JOINT_ATLASES as omegaRightAtlases } from './v104OmegaJointD
 import { V177_FERAL_JOINT_ATLASES as feralAtlases } from './v177FeralJointData.js';
 import { V177_FUTAGO_JOINT_ATLASES as futagoAtlases } from './v177FutagoJointData.js';
 import { v177RangerCarryPose } from './v177RangerUpperMotion.js';
-import { v177RangerLowerBob } from './v177RangerLowerMotion.js';
+import { v177RangerLowerBob, v177RangerStanceDrop } from './v177RangerLowerMotion.js';
 import { drawV177RangerLower } from './v177RangerLowerPaint.js';
 import {v177RecessedMouthContour} from './v177MouthCavity.js';
 import { v177RangerFootPlacement } from './v177RangerFootPlacement.js';
@@ -661,15 +661,25 @@ export function v177RangerFootPlan(kind,plan,{actor,world,width,direction}={}) {
   const facing=direction===undefined&&current ? state.turnTargetFacing??state.facing
     : (direction??runtime?.direction)==='left'?-1:1;
   if(current&&(state.turnTargetFacing??state.facing)===facing)return plan;
-  const feet=v177RangerFootPlacement(atlas.lowerRig,previous?.plan?.rangerFeet,{
+  const input={
     time:world?.time,root:actor?.x,scale,phase:runtime?.locomotionPhase,
     // Physical knock can outlast the hit flash. Carry its local leg pose
     // until the existing impulse ends, then resume the original stop steps.
     moving:runtime?.moving,facing,settle:plan.lowerSettle,
     frozen:plan.reactionHeld||plan.liveStun||Math.abs(actor?.knock??0)>.1,
     bodyCorrection,bodyShiftX,
-  });
+  };
+  const rig=atlas.lowerRig;
+  let feet=v177RangerFootPlacement(rig,previous?.plan?.rangerFeet,input);
   if(!feet)return plan;
+  const brace=plan.rangerBraceY??0;
+  let drop=v177RangerStanceDrop(rig,feet.phase,plan.lowerSettle,feet.targets,brace);
+  if(drop===null||drop>12){
+    // Neither a missing support nor an extreme separation should force a
+    // deep or broken pose. Take the rig's authored standing support once.
+    feet=v177RangerFootPlacement(rig,null,{...input,moving:false});
+    drop=v177RangerStanceDrop(rig,feet.phase,plan.lowerSettle,feet.targets,brace);
+  }
   plan={...plan,phase:feet.phase,
     lowerIndex:plan.settleIndex*atlas.frameCount+Math.floor(feet.phase*atlas.frameCount),
     lowerFootTargets:feet.targets,rangerFeet:feet.state};
@@ -680,6 +690,10 @@ export function v177RangerFootPlan(kind,plan,{actor,world,width,direction}={}) {
     const current=v177RangerCarryPose(rig.poses[first],feet.phase,plan.lowerSettle);
     plan.upperRigPoses=[current,next===first?current:v177RangerCarryPose(rig.poses[next],feet.phase,plan.lowerSettle)];
     plan.upperOffsetY=v177RangerLowerBob(feet.phase,plan.lowerSettle);
+  }
+  if(drop>0){
+    plan.rangerBraceY=brace+drop;
+    plan.upperOffsetY+=drop;
   }
   return plan;
 }
